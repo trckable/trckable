@@ -1,8 +1,9 @@
-import { Activity, Bell, Blocks, Code, CreditCard, Search, Settings as Cog, ShieldCheck } from 'lucide-react'
+import { Activity, Bell, Blocks, Code, CreditCard, Search, Settings as Cog, ShieldCheck, X } from 'lucide-react'
 import { useState } from 'react'
 import { isViewer } from '../lib/me'
 import { api, type Site } from '../lib/api'
 import { navigate, useLocation } from '../lib/url'
+import { Modal } from '../components/Modal'
 import { Picker } from '../components/Picker'
 import { Row } from '../components/Row'
 import { Copyable } from '../components/Copyable'
@@ -15,6 +16,7 @@ import { AlertsSettings } from './Alerts'
 import { SearchSettings } from './Search'
 import { SitesSettings } from './Sites'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
+import './Settings.css'
 
 type TabID = 'site' | 'install' | 'modules' | 'payments' | 'search' | 'privacy' | 'alerts' | 'health'
 
@@ -38,6 +40,64 @@ function NavIcon({ d: Icon }: { d: typeof Cog }) {
   )
 }
 
+/** A site's settings as a dialog over its dashboard: the sections on the
+ *  left, the section on the right. /settings?site=…&tab=… still opens it, so
+ *  every link into settings keeps working; closing it goes back to the
+ *  dashboard underneath. */
+export function SettingsDialog(p: { sites: Site[]; site: Site; onSites: () => void }) {
+  const { params } = useLocation()
+  const tab = (TABS.find((t) => t.id === params.get('tab'))?.id ?? 'site') as TabID
+  const go = (id: TabID) => navigate(`/settings?site=${encodeURIComponent(p.site.id)}&tab=${id}`, { replace: true })
+  const close = () => navigate('/' + encodeURIComponent(p.site.domain))
+  const current = TABS.find((t) => t.id === tab)!
+  return (
+    <Modal label={`Settings for ${p.site.domain}`} className="settings-modal" onClose={close}>
+      <nav className="settings-nav" aria-label="Settings sections">
+        <div className="settings-title">
+          <b>Settings</b>
+          <span className="faint">{p.site.name || p.site.domain}</span>
+        </div>
+        {TABS.map((t) => (
+          <button key={t.id} type="button" aria-current={tab === t.id} onClick={() => go(t.id)}>
+            <NavIcon d={t.icon} />
+            {t.label}
+          </button>
+        ))}
+      </nav>
+      <div className="settings-pane">
+        <div className="settings-pane-head">
+          <h2>{current.label}</h2>
+          <button type="button" className="modal-close" aria-label="Close settings" onClick={close}>
+            <X size={16} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        </div>
+        <div className="settings-body" key={tab}>
+          <SettingsSection tab={tab} site={p.site} onSites={p.onSites} />
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSites: () => void }) {
+  return (
+    <>
+      {/* Saying it once is kinder than letting every save come back 403. */}
+      {isViewer() && <p className="viewer-note">Your account reads this instance. Settings are shown as they are, and an owner changes them.</p>}
+      {tab === 'site' && <SiteSettings key={site.id} site={site} onSaved={onSites} />}
+      {tab === 'install' && <Install site={site} visits={[]} inSettings />}
+      {tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
+      {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}
+      {tab === 'search' && <SearchSettings key={'sc' + site.id} site={site} />}
+      {tab === 'privacy' && <PrivacySettings key={'pv' + site.id} site={site} />}
+      {tab === 'alerts' && <AlertsSettings key={'al' + site.id} site={site} />}
+      {tab === 'health' && <HealthSettings />}
+    </>
+  )
+}
+
+/** The page form, kept for an instance with no site yet: there is no
+ *  dashboard to open a dialog over, only the list to add the first one. */
 export function Settings(p: { sites: Site[]; site: Site | null; onSites: () => void; header: React.ReactNode }) {
   const site = p.site ?? p.sites[0] ?? null
   const { params } = useLocation()

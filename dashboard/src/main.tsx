@@ -17,6 +17,7 @@ import { setRole } from "./lib/me";
 // Settings and the account dialog are their own screens: the dashboard should
 // not carry them.
 const Settings = lazy(() => import("./views/Settings").then((m) => ({ default: m.Settings })));
+const SettingsDialog = lazy(() => import("./views/Settings").then((m) => ({ default: m.SettingsDialog })));
 const AccountDialog = lazy(() => import("./views/Account").then((m) => ({ default: m.AccountDialog })));
 const AddWizard = lazy(() => import("./views/Sites").then((m) => ({ default: m.AddWizard })));
 // Only people with more than one site open it, so it loads when asked.
@@ -152,7 +153,7 @@ function App() {
         <Suspense fallback={<div className="skeleton" style={{ height: 320, margin: 24 }} />}>
           <AllSites sites={boot.sites} header={header} />
         </Suspense>
-      ) : settings || !site ? (
+      ) : !site ? (
         <Suspense fallback={<div className="skeleton" style={{ height: 320, margin: 24 }} />}>
         <Settings
           sites={boot.sites}
@@ -162,12 +163,20 @@ function App() {
         />
         </Suspense>
       ) : (
-        <Dashboard
-          key={site.id}
-          site={site}
-          sites={boot.sites}
-          header={header}
-        />
+        <>
+          <Dashboard
+            key={site.id}
+            site={site}
+            sites={boot.sites}
+            header={header}
+          />
+          {/* Settings open over the dashboard they belong to. */}
+          {settings && (
+            <Suspense fallback={null}>
+              <SettingsDialog sites={boot.sites} site={site} onSites={refreshSites} />
+            </Suspense>
+          )}
+        </>
       )}
       <Footer version={boot.version} />
       <ShortcutsHost />
