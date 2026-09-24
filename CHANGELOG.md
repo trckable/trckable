@@ -9,6 +9,17 @@ section into the release.
 
 ## Unreleased
 
+- The server's own error log no longer contains visitors' addresses: its
+  lines pass through a filter first, so no IP address is stored anywhere
+- The dashboard's logo is the one trckable uses everywhere, with its own
+  small font (2.5 KB), and a hover animation; the name is set the same way
+  in headings
+- The dashboard is built with Vite 8: first load 125.8 KB instead of 127.0
+- npm package: the README says what works with self-hosting and Cloud and
+  what needs a key; the `trckable` command is declared the way npm expects
+- Contributing: pull requests, a contributor licence agreement (CLA.md),
+  and `pnpm release` for maintainers
+
 ## 0.1.0 (24 Sep 2026)
 
 The first public version. It includes:
