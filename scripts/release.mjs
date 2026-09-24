@@ -41,7 +41,8 @@ edit('README.md', `badge/version-${OLD}-`, `badge/version-${V}-`)
 const log = readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf8')
 const body = log.match(/## Unreleased\n([\s\S]*?)(?=\n## )/)?.[1].trim()
 if (!body) throw new Error('CHANGELOG.md: the "## Unreleased" section is empty; write down what changed first')
-const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+const now = new Date()
+const date = `${now.getUTCDate()} ${'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ')[now.getUTCMonth()]} ${now.getUTCFullYear()}` // 24 Sep 2026
 writeFileSync(join(ROOT, 'CHANGELOG.md'), log.replace('## Unreleased\n', `## Unreleased\n\n## ${V} (${date})\n`))
 
 run('git', 'commit', '-qam', `${V}`)
