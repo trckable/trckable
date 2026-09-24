@@ -59,6 +59,10 @@ jobs:
       # feature flag left undefined there is only visible in dist/.
       - name: npm package build (react entry ≤ 2.5 KB gzip) + tests
         run: pnpm --filter trckable build && pnpm --filter trckable test
+      - name: publish the measured numbers (facts)
+        run: node scripts/facts.mjs tracker > facts-tracker.json && cat facts-tracker.json
+      - uses: actions/upload-artifact@v4
+        with: { name: facts-tracker, path: facts-tracker.json }
 
   dashboard:
     name: dashboard (types, first load ≤ 130 KB gzip, embedded build up to date)
@@ -73,6 +77,10 @@ jobs:
       - name: the embedded dashboard matches the source
         run: |
           git diff --exit-code server/internal/web/dist || (echo "run: pnpm --filter @trckable/dashboard build" && exit 1)
+      - name: publish the measured numbers (facts)
+        run: node scripts/facts.mjs dashboard > facts-dashboard.json && cat facts-dashboard.json
+      - uses: actions/upload-artifact@v4
+        with: { name: facts-dashboard, path: facts-dashboard.json }
 
   e2e:
     name: browsers (Chromium, Firefox, WebKit)
@@ -102,6 +110,7 @@ jobs:
           bytes=$(docker save trckable:ci | gzip -1 | wc -c)
           mb=$(( bytes / 1048576 ))
           echo "compressed image: ${mb} MB (budget 40 MB)"
+          echo "IMAGE_BYTES=$bytes" >> "$GITHUB_ENV"
           test "$mb" -le 40
       - name: boots, accepts an event, idle RAM ≤ 64 MB, stops cleanly
         run: |
@@ -115,7 +124,12 @@ jobs:
           sleep 3
           mem=$(docker stats --no-stream --format '{{.MemUsage}}' tkb | awk '{print $1}')
           echo "idle memory: $mem (budget 64MiB)"
+          echo "IDLE_MIB=$(echo "$mem" | sed 's/MiB//')" >> "$GITHUB_ENV"
           case "$mem" in *GiB) exit 1;; esac
           test "$(echo "$mem" | sed 's/MiB//' | cut -d. -f1)" -le 64
           docker stop -t 30 tkb
           test "$(docker inspect -f '{{.State.ExitCode}}' tkb)" = 0
+      - name: publish the measured numbers (facts)
+        run: node scripts/facts.mjs image > facts-image.json && cat facts-image.json
+      - uses: actions/upload-artifact@v4
+        with: { name: facts-image, path: facts-image.json }
