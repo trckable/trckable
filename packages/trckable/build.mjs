@@ -4,7 +4,7 @@
 import { build } from 'esbuild'
 import { execSync } from 'node:child_process'
 import { chmodSync, readFileSync, rmSync } from 'node:fs'
-import { gzipSync } from 'node:zlib'
+import { gzipSize } from '../../scripts/gzip-size.mjs'
 
 rmSync('dist', { recursive: true, force: true })
 
@@ -80,7 +80,7 @@ chmodSync('dist/cli.js', 0o755)
 
 execSync('npx tsc -p tsconfig.build.json', { stdio: 'inherit' })
 
-const gz = (f) => gzipSync(readFileSync(f), { level: 9 }).length
+const gz = (f) => gzipSize(readFileSync(f))
 const react = gz('dist/react.js') + gz('dist/index.js')
 console.log(`trckable/react adds ${react} B gzip to an app (budget 2560) ${react <= 2560 ? '✓' : '✗ OVER BUDGET'}`)
 for (const e of [...entries, { name: 'cli' }]) console.log(`  dist/${e.name}.js  ${gz(`dist/${e.name}.js`)} B gzip`)

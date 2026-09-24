@@ -54,7 +54,7 @@ jobs:
       - name: tracker ≤ 2 KB gzip (and the embedded copy is up to date)
         run: |
           pnpm --filter @trckable/tracker size
-          git diff --exit-code server/internal/web/assets/t.js || (echo "run: pnpm --filter @trckable/tracker build" && exit 1)
+          git diff --exit-code server/internal/web/assets/ || (echo "run: pnpm --filter @trckable/tracker build" && exit 1)
       # The build comes first: one test reads the built files, because a
       # feature flag left undefined there is only visible in dist/.
       - name: npm package build (react entry ≤ 2.5 KB gzip) + tests

@@ -9,7 +9,7 @@
 // core script and nothing else. sizes.json records what each feature costs so
 // the dashboard can show it honestly.
 import { build } from 'esbuild'
-import { gzipSync } from 'node:zlib'
+import { gzipSize } from '../scripts/gzip-size.mjs'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 
 const BUDGET = 2048 // bytes, gzip, for the full script
@@ -64,7 +64,7 @@ async function buildVariant(on) {
   // The IIFE doesn't rely on strict mode; the directive is 13 bytes we skip.
   writeFileSync(outfile, readFileSync(outfile, 'utf8').replace('"use strict";', ''))
   const js = readFileSync(outfile)
-  return { name, bytes: js.length, gzip: gzipSync(js, { level: 9 }).length, js }
+  return { name, bytes: js.length, gzip: gzipSize(js), js }
 }
 
 mkdirSync('dist', { recursive: true })

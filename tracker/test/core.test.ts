@@ -269,6 +269,14 @@ describe('privacy and modes', () => {
     expect(byKind('pv')[0].v).toBeUndefined()
   })
 
+  it('cookieless mode does not even read browser storage', async () => {
+    let touched = 0
+    Object.defineProperty(globalThis, 'localStorage', { get: () => (touched++, win.localStorage), configurable: true })
+    tracker({ cookieless: true })
+    await flush()
+    expect(touched).toBe(0)
+  })
+
   it('consent upgrades cookieless to cookie mode', async () => {
     const t = tracker({ cookieless: true })
     t('consent', true)

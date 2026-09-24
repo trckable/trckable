@@ -1,12 +1,12 @@
 // Weight gate: the Core first load (entry JS + CSS) must stay ≤ 130 KB gzip.
 import { readFileSync, readdirSync } from 'node:fs'
-import { gzipSync } from 'node:zlib'
+import { gzipSize } from '../../scripts/gzip-size.mjs'
 import { join } from 'node:path'
 
 const dir = new URL('../../server/internal/web/dist/', import.meta.url).pathname
 const html = readFileSync(join(dir, 'index.html'), 'utf8')
 const entry = [...html.matchAll(/(?:src|href)="\/(assets\/[^"]+\.(?:js|css))"/g)].map((m) => m[1])
-const gz = (f) => gzipSync(readFileSync(join(dir, f)), { level: 9 }).length
+const gz = (f) => gzipSize(readFileSync(join(dir, f)))
 let total = 0
 for (const f of entry) {
   const n = gz(f)

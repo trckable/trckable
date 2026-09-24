@@ -8,21 +8,30 @@
 //
 // Sizes are gzip level 9, bytes. Megabytes are MiB, rounded up.
 import { readFileSync } from 'node:fs'
-import { gzipSync } from 'node:zlib'
+import { gzipSize } from './gzip-size.mjs'
 import { join } from 'node:path'
 
 const ROOT = new URL('..', import.meta.url).pathname
-const gz = (f) => gzipSync(readFileSync(join(ROOT, f)), { level: 9 }).length
+const gz = (f) => gzipSize(readFileSync(join(ROOT, f)))
 const up1 = (n) => Math.ceil(n * 10) / 10
 
 const parts = {
-  tracker: () => ({
-    tracker_bytes: gz('server/internal/web/assets/t.js'), // goals, outbound links, checkout
-    tracker_core_bytes: gz('server/internal/web/assets/t-core.js'), // pageviews only
+  tracker: () => {
+    // sizes.json is what tracker/build.mjs measured, and what the dashboard's
+    // Modules page shows, so the site and the product quote the same bytes.
+    const sz = JSON.parse(readFileSync(join(ROOT, 'server/internal/web/assets/sizes.json'), 'utf8'))
+    // A site has the cookie bar (b) or reads another banner (n), never both.
+    const servable = Object.entries(sz.variants).filter(([k]) => !(k.includes('n') && k.includes('b')))
+    return {
+    tracker_bytes: sz.full, // /js/t.js: goals, outbound links, checkout
+    tracker_core_bytes: sz.core, // pageviews only
+    tracker_max_bytes: Math.max(...servable.map(([, n]) => n)), // every module a site can turn on
+    ...Object.fromEntries(Object.entries(sz.feature).map(([f, n]) => ['module_' + f + '_bytes', n])),
     tracker_budget_bytes: 2048, // tracker/build.mjs
     react_bytes: gz('packages/trckable/dist/react.js') + gz('packages/trckable/dist/index.js'),
     react_budget_bytes: 2560, // packages/trckable/build.mjs
-  }),
+    }
+  },
   dashboard: () => {
     const dir = 'server/internal/web/dist/'
     const html = readFileSync(join(ROOT, dir, 'index.html'), 'utf8')

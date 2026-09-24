@@ -72,10 +72,12 @@ export function start(c: Config): Tracker {
   const now = Date.now
   const noop = (() => {}) as Tracker
 
+  // Consent-free mode touches no browser storage at all, not even to read.
   let ls: Storage | null = null
-  try {
-    ls = localStorage
-  } catch {}
+  if (!c.cookieless)
+    try {
+      ls = localStorage
+    } catch {}
   if (
     !c.site ||
     ls?.getItem('trckable_ignore') ||
