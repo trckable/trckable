@@ -122,7 +122,7 @@ func scriptFor(features []string) script {
 type SiteFeatures func(site string) []string
 
 // SiteScript is everything about one site that changes the script it is
-// served: whether it runs consent-free, and what its cookie bar says.
+// served: whether it runs cookieless, and what its cookie bar says.
 type SiteScript func(site string) ScriptOpts
 
 // ScriptOpts are those settings. Empty is the plain script.

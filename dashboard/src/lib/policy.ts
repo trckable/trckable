@@ -51,15 +51,15 @@ export function policyText(p: PolicyInput): string {
   const ownBar = asks && p.config.banner?.mode === 'bar'
   if (asks && !p.config.consent_free) {
     out.push(
-      `**Cookies, and only if you say so.** Until you answer our cookie banner, trckable counts your visit with a number derived from your request that changes every day, and sets no cookie. ` +
+      `**Cookies, and only if you say so.** Until you answer our cookie banner, nothing about your visit is sent. If you decline, your visit is not counted at all. If you leave without answering, the pages you saw are counted without a cookie, using a number derived from your request that changes every day. ` +
         `If you agree, one cookie, \`trckable_vid\`, holds a random number so that a return visit is not counted as a new person. ` +
         `It contains no personal data, is not readable by anyone else, and is never used for advertising. If you change your mind, that cookie is deleted.` +
         (ownBar ? ` Your answer itself — yes or no — is kept in your browser, so that we do not ask again on every page.` : ''),
     )
   } else if (p.config.consent_free) {
     out.push(
-      `**No cookies, and nothing stored on your device.** trckable is running in its consent-free mode: it sets no cookie and stores nothing in your browser. ` +
-        `Visits are counted using a number derived from your request that changes every day and cannot be traced back to you, so we do not ask for your consent and there is no banner to click.`,
+      `**No cookies, and nothing stored on your device.** trckable is running in cookieless mode: it sets no cookie and stores nothing in your browser. ` +
+        `Visits are counted using a number derived from your request (your IP address and browser) that changes every day; your IP address itself is never stored.`,
     )
   } else {
     out.push(
@@ -69,7 +69,7 @@ export function policyText(p: PolicyInput): string {
     )
   }
   out.push('')
-  if (p.config.honor_dnt) {
+  if (p.config.honor_dnt || asks) {
     out.push(`**Do Not Track.** If your browser sends a Do Not Track or Global Privacy Control signal, nothing about your visit is recorded at all.`)
     out.push('')
   }
@@ -99,7 +99,9 @@ export function policyCaveats(p: PolicyInput): string[] {
   else if (p.modules.consent && !p.config.consent_free)
     out.push('The cookie waits for your banner. Check that refusing is as easy as agreeing, and that your banner tells people what the analytics cookie is for.')
   else if (!p.config.consent_free)
-    out.push('This site sets a cookie. In the EU and the UK that normally needs consent before the script runs — consent-free mode above removes that requirement entirely.')
+    out.push('This site sets a cookie. In the EU and the UK that normally needs consent before the script runs. Cookieless mode above sets none; whether you can then skip the banner depends on your country.')
+  if (p.config.consent_free)
+    out.push('Cookieless mode stores nothing on the device, but the script still reads the page address, referrer, screen width and language, and counts visitors by a daily hash of IP and browser. France, Italy, the Netherlands, Spain and the UK have analytics exemptions with conditions; Germany and Austria generally still ask for consent.')
   if (p.config.record_city && !p.config.consent_free) out.push('City is being recorded. It is derived from the IP address and never stored with it, but it is more precise than country alone.')
   if (p.config.retention_days === 0) out.push('Nothing expires. A retention period is easier to justify than keeping everything forever.')
   if (p.modules.goals) out.push('Goals can carry properties you choose. Do not put names, emails or anything else personal in them — trckable stores whatever you send.')

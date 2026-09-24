@@ -14,7 +14,7 @@ const reply = (routes: Record<string, { status?: number; body?: string; headers?
   })
 
 describe('doctor', () => {
-  it('passes a healthy install and explains a consent-free script', async () => {
+  it('passes a healthy install and explains a cookieless script', async () => {
     reply({
       '/healthz': { headers: { 'x-trckable-version': 'v1.0.0' } },
       '/js/tkb_1.js': { body: "document.currentScript.dataset.cookieless='';(function(){})()" },
@@ -24,7 +24,7 @@ describe('doctor', () => {
     })
     const checks = await doctor({ host: 'https://stats.example.com', site: 'tkb_1', url: 'https://example.com' })
     expect(checks.every((c) => c.ok)).toBe(true)
-    expect(checks.find((c) => c.name === 'Script')?.detail).toContain('consent-free')
+    expect(checks.find((c) => c.name === 'Script')?.detail).toContain('cookieless')
     expect(format(checks)).toContain('Everything looks right.')
   })
 

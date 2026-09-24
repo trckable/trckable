@@ -9,8 +9,19 @@ section into the release.
 
 ## Unreleased
 
-- Groundwork for hosted accounts (off unless an operator token is set);
-  nothing changes for a self-hosted instance
+- A visitor who declines is not counted at all, with or without a cookie:
+  from the moment they say no (trckable's bar, the site's consent manager,
+  `trckable('consent', false)`, Do Not Track or Global Privacy Control),
+  nothing more is sent. A banner's default is not an answer
+- With a banner, the first page waits for the visitor's answer: sent with the
+  cookie after an accept, dropped after a decline, sent without a cookie if
+  they leave without answering
+- `trckable('consent', false)` now deletes the cookie, as a withdrawal should
+- Consent-free mode is now called cookieless mode, and says what it does
+  rather than what the law allows; the privacy-policy text the dashboard
+  writes for you says the same, and names where a banner is still needed
+- The script's budget is 2,060 bytes (was 2,048); the default script is
+  2,051 bytes
 
 ## 0.1.1 (24 Sep 2026)
 

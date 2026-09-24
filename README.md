@@ -81,7 +81,7 @@ Nothing is paid, limited or kept for a hosted edition. The complete list, in wor
   <img src=".github/images/features/funnels.svg" width="49%" alt="Funnels, journeys and retention cohorts: where people stop, and whether they come back">
 </p>
 <p align="center">
-  <img src=".github/images/features/consent.svg" width="49%" alt="Cookie consent your way: consent-free, trckable's own bar, or read the banner you already run">
+  <img src=".github/images/features/consent.svg" width="49%" alt="Cookie consent your way: cookieless, trckable's own bar, or read the banner you already run">
   <img src=".github/images/features/vitals.svg" width="49%" alt="Core Web Vitals at the 75th percentile, measured by the browsers that visited">
 </p>
 <p align="center">

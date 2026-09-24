@@ -97,10 +97,22 @@ describe('the cookie banner module', () => {
     expect(cs[0]).toContain('need their own consent')
   })
 
-  it('does not claim a banner in consent-free mode, where there is none', () => {
+  it('does not describe a banner in cookieless mode, nor promise that none is needed', () => {
     const t = policyText(input({ config: config({ consent_free: true, record_city: false }), modules: { consent: true } }))
-    expect(t).toContain('there is no banner to click')
+    expect(t).toContain('running in cookieless mode')
+    expect(t).toContain('your IP address itself is never stored')
     expect(t).not.toContain('Until you answer our cookie banner')
+    expect(t).not.toMatch(/no banner|do not ask for your consent/)
+  })
+
+  it('says a visitor who declines is not counted at all', () => {
+    const t = policyText(input({ modules: { consent: true } }))
+    expect(t).toContain('If you decline, your visit is not counted at all')
+  })
+
+  it('names the countries where cookieless mode is not enough on its own', () => {
+    const cs = policyCaveats(input({ config: config({ consent_free: true }) }))
+    expect(cs.some((c) => c.includes('Germany and Austria'))).toBe(true)
   })
 
   it('asks about the banner instead of about consent', () => {

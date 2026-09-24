@@ -12,7 +12,9 @@ import { build } from 'esbuild'
 import { gzipSize } from '../scripts/gzip-size.mjs'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 
-const BUDGET = 2048 // bytes, gzip, for the full script
+// 2,060 since 24 Sep 2026: a visitor who declines is never counted, and the
+// first page waits for their answer; those rules cost 20 bytes (2,031 → 2,051).
+const BUDGET = 2060 // bytes, gzip, for the full script
 const TARGET = 1638 // 1.6 KB goal
 
 // Keep in sync with server/internal/modules (Tracker* constants).
@@ -36,7 +38,7 @@ const WITH_OPTIONAL_BUDGET = 2560
 // trckable's own cookie bar carries markup, styles and words, so it has a
 // budget of its own. It replaces a consent manager that costs 30–90 KB, and
 // it is off unless a site asks for it.
-const BANNER_BUDGET = 3328
+const BANNER_BUDGET = 3400
 
 // The bar and the read-someone-else's-banner module answer the same question,
 // so a site has one or the other (modules.Module.Excludes). The variant with
