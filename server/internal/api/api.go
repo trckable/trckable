@@ -51,6 +51,7 @@ type API struct {
 	ErasePerson func(ctx context.Context, site string, visitor uint64) (events, sessions int64, err error)
 	BaseURL     string // public https address (TRCKABLE_BASE_URL), for webhook URLs
 	Operator    string // TRCKABLE_OPERATOR_TOKEN: one-time sign-in links for a hosting provider
+	Managed     string // TRCKABLE_MANAGED: the hosting provider's sign-in page; see unmanaged
 	// Box seals the keys trckable stores for other services (Search Console).
 	Box *secrets.Box
 	// GSCHTTP replaces the HTTP client used to reach Google; tests only.
@@ -94,10 +95,16 @@ func (a *API) Routes(mux *http.ServeMux) {
 	}
 	handleFunc := func(pattern string, f http.HandlerFunc) { handle(pattern, f) }
 	handleFunc("GET /api/v1/setup", a.setupStatus)
-	handleFunc("POST /api/v1/setup", a.setup)
+	handleFunc("POST /api/v1/setup", a.unmanaged(a.setup))
 	handleFunc("POST /_trckable/signin", a.signinLink)
 	handleFunc("GET /_trckable/signin", a.useSigninLink)
-	handleFunc("POST /api/v1/login", a.login)
+	handleFunc("POST /_trckable/accounts", a.createAccount)
+	handleFunc("GET /_trckable/accounts", a.listAccounts)
+	handleFunc("GET /_trckable/accounts/{id}", a.getAccount)
+	handleFunc("PUT /_trckable/accounts/{id}/limits", a.setAccountLimits)
+	handleFunc("PUT /_trckable/accounts/{id}/state", a.setAccountState)
+	handleFunc("DELETE /_trckable/accounts/{id}", a.deleteAccount)
+	handleFunc("POST /api/v1/login", a.unmanaged(a.login))
 	handleFunc("POST /api/v1/logout", a.logout)
 	handle("GET /api/v1/me", a.authed(a.me))
 	handle("GET /api/v1/sites", a.authed(a.sites))
@@ -108,15 +115,15 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}", a.authed(a.deleteSite))
 	handle("GET /api/v1/sites/{site}/config", a.authed(a.siteConfig))
 	handle("PUT /api/v1/sites/{site}/config", a.authed(a.setSiteConfig))
-	handle("POST /api/v1/account/password", a.authed(a.changePassword))
+	handle("POST /api/v1/account/password", a.authed(a.unmanaged(a.changePassword)))
 	handle("GET /api/v1/account", a.authed(a.profile))
 	handle("PATCH /api/v1/account", a.authed(a.setProfile))
 	handle("GET /api/v1/account/avatar", a.authed(a.getAvatar))
 	handle("PUT /api/v1/account/avatar", a.authed(a.putAvatar))
 	handle("DELETE /api/v1/account/avatar", a.authed(a.deleteAvatar))
 	handle("GET /api/v1/account/2fa", a.authed(a.twoStep))
-	handle("POST /api/v1/account/2fa/start", a.authed(a.startTwoStep))
-	handle("POST /api/v1/account/2fa/enable", a.authed(a.enableTwoStep))
+	handle("POST /api/v1/account/2fa/start", a.authed(a.unmanaged(a.startTwoStep)))
+	handle("POST /api/v1/account/2fa/enable", a.authed(a.unmanaged(a.enableTwoStep)))
 	handle("POST /api/v1/account/2fa/disable", a.authed(a.disableTwoStep))
 	handle("GET /api/v1/people", a.authed(a.people))
 	handle("POST /api/v1/people", a.authed(a.addPerson))
@@ -270,6 +277,18 @@ func (a *API) authed(h http.HandlerFunc) http.Handler {
 			fail(w, http.StatusUnauthorized, "please sign in")
 			return
 		}
+		// A hosting provider can pause an account (operator.go): suspended
+		// locks everyone out, read-only lets them look but change nothing.
+		switch a.Ctl.AccountState(r.Context(), p.account) {
+		case sqlite.StateSuspended:
+			fail(w, http.StatusForbidden, "this account is suspended")
+			return
+		case sqlite.StateReadOnly:
+			if r.Method != http.MethodGet && r.Method != http.MethodHead {
+				fail(w, http.StatusForbidden, "this account is read-only for now: nothing can be changed")
+				return
+			}
+		}
 		// The one guard every site route passes: a site in another account
 		// does not exist for this request. "Not found", not "forbidden", so a
 		// guessed id says nothing about whether it is real.
@@ -343,7 +362,26 @@ func (a *API) setupStatus(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]bool{"needs_setup": !has})
+	if a.Managed != "" {
+		// A hosted account is made by the provider, never set up here.
+		writeJSON(w, http.StatusOK, map[string]any{"needs_setup": false, "managed": a.Managed})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"needs_setup": !has})
+}
+
+// unmanaged is a route that does not exist on a managed instance: a hosting
+// provider signs people in itself, so there is no setup, no password sign-in
+// and no password or second step to set here, and nobody can get in around
+// the provider (a suspended customer, say, with a password from before).
+func (a *API) unmanaged(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if a.Managed != "" {
+			fail(w, http.StatusNotFound, "people sign in at "+a.Managed)
+			return
+		}
+		h(w, r)
+	}
 }
 
 func (a *API) setup(w http.ResponseWriter, r *http.Request) {

@@ -9,6 +9,11 @@ section into the release.
 
 ## Unreleased
 
+- Hosting trckable for others: operator endpoints for accounts on one server
+  (create with an owner, list, limit owners, read-only, suspend, delete with
+  everything in it), and `TRCKABLE_MANAGED` for a provider that signs people
+  in itself: no setup, passwords or two-step there, so nobody gets in around it
+
 ## 0.1.1 (24 Sep 2026)
 
 - The server's own error log no longer contains visitors' addresses: its

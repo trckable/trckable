@@ -559,7 +559,7 @@ export interface Profile {
 }
 
 export const api = {
-  setupStatus: () => call<{ needs_setup: boolean }>('GET', '/setup'),
+  setupStatus: () => call<{ needs_setup: boolean; managed?: string }>('GET', '/setup'),
   setup: (token: string, email: string, password: string, domain: string) =>
     call<{ user: { email: string }; site: Site | null }>('POST', '/setup', { token, email, password, domain }),
   login: (email: string, password: string, code?: string) => call<{ user: { email: string } }>('POST', '/login', { email, password, code }),
@@ -584,7 +584,7 @@ export const api = {
   openShare: (token: string, password?: string, embed?: boolean) => call<ShareInfo>('POST', '/share/open', { token, password, embed }),
   shareMe: () => call<ShareInfo>('GET', '/share/me'),
   people: () => call<{ people: Person[] }>('GET', '/people'),
-  addPerson: (email: string, role: string) => call<{ person: Person; password: string }>('POST', '/people', { email, role }),
+  addPerson: (email: string, role: string) => call<{ person: Person; password: string; signin?: string }>('POST', '/people', { email, role }),
   setPersonRole: (id: string, role: string) => call<{ people: Person[] }>('PATCH', `/people/${id}`, { role }),
   removePerson: (id: string) => call<void>('DELETE', `/people/${id}`),
   changePassword: (current: string, password: string) => call<void>('POST', '/account/password', { current, password }),

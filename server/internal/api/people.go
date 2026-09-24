@@ -52,7 +52,11 @@ func (a *API) addPerson(w http.ResponseWriter, r *http.Request) {
 		in.Role = sqlite.RoleViewer
 	}
 	generated := ""
-	if strings.TrimSpace(in.Password) == "" {
+	if a.Managed != "" {
+		// On a managed instance nobody signs in with a password: they sign in
+		// at the provider with this email, so no password is made or shown.
+		in.Password = auth.Token("", 32)
+	} else if strings.TrimSpace(in.Password) == "" {
 		generated = auth.Token("", 12)
 		in.Password = generated
 	}
@@ -65,7 +69,7 @@ func (a *API) addPerson(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusCreated, map[string]any{"person": p, "password": generated})
+	writeJSON(w, http.StatusCreated, map[string]any{"person": p, "password": generated, "signin": a.Managed})
 }
 
 func (a *API) setPersonRole(w http.ResponseWriter, r *http.Request) {

@@ -14,6 +14,7 @@ import { THEMES, useTheme } from '../lib/theme'
 import { isViewer } from '../lib/me'
 import { SitesSettings } from './Sites'
 import type { Site } from '../lib/api'
+import { managed } from '../lib/managed'
 
 // The setup wizard carries the QR encoder, so it is fetched only when someone
 // actually turns two-step sign-in on.
@@ -80,13 +81,14 @@ export function AccountDialog({ tab, sites, email, onSites }: { tab: Tab; sites:
                 <h2>Signed in</h2>
               </div>
               <Row label={email ?? 'Signed in'} hint="This browser">
-                <button type="button" className="btn" onClick={() => api.logout().finally(() => location.assign('/login'))}>
+                <button type="button" className="btn" onClick={() => api.logout().finally(() => location.assign(managed() || '/login'))}>
                   Sign out
                 </button>
               </Row>
             </section>
-            <ChangePassword />
-            <TwoStep />
+            {/* On a managed instance the provider owns sign-in: no password or second step here. */}
+            {!managed() && <ChangePassword />}
+            {!managed() && <TwoStep />}
             <Appearance />
           </>
         )}
@@ -328,7 +330,7 @@ function AddPerson({ onClose, onAdded }: { onClose: () => void; onAdded: () => v
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('viewer')
   const [busy, setBusy] = useState(false)
-  const [made, setMade] = useState<{ email: string; password: string } | null>(null)
+  const [made, setMade] = useState<{ email: string; password: string; signin?: string } | null>(null)
   const [copied, setCopied] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
@@ -338,7 +340,7 @@ function AddPerson({ onClose, onAdded }: { onClose: () => void; onAdded: () => v
     api
       .addPerson(email.trim(), role)
       .then((r) => {
-        setMade({ email: r.person.email, password: r.password })
+        setMade({ email: r.person.email, password: r.password, signin: r.signin })
         onAdded()
       })
       .catch((e: Error) => setErr(e.message))
@@ -395,6 +397,18 @@ function AddPerson({ onClose, onAdded }: { onClose: () => void; onAdded: () => v
               </button>
               <button type="button" className="btn primary big" disabled={busy || !email.includes('@')} onClick={create}>
                 {busy ? 'Adding…' : 'Add them'}
+              </button>
+            </div>
+          </>
+        ) : made.signin ? (
+          <>
+            <h2>They can sign in now</h2>
+            <p className="muted" style={{ margin: 0 }}>
+              <b>{made.email}</b> signs in at <a href={made.signin}>{made.signin.replace(/^https?:\/\//, '')}</a> with that email address. There is no password to send.
+            </p>
+            <div className="wiz-actions">
+              <button type="button" className="btn primary" onClick={onClose}>
+                Done
               </button>
             </div>
           </>

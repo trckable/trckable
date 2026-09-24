@@ -164,6 +164,11 @@ func (a *API) shared(w http.ResponseWriter, r *http.Request) (sqlite.Share, bool
 		fail(w, http.StatusUnauthorized, "this link has expired or been revoked")
 		return sqlite.Share{}, false
 	}
+	// A suspended account's links stop working with the account.
+	if account, err := a.Ctl.SiteAccount(r.Context(), sh.SiteID); err == nil && a.Ctl.AccountState(r.Context(), account) == sqlite.StateSuspended {
+		fail(w, http.StatusUnauthorized, "this link is not available")
+		return sqlite.Share{}, false
+	}
 	return sh, true
 }
 

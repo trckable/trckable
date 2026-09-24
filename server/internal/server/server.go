@@ -182,7 +182,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	}
 	a := &api.API{
 		Ctl: ctl, Hub: s.hub, Token: cfg.APIToken, SetupEnv: cfg.SetupToken, ClientIP: s.ingest.ClientIP,
-		Revenue: s.revenue, BaseURL: cfg.BaseURL, Box: box, Operator: cfg.OperatorToken,
+		Revenue: s.revenue, BaseURL: cfg.BaseURL, Box: box, Operator: cfg.OperatorToken, Managed: cfg.Managed,
 		Query: func() *query.Q {
 			st, w := s.duck.Load(), s.writer.Load()
 			if st == nil || w == nil || !w.Ready() {
@@ -259,6 +259,10 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 // announceSetup logs the one-time setup link until the first account exists.
 // The token is in the URL fragment, so it never reaches proxies or access logs.
 func (s *Server) announceSetup(ctx context.Context) {
+	if s.cfg.Managed != "" {
+		slog.Info("managed: people sign in through the hosting provider", "signin", s.cfg.Managed)
+		return
+	}
 	if has, err := s.ctl.HasUsers(ctx); err != nil || has {
 		return
 	}

@@ -68,6 +68,11 @@ func (s *Store) AddUser(ctx context.Context, account, email, password, role stri
 	if err != nil {
 		return Person{}, err
 	}
+	if role == RoleOwner {
+		if err := ownersFull(ctx, s.DB, account); err != nil {
+			return Person{}, err
+		}
+	}
 	p := Person{ID: auth.Token("usr_", 10), Email: email, Role: role, CreatedAt: time.Now().Unix()}
 	_, err = s.DB.ExecContext(ctx, `INSERT INTO users (id, account_id, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
 		p.ID, account, p.Email, hash, p.Role, p.CreatedAt)
@@ -91,6 +96,13 @@ func (s *Store) SetRole(ctx context.Context, account, id, role string) error {
 	if role != RoleOwner {
 		if err := lastOwner(ctx, tx, account, id); err != nil {
 			return err
+		}
+	} else {
+		var cur string
+		if err := tx.QueryRowContext(ctx, `SELECT role FROM users WHERE id = ? AND account_id = ?`, id, account).Scan(&cur); err == nil && cur != RoleOwner {
+			if err := ownersFull(ctx, tx, account); err != nil {
+				return err
+			}
 		}
 	}
 	res, err := tx.ExecContext(ctx, `UPDATE users SET role = ? WHERE id = ? AND account_id = ?`, role, id, account)

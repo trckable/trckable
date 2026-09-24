@@ -22,6 +22,7 @@ import { Shortcuts } from "./views/Shortcuts";
 // A shared link is its own entry point: no setup, no sign-in, one site.
 const SharedSite = lazy(() => import("./views/SharedSite"));
 import { Toasts } from "./components/Toast";
+import { managed, setManaged } from "./lib/managed";
 
 try {
   applyTheme(localStorage.getItem("trckable:theme") ?? "system");
@@ -44,6 +45,7 @@ function App() {
   const load = useCallback(async () => {
     try {
       const s = await api.setupStatus();
+      setManaged(s.managed);
       if (s.needs_setup) return setBoot({ state: "setup" });
       const me = await api.me().catch(() => null);
       if (!me) return setBoot({ state: "login" });
@@ -118,7 +120,14 @@ function App() {
         }}
       />
     );
-  if (boot.state === "login") return <Login onDone={load} />;
+  if (boot.state === "login") {
+    // A managed instance has no sign-in page: people sign in at the provider.
+    if (managed()) {
+      location.assign(managed());
+      return null;
+    }
+    return <Login onDone={load} />;
+  }
 
   const refreshSites = () =>
     api.sites().then(({ sites }) => setBoot({ ...boot, sites }));

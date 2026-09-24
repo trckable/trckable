@@ -350,6 +350,11 @@ var migrations = []string{
 		user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 		expires_at INTEGER NOT NULL
 	);`,
+	// 22: what a hosting provider sets per account (operator.go): how many
+	// owners its plan allows (0: no limit) and whether it is active,
+	// read-only or suspended.
+	`ALTER TABLE accounts ADD COLUMN max_members INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE accounts ADD COLUMN state TEXT NOT NULL DEFAULT 'active';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {
@@ -411,7 +416,10 @@ func (s *Store) reloadSites(ctx context.Context) error {
 		       coalesce(c.exclude_paths, ''), coalesce(c.honor_dnt, 0),
 		       coalesce(c.record_city, 1), coalesce(c.bot_strict, 0),
 		       coalesce(c.consent_free, 0)
-		FROM sites s LEFT JOIN site_settings c ON c.site_id = s.id`)
+		FROM sites s LEFT JOIN site_settings c ON c.site_id = s.id
+		LEFT JOIN accounts a ON a.id = s.account_id
+		-- a suspended account's sites take no events
+		WHERE coalesce(a.state, 'active') != 'suspended'`)
 	if err != nil {
 		return err
 	}
