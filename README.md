@@ -37,18 +37,17 @@ One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy,
 ## ⚡ Quick start
 
 ```bash
-docker build -t trckable -f deploy/Dockerfile https://github.com/trckable/trckable.git
-docker run -d --name trckable -p 8080:8080 -v trckable-data:/data trckable
+docker run -d --name trckable -p 8080:8080 -v trckable-data:/data ghcr.io/trckable/trckable
 docker logs trckable   # a one-time setup link: open it, create your account, add your site
 ```
 
-The ready-made image (`ghcr.io/trckable/trckable`) and the npm package are published with the first release, 0.1.0; until then Docker builds it from this repository, as above.
+The image is for x86-64 and arm64; pin a version with `ghcr.io/trckable/trckable:0.1.0`. You can also build it yourself: `docker build -t trckable -f deploy/Dockerfile https://github.com/trckable/trckable.git`.
 
 ```html
 <script defer src="https://stats.yoursite.com/js/tkb_….js"></script>
 ```
 
-Your site's own script, from Settings → Install: it carries the modules and the privacy settings you chose. The npm package for React and Next.js, where events go through your own domain, comes with the first release. Every route is in the docs: [install](https://trckable.com/docs/install/) · [platforms](https://trckable.com/docs/install/platforms/) · [revenue](https://trckable.com/docs/revenue/) · [MCP](https://trckable.com/docs/api/mcp/).
+Your site's own script, from Settings → Install: it carries the modules and the privacy settings you chose. The npm package for React and Next.js, where events go through your own domain, is published soon. Every route is in the docs: [install](https://trckable.com/docs/install/) · [platforms](https://trckable.com/docs/install/platforms/) · [revenue](https://trckable.com/docs/revenue/) · [MCP](https://trckable.com/docs/api/mcp/).
 
 ## ⚖️ How it compares
 

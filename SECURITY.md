@@ -14,8 +14,7 @@ updated until it is fixed. We are happy to credit you in the release notes.
 
 ## Supported versions
 
-Security fixes go into the latest release (the first, 0.1.0, is not out yet;
-until then, into main). Self-hosters should update when a release says it
+Security fixes go into the latest release. Self-hosters should update when a release says it
 contains a security fix.
 
 ## What is in scope
