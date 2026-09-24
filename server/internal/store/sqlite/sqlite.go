@@ -358,6 +358,17 @@ var migrations = []string{
 	// 23: the shortcuts a person changed, as JSON {action: key}. Empty is the
 	// defaults; the dashboard owns the list of actions.
 	`ALTER TABLE users ADD COLUMN keymap TEXT NOT NULL DEFAULT '';`,
+	// 24: people erased through a data request, so nothing links them back:
+	// kind 'email' holds the keyed email hash (never the address), kind
+	// 'payment' holds provider:id. A webhook, a reconciliation or a reprocess
+	// that meets one drops its payload and leaves the payment unlinked.
+	`CREATE TABLE pay_erased (
+		site_id   TEXT NOT NULL,
+		kind      TEXT NOT NULL,
+		value     TEXT NOT NULL,
+		erased_at INTEGER NOT NULL,
+		PRIMARY KEY (site_id, kind, value)
+	);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {
@@ -527,6 +538,7 @@ func (s *Store) DeleteSite(ctx context.Context, id string) (Removed, error) {
 		`DELETE FROM pay_inbox WHERE connection_id IN (SELECT id FROM pay_connections WHERE site_id = ?)`,
 		`DELETE FROM pay_payments WHERE site_id = ?`,
 		`DELETE FROM pay_hints WHERE site_id = ?`,
+		`DELETE FROM pay_erased WHERE site_id = ?`,
 		`DELETE FROM pay_aliases WHERE site_id = ?`,
 		`DELETE FROM pay_refunds WHERE site_id = ?`,
 		`DELETE FROM pay_disputes WHERE site_id = ?`,

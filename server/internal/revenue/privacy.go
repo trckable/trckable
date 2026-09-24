@@ -3,10 +3,11 @@ package revenue
 import (
 	"context"
 	"database/sql"
-	"strconv"
+	"strings"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/ledger"
+	"github.com/trckable/trckable/server/internal/payments"
 )
 
 // The money side of a data request. Two things happen here and nowhere else:
@@ -68,32 +69,137 @@ func (s *Service) PaymentsOf(ctx context.Context, site string, visitor uint64) (
 	return out, rows.Err()
 }
 
-// UnlinkVisitor cuts every payment loose from one visitor: the link to the
-// analytics id and the hashed email both go, so the row is money and nothing
-// more. The payment itself stays, because it is a business record the owner
-// may be required to keep — and it no longer says who made it.
+// ErasePayer cuts every payment loose from one person and forgets them for
+// good. The payments stay, because they are business records the owner may be
+// required to keep, but nothing on them points at a person any more:
 //
-// The webhook inbox is a separate matter: it holds the provider's raw payload,
-// with the real email and address in it. That is emptied by retention, and the
-// caller says so rather than pretending otherwise.
-func (s *Service) UnlinkVisitor(ctx context.Context, site string, visitor uint64) (int64, error) {
-	id := strconv.FormatInt(int64(visitor), 10)
+//   - the link to the analytics id and the hashed email go from the payments
+//     and from the hints a link could be rebuilt from;
+//   - the provider's raw notices about those payments, which carry the real
+//     email and address, are deleted from the webhook inbox;
+//   - the person is remembered as erased (their email's keyed hash and their
+//     payment ids, never the address), so a later webhook, reconciliation or
+//     reprocess cannot link them back.
+//
+// email may be empty when the request named a visitor, not an address.
+func (s *Service) ErasePayer(ctx context.Context, site string, visitor uint64, email string) (unlinked, dropped int64, err error) {
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	defer tx.Rollback()
-	res, err := tx.ExecContext(ctx,
-		`UPDATE pay_payments SET visitor_id = 0, email_hash = '' WHERE site_id = ? AND visitor_id = `+id, site)
+	now := s.Now().Unix()
+	remember := func(kind, value string) error {
+		if value == "" {
+			return nil
+		}
+		_, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO pay_erased (site_id, kind, value, erased_at) VALUES (?, ?, ?, ?)`, site, kind, value, now)
+		return err
+	}
+	hash := ledger.EmailHash(s.emailKey, email)
+	if err := remember("email", hash); err != nil {
+		return 0, 0, err
+	}
+	// Every payment that is theirs: linked to the visitor, or paid with the
+	// address. Their emails' hashes are remembered too, so a renewal paid with
+	// the same address stays unlinked.
+	rows, err := tx.QueryContext(ctx,
+		`SELECT provider, id, email_hash FROM pay_payments WHERE site_id = ? AND ((visitor_id <> 0 AND visitor_id = ?) OR (email_hash <> '' AND email_hash = ?))`,
+		site, int64(visitor), hash)
+	if err != nil {
+		return 0, 0, err
+	}
+	type pay struct{ provider, id, hash string }
+	var mine []pay
+	for rows.Next() {
+		var p pay
+		if err := rows.Scan(&p.provider, &p.id, &p.hash); err != nil {
+			rows.Close()
+			return 0, 0, err
+		}
+		mine = append(mine, p)
+	}
+	rows.Close()
+	for _, p := range mine {
+		if err := remember("payment", p.provider+":"+p.id); err != nil {
+			return 0, 0, err
+		}
+		if err := remember("email", p.hash); err != nil {
+			return 0, 0, err
+		}
+	}
+	if visitor != 0 {
+		// Hints are where a visitor id arrives from, so they go too.
+		if _, err := tx.ExecContext(ctx, `UPDATE pay_hints SET visitor_id = 0 WHERE site_id = ? AND visitor_id = ?`, site, int64(visitor)); err != nil {
+			return 0, 0, err
+		}
+	}
+	if unlinked, err = forgetErased(ctx, tx, site); err != nil {
+		return 0, 0, err
+	}
+	// The raw notices: any inbox body that names one of their payments, or
+	// their address when the request gave one.
+	needles := make([]string, 0, len(mine)+1)
+	for _, p := range mine {
+		needles = append(needles, p.id)
+	}
+	if e := strings.TrimSpace(email); e != "" {
+		needles = append(needles, strings.ToLower(e))
+	}
+	for _, n := range needles {
+		res, err := tx.ExecContext(ctx,
+			`DELETE FROM pay_inbox WHERE connection_id IN (SELECT id FROM pay_connections WHERE site_id = ?) AND processed_at IS NOT NULL AND instr(lower(CAST(body AS TEXT)), ?) > 0`,
+			site, strings.ToLower(n))
+		if err != nil {
+			return 0, 0, err
+		}
+		k, _ := res.RowsAffected()
+		dropped += k
+	}
+	return unlinked, dropped, tx.Commit()
+}
+
+// forgetErased unlinks every payment an erased person made: by payment id, or
+// by the keyed hash of the address it was paid with. It runs after every
+// batch the inbox applies, so nothing that arrives later links them again.
+func forgetErased(ctx context.Context, tx *sql.Tx, site string) (int64, error) {
+	res, err := tx.ExecContext(ctx, `UPDATE pay_payments SET visitor_id = 0, email_hash = ''
+		WHERE site_id = ? AND (visitor_id <> 0 OR email_hash <> '') AND (
+			email_hash IN (SELECT value FROM pay_erased WHERE site_id = ? AND kind = 'email') OR
+			provider || ':' || id IN (SELECT value FROM pay_erased WHERE site_id = ? AND kind = 'payment'))`, site, site, site)
 	if err != nil {
 		return 0, err
 	}
 	n, _ := res.RowsAffected()
-	// Hints are where a visitor id arrives from, so they have to go too, or
-	// the next reprocess would link the payment straight back.
-	if _, err := tx.ExecContext(ctx,
-		`UPDATE pay_hints SET visitor_id = 0 WHERE site_id = ? AND visitor_id = `+id, site); err != nil {
-		return 0, err
+	_, err = tx.ExecContext(ctx, `UPDATE pay_hints SET visitor_id = 0
+		WHERE site_id = ? AND visitor_id <> 0 AND provider || ':' || payment_id IN (SELECT value FROM pay_erased WHERE site_id = ? AND kind = 'payment')`, site, site)
+	return n, err
+}
+
+// erasedEvent reports whether an event is about a person who was erased, and
+// remembers any new payment of theirs it carries (a renewal, say) so that one
+// stays unlinked too. Its inbox row is then dropped instead of kept.
+func erasedEvent(ctx context.Context, tx *sql.Tx, sc ledger.Scope, ev payments.Event) (bool, error) {
+	hit := false
+	for _, p := range ev.Payments {
+		var n int
+		if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM pay_erased WHERE site_id = ? AND ((kind = 'payment' AND value = ?) OR (kind = 'email' AND value = ?))`,
+			sc.Site, sc.Provider+":"+p.ID, ledger.EmailHash(sc.EmailKey, p.Email)).Scan(&n); err != nil {
+			return false, err
+		}
+		if n > 0 {
+			hit = true
+			if _, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO pay_erased (site_id, kind, value, erased_at) VALUES (?, 'payment', ?, strftime('%s','now'))`, sc.Site, sc.Provider+":"+p.ID); err != nil {
+				return false, err
+			}
+		}
 	}
-	return n, tx.Commit()
+	for _, r := range ev.Refunds {
+		var n int
+		if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM pay_erased WHERE site_id = ? AND kind = 'payment' AND value = ?`, sc.Site, sc.Provider+":"+r.PaymentID).Scan(&n); err != nil {
+			return false, err
+		}
+		hit = hit || n > 0
+	}
+	return hit, nil
 }

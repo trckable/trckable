@@ -485,9 +485,20 @@ func maxS(a, b string) string {
 
 // Reset deletes a site's derived ledger rows (the inbox stays) so it can be
 // rebuilt with `trckabled payments reprocess`.
+//
+// Payments of someone erased through a data request are the exception: their
+// raw notices were deleted from the inbox with them, so a rebuild could not
+// bring the money back. Those rows, already unlinked, stay as they are, with
+// their refunds and disputes.
 func Reset(ctx context.Context, tx *sql.Tx, site string) error {
+	const erased = ` AND provider || ':' || %s NOT IN (SELECT value FROM pay_erased WHERE site_id = ? AND kind = 'payment')`
+	keep := map[string]string{"pay_payments": "id", "pay_refunds": "payment_id", "pay_disputes": "payment_id"}
 	for _, t := range []string{"pay_payments", "pay_hints", "pay_refunds", "pay_disputes", "pay_links", "pay_aliases"} {
-		if _, err := tx.ExecContext(ctx, `DELETE FROM `+t+` WHERE site_id = ?`, site); err != nil {
+		q, args := `DELETE FROM `+t+` WHERE site_id = ?`, []any{site}
+		if col, ok := keep[t]; ok {
+			q, args = q+fmt.Sprintf(erased, col), append(args, site)
+		}
+		if _, err := tx.ExecContext(ctx, q, args...); err != nil {
 			return err
 		}
 	}

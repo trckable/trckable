@@ -555,7 +555,7 @@ function DataRequest({ site }: { site: Site }) {
       title: `Erase everything for ${found.found.visitor}?`,
       body:
         `${found.found.events} events and ${found.found.sessions} visits are deleted and cannot be brought back. ` +
-        (found.payments.length ? 'Their payments stay as business records, with nothing on them pointing at a person any more.' : ''),
+        (found.payments.length ? 'Their payments stay as business records, with nothing on them pointing at a person any more; the payment provider\'s notices about them are deleted.' : ''),
       confirmLabel: 'Erase',
       danger: true,
       busyLabel: 'Erasing…',

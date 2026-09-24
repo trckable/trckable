@@ -76,7 +76,8 @@ export function policyText(p: PolicyInput): string {
   if (p.modules.revenue) {
     out.push(
       `**Purchases.** If you buy something, our payment provider tells us the amount and which visit led to it, so we know which parts of the site are worth keeping. ` +
-        `Your email address is stored only as a one-way hash, and your card details never reach us.`,
+        `The provider's notice of the payment, which includes your email address, is kept on our own server so the figures stay correct. ` +
+        `If you ask us to erase your data, that notice is deleted and the payment is no longer linked to you, and your card details never reach us.`,
     )
     out.push('')
   }

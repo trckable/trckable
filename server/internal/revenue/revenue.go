@@ -494,12 +494,33 @@ func (s *Service) Process(ctx context.Context) (int, error) {
 					tx.Rollback()
 					return total, err
 				}
+				// A notice about someone who was erased: the money is kept, the
+				// payload with their address is not.
+				gone, err := erasedEvent(ctx, tx, it.sc, ev)
+				if err != nil {
+					tx.Rollback()
+					return total, err
+				}
+				if gone {
+					if _, err := tx.ExecContext(ctx, `DELETE FROM pay_inbox WHERE id = ?`, it.id); err != nil {
+						tx.Rollback()
+						return total, err
+					}
+					sites[it.sc.Site] = true
+					continue
+				}
 			}
 			if _, err := tx.ExecContext(ctx, `UPDATE pay_inbox SET processed_at = ?, error = ? WHERE id = ?`, s.Now().UnixMilli(), msg, it.id); err != nil {
 				tx.Rollback()
 				return total, err
 			}
 			sites[it.sc.Site] = true
+		}
+		for site := range sites {
+			if _, err := forgetErased(ctx, tx, site); err != nil {
+				tx.Rollback()
+				return total, err
+			}
 		}
 		if err := tx.Commit(); err != nil {
 			return total, err
@@ -569,6 +590,11 @@ func (s *Service) Reprocess(ctx context.Context, site string) (int, error) {
 				return 0, err
 			}
 		}
+	}
+	// A rebuild starts from nothing, so the erased are unlinked again here:
+	// a reprocess must never bring back someone a data request removed.
+	if _, err := forgetErased(ctx, tx, site); err != nil {
+		return 0, err
 	}
 	if err := tx.Commit(); err != nil {
 		return 0, err

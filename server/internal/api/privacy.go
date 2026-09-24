@@ -146,9 +146,9 @@ func (a *API) erasePerson(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	var unlinked int64
+	var unlinked, dropped int64
 	if a.Revenue != nil {
-		if unlinked, err = a.Revenue.UnlinkVisitor(r.Context(), site, visitor); err != nil {
+		if unlinked, dropped, err = a.Revenue.ErasePayer(r.Context(), site, visitor, r.URL.Query().Get("email")); err != nil {
 			fail(w, http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -159,9 +159,10 @@ func (a *API) erasePerson(w http.ResponseWriter, r *http.Request) {
 		"events":   events,
 		"sessions": sessions,
 		"payments": unlinked,
+		"notices":  dropped,
 	}
 	if unlinked > 0 {
-		out["kept"] = "The payments themselves stay — they are business records — but nothing on them points at a person any more."
+		out["kept"] = "The payments themselves stay — they are business records — but nothing on them points at a person any more, and the provider's notices about them are deleted."
 	}
 	writeJSON(w, http.StatusOK, out)
 }
