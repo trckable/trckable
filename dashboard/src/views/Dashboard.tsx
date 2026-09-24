@@ -911,7 +911,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               loading={firstLoad}
               subLabel={full && dim !== 'page' && !money && !scrubbing ? 'Bounce' : undefined}
               onPick={(v) => addFilter(dim, v)}
-              barColor={trail ? `color-mix(in srgb, ${channelColor(trail)} 22%, transparent)` : undefined}
+              barColor={trail ? channelColor(trail) : undefined}
               emptyText={!perDay(dim) ? 'Per-day data covers entry pages only' : undefined}
               // A sale belongs to a visit, and a visit has one entry page but
               // many pages and sections. Showing a money column of dashes there
@@ -943,7 +943,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
                 loading={firstLoad}
                 subLabel={full && !money && !scrubbing ? 'Bounce' : undefined}
                 onPick={(v) => addFilter(dim, v)}
-                barColor={trail ? `color-mix(in srgb, ${channelColor(trail)} 22%, transparent)` : undefined}
+                barColor={trail ? channelColor(trail) : undefined}
                 items={dims(dim)
                   .slice(0, rows)
                   .map((r) => ({
@@ -973,7 +973,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               loading={firstLoad}
               subLabel={full && !money && !scrubbing ? 'Bounce' : undefined}
               onPick={(v) => addFilter(dim, v)}
-              barColor={trail ? `color-mix(in srgb, ${channelColor(trail)} 22%, transparent)` : undefined}
+              barColor={trail ? channelColor(trail) : undefined}
               emptyText={!perDay(dim) ? 'Per-day data covers device type only' : undefined}
               money={full && money && !scrubbing ? fmtM : undefined}
               items={(perDay(dim) ? dims(dim) : []).slice(0, rows).map((r) => ({ key: r.value, label: r.value || 'Unknown', value: r.visitors, sub: r.bounce_rate, rev: r.revenue }))}
@@ -995,7 +995,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               dimLabel="Goal"
               subLabel="Conv."
               loading={firstLoad}
-              barColor="var(--accent-soft)"
+              barColor="var(--accent)"
               emptyText="No goals yet. Track one with trckable('signup')."
               onPick={(v) => addFilter('goal', v)}
               items={((scrubbing ? null : src?.goals) ?? []).slice(0, rows).map(
@@ -1034,7 +1034,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
                   loading={firstLoad}
                   byRevenue
                   money={fmtM}
-                  barColor="color-mix(in srgb, var(--money) 20%, transparent)"
+                  barColor="var(--money)"
                   emptyText={scrubbing ? 'Whole-period view only' : 'No attributed revenue yet. Pass trckable_vid to your checkout (Settings → Payments).'}
                   onPick={(v) => addFilter(dim, v)}
                   items={(scrubbing ? [] : (src?.revenue_dims?.[dim] ?? [])).slice(0, rows).map((r) => ({

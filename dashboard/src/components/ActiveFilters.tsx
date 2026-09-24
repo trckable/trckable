@@ -74,7 +74,6 @@ export function ActiveFilters<T>({ filters, onRemove, onClear, onSave }: { filte
                   <div key={f.key} className="menu-row">
                     <span className="menu-text">
                       <span className="menu-title" title={f.value}>
-                        {f.dot && <span className="dot" style={{ background: f.dot, marginRight: 6 }} />}
                         {f.value}
                       </span>
                       <span className="menu-sub">{f.dim}</span>

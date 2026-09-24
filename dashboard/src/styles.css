@@ -561,12 +561,16 @@ button.kpi[aria-pressed='true'] {
   color: var(--text);
   background: var(--surface-2);
 }
+.bl {
+  /* A narrow card drops its secondary column before it cuts the names. */
+  container-type: inline-size;
+}
 .cols {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   font-size: 11px;
   color: var(--text-3);
-  padding: 0 8px;
+  padding: 0 10px 4px;
 }
 .cols span:first-child {
   flex: 1;
@@ -575,46 +579,75 @@ button.kpi[aria-pressed='true'] {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 32px;
-  padding: 0 8px;
+  gap: 12px;
+  min-height: 42px;
+  padding: 5px 10px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   background: transparent;
+  color: var(--text);
   font-size: 13px;
   text-align: left;
   width: 100%;
-  transition: opacity 0.25s;
+  cursor: pointer;
+  transition: opacity 0.25s, background 0.15s;
 }
-.bl-row:hover .bl-bar {
-  filter: brightness(1.25);
+.bl-row:hover,
+.bl-row:focus-visible {
+  background: var(--sunken);
+  outline: none;
 }
-.bl-bar {
-  position: absolute;
-  left: 0;
-  top: 2px;
-  bottom: 2px;
-  border-radius: 6px;
-  background: var(--row);
-  transition: width 0.45s var(--ease);
-}
-.bl-row > :not(.bl-bar) {
-  position: relative;
+.bl-label {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 5px;
 }
 .bl-name {
-  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.bl-text {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.bl-track {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--grid);
+  overflow: hidden;
+}
+.bl-bar {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.75;
+  transition: width 0.45s var(--ease), opacity 0.15s;
+}
+.bl-row:hover .bl-bar {
+  opacity: 1;
+}
 .bl-val {
   width: 60px;
+  flex: none;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 .bl-val.sub {
   width: 52px;
   color: var(--text-2);
+}
+@container (max-width: 340px) {
+  .bl .sub,
+  .bl .bl-val.sub {
+    display: none;
+  }
 }
 .empty {
   padding: 18px 8px;
