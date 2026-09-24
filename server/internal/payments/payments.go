@@ -74,7 +74,7 @@ type Payment struct {
 	Tax            *int64 // nil when this event doesn't know (a Hint may)
 	CustomerID     string
 	SubscriptionID string
-	Email          string // used only to link identify()'d visitors; stored hashed
+	Email          string // stored only as a keyed hash (for data requests by email)
 	Visitor        uint64
 	Kind           string
 }
