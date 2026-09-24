@@ -24,7 +24,7 @@
   "type": "module",
   "sideEffects": false,
   "bin": {
-    "trckable": "./dist/cli.js"
+    "trckable": "dist/cli.js"
   },
   "engines": {
     "node": ">=18"

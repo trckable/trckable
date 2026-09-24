@@ -12,7 +12,7 @@ One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy,
 [![Version](https://img.shields.io/badge/version-0.1.0-b8ff3c?style=flat-square)](CHANGELOG.md)
 [![License: AGPL-3.0](https://img.shields.io/badge/server-AGPL--3.0-0b0d10?style=flat-square)](LICENSE)
 [![Tracker: MIT](https://img.shields.io/badge/tracker-MIT-0b0d10?style=flat-square)](packages/trckable/LICENSE)
-[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://trckable.com/docs/benchmarks/"><img src="https://img.shields.io/badge/tracker-2031_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2031 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://trckable.com/docs/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-58_MB-b8ff3c?style=flat-square" alt="Idle memory: 58 MB"></a><!--/f-->
+[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://trckable.com/docs/benchmarks/"><img src="https://img.shields.io/badge/tracker-2031_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2031 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://trckable.com/docs/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-49_MB-b8ff3c?style=flat-square" alt="Idle memory: 49 MB"></a><!--/f-->
 
 [Quick start](#-quick-start) · [How it compares](#️-how-it-compares) · [Everything it does](#-everything-it-does) · [Gallery](#-gallery) · [Docs](https://trckable.com/docs/) · [Changelog](CHANGELOG.md)
 
@@ -45,7 +45,7 @@ The image is for x86-64 and arm64; pin a version with `ghcr.io/trckable/trckable
 <script defer src="https://stats.yoursite.com/js/tkb_….js"></script>
 ```
 
-Your site's own script, from Settings → Install: it carries the modules and the privacy settings you chose. The npm package for React and Next.js, where events go through your own domain, is published soon. Every route is in the docs: [install](https://trckable.com/docs/install/) · [platforms](https://trckable.com/docs/install/platforms/) · [revenue](https://trckable.com/docs/revenue/) · [MCP](https://trckable.com/docs/api/mcp/).
+Your site's own script, from Settings → Install: it carries the modules and the privacy settings you chose. Or `npm i trckable` for React and Next.js, where events go through your own domain. Every route is in the docs: [install](https://trckable.com/docs/install/) · [platforms](https://trckable.com/docs/install/platforms/) · [revenue](https://trckable.com/docs/revenue/) · [MCP](https://trckable.com/docs/api/mcp/).
 
 ## ⚖️ How it compares
 
