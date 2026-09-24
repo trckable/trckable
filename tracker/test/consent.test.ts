@@ -160,7 +160,7 @@ it('withdrawn consent also empties the queued page views, and says so to the ser
   ;(win as any).dataLayer.push(['consent', 'update', { analytics_storage: 'denied' }])
   t('pageview')
   await flush()
-  expect(win.document.cookie).toBe('')
+  expect(win.document.cookie.replace('trckable_vid=', '')).toBe('') // happy-dom keeps the emptied name
   expect(win.localStorage.getItem('trckable_q')).toBeNull()
 })
 
