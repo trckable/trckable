@@ -4,7 +4,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { APIError, api, setShareMode, type ShareInfo, setShareSession } from '../lib/api'
 import { setShared } from '../lib/me'
-import { Ghost, Wordmark } from '../components/Logo'
+import { Ghost, Name, Wordmark } from '../components/Logo'
 
 /** The token out of /s/<token>. It is in the address bar once; after that the
  *  browser carries a session cookie instead, so it stays out of logs. */
@@ -95,7 +95,7 @@ export function ShareShell({ title, sub, children }: { title: string; sub: strin
   return (
     <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 16 }}>
       <div className="card rise" style={{ width: 'min(420px, 100%)', padding: 28, gap: 18 }}>
-        <Wordmark height={30} />
+        <Wordmark />
         <div>
           <h1 style={{ fontSize: 22, letterSpacing: '-0.01em' }}>{title}</h1>
           <p className="muted" style={{ margin: '6px 0 0' }}>
@@ -115,7 +115,7 @@ export function EmbedHeader({ info }: { info: ShareInfo }) {
     <span className="share-who embed-who">
       <b>{info.site || info.domain}</b>
       <span className="faint">
-        <Ghost size={14} /> analytics by trckable
+        <Ghost size={14} /> analytics by <Name />
       </span>
     </span>
   )
@@ -125,7 +125,7 @@ export function ShareHeader({ info }: { info: ShareInfo }) {
   return (
     <>
       <span className="brand">
-        <Wordmark height={28} />
+        <Wordmark />
       </span>
       <span className="share-who">
         <b>{info.site || info.domain}</b>

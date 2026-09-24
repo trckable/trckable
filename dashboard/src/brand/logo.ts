@@ -17,23 +17,31 @@ const LINE = 'M5 47l12-6 9 4 12-9 9 3 12-12'
 export function ghostSvg(size: number): string {
   return (
     `<svg class="tkb-ghost" width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">` +
-    `<path d="${GHOST}" fill="#b8ff3c"/>` +
+    // The ghost (body and eyes) floats as one on hover; its hem ripples.
+    '<g class="tkb-boo">' +
+    `<path class="tkb-body" d="${GHOST}" fill="#b8ff3c"/>` +
     '<circle cx="25.5" cy="29" r="3.6" fill="#0b0d10"/><circle cx="38.5" cy="29" r="3.6" fill="#0b0d10"/>' +
     '<circle cx="26.6" cy="27.8" r="1.1" fill="#b8ff3c"/><circle cx="39.6" cy="27.8" r="1.1" fill="#b8ff3c"/>' +
-    `<path class="tkb-line-edge" d="${LINE}" fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` +
-    `<path class="tkb-line" d="${LINE}" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>` +
+    '</g>' +
+    // pathLength lets the line redraw itself on hover with one dash.
+    `<path class="tkb-line-edge" d="${LINE}" pathLength="1" fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<path class="tkb-line" d="${LINE}" pathLength="1" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>` +
     '</svg>'
   )
 }
+
+/** The name in a heading or a label: the wordmark's type (bold "trck", light
+ *  "able"), without the ghost and without the missing a. */
+export const NAME = '<span class="tkb-name">trck<span class="tkb-able">able</span></span>'
+
+/** Every "trckable" in a piece of HTML text, set as the name. */
+export const withName = (html: string): string => html.replace(/\btrckable\b/g, NAME)
 
 /** The name, with its missing a. */
 export const WORDMARK =
   '<span class="tkb-wm" aria-hidden="true">tr<span class="tkb-a">a</span>ck<span class="tkb-able">able</span></span>'
 
-/** The name's size for a ghost of `size` pixels: the one proportion everywhere. */
-export const logoFont = (size: number): number => Math.round(size * 0.7)
-
-/** Ghost and name, to go inside an element with class "tkb-logo" whose
- *  font-size is logoFont(size). The element is the host's: a link, or a span
- *  with role="img" and aria-label="trckable". */
-export const logoInner = (size: number): string => ghostSvg(size) + WORDMARK
+/** Ghost and name, to go inside an element with class "tkb-logo". The logo
+ *  is one size everywhere (logo.css fixes it); the element is the host's: a
+ *  link, or a span with role="img" and aria-label="trckable". */
+export const logoInner = (): string => ghostSvg(30) + WORDMARK

@@ -1,13 +1,23 @@
 /* trckable's logo. The only definition, with logo.ts beside it; trckable.com,
    its docs and its legal pages use generated copies.
 
-   The host sets the font-size (logoFont in logo.ts) and may set these, which
-   default to the dashboard's and trckable.com's own tokens:
+   The logo owns its look: its own font (Geist, cut down to the eight letters
+   of the name, 2.5 KB, embedded here), its size and its spacing, so no host
+   can make it differ. A host may only recolour it with these, which default
+   to the dashboard's and trckable.com's own tokens:
      --tkb-ink     the name, and the chart line
      --tkb-muted   "able" at rest
      --tkb-accent  the a that peeks in
      --tkb-bg      the page behind the line */
+@font-face {
+  font-family: tkb-wordmark;
+  src: url(data:font/woff2;base64,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) format("woff2");
+  font-weight: 100 900;
+  font-display: block;
+}
 .tkb-logo {
+  font-size: 21px !important;
+  line-height: 1;
   display: inline-flex;
   align-items: center;
   gap: 0.45em;
@@ -19,6 +29,11 @@
   flex: none;
   overflow: visible;
 }
+/* In the logo the ghost is sized by the logo, whatever a host does to svgs. */
+.tkb-logo .tkb-ghost {
+  width: 30px !important;
+  height: 30px !important;
+}
 .tkb-line-edge {
   stroke: var(--tkb-bg, var(--bg, #0b0d10));
 }
@@ -26,10 +41,18 @@
   stroke: var(--tkb-ink, var(--text, #f5f7fa));
 }
 .tkb-wm {
+  font-family: tkb-wordmark, Geist, ui-sans-serif, system-ui, sans-serif;
   display: inline-flex;
   align-items: baseline;
   font-weight: 760;
   line-height: 1;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+}
+/* The name in headings and labels: the same type as the logo, any size. */
+.tkb-name {
+  font-family: tkb-wordmark, Geist, ui-sans-serif, system-ui, sans-serif;
+  font-weight: 760;
   letter-spacing: -0.055em;
   white-space: nowrap;
 }
@@ -49,7 +72,52 @@
   transform: translateY(0.55em) scale(0.6);
   transition: width 0.4s cubic-bezier(0.3, 1.4, 0.5, 1), opacity 0.2s, transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
+/* On hover the ghost floats and sways, its hem ripples like a wave (browsers
+   that animate the path's shape; the rest float it), and the line redraws. */
+.tkb-boo {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.tkb-line,
+.tkb-line-edge {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+@keyframes tkb-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  30% {
+    transform: translateY(-9%) rotate(-4deg);
+  }
+  70% {
+    transform: translateY(-4%) rotate(4deg);
+  }
+}
+@keyframes tkb-hem {
+  to {
+    d: path("M12 30a20 20 0 0 1 40 0v18.5l-5 3.5-5-3.5-5 3.5-5-3.5-5 3.5-5-3.5-5 3.5-5-3.5z");
+  }
+}
+@keyframes tkb-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
 /* A real pointer only: on a touch screen :hover sticks after a tap. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .tkb-logo:hover .tkb-boo {
+    animation: tkb-float 1.6s ease-in-out infinite;
+  }
+  .tkb-logo:hover .tkb-body {
+    animation: tkb-hem 0.45s ease-in-out infinite alternate;
+  }
+  .tkb-logo:hover .tkb-line,
+  .tkb-logo:hover .tkb-line-edge {
+    animation: tkb-draw 0.8s cubic-bezier(0.3, 0.7, 0.3, 1);
+  }
+}
 @media (hover: hover) {
   .tkb-logo:hover .tkb-a {
     width: 0.56em;

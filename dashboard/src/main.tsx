@@ -1,7 +1,7 @@
 import { StrictMode, Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Ghost } from "./components/Logo";
-import { logoFont, logoInner } from "./brand/logo";
+import { logoInner } from "./brand/logo";
 import { api, setUnauthorizedHandler, type Site } from "./lib/api";
 import { navigate, useLocation } from "./lib/url";
 import "./styles.css";
@@ -195,9 +195,8 @@ function Header({
         href="/"
         aria-label="trckable home"
         className="brand tkb-logo"
-        style={{ fontSize: logoFont(30) }}
         onClick={(e) => (e.preventDefault(), navigate("/"))}
-        dangerouslySetInnerHTML={{ __html: logoInner(30) }}
+        dangerouslySetInnerHTML={{ __html: logoInner() }}
       />
       {/* One control, two actions: which site, and that site's settings. They
           were two separate buttons sitting next to each other, which read as

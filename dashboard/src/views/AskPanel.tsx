@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { api, type Site } from '../lib/api'
 import { navigate } from '../lib/url'
 import { CodeBlock } from '../components/Code'
+import { Name } from '../components/Logo'
 
 export function AskPanel({ open, onClose, site, sites = [] }: { open: boolean; onClose: () => void; site: Site; sites?: Site[] }) {
   const ref = useRef<HTMLElement>(null)
@@ -40,7 +41,9 @@ export function AskPanel({ open, onClose, site, sites = [] }: { open: boolean; o
     <aside ref={ref} className="drawer" aria-label="Ask trckable" aria-hidden={!open} inert={!open}>
       <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--grid)', display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <h2>Ask trckable</h2>
+          <h2>
+            Ask <Name />
+          </h2>
           <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-2)', background: 'var(--row)', borderRadius: 999, padding: '3px 8px' }}>Your own AI</span>
           <button type="button" className="btn icon ghost" aria-label="Close Ask trckable" onClick={onClose}>
             ×

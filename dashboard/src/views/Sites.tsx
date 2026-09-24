@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react'
 import { api, siteState, type Site, type Visit } from '../lib/api'
 import { fmtInt } from '../lib/format'
 import { navigate } from '../lib/url'
-import { Ghost } from '../components/Logo'
+import { Ghost, Name } from '../components/Logo'
 import { Menu } from '../components/Menu'
 import { toast } from '../components/Toast'
 import { Install } from './InstallPanel'
@@ -387,7 +387,9 @@ export function AddWizard({ onClose, onSites }: { onClose: () => void; onSites: 
 
       {step === 2 && site && (
         <>
-          <h2>Add trckable to {site.domain}</h2>
+          <h2>
+            Add <Name /> to {site.domain}
+          </h2>
           <Install site={site} visits={[]} bare />
           <DialogActions
             left={
