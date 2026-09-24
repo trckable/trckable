@@ -85,6 +85,14 @@ export function AccountDialog({ tab, sites, email, onSites }: { tab: Tab; sites:
                   Sign out
                 </button>
               </Row>
+              {/* On a managed instance the plan, billing and the account itself live with the provider. */}
+              {managed() && (
+                <Row label="Plan & account" hint="Your plan, usage, billing, and deleting the account">
+                  <a className="btn" href={new URL('/account', managed()).href}>
+                    Open
+                  </a>
+                </Row>
+              )}
             </section>
             {/* On a managed instance the provider owns sign-in: no password or second step here. */}
             {!managed() && <ChangePassword />}

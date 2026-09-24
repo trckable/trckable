@@ -3531,7 +3531,7 @@ body[data-mode='full'] .app {
   text-overflow: ellipsis;
 }
 
-/* ---- Consent-free mode ----------------------------------------------------- */
+/* ---- Cookieless mode -------------------------------------------------------- */
 .card.eu {
   border-color: var(--border-2);
 }

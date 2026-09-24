@@ -79,28 +79,29 @@ export function PrivacySettings({ site }: { site: Site }) {
             <span className="eu-stars" aria-hidden="true">
               ★
             </span>
-            Consent-free mode
+            Cookieless mode
           </h2>
           {free && <span className="tag live">on</span>}
           <button
             type="button"
             role="switch"
             aria-checked={free}
-            aria-label="Consent-free mode"
+            aria-label="Cookieless mode"
             className={free ? 'switch on' : 'switch'}
             style={{ marginLeft: 'auto' }}
-            onClick={() => save({ consent_free: !free }, free ? 'Consent-free mode is off' : 'Consent-free mode is on — the script stores nothing')}
+            onClick={() => save({ consent_free: !free }, free ? 'Cookieless mode is off' : 'Cookieless mode is on — the script stores nothing')}
           >
             <span />
           </button>
         </div>
         <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
-          Analytics you can run in the EU and the UK without a cookie banner: nothing is stored in a visitor's browser, so ePrivacy consent does not apply, and what is left is not personal data anyone can trace back.
+          Nothing is stored in a visitor's browser: no cookie, no localStorage. Each visitor is counted by a hash of their IP address and browser that changes every day, and the IP itself is never stored. In
+          countries with an analytics exemption (France, Italy, the Netherlands, Spain, the UK) that can let you skip the banner; Germany and Austria generally still ask for consent. Check your own rules.
         </p>
         <div className="eu-cols">
           <ul className="bullets good">
             <li>The script stores no cookie and nothing in localStorage</li>
-            <li>Visitors are a salted hash that rotates daily — never an IP</li>
+            <li>Visitors are a salted hash that rotates daily; the IP is never stored</li>
             <li>The country stays; the city is dropped</li>
             <li>Do Not Track and Global Privacy Control are honoured</li>
             <li>Enforced by this server, so a cached script cannot opt back in</li>
@@ -122,11 +123,11 @@ export function PrivacySettings({ site }: { site: Site }) {
           <Info text="trckable never stores an IP address, never loads anything from another company, and never sells or shares your data. These switches are about recording less than that floor, not more." />
         </div>
 
-        <Row label="City" hint={free ? 'Consent-free mode keeps the country only' : 'The country is always recorded; the city is yours to choose'}>
+        <Row label="City" hint={free ? 'Cookieless mode keeps the country only' : 'The country is always recorded; the city is yours to choose'}>
           <Switch on={c.record_city} disabled={free} onChange={() => save({ record_city: !c.record_city }, c.record_city ? 'City is no longer recorded' : 'City will be recorded')} />
         </Row>
 
-        <Row label="Honour Do Not Track and Global Privacy Control" hint={free ? 'Always on in consent-free mode' : 'Visits from browsers sending those signals are dropped before anything is stored'}>
+        <Row label="Honour Do Not Track and Global Privacy Control" hint={free ? 'Always on in cookieless mode' : 'Visits from browsers sending those signals are dropped before anything is stored'}>
           <Switch on={c.honor_dnt} disabled={free} onChange={() => save({ honor_dnt: !c.honor_dnt }, c.honor_dnt ? 'DNT and GPC are ignored again' : 'DNT and GPC will be honoured')} />
         </Row>
 
@@ -238,7 +239,7 @@ function Consent({ site, config, on, onSave }: { site: Site; config: SiteConfig;
       <section className="card" id="consent" style={{ gap: 12 }}>
         <div className="card-head">
           <h2>Cookie consent</h2>
-          <Info text="For sites that want the cookie and the returning-visitor numbers that come with it, and are willing to ask first. Consent-free mode above is the other answer: no cookie, nothing stored, nothing to ask." />
+          <Info text="For sites that want the cookie and the returning-visitor numbers that come with it, and are willing to ask first. Cookieless mode above is the other answer: no cookie, and nothing stored on the device. A visitor who declines your banner is never counted, and the first page waits for their answer." />
         </div>
         <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
           Keep the cookie and ask first. trckable can read the consent manager you already run, or ask with a small bar of its own — about its one cookie and nothing else. Turn on the
@@ -423,7 +424,7 @@ function PrivacyPolicy({ site, config, modules }: { site: Site; config: SiteConf
     <section className="card" id="policy" style={{ gap: 12 }}>
       <div className="card-head">
         <h2>Your privacy policy</h2>
-        <Info text="Written from this site's own settings, not from a template: turn a module off or switch on consent-free mode and the paragraph changes with it. It is a starting point drafted by people who are not your lawyers — read it before you publish it." />
+        <Info text="Written from this site's own settings, not from a template: turn a module off or switch on cookieless mode and the paragraph changes with it. It is a starting point drafted by people who are not your lawyers — read it before you publish it." />
         <button type="button" className="btn" style={{ marginLeft: 'auto' }} onClick={() => setOpen(!open)}>
           {open ? 'Hide' : 'Show the paragraph'}
         </button>

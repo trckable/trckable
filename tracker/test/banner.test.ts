@@ -45,11 +45,25 @@ beforeEach(() => {
 })
 afterEach(() => vi.restoreAllMocks())
 
-it('asks, and counts the visit without a cookie while it waits', async () => {
+const hide = () => {
+  Object.defineProperty(win.document, 'hidden', { value: true, configurable: true })
+  win.document.dispatchEvent(new win.Event('visibilitychange') as any)
+}
+
+it('asks, and holds the page until the visitor answers', async () => {
   tracker()
   await flush()
   expect(bar()).not.toBe(null)
-  expect(last()).toMatchObject({ k: 'pv', c: 1 })
+  expect(sent).toEqual([])
+  expect(win.document.cookie).toBe('')
+})
+
+it('counts the page without a cookie if the visitor leaves without answering', async () => {
+  tracker()
+  await flush()
+  hide()
+  await flush()
+  expect(sent[0]).toMatchObject({ k: 'pv', c: 1 })
   expect(win.document.cookie).toBe('')
 })
 
@@ -82,34 +96,39 @@ it('does not ask again after a refusal, and stores nothing else', async () => {
   await flush()
   button(0).click()
   t('pageview')
+  hide()
   await flush()
   expect(bar()).toBe(null)
-  expect(last()).toMatchObject({ c: 1 })
+  expect(sent).toEqual([]) // a visitor who declines is not counted at all
   expect(win.document.cookie).toBe('')
   expect(win.localStorage.getItem('trckable_q')).toBe(null)
   expect(win.localStorage.getItem('trckable_c')).toBe('0')
 
-  sent = []
+  browser()
+  win.localStorage.setItem('trckable_c', '0') // the answer, kept for the next page
   tracker()
+  hide()
   await flush()
   expect(bar()).toBe(null)
-  expect(last()).toMatchObject({ c: 1 })
+  expect(sent).toEqual([])
 })
 
 it('never asks a browser that already said do not track', async () => {
   browser({ doNotTrack: '1' })
   tracker()
+  hide()
   await flush()
   expect(bar()).toBe(null)
-  expect(last()).toMatchObject({ c: 1 })
+  expect(sent).toEqual([]) // an answer, and it is no
 })
 
 it('takes Global Privacy Control as the same answer', async () => {
   browser({ globalPrivacyControl: true })
   tracker()
+  hide()
   await flush()
   expect(bar()).toBe(null)
-  expect(last()).toMatchObject({ c: 1 })
+  expect(sent).toEqual([]) // an answer, and it is no
 })
 
 it('says what the site tells it to say, in the site’s own language', () => {

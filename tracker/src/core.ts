@@ -82,13 +82,15 @@ export function start(c: Config): Tracker {
     !c.site ||
     ls?.getItem('trckable_ignore') ||
     // Automation is ignored, except in dev mode so you can test your own site
-    // (Playwright, Cypress); the server only honours that on localhost.
-    (!c.dev && (nav.webdriver || /^(localhost|127\.|\[::1\]|0\.0\.0\.0)/.test(loc.hostname) || loc.protocol === 'file:' || w !== w.parent))
+    // (Playwright, Cypress); the server only honours that on localhost. Local
+    // hosts: localhost, 127.x, any IPv6 literal ([…]) and 0.x.
+    (!c.dev && (nav.webdriver || /^(localhost|127\.|\[|0\.)/.test(loc.hostname) || loc.protocol == 'file:' || w != w.parent))
   )
     return noop
 
-  const proxied = new URL(c.api, loc.href).origin === loc.origin // server manages the cookie
-  let cookieless = !!c.cookieless
+  const proxied = new URL(c.api, loc.href).origin == loc.origin // server manages the cookie
+  // 0: a cookie · 1: no cookie · 2: the visitor declined, and nothing is sent.
+  let cookieless = c.cookieless ? 1 : 0
   let last = ''
   let pv = ''
   let visible = 0 // when the page last became visible (0 = hidden)
@@ -102,13 +104,20 @@ export function start(c: Config): Tracker {
   }
 
   const cookie = () => d.cookie.match(/(^|; )trckable_vid=([^;]+)/)?.[2]
+  // Writes the visitor cookie; an empty value with no age deletes it.
+  const put = (v: string, age: number) => {
+    d.cookie =
+      VID + '=' + v + '; Max-Age=' + age + '; Path=/; SameSite=Lax' + (c.domain ? '; Domain=' + c.domain : '') + (loc.protocol[4] == 's' ? '; Secure' : '') // https:
+  }
   const shown = () => (d.hidden ? 0 : now())
 
   // Consent, read from the banner the site already runs. Until the visitor
-  // agrees, the script is in its consent-free mode: no cookie, nothing stored,
-  // and a daily anonymous hash on the server. The moment analytics storage is
-  // granted the cookie starts; the moment it is withdrawn the cookie is
-  // deleted and we are back to storing nothing.
+  // answers, what the page sends is held in memory, not sent. Accept, and it
+  // goes with the cookie; decline, and it is dropped: a visitor who declines
+  // is not counted at all, with or without a cookie, from then on. Someone
+  // who leaves the page without answering is counted without a cookie. A
+  // banner's default ("denied" before anyone has clicked) is not an answer;
+  // Do Not Track and Global Privacy Control are, and they mean no.
   //
   // Two standards are understood, because they are what banners actually
   // speak: Google Consent Mode v2 (the `dataLayer` a CMP or gtag writes to)
@@ -122,28 +131,47 @@ export function start(c: Config): Tracker {
   // Declared without a body so that nothing at all is left in a script built
   // without this module.
   let consent!: () => void
+  let grant!: (ok: any, final?: any) => void
+  let held!: Payload[] | 0
   if (__CONSENT__ || __BANNER__) {
-    cookieless = true
-    const grant = (ok: any) => {
-      if (!ok === cookieless) return
-      cookieless = !ok
+    cookieless = 1
+    held = []
+    // Sends what was held: with the cookie after an accept, without one when
+    // the visitor leaves unanswered, and not at all after a decline.
+    const release = () => {
+      const h = held
+      held = 0
+      h && h.forEach((p) => send(p)) // not h.forEach(send): send is defined further down
+    }
+    grant = (ok, final) => {
+      if (!ok && cookieless > 1) return // a refusal stands until an accept
+      const was = cookieless
+      cookieless = ok ? 0 : final ? 2 : 1
       // Withdrawn: the cookie has to go, not just stop being read, and so do
       // the queued page views. A cookie the server set (same-origin proxy) is
       // expired by the server with the next event, which now says cookieless.
-      if (!ok) {
-        d.cookie = VID + '=; Max-Age=0; Path=/' + (c.domain ? '; Domain=' + c.domain : '')
+      if (!was && cookieless) {
+        put('', 0)
         ls?.removeItem(QUEUE)
       }
+      if (ok || final) release()
     }
+    if (nav.doNotTrack == '1' || (nav as any).globalPrivacyControl) grant(0, 1)
+    // Leaving without an answer: count the page, without a cookie.
+    w.addEventListener('pagehide', release)
+    d.addEventListener('visibilitychange', () => d.hidden && release())
 
     if (__CONSENT__) {
       const dl: any[] = ((w as any).dataLayer ||= [])
       let at = 0
       let tcf = 0
       consent = () => {
-        for (; at < dl.length; at++) {
-          const e = dl[at]
-          if (e?.[0] === 'consent' && e[2]) grant(e[2].analytics_storage === 'granted')
+        // Move past an entry before acting on it: an answer can release held
+        // pages, whose sending reads the dataLayer again.
+        while (at < dl.length) {
+          const e = dl[at++]
+          // 'default' is the banner before any click; only 'update' is an answer.
+          if (e?.[0] == 'consent' && e[2]) grant(e[2].analytics_storage == 'granted', e[1] == 'update')
         }
         // The CMP's stub can appear after us; register as soon as it does.
         if (!tcf && (w as any).__tcfapi) {
@@ -151,7 +179,8 @@ export function start(c: Config): Tracker {
           ;(w as any).__tcfapi('addEventListener', 2, (t: any, ok: boolean) => {
             // Purpose 1 is storing on the device, purpose 8 is measuring how
             // content is used. Outside the EU the framework says so itself.
-            if (ok) grant(!t.gdprApplies || (t.purpose?.consents[1] && t.purpose.consents[8]))
+            // 'cmpuishown' is the banner on screen, not yet answered.
+            if (ok) grant(!t.gdprApplies || (t.purpose?.consents[1] && t.purpose.consents[8]), t.eventStatus != 'cmpuishown')
           })
         }
       }
@@ -177,7 +206,8 @@ export function start(c: Config): Tracker {
       // Someone whose browser already says "do not track" has answered.
       if (nav.doNotTrack == '1' || (nav as any).globalPrivacyControl) said = '0'
       if (said == '1') grant(1)
-      else if (said != '0') {
+      else if (said == '0') grant(0, 1)
+      else {
         const b = c.banner || {}
         const host = d.createElement('div')
         const root = host.attachShadow({ mode: 'open' })
@@ -202,7 +232,7 @@ export function start(c: Config): Tracker {
           try {
             ls!.setItem(KEY, '' + ok)
           } catch {}
-          grant(ok)
+          grant(ok, 1)
           host.remove()
         }
         btn[0].onclick = answer(0)
@@ -220,11 +250,8 @@ export function start(c: Config): Tracker {
   const vid = () => {
     let v = cookie()
     if (!v && !proxied) {
-      v = rid() + '.' + Math.floor(now() / 1e3).toString(36)
-      d.cookie =
-        VID + '=' + v + '; Max-Age=34560000; Path=/; SameSite=Lax' +
-        (c.domain ? '; Domain=' + c.domain : '') +
-        (loc.protocol === 'https:' ? '; Secure' : '')
+      v = rid() + '.' + (now() / 1e3 >>> 0).toString(36) // whole seconds; >>> keeps it right until 2106
+      put(v, 34560000)
     }
     return v
   }
@@ -248,19 +275,25 @@ export function start(c: Config): Tracker {
       .then((r) => {
         // 5xx / 429: keep it queued for a retry; anything else is final.
         // Cookieless mode never touches storage, not even to clean up.
-        if (!cookieless && r.status < 500 && r.status !== 429) save(queue().filter((x) => x[0].id !== p.id))
+        if (!cookieless && r.status < 500 && r.status != 429) save(queue().filter((x) => x[0].id != p.id))
       })
       .catch(() => {})
   }
 
+  // A payload is filled in once; one held back comes here again when it is
+  // released, already filled in.
   const send = (p: Payload) => {
     if (__CONSENT__) consent()
-    p.s = c.site
-    p.u = loc.href
-    p.w = screen.width
-    p.l = nav.language
-    p.id = rid()
-    if (c.dev) p.dev = 1
+    if (!p.id) {
+      p.s = c.site
+      p.u = loc.href
+      p.w = screen.width
+      p.l = nav.language
+      p.id = rid()
+      if (c.dev) p.dev = 1
+      if ((__CONSENT__ || __BANNER__) && held) return held.push(p)
+    }
+    if (cookieless > 1) return // declined: nothing is sent
     if (cookieless) p.c = 1 // the server must not set a cookie either
     else {
       const v = vid()
@@ -321,7 +354,7 @@ export function start(c: Config): Tracker {
 
   const page = () => {
     const url = c.hash ? loc.href : loc.href.split('#')[0]
-    if (url === last) return // SPA frameworks often push/replace the same URL
+    if (url == last) return // SPA frameworks often push/replace the same URL
     if (last) flushEngagement()
     last = url
     pv = rid()
@@ -393,7 +426,7 @@ export function start(c: Config): Tracker {
             }
           }
           if (__OUTBOUND__) {
-            if (h !== loc.host) goal('outbound_click', { url: h + a.pathname })
+            if (h != loc.host) goal('outbound_click', { url: h + a.pathname })
             else if (DOWNLOAD.test(a.pathname)) goal('file_download', { url: a.pathname })
           }
         }
@@ -448,10 +481,16 @@ export function start(c: Config): Tracker {
   else page()
 
   return ((cmd: string, a?: any, b?: Props) => {
-    if (__GOALS__ && (cmd === 'goal' || cmd === 'track')) goal(a, b)
-    else if (cmd === 'pageview') {
+    if (__GOALS__ && (cmd == 'goal' || cmd == 'track')) goal(a, b)
+    else if (cmd == 'pageview') {
       last = ''
       page()
-    } else if (cmd === 'consent') cookieless = !a
+    } else if (cmd == 'consent') {
+      // The site's own answer from its own banner: yes, or a final no.
+      if (__CONSENT__ || __BANNER__) grant(a, 1)
+      else {
+        cookieless = a ? 0 : (put('', 0), 2) // no: the cookie goes, and so does counting
+      }
+    }
   }) as Tracker
 }

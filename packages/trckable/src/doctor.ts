@@ -62,7 +62,7 @@ export async function doctor(o: DoctorOptions): Promise<Check[]> {
       out.push({
         ok: res.ok && body.length > 0,
         name: 'Script',
-        detail: res.ok ? `${(body.length / 1024).toFixed(1)} KB${cookieless ? ' · consent-free (stores nothing)' : ''}` : `/js/${o.site}.js answered ${res.status}`,
+        detail: res.ok ? `${(body.length / 1024).toFixed(1)} KB${cookieless ? ' · cookieless (stores nothing)' : ''}` : `/js/${o.site}.js answered ${res.status}`,
         fix: res.ok ? undefined : 'Check the site id in your snippet (Settings → Install).',
       })
     } catch {
