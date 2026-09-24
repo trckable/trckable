@@ -125,9 +125,43 @@
   overflow-y: auto;
   background: color-mix(in srgb, var(--sunken) 55%, transparent);
 }
-.settings-modal .settings-nav button:hover,
+.settings-group {
+  display: grid;
+  gap: 2px;
+}
+.settings-group + .settings-group {
+  margin-top: 10px;
+}
+.settings-group-head {
+  padding: 6px 12px 4px;
+  color: var(--text-3);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.settings-modal .settings-nav button {
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 8px;
+  font-size: 13.5px;
+  transition: background 0.15s, color 0.15s;
+}
+.settings-modal .settings-nav button svg {
+  opacity: 1;
+}
+.settings-modal .settings-nav button:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
 .settings-modal .settings-nav button[aria-current='true'] {
   background: var(--surface-2);
+  color: var(--text);
+  box-shadow: none;
+}
+.settings-modal .settings-nav button[aria-current='true'] .icon-tile {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 .settings-title {
   display: grid;
@@ -188,12 +222,25 @@
     overflow-x: auto;
     scrollbar-width: none;
   }
-  .settings-modal .settings-title {
+  .settings-modal .settings-title,
+  .settings-group-head {
     display: none;
   }
+  .settings-group {
+    display: contents;
+  }
+  /* The same look as the menu on a wide screen: no outline, the open one
+     on a soft background with its icon lit. */
   .settings-modal .settings-nav button {
     white-space: nowrap;
-    min-height: 36px;
+    min-height: 38px;
+    padding: 0 12px 0 6px;
+    border: 0;
+    background: transparent;
+  }
+  .settings-modal .settings-nav button[aria-current='true'] {
+    border: 0;
+    background: var(--surface-2);
   }
   /* Title and close first, then the sections as tabs, then the section. */
   .settings-pane {
@@ -208,5 +255,45 @@
   }
   .settings-modal .settings-body {
     padding: 14px 12px 24px;
+  }
+}
+
+/* The arrows exist on a phone only, where the sections are a scrolling row. */
+.settings-scroll {
+  display: none;
+}
+@media (max-width: 760px) {
+  .settings-modal {
+    position: relative;
+  }
+  .settings-modal .settings-nav.more-left {
+    mask-image: linear-gradient(90deg, transparent, #000 48px);
+  }
+  .settings-modal .settings-nav.more-right {
+    mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent);
+  }
+  .settings-modal .settings-nav.more-left.more-right {
+    mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent);
+  }
+  .settings-scroll {
+    position: absolute;
+    top: 67px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--border-2);
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+  }
+  .settings-scroll.left {
+    left: 6px;
+  }
+  .settings-scroll.right {
+    right: 6px;
   }
 }

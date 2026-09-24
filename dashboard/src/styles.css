@@ -1017,35 +1017,12 @@ table.t td {
   font-size: 10px;
   padding: 1px 5px;
 }
-.range-pop {
-  top: 50px;
-  right: 0;
-  width: min(560px, calc(100vw - 32px));
-  display: flex;
-  flex-wrap: wrap;
-}
 
 .months {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   min-width: 0;
-}
-.range-pop .field {
-  width: 132px;
-}
-.pop-body {
-  flex: 1;
-  min-width: 260px;
-  padding: 12px 14px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.pop-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
 }
 .btn.range .num {
   max-width: 100%;
@@ -1089,19 +1066,6 @@ table.t td {
   .pop.sheet .preset .kbd {
     display: none;
   }
-  .pop.sheet .pop-actions {
-    position: sticky;
-    bottom: 0;
-    background: var(--surface);
-    padding-top: 10px;
-    margin: 0 -16px -16px;
-    padding: 12px 16px;
-    border-top: 1px solid var(--border);
-  }
-  .pop.sheet .pop-actions .btn {
-    flex: 1;
-    justify-content: center;
-  }
 }
 @keyframes sheet {
   from {
@@ -1115,13 +1079,51 @@ table.t td {
 }
 
 /* ---- modules ---- */
+/* A module: its picture, its name and tags, the switch; what it does under
+   the name. On a phone the description takes the card's full width. */
 .module {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'art head switch'
+    'art body switch';
   align-items: center;
-  gap: 14px;
+  column-gap: 14px;
+  row-gap: 4px;
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 12px;
+}
+.module > .mart-btn {
+  grid-area: art;
+}
+.module > .switch {
+  grid-area: switch;
+}
+.module-head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  gap: 6px 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.module-head .tag {
+  white-space: nowrap;
+}
+.module-body {
+  grid-area: body;
+  align-self: start;
+  min-width: 0;
+}
+.module-body p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.module-body p.small {
+  margin-top: 2px;
+  font-size: 12px;
 }
 .tag {
   font-size: 11px;
@@ -1418,41 +1420,6 @@ table.t td {
   }
   .kpi .delta {
     min-height: 0;
-  }
-}
-
-/* ---- Date range on a phone --------------------------------------------------
-   The sheet fills the screen: presets wrap into chips, one month at a time, and
-   the buttons sit on a bar at the bottom. Nothing scrolls sideways. */
-@media (max-width: 640px) {
-  .range-pop {
-    width: 100%;
-    max-width: 100vw;
-    overflow-x: hidden;
-  }
-  .range-pop .presets {
-    max-width: 100%;
-  }
-  .range-pop .pop-body {
-    min-width: 0;
-    width: 100%;
-    padding: 14px 16px 16px;
-  }
-  .range-pop .months {
-    grid-template-columns: 1fr;
-  }
-  /* One month is enough on a phone; the arrows move between them. */
-  .range-pop .months > div + div {
-    display: none;
-  }
-  .range-pop .field {
-    flex: 1;
-    width: auto;
-    min-width: 130px;
-  }
-  .range-pop .pop-actions .btn {
-    flex: 1;
-    height: 46px;
   }
 }
 
@@ -1761,24 +1728,6 @@ table.t td {
     min-width: 0;
   }
 }
-
-/* The dimmed, lightly blurred backdrop behind a phone sheet. Desktop popovers
-   do not need one, so it only exists at phone width. */
-.pop-backdrop {
-  display: none;
-}
-@media (max-width: 640px) {
-  .pop-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 19;
-    background: color-mix(in srgb, var(--bg) 45%, transparent);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-    animation: fade 0.18s var(--ease) both;
-  }
-}
 @keyframes fade {
   from {
     opacity: 0;
@@ -1930,54 +1879,21 @@ table.t td {
 }
 @media (max-width: 640px) {
   .module {
-    flex-wrap: wrap;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'art head switch'
+      'body body body';
+    column-gap: 12px;
+    row-gap: 10px;
+    padding: 12px;
   }
   .mart-btn .mart {
-    width: 72px;
-    height: 40px;
+    width: 56px;
+    height: 36px;
   }
-}
-
-/* ---- Payments --------------------------------------------------------------
-   Providers are tiles you tap; everything wordy happens in a dialog. */
-.prov-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: 10px;
-}
-.prov {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--sunken);
-  color: var(--text);
-  font: inherit;
-  cursor: pointer;
-  transition: border-color 0.2s, transform 0.2s var(--ease);
-}
-.prov:hover,
-.prov:focus-visible {
-  border-color: var(--money);
-  transform: translateY(-1px);
-}
-.prov .faint {
-  font-size: 12px;
-}
-.prov-mark {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  flex: none;
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--money) 18%, transparent);
-  color: var(--money);
-  font-size: 13px;
-  font-weight: 600;
+  .module-head strong {
+    flex: 1 0 100%;
+  }
 }
 .conn {
   position: relative;
@@ -1987,6 +1903,23 @@ table.t td {
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 14px;
+}
+.conn-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 3px;
+  min-width: 0;
+  font-size: 13px;
+}
+.conn-status .dot {
+  flex: none;
+}
+.conn-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .modal.wide {
   /* max-width alone would lose to .modal's own width, so both move. */
@@ -2007,111 +1940,15 @@ table.t td {
   flex-direction: column;
   gap: 3px;
 }
-.rhythm-hours {
-  display: grid;
-  grid-template-columns: repeat(24, 1fr);
-  font-size: 10px;
-  color: var(--text-3);
-  margin-left: 34px;
-}
-.rhythm-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.rhythm-row > .faint {
-  width: 26px;
-  font-size: 11px;
-}
-.rhythm-cells {
-  display: grid;
-  grid-template-columns: repeat(24, 1fr);
-  gap: 2px;
-  flex: 1;
-}
-.rhythm-cells i {
-  display: block;
-  aspect-ratio: 1;
-  border-radius: 3px;
-}
-.funnel-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
-}
 .funnel {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.funnel-step {
-  position: relative;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--sunken);
-  overflow: hidden;
-}
-.funnel-bar {
-  position: absolute;
-  inset: 0 auto 0 0;
-  background: var(--accent-soft);
-  transition: width 0.5s var(--ease);
-}
-.funnel-label,
-.funnel-meta {
-  position: relative;
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-}
-.funnel-label b {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.funnel-meta {
-  font-size: 11.5px;
-  /* This sits on the step's own filled bar, not on the page, so the muted
-     grey it used to wear did not have the contrast to be read. */
-  color: var(--text-2);
-}
 .journey {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-.journey-visit {
-  border-left: 2px solid var(--grid);
-  padding-left: 12px;
-}
-.journey-head {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-  flex-wrap: wrap;
-  font-size: 13px;
-}
-.journey-events {
-  list-style: none;
-  margin: 6px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  font-size: 13px;
-}
-.journey-events li {
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-}
-.journey-events li > .num:first-child {
-  width: 46px;
-  flex: none;
-  font-size: 11.5px;
 }
 .live-row:hover {
   background: var(--sunken);
@@ -2142,13 +1979,6 @@ table.t td {
 }
 .people button:hover {
   background: var(--sunken);
-}
-.people-what {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .install-pick {
@@ -2264,6 +2094,16 @@ table.t td {
 .size-strip b {
   color: var(--accent);
 }
+@media (max-width: 640px) {
+  /* Under the heading, on its own line, instead of squeezed beside it. */
+  .card-head:has(.size-strip) {
+    flex-wrap: wrap;
+  }
+  .card-head .size-strip {
+    flex: 1 0 100%;
+    white-space: nowrap;
+  }
+}
 .info-dot.static {
   display: inline-flex;
   align-items: center;
@@ -2274,16 +2114,6 @@ table.t td {
 /* The way back to the default period stays visible on phones. */
 .btn.icon.reset {
   width: 36px;
-}
-
-/* ---- Calendar -------------------------------------------------------------- */
-.month-title {
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  text-align: center;
-  margin-bottom: 8px;
 }
 .day {
   width: 100%;
@@ -2536,41 +2366,6 @@ table.t td {
 .picker-row .faint {
   font-size: 11.5px;
 }
-
-/* ---- "Waiting for the first visit" ---------------------------------------- */
-.listen {
-  position: relative;
-  display: grid;
-  place-items: center;
-  height: 150px;
-  margin-bottom: -8px;
-}
-.listen .ring {
-  position: absolute;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  border: 1px solid var(--accent);
-  opacity: 0;
-  animation: sonar 2.4s var(--ease) infinite;
-}
-.listen .ring:nth-child(2) {
-  animation-delay: 0.8s;
-}
-.listen .ring:nth-child(3) {
-  animation-delay: 1.6s;
-}
-.listen-ghost {
-  position: relative;
-  animation: bob 2.6s ease-in-out infinite;
-}
-.listen.arrived .ring {
-  animation: none;
-  opacity: 0;
-}
-.listen.arrived .listen-ghost {
-  animation: pop 0.5s var(--ease) both;
-}
 .listen-tick {
   position: absolute;
   right: calc(50% - 46px);
@@ -2800,15 +2595,6 @@ table.t td {
   overflow-y: auto;
   gap: 14px;
 }
-.account-body {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  /* Changing section used to slide the whole panel up 8px and fade it in,
-     which read as a stutter every time you moved between them. The size is
-     identical either way, so nothing needs to move: it just appears. */
-  animation: fadein 0.16s var(--ease) backwards;
-}
 @keyframes fadein {
   from {
     opacity: 0;
@@ -2816,11 +2602,6 @@ table.t td {
   to {
     opacity: 1;
   }
-}
-.account-body .card {
-  border: 0;
-  padding: 0;
-  background: transparent;
 }
 
 /* ---- The toolbar under the header ------------------------------------------
@@ -2896,18 +2677,6 @@ table.t td {
   padding: 0;
   gap: 0;
 }
-.account-head {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 16px 18px 0;
-  background: var(--surface);
-  border-bottom: 1px solid var(--grid);
-}
 .avatar {
   display: grid;
   place-items: center;
@@ -2919,24 +2688,6 @@ table.t td {
   color: var(--accent);
   font-weight: 600;
   font-size: 15px;
-}
-.account-who {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  flex: 1;
-  min-width: 0;
-  font-size: 14px;
-}
-.account-who .faint {
-  font-size: 12px;
-}
-.account-head .tabs {
-  flex-basis: 100%;
-  margin-bottom: -1px;
-}
-.account-body {
-  padding: 16px 18px 18px;
 }
 .tag.live {
   color: var(--accent-strong, var(--accent));
@@ -2954,75 +2705,12 @@ pre.code.words {
   word-break: normal;
   overflow-wrap: break-word;
 }
-
-/* Checkout snippets: pick the provider by its mark. */
-.prov-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.prov-tabs .mtile {
-  min-width: 0;
-  height: 40px;
-  padding: 0 12px;
-  font-size: 13px;
-}
-.prov-tabs .mtile .prov-mark {
-  width: 22px;
-  height: 22px;
-}
-
-/* ---- Stages ----------------------------------------------------------------
-   A slow job says what it is doing: the current line pulses, finished lines
-   get a tick. Used by delete, and by anything else that takes a moment. */
-.stages {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  font-size: 14px;
-}
-.stages li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--text-3);
-}
-.stages li.now {
-  color: var(--text);
-}
-.stages li.done {
-  color: var(--text-2);
-}
 .stage-mark {
   width: 16px;
   height: 16px;
   flex: none;
   border-radius: 50%;
   border: 2px solid var(--grid);
-}
-.stages li.now .stage-mark {
-  border-color: var(--accent);
-  border-right-color: transparent;
-  animation: spin 0.8s linear infinite;
-}
-.stages li.done .stage-mark {
-  border-color: var(--up);
-  background: var(--up);
-  position: relative;
-}
-.stages li.done .stage-mark::after {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 1px;
-  width: 4px;
-  height: 8px;
-  border: solid var(--bg);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
 }
 @keyframes spin {
   to {
@@ -3114,52 +2802,6 @@ pre.code.words {
   max-width: none;
   height: min(560px, 86vh);
 }
-.account-head {
-  grid-column: 1 / -1;
-  position: static;
-  border-bottom: 1px solid var(--grid);
-  padding: 16px 18px;
-}
-.account-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 14px 10px;
-  border-right: 1px solid var(--grid);
-}
-.account-nav button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 42px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text-2);
-  font: inherit;
-  font-size: 14px;
-  text-align: left;
-  cursor: pointer;
-}
-.account-nav button:hover {
-  background: var(--sunken);
-}
-.account-nav button[aria-selected='true'] {
-  background: var(--sunken);
-  color: var(--text);
-}
-.account-nav button[aria-selected='true'] svg {
-  color: var(--accent);
-}
-.account-body {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  /* Reserve the scrollbar's width so the panel never changes size between
-     sections. */
-  scrollbar-gutter: stable;
-  min-height: 0;
-}
 /* A close button you can actually hit. */
 .btn.icon.close {
   width: 40px;
@@ -3171,17 +2813,6 @@ pre.code.words {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto minmax(0, 1fr);
     height: min(600px, 88vh);
-  }
-  .account-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    border-right: 0;
-    border-bottom: 1px solid var(--grid);
-    padding: 10px;
-  }
-  .account-nav button {
-    flex: none;
-    white-space: nowrap;
   }
 }
 
@@ -3293,13 +2924,6 @@ body[data-mode='full'] .app {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
-
-/* ---- The period panel ------------------------------------------------------
-   Periods first, in a grid you can read at a glance; the calendar is a step
-   away, not a wall beside it. */
-.range-pop.small {
-  width: min(330px, calc(100vw - 32px));
-}
 .periods {
   display: flex;
   flex-direction: column;
@@ -3307,26 +2931,6 @@ body[data-mode='full'] .app {
   padding: 12px;
   width: 100%;
   animation: rise 0.16s var(--ease) backwards;
-}
-.periods-head {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 0 2px 8px;
-  border-bottom: 1px solid var(--grid);
-  font-size: 12px;
-}
-.periods-head .num {
-  color: var(--text);
-  font-size: 13px;
-}
-.periods-head .tz {
-  margin-left: auto;
-}
-.periods-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
 }
 .period {
   display: flex;
@@ -3354,49 +2958,6 @@ body[data-mode='full'] .app {
   margin-left: auto;
   font-size: 10px;
   padding: 1px 5px;
-}
-.periods-compare {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 2px 0;
-  border-top: 1px solid var(--grid);
-  font-size: 12.5px;
-  color: var(--text-2);
-  cursor: pointer;
-}
-.periods-compare .num {
-  margin-left: auto;
-  font-size: 11.5px;
-}
-.periods-foot {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.periods-foot .btn {
-  height: 34px;
-  font-size: 13px;
-}
-.periods-foot .num {
-  flex: 1;
-  font-size: 11.5px;
-}
-.back-link {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  align-self: flex-start;
-  border: 0;
-  background: transparent;
-  color: var(--text-3);
-  font: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
-  padding: 0;
-}
-.back-link:hover {
-  color: var(--text);
 }
 
 /* API keys: one line each. */
@@ -3429,47 +2990,9 @@ body[data-mode='full'] .app {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* ---- Cookieless mode -------------------------------------------------------- */
-.card.eu {
-  border-color: var(--border-2);
-}
-.card.eu.on {
-  border-color: var(--accent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 5%, transparent), transparent 60%), var(--surface);
-}
-.eu-stars {
-  color: var(--accent);
-  margin-right: 6px;
-}
-.eu-cols {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 12px 24px;
-}
 .switch:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
-
-/* Granularity sits with the period it describes. */
-.periods-bucket {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-.periods-bucket .seg {
-  flex: 1;
-}
-.periods-bucket .seg button {
-  flex: 1;
-  padding: 0 9px;
-  font-size: 12px;
-  white-space: nowrap;
-}
-.periods-bucket .auto-note {
-  font-size: 11px;
 }
 
 /* Two by two: four routes in a row squeezed every title onto three lines. */
@@ -3600,36 +3123,6 @@ body[data-mode='full'] .app {
   align-items: center;
   gap: 10px;
 }
-.note-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-}
-.note-list li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: var(--sunken);
-}
-.note-list li span {
-  flex: 1;
-}
-.note-list button {
-  border: 0;
-  background: transparent;
-  color: var(--text-3);
-  cursor: pointer;
-  font-size: 15px;
-}
-.note-list button:hover {
-  color: var(--down);
-}
 
 /* Saved views, under the filters. */
 .segments {
@@ -3731,44 +3224,6 @@ body[data-mode='full'] .app {
     margin: 0 auto;
   }
 }
-/* One last question before an account-level change: a strip, not a row, so the
-   field and its two buttons never have to share one line. */
-/* Picking a role is picking a sentence, so each choice carries its own. */
-.role-pick {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 8px;
-}
-.role-opt {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 12px 14px;
-  text-align: left;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  transition: border-color 0.18s var(--ease), background 0.18s var(--ease);
-}
-.role-opt:hover {
-  border-color: var(--border-2);
-}
-.role-opt[aria-selected='true'] {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-.role-opt b {
-  font-size: 14px;
-}
-.role-opt .faint {
-  font-size: 12px;
-  line-height: 1.35;
-  white-space: normal;
-}
 .viewer-note {
   margin: 0;
   padding: 10px 14px;
@@ -3777,45 +3232,6 @@ body[data-mode='full'] .app {
   background: var(--sunken);
   color: var(--text-2);
   font-size: 13px;
-}
-
-/* ---- Answering a data request ---------------------------------------------- */
-.request-find {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.request-find .input {
-  flex: 1;
-  min-width: 190px;
-  height: 38px;
-}
-.request-found {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid var(--grid);
-  background: var(--sunken);
-}
-.request-facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 12px;
-}
-.request-facts span {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  font-size: 12px;
-  color: var(--text-3);
-}
-.request-facts b {
-  font-size: 15px;
-  color: var(--text);
-  font-weight: 600;
 }
 /* A dialog that is a form: the form disappears from the layout so its fields
    sit in the dialog's own column, exactly as they would without it. */
@@ -4105,74 +3521,10 @@ body[data-mode='full'] .app {
     display: none;
   }
 }
-
-/* What a generated paragraph cannot know, said out loud rather than left to be
-   discovered by a regulator. */
-.policy-notes {
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px dashed var(--border-2);
-  font-size: 13px;
-  color: var(--text-2);
-}
-.policy-notes b {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--text);
-}
-.policy-notes ul {
-  margin: 0;
-  padding-left: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-/* Where the real bar is previewed. The bar itself brings its own stylesheet
-   from the tracker, so only its surroundings are ours. */
-.bar-preview {
-  padding: 18px;
-  border: 1px solid var(--grid);
-  border-radius: 12px;
-  background: var(--sunken);
-  display: flex;
-  justify-content: flex-end;
-}
 .bar-real {
   display: grid;
   min-width: 0;
   max-width: 100%;
-}
-.bar-preview.left {
-  justify-content: flex-start;
-}
-.bar-preview.wide .bar-real {
-  flex: 1;
-}
-
-/* A colour and its name, so a swatch is never the only label. */
-.bar-colours {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-.swatch {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  font-size: 12px;
-  color: var(--text-2);
-}
-.swatch input[type='color'] {
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 1px solid var(--grid);
-  border-radius: 7px;
-  background: none;
-  cursor: pointer;
 }
 
 /* ---- The Filter menu -------------------------------------------------------
@@ -4216,6 +3568,7 @@ body[data-mode='full'] .app {
   right: 0;
 }
 .menu-pop-head {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -4243,6 +3596,8 @@ body[data-mode='full'] .app {
   color: var(--text);
 }
 .menu-search {
+  /* The dropdown is a capped column: only the list may shrink and scroll. */
+  flex: none;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -4362,6 +3717,7 @@ body[data-mode='full'] .app {
   font-size: 12.5px;
 }
 .menu-foot {
+  flex: none;
   margin-top: 4px;
   padding-top: 6px;
   border-top: 1px solid var(--border);
@@ -4653,122 +4009,6 @@ body[data-mode='full'] .app {
   gap: 8px;
   padding: 8px 10px;
   color: var(--text-3);
-}
-
-/* ---- Adding a note ---------------------------------------------------------
-   The period's days as a strip of bars: you point at the bump you are about to
-   explain. The chosen day is the accent; a day that already has a note wears
-   a small dot, the same dot the chart shows. */
-.note-modal {
-  width: min(520px, calc(100vw - 32px));
-}
-.note-strip {
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 84px;
-  padding: 10px 10px 6px;
-  border-radius: 11px;
-  background: var(--sunken);
-  border: 1px solid var(--grid);
-}
-.note-strip button {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-}
-.note-strip button span {
-  width: 100%;
-  border-radius: 3px 3px 1px 1px;
-  background: color-mix(in srgb, var(--text-3) 45%, transparent);
-  transition: background 0.15s;
-}
-.note-strip button:hover span {
-  background: color-mix(in srgb, var(--accent) 55%, transparent);
-}
-.note-strip button.on span {
-  background: var(--accent);
-}
-.note-strip button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 3px;
-}
-.note-dot {
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  margin-left: -2.5px;
-  border-radius: 50%;
-  background: var(--money);
-}
-.note-day {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.note-day-label {
-  flex: 1;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 10px;
-  height: 36px;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 8px 12px 0;
-}
-.note-day-label:hover {
-  border-color: var(--border-2);
-}
-.note-day-label[aria-expanded='true'] {
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-}
-.note-day-label .faint {
-  font-size: 12.5px;
-}
-.note-cal {
-  position: relative;
-  padding: 10px 12px 8px;
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  background: var(--surface);
-}
-.note-cal-nav {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  display: flex;
-  gap: 2px;
-}
-.note-input {
-  position: relative;
-}
-.note-input .input {
-  width: 100%;
-  height: 46px;
-  padding-right: 52px;
-}
-.note-input > span {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
 }
 
 /* The whole note, in the tooltip for its day. */
@@ -5362,28 +4602,67 @@ button.kpi[aria-pressed='true'] .kpi-icon {
   font-size: 13px;
 }
 
-/* Replay speed: the four speeds side by side beside Replay, the one in use lit. */
-.scrub .seg.speed {
+/* Replay speed: one button beside Replay; the four speeds open above it. */
+.speed-menu {
+  position: relative;
   flex: none;
+}
+.speed-btn {
   height: 38px;
-  padding: 3px;
+  gap: 6px;
+  padding: 0 10px 0 12px;
   border-radius: 999px;
+  color: var(--text-2);
+  font-size: 13px;
 }
-.scrub .seg.speed button {
-  min-width: 42px;
-  padding: 0 8px;
-  border-radius: 999px;
-  font-size: 12px;
+.speed-btn:hover,
+.speed-btn[aria-expanded='true'] {
+  color: var(--text);
 }
-.scrub .seg.speed button[aria-pressed='true'] {
-  background: var(--accent-soft);
+.pop.menu-pop.speed-pop {
+  bottom: 46px;
+  left: 0;
+  width: 230px;
+}
+.speed-row {
+  min-height: 42px;
+}
+.speed-row .menu-title {
+  flex: 1;
+}
+.speed-row.on {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+.speed-bars {
+  display: flex !important;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  padding-bottom: 7px;
+}
+.speed-bars i {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--border-2);
+}
+.speed-bars i.lit {
+  background: currentColor;
+}
+.speed-chip {
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--sunken);
+  color: var(--text-2);
+  font-size: 11.5px;
+}
+.speed-row.on .speed-chip {
+  color: var(--text);
+}
+.speed-check {
+  display: grid;
+  place-items: center;
+  width: 16px;
   color: var(--accent);
-}
-@media (max-width: 640px) {
-  .scrub .seg.speed button {
-    min-width: 34px;
-    padding: 0 5px;
-  }
 }
 
 .kpi-name {
@@ -5407,4 +4686,30 @@ button.kpi[aria-pressed='true'] .kpi-icon {
 }
 button.kpi[aria-pressed='true'] .kpi-spark {
   color: var(--accent);
+}
+
+/* The replay bar on a phone: Replay, speed and the scrubber on one row; the
+   day being viewed on its own row under them, shortened if it must be. */
+@media (max-width: 640px) {
+  .scrub {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .scrub input[type='range'] {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+  .scrub > .btn:last-child {
+    order: 3;
+    flex: 1 0 100%;
+    min-width: 0;
+    justify-content: flex-start;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .scrub > .btn:last-child .muted {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }

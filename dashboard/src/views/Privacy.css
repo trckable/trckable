@@ -1,0 +1,118 @@
+/* Privacy.tsx: its own styles, loaded with it (not with the first load). */
+
+/* ---- Cookieless mode -------------------------------------------------------- */
+.card.eu {
+  border-color: var(--border-2);
+}
+.card.eu.on {
+  border-color: var(--accent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 5%, transparent), transparent 60%), var(--surface);
+}
+.eu-stars {
+  color: var(--accent);
+  margin-right: 6px;
+}
+.eu-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px 24px;
+}
+/* ---- Answering a data request ---------------------------------------------- */
+.request-find {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.request-find .input {
+  flex: 1;
+  min-width: 190px;
+  height: 38px;
+}
+.request-found {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--grid);
+  background: var(--sunken);
+}
+.request-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+}
+.request-facts span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.request-facts b {
+  font-size: 15px;
+  color: var(--text);
+  font-weight: 600;
+}
+/* What a generated paragraph cannot know, said out loud rather than left to be
+   discovered by a regulator. */
+.policy-notes {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px dashed var(--border-2);
+  font-size: 13px;
+  color: var(--text-2);
+}
+.policy-notes b {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.policy-notes ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+/* Where the real bar is previewed. The bar itself brings its own stylesheet
+   from the tracker, so only its surroundings are ours. */
+.bar-preview {
+  padding: 18px;
+  border: 1px solid var(--grid);
+  border-radius: 12px;
+  background: var(--sunken);
+  display: flex;
+  justify-content: flex-end;
+}
+.bar-preview.left {
+  justify-content: flex-start;
+}
+.bar-preview.wide .bar-real {
+  flex: 1;
+}
+/* A colour and its name, so a swatch is never the only label. */
+.bar-colours {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.swatch {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.swatch input[type='color'] {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--grid);
+  border-radius: 7px;
+  background: none;
+  cursor: pointer;
+}

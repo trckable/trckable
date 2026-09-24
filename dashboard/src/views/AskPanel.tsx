@@ -3,9 +3,9 @@
 // tools turns on once the owner adds an AI key (next release).
 import { useEffect, useRef, useState } from 'react'
 import { api, type Site } from '../lib/api'
-import { navigate } from '../lib/url'
 import { CodeBlock } from '../components/Code'
 import { Name } from '../components/Logo'
+import { openAccount } from '../lib/account'
 
 export function AskPanel({ open, onClose, site, sites = [] }: { open: boolean; onClose: () => void; site: Site; sites?: Site[] }) {
   const ref = useRef<HTMLElement>(null)
@@ -127,7 +127,7 @@ export function AskPanel({ open, onClose, site, sites = [] }: { open: boolean; o
           <strong style={{ color: 'var(--text)' }}>Chat right here, coming next</strong>
           <span>The built-in chat uses the same tools with your own AI key (Anthropic, OpenAI-compatible or local Ollama). Off until you add a key, so it costs nothing.</span>
         </div>
-        <button type="button" className="btn ghost" style={{ alignSelf: 'flex-start' }} onClick={() => navigate('/settings?site=' + encodeURIComponent(site.id) + '&tab=keys')}>
+        <button type="button" className="btn ghost" style={{ alignSelf: 'flex-start' }} onClick={() => openAccount('keys')}>
           Manage API keys →
         </button>
       </div>

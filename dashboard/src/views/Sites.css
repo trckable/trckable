@@ -1,0 +1,81 @@
+/* Sites.tsx: its own styles, loaded with it (not with the first load). */
+
+/* ---- "Waiting for the first visit" ---------------------------------------- */
+.listen {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 150px;
+  margin-bottom: -8px;
+}
+.listen .ring {
+  position: absolute;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  opacity: 0;
+  animation: sonar 2.4s var(--ease) infinite;
+}
+.listen .ring:nth-child(2) {
+  animation-delay: 0.8s;
+}
+.listen .ring:nth-child(3) {
+  animation-delay: 1.6s;
+}
+.listen-ghost {
+  position: relative;
+  animation: bob 2.6s ease-in-out infinite;
+}
+.listen.arrived .ring {
+  animation: none;
+  opacity: 0;
+}
+.listen.arrived .listen-ghost {
+  animation: pop 0.5s var(--ease) both;
+}
+/* ---- Stages ----------------------------------------------------------------
+   A slow job says what it is doing: the current line pulses, finished lines
+   get a tick. Used by delete, and by anything else that takes a moment. */
+.stages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+}
+.stages li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-3);
+}
+.stages li.now {
+  color: var(--text);
+}
+.stages li.done {
+  color: var(--text-2);
+}
+.stages li.now .stage-mark {
+  border-color: var(--accent);
+  border-right-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+.stages li.done .stage-mark {
+  border-color: var(--up);
+  background: var(--up);
+  position: relative;
+}
+.stages li.done .stage-mark::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--bg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}

@@ -284,7 +284,7 @@ export default function FilterPop({
 
           <div className="menu-foot split">
             {active.length > 0 && (
-              <button type="button" className="menu-clear" onClick={() => onClear()}>
+              <button type="button" className="menu-clear" onClick={() => (onClear(), close())}>
                 <X size={14} strokeWidth={1.75} aria-hidden="true" />
                 Clear {active.length} filter{active.length > 1 ? 's' : ''}
               </button>

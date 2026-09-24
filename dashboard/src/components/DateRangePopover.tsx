@@ -24,6 +24,7 @@ import {
 
 
 import { CalendarIcon, Chevron, type PickerValue } from './DatePicker'
+import './DateRangePopover.css'
 
 const CMP_LABEL: Record<CompareMode, string> = {
   none: 'No comparison',

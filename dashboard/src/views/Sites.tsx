@@ -15,6 +15,8 @@ import { Menu } from '../components/Menu'
 import { toast } from '../components/Toast'
 import { Install } from './InstallPanel'
 import { isViewer } from '../lib/me'
+import { openSettings } from '../lib/settings'
+import './Sites.css'
 
 export function SitesSettings({ sites, onSites }: { sites: Site[]; onSites: () => void }) {
   const [wizard, setWizard] = useState(false)
@@ -75,7 +77,7 @@ function SiteRow({ site, onSites, onDelete }: { site: Site; onSites: () => void;
                 <button type="button" role="menuitem" onClick={() => (close(), setEditing(true))}>
                   Edit site
                 </button>
-                <button type="button" role="menuitem" onClick={() => (close(), navigate('/settings?site=' + encodeURIComponent(site.id) + '&tab=install'))}>
+                <button type="button" role="menuitem" onClick={() => (close(), openSettings(site, 'install'))}>
                   Install snippet
                 </button>
                 <button type="button" role="menuitem" style={{ color: 'var(--down)' }} onClick={() => (close(), onDelete())}>
@@ -163,7 +165,7 @@ function EditSite({ site, onClose, onSaved }: { site: Site; onClose: () => void;
           </span>
         )}
         <div className="wiz-actions">
-          <button type="button" className="btn ghost" onClick={() => navigate('/settings?site=' + encodeURIComponent(site.id))}>
+          <button type="button" className="btn ghost" onClick={() => openSettings(site)}>
             More settings →
           </button>
           <span className="spacer" style={{ flex: 1 }} />

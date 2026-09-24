@@ -1,0 +1,59 @@
+/* Payments.tsx: its own styles, loaded with it (not with the first load). */
+
+/* ---- Payments --------------------------------------------------------------
+   Providers are tiles you tap; everything wordy happens in a dialog. */
+.prov-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 10px;
+}
+.prov {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--sunken);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s var(--ease);
+}
+.prov:hover,
+.prov:focus-visible {
+  border-color: var(--money);
+  transform: translateY(-1px);
+}
+.prov .faint {
+  font-size: 12px;
+}
+.prov-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--money) 18%, transparent);
+  color: var(--money);
+  font-size: 13px;
+  font-weight: 600;
+}
+/* Checkout snippets: pick the provider by its mark. */
+.prov-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.prov-tabs .mtile {
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.prov-tabs .mtile .prov-mark {
+  width: 22px;
+  height: 22px;
+}

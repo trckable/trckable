@@ -26,6 +26,7 @@ import { Install } from './InstallPanel'
 import { caps, keyFor, pressed, useKeymap } from '../lib/keys'
 import { ActiveFilters } from '../components/ActiveFilters'
 import { SavedViews } from '../components/SavedViews'
+import { SpeedMenu } from '../components/SpeedMenu'
 import { LiveFeed } from './LiveFeed'
 import { SearchTerms } from './SearchTerms'
 import { ScrollDepth } from './ScrollDepth'
@@ -41,8 +42,6 @@ const AddGoals = lazy(() => import('./AddGoals').then((m) => ({ default: m.AddGo
 const People = lazy(() => import('./FullModules').then((m) => ({ default: m.People })))
 const NoteDialog = lazy(() => import('../components/NoteDialog').then((m) => ({ default: m.NoteDialog })))
 const JourneyDrawer = lazy(() => import('./FullModules').then((m) => ({ default: m.JourneyDrawer })))
-
-const SPEEDS = [0.5, 1, 2, 4]
 
 const DIM_LABEL: Record<string, string> = {
   channel: 'Channel',
@@ -533,7 +532,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           the controls that narrow them (period, filters, saved views) on the
           right. The top row keeps who, which site and the view. */}
       <div className="toolbar">
-        <div className="toolbar-filters" aria-label="Active filters">
+        <div className="toolbar-filters" role={view.filters.length ? 'group' : undefined} aria-label={view.filters.length ? 'Active filters' : undefined}>
           <ActiveFilters
             filters={view.filters.map((f) => ({
               key: f.dim + '\u0000' + f.value,
@@ -791,13 +790,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               )}
               Replay
             </button>
-            <div className="seg speed" role="group" aria-label="Replay speed">
-              {SPEEDS.map((v) => (
-                <button key={v} type="button" className="num" aria-pressed={speed === v} onClick={() => pickSpeed(v)}>
-                  {v}×
-                </button>
-              ))}
-            </div>
+            <SpeedMenu speed={speed} onPick={pickSpeed} />
             <label htmlFor="scrub" className="sr">
               Scrub through the period
             </label>

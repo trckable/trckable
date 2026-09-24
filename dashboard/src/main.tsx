@@ -13,6 +13,7 @@ import { SitePicker } from "./components/SitePicker";
 import { Dashboard } from "./views/Dashboard";
 import { applyTheme } from "./lib/theme";
 import { closeAddSite, useAccountTab, useAddSite } from "./lib/account";
+import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { setRole } from "./lib/me";
 // Settings and the account dialog are their own screens: the dashboard should
 // not carry them.
@@ -74,6 +75,16 @@ function App() {
 
   const accountTab = useAccountTab(); // a hook: must run before any early return
   const adding = useAddSite();
+  const settingsOpen = useSettings();
+  // An old /settings?site=…&tab=… link (the docs, a bookmark): open the dialog
+  // over that site's dashboard and put the dashboard's address back.
+  useEffect(() => {
+    if (boot.state !== "ready" || path !== "/settings") return;
+    const s = boot.sites.find((x) => x.id === params.get("site"));
+    if (!s) return;
+    const visitor = params.get("visitor");
+    openSettings(s, (params.get("tab") as SettingsTab) || "site", visitor ? { visitor } : undefined, { replace: true });
+  }, [boot, path, params]);
 
   if (shared)
     return (
@@ -173,9 +184,9 @@ function App() {
             header={header}
           />
           {/* Settings open over the dashboard they belong to. */}
-          {settings && (
+          {settingsOpen?.site === site.id && (
             <Suspense fallback={null}>
-              <SettingsDialog sites={boot.sites} site={site} onSites={refreshSites} />
+              <SettingsDialog sites={boot.sites} site={site} tab={settingsOpen.tab} onSites={refreshSites} />
             </Suspense>
           )}
         </>
@@ -238,7 +249,7 @@ function Header({
           className="btn icon ghost gear"
           aria-label={`Settings for ${current.domain}`}
           title={`Settings for ${current.domain}`}
-          onClick={() => navigate("/settings?site=" + encodeURIComponent(current.id))}
+          onClick={() => openSettings(current)}
         >
           {/* A cog, with teeth. It used to be a circle with rays, which is a
               sun — so the one button that opens a site's settings looked like

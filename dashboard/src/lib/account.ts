@@ -1,48 +1,69 @@
-// Opening the account dialog is a URL change, so the dashboard can link to it
-// without pulling the dialog itself into the first load.
-import { navigate, useLocation } from './url'
+// The account dialog and the add-a-site wizard, like every dialog, open over
+// the page without changing its address: closing one leaves the page exactly
+// as it was. Old links that carried ?account=… or ?add=site still open them
+// once, and the address is put back.
+import { useEffect, useState } from 'react'
 
 export type AccountTab = 'sites' | 'keys' | 'people' | 'profile'
 
 const TABS: AccountTab[] = ['sites', 'keys', 'people', 'profile']
+const EVENT = 'trckable:dialogs'
 
-/** Which account section the URL asks for, if any. */
+let account: AccountTab | null = null
+let adding = false
+const emit = () => window.dispatchEvent(new Event(EVENT))
+
+function useDialogs() {
+  const [, bump] = useState(0)
+  useEffect(() => {
+    const on = () => bump((n) => n + 1)
+    window.addEventListener(EVENT, on)
+    return () => window.removeEventListener(EVENT, on)
+  }, [])
+}
+
+// An old address with ?account= or ?add=: open what it asked for, once.
+{
+  const p = new URLSearchParams(location.search)
+  const v = p.get('account')
+  if (v !== null) account = TABS.includes(v as AccountTab) ? (v as AccountTab) : 'sites'
+  if (p.get('add') === 'site') adding = true
+  if (v !== null || p.has('add')) {
+    p.delete('account')
+    p.delete('add')
+    const q = p.toString()
+    history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash)
+  }
+}
+
+/** Which account section is open, if any. */
 export function useAccountTab(): AccountTab | null {
-  const { params } = useLocation()
-  const v = params.get('account')
-  return TABS.includes(v as AccountTab) ? (v as AccountTab) : v === '1' ? 'sites' : null
+  useDialogs()
+  return account
 }
 
 export function openAccount(tab: AccountTab = 'sites') {
-  const p = new URLSearchParams(location.search)
-  p.set('account', tab)
-  navigate(location.pathname + '?' + p.toString())
-}
-
-/** Is the add-a-site wizard open? It has an address of its own, so "Add a
- *  site" can open it from anywhere — not open a list with another "Add a
- *  site" button in it. */
-export function useAddSite(): boolean {
-  const { params } = useLocation()
-  return params.get('add') === 'site'
-}
-
-export function openAddSite() {
-  const p = new URLSearchParams(location.search)
-  p.set('add', 'site')
-  navigate(location.pathname + '?' + p.toString())
-}
-
-export function closeAddSite() {
-  const p = new URLSearchParams(location.search)
-  p.delete('add')
-  const q = p.toString()
-  navigate(location.pathname + (q ? '?' + q : ''))
+  account = tab
+  emit()
 }
 
 export function closeAccount() {
-  const p = new URLSearchParams(location.search)
-  p.delete('account')
-  const q = p.toString()
-  navigate(location.pathname + (q ? '?' + q : ''))
+  account = null
+  emit()
+}
+
+/** Is the add-a-site wizard open? */
+export function useAddSite(): boolean {
+  useDialogs()
+  return adding
+}
+
+export function openAddSite() {
+  adding = true
+  emit()
+}
+
+export function closeAddSite() {
+  adding = false
+  emit()
 }

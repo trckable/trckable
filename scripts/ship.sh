@@ -54,6 +54,19 @@ if [ "$MODE" != --quick ]; then
 
   step "browser suites (Chromium, Firefox, WebKit)"
   ( cd e2e && npx playwright test --reporter=line )
+
+  # The same accessibility pass as CI, against a server with demo data. Left
+  # out, it skips itself, and a failure would first show up on the pull
+  # request; it did, five pushes running.
+  step "WCAG 2.1 AA on the main screens, both themes (axe-core, demo data)"
+  ( d=$(mktemp -d)
+    trap 'kill $pid 2>/dev/null; rm -rf "$d"' EXIT
+    (cd server && go run ./bench/demoseed -data "$d" -days 30 -daily 150 > /dev/null)
+    echo 'correct horse battery' | TRCKABLE_DATA_DIR="$d" server/bin/trckabled admin add-user me@site.com --role owner > /dev/null
+    TRCKABLE_DATA_DIR="$d" TRCKABLE_ADDR=127.0.0.1:8799 server/bin/trckabled serve > "$d/log" 2>&1 &
+    pid=$!
+    for i in $(seq 1 50); do curl -sf 127.0.0.1:8799/readyz > /dev/null && break; sleep 0.3; done
+    cd e2e && TRCKABLE_A11Y_URL=http://127.0.0.1:8799 npx playwright test a11y --reporter=line )
 fi
 
 # The dashboard and the tracker are embedded in the server from committed

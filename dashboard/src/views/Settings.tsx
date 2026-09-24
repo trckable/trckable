@@ -1,9 +1,10 @@
-import { Activity, Bell, Blocks, Code, CreditCard, Search, Settings as Cog, ShieldCheck, X } from 'lucide-react'
-import { useState } from 'react'
+import { Activity, Bell, Blocks, ChevronLeft, ChevronRight, Code, CreditCard, Search, Settings as Cog, ShieldCheck, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { isViewer } from '../lib/me'
 import { api, type Site } from '../lib/api'
 import { navigate, useLocation } from '../lib/url'
 import { Modal } from '../components/Modal'
+import { closeSettings, setSettingsTab, type SettingsTab } from '../lib/settings'
 import { Picker } from '../components/Picker'
 import { Row } from '../components/Row'
 import { Copyable } from '../components/Copyable'
@@ -18,7 +19,7 @@ import { SitesSettings } from './Sites'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import './Settings.css'
 
-type TabID = 'site' | 'install' | 'modules' | 'payments' | 'search' | 'privacy' | 'alerts' | 'health'
+type TabID = SettingsTab
 
 // Only the open site lives here. Anything about the account — the list of
 // sites, keys, the password — is one dialog away (see AccountDialog), so the
@@ -35,33 +36,74 @@ const TABS: { id: TabID; label: string; icon: typeof Cog }[] = [
 ]
 
 function NavIcon({ d: Icon }: { d: typeof Cog }) {
-  return (
-    <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
-  )
+  return <Icon size={15} strokeWidth={1.75} aria-hidden="true" />
 }
 
+// The dialog's menu, grouped the way an owner looks for things.
+const GROUPS: { name: string; tabs: TabID[] }[] = [
+  { name: 'This site', tabs: ['site', 'install', 'modules'] },
+  { name: 'Money', tabs: ['payments'] },
+  { name: 'Data', tabs: ['search', 'privacy', 'alerts'] },
+  { name: 'Instance', tabs: ['health'] },
+]
+
 /** A site's settings as a dialog over its dashboard: the sections on the
- *  left, the section on the right. /settings?site=…&tab=… still opens it, so
- *  every link into settings keeps working; closing it goes back to the
- *  dashboard underneath. */
-export function SettingsDialog(p: { sites: Site[]; site: Site; onSites: () => void }) {
-  const { params } = useLocation()
-  const tab = (TABS.find((t) => t.id === params.get('tab'))?.id ?? 'site') as TabID
-  const go = (id: TabID) => navigate(`/settings?site=${encodeURIComponent(p.site.id)}&tab=${id}`, { replace: true })
-  const close = () => navigate('/' + encodeURIComponent(p.site.domain))
+ *  left, the section on the right. Opening it does not change the address
+ *  (lib/settings.ts); closing it leaves the dashboard exactly as it was. */
+export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSites: () => void }) {
+  const tab = TABS.some((t) => t.id === p.tab) ? p.tab : 'site'
+  const go = (id: TabID) => setSettingsTab(id)
+  const close = closeSettings
   const current = TABS.find((t) => t.id === tab)!
+  // On a phone the sections are one row of tabs wider than the screen: the
+  // edges fade and an arrow shows on the side that has more, and the open
+  // one is scrolled into view.
+  const nav = useRef<HTMLElement>(null)
+  const [more, setMore] = useState({ left: false, right: false })
+  const measure = () => {
+    const el = nav.current
+    if (!el) return
+    setMore({ left: el.scrollLeft > 4, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 })
+  }
+  useEffect(() => {
+    nav.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest', inline: 'center' })
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [tab])
+  const nudge = (dir: number) => nav.current?.scrollBy({ left: dir * 160, behavior: 'smooth' })
   return (
     <Modal label={`Settings for ${p.site.domain}`} className="settings-modal" onClose={close}>
-      <nav className="settings-nav" aria-label="Settings sections">
+      {more.left && (
+        <button type="button" className="settings-scroll left" aria-label="Earlier sections" onClick={() => nudge(-1)}>
+          <ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />
+        </button>
+      )}
+      {more.right && (
+        <button type="button" className="settings-scroll right" aria-label="More sections" onClick={() => nudge(1)}>
+          <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
+        </button>
+      )}
+      <nav ref={nav} onScroll={measure} className={'settings-nav' + (more.left ? ' more-left' : '') + (more.right ? ' more-right' : '')} aria-label="Settings sections">
         <div className="settings-title">
           <b>Settings</b>
           <span className="faint">{p.site.name || p.site.domain}</span>
         </div>
-        {TABS.map((t) => (
-          <button key={t.id} type="button" aria-current={tab === t.id} onClick={() => go(t.id)}>
-            <NavIcon d={t.icon} />
-            {t.label}
-          </button>
+        {GROUPS.map((g) => (
+          <div key={g.name} className="settings-group">
+            <span className="settings-group-head">{g.name}</span>
+            {g.tabs.map((id) => {
+              const t = TABS.find((x) => x.id === id)!
+              return (
+                <button key={t.id} type="button" aria-current={tab === t.id} onClick={() => go(t.id)}>
+                  <span className="icon-tile small">
+                    <NavIcon d={t.icon} />
+                  </span>
+                  {t.label}
+                </button>
+              )
+            })}
+          </div>
         ))}
       </nav>
       <div className="settings-pane">

@@ -11,6 +11,7 @@ import { toast } from './Toast'
 import { api, type Annotation, type Site } from '../lib/api'
 import { addDays, fmtDay, type ISODate } from '../lib/dates'
 import { fmtInt } from '../lib/format'
+import './NoteDialog.css'
 
 export type DayBar = { day: ISODate; visitors: number }
 

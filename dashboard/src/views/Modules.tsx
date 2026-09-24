@@ -60,8 +60,7 @@ export function ModulesSettings({ site }: { site: Site }) {
             <button type="button" className="mart-btn" onClick={() => setPreview(m)} aria-label={`What ${m.name} looks like`} title={`What ${m.name} looks like`}>
               <ModuleArt id={m.id} />
             </button>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div className="module-head">
                 <strong>{m.name}</strong>
                 {m.label ? (
                   <span className="tag quiet">{m.label}</span>
@@ -71,15 +70,10 @@ export function ModulesSettings({ site }: { site: Site }) {
                   <span className="tag quiet">reads data you already have</span>
                 )}
                 {m.tracker_bytes ? <span className="tag quiet num">+{m.tracker_bytes} B in the browser</span> : null}
-              </div>
-              <p className="muted" style={{ margin: '4px 0 0', fontSize: 13 }}>
-                {m.summary}
-              </p>
-              {m.server && (
-                <p className="faint" style={{ margin: '2px 0 0', fontSize: 12 }}>
-                  While on: {m.server}.
-                </p>
-              )}
+            </div>
+            <div className="module-body">
+              <p className="muted">{m.summary}</p>
+              {m.server && <p className="faint small">While on: {m.server}.</p>}
             </div>
             <button
               type="button"

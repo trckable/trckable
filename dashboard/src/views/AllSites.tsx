@@ -9,6 +9,7 @@ import { delta, fmtInt, fmtMoney, fmtPct } from '../lib/format'
 import { isViewer } from '../lib/me'
 import { navigate } from '../lib/url'
 import './AllSites.css'
+import { openSettings } from '../lib/settings'
 
 const PERIODS = [
   { days: 7, label: '7 days' },
@@ -317,7 +318,7 @@ export function AllSites({ header }: { sites: Site[]; header: React.ReactNode })
                     type="button"
                     role="listitem"
                     className={'all-row' + (quiet ? ' quiet' : '')}
-                    onClick={() => navigate(quiet ? `/settings?site=${encodeURIComponent(r.id)}&tab=install` : '/' + encodeURIComponent(r.domain))}
+                    onClick={() => (quiet ? openSettings(r, 'install') : navigate('/' + encodeURIComponent(r.domain)))}
                   >
                     <span className="all-name">
                       <Badge domain={r.domain} />

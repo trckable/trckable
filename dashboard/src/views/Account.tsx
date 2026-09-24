@@ -16,6 +16,7 @@ import { isViewer } from '../lib/me'
 import { SitesSettings } from './Sites'
 import type { Site } from '../lib/api'
 import { managed } from '../lib/managed'
+import './Account.css'
 
 // The setup wizard carries the QR encoder, so it is fetched only when someone
 // actually turns two-step sign-in on.

@@ -3,11 +3,12 @@
 // card is skipped entirely when its module is off.
 import { Modal } from '../components/Modal'
 import { isViewer } from '../lib/me'
-import { navigate } from '../lib/url'
 import { useEffect, useMemo, useState } from 'react'
 import { Picker } from '../components/Picker'
 import { api, type FunnelResult, type FunnelStep, type Heatmap, type JourneyResult, type ReportQuery, type Row, type Site } from '../lib/api'
 import { fmtDuration, fmtInt, fmtMoney } from '../lib/format'
+import { openSettings } from '../lib/settings'
+import './FullModules.css'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -242,7 +243,7 @@ export function JourneyDrawer({ site, visitor, query, onClose }: { site: Site; v
             type="button"
             className="btn"
             title="Export or erase everything held about this visitor"
-            onClick={() => navigate(`/settings?site=${encodeURIComponent(site.id)}&tab=privacy&visitor=${encodeURIComponent(visitor)}#requests`)}
+            onClick={() => openSettings(site, 'privacy', { visitor })}
           >
             Data request
           </button>
