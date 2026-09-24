@@ -145,7 +145,9 @@ function App() {
     : (boot.sites.find((s) => s.domain === domain) ?? null);
 
   const header = (
-    <Header sites={boot.sites} current={site} settings={settings} all={all} />
+    // The header hides the site picker only on the settings page (an instance
+    // with no site yet); settings over a dashboard keep the dashboard's header.
+    <Header sites={boot.sites} current={site} settings={settings && !site} all={all} />
   );
   return (
     <div className="app">

@@ -266,16 +266,14 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       return 1
     }
   })
-  const nextSpeed = () =>
-    setSpeed((v) => {
-      const n = SPEEDS[(SPEEDS.indexOf(v) + 1) % SPEEDS.length]!
-      try {
-        localStorage.setItem('tkb_replay_speed', String(n))
-      } catch {
-        /* storage blocked: the choice lasts until the page closes */
-      }
-      return n
-    })
+  const pickSpeed = (n: number) => {
+    setSpeed(n)
+    try {
+      localStorage.setItem('tkb_replay_speed', String(n))
+    } catch {
+      /* storage blocked: the choice lasts until the page closes */
+    }
+  }
   const setDayIdx = useCallback(
     (i: number | null) => {
       if (!cur) return
@@ -446,6 +444,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
   // ---- chart ----
   const series = cur?.series ?? []
+  // Each number's own day-by-day line, for the small spark in its tile.
+  const dayRows = cur?.days ?? []
+  const sparkOf = (f: (d: (typeof dayRows)[number]) => number) => (dayRows.length > 1 ? dayRows.map(f) : undefined)
   const values = series.map((p) => p[metric])
   const ghost = data?.previous?.series.map((p) => p[metric])
   const overlay = trailData
@@ -652,18 +653,18 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           top, the chart under them — they are one story, not two cards. */}
       <section className="card overview" aria-label="Overview">
       <div role="group" aria-label="Key numbers" className={money ? 'kpis money' : 'kpis'}>
-        <Kpi loading={firstLoad} vs={vs} label="Visitors" icon={Users} value={k?.visitors} fmt={fmtInt} d={delta(k?.visitors ?? 0, pk?.visitors)} pressed={metric === 'visitors'} onClick={() => setMetric('visitors')}  sub={soFarDay} />
+        <Kpi loading={firstLoad} vs={vs} label="Visitors" icon={Users} spark={series.length > 1 ? series.map((p) => p.visitors) : undefined} value={k?.visitors} fmt={fmtInt} d={delta(k?.visitors ?? 0, pk?.visitors)} pressed={metric === 'visitors'} onClick={() => setMetric('visitors')}  sub={soFarDay} />
         {money ? (
           <>
-            <Kpi loading={firstLoad} vs={vs} label="Revenue" icon={Banknote} money value={revenueNow} fmt={fmtM} d={pm ? delta(money.revenue, pm.revenue) : null}  sub={soFarDay} />
-            <Kpi loading={firstLoad} vs={vs} label="Conversion" icon={Target} value={conv} fmt={(x) => (x * 100).toFixed(x < 0.1 ? 2 : 1) + '%'} d={pm && conv !== undefined ? delta(conv, pm.conversion) : null}  sub={soFarDay} />
-            <Kpi loading={firstLoad} vs={vs} label="Revenue / visitor" icon={Coins} value={rpv} fmt={(x) => fmtMoney(x, money.currency, money.exponent, { cents: true })} d={pm && rpv !== undefined ? delta(rpv, pm.revenue_per_visitor) : null}  sub={soFarDay} />
+            <Kpi loading={firstLoad} vs={vs} label="Revenue" icon={Banknote} spark={sparkOf((d) => d.money?.revenue ?? 0)} money value={revenueNow} fmt={fmtM} d={pm ? delta(money.revenue, pm.revenue) : null}  sub={soFarDay} />
+            <Kpi loading={firstLoad} vs={vs} label="Conversion" icon={Target} spark={sparkOf((d) => (d.kpis.visitors ? (d.money?.payments ?? 0) / d.kpis.visitors : 0))} value={conv} fmt={(x) => (x * 100).toFixed(x < 0.1 ? 2 : 1) + '%'} d={pm && conv !== undefined ? delta(conv, pm.conversion) : null}  sub={soFarDay} />
+            <Kpi loading={firstLoad} vs={vs} label="Per visitor" icon={Coins} spark={sparkOf((d) => (d.kpis.visitors ? (d.money?.revenue ?? 0) / d.kpis.visitors : 0))} value={rpv} fmt={(x) => fmtMoney(x, money.currency, money.exponent, { cents: true })} d={pm && rpv !== undefined ? delta(rpv, pm.revenue_per_visitor) : null}  sub={soFarDay} />
           </>
         ) : (
-          <Kpi loading={firstLoad} vs={vs} label="Pageviews" icon={Eye} value={k?.pageviews} fmt={fmtInt} d={delta(k?.pageviews ?? 0, pk?.pageviews)} pressed={metric === 'pageviews'} onClick={() => setMetric('pageviews')}  sub={soFarDay} />
+          <Kpi loading={firstLoad} vs={vs} label="Pageviews" icon={Eye} spark={series.length > 1 ? series.map((p) => p.pageviews) : undefined} value={k?.pageviews} fmt={fmtInt} d={delta(k?.pageviews ?? 0, pk?.pageviews)} pressed={metric === 'pageviews'} onClick={() => setMetric('pageviews')}  sub={soFarDay} />
         )}
-        <Kpi loading={firstLoad} vs={vs} label="Bounce rate" icon={CornerUpLeft} value={k?.bounce_rate} fmt={fmtPct} d={delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true)}  sub={soFarDay} />
-        <Kpi loading={firstLoad} vs={vs} label="Session time" icon={Timer} value={k?.avg_session_s} fmt={fmtDuration} d={delta(k?.avg_session_s ?? 0, pk?.avg_session_s)}  sub={soFarDay} />
+        <Kpi loading={firstLoad} vs={vs} label="Bounce rate" icon={CornerUpLeft} spark={sparkOf((d) => d.kpis.bounce_rate)} value={k?.bounce_rate} fmt={fmtPct} d={delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true)}  sub={soFarDay} />
+        <Kpi loading={firstLoad} vs={vs} label="Session time" icon={Timer} spark={sparkOf((d) => d.kpis.avg_session_s)} value={k?.avg_session_s} fmt={fmtDuration} d={delta(k?.avg_session_s ?? 0, pk?.avg_session_s)}  sub={soFarDay} />
         <div className="kpi">
           <div className="label">
             <span className={'kpi-icon live' + (onlineNow ? ' on' : '')} aria-hidden="true">
@@ -790,9 +791,13 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               )}
               Replay
             </button>
-            <button type="button" className="btn speed num" onClick={nextSpeed} aria-label={`Replay speed ${speed}×, change`} title="Replay speed">
-              {speed === 0.5 ? '½' : speed}×
-            </button>
+            <div className="seg speed" role="group" aria-label="Replay speed">
+              {SPEEDS.map((v) => (
+                <button key={v} type="button" className="num" aria-pressed={speed === v} onClick={() => pickSpeed(v)}>
+                  {v}×
+                </button>
+              ))}
+            </div>
             <label htmlFor="scrub" className="sr">
               Scrub through the period
             </label>
@@ -1360,6 +1365,8 @@ function fmtRange2(from: string, to: string) {
 function Kpi(p: {
   label: string
   icon: LucideIcon
+  /** The number day by day, drawn small at the foot of the tile. */
+  spark?: number[]
   value?: number
   fmt: (n: number) => string
   d: Delta | null
@@ -1392,14 +1399,33 @@ function Kpi(p: {
       <div className={`delta num ${p.d ? 'tone-' + p.d.tone : ''}`} aria-label={p.d ? `${p.d.label} ${p.vs ?? 'vs compared'}` : undefined}>
         {p.d ? `${p.d.text} ${p.vs ?? 'vs compared'}` : (p.sub ?? '')}
       </div>
+      {p.spark && !p.loading && <KpiSpark values={p.spark} />}
     </>
   )
   return p.onClick ? (
-    <button type="button" className="kpi" aria-pressed={p.pressed} onClick={p.onClick} title={`Chart ${p.label.toLowerCase()}`}>
+    <button type="button" className={'kpi' + (p.money ? ' money' : '')} aria-pressed={p.pressed} onClick={p.onClick} title={`Chart ${p.label.toLowerCase()}`}>
       {body}
     </button>
   ) : (
-    <div className="kpi">{body}</div>
+    <div className={'kpi' + (p.money ? ' money' : '')}>{body}</div>
+  )
+}
+
+/** A tile's small line: its number day by day, no axis, no labels — the
+ *  shape of the period at a glance. */
+function KpiSpark({ values }: { values: number[] }) {
+  const w = 120
+  const h = 28
+  const max = Math.max(...values)
+  const min = Math.min(...values)
+  const span = max - min || 1
+  const pts = values.map((v, i) => [(i / (values.length - 1)) * w, h - 3 - ((v - min) / span) * (h - 6)] as const)
+  const line = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join('')
+  return (
+    <svg className="kpi-spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
+      <path d={`${line}L${w} ${h}L0 ${h}Z`} fill="currentColor" opacity="0.1" />
+      <path d={line} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+    </svg>
   )
 }
 
@@ -1485,30 +1511,20 @@ function storyLine(p: {
   const top = p.channels[0]
   const ai = p.channels.find((r) => r.value === 'AI')
   const parts: string[] = []
-  if (p.scrubDay) {
-    parts.push(`${fmtDay(p.scrubDay, { weekday: true })}: ${fmtInt(c.visitors)} visitors, ${fmtInt(c.pageviews)} pageviews.`)
-  } else if (p.trail) {
+  // The cards above already give the counts, the revenue and how they
+  // compare; the line under the chart says only what they cannot: where the
+  // visitors and the money came from.
+  if (p.trail) {
     parts.push(
       p.money
-        ? `${channelLabel(p.trail)} brought ${fmtInt(c.visitors)} visitors and ${p.money.fmt(p.money.revenue)} in revenue (${p.money.fmt(c.visitors ? p.money.revenue / c.visitors : 0)} per visitor).`
-        : `${channelLabel(p.trail)} brought ${fmtInt(c.visitors)} visitors, bounce ${fmtPct(c.bounce_rate)}, ${fmtDuration(c.avg_session_s)} per visit.`,
+        ? `${channelLabel(p.trail)}: ${p.money.fmt(c.visitors ? p.money.revenue / c.visitors : 0)} per visitor.`
+        : `${channelLabel(p.trail)}: bounce ${fmtPct(c.bounce_rate)}, ${fmtDuration(c.avg_session_s)} per visit.`,
     )
     return parts.join(' ')
-  } else if (p.prev) {
-    const d = delta(c.visitors, p.prev.visitors)
-    if (d) parts.push(d.tone === 'flat' ? 'Visitors held steady.' : `Visitors ${d.text.startsWith('↑') ? 'up' : 'down'} ${d.text.slice(2)} ${p.compare === 'year' ? 'vs last year' : p.compare === 'previous' ? 'vs the previous period' : 'vs the compared period'}.`)
-  } else {
-    parts.push(`${fmtInt(c.visitors)} visitors viewed ${fmtInt(c.pageviews)} pages.`)
   }
-  if (p.money && !p.scrubDay) {
-    const d = delta(p.money.revenue, p.money.prev)
-    parts.push(`Revenue ${p.money.fmt(p.money.revenue)}${d && d.tone !== 'flat' ? ` (${d.text})` : ''}.`)
-    const t = p.money.top
-    if (t?.revenue) return [...parts, `${channelLabel(t.value)} earned the most.`].join(' ')
-  } else if (p.money && p.scrubDay) {
-    parts[0] = parts[0].replace(/\.$/, `, ${p.money.fmt(p.money.revenue)} revenue.`)
-  }
-  if (top) parts.push(`Most came from ${channelLabel(top.value)} (${fmtPct(top.visitors / total)}).`)
+  const earner = p.money?.top
+  if (earner?.revenue) parts.push(`${channelLabel(earner.value)} earned the most.`)
+  if (top) parts.push(`Most visitors came from ${channelLabel(top.value)} (${fmtPct(top.visitors / total)}).`)
   if (ai && top?.value !== 'AI' && ai.visitors / total >= 0.01) parts.push(`AI assistants sent ${fmtPct(ai.visitors / total)}.`)
   return parts.join(' ')
 }
