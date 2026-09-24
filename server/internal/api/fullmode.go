@@ -3,8 +3,10 @@ package api
 import (
 	"errors"
 	"net/http"
+	"net/url"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
@@ -378,13 +380,41 @@ func (a *API) alertList(w http.ResponseWriter, r *http.Request) {
 	if !a.siteExists(w, r) {
 		return
 	}
+	u := r.Context().Value(ctxKey{}).(principal).user
+	if u == nil {
+		// An API key reads reports, nothing else: where alerts go is not a report.
+		fail(w, http.StatusForbidden, "an API key reads reports only")
+		return
+	}
 	list, err := a.Ctl.Alerts(r.Context(), r.PathValue("site"))
 	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	// A destination can be a secret (a Slack or Discord webhook URL is one):
+	// a viewer sees that an alert goes somewhere, not the address itself.
+	if u.Role != sqlite.RoleOwner {
+		for i := range list {
+			list[i].Target = redactTarget(list[i].Target)
+		}
+	}
 	// mail says whether an email address can be a destination here.
 	writeJSON(w, http.StatusOK, map[string]any{"alerts": list, "kinds": alertKinds(principalOf(r)), "mail": alerts.Mail != nil})
+}
+
+// redactTarget keeps where an alert goes, readable, and drops the part that
+// works as a password: "hooks.slack.com/…", "a…@example.com".
+func redactTarget(t string) string {
+	if t == "" {
+		return ""
+	}
+	if at := strings.IndexByte(t, '@'); at > 0 && !strings.Contains(t, "/") {
+		return t[:1] + "…" + t[at:]
+	}
+	if u, err := url.Parse(t); err == nil && u.Host != "" {
+		return u.Host + "/…"
+	}
+	return "…"
 }
 
 func (a *API) saveAlert(w http.ResponseWriter, r *http.Request) {

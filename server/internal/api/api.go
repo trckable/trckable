@@ -607,6 +607,11 @@ func (a *API) updateSite(w http.ResponseWriter, r *http.Request) {
 // ---- API keys ----
 
 func (a *API) keys(w http.ResponseWriter, r *http.Request) {
+	// The list of keys is for whoever makes and revokes them: owners.
+	if u := r.Context().Value(ctxKey{}).(principal).user; u == nil || u.Role != sqlite.RoleOwner {
+		fail(w, http.StatusForbidden, "only an owner can see this instance's API keys")
+		return
+	}
 	ks, err := a.Ctl.ListAPIKeys(r.Context(), principalOf(r).account)
 	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
