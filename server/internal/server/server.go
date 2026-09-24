@@ -247,6 +247,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       120 * time.Second,
 		MaxHeaderBytes:    16 << 10,
+		ErrorLog:          serverLog(os.Stderr), // its own lines, without visitors' addresses
 	}
 	// Shutdown waits for requests in flight, and a live stream is one that
 	// never finishes: end them first so a redeploy is not held for the drain.
