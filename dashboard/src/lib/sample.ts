@@ -31,7 +31,7 @@ const SHAPES: Record<string, [string, number][]> = {
   ],
   referrer: [
     ['google.com', 30],
-    ['news.ycombinator.com', 18],
+    ['linkedin.com', 18],
     ['x.com', 14],
     ['reddit.com', 11],
     ['chatgpt.com', 9],

@@ -212,8 +212,8 @@ func (a *API) shareInfoWith(w http.ResponseWriter, r *http.Request, sh sqlite.Sh
 	})
 }
 
-// shareAnnotations gives a shared page the notes on the chart: "launched on
-// Hacker News" is the context a number needs, and it is already public the
+// shareAnnotations gives a shared page the notes on the chart: "launch post
+// on LinkedIn" is the context a number needs, and it is already public the
 // moment the link is.
 func (a *API) shareAnnotations(w http.ResponseWriter, r *http.Request) {
 	sh, ok := a.shared(w, r)
