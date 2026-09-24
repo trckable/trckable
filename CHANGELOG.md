@@ -5,7 +5,7 @@ All notable changes to trckable are written down here. Versions follow
 source, and the server, the tracker and the npm package always carry it.
 Every release is tagged `vX.Y.Z` and gets a section here before it ships.
 
-## 0.1.0 (unreleased)
+## 0.1.0 (24 Sep 2026)
 
 The first public version. It includes:
 
