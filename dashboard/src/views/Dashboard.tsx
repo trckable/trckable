@@ -552,12 +552,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               active={view.filters}
               onPick={addFilter}
               onClear={() => setView({ filters: [] })}
-              saved={segments.map((g) => ({ id: g.id, name: g.name, on: current === g.query }))}
-              onOpenSaved={(id) => {
-                const g = segments.find((x) => x.id === id)
-                if (g) openView(g)
-              }}
-              onSaveCurrent={saveView}
             />
           )}
           {!isShared() && (segments.length > 0 || view.filters.length > 0) && (

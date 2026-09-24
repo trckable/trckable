@@ -32,7 +32,7 @@ export function SavedViews<V extends View>({
   const [q, setQ] = useState('')
   const [editing, setEditing] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
-  const [at, setAt] = useState({ top: 0, left: 0 })
+  const [at, setAt] = useState({ top: 0, right: 0 })
   const btn = useRef<HTMLButtonElement>(null)
   const pop = useRef<HTMLDivElement>(null)
   const active = views.find((v) => v.query === current)
@@ -40,7 +40,9 @@ export function SavedViews<V extends View>({
   useLayoutEffect(() => {
     if (!open || !btn.current) return
     const r = btn.current.getBoundingClientRect()
-    setAt({ top: r.bottom + 6, left: Math.max(8, Math.min(r.left, window.innerWidth - 340)) })
+    // Right edge under the button's right edge: the button sits at the
+    // right of the toolbar, so a menu opening rightwards would leave the screen.
+    setAt({ top: r.bottom + 6, right: Math.max(8, window.innerWidth - r.right) })
   }, [open])
 
   useEffect(() => {
@@ -95,7 +97,7 @@ export function SavedViews<V extends View>({
       </button>
       {open &&
         createPortal(
-          <div ref={pop} className="pop floating sv-pop" role="dialog" aria-label="Saved views" style={{ top: at.top, left: at.left }}>
+          <div ref={pop} className="pop floating menu-pop sv-pop" role="dialog" aria-label="Saved views" style={{ top: at.top, right: at.right }}>
             <div className="sv-head">
               <b>Saved views</b>
               <span className="faint">

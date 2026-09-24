@@ -3,7 +3,7 @@ import { StrictMode, Suspense, lazy, useCallback, useEffect, useState } from "re
 import { loadKeymap } from "./lib/keys";
 import { createRoot } from "react-dom/client";
 import { Ghost } from "./components/Logo";
-import { ghostSvg } from "./brand/logo";
+import { logoInner } from "./brand/logo";
 import { Footer } from "./components/Footer";
 import { api, setUnauthorizedHandler, type Site } from "./lib/api";
 import { navigate, useLocation } from "./lib/url";
@@ -205,14 +205,14 @@ function Header({
 }) {
   return (
     <>
-      {/* The same ghost as everywhere else (src/brand). The header has room
-          for the mark only; the full logo is in the footer. */}
+      {/* The full logo, the same as everywhere else (src/brand). On a phone
+          the header has room for the ghost only (styles.css). */}
       <a
         href="/"
         aria-label="trckable home"
         className="brand tkb-logo"
         onClick={(e) => (e.preventDefault(), navigate("/"))}
-        dangerouslySetInnerHTML={{ __html: ghostSvg(30) }}
+        dangerouslySetInnerHTML={{ __html: logoInner() }}
       />
 
       {/* One control, two actions: which site, and that site's settings. They

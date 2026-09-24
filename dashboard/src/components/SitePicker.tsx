@@ -2,7 +2,7 @@
 // not like trckable, and on a phone it opened the system list: this is the same
 // control in the product's own shape, with search once there are a few sites
 // and a way straight to adding one.
-import { Check, ChevronDown, LayoutGrid, Plus } from 'lucide-react'
+import { Check, ChevronDown, LayoutGrid, Plus, Settings2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { siteState, type Site } from '../lib/api'
 import { navigate } from '../lib/url'
@@ -126,12 +126,14 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
                 <button
                   type="button"
                   className="foot-side"
+                  aria-label="Manage sites"
+                  title="Manage sites"
                   onClick={() => {
                     setOpen(false)
                     openAccount('sites')
                   }}
                 >
-                  Manage
+                  <Settings2 size={18} strokeWidth={1.75} aria-hidden="true" />
                 </button>
               </>
             )}
