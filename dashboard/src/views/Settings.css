@@ -297,3 +297,30 @@
     right: 6px;
   }
 }
+
+.nav-off {
+  margin-left: auto;
+  font-size: 10.5px;
+}
+.card.module-off {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+}
+.card.module-off h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+.card.module-off p {
+  margin: 0;
+  font-size: 13px;
+}
+@media (max-width: 640px) {
+  .card.module-off {
+    grid-template-columns: auto 1fr;
+  }
+  .card.module-off .btn {
+    grid-column: 1 / -1;
+  }
+}

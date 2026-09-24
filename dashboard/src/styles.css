@@ -1877,22 +1877,42 @@ table.t td {
     display: none;
   }
 }
+/* On a phone a module is a small card: its picture across the top, then the
+   name with its switch, the tags, and what it does. */
 @media (max-width: 640px) {
   .module {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      'art head switch'
-      'body body body';
+      'art art'
+      'head switch'
+      'body body';
     column-gap: 12px;
     row-gap: 10px;
-    padding: 12px;
+    padding: 10px 10px 14px;
+    border-radius: 14px;
+  }
+  .module > .mart-btn {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    padding: 10px 0;
+    border: 1px solid var(--grid);
+    border-radius: 10px;
+    background: var(--sunken);
   }
   .mart-btn .mart {
-    width: 56px;
-    height: 36px;
+    width: auto;
+    height: 72px;
+  }
+  .module-head {
+    padding: 0 4px;
   }
   .module-head strong {
     flex: 1 0 100%;
+    font-size: 15px;
+  }
+  .module-body {
+    padding: 0 4px;
   }
 }
 .conn {

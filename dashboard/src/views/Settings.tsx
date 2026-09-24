@@ -39,6 +39,47 @@ function NavIcon({ d: Icon }: { d: typeof Cog }) {
   return <Icon size={15} strokeWidth={1.75} aria-hidden="true" />
 }
 
+// Sections that exist for one module, and that module's id.
+const MODULE_OF: Partial<Record<TabID, string>> = { search: 'search', payments: 'revenue' }
+const MODULE_WHY: Partial<Record<TabID, { name: string; what: string }>> = {
+  search: { name: 'Search Console', what: 'Turn it on to connect Google Search Console and see which searches showed your site, next to your own numbers.' },
+  payments: { name: 'Revenue', what: 'Turn it on to connect Stripe, Lemon Squeezy, Polar, Paddle or Dodo and see which traffic pays.' },
+}
+
+/** A module's section while the module is off: what it would do, and the
+ *  switch to turn it on — rather than a setup for something that is off. */
+function ModuleOff({ site, tab, onOn }: { site: Site; tab: TabID; onOn: () => void }) {
+  const [busy, setBusy] = useState(false)
+  const why = MODULE_WHY[tab]!
+  return (
+    <section className="card module-off">
+      <span className="icon-tile">
+        <NavIcon d={TABS.find((t) => t.id === tab)!.icon} />
+      </span>
+      <div>
+        <h3>The {why.name} module is off</h3>
+        <p className="muted">{why.what}</p>
+      </div>
+      {!isViewer() && (
+        <button
+          type="button"
+          className="btn primary"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true)
+            api
+              .setModule(site.id, MODULE_OF[tab]!, true)
+              .then(onOn)
+              .finally(() => setBusy(false))
+          }}
+        >
+          {busy ? 'Turning on…' : 'Turn on'}
+        </button>
+      )}
+    </section>
+  )
+}
+
 // The dialog's menu, grouped the way an owner looks for things.
 const GROUPS: { name: string; tabs: TabID[] }[] = [
   { name: 'This site', tabs: ['site', 'install', 'modules'] },
@@ -55,6 +96,19 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
   const go = (id: TabID) => setSettingsTab(id)
   const close = closeSettings
   const current = TABS.find((t) => t.id === tab)!
+  // Sections that belong to a module say so when it is off, and offer to
+  // turn it on, instead of showing a setup that leads nowhere.
+  const [mods, setMods] = useState<Record<string, boolean> | null>(null)
+  const loadMods = () =>
+    api
+      .modules(p.site.id)
+      .then((r) => setMods(Object.fromEntries(r.modules.map((m) => [m.id, m.enabled]))))
+      .catch(() => setMods({}))
+  useEffect(() => {
+    loadMods()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.site.id, tab])
+  const off = (id: TabID) => mods !== null && MODULE_OF[id] !== undefined && mods[MODULE_OF[id]!] === false
   // On a phone the sections are one row of tabs wider than the screen: the
   // edges fade and an arrow shows on the side that has more, and the open
   // one is scrolled into view.
@@ -100,6 +154,7 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
                     <NavIcon d={t.icon} />
                   </span>
                   {t.label}
+                  {off(t.id) && <span className="tag quiet nav-off">Off</span>}
                 </button>
               )
             })}
@@ -113,8 +168,14 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
             <X size={16} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
-        <div className="settings-body" key={tab}>
-          <SettingsSection tab={tab} site={p.site} onSites={p.onSites} />
+        {/* Focusable, so the section scrolls from the keyboard too — even one,
+            like Health, with nothing else in it to tab to. */}
+        <div className="settings-body" key={tab} tabIndex={0} role="region" aria-label={current.label}>
+          {off(tab) ? (
+            <ModuleOff site={p.site} tab={tab} onOn={loadMods} />
+          ) : (
+            <SettingsSection tab={tab} site={p.site} onSites={p.onSites} />
+          )}
         </div>
       </div>
     </Modal>
