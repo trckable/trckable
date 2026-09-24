@@ -48,6 +48,10 @@ func Open(ctx context.Context, path string, opts Options) (*Store, error) {
 		// order preservation in query operators keeps memory low under the cap.
 		"SET preserve_insertion_order = false",
 		"SET TimeZone = 'UTC'",
+		// DuckDB's allocator keeps up to 128 MB of freed memory before giving
+		// any back; a server that idles most of the day should keep a few.
+		"SET allocator_flush_threshold = '4MB'",
+		"SET allocator_bulk_deallocation_flush_threshold = '16MB'",
 	}
 	// Applied on every new pooled connection.
 	connInit := func(execer driver.ExecerContext) error {
