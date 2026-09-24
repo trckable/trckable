@@ -26,7 +26,7 @@ export function FilterMenu(p: {
         onClick={() => setOpen((o) => !o)}
       >
         <ListFilter size={17} strokeWidth={1.75} aria-hidden="true" />
-        Filter
+        <span className="filter-label">Filter</span>
         {p.active.length > 0 && <span className="filter-count num">{p.active.length}</span>}
       </button>
       {open && (

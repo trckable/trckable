@@ -1,10 +1,11 @@
 // Saved views in one dropdown: find one by typing, open it, rename it, delete
 // it. A row of pills stopped working at a handful of views; a list with a
 // search keeps working at thirty (the server's limit).
-import { Bookmark, Check, ChevronDown, ListFilter, Pencil, Trash2 } from 'lucide-react'
+import { Bookmark, Check, ChevronDown, ListFilter, Pencil, Search, Trash2 } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { confirm } from './Confirm'
+import { usePhoneLock } from './lockScroll'
 
 export type View = { id: string; name: string; query: string }
 
@@ -36,6 +37,7 @@ export function SavedViews<V extends View>({
   const btn = useRef<HTMLButtonElement>(null)
   const pop = useRef<HTMLDivElement>(null)
   const active = views.find((v) => v.query === current)
+  usePhoneLock(open)
 
   useLayoutEffect(() => {
     if (!open || !btn.current) return
@@ -105,7 +107,10 @@ export function SavedViews<V extends View>({
               </span>
             </div>
             {views.length > 4 && (
-              <input className="sv-search" type="search" placeholder="Find a view" aria-label="Find a view" autoFocus value={q} onChange={(e) => setQ(e.target.value)} />
+              <label className="menu-search">
+                <Search size={17} strokeWidth={1.75} aria-hidden="true" />
+                <input type="search" placeholder="Find a view" aria-label="Find a view" autoFocus value={q} onChange={(e) => setQ(e.target.value)} />
+              </label>
             )}
             {views.length === 0 && <p className="sv-empty">No saved views yet. Filter the dashboard, then save it here to come back in one click.</p>}
             {views.length > 0 && shown.length === 0 && <p className="sv-empty">No view is called that.</p>}

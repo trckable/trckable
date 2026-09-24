@@ -4605,8 +4605,8 @@ body[data-mode='full'] .app {
 .menu-search {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 38px;
+  gap: 10px;
+  height: 44px;
   margin: 2px 2px 6px;
   padding: 0 10px;
   border: 1px solid var(--border);
@@ -4624,7 +4624,7 @@ body[data-mode='full'] .app {
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   outline: none;
 }
 .menu-list {
@@ -4716,26 +4716,6 @@ body[data-mode='full'] .app {
   height: 26px;
   border-radius: 7px;
 }
-.menu-more {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 8px 10px;
-  border: 0;
-  border-radius: 8px;
-  background: none;
-  color: var(--text-3);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-.menu-more:hover {
-  color: var(--text-2);
-}
-.menu-more svg {
-  transition: transform 0.15s ease;
-}
 .menu-empty {
   margin: 10px;
   color: var(--text-3);
@@ -4763,6 +4743,43 @@ body[data-mode='full'] .app {
 .menu-clear:hover {
   background: var(--sunken);
   color: var(--down);
+}
+.menu-foot.split {
+  display: flex;
+  gap: 4px;
+}
+.menu-clear.save:hover {
+  color: var(--accent);
+}
+.menu-x {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.menu-x:hover {
+  background: var(--surface);
+  color: var(--down);
+}
+.filters-pop {
+  top: 42px;
+  left: 0;
+  width: 320px;
+}
+.chip.more {
+  gap: 6px;
+  cursor: pointer;
+  color: var(--text-2);
+}
+.chip.more:hover,
+.chip.more.on {
+  color: var(--text);
+  border-color: var(--border-2);
 }
 
 /* Saved views: one dropdown in the toolbar, in the menu look above. The name
@@ -4814,16 +4831,6 @@ body[data-mode='full'] .app {
 .sv-head .faint {
   font-size: 11.5px;
   font-variant-numeric: tabular-nums;
-}
-.sv-search {
-  margin: 2px 2px 4px;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--sunken);
-  color: var(--text);
-  font: inherit;
-  font-size: 13px;
 }
 .sv-empty {
   margin: 0;
@@ -5730,12 +5737,37 @@ body[data-mode='full'] .app {
   }
 }
 
-/* The toolbar on a phone: one row that fits, the Views button as its icon. */
+/* The toolbar on a phone: one row that fits. The period takes what is left
+   and shortens with an ellipsis; Filter and Views show their icon (and count). */
 @media (max-width: 640px) {
   .toolbar-tools {
     gap: 8px;
+    min-width: 0;
   }
-  .toolbar-tools .sv-btn .sv-btn-name {
+  .toolbar-tools > .range-picker {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .toolbar-tools .range-picker .btn,
+  .toolbar-tools .range-picker button {
+    min-width: 0;
+  }
+  .toolbar-tools .btn.range {
+    flex: 1 1 auto !important;
+  }
+  .toolbar-tools .range-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .toolbar-tools .sv-btn .sv-btn-name,
+  .toolbar-tools .btn.filter .filter-label {
     display: none;
+  }
+  .toolbar-tools .btn.filter,
+  .toolbar-tools .sv-btn {
+    flex: none;
+    padding: 0 11px;
   }
 }

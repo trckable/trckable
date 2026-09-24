@@ -24,6 +24,7 @@ import { sampleReport } from '../lib/sample'
 import { AskPanel } from './AskPanel'
 import { Install } from './InstallPanel'
 import { caps, keyFor, pressed, useKeymap } from '../lib/keys'
+import { ActiveFilters } from '../components/ActiveFilters'
 import { SavedViews } from '../components/SavedViews'
 import { LiveFeed } from './LiveFeed'
 import { SearchTerms } from './SearchTerms'
@@ -510,28 +511,18 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           right. The top row keeps who, which site and the view. */}
       <div className="toolbar">
         <div className="toolbar-filters" aria-label="Active filters">
-          {view.filters.length > 0 && (
-            <>
-              {view.filters.map((f) => (
-                <span key={f.dim + f.value} className="chip">
-                  {f.dim === 'channel' && <span className="dot" style={{ background: channelColor(f.value) }} />}
-                  <span className="faint">{DIM_LABEL[f.dim] ?? f.dim} is</span>
-                  <b title={f.value}>{f.dim === 'channel' ? channelLabel(f.value) : f.dim === 'country' ? countryName(f.value) : f.value}</b>
-                  <button type="button" aria-label={`Remove filter ${DIM_LABEL[f.dim] ?? f.dim} is ${f.value}`} onClick={() => removeFilter(f)}>
-                    ×
-                  </button>
-                </span>
-              ))}
-              {view.filters.length > 1 && (
-                <button type="button" className="btn ghost" style={{ height: 32, fontSize: 13 }} onClick={() => setView({ filters: [] })}>
-                  Clear all
-                </button>
-              )}
-              <button type="button" className="btn ghost" style={{ height: 32, fontSize: 13 }} onClick={saveView}>
-                Save this view
-              </button>
-            </>
-          )}
+          <ActiveFilters
+            filters={view.filters.map((f) => ({
+              key: f.dim + '\u0000' + f.value,
+              dim: DIM_LABEL[f.dim] ?? f.dim,
+              value: f.dim === 'channel' ? channelLabel(f.value) : f.dim === 'country' ? countryName(f.value) : f.value,
+              dot: f.dim === 'channel' ? channelColor(f.value) : undefined,
+              raw: f,
+            }))}
+            onRemove={removeFilter}
+            onClear={() => setView({ filters: [] })}
+            onSave={saveView}
+          />
         </div>
         <div className="toolbar-tools">
           <DatePicker

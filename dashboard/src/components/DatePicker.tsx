@@ -119,9 +119,9 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
         onClick={() => setOpen((o) => !o)}
         style={{ flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: 0, minWidth: 0, flex: short ? 'none' : 1 }}
       >
-        <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <span style={{ display: 'flex', gap: 8, alignItems: 'center', minWidth: 0, maxWidth: '100%' }}>
           <CalendarIcon />
-          <span>{presetLabel ?? fmtRange(value.range, today)}</span>
+          <span className="range-label">{presetLabel ?? fmtRange(value.range, today)}</span>
           {value.period === 'now' && <span className="pulse" aria-hidden="true" />}
           <Chevron dir="down" />
         </span>

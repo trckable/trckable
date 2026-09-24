@@ -32,3 +32,10 @@ export function useLockScroll(active = true) {
     }
   }, [active])
 }
+
+/** A dropdown on a phone opens centred over the page, like a dialog, so the
+ *  page behind it must stay put too. On a wider screen it is anchored to its
+ *  button and the page may scroll as usual. */
+export function usePhoneLock(active = true) {
+  useLockScroll(active && typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches)
+}

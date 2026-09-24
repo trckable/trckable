@@ -2,12 +2,13 @@
 // not like trckable, and on a phone it opened the system list: this is the same
 // control in the product's own shape, with search once there are a few sites
 // and a way straight to adding one.
-import { Check, ChevronDown, LayoutGrid, Plus, Settings2 } from 'lucide-react'
+import { Check, ChevronDown, LayoutGrid, Plus, Search, Settings2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { siteState, type Site } from '../lib/api'
 import { navigate } from '../lib/url'
 import { openAccount, openAddSite } from '../lib/account'
 import { isViewer } from '../lib/me'
+import { usePhoneLock } from './lockScroll'
 
 /** Green when the site sent something today, amber when it has gone quiet,
  *  hollow when nothing has ever arrived. */
@@ -25,6 +26,7 @@ function StateDot({ state }: { state: 'live' | 'quiet' | 'new' }) {
 
 export function SitePicker({ sites, current, all }: { sites: Site[]; current: Site | null; all?: boolean }) {
   const [open, setOpen] = useState(false)
+  usePhoneLock(open)
   const [q, setQ] = useState('')
   const root = useRef<HTMLDivElement>(null)
   const search = useRef<HTMLInputElement>(null)
@@ -64,14 +66,18 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
       {open && (
         <div className="pop sites" role="listbox" aria-label="Sites">
           {sites.length > 6 && (
-            <input
-              ref={search}
-              className="input"
-              placeholder="Search sites"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && shown[0] && pick(shown[0])}
-            />
+            <label className="menu-search">
+              <Search size={17} strokeWidth={1.75} aria-hidden="true" />
+              <input
+                ref={search}
+                type="search"
+                placeholder="Search sites"
+                aria-label="Search sites"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && shown[0] && pick(shown[0])}
+              />
+            </label>
           )}
           <div className="sites-list">
             {/* Every site on one page, once there is more than one to compare. */}

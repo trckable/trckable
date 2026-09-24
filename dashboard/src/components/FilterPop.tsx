@@ -33,6 +33,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Row } from '../lib/api'
+import { usePhoneLock } from './lockScroll'
 
 export type FilterGroup = {
   name: string
@@ -104,9 +105,9 @@ export default function FilterPop({
   onClose: () => void
 }) {
   const open = true
+  usePhoneLock()
   const [dim, setDim] = useState<string | null>(null)
   const [q, setQ] = useState('')
-  const [more, setMore] = useState(false)
   const search = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -177,7 +178,7 @@ export default function FilterPop({
             )}
           </div>
           <label className="menu-search">
-            <Search size={15} strokeWidth={1.75} aria-hidden="true" />
+            <Search size={17} strokeWidth={1.75} aria-hidden="true" />
             <input
               ref={search}
               type="search"
@@ -217,6 +218,7 @@ export default function FilterPop({
             </div>
           ) : (
             <div className="menu-list">
+              {ALL.every((d) => count(d.dim) === 0) && <p className="menu-empty">No visits in this period yet. Pick a longer period to filter what was recorded.</p>}
               {FILTER_GROUPS.map((g) => {
                 const live = g.dims.filter((d) => count(d.dim) > 0)
                 if (!live.length) return null
@@ -246,22 +248,18 @@ export default function FilterPop({
                 if (!idle.length) return null
                 return (
                   <div className="menu-group">
-                    <button type="button" className="menu-more" onClick={() => setMore((m) => !m)} aria-expanded={more}>
-                      {idle.length} more with nothing to pick yet
-                      <ChevronRight size={14} strokeWidth={1.75} style={{ transform: more ? 'rotate(90deg)' : undefined }} aria-hidden="true" />
-                    </button>
-                    {more &&
-                      idle.map((d) => (
-                        <div key={d.dim} className="menu-row idle">
-                          <span className="icon-tile small">
-                            <d.icon size={15} strokeWidth={1.75} />
-                          </span>
-                          <span className="menu-text">
-                            <span className="menu-title">{d.label}</span>
-                            <span className="menu-sub">{d.note === 'Full mode' ? 'Shown in Full mode' : 'Nothing recorded yet'}</span>
-                          </span>
-                        </div>
-                      ))}
+                    <p className="menu-group-head">Nothing to pick yet</p>
+                    {idle.map((d) => (
+                      <div key={d.dim} className="menu-row idle">
+                        <span className="icon-tile small">
+                          <d.icon size={15} strokeWidth={1.75} />
+                        </span>
+                        <span className="menu-text">
+                          <span className="menu-title">{d.label}</span>
+                          <span className="menu-sub">{d.note === 'Full mode' ? 'Shown in Full mode' : 'Nothing recorded in this period'}</span>
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 )
               })()}
