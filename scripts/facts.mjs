@@ -8,7 +8,8 @@
 //
 // Sizes are gzip level 9, bytes. Megabytes are MiB, rounded up.
 import { readFileSync } from 'node:fs'
-import { gzipSize } from './gzip-size.mjs'
+// The image job measures no sizes and installs no packages: load gzip only when needed.
+const { gzipSize } = process.argv[2] === 'image' ? {} : await import('./gzip-size.mjs')
 import { join } from 'node:path'
 
 const ROOT = new URL('..', import.meta.url).pathname

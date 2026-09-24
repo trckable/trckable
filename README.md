@@ -13,8 +13,8 @@ One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy,
 [![License: AGPL-3.0](https://img.shields.io/badge/server-AGPL--3.0-0b0d10?style=flat-square)](LICENSE)
 [![Tracker: MIT](https://img.shields.io/badge/tracker-MIT-0b0d10?style=flat-square)](packages/trckable/LICENSE)
 [![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod)
-[![Tracker size](https://img.shields.io/badge/tracker-2.0_KB_gzip-b8ff3c?style=flat-square)](https://trckable.com/docs/benchmarks/)
-[![Idle RAM](https://img.shields.io/badge/idle_RAM-28_MB-b8ff3c?style=flat-square)](https://trckable.com/docs/benchmarks/)
+<!--f:badge_tracker-->x<!--/f-->
+<!--f:badge_memory-->x<!--/f-->
 
 [Quick start](#-quick-start) · [How it compares](#️-how-it-compares) · [Everything it does](#-everything-it-does) · [Gallery](#-gallery) · [Docs](https://trckable.com/docs/) · [Changelog](CHANGELOG.md)
 
@@ -58,7 +58,7 @@ The free, self-hostable tools, plus DataFast (paid, hosted only) for script size
   <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 28 to 35 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
 </p>
 
-**Where it is not the right pick:** with pageviews only, Plausible CE's script is smaller (1,283 B against 1,597 B). And session replay, heatmaps and A/B tests are out of scope on purpose. If you need those, use Matomo.
+**Where it is not the right pick:** with pageviews only, Plausible CE's script is smaller (1,283 B against <!--f:tracker_core_bytes-->1,597<!--/f--> B). And session replay, heatmaps and A/B tests are out of scope on purpose. If you need those, use Matomo.
 
 ## 🧰 Everything it does
 
@@ -89,11 +89,11 @@ Nothing is paid, limited or kept for a hosted edition. The complete list, in wor
   <img src=".github/images/features/ask.svg" width="49%" alt="Ask your own AI: an MCP server with read-only tools, your key and your model">
 </p>
 <p align="center">
-  <img src=".github/images/features/exactly-once.svg" width="49%" alt="Exactly once: 200,000 events through 10 crash runs, 0 lost and 0 counted twice">
+  <img src=".github/images/features/exactly-once.svg" width="49%" alt="Exactly once: CI kills the server mid-load on every change, 40,000 events, 0 lost and 0 counted twice">
   <img src=".github/images/features/backups.svg" width="49%" alt="Encrypted nightly backups, kept seven deep, with a tested restore">
 </p>
 <p align="center">
-  <img src=".github/images/features/people.svg" width="49%" alt="Two-step sign-in (RFC 6238, QR drawn on your own server) and a read-only viewer role">
+  <img src=".github/images/features/people.svg" width="49%" alt="Two-step sign-in (RFC 6238, the QR drawn in your browser) and a read-only viewer role">
   <img src=".github/images/features/export.svg" width="49%" alt="Export the view you are looking at as CSV, or read the same numbers over the HTTP API">
 </p>
 
@@ -110,7 +110,7 @@ Nothing is paid, limited or kept for a hosted edition. The complete list, in wor
 </tr>
 <tr>
 <td><img src=".github/images/gallery/cookie-consent.png" alt="Cookie consent settings with a live preview of trckable's own bar"><br><sub><b>Cookie consent.</b> Read your banner, or brand trckable's own bar.</sub></td>
-<td><img src=".github/images/gallery/core-light.png" alt="Core mode in the light theme"><br><sub><b>Light theme.</b> Both themes pass WCAG 2.1 AA.</sub></td>
+<td><img src=".github/images/gallery/core-light.png" alt="Core mode in the light theme"><br><sub><b>Light theme.</b> Both themes are built to WCAG 2.1 AA and checked with axe-core.</sub></td>
 </tr>
 </table>
 
@@ -125,7 +125,8 @@ Go, embedded DuckDB and SQLite, React with an in-house SVG chart kit. Every even
 ## 🗺 Roadmap
 
 - [x] Tracking, dashboard (Core and Full), revenue for five providers, MCP server
-- [x] Self-hosting tools: `init` / `doctor`, alerts, encrypted backups, imports, 2FA, share links, WCAG 2.1 AA
+- [x] Self-hosting tools: alerts, encrypted backups, imports, 2FA, share links, WCAG 2.1 AA (checked with axe-core before a release)
+- [x] npm package with `init` / `doctor` / `mcp` (built and tested; published with the first release)
 - [ ] Live sandbox runs against each payment provider
 - [ ] Ask trckable: an optional in-app assistant on the same read-only tools, with your own AI key
 - [ ] Public v1.0: Railway template, releases, public demo
