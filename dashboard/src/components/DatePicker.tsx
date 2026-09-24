@@ -9,6 +9,7 @@ import {
   PRESETS,
   addMonths,
   compareRange,
+  compareLabel,
   fmtRange,
   shiftRange,
   type CompareMode,
@@ -131,8 +132,8 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
           <Chevron dir="down" />
         </span>
         {cmp && !short && (
-          <span className="faint num" style={{ fontSize: 11, marginLeft: 24 }}>
-            vs {fmtRange(cmp, today)}
+          <span className="range-vs" title={`Compared with ${fmtRange(cmp, today)}`}>
+            vs {compareLabel(value.period, value.compare, value.range)}
           </span>
         )}
       </button>

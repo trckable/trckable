@@ -4898,3 +4898,16 @@ body[data-mode] .overview .kpi .value,
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* The period button's comparison: a small chip in words under the period
+   ("vs last year"), the exact days in its tooltip. */
+.range-vs {
+  margin-left: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--text-3);
+  font-size: 11px;
+  line-height: 17px;
+  white-space: nowrap;
+}

@@ -117,6 +117,27 @@ export function calendarPrevious(period: string, r: Range): Range | null {
   }
 }
 
+/** What a comparison is against, in words: "last year", "last month", "the
+ *  30 days before". The exact days go in a tooltip. */
+export function compareLabel(period: string, mode: CompareMode, r: Range): string {
+  if (mode === 'year') return 'a year before'
+  if (mode === 'custom') return 'your dates'
+  switch (period) {
+    case 'wtd':
+      return 'last week'
+    case 'mtd':
+      return 'last month'
+    case 'ytd':
+      return 'last year'
+    case 'today':
+      return 'yesterday'
+    case 'yesterday':
+      return 'the day before'
+  }
+  const n = diffDays(r.from, r.to) + 1
+  return n === 1 ? 'the day before' : `the ${n} days before`
+}
+
 export function compareRange(r: Range, mode: CompareMode, custom?: Range, period?: string): Range | null {
   const n = diffDays(r.from, r.to) + 1
   switch (mode) {
