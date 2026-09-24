@@ -485,22 +485,19 @@ function TwoStep() {
         <span className={'tag' + (on ? ' on' : ' quiet')} style={{ marginLeft: 'auto' }}>
           {state ? (on ? 'On' : 'Off') : '…'}
         </span>
-        {state &&
-          (on ? (
-            <button type="button" className="btn" onClick={() => setOff('')}>
-              Turn off
-            </button>
-          ) : (
-            <button type="button" className="btn primary" onClick={() => setSetup(true)}>
-              Turn on
-            </button>
-          ))}
+        {on && (
+          <button type="button" className="btn" onClick={() => setOff('')}>
+            Turn off
+          </button>
+        )}
       </div>
 
       {!state && <div className="skeleton" style={{ height: 54 }} />}
       {state && !on && (
         <Row label="Authenticator app" hint="A password alone is one secret away from someone else's hands">
-          <span className="faint">Not set up</span>
+          <button type="button" className="btn primary" onClick={() => setSetup(true)}>
+            Set up
+          </button>
         </Row>
       )}
       {state && on && (

@@ -209,6 +209,7 @@ function Header({
         onClick={(e) => (e.preventDefault(), navigate("/"))}
         dangerouslySetInnerHTML={{ __html: ghostSvg(30) }}
       />
+
       {/* One control, two actions: which site, and that site's settings. They
           were two separate buttons sitting next to each other, which read as
           two unrelated things rather than one subject. */}
