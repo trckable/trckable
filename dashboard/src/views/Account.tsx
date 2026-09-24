@@ -3,6 +3,8 @@
 // Settings page can stay about one site.
 import { CircleUser, Globe, KeyRound, Users, X } from 'lucide-react'
 import { Modal } from '../components/Modal'
+import { checksHere, setChecksHere } from '../lib/update'
+import { Switch } from '../components/Switch'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { api, type APIKey, type Person, type Profile, type TwoStep as TwoStepState } from '../lib/api'
 import { settle, toast } from '../components/Toast'
@@ -97,6 +99,7 @@ export function AccountDialog({ tab, sites, email, onSites }: { tab: Tab; sites:
             {!managed() && <ChangePassword />}
             {!managed() && <TwoStep />}
             <Appearance />
+            {!managed() && !isViewer() && <Updates />}
           </>
         )}
       </div>
@@ -242,6 +245,29 @@ function ChangePassword() {
   )
 }
 
+/** New versions: whether this dashboard tells you. The check itself is in
+ *  lib/update.ts: this browser, once a day, nothing about the instance sent. */
+function Updates() {
+  const [on, setOn] = useState(checksHere())
+  return (
+    <section className="card" style={{ gap: 0 }}>
+      <div className="card-head" style={{ paddingBottom: 10 }}>
+        <h2>New versions</h2>
+      </div>
+      <Row label="Tell me when a new version is out" hint="Once a day this browser asks GitHub's list of releases. Nothing about this server is sent.">
+        <Switch
+          on={on}
+          label="Tell me when a new version is out"
+          onChange={() => {
+            setChecksHere(!on)
+            setOn(!on)
+          }}
+        />
+      </Row>
+    </section>
+  )
+}
+
 /** Who may use this instance. Owners run it, viewers read it — that is the
  *  whole model, and it is enforced on the server, not here. */
 function People() {
@@ -307,13 +333,11 @@ function People() {
                         body: 'They are signed out everywhere straight away. Nothing they looked at is deleted.',
                         confirmLabel: 'Remove',
                         danger: true,
+                        busyLabel: 'Removing…',
+                        done: `${p.email} removed`,
+                        run: () => api.removePerson(p.id),
                       })
-                      if (!ok) return
-                      const id = toast(`Removing ${p.email}…`, 'busy')
-                      api
-                        .removePerson(p.id)
-                        .then(() => (settle(id, `${p.email} removed`), load()))
-                        .catch((e: Error) => settle(id, e.message, 'error'))
+                      if (ok) load()
                     }}
                   >
                     Remove
@@ -469,13 +493,12 @@ function TwoStep() {
       field: { label: 'Your password', type: 'password', autoComplete: 'current-password' },
       confirmLabel: 'Turn off',
       danger: true,
+      busyLabel: 'Turning off…',
+      done: 'Two-step sign-in is off',
+      // A wrong password is said in the dialog, which stays open for another go.
+      run: (pw) => api.disableTwoStep(pw),
     })
-    if (pw === null) return
-    const id = toast('Turning two-step sign-in off…', 'busy')
-    api
-      .disableTwoStep(pw)
-      .then(() => (settle(id, 'Two-step sign-in is off'), load()))
-      .catch((e: Error) => settle(id, e.message, 'error'))
+    if (pw !== null) load()
   }
 
   const on = state?.enabled === true
@@ -580,13 +603,11 @@ function Keys() {
                           : 'This key has never been used. Revoking it cannot be undone.',
                         confirmLabel: 'Revoke',
                         danger: true,
+                        busyLabel: 'Revoking…',
+                        done: 'Key revoked',
+                        run: () => api.revokeKey(k.id),
                       })
-                      if (!ok) return
-                      const id = toast(`Revoking "${k.name}"…`, 'busy')
-                      api
-                        .revokeKey(k.id)
-                        .then(() => (settle(id, 'Key revoked'), load()))
-                        .catch((e: Error) => settle(id, e.message, 'error'))
+                      if (ok) load()
                     }}
                   >
                     Revoke

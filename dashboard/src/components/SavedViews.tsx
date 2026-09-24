@@ -151,7 +151,14 @@ export function SavedViews<V extends View>({
                       </button>
                       <button type="button" className="sv-act" aria-label={`Delete ${v.name}`} title="Delete" onClick={async () => {
                           close()
-                          if (await confirm({ title: `Delete “${v.name}”?`, body: 'The view goes for everyone on this site. What it shows stays in your data; only the shortcut to it is gone.', confirmLabel: 'Delete view', danger: true })) onDelete(v)
+                          await confirm({
+                            title: `Delete “${v.name}”?`,
+                            body: 'The view goes for everyone on this site. What it shows stays in your data; only the shortcut to it is gone.',
+                            confirmLabel: 'Delete view',
+                            danger: true,
+                            busyLabel: 'Deleting…',
+                            run: () => onDelete(v),
+                          })
                         }}>
                         <Trash2 size={15} strokeWidth={1.75} aria-hidden="true" />
                       </button>

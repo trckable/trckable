@@ -564,7 +564,7 @@ export const api = {
     call<{ user: { email: string }; site: Site | null }>('POST', '/setup', { token, email, password, domain }),
   login: (email: string, password: string, code?: string) => call<{ user: { email: string } }>('POST', '/login', { email, password, code }),
   logout: () => call<void>('POST', '/logout'),
-  me: () => call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string> }>('GET', '/me'),
+  me: () => call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean }>('GET', '/me'),
   setKeys: (keys: Record<string, string>) => call<{ keys: Record<string, string> }>('PUT', '/me/keys', { keys }),
   sites: () => call<{ sites: Site[] }>('GET', '/sites'),
   createSite: (domain: string) => call<Site>('POST', '/sites', { domain }),

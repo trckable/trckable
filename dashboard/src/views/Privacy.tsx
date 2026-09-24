@@ -6,7 +6,7 @@ import { Switch } from '../components/Switch'
 import { api, type BannerText, type ContentGroup, type PersonFound, type PersonPayment, type Site, type SiteConfig } from '../lib/api'
 import { Info } from '../components/Info'
 import { Picker } from '../components/Picker'
-import { settle, toast } from '../components/Toast'
+import { toast } from '../components/Toast'
 import { useConfirm } from '../components/Confirm'
 import { Shares } from './Shares'
 import { CodeBlock } from '../components/Code'
@@ -558,17 +558,10 @@ function DataRequest({ site }: { site: Site }) {
         (found.payments.length ? 'Their payments stay as business records, with nothing on them pointing at a person any more.' : ''),
       confirmLabel: 'Erase',
       danger: true,
+      busyLabel: 'Erasing…',
+      run: () => api.erasePerson(site.id, by, value.trim()).then((r) => toast(`Erased ${r.events} events and ${r.sessions} visits`)),
     })
-    if (!ok) return
-    const id = toast('Erasing…', 'busy')
-    api
-      .erasePerson(site.id, by, value.trim())
-      .then((r) => {
-        settle(id, `Erased ${r.events} events and ${r.sessions} visits`)
-        setFound(null)
-        setValue('')
-      })
-      .catch((e: Error) => settle(id, e.message, 'error'))
+    if (ok) (setFound(null), setValue(''))
   }
 
   const when = (iso?: string) => (iso ? new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '—')

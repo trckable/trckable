@@ -9,7 +9,7 @@ import { Menu } from '../components/Menu'
 import { Modal } from '../components/Modal'
 import { CodeBlock } from '../components/Code'
 import { useConfirm } from '../components/Confirm'
-import { settle, toast } from '../components/Toast'
+import { toast } from '../components/Toast'
 
 const LASTS = [
   { days: 0, label: 'No end date' },
@@ -79,13 +79,11 @@ export function Shares({ site }: { site: Site }) {
                       body: 'Anyone holding it sees nothing from then on, including anyone with it open right now. The link cannot be brought back.',
                       confirmLabel: 'Revoke',
                       danger: true,
+                      busyLabel: 'Revoking…',
+                      done: 'Link revoked',
+                      run: () => api.deleteShare(site.id, s.id),
                     })
-                    if (!ok) return
-                    const id = toast('Revoking…', 'busy')
-                    api
-                      .deleteShare(site.id, s.id)
-                      .then(() => (settle(id, 'Link revoked'), load()))
-                      .catch((e: Error) => settle(id, e.message, 'error'))
+                    if (ok) load()
                   }}
                 >
                   Revoke

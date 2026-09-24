@@ -452,19 +452,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     ? { values: trailData.current.series.map((p) => p[metric]), color: channelColor(trail!), name: channelLabel(trail!) }
     : undefined
 
-  const story = useMemo(
-    () =>
-      storyLine({
-        cur: k,
-        prev: pk,
-        channels: dims('channel'),
-        trail,
-        scrubDay: scrubbing ? view.day : undefined,
-        compare: view.compare,
-        money: money ? { revenue: revenueNow ?? 0, prev: pm?.revenue, fmt: fmtM, top: scrubbing ? undefined : src?.revenue_dims?.channel?.[0] } : undefined,
-      }),
-    [k, pk, trail, scrubbing, view.day, view.compare, src, day, money, pm, revenueNow], // eslint-disable-line react-hooks/exhaustive-deps
-  )
 
   const narrow = useNarrow()
   const shortDates = useMedia('(max-width: 960px)')
@@ -711,7 +698,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       <div className="overview-chart" role="group" aria-label={`${metric === 'visitors' ? 'Visitors' : 'Pageviews'} over time`}>
         <div className="chart-head">
           <h2>{metric === 'visitors' ? 'Visitors' : 'Pageviews'}</h2>
-          <StoryLine text={story} />
           <div className="legend">
             <span>
               <i style={{ background: 'var(--accent)' }} />
@@ -1145,22 +1131,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   )
 }
 
-/** The one-line summary above the chart. Phones get two lines and a tap. */
-function StoryLine({ text }: { text: string }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <p
-      className={open ? 'muted story open' : 'muted story'}
-      style={{ margin: 0, flex: 1, minWidth: 200 }}
-      aria-live="polite"
-      title={text}
-      onClick={() => setOpen((o) => !o)}
-    >
-      {text}
-    </p>
-  )
-}
-
 /**
  * A card's hint. Wide screens read it beside the title; phones hide that line
  * (see .card-note) and show this (i) instead, which reveals the same words
@@ -1485,41 +1455,6 @@ function TabbedCard(p: { title: string; note?: string; extra?: React.ReactNode; 
       {!folded && <div role="tabpanel">{p.render(active)}</div>}
     </div>
   )
-}
-
-/** One honest sentence about what changed, computed from the numbers on screen. */
-function storyLine(p: {
-  cur?: KPIs
-  prev?: KPIs
-  channels: Row[]
-  trail: string | null
-  scrubDay?: string
-  compare: string
-  money?: { revenue: number; prev?: number; fmt: (n: number) => string; top?: Row }
-}): string {
-  const c = p.cur
-  if (!c) return ''
-  if (c.visitors === 0) return p.scrubDay ? `No visitors on ${fmtDay(p.scrubDay, { weekday: true })}.` : 'No visitors in this period yet.'
-  const total = p.channels.reduce((s, r) => s + r.visitors, 0) || 1
-  const top = p.channels[0]
-  const ai = p.channels.find((r) => r.value === 'AI')
-  const parts: string[] = []
-  // The cards above already give the counts, the revenue and how they
-  // compare; the line under the chart says only what they cannot: where the
-  // visitors and the money came from.
-  if (p.trail) {
-    parts.push(
-      p.money
-        ? `${channelLabel(p.trail)}: ${p.money.fmt(c.visitors ? p.money.revenue / c.visitors : 0)} per visitor.`
-        : `${channelLabel(p.trail)}: bounce ${fmtPct(c.bounce_rate)}, ${fmtDuration(c.avg_session_s)} per visit.`,
-    )
-    return parts.join(' ')
-  }
-  const earner = p.money?.top
-  if (earner?.revenue) parts.push(`${channelLabel(earner.value)} earned the most.`)
-  if (top) parts.push(`Most visitors came from ${channelLabel(top.value)} (${fmtPct(top.visitors / total)}).`)
-  if (ai && top?.value !== 'AI' && ai.visitors / total >= 0.01) parts.push(`AI assistants sent ${fmtPct(ai.visitors / total)}.`)
-  return parts.join(' ')
 }
 
 function ChatIcon() {

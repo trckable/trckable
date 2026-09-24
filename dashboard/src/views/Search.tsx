@@ -119,12 +119,11 @@ export function SearchSettings({ site }: { site: Site }) {
                     body: 'The key is deleted from this server and the Search tab goes away. Nothing else changes: trckable never copied anything from Google.',
                     confirmLabel: 'Disconnect',
                     danger: true,
+                    busyLabel: 'Disconnecting…',
+                    done: 'Search Console disconnected',
+                    run: () => api.deleteSearchConsole(site.id),
                   })
-                  if (!ok) return
-                  api
-                    .deleteSearchConsole(site.id)
-                    .then(() => (setConn(null), setProps(null), toast('Disconnected')))
-                    .catch((e: Error) => toast(e.message, 'error'))
+                  if (ok) (setConn(null), setProps(null))
                 }}
               >
                 Disconnect
