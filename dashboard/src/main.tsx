@@ -1,4 +1,5 @@
 import { StrictMode, Suspense, lazy, useCallback, useEffect, useState } from "react";
+import { loadKeymap } from "./lib/keys";
 import { createRoot } from "react-dom/client";
 import { Ghost } from "./components/Logo";
 import { ghostSvg } from "./brand/logo";
@@ -19,7 +20,7 @@ const AccountDialog = lazy(() => import("./views/Account").then((m) => ({ defaul
 const AddWizard = lazy(() => import("./views/Sites").then((m) => ({ default: m.AddWizard })));
 // Only people with more than one site open it, so it loads when asked.
 const AllSites = lazy(() => import("./views/AllSites").then((m) => ({ default: m.AllSites })));
-import { Shortcuts } from "./views/Shortcuts";
+import { ShortcutsHost } from "./components/ShortcutsHost";
 // A shared link is its own entry point: no setup, no sign-in, one site.
 const SharedSite = lazy(() => import("./views/SharedSite"));
 import { Toasts } from "./components/Toast";
@@ -51,6 +52,7 @@ function App() {
       const me = await api.me().catch(() => null);
       if (!me) return setBoot({ state: "login" });
       setRole(me.role);
+      loadKeymap(me.keys);
       const { sites } = await api.sites();
       setBoot({ state: "ready", email: me.email, version: me.version, sites });
     } catch (e) {
@@ -166,7 +168,7 @@ function App() {
         />
       )}
       <Footer version={boot.version} />
-      <Shortcuts />
+      <ShortcutsHost />
       <Toasts />
       {accountTab && (
         <Suspense fallback={null}>

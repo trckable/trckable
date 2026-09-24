@@ -5,6 +5,7 @@
 //   Core     one wide block, three cards under it
 //   Full     the block splits and the row fills out — the denser screen
 import type { CSSProperties } from 'react'
+import { caps, keyFor, useKeymap } from '../lib/keys'
 
 // x, y, width, height per state. The same shapes, moved — nothing appears from
 // nowhere except the pieces Full adds, which grow out of an edge.
@@ -19,6 +20,7 @@ const SHAPES: { core: Box; full: Box }[] = [
 ]
 
 export function ModeToggle({ full, onToggle }: { full: boolean; onToggle: () => void }) {
+  useKeymap()
   // Geometry as CSS so it transitions; as SVG attributes it would jump.
   const at = (s: Box): CSSProperties => ({ x: s[0], y: s[1], width: s[2], height: s[3] })
   return (
@@ -36,7 +38,7 @@ export function ModeToggle({ full, onToggle }: { full: boolean; onToggle: () => 
         ))}
       </svg>
       <span className="mode-name">{full ? 'Full' : 'Core'}</span>
-      <span className="kbd">F</span>
+      <span className="kbd">{caps(keyFor('mode')).join('')}</span>
     </button>
   )
 }

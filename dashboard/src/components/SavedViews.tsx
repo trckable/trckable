@@ -14,6 +14,7 @@ export function SavedViews<V extends View>({
   onSave,
   onRename,
   onDelete,
+  describe,
 }: {
   views: V[]
   current: string
@@ -22,6 +23,8 @@ export function SavedViews<V extends View>({
   onSave: () => void
   onRename: (v: V, name: string) => Promise<unknown>
   onDelete: (v: V) => Promise<unknown>
+  /** What a view narrows to, in words: "Channel Direct · Campaign launch_week". */
+  describe: (query: string) => string
 }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
@@ -97,6 +100,12 @@ export function SavedViews<V extends View>({
       {open &&
         createPortal(
           <div ref={pop} className="pop floating sv-pop" role="dialog" aria-label="Saved views" style={{ top: at.top, left: at.left }}>
+            <div className="sv-head">
+              <b>Saved views</b>
+              <span className="faint">
+                {views.length} of 30
+              </span>
+            </div>
             {views.length > 4 && (
               <input className="sv-search" type="search" placeholder="Find a view" aria-label="Find a view" autoFocus value={q} onChange={(e) => setQ(e.target.value)} />
             )}
@@ -134,10 +143,21 @@ export function SavedViews<V extends View>({
                   ) : (
                     <>
                       <button type="button" className="sv-name" onClick={() => (onOpen(v), close())} aria-current={v.query === current}>
-                        <span className="sv-check" aria-hidden="true">
-                          {v.query === current ? '✓' : ''}
+                        <span className="sv-icon" aria-hidden="true">
+                          {v.query === current ? (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M5 12l5 5L20 7" />
+                            </svg>
+                          ) : (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                            </svg>
+                          )}
                         </span>
-                        <span>{v.name}</span>
+                        <span className="sv-text">
+                          <span className="sv-title">{v.name}</span>
+                          <span className="sv-sub">{describe(v.query) || 'Every visit'}</span>
+                        </span>
                       </button>
                       <button type="button" className="sv-act" aria-label={`Rename ${v.name}`} title="Rename" onClick={() => (setDraft(v.name), setEditing(v.id))}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -157,11 +177,17 @@ export function SavedViews<V extends View>({
             </ul>
             <div className="sv-foot">
               {canSave ? (
-                <button type="button" className="btn ghost small filter-save" onClick={() => (close(), onSave())}>
-                  + Save what you see now
+                <button type="button" className="sv-save" onClick={() => (close(), onSave())}>
+                  <span aria-hidden="true">+</span> Save what you see now
+                  <span className="sv-sub">{describe(current)}</span>
                 </button>
               ) : (
-                <span className="faint">Add a filter to save a new view.</span>
+                <span className="sv-hint">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                    <path d="M3 5h18l-7 8v6l-4 2v-8z" />
+                  </svg>
+                  Filter the dashboard, then save it here.
+                </span>
               )}
             </div>
           </div>,

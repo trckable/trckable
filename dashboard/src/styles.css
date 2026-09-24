@@ -996,14 +996,7 @@ table.t td {
   display: flex;
   flex-wrap: wrap;
 }
-/* The site's clock, above the presets. */
-.preset-clock {
-  padding: 0 8px 0 2px;
-  margin-right: 2px;
-  font-size: 12px;
-  color: var(--text-3);
-  border-right: 1px solid var(--grid);
-}
+
 .months {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1226,18 +1219,25 @@ table.t td {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fade-in 0.2s ease both;
   display: grid;
   place-items: center;
   padding: 16px;
   z-index: 40;
 }
+/* Every dialog: a soft light from the top corner, and a small pop as it
+   opens. The same look as the shortcuts list, which is where it started. */
 .modal {
   width: min(460px, 100%);
-  background: var(--surface);
+  background:
+    radial-gradient(520px 200px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
+    var(--surface);
   border: 1px solid var(--border-2);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
-  padding: 20px;
+  border-radius: 18px;
+  box-shadow: var(--shadow), 0 30px 80px rgb(0 0 0 / 0.35);
+  padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1245,6 +1245,99 @@ table.t td {
      otherwise push its own heading off the top of the screen, out of reach. */
   max-height: calc(100vh - 32px);
   overflow-y: auto;
+}
+.modal.rise {
+  animation: modal-pop 0.28s cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+}
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+/* The dialog's top-right corner: its tools, then a round close button. */
+.modal-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  align-self: flex-start;
+}
+.modal-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.2s ease;
+}
+.modal-close:hover {
+  color: var(--text);
+  border-color: var(--border-2);
+  transform: rotate(90deg);
+}
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 8px 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.pill-btn:hover {
+  color: var(--text);
+  border-color: var(--border-2);
+}
+.pill-btn:hover svg {
+  transform: rotate(-120deg);
+}
+.pill-btn svg {
+  transition: transform 0.35s ease;
+}
+.pill-btn .count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+/* The dialog heading, with an optional icon tile before it. */
+.modal-badge {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--accent);
+  flex: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal.rise,
+  .modal-back {
+    animation: none;
+  }
 }
 
 /* ---- Waiting for the first visit ------------------------------------------
@@ -1700,12 +1793,6 @@ table.t td {
   }
 }
 
-/* ---- Settings on a phone ---------------------------------------------------
-   Section chips scroll in one line without their hints, tables stack into
-   rows you can read, and the back button keeps only its arrow. */
-.table-wrap {
-  overflow-x: auto;
-}
 @media (max-width: 640px) {
   .settings-nav {
     scroll-snap-type: x proximity;
@@ -1736,9 +1823,6 @@ table.t td {
     width: 44px;
     padding: 0;
     justify-content: center;
-  }
-  .table-wrap {
-    overflow-x: visible;
   }
   table.t,
   table.t tbody,
@@ -1936,26 +2020,6 @@ table.t td {
   width: min(560px, 100%);
   max-width: 560px;
   gap: 12px;
-}
-
-/* Wizard progress: three words, the current one lit. */
-.wizard-steps {
-  display: flex;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text-3);
-}
-.wizard-steps span {
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-}
-.wizard-steps span.on {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.wizard-steps span.done {
-  color: var(--text-2);
 }
 
 /* The install picker has many entries: let them wrap. */
@@ -2423,11 +2487,6 @@ table.t td {
     transform: none;
   }
 }
-.listening {
-  display: grid;
-  place-items: center;
-  padding: 6px 0;
-}
 @media (prefers-reduced-motion: reduce) {
   .wiz-step {
     animation: none;
@@ -2811,27 +2870,10 @@ table.t td {
 .header-tools {
   order: 2;
 }
-.header-end {
-  order: 3;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: 8px;
-  padding-left: 10px;
-  border-left: 1px solid var(--grid);
-}
-@media (max-width: 640px) {
-  .header-end {
-    border-left: 0;
-    padding-left: 0;
-    margin-left: 0;
-  }
-}
 
 @media (max-width: 640px) {
   /* One row means one menu: the account lives in the ⋯ menu, and so does the
      site's settings — the row has space for the site, the period and ⋯. */
-  .header-end,
   .header > .gear {
     display: none;
   }
@@ -2839,38 +2881,110 @@ table.t td {
 
 /* ---- Shortcuts ------------------------------------------------------------ */
 .modal.keys-modal {
-  max-width: 980px;
+  max-width: 1040px;
   width: calc(100vw - 32px);
   gap: 18px;
+  padding: 24px;
 }
-.keys-modal .card-head > div {
+.keys-head {
+  gap: 14px;
+}
+.keys-head > div:not(.modal-tools) {
   display: grid;
-  gap: 2px;
+  gap: 3px;
 }
-.keys-modal .card-head .faint {
+.keys-head h2 {
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.keys-head .faint {
   font-size: 12.5px;
 }
 .keys-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.75fr) minmax(0, 1.15fr);
   gap: 12px;
 }
 .keys-group {
   display: grid;
   align-content: start;
-  gap: 12px;
+  gap: 14px;
   padding: 16px;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface);
+  border-radius: 16px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 70%, transparent), transparent 60%), var(--sunken);
+  transition: border-color 0.2s ease;
+}
+.keys-group:hover {
+  border-color: var(--border-2);
 }
 .keys-group header {
-  display: grid;
-  gap: 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 13px;
+}
+.keys-group header > span:last-child {
+  display: grid;
+  gap: 1px;
 }
 .keys-group header .faint {
   font-size: 11.5px;
+}
+.keys-gicon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+}
+.g-period .keys-gicon {
+  color: var(--accent);
+}
+.keys-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+.keys-foot span:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+kbd.cap.small {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  font-size: 11px;
+  border-bottom-width: 2px;
+}
+.keys-mine {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+}
+.keys-mouse .keys-what {
+  display: grid;
+  gap: 1px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.keys-mouse .keys-what b {
+  color: var(--text);
+  font-weight: 500;
+  font-size: 13px;
 }
 .keys-list {
   list-style: none;
@@ -2905,9 +3019,51 @@ table.t td {
   display: flex;
   gap: 4px;
   flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
 }
-.keys-group:not(:last-child) .keys-caps {
-  min-width: 30px;
+.keys-caps.fixed {
+  cursor: default;
+}
+button.keys-caps:hover kbd.cap {
+  border-color: var(--text-3);
+}
+button.keys-caps:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+kbd.cap.mine {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border-2));
+}
+kbd.cap.wait {
+  min-width: 44px;
+  border-color: var(--accent);
+  color: var(--accent);
+  animation: cap-wait 1s ease-in-out infinite;
+}
+.keys-list li.rec {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.keys-why {
+  margin: -6px 0 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--down) 12%, transparent);
+  color: var(--text);
+  font-size: 12.5px;
+  animation: rise 0.18s var(--ease) backwards;
+}
+@keyframes cap-wait {
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+}
+.keys-caps {
+  min-width: 60px;
 }
 .keys-what {
   color: var(--text-2);
@@ -2916,13 +3072,14 @@ table.t td {
 kbd.cap {
   display: inline-grid;
   place-items: center;
-  min-width: 26px;
-  height: 26px;
-  padding: 0 7px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
   border: 1px solid var(--border-2);
   border-bottom-width: 3px;
-  border-radius: 7px;
-  background: var(--surface-2);
+  border-radius: 8px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 7%, var(--surface-2)), var(--surface-2));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 10%, transparent), 0 2px 6px rgb(0 0 0 / 0.25);
   color: var(--text);
   font-family: var(--mono);
   font-size: 12px;
@@ -2949,11 +3106,6 @@ kbd.cap.down {
   font-size: 12px;
   white-space: nowrap;
 }
-.keys-group:last-child .keys-list li {
-  display: grid;
-  justify-items: start;
-  gap: 6px;
-}
 @keyframes key-in {
   from {
     opacity: 0;
@@ -2972,7 +3124,8 @@ kbd.cap.down {
 }
 @media (prefers-reduced-motion: reduce) {
   .keys-list li,
-  kbd.cap {
+  kbd.cap,
+  kbd.cap.wait {
     animation: none;
     transition: none;
   }
@@ -3421,92 +3574,6 @@ body[data-mode='full'] .app {
   }
 }
 
-/* ---- The period menu -------------------------------------------------------
-   Five periods, a clock in the site's own timezone, and the calendar behind
-   one more click. */
-.pop.range-menu {
-  top: 52px;
-  left: 0;
-  min-width: 250px;
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.range-clock {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 8px 12px 10px;
-  border-bottom: 1px solid var(--grid);
-  margin-bottom: 4px;
-  font-size: 12px;
-}
-.range-clock .num {
-  color: var(--text);
-  font-size: 13px;
-}
-.range-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--text-2);
-  font: inherit;
-  font-size: 14px;
-  text-align: left;
-  cursor: pointer;
-}
-.range-item .kbd,
-.range-item svg {
-  margin-left: auto;
-}
-.range-item:hover {
-  background: var(--sunken);
-  color: var(--text);
-}
-.range-item.on {
-  background: var(--sunken);
-  color: var(--text);
-}
-.range-item.custom,
-.range-item.more {
-  border-top: 1px solid var(--grid);
-  border-radius: 0 0 9px 9px;
-  margin-top: 4px;
-  padding-top: 11px;
-}
-@media (max-width: 640px) {
-  .pop.range-menu {
-    position: fixed;
-    left: 10px;
-    right: 10px;
-    top: 56px;
-    min-width: 0;
-  }
-}
-
-/* Clear the period, on the period itself. */
-.range-clear {
-  display: inline-grid;
-  place-items: center;
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  border: 1px solid var(--border-2);
-  color: var(--text-3);
-  font-size: 12px;
-  line-height: 1;
-  cursor: pointer;
-}
-.range-clear:hover {
-  color: var(--text);
-  border-color: var(--text-3);
-}
-
 /* ---- The period panel ------------------------------------------------------
    Periods first, in a grid you can read at a glance; the calendar is a step
    away, not a wall beside it. */
@@ -3698,14 +3765,6 @@ body[data-mode='full'] .app {
   justify-content: flex-start;
 }
 
-/* A two-icon switch reads faster than two words. */
-.seg.icons button {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  padding: 0;
-}
-
 /* Fold a card you are not reading. */
 .fold {
   display: grid;
@@ -3729,12 +3788,6 @@ body[data-mode='full'] .app {
 }
 .card.folded {
   padding-bottom: 12px;
-}
-
-/* The view toggle carries its shortcut, like Ask does. */
-.btn.view-toggle {
-  gap: 7px;
-  padding: 0 10px;
 }
 
 /* ---- Robots ---------------------------------------------------------------- */
@@ -4561,10 +4614,24 @@ body[data-mode='full'] .app {
 .pop.sv-pop {
   position: fixed;
   z-index: 120;
-  width: 320px;
+  width: 360px;
   padding: 6px;
+  background:
+    radial-gradient(300px 120px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--surface);
   display: grid;
   gap: 4px;
+}
+.sv-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 10px 6px;
+  font-size: 12.5px;
+}
+.sv-head .faint {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
 }
 .sv-search {
   margin: 2px 2px 4px;
@@ -4595,7 +4662,8 @@ body[data-mode='full'] .app {
 .sv-list li {
   display: flex;
   align-items: center;
-  min-height: 36px;
+  min-height: 48px;
+  padding-right: 4px;
   border-radius: 9px;
   animation: rise 0.16s var(--ease) backwards;
 }
@@ -4603,35 +4671,56 @@ body[data-mode='full'] .app {
 .sv-list li:focus-within {
   background: var(--sunken);
 }
-.sv-list li.on .sv-name {
-  color: var(--text);
-  font-weight: 600;
+.sv-list li.on .sv-icon {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0b0d10;
 }
 .sv-name {
   flex: 1;
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 8px;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 8px;
   border: 0;
   background: none;
-  color: var(--text-2);
+  color: var(--text);
   font: inherit;
   font-size: 13px;
   text-align: left;
   cursor: pointer;
 }
-.sv-name span:last-child {
+.sv-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-2);
+  flex: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.sv-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.sv-title,
+.sv-sub {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.sv-check {
-  width: 12px;
-  color: var(--accent);
-  flex: none;
+.sv-title {
+  font-weight: 500;
+}
+.sv-sub {
+  color: var(--text-3);
+  font-size: 11.5px;
 }
 .sv-act {
   display: grid;
@@ -4698,14 +4787,41 @@ body[data-mode='full'] .app {
   font-size: 12px;
 }
 .sv-foot {
-  padding: 6px 4px 2px;
+  padding: 6px 0 0;
   border-top: 1px solid var(--border);
-  font-size: 12px;
+  font-size: 12.5px;
+}
+.sv-save {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  color: var(--accent);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.sv-save:hover {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.sv-save .sv-sub {
+  grid-column: 2;
+}
+.sv-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  color: var(--text-3);
 }
 .filter-save {
   color: var(--accent) !important;
 }
-
 
 /* ---- Adding a note ---------------------------------------------------------
    The period's days as a strip of bars: you point at the bump you are about to
@@ -4823,7 +4939,6 @@ body[data-mode='full'] .app {
   font-size: 12px;
 }
 
-
 /* The whole note, in the tooltip for its day. */
 .tip-note {
   margin: 2px 0 4px;
@@ -4862,7 +4977,6 @@ body[data-mode='full'] .app {
   background: var(--money);
   color: var(--surface);
 }
-
 
 /* ---- The header at every width ---------------------------------------------
    One block that decides, instead of rules in four places that disagreed —
@@ -4919,7 +5033,6 @@ body[data-mode='full'] .app {
     box-shadow: none;
   }
 }
-
 
 /* ---- Live pulse -------------------------------------------------------------
    A visit rises from today's point as a dot and fades; a goal as a ring that
@@ -5370,7 +5483,6 @@ body[data-mode='full'] .app {
   gap: 5px;
   font-size: 12px;
 }
-
 
 /* ---- Footer: the full logo, the year and the version ----------------------- */
 .app-footer {

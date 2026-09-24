@@ -108,6 +108,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("POST /api/v1/login", a.unmanaged(a.login))
 	handleFunc("POST /api/v1/logout", a.logout)
 	handle("GET /api/v1/me", a.authed(a.me))
+	handle("PUT /api/v1/me/keys", a.authed(a.setKeys))
 	handle("GET /api/v1/sites", a.authed(a.sites))
 	handle("GET /api/v1/overview", a.authed(a.overview))
 	handle("POST /api/v1/sites", a.authed(a.createSite))
@@ -498,7 +499,30 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 	}
 	// The version is for the dashboard's footer; every response carries it in
 	// X-Trckable-Version anyway.
-	writeJSON(w, http.StatusOK, map[string]string{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version})
+	keys, _ := a.Ctl.UserKeymap(r.Context(), p.user.ID)
+	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys})
+}
+
+// setKeys keeps the shortcuts a person changed, so they follow them to any
+// browser. Anyone signed in may change their own; they touch nothing else.
+func (a *API) setKeys(w http.ResponseWriter, r *http.Request) {
+	p := r.Context().Value(ctxKey{}).(principal)
+	if p.user == nil {
+		fail(w, http.StatusForbidden, "shortcuts belong to a person, not an API key")
+		return
+	}
+	var in struct {
+		Keys sqlite.Keymap `json:"keys"`
+	}
+	if err := decode(r, &in); err != nil {
+		fail(w, http.StatusBadRequest, "bad request")
+		return
+	}
+	if err := a.Ctl.SetUserKeymap(r.Context(), p.user.ID, in.Keys); err != nil {
+		fail(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"keys": in.Keys})
 }
 
 // ---- sites ----

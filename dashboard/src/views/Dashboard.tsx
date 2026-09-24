@@ -11,7 +11,7 @@ import { useTween } from '../lib/motion'
 import { channelColor, channelLabel } from '../lib/palette'
 import { navigate, readView, setView, useLocation } from '../lib/url'
 import { openAccount } from '../lib/account'
-import { openShortcuts } from './Shortcuts'
+import { openShortcuts } from '../components/ShortcutsHost'
 import { isShared, sharedModules } from '../lib/me'
 import { THEMES, useTheme } from '../lib/theme'
 import { ModeToggle } from '../components/ModeToggle'
@@ -23,6 +23,7 @@ import { useReport } from '../lib/useReport'
 import { sampleReport } from '../lib/sample'
 import { AskPanel } from './AskPanel'
 import { Install } from './InstallPanel'
+import { caps, keyFor, pressed, useKeymap } from '../lib/keys'
 import { SavedViews } from '../components/SavedViews'
 import { LiveFeed } from './LiveFeed'
 import { SearchTerms } from './SearchTerms'
@@ -57,6 +58,7 @@ const DIM_LABEL: Record<string, string> = {
 }
 
 export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; header: React.ReactNode }) {
+  useKeymap()
   const { params } = useLocation()
   const view = readView(params)
   const today = todayIn(site.timezone)
@@ -285,13 +287,13 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // ---- keyboard: ⌘K opens Ask, F toggles Core/Full, Esc clears scrub ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      if (pressed(e, 'ask')) {
         e.preventDefault()
         setAskOpen((o) => !o)
         return
       }
-      if (e.metaKey || e.ctrlKey || e.altKey || (e.target as HTMLElement).closest('input, textarea, select')) return
-      if (e.key === 'f' || e.key === 'F') setView({ mode: full ? 'core' : 'full' })
+      if ((e.target as HTMLElement).closest('input, textarea, select')) return
+      if (pressed(e, 'mode')) setView({ mode: full ? 'core' : 'full' })
       if (e.key === 'Escape' && view.day) setView({ day: undefined })
     }
     window.addEventListener('keydown', onKey)
@@ -496,6 +498,16 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               onSave={saveView}
               onRename={renameView}
               onDelete={removeView}
+              describe={(q) =>
+                new URLSearchParams(q)
+                  .getAll('f')
+                  .map((f) => {
+                    const [dim = '', ...rest] = f.split(':')
+                    const v = rest.join(':')
+                    return `${DIM_LABEL[dim] ?? dim} ${dim === 'channel' ? channelLabel(v) : dim === 'country' ? countryName(v) : v}`
+                  })
+                  .join(' · ')
+              }
             />
           )}
           <div className="spacer" />
@@ -509,9 +521,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           </button>
         )}
           {askOn && (
-            <button type="button" className="btn ask" onClick={() => setAskOpen(true)} aria-expanded={askOpen} aria-label="Ask trckable" title="Ask trckable (⌘K)">
+            <button type="button" className="btn ask" onClick={() => setAskOpen(true)} aria-expanded={askOpen} aria-label="Ask trckable" title={`Ask trckable (${caps(keyFor('ask')).join('')})`}>
               <ChatIcon />
-              <span className="kbd">⌘K</span>
+              <span className="kbd">{caps(keyFor('ask')).join('')}</span>
             </button>
           )}
           {!narrow && <ModeToggle full={full} onToggle={() => setView({ mode: full ? 'core' : 'full' })} />}
@@ -1089,7 +1101,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             <span>Full mode adds more numbers, bounce on every row, exit pages, goals, campaigns and the live feed. Nothing reloads.</span>
           </div>
           <button type="button" className="btn primary" onClick={() => setView({ mode: 'full' })}>
-            Show Full <span className="kbd" style={{ color: 'inherit', borderColor: 'currentColor' }}>F</span>
+            Show Full <span className="kbd" style={{ color: 'inherit', borderColor: 'currentColor' }}>{caps(keyFor('mode')).join('')}</span>
           </button>
         </section>
       )}

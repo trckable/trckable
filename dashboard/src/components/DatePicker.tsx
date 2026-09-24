@@ -2,6 +2,7 @@
 // start/end fields, and a comparison (previous period, same period last
 // year, or a custom range). Keyboard-first; the view stays in the URL.
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { caps, keyFor, pressed, useKeymap } from '../lib/keys'
 import { useLockScroll } from './lockScroll'
 import type { Bucket } from '../lib/api'
 import {
@@ -80,6 +81,7 @@ const SHORT: Record<string, string> = {
 
 export function DatePicker({ value, today, onChange, short, tz, bucket, autoBucket, onBucket }: Props & { short?: boolean; tz?: string; bucket?: Bucket; autoBucket?: string; onBucket?: (b?: Bucket) => void }) {
   const [open, setOpen] = useState(false)
+  useKeymap()
   const root = useRef<HTMLDivElement>(null)
   const minDate = addMonths(today, -12 * MIN_BACK_YEARS)
   const cmp = compareRange(value.range, value.compare, value.compareCustom)
@@ -89,18 +91,19 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement
-      if (e.metaKey || e.ctrlKey || e.altKey || el.closest('input, textarea, select, [contenteditable]')) return
-      const p = PRESETS.find((p) => p.key === e.key.toLowerCase())
+      if (el.closest('input, textarea, select, [contenteditable]')) return
+      const p = PRESETS.find((p) => p.key && pressed(e, 'period.' + p.id))
+      const step = pressed(e, 'back') ? -1 : pressed(e, 'forward') ? 1 : 0
       if (p) {
         e.preventDefault()
         onChange({ ...value, period: p.id, range: p.range(today) })
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      } else if (step) {
         if (open || el.closest('[role=slider], .chart-wrap')) return
-        const next = shiftRange(value.range, e.key === 'ArrowLeft' ? -1 : 1)
+        const next = shiftRange(value.range, step)
         if (next.to > today || next.from < minDate) return
         e.preventDefault()
         onChange({ ...value, period: 'custom', range: next })
-      } else if (e.key.toLowerCase() === 'c') {
+      } else if (pressed(e, 'compare')) {
         e.preventDefault()
         onChange({ ...value, compare: value.compare === 'none' ? 'previous' : 'none' })
       }
@@ -306,7 +309,7 @@ function Popover({
                 >
                   {p.label}
                   {p.id === 'now' && <span className="pulse" aria-hidden="true" />}
-                  {p.key && <span className="kbd">{p.key.toUpperCase()}</span>}
+                  {p.key && <span className="kbd">{caps(keyFor('period.' + p.id)).join('')}</span>}
                 </button>
               )
             })}
