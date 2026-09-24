@@ -124,13 +124,8 @@ export function EmbedHeader({ info }: { info: ShareInfo }) {
 export function ShareHeader({ info }: { info: ShareInfo }) {
   return (
     <>
-      <span className="brand" aria-label="trckable">
-        <span className="wordmark">
-          <Wordmark height={28} />
-        </span>
-        <span className="mark" aria-hidden="true">
-          <Ghost size={30} peek />
-        </span>
+      <span className="brand">
+        <Wordmark height={28} />
       </span>
       <span className="share-who">
         <b>{info.site || info.domain}</b>

@@ -1,6 +1,7 @@
 import { StrictMode, Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Ghost } from "./components/Logo";
+import { logoFont, logoInner } from "./brand/logo";
 import { api, setUnauthorizedHandler, type Site } from "./lib/api";
 import { navigate, useLocation } from "./lib/url";
 import "./styles.css";
@@ -188,20 +189,16 @@ function Header({
 }) {
   return (
     <>
+      {/* The same logo as everywhere else (src/brand); on a phone the name
+          gives its room to the site, the dates and the filters. */}
       <a
         href="/"
         aria-label="trckable home"
-        className="brand"
+        className="brand tkb-logo"
+        style={{ fontSize: logoFont(30) }}
         onClick={(e) => (e.preventDefault(), navigate("/"))}
-      >
-        {/* The ghost is trckable inside the product: the name is on the
-            sign-in page and on share links, where people meet it without
-            knowing it; in here the mark is the project, and it leaves the row
-            to the site, the dates and the filters. */}
-        <span className="mark" aria-hidden="true" title="trckable">
-          <Ghost size={32} peek />
-        </span>
-      </a>
+        dangerouslySetInnerHTML={{ __html: logoInner(30) }}
+      />
       {/* One control, two actions: which site, and that site's settings. They
           were two separate buttons sitting next to each other, which read as
           two unrelated things rather than one subject. */}

@@ -1,0 +1,76 @@
+/* trckable's logo. The only definition, with logo.ts beside it; trckable.com,
+   its docs and its legal pages use generated copies.
+
+   The host sets the font-size (logoFont in logo.ts) and may set these, which
+   default to the dashboard's and trckable.com's own tokens:
+     --tkb-ink     the name, and the chart line
+     --tkb-muted   "able" at rest
+     --tkb-accent  the a that peeks in
+     --tkb-bg      the page behind the line */
+.tkb-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  color: var(--tkb-ink, var(--text, #f5f7fa));
+  text-decoration: none;
+}
+.tkb-ghost {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+.tkb-line-edge {
+  stroke: var(--tkb-bg, var(--bg, #0b0d10));
+}
+.tkb-line {
+  stroke: var(--tkb-ink, var(--text, #f5f7fa));
+}
+.tkb-wm {
+  display: inline-flex;
+  align-items: baseline;
+  font-weight: 760;
+  line-height: 1;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+}
+.tkb-able {
+  font-weight: 360;
+  color: var(--tkb-muted, var(--text-2, #a7b0bd));
+  letter-spacing: -0.035em;
+  margin-left: 0.02em;
+  transition: color 0.3s;
+}
+.tkb-a {
+  display: inline-block;
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+  color: var(--tkb-accent, var(--accent, #b8ff3c));
+  transform: translateY(0.55em) scale(0.6);
+  transition: width 0.4s cubic-bezier(0.3, 1.4, 0.5, 1), opacity 0.2s, transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+/* A real pointer only: on a touch screen :hover sticks after a tap. */
+@media (hover: hover) {
+  .tkb-logo:hover .tkb-a {
+    width: 0.56em;
+    opacity: 1;
+    transform: none;
+  }
+  .tkb-logo:hover .tkb-able {
+    color: var(--tkb-ink, var(--text, #f5f7fa));
+  }
+}
+.tkb-logo:focus-visible .tkb-a {
+  width: 0.56em;
+  opacity: 1;
+  transform: none;
+}
+.tkb-logo:focus-visible .tkb-able {
+  color: var(--tkb-ink, var(--text, #f5f7fa));
+}
+@media (prefers-reduced-motion: reduce) {
+  .tkb-a,
+  .tkb-able {
+    transition: none;
+  }
+}

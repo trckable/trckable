@@ -893,6 +893,9 @@ table.t td {
 }
 
 /* the ghost peeks up and down while waiting */
+.ghost {
+  display: inline-flex;
+}
 .peek {
   animation: peek 1.8s var(--ease) infinite;
 }
@@ -1299,12 +1302,12 @@ table.t td {
   align-items: center;
   margin-right: 4px;
 }
-.brand .mark {
-  display: flex;
-}
 @media (max-width: 640px) {
   .brand {
     margin-right: 0;
+  }
+  .brand .tkb-wm {
+    display: none;
   }
   .header {
     gap: 8px;
@@ -2757,45 +2760,6 @@ table.t td {
 }
 .chart-tip .num {
   color: var(--text-2);
-}
-
-/* ---- The wordmark blinks --------------------------------------------------
-   Two quick blinks every eight seconds, and one whenever the pointer visits.
-   Peekaboo: the eyes are the whole joke. */
-.eye {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: blink 8s var(--ease) infinite;
-}
-.eye:nth-child(2) {
-  animation-delay: 0.08s;
-}
-.brand:hover .eye {
-  animation: blink 0.5s var(--ease) 1;
-}
-@keyframes blink {
-  0%,
-  92%,
-  100% {
-    transform: scaleY(1);
-  }
-  94% {
-    transform: scaleY(0.08);
-  }
-  96% {
-    transform: scaleY(1);
-  }
-  97.5% {
-    transform: scaleY(0.08);
-  }
-  99% {
-    transform: scaleY(1);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .eye {
-    animation: none;
-  }
 }
 
 /* The account dialog: a page's worth of settings, over whatever is on screen. */
@@ -4977,72 +4941,3 @@ body[data-mode='full'] .app {
   font-size: 12px;
 }
 
-/* ---- The name plays peekaboo ------------------------------------------------
-   "trck" is missing its a. Once, a moment after the page opens, and whenever
-   the pointer visits, the a pops up between "tr" and "ck". */
-.wm-logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45em;
-  color: var(--text);
-}
-.wm-logo svg {
-  display: block;
-  flex: none;
-}
-.wm {
-  display: inline-flex;
-  align-items: baseline;
-  font: 760 1em/1 var(--font);
-  letter-spacing: -0.055em;
-  white-space: nowrap;
-}
-.wm-able {
-  font-weight: 360;
-  color: var(--text-2);
-  letter-spacing: -0.035em;
-  margin-left: 0.02em;
-  transition: color 0.3s;
-}
-.wm-a {
-  display: inline-block;
-  width: 0;
-  overflow: hidden;
-  opacity: 0;
-  color: var(--accent);
-  transform: translateY(0.55em) scale(0.6);
-  transition: width 0.4s cubic-bezier(0.3, 1.4, 0.5, 1), opacity 0.2s, transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
-  animation: wm-peek 1.7s cubic-bezier(0.3, 1.3, 0.5, 1) 1.2s backwards;
-}
-.wm-logo:hover .wm-a,
-.brand:hover .wm-a,
-a:focus-visible .wm-a {
-  width: 0.56em;
-  opacity: 1;
-  transform: none;
-}
-.wm-logo:hover .wm-able,
-.brand:hover .wm-able {
-  color: var(--text);
-}
-@keyframes wm-peek {
-  0%,
-  100% {
-    width: 0;
-    opacity: 0;
-    transform: translateY(0.55em) scale(0.6);
-  }
-  22%,
-  72% {
-    width: 0.56em;
-    opacity: 1;
-    transform: none;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .wm-a,
-  .wm-able {
-    transition: none;
-    animation: none;
-  }
-}
