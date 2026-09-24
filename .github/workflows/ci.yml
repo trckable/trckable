@@ -97,6 +97,14 @@ jobs:
       - run: pnpm --filter trckable build
       - run: cd e2e && npx playwright install --with-deps chromium firefox webkit
       - run: cd e2e && npx playwright test
+      - name: WCAG 2.1 AA on the dashboard's main screens, both themes (axe-core, demo data)
+        run: |
+          d=$(mktemp -d)
+          (cd server && go run ./bench/demoseed -data "$d" -days 30 -daily 150 > /dev/null)
+          echo 'correct horse battery' | TRCKABLE_DATA_DIR="$d" server/bin/trckabled admin add-user me@site.com --role owner
+          TRCKABLE_DATA_DIR="$d" TRCKABLE_ADDR=127.0.0.1:8799 server/bin/trckabled serve > "$d/log" 2>&1 &
+          for i in $(seq 1 50); do curl -sf 127.0.0.1:8799/readyz > /dev/null && break; sleep 0.3; done
+          cd e2e && TRCKABLE_A11Y_URL=http://127.0.0.1:8799 npx playwright test a11y
 
   image:
     name: image (weight budget)
