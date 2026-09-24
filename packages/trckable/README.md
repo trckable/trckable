@@ -3,12 +3,19 @@
 **Peekaboo. Every visit counted.**
 
 Tiny, open-source web analytics that shows which traffic pays. This is the
-client for a self-hosted [trckable](https://github.com/trckable/trckable) server.
+client for a [trckable](https://github.com/trckable/trckable) server: your own,
+self-hosted, or trckable Cloud (opening soon). The same package works with both;
+only `host` differs.
 
 - ~2 KB, bundled into your app (no script file for ad blockers to block)
 - Pageviews for any SPA, goals, outbound links, downloads, scroll goals, engagement time
-- Events are never lost: queued in the browser and retried, and never double-counted
+- Events that fail to send are kept in the browser and sent again on a later page
+  (not in cookieless mode, which keeps nothing); the server counts each one once
 - Cookieless mode stores nothing in the browser
+
+Tracking needs no key: only the site's public id (`tkb_…`). The Next.js route
+and other server proxies use the site's proxy key, kept on your server, and
+`npx trckable mcp` a read-only API key.
 
 ## React (Vite, React Router, Remix…)
 
