@@ -9,10 +9,8 @@ section into the release.
 
 ## Unreleased
 
-- Hosting trckable for others: operator endpoints for accounts on one server
-  (create with an owner, list, limit owners, read-only, suspend, delete with
-  everything in it), and `TRCKABLE_MANAGED` for a provider that signs people
-  in itself: no setup, passwords or two-step there, so nobody gets in around it
+- Groundwork for hosted accounts (off unless an operator token is set);
+  nothing changes for a self-hosted instance
 
 ## 0.1.1 (24 Sep 2026)
 
