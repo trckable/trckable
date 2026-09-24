@@ -81,7 +81,7 @@ func main() {
 	rng := rand.New(rand.NewSource(*seed))
 	now := time.Now()
 	start := now.AddDate(0, 0, -*days).Truncate(24 * time.Hour)
-	spike := *days - 13 // a Hacker News day two weeks ago
+	spike := *days - 13 // a launch post that took off on LinkedIn, two weeks ago
 	var evs []event.Event
 	var buys []purchase
 	var id uint64 = uint64(now.UnixNano())
@@ -124,7 +124,7 @@ func main() {
 			if len(ch.refs) > 0 {
 				ref = ch.refs[rng.Intn(len(ch.refs))]
 				if ch.name == "Social" && (d == spike || d == spike+1) && rng.Float64() < 0.8 {
-					ref = "news.ycombinator.com"
+					ref = "www.linkedin.com"
 				}
 			}
 			var utm string
