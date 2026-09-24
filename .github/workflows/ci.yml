@@ -1,0 +1,120 @@
+# trckable CI: correctness, durability and the weight budget are enforced on
+# every push. A change that loses data or makes trckable heavier cannot merge.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  server:
+    name: server (tests, race, crash)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+          cache-dependency-path: server/go.sum
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - name: vet
+        run: go vet ./...
+      - name: test (race detector; network tests skipped)
+        run: go test ./... -race -count=1 -short
+      - name: build trckabled
+        run: go build -trimpath -ldflags="-s -w" -o bin/trckabled ./cmd/trckabled
+      - name: crash test — kill -9 mid-load, exactly once
+        run: go run ./bench/crashtest -bin ./bin/trckabled -n 20000 -signal kill
+      - name: crash test — graceful redeploy, exactly once
+        run: go run ./bench/crashtest -bin ./bin/trckabled -n 20000 -signal term
+      - name: backup while serving, restore, serve again — identical reports
+        run: bench/roundtrip/roundtrip.sh ./bin/trckabled
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+  tracker:
+    name: tracker + npm package (tests, size budget)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: tracker tests
+        run: pnpm --filter @trckable/tracker test
+      - name: tracker ≤ 2 KB gzip (and the embedded copy is up to date)
+        run: |
+          pnpm --filter @trckable/tracker size
+          git diff --exit-code server/internal/web/assets/t.js || (echo "run: pnpm --filter @trckable/tracker build" && exit 1)
+      # The build comes first: one test reads the built files, because a
+      # feature flag left undefined there is only visible in dist/.
+      - name: npm package build (react entry ≤ 2.5 KB gzip) + tests
+        run: pnpm --filter trckable build && pnpm --filter trckable test
+
+  dashboard:
+    name: dashboard (types, first load ≤ 130 KB gzip, embedded build up to date)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @trckable/dashboard build
+      - name: the embedded dashboard matches the source
+        run: git diff --exit-code server/internal/web/dist || (echo "run: pnpm --filter @trckable/dashboard build" && exit 1)
+
+  e2e:
+    name: browsers (Chromium, Firefox, WebKit)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.27", cache-dependency-path: server/go.sum }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: cd server && go build -o bin/trckabled ./cmd/trckabled
+      - run: pnpm --filter trckable build
+      - run: cd e2e && npx playwright install --with-deps chromium firefox webkit
+      - run: cd e2e && npx playwright test
+
+  image:
+    name: image (weight budget)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: build image
+        run: docker build -f deploy/Dockerfile -t trckable:ci .
+      - name: compressed size ≤ 40 MB
+        run: |
+          bytes=$(docker save trckable:ci | gzip -1 | wc -c)
+          mb=$(( bytes / 1048576 ))
+          echo "compressed image: ${mb} MB (budget 40 MB)"
+          test "$mb" -le 40
+      - name: boots, accepts an event, idle RAM ≤ 64 MB, stops cleanly
+        run: |
+          docker run -d --name t -p 8080:8080 trckable:ci
+          for i in $(seq 1 50); do curl -sf localhost:8080/readyz && break; sleep 0.2; done
+          site=$(docker exec t trckabled site add example.com)
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST localhost:8080/api/e \
+            -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36' \
+            -d "{\"s\":\"$site\",\"k\":\"pv\",\"u\":\"https://example.com/\"}")
+          test "$code" = 202
+          sleep 3
+          mem=$(docker stats --no-stream --format '{{.MemUsage}}' t | awk '{print $1}')
+          echo "idle memory: $mem (budget 64MiB)"
+          case "$mem" in *GiB) exit 1;; esac
+          test "$(echo "$mem" | sed 's/MiB//' | cut -d. -f1)" -le 64
+          docker stop -t 30 t
+          test "$(docker inspect -f '{{.State.ExitCode}}' t)" = 0

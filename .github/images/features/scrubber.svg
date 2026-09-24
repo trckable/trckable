@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="250" viewBox="0 0 440 250" role="img" aria-label="Scrub through time. Drag the chart and every card re-animates to that day.">
+<rect x="0.5" y="0.5" width="439" height="249" rx="16" fill="#111317" stroke="#23272f"/>
+<rect x="14" y="14" width="412" height="148" rx="11" fill="#0b0d10"/>
+<g transform="translate(14 14)">
+    <path d="M30 110c30 0 40-40 70-40s40 20 70 20 40-50 70-50 40 30 70 30 40-10 70-10" fill="none" stroke="#c8fa3c" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M30 110c30 0 40-40 70-40s40 20 70 20 40-50 70-50 40 30 70 30 40-10 70-10V128H30Z" fill="#c8fa3c" opacity="0.08"/>
+    <g transform="translate(250 0)">
+      <line y1="20" y2="128" stroke="#f5f7fa" stroke-width="1.5" x1="0" x2="0"/>
+      <circle cy="126" r="6" fill="#c8fa3c" stroke="#0b0d10" stroke-width="2"/>
+      <animateTransform attributeName="transform" type="translate" values="250 0;370 0;40 0;250 0" keyTimes="0;0.25;0.75;1" dur="6s" repeatCount="indefinite"/>
+    </g>
+  </g>
+<text x="24" y="196" fill="#f5f7fa" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="650">Scrub through time</text>
+<text x="24" y="222" fill="#a7b0bd" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="13.5">Drag the chart and every card re-animates to that day.</text>
+</svg>

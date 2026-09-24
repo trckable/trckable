@@ -1,0 +1,23 @@
+{
+  "name": "@trckable/tracker",
+  "private": true,
+  "version": "0.1.0",
+  "description": "trckable tracker core \u2014 the ~2 KB script behind /js/t.js and the trckable npm package",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/core.ts",
+    "./bar": "./src/bar.ts"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "size": "node build.mjs --check",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "happy-dom": "^20.14.5",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  }
+}

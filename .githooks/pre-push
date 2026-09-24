@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# The quick checks before any push to main.
+# Install once per clone: git config core.hooksPath .githooks
+while read -r _ _ remote_ref _; do
+  if [ "$remote_ref" = refs/heads/main ]; then
+    exec "$(git rev-parse --show-toplevel)/scripts/ship.sh" --quick
+  fi
+done

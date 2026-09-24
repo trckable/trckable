@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="250" viewBox="0 0 440 250" role="img" aria-label="Two-step sign-in, viewer role. RFC 6238, the QR drawn on your own server.">
+<rect x="0.5" y="0.5" width="439" height="249" rx="16" fill="#111317" stroke="#23272f"/>
+<rect x="14" y="14" width="412" height="148" rx="11" fill="#0b0d10"/>
+<g transform="translate(14 14)">
+    <path d="M206 20l62 22v32c0 34-26 52-62 62-36-10-62-28-62-62V42z" fill="none" stroke="#c8fa3c" stroke-width="3"/>
+    <path d="M182 78l16 16 32-34" fill="none" stroke="#c8fa3c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="70" stroke-dashoffset="0">
+      <animate attributeName="stroke-dashoffset" values="70;70;0" keyTimes="0;0.300;1" dur="1s" fill="freeze"/>
+    </path>
+  </g>
+<text x="24" y="196" fill="#f5f7fa" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="650">Two-step sign-in, viewer role</text>
+<text x="24" y="222" fill="#a7b0bd" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="13.5">RFC 6238, the QR drawn on your own server.</text>
+</svg>

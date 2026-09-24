@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="250" viewBox="0 0 440 250" role="img" aria-label="Core Web Vitals. How fast pages feel, from the browsers that visited.">
+<rect x="0.5" y="0.5" width="439" height="249" rx="16" fill="#111317" stroke="#23272f"/>
+<rect x="14" y="14" width="412" height="148" rx="11" fill="#0b0d10"/>
+<g transform="translate(14 14)">
+    <path d="M146 118a60 60 0 0 1 120 0" fill="none" stroke="#6b7482" stroke-width="10" stroke-linecap="round" opacity="0.35"/>
+    <path d="M146 118a60 60 0 0 1 120 0" fill="none" stroke="#c8fa3c" stroke-width="10" stroke-linecap="round" stroke-dasharray="189" stroke-dashoffset="60">
+      <animate attributeName="stroke-dashoffset" values="189;60" dur="1.1s" fill="freeze"/>
+    </path>
+    <path d="M206 118 170 90" stroke="#c8fa3c" stroke-width="4" stroke-linecap="round" transform="rotate(4 206 118)">
+      <animateTransform attributeName="transform" type="rotate" values="-40 206 118;14 206 118;4 206 118" dur="1.3s" fill="freeze"/>
+    </path>
+    <circle cx="206" cy="118" r="7" fill="#c8fa3c"/>
+    <text x="206" y="144" fill="#c8fa3c" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="11" text-anchor="middle">LCP 1.4 s · good</text>
+  </g>
+<text x="24" y="196" fill="#f5f7fa" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="650">Core Web Vitals</text>
+<text x="24" y="222" fill="#a7b0bd" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="13.5">How fast pages feel, from the browsers that visited.</text>
+</svg>

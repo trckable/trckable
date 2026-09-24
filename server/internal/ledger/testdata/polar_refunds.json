@@ -1,0 +1,16 @@
+{
+  "provider": "polar",
+  "note": "A Polar checkout-link purchase attributed via ?reference_id=trckable_…; a partial refund reported as refund.created (pending), refund.updated (succeeded) and order.refunded (cumulative): counted once. A renewal order inherits the subscription's metadata.",
+  "events": [
+    {"type":"order.paid","timestamp":"2026-09-10T12:00:00Z","data":{"id":"ord_1","created_at":"2026-09-10T11:59:59Z","modified_at":"2026-09-10T12:00:00Z","status":"paid","paid":true,"subtotal_amount":5000,"discount_amount":0,"net_amount":5000,"tax_amount":1000,"total_amount":6000,"refunded_amount":0,"refunded_tax_amount":0,"currency":"eur","billing_reason":"subscription_create","customer_id":"c_1","subscription_id":"s_1","metadata":{"reference_id":"trckable_pol123_abc"},"customer":{"email":"p@x.y","metadata":{}}}},
+    {"type":"refund.created","timestamp":"2026-09-12T12:00:00Z","data":{"id":"rf_1","created_at":"2026-09-12T12:00:00Z","modified_at":"2026-09-12T12:00:00Z","order_id":"ord_1","amount":2500,"tax_amount":500,"currency":"eur","status":"pending"}},
+    {"type":"refund.updated","timestamp":"2026-09-12T12:05:00Z","data":{"id":"rf_1","created_at":"2026-09-12T12:00:00Z","modified_at":"2026-09-12T12:05:00Z","order_id":"ord_1","amount":2500,"tax_amount":500,"currency":"eur","status":"succeeded"}},
+    {"type":"order.refunded","timestamp":"2026-09-12T12:05:01Z","data":{"id":"ord_1","created_at":"2026-09-10T11:59:59Z","modified_at":"2026-09-12T12:05:01Z","status":"partially_refunded","paid":true,"tax_amount":1000,"total_amount":6000,"refunded_amount":2500,"refunded_tax_amount":500,"currency":"eur","billing_reason":"subscription_create","customer_id":"c_1","subscription_id":"s_1","metadata":{"reference_id":"trckable_pol123_abc"}}},
+    {"type":"order.paid","timestamp":"2026-10-10T12:00:00Z","data":{"id":"ord_2","created_at":"2026-10-10T12:00:00Z","modified_at":"2026-10-10T12:00:00Z","status":"paid","paid":true,"tax_amount":1000,"total_amount":6000,"refunded_amount":0,"refunded_tax_amount":0,"currency":"eur","billing_reason":"subscription_cycle","customer_id":"c_1","subscription_id":"s_1","metadata":{}}}
+  ],
+  "currency": "EUR",
+  "expect": [
+    {"id":"ord_1","amount":5000,"refunded":2500,"visitor":"pol123","kind":"subscription"},
+    {"id":"ord_2","amount":5000,"refunded":0,"visitor":"pol123","kind":"renewal"}
+  ]
+}

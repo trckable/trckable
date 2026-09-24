@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="250" viewBox="0 0 440 250" role="img" aria-label="Exactly once. Crash it mid-load: 0 lost, 0 counted twice.">
+<rect x="0.5" y="0.5" width="439" height="249" rx="16" fill="#111317" stroke="#23272f"/>
+<rect x="14" y="14" width="412" height="148" rx="11" fill="#0b0d10"/>
+<g transform="translate(14 14)">
+    <rect x="30" y="64" width="18" height="18" rx="4" fill="#c8fa3c" opacity="0.3">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2.4s" begin="0s" repeatCount="indefinite"/></rect><rect x="55" y="64" width="18" height="18" rx="4" fill="#c8fa3c" opacity="0.3">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2.4s" begin="0.2s" repeatCount="indefinite"/></rect><rect x="80" y="64" width="18" height="18" rx="4" fill="#c8fa3c" opacity="0.3">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2.4s" begin="0.4s" repeatCount="indefinite"/></rect><rect x="105" y="64" width="18" height="18" rx="4" fill="#c8fa3c" opacity="0.3">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2.4s" begin="0.6000000000000001s" repeatCount="indefinite"/></rect><rect x="130" y="64" width="18" height="18" rx="4" fill="#c8fa3c" opacity="0.3">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2.4s" begin="0.8s" repeatCount="indefinite"/></rect><rect x="155" y="64" width="18" height="18" rx="4" fill="#c8fa3c" opacity="0.3">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2.4s" begin="1s" repeatCount="indefinite"/></rect><rect x="180" y="64" width="18" height="18" rx="4" fill="#c8fa3c" opacity="0.3">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2.4s" begin="1.2000000000000002s" repeatCount="indefinite"/></rect>
+    <path d="M208 73h12" stroke="#c8fa3c" stroke-width="2.4" stroke-linecap="round"/>
+    <rect x="226" y="40" width="156" height="66" rx="10" fill="none" stroke="#c8fa3c" stroke-width="2"/>
+    <text x="304" y="66" fill="#f5f7fa" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12.5" text-anchor="middle">fsync'd log</text>
+    <text x="304" y="88" fill="#c8fa3c" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12.5" text-anchor="middle">0 lost · 0 twice</text>
+    <text x="30" y="124" fill="#6b7482" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="11">200,000 events through 10 crash runs</text>
+  </g>
+<text x="24" y="196" fill="#f5f7fa" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="650">Exactly once</text>
+<text x="24" y="222" fill="#a7b0bd" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="13.5">Crash it mid-load: 0 lost, 0 counted twice.</text>
+</svg>

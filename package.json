@@ -1,0 +1,17 @@
+{
+  "name": "trckable-monorepo",
+  "private": true,
+  "description": "trckable \u2014 tiny, open-source, self-hosted web analytics that shows which traffic pays",
+  "license": "AGPL-3.0-only",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "ship": "scripts/ship.sh",
+    "check": "scripts/ship.sh --check"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}

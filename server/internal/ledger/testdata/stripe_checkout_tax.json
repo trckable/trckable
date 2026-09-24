@@ -1,0 +1,12 @@
+{
+  "provider": "stripe",
+  "note": "One-off Checkout payment with tax: money from payment_intent.succeeded, tax and visitor from checkout.session.completed (payment_intent_data.metadata not set, so the PaymentIntent has no metadata). Shapes per docs.stripe.com, API 2026-08-26.dahlia.",
+  "events": [
+    {"id":"evt_cs1","object":"event","api_version":"2026-08-26.dahlia","created":1758500010,"livemode":true,"type":"checkout.session.completed",
+     "data":{"object":{"id":"cs_1","object":"checkout.session","mode":"payment","payment_status":"paid","status":"complete","payment_intent":"pi_1","invoice":null,"subscription":null,"customer":"cus_1","client_reference_id":null,"metadata":{"trckable_vid":"a1b2c3.qx9"},"currency":"eur","amount_subtotal":10000,"amount_total":11900,"total_details":{"amount_discount":0,"amount_shipping":0,"amount_tax":1900},"customer_details":{"email":"a@b.c"},"livemode":true}}},
+    {"id":"evt_pi1","object":"event","api_version":"2026-08-26.dahlia","created":1758500000,"livemode":true,"type":"payment_intent.succeeded",
+     "data":{"object":{"id":"pi_1","object":"payment_intent","amount":11900,"amount_received":11900,"currency":"eur","customer":"cus_1","latest_charge":"ch_1","metadata":{},"status":"succeeded","livemode":true,"created":1758499990}}}
+  ],
+  "currency": "EUR",
+  "expect": [{"id":"pi_1","amount":10000,"refunded":0,"visitor":"a1b2c3","kind":"one_time"}]
+}
