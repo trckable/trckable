@@ -46,7 +46,7 @@ import (
 )
 
 // Version is set at build time (-ldflags "-X .../server.Version=v1.2.3").
-var Version = "0.1.0" // the VERSION file; release builds stamp it too
+var Version = "0.1.1" // the VERSION file; release builds stamp it too
 
 // Server is a running trckable instance.
 type Server struct {

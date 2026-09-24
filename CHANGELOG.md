@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.1.1 (24 Sep 2026)
+
 - The server's own error log no longer contains visitors' addresses: its
   lines pass through a filter first, so no IP address is stored anywhere
 - The dashboard's logo is the one trckable uses everywhere, with its own
