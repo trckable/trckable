@@ -52,6 +52,7 @@ type API struct {
 	BaseURL     string // public https address (TRCKABLE_BASE_URL), for webhook URLs
 	Operator    string // TRCKABLE_OPERATOR_TOKEN: one-time sign-in links for a hosting provider
 	Managed     string // TRCKABLE_MANAGED: the hosting provider's sign-in page; see unmanaged
+	Version     string // this build's version, shown in the dashboard's footer
 	// Box seals the keys trckable stores for other services (Search Console).
 	Box *secrets.Box
 	// GSCHTTP replaces the HTTP client used to reach Google; tests only.
@@ -494,7 +495,9 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"kind": "api_key"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"kind": "user", "email": p.user.Email, "role": p.user.Role})
+	// The version is for the dashboard's footer; every response carries it in
+	// X-Trckable-Version anyway.
+	writeJSON(w, http.StatusOK, map[string]string{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version})
 }
 
 // ---- sites ----

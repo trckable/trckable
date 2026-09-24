@@ -4941,3 +4941,31 @@ body[data-mode='full'] .app {
   font-size: 12px;
 }
 
+
+/* ---- Footer: the full logo, the year and the version ----------------------- */
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 18px;
+  padding: 28px 16px 36px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+.app-footer .tkb-logo {
+  font-size: 20px;
+  color: var(--text);
+  text-decoration: none;
+}
+.app-footer-links {
+  display: flex;
+  gap: 14px;
+}
+.app-footer a:not(.tkb-logo) {
+  color: var(--text-3);
+  text-decoration: none;
+}
+.app-footer a:not(.tkb-logo):hover {
+  color: var(--text-2);
+}

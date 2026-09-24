@@ -1,7 +1,8 @@
 import { StrictMode, Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Ghost } from "./components/Logo";
-import { logoInner } from "./brand/logo";
+import { ghostSvg } from "./brand/logo";
+import { Footer } from "./components/Footer";
 import { api, setUnauthorizedHandler, type Site } from "./lib/api";
 import { navigate, useLocation } from "./lib/url";
 import "./styles.css";
@@ -34,7 +35,7 @@ type Boot =
   | { state: "loading" }
   | { state: "setup" }
   | { state: "login" }
-  | { state: "ready"; email?: string; sites: Site[] }
+  | { state: "ready"; email?: string; version?: string; sites: Site[] }
   | { state: "error"; message: string };
 
 function App() {
@@ -51,7 +52,7 @@ function App() {
       if (!me) return setBoot({ state: "login" });
       setRole(me.role);
       const { sites } = await api.sites();
-      setBoot({ state: "ready", email: me.email, sites });
+      setBoot({ state: "ready", email: me.email, version: me.version, sites });
     } catch (e) {
       setBoot({
         state: "error",
@@ -164,6 +165,7 @@ function App() {
           header={header}
         />
       )}
+      <Footer version={boot.version} />
       <Shortcuts />
       <Toasts />
       {accountTab && (
@@ -198,14 +200,14 @@ function Header({
 }) {
   return (
     <>
-      {/* The same logo as everywhere else (src/brand); on a phone the name
-          gives its room to the site, the dates and the filters. */}
+      {/* The same ghost as everywhere else (src/brand). The header has room
+          for the mark only; the full logo is in the footer. */}
       <a
         href="/"
         aria-label="trckable home"
         className="brand tkb-logo"
         onClick={(e) => (e.preventDefault(), navigate("/"))}
-        dangerouslySetInnerHTML={{ __html: logoInner() }}
+        dangerouslySetInnerHTML={{ __html: ghostSvg(30) }}
       />
       {/* One control, two actions: which site, and that site's settings. They
           were two separate buttons sitting next to each other, which read as

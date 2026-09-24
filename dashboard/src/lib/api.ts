@@ -564,7 +564,7 @@ export const api = {
     call<{ user: { email: string }; site: Site | null }>('POST', '/setup', { token, email, password, domain }),
   login: (email: string, password: string, code?: string) => call<{ user: { email: string } }>('POST', '/login', { email, password, code }),
   logout: () => call<void>('POST', '/logout'),
-  me: () => call<{ kind: string; email?: string; role?: string }>('GET', '/me'),
+  me: () => call<{ kind: string; email?: string; role?: string; version?: string }>('GET', '/me'),
   sites: () => call<{ sites: Site[] }>('GET', '/sites'),
   createSite: (domain: string) => call<Site>('POST', '/sites', { domain }),
   updateSite: (id: string, patch: { name?: string; timezone?: string; currency?: string }) => call<Site>('PATCH', `/sites/${id}`, patch),
