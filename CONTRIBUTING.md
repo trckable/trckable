@@ -25,12 +25,16 @@ The server prints a one-time setup link on first start. `go run
 1. Fork the repository and make a branch for your change.
 2. Run `pnpm check` (below) until it passes.
 3. Open a pull request against `main`. CI runs the same checks, plus the
-   Docker image and govulncheck; all five must pass.
+   Docker image and govulncheck; all six must pass (the sixth is the CLA).
+   Nobody can merge with a failing check, maintainers included: a ruleset on
+   `main` requires them and has no bypass.
 4. The maintainer reviews it (CODEOWNERS), and it is squash-merged, so
    `main` has one commit per change and is always releasable.
-5. A release is `pnpm release X.Y.Z` on `main`: it bumps every version,
-   dates the Unreleased section, runs the gate and pushes the tag. The tag's
-   workflow publishes the image, the npm package and the GitHub release.
+5. A release goes through a pull request too. `pnpm release X.Y.Z` bumps
+   every version and dates the Unreleased section on a `release-X.Y.Z`
+   branch, runs the gate, pushes it and opens its pull request. Once that is
+   merged, `pnpm release tag X.Y.Z` tags `main`, and the tag's workflow
+   publishes the image, the npm package and the GitHub release.
 
 ## Before you open a pull request
 

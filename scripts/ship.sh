@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Ship: run the checks CI runs, then push main. Two stay in CI only: the
+# Ship: run the checks CI runs, then push this branch for a pull request.
+# main takes changes only through pull requests whose checks passed (a
+# GitHub ruleset nobody can bypass), so nothing here pushes main. Two stay in CI only: the
 # Docker image (size, boot, memory) and govulncheck, which need Docker and the
 # network. Nothing is deployed from here: self-hosters build it themselves.
 # Nothing is pushed unless everything passes.
 #
-#   scripts/ship.sh           the full gate (about 3 minutes), then push
+#   scripts/ship.sh           the full gate (about 3 minutes), then push this branch
 #   scripts/ship.sh --check   the gate only, no push (any branch: use it on a pull request)
 #   scripts/ship.sh --quick   Go, tracker and dashboard tests only (the pre-push hook)
 set -euo pipefail
@@ -14,7 +16,8 @@ MODE=${1:-}
 step() { printf '\n\033[1m▸ %s\033[0m\n' "$*"; }
 fail() { printf '\n\033[31m✗ %s\033[0m\n' "$*"; exit 1; }
 
-[ -n "$MODE" ] || [ "$(git branch --show-current)" = main ] || fail "ship from main"
+BRANCH=$(git branch --show-current)
+[ -n "$MODE" ] || [ "$BRANCH" != main ] || fail "main takes changes through pull requests: ship from a branch"
 
 step "one version everywhere"
 V=$(tr -d '[:space:]' < VERSION)
@@ -65,6 +68,6 @@ fi
 [ "$MODE" = --quick ] && { step "quick checks passed"; exit 0; }
 [ "$MODE" = --check ] && { step "all checks passed (not pushed)"; exit 0; }
 
-step "push main"
-git push --no-verify origin main # the full gate above already ran
-printf '\n\033[32m✓ pushed.\033[0m\n'
+step "push $BRANCH"
+git push --no-verify -u origin "$BRANCH" # the full gate above already ran
+printf '\n\033[32m✓ pushed %s: open or update its pull request.\033[0m\n' "$BRANCH"
