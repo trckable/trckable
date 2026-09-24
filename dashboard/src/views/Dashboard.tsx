@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, CircleUser, Download, Ellipsis, Keyboard, KeyRound, Maximize2, MessageCircle, Minimize2, Pause, Play, RefreshCw } from 'lucide-react'
+import { Banknote, ChevronDown, ChevronRight, CircleUser, Coins, CornerUpLeft, Download, Ellipsis, Eye, Keyboard, KeyRound, Maximize2, MessageCircle, Minimize2, Pause, Play, Radio, RefreshCw, Target, Timer, Users, type LucideIcon } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DialogActions } from '../components/DialogActions'
 import { Modal } from '../components/Modal'
@@ -41,6 +41,8 @@ const AddGoals = lazy(() => import('./AddGoals').then((m) => ({ default: m.AddGo
 const People = lazy(() => import('./FullModules').then((m) => ({ default: m.People })))
 const NoteDialog = lazy(() => import('../components/NoteDialog').then((m) => ({ default: m.NoteDialog })))
 const JourneyDrawer = lazy(() => import('./FullModules').then((m) => ({ default: m.JourneyDrawer })))
+
+const SPEEDS = [0.5, 1, 2, 4]
 
 const DIM_LABEL: Record<string, string> = {
   channel: 'Channel',
@@ -255,6 +257,25 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       .forEach((x, i) => setTimeout(() => addPulse({ id: 's' + x.id, kind: 'sale', label: '+' + fmtMoney(x.amount, x.currency, x.exponent) }), i * 400))
   }, [stream.sales, pulsing, addPulse])
   const [playing, setPlaying] = useState(false)
+  // How fast a replay runs, remembered in this browser (a convenience, so a
+  // private window simply starts at 1×).
+  const [speed, setSpeed] = useState(() => {
+    try {
+      return Number(localStorage.getItem('tkb_replay_speed')) || 1
+    } catch {
+      return 1
+    }
+  })
+  const nextSpeed = () =>
+    setSpeed((v) => {
+      const n = SPEEDS[(SPEEDS.indexOf(v) + 1) % SPEEDS.length]!
+      try {
+        localStorage.setItem('tkb_replay_speed', String(n))
+      } catch {
+        /* storage blocked: the choice lasts until the page closes */
+      }
+      return n
+    })
   const setDayIdx = useCallback(
     (i: number | null) => {
       if (!cur) return
@@ -267,7 +288,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   useEffect(() => {
     if (!playing || !cur) return
     const n = cur.series.length
-    const every = n > 60 ? 90 : n > 20 ? 200 : 480
+    const every = (n > 60 ? 90 : n > 20 ? 200 : 480) / speed
     let i = scrubIdx < 0 || scrubIdx >= n - 1 ? 0 : scrubIdx
     setDayIdx(i)
     const t = setInterval(() => {
@@ -281,8 +302,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       setDayIdx(i)
     }, every)
     return () => clearInterval(t)
+    // A new speed picks up from the day on screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing])
+  }, [playing, speed])
 
   const [askOpen, setAskOpen] = useState(false)
 
@@ -626,22 +648,27 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </p>
       )}
       <div className={waiting ? 'sleep waiting' : 'sleep'} aria-hidden={waiting || undefined} inert={waiting}>
-      <section aria-label="Key numbers" className={money ? 'kpis money' : 'kpis'}>
-        <Kpi loading={firstLoad} vs={vs} label="Visitors" value={k?.visitors} fmt={fmtInt} d={delta(k?.visitors ?? 0, pk?.visitors)} pressed={metric === 'visitors'} onClick={() => setMetric('visitors')}  sub={soFarDay} />
+      {/* One section for the period at a glance: the key numbers across the
+          top, the chart under them — they are one story, not two cards. */}
+      <section className="card overview" aria-label="Overview">
+      <div role="group" aria-label="Key numbers" className={money ? 'kpis money' : 'kpis'}>
+        <Kpi loading={firstLoad} vs={vs} label="Visitors" icon={Users} value={k?.visitors} fmt={fmtInt} d={delta(k?.visitors ?? 0, pk?.visitors)} pressed={metric === 'visitors'} onClick={() => setMetric('visitors')}  sub={soFarDay} />
         {money ? (
           <>
-            <Kpi loading={firstLoad} vs={vs} label="Revenue" money value={revenueNow} fmt={fmtM} d={pm ? delta(money.revenue, pm.revenue) : null}  sub={soFarDay} />
-            <Kpi loading={firstLoad} vs={vs} label="Conversion" value={conv} fmt={(x) => (x * 100).toFixed(x < 0.1 ? 2 : 1) + '%'} d={pm && conv !== undefined ? delta(conv, pm.conversion) : null}  sub={soFarDay} />
-            <Kpi loading={firstLoad} vs={vs} label="Revenue / visitor" value={rpv} fmt={(x) => fmtMoney(x, money.currency, money.exponent, { cents: true })} d={pm && rpv !== undefined ? delta(rpv, pm.revenue_per_visitor) : null}  sub={soFarDay} />
+            <Kpi loading={firstLoad} vs={vs} label="Revenue" icon={Banknote} money value={revenueNow} fmt={fmtM} d={pm ? delta(money.revenue, pm.revenue) : null}  sub={soFarDay} />
+            <Kpi loading={firstLoad} vs={vs} label="Conversion" icon={Target} value={conv} fmt={(x) => (x * 100).toFixed(x < 0.1 ? 2 : 1) + '%'} d={pm && conv !== undefined ? delta(conv, pm.conversion) : null}  sub={soFarDay} />
+            <Kpi loading={firstLoad} vs={vs} label="Revenue / visitor" icon={Coins} value={rpv} fmt={(x) => fmtMoney(x, money.currency, money.exponent, { cents: true })} d={pm && rpv !== undefined ? delta(rpv, pm.revenue_per_visitor) : null}  sub={soFarDay} />
           </>
         ) : (
-          <Kpi loading={firstLoad} vs={vs} label="Pageviews" value={k?.pageviews} fmt={fmtInt} d={delta(k?.pageviews ?? 0, pk?.pageviews)} pressed={metric === 'pageviews'} onClick={() => setMetric('pageviews')}  sub={soFarDay} />
+          <Kpi loading={firstLoad} vs={vs} label="Pageviews" icon={Eye} value={k?.pageviews} fmt={fmtInt} d={delta(k?.pageviews ?? 0, pk?.pageviews)} pressed={metric === 'pageviews'} onClick={() => setMetric('pageviews')}  sub={soFarDay} />
         )}
-        <Kpi loading={firstLoad} vs={vs} label="Bounce rate" value={k?.bounce_rate} fmt={fmtPct} d={delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true)}  sub={soFarDay} />
-        <Kpi loading={firstLoad} vs={vs} label="Session time" value={k?.avg_session_s} fmt={fmtDuration} d={delta(k?.avg_session_s ?? 0, pk?.avg_session_s)}  sub={soFarDay} />
+        <Kpi loading={firstLoad} vs={vs} label="Bounce rate" icon={CornerUpLeft} value={k?.bounce_rate} fmt={fmtPct} d={delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true)}  sub={soFarDay} />
+        <Kpi loading={firstLoad} vs={vs} label="Session time" icon={Timer} value={k?.avg_session_s} fmt={fmtDuration} d={delta(k?.avg_session_s ?? 0, pk?.avg_session_s)}  sub={soFarDay} />
         <div className="kpi">
           <div className="label">
-            <span className="pulse" aria-hidden="true" />
+            <span className={'kpi-icon live' + (onlineNow ? ' on' : '')} aria-hidden="true">
+              <Radio size={17} strokeWidth={1.75} />
+            </span>
             Online now
           </div>
           <div className="value num">{onlineNow ?? '–'}</div>
@@ -649,7 +676,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               comes from instead of waiting to connect forever. */}
           <div className="delta">{stream.connected || isShared() ? 'visitors in the last 5 min' : 'connecting…'}</div>
         </div>
-      </section>
+      </div>
 
       {full && (
         <div className="more-numbers rise">
@@ -681,7 +708,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </div>
       )}
 
-      <section className="card" aria-label={`${metric === 'visitors' ? 'Visitors' : 'Pageviews'} over time`} style={{ gap: 12 }}>
+      <div className="overview-chart" role="group" aria-label={`${metric === 'visitors' ? 'Visitors' : 'Pageviews'} over time`}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
           <h2>{metric === 'visitors' ? 'Visitors' : 'Pageviews'}</h2>
           <StoryLine text={story} />
@@ -728,8 +755,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               if (!d) return null
               const nv = Math.round(d.kpis.visitors * d.kpis.new_visitor_share)
               const rows: { label: string; value: string; faint?: boolean }[] = [{ label: 'Pageviews', value: fmtInt(d.kpis.pageviews) }]
+              // Revenue itself is already in the card, next to the bars.
               if (money && d.money) {
-                rows.push({ label: 'Revenue', value: fmtM(d.money.revenue) })
                 rows.push({ label: 'Revenue / visitor', value: fmtMoney(d.kpis.visitors ? d.money.revenue / d.kpis.visitors : 0, money.currency, money.exponent, { cents: true }) })
               }
               rows.push({ label: 'Bounce rate', value: fmtPct(d.kpis.bounce_rate), faint: true })
@@ -762,6 +789,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
                 <Play size={15} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
               )}
               Replay
+            </button>
+            <button type="button" className="btn speed num" onClick={nextSpeed} aria-label={`Replay speed ${speed}×, change`} title="Replay speed">
+              {speed === 0.5 ? '½' : speed}×
             </button>
             <label htmlFor="scrub" className="sr">
               Scrub through the period
@@ -803,6 +833,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             )}
           </div>
         )}
+      </div>
       </section>
 
       {noteFor && (
@@ -1328,6 +1359,7 @@ function fmtRange2(from: string, to: string) {
 
 function Kpi(p: {
   label: string
+  icon: LucideIcon
   value?: number
   fmt: (n: number) => string
   d: Delta | null
@@ -1343,8 +1375,12 @@ function Kpi(p: {
   const body = (
     <>
       <div className="label">
-        {p.money && <span className="money-dot" aria-hidden="true" />}
-        {p.label}
+        <span className={'kpi-icon' + (p.money ? ' money' : '')} aria-hidden="true">
+          <p.icon size={17} strokeWidth={1.75} />
+        </span>
+        <span className="kpi-name" title={p.label}>
+          {p.label}
+        </span>
       </div>
       {/* The skeleton is decorative: the loading bar at the top of the page
           is the one thing that announces loading, and it says it once. */}

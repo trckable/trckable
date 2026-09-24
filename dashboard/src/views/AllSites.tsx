@@ -8,6 +8,7 @@ import { api, type Site, type SiteRow } from '../lib/api'
 import { delta, fmtInt, fmtMoney, fmtPct } from '../lib/format'
 import { isViewer } from '../lib/me'
 import { navigate } from '../lib/url'
+import './AllSites.css'
 
 const PERIODS = [
   { days: 7, label: '7 days' },

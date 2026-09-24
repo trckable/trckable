@@ -1,0 +1,252 @@
+/* The shortcuts list (views/Shortcuts.tsx). Loaded when the list first opens. */
+/* ---- Shortcuts ------------------------------------------------------------ */
+.modal.keys-modal {
+  max-width: 1040px;
+  width: calc(100vw - 32px);
+  gap: 18px;
+  padding: 24px;
+}
+.keys-head {
+  gap: 14px;
+}
+.keys-head > div:not(.modal-tools) {
+  display: grid;
+  gap: 3px;
+}
+.keys-head h2 {
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.keys-head .faint {
+  font-size: 12.5px;
+}
+.keys-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.75fr) minmax(0, 1.15fr);
+  gap: 12px;
+}
+.keys-group {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 70%, transparent), transparent 60%), var(--sunken);
+  transition: border-color 0.2s ease;
+}
+.keys-group:hover {
+  border-color: var(--border-2);
+}
+.keys-group header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.keys-group header > span:last-child {
+  display: grid;
+  gap: 1px;
+}
+.keys-group header .faint {
+  font-size: 11.5px;
+}
+.keys-gicon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+}
+.g-period .keys-gicon {
+  color: var(--accent);
+}
+.keys-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+.keys-foot span:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+kbd.cap.small {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  font-size: 11px;
+  border-bottom-width: 2px;
+}
+.keys-mine {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+}
+.keys-mouse .keys-what {
+  display: grid;
+  gap: 1px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.keys-mouse .keys-what b {
+  color: var(--text);
+  font-weight: 500;
+  font-size: 13px;
+}
+.keys-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.keys-group.wide .keys-list {
+  grid-template-columns: 1fr 1fr;
+  column-gap: 12px;
+}
+.keys-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 6px;
+  margin: 0 -6px;
+  border-radius: 8px;
+  transition: background 0.18s ease;
+  animation: key-in 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i) * 22ms + 60ms);
+}
+.keys-list li.on {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.keys-list li.on .keys-what {
+  color: var(--text);
+}
+.keys-caps {
+  display: flex;
+  gap: 4px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+.keys-caps.fixed {
+  cursor: default;
+}
+button.keys-caps:hover kbd.cap {
+  border-color: var(--text-3);
+}
+button.keys-caps:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+kbd.cap.mine {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border-2));
+}
+kbd.cap.wait {
+  min-width: 44px;
+  border-color: var(--accent);
+  color: var(--accent);
+  animation: cap-wait 1s ease-in-out infinite;
+}
+.keys-list li.rec {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.keys-why {
+  margin: -6px 0 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--down) 12%, transparent);
+  color: var(--text);
+  font-size: 12.5px;
+  animation: rise 0.18s var(--ease) backwards;
+}
+@keyframes cap-wait {
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+}
+.keys-caps {
+  min-width: 60px;
+}
+.keys-what {
+  color: var(--text-2);
+  transition: color 0.18s ease;
+}
+kbd.cap {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border-2);
+  border-bottom-width: 3px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 7%, var(--surface-2)), var(--surface-2));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 10%, transparent), 0 2px 6px rgb(0 0 0 / 0.25);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1;
+  transition: transform 0.08s ease, border-bottom-width 0.08s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.2s ease;
+}
+kbd.cap.down {
+  transform: translateY(2px);
+  border-bottom-width: 1px;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0b0d10;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.gesture {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 9px;
+  border: 1px dashed var(--border-2);
+  border-radius: 7px;
+  color: var(--text);
+  font-size: 12px;
+  white-space: nowrap;
+}
+@keyframes key-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (max-width: 860px) {
+  .keys-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 480px) {
+  .keys-group.wide .keys-list {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .keys-list li,
+  kbd.cap,
+  kbd.cap.wait {
+    animation: none;
+    transition: none;
+  }
+}
