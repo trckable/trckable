@@ -71,7 +71,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @trckable/dashboard build
       - name: the embedded dashboard matches the source
-        run: git diff --exit-code server/internal/web/dist || (echo "run: pnpm --filter @trckable/dashboard build" && exit 1)
+        run: |
+          git diff --exit-code server/internal/web/dist || (echo "run: pnpm --filter @trckable/dashboard build" && exit 1)
 
   e2e:
     name: browsers (Chromium, Firefox, WebKit)
