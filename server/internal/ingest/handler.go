@@ -112,6 +112,9 @@ type Handler struct {
 	Now     func() time.Time
 	Stats   Stats
 	Seen    Seen // optional: records that a site is alive
+	// Module reports whether a site has a module on; nil means every module
+	// is on. Only endpoints that exist for one module ask (the crawler one).
+	Module func(site, id string) bool
 
 	limitOnce sync.Once
 	limit     *limiter

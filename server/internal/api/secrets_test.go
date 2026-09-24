@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -36,6 +37,28 @@ func TestRedactTarget(t *testing.T) {
 	} {
 		if got := redactTarget(in); got != want {
 			t.Errorf("redactTarget(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+// Every byte figure in a module's text is filled in from the build; none is
+// typed, and none is left as a placeholder.
+func TestModuleTextsCarryMeasuredSizes(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	code, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/modules", "")
+	if code != http.StatusOK {
+		t.Fatalf("modules: %d", code)
+	}
+	for _, m := range out["modules"].([]any) {
+		mod := m.(map[string]any)
+		costs, _ := mod["costs"].([]any)
+		for _, cst := range costs {
+			s := cst.(string)
+			if strings.Contains(s, "{") {
+				t.Errorf("%s: placeholder left in %q", mod["id"], s)
+			}
 		}
 	}
 }

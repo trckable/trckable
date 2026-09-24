@@ -121,6 +121,10 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			return l.Country, l.Region, l.City
 		},
 		Hosting: s.hosting,
+		Module: func(site, id string) bool {
+			set, err := (modules.Store{DB: ctl.DB}).Of(context.Background(), site)
+			return err != nil || set.Has(id) // unreadable: record rather than lose
+		},
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/api/e", s.ingest)
