@@ -32,7 +32,8 @@ pnpm check      # everything CI runs: Go, tracker, dashboard, npm package,
   commit them together with the source change.
 - Every visible string is plain English and short. Every feature works in the
   self-hosted edition: nothing is held back for a hosted one.
-- New behaviour comes with a test.
+- New behaviour comes with a test, and a line in CHANGELOG.md under the
+  version being prepared.
 
 ## Licensing of contributions
 

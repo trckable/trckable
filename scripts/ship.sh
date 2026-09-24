@@ -22,6 +22,7 @@ for f in tracker/package.json packages/trckable/package.json; do
 done
 grep -q "Version = \"$V\"" server/internal/server/server.go || fail "server.Version is not $V (the VERSION file)"
 grep -q "^## $V" CHANGELOG.md || fail "CHANGELOG.md has no section for $V"
+grep -q "badge/version-$V-" README.md || fail "the README's version badge is not $V"
 
 step "server: gofmt, vet, tests"
 ( cd server
