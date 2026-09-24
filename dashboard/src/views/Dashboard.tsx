@@ -6,7 +6,7 @@ import { BarList, type BarItem } from '../charts/BarList'
 import { TimeChart, type Pulse } from '../charts/TimeChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
 import { api, cachedReport, dropReports, exportURL, type Annotation, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
-import { diffDays, fmtDay, presetById, todayIn, type Range } from '../lib/dates'
+import { calendarPrevious, diffDays, fmtDay, presetById, todayIn, type Range } from '../lib/dates'
 import { countryName, delta, flag, fmtDuration, fmtInt, fmtMoney, fmtPct, type Delta } from '../lib/format'
 import { useTween } from '../lib/motion'
 import { channelColor, channelLabel } from '../lib/palette'
@@ -71,13 +71,16 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   }, [view.period, view.from, view.to, today])
   const full = view.mode === 'full'
 
+  // A calendar period is compared with the same stretch of the one before
+  // (lib/dates.ts), which the server takes as a custom comparison.
+  const calPrev = view.compare === 'previous' ? calendarPrevious(view.period, range) : null
   const query: ReportQuery = useMemo(
     () => ({
       from: range.from,
       to: range.to,
-      compare: view.compare === 'none' ? undefined : view.compare,
-      cfrom: view.cfrom,
-      cto: view.cto,
+      compare: view.compare === 'none' ? undefined : calPrev ? 'custom' : view.compare,
+      cfrom: calPrev ? calPrev.from : view.cfrom,
+      cto: calPrev ? calPrev.to : view.cto,
       filters: view.filters,
       daily: diffDays(range.from, range.to) >= 1 && diffDays(range.from, range.to) < 400,
       testPayments: view.test,
@@ -85,7 +88,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       attr: view.attr,
       deep: full,
     }),
-    [range.from, range.to, view.compare, view.cfrom, view.cto, JSON.stringify(view.filters), view.test, view.bucket, view.attr, full], // eslint-disable-line react-hooks/exhaustive-deps
+    [range.from, range.to, view.compare, view.cfrom, view.cto, calPrev?.from, JSON.stringify(view.filters), view.test, view.bucket, view.attr, full], // eslint-disable-line react-hooks/exhaustive-deps
   )
   const live = range.to === today
   const { data: real, error, warming, loading, refresh } = useReport(site.id, query, { live })
@@ -215,6 +218,10 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // ---- scrubber / replay ----
   const cur = data?.current
   const canScrub = !!data && data.bucket === 'day' && (cur?.series.length ?? 0) > 1
+  // Replay steps a day at a time. A chart by week or month still offers it:
+  // pressing Replay switches to days, and it starts once they have arrived.
+  const canReplayByDay = !!data && !canScrub && data.bucket !== 'hour' && diffDays(range.from, range.to) >= 1 && diffDays(range.from, range.to) < 400
+  const [replaySoon, setReplaySoon] = useState(false)
   const scrubIdx = canScrub && view.day ? cur!.series.findIndex((p) => p.t.startsWith(view.day!)) : -1
   const scrubbing = scrubIdx >= 0
 
@@ -302,6 +309,13 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     // A new speed picks up from the day on screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, speed])
+
+  useEffect(() => {
+    if (replaySoon && canScrub) {
+      setReplaySoon(false)
+      setPlaying(true)
+    }
+  }, [replaySoon, canScrub])
 
   const [askOpen, setAskOpen] = useState(false)
 
@@ -707,6 +721,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               <span>
                 <i className="ghost" />
                 {data.previous_from && data.previous_to ? fmtRange2(data.previous_from, data.previous_to) : 'Compared'}
+                {/* A flat dashed line on the axis says nothing; this does. */}
+                {data.previous.series.every((p) => !p.visitors) && <em className="faint"> · no visits then</em>}
               </span>
             )}
             {overlay && (
@@ -736,7 +752,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             onAddNote={isShared() ? undefined : (day) => setNoteFor(day)}
             pulses={pulses}
             detail={(i) => {
-              // The day's own numbers, when the report carried them.
+              // The day's own numbers, when the report carried them — only
+              // while the chart is by day: by week, point i is not day i.
+              if (data?.bucket !== 'day') return null
               const d = cur?.days?.[i]
               if (!d) return null
               const nv = Math.round(d.kpis.visitors * d.kpis.new_visitor_share)
@@ -760,6 +778,24 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         )}
         {/* The replay bar, in Core too: it is the one control that makes the
             whole page move. Core leaves out the hint line. */}
+        {canReplayByDay && (
+          <div className="scrub">
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => (setReplaySoon(true), setView({ bucket: 'day' }))}
+              aria-label="Replay this period day by day (switches the chart to days)"
+              style={{ height: 38, padding: '0 14px 0 10px' }}
+            >
+              <Play size={15} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
+              Replay
+            </button>
+            <SpeedMenu speed={speed} onPick={pickSpeed} />
+            <span className="faint" style={{ fontSize: 12 }}>
+              Plays day by day
+            </span>
+          </div>
+        )}
         {canScrub && (
           <div className="scrub">
             <button

@@ -4759,14 +4759,6 @@ button.kpi[aria-pressed='true'] .kpi-spark {
   .chart-head > h2 {
     flex: 1 0 100%;
   }
-  /* Tiles two by two: the number shrinks to fit rather than pushing out. */
-  body[data-mode] .overview .kpi .value,
-  .overview .kpi .value {
-    font-size: clamp(18px, 6vw, 24px);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
   body[data-mode] .overview .kpi,
   .overview .kpi {
     padding: 12px;
@@ -4880,4 +4872,29 @@ button.kpi[aria-pressed='true'] .kpi-spark {
   margin: 4px 0 0;
   color: var(--down);
   font-size: 13px;
+}
+
+/* The days beside a short preset label: shown only where the button spans the
+   row (the phone toolbar), hidden in the compact header chip. */
+.range-days {
+  display: none;
+  font-size: 12.5px;
+}
+@media (max-width: 640px) {
+  .toolbar-tools .range-days {
+    display: inline;
+  }
+}
+
+/* A tile's number is sized by the tile, not the screen: seven across on a
+   laptop or two by two on a phone, "$111,630" fits either way. */
+.overview .kpi {
+  container-type: inline-size;
+}
+body[data-mode] .overview .kpi .value,
+.overview .kpi .value {
+  font-size: clamp(18px, 15cqi, 30px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

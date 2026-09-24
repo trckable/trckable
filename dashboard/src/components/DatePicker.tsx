@@ -63,7 +63,7 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
   useKeymap()
   const root = useRef<HTMLDivElement>(null)
   const minDate = addMonths(today, -12 * MIN_BACK_YEARS)
-  const cmp = compareRange(value.range, value.compare, value.compareCustom)
+  const cmp = compareRange(value.range, value.compare, value.compareCustom, value.period)
   const presetLabel = short ? SHORT[value.period] : PRESETS.find((p) => p.id === value.period)?.label
 
   // Global shortcuts: t/y/7/3/9/w/m/1 pick presets, ← → shift the period, c toggles compare.
@@ -121,7 +121,12 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
       >
         <span style={{ display: 'flex', gap: 8, alignItems: 'center', minWidth: 0, maxWidth: '100%' }}>
           <CalendarIcon />
-          <span className="range-label">{presetLabel ?? fmtRange(value.range, today)}</span>
+          <span className="range-label">
+            {presetLabel ?? fmtRange(value.range, today)}
+            {/* Short labels ("Year", "30d") say which preset, not which days:
+                where the button has the room (the phone toolbar), the days too. */}
+            {short && presetLabel && <span className="range-days faint"> · {fmtRange(value.range, today)}</span>}
+          </span>
           {value.period === 'now' && <span className="pulse" aria-hidden="true" />}
           <Chevron dir="down" />
         </span>

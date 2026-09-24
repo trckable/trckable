@@ -81,7 +81,7 @@ export default function Popover({
   const [focusDay, setFocusDay] = useState<ISODate>(value.range.to)
   const dialog = useRef<HTMLDivElement>(null)
 
-  const cmp = compareRange(draft.range, draft.compare, draft.compareCustom)
+  const cmp = compareRange(draft.range, draft.compare, draft.compareCustom, draft.period)
   const active = editing === 'main' ? draft.range : (draft.compareCustom ?? cmp ?? draft.range)
 
   useEffect(() => {
