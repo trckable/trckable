@@ -102,7 +102,7 @@ export function start(c: Config): Tracker {
   }
 
   const cookie = () => d.cookie.match(/(^|; )trckable_vid=([^;]+)/)?.[2]
-  const shown = () => (d.visibilityState === 'visible' ? now() : 0)
+  const shown = () => (d.hidden ? 0 : now())
 
   // Consent, read from the banner the site already runs. Until the visitor
   // agrees, the script is in its consent-free mode: no cookie, nothing stored,
@@ -127,8 +127,13 @@ export function start(c: Config): Tracker {
     const grant = (ok: any) => {
       if (!ok === cookieless) return
       cookieless = !ok
-      // Withdrawn: the cookie has to go, not just stop being read.
-      if (!ok) d.cookie = VID + '=; Max-Age=0; Path=/' + (c.domain ? '; Domain=' + c.domain : '')
+      // Withdrawn: the cookie has to go, not just stop being read, and so do
+      // the queued page views. A cookie the server set (same-origin proxy) is
+      // expired by the server with the next event, which now says cookieless.
+      if (!ok) {
+        d.cookie = VID + '=; Max-Age=0; Path=/' + (c.domain ? '; Domain=' + c.domain : '')
+        ls?.removeItem(QUEUE)
+      }
     }
 
     if (__CONSENT__) {

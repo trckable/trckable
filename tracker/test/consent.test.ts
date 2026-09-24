@@ -86,6 +86,22 @@ it('deletes the cookie when consent is withdrawn', async () => {
   expect(last().v).toBeUndefined()
 })
 
+it('withdrawn consent also empties the queued page views, and says so to the server', async () => {
+  browser('https://www.site.com/')
+  const t = tracker()
+  await flush()
+  ;(win as any).dataLayer.push(['consent', 'update', { analytics_storage: 'granted' }])
+  win.localStorage.setItem('trckable_q', '[[{"k":"pv","u":"https://www.site.com/secret"},1]]')
+  t('pageview')
+  await flush()
+  ;(win as any).dataLayer.push(['consent', 'update', { analytics_storage: 'denied' }])
+  t('pageview')
+  await flush()
+  expect(win.document.cookie).toBe('')
+  expect(win.localStorage.getItem('trckable_q')).toBeNull()
+  expect(last()).toMatchObject({ c: 1 }) // the server expires any cookie it set (ingest: forget)
+})
+
 it('keeps reading the dataLayer after a tag manager replaces push', async () => {
   const t = tracker()
   await flush()

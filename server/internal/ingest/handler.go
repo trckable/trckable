@@ -403,7 +403,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 	if site.ConsentFree {
 		e.Visitor = h.Salts.Cookieless(now, site.ID, ip, r.UserAgent())
 		e.FirstSeen = 0
-		return e, false, nil, nil
+		return e, false, forget(proxied, u, site), nil
 	}
 	if id, fs, ok := parseVisitor(p.Visitor); ok {
 		e.Visitor, e.FirstSeen = id, fs
@@ -417,8 +417,23 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 		cookie = visitorCookieFor(v, u, site)
 	} else {
 		e.Visitor = h.Salts.Cookieless(now, site.ID, ip, r.UserAgent())
+		if p.Cookieless == 1 {
+			cookie = forget(proxied, u, site) // consent withdrawn: the cookie we set goes too
+		}
 	}
 	return e, false, cookie, nil
+}
+
+// forget expires the visitor cookie this server set, with the same domain and
+// path, for a visitor who is now counted without one. The script cannot delete
+// it reliably itself: it does not know which domain the server chose.
+func forget(proxied bool, page parsedURL, s Site) *http.Cookie {
+	if !proxied {
+		return nil
+	}
+	c := visitorCookieFor("", page, s)
+	c.MaxAge = -1
+	return c
 }
 
 // visitorCookieFor builds the server-set visitor cookie. It is readable by the

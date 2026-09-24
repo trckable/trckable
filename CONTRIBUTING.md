@@ -23,8 +23,9 @@ The server prints a one-time setup link on first start. `go run
 ## Before you open a pull request
 
 ```bash
-pnpm check      # everything CI runs: Go, tracker, dashboard, npm package,
-                # a backup round trip and the browser suites
+pnpm check      # what CI runs, on any branch: Go, tracker, dashboard, npm package,
+                # a backup round trip, the crash tests and the browser suites
+                # (CI alone also checks the Docker image and runs govulncheck)
 ```
 
 - Keep the tracker inside its size budget: the build fails if it grows past it.

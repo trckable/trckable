@@ -214,18 +214,8 @@ var All = []Module{
 			"Your server asks Google for the report; no visitor data is sent",
 		},
 		Loses: []string{"The Search terms tab goes away", "Nothing is stored, so nothing is lost"}},
-	{ID: "ask", Name: "Ask trckable", Summary: "Ask questions in plain words, with your own AI key. Off until you add one.",
-		Server: "one AI request per question, paid by your own key",
-		Gives: []string{
-			"Ask across every site in plain words",
-			"Answers come from read-only tools, never a guess",
-			"Works with Claude, any OpenAI-compatible endpoint or local Ollama",
-		},
-		Costs: []string{
-			"Uses your own AI key — trckable never pays and never sends data anywhere else",
-			"One request per question, with a token budget per answer",
-		},
-		Loses: []string{"The Ask panel disappears. Your MCP keys keep working."}},
+	// Ask trckable joins this list when it is built (plan §3c); until then it is
+	// not offered, and the MCP server is the way to ask in plain words.
 }
 
 // Core is what every site always has: visits, sources, pages, locations,

@@ -252,11 +252,21 @@ func TestProxyWithWrongKeyIsNotTrusted(t *testing.T) {
 	}
 }
 
-func TestProxyNeverSetsACookieForCookielessVisitors(t *testing.T) {
+// A cookieless visitor is never given an id, and one who had a cookie (consent
+// withdrawn) loses it: the server expires the cookie it set, on the same
+// domain, because the script cannot know which domain that was.
+func TestProxyExpiresTheCookieForCookielessVisitors(t *testing.T) {
 	h, _ := newHandler(t)
-	w := proxied(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/","c":1}`, "tkb_px_secret")
-	if w.Code != http.StatusAccepted || len(w.Result().Cookies()) != 0 {
-		t.Fatalf("status %d, cookies %v", w.Code, w.Result().Cookies())
+	w := proxied(h, `{"s":"tkb_test","k":"pv","u":"https://www.site.com/","c":1}`, "tkb_px_secret")
+	if w.Code != http.StatusAccepted {
+		t.Fatalf("status %d", w.Code)
+	}
+	cookies := w.Result().Cookies()
+	if len(cookies) != 1 {
+		t.Fatalf("want one expiring cookie, got %v", cookies)
+	}
+	if c := cookies[0]; c.Name != "trckable_vid" || c.Value != "" || c.MaxAge >= 0 || c.Domain != "site.com" || c.Path != "/" {
+		t.Fatalf("not an expiry of the cookie we set: %+v", c)
 	}
 }
 

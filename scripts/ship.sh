@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Ship: run every check CI runs, then push main. Nothing is deployed from
-# here: self-hosters build the product themselves.
+# Ship: run the checks CI runs, then push main. Two stay in CI only: the
+# Docker image (size, boot, memory) and govulncheck, which need Docker and the
+# network. Nothing is deployed from here: self-hosters build it themselves.
 # Nothing is pushed unless everything passes.
 #
 #   scripts/ship.sh           the full gate (about 3 minutes), then push
-#   scripts/ship.sh --check   the gate only, no push
+#   scripts/ship.sh --check   the gate only, no push (any branch: use it on a pull request)
 #   scripts/ship.sh --quick   Go, tracker and dashboard tests only (the pre-push hook)
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -13,7 +14,7 @@ MODE=${1:-}
 step() { printf '\n\033[1m▸ %s\033[0m\n' "$*"; }
 fail() { printf '\n\033[31m✗ %s\033[0m\n' "$*"; exit 1; }
 
-[ "$(git branch --show-current)" = main ] || fail "ship from main"
+[ -n "$MODE" ] || [ "$(git branch --show-current)" = main ] || fail "ship from main"
 
 step "one version everywhere"
 V=$(tr -d '[:space:]' < VERSION)
@@ -43,6 +44,10 @@ if [ "$MODE" != --quick ]; then
   step "server binary, then a backup → restore round trip"
   ( cd server && go build -o bin/trckabled ./cmd/trckabled )
   server/bench/roundtrip/roundtrip.sh server/bin/trckabled | tail -1
+
+  step "crash tests: kill -9 and a graceful restart mid-load, exactly once"
+  ( cd server && go run ./bench/crashtest -bin ./bin/trckabled -n 20000 -signal kill | tail -1 \
+      && go run ./bench/crashtest -bin ./bin/trckabled -n 20000 -signal term | tail -1 )
 
   step "browser suites (Chromium, Firefox, WebKit)"
   ( cd e2e && npx playwright test --reporter=line )

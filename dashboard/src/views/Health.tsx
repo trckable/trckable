@@ -85,7 +85,7 @@ export function HealthSettings() {
         </Row>
         <Row
           label="Last backup"
-          hint={h.backup.at ? `${bytes(h.backup.bytes)} · encrypted with this instance's key · seven kept` : 'One is written a few minutes after boot, then daily'}
+          hint={h.backup.at ? `${bytes(h.backup.bytes)} · encrypted with this instance's key · ${h.backup.offsite ? 'two kept here, the rest off-site' : 'seven kept'}` : 'One is written a few minutes after boot, then daily'}
         >
           <span className="num" style={!h.backup.at ? { color: 'var(--money)' } : undefined}>
             {since(h.backup.at)}

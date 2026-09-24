@@ -25,7 +25,7 @@ func TestDefaultsAndToggles(t *testing.T) {
 	// A new site: goals on, the reading modules on (they cost nothing), and
 	// everything that records more or needs setup off.
 	for id, want := range map[string]bool{"goals": true, "funnels": true, "rhythm": true, "journeys": true, "map": true,
-		"outbound": false, "revenue": false, "ask": false} {
+		"outbound": false, "revenue": false} {
 		if set.Has(id) != want {
 			t.Errorf("new site: %s = %v, want %v", id, set.Has(id), want)
 		}
@@ -56,7 +56,7 @@ func TestDefaultsAndToggles(t *testing.T) {
 	if !store.AnyHas(ctx, "revenue") {
 		t.Error("AnyHas missed a site with revenue on")
 	}
-	if store.AnyHas(ctx, "ask") {
+	if store.AnyHas(ctx, "outbound") {
 		t.Error("AnyHas reported a module nobody turned on")
 	}
 }

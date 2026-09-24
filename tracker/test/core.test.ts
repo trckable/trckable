@@ -194,7 +194,9 @@ describe('engagement', () => {
     vi.spyOn(Date, 'now').mockReturnValue(1_000_000)
     tracker()
     ;(Date.now as any).mockReturnValue(1_012_500)
+    // A browser changes both together; the tracker reads document.hidden.
     Object.defineProperty(win.document, 'visibilityState', { value: 'hidden', configurable: true })
+    Object.defineProperty(win.document, 'hidden', { value: true, configurable: true })
     win.document.dispatchEvent(new win.Event('visibilitychange'))
     await flush()
     const [e] = byKind('e')
