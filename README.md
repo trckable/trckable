@@ -12,9 +12,7 @@ One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy,
 [![Version](https://img.shields.io/badge/version-0.1.0-b8ff3c?style=flat-square)](CHANGELOG.md)
 [![License: AGPL-3.0](https://img.shields.io/badge/server-AGPL--3.0-0b0d10?style=flat-square)](LICENSE)
 [![Tracker: MIT](https://img.shields.io/badge/tracker-MIT-0b0d10?style=flat-square)](packages/trckable/LICENSE)
-[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod)
-<!--f:badge_tracker-->[![Tracker size](https://img.shields.io/badge/tracker-2031_B_gzip-b8ff3c?style=flat-square)](https://trckable.com/docs/benchmarks/)<!--/f-->
-<!--f:badge_memory-->[![Idle memory](https://img.shields.io/badge/idle_memory-49_MB-b8ff3c?style=flat-square)](https://trckable.com/docs/benchmarks/)<!--/f-->
+[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://trckable.com/docs/benchmarks/"><img src="https://img.shields.io/badge/tracker-2031_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2031 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://trckable.com/docs/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-42_MB-b8ff3c?style=flat-square" alt="Idle memory: 42 MB"></a><!--/f-->
 
 [Quick start](#-quick-start) · [How it compares](#️-how-it-compares) · [Everything it does](#-everything-it-does) · [Gallery](#-gallery) · [Docs](https://trckable.com/docs/) · [Changelog](CHANGELOG.md)
 
@@ -28,7 +26,7 @@ One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy,
 
 <br><br>
 
-<img src=".github/images/readme/numbers.svg" width="880" alt="2 KB browser script. 1 container, no external database. 49 MB of memory when idle. 0 IP addresses stored.">
+<img src=".github/images/readme/numbers.svg" width="880" alt="2 KB browser script. 1 container, no external database. 42 MB of memory when idle. 0 IP addresses stored.">
 
 </div>
 
@@ -37,18 +35,17 @@ One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy,
 ## ⚡ Quick start
 
 ```bash
-docker build -t trckable -f deploy/Dockerfile https://github.com/trckable/trckable.git
-docker run -d --name trckable -p 8080:8080 -v trckable-data:/data trckable
+docker run -d --name trckable -p 8080:8080 -v trckable-data:/data ghcr.io/trckable/trckable
 docker logs trckable   # a one-time setup link: open it, create your account, add your site
 ```
 
-The ready-made image (`ghcr.io/trckable/trckable`) and the npm package are published with the first release, 0.1.0; until then Docker builds it from this repository, as above.
+The image is for x86-64 and arm64; pin a version with `ghcr.io/trckable/trckable:0.1.0`. You can also build it yourself: `docker build -t trckable -f deploy/Dockerfile https://github.com/trckable/trckable.git`.
 
 ```html
 <script defer src="https://stats.yoursite.com/js/tkb_….js"></script>
 ```
 
-Your site's own script, from Settings → Install: it carries the modules and the privacy settings you chose. The npm package for React and Next.js, where events go through your own domain, comes with the first release. Every route is in the docs: [install](https://trckable.com/docs/install/) · [platforms](https://trckable.com/docs/install/platforms/) · [revenue](https://trckable.com/docs/revenue/) · [MCP](https://trckable.com/docs/api/mcp/).
+Your site's own script, from Settings → Install: it carries the modules and the privacy settings you chose. The npm package for React and Next.js, where events go through your own domain, is published soon. Every route is in the docs: [install](https://trckable.com/docs/install/) · [platforms](https://trckable.com/docs/install/platforms/) · [revenue](https://trckable.com/docs/revenue/) · [MCP](https://trckable.com/docs/api/mcp/).
 
 ## ⚖️ How it compares
 
@@ -58,7 +55,7 @@ The free, self-hostable tools, plus DataFast (paid, hosted only) for script size
   <img src=".github/images/readme/script-size.svg" width="880" alt="Browser script, gzipped, with goals and outbound links: trckable 2,031 bytes, Plausible CE 2,141, Umami 2,333, GoatCounter 3,467, DataFast 5,253 (paid, hosted only), Rybbit 11,172, Matomo 28,172.">
 </p>
 <p align="center">
-  <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 49 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
+  <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 42 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
 </p>
 
 **Where it is not the right pick:** with pageviews only, Plausible CE's script is smaller (1,283 B against <!--f:tracker_core_bytes-->1,583<!--/f--> B). And session replay, heatmaps and A/B tests are out of scope on purpose. If you need those, use Matomo.
