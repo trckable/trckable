@@ -709,7 +709,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
 
       <div className="overview-chart" role="group" aria-label={`${metric === 'visitors' ? 'Visitors' : 'Pageviews'} over time`}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+        <div className="chart-head">
           <h2>{metric === 'visitors' ? 'Visitors' : 'Pageviews'}</h2>
           <StoryLine text={story} />
           <div className="legend">

@@ -2913,6 +2913,11 @@ body[data-mode='full'] .card h2 {
 body[data-mode='full'] .app {
   gap: 12px;
 }
+/* The overview sets its own inner spacing (the tiles and the chart each pad
+   themselves), so the modes' card padding stays off it. */
+body[data-mode] .card.overview {
+  padding: 0;
+}
 /* The jump bar: where everything is, one tap away. */
 .jump {
   display: flex;
@@ -4731,5 +4736,37 @@ button.kpi[aria-pressed='true'] .kpi-spark {
   .scrub > .btn:last-child .muted {
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+}
+
+/* The chart's heading: title, the story line, the legend. On a phone the story
+   goes under the title, full width, instead of squeezed beside it. */
+.chart-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px 12px;
+  flex-wrap: wrap;
+}
+@media (max-width: 640px) {
+  .chart-head > h2 {
+    flex: 1 0 100%;
+  }
+  /* Tiles two by two: the number shrinks to fit rather than pushing out. */
+  body[data-mode] .overview .kpi .value,
+  .overview .kpi .value {
+    font-size: clamp(18px, 6vw, 24px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  body[data-mode] .overview .kpi,
+  .overview .kpi {
+    padding: 12px;
+  }
+  .overview > .kpis {
+    gap: 8px;
+  }
+  .chart-tip.time-tip {
+    width: min(244px, calc(100% - 8px));
   }
 }
