@@ -532,6 +532,13 @@ button.kpi[aria-pressed='true'] {
   grid-template-columns: 1fr 1fr 1.6fr;
   gap: 12px;
 }
+/* Behaviour (Full mode): wide cards, one under another, with the same gap as
+   every other section. It had no rule at all, so People sat on Retention. */
+.grid2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
 @media (max-width: 1100px) {
   .grid4,
   .grid3 {
