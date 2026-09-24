@@ -33,7 +33,9 @@ const FEATURES = [
 // costs — visibly, in the modules page, before anyone turns it on. Every
 // variant without it still has to fit BUDGET.
 const OPTIONAL = new Set(['vitals', 'consent', 'banner', 'forms'])
-const WITH_OPTIONAL_BUDGET = 2560
+// 2,700 since 24 Sep 2026 (was 2,560): the consent module's decline rules add
+// about 120 bytes, and the heaviest optional mix is 2,689.
+const WITH_OPTIONAL_BUDGET = 2700
 
 // trckable's own cookie bar carries markup, styles and words, so it has a
 // budget of its own. It replaces a consent manager that costs 30–90 KB, and
