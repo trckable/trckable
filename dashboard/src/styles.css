@@ -744,12 +744,15 @@ input[type='range']::-moz-range-thumb {
 }
 .drawer {
   position: fixed;
+  /* The same soft light as the dialogs and dropdowns. */
+  background:
+    radial-gradient(420px 180px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
+    var(--surface);
   top: 12px;
   right: 12px;
   bottom: 12px;
   width: min(440px, calc(100vw - 24px));
   z-index: 30;
-  background: var(--surface);
   border: 1px solid var(--border-2);
   border-radius: 18px;
   box-shadow: -24px 0 60px rgba(0, 0, 0, 0.45);
@@ -4606,7 +4609,7 @@ body[data-mode='full'] .app {
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 44px;
+  height: 48px;
   margin: 2px 2px 6px;
   padding: 0 10px;
   border: 1px solid var(--border);
@@ -4746,7 +4749,13 @@ body[data-mode='full'] .app {
 }
 .menu-foot.split {
   display: flex;
+  align-items: center;
   gap: 4px;
+}
+.menu-done {
+  margin-left: auto;
+  height: 34px;
+  padding: 0 16px;
 }
 .menu-clear.save:hover {
   color: var(--accent);

@@ -542,6 +542,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               labelFor={(dim, v) => (dim === 'channel' ? channelLabel(v) : dim === 'country' ? countryName(v) : v)}
               active={view.filters}
               onPick={addFilter}
+              onRemove={removeFilter}
               onClear={() => setView({ filters: [] })}
             />
           )}

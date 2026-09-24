@@ -12,6 +12,7 @@ export function FilterMenu(p: {
   labelFor: (dim: string, value: string) => string
   active: { dim: string; value: string }[]
   onPick: (dim: string, value: string) => void
+  onRemove: (f: { dim: string; value: string }) => void
   onClear: () => void
 }) {
   const [open, setOpen] = useState(false)

@@ -10,6 +10,7 @@
 // bottom, rather than as a column of greyed-out rows.
 import {
   AppWindow,
+  Check,
   Building2,
   ChevronLeft,
   ChevronRight,
@@ -89,6 +90,7 @@ export default function FilterPop({
   labelFor,
   active,
   onPick,
+  onRemove,
   onClear,
   root,
   onClose,
@@ -99,6 +101,7 @@ export default function FilterPop({
   labelFor: (dim: string, value: string) => string
   active: { dim: string; value: string }[]
   onPick: (dim: string, value: string) => void
+  onRemove: (f: { dim: string; value: string }) => void
   onClear: () => void
   /** The button and the menu together: a click outside both closes it. */
   root: React.RefObject<HTMLDivElement | null>
@@ -157,7 +160,17 @@ export default function FilterPop({
   const picked = (d: string) => active.some((f) => f.dim === d)
   const label = dim ? ALL.find((d) => d.dim === dim) : null
   const top = Math.max(1, ...values.map((v) => v.visitors))
-  const pick = (d: string, v: string) => (onPick(d, v), close())
+  // The menu stays open: somebody narrowing by channel is often about to
+  // narrow by country too. Picking goes back to the list; picking a value that
+  // is already on takes it off. Done (or a click outside) closes it.
+  const isOn = (d: string, v: string) => active.some((f) => f.dim === d && f.value === v)
+  const pick = (d: string, v: string) => {
+    if (isOn(d, v)) onRemove({ dim: d, value: v })
+    else onPick(d, v)
+    setDim(null)
+    setQ('')
+    search.current?.focus()
+  }
 
   return (
         <div className="pop menu-pop filter-pop" role="menu">
@@ -173,7 +186,6 @@ export default function FilterPop({
             ) : (
               <>
                 <b>Filter</b>
-                <span className="faint">every number on the page</span>
               </>
             )}
           </div>
@@ -210,7 +222,11 @@ export default function FilterPop({
                         <i style={{ width: `${(v.visitors / top) * 100}%` }} />
                       </span>
                     </span>
-                    <span className="num faint">{v.visitors.toLocaleString()}</span>
+                    {isOn(v.dim, v.value) ? (
+                      <Check size={16} strokeWidth={2.25} color="var(--accent)" aria-label="filtered" />
+                    ) : (
+                      <span className="num faint">{v.visitors.toLocaleString()}</span>
+                    )}
                   </button>
                 )
               })}
@@ -266,14 +282,17 @@ export default function FilterPop({
             </div>
           )}
 
-          {active.length > 0 && (
-            <div className="menu-foot">
-              <button type="button" className="menu-clear" onClick={() => (onClear(), close())}>
+          <div className="menu-foot split">
+            {active.length > 0 && (
+              <button type="button" className="menu-clear" onClick={() => onClear()}>
                 <X size={14} strokeWidth={1.75} aria-hidden="true" />
                 Clear {active.length} filter{active.length > 1 ? 's' : ''}
               </button>
-            </div>
-          )}
+            )}
+            <button type="button" className="btn primary small menu-done" onClick={close}>
+              Done
+            </button>
+          </div>
         </div>
   )
 }
