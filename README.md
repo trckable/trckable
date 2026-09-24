@@ -16,7 +16,9 @@ One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy,
 [![Tracker size](https://img.shields.io/badge/tracker-2.0_KB_gzip-b8ff3c?style=flat-square)](https://trckable.com/docs/benchmarks/)
 [![Idle RAM](https://img.shields.io/badge/idle_RAM-28_MB-b8ff3c?style=flat-square)](https://trckable.com/docs/benchmarks/)
 
-[Quick start](#-quick-start) · [How it compares](#️-how-it-compares) · [Everything it does](#-everything-it-does) · [Gallery](#-gallery) · [Docs](https://trckable.com/docs/)
+[Quick start](#-quick-start) · [How it compares](#️-how-it-compares) · [Everything it does](#-everything-it-does) · [Gallery](#-gallery) · [Docs](https://trckable.com/docs/) · [Changelog](CHANGELOG.md)
+
+<a href="#-quick-start"><img alt="Self-host it: free, every feature" src="https://img.shields.io/badge/Self--host_it-free,_every_feature-b8ff3c?style=for-the-badge"></a>&nbsp;<a href="https://trckable.com/#pricing"><img alt="trckable Cloud: we run it, opens soon" src="https://img.shields.io/badge/trckable_Cloud-we_run_it,_opens_soon-0b0d10?style=for-the-badge"></a>
 
 <br>
 
