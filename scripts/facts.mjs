@@ -32,7 +32,7 @@ const parts = {
   },
   image: () => ({
     image_mb: up1(+process.env.IMAGE_BYTES / 1048576),
-    image_budget_mb: 40, // .github/workflows/ci.yml
+    image_budget_mb: 30, // .github/workflows/ci.yml
     memory_idle_mb: Math.ceil(+process.env.IDLE_MIB),
     memory_budget_mb: 64, // .github/workflows/ci.yml
   }),
