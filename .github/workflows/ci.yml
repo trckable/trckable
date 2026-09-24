@@ -54,7 +54,8 @@ jobs:
       - name: tracker ≤ 2 KB gzip (and the embedded copy is up to date)
         run: |
           pnpm --filter @trckable/tracker size
-          git diff --exit-code server/internal/web/assets/ || (echo "run: pnpm --filter @trckable/tracker build" && exit 1)
+          # status, not diff: a file git has never seen (a lost build) counts too
+          test -z "$(git status --porcelain -- server/internal/web/assets/)" || (git status --short -- server/internal/web/assets/ && echo "run: pnpm --filter @trckable/tracker build" && exit 1)
       # The build comes first: one test reads the built files, because a
       # feature flag left undefined there is only visible in dist/.
       - name: npm package build (react entry ≤ 2.5 KB gzip) + tests
@@ -76,7 +77,8 @@ jobs:
       - run: pnpm --filter @trckable/dashboard build
       - name: the embedded dashboard matches the source
         run: |
-          git diff --exit-code server/internal/web/dist || (echo "run: pnpm --filter @trckable/dashboard build" && exit 1)
+          # status, not diff: a build missing from git (untracked after building) counts too
+          test -z "$(git status --porcelain -- server/internal/web/dist)" || (git status --short -- server/internal/web/dist && echo "run: pnpm --filter @trckable/dashboard build" && exit 1)
       - name: publish the measured numbers (facts)
         run: node scripts/facts.mjs dashboard > facts-dashboard.json && cat facts-dashboard.json
       - uses: actions/upload-artifact@v4
