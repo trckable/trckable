@@ -298,7 +298,14 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 	proxied := site.ProxyKey != "" && auth.Equal(r.Header.Get(proxyKeyHeader), site.ProxyKey)
 	ip := h.ClientIP(r)
 	if proxied {
-		if fwd := strings.TrimSpace(r.Header.Get(proxyIPHeader)); fwd != "" {
+		// Our own header first; X-Real-IP too, because that is what a stock
+		// Nginx recipe sets, and our own docs once said so. Either counts
+		// only with the proxy key: without it a visitor could name any IP.
+		fwd := strings.TrimSpace(r.Header.Get(proxyIPHeader))
+		if fwd == "" {
+			fwd = strings.TrimSpace(r.Header.Get("X-Real-IP"))
+		}
+		if fwd != "" {
 			ip = fwd
 		}
 	}
