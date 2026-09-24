@@ -160,6 +160,9 @@ const MaxAPIKeys = 20
 // ErrTooManySegments is returned when a site has as many saved views as it can.
 var ErrTooManySegments = errors.New("that is 30 saved views, which is the limit — remove one you no longer use")
 
+// ErrSegmentName: a saved view needs a name to be found again.
+var ErrSegmentName = errors.New("a saved view needs a name")
+
 // ErrTooManyKeys is returned when the cap is reached.
 var ErrTooManyKeys = errors.New("that is 20 keys, which is the limit — revoke one you no longer use")
 

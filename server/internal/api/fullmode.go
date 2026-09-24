@@ -336,6 +336,28 @@ func (a *API) saveSegment(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, g)
 }
 
+func (a *API) renameSegment(w http.ResponseWriter, r *http.Request) {
+	if !a.siteExists(w, r) {
+		return
+	}
+	var in struct {
+		Name string `json:"name"`
+	}
+	if err := decode(r, &in); err != nil {
+		fail(w, http.StatusBadRequest, "bad request")
+		return
+	}
+	g, err := a.Ctl.RenameSegment(r.Context(), r.PathValue("site"), r.PathValue("id"), in.Name)
+	switch {
+	case errors.Is(err, sqlite.ErrSegmentName):
+		fail(w, http.StatusBadRequest, err.Error())
+	case err != nil:
+		fail(w, http.StatusNotFound, "saved view not found")
+	default:
+		writeJSON(w, http.StatusOK, g)
+	}
+}
+
 func (a *API) deleteSegment(w http.ResponseWriter, r *http.Request) {
 	if !a.siteExists(w, r) {
 		return

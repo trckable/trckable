@@ -23,6 +23,7 @@ import { useReport } from '../lib/useReport'
 import { sampleReport } from '../lib/sample'
 import { AskPanel } from './AskPanel'
 import { Install } from './InstallPanel'
+import { SavedViews } from '../components/SavedViews'
 import { LiveFeed } from './LiveFeed'
 import { SearchTerms } from './SearchTerms'
 import { ScrollDepth } from './ScrollDepth'
@@ -141,8 +142,16 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const removeView = (g: SavedView) =>
     api
       .deleteSegment(site.id, g.id)
-      .then(() => (toast('Saved view removed'), loadSegments()))
+      .then(() => (toast(`Deleted "${g.name}"`), loadSegments()))
       .catch((e: Error) => toast(e.message, 'error'))
+  const renameView = (g: SavedView, name: string) =>
+    api
+      .renameSegment(site.id, g.id, name)
+      .then(() => (toast(`Renamed to "${name}"`), loadSegments()))
+      .catch((e: Error) => {
+        toast(e.message, 'error')
+        throw e
+      })
   const loadNotes = useCallback(() => {
     api
       .annotations(site.id, range.from, range.to)
@@ -478,6 +487,17 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               onSaveCurrent={saveView}
             />
           )}
+          {!isShared() && (segments.length > 0 || view.filters.length > 0) && (
+            <SavedViews
+              views={segments}
+              current={current}
+              canSave={view.filters.length > 0}
+              onOpen={openView}
+              onSave={saveView}
+              onRename={renameView}
+              onDelete={removeView}
+            />
+          )}
           <div className="spacer" />
         {trail && trailData && (
           <button type="button" className="chip" style={{ borderColor: channelColor(trail) }} onClick={() => addFilter('channel', trail)}>
@@ -539,24 +559,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           <button type="button" className="btn ghost" style={{ height: 32, fontSize: 13 }} onClick={saveView}>
             Save this view
           </button>
-        </div>
-      )}
-
-      {/* Saved views: one click back to a question you ask often. Labelled,
-          because a row of unexplained pills reads as decoration. */}
-      {segments.length > 0 && (
-        <div className="sv-strip" role="group" aria-label="Saved views">
-          <span className="sv-label">Saved views</span>
-          {segments.map((g) => (
-            <span key={g.id} className={current === g.query ? 'sv on' : 'sv'}>
-              <button type="button" className="sv-open" onClick={() => openView(g)} aria-pressed={current === g.query}>
-                {g.name}
-              </button>
-              <button type="button" className="sv-x" aria-label={`Remove saved view ${g.name}`} onClick={() => removeView(g)}>
-                ×
-              </button>
-            </span>
-          ))}
         </div>
       )}
 

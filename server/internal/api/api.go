@@ -167,6 +167,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}/alerts/{id}", a.authed(a.deleteAlert))
 	handle("GET /api/v1/sites/{site}/segments", a.authed(a.segments))
 	handle("POST /api/v1/sites/{site}/segments", a.authed(a.saveSegment))
+	handle("PATCH /api/v1/sites/{site}/segments/{id}", a.authed(a.renameSegment))
 	handle("DELETE /api/v1/sites/{site}/segments/{id}", a.authed(a.deleteSegment))
 	handle("GET /api/v1/sites/{site}/annotations", a.authed(a.annotations))
 	handle("POST /api/v1/sites/{site}/annotations", a.authed(a.addAnnotation))
