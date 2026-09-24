@@ -3,8 +3,10 @@
 #   docker build -f deploy/Dockerfile -t ghcr.io/trckable/trckable .
 #   docker run -d -p 8080:8080 -v trckable-data:/data ghcr.io/trckable/trckable
 #
-# DuckDB needs cgo and glibc, so we build on Debian trixie and run on the
-# matching distroless "cc" image (libstdc++ + libgcc, no shell, no package manager).
+# One static binary (DuckDB, libstdc++ and glibc linked in; Go's own DNS and
+# user lookups) on distroless "static": CA certificates, time zones and
+# nothing else, no shell, no package manager. About a third smaller than the
+# glibc base it replaced, in the image and in memory.
 
 FROM golang:1.27-trixie AS build
 WORKDIR /src
@@ -13,12 +15,12 @@ RUN cd server && go mod download
 COPY server/ ./server/
 COPY VERSION ./
 ARG VERSION=
-RUN V=${VERSION:-$(cat VERSION)} && cd server && CGO_ENABLED=1 go build -trimpath \
-      -ldflags="-s -w -X github.com/trckable/trckable/server/internal/server.Version=$V" \
+RUN V=${VERSION:-$(cat VERSION)} && cd server && CGO_ENABLED=1 go build -trimpath -tags netgo,osusergo \
+      -ldflags="-s -w -linkmode external -extldflags=-static -X github.com/trckable/trckable/server/internal/server.Version=$V" \
       -o /out/trckabled ./cmd/trckabled \
  && mkdir -p /out/data
 
-FROM gcr.io/distroless/cc-debian13
+FROM gcr.io/distroless/static-debian13
 LABEL org.opencontainers.image.title="trckable" \
       org.opencontainers.image.description="Tiny self-hosted web analytics that shows which traffic pays" \
       org.opencontainers.image.source="https://github.com/trckable/trckable" \
