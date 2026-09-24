@@ -99,7 +99,7 @@ export function start(c: Config): Tracker {
     return (a[0] * 2097152 + (a[1] >>> 11)).toString(36) // 53 random bits
   }
 
-  const cookie = () => d.cookie.match(/(?:^|; )trckable_vid=([^;]+)/)?.[1]
+  const cookie = () => d.cookie.match(/(^|; )trckable_vid=([^;]+)/)?.[2]
   const shown = () => (d.visibilityState === 'visible' ? now() : 0)
 
   // Consent, read from the banner the site already runs. Until the visitor
@@ -363,7 +363,7 @@ export function start(c: Config): Tracker {
             const props: Props = {}
             const ds = g.dataset
             for (const k in ds)
-              if (k.length > 12 && k.startsWith('trckableGoal'))
+              if (/^trckableGoal./.test(k))
                 props[k.slice(12).replace(/[A-Z]/g, (m) => '_' + m.toLowerCase()).slice(1)] = ds[k]!
             goal(ds.trckableGoal!, props)
           }

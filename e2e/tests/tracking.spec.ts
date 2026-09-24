@@ -133,7 +133,10 @@ test('same-origin proxy: the server sets a long-lived cookie and visitors stay o
 
   const cookie = (await context.cookies()).find((c) => c.name === 'trckable_vid')!
   const days = (cookie.expires * 1000 - Date.now()) / 86_400_000
-  expect(days).toBeGreaterThan(399) // server-set: not subject to Safari's 7-day script cap
+  // Server-set, so not subject to Safari's 7-day cap on cookies set by
+  // scripts. The ceiling above that is the engine's own: 400 days in
+  // Chromium and Safari, 365 in WebKit on Linux.
+  expect(days).toBeGreaterThan(360)
   expect(cookie.httpOnly).toBe(false) // readable, for checkout metadata
 
   await page.goto(`${prefix}next.html`)

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
@@ -88,7 +89,7 @@ func (s *Store) Login(ctx context.Context, email, password string) (User, error)
 	err := s.DB.QueryRowContext(ctx, `SELECT id, account_id, email, role, password_hash FROM users WHERE email = ?`,
 		strings.ToLower(strings.TrimSpace(email))).Scan(&u.ID, &u.AccountID, &u.Email, &u.Role, &hash)
 	if errors.Is(err, sql.ErrNoRows) {
-		auth.VerifyPassword(dummyHash, password)
+		auth.VerifyPassword(dummyHash(), password)
 		return User{}, auth.ErrBadLogin
 	}
 	if err != nil {
@@ -100,8 +101,13 @@ func (s *Store) Login(ctx context.Context, email, password string) (User, error)
 	return u, nil
 }
 
-// dummyHash equalizes login timing for unknown emails.
-var dummyHash, _ = auth.HashPassword("trckable-timing-equalizer")
+// dummyHash equalizes login timing for unknown emails. Made on the first
+// unknown email rather than at start: a hash costs argon2's ~19 MB, which a
+// process that nobody signs in to should never pay.
+var dummyHash = sync.OnceValue(func() string {
+	h, _ := auth.HashPassword("trckable-timing-equalizer")
+	return h
+})
 
 // CreateSession starts a login session and returns its cookie value.
 func (s *Store) CreateSession(ctx context.Context, userID string) (string, error) {

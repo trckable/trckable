@@ -28,7 +28,7 @@ One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy,
 
 <br><br>
 
-<img src=".github/images/readme/numbers.svg" width="880" alt="2 KB browser script. 1 container, no external database. 28 MB of memory when idle. 0 IP addresses stored.">
+<img src=".github/images/readme/numbers.svg" width="880" alt="2 KB browser script. 1 container, no external database. At most 64 MB of memory when idle. 0 IP addresses stored.">
 
 </div>
 
@@ -58,7 +58,7 @@ The free, self-hostable tools, plus DataFast (paid, hosted only) for script size
   <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 28 to 35 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
 </p>
 
-**Where it is not the right pick:** with pageviews only, Plausible CE's script is smaller (1,283 B against 1,580 B). And session replay, heatmaps and A/B tests are out of scope on purpose. If you need those, use Matomo.
+**Where it is not the right pick:** with pageviews only, Plausible CE's script is smaller (1,283 B against 1,597 B). And session replay, heatmaps and A/B tests are out of scope on purpose. If you need those, use Matomo.
 
 ## 🧰 Everything it does
 
@@ -69,7 +69,7 @@ Nothing is paid, limited or kept for a hosted edition. The complete list, in wor
   <img src=".github/images/features/providers.svg" width="49%" alt="Five payment providers: Stripe, Lemon Squeezy, Polar, Paddle and Dodo, one key each">
 </p>
 <p align="center">
-  <img src=".github/images/features/lightweight.svg" width="49%" alt="A 2 KB script, measured on the wire and gated in CI; modules that are off cost 0 bytes">
+  <img src=".github/images/features/lightweight.svg" width="49%" alt="A 2 KB script, gzipped and gated in CI; modules that are off cost 0 bytes">
   <img src=".github/images/features/no-ip.svg" width="49%" alt="No IP address is ever stored: used once in memory for the country, then discarded">
 </p>
 <p align="center">

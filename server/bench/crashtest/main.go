@@ -67,7 +67,10 @@ func main() {
 	dir, err := os.MkdirTemp("", "trckable-crashtest-*")
 	check(err)
 	defer os.RemoveAll(dir)
-	env := append(os.Environ(), "TRCKABLE_DATA_DIR="+dir, fmt.Sprintf("TRCKABLE_ADDR=127.0.0.1:%d", *port), "TRCKABLE_LOG_LEVEL=warn", "TRCKABLE_UNSAFE_SESSION_CLOSE_MS=1500")
+	env := append(os.Environ(), "TRCKABLE_DATA_DIR="+dir, fmt.Sprintf("TRCKABLE_ADDR=127.0.0.1:%d", *port), "TRCKABLE_LOG_LEVEL=warn", "TRCKABLE_UNSAFE_SESSION_CLOSE_MS=1500",
+		// Behind an edge that names the visitor, as on Railway: 3,000 visitors
+		// from one address would be (rightly) rate limited.
+		"TRCKABLE_TRUST_PROXY=header:X-Real-IP")
 
 	out, err := cmd(env, "site", "add", "example.com").Output()
 	check(err)
@@ -193,6 +196,8 @@ func send(site string, ids []int, acked []atomic.Bool, count *atomic.Int64, stop
 				req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("http://127.0.0.1:%d/api/e", *port), bytes.NewReader(body))
 				req.Header.Set("User-Agent", ua)
 				req.Header.Set("Content-Type", "text/plain")
+				vis := id%3000 + 1
+				req.Header.Set("X-Real-IP", fmt.Sprintf("198.18.%d.%d", vis/256, vis%256)) // the benchmarking range
 				resp, err := client.Do(req)
 				if err != nil {
 					noteFailure("net: " + errKind(err))

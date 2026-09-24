@@ -105,17 +105,17 @@ jobs:
           test "$mb" -le 40
       - name: boots, accepts an event, idle RAM ≤ 64 MB, stops cleanly
         run: |
-          docker run -d --name t -p 8080:8080 trckable:ci
+          docker run -d --name tkb -p 8080:8080 trckable:ci
           for i in $(seq 1 50); do curl -sf localhost:8080/readyz && break; sleep 0.2; done
-          site=$(docker exec t trckabled site add example.com)
+          site=$(docker exec tkb trckabled site add example.com)
           code=$(curl -s -o /dev/null -w '%{http_code}' -X POST localhost:8080/api/e \
             -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36' \
             -d "{\"s\":\"$site\",\"k\":\"pv\",\"u\":\"https://example.com/\"}")
           test "$code" = 202
           sleep 3
-          mem=$(docker stats --no-stream --format '{{.MemUsage}}' t | awk '{print $1}')
+          mem=$(docker stats --no-stream --format '{{.MemUsage}}' tkb | awk '{print $1}')
           echo "idle memory: $mem (budget 64MiB)"
           case "$mem" in *GiB) exit 1;; esac
           test "$(echo "$mem" | sed 's/MiB//' | cut -d. -f1)" -le 64
-          docker stop -t 30 t
-          test "$(docker inspect -f '{{.State.ExitCode}}' t)" = 0
+          docker stop -t 30 tkb
+          test "$(docker inspect -f '{{.State.ExitCode}}' tkb)" = 0
