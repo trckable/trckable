@@ -642,8 +642,11 @@ func importCmd(cfg config.Config, args []string) error {
 	}
 
 	log, err := wal.Open(cfg.WALDir(), wal.Options{})
+	if errors.Is(err, wal.ErrLocked) {
+		return errors.New("the server is running on this data directory: stop it, run the import, then start it again (an import writes to the same log the server does)")
+	}
 	if err != nil {
-		return fmt.Errorf("open the write-ahead log (is the server running?): %w", err)
+		return fmt.Errorf("open the write-ahead log: %w", err)
 	}
 	defer log.Close()
 
@@ -670,6 +673,6 @@ func importCmd(cfg config.Config, args []string) error {
 		return fmt.Errorf("%d of %d rows had no usable timestamp or path — every row needs a time and either a path or a goal; "+
 			"the columns may be named ts/path/visitor, or timestamp/url/session_id as Plausible and Umami name them; GA4 rows come from its BigQuery export", res.Skipped, res.Skipped+res.Rows)
 	}
-	fmt.Println("start the server (or leave it running) and the writer will apply them")
+	fmt.Println("start the server and the writer will apply them")
 	return nil
 }

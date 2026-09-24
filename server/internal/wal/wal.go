@@ -40,6 +40,9 @@ var (
 	crcTable  = crc32.MakeTable(crc32.Castagnoli)
 	ErrClosed = errors.New("wal: closed")
 	ErrTooBig = errors.New("wal: record too large")
+	// ErrLocked: another process has this log open (the server, while an
+	// import runs). Stop it first, or import through the running server.
+	ErrLocked = errors.New("wal: another trckabled has this data directory open")
 )
 
 // Options tune the log. Zero values pick safe defaults.
@@ -60,6 +63,7 @@ type appendReq struct {
 type Log struct {
 	dir  string
 	opts Options
+	lock *os.File // held while open: one writer per log
 
 	reqs   chan *appendReq
 	closed chan struct{}
@@ -91,7 +95,12 @@ func Open(dir string, opts Options) (*Log, error) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}
+	lock, err := lockDir(dir)
+	if err != nil {
+		return nil, err
+	}
 	l := &Log{
+		lock:   lock,
 		dir:    dir,
 		opts:   opts,
 		reqs:   make(chan *appendReq, opts.MaxBatch),
@@ -380,6 +389,10 @@ func (l *Log) Close() error {
 	}
 	err := l.f.Close()
 	l.f = nil
+	if l.lock != nil {
+		l.lock.Close() // closing the file releases the lock
+		l.lock = nil
+	}
 	return err
 }
 
