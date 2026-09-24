@@ -20,8 +20,12 @@ function lex(src: string): Tok[] {
   }
   while (i < src.length) {
     const rest = src.slice(i)
+    const prev = src[i - 1]
+    // "//" and "#" open a comment only where one can start: at the start of a
+    // line or after a space, never inside https://… or a #fragment.
+    const spaced = prev === undefined || /\s/.test(prev)
     let m: RegExpMatchArray | null
-    if ((m = rest.match(/^(<!--[\s\S]*?-->|\/\/[^\n]*|#[^\n]*|\/\*[\s\S]*?\*\/)/))) {
+    if ((m = rest.match(/^(<!--[\s\S]*?-->|\/\*[\s\S]*?\*\/)/) || (spaced ? rest.match(/^(\/\/[^\n]*|#[^\n]*)/) : null))) {
       push(m[0], 'c-comment')
       i += m[0].length
       continue
@@ -41,7 +45,7 @@ function lex(src: string): Tok[] {
       i += m[0].length
       continue
     }
-    if ((m = rest.match(/^\d[\d._]*/))) {
+    if ((prev === undefined || !/[\w$]/.test(prev)) && (m = rest.match(/^\d[\d._]*/))) {
       push(m[0], 'c-num')
       i += m[0].length
       continue
