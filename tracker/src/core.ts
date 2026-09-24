@@ -382,7 +382,7 @@ export function start(c: Config): Tracker {
             // Hosted checkout links carry the visitor id, so sales are
             // attributed with no code (Stripe Payment Links, Lemon Squeezy,
             // Polar, Dodo).
-            const v = cookie()
+            const v = !cookieless && cookie() // consent-free mode reads nothing
             const m = /(buy\.stripe|lemonsqueezy|polar|dodopayments)\.(com|sh)$/.exec(h)
             if (v && m) {
               const u = new URL(a.href)
