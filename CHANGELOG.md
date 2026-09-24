@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.1.2 (24 Sep 2026)
+
 - A visitor who declines is not counted at all, with or without a cookie:
   from the moment they say no (trckable's bar, the site's consent manager,
   `trckable('consent', false)`, Do Not Track or Global Privacy Control),

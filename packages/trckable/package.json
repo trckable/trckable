@@ -1,6 +1,6 @@
 {
   "name": "trckable",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Tiny, open-source web analytics that shows which traffic pays. Peekaboo. Every visit counted.",
   "keywords": [
     "analytics",
