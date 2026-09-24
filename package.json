@@ -9,7 +9,8 @@
   },
   "scripts": {
     "ship": "scripts/ship.sh",
-    "check": "scripts/ship.sh --check"
+    "check": "scripts/ship.sh --check",
+    "release": "node scripts/release.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

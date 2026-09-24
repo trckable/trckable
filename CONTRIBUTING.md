@@ -28,8 +28,9 @@ The server prints a one-time setup link on first start. `go run
    Docker image and govulncheck; all five must pass.
 4. The maintainer reviews it (CODEOWNERS), and it is squash-merged, so
    `main` has one commit per change and is always releasable.
-5. Releases are tags on `main` (`vX.Y.Z`); the release workflow publishes
-   the image and the GitHub release from `CHANGELOG.md`.
+5. A release is `pnpm release X.Y.Z` on `main`: it bumps every version,
+   dates the Unreleased section, runs the gate and pushes the tag. The tag's
+   workflow publishes the image, the npm package and the GitHub release.
 
 ## Before you open a pull request
 
@@ -44,8 +45,8 @@ pnpm check      # what CI runs, on any branch: Go, tracker, dashboard, npm packa
   commit them together with the source change.
 - Every visible string is plain English and short. Every feature works in the
   self-hosted edition: nothing is held back for a hosted one.
-- New behaviour comes with a test, and a line in CHANGELOG.md under the
-  version being prepared.
+- New behaviour comes with a test, and a line in CHANGELOG.md under
+  "Unreleased".
 
 ## Licensing of contributions
 

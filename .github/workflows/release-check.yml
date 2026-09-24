@@ -1,0 +1,28 @@
+# A change to how releases are built is tried before it is merged: the image is
+# built for both architectures, exactly as the release does, but not published.
+name: release-check
+
+on:
+  pull_request:
+    paths:
+      - deploy/Dockerfile
+      - .github/workflows/release.yml
+      - .github/workflows/release-check.yml
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: image, x86-64 and arm64, not pushed
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: false

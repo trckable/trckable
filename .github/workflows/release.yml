@@ -1,7 +1,11 @@
-# A release: push a tag vX.Y.Z whose version matches VERSION and has a section
-# in CHANGELOG.md. The image goes to ghcr.io/trckable/trckable (:X.Y.Z and
-# :latest, for x86-64 and arm64), and a GitHub release carries that section.
-# The npm package is published by hand (npm publish needs a maintainer's login).
+# A release: `pnpm release X.Y.Z` pushes the tag vX.Y.Z (matching VERSION, with
+# a section in CHANGELOG.md), and this publishes everything from it:
+#   - the image, ghcr.io/trckable/trckable :X.Y.Z and :latest, x86-64 and arm64
+#   - the GitHub release, with that CHANGELOG section
+#   - the npm package trckable, through npm's Trusted Publishing: npm checks
+#     that this workflow built it, so no npm token is stored anywhere, and the
+#     package carries a provenance statement
+#   - trckable.com/docs rebuilt (the changelog), in trckable/trckable-cloud
 name: release
 
 on:
@@ -47,3 +51,35 @@ jobs:
         run: |
           awk -v v="## $V" 'index($0, v) == 1 {on = 1; next} /^## / {on = 0} on' CHANGELOG.md > notes.md
           gh release create "$GITHUB_REF_NAME" --title "trckable $V" --notes-file notes.md
+
+  npm:
+    needs: release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write # Trusted Publishing (set up on npmjs.com for this workflow)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, registry-url: "https://registry.npmjs.org", cache: pnpm }
+      - run: npm install -g npm@11 # Trusted Publishing needs npm 11.5 or newer
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter trckable build && pnpm --filter trckable test
+      - name: publish (a version already on npm is left alone)
+        working-directory: packages/trckable
+        run: |
+          V=$(node -p "require('./package.json').version")
+          if npm view "trckable@$V" version >/dev/null 2>&1; then echo "trckable@$V is already on npm"; exit 0; fi
+          npm publish --provenance --access public
+
+  docs:
+    needs: [release, npm]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: rebuild trckable.com/docs
+        env:
+          GH_TOKEN: ${{ secrets.SITE_DEPLOY_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "::notice::SITE_DEPLOY_TOKEN is not set yet: deploy the site by hand (pnpm web:ship in trckable-cloud)"; exit 0; fi
+          gh workflow run deploy.yml -R trckable/trckable-cloud
