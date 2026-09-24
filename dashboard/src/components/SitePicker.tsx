@@ -2,6 +2,7 @@
 // not like trckable, and on a phone it opened the system list: this is the same
 // control in the product's own shape, with search once there are a few sites
 // and a way straight to adding one.
+import { Check, ChevronDown, LayoutGrid, Plus } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { siteState, type Site } from '../lib/api'
 import { navigate } from '../lib/url'
@@ -58,9 +59,7 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
       <button type="button" className="btn site-btn" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
         {!all && <StateDot state={current ? siteState(current) : 'new'} />}
         <span className="name">{all ? 'All sites' : current?.name || current?.domain || 'Pick a site'}</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-          <path d="m6 9 6 6 6-6" />
-        </svg>
+        <ChevronDown size={15} strokeWidth={1.75} aria-hidden="true" />
       </button>
       {open && (
         <div className="pop sites" role="listbox" aria-label="Sites">
@@ -78,9 +77,7 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
             {/* Every site on one page, once there is more than one to compare. */}
             {sites.length > 1 && !q && (
               <button type="button" role="option" aria-selected={!!all} className={all ? 'site on' : 'site'} onClick={() => (setOpen(false), navigate('/all'))}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                  <path d="M4 5h7v7H4zM13 5h7v7h-7zM4 14h7v5H4zM13 14h7v5h-7z" />
-                </svg>
+                <span className="icon-tile"><LayoutGrid size={18} strokeWidth={1.75} /></span>
                 <span className="name">
                   <b>All sites</b>
                   <span className="faint">every site, side by side</span>
@@ -101,9 +98,7 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
                   )}
                 </span>
                 {s.id === current?.id && (
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="m20 6-11 11-5-5" />
-                  </svg>
+                  <Check size={17} strokeWidth={2} color="var(--accent)" aria-hidden="true" />
                 )}
               </button>
             ))}
@@ -120,8 +115,8 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
                     openAddSite()
                   }}
                 >
-                  <span className="foot-plus" aria-hidden="true">
-                    +
+                  <span className="icon-tile accent" aria-hidden="true">
+                    <Plus size={18} strokeWidth={2} />
                   </span>
                   <span>
                     <b>Add a site</b>

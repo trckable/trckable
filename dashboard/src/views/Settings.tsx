@@ -1,3 +1,4 @@
+import { Activity, Bell, Blocks, Code, CreditCard, Search, Settings as Cog, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { isViewer } from '../lib/me'
 import { api, type Site } from '../lib/api'
@@ -20,22 +21,20 @@ type TabID = 'site' | 'install' | 'modules' | 'payments' | 'search' | 'privacy' 
 // Only the open site lives here. Anything about the account — the list of
 // sites, keys, the password — is one dialog away (see AccountDialog), so the
 // two can never be mistaken for each other.
-const TABS: { id: TabID; label: string; icon: string }[] = [
-  { id: 'site', label: 'General', icon: 'M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.4-.5a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z' },
-  { id: 'install', label: 'Install', icon: 'm9 8-5 4 5 4m6-8 5 4-5 4' },
-  { id: 'modules', label: 'Modules', icon: 'M4 5h7v7H4zM13 5h7v4h-7zM13 11h7v8h-7zM4 14h7v5H4z' },
-  { id: 'payments', label: 'Payments', icon: 'M3 8h18M3 12.5h18M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z' },
-  { id: 'search', label: 'Search Console', icon: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm9 3-4.35-4.35' },
-  { id: 'privacy', label: 'Data & privacy', icon: 'M12 3l7 3v6c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V6l7-3Zm0 7v4' },
-  { id: 'alerts', label: 'Alerts', icon: 'M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0' },
-  { id: 'health', label: 'Health', icon: 'M3 12h4l2.5-6 4 12 2.5-6H21' },
+const TABS: { id: TabID; label: string; icon: typeof Cog }[] = [
+  { id: 'site', label: 'General', icon: Cog },
+  { id: 'install', label: 'Install', icon: Code },
+  { id: 'modules', label: 'Modules', icon: Blocks },
+  { id: 'payments', label: 'Payments', icon: CreditCard },
+  { id: 'search', label: 'Search Console', icon: Search },
+  { id: 'privacy', label: 'Data & privacy', icon: ShieldCheck },
+  { id: 'alerts', label: 'Alerts', icon: Bell },
+  { id: 'health', label: 'Health', icon: Activity },
 ]
 
-function NavIcon({ d }: { d: string }) {
+function NavIcon({ d: Icon }: { d: typeof Cog }) {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d={d} />
-    </svg>
+    <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
   )
 }
 

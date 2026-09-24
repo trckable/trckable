@@ -1,6 +1,7 @@
 // Settings → Sites: everything about sites as a whole, not about one of them.
 // Adding a site is a short wizard (domain → install → first visit), and each
 // site can be renamed or removed from the same list.
+import { Check } from 'lucide-react'
 import { DialogActions } from '../components/DialogActions'
 import { Modal } from '../components/Modal'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
@@ -270,9 +271,7 @@ function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: () => voi
       {step === 4 && (
         <>
           <div className="wiz-done">
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--up)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m20 6-11 11-5-5" />
-            </svg>
+            <Check size={34} strokeWidth={2} aria-hidden="true" />
             <b>{site.domain} is gone.</b>
           </div>
           {gone && (
@@ -445,9 +444,7 @@ function ListenScene({ arrived }: { arrived: boolean }) {
         <Ghost size={54} peek={!arrived} />
       </span>
       {arrived && (
-        <svg className="listen-tick" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--up)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-          <path d="m20 6-11 11-5-5" />
-        </svg>
+        <Check size={26} strokeWidth={2} aria-hidden="true" />
       )}
     </div>
   )

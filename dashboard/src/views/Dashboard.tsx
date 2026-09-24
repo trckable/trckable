@@ -1,3 +1,4 @@
+import { ChevronDown, ChevronRight, CircleUser, Download, Ellipsis, Keyboard, KeyRound, Maximize2, MessageCircle, Minimize2, Pause, Play, RefreshCw } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DialogActions } from '../components/DialogActions'
 import { Modal } from '../components/Modal'
@@ -16,7 +17,6 @@ import { isShared, sharedModules } from '../lib/me'
 import { THEMES, useTheme } from '../lib/theme'
 import { ModeToggle } from '../components/ModeToggle'
 import { FilterMenu } from '../components/FilterMenu'
-import { NoteDialog } from '../components/NoteDialog'
 import { toast } from '../components/Toast'
 import { useLive } from '../lib/useLive'
 import { useReport } from '../lib/useReport'
@@ -38,6 +38,7 @@ const Vitals = lazy(() => import('./Vitals').then((m) => ({ default: m.Vitals })
 const Retention = lazy(() => import('./Retention').then((m) => ({ default: m.Retention })))
 const AddGoals = lazy(() => import('./AddGoals').then((m) => ({ default: m.AddGoals })))
 const People = lazy(() => import('./FullModules').then((m) => ({ default: m.People })))
+const NoteDialog = lazy(() => import('../components/NoteDialog').then((m) => ({ default: m.NoteDialog })))
 const JourneyDrawer = lazy(() => import('./FullModules').then((m) => ({ default: m.JourneyDrawer })))
 
 const DIM_LABEL: Record<string, string> = {
@@ -463,6 +464,76 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       <div className="header">
         {header}
         <div className="header-tools">
+          <div className="spacer" />
+        {trail && trailData && (
+          <button type="button" className="chip" style={{ borderColor: channelColor(trail) }} onClick={() => addFilter('channel', trail)}>
+            <span className="dot" style={{ background: channelColor(trail) }} />
+            <b>Following {channelLabel(trail)}</b>
+            <span className="faint" style={{ fontSize: 12 }}>
+              click to keep
+            </span>
+          </button>
+        )}
+          {askOn && (
+            <button type="button" className="btn ask" onClick={() => setAskOpen(true)} aria-expanded={askOpen} aria-label="Ask trckable" title={`Ask trckable (${caps(keyFor('ask')).join('')})`}>
+              <ChatIcon />
+              <span className="kbd">{caps(keyFor('ask')).join('')}</span>
+            </button>
+          )}
+          {!narrow && <ModeToggle full={full} onToggle={() => setView({ mode: full ? 'core' : 'full' })} />}
+          <MoreMenu
+            full={full}
+            askOn={askOn}
+            narrow={narrow}
+            onAsk={() => setAskOpen(true)}
+            onMode={(m) => setView({ mode: m })}
+            // A download, not a fetch: the browser writes the file, names it
+            // from the header, and nothing has to be held in memory here.
+            onExport={() => {
+              const a = document.createElement('a')
+              a.href = exportURL(site.id, query)
+              a.download = ''
+              a.click()
+              toast('Building your file…')
+            }}
+            onRefresh={() => {
+              dropReports(site.id)
+              refresh()
+              toast('Refreshed')
+            }}
+          />
+        </div>
+      </div>
+
+      {/* The second row: what the numbers are narrowed to on the left, and
+          the controls that narrow them (period, filters, saved views) on the
+          right. The top row keeps who, which site and the view. */}
+      <div className="toolbar">
+        <div className="toolbar-filters" aria-label="Active filters">
+          {view.filters.length > 0 && (
+            <>
+              {view.filters.map((f) => (
+                <span key={f.dim + f.value} className="chip">
+                  {f.dim === 'channel' && <span className="dot" style={{ background: channelColor(f.value) }} />}
+                  <span className="faint">{DIM_LABEL[f.dim] ?? f.dim} is</span>
+                  <b title={f.value}>{f.dim === 'channel' ? channelLabel(f.value) : f.dim === 'country' ? countryName(f.value) : f.value}</b>
+                  <button type="button" aria-label={`Remove filter ${DIM_LABEL[f.dim] ?? f.dim} is ${f.value}`} onClick={() => removeFilter(f)}>
+                    ×
+                  </button>
+                </span>
+              ))}
+              {view.filters.length > 1 && (
+                <button type="button" className="btn ghost" style={{ height: 32, fontSize: 13 }} onClick={() => setView({ filters: [] })}>
+                  Clear all
+                </button>
+              )}
+              <button type="button" className="btn ghost" style={{ height: 32, fontSize: 13 }} onClick={saveView}>
+                Save this view
+              </button>
+            </>
+          )}
+        </div>
+        <div className="toolbar-tools">
           <DatePicker
             value={pickerValue}
             today={today}
@@ -510,69 +581,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               }
             />
           )}
-          <div className="spacer" />
-        {trail && trailData && (
-          <button type="button" className="chip" style={{ borderColor: channelColor(trail) }} onClick={() => addFilter('channel', trail)}>
-            <span className="dot" style={{ background: channelColor(trail) }} />
-            <b>Following {channelLabel(trail)}</b>
-            <span className="faint" style={{ fontSize: 12 }}>
-              click to keep
-            </span>
-          </button>
-        )}
-          {askOn && (
-            <button type="button" className="btn ask" onClick={() => setAskOpen(true)} aria-expanded={askOpen} aria-label="Ask trckable" title={`Ask trckable (${caps(keyFor('ask')).join('')})`}>
-              <ChatIcon />
-              <span className="kbd">{caps(keyFor('ask')).join('')}</span>
-            </button>
-          )}
-          {!narrow && <ModeToggle full={full} onToggle={() => setView({ mode: full ? 'core' : 'full' })} />}
-          <MoreMenu
-            full={full}
-            askOn={askOn}
-            narrow={narrow}
-            onAsk={() => setAskOpen(true)}
-            onMode={(m) => setView({ mode: m })}
-            // A download, not a fetch: the browser writes the file, names it
-            // from the header, and nothing has to be held in memory here.
-            onExport={() => {
-              const a = document.createElement('a')
-              a.href = exportURL(site.id, query)
-              a.download = ''
-              a.click()
-              toast('Building your file…')
-            }}
-            onRefresh={() => {
-              dropReports(site.id)
-              refresh()
-              toast('Refreshed')
-            }}
-          />
         </div>
       </div>
-
-      {view.filters.length > 0 && (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }} aria-label="Active filters">
-          {view.filters.map((f) => (
-            <span key={f.dim + f.value} className="chip">
-              {f.dim === 'channel' && <span className="dot" style={{ background: channelColor(f.value) }} />}
-              <span className="faint">{DIM_LABEL[f.dim] ?? f.dim} is</span>
-              <b title={f.value}>{f.dim === 'channel' ? channelLabel(f.value) : f.dim === 'country' ? countryName(f.value) : f.value}</b>
-              <button type="button" aria-label={`Remove filter ${DIM_LABEL[f.dim] ?? f.dim} is ${f.value}`} onClick={() => removeFilter(f)}>
-                ×
-              </button>
-            </span>
-          ))}
-          {view.filters.length > 1 && (
-            <button type="button" className="btn ghost" style={{ height: 32, fontSize: 13 }} onClick={() => setView({ filters: [] })}>
-              Clear all
-            </button>
-          )}
-          <button type="button" className="btn ghost" style={{ height: 32, fontSize: 13 }} onClick={saveView}>
-            Save this view
-          </button>
-        </div>
-      )}
 
       {naming && (
         <SaveViewDialog
@@ -658,9 +668,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {full && (
         <div className="more-numbers rise">
           <button type="button" className="more-toggle" aria-expanded={moreOpen} onClick={() => setMoreOpen((o) => !o)}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: moreOpen ? 'rotate(90deg)' : undefined, transition: 'transform 0.2s' }}>
-              <path d="m9 6 6 6-6 6" />
-            </svg>
+            <ChevronRight size={15} strokeWidth={1.75} aria-hidden="true" />
             More numbers
             {!moreOpen && k && (
               <span className="faint num">
@@ -763,14 +771,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               style={{ height: 38, padding: '0 14px 0 10px' }}
             >
               {playing ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <rect x="6" y="5" width="4" height="14" rx="1" />
-                  <rect x="14" y="5" width="4" height="14" rx="1" />
-                </svg>
+                <Pause size={15} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
               ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M7 4.5v15l12-7.5z" />
-                </svg>
+                <Play size={15} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
               )}
               Replay
             </button>
@@ -817,6 +820,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       </section>
 
       {noteFor && (
+        <Suspense fallback={null}>
         <NoteDialog
           site={site}
           day={noteFor}
@@ -828,6 +832,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           onClose={() => setNoteFor(null)}
           onSaved={loadNotes}
         />
+        </Suspense>
       )}
 
       {full && hasData && (
@@ -1255,18 +1260,12 @@ function MoreMenu({
   return (
     <div ref={root} style={{ position: 'relative' }}>
       <button type="button" className="btn icon" aria-haspopup="menu" aria-expanded={open} aria-label="More" onClick={() => setOpen((o) => !o)}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <circle cx="5" cy="12" r="1.7" />
-          <circle cx="12" cy="12" r="1.7" />
-          <circle cx="19" cy="12" r="1.7" />
-        </svg>
+        <Ellipsis size={20} strokeWidth={1.75} aria-hidden="true" />
       </button>
       {open && (
         <div className="pop menu" role="menu" style={{ top: 48, right: 0 }}>
           <button type="button" role="menuitem" onClick={go(onRefresh)}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5" />
-            </svg>
+            <RefreshCw size={18} strokeWidth={1.75} aria-hidden="true" />
             Refresh
           </button>
           {askOn && narrow && (
@@ -1277,25 +1276,18 @@ function MoreMenu({
           )}
           {narrow && (
           <button type="button" role="menuitem" onClick={go(() => onMode(full ? 'core' : 'full'))}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              {full ? <path d="M9 9H4m5 0V4m11 5h-5m5 0V4M9 15H4m5 0v5m11-5h-5m5 0v5" /> : <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />}
-            </svg>
+            {full ? <Minimize2 size={18} strokeWidth={1.75} aria-hidden="true" /> : <Maximize2 size={18} strokeWidth={1.75} aria-hidden="true" />}
             {full ? 'Core view' : 'Full view'}
           </button>
           )}
           {!isShared() && (
             <>
           <button type="button" role="menuitem" onClick={go(onExport)}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
-            </svg>
+            <Download size={18} strokeWidth={1.75} aria-hidden="true" />
             Export as CSV
           </button>
           <button type="button" role="menuitem" onClick={go(openShortcuts)}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="2.5" y="6" width="19" height="12" rx="2.5" />
-              <path d="M7 10h.01M11 10h.01M15 10h.01M8 14h8" />
-            </svg>
+            <Keyboard size={18} strokeWidth={1.75} aria-hidden="true" />
             Shortcuts
           </button>
           <div className="menu-theme" role="group" aria-label="Theme">
@@ -1309,10 +1301,7 @@ function MoreMenu({
             </span>
           </div>
           <button type="button" role="menuitem" onClick={go(() => openAccount('sites'))}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M20 21a8 8 0 0 0-16 0" />
-            </svg>
+            <CircleUser size={18} strokeWidth={1.75} aria-hidden="true" />
             Your account
           </button>
             </>
@@ -1325,10 +1314,7 @@ function MoreMenu({
 
 function KeyIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="7.5" cy="15.5" r="4.5" />
-      <path d="m10.7 12.3 8.3-8.3M17 6l2.5 2.5M14.5 8.5 17 11" />
-    </svg>
+    <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />
   )
 }
 
@@ -1429,9 +1415,7 @@ function TabbedCard(p: { title: string; note?: string; extra?: React.ReactNode; 
     <div className={folded ? 'card folded' : 'card'}>
       <div className="card-head" style={{ flexWrap: 'wrap' }}>
         <button type="button" className="fold" aria-expanded={!folded} aria-label={folded ? `Show ${p.title}` : `Hide ${p.title}`} onClick={() => fold(!folded)}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+          <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
         </button>
         <h2 style={{ whiteSpace: 'nowrap' }}>{p.title}</h2>
         {p.tabs.length > 1 ? (
@@ -1509,9 +1493,7 @@ function storyLine(p: {
 
 function ChatIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 12a8 8 0 0 1-11.7 7.1L4 20l.9-5.3A8 8 0 1 1 21 12Z" />
-    </svg>
+    <MessageCircle size={17} strokeWidth={1.75} aria-hidden="true" />
   )
 }
 

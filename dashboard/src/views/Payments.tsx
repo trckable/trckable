@@ -1,6 +1,7 @@
 // Settings → Payments. Connecting a provider is three taps: pick it, paste the
 // key, done. Everything wordy (manual webhooks, checkout snippets) lives behind
 // its own button, so the page itself stays short.
+import { Check } from 'lucide-react'
 import { Menu } from '../components/Menu'
 import { DialogActions } from '../components/DialogActions'
 import { Modal } from '../components/Modal'
@@ -395,9 +396,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
               </div>
             ) : done ? (
               <div className="wiz-done">
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--up)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m20 6-11 11-5-5" />
-                </svg>
+                <Check size={34} strokeWidth={2} aria-hidden="true" />
                 <b>Connected.</b>
                 <span className="muted">Payments will appear as they happen.</span>
               </div>

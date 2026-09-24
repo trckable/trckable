@@ -1321,6 +1321,40 @@ table.t td {
   line-height: 18px;
   text-align: center;
 }
+.modal-badge.danger {
+  background: color-mix(in srgb, var(--down) 14%, transparent);
+  border-color: color-mix(in srgb, var(--down) 40%, transparent);
+  color: var(--down);
+}
+.modal.confirm-modal {
+  width: min(460px, 100%);
+}
+.confirm-body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px 14px;
+}
+.confirm-text {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.confirm-text h2 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+.confirm-text p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.confirm-text .field {
+  margin-top: 8px;
+}
+.confirm-body > :last-child {
+  grid-column: 1 / -1;
+}
 /* The dialog heading, with an optional icon tile before it. */
 .modal-badge {
   display: grid;
@@ -1704,17 +1738,22 @@ table.t td {
 .foot-main .faint {
   font-size: 11.5px;
 }
-.foot-plus {
+/* An icon on a small rounded square: menu rows and headings. */
+.icon-tile {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   flex: none;
-  border-radius: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 6%, var(--surface-2)), var(--surface-2));
+  color: var(--text-2);
+}
+.icon-tile.accent {
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
   background: var(--accent-soft);
   color: var(--accent);
-  font-size: 16px;
-  line-height: 1;
 }
 .foot-side {
   border: 0;
@@ -2853,6 +2892,35 @@ table.t td {
   background: transparent;
 }
 
+/* ---- The toolbar under the header ------------------------------------------
+   Left: the filters in force. Right: period, filter, saved views. */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px 16px;
+  flex-wrap: wrap;
+  margin-top: -4px;
+}
+.toolbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+.toolbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+@media (max-width: 760px) {
+  .toolbar-tools {
+    flex: 1 0 100%;
+    order: -1;
+  }
+}
 /* ---- Header zones ----------------------------------------------------------
    Left: who and which site. Middle: the period and the view. Right: account
    and this site's settings. Flex order keeps that true however the pieces are
@@ -4013,21 +4081,6 @@ body[data-mode='full'] .app {
 }
 /* One last question before an account-level change: a strip, not a row, so the
    field and its two buttons never have to share one line. */
-.confirm-strip {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px 0 2px;
-  border-top: 1px solid var(--grid);
-}
-.confirm-strip .faint {
-  font-size: 12px;
-}
-.confirm-strip-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
 /* Picking a role is picking a sentence, so each choice carries its own. */
 .role-pick {
   display: grid;

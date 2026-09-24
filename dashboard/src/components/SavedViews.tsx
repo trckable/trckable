@@ -1,8 +1,10 @@
 // Saved views in one dropdown: find one by typing, open it, rename it, delete
 // it. A row of pills stopped working at a handful of views; a list with a
 // search keeps working at thirty (the server's limit).
+import { Bookmark, Check, ChevronDown, ListFilter, Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { confirm } from './Confirm'
 
 export type View = { id: string; name: string; query: string }
 
@@ -30,7 +32,6 @@ export function SavedViews<V extends View>({
   const [q, setQ] = useState('')
   const [editing, setEditing] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
-  const [sure, setSure] = useState<string | null>(null)
   const [at, setAt] = useState({ top: 0, left: 0 })
   const btn = useRef<HTMLButtonElement>(null)
   const pop = useRef<HTMLDivElement>(null)
@@ -68,7 +69,6 @@ export function SavedViews<V extends View>({
     setOpen(false)
     setQ('')
     setEditing(null)
-    setSure(null)
   }
 
   const shown = views.filter((v) => v.name.toLowerCase().includes(q.trim().toLowerCase()))
@@ -88,14 +88,10 @@ export function SavedViews<V extends View>({
         aria-expanded={open}
         onClick={() => (open ? close() : setOpen(true))}
       >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-        </svg>
+        <Bookmark size={16} strokeWidth={1.75} aria-hidden="true" />
         <span className="sv-btn-name">{active ? active.name : 'Views'}</span>
         {!active && views.length > 0 && <span className="count">{views.length}</span>}
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        <ChevronDown size={15} strokeWidth={1.75} aria-hidden="true" />
       </button>
       {open &&
         createPortal(
@@ -128,30 +124,14 @@ export function SavedViews<V extends View>({
                         Save
                       </button>
                     </form>
-                  ) : sure === v.id ? (
-                    <div className="sv-sure">
-                      <span>
-                        Delete <b>{v.name}</b>?
-                      </span>
-                      <button type="button" className="btn ghost small" onClick={() => setSure(null)}>
-                        Keep
-                      </button>
-                      <button type="button" className="btn danger small" autoFocus onClick={() => onDelete(v).then(() => setSure(null))}>
-                        Delete
-                      </button>
-                    </div>
                   ) : (
                     <>
                       <button type="button" className="sv-name" onClick={() => (onOpen(v), close())} aria-current={v.query === current}>
                         <span className="sv-icon" aria-hidden="true">
                           {v.query === current ? (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M5 12l5 5L20 7" />
-                            </svg>
+                            <Check size={16} strokeWidth={2.25} aria-hidden="true" />
                           ) : (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                            </svg>
+                            <Bookmark size={16} strokeWidth={1.75} aria-hidden="true" />
                           )}
                         </span>
                         <span className="sv-text">
@@ -160,15 +140,13 @@ export function SavedViews<V extends View>({
                         </span>
                       </button>
                       <button type="button" className="sv-act" aria-label={`Rename ${v.name}`} title="Rename" onClick={() => (setDraft(v.name), setEditing(v.id))}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
-                        </svg>
+                        <Pencil size={15} strokeWidth={1.75} aria-hidden="true" />
                       </button>
-                      <button type="button" className="sv-act" aria-label={`Delete ${v.name}`} title="Delete" onClick={() => setSure(v.id)}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" />
-                        </svg>
+                      <button type="button" className="sv-act" aria-label={`Delete ${v.name}`} title="Delete" onClick={async () => {
+                          close()
+                          if (await confirm({ title: `Delete “${v.name}”?`, body: 'The view goes for everyone on this site. What it shows stays in your data; only the shortcut to it is gone.', confirmLabel: 'Delete view', danger: true })) onDelete(v)
+                        }}>
+                        <Trash2 size={15} strokeWidth={1.75} aria-hidden="true" />
                       </button>
                     </>
                   )}
@@ -183,9 +161,7 @@ export function SavedViews<V extends View>({
                 </button>
               ) : (
                 <span className="sv-hint">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                    <path d="M3 5h18l-7 8v6l-4 2v-8z" />
-                  </svg>
+                  <ListFilter size={15} strokeWidth={1.75} aria-hidden="true" />
                   Filter the dashboard, then save it here.
                 </span>
               )}

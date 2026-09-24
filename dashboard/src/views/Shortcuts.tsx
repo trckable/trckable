@@ -2,16 +2,14 @@
 // on a phone, and from the account dialog — the keys are the fastest way to
 // use trckable, so they should not be a secret.
 import { useEffect, useState } from 'react'
+import { Calendar, ChartSpline, Compass, Keyboard, MousePointer2, MoveHorizontal, RotateCcw, Rows3, X } from 'lucide-react'
+import { useConfirm } from '../components/Confirm'
 import { Modal } from '../components/Modal'
 import { toast } from '../components/Toast'
 import { api } from '../lib/api'
 import { ACTIONS, caps, comboOf, customKeys, keyFor, loadKeymap, takenBy, useKeymap, type Group } from '../lib/keys'
 
-const ICON: Record<string, string> = {
-  around: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.2 5.8-2.1 6.3-6.3 2.1 2.1-6.3z',
-  period: 'M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z',
-  mouse: 'M4 3l7 17 2.5-7.5L21 10z',
-}
+const ICON = { around: Compass, period: Calendar, mouse: MousePointer2 }
 
 const GROUPS: { id: Group | 'mouse'; title: string; hint: string }[] = [
   { id: 'around', title: 'Getting around', hint: 'Anywhere in trckable' },
@@ -19,26 +17,20 @@ const GROUPS: { id: Group | 'mouse'; title: string; hint: string }[] = [
   { id: 'mouse', title: 'Reading the chart', hint: 'With the mouse or a finger' },
 ]
 
-function Glyph({ d, size = 14 }: { d: string; size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d={d} />
-    </svg>
-  )
-}
 
 // Fixed on purpose: Esc closes what is open everywhere, and the gestures are
 // not keys.
 const MOUSE = [
-  { mouse: 'Click a row', what: 'Filter the whole dashboard by it', d: 'M4 6h16M4 12h16M4 18h10' },
-  { mouse: 'Click the chart', what: 'See a single day', d: 'M3 17l5-6 4 4 8-9M12 3v18' },
-  { mouse: 'Drag the scrubber', what: 'Replay the period', d: 'M3 12h18M8 8l-4 4 4 4M16 8l4 4-4 4' },
+  { mouse: 'Click a row', what: 'Filter the whole dashboard by it', icon: Rows3 },
+  { mouse: 'Click the chart', what: 'See a single day', icon: ChartSpline },
+  { mouse: 'Drag the scrubber', what: 'Replay the period', icon: MoveHorizontal },
 ]
 
 /** The list itself, loaded the first time someone opens it
     (components/ShortcutsHost.tsx listens for the key). */
 export default function Shortcuts({ onClose }: { onClose: () => void }) {
   useKeymap()
+  const { ask, dialog } = useConfirm()
 
   // Try a key while the list is open and its row lights up.
   const [lit, setLit] = useState('')
@@ -90,7 +82,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
     <Modal label="Keyboard shortcuts" className="keys-modal" onClose={rec ? undefined : close}>
       <div className="card-head keys-head">
         <span className="modal-badge" aria-hidden="true">
-          <Glyph size={18} d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM7 10h.01M11 10h.01M15 10h.01M7 14h10" />
+          <Keyboard size={20} strokeWidth={1.75} />
         </span>
         <div>
           <h2>Keyboard shortcuts</h2>
@@ -98,14 +90,22 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
         </div>
         <div className="modal-tools">
           {changed && !rec && (
-            <button type="button" className="pill-btn" onClick={() => save({}, 'Shortcuts are back to the defaults')} title="Put every key back as it came">
-              <Glyph d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5" />
+            <button type="button" className="pill-btn" onClick={async () => {
+                const ok = await ask({
+                  title: count === 1 ? 'Reset the key you changed?' : `Reset all ${count} keys you changed?`,
+                  body: 'Every shortcut goes back to how it came. Your own keys are not kept anywhere, so you would have to set them again.',
+                  confirmLabel: 'Reset shortcuts',
+                  danger: true,
+                })
+                if (ok) save({}, 'Shortcuts are back to the defaults')
+              }} title="Put every key back as it came">
+              <RotateCcw size={15} strokeWidth={1.75} aria-hidden="true" />
               Reset
               <span className="count">{count}</span>
             </button>
           )}
           <button type="button" className="modal-close" aria-label="Close" onClick={close}>
-            <Glyph d="M6 6l12 12M18 6L6 18" />
+            <X size={16} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -121,7 +121,10 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
             <section key={g.id} className={'keys-group g-' + g.id + (items.length > 6 ? ' wide' : '')}>
               <header>
                 <span className="keys-gicon">
-                  <Glyph d={ICON[g.id]!} />
+                  {(() => {
+                    const I = ICON[g.id]
+                    return <I size={16} strokeWidth={1.75} aria-hidden="true" />
+                  })()}
                 </span>
                 <span>
                   <b>{g.title}</b>
@@ -169,7 +172,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
                     <li key={m.mouse} className="keys-mouse" style={{ ['--i' as string]: n++ }}>
                       <span className="keys-caps fixed">
                         <kbd className="cap">
-                          <Glyph d={m.d} />
+                          <m.icon size={16} strokeWidth={1.75} aria-hidden="true" />
                         </kbd>
                       </span>
                       <span className="keys-what">
@@ -194,6 +197,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
           ))}
         </span>
       </footer>
+      {dialog}
     </Modal>
   )
 }

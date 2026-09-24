@@ -1,3 +1,4 @@
+import { Settings as Cog } from "lucide-react";
 import { StrictMode, Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { loadKeymap } from "./lib/keys";
 import { createRoot } from "react-dom/client";
@@ -20,6 +21,7 @@ const AccountDialog = lazy(() => import("./views/Account").then((m) => ({ defaul
 const AddWizard = lazy(() => import("./views/Sites").then((m) => ({ default: m.AddWizard })));
 // Only people with more than one site open it, so it loads when asked.
 const AllSites = lazy(() => import("./views/AllSites").then((m) => ({ default: m.AllSites })));
+import { ConfirmHost } from "./components/Confirm";
 import { ShortcutsHost } from "./components/ShortcutsHost";
 // A shared link is its own entry point: no setup, no sign-in, one site.
 const SharedSite = lazy(() => import("./views/SharedSite"));
@@ -169,6 +171,7 @@ function App() {
       )}
       <Footer version={boot.version} />
       <ShortcutsHost />
+      <ConfirmHost />
       <Toasts />
       {accountTab && (
         <Suspense fallback={null}>
@@ -229,9 +232,7 @@ function Header({
           {/* A cog, with teeth. It used to be a circle with rays, which is a
               sun — so the one button that opens a site's settings looked like
               a light/dark switch. */}
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-2)" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.4-.5a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
-          </svg>
+          <Cog size={19} strokeWidth={1.75} color="var(--text-2)" aria-hidden="true" />
         </button>
           )}
         </div>

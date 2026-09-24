@@ -5,6 +5,7 @@
 // Values come from the report that is already loaded, so opening this costs
 // nothing and asks the server nothing. A dimension the current report does
 // not carry — regions and cities in Core — says so rather than looking empty.
+import { ListFilter } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Row } from '../lib/api'
 
@@ -131,9 +132,7 @@ export function FilterMenu({
           setDim(null)
         }}
       >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-          <path d="M3 6h18M7 12h10M10 18h4" />
-        </svg>
+        <ListFilter size={17} strokeWidth={1.75} aria-hidden="true" />
         Filter
         {active.length > 0 && <span className="filter-count num">{active.length}</span>}
       </button>

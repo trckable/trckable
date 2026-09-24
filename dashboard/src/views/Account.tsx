@@ -1,12 +1,13 @@
 // The account dialog: everything that belongs to the person, not to the site
 // they happen to be looking at. It opens over whatever is on screen, so the
 // Settings page can stay about one site.
+import { CircleUser, Globe, KeyRound, Users, X } from 'lucide-react'
 import { Modal } from '../components/Modal'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { api, type APIKey, type Person, type Profile, type TwoStep as TwoStepState } from '../lib/api'
 import { settle, toast } from '../components/Toast'
 import { closeAccount, openAccount, type AccountTab as Tab } from '../lib/account'
-import { useConfirm } from '../components/Confirm'
+import { confirmWith, useConfirm } from '../components/Confirm'
 import { Info } from '../components/Info'
 import { Menu } from '../components/Menu'
 import { Row } from '../components/Row'
@@ -27,18 +28,17 @@ const TABS: { id: Tab; label: string; owner?: true }[] = [
   { id: 'profile', label: 'Account' },
 ]
 
-const ICONS: Record<Tab, string> = {
-  sites: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9m0-18c-2.5 2.5-3.5 5.5-3.5 9s1 6.5 3.5 9M3.5 9h17m-17 6h17',
-  keys: 'M7.5 15.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm3.2-3.2L19 4m-2 2 2.5 2.5M14.5 8.5 17 11',
-  people: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-6 9a6 6 0 0 1 12 0M16 4.3a3.5 3.5 0 0 1 0 6.4M17.5 14a6 6 0 0 1 3.5 5.5',
-  profile: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8 8a8 8 0 0 0-16 0',
+const ICONS: Record<Tab, typeof Globe> = {
+  sites: Globe,
+  keys: KeyRound,
+  people: Users,
+  profile: CircleUser,
 }
 
 function NavIcon({ id }: { id: Tab }) {
+  const Icon = ICONS[id]
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d={ICONS[id]} />
-    </svg>
+    <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
   )
 }
 
@@ -54,9 +54,7 @@ export function AccountDialog({ tab, sites, email, onSites }: { tab: Tab; sites:
           <span className="faint">{email}</span>
         </span>
         <button type="button" className="btn icon close" aria-label="Close" onClick={closeAccount}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <path d="M6 6l12 12M18 6 6 18" />
-          </svg>
+          <X size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </header>
 
@@ -458,21 +456,25 @@ function AddPerson({ onClose, onAdded }: { onClose: () => void; onAdded: () => v
 function TwoStep() {
   const [state, setState] = useState<TwoStepState | null>(null)
   const [setup, setSetup] = useState(false)
-  const [off, setOff] = useState<string | null>(null) // the password typed to turn it off
-  const [busy, setBusy] = useState(false)
   const load = () => api.twoStep().then(setState).catch(() => {})
   useEffect(() => {
     load()
   }, [])
 
-  const turnOff = () => {
-    setBusy(true)
+  const turnOff = async () => {
+    const pw = await confirmWith({
+      title: 'Turn off two-step sign-in?',
+      body: 'Your account goes back to the password alone. Type it to confirm.',
+      field: { label: 'Your password', type: 'password', autoComplete: 'current-password' },
+      confirmLabel: 'Turn off',
+      danger: true,
+    })
+    if (pw === null) return
     const id = toast('Turning two-step sign-in off…', 'busy')
     api
-      .disableTwoStep(off ?? '')
-      .then(() => (settle(id, 'Two-step sign-in is off'), setOff(null), load()))
+      .disableTwoStep(pw)
+      .then(() => (settle(id, 'Two-step sign-in is off'), load()))
       .catch((e: Error) => settle(id, e.message, 'error'))
-      .finally(() => setBusy(false))
   }
 
   const on = state?.enabled === true
@@ -486,7 +488,7 @@ function TwoStep() {
           {state ? (on ? 'On' : 'Off') : '…'}
         </span>
         {on && (
-          <button type="button" className="btn" onClick={() => setOff('')}>
+          <button type="button" className="btn" onClick={turnOff}>
             Turn off
           </button>
         )}
@@ -506,31 +508,6 @@ function TwoStep() {
             {state.recovery_left} of 8 left
           </span>
         </Row>
-      )}
-      {off !== null && (
-        <form className="confirm-strip" onSubmit={(e) => (e.preventDefault(), turnOff())}>
-          <label className="field">
-            Your password
-            <input
-              className="input"
-              type="password"
-              value={off}
-              autoFocus
-              autoComplete="current-password"
-              onChange={(e) => setOff(e.target.value)}
-              onKeyDown={(e) => e.key === 'Escape' && setOff(null)}
-            />
-          </label>
-          <span className="faint">Turning it off leaves your account on the password alone.</span>
-          <div className="confirm-strip-actions">
-            <button type="button" className="btn ghost" onClick={() => setOff(null)}>
-              Cancel
-            </button>
-            <button type="submit" className="btn danger" disabled={busy || !off}>
-              {busy ? 'Turning off…' : 'Turn off'}
-            </button>
-          </div>
-        </form>
       )}
 
       {setup && (
