@@ -170,6 +170,31 @@ func (s *Store) updateAccount(ctx context.Context, q string, v any, id string) e
 	return nil
 }
 
+// SiteDomain is one site of an account, as the operator sees it.
+type SiteDomain struct {
+	ID     string `json:"id"`
+	Domain string `json:"domain"`
+}
+
+// AccountDomains lists an account's sites with their domains, oldest first:
+// what a host (Cloud) needs to hold one trial per website.
+func (s *Store) AccountDomains(ctx context.Context, id string) ([]SiteDomain, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT id, domain FROM sites WHERE account_id = ? ORDER BY created_at, id`, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []SiteDomain{}
+	for rows.Next() {
+		var d SiteDomain
+		if err := rows.Scan(&d.ID, &d.Domain); err != nil {
+			return nil, err
+		}
+		out = append(out, d)
+	}
+	return out, rows.Err()
+}
+
 // AccountSites lists an account's site ids, for deleting it: each site's
 // analytics are purged by the writer before the site itself is deleted.
 func (s *Store) AccountSites(ctx context.Context, id string) ([]string, error) {

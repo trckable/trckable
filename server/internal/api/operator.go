@@ -70,6 +70,26 @@ func (a *API) listAccounts(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"accounts": list})
 }
 
+// accountSites serves GET /_trckable/accounts/{id}/sites: the account's sites
+// and their domains, so the host can hold one trial per website. The account
+// must exist (404 otherwise), and it lists that account's sites only.
+func (a *API) accountSites(w http.ResponseWriter, r *http.Request) {
+	if !a.operator(w, r) {
+		return
+	}
+	id := r.PathValue("id")
+	if _, err := a.Ctl.Account(r.Context(), id); err != nil {
+		operatorFail(w, err)
+		return
+	}
+	sites, err := a.Ctl.AccountDomains(r.Context(), id)
+	if err != nil {
+		operatorFail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"sites": sites})
+}
+
 func (a *API) getAccount(w http.ResponseWriter, r *http.Request) {
 	if !a.operator(w, r) {
 		return

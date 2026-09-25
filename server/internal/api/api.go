@@ -108,6 +108,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("GET /_trckable/health", a.operatorHealth)
 	handle("POST /api/v1/payments/start-over", a.authed(a.startOverKeys))
 	handleFunc("GET /_trckable/accounts/{id}", a.getAccount)
+	handleFunc("GET /_trckable/accounts/{id}/sites", a.accountSites)
 	handleFunc("PUT /_trckable/accounts/{id}/limits", a.setAccountLimits)
 	handleFunc("PUT /_trckable/accounts/{id}/state", a.setAccountState)
 	handleFunc("DELETE /_trckable/accounts/{id}", a.deleteAccount)
