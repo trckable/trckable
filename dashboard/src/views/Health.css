@@ -229,3 +229,7 @@
   line-height: 1.55;
   max-width: 72ch;
 }
+
+.hnote.health-refusing {
+  color: var(--down);
+}

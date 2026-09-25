@@ -23,7 +23,9 @@ type Health struct {
 	// KeyOnVolume: TRCKABLE_SECRET is not set, so the instance key exists
 	// only as data/secret.key, on the same disk as the backups it unlocks.
 	KeyOnVolume bool `json:"key_on_volume,omitempty"`
-	Payments    *Pay `json:"payments,omitempty"`
+	// IngestError: the write-ahead log is refusing events (a full disk, say).
+	IngestError string `json:"ingest_error,omitempty"`
+	Payments    *Pay   `json:"payments,omitempty"`
 }
 
 // Backup is the newest copy on disk: when it was written and how big it is.

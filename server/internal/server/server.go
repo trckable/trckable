@@ -358,6 +358,7 @@ func (s *Server) Run(ctx context.Context) error {
 	go s.runBackups(wctx)   // one encrypted copy a day, kept on the volume
 	go s.runAlerts(wctx)    // the four things worth being told about
 	go s.runChecks(wctx)    // each site's snippet, looked for once a day
+	go s.runLogRetry(wctx)  // events again once a full disk has room
 
 	select {
 	case <-ctx.Done():

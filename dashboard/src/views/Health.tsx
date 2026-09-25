@@ -90,6 +90,7 @@ export function HealthSettings() {
   const diskTone: Tone = !(h.store.days_left > 0) ? 'info' : h.store.days_left < 14 ? 'bad' : h.store.days_left < 60 ? 'warn' : 'ok'
   // What needs a look, in words, so the top line can say it.
   const issues = [
+    h.ingest_error && { tone: 'bad', text: 'new visits are being turned away' },
     h.analytics === 'error' && { tone: 'bad', text: 'the analytics store reported a problem' },
     h.backup.error && { tone: 'bad', text: 'the last backup failed' },
     !h.backup.error && backupTone === 'bad' && { tone: 'bad', text: 'no backup for over two days' },
@@ -167,7 +168,14 @@ export function HealthSettings() {
             <b className="num">{h.store.events_per_day ? bytes(h.store.events_per_day * h.store.bytes_per_event) : '—'}</b>
           </span>
         </div>
-        <p className="hnote faint">When it is full, new visits are turned away until there is room; nothing stored is harmed.</p>
+        {h.ingest_error ? (
+          <p className="hnote health-refusing">
+            New visits are being turned away: {h.ingest_error}. Free some space: trckable tries again every 30 seconds by itself, and browsers keep what they could not send (except in cookieless
+            mode).
+          </p>
+        ) : (
+          <p className="hnote faint">When it is full, new visits are turned away until there is room again (tried every 30 seconds); nothing stored is harmed.</p>
+        )}
       </section>
 
       <section className="card hcard">

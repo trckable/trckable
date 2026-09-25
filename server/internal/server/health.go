@@ -56,6 +56,9 @@ func (s *Server) health(ctx context.Context) api.Health {
 	}
 
 	h.KeyOnVolume = strings.TrimSpace(s.cfg.Secret) == ""
+	if err := s.log.Err(); err != nil {
+		h.IngestError = err.Error()
+	}
 	if at, size := s.LastBackup(); !at.IsZero() {
 		h.Backup = api.Backup{At: at.Unix(), Bytes: size}
 	}

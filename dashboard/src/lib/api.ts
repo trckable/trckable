@@ -541,6 +541,10 @@ export interface Health {
   memory_bytes: number
   /** rss: the whole process, analytics store included · go: the Go runtime only */
   memory_source?: 'rss' | 'go'
+  /** TRCKABLE_SECRET is not set: the key is only data/secret.key, next to the backups. */
+  key_on_volume?: boolean
+  /** The write-ahead log is refusing events, and why. */
+  ingest_error?: string
   backup: { at: number; bytes: number; error?: string; error_at?: number; offsite?: string; offsite_at?: number; offsite_days?: number; offsite_error?: string }
   payments?: { connections: number; pending: number; last_event: number; last_sync: number }
 }
