@@ -1,0 +1,155 @@
+/* Settings → Alerts. */
+.al {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.al-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background:
+    radial-gradient(420px 160px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
+    var(--surface-2);
+}
+.al-head-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.al-head-text h2 {
+  margin: 0;
+}
+.al-head-text .faint {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.card.al-dest {
+  gap: 10px;
+}
+.al-dest-row {
+  display: flex;
+  gap: 8px;
+}
+.al-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 8px 0 12px;
+  border: 1px solid var(--border-2);
+  border-radius: 11px;
+  background: var(--sunken);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.al-field:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border-2));
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.al-field-kind {
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+}
+.al-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13.5px;
+  outline: none;
+}
+.al-chip {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.al-dest-row .btn {
+  height: 44px;
+  gap: 7px;
+  white-space: nowrap;
+}
+.al-note {
+  font-size: 12px;
+  line-height: 1.45;
+}
+.al-test {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  animation: fadein 0.2s var(--ease) backwards;
+}
+.al-test.ok {
+  color: var(--up);
+}
+.al-test.bad {
+  color: var(--down);
+}
+.al-kinds {
+  display: grid;
+  gap: 8px;
+  transition: opacity 0.2s;
+}
+.al-kinds.waiting {
+  opacity: 0.55;
+}
+.al-kind {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+  transition: border-color 0.2s, box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.al-kind.on {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+.al-kind-text {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.al-kind-text b {
+  font-size: 14px;
+}
+.al-rule {
+  font-size: 12.5px;
+  line-height: 1.9;
+  color: var(--text-2);
+}
+.input.al-num {
+  display: inline-block;
+  width: 58px;
+  height: 28px;
+  padding: 0 8px;
+  text-align: center;
+  font-size: 12.5px;
+  vertical-align: middle;
+}
+.al-last {
+  font-size: 11.5px;
+}
+.al-foot {
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .al-dest-row {
+    flex-direction: column;
+  }
+}

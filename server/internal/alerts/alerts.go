@@ -31,9 +31,11 @@ type Event struct {
 	Message string         `json:"message"`
 	At      time.Time      `json:"at"`
 	Data    map[string]any `json:"data,omitempty"`
-	// Text is what a chat tool shows when it ignores everything else; Slack,
-	// Discord and Mattermost all read this field.
-	Text string `json:"text"`
+	// Text is what a chat tool shows when it ignores everything else: Slack
+	// and Mattermost read text, Discord reads content (a webhook without it
+	// is refused), so the same line goes in both.
+	Text    string `json:"text"`
+	Content string `json:"content"`
 }
 
 // ErrUnsafeTarget is returned for a destination trckable will not call.
@@ -150,6 +152,7 @@ func Send(ctx context.Context, target string, e Event) error {
 	if e.Text == "" {
 		e.Text = e.Title + " — " + e.Message
 	}
+	e.Content = e.Text
 	if to, ok := mailAddress(target); ok {
 		return Mail.send(ctx, to, e)
 	}
