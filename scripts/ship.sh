@@ -100,7 +100,7 @@ if [[ $BRANCH != release-* ]]; then
   if URL=$(gh pr view "$BRANCH" --json url,state -q 'select(.state == "OPEN") | .url' 2>/dev/null) && [ -n "$URL" ]; then
     printf '\n\033[32m✓ pushed %s: its pull request is updated.\033[0m\n  %s\n' "$BRANCH" "$URL"
   else
-    URL=$(gh pr create --base main --head "$BRANCH" --fill 2>&1 | tail -1)
+    URL=$(gh pr create --base main --head "$BRANCH" --fill-first 2>&1 | tail -1)
     printf '\n\033[32m✓ pushed %s and opened its pull request.\033[0m\n  %s\n' "$BRANCH" "$URL"
   fi
   echo "  Next: merge it once its checks pass (the branch is then deleted), then pnpm work <next topic>"

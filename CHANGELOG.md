@@ -9,6 +9,11 @@ section into the release.
 
 ## Unreleased
 
+### New
+- For hosts running trckable for others (the operator API):
+  `GET /_trckable/accounts/{id}/sites` lists an account's sites and their
+  domains
+
 ### Fixed
 - Security: a two-step code signs in once. The same code, or an older one
   still inside its 90-second window, is refused, so a code seen over a

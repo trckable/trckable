@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"testing"
 )
@@ -42,6 +43,29 @@ func TestOperatorAccounts(t *testing.T) {
 	site, err := g.ctl.CreateSite(ctx, acc, "company.com", "")
 	if err != nil {
 		t.Fatal(err)
+	}
+	// Its sites and their domains, for one trial per website; another
+	// account's sites never appear, and an unknown account is a 404.
+	code, out = do(t, client(), "POST", url, `{"email":"other@else.com"}`, op...)
+	if code != http.StatusCreated {
+		t.Fatalf("second account: %d %v", code, out)
+	}
+	other := out["account"].(map[string]any)["id"].(string)
+	if _, err := g.ctl.CreateSite(ctx, other, "else.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	code, out = do(t, client(), "GET", url+"/"+acc+"/sites", "", op...)
+	if got, _ := json.Marshal(out["sites"]); code != http.StatusOK || string(got) != `[{"domain":"company.com","id":"`+site+`"}]` {
+		t.Fatalf("an account's sites: %d %s", code, got)
+	}
+	if code, _ := do(t, client(), "GET", url+"/acc_nope/sites", "", op...); code != http.StatusNotFound {
+		t.Fatalf("unknown account: %d", code)
+	}
+	if code, _ := do(t, client(), "GET", url+"/"+acc+"/sites", "", "Authorization", "Bearer nope"); code != http.StatusUnauthorized {
+		t.Fatalf("wrong token: %d", code)
+	}
+	if code, _ := do(t, client(), "DELETE", url+"/"+other, "", op...); code != http.StatusNoContent && code != http.StatusOK {
+		t.Fatalf("remove the second account: %d", code)
 	}
 	signIn := func() *http.Client {
 		code, out := do(t, client(), "POST", g.srv.URL+"/_trckable/signin", `{"email":"them@company.com"}`, op...)
