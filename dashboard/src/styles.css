@@ -1576,11 +1576,13 @@ table.t td {
 .pop.sites .input {
   height: 36px;
 }
+/* About five sites, then it scrolls: the search above finds the rest. */
 .sites-list {
   display: flex;
   flex-direction: column;
-  max-height: 46vh;
+  max-height: min(312px, 46vh);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .site {
   display: flex;
@@ -2262,67 +2264,14 @@ table.t td {
   /* The install step carries a snippet somebody has to read. */
   width: min(720px, 100%);
   max-width: 720px;
-  gap: 14px;
+  gap: 20px;
+  padding: 26px 28px 22px;
 }
 .install-bare {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
-.wiz-rail {
-  display: flex;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--text-3);
-}
-.wiz-rail span {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-.wiz-rail i {
-  display: block;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--grid);
-  transition: background 0.4s var(--ease);
-}
-.wiz-rail .on {
-  color: var(--accent);
-}
-.wiz-rail .on i,
-.wiz-rail .done i {
-  background: var(--accent);
-}
-.wiz-rail .done {
-  color: var(--text-2);
-}
-.wiz-rail .done i {
-  opacity: 0.5;
-}
-.wiz-step {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  animation: wizin 0.35s var(--ease) backwards;
-}
-@keyframes wizin {
-  from {
-    opacity: 0;
-    transform: translateX(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .wiz-step {
-    animation: none;
-  }
-}
-
 /* ---- Searchable picker ----------------------------------------------------- */
 .picker {
   position: relative;
@@ -4677,3 +4626,22 @@ body[data-mode] .overview .kpi .value,
     grid-column: 1 / -1;
   }
 }
+
+/* A quiet text button: "Look again", "Or paste its contents". */
+.linkish {
+  justify-self: start;
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.linkish:hover {
+  color: var(--text);
+}
+

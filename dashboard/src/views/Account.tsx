@@ -3,6 +3,8 @@
 // Settings page can stay about one site.
 import { BellRing, Camera, Check, CircleUser, Copy, CreditCard, Eye, EyeOff, Globe, ImageUp, KeyRound, LockKeyhole, LogOut, Pencil, ShieldCheck, SunMoon, Trash2, UserCheck, UserPlus, Users, X } from 'lucide-react'
 import { Modal } from '../components/Modal'
+import { StepBody } from '../components/StepBody'
+import { Steps } from '../components/Steps'
 import { checksHere, setChecksHere } from '../lib/update'
 import { Switch } from '../components/Switch'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
@@ -819,16 +821,9 @@ function NewKey({ onClose, onCreated }: { onClose: () => void; onCreated: () => 
 
   return (
     <Modal label="New API key" className="wizard" onClose={secret ? undefined : onClose}>
-      <div className="wiz-rail" aria-hidden="true">
-        {['What for', 'Copy it'].map((label, i) => (
-          <span key={label} className={secret ? (i === 1 ? 'on' : 'done') : i === 0 ? 'on' : ''}>
-            <i />
-            {label}
-          </span>
-        ))}
-      </div>
+      <Steps labels={['What for', 'Copy it']} at={secret ? 1 : 0} />
 
-      <div key={secret ? 'key' : 'name'} className="wiz-step">
+      <StepBody step={secret ? 'key' : 'name'}>
         {!secret ? (
           <>
             <h2>What is this key for?</h2>
@@ -898,7 +893,7 @@ function NewKey({ onClose, onCreated }: { onClose: () => void; onCreated: () => 
             </div>
           </>
         )}
-      </div>
+      </StepBody>
     </Modal>
   )
 }

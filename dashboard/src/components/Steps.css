@@ -1,0 +1,100 @@
+/* Steps.tsx and StepBody.tsx: loaded with the dialogs that use them. */
+.wiz-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wiz-steps li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+.wiz-steps li:not(:last-child)::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  margin-right: 10px;
+  border-radius: 2px;
+  background: var(--grid);
+  transition: background 0.4s var(--ease);
+}
+.wiz-steps li.done:not(:last-child)::after {
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.wiz-dot {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border: 1.5px solid var(--border-2);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.3s var(--ease), border-color 0.3s, color 0.3s;
+}
+.wiz-steps li.on {
+  color: var(--text);
+}
+.wiz-steps li.on .wiz-dot {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.wiz-steps li.done {
+  color: var(--text-2);
+}
+.wiz-steps li.done .wiz-dot {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.wiz-label {
+  white-space: nowrap;
+}
+@keyframes wizin {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Stepped dialogs (StepBody): the height only ever grows, and gently. */
+.step-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: min-height 0.25s var(--ease);
+}
+.step-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: wizin 0.3s var(--ease) backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-body {
+    transition: none;
+  }
+  .step-inner {
+    animation: none;
+  }
+}
+
+/* On a phone only the current step keeps its name. */
+@media (max-width: 640px) {
+  .wiz-label {
+    display: none;
+  }
+  .wiz-steps li.on .wiz-label {
+    display: inline;
+  }
+}

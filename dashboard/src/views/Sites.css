@@ -79,3 +79,103 @@
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
+
+/* ---- Add a site ---------------------------------------------------------- */
+.wiz-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.wiz-head h2 {
+  margin: 0 0 3px;
+  font-size: 19px;
+}
+.wiz-head .faint {
+  font-size: 13.5px;
+}
+/* The line to the next step. */
+/* A floor for the first step, so the domain does not sit in a sliver; the
+   body never shrinks after that (StepBody). */
+.wiz-step {
+  min-height: 240px;
+  justify-content: center;
+}
+.wiz-domain {
+  display: grid;
+  gap: 10px;
+  align-content: center;
+}
+.wiz-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 60px;
+  padding: 0 14px 0 18px;
+  border: 1px solid var(--border-2);
+  border-radius: 14px;
+  background: var(--sunken);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.wiz-field:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.wiz-prefix {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 15px;
+}
+.wiz-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 17px;
+  outline: none;
+}
+.wiz-help {
+  font-size: 12.5px;
+  padding-left: 4px;
+}
+.wiz-wait {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+}
+.wiz-wait .muted {
+  margin: 0;
+}
+.wiz-found {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.wiz-found.ok {
+  color: var(--up);
+  background: color-mix(in srgb, var(--up) 10%, transparent);
+}
+.wiz-found.warn {
+  color: var(--text-2);
+  background: var(--sunken);
+}
+.wiz-found .linkish {
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .modal.wizard {
+    padding: 20px 18px 18px;
+  }
+  .wiz-step {
+    min-height: 200px;
+  }
+}
+

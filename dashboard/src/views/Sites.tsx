@@ -1,13 +1,16 @@
 // Settings → Sites: everything about sites as a whole, not about one of them.
 // Adding a site is a short wizard (domain → install → first visit), and each
 // site can be renamed or removed from the same list.
-import { Check } from 'lucide-react'
+import { Check, Globe } from 'lucide-react'
+import { SiteMark } from '../components/SiteMark'
+import { StepBody } from '../components/StepBody'
+import { Steps } from '../components/Steps'
 import { DialogActions } from '../components/DialogActions'
 import { Modal } from '../components/Modal'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import { Picker } from '../components/Picker'
 import { useEffect, useState } from 'react'
-import { api, siteState, stoppedWhy, type Site, type Visit } from '../lib/api'
+import { api, siteState, stoppedWhy, type InstallCheck, type Site, type Visit } from '../lib/api'
 import { fmtInt } from '../lib/format'
 import { navigate } from '../lib/url'
 import { Ghost, Name } from '../components/Logo'
@@ -319,6 +322,7 @@ export function AddWizard({ onClose, onSites }: { onClose: () => void; onSites: 
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [visits, setVisits] = useState<Visit[]>([])
+  const [page, setPage] = useState<InstallCheck | 'checking' | null>(null)
 
   // Step 3 watches for the first event instead of asking anyone to refresh.
   useEffect(() => {
@@ -334,6 +338,21 @@ export function AddWizard({ onClose, onSites }: { onClose: () => void; onSites: 
     const t = setInterval(tick, 4000)
     return () => clearInterval(t)
   }, [step, site])
+
+  // …and looks at the homepage once, the way Verify does, so a snippet that
+  // is in place but not yet visited is said to be in place.
+  const lookAtPage = () => {
+    if (!site) return
+    setPage('checking')
+    api
+      .checkInstall(site.id)
+      .then(setPage)
+      .catch(() => setPage(null))
+  }
+  useEffect(() => {
+    if (step === 3) lookAtPage()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step])
 
   const create = () => {
     setBusy(true)
@@ -351,92 +370,111 @@ export function AddWizard({ onClose, onSites }: { onClose: () => void; onSites: 
       .finally(() => setBusy(false))
   }
 
+  const clean = domain.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+  const sub = step === 1 ? 'The domain you want to count visits on.' : step === 2 ? `One line in the <head> of ${site?.domain}, and every page is counted.` : 'Open your site in a browser tab: the visit shows up here.'
+  const open = () => site && (onClose(), navigate('/' + encodeURIComponent(site.domain)))
+
   return (
     <Modal label="Add a site" className="wizard" onClose={onClose}>
-      <div className="wiz-rail" aria-hidden="true">
-        {['Domain', 'Install', 'First visit'].map((label, i) => (
-          <span key={label} className={step === i + 1 ? 'on' : step > i + 1 ? 'done' : ''}>
-            <i />
-            {label}
-          </span>
-        ))}
+      <div className="wiz-head">
+        <span className="modal-badge" aria-hidden="true">
+          <Globe size={19} strokeWidth={1.75} />
+        </span>
+        <div>
+          <h2>{step === 1 ? 'Add a site' : step === 2 ? <>Add <Name /> to {site?.domain}</> : visits.length ? 'Peekaboo! It works.' : 'Waiting for the first visit…'}</h2>
+          <span className="faint">{sub}</span>
+        </div>
       </div>
-      <div key={step} className="wiz-step">
+      <Steps labels={['Your site', 'The snippet', 'First visit']} at={step - 1} done={visits.length > 0 ? 2 : undefined} />
 
-      {step === 1 && (
-        <form
-          style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
-          onSubmit={(e) => {
-            e.preventDefault()
-            create()
-          }}
-        >
-          <h2>Which site?</h2>
-          <input
-            className="input"
-            style={{ height: 50, fontSize: 15 }}
-            value={domain}
-            onChange={(e) => setDomain(e.target.value)}
-            placeholder="example.com"
-            aria-label="Domain"
-            autoFocus
-            required
-          />
-          <span className="faint" style={{ fontSize: 12 }}>
-            Just the domain. Subdomains and www are counted together.
-          </span>
-          {err && (
-            <span role="alert" style={{ color: 'var(--down)', fontSize: 13 }}>
-              {err}
-            </span>
-          )}
-          <button type="submit" className="btn primary big" disabled={busy || !domain.trim()}>
-            {busy ? 'Adding…' : 'Add site'}
+      <StepBody step={step} className="wiz-step">
+        {step === 1 && (
+          <form
+            id="wiz-domain"
+            className="wiz-domain"
+            onSubmit={(e) => {
+              e.preventDefault()
+              create()
+            }}
+          >
+            <label className="wiz-field">
+              <span className="wiz-prefix" aria-hidden="true">
+                https://
+              </span>
+              <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="example.com" aria-label="Domain" autoFocus required spellCheck={false} autoCapitalize="none" />
+              {clean && <SiteMark site={{ domain: clean } as Site} size={28} />}
+            </label>
+            <span className="faint wiz-help">Just the domain. www and every subdomain are counted with it.</span>
+            {err && (
+              <p className="confirm-err" role="alert">
+                {err}
+              </p>
+            )}
+          </form>
+        )}
+
+        {step === 2 && site && <Install site={site} visits={[]} bare />}
+
+        {step === 3 && site && (
+          <div className="wiz-wait">
+            <ListenScene arrived={visits.length > 0} />
+            <p className="muted">{visits.length ? `We just recorded ${visits[0].path ?? '/'} on ${site.domain}.` : `Open ${site.domain} in a browser tab. This page updates by itself.`}</p>
+            <div className={'wiz-found' + (page && page !== 'checking' ? (page.found === 'site' ? ' ok' : ' warn') : '')}>
+              {page === 'checking' ? (
+                <>
+                  <span className="btn-spin" aria-hidden="true" /> Looking for the snippet on {site.domain}…
+                </>
+              ) : page?.found === 'site' ? (
+                <>
+                  <Check size={15} strokeWidth={2.25} aria-hidden="true" /> The snippet is on {site.domain}
+                </>
+              ) : page ? (
+                <>
+                  {page.error ? `${site.domain} did not answer` : `No snippet on ${site.domain}'s homepage yet`}
+                  <button type="button" className="linkish" onClick={lookAtPage}>
+                    Look again
+                  </button>
+                </>
+              ) : null}
+            </div>
+          </div>
+        )}
+      </StepBody>
+
+      <DialogActions
+        left={
+          step === 1 ? (
+            <button type="button" className="btn ghost" onClick={onClose}>
+              Cancel
+            </button>
+          ) : step === 2 ? (
+            <button type="button" className="btn ghost" onClick={open}>
+              I'll do it later
+            </button>
+          ) : (
+            <button type="button" className="btn ghost" onClick={() => setStep(2)}>
+              Back to the snippet
+            </button>
+          )
+        }
+      >
+        {step === 1 && (
+          <button type="submit" form="wiz-domain" className="btn primary big" disabled={busy || !clean}>
+            {busy && <span className="btn-spin" aria-hidden="true" />}
+            {busy ? 'Adding…' : 'Continue'}
           </button>
-        </form>
-      )}
-
-      {step === 2 && site && (
-        <>
-          <h2>
-            Add <Name /> to {site.domain}
-          </h2>
-          <Install site={site} visits={[]} bare />
-          <DialogActions
-            left={
-              <button type="button" className="btn ghost" onClick={() => (onClose(), navigate('/' + encodeURIComponent(site.domain)))}>
-                I'll do it later
-              </button>
-            }
-          >
-            <button type="button" className="btn primary big" onClick={() => setStep(3)}>
-              Added it — check
-            </button>
-          </DialogActions>
-        </>
-      )}
-
-      {step === 3 && site && (
-        <>
-          <ListenScene arrived={visits.length > 0} />
-          <h2 style={{ textAlign: 'center' }}>{visits.length ? 'Peekaboo! It works.' : 'Waiting for the first visit…'}</h2>
-          <p className="muted" style={{ margin: 0, textAlign: 'center' }}>
-            {visits.length ? `We just recorded ${visits[0].path ?? '/'}.` : `Open ${site.domain} in a browser tab.`}
-          </p>
-          <DialogActions
-            left={
-              <button type="button" className="btn ghost" onClick={() => setStep(2)}>
-                Back to the snippet
-              </button>
-            }
-          >
-            <button type="button" className={visits.length ? 'btn primary big' : 'btn big'} onClick={() => (onClose(), navigate('/' + encodeURIComponent(site.domain)))}>
-              Open the dashboard
-            </button>
-          </DialogActions>
-        </>
-      )}
-      </div>
+        )}
+        {step === 2 && (
+          <button type="button" className="btn primary big" onClick={() => setStep(3)}>
+            I added it — check
+          </button>
+        )}
+        {step === 3 && (
+          <button type="button" className={visits.length ? 'btn primary big' : 'btn big'} onClick={open}>
+            Open the dashboard
+          </button>
+        )}
+      </DialogActions>
     </Modal>
   )
 }

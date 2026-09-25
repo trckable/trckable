@@ -7,6 +7,8 @@ import { api, type Share, type Site } from '../lib/api'
 import { Info } from '../components/Info'
 import { Menu } from '../components/Menu'
 import { Modal } from '../components/Modal'
+import { StepBody } from '../components/StepBody'
+import { Steps } from '../components/Steps'
 import { CodeBlock } from '../components/Code'
 import { useConfirm } from '../components/Confirm'
 import { toast } from '../components/Toast'
@@ -130,16 +132,9 @@ function NewShare({ site, onClose, onMade }: { site: Site; onClose: () => void; 
 
   return (
     <Modal label="New shared link" className="wizard" onClose={url ? undefined : onClose}>
-      <div className="wiz-rail" aria-hidden="true">
-        {['What it shows', 'The link'].map((label, i) => (
-          <span key={label} className={url ? (i === 1 ? 'on' : 'done') : i === 0 ? 'on' : ''}>
-            <i />
-            {label}
-          </span>
-        ))}
-      </div>
+      <Steps labels={['What it shows', 'The link']} at={url ? 1 : 0} />
 
-      <div key={url ? 'link' : 'what'} className="wiz-step">
+      <StepBody step={url ? 'link' : 'what'}>
         {!url ? (
           <>
             <h2>Share {site.domain}</h2>
@@ -246,7 +241,7 @@ function NewShare({ site, onClose, onMade }: { site: Site; onClose: () => void; 
             </div>
           </>
         )}
-      </div>
+      </StepBody>
     </Modal>
   )
 }

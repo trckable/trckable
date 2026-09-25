@@ -71,7 +71,7 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
       </button>
       {open && (
         <div className="pop sites" role="listbox" aria-label="Sites">
-          {sites.length > 6 && (
+          {sites.length > 5 && (
             <label className="menu-search">
               <Search size={17} strokeWidth={1.75} aria-hidden="true" />
               <input

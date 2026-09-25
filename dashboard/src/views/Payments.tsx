@@ -5,6 +5,8 @@ import { Check } from 'lucide-react'
 import { Menu } from '../components/Menu'
 import { DialogActions } from '../components/DialogActions'
 import { Modal } from '../components/Modal'
+import { StepBody } from '../components/StepBody'
+import { Steps } from '../components/Steps'
 import { Ghost } from '../components/Logo'
 import { useEffect, useState } from 'react'
 import { api, type PayConnection, type Provider, type Site } from '../lib/api'
@@ -315,16 +317,9 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
         <ProviderMark id={c.provider} />
         <h2>{provider?.name} webhook</h2>
       </div>
-      <div className="wiz-rail" aria-hidden="true">
-        {steps.map((label, i) => (
-          <span key={label} className={step === i + 1 ? 'on' : step > i + 1 ? 'done' : ''}>
-            <i />
-            {label}
-          </span>
-        ))}
-      </div>
+      <Steps labels={steps} at={step - 1} />
 
-      <div key={step} className="wiz-step">
+      <StepBody step={step}>
         {step === 1 && (
           <>
             <p className="muted" style={{ margin: 0 }}>
@@ -447,7 +442,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
             </div>
           </>
         )}
-      </div>
+      </StepBody>
     </Modal>
   )
 }

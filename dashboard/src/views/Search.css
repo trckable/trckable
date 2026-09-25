@@ -132,22 +132,6 @@
   font-size: 12.5px;
   line-height: 1.5;
 }
-.linkish {
-  justify-self: start;
-  margin-top: 6px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--text-2);
-  font: inherit;
-  font-size: 12.5px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-.linkish:hover {
-  color: var(--text);
-}
 .gsc-foot {
   display: flex;
   align-items: center;

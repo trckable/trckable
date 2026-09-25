@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { api } from "../lib/api";
 import { Modal } from "../components/Modal";
+import { StepBody } from "../components/StepBody";
+import { Steps } from "../components/Steps";
 import { toast } from "../components/Toast";
 import { qr, qrPath } from "../lib/qr";
 
@@ -62,19 +64,9 @@ export default function TwoStepSetup({
       className="wizard"
       onClose={step < 2 ? onClose : undefined}
     >
-      <div className="wiz-rail" aria-hidden="true">
-        {STEPS.map((label, i) => (
-          <span
-            key={label}
-            className={i === step ? "on" : i < step ? "done" : ""}
-          >
-            <i />
-            {label}
-          </span>
-        ))}
-      </div>
+      <Steps labels={STEPS} at={step} />
 
-      <div key={step} className="wiz-step">
+      <StepBody step={step}>
         {step === 0 && (
           <>
             <h2>First, confirm it's you</h2>
@@ -248,7 +240,7 @@ export default function TwoStepSetup({
             </div>
           </>
         )}
-      </div>
+      </StepBody>
     </Modal>
   );
 }
