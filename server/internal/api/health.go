@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"net/http"
-	"runtime"
 	"time"
 )
 
@@ -17,8 +16,11 @@ type Health struct {
 	Store     Store  `json:"store"`
 	Analytics string `json:"analytics"` // ready | warming | error
 	Memory    uint64 `json:"memory_bytes"`
-	Backup    Backup `json:"backup"`
-	Payments  *Pay   `json:"payments,omitempty"`
+	// MemorySource says what Memory is: "rss" (the whole process, analytics
+	// store included) or "go" (the Go runtime only, where no RSS can be read).
+	MemorySource string `json:"memory_source"`
+	Backup       Backup `json:"backup"`
+	Payments     *Pay   `json:"payments,omitempty"`
 }
 
 // Backup is the newest copy on disk: when it was written and how big it is.
@@ -48,7 +50,8 @@ type Store struct {
 	Events    int64   `json:"events"`
 	BytesUsed int64   `json:"bytes_used"`
 	BytesFree int64   `json:"bytes_free"`
-	DaysLeft  float64 `json:"days_left"` // 0 when unknown
+	DaysLeft  float64 `json:"days_left"`      // 0 when unknown
+	PerDay    float64 `json:"events_per_day"` // average over the last 7 days
 	PerEvent  float64 `json:"bytes_per_event"`
 }
 
@@ -77,8 +80,6 @@ func (a *API) health(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 	h := a.HealthOf(ctx)
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-	h.Memory = m.Sys
+	h.Memory, h.MemorySource = memoryUse()
 	writeJSON(w, http.StatusOK, h)
 }

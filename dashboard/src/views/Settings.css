@@ -511,3 +511,9 @@
   margin-top: 1px;
   color: var(--warn);
 }
+
+.icon-tile.warn {
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  color: var(--warn);
+}

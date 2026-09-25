@@ -14,7 +14,7 @@ import { applyTheme } from "./lib/theme";
 import { closeAddSite, useAccountTab, useAddSite } from "./lib/account";
 import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
-import { setRole } from "./lib/me";
+import { setOperator, setRole } from "./lib/me";
 // Settings and the account dialog are their own screens: the dashboard should
 // not carry them.
 const Settings = lazy(() => import("./views/Settings").then((m) => ({ default: m.Settings })));
@@ -62,6 +62,7 @@ function App() {
       const me = await api.me().catch(() => null);
       if (!me) return setBoot({ state: "login" });
       setRole(me.role);
+      setOperator(me.operator);
       loadKeymap(me.keys);
       const { sites } = await api.sites();
       setBoot({ state: "ready", email: me.email, version: me.version, updateCheck: me.update_check, mustChange: me.must_change, sites });

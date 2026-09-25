@@ -512,7 +512,10 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 	keys, _ := a.Ctl.UserKeymap(r.Context(), p.user.ID)
 	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID),
 		// Only owners upgrade, so only their dashboards look.
-		"update_check": a.UpdateCheck && p.user.Role == sqlite.RoleOwner})
+		"update_check": a.UpdateCheck && p.user.Role == sqlite.RoleOwner,
+		// The instance's own health (every event, the disk, backups) is the
+		// operator's: a hosted account never sees it.
+		"operator": p.operator()})
 }
 
 // setKeys keeps the shortcuts a person changed, so they follow them to any

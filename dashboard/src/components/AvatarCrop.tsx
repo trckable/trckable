@@ -1,7 +1,7 @@
 // Your picture, before it is saved: drag it inside the circle and zoom, so a
 // holiday photo becomes a face. The result is drawn at 256 × 256 and saved as
 // WebP, well under the server's 256 KB, whatever size the original was.
-import { ImageUp, ZoomIn, ZoomOut } from 'lucide-react'
+import { Check, ImageUp, ZoomIn, ZoomOut } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Modal } from './Modal'
 import './AvatarCrop.css'
@@ -13,12 +13,16 @@ export default function AvatarCrop({
   file,
   onCancel,
   onSave,
+  onDone,
   square = false,
   title = 'Your picture',
 }: {
   file: File
   onCancel: () => void
+  /** Stores the picture; the dialog stays open, busy, until it resolves. */
   onSave: (picture: Blob) => Promise<unknown>
+  /** Closes the dialog, once "Saved" has been seen. */
+  onDone: () => void
   /** A site's icon is a rounded square, not a circle. */
   square?: boolean
   title?: string
@@ -27,6 +31,7 @@ export default function AvatarCrop({
   const [zoom, setZoom] = useState(1)
   const [at, setAt] = useState({ x: 0, y: 0 }) // offset of the image centre, in view pixels
   const [busy, setBusy] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const drag = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null)
 
@@ -73,12 +78,20 @@ export default function AvatarCrop({
     ctx.drawImage(img, (VIEW / 2 - w / 2 + at.x) * k, (VIEW / 2 - h / 2 + at.y) * k, w * k, h * k)
     setBusy(true)
     setErr(null)
+    // A save takes a few milliseconds here; without a moment of "Saving…" and
+    // a tick, the dialog just vanished and nobody could tell it had worked.
+    const t0 = Date.now()
+    const after = (ms: number) => new Promise((r) => setTimeout(r, Math.max(0, ms - (Date.now() - t0))))
     c.toBlob(
       (blob) => {
         if (!blob) return (setBusy(false), setErr('Could not make the picture — try another file.'))
-        onSave(blob)
-          .catch((e: Error) => setErr(e.message))
-          .finally(() => setBusy(false))
+        Promise.all([onSave(blob), after(700)])
+          .then(() => {
+            setBusy(false)
+            setSaved(true)
+            setTimeout(onDone, 650)
+          })
+          .catch((e: Error) => (setBusy(false), setErr(e.message)))
       },
       'image/webp',
       0.9,
@@ -86,7 +99,7 @@ export default function AvatarCrop({
   }
 
   return (
-    <Modal label={title} className="crop-modal" onClose={busy ? undefined : onCancel}>
+    <Modal label={title} className="crop-modal" onClose={busy || saved ? undefined : onCancel}>
       <div className="modal-head">
         <span className="modal-badge" aria-hidden="true">
           <ImageUp size={19} strokeWidth={1.75} />
@@ -98,7 +111,8 @@ export default function AvatarCrop({
       </div>
       {!(err && !img) && (
       <div
-        className="crop-stage"
+        className={'crop-stage' + (busy ? ' saving' : '') + (saved ? ' saved' : '')}
+        aria-busy={busy}
         style={{ width: VIEW, height: VIEW }}
         onPointerDown={(e) => {
           ;(e.target as Element).setPointerCapture?.(e.pointerId)
@@ -120,6 +134,11 @@ export default function AvatarCrop({
           />
         )}
         <span className={'crop-ring' + (square ? ' square' : '')} aria-hidden="true" />
+        {(busy || saved) && (
+          <span className={'crop-veil' + (square ? ' square' : '')} aria-hidden="true">
+            {saved ? <Check size={30} strokeWidth={2.25} /> : <span className="btn-spin" />}
+          </span>
+        )}
       </div>
       )}
       {img && (
@@ -135,12 +154,13 @@ export default function AvatarCrop({
         </p>
       )}
       <div className="person-actions">
-        <button type="button" className="btn ghost" onClick={onCancel} disabled={busy}>
+        <button type="button" className="btn ghost" onClick={onCancel} disabled={busy || saved}>
           Cancel
         </button>
-        <button type="button" className="btn primary" onClick={save} disabled={busy || !img}>
+        <button type="button" className="btn primary" onClick={save} disabled={busy || saved || !img} aria-live="polite">
           {busy && <span className="btn-spin" aria-hidden="true" />}
-          {busy ? 'Saving…' : 'Save picture'}
+          {saved && <Check size={16} strokeWidth={2.25} aria-hidden="true" />}
+          {busy ? 'Saving…' : saved ? 'Saved' : 'Save picture'}
         </button>
       </div>
     </Modal>

@@ -189,13 +189,14 @@ function Me({ email, p, v, onProfile, onPicture }: { email?: string; p: Profile 
   useEffect(() => setName(p?.name ?? ''), [p?.name])
 
   // The crop dialog saves: it stays open with its button busy until the server
-  // has the picture, and shows the error if it refuses.
-  const upload = async (picture: Blob) => {
-    await api.setAvatar(picture)
+  // has the picture, shows the error if it refuses, and says Saved before it
+  // closes.
+  const upload = (picture: Blob) => api.setAvatar(picture)
+  const uploaded = () => {
+    setCropping(null)
     toast('Picture updated')
     if (p) onProfile({ ...p, has_avatar: true })
     onPicture()
-    setCropping(null)
     window.dispatchEvent(new CustomEvent('trckable:profile'))
   }
   const remove = async () => {
@@ -227,7 +228,7 @@ function Me({ email, p, v, onProfile, onPicture }: { email?: string; p: Profile 
     <section className="me-card">
       {cropping && (
         <Suspense fallback={null}>
-          <AvatarCrop file={cropping} onCancel={() => setCropping(null)} onSave={upload} />
+          <AvatarCrop file={cropping} onCancel={() => setCropping(null)} onSave={upload} onDone={uploaded} />
         </Suspense>
       )}
       <input

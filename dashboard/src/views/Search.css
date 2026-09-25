@@ -1,0 +1,221 @@
+/* Settings → Search Console: its own styles, loaded with it. */
+.gsc-connect {
+  gap: 16px;
+}
+.gsc-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.gsc-intro h2 {
+  margin: 0 0 4px;
+}
+.gsc-intro .muted {
+  display: block;
+  font-size: 13.5px;
+  max-width: 62ch;
+}
+.gsc-steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+.gsc-step {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--grid);
+  border-radius: 14px;
+  background: var(--sunken);
+}
+.gsc-step.last {
+  align-items: start;
+  grid-template-columns: auto 1fr;
+}
+.gsc-num {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.gsc-num.done {
+  background: var(--accent);
+  color: var(--accent-ink);
+  animation: fadein 0.25s var(--ease) backwards;
+}
+.gsc-step-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  font-size: 14px;
+}
+.gsc-step-text .faint {
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.gsc-step-text .faint b {
+  color: var(--text);
+  font-weight: 600;
+}
+.gsc-email {
+  overflow-wrap: anywhere;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.btn.gsc-go {
+  gap: 6px;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn.gsc-go svg {
+  color: var(--text-3);
+}
+.gsc-drop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 16px;
+  border: 1.5px dashed var(--border-2);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.gsc-drop:hover,
+.gsc-drop.over {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border-2));
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.gsc-drop b {
+  color: var(--text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.gsc-drop svg {
+  flex: none;
+  color: var(--text-3);
+}
+.gsc-drop.ok {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: var(--accent-soft);
+}
+.gsc-drop.ok svg {
+  color: var(--accent);
+}
+.input.gsc-paste {
+  width: 100%;
+  height: auto;
+  min-height: 150px;
+  margin-top: 8px;
+  padding: 12px 14px;
+  resize: vertical;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.linkish {
+  justify-self: start;
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.linkish:hover {
+  color: var(--text);
+}
+.gsc-foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gsc-foot > .faint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+  font-size: 12.5px;
+}
+
+/* Connected: where it stands, then the settings. */
+.gsc-status {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  --tone: var(--up);
+  background:
+    radial-gradient(420px 160px at 0% 0%, color-mix(in srgb, var(--tone) 11%, transparent), transparent 70%),
+    var(--surface-2);
+}
+.gsc-status.warn {
+  --tone: var(--warn);
+}
+.gsc-status.bad {
+  --tone: var(--down);
+}
+.gsc-orb {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--tone) 16%, transparent);
+  color: var(--tone);
+}
+.gsc-status-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.gsc-status-text b {
+  font-size: 15.5px;
+  overflow-wrap: anywhere;
+}
+.gsc-status-text .faint {
+  font-size: 12.5px;
+}
+.gsc-asking {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .gsc-step {
+    grid-template-columns: auto 1fr;
+  }
+  .gsc-go {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

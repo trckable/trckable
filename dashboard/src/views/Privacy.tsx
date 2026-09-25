@@ -105,7 +105,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
           <ul className="bullets good">
             <li>The script stores no cookie and nothing in localStorage</li>
             <li>Visitors are a salted hash that rotates daily; the IP is never stored</li>
-            <li>The country stays; the city is dropped</li>
+            <li>The country stays; region and city are dropped</li>
             <li>Do Not Track and Global Privacy Control are honoured</li>
             <li>Enforced by this server, so a cached script cannot opt back in</li>
           </ul>
@@ -126,8 +126,8 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
           <Info text="trckable never stores an IP address, never loads anything from another company, and never sells or shares your data. These switches are about recording less than that floor, not more." />
         </div>
 
-        <Row label="City" hint={free ? 'Cookieless mode keeps the country only' : 'The country is always recorded; the city is yours to choose'}>
-          <Switch on={c.record_city} disabled={free} onChange={() => save({ record_city: !c.record_city }, c.record_city ? 'City is no longer recorded' : 'City will be recorded')} />
+        <Row label="Region and city" hint={free ? 'Cookieless mode keeps the country only' : 'The country is always recorded; region and city are yours to choose'}>
+          <Switch on={c.record_city} disabled={free} onChange={() => save({ record_city: !c.record_city }, c.record_city ? 'Region and city are no longer recorded' : 'Region and city will be recorded')} />
         </Row>
 
         <Row label="Honour Do Not Track and Global Privacy Control" hint={free ? 'Always on in cookieless mode' : 'Visits from browsers sending those signals are dropped before anything is stored'}>

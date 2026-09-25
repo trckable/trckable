@@ -1,6 +1,6 @@
 import { Activity, Bell, Blocks, Check, ChevronLeft, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, RefreshCw, Search, Settings as Cog, ShieldCheck, TriangleAlert, X } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
-import { isViewer } from '../lib/me'
+import { isOperator, isViewer } from '../lib/me'
 import { api, type InstallCheck, type Site } from '../lib/api'
 import { navigate, useLocation } from '../lib/url'
 import { Modal } from '../components/Modal'
@@ -97,10 +97,12 @@ const GROUPS: { name: string; tabs: TabID[] }[] = [
  *  left, the section on the right. Opening it does not change the address
  *  (lib/settings.ts); closing it leaves the dashboard exactly as it was. */
 export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSites: () => void }) {
-  const tab = TABS.some((t) => t.id === p.tab) ? p.tab : 'site'
+  const tab = TABS.some((t) => t.id === p.tab) && !(p.tab === 'health' && !isOperator()) ? p.tab : 'site'
   const go = (id: TabID) => setSettingsTab(id)
   const close = closeSettings
   const current = TABS.find((t) => t.id === tab)!
+  // Once visits arrive there is nothing left to install, only to verify.
+  const label = (t: (typeof TABS)[number]) => (t.id === 'install' && p.site.last_event_at ? 'Verify' : t.label)
   // Sections that belong to a module say so when it is off, and offer to
   // turn it on, instead of showing a setup that leads nowhere.
   const [mods, setMods] = useState<Record<string, boolean> | null>(null)
@@ -148,7 +150,7 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
           <b>Settings</b>
           <span className="faint">{p.site.name || p.site.domain}</span>
         </div>
-        {GROUPS.map((g) => (
+        {GROUPS.filter((g) => g.name !== 'Instance' || isOperator()).map((g) => (
           <div key={g.name} className="settings-group">
             <span className="settings-group-head">{g.name}</span>
             {g.tabs.map((id) => {
@@ -158,7 +160,7 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
                   <span className="icon-tile small">
                     <NavIcon d={t.icon} />
                   </span>
-                  {t.label}
+                  {label(t)}
                   {off(t.id) && <span className="tag quiet nav-off">Off</span>}
                 </button>
               )
@@ -168,14 +170,14 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
       </nav>
       <div className="settings-pane">
         <div className="settings-pane-head">
-          <h2>{current.label}</h2>
+          <h2>{label(current)}</h2>
           <button type="button" className="modal-close" aria-label="Close settings" onClick={close}>
             <X size={16} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
         {/* Focusable, so the section scrolls from the keyboard too — even one,
             like Health, with nothing else in it to tab to. */}
-        <div className="settings-body" key={tab} tabIndex={0} role="region" aria-label={current.label}>
+        <div className="settings-body" key={tab} tabIndex={0} role="region" aria-label={label(current)}>
           {off(tab) ? (
             <ModuleOff site={p.site} tab={tab} onOn={loadMods} />
           ) : (
@@ -224,7 +226,7 @@ function InstallSection({ site }: { site: Site }) {
   // looked as if the button did nothing.
   const [pend, setPend] = useState({ page: true, visits: false })
   const [at, setAt] = useState<Date | null>(null)
-  const [code, setCode] = useState(false)
+  const [code, setCode] = useState<boolean | null>(null) // null: open when not verified
   const checking = pend.page || pend.visits
   const latest = () =>
     api
@@ -235,7 +237,7 @@ function InstallSection({ site }: { site: Site }) {
     const t0 = Date.now()
     const wait = (ms: number) => new Promise((r) => setTimeout(r, Math.max(0, ms - (Date.now() - t0))))
     setPend({ page: true, visits })
-    const pageP = api.checkInstall(site.id).catch((e: Error): InstallCheck => ({ url: `https://${site.domain}/`, error: e.message }))
+    const pageP = api.checkInstall(site.id).catch((e: Error): InstallCheck => ({ url: `https://${site.domain}/`, scripts: 0, error: e.message }))
     const lastP = visits ? latest() : null
     const [pg] = await Promise.all([pageP, wait(750)])
     setPage(pg)
@@ -258,38 +260,68 @@ function InstallSection({ site }: { site: Site }) {
   if (last === null) return <Install site={site} visits={[]} inSettings />
 
   const DAY = 86_400_000
-  const fresh = Date.now() - last.ts < 2 * DAY
+  const fresh = Date.now() - last.ts < DAY
+  const seen = `${agoText(last.ts)}${last.path ? ` on ${last.path}` : ''}`
   const where = page?.url.replace(/^https?:\/\//, '').replace(/\/$/, '') || site.domain
-  const snippet: Step = !page || pend.page
-    ? { tone: 'wait', title: 'Snippet on your homepage', text: `Reading ${site.domain}…` }
-    : page.error
-      ? { tone: 'warn', title: 'Snippet on your homepage', text: `Could not read it — ${page.error}.` }
-      : page.found === 'site'
-        ? { tone: 'ok', title: 'Snippet on your homepage', text: `Found on ${where}.` }
-        : page.found === 'other'
-          ? { tone: 'warn', title: 'A snippet for another site', text: `${where} loads trckable, but not with this site's id — copy the code below again.` }
-          : {
-              tone: fresh ? 'info' : 'warn',
-              title: 'Not in the homepage',
-              text: `No trckable script in ${where}'s HTML. That is fine when a tag manager or the npm package loads it — the visits below say whether it works.`,
+  const scripts = page ? `${page.scripts} script${page.scripts === 1 ? '' : 's'}` : ''
+  // Three things, in the order they are checked. Only the second can verify
+  // the install: this site's own id, found where a browser would load it.
+  const reach: Step =
+    !page || pend.page
+      ? { tone: 'wait', title: 'Your homepage', text: `Loading https://${site.domain}/…` }
+      : page.error
+        ? { tone: 'warn', title: 'Your homepage', text: `${page.error}.` }
+        : { tone: 'ok', title: 'Your homepage', text: `${where} answered (${page.status}).` }
+  const snippet: Step =
+    !page || pend.page
+      ? { tone: 'wait', title: "This site's snippet", text: 'Looking in the page and the scripts it loads…' }
+      : page.error
+        ? { tone: 'info', title: "This site's snippet", text: 'Not checked: the page could not be read.' }
+        : page.found === 'site'
+          ? {
+              tone: 'ok',
+              title: "This site's snippet",
+              text: page.via === 'page' ? `Found in the page, with this site's id.` : `Found in a script the page loads: ${page.via?.replace(/^https?:\/\//, '')}`,
             }
+          : page.found === 'other'
+            ? { tone: 'warn', title: "This site's snippet", text: `trckable is on ${where}, but with another site's id. Copy the code below again.` }
+            : { tone: 'warn', title: "This site's snippet", text: `Not in the page or in the ${scripts} it loads. Add the code below to your homepage's <head>.` }
   const visits: Step = pend.visits
     ? { tone: 'wait', title: 'Visits arriving', text: 'Asking for the latest visit…' }
     : fresh
-    ? { tone: 'ok', title: 'Visits arriving', text: `Last one ${agoText(last.ts)}${last.path ? ` on ${last.path}` : ''}.` }
-    : { tone: 'warn', title: 'No recent visits', text: `The last one was ${agoText(last.ts)}${last.path ? ` on ${last.path}` : ''}. Is the snippet still on every page?` }
-  const allOk = !checking && snippet.tone === 'ok' && visits.tone === 'ok'
+      ? { tone: 'ok', title: 'Visits arriving', text: `The last one ${seen}.` }
+      : { tone: 'warn', title: 'No visits in the last day', text: `The last one was ${seen}.` }
+  const verified = !checking && snippet.tone === 'ok'
+  const showCode = code ?? (!checking && !verified)
+  const head = checking
+    ? `Checking ${site.domain}…`
+    : verified
+      ? fresh
+        ? `Connected and verified`
+        : `Snippet found, but no visits in the last day`
+      : page?.found === 'other'
+        ? `Not verified: another site's snippet`
+        : `Not verified`
+  const sub = checking
+    ? 'This server loads your homepage like a browser would, looks for this site\'s id in it and in every script it loads, then asks for the latest visit it recorded.'
+    : verified
+      ? fresh
+        ? `This site's snippet is on ${site.domain} and visits are arriving from it.`
+        : 'The snippet is in place. Visits show up here within seconds of someone opening a page.'
+      : page?.error
+        ? `${site.domain} could not be read, so the snippet could not be found. Until it can, the install is not verified.`
+        : `This site's id is not on ${site.domain}'s homepage${fresh ? ', though visits did arrive — the snippet may be on some pages only' : ''}.`
 
   return (
     <>
       <section className="card install-check" aria-busy={checking}>
         <div className="install-check-head">
-          <span className={'icon-tile' + (allOk ? ' accent' : '')} aria-hidden="true">
-            {allOk ? <CircleCheck size={18} strokeWidth={1.75} /> : <Activity size={18} strokeWidth={1.75} />}
+          <span className={'icon-tile' + (verified && fresh ? ' accent' : checking ? '' : ' warn')} aria-hidden="true">
+            {verified ? <CircleCheck size={18} strokeWidth={1.75} /> : checking ? <Activity size={18} strokeWidth={1.75} /> : <TriangleAlert size={18} strokeWidth={1.75} />}
           </span>
           <div>
-            <h3>{checking ? `Checking ${site.domain}…` : allOk ? `Installed on ${site.domain}` : visits.tone === 'ok' ? `Receiving visits from ${site.domain}` : `Check the install on ${site.domain}`}</h3>
-            <p className="muted">This server reads your homepage like a browser would and looks for the snippet, then asks for the latest visit it recorded. Nothing is sent to your site.</p>
+            <h3>{head}</h3>
+            <p className="muted">{sub}</p>
             {at && !checking && (
               <span className="install-at faint" key={at.getTime()}>
                 Checked at {at.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -298,11 +330,11 @@ function InstallSection({ site }: { site: Site }) {
           </div>
           <button type="button" className="btn" onClick={() => check(true)} disabled={checking}>
             {checking ? <span className="btn-spin" aria-hidden="true" /> : <RefreshCw size={15} strokeWidth={1.75} aria-hidden="true" />}
-            {checking ? 'Checking…' : 'Check again'}
+            {checking ? 'Checking…' : 'Verify again'}
           </button>
         </div>
         <ul className="install-steps">
-          {[snippet, visits].map((s) => (
+          {[reach, snippet, visits].map((s) => (
             <li key={s.title} className={'install-step ' + s.tone}>
               <span className="install-step-mark" aria-hidden="true" key={s.tone}>
                 {s.tone === 'ok' ? <Check size={14} strokeWidth={2.25} /> : s.tone === 'wait' ? <span className="btn-spin" /> : s.tone === 'info' ? <InfoIcon size={14} strokeWidth={2} /> : <TriangleAlert size={14} strokeWidth={2} />}
@@ -315,11 +347,11 @@ function InstallSection({ site }: { site: Site }) {
           ))}
         </ul>
       </section>
-      <button type="button" className="btn ghost install-more" aria-expanded={code} onClick={() => setCode((c) => !c)}>
-        <ChevronRight size={15} strokeWidth={1.75} style={{ transform: code ? 'rotate(90deg)' : undefined, transition: 'transform .15s' }} aria-hidden="true" />
-        {code ? 'Hide the code' : 'Show the code again'}
+      <button type="button" className="btn ghost install-more" aria-expanded={showCode} onClick={() => setCode(!showCode)}>
+        <ChevronRight size={15} strokeWidth={1.75} style={{ transform: showCode ? 'rotate(90deg)' : undefined, transition: 'transform .15s' }} aria-hidden="true" />
+        {showCode ? 'Hide the code' : 'Show the code again'}
       </button>
-      {code && <Install site={site} visits={[]} inSettings />}
+      {showCode && <Install site={site} visits={[]} inSettings />}
     </>
   )
 }
@@ -571,13 +603,12 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
             square
             title="The site's icon"
             onCancel={() => setCropping(null)}
-            onSave={(picture) =>
-              api.setSiteIcon(site.id, picture).then(() => {
-                setCropping(null)
-                toast('Icon saved')
-                onSaved()
-              })
-            }
+            onSave={(picture) => api.setSiteIcon(site.id, picture)}
+            onDone={() => {
+              setCropping(null)
+              toast('Icon saved')
+              onSaved()
+            }}
           />
         </Suspense>
       )}

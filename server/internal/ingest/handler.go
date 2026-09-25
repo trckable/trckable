@@ -45,7 +45,7 @@ type Site struct {
 	// analytics signal: a site only gives something up when its owner says so.
 	ExcludePaths []string // globs that are never recorded, e.g. /admin/*
 	HonorDNT     bool     // drop visits from browsers sending DNT or GPC
-	NoCity       bool     // keep the country, drop the city
+	NoCity       bool     // keep the country, drop region and city
 	BotStrict    bool     // also drop headless and unknown clients
 	// ConsentFree keeps nothing in the browser and no city, so the site can
 	// run analytics without a consent banner. Enforced here, not trusted to
@@ -396,8 +396,8 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 
 	if h.Geo != nil {
 		e.Country, e.Region, e.City = h.Geo(ip)
-		if site.NoCity {
-			e.City = ""
+		if site.NoCity { // "the country is always recorded; region and city are yours"
+			e.Region, e.City = "", ""
 		}
 	}
 	if e.Country == "" && !proxied { // trusted edge header (Cloudflare) as a fallback

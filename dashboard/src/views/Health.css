@@ -1,0 +1,208 @@
+/* Settings → Health: its own styles, loaded with it. */
+.health-hero {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  --tone: var(--up);
+  background:
+    radial-gradient(420px 160px at 0% 0%, color-mix(in srgb, var(--tone) 12%, transparent), transparent 70%),
+    var(--surface-2);
+}
+.health-hero.warn {
+  --tone: var(--warn);
+}
+.health-hero.bad {
+  --tone: var(--down);
+}
+.health-orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--tone) 16%, transparent);
+  color: var(--tone);
+}
+.health-orb::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
+  animation: health-ring 2.4s var(--ease) infinite;
+}
+@keyframes health-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+.health-hero-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.health-hero-text b {
+  font-size: 17px;
+}
+.health-hero-text .faint {
+  font-size: 13px;
+}
+.health-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.health-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--up);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--up) 20%, transparent);
+}
+
+.htiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.htile {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+  min-width: 0;
+}
+.htile-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.htile b {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.htile .faint {
+  font-size: 12px;
+  line-height: 1.35;
+}
+.htile.warn {
+  border-color: color-mix(in srgb, var(--warn) 40%, var(--border));
+}
+.htile.warn b {
+  color: var(--warn);
+}
+
+.card.hcard {
+  gap: 12px;
+}
+.hcard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.hcard-head h2 {
+  margin: 0;
+}
+.hitem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--grid);
+}
+.hitem-text {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+}
+.hitem-text .faint {
+  font-size: 12.5px;
+}
+
+.hpill {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  border: 1px solid;
+}
+.hpill.info {
+  color: var(--text-2);
+  border-color: var(--border);
+  background: var(--sunken);
+}
+.health-issue {
+  color: var(--tone);
+  font-size: 13px;
+}
+.hpill.ok {
+  color: var(--up);
+  border-color: color-mix(in srgb, var(--up) 35%, transparent);
+  background: color-mix(in srgb, var(--up) 10%, transparent);
+}
+.hpill.warn {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+.hpill.bad {
+  color: var(--down);
+  border-color: color-mix(in srgb, var(--down) 40%, transparent);
+  background: color-mix(in srgb, var(--down) 10%, transparent);
+}
+
+@media (max-width: 760px) {
+  .htiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .health-hero {
+    grid-template-columns: auto 1fr;
+  }
+  .health-live {
+    grid-column: 1 / -1;
+  }
+  .hitem {
+    flex-wrap: wrap;
+  }
+  .hitem .hpill {
+    margin-left: 50px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .health-orb::after {
+    animation: none;
+  }
+}
+
+.hnote {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 72ch;
+}

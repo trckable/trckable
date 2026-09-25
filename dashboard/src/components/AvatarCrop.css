@@ -52,3 +52,37 @@
 .crop-ring.square {
   border-radius: 22%;
 }
+
+/* Saving: the picture dims under a spinner, then a tick before it closes. */
+.crop-veil {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.55);
+  color: var(--accent);
+  animation: fadein 0.2s var(--ease) backwards;
+  pointer-events: none;
+}
+.crop-veil.square {
+  border-radius: 22%;
+}
+.crop-veil .btn-spin {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+}
+.crop-stage.saved .crop-veil svg {
+  animation: crop-tick 0.35s var(--ease) backwards;
+}
+@keyframes crop-tick {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+.crop-stage.saving,
+.crop-stage.saved {
+  pointer-events: none;
+}

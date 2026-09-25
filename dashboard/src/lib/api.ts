@@ -517,9 +517,11 @@ export interface Health {
   version: string
   uptime_s: number
   events: { accepted: number; bots: number; rejected: number; lag: number }
-  store: { events: number; bytes_used: number; bytes_free: number; days_left: number; bytes_per_event: number }
+  store: { events: number; bytes_used: number; bytes_free: number; days_left: number; bytes_per_event: number; events_per_day?: number }
   analytics: 'ready' | 'warming' | 'error'
   memory_bytes: number
+  /** rss: the whole process, analytics store included · go: the Go runtime only */
+  memory_source?: 'rss' | 'go'
   backup: { at: number; bytes: number; offsite?: string; offsite_at?: number; offsite_days?: number; offsite_error?: string }
   payments?: { connections: number; pending: number; last_event: number; last_sync: number }
 }
@@ -570,6 +572,10 @@ export interface InstallCheck {
   status?: number
   /** site: this site's snippet · other: a trckable script for another site · none */
   found?: 'site' | 'other' | 'none'
+  /** Where this site's id was found: "page", or the URL of a script. */
+  via?: string
+  /** How many of the page's scripts were read. */
+  scripts: number
   error?: string
 }
 
@@ -585,7 +591,7 @@ export const api = {
     call<{ user: { email: string }; site: Site | null }>('POST', '/setup', { token, email, password, domain }),
   login: (email: string, password: string, code?: string) => call<{ user: { email: string } }>('POST', '/login', { email, password, code }),
   logout: () => call<void>('POST', '/logout'),
-  me: () => call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean }>('GET', '/me'),
+  me: () => call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean; operator?: boolean }>('GET', '/me'),
   setKeys: (keys: Record<string, string>) => call<{ keys: Record<string, string> }>('PUT', '/me/keys', { keys }),
   sites: () => call<{ sites: Site[] }>('GET', '/sites'),
   createSite: (domain: string) => call<Site>('POST', '/sites', { domain }),

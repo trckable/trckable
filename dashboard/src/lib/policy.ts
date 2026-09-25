@@ -25,7 +25,7 @@ const retention = (days: number) =>
  *  the person it is about, which is the whole point of the requirement. */
 export function policyText(p: PolicyInput): string {
   const collected = ['the page you are on', 'the site that sent you here']
-  collected.push(p.config.record_city && !p.config.consent_free ? 'your country and city' : 'your country')
+  collected.push(p.config.record_city && !p.config.consent_free ? 'your country, region and city' : 'your country')
   collected.push('your browser, operating system and device type', 'how long you stayed')
   if (p.modules.goals) collected.push('which of a handful of marked actions you took, such as signing up')
   if (p.modules.outbound) collected.push('which links you followed away from the site, and which files you downloaded')
@@ -42,7 +42,7 @@ export function policyText(p: PolicyInput): string {
   out.push('')
   out.push(
     `**What is not recorded.** Your IP address is never stored. It is used once, in memory, to work out your country` +
-      (p.config.record_city && !p.config.consent_free ? ' and city' : '') +
+      (p.config.record_city && !p.config.consent_free ? ', region and city' : '') +
       `, and is then discarded — it is not written to a log or a database. We do not build a profile of you, and we cannot identify you from what is kept.`,
   )
   out.push('')
@@ -103,7 +103,7 @@ export function policyCaveats(p: PolicyInput): string[] {
     out.push('This site sets a cookie. In the EU and the UK that normally needs consent before the script runs. Cookieless mode above sets none; whether you can then skip the banner depends on your country.')
   if (p.config.consent_free)
     out.push('Cookieless mode stores nothing on the device, but the script still reads the page address, referrer, screen width and language, and counts visitors by a daily hash of IP and browser. France, Italy, the Netherlands, Spain and the UK have analytics exemptions with conditions; Germany and Austria generally still ask for consent.')
-  if (p.config.record_city && !p.config.consent_free) out.push('City is being recorded. It is derived from the IP address and never stored with it, but it is more precise than country alone.')
+  if (p.config.record_city && !p.config.consent_free) out.push('Region and city are being recorded. They are derived from the IP address and never stored with it, but they are more precise than country alone.')
   if (p.config.retention_days === 0) out.push('Nothing expires. A retention period is easier to justify than keeping everything forever.')
   if (p.modules.goals) out.push('Goals can carry properties you choose. Do not put names, emails or anything else personal in them — trckable stores whatever you send.')
   out.push('This covers trckable only. Anything else on your site — embedded video, fonts, chat, ads — needs its own paragraph.')
