@@ -15,6 +15,13 @@ import { join } from 'node:path'
 const ROOT = new URL('..', import.meta.url).pathname
 const gz = (f) => gzipSize(readFileSync(join(ROOT, f)))
 const up1 = (n) => Math.ceil(n * 10) / 10
+// A budget is read from the file that enforces it, never copied here: a copy
+// said 2,048 bytes for weeks after the tracker's real budget became 2,060.
+const budget = (file, re) => {
+  const m = readFileSync(join(ROOT, file), 'utf8').match(re)
+  if (!m) throw new Error(`${file}: no budget found (${re})`)
+  return +m[1]
+}
 
 const parts = {
   tracker: () => {
@@ -28,9 +35,9 @@ const parts = {
     tracker_core_bytes: sz.core, // pageviews only
     tracker_max_bytes: Math.max(...servable.map(([, n]) => n)), // every module a site can turn on
     ...Object.fromEntries(Object.entries(sz.feature).map(([f, n]) => ['module_' + f + '_bytes', n])),
-    tracker_budget_bytes: 2048, // tracker/build.mjs
+    tracker_budget_bytes: budget('tracker/build.mjs', /^const BUDGET = (\d+)/m),
     react_bytes: gz('packages/trckable/dist/react.js') + gz('packages/trckable/dist/index.js'),
-    react_budget_bytes: 2560, // packages/trckable/build.mjs
+    react_budget_bytes: budget('packages/trckable/build.mjs', /^const BUDGET = (\d+)/m),
     }
   },
   dashboard: () => {
@@ -38,13 +45,13 @@ const parts = {
     const html = readFileSync(join(ROOT, dir, 'index.html'), 'utf8')
     const entry = [...html.matchAll(/(?:src|href)="\/(assets\/[^"]+\.(?:js|css))"/g)].map((m) => m[1])
     const total = entry.reduce((n, f) => n + gz(dir + f), 0)
-    return { dashboard_kb: up1(total / 1024), dashboard_budget_kb: 130 } // dashboard/scripts/size.mjs
+    return { dashboard_kb: up1(total / 1024), dashboard_budget_kb: budget('dashboard/scripts/size.mjs', /^const budget = (\d+) \* 1024/m) }
   },
   image: () => ({
     image_mb: up1(+process.env.IMAGE_BYTES / 1048576),
-    image_budget_mb: 30, // .github/workflows/ci.yml
+    image_budget_mb: budget('.github/workflows/ci.yml', /\(budget (\d+) MB\)/),
     memory_idle_mb: Math.ceil(+process.env.IDLE_MIB),
-    memory_budget_mb: 64, // .github/workflows/ci.yml
+    memory_budget_mb: budget('.github/workflows/ci.yml', /idle memory ≤ (\d+) MB/),
   }),
 }
 

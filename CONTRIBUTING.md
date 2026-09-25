@@ -22,19 +22,34 @@ The server prints a one-time setup link on first start. `go run
 
 ## How changes land
 
-1. Fork the repository and make a branch for your change.
-2. Run `pnpm check` (below) until it passes.
-3. Open a pull request against `main`. CI runs the same checks, plus the
-   Docker image and govulncheck; all six must pass (the sixth is the CLA).
-   Nobody can merge with a failing check, maintainers included: a ruleset on
-   `main` requires them and has no bypass.
-4. The maintainer reviews it (CODEOWNERS), and it is squash-merged, so
-   `main` has one commit per change and is always releasable.
-5. A release goes through a pull request too. `pnpm release X.Y.Z` bumps
-   every version and dates the Unreleased section on a `release-X.Y.Z`
-   branch, runs the gate, pushes it and opens its pull request. Once that is
-   merged, `pnpm release tag X.Y.Z` tags `main`, and the tag's workflow
-   publishes the image, the npm package and the GitHub release.
+Five stages, one command each. The maintainer's full runbook (the site, the
+docs, what to do when a step fails) is `ops/SHIPPING.md` in the private
+repository; this is the part that happens here.
+
+| Stage | Command | What it does |
+| --- | --- | --- |
+| 1. Work | `pnpm work <topic>` | A fresh branch from the latest `main`. One topic per branch, never a branch on top of an unmerged one |
+| 2. Land | `pnpm ship` | The full gate (below), then push and open the pull request (or update it). Once every check is green it is squash-merged, and the branch is deleted |
+| 3. Prepare a release | `pnpm release X.Y.Z` | Every version bumped, the Unreleased notes dated, CI's figures and the screenshots whose screen changed brought up to date, the gate, and the release pull request |
+| 4. Publish | `pnpm release tag X.Y.Z` | After that pull request is merged: tags `main`, waits for the release workflow, then checks the GitHub release, npm and the Docker image |
+| 5. The site | `web:ship` (private repo) | trckable.com and the docs, checked live |
+
+`pnpm status` shows where everything stands: open pull requests and their
+checks, what is waiting to be released, and the version on GitHub, npm, the
+image and trckable.com. `pnpm tidy` deletes local branches whose pull request
+is merged (`pnpm work` runs it too).
+
+The rules on `main`:
+
+- Six checks are required and a ruleset without a bypass enforces them, so
+  nobody merges with a failing check, maintainers included: server, tracker
+  and npm package, dashboard, browsers, image, and the CLA.
+- A pull request from anyone else needs the maintainer's review (CODEOWNERS).
+  The maintainer's own are merged with admin rights once every check is green.
+- Every change people will notice carries its own line in CHANGELOG.md under
+  "Unreleased", in the same pull request (`scripts/changelog-check.mjs`, run by
+  `pnpm ship` and by CI). A change nobody notices is marked with the
+  `no-changelog` label, or `[no-changelog]` in a commit message.
 
 ## Before you open a pull request
 
