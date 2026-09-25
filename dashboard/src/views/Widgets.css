@@ -1,0 +1,154 @@
+/* Settings → Sharing → Widgets. */
+.wg {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.wg-head h2 {
+  margin: 0 0 4px;
+}
+.wg-head .faint {
+  font-size: 13px;
+  max-width: 70ch;
+  display: block;
+}
+.wg-kinds {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.wg-kind {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.wg-kind[aria-checked='true'] {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.wg-kind-text {
+  display: grid;
+  gap: 2px;
+  font-size: 13.5px;
+}
+.wg-kind-text .faint {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.wg-studio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 14px;
+}
+/* The preview sits on a checked floor, so its own background reads. */
+.wg-stage {
+  display: grid;
+  place-items: center;
+  min-height: 380px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background-color: var(--sunken);
+  background-image: radial-gradient(color-mix(in srgb, var(--text) 10%, transparent) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+.wg-stage.light {
+  background-color: #f4f4f5;
+}
+.wg-stage iframe {
+  border: 0;
+  background: transparent;
+  max-width: 100%;
+}
+.wg-options {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+.wg-opt {
+  display: grid;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.wg-opt .seg button {
+  flex: 1;
+}
+.wg-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wg-swatch {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.15);
+}
+.wg-swatch.own {
+  background: conic-gradient(#b8ff3c 0 50%, #3f6212 50% 100%);
+}
+.wg-swatch[aria-checked='true'] {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--surface) inset;
+}
+.wg-make {
+  margin-top: 4px;
+}
+.wg-made {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: 12px;
+  background: var(--accent-soft);
+  font-size: 13.5px;
+  animation: fadein 0.25s var(--ease) backwards;
+}
+.wg-list {
+  display: grid;
+  gap: 8px;
+}
+.wg-list-head {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.wg-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.wg-row-text {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+}
+.wg-row-text .faint {
+  font-size: 12px;
+}
+@media (max-width: 760px) {
+  .wg-kinds,
+  .wg-studio {
+    grid-template-columns: 1fr;
+  }
+}

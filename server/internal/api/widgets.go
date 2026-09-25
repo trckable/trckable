@@ -37,7 +37,7 @@ func (a *API) widgetsList(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"widgets": list})
+	writeJSON(w, http.StatusOK, map[string]any{"widgets": list, "base": a.publicBase(r)})
 }
 
 func (a *API) createWidget(w http.ResponseWriter, r *http.Request) {

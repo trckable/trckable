@@ -17,6 +17,7 @@ import { ModulesSettings } from './Modules'
 import { PaymentsSettings } from './Payments'
 import { PrivacySettings, ReportSettings } from './Privacy'
 import { Shares } from './Shares'
+import { WidgetsSettings } from './Widgets'
 import { HealthSettings } from './Health'
 import { AlertsSettings } from './Alerts'
 import { SearchSettings } from './Search'
@@ -205,7 +206,12 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
           {!isViewer() && <DangerZone site={site} onSites={onSites} />}
         </>
       )}
-      {tab === 'sharing' && <Shares key={'sh' + site.id} site={site} />}
+      {tab === 'sharing' && (
+        <>
+          <Shares key={'sh' + site.id} site={site} />
+          <WidgetsSettings key={'wg' + site.id} site={site} />
+        </>
+      )}
       {tab === 'install' && <InstallSection site={site} />}
       {tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
       {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}

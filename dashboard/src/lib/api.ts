@@ -598,6 +598,21 @@ export interface InstallCheck {
   error?: string
 }
 
+export type WidgetKind = 'live' | 'badge' | 'counter'
+export interface WidgetLook {
+  kind: WidgetKind
+  theme: 'auto' | 'dark' | 'light'
+  accent: string
+  radius: number
+  brand: boolean
+}
+export interface Widget extends WidgetLook {
+  id: string
+  site_id: string
+  on: boolean
+  created_at: number
+}
+
 export interface Profile {
   email: string
   name: string
@@ -624,6 +639,10 @@ export const api = {
       'DELETE',
       `/sites/${site}/privacy/person?${by}=${encodeURIComponent(value)}`,
     ),
+  widgets: (site: string) => call<{ widgets: Widget[]; base: string }>('GET', `/sites/${site}/widgets`),
+  createWidget: (site: string, w: WidgetLook) => call<Widget>('POST', `/sites/${site}/widgets`, w),
+  updateWidget: (site: string, id: string, w: WidgetLook & { on: boolean }) => call<Widget>('PUT', `/sites/${site}/widgets/${id}`, w),
+  deleteWidget: (site: string, id: string) => call<void>('DELETE', `/sites/${site}/widgets/${id}`),
   shares: (site: string) => call<{ shares: Share[]; base: string }>('GET', `/sites/${site}/shares`),
   createShare: (site: string, body: { name: string; password?: string; revenue: boolean; days: number; embed_origins?: string[] }) =>
     call<{ share: Share; url: string }>('POST', `/sites/${site}/shares`, body),
