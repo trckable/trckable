@@ -422,10 +422,9 @@
   transition: border-color 0.25s, background 0.25s;
 }
 .install-step.wait {
+  /* The dashed edge and the spinner say "still checking"; the words stay at
+     full contrast (dimming them fell below WCAG AA). */
   border-style: dashed;
-}
-.install-step.wait > span:last-child {
-  opacity: 0.7;
 }
 .install-step-mark {
   animation: step-in 0.35s var(--ease) backwards;
