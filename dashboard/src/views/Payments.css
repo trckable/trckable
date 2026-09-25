@@ -182,3 +182,10 @@
     grid-column: 1 / -1;
   }
 }
+
+.pay-alert .pay-startover {
+  justify-self: start;
+  margin-top: 8px;
+  height: 32px;
+  font-size: 12.5px;
+}

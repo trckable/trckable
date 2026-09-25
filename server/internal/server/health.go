@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"os"
+	"strings"
 	"syscall"
 	"time"
 
@@ -54,6 +55,7 @@ func (s *Server) health(ctx context.Context) api.Health {
 		}
 	}
 
+	h.KeyOnVolume = strings.TrimSpace(s.cfg.Secret) == ""
 	if at, size := s.LastBackup(); !at.IsZero() {
 		h.Backup = api.Backup{At: at.Unix(), Bytes: size}
 	}

@@ -20,7 +20,10 @@ type Health struct {
 	// store included) or "go" (the Go runtime only, where no RSS can be read).
 	MemorySource string `json:"memory_source"`
 	Backup       Backup `json:"backup"`
-	Payments     *Pay   `json:"payments,omitempty"`
+	// KeyOnVolume: TRCKABLE_SECRET is not set, so the instance key exists
+	// only as data/secret.key, on the same disk as the backups it unlocks.
+	KeyOnVolume bool `json:"key_on_volume,omitempty"`
+	Payments    *Pay `json:"payments,omitempty"`
 }
 
 // Backup is the newest copy on disk: when it was written and how big it is.

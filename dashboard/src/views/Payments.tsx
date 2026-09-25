@@ -13,7 +13,8 @@ import { api, type PayConnection, type Provider, type Site } from '../lib/api'
 import { navigate } from '../lib/url'
 import { CodeBlock } from '../components/Code'
 import { Picker } from '../components/Picker'
-import { useConfirm } from '../components/Confirm'
+import { confirmWith, useConfirm } from '../components/Confirm'
+import { isOperator, isViewer } from '../lib/me'
 import { settle, toast } from '../components/Toast'
 import './Payments.css'
 
@@ -76,8 +77,30 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
           <span>
             <b>The saved provider keys cannot be read</b>
             <span>
-              {data.key_error}. Webhooks answer 503, so providers keep retrying and nothing is lost. Start the server with the original TRCKABLE_SECRET (or its old secret.key) to resume.
+              {data.key_error}. Webhooks answer 503, so providers keep retrying for a while (Stripe about three days). Start the server with the original TRCKABLE_SECRET, or its old data/secret.key,
+              to pick up where it was. If that key is gone for good, start over with this server's key and reconnect each provider.
             </span>
+            {isOperator() && !isViewer() && (
+              <button
+                type="button"
+                className="btn danger pay-startover"
+                onClick={async () => {
+                  const pw = await confirmWith({
+                    title: 'Start over with this server’s key?',
+                    body: 'The provider keys and signing secrets saved with the old key are forgotten, and so is the Search Console key. Payments already recorded stay. Reconnect each provider afterwards. Looking someone up by email will not find payments recorded before today.',
+                    field: { label: 'Your password', type: 'password', autoComplete: 'current-password' },
+                    confirmLabel: 'Start over',
+                    danger: true,
+                    busyLabel: 'Starting over…',
+                    done: 'Started over — reconnect each provider',
+                    run: (mine) => api.startOverKeys(mine),
+                  })
+                  if (pw !== null) load()
+                }}
+              >
+                Start over with this server’s key
+              </button>
+            )}
           </span>
         </div>
       )}
