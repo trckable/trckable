@@ -31,14 +31,15 @@ const sessionCookie = "trckable_session"
 
 // API serves /api/v1.
 type API struct {
-	Ctl      *sqlite.Store
-	Query    func() *query.Q // nil while the analytics store warms up
-	Hub      *realtime.Hub
-	Token    string // TRCKABLE_API_TOKEN (automation, optional)
-	SetupEnv string // TRCKABLE_SETUP_TOKEN (optional; otherwise generated)
-	ClientIP func(*http.Request) string
-	Now      func() time.Time
-	Revenue  *revenue.Service // nil = payments disabled
+	widgetCache widgetCache // each site's widget numbers, for a minute
+	Ctl         *sqlite.Store
+	Query       func() *query.Q // nil while the analytics store warms up
+	Hub         *realtime.Hub
+	Token       string // TRCKABLE_API_TOKEN (automation, optional)
+	SetupEnv    string // TRCKABLE_SETUP_TOKEN (optional; otherwise generated)
+	ClientIP    func(*http.Request) string
+	Now         func() time.Time
+	Revenue     *revenue.Service // nil = payments disabled
 	// UpdateCheck lets owners' dashboards look for a newer release. Off with
 	// TRCKABLE_UPDATE_CHECK=off, and on a managed instance (the host updates).
 	UpdateCheck bool
@@ -123,6 +124,12 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}/icon", a.authed(a.clearSiteIcon))
 	handle("POST /api/v1/sites/{site}/icon/favicon", a.authed(a.fetchFavicon))
 	handle("PUT /api/v1/sites/{site}/color", a.authed(a.setSiteColor))
+	handle("GET /api/v1/sites/{site}/widgets", a.authed(a.widgetsList))
+	handle("POST /api/v1/sites/{site}/widgets", a.authed(a.createWidget))
+	handle("GET /api/v1/sites/{site}/widgets/preview", a.authed(a.widgetPreview))
+	handle("PUT /api/v1/sites/{site}/widgets/{id}", a.authed(a.updateWidget))
+	handle("DELETE /api/v1/sites/{site}/widgets/{id}", a.authed(a.deleteWidget))
+	handleFunc("GET /w/{id}", a.widgetPage)
 	handle("POST /api/v1/sites/{site}/install/check", a.authed(a.checkInstall))
 	handle("DELETE /api/v1/sites/{site}", a.authed(a.deleteSite))
 	handle("GET /api/v1/sites/{site}/config", a.authed(a.siteConfig))

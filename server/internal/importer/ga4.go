@@ -198,3 +198,28 @@ func countryKey(s string) string {
 
 // accents covers every letter the country names use.
 var accents = map[rune]rune{'ç': 'c', 'å': 'a', 'ã': 'a', 'é': 'e', 'í': 'i', 'ô': 'o', 'ü': 'u'}
+
+var (
+	namesOnce sync.Once
+	names     map[string]string
+)
+
+// CountryName turns "DE" into "Germany", the first name the list gives; a
+// code it does not know comes back as it is.
+func CountryName(code string) string {
+	namesOnce.Do(func() {
+		names = map[string]string{}
+		for _, line := range strings.Split(countriesTxt, "\n") {
+			if line == "" || line[0] == '#' {
+				continue
+			}
+			if f := strings.Split(line, "\t"); len(f) > 1 {
+				names[f[0]] = f[1]
+			}
+		}
+	})
+	if n, ok := names[strings.ToUpper(code)]; ok {
+		return n
+	}
+	return code
+}

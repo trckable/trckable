@@ -445,7 +445,12 @@ function People({ me }: { me?: string }) {
         <Menu label={`${p.email} options`}>
           {(close) =>
             self ? (
-              <span className="menu-note">You cannot change your own role: another owner can. Your password and two-step are under Account.</span>
+              <>
+                <button type="button" role="menuitem" onClick={() => (close(), openAccount('profile'))}>
+                  Your account settings
+                </button>
+                <span className="menu-note">Your own role is changed by another owner.</span>
+              </>
             ) : (
               <>
                 <button

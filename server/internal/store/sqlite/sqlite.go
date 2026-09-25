@@ -391,6 +391,20 @@ var migrations = []string{
 		via        TEXT NOT NULL DEFAULT '',
 		error      TEXT NOT NULL DEFAULT ''
 	);`,
+	// 28: public widgets a site shows on its own pages: a small card with a
+	// few numbers the owner chose to make public, under a random id.
+	`CREATE TABLE widgets (
+		id         TEXT PRIMARY KEY,
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		kind       TEXT NOT NULL,
+		theme      TEXT NOT NULL DEFAULT 'auto',
+		accent     TEXT NOT NULL DEFAULT '',
+		radius     INTEGER NOT NULL DEFAULT 16,
+		brand      INTEGER NOT NULL DEFAULT 1,
+		on_        INTEGER NOT NULL DEFAULT 1,
+		created_at INTEGER NOT NULL
+	);
+	CREATE INDEX widgets_site ON widgets(site_id);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {
