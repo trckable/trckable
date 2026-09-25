@@ -26,7 +26,9 @@ export function Toasts() {
     const on = (e: Event) => {
       const d = (e as CustomEvent).detail as Item & { replace?: boolean }
       setItems((list) => {
-        const rest = d.replace ? list.filter((t) => t.id !== d.id) : list
+        // The same message twice (a button pressed again) is one toast, shown
+        // afresh — never a stack of copies.
+        const rest = (d.replace ? list.filter((t) => t.id !== d.id) : list).filter((t) => !(t.text === d.text && t.kind === d.kind))
         return d.text ? [...rest, { id: d.replace ? ++seq : d.id, text: d.text, kind: d.kind }].slice(-3) : rest
       })
     }

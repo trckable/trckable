@@ -162,7 +162,7 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 
 	// Revenue over time (by payment date).
 	rows, err := conn.QueryContext(ctx, sqlText+`
-		SELECT strftime(date_trunc('`+safeBucket(p.Bucket)+`', lpaid), '%Y-%m-%dT%H:%M'), sum(amount - refunded) FROM ar GROUP BY 1`, args...)
+		SELECT strftime(`+bucketOf(p, "lpaid")+`, '%Y-%m-%dT%H:%M'), sum(amount - refunded) FROM ar GROUP BY 1`, args...)
 	if err != nil {
 		return fmt.Errorf("revenue series: %w", err)
 	}

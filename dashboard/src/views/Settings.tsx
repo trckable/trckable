@@ -202,7 +202,7 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
       {tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
       {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}
       {tab === 'search' && <SearchSettings key={'sc' + site.id} site={site} />}
-      {tab === 'privacy' && <PrivacySettings key={'pv' + site.id} site={site} />}
+      {tab === 'privacy' && <PrivacySettings key={'pv' + site.id} site={site} onSites={onSites} />}
       {tab === 'alerts' && <AlertsSettings key={'al' + site.id} site={site} />}
       {tab === 'health' && <HealthSettings />}
     </>
@@ -219,30 +219,48 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
 function InstallSection({ site }: { site: Site }) {
   const [last, setLast] = useState<{ ts: number; path?: string } | null | undefined>(undefined)
   const [page, setPage] = useState<InstallCheck | null>(null)
-  const [checking, setChecking] = useState(false)
+  // Which checks are still running. Each one resolves on its own, in order,
+  // and never faster than the eye can follow: a check that answers in 20 ms
+  // looked as if the button did nothing.
+  const [pend, setPend] = useState({ page: true, visits: false })
+  const [at, setAt] = useState<Date | null>(null)
   const [code, setCode] = useState(false)
-  const check = () => {
-    setChecking(true)
-    setPage(null)
-    Promise.all([
-      api
-        .events(site.id, 1)
-        .then((r) => setLast(r.events[0] ? { ts: Number(r.events[0].ts) || Date.parse(r.events[0].ts), path: r.events[0].path } : null))
-        .catch(() => setLast(null)),
-      api
-        .checkInstall(site.id)
-        .then(setPage)
-        .catch((e: Error) => setPage({ url: `https://${site.domain}/`, error: e.message })),
-    ]).finally(() => setChecking(false))
+  const checking = pend.page || pend.visits
+  const latest = () =>
+    api
+      .events(site.id, 1)
+      .then((r) => (r.events[0] ? { ts: Number(r.events[0].ts) || Date.parse(r.events[0].ts), path: r.events[0].path } : null))
+      .catch(() => null)
+  const check = async (visits: boolean) => {
+    const t0 = Date.now()
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, Math.max(0, ms - (Date.now() - t0))))
+    setPend({ page: true, visits })
+    const pageP = api.checkInstall(site.id).catch((e: Error): InstallCheck => ({ url: `https://${site.domain}/`, error: e.message }))
+    const lastP = visits ? latest() : null
+    const [pg] = await Promise.all([pageP, wait(750)])
+    setPage(pg)
+    setPend((p) => ({ ...p, page: false }))
+    if (lastP) {
+      const [l] = await Promise.all([lastP, wait(1400)])
+      if (l) setLast(l)
+    }
+    setPend({ page: false, visits: false })
+    setAt(new Date())
   }
-  useEffect(check, [site.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    // The latest visit decides what this tab is: the install steps, or the check.
+    latest().then((l) => {
+      setLast(l)
+      if (l) check(false)
+    })
+  }, [site.id]) // eslint-disable-line react-hooks/exhaustive-deps
   if (last === undefined) return <div className="skeleton" style={{ height: 88 }} />
   if (last === null) return <Install site={site} visits={[]} inSettings />
 
   const DAY = 86_400_000
   const fresh = Date.now() - last.ts < 2 * DAY
   const where = page?.url.replace(/^https?:\/\//, '').replace(/\/$/, '') || site.domain
-  const snippet: Step = !page
+  const snippet: Step = !page || pend.page
     ? { tone: 'wait', title: 'Snippet on your homepage', text: `Reading ${site.domain}…` }
     : page.error
       ? { tone: 'warn', title: 'Snippet on your homepage', text: `Could not read it — ${page.error}.` }
@@ -255,7 +273,9 @@ function InstallSection({ site }: { site: Site }) {
               title: 'Not in the homepage',
               text: `No trckable script in ${where}'s HTML. That is fine when a tag manager or the npm package loads it — the visits below say whether it works.`,
             }
-  const visits: Step = fresh
+  const visits: Step = pend.visits
+    ? { tone: 'wait', title: 'Visits arriving', text: 'Asking for the latest visit…' }
+    : fresh
     ? { tone: 'ok', title: 'Visits arriving', text: `Last one ${agoText(last.ts)}${last.path ? ` on ${last.path}` : ''}.` }
     : { tone: 'warn', title: 'No recent visits', text: `The last one was ${agoText(last.ts)}${last.path ? ` on ${last.path}` : ''}. Is the snippet still on every page?` }
   const allOk = !checking && snippet.tone === 'ok' && visits.tone === 'ok'
@@ -270,8 +290,13 @@ function InstallSection({ site }: { site: Site }) {
           <div>
             <h3>{checking ? `Checking ${site.domain}…` : allOk ? `Installed on ${site.domain}` : visits.tone === 'ok' ? `Receiving visits from ${site.domain}` : `Check the install on ${site.domain}`}</h3>
             <p className="muted">This server reads your homepage like a browser would and looks for the snippet, then asks for the latest visit it recorded. Nothing is sent to your site.</p>
+            {at && !checking && (
+              <span className="install-at faint" key={at.getTime()}>
+                Checked at {at.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+            )}
           </div>
-          <button type="button" className="btn" onClick={check} disabled={checking}>
+          <button type="button" className="btn" onClick={() => check(true)} disabled={checking}>
             {checking ? <span className="btn-spin" aria-hidden="true" /> : <RefreshCw size={15} strokeWidth={1.75} aria-hidden="true" />}
             {checking ? 'Checking…' : 'Check again'}
           </button>
@@ -279,7 +304,7 @@ function InstallSection({ site }: { site: Site }) {
         <ul className="install-steps">
           {[snippet, visits].map((s) => (
             <li key={s.title} className={'install-step ' + s.tone}>
-              <span className="install-step-mark" aria-hidden="true">
+              <span className="install-step-mark" aria-hidden="true" key={s.tone}>
                 {s.tone === 'ok' ? <Check size={14} strokeWidth={2.25} /> : s.tone === 'wait' ? <span className="btn-spin" /> : s.tone === 'info' ? <InfoIcon size={14} strokeWidth={2} /> : <TriangleAlert size={14} strokeWidth={2} />}
               </span>
               <span>
@@ -360,7 +385,7 @@ export function Settings(p: { sites: Site[]; site: Site | null; onSites: () => v
           {site && tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
           {site && tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={p.onSites} />}
           {site && tab === 'search' && <SearchSettings key={'sc' + site.id} site={site} />}
-          {site && tab === 'privacy' && <PrivacySettings key={'pv' + site.id} site={site} />}
+          {site && tab === 'privacy' && <PrivacySettings key={'pv' + site.id} site={site} onSites={p.onSites} />}
           {site && tab === 'alerts' && <AlertsSettings key={'al' + site.id} site={site} />}
           {tab === 'health' && <HealthSettings />}
         </div>
@@ -466,12 +491,16 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
   const file = useRef<HTMLInputElement>(null)
   const [cropping, setCropping] = useState<File | null>(null)
   const [busy, setBusy] = useState<'favicon' | 'remove' | null>(null)
+  const [err, setErr] = useState<string | null>(null)
   const act = (what: 'favicon' | 'remove', run: () => Promise<unknown>, said: string) => {
     setBusy(what)
+    setErr(null)
+    // At least a moment of "Looking…": a quick no used to look like nothing.
+    const t0 = Date.now()
+    const settled = (fn: () => void) => setTimeout(fn, Math.max(0, 600 - (Date.now() - t0)))
     run()
-      .then(() => (toast(said), onSaved()))
-      .catch((e: Error) => toast(e.message, 'error'))
-      .finally(() => setBusy(null))
+      .then(() => settled(() => (toast(said), onSaved(), setBusy(null))))
+      .catch((e: Error) => settled(() => (setErr(e.message), setBusy(null))))
   }
   return (
     <section className="card" style={{ gap: 0 }}>
@@ -494,7 +523,7 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
         />
         <button type="button" className="btn" disabled={!!busy} onClick={() => act('favicon', () => api.fetchSiteFavicon(site.id), 'Using the site\'s favicon')}>
           {busy === 'favicon' && <span className="btn-spin" aria-hidden="true" />}
-          {busy === 'favicon' ? 'Fetching…' : 'Use its favicon'}
+          {busy === 'favicon' ? `Looking at ${site.domain}…` : 'Use its favicon'}
         </button>
         <button type="button" className="btn" onClick={() => file.current?.click()}>
           Upload
@@ -505,6 +534,12 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
           </button>
         )}
       </Row>
+      {err && (
+        <p className="look-err" role="alert">
+          <TriangleAlert size={15} strokeWidth={1.75} aria-hidden="true" />
+          {err}
+        </p>
+      )}
       <Row label="Colour" hint="The site's letter and marks, when it has no icon">
         <div className="swatches" role="radiogroup" aria-label="Colour">
           {SWATCHES.map((c) => (

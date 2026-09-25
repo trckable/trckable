@@ -27,7 +27,7 @@ const KEEP = [
   { id: '1095', label: '3 years' },
 ]
 
-export function PrivacySettings({ site }: { site: Site }) {
+export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () => void }) {
   const [c, setC] = useState<SiteConfig | null>(null)
   const [mods, setMods] = useState<Record<string, boolean> | null>(null)
   const [paths, setPaths] = useState('')
@@ -61,6 +61,8 @@ export function PrivacySettings({ site }: { site: Site }) {
       .then((r) => {
         setC(r)
         toast(said ?? 'Saved')
+        // The week's first day is read by the dashboard from the site list.
+        if ('week_start' in patch) onSites?.()
       })
       .catch((e: Error) => toast(e.message, 'error'))
   }
@@ -110,7 +112,7 @@ export function PrivacySettings({ site }: { site: Site }) {
           <ul className="bullets gone">
             <li>New versus returning is only right within a day</li>
             <li>Revenue is attributed to visits from the same day</li>
-            <li>Sessions end at midnight in your timezone</li>
+            <li>Visitors are counted afresh at midnight UTC{utcMidnight(site.timezone)}</li>
           </ul>
         </div>
         {free && <span className="faint" style={{ fontSize: 12 }}>Visitors get the smaller, storage-free script within the hour.</span>}
@@ -167,12 +169,12 @@ export function PrivacySettings({ site }: { site: Site }) {
             items={KEEP}
           />
         </Row>
-        <Row label="Week starts on" hint="Used by weekly reports">
+        <Row label="Week starts on" hint="“This week”, weekly charts, the calendar and the weekly report all start on this day">
           <div className="seg" role="group" aria-label="Week starts on">
-            <button type="button" aria-pressed={c.week_start === 1} onClick={() => save({ week_start: 1 })}>
+            <button type="button" aria-pressed={c.week_start === 1} onClick={() => save({ week_start: 1 }, 'Weeks start on Monday')}>
               Monday
             </button>
-            <button type="button" aria-pressed={c.week_start === 0} onClick={() => save({ week_start: 0 })}>
+            <button type="button" aria-pressed={c.week_start === 0} onClick={() => save({ week_start: 0 }, 'Weeks start on Sunday')}>
               Sunday
             </button>
           </div>
@@ -649,4 +651,16 @@ function DataRequest({ site }: { site: Site }) {
       {dialog}
     </section>
   )
+}
+
+/** When midnight UTC is on the site's own clock, for the cookieless note:
+ *  " — 02:00 in Europe/Berlin", or nothing when the site runs on UTC. */
+function utcMidnight(tz: string): string {
+  try {
+    const d = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()))
+    const t = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d)
+    return t === '00:00' ? '' : ` — ${t} in ${tz.split('/').pop()?.replace(/_/g, ' ')}`
+  } catch {
+    return ''
+  }
 }

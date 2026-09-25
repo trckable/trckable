@@ -22,7 +22,14 @@ export function addMonths(d: ISODate, n: number): ISODate {
 
 export const startOfMonth = (d: ISODate) => d.slice(0, 8) + '01'
 export const endOfMonth = (d: ISODate) => addDays(addMonths(startOfMonth(d), 1), -1)
-export const weekday = (d: ISODate) => (toDate(d).getUTCDay() + 6) % 7 // Monday = 0
+// The site's "Week starts on": 1 Monday (ISO), 0 Sunday. The dashboard sets it
+// from the site being looked at; "This week", "Last week" and the calendar follow.
+let firstDay = 1
+export const setWeekStart = (d?: number) => {
+  firstDay = d === 0 ? 0 : 1
+}
+export const weekStartsOn = () => firstDay
+export const weekday = (d: ISODate) => (toDate(d).getUTCDay() + 7 - firstDay) % 7 // first day = 0
 export const startOfWeek = (d: ISODate) => addDays(d, -weekday(d))
 
 /** Today's date in a timezone. */
@@ -172,7 +179,7 @@ const dayShort = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 export function fmtDay(d: ISODate, opts: { year?: boolean; weekday?: boolean } = {}) {
   const t = toDate(d)
   let s = `${monthShort[t.getUTCMonth()]} ${t.getUTCDate()}`
-  if (opts.weekday) s = `${dayShort[weekday(d)]}, ${s}`
+  if (opts.weekday) s = `${dayShort[(toDate(d).getUTCDay() + 6) % 7]}, ${s}`
   if (opts.year) s += `, ${t.getUTCFullYear()}`
   return s
 }

@@ -250,6 +250,9 @@ type SiteInfo struct {
 	// Color and IconURL are the site's own look in the dashboard, if set.
 	Color   string `json:"color,omitempty"`
 	IconURL string `json:"icon_url,omitempty"`
+	// WeekStart is the site's first day of the week (1 Monday, 0 Sunday), so
+	// the dashboard's "This week" starts where the weekly report does.
+	WeekStart int `json:"week_start"`
 }
 
 // SiteInfo returns one site.

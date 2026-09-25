@@ -16,6 +16,7 @@ import {
   monthLong,
   parseLoose,
   startOfMonth,
+  weekStartsOn,
   type CompareMode,
   type ISODate,
   type Range,
@@ -360,7 +361,7 @@ export function Month(p: {
       <table role="grid" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
         <thead>
           <tr>
-            {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((d) => (
+            {(weekStartsOn() === 0 ? ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] : ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']).map((d) => (
               <th key={d} className="faint" style={{ fontSize: 10.5, fontWeight: 500, padding: '2px 0 4px' }}>
                 {d}
               </th>

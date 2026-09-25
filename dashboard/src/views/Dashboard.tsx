@@ -6,7 +6,7 @@ import { BarList, type BarItem } from '../charts/BarList'
 import { TimeChart, type Pulse } from '../charts/TimeChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
 import { api, cachedReport, dropReports, exportURL, type Annotation, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
-import { calendarPrevious, diffDays, fmtDay, presetById, todayIn, type Range } from '../lib/dates'
+import { calendarPrevious, diffDays, fmtDay, presetById, setWeekStart, todayIn, type Range } from '../lib/dates'
 import { countryName, delta, flag, fmtDuration, fmtInt, fmtMoney, fmtPct, type Delta } from '../lib/format'
 import { useTween } from '../lib/motion'
 import { channelColor, channelLabel } from '../lib/palette'
@@ -61,6 +61,8 @@ const DIM_LABEL: Record<string, string> = {
 }
 
 export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; header: React.ReactNode }) {
+  // Before anything reads a date: "This week" starts on the site's own day.
+  setWeekStart(site.week_start)
   useKeymap()
   const { params } = useLocation()
   const view = readView(params)

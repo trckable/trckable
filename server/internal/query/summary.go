@@ -45,7 +45,7 @@ func (q Q) SiteSummary(ctx context.Context, p Params) (*Summary, error) {
 		return nil, fmt.Errorf("summary: %w", err)
 	}
 	rows, err := conn.QueryContext(ctx, cte+`
-		SELECT date_trunc('`+safeBucket(p.Bucket)+`', lstart) AS b, count(DISTINCT visitor_id), sum(pvs) FROM s GROUP BY b`, args...)
+		SELECT `+bucketOf(p, "lstart")+` AS b, count(DISTINCT visitor_id), sum(pvs) FROM s GROUP BY b`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("summary series: %w", err)
 	}

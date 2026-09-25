@@ -327,7 +327,34 @@
 
 /* Install, once installed: the state first, the code a click away. */
 .card.install-check {
+  position: relative;
   gap: 14px;
+  overflow: hidden;
+}
+/* While it checks, a light runs along the top of the card. */
+.card.install-check[aria-busy='true']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: install-scan 1.1s var(--ease) infinite;
+}
+@keyframes install-scan {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+.install-at {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  animation: fadein 0.3s var(--ease) backwards;
 }
 .install-check-head {
   display: grid;
@@ -391,6 +418,30 @@
 .install-step.warn {
   border-color: color-mix(in srgb, var(--warn) 30%, var(--grid));
 }
+.install-step {
+  transition: border-color 0.25s, background 0.25s;
+}
+.install-step.wait {
+  border-style: dashed;
+}
+.install-step.wait > span:last-child {
+  opacity: 0.7;
+}
+.install-step-mark {
+  animation: step-in 0.35s var(--ease) backwards;
+}
+@keyframes step-in {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card.install-check[aria-busy='true']::before,
+  .install-step-mark {
+    animation: none;
+  }
+}
 .install-step-mark .btn-spin {
   width: 12px;
   height: 12px;
@@ -439,4 +490,24 @@
   inset: -4px;
   opacity: 0;
   cursor: pointer;
+}
+
+/* Why the favicon could not be used, under its row rather than in a toast. */
+.look-err {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--grid));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--warn) 8%, transparent);
+  color: var(--text-2);
+  font-size: 12.5px;
+  animation: fadein 0.2s var(--ease) backwards;
+}
+.look-err svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--warn);
 }

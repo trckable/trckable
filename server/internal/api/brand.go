@@ -92,14 +92,19 @@ func (a *API) fetchFavicon(w http.ResponseWriter, r *http.Request) {
 	home := "https://" + si.Domain + "/"
 	// The icons the homepage names come first (most sites point at a PNG
 	// there), then the two places browsers look by themselves.
-	tries := append(declaredIcons(r.Context(), client, home), home+"apple-touch-icon.png", home+"favicon.ico")
+	named, reached := declaredIcons(r.Context(), client, home)
+	if !reached {
+		fail(w, http.StatusNotFound, si.Domain+" could not be reached over https, so its favicon cannot be fetched. Upload a picture instead.")
+		return
+	}
+	tries := append(named, home+"apple-touch-icon.png", home+"favicon.ico")
 	for _, u := range tries {
 		if data, ok := getIcon(r.Context(), client, u); ok {
 			a.storeIcon(w, r, data)
 			return
 		}
 	}
-	fail(w, http.StatusNotFound, "no icon found at "+si.Domain+"/favicon.ico or /apple-touch-icon.png — upload one instead")
+	fail(w, http.StatusNotFound, si.Domain+" has no icon trckable can use: none of the ones its homepage names, /apple-touch-icon.png or /favicon.ico is a PNG, JPEG, WebP, GIF or ICO (SVG icons are not kept). Upload a picture instead.")
 }
 
 var iconLink = regexp.MustCompile(`(?is)<link\b[^>]*>`)
@@ -107,20 +112,21 @@ var linkAttr = regexp.MustCompile(`(?is)\b(rel|href)\s*=\s*["']([^"']*)["']`)
 
 // declaredIcons reads the homepage's <link rel="icon" …> tags and returns the
 // icons it names, as absolute URLs: an embedded one (data:) and SVG are left
-// out, since SVG can carry script and is not kept.
-func declaredIcons(ctx context.Context, client *http.Client, home string) []string {
+// out, since SVG can carry script and is not kept. reached is false when the
+// site did not answer at all.
+func declaredIcons(ctx context.Context, client *http.Client, home string) (icons []string, reached bool) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, home, nil)
 	if err != nil {
-		return nil
+		return nil, false
 	}
 	req.Header.Set("User-Agent", "trckable (site icon)")
 	res, err := client.Do(req)
 	if err != nil {
-		return nil
+		return nil, false
 	}
 	defer res.Body.Close()
 	page, _ := io.ReadAll(io.LimitReader(res.Body, 256<<10))
-	return iconLinks(page, home)
+	return iconLinks(page, home), true
 }
 
 // iconLinks finds up to three icons a page names, as absolute https URLs.

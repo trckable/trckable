@@ -45,10 +45,13 @@ type Params struct {
 	TZ       string    // IANA zone for buckets
 	Filters  []Filter
 	Bucket   string // "hour" | "day" | "week" | "month"
-	Limit    int    // rows per breakdown (default 10)
-	Daily    bool   // include per-day breakdowns (scrubber / replay)
-	Currency string // site currency for revenue (ISO 4217)
-	Test     bool   // count test/sandbox payments instead of live ones
+	// SundayWeeks starts weekly buckets on Sunday, as the site's "Week starts
+	// on" setting says; otherwise weeks start on Monday (ISO).
+	SundayWeeks bool
+	Limit       int    // rows per breakdown (default 10)
+	Daily       bool   // include per-day breakdowns (scrubber / replay)
+	Currency    string // site currency for revenue (ISO 4217)
+	Test        bool   // count test/sandbox payments instead of live ones
 	// Revenue includes attributed revenue in the report. It follows the site's
 	// revenue module: with the module off no payment is read or attributed, so
 	// the report costs nothing extra and shows no money anywhere.
@@ -231,7 +234,7 @@ func (q Q) Report(ctx context.Context, p Params) (*Result, error) {
 
 	// Chart series.
 	rows, err := conn.QueryContext(ctx, cte+`
-		SELECT date_trunc('`+safeBucket(p.Bucket)+`', lstart) AS b, `+distinct+`, sum(pvs)
+		SELECT `+bucketOf(p, "lstart")+` AS b, `+distinct+`, sum(pvs)
 		FROM s GROUP BY b ORDER BY b`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("series: %w", err)
@@ -335,6 +338,16 @@ func safeTZ(tz string) (string, error) {
 }
 
 // safeBucket validates a bucket name before it goes into SQL.
+// bucketOf truncates a local timestamp column to the report's bucket. A week
+// that starts on Sunday is the ISO week of the day after, moved back a day.
+func bucketOf(p Params, col string) string {
+	b := safeBucket(p.Bucket)
+	if b == "week" && p.SundayWeeks {
+		return "(date_trunc('week', " + col + " + INTERVAL 1 DAY) - INTERVAL 1 DAY)"
+	}
+	return "date_trunc('" + b + "', " + col + ")"
+}
+
 func safeBucket(b string) string {
 	switch b {
 	case "hour", "day", "week", "month":
@@ -624,8 +637,12 @@ func fillSeries(got map[string]Point, p Params) []Point {
 	switch p.Bucket {
 	case "day":
 		cur = cur.Truncate(24 * time.Hour)
-	case "week": // ISO weeks start on Monday, like date_trunc('week')
-		cur = cur.Truncate(24*time.Hour).AddDate(0, 0, -((int(cur.Weekday()) + 6) % 7))
+	case "week": // Monday, like date_trunc('week'), or Sunday when the site says so
+		back := (int(cur.Weekday()) + 6) % 7
+		if p.SundayWeeks {
+			back = int(cur.Weekday())
+		}
+		cur = cur.Truncate(24*time.Hour).AddDate(0, 0, -back)
 	case "month":
 		cur = time.Date(cur.Year(), cur.Month(), 1, 0, 0, 0, 0, time.UTC)
 	}

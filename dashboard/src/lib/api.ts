@@ -90,6 +90,8 @@ export interface Site {
   /** The site's own look, when the owner set one: #rrggbb, and its icon. */
   color?: string
   icon_url?: string
+  /** The site's first day of the week: 1 Monday, 0 Sunday. */
+  week_start?: number
 }
 
 /** live = seen in the last day · quiet = seen, but not lately · new = never. */
