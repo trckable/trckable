@@ -104,6 +104,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("GET /_trckable/signin", a.useSigninLink)
 	handleFunc("POST /_trckable/accounts", a.createAccount)
 	handleFunc("GET /_trckable/accounts", a.listAccounts)
+	handleFunc("GET /_trckable/health", a.operatorHealth)
 	handleFunc("GET /_trckable/accounts/{id}", a.getAccount)
 	handleFunc("PUT /_trckable/accounts/{id}/limits", a.setAccountLimits)
 	handleFunc("PUT /_trckable/accounts/{id}/state", a.setAccountState)

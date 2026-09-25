@@ -73,6 +73,20 @@ func (a *API) health(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusNotFound, "not found")
 		return
 	}
+	a.writeHealth(w, r)
+}
+
+// operatorHealth is the same answer for a hosting provider, with the operator
+// token instead of a signed-in person: trckable Cloud's own monitoring reads
+// it, since no customer there sees Settings → Health.
+func (a *API) operatorHealth(w http.ResponseWriter, r *http.Request) {
+	if !a.operator(w, r) {
+		return
+	}
+	a.writeHealth(w, r)
+}
+
+func (a *API) writeHealth(w http.ResponseWriter, r *http.Request) {
 	if a.HealthOf == nil {
 		fail(w, http.StatusServiceUnavailable, "health is not available")
 		return

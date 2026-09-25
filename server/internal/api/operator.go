@@ -22,6 +22,7 @@ import (
 //	PUT    /_trckable/accounts/{id}/limits   {"max_members"}    owners the plan allows (0: no limit)
 //	PUT    /_trckable/accounts/{id}/state    {"state"}          active, read_only or suspended
 //	DELETE /_trckable/accounts/{id}                             the account and everything in it
+//	GET    /_trckable/health                                    the server's health, as Settings → Health shows it
 
 // operator answers the request itself unless it carries the operator token.
 func (a *API) operator(w http.ResponseWriter, r *http.Request) bool {

@@ -145,3 +145,20 @@ func TestManagedInstance(t *testing.T) {
 		t.Fatal("a password given to a managed invite works")
 	}
 }
+
+func TestOperatorHealth(t *testing.T) {
+	g := newRig(t)
+	g.api.HealthOf = func(context.Context) Health { return Health{Version: "test", Analytics: "ready"} }
+	url := g.srv.URL + "/_trckable/health"
+	if code, _ := do(t, client(), "GET", url, ""); code != http.StatusNotFound {
+		t.Fatalf("without an operator token it must not exist: %d", code)
+	}
+	g.api.Operator = "tkb_op_test_0123456789"
+	if code, _ := do(t, client(), "GET", url, "", "Authorization", "Bearer nope"); code != http.StatusUnauthorized {
+		t.Fatalf("wrong token: %d", code)
+	}
+	code, out := do(t, client(), "GET", url, "", "Authorization", "Bearer tkb_op_test_0123456789")
+	if code != http.StatusOK || out["version"] != "test" || out["memory_bytes"].(float64) <= 0 {
+		t.Fatalf("health: %d %v", code, out)
+	}
+}
