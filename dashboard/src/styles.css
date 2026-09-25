@@ -4656,3 +4656,32 @@ body[data-mode] .overview .kpi .value,
   line-height: 1.45;
   white-space: normal;
 }
+
+/* ---- Scrollbars -------------------------------------------------------------
+   One slim, branded bar everywhere something scrolls: a quiet thumb on no
+   track, brighter under the pointer, the same in both themes. */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--text) 22%, transparent) transparent;
+  }
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 22%, transparent) padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  border-width: 2px;
+  background: color-mix(in srgb, var(--accent) 70%, var(--text)) padding-box;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}

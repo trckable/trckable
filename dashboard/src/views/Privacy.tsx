@@ -615,7 +615,7 @@ function DataRequest({ site }: { site: Site }) {
     const ok = await ask({
       title: `Erase everything for ${found.found.visitor}?`,
       body:
-        `${found.found.events} events and ${found.found.sessions} visits are deleted and cannot be brought back. ` +
+        `${found.found.events} events and ${found.found.sessions} visits are deleted and cannot be brought back from the dashboard. Backups made before today still hold them until they age out (seven days here, longer off-site): after restoring one, erase again. ` +
         (found.payments.length ? 'Their payments stay as business records, with nothing on them pointing at a person any more; the payment provider\'s notices about them are deleted.' : ''),
       confirmLabel: 'Erase',
       danger: true,
