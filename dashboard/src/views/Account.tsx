@@ -1,7 +1,7 @@
 // The account dialog: everything that belongs to the person, not to the site
 // they happen to be looking at. It opens over whatever is on screen, so the
 // Settings page can stay about one site.
-import { BellRing, Camera, Check, CircleUser, Copy, CreditCard, Eye, EyeOff, Globe, ImageUp, KeyRound, LockKeyhole, LogOut, Pencil, ShieldCheck, SunMoon, Trash2, UserCheck, UserPlus, Users, X } from 'lucide-react'
+import { BellRing, Camera, Check, CircleUser, Copy, CreditCard, Eye, EyeOff, Globe, ImageUp, KeyRound, LockKeyhole, LogOut, ShieldCheck, SunMoon, Trash2, UserCheck, UserPlus, Users, X } from 'lucide-react'
 import { Modal } from '../components/Modal'
 import { StepBody } from '../components/StepBody'
 import { Steps } from '../components/Steps'
@@ -18,6 +18,7 @@ import { Menu } from '../components/Menu'
 import { THEMES, useTheme } from '../lib/theme'
 import { isViewer } from '../lib/me'
 import { SitesSettings } from './Sites'
+import { InlineEdit } from '../components/InlineEdit'
 import type { Site } from '../lib/api'
 import { managed } from '../lib/managed'
 import './Account.css'
@@ -183,11 +184,8 @@ function ProfileTab({ email, p, v, onProfile, onPicture }: { email?: string; p: 
 
 /** Who you are here: your picture, your name, your role. */
 function Me({ email, p, v, onProfile, onPicture }: { email?: string; p: Profile | null; v: number; onProfile: (p: Profile) => void; onPicture: () => void }) {
-  const [name, setName] = useState(p?.name ?? '')
-  const [saved, setSaved] = useState(false)
   const file = useRef<HTMLInputElement>(null)
   const [cropping, setCropping] = useState<File | null>(null)
-  useEffect(() => setName(p?.name ?? ''), [p?.name])
 
   // The crop dialog saves: it stays open with its button busy until the server
   // has the picture, shows the error if it refuses, and says Saved before it
@@ -212,19 +210,6 @@ function Me({ email, p, v, onProfile, onPicture }: { email?: string; p: Profile 
     if (ok && p) onProfile({ ...p, has_avatar: false })
     if (ok) window.dispatchEvent(new CustomEvent('trckable:profile'))
   }
-  const saveName = () => {
-    if (!p || name.trim() === p.name) return
-    api
-      .setName(name.trim())
-      .then((r) => {
-        onProfile(r)
-        setSaved(true)
-        setTimeout(() => setSaved(false), 1600)
-        window.dispatchEvent(new CustomEvent('trckable:profile'))
-      })
-      .catch((e: Error) => toast(e.message, 'error'))
-  }
-
   return (
     <section className="me-card">
       {cropping && (
@@ -250,19 +235,18 @@ function Me({ email, p, v, onProfile, onPicture }: { email?: string; p: Profile 
         </span>
       </button>
       <div className="me-text">
-        <label className="me-name">
-          <input
-            value={name}
-            placeholder={email?.split('@')[0] ?? 'Your name'}
-            aria-label="Your name"
-            title="Shown instead of your email address"
-            maxLength={80}
-            onChange={(e) => setName(e.target.value)}
-            onBlur={saveName}
-            onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-          />
-          {saved ? <Check size={15} strokeWidth={2} className="me-saved" aria-label="Saved" /> : <Pencil size={14} strokeWidth={1.75} aria-hidden="true" />}
-        </label>
+        <InlineEdit
+          size="lg"
+          label="Your name"
+          value={p?.name ?? ''}
+          placeholder={email?.split('@')[0] ?? 'Your name'}
+          onSave={(n) =>
+            api.setName(n).then((r) => {
+              onProfile(r)
+              window.dispatchEvent(new CustomEvent('trckable:profile'))
+            })
+          }
+        />
         <span className="me-email">{email}</span>
         <span className="me-meta">
           <span className={'tag' + (isViewer() ? ' quiet' : ' on')}>{isViewer() ? 'Viewer' : 'Owner'}</span>

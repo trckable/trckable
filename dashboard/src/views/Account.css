@@ -490,39 +490,6 @@
   gap: 3px;
   min-width: 0;
 }
-.me-name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-3);
-}
-.me-name input {
-  /* As wide as the name, so the pencil sits right after it. */
-  field-sizing: content;
-  min-width: 6ch;
-  max-width: 100%;
-  margin-left: -8px;
-  padding: 4px 8px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: none;
-  color: var(--text);
-  font: inherit;
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  outline: none;
-}
-.me-name input:hover {
-  border-color: var(--border);
-}
-.me-name input:focus {
-  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
-  background: var(--sunken);
-}
-.me-saved {
-  color: var(--accent);
-}
 .me-email {
   color: var(--text-2);
   font-size: 13.5px;

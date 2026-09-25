@@ -131,18 +131,28 @@
     opacity: 1;
   }
 }
-.sv-edit input {
+/* Renaming a view: the shared inline field, filling the row. */
+.sv-edit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 10px;
+  font-size: 13.5px;
+}
+.sv-edit .ie,
+.sv-edit .ie-field {
   flex: 1;
-  min-width: 0;
-  height: 30px;
-  padding: 0 8px;
-  border: 1px solid var(--accent);
-  border-radius: 7px;
-  background: var(--bg);
-  color: var(--text);
-  font: inherit;
-  font-size: 13px;
-  outline: none;
+  width: 100%;
+  justify-self: stretch;
+  justify-items: stretch;
+}
+.sv-edit .ie-field {
+  margin-left: 0;
+}
+.sv-edit .ie-field input {
+  flex: 1;
+  field-sizing: fixed;
+  max-width: none;
 }
 .sv-foot {
   padding: 6px 0 0;

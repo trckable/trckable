@@ -4,6 +4,7 @@ import { Bookmark, Check, ListFilter, Pencil, Search, Trash2 } from 'lucide-reac
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { confirm } from './Confirm'
+import { InlineEdit } from './InlineEdit'
 import { usePhoneLock } from './lockScroll'
 
 import type { View } from './SavedViews'
@@ -37,7 +38,6 @@ export default function SavedViewsPop<V extends View>({
   const open = true
   const [q, setQ] = useState('')
   const [editing, setEditing] = useState<string | null>(null)
-  const [draft, setDraft] = useState('')
   const [at, setAt] = useState({ top: 0, right: 0 })
   const pop = useRef<HTMLDivElement>(null)
   usePhoneLock(open)
@@ -75,11 +75,6 @@ export default function SavedViewsPop<V extends View>({
   const close = onClose
 
   const shown = views.filter((v) => v.name.toLowerCase().includes(q.trim().toLowerCase()))
-  const rename = (v: V) => {
-    const name = draft.trim()
-    if (!name || name === v.name) return setEditing(null)
-    onRename(v, name).then(() => setEditing(null))
-  }
 
   return (
     <>
@@ -104,19 +99,12 @@ export default function SavedViewsPop<V extends View>({
               {shown.map((v) => (
                 <li key={v.id} className={v.query === current ? 'on' : undefined}>
                   {editing === v.id ? (
-                    <form className="sv-edit" onSubmit={(e) => (e.preventDefault(), rename(v))}>
-                      <input
-                        autoFocus
-                        maxLength={60}
-                        value={draft}
-                        aria-label={`New name for ${v.name}`}
-                        onChange={(e) => setDraft(e.target.value)}
-                        onFocus={(e) => e.currentTarget.select()}
-                      />
-                      <button type="submit" className="btn primary small">
-                        Save
-                      </button>
-                    </form>
+                    <div className="sv-edit">
+                      <span className="sv-icon" aria-hidden="true">
+                        <Pencil size={15} strokeWidth={1.75} />
+                      </span>
+                      <InlineEdit editing required maxLength={60} label={`Name of ${v.name}`} value={v.name} onSave={(n) => onRename(v, n)} onDone={() => setEditing(null)} />
+                    </div>
                   ) : (
                     <>
                       <button type="button" className="sv-name" onClick={() => (onOpen(v), close())} aria-current={v.query === current}>
@@ -132,7 +120,7 @@ export default function SavedViewsPop<V extends View>({
                           <span className="sv-sub">{describe(v.query) || 'Every visit'}</span>
                         </span>
                       </button>
-                      <button type="button" className="sv-act" aria-label={`Rename ${v.name}`} title="Rename" onClick={() => (setDraft(v.name), setEditing(v.id))}>
+                      <button type="button" className="sv-act" aria-label={`Rename ${v.name}`} title="Rename" onClick={() => setEditing(v.id)}>
                         <Pencil size={15} strokeWidth={1.75} aria-hidden="true" />
                       </button>
                       <button type="button" className="sv-act" aria-label={`Delete ${v.name}`} title="Delete" onClick={async () => {

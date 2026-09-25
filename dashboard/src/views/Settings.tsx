@@ -9,6 +9,7 @@ import { Info } from '../components/Info'
 import { toast } from '../components/Toast'
 import { closeSettings, setSettingsTab, type SettingsTab } from '../lib/settings'
 import { Picker } from '../components/Picker'
+import { InlineEdit } from '../components/InlineEdit'
 import { Row } from '../components/Row'
 import { Copyable } from '../components/Copyable'
 import { Install } from './InstallPanel'
@@ -502,13 +503,17 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
       </div>
 
       <Row label="Display name" hint="What you call this site in trckable">
-        <input
-          className="input"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={() => name !== site.name && save({ name })}
-          onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+        <InlineEdit
+          label="Display name"
+          value={site.name === site.domain ? '' : site.name}
           placeholder={site.domain}
+          onSave={(n) =>
+            api.updateSite(site.id, { name: n || site.domain }).then(() => {
+              setName(n || site.domain)
+              flash()
+              onSaved()
+            })
+          }
         />
       </Row>
 

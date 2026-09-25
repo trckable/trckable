@@ -1,0 +1,119 @@
+/* InlineEdit: a name you can click to change. */
+.ie {
+  display: inline-grid;
+  justify-self: start;
+  justify-items: start;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+.ie-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  margin-left: -8px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: text;
+  transition: border-color 0.15s, background 0.15s;
+}
+.ie-view:hover,
+.ie-view:focus-visible {
+  border-color: var(--border);
+  background: var(--sunken);
+}
+.ie-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ie-text.empty {
+  color: var(--text-3);
+}
+.ie-pen {
+  flex: none;
+  color: var(--text-3);
+  opacity: 0.6;
+  transition: opacity 0.15s, color 0.15s;
+}
+.ie-view:hover .ie-pen,
+.ie-view:focus-visible .ie-pen {
+  opacity: 1;
+  color: var(--text-2);
+}
+.ie-saved {
+  flex: none;
+  color: var(--accent);
+  animation: fadein 0.2s var(--ease) backwards;
+}
+.ie-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: -8px;
+  padding: 2px 3px 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
+  border-radius: 9px;
+  background: var(--sunken);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.ie-field input {
+  field-sizing: content;
+  min-width: 3ch;
+  padding-right: 4px;
+  max-width: min(420px, 60vw);
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+.ie-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.ie-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  color: var(--text);
+}
+.ie-btn.ok {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.ie-btn.ok:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-ink);
+  filter: brightness(1.08);
+}
+.ie-btn .btn-spin {
+  margin: 0;
+}
+.ie-err {
+  font-size: 12px;
+  color: var(--down);
+}
+.ie.lg {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.ie.lg .ie-btn {
+  width: 32px;
+  height: 32px;
+}
