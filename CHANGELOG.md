@@ -15,6 +15,11 @@ section into the release.
   domains
 
 ### Fixed
+- Security: starting a new two-step setup no longer turns two-step off. The
+  new phone's secret waits until a code from it is proven, so a setup given
+  up half-way leaves the old phone working. While two-step is on, turning it
+  off or setting up a new phone asks for a current code (or a recovery code)
+  as well as the password
 - Security: a two-step code signs in once. The same code, or an older one
   still inside its 90-second window, is refused, so a code seen over a
   shoulder or replayed cannot be used again. The code that turns two-step on

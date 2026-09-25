@@ -696,19 +696,29 @@ function TwoStep() {
     load()
   }, [])
 
+  // Two questions, because the password alone must not remove the phone: a
+  // borrowed session or a password seen over a shoulder would be enough.
   const turnOff = async () => {
     const pw = await confirmWith({
       title: 'Turn off two-step sign-in?',
       body: 'Your account goes back to the password alone. Type it to confirm.',
       field: { label: 'Your password', type: 'password', autoComplete: 'current-password' },
+      confirmLabel: 'Next',
+      danger: true,
+    })
+    if (pw === null) return
+    const code = await confirmWith({
+      title: 'A code from your app',
+      body: 'The six digits your authenticator shows now, or one of your recovery codes.',
+      field: { label: 'Code', type: 'text', autoComplete: 'one-time-code' },
       confirmLabel: 'Turn off',
       danger: true,
       busyLabel: 'Turning off…',
       done: 'Two-step sign-in is off',
-      // A wrong password is said in the dialog, which stays open for another go.
-      run: (pw) => api.disableTwoStep(pw),
+      // A wrong code or password is said in the dialog, which stays open for another go.
+      run: (code) => api.disableTwoStep(pw, code),
     })
-    if (pw !== null) load()
+    if (code !== null) load()
   }
 
   const on = state?.enabled === true

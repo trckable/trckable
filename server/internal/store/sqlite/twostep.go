@@ -39,7 +39,10 @@ func (s *Store) StartTwoStep(ctx context.Context, id string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	_, err = s.DB.ExecContext(ctx, `UPDATE users SET totp_secret = ?, totp_enabled = 0 WHERE id = ?`, secret, id)
+	// Pending only: the secret that works now (if any) keeps working until a
+	// code from the new one is proven. Writing it over the live one used to
+	// turn two-step off the moment a setup started.
+	_, err = s.DB.ExecContext(ctx, `UPDATE users SET totp_pending = ? WHERE id = ?`, secret, id)
 	return secret, err
 }
 
@@ -47,7 +50,7 @@ func (s *Store) StartTwoStep(ctx context.Context, id string) (string, error) {
 // recovery codes — the only time they are readable.
 func (s *Store) EnableTwoStep(ctx context.Context, id, code string, now func() int64) ([]string, error) {
 	var secret string
-	if err := s.DB.QueryRowContext(ctx, `SELECT totp_secret FROM users WHERE id = ?`, id).Scan(&secret); err != nil {
+	if err := s.DB.QueryRowContext(ctx, `SELECT totp_pending FROM users WHERE id = ?`, id).Scan(&secret); err != nil {
 		return nil, err
 	}
 	if secret == "" {
@@ -63,13 +66,13 @@ func (s *Store) EnableTwoStep(ctx context.Context, id, code string, now func() i
 		codes[i] = auth.Token("", 5) // short, readable, one use each
 		hashes[i] = hex.EncodeToString(auth.Hash(codes[i]))
 	}
-	_, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_enabled = 1, recovery = ?, totp_last_step = ? WHERE id = ?`, strings.Join(hashes, " "), step, id)
+	_, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_secret = totp_pending, totp_pending = '', totp_enabled = 1, recovery = ?, totp_last_step = ? WHERE id = ?`, strings.Join(hashes, " "), step, id)
 	return codes, err
 }
 
 // DisableTwoStep turns it off and forgets the secret.
 func (s *Store) DisableTwoStep(ctx context.Context, id string) error {
-	_, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_enabled = 0, totp_secret = '', recovery = '', totp_last_step = 0 WHERE id = ?`, id)
+	_, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_enabled = 0, totp_secret = '', totp_pending = '', recovery = '', totp_last_step = 0 WHERE id = ?`, id)
 	return err
 }
 

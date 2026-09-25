@@ -678,9 +678,10 @@ export const api = {
   resetPersonPassword: (id: string, password: string) => call<{ email: string; password: string }>('POST', `/people/${id}/password`, { password }),
   changePassword: (current: string, password: string) => call<void>('POST', '/account/password', { current, password }),
   twoStep: () => call<TwoStep>('GET', '/account/2fa'),
-  startTwoStep: (password: string) => call<{ secret: string; uri: string }>('POST', '/account/2fa/start', { password }),
+  startTwoStep: (password: string, code?: string) => call<{ secret: string; uri: string }>('POST', '/account/2fa/start', { password, code }),
   enableTwoStep: (code: string) => call<{ recovery: string[] }>('POST', '/account/2fa/enable', { code }),
-  disableTwoStep: (password: string) => call<void>('POST', '/account/2fa/disable', { password }),
+  // While two-step is on, changing it needs a code from the app (or a recovery code) as well.
+  disableTwoStep: (password: string, code: string) => call<void>('POST', '/account/2fa/disable', { password, code }),
   profile: () => call<Profile>('GET', '/account'),
   health: () => call<Health>('GET', '/health'),
   setName: (name: string) => call<Profile>('PATCH', '/account', { name }),

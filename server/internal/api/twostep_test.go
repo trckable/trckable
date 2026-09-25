@@ -101,11 +101,38 @@ func TestTwoStepSignIn(t *testing.T) {
 		t.Fatalf("recovery left: %v", out)
 	}
 
+	// While it is on, the password alone (a borrowed session, a password read
+	// over a shoulder) can neither replace the phone nor remove it.
+	if code, out := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/start", `{"password":`+pw+`}`, csrf, "1"); code != http.StatusForbidden || out["needs_code"] != true {
+		t.Fatalf("start while on, password only: %d %v", code, out)
+	}
+	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/start", `{"password":`+pw+`,"code":"000000"}`, csrf, "1"); code != http.StatusForbidden {
+		t.Fatalf("start while on, wrong code: %d", code)
+	}
+	// With a code, a new phone can be set up; given up half-way, the old phone
+	// still works and two-step stays on.
+	now2 := g.advance(time.Minute)
+	c2, _ := auth.TOTPCode(secret, now2)
+	if code, out := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/start", `{"password":`+pw+`,"code":"`+c2+`"}`, csrf, "1"); code != 200 || out["secret"] == secret {
+		t.Fatalf("start a new phone with a code: %d %v", code, out)
+	}
+	if _, out := do(t, c, "GET", g.srv.URL+"/api/v1/account/2fa", ""); out["enabled"] != true {
+		t.Fatalf("an abandoned new setup turned two-step off: %v", out)
+	}
+	now3 := g.advance(time.Minute)
+	c3, _ := auth.TOTPCode(secret, now3)
+	if code, _ := do(t, client(), "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery","code":"`+c3+`"}`); code != 200 {
+		t.Fatalf("the old phone after an abandoned new setup: %d", code)
+	}
+
 	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/disable", `{"password":"nope"}`, csrf, "1"); code != http.StatusForbidden {
 		t.Fatalf("disable with a wrong password: %d", code)
 	}
-	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/disable", `{"password":`+pw+`}`, csrf, "1"); code != http.StatusNoContent {
-		t.Fatalf("disable: %d", code)
+	if code, out := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/disable", `{"password":`+pw+`}`, csrf, "1"); code != http.StatusForbidden || out["needs_code"] != true {
+		t.Fatalf("disable with the password alone: %d %v", code, out)
+	}
+	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/disable", `{"password":`+pw+`,"code":"`+recovery[1]+`"}`, csrf, "1"); code != http.StatusNoContent {
+		t.Fatalf("disable with a recovery code: %d", code)
 	}
 	if code, _ := do(t, client(), "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery"}`); code != 200 {
 		t.Fatalf("password alone after turning it off: %d", code)

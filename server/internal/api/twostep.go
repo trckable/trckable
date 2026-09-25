@@ -39,6 +39,31 @@ func (a *API) twoStep(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, s)
 }
 
+// secondStepFor asks for what the account already has, before its two-step
+// setting changes: while two-step is on, the password alone (a borrowed
+// session, a shoulder-read password) must not remove or replace the phone, so
+// a current code or a recovery code is asked for too. It answers the request
+// itself when that is missing or wrong.
+func (a *API) secondStepFor(w http.ResponseWriter, r *http.Request, u *sqlite.User, code string) bool {
+	on, err := a.Ctl.TwoStepOf(r.Context(), u.ID)
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return false
+	}
+	if !on.Enabled {
+		return true
+	}
+	if strings.TrimSpace(code) == "" {
+		writeJSON(w, http.StatusForbidden, map[string]any{"error": "type a code from your app, or a recovery code", "needs_code": true})
+		return false
+	}
+	if err := a.Ctl.CheckSecondStep(r.Context(), u.ID, cleanCode(code), a.unix); err != nil {
+		writeJSON(w, http.StatusForbidden, map[string]any{"error": "that code is not right: try the current one from your app, or a recovery code", "needs_code": true})
+		return false
+	}
+	return true
+}
+
 // startTwoStep hands back a fresh secret to scan or type. Nothing is turned on
 // until a code from it comes back, so an abandoned setup changes nothing.
 // The password is asked for again: a borrowed session must not be able to add
@@ -56,6 +81,7 @@ func (a *API) startTwoStep(w http.ResponseWriter, r *http.Request) {
 	}
 	var in struct {
 		Password string `json:"password"`
+		Code     string `json:"code"`
 	}
 	if err := decode(r, &in); err != nil {
 		fail(w, http.StatusBadRequest, "bad request")
@@ -63,6 +89,9 @@ func (a *API) startTwoStep(w http.ResponseWriter, r *http.Request) {
 	}
 	if _, err := a.Ctl.Login(r.Context(), u.Email, in.Password); err != nil {
 		fail(w, http.StatusForbidden, "that is not your password")
+		return
+	}
+	if !a.secondStepFor(w, r, u, in.Code) {
 		return
 	}
 	secret, err := a.Ctl.StartTwoStep(r.Context(), u.ID)
@@ -107,7 +136,7 @@ func (a *API) enableTwoStep(w http.ResponseWriter, r *http.Request) {
 }
 
 // disableTwoStep turns it off and forgets the secret. It asks for the password
-// again for the same reason enabling does.
+// again for the same reason enabling does, and, since it is on, a code.
 func (a *API) disableTwoStep(w http.ResponseWriter, r *http.Request) {
 	// Each of these does real work (outside fetches, or a password hash):
 	// limited, so a busy button or a stolen session cannot make it a flood.
@@ -121,6 +150,7 @@ func (a *API) disableTwoStep(w http.ResponseWriter, r *http.Request) {
 	}
 	var in struct {
 		Password string `json:"password"`
+		Code     string `json:"code"`
 	}
 	if err := decode(r, &in); err != nil {
 		fail(w, http.StatusBadRequest, "bad request")
@@ -128,6 +158,9 @@ func (a *API) disableTwoStep(w http.ResponseWriter, r *http.Request) {
 	}
 	if _, err := a.Ctl.Login(r.Context(), u.Email, in.Password); err != nil {
 		fail(w, http.StatusForbidden, "that is not your password")
+		return
+	}
+	if !a.secondStepFor(w, r, u, in.Code) {
 		return
 	}
 	if err := a.Ctl.DisableTwoStep(r.Context(), u.ID); err != nil {
