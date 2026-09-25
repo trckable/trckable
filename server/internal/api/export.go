@@ -119,6 +119,29 @@ func (a *API) export(w http.ResponseWriter, r *http.Request) {
 	}
 	row("total", from+" to "+to, total)
 
+	// The comparison the dashboard showed, as its own totals row, so the file
+	// holds the same "vs last year" the page did — not only one side of it.
+	if ask.Prev != nil {
+		pp := *ask.Prev
+		pp.Limit = 1
+		pp.Daily = false
+		pr, err := q.Report(r.Context(), pp)
+		if err == nil {
+			prev := query.Row{Visitors: pr.KPIs.Visitors, Sessions: pr.KPIs.Sessions, Pageviews: pr.KPIs.Pageviews, Bounce: pr.KPIs.BounceRate}
+			if money {
+				var net int64
+				if pr.Money != nil && pr.Money.Currency == res.Money.Currency {
+					net = pr.Money.Revenue
+					prev.Payers = pr.Money.Customers
+				}
+				prev.Revenue = &net
+			}
+			pf := pp.From.In(ask.Loc).Format("2006-01-02")
+			pt := pp.To.In(ask.Loc).AddDate(0, 0, -1).Format("2006-01-02")
+			row("compared total", pf+" to "+pt, prev)
+		}
+	}
+
 	// Then the chart, one bucket per row, so a spreadsheet can redraw it.
 	for _, pt := range res.Series {
 		r := query.Row{Visitors: pt.Visitors, Pageviews: pt.Pageviews}

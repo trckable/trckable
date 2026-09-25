@@ -6,7 +6,7 @@ import { BarList, type BarItem } from '../charts/BarList'
 import { TimeChart, type Pulse } from '../charts/TimeChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
 import { api, cachedReport, dropReports, exportURL, siteState, type Milestone, type Annotation, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
-import { calendarPrevious, diffDays, fmtDay, presetById, setWeekStart, todayIn, type Range } from '../lib/dates'
+import { calendarPrevious, compareLabel, diffDays, fmtDay, presetById, setWeekStart, todayIn, type Range } from '../lib/dates'
 import { countryName, delta, flag, fmtDuration, fmtInt, fmtMoney, fmtPct, type Delta } from '../lib/format'
 import { useTween } from '../lib/motion'
 import { channelColor, channelLabel } from '../lib/palette'
@@ -509,7 +509,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const narrow = useNarrow()
   const shortDates = useMedia('(max-width: 960px)')
   const rows = full ? 12 : 5
-  const vs = view.compare === 'year' ? 'vs last year' : view.compare === 'previous' ? 'vs previous period' : 'vs compared'
+  // The same words the date picker shows ("vs last year" for This year), so
+  // the tiles, the chart legend and a shared card never disagree with it.
+  const vs = 'vs ' + compareLabel(pickerValue.period, pickerValue.compare, pickerValue.range)
   const onlineNow = stream.online ?? data?.online
 
   // The mode is a property of the page, not of one card: everything from grid

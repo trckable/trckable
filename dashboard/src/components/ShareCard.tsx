@@ -3,7 +3,7 @@
 // look and the site's colour. Nothing is uploaded: the owner downloads it,
 // copies it, or hands it to the phone's share sheet. The owner picks the big
 // number and up to three more, and money starts off.
-import { Check, Copy, Download, Film, Share2, X } from 'lucide-react'
+import { Check, Copy, Download, Film, Image as ImageIcon, Share2, X } from 'lucide-react'
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { GHOST, LINE } from '../brand/logo'
 import { fmtDuration, fmtInt, fmtPct } from '../lib/format'
@@ -136,10 +136,10 @@ export function cardSvg(d: ShareData, design: Design, look: Look, title: string,
   const font = `font-family="Geist, Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif"`
   const lead =
     look.lead === 'revenue' && d.revenue
-      ? { value: d.revenue.fmt(Math.round(d.revenue.now * a.count)), label: 'revenue', ch: change(d.revenue.now, d.revenue.prev) }
+      ? { value: d.revenue.fmt(Math.round(d.revenue.now * a.count)), label: 'revenue', ch: change(d.revenue.now, d.revenue.prev), prev: d.revenue.prev }
       : look.lead === 'pageviews'
-        ? { value: fmtInt(Math.round(d.pageviews * a.count)), label: 'pageviews', ch: change(d.pageviews, d.prevPageviews) }
-        : { value: fmtInt(Math.round(d.visitors * a.count)), label: 'visitors', ch: change(d.visitors, d.prevVisitors) }
+        ? { value: fmtInt(Math.round(d.pageviews * a.count)), label: 'pageviews', ch: change(d.pageviews, d.prevPageviews), prev: d.prevPageviews }
+        : { value: fmtInt(Math.round(d.visitors * a.count)), label: 'visitors', ch: change(d.visitors, d.prevVisitors), prev: d.prevVisitors }
   const extras = EXTRAS.filter((e) => look.extras.includes(e) && e !== look.lead)
     .map((e) => extraOf(d, e))
     .filter((x): x is { value: string; label: string } => !!x)
@@ -149,13 +149,17 @@ export function cardSvg(d: ShareData, design: Design, look: Look, title: string,
     look.change && d.compare
       ? lead.ch !== null
         ? `<tspan fill-opacity="${a.change}">  ·  </tspan><tspan fill="${t.acc}" fill-opacity="${a.change}" font-weight="700">${pct(lead.ch)}</tspan><tspan fill="${t.mute}" fill-opacity="${a.change}"> ${esc(vsText)}</tspan>`
-        : `<tspan fill="${t.mute}" fill-opacity="${a.change}">  ·  no data ${esc(vsText.replace(/^vs /, 'from '))}</tspan>`
+        : // Nothing then to compare with: say so plainly, in the picker's words
+          // ("new · none last year"), rather than a percentage from zero.
+          lead.prev === 0
+          ? `<tspan fill-opacity="${a.change}">  ·  </tspan><tspan fill="${t.acc}" fill-opacity="${a.change}" font-weight="700">new</tspan><tspan fill="${t.mute}" fill-opacity="${a.change}"> · none ${esc(vsText.replace(/^vs /, ''))}</tspan>`
+          : `<tspan fill="${t.mute}" fill-opacity="${a.change}">  ·  no data ${esc(vsText.replace(/^vs /, 'for '))}</tspan>`
       : ''
 
   // Where each part goes, by size.
   const L =
     look.format === 'post'
-      ? { pad: 60, title: 92, period: 132, big: 290, bigSize: 150, label: 340, chartTop: 410, chartH: 130, foot: H - 26, extras: 'column' as const, exTop: 210 }
+      ? { pad: 60, title: 92, period: 132, big: 290, bigSize: 150, label: 340, chartTop: 410, chartH: 130, foot: H - 26, extras: 'column' as const, exTop: 196 }
       : look.format === 'square'
         ? { pad: 72, title: 120, period: 164, big: 420, bigSize: 190, label: 480, chartTop: 700, chartH: 220, foot: H - 44, extras: 'row' as const, exTop: 600 }
         : { pad: 80, title: 220, period: 270, big: 760, bigSize: 230, label: 840, chartTop: 1450, chartH: 250, foot: H - 80, extras: 'stack' as const, exTop: 1010 }
@@ -173,8 +177,8 @@ export function cardSvg(d: ShareData, design: Design, look: Look, title: string,
   function exOne(x: { value: string; label: string }, i: number) {
       if (L.extras === 'column')
         return (
-          `<text x="${W - L.pad}" y="${L.exTop + i * 86}" text-anchor="end" ${font} font-size="${fit(x.value, 48, 420)}" font-weight="700" fill="${t.fg}">${esc(x.value)}</text>` +
-          `<text x="${W - L.pad}" y="${L.exTop + 32 + i * 86}" text-anchor="end" ${font} font-size="22" fill="${t.mute}">${esc(x.label)}</text>`
+          `<text x="${W - L.pad}" y="${L.exTop + i * 78}" text-anchor="end" ${font} font-size="${fit(x.value, 44, 420)}" font-weight="700" fill="${t.fg}">${esc(x.value)}</text>` +
+          `<text x="${W - L.pad}" y="${L.exTop + 28 + i * 78}" text-anchor="end" ${font} font-size="21" fill="${t.mute}">${esc(x.label)}</text>`
         )
       if (L.extras === 'row') {
         const colW = (W - L.pad * 2) / 3
@@ -313,11 +317,41 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
   const [look, setLook] = useState<Look>({ lead: 'visitors', extras: ['pageviews', 'source'], change: true, chart: true, format: 'post' })
   const [title, setTitle] = useState(data.name || data.domain)
   const [busy, setBusy] = useState<string | null>(null)
+  const [kind, setKind] = useState<'picture' | 'gif'>('picture')
+  // The GIF the preview plays is the very file Download and Share hand over.
+  const [gif, setGif] = useState<{ blob: Blob; url: string; key: string } | null>(null)
   const [gifAt, setGifAt] = useState(0)
   const [done, setDone] = useState<string | null>(null)
   const size = SIZES[look.format]
   const svg = useMemo(() => cardSvg(data, design, look, title), [data, design, look, title])
   const src = useMemo(() => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg), [svg])
+  // In GIF mode the real GIF is made again shortly after the last change
+  // (about half a second of work); the still card shows until it is ready.
+  const gifKey = kind === 'gif' ? svg : ''
+  useEffect(() => {
+    if (!gifKey || gif?.key === gifKey) return
+    let stale = false
+    const t = setTimeout(async () => {
+      setGifAt(0)
+      try {
+        const { cardGif } = await import('./ShareGif')
+        const blob = await cardGif(data, design, look, title, (p) => stale || setGifAt(p))
+        if (stale) return
+        setGif((old) => {
+          if (old) URL.revokeObjectURL(old.url)
+          return { blob, url: URL.createObjectURL(blob), key: gifKey }
+        })
+      } catch (e) {
+        if (!stale) toast(e instanceof Error ? e.message : String(e), 'error')
+      }
+    }, 350)
+    return () => {
+      stale = true
+      clearTimeout(t)
+    }
+  }, [gifKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => void (gif && URL.revokeObjectURL(gif.url)), [gif])
+  const gifReady = kind === 'gif' && gif?.key === gifKey
   useEffect(() => {
     if (!done) return
     const t = setTimeout(() => setDone(null), 1800)
@@ -333,11 +367,11 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
   const post = data.milestone
     ? `${title}: ${data.milestone.value} ${data.milestone.label}. ${data.milestone.sub}. Counted by trckable — trckable.com`
     : `${title}: ${lead.text}, ${data.period}${look.change && data.compare && lead.ch !== null ? ` (${pct(lead.ch)} ${data.compare.label})` : ''}. Counted by trckable — trckable.com`
-  const file = () => `trckable-${data.domain}-${look.format}-${new Date().toISOString().slice(0, 10)}.png`
-  const act = async (what: string, run: (png: Blob) => Promise<unknown>) => {
+  const file = () => `trckable-${data.domain}-${look.format}-${new Date().toISOString().slice(0, 10)}.${kind === 'gif' ? 'gif' : 'png'}`
+  const act = async (what: string, run: (img: Blob) => Promise<unknown>) => {
     setBusy(what)
     try {
-      await run(await toPng(svg, size.w, size.h))
+      await run(kind === 'gif' ? gif!.blob : await toPng(svg, size.w, size.h))
       setDone(what)
     } catch (e) {
       if (!(e instanceof DOMException && e.name === 'AbortError')) toast(e instanceof Error ? e.message : String(e), 'error')
@@ -353,25 +387,10 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
     a.click()
     setTimeout(() => URL.revokeObjectURL(a.href), 1000)
   }
-  // The GIF is drawn frame by frame here; its encoder is its own chunk,
-  // fetched the first time this is pressed.
-  const makeGif = async () => {
-    setBusy('gif')
-    setGifAt(0)
-    try {
-      const { cardGif } = await import('./ShareGif')
-      save(await cardGif(data, design, look, title, setGifAt), file().replace(/\.png$/, '.gif'))
-      setDone('gif')
-    } catch (e) {
-      toast(e instanceof Error ? e.message : String(e), 'error')
-    } finally {
-      setBusy(null)
-    }
-  }
   const has = (e: Extra) => e !== look.lead && extraOf(data, e) !== null
   const extras = look.extras.filter(has)
   const flip = (e: Extra) =>
-    setLook((l) => ({ ...l, extras: l.extras.includes(e) ? l.extras.filter((x) => x !== e) : [...l.extras.filter(has), e].slice(-MAX_EXTRAS) }))
+    setLook((l) => ({ ...l, extras: l.extras.includes(e) ? l.extras.filter((x) => x !== e) : [...l.extras.filter(has), e].slice(0, MAX_EXTRAS) }))
 
   return (
     <Modal label="Share these numbers" className="share-modal" onClose={onClose}>
@@ -390,7 +409,29 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
 
       <div className="share-body">
         <div className="share-preview">
-          <img key={look.format} src={src} alt={`The card: ${post}`} className={'is-' + look.format} style={{ aspectRatio: `${size.w} / ${size.h}` }} />
+          <div className="share-kind seg" role="group" aria-label="Picture or GIF">
+            <button type="button" aria-pressed={kind === 'picture'} onClick={() => setKind('picture')}>
+              <ImageIcon size={15} strokeWidth={1.75} aria-hidden="true" />
+              Picture
+            </button>
+            <button type="button" aria-pressed={kind === 'gif'} title="The number counts up and the line draws itself, then it loops" onClick={() => setKind('gif')}>
+              <Film size={15} strokeWidth={1.75} aria-hidden="true" />
+              GIF
+            </button>
+          </div>
+          <img
+            key={look.format + (gifReady ? ' gif' : '')}
+            src={gifReady ? gif!.url : src}
+            alt={`The card${kind === 'gif' ? ', animated' : ''}: ${post}`}
+            className={'is-' + look.format}
+            style={{ aspectRatio: `${size.w} / ${size.h}` }}
+          />
+          {kind === 'gif' && !gifReady && (
+            <span className="share-making" style={{ '--p': gifAt } as CSSProperties} aria-live="polite">
+              <span className="btn-spin" aria-hidden="true" />
+              Making the GIF… {Math.round(gifAt * 100)}%
+            </span>
+          )}
         </div>
         <div className="share-options">
           <div className="share-row">
@@ -431,15 +472,21 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
                 </div>
               </div>
               <div className="share-row">
-                <span className="share-label">
-                  Also show <span className="faint">{extras.length} of {MAX_EXTRAS}</span>
-                </span>
-                <div className="share-chips" role="group" aria-label="Also show">
+                <span className="share-label">Also show</span>
+                <div className="share-chips" role="group" aria-label={`Also show, up to ${MAX_EXTRAS}`}>
                   {EXTRAS.filter(has).map((e) => {
                     const on = extras.includes(e)
+                    const full = !on && extras.length >= MAX_EXTRAS
                     return (
-                      <button key={e} type="button" className={'share-chip' + (on ? ' on' : '')} aria-pressed={on} onClick={() => flip(e)}>
-                        {on && <Check size={13} strokeWidth={2.4} aria-hidden="true" />}
+                      <button
+                        key={e}
+                        type="button"
+                        className={'share-chip' + (on ? ' on' : '')}
+                        aria-pressed={on}
+                        disabled={full}
+                        title={full ? `Up to ${MAX_EXTRAS}: take one off first` : undefined}
+                        onClick={() => flip(e)}
+                      >
                         {EXTRA_LABEL[e]}
                       </button>
                     )
@@ -464,53 +511,45 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
             <button
               type="button"
               className="btn primary big"
-              disabled={!!busy}
+              disabled={!!busy || (kind === 'gif' && !gifReady)}
               onClick={() =>
                 act('download', async (png) => save(png, file()))
               }
             >
               {busy === 'download' ? <span className="btn-spin" aria-hidden="true" /> : done === 'download' ? <Check size={16} strokeWidth={2.4} aria-hidden="true" /> : <Download size={16} strokeWidth={1.75} aria-hidden="true" />}
-              {done === 'download' ? 'Saved' : 'Download'}
+              {done === 'download' ? 'Saved' : kind === 'gif' ? 'Download GIF' : 'Download'}
             </button>
-            <div className="share-pair">
-            <button
-              type="button"
-              className="btn"
-              disabled={!!busy || typeof ClipboardItem === 'undefined'}
-              onClick={() => act('copy', (png) => navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]))}
-            >
-              {busy === 'copy' ? <span className="btn-spin" aria-hidden="true" /> : done === 'copy' ? <Check size={16} strokeWidth={2.4} aria-hidden="true" /> : <Copy size={16} strokeWidth={1.75} aria-hidden="true" />}
-              {done === 'copy' ? 'Copied' : 'Copy image'}
-            </button>
-            <button
-              type="button"
-              className={'btn share-gif' + (busy === 'gif' ? ' making' : '')}
-              disabled={!!busy}
-              style={{ '--p': gifAt } as CSSProperties}
-              title="The same card, animated: the number counts up and the line draws itself"
-              onClick={makeGif}
-              aria-live="polite"
-            >
-              {done === 'gif' ? <Check size={16} strokeWidth={2.4} aria-hidden="true" /> : <Film size={16} strokeWidth={1.75} aria-hidden="true" />}
-              <span>{busy === 'gif' ? `GIF ${Math.round(gifAt * 100)}%` : done === 'gif' ? 'Saved' : 'GIF'}</span>
-            </button>
-            </div>
-            {canShare && (
-              <button
-                type="button"
-                className="btn"
-                disabled={!!busy}
-                onClick={() =>
-                  act('share', async (png) => {
-                    const f = new File([png], file(), { type: 'image/png' })
-                    if (!navigator.canShare({ files: [f] })) throw new Error('This browser cannot share pictures: download it instead.')
-                    await navigator.share({ files: [f], text: post })
-                  })
-                }
-              >
-                <Share2 size={16} strokeWidth={1.75} aria-hidden="true" />
-                Share…
-              </button>
+            {(kind === 'picture' || canShare) && (
+              <div className={'share-pair' + (kind === 'gif' || !canShare ? ' one' : '')}>
+                {kind === 'picture' && (
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={!!busy || typeof ClipboardItem === 'undefined'}
+                    onClick={() => act('copy', (png) => navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]))}
+                  >
+                    {busy === 'copy' ? <span className="btn-spin" aria-hidden="true" /> : done === 'copy' ? <Check size={16} strokeWidth={2.4} aria-hidden="true" /> : <Copy size={16} strokeWidth={1.75} aria-hidden="true" />}
+                    {done === 'copy' ? 'Copied' : 'Copy image'}
+                  </button>
+                )}
+                {canShare && (
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={!!busy || (kind === 'gif' && !gifReady)}
+                    onClick={() =>
+                      act('share', async (img) => {
+                        const f = new File([img], file(), { type: img.type })
+                        if (!navigator.canShare({ files: [f] })) throw new Error(`This browser cannot share ${kind === 'gif' ? 'GIFs' : 'pictures'}: download it instead.`)
+                        await navigator.share({ files: [f], text: post })
+                      })
+                    }
+                  >
+                    <Share2 size={16} strokeWidth={1.75} aria-hidden="true" />
+                    Share…
+                  </button>
+                )}
+              </div>
             )}
           </div>
           <button type="button" className="linkish share-post" onClick={() => navigator.clipboard?.writeText(post).then(() => toast('Post text copied'))}>

@@ -236,7 +236,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
                   <div>
                     <span className="faint">Visitors</span>
                     <b className="num">{fmtInt(total)}</b>
-                    {d && <span className={'delta tone-' + d.tone}>{d.text} vs the period before</span>}
+                    {d && <span className={'delta tone-' + d.tone}>{d.text} vs the {days} days before</span>}
                   </div>
                 </div>
                 <Stacked rows={list!} days={days} />

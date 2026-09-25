@@ -55,6 +55,13 @@ describe('share card', () => {
     expect(cardSvg(data, 'glow', look(), 'Example', 1)).toBe(cardSvg(data, 'glow', look(), 'Example'))
   })
 
+  it('says "new" in the picker\'s words when there was nothing then', () => {
+    const svg = cardSvg({ ...data, prevVisitors: 0 }, 'glow', look(), 'Example')
+    expect(svg).toContain('>new<')
+    expect(svg).toContain('none last year')
+    expect(svg).not.toMatch(/[+−]\d+%/)
+  })
+
   it('draws a milestone as one big number, what it is and when', () => {
     const svg = cardSvg({ ...data, milestone: { value: '10,000', label: 'visitors, all time', sub: 'Reached on Sep 25' } }, 'bold', look(), 'Example')
     expect(svg).toContain('10,000')

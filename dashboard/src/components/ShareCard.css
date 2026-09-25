@@ -20,7 +20,7 @@
 .share-preview {
   display: grid;
   place-items: center;
-  padding: 14px;
+  padding: 58px 14px 14px;
   border: 1px solid var(--border);
   border-radius: 14px;
   background-color: var(--sunken);
@@ -77,27 +77,29 @@
 .share-shape.is-square { width: 10px; height: 10px; }
 .share-shape.is-story { width: 7px; height: 12px; }
 .share-chips {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
 }
 .share-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 28px;
-  padding: 0 11px;
+  height: 30px;
+  padding: 0 6px;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 8px;
   background: none;
-  color: var(--text);
+  color: var(--text-2, var(--text));
   font: inherit;
   font-size: 12.5px;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.15s var(--ease), border-color 0.15s var(--ease);
+  transition: background-color 0.15s var(--ease), border-color 0.15s var(--ease), opacity 0.15s var(--ease);
 }
-.share-chip:hover {
+.share-chip:hover:not(:disabled) {
   border-color: var(--muted);
+}
+.share-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 .share-chip.on {
   border-color: var(--accent);
@@ -130,23 +132,48 @@
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
-/* The GIF button fills up as its frames are drawn. */
-.share-gif {
-  position: relative;
-  overflow: hidden;
-  font-variant-numeric: tabular-nums;
+.share-pair.one {
+  grid-template-columns: 1fr;
 }
-.share-gif.making::before {
-  content: '';
+.share-preview {
+  position: relative;
+}
+/* Picture or GIF, on the preview itself: what you see is what you get. */
+.share-kind {
   position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--accent) 22%, transparent);
-  transform-origin: left;
-  transform: scaleX(var(--p, 0));
-  transition: transform 0.1s linear;
+  top: 12px;
+  left: 50%;
+  z-index: 1;
+  transform: translateX(-50%);
+  background: var(--surface);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.28);
 }
-.share-gif > * {
-  position: relative;
+.share-kind button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-inline: 14px;
+}
+/* While the GIF is being made: a pill over the still card that fills up. */
+.share-making {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background:
+    linear-gradient(color-mix(in srgb, var(--accent) 24%, transparent), color-mix(in srgb, var(--accent) 24%, transparent)) left / calc(var(--p, 0) * 100%) 100% no-repeat,
+    var(--surface);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  transform: translateX(-50%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
+  animation: fadein 0.2s var(--ease) backwards;
 }
 .share-post {
   justify-self: center;
