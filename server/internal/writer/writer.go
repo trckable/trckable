@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -268,6 +269,53 @@ func (w *Writer) drain(conn *sql.Conn, rd *wal.Reader) error {
 	}
 }
 
+// decoded is a WAL record read back into its event.
+type decoded struct {
+	seq uint64
+	e   event.Event
+}
+
+// importedAlready returns which imported event ids in a batch are already in
+// the store. It looks only inside the batch's own time range, so the scan is
+// a few row groups, not the table; a batch with nothing imported costs
+// nothing.
+func (w *Writer) importedAlready(ctx context.Context, conn *sql.Conn, batch []decoded) (map[uint64]bool, error) {
+	var ids []string
+	var lo, hi int64
+	for _, d := range batch {
+		if !d.e.Imported || d.e.EventID == 0 {
+			continue
+		}
+		if len(ids) == 0 || d.e.TS < lo {
+			lo = d.e.TS
+		}
+		if d.e.TS > hi {
+			hi = d.e.TS
+		}
+		ids = append(ids, strconv.FormatUint(d.e.EventID, 10))
+	}
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	// The ids are numbers written by this code, so they go into the query as
+	// a list; the times are parameters.
+	q := `SELECT event_id FROM events WHERE ts >= ? AND ts <= ? AND event_id IN (` + strings.Join(ids, ",") + `)`
+	rows, err := conn.QueryContext(ctx, q, time.UnixMilli(lo).UTC(), time.UnixMilli(hi).UTC())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	have := map[uint64]bool{}
+	for rows.Next() {
+		var id uint64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		have[id] = true
+	}
+	return have, rows.Err()
+}
+
 // row is one event ready to append, with its WAL seq and assigned session.
 type row struct {
 	seq     uint64
@@ -284,6 +332,7 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 	rows := make([]row, 0, len(batch))
 	var closed []*Session
 	nowMs := w.now().UnixMilli()
+	fresh := make([]decoded, 0, len(batch))
 	for _, r := range batch {
 		var e event.Event
 		if err := event.Unmarshal(r.Payload, &e); err != nil {
@@ -294,11 +343,25 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 		if w.dd.seen(e.EventID, nowMs) {
 			continue
 		}
+		fresh = append(fresh, decoded{r.Seq, e})
+	}
+	// Imported history is older than the in-memory window, and a second
+	// import always comes after a restart: its ids are checked against what
+	// is stored, so importing the same file twice changes nothing.
+	have, err := w.importedAlready(ctx, conn, fresh)
+	if err != nil {
+		return err
+	}
+	for _, d := range fresh {
+		if d.e.Imported && have[d.e.EventID] {
+			continue
+		}
+		e := d.e
 		id, prev := w.sess.assign(&e)
 		if prev != nil {
 			closed = append(closed, prev)
 		}
-		rows = append(rows, row{seq: r.Seq, session: id, e: e})
+		rows = append(rows, row{seq: d.seq, session: id, e: e})
 	}
 	idle, watermark := w.sess.closeIdle(closeAt)
 	closed = append(closed, idle...)
@@ -309,7 +372,7 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 	if _, err := conn.ExecContext(ctx, "BEGIN TRANSACTION"); err != nil {
 		return err
 	}
-	err := conn.Raw(func(dc any) error {
+	err = conn.Raw(func(dc any) error {
 		if len(rows) > 0 {
 			app, err := duckdb.NewAppenderFromConn(dc.(driver.Conn), "", "events")
 			if err != nil {
