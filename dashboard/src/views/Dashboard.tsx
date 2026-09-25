@@ -1,4 +1,4 @@
-import { Banknote, ChevronDown, ChevronRight, CircleUser, Coins, CornerUpLeft, Download, Ellipsis, Eye, Keyboard, KeyRound, Maximize2, MessageCircle, Minimize2, Pause, Play, Radio, RefreshCw, Target, Timer, Users, type LucideIcon } from 'lucide-react'
+import { Banknote, ChevronDown, ChevronRight, CircleUser, Coins, CornerUpLeft, Download, Ellipsis, Eye, Keyboard, KeyRound, Maximize2, MessageCircle, Minimize2, Pause, Play, Radio, RefreshCw, Share2, Target, Timer, Users, type LucideIcon } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DialogActions } from '../components/DialogActions'
 import { Modal } from '../components/Modal'
@@ -33,6 +33,8 @@ import { StoppedNotice } from '../components/StoppedNotice'
 import { ScrollDepth } from './ScrollDepth'
 
 // Full mode's extra views live in their own chunk: Core never loads them.
+// The share card is its own chunk: nothing of it loads until Share is pressed.
+const ShareCard = lazy(() => import('../components/ShareCard'))
 const Rhythm = lazy(() => import('./FullModules').then((m) => ({ default: m.Rhythm })))
 const Funnel = lazy(() => import('./FullModules').then((m) => ({ default: m.Funnel })))
 const WorldMap = lazy(() => import('./WorldMap').then((m) => ({ default: m.WorldMap })))
@@ -147,6 +149,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // Naming a view gets a real dialog. The browser's prompt() looks like it
   // belongs to some other website, and it cannot say what is being saved.
   const [naming, setNaming] = useState(false)
+  const [sharing, setSharing] = useState(false)
   const saveView = () => setNaming(true)
   const current = location.search.replace(/^\?/, '')
   const openView = (g: SavedView) => navigate(location.pathname + '?' + g.query)
@@ -573,6 +576,12 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               onClear={() => setView({ filters: [] })}
             />
           )}
+          {!isShared() && (
+            <button type="button" className="btn share-btn" onClick={() => setSharing(true)} title="Share these numbers as a picture">
+              <Share2 size={16} strokeWidth={1.75} aria-hidden="true" />
+              <span className="label">Share</span>
+            </button>
+          )}
           {!isShared() && (segments.length > 0 || view.filters.length > 0) && (
             <SavedViews
               views={segments}
@@ -597,6 +606,25 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </div>
       </div>
 
+      {sharing && k && (
+        <Suspense fallback={null}>
+          <ShareCard
+            onClose={() => setSharing(false)}
+            data={{
+              domain: site.domain,
+              name: site.name || site.domain,
+              color: site.color,
+              period: series.length ? `${fmtDay(series[0].t.slice(0, 10))} – ${fmtDay(series[series.length - 1].t.slice(0, 10))}` : '',
+              visitors: k.visitors,
+              pageviews: k.pageviews,
+              prevVisitors: pk?.visitors,
+              prevPageviews: pk?.pageviews,
+              revenue: money ? { now: money.revenue, prev: pm?.revenue, fmt: fmtM } : undefined,
+              series: series.map((p) => p.visitors),
+            }}
+          />
+        </Suspense>
+      )}
       {naming && (
         <SaveViewDialog
           filters={view.filters.length}

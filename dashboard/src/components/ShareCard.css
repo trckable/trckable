@@ -1,0 +1,77 @@
+/* The share dialog: the card on the left, the choices on the right. */
+.modal.share-modal {
+  width: min(1040px, 100%);
+  gap: 18px;
+}
+.share-modal .modal-head {
+  position: relative;
+  padding-right: 44px;
+}
+.share-modal .modal-head .close {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+}
+.share-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 18px;
+}
+.share-preview {
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background-color: var(--sunken);
+  background-image: radial-gradient(color-mix(in srgb, var(--text) 10%, transparent) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+.share-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1200 / 630;
+  border-radius: 10px;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.35);
+  animation: fadein 0.25s var(--ease) backwards;
+}
+.share-options {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+.share-designs button {
+  flex: 1;
+}
+.share-toggles {
+  display: grid;
+  border-top: 1px solid var(--grid);
+}
+.share-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--grid);
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.share-actions {
+  display: grid;
+  gap: 8px;
+}
+.share-actions .btn {
+  justify-content: center;
+  gap: 8px;
+}
+.share-post {
+  justify-self: center;
+  font-size: 12.5px;
+}
+@media (max-width: 760px) {
+  .share-body {
+    grid-template-columns: 1fr;
+  }
+}

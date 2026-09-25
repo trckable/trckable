@@ -10,8 +10,8 @@
 //
 // Plain strings, no framework: Node, Vite and Next read this file as it is.
 
-const GHOST = 'M12 30a20 20 0 0 1 40 0v22l-5-3.5-5 3.5-5-3.5-5 3.5-5-3.5-5 3.5-5-3.5-5 3.5z'
-const LINE = 'M5 47l12-6 9 4 12-9 9 3 12-12'
+export const GHOST = 'M12 30a20 20 0 0 1 40 0v22l-5-3.5-5 3.5-5-3.5-5 3.5-5-3.5-5 3.5-5-3.5-5 3.5z'
+export const LINE = 'M5 47l12-6 9 4 12-9 9 3 12-12'
 
 /** The ghost alone, `size` pixels square. */
 export function ghostSvg(size: number): string {
