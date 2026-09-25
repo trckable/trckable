@@ -31,8 +31,8 @@ import './DateRangePopover.css'
 
 const CMP_LABEL: Record<CompareMode, string> = {
   none: 'No comparison',
-  previous: 'Previous period',
-  year: 'Same period last year',
+  previous: 'Period before',
+  year: 'Last year',
   custom: 'Custom',
 }
 
@@ -249,31 +249,36 @@ export default function Popover({
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button type="button" className="btn icon ghost" aria-label="Previous month" onClick={() => setMonth(addMonths(month, -1))} disabled={month <= startOfMonth(minDate)}>
-            <Chevron dir="left" />
-          </button>
-          <div style={{ display: 'flex', gap: 8, fontSize: 12 }} className="muted">
-            {editing === 'compare' ? (
-              <span>
-                <span className="dot" style={{ display: 'inline-block', background: 'var(--ch-7)', marginRight: 6 }} />
-                Picking the comparison range
-              </span>
-            ) : anchor ? (
-              <span>Now pick the end date</span>
-            ) : (
-              <span>Click a start date, then an end date</span>
-            )}
-          </div>
-          <button type="button" className="btn icon ghost" aria-label="Next month" onClick={() => setMonth(addMonths(month, 1))} disabled={addMonths(month, 1) > startOfMonth(today)}>
-            <Chevron dir="right" />
-          </button>
-        </div>
+        <p className="cal-hint">
+          {editing === 'compare' ? (
+            <>
+              <span className="dot" style={{ display: 'inline-block', background: 'var(--ch-7)', borderRadius: '50%' }} /> Picking the comparison range
+            </>
+          ) : anchor ? (
+            'Now pick the end date'
+          ) : (
+            'Pick a start date, then an end date'
+          )}
+        </p>
 
         <div className="months" onKeyDown={onGridKey}>
-          {[month, addMonths(month, 1)].map((m) => (
+          {[month, addMonths(month, 1)].map((m, i) => (
             <Month
               key={m}
+              before={
+                i === 0 ? (
+                  <button type="button" className="month-nav" aria-label="Previous month" onClick={() => setMonth(addMonths(month, -1))} disabled={month <= startOfMonth(minDate)}>
+                    <Chevron dir="left" />
+                  </button>
+                ) : undefined
+              }
+              after={
+                i === 1 ? (
+                  <button type="button" className="month-nav" aria-label="Next month" onClick={() => setMonth(addMonths(month, 1))} disabled={addMonths(month, 1) > startOfMonth(today)}>
+                    <Chevron dir="right" />
+                  </button>
+                ) : undefined
+              }
               month={m}
               today={today}
               minDate={minDate}
@@ -288,44 +293,41 @@ export default function Popover({
           ))}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
-            <input
-              type="checkbox"
-              checked={draft.compare !== 'none'}
-              onChange={(e) => {
-                setDraft((d) => ({ ...d, compare: e.target.checked ? 'previous' : 'none' }))
-                if (!e.target.checked) setEditing('main')
+        <div className="cal-compare">
+          <div className="periods-compare">
+            <span className="compare-text">
+              <span>Compare</span>
+              <span className="faint">{cmp ? fmtRange(cmp, today) : 'A second line on the chart'}</span>
+            </span>
+            <Switch
+              on={draft.compare !== 'none'}
+              label="Compare"
+              onChange={() => {
+                const on = draft.compare !== 'none'
+                setDraft((d) => ({ ...d, compare: on ? 'none' : 'previous' }))
+                if (on) setEditing('main')
               }}
-              style={{ width: 16, height: 16, accentColor: 'var(--accent)' }}
             />
-            Compare
-            {draft.compare !== 'none' && (
-              <select
-                value={draft.compare}
-                onChange={(e) => {
-                  const c = e.target.value as CompareMode
-                  setDraft((d) => ({ ...d, compare: c, compareCustom: c === 'custom' ? (d.compareCustom ?? compareRange(d.range, 'previous')!) : d.compareCustom }))
-                  setEditing(c === 'custom' ? 'compare' : 'main')
-                  setAnchor(null)
-                }}
-                className="input"
-                style={{ height: 34, width: 'auto', padding: '0 10px' }}
-                aria-label="Compare to"
-              >
-                {(['previous', 'year', 'custom'] as CompareMode[]).map((c) => (
-                  <option key={c} value={c}>
-                    {CMP_LABEL[c]}
-                  </option>
-                ))}
-              </select>
-            )}
-            {cmp && (
-              <span className="faint num" style={{ fontSize: 12 }}>
-                {fmtRange(cmp, today)}
-              </span>
-            )}
-          </label>
+          </div>
+          {draft.compare !== 'none' && (
+            <div className="cmp-chips" role="radiogroup" aria-label="Compare with">
+              {(['previous', 'year', 'custom'] as CompareMode[]).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  role="radio"
+                  aria-checked={draft.compare === c}
+                  onClick={() => {
+                    setDraft((d) => ({ ...d, compare: c, compareCustom: c === 'custom' ? (d.compareCustom ?? compareRange(d.range, 'previous')!) : d.compareCustom }))
+                    setEditing(c === 'custom' ? 'compare' : 'main')
+                    setAnchor(null)
+                  }}
+                >
+                  {CMP_LABEL[c]}
+                </button>
+              ))}
+            </div>
+          )}
           {draft.compare === 'custom' && (
             <div className="tabs" role="tablist" aria-label="Which range to edit">
               <button type="button" role="tab" aria-selected={editing === 'main'} onClick={() => setEditing('main')}>
@@ -364,21 +366,27 @@ export function Month(p: {
   focusDay: ISODate
   onPick: (d: ISODate) => void
   onHover: (d: ISODate) => void
+  /** Arrows beside the month's name: the first month steps back, the last forward. */
+  before?: React.ReactNode
+  after?: React.ReactNode
 }) {
   const weeks = useMemo(() => monthGrid(p.month), [p.month])
   const [y, m] = p.month.split('-').map(Number)
+  const single = p.range.from === p.range.to
   return (
-    <div>
+    <div className="month">
       <div className="month-title">
-        {monthLong[m - 1]} {y}
+        {p.before ?? <span className="month-nav-gap" />}
+        <span>
+          {monthLong[m - 1]} {y}
+        </span>
+        {p.after ?? <span className="month-nav-gap" />}
       </div>
-      <table role="grid" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+      <table role="grid" className="month-grid" style={{ ['--pick' as string]: p.color, ['--other' as string]: p.otherColor }}>
         <thead>
           <tr>
             {(weekStartsOn() === 0 ? ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] : ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']).map((d) => (
-              <th key={d} className="faint" style={{ fontSize: 10.5, fontWeight: 500, padding: '2px 0 4px' }}>
-                {d}
-              </th>
+              <th key={d}>{d}</th>
             ))}
           </tr>
         </thead>
@@ -390,13 +398,21 @@ export function Month(p: {
                 const inR = d >= p.range.from && d <= p.range.to
                 const start = d === p.range.from
                 const end = d === p.range.to
-                const inO = p.other && d >= p.other.from && d <= p.other.to
+                const inO = !!p.other && d >= p.other.from && d <= p.other.to
                 const disabled = d > p.today || d < p.minDate
-                // Rounded where the band starts and ends, including at the
-                // edges of a week, so a range reads as one ribbon.
-                const radius = [start || di === 0 ? 8 : 0, end || di === 6 ? 8 : 0]
+                // The band runs behind the days as one ribbon, round where a
+                // week (or the month) starts or ends inside it.
+                const cls = [
+                  inR && !single ? 'band' : '',
+                  start ? 'from' : '',
+                  end ? 'to' : '',
+                  di === 0 || !w[di - 1] ? 'row-start' : '',
+                  di === 6 || !w[di + 1] ? 'row-end' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')
                 return (
-                  <td key={d} style={{ padding: 0 }}>
+                  <td key={d} className={cls || undefined}>
                     <button
                       type="button"
                       data-day={d}
@@ -407,13 +423,7 @@ export function Month(p: {
                       aria-label={fmtDay(d, { weekday: true, year: true })}
                       onClick={() => p.onPick(d)}
                       onMouseEnter={() => p.onHover(d)}
-                      className={'day num' + (inR ? ' in' : '') + (start || end ? ' edge' : '') + (d === p.today ? ' today' : '')}
-                      style={{
-                        borderRadius: `${radius[0]}px ${radius[1]}px ${radius[1]}px ${radius[0]}px`,
-                        background: start || end ? p.color : inR ? `color-mix(in srgb, ${p.color} 16%, transparent)` : undefined,
-                        color: start || end ? 'var(--accent-ink)' : disabled ? 'var(--border-2)' : undefined,
-                        boxShadow: inO && !inR ? `inset 0 -2px 0 ${p.otherColor}` : undefined,
-                      }}
+                      className={'day num' + (inR ? ' in' : '') + (start || end ? ' edge' : '') + (d === p.today ? ' today' : '') + (inO && !inR ? ' other' : '')}
                     >
                       {+d.slice(8)}
                     </button>

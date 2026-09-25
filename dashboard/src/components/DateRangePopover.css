@@ -88,12 +88,110 @@
 }
 /* ---- Calendar -------------------------------------------------------------- */
 .month-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.month-nav,
+.month-nav-gap {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+}
+.month-nav {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.month-nav:hover:not(:disabled) {
+  background: var(--sunken);
+  color: var(--text);
+}
+.month-nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.month-grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.month-grid th {
+  padding: 2px 0 6px;
   font-size: 10.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 500;
   color: var(--text-3);
-  text-align: center;
-  margin-bottom: 8px;
+}
+.month-grid td {
+  padding: 0;
+}
+/* The range: a light ribbon behind the days, from the middle of the first to
+   the middle of the last, rounded where a week starts or ends inside it. */
+.month-grid td.band {
+  background: color-mix(in srgb, var(--pick) 14%, transparent);
+}
+.month-grid td.band.from {
+  background: linear-gradient(90deg, transparent 50%, color-mix(in srgb, var(--pick) 14%, transparent) 50%);
+}
+.month-grid td.band.to {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--pick) 14%, transparent) 50%, transparent 50%);
+}
+.month-grid td.band.row-start:not(.from) {
+  border-radius: 999px 0 0 999px;
+}
+.month-grid td.band.row-end:not(.to) {
+  border-radius: 0 999px 999px 0;
+}
+.month-grid td.band.row-start.row-end:not(.from):not(.to) {
+  border-radius: 999px;
+}
+.cal-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cal-compare {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--grid);
+}
+.cmp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cmp-chips button {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.cmp-chips button:hover {
+  color: var(--text);
+  background: var(--sunken);
+}
+.cmp-chips button[aria-checked='true'] {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  background: var(--accent-soft);
+  color: var(--text);
 }
 /* ---- The period panel ------------------------------------------------------
    Periods first, in a grid you can read at a glance; the calendar is a step
