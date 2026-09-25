@@ -23,8 +23,17 @@ test('every screen meets WCAG 2.1 AA', async ({ page }) => {
   test.slow()
   const scan = async (where: string) => {
     // Entry animations fade text in; measuring mid-fade reports a contrast
-    // failure nobody ever sees.
-    await page.waitForTimeout(700)
+    // failure nobody ever sees. A fixed wait was too short on a slow machine
+    // (a dialog whose code arrives late starts its fade late), so wait until
+    // no animation that ends is still running — the looping ones (a live dot)
+    // never end and are left out — and look twice, for one that starts late.
+    for (let quiet = 0, i = 0; quiet < 2 && i < 40; i++) {
+      await page.waitForTimeout(150)
+      const running = await page.evaluate(
+        () => document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.getTiming().iterations !== Infinity).length,
+      )
+      quiet = running ? 0 : quiet + 1
+    }
     const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
     const found = violations.flatMap((v) => v.nodes.map((n) => `${where}: ${v.id} — ${n.any?.[0]?.message ?? v.help}\n    ${n.html.slice(0, 160)}`))
     expect(found, where).toEqual([])
