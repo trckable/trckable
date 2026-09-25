@@ -56,11 +56,13 @@ test('every screen meets WCAG 2.1 AA', async ({ page }) => {
 
   for (const tab of ['site', 'install', 'modules', 'payments', 'privacy', 'alerts', 'health']) {
     await page.goto(`${BASE}/settings?site=${site}&tab=${tab}`)
-    await page.waitForTimeout(1500)
+    // Settings open as a dialog whose code loads on demand: wait for it to be
+    // there, or the scan can start before it and catch it fading in.
+    await page.waitForSelector('.settings-modal .settings-body', { timeout: 15_000 })
     await scan('settings, ' + tab)
   }
   await page.goto(BASE + '/site.com?account=profile')
-  await page.waitForTimeout(1500)
+  await page.waitForSelector('.modal.account', { timeout: 15_000 })
   await scan('your account')
 })
 })
