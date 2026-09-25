@@ -49,7 +49,7 @@ export default function TwoStepSetup({
     setBusy(true);
     setErr(null);
     api
-      .enableTwoStep(code)
+      .enableTwoStep(password, code)
       .then((r) => {
         setCodes(r.recovery);
         setStep(2);
@@ -85,7 +85,7 @@ export default function TwoStepSetup({
               autoComplete="current-password"
               placeholder="Your password"
               onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && password && start()}
+              onKeyDown={(e) => e.key === "Enter" && !busy && password && start()}
             />
             {err && (
               <span role="alert" style={{ color: "var(--down)", fontSize: 13 }}>
@@ -151,7 +151,7 @@ export default function TwoStepSetup({
                 maxLength={7}
                 placeholder="123456"
                 onChange={(e) => setCode(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && enable()}
+                onKeyDown={(e) => e.key === "Enter" && !busy && enable()}
               />
             </label>
             {err && (

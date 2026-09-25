@@ -111,13 +111,18 @@ func (a *API) resetPersonPassword(w http.ResponseWriter, r *http.Request) {
 	}
 	// Your own password first: a session left open somewhere must not be
 	// enough to take someone's account.
-	var in struct{ Password string }
+	var in struct{ Password, Code string }
 	if err := decode(r, &in); err != nil || in.Password == "" {
 		fail(w, http.StatusBadRequest, "type your own password to confirm")
 		return
 	}
 	if _, err := a.Ctl.Login(r.Context(), me.Email, in.Password); err != nil {
 		fail(w, http.StatusForbidden, "that is not your password")
+		return
+	}
+	// With two-step on, the owner's own code too: a borrowed owner session
+	// plus the password must not be enough to take someone else's account.
+	if _, ok := a.secondStepFor(w, r, me, in.Code); !ok {
 		return
 	}
 	p, err := a.Ctl.PersonByID(r.Context(), principalOf(r).account, r.PathValue("id"))
@@ -183,13 +188,18 @@ func (a *API) turnOffTwoStep(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, "turn off your own two-step in your account")
 		return
 	}
-	var in struct{ Password string }
+	var in struct{ Password, Code string }
 	if err := decode(r, &in); err != nil || in.Password == "" {
 		fail(w, http.StatusBadRequest, "type your own password to confirm")
 		return
 	}
 	if _, err := a.Ctl.Login(r.Context(), me.Email, in.Password); err != nil {
 		fail(w, http.StatusForbidden, "that is not your password")
+		return
+	}
+	// With two-step on, the owner's own code too: a borrowed owner session
+	// plus the password must not be enough to take someone else's account.
+	if _, ok := a.secondStepFor(w, r, me, in.Code); !ok {
 		return
 	}
 	p, err := a.Ctl.PersonByID(r.Context(), principalOf(r).account, r.PathValue("id"))

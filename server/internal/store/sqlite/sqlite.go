@@ -413,6 +413,8 @@ var migrations = []string{
 	// 31: a new phone's secret waits here until a code from it is proven, so
 	// starting a setup never turns off the one that works.
 	`ALTER TABLE users ADD COLUMN totp_pending TEXT NOT NULL DEFAULT '';`,
+	// 32: when that pending secret was made: an unproven one expires.
+	`ALTER TABLE users ADD COLUMN totp_pending_at INTEGER NOT NULL DEFAULT 0;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

@@ -19,7 +19,11 @@ section into the release.
   new phone's secret waits until a code from it is proven, so a setup given
   up half-way leaves the old phone working. While two-step is on, turning it
   off or setting up a new phone asks for a current code (or a recovery code)
-  as well as the password
+  as well as the password. Turning it on asks for the password too, a new
+  phone's setup expires after 10 minutes, codes are limited per person as
+  well as per address, a recovery code is spent once even when sent twice at
+  once, and an owner with two-step on needs their own code to reset someone
+  else's password or two-step
 - Security: a two-step code signs in once. The same code, or an older one
   still inside its 90-second window, is refused, so a code seen over a
   shoulder or replayed cannot be used again. The code that turns two-step on

@@ -514,6 +514,10 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 	// The password was right. If this account has two-step sign-in, ask for
 	// the code — as a separate answer, so the dashboard can show that step
 	// instead of repeating "wrong email or password".
+	// Codes are counted per person too, not only per address (codeTries).
+	if in.Code != "" && !a.codeTries(w, &u) {
+		return
+	}
 	switch err := a.Ctl.CheckSecondStep(r.Context(), u.ID, cleanCode(in.Code), a.unix); {
 	case errors.Is(err, sqlite.ErrNeedsCode):
 		writeJSON(w, http.StatusUnauthorized, map[string]any{

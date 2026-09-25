@@ -3,6 +3,8 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -37,12 +39,16 @@ func TestTwoStepSignIn(t *testing.T) {
 	if _, out := do(t, c, "GET", g.srv.URL+"/api/v1/account/2fa", ""); out["enabled"] != false {
 		t.Fatalf("enabled before any code was proven: %v", out)
 	}
-	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/enable", `{"code":"000000"}`, csrf, "1"); code != http.StatusBadRequest {
+	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/enable", `{"password":`+pw+`,"code":"000000"}`, csrf, "1"); code != http.StatusBadRequest {
 		t.Fatalf("enable with a wrong code: %d", code)
 	}
 
 	now, _ := auth.TOTPCode(secret, g.now)
-	code, out = do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/enable", `{"code":"`+now[:3]+" "+now[3:]+`"}`, csrf, "1")
+	// The password again to finish, so a session alone cannot add a phone.
+	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/enable", `{"code":"`+now+`"}`, csrf, "1"); code != http.StatusForbidden {
+		t.Fatalf("enable without the password: %d", code)
+	}
+	code, out = do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/enable", `{"password":`+pw+`,"code":"`+now[:3]+" "+now[3:]+`"}`, csrf, "1")
 	if code != 200 {
 		t.Fatalf("enable: %d %v", code, out)
 	}
@@ -101,6 +107,8 @@ func TestTwoStepSignIn(t *testing.T) {
 		t.Fatalf("recovery left: %v", out)
 	}
 
+	// (A new ten-minute window: the codes above spent this person's tries.)
+	g.advance(11 * time.Minute)
 	// While it is on, the password alone (a borrowed session, a password read
 	// over a shoulder) can neither replace the phone nor remove it.
 	if code, out := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/start", `{"password":`+pw+`}`, csrf, "1"); code != http.StatusForbidden || out["needs_code"] != true {
@@ -136,5 +144,113 @@ func TestTwoStepSignIn(t *testing.T) {
 	}
 	if code, _ := do(t, client(), "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery"}`); code != 200 {
 		t.Fatalf("password alone after turning it off: %d", code)
+	}
+}
+
+// The races the security review found: several enables with one code, and
+// one recovery code spent by several requests at once.
+func TestTwoStepRaces(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	const pw = `"correct horse battery"`
+	_, out := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/start", `{"password":`+pw+`}`, csrf, "1")
+	secret := out["secret"].(string)
+	now, _ := auth.TOTPCode(secret, g.now)
+
+	// Eight enables at once: exactly one wins, and the secret is the real one.
+	var wg sync.WaitGroup
+	var ok atomic.Int32
+	codes := make([][]string, 8)
+	for i := range 8 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if code, out := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/enable", `{"password":`+pw+`,"code":"`+now+`"}`, csrf, "1"); code == 200 {
+				ok.Add(1)
+				b, _ := json.Marshal(out["recovery"])
+				json.Unmarshal(b, &codes[i])
+			}
+		}()
+	}
+	wg.Wait()
+	if ok.Load() != 1 {
+		t.Fatalf("%d enables succeeded with one code, want exactly 1", ok.Load())
+	}
+	// An empty secret's code never signs in.
+	later := g.advance(time.Minute)
+	empty, _ := auth.TOTPCode("", later)
+	if code, _ := do(t, client(), "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery","code":"`+empty+`"}`); code == 200 {
+		t.Fatal("the empty-secret code signed in")
+	}
+	real, _ := auth.TOTPCode(secret, later)
+	if code, _ := do(t, client(), "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery","code":"`+real+`"}`); code != 200 {
+		t.Fatalf("the real phone's code: %d", code)
+	}
+
+	// One recovery code, eight requests at once: it signs in once. (Past the
+	// ten-minute window first: the enables above spent this person's tries.)
+	g.advance(11 * time.Minute)
+	var recovery []string
+	for _, cs := range codes {
+		if cs != nil {
+			recovery = cs
+		}
+	}
+	var in atomic.Int32
+	for range 8 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if code, _ := do(t, client(), "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery","code":"`+recovery[0]+`"}`); code == 200 {
+				in.Add(1)
+			}
+		}()
+	}
+	wg.Wait()
+	if in.Load() != 1 {
+		t.Fatalf("one recovery code signed in %d times, want 1", in.Load())
+	}
+}
+
+// A pending secret expires: a setup left open cannot be finished later.
+func TestTwoStepPendingExpires(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	const pw = `"correct horse battery"`
+	_, out := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/start", `{"password":`+pw+`}`, csrf, "1")
+	secret := out["secret"].(string)
+	later := g.advance(11 * time.Minute)
+	code, _ := auth.TOTPCode(secret, later)
+	if status, _ := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/enable", `{"password":`+pw+`,"code":"`+code+`"}`, csrf, "1"); status != http.StatusBadRequest {
+		t.Fatalf("enable after the pending secret expired: %d", status)
+	}
+}
+
+// An owner with two-step on acts on someone else's sign-in only with their
+// own code as well: a borrowed owner session plus the password is not enough.
+func TestOwnerActionsNeedTheOwnersCode(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	const pw = `"correct horse battery"`
+	_, out := do(t, owner, "POST", g.srv.URL+"/api/v1/people", `{"email":"ada@site.com","role":"viewer"}`, csrf, "1")
+	id := out["person"].(map[string]any)["id"].(string)
+	_, out = do(t, owner, "POST", g.srv.URL+"/api/v1/account/2fa/start", `{"password":`+pw+`}`, csrf, "1")
+	secret := out["secret"].(string)
+	now, _ := auth.TOTPCode(secret, g.now)
+	if code, _ := do(t, owner, "POST", g.srv.URL+"/api/v1/account/2fa/enable", `{"password":`+pw+`,"code":"`+now+`"}`, csrf, "1"); code != 200 {
+		t.Fatalf("enable: %d", code)
+	}
+	for _, path := range []string{"/password", "/two-step/off"} {
+		if code, out := do(t, owner, "POST", g.srv.URL+"/api/v1/people/"+id+path, `{"password":`+pw+`}`, csrf, "1"); code != http.StatusForbidden || out["needs_code"] != true {
+			t.Fatalf("%s with the owner's password alone: %d %v", path, code, out)
+		}
+	}
+	later := g.advance(time.Minute)
+	c, _ := auth.TOTPCode(secret, later)
+	if code, _ := do(t, owner, "POST", g.srv.URL+"/api/v1/people/"+id+"/password", `{"password":`+pw+`,"code":"`+c+`"}`, csrf, "1"); code != 200 {
+		t.Fatalf("reset with the owner's code: %d", code)
 	}
 }

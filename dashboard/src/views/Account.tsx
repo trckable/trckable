@@ -367,31 +367,51 @@ function People({ me }: { me?: string }) {
       .catch((e: Error) => settle(id, e.message, 'error'))
   }
 
+  // Acting on someone else's sign-in takes your password and, when your own
+  // two-step is on, a code too: a borrowed owner session plus a password
+  // must not be enough to take another person's account. Asked one after the
+  // other (one dialog at a time), the code last, where the action runs.
+  const asOwner = async <T,>(o: { title: string; body: string; confirmLabel: string; busyLabel: string; done?: string; danger?: boolean }, act: (mine: string, code?: string) => Promise<T>) => {
+    const on = await api.twoStep().then((s) => s.enabled).catch(() => false)
+    if (!on) return confirmWith({ ...o, field: { label: 'Your password', type: 'password', autoComplete: 'current-password' }, run: (mine) => act(mine) })
+    const mine = await confirmWith({ ...o, done: undefined, busyLabel: undefined, confirmLabel: 'Next', field: { label: 'Your password', type: 'password', autoComplete: 'current-password' } })
+    if (mine === null) return null
+    return confirmWith({
+      ...o,
+      title: 'A code from your app',
+      body: 'Your own two-step is on: the six digits your authenticator shows now, or one of your recovery codes.',
+      field: { label: 'Code', type: 'text', autoComplete: 'one-time-code' },
+      run: (code) => act(mine, code),
+    })
+  }
+
   const reset = async (p: Person) => {
     let made: { email: string; password: string } | null = null
-    const pw = await confirmWith({
-      title: `New sign-in details for ${p.email}?`,
-      body: 'They are signed out everywhere, get a new one-time password from you, and choose their own at the next sign-in. Type your own password to confirm.',
-      field: { label: 'Your password', type: 'password', autoComplete: 'current-password' },
-      confirmLabel: 'Make new details',
-      busyLabel: 'Resetting…',
-      run: (mine) => api.resetPersonPassword(p.id, mine).then((r) => (made = r)),
-    })
+    const pw = await asOwner(
+      {
+        title: `New sign-in details for ${p.email}?`,
+        body: 'They are signed out everywhere, get a new one-time password from you, and choose their own at the next sign-in. Type your own password to confirm.',
+        confirmLabel: 'Make new details',
+        busyLabel: 'Resetting…',
+      },
+      (mine, code) => api.resetPersonPassword(p.id, mine, code).then((r) => (made = r)),
+    )
     if (pw !== null && made) (setIssued({ ...(made as { email: string; password: string }), reset: true }), load())
   }
   // Lost phone, no recovery codes: they sign in with the password alone and
   // set two-step up again.
   const turnOff = async (p: Person) => {
-    const pw = await confirmWith({
-      title: `Turn off two-step for ${p.email}?`,
-      body: 'For a lost phone with no recovery codes left: they sign in with their password alone, then set two-step up again. Type your own password to confirm.',
-      field: { label: 'Your password', type: 'password', autoComplete: 'current-password' },
-      confirmLabel: 'Turn off two-step',
-      danger: true,
-      busyLabel: 'Turning off…',
-      done: `Two-step is off for ${p.email}`,
-      run: (mine) => api.turnOffTwoStepFor(p.id, mine),
-    })
+    const pw = await asOwner(
+      {
+        title: `Turn off two-step for ${p.email}?`,
+        body: 'For a lost phone with no recovery codes left: they sign in with their password alone, then set two-step up again. Type your own password to confirm.',
+        confirmLabel: 'Turn off two-step',
+        danger: true,
+        busyLabel: 'Turning off…',
+        done: `Two-step is off for ${p.email}`,
+      },
+      (mine, code) => api.turnOffTwoStepFor(p.id, mine, code),
+    )
     if (pw !== null) load()
   }
   const remove = async (p: Person) => {
