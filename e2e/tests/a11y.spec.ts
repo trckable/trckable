@@ -22,14 +22,16 @@ test.use({ colorScheme })
 test('every screen meets WCAG 2.1 AA', async ({ page }) => {
   test.slow()
   const scan = async (where: string) => {
-    // Entry animations fade text in; measuring mid-fade reports a contrast
-    // failure nobody ever sees.
+    // Contrast is about what stays on screen, not a fade on its way in: the
+    // page runs with reduced motion (the dashboard then skips its entrance
+    // animations), and a short pause lets late-loading parts arrive.
     await page.waitForTimeout(700)
     const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
     const found = violations.flatMap((v) => v.nodes.map((n) => `${where}: ${v.id} — ${n.any?.[0]?.message ?? v.help}\n    ${n.html.slice(0, 160)}`))
     expect(found, where).toEqual([])
   }
 
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto(BASE + '/login')
   await scan('sign in')
   await page.fill('input[type=email]', EMAIL)
@@ -47,11 +49,13 @@ test('every screen meets WCAG 2.1 AA', async ({ page }) => {
 
   for (const tab of ['site', 'install', 'modules', 'payments', 'privacy', 'alerts', 'health']) {
     await page.goto(`${BASE}/settings?site=${site}&tab=${tab}`)
-    await page.waitForTimeout(1500)
+    // Settings open as a dialog whose code loads on demand: wait for it to be
+    // there, or the scan can start before it and catch it fading in.
+    await page.waitForSelector('.settings-modal .settings-body', { timeout: 15_000 })
     await scan('settings, ' + tab)
   }
   await page.goto(BASE + '/site.com?account=profile')
-  await page.waitForTimeout(1500)
+  await page.waitForSelector('.modal.account', { timeout: 15_000 })
   await scan('your account')
 })
 })

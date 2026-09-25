@@ -40,9 +40,14 @@ type Config struct {
 	// the provider's sign-in page, e.g. https://cloud.trckable.com/login). Then
 	// there is no setup, no password sign-in, no password or two-step to set
 	// here: people arrive through the provider's one-time sign-in links.
-	Managed    string
-	BackupS3   string // TRCKABLE_BACKUP_S3: https://key:secret@host/bucket/prefix?region=… (optional)
-	BackupDays int    // TRCKABLE_BACKUP_KEEP_DAYS: how long off-site copies are kept (default 30)
+	Managed string
+	// UpdateCheck: whether the dashboard may look for a newer release
+	// (TRCKABLE_UPDATE_CHECK=off turns it off for everyone). The check runs
+	// in the owner's browser, once a day, against GitHub's release list; the
+	// server itself never calls out.
+	UpdateCheck bool
+	BackupS3    string // TRCKABLE_BACKUP_S3: https://key:secret@host/bucket/prefix?region=… (optional)
+	BackupDays  int    // TRCKABLE_BACKUP_KEEP_DAYS: how long off-site copies are kept (default 30)
 	// TRCKABLE_UNSAFE_SESSION_CLOSE_MS shortens how long sessions stay open
 	// before they are written. Tests only: never in production.
 	SessionCloseAfter time.Duration
@@ -71,6 +76,7 @@ func Load() Config {
 		BackupS3:      envFile("TRCKABLE_BACKUP_S3"),
 		OperatorToken: envFile("TRCKABLE_OPERATOR_TOKEN"),
 		Managed:       strings.TrimSpace(os.Getenv("TRCKABLE_MANAGED")),
+		UpdateCheck:   !strings.EqualFold(strings.TrimSpace(os.Getenv("TRCKABLE_UPDATE_CHECK")), "off"),
 		BackupDays:    envInt("TRCKABLE_BACKUP_KEEP_DAYS", 30),
 	}
 	if c.BaseURL == "" && os.Getenv("RAILWAY_PUBLIC_DOMAIN") != "" {

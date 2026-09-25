@@ -324,3 +324,32 @@
     grid-column: 1 / -1;
   }
 }
+
+/* Install, once installed: the state first, the code a click away. */
+.card.install-ok {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+}
+.card.install-ok h3 {
+  margin: 0 0 3px;
+  font-size: 15px;
+}
+.card.install-ok p {
+  margin: 0;
+  font-size: 13px;
+}
+.install-more {
+  align-self: flex-start;
+  gap: 6px;
+  margin-top: 4px;
+}
+@media (max-width: 640px) {
+  .card.install-ok {
+    grid-template-columns: auto 1fr;
+  }
+  .card.install-ok .btn {
+    grid-column: 1 / -1;
+  }
+}

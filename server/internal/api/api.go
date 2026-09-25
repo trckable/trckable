@@ -39,6 +39,9 @@ type API struct {
 	ClientIP func(*http.Request) string
 	Now      func() time.Time
 	Revenue  *revenue.Service // nil = payments disabled
+	// UpdateCheck lets owners' dashboards look for a newer release. Off with
+	// TRCKABLE_UPDATE_CHECK=off, and on a managed instance (the host updates).
+	UpdateCheck bool
 	// HealthOf answers "is this thing still fine?" for Settings → Health.
 	HealthOf HealthSource
 	// PurgeAnalytics removes a site's rows from the analytics store. It runs on
@@ -500,7 +503,9 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 	// The version is for the dashboard's footer; every response carries it in
 	// X-Trckable-Version anyway.
 	keys, _ := a.Ctl.UserKeymap(r.Context(), p.user.ID)
-	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys})
+	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys,
+		// Only owners upgrade, so only their dashboards look.
+		"update_check": a.UpdateCheck && p.user.Role == sqlite.RoleOwner})
 }
 
 // setKeys keeps the shortcuts a person changed, so they follow them to any

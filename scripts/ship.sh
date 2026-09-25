@@ -82,5 +82,7 @@ fi
 [ "$MODE" = --check ] && { step "all checks passed (not pushed)"; exit 0; }
 
 step "push $BRANCH"
-git push --no-verify -u origin "$BRANCH" # the full gate above already ran
+# The full gate above already ran. With a lease, so a branch rebased onto a
+# freshly merged main can go up, and never over work pushed by someone else.
+git push --no-verify --force-with-lease -u origin "$BRANCH"
 printf '\n\033[32m✓ pushed %s: open or update its pull request.\033[0m\n' "$BRANCH"
