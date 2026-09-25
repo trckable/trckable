@@ -19,6 +19,7 @@ jobs:
         working-directory: server
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 } # to see what a pull request changed
       - uses: actions/setup-go@v5
         with:
           go-version: "1.27"
@@ -27,8 +28,17 @@ jobs:
         run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
       - name: vet
         run: go vet ./...
-      - name: test (race detector; network tests skipped)
-        run: go test ./... -race -count=1 -short
+      # The race detector makes the tests about three times slower. It runs on
+      # every push to main and on every pull request that touches the server;
+      # a pull request that only changes the dashboard or the docs cannot add
+      # a data race, so it gets the same tests without it.
+      - name: test (race detector when the server changed; network tests skipped)
+        run: |
+          race=-race
+          if [ "${{ github.event_name }}" = pull_request ] && git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- . ; then
+            race=""; echo "no server change in this pull request: tests without -race"
+          fi
+          go test ./... $race -count=1 -short
       - name: build trckabled
         run: go build -trimpath -ldflags="-s -w" -o bin/trckabled ./cmd/trckabled
       - name: crash test — kill -9 mid-load, exactly once
@@ -97,8 +107,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: cd server && go build -o bin/trckabled ./cmd/trckabled
       - run: pnpm --filter trckable build
+      # The three browsers are kept between runs (a minute each time); the
+      # system libraries they need still come from apt.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: cd e2e && npx playwright install --with-deps chromium firefox webkit
-      - run: cd e2e && npx playwright test
+      - run: cd e2e && npx playwright test --workers=4
       - name: WCAG 2.1 AA on the dashboard's main screens, both themes (axe-core, demo data)
         run: |
           d=$(mktemp -d)
@@ -106,7 +122,7 @@ jobs:
           echo 'correct horse battery' | TRCKABLE_DATA_DIR="$d" server/bin/trckabled admin add-user me@site.com --role owner
           TRCKABLE_DATA_DIR="$d" TRCKABLE_ADDR=127.0.0.1:8799 server/bin/trckabled serve > "$d/log" 2>&1 &
           for i in $(seq 1 50); do curl -sf 127.0.0.1:8799/readyz > /dev/null && break; sleep 0.3; done
-          cd e2e && TRCKABLE_A11Y_URL=http://127.0.0.1:8799 npx playwright test a11y
+          cd e2e && TRCKABLE_A11Y_URL=http://127.0.0.1:8799 npx playwright test a11y --workers=4
 
   image:
     name: image (weight budget)
