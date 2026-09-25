@@ -101,10 +101,13 @@
 .al-kinds {
   display: grid;
   gap: 8px;
-  transition: opacity 0.2s;
 }
-.al-kinds.waiting {
-  opacity: 0.55;
+/* Until there is somewhere to send them, the alerts wait: dashed edges and a
+   quieter fill say so. The words stay at full contrast (fading the whole list
+   fell below WCAG AA). */
+.al-kinds.waiting .al-kind {
+  border-style: dashed;
+  background: transparent;
 }
 .al-kind {
   display: flex;
