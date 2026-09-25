@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react'
 import { navigate } from './url'
 
-export type SettingsTab = 'site' | 'install' | 'modules' | 'payments' | 'search' | 'privacy' | 'alerts' | 'health'
+export type SettingsTab = 'site' | 'install' | 'modules' | 'sharing' | 'payments' | 'search' | 'privacy' | 'alerts' | 'health'
 export type SettingsOpen = { site: string; tab: SettingsTab; extra?: Record<string, string> }
 
 let open: SettingsOpen | null = null

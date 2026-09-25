@@ -1,6 +1,7 @@
 // Settings → Data & privacy. Everything here is part of trckable, not an
 // add-on: the defaults record the most, and each switch is the owner deciding
 // to record less. Nothing is paywalled, and nothing is on without them.
+import { Clock, Cookie, Cookie as CookieIcon, EyeOff, MapPin, ShieldCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Switch } from '../components/Switch'
 import { api, type BannerText, type ContentGroup, type PersonFound, type PersonPayment, type Site, type SiteConfig } from '../lib/api'
@@ -8,7 +9,6 @@ import { Info } from '../components/Info'
 import { Picker } from '../components/Picker'
 import { toast } from '../components/Toast'
 import { useConfirm } from '../components/Confirm'
-import { Shares } from './Shares'
 import { CodeBlock } from '../components/Code'
 import { policyCaveats, policyText } from '../lib/policy'
 import { Row } from '../components/Row'
@@ -71,51 +71,80 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
   if (!c) return <div className="skeleton" style={{ height: 240 }} />
 
   const free = c.consent_free
+  const kept = KEEP.find((k) => k.id === String(c.retention_days))?.label ?? `${c.retention_days} days`
+  // What this site records, in five plain facts, before any switch.
+  const facts: { icon: typeof ShieldCheck; text: string; tone?: 'good' }[] = [
+    { icon: ShieldCheck, text: 'No IP addresses stored', tone: 'good' },
+    { icon: Cookie, text: free ? 'Cookieless: nothing in the browser' : mods?.consent ? 'A cookie, after consent' : 'A first-party cookie', tone: free ? 'good' : undefined },
+    { icon: MapPin, text: c.record_city && !free ? 'Country, region and city' : 'Country only', tone: c.record_city && !free ? undefined : 'good' },
+    { icon: Clock, text: c.retention_days ? `Visits kept ${kept.toLowerCase()}` : 'Visits kept until you delete them' },
+    { icon: EyeOff, text: c.honor_dnt || free ? 'Do Not Track honoured' : 'Do Not Track not honoured', tone: c.honor_dnt || free ? 'good' : undefined },
+  ]
+  const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
   return (
     <>
+      <section className="pv-summary" aria-label="What this site records">
+        {facts.map((f) => (
+          <span key={f.text} className={'pv-fact' + (f.tone ? ' ' + f.tone : '')}>
+            <f.icon size={15} strokeWidth={1.75} aria-hidden="true" />
+            {f.text}
+          </span>
+        ))}
+      </section>
+      <nav className="pv-jump" aria-label="Sections of Data & privacy">
+        {[
+          ['pv-recording', 'Recording'],
+          ['pv-keeping', 'Keeping'],
+          ['requests', 'Requests'],
+          ['policy', 'Your policy'],
+        ].map(([id, label]) => (
+          <button key={id} type="button" onClick={() => jump(id)}>
+            {label}
+          </button>
+        ))}
+      </nav>
+
       {/* The mode a European site can run without a cookie banner. It is a
           switch, not a checklist, because half of it would not be compliant. */}
-      <section className={free ? 'card eu on' : 'card eu'} style={{ gap: 12 }}>
-        <div className="card-head">
-          <h2>
-            <span className="eu-stars" aria-hidden="true">
-              ★
-            </span>
-            Cookieless mode
-          </h2>
-          {free && <span className="tag live">on</span>}
-          <button
-            type="button"
-            role="switch"
-            aria-checked={free}
-            aria-label="Cookieless mode"
-            className={free ? 'switch on' : 'switch'}
-            style={{ marginLeft: 'auto' }}
-            onClick={() => save({ consent_free: !free }, free ? 'Cookieless mode is off' : 'Cookieless mode is on — the script stores nothing')}
-          >
-            <span />
-          </button>
+      <section id="pv-recording" className={free ? 'card eu on' : 'card eu'}>
+        <div className="eu-head">
+          <span className={'icon-tile' + (free ? ' accent' : '')} aria-hidden="true">
+            <CookieIcon size={18} strokeWidth={1.75} />
+          </span>
+          <span className="eu-title">
+            <h2>Cookieless mode</h2>
+            <span className="faint">{free ? 'On — the script stores nothing in the browser' : 'Store nothing in the browser, and count visitors by a daily hash'}</span>
+          </span>
+          <Switch on={free} label="Cookieless mode" onChange={() => save({ consent_free: !free }, free ? 'Cookieless mode is off' : 'Cookieless mode is on — the script stores nothing')} />
         </div>
-        <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
-          Nothing is stored in a visitor's browser: no cookie, no localStorage. Each visitor is counted by a hash of their IP address and browser that changes every day, and the IP itself is never stored. In
-          countries with an analytics exemption (France, Italy, the Netherlands, Spain, the UK) that can let you skip the banner; Germany and Austria generally still ask for consent. Check your own rules.
-        </p>
         <div className="eu-cols">
-          <ul className="bullets good">
-            <li>The script stores no cookie and nothing in localStorage</li>
-            <li>Visitors are a salted hash that rotates daily; the IP is never stored</li>
-            <li>The country stays; region and city are dropped</li>
-            <li>Do Not Track and Global Privacy Control are honoured</li>
-            <li>Enforced by this server, so a cached script cannot opt back in</li>
-          </ul>
-          <ul className="bullets gone">
-            <li>New versus returning is only right within a day</li>
-            <li>Revenue is attributed to visits from the same day</li>
-            <li>Visitors are counted afresh at midnight UTC{utcMidnight(site.timezone)}</li>
-          </ul>
+          <div>
+            <span className="eu-col-head">You get</span>
+            <ul className="bullets good">
+              <li>No cookie, no localStorage</li>
+              <li>A daily salted hash; the IP is never stored</li>
+              <li>Country only</li>
+              <li>Do Not Track and GPC honoured</li>
+            </ul>
+          </div>
+          <div>
+            <span className="eu-col-head">You give up</span>
+            <ul className="bullets gone">
+              <li>New vs returning beyond one day</li>
+              <li>Revenue credited across days</li>
+              <li>One visitor across midnight UTC{utcMidnight(site.timezone)} counts as two</li>
+            </ul>
+          </div>
         </div>
-        {free && <span className="faint" style={{ fontSize: 12 }}>Visitors get the smaller, storage-free script within the hour.</span>}
+        <details className="eu-more">
+          <summary>Can I skip the cookie banner?</summary>
+          <p className="faint">
+            Often, yes. Countries with an analytics exemption (France, Italy, the Netherlands, Spain, the UK) generally allow it for a mode like this; Germany and Austria generally still ask for consent. The rules are enforced by this
+            server, so a cached script cannot opt back in. Check your own rules.
+          </p>
+        </details>
+        {free && <span className="faint eu-note">Visitors get the smaller, storage-free script within the hour.</span>}
       </section>
 
       {!free && <Consent site={site} config={c} on={!!mods?.consent} onSave={save} />}
@@ -127,11 +156,11 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
         </div>
 
         <Row label="Region and city" hint={free ? 'Cookieless mode keeps the country only' : 'The country is always recorded; region and city are yours to choose'}>
-          <Switch on={c.record_city} disabled={free} onChange={() => save({ record_city: !c.record_city }, c.record_city ? 'Region and city are no longer recorded' : 'Region and city will be recorded')} />
+          <Switch on={c.record_city && !free} disabled={free} onChange={() => save({ record_city: !c.record_city }, c.record_city ? 'Region and city are no longer recorded' : 'Region and city will be recorded')} />
         </Row>
 
         <Row label="Honour Do Not Track and Global Privacy Control" hint={free ? 'Always on in cookieless mode' : 'Visits from browsers sending those signals are dropped before anything is stored'}>
-          <Switch on={c.honor_dnt} disabled={free} onChange={() => save({ honor_dnt: !c.honor_dnt }, c.honor_dnt ? 'DNT and GPC are ignored again' : 'DNT and GPC will be honoured')} />
+          <Switch on={c.honor_dnt || free} disabled={free} onChange={() => save({ honor_dnt: !c.honor_dnt }, c.honor_dnt ? 'DNT and GPC are ignored again' : 'DNT and GPC will be honoured')} />
         </Row>
 
         <Row label="Stricter bot filtering" hint="Also drops clients that name no browser, and visits from data centres such as AWS or Hetzner (downloaded once, about 5 MB). Private Relay and VPN users still count">
@@ -156,7 +185,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
         </Row>
       </section>
 
-      <section className="card" style={{ gap: 0 }}>
+      <section id="pv-keeping" className="card" style={{ gap: 0 }}>
         <div className="card-head" style={{ paddingBottom: 10 }}>
           <h2>How long it is kept</h2>
         </div>
@@ -169,22 +198,10 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
             items={KEEP}
           />
         </Row>
-        <Row label="Week starts on" hint="“This week”, weekly charts, the calendar and the weekly report all start on this day">
-          <div className="seg" role="group" aria-label="Week starts on">
-            <button type="button" aria-pressed={c.week_start === 1} onClick={() => save({ week_start: 1 }, 'Weeks start on Monday')}>
-              Monday
-            </button>
-            <button type="button" aria-pressed={c.week_start === 0} onClick={() => save({ week_start: 0 }, 'Weeks start on Sunday')}>
-              Sunday
-            </button>
-          </div>
-        </Row>
       </section>
 
-      <PrivacyPolicy site={site} config={c} modules={mods} />
-      <ContentGroups site={site} config={c} onSave={save} />
-      <Shares site={site} />
       <DataRequest site={site} />
+      <PrivacyPolicy site={site} config={c} modules={mods} />
     </>
   )
 }
@@ -477,6 +494,48 @@ function PrivacyPolicy({ site, config, modules }: { site: Site; config: SiteConf
 /** Sections: /blog/* is "Writing". A site with four hundred URLs is read by
  *  the handful of parts it actually has. The rules are applied when a report
  *  runs, so changing them re-reads history rather than only what comes next. */
+/** Settings → General → Reports: how weeks are cut and how pages are grouped.
+ *  They shape what every report shows, so they live with the site. */
+export function ReportSettings({ site, onSites }: { site: Site; onSites?: () => void }) {
+  const [c, setC] = useState<SiteConfig | null>(null)
+  useEffect(() => {
+    api.siteConfig(site.id).then(setC).catch(() => {})
+  }, [site.id])
+  if (!c) return null
+  const save = (patch: Partial<SiteConfig>, said?: string) => {
+    const next = { ...c, ...patch }
+    setC(next)
+    api
+      .setSiteConfig(site.id, next)
+      .then((r) => {
+        setC(r)
+        toast(said ?? 'Saved')
+        if ('week_start' in patch) onSites?.()
+      })
+      .catch((e: Error) => toast(e.message, 'error'))
+  }
+  return (
+    <>
+      <section className="card" style={{ gap: 0 }}>
+        <div className="card-head" style={{ paddingBottom: 10 }}>
+          <h2>Reports</h2>
+        </div>
+        <Row label="Week starts on" hint="“This week”, weekly charts, the calendar and the weekly report all start on this day">
+          <div className="seg" role="group" aria-label="Week starts on">
+            <button type="button" aria-pressed={c.week_start === 1} onClick={() => save({ week_start: 1 }, 'Weeks start on Monday')}>
+              Monday
+            </button>
+            <button type="button" aria-pressed={c.week_start === 0} onClick={() => save({ week_start: 0 }, 'Weeks start on Sunday')}>
+              Sunday
+            </button>
+          </div>
+        </Row>
+      </section>
+      <ContentGroups site={site} config={c} onSave={save} />
+    </>
+  )
+}
+
 function ContentGroups({ site, config, onSave }: { site: Site; config: SiteConfig; onSave: (patch: Partial<SiteConfig>, said?: string) => void }) {
   const write = (gs: ContentGroup[]) => gs.map((g) => `${g.name} = ${g.path}`).join('\n')
   const [text, setText] = useState(() => write(config.groups ?? []))

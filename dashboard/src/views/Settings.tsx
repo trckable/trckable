@@ -1,4 +1,4 @@
-import { Activity, Bell, Blocks, Check, ChevronLeft, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, RefreshCw, Search, Settings as Cog, ShieldCheck, TriangleAlert, X } from 'lucide-react'
+import { Activity, Bell, Blocks, Check, ChevronLeft, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, RefreshCw, Search, Settings as Cog, Share2, ShieldCheck, TriangleAlert, X } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { isOperator, isViewer } from '../lib/me'
 import { api, type InstallCheck, type Site } from '../lib/api'
@@ -14,7 +14,8 @@ import { Copyable } from '../components/Copyable'
 import { Install } from './InstallPanel'
 import { ModulesSettings } from './Modules'
 import { PaymentsSettings } from './Payments'
-import { PrivacySettings } from './Privacy'
+import { PrivacySettings, ReportSettings } from './Privacy'
+import { Shares } from './Shares'
 import { HealthSettings } from './Health'
 import { AlertsSettings } from './Alerts'
 import { SearchSettings } from './Search'
@@ -33,6 +34,7 @@ const TABS: { id: TabID; label: string; icon: typeof Cog }[] = [
   { id: 'site', label: 'General', icon: Cog },
   { id: 'install', label: 'Install', icon: Code },
   { id: 'modules', label: 'Modules', icon: Blocks },
+  { id: 'sharing', label: 'Sharing', icon: Share2 },
   { id: 'payments', label: 'Payments', icon: CreditCard },
   { id: 'search', label: 'Search Console', icon: Search },
   { id: 'privacy', label: 'Data & privacy', icon: ShieldCheck },
@@ -87,7 +89,7 @@ function ModuleOff({ site, tab, onOn }: { site: Site; tab: TabID; onOn: () => vo
 
 // The dialog's menu, grouped the way an owner looks for things.
 const GROUPS: { name: string; tabs: TabID[] }[] = [
-  { name: 'This site', tabs: ['site', 'install', 'modules'] },
+  { name: 'This site', tabs: ['site', 'install', 'modules', 'sharing'] },
   { name: 'Money', tabs: ['payments'] },
   { name: 'Data', tabs: ['search', 'privacy', 'alerts'] },
   { name: 'Instance', tabs: ['health'] },
@@ -198,8 +200,10 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
         <>
           <SiteSettings key={site.id} site={site} onSaved={onSites} />
           <SiteLook site={site} onSaved={onSites} />
+          <ReportSettings key={'r' + site.id} site={site} onSites={onSites} />
         </>
       )}
+      {tab === 'sharing' && <Shares key={'sh' + site.id} site={site} />}
       {tab === 'install' && <InstallSection site={site} />}
       {tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
       {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}
