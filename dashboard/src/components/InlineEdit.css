@@ -6,6 +6,15 @@
   gap: 4px;
   min-width: 0;
   max-width: 100%;
+  /* The text lines up with what is around it and the hover box reaches past
+     it. An offset, not a negative margin: a margin made the layout reserve
+     too little and cut the name to "…". */
+  position: relative;
+  left: -8px;
+}
+/* On the right of a settings row it reaches past on the right instead. */
+.srow-ctl .ie {
+  left: 8px;
 }
 .ie-view {
   display: inline-flex;
@@ -13,7 +22,6 @@
   gap: 8px;
   min-width: 0;
   max-width: 100%;
-  margin-left: -8px;
   padding: 3px 8px;
   border: 1px solid transparent;
   border-radius: 8px;
@@ -57,7 +65,6 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  margin-left: -8px;
   padding: 2px 3px 2px 8px;
   border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
   border-radius: 9px;

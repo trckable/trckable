@@ -146,8 +146,8 @@
   justify-self: stretch;
   justify-items: stretch;
 }
-.sv-edit .ie-field {
-  margin-left: 0;
+.sv-edit .ie {
+  left: 0;
 }
 .sv-edit .ie-field input {
   flex: 1;
