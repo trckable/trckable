@@ -2,6 +2,8 @@ package api
 
 import (
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/trckable/trckable/server/internal/modules"
 	"github.com/trckable/trckable/server/internal/web"
@@ -38,14 +40,36 @@ func (a *API) listModules(w http.ResponseWriter, r *http.Request) {
 	}
 	sizes := web.TrackerSizes()
 	out := make([]row, 0, len(modules.All))
+	// Every figure in a module's text comes from the tracker build's own
+	// measurements: {bytes} is the module's feature, {consent} and {banner}
+	// the two ways of asking. Nothing is typed by hand.
+	fill := strings.NewReplacer(
+		"{consent}", fmtBytes(sizes.Feature[modules.TrackConsent]),
+		"{banner}", fmtBytes(sizes.Feature[modules.TrackBanner]),
+	)
 	for _, m := range modules.All {
 		m.TrackerBytes = sizes.Feature[m.Tracker] // measured by the tracker build
+		costs := make([]string, len(m.Costs))
+		for i, c := range m.Costs {
+			costs[i] = strings.ReplaceAll(fill.Replace(c), "{bytes}", fmtBytes(m.TrackerBytes))
+		}
+		m.Costs = costs
 		out = append(out, row{Module: m, Enabled: set.Has(m.ID)})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"modules": out,
 		"script":  map[string]any{"bytes": sizes.Variants[web.VariantName(set.Tracker())], "core": sizes.Core, "full": sizes.Full, "url": "/js/" + site + ".js"},
 	})
+}
+
+// fmtBytes writes a measured size the way the texts use it: "183 B",
+// "1,025 B".
+func fmtBytes(n int) string {
+	s := strconv.Itoa(n)
+	for i := len(s) - 3; i > 0; i -= 3 {
+		s = s[:i] + "," + s[i:]
+	}
+	return s + " B"
 }
 
 func (a *API) setModule(w http.ResponseWriter, r *http.Request) {

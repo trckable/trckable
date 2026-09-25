@@ -1,7 +1,7 @@
 // One searchable picker, used wherever a list is long enough to scroll:
 // install methods, timezones, currencies. A native <select> with 400 zones is
 // a scroll race; this is a search box with keyboard control.
-import { Check, ChevronDown } from 'lucide-react'
+import { Check, ChevronDown, Search } from 'lucide-react'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -56,13 +56,19 @@ export function Picker({
       if (!root.current?.contains(t) && !pop.current?.contains(t)) setOpen(false)
     }
     const close = () => setOpen(false)
+    // The page scrolling moves the button, so the list closes rather than
+    // drift. Its own list scrolling is just someone reading it: it used to
+    // close the list under their mouse.
+    const scrolled = (e: Event) => {
+      if (!pop.current?.contains(e.target as Node)) setOpen(false)
+    }
     document.addEventListener('mousedown', away)
     window.addEventListener('resize', close)
-    window.addEventListener('scroll', close, true)
+    window.addEventListener('scroll', scrolled, true)
     return () => {
       document.removeEventListener('mousedown', away)
       window.removeEventListener('resize', close)
-      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('scroll', scrolled, true)
     }
   }, [open])
 
@@ -98,9 +104,12 @@ export function Picker({
       {open &&
         createPortal(
           <div ref={pop} className="pop picker-pop floating" role="listbox" aria-label={label} style={at}>
-            <input
+            <label className="menu-search">
+              <Search size={17} strokeWidth={1.75} aria-hidden="true" />
+              <input
               ref={search}
-              className="input"
+              type="search"
+              aria-label={placeholder}
               placeholder={placeholder}
               value={q}
               onChange={(e) => (setQ(e.target.value), setI(0))}
@@ -111,6 +120,7 @@ export function Picker({
                 else if (e.key === 'Escape') setOpen(false)
               }}
             />
+            </label>
             <div className="picker-list" ref={list}>
               {hits.map((x, n) => {
                 const head = x.group && x.group !== lastGroup ? x.group : null

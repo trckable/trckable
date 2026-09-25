@@ -1,12 +1,12 @@
-import { Banknote, ChevronDown, ChevronRight, CircleUser, Coins, CornerUpLeft, Download, Ellipsis, Eye, Keyboard, KeyRound, Maximize2, MessageCircle, Minimize2, Pause, Play, Radio, RefreshCw, Target, Timer, Users, type LucideIcon } from 'lucide-react'
+import { Banknote, Check, ChevronDown, ChevronRight, CircleUser, Coins, CornerUpLeft, Download, Ellipsis, Eye, Keyboard, KeyRound, Maximize2, MessageCircle, Minimize2, Pause, Play, Radio, RefreshCw, Share2, Target, Timer, Users, type LucideIcon } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DialogActions } from '../components/DialogActions'
 import { Modal } from '../components/Modal'
 import { BarList, type BarItem } from '../charts/BarList'
 import { TimeChart, type Pulse } from '../charts/TimeChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
-import { api, cachedReport, dropReports, exportURL, type Annotation, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
-import { calendarPrevious, diffDays, fmtDay, presetById, todayIn, type Range } from '../lib/dates'
+import { api, cachedReport, dropReports, exportURL, siteState, type Milestone, type Annotation, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
+import { calendarPrevious, compareLabel, diffDays, fmtDay, presetById, setWeekStart, todayIn, type Range } from '../lib/dates'
 import { countryName, delta, flag, fmtDuration, fmtInt, fmtMoney, fmtPct, type Delta } from '../lib/format'
 import { useTween } from '../lib/motion'
 import { channelColor, channelLabel } from '../lib/palette'
@@ -29,9 +29,13 @@ import { SavedViews } from '../components/SavedViews'
 import { SpeedMenu } from '../components/SpeedMenu'
 import { LiveFeed } from './LiveFeed'
 import { SearchTerms } from './SearchTerms'
+import { StoppedNotice } from '../components/StoppedNotice'
 import { ScrollDepth } from './ScrollDepth'
 
 // Full mode's extra views live in their own chunk: Core never loads them.
+// The share card is its own chunk: nothing of it loads until Share is pressed.
+const ShareCard = lazy(() => import('../components/ShareCard'))
+const MilestoneNotice = lazy(() => import('../components/MilestoneNotice'))
 const Rhythm = lazy(() => import('./FullModules').then((m) => ({ default: m.Rhythm })))
 const Funnel = lazy(() => import('./FullModules').then((m) => ({ default: m.Funnel })))
 const WorldMap = lazy(() => import('./WorldMap').then((m) => ({ default: m.WorldMap })))
@@ -61,6 +65,8 @@ const DIM_LABEL: Record<string, string> = {
 }
 
 export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; header: React.ReactNode }) {
+  // Before anything reads a date: "This week" starts on the site's own day.
+  setWeekStart(site.week_start)
   useKeymap()
   const { params } = useLocation()
   const view = readView(params)
@@ -92,6 +98,27 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   )
   const live = range.to === today
   const { data: real, error, warming, loading, refresh } = useReport(site.id, query, { live })
+  // Refresh fetches every number again in place: the cache for this site is
+  // dropped, the page, filters and dates stay. The icon turns while it works
+  // (at least a moment, so a fast answer is still seen) and ticks when done.
+  const [reloading, setReloading] = useState(false)
+  const [reloaded, setReloaded] = useState(false)
+  const reloadAt = useRef(0)
+  const reloadNow = () => {
+    dropReports(site.id)
+    reloadAt.current = Date.now()
+    setReloading(true)
+    refresh()
+  }
+  useEffect(() => {
+    if (!reloading || loading) return
+    const t = setTimeout(() => {
+      setReloading(false)
+      setReloaded(true)
+      setTimeout(() => setReloaded(false), 1200)
+    }, Math.max(0, 600 - (Date.now() - reloadAt.current)))
+    return () => clearTimeout(t)
+  }, [reloading, loading])
   // A shared link has no session, so no live stream: the report refreshes on
   // its own timer instead.
   const stream = useLive(isShared() ? '' : site.id)
@@ -144,6 +171,38 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // Naming a view gets a real dialog. The browser's prompt() looks like it
   // belongs to some other website, and it cannot say what is being saved.
   const [naming, setNaming] = useState(false)
+  const [sharing, setSharing] = useState(false)
+  // A milestone of the last week not seen yet, said once (the ids seen are
+  // kept in this browser).
+  const [ms, setMs] = useState<Milestone | null>(null)
+  const [msShare, setMsShare] = useState<{ value: string; label: string; sub: string } | null>(null)
+  useEffect(() => {
+    setMs(null)
+    if (isShared()) return
+    const key = 'tkb_ms_' + site.id
+    let seen: string[] = []
+    try {
+      seen = JSON.parse(localStorage.getItem(key) || '[]')
+    } catch {
+      /* private window */
+    }
+    const since = new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10)
+    api
+      .milestones(site.id)
+      .then((r) => setMs(r.milestones.find((m) => /^\d{4}-\d{2}-\d{2}$/.test(m.day) && m.day >= since && !seen.includes(m.id)) ?? null))
+      .catch(() => {})
+  }, [site.id])
+  const dismissMs = () => {
+    if (!ms) return
+    const key = 'tkb_ms_' + site.id
+    try {
+      const seen: string[] = JSON.parse(localStorage.getItem(key) || '[]')
+      localStorage.setItem(key, JSON.stringify([...seen, ms.id].slice(-50)))
+    } catch {
+      /* private window: it shows again next time */
+    }
+    setMs(null)
+  }
   const saveView = () => setNaming(true)
   const current = location.search.replace(/^\?/, '')
   const openView = (g: SavedView) => navigate(location.pathname + '?' + g.query)
@@ -189,7 +248,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // appears as a tab when the module is on.
   const mapOn = !!mods?.map
   // The Ask button follows its module: off means the entry point is gone too.
-  const askOn = !isShared() && (mods === null || mods.ask !== false)
+  // Ask is the MCP tools and an optional key, not a module: there is nothing to switch off.
+  const askOn = !isShared()
   const sample = useMemo(() => sampleReport(site.id, site.timezone, range.from, range.to), [site.id, site.timezone, range.from, range.to])
   const data = waiting ? sample : real
 
@@ -470,7 +530,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const narrow = useNarrow()
   const shortDates = useMedia('(max-width: 960px)')
   const rows = full ? 12 : 5
-  const vs = view.compare === 'year' ? 'vs last year' : view.compare === 'previous' ? 'vs previous period' : 'vs compared'
+  // The same words the date picker shows ("vs last year" for This year), so
+  // the tiles, the chart legend and a shared card never disagree with it.
+  const vs = 'vs ' + compareLabel(pickerValue.period, pickerValue.compare, pickerValue.range)
   const onlineNow = stream.online ?? data?.online
 
   // The mode is a property of the page, not of one card: everything from grid
@@ -498,6 +560,18 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             </span>
           </button>
         )}
+          {!narrow && (
+            <button
+              type="button"
+              className={'btn icon refresh' + (reloading ? ' spinning' : '')}
+              onClick={reloadNow}
+              disabled={reloading}
+              aria-label="Refresh the numbers"
+              title="Refresh the numbers (the page stays as it is)"
+            >
+              {reloaded ? <Check size={17} strokeWidth={2.2} aria-hidden="true" /> : <RefreshCw size={17} strokeWidth={1.75} aria-hidden="true" />}
+            </button>
+          )}
           {askOn && (
             <button type="button" className="btn ask" onClick={() => setAskOpen(true)} aria-expanded={askOpen} aria-label="Ask trckable" title={`Ask trckable (${caps(keyFor('ask')).join('')})`}>
               <ChatIcon />
@@ -520,11 +594,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               a.click()
               toast('Building your file…')
             }}
-            onRefresh={() => {
-              dropReports(site.id)
-              refresh()
-              toast('Refreshed')
-            }}
+            onRefresh={reloadNow}
           />
         </div>
       </div>
@@ -569,6 +639,12 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               onClear={() => setView({ filters: [] })}
             />
           )}
+          {!isShared() && (
+            <button type="button" className="btn share-btn" onClick={() => setSharing(true)} title="Share these numbers as a picture">
+              <Share2 size={16} strokeWidth={1.75} aria-hidden="true" />
+              <span className="label">Share</span>
+            </button>
+          )}
           {!isShared() && (segments.length > 0 || view.filters.length > 0) && (
             <SavedViews
               views={segments}
@@ -593,6 +669,33 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </div>
       </div>
 
+      {sharing && k && (
+        <Suspense fallback={null}>
+          <ShareCard
+            onClose={() => (setSharing(false), msShare && (setMsShare(null), dismissMs()))}
+            data={{
+              domain: site.domain,
+              name: site.name || site.domain,
+              color: site.color,
+              // The dates the picker shows, not the first chart bucket (a week
+              // bucket starts before the range does).
+              period: pickerValue.range.from === pickerValue.range.to ? fmtDay(pickerValue.range.from) : `${fmtDay(pickerValue.range.from)} – ${fmtDay(pickerValue.range.to)}`,
+              visitors: k.visitors,
+              pageviews: k.pageviews,
+              prevVisitors: pk?.visitors,
+              prevPageviews: pk?.pageviews,
+              bounce: k.sessions ? k.bounce_rate : undefined,
+              visitTime: k.sessions ? k.avg_session_s : undefined,
+              topSource: (() => { const r = dims('channel')[0]; return r ? channelLabel(r.value) : undefined })(),
+              topCountry: (() => { const r = dims('country').find((x) => x.value); return r ? countryName(r.value) : undefined })(),
+              revenue: money ? { now: money.revenue, prev: pm?.revenue, fmt: fmtM } : undefined,
+              series: series.map((p) => p.visitors),
+              compare: data?.previous ? { label: vs, series: data.previous.series.map((p) => p.visitors) } : undefined,
+              milestone: msShare ?? undefined,
+            }}
+          />
+        </Suspense>
+      )}
       {naming && (
         <SaveViewDialog
           filters={view.filters.length}
@@ -626,6 +729,22 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
 
       {showInstall && <Install site={site} visits={stream.visits} />}
+      {ms && !showInstall && (
+        <Suspense fallback={null}>
+          <MilestoneNotice
+            m={ms}
+            onDismiss={dismissMs}
+            onShare={() =>
+              import('../components/MilestoneNotice').then(({ milestoneWords }) => {
+                const w = milestoneWords(ms)
+                setMsShare({ value: w.value, label: w.label, sub: w.sub })
+                setSharing(true)
+              })
+            }
+          />
+        </Suspense>
+      )}
+      {!showInstall && !isShared() && siteState(site) === 'stopped' && <StoppedNotice site={site} />}
 
       {view.test && (
         <div className="banner" style={{ borderColor: 'var(--money)' }}>
@@ -1035,6 +1154,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
       {full && (
         <section aria-label="Goals and live visits" className="grid3 rise" id="sec-goals">
+          {/* Off means off: with Goals off the script records none, so the card
+              would only ask for something that cannot arrive. */}
+          {(mods === null || mods.goals !== false) && (
           <div className="card">
             <div className="card-head">
               <h2>Goals</h2>
@@ -1054,6 +1176,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               )}
             />
           </div>
+          )}
           {money ? (
             <TabbedCard
               title="Top earners"
@@ -1285,10 +1408,12 @@ function MoreMenu({
       </button>
       {open && (
         <div className="pop menu" role="menu" style={{ top: 48, right: 0 }}>
-          <button type="button" role="menuitem" onClick={go(onRefresh)}>
-            <RefreshCw size={18} strokeWidth={1.75} aria-hidden="true" />
-            Refresh
-          </button>
+          {narrow && (
+            <button type="button" role="menuitem" onClick={go(onRefresh)}>
+              <RefreshCw size={18} strokeWidth={1.75} aria-hidden="true" />
+              Refresh
+            </button>
+          )}
           {askOn && narrow && (
             <button type="button" role="menuitem" onClick={go(onAsk)}>
               <ChatIcon />

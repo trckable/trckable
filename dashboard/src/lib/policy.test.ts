@@ -57,10 +57,11 @@ describe('policyText', () => {
     expect(free).toContain('Do Not Track')
   })
 
-  it('claims city only while city is recorded', () => {
-    expect(policyText(input())).toContain('your country and city')
+  it('claims region and city only while they are recorded', () => {
+    expect(policyText(input())).toContain('your country, region and city')
     expect(policyText(input({ config: config({ record_city: false }) }))).toContain('your country;')
-    expect(policyText(input({ config: config({ record_city: false }) }))).not.toContain('and city')
+    expect(policyText(input({ config: config({ record_city: false }) }))).not.toContain('city')
+    expect(policyText(input({ config: config({ record_city: false }) }))).not.toContain('region')
   })
 
   it('says how long records are kept, in the site’s own words', () => {

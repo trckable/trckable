@@ -96,6 +96,7 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 		// same model, so the two periods are read the same way.
 		Attribution: attribution(v.Get("attr")),
 		Groups:      contentGroups(r.Context(), a, siteID),
+		SundayWeeks: sundayWeeks(r.Context(), a, siteID),
 		PageGoals:   pageGoals(r.Context(), a, siteID),
 	}
 
@@ -265,6 +266,13 @@ func contentGroups(ctx context.Context, a *API, site string) []query.Group {
 	return out
 }
 
+// sundayWeeks is the site's "Week starts on" setting: weekly buckets begin
+// on Sunday when it says so.
+func sundayWeeks(ctx context.Context, a *API, site string) bool {
+	c, err := a.Ctl.SiteConfig(ctx, site)
+	return err == nil && c.WeekStart == 0
+}
+
 // pageGoals are the site's "a page was seen" goals.
 func pageGoals(ctx context.Context, a *API, site string) []query.Group {
 	c, err := a.Ctl.SiteConfig(ctx, site)
@@ -291,7 +299,7 @@ func cacheKey(p query.Params) string {
 	for _, g := range p.PageGoals {
 		gs = append(gs, "goal:"+g.Name+"="+g.Path)
 	}
-	return fmt.Sprintf("%s|%d|%d|%s|%s|%v|%v|%s|%s|%v|%v|%v|%s|%s", p.Site, p.From.Unix(), p.To.Unix(), p.TZ, p.Bucket, p.Daily, p.Deep, strings.Join(fs, "&"), p.Currency, p.Test, p.Revenue, p.Goals, p.Attribution, strings.Join(gs, "&"))
+	return fmt.Sprintf("%s|%d|%d|%s|%s|%v|%v|%v|%s|%s|%v|%v|%v|%s|%s", p.Site, p.From.Unix(), p.To.Unix(), p.TZ, p.Bucket, p.SundayWeeks, p.Daily, p.Deep, strings.Join(fs, "&"), p.Currency, p.Test, p.Revenue, p.Goals, p.Attribution, strings.Join(gs, "&"))
 }
 
 func (a *API) cachedReport(r *http.Request, q *query.Q, p query.Params, live bool) (*query.Result, error) {

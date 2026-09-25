@@ -43,7 +43,11 @@ export function useShare(): State {
     // reload, and the cookie from the first open answers instead.
     const open = token
       ? api.openShare(token, undefined, isEmbed())
-      : api.shareMe().catch(() => Promise.reject(new APIError(410, 'This link is incomplete. Ask for the full address.')))
+      : api.shareMe().catch(() =>
+          // No token in the address and no session left: either the address
+          // was cut short, or the time it was open for has passed.
+          Promise.reject(new APIError(410, 'This view has closed, or the address is incomplete. Open the full link you were given again, or ask for a new one.')),
+        )
     open.then(done).catch((e: Error) => {
       if (e instanceof APIError && e.status === 401) return setS({ state: 'password' })
       setS({ state: 'error', message: e.message })

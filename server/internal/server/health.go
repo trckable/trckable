@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"os"
+	"strings"
 	"syscall"
 	"time"
 
@@ -35,9 +36,12 @@ func (s *Server) health(ctx context.Context) api.Health {
 
 	// Disk: what this instance has written, and how long the free space lasts
 	// at the rate it is actually writing.
+	// The rate is the last seven days of stored events: known at once after a
+	// restart, and the same number a person would work out by hand.
+	var week int64
 	if st := s.duck.Load(); st != nil {
 		var events int64
-		if err := st.DB.QueryRowContext(ctx, `SELECT count(*) FROM events`).Scan(&events); err == nil {
+		if err := st.DB.QueryRowContext(ctx, `SELECT count(*), count(*) FILTER (WHERE ts >= ?) FROM events`, time.Now().Add(-7*24*time.Hour).UTC()).Scan(&events, &week); err == nil {
 			h.Store.Events = events
 		}
 	}
@@ -45,19 +49,21 @@ func (s *Server) health(ctx context.Context) api.Health {
 	h.Store.BytesFree = freeSpace(s.cfg.DataDir)
 	if h.Store.Events > 0 && h.Store.BytesUsed > 0 {
 		h.Store.PerEvent = float64(h.Store.BytesUsed) / float64(h.Store.Events)
-		// Events per day since boot, which is the only rate this process can
-		// honestly claim to know.
-		days := time.Since(s.started).Hours() / 24
-		if days > 0.02 && h.Events.Accepted > 0 && h.Store.PerEvent > 0 {
-			perDay := float64(h.Events.Accepted) / days
-			if perDay > 0 {
-				h.Store.DaysLeft = float64(h.Store.BytesFree) / (perDay * h.Store.PerEvent)
-			}
+		if perDay := float64(week) / 7; perDay > 0 {
+			h.Store.PerDay = perDay
+			h.Store.DaysLeft = float64(h.Store.BytesFree) / (perDay * h.Store.PerEvent)
 		}
 	}
 
+	h.KeyOnVolume = strings.TrimSpace(s.cfg.Secret) == ""
+	if err := s.log.Err(); err != nil {
+		h.IngestError = err.Error()
+	}
 	if at, size := s.LastBackup(); !at.IsZero() {
 		h.Backup = api.Backup{At: at.Unix(), Bytes: size}
+	}
+	if f := s.backupErr.Load(); f != nil {
+		h.Backup.Error, h.Backup.ErrorAt = f.err, f.at
 	}
 	if s.remote != nil {
 		h.Backup.Offsite, h.Backup.OffsiteDays = s.remote.Where(), s.cfg.BackupDays

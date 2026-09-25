@@ -404,3 +404,27 @@ func TestOriginMustMatchThePage(t *testing.T) {
 		}
 	}
 }
+
+// The Nginx recipe people already copied set X-Real-IP; with the proxy key it
+// counts as the visitor's IP, and without it it counts for nothing.
+func TestProxyForwardingXRealIP(t *testing.T) {
+	for _, tc := range []struct {
+		key, want string
+	}{{"tkb_px_secret", "79.106.125.62"}, {"tkb_px_guess", "10.0.0.5"}} {
+		h, _ := newHandler(t)
+		used := geoSpy(h)
+		req := httptest.NewRequest(http.MethodPost, "/api/e", strings.NewReader(`{"s":"tkb_test","k":"pv","u":"https://site.com/"}`))
+		req.Header.Set("User-Agent", chromeUA)
+		req.Header.Set("X-Trckable-Proxy-Key", tc.key)
+		req.Header.Set("X-Real-IP", "79.106.125.62")
+		req.RemoteAddr = "10.0.0.5:4444"
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		if w.Code != http.StatusAccepted {
+			t.Fatalf("key %s: status %d", tc.key, w.Code)
+		}
+		if *used != tc.want {
+			t.Fatalf("key %s: geo used %q, want %q", tc.key, *used, tc.want)
+		}
+	}
+}

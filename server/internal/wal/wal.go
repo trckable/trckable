@@ -40,6 +40,9 @@ var (
 	crcTable  = crc32.MakeTable(crc32.Castagnoli)
 	ErrClosed = errors.New("wal: closed")
 	ErrTooBig = errors.New("wal: record too large")
+	// ErrLocked: another process has this log open (the server, while an
+	// import runs). Stop it first, or import through the running server.
+	ErrLocked = errors.New("wal: another trckabled has this data directory open")
 )
 
 // Options tune the log. Zero values pick safe defaults.
@@ -60,6 +63,7 @@ type appendReq struct {
 type Log struct {
 	dir  string
 	opts Options
+	lock *os.File // held while open: one writer per log
 
 	reqs   chan *appendReq
 	closed chan struct{}
@@ -78,6 +82,10 @@ type Log struct {
 	committed uint64        // highest seq that is written and fsynced
 	notify    chan struct{} // closed and replaced on every commit
 	err       error         // sticky write error: the log refuses further appends
+	// retryable: the error was a write that was rolled back (a full disk),
+	// so the file is as it was and Retry may try again. A failed fsync is
+	// never retryable: what reached the disk is then unknown.
+	retryable bool
 }
 
 // Open opens (or creates) the log in dir, repairing a torn tail.
@@ -91,7 +99,12 @@ func Open(dir string, opts Options) (*Log, error) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}
+	lock, err := lockDir(dir)
+	if err != nil {
+		return nil, err
+	}
 	l := &Log{
+		lock:   lock,
 		dir:    dir,
 		opts:   opts,
 		reqs:   make(chan *appendReq, opts.MaxBatch),
@@ -268,11 +281,12 @@ func (l *Log) commit(batch []*appendReq, buf []byte) []byte {
 		buf = appendRecord(buf, seq, r.payload)
 		seq++
 	}
-	err = l.writeAndSync(buf)
+	err, rolledBack := l.writeAndSync(buf)
 
 	l.mu.Lock()
 	if err != nil {
 		l.err = fmt.Errorf("wal: write failed, refusing further appends: %w", err)
+		l.retryable = rolledBack
 		err = l.err
 	} else {
 		l.nextSeq = seq
@@ -295,20 +309,39 @@ func (l *Log) commit(batch []*appendReq, buf []byte) []byte {
 	return buf
 }
 
-func (l *Log) writeAndSync(buf []byte) error {
-	if _, err := l.f.Write(buf); err != nil {
+// writeFile is the one write the log makes; tests swap it to fill the disk.
+var writeFile = func(f *os.File, b []byte) (int, error) { return f.Write(b) }
+
+func (l *Log) writeAndSync(buf []byte) (err error, rolledBack bool) {
+	if _, err := writeFile(l.f, buf); err != nil {
 		// Roll back a partial write so the file stays well-formed.
-		_ = l.f.Truncate(l.size)
-		_, _ = l.f.Seek(l.size, io.SeekStart)
-		return err
+		terr := l.f.Truncate(l.size)
+		_, serr := l.f.Seek(l.size, io.SeekStart)
+		return err, terr == nil && serr == nil
 	}
 	if !l.opts.NoSync {
 		if err := l.f.Sync(); err != nil {
-			return err
+			return err, false
 		}
 	}
 	l.size += int64(len(buf))
-	return nil
+	return nil, false
+}
+
+// Retry clears a write error that was rolled back (a full disk), so the next
+// append tries again; if the disk is still full it fails the same way. It
+// reports whether the log accepts appends again.
+func (l *Log) Retry() bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.err == nil {
+		return true
+	}
+	if !l.retryable {
+		return false
+	}
+	l.err, l.retryable = nil, false
+	return true
 }
 
 func appendRecord(buf []byte, seq uint64, payload []byte) []byte {
@@ -380,6 +413,10 @@ func (l *Log) Close() error {
 	}
 	err := l.f.Close()
 	l.f = nil
+	if l.lock != nil {
+		l.lock.Close() // closing the file releases the lock
+		l.lock = nil
+	}
 	return err
 }
 

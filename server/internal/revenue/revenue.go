@@ -494,12 +494,33 @@ func (s *Service) Process(ctx context.Context) (int, error) {
 					tx.Rollback()
 					return total, err
 				}
+				// A notice about someone who was erased: the money is kept, the
+				// payload with their address is not.
+				gone, err := erasedEvent(ctx, tx, it.sc, ev)
+				if err != nil {
+					tx.Rollback()
+					return total, err
+				}
+				if gone {
+					if _, err := tx.ExecContext(ctx, `DELETE FROM pay_inbox WHERE id = ?`, it.id); err != nil {
+						tx.Rollback()
+						return total, err
+					}
+					sites[it.sc.Site] = true
+					continue
+				}
 			}
 			if _, err := tx.ExecContext(ctx, `UPDATE pay_inbox SET processed_at = ?, error = ? WHERE id = ?`, s.Now().UnixMilli(), msg, it.id); err != nil {
 				tx.Rollback()
 				return total, err
 			}
 			sites[it.sc.Site] = true
+		}
+		for site := range sites {
+			if _, err := forgetErased(ctx, tx, site); err != nil {
+				tx.Rollback()
+				return total, err
+			}
 		}
 		if err := tx.Commit(); err != nil {
 			return total, err
@@ -569,6 +590,11 @@ func (s *Service) Reprocess(ctx context.Context, site string) (int, error) {
 				return 0, err
 			}
 		}
+	}
+	// A rebuild starts from nothing, so the erased are unlinked again here:
+	// a reprocess must never bring back someone a data request removed.
+	if _, err := forgetErased(ctx, tx, site); err != nil {
+		return 0, err
 	}
 	if err := tx.Commit(); err != nil {
 		return 0, err
@@ -694,4 +720,37 @@ func isLocal(host string) bool {
 
 func providerTitle(p string) string {
 	return map[string]string{"stripe": "Stripe", "lemonsqueezy": "Lemon Squeezy", "polar": "Polar", "paddle": "Paddle", "dodo": "Dodo Payments"}[p]
+}
+
+// StartOver is the way out when the instance key is lost: the provider keys
+// and signing secrets sealed with the old key are unreadable, so they are
+// forgotten, and the current key becomes the one the data is checked
+// against. Every connection then waits for its keys again (reconnect it),
+// the Search Console key is removed, and payments already recorded stay.
+// Email hashes made with the old key no longer match new ones.
+func (s *Service) StartOver(ctx context.Context) (connections int, err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+	res, err := tx.ExecContext(ctx, `UPDATE pay_connections SET api_key_enc = '', secret_enc = ''`)
+	if err != nil {
+		return 0, err
+	}
+	n, _ := res.RowsAffected()
+	if _, err := tx.ExecContext(ctx, `DELETE FROM search_console`); err != nil {
+		return 0, err
+	}
+	if _, err := tx.ExecContext(ctx, `INSERT INTO meta (key, value) VALUES ('secret_kcv', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, s.Box.KCV()); err != nil {
+		return 0, err
+	}
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+	s.KeyErr = nil
+	slog.Warn("payments started over with the current key: old provider keys forgotten", "connections", n)
+	return int(n), nil
 }

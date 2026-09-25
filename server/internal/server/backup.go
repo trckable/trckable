@@ -29,6 +29,10 @@ const (
 // directory, so it needs no other permission.
 const TriggerFile = ".backup-now"
 
+// FailedFile holds why the last backup failed, so `trckabled backup` (which
+// asks through TriggerFile) can say so at once instead of waiting.
+const FailedFile = ".backup-failed"
+
 // runBackups writes one backup a few minutes after boot, then one a day, and
 // one whenever the trigger file appears.
 func (s *Server) runBackups(ctx context.Context) {
@@ -47,7 +51,12 @@ func (s *Server) runBackups(ctx context.Context) {
 			if _, err := os.Stat(trigger); err != nil {
 				continue
 			}
-			os.Remove(trigger)
+			// Removed before the backup runs; a trigger that cannot be removed
+			// would otherwise start a backup every three seconds.
+			if err := os.Remove(trigger); err != nil {
+				s.backupErr.Store(&backupFailure{at: time.Now().Unix(), err: "the backups folder cannot be written: " + err.Error()})
+				continue
+			}
 		}
 		s.backupOnce(ctx)
 	}
@@ -62,9 +71,13 @@ func (s *Server) backupOnce(ctx context.Context) {
 	if err != nil {
 		if ctx.Err() == nil {
 			slog.Warn("backup failed", "err", err)
+			s.backupErr.Store(&backupFailure{at: time.Now().Unix(), err: err.Error()})
+			os.WriteFile(filepath.Join(s.backupsDir(), FailedFile), []byte(err.Error()), 0o600)
 		}
 		return
 	}
+	s.backupErr.Store(nil)
+	os.Remove(filepath.Join(s.backupsDir(), FailedFile))
 	slog.Info("backup written", "path", res.Path, "bytes", res.Bytes, "took", res.Took.Round(time.Millisecond))
 	s.ship(ctx, res.Path)
 	s.pruneBackups()
@@ -96,6 +109,12 @@ func (s *Server) Backup(ctx context.Context) (backup.Result, error) {
 		st.Duck = d.DB
 	}
 	return backup.Run(ctx, st, s.backupsDir())
+}
+
+// backupFailure is a local backup that did not get written.
+type backupFailure struct {
+	at  int64
+	err string
 }
 
 // offsiteStatus is how the last copy to the bucket went, for Settings → Health.
@@ -146,7 +165,9 @@ func (s *Server) pruneBackups() {
 	}
 	backup.SortNewest(files)
 	keep := KeepBackups
-	if s.remote != nil {
+	// Fewer here only while the bucket really holds the rest: when the last
+	// copy failed, the local files are the only ones there are.
+	if st := s.offsite.Load(); s.remote != nil && st != nil && st.err == "" && st.at > 0 {
 		keep = KeepBackupsOffsite
 	}
 	for _, name := range files[min(len(files), keep):] {

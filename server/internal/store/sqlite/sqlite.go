@@ -358,6 +358,56 @@ var migrations = []string{
 	// 23: the shortcuts a person changed, as JSON {action: key}. Empty is the
 	// defaults; the dashboard owns the list of actions.
 	`ALTER TABLE users ADD COLUMN keymap TEXT NOT NULL DEFAULT '';`,
+	// 24: people erased through a data request, so nothing links them back:
+	// kind 'email' holds the keyed email hash (never the address), kind
+	// 'payment' holds provider:id. A webhook, a reconciliation or a reprocess
+	// that meets one drops its payload and leaves the payment unlinked.
+	`CREATE TABLE pay_erased (
+		site_id   TEXT NOT NULL,
+		kind      TEXT NOT NULL,
+		value     TEXT NOT NULL,
+		erased_at INTEGER NOT NULL,
+		PRIMARY KEY (site_id, kind, value)
+	);`,
+	// 25: a password someone else chose (a new person's, or one an owner
+	// reset) must be replaced at the next sign-in.
+	`ALTER TABLE users ADD COLUMN must_change INTEGER NOT NULL DEFAULT 0;`,
+	// 26: a site's own look in the dashboard: an accent colour and a small
+	// icon (its favicon, or one the owner uploads).
+	`CREATE TABLE site_brand (
+		site_id    TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		color      TEXT NOT NULL DEFAULT '',
+		icon       BLOB,
+		icon_type  TEXT NOT NULL DEFAULT '',
+		updated_at INTEGER NOT NULL
+	);`,
+	// 27: the last time this server looked for a site's snippet from the
+	// outside, and what it found, so the dashboard can say when a working
+	// install stopped working.
+	`CREATE TABLE site_check (
+		site_id    TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		checked_at INTEGER NOT NULL,
+		found      TEXT NOT NULL DEFAULT '',
+		via        TEXT NOT NULL DEFAULT '',
+		error      TEXT NOT NULL DEFAULT ''
+	);`,
+	// 28: public widgets a site shows on its own pages: a small card with a
+	// few numbers the owner chose to make public, under a random id.
+	`CREATE TABLE widgets (
+		id         TEXT PRIMARY KEY,
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		kind       TEXT NOT NULL,
+		theme      TEXT NOT NULL DEFAULT 'auto',
+		accent     TEXT NOT NULL DEFAULT '',
+		radius     INTEGER NOT NULL DEFAULT 16,
+		brand      INTEGER NOT NULL DEFAULT 1,
+		on_        INTEGER NOT NULL DEFAULT 1,
+		created_at INTEGER NOT NULL
+	);
+	CREATE INDEX widgets_site ON widgets(site_id);`,
+	// 29: which parts a widget shows (bars, countries, pages, channels, ai).
+	// Its own migration: 28 had already run on existing databases.
+	`ALTER TABLE widgets ADD COLUMN shows TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {
@@ -527,6 +577,7 @@ func (s *Store) DeleteSite(ctx context.Context, id string) (Removed, error) {
 		`DELETE FROM pay_inbox WHERE connection_id IN (SELECT id FROM pay_connections WHERE site_id = ?)`,
 		`DELETE FROM pay_payments WHERE site_id = ?`,
 		`DELETE FROM pay_hints WHERE site_id = ?`,
+		`DELETE FROM pay_erased WHERE site_id = ?`,
 		`DELETE FROM pay_aliases WHERE site_id = ?`,
 		`DELETE FROM pay_refunds WHERE site_id = ?`,
 		`DELETE FROM pay_disputes WHERE site_id = ?`,

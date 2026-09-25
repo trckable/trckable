@@ -407,3 +407,36 @@ func TestPruneBeforeKeepsRecentRows(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+// Importing the same history twice, with a restart in between as an import
+// needs, stores it once: old ids are outside the in-memory window, so they
+// are checked against what is stored.
+func TestImportingTwiceStoresOnce(t *testing.T) {
+	dir := t.TempDir()
+	e := newEnv(t, dir)
+	old := time.Now().Add(-90 * 24 * time.Hour).UnixMilli()
+	imported := func(i uint64) event.Event {
+		ev := pv("s1", i%20+1, 1_000_000+i, old+int64(i)*60_000)
+		ev.Imported = true
+		return ev
+	}
+	for i := uint64(1); i <= 300; i++ {
+		e.append(t, imported(i))
+	}
+	e.runUntil(t, 300)
+	if n := e.count(t, `SELECT count(*) FROM events`); n != 300 {
+		t.Fatalf("first import: %d rows", n)
+	}
+	e.close()
+
+	e = newEnv(t, dir)
+	defer e.close()
+	for i := uint64(1); i <= 300; i++ {
+		e.append(t, imported(i))
+	}
+	e.append(t, imported(301)) // one new row in the second file
+	e.runUntil(t, 601)
+	if n := e.count(t, `SELECT count(*) FROM events`); n != 301 {
+		t.Fatalf("after importing the same file again: %d rows, want 301", n)
+	}
+}

@@ -4,6 +4,7 @@ import { ExternalLink, Sparkles } from 'lucide-react'
 import type { Latest } from '../lib/update'
 import { CodeBlock } from './Code'
 import { Modal } from './Modal'
+import './UpdateDialog.css'
 
 /** The release notes as short plain lines: headings and bullets, no markup. */
 function lines(md = ''): string[] {
@@ -37,15 +38,18 @@ export default function UpdateDialog({ latest, current, onClose }: { latest: Lat
         </div>
       )}
       <div className="update-steps">
-        <b>Upgrade a Docker install</b>
+        <b>Upgrade with docker compose</b>
         <CodeBlock
           wrap
           lang="bash"
-          code={`docker exec trckable trckabled backup      # a copy to go back to
-docker pull ghcr.io/trckable/trckable:${latest.v}
-docker restart trckable`}
+          code={`docker compose exec trckable trckabled backup   # a copy to go back to
+docker compose pull
+docker compose up -d`}
         />
-        <span className="faint">Nothing the server accepted is lost while it restarts. On Railway or another host, redeploy with the new image.</span>
+        <span className="faint">
+          A plain docker run install is replaced the same way: pull, then remove the container and run it again with the same volume (docker restart keeps the old image). On Railway, redeploy. Nothing the server
+          accepted is lost while it restarts.
+        </span>
       </div>
       <div className="update-links">
         <a className="btn" href="https://trckable.com/docs/self-host/upgrading/" target="_blank" rel="noreferrer">

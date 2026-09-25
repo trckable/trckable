@@ -141,3 +141,499 @@
   line-height: 1.35;
   white-space: normal;
 }
+
+/* ---- People ------------------------------------------------------------------
+   One row per person: who, when they were last here, their role and whether
+   they use a second step; the ⋯ menu for the rest. */
+.people {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.people-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background:
+    radial-gradient(420px 160px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
+    var(--surface-2);
+}
+.people-head-text {
+  display: grid;
+  gap: 2px;
+}
+.people-head-text h2 {
+  margin: 0;
+}
+.people-head-text .faint {
+  font-size: 13px;
+}
+.people-roles {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.people-roles > span {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--grid);
+  border-radius: 10px;
+  background: var(--sunken);
+  line-height: 1.45;
+}
+.people-roles svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--text-3);
+}
+.people-roles b {
+  color: var(--text);
+  font-weight: 600;
+}
+.people-group {
+  display: grid;
+  gap: 8px;
+}
+.people-group-head {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.people-list {
+  display: grid;
+  gap: 8px;
+  container-type: inline-size;
+}
+.person {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.person.self {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+.person-avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--sunken);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-weight: 600;
+}
+.person-avatar.owner {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--accent);
+}
+.person-text {
+  display: grid;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.person-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.person-name .you {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+}
+.person-sub {
+  font-size: 13px;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+.person-seen {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.person-tags {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+.person .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+.person .tag.quiet {
+  border-color: var(--border-2);
+  background: transparent;
+  color: var(--text-2);
+}
+/* The row's menu sits in the middle of the row, however tall it is. */
+.person > .btn.icon {
+  align-self: center;
+}
+.person .tag.on {
+  border-color: color-mix(in srgb, var(--up) 35%, transparent);
+  color: var(--up);
+}
+/* A small action under the status, not a link that runs under the text. */
+.person-seen .person-quick {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  height: 26px;
+  margin: 6px 0 0;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.person-seen .person-quick:hover {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--accent);
+}
+.person-seen {
+  display: grid;
+  justify-items: start;
+}
+.person-tags,
+.person .menu-wrap {
+  flex-shrink: 0;
+}
+@media (max-width: 640px) {
+  .people-roles {
+    grid-template-columns: 1fr;
+  }
+}
+/* Where the list is narrow (a phone, or a small window), the name and email
+   keep the whole line and the tags and buttons go underneath. */
+@container (max-width: 560px) {
+  .person {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 6px 14px;
+  }
+  .person-tags {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+  .person > .btn.icon {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+}
+.modal.person-modal {
+  width: min(480px, 100%);
+  gap: 18px;
+}
+.person-form {
+  display: grid;
+  gap: 16px;
+}
+.person-roles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.person-role {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--sunken);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.person-role .menu-sub {
+  white-space: normal;
+}
+.person-role[aria-checked='true'] {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 7%, var(--sunken));
+}
+.person-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.otp-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px 10px 14px;
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  background: var(--sunken);
+}
+.otp-box code {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  user-select: all;
+}
+.otp-box .btn {
+  gap: 6px;
+}
+@media (max-width: 480px) {
+  .person-roles {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Your picture: always a circle, whatever was uploaded. */
+.avatar {
+  overflow: hidden;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.avatar.big {
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+}
+.avatar.huge {
+  width: 72px;
+  height: 72px;
+  font-size: 28px;
+}
+
+/* ---- Account: you, then sign-in, then preferences ------------------------ */
+.me-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background:
+    radial-gradient(420px 160px at 0% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
+    var(--surface-2);
+}
+.me-photo {
+  position: relative;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+.me-photo .avatar {
+  box-shadow: 0 0 0 3px var(--surface-2), 0 0 0 4px color-mix(in srgb, var(--accent) 40%, transparent);
+  transition: filter 0.15s;
+}
+.me-photo:hover .avatar {
+  filter: brightness(0.85);
+}
+.me-cam {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--surface-2);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.me-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.me-email {
+  color: var(--text-2);
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+.me-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12px;
+}
+.me-actions {
+  display: flex;
+  gap: 6px;
+  align-self: start;
+}
+.acct-group {
+  gap: 0;
+}
+.acct-title {
+  margin: 8px 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-2);
+}
+.srow.acct-line {
+  gap: 14px;
+}
+@media (max-width: 640px) {
+  .me-card {
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+    padding: 16px;
+  }
+  .avatar.huge {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+  .me-actions {
+    grid-column: 1 / -1;
+  }
+  .me-actions .btn:first-child {
+    flex: 1;
+  }
+  .me-meta .faint {
+    display: none;
+  }
+  .srow.acct-line {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 6px 12px;
+  }
+  .srow.acct-line .srow-ctl {
+    grid-column: 1 / -1;
+  }
+}
+
+/* The new password: a field with its eye, and how long it is. */
+.pw-field {
+  position: relative;
+  display: block;
+}
+.pw-field .input {
+  width: 100%;
+  padding-right: 44px;
+}
+.pw-eye {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.pw-eye:hover {
+  color: var(--text);
+  background: var(--sunken);
+}
+.pw-meter {
+  display: grid;
+  gap: 6px;
+  margin-top: -6px;
+  font-size: 12px;
+}
+.pw-bar {
+  display: block;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--grid);
+  overflow: hidden;
+}
+.pw-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--text-3);
+  transition: width 0.2s var(--ease), background 0.2s;
+}
+.pw-meter.ok .pw-bar > span {
+  background: var(--accent);
+}
+.pw-meter.ok .faint {
+  color: var(--accent);
+}
+
+/* API keys share the People look; the bar says how many of the 20 are used. */
+.keys-bar {
+  grid-column: 1 / -1;
+  display: block;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--grid);
+  overflow: hidden;
+}
+.keys-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+}
+.keys-empty {
+  padding: 12px 4px;
+  font-size: 13px;
+}
+
+/* A sentence inside a menu: wraps, quiet, never wider than the menu. */
+.menu-note {
+  display: block;
+  max-width: 240px;
+  padding: 8px 12px 10px;
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: normal;
+}

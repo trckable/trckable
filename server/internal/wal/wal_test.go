@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -338,5 +339,64 @@ func TestEnqueueKeepsOrderAndDurability(t *testing.T) {
 		if want := fmt.Sprintf("record-%d", i); string(r.Payload) != want {
 			t.Fatalf("record %d is %q, want %q", i, r.Payload, want)
 		}
+	}
+}
+
+// A full disk refuses appends; once there is room again the log takes them,
+// and what was written before and after reads back whole.
+func TestFullDiskIsNotForever(t *testing.T) {
+	dir := t.TempDir()
+	l, err := Open(dir, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	ctx := context.Background()
+	if _, err := l.Append(ctx, []byte("before")); err != nil {
+		t.Fatal(err)
+	}
+	was := writeFile
+	full := true
+	writeFile = func(f *os.File, b []byte) (int, error) {
+		if full {
+			n, _ := f.Write(b[:len(b)/2]) // half of it lands, then the disk is full
+			return n, syscall.ENOSPC
+		}
+		return was(f, b)
+	}
+	defer func() { writeFile = was }()
+
+	if _, err := l.Append(ctx, []byte("while full")); err == nil {
+		t.Fatal("an append on a full disk must fail")
+	}
+	if l.Err() == nil {
+		t.Fatal("the log must refuse while the disk is full")
+	}
+	full = false
+	if !l.Retry() {
+		t.Fatal("a rolled-back write must be retryable")
+	}
+	if _, err := l.Append(ctx, []byte("after")); err != nil {
+		t.Fatalf("after room came back: %v", err)
+	}
+	if err := l.Close(); err != nil {
+		t.Fatal(err)
+	}
+	// Read everything back: two whole records, nothing torn in between.
+	l2, err := Open(dir, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l2.Close()
+	rd, err := l2.NewReader(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	recs, err := rd.TryRead(10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(recs) != 2 || string(recs[0].Payload) != "before" || string(recs[1].Payload) != "after" {
+		t.Fatalf("read back %d records: %v", len(recs), recs)
 	}
 }

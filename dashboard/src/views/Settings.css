@@ -326,19 +326,124 @@
 }
 
 /* Install, once installed: the state first, the code a click away. */
-.card.install-ok {
+.card.install-check {
+  position: relative;
+  gap: 14px;
+  overflow: hidden;
+}
+/* While it checks, a light runs along the top of the card. */
+.card.install-check[aria-busy='true']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: install-scan 1.1s var(--ease) infinite;
+}
+@keyframes install-scan {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+.install-at {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  animation: fadein 0.3s var(--ease) backwards;
+}
+.install-check-head {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  align-items: center;
+  align-items: start;
   gap: 14px;
 }
-.card.install-ok h3 {
+.install-check-head h3 {
   margin: 0 0 3px;
   font-size: 15px;
 }
-.card.install-ok p {
+.install-check-head p {
   margin: 0;
-  font-size: 13px;
+  font-size: 12.5px;
+  max-width: 62ch;
+}
+.install-steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.install-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--grid);
+  border-radius: 12px;
+  background: var(--sunken);
+}
+.install-step > span:last-child {
+  display: grid;
+  gap: 2px;
+  font-size: 13.5px;
+  min-width: 0;
+}
+.install-step .faint {
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+.install-step-mark {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  color: var(--text-2);
+}
+.install-step.ok .install-step-mark {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+}
+.install-step.warn .install-step-mark {
+  background: color-mix(in srgb, var(--warn) 18%, transparent);
+  color: var(--warn);
+}
+.install-step.warn {
+  border-color: color-mix(in srgb, var(--warn) 30%, var(--grid));
+}
+.install-step {
+  transition: border-color 0.25s, background 0.25s;
+}
+.install-step.wait {
+  /* The dashed edge and the spinner say "still checking"; the words stay at
+     full contrast (dimming them fell below WCAG AA). */
+  border-style: dashed;
+}
+.install-step-mark {
+  animation: step-in 0.35s var(--ease) backwards;
+}
+@keyframes step-in {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card.install-check[aria-busy='true']::before,
+  .install-step-mark {
+    animation: none;
+  }
+}
+.install-step-mark .btn-spin {
+  width: 12px;
+  height: 12px;
 }
 .install-more {
   align-self: flex-start;
@@ -346,10 +451,170 @@
   margin-top: 4px;
 }
 @media (max-width: 640px) {
-  .card.install-ok {
+  .install-check-head {
     grid-template-columns: auto 1fr;
   }
-  .card.install-ok .btn {
+  .install-check-head .btn {
     grid-column: 1 / -1;
   }
+}
+
+/* The site's colour: a row of swatches and a picker for any other. */
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.swatch {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.15);
+}
+.swatch[aria-checked='true'] {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--surface) inset;
+}
+.swatch.custom {
+  position: relative;
+  overflow: hidden;
+  background: conic-gradient(#f87171, #facc15, #4ade80, #38bdf8, #a78bfa, #f472b6, #f87171);
+}
+.swatch.custom input {
+  position: absolute;
+  inset: -4px;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Why the favicon could not be used, under its row rather than in a toast. */
+.look-err {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--grid));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--warn) 8%, transparent);
+  color: var(--text-2);
+  font-size: 12.5px;
+  animation: fadein 0.2s var(--ease) backwards;
+}
+.look-err svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--warn);
+}
+
+.icon-tile.warn {
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  color: var(--warn);
+}
+
+/* ---- General: the site itself first -------------------------------------- */
+.gen-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background:
+    radial-gradient(420px 160px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
+    var(--surface-2);
+}
+.gen-head-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.gen-head-text b {
+  overflow-wrap: anywhere;
+  font-size: 17px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gen-head-text .faint {
+  font-size: 12.5px;
+}
+.gen-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.gen-state::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.gen-state.live::before {
+  background: var(--accent);
+}
+.gen-state.quiet::before {
+  background: var(--money);
+}
+.gen-state.stopped {
+  color: var(--down);
+  border-color: color-mix(in srgb, var(--down) 40%, transparent);
+}
+.gen-state.stopped::before {
+  background: var(--down);
+}
+.card.danger-zone {
+  border-color: color-mix(in srgb, var(--down) 30%, var(--border));
+}
+.card.danger-zone .srow {
+  border-top: 0;
+}
+@media (max-width: 640px) {
+  .gen-head {
+    grid-template-columns: auto 1fr;
+  }
+  .gen-state {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+/* Settings nav: a quiet heading above each group. */
+.nav-group {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 12px 12px 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 860px) {
+  /* The chip row has no room for headings; the order still groups them. */
+  .nav-group {
+    display: none;
+  }
+}
+.viewer-note {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--grid);
+  background: var(--sunken);
+  color: var(--text-2);
+  font-size: 13px;
 }

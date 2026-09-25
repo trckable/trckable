@@ -1,0 +1,28 @@
+.btn.danger.hold {
+  border-color: var(--down);
+  background: var(--down);
+  color: #fff;
+  font-weight: 600;
+}
+.btn.danger.hold:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--down) 88%, #000);
+  color: #fff;
+}
+.btn.hold {
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+.hold-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  transform: scaleX(var(--held, 0));
+  background: color-mix(in srgb, #fff 22%, transparent);
+  pointer-events: none;
+}
+.hold-text {
+  position: relative;
+}

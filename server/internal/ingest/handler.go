@@ -45,7 +45,7 @@ type Site struct {
 	// analytics signal: a site only gives something up when its owner says so.
 	ExcludePaths []string // globs that are never recorded, e.g. /admin/*
 	HonorDNT     bool     // drop visits from browsers sending DNT or GPC
-	NoCity       bool     // keep the country, drop the city
+	NoCity       bool     // keep the country, drop region and city
 	BotStrict    bool     // also drop headless and unknown clients
 	// ConsentFree keeps nothing in the browser and no city, so the site can
 	// run analytics without a consent banner. Enforced here, not trusted to
@@ -112,6 +112,9 @@ type Handler struct {
 	Now     func() time.Time
 	Stats   Stats
 	Seen    Seen // optional: records that a site is alive
+	// Module reports whether a site has a module on; nil means every module
+	// is on. Only endpoints that exist for one module ask (the crawler one).
+	Module func(site, id string) bool
 
 	limitOnce sync.Once
 	limit     *limiter
@@ -298,7 +301,14 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 	proxied := site.ProxyKey != "" && auth.Equal(r.Header.Get(proxyKeyHeader), site.ProxyKey)
 	ip := h.ClientIP(r)
 	if proxied {
-		if fwd := strings.TrimSpace(r.Header.Get(proxyIPHeader)); fwd != "" {
+		// Our own header first; X-Real-IP too, because that is what a stock
+		// Nginx recipe sets, and our own docs once said so. Either counts
+		// only with the proxy key: without it a visitor could name any IP.
+		fwd := strings.TrimSpace(r.Header.Get(proxyIPHeader))
+		if fwd == "" {
+			fwd = strings.TrimSpace(r.Header.Get("X-Real-IP"))
+		}
+		if fwd != "" {
 			ip = fwd
 		}
 	}
@@ -386,8 +396,8 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 
 	if h.Geo != nil {
 		e.Country, e.Region, e.City = h.Geo(ip)
-		if site.NoCity {
-			e.City = ""
+		if site.NoCity { // "the country is always recorded; region and city are yours"
+			e.Region, e.City = "", ""
 		}
 	}
 	if e.Country == "" && !proxied { // trusted edge header (Cloudflare) as a fallback

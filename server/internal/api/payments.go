@@ -207,3 +207,32 @@ func (a *API) PurgeSite(site string) {
 	a.init()
 	a.cache.purgeSite(site)
 }
+
+// startOverKeys is the way out of a lost TRCKABLE_SECRET (see
+// revenue.StartOver). The key is the whole instance's, so only an owner of
+// the instance's own account may do it, with their password.
+func (a *API) startOverKeys(w http.ResponseWriter, r *http.Request) {
+	me := a.owner(w, r)
+	if me == nil {
+		return
+	}
+	if !principalOf(r).operator() || a.Revenue == nil {
+		fail(w, http.StatusNotFound, "not found")
+		return
+	}
+	var in struct{ Password string }
+	if err := decode(r, &in); err != nil || in.Password == "" {
+		fail(w, http.StatusBadRequest, "type your password to confirm")
+		return
+	}
+	if _, err := a.Ctl.Login(r.Context(), me.Email, in.Password); err != nil {
+		fail(w, http.StatusForbidden, "that is not your password")
+		return
+	}
+	n, err := a.Revenue.StartOver(r.Context())
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"connections": n})
+}

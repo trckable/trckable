@@ -3,6 +3,7 @@ package query
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -253,6 +254,22 @@ func TestDailyKPIsIncludeNewVisitorShare(t *testing.T) {
 		// B and C are new on Sep 10; A was first seen in January.
 		eq(t, "new visitors on Sep 10", res.Days[0].KPIs.NewVisitors, 2.0/3.0)
 	})
+}
+
+func TestWeeksStartOnTheSitesDay(t *testing.T) {
+	// Wednesday 2026-09-23 to Wednesday 2026-10-07.
+	day := func(y int, m time.Month, d int) time.Time { return time.Date(y, m, d, 0, 0, 0, 0, time.UTC) }
+	p := Params{TZ: "UTC", Bucket: "week", From: day(2026, 9, 23), To: day(2026, 10, 7)}
+	if got := fillSeries(nil, p)[0].T; got != "2026-09-21T00:00" {
+		t.Fatalf("Monday weeks start %s", got)
+	}
+	p.SundayWeeks = true
+	if got := fillSeries(nil, p)[0].T; got != "2026-09-20T00:00" {
+		t.Fatalf("Sunday weeks start %s", got)
+	}
+	if got := bucketOf(p, "lstart"); !strings.Contains(got, "INTERVAL 1 DAY") {
+		t.Fatalf("Sunday bucket SQL: %s", got)
+	}
 }
 
 func TestFillSeriesCoversEveryBucket(t *testing.T) {

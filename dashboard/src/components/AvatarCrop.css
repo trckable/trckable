@@ -1,0 +1,88 @@
+/* The crop dialog: the picture under a round window, a zoom slider below. */
+.modal.crop-modal {
+  width: min(400px, 100%);
+  align-items: center;
+  gap: 16px;
+}
+.crop-modal .modal-head {
+  align-self: stretch;
+}
+.crop-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--sunken);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.crop-stage:active {
+  cursor: grabbing;
+}
+.crop-stage img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  pointer-events: none;
+}
+/* Everything outside the circle dimmed: what is saved is what is lit. */
+.crop-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 999px color-mix(in srgb, var(--bg) 70%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  pointer-events: none;
+}
+.crop-zoom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 240px;
+  color: var(--text-3);
+}
+.crop-zoom input {
+  flex: 1;
+}
+.crop-modal .person-actions {
+  align-self: stretch;
+}
+
+.crop-ring.square {
+  border-radius: 22%;
+}
+
+/* Saving: the picture dims under a spinner, then a tick before it closes. */
+.crop-veil {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.55);
+  color: var(--accent);
+  animation: fadein 0.2s var(--ease) backwards;
+  pointer-events: none;
+}
+.crop-veil.square {
+  border-radius: 22%;
+}
+.crop-veil .btn-spin {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+}
+.crop-stage.saved .crop-veil svg {
+  animation: crop-tick 0.35s var(--ease) backwards;
+}
+@keyframes crop-tick {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+.crop-stage.saving,
+.crop-stage.saved {
+  pointer-events: none;
+}

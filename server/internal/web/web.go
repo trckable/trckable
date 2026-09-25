@@ -282,7 +282,7 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 				ancestors = o
 			}
 		}
-		h.Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://api.github.com; frame-ancestors "+ancestors+"; base-uri 'self'; form-action 'self'; object-src 'none'")
+		h.Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://api.github.com; frame-ancestors "+ancestors+"; base-uri 'self'; form-action 'self'; object-src 'none'")
 		if ancestors == "'none'" {
 			h.Set("X-Frame-Options", "DENY") // older browsers that ignore frame-ancestors
 		}

@@ -76,6 +76,9 @@ type Server struct {
 	// offsite how the last copy went.
 	remote  *backup.Remote
 	offsite atomic.Pointer[offsiteStatus]
+	// backupErr is why the last local backup failed, and when; nil after a
+	// backup that worked. Shown in Settings → Health, not only in the log.
+	backupErr atomic.Pointer[backupFailure]
 }
 
 // New performs boot steps 1–2 and prepares the listener.
@@ -121,6 +124,10 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			return l.Country, l.Region, l.City
 		},
 		Hosting: s.hosting,
+		Module: func(site, id string) bool {
+			set, err := (modules.Store{DB: ctl.DB}).Of(context.Background(), site)
+			return err != nil || set.Has(id) // unreadable: record rather than lose
+		},
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/api/e", s.ingest)
@@ -350,6 +357,8 @@ func (s *Server) Run(ctx context.Context) error {
 	go s.runRetention(wctx) // each site's own "keep for N days"
 	go s.runBackups(wctx)   // one encrypted copy a day, kept on the volume
 	go s.runAlerts(wctx)    // the four things worth being told about
+	go s.runChecks(wctx)    // each site's snippet, looked for once a day
+	go s.runLogRetry(wctx)  // events again once a full disk has room
 
 	select {
 	case <-ctx.Done():

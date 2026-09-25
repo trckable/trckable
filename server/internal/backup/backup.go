@@ -191,7 +191,12 @@ func addTree(tw *tar.Writer, dir, prefix string) error {
 		if err := tw.WriteHeader(&tar.Header{Name: rel, Mode: 0o600, Size: info.Size(), ModTime: info.ModTime()}); err != nil {
 			return err
 		}
-		_, err = io.Copy(tw, f)
+		// Exactly the size the header promised. The write-ahead log keeps
+		// growing while visits arrive; copying to the end of a file that grew
+		// broke every backup of a busy site ("archive/tar: write too long").
+		// A record cut off at that point is dropped when the log is reopened,
+		// and the full record is in the next backup.
+		_, err = io.CopyN(tw, f, info.Size())
 		return err
 	})
 }

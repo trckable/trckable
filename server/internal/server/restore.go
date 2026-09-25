@@ -25,14 +25,16 @@ type Restored struct {
 // DuckDB file, and the write-ahead log the writer replays from its watermark.
 // dir must be empty; on any failure it is left empty again.
 func Restore(ctx context.Context, file, dir string, key []byte) (res Restored, err error) {
-	if err := backup.Restore(file, dir, key); err != nil {
-		return res, err
-	}
+	// Armed before unpacking: a file that fails halfway (disk full, a damaged
+	// entry after the tag check) must not leave half a data directory behind.
 	defer func() {
 		if err != nil {
 			clearDir(dir)
 		}
 	}()
+	if err := backup.Restore(file, dir, key); err != nil {
+		return res, err
+	}
 	c := config.Config{DataDir: dir}
 
 	// The control plane: renamed into place, then opened once so an older
@@ -65,6 +67,10 @@ func Restore(ctx context.Context, file, dir string, key []byte) (res Restored, e
 			return res, err
 		}
 		res.Analytics = true
+		// Visitor data: readable by this user only, like everything else here.
+		if err := os.Chmod(c.DuckPath(), 0o600); err != nil {
+			return res, err
+		}
 		if err := os.RemoveAll(export); err != nil {
 			return res, err
 		}

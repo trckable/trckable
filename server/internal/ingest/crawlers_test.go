@@ -1,6 +1,11 @@
 package ingest
 
-import "testing"
+import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+)
 
 func TestClassifyCrawler(t *testing.T) {
 	cases := []struct {
@@ -37,5 +42,26 @@ func TestCrawlerSpecificityWins(t *testing.T) {
 	}
 	if c, _ := ClassifyCrawler("Applebot-Extended/1.0"); c.Kind != "train" {
 		t.Fatalf("Applebot-Extended classified as %q", c.Kind)
+	}
+}
+
+// With the Crawlers module off a report is answered 202 and nothing is
+// written; with it on, the hit is recorded.
+func TestCrawlRespectsTheModule(t *testing.T) {
+	for _, on := range []bool{false, true} {
+		h, l := newHandler(t)
+		h.Module = func(site, id string) bool { return on }
+		before, _ := l.Committed()
+		req := httptest.NewRequest(http.MethodPost, "/api/crawl", strings.NewReader(`{"s":"tkb_test","u":"https://site.com/pricing","ua":"GPTBot/1.2","st":200}`))
+		req.Header.Set("X-Trckable-Proxy-Key", "tkb_px_secret")
+		w := httptest.NewRecorder()
+		h.Crawl(w, req)
+		if w.Code != http.StatusAccepted {
+			t.Fatalf("module on=%v: status %d %s", on, w.Code, w.Body)
+		}
+		after, _ := l.Committed()
+		if wrote := after > before; wrote != on {
+			t.Fatalf("module on=%v: wrote=%v", on, wrote)
+		}
 	}
 }

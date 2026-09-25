@@ -117,8 +117,7 @@ func TestSearchConsoleEndToEnd(t *testing.T) {
 
 	// A viewer reads the report but cannot change the connection.
 	_, p := do(t, c, "POST", g.srv.URL+"/api/v1/people", `{"email":"reader@site.com","role":"viewer"}`, csrf, "1")
-	viewer := client()
-	do(t, viewer, "POST", g.srv.URL+"/api/v1/login", `{"email":"reader@site.com","password":"`+p["password"].(string)+`"}`)
+	viewer := signInFirst(t, g, "reader@site.com", p["password"].(string))
 	if code, _ := do(t, viewer, "GET", base+"/report/search", ""); code != 200 {
 		t.Fatalf("viewer report: %d", code)
 	}

@@ -373,7 +373,7 @@ app.use('/api/e', proxy({ host: '${host}', key: '${proxyKey}' }))`,
 location /t.js  { proxy_pass ${host}/js/${site}.js; }
 location /api/e {
   proxy_pass ${host}/api/e;
-  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Trckable-Client-IP $remote_addr;
   proxy_set_header X-Trckable-Proxy-Key ${proxyKey};
 }`,
     note: 'Same-origin: no blocker list, and the visitor cookie lasts 400 days in Safari. Keep the proxy key secret.',

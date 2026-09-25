@@ -3,8 +3,11 @@
 import { useMemo, useState } from "react";
 import { api } from "../lib/api";
 import { Modal } from "../components/Modal";
+import { StepBody } from "../components/StepBody";
+import { Steps } from "../components/Steps";
 import { toast } from "../components/Toast";
 import { qr, qrPath } from "../lib/qr";
+import './TwoStepSetup.css'
 
 const STEPS = ["Confirm", "Scan", "Save codes"];
 
@@ -62,19 +65,9 @@ export default function TwoStepSetup({
       className="wizard"
       onClose={step < 2 ? onClose : undefined}
     >
-      <div className="wiz-rail" aria-hidden="true">
-        {STEPS.map((label, i) => (
-          <span
-            key={label}
-            className={i === step ? "on" : i < step ? "done" : ""}
-          >
-            <i />
-            {label}
-          </span>
-        ))}
-      </div>
+      <Steps labels={STEPS} at={step} />
 
-      <div key={step} className="wiz-step">
+      <StepBody step={step}>
         {step === 0 && (
           <>
             <h2>First, confirm it's you</h2>
@@ -120,8 +113,8 @@ export default function TwoStepSetup({
             <h2>Scan this with your app</h2>
             <p className="muted" style={{ margin: 0 }}>
               Any authenticator app works — 1Password, Bitwarden, Google
-              Authenticator, Aegis. The code is drawn here on your own server;
-              the secret never leaves it.
+              Authenticator, Aegis. The QR code is drawn in this browser; the secret is
+              never sent to a QR service or anyone else.
             </p>
             <div className="totp-setup">
               <QR uri={uri} />
@@ -248,7 +241,7 @@ export default function TwoStepSetup({
             </div>
           </>
         )}
-      </div>
+      </StepBody>
     </Modal>
   );
 }

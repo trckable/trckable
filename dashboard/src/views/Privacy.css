@@ -8,14 +8,117 @@
   border-color: var(--accent);
   background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 5%, transparent), transparent 60%), var(--surface);
 }
-.eu-stars {
-  color: var(--accent);
-  margin-right: 6px;
+.card.eu {
+  gap: 14px;
+}
+.eu-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+}
+.eu-title {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.eu-title h2 {
+  margin: 0;
+}
+.eu-title .faint {
+  font-size: 13px;
 }
 .eu-cols {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 12px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.eu-cols > div {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--grid);
+  border-radius: 12px;
+  background: var(--sunken);
+}
+.eu-col-head {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.eu-cols .bullets {
+  font-size: 13px;
+}
+.eu-more summary {
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 13px;
+  width: fit-content;
+}
+.eu-more summary:hover {
+  color: var(--text);
+}
+.eu-more p {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  max-width: 72ch;
+}
+.eu-note {
+  font-size: 12px;
+}
+
+/* ---- What this site records, at a glance ------------------------------------ */
+.pv-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pv-fact {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.pv-fact svg {
+  color: var(--text-3);
+}
+.pv-fact.good svg {
+  color: var(--up);
+}
+.pv-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: -4px;
+}
+.pv-jump button {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-3);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.pv-jump button:hover {
+  background: var(--sunken);
+  color: var(--text);
+}
+#pv-recording,
+#pv-keeping,
+#requests,
+#policy {
+  scroll-margin-top: 12px;
 }
 /* ---- Answering a data request ---------------------------------------------- */
 .request-find {
@@ -101,6 +204,7 @@
   justify-content: flex-end;
 }
 .swatch {
+  flex: none;
   display: flex;
   gap: 6px;
   align-items: center;
@@ -108,6 +212,9 @@
   color: var(--text-2);
 }
 .swatch input[type='color'] {
+  /* In the settings dialog the row is narrow: a swatch wraps to the next line
+     rather than being squeezed to a sliver. */
+  flex: none;
   width: 26px;
   height: 26px;
   padding: 0;

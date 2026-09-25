@@ -26,10 +26,7 @@ func TestViewerReadsButCannotChange(t *testing.T) {
 		t.Fatalf("same email twice: %d", code)
 	}
 
-	viewer := client()
-	if code, _ := do(t, viewer, "POST", g.srv.URL+"/api/v1/login", `{"email":"reader@site.com","password":"`+password+`"}`); code != 200 {
-		t.Fatalf("viewer sign-in: %d", code)
-	}
+	viewer := signInFirst(t, g, "reader@site.com", password)
 	if code, out := do(t, viewer, "GET", g.srv.URL+"/api/v1/me", ""); code != 200 || out["role"] != "viewer" {
 		t.Fatalf("me: %d %v", code, out)
 	}
@@ -52,7 +49,7 @@ func TestViewerReadsButCannotChange(t *testing.T) {
 	if code, _ := do(t, viewer, "PATCH", g.srv.URL+"/api/v1/account", `{"name":"Reader"}`, csrf, "1"); code != 200 {
 		t.Errorf("a viewer must be able to set their own name: %d", code)
 	}
-	if code, _ := do(t, viewer, "POST", g.srv.URL+"/api/v1/account/password", `{"current":"`+password+`","password":"a much longer password"}`, csrf, "1"); code != http.StatusNoContent {
+	if code, _ := do(t, viewer, "POST", g.srv.URL+"/api/v1/account/password", `{"current":"a long password of their own","password":"a much longer password"}`, csrf, "1"); code != http.StatusNoContent {
 		t.Errorf("a viewer must be able to change their own password: %d", code)
 	}
 	if code, _ := do(t, viewer, "GET", g.srv.URL+"/api/v1/people", ""); code != http.StatusForbidden {

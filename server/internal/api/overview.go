@@ -62,7 +62,7 @@ func (a *API) overview(w http.ResponseWriter, r *http.Request) {
 		to := startOfDay(now, loc).AddDate(0, 0, 1)
 		from := to.AddDate(0, 0, -days)
 		p := query.Params{Site: si.ID, From: from.UTC(), To: to.UTC(), TZ: loc.String(), Bucket: bucket, Currency: si.Currency,
-			Revenue: a.moduleOn(r, si.ID, "revenue")}
+			Revenue: a.moduleOn(r, si.ID, "revenue"), SundayWeeks: sundayWeeks(r.Context(), a, si.ID)}
 		cur, err := q.SiteSummary(r.Context(), p)
 		if err != nil {
 			row.Error = err.Error()

@@ -668,6 +668,21 @@ func TestExportCSV(t *testing.T) {
 	if by["country"]["DE"] != "2" {
 		t.Errorf("countries = %v", by["country"])
 	}
+	if len(by["compared total"]) != 0 {
+		t.Errorf("no comparison asked, yet the file has one: %v", by["compared total"])
+	}
+
+	// With a comparison on, the file carries its totals too, as the page did.
+	_, rows = get("?from=2026-09-20&to=2026-09-20&compare=previous")
+	var cmp []string
+	for _, r := range rows[1:] {
+		if r[0] == "compared total" {
+			cmp = r
+		}
+	}
+	if cmp == nil || cmp[1] != "2026-09-19 to 2026-09-19" || cmp[2] != "1" {
+		t.Errorf("compared total = %v, want the 19th with 1 visitor", cmp)
+	}
 	// Every bucket in the range is a row, including the empty ones, so a
 	// spreadsheet can redraw the chart without filling gaps itself.
 	if len(by["day"]) != 7 {
@@ -821,4 +836,18 @@ func TestSigninLinks(t *testing.T) {
 	if code, _ := do(t, client(), "POST", g.srv.URL+"/_trckable/signin", `{"email":"me@site.com"}`, op...); code != http.StatusConflict {
 		t.Fatalf("two-step on: %d", code)
 	}
+}
+
+// signInFirst signs a new person in with the one-time password they were
+// given and chooses their own, as the first sign-in asks.
+func signInFirst(t *testing.T, g *rig, email, oneTime string) *http.Client {
+	t.Helper()
+	c := client()
+	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/login", `{"email":"`+email+`","password":"`+oneTime+`"}`); code != http.StatusOK {
+		t.Fatalf("first sign-in: %d", code)
+	}
+	if code, out := do(t, c, "POST", g.srv.URL+"/api/v1/account/password", `{"current":"`+oneTime+`","password":"a long password of their own"}`, csrf, "1"); code != http.StatusNoContent {
+		t.Fatalf("choosing their own password: %d %v", code, out)
+	}
+	return c
 }

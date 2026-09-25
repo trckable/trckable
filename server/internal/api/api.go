@@ -31,14 +31,15 @@ const sessionCookie = "trckable_session"
 
 // API serves /api/v1.
 type API struct {
-	Ctl      *sqlite.Store
-	Query    func() *query.Q // nil while the analytics store warms up
-	Hub      *realtime.Hub
-	Token    string // TRCKABLE_API_TOKEN (automation, optional)
-	SetupEnv string // TRCKABLE_SETUP_TOKEN (optional; otherwise generated)
-	ClientIP func(*http.Request) string
-	Now      func() time.Time
-	Revenue  *revenue.Service // nil = payments disabled
+	widgetCache widgetCache // each site's widget numbers, for a minute
+	Ctl         *sqlite.Store
+	Query       func() *query.Q // nil while the analytics store warms up
+	Hub         *realtime.Hub
+	Token       string // TRCKABLE_API_TOKEN (automation, optional)
+	SetupEnv    string // TRCKABLE_SETUP_TOKEN (optional; otherwise generated)
+	ClientIP    func(*http.Request) string
+	Now         func() time.Time
+	Revenue     *revenue.Service // nil = payments disabled
 	// UpdateCheck lets owners' dashboards look for a newer release. Off with
 	// TRCKABLE_UPDATE_CHECK=off, and on a managed instance (the host updates).
 	UpdateCheck bool
@@ -104,6 +105,8 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("GET /_trckable/signin", a.useSigninLink)
 	handleFunc("POST /_trckable/accounts", a.createAccount)
 	handleFunc("GET /_trckable/accounts", a.listAccounts)
+	handleFunc("GET /_trckable/health", a.operatorHealth)
+	handle("POST /api/v1/payments/start-over", a.authed(a.startOverKeys))
 	handleFunc("GET /_trckable/accounts/{id}", a.getAccount)
 	handleFunc("PUT /_trckable/accounts/{id}/limits", a.setAccountLimits)
 	handleFunc("PUT /_trckable/accounts/{id}/state", a.setAccountState)
@@ -117,7 +120,21 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("POST /api/v1/sites", a.authed(a.createSite))
 	handle("GET /api/v1/sites/{site}", a.authed(a.site))
 	handle("PATCH /api/v1/sites/{site}", a.authed(a.updateSite))
+	handle("GET /api/v1/sites/{site}/icon", a.authed(a.siteIcon))
+	handle("PUT /api/v1/sites/{site}/icon", a.authed(a.setSiteIcon))
+	handle("DELETE /api/v1/sites/{site}/icon", a.authed(a.clearSiteIcon))
+	handle("POST /api/v1/sites/{site}/icon/favicon", a.authed(a.fetchFavicon))
+	handle("PUT /api/v1/sites/{site}/color", a.authed(a.setSiteColor))
+	handle("GET /api/v1/sites/{site}/widgets", a.authed(a.widgetsList))
+	handle("POST /api/v1/sites/{site}/widgets", a.authed(a.createWidget))
+	handle("GET /api/v1/sites/{site}/widgets/preview", a.authed(a.widgetPreview))
+	handle("PUT /api/v1/sites/{site}/widgets/{id}", a.authed(a.updateWidget))
+	handle("DELETE /api/v1/sites/{site}/widgets/{id}", a.authed(a.deleteWidget))
+	handleFunc("GET /w/{id}", a.widgetPage)
+	handle("POST /api/v1/sites/{site}/install/check", a.authed(a.checkInstall))
 	handle("DELETE /api/v1/sites/{site}", a.authed(a.deleteSite))
+	handle("GET /api/v1/sites/{site}/delete-preview", a.authed(a.deletePreview))
+	handle("GET /api/v1/sites/{site}/milestones", a.authed(a.milestones))
 	handle("GET /api/v1/sites/{site}/config", a.authed(a.siteConfig))
 	handle("PUT /api/v1/sites/{site}/config", a.authed(a.setSiteConfig))
 	handle("POST /api/v1/account/password", a.authed(a.unmanaged(a.changePassword)))
@@ -134,6 +151,8 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("POST /api/v1/people", a.authed(a.addPerson))
 	handle("PATCH /api/v1/people/{id}", a.authed(a.setPersonRole))
 	handle("DELETE /api/v1/people/{id}", a.authed(a.removePerson))
+	handle("POST /api/v1/people/{id}/password", a.authed(a.unmanaged(a.resetPersonPassword)))
+	handle("POST /api/v1/people/{id}/two-step/off", a.authed(a.unmanaged(a.turnOffTwoStep)))
 	handle("GET /api/v1/sites/{site}/privacy/person", a.authed(a.person))
 	handle("GET /api/v1/sites/{site}/privacy/export", a.authed(a.exportPerson))
 	handle("DELETE /api/v1/sites/{site}/privacy/person", a.authed(a.erasePerson))
@@ -202,6 +221,15 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 }
 
 func fail(w http.ResponseWriter, code int, msg string) { writeJSON(w, code, apiError{msg}) }
+
+// jsonOnly refuses a request a plain HTML form on another site could send:
+// login, setup and opening a share link must come as JSON or with the
+// dashboard's own header (login CSRF signs a victim into someone else's
+// account).
+func jsonOnly(r *http.Request) bool {
+	ct := r.Header.Get("Content-Type")
+	return strings.HasPrefix(ct, "application/json") || r.Header.Get("X-Trckable-Request") == "1"
+}
 
 func decode(r *http.Request, v any) error {
 	return json.NewDecoder(http.MaxBytesReader(nil, r.Body, 64<<10)).Decode(v)
@@ -274,6 +302,13 @@ func (a *API) authed(h http.HandlerFunc) http.Handler {
 				fail(w, http.StatusForbidden, "your account can read this instance, not change it")
 				return
 			}
+			// A password someone else chose (a new person's, or one an owner
+			// reset) opens only the way to choose your own: whoever saw the
+			// one-time password must not keep the account.
+			if !mustChangeAllowed(r) && a.Ctl.MustChange(r.Context(), u.ID) {
+				fail(w, http.StatusForbidden, "choose your own password first")
+				return
+			}
 		} else {
 			w.Header().Set("WWW-Authenticate", `Bearer realm="trckable"`)
 			fail(w, http.StatusUnauthorized, "please sign in")
@@ -307,6 +342,16 @@ func (a *API) authed(h http.HandlerFunc) http.Handler {
 		}
 		h.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKey{}, p)))
 	})
+}
+
+// mustChangeAllowed is what a person may do before choosing their own
+// password: say who they are, choose it, or sign out.
+func mustChangeAllowed(r *http.Request) bool {
+	switch r.Method + " " + r.URL.Path {
+	case "GET /api/v1/me", "POST /api/v1/account/password", "POST /api/v1/logout":
+		return true
+	}
+	return false
 }
 
 // ownAccount is the part of the API that belongs to the signed-in person
@@ -391,6 +436,10 @@ func (a *API) unmanaged(h http.HandlerFunc) http.HandlerFunc {
 }
 
 func (a *API) setup(w http.ResponseWriter, r *http.Request) {
+	if !jsonOnly(r) {
+		fail(w, http.StatusUnsupportedMediaType, "send JSON")
+		return
+	}
 	a.init()
 	if !a.loginRate.allow("setup:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")
@@ -442,6 +491,10 @@ func (a *API) setup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) login(w http.ResponseWriter, r *http.Request) {
+	if !jsonOnly(r) {
+		fail(w, http.StatusUnsupportedMediaType, "send JSON")
+		return
+	}
 	a.init()
 	if !a.loginRate.allow("login:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")
@@ -503,9 +556,12 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 	// The version is for the dashboard's footer; every response carries it in
 	// X-Trckable-Version anyway.
 	keys, _ := a.Ctl.UserKeymap(r.Context(), p.user.ID)
-	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys,
+	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID),
 		// Only owners upgrade, so only their dashboards look.
-		"update_check": a.UpdateCheck && p.user.Role == sqlite.RoleOwner})
+		"update_check": a.UpdateCheck && p.user.Role == sqlite.RoleOwner,
+		// The instance's own health (every event, the disk, backups) is the
+		// operator's: a hosted account never sees it.
+		"operator": p.operator()})
 }
 
 // setKeys keeps the shortcuts a person changed, so they follow them to any
@@ -538,9 +594,20 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	brands, _ := a.Ctl.Brands(r.Context(), principalOf(r).account)
+	checks, _ := a.Ctl.Checks(r.Context(), principalOf(r).account)
 	out := []sqlite.SiteInfo{}
 	for _, s := range rows {
-		out = append(out, sqlite.SiteInfo{ID: s.ID, Domain: s.Domain, Name: s.Name, Timezone: s.Timezone, Currency: s.Currency, ProxyKey: a.proxyKeyFor(r, s.ProxyKey), LastEventAt: s.LastEventAt})
+		b := brands[s.ID]
+		week := 1
+		if c, err := a.Ctl.SiteConfig(r.Context(), s.ID); err == nil {
+			week = c.WeekStart
+		}
+		out = append(out, sqlite.SiteInfo{ID: s.ID, Domain: s.Domain, Name: s.Name, Timezone: s.Timezone, Currency: s.Currency, ProxyKey: a.proxyKeyFor(r, s.ProxyKey), LastEventAt: s.LastEventAt,
+			Color: b.Color, IconURL: iconURL(s.ID, b), WeekStart: week})
+		if c, ok := checks[s.ID]; ok {
+			out[len(out)-1].Check = &c
+		}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"sites": out})
 }
@@ -607,6 +674,11 @@ func (a *API) updateSite(w http.ResponseWriter, r *http.Request) {
 // ---- API keys ----
 
 func (a *API) keys(w http.ResponseWriter, r *http.Request) {
+	// The list of keys is for whoever makes and revokes them: owners.
+	if u := r.Context().Value(ctxKey{}).(principal).user; u == nil || u.Role != sqlite.RoleOwner {
+		fail(w, http.StatusForbidden, "only an owner can see this instance's API keys")
+		return
+	}
 	ks, err := a.Ctl.ListAPIKeys(r.Context(), principalOf(r).account)
 	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())

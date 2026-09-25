@@ -7,6 +7,14 @@ export const setRole = (r?: string) => {
   role = r ?? 'owner'
 }
 
+// Whether this account runs the instance itself (the default account of a
+// self-hosted server). Only then is there an instance's health to show.
+let operator = true
+export const setOperator = (o?: boolean) => {
+  operator = o !== false
+}
+export const isOperator = () => operator
+
 /** A viewer reads this instance. They change nothing except their own account. */
 export const isViewer = () => role === 'viewer'
 

@@ -29,16 +29,22 @@ export function Menu({ label, children }: { label: string; children: (close: () 
     }
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
     const close = () => setOpen(false)
+    // The page scrolling moves the button, so the list closes rather than
+    // drift. Its own list scrolling is just someone reading it: it used to
+    // close the list under their mouse.
+    const scrolled = (e: Event) => {
+      if (!pop.current?.contains(e.target as Node)) setOpen(false)
+    }
     document.addEventListener('mousedown', away)
     document.addEventListener('keydown', esc)
     window.addEventListener('resize', close)
     // Any scroll under an open menu moves the button: close rather than drift.
-    window.addEventListener('scroll', close, true)
+    window.addEventListener('scroll', scrolled, true)
     return () => {
       document.removeEventListener('mousedown', away)
       document.removeEventListener('keydown', esc)
       window.removeEventListener('resize', close)
-      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('scroll', scrolled, true)
     }
   }, [open])
 

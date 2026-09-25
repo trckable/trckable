@@ -23,6 +23,7 @@
   --money: #ffb547;
   --up: #5ee29b;
   --down: #ff6b6b;
+  --warn: #e8a93a;
   --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
   /* The code view has colours of its own: the chart palette is chosen for
      fills, and as text on a pale background it does not have the contrast.
@@ -68,6 +69,7 @@
     --money: #9c5a00;
     --up: #177a44;
     --down: #c62828;
+    --warn: #845200;
     --shadow: 0 12px 32px rgba(20, 24, 30, 0.12);
     --code-com: #5c6470;
     --code-str: #8a4f00;
@@ -104,6 +106,7 @@
   --money: #9c5a00;
   --up: #177a44;
   --down: #c62828;
+  --warn: #845200;
   --shadow: 0 12px 32px rgba(20, 24, 30, 0.12);
   --code-com: #5c6470;
   --code-str: #8a4f00;
@@ -300,19 +303,6 @@ h2 {
 }
 .btn.ghost:hover {
   background: var(--surface-2);
-}
-/* A button that reads as a sentence, not a control: "Lost your phone?" */
-.linkish {
-  background: none;
-  border: 0;
-  padding: 0;
-  font: inherit;
-  color: var(--accent);
-  cursor: pointer;
-  text-underline-offset: 3px;
-}
-.linkish:hover {
-  text-decoration: underline;
 }
 .btn.icon {
   width: 40px;
@@ -1094,36 +1084,8 @@ table.t td {
   border: 1px solid var(--border);
   border-radius: 12px;
 }
-.module > .mart-btn {
-  grid-area: art;
-}
 .module > .switch {
   grid-area: switch;
-}
-.module-head {
-  grid-area: head;
-  display: flex;
-  align-items: center;
-  gap: 6px 8px;
-  flex-wrap: wrap;
-  min-width: 0;
-}
-.module-head .tag {
-  white-space: nowrap;
-}
-.module-body {
-  grid-area: body;
-  align-self: start;
-  min-width: 0;
-}
-.module-body p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.45;
-}
-.module-body p.small {
-  margin-top: 2px;
-  font-size: 12px;
 }
 .tag {
   font-size: 11px;
@@ -1199,26 +1161,19 @@ table.t td {
   overflow-y: auto;
 }
 .modal.rise {
-  animation: modal-pop 0.28s cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+  animation: modal-pop 0.34s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 @keyframes modal-pop {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.97);
+    transform: translateY(12px) scale(0.96);
+    box-shadow: 0 0 0 rgb(0 0 0 / 0);
   }
 }
 @keyframes fade-in {
   from {
     opacity: 0;
   }
-}
-/* The dialog's top-right corner: its tools, then a round close button. */
-.modal-tools {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-  align-self: flex-start;
 }
 .modal-close {
   display: grid;
@@ -1236,42 +1191,6 @@ table.t td {
   color: var(--text);
   border-color: var(--border-2);
   transform: rotate(90deg);
-}
-.pill-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 32px;
-  padding: 0 8px 0 11px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--sunken);
-  color: var(--text-2);
-  font: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-.pill-btn:hover {
-  color: var(--text);
-  border-color: var(--border-2);
-}
-.pill-btn:hover svg {
-  transform: rotate(-120deg);
-}
-.pill-btn svg {
-  transition: transform 0.35s ease;
-}
-.pill-btn .count {
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  color: var(--accent);
-  font-size: 11px;
-  line-height: 18px;
-  text-align: center;
 }
 .modal-badge.danger {
   background: color-mix(in srgb, var(--down) 14%, transparent);
@@ -1307,7 +1226,8 @@ table.t td {
 .confirm-body > :last-child {
   grid-column: 1 / -1;
 }
-/* A dialog's heading: its icon tile, then the title with a line under it. */
+/* A dialog's heading: its icon tile, then the title with a line under it.
+   Shared by every dialog, so it stays in the main stylesheet. */
 .modal-head {
   display: flex;
   align-items: center;
@@ -1577,19 +1497,21 @@ table.t td {
   left: 0;
   min-width: 268px;
   max-width: min(360px, calc(100vw - 24px));
-  padding: 8px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 .pop.sites .input {
   height: 36px;
 }
+/* About five sites, then it scrolls: the search above finds the rest. */
 .sites-list {
   display: flex;
   flex-direction: column;
-  max-height: 46vh;
+  max-height: min(312px, 46vh);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .site {
   display: flex;
@@ -1840,37 +1762,9 @@ table.t td {
   flex-basis: 100%;
   font-size: 12px;
 }
-
-/* ---- Module previews -------------------------------------------------------
-   Every module carries a small drawing of what it gives you; tapping it opens
-   the same picture at a readable size. */
-.mart-btn {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  border-radius: 10px;
-  cursor: pointer;
-  flex: none;
-  line-height: 0;
-}
-.mart-btn:hover .mart,
-.mart-btn:focus-visible .mart {
-  border-color: var(--border-2);
-  transform: translateY(-1px);
-}
 .mart {
   border-radius: 9px;
   transition: transform 0.2s var(--ease);
-}
-/* In a dialog the band is the tile: as wide as the words under it, so the
-   whole thing reads as one column instead of a picture floating above a
-   paragraph. */
-.mart-hero {
-  display: block;
-  background: var(--sunken);
-  border: 1px solid var(--grid);
-  border-radius: 11px;
-  padding: 10px 0;
 }
 .mart.large {
   display: block;
@@ -1896,29 +1790,6 @@ table.t td {
     padding: 10px 10px 14px;
     border-radius: 14px;
   }
-  .module > .mart-btn {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    padding: 10px 0;
-    border: 1px solid var(--grid);
-    border-radius: 10px;
-    background: var(--sunken);
-  }
-  .mart-btn .mart {
-    width: auto;
-    height: 72px;
-  }
-  .module-head {
-    padding: 0 4px;
-  }
-  .module-head strong {
-    flex: 1 0 100%;
-    font-size: 15px;
-  }
-  .module-body {
-    padding: 0 4px;
-  }
 }
 .conn {
   position: relative;
@@ -1928,23 +1799,6 @@ table.t td {
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 14px;
-}
-.conn-status {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 3px;
-  min-width: 0;
-  font-size: 13px;
-}
-.conn-status .dot {
-  flex: none;
-}
-.conn-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .modal.wide {
   /* max-width alone would lose to .modal's own width, so both move. */
@@ -2061,24 +1915,6 @@ table.t td {
   cursor: pointer;
 }
 
-/* Settings nav: a quiet heading above each group. */
-.nav-group {
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  padding: 12px 12px 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-@media (max-width: 860px) {
-  /* The chip row has no room for headings; the order still groups them. */
-  .nav-group {
-    display: none;
-  }
-}
-
 /* ---- Map ------------------------------------------------------------------ */
 .worldmap {
   display: flex;
@@ -2108,27 +1944,6 @@ table.t td {
   height: 8px;
   border-radius: 2px;
 }
-
-/* The module list's whole explanation, in one strip. */
-.size-strip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-.size-strip b {
-  color: var(--accent);
-}
-@media (max-width: 640px) {
-  /* Under the heading, on its own line, instead of squeezed beside it. */
-  .card-head:has(.size-strip) {
-    flex-wrap: wrap;
-  }
-  .card-head .size-strip {
-    flex: 1 0 100%;
-    white-space: nowrap;
-  }
-}
 .info-dot.static {
   display: inline-flex;
   align-items: center;
@@ -2141,9 +1956,15 @@ table.t td {
   width: 36px;
 }
 .day {
-  width: 100%;
-  height: 27px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: 1px auto;
+  padding: 0;
   border: 0;
+  border-radius: 50%;
   background: transparent;
   color: var(--text);
   font-size: 12.5px;
@@ -2151,24 +1972,32 @@ table.t td {
   transition: background 0.15s, color 0.15s, box-shadow 0.15s;
 }
 .day:hover:not(:disabled):not(.edge) {
-  background: var(--row);
+  background: color-mix(in srgb, var(--text) 10%, transparent);
 }
 .day:disabled {
+  color: var(--border-2);
   cursor: default;
 }
 .day.edge {
+  background: var(--pick, var(--accent));
+  color: var(--accent-ink);
   font-weight: 600;
+}
+.day.other {
+  box-shadow: inset 0 0 0 1.5px var(--other, var(--ch-7));
 }
 /* Today keeps a dot under the number, so it never fights the range colour. */
 .day.today::after {
   content: '';
-  display: block;
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
   width: 3px;
   height: 3px;
+  margin-left: -1.5px;
   border-radius: 50%;
   background: currentColor;
-  margin: 1px auto 0;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 /* ---- Settings rows ---------------------------------------------------------
@@ -2257,67 +2086,14 @@ table.t td {
   /* The install step carries a snippet somebody has to read. */
   width: min(720px, 100%);
   max-width: 720px;
-  gap: 14px;
+  gap: 20px;
+  padding: 26px 28px 22px;
 }
 .install-bare {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
-.wiz-rail {
-  display: flex;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--text-3);
-}
-.wiz-rail span {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-.wiz-rail i {
-  display: block;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--grid);
-  transition: background 0.4s var(--ease);
-}
-.wiz-rail .on {
-  color: var(--accent);
-}
-.wiz-rail .on i,
-.wiz-rail .done i {
-  background: var(--accent);
-}
-.wiz-rail .done {
-  color: var(--text-2);
-}
-.wiz-rail .done i {
-  opacity: 0.5;
-}
-.wiz-step {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  animation: wizin 0.35s var(--ease) backwards;
-}
-@keyframes wizin {
-  from {
-    opacity: 0;
-    transform: translateX(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .wiz-step {
-    animation: none;
-  }
-}
-
 /* ---- Searchable picker ----------------------------------------------------- */
 .picker {
   position: relative;
@@ -2347,8 +2123,8 @@ table.t td {
   left: auto;
   right: 0;
 }
-.picker-pop .input {
-  height: 34px;
+.picker-pop .menu-search {
+  margin: 0 0 4px;
 }
 .picker-list {
   display: flex;
@@ -2513,13 +2289,6 @@ table.t td {
   content: '×';
   color: var(--down);
   line-height: 1.3;
-}
-.bullets-head {
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  margin-top: 4px;
 }
 
 /* ---- The period control ----------------------------------------------------
@@ -2821,11 +2590,11 @@ pre.code.words {
 .modal.account {
   display: grid;
   overflow: hidden; /* the body scrolls, not the dialog: never two scrollbars */
-  grid-template-columns: 190px minmax(0, 1fr);
+  grid-template-columns: 210px minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
-  width: min(760px, calc(100vw - 32px));
+  width: min(940px, calc(100vw - 32px));
   max-width: none;
-  height: min(560px, 86vh);
+  height: min(700px, 88vh);
 }
 /* A close button you can actually hit. */
 .btn.icon.close {
@@ -2989,13 +2758,6 @@ body[data-mode] .card.overview {
   font-size: 10px;
   padding: 1px 5px;
 }
-
-/* API keys: one line each. */
-.keylist {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
 .keyrow {
   display: flex;
   align-items: center;
@@ -3003,22 +2765,6 @@ body[data-mode] .card.overview {
   padding: 8px 10px;
   border-radius: 10px;
   border: 1px solid var(--grid);
-}
-.keyrow-name {
-  font-weight: 500;
-  font-size: 13.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 45%;
-}
-.keyrow-meta {
-  flex: 1;
-  min-width: 0;
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .switch:disabled {
   opacity: 0.55;
@@ -3190,19 +2936,6 @@ body[data-mode] .card.overview {
 .btn.danger:hover:not(:disabled) {
   background: color-mix(in srgb, var(--down) 12%, transparent);
 }
-.totp-setup {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.totp-manual {
-  flex: 1;
-  min-width: 190px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 .qr {
   width: 172px;
   height: 172px;
@@ -3210,15 +2943,6 @@ body[data-mode] .card.overview {
   background: #fff;
   box-shadow: 0 0 0 1px var(--line);
   flex: none;
-}
-.keybox.as-button {
-  width: 100%;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-}
-.keybox.as-button:hover {
-  background: var(--surface-2);
 }
 .recovery {
   display: grid;
@@ -3253,15 +2977,6 @@ body[data-mode] .card.overview {
     max-width: 240px;
     margin: 0 auto;
   }
-}
-.viewer-note {
-  margin: 0;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--grid);
-  background: var(--sunken);
-  color: var(--text-2);
-  font-size: 13px;
 }
 /* A dialog that is a form: the form disappears from the layout so its fields
    sit in the dialog's own column, exactly as they would without it. */
@@ -3783,26 +3498,6 @@ body[data-mode] .card.overview {
 .menu-clear.save:hover {
   color: var(--accent);
 }
-.menu-x {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 7px;
-  background: none;
-  color: var(--text-3);
-  cursor: pointer;
-}
-.menu-x:hover {
-  background: var(--surface);
-  color: var(--down);
-}
-.filters-pop {
-  top: 42px;
-  left: 0;
-  width: 320px;
-}
 .chip.more {
   gap: 6px;
   cursor: pointer;
@@ -3842,137 +3537,6 @@ body[data-mode] .card.overview {
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
-.pop.sv-pop {
-  position: fixed;
-  z-index: 120;
-  width: 360px;
-  padding: 6px;
-  background:
-    radial-gradient(300px 120px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
-    var(--surface);
-  display: grid;
-  gap: 4px;
-}
-.sv-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 8px 10px 6px;
-  font-size: 12.5px;
-}
-.sv-head .faint {
-  font-size: 11.5px;
-  font-variant-numeric: tabular-nums;
-}
-.sv-empty {
-  margin: 0;
-  padding: 10px;
-  color: var(--text-3);
-  font-size: 12.5px;
-  line-height: 1.5;
-}
-.sv-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 1px;
-  max-height: 320px;
-  overflow-y: auto;
-}
-.sv-list li {
-  display: flex;
-  align-items: center;
-  min-height: 48px;
-  padding-right: 4px;
-  border-radius: 9px;
-  animation: rise 0.16s var(--ease) backwards;
-}
-.sv-list li:hover,
-.sv-list li:focus-within {
-  background: var(--sunken);
-}
-.sv-list li.on .sv-icon {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #0b0d10;
-}
-.sv-name {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 48px;
-  padding: 6px 8px;
-  border: 0;
-  background: none;
-  color: var(--text);
-  font: inherit;
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-}
-.sv-icon {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text-2);
-  flex: none;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-.sv-text {
-  display: grid;
-  gap: 1px;
-  min-width: 0;
-}
-.sv-title,
-.sv-sub {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.sv-title {
-  font-weight: 500;
-}
-.sv-sub {
-  color: var(--text-3);
-  font-size: 11.5px;
-}
-.sv-act {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  border-radius: 7px;
-  background: none;
-  color: var(--text-3);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.12s ease, color 0.12s ease, background 0.12s ease;
-}
-.sv-list li:hover .sv-act,
-.sv-list li:focus-within .sv-act,
-.sv-act:focus-visible {
-  opacity: 1;
-}
-.sv-act:hover {
-  color: var(--text);
-  background: var(--surface);
-}
-.sv-act:last-child:hover {
-  color: var(--down);
-}
-@media (hover: none) {
-  .sv-act {
-    opacity: 1;
-  }
-}
 .sv-edit,
 .sv-sure {
   flex: 1;
@@ -3989,56 +3553,10 @@ body[data-mode] .card.overview {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.sv-edit input {
-  flex: 1;
-  min-width: 0;
-  height: 30px;
-  padding: 0 8px;
-  border: 1px solid var(--accent);
-  border-radius: 7px;
-  background: var(--bg);
-  color: var(--text);
-  font: inherit;
-  font-size: 13px;
-  outline: none;
-}
 .btn.small {
   height: 28px;
   padding: 0 10px;
   font-size: 12px;
-}
-.sv-foot {
-  padding: 6px 0 0;
-  border-top: 1px solid var(--border);
-  font-size: 12.5px;
-}
-.sv-save {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 8px;
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--accent) 7%, transparent);
-  color: var(--accent);
-  font: inherit;
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-}
-.sv-save:hover {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-}
-.sv-save .sv-sub {
-  grid-column: 2;
-}
-.sv-hint {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  color: var(--text-3);
 }
 
 /* The whole note, in the tooltip for its day. */
@@ -4203,20 +3721,6 @@ body[data-mode] .card.overview {
 }
 
 /* Settings → Search Console: the setup is a real sequence, so it is numbered. */
-.gsc-steps {
-  margin: 0;
-  padding-left: 20px;
-  display: grid;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--text-2);
-  max-width: 68ch;
-}
-.gsc-steps b {
-  color: var(--text);
-  font-weight: 600;
-}
-
 /* Track a goal → the page goals already set up. */
 .pg-list {
   list-style: none;
@@ -4632,69 +4136,6 @@ button.kpi[aria-pressed='true'] .kpi-icon {
   font-size: 13px;
 }
 
-/* Replay speed: one button beside Replay; the four speeds open above it. */
-.speed-menu {
-  position: relative;
-  flex: none;
-}
-.speed-btn {
-  height: 38px;
-  gap: 6px;
-  padding: 0 10px 0 12px;
-  border-radius: 999px;
-  color: var(--text-2);
-  font-size: 13px;
-}
-.speed-btn:hover,
-.speed-btn[aria-expanded='true'] {
-  color: var(--text);
-}
-.pop.menu-pop.speed-pop {
-  bottom: 46px;
-  left: 0;
-  width: 230px;
-}
-.speed-row {
-  min-height: 42px;
-}
-.speed-row .menu-title {
-  flex: 1;
-}
-.speed-row.on {
-  background: color-mix(in srgb, var(--accent) 9%, transparent);
-}
-.speed-bars {
-  display: flex !important;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 2px;
-  padding-bottom: 7px;
-}
-.speed-bars i {
-  width: 3px;
-  border-radius: 1px;
-  background: var(--border-2);
-}
-.speed-bars i.lit {
-  background: currentColor;
-}
-.speed-chip {
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: var(--sunken);
-  color: var(--text-2);
-  font-size: 11.5px;
-}
-.speed-row.on .speed-chip {
-  color: var(--text);
-}
-.speed-check {
-  display: grid;
-  place-items: center;
-  width: 16px;
-  color: var(--accent);
-}
-
 .kpi-name {
   min-width: 0;
   overflow: hidden;
@@ -4803,45 +4244,6 @@ button.kpi[aria-pressed='true'] .kpi-spark {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.modal.update-modal {
-  width: min(560px, 100%);
-  gap: 16px;
-}
-.update-notes {
-  display: grid;
-  gap: 4px;
-  max-height: 180px;
-  overflow-y: auto;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--sunken);
-  font-size: 13px;
-}
-.update-notes p {
-  margin: 0;
-}
-.update-notes p.head {
-  margin-top: 4px;
-  font-weight: 600;
-}
-.update-notes p.bullet {
-  color: var(--text-2);
-}
-.update-steps {
-  display: grid;
-  gap: 8px;
-  font-size: 13px;
-}
-.update-links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-.update-links .btn svg {
-  margin-left: 2px;
-}
 @media (max-width: 640px) {
   .update-pill .num {
     display: none;
@@ -4910,4 +4312,161 @@ body[data-mode] .overview .kpi .value,
   font-size: 11px;
   line-height: 17px;
   white-space: nowrap;
+}
+
+/* A site's mark: its icon, or its letter on its colour (components/SiteMark). */
+.site-mark {
+  flex: none;
+  border-radius: 7px;
+  object-fit: cover;
+}
+.site-mark.letter {
+  display: inline-grid;
+  place-items: center;
+  font-weight: 700;
+  line-height: 1;
+}
+/* The live dot sits on the mark's corner. */
+.mark-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.mark-wrap > .dot {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 9px !important;
+  height: 9px !important;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+/* A site that stopped sending visits: said once, above its numbers. */
+.stopped {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--down) 40%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--down) 7%, var(--surface));
+}
+.stopped-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--down) 15%, transparent);
+  color: var(--down);
+}
+.stopped-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.stopped-text b {
+  color: var(--text);
+  font-size: 14px;
+}
+.tag.danger {
+  color: var(--down);
+  border-color: color-mix(in srgb, var(--down) 40%, transparent);
+}
+.stopped-note {
+  color: var(--down) !important;
+}
+@media (max-width: 640px) {
+  .stopped {
+    grid-template-columns: auto 1fr;
+  }
+  .stopped .btn {
+    grid-column: 1 / -1;
+  }
+}
+
+/* A quiet text button: "Look again", "Or paste its contents". */
+.linkish {
+  justify-self: start;
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.linkish:hover {
+  color: var(--text);
+}
+
+/* ---- Scrollbars -------------------------------------------------------------
+   One slim, branded bar everywhere something scrolls: a quiet thumb on no
+   track, brighter under the pointer, the same in both themes. */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--text) 22%, transparent) transparent;
+  }
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 22%, transparent) padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  border-width: 2px;
+  background: color-mix(in srgb, var(--accent) 70%, var(--text)) padding-box;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Cards you can click lift a little under the pointer. */
+.site-card,
+.prov,
+.mtile,
+.person,
+.wg-row,
+.htile {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s;
+}
+.site-card:hover,
+.prov:hover,
+.mtile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.28);
+}
+.person:hover,
+.wg-row:hover {
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.22);
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-card:hover,
+  .prov:hover,
+  .mtile:hover {
+    transform: none;
+  }
+}
+
+/* Refresh, before Ask: the icon turns while every number is fetched again. */
+.btn.icon.refresh.spinning svg {
+  animation: spin 0.8s linear infinite;
+}
+.btn.icon.refresh:disabled {
+  opacity: 1;
+  cursor: progress;
 }

@@ -90,7 +90,7 @@ Nothing is paid, limited or kept for a hosted edition. The complete list, in wor
 </p>
 <p align="center">
   <img src=".github/images/features/exactly-once.svg" width="49%" alt="Exactly once: CI kills the server mid-load on every change, 40,000 events, 0 lost and 0 counted twice">
-  <img src=".github/images/features/backups.svg" width="49%" alt="Encrypted nightly backups, kept seven deep, with a tested restore">
+  <img src=".github/images/features/backups.svg" width="49%" alt="Encrypted daily backups, kept seven deep, with a tested restore">
 </p>
 <p align="center">
   <img src=".github/images/features/people.svg" width="49%" alt="Two-step sign-in (RFC 6238, the QR drawn in your browser) and a read-only viewer role">
@@ -111,6 +111,10 @@ Nothing is paid, limited or kept for a hosted edition. The complete list, in wor
 <tr>
 <td><img src=".github/images/gallery/cookie-consent.png" alt="Cookie consent settings with a live preview of trckable's own bar"><br><sub><b>Cookie consent.</b> Read your banner, or brand trckable's own bar.</sub></td>
 <td><img src=".github/images/gallery/core-light.png" alt="Core mode in the light theme"><br><sub><b>Light theme.</b> Both themes are built to WCAG 2.1 AA and checked with axe-core.</sub></td>
+</tr>
+<tr>
+<td><img src=".github/images/gallery/share-card.png" alt="The Share dialog: the last 30 days as a picture, with visitors, revenue and the change against a year before"><br><sub><b>Share card.</b> Your numbers as a picture or a GIF, made in the browser. Nothing is uploaded.</sub></td>
+<td><img src=".github/images/gallery/widgets.png" alt="Settings, Sharing: the Open revenue widget previewed with this month's revenue by channel"><br><sub><b>Widgets.</b> Live numbers for your own pages, with no script and no cookie.</sub></td>
 </tr>
 </table>
 

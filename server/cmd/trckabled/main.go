@@ -497,6 +497,11 @@ func backupViaServer(ctx context.Context, dir string) (string, error) {
 			return "", errors.New("the server did not write a backup within two hours; see its log")
 		case <-time.After(time.Second):
 		}
+		// A failure the server wrote down after this request ends the wait.
+		if info, err := os.Stat(filepath.Join(dir, server.FailedFile)); err == nil && info.ModTime().After(asked) {
+			why, _ := os.ReadFile(filepath.Join(dir, server.FailedFile))
+			return "", fmt.Errorf("the server could not write the backup: %s", strings.TrimSpace(string(why)))
+		}
 		// The server renames a backup into place only when it is complete,
 		// so the first *.tkb newer than the request is the answer.
 		entries, _ := os.ReadDir(dir)
@@ -642,8 +647,11 @@ func importCmd(cfg config.Config, args []string) error {
 	}
 
 	log, err := wal.Open(cfg.WALDir(), wal.Options{})
+	if errors.Is(err, wal.ErrLocked) {
+		return errors.New("the server is running on this data directory: stop it, run the import, then start it again (an import writes to the same log the server does)")
+	}
 	if err != nil {
-		return fmt.Errorf("open the write-ahead log (is the server running?): %w", err)
+		return fmt.Errorf("open the write-ahead log: %w", err)
 	}
 	defer log.Close()
 
@@ -670,6 +678,6 @@ func importCmd(cfg config.Config, args []string) error {
 		return fmt.Errorf("%d of %d rows had no usable timestamp or path — every row needs a time and either a path or a goal; "+
 			"the columns may be named ts/path/visitor, or timestamp/url/session_id as Plausible and Umami name them; GA4 rows come from its BigQuery export", res.Skipped, res.Skipped+res.Rows)
 	}
-	fmt.Println("start the server (or leave it running) and the writer will apply them")
+	fmt.Println("start the server and the writer will apply them")
 	return nil
 }

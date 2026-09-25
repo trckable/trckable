@@ -12,6 +12,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,10 +41,15 @@ func Open(ctx context.Context, path string, opts Options) (*Store, error) {
 		opts.MemoryLimit = "256MB"
 	}
 	tmp := filepath.Join(filepath.Dir(path), "duckdb_tmp")
+	// Settings of the whole database go in once, as it opens. temp_directory
+	// cannot be set again once a query has spilled there (a backup does), so
+	// setting it on every new connection broke every connection after the
+	// first spill, and with them the reports, until a restart.
+	once := url.Values{}
+	once.Set("threads", fmt.Sprint(opts.Threads))
+	once.Set("memory_limit", opts.MemoryLimit)
+	once.Set("temp_directory", tmp)
 	settings := []string{
-		fmt.Sprintf("SET threads = %d", opts.Threads),
-		fmt.Sprintf("SET memory_limit = '%s'", opts.MemoryLimit),
-		fmt.Sprintf("SET temp_directory = '%s'", tmp),
 		// Appends are already time-ordered (zonemaps stay effective); not forcing
 		// order preservation in query operators keeps memory low under the cap.
 		"SET preserve_insertion_order = false",
@@ -62,7 +68,7 @@ func Open(ctx context.Context, path string, opts Options) (*Store, error) {
 		}
 		return nil
 	}
-	connector, err := duckdb.NewConnector(path, connInit)
+	connector, err := duckdb.NewConnector(path+"?"+once.Encode(), connInit)
 	if err != nil {
 		return nil, err
 	}

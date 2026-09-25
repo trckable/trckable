@@ -8,17 +8,21 @@ import { Footer } from "./components/Footer";
 import { api, setUnauthorizedHandler, type Site } from "./lib/api";
 import { navigate, useLocation } from "./lib/url";
 import "./styles.css";
-import { Setup, Login } from "./views/Auth";
 import { SitePicker } from "./components/SitePicker";
 import { Dashboard } from "./views/Dashboard";
 import { applyTheme } from "./lib/theme";
 import { closeAddSite, useAccountTab, useAddSite } from "./lib/account";
 import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
-import { setRole } from "./lib/me";
+import { setOperator, setRole } from "./lib/me";
 // Settings and the account dialog are their own screens: the dashboard should
 // not carry them.
 const Settings = lazy(() => import("./views/Settings").then((m) => ({ default: m.Settings })));
+// Sign-in and first-run setup are for the minutes before someone is in: a
+// signed-in owner never downloads them.
+const Setup = lazy(() => import("./views/Auth").then((m) => ({ default: m.Setup })));
+const Login = lazy(() => import("./views/Auth").then((m) => ({ default: m.Login })));
+const FirstPassword = lazy(() => import("./views/Auth").then((m) => ({ default: m.FirstPassword })));
 const UpdateDialog = lazy(() => import("./components/UpdateDialog"));
 const SettingsDialog = lazy(() => import("./views/Settings").then((m) => ({ default: m.SettingsDialog })));
 const AccountDialog = lazy(() => import("./views/Account").then((m) => ({ default: m.AccountDialog })));
@@ -42,7 +46,7 @@ type Boot =
   | { state: "loading" }
   | { state: "setup" }
   | { state: "login" }
-  | { state: "ready"; email?: string; version?: string; updateCheck?: boolean; sites: Site[] }
+  | { state: "ready"; email?: string; version?: string; updateCheck?: boolean; mustChange?: boolean; sites: Site[] }
   | { state: "error"; message: string };
 
 function App() {
@@ -58,9 +62,12 @@ function App() {
       const me = await api.me().catch(() => null);
       if (!me) return setBoot({ state: "login" });
       setRole(me.role);
+      setOperator(me.operator);
       loadKeymap(me.keys);
-      const { sites } = await api.sites();
-      setBoot({ state: "ready", email: me.email, version: me.version, updateCheck: me.update_check, sites });
+      // Before choosing their own password a person may do nothing else: the
+      // server refuses the rest, so the sites are loaded after.
+      const { sites } = me.must_change ? { sites: [] } : await api.sites();
+      setBoot({ state: "ready", email: me.email, version: me.version, updateCheck: me.update_check, mustChange: me.must_change, sites });
     } catch (e) {
       setBoot({
         state: "error",
@@ -131,6 +138,7 @@ function App() {
     );
   if (boot.state === "setup")
     return (
+      <Suspense fallback={null}>
       <Setup
         onDone={(site) => {
           load().then(() =>
@@ -141,6 +149,7 @@ function App() {
           );
         }}
       />
+      </Suspense>
     );
   if (boot.state === "login") {
     // A managed instance has no sign-in page: people sign in at the provider.
@@ -148,8 +157,20 @@ function App() {
       location.assign(managed());
       return null;
     }
-    return <Login onDone={load} />;
+    return (
+      <Suspense fallback={null}>
+        <Login onDone={load} />
+      </Suspense>
+    );
   }
+
+  // Signed in with a password someone else chose: choose one's own first.
+  if (boot.mustChange && !managed())
+    return (
+      <Suspense fallback={null}>
+        <FirstPassword email={boot.email} onDone={() => setBoot({ ...boot, mustChange: false })} />
+      </Suspense>
+    );
 
   const refreshSites = () =>
     api.sites().then(({ sites }) => setBoot({ ...boot, sites }));

@@ -12,23 +12,28 @@ import (
 	"github.com/trckable/trckable/server/internal/query"
 )
 
-// The weekly report: last week's numbers, delivered on Monday morning to the
+// The weekly report: last week's numbers, delivered on the first morning of the site's week to the
 // same place as the site's other alerts. One short message a week is the
 // digest people actually read; a daily one becomes noise by Thursday.
 
-// weeklyDue says which week the report covers (the Monday–Sunday that just
-// ended, in the site's own timezone) and whether it should go now: from
-// Monday 08:00 until it has been sent that week. A server that was down on
-// Monday sends it when it is back, the same week.
-func weeklyDue(now time.Time, loc *time.Location, lastFired int64) (from, to time.Time, due bool) {
+// weeklyDue says which week the report covers (the week that just ended, in
+// the site's own timezone, starting on the site's first day of the week:
+// 1 Monday, 0 Sunday) and whether it should go now: from 08:00 on that first
+// day until it has been sent that week. A server that was down that morning
+// sends it when it is back, the same week.
+func weeklyDue(now time.Time, loc *time.Location, weekStart int, lastFired int64) (from, to time.Time, due bool) {
 	t := now.In(loc)
 	day := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
-	monday := day.AddDate(0, 0, -((int(day.Weekday()) + 6) % 7))
-	sendAt := monday.Add(8 * time.Hour)
+	back := (int(day.Weekday()) + 6) % 7
+	if weekStart == 0 {
+		back = int(day.Weekday())
+	}
+	first := day.AddDate(0, 0, -back)
+	sendAt := first.Add(8 * time.Hour)
 	if t.Before(sendAt) || lastFired >= sendAt.Unix() {
 		return time.Time{}, time.Time{}, false
 	}
-	return monday.AddDate(0, 0, -7), monday, true
+	return first.AddDate(0, 0, -7), first, true
 }
 
 var channelNames = map[string]string{"AI": "AI assistants"}
@@ -140,7 +145,11 @@ func (s *Server) weekly(ctx context.Context, siteID string, lastFired int64, now
 	if err != nil {
 		loc = time.UTC
 	}
-	from, to, due := weeklyDue(now, loc, lastFired)
+	weekStart := 1
+	if c, err := s.ctl.SiteConfig(ctx, siteID); err == nil {
+		weekStart = c.WeekStart
+	}
+	from, to, due := weeklyDue(now, loc, weekStart, lastFired)
 	if !due {
 		return ev, false
 	}

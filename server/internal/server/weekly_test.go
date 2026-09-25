@@ -13,28 +13,36 @@ func TestWeeklyIsDueOnceAWeekFromMondayMorning(t *testing.T) {
 	at := func(s string) time.Time { v, _ := time.ParseInLocation("2006-01-02 15:04", s, berlin); return v }
 	mon8 := at("2026-09-21 08:00") // a Monday
 
-	if _, _, due := weeklyDue(at("2026-09-21 07:59"), berlin, 0); due {
+	if _, _, due := weeklyDue(at("2026-09-21 07:59"), berlin, 1, 0); due {
 		t.Fatal("due before Monday 08:00")
 	}
-	from, to, due := weeklyDue(mon8, berlin, 0)
+	from, to, due := weeklyDue(mon8, berlin, 1, 0)
 	if !due || !from.Equal(at("2026-09-14 00:00")) || !to.Equal(at("2026-09-21 00:00")) {
 		t.Fatalf("Monday 08:00: due=%v %v – %v", due, from, to)
 	}
-	if _, _, due := weeklyDue(at("2026-09-21 09:30"), berlin, mon8.Unix()); due {
+	if _, _, due := weeklyDue(at("2026-09-21 09:30"), berlin, 1, mon8.Unix()); due {
 		t.Fatal("sent twice in one week")
 	}
 	// Down all Monday: the report still goes out, for the same week.
-	if from, _, due := weeklyDue(at("2026-09-24 11:00"), berlin, at("2026-09-14 08:05").Unix()); !due || !from.Equal(at("2026-09-14 00:00")) {
+	if from, _, due := weeklyDue(at("2026-09-24 11:00"), berlin, 1, at("2026-09-14 08:05").Unix()); !due || !from.Equal(at("2026-09-14 00:00")) {
 		t.Fatalf("Thursday catch-up: due=%v from=%v", due, from)
 	}
 	// Sunday night belongs to the week already reported.
-	if _, _, due := weeklyDue(at("2026-09-27 23:30"), berlin, mon8.Unix()); due {
+	if _, _, due := weeklyDue(at("2026-09-27 23:30"), berlin, 1, mon8.Unix()); due {
 		t.Fatal("due again before the next Monday")
 	}
 	// The site's own clock decides: 08:00 in Auckland is still Sunday in Berlin.
 	akl, _ := time.LoadLocation("Pacific/Auckland")
-	if _, _, due := weeklyDue(time.Date(2026, 9, 20, 20, 30, 0, 0, time.UTC), akl, 0); !due {
+	if _, _, due := weeklyDue(time.Date(2026, 9, 20, 20, 30, 0, 0, time.UTC), akl, 1, 0); !due {
 		t.Fatal("Monday 08:30 in Auckland is due")
+	}
+	// A site whose week starts on Sunday gets Sunday–Saturday, on Sunday.
+	sun8 := at("2026-09-20 08:00")
+	if _, _, due := weeklyDue(at("2026-09-20 07:59"), berlin, 0, 0); due {
+		t.Fatal("due before Sunday 08:00")
+	}
+	if from, to, due := weeklyDue(sun8, berlin, 0, 0); !due || !from.Equal(at("2026-09-13 00:00")) || !to.Equal(at("2026-09-20 00:00")) {
+		t.Fatalf("Sunday week: %v %v %v", from, to, due)
 	}
 }
 

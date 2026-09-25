@@ -25,7 +25,7 @@ const retention = (days: number) =>
  *  the person it is about, which is the whole point of the requirement. */
 export function policyText(p: PolicyInput): string {
   const collected = ['the page you are on', 'the site that sent you here']
-  collected.push(p.config.record_city && !p.config.consent_free ? 'your country and city' : 'your country')
+  collected.push(p.config.record_city && !p.config.consent_free ? 'your country, region and city' : 'your country')
   collected.push('your browser, operating system and device type', 'how long you stayed')
   if (p.modules.goals) collected.push('which of a handful of marked actions you took, such as signing up')
   if (p.modules.outbound) collected.push('which links you followed away from the site, and which files you downloaded')
@@ -42,7 +42,7 @@ export function policyText(p: PolicyInput): string {
   out.push('')
   out.push(
     `**What is not recorded.** Your IP address is never stored. It is used once, in memory, to work out your country` +
-      (p.config.record_city && !p.config.consent_free ? ' and city' : '') +
+      (p.config.record_city && !p.config.consent_free ? ', region and city' : '') +
       `, and is then discarded — it is not written to a log or a database. We do not build a profile of you, and we cannot identify you from what is kept.`,
   )
   out.push('')
@@ -53,7 +53,7 @@ export function policyText(p: PolicyInput): string {
     out.push(
       `**Cookies, and only if you say so.** Until you answer our cookie banner, nothing about your visit is sent. If you decline, your visit is not counted at all. If you leave without answering, the pages you saw are counted without a cookie, using a number derived from your request that changes every day. ` +
         `If you agree, one cookie, \`trckable_vid\`, holds a random number so that a return visit is not counted as a new person. ` +
-        `It contains no personal data, is not readable by anyone else, and is never used for advertising. If you change your mind, that cookie is deleted.` +
+        `It contains no personal data, is only ever sent to this site, and is never used for advertising. A few visits waiting to be sent may sit in your browser's storage for a moment. If you change your mind, that cookie is deleted.` +
         (ownBar ? ` Your answer itself — yes or no — is kept in your browser, so that we do not ask again on every page.` : ''),
     )
   } else if (p.config.consent_free) {
@@ -64,7 +64,7 @@ export function policyText(p: PolicyInput): string {
   } else {
     out.push(
       `**Cookies.** One cookie, \`trckable_vid\`, holds a random number so that a return visit is not counted as a new person. ` +
-        `It contains no personal data, is not readable by anyone else, and is never used for advertising. ` +
+        `It contains no personal data, is only ever sent to this site, and is never used for advertising. A few visits waiting to be sent may sit in your browser's storage for a moment. ` +
         `Depending on where you are, your consent may be required before it is set.`,
     )
   }
@@ -76,7 +76,8 @@ export function policyText(p: PolicyInput): string {
   if (p.modules.revenue) {
     out.push(
       `**Purchases.** If you buy something, our payment provider tells us the amount and which visit led to it, so we know which parts of the site are worth keeping. ` +
-        `Your email address is stored only as a one-way hash, and your card details never reach us.`,
+        `The provider's notice of the payment, which includes your email address, is kept on our own server so the figures stay correct. ` +
+        `If you ask us to erase your data, that notice is deleted and the payment is no longer linked to you, and your card details never reach us.`,
     )
     out.push('')
   }
@@ -102,7 +103,7 @@ export function policyCaveats(p: PolicyInput): string[] {
     out.push('This site sets a cookie. In the EU and the UK that normally needs consent before the script runs. Cookieless mode above sets none; whether you can then skip the banner depends on your country.')
   if (p.config.consent_free)
     out.push('Cookieless mode stores nothing on the device, but the script still reads the page address, referrer, screen width and language, and counts visitors by a daily hash of IP and browser. France, Italy, the Netherlands, Spain and the UK have analytics exemptions with conditions; Germany and Austria generally still ask for consent.')
-  if (p.config.record_city && !p.config.consent_free) out.push('City is being recorded. It is derived from the IP address and never stored with it, but it is more precise than country alone.')
+  if (p.config.record_city && !p.config.consent_free) out.push('Region and city are being recorded. They are derived from the IP address and never stored with it, but they are more precise than country alone.')
   if (p.config.retention_days === 0) out.push('Nothing expires. A retention period is easier to justify than keeping everything forever.')
   if (p.modules.goals) out.push('Goals can carry properties you choose. Do not put names, emails or anything else personal in them — trckable stores whatever you send.')
   out.push('This covers trckable only. Anything else on your site — embedded video, fonts, chat, ads — needs its own paragraph.')

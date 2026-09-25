@@ -69,6 +69,11 @@ func (a *API) addPerson(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	// A password someone else chose is replaced at their first sign-in.
+	if generated != "" {
+		a.Ctl.SetMustChange(r.Context(), p.ID, true)
+		p.MustChange = true
+	}
 	writeJSON(w, http.StatusCreated, map[string]any{"person": p, "password": generated, "signin": a.Managed})
 }
 
@@ -89,6 +94,49 @@ func (a *API) setPersonRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.people(w, r)
+}
+
+// resetPersonPassword is an owner's answer to "I forgot my password": a new
+// one-time password to pass on, every session of theirs ended, and a new
+// password of their own asked for at the next sign-in. Your own password is
+// changed in your account, with the current one.
+func (a *API) resetPersonPassword(w http.ResponseWriter, r *http.Request) {
+	me := a.owner(w, r)
+	if me == nil {
+		return
+	}
+	if r.PathValue("id") == me.ID {
+		fail(w, http.StatusBadRequest, "change your own password in your account")
+		return
+	}
+	// Your own password first: a session left open somewhere must not be
+	// enough to take someone's account.
+	var in struct{ Password string }
+	if err := decode(r, &in); err != nil || in.Password == "" {
+		fail(w, http.StatusBadRequest, "type your own password to confirm")
+		return
+	}
+	if _, err := a.Ctl.Login(r.Context(), me.Email, in.Password); err != nil {
+		fail(w, http.StatusForbidden, "that is not your password")
+		return
+	}
+	p, err := a.Ctl.PersonByID(r.Context(), principalOf(r).account, r.PathValue("id"))
+	if failPerson(w, err) {
+		return
+	}
+	// An owner's password is theirs: another owner makes them a viewer first,
+	// which everyone on the instance can see, and can undo.
+	if p.Role == sqlite.RoleOwner {
+		fail(w, http.StatusConflict, "an owner's password can only be reset once they are a viewer: make them a viewer first")
+		return
+	}
+	password := auth.Token("", 12)
+	if err := a.Ctl.ResetPassword(r.Context(), p.Email, password); err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	a.Ctl.SetMustChange(r.Context(), p.ID, true)
+	writeJSON(w, http.StatusOK, map[string]any{"email": p.Email, "password": password})
 }
 
 func (a *API) removePerson(w http.ResponseWriter, r *http.Request) {
@@ -120,4 +168,41 @@ func failPerson(w http.ResponseWriter, err error) bool {
 		fail(w, http.StatusBadRequest, err.Error())
 	}
 	return true
+}
+
+// turnOffTwoStep is for someone who lost their phone and their recovery
+// codes: an owner turns their second step off (with the owner's own
+// password), and they set it up again after signing in. Not for owners: an
+// owner's account is theirs (the same rule as resetting a password).
+func (a *API) turnOffTwoStep(w http.ResponseWriter, r *http.Request) {
+	me := a.owner(w, r)
+	if me == nil {
+		return
+	}
+	if r.PathValue("id") == me.ID {
+		fail(w, http.StatusBadRequest, "turn off your own two-step in your account")
+		return
+	}
+	var in struct{ Password string }
+	if err := decode(r, &in); err != nil || in.Password == "" {
+		fail(w, http.StatusBadRequest, "type your own password to confirm")
+		return
+	}
+	if _, err := a.Ctl.Login(r.Context(), me.Email, in.Password); err != nil {
+		fail(w, http.StatusForbidden, "that is not your password")
+		return
+	}
+	p, err := a.Ctl.PersonByID(r.Context(), principalOf(r).account, r.PathValue("id"))
+	if failPerson(w, err) {
+		return
+	}
+	if p.Role == sqlite.RoleOwner {
+		fail(w, http.StatusConflict, "an owner's two-step can only be turned off once they are a viewer: make them a viewer first")
+		return
+	}
+	if err := a.Ctl.DisableTwoStep(r.Context(), p.ID); err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

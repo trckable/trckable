@@ -250,3 +250,48 @@ kbd.cap.down {
     transition: none;
   }
 }
+
+/* The dialog's top-right corner: its tools, then a round close button. */
+.modal-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  align-self: flex-start;
+}
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 8px 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.pill-btn:hover {
+  color: var(--text);
+  border-color: var(--border-2);
+}
+.pill-btn:hover svg {
+  transform: rotate(-120deg);
+}
+.pill-btn svg {
+  transition: transform 0.35s ease;
+}
+.pill-btn .count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}

@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"net/http"
-	"runtime"
 	"time"
 )
 
@@ -17,14 +16,25 @@ type Health struct {
 	Store     Store  `json:"store"`
 	Analytics string `json:"analytics"` // ready | warming | error
 	Memory    uint64 `json:"memory_bytes"`
-	Backup    Backup `json:"backup"`
-	Payments  *Pay   `json:"payments,omitempty"`
+	// MemorySource says what Memory is: "rss" (the whole process, analytics
+	// store included) or "go" (the Go runtime only, where no RSS can be read).
+	MemorySource string `json:"memory_source"`
+	Backup       Backup `json:"backup"`
+	// KeyOnVolume: TRCKABLE_SECRET is not set, so the instance key exists
+	// only as data/secret.key, on the same disk as the backups it unlocks.
+	KeyOnVolume bool `json:"key_on_volume,omitempty"`
+	// IngestError: the write-ahead log is refusing events (a full disk, say).
+	IngestError string `json:"ingest_error,omitempty"`
+	Payments    *Pay   `json:"payments,omitempty"`
 }
 
 // Backup is the newest copy on disk: when it was written and how big it is.
 type Backup struct {
 	At    int64 `json:"at"` // unix seconds, 0 when there is none yet
 	Bytes int64 `json:"bytes"`
+	// Error is why the last backup failed (ErrorAt when); empty once one works.
+	Error   string `json:"error,omitempty"`
+	ErrorAt int64  `json:"error_at,omitempty"`
 	// Offsite is the bucket copies go to, without its keys; empty when
 	// backups stay on this machine only.
 	Offsite     string `json:"offsite,omitempty"`
@@ -48,7 +58,8 @@ type Store struct {
 	Events    int64   `json:"events"`
 	BytesUsed int64   `json:"bytes_used"`
 	BytesFree int64   `json:"bytes_free"`
-	DaysLeft  float64 `json:"days_left"` // 0 when unknown
+	DaysLeft  float64 `json:"days_left"`      // 0 when unknown
+	PerDay    float64 `json:"events_per_day"` // average over the last 7 days
 	PerEvent  float64 `json:"bytes_per_event"`
 }
 
@@ -70,6 +81,20 @@ func (a *API) health(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusNotFound, "not found")
 		return
 	}
+	a.writeHealth(w, r)
+}
+
+// operatorHealth is the same answer for a hosting provider, with the operator
+// token instead of a signed-in person: trckable Cloud's own monitoring reads
+// it, since no customer there sees Settings → Health.
+func (a *API) operatorHealth(w http.ResponseWriter, r *http.Request) {
+	if !a.operator(w, r) {
+		return
+	}
+	a.writeHealth(w, r)
+}
+
+func (a *API) writeHealth(w http.ResponseWriter, r *http.Request) {
 	if a.HealthOf == nil {
 		fail(w, http.StatusServiceUnavailable, "health is not available")
 		return
@@ -77,8 +102,6 @@ func (a *API) health(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 	h := a.HealthOf(ctx)
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-	h.Memory = m.Sys
+	h.Memory, h.MemorySource = memoryUse()
 	writeJSON(w, http.StatusOK, h)
 }

@@ -45,6 +45,13 @@ func (h *Handler) Crawl(w http.ResponseWriter, r *http.Request) {
 		h.reject(w, http.StatusForbidden, errUnknown)
 		return
 	}
+	// After the key check, so nobody learns a site's modules by asking.
+	// With the module off nothing is recorded, as the module says. The
+	// answer is still 202, so the site's middleware sees no error to log.
+	if h.Module != nil && !h.Module(site.ID, "crawlers") {
+		w.WriteHeader(http.StatusAccepted)
+		return
+	}
 	u, ok := parsePageURL(p.URL, site.HashMode)
 	if !ok || !hostAllowed(u.Host, site, false) {
 		h.reject(w, http.StatusBadRequest, errHost)

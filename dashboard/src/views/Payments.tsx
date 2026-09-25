@@ -1,17 +1,20 @@
 // Settings → Payments. Connecting a provider is three taps: pick it, paste the
 // key, done. Everything wordy (manual webhooks, checkout snippets) lives behind
 // its own button, so the page itself stays short.
-import { Check } from 'lucide-react'
+import { ArrowRight, Banknote, Check, Info, Link2, TriangleAlert } from 'lucide-react'
 import { Menu } from '../components/Menu'
 import { DialogActions } from '../components/DialogActions'
 import { Modal } from '../components/Modal'
+import { StepBody } from '../components/StepBody'
+import { Steps } from '../components/Steps'
 import { Ghost } from '../components/Logo'
 import { useEffect, useState } from 'react'
 import { api, type PayConnection, type Provider, type Site } from '../lib/api'
 import { navigate } from '../lib/url'
 import { CodeBlock } from '../components/Code'
 import { Picker } from '../components/Picker'
-import { useConfirm } from '../components/Confirm'
+import { confirmWith, useConfirm } from '../components/Confirm'
+import { isOperator, isViewer } from '../lib/me'
 import { settle, toast } from '../components/Toast'
 import './Payments.css'
 
@@ -39,57 +42,125 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
 
   const byId = (id: string) => data?.providers.find((p) => p.id === id)
   const connected = data?.connections ?? []
+  const recorded = connected.reduce((n, c) => n + c.payments, 0)
+  const available = data?.providers.filter((p) => !connected.some((c) => c.provider === p.id)) ?? []
   return (
-    <section className="card" id="payments" style={{ gap: 14 }}>
-      <div className="card-head">
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span className="money-dot" /> Payments
-        </h2>
-        <span className="faint" style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-          Show revenue in
+    <section className="pay" id="payments">
+      <div className="pay-head">
+        <span className="icon-tile money" aria-hidden="true">
+          <Banknote size={18} strokeWidth={1.75} />
+        </span>
+        <span className="pay-head-text">
+          <h2>Payments</h2>
+          <span className="faint">
+            {connected.length === 0
+              ? 'Connect a provider to see which traffic pays.'
+              : `${connected.length} provider${connected.length === 1 ? '' : 's'} connected · ${recorded.toLocaleString()} payment${recorded === 1 ? '' : 's'} recorded`}
+          </span>
+        </span>
+        <span className="pay-currency faint">
+          Revenue in
           <Picker
             label="Currency"
             align="right"
             placeholder="Search a currency…"
             value={site.currency}
-            onPick={(currency) => api.updateSite(site.id, { name: site.name, currency }).then(onSiteChange)}
+            onPick={(currency) =>
+              api
+                .updateSite(site.id, { name: site.name, currency })
+                .then(() => (toast(`Revenue is shown in ${currency}`), onSiteChange()))
+                .catch((e: Error) => toast(e.message, 'error'))
+            }
             items={(CURRENCIES.includes(site.currency) ? CURRENCIES : [site.currency, ...CURRENCIES]).map((c) => ({ id: c, label: c }))}
           />
         </span>
       </div>
 
       {data?.key_error && (
-        <div className="banner" role="alert" style={{ borderColor: 'var(--down)', color: 'var(--down)' }}>
-          {data.key_error}. Webhooks answer 503 so nothing is lost; restore the original TRCKABLE_SECRET to resume.
+        <div className="pay-alert bad" role="alert">
+          <TriangleAlert size={17} strokeWidth={1.75} aria-hidden="true" />
+          <span>
+            <b>The saved provider keys cannot be read</b>
+            <span>
+              {data.key_error}. Webhooks answer 503, so providers keep retrying for a while (Stripe about three days). Start the server with the original TRCKABLE_SECRET, or its old data/secret.key,
+              to pick up where it was. If that key is gone for good, start over with this server's key and reconnect each provider.
+            </span>
+            {isOperator() && !isViewer() && (
+              <button
+                type="button"
+                className="btn danger pay-startover"
+                onClick={async () => {
+                  const pw = await confirmWith({
+                    title: 'Start over with this server’s key?',
+                    body: 'The provider keys and signing secrets saved with the old key are forgotten, and so is the Search Console key. Payments already recorded stay. Reconnect each provider afterwards. Looking someone up by email will not find payments recorded before today.',
+                    field: { label: 'Your password', type: 'password', autoComplete: 'current-password' },
+                    confirmLabel: 'Start over',
+                    danger: true,
+                    busyLabel: 'Starting over…',
+                    done: 'Started over — reconnect each provider',
+                    run: (mine) => api.startOverKeys(mine),
+                  })
+                  if (pw !== null) load()
+                }}
+              >
+                Start over with this server’s key
+              </button>
+            )}
+          </span>
         </div>
       )}
       {err && <div className="banner">{err}</div>}
       {data && /^http:\/\/|localhost|127\.0\.0\.1/.test(data.webhook_base) && (
-        <div className="banner">Providers can't reach {data.webhook_base}. Set TRCKABLE_BASE_URL to this server's public https address.</div>
+        <div className="pay-alert info">
+          <Info size={17} strokeWidth={1.75} aria-hidden="true" />
+          <span>
+            <b>Providers cannot reach this server yet</b>
+            <span>
+              Webhooks would go to {data.webhook_base}. Set TRCKABLE_BASE_URL to this server's public https address.
+            </span>
+          </span>
+        </div>
       )}
 
-      {connected.map((c) => (
-        <ConnectionRow key={c.id} site={site} c={c} provider={byId(c.provider)} onChange={load} />
-      ))}
-
-      {connected.length === 0 && <p className="muted" style={{ margin: 0 }}>Connect a provider to see which traffic pays.</p>}
-
-      <div className="prov-grid">
-        {data?.providers
-          .filter((p) => !connected.some((c) => c.provider === p.id))
-          .map((p) => (
-            <button key={p.id} type="button" className="prov" onClick={() => setAdding(p)}>
-              <ProviderMark id={p.id} />
-              <b>{p.name}</b>
-              <span className="faint">Connect</span>
-            </button>
+      {connected.length > 0 && (
+        <div className="pay-group">
+          <span className="pay-group-head">Connected</span>
+          {connected.map((c) => (
+            <ConnectionRow key={c.id} site={site} c={c} provider={byId(c.provider)} onChange={load} />
           ))}
-      </div>
+        </div>
+      )}
+
+      {available.length > 0 && (
+        <div className="pay-group">
+          <span className="pay-group-head">{connected.length ? 'Add another' : 'Connect a provider'}</span>
+          <div className="prov-grid">
+            {available.map((p) => (
+              <button key={p.id} type="button" className="prov" onClick={() => setAdding(p)}>
+                <ProviderMark id={p.id} />
+                <b>{p.name}</b>
+                <span className="faint">
+                  Connect <ArrowRight size={12} strokeWidth={2} aria-hidden="true" />
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {connected.length > 0 && (
-        <button type="button" className="btn ghost" style={{ alignSelf: 'flex-start' }} onClick={() => setSnippets(true)}>
-          Send visitor ids to checkout →
-        </button>
+        <div className="pay-link">
+          <span className="icon-tile" aria-hidden="true">
+            <Link2 size={17} strokeWidth={1.75} />
+          </span>
+          <span className="pay-link-text">
+            <b>Link sales to visits</b>
+            <span className="faint">Pass the visitor id to checkout, so each payment is credited to the visit that brought it.</span>
+          </span>
+          <button type="button" className="btn" onClick={() => setSnippets(true)}>
+            Show how
+          </button>
+        </div>
       )}
 
       {adding && (
@@ -245,7 +316,7 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
               close()
               const ok = await ask({
                 title: `Disconnect ${provider?.name}?`,
-                body: `Revenue already recorded stays${c.payments > 0 ? ` (${c.payments} payments)` : ''}. New payments stop arriving, the webhook trckable created is removed, and later sales will show as unattributed. You can reconnect at any time.`,
+                body: `Revenue already recorded stays${c.payments > 0 ? ` (${c.payments} payments)` : ''}. New payments stop arriving here.${c.managed ? ' The webhook trckable created is removed.' : ` Remove the webhook in ${provider?.name} too.`} You can reconnect at any time.`,
                 confirmLabel: 'Disconnect',
                 danger: true,
                 busyLabel: 'Disconnecting…',
@@ -315,16 +386,9 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
         <ProviderMark id={c.provider} />
         <h2>{provider?.name} webhook</h2>
       </div>
-      <div className="wiz-rail" aria-hidden="true">
-        {steps.map((label, i) => (
-          <span key={label} className={step === i + 1 ? 'on' : step > i + 1 ? 'done' : ''}>
-            <i />
-            {label}
-          </span>
-        ))}
-      </div>
+      <Steps labels={steps} at={step - 1} />
 
-      <div key={step} className="wiz-step">
+      <StepBody step={step}>
         {step === 1 && (
           <>
             <p className="muted" style={{ margin: 0 }}>
@@ -447,7 +511,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
             </div>
           </>
         )}
-      </div>
+      </StepBody>
     </Modal>
   )
 }

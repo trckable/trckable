@@ -87,12 +87,36 @@ export interface Site {
   proxy_key: string
   /** Unix seconds of the last event; absent means nothing has arrived yet. */
   last_event_at?: number
+  /** The site's own look, when the owner set one: #rrggbb, and its icon. */
+  color?: string
+  icon_url?: string
+  /** The site's first day of the week: 1 Monday, 0 Sunday. */
+  week_start?: number
+  /** The last time the server looked for the snippet from the outside. */
+  check?: { at: number; found?: 'site' | 'other' | 'none'; via?: string; error?: string }
 }
 
-/** live = seen in the last day · quiet = seen, but not lately · new = never. */
-export function siteState(s: Site): 'live' | 'quiet' | 'new' {
+export type SiteState = 'live' | 'quiet' | 'stopped' | 'new'
+
+/** live = seen in the last day · quiet = seen, but not lately, and nothing
+ *  known to be wrong · stopped = not seen lately, and the snippet was not
+ *  found (or the site did not answer) when the server last looked, after the
+ *  last visit · new = never seen. */
+export function siteState(s: Site): SiteState {
   if (!s.last_event_at) return 'new'
-  return Date.now() / 1000 - s.last_event_at < 86400 ? 'live' : 'quiet'
+  if (Date.now() / 1000 - s.last_event_at < 86400) return 'live'
+  const c = s.check
+  if (c && c.at > s.last_event_at && c.found !== 'site') return 'stopped'
+  return 'quiet'
+}
+
+/** Why a stopped site stopped, in a few words. */
+export function stoppedWhy(s: Site): string {
+  const c = s.check
+  if (!c) return ''
+  if (c.error) return `${s.domain} did not answer`
+  if (c.found === 'other') return "another site's snippet is on the page"
+  return 'the snippet is not on the homepage'
 }
 
 export interface APIKey {
@@ -512,10 +536,16 @@ export interface Health {
   version: string
   uptime_s: number
   events: { accepted: number; bots: number; rejected: number; lag: number }
-  store: { events: number; bytes_used: number; bytes_free: number; days_left: number; bytes_per_event: number }
+  store: { events: number; bytes_used: number; bytes_free: number; days_left: number; bytes_per_event: number; events_per_day?: number }
   analytics: 'ready' | 'warming' | 'error'
   memory_bytes: number
-  backup: { at: number; bytes: number; offsite?: string; offsite_at?: number; offsite_days?: number; offsite_error?: string }
+  /** rss: the whole process, analytics store included · go: the Go runtime only */
+  memory_source?: 'rss' | 'go'
+  /** TRCKABLE_SECRET is not set: the key is only data/secret.key, next to the backups. */
+  key_on_volume?: boolean
+  /** The write-ahead log is refusing events, and why. */
+  ingest_error?: string
+  backup: { at: number; bytes: number; error?: string; error_at?: number; offsite?: string; offsite_at?: number; offsite_days?: number; offsite_error?: string }
   payments?: { connections: number; pending: number; last_event: number; last_sync: number }
 }
 
@@ -538,6 +568,12 @@ export interface PersonPayment {
   test?: boolean
 }
 
+export interface Brand {
+  color: string
+  icon_at: number
+  icon_url: string
+}
+
 export interface Person {
   id: string
   email: string
@@ -545,11 +581,50 @@ export interface Person {
   role: string
   created_at: number
   two_step: boolean
+  last_seen: number // unix seconds; 0: never signed in
+  must_change: boolean // still has a password someone else chose
 }
 
 export interface TwoStep {
   enabled: boolean
   recovery_left: number
+}
+
+export interface InstallCheck {
+  url: string
+  status?: number
+  /** site: this site's snippet · other: a trckable script for another site · none */
+  found?: 'site' | 'other' | 'none'
+  /** Where this site's id was found: "page", or the URL of a script. */
+  via?: string
+  /** How many of the page's scripts were read. */
+  scripts: number
+  error?: string
+}
+
+/** A moment the data shows: a visitor step, the best day, a first. */
+export interface Milestone {
+  id: string
+  kind: 'visitors' | 'best_day' | 'first_ai' | 'first_sale'
+  value: number
+  day: string
+}
+
+export type WidgetKind = 'live' | 'badge' | 'counter' | 'revenue' | 'privacy'
+export interface WidgetLook {
+  kind: WidgetKind
+  theme: 'auto' | 'dark' | 'light'
+  accent: string
+  radius: number
+  brand: boolean
+  /** The parts the design shows: bars, countries, pages, channels (live); ai (badge); channels (revenue). */
+  shows: string[]
+}
+export interface Widget extends WidgetLook {
+  id: string
+  site_id: string
+  on: boolean
+  created_at: number
 }
 
 export interface Profile {
@@ -564,7 +639,7 @@ export const api = {
     call<{ user: { email: string }; site: Site | null }>('POST', '/setup', { token, email, password, domain }),
   login: (email: string, password: string, code?: string) => call<{ user: { email: string } }>('POST', '/login', { email, password, code }),
   logout: () => call<void>('POST', '/logout'),
-  me: () => call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean }>('GET', '/me'),
+  me: () => call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean; operator?: boolean }>('GET', '/me'),
   setKeys: (keys: Record<string, string>) => call<{ keys: Record<string, string> }>('PUT', '/me/keys', { keys }),
   sites: () => call<{ sites: Site[] }>('GET', '/sites'),
   createSite: (domain: string) => call<Site>('POST', '/sites', { domain }),
@@ -578,6 +653,14 @@ export const api = {
       'DELETE',
       `/sites/${site}/privacy/person?${by}=${encodeURIComponent(value)}`,
     ),
+  turnOffTwoStepFor: (id: string, password: string) => call<void>('POST', `/people/${id}/two-step/off`, { password }),
+  startOverKeys: (password: string) => call<{ connections: number }>('POST', '/payments/start-over', { password }),
+  milestones: (site: string) => call<{ milestones: Milestone[] }>('GET', `/sites/${encodeURIComponent(site)}/milestones`),
+  deletePreview: (site: string) => call<Record<string, number>>('GET', `/sites/${encodeURIComponent(site)}/delete-preview`),
+  widgets: (site: string) => call<{ widgets: Widget[]; base: string }>('GET', `/sites/${site}/widgets`),
+  createWidget: (site: string, w: WidgetLook) => call<Widget>('POST', `/sites/${site}/widgets`, w),
+  updateWidget: (site: string, id: string, w: WidgetLook & { on: boolean }) => call<Widget>('PUT', `/sites/${site}/widgets/${id}`, w),
+  deleteWidget: (site: string, id: string) => call<void>('DELETE', `/sites/${site}/widgets/${id}`),
   shares: (site: string) => call<{ shares: Share[]; base: string }>('GET', `/sites/${site}/shares`),
   createShare: (site: string, body: { name: string; password?: string; revenue: boolean; days: number; embed_origins?: string[] }) =>
     call<{ share: Share; url: string }>('POST', `/sites/${site}/shares`, body),
@@ -588,6 +671,11 @@ export const api = {
   addPerson: (email: string, role: string) => call<{ person: Person; password: string; signin?: string }>('POST', '/people', { email, role }),
   setPersonRole: (id: string, role: string) => call<{ people: Person[] }>('PATCH', `/people/${id}`, { role }),
   removePerson: (id: string) => call<void>('DELETE', `/people/${id}`),
+  setSiteIcon: (site: string, picture: Blob) => raw('PUT', `/sites/${site}/icon`, picture),
+  clearSiteIcon: (site: string) => call<Brand>('DELETE', `/sites/${site}/icon`),
+  fetchSiteFavicon: (site: string) => call<Brand>('POST', `/sites/${site}/icon/favicon`),
+  setSiteColor: (site: string, color: string) => call<Brand>('PUT', `/sites/${site}/color`, { color }),
+  resetPersonPassword: (id: string, password: string) => call<{ email: string; password: string }>('POST', `/people/${id}/password`, { password }),
   changePassword: (current: string, password: string) => call<void>('POST', '/account/password', { current, password }),
   twoStep: () => call<TwoStep>('GET', '/account/2fa'),
   startTwoStep: (password: string) => call<{ secret: string; uri: string }>('POST', '/account/2fa/start', { password }),
@@ -599,6 +687,8 @@ export const api = {
   setAvatar: (file: Blob) => raw('PUT', '/account/avatar', file),
   clearAvatar: () => call<void>('DELETE', '/account/avatar'),
   report: (site: string, q: ReportQuery, signal?: AbortSignal) => call<Report>('GET', reportURL(site, q), undefined, signal),
+  /** This server reads the site's homepage and looks for the snippet. */
+  checkInstall: (site: string) => call<InstallCheck>('POST', `/sites/${encodeURIComponent(site)}/install/check`),
   events: (site: string, limit = 20) =>
     call<{ events: { ts: string; path: string; kind: string; visitor?: string; goal?: string; channel?: string; country?: string; device?: string; browser?: string }[] }>(
       'GET',

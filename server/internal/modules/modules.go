@@ -4,7 +4,10 @@
 //
 //   - no bytes in the browser: the tracker is built per feature, so a site
 //     without goals or outbound links gets a smaller script (see tracker/);
-//   - no work on the server: its endpoints answer 404 and its jobs never run;
+//   - no work on the server for what it adds: its endpoints answer 404 and
+//     what it alone collects (crawler hits) is not recorded. Revenue is the one
+//     exception, on purpose: payments keep arriving while it is off, so turning
+//     it back on shows everything and no sale is lost;
 //   - no code in the dashboard: its chunk is never downloaded.
 //
 // Modules are first-party only. Nothing here loads foreign code into the
@@ -74,7 +77,7 @@ var All = []Module{
 			"Feeds funnels, so you can see where people stop",
 		},
 		Costs: []string{
-			"Adds 199 B to the browser script",
+			"Adds {bytes} to the browser script",
 			"You mark what counts with data-trckable-goal or trckable('signup')",
 		},
 		Loses: []string{
@@ -89,15 +92,16 @@ var All = []Module{
 			"Shows which page sent people away",
 		},
 		Costs: []string{
-			"Adds 157 B to the browser script",
+			"Adds {bytes} to the browser script",
 			"Listens for clicks on links — nothing else",
+			"Shows up with the other goals, so Goals needs to be on",
 		},
 		Loses: []string{
 			"Outbound clicks and downloads stop being recorded",
 			"Recorded ones stay in your reports",
 		}},
 	{ID: "revenue", Name: "Revenue", Summary: "Stripe, Lemon Squeezy, Polar, Paddle and Dodo: which traffic pays.",
-		Tracker: TrackCheckout, Collects: true, Gap: "New payments stop arriving and checkout links lose the visitor id. Recorded revenue stays.",
+		Tracker: TrackCheckout, Collects: true, Gap: "Revenue is hidden and checkout links lose the visitor id. Payments keep arriving, so nothing is lost.",
 		Server: "webhook inbox, payment ledger, reconciliation every 6 h, exchange rates",
 		Gives: []string{
 			"Revenue, conversion and revenue per visitor beside your traffic",
@@ -105,14 +109,14 @@ var All = []Module{
 			"Refunds, disputes, test mode and currencies handled for you",
 		},
 		Costs: []string{
-			"Adds 239 B to the browser script (the visitor id on checkout links)",
+			"Adds {bytes} to the browser script (the visitor id on checkout links)",
 			"Keeps a webhook inbox and a payment ledger on your own server",
 			"Checks your provider for missed payments every 6 hours",
 		},
 		Loses: []string{
-			"New payments stop being recorded — that gap cannot be filled in later",
-			"Checkout links lose the visitor id, so later sales are unattributed",
-			"Revenue already recorded stays",
+			"Revenue is hidden from the dashboard; payments keep arriving and are kept",
+			"Checkout links lose the visitor id, so sales made while off are unattributed",
+			"Turn it back on and everything recorded meanwhile is there",
 		}},
 	{ID: "funnels", Name: "Funnels", Summary: "Follow visitors through steps and see where they stop.", On: true,
 		Gives: []string{
@@ -162,12 +166,12 @@ var All = []Module{
 	{ID: "consent", Name: "Cookie consent", Summary: "Keep the cookie and ask first — with a bar of trckable's own, or by reading the banner you already run.",
 		Tracker: TrackConsent, Label: "records less", Gap: "The script stops asking and follows the site's own setting again.",
 		Gives: []string{
-			"Until someone agrees, the script stores nothing — and their visit still counts",
+			"Until someone agrees, the script stores nothing; someone who says no is not counted at all",
 			"Read the consent manager you already run, or let trckable ask with a bar of its own",
 			"Withdraw it and the cookie is deleted, not just ignored",
 		},
 		Costs: []string{
-			"Reading your banner adds 196 B to the script; trckable's own bar adds 941 B",
+			"Reading your banner adds {consent} to the script; trckable's own bar adds {banner}",
 			"Which of the two, and how the bar looks, is in Settings → Data & privacy",
 			"Before anyone agrees a returning visitor looks new, so multi-day attribution starts at consent",
 		},
@@ -196,7 +200,7 @@ var All = []Module{
 			"Only forms the browser accepted: one refused on the spot is not counted",
 		},
 		Costs: []string{
-			"Adds 115 B to the browser script",
+			"Adds {bytes} to the browser script",
 			"Shows up with the other goals, so Goals needs to be on",
 			"Search forms and forms marked data-trckable-ignore are left out",
 		},
@@ -213,7 +217,7 @@ var All = []Module{
 			"A Google service account with read-only access: five minutes, once",
 			"Your server asks Google for the report; no visitor data is sent",
 		},
-		Loses: []string{"The Search terms tab goes away", "Nothing is stored, so nothing is lost"}},
+		Loses: []string{"The Search terms tab goes away", "Nothing was copied from Google, so nothing is lost", "The key stays on this server until you disconnect"}},
 	// Ask trckable joins this list when it is built (plan §3c); until then it is
 	// not offered, and the MCP server is the way to ask in plain words.
 }

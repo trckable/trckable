@@ -1,15 +1,19 @@
-// Settings → Data & privacy → a link to this site's numbers for someone with
+// Settings → Sharing → a link to this site's numbers for someone with
 // no account. What it may show is decided on the server: hiding revenue means
 // the figure is never asked for, not that the page leaves it out.
+import { isViewer } from '../lib/me'
 import { useEffect, useState } from 'react'
 import { Switch } from '../components/Switch'
 import { api, type Share, type Site } from '../lib/api'
 import { Info } from '../components/Info'
 import { Menu } from '../components/Menu'
 import { Modal } from '../components/Modal'
+import { StepBody } from '../components/StepBody'
+import { Steps } from '../components/Steps'
 import { CodeBlock } from '../components/Code'
 import { useConfirm } from '../components/Confirm'
 import { toast } from '../components/Toast'
+import './Shares.css'
 
 const LASTS = [
   { days: 0, label: 'No end date' },
@@ -36,9 +40,11 @@ export function Shares({ site }: { site: Site }) {
       <div className="card-head">
         <h2>Share these numbers</h2>
         <Info text="A read-only link to this one site. No account, no sign-in, nothing to change. Give it a password if it is going anywhere public, and turn revenue off if the person reading should not see money — the server then never puts the figure in the answer at all." />
-        <button type="button" className="btn primary" style={{ marginLeft: 'auto' }} onClick={() => setMaking(true)}>
-          New link
-        </button>
+        {!isViewer() && (
+          <button type="button" className="btn primary" style={{ marginLeft: 'auto' }} onClick={() => setMaking(true)}>
+            New link
+          </button>
+        )}
       </div>
 
       <div className="keylist">
@@ -130,16 +136,9 @@ function NewShare({ site, onClose, onMade }: { site: Site; onClose: () => void; 
 
   return (
     <Modal label="New shared link" className="wizard" onClose={url ? undefined : onClose}>
-      <div className="wiz-rail" aria-hidden="true">
-        {['What it shows', 'The link'].map((label, i) => (
-          <span key={label} className={url ? (i === 1 ? 'on' : 'done') : i === 0 ? 'on' : ''}>
-            <i />
-            {label}
-          </span>
-        ))}
-      </div>
+      <Steps labels={['What it shows', 'The link']} at={url ? 1 : 0} />
 
-      <div key={url ? 'link' : 'what'} className="wiz-step">
+      <StepBody step={url ? 'link' : 'what'}>
         {!url ? (
           <>
             <h2>Share {site.domain}</h2>
@@ -246,7 +245,7 @@ function NewShare({ site, onClose, onMade }: { site: Site; onClose: () => void; 
             </div>
           </>
         )}
-      </div>
+      </StepBody>
     </Modal>
   )
 }

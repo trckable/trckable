@@ -57,3 +57,153 @@
   width: 22px;
   height: 22px;
 }
+
+/* ---- The section: where it stands, then connected, then the rest --------- */
+.pay {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pay-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background:
+    radial-gradient(420px 160px at 0% 0%, color-mix(in srgb, var(--money) 10%, transparent), transparent 70%),
+    var(--surface-2);
+}
+.icon-tile.money {
+  border-color: color-mix(in srgb, var(--money) 40%, transparent);
+  background: color-mix(in srgb, var(--money) 14%, transparent);
+  color: var(--money);
+}
+.pay-head-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.pay-head-text h2 {
+  margin: 0;
+}
+.pay-head-text .faint {
+  font-size: 13px;
+}
+.pay-currency {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.pay-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 13px;
+}
+.pay-alert > span {
+  display: grid;
+  gap: 2px;
+  color: var(--text-2);
+}
+.pay-alert b {
+  color: var(--text);
+}
+.pay-alert svg {
+  flex: none;
+  margin-top: 1px;
+}
+.pay-alert.bad {
+  border-color: color-mix(in srgb, var(--down) 40%, var(--border));
+  background: color-mix(in srgb, var(--down) 7%, transparent);
+}
+.pay-alert.bad svg {
+  color: var(--down);
+}
+.pay-alert.info {
+  background: var(--sunken);
+}
+.pay-alert.info svg {
+  color: var(--text-3);
+}
+.pay-group {
+  display: grid;
+  gap: 8px;
+}
+.pay-group-head {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.pay .conn {
+  padding: 14px 16px;
+  border-radius: 14px;
+}
+.prov .faint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.prov:hover .faint {
+  color: var(--money);
+}
+.pay-link {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px dashed var(--border-2);
+  border-radius: 14px;
+}
+.pay-link-text {
+  display: grid;
+  gap: 2px;
+  font-size: 14px;
+}
+.pay-link-text .faint {
+  font-size: 12.5px;
+}
+@media (max-width: 640px) {
+  .pay-head,
+  .pay-link {
+    grid-template-columns: auto 1fr;
+  }
+  .pay-currency,
+  .pay-link .btn {
+    grid-column: 1 / -1;
+  }
+}
+
+.pay-alert .pay-startover {
+  justify-self: start;
+  margin-top: 8px;
+  height: 32px;
+  font-size: 12.5px;
+}
+
+.conn-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 3px;
+  min-width: 0;
+  font-size: 13px;
+}
+.conn-status .dot {
+  flex: none;
+}
+.conn-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
