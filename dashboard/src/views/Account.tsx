@@ -14,7 +14,6 @@ import { closeAccount, openAccount, type AccountTab as Tab } from '../lib/accoun
 import { confirm, confirmWith, useConfirm } from '../components/Confirm'
 import { DialogActions } from '../components/DialogActions'
 import { RowLabel } from '../components/Switch'
-import { Info } from '../components/Info'
 import { Menu } from '../components/Menu'
 import { THEMES, useTheme } from '../lib/theme'
 import { isViewer } from '../lib/me'
@@ -383,108 +382,134 @@ function People({ me }: { me?: string }) {
       .catch((e: Error) => settle(id, e.message, 'error'))
   }
 
+  const reset = async (p: Person) => {
+    let made: { email: string; password: string } | null = null
+    const ok = await ask({
+      title: `New sign-in details for ${p.email}?`,
+      body: 'They are signed out everywhere, get a new one-time password from you, and choose their own at the next sign-in.',
+      confirmLabel: 'Make new details',
+      busyLabel: 'Resetting…',
+      run: () => api.resetPersonPassword(p.id).then((r) => (made = r)),
+    })
+    if (ok && made) (setIssued({ ...(made as { email: string; password: string }), reset: true }), load())
+  }
+  const remove = async (p: Person) => {
+    const ok = await ask({
+      title: `Remove ${p.email}?`,
+      body: 'They are signed out everywhere straight away. Nothing they looked at is deleted.',
+      confirmLabel: 'Remove',
+      danger: true,
+      busyLabel: 'Removing…',
+      done: `${p.email} removed`,
+      run: () => api.removePerson(p.id),
+    })
+    if (ok) load()
+  }
+
+  // You first; then the people who use it; then the ones still to sign in.
+  const waiting = (p: Person) => p.email !== me && (p.must_change || !p.last_seen)
+  const sorted = [...(people ?? [])].sort((x, y) => (y.email === me ? 1 : 0) - (x.email === me ? 1 : 0) || (y.last_seen || 0) - (x.last_seen || 0))
+  const active = sorted.filter((p) => !waiting(p))
+  const pending = sorted.filter(waiting)
+  const viewers = (people?.length ?? 0) - owners
+
+  const row = (p: Person) => {
+    const self = p.email === me
+    return (
+      <div key={p.id} className={'person' + (self ? ' self' : '')}>
+        <span className={'person-avatar' + (p.role === 'owner' ? ' owner' : '')} aria-hidden="true">
+          {(p.name || p.email).slice(0, 1).toUpperCase()}
+        </span>
+        <span className="person-text">
+          <span className="person-name">
+            {p.name || p.email.split('@')[0]}
+            {self && <span className="you">You</span>}
+          </span>
+          <span className="person-sub">{p.email}</span>
+          <span className="person-seen">
+            {p.must_change ? 'Has not chosen a password yet' : p.last_seen ? `Last seen ${seen(p.last_seen)}` : 'Never signed in'}
+            {waiting(p) && !managed() && (
+              <button type="button" className="linkish person-quick" onClick={() => reset(p)}>
+                New sign-in details
+              </button>
+            )}
+          </span>
+        </span>
+        <span className="person-tags">
+          <span className={'tag ' + (p.role === 'owner' ? 'on' : 'quiet')}>{p.role === 'owner' ? 'Owner' : 'Viewer'}</span>
+          <span className={'tag ' + (p.two_step ? 'on' : 'quiet')} title={p.two_step ? 'Signs in with a password and an authenticator app' : 'Signs in with a password alone'}>
+            {p.two_step && <ShieldCheck size={12} strokeWidth={2} aria-hidden="true" />}
+            {p.two_step ? 'Two-step' : 'Password only'}
+          </span>
+        </span>
+        <Menu label={`${p.email} options`}>
+          {(close) =>
+            self ? (
+              <span className="menu-note">You cannot change your own role: another owner can. Your password and two-step are under Account.</span>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={p.role === 'owner' && owners <= 1}
+                  title={p.role === 'owner' && owners <= 1 ? 'The only owner: make someone else an owner first' : undefined}
+                  onClick={() => (close(), setRole(p, p.role === 'owner' ? 'viewer' : 'owner'))}
+                >
+                  {p.role === 'owner' ? 'Make a viewer' : 'Make an owner'}
+                </button>
+                {!managed() && (
+                  <button type="button" role="menuitem" onClick={() => (close(), reset(p))}>
+                    Reset password
+                  </button>
+                )}
+                <button type="button" role="menuitem" style={{ color: 'var(--down)' }} onClick={() => (close(), remove(p))}>
+                  Remove
+                </button>
+              </>
+            )
+          }
+        </Menu>
+      </div>
+    )
+  }
+
   return (
-    <section className="card" id="people" style={{ gap: 12 }}>
-      <div className="card-head">
-        <h2>People</h2>
-        <Info text="An owner can change anything on this instance. A viewer can read every report and nothing else — no settings, no sites, no payments, no API keys. The server enforces it, not the page. Everyone looks after their own password and second step." />
-        <button type="button" className="btn primary" style={{ marginLeft: 'auto' }} onClick={() => setAdding(true)}>
+    <section className="people" id="people">
+      <div className="people-head">
+        <span className="people-head-text">
+          <h2>People</h2>
+          <span className="faint">
+            {people ? `${people.length} ${people.length === 1 ? 'person' : 'people'} · ${owners} owner${owners === 1 ? '' : 's'} · ${viewers} viewer${viewers === 1 ? '' : 's'}` : '…'}
+          </span>
+        </span>
+        <button type="button" className="btn primary" onClick={() => setAdding(true)}>
           <UserPlus size={16} strokeWidth={1.75} aria-hidden="true" />
           Add someone
         </button>
+        <div className="people-roles">
+          <span>
+            <ShieldCheck size={14} strokeWidth={1.75} aria-hidden="true" />
+            <span>
+              <b>Owners</b> run the instance: sites, payments, people, keys.
+            </span>
+          </span>
+          <span>
+            <Eye size={14} strokeWidth={1.75} aria-hidden="true" />
+            <span>
+              <b>Viewers</b> read every report and change nothing. The server enforces it.
+            </span>
+          </span>
+        </div>
       </div>
 
-      <div className="people-list">
-        {people?.map((p) => {
-          const self = p.email === me
-          return (
-            <div key={p.id} className="person">
-              <span className="person-avatar" aria-hidden="true">
-                {(p.name || p.email).slice(0, 1).toUpperCase()}
-              </span>
-              <span className="person-text">
-                <span className="person-name">
-                  {p.name || p.email}
-                  {self && <span className="faint"> (you)</span>}
-                </span>
-                <span className="person-sub">
-                  {p.name ? p.email + ' · ' : ''}
-                  {p.must_change ? 'has not chosen a password yet' : p.last_seen ? `last seen ${seen(p.last_seen)}` : 'never signed in'}
-                </span>
-              </span>
-              <span className={'tag ' + (p.role === 'owner' ? 'on' : 'quiet')}>{p.role === 'owner' ? 'Owner' : 'Viewer'}</span>
-              <span className={'tag ' + (p.two_step ? 'on' : 'quiet')} title={p.two_step ? 'Signs in with a password and an authenticator app' : 'Signs in with a password alone'}>
-                {p.two_step ? <ShieldCheck size={12} strokeWidth={2} aria-hidden="true" /> : null}
-                {p.two_step ? 'Two-step' : 'Password only'}
-              </span>
-              <Menu label={`${p.email} options`}>
-                {(close) => (
-                  <>
-                    {self ? (
-                      <span className="menu-note">
-                        You cannot change your own role: another owner can. Your password and two-step are under Account.
-                      </span>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          disabled={p.role === 'owner' && owners <= 1}
-                          title={p.role === 'owner' && owners <= 1 ? 'The only owner: make someone else an owner first' : undefined}
-                          onClick={() => (close(), setRole(p, p.role === 'owner' ? 'viewer' : 'owner'))}
-                        >
-                          {p.role === 'owner' ? 'Make a viewer' : 'Make an owner'}
-                        </button>
-                        {!managed() && (
-                          <button
-                            type="button"
-                            role="menuitem"
-                            onClick={async () => {
-                              close()
-                              let made: { email: string; password: string } | null = null
-                              const ok = await ask({
-                                title: `Reset ${p.email}'s password?`,
-                                body: 'They are signed out everywhere, get a new one-time password from you, and choose their own at the next sign-in.',
-                                confirmLabel: 'Reset password',
-                                busyLabel: 'Resetting…',
-                                run: () => api.resetPersonPassword(p.id).then((r) => (made = r)),
-                              })
-                              if (ok && made) (setIssued({ ...(made as { email: string; password: string }), reset: true }), load())
-                            }}
-                          >
-                            Reset password
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          role="menuitem"
-                          style={{ color: 'var(--down)' }}
-                          onClick={async () => {
-                            close()
-                            const ok = await ask({
-                              title: `Remove ${p.email}?`,
-                              body: 'They are signed out everywhere straight away. Nothing they looked at is deleted.',
-                              confirmLabel: 'Remove',
-                              danger: true,
-                              busyLabel: 'Removing…',
-                              done: `${p.email} removed`,
-                              run: () => api.removePerson(p.id),
-                            })
-                            if (ok) load()
-                          }}
-                        >
-                          Remove
-                        </button>
-                      </>
-                    )}
-                  </>
-                )}
-              </Menu>
-            </div>
-          )
-        })}
-        {!people && <div className="skeleton" style={{ height: 54 }} />}
-      </div>
+      {!people && <div className="skeleton" style={{ height: 120 }} />}
+      {active.length > 0 && <div className="people-list">{active.map(row)}</div>}
+      {pending.length > 0 && (
+        <div className="people-group">
+          <span className="people-group-head">Waiting to sign in</span>
+          <div className="people-list">{pending.map(row)}</div>
+        </div>
+      )}
 
       {adding && (
         <AddPerson
@@ -727,24 +752,52 @@ function Keys() {
   const when = (unix?: number) => (unix ? new Date(unix * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : null)
 
   return (
-    <section className="card" id="keys" style={{ gap: 12 }}>
-      <div className="card-head">
-        <h2>API keys</h2>
-        <Info text="A key can read this instance's reports — nothing else. It cannot change a setting, a site or a payment. Give each tool its own key, so revoking one never touches the rest." />
-        <span className="faint num" style={{ marginLeft: 'auto', fontSize: 12 }}>
-          {used} of {MAX}
+    <section className="people" id="keys">
+      <div className="people-head">
+        <span className="people-head-text">
+          <h2>API keys</h2>
+          <span className="faint">
+            <span className="num">
+              {used} of {MAX}
+            </span>{' '}
+            in use
+          </span>
         </span>
         <button type="button" className="btn primary" disabled={used >= MAX} onClick={() => setCreating(true)}>
+          <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />
           New key
         </button>
+        <span className="keys-bar" aria-hidden="true">
+          <span style={{ width: `${(used / MAX) * 100}%` }} />
+        </span>
+        <div className="people-roles">
+          <span>
+            <Eye size={14} strokeWidth={1.75} aria-hidden="true" />
+            <span>
+              A key <b>reads reports</b>, nothing else: no settings, sites or payments.
+            </span>
+          </span>
+          <span>
+            <KeyRound size={14} strokeWidth={1.75} aria-hidden="true" />
+            <span>One per tool (Claude, Cursor, a script), so revoking one leaves the rest.</span>
+          </span>
+        </div>
       </div>
 
-      <div className="keylist">
+      <div className="people-list">
         {keys?.map((k) => (
-          <div key={k.id} className="keyrow">
-            <span className="keyrow-name">{k.name}</span>
-            <span className="faint num keyrow-meta">
-              {k.prefix}… · {k.last_used_at ? `used ${when(k.last_used_at)}` : 'never used'}
+          <div key={k.id} className="person keyrow">
+            <span className="person-avatar" aria-hidden="true">
+              <KeyRound size={17} strokeWidth={1.75} />
+            </span>
+            <span className="person-text">
+              <span className="person-name">{k.name}</span>
+              <span className="person-seen num">
+                {k.prefix}… · created {when(k.created_at)}
+              </span>
+            </span>
+            <span className="person-tags">
+              <span className={'tag ' + (k.last_used_at ? 'on' : 'quiet')}>{k.last_used_at ? `Used ${when(k.last_used_at)}` : 'Never used'}</span>
             </span>
             <Menu label={`${k.name} options`}>
               {(close) => (
@@ -787,7 +840,7 @@ function Keys() {
             </Menu>
           </div>
         ))}
-        {keys?.length === 0 && <span className="faint">No keys yet. Create one for your AI assistant or a script.</span>}
+        {keys?.length === 0 && <span className="faint keys-empty">No keys yet. Create one for your AI assistant or a script.</span>}
         {!keys && <div className="skeleton" style={{ height: 54 }} />}
       </div>
 

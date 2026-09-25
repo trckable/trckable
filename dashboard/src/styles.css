@@ -2775,11 +2775,11 @@ pre.code.words {
 .modal.account {
   display: grid;
   overflow: hidden; /* the body scrolls, not the dialog: never two scrollbars */
-  grid-template-columns: 190px minmax(0, 1fr);
+  grid-template-columns: 210px minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
-  width: min(760px, calc(100vw - 32px));
+  width: min(940px, calc(100vw - 32px));
   max-width: none;
-  height: min(560px, 86vh);
+  height: min(700px, 88vh);
 }
 /* A close button you can actually hit. */
 .btn.icon.close {

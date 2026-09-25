@@ -1,7 +1,8 @@
 // Settings → Sites: everything about sites as a whole, not about one of them.
 // Adding a site is a short wizard (domain → install → first visit), and each
 // site can be renamed or removed from the same list.
-import { Check, Globe } from 'lucide-react'
+import { Check, Globe, Plus, Settings2 } from 'lucide-react'
+import { closeAccount } from '../lib/account'
 import { SiteMark } from '../components/SiteMark'
 import { StepBody } from '../components/StepBody'
 import { Steps } from '../components/Steps'
@@ -25,24 +26,35 @@ export function SitesSettings({ sites, onSites }: { sites: Site[]; onSites: () =
   const [wizard, setWizard] = useState(false)
   const [drop, setDrop] = useState<Site | null>(null)
 
+  const live = sites.filter((x) => siteState(x) === 'live').length
+  const stopped = sites.filter((x) => siteState(x) === 'stopped').length
   return (
-    <section className="card" style={{ gap: 14 }}>
-      <div className="card-head">
-        <span className="faint" style={{ fontSize: 12 }}>
-          {sites.length} {sites.length === 1 ? 'site' : 'sites'}
+    <section className="sites-sec">
+      <div className="sites-head">
+        <span className="sites-head-text">
+          <h2>Sites</h2>
+          <span className="faint">
+            {sites.length} {sites.length === 1 ? 'site' : 'sites'} · {live} receiving visits{stopped ? ` · ${stopped} stopped` : ''}
+          </span>
         </span>
         {!isViewer() && (
-          <button type="button" className="btn primary" style={{ marginLeft: 'auto' }} onClick={() => setWizard(true)}>
-            + Add a site
+          <button type="button" className="btn primary" onClick={() => setWizard(true)}>
+            <Plus size={16} strokeWidth={2} aria-hidden="true" />
+            Add a site
           </button>
         )}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div className="sites-cards">
         {sites.map((s) => (
           <SiteRow key={s.id} site={s} onSites={onSites} onDelete={() => setDrop(s)} />
         ))}
-        {sites.length === 0 && <p className="muted" style={{ margin: 0 }}>No sites yet.</p>}
+        {!isViewer() && (
+          <button type="button" className="site-add" onClick={() => setWizard(true)}>
+            <Plus size={18} strokeWidth={1.75} aria-hidden="true" />
+            Add a site
+          </button>
+        )}
       </div>
 
       {wizard && <AddWizard onClose={() => setWizard(false)} onSites={onSites} />}
@@ -51,38 +63,56 @@ export function SitesSettings({ sites, onSites }: { sites: Site[]; onSites: () =
   )
 }
 
+function lastVisit(unix: number): string {
+  const s = Math.max(0, Date.now() / 1000 - unix)
+  if (s < 3600) return 'within the hour'
+  if (s < 86400) return `${Math.round(s / 3600)} h ago`
+  const d = Math.round(s / 86400)
+  return d === 1 ? 'yesterday' : `${d} days ago`
+}
+
 function SiteRow({ site, onSites, onDelete }: { site: Site; onSites: () => void; onDelete: () => void }) {
   const [editing, setEditing] = useState(false)
   // The same signal the site picker uses, so the two can never disagree.
   const state = siteState(site)
   const live = state === 'live'
+  const go = () => (closeAccount(), navigate('/' + encodeURIComponent(site.domain)))
   return (
-    <div className="conn">
-      <span className="dot" style={{ background: live ? 'var(--accent)' : state === 'stopped' ? 'var(--down)' : 'var(--text-3)', borderRadius: '50%' }} aria-hidden="true" />
-      <div style={{ flex: 1, minWidth: 0 }} onDoubleClick={() => navigate('/' + encodeURIComponent(site.domain))}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <strong>{site.name || site.domain}</strong>
-          {state === 'live' ? (
-            <span className="tag live">live</span>
-          ) : state === 'stopped' ? (
-            <span className="tag danger" title={stoppedWhy(site)}>
-              stopped
-            </span>
-          ) : state === 'quiet' ? (
-            <span className="tag quiet">no visits today</span>
-          ) : (
-            <span className="tag quiet">not installed yet</span>
-          )}
-        </div>
-        <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
+    <div className={'site-card ' + state}>
+      <SiteMark site={site} size={38} />
+      <div className="site-card-text">
+        <span className="site-card-name">
+          {site.name || site.domain}
+          <span className={'site-pill ' + state} title={state === 'stopped' ? stoppedWhy(site) : undefined}>
+            {live ? 'Live' : state === 'stopped' ? 'Stopped' : state === 'quiet' ? 'Quiet today' : 'Not installed'}
+          </span>
+        </span>
+        <span className="faint">
           {site.name && site.name !== site.domain ? site.domain + ' · ' : ''}
           {site.timezone.replace(/_/g, ' ')} · {site.currency}
-        </div>
+          {site.last_event_at ? ` · last visit ${lastVisit(site.last_event_at)}` : ''}
+        </span>
+      </div>
+      <div className="site-card-actions">
+        {state === 'new' && !isViewer() ? (
+          <button type="button" className="btn" onClick={() => (closeAccount(), openSettings(site, 'install'))}>
+            Install
+          </button>
+        ) : (
+          <button type="button" className="btn" onClick={go}>
+            Open
+          </button>
+        )}
+        {!isViewer() && (
+          <button type="button" className="btn icon ghost" aria-label={`${site.domain} settings`} title="Settings" onClick={() => (closeAccount(), openSettings(site))}>
+            <Settings2 size={16} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        )}
       </div>
       <Menu label={`${site.domain} options`}>
         {(close) => (
           <>
-            <button type="button" role="menuitem" onClick={() => (close(), navigate('/' + encodeURIComponent(site.domain)))}>
+            <button type="button" role="menuitem" onClick={() => (close(), go())}>
               Open dashboard
             </button>
             {!isViewer() && (
@@ -90,8 +120,8 @@ function SiteRow({ site, onSites, onDelete }: { site: Site; onSites: () => void;
                 <button type="button" role="menuitem" onClick={() => (close(), setEditing(true))}>
                   Edit site
                 </button>
-                <button type="button" role="menuitem" onClick={() => (close(), openSettings(site, 'install'))}>
-                  Install snippet
+                <button type="button" role="menuitem" onClick={() => (close(), closeAccount(), openSettings(site, 'install'))}>
+                  {state === 'new' ? 'Install snippet' : 'Verify'}
                 </button>
                 <button type="button" role="menuitem" style={{ color: 'var(--down)' }} onClick={() => (close(), onDelete())}>
                   Delete site

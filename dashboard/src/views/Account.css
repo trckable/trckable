@@ -145,29 +145,104 @@
 /* ---- People ------------------------------------------------------------------
    One row per person: who, when they were last here, their role and whether
    they use a second step; the ⋯ menu for the rest. */
+.people {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.people-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background:
+    radial-gradient(420px 160px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
+    var(--surface-2);
+}
+.people-head-text {
+  display: grid;
+  gap: 2px;
+}
+.people-head-text h2 {
+  margin: 0;
+}
+.people-head-text .faint {
+  font-size: 13px;
+}
+.people-roles {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.people-roles > span {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--grid);
+  border-radius: 10px;
+  background: var(--sunken);
+  line-height: 1.45;
+}
+.people-roles svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--text-3);
+}
+.people-roles b {
+  color: var(--text);
+  font-weight: 600;
+}
+.people-group {
+  display: grid;
+  gap: 8px;
+}
+.people-group-head {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
 .people-list {
   display: grid;
-  gap: 6px;
+  gap: 8px;
+  container-type: inline-size;
 }
 .person {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
+  gap: 14px;
+  padding: 14px 16px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.person.self {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
 }
 .person-avatar {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   flex: none;
   border-radius: 50%;
-  background: var(--surface-2);
+  background: var(--sunken);
+  border: 1px solid var(--border);
   color: var(--text-2);
   font-weight: 600;
-  font-size: 14px;
+}
+.person-avatar.owner {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--accent);
 }
 .person-text {
   display: grid;
@@ -175,47 +250,77 @@
   flex: 1;
   min-width: 0;
 }
-.person-name,
-.person-sub {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .person-name {
-  font-size: 13.5px;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.person-name .you {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
 }
 .person-sub {
-  color: var(--text-3);
+  font-size: 13px;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+.person-seen {
   font-size: 12px;
+  color: var(--text-3);
+}
+.person-tags {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
 }
 .person .tag {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  flex: none;
+  white-space: nowrap;
 }
-.menu-note {
+.person-seen .person-quick {
   display: block;
-  max-width: 240px;
-  padding: 8px 10px;
-  color: var(--text-3);
-  font-size: 12.5px;
-  line-height: 1.45;
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--accent);
 }
-#people .card-head .btn.primary {
-  gap: 7px;
+.person-tags,
+.person .menu-wrap {
+  flex-shrink: 0;
 }
 @media (max-width: 640px) {
-  .person {
-    flex-wrap: wrap;
-  }
-  .person-text {
-    flex: 1 0 calc(100% - 90px);
+  .people-roles {
+    grid-template-columns: 1fr;
   }
 }
-
-/* Adding someone, and the one-time password: small dialogs that fit what they hold. */
+/* Where the list is narrow (a phone, or a small window), the name and email
+   keep the whole line and the tags and buttons go underneath. */
+@container (max-width: 560px) {
+  .person {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 6px 14px;
+  }
+  .person-tags {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+  .person > .btn.icon {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
 .modal.person-modal {
   width: min(480px, 100%);
   gap: 18px;
@@ -496,4 +601,24 @@
 }
 .pw-meter.ok .faint {
   color: var(--accent);
+}
+
+/* API keys share the People look; the bar says how many of the 20 are used. */
+.keys-bar {
+  grid-column: 1 / -1;
+  display: block;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--grid);
+  overflow: hidden;
+}
+.keys-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+}
+.keys-empty {
+  padding: 12px 4px;
+  font-size: 13px;
 }

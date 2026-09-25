@@ -3,7 +3,7 @@
 // containing block for position: fixed, so a wizard opened from inside the
 // account dialog was trapped by it — the backdrop stopped covering the page
 // and the wizard's own heading was clipped out of reach.
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useLockScroll } from './lockScroll'
 
@@ -41,9 +41,30 @@ export function Modal({
       if (at !== -1) stack.splice(at, 1)
     }
   }, [])
+  // While it is open, a dialog never shrinks: switching a tab or a step keeps
+  // its size, and only more content makes it grow. A dialog that jumped with
+  // every tab felt broken. Capped by the screen, so a phone keyboard or a
+  // smaller window still fits it.
+  const box = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const el = box.current
+    if (!el) return
+    let tallest = 0
+    const hold = () => {
+      const h = el.offsetHeight
+      if (h > tallest) {
+        tallest = h
+        el.style.minHeight = `min(${h}px, calc(100dvh - 32px))`
+      }
+    }
+    hold()
+    const ro = new ResizeObserver(hold)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   return createPortal(
     <div className="modal-back" onClick={onClose}>
-      <div className={('modal rise ' + className).trim()} role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.stopPropagation()}>
+      <div ref={box} className={('modal rise ' + className).trim()} role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>,
