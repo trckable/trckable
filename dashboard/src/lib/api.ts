@@ -602,6 +602,14 @@ export interface InstallCheck {
   error?: string
 }
 
+/** A moment the data shows: a visitor step, the best day, a first. */
+export interface Milestone {
+  id: string
+  kind: 'visitors' | 'best_day' | 'first_ai' | 'first_sale'
+  value: number
+  day: string
+}
+
 export type WidgetKind = 'live' | 'badge' | 'counter' | 'revenue' | 'privacy'
 export interface WidgetLook {
   kind: WidgetKind
@@ -647,6 +655,7 @@ export const api = {
     ),
   turnOffTwoStepFor: (id: string, password: string) => call<void>('POST', `/people/${id}/two-step/off`, { password }),
   startOverKeys: (password: string) => call<{ connections: number }>('POST', '/payments/start-over', { password }),
+  milestones: (site: string) => call<{ milestones: Milestone[] }>('GET', `/sites/${encodeURIComponent(site)}/milestones`),
   deletePreview: (site: string) => call<Record<string, number>>('GET', `/sites/${encodeURIComponent(site)}/delete-preview`),
   widgets: (site: string) => call<{ widgets: Widget[]; base: string }>('GET', `/sites/${site}/widgets`),
   createWidget: (site: string, w: WidgetLook) => call<Widget>('POST', `/sites/${site}/widgets`, w),

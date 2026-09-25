@@ -143,3 +143,32 @@ func TestWidgetPreviewRefusesInjectedStyles(t *testing.T) {
 		t.Fatalf("injected accent: %d %s", res.StatusCode, b)
 	}
 }
+
+// Milestones come from the data: 150 first visits pass the 100 step on the
+// day the hundredth came.
+func TestMilestones(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	base := g.now.Add(-48 * time.Hour)
+	for i := 0; i < 150; i++ {
+		g.event(t, event.Event{Kind: event.KindPageview, EventID: uint64(9000 + i), TS: base.Add(time.Duration(i) * time.Minute).UnixMilli(), Visitor: uint64(500 + i), Path: "/", Country: "DE"})
+	}
+	g.waitApplied(t, 150)
+	// Sessions are written once they are idle; these are two days old.
+	var out map[string]any
+	for try := 0; try < 50; try++ {
+		code, o := do(t, owner, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/milestones", "")
+		if code != http.StatusOK {
+			t.Fatalf("milestones: %d %v", code, o)
+		}
+		out = o
+		for _, m := range o["milestones"].([]any) {
+			if m.(map[string]any)["id"] == "visitors-100" {
+				return
+			}
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatalf("no 100-visitor milestone: %v", out)
+}

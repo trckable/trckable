@@ -23,6 +23,8 @@ export type ShareData = {
   prevPageviews?: number
   revenue?: { now: number; prev?: number; fmt: (minor: number) => string }
   series: number[]
+  /** A milestone instead of the period: "10,000" · "visitors, all time" · "Reached on Sep 25". */
+  milestone?: { value: string; label: string; sub: string }
 }
 
 type Design = 'glow' | 'paper' | 'bold'
@@ -62,11 +64,12 @@ export function cardSvg(d: ShareData, design: Design, show: Show, title: string)
   const accent = d.color || '#b8ff3c'
   const t =
     design === 'paper'
-      ? { bg: '#ffffff', fg: '#15161a', mute: '#6b7280', line: '#e7e7ea', acc: d.color || '#4d7c0f', ghostEye: '#0b0d10' }
+      ? { bg: '#ffffff', fg: '#15161a', mute: '#6b7280', line: '#e7e7ea', acc: d.color || '#4d7c0f' }
       : design === 'bold'
-        ? { bg: accent, fg: '#0b0d10', mute: 'rgba(11,13,16,0.62)', line: 'rgba(11,13,16,0.16)', acc: '#0b0d10', ghostEye: accent }
-        : { bg: '#0b0d10', fg: '#f5f7fa', mute: '#8a93a1', line: '#1d2229', acc: accent, ghostEye: '#0b0d10' }
+        ? { bg: accent, fg: '#0b0d10', mute: 'rgba(11,13,16,0.62)', line: 'rgba(11,13,16,0.16)', acc: '#0b0d10' }
+        : { bg: '#0b0d10', fg: '#f5f7fa', mute: '#8a93a1', line: '#1d2229', acc: accent }
   const font = `font-family="Geist, Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif"`
+  if (d.milestone) return milestoneSvg(d, design, title)
   const main = show.visitors
     ? { value: fmtInt(d.visitors), label: 'visitors', ch: change(d.visitors, d.prevVisitors) }
     : show.pageviews
@@ -78,17 +81,20 @@ export function cardSvg(d: ShareData, design: Design, show: Show, title: string)
   if (show.visitors && show.pageviews) side.push({ value: fmtInt(d.pageviews), label: 'pageviews' })
   if (show.revenue && d.revenue && (show.visitors || show.pageviews)) side.push({ value: d.revenue.fmt(d.revenue.now), label: 'revenue' })
 
-  const chart = show.chart && d.series.length > 1 ? linePath(d.series, 60, 420, W - 120, 130) : ''
+  const chart = show.chart && d.series.length > 1 ? linePath(d.series, 60, 410, W - 120, 130) : ''
   const glow =
     design === 'glow'
       ? `<radialGradient id="g" cx="0.15" cy="0" r="0.9"><stop offset="0" stop-color="${accent}" stop-opacity="0.28"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient><rect width="${W}" height="${H}" fill="url(#g)"/>`
       : ''
+  // The ghost always in its own colours, on its own dark badge (as the app
+  // icon is), so it reads the same on every design and is never recoloured.
   const ghost =
-    `<g transform="translate(60 548) scale(0.72)">` +
-    `<path d="${GHOST}" fill="${design === 'bold' ? '#0b0d10' : '#b8ff3c'}"/>` +
-    `<circle cx="25.5" cy="29" r="3.6" fill="${t.ghostEye}"/><circle cx="38.5" cy="29" r="3.6" fill="${t.ghostEye}"/>` +
-    `<path d="${LINE}" fill="none" stroke="${t.bg}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` +
-    `<path d="${LINE}" fill="none" stroke="${t.fg}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<rect x="60" y="578" width="38" height="38" rx="10" fill="#0b0d10"/>` +
+    `<g transform="translate(64 582) scale(0.47)">` +
+    `<path d="${GHOST}" fill="#b8ff3c"/>` +
+    `<circle cx="25.5" cy="29" r="3.6" fill="#0b0d10"/><circle cx="38.5" cy="29" r="3.6" fill="#0b0d10"/>` +
+    `<path d="${LINE}" fill="none" stroke="#0b0d10" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<path d="${LINE}" fill="none" stroke="#f5f7fa" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>` +
     `</g>`
 
   return (
@@ -110,12 +116,54 @@ export function cardSvg(d: ShareData, design: Design, show: Show, title: string)
       )
       .join('') +
     (chart
-      ? `<path d="${chart} L${W - 60} 550 L60 550 Z" fill="url(#a)"/><path d="${chart}" fill="none" stroke="${t.acc}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`
+      ? `<path d="${chart} L${W - 60} 540 L60 540 Z" fill="url(#a)"/><path d="${chart}" fill="none" stroke="${t.acc}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`
       : '') +
-    `<line x1="60" y1="572" x2="${W - 60}" y2="572" stroke="${t.line}" stroke-width="2"/>` +
+    `<line x1="60" y1="562" x2="${W - 60}" y2="562" stroke="${t.line}" stroke-width="2"/>` +
     ghost +
-    `<text x="112" y="596" ${font} font-size="22" fill="${t.mute}">Counted by <tspan font-weight="760" fill="${t.fg}" letter-spacing="-1">trck</tspan><tspan font-weight="360" letter-spacing="-0.5">able</tspan></text>` +
-    `<text x="${W - 60}" y="596" text-anchor="end" ${font} font-size="22" fill="${t.mute}">${esc(d.domain)}</text>` +
+    `<text x="112" y="604" ${font} font-size="22" fill="${t.mute}">Counted by <tspan font-weight="760" fill="${t.fg}" letter-spacing="-1">trck</tspan><tspan font-weight="360" letter-spacing="-0.5">able</tspan></text>` +
+    `<text x="${W - 60}" y="604" text-anchor="end" ${font} font-size="22" fill="${t.mute}">${esc(d.domain)}</text>` +
+    `</svg>`
+  )
+}
+
+/** A milestone card: one big number, what it is, the day, and a burst. */
+function milestoneSvg(d: ShareData, design: Design, title: string): string {
+  const m = d.milestone!
+  const accent = d.color || '#b8ff3c'
+  const t =
+    design === 'paper'
+      ? { bg: '#ffffff', fg: '#15161a', mute: '#6b7280', acc: d.color || '#4d7c0f' }
+      : design === 'bold'
+        ? { bg: accent, fg: '#0b0d10', mute: 'rgba(11,13,16,0.62)', acc: '#0b0d10' }
+        : { bg: '#0b0d10', fg: '#f5f7fa', mute: '#8a93a1', acc: accent }
+  const font = `font-family="Geist, Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif"`
+  // A burst of dots around the number: fixed positions, so the card is the
+  // same every time it is drawn.
+  const dots = [
+    [150, 170, 9], [230, 120, 5], [1030, 150, 8], [960, 110, 5], [1080, 260, 6], [120, 330, 6],
+    [1010, 380, 10], [200, 430, 5], [880, 470, 6], [320, 500, 7], [760, 130, 4], [420, 110, 4],
+  ]
+    .map(([x, y, r], i) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${i % 3 === 0 ? t.acc : t.mute}" opacity="${i % 2 ? 0.5 : 0.85}"/>`)
+    .join('')
+  const glow =
+    design === 'glow'
+      ? `<radialGradient id="g" cx="0.5" cy="0.45" r="0.6"><stop offset="0" stop-color="${accent}" stop-opacity="0.3"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient><rect width="${W}" height="${H}" fill="url(#g)"/>`
+      : ''
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
+    `<rect width="${W}" height="${H}" fill="${t.bg}"/>` +
+    glow +
+    dots +
+    `<text x="${W / 2}" y="120" text-anchor="middle" ${font} font-size="28" font-weight="600" fill="${t.fg}">${esc(title)}</text>` +
+    `<text x="${W / 2}" y="330" text-anchor="middle" ${font} font-size="170" font-weight="760" letter-spacing="-6" fill="${t.fg}">${esc(m.value)}</text>` +
+    `<text x="${W / 2}" y="396" text-anchor="middle" ${font} font-size="38" font-weight="600" fill="${t.acc}">${esc(m.label)}</text>` +
+    `<text x="${W / 2}" y="446" text-anchor="middle" ${font} font-size="24" fill="${t.mute}">${esc(m.sub)}</text>` +
+    `<rect x="${W / 2 - 150}" y="${H - 72}" width="38" height="38" rx="10" fill="#0b0d10"/>` +
+    `<g transform="translate(${W / 2 - 146} ${H - 68}) scale(0.47)">` +
+    `<path d="${GHOST}" fill="#b8ff3c"/><circle cx="25.5" cy="29" r="3.6" fill="#0b0d10"/><circle cx="38.5" cy="29" r="3.6" fill="#0b0d10"/>` +
+    `<path d="${LINE}" fill="none" stroke="#0b0d10" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<path d="${LINE}" fill="none" stroke="#f5f7fa" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></g>` +
+    `<text x="${W / 2 - 100}" y="${H - 46}" ${font} font-size="22" fill="${t.mute}">Counted by <tspan font-weight="760" fill="${t.fg}" letter-spacing="-1">trck</tspan><tspan font-weight="360" letter-spacing="-0.5">able</tspan> · ${esc(d.domain)}</text>` +
     `</svg>`
   )
 }
@@ -157,7 +205,9 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
   }, [done])
 
   const vch = change(data.visitors, data.prevVisitors)
-  const post = `${title}: ${fmtInt(data.visitors)} visitors, ${data.period}${show.change && vch !== null ? ` (${pct(vch)})` : ''}. Counted by trckable — trckable.com`
+  const post = data.milestone
+    ? `${title}: ${data.milestone.value} ${data.milestone.label}. ${data.milestone.sub}. Counted by trckable — trckable.com`
+    : `${title}: ${fmtInt(data.visitors)} visitors, ${data.period}${show.change && vch !== null ? ` (${pct(vch)})` : ''}. Counted by trckable — trckable.com`
   const file = () => `trckable-${data.domain}-${new Date().toISOString().slice(0, 10)}.png`
   const act = async (what: string, run: (png: Blob) => Promise<unknown>) => {
     setBusy(what)
@@ -210,7 +260,7 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
             Title
             <input className="input" value={title} maxLength={60} onChange={(e) => setTitle(e.target.value)} />
           </label>
-          <div className="share-toggles">
+          {!data.milestone && <div className="share-toggles">
             {toggles
               .filter((x) => !x.off)
               .map((x) => (
@@ -219,7 +269,7 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
                   <Switch on={show[x.id]} label={x.label} onChange={() => setShow((s) => ({ ...s, [x.id]: !s[x.id] }))} />
                 </label>
               ))}
-          </div>
+          </div>}
           <div className="share-actions">
             <button
               type="button"

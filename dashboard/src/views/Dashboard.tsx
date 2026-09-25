@@ -5,7 +5,7 @@ import { Modal } from '../components/Modal'
 import { BarList, type BarItem } from '../charts/BarList'
 import { TimeChart, type Pulse } from '../charts/TimeChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
-import { api, cachedReport, dropReports, exportURL, siteState, type Annotation, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
+import { api, cachedReport, dropReports, exportURL, siteState, type Milestone, type Annotation, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
 import { calendarPrevious, diffDays, fmtDay, presetById, setWeekStart, todayIn, type Range } from '../lib/dates'
 import { countryName, delta, flag, fmtDuration, fmtInt, fmtMoney, fmtPct, type Delta } from '../lib/format'
 import { useTween } from '../lib/motion'
@@ -35,6 +35,7 @@ import { ScrollDepth } from './ScrollDepth'
 // Full mode's extra views live in their own chunk: Core never loads them.
 // The share card is its own chunk: nothing of it loads until Share is pressed.
 const ShareCard = lazy(() => import('../components/ShareCard'))
+const MilestoneNotice = lazy(() => import('../components/MilestoneNotice'))
 const Rhythm = lazy(() => import('./FullModules').then((m) => ({ default: m.Rhythm })))
 const Funnel = lazy(() => import('./FullModules').then((m) => ({ default: m.Funnel })))
 const WorldMap = lazy(() => import('./WorldMap').then((m) => ({ default: m.WorldMap })))
@@ -150,6 +151,37 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // belongs to some other website, and it cannot say what is being saved.
   const [naming, setNaming] = useState(false)
   const [sharing, setSharing] = useState(false)
+  // A milestone of the last week not seen yet, said once (the ids seen are
+  // kept in this browser).
+  const [ms, setMs] = useState<Milestone | null>(null)
+  const [msShare, setMsShare] = useState<{ value: string; label: string; sub: string } | null>(null)
+  useEffect(() => {
+    setMs(null)
+    if (isShared()) return
+    const key = 'tkb_ms_' + site.id
+    let seen: string[] = []
+    try {
+      seen = JSON.parse(localStorage.getItem(key) || '[]')
+    } catch {
+      /* private window */
+    }
+    const since = new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10)
+    api
+      .milestones(site.id)
+      .then((r) => setMs(r.milestones.find((m) => /^\d{4}-\d{2}-\d{2}$/.test(m.day) && m.day >= since && !seen.includes(m.id)) ?? null))
+      .catch(() => {})
+  }, [site.id])
+  const dismissMs = () => {
+    if (!ms) return
+    const key = 'tkb_ms_' + site.id
+    try {
+      const seen: string[] = JSON.parse(localStorage.getItem(key) || '[]')
+      localStorage.setItem(key, JSON.stringify([...seen, ms.id].slice(-50)))
+    } catch {
+      /* private window: it shows again next time */
+    }
+    setMs(null)
+  }
   const saveView = () => setNaming(true)
   const current = location.search.replace(/^\?/, '')
   const openView = (g: SavedView) => navigate(location.pathname + '?' + g.query)
@@ -609,7 +641,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {sharing && k && (
         <Suspense fallback={null}>
           <ShareCard
-            onClose={() => setSharing(false)}
+            onClose={() => (setSharing(false), msShare && (setMsShare(null), dismissMs()))}
             data={{
               domain: site.domain,
               name: site.name || site.domain,
@@ -621,6 +653,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               prevPageviews: pk?.pageviews,
               revenue: money ? { now: money.revenue, prev: pm?.revenue, fmt: fmtM } : undefined,
               series: series.map((p) => p.visitors),
+              milestone: msShare ?? undefined,
             }}
           />
         </Suspense>
@@ -658,6 +691,21 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
 
       {showInstall && <Install site={site} visits={stream.visits} />}
+      {ms && !showInstall && (
+        <Suspense fallback={null}>
+          <MilestoneNotice
+            m={ms}
+            onDismiss={dismissMs}
+            onShare={() =>
+              import('../components/MilestoneNotice').then(({ milestoneWords }) => {
+                const w = milestoneWords(ms)
+                setMsShare({ value: w.value, label: w.label, sub: w.sub })
+                setSharing(true)
+              })
+            }
+          />
+        </Suspense>
+      )}
       {!showInstall && !isShared() && siteState(site) === 'stopped' && <StoppedNotice site={site} />}
 
       {view.test && (

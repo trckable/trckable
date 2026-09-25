@@ -134,6 +134,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("POST /api/v1/sites/{site}/install/check", a.authed(a.checkInstall))
 	handle("DELETE /api/v1/sites/{site}", a.authed(a.deleteSite))
 	handle("GET /api/v1/sites/{site}/delete-preview", a.authed(a.deletePreview))
+	handle("GET /api/v1/sites/{site}/milestones", a.authed(a.milestones))
 	handle("GET /api/v1/sites/{site}/config", a.authed(a.siteConfig))
 	handle("PUT /api/v1/sites/{site}/config", a.authed(a.setSiteConfig))
 	handle("POST /api/v1/account/password", a.authed(a.unmanaged(a.changePassword)))
