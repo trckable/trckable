@@ -179,8 +179,9 @@ h2 {
 /* ---- layout ---- */
 .app {
   max-width: 1440px;
+  min-height: 100dvh;
   margin: 0 auto;
-  padding: 24px 32px 48px;
+  padding: 24px 32px 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -214,8 +215,11 @@ h2 {
   .header {
     gap: 8px;
   }
+  /* The period, Filter and Views have their own row now (the toolbar), so
+     what is left here (Ask, the view, ⋯) stays on the first row, at its end. */
   .header-tools {
-    flex: 1 0 100%;
+    flex: 0 0 auto;
+    margin-left: auto;
     gap: 8px;
   }
   .header-tools .spacer {
@@ -528,6 +532,13 @@ button.kpi[aria-pressed='true'] {
   grid-template-columns: 1fr 1fr 1.6fr;
   gap: 12px;
 }
+/* Behaviour (Full mode): wide cards, one under another, with the same gap as
+   every other section. It had no rule at all, so People sat on Retention. */
+.grid2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
 @media (max-width: 1100px) {
   .grid4,
   .grid3 {
@@ -557,12 +568,16 @@ button.kpi[aria-pressed='true'] {
   color: var(--text);
   background: var(--surface-2);
 }
+.bl {
+  /* A narrow card drops its secondary column before it cuts the names. */
+  container-type: inline-size;
+}
 .cols {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   font-size: 11px;
   color: var(--text-3);
-  padding: 0 8px;
+  padding: 0 10px 4px;
 }
 .cols span:first-child {
   flex: 1;
@@ -571,46 +586,75 @@ button.kpi[aria-pressed='true'] {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 32px;
-  padding: 0 8px;
+  gap: 12px;
+  min-height: 42px;
+  padding: 5px 10px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   background: transparent;
+  color: var(--text);
   font-size: 13px;
   text-align: left;
   width: 100%;
-  transition: opacity 0.25s;
+  cursor: pointer;
+  transition: opacity 0.25s, background 0.15s;
 }
-.bl-row:hover .bl-bar {
-  filter: brightness(1.25);
+.bl-row:hover,
+.bl-row:focus-visible {
+  background: var(--sunken);
+  outline: none;
 }
-.bl-bar {
-  position: absolute;
-  left: 0;
-  top: 2px;
-  bottom: 2px;
-  border-radius: 6px;
-  background: var(--row);
-  transition: width 0.45s var(--ease);
-}
-.bl-row > :not(.bl-bar) {
-  position: relative;
+.bl-label {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 5px;
 }
 .bl-name {
-  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.bl-text {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.bl-track {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--grid);
+  overflow: hidden;
+}
+.bl-bar {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.75;
+  transition: width 0.45s var(--ease), opacity 0.15s;
+}
+.bl-row:hover .bl-bar {
+  opacity: 1;
+}
 .bl-val {
   width: 60px;
+  flex: none;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 .bl-val.sub {
   width: 52px;
   color: var(--text-2);
+}
+@container (max-width: 340px) {
+  .bl .sub,
+  .bl .bl-val.sub {
+    display: none;
+  }
 }
 .empty {
   padding: 18px 8px;
@@ -638,27 +682,6 @@ button.kpi[aria-pressed='true'] {
 .chart-wrap svg {
   display: block;
   overflow: visible;
-}
-.tip {
-  position: absolute;
-  top: 6px;
-  min-width: 180px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--bg);
-  border: 1px solid var(--border-2);
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  pointer-events: none;
-  font-size: 13px;
-  z-index: 2;
-}
-.tip .r {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
 }
 .scrub {
   display: flex;
@@ -729,7 +752,10 @@ input[type='range']::-moz-range-thumb {
 .pop {
   position: absolute;
   z-index: 20;
-  background: var(--surface);
+  /* Every dropdown has the dialogs' soft light in its top corner. */
+  background:
+    radial-gradient(300px 120px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--surface);
   border: 1px solid var(--border-2);
   border-radius: 16px;
   box-shadow: var(--shadow);
@@ -737,12 +763,15 @@ input[type='range']::-moz-range-thumb {
 }
 .drawer {
   position: fixed;
+  /* The same soft light as the dialogs and dropdowns. */
+  background:
+    radial-gradient(420px 180px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
+    var(--surface);
   top: 12px;
   right: 12px;
   bottom: 12px;
   width: min(440px, calc(100vw - 24px));
   z-index: 30;
-  background: var(--surface);
   border: 1px solid var(--border-2);
   border-radius: 18px;
   box-shadow: -24px 0 60px rgba(0, 0, 0, 0.45);
@@ -988,42 +1017,12 @@ table.t td {
   font-size: 10px;
   padding: 1px 5px;
 }
-.range-pop {
-  top: 50px;
-  left: 0;
-  width: min(560px, calc(100vw - 32px));
-  display: flex;
-  flex-wrap: wrap;
-}
-/* The site's clock, above the presets. */
-.preset-clock {
-  padding: 0 8px 0 2px;
-  margin-right: 2px;
-  font-size: 12px;
-  color: var(--text-3);
-  border-right: 1px solid var(--grid);
-}
+
 .months {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   min-width: 0;
-}
-.range-pop .field {
-  width: 132px;
-}
-.pop-body {
-  flex: 1;
-  min-width: 260px;
-  padding: 12px 14px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.pop-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
 }
 .btn.range .num {
   max-width: 100%;
@@ -1067,19 +1066,6 @@ table.t td {
   .pop.sheet .preset .kbd {
     display: none;
   }
-  .pop.sheet .pop-actions {
-    position: sticky;
-    bottom: 0;
-    background: var(--surface);
-    padding-top: 10px;
-    margin: 0 -16px -16px;
-    padding: 12px 16px;
-    border-top: 1px solid var(--border);
-  }
-  .pop.sheet .pop-actions .btn {
-    flex: 1;
-    justify-content: center;
-  }
 }
 @keyframes sheet {
   from {
@@ -1092,92 +1078,52 @@ table.t td {
   }
 }
 
-/* ---- settings ---- */
-.settings {
-  display: grid;
-  grid-template-columns: 216px minmax(0, 1fr);
-  gap: 20px;
-  align-items: start;
-}
-.settings-nav {
-  position: sticky;
-  top: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.settings-nav button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-align: left;
-  border: 0;
-  background: transparent;
-  color: var(--text-2);
-  border-radius: 10px;
-  padding: 0 12px;
-  min-height: 40px;
-  font-size: 14px;
-  cursor: pointer;
-}
-.settings-nav button svg {
-  flex: none;
-  opacity: 0.8;
-}
-.settings-nav button:hover {
-  background: var(--surface);
-}
-.settings-nav button[aria-current='true'] {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: inset 2px 0 0 var(--accent);
-}
-.settings-nav .hint {
-  font-size: 11px;
-}
-.settings-body {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 0;
-}
-@media (max-width: 860px) {
-  .settings {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
-  }
-  .settings-nav {
-    position: static;
-    flex-direction: row;
-    overflow-x: auto;
-    gap: 6px;
-    padding-bottom: 4px;
-    scrollbar-width: none;
-  }
-  .settings-nav::-webkit-scrollbar {
-    display: none;
-  }
-  .settings-nav button {
-    white-space: nowrap;
-    border: 1px solid var(--border);
-  }
-  .settings-nav button[aria-current='true'] {
-    box-shadow: none;
-    border-color: var(--accent);
-  }
-  .settings-nav .hint {
-    display: none;
-  }
-}
-
 /* ---- modules ---- */
+/* A module: its picture, its name and tags, the switch; what it does under
+   the name. On a phone the description takes the card's full width. */
 .module {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'art head switch'
+    'art body switch';
   align-items: center;
-  gap: 14px;
+  column-gap: 14px;
+  row-gap: 4px;
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 12px;
+}
+.module > .mart-btn {
+  grid-area: art;
+}
+.module > .switch {
+  grid-area: switch;
+}
+.module-head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  gap: 6px 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.module-head .tag {
+  white-space: nowrap;
+}
+.module-body {
+  grid-area: body;
+  align-self: start;
+  min-width: 0;
+}
+.module-body p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.module-body p.small {
+  margin-top: 2px;
+  font-size: 12px;
 }
 .tag {
   font-size: 11px;
@@ -1225,18 +1171,25 @@ table.t td {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fade-in 0.2s ease both;
   display: grid;
   place-items: center;
   padding: 16px;
   z-index: 40;
 }
+/* Every dialog: a soft light from the top corner, and a small pop as it
+   opens. The same look as the shortcuts list, which is where it started. */
 .modal {
   width: min(460px, 100%);
-  background: var(--surface);
+  background:
+    radial-gradient(520px 200px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
+    var(--surface);
   border: 1px solid var(--border-2);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
-  padding: 20px;
+  border-radius: 18px;
+  box-shadow: var(--shadow), 0 30px 80px rgb(0 0 0 / 0.35);
+  padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1244,6 +1197,133 @@ table.t td {
      otherwise push its own heading off the top of the screen, out of reach. */
   max-height: calc(100vh - 32px);
   overflow-y: auto;
+}
+.modal.rise {
+  animation: modal-pop 0.28s cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+}
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+/* The dialog's top-right corner: its tools, then a round close button. */
+.modal-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  align-self: flex-start;
+}
+.modal-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.2s ease;
+}
+.modal-close:hover {
+  color: var(--text);
+  border-color: var(--border-2);
+  transform: rotate(90deg);
+}
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 8px 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.pill-btn:hover {
+  color: var(--text);
+  border-color: var(--border-2);
+}
+.pill-btn:hover svg {
+  transform: rotate(-120deg);
+}
+.pill-btn svg {
+  transition: transform 0.35s ease;
+}
+.pill-btn .count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+.modal-badge.danger {
+  background: color-mix(in srgb, var(--down) 14%, transparent);
+  border-color: color-mix(in srgb, var(--down) 40%, transparent);
+  color: var(--down);
+}
+.modal.confirm-modal {
+  width: min(460px, 100%);
+}
+.confirm-body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px 14px;
+}
+.confirm-text {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.confirm-text h2 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+.confirm-text p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.confirm-text .field {
+  margin-top: 8px;
+}
+.confirm-body > :last-child {
+  grid-column: 1 / -1;
+}
+/* The dialog heading, with an optional icon tile before it. */
+.modal-badge {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--accent);
+  flex: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal.rise,
+  .modal-back {
+    animation: none;
+  }
 }
 
 /* ---- Waiting for the first visit ------------------------------------------
@@ -1340,41 +1420,6 @@ table.t td {
   }
   .kpi .delta {
     min-height: 0;
-  }
-}
-
-/* ---- Date range on a phone --------------------------------------------------
-   The sheet fills the screen: presets wrap into chips, one month at a time, and
-   the buttons sit on a bar at the bottom. Nothing scrolls sideways. */
-@media (max-width: 640px) {
-  .range-pop {
-    width: 100%;
-    max-width: 100vw;
-    overflow-x: hidden;
-  }
-  .range-pop .presets {
-    max-width: 100%;
-  }
-  .range-pop .pop-body {
-    min-width: 0;
-    width: 100%;
-    padding: 14px 16px 16px;
-  }
-  .range-pop .months {
-    grid-template-columns: 1fr;
-  }
-  /* One month is enough on a phone; the arrows move between them. */
-  .range-pop .months > div + div {
-    display: none;
-  }
-  .range-pop .field {
-    flex: 1;
-    width: auto;
-    min-width: 130px;
-  }
-  .range-pop .pop-actions .btn {
-    flex: 1;
-    height: 46px;
   }
 }
 
@@ -1610,27 +1655,38 @@ table.t td {
 .foot-main .faint {
   font-size: 11.5px;
 }
-.foot-plus {
+/* An icon on a small rounded square: menu rows and headings. */
+.icon-tile {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   flex: none;
-  border-radius: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 6%, var(--surface-2)), var(--surface-2));
+  color: var(--text-2);
+}
+.icon-tile.accent {
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
   background: var(--accent-soft);
   color: var(--accent);
-  font-size: 16px;
-  line-height: 1;
 }
 .foot-side {
-  border: 0;
+  align-self: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: transparent;
-  color: var(--text-3);
-  font: inherit;
-  font-size: 12.5px;
-  padding: 0 12px;
+  background: var(--sunken);
+  color: var(--text-2);
   cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.foot-side:hover {
+  color: var(--text);
+  border-color: var(--border-2);
 }
 .sites-foot button {
   white-space: nowrap;
@@ -1672,24 +1728,6 @@ table.t td {
     min-width: 0;
   }
 }
-
-/* The dimmed, lightly blurred backdrop behind a phone sheet. Desktop popovers
-   do not need one, so it only exists at phone width. */
-.pop-backdrop {
-  display: none;
-}
-@media (max-width: 640px) {
-  .pop-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 19;
-    background: color-mix(in srgb, var(--bg) 45%, transparent);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-    animation: fade 0.18s var(--ease) both;
-  }
-}
 @keyframes fade {
   from {
     opacity: 0;
@@ -1699,35 +1737,7 @@ table.t td {
   }
 }
 
-/* ---- Settings on a phone ---------------------------------------------------
-   Section chips scroll in one line without their hints, tables stack into
-   rows you can read, and the back button keeps only its arrow. */
-.table-wrap {
-  overflow-x: auto;
-}
 @media (max-width: 640px) {
-  .settings-nav {
-    scroll-snap-type: x proximity;
-  }
-  .settings-nav button {
-    flex: none;
-    scroll-snap-align: start;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 0 14px;
-    min-height: 38px;
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;
-  }
-  .settings-nav .hint {
-    display: none;
-  }
-  .settings-nav button[aria-current='true'] {
-    box-shadow: none;
-    border-color: var(--accent);
-    color: var(--text);
-  }
   .btn.back .label {
     display: none;
   }
@@ -1735,9 +1745,6 @@ table.t td {
     width: 44px;
     padding: 0;
     justify-content: center;
-  }
-  .table-wrap {
-    overflow-x: visible;
   }
   table.t,
   table.t tbody,
@@ -1870,56 +1877,43 @@ table.t td {
     display: none;
   }
 }
+/* On a phone a module is a small card: its picture across the top, then the
+   name with its switch, the tags, and what it does. */
 @media (max-width: 640px) {
   .module {
-    flex-wrap: wrap;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'art art'
+      'head switch'
+      'body body';
+    column-gap: 12px;
+    row-gap: 10px;
+    padding: 10px 10px 14px;
+    border-radius: 14px;
+  }
+  .module > .mart-btn {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    padding: 10px 0;
+    border: 1px solid var(--grid);
+    border-radius: 10px;
+    background: var(--sunken);
   }
   .mart-btn .mart {
-    width: 72px;
-    height: 40px;
+    width: auto;
+    height: 72px;
   }
-}
-
-/* ---- Payments --------------------------------------------------------------
-   Providers are tiles you tap; everything wordy happens in a dialog. */
-.prov-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: 10px;
-}
-.prov {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--sunken);
-  color: var(--text);
-  font: inherit;
-  cursor: pointer;
-  transition: border-color 0.2s, transform 0.2s var(--ease);
-}
-.prov:hover,
-.prov:focus-visible {
-  border-color: var(--money);
-  transform: translateY(-1px);
-}
-.prov .faint {
-  font-size: 12px;
-}
-.prov-mark {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  flex: none;
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--money) 18%, transparent);
-  color: var(--money);
-  font-size: 13px;
-  font-weight: 600;
+  .module-head {
+    padding: 0 4px;
+  }
+  .module-head strong {
+    flex: 1 0 100%;
+    font-size: 15px;
+  }
+  .module-body {
+    padding: 0 4px;
+  }
 }
 .conn {
   position: relative;
@@ -1930,31 +1924,28 @@ table.t td {
   border: 1px solid var(--border);
   border-radius: 14px;
 }
+.conn-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 3px;
+  min-width: 0;
+  font-size: 13px;
+}
+.conn-status .dot {
+  flex: none;
+}
+.conn-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .modal.wide {
   /* max-width alone would lose to .modal's own width, so both move. */
   width: min(560px, 100%);
   max-width: 560px;
   gap: 12px;
-}
-
-/* Wizard progress: three words, the current one lit. */
-.wizard-steps {
-  display: flex;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text-3);
-}
-.wizard-steps span {
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-}
-.wizard-steps span.on {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.wizard-steps span.done {
-  color: var(--text-2);
 }
 
 /* The install picker has many entries: let them wrap. */
@@ -1969,111 +1960,15 @@ table.t td {
   flex-direction: column;
   gap: 3px;
 }
-.rhythm-hours {
-  display: grid;
-  grid-template-columns: repeat(24, 1fr);
-  font-size: 10px;
-  color: var(--text-3);
-  margin-left: 34px;
-}
-.rhythm-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.rhythm-row > .faint {
-  width: 26px;
-  font-size: 11px;
-}
-.rhythm-cells {
-  display: grid;
-  grid-template-columns: repeat(24, 1fr);
-  gap: 2px;
-  flex: 1;
-}
-.rhythm-cells i {
-  display: block;
-  aspect-ratio: 1;
-  border-radius: 3px;
-}
-.funnel-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
-}
 .funnel {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.funnel-step {
-  position: relative;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--sunken);
-  overflow: hidden;
-}
-.funnel-bar {
-  position: absolute;
-  inset: 0 auto 0 0;
-  background: var(--accent-soft);
-  transition: width 0.5s var(--ease);
-}
-.funnel-label,
-.funnel-meta {
-  position: relative;
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-}
-.funnel-label b {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.funnel-meta {
-  font-size: 11.5px;
-  /* This sits on the step's own filled bar, not on the page, so the muted
-     grey it used to wear did not have the contrast to be read. */
-  color: var(--text-2);
-}
 .journey {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-.journey-visit {
-  border-left: 2px solid var(--grid);
-  padding-left: 12px;
-}
-.journey-head {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-  flex-wrap: wrap;
-  font-size: 13px;
-}
-.journey-events {
-  list-style: none;
-  margin: 6px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  font-size: 13px;
-}
-.journey-events li {
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-}
-.journey-events li > .num:first-child {
-  width: 46px;
-  flex: none;
-  font-size: 11.5px;
 }
 .live-row:hover {
   background: var(--sunken);
@@ -2104,13 +1999,6 @@ table.t td {
 }
 .people button:hover {
   background: var(--sunken);
-}
-.people-what {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .install-pick {
@@ -2179,9 +2067,6 @@ table.t td {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.settings-nav .nav-group:first-child {
-  padding-top: 0;
-}
 @media (max-width: 860px) {
   /* The chip row has no room for headings; the order still groups them. */
   .nav-group {
@@ -2229,6 +2114,16 @@ table.t td {
 .size-strip b {
   color: var(--accent);
 }
+@media (max-width: 640px) {
+  /* Under the heading, on its own line, instead of squeezed beside it. */
+  .card-head:has(.size-strip) {
+    flex-wrap: wrap;
+  }
+  .card-head .size-strip {
+    flex: 1 0 100%;
+    white-space: nowrap;
+  }
+}
 .info-dot.static {
   display: inline-flex;
   align-items: center;
@@ -2239,16 +2134,6 @@ table.t td {
 /* The way back to the default period stays visible on phones. */
 .btn.icon.reset {
   width: 36px;
-}
-
-/* ---- Calendar -------------------------------------------------------------- */
-.month-title {
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  text-align: center;
-  margin-bottom: 8px;
 }
 .day {
   width: 100%;
@@ -2422,11 +2307,6 @@ table.t td {
     transform: none;
   }
 }
-.listening {
-  display: grid;
-  place-items: center;
-  padding: 6px 0;
-}
 @media (prefers-reduced-motion: reduce) {
   .wiz-step {
     animation: none;
@@ -2505,41 +2385,6 @@ table.t td {
 }
 .picker-row .faint {
   font-size: 11.5px;
-}
-
-/* ---- "Waiting for the first visit" ---------------------------------------- */
-.listen {
-  position: relative;
-  display: grid;
-  place-items: center;
-  height: 150px;
-  margin-bottom: -8px;
-}
-.listen .ring {
-  position: absolute;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  border: 1px solid var(--accent);
-  opacity: 0;
-  animation: sonar 2.4s var(--ease) infinite;
-}
-.listen .ring:nth-child(2) {
-  animation-delay: 0.8s;
-}
-.listen .ring:nth-child(3) {
-  animation-delay: 1.6s;
-}
-.listen-ghost {
-  position: relative;
-  animation: bob 2.6s ease-in-out infinite;
-}
-.listen.arrived .ring {
-  animation: none;
-  opacity: 0;
-}
-.listen.arrived .listen-ghost {
-  animation: pop 0.5s var(--ease) both;
 }
 .listen-tick {
   position: absolute;
@@ -2770,15 +2615,6 @@ table.t td {
   overflow-y: auto;
   gap: 14px;
 }
-.account-body {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  /* Changing section used to slide the whole panel up 8px and fade it in,
-     which read as a stutter every time you moved between them. The size is
-     identical either way, so nothing needs to move: it just appears. */
-  animation: fadein 0.16s var(--ease) backwards;
-}
 @keyframes fadein {
   from {
     opacity: 0;
@@ -2787,12 +2623,36 @@ table.t td {
     opacity: 1;
   }
 }
-.account-body .card {
-  border: 0;
-  padding: 0;
-  background: transparent;
-}
 
+/* ---- The toolbar under the header ------------------------------------------
+   Left: the filters in force. Right: period, filter, saved views. */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px 16px;
+  flex-wrap: wrap;
+  margin-top: -4px;
+}
+.toolbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+.toolbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+@media (max-width: 760px) {
+  .toolbar-tools {
+    flex: 1 0 100%;
+    order: -1;
+  }
+}
 /* ---- Header zones ----------------------------------------------------------
    Left: who and which site. Middle: the period and the view. Right: account
    and this site's settings. Flex order keeps that true however the pieces are
@@ -2810,60 +2670,13 @@ table.t td {
 .header-tools {
   order: 2;
 }
-.header-end {
-  order: 3;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: 8px;
-  padding-left: 10px;
-  border-left: 1px solid var(--grid);
-}
-@media (max-width: 640px) {
-  .header-end {
-    border-left: 0;
-    padding-left: 0;
-    margin-left: 0;
-  }
-}
 
 @media (max-width: 640px) {
   /* One row means one menu: the account lives in the ⋯ menu, and so does the
      site's settings — the row has space for the site, the period and ⋯. */
-  .header-end,
   .header > .gear {
     display: none;
   }
-}
-
-/* ---- Shortcuts ------------------------------------------------------------ */
-.modal.keys-modal {
-  max-width: 620px;
-  gap: 14px;
-}
-.keys-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 18px;
-}
-.keys-list {
-  list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  font-size: 13px;
-}
-.keys-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.keys-list .kbd {
-  min-width: 42px;
-  text-align: center;
-  flex: none;
 }
 
 /* A popup that lives on the page body, above dialogs and scrolling cards. */
@@ -2884,18 +2697,6 @@ table.t td {
   padding: 0;
   gap: 0;
 }
-.account-head {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 16px 18px 0;
-  background: var(--surface);
-  border-bottom: 1px solid var(--grid);
-}
 .avatar {
   display: grid;
   place-items: center;
@@ -2907,24 +2708,6 @@ table.t td {
   color: var(--accent);
   font-weight: 600;
   font-size: 15px;
-}
-.account-who {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  flex: 1;
-  min-width: 0;
-  font-size: 14px;
-}
-.account-who .faint {
-  font-size: 12px;
-}
-.account-head .tabs {
-  flex-basis: 100%;
-  margin-bottom: -1px;
-}
-.account-body {
-  padding: 16px 18px 18px;
 }
 .tag.live {
   color: var(--accent-strong, var(--accent));
@@ -2942,75 +2725,12 @@ pre.code.words {
   word-break: normal;
   overflow-wrap: break-word;
 }
-
-/* Checkout snippets: pick the provider by its mark. */
-.prov-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.prov-tabs .mtile {
-  min-width: 0;
-  height: 40px;
-  padding: 0 12px;
-  font-size: 13px;
-}
-.prov-tabs .mtile .prov-mark {
-  width: 22px;
-  height: 22px;
-}
-
-/* ---- Stages ----------------------------------------------------------------
-   A slow job says what it is doing: the current line pulses, finished lines
-   get a tick. Used by delete, and by anything else that takes a moment. */
-.stages {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  font-size: 14px;
-}
-.stages li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--text-3);
-}
-.stages li.now {
-  color: var(--text);
-}
-.stages li.done {
-  color: var(--text-2);
-}
 .stage-mark {
   width: 16px;
   height: 16px;
   flex: none;
   border-radius: 50%;
   border: 2px solid var(--grid);
-}
-.stages li.now .stage-mark {
-  border-color: var(--accent);
-  border-right-color: transparent;
-  animation: spin 0.8s linear infinite;
-}
-.stages li.done .stage-mark {
-  border-color: var(--up);
-  background: var(--up);
-  position: relative;
-}
-.stages li.done .stage-mark::after {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 1px;
-  width: 4px;
-  height: 8px;
-  border: solid var(--bg);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
 }
 @keyframes spin {
   to {
@@ -3019,33 +2739,6 @@ pre.code.words {
 }
 
 /* The chart tooltip's split bar: new against returning, in one line. */
-.tip .split {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-  height: 4px;
-  border-radius: 3px;
-  background: var(--grid);
-  margin: 4px 0 20px;
-}
-.tip .split > span {
-  height: 4px;
-  border-radius: 3px;
-  background: var(--accent);
-}
-.tip .split em {
-  position: absolute;
-  top: 8px;
-  left: 0;
-  font-style: normal;
-  font-size: 11px;
-  color: var(--text-3);
-}
-.tip .split em.right {
-  left: auto;
-  right: 0;
-}
 /* "12 days ago", under the axis where the cursor is. */
 .ago-pill {
   position: absolute;
@@ -3129,52 +2822,6 @@ pre.code.words {
   max-width: none;
   height: min(560px, 86vh);
 }
-.account-head {
-  grid-column: 1 / -1;
-  position: static;
-  border-bottom: 1px solid var(--grid);
-  padding: 16px 18px;
-}
-.account-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 14px 10px;
-  border-right: 1px solid var(--grid);
-}
-.account-nav button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 42px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text-2);
-  font: inherit;
-  font-size: 14px;
-  text-align: left;
-  cursor: pointer;
-}
-.account-nav button:hover {
-  background: var(--sunken);
-}
-.account-nav button[aria-selected='true'] {
-  background: var(--sunken);
-  color: var(--text);
-}
-.account-nav button[aria-selected='true'] svg {
-  color: var(--accent);
-}
-.account-body {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  /* Reserve the scrollbar's width so the panel never changes size between
-     sections. */
-  scrollbar-gutter: stable;
-  min-height: 0;
-}
 /* A close button you can actually hit. */
 .btn.icon.close {
   width: 40px;
@@ -3186,17 +2833,6 @@ pre.code.words {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto minmax(0, 1fr);
     height: min(600px, 88vh);
-  }
-  .account-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    border-right: 0;
-    border-bottom: 1px solid var(--grid);
-    padding: 10px;
-  }
-  .account-nav button {
-    flex: none;
-    white-space: nowrap;
   }
 }
 
@@ -3308,99 +2944,6 @@ body[data-mode='full'] .app {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
-
-/* ---- The period menu -------------------------------------------------------
-   Five periods, a clock in the site's own timezone, and the calendar behind
-   one more click. */
-.pop.range-menu {
-  top: 52px;
-  left: 0;
-  min-width: 250px;
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.range-clock {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 8px 12px 10px;
-  border-bottom: 1px solid var(--grid);
-  margin-bottom: 4px;
-  font-size: 12px;
-}
-.range-clock .num {
-  color: var(--text);
-  font-size: 13px;
-}
-.range-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--text-2);
-  font: inherit;
-  font-size: 14px;
-  text-align: left;
-  cursor: pointer;
-}
-.range-item .kbd,
-.range-item svg {
-  margin-left: auto;
-}
-.range-item:hover {
-  background: var(--sunken);
-  color: var(--text);
-}
-.range-item.on {
-  background: var(--sunken);
-  color: var(--text);
-}
-.range-item.custom,
-.range-item.more {
-  border-top: 1px solid var(--grid);
-  border-radius: 0 0 9px 9px;
-  margin-top: 4px;
-  padding-top: 11px;
-}
-@media (max-width: 640px) {
-  .pop.range-menu {
-    position: fixed;
-    left: 10px;
-    right: 10px;
-    top: 56px;
-    min-width: 0;
-  }
-}
-
-/* Clear the period, on the period itself. */
-.range-clear {
-  display: inline-grid;
-  place-items: center;
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  border: 1px solid var(--border-2);
-  color: var(--text-3);
-  font-size: 12px;
-  line-height: 1;
-  cursor: pointer;
-}
-.range-clear:hover {
-  color: var(--text);
-  border-color: var(--text-3);
-}
-
-/* ---- The period panel ------------------------------------------------------
-   Periods first, in a grid you can read at a glance; the calendar is a step
-   away, not a wall beside it. */
-.range-pop.small {
-  width: min(330px, calc(100vw - 32px));
-}
 .periods {
   display: flex;
   flex-direction: column;
@@ -3408,26 +2951,6 @@ body[data-mode='full'] .app {
   padding: 12px;
   width: 100%;
   animation: rise 0.16s var(--ease) backwards;
-}
-.periods-head {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 0 2px 8px;
-  border-bottom: 1px solid var(--grid);
-  font-size: 12px;
-}
-.periods-head .num {
-  color: var(--text);
-  font-size: 13px;
-}
-.periods-head .tz {
-  margin-left: auto;
-}
-.periods-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
 }
 .period {
   display: flex;
@@ -3455,49 +2978,6 @@ body[data-mode='full'] .app {
   margin-left: auto;
   font-size: 10px;
   padding: 1px 5px;
-}
-.periods-compare {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 2px 0;
-  border-top: 1px solid var(--grid);
-  font-size: 12.5px;
-  color: var(--text-2);
-  cursor: pointer;
-}
-.periods-compare .num {
-  margin-left: auto;
-  font-size: 11.5px;
-}
-.periods-foot {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.periods-foot .btn {
-  height: 34px;
-  font-size: 13px;
-}
-.periods-foot .num {
-  flex: 1;
-  font-size: 11.5px;
-}
-.back-link {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  align-self: flex-start;
-  border: 0;
-  background: transparent;
-  color: var(--text-3);
-  font: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
-  padding: 0;
-}
-.back-link:hover {
-  color: var(--text);
 }
 
 /* API keys: one line each. */
@@ -3530,47 +3010,9 @@ body[data-mode='full'] .app {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* ---- Cookieless mode -------------------------------------------------------- */
-.card.eu {
-  border-color: var(--border-2);
-}
-.card.eu.on {
-  border-color: var(--accent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 5%, transparent), transparent 60%), var(--surface);
-}
-.eu-stars {
-  color: var(--accent);
-  margin-right: 6px;
-}
-.eu-cols {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 12px 24px;
-}
 .switch:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
-
-/* Granularity sits with the period it describes. */
-.periods-bucket {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-.periods-bucket .seg {
-  flex: 1;
-}
-.periods-bucket .seg button {
-  flex: 1;
-  padding: 0 9px;
-  font-size: 12px;
-  white-space: nowrap;
-}
-.periods-bucket .auto-note {
-  font-size: 11px;
 }
 
 /* Two by two: four routes in a row squeezed every title onto three lines. */
@@ -3584,14 +3026,6 @@ body[data-mode='full'] .app {
   padding: 10px 12px;
   text-align: left;
   justify-content: flex-start;
-}
-
-/* A two-icon switch reads faster than two words. */
-.seg.icons button {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  padding: 0;
 }
 
 /* Fold a card you are not reading. */
@@ -3617,12 +3051,6 @@ body[data-mode='full'] .app {
 }
 .card.folded {
   padding-bottom: 12px;
-}
-
-/* The view toggle carries its shortcut, like Ask does. */
-.btn.view-toggle {
-  gap: 7px;
-  padding: 0 10px;
 }
 
 /* ---- Robots ---------------------------------------------------------------- */
@@ -3714,36 +3142,6 @@ body[data-mode='full'] .app {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-.note-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-}
-.note-list li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: var(--sunken);
-}
-.note-list li span {
-  flex: 1;
-}
-.note-list button {
-  border: 0;
-  background: transparent;
-  color: var(--text-3);
-  cursor: pointer;
-  font-size: 15px;
-}
-.note-list button:hover {
-  color: var(--down);
 }
 
 /* Saved views, under the filters. */
@@ -3846,59 +3244,6 @@ body[data-mode='full'] .app {
     margin: 0 auto;
   }
 }
-/* One last question before an account-level change: a strip, not a row, so the
-   field and its two buttons never have to share one line. */
-.confirm-strip {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px 0 2px;
-  border-top: 1px solid var(--grid);
-}
-.confirm-strip .faint {
-  font-size: 12px;
-}
-.confirm-strip-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-/* Picking a role is picking a sentence, so each choice carries its own. */
-.role-pick {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 8px;
-}
-.role-opt {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 12px 14px;
-  text-align: left;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  transition: border-color 0.18s var(--ease), background 0.18s var(--ease);
-}
-.role-opt:hover {
-  border-color: var(--border-2);
-}
-.role-opt[aria-selected='true'] {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-.role-opt b {
-  font-size: 14px;
-}
-.role-opt .faint {
-  font-size: 12px;
-  line-height: 1.35;
-  white-space: normal;
-}
 .viewer-note {
   margin: 0;
   padding: 10px 14px;
@@ -3907,45 +3252,6 @@ body[data-mode='full'] .app {
   background: var(--sunken);
   color: var(--text-2);
   font-size: 13px;
-}
-
-/* ---- Answering a data request ---------------------------------------------- */
-.request-find {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.request-find .input {
-  flex: 1;
-  min-width: 190px;
-  height: 38px;
-}
-.request-found {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid var(--grid);
-  background: var(--sunken);
-}
-.request-facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 12px;
-}
-.request-facts span {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  font-size: 12px;
-  color: var(--text-3);
-}
-.request-facts b {
-  font-size: 15px;
-  color: var(--text);
-  font-weight: 600;
 }
 /* A dialog that is a form: the form disappears from the layout so its fields
    sit in the dialog's own column, exactly as they would without it. */
@@ -4235,74 +3541,10 @@ body[data-mode='full'] .app {
     display: none;
   }
 }
-
-/* What a generated paragraph cannot know, said out loud rather than left to be
-   discovered by a regulator. */
-.policy-notes {
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px dashed var(--border-2);
-  font-size: 13px;
-  color: var(--text-2);
-}
-.policy-notes b {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--text);
-}
-.policy-notes ul {
-  margin: 0;
-  padding-left: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-/* Where the real bar is previewed. The bar itself brings its own stylesheet
-   from the tracker, so only its surroundings are ours. */
-.bar-preview {
-  padding: 18px;
-  border: 1px solid var(--grid);
-  border-radius: 12px;
-  background: var(--sunken);
-  display: flex;
-  justify-content: flex-end;
-}
 .bar-real {
   display: grid;
   min-width: 0;
   max-width: 100%;
-}
-.bar-preview.left {
-  justify-content: flex-start;
-}
-.bar-preview.wide .bar-real {
-  flex: 1;
-}
-
-/* A colour and its name, so a swatch is never the only label. */
-.bar-colours {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-.swatch {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  font-size: 12px;
-  color: var(--text-2);
-}
-.swatch input[type='color'] {
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 1px solid var(--grid);
-  border-radius: 7px;
-  background: none;
-  cursor: pointer;
 }
 
 /* ---- The Filter menu -------------------------------------------------------
@@ -4328,279 +3570,466 @@ body[data-mode='full'] .app {
   align-items: center;
   justify-content: center;
 }
+/* ---- Dropdown menus ---------------------------------------------------------
+   One look for every dropdown (Filter, Views): a heading, a search, two-line
+   rows with an icon tile, the same soft light as the dialogs. */
+.pop.menu-pop {
+  width: 340px;
+  max-height: min(60vh, 460px);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(300px 120px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--surface);
+}
 .filter-pop {
   top: 48px;
-  left: 0;
-  width: 290px;
-  max-height: min(62vh, 520px);
-  overflow-y: auto;
-  padding: 6px;
+  right: 0;
 }
-.filter-group + .filter-group {
-  margin-top: 4px;
-  padding-top: 4px;
-  border-top: 1px solid var(--grid);
-}
-.filter-head {
-  margin: 6px 0 2px;
-  padding: 0 10px;
-  font-size: 11px;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
-.filter-pop button[role='menuitem'] {
+.menu-pop-head {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
-  padding: 7px 10px;
-  border: 0;
-  border-radius: 8px;
-  background: none;
-  color: var(--text);
-  font: inherit;
-  font-size: 13.5px;
-  text-align: left;
-  cursor: pointer;
+  padding: 8px 10px 6px;
+  font-size: 12.5px;
 }
-.filter-pop button[role='menuitem'] > span:first-child {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.menu-pop-head .faint {
+  margin-left: auto;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
 }
-.filter-pop button[role='menuitem']:hover:not(:disabled) {
-  background: var(--sunken);
-}
-.filter-pop button[role='menuitem']:disabled {
-  color: var(--text-3);
-  cursor: default;
-}
-.filter-on {
-  color: var(--accent);
-  font-size: 16px;
-  line-height: 1;
-}
-.filter-clear {
-  margin-top: 4px;
-  border-top: 1px solid var(--grid) !important;
-  border-radius: 0 0 8px 8px !important;
-  color: var(--text-2) !important;
-}
-.filter-back {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 2px 4px 8px;
-}
-.filter-back button {
+.menu-back {
+  display: grid;
+  place-items: center;
   width: 26px;
   height: 26px;
-  border-radius: 7px;
+  margin-left: -4px;
   border: 1px solid var(--border);
+  border-radius: 8px;
   background: var(--sunken);
+  color: var(--text-2);
+  cursor: pointer;
+}
+.menu-back:hover {
   color: var(--text);
-  font: inherit;
-  cursor: pointer;
 }
-.filter-values .input {
-  width: 100%;
-  height: 34px;
-  margin-bottom: 6px;
-}
-.filter-list {
-  max-height: 320px;
-  overflow-y: auto;
-}
-.filter-list p {
-  margin: 10px;
-  font-size: 13px;
-}
-
-/* ---- Saved views -----------------------------------------------------------
-   A labelled row, each view one legible pill: the name opens it, the × is a
-   separate, smaller target so nobody deletes a view by trying to open it.
-   (Not .saved: that name already belongs to the fading "Saved" confirmation,
-   which is invisible until it fires — and so, for a while, were these.) */
-.sv-strip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.sv-label {
-  font-size: 12px;
-  color: var(--text-3);
-  margin-right: 2px;
-}
-.sv {
-  display: inline-flex;
-  align-items: center;
-  height: 32px;
-  border: 1px solid var(--border-2);
-  border-radius: 999px;
-  background: var(--surface);
-  overflow: hidden;
-  max-width: 280px;
-}
-.sv.on {
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  background: var(--accent-soft);
-}
-.sv-open {
-  height: 100%;
-  padding: 0 6px 0 13px;
-  border: 0;
-  background: none;
-  color: var(--text);
-  font: inherit;
-  font-size: 13px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: pointer;
-}
-.sv-open:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.sv-x {
-  width: 28px;
-  height: 100%;
-  border: 0;
-  background: none;
-  color: var(--text-3);
-  font-size: 15px;
-  cursor: pointer;
+.menu-search {
+  /* The dropdown is a capped column: only the list may shrink and scroll. */
   flex: none;
-}
-.sv-x:hover {
-  color: var(--text);
-  background: var(--sunken);
-}
-.filter-save {
-  color: var(--accent) !important;
-}
-
-
-/* ---- Adding a note ---------------------------------------------------------
-   The period's days as a strip of bars: you point at the bump you are about to
-   explain. The chosen day is the accent; a day that already has a note wears
-   a small dot, the same dot the chart shows. */
-.note-modal {
-  width: min(520px, calc(100vw - 32px));
-}
-.note-strip {
   display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 84px;
-  padding: 10px 10px 6px;
-  border-radius: 11px;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  margin: 2px 2px 6px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   background: var(--sunken);
-  border: 1px solid var(--grid);
+  color: var(--text-3);
 }
-.note-strip button {
-  position: relative;
+.menu-search:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+}
+.menu-search input {
   flex: 1;
   min-width: 0;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  padding: 0;
   border: 0;
   background: none;
-  cursor: pointer;
-}
-.note-strip button span {
-  width: 100%;
-  border-radius: 3px 3px 1px 1px;
-  background: color-mix(in srgb, var(--text-3) 45%, transparent);
-  transition: background 0.15s;
-}
-.note-strip button:hover span {
-  background: color-mix(in srgb, var(--accent) 55%, transparent);
-}
-.note-strip button.on span {
-  background: var(--accent);
-}
-.note-strip button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 3px;
-}
-.note-dot {
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  margin-left: -2.5px;
-  border-radius: 50%;
-  background: var(--money);
-}
-.note-day {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.note-day-label {
-  flex: 1;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 10px;
-  height: 36px;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--surface);
   color: var(--text);
   font: inherit;
   font-size: 14px;
-  cursor: pointer;
-  padding: 8px 12px 0;
+  outline: none;
 }
-.note-day-label:hover {
-  border-color: var(--border-2);
+.menu-list {
+  display: grid;
+  align-content: start;
+  gap: 1px;
+  min-height: 0;
+  overflow-y: auto;
 }
-.note-day-label[aria-expanded='true'] {
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+.menu-group + .menu-group {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
 }
-.note-day-label .faint {
-  font-size: 12.5px;
+.menu-group-head {
+  margin: 4px 10px 2px;
+  color: var(--text-3);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
-.note-cal {
-  position: relative;
-  padding: 10px 12px 8px;
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  background: var(--surface);
-}
-.note-cal-nav {
-  position: absolute;
-  top: 6px;
-  right: 8px;
+.menu-row {
   display: flex;
-  gap: 2px;
-}
-.note-input {
-  position: relative;
-}
-.note-input .input {
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  height: 46px;
-  padding-right: 52px;
+  min-height: 38px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  animation: rise 0.16s var(--ease) backwards;
 }
-.note-input > span {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
+.menu-row:hover,
+.menu-row:focus-visible {
+  background: var(--sunken);
+  outline: none;
+}
+.menu-row.idle {
+  cursor: default;
+  opacity: 0.6;
+}
+.menu-row.idle:hover {
+  background: none;
+}
+.menu-text {
+  display: grid;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.menu-title,
+.menu-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menu-title {
+  font-size: 13px;
+  font-weight: 500;
+}
+.menu-sub {
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+.menu-bar {
+  height: 3px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: var(--grid);
+  overflow: hidden;
+}
+.menu-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.7;
+}
+.menu-row .num {
   font-size: 12px;
 }
+.icon-tile.small {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+}
+.menu-empty {
+  margin: 10px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+.menu-foot {
+  flex: none;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+.menu-clear {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.menu-clear:hover {
+  background: var(--sunken);
+  color: var(--down);
+}
+.menu-foot.split {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.menu-done {
+  margin-left: auto;
+  height: 34px;
+  padding: 0 16px;
+}
+.menu-clear.save:hover {
+  color: var(--accent);
+}
+.menu-x {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.menu-x:hover {
+  background: var(--surface);
+  color: var(--down);
+}
+.filters-pop {
+  top: 42px;
+  left: 0;
+  width: 320px;
+}
+.chip.more {
+  gap: 6px;
+  cursor: pointer;
+  color: var(--text-2);
+}
+.chip.more:hover,
+.chip.more.on {
+  color: var(--text);
+  border-color: var(--border-2);
+}
 
+/* Saved views: one dropdown in the toolbar, in the menu look above. The name
+   opens a view; rename and delete sit at the row's end, and delete asks in the
+   confirmation dialog. */
+.sv-btn {
+  gap: 7px;
+  max-width: 240px;
+}
+.sv-btn.on {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: var(--accent-soft);
+}
+.sv-btn-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sv-btn .count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--text-2);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.pop.sv-pop {
+  position: fixed;
+  z-index: 120;
+  width: 360px;
+  padding: 6px;
+  background:
+    radial-gradient(300px 120px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--surface);
+  display: grid;
+  gap: 4px;
+}
+.sv-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 10px 6px;
+  font-size: 12.5px;
+}
+.sv-head .faint {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+.sv-empty {
+  margin: 0;
+  padding: 10px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.sv-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.sv-list li {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding-right: 4px;
+  border-radius: 9px;
+  animation: rise 0.16s var(--ease) backwards;
+}
+.sv-list li:hover,
+.sv-list li:focus-within {
+  background: var(--sunken);
+}
+.sv-list li.on .sv-icon {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0b0d10;
+}
+.sv-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 8px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.sv-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-2);
+  flex: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.sv-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.sv-title,
+.sv-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sv-title {
+  font-weight: 500;
+}
+.sv-sub {
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+.sv-act {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+.sv-list li:hover .sv-act,
+.sv-list li:focus-within .sv-act,
+.sv-act:focus-visible {
+  opacity: 1;
+}
+.sv-act:hover {
+  color: var(--text);
+  background: var(--surface);
+}
+.sv-act:last-child:hover {
+  color: var(--down);
+}
+@media (hover: none) {
+  .sv-act {
+    opacity: 1;
+  }
+}
+.sv-edit,
+.sv-sure {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px 3px 8px;
+  font-size: 12.5px;
+}
+.sv-sure span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sv-edit input {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--accent);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.btn.small {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+.sv-foot {
+  padding: 6px 0 0;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+}
+.sv-save {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  color: var(--accent);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.sv-save:hover {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.sv-save .sv-sub {
+  grid-column: 2;
+}
+.sv-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  color: var(--text-3);
+}
 
 /* The whole note, in the tooltip for its day. */
 .tip-note {
@@ -4641,7 +4070,6 @@ body[data-mode='full'] .app {
   color: var(--surface);
 }
 
-
 /* ---- The header at every width ---------------------------------------------
    One block that decides, instead of rules in four places that disagreed —
    which is how the ghost and the settings cog came to be hidden on phones,
@@ -4677,8 +4105,10 @@ body[data-mode='full'] .app {
     flex: 1;
     min-width: 0;
   }
+  /* Only Ask, the view and ⋯ are left up here (the period, Filter and
+     Views are in the toolbar), so they share the first row. */
   .header-tools {
-    flex: 1 1 100%;
+    flex: 0 0 auto;
     gap: 8px;
   }
   .header-tools > .spacer {
@@ -4697,7 +4127,6 @@ body[data-mode='full'] .app {
     box-shadow: none;
   }
 }
-
 
 /* ---- Live pulse -------------------------------------------------------------
    A visit rises from today's point as a dot and fades; a goal as a ring that
@@ -4803,34 +4232,6 @@ body[data-mode='full'] .app {
   height: 28px;
   font-size: 12.5px;
 }
-
-/* ---- All sites --------------------------------------------------------------
-   One row per site: its own dashboard in a line. */
-.all-sites {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 8px 20px 60px;
-  display: grid;
-  gap: 18px;
-}
-.all-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 12px 24px;
-}
-.all-head h1 {
-  margin: 0 0 4px;
-  font-size: 26px;
-  letter-spacing: -0.03em;
-}
-.all-head p {
-  margin: 0;
-}
-.all-head .delta {
-  font-size: 13px;
-}
 .seg {
   display: flex;
   gap: 2px;
@@ -4854,78 +4255,6 @@ body[data-mode='full'] .app {
   color: var(--text);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
-.all-list {
-  display: grid;
-  gap: 6px;
-}
-.all-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) 120px repeat(4, minmax(80px, 1fr));
-  align-items: center;
-  gap: 16px;
-  padding: 12px 16px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-.all-row:hover {
-  border-color: var(--accent);
-}
-.all-row.all-cols {
-  border: 0;
-  background: none;
-  padding: 0 16px;
-  cursor: default;
-  font-size: 12px;
-  color: var(--text-3);
-}
-.all-row .n {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  font-family: var(--mono, ui-monospace, monospace);
-  font-size: 13.5px;
-}
-.all-name {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.all-name b {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.all-name .faint {
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.all-big {
-  display: grid;
-  gap: 2px;
-  font-size: 16px !important;
-  font-weight: 600;
-}
-.all-big .delta {
-  font-size: 11.5px;
-  font-weight: 500;
-}
-@media (max-width: 760px) {
-  .all-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .all-row > :nth-child(n + 4),
-  .all-row .all-spark,
-  .all-row.all-cols {
-    display: none;
-  }
-}
 
 /* An embedded dashboard: the site's name and a quiet credit, nothing that
    leads away from the page it sits in. */
@@ -4941,3 +4270,466 @@ body[data-mode='full'] .app {
   font-size: 12px;
 }
 
+/* ---- Footer: the full logo, the year and the version ----------------------- */
+.app-footer {
+  margin-top: auto; /* on a short page it stays at the bottom */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 18px;
+  padding: 28px 16px 36px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+.app-footer .tkb-logo {
+  font-size: 20px;
+  color: var(--text);
+  text-decoration: none;
+}
+.app-footer-links {
+  display: flex;
+  gap: 14px;
+}
+.app-footer a:not(.tkb-logo) {
+  color: var(--text-3);
+  text-decoration: none;
+}
+.app-footer a:not(.tkb-logo):hover {
+  color: var(--text-2);
+}
+
+/* ---- Dropdowns on a phone ----------------------------------------------------
+   Centred over the page, the page dimmed behind, the way a dialog opens:
+   anchored to a button, a menu runs off one edge or the other. */
+@media (max-width: 640px) {
+  .pop.menu-pop,
+  .pop.sv-pop,
+  .pop.sites,
+  .pop.sheet.range-pop {
+    position: fixed !important;
+    inset: auto 12px auto 12px !important;
+    top: 50% !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: 80dvh;
+    overflow-y: auto;
+    transform: translateY(-50%);
+    box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.55), var(--shadow);
+    z-index: 130;
+    animation: pop-centre 0.22s var(--ease) both;
+  }
+}
+@keyframes pop-centre {
+  from {
+    opacity: 0;
+    transform: translateY(-46%) scale(0.98);
+  }
+}
+
+/* The header's logo: ghost and name; the ghost alone on a phone. */
+@media (max-width: 640px) {
+  .header > .brand .tkb-wm {
+    display: none;
+  }
+}
+
+/* The toolbar on a phone: one row that fits. The period takes what is left
+   and shortens with an ellipsis; Filter and Views show their icon (and count). */
+@media (max-width: 640px) {
+  .toolbar-tools {
+    gap: 8px;
+    min-width: 0;
+  }
+  .toolbar-tools > .range-picker {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .toolbar-tools .range-picker .btn,
+  .toolbar-tools .range-picker button {
+    min-width: 0;
+  }
+  .toolbar-tools .btn.range {
+    flex: 1 1 auto !important;
+  }
+  .toolbar-tools .range-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .toolbar-tools .sv-btn .sv-btn-name,
+  .toolbar-tools .btn.filter .filter-label {
+    display: none;
+  }
+  .toolbar-tools .btn.filter,
+  .toolbar-tools .sv-btn {
+    flex: none;
+    padding: 0 11px;
+  }
+}
+
+/* ---- The main chart's finish ------------------------------------------------
+   A soft glow under the line, and today's point breathing while it counts. */
+.chart-line {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+.chart-now-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: chart-breathe 2.4s ease-in-out infinite;
+}
+@keyframes chart-breathe {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chart-now-halo {
+    animation: none;
+    opacity: 0.2;
+  }
+}
+
+/* ---- Overview: the key numbers and the chart, one section -------------------
+   The dialogs' soft light across the top; each number on a quiet tile with its
+   own icon; the one being charted is lit. */
+.card.overview {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(700px 240px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--surface);
+}
+.overview > .kpis {
+  padding: 14px;
+  gap: 8px;
+  border-bottom: 1px solid var(--grid);
+}
+.overview .kpi {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--sunken) 70%, transparent);
+  gap: 8px;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s var(--ease);
+}
+.overview button.kpi:hover {
+  border-color: var(--border-2);
+  transform: translateY(-1px);
+}
+.overview button.kpi[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background:
+    radial-gradient(160px 80px at 0% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 75%),
+    var(--sunken);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.overview > .more-numbers {
+  padding: 10px 14px 0;
+}
+.overview-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px 16px;
+}
+.kpi-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  margin-right: 2px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 6%, var(--surface-2)), var(--surface-2));
+  color: var(--text-2);
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.kpi-icon.money {
+  color: var(--money);
+}
+/* A little life: the icon nods when you point at its number, and the charted
+   number's icon is lit. */
+button.kpi:hover .kpi-icon {
+  transform: translateY(-2px) rotate(-6deg);
+}
+button.kpi[aria-pressed='true'] .kpi-icon {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.kpi-icon.live.on {
+  color: var(--accent);
+  animation: kpi-live 2s ease-in-out infinite;
+}
+@keyframes kpi-live {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+}
+@media (max-width: 640px) {
+  .overview > .kpis {
+    padding: 10px;
+  }
+  .overview-chart {
+    padding: 14px 12px 12px;
+  }
+  .kpi-icon {
+    width: 26px;
+    height: 26px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kpi-icon,
+  .overview .kpi {
+    transition: none;
+  }
+  .kpi-icon.live.on {
+    animation: none;
+  }
+}
+
+/* ---- The main chart's hover card ---------------------------------------------
+   The day as a heading, its figures large, how it compares, then the smaller
+   numbers in two columns. */
+.chart-tip.time-tip {
+  top: 6px;
+  width: 244px;
+  gap: 10px;
+  padding: 12px 14px;
+  white-space: normal;
+  border-radius: 14px;
+  background:
+    radial-gradient(220px 90px at 0% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
+    color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.4);
+}
+.ct-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.ct-live {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 10.5px;
+}
+.ct-hero {
+  display: grid;
+  gap: 2px;
+}
+.ct-label,
+.ct-row span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+  font-size: 11.5px;
+}
+.ct-label i,
+.ct-row i {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+}
+.ct-big {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.ct-hero.money .ct-big {
+  color: var(--money);
+}
+.ct-vs {
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+.ct-vs em {
+  font-style: normal;
+  margin-right: 2px;
+}
+.ct-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+}
+.ct-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+}
+.ct-split-bar {
+  grid-column: 1 / -1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--grid);
+  overflow: hidden;
+}
+.ct-split-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+}
+.ct-split em {
+  font-style: normal;
+  color: var(--text-3);
+  font-size: 11px;
+}
+.ct-split em .num {
+  color: var(--text-2);
+}
+.ct-split em.right {
+  text-align: right;
+}
+.ct-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.ct-grid span {
+  display: grid;
+  gap: 1px;
+}
+.ct-grid em {
+  font-style: normal;
+  color: var(--text-3);
+  font-size: 10.5px;
+}
+.ct-grid b {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+/* Replay speed: one button beside Replay; the four speeds open above it. */
+.speed-menu {
+  position: relative;
+  flex: none;
+}
+.speed-btn {
+  height: 38px;
+  gap: 6px;
+  padding: 0 10px 0 12px;
+  border-radius: 999px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.speed-btn:hover,
+.speed-btn[aria-expanded='true'] {
+  color: var(--text);
+}
+.pop.menu-pop.speed-pop {
+  bottom: 46px;
+  left: 0;
+  width: 230px;
+}
+.speed-row {
+  min-height: 42px;
+}
+.speed-row .menu-title {
+  flex: 1;
+}
+.speed-row.on {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+.speed-bars {
+  display: flex !important;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  padding-bottom: 7px;
+}
+.speed-bars i {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--border-2);
+}
+.speed-bars i.lit {
+  background: currentColor;
+}
+.speed-chip {
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--sunken);
+  color: var(--text-2);
+  font-size: 11.5px;
+}
+.speed-row.on .speed-chip {
+  color: var(--text);
+}
+.speed-check {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  color: var(--accent);
+}
+
+.kpi-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The tile's spark sits at its foot: quiet grey, lime on the charted number,
+   gold on money. */
+.kpi-spark {
+  display: block;
+  width: 100%;
+  height: 28px;
+  margin-top: auto;
+  color: var(--text-3);
+}
+.kpi.money .kpi-spark {
+  color: var(--money);
+}
+button.kpi[aria-pressed='true'] .kpi-spark {
+  color: var(--accent);
+}
+
+/* The replay bar on a phone: Replay, speed and the scrubber on one row; the
+   day being viewed on its own row under them, shortened if it must be. */
+@media (max-width: 640px) {
+  .scrub {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .scrub input[type='range'] {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+  .scrub > .btn:last-child {
+    order: 3;
+    flex: 1 0 100%;
+    min-width: 0;
+    justify-content: flex-start;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .scrub > .btn:last-child .muted {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

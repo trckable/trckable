@@ -1,6 +1,7 @@
 // The ⋯ menu used wherever a row has more than one action. It renders into the
 // page body, not inside the row, so a dialog or a scrolling card can never
 // clip it — that is the whole reason this is a component and not a div.
+import { Ellipsis } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -44,11 +45,7 @@ export function Menu({ label, children }: { label: string; children: (close: () 
   return (
     <>
       <button ref={btn} type="button" className="btn icon ghost" aria-haspopup="menu" aria-expanded={open} aria-label={label} onClick={() => setOpen((o) => !o)}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <circle cx="5" cy="12" r="1.7" />
-          <circle cx="12" cy="12" r="1.7" />
-          <circle cx="19" cy="12" r="1.7" />
-        </svg>
+        <Ellipsis size={20} strokeWidth={1.75} aria-hidden="true" />
       </button>
       {open &&
         createPortal(

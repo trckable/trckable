@@ -52,6 +52,7 @@ type API struct {
 	BaseURL     string // public https address (TRCKABLE_BASE_URL), for webhook URLs
 	Operator    string // TRCKABLE_OPERATOR_TOKEN: one-time sign-in links for a hosting provider
 	Managed     string // TRCKABLE_MANAGED: the hosting provider's sign-in page; see unmanaged
+	Version     string // this build's version, shown in the dashboard's footer
 	// Box seals the keys trckable stores for other services (Search Console).
 	Box *secrets.Box
 	// GSCHTTP replaces the HTTP client used to reach Google; tests only.
@@ -107,6 +108,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("POST /api/v1/login", a.unmanaged(a.login))
 	handleFunc("POST /api/v1/logout", a.logout)
 	handle("GET /api/v1/me", a.authed(a.me))
+	handle("PUT /api/v1/me/keys", a.authed(a.setKeys))
 	handle("GET /api/v1/sites", a.authed(a.sites))
 	handle("GET /api/v1/overview", a.authed(a.overview))
 	handle("POST /api/v1/sites", a.authed(a.createSite))
@@ -166,6 +168,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}/alerts/{id}", a.authed(a.deleteAlert))
 	handle("GET /api/v1/sites/{site}/segments", a.authed(a.segments))
 	handle("POST /api/v1/sites/{site}/segments", a.authed(a.saveSegment))
+	handle("PATCH /api/v1/sites/{site}/segments/{id}", a.authed(a.renameSegment))
 	handle("DELETE /api/v1/sites/{site}/segments/{id}", a.authed(a.deleteSegment))
 	handle("GET /api/v1/sites/{site}/annotations", a.authed(a.annotations))
 	handle("POST /api/v1/sites/{site}/annotations", a.authed(a.addAnnotation))
@@ -494,7 +497,32 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"kind": "api_key"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"kind": "user", "email": p.user.Email, "role": p.user.Role})
+	// The version is for the dashboard's footer; every response carries it in
+	// X-Trckable-Version anyway.
+	keys, _ := a.Ctl.UserKeymap(r.Context(), p.user.ID)
+	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys})
+}
+
+// setKeys keeps the shortcuts a person changed, so they follow them to any
+// browser. Anyone signed in may change their own; they touch nothing else.
+func (a *API) setKeys(w http.ResponseWriter, r *http.Request) {
+	p := r.Context().Value(ctxKey{}).(principal)
+	if p.user == nil {
+		fail(w, http.StatusForbidden, "shortcuts belong to a person, not an API key")
+		return
+	}
+	var in struct {
+		Keys sqlite.Keymap `json:"keys"`
+	}
+	if err := decode(r, &in); err != nil {
+		fail(w, http.StatusBadRequest, "bad request")
+		return
+	}
+	if err := a.Ctl.SetUserKeymap(r.Context(), p.user.ID, in.Keys); err != nil {
+		fail(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"keys": in.Keys})
 }
 
 // ---- sites ----

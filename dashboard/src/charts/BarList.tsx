@@ -1,5 +1,7 @@
-// Ranked rows with a proportional bar behind each. Rows are buttons: click
-// to filter the whole dashboard; hover (on sources) previews the money trail.
+// Ranked rows, each with a thin proportional line under its name. Rows are
+// buttons: click to filter the whole dashboard; hover (on sources) previews
+// the money trail. The line used to be a block behind the whole row, so the
+// numbers sat half on it and half off — the list read as noise.
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { useTween } from '../lib/motion'
 import { fmtInt, fmtPct } from '../lib/format'
@@ -72,11 +74,15 @@ export function BarList(p: {
       </div>
     )
   return (
-    <div>
+    <div className="bl">
       <div className="cols">
         <span>{p.dimLabel}</span>
         <span style={{ width: 60, textAlign: 'right' }}>{p.valueLabel ?? 'Visitors'}</span>
-        {p.subLabel && <span style={{ width: 52, textAlign: 'right' }}>{p.subLabel}</span>}
+        {p.subLabel && (
+          <span className="sub" style={{ width: 52, textAlign: 'right' }}>
+            {p.subLabel}
+          </span>
+        )}
         {p.money && <span style={{ width: 72, textAlign: 'right' }}>Revenue</span>}
       </div>
       {p.items.length === 0 && <div className="empty">{p.emptyText ?? 'Nothing here yet… peekaboo.'}</div>}
@@ -98,9 +104,15 @@ export function BarList(p: {
           onFocus={() => p.onHover?.(it.key)}
           onBlur={() => p.onHover?.(null)}
         >
-          <span className="bl-bar" style={{ width: `${(measure(it) / max) * 100}%`, background: p.barColor }} />
-          {it.color && <span className="dot" style={{ background: it.color }} />}
-          <span className="bl-name">{it.label}</span>
+          <span className="bl-label">
+            <span className="bl-name">
+              {it.color && <span className="dot" style={{ background: it.color }} />}
+              <span className="bl-text">{it.label}</span>
+            </span>
+            <span className="bl-track" aria-hidden="true">
+              <span className="bl-bar" style={{ width: `${(measure(it) / max) * 100}%`, background: it.color ?? p.barColor }} />
+            </span>
+          </span>
           <span className="bl-val num">
             <Count value={it.value} fmt={p.fmtValue} />
           </span>

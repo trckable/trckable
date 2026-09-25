@@ -14,7 +14,8 @@ import { policyCaveats, policyText } from '../lib/policy'
 import { Row } from '../components/Row'
 import { DialogActions } from '../components/DialogActions'
 import { BarPreview } from '../components/BarPreview'
-import { navigate } from '../lib/url'
+import { setSettingsTab, settingsParam } from '../lib/settings'
+import './Privacy.css'
 
 const KEEP = [
   { id: '0', label: 'Keep everything' },
@@ -207,7 +208,7 @@ const BAR_PLACES = [
 /** One card for one decision: keep the cookie and ask first. How you ask —
  *  by reading the consent manager the site already runs, or with a bar of
  *  trckable's own — is a setting inside it, not a second module. */
-function Consent({ site, config, on, onSave }: { site: Site; config: SiteConfig; on: boolean; onSave: (patch: Partial<SiteConfig>, said?: string) => void }) {
+function Consent({ config, on, onSave }: { site: Site; config: SiteConfig; on: boolean; onSave: (patch: Partial<SiteConfig>, said?: string) => void }) {
   const saved = { ...EMPTY_BAR, ...(config.banner ?? {}) }
   const [b, setB] = useState(saved)
   const [css, setCSS] = useState(false)
@@ -245,7 +246,7 @@ function Consent({ site, config, on, onSave }: { site: Site; config: SiteConfig;
           Keep the cookie and ask first. trckable can read the consent manager you already run, or ask with a small bar of its own — about its one cookie and nothing else. Turn on the
           Cookie consent module to choose.
         </p>
-        <button type="button" className="btn" style={{ alignSelf: 'flex-start' }} onClick={() => navigate(`/settings?site=${encodeURIComponent(site.id)}&tab=modules`)}>
+        <button type="button" className="btn" style={{ alignSelf: 'flex-start' }} onClick={() => setSettingsTab('modules')}>
           Open Modules
         </button>
       </section>
@@ -525,7 +526,7 @@ function DataRequest({ site }: { site: Site }) {
   const { ask, dialog } = useConfirm()
   const [by, setBy] = useState<'visitor' | 'email'>('visitor')
   // A journey can send someone here with the visitor already in hand.
-  const [value, setValue] = useState(() => new URLSearchParams(location.search).get('visitor') ?? '')
+  const [value, setValue] = useState(() => settingsParam('visitor') ?? '')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [found, setFound] = useState<{ found: PersonFound; payments: PersonPayment[] } | null>(null)
@@ -543,7 +544,7 @@ function DataRequest({ site }: { site: Site }) {
 
   // Arriving from a visitor's journey: the lookup is why they came.
   useEffect(() => {
-    const from = new URLSearchParams(location.search).get('visitor')
+    const from = settingsParam('visitor')
     if (from) look(from, 'visitor')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [site.id])

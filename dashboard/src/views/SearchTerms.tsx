@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { api, type ReportQuery, type SearchReport, type Site } from '../lib/api'
 import { BarList } from '../charts/BarList'
 import { fmtInt, fmtPct } from '../lib/format'
-import { navigate } from '../lib/url'
+import { openSettings } from '../lib/settings'
 
 export function SearchTerms({ site, query, rows, full }: { site: Site; query: ReportQuery; rows: number; full: boolean }) {
   const [rep, setRep] = useState<SearchReport | null>(null)
@@ -31,7 +31,7 @@ export function SearchTerms({ site, query, rows, full }: { site: Site; query: Re
     return (
       <div className="empty" style={{ display: 'grid', gap: 8, justifyItems: 'start' }}>
         <span>Connect Google Search Console to see the searches that showed this site.</span>
-        <button type="button" className="btn" onClick={() => navigate(`/settings?site=${encodeURIComponent(site.id)}&tab=search`)}>
+        <button type="button" className="btn" onClick={() => openSettings(site, 'search')}>
           Connect Search Console
         </button>
       </div>

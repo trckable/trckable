@@ -355,6 +355,9 @@ var migrations = []string{
 	// read-only or suspended.
 	`ALTER TABLE accounts ADD COLUMN max_members INTEGER NOT NULL DEFAULT 0;
 	ALTER TABLE accounts ADD COLUMN state TEXT NOT NULL DEFAULT 'active';`,
+	// 23: the shortcuts a person changed, as JSON {action: key}. Empty is the
+	// defaults; the dashboard owns the list of actions.
+	`ALTER TABLE users ADD COLUMN keymap TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

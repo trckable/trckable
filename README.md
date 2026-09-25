@@ -12,7 +12,7 @@ One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy,
 [![Version](https://img.shields.io/badge/version-0.1.2-b8ff3c?style=flat-square)](CHANGELOG.md)
 [![License: AGPL-3.0](https://img.shields.io/badge/server-AGPL--3.0-0b0d10?style=flat-square)](LICENSE)
 [![Tracker: MIT](https://img.shields.io/badge/tracker-MIT-0b0d10?style=flat-square)](packages/trckable/LICENSE)
-[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://trckable.com/docs/benchmarks/"><img src="https://img.shields.io/badge/tracker-2031_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2031 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://trckable.com/docs/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-49_MB-b8ff3c?style=flat-square" alt="Idle memory: 49 MB"></a><!--/f-->
+[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://trckable.com/docs/benchmarks/"><img src="https://img.shields.io/badge/tracker-2051_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2051 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://trckable.com/docs/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-49_MB-b8ff3c?style=flat-square" alt="Idle memory: 49 MB"></a><!--/f-->
 
 [Quick start](#-quick-start) · [How it compares](#️-how-it-compares) · [Everything it does](#-everything-it-does) · [Gallery](#-gallery) · [Docs](https://trckable.com/docs/) · [Changelog](CHANGELOG.md)
 
@@ -58,7 +58,7 @@ The free, self-hostable tools, plus DataFast (paid, hosted only) for script size
   <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 58 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
 </p>
 
-**Where it is not the right pick:** with pageviews only, Plausible CE's script is smaller (1,283 B against <!--f:tracker_core_bytes-->1,583<!--/f--> B). And session replay, heatmaps and A/B tests are out of scope on purpose. If you need those, use Matomo.
+**Where it is not the right pick:** with pageviews only, Plausible CE's script is smaller (1,283 B against <!--f:tracker_core_bytes-->1,603<!--/f--> B). And session replay, heatmaps and A/B tests are out of scope on purpose. If you need those, use Matomo.
 
 ## 🧰 Everything it does
 

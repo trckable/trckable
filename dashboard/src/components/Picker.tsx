@@ -1,6 +1,7 @@
 // One searchable picker, used wherever a list is long enough to scroll:
 // install methods, timezones, currencies. A native <select> with 400 zones is
 // a scroll race; this is a search box with keyboard control.
+import { Check, ChevronDown } from 'lucide-react'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -90,9 +91,7 @@ export function Picker({
         ) : (
           <>
             <span className="name">{current?.label ?? placeholder}</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <path d="m6 9 6 6 6-6" />
-            </svg>
+            <ChevronDown size={15} strokeWidth={1.75} aria-hidden="true" />
           </>
         )}
       </button>
@@ -131,9 +130,7 @@ export function Picker({
                       <span className="name">{x.label}</span>
                       {x.hint && <span className="faint">{x.hint}</span>}
                       {x.id === value && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="m20 6-11 11-5-5" />
-                        </svg>
+                        <Check size={16} strokeWidth={2} color="var(--accent)" aria-hidden="true" />
                       )}
                     </button>
                   </div>

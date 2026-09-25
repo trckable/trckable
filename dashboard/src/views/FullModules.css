@@ -1,0 +1,105 @@
+/* FullModules.tsx: its own styles, loaded with it (not with the first load). */
+
+.rhythm-hours {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  font-size: 10px;
+  color: var(--text-3);
+  margin-left: 34px;
+}
+.rhythm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rhythm-row > .faint {
+  width: 26px;
+  font-size: 11px;
+}
+.rhythm-cells {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+  flex: 1;
+}
+.rhythm-cells i {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 3px;
+}
+.funnel-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.funnel-step {
+  position: relative;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--sunken);
+  overflow: hidden;
+}
+.funnel-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent-soft);
+  transition: width 0.5s var(--ease);
+}
+.funnel-label,
+.funnel-meta {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.funnel-label b {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.funnel-meta {
+  font-size: 11.5px;
+  /* This sits on the step's own filled bar, not on the page, so the muted
+     grey it used to wear did not have the contrast to be read. */
+  color: var(--text-2);
+}
+.journey-visit {
+  border-left: 2px solid var(--grid);
+  padding-left: 12px;
+}
+.journey-head {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.journey-events {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+}
+.journey-events li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.journey-events li > .num:first-child {
+  width: 46px;
+  flex: none;
+  font-size: 11.5px;
+}
+.people-what {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

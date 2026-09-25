@@ -1,6 +1,7 @@
 // Settings → Payments. Connecting a provider is three taps: pick it, paste the
 // key, done. Everything wordy (manual webhooks, checkout snippets) lives behind
 // its own button, so the page itself stays short.
+import { Check } from 'lucide-react'
 import { Menu } from '../components/Menu'
 import { DialogActions } from '../components/DialogActions'
 import { Modal } from '../components/Modal'
@@ -12,6 +13,7 @@ import { CodeBlock } from '../components/Code'
 import { Picker } from '../components/Picker'
 import { useConfirm } from '../components/Confirm'
 import { settle, toast } from '../components/Toast'
+import './Payments.css'
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'CHF', 'JPY', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'INR', 'BRL', 'MXN', 'SGD', 'NZD', 'ZAR']
 
@@ -175,7 +177,7 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
           <strong>{provider?.name ?? c.provider}</strong>
           {c.mode === 'test' && <span className="tag quiet">test mode</span>}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, marginTop: 3 }}>
+        <div className="conn-status">
           {busy ? (
             <>
               <span className="stage-mark" aria-hidden="true" style={{ width: 13, height: 13, borderColor: 'var(--accent)', borderRightColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
@@ -184,10 +186,17 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
           ) : (
             <>
               <span className="dot" style={{ background: status.tone, borderRadius: '50%' }} />
-              <span className="muted">{status.text}</span>
+              <span className="muted conn-text">
+                {status.text}
+                {c.payments > 0 && (
+                  <span className="faint num">
+                    {' '}
+                    · {c.payments.toLocaleString()} payment{c.payments === 1 ? '' : 's'}
+                  </span>
+                )}
+              </span>
             </>
           )}
-          {!busy && c.payments > 0 && <span className="faint num">· {c.payments}</span>}
         </div>
         {c.last_error && <div style={{ color: 'var(--down)', fontSize: 12.5, marginTop: 3 }}>{c.last_error}</div>}
         {msg && <div className="faint" style={{ fontSize: 12.5, marginTop: 3 }}>{msg}</div>}
@@ -395,9 +404,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
               </div>
             ) : done ? (
               <div className="wiz-done">
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--up)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m20 6-11 11-5-5" />
-                </svg>
+                <Check size={34} strokeWidth={2} aria-hidden="true" />
                 <b>Connected.</b>
                 <span className="muted">Payments will appear as they happen.</span>
               </div>

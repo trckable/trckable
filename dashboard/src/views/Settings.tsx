@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { Activity, Bell, Blocks, ChevronLeft, ChevronRight, Code, CreditCard, Search, Settings as Cog, ShieldCheck, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { isViewer } from '../lib/me'
 import { api, type Site } from '../lib/api'
 import { navigate, useLocation } from '../lib/url'
+import { Modal } from '../components/Modal'
+import { closeSettings, setSettingsTab, type SettingsTab } from '../lib/settings'
 import { Picker } from '../components/Picker'
 import { Row } from '../components/Row'
 import { Copyable } from '../components/Copyable'
@@ -14,31 +17,190 @@ import { AlertsSettings } from './Alerts'
 import { SearchSettings } from './Search'
 import { SitesSettings } from './Sites'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
+import './Settings.css'
 
-type TabID = 'site' | 'install' | 'modules' | 'payments' | 'search' | 'privacy' | 'alerts' | 'health'
+type TabID = SettingsTab
 
 // Only the open site lives here. Anything about the account — the list of
 // sites, keys, the password — is one dialog away (see AccountDialog), so the
 // two can never be mistaken for each other.
-const TABS: { id: TabID; label: string; icon: string }[] = [
-  { id: 'site', label: 'General', icon: 'M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.4-.5a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z' },
-  { id: 'install', label: 'Install', icon: 'm9 8-5 4 5 4m6-8 5 4-5 4' },
-  { id: 'modules', label: 'Modules', icon: 'M4 5h7v7H4zM13 5h7v4h-7zM13 11h7v8h-7zM4 14h7v5H4z' },
-  { id: 'payments', label: 'Payments', icon: 'M3 8h18M3 12.5h18M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z' },
-  { id: 'search', label: 'Search Console', icon: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm9 3-4.35-4.35' },
-  { id: 'privacy', label: 'Data & privacy', icon: 'M12 3l7 3v6c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V6l7-3Zm0 7v4' },
-  { id: 'alerts', label: 'Alerts', icon: 'M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0' },
-  { id: 'health', label: 'Health', icon: 'M3 12h4l2.5-6 4 12 2.5-6H21' },
+const TABS: { id: TabID; label: string; icon: typeof Cog }[] = [
+  { id: 'site', label: 'General', icon: Cog },
+  { id: 'install', label: 'Install', icon: Code },
+  { id: 'modules', label: 'Modules', icon: Blocks },
+  { id: 'payments', label: 'Payments', icon: CreditCard },
+  { id: 'search', label: 'Search Console', icon: Search },
+  { id: 'privacy', label: 'Data & privacy', icon: ShieldCheck },
+  { id: 'alerts', label: 'Alerts', icon: Bell },
+  { id: 'health', label: 'Health', icon: Activity },
 ]
 
-function NavIcon({ d }: { d: string }) {
+function NavIcon({ d: Icon }: { d: typeof Cog }) {
+  return <Icon size={15} strokeWidth={1.75} aria-hidden="true" />
+}
+
+// Sections that exist for one module, and that module's id.
+const MODULE_OF: Partial<Record<TabID, string>> = { search: 'search', payments: 'revenue' }
+const MODULE_WHY: Partial<Record<TabID, { name: string; what: string }>> = {
+  search: { name: 'Search Console', what: 'Turn it on to connect Google Search Console and see which searches showed your site, next to your own numbers.' },
+  payments: { name: 'Revenue', what: 'Turn it on to connect Stripe, Lemon Squeezy, Polar, Paddle or Dodo and see which traffic pays.' },
+}
+
+/** A module's section while the module is off: what it would do, and the
+ *  switch to turn it on — rather than a setup for something that is off. */
+function ModuleOff({ site, tab, onOn }: { site: Site; tab: TabID; onOn: () => void }) {
+  const [busy, setBusy] = useState(false)
+  const why = MODULE_WHY[tab]!
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d={d} />
-    </svg>
+    <section className="card module-off">
+      <span className="icon-tile">
+        <NavIcon d={TABS.find((t) => t.id === tab)!.icon} />
+      </span>
+      <div>
+        <h3>The {why.name} module is off</h3>
+        <p className="muted">{why.what}</p>
+      </div>
+      {!isViewer() && (
+        <button
+          type="button"
+          className="btn primary"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true)
+            api
+              .setModule(site.id, MODULE_OF[tab]!, true)
+              .then(onOn)
+              .finally(() => setBusy(false))
+          }}
+        >
+          {busy ? 'Turning on…' : 'Turn on'}
+        </button>
+      )}
+    </section>
   )
 }
 
+// The dialog's menu, grouped the way an owner looks for things.
+const GROUPS: { name: string; tabs: TabID[] }[] = [
+  { name: 'This site', tabs: ['site', 'install', 'modules'] },
+  { name: 'Money', tabs: ['payments'] },
+  { name: 'Data', tabs: ['search', 'privacy', 'alerts'] },
+  { name: 'Instance', tabs: ['health'] },
+]
+
+/** A site's settings as a dialog over its dashboard: the sections on the
+ *  left, the section on the right. Opening it does not change the address
+ *  (lib/settings.ts); closing it leaves the dashboard exactly as it was. */
+export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSites: () => void }) {
+  const tab = TABS.some((t) => t.id === p.tab) ? p.tab : 'site'
+  const go = (id: TabID) => setSettingsTab(id)
+  const close = closeSettings
+  const current = TABS.find((t) => t.id === tab)!
+  // Sections that belong to a module say so when it is off, and offer to
+  // turn it on, instead of showing a setup that leads nowhere.
+  const [mods, setMods] = useState<Record<string, boolean> | null>(null)
+  const loadMods = () =>
+    api
+      .modules(p.site.id)
+      .then((r) => setMods(Object.fromEntries(r.modules.map((m) => [m.id, m.enabled]))))
+      .catch(() => setMods({}))
+  useEffect(() => {
+    loadMods()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.site.id, tab])
+  const off = (id: TabID) => mods !== null && MODULE_OF[id] !== undefined && mods[MODULE_OF[id]!] === false
+  // On a phone the sections are one row of tabs wider than the screen: the
+  // edges fade and an arrow shows on the side that has more, and the open
+  // one is scrolled into view.
+  const nav = useRef<HTMLElement>(null)
+  const [more, setMore] = useState({ left: false, right: false })
+  const measure = () => {
+    const el = nav.current
+    if (!el) return
+    setMore({ left: el.scrollLeft > 4, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 })
+  }
+  useEffect(() => {
+    nav.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest', inline: 'center' })
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [tab])
+  const nudge = (dir: number) => nav.current?.scrollBy({ left: dir * 160, behavior: 'smooth' })
+  return (
+    <Modal label={`Settings for ${p.site.domain}`} className="settings-modal" onClose={close}>
+      {more.left && (
+        <button type="button" className="settings-scroll left" aria-label="Earlier sections" onClick={() => nudge(-1)}>
+          <ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />
+        </button>
+      )}
+      {more.right && (
+        <button type="button" className="settings-scroll right" aria-label="More sections" onClick={() => nudge(1)}>
+          <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
+        </button>
+      )}
+      <nav ref={nav} onScroll={measure} className={'settings-nav' + (more.left ? ' more-left' : '') + (more.right ? ' more-right' : '')} aria-label="Settings sections">
+        <div className="settings-title">
+          <b>Settings</b>
+          <span className="faint">{p.site.name || p.site.domain}</span>
+        </div>
+        {GROUPS.map((g) => (
+          <div key={g.name} className="settings-group">
+            <span className="settings-group-head">{g.name}</span>
+            {g.tabs.map((id) => {
+              const t = TABS.find((x) => x.id === id)!
+              return (
+                <button key={t.id} type="button" aria-current={tab === t.id} onClick={() => go(t.id)}>
+                  <span className="icon-tile small">
+                    <NavIcon d={t.icon} />
+                  </span>
+                  {t.label}
+                  {off(t.id) && <span className="tag quiet nav-off">Off</span>}
+                </button>
+              )
+            })}
+          </div>
+        ))}
+      </nav>
+      <div className="settings-pane">
+        <div className="settings-pane-head">
+          <h2>{current.label}</h2>
+          <button type="button" className="modal-close" aria-label="Close settings" onClick={close}>
+            <X size={16} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        </div>
+        {/* Focusable, so the section scrolls from the keyboard too — even one,
+            like Health, with nothing else in it to tab to. */}
+        <div className="settings-body" key={tab} tabIndex={0} role="region" aria-label={current.label}>
+          {off(tab) ? (
+            <ModuleOff site={p.site} tab={tab} onOn={loadMods} />
+          ) : (
+            <SettingsSection tab={tab} site={p.site} onSites={p.onSites} />
+          )}
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSites: () => void }) {
+  return (
+    <>
+      {/* Saying it once is kinder than letting every save come back 403. */}
+      {isViewer() && <p className="viewer-note">Your account reads this instance. Settings are shown as they are, and an owner changes them.</p>}
+      {tab === 'site' && <SiteSettings key={site.id} site={site} onSaved={onSites} />}
+      {tab === 'install' && <Install site={site} visits={[]} inSettings />}
+      {tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
+      {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}
+      {tab === 'search' && <SearchSettings key={'sc' + site.id} site={site} />}
+      {tab === 'privacy' && <PrivacySettings key={'pv' + site.id} site={site} />}
+      {tab === 'alerts' && <AlertsSettings key={'al' + site.id} site={site} />}
+      {tab === 'health' && <HealthSettings />}
+    </>
+  )
+}
+
+/** The page form, kept for an instance with no site yet: there is no
+ *  dashboard to open a dialog over, only the list to add the first one. */
 export function Settings(p: { sites: Site[]; site: Site | null; onSites: () => void; header: React.ReactNode }) {
   const site = p.site ?? p.sites[0] ?? null
   const { params } = useLocation()

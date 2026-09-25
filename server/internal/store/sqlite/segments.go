@@ -72,3 +72,25 @@ func (s *Store) DeleteSegment(ctx context.Context, site, id string) error {
 	}
 	return nil
 }
+
+// RenameSegment gives a saved view a new name; what it shows stays the same.
+func (s *Store) RenameSegment(ctx context.Context, site, id, name string) (Segment, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return Segment{}, ErrSegmentName
+	}
+	if len([]rune(name)) > 60 {
+		name = string([]rune(name)[:60])
+	}
+	res, err := s.DB.ExecContext(ctx, `UPDATE segments SET name = ? WHERE site_id = ? AND id = ?`, name, site, id)
+	if err != nil {
+		return Segment{}, err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return Segment{}, auth.ErrNotFound
+	}
+	var g Segment
+	err = s.DB.QueryRowContext(ctx, `SELECT id, name, query, created_at FROM segments WHERE site_id = ? AND id = ?`, site, id).
+		Scan(&g.ID, &g.Name, &g.Query, &g.Created)
+	return g, err
+}

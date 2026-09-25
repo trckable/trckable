@@ -112,7 +112,7 @@ export function TimeChart(p: TimeChartProps) {
   // max is tweened, so on the very first frame it can still be 0 — and 0/0 is
   // a NaN in the middle of a path the browser then refuses to draw.
   const y = (v: number) => PAD_T + plotH - (v / (max || 1)) * plotH
-  const line = (a: number[]) => a.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join('')
+  const line = (a: number[]) => smooth(a.map((v, i) => [x(i), y(v)]))
   const area = (a: number[]) => (a.length ? `${line(a)}L${x(a.length - 1).toFixed(1)} ${PAD_T + plotH}L${x(0).toFixed(1)} ${PAD_T + plotH}Z` : '')
 
   const ticks = Array.from({ length: Math.round(target.max / target.step) }, (_, j) => (j + 1) * target.step)
@@ -127,7 +127,7 @@ export function TimeChart(p: TimeChartProps) {
   const scrub = p.scrub ?? null
   const detail = hover != null ? (p.detail?.(hover) ?? null) : null
   const hi = hover ?? scrub
-  const tipLeft = hi != null ? (x(hi) > w - 220 ? x(hi) - 212 : x(hi) + 14) : 0
+  const tipLeft = hi != null ? (x(hi) > w - 270 ? x(hi) - 258 : x(hi) + 14) : 0
   const gradId = 'g-area'
 
   return (
@@ -165,8 +165,14 @@ export function TimeChart(p: TimeChartProps) {
             <rect x={PAD_L} y={0} width={Math.max(0, w - PAD_L)} height={H} />
           </clipPath>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="var(--accent)" stopOpacity="0.26" />
+            <stop offset="0" stopColor="var(--accent)" stopOpacity="0.34" />
+            <stop offset="0.55" stopColor="var(--accent)" stopOpacity="0.08" />
             <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
+          </linearGradient>
+          {/* Revenue bars lit from the top, like the line above them. */}
+          <linearGradient id={gradId + '-money'} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="var(--money)" stopOpacity="1" />
+            <stop offset="1" stopColor="var(--money)" stopOpacity="0.45" />
           </linearGradient>
         </defs>
         {ticks.map((t) => (
@@ -181,12 +187,19 @@ export function TimeChart(p: TimeChartProps) {
         <g clipPath={`url(#${gradId}-plot)`}>
         <g style={{ opacity: p.overlay ? 0.35 : 1, transition: 'opacity .25s' }}>
           <path d={area(vals)} fill={`url(#${gradId})`} />
-          <path d={line(p.partialLast && n > 2 ? vals.slice(0, -1) : vals)} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          <path className="chart-line" d={line(p.partialLast && n > 2 ? vals.slice(0, -1) : vals)} fill="none" stroke="var(--accent)" strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
           {p.partialLast && n > 2 && (
             <path d={`M${x(n - 2).toFixed(1)} ${y(vals[n - 2]).toFixed(1)}L${x(n - 1).toFixed(1)} ${y(vals[n - 1]).toFixed(1)}`} fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="3 4" strokeLinecap="round" />
           )}
         </g>
         {p.ghost && <path d={line(ghost)} fill="none" stroke="var(--text-3)" strokeWidth="1.5" strokeDasharray="4 3" strokeLinejoin="round" />}
+        {/* Today, still counting: a point that breathes at the line's end. */}
+        {p.partialLast && n > 1 && hover == null && scrub == null && (
+          <g className="chart-now" aria-hidden="true">
+            <circle cx={x(n - 1)} cy={y(vals[n - 1] ?? 0)} r="9" fill="var(--accent)" className="chart-now-halo" />
+            <circle cx={x(n - 1)} cy={y(vals[n - 1] ?? 0)} r="4" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" />
+          </g>
+        )}
         {p.overlay && (
           <g>
             <path d={area(over)} fill={p.overlay.color} fillOpacity="0.22" />
@@ -218,7 +231,7 @@ export function TimeChart(p: TimeChartProps) {
               const bh = v > 0 ? Math.min(STRIP - 16, Math.max(2, (v / stripMax) * (STRIP - 16))) : 0
               const base = PAD_T + plotH + STRIP - 4
               const dim = (hi != null && hi !== i) || (scrub != null && i > scrub)
-              return <rect key={i} x={x(i) - bw / 2} y={base - bh} width={bw} height={bh} rx={Math.min(3, bw / 2)} fill="var(--money)" opacity={dim ? 0.35 : 0.9} />
+              return <rect key={i} x={x(i) - bw / 2} y={base - bh} width={bw} height={bh} rx={Math.min(3, bw / 2)} fill={`url(#${gradId}-money)`} opacity={dim ? 0.35 : 1} />
             })}
             </g>
           </g>
@@ -243,9 +256,10 @@ export function TimeChart(p: TimeChartProps) {
         )
       })}
       {hover != null && n > 0 && (
-        <div className="tip" style={{ left: tipLeft }}>
-          <div className="muted" style={{ fontSize: 12 }}>
-            {bucketLabel(p.labels[hover], p.bucket, true)}
+        <div className="chart-tip time-tip" style={{ left: tipLeft }}>
+          <div className="ct-head">
+            <b>{bucketLabel(p.labels[hover], p.bucket, true)}</b>
+            {p.partialLast && hover === n - 1 && <span className="ct-live">In progress</span>}
           </div>
           {/* The flag on the axis is a short tag; the whole note is here,
               where there is room to read it. */}
@@ -256,35 +270,53 @@ export function TimeChart(p: TimeChartProps) {
                 {note.text}
               </div>
             ))}
-          {p.partialLast && hover === n - 1 && (
-            <div className="faint" style={{ fontSize: 11, marginTop: -4 }}>
-              In progress
-            </div>
-          )}
-          <div className="r">
-            <span className="muted">{p.metric}</span>
-            <span className="num">{fmtInt(p.values[hover] ?? 0)}</span>
+          <div className="ct-hero">
+            <span className="ct-label">
+              <i style={{ background: 'var(--accent)' }} />
+              {p.metric}
+            </span>
+            <span className="ct-big num">{fmtInt(p.values[hover] ?? 0)}</span>
+            {p.ghost && p.ghost[hover] !== undefined && (
+              <span className="ct-vs num">
+                {(() => {
+                  const a = p.values[hover] ?? 0
+                  const b = p.ghost[hover] ?? 0
+                  const pct = b ? Math.round(((a - b) / b) * 100) : null
+                  return (
+                    <>
+                      {pct !== null && <em className={pct >= 0 ? 'tone-up' : 'tone-down'}>{(pct >= 0 ? '↑ ' : '↓ ') + Math.abs(pct) + '%'}</em>} vs {fmtInt(b)}
+                      {p.ghostLabels?.[hover] ? ` on ${bucketLabel(p.ghostLabels[hover], p.bucket, true)}` : ''}
+                    </>
+                  )
+                })()}
+              </span>
+            )}
           </div>
           {p.strip && (
-            <div className="r">
-              <span className="muted" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="dot" style={{ background: 'var(--money)' }} />
+            <div className="ct-hero money">
+              <span className="ct-label">
+                <i style={{ background: 'var(--money)' }} />
                 {p.strip.label}
               </span>
-              <span className="num">{p.strip.fmt(p.strip.values[hover] ?? 0)}</span>
+              <span className="ct-big num">{p.strip.fmt(p.strip.values[hover] ?? 0)}</span>
             </div>
           )}
           {p.overlay && (
-            <div className="r">
-              <span className="muted">{p.overlay.name}</span>
+            <div className="ct-row">
+              <span>
+                <i style={{ background: p.overlay.color }} />
+                {p.overlay.name}
+              </span>
               <span className="num">{fmtInt(p.overlay.values[hover] ?? 0)}</span>
             </div>
           )}
           {detail?.splits?.map((sp) => {
             const write = sp.fmt ?? fmtInt
             return (
-              <div className="split" key={sp.aLabel + sp.bLabel} aria-hidden="true">
-                <span style={{ width: `${(sp.a / Math.max(1, sp.a + sp.b)) * 100}%`, background: sp.tone }} />
+              <div className="ct-split" key={sp.aLabel + sp.bLabel} aria-hidden="true">
+                <span className="ct-split-bar">
+                  <span style={{ width: `${(sp.a / Math.max(1, sp.a + sp.b)) * 100}%`, background: sp.tone ?? 'var(--accent)' }} />
+                </span>
                 <em>
                   <span className="num">{write(sp.a)}</span> {sp.aLabel}
                 </em>
@@ -294,16 +326,14 @@ export function TimeChart(p: TimeChartProps) {
               </div>
             )
           })}
-          {detail?.rows?.map((r) => (
-            <div className="r" key={r.label}>
-              <span className={r.faint ? 'faint' : 'muted'}>{r.label}</span>
-              <span className={r.faint ? 'num faint' : 'num'}>{r.value}</span>
-            </div>
-          ))}
-          {p.ghost && p.ghost[hover] !== undefined && (
-            <div className="r">
-              <span className="faint">{p.ghostLabels?.[hover] ? bucketLabel(p.ghostLabels[hover], p.bucket, true) : 'Compared'}</span>
-              <span className="num faint">{fmtInt(p.ghost[hover])}</span>
+          {detail?.rows && detail.rows.length > 0 && (
+            <div className="ct-grid">
+              {detail.rows.map((r) => (
+                <span key={r.label}>
+                  <em>{r.label}</em>
+                  <b className="num">{r.value}</b>
+                </span>
+              ))}
             </div>
           )}
         </div>
@@ -360,3 +390,40 @@ function ago(t: string): string {
 
 const zeros = (n: number) => Array(n).fill(0)
 const pad = (a: number[], n: number) => (a.length >= n ? a.slice(0, n) : [...a, ...zeros(n - a.length)])
+
+/** A curve through every point that never overshoots them (monotone cubic,
+ *  Fritsch–Carlson): a quiet day between two busy ones dips, it does not
+ *  swing below zero, and a peak is drawn where it happened, no higher. */
+function smooth(pts: number[][]): string {
+  const n = pts.length
+  if (n === 0) return ''
+  const P = (i: number) => pts[i]!
+  if (n < 3) return pts.map(([px, py], i) => `${i ? 'L' : 'M'}${px!.toFixed(1)} ${py!.toFixed(1)}`).join('')
+  const d: number[] = []
+  for (let i = 0; i < n - 1; i++) d.push((P(i + 1)[1]! - P(i)[1]!) / (P(i + 1)[0]! - P(i)[0]! || 1))
+  const m: number[] = [d[0]!]
+  for (let i = 1; i < n - 1; i++) m.push(d[i - 1]! * d[i]! <= 0 ? 0 : (d[i - 1]! + d[i]!) / 2)
+  m.push(d[n - 2]!)
+  for (let i = 0; i < n - 1; i++) {
+    if (d[i] === 0) {
+      m[i] = m[i + 1] = 0
+      continue
+    }
+    const a = m[i]! / d[i]!
+    const b = m[i + 1]! / d[i]!
+    const h = a * a + b * b
+    if (h > 9) {
+      const t = 3 / Math.sqrt(h)
+      m[i] = t * a * d[i]!
+      m[i + 1] = t * b * d[i]!
+    }
+  }
+  let out = `M${P(0)[0]!.toFixed(1)} ${P(0)[1]!.toFixed(1)}`
+  for (let i = 0; i < n - 1; i++) {
+    const [x0, y0] = P(i) as [number, number]
+    const [x1, y1] = P(i + 1) as [number, number]
+    const h = (x1 - x0) / 3
+    out += `C${(x0 + h).toFixed(1)} ${(y0 + m[i]! * h).toFixed(1)} ${(x1 - h).toFixed(1)} ${(y1 - m[i + 1]! * h).toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}`
+  }
+  return out
+}

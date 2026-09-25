@@ -1,0 +1,143 @@
+/* Account.tsx: its own styles, loaded with it (not with the first load). */
+
+.account-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /* Changing section used to slide the whole panel up 8px and fade it in,
+     which read as a stutter every time you moved between them. The size is
+     identical either way, so nothing needs to move: it just appears. */
+  animation: fadein 0.16s var(--ease) backwards;
+}
+.account-body .card {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.account-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 18px 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--grid);
+}
+.account-who {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+}
+.account-who .faint {
+  font-size: 12px;
+}
+.account-head .tabs {
+  flex-basis: 100%;
+  margin-bottom: -1px;
+}
+.account-body {
+  padding: 16px 18px 18px;
+}
+.account-head {
+  grid-column: 1 / -1;
+  position: static;
+  border-bottom: 1px solid var(--grid);
+  padding: 16px 18px;
+}
+.account-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 10px;
+  border-right: 1px solid var(--grid);
+}
+.account-nav button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.account-nav button:hover {
+  background: var(--sunken);
+}
+.account-nav button[aria-selected='true'] {
+  background: var(--sunken);
+  color: var(--text);
+}
+.account-nav button[aria-selected='true'] svg {
+  color: var(--accent);
+}
+.account-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Reserve the scrollbar's width so the panel never changes size between
+     sections. */
+  scrollbar-gutter: stable;
+  min-height: 0;
+}
+@media (max-width: 720px) {
+  .account-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--grid);
+    padding: 10px;
+  }
+  .account-nav button {
+    flex: none;
+    white-space: nowrap;
+  }
+}
+/* One last question before an account-level change: a strip, not a row, so the
+   field and its two buttons never have to share one line. */
+/* Picking a role is picking a sentence, so each choice carries its own. */
+.role-pick {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+.role-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.18s var(--ease), background 0.18s var(--ease);
+}
+.role-opt:hover {
+  border-color: var(--border-2);
+}
+.role-opt[aria-selected='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.role-opt b {
+  font-size: 14px;
+}
+.role-opt .faint {
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: normal;
+}

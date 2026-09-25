@@ -1,3 +1,4 @@
+import { Banknote, ChevronDown, ChevronRight, CircleUser, Coins, CornerUpLeft, Download, Ellipsis, Eye, Keyboard, KeyRound, Maximize2, MessageCircle, Minimize2, Pause, Play, Radio, RefreshCw, Target, Timer, Users, type LucideIcon } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DialogActions } from '../components/DialogActions'
 import { Modal } from '../components/Modal'
@@ -11,18 +12,21 @@ import { useTween } from '../lib/motion'
 import { channelColor, channelLabel } from '../lib/palette'
 import { navigate, readView, setView, useLocation } from '../lib/url'
 import { openAccount } from '../lib/account'
-import { openShortcuts } from './Shortcuts'
+import { openShortcuts } from '../components/ShortcutsHost'
 import { isShared, sharedModules } from '../lib/me'
 import { THEMES, useTheme } from '../lib/theme'
 import { ModeToggle } from '../components/ModeToggle'
 import { FilterMenu } from '../components/FilterMenu'
-import { NoteDialog } from '../components/NoteDialog'
 import { toast } from '../components/Toast'
 import { useLive } from '../lib/useLive'
 import { useReport } from '../lib/useReport'
 import { sampleReport } from '../lib/sample'
 import { AskPanel } from './AskPanel'
 import { Install } from './InstallPanel'
+import { caps, keyFor, pressed, useKeymap } from '../lib/keys'
+import { ActiveFilters } from '../components/ActiveFilters'
+import { SavedViews } from '../components/SavedViews'
+import { SpeedMenu } from '../components/SpeedMenu'
 import { LiveFeed } from './LiveFeed'
 import { SearchTerms } from './SearchTerms'
 import { ScrollDepth } from './ScrollDepth'
@@ -36,6 +40,7 @@ const Vitals = lazy(() => import('./Vitals').then((m) => ({ default: m.Vitals })
 const Retention = lazy(() => import('./Retention').then((m) => ({ default: m.Retention })))
 const AddGoals = lazy(() => import('./AddGoals').then((m) => ({ default: m.AddGoals })))
 const People = lazy(() => import('./FullModules').then((m) => ({ default: m.People })))
+const NoteDialog = lazy(() => import('../components/NoteDialog').then((m) => ({ default: m.NoteDialog })))
 const JourneyDrawer = lazy(() => import('./FullModules').then((m) => ({ default: m.JourneyDrawer })))
 
 const DIM_LABEL: Record<string, string> = {
@@ -56,6 +61,7 @@ const DIM_LABEL: Record<string, string> = {
 }
 
 export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; header: React.ReactNode }) {
+  useKeymap()
   const { params } = useLocation()
   const view = readView(params)
   const today = todayIn(site.timezone)
@@ -141,8 +147,16 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const removeView = (g: SavedView) =>
     api
       .deleteSegment(site.id, g.id)
-      .then(() => (toast('Saved view removed'), loadSegments()))
+      .then(() => (toast(`Deleted "${g.name}"`), loadSegments()))
       .catch((e: Error) => toast(e.message, 'error'))
+  const renameView = (g: SavedView, name: string) =>
+    api
+      .renameSegment(site.id, g.id, name)
+      .then(() => (toast(`Renamed to "${name}"`), loadSegments()))
+      .catch((e: Error) => {
+        toast(e.message, 'error')
+        throw e
+      })
   const loadNotes = useCallback(() => {
     api
       .annotations(site.id, range.from, range.to)
@@ -242,6 +256,23 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       .forEach((x, i) => setTimeout(() => addPulse({ id: 's' + x.id, kind: 'sale', label: '+' + fmtMoney(x.amount, x.currency, x.exponent) }), i * 400))
   }, [stream.sales, pulsing, addPulse])
   const [playing, setPlaying] = useState(false)
+  // How fast a replay runs, remembered in this browser (a convenience, so a
+  // private window simply starts at 1×).
+  const [speed, setSpeed] = useState(() => {
+    try {
+      return Number(localStorage.getItem('tkb_replay_speed')) || 1
+    } catch {
+      return 1
+    }
+  })
+  const pickSpeed = (n: number) => {
+    setSpeed(n)
+    try {
+      localStorage.setItem('tkb_replay_speed', String(n))
+    } catch {
+      /* storage blocked: the choice lasts until the page closes */
+    }
+  }
   const setDayIdx = useCallback(
     (i: number | null) => {
       if (!cur) return
@@ -254,7 +285,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   useEffect(() => {
     if (!playing || !cur) return
     const n = cur.series.length
-    const every = n > 60 ? 90 : n > 20 ? 200 : 480
+    const every = (n > 60 ? 90 : n > 20 ? 200 : 480) / speed
     let i = scrubIdx < 0 || scrubIdx >= n - 1 ? 0 : scrubIdx
     setDayIdx(i)
     const t = setInterval(() => {
@@ -268,21 +299,22 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       setDayIdx(i)
     }, every)
     return () => clearInterval(t)
+    // A new speed picks up from the day on screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing])
+  }, [playing, speed])
 
   const [askOpen, setAskOpen] = useState(false)
 
   // ---- keyboard: ⌘K opens Ask, F toggles Core/Full, Esc clears scrub ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      if (pressed(e, 'ask')) {
         e.preventDefault()
         setAskOpen((o) => !o)
         return
       }
-      if (e.metaKey || e.ctrlKey || e.altKey || (e.target as HTMLElement).closest('input, textarea, select')) return
-      if (e.key === 'f' || e.key === 'F') setView({ mode: full ? 'core' : 'full' })
+      if ((e.target as HTMLElement).closest('input, textarea, select')) return
+      if (pressed(e, 'mode')) setView({ mode: full ? 'core' : 'full' })
       if (e.key === 'Escape' && view.day) setView({ day: undefined })
     }
     window.addEventListener('keydown', onKey)
@@ -411,6 +443,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
   // ---- chart ----
   const series = cur?.series ?? []
+  // Each number's own day-by-day line, for the small spark in its tile.
+  const dayRows = cur?.days ?? []
+  const sparkOf = (f: (d: (typeof dayRows)[number]) => number) => (dayRows.length > 1 ? dayRows.map(f) : undefined)
   const values = series.map((p) => p[metric])
   const ghost = data?.previous?.series.map((p) => p[metric])
   const overlay = trailData
@@ -452,32 +487,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       <div className="header">
         {header}
         <div className="header-tools">
-          <DatePicker
-            value={pickerValue}
-            today={today}
-            onChange={onPicker}
-            // Short from tablet down, so the header stays one row there.
-            short={shortDates}
-            tz={site.timezone}
-            bucket={view.bucket}
-            autoBucket={data?.bucket}
-            onBucket={(b) => setView({ bucket: b })}
-          />
-          {!isShared() && (
-            <FilterMenu
-              rows={dims}
-              labelFor={(dim, v) => (dim === 'channel' ? channelLabel(v) : dim === 'country' ? countryName(v) : v)}
-              active={view.filters}
-              onPick={addFilter}
-              onClear={() => setView({ filters: [] })}
-              saved={segments.map((g) => ({ id: g.id, name: g.name, on: current === g.query }))}
-              onOpenSaved={(id) => {
-                const g = segments.find((x) => x.id === id)
-                if (g) openView(g)
-              }}
-              onSaveCurrent={saveView}
-            />
-          )}
           <div className="spacer" />
         {trail && trailData && (
           <button type="button" className="chip" style={{ borderColor: channelColor(trail) }} onClick={() => addFilter('channel', trail)}>
@@ -489,9 +498,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           </button>
         )}
           {askOn && (
-            <button type="button" className="btn ask" onClick={() => setAskOpen(true)} aria-expanded={askOpen} aria-label="Ask trckable" title="Ask trckable (⌘K)">
+            <button type="button" className="btn ask" onClick={() => setAskOpen(true)} aria-expanded={askOpen} aria-label="Ask trckable" title={`Ask trckable (${caps(keyFor('ask')).join('')})`}>
               <ChatIcon />
-              <span className="kbd">⌘K</span>
+              <span className="kbd">{caps(keyFor('ask')).join('')}</span>
             </button>
           )}
           {!narrow && <ModeToggle full={full} onToggle={() => setView({ mode: full ? 'core' : 'full' })} />}
@@ -519,46 +528,69 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </div>
       </div>
 
-      {view.filters.length > 0 && (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }} aria-label="Active filters">
-          {view.filters.map((f) => (
-            <span key={f.dim + f.value} className="chip">
-              {f.dim === 'channel' && <span className="dot" style={{ background: channelColor(f.value) }} />}
-              <span className="faint">{DIM_LABEL[f.dim] ?? f.dim} is</span>
-              <b title={f.value}>{f.dim === 'channel' ? channelLabel(f.value) : f.dim === 'country' ? countryName(f.value) : f.value}</b>
-              <button type="button" aria-label={`Remove filter ${DIM_LABEL[f.dim] ?? f.dim} is ${f.value}`} onClick={() => removeFilter(f)}>
-                ×
-              </button>
-            </span>
-          ))}
-          {view.filters.length > 1 && (
-            <button type="button" className="btn ghost" style={{ height: 32, fontSize: 13 }} onClick={() => setView({ filters: [] })}>
-              Clear all
-            </button>
+      {/* The second row: what the numbers are narrowed to on the left, and
+          the controls that narrow them (period, filters, saved views) on the
+          right. The top row keeps who, which site and the view. */}
+      <div className="toolbar">
+        <div className="toolbar-filters" role={view.filters.length ? 'group' : undefined} aria-label={view.filters.length ? 'Active filters' : undefined}>
+          <ActiveFilters
+            filters={view.filters.map((f) => ({
+              key: f.dim + '\u0000' + f.value,
+              dim: DIM_LABEL[f.dim] ?? f.dim,
+              value: f.dim === 'channel' ? channelLabel(f.value) : f.dim === 'country' ? countryName(f.value) : f.value,
+              dot: f.dim === 'channel' ? channelColor(f.value) : undefined,
+              raw: f,
+            }))}
+            onRemove={removeFilter}
+            onClear={() => setView({ filters: [] })}
+            onSave={saveView}
+          />
+        </div>
+        <div className="toolbar-tools">
+          <DatePicker
+            value={pickerValue}
+            today={today}
+            onChange={onPicker}
+            // Short from tablet down, so the header stays one row there.
+            short={shortDates}
+            tz={site.timezone}
+            bucket={view.bucket}
+            autoBucket={data?.bucket}
+            onBucket={(b) => setView({ bucket: b })}
+          />
+          {!isShared() && (
+            <FilterMenu
+              rows={dims}
+              labelFor={(dim, v) => (dim === 'channel' ? channelLabel(v) : dim === 'country' ? countryName(v) : v)}
+              active={view.filters}
+              onPick={addFilter}
+              onRemove={removeFilter}
+              onClear={() => setView({ filters: [] })}
+            />
           )}
-          <button type="button" className="btn ghost" style={{ height: 32, fontSize: 13 }} onClick={saveView}>
-            Save this view
-          </button>
+          {!isShared() && (segments.length > 0 || view.filters.length > 0) && (
+            <SavedViews
+              views={segments}
+              current={current}
+              canSave={view.filters.length > 0}
+              onOpen={openView}
+              onSave={saveView}
+              onRename={renameView}
+              onDelete={removeView}
+              describe={(q) =>
+                new URLSearchParams(q)
+                  .getAll('f')
+                  .map((f) => {
+                    const [dim = '', ...rest] = f.split(':')
+                    const v = rest.join(':')
+                    return `${DIM_LABEL[dim] ?? dim} ${dim === 'channel' ? channelLabel(v) : dim === 'country' ? countryName(v) : v}`
+                  })
+                  .join(' · ')
+              }
+            />
+          )}
         </div>
-      )}
-
-      {/* Saved views: one click back to a question you ask often. Labelled,
-          because a row of unexplained pills reads as decoration. */}
-      {segments.length > 0 && (
-        <div className="sv-strip" role="group" aria-label="Saved views">
-          <span className="sv-label">Saved views</span>
-          {segments.map((g) => (
-            <span key={g.id} className={current === g.query ? 'sv on' : 'sv'}>
-              <button type="button" className="sv-open" onClick={() => openView(g)} aria-pressed={current === g.query}>
-                {g.name}
-              </button>
-              <button type="button" className="sv-x" aria-label={`Remove saved view ${g.name}`} onClick={() => removeView(g)}>
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
+      </div>
 
       {naming && (
         <SaveViewDialog
@@ -616,22 +648,27 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </p>
       )}
       <div className={waiting ? 'sleep waiting' : 'sleep'} aria-hidden={waiting || undefined} inert={waiting}>
-      <section aria-label="Key numbers" className={money ? 'kpis money' : 'kpis'}>
-        <Kpi loading={firstLoad} vs={vs} label="Visitors" value={k?.visitors} fmt={fmtInt} d={delta(k?.visitors ?? 0, pk?.visitors)} pressed={metric === 'visitors'} onClick={() => setMetric('visitors')}  sub={soFarDay} />
+      {/* One section for the period at a glance: the key numbers across the
+          top, the chart under them — they are one story, not two cards. */}
+      <section className="card overview" aria-label="Overview">
+      <div role="group" aria-label="Key numbers" className={money ? 'kpis money' : 'kpis'}>
+        <Kpi loading={firstLoad} vs={vs} label="Visitors" icon={Users} spark={series.length > 1 ? series.map((p) => p.visitors) : undefined} value={k?.visitors} fmt={fmtInt} d={delta(k?.visitors ?? 0, pk?.visitors)} pressed={metric === 'visitors'} onClick={() => setMetric('visitors')}  sub={soFarDay} />
         {money ? (
           <>
-            <Kpi loading={firstLoad} vs={vs} label="Revenue" money value={revenueNow} fmt={fmtM} d={pm ? delta(money.revenue, pm.revenue) : null}  sub={soFarDay} />
-            <Kpi loading={firstLoad} vs={vs} label="Conversion" value={conv} fmt={(x) => (x * 100).toFixed(x < 0.1 ? 2 : 1) + '%'} d={pm && conv !== undefined ? delta(conv, pm.conversion) : null}  sub={soFarDay} />
-            <Kpi loading={firstLoad} vs={vs} label="Revenue / visitor" value={rpv} fmt={(x) => fmtMoney(x, money.currency, money.exponent, { cents: true })} d={pm && rpv !== undefined ? delta(rpv, pm.revenue_per_visitor) : null}  sub={soFarDay} />
+            <Kpi loading={firstLoad} vs={vs} label="Revenue" icon={Banknote} spark={sparkOf((d) => d.money?.revenue ?? 0)} money value={revenueNow} fmt={fmtM} d={pm ? delta(money.revenue, pm.revenue) : null}  sub={soFarDay} />
+            <Kpi loading={firstLoad} vs={vs} label="Conversion" icon={Target} spark={sparkOf((d) => (d.kpis.visitors ? (d.money?.payments ?? 0) / d.kpis.visitors : 0))} value={conv} fmt={(x) => (x * 100).toFixed(x < 0.1 ? 2 : 1) + '%'} d={pm && conv !== undefined ? delta(conv, pm.conversion) : null}  sub={soFarDay} />
+            <Kpi loading={firstLoad} vs={vs} label="Per visitor" icon={Coins} spark={sparkOf((d) => (d.kpis.visitors ? (d.money?.revenue ?? 0) / d.kpis.visitors : 0))} value={rpv} fmt={(x) => fmtMoney(x, money.currency, money.exponent, { cents: true })} d={pm && rpv !== undefined ? delta(rpv, pm.revenue_per_visitor) : null}  sub={soFarDay} />
           </>
         ) : (
-          <Kpi loading={firstLoad} vs={vs} label="Pageviews" value={k?.pageviews} fmt={fmtInt} d={delta(k?.pageviews ?? 0, pk?.pageviews)} pressed={metric === 'pageviews'} onClick={() => setMetric('pageviews')}  sub={soFarDay} />
+          <Kpi loading={firstLoad} vs={vs} label="Pageviews" icon={Eye} spark={series.length > 1 ? series.map((p) => p.pageviews) : undefined} value={k?.pageviews} fmt={fmtInt} d={delta(k?.pageviews ?? 0, pk?.pageviews)} pressed={metric === 'pageviews'} onClick={() => setMetric('pageviews')}  sub={soFarDay} />
         )}
-        <Kpi loading={firstLoad} vs={vs} label="Bounce rate" value={k?.bounce_rate} fmt={fmtPct} d={delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true)}  sub={soFarDay} />
-        <Kpi loading={firstLoad} vs={vs} label="Session time" value={k?.avg_session_s} fmt={fmtDuration} d={delta(k?.avg_session_s ?? 0, pk?.avg_session_s)}  sub={soFarDay} />
+        <Kpi loading={firstLoad} vs={vs} label="Bounce rate" icon={CornerUpLeft} spark={sparkOf((d) => d.kpis.bounce_rate)} value={k?.bounce_rate} fmt={fmtPct} d={delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true)}  sub={soFarDay} />
+        <Kpi loading={firstLoad} vs={vs} label="Session time" icon={Timer} spark={sparkOf((d) => d.kpis.avg_session_s)} value={k?.avg_session_s} fmt={fmtDuration} d={delta(k?.avg_session_s ?? 0, pk?.avg_session_s)}  sub={soFarDay} />
         <div className="kpi">
           <div className="label">
-            <span className="pulse" aria-hidden="true" />
+            <span className={'kpi-icon live' + (onlineNow ? ' on' : '')} aria-hidden="true">
+              <Radio size={17} strokeWidth={1.75} />
+            </span>
             Online now
           </div>
           <div className="value num">{onlineNow ?? '–'}</div>
@@ -639,14 +676,12 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               comes from instead of waiting to connect forever. */}
           <div className="delta">{stream.connected || isShared() ? 'visitors in the last 5 min' : 'connecting…'}</div>
         </div>
-      </section>
+      </div>
 
       {full && (
         <div className="more-numbers rise">
           <button type="button" className="more-toggle" aria-expanded={moreOpen} onClick={() => setMoreOpen((o) => !o)}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: moreOpen ? 'rotate(90deg)' : undefined, transition: 'transform 0.2s' }}>
-              <path d="m9 6 6 6-6 6" />
-            </svg>
+            <ChevronRight size={15} strokeWidth={1.75} aria-hidden="true" />
             More numbers
             {!moreOpen && k && (
               <span className="faint num">
@@ -673,7 +708,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </div>
       )}
 
-      <section className="card" aria-label={`${metric === 'visitors' ? 'Visitors' : 'Pageviews'} over time`} style={{ gap: 12 }}>
+      <div className="overview-chart" role="group" aria-label={`${metric === 'visitors' ? 'Visitors' : 'Pageviews'} over time`}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
           <h2>{metric === 'visitors' ? 'Visitors' : 'Pageviews'}</h2>
           <StoryLine text={story} />
@@ -720,8 +755,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               if (!d) return null
               const nv = Math.round(d.kpis.visitors * d.kpis.new_visitor_share)
               const rows: { label: string; value: string; faint?: boolean }[] = [{ label: 'Pageviews', value: fmtInt(d.kpis.pageviews) }]
+              // Revenue itself is already in the card, next to the bars.
               if (money && d.money) {
-                rows.push({ label: 'Revenue', value: fmtM(d.money.revenue) })
                 rows.push({ label: 'Revenue / visitor', value: fmtMoney(d.kpis.visitors ? d.money.revenue / d.kpis.visitors : 0, money.currency, money.exponent, { cents: true }) })
               }
               rows.push({ label: 'Bounce rate', value: fmtPct(d.kpis.bounce_rate), faint: true })
@@ -749,17 +784,13 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               style={{ height: 38, padding: '0 14px 0 10px' }}
             >
               {playing ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <rect x="6" y="5" width="4" height="14" rx="1" />
-                  <rect x="14" y="5" width="4" height="14" rx="1" />
-                </svg>
+                <Pause size={15} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
               ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M7 4.5v15l12-7.5z" />
-                </svg>
+                <Play size={15} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
               )}
               Replay
             </button>
+            <SpeedMenu speed={speed} onPick={pickSpeed} />
             <label htmlFor="scrub" className="sr">
               Scrub through the period
             </label>
@@ -800,9 +831,11 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             )}
           </div>
         )}
+      </div>
       </section>
 
       {noteFor && (
+        <Suspense fallback={null}>
         <NoteDialog
           site={site}
           day={noteFor}
@@ -814,6 +847,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           onClose={() => setNoteFor(null)}
           onSaved={loadNotes}
         />
+        </Suspense>
       )}
 
       {full && hasData && (
@@ -906,7 +940,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               loading={firstLoad}
               subLabel={full && dim !== 'page' && !money && !scrubbing ? 'Bounce' : undefined}
               onPick={(v) => addFilter(dim, v)}
-              barColor={trail ? `color-mix(in srgb, ${channelColor(trail)} 22%, transparent)` : undefined}
+              barColor={trail ? channelColor(trail) : undefined}
               emptyText={!perDay(dim) ? 'Per-day data covers entry pages only' : undefined}
               // A sale belongs to a visit, and a visit has one entry page but
               // many pages and sections. Showing a money column of dashes there
@@ -938,7 +972,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
                 loading={firstLoad}
                 subLabel={full && !money && !scrubbing ? 'Bounce' : undefined}
                 onPick={(v) => addFilter(dim, v)}
-                barColor={trail ? `color-mix(in srgb, ${channelColor(trail)} 22%, transparent)` : undefined}
+                barColor={trail ? channelColor(trail) : undefined}
                 items={dims(dim)
                   .slice(0, rows)
                   .map((r) => ({
@@ -968,7 +1002,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               loading={firstLoad}
               subLabel={full && !money && !scrubbing ? 'Bounce' : undefined}
               onPick={(v) => addFilter(dim, v)}
-              barColor={trail ? `color-mix(in srgb, ${channelColor(trail)} 22%, transparent)` : undefined}
+              barColor={trail ? channelColor(trail) : undefined}
               emptyText={!perDay(dim) ? 'Per-day data covers device type only' : undefined}
               money={full && money && !scrubbing ? fmtM : undefined}
               items={(perDay(dim) ? dims(dim) : []).slice(0, rows).map((r) => ({ key: r.value, label: r.value || 'Unknown', value: r.visitors, sub: r.bounce_rate, rev: r.revenue }))}
@@ -990,7 +1024,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               dimLabel="Goal"
               subLabel="Conv."
               loading={firstLoad}
-              barColor="var(--accent-soft)"
+              barColor="var(--accent)"
               emptyText="No goals yet. Track one with trckable('signup')."
               onPick={(v) => addFilter('goal', v)}
               items={((scrubbing ? null : src?.goals) ?? []).slice(0, rows).map(
@@ -1029,7 +1063,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
                   loading={firstLoad}
                   byRevenue
                   money={fmtM}
-                  barColor="color-mix(in srgb, var(--money) 20%, transparent)"
+                  barColor="var(--money)"
                   emptyText={scrubbing ? 'Whole-period view only' : 'No attributed revenue yet. Pass trckable_vid to your checkout (Settings → Payments).'}
                   onPick={(v) => addFilter(dim, v)}
                   items={(scrubbing ? [] : (src?.revenue_dims?.[dim] ?? [])).slice(0, rows).map((r) => ({
@@ -1087,7 +1121,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             <span>Full mode adds more numbers, bounce on every row, exit pages, goals, campaigns and the live feed. Nothing reloads.</span>
           </div>
           <button type="button" className="btn primary" onClick={() => setView({ mode: 'full' })}>
-            Show Full <span className="kbd" style={{ color: 'inherit', borderColor: 'currentColor' }}>F</span>
+            Show Full <span className="kbd" style={{ color: 'inherit', borderColor: 'currentColor' }}>{caps(keyFor('mode')).join('')}</span>
           </button>
         </section>
       )}
@@ -1241,18 +1275,12 @@ function MoreMenu({
   return (
     <div ref={root} style={{ position: 'relative' }}>
       <button type="button" className="btn icon" aria-haspopup="menu" aria-expanded={open} aria-label="More" onClick={() => setOpen((o) => !o)}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <circle cx="5" cy="12" r="1.7" />
-          <circle cx="12" cy="12" r="1.7" />
-          <circle cx="19" cy="12" r="1.7" />
-        </svg>
+        <Ellipsis size={20} strokeWidth={1.75} aria-hidden="true" />
       </button>
       {open && (
         <div className="pop menu" role="menu" style={{ top: 48, right: 0 }}>
           <button type="button" role="menuitem" onClick={go(onRefresh)}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5" />
-            </svg>
+            <RefreshCw size={18} strokeWidth={1.75} aria-hidden="true" />
             Refresh
           </button>
           {askOn && narrow && (
@@ -1263,25 +1291,18 @@ function MoreMenu({
           )}
           {narrow && (
           <button type="button" role="menuitem" onClick={go(() => onMode(full ? 'core' : 'full'))}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              {full ? <path d="M9 9H4m5 0V4m11 5h-5m5 0V4M9 15H4m5 0v5m11-5h-5m5 0v5" /> : <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />}
-            </svg>
+            {full ? <Minimize2 size={18} strokeWidth={1.75} aria-hidden="true" /> : <Maximize2 size={18} strokeWidth={1.75} aria-hidden="true" />}
             {full ? 'Core view' : 'Full view'}
           </button>
           )}
           {!isShared() && (
             <>
           <button type="button" role="menuitem" onClick={go(onExport)}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
-            </svg>
+            <Download size={18} strokeWidth={1.75} aria-hidden="true" />
             Export as CSV
           </button>
           <button type="button" role="menuitem" onClick={go(openShortcuts)}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="2.5" y="6" width="19" height="12" rx="2.5" />
-              <path d="M7 10h.01M11 10h.01M15 10h.01M8 14h8" />
-            </svg>
+            <Keyboard size={18} strokeWidth={1.75} aria-hidden="true" />
             Shortcuts
           </button>
           <div className="menu-theme" role="group" aria-label="Theme">
@@ -1295,10 +1316,7 @@ function MoreMenu({
             </span>
           </div>
           <button type="button" role="menuitem" onClick={go(() => openAccount('sites'))}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M20 21a8 8 0 0 0-16 0" />
-            </svg>
+            <CircleUser size={18} strokeWidth={1.75} aria-hidden="true" />
             Your account
           </button>
             </>
@@ -1311,10 +1329,7 @@ function MoreMenu({
 
 function KeyIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="7.5" cy="15.5" r="4.5" />
-      <path d="m10.7 12.3 8.3-8.3M17 6l2.5 2.5M14.5 8.5 17 11" />
-    </svg>
+    <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />
   )
 }
 
@@ -1342,6 +1357,9 @@ function fmtRange2(from: string, to: string) {
 
 function Kpi(p: {
   label: string
+  icon: LucideIcon
+  /** The number day by day, drawn small at the foot of the tile. */
+  spark?: number[]
   value?: number
   fmt: (n: number) => string
   d: Delta | null
@@ -1357,8 +1375,12 @@ function Kpi(p: {
   const body = (
     <>
       <div className="label">
-        {p.money && <span className="money-dot" aria-hidden="true" />}
-        {p.label}
+        <span className={'kpi-icon' + (p.money ? ' money' : '')} aria-hidden="true">
+          <p.icon size={17} strokeWidth={1.75} />
+        </span>
+        <span className="kpi-name" title={p.label}>
+          {p.label}
+        </span>
       </div>
       {/* The skeleton is decorative: the loading bar at the top of the page
           is the one thing that announces loading, and it says it once. */}
@@ -1370,14 +1392,33 @@ function Kpi(p: {
       <div className={`delta num ${p.d ? 'tone-' + p.d.tone : ''}`} aria-label={p.d ? `${p.d.label} ${p.vs ?? 'vs compared'}` : undefined}>
         {p.d ? `${p.d.text} ${p.vs ?? 'vs compared'}` : (p.sub ?? '')}
       </div>
+      {p.spark && !p.loading && <KpiSpark values={p.spark} />}
     </>
   )
   return p.onClick ? (
-    <button type="button" className="kpi" aria-pressed={p.pressed} onClick={p.onClick} title={`Chart ${p.label.toLowerCase()}`}>
+    <button type="button" className={'kpi' + (p.money ? ' money' : '')} aria-pressed={p.pressed} onClick={p.onClick} title={`Chart ${p.label.toLowerCase()}`}>
       {body}
     </button>
   ) : (
-    <div className="kpi">{body}</div>
+    <div className={'kpi' + (p.money ? ' money' : '')}>{body}</div>
+  )
+}
+
+/** A tile's small line: its number day by day, no axis, no labels — the
+ *  shape of the period at a glance. */
+function KpiSpark({ values }: { values: number[] }) {
+  const w = 120
+  const h = 28
+  const max = Math.max(...values)
+  const min = Math.min(...values)
+  const span = max - min || 1
+  const pts = values.map((v, i) => [(i / (values.length - 1)) * w, h - 3 - ((v - min) / span) * (h - 6)] as const)
+  const line = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join('')
+  return (
+    <svg className="kpi-spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
+      <path d={`${line}L${w} ${h}L0 ${h}Z`} fill="currentColor" opacity="0.1" />
+      <path d={line} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+    </svg>
   )
 }
 
@@ -1415,9 +1456,7 @@ function TabbedCard(p: { title: string; note?: string; extra?: React.ReactNode; 
     <div className={folded ? 'card folded' : 'card'}>
       <div className="card-head" style={{ flexWrap: 'wrap' }}>
         <button type="button" className="fold" aria-expanded={!folded} aria-label={folded ? `Show ${p.title}` : `Hide ${p.title}`} onClick={() => fold(!folded)}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+          <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
         </button>
         <h2 style={{ whiteSpace: 'nowrap' }}>{p.title}</h2>
         {p.tabs.length > 1 ? (
@@ -1465,39 +1504,27 @@ function storyLine(p: {
   const top = p.channels[0]
   const ai = p.channels.find((r) => r.value === 'AI')
   const parts: string[] = []
-  if (p.scrubDay) {
-    parts.push(`${fmtDay(p.scrubDay, { weekday: true })}: ${fmtInt(c.visitors)} visitors, ${fmtInt(c.pageviews)} pageviews.`)
-  } else if (p.trail) {
+  // The cards above already give the counts, the revenue and how they
+  // compare; the line under the chart says only what they cannot: where the
+  // visitors and the money came from.
+  if (p.trail) {
     parts.push(
       p.money
-        ? `${channelLabel(p.trail)} brought ${fmtInt(c.visitors)} visitors and ${p.money.fmt(p.money.revenue)} in revenue (${p.money.fmt(c.visitors ? p.money.revenue / c.visitors : 0)} per visitor).`
-        : `${channelLabel(p.trail)} brought ${fmtInt(c.visitors)} visitors, bounce ${fmtPct(c.bounce_rate)}, ${fmtDuration(c.avg_session_s)} per visit.`,
+        ? `${channelLabel(p.trail)}: ${p.money.fmt(c.visitors ? p.money.revenue / c.visitors : 0)} per visitor.`
+        : `${channelLabel(p.trail)}: bounce ${fmtPct(c.bounce_rate)}, ${fmtDuration(c.avg_session_s)} per visit.`,
     )
     return parts.join(' ')
-  } else if (p.prev) {
-    const d = delta(c.visitors, p.prev.visitors)
-    if (d) parts.push(d.tone === 'flat' ? 'Visitors held steady.' : `Visitors ${d.text.startsWith('↑') ? 'up' : 'down'} ${d.text.slice(2)} ${p.compare === 'year' ? 'vs last year' : p.compare === 'previous' ? 'vs the previous period' : 'vs the compared period'}.`)
-  } else {
-    parts.push(`${fmtInt(c.visitors)} visitors viewed ${fmtInt(c.pageviews)} pages.`)
   }
-  if (p.money && !p.scrubDay) {
-    const d = delta(p.money.revenue, p.money.prev)
-    parts.push(`Revenue ${p.money.fmt(p.money.revenue)}${d && d.tone !== 'flat' ? ` (${d.text})` : ''}.`)
-    const t = p.money.top
-    if (t?.revenue) return [...parts, `${channelLabel(t.value)} earned the most.`].join(' ')
-  } else if (p.money && p.scrubDay) {
-    parts[0] = parts[0].replace(/\.$/, `, ${p.money.fmt(p.money.revenue)} revenue.`)
-  }
-  if (top) parts.push(`Most came from ${channelLabel(top.value)} (${fmtPct(top.visitors / total)}).`)
+  const earner = p.money?.top
+  if (earner?.revenue) parts.push(`${channelLabel(earner.value)} earned the most.`)
+  if (top) parts.push(`Most visitors came from ${channelLabel(top.value)} (${fmtPct(top.visitors / total)}).`)
   if (ai && top?.value !== 'AI' && ai.visitors / total >= 0.01) parts.push(`AI assistants sent ${fmtPct(ai.visitors / total)}.`)
   return parts.join(' ')
 }
 
 function ChatIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 12a8 8 0 0 1-11.7 7.1L4 20l.9-5.3A8 8 0 1 1 21 12Z" />
-    </svg>
+    <MessageCircle size={17} strokeWidth={1.75} aria-hidden="true" />
   )
 }
 

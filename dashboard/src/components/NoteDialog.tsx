@@ -5,11 +5,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Modal } from './Modal'
 import { DialogActions } from './DialogActions'
-import { Chevron, Month } from './DatePicker'
+import { Chevron } from './DatePicker'
+import { Month } from './DateRangePopover'
 import { toast } from './Toast'
 import { api, type Annotation, type Site } from '../lib/api'
 import { addDays, fmtDay, type ISODate } from '../lib/dates'
 import { fmtInt } from '../lib/format'
+import './NoteDialog.css'
 
 export type DayBar = { day: ISODate; visitors: number }
 

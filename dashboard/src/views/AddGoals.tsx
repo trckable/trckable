@@ -1,6 +1,7 @@
 // "How do I track a signup?" — four answers. The first needs no code at all:
 // a page seen is a goal reached, counted from the pageviews trckable already
 // has, so it reads history too. The other three are one snippet each.
+import { Code, FileCheck, MousePointerClick, Server } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { DialogActions } from '../components/DialogActions'
 import { Modal } from '../components/Modal'
@@ -11,11 +12,11 @@ import { toast } from '../components/Toast'
 
 type Route = 'page' | 'html' | 'js' | 'api'
 
-const ROUTES: { id: Route; name: string; what: string; icon: string }[] = [
-  { id: 'page', name: 'When a page is visited', what: 'No code at all', icon: 'M6 3h9l4 4v14H6zM14 3v5h5M9 13l2 2 4-4' },
-  { id: 'html', name: 'On a button or link', what: 'One attribute, no code', icon: 'M4 6h16M4 12h10M4 18h7' },
-  { id: 'js', name: 'From your code', what: 'A call when something succeeds', icon: 'm9 8-5 4 5 4m6-8 5 4-5 4' },
-  { id: 'api', name: 'From your server', what: 'For anything the browser never sees', icon: 'M4 5h16v5H4zM4 14h16v5H4zM7.5 7.5h.01M7.5 16.5h.01' },
+const ROUTES: { id: Route; name: string; what: string; icon: typeof Code }[] = [
+  { id: 'page', name: 'When a page is visited', what: 'No code at all', icon: FileCheck },
+  { id: 'html', name: 'On a button or link', what: 'One attribute, no code', icon: MousePointerClick },
+  { id: 'js', name: 'From your code', what: 'A call when something succeeds', icon: Code },
+  { id: 'api', name: 'From your server', what: 'For anything the browser never sees', icon: Server },
 ]
 
 export function AddGoals({ site, pages, onClose, onChanged }: { site: Site; pages: string[]; onClose: () => void; onChanged: () => void }) {
@@ -50,9 +51,7 @@ track('signup', { plan: 'pro' })`,
       <div className="goal-routes">
         {ROUTES.map((r) => (
           <button key={r.id} type="button" className={route === r.id ? 'mtile on' : 'mtile'} aria-pressed={route === r.id} onClick={() => setRoute(r.id)} style={{ minWidth: 0, flex: 1 }}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d={r.icon} />
-            </svg>
+            <r.icon size={19} strokeWidth={1.75} aria-hidden="true" />
             <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
               {r.name}
               <span className="faint" style={{ fontSize: 11 }}>

@@ -1,0 +1,147 @@
+/* NoteDialog.tsx: its own styles, loaded with it (not with the first load). */
+
+.note-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+.note-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--sunken);
+}
+.note-list li span {
+  flex: 1;
+}
+.note-list button {
+  border: 0;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: 15px;
+}
+.note-list button:hover {
+  color: var(--down);
+}
+/* ---- Adding a note ---------------------------------------------------------
+   The period's days as a strip of bars: you point at the bump you are about to
+   explain. The chosen day is the accent; a day that already has a note wears
+   a small dot, the same dot the chart shows. */
+.note-modal {
+  width: min(520px, calc(100vw - 32px));
+}
+.note-strip {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 84px;
+  padding: 10px 10px 6px;
+  border-radius: 11px;
+  background: var(--sunken);
+  border: 1px solid var(--grid);
+}
+.note-strip button {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.note-strip button span {
+  width: 100%;
+  border-radius: 3px 3px 1px 1px;
+  background: color-mix(in srgb, var(--text-3) 45%, transparent);
+  transition: background 0.15s;
+}
+.note-strip button:hover span {
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.note-strip button.on span {
+  background: var(--accent);
+}
+.note-strip button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.note-dot {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: var(--money);
+}
+.note-day {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.note-day-label {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 12px 0;
+}
+.note-day-label:hover {
+  border-color: var(--border-2);
+}
+.note-day-label[aria-expanded='true'] {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.note-day-label .faint {
+  font-size: 12.5px;
+}
+.note-cal {
+  position: relative;
+  padding: 10px 12px 8px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+}
+.note-cal-nav {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: flex;
+  gap: 2px;
+}
+.note-input {
+  position: relative;
+}
+.note-input .input {
+  width: 100%;
+  height: 46px;
+  padding-right: 52px;
+}
+.note-input > span {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+}

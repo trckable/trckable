@@ -1,5 +1,6 @@
 // Small confirmations, bottom right. Every action that changes something says
 // so — a silent success looks exactly like a bug.
+import { Check, TriangleAlert } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 type Kind = 'ok' | 'error' | 'busy'
@@ -47,9 +48,7 @@ export function Toasts() {
           {t.kind === 'busy' ? (
             <span className="stage-mark" aria-hidden="true" style={{ animation: 'spin 0.8s linear infinite', borderColor: 'var(--accent)', borderRightColor: 'transparent' }} />
           ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              {t.kind === 'ok' ? <path d="m20 6-11 11-5-5" /> : <path d="M12 8v5m0 3.5h.01M12 3l9 16H3l9-16Z" />}
-            </svg>
+            t.kind === 'ok' ? <Check size={17} strokeWidth={2} aria-hidden="true" /> : <TriangleAlert size={17} strokeWidth={1.75} aria-hidden="true" />
           )}
           {t.text}
         </div>
