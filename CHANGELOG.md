@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.2.0 (25 Sep 2026)
+
 ### New
 - Share what the dashboard shows as a card for a post: pick the big number and
   up to three more (pageviews, revenue, bounce rate, visit time, top source,
