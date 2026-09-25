@@ -497,6 +497,11 @@ func backupViaServer(ctx context.Context, dir string) (string, error) {
 			return "", errors.New("the server did not write a backup within two hours; see its log")
 		case <-time.After(time.Second):
 		}
+		// A failure the server wrote down after this request ends the wait.
+		if info, err := os.Stat(filepath.Join(dir, server.FailedFile)); err == nil && info.ModTime().After(asked) {
+			why, _ := os.ReadFile(filepath.Join(dir, server.FailedFile))
+			return "", fmt.Errorf("the server could not write the backup: %s", strings.TrimSpace(string(why)))
+		}
 		// The server renames a backup into place only when it is complete,
 		// so the first *.tkb newer than the request is the answer.
 		entries, _ := os.ReadDir(dir)

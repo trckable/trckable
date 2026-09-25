@@ -27,6 +27,9 @@ type Health struct {
 type Backup struct {
 	At    int64 `json:"at"` // unix seconds, 0 when there is none yet
 	Bytes int64 `json:"bytes"`
+	// Error is why the last backup failed (ErrorAt when); empty once one works.
+	Error   string `json:"error,omitempty"`
+	ErrorAt int64  `json:"error_at,omitempty"`
 	// Offsite is the bucket copies go to, without its keys; empty when
 	// backups stay on this machine only.
 	Offsite     string `json:"offsite,omitempty"`

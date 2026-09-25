@@ -76,6 +76,9 @@ type Server struct {
 	// offsite how the last copy went.
 	remote  *backup.Remote
 	offsite atomic.Pointer[offsiteStatus]
+	// backupErr is why the last local backup failed, and when; nil after a
+	// backup that worked. Shown in Settings → Health, not only in the log.
+	backupErr atomic.Pointer[backupFailure]
 }
 
 // New performs boot steps 1–2 and prepares the listener.

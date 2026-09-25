@@ -85,13 +85,14 @@ export function HealthSettings() {
   if (!h) return <div className="skeleton" style={{ height: 320 }} />
 
   const lagTone: Tone = h.events.lag > 5000 ? 'warn' : 'ok'
-  const backupTone: Tone = !h.backup.at ? 'warn' : Date.now() / 1000 - h.backup.at > 2 * 86400 ? 'bad' : 'ok'
+  const backupTone: Tone = h.backup.error ? 'bad' : !h.backup.at ? 'warn' : Date.now() / 1000 - h.backup.at > 2 * 86400 ? 'bad' : 'ok'
   const offTone: Tone = h.backup.offsite_error ? 'bad' : h.backup.offsite ? 'ok' : 'warn'
   const diskTone: Tone = !(h.store.days_left > 0) ? 'info' : h.store.days_left < 14 ? 'bad' : h.store.days_left < 60 ? 'warn' : 'ok'
   // What needs a look, in words, so the top line can say it.
   const issues = [
     h.analytics === 'error' && { tone: 'bad', text: 'the analytics store reported a problem' },
-    backupTone === 'bad' && { tone: 'bad', text: 'no backup for over two days' },
+    h.backup.error && { tone: 'bad', text: 'the last backup failed' },
+    !h.backup.error && backupTone === 'bad' && { tone: 'bad', text: 'no backup for over two days' },
     !h.backup.at && { tone: 'warn', text: 'no backup yet' },
     diskTone === 'bad' && { tone: 'bad', text: 'the disk is nearly full' },
     diskTone === 'warn' && { tone: 'warn', text: 'the disk fills within two months' },
@@ -176,7 +177,13 @@ export function HealthSettings() {
         <Item
           icon={ArchiveRestore}
           label="Last backup"
-          hint={h.backup.at ? `${bytes(h.backup.bytes)} · encrypted with this instance's key · ${h.backup.offsite ? 'two kept here, the rest off-site' : 'seven kept'}` : 'One is written a few minutes after boot, then daily'}
+          hint={
+            h.backup.error
+              ? `The last one failed ${since(h.backup.error_at)}: ${h.backup.error}`
+              : h.backup.at
+                ? `${bytes(h.backup.bytes)} · encrypted with this instance's key · ${h.backup.offsite && !h.backup.offsite_error && h.backup.offsite_at ? 'two kept here, the rest off-site' : 'seven kept here'}`
+                : 'The first is written ten minutes after the server starts, then one a day'
+          }
         >
           <Pill tone={backupTone}>{since(h.backup.at)}</Pill>
         </Item>
@@ -191,7 +198,7 @@ export function HealthSettings() {
                 : 'Only on this machine. Set TRCKABLE_BACKUP_S3 to copy each backup to a bucket elsewhere.'
           }
         >
-          <Pill tone={offTone}>{h.backup.offsite ? (h.backup.offsite_at ? since(h.backup.offsite_at) : 'Not yet') : 'Off'}</Pill>
+          <Pill tone={offTone}>{h.backup.offsite ? (h.backup.offsite_at ? since(h.backup.offsite_at) : 'None since start') : 'Off'}</Pill>
         </Item>
       </section>
 

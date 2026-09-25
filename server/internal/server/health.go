@@ -57,6 +57,9 @@ func (s *Server) health(ctx context.Context) api.Health {
 	if at, size := s.LastBackup(); !at.IsZero() {
 		h.Backup = api.Backup{At: at.Unix(), Bytes: size}
 	}
+	if f := s.backupErr.Load(); f != nil {
+		h.Backup.Error, h.Backup.ErrorAt = f.err, f.at
+	}
 	if s.remote != nil {
 		h.Backup.Offsite, h.Backup.OffsiteDays = s.remote.Where(), s.cfg.BackupDays
 		if st := s.offsite.Load(); st != nil {

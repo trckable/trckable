@@ -1,8 +1,11 @@
 package backup
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
 	"database/sql"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -103,5 +106,53 @@ func TestRestoreRefusesNonEmpty(t *testing.T) {
 	os.WriteFile(filepath.Join(busy, "something"), []byte("x"), 0o600)
 	if err := Restore(res.Path, busy, key); err == nil {
 		t.Fatal("restored into a directory that was not empty")
+	}
+}
+
+// growing appends to a file the first time anything is written through it:
+// a write-ahead log receiving visits while the backup copies it.
+type growing struct {
+	w    io.Writer
+	path string
+	done bool
+}
+
+func (g *growing) Write(p []byte) (int, error) {
+	if !g.done {
+		g.done = true
+		f, err := os.OpenFile(g.path, os.O_APPEND|os.O_WRONLY, 0o600)
+		if err != nil {
+			return 0, err
+		}
+		f.Write(bytes.Repeat([]byte("more visits "), 1000))
+		f.Close()
+	}
+	return g.w.Write(p)
+}
+
+// A log that grows during the copy is copied as it was when listed, and the
+// backup does not fail.
+func TestBackupWhileTheLogGrows(t *testing.T) {
+	dir := t.TempDir()
+	seg := filepath.Join(dir, "000001.wal")
+	if err := os.WriteFile(seg, []byte("the first visits"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	tw := tar.NewWriter(&growing{w: &out, path: seg})
+	if err := addTree(tw, dir, "wal"); err != nil {
+		t.Fatalf("a growing log broke the backup: %v", err)
+	}
+	if err := tw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	tr := tar.NewReader(&out)
+	h, err := tr.Next()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, _ := io.ReadAll(tr)
+	if h.Size != int64(len("the first visits")) || string(got) != "the first visits" {
+		t.Fatalf("copied %d bytes: %q", h.Size, got)
 	}
 }

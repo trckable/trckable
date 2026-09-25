@@ -90,7 +90,7 @@ Nothing is paid, limited or kept for a hosted edition. The complete list, in wor
 </p>
 <p align="center">
   <img src=".github/images/features/exactly-once.svg" width="49%" alt="Exactly once: CI kills the server mid-load on every change, 40,000 events, 0 lost and 0 counted twice">
-  <img src=".github/images/features/backups.svg" width="49%" alt="Encrypted nightly backups, kept seven deep, with a tested restore">
+  <img src=".github/images/features/backups.svg" width="49%" alt="Encrypted daily backups, kept seven deep, with a tested restore">
 </p>
 <p align="center">
   <img src=".github/images/features/people.svg" width="49%" alt="Two-step sign-in (RFC 6238, the QR drawn in your browser) and a read-only viewer role">

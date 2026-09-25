@@ -541,7 +541,7 @@ export interface Health {
   memory_bytes: number
   /** rss: the whole process, analytics store included · go: the Go runtime only */
   memory_source?: 'rss' | 'go'
-  backup: { at: number; bytes: number; offsite?: string; offsite_at?: number; offsite_days?: number; offsite_error?: string }
+  backup: { at: number; bytes: number; error?: string; error_at?: number; offsite?: string; offsite_at?: number; offsite_days?: number; offsite_error?: string }
   payments?: { connections: number; pending: number; last_event: number; last_sync: number }
 }
 

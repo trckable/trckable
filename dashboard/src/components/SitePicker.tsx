@@ -107,7 +107,9 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
                   {siteState(s) === 'new' ? (
                     <span className="faint">not installed yet</span>
                   ) : siteState(s) === 'stopped' ? (
-                    <span className="faint stopped-note">stopped · {stoppedWhy(s)}</span>
+                    <span className="faint stopped-note" title={stoppedWhy(s)}>
+                      stopped
+                    </span>
                   ) : siteState(s) === 'quiet' ? (
                     <span className="faint">no visits today</span>
                   ) : (

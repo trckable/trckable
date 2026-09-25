@@ -62,7 +62,9 @@ function SiteRow({ site, onSites, onDelete }: { site: Site; onSites: () => void;
           {state === 'live' ? (
             <span className="tag live">live</span>
           ) : state === 'stopped' ? (
-            <span className="tag danger">stopped · {stoppedWhy(site)}</span>
+            <span className="tag danger" title={stoppedWhy(site)}>
+              stopped
+            </span>
           ) : state === 'quiet' ? (
             <span className="tag quiet">no visits today</span>
           ) : (
