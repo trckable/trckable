@@ -47,6 +47,8 @@ section into the release.
 - The dashboard's first load stays under 130 KB gzip
 
 ### Fixed
+- Reports no longer stop loading after the first large backup: in 0.1.x
+  every database connection opened after it failed until a restart
 - Backups work on a busy site, and say so when they do not; a failed off-site
   copy keeps local copies
 - A full disk no longer turns visits away until a restart
