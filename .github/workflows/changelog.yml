@@ -1,0 +1,27 @@
+# A pull request that changes what ships carries its own line in CHANGELOG.md
+# under "## Unreleased" (scripts/changelog-check.mjs). Its own workflow, so
+# adding or removing the no-changelog label reruns this check and nothing else.
+name: changelog
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  changelog:
+    name: changelog (a line for what changed)
+    # A release pull request only moves the version; Dependabot changes CI.
+    if: ${{ !startsWith(github.head_ref, 'release-') && github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: check
+        env:
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: node scripts/changelog-check.mjs "origin/${{ github.base_ref }}"

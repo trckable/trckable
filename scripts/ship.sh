@@ -6,7 +6,7 @@
 # network. Nothing is deployed from here: self-hosters build it themselves.
 # Nothing is pushed unless everything passes.
 #
-#   scripts/ship.sh           the full gate (about 3 minutes), then push this branch
+#   scripts/ship.sh           the full gate (about 3 minutes), then push this branch and open its pull request
 #   scripts/ship.sh --check   the gate only, no push (any branch: use it on a pull request)
 #   scripts/ship.sh --quick   Go, tracker and dashboard tests only (the pre-push hook)
 set -euo pipefail
@@ -27,6 +27,14 @@ done
 grep -q "Version = \"$V\"" server/internal/server/server.go || fail "server.Version is not $V (the VERSION file)"
 grep -q "^## $V" CHANGELOG.md || fail "CHANGELOG.md has no section for $V"
 grep -q "badge/version-$V-" README.md || fail "the README's version badge is not $V"
+
+# Every change people will notice brings its own changelog line (stage 2 of
+# ops SHIPPING.md). A release branch only moves the version, so it is exempt.
+if [ "$BRANCH" != main ] && [[ $BRANCH != release-* ]]; then
+  step "a CHANGELOG line for what changed"
+  git fetch -q origin main
+  node scripts/changelog-check.mjs origin/main || fail "add the CHANGELOG line, then ship again"
+fi
 
 step "server: gofmt, vet, tests"
 ( cd server
@@ -85,4 +93,17 @@ step "push $BRANCH"
 # The full gate above already ran. With a lease, so a branch rebased onto a
 # freshly merged main can go up, and never over work pushed by someone else.
 git push --no-verify --force-with-lease -u origin "$BRANCH"
-printf '\n\033[32m✓ pushed %s: open or update its pull request.\033[0m\n' "$BRANCH"
+
+# Its pull request: opened the first time, the same one after that. The
+# release script opens its own, with the release notes in it.
+if [[ $BRANCH != release-* ]]; then
+  if URL=$(gh pr view "$BRANCH" --json url,state -q 'select(.state == "OPEN") | .url' 2>/dev/null) && [ -n "$URL" ]; then
+    printf '\n\033[32m✓ pushed %s: its pull request is updated.\033[0m\n  %s\n' "$BRANCH" "$URL"
+  else
+    URL=$(gh pr create --base main --head "$BRANCH" --fill 2>&1 | tail -1)
+    printf '\n\033[32m✓ pushed %s and opened its pull request.\033[0m\n  %s\n' "$BRANCH" "$URL"
+  fi
+  echo "  Next: merge it once its checks pass (the branch is then deleted), then pnpm work <next topic>"
+else
+  printf '\n\033[32m✓ pushed %s.\033[0m\n' "$BRANCH"
+fi

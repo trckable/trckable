@@ -8,9 +8,12 @@
     "node": ">=22"
   },
   "scripts": {
+    "work": "scripts/work.sh",
     "ship": "scripts/ship.sh",
     "check": "scripts/ship.sh --check",
-    "release": "node scripts/release.mjs"
+    "tidy": "scripts/tidy.sh",
+    "release": "node scripts/release.mjs",
+    "status": "node scripts/status.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
