@@ -34,14 +34,17 @@ export default function AvatarCrop({
     const url = URL.createObjectURL(file)
     const i = new Image()
     i.onload = () => setImg(i)
-    // Say which file and why, not just "no": the usual one is an iPhone photo
-    // (HEIC), which most browsers cannot open.
+    // Say which file and why, not just "no". A PNG the browser knows yet cannot
+    // open is damaged or not what its name says; anything else is a format
+    // this browser does not read — most often an iPhone photo (HEIC).
     i.onerror = () => {
-      const kind = file.type || file.name.split('.').pop()?.toUpperCase() || 'this kind of file'
+      const known = /^image\/(png|jpeg|webp|gif)$/.test(file.type)
       const heic = /heic|heif/i.test(file.type + file.name)
       setErr(
-        `${file.name} (${kind}) cannot be opened in this browser. Use a PNG, JPEG, WebP or GIF` +
-          (heic ? ' — an iPhone photo (HEIC) can be exported as JPEG from Photos first.' : '.'),
+        known
+          ? `${file.name} could not be read. It may be damaged, or not really a ${file.type.slice(6).toUpperCase()} — try saving it again.`
+          : `${file.name} is not a picture this browser can open. Use a PNG, JPEG, WebP or GIF` +
+              (heic ? ' — an iPhone photo (HEIC) can be exported as JPEG from Photos first.' : '.'),
       )
     }
     i.src = url

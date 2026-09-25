@@ -23,6 +23,7 @@
   --money: #ffb547;
   --up: #5ee29b;
   --down: #ff6b6b;
+  --warn: #e8a93a;
   --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
   /* The code view has colours of its own: the chart palette is chosen for
      fills, and as text on a pale background it does not have the contrast.
@@ -68,6 +69,7 @@
     --money: #9c5a00;
     --up: #177a44;
     --down: #c62828;
+    --warn: #9a6200;
     --shadow: 0 12px 32px rgba(20, 24, 30, 0.12);
     --code-com: #5c6470;
     --code-str: #8a4f00;
@@ -104,6 +106,7 @@
   --money: #9c5a00;
   --up: #177a44;
   --down: #c62828;
+  --warn: #9a6200;
   --shadow: 0 12px 32px rgba(20, 24, 30, 0.12);
   --code-com: #5c6470;
   --code-str: #8a4f00;
@@ -1565,10 +1568,10 @@ table.t td {
   left: 0;
   min-width: 268px;
   max-width: min(360px, calc(100vw - 24px));
-  padding: 8px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 .pop.sites .input {
   height: 36px;
@@ -2335,8 +2338,8 @@ table.t td {
   left: auto;
   right: 0;
 }
-.picker-pop .input {
-  height: 34px;
+.picker-pop .menu-search {
+  margin: 0 0 4px;
 }
 .picker-list {
   display: flex;

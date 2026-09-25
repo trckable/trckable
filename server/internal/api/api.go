@@ -122,6 +122,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}/icon", a.authed(a.clearSiteIcon))
 	handle("POST /api/v1/sites/{site}/icon/favicon", a.authed(a.fetchFavicon))
 	handle("PUT /api/v1/sites/{site}/color", a.authed(a.setSiteColor))
+	handle("POST /api/v1/sites/{site}/install/check", a.authed(a.checkInstall))
 	handle("DELETE /api/v1/sites/{site}", a.authed(a.deleteSite))
 	handle("GET /api/v1/sites/{site}/config", a.authed(a.siteConfig))
 	handle("PUT /api/v1/sites/{site}/config", a.authed(a.setSiteConfig))

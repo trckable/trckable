@@ -1,7 +1,7 @@
-import { Activity, Bell, Blocks, ChevronLeft, ChevronRight, CircleCheck, Code, CreditCard, Search, Settings as Cog, ShieldCheck, X } from 'lucide-react'
+import { Activity, Bell, Blocks, Check, ChevronLeft, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, RefreshCw, Search, Settings as Cog, ShieldCheck, TriangleAlert, X } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { isViewer } from '../lib/me'
-import { api, type Site } from '../lib/api'
+import { api, type InstallCheck, type Site } from '../lib/api'
 import { navigate, useLocation } from '../lib/url'
 import { Modal } from '../components/Modal'
 import { SiteMark } from '../components/SiteMark'
@@ -213,38 +213,82 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
  *  last visit arrived, and on which page — with a button to look again; the
  *  code stays one click away, for a new page, a rebuild or a teammate.
  *  Before the first visit it is the install card as it always was. */
+/** Once visits arrive, Install becomes a check you can run: this server reads
+ *  the homepage and looks for the snippet, and the latest recorded visit says
+ *  whether the script is sending. The code stays one click away. */
 function InstallSection({ site }: { site: Site }) {
   const [last, setLast] = useState<{ ts: number; path?: string } | null | undefined>(undefined)
+  const [page, setPage] = useState<InstallCheck | null>(null)
   const [checking, setChecking] = useState(false)
   const [code, setCode] = useState(false)
   const check = () => {
     setChecking(true)
-    api
-      .events(site.id, 1)
-      .then((r) => setLast(r.events[0] ? { ts: Number(r.events[0].ts) || Date.parse(r.events[0].ts), path: r.events[0].path } : null))
-      .catch(() => setLast(null))
-      .finally(() => setChecking(false))
+    setPage(null)
+    Promise.all([
+      api
+        .events(site.id, 1)
+        .then((r) => setLast(r.events[0] ? { ts: Number(r.events[0].ts) || Date.parse(r.events[0].ts), path: r.events[0].path } : null))
+        .catch(() => setLast(null)),
+      api
+        .checkInstall(site.id)
+        .then(setPage)
+        .catch((e: Error) => setPage({ url: `https://${site.domain}/`, error: e.message })),
+    ]).finally(() => setChecking(false))
   }
   useEffect(check, [site.id]) // eslint-disable-line react-hooks/exhaustive-deps
   if (last === undefined) return <div className="skeleton" style={{ height: 88 }} />
   if (last === null) return <Install site={site} visits={[]} inSettings />
+
+  const DAY = 86_400_000
+  const fresh = Date.now() - last.ts < 2 * DAY
+  const where = page?.url.replace(/^https?:\/\//, '').replace(/\/$/, '') || site.domain
+  const snippet: Step = !page
+    ? { tone: 'wait', title: 'Snippet on your homepage', text: `Reading ${site.domain}…` }
+    : page.error
+      ? { tone: 'warn', title: 'Snippet on your homepage', text: `Could not read it — ${page.error}.` }
+      : page.found === 'site'
+        ? { tone: 'ok', title: 'Snippet on your homepage', text: `Found on ${where}.` }
+        : page.found === 'other'
+          ? { tone: 'warn', title: 'A snippet for another site', text: `${where} loads trckable, but not with this site's id — copy the code below again.` }
+          : {
+              tone: fresh ? 'info' : 'warn',
+              title: 'Not in the homepage',
+              text: `No trckable script in ${where}'s HTML. That is fine when a tag manager or the npm package loads it — the visits below say whether it works.`,
+            }
+  const visits: Step = fresh
+    ? { tone: 'ok', title: 'Visits arriving', text: `Last one ${agoText(last.ts)}${last.path ? ` on ${last.path}` : ''}.` }
+    : { tone: 'warn', title: 'No recent visits', text: `The last one was ${agoText(last.ts)}${last.path ? ` on ${last.path}` : ''}. Is the snippet still on every page?` }
+  const allOk = !checking && snippet.tone === 'ok' && visits.tone === 'ok'
+
   return (
     <>
-      <section className="card install-ok">
-        <span className="icon-tile accent" aria-hidden="true">
-          <CircleCheck size={18} strokeWidth={1.75} />
-        </span>
-        <div>
-          <h3>Installed on {site.domain}</h3>
-          <p className="muted">
-            Last visit {agoText(last.ts)}
-            {last.path ? ` on ${last.path}` : ''}.
-          </p>
+      <section className="card install-check" aria-busy={checking}>
+        <div className="install-check-head">
+          <span className={'icon-tile' + (allOk ? ' accent' : '')} aria-hidden="true">
+            {allOk ? <CircleCheck size={18} strokeWidth={1.75} /> : <Activity size={18} strokeWidth={1.75} />}
+          </span>
+          <div>
+            <h3>{checking ? `Checking ${site.domain}…` : allOk ? `Installed on ${site.domain}` : visits.tone === 'ok' ? `Receiving visits from ${site.domain}` : `Check the install on ${site.domain}`}</h3>
+            <p className="muted">This server reads your homepage like a browser would and looks for the snippet, then asks for the latest visit it recorded. Nothing is sent to your site.</p>
+          </div>
+          <button type="button" className="btn" onClick={check} disabled={checking}>
+            {checking ? <span className="btn-spin" aria-hidden="true" /> : <RefreshCw size={15} strokeWidth={1.75} aria-hidden="true" />}
+            {checking ? 'Checking…' : 'Check again'}
+          </button>
         </div>
-        <button type="button" className="btn" onClick={check} disabled={checking}>
-          {checking && <span className="btn-spin" aria-hidden="true" />}
-          {checking ? 'Checking…' : 'Check again'}
-        </button>
+        <ul className="install-steps">
+          {[snippet, visits].map((s) => (
+            <li key={s.title} className={'install-step ' + s.tone}>
+              <span className="install-step-mark" aria-hidden="true">
+                {s.tone === 'ok' ? <Check size={14} strokeWidth={2.25} /> : s.tone === 'wait' ? <span className="btn-spin" /> : s.tone === 'info' ? <InfoIcon size={14} strokeWidth={2} /> : <TriangleAlert size={14} strokeWidth={2} />}
+              </span>
+              <span>
+                <b>{s.title}</b>
+                <span className="faint">{s.text}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
       </section>
       <button type="button" className="btn ghost install-more" aria-expanded={code} onClick={() => setCode((c) => !c)}>
         <ChevronRight size={15} strokeWidth={1.75} style={{ transform: code ? 'rotate(90deg)' : undefined, transition: 'transform .15s' }} aria-hidden="true" />
@@ -254,6 +298,8 @@ function InstallSection({ site }: { site: Site }) {
     </>
   )
 }
+
+type Step = { tone: 'ok' | 'warn' | 'info' | 'wait'; title: string; text: string }
 
 function agoText(ts: number): string {
   const s = Math.max(0, Math.round((Date.now() - ts) / 1000))

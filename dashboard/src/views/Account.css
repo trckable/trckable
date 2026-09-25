@@ -296,3 +296,204 @@
   height: 44px;
   font-size: 18px;
 }
+.avatar.huge {
+  width: 72px;
+  height: 72px;
+  font-size: 28px;
+}
+
+/* ---- Account: you, then sign-in, then preferences ------------------------ */
+.me-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background:
+    radial-gradient(420px 160px at 0% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
+    var(--surface-2);
+}
+.me-photo {
+  position: relative;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+.me-photo .avatar {
+  box-shadow: 0 0 0 3px var(--surface-2), 0 0 0 4px color-mix(in srgb, var(--accent) 40%, transparent);
+  transition: filter 0.15s;
+}
+.me-photo:hover .avatar {
+  filter: brightness(0.85);
+}
+.me-cam {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--surface-2);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.me-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.me-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-3);
+}
+.me-name input {
+  /* As wide as the name, so the pencil sits right after it. */
+  field-sizing: content;
+  min-width: 6ch;
+  max-width: 100%;
+  margin-left: -8px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  outline: none;
+}
+.me-name input:hover {
+  border-color: var(--border);
+}
+.me-name input:focus {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  background: var(--sunken);
+}
+.me-saved {
+  color: var(--accent);
+}
+.me-email {
+  color: var(--text-2);
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+.me-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12px;
+}
+.me-actions {
+  display: flex;
+  gap: 6px;
+  align-self: start;
+}
+.acct-group {
+  gap: 0;
+}
+.acct-title {
+  margin: 8px 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-2);
+}
+.srow.acct-line {
+  gap: 14px;
+}
+@media (max-width: 640px) {
+  .me-card {
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+    padding: 16px;
+  }
+  .avatar.huge {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+  .me-actions {
+    grid-column: 1 / -1;
+  }
+  .me-actions .btn:first-child {
+    flex: 1;
+  }
+  .me-meta .faint {
+    display: none;
+  }
+  .srow.acct-line {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 6px 12px;
+  }
+  .srow.acct-line .srow-ctl {
+    grid-column: 1 / -1;
+  }
+}
+
+/* The new password: a field with its eye, and how long it is. */
+.pw-field {
+  position: relative;
+  display: block;
+}
+.pw-field .input {
+  width: 100%;
+  padding-right: 44px;
+}
+.pw-eye {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.pw-eye:hover {
+  color: var(--text);
+  background: var(--sunken);
+}
+.pw-meter {
+  display: grid;
+  gap: 6px;
+  margin-top: -6px;
+  font-size: 12px;
+}
+.pw-bar {
+  display: block;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--grid);
+  overflow: hidden;
+}
+.pw-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--text-3);
+  transition: width 0.2s var(--ease), background 0.2s;
+}
+.pw-meter.ok .pw-bar > span {
+  background: var(--accent);
+}
+.pw-meter.ok .faint {
+  color: var(--accent);
+}

@@ -563,6 +563,14 @@ export interface TwoStep {
   recovery_left: number
 }
 
+export interface InstallCheck {
+  url: string
+  status?: number
+  /** site: this site's snippet · other: a trckable script for another site · none */
+  found?: 'site' | 'other' | 'none'
+  error?: string
+}
+
 export interface Profile {
   email: string
   name: string
@@ -615,6 +623,8 @@ export const api = {
   setAvatar: (file: Blob) => raw('PUT', '/account/avatar', file),
   clearAvatar: () => call<void>('DELETE', '/account/avatar'),
   report: (site: string, q: ReportQuery, signal?: AbortSignal) => call<Report>('GET', reportURL(site, q), undefined, signal),
+  /** This server reads the site's homepage and looks for the snippet. */
+  checkInstall: (site: string) => call<InstallCheck>('POST', `/sites/${encodeURIComponent(site)}/install/check`),
   events: (site: string, limit = 20) =>
     call<{ events: { ts: string; path: string; kind: string; visitor?: string; goal?: string; channel?: string; country?: string; device?: string; browser?: string }[] }>(
       'GET',

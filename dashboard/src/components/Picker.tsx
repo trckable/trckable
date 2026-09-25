@@ -1,7 +1,7 @@
 // One searchable picker, used wherever a list is long enough to scroll:
 // install methods, timezones, currencies. A native <select> with 400 zones is
 // a scroll race; this is a search box with keyboard control.
-import { Check, ChevronDown } from 'lucide-react'
+import { Check, ChevronDown, Search } from 'lucide-react'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -98,9 +98,12 @@ export function Picker({
       {open &&
         createPortal(
           <div ref={pop} className="pop picker-pop floating" role="listbox" aria-label={label} style={at}>
-            <input
+            <label className="menu-search">
+              <Search size={17} strokeWidth={1.75} aria-hidden="true" />
+              <input
               ref={search}
-              className="input"
+              type="search"
+              aria-label={placeholder}
               placeholder={placeholder}
               value={q}
               onChange={(e) => (setQ(e.target.value), setI(0))}
@@ -111,6 +114,7 @@ export function Picker({
                 else if (e.key === 'Escape') setOpen(false)
               }}
             />
+            </label>
             <div className="picker-list" ref={list}>
               {hits.map((x, n) => {
                 const head = x.group && x.group !== lastGroup ? x.group : null

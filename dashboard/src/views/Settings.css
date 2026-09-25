@@ -326,19 +326,74 @@
 }
 
 /* Install, once installed: the state first, the code a click away. */
-.card.install-ok {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
+.card.install-check {
   gap: 14px;
 }
-.card.install-ok h3 {
+.install-check-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 14px;
+}
+.install-check-head h3 {
   margin: 0 0 3px;
   font-size: 15px;
 }
-.card.install-ok p {
+.install-check-head p {
   margin: 0;
-  font-size: 13px;
+  font-size: 12.5px;
+  max-width: 62ch;
+}
+.install-steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.install-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--grid);
+  border-radius: 12px;
+  background: var(--sunken);
+}
+.install-step > span:last-child {
+  display: grid;
+  gap: 2px;
+  font-size: 13.5px;
+  min-width: 0;
+}
+.install-step .faint {
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+.install-step-mark {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  color: var(--text-2);
+}
+.install-step.ok .install-step-mark {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+}
+.install-step.warn .install-step-mark {
+  background: color-mix(in srgb, var(--warn) 18%, transparent);
+  color: var(--warn);
+}
+.install-step.warn {
+  border-color: color-mix(in srgb, var(--warn) 30%, var(--grid));
+}
+.install-step-mark .btn-spin {
+  width: 12px;
+  height: 12px;
 }
 .install-more {
   align-self: flex-start;
@@ -346,10 +401,10 @@
   margin-top: 4px;
 }
 @media (max-width: 640px) {
-  .card.install-ok {
+  .install-check-head {
     grid-template-columns: auto 1fr;
   }
-  .card.install-ok .btn {
+  .install-check-head .btn {
     grid-column: 1 / -1;
   }
 }

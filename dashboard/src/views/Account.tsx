@@ -1,7 +1,7 @@
 // The account dialog: everything that belongs to the person, not to the site
 // they happen to be looking at. It opens over whatever is on screen, so the
 // Settings page can stay about one site.
-import { Check, CircleUser, Copy, Eye, Globe, KeyRound, ShieldCheck, UserCheck, UserPlus, Users, X } from 'lucide-react'
+import { BellRing, Camera, Check, CircleUser, Copy, CreditCard, Eye, EyeOff, Globe, ImageUp, KeyRound, LockKeyhole, LogOut, Pencil, ShieldCheck, SunMoon, Trash2, UserCheck, UserPlus, Users, X } from 'lucide-react'
 import { Modal } from '../components/Modal'
 import { checksHere, setChecksHere } from '../lib/update'
 import { Switch } from '../components/Switch'
@@ -9,10 +9,11 @@ import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { api, type APIKey, type Person, type Profile, type TwoStep as TwoStepState } from '../lib/api'
 import { settle, toast } from '../components/Toast'
 import { closeAccount, openAccount, type AccountTab as Tab } from '../lib/account'
-import { confirmWith, useConfirm } from '../components/Confirm'
+import { confirm, confirmWith, useConfirm } from '../components/Confirm'
+import { DialogActions } from '../components/DialogActions'
+import { RowLabel } from '../components/Switch'
 import { Info } from '../components/Info'
 import { Menu } from '../components/Menu'
-import { Row } from '../components/Row'
 import { THEMES, useTheme } from '../lib/theme'
 import { isViewer } from '../lib/me'
 import { SitesSettings } from './Sites'
@@ -47,14 +48,17 @@ function NavIcon({ id }: { id: Tab }) {
 }
 
 export function AccountDialog({ tab, sites, email, onSites }: { tab: Tab; sites: Site[]; email?: string; onSites: () => void }) {
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [v, bump] = useState(0) // cache-buster after a new picture
+  useEffect(() => {
+    api.profile().then(setProfile).catch(() => {})
+  }, [])
   return (
     <Modal label="Your account" className="account" onClose={closeAccount}>
       <header className="account-head">
-        <span className="avatar" aria-hidden="true">
-          {(email ?? '?').slice(0, 1).toUpperCase()}
-        </span>
+        <Avatar p={profile} email={email} v={v} />
         <span className="account-who">
-          <b>Your account</b>
+          <b>{profile?.name || 'Your account'}</b>
           <span className="faint">{email}</span>
         </span>
         <button type="button" className="btn icon close" aria-label="Close" onClick={closeAccount}>
@@ -75,201 +79,283 @@ export function AccountDialog({ tab, sites, email, onSites }: { tab: Tab; sites:
         {tab === 'sites' && <SitesSettings sites={sites} onSites={onSites} />}
         {tab === 'keys' && <Keys />}
         {tab === 'people' && <People me={email} />}
-        {tab === 'profile' && (
-          <>
-            <You email={email} />
-            <section className="card" style={{ gap: 0 }}>
-              <div className="card-head" style={{ paddingBottom: 10 }}>
-                <h2>Signed in</h2>
-              </div>
-              <Row label={email ?? 'Signed in'} hint="This browser">
-                <button type="button" className="btn" onClick={() => api.logout().finally(() => location.assign(managed() || '/login'))}>
-                  Sign out
-                </button>
-              </Row>
-              {/* On a managed instance the plan, billing and the account itself live with the provider. */}
-              {managed() && (
-                <Row label="Plan & account" hint="Your plan, usage, billing, and deleting the account">
-                  <a className="btn" href={new URL('/account', managed()).href}>
-                    Open
-                  </a>
-                </Row>
-              )}
-            </section>
-            {/* On a managed instance the provider owns sign-in: no password or second step here. */}
-            {!managed() && <ChangePassword />}
-            {!managed() && <TwoStep />}
-            <Appearance />
-            {!managed() && !isViewer() && <Updates />}
-          </>
-        )}
+        {tab === 'profile' && <ProfileTab email={email} p={profile} v={v} onProfile={setProfile} onPicture={() => bump((n) => n + 1)} />}
       </div>
     </Modal>
   )
 }
 
-/** Your name and picture. Both live on this server: no avatar service is ever
- *  asked about your email address. */
-function You({ email }: { email?: string }) {
-  const [p, setP] = useState<Profile | null>(null)
-  const [name, setName] = useState('')
-  const [v, bump] = useState(0) // cache-buster after a new picture
+/** The picture you chose, or your initial. Both live on this server: no
+ *  avatar service is ever asked about your email address. */
+function Avatar({ p, email, v, size }: { p: Profile | null; email?: string; v: number; size?: 'big' | 'huge' }) {
+  return (
+    <span className={'avatar' + (size ? ' ' + size : '')} aria-hidden="true">
+      {p?.has_avatar ? <img src={`/api/v1/account/avatar?v=${v}`} alt="" /> : (p?.name || email || '?').slice(0, 1).toUpperCase()}
+    </span>
+  )
+}
+
+/** One line of the Account section: an icon, what it is, and its control. */
+function Line({ icon: Icon, label, hint, children, id }: { icon: typeof Globe; label: string; hint?: React.ReactNode; children?: React.ReactNode; id?: string }) {
+  return (
+    <div className="srow acct-line" id={id}>
+      <span className="icon-tile" aria-hidden="true">
+        <Icon size={17} strokeWidth={1.75} />
+      </span>
+      <div className="srow-text">
+        <b>{label}</b>
+        {hint && <span className="faint">{hint}</span>}
+      </div>
+      {children && (
+        <div className="srow-ctl">
+          <RowLabel.Provider value={label}>{children}</RowLabel.Provider>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ProfileTab({ email, p, v, onProfile, onPicture }: { email?: string; p: Profile | null; v: number; onProfile: (p: Profile) => void; onPicture: () => void }) {
+  const [theme, pick] = useTheme()
+  const [updates, setUpdates] = useState(checksHere())
+  const [pw, setPw] = useState(false)
+  return (
+    <>
+      <Me email={email} p={p} v={v} onProfile={onProfile} onPicture={onPicture} />
+
+      <section className="card acct-group">
+        <h2 className="acct-title">Sign-in and security</h2>
+        {/* On a managed instance the provider owns sign-in: no password or second step here. */}
+        {managed() ? (
+          <Line icon={CreditCard} label="Plan and account" hint="Your plan, usage, billing, and deleting the account">
+            <a className="btn" href={new URL('/account', managed()).href}>
+              Open
+            </a>
+          </Line>
+        ) : (
+          <>
+            <Line icon={LockKeyhole} label="Password" hint="Changing it signs you out everywhere else">
+              <button type="button" className="btn" onClick={() => setPw(true)}>
+                Change password
+              </button>
+            </Line>
+            <TwoStep />
+          </>
+        )}
+        <Line icon={LogOut} label="This browser" hint={`Signed in as ${email ?? 'you'}`}>
+          <button type="button" className="btn" onClick={() => api.logout().finally(() => location.assign(managed() || '/login'))}>
+            Sign out
+          </button>
+        </Line>
+      </section>
+
+      <section className="card acct-group">
+        <h2 className="acct-title">Preferences</h2>
+        <Line icon={SunMoon} label="Theme" hint="System follows your device">
+          <div className="seg" role="group" aria-label="Theme">
+            {THEMES.map((t) => (
+              <button key={t} type="button" aria-pressed={theme === t} onClick={() => pick(t)}>
+                {t[0].toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </div>
+        </Line>
+        {/* The check itself is in lib/update.ts: this browser, once a day, nothing about the instance sent. */}
+        {!managed() && !isViewer() && (
+          <Line icon={BellRing} label="New versions" hint="Once a day this browser asks GitHub's list of releases. Nothing about this server is sent.">
+            <Switch
+              on={updates}
+              label="Tell me when a new version is out"
+              onChange={() => {
+                setChecksHere(!updates)
+                setUpdates(!updates)
+              }}
+            />
+          </Line>
+        )}
+      </section>
+
+      {pw && <PasswordDialog onClose={() => setPw(false)} />}
+    </>
+  )
+}
+
+/** Who you are here: your picture, your name, your role. */
+function Me({ email, p, v, onProfile, onPicture }: { email?: string; p: Profile | null; v: number; onProfile: (p: Profile) => void; onPicture: () => void }) {
+  const [name, setName] = useState(p?.name ?? '')
+  const [saved, setSaved] = useState(false)
   const file = useRef<HTMLInputElement>(null)
   const [cropping, setCropping] = useState<File | null>(null)
-  useEffect(() => {
-    api
-      .profile()
-      .then((r) => {
-        setP(r)
-        setName(r.name)
-      })
-      .catch(() => {})
-  }, [])
+  useEffect(() => setName(p?.name ?? ''), [p?.name])
 
   // The crop dialog saves: it stays open with its button busy until the server
   // has the picture, and shows the error if it refuses.
   const upload = async (picture: Blob) => {
     await api.setAvatar(picture)
     toast('Picture updated')
-    setP((old) => (old ? { ...old, has_avatar: true } : old))
-    bump((n) => n + 1)
+    if (p) onProfile({ ...p, has_avatar: true })
+    onPicture()
     setCropping(null)
     window.dispatchEvent(new CustomEvent('trckable:profile'))
   }
+  const remove = async () => {
+    const ok = await confirm({
+      title: 'Remove your picture?',
+      body: 'Your initial is shown instead. You can add a picture again any time.',
+      confirmLabel: 'Remove',
+      busyLabel: 'Removing…',
+      done: 'Picture removed',
+      run: () => api.clearAvatar(),
+    })
+    if (ok && p) onProfile({ ...p, has_avatar: false })
+    if (ok) window.dispatchEvent(new CustomEvent('trckable:profile'))
+  }
+  const saveName = () => {
+    if (!p || name.trim() === p.name) return
+    api
+      .setName(name.trim())
+      .then((r) => {
+        onProfile(r)
+        setSaved(true)
+        setTimeout(() => setSaved(false), 1600)
+        window.dispatchEvent(new CustomEvent('trckable:profile'))
+      })
+      .catch((e: Error) => toast(e.message, 'error'))
+  }
 
   return (
-    <section className="card" style={{ gap: 0 }}>
+    <section className="me-card">
       {cropping && (
         <Suspense fallback={null}>
           <AvatarCrop file={cropping} onCancel={() => setCropping(null)} onSave={upload} />
         </Suspense>
       )}
-      <div className="card-head" style={{ paddingBottom: 10 }}>
-        <h2>You</h2>
-      </div>
-      <Row label="Picture" hint="PNG, JPEG, WebP or GIF · you crop it before it is saved">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span className="avatar big" aria-hidden="true">
-            {p?.has_avatar ? <img src={`/api/v1/account/avatar?v=${v}`} alt="" /> : (name || email || '?').slice(0, 1).toUpperCase()}
-          </span>
+      <input
+        ref={file}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        hidden
+        onChange={(e) => {
+          const f = e.target.files?.[0]
+          if (f) setCropping(f)
+          e.target.value = ''
+        }}
+      />
+      <button type="button" className="me-photo" onClick={() => file.current?.click()} aria-label={p?.has_avatar ? 'Replace your picture' : 'Add a picture'}>
+        <Avatar p={p} email={email} v={v} size="huge" />
+        <span className="me-cam" aria-hidden="true">
+          <Camera size={14} strokeWidth={2} />
+        </span>
+      </button>
+      <div className="me-text">
+        <label className="me-name">
           <input
-            ref={file}
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif"
-            style={{ display: 'none' }}
-            onChange={(e) => {
-              const f = e.target.files?.[0]
-              if (f) setCropping(f)
-              e.target.value = ''
-            }}
+            value={name}
+            placeholder={email?.split('@')[0] ?? 'Your name'}
+            aria-label="Your name"
+            title="Shown instead of your email address"
+            maxLength={80}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={saveName}
+            onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
           />
-          <button type="button" className="btn" onClick={() => file.current?.click()}>
-            {p?.has_avatar ? 'Replace' : 'Upload'}
+          {saved ? <Check size={15} strokeWidth={2} className="me-saved" aria-label="Saved" /> : <Pencil size={14} strokeWidth={1.75} aria-hidden="true" />}
+        </label>
+        <span className="me-email">{email}</span>
+        <span className="me-meta">
+          <span className={'tag' + (isViewer() ? ' quiet' : ' on')}>{isViewer() ? 'Viewer' : 'Owner'}</span>
+        </span>
+      </div>
+      <div className="me-actions">
+        <button type="button" className="btn" onClick={() => file.current?.click()}>
+          <ImageUp size={16} strokeWidth={1.75} aria-hidden="true" />
+          {p?.has_avatar ? 'Replace' : 'Add picture'}
+        </button>
+        {p?.has_avatar && (
+          <button type="button" className="btn ghost icon" aria-label="Remove your picture" title="Remove your picture" onClick={remove}>
+            <Trash2 size={16} strokeWidth={1.75} aria-hidden="true" />
           </button>
-          {p?.has_avatar && (
-            <button
-              type="button"
-              className="btn ghost"
-              onClick={async () => {
-                const id = toast('Removing…', 'busy')
-                try {
-                  await api.clearAvatar()
-                  settle(id, 'Picture removed')
-                  setP((old) => (old ? { ...old, has_avatar: false } : old))
-                  window.dispatchEvent(new CustomEvent('trckable:profile'))
-                } catch (e) {
-                  settle(id, e instanceof Error ? e.message : 'Could not remove it', 'error')
-                }
-              }}
-            >
-              Remove
-            </button>
-          )}
-        </div>
-      </Row>
-      <Row label="Name" hint="Shown instead of your email address">
-        <input
-          className="input"
-          value={name}
-          placeholder={email?.split('@')[0] ?? 'Your name'}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={() => {
-            if (name === p?.name) return
-            api
-              .setName(name)
-              .then((r) => {
-                setP(r)
-                toast('Name saved')
-                window.dispatchEvent(new CustomEvent('trckable:profile'))
-              })
-              .catch((e: Error) => toast(e.message, 'error'))
-          }}
-          onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-        />
-      </Row>
+        )}
+      </div>
     </section>
   )
 }
 
-function ChangePassword() {
+/** A new password, in its own dialog: two fields and a meter, not two rows
+ *  and a button squeezed beside the second one. */
+function PasswordDialog({ onClose }: { onClose: () => void }) {
   const [cur, setCur] = useState('')
   const [next, setNext] = useState('')
-  const [msg, setMsg] = useState<string | null>(null)
+  const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const MIN = 12
+  const fill = Math.min(1, next.length / MIN)
+  const ok = next.length >= MIN
+  const same = ok && next === cur
+  const submit = () => {
+    if (!cur || !ok || same) return
+    setBusy(true)
+    setErr(null)
+    api
+      .changePassword(cur, next)
+      .then(() => (toast('Password changed — other devices were signed out'), onClose()))
+      .catch((e: Error) => setErr(e.message))
+      .finally(() => setBusy(false))
+  }
+  const Eyes = show ? EyeOff : Eye
   return (
-    <form
-      className="card"
-      style={{ gap: 0 }}
-      onSubmit={(e) => {
-        e.preventDefault()
-        setBusy(true)
-        setMsg(null)
-        api
-          .changePassword(cur, next)
-          .then(() => (setCur(''), setNext(''), setMsg(null), toast('Password changed — other devices were signed out')))
-          .catch((e: Error) => (setMsg(e.message), toast(e.message, 'error')))
-          .finally(() => setBusy(false))
-      }}
-    >
-      <div className="card-head" style={{ paddingBottom: 10 }}>
-        <h2>Password</h2>
-        {msg && <span className="faint">{msg}</span>}
-      </div>
-      <Row label="Current password">
-        <input className="input" type="password" aria-label="Current password" value={cur} onChange={(e) => setCur(e.target.value)} autoComplete="current-password" required />
-      </Row>
-      <Row label="New password" hint="At least 12 characters">
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input className="input" type="password" aria-label="New password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" minLength={12} required />
-          <button type="submit" className="btn primary" disabled={busy || !cur || next.length < 12}>
-            {busy ? 'Saving…' : 'Change'}
-          </button>
+    <Modal label="Change your password" className="person-modal" onClose={busy ? undefined : onClose}>
+      <form className="person-form" onSubmit={(e) => (e.preventDefault(), submit())} aria-busy={busy}>
+        <div className="modal-head">
+          <span className="modal-badge" aria-hidden="true">
+            <LockKeyhole size={19} strokeWidth={1.75} />
+          </span>
+          <div>
+            <h2>Change your password</h2>
+            <span className="faint">Every other browser and device is signed out. This one stays signed in.</span>
+          </div>
         </div>
-      </Row>
-    </form>
-  )
-}
-
-/** New versions: whether this dashboard tells you. The check itself is in
- *  lib/update.ts: this browser, once a day, nothing about the instance sent. */
-function Updates() {
-  const [on, setOn] = useState(checksHere())
-  return (
-    <section className="card" style={{ gap: 0 }}>
-      <div className="card-head" style={{ paddingBottom: 10 }}>
-        <h2>New versions</h2>
-      </div>
-      <Row label="Tell me when a new version is out" hint="Once a day this browser asks GitHub's list of releases. Nothing about this server is sent.">
-        <Switch
-          on={on}
-          label="Tell me when a new version is out"
-          onChange={() => {
-            setChecksHere(!on)
-            setOn(!on)
-          }}
-        />
-      </Row>
-    </section>
+        <label className="field">
+          Current password
+          <input className="input" type="password" autoFocus autoComplete="current-password" value={cur} onChange={(e) => setCur(e.target.value)} />
+        </label>
+        <label className="field">
+          New password
+          <span className="pw-field">
+            <input className="input" type={show ? 'text' : 'password'} autoComplete="new-password" minLength={MIN} value={next} onChange={(e) => setNext(e.target.value)} />
+            <button type="button" className="pw-eye" aria-label={show ? 'Hide the new password' : 'Show the new password'} aria-pressed={show} onClick={() => setShow(!show)}>
+              <Eyes size={16} strokeWidth={1.75} aria-hidden="true" />
+            </button>
+          </span>
+        </label>
+        <div className={'pw-meter' + (ok ? ' ok' : '')} aria-live="polite">
+          <span className="pw-bar">
+            <span style={{ width: `${fill * 100}%` }} />
+          </span>
+          <span className="faint num">
+            {same ? 'The same as the current one' : ok ? `${next.length} characters · long enough` : `${next.length} of ${MIN} characters`}
+          </span>
+        </div>
+        {err && (
+          <p className="confirm-err" role="alert">
+            {err}
+          </p>
+        )}
+        <DialogActions
+          left={
+            <button type="button" className="btn ghost" onClick={onClose} disabled={busy}>
+              Cancel
+            </button>
+          }
+        >
+          <button type="submit" className="btn primary big" disabled={busy || !cur || !ok || same}>
+            {busy && <span className="btn-spin" aria-hidden="true" />}
+            {busy ? 'Changing…' : 'Change password'}
+          </button>
+        </DialogActions>
+      </form>
+    </Modal>
   )
 }
 
@@ -560,7 +646,8 @@ function OneTimePassword({ email, password, reset, onClose }: { email: string; p
   )
 }
 
-/** Two-step sign-in: an authenticator app, plus one-time recovery codes. */
+/** Two-step sign-in: an authenticator app, plus one-time recovery codes. The
+ *  secret is generated and kept on this server — no SMS, no email. */
 function TwoStep() {
   const [state, setState] = useState<TwoStepState | null>(null)
   const [setup, setSetup] = useState(false)
@@ -586,43 +673,40 @@ function TwoStep() {
 
   const on = state?.enabled === true
   const low = on && state.recovery_left <= 2
+  const hint = !state
+    ? 'Checking…'
+    : on
+      ? (
+          <>
+            A code from your phone after the password ·{' '}
+            <span className="num" style={low ? { color: 'var(--down)' } : undefined}>
+              {state.recovery_left} of 8 recovery codes left
+            </span>
+            {low && ' — turn it off and on again for a fresh set'}
+          </>
+        )
+      : 'A password alone is one secret away from someone else’s hands'
   return (
-    <section className="card" id="two-step" style={{ gap: 0 }}>
-      <div className="card-head" style={{ paddingBottom: 10 }}>
-        <h2>Two-step sign-in</h2>
-        <Info text="After your password, sign-in asks for a six-digit code from an authenticator app on your phone. The secret is generated and kept on this server — no SMS, no email, nobody else involved." />
-        <span className={'tag' + (on ? ' on' : ' quiet')} style={{ marginLeft: 'auto' }}>
-          {state ? (on ? 'On' : 'Off') : '…'}
-        </span>
-        {on && (
-          <button type="button" className="btn" onClick={turnOff}>
-            Turn off
-          </button>
-        )}
-      </div>
-
-      {!state && <div className="skeleton" style={{ height: 54 }} />}
-      {state && !on && (
-        <Row label="Authenticator app" hint="A password alone is one secret away from someone else's hands">
-          <button type="button" className="btn primary" onClick={() => setSetup(true)}>
-            Set up
-          </button>
-        </Row>
-      )}
-      {state && on && (
-        <Row label="Recovery codes" hint={low ? 'Running low — turn it off and on again for a fresh set' : 'Each one signs you in once if you lose your phone'}>
-          <span className="num" style={low ? { color: 'var(--down)' } : undefined}>
-            {state.recovery_left} of 8 left
-          </span>
-        </Row>
-      )}
-
+    <>
+      <Line icon={ShieldCheck} id="two-step" label="Two-step sign-in" hint={hint}>
+        {state && <span className={'tag' + (on ? ' on' : ' quiet')}>{on ? 'On' : 'Off'}</span>}
+        {state &&
+          (on ? (
+            <button type="button" className="btn" onClick={turnOff}>
+              Turn off
+            </button>
+          ) : (
+            <button type="button" className="btn primary" onClick={() => setSetup(true)}>
+              Set up
+            </button>
+          ))}
+      </Line>
       {setup && (
         <Suspense fallback={null}>
           <TwoStepSetup onClose={() => (setSetup(false), load())} onDone={load} />
         </Suspense>
       )}
-    </section>
+    </>
   )
 }
 
@@ -817,26 +901,3 @@ function NewKey({ onClose, onCreated }: { onClose: () => void; onCreated: () => 
     </Modal>
   )
 }
-
-function Appearance() {
-  const [theme, pick] = useTheme()
-  return (
-    <section className="card" style={{ gap: 0 }}>
-      <div className="card-head" style={{ paddingBottom: 10 }}>
-        <h2>Appearance</h2>
-      </div>
-      <Row label="Theme" hint="System follows your device">
-        <div className="seg" role="group" aria-label="Theme">
-          {THEMES.map((t) => (
-            <button key={t} type="button" aria-pressed={theme === t} onClick={() => pick(t)}>
-              {t[0].toUpperCase() + t.slice(1)}
-            </button>
-          ))}
-        </div>
-      </Row>
-    </section>
-  )
-}
-
-
-
