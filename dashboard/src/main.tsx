@@ -8,7 +8,6 @@ import { Footer } from "./components/Footer";
 import { api, setUnauthorizedHandler, type Site } from "./lib/api";
 import { navigate, useLocation } from "./lib/url";
 import "./styles.css";
-import { Setup, Login } from "./views/Auth";
 import { SitePicker } from "./components/SitePicker";
 import { Dashboard } from "./views/Dashboard";
 import { applyTheme } from "./lib/theme";
@@ -19,6 +18,10 @@ import { setRole } from "./lib/me";
 // Settings and the account dialog are their own screens: the dashboard should
 // not carry them.
 const Settings = lazy(() => import("./views/Settings").then((m) => ({ default: m.Settings })));
+// Sign-in and first-run setup are for the minutes before someone is in: a
+// signed-in owner never downloads them.
+const Setup = lazy(() => import("./views/Auth").then((m) => ({ default: m.Setup })));
+const Login = lazy(() => import("./views/Auth").then((m) => ({ default: m.Login })));
 const UpdateDialog = lazy(() => import("./components/UpdateDialog"));
 const SettingsDialog = lazy(() => import("./views/Settings").then((m) => ({ default: m.SettingsDialog })));
 const AccountDialog = lazy(() => import("./views/Account").then((m) => ({ default: m.AccountDialog })));
@@ -131,6 +134,7 @@ function App() {
     );
   if (boot.state === "setup")
     return (
+      <Suspense fallback={null}>
       <Setup
         onDone={(site) => {
           load().then(() =>
@@ -141,6 +145,7 @@ function App() {
           );
         }}
       />
+      </Suspense>
     );
   if (boot.state === "login") {
     // A managed instance has no sign-in page: people sign in at the provider.
@@ -148,7 +153,11 @@ function App() {
       location.assign(managed());
       return null;
     }
-    return <Login onDone={load} />;
+    return (
+      <Suspense fallback={null}>
+        <Login onDone={load} />
+      </Suspense>
+    );
   }
 
   const refreshSites = () =>

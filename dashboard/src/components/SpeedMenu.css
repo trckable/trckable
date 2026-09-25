@@ -1,0 +1,64 @@
+/* SpeedMenu.tsx: its own styles, loaded with it (not with the first load). */
+
+/* Replay speed: one button beside Replay; the four speeds open above it. */
+.speed-menu {
+  position: relative;
+  flex: none;
+}
+.speed-btn {
+  height: 38px;
+  gap: 6px;
+  padding: 0 10px 0 12px;
+  border-radius: 999px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.speed-btn:hover,
+.speed-btn[aria-expanded='true'] {
+  color: var(--text);
+}
+.pop.menu-pop.speed-pop {
+  bottom: 46px;
+  left: 0;
+  width: 230px;
+}
+.speed-row {
+  min-height: 42px;
+}
+.speed-row .menu-title {
+  flex: 1;
+}
+.speed-row.on {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+.speed-bars {
+  display: flex !important;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  padding-bottom: 7px;
+}
+.speed-bars i {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--border-2);
+}
+.speed-bars i.lit {
+  background: currentColor;
+}
+.speed-chip {
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--sunken);
+  color: var(--text-2);
+  font-size: 11.5px;
+}
+.speed-row.on .speed-chip {
+  color: var(--text);
+}
+.speed-check {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  color: var(--accent);
+}

@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Wordmark } from '../components/Logo'
 import { api, APIError, type Site } from '../lib/api'
 import { browserZone } from '../lib/dates'
+import './Auth.css'
 
 function Shell({ title, sub, children }: { title: string; sub: ReactNode; children: ReactNode }) {
   return (

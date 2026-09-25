@@ -4,6 +4,7 @@ import { ExternalLink, Sparkles } from 'lucide-react'
 import type { Latest } from '../lib/update'
 import { CodeBlock } from './Code'
 import { Modal } from './Modal'
+import './UpdateDialog.css'
 
 /** The release notes as short plain lines: headings and bullets, no markup. */
 function lines(md = ''): string[] {

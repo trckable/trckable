@@ -5,6 +5,7 @@
 import { Bookmark, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { usePhoneLock } from './lockScroll'
+import './ActiveFilters.css'
 
 /** One filter as a person reads it; `raw` is what goes back on remove. */
 export type Shown<T> = { key: string; dim: string; value: string; dot?: string; raw: T }

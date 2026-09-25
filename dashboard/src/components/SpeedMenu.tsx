@@ -2,6 +2,7 @@
 // speeds. It opens upwards, since it sits at the foot of the chart.
 import { Check, ChevronDown, Gauge } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import './SpeedMenu.css'
 
 const SPEEDS: { v: number; name: string }[] = [
   { v: 0.5, name: 'Slow' },
