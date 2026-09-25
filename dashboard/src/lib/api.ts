@@ -646,6 +646,7 @@ export const api = {
       `/sites/${site}/privacy/person?${by}=${encodeURIComponent(value)}`,
     ),
   startOverKeys: (password: string) => call<{ connections: number }>('POST', '/payments/start-over', { password }),
+  deletePreview: (site: string) => call<Record<string, number>>('GET', `/sites/${encodeURIComponent(site)}/delete-preview`),
   widgets: (site: string) => call<{ widgets: Widget[]; base: string }>('GET', `/sites/${site}/widgets`),
   createWidget: (site: string, w: WidgetLook) => call<Widget>('POST', `/sites/${site}/widgets`, w),
   updateWidget: (site: string, id: string, w: WidgetLook & { on: boolean }) => call<Widget>('PUT', `/sites/${site}/widgets/${id}`, w),

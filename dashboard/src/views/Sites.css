@@ -309,3 +309,114 @@
     margin-left: 52px;
   }
 }
+
+/* ---- Deleting: a dialog that looks as serious as it is ---------------------- */
+.modal.danger-modal {
+  width: min(520px, 100%);
+  gap: 18px;
+  border-color: color-mix(in srgb, var(--down) 45%, var(--border));
+  background:
+    radial-gradient(520px 180px at 0% 0%, color-mix(in srgb, var(--down) 12%, transparent), transparent 70%),
+    var(--surface);
+}
+.danger-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.danger-head h2 {
+  margin: 0 0 4px;
+  font-size: 19px;
+}
+.danger-head span {
+  font-size: 13.5px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+.danger-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--down) 45%, transparent);
+  background: color-mix(in srgb, var(--down) 16%, transparent);
+  color: var(--down);
+}
+.danger-list {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--down) 25%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--down) 5%, var(--sunken));
+  font-size: 13.5px;
+}
+.danger-list ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.danger-list li .num {
+  color: var(--text);
+  font-weight: 600;
+}
+.danger-list li:last-child {
+  grid-column: 1 / -1;
+  color: var(--text-2);
+}
+.danger-list .faint {
+  font-size: 12px;
+  line-height: 1.45;
+}
+.danger-type b {
+  color: var(--text);
+  font-family: var(--mono);
+  font-weight: 500;
+}
+.danger-type .input {
+  height: 46px;
+  font-family: var(--mono);
+}
+.danger-type .input:focus {
+  border-color: var(--down);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--down) 18%, transparent);
+}
+.danger-working {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 26px 0 10px;
+  text-align: center;
+}
+.danger-working .btn-spin {
+  width: 26px;
+  height: 26px;
+  border-width: 3px;
+  color: var(--down);
+}
+@media (max-width: 480px) {
+  .danger-list ul {
+    grid-template-columns: 1fr;
+  }
+}
+
+.danger-final {
+  grid-template-columns: repeat(3, 1fr);
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.danger-final span {
+  display: grid;
+  gap: 2px;
+}
+.danger-final b {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--down);
+}

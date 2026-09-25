@@ -20,9 +20,13 @@ export function Modal({
   label,
   onClose,
   className = '',
+  keepSize = true,
   children,
 }: {
   label: string
+  /** Never shrink while open (tabs, steps). Off for a dialog whose later
+   *  step is meant to be shorter. */
+  keepSize?: boolean
   /** Left out while the dialog must not be dismissed — mid-delete, say. */
   onClose?: () => void
   className?: string
@@ -48,7 +52,7 @@ export function Modal({
   const box = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     const el = box.current
-    if (!el) return
+    if (!el || !keepSize) return
     let tallest = 0
     const hold = () => {
       const h = el.offsetHeight
@@ -61,7 +65,7 @@ export function Modal({
     const ro = new ResizeObserver(hold)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [])
+  }, [keepSize])
   return createPortal(
     <div className="modal-back" onClick={onClose}>
       <div ref={box} className={('modal rise ' + className).trim()} role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.stopPropagation()}>

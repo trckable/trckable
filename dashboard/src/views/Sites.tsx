@@ -1,7 +1,8 @@
 // Settings → Sites: everything about sites as a whole, not about one of them.
 // Adding a site is a short wizard (domain → install → first visit), and each
 // site can be renamed or removed from the same list.
-import { Check, Globe, Plus, Settings2 } from 'lucide-react'
+import { Check, Globe, Plus, Settings2, TriangleAlert } from 'lucide-react'
+import { HoldButton } from '../components/HoldButton'
 import { closeAccount } from '../lib/account'
 import { SiteMark } from '../components/SiteMark'
 import { StepBody } from '../components/StepBody'
@@ -231,89 +232,144 @@ function EditSite({ site, onClose, onSaved }: { site: Site; onClose: () => void;
  */
 export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: () => void; onSites: () => void }) {
   const [typed, setTyped] = useState('')
-  const [step, setStep] = useState(0) // 0 asking · 1..3 working · 4 done
+  const [step, setStep] = useState<'what' | 'last' | 'working' | 'done'>('what')
+  const [counts, setCounts] = useState<Record<string, number> | null>(null)
   const [gone, setGone] = useState<{ events: number; sessions: number; payments: number } | null>(null)
   const [err, setErr] = useState<string | null>(null)
-
-  const STAGES = ['Clearing visits and sessions', 'Removing payments and settings', 'Tidying up']
+  useEffect(() => {
+    api.deletePreview(site.id).then(setCounts).catch(() => setCounts({}))
+  }, [site.id])
+  const named = typed.trim().toLowerCase() === site.domain.toLowerCase()
 
   const run = () => {
     setErr(null)
-    setStep(1)
-    // The server does this in one pass; the stages move on their own so the
-    // wait is legible, and the real counts land when it answers.
-    const tick = setInterval(() => setStep((n) => (n < 3 ? n + 1 : n)), 700)
+    setStep('working')
     api
       .deleteSite(site.id, typed.trim())
       .then((r) => {
-        clearInterval(tick)
+        // The summary first: refreshing the list now would take the page
+        // (and this dialog) away before it is read.
         setGone(r)
-        setStep(4)
-        onSites()
+        setStep('done')
       })
       .catch((e: Error) => {
-        clearInterval(tick)
         setErr(e.message)
-        setStep(0)
+        setStep('last')
       })
   }
 
+  // What goes, in numbers, before anyone decides.
+  const lines: [string, number | undefined][] = [
+    ['events', counts?.events],
+    ['visits', counts?.sessions],
+    ['payments', counts?.payments],
+    ['payment connections', counts?.connections],
+    ['share links', counts?.shares],
+    ['widgets', counts?.widgets],
+  ]
+
   return (
-    <Modal label={`Delete ${site.domain}`} onClose={step === 0 ? onClose : undefined}>
-      {step === 0 && (
+    <Modal label={`Delete ${site.domain}`} className="danger-modal" keepSize={false} onClose={step === 'what' || step === 'last' ? onClose : undefined}>
+      {step === 'what' && (
         <>
-          <h2>Delete {site.domain}?</h2>
-          <p className="muted" style={{ margin: 0 }}>
-            Every visit, session and payment recorded for this site goes, here and in the analytics store. This cannot be undone.
-          </p>
-          <input
-            className="input"
-            style={{ height: 46 }}
-            value={typed}
-            onChange={(e) => setTyped(e.target.value)}
-            placeholder={site.domain}
-            aria-label="Type the domain to confirm"
-            autoComplete="off"
-            autoFocus
-            onKeyDown={(e) => e.key === 'Enter' && typed.trim().toLowerCase() === site.domain.toLowerCase() && run()}
-          />
-          {err && (
-            <span role="alert" style={{ color: 'var(--down)', fontSize: 13 }}>
-              {err}
+          <div className="danger-head">
+            <span className="danger-mark" aria-hidden="true">
+              <TriangleAlert size={22} strokeWidth={1.9} />
             </span>
-          )}
+            <div>
+              <h2>Delete {site.domain}?</h2>
+              <span>This removes the site and everything recorded for it. There is no undo.</span>
+            </div>
+          </div>
+          <div className="danger-list">
+            <b>What goes</b>
+            <ul>
+              {lines.map(([label, n]) => (
+                <li key={label}>
+                  <span className="num">{n === undefined ? '…' : fmtInt(n)}</span> {label}
+                </li>
+              ))}
+              <li>Its settings, modules, verification and look</li>
+            </ul>
+            <span className="faint">Backups made before now still hold it until they age out. Payment providers keep the webhooks they were given; remove those there.</span>
+          </div>
+          <label className="field danger-type">
+            <span>
+              Type <b>{site.domain}</b> to continue
+            </span>
+            <input
+              className="input"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder={site.domain}
+              autoComplete="off"
+              spellCheck={false}
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && named && setStep('last')}
+            />
+          </label>
           <DialogActions
             left={
-              <button type="button" className="btn ghost" onClick={onClose}>
+              <button type="button" className="btn ghost" onClick={onClose} autoFocus={false}>
                 Keep it
               </button>
             }
           >
-            <button type="button" className="btn danger big" disabled={typed.trim().toLowerCase() !== site.domain.toLowerCase()} onClick={run}>
-              Delete site
+            <button type="button" className="btn danger big" disabled={!named} onClick={() => setStep('last')}>
+              Continue
             </button>
           </DialogActions>
         </>
       )}
 
-      {step > 0 && step < 4 && (
+      {step === 'last' && (
         <>
-          <h2>Deleting {site.domain}</h2>
-          <ul className="stages">
-            {STAGES.map((label, i) => (
-              <li key={label} className={step > i + 1 ? 'done' : step === i + 1 ? 'now' : ''}>
-                <span className="stage-mark" aria-hidden="true" />
-                {label}
-              </li>
-            ))}
-          </ul>
-          <span className="faint" style={{ fontSize: 12 }}>
-            A busy site can hold millions of rows — this can take a moment.
-          </span>
+          <div className="danger-head">
+            <span className="danger-mark" aria-hidden="true">
+              <TriangleAlert size={22} strokeWidth={1.9} />
+            </span>
+            <div>
+              <h2>Last check</h2>
+              <span>Once you hold the button, {site.domain} is deleted for good. Nobody, including trckable, can bring it back from here.</span>
+            </div>
+          </div>
+          <div className="danger-list danger-final">
+            <span>
+              <b className="num">{fmtInt(counts?.events ?? 0)}</b> events
+            </span>
+            <span>
+              <b className="num">{fmtInt(counts?.sessions ?? 0)}</b> visits
+            </span>
+            <span>
+              <b className="num">{fmtInt(counts?.payments ?? 0)}</b> payments
+            </span>
+          </div>
+          {err && (
+            <p className="confirm-err" role="alert">
+              {err}
+            </p>
+          )}
+          <DialogActions
+            left={
+              <button type="button" className="btn ghost" onClick={() => setStep('what')}>
+                Back
+              </button>
+            }
+          >
+            <HoldButton onDone={run}>Hold to delete forever</HoldButton>
+          </DialogActions>
         </>
       )}
 
-      {step === 4 && (
+      {step === 'working' && (
+        <div className="danger-working">
+          <span className="btn-spin" aria-hidden="true" />
+          <b>Deleting {site.domain}…</b>
+          <span className="faint">A busy site can hold millions of rows: this can take a moment. Keep this open.</span>
+        </div>
+      )}
+
+      {step === 'done' && (
         <>
           <div className="wiz-done">
             <Check size={34} strokeWidth={2} aria-hidden="true" />
@@ -321,9 +377,11 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
           </div>
           {gone && (
             <ul className="bullets">
-              <li>{fmtInt(gone.events)} events and {fmtInt(gone.sessions)} sessions removed</li>
+              <li>
+                {fmtInt(gone.events)} events and {fmtInt(gone.sessions)} visits removed
+              </li>
               {gone.payments > 0 && <li>{fmtInt(gone.payments)} payments removed</li>}
-              <li>Settings, modules and payment connections removed</li>
+              <li>Settings, modules, share links and widgets removed</li>
             </ul>
           )}
           <DialogActions>
@@ -332,6 +390,7 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
               className="btn primary big"
               onClick={() => {
                 onClose()
+                onSites()
                 navigate('/')
               }}
             >

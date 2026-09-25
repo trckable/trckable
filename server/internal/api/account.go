@@ -274,3 +274,30 @@ func (a *API) getAvatar(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "private, max-age=60")
 	w.Write(body)
 }
+
+// deletePreview says what deleting a site would remove, before anyone
+// decides: the numbers the confirmation shows are the real ones.
+func (a *API) deletePreview(w http.ResponseWriter, r *http.Request) {
+	site := r.PathValue("site")
+	if !a.siteExists(w, r) {
+		return
+	}
+	out := map[string]int64{}
+	if q := a.Query; q != nil && q() != nil {
+		var ev, se int64
+		q().DB.QueryRowContext(r.Context(), `SELECT count(*) FROM events WHERE site_id = ?`, site).Scan(&ev)
+		q().DB.QueryRowContext(r.Context(), `SELECT count(*) FROM sessions WHERE site_id = ?`, site).Scan(&se)
+		out["events"], out["sessions"] = ev, se
+	}
+	for key, query := range map[string]string{
+		"payments":    `SELECT count(*) FROM pay_payments WHERE site_id = ?`,
+		"connections": `SELECT count(*) FROM pay_connections WHERE site_id = ?`,
+		"shares":      `SELECT count(*) FROM site_shares WHERE site_id = ?`,
+		"widgets":     `SELECT count(*) FROM widgets WHERE site_id = ?`,
+	} {
+		var n int64
+		a.Ctl.DB.QueryRowContext(r.Context(), query, site).Scan(&n)
+		out[key] = n
+	}
+	writeJSON(w, http.StatusOK, out)
+}
