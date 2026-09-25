@@ -408,6 +408,8 @@ var migrations = []string{
 	// 29: which parts a widget shows (bars, countries, pages, channels, ai).
 	// Its own migration: 28 had already run on existing databases.
 	`ALTER TABLE widgets ADD COLUMN shows TEXT NOT NULL DEFAULT '';`,
+	// 30: the last authenticator step accepted, so a code signs in once.
+	`ALTER TABLE users ADD COLUMN totp_last_step INTEGER NOT NULL DEFAULT 0;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

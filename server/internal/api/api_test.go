@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -42,6 +43,14 @@ type rig struct {
 	site string
 	now  time.Time
 	api  *API
+	// The server's clock, moved only by advance: the test's now stays the
+	// start, so the many tests that build times from g.now do not change.
+	clock *atomic.Int64
+}
+
+// advance moves the server's clock forward, safely while it serves.
+func (g *rig) advance(d time.Duration) time.Time {
+	return time.UnixMilli(g.clock.Add(d.Milliseconds())).UTC()
 }
 
 func newRig(t *testing.T) *rig {
@@ -58,8 +67,11 @@ func newRig(t *testing.T) *rig {
 	}
 	lg, _ := wal.Open(filepath.Join(dir, "wal"), wal.Options{NoSync: true})
 	now := time.Date(2026, 9, 22, 12, 0, 0, 0, time.UTC)
+	clock := &atomic.Int64{}
+	clock.Store(now.UnixMilli())
+	tick := func() time.Time { return time.UnixMilli(clock.Load()).UTC() }
 	hub := realtime.New()
-	w := writer.New(lg, st, writer.Options{FlushEvery: 5 * time.Millisecond, IdleClose: 20 * time.Millisecond, Now: func() time.Time { return now }})
+	w := writer.New(lg, st, writer.Options{FlushEvery: 5 * time.Millisecond, IdleClose: 20 * time.Millisecond, Now: tick})
 	w.OnCommit = hub.Publish
 	wctx, cancel := context.WithCancel(ctx)
 	done := make(chan struct{})
@@ -70,7 +82,7 @@ func newRig(t *testing.T) *rig {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a := &API{Ctl: ctl, Hub: hub, Token: "automation-token", SetupEnv: "tkb_setup_test", Now: func() time.Time { return now }, Revenue: rev, Box: box,
+	a := &API{Ctl: ctl, Hub: hub, Token: "automation-token", SetupEnv: "tkb_setup_test", Now: tick, Revenue: rev, Box: box,
 		PurgeAnalytics: w.PurgeSite,
 		ErasePerson:    w.ErasePerson,
 		Query: func() *query.Q {
@@ -98,7 +110,7 @@ func newRig(t *testing.T) *rig {
 		st.Close()
 		ctl.Close()
 	})
-	return &rig{rev: rev, srv: srv, ctl: ctl, log: lg, w: w, site: site, now: now, api: a}
+	return &rig{rev: rev, srv: srv, ctl: ctl, log: lg, w: w, site: site, now: now, api: a, clock: clock}
 }
 
 func (g *rig) event(t *testing.T, e event.Event) {

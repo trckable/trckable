@@ -9,6 +9,12 @@ section into the release.
 
 ## Unreleased
 
+### Fixed
+- Security: a two-step code signs in once. The same code, or an older one
+  still inside its 90-second window, is refused, so a code seen over a
+  shoulder or replayed cannot be used again. The code that turns two-step on
+  does not sign in either
+
 ## 0.2.0 (25 Sep 2026)
 
 ### New

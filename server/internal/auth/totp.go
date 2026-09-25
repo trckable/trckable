@@ -61,18 +61,27 @@ func TOTPCode(secret string, at time.Time) (string, error) {
 // VerifyTOTP accepts the code for now, and for one step either side, so a
 // slow phone or a slow person still works.
 func VerifyTOTP(secret, code string, now time.Time) bool {
+	_, ok := TOTPStepOf(secret, code, now)
+	return ok
+}
+
+// TOTPStepOf is VerifyTOTP that also says which 30-second step the code
+// belongs to, so the caller can refuse a step it has already accepted: a code
+// seen over a shoulder, or replayed from a log, must not sign in again.
+func TOTPStepOf(secret, code string, now time.Time) (int64, bool) {
 	code = strings.TrimSpace(strings.ReplaceAll(code, " ", ""))
 	if len(code) != 6 {
-		return false
+		return 0, false
 	}
 	for _, drift := range []time.Duration{0, -TOTPStep, TOTPStep} {
-		want, err := TOTPCode(secret, now.Add(drift))
+		at := now.Add(drift)
+		want, err := TOTPCode(secret, at)
 		if err != nil {
-			return false
+			return 0, false
 		}
 		if subtle.ConstantTimeCompare([]byte(want), []byte(code)) == 1 {
-			return true
+			return at.Unix() / int64(TOTPStep.Seconds()), true
 		}
 	}
-	return false
+	return 0, false
 }
