@@ -10,6 +10,7 @@
 // <ConfirmHost /> is mounted once, at the root; any component may ask.
 import { CircleHelp, TriangleAlert } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from './Toast'
 import { DialogActions } from './DialogActions'
 import { Modal } from './Modal'
 
@@ -20,6 +21,12 @@ type Ask = {
   cancelLabel?: string
   /** Red button and a warning mark: for what cannot be undone. */
   danger?: boolean
+  /** Do the thing from inside the dialog: it stays open with the button
+   *  busy until the server says done, then closes with `done` as a toast;
+   *  a failure is shown in the dialog, which stays open to try again. */
+  run?: (value: string) => Promise<unknown>
+  busyLabel?: string
+  done?: string
 }
 type Field = { label: string; type?: 'password' | 'text'; autoComplete?: string }
 type Req = Ask & { field?: Field; resolve: (v: string | null) => void }
@@ -61,16 +68,38 @@ export function ConfirmHost() {
 
 function ConfirmDialog({ req, done }: { req: Req; done: (v: string | null) => void }) {
   const [value, setValue] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const submit = () => {
+    if (req.field && !value) return
+    const v = req.field ? value : ''
+    if (!req.run) return done(v)
+    setBusy(true)
+    setErr(null)
+    req
+      .run(v)
+      .then(() => {
+        if (req.done) toast(req.done)
+        done(v)
+      })
+      .catch((e: Error) => setErr(e.message || 'That did not work — try again.'))
+      .finally(() => setBusy(false))
+  }
   const Mark = req.danger ? TriangleAlert : CircleHelp
   return (
-    <Modal label={req.title} className="confirm-modal" onClose={() => done(null)}>
-      <form className="confirm-body" onSubmit={(e) => (e.preventDefault(), (!req.field || value) && done(req.field ? value : ''))}>
+    <Modal label={req.title} className="confirm-modal" onClose={busy ? undefined : () => done(null)}>
+      <form className="confirm-body" onSubmit={(e) => (e.preventDefault(), submit())} aria-busy={busy}>
         <span className={'modal-badge' + (req.danger ? ' danger' : '')} aria-hidden="true">
           <Mark size={20} strokeWidth={1.75} />
         </span>
         <div className="confirm-text">
           <h2>{req.title}</h2>
           {req.body && <p className="muted">{req.body}</p>}
+          {err && (
+            <p className="confirm-err" role="alert">
+              {err}
+            </p>
+          )}
           {req.field && (
             <label className="field">
               {req.field.label}
@@ -87,13 +116,14 @@ function ConfirmDialog({ req, done }: { req: Req; done: (v: string | null) => vo
         </div>
         <DialogActions
           left={
-            <button type="button" className="btn ghost" onClick={() => done(null)} autoFocus={!req.field}>
+            <button type="button" className="btn ghost" onClick={() => done(null)} autoFocus={!req.field} disabled={busy}>
               {req.cancelLabel ?? 'Cancel'}
             </button>
           }
         >
-          <button type="submit" className={req.danger ? 'btn danger big' : 'btn primary big'} disabled={!!req.field && !value}>
-            {req.confirmLabel ?? 'Yes'}
+          <button type="submit" className={req.danger ? 'btn danger big' : 'btn primary big'} disabled={busy || (!!req.field && !value)}>
+            {busy && <span className="btn-spin" aria-hidden="true" />}
+            {busy ? (req.busyLabel ?? 'Working…') : (req.confirmLabel ?? 'Yes')}
           </button>
         </DialogActions>
       </form>

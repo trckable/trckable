@@ -92,13 +92,15 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
         <div className="modal-tools">
           {changed && !rec && (
             <button type="button" className="pill-btn" onClick={async () => {
-                const ok = await ask({
+                await ask({
                   title: count === 1 ? 'Reset the key you changed?' : `Reset all ${count} keys you changed?`,
                   body: 'Every shortcut goes back to how it came. Your own keys are not kept anywhere, so you would have to set them again.',
                   confirmLabel: 'Reset shortcuts',
                   danger: true,
+                  busyLabel: 'Resetting…',
+                  done: 'Shortcuts are back to the defaults',
+                  run: () => api.setKeys({}).then((r) => loadKeymap(r.keys)),
                 })
-                if (ok) save({}, 'Shortcuts are back to the defaults')
               }} title="Put every key back as it came">
               <RotateCcw size={15} strokeWidth={1.75} aria-hidden="true" />
               Reset

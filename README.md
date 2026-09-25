@@ -105,7 +105,7 @@ Nothing is paid, limited or kept for a hosted edition. The complete list, in wor
 <td width="50%"><img src=".github/images/gallery/money-trail.png" alt="Hovering a channel highlights where those visitors went and what they paid"><br><sub><b>Money trail.</b> Hover a source, follow its visitors and their money.</sub></td>
 </tr>
 <tr>
-<td><img src=".github/images/gallery/filter-menu.png" alt="The Filter menu with dimensions grouped and a search inside each"><br><sub><b>Filter menu.</b> Every dimension, grouped and searchable; saved views.</sub></td>
+<td><img src=".github/images/gallery/filter-menu.png" alt="The Filter menu: one search across every dimension, dimensions grouped with an icon each"><br><sub><b>Filter menu.</b> One search across every dimension; pick several without closing it.</sub></td>
 <td><img src=".github/images/gallery/modules.png" alt="Settings, Modules: every module priced in bytes before you turn it on"><br><sub><b>Modules.</b> Each priced in bytes before you turn it on.</sub></td>
 </tr>
 <tr>

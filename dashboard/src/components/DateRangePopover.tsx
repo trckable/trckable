@@ -81,7 +81,7 @@ export default function Popover({
   const [focusDay, setFocusDay] = useState<ISODate>(value.range.to)
   const dialog = useRef<HTMLDivElement>(null)
 
-  const cmp = compareRange(draft.range, draft.compare, draft.compareCustom)
+  const cmp = compareRange(draft.range, draft.compare, draft.compareCustom, draft.period)
   const active = editing === 'main' ? draft.range : (draft.compareCustom ?? cmp ?? draft.range)
 
   useEffect(() => {
@@ -188,8 +188,10 @@ export default function Popover({
               onChange={(e) => setDraft((d) => ({ ...d, compare: e.target.checked ? 'previous' : 'none' }))}
               style={{ width: 15, height: 15, accentColor: 'var(--accent)' }}
             />
-            Compare with the period before
-            {draft.compare !== 'none' && cmp && <span className="faint num">{fmtRange(cmp, today)}</span>}
+            <span className="compare-text">
+              <span>Compare with the period before</span>
+              {draft.compare !== 'none' && cmp && <span className="faint">{fmtRange(cmp, today)}</span>}
+            </span>
           </label>
           {onBucket && (
             <div className="periods-bucket">

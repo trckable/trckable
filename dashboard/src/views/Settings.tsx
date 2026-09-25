@@ -1,4 +1,4 @@
-import { Activity, Bell, Blocks, ChevronLeft, ChevronRight, Code, CreditCard, Search, Settings as Cog, ShieldCheck, X } from 'lucide-react'
+import { Activity, Bell, Blocks, ChevronLeft, ChevronRight, CircleCheck, Code, CreditCard, Search, Settings as Cog, ShieldCheck, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { isViewer } from '../lib/me'
 import { api, type Site } from '../lib/api'
@@ -188,7 +188,7 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
       {/* Saying it once is kinder than letting every save come back 403. */}
       {isViewer() && <p className="viewer-note">Your account reads this instance. Settings are shown as they are, and an owner changes them.</p>}
       {tab === 'site' && <SiteSettings key={site.id} site={site} onSaved={onSites} />}
-      {tab === 'install' && <Install site={site} visits={[]} inSettings />}
+      {tab === 'install' && <InstallSection site={site} />}
       {tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
       {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}
       {tab === 'search' && <SearchSettings key={'sc' + site.id} site={site} />}
@@ -197,6 +197,61 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
       {tab === 'health' && <HealthSettings />}
     </>
   )
+}
+
+/** Install, once the site is installed: that it works comes first — when the
+ *  last visit arrived, and on which page — with a button to look again; the
+ *  code stays one click away, for a new page, a rebuild or a teammate.
+ *  Before the first visit it is the install card as it always was. */
+function InstallSection({ site }: { site: Site }) {
+  const [last, setLast] = useState<{ ts: number; path?: string } | null | undefined>(undefined)
+  const [checking, setChecking] = useState(false)
+  const [code, setCode] = useState(false)
+  const check = () => {
+    setChecking(true)
+    api
+      .events(site.id, 1)
+      .then((r) => setLast(r.events[0] ? { ts: Number(r.events[0].ts) || Date.parse(r.events[0].ts), path: r.events[0].path } : null))
+      .catch(() => setLast(null))
+      .finally(() => setChecking(false))
+  }
+  useEffect(check, [site.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  if (last === undefined) return <div className="skeleton" style={{ height: 88 }} />
+  if (last === null) return <Install site={site} visits={[]} inSettings />
+  return (
+    <>
+      <section className="card install-ok">
+        <span className="icon-tile accent" aria-hidden="true">
+          <CircleCheck size={18} strokeWidth={1.75} />
+        </span>
+        <div>
+          <h3>Installed on {site.domain}</h3>
+          <p className="muted">
+            Last visit {agoText(last.ts)}
+            {last.path ? ` on ${last.path}` : ''}.
+          </p>
+        </div>
+        <button type="button" className="btn" onClick={check} disabled={checking}>
+          {checking && <span className="btn-spin" aria-hidden="true" />}
+          {checking ? 'Checking…' : 'Check again'}
+        </button>
+      </section>
+      <button type="button" className="btn ghost install-more" aria-expanded={code} onClick={() => setCode((c) => !c)}>
+        <ChevronRight size={15} strokeWidth={1.75} style={{ transform: code ? 'rotate(90deg)' : undefined, transition: 'transform .15s' }} aria-hidden="true" />
+        {code ? 'Hide the code' : 'Show the code again'}
+      </button>
+      {code && <Install site={site} visits={[]} inSettings />}
+    </>
+  )
+}
+
+function agoText(ts: number): string {
+  const s = Math.max(0, Math.round((Date.now() - ts) / 1000))
+  if (s < 60) return 'just now'
+  if (s < 3600) return `${Math.round(s / 60)} min ago`
+  if (s < 86400) return `${Math.round(s / 3600)} h ago`
+  const d = Math.round(s / 86400)
+  return d === 1 ? 'a day ago' : `${d} days ago`
 }
 
 /** The page form, kept for an instance with no site yet: there is no

@@ -14,10 +14,12 @@ import { Dashboard } from "./views/Dashboard";
 import { applyTheme } from "./lib/theme";
 import { closeAddSite, useAccountTab, useAddSite } from "./lib/account";
 import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
+import { useLatest } from "./lib/update";
 import { setRole } from "./lib/me";
 // Settings and the account dialog are their own screens: the dashboard should
 // not carry them.
 const Settings = lazy(() => import("./views/Settings").then((m) => ({ default: m.Settings })));
+const UpdateDialog = lazy(() => import("./components/UpdateDialog"));
 const SettingsDialog = lazy(() => import("./views/Settings").then((m) => ({ default: m.SettingsDialog })));
 const AccountDialog = lazy(() => import("./views/Account").then((m) => ({ default: m.AccountDialog })));
 const AddWizard = lazy(() => import("./views/Sites").then((m) => ({ default: m.AddWizard })));
@@ -40,7 +42,7 @@ type Boot =
   | { state: "loading" }
   | { state: "setup" }
   | { state: "login" }
-  | { state: "ready"; email?: string; version?: string; sites: Site[] }
+  | { state: "ready"; email?: string; version?: string; updateCheck?: boolean; sites: Site[] }
   | { state: "error"; message: string };
 
 function App() {
@@ -58,7 +60,7 @@ function App() {
       setRole(me.role);
       loadKeymap(me.keys);
       const { sites } = await api.sites();
-      setBoot({ state: "ready", email: me.email, version: me.version, sites });
+      setBoot({ state: "ready", email: me.email, version: me.version, updateCheck: me.update_check, sites });
     } catch (e) {
       setBoot({
         state: "error",
@@ -76,6 +78,9 @@ function App() {
   const accountTab = useAccountTab(); // a hook: must run before any early return
   const adding = useAddSite();
   const settingsOpen = useSettings();
+  // A newer release, if this owner's dashboard may look (lib/update.ts).
+  const latest = useLatest(boot.state === "ready" ? boot.version : undefined, boot.state === "ready" ? boot.updateCheck : false);
+  const [showUpdate, setShowUpdate] = useState(false);
   // An old /settings?site=…&tab=… link (the docs, a bookmark): open the dialog
   // over that site's dashboard and put the dashboard's address back.
   useEffect(() => {
@@ -158,7 +163,7 @@ function App() {
   const header = (
     // The header hides the site picker only on the settings page (an instance
     // with no site yet); settings over a dashboard keep the dashboard's header.
-    <Header sites={boot.sites} current={site} settings={settings && !site} all={all} />
+    <Header sites={boot.sites} current={site} settings={settings && !site} all={all} update={latest?.v} onUpdate={() => setShowUpdate(true)} />
   );
   return (
     <div className="app">
@@ -191,7 +196,12 @@ function App() {
           )}
         </>
       )}
-      <Footer version={boot.version} />
+      <Footer version={boot.version} newer={latest?.v} onNewer={() => setShowUpdate(true)} />
+      {showUpdate && latest && boot.version && (
+        <Suspense fallback={null}>
+          <UpdateDialog latest={latest} current={boot.version} onClose={() => setShowUpdate(false)} />
+        </Suspense>
+      )}
       <ShortcutsHost />
       <ConfirmHost />
       <Toasts />
@@ -219,11 +229,16 @@ function Header({
   current,
   settings,
   all,
+  update,
+  onUpdate,
 }: {
   sites: Site[];
   current: Site | null;
   settings: boolean;
   all?: boolean;
+  /** A newer version, when there is one: a small lime pill by the logo. */
+  update?: string;
+  onUpdate?: () => void;
 }) {
   return (
     <>
@@ -236,6 +251,13 @@ function Header({
         onClick={(e) => (e.preventDefault(), navigate("/"))}
         dangerouslySetInnerHTML={{ __html: logoInner() }}
       />
+      {update && (
+        <button type="button" className="update-pill" onClick={onUpdate} title={`trckable ${update} is out`}>
+          <span className="dot" aria-hidden="true" />
+          <span className="num">v{update}</span>
+          <span className="sr">is out: see how to upgrade</span>
+        </button>
+      )}
 
       {/* One control, two actions: which site, and that site's settings. They
           were two separate buttons sitting next to each other, which read as

@@ -248,20 +248,11 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
                 body: `Revenue already recorded stays${c.payments > 0 ? ` (${c.payments} payments)` : ''}. New payments stop arriving, the webhook trckable created is removed, and later sales will show as unattributed. You can reconnect at any time.`,
                 confirmLabel: 'Disconnect',
                 danger: true,
+                busyLabel: 'Disconnecting…',
+                done: `${provider?.name} disconnected · recorded revenue kept`,
+                run: () => api.disconnectPayments(site.id, c.id),
               })
-              if (!ok) return
-              setBusy('disconnect')
-              const id = toast(`Disconnecting ${provider?.name}…`, 'busy')
-              api
-                .disconnectPayments(site.id, c.id)
-                .then(() => {
-                  settle(id, `${provider?.name} disconnected · recorded revenue kept`)
-                  onChange()
-                })
-                .catch((e: Error) => {
-                  settle(id, e.message, 'error')
-                  setBusy('')
-                })
+              if (ok) onChange()
             }}
           >
             Disconnect

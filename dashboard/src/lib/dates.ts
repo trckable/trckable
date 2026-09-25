@@ -97,11 +97,52 @@ export const presetById = (id: string) => PRESETS.find((p) => p.id === id)
 export type CompareMode = 'none' | 'previous' | 'year' | 'custom'
 
 /** The comparison range the server will use (mirrors api/report.go). */
-export function compareRange(r: Range, mode: CompareMode, custom?: Range): Range | null {
+/** The period before a calendar one, the same stretch of it: This week
+ *  (Mon–Thu) against last Mon–Thu, this month (1–24) against last month's
+ *  1–24, this year to date against last year to date. The period of the same
+ *  length just before would compare September with the April before it. */
+export function calendarPrevious(period: string, r: Range): Range | null {
+  switch (period) {
+    case 'wtd':
+      return { from: addDays(r.from, -7), to: addDays(r.to, -7) }
+    case 'mtd': {
+      const from = addMonths(r.from, -1)
+      const to = addMonths(r.to, -1)
+      return { from, to: to > endOfMonth(from) ? endOfMonth(from) : to }
+    }
+    case 'ytd':
+      return { from: addMonths(r.from, -12), to: addMonths(r.to, -12) }
+    default:
+      return null
+  }
+}
+
+/** What a comparison is against, in words: "last year", "last month", "the
+ *  30 days before". The exact days go in a tooltip. */
+export function compareLabel(period: string, mode: CompareMode, r: Range): string {
+  if (mode === 'year') return 'a year before'
+  if (mode === 'custom') return 'your dates'
+  switch (period) {
+    case 'wtd':
+      return 'last week'
+    case 'mtd':
+      return 'last month'
+    case 'ytd':
+      return 'last year'
+    case 'today':
+      return 'yesterday'
+    case 'yesterday':
+      return 'the day before'
+  }
+  const n = diffDays(r.from, r.to) + 1
+  return n === 1 ? 'the day before' : `the ${n} days before`
+}
+
+export function compareRange(r: Range, mode: CompareMode, custom?: Range, period?: string): Range | null {
   const n = diffDays(r.from, r.to) + 1
   switch (mode) {
     case 'previous':
-      return { from: addDays(r.from, -n), to: addDays(r.from, -1) }
+      return (period && calendarPrevious(period, r)) || { from: addDays(r.from, -n), to: addDays(r.from, -1) }
     case 'year':
       return { from: addMonths(r.from, -12), to: addMonths(r.to, -12) }
     case 'custom':

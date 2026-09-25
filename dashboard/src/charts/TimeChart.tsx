@@ -127,7 +127,10 @@ export function TimeChart(p: TimeChartProps) {
   const scrub = p.scrub ?? null
   const detail = hover != null ? (p.detail?.(hover) ?? null) : null
   const hi = hover ?? scrub
-  const tipLeft = hi != null ? (x(hi) > w - 270 ? x(hi) - 258 : x(hi) + 14) : 0
+  // Beside the point when there is room, never past either edge: on a phone
+  // the card is nearly as wide as the chart, and it used to leave the screen.
+  const tipW = 244
+  const tipLeft = hi != null ? Math.max(0, Math.min(w - tipW, x(hi) > w - 270 ? x(hi) - 258 : x(hi) + 14)) : 0
   const gradId = 'g-area'
 
   return (
