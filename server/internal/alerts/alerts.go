@@ -81,8 +81,45 @@ var cgnat = &net.IPNet{IP: net.IPv4(100, 64, 0, 0), Mask: net.CIDRMask(10, 32)}
 // or internal network, link-local (the cloud metadata service lives there),
 // or no address at all.
 func unsafeIP(ip net.IP) bool {
-	return ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() ||
-		ip.IsInterfaceLocalMulticast() || ip.IsMulticast() || ip.IsUnspecified() || cgnat.Contains(ip)
+	// An IPv4 address carried inside IPv6 (NAT64, 6to4) is judged as itself.
+	if len(ip) == net.IPv6len && ip.To4() == nil {
+		if nat64.Contains(ip) {
+			return unsafeIP(net.IP(ip[12:16]))
+		}
+		if sixToFour.Contains(ip) {
+			return unsafeIP(net.IP(ip[2:6]))
+		}
+	}
+	if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() ||
+		ip.IsInterfaceLocalMulticast() || ip.IsMulticast() || ip.IsUnspecified() || cgnat.Contains(ip) {
+		return true
+	}
+	for _, n := range special {
+		if n.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+// special are the IPv4 ranges that are no public host: "this network",
+// IETF protocol assignments (192.0.0.192 is Oracle Cloud's metadata),
+// benchmarking, and the reserved block.
+var special = []*net.IPNet{
+	mustNet("0.0.0.0/8"), mustNet("192.0.0.0/24"), mustNet("198.18.0.0/15"), mustNet("240.0.0.0/4"),
+}
+
+var (
+	nat64     = mustNet("64:ff9b::/96")
+	sixToFour = mustNet("2002::/16")
+)
+
+func mustNet(cidr string) *net.IPNet {
+	_, n, err := net.ParseCIDR(cidr)
+	if err != nil {
+		panic(err)
+	}
+	return n
 }
 
 // safeDial refuses to connect to an unsafe address. CheckTarget looks the

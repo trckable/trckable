@@ -1189,12 +1189,13 @@ table.t td {
   overflow-y: auto;
 }
 .modal.rise {
-  animation: modal-pop 0.28s cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+  animation: modal-pop 0.34s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 @keyframes modal-pop {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.97);
+    transform: translateY(12px) scale(0.96);
+    box-shadow: 0 0 0 rgb(0 0 0 / 0);
   }
 }
 @keyframes fade-in {
@@ -4684,4 +4685,31 @@ body[data-mode] .overview .kpi .value,
 }
 *::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* Cards you can click lift a little under the pointer. */
+.site-card,
+.prov,
+.mtile,
+.person,
+.wg-row,
+.htile {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s;
+}
+.site-card:hover,
+.prov:hover,
+.mtile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.28);
+}
+.person:hover,
+.wg-row:hover {
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.22);
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-card:hover,
+  .prov:hover,
+  .mtile:hover {
+    transform: none;
+  }
 }

@@ -100,6 +100,10 @@ func (a *API) deleteShare(w http.ResponseWriter, r *http.Request) {
 // session cookie. Rate-limited on the address, because a token is the only
 // thing standing between the outside and these numbers.
 func (a *API) openShare(w http.ResponseWriter, r *http.Request) {
+	if !jsonOnly(r) {
+		fail(w, http.StatusUnsupportedMediaType, "send JSON")
+		return
+	}
 	a.init()
 	if !a.loginRate.allow("share:"+a.ip(r), a.Now(), 30, 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")

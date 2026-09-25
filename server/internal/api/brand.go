@@ -80,6 +80,12 @@ func (a *API) storeIcon(w http.ResponseWriter, r *http.Request, data []byte) {
 // fetchFavicon asks the site for its own icon: the Apple touch icon first
 // (usually larger and sharper), then /favicon.ico.
 func (a *API) fetchFavicon(w http.ResponseWriter, r *http.Request) {
+	// Each of these does real work (outside fetches, or a password hash):
+	// limited, so a busy button or a stolen session cannot make it a flood.
+	if !a.loginRate.allow("favicon:"+r.PathValue("site"), a.Now(), 10, 10*time.Minute) {
+		fail(w, http.StatusTooManyRequests, "tried many times just now: try again in a few minutes")
+		return
+	}
 	if !a.siteExists(w, r) {
 		return
 	}

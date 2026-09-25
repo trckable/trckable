@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
@@ -43,6 +44,12 @@ func (a *API) twoStep(w http.ResponseWriter, r *http.Request) {
 // The password is asked for again: a borrowed session must not be able to add
 // a factor only the borrower holds.
 func (a *API) startTwoStep(w http.ResponseWriter, r *http.Request) {
+	// Each of these does real work (outside fetches, or a password hash):
+	// limited, so a busy button or a stolen session cannot make it a flood.
+	if !a.loginRate.allow("twostep:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
+		fail(w, http.StatusTooManyRequests, "too many tries: wait a few minutes")
+		return
+	}
 	u := a.twoStepUser(w, r)
 	if u == nil {
 		return
@@ -102,6 +109,12 @@ func (a *API) enableTwoStep(w http.ResponseWriter, r *http.Request) {
 // disableTwoStep turns it off and forgets the secret. It asks for the password
 // again for the same reason enabling does.
 func (a *API) disableTwoStep(w http.ResponseWriter, r *http.Request) {
+	// Each of these does real work (outside fetches, or a password hash):
+	// limited, so a busy button or a stolen session cannot make it a flood.
+	if !a.loginRate.allow("twostep:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
+		fail(w, http.StatusTooManyRequests, "too many tries: wait a few minutes")
+		return
+	}
 	u := a.twoStepUser(w, r)
 	if u == nil {
 		return

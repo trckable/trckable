@@ -420,3 +420,112 @@
   font-weight: 700;
   color: var(--down);
 }
+
+/* Moving between the steps: each one slides and fades in, a beat after the
+   one above it, instead of snapping into place. */
+.danger-step {
+  animation: danger-in 0.36s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.danger-list.danger-step {
+  animation-delay: 0.06s;
+}
+@keyframes danger-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+}
+.danger-type .input:focus,
+.danger-type .input:focus-visible {
+  outline: none;
+  border-color: var(--down);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--down) 22%, transparent);
+}
+
+/* While it deletes: rows dissolving one after another, and a sweep. */
+.shred {
+  display: grid;
+  gap: 5px;
+  width: 120px;
+  margin-bottom: 6px;
+}
+.shred i {
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--down) 55%, var(--border-2));
+  animation: shred 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.shred i:nth-child(2) {
+  width: 86%;
+  animation-delay: 0.15s;
+}
+.shred i:nth-child(3) {
+  width: 94%;
+  animation-delay: 0.3s;
+}
+.shred i:nth-child(4) {
+  width: 70%;
+  animation-delay: 0.45s;
+}
+@keyframes shred {
+  0%,
+  15% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  55% {
+    opacity: 0;
+    transform: translateX(18px) scaleX(0.6);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(18px) scaleX(0.6);
+  }
+}
+.shred-bar {
+  display: block;
+  width: min(260px, 80%);
+  height: 3px;
+  margin: 4px 0 2px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--down) 15%, transparent);
+  overflow: hidden;
+}
+.shred-bar > span {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--down);
+  animation: sweep 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+/* Done: the tick pops in with a ring. */
+.danger-done svg {
+  animation: tick-pop 0.5s cubic-bezier(0.3, 1.4, 0.5, 1) 0.05s both;
+  color: var(--up);
+}
+@keyframes tick-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3) rotate(-12deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .danger-step,
+  .shred i,
+  .shred-bar > span,
+  .danger-done svg {
+    animation: none;
+  }
+}

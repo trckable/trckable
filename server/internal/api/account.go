@@ -63,6 +63,12 @@ func (a *API) deleteSite(w http.ResponseWriter, r *http.Request) {
 
 // changePassword needs the current password, and signs every other session out.
 func (a *API) changePassword(w http.ResponseWriter, r *http.Request) {
+	// Each of these does real work (outside fetches, or a password hash):
+	// limited, so a busy button or a stolen session cannot make it a flood.
+	if !a.loginRate.allow("password:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
+		fail(w, http.StatusTooManyRequests, "too many tries: wait a few minutes")
+		return
+	}
 	u := r.Context().Value(ctxKey{}).(principal).user
 	if u == nil {
 		fail(w, http.StatusForbidden, "only a signed-in user can change a password")

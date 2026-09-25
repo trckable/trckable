@@ -220,6 +220,15 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 
 func fail(w http.ResponseWriter, code int, msg string) { writeJSON(w, code, apiError{msg}) }
 
+// jsonOnly refuses a request a plain HTML form on another site could send:
+// login, setup and opening a share link must come as JSON or with the
+// dashboard's own header (login CSRF signs a victim into someone else's
+// account).
+func jsonOnly(r *http.Request) bool {
+	ct := r.Header.Get("Content-Type")
+	return strings.HasPrefix(ct, "application/json") || r.Header.Get("X-Trckable-Request") == "1"
+}
+
 func decode(r *http.Request, v any) error {
 	return json.NewDecoder(http.MaxBytesReader(nil, r.Body, 64<<10)).Decode(v)
 }
@@ -425,6 +434,10 @@ func (a *API) unmanaged(h http.HandlerFunc) http.HandlerFunc {
 }
 
 func (a *API) setup(w http.ResponseWriter, r *http.Request) {
+	if !jsonOnly(r) {
+		fail(w, http.StatusUnsupportedMediaType, "send JSON")
+		return
+	}
 	a.init()
 	if !a.loginRate.allow("setup:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")
@@ -476,6 +489,10 @@ func (a *API) setup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) login(w http.ResponseWriter, r *http.Request) {
+	if !jsonOnly(r) {
+		fail(w, http.StatusUnsupportedMediaType, "send JSON")
+		return
+	}
 	a.init()
 	if !a.loginRate.allow("login:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")

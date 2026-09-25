@@ -244,9 +244,13 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
   const run = () => {
     setErr(null)
     setStep('working')
+    // At least a moment on screen: a small site goes in milliseconds, and a
+    // flash of the working step read as a glitch.
+    const shown = new Promise((r) => setTimeout(r, 1200))
     api
       .deleteSite(site.id, typed.trim())
-      .then((r) => {
+      .then(async (r) => {
+        await shown
         // The summary first: refreshing the list now would take the page
         // (and this dialog) away before it is read.
         setGone(r)
@@ -272,7 +276,7 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
     <Modal label={`Delete ${site.domain}`} className="danger-modal" keepSize={false} onClose={step === 'what' || step === 'last' ? onClose : undefined}>
       {step === 'what' && (
         <>
-          <div className="danger-head">
+          <div className="danger-head danger-step" key="what">
             <span className="danger-mark" aria-hidden="true">
               <TriangleAlert size={22} strokeWidth={1.9} />
             </span>
@@ -281,7 +285,7 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
               <span>This removes the site and everything recorded for it. There is no undo.</span>
             </div>
           </div>
-          <div className="danger-list">
+          <div className="danger-list danger-step">
             <b>What goes</b>
             <ul>
               {lines.map(([label, n]) => (
@@ -324,7 +328,7 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
 
       {step === 'last' && (
         <>
-          <div className="danger-head">
+          <div className="danger-head danger-step" key="last">
             <span className="danger-mark" aria-hidden="true">
               <TriangleAlert size={22} strokeWidth={1.9} />
             </span>
@@ -333,7 +337,7 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
               <span>Once you hold the button, {site.domain} is deleted for good. Nobody, including trckable, can bring it back from here.</span>
             </div>
           </div>
-          <div className="danger-list danger-final">
+          <div className="danger-list danger-final danger-step">
             <span>
               <b className="num">{fmtInt(counts?.events ?? 0)}</b> events
             </span>
@@ -362,16 +366,24 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
       )}
 
       {step === 'working' && (
-        <div className="danger-working">
-          <span className="btn-spin" aria-hidden="true" />
+        <div className="danger-working danger-step" key="working" role="status" aria-live="polite">
+          <div className="shred" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <i />
+          </div>
           <b>Deleting {site.domain}…</b>
+          <span className="shred-bar" aria-hidden="true">
+            <span />
+          </span>
           <span className="faint">A busy site can hold millions of rows: this can take a moment. Keep this open.</span>
         </div>
       )}
 
       {step === 'done' && (
         <>
-          <div className="wiz-done">
+          <div className="wiz-done danger-done danger-step" key="done">
             <Check size={34} strokeWidth={2} aria-hidden="true" />
             <b>{site.domain} is gone.</b>
           </div>
