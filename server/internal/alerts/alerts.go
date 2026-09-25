@@ -152,3 +152,14 @@ func Send(ctx context.Context, target string, e Event) error {
 	}
 	return nil
 }
+
+// SafeClient is an HTTP client that can only reach the public internet: every
+// connection goes through safeDial, so no redirect or DNS answer can walk it
+// into this machine or its private network. For outbound fetches other than
+// alerts (a site's favicon).
+func SafeClient(timeout time.Duration) *http.Client {
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: &http.Transport{Proxy: nil, DialContext: safeDial, TLSHandshakeTimeout: timeout},
+	}
+}

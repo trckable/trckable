@@ -117,6 +117,11 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("POST /api/v1/sites", a.authed(a.createSite))
 	handle("GET /api/v1/sites/{site}", a.authed(a.site))
 	handle("PATCH /api/v1/sites/{site}", a.authed(a.updateSite))
+	handle("GET /api/v1/sites/{site}/icon", a.authed(a.siteIcon))
+	handle("PUT /api/v1/sites/{site}/icon", a.authed(a.setSiteIcon))
+	handle("DELETE /api/v1/sites/{site}/icon", a.authed(a.clearSiteIcon))
+	handle("POST /api/v1/sites/{site}/icon/favicon", a.authed(a.fetchFavicon))
+	handle("PUT /api/v1/sites/{site}/color", a.authed(a.setSiteColor))
 	handle("DELETE /api/v1/sites/{site}", a.authed(a.deleteSite))
 	handle("GET /api/v1/sites/{site}/config", a.authed(a.siteConfig))
 	handle("PUT /api/v1/sites/{site}/config", a.authed(a.setSiteConfig))
@@ -539,9 +544,12 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	brands, _ := a.Ctl.Brands(r.Context(), principalOf(r).account)
 	out := []sqlite.SiteInfo{}
 	for _, s := range rows {
-		out = append(out, sqlite.SiteInfo{ID: s.ID, Domain: s.Domain, Name: s.Name, Timezone: s.Timezone, Currency: s.Currency, ProxyKey: a.proxyKeyFor(r, s.ProxyKey), LastEventAt: s.LastEventAt})
+		b := brands[s.ID]
+		out = append(out, sqlite.SiteInfo{ID: s.ID, Domain: s.Domain, Name: s.Name, Timezone: s.Timezone, Currency: s.Currency, ProxyKey: a.proxyKeyFor(r, s.ProxyKey), LastEventAt: s.LastEventAt,
+			Color: b.Color, IconURL: iconURL(s.ID, b)})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"sites": out})
 }

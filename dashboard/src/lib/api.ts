@@ -87,6 +87,9 @@ export interface Site {
   proxy_key: string
   /** Unix seconds of the last event; absent means nothing has arrived yet. */
   last_event_at?: number
+  /** The site's own look, when the owner set one: #rrggbb, and its icon. */
+  color?: string
+  icon_url?: string
 }
 
 /** live = seen in the last day · quiet = seen, but not lately · new = never. */
@@ -538,6 +541,12 @@ export interface PersonPayment {
   test?: boolean
 }
 
+export interface Brand {
+  color: string
+  icon_at: number
+  icon_url: string
+}
+
 export interface Person {
   id: string
   email: string
@@ -590,6 +599,10 @@ export const api = {
   addPerson: (email: string, role: string) => call<{ person: Person; password: string; signin?: string }>('POST', '/people', { email, role }),
   setPersonRole: (id: string, role: string) => call<{ people: Person[] }>('PATCH', `/people/${id}`, { role }),
   removePerson: (id: string) => call<void>('DELETE', `/people/${id}`),
+  setSiteIcon: (site: string, picture: Blob) => raw('PUT', `/sites/${site}/icon`, picture),
+  clearSiteIcon: (site: string) => call<Brand>('DELETE', `/sites/${site}/icon`),
+  fetchSiteFavicon: (site: string) => call<Brand>('POST', `/sites/${site}/icon/favicon`),
+  setSiteColor: (site: string, color: string) => call<Brand>('PUT', `/sites/${site}/color`, { color }),
   resetPersonPassword: (id: string) => call<{ email: string; password: string }>('POST', `/people/${id}/password`),
   changePassword: (current: string, password: string) => call<void>('POST', '/account/password', { current, password }),
   twoStep: () => call<TwoStep>('GET', '/account/2fa'),

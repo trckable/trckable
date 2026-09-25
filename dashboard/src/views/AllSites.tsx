@@ -9,6 +9,7 @@ import { delta, fmtInt, fmtMoney, fmtPct } from '../lib/format'
 import { isViewer } from '../lib/me'
 import { navigate } from '../lib/url'
 import './AllSites.css'
+import { SiteMark, hueOf as hueFromDomain } from '../components/SiteMark'
 import { openSettings } from '../lib/settings'
 
 const PERIODS = [
@@ -33,23 +34,9 @@ function Spark({ values, color = 'var(--accent)', w = 140, h = 36 }: { values: n
   )
 }
 
-/** A site's hue, from its domain, so its badge and its colour in the chart
-    stay the same everywhere. */
-const hueOf = (domain: string) => {
-  let h = 0
-  for (const c of domain) h = (h * 31 + c.charCodeAt(0)) % 360
-  return h
-}
-
-/** A letter badge per site. */
-function Badge({ domain }: { domain: string }) {
-  const h = hueOf(domain)
-  return (
-    <span className="all-badge" style={{ ['--h' as string]: h }} aria-hidden="true">
-      {domain.replace(/^www\./, '')[0]?.toUpperCase() ?? '?'}
-    </span>
-  )
-}
+/** A site's hue, from its domain, so its chart band, spark and share bar
+    stay the same everywhere (components/SiteMark.tsx). */
+const hueOf = hueFromDomain
 
 /** Every site's visitors over the period, stacked, each in its own colour.
     Point at a day to read each site's share of it. */
@@ -134,7 +121,8 @@ function Stacked({ rows, days }: { rows: SiteRow[]; days: number }) {
 
 type Show = 'all' | 'active' | 'waiting' | 'revenue'
 
-export function AllSites({ header }: { sites: Site[]; header: React.ReactNode }) {
+export function AllSites({ sites, header }: { sites: Site[]; header: React.ReactNode }) {
+  const brandOf = (id: string, domain: string) => sites.find((s) => s.id === id) ?? { domain }
   const [days, setDays] = useState(() => {
     const d = Number(new URLSearchParams(location.search).get('days'))
     return PERIODS.some((p) => p.days === d) ? d : 30
@@ -321,7 +309,7 @@ export function AllSites({ header }: { sites: Site[]; header: React.ReactNode })
                     onClick={() => (quiet ? openSettings(r, 'install') : navigate('/' + encodeURIComponent(r.domain)))}
                   >
                     <span className="all-name">
-                      <Badge domain={r.domain} />
+                      <SiteMark site={brandOf(r.id, r.domain)} size={32} />
                       <span>
                         <b>{r.name || r.domain}</b>
                         <span className="faint">

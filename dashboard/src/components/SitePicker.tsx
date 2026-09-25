@@ -9,6 +9,7 @@ import { navigate } from '../lib/url'
 import { openAccount, openAddSite } from '../lib/account'
 import { isViewer } from '../lib/me'
 import { usePhoneLock } from './lockScroll'
+import { SiteMark } from './SiteMark'
 
 /** Green when the site sent something today, amber when it has gone quiet,
  *  hollow when nothing has ever arrived. */
@@ -59,7 +60,12 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
   return (
     <div className="site-pick" ref={root}>
       <button type="button" className="btn site-btn" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        {!all && <StateDot state={current ? siteState(current) : 'new'} />}
+        {!all && current && (
+          <span className="mark-wrap">
+            <SiteMark site={current} size={20} />
+            <StateDot state={siteState(current)} />
+          </span>
+        )}
         <span className="name">{all ? 'All sites' : current?.name || current?.domain || 'Pick a site'}</span>
         <ChevronDown size={15} strokeWidth={1.75} aria-hidden="true" />
       </button>
@@ -92,7 +98,10 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
             )}
             {shown.map((s) => (
               <button key={s.id} type="button" role="option" aria-selected={s.id === current?.id} className={s.id === current?.id ? 'site on' : 'site'} onClick={() => pick(s)}>
-                <StateDot state={siteState(s)} />
+                <span className="mark-wrap">
+                  <SiteMark site={s} size={26} />
+                  <StateDot state={siteState(s)} />
+                </span>
                 <span className="name">
                   <b>{s.name || s.domain}</b>
                   {siteState(s) === 'new' ? (

@@ -4600,3 +4600,30 @@ body[data-mode] .overview .kpi .value,
   line-height: 17px;
   white-space: nowrap;
 }
+
+/* A site's mark: its icon, or its letter on its colour (components/SiteMark). */
+.site-mark {
+  flex: none;
+  border-radius: 7px;
+  object-fit: cover;
+}
+.site-mark.letter {
+  display: inline-grid;
+  place-items: center;
+  font-weight: 700;
+  line-height: 1;
+}
+/* The live dot sits on the mark's corner. */
+.mark-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.mark-wrap > .dot {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 9px !important;
+  height: 9px !important;
+  box-shadow: 0 0 0 2px var(--surface);
+}

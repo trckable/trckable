@@ -372,6 +372,15 @@ var migrations = []string{
 	// 25: a password someone else chose (a new person's, or one an owner
 	// reset) must be replaced at the next sign-in.
 	`ALTER TABLE users ADD COLUMN must_change INTEGER NOT NULL DEFAULT 0;`,
+	// 26: a site's own look in the dashboard: an accent colour and a small
+	// icon (its favicon, or one the owner uploads).
+	`CREATE TABLE site_brand (
+		site_id    TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		color      TEXT NOT NULL DEFAULT '',
+		icon       BLOB,
+		icon_type  TEXT NOT NULL DEFAULT '',
+		updated_at INTEGER NOT NULL
+	);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

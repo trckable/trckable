@@ -1,9 +1,12 @@
 import { Activity, Bell, Blocks, ChevronLeft, ChevronRight, CircleCheck, Code, CreditCard, Search, Settings as Cog, ShieldCheck, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { isViewer } from '../lib/me'
 import { api, type Site } from '../lib/api'
 import { navigate, useLocation } from '../lib/url'
 import { Modal } from '../components/Modal'
+import { SiteMark } from '../components/SiteMark'
+import { Info } from '../components/Info'
+import { toast } from '../components/Toast'
 import { closeSettings, setSettingsTab, type SettingsTab } from '../lib/settings'
 import { Picker } from '../components/Picker'
 import { Row } from '../components/Row'
@@ -20,6 +23,8 @@ import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import './Settings.css'
 
 type TabID = SettingsTab
+
+const IconCrop = lazy(() => import('../components/AvatarCrop'))
 
 // Only the open site lives here. Anything about the account — the list of
 // sites, keys, the password — is one dialog away (see AccountDialog), so the
@@ -187,7 +192,12 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
     <>
       {/* Saying it once is kinder than letting every save come back 403. */}
       {isViewer() && <p className="viewer-note">Your account reads this instance. Settings are shown as they are, and an owner changes them.</p>}
-      {tab === 'site' && <SiteSettings key={site.id} site={site} onSaved={onSites} />}
+      {tab === 'site' && (
+        <>
+          <SiteSettings key={site.id} site={site} onSaved={onSites} />
+          <SiteLook site={site} onSaved={onSites} />
+        </>
+      )}
       {tab === 'install' && <InstallSection site={site} />}
       {tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
       {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}
@@ -396,6 +406,99 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
         <span role="alert" style={{ color: 'var(--down)', fontSize: 13, paddingTop: 10 }}>
           {err}
         </span>
+      )}
+    </section>
+  )
+}
+
+// A few colours that read well on both themes, and any other with the picker.
+const SWATCHES = ['#b8ff3c', '#3ddc97', '#38bdf8', '#818cf8', '#c084fc', '#f472b6', '#fb7185', '#fb923c', '#facc15']
+
+/** How the site looks in trckable: its icon and its colour, in the site
+ *  picker, All sites and the header. Nothing a visitor ever sees. */
+function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
+  const file = useRef<HTMLInputElement>(null)
+  const [cropping, setCropping] = useState<File | null>(null)
+  const [busy, setBusy] = useState<'favicon' | 'remove' | null>(null)
+  const act = (what: 'favicon' | 'remove', run: () => Promise<unknown>, said: string) => {
+    setBusy(what)
+    run()
+      .then(() => (toast(said), onSaved()))
+      .catch((e: Error) => toast(e.message, 'error'))
+      .finally(() => setBusy(null))
+  }
+  return (
+    <section className="card" style={{ gap: 0 }}>
+      <div className="card-head" style={{ paddingBottom: 10 }}>
+        <h2>Look</h2>
+        <Info text="How this site shows up inside trckable: the site picker, All sites and the header. Visitors never see it." />
+      </div>
+      <Row label="Icon" hint="Its favicon, or a picture you crop. PNG, JPEG, WebP, GIF or ICO.">
+        <SiteMark site={site} size={36} />
+        <input
+          ref={file}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif,image/x-icon"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const f = e.target.files?.[0]
+            if (f) setCropping(f)
+            e.target.value = ''
+          }}
+        />
+        <button type="button" className="btn" disabled={!!busy} onClick={() => act('favicon', () => api.fetchSiteFavicon(site.id), 'Using the site\'s favicon')}>
+          {busy === 'favicon' && <span className="btn-spin" aria-hidden="true" />}
+          {busy === 'favicon' ? 'Fetching…' : 'Use its favicon'}
+        </button>
+        <button type="button" className="btn" onClick={() => file.current?.click()}>
+          Upload
+        </button>
+        {site.icon_url && (
+          <button type="button" className="btn ghost" disabled={!!busy} onClick={() => act('remove', () => api.clearSiteIcon(site.id), 'Icon removed')}>
+            Remove
+          </button>
+        )}
+      </Row>
+      <Row label="Colour" hint="The site's letter and marks, when it has no icon">
+        <div className="swatches" role="radiogroup" aria-label="Colour">
+          {SWATCHES.map((c) => (
+            <button
+              key={c}
+              type="button"
+              role="radio"
+              aria-checked={site.color === c}
+              aria-label={c}
+              className="swatch"
+              style={{ background: c }}
+              onClick={() => api.setSiteColor(site.id, c).then(onSaved).catch((e: Error) => toast(e.message, 'error'))}
+            />
+          ))}
+          <label className="swatch custom" title="Another colour">
+            <input type="color" value={site.color || '#b8ff3c'} onChange={(e) => api.setSiteColor(site.id, e.target.value).then(onSaved)} aria-label="Another colour" />
+          </label>
+          {site.color && (
+            <button type="button" className="btn ghost small" onClick={() => api.setSiteColor(site.id, '').then(onSaved)}>
+              None
+            </button>
+          )}
+        </div>
+      </Row>
+      {cropping && (
+        <Suspense fallback={null}>
+          <IconCrop
+            file={cropping}
+            square
+            title="The site's icon"
+            onCancel={() => setCropping(null)}
+            onSave={(picture) =>
+              api.setSiteIcon(site.id, picture).then(() => {
+                setCropping(null)
+                toast('Icon saved')
+                onSaved()
+              })
+            }
+          />
+        </Suspense>
       )}
     </section>
   )

@@ -247,6 +247,9 @@ type SiteInfo struct {
 	// LastEventAt is when this site last sent an event (unix seconds, 0 if it
 	// never has), so the dashboard can show which sites are live.
 	LastEventAt int64 `json:"last_event_at,omitempty"`
+	// Color and IconURL are the site's own look in the dashboard, if set.
+	Color   string `json:"color,omitempty"`
+	IconURL string `json:"icon_url,omitempty"`
 }
 
 // SiteInfo returns one site.
