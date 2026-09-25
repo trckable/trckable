@@ -1,12 +1,12 @@
 // Share what the dashboard shows as a picture for a post: a card drawn here,
-// in the browser, 1200 × 630 (what social sites show), in trckable's look
-// and the site's colour. Nothing is uploaded: the owner downloads it, copies
-// it, or hands it to the phone's share sheet. Every number is a switch, and
-// money starts off.
+// in the browser as a post (1200 × 630), a square or a story, in trckable's
+// look and the site's colour. Nothing is uploaded: the owner downloads it,
+// copies it, or hands it to the phone's share sheet. The owner picks the big
+// number and up to three more, and money starts off.
 import { Check, Copy, Download, Share2, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { GHOST, LINE } from '../brand/logo'
-import { fmtInt } from '../lib/format'
+import { fmtDuration, fmtInt, fmtPct } from '../lib/format'
 import { Modal } from './Modal'
 import { Switch } from './Switch'
 import { toast } from './Toast'
@@ -26,6 +26,11 @@ export type ShareData = {
   /** The dashboard's own comparison, when it has one: the words ("vs last
    *  year") and the other period's line, drawn dashed like the chart's. */
   compare?: { label: string; series: number[] }
+  /** More numbers the owner may add: bounce rate (0–1), visit time (s), the top source and country. */
+  bounce?: number
+  visitTime?: number
+  topSource?: string
+  topCountry?: string
   /** A milestone instead of the period: "10,000" · "visitors, all time" · "Reached on Sep 25". */
   milestone?: { value: string; label: string; sub: string }
 }
@@ -37,8 +42,6 @@ const DESIGNS: { id: Design; name: string }[] = [
   { id: 'bold', name: 'Bold' },
 ]
 
-const W = 1200
-const H = 630
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
 const change = (now: number, prev?: number) => (prev && prev > 0 ? (now - prev) / prev : null)
@@ -60,10 +63,53 @@ function linePath(values: number[], x0: number, y0: number, w: number, h: number
   return d
 }
 
-type Show = { visitors: boolean; pageviews: boolean; revenue: boolean; change: boolean; chart: boolean }
+export type Lead = 'visitors' | 'pageviews' | 'revenue'
+export type Extra = 'visitors' | 'pageviews' | 'revenue' | 'bounce' | 'time' | 'source' | 'country'
+export type Format = 'post' | 'square' | 'story'
+export type Look = { lead: Lead; extras: Extra[]; change: boolean; chart: boolean; format: Format }
+
+const SIZES: Record<Format, { w: number; h: number; name: string }> = {
+  post: { w: 1200, h: 630, name: 'Post' },
+  square: { w: 1080, h: 1080, name: 'Square' },
+  story: { w: 1080, h: 1920, name: 'Story' },
+}
+
+export const EXTRA_LABEL: Record<Extra, string> = {
+  visitors: 'Visitors',
+  pageviews: 'Pageviews',
+  revenue: 'Revenue',
+  bounce: 'Bounce rate',
+  time: 'Visit time',
+  source: 'Top source',
+  country: 'Top country',
+}
+
+const EXTRAS: Extra[] = ['visitors', 'pageviews', 'revenue', 'bounce', 'time', 'source', 'country']
+
+/** The value and its small label for one extra, or null when there is none. */
+function extraOf(d: ShareData, e: Extra): { value: string; label: string } | null {
+  switch (e) {
+    case 'visitors':
+      return { value: fmtInt(d.visitors), label: 'visitors' }
+    case 'pageviews':
+      return { value: fmtInt(d.pageviews), label: 'pageviews' }
+    case 'revenue':
+      return d.revenue ? { value: d.revenue.fmt(d.revenue.now), label: 'revenue' } : null
+    case 'bounce':
+      return d.bounce !== undefined ? { value: fmtPct(d.bounce), label: 'bounce rate' } : null
+    case 'time':
+      return d.visitTime !== undefined ? { value: fmtDuration(d.visitTime), label: 'a visit, on average' } : null
+    case 'source':
+      return d.topSource ? { value: d.topSource, label: 'top source' } : null
+    case 'country':
+      return d.topCountry ? { value: d.topCountry, label: 'top country' } : null
+  }
+}
 
 /** The card, as SVG: the same string is the preview and the picture. */
-export function cardSvg(d: ShareData, design: Design, show: Show, title: string): string {
+export function cardSvg(d: ShareData, design: Design, look: Look, title: string): string {
+  const { w: W, h: H } = SIZES[look.format]
+  if (d.milestone) return milestoneSvg(d, design, title, W, H)
   const accent = d.color || '#b8ff3c'
   const t =
     design === 'paper'
@@ -72,76 +118,105 @@ export function cardSvg(d: ShareData, design: Design, show: Show, title: string)
         ? { bg: accent, fg: '#0b0d10', mute: 'rgba(11,13,16,0.62)', line: 'rgba(11,13,16,0.16)', acc: '#0b0d10' }
         : { bg: '#0b0d10', fg: '#f5f7fa', mute: '#8a93a1', line: '#1d2229', acc: accent }
   const font = `font-family="Geist, Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif"`
-  if (d.milestone) return milestoneSvg(d, design, title)
-  const main = show.visitors
-    ? { value: fmtInt(d.visitors), label: 'visitors', ch: change(d.visitors, d.prevVisitors) }
-    : show.pageviews
-      ? { value: fmtInt(d.pageviews), label: 'pageviews', ch: change(d.pageviews, d.prevPageviews) }
-      : show.revenue && d.revenue
-        ? { value: d.revenue.fmt(d.revenue.now), label: 'revenue', ch: change(d.revenue.now, d.revenue.prev) }
-        : null
-  const side: { value: string; label: string }[] = []
-  if (show.visitors && show.pageviews) side.push({ value: fmtInt(d.pageviews), label: 'pageviews' })
-  if (show.revenue && d.revenue && (show.visitors || show.pageviews)) side.push({ value: d.revenue.fmt(d.revenue.now), label: 'revenue' })
-
-  // One scale for both lines, so the comparison is honest.
-  const top = Math.max(1, ...d.series, ...(d.compare?.series ?? []))
-  const chart = show.chart && d.series.length > 1 ? linePath([...d.series, top].slice(0, -1).map((v) => v / top), 60, 410, W - 120, 130, 1) : ''
-  const ghostLine = show.chart && show.change && d.compare && d.compare.series.some((v) => v > 0) ? linePath(d.compare.series.map((v) => v / top), 60, 410, W - 120, 130, 1) : ''
+  const lead =
+    look.lead === 'revenue' && d.revenue
+      ? { value: d.revenue.fmt(d.revenue.now), label: 'revenue', ch: change(d.revenue.now, d.revenue.prev) }
+      : look.lead === 'pageviews'
+        ? { value: fmtInt(d.pageviews), label: 'pageviews', ch: change(d.pageviews, d.prevPageviews) }
+        : { value: fmtInt(d.visitors), label: 'visitors', ch: change(d.visitors, d.prevVisitors) }
+  const extras = EXTRAS.filter((e) => look.extras.includes(e) && e !== look.lead)
+    .map((e) => extraOf(d, e))
+    .filter((x): x is { value: string; label: string } => !!x)
+    .slice(0, 3)
   const vsText = d.compare?.label ?? 'vs the period before'
+  const changeLine =
+    look.change && d.compare
+      ? lead.ch !== null
+        ? `  ·  <tspan fill="${t.acc}" font-weight="700">${pct(lead.ch)}</tspan><tspan fill="${t.mute}"> ${esc(vsText)}</tspan>`
+        : `  ·  <tspan fill="${t.mute}">no data ${esc(vsText.replace(/^vs /, 'from '))}</tspan>`
+      : ''
+
+  // Where each part goes, by size.
+  const L =
+    look.format === 'post'
+      ? { pad: 60, title: 92, period: 132, big: 290, bigSize: 150, label: 340, chartTop: 410, chartH: 130, foot: H - 26, extras: 'column' as const, exTop: 210 }
+      : look.format === 'square'
+        ? { pad: 72, title: 120, period: 164, big: 420, bigSize: 190, label: 480, chartTop: 700, chartH: 220, foot: H - 44, extras: 'row' as const, exTop: 600 }
+        : { pad: 80, title: 220, period: 270, big: 760, bigSize: 230, label: 840, chartTop: 1450, chartH: 250, foot: H - 80, extras: 'stack' as const, exTop: 1010 }
+  const top = Math.max(1, ...d.series, ...(d.compare?.series ?? []))
+  const chartBottom = L.chartTop + L.chartH
+  const chart = look.chart && d.series.length > 1 ? linePath(d.series.map((v) => v / top), L.pad, L.chartTop, W - L.pad * 2, L.chartH, 1) : ''
+  const ghostLine = look.chart && look.change && d.compare && d.compare.series.some((v) => v > 0) ? linePath(d.compare.series.map((v) => v / top), L.pad, L.chartTop, W - L.pad * 2, L.chartH, 1) : ''
+
+  // A long value ("United Kingdom") shrinks to its room instead of running
+  // into the next one; Geist's figures and letters average about 0.58 em.
+  const fit = (text: string, size: number, room: number) => Math.min(size, Math.floor(room / (text.length * 0.58)))
+  const exSvg = extras
+    .map((x, i) => {
+      if (L.extras === 'column')
+        return (
+          `<text x="${W - L.pad}" y="${L.exTop + i * 86}" text-anchor="end" ${font} font-size="${fit(x.value, 48, 420)}" font-weight="700" fill="${t.fg}">${esc(x.value)}</text>` +
+          `<text x="${W - L.pad}" y="${L.exTop + 32 + i * 86}" text-anchor="end" ${font} font-size="22" fill="${t.mute}">${esc(x.label)}</text>`
+        )
+      if (L.extras === 'row') {
+        const colW = (W - L.pad * 2) / 3
+        const x0 = L.pad + i * colW
+        return (
+          `<text x="${x0}" y="${L.exTop}" ${font} font-size="${fit(x.value, 50, colW - 24)}" font-weight="700" fill="${t.fg}">${esc(x.value)}</text>` +
+          `<text x="${x0}" y="${L.exTop + 36}" ${font} font-size="26" fill="${t.mute}">${esc(x.label)}</text>`
+        )
+      }
+      return (
+        `<text x="${L.pad}" y="${L.exTop + i * 150}" ${font} font-size="${fit(x.value, 84, W - L.pad * 2)}" font-weight="700" letter-spacing="-2" fill="${t.fg}">${esc(x.value)}</text>` +
+        `<text x="${L.pad + 2}" y="${L.exTop + 46 + i * 150}" ${font} font-size="32" fill="${t.mute}">${esc(x.label)}</text>`
+      )
+    })
+    .join('')
+
   const glow =
     design === 'glow'
       ? `<radialGradient id="g" cx="0.15" cy="0" r="0.9"><stop offset="0" stop-color="${accent}" stop-opacity="0.28"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient><rect width="${W}" height="${H}" fill="url(#g)"/>`
       : ''
-  // The ghost always in its own colours, on its own dark badge (as the app
-  // icon is), so it reads the same on every design and is never recoloured.
-  const ghost =
-    `<rect x="60" y="578" width="38" height="38" rx="10" fill="#0b0d10"/>` +
-    `<g transform="translate(64 582) scale(0.47)">` +
-    `<path d="${GHOST}" fill="#b8ff3c"/>` +
-    `<circle cx="25.5" cy="29" r="3.6" fill="#0b0d10"/><circle cx="38.5" cy="29" r="3.6" fill="#0b0d10"/>` +
-    `<path d="${LINE}" fill="none" stroke="#0b0d10" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` +
-    `<path d="${LINE}" fill="none" stroke="#f5f7fa" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>` +
-    `</g>`
+  const s = look.format === 'post' ? 1 : 1.25 // the footer grows with the canvas
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
     `<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t.acc}" stop-opacity="0.35"/><stop offset="1" stop-color="${t.acc}" stop-opacity="0"/></linearGradient></defs>` +
     `<rect width="${W}" height="${H}" fill="${t.bg}"/>` +
     glow +
-    `<text x="60" y="92" ${font} font-size="30" font-weight="600" fill="${t.fg}">${esc(title)}</text>` +
-    `<text x="60" y="132" ${font} font-size="24" fill="${t.mute}">${esc(d.period)}</text>` +
-    (main
-      ? `<text x="56" y="290" ${font} font-size="150" font-weight="760" letter-spacing="-6" fill="${t.fg}">${esc(main.value)}</text>` +
-        `<text x="62" y="340" ${font} font-size="30" fill="${t.mute}">${main.label}${
-          show.change && d.compare
-            ? main.ch !== null
-              ? `  ·  <tspan fill="${t.acc}" font-weight="700">${pct(main.ch)}</tspan><tspan fill="${t.mute}"> ${esc(vsText)}</tspan>`
-              : `  ·  <tspan fill="${t.mute}">no data ${esc(vsText.replace(/^vs /, 'from '))}</tspan>`
-            : ''
-        }</text>`
-      : '') +
-    side
-      .map(
-        (s, i) =>
-          `<text x="${W - 60}" y="${210 + i * 90}" text-anchor="end" ${font} font-size="52" font-weight="700" fill="${t.fg}">${esc(s.value)}</text>` +
-          `<text x="${W - 60}" y="${244 + i * 90}" text-anchor="end" ${font} font-size="22" fill="${t.mute}">${s.label}</text>`,
-      )
-      .join('') +
+    `<text x="${L.pad}" y="${L.title}" ${font} font-size="${30 * s}" font-weight="600" fill="${t.fg}">${esc(title)}</text>` +
+    `<text x="${L.pad}" y="${L.period}" ${font} font-size="${24 * s}" fill="${t.mute}">${esc(d.period)}</text>` +
+    `<text x="${L.pad - 4}" y="${L.big}" ${font} font-size="${L.bigSize}" font-weight="760" letter-spacing="-6" fill="${t.fg}">${esc(lead.value)}</text>` +
+    `<text x="${L.pad + 2}" y="${L.label}" ${font} font-size="${30 * s}" fill="${t.mute}">${lead.label}${changeLine}</text>` +
+    exSvg +
     (ghostLine ? `<path d="${ghostLine}" fill="none" stroke="${t.mute}" stroke-width="3" stroke-dasharray="10 9" stroke-linecap="round" opacity="0.8"/>` : '') +
     (chart
-      ? `<path d="${chart} L${W - 60} 540 L60 540 Z" fill="url(#a)"/><path d="${chart}" fill="none" stroke="${t.acc}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`
+      ? `<path d="${chart} L${W - L.pad} ${chartBottom} L${L.pad} ${chartBottom} Z" fill="url(#a)"/><path d="${chart}" fill="none" stroke="${t.acc}" stroke-width="${5 * s}" stroke-linecap="round" stroke-linejoin="round"/>`
       : '') +
-    `<line x1="60" y1="562" x2="${W - 60}" y2="562" stroke="${t.line}" stroke-width="2"/>` +
-    ghost +
-    `<text x="112" y="604" ${font} font-size="22" fill="${t.mute}">Counted by <tspan font-weight="760" fill="${t.fg}" letter-spacing="-1">trck</tspan><tspan font-weight="360" letter-spacing="-0.5">able</tspan></text>` +
-    `<text x="${W - 60}" y="604" text-anchor="end" ${font} font-size="22" fill="${t.mute}">${esc(d.domain)}</text>` +
+    `<line x1="${L.pad}" y1="${L.foot - 42 * s}" x2="${W - L.pad}" y2="${L.foot - 42 * s}" stroke="${t.line}" stroke-width="2"/>` +
+    brandFoot(L.pad, L.foot, s, t) +
+    `<text x="${W - L.pad}" y="${L.foot}" text-anchor="end" ${font} font-size="${22 * s}" fill="${t.mute}">${esc(d.domain)}</text>` +
     `</svg>`
   )
 }
 
+/** The ghost on its own dark badge (as the app icon is) and "Counted by
+ *  trckable", with the baseline at y. */
+function brandFoot(x: number, y: number, s: number, t: { fg: string; mute: string }) {
+  const font = `font-family="Geist, Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif"`
+  const b = 38 * s
+  return (
+    `<rect x="${x}" y="${y - b + 8 * s}" width="${b}" height="${b}" rx="${10 * s}" fill="#0b0d10"/>` +
+    `<g transform="translate(${x + 4 * s} ${y - b + 12 * s}) scale(${0.47 * s})">` +
+    `<path d="${GHOST}" fill="#b8ff3c"/><circle cx="25.5" cy="29" r="3.6" fill="#0b0d10"/><circle cx="38.5" cy="29" r="3.6" fill="#0b0d10"/>` +
+    `<path d="${LINE}" fill="none" stroke="#0b0d10" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<path d="${LINE}" fill="none" stroke="#f5f7fa" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></g>` +
+    `<text x="${x + b + 14 * s}" y="${y}" ${font} font-size="${22 * s}" fill="${t.mute}">Counted by <tspan font-weight="760" fill="${t.fg}" letter-spacing="-1">trck</tspan><tspan font-weight="360" letter-spacing="-0.5">able</tspan></text>`
+  )
+}
+
 /** A milestone card: one big number, what it is, the day, and a burst. */
-function milestoneSvg(d: ShareData, design: Design, title: string): string {
+function milestoneSvg(d: ShareData, design: Design, title: string, W: number, H: number): string {
   const m = d.milestone!
   const accent = d.color || '#b8ff3c'
   const t =
@@ -151,39 +226,37 @@ function milestoneSvg(d: ShareData, design: Design, title: string): string {
         ? { bg: accent, fg: '#0b0d10', mute: 'rgba(11,13,16,0.62)', acc: '#0b0d10' }
         : { bg: '#0b0d10', fg: '#f5f7fa', mute: '#8a93a1', acc: accent }
   const font = `font-family="Geist, Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif"`
-  // A burst of dots around the number: fixed positions, so the card is the
-  // same every time it is drawn.
+  const s = W === 1200 ? 1 : 1.3
+  const cy = H * 0.52
+  // A burst of dots around the number, placed by fractions of the canvas so
+  // it is the same every time and on every size.
   const dots = [
-    [150, 170, 9], [230, 120, 5], [1030, 150, 8], [960, 110, 5], [1080, 260, 6], [120, 330, 6],
-    [1010, 380, 10], [200, 430, 5], [880, 470, 6], [320, 500, 7], [760, 130, 4], [420, 110, 4],
+    [0.12, 0.27, 9], [0.19, 0.19, 5], [0.86, 0.24, 8], [0.8, 0.17, 5], [0.9, 0.41, 6], [0.1, 0.52, 6],
+    [0.84, 0.6, 10], [0.17, 0.68, 5], [0.73, 0.75, 6], [0.27, 0.79, 7], [0.63, 0.21, 4], [0.35, 0.17, 4],
   ]
-    .map(([x, y, r], i) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${i % 3 === 0 ? t.acc : t.mute}" opacity="${i % 2 ? 0.5 : 0.85}"/>`)
+    .map(([x, y, r], i) => `<circle cx="${x * W}" cy="${y * H}" r="${r * s}" fill="${i % 3 === 0 ? t.acc : t.mute}" opacity="${i % 2 ? 0.5 : 0.85}"/>`)
     .join('')
   const glow =
     design === 'glow'
-      ? `<radialGradient id="g" cx="0.5" cy="0.45" r="0.6"><stop offset="0" stop-color="${accent}" stop-opacity="0.3"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient><rect width="${W}" height="${H}" fill="url(#g)"/>`
+      ? `<radialGradient id="g" cx="0.5" cy="0.5" r="0.6"><stop offset="0" stop-color="${accent}" stop-opacity="0.3"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient><rect width="${W}" height="${H}" fill="url(#g)"/>`
       : ''
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
     `<rect width="${W}" height="${H}" fill="${t.bg}"/>` +
     glow +
     dots +
-    `<text x="${W / 2}" y="120" text-anchor="middle" ${font} font-size="28" font-weight="600" fill="${t.fg}">${esc(title)}</text>` +
-    `<text x="${W / 2}" y="330" text-anchor="middle" ${font} font-size="170" font-weight="760" letter-spacing="-6" fill="${t.fg}">${esc(m.value)}</text>` +
-    `<text x="${W / 2}" y="396" text-anchor="middle" ${font} font-size="38" font-weight="600" fill="${t.acc}">${esc(m.label)}</text>` +
-    `<text x="${W / 2}" y="446" text-anchor="middle" ${font} font-size="24" fill="${t.mute}">${esc(m.sub)}</text>` +
-    `<rect x="${W / 2 - 150}" y="${H - 72}" width="38" height="38" rx="10" fill="#0b0d10"/>` +
-    `<g transform="translate(${W / 2 - 146} ${H - 68}) scale(0.47)">` +
-    `<path d="${GHOST}" fill="#b8ff3c"/><circle cx="25.5" cy="29" r="3.6" fill="#0b0d10"/><circle cx="38.5" cy="29" r="3.6" fill="#0b0d10"/>` +
-    `<path d="${LINE}" fill="none" stroke="#0b0d10" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` +
-    `<path d="${LINE}" fill="none" stroke="#f5f7fa" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></g>` +
-    `<text x="${W / 2 - 100}" y="${H - 46}" ${font} font-size="22" fill="${t.mute}">Counted by <tspan font-weight="760" fill="${t.fg}" letter-spacing="-1">trck</tspan><tspan font-weight="360" letter-spacing="-0.5">able</tspan> · ${esc(d.domain)}</text>` +
+    `<text x="${W / 2}" y="${cy - 210 * s}" text-anchor="middle" ${font} font-size="${28 * s}" font-weight="600" fill="${t.fg}">${esc(title)}</text>` +
+    `<text x="${W / 2}" y="${cy}" text-anchor="middle" ${font} font-size="${170 * s}" font-weight="760" letter-spacing="-6" fill="${t.fg}">${esc(m.value)}</text>` +
+    `<text x="${W / 2}" y="${cy + 66 * s}" text-anchor="middle" ${font} font-size="${38 * s}" font-weight="600" fill="${t.acc}">${esc(m.label)}</text>` +
+    `<text x="${W / 2}" y="${cy + 116 * s}" text-anchor="middle" ${font} font-size="${24 * s}" fill="${t.mute}">${esc(m.sub)}</text>` +
+    brandFoot(60 * s, H - 40 * s, s, t) +
+    `<text x="${W - 60 * s}" y="${H - 40 * s}" text-anchor="end" ${font} font-size="${22 * s}" fill="${t.mute}">${esc(d.domain)}</text>` +
     `</svg>`
   )
 }
 
 /** The card as a PNG, at twice the size so it stays sharp on phones. */
-async function toPng(svg: string): Promise<Blob> {
+async function toPng(svg: string, W: number, H: number): Promise<Blob> {
   const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }))
   try {
     const img = new Image()
@@ -204,13 +277,22 @@ async function toPng(svg: string): Promise<Blob> {
   }
 }
 
+const LEADS: { id: Lead; name: string }[] = [
+  { id: 'visitors', name: 'Visitors' },
+  { id: 'pageviews', name: 'Pageviews' },
+  { id: 'revenue', name: 'Revenue' },
+]
+const MAX_EXTRAS = 3
+
 export default function ShareCard({ data, onClose }: { data: ShareData; onClose: () => void }) {
   const [design, setDesign] = useState<Design>('glow')
-  const [show, setShow] = useState<Show>({ visitors: true, pageviews: true, revenue: false, change: true, chart: true })
+  // Money starts off: it is the owner's to put in, never a default.
+  const [look, setLook] = useState<Look>({ lead: 'visitors', extras: ['pageviews', 'source'], change: true, chart: true, format: 'post' })
   const [title, setTitle] = useState(data.name || data.domain)
   const [busy, setBusy] = useState<string | null>(null)
   const [done, setDone] = useState<string | null>(null)
-  const svg = useMemo(() => cardSvg(data, design, show, title), [data, design, show, title])
+  const size = SIZES[look.format]
+  const svg = useMemo(() => cardSvg(data, design, look, title), [data, design, look, title])
   const src = useMemo(() => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg), [svg])
   useEffect(() => {
     if (!done) return
@@ -218,15 +300,20 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
     return () => clearTimeout(t)
   }, [done])
 
-  const vch = change(data.visitors, data.prevVisitors)
+  const lead =
+    look.lead === 'revenue' && data.revenue
+      ? { text: `${data.revenue.fmt(data.revenue.now)} revenue`, ch: change(data.revenue.now, data.revenue.prev) }
+      : look.lead === 'pageviews'
+        ? { text: `${fmtInt(data.pageviews)} pageviews`, ch: change(data.pageviews, data.prevPageviews) }
+        : { text: `${fmtInt(data.visitors)} visitors`, ch: change(data.visitors, data.prevVisitors) }
   const post = data.milestone
     ? `${title}: ${data.milestone.value} ${data.milestone.label}. ${data.milestone.sub}. Counted by trckable — trckable.com`
-    : `${title}: ${fmtInt(data.visitors)} visitors, ${data.period}${show.change && data.compare && vch !== null ? ` (${pct(vch)} ${data.compare.label})` : ''}. Counted by trckable — trckable.com`
-  const file = () => `trckable-${data.domain}-${new Date().toISOString().slice(0, 10)}.png`
+    : `${title}: ${lead.text}, ${data.period}${look.change && data.compare && lead.ch !== null ? ` (${pct(lead.ch)} ${data.compare.label})` : ''}. Counted by trckable — trckable.com`
+  const file = () => `trckable-${data.domain}-${look.format}-${new Date().toISOString().slice(0, 10)}.png`
   const act = async (what: string, run: (png: Blob) => Promise<unknown>) => {
     setBusy(what)
     try {
-      await run(await toPng(svg))
+      await run(await toPng(svg, size.w, size.h))
       setDone(what)
     } catch (e) {
       if (!(e instanceof DOMException && e.name === 'AbortError')) toast(e instanceof Error ? e.message : String(e), 'error')
@@ -235,13 +322,10 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
     }
   }
   const canShare = typeof navigator.canShare === 'function'
-  const toggles: { id: keyof Show; label: string; off?: boolean }[] = [
-    { id: 'visitors', label: 'Visitors' },
-    { id: 'pageviews', label: 'Pageviews' },
-    { id: 'revenue', label: 'Revenue', off: !data.revenue },
-    { id: 'change', label: data.compare ? `Change ${data.compare.label}` : 'Change', off: !data.compare },
-    { id: 'chart', label: 'The chart' },
-  ]
+  const has = (e: Extra) => e !== look.lead && extraOf(data, e) !== null
+  const extras = look.extras.filter(has)
+  const flip = (e: Extra) =>
+    setLook((l) => ({ ...l, extras: l.extras.includes(e) ? l.extras.filter((x) => x !== e) : [...l.extras.filter(has), e].slice(-MAX_EXTRAS) }))
 
   return (
     <Modal label="Share these numbers" className="share-modal" onClose={onClose}>
@@ -251,7 +335,7 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
         </span>
         <div>
           <h2>Share these numbers</h2>
-          <span className="faint">A picture for a post, made in this browser. Nothing is uploaded, and only what you switch on is in it.</span>
+          <span className="faint">A picture for a post, made in this browser. Nothing is uploaded, and only what you pick is in it.</span>
         </div>
         <button type="button" className="btn icon close" aria-label="Close" onClick={onClose}>
           <X size={18} strokeWidth={1.75} aria-hidden="true" />
@@ -260,30 +344,76 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
 
       <div className="share-body">
         <div className="share-preview">
-          <img src={src} alt={`The card: ${post}`} />
+          <img key={look.format} src={src} alt={`The card: ${post}`} className={'is-' + look.format} style={{ aspectRatio: `${size.w} / ${size.h}` }} />
         </div>
         <div className="share-options">
-          <div className="share-designs seg" role="group" aria-label="Design">
-            {DESIGNS.map((x) => (
-              <button key={x.id} type="button" aria-pressed={design === x.id} onClick={() => setDesign(x.id)}>
-                {x.name}
-              </button>
-            ))}
+          <div className="share-row">
+            <span className="share-label">Look</span>
+            <div className="share-designs seg" role="group" aria-label="Design">
+              {DESIGNS.map((x) => (
+                <button key={x.id} type="button" aria-pressed={design === x.id} onClick={() => setDesign(x.id)}>
+                  {x.name}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="share-row">
+            <span className="share-label">Size</span>
+            <div className="share-designs seg" role="group" aria-label="Size">
+              {(Object.keys(SIZES) as Format[]).map((f) => (
+                <button key={f} type="button" aria-pressed={look.format === f} title={`${SIZES[f].w} × ${SIZES[f].h}`} onClick={() => setLook((l) => ({ ...l, format: f }))}>
+                  <span className={'share-shape is-' + f} aria-hidden="true" />
+                  {SIZES[f].name}
+                </button>
+              ))}
+            </div>
           </div>
           <label className="field">
             Title
             <input className="input" value={title} maxLength={60} onChange={(e) => setTitle(e.target.value)} />
           </label>
-          {!data.milestone && <div className="share-toggles">
-            {toggles
-              .filter((x) => !x.off)
-              .map((x) => (
-                <label key={x.id} className="share-toggle">
-                  <span>{x.label}</span>
-                  <Switch on={show[x.id]} label={x.label} onChange={() => setShow((s) => ({ ...s, [x.id]: !s[x.id] }))} />
+          {!data.milestone && (
+            <>
+              <div className="share-row">
+                <span className="share-label">Big number</span>
+                <div className="share-designs seg" role="group" aria-label="Big number">
+                  {LEADS.filter((x) => x.id !== 'revenue' || data.revenue).map((x) => (
+                    <button key={x.id} type="button" aria-pressed={look.lead === x.id} onClick={() => setLook((l) => ({ ...l, lead: x.id }))}>
+                      {x.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="share-row">
+                <span className="share-label">
+                  Also show <span className="faint">{extras.length} of {MAX_EXTRAS}</span>
+                </span>
+                <div className="share-chips" role="group" aria-label="Also show">
+                  {EXTRAS.filter(has).map((e) => {
+                    const on = extras.includes(e)
+                    return (
+                      <button key={e} type="button" className={'share-chip' + (on ? ' on' : '')} aria-pressed={on} onClick={() => flip(e)}>
+                        {on && <Check size={13} strokeWidth={2.4} aria-hidden="true" />}
+                        {EXTRA_LABEL[e]}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className="share-toggles">
+                {data.compare && (
+                  <label className="share-toggle">
+                    <span>Change {data.compare.label}</span>
+                    <Switch on={look.change} label="Change" onChange={() => setLook((l) => ({ ...l, change: !l.change }))} />
+                  </label>
+                )}
+                <label className="share-toggle">
+                  <span>The chart</span>
+                  <Switch on={look.chart} label="The chart" onChange={() => setLook((l) => ({ ...l, chart: !l.chart }))} />
                 </label>
-              ))}
-          </div>}
+              </div>
+            </>
+          )}
           <div className="share-actions">
             <button
               type="button"
