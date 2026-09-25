@@ -112,6 +112,10 @@ Nothing is paid, limited or kept for a hosted edition. The complete list, in wor
 <td><img src=".github/images/gallery/cookie-consent.png" alt="Cookie consent settings with a live preview of trckable's own bar"><br><sub><b>Cookie consent.</b> Read your banner, or brand trckable's own bar.</sub></td>
 <td><img src=".github/images/gallery/core-light.png" alt="Core mode in the light theme"><br><sub><b>Light theme.</b> Both themes are built to WCAG 2.1 AA and checked with axe-core.</sub></td>
 </tr>
+<tr>
+<td><img src=".github/images/gallery/share-card.png" alt="The Share dialog: the last 30 days as a picture, with visitors, revenue and the change against a year before"><br><sub><b>Share card.</b> Your numbers as a picture or a GIF, made in the browser. Nothing is uploaded.</sub></td>
+<td><img src=".github/images/gallery/widgets.png" alt="Settings, Sharing: the Open revenue widget previewed with this month's revenue by channel"><br><sub><b>Widgets.</b> Live numbers for your own pages, with no script and no cookie.</sub></td>
+</tr>
 </table>
 
 ## 🏗 How it's built
