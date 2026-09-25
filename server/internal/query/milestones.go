@@ -24,7 +24,9 @@ func (q Q) Milestones(ctx context.Context, site, tz string) ([]Milestone, error)
 	if err != nil {
 		return nil, err
 	}
-	local := func(col string) string { return `CAST(((` + col + ` AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS DATE)` }
+	local := func(col string) string {
+		return `CAST(((` + col + ` AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS DATE)`
+	}
 	var out []Milestone
 
 	// Visitors, all time: the day each step was crossed, from first visits.
