@@ -18,9 +18,9 @@ jobs:
       run:
         working-directory: server
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 } # to see what a pull request changed
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.27"
           cache-dependency-path: server/go.sum
@@ -54,9 +54,9 @@ jobs:
     name: tracker + npm package (tests, size budget)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - name: tracker tests
@@ -72,16 +72,16 @@ jobs:
         run: pnpm --filter trckable build && pnpm --filter trckable test
       - name: publish the measured numbers (facts)
         run: node scripts/facts.mjs tracker > facts-tracker.json && cat facts-tracker.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: facts-tracker, path: facts-tracker.json }
 
   dashboard:
     name: dashboard (types, first load ≤ 130 KB gzip, embedded build up to date)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @trckable/dashboard build
@@ -91,25 +91,25 @@ jobs:
           test -z "$(git status --porcelain -- server/internal/web/dist)" || (git status --short -- server/internal/web/dist && echo "run: pnpm --filter @trckable/dashboard build" && exit 1)
       - name: publish the measured numbers (facts)
         run: node scripts/facts.mjs dashboard > facts-dashboard.json && cat facts-dashboard.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: facts-dashboard, path: facts-dashboard.json }
 
   e2e:
     name: browsers (Chromium, Firefox, WebKit)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with: { go-version: "1.27", cache-dependency-path: server/go.sum }
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: cd server && go build -o bin/trckabled ./cmd/trckabled
       - run: pnpm --filter trckable build
       # The three browsers are kept between runs (a minute each time); the
       # system libraries they need still come from apt.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
@@ -128,7 +128,7 @@ jobs:
     name: image (weight budget)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: build image
         run: docker build -f deploy/Dockerfile -t trckable:ci .
       - name: compressed size ≤ 30 MB
@@ -163,5 +163,5 @@ jobs:
           test "$(docker inspect -f '{{.State.ExitCode}}' tkb)" = 0
       - name: publish the measured numbers (facts)
         run: node scripts/facts.mjs image > facts-image.json && cat facts-image.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: facts-image, path: facts-image.json }
