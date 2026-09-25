@@ -147,7 +147,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/account/2fa", a.authed(a.twoStep))
 	handle("POST /api/v1/account/2fa/start", a.authed(a.unmanaged(a.startTwoStep)))
 	handle("POST /api/v1/account/2fa/enable", a.authed(a.unmanaged(a.enableTwoStep)))
-	handle("POST /api/v1/account/2fa/disable", a.authed(a.disableTwoStep))
+	handle("POST /api/v1/account/2fa/disable", a.authed(a.unmanaged(a.disableTwoStep)))
 	handle("GET /api/v1/people", a.authed(a.people))
 	handle("POST /api/v1/people", a.authed(a.addPerson))
 	handle("PATCH /api/v1/people/{id}", a.authed(a.setPersonRole))
@@ -368,6 +368,32 @@ func (a *API) setCookie(w http.ResponseWriter, r *http.Request, value string, ma
 	})
 }
 
+// full says whether key has max attempts inside the window, without adding
+// one: for counting only failures (record), cleared by a success (clear).
+func (l *attempts) full(key string, now time.Time, max int, window time.Duration) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	n := 0
+	for _, t := range l.m[key] {
+		if now.Sub(t) < window {
+			n++
+		}
+	}
+	return n >= max
+}
+
+func (l *attempts) record(key string, now time.Time) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.m[key] = append(l.m[key], now)
+}
+
+func (l *attempts) clear(key string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	delete(l.m, key)
+}
+
 // attempts is a small sliding-window limiter for login and setup.
 type attempts struct {
 	mu sync.Mutex
@@ -514,11 +540,13 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 	// The password was right. If this account has two-step sign-in, ask for
 	// the code — as a separate answer, so the dashboard can show that step
 	// instead of repeating "wrong email or password".
-	// Codes are counted per person too, not only per address (codeTries).
+	// Wrong codes are counted per person too, not only per address (codeTries).
 	if in.Code != "" && !a.codeTries(w, &u) {
 		return
 	}
-	switch err := a.Ctl.CheckSecondStep(r.Context(), u.ID, cleanCode(in.Code), a.unix); {
+	err = a.Ctl.CheckSecondStep(r.Context(), u.ID, cleanCode(in.Code), a.unix)
+	a.codeResult(&u, in.Code, err)
+	switch {
 	case errors.Is(err, sqlite.ErrNeedsCode):
 		writeJSON(w, http.StatusUnauthorized, map[string]any{
 			"error":      "enter the six-digit code from your authenticator app",

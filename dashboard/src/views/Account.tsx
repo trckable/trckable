@@ -372,7 +372,8 @@ function People({ me }: { me?: string }) {
   // must not be enough to take another person's account. Asked one after the
   // other (one dialog at a time), the code last, where the action runs.
   const asOwner = async <T,>(o: { title: string; body: string; confirmLabel: string; busyLabel: string; done?: string; danger?: boolean }, act: (mine: string, code?: string) => Promise<T>) => {
-    const on = await api.twoStep().then((s) => s.enabled).catch(() => false)
+    // Not known (a failed read): ask for the code anyway; the server ignores it when two-step is off.
+    const on = await api.twoStep().then((s) => s.enabled).catch(() => true)
     if (!on) return confirmWith({ ...o, field: { label: 'Your password', type: 'password', autoComplete: 'current-password' }, run: (mine) => act(mine) })
     const mine = await confirmWith({ ...o, done: undefined, busyLabel: undefined, confirmLabel: 'Next', field: { label: 'Your password', type: 'password', autoComplete: 'current-password' } })
     if (mine === null) return null

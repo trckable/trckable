@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -252,5 +253,32 @@ func TestOwnerActionsNeedTheOwnersCode(t *testing.T) {
 	c, _ := auth.TOTPCode(secret, later)
 	if code, _ := do(t, owner, "POST", g.srv.URL+"/api/v1/people/"+id+"/password", `{"password":`+pw+`,"code":"`+c+`"}`, csrf, "1"); code != 200 {
 		t.Fatalf("reset with the owner's code: %d", code)
+	}
+}
+
+// A session without the password cannot spend someone's code tries, and the
+// person's own good codes never use them up.
+func TestCodeTriesCannotLockSomeoneOut(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	const pw = `"correct horse battery"`
+	_, out := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/start", `{"password":`+pw+`}`, csrf, "1")
+	secret := out["secret"].(string)
+	now, _ := auth.TOTPCode(secret, g.now)
+	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/enable", `{"password":`+pw+`,"code":"`+now+`"}`, csrf, "1"); code != 200 {
+		t.Fatalf("enable: %d", code)
+	}
+	// A stolen session, no password: ten tries at enable, all refused at the password.
+	for range 10 {
+		do(t, c, "POST", g.srv.URL+"/api/v1/account/2fa/enable", `{"password":"wrong","code":"000000"}`, csrf, "1")
+	}
+	// Twelve good sign-ins in a row, a minute apart, then one more: all work.
+	for i := range 13 {
+		at := g.advance(time.Minute)
+		code, _ := auth.TOTPCode(secret, at)
+		if status, _ := do(t, client(), "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery","code":"`+code+`"}`, "X-Real-IP", fmt.Sprintf("10.0.0.%d", i)); status != 200 {
+			t.Fatalf("good sign-in %d: %d", i+1, status)
+		}
 	}
 }

@@ -60,23 +60,38 @@ func (a *API) secondStepFor(w http.ResponseWriter, r *http.Request, u *sqlite.Us
 	if !a.codeTries(w, u) {
 		return true, false
 	}
-	if err := a.Ctl.CheckSecondStep(r.Context(), u.ID, cleanCode(code), a.unix); err != nil {
+	err = a.Ctl.CheckSecondStep(r.Context(), u.ID, cleanCode(code), a.unix)
+	a.codeResult(u, code, err)
+	if err != nil {
 		writeJSON(w, http.StatusForbidden, map[string]any{"error": "that code is not right: try the current one from your app, or a recovery code", "needs_code": true})
 		return true, false
 	}
 	return true, true
 }
 
-// codeTries limits how many codes one person's account may be tried with,
+// codeTries limits how many wrong codes one person's account may take,
 // wherever they are typed (sign-in, turning on, off, a new phone), whatever
 // address they come from: a limit per address alone lets many addresses
-// guess six digits without end.
+// guess six digits without end. It only looks; codeResult counts a wrong
+// code and clears the count after a right one, so the person's own good
+// sign-ins never use it up. Always called after the password is proven, so
+// a session alone cannot spend someone's tries and lock them out.
 func (a *API) codeTries(w http.ResponseWriter, u *sqlite.User) bool {
-	if a.loginRate.allow("code:"+u.ID, a.Now(), 10, 10*time.Minute) {
+	if !a.loginRate.full("code:"+u.ID, a.Now(), 10, 10*time.Minute) {
 		return true
 	}
-	fail(w, http.StatusTooManyRequests, "too many codes tried for this account: wait a few minutes")
+	fail(w, http.StatusTooManyRequests, "too many wrong codes for this account: wait a few minutes")
 	return false
+}
+
+func (a *API) codeResult(u *sqlite.User, code string, err error) {
+	switch {
+	case code == "":
+	case err == nil:
+		a.loginRate.clear("code:" + u.ID)
+	case errors.Is(err, auth.ErrBadLogin):
+		a.loginRate.record("code:"+u.ID, a.Now())
+	}
 }
 
 // startTwoStep hands back a fresh secret to scan or type. Nothing is turned on
@@ -146,14 +161,15 @@ func (a *API) enableTwoStep(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusTooManyRequests, "too many tries: wait a few minutes")
 		return
 	}
-	if !a.codeTries(w, u) {
-		return
-	}
 	if _, err := a.Ctl.Login(r.Context(), u.Email, in.Password); err != nil {
 		fail(w, http.StatusForbidden, "that is not your password")
 		return
 	}
+	if !a.codeTries(w, u) {
+		return
+	}
 	codes, err := a.Ctl.EnableTwoStep(r.Context(), u.ID, cleanCode(in.Code), a.unix)
+	a.codeResult(u, in.Code, err)
 	if errors.Is(err, auth.ErrBadLogin) {
 		fail(w, http.StatusBadRequest, "that code is not right — check your phone's clock and try the current one")
 		return
@@ -194,10 +210,15 @@ func (a *API) disableTwoStep(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusForbidden, "that is not your password")
 		return
 	}
-	if _, ok := a.secondStepFor(w, r, u, in.Code); !ok {
+	wasOn, ok := a.secondStepFor(w, r, u, in.Code)
+	if !ok {
 		return
 	}
-	if err := a.Ctl.DisableTwoStep(r.Context(), u.ID); err != nil {
+	// Only if it is still as checked: turned on meanwhile, it needs a code.
+	if err := a.Ctl.DisableTwoStepIf(r.Context(), u.ID, wasOn); errors.Is(err, sqlite.ErrChanged) {
+		fail(w, http.StatusConflict, err.Error())
+		return
+	} else if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}

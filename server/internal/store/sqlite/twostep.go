@@ -100,6 +100,23 @@ func (s *Store) EnableTwoStep(ctx context.Context, id, code string, now func() i
 	return codes, nil
 }
 
+// DisableTwoStepIf turns it off only if it is still as the caller checked
+// (wasOn): a two-step turned on between that check and this write is left on.
+func (s *Store) DisableTwoStepIf(ctx context.Context, id string, wasOn bool) error {
+	on := 0
+	if wasOn {
+		on = 1
+	}
+	res, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_enabled = 0, totp_secret = '', totp_pending = '', recovery = '', totp_last_step = 0 WHERE id = ? AND totp_enabled = ?`, id, on)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n != 1 {
+		return ErrChanged
+	}
+	return nil
+}
+
 // DisableTwoStep turns it off and forgets the secret.
 func (s *Store) DisableTwoStep(ctx context.Context, id string) error {
 	_, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_enabled = 0, totp_secret = '', totp_pending = '', recovery = '', totp_last_step = 0 WHERE id = ?`, id)
