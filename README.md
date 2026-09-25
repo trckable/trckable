@@ -20,9 +20,12 @@ One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy,
 
 <br>
 
-<img src=".github/images/gallery/core.png" alt="The trckable dashboard in Core mode: visitors, revenue, conversion and revenue per visitor, a visitors chart with a revenue strip and notes, and the top sources, pages, locations and devices" width="960">
+<picture>
+  <source srcset=".github/images/gallery/tour.webp" type="image/webp">
+  <img src=".github/images/gallery/tour.gif" alt="A tour of the trckable dashboard on the demo site: the last 30 days against the 30 before, a pointer across the chart showing each day's visitors and revenue, the Share dialog with a card for a post, the money trail of visitors from Search, Full mode, then Replay playing the period day by day" width="960">
+</picture>
 
-<sub>Core mode on the demo site. Press <kbd>F</kbd> for Full: revenue and conversion on every row, goals, top earners and a live feed.</sub>
+<sub>The demo site, recorded from the real dashboard: the comparison, the day under the pointer, Share, the money trail from Search, Full (<kbd>F</kbd>) and Replay.</sub>
 
 <br><br>
 

@@ -10,7 +10,7 @@
 
 [Docs](https://trckable.com/docs/install/npm/) · [GitHub](https://github.com/trckable/trckable) · [Changelog](https://github.com/trckable/trckable/blob/main/CHANGELOG.md) · [trckable.com](https://trckable.com)
 
-<img src="https://raw.githubusercontent.com/trckable/trckable/main/.github/images/gallery/core.png" width="880" alt="The trckable dashboard in Core mode: visitors, revenue, conversion and revenue per visitor, a visitors chart with a revenue strip and notes, and the top sources, pages, locations and devices">
+<img src="https://raw.githubusercontent.com/trckable/trckable/main/.github/images/gallery/tour.webp" width="880" alt="A tour of the trckable dashboard on the demo site: the last 30 days against the 30 before, a pointer across the chart showing each day's visitors and revenue, the Share dialog, the money trail of visitors from Search, Full mode, then Replay playing the period day by day">
 
 </div>
 
