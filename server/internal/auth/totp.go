@@ -70,7 +70,8 @@ func VerifyTOTP(secret, code string, now time.Time) bool {
 // seen over a shoulder, or replayed from a log, must not sign in again.
 func TOTPStepOf(secret, code string, now time.Time) (int64, bool) {
 	code = strings.TrimSpace(strings.ReplaceAll(code, " ", ""))
-	if len(code) != 6 {
+	// An empty secret has codes anyone can compute: never a match.
+	if strings.TrimSpace(secret) == "" || len(code) != 6 {
 		return 0, false
 	}
 	for _, drift := range []time.Duration{0, -TOTPStep, TOTPStep} {

@@ -34,23 +34,46 @@ func (s *Store) TwoStepOf(ctx context.Context, id string) (TwoStep, error) {
 
 // StartTwoStep stores a fresh secret without turning anything on: it is only
 // enabled once a code from it has been proven.
-func (s *Store) StartTwoStep(ctx context.Context, id string) (string, error) {
+//
+// wasOn is whether two-step was on when the caller checked what to ask for;
+// if it changed since, nothing is written (the caller asked for too little).
+func (s *Store) StartTwoStep(ctx context.Context, id string, wasOn bool, now func() int64) (string, error) {
 	secret, err := auth.NewTOTPSecret()
 	if err != nil {
 		return "", err
 	}
-	_, err = s.DB.ExecContext(ctx, `UPDATE users SET totp_secret = ?, totp_enabled = 0 WHERE id = ?`, secret, id)
-	return secret, err
+	on := 0
+	if wasOn {
+		on = 1
+	}
+	// Pending only: the secret that works now (if any) keeps working until a
+	// code from the new one is proven. Writing it over the live one used to
+	// turn two-step off the moment a setup started.
+	res, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_pending = ?, totp_pending_at = ? WHERE id = ? AND totp_enabled = ?`, secret, nowTime(now).Unix(), id, on)
+	if err != nil {
+		return "", err
+	}
+	if n, _ := res.RowsAffected(); n != 1 {
+		return "", ErrChanged
+	}
+	return secret, nil
 }
+
+// PendingTTL is how long a new phone's secret waits to be proven.
+const PendingTTL = 10 * time.Minute
+
+// ErrChanged: two-step changed between the check and the write.
+var ErrChanged = errors.New("two-step sign-in changed meanwhile: try again")
 
 // EnableTwoStep turns it on once the app's code checks out, and returns the
 // recovery codes — the only time they are readable.
 func (s *Store) EnableTwoStep(ctx context.Context, id, code string, now func() int64) ([]string, error) {
 	var secret string
-	if err := s.DB.QueryRowContext(ctx, `SELECT totp_secret FROM users WHERE id = ?`, id).Scan(&secret); err != nil {
+	var at int64
+	if err := s.DB.QueryRowContext(ctx, `SELECT totp_pending, totp_pending_at FROM users WHERE id = ?`, id).Scan(&secret, &at); err != nil {
 		return nil, err
 	}
-	if secret == "" {
+	if secret == "" || nowTime(now).Sub(time.Unix(at, 0)) > PendingTTL {
 		return nil, auth.ErrNotFound
 	}
 	step, ok := auth.TOTPStepOf(secret, code, nowTime(now))
@@ -63,13 +86,40 @@ func (s *Store) EnableTwoStep(ctx context.Context, id, code string, now func() i
 		codes[i] = auth.Token("", 5) // short, readable, one use each
 		hashes[i] = hex.EncodeToString(auth.Hash(codes[i]))
 	}
-	_, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_enabled = 1, recovery = ?, totp_last_step = ? WHERE id = ?`, strings.Join(hashes, " "), step, id)
-	return codes, err
+	// Exactly the secret that was checked, exactly once: two enables racing
+	// with one code used to copy an already-cleared pending secret, leaving
+	// two-step on with an empty secret whose codes anyone can compute.
+	res, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_secret = ?, totp_pending = '', totp_pending_at = 0, totp_enabled = 1, recovery = ?, totp_last_step = ? WHERE id = ? AND totp_pending = ?`,
+		secret, strings.Join(hashes, " "), step, id, secret)
+	if err != nil {
+		return nil, err
+	}
+	if n, _ := res.RowsAffected(); n != 1 {
+		return nil, auth.ErrNotFound // another request enabled it first
+	}
+	return codes, nil
+}
+
+// DisableTwoStepIf turns it off only if it is still as the caller checked
+// (wasOn): a two-step turned on between that check and this write is left on.
+func (s *Store) DisableTwoStepIf(ctx context.Context, id string, wasOn bool) error {
+	on := 0
+	if wasOn {
+		on = 1
+	}
+	res, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_enabled = 0, totp_secret = '', totp_pending = '', recovery = '', totp_last_step = 0 WHERE id = ? AND totp_enabled = ?`, id, on)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n != 1 {
+		return ErrChanged
+	}
+	return nil
 }
 
 // DisableTwoStep turns it off and forgets the secret.
 func (s *Store) DisableTwoStep(ctx context.Context, id string) error {
-	_, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_enabled = 0, totp_secret = '', recovery = '', totp_last_step = 0 WHERE id = ?`, id)
+	_, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_enabled = 0, totp_secret = '', totp_pending = '', recovery = '', totp_last_step = 0 WHERE id = ?`, id)
 	return err
 }
 
@@ -83,6 +133,9 @@ func (s *Store) CheckSecondStep(ctx context.Context, id, code string, now func()
 	}
 	if on != 1 {
 		return nil
+	}
+	if secret == "" {
+		return errors.New("two-step is on without a secret: an admin must reset it (trckabled admin disable-2fa)")
 	}
 	if code == "" {
 		return ErrNeedsCode
@@ -104,7 +157,16 @@ func (s *Store) CheckSecondStep(ctx context.Context, id, code string, now func()
 	for i, h := range left {
 		if auth.Equal(h, hex.EncodeToString(auth.Hash(strings.TrimSpace(code)))) {
 			left = append(left[:i], left[i+1:]...)
-			s.DB.ExecContext(ctx, `UPDATE users SET recovery = ? WHERE id = ?`, strings.Join(left, " "), id)
+			// Spent only if the list is still the one read: of two requests
+			// with the same code (or two codes at once) one wins; the other
+			// is refused rather than using a code twice or bringing one back.
+			res, err := s.DB.ExecContext(ctx, `UPDATE users SET recovery = ? WHERE id = ? AND recovery = ?`, strings.Join(left, " "), id, recovery)
+			if err != nil {
+				return err
+			}
+			if n, _ := res.RowsAffected(); n != 1 {
+				return auth.ErrBadLogin
+			}
 			return nil
 		}
 	}

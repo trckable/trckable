@@ -39,6 +39,61 @@ func (a *API) twoStep(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, s)
 }
 
+// secondStepFor asks for what the account already has, before its two-step
+// setting changes: while two-step is on, the password alone (a borrowed
+// session, a shoulder-read password) must not remove or replace the phone, so
+// a current code or a recovery code is asked for too. It answers the request
+// itself when that is missing or wrong.
+func (a *API) secondStepFor(w http.ResponseWriter, r *http.Request, u *sqlite.User, code string) (wasOn, ok bool) {
+	on, err := a.Ctl.TwoStepOf(r.Context(), u.ID)
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return false, false
+	}
+	if !on.Enabled {
+		return false, true
+	}
+	if strings.TrimSpace(code) == "" {
+		writeJSON(w, http.StatusForbidden, map[string]any{"error": "type a code from your app, or a recovery code", "needs_code": true})
+		return true, false
+	}
+	if !a.codeTries(w, u) {
+		return true, false
+	}
+	err = a.Ctl.CheckSecondStep(r.Context(), u.ID, cleanCode(code), a.unix)
+	a.codeResult(u, code, err)
+	if err != nil {
+		writeJSON(w, http.StatusForbidden, map[string]any{"error": "that code is not right: try the current one from your app, or a recovery code", "needs_code": true})
+		return true, false
+	}
+	return true, true
+}
+
+// codeTries limits how many wrong codes one person's account may take,
+// wherever they are typed (sign-in, turning on, off, a new phone), whatever
+// address they come from: a limit per address alone lets many addresses
+// guess six digits without end. It only looks; codeResult counts a wrong
+// code and clears the count after a right one, so the person's own good
+// sign-ins never use it up. Always called after the password is proven, so
+// a session alone cannot spend someone's tries and lock them out.
+func (a *API) codeTries(w http.ResponseWriter, u *sqlite.User) bool {
+	if !a.loginRate.full("code:"+u.ID, a.Now(), 10, 10*time.Minute) {
+		return true
+	}
+	fail(w, http.StatusTooManyRequests, "too many wrong codes for this account: wait a few minutes")
+	return false
+}
+
+func (a *API) codeResult(u *sqlite.User, code string, err error) {
+	switch {
+	case code == "":
+	case err == nil:
+		a.loginRate.clear("code:" + u.ID)
+	case errors.Is(err, auth.ErrBadLogin):
+		a.loginRate.record("code:"+u.ID, a.Now())
+	}
+}
+
 // startTwoStep hands back a fresh secret to scan or type. Nothing is turned on
 // until a code from it comes back, so an abandoned setup changes nothing.
 // The password is asked for again: a borrowed session must not be able to add
@@ -56,6 +111,7 @@ func (a *API) startTwoStep(w http.ResponseWriter, r *http.Request) {
 	}
 	var in struct {
 		Password string `json:"password"`
+		Code     string `json:"code"`
 	}
 	if err := decode(r, &in); err != nil {
 		fail(w, http.StatusBadRequest, "bad request")
@@ -65,7 +121,15 @@ func (a *API) startTwoStep(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusForbidden, "that is not your password")
 		return
 	}
-	secret, err := a.Ctl.StartTwoStep(r.Context(), u.ID)
+	wasOn, ok := a.secondStepFor(w, r, u, in.Code)
+	if !ok {
+		return
+	}
+	secret, err := a.Ctl.StartTwoStep(r.Context(), u.ID, wasOn, a.unix)
+	if errors.Is(err, sqlite.ErrChanged) {
+		fail(w, http.StatusConflict, err.Error())
+		return
+	}
 	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
@@ -84,13 +148,28 @@ func (a *API) enableTwoStep(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var in struct {
-		Code string `json:"code"`
+		Password string `json:"password"`
+		Code     string `json:"code"`
 	}
 	if err := decode(r, &in); err != nil {
 		fail(w, http.StatusBadRequest, "bad request")
 		return
 	}
+	// A session alone must not be able to finish someone else's setup: the
+	// password again, and few tries, so a pending code cannot be guessed.
+	if !a.loginRate.allow("twostep:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
+		fail(w, http.StatusTooManyRequests, "too many tries: wait a few minutes")
+		return
+	}
+	if _, err := a.Ctl.Login(r.Context(), u.Email, in.Password); err != nil {
+		fail(w, http.StatusForbidden, "that is not your password")
+		return
+	}
+	if !a.codeTries(w, u) {
+		return
+	}
 	codes, err := a.Ctl.EnableTwoStep(r.Context(), u.ID, cleanCode(in.Code), a.unix)
+	a.codeResult(u, in.Code, err)
 	if errors.Is(err, auth.ErrBadLogin) {
 		fail(w, http.StatusBadRequest, "that code is not right — check your phone's clock and try the current one")
 		return
@@ -107,7 +186,7 @@ func (a *API) enableTwoStep(w http.ResponseWriter, r *http.Request) {
 }
 
 // disableTwoStep turns it off and forgets the secret. It asks for the password
-// again for the same reason enabling does.
+// again for the same reason enabling does, and, since it is on, a code.
 func (a *API) disableTwoStep(w http.ResponseWriter, r *http.Request) {
 	// Each of these does real work (outside fetches, or a password hash):
 	// limited, so a busy button or a stolen session cannot make it a flood.
@@ -121,6 +200,7 @@ func (a *API) disableTwoStep(w http.ResponseWriter, r *http.Request) {
 	}
 	var in struct {
 		Password string `json:"password"`
+		Code     string `json:"code"`
 	}
 	if err := decode(r, &in); err != nil {
 		fail(w, http.StatusBadRequest, "bad request")
@@ -130,7 +210,15 @@ func (a *API) disableTwoStep(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusForbidden, "that is not your password")
 		return
 	}
-	if err := a.Ctl.DisableTwoStep(r.Context(), u.ID); err != nil {
+	wasOn, ok := a.secondStepFor(w, r, u, in.Code)
+	if !ok {
+		return
+	}
+	// Only if it is still as checked: turned on meanwhile, it needs a code.
+	if err := a.Ctl.DisableTwoStepIf(r.Context(), u.ID, wasOn); errors.Is(err, sqlite.ErrChanged) {
+		fail(w, http.StatusConflict, err.Error())
+		return
+	} else if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
