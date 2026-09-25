@@ -56,13 +56,19 @@ export function Picker({
       if (!root.current?.contains(t) && !pop.current?.contains(t)) setOpen(false)
     }
     const close = () => setOpen(false)
+    // The page scrolling moves the button, so the list closes rather than
+    // drift. Its own list scrolling is just someone reading it: it used to
+    // close the list under their mouse.
+    const scrolled = (e: Event) => {
+      if (!pop.current?.contains(e.target as Node)) setOpen(false)
+    }
     document.addEventListener('mousedown', away)
     window.addEventListener('resize', close)
-    window.addEventListener('scroll', close, true)
+    window.addEventListener('scroll', scrolled, true)
     return () => {
       document.removeEventListener('mousedown', away)
       window.removeEventListener('resize', close)
-      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('scroll', scrolled, true)
     }
   }, [open])
 
