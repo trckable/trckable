@@ -160,8 +160,11 @@ func (c *widgetCache) put(key string, n query.WidgetNumbers, now time.Time) {
 func (c *widgetCache) forget(site string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	delete(c.m, site+"|w")
-	delete(c.m, site+"|n")
+	for k := range c.m {
+		if strings.HasPrefix(k, site+"|") {
+			delete(c.m, k)
+		}
+	}
 }
 
 func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Widget, si sqlite.SiteInfo, public bool) {
@@ -182,13 +185,18 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 		fmt.Fprint(w, `<!doctype html><meta http-equiv="refresh" content="20"><title>…</title>`)
 		return
 	}
-	week := wd.Kind == "badge"
-	key := si.ID + map[bool]string{true: "|w", false: "|n"}[week]
+	ask := query.WidgetAsk{
+		Week:     wd.Kind == "badge",
+		AI:       wd.Kind == "badge" && wd.Has("ai"),
+		Pages:    wd.Kind == "live" && wd.Has("pages"),
+		Channels: wd.Kind == "live" && wd.Has("channels"),
+	}
+	key := fmt.Sprintf("%s|%v", si.ID, ask)
 	now := a.Now()
 	nums, ok := a.widgetCache.get(key, now)
 	if !ok {
 		var err error
-		nums, err = q().Widget(r.Context(), si.ID, now, week)
+		nums, err = q().Widget(r.Context(), si.ID, now, ask)
 		if err != nil {
 			http.Error(w, "the numbers could not be read", http.StatusInternalServerError)
 			return
@@ -215,6 +223,7 @@ type widgetData struct {
 	From, Mid, Till string
 	Countries       []widgetCountry
 	Domain          string
+	Ghost           template.HTML
 }
 
 type widgetCountry struct {
@@ -226,7 +235,7 @@ func widgetView(wd sqlite.Widget, si sqlite.SiteInfo, n query.WidgetNumbers, now
 	if err != nil {
 		loc = time.UTC
 	}
-	d := widgetData{Kind: wd.Kind, Theme: wd.Theme, Radius: wd.Radius, Brand: wd.Brand, Now: number(n.Now), NowN: n.Now, Week: number(n.Week), Domain: si.Domain}
+	d := widgetData{Kind: wd.Kind, Theme: wd.Theme, Radius: wd.Radius, Brand: wd.Brand, Now: number(n.Now), NowN: n.Now, Week: number(n.Week), Domain: si.Domain, Ghost: template.HTML(widgetGhost)}
 	d.AccentDark, d.AccentLight = "#b8ff3c", "#3f6212"
 	if wd.Accent != "" {
 		d.AccentDark, d.AccentLight = template.CSS(wd.Accent), template.CSS(wd.Accent)
@@ -293,7 +302,9 @@ ul{list-style:none;padding:0;margin-top:14px;display:grid;gap:6px}
 li{display:flex;align-items:center;gap:8px}
 li span:nth-child(2){flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 li b{font-weight:500;font-variant-numeric:tabular-nums}
-.by{display:block;margin-top:8px;font-size:11px;color:var(--mute);text-decoration:none;text-align:center}
+.by{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:8px;font-size:11px;color:var(--mute);text-decoration:none}
+.by b{font-weight:760;letter-spacing:-.04em;color:var(--fg)}.by i{font-style:normal;font-weight:360;letter-spacing:-.03em}
+.by svg{flex:none}
 .badge{display:flex;align-items:center;gap:12px;padding:12px 16px}
 .badge b{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
 .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:{{.Radius}}px;font-weight:600;font-variant-numeric:tabular-nums}
@@ -307,5 +318,5 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 </div>
 {{else if eq .Kind "badge"}}<div class="card badge"><span class="dot"></span><span><b>{{.Week}}</b><br><span class="lab">visitors this week</span></span></div>
 {{else}}<div class="card pill"><span class="dot"></span>{{.Now}} here now</div>{{end}}
-{{if .Brand}}<a class="by" href="https://trckable.com" target="_blank" rel="noopener">Counted by trckable</a>{{end}}
+{{if .Brand}}<a class="by" href="https://trckable.com" target="_blank" rel="noopener">{{.Ghost}}<span>Counted by <b>trck</b><i>able</i></span></a>{{end}}
 </body></html>`))

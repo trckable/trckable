@@ -401,6 +401,7 @@ var migrations = []string{
 		accent     TEXT NOT NULL DEFAULT '',
 		radius     INTEGER NOT NULL DEFAULT 16,
 		brand      INTEGER NOT NULL DEFAULT 1,
+		shows      TEXT NOT NULL DEFAULT '',
 		on_        INTEGER NOT NULL DEFAULT 1,
 		created_at INTEGER NOT NULL
 	);

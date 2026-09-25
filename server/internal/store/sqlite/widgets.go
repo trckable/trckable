@@ -15,11 +15,14 @@ import (
 type Widget struct {
 	ID        string `json:"id"`
 	SiteID    string `json:"site_id"`
-	Kind      string `json:"kind"`   // live, badge, counter
+	Kind      string `json:"kind"`   // live, badge, counter, revenue, privacy
 	Theme     string `json:"theme"`  // auto, dark, light
 	Accent    string `json:"accent"` // #rrggbb, or empty for trckable's own
 	Radius    int    `json:"radius"` // corner radius in px, 0–28
-	Brand     bool   `json:"brand"`  // "Powered by trckable" under it
+	Brand     bool   `json:"brand"`  // "Counted by trckable" under it
+	// Shows are the parts the design can leave out or add: for live bars,
+	// countries, pages and channels; for badge ai; for revenue channels.
+	Shows []string `json:"shows"`
 	On        bool   `json:"on"`
 	CreatedAt int64  `json:"created_at"`
 }
@@ -30,8 +33,27 @@ var ErrBadWidget = errors.New("that is not a widget trckable can show")
 // MaxWidgets per site: enough for a few designs, not a way to fill a table.
 const MaxWidgets = 10
 
-// WidgetKinds are the designs there are.
-var WidgetKinds = map[string]bool{"live": true, "badge": true, "counter": true}
+// WidgetKinds are the designs there are, with the parts each may show and
+// the ones it shows when nothing was chosen.
+var WidgetKinds = map[string]bool{"live": true, "badge": true, "counter": true, "revenue": true, "privacy": true}
+
+var widgetParts = map[string]map[string]bool{
+	"live":    {"bars": true, "countries": true, "pages": true, "channels": true},
+	"badge":   {"ai": true},
+	"revenue": {"channels": true},
+}
+
+var widgetDefaults = map[string][]string{"live": {"bars", "countries"}, "revenue": {"channels"}}
+
+// Has says whether the widget shows a part.
+func (w Widget) Has(part string) bool {
+	for _, p := range w.Shows {
+		if p == part {
+			return true
+		}
+	}
+	return false
+}
 
 func (w *Widget) clean() error {
 	if !WidgetKinds[w.Kind] {
@@ -48,6 +70,21 @@ func (w *Widget) clean() error {
 		return ErrBadWidget
 	}
 	w.Radius = max(0, min(28, w.Radius))
+	var parts []string
+	seen := map[string]bool{}
+	for _, p := range w.Shows {
+		if !widgetParts[w.Kind][p] {
+			return ErrBadWidget
+		}
+		if !seen[p] {
+			seen[p] = true
+			parts = append(parts, p)
+		}
+	}
+	w.Shows = parts
+	if w.Shows == nil {
+		w.Shows = []string{}
+	}
 	return nil
 }
 
@@ -59,6 +96,9 @@ func widgetID() string {
 
 // CreateWidget adds a widget to a site, on.
 func (s *Store) CreateWidget(ctx context.Context, w Widget) (Widget, error) {
+	if w.Shows == nil {
+		w.Shows = widgetDefaults[w.Kind]
+	}
 	if err := w.clean(); err != nil {
 		return w, err
 	}
@@ -68,8 +108,8 @@ func (s *Store) CreateWidget(ctx context.Context, w Widget) (Widget, error) {
 		return w, errors.New("a site can have ten widgets: remove one first")
 	}
 	w.ID, w.On, w.CreatedAt = widgetID(), true, time.Now().Unix()
-	_, err := s.DB.ExecContext(ctx, `INSERT INTO widgets (id, site_id, kind, theme, accent, radius, brand, on_, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-		w.ID, w.SiteID, w.Kind, w.Theme, w.Accent, w.Radius, bit(w.Brand), w.CreatedAt)
+	_, err := s.DB.ExecContext(ctx, `INSERT INTO widgets (id, site_id, kind, theme, accent, radius, brand, shows, on_, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+		w.ID, w.SiteID, w.Kind, w.Theme, w.Accent, w.Radius, bit(w.Brand), strings.Join(w.Shows, ","), w.CreatedAt)
 	return w, err
 }
 
@@ -78,8 +118,8 @@ func (s *Store) UpdateWidget(ctx context.Context, w Widget) (Widget, error) {
 	if err := w.clean(); err != nil {
 		return w, err
 	}
-	res, err := s.DB.ExecContext(ctx, `UPDATE widgets SET kind = ?, theme = ?, accent = ?, radius = ?, brand = ?, on_ = ? WHERE id = ? AND site_id = ?`,
-		w.Kind, w.Theme, w.Accent, w.Radius, bit(w.Brand), bit(w.On), w.ID, w.SiteID)
+	res, err := s.DB.ExecContext(ctx, `UPDATE widgets SET kind = ?, theme = ?, accent = ?, radius = ?, brand = ?, shows = ?, on_ = ? WHERE id = ? AND site_id = ?`,
+		w.Kind, w.Theme, w.Accent, w.Radius, bit(w.Brand), strings.Join(w.Shows, ","), bit(w.On), w.ID, w.SiteID)
 	if err != nil {
 		return w, err
 	}
@@ -97,7 +137,7 @@ func (s *Store) DeleteWidget(ctx context.Context, site, id string) error {
 
 // Widgets lists a site's widgets, newest first.
 func (s *Store) Widgets(ctx context.Context, site string) ([]Widget, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT id, site_id, kind, theme, accent, radius, brand, on_, created_at FROM widgets WHERE site_id = ? ORDER BY created_at DESC`, site)
+	rows, err := s.DB.QueryContext(ctx, `SELECT id, site_id, kind, theme, accent, radius, brand, shows, on_, created_at FROM widgets WHERE site_id = ? ORDER BY created_at DESC`, site)
 	if err != nil {
 		return nil, err
 	}
@@ -115,14 +155,19 @@ func (s *Store) Widgets(ctx context.Context, site string) ([]Widget, error) {
 
 // WidgetByID finds a widget by its public id.
 func (s *Store) WidgetByID(ctx context.Context, id string) (Widget, error) {
-	return scanWidget(s.DB.QueryRowContext(ctx, `SELECT id, site_id, kind, theme, accent, radius, brand, on_, created_at FROM widgets WHERE id = ?`, id))
+	return scanWidget(s.DB.QueryRowContext(ctx, `SELECT id, site_id, kind, theme, accent, radius, brand, shows, on_, created_at FROM widgets WHERE id = ?`, id))
 }
 
 func scanWidget(r interface{ Scan(...any) error }) (Widget, error) {
 	var w Widget
 	var brand, on int
-	err := r.Scan(&w.ID, &w.SiteID, &w.Kind, &w.Theme, &w.Accent, &w.Radius, &brand, &on, &w.CreatedAt)
+	var shows string
+	err := r.Scan(&w.ID, &w.SiteID, &w.Kind, &w.Theme, &w.Accent, &w.Radius, &brand, &shows, &on, &w.CreatedAt)
 	w.Brand, w.On = brand == 1, on == 1
+	w.Shows = []string{}
+	if shows != "" {
+		w.Shows = strings.Split(shows, ",")
+	}
 	return w, err
 }
 

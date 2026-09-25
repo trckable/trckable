@@ -511,7 +511,8 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
       <Row label="Display name" hint="What you call this site in trckable">
         <InlineEdit
           label="Display name"
-          value={site.name === site.domain ? '' : site.name}
+          width={260}
+          value={site.name || site.domain}
           placeholder={site.domain}
           onSave={(n) =>
             api.updateSite(site.id, { name: n || site.domain }).then(() => {

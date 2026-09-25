@@ -139,20 +139,18 @@
   padding: 6px 8px 6px 10px;
   font-size: 13.5px;
 }
-.sv-edit .ie,
-.sv-edit .ie-field {
+.sv-edit .ie {
   flex: 1;
-  width: 100%;
+  left: 0;
   justify-self: stretch;
   justify-items: stretch;
 }
-.sv-edit .ie {
-  left: 0;
+.sv-edit .ie-box {
+  width: 100%;
 }
-.sv-edit .ie-field input {
-  flex: 1;
+.sv-edit .ie-box input {
   field-sizing: fixed;
-  max-width: none;
+  width: 100%;
 }
 .sv-foot {
   padding: 6px 0 0;

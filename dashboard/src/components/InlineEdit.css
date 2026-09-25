@@ -1,43 +1,65 @@
-/* InlineEdit: a name you can click to change. */
+/* InlineEdit: one box that is text until it is clicked, then the field. The
+   box keeps its size and place in both states, so nothing moves. */
 .ie {
+  --ie-h: 36px;
+  --ie-pad: 10px;
   display: inline-grid;
   justify-self: start;
   justify-items: start;
   gap: 4px;
   min-width: 0;
   max-width: 100%;
-  /* The text lines up with what is around it and the hover box reaches past
-     it. An offset, not a negative margin: a margin made the layout reserve
-     too little and cut the name to "…". */
+  /* The text lines up with what is around it and the box reaches past it.
+     A position shift, not a negative margin: a margin made the layout
+     reserve too little and cut the name to "…". */
   position: relative;
-  left: -8px;
+  left: calc(-1 * var(--ie-pad) - 1px);
 }
-/* On the right of a settings row it reaches past on the right instead. */
 .srow-ctl .ie {
-  left: 8px;
+  left: 0;
 }
-.ie-view {
+.ie.lg {
+  --ie-h: 42px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.ie-box {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  height: var(--ie-h);
   min-width: 0;
   max-width: 100%;
-  padding: 3px 8px;
+  padding: 0 6px 0 var(--ie-pad);
   border: 1px solid transparent;
-  border-radius: 8px;
-  background: none;
+  border-radius: 10px;
+  background: transparent;
   color: var(--text);
   font: inherit;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.ie-box.view {
   text-align: left;
   cursor: text;
-  transition: border-color 0.15s, background 0.15s;
 }
-.ie-view:hover,
-.ie-view:focus-visible {
-  border-color: var(--border);
+.ie-box.view:hover,
+.ie-box.view:focus-visible {
+  border-color: var(--border-2);
   background: var(--sunken);
 }
+.ie-box.edit {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border-2));
+  background: var(--sunken);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.ie-box.edit.bad {
+  border-color: var(--down);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--down) 18%, transparent);
+}
 .ie-text {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -47,80 +69,101 @@
 }
 .ie-pen {
   flex: none;
+  margin-right: 4px;
   color: var(--text-3);
-  opacity: 0.6;
+  opacity: 0.55;
   transition: opacity 0.15s, color 0.15s;
 }
-.ie-view:hover .ie-pen,
-.ie-view:focus-visible .ie-pen {
+.ie-box.view:hover .ie-pen,
+.ie-box.view:focus-visible .ie-pen {
   opacity: 1;
   color: var(--text-2);
 }
 .ie-saved {
-  flex: none;
-  color: var(--accent);
-  animation: fadein 0.2s var(--ease) backwards;
-}
-.ie-field {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 3px 2px 8px;
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
-  border-radius: 9px;
-  background: var(--sunken);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  flex: none;
+  margin-right: 4px;
+  color: var(--up);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  animation: ie-saved 1.6s var(--ease) both;
 }
-.ie-field input {
+@keyframes ie-saved {
+  0% {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  12%,
+  75% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* In a heading the field grows with the name; in a row it fills its width. */
+.ie-box.edit input {
+  flex: 1;
+  min-width: 4ch;
   field-sizing: content;
-  min-width: 3ch;
-  padding-right: 4px;
-  max-width: min(420px, 60vw);
-  padding: 2px 0;
+  height: 100%;
+  padding: 0;
   border: 0;
   background: none;
   color: var(--text);
   font: inherit;
   outline: none;
 }
-.ie-btn {
+.ie-box[style] input {
+  field-sizing: fixed;
+  width: 100%;
+}
+.ie-box.edit.busy input {
+  opacity: 0.55;
+}
+.ie-act {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   flex: none;
+  padding: 0;
   border: 0;
   border-radius: 7px;
   background: transparent;
-  color: var(--text-2);
+  color: var(--text-3);
   cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  animation: fadein 0.15s var(--ease) backwards;
 }
-.ie-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--text) 10%, transparent);
+.ie-act:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 9%, transparent);
   color: var(--text);
 }
-.ie-btn.ok {
-  background: var(--accent);
-  color: var(--accent-ink);
+.ie-act.ok {
+  color: var(--accent);
 }
-.ie-btn.ok:hover:not(:disabled) {
-  background: var(--accent);
-  color: var(--accent-ink);
-  filter: brightness(1.08);
+.ie-act.ok:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
-.ie-btn .btn-spin {
+.ie-act .btn-spin {
+  width: 13px;
+  height: 13px;
   margin: 0;
 }
 .ie-err {
+  padding-left: calc(var(--ie-pad) + 1px);
   font-size: 12px;
+  font-weight: 400;
   color: var(--down);
 }
-.ie.lg {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-.ie.lg .ie-btn {
-  width: 32px;
-  height: 32px;
+@media (prefers-reduced-motion: reduce) {
+  .ie-saved {
+    animation: none;
+  }
 }
