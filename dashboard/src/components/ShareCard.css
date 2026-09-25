@@ -125,6 +125,29 @@
   justify-content: center;
   gap: 8px;
 }
+.share-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+/* The GIF button fills up as its frames are drawn. */
+.share-gif {
+  position: relative;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+.share-gif.making::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  transform-origin: left;
+  transform: scaleX(var(--p, 0));
+  transition: transform 0.1s linear;
+}
+.share-gif > * {
+  position: relative;
+}
 .share-post {
   justify-self: center;
   font-size: 12.5px;

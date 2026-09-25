@@ -47,6 +47,14 @@ describe('share card', () => {
     expect(cardSvg(d, 'glow', look({ lead: 'pageviews', extras: ['pageviews'] }), 'Example').match(/42,059/g)).toHaveLength(1)
   })
 
+  it('animates for the GIF: counts up from zero and ends on the still card', () => {
+    const first = cardSvg(data, 'glow', look(), 'Example', 0)
+    expect(first).toContain('>0</text>')
+    expect(first).not.toContain('18,273')
+    expect(first).toContain('Counted by') // the brand is in every frame
+    expect(cardSvg(data, 'glow', look(), 'Example', 1)).toBe(cardSvg(data, 'glow', look(), 'Example'))
+  })
+
   it('draws a milestone as one big number, what it is and when', () => {
     const svg = cardSvg({ ...data, milestone: { value: '10,000', label: 'visitors, all time', sub: 'Reached on Sep 25' } }, 'bold', look(), 'Example')
     expect(svg).toContain('10,000')

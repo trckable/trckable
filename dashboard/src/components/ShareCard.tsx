@@ -3,8 +3,8 @@
 // look and the site's colour. Nothing is uploaded: the owner downloads it,
 // copies it, or hands it to the phone's share sheet. The owner picks the big
 // number and up to three more, and money starts off.
-import { Check, Copy, Download, Share2, X } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { Check, Copy, Download, Film, Share2, X } from 'lucide-react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { GHOST, LINE } from '../brand/logo'
 import { fmtDuration, fmtInt, fmtPct } from '../lib/format'
 import { Modal } from './Modal'
@@ -35,7 +35,7 @@ export type ShareData = {
   milestone?: { value: string; label: string; sub: string }
 }
 
-type Design = 'glow' | 'paper' | 'bold'
+export type Design = 'glow' | 'paper' | 'bold'
 const DESIGNS: { id: Design; name: string }[] = [
   { id: 'glow', name: 'Glow' },
   { id: 'paper', name: 'Paper' },
@@ -68,7 +68,7 @@ export type Extra = 'visitors' | 'pageviews' | 'revenue' | 'bounce' | 'time' | '
 export type Format = 'post' | 'square' | 'story'
 export type Look = { lead: Lead; extras: Extra[]; change: boolean; chart: boolean; format: Format }
 
-const SIZES: Record<Format, { w: number; h: number; name: string }> = {
+export const SIZES: Record<Format, { w: number; h: number; name: string }> = {
   post: { w: 1200, h: 630, name: 'Post' },
   square: { w: 1080, h: 1080, name: 'Square' },
   story: { w: 1080, h: 1920, name: 'Story' },
@@ -106,10 +106,26 @@ function extraOf(d: ShareData, e: Extra): { value: string; label: string } | nul
   }
 }
 
-/** The card, as SVG: the same string is the preview and the picture. */
-export function cardSvg(d: ShareData, design: Design, look: Look, title: string): string {
+/** Where each part is at moment `at` of the GIF (0 → 1); 1 is the still card.
+ *  The number counts up first, the line draws, then the rest fades in. */
+function anim(at: number) {
+  const span = (a: number, b: number) => Math.max(0, Math.min(1, (at - a) / (b - a)))
+  const out = (x: number) => 1 - (1 - x) ** 3
+  return {
+    count: out(span(0, 0.6)),
+    draw: out(span(0.15, 0.85)),
+    ghost: span(0.55, 0.85),
+    change: span(0.62, 0.8),
+    extra: (i: number) => out(span(0.3 + i * 0.1, 0.5 + i * 0.1)),
+  }
+}
+
+/** The card, as SVG: the same string is the preview and the picture. With
+ *  `at` below 1 it is one frame of the GIF. */
+export function cardSvg(d: ShareData, design: Design, look: Look, title: string, at = 1): string {
   const { w: W, h: H } = SIZES[look.format]
-  if (d.milestone) return milestoneSvg(d, design, title, W, H)
+  if (d.milestone) return milestoneSvg(d, design, title, W, H, at)
+  const a = anim(at)
   const accent = d.color || '#b8ff3c'
   const t =
     design === 'paper'
@@ -120,10 +136,10 @@ export function cardSvg(d: ShareData, design: Design, look: Look, title: string)
   const font = `font-family="Geist, Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif"`
   const lead =
     look.lead === 'revenue' && d.revenue
-      ? { value: d.revenue.fmt(d.revenue.now), label: 'revenue', ch: change(d.revenue.now, d.revenue.prev) }
+      ? { value: d.revenue.fmt(Math.round(d.revenue.now * a.count)), label: 'revenue', ch: change(d.revenue.now, d.revenue.prev) }
       : look.lead === 'pageviews'
-        ? { value: fmtInt(d.pageviews), label: 'pageviews', ch: change(d.pageviews, d.prevPageviews) }
-        : { value: fmtInt(d.visitors), label: 'visitors', ch: change(d.visitors, d.prevVisitors) }
+        ? { value: fmtInt(Math.round(d.pageviews * a.count)), label: 'pageviews', ch: change(d.pageviews, d.prevPageviews) }
+        : { value: fmtInt(Math.round(d.visitors * a.count)), label: 'visitors', ch: change(d.visitors, d.prevVisitors) }
   const extras = EXTRAS.filter((e) => look.extras.includes(e) && e !== look.lead)
     .map((e) => extraOf(d, e))
     .filter((x): x is { value: string; label: string } => !!x)
@@ -132,8 +148,8 @@ export function cardSvg(d: ShareData, design: Design, look: Look, title: string)
   const changeLine =
     look.change && d.compare
       ? lead.ch !== null
-        ? `  ·  <tspan fill="${t.acc}" font-weight="700">${pct(lead.ch)}</tspan><tspan fill="${t.mute}"> ${esc(vsText)}</tspan>`
-        : `  ·  <tspan fill="${t.mute}">no data ${esc(vsText.replace(/^vs /, 'from '))}</tspan>`
+        ? `<tspan fill-opacity="${a.change}">  ·  </tspan><tspan fill="${t.acc}" fill-opacity="${a.change}" font-weight="700">${pct(lead.ch)}</tspan><tspan fill="${t.mute}" fill-opacity="${a.change}"> ${esc(vsText)}</tspan>`
+        : `<tspan fill="${t.mute}" fill-opacity="${a.change}">  ·  no data ${esc(vsText.replace(/^vs /, 'from '))}</tspan>`
       : ''
 
   // Where each part goes, by size.
@@ -152,7 +168,9 @@ export function cardSvg(d: ShareData, design: Design, look: Look, title: string)
   // into the next one; Geist's figures and letters average about 0.58 em.
   const fit = (text: string, size: number, room: number) => Math.min(size, Math.floor(room / (text.length * 0.58)))
   const exSvg = extras
-    .map((x, i) => {
+    .map((x, i) => `<g opacity="${a.extra(i)}" transform="translate(0 ${(1 - a.extra(i)) * 14})">` + exOne(x, i) + '</g>')
+    .join('')
+  function exOne(x: { value: string; label: string }, i: number) {
       if (L.extras === 'column')
         return (
           `<text x="${W - L.pad}" y="${L.exTop + i * 86}" text-anchor="end" ${font} font-size="${fit(x.value, 48, 420)}" font-weight="700" fill="${t.fg}">${esc(x.value)}</text>` +
@@ -170,8 +188,7 @@ export function cardSvg(d: ShareData, design: Design, look: Look, title: string)
         `<text x="${L.pad}" y="${L.exTop + i * 150}" ${font} font-size="${fit(x.value, 84, W - L.pad * 2)}" font-weight="700" letter-spacing="-2" fill="${t.fg}">${esc(x.value)}</text>` +
         `<text x="${L.pad + 2}" y="${L.exTop + 46 + i * 150}" ${font} font-size="32" fill="${t.mute}">${esc(x.label)}</text>`
       )
-    })
-    .join('')
+  }
 
   const glow =
     design === 'glow'
@@ -181,7 +198,9 @@ export function cardSvg(d: ShareData, design: Design, look: Look, title: string)
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
-    `<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t.acc}" stop-opacity="0.35"/><stop offset="1" stop-color="${t.acc}" stop-opacity="0"/></linearGradient></defs>` +
+    `<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t.acc}" stop-opacity="0.35"/><stop offset="1" stop-color="${t.acc}" stop-opacity="0"/></linearGradient>` +
+    // The line draws itself from the left in the GIF; a still card shows it all.
+    `<clipPath id="draw"><rect x="0" y="0" width="${L.pad + (W - L.pad * 2) * a.draw + 8}" height="${H}"/></clipPath></defs>` +
     `<rect width="${W}" height="${H}" fill="${t.bg}"/>` +
     glow +
     `<text x="${L.pad}" y="${L.title}" ${font} font-size="${30 * s}" font-weight="600" fill="${t.fg}">${esc(title)}</text>` +
@@ -189,9 +208,9 @@ export function cardSvg(d: ShareData, design: Design, look: Look, title: string)
     `<text x="${L.pad - 4}" y="${L.big}" ${font} font-size="${L.bigSize}" font-weight="760" letter-spacing="-6" fill="${t.fg}">${esc(lead.value)}</text>` +
     `<text x="${L.pad + 2}" y="${L.label}" ${font} font-size="${30 * s}" fill="${t.mute}">${lead.label}${changeLine}</text>` +
     exSvg +
-    (ghostLine ? `<path d="${ghostLine}" fill="none" stroke="${t.mute}" stroke-width="3" stroke-dasharray="10 9" stroke-linecap="round" opacity="0.8"/>` : '') +
+    (ghostLine ? `<path d="${ghostLine}" fill="none" stroke="${t.mute}" stroke-width="3" stroke-dasharray="10 9" stroke-linecap="round" opacity="${0.8 * a.ghost}"/>` : '') +
     (chart
-      ? `<path d="${chart} L${W - L.pad} ${chartBottom} L${L.pad} ${chartBottom} Z" fill="url(#a)"/><path d="${chart}" fill="none" stroke="${t.acc}" stroke-width="${5 * s}" stroke-linecap="round" stroke-linejoin="round"/>`
+      ? `<g clip-path="url(#draw)"><path d="${chart} L${W - L.pad} ${chartBottom} L${L.pad} ${chartBottom} Z" fill="url(#a)"/><path d="${chart}" fill="none" stroke="${t.acc}" stroke-width="${5 * s}" stroke-linecap="round" stroke-linejoin="round"/></g>`
       : '') +
     `<line x1="${L.pad}" y1="${L.foot - 42 * s}" x2="${W - L.pad}" y2="${L.foot - 42 * s}" stroke="${t.line}" stroke-width="2"/>` +
     brandFoot(L.pad, L.foot, s, t) +
@@ -216,8 +235,12 @@ function brandFoot(x: number, y: number, s: number, t: { fg: string; mute: strin
 }
 
 /** A milestone card: one big number, what it is, the day, and a burst. */
-function milestoneSvg(d: ShareData, design: Design, title: string, W: number, H: number): string {
+function milestoneSvg(d: ShareData, design: Design, title: string, W: number, H: number, at: number): string {
   const m = d.milestone!
+  const a = anim(at)
+  // "10,000" counts up; a value that is not a plain number (a date) just appears.
+  const plain = /^[\d,]+$/.test(m.value)
+  const value = plain && at < 1 ? fmtInt(Math.round(Number(m.value.replace(/,/g, '')) * a.count)) : m.value
   const accent = d.color || '#b8ff3c'
   const t =
     design === 'paper'
@@ -234,7 +257,7 @@ function milestoneSvg(d: ShareData, design: Design, title: string, W: number, H:
     [0.12, 0.27, 9], [0.19, 0.19, 5], [0.86, 0.24, 8], [0.8, 0.17, 5], [0.9, 0.41, 6], [0.1, 0.52, 6],
     [0.84, 0.6, 10], [0.17, 0.68, 5], [0.73, 0.75, 6], [0.27, 0.79, 7], [0.63, 0.21, 4], [0.35, 0.17, 4],
   ]
-    .map(([x, y, r], i) => `<circle cx="${x * W}" cy="${y * H}" r="${r * s}" fill="${i % 3 === 0 ? t.acc : t.mute}" opacity="${i % 2 ? 0.5 : 0.85}"/>`)
+    .map(([x, y, r], i) => `<circle cx="${x * W}" cy="${y * H}" r="${r * s * a.extra(i % 4)}" fill="${i % 3 === 0 ? t.acc : t.mute}" opacity="${i % 2 ? 0.5 : 0.85}"/>`)
     .join('')
   const glow =
     design === 'glow'
@@ -246,9 +269,9 @@ function milestoneSvg(d: ShareData, design: Design, title: string, W: number, H:
     glow +
     dots +
     `<text x="${W / 2}" y="${cy - 210 * s}" text-anchor="middle" ${font} font-size="${28 * s}" font-weight="600" fill="${t.fg}">${esc(title)}</text>` +
-    `<text x="${W / 2}" y="${cy}" text-anchor="middle" ${font} font-size="${170 * s}" font-weight="760" letter-spacing="-6" fill="${t.fg}">${esc(m.value)}</text>` +
-    `<text x="${W / 2}" y="${cy + 66 * s}" text-anchor="middle" ${font} font-size="${38 * s}" font-weight="600" fill="${t.acc}">${esc(m.label)}</text>` +
-    `<text x="${W / 2}" y="${cy + 116 * s}" text-anchor="middle" ${font} font-size="${24 * s}" fill="${t.mute}">${esc(m.sub)}</text>` +
+    `<text x="${W / 2}" y="${cy}" text-anchor="middle" ${font} font-size="${170 * s}" font-weight="760" letter-spacing="-6" fill="${t.fg}">${esc(value)}</text>` +
+    `<text x="${W / 2}" y="${cy + 66 * s}" text-anchor="middle" ${font} font-size="${38 * s}" font-weight="600" fill="${t.acc}" fill-opacity="${a.change}">${esc(m.label)}</text>` +
+    `<text x="${W / 2}" y="${cy + 116 * s}" text-anchor="middle" ${font} font-size="${24 * s}" fill="${t.mute}" fill-opacity="${a.change}">${esc(m.sub)}</text>` +
     brandFoot(60 * s, H - 40 * s, s, t) +
     `<text x="${W - 60 * s}" y="${H - 40 * s}" text-anchor="end" ${font} font-size="${22 * s}" fill="${t.mute}">${esc(d.domain)}</text>` +
     `</svg>`
@@ -290,6 +313,7 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
   const [look, setLook] = useState<Look>({ lead: 'visitors', extras: ['pageviews', 'source'], change: true, chart: true, format: 'post' })
   const [title, setTitle] = useState(data.name || data.domain)
   const [busy, setBusy] = useState<string | null>(null)
+  const [gifAt, setGifAt] = useState(0)
   const [done, setDone] = useState<string | null>(null)
   const size = SIZES[look.format]
   const svg = useMemo(() => cardSvg(data, design, look, title), [data, design, look, title])
@@ -322,6 +346,28 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
     }
   }
   const canShare = typeof navigator.canShare === 'function'
+  const save = (blob: Blob, name: string) => {
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = name
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+  }
+  // The GIF is drawn frame by frame here; its encoder is its own chunk,
+  // fetched the first time this is pressed.
+  const makeGif = async () => {
+    setBusy('gif')
+    setGifAt(0)
+    try {
+      const { cardGif } = await import('./ShareGif')
+      save(await cardGif(data, design, look, title, setGifAt), file().replace(/\.png$/, '.gif'))
+      setDone('gif')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : String(e), 'error')
+    } finally {
+      setBusy(null)
+    }
+  }
   const has = (e: Extra) => e !== look.lead && extraOf(data, e) !== null
   const extras = look.extras.filter(has)
   const flip = (e: Extra) =>
@@ -420,18 +466,13 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
               className="btn primary big"
               disabled={!!busy}
               onClick={() =>
-                act('download', async (png) => {
-                  const a = document.createElement('a')
-                  a.href = URL.createObjectURL(png)
-                  a.download = file()
-                  a.click()
-                  setTimeout(() => URL.revokeObjectURL(a.href), 1000)
-                })
+                act('download', async (png) => save(png, file()))
               }
             >
               {busy === 'download' ? <span className="btn-spin" aria-hidden="true" /> : done === 'download' ? <Check size={16} strokeWidth={2.4} aria-hidden="true" /> : <Download size={16} strokeWidth={1.75} aria-hidden="true" />}
               {done === 'download' ? 'Saved' : 'Download'}
             </button>
+            <div className="share-pair">
             <button
               type="button"
               className="btn"
@@ -441,6 +482,19 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
               {busy === 'copy' ? <span className="btn-spin" aria-hidden="true" /> : done === 'copy' ? <Check size={16} strokeWidth={2.4} aria-hidden="true" /> : <Copy size={16} strokeWidth={1.75} aria-hidden="true" />}
               {done === 'copy' ? 'Copied' : 'Copy image'}
             </button>
+            <button
+              type="button"
+              className={'btn share-gif' + (busy === 'gif' ? ' making' : '')}
+              disabled={!!busy}
+              style={{ '--p': gifAt } as CSSProperties}
+              title="The same card, animated: the number counts up and the line draws itself"
+              onClick={makeGif}
+              aria-live="polite"
+            >
+              {done === 'gif' ? <Check size={16} strokeWidth={2.4} aria-hidden="true" /> : <Film size={16} strokeWidth={1.75} aria-hidden="true" />}
+              <span>{busy === 'gif' ? `GIF ${Math.round(gifAt * 100)}%` : done === 'gif' ? 'Saved' : 'GIF'}</span>
+            </button>
+            </div>
             {canShare && (
               <button
                 type="button"

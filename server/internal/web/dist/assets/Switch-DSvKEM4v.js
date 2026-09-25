@@ -1,0 +1,1 @@
+import{n as e,t}from"./jsx-runtime-jO97T933.js";var n=e(),r=t(),i=(0,n.createContext)(``);function a({on:e,label:t,disabled:a,onChange:o}){let s=(0,n.useContext)(i);return(0,r.jsx)(`button`,{type:`button`,role:`switch`,"aria-checked":e,"aria-label":t||s||void 0,disabled:a,className:e?`switch on`:`switch`,onClick:o,children:(0,r.jsx)(`span`,{})})}export{a as n,i as t};
