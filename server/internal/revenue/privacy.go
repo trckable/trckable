@@ -133,6 +133,28 @@ func (s *Service) ErasePayer(ctx context.Context, site string, visitor uint64, e
 		if _, err := tx.ExecContext(ctx, `UPDATE pay_hints SET visitor_id = 0 WHERE site_id = ? AND visitor_id = ?`, site, int64(visitor)); err != nil {
 			return 0, 0, err
 		}
+		// Their customer and subscription links credit renewals to them: the
+		// links are remembered (as ids, never the person) and removed, so a
+		// later payment by the same customer is not linked back.
+		lrows, err := tx.QueryContext(ctx, `SELECT provider || ':' || kind || ':' || key FROM pay_links WHERE site_id = ? AND visitor_id = ?`, site, int64(visitor))
+		if err != nil {
+			return 0, 0, err
+		}
+		var links []string
+		for lrows.Next() {
+			var l string
+			if err := lrows.Scan(&l); err != nil {
+				lrows.Close()
+				return 0, 0, err
+			}
+			links = append(links, l)
+		}
+		lrows.Close()
+		for _, l := range links {
+			if err := remember("link", l); err != nil {
+				return 0, 0, err
+			}
+		}
 	}
 	if unlinked, err = forgetErased(ctx, tx, site); err != nil {
 		return 0, 0, err
@@ -171,8 +193,14 @@ func forgetErased(ctx context.Context, tx *sql.Tx, site string) (int64, error) {
 		return 0, err
 	}
 	n, _ := res.RowsAffected()
-	_, err = tx.ExecContext(ctx, `UPDATE pay_hints SET visitor_id = 0
-		WHERE site_id = ? AND visitor_id <> 0 AND provider || ':' || payment_id IN (SELECT value FROM pay_erased WHERE site_id = ? AND kind = 'payment')`, site, site)
+	if _, err = tx.ExecContext(ctx, `UPDATE pay_hints SET visitor_id = 0
+		WHERE site_id = ? AND visitor_id <> 0 AND provider || ':' || payment_id IN (SELECT value FROM pay_erased WHERE site_id = ? AND kind = 'payment')`, site, site); err != nil {
+		return n, err
+	}
+	// A customer or subscription link of an erased person, however it came
+	// back, goes again.
+	_, err = tx.ExecContext(ctx, `DELETE FROM pay_links
+		WHERE site_id = ? AND provider || ':' || kind || ':' || key IN (SELECT value FROM pay_erased WHERE site_id = ? AND kind = 'link')`, site, site)
 	return n, err
 }
 

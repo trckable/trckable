@@ -22,7 +22,7 @@ func TestErasedPayerStaysErased(t *testing.T) {
 	send := func(evt, pi string) {
 		t.Helper()
 		body := []byte(fmt.Sprintf(`{"id":%q,"type":"payment_intent.succeeded","created":%d,"livemode":true,
- "data":{"object":{"id":%q,"amount_received":4900,"currency":"usd","receipt_email":"Ada@Example.com","metadata":{"trckable_vid":"abc123.x"}}}}`, evt, time.Now().Unix(), pi))
+ "data":{"object":{"id":%q,"amount_received":4900,"currency":"usd","customer":"cus_ada","receipt_email":"Ada@Example.com","metadata":{"trckable_vid":"abc123.x"}}}}`, evt, time.Now().Unix(), pi))
 		if code := g.post(t, path, stripeSigned("whsec_test", body, time.Now()), body); code != 200 {
 			t.Fatalf("webhook %s: %d", evt, code)
 		}
@@ -34,34 +34,38 @@ func TestErasedPayerStaysErased(t *testing.T) {
 		g.st.DB.QueryRow(`SELECT count(*) FROM pay_payments WHERE site_id = ? AND (visitor_id <> 0 OR email_hash <> '')`, g.site).Scan(&n)
 		return
 	}
+	links := func() (n int) {
+		g.st.DB.QueryRow(`SELECT count(*) FROM pay_links WHERE site_id = ? AND key = 'cus_ada'`, g.site).Scan(&n)
+		return
+	}
 	notices := func() (n int) {
 		g.st.DB.QueryRow(`SELECT count(*) FROM pay_inbox WHERE instr(lower(CAST(body AS TEXT)), 'ada@example.com') > 0`).Scan(&n)
 		return
 	}
 	send("evt_1", "pi_1")
 	visitor, err := g.svc.VisitorForEmail(ctx, g.site, "ada@example.com")
-	if err != nil || visitor == 0 || linked() != 1 || notices() != 1 {
-		t.Fatalf("before: visitor=%d err=%v linked=%d notices=%d", visitor, err, linked(), notices())
+	if err != nil || visitor == 0 || linked() != 1 || notices() != 1 || links() != 1 {
+		t.Fatalf("before: visitor=%d err=%v linked=%d notices=%d links=%d", visitor, err, linked(), notices(), links())
 	}
 
 	unlinked, dropped, err := g.svc.ErasePayer(ctx, g.site, visitor, "ada@example.com")
 	if err != nil || unlinked != 1 || dropped != 1 {
 		t.Fatalf("erase: unlinked=%d dropped=%d err=%v", unlinked, dropped, err)
 	}
-	if linked() != 0 || notices() != 0 {
-		t.Fatalf("after erase: linked=%d notices=%d", linked(), notices())
+	if linked() != 0 || notices() != 0 || links() != 0 {
+		t.Fatalf("after erase: linked=%d notices=%d links=%d", linked(), notices(), links())
 	}
 
 	// The same person pays again: counted, not linked, notice not kept.
 	send("evt_2", "pi_2")
-	if linked() != 0 || notices() != 0 {
-		t.Fatalf("after a renewal: linked=%d notices=%d", linked(), notices())
+	if linked() != 0 || notices() != 0 || links() != 0 {
+		t.Fatalf("after a renewal: linked=%d notices=%d links=%d", linked(), notices(), links())
 	}
 	if _, err := g.svc.Reprocess(ctx, g.site); err != nil {
 		t.Fatal(err)
 	}
-	if linked() != 0 {
-		t.Fatalf("after reprocess: linked=%d", linked())
+	if linked() != 0 || links() != 0 {
+		t.Fatalf("after reprocess: linked=%d links=%d", linked(), links())
 	}
 	var payments int
 	g.st.DB.QueryRow(`SELECT count(*) FROM pay_payments WHERE site_id = ?`, g.site).Scan(&payments)
