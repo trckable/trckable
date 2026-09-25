@@ -199,7 +199,7 @@ function EditSite({ site, onClose, onSaved }: { site: Site; onClose: () => void;
  * domain first and then shows the work: what is being cleared, and what was
  * removed when it is done. A long silence is the worst thing a delete can do.
  */
-function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: () => void; onSites: () => void }) {
+export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: () => void; onSites: () => void }) {
   const [typed, setTyped] = useState('')
   const [step, setStep] = useState(0) // 0 asking · 1..3 working · 4 done
   const [gone, setGone] = useState<{ events: number; sessions: number; payments: number } | null>(null)

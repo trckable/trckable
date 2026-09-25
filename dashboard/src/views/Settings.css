@@ -517,3 +517,77 @@
   background: color-mix(in srgb, var(--warn) 12%, transparent);
   color: var(--warn);
 }
+
+/* ---- General: the site itself first -------------------------------------- */
+.gen-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background:
+    radial-gradient(420px 160px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
+    var(--surface-2);
+}
+.gen-head-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.gen-head-text b {
+  font-size: 17px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gen-head-text .faint {
+  font-size: 12.5px;
+}
+.gen-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.gen-state::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.gen-state.live::before {
+  background: var(--accent);
+}
+.gen-state.quiet::before {
+  background: var(--money);
+}
+.gen-state.stopped {
+  color: var(--down);
+  border-color: color-mix(in srgb, var(--down) 40%, transparent);
+}
+.gen-state.stopped::before {
+  background: var(--down);
+}
+.card.danger-zone {
+  border-color: color-mix(in srgb, var(--down) 30%, var(--border));
+}
+.card.danger-zone .srow {
+  border-top: 0;
+}
+@media (max-width: 640px) {
+  .gen-head {
+    grid-template-columns: auto 1fr;
+  }
+  .gen-state {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}

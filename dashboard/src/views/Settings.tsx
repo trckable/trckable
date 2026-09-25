@@ -1,7 +1,7 @@
 import { Activity, Bell, Blocks, Check, ChevronLeft, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, RefreshCw, Search, Settings as Cog, Share2, ShieldCheck, TriangleAlert, X } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { isOperator, isViewer } from '../lib/me'
-import { api, type InstallCheck, type Site } from '../lib/api'
+import { api, siteState, type InstallCheck, type Site } from '../lib/api'
 import { navigate, useLocation } from '../lib/url'
 import { Modal } from '../components/Modal'
 import { SiteMark } from '../components/SiteMark'
@@ -19,7 +19,7 @@ import { Shares } from './Shares'
 import { HealthSettings } from './Health'
 import { AlertsSettings } from './Alerts'
 import { SearchSettings } from './Search'
-import { SitesSettings } from './Sites'
+import { DeleteSite, SitesSettings } from './Sites'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import './Settings.css'
 
@@ -201,6 +201,7 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
           <SiteSettings key={site.id} site={site} onSaved={onSites} />
           <SiteLook site={site} onSaved={onSites} />
           <ReportSettings key={'r' + site.id} site={site} onSites={onSites} />
+          {!isViewer() && <DangerZone site={site} onSites={onSites} />}
         </>
       )}
       {tab === 'sharing' && <Shares key={'sh' + site.id} site={site} />}
@@ -439,6 +440,31 @@ function useSaved() {
   }] as const
 }
 
+/** The end of the General tab: deleting the site, with the same dialog as
+ *  the sites list (it asks for the domain and says what goes with it). */
+function DangerZone({ site, onSites }: { site: Site; onSites: () => void }) {
+  const [drop, setDrop] = useState(false)
+  return (
+    <section className="card danger-zone" style={{ gap: 0 }}>
+      <Row label="Delete this site" hint="Its visits, payments, settings and share links go with it. There is no undo." tone="danger">
+        <button type="button" className="btn danger" onClick={() => setDrop(true)}>
+          Delete site
+        </button>
+      </Row>
+      {drop && (
+        <DeleteSite
+          site={site}
+          onClose={() => setDrop(false)}
+          onSites={() => {
+            closeSettings()
+            onSites()
+          }}
+        />
+      )}
+    </section>
+  )
+}
+
 function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
   const [name, setName] = useState(site.name)
   const [saved, flash] = useSaved()
@@ -452,10 +478,24 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
       })
       .catch((e: Error) => setErr(e.message))
 
+  const state = siteState(site)
+  const stateText = state === 'live' ? 'Receiving visits' : state === 'quiet' ? 'No visits today' : state === 'stopped' ? 'Stopped' : 'Not installed yet'
   return (
+    <>
+    <section className="gen-head">
+      <SiteMark site={site} size={44} />
+      <span className="gen-head-text">
+        <b>{site.name || site.domain}</b>
+        <span className="faint">
+          {site.domain} · {site.timezone.replace(/_/g, ' ')} · {site.currency}
+        </span>
+      </span>
+      <span className={'gen-state ' + state}>{stateText}</span>
+    </section>
+
     <section className="card" style={{ gap: 0 }}>
       <div className="card-head" style={{ paddingBottom: 10 }}>
-        <h2>{site.domain}</h2>
+        <h2>Basics</h2>
         <span className={saved ? 'saved on' : 'saved'} aria-live="polite">
           Saved
         </span>
@@ -493,7 +533,12 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
           items={withCurrent(CURRENCIES, site.currency)}
         />
       </Row>
+    </section>
 
+    <section className="card" style={{ gap: 0 }}>
+      <div className="card-head" style={{ paddingBottom: 10 }}>
+        <h2>For developers</h2>
+      </div>
       <Row label="Site id" hint="Used by the snippet and the API">
         <Copyable value={site.id} />
       </Row>
@@ -515,6 +560,7 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
         </span>
       )}
     </section>
+    </>
   )
 }
 
