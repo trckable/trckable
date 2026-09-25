@@ -23,6 +23,9 @@ export type ShareData = {
   prevPageviews?: number
   revenue?: { now: number; prev?: number; fmt: (minor: number) => string }
   series: number[]
+  /** The dashboard's own comparison, when it has one: the words ("vs last
+   *  year") and the other period's line, drawn dashed like the chart's. */
+  compare?: { label: string; series: number[] }
   /** A milestone instead of the period: "10,000" · "visitors, all time" · "Reached on Sep 25". */
   milestone?: { value: string; label: string; sub: string }
 }
@@ -42,10 +45,10 @@ const change = (now: number, prev?: number) => (prev && prev > 0 ? (now - prev) 
 const pct = (x: number) => `${x >= 0 ? '+' : '−'}${Math.abs(Math.round(x * 100))}%`
 
 /** A smooth line through the points, fitted into the box. */
-function linePath(values: number[], x0: number, y0: number, w: number, h: number) {
+function linePath(values: number[], x0: number, y0: number, w: number, h: number, scale?: number) {
   const n = values.length
   if (n < 2) return ''
-  const top = Math.max(1, ...values)
+  const top = scale ?? Math.max(1, ...values)
   const pts = values.map((v, i) => [x0 + (i / (n - 1)) * w, y0 + h - (v / top) * h] as const)
   let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`
   for (let i = 1; i < n; i++) {
@@ -81,7 +84,11 @@ export function cardSvg(d: ShareData, design: Design, show: Show, title: string)
   if (show.visitors && show.pageviews) side.push({ value: fmtInt(d.pageviews), label: 'pageviews' })
   if (show.revenue && d.revenue && (show.visitors || show.pageviews)) side.push({ value: d.revenue.fmt(d.revenue.now), label: 'revenue' })
 
-  const chart = show.chart && d.series.length > 1 ? linePath(d.series, 60, 410, W - 120, 130) : ''
+  // One scale for both lines, so the comparison is honest.
+  const top = Math.max(1, ...d.series, ...(d.compare?.series ?? []))
+  const chart = show.chart && d.series.length > 1 ? linePath([...d.series, top].slice(0, -1).map((v) => v / top), 60, 410, W - 120, 130, 1) : ''
+  const ghostLine = show.chart && show.change && d.compare && d.compare.series.some((v) => v > 0) ? linePath(d.compare.series.map((v) => v / top), 60, 410, W - 120, 130, 1) : ''
+  const vsText = d.compare?.label ?? 'vs the period before'
   const glow =
     design === 'glow'
       ? `<radialGradient id="g" cx="0.15" cy="0" r="0.9"><stop offset="0" stop-color="${accent}" stop-opacity="0.28"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient><rect width="${W}" height="${H}" fill="url(#g)"/>`
@@ -106,7 +113,13 @@ export function cardSvg(d: ShareData, design: Design, show: Show, title: string)
     `<text x="60" y="132" ${font} font-size="24" fill="${t.mute}">${esc(d.period)}</text>` +
     (main
       ? `<text x="56" y="290" ${font} font-size="150" font-weight="760" letter-spacing="-6" fill="${t.fg}">${esc(main.value)}</text>` +
-        `<text x="62" y="340" ${font} font-size="30" fill="${t.mute}">${main.label}${show.change && main.ch !== null ? `  ·  <tspan fill="${t.acc}" font-weight="700">${pct(main.ch)}</tspan><tspan fill="${t.mute}"> vs the period before</tspan>` : ''}</text>`
+        `<text x="62" y="340" ${font} font-size="30" fill="${t.mute}">${main.label}${
+          show.change && d.compare
+            ? main.ch !== null
+              ? `  ·  <tspan fill="${t.acc}" font-weight="700">${pct(main.ch)}</tspan><tspan fill="${t.mute}"> ${esc(vsText)}</tspan>`
+              : `  ·  <tspan fill="${t.mute}">no data ${esc(vsText.replace(/^vs /, 'from '))}</tspan>`
+            : ''
+        }</text>`
       : '') +
     side
       .map(
@@ -115,6 +128,7 @@ export function cardSvg(d: ShareData, design: Design, show: Show, title: string)
           `<text x="${W - 60}" y="${244 + i * 90}" text-anchor="end" ${font} font-size="22" fill="${t.mute}">${s.label}</text>`,
       )
       .join('') +
+    (ghostLine ? `<path d="${ghostLine}" fill="none" stroke="${t.mute}" stroke-width="3" stroke-dasharray="10 9" stroke-linecap="round" opacity="0.8"/>` : '') +
     (chart
       ? `<path d="${chart} L${W - 60} 540 L60 540 Z" fill="url(#a)"/><path d="${chart}" fill="none" stroke="${t.acc}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`
       : '') +
@@ -207,7 +221,7 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
   const vch = change(data.visitors, data.prevVisitors)
   const post = data.milestone
     ? `${title}: ${data.milestone.value} ${data.milestone.label}. ${data.milestone.sub}. Counted by trckable — trckable.com`
-    : `${title}: ${fmtInt(data.visitors)} visitors, ${data.period}${show.change && vch !== null ? ` (${pct(vch)})` : ''}. Counted by trckable — trckable.com`
+    : `${title}: ${fmtInt(data.visitors)} visitors, ${data.period}${show.change && data.compare && vch !== null ? ` (${pct(vch)} ${data.compare.label})` : ''}. Counted by trckable — trckable.com`
   const file = () => `trckable-${data.domain}-${new Date().toISOString().slice(0, 10)}.png`
   const act = async (what: string, run: (png: Blob) => Promise<unknown>) => {
     setBusy(what)
@@ -225,7 +239,7 @@ export default function ShareCard({ data, onClose }: { data: ShareData; onClose:
     { id: 'visitors', label: 'Visitors' },
     { id: 'pageviews', label: 'Pageviews' },
     { id: 'revenue', label: 'Revenue', off: !data.revenue },
-    { id: 'change', label: 'Change vs the period before', off: data.prevVisitors === undefined },
+    { id: 'change', label: data.compare ? `Change ${data.compare.label}` : 'Change', off: !data.compare },
     { id: 'chart', label: 'The chart' },
   ]
 

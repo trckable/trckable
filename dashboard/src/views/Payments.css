@@ -189,3 +189,21 @@
   height: 32px;
   font-size: 12.5px;
 }
+
+.conn-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 3px;
+  min-width: 0;
+  font-size: 13px;
+}
+.conn-status .dot {
+  flex: none;
+}
+.conn-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

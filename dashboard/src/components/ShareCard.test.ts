@@ -10,6 +10,7 @@ const data = {
   prevVisitors: 13800,
   revenue: { now: 3421600, fmt: (n: number) => '€' + Math.round(n / 100).toLocaleString('en-US') },
   series: [1, 3, 2, 5, 4],
+  compare: { label: 'vs last year', series: [1, 1, 2, 2, 3] },
 }
 const all = { visitors: true, pageviews: true, revenue: false, change: true, chart: true }
 
@@ -19,6 +20,8 @@ describe('share card', () => {
     expect(svg).toContain('18,273')
     expect(svg).toContain('42,059')
     expect(svg).toContain('+32%')
+    expect(svg).toContain('vs last year')
+    expect(svg).toContain('stroke-dasharray')
     expect(svg).not.toContain('€')
     expect(cardSvg(data, 'glow', { ...all, revenue: true }, 'Example')).toContain('€34,216')
   })

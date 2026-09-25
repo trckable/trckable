@@ -646,13 +646,16 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               domain: site.domain,
               name: site.name || site.domain,
               color: site.color,
-              period: series.length ? `${fmtDay(series[0].t.slice(0, 10))} – ${fmtDay(series[series.length - 1].t.slice(0, 10))}` : '',
+              // The dates the picker shows, not the first chart bucket (a week
+              // bucket starts before the range does).
+              period: pickerValue.range.from === pickerValue.range.to ? fmtDay(pickerValue.range.from) : `${fmtDay(pickerValue.range.from)} – ${fmtDay(pickerValue.range.to)}`,
               visitors: k.visitors,
               pageviews: k.pageviews,
               prevVisitors: pk?.visitors,
               prevPageviews: pk?.pageviews,
               revenue: money ? { now: money.revenue, prev: pm?.revenue, fmt: fmtM } : undefined,
               series: series.map((p) => p.visitors),
+              compare: data?.previous ? { label: vs, series: data.previous.series.map((p) => p.visitors) } : undefined,
               milestone: msShare ?? undefined,
             }}
           />

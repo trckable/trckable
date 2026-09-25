@@ -1084,36 +1084,8 @@ table.t td {
   border: 1px solid var(--border);
   border-radius: 12px;
 }
-.module > .mart-btn {
-  grid-area: art;
-}
 .module > .switch {
   grid-area: switch;
-}
-.module-head {
-  grid-area: head;
-  display: flex;
-  align-items: center;
-  gap: 6px 8px;
-  flex-wrap: wrap;
-  min-width: 0;
-}
-.module-head .tag {
-  white-space: nowrap;
-}
-.module-body {
-  grid-area: body;
-  align-self: start;
-  min-width: 0;
-}
-.module-body p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.45;
-}
-.module-body p.small {
-  margin-top: 2px;
-  font-size: 12px;
 }
 .tag {
   font-size: 11px;
@@ -1203,14 +1175,6 @@ table.t td {
     opacity: 0;
   }
 }
-/* The dialog's top-right corner: its tools, then a round close button. */
-.modal-tools {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-  align-self: flex-start;
-}
 .modal-close {
   display: grid;
   place-items: center;
@@ -1227,42 +1191,6 @@ table.t td {
   color: var(--text);
   border-color: var(--border-2);
   transform: rotate(90deg);
-}
-.pill-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 32px;
-  padding: 0 8px 0 11px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--sunken);
-  color: var(--text-2);
-  font: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-.pill-btn:hover {
-  color: var(--text);
-  border-color: var(--border-2);
-}
-.pill-btn:hover svg {
-  transform: rotate(-120deg);
-}
-.pill-btn svg {
-  transition: transform 0.35s ease;
-}
-.pill-btn .count {
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  color: var(--accent);
-  font-size: 11px;
-  line-height: 18px;
-  text-align: center;
 }
 .modal-badge.danger {
   background: color-mix(in srgb, var(--down) 14%, transparent);
@@ -1834,37 +1762,9 @@ table.t td {
   flex-basis: 100%;
   font-size: 12px;
 }
-
-/* ---- Module previews -------------------------------------------------------
-   Every module carries a small drawing of what it gives you; tapping it opens
-   the same picture at a readable size. */
-.mart-btn {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  border-radius: 10px;
-  cursor: pointer;
-  flex: none;
-  line-height: 0;
-}
-.mart-btn:hover .mart,
-.mart-btn:focus-visible .mart {
-  border-color: var(--border-2);
-  transform: translateY(-1px);
-}
 .mart {
   border-radius: 9px;
   transition: transform 0.2s var(--ease);
-}
-/* In a dialog the band is the tile: as wide as the words under it, so the
-   whole thing reads as one column instead of a picture floating above a
-   paragraph. */
-.mart-hero {
-  display: block;
-  background: var(--sunken);
-  border: 1px solid var(--grid);
-  border-radius: 11px;
-  padding: 10px 0;
 }
 .mart.large {
   display: block;
@@ -1890,29 +1790,6 @@ table.t td {
     padding: 10px 10px 14px;
     border-radius: 14px;
   }
-  .module > .mart-btn {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    padding: 10px 0;
-    border: 1px solid var(--grid);
-    border-radius: 10px;
-    background: var(--sunken);
-  }
-  .mart-btn .mart {
-    width: auto;
-    height: 72px;
-  }
-  .module-head {
-    padding: 0 4px;
-  }
-  .module-head strong {
-    flex: 1 0 100%;
-    font-size: 15px;
-  }
-  .module-body {
-    padding: 0 4px;
-  }
 }
 .conn {
   position: relative;
@@ -1922,23 +1799,6 @@ table.t td {
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 14px;
-}
-.conn-status {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 3px;
-  min-width: 0;
-  font-size: 13px;
-}
-.conn-status .dot {
-  flex: none;
-}
-.conn-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .modal.wide {
   /* max-width alone would lose to .modal's own width, so both move. */
@@ -2055,24 +1915,6 @@ table.t td {
   cursor: pointer;
 }
 
-/* Settings nav: a quiet heading above each group. */
-.nav-group {
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  padding: 12px 12px 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-@media (max-width: 860px) {
-  /* The chip row has no room for headings; the order still groups them. */
-  .nav-group {
-    display: none;
-  }
-}
-
 /* ---- Map ------------------------------------------------------------------ */
 .worldmap {
   display: flex;
@@ -2101,27 +1943,6 @@ table.t td {
   width: 16px;
   height: 8px;
   border-radius: 2px;
-}
-
-/* The module list's whole explanation, in one strip. */
-.size-strip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-.size-strip b {
-  color: var(--accent);
-}
-@media (max-width: 640px) {
-  /* Under the heading, on its own line, instead of squeezed beside it. */
-  .card-head:has(.size-strip) {
-    flex-wrap: wrap;
-  }
-  .card-head .size-strip {
-    flex: 1 0 100%;
-    white-space: nowrap;
-  }
 }
 .info-dot.static {
   display: inline-flex;
@@ -2468,13 +2289,6 @@ table.t td {
   content: '×';
   color: var(--down);
   line-height: 1.3;
-}
-.bullets-head {
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  margin-top: 4px;
 }
 
 /* ---- The period control ----------------------------------------------------
@@ -2944,13 +2758,6 @@ body[data-mode] .card.overview {
   font-size: 10px;
   padding: 1px 5px;
 }
-
-/* API keys: one line each. */
-.keylist {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
 .keyrow {
   display: flex;
   align-items: center;
@@ -2958,22 +2765,6 @@ body[data-mode] .card.overview {
   padding: 8px 10px;
   border-radius: 10px;
   border: 1px solid var(--grid);
-}
-.keyrow-name {
-  font-weight: 500;
-  font-size: 13.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 45%;
-}
-.keyrow-meta {
-  flex: 1;
-  min-width: 0;
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .switch:disabled {
   opacity: 0.55;
@@ -3145,19 +2936,6 @@ body[data-mode] .card.overview {
 .btn.danger:hover:not(:disabled) {
   background: color-mix(in srgb, var(--down) 12%, transparent);
 }
-.totp-setup {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.totp-manual {
-  flex: 1;
-  min-width: 190px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 .qr {
   width: 172px;
   height: 172px;
@@ -3165,15 +2943,6 @@ body[data-mode] .card.overview {
   background: #fff;
   box-shadow: 0 0 0 1px var(--line);
   flex: none;
-}
-.keybox.as-button {
-  width: 100%;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-}
-.keybox.as-button:hover {
-  background: var(--surface-2);
 }
 .recovery {
   display: grid;
@@ -3208,15 +2977,6 @@ body[data-mode] .card.overview {
     max-width: 240px;
     margin: 0 auto;
   }
-}
-.viewer-note {
-  margin: 0;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--grid);
-  background: var(--sunken);
-  color: var(--text-2);
-  font-size: 13px;
 }
 /* A dialog that is a form: the form disappears from the layout so its fields
    sit in the dialog's own column, exactly as they would without it. */
@@ -4644,18 +4404,6 @@ body[data-mode] .overview .kpi .value,
 }
 .linkish:hover {
   color: var(--text);
-}
-
-
-/* A sentence inside a menu: wraps, quiet, never wider than the menu. */
-.menu-note {
-  display: block;
-  max-width: 240px;
-  padding: 8px 12px 10px;
-  color: var(--text-3);
-  font-size: 12px;
-  line-height: 1.45;
-  white-space: normal;
 }
 
 /* ---- Scrollbars -------------------------------------------------------------

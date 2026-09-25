@@ -7,6 +7,7 @@ import { Modal } from '../components/Modal'
 import { useEffect, useState } from 'react'
 import { ModuleArt } from '../components/ModuleArt'
 import { api, type ModuleInfo, type ScriptInfo, type Site } from '../lib/api'
+import './Modules.css'
 
 const bytes = (n: number) => (n >= 1024 ? (n / 1024).toFixed(2) + ' KB' : n + ' B')
 

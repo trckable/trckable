@@ -13,6 +13,7 @@ import { Steps } from '../components/Steps'
 import { CodeBlock } from '../components/Code'
 import { useConfirm } from '../components/Confirm'
 import { toast } from '../components/Toast'
+import './Shares.css'
 
 const LASTS = [
   { days: 0, label: 'No end date' },

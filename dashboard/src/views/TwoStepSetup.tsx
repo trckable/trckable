@@ -7,6 +7,7 @@ import { StepBody } from "../components/StepBody";
 import { Steps } from "../components/Steps";
 import { toast } from "../components/Toast";
 import { qr, qrPath } from "../lib/qr";
+import './TwoStepSetup.css'
 
 const STEPS = ["Confirm", "Scan", "Save codes"];
 

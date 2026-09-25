@@ -626,3 +626,14 @@
   padding: 12px 4px;
   font-size: 13px;
 }
+
+/* A sentence inside a menu: wraps, quiet, never wider than the menu. */
+.menu-note {
+  display: block;
+  max-width: 240px;
+  padding: 8px 12px 10px;
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: normal;
+}

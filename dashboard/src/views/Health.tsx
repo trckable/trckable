@@ -100,6 +100,7 @@ export function HealthSettings() {
     h.backup.offsite_error && { tone: 'bad', text: 'the last off-site copy failed' },
     !h.backup.offsite && { tone: 'warn', text: 'backups stay on this machine only' },
     lagTone === 'warn' && { tone: 'warn', text: 'the writer is behind' },
+    h.key_on_volume && { tone: 'warn', text: 'the instance key is only on this disk' },
   ].filter(Boolean) as { tone: Tone; text: string }[]
   const state: { tone: Tone; title: string; sub?: string } =
     h.analytics === 'warming'
@@ -209,6 +210,19 @@ export function HealthSettings() {
           <Pill tone={offTone}>{h.backup.offsite ? (h.backup.offsite_at ? since(h.backup.offsite_at) : 'None since start') : 'Off'}</Pill>
         </Item>
       </section>
+
+      {h.key_on_volume && (
+        <section className="card hcard">
+          <div className="hcard-head">
+            <h2>The instance key</h2>
+            <Pill tone="warn">Only on this disk</Pill>
+          </div>
+          <p className="hnote faint">
+            Backups and saved provider keys are encrypted with data/secret.key, which sits on the same disk as the backups. If the disk is lost, so is the key, and the backups cannot be read. Copy the file somewhere
+            safe (for Docker: docker cp trckable:/data/secret.key .), or set its contents as TRCKABLE_SECRET.
+          </p>
+        </section>
+      )}
 
       {h.payments && (
         <section className="card hcard">

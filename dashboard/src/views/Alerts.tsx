@@ -15,7 +15,7 @@ const DAYS = ['Sunday', 'Monday']
 const KINDS: { id: Alert['kind']; label: string; Icon: typeof Bell; before?: string; unit?: string; fallback: number; hint: (site: Site) => string }[] = [
   { id: 'stopped', label: 'Tracking stopped', Icon: WifiOff, before: 'No visits for', unit: 'hours', fallback: 6, hint: () => 'when it normally has some by then' },
   { id: 'spike', label: 'Busy day', Icon: TrendingUp, before: 'Today reaches', unit: '× a normal day', fallback: 3, hint: () => 'and at least 50 visitors' },
-  { id: 'customer', label: 'Someone paid', Icon: Banknote, fallback: 0, hint: () => 'A message for each new payment' },
+  { id: 'customer', label: 'Someone paid', Icon: Banknote, fallback: 0, hint: () => 'New payments since the last message, at most once every six hours' },
   { id: 'disk', label: 'Disk filling up', Icon: HardDrive, before: 'Less than', unit: 'days of room left', fallback: 14, hint: () => 'at the rate the last week wrote' },
   {
     id: 'weekly',

@@ -592,3 +592,30 @@
     justify-self: start;
   }
 }
+
+/* Settings nav: a quiet heading above each group. */
+.nav-group {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 12px 12px 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 860px) {
+  /* The chip row has no room for headings; the order still groups them. */
+  .nav-group {
+    display: none;
+  }
+}
+.viewer-note {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--grid);
+  background: var(--sunken);
+  color: var(--text-2);
+  font-size: 13px;
+}

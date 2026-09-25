@@ -230,7 +230,8 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 		// owner made a revenue widget.
 		if !a.moduleOn(r, si.ID, "revenue") {
 			if public {
-				http.Error(w, "not found", http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound)
+				fmt.Fprint(w, `<!doctype html><title></title>`)
 				return
 			}
 			view.Off = "Turn on the Revenue module to show this card."
