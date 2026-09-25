@@ -64,7 +64,9 @@ function App() {
       setRole(me.role);
       setOperator(me.operator);
       loadKeymap(me.keys);
-      const { sites } = await api.sites();
+      // Before choosing their own password a person may do nothing else: the
+      // server refuses the rest, so the sites are loaded after.
+      const { sites } = me.must_change ? { sites: [] } : await api.sites();
       setBoot({ state: "ready", email: me.email, version: me.version, updateCheck: me.update_check, mustChange: me.must_change, sites });
     } catch (e) {
       setBoot({

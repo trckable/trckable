@@ -598,13 +598,15 @@ export interface InstallCheck {
   error?: string
 }
 
-export type WidgetKind = 'live' | 'badge' | 'counter'
+export type WidgetKind = 'live' | 'badge' | 'counter' | 'revenue' | 'privacy'
 export interface WidgetLook {
   kind: WidgetKind
   theme: 'auto' | 'dark' | 'light'
   accent: string
   radius: number
   brand: boolean
+  /** The parts the design shows: bars, countries, pages, channels (live); ai (badge); channels (revenue). */
+  shows: string[]
 }
 export interface Widget extends WidgetLook {
   id: string
@@ -657,7 +659,7 @@ export const api = {
   clearSiteIcon: (site: string) => call<Brand>('DELETE', `/sites/${site}/icon`),
   fetchSiteFavicon: (site: string) => call<Brand>('POST', `/sites/${site}/icon/favicon`),
   setSiteColor: (site: string, color: string) => call<Brand>('PUT', `/sites/${site}/color`, { color }),
-  resetPersonPassword: (id: string) => call<{ email: string; password: string }>('POST', `/people/${id}/password`),
+  resetPersonPassword: (id: string, password: string) => call<{ email: string; password: string }>('POST', `/people/${id}/password`, { password }),
   changePassword: (current: string, password: string) => call<void>('POST', '/account/password', { current, password }),
   twoStep: () => call<TwoStep>('GET', '/account/2fa'),
   startTwoStep: (password: string) => call<{ secret: string; uri: string }>('POST', '/account/2fa/start', { password }),

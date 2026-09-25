@@ -822,3 +822,17 @@ func TestSigninLinks(t *testing.T) {
 		t.Fatalf("two-step on: %d", code)
 	}
 }
+
+// signInFirst signs a new person in with the one-time password they were
+// given and chooses their own, as the first sign-in asks.
+func signInFirst(t *testing.T, g *rig, email, oneTime string) *http.Client {
+	t.Helper()
+	c := client()
+	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/login", `{"email":"`+email+`","password":"`+oneTime+`"}`); code != http.StatusOK {
+		t.Fatalf("first sign-in: %d", code)
+	}
+	if code, out := do(t, c, "POST", g.srv.URL+"/api/v1/account/password", `{"current":"`+oneTime+`","password":"a long password of their own"}`, csrf, "1"); code != http.StatusNoContent {
+		t.Fatalf("choosing their own password: %d %v", code, out)
+	}
+	return c
+}

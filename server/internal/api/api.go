@@ -289,6 +289,13 @@ func (a *API) authed(h http.HandlerFunc) http.Handler {
 				fail(w, http.StatusForbidden, "your account can read this instance, not change it")
 				return
 			}
+			// A password someone else chose (a new person's, or one an owner
+			// reset) opens only the way to choose your own: whoever saw the
+			// one-time password must not keep the account.
+			if !mustChangeAllowed(r) && a.Ctl.MustChange(r.Context(), u.ID) {
+				fail(w, http.StatusForbidden, "choose your own password first")
+				return
+			}
 		} else {
 			w.Header().Set("WWW-Authenticate", `Bearer realm="trckable"`)
 			fail(w, http.StatusUnauthorized, "please sign in")
@@ -322,6 +329,16 @@ func (a *API) authed(h http.HandlerFunc) http.Handler {
 		}
 		h.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKey{}, p)))
 	})
+}
+
+// mustChangeAllowed is what a person may do before choosing their own
+// password: say who they are, choose it, or sign out.
+func mustChangeAllowed(r *http.Request) bool {
+	switch r.Method + " " + r.URL.Path {
+	case "GET /api/v1/me", "POST /api/v1/account/password", "POST /api/v1/logout":
+		return true
+	}
+	return false
 }
 
 // ownAccount is the part of the API that belongs to the signed-in person

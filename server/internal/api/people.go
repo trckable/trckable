@@ -109,8 +109,25 @@ func (a *API) resetPersonPassword(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, "change your own password in your account")
 		return
 	}
+	// Your own password first: a session left open somewhere must not be
+	// enough to take someone's account.
+	var in struct{ Password string }
+	if err := decode(r, &in); err != nil || in.Password == "" {
+		fail(w, http.StatusBadRequest, "type your own password to confirm")
+		return
+	}
+	if _, err := a.Ctl.Login(r.Context(), me.Email, in.Password); err != nil {
+		fail(w, http.StatusForbidden, "that is not your password")
+		return
+	}
 	p, err := a.Ctl.PersonByID(r.Context(), principalOf(r).account, r.PathValue("id"))
 	if failPerson(w, err) {
+		return
+	}
+	// An owner's password is theirs: another owner makes them a viewer first,
+	// which everyone on the instance can see, and can undo.
+	if p.Role == sqlite.RoleOwner {
+		fail(w, http.StatusConflict, "an owner's password can only be reset once they are a viewer: make them a viewer first")
 		return
 	}
 	password := auth.Token("", 12)

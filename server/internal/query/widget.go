@@ -12,7 +12,7 @@ type WidgetNumbers struct {
 	Now       int64          `json:"now"`     // distinct visitors, last 30 minutes
 	Minutes   [30]int64      `json:"minutes"` // oldest first; the last is the current minute
 	Countries []CountryCount `json:"countries"`
-	Week      int64          `json:"week"` // distinct visitors, last 7 days
+	Week      int64          `json:"week"`               // distinct visitors, last 7 days
 	Pages     []NamedCount   `json:"pages,omitempty"`    // most viewed paths, last 30 minutes
 	Channels  []NamedCount   `json:"channels,omitempty"` // where visitors came from, last 30 minutes
 	AIShare   float64        `json:"ai_share,omitempty"` // share of the week's visitors from AI assistants

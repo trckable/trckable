@@ -37,8 +37,11 @@ func TestOneTimePasswordsAndReset(t *testing.T) {
 		t.Fatalf("after choosing one: %v", me)
 	}
 
-	// Ada forgets it; an owner resets it.
-	code, out = do(t, owner, "POST", g.srv.URL+"/api/v1/people/"+id+"/password", "", csrf, "1")
+	// Ada forgets it; an owner resets it, with their own password.
+	if code, _ := do(t, owner, "POST", g.srv.URL+"/api/v1/people/"+id+"/password", `{"password":"not mine"}`, csrf, "1"); code != http.StatusForbidden {
+		t.Fatalf("a reset without the owner's own password: %d", code)
+	}
+	code, out = do(t, owner, "POST", g.srv.URL+"/api/v1/people/"+id+"/password", `{"password":"correct horse battery"}`, csrf, "1")
 	if code != http.StatusOK || out["password"] == "" {
 		t.Fatalf("reset: %d %v", code, out)
 	}
@@ -52,10 +55,23 @@ func TestOneTimePasswordsAndReset(t *testing.T) {
 	if _, me := do(t, again, "GET", g.srv.URL+"/api/v1/me", ""); me["must_change"] != true {
 		t.Fatalf("after a reset: %v", me)
 	}
+	// Until she chooses her own, the one-time password opens nothing else:
+	// whoever saw it must not keep the account.
+	if code, _ := do(t, again, "GET", g.srv.URL+"/api/v1/sites", ""); code != http.StatusForbidden {
+		t.Fatalf("reading sites with a one-time password: %d", code)
+	}
+	if code, _ := do(t, again, "POST", g.srv.URL+"/api/v1/keys", `{"name":"mine now"}`, csrf, "1"); code != http.StatusForbidden {
+		t.Fatalf("making an API key with a one-time password: %d", code)
+	}
+	// An owner's password is not another owner's to reset.
+	do(t, owner, "PATCH", g.srv.URL+"/api/v1/people/"+id, `{"role":"owner"}`, csrf, "1")
+	if code, _ := do(t, owner, "POST", g.srv.URL+"/api/v1/people/"+id+"/password", `{"password":"correct horse battery"}`, csrf, "1"); code != http.StatusConflict {
+		t.Fatalf("resetting another owner: %d", code)
+	}
 	// Owners change their own password in their account, with the current one.
 	_, me := do(t, owner, "GET", g.srv.URL+"/api/v1/people", "")
 	ownID := me["people"].([]any)[0].(map[string]any)["id"].(string)
-	if code, _ := do(t, owner, "POST", g.srv.URL+"/api/v1/people/"+ownID+"/password", "", csrf, "1"); code != http.StatusBadRequest {
+	if code, _ := do(t, owner, "POST", g.srv.URL+"/api/v1/people/"+ownID+"/password", `{"password":"correct horse battery"}`, csrf, "1"); code != http.StatusBadRequest {
 		t.Fatalf("resetting your own password: %d, want 400", code)
 	}
 	// A viewer cannot reset anyone's.

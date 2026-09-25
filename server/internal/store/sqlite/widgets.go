@@ -13,18 +13,18 @@ import (
 // Widget is a small public card a site shows on its own pages. Only the
 // numbers its kind shows are ever served for it, and only while it is on.
 type Widget struct {
-	ID        string `json:"id"`
-	SiteID    string `json:"site_id"`
-	Kind      string `json:"kind"`   // live, badge, counter, revenue, privacy
-	Theme     string `json:"theme"`  // auto, dark, light
-	Accent    string `json:"accent"` // #rrggbb, or empty for trckable's own
-	Radius    int    `json:"radius"` // corner radius in px, 0–28
-	Brand     bool   `json:"brand"`  // "Counted by trckable" under it
+	ID     string `json:"id"`
+	SiteID string `json:"site_id"`
+	Kind   string `json:"kind"`   // live, badge, counter, revenue, privacy
+	Theme  string `json:"theme"`  // auto, dark, light
+	Accent string `json:"accent"` // #rrggbb, or empty for trckable's own
+	Radius int    `json:"radius"` // corner radius in px, 0–28
+	Brand  bool   `json:"brand"`  // "Counted by trckable" under it
 	// Shows are the parts the design can leave out or add: for live bars,
 	// countries, pages and channels; for badge ai; for revenue channels.
-	Shows []string `json:"shows"`
-	On        bool   `json:"on"`
-	CreatedAt int64  `json:"created_at"`
+	Shows     []string `json:"shows"`
+	On        bool     `json:"on"`
+	CreatedAt int64    `json:"created_at"`
 }
 
 // ErrBadWidget: a kind, theme, colour or radius that is not one of ours.
@@ -45,6 +45,12 @@ var widgetParts = map[string]map[string]bool{
 
 var widgetDefaults = map[string][]string{"live": {"bars", "countries"}, "revenue": {"channels"}}
 
+// HexColor says whether s is a #rrggbb colour.
+func HexColor(s string) bool { return hexColor.MatchString(s) }
+
+// WidgetPart says whether a design has a part.
+func WidgetPart(kind, part string) bool { return widgetParts[kind][part] }
+
 // Has says whether the widget shows a part.
 func (w Widget) Has(part string) bool {
 	for _, p := range w.Shows {
@@ -55,7 +61,10 @@ func (w Widget) Has(part string) bool {
 	return false
 }
 
-func (w *Widget) clean() error {
+func (w *Widget) Clean() error {
+	// "Counted by trckable" is part of every widget: it is how a visitor
+	// finds out what counted them.
+	w.Brand = true
 	if !WidgetKinds[w.Kind] {
 		return ErrBadWidget
 	}
@@ -99,7 +108,7 @@ func (s *Store) CreateWidget(ctx context.Context, w Widget) (Widget, error) {
 	if w.Shows == nil {
 		w.Shows = widgetDefaults[w.Kind]
 	}
-	if err := w.clean(); err != nil {
+	if err := w.Clean(); err != nil {
 		return w, err
 	}
 	var n int
@@ -115,7 +124,7 @@ func (s *Store) CreateWidget(ctx context.Context, w Widget) (Widget, error) {
 
 // UpdateWidget changes a widget's look, or turns it on or off.
 func (s *Store) UpdateWidget(ctx context.Context, w Widget) (Widget, error) {
-	if err := w.clean(); err != nil {
+	if err := w.Clean(); err != nil {
 		return w, err
 	}
 	res, err := s.DB.ExecContext(ctx, `UPDATE widgets SET kind = ?, theme = ?, accent = ?, radius = ?, brand = ?, shows = ?, on_ = ? WHERE id = ? AND site_id = ?`,

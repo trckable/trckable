@@ -12,40 +12,63 @@
   max-width: 70ch;
   display: block;
 }
-.wg-kinds {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-.wg-kind {
+/* The designs: one row of tabs, the chosen one's line under it. */
+.wg-tabs {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px;
+  gap: 4px;
+  padding: 4px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--surface-2);
-  color: var(--text);
+  background: var(--sunken);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.wg-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1 0 auto;
+  justify-content: center;
+  height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-2);
   font: inherit;
-  text-align: left;
+  font-size: 13px;
+  white-space: nowrap;
   cursor: pointer;
 }
-.wg-kind[aria-checked='true'] {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-  box-shadow: 0 0 0 3px var(--accent-soft);
+.wg-tab:hover {
+  color: var(--text);
 }
-.wg-kind-text {
-  display: grid;
-  gap: 2px;
-  font-size: 13.5px;
+.wg-tab[aria-checked='true'] {
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25), inset 0 0 0 1px var(--border);
 }
-.wg-kind-text .faint {
-  font-size: 12px;
-  line-height: 1.4;
+.wg-tab[aria-checked='true'] svg {
+  color: var(--accent);
+}
+.wg-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.wg-hint {
+  margin: -6px 0 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.wg-only {
+  color: var(--accent);
 }
 .wg-studio {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   gap: 14px;
 }
 /* The preview sits on a checked floor, so its own background reads. */
@@ -151,4 +174,40 @@
   .wg-studio {
     grid-template-columns: 1fr;
   }
+}
+
+.wg-parts {
+  display: grid;
+}
+.wg-parts {
+  border-top: 1px solid var(--grid);
+}
+.wg-part {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--grid);
+  cursor: pointer;
+}
+.wg-part > span {
+  display: grid;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  font-size: 13px;
+}
+.wg-part b {
+  font-weight: 500;
+}
+.wg-part .faint {
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+.wg-place button {
+  white-space: nowrap;
+}
+.wg-place-hint {
+  font-size: 11.5px;
 }

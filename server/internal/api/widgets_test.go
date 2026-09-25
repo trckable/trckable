@@ -1,8 +1,10 @@
 package api
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -71,9 +73,73 @@ func TestWidgets(t *testing.T) {
 
 	// A viewer reads the list and changes nothing.
 	_, made := do(t, owner, "POST", g.srv.URL+"/api/v1/people", `{"email":"reader@site.com","role":"viewer"}`, csrf, "1")
-	viewer := client()
-	do(t, viewer, "POST", g.srv.URL+"/api/v1/login", `{"email":"reader@site.com","password":"`+made["password"].(string)+`"}`)
+	viewer := signInFirst(t, g, "reader@site.com", made["password"].(string))
 	if code, _ := do(t, viewer, "POST", base, `{"kind":"badge"}`, csrf, "1"); code != http.StatusForbidden {
 		t.Fatalf("a viewer must not make a widget: %d", code)
+	}
+}
+
+// The privacy seal says what the settings do, and follows them; a revenue
+// card shows nothing publicly while the site does not record revenue.
+func TestWidgetSealAndRevenue(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	base := g.srv.URL + "/api/v1/sites/" + g.site + "/widgets"
+	get := func(id string) (int, string) {
+		res, err := http.Get(g.srv.URL + "/w/" + id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer res.Body.Close()
+		b, _ := io.ReadAll(res.Body)
+		return res.StatusCode, string(b)
+	}
+
+	if code, _ := do(t, owner, "POST", base, `{"kind":"badge","shows":["pages"]}`, csrf, "1"); code != http.StatusBadRequest {
+		t.Fatalf("a part the design does not have must be refused: %d", code)
+	}
+
+	_, seal := do(t, owner, "POST", base, `{"kind":"privacy"}`, csrf, "1")
+	id := seal["id"].(string)
+	_, body := get(id)
+	for _, want := range []string{"No IP addresses stored", "Never sold"} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("seal misses %q: %s", want, body)
+		}
+	}
+	// Cookieless on: the seal says so at once.
+	_, cfg := do(t, owner, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/config", "")
+	cfg["consent_free"] = true
+	b, _ := json.Marshal(cfg)
+	if code, _ := do(t, owner, "PUT", g.srv.URL+"/api/v1/sites/"+g.site+"/config", string(b), csrf, "1"); code != http.StatusOK {
+		t.Fatalf("config: %d", code)
+	}
+	if _, body := get(id); !strings.Contains(body, "No cookies") || !strings.Contains(body, "country only") {
+		t.Fatalf("seal must follow the settings: %s", body)
+	}
+
+	_, rev := do(t, owner, "POST", base, `{"kind":"revenue"}`, csrf, "1")
+	do(t, owner, "PUT", g.srv.URL+"/api/v1/sites/"+g.site+"/modules/revenue", `{"enabled":false}`, csrf, "1")
+	if code, _ := get(rev["id"].(string)); code != http.StatusNotFound {
+		t.Fatalf("revenue while the module is off must not be public: %d", code)
+	}
+}
+
+// The preview takes its look from the address: a colour that is not #rrggbb
+// must never reach the page's styles.
+func TestWidgetPreviewRefusesInjectedStyles(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	bad := g.srv.URL + "/api/v1/sites/" + g.site + "/widgets/preview?kind=live&accent=" + url.QueryEscape(`red}</style><meta http-equiv=refresh content="0;url=https://evil.example/">`)
+	res, err := owner.Get(bad)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusBadRequest || strings.Contains(string(b), "evil.example") {
+		t.Fatalf("injected accent: %d %s", res.StatusCode, b)
 	}
 }

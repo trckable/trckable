@@ -368,14 +368,15 @@ function People({ me }: { me?: string }) {
 
   const reset = async (p: Person) => {
     let made: { email: string; password: string } | null = null
-    const ok = await ask({
+    const pw = await confirmWith({
       title: `New sign-in details for ${p.email}?`,
-      body: 'They are signed out everywhere, get a new one-time password from you, and choose their own at the next sign-in.',
+      body: 'They are signed out everywhere, get a new one-time password from you, and choose their own at the next sign-in. Type your own password to confirm.',
+      field: { label: 'Your password', type: 'password', autoComplete: 'current-password' },
       confirmLabel: 'Make new details',
       busyLabel: 'Resetting…',
-      run: () => api.resetPersonPassword(p.id).then((r) => (made = r)),
+      run: (mine) => api.resetPersonPassword(p.id, mine).then((r) => (made = r)),
     })
-    if (ok && made) (setIssued({ ...(made as { email: string; password: string }), reset: true }), load())
+    if (pw !== null && made) (setIssued({ ...(made as { email: string; password: string }), reset: true }), load())
   }
   const remove = async (p: Person) => {
     const ok = await ask({
@@ -412,7 +413,7 @@ function People({ me }: { me?: string }) {
           <span className="person-sub">{p.email}</span>
           <span className="person-seen">
             {p.must_change ? 'Has not chosen a password yet' : p.last_seen ? `Last seen ${seen(p.last_seen)}` : 'Never signed in'}
-            {waiting(p) && !managed() && (
+            {waiting(p) && !managed() && p.role !== 'owner' && (
               <button type="button" className="linkish person-quick" onClick={() => reset(p)}>
                 New sign-in details
               </button>
@@ -446,11 +447,12 @@ function People({ me }: { me?: string }) {
                 >
                   {p.role === 'owner' ? 'Make a viewer' : 'Make an owner'}
                 </button>
-                {!managed() && (
+                {!managed() && p.role !== 'owner' && (
                   <button type="button" role="menuitem" onClick={() => (close(), reset(p))}>
                     Reset password
                   </button>
                 )}
+                {!managed() && p.role === 'owner' && <span className="menu-note">An owner's password can be reset once they are a viewer.</span>}
                 <button type="button" role="menuitem" style={{ color: 'var(--down)' }} onClick={() => (close(), remove(p))}>
                   Remove
                 </button>
