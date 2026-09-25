@@ -53,7 +53,8 @@ func (s *Store) EnableTwoStep(ctx context.Context, id, code string, now func() i
 	if secret == "" {
 		return nil, auth.ErrNotFound
 	}
-	if !auth.VerifyTOTP(secret, code, nowTime(now)) {
+	step, ok := auth.TOTPStepOf(secret, code, nowTime(now))
+	if !ok {
 		return nil, auth.ErrBadLogin
 	}
 	codes := make([]string, 8)
@@ -62,13 +63,13 @@ func (s *Store) EnableTwoStep(ctx context.Context, id, code string, now func() i
 		codes[i] = auth.Token("", 5) // short, readable, one use each
 		hashes[i] = hex.EncodeToString(auth.Hash(codes[i]))
 	}
-	_, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_enabled = 1, recovery = ? WHERE id = ?`, strings.Join(hashes, " "), id)
+	_, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_enabled = 1, recovery = ?, totp_last_step = ? WHERE id = ?`, strings.Join(hashes, " "), step, id)
 	return codes, err
 }
 
 // DisableTwoStep turns it off and forgets the secret.
 func (s *Store) DisableTwoStep(ctx context.Context, id string) error {
-	_, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_enabled = 0, totp_secret = '', recovery = '' WHERE id = ?`, id)
+	_, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_enabled = 0, totp_secret = '', recovery = '', totp_last_step = 0 WHERE id = ?`, id)
 	return err
 }
 
@@ -86,8 +87,18 @@ func (s *Store) CheckSecondStep(ctx context.Context, id, code string, now func()
 	if code == "" {
 		return ErrNeedsCode
 	}
-	if auth.VerifyTOTP(secret, code, nowTime(now)) {
-		return nil
+	if step, ok := auth.TOTPStepOf(secret, code, nowTime(now)); ok {
+		// Each step once: the update only happens for a newer step, so the
+		// same code (or an older one still inside the window) is refused, even
+		// when two sign-ins race with it.
+		res, err := s.DB.ExecContext(ctx, `UPDATE users SET totp_last_step = ? WHERE id = ? AND totp_last_step < ?`, step, id, step)
+		if err != nil {
+			return err
+		}
+		if n, _ := res.RowsAffected(); n == 1 {
+			return nil
+		}
+		return auth.ErrBadLogin
 	}
 	left := splitCodes(recovery)
 	for i, h := range left {

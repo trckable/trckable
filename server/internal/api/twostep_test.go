@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
 )
@@ -68,9 +69,24 @@ func TestTwoStepSignIn(t *testing.T) {
 	if code, out := do(t, fresh, "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery","code":"111111"}`); code != http.StatusUnauthorized || out["needs_code"] != true {
 		t.Fatalf("wrong code: %d %v", code, out)
 	}
-	now, _ = auth.TOTPCode(secret, g.now)
+	// The code that turned two-step on has done its job: it does not sign in.
+	enabling := now
+	if code, _ := do(t, fresh, "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery","code":"`+enabling+`"}`); code != http.StatusUnauthorized {
+		t.Fatalf("the enabling code signed in: %d", code)
+	}
+	// A minute later: the new code signs in once, and only once.
+	later := g.advance(time.Minute)
+	now, _ = auth.TOTPCode(secret, later)
 	if code, out := do(t, fresh, "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery","code":"`+now+`"}`); code != 200 {
 		t.Fatalf("with the code: %d %v", code, out)
+	}
+	if code, _ := do(t, client(), "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery","code":"`+now+`"}`); code != http.StatusUnauthorized {
+		t.Fatal("the same code signed in twice (seen over a shoulder, or replayed)")
+	}
+	// Nor does the code from the step before, though it is still in the window.
+	before, _ := auth.TOTPCode(secret, later.Add(-auth.TOTPStep))
+	if code, _ := do(t, client(), "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery","code":"`+before+`"}`); code != http.StatusUnauthorized {
+		t.Fatal("an older code signed in after a newer one")
 	}
 
 	// A recovery code works once, and is then used up.
