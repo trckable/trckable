@@ -20,16 +20,13 @@ One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy,
 
 <br>
 
-<picture>
-  <source srcset=".github/images/gallery/tour.webp" type="image/webp">
-  <img src=".github/images/gallery/tour.gif" alt="A tour of the trckable dashboard on the demo site: the last 30 days against the 30 before, a pointer across the chart showing each day's visitors and revenue, the Share dialog with a card for a post, the money trail of visitors from Search, Full mode, then Replay playing the period day by day" width="960">
-</picture>
+<img src=".github/images/gallery/tour.webp" alt="A tour of the trckable dashboard on the demo site: the last 30 days against the 30 before, a pointer across the chart showing each day's visitors and revenue, the Share dialog with a card for a post, the money trail of visitors from Search, Full mode, then Replay playing the period day by day" width="960">
 
 <sub>The demo site, recorded from the real dashboard: the comparison, the day under the pointer, Share, the money trail from Search, Full (<kbd>F</kbd>) and Replay.</sub>
 
 <br><br>
 
-<img src=".github/images/readme/numbers.svg" width="880" alt="3 KB browser script. 1 container, no external database. 52 MB of memory when idle. 0 IP addresses stored.">
+<img src=".github/images/readme/numbers.svg" width="880" alt="2.1 KB browser script. 1 container, no external database. 52 MB of memory when idle. 0 IP addresses stored.">
 
 </div>
 
