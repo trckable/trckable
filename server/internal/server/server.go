@@ -354,6 +354,7 @@ func (s *Server) Run(ctx context.Context) error {
 	go s.runRetention(wctx) // each site's own "keep for N days"
 	go s.runBackups(wctx)   // one encrypted copy a day, kept on the volume
 	go s.runAlerts(wctx)    // the four things worth being told about
+	go s.runChecks(wctx)    // each site's snippet, looked for once a day
 
 	select {
 	case <-ctx.Done():

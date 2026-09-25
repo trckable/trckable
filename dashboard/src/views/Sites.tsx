@@ -7,7 +7,7 @@ import { Modal } from '../components/Modal'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import { Picker } from '../components/Picker'
 import { useEffect, useState } from 'react'
-import { api, siteState, type Site, type Visit } from '../lib/api'
+import { api, siteState, stoppedWhy, type Site, type Visit } from '../lib/api'
 import { fmtInt } from '../lib/format'
 import { navigate } from '../lib/url'
 import { Ghost, Name } from '../components/Logo'
@@ -55,11 +55,19 @@ function SiteRow({ site, onSites, onDelete }: { site: Site; onSites: () => void;
   const live = state === 'live'
   return (
     <div className="conn">
-      <span className="dot" style={{ background: live ? 'var(--accent)' : 'var(--text-3)', borderRadius: '50%' }} aria-hidden="true" />
+      <span className="dot" style={{ background: live ? 'var(--accent)' : state === 'stopped' ? 'var(--down)' : 'var(--text-3)', borderRadius: '50%' }} aria-hidden="true" />
       <div style={{ flex: 1, minWidth: 0 }} onDoubleClick={() => navigate('/' + encodeURIComponent(site.domain))}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <strong>{site.name || site.domain}</strong>
-          {state === 'live' ? <span className="tag live">live</span> : state === 'quiet' ? <span className="tag quiet">no visits today</span> : <span className="tag quiet">not installed yet</span>}
+          {state === 'live' ? (
+            <span className="tag live">live</span>
+          ) : state === 'stopped' ? (
+            <span className="tag danger">stopped · {stoppedWhy(site)}</span>
+          ) : state === 'quiet' ? (
+            <span className="tag quiet">no visits today</span>
+          ) : (
+            <span className="tag quiet">not installed yet</span>
+          )}
         </div>
         <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
           {site.name && site.name !== site.domain ? site.domain + ' · ' : ''}

@@ -92,12 +92,31 @@ export interface Site {
   icon_url?: string
   /** The site's first day of the week: 1 Monday, 0 Sunday. */
   week_start?: number
+  /** The last time the server looked for the snippet from the outside. */
+  check?: { at: number; found?: 'site' | 'other' | 'none'; via?: string; error?: string }
 }
 
-/** live = seen in the last day · quiet = seen, but not lately · new = never. */
-export function siteState(s: Site): 'live' | 'quiet' | 'new' {
+export type SiteState = 'live' | 'quiet' | 'stopped' | 'new'
+
+/** live = seen in the last day · quiet = seen, but not lately, and nothing
+ *  known to be wrong · stopped = not seen lately, and the snippet was not
+ *  found (or the site did not answer) when the server last looked, after the
+ *  last visit · new = never seen. */
+export function siteState(s: Site): SiteState {
   if (!s.last_event_at) return 'new'
-  return Date.now() / 1000 - s.last_event_at < 86400 ? 'live' : 'quiet'
+  if (Date.now() / 1000 - s.last_event_at < 86400) return 'live'
+  const c = s.check
+  if (c && c.at > s.last_event_at && c.found !== 'site') return 'stopped'
+  return 'quiet'
+}
+
+/** Why a stopped site stopped, in a few words. */
+export function stoppedWhy(s: Site): string {
+  const c = s.check
+  if (!c) return ''
+  if (c.error) return `${s.domain} did not answer`
+  if (c.found === 'other') return "another site's snippet is on the page"
+  return 'the snippet is not on the homepage'
 }
 
 export interface APIKey {

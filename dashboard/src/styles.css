@@ -4630,3 +4630,50 @@ body[data-mode] .overview .kpi .value,
   height: 9px !important;
   box-shadow: 0 0 0 2px var(--surface);
 }
+
+/* A site that stopped sending visits: said once, above its numbers. */
+.stopped {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--down) 40%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--down) 7%, var(--surface));
+}
+.stopped-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--down) 15%, transparent);
+  color: var(--down);
+}
+.stopped-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.stopped-text b {
+  color: var(--text);
+  font-size: 14px;
+}
+.tag.danger {
+  color: var(--down);
+  border-color: color-mix(in srgb, var(--down) 40%, transparent);
+}
+.stopped-note {
+  color: var(--down) !important;
+}
+@media (max-width: 640px) {
+  .stopped {
+    grid-template-columns: auto 1fr;
+  }
+  .stopped .btn {
+    grid-column: 1 / -1;
+  }
+}

@@ -4,7 +4,7 @@
 // and a way straight to adding one.
 import { Check, ChevronDown, LayoutGrid, Plus, Search, Settings2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { siteState, type Site } from '../lib/api'
+import { siteState, stoppedWhy, type Site, type SiteState } from '../lib/api'
 import { navigate } from '../lib/url'
 import { openAccount, openAddSite } from '../lib/account'
 import { isViewer } from '../lib/me'
@@ -13,13 +13,13 @@ import { SiteMark } from './SiteMark'
 
 /** Green when the site sent something today, amber when it has gone quiet,
  *  hollow when nothing has ever arrived. */
-function StateDot({ state }: { state: 'live' | 'quiet' | 'new' }) {
-  const color = state === 'live' ? 'var(--accent)' : state === 'quiet' ? 'var(--money)' : 'var(--text-3)'
+function StateDot({ state }: { state: SiteState }) {
+  const color = state === 'live' ? 'var(--accent)' : state === 'quiet' ? 'var(--money)' : state === 'stopped' ? 'var(--down)' : 'var(--text-3)'
   return (
     <span
       className="dot"
       aria-hidden="true"
-      title={state === 'live' ? 'Receiving visits' : state === 'quiet' ? 'No visits today' : 'Not installed yet'}
+      title={state === 'live' ? 'Receiving visits' : state === 'quiet' ? 'No visits today' : state === 'stopped' ? 'Stopped: no visits, and the snippet was not found' : 'Not installed yet'}
       style={{ background: state === 'new' ? 'transparent' : color, border: '1.5px solid ' + color, borderRadius: '50%', width: 9, height: 9 }}
     />
   )
@@ -106,6 +106,8 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
                   <b>{s.name || s.domain}</b>
                   {siteState(s) === 'new' ? (
                     <span className="faint">not installed yet</span>
+                  ) : siteState(s) === 'stopped' ? (
+                    <span className="faint stopped-note">stopped · {stoppedWhy(s)}</span>
                   ) : siteState(s) === 'quiet' ? (
                     <span className="faint">no visits today</span>
                   ) : (

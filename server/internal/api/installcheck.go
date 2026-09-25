@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
 // Verifying an install from the outside: this server loads the site's homepage
@@ -32,6 +33,10 @@ type installCheck struct {
 	Scripts int    `json:"scripts"`
 	Error   string `json:"error,omitempty"`
 }
+
+// checkClient is the guarded client checks use; tests swap it so they never
+// reach the internet.
+var checkClient = func() *http.Client { return alerts.SafeClient(8 * time.Second) }
 
 const (
 	maxScripts    = 20
@@ -98,29 +103,62 @@ func (a *API) checkInstall(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusNotFound, "site not found")
 		return
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), checkDeadline)
+	out := verifySite(r.Context(), si.ID, si.Domain)
+	a.remember(r.Context(), si.ID, out)
+	writeJSON(w, http.StatusOK, out)
+}
+
+// remember keeps a check's outcome, so the site picker and the dashboard can
+// tell a working install from one that stopped.
+func (a *API) remember(ctx context.Context, site string, c installCheck) {
+	_ = a.Ctl.SetCheck(ctx, site, sqlite.SiteCheck{At: time.Now().Unix(), Found: c.Found, Via: c.Via, Error: c.Error})
+}
+
+// VerifyAll checks every site of the installation once, a few seconds apart,
+// so a site whose snippet disappeared is noticed within a day even when
+// nobody opens Verify. One plain GET per site (plus its scripts when the id
+// is not in the page).
+func (a *API) VerifyAll(ctx context.Context) {
+	rows, err := a.Ctl.AllSites(ctx)
+	if err != nil {
+		return
+	}
+	for _, s := range rows {
+		if ctx.Err() != nil {
+			return
+		}
+		a.remember(ctx, s.ID, verifySite(ctx, s.ID, s.Domain))
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(3 * time.Second):
+		}
+	}
+}
+
+// verifySite reads the homepage, then the scripts it loads, and says whether
+// this site's id is there.
+func verifySite(parent context.Context, siteID, domain string) installCheck {
+	ctx, cancel := context.WithTimeout(parent, checkDeadline)
 	defer cancel()
-	client := alerts.SafeClient(8 * time.Second)
-	home := "https://" + si.Domain + "/"
+	client := checkClient()
+	home := "https://" + domain + "/"
 	out := installCheck{URL: home}
 
 	page, final, status, err := fetchText(ctx, client, home)
 	if err != nil {
-		out.Error = si.Domain + " could not be reached over https"
-		writeJSON(w, http.StatusOK, out)
-		return
+		out.Error = domain + " could not be reached over https"
+		return out
 	}
 	out.URL, out.Status = final.String(), status
 	if status >= 400 {
 		out.Error = final.Host + " answered " + http.StatusText(status)
-		writeJSON(w, http.StatusOK, out)
-		return
+		return out
 	}
-	out.Found = snippetIn(page, si.ID)
+	out.Found = snippetIn(page, siteID)
 	if out.Found == "site" {
 		out.Via = "page"
-		writeJSON(w, http.StatusOK, out)
-		return
+		return out
 	}
 
 	// Not in the HTML: read the scripts it loads, a few at a time, and stop at
@@ -150,7 +188,7 @@ func (a *API) checkInstall(w http.ResponseWriter, r *http.Request) {
 			mu.Lock()
 			defer mu.Unlock()
 			out.Scripts++
-			switch snippetIn(body, si.ID) {
+			switch snippetIn(body, siteID) {
 			case "site":
 				if out.Found != "site" {
 					out.Found, out.Via = "site", u
@@ -164,5 +202,5 @@ func (a *API) checkInstall(w http.ResponseWriter, r *http.Request) {
 		}(u)
 	}
 	wg.Wait()
-	writeJSON(w, http.StatusOK, out)
+	return out
 }

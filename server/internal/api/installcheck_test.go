@@ -1,9 +1,15 @@
 package api
 
 import (
+	"errors"
+	"net/http"
 	"net/url"
 	"testing"
 )
+
+type roundTrip func(*http.Request) (*http.Response, error)
+
+func (f roundTrip) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
 
 func TestSnippetIn(t *testing.T) {
 	for _, c := range []struct{ page, want string }{
@@ -36,5 +42,27 @@ func TestScriptURLs(t *testing.T) {
 		if got[i] != want[i] {
 			t.Fatalf("got %v, want %v", got, want)
 		}
+	}
+}
+
+// A check is remembered and travels with the site, so the picker can show an
+// install that stopped working.
+func TestCheckIsRemembered(t *testing.T) {
+	was := checkClient
+	defer func() { checkClient = was }()
+	checkClient = func() *http.Client {
+		return &http.Client{Transport: roundTrip(func(*http.Request) (*http.Response, error) { return nil, errors.New("no network in tests") })}
+	}
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	if code, out := do(t, c, "POST", g.srv.URL+"/api/v1/sites/"+g.site+"/install/check", "", csrf, "1"); code != http.StatusOK || out["error"] == nil {
+		t.Fatalf("check of a site that cannot be reached: %d %v", code, out)
+	}
+	_, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites", "")
+	site := out["sites"].([]any)[0].(map[string]any)
+	check, ok := site["check"].(map[string]any)
+	if !ok || check["at"].(float64) == 0 || check["error"] == "" {
+		t.Fatalf("the check travels with the site: %v", site)
 	}
 }

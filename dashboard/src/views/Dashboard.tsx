@@ -5,7 +5,7 @@ import { Modal } from '../components/Modal'
 import { BarList, type BarItem } from '../charts/BarList'
 import { TimeChart, type Pulse } from '../charts/TimeChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
-import { api, cachedReport, dropReports, exportURL, type Annotation, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
+import { api, cachedReport, dropReports, exportURL, siteState, type Annotation, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
 import { calendarPrevious, diffDays, fmtDay, presetById, setWeekStart, todayIn, type Range } from '../lib/dates'
 import { countryName, delta, flag, fmtDuration, fmtInt, fmtMoney, fmtPct, type Delta } from '../lib/format'
 import { useTween } from '../lib/motion'
@@ -29,6 +29,7 @@ import { SavedViews } from '../components/SavedViews'
 import { SpeedMenu } from '../components/SpeedMenu'
 import { LiveFeed } from './LiveFeed'
 import { SearchTerms } from './SearchTerms'
+import { StoppedNotice } from '../components/StoppedNotice'
 import { ScrollDepth } from './ScrollDepth'
 
 // Full mode's extra views live in their own chunk: Core never loads them.
@@ -628,6 +629,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
 
       {showInstall && <Install site={site} visits={stream.visits} />}
+      {!showInstall && !isShared() && siteState(site) === 'stopped' && <StoppedNotice site={site} />}
 
       {view.test && (
         <div className="banner" style={{ borderColor: 'var(--money)' }}>

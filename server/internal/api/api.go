@@ -550,6 +550,7 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	brands, _ := a.Ctl.Brands(r.Context(), principalOf(r).account)
+	checks, _ := a.Ctl.Checks(r.Context(), principalOf(r).account)
 	out := []sqlite.SiteInfo{}
 	for _, s := range rows {
 		b := brands[s.ID]
@@ -559,6 +560,9 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 		}
 		out = append(out, sqlite.SiteInfo{ID: s.ID, Domain: s.Domain, Name: s.Name, Timezone: s.Timezone, Currency: s.Currency, ProxyKey: a.proxyKeyFor(r, s.ProxyKey), LastEventAt: s.LastEventAt,
 			Color: b.Color, IconURL: iconURL(s.ID, b), WeekStart: week})
+		if c, ok := checks[s.ID]; ok {
+			out[len(out)-1].Check = &c
+		}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"sites": out})
 }

@@ -381,6 +381,16 @@ var migrations = []string{
 		icon_type  TEXT NOT NULL DEFAULT '',
 		updated_at INTEGER NOT NULL
 	);`,
+	// 27: the last time this server looked for a site's snippet from the
+	// outside, and what it found, so the dashboard can say when a working
+	// install stopped working.
+	`CREATE TABLE site_check (
+		site_id    TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		checked_at INTEGER NOT NULL,
+		found      TEXT NOT NULL DEFAULT '',
+		via        TEXT NOT NULL DEFAULT '',
+		error      TEXT NOT NULL DEFAULT ''
+	);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {
