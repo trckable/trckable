@@ -4461,3 +4461,12 @@ body[data-mode] .overview .kpi .value,
     transform: none;
   }
 }
+
+/* Refresh, before Ask: the icon turns while every number is fetched again. */
+.btn.icon.refresh.spinning svg {
+  animation: spin 0.8s linear infinite;
+}
+.btn.icon.refresh:disabled {
+  opacity: 1;
+  cursor: progress;
+}

@@ -1,4 +1,4 @@
-import { Banknote, ChevronDown, ChevronRight, CircleUser, Coins, CornerUpLeft, Download, Ellipsis, Eye, Keyboard, KeyRound, Maximize2, MessageCircle, Minimize2, Pause, Play, Radio, RefreshCw, Share2, Target, Timer, Users, type LucideIcon } from 'lucide-react'
+import { Banknote, Check, ChevronDown, ChevronRight, CircleUser, Coins, CornerUpLeft, Download, Ellipsis, Eye, Keyboard, KeyRound, Maximize2, MessageCircle, Minimize2, Pause, Play, Radio, RefreshCw, Share2, Target, Timer, Users, type LucideIcon } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DialogActions } from '../components/DialogActions'
 import { Modal } from '../components/Modal'
@@ -98,6 +98,27 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   )
   const live = range.to === today
   const { data: real, error, warming, loading, refresh } = useReport(site.id, query, { live })
+  // Refresh fetches every number again in place: the cache for this site is
+  // dropped, the page, filters and dates stay. The icon turns while it works
+  // (at least a moment, so a fast answer is still seen) and ticks when done.
+  const [reloading, setReloading] = useState(false)
+  const [reloaded, setReloaded] = useState(false)
+  const reloadAt = useRef(0)
+  const reloadNow = () => {
+    dropReports(site.id)
+    reloadAt.current = Date.now()
+    setReloading(true)
+    refresh()
+  }
+  useEffect(() => {
+    if (!reloading || loading) return
+    const t = setTimeout(() => {
+      setReloading(false)
+      setReloaded(true)
+      setTimeout(() => setReloaded(false), 1200)
+    }, Math.max(0, 600 - (Date.now() - reloadAt.current)))
+    return () => clearTimeout(t)
+  }, [reloading, loading])
   // A shared link has no session, so no live stream: the report refreshes on
   // its own timer instead.
   const stream = useLive(isShared() ? '' : site.id)
@@ -539,6 +560,18 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             </span>
           </button>
         )}
+          {!narrow && (
+            <button
+              type="button"
+              className={'btn icon refresh' + (reloading ? ' spinning' : '')}
+              onClick={reloadNow}
+              disabled={reloading}
+              aria-label="Refresh the numbers"
+              title="Refresh the numbers (the page stays as it is)"
+            >
+              {reloaded ? <Check size={17} strokeWidth={2.2} aria-hidden="true" /> : <RefreshCw size={17} strokeWidth={1.75} aria-hidden="true" />}
+            </button>
+          )}
           {askOn && (
             <button type="button" className="btn ask" onClick={() => setAskOpen(true)} aria-expanded={askOpen} aria-label="Ask trckable" title={`Ask trckable (${caps(keyFor('ask')).join('')})`}>
               <ChatIcon />
@@ -561,11 +594,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               a.click()
               toast('Building your file…')
             }}
-            onRefresh={() => {
-              dropReports(site.id)
-              refresh()
-              toast('Refreshed')
-            }}
+            onRefresh={reloadNow}
           />
         </div>
       </div>
@@ -1379,10 +1408,12 @@ function MoreMenu({
       </button>
       {open && (
         <div className="pop menu" role="menu" style={{ top: 48, right: 0 }}>
-          <button type="button" role="menuitem" onClick={go(onRefresh)}>
-            <RefreshCw size={18} strokeWidth={1.75} aria-hidden="true" />
-            Refresh
-          </button>
+          {narrow && (
+            <button type="button" role="menuitem" onClick={go(onRefresh)}>
+              <RefreshCw size={18} strokeWidth={1.75} aria-hidden="true" />
+              Refresh
+            </button>
+          )}
           {askOn && narrow && (
             <button type="button" role="menuitem" onClick={go(onAsk)}>
               <ChatIcon />
