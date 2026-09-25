@@ -129,14 +129,27 @@ func (a *API) widgetPreview(w http.ResponseWriter, r *http.Request) {
 // widgetPage is the public card. An unknown id and a widget that is off
 // look the same from outside: not found.
 func (a *API) widgetPage(w http.ResponseWriter, r *http.Request) {
+	// An empty page, not the words "not found": pages that still embed it
+	// show a quiet space instead of an error. A suspended account's widgets
+	// stop like its share links.
+	gone := func() {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors *")
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprint(w, `<!doctype html><title></title>`)
+	}
 	wd, err := a.Ctl.WidgetByID(r.Context(), r.PathValue("id"))
 	if err != nil || !wd.On {
-		http.Error(w, "not found", http.StatusNotFound)
+		gone()
 		return
 	}
 	si, err := a.Ctl.SiteInfo(r.Context(), wd.SiteID)
 	if err != nil {
-		http.Error(w, "not found", http.StatusNotFound)
+		gone()
+		return
+	}
+	if acc, err := a.Ctl.SiteAccount(r.Context(), si.ID); err != nil || a.Ctl.AccountState(r.Context(), acc) == sqlite.StateSuspended {
+		gone()
 		return
 	}
 	a.renderWidget(w, r, wd, si, true)
@@ -500,7 +513,7 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 {{if .Pages}}<h3>Reading now</h3><ul>{{range .Pages}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
 {{if .Channels}}<h3>Came from</h3><ul>{{range .Channels}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
 </div>
-{{else if eq .Kind "badge"}}<div class="card badge"><span class="dot"></span><span><b>{{.Week}}</b><br><span class="lab">visitors this week{{if .AI}} · {{.AI}} from AI assistants{{end}}</span></span></div>
+{{else if eq .Kind "badge"}}<div class="card badge"><span class="dot"></span><span><b>{{.Week}}</b><br><span class="lab">visitors in the last 7 days{{if .AI}} · {{.AI}} from AI assistants{{end}}</span></span></div>
 {{else if eq .Kind "revenue"}}<div class="card">
 <div class="lab">Revenue in {{.Month}}</div>
 <div class="big">{{.Revenue}}</div>
@@ -511,6 +524,6 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 <ul>{{range .Facts}}<li><span class="ok">✓</span><span>{{.}}</span></li>{{end}}</ul>
 <div class="foot">Read live from this site's settings at {{.Checked}}</div>
 </div>
-{{else}}<div class="card pill"><span class="dot"></span>{{.Now}} here now</div>{{end}}
+{{else}}<div class="card pill"><span class="dot"></span>{{.Now}} in the last 30 min</div>{{end}}
 {{if .Brand}}<a class="by" href="https://trckable.com" target="_blank" rel="noopener">{{.Ghost}}<span>Counted by <b>trck</b><i>able</i></span></a>{{end}}
 </body></html>`))

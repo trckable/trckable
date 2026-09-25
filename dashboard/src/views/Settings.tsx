@@ -315,7 +315,7 @@ function InstallSection({ site }: { site: Site }) {
         ? `Not verified: another site's snippet`
         : `Not verified`
   const sub = checking
-    ? 'This server loads your homepage like a browser would, looks for this site\'s id in it and in every script it loads, then asks for the latest visit it recorded.'
+    ? 'This server fetches your homepage and up to 20 scripts it links to, looks for this site\'s id in them, then asks for the latest visit it recorded.'
     : verified
       ? fresh
         ? `This site's snippet is on ${site.domain} and visits are arriving from it.`
@@ -486,7 +486,7 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
       .catch((e: Error) => setErr(e.message))
 
   const state = siteState(site)
-  const stateText = state === 'live' ? 'Receiving visits' : state === 'quiet' ? 'No visits today' : state === 'stopped' ? 'Stopped' : 'Not installed yet'
+  const stateText = state === 'live' ? 'Receiving visits' : state === 'quiet' ? 'No visits in the last day' : state === 'stopped' ? 'Stopped' : 'Not installed yet'
   return (
     <>
     <section className="gen-head">

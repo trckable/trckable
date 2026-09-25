@@ -13,8 +13,8 @@ import './Widgets.css'
 
 const KINDS: { id: WidgetKind; name: string; hint: string; Icon: typeof Activity; w: number; fresh?: boolean }[] = [
   { id: 'live', name: 'Live now', hint: 'Visitors in the last 30 minutes, minute by minute', Icon: Activity, w: 320 },
-  { id: 'badge', name: 'This week', hint: 'Visitors in the last seven days', Icon: BadgeCheck, w: 260 },
-  { id: 'counter', name: 'Counter', hint: 'People on the site right now, in one line', Icon: CircleDot, w: 200 },
+  { id: 'badge', name: 'Last 7 days', hint: 'Visitors in the last seven days', Icon: BadgeCheck, w: 260 },
+  { id: 'counter', name: 'Counter', hint: 'Visitors in the last 30 minutes, in one line', Icon: CircleDot, w: 200 },
   { id: 'revenue', name: 'Open revenue', hint: "This month's revenue and the channels that brought it", Icon: Banknote, w: 320, fresh: true },
   { id: 'privacy', name: 'Privacy seal', hint: 'What this site records, read live from its settings', Icon: ShieldCheck, w: 320, fresh: true },
 ]
@@ -261,7 +261,7 @@ function WidgetRow({ site, w, base, onChange }: { site: Site; w: Widget; base: s
             onClick={async () => {
               const ok = await confirm({
                 title: 'Delete this widget?',
-                body: 'Pages that show it get an empty space where it was. Nothing else changes.',
+                body: 'Within a minute, pages that show it get an empty space where it was. Nothing else changes.',
                 confirmLabel: 'Delete',
                 danger: true,
                 busyLabel: 'Deleting…',

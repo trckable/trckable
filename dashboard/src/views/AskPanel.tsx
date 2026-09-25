@@ -86,7 +86,7 @@ export function AskPanel({ open, onClose, site, sites = [] }: { open: boolean; o
 
         <div className="banner" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
           <strong style={{ color: 'var(--text)' }}>Chat right here, coming next</strong>
-          <span>The built-in chat uses the same tools with your own AI key (Anthropic, OpenAI-compatible or local Ollama). Off until you add a key, so it costs nothing.</span>
+          <span>Planned: a built-in chat on the same tools, with your own AI key (Anthropic, OpenAI-compatible or local Ollama). Until then, use your own assistant as above.</span>
         </div>
       </div>
     </aside>

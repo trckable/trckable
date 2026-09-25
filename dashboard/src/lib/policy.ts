@@ -53,7 +53,7 @@ export function policyText(p: PolicyInput): string {
     out.push(
       `**Cookies, and only if you say so.** Until you answer our cookie banner, nothing about your visit is sent. If you decline, your visit is not counted at all. If you leave without answering, the pages you saw are counted without a cookie, using a number derived from your request that changes every day. ` +
         `If you agree, one cookie, \`trckable_vid\`, holds a random number so that a return visit is not counted as a new person. ` +
-        `It contains no personal data, is not readable by anyone else, and is never used for advertising. If you change your mind, that cookie is deleted.` +
+        `It contains no personal data, is only ever sent to this site, and is never used for advertising. A few visits waiting to be sent may sit in your browser's storage for a moment. If you change your mind, that cookie is deleted.` +
         (ownBar ? ` Your answer itself — yes or no — is kept in your browser, so that we do not ask again on every page.` : ''),
     )
   } else if (p.config.consent_free) {
@@ -64,7 +64,7 @@ export function policyText(p: PolicyInput): string {
   } else {
     out.push(
       `**Cookies.** One cookie, \`trckable_vid\`, holds a random number so that a return visit is not counted as a new person. ` +
-        `It contains no personal data, is not readable by anyone else, and is never used for advertising. ` +
+        `It contains no personal data, is only ever sent to this site, and is never used for advertising. A few visits waiting to be sent may sit in your browser's storage for a moment. ` +
         `Depending on where you are, your consent may be required before it is set.`,
     )
   }

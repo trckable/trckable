@@ -19,7 +19,7 @@ export function StoppedNotice({ site }: { site: Site }) {
       <span className="stopped-text">
         <b>No visits since {when(site.last_event_at)}</b>
         <span>
-          When trckable last looked ({when(site.check.at)}), {stoppedWhy(site)}. Everything recorded before is kept; nothing is deleted.
+          When trckable last looked ({when(site.check.at)}), {stoppedWhy(site)}. Stopping deletes nothing: everything recorded before is kept.
         </span>
       </span>
       {!isViewer() && (

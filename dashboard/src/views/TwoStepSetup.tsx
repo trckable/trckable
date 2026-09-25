@@ -112,8 +112,8 @@ export default function TwoStepSetup({
             <h2>Scan this with your app</h2>
             <p className="muted" style={{ margin: 0 }}>
               Any authenticator app works — 1Password, Bitwarden, Google
-              Authenticator, Aegis. The code is drawn here on your own server;
-              the secret never leaves it.
+              Authenticator, Aegis. The QR code is drawn in this browser; the secret is
+              never sent to a QR service or anyone else.
             </p>
             <div className="totp-setup">
               <QR uri={uri} />

@@ -311,7 +311,7 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
               close()
               const ok = await ask({
                 title: `Disconnect ${provider?.name}?`,
-                body: `Revenue already recorded stays${c.payments > 0 ? ` (${c.payments} payments)` : ''}. New payments stop arriving, the webhook trckable created is removed, and later sales will show as unattributed. You can reconnect at any time.`,
+                body: `Revenue already recorded stays${c.payments > 0 ? ` (${c.payments} payments)` : ''}. New payments stop arriving here.${c.managed ? ' The webhook trckable created is removed.' : ` Remove the webhook in ${provider?.name} too.`} You can reconnect at any time.`,
                 confirmLabel: 'Disconnect',
                 danger: true,
                 busyLabel: 'Disconnecting…',

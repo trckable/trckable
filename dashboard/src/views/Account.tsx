@@ -765,7 +765,7 @@ function Keys() {
           <span>
             <Eye size={14} strokeWidth={1.75} aria-hidden="true" />
             <span>
-              A key <b>reads reports</b>, nothing else: no settings, sites or payments.
+              A key <b>only reads</b>: it can never change a setting, a site or a payment.
             </span>
           </span>
           <span>

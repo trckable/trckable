@@ -48,7 +48,7 @@ export function ModulesSettings({ site }: { site: Site }) {
           <span className="size-strip">
             <b className="num">{bytes(script.bytes)}</b>
             <span className="faint num">core {bytes(script.core)} · all {bytes(script.full)}</span>
-            <Info text="A module that is off sends no JavaScript, runs nothing on the server and hides its views. Changes reach visitors within an hour." align="right" />
+            <Info text="A module that is off sends no JavaScript and hides its views. Payments keep arriving while Revenue is off, so nothing is lost. Changes reach visitors within an hour." align="right" />
           </span>
         )}
       </div>

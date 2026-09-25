@@ -19,7 +19,7 @@ function StateDot({ state }: { state: SiteState }) {
     <span
       className="dot"
       aria-hidden="true"
-      title={state === 'live' ? 'Receiving visits' : state === 'quiet' ? 'No visits today' : state === 'stopped' ? 'Stopped: no visits, and the snippet was not found' : 'Not installed yet'}
+      title={state === 'live' ? 'Receiving visits' : state === 'quiet' ? 'No visits in the last day' : state === 'stopped' ? 'Stopped: no visits, and the snippet was not found' : 'Not installed yet'}
       style={{ background: state === 'new' ? 'transparent' : color, border: '1.5px solid ' + color, borderRadius: '50%', width: 9, height: 9 }}
     />
   )

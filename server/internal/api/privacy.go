@@ -18,6 +18,11 @@ import (
 func (a *API) findPerson(w http.ResponseWriter, r *http.Request) (uint64, bool) {
 	v := r.URL.Query()
 	if id := strings.TrimSpace(v.Get("visitor")); id != "" {
+		// What a visitor has is their cookie, "<id>.<first seen>": the id is
+		// the part before the dot, the same one the dashboard shows.
+		if i := strings.IndexByte(id, '.'); i > 0 {
+			id = id[:i]
+		}
 		n, err := strconv.ParseUint(id, 36, 64)
 		if err != nil {
 			fail(w, http.StatusBadRequest, "that is not a visitor id")

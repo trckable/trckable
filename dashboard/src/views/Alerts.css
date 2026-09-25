@@ -153,3 +153,103 @@
     flex-direction: column;
   }
 }
+
+/* Send a test: the plane leaves, then the answer lands on the button. */
+.btn.al-send {
+  position: relative;
+  min-width: 132px;
+  justify-content: center;
+  overflow: hidden;
+  transition: background 0.25s, border-color 0.25s, color 0.25s;
+}
+.al-send-icon {
+  display: inline-grid;
+  place-items: center;
+}
+.btn.al-send.busy .al-send-icon {
+  animation: al-fly 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes al-fly {
+  0% {
+    transform: translate(0, 0) rotate(0);
+    opacity: 1;
+  }
+  45% {
+    transform: translate(18px, -12px) rotate(-12deg);
+    opacity: 0;
+  }
+  46% {
+    transform: translate(-16px, 10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+.btn.al-send.ok {
+  border-color: color-mix(in srgb, var(--up) 45%, transparent);
+  background: color-mix(in srgb, var(--up) 14%, transparent);
+  color: var(--up);
+}
+.btn.al-send.ok .al-send-icon {
+  animation: tick-in 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+@keyframes tick-in {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+.btn.al-send.bad {
+  border-color: color-mix(in srgb, var(--down) 45%, transparent);
+  color: var(--down);
+  animation: al-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes al-shake {
+  20%,
+  60% {
+    transform: translateX(-4px);
+  }
+  40%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+.al-test.busy {
+  color: var(--text-3);
+}
+.al-fail {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--down) 40%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--down) 7%, transparent);
+  font-size: 13px;
+  animation: fadein 0.25s var(--ease) backwards;
+}
+.al-fail svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--down);
+}
+.al-fail > span {
+  display: grid;
+  gap: 3px;
+  color: var(--text-2);
+}
+.al-fail b {
+  color: var(--text);
+}
+.al-fail .faint {
+  font-size: 12.5px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn.al-send.busy .al-send-icon,
+  .btn.al-send.ok .al-send-icon,
+  .btn.al-send.bad {
+    animation: none;
+  }
+}

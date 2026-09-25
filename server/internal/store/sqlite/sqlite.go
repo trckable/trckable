@@ -401,11 +401,13 @@ var migrations = []string{
 		accent     TEXT NOT NULL DEFAULT '',
 		radius     INTEGER NOT NULL DEFAULT 16,
 		brand      INTEGER NOT NULL DEFAULT 1,
-		shows      TEXT NOT NULL DEFAULT '',
 		on_        INTEGER NOT NULL DEFAULT 1,
 		created_at INTEGER NOT NULL
 	);
 	CREATE INDEX widgets_site ON widgets(site_id);`,
+	// 29: which parts a widget shows (bars, countries, pages, channels, ai).
+	// Its own migration: 28 had already run on existing databases.
+	`ALTER TABLE widgets ADD COLUMN shows TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

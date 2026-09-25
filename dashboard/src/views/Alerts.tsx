@@ -93,13 +93,33 @@ export function AlertsSettings({ site }: { site: Site }) {
       .catch((e: Error) => toast(e.message, 'error'))
   }
 
+  // Long enough to see it leave, even when the answer is instant.
   const sendTest = () => {
     setTest({ state: 'busy', text: 'Sending a test…' })
+    const seen = new Promise((r) => setTimeout(r, 900))
     api
       .testAlert(site.id, stored(target))
-      .then(() => setTest({ state: 'ok', text: `Delivered at ${new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}: check the other end` }))
-      .catch((e: Error) => setTest({ state: 'bad', text: e.message.charAt(0).toUpperCase() + e.message.slice(1) }))
+      .then(async () => {
+        await seen
+        setTest({ state: 'ok', text: `Delivered at ${new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}. Check the other end: a message saying it is a test.` })
+      })
+      .catch(async (e: Error) => {
+        await seen
+        setTest({ state: 'bad', text: e.message.charAt(0).toUpperCase() + e.message.slice(1) })
+      })
   }
+  // What to do about a failed test, in words.
+  const advice = (why: string) =>
+    /not reachable from outside|private|internal/i.test(why)
+      ? 'Use a public https address: trckable never calls addresses inside your own network.'
+      : /email is not set up|SMTP/i.test(why)
+        ? 'Set TRCKABLE_SMTP_URL on the server, or send them to a webhook instead.'
+        : /40[0-9]|invalid|not found/i.test(why)
+          ? 'The other end refused it: check the webhook URL is complete and still active.'
+          : /timeout|deadline|refused|no such host/i.test(why)
+            ? 'The other end did not answer: check the address, or try again in a moment.'
+            : 'Check the address and try again.'
+
 
   if (!list) return <div className="skeleton" style={{ height: 240 }} />
   const on = list.filter((a) => a.enabled).length
@@ -135,15 +155,36 @@ export function AlertsSettings({ site }: { site: Site }) {
             />
             {dest && <span className="al-chip">{dest.name}</span>}
           </label>
-          <button type="button" className="btn" disabled={test?.state === 'busy' || !target.trim()} onClick={sendTest}>
-            {test?.state === 'busy' ? <span className="btn-spin" aria-hidden="true" /> : <Send size={15} strokeWidth={1.75} aria-hidden="true" />}
-            Send a test
+          <button
+            type="button"
+            key={test?.state ?? 'idle'}
+            className={'btn al-send' + (test ? ' ' + test.state : '')}
+            disabled={test?.state === 'busy' || !target.trim()}
+            onClick={sendTest}
+            aria-live="polite"
+          >
+            <span className="al-send-icon" aria-hidden="true">
+              {test?.state === 'ok' ? <Check size={15} strokeWidth={2.4} /> : test?.state === 'bad' ? <TriangleAlert size={15} strokeWidth={2} /> : <Send size={15} strokeWidth={1.75} />}
+            </span>
+            {test?.state === 'busy' ? 'Sending…' : test?.state === 'ok' ? 'Delivered' : test?.state === 'bad' ? 'Try again' : 'Send a test'}
           </button>
         </div>
-        {test ? (
-          <span className={'al-test ' + test.state} role="status">
-            {test.state === 'ok' ? <Check size={14} strokeWidth={2.25} aria-hidden="true" /> : test.state === 'bad' ? <TriangleAlert size={14} strokeWidth={2} aria-hidden="true" /> : null}
+        {test?.state === 'ok' ? (
+          <span className="al-test ok" role="status">
             {test.text}
+          </span>
+        ) : test?.state === 'bad' ? (
+          <div className="al-fail" role="alert">
+            <TriangleAlert size={16} strokeWidth={1.9} aria-hidden="true" />
+            <span>
+              <b>The test was not delivered</b>
+              <span>{test.text}.</span>
+              <span className="faint">{advice(test.text)}</span>
+            </span>
+          </div>
+        ) : test?.state === 'busy' ? (
+          <span className="al-test busy" role="status">
+            Sending a test to {where}…
           </span>
         ) : (
           <span className="faint al-note">

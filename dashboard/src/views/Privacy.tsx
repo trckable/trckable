@@ -152,7 +152,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
       <section className="card" style={{ gap: 0 }}>
         <div className="card-head" style={{ paddingBottom: 10 }}>
           <h2>What is recorded</h2>
-          <Info text="trckable never stores an IP address, never loads anything from another company, and never sells or shares your data. These switches are about recording less than that floor, not more." />
+          <Info text="trckable never stores an IP address, never makes your visitors' browsers load anything from another company, and never sells or shares your data. These switches are about recording less than that floor, not more." />
         </div>
 
         <Row label="Region and city" hint={free ? 'Cookieless mode keeps the country only' : 'The country is always recorded; region and city are yours to choose'}>
@@ -163,7 +163,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
           <Switch on={c.honor_dnt || free} disabled={free} onChange={() => save({ honor_dnt: !c.honor_dnt }, c.honor_dnt ? 'DNT and GPC are ignored again' : 'DNT and GPC will be honoured')} />
         </Row>
 
-        <Row label="Stricter bot filtering" hint="Also drops clients that name no browser, and visits from data centres such as AWS or Hetzner (downloaded once, about 5 MB). Private Relay and VPN users still count">
+        <Row label="Stricter bot filtering" hint="Also drops clients that name no browser, and visits from data centres such as AWS or Hetzner (downloaded, then refreshed monthly, about 5 MB). Private Relay and VPN users still count">
           <Switch on={c.bot_strict} onChange={() => save({ bot_strict: !c.bot_strict })} />
         </Row>
 
@@ -277,7 +277,7 @@ function Consent({ config, on, onSave }: { site: Site; config: SiteConfig; on: b
       <div className="card-head">
         <h2>Cookie consent</h2>
         <span className="tag live">on</span>
-        <Info text="Until a visitor answers, the script stores nothing and their visit still counts. A browser already sending Do Not Track is never asked." />
+        <Info text="Until a visitor answers, the script stores nothing and their visit still counts. With trckable's own bar, a browser already sending Do Not Track is never asked; with your consent manager, Do Not Track counts as a no." />
       </div>
 
       <Row

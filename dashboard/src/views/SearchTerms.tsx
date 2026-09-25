@@ -62,7 +62,7 @@ export function SearchTerms({ site, query, rows, full }: { site: Site; query: Re
       />
       {rep && (
         <p className="faint" style={{ margin: '10px 0 0', fontSize: 12 }}>
-          From Google Search Console · {fmtInt(rep.impressions)} impressions, {fmtPct(rep.impressions ? rep.clicks / rep.impressions : 0)} clicked. Google's last three days may still change.
+          From Google Search Console · across the top 100 searches: {fmtInt(rep.impressions)} impressions, {fmtPct(rep.impressions ? rep.clicks / rep.impressions : 0)} clicked. Google's last three days may still change.
           {ignored && ` Google can't apply the ${ignored.join(', ')} filter, so it's left out here.`}
         </p>
       )}
