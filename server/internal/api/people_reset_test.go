@@ -79,3 +79,24 @@ func TestOneTimePasswordsAndReset(t *testing.T) {
 		t.Fatalf("a viewer resetting: %d, want 403", code)
 	}
 }
+
+// Someone lost their phone: an owner turns their two-step off, with the
+// owner's own password; never another owner's.
+func TestOwnerTurnsOffSomeonesTwoStep(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	_, out := do(t, owner, "POST", g.srv.URL+"/api/v1/people", `{"email":"bo@site.com","role":"viewer"}`, csrf, "1")
+	id := out["person"].(map[string]any)["id"].(string)
+	url := g.srv.URL + "/api/v1/people/" + id + "/two-step/off"
+	if code, _ := do(t, owner, "POST", url, `{"password":"nope"}`, csrf, "1"); code != http.StatusForbidden {
+		t.Fatalf("without the owner's password: %d", code)
+	}
+	if code, _ := do(t, owner, "POST", url, `{"password":"correct horse battery"}`, csrf, "1"); code != http.StatusNoContent {
+		t.Fatalf("turn off: %d", code)
+	}
+	do(t, owner, "PATCH", g.srv.URL+"/api/v1/people/"+id, `{"role":"owner"}`, csrf, "1")
+	if code, _ := do(t, owner, "POST", url, `{"password":"correct horse battery"}`, csrf, "1"); code != http.StatusConflict {
+		t.Fatalf("another owner's two-step: %d", code)
+	}
+}

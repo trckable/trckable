@@ -645,6 +645,7 @@ export const api = {
       'DELETE',
       `/sites/${site}/privacy/person?${by}=${encodeURIComponent(value)}`,
     ),
+  turnOffTwoStepFor: (id: string, password: string) => call<void>('POST', `/people/${id}/two-step/off`, { password }),
   startOverKeys: (password: string) => call<{ connections: number }>('POST', '/payments/start-over', { password }),
   deletePreview: (site: string) => call<Record<string, number>>('GET', `/sites/${encodeURIComponent(site)}/delete-preview`),
   widgets: (site: string) => call<{ widgets: Widget[]; base: string }>('GET', `/sites/${site}/widgets`),

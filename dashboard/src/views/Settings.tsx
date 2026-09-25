@@ -79,6 +79,7 @@ function ModuleOff({ site, tab, onOn }: { site: Site; tab: TabID; onOn: () => vo
             api
               .setModule(site.id, MODULE_OF[tab]!, true)
               .then(onOn)
+              .catch((e: Error) => toast(e.message, 'error'))
               .finally(() => setBusy(false))
           }}
         >
@@ -404,7 +405,7 @@ export function Settings(p: { sites: Site[]; site: Site | null; onSites: () => v
       <div className="settings">
         <nav className="settings-nav" aria-label="Settings sections">
           <span className="nav-group">{site ? site.domain : 'This site'}</span>
-          {TABS.map((t) => (
+          {TABS.filter((t) => t.id !== 'health' || isOperator()).map((t) => (
             <button key={t.id} type="button" aria-current={tab === t.id} onClick={() => go(t.id)} disabled={!site}>
               <NavIcon d={t.icon} />
               {t.label}
@@ -413,25 +414,9 @@ export function Settings(p: { sites: Site[]; site: Site | null; onSites: () => v
         </nav>
 
         <div className="settings-body">
-          {/* Saying it once is kinder than letting every save come back 403. */}
-          {isViewer() && (
-            <p className="viewer-note">
-              Your account reads this instance. Settings are shown as they are, and an owner changes them.
-            </p>
-          )}
           {!site && <SitesSettings sites={p.sites} onSites={p.onSites} />}
-          {site && tab === 'site' && (
-            <>
-              <SiteSettings key={site.id} site={site} onSaved={p.onSites} />
-            </>
-          )}
-          {site && tab === 'install' && <Install site={site} visits={[]} inSettings />}
-          {site && tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
-          {site && tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={p.onSites} />}
-          {site && tab === 'search' && <SearchSettings key={'sc' + site.id} site={site} />}
-          {site && tab === 'privacy' && <PrivacySettings key={'pv' + site.id} site={site} onSites={p.onSites} />}
-          {site && tab === 'alerts' && <AlertsSettings key={'al' + site.id} site={site} />}
-          {tab === 'health' && <HealthSettings />}
+          {/* The same sections as the dialog, so the two never drift apart. */}
+          {site && (tab !== 'health' || isOperator()) && <SettingsSection tab={tab} site={site} onSites={p.onSites} />}
         </div>
       </div>
     </>
@@ -583,6 +568,7 @@ const SWATCHES = ['#b8ff3c', '#3ddc97', '#38bdf8', '#818cf8', '#c084fc', '#f472b
  *  picker, All sites and the header. Nothing a visitor ever sees. */
 function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
   const file = useRef<HTMLInputElement>(null)
+  const colourTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const [cropping, setCropping] = useState<File | null>(null)
   const [busy, setBusy] = useState<'favicon' | 'remove' | null>(null)
   const [err, setErr] = useState<string | null>(null)
@@ -649,10 +635,21 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
             />
           ))}
           <label className="swatch custom" title="Another colour">
-            <input type="color" value={site.color || '#b8ff3c'} onChange={(e) => api.setSiteColor(site.id, e.target.value).then(onSaved)} aria-label="Another colour" />
+            <input
+              type="color"
+              defaultValue={site.color || '#b8ff3c'}
+              onChange={(e) => {
+                // Dragging through the picker changes it many times a second:
+                // saved once, when the hand stops.
+                const c = e.target.value
+                clearTimeout(colourTimer.current)
+                colourTimer.current = setTimeout(() => api.setSiteColor(site.id, c).then(onSaved).catch((err: Error) => toast(err.message, 'error')), 400)
+              }}
+              aria-label="Another colour"
+            />
           </label>
           {site.color && (
-            <button type="button" className="btn ghost small" onClick={() => api.setSiteColor(site.id, '').then(onSaved)}>
+            <button type="button" className="btn ghost small" onClick={() => api.setSiteColor(site.id, '').then(onSaved).catch((e: Error) => toast(e.message, 'error'))}>
               None
             </button>
           )}

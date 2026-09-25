@@ -118,6 +118,7 @@
 }
 .hcard-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
@@ -177,26 +178,6 @@
   background: color-mix(in srgb, var(--down) 10%, transparent);
 }
 
-@media (max-width: 760px) {
-  .htiles {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .health-hero {
-    grid-template-columns: auto 1fr;
-  }
-  .health-live {
-    grid-column: 1 / -1;
-  }
-  .hitem {
-    flex-wrap: wrap;
-  }
-  .hfigs {
-    grid-template-columns: 1fr 1fr;
-  }
-  .hitem .hpill {
-    margin-left: 50px;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .health-orb::after {
     animation: none;
@@ -232,4 +213,25 @@
 
 .hnote.health-refusing {
   color: var(--down);
+}
+
+@media (max-width: 760px) {
+  .htiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .health-hero {
+    grid-template-columns: auto 1fr;
+  }
+  .health-live {
+    grid-column: 1 / -1;
+  }
+  .hitem {
+    flex-wrap: wrap;
+  }
+  .hfigs {
+    grid-template-columns: 1fr 1fr;
+  }
+  .hitem .hpill {
+    margin-left: 50px;
+  }
 }

@@ -211,3 +211,10 @@
 .wg-place-hint {
   font-size: 11.5px;
 }
+
+@media (max-width: 480px) {
+  .wg-stage {
+    padding: 10px;
+    min-height: 0;
+  }
+}

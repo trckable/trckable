@@ -166,7 +166,7 @@ export function Login({ onDone }: { onDone: () => void }) {
               />
             </label>
             <span className="faint" style={{ fontSize: 12 }}>
-              {recovery ? 'Each recovery code works once.' : 'From your authenticator app.'}{' '}
+              {recovery ? 'Each recovery code works once. No codes left? An owner can turn your two-step off.' : 'From your authenticator app.'}{' '}
               <button type="button" className="linkish" onClick={() => (setRecovery(!recovery), setCode(''), setError(null))}>
                 {recovery ? 'Use the app instead' : 'Lost your phone?'}
               </button>
@@ -186,8 +186,8 @@ export function Login({ onDone }: { onDone: () => void }) {
             ← Back
           </button>
         ) : (
-          <span className="faint" style={{ fontSize: 12 }}>
-            Forgot it? Run <span className="num">trckabled admin reset-password</span> on the server.
+          <span className="faint" style={{ fontSize: 12, lineHeight: 1.5 }}>
+            Forgot it? Ask an owner for new sign-in details. The owner of the server can run <span className="num">trckabled admin reset-password &lt;email&gt;</span>.
           </span>
         )}
       </form>
@@ -212,7 +212,14 @@ export function FirstPassword({ email, onDone }: { email?: string; onDone: () =>
     setError(null)
     api
       .changePassword(current, password)
-      .then(() => setStage('second'))
+      // Two-step only for someone who has not got it: an owner's reset leaves
+      // it on, and offering it again would say it was gone.
+      .then(() =>
+        api
+          .twoStep()
+          .then((t) => (t.enabled ? onDone() : setStage('second')))
+          .catch(() => setStage('second')),
+      )
       .catch((err: Error) => setError(err.message))
       .finally(() => setBusy(false))
   }

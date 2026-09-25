@@ -537,6 +537,7 @@
   min-width: 0;
 }
 .gen-head-text b {
+  overflow-wrap: anywhere;
   font-size: 17px;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -151,6 +151,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("PATCH /api/v1/people/{id}", a.authed(a.setPersonRole))
 	handle("DELETE /api/v1/people/{id}", a.authed(a.removePerson))
 	handle("POST /api/v1/people/{id}/password", a.authed(a.unmanaged(a.resetPersonPassword)))
+	handle("POST /api/v1/people/{id}/two-step/off", a.authed(a.unmanaged(a.turnOffTwoStep)))
 	handle("GET /api/v1/sites/{site}/privacy/person", a.authed(a.person))
 	handle("GET /api/v1/sites/{site}/privacy/export", a.authed(a.exportPerson))
 	handle("DELETE /api/v1/sites/{site}/privacy/person", a.authed(a.erasePerson))

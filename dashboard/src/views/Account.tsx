@@ -77,11 +77,12 @@ export function AccountDialog({ tab, sites, email, onSites }: { tab: Tab; sites:
         ))}
       </nav>
 
+      {/* A viewer sent to an owner's tab (Ask's "Create a key") lands on their own account. */}
       <div key={tab} className="account-body">
         {tab === 'sites' && <SitesSettings sites={sites} onSites={onSites} />}
-        {tab === 'keys' && <Keys />}
-        {tab === 'people' && <People me={email} />}
-        {tab === 'profile' && <ProfileTab email={email} p={profile} v={v} onProfile={setProfile} onPicture={() => bump((n) => n + 1)} />}
+        {tab === 'keys' && !isViewer() && <Keys />}
+        {tab === 'people' && !isViewer() && <People me={email} />}
+        {(tab === 'profile' || (isViewer() && (tab === 'keys' || tab === 'people'))) && <ProfileTab email={email} p={profile} v={v} onProfile={setProfile} onPicture={() => bump((n) => n + 1)} />}
       </div>
     </Modal>
   )
@@ -378,6 +379,21 @@ function People({ me }: { me?: string }) {
     })
     if (pw !== null && made) (setIssued({ ...(made as { email: string; password: string }), reset: true }), load())
   }
+  // Lost phone, no recovery codes: they sign in with the password alone and
+  // set two-step up again.
+  const turnOff = async (p: Person) => {
+    const pw = await confirmWith({
+      title: `Turn off two-step for ${p.email}?`,
+      body: 'For a lost phone with no recovery codes left: they sign in with their password alone, then set two-step up again. Type your own password to confirm.',
+      field: { label: 'Your password', type: 'password', autoComplete: 'current-password' },
+      confirmLabel: 'Turn off two-step',
+      danger: true,
+      busyLabel: 'Turning off…',
+      done: `Two-step is off for ${p.email}`,
+      run: (mine) => api.turnOffTwoStepFor(p.id, mine),
+    })
+    if (pw !== null) load()
+  }
   const remove = async (p: Person) => {
     const ok = await ask({
       title: `Remove ${p.email}?`,
@@ -450,6 +466,11 @@ function People({ me }: { me?: string }) {
                 {!managed() && p.role !== 'owner' && (
                   <button type="button" role="menuitem" onClick={() => (close(), reset(p))}>
                     Reset password
+                  </button>
+                )}
+                {!managed() && p.role !== 'owner' && p.two_step && (
+                  <button type="button" role="menuitem" onClick={() => (close(), turnOff(p))}>
+                    Turn off two-step
                   </button>
                 )}
                 {!managed() && p.role === 'owner' && <span className="menu-note">An owner's password can be reset once they are a viewer.</span>}

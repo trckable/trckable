@@ -169,3 +169,40 @@ func failPerson(w http.ResponseWriter, err error) bool {
 	}
 	return true
 }
+
+// turnOffTwoStep is for someone who lost their phone and their recovery
+// codes: an owner turns their second step off (with the owner's own
+// password), and they set it up again after signing in. Not for owners: an
+// owner's account is theirs (the same rule as resetting a password).
+func (a *API) turnOffTwoStep(w http.ResponseWriter, r *http.Request) {
+	me := a.owner(w, r)
+	if me == nil {
+		return
+	}
+	if r.PathValue("id") == me.ID {
+		fail(w, http.StatusBadRequest, "turn off your own two-step in your account")
+		return
+	}
+	var in struct{ Password string }
+	if err := decode(r, &in); err != nil || in.Password == "" {
+		fail(w, http.StatusBadRequest, "type your own password to confirm")
+		return
+	}
+	if _, err := a.Ctl.Login(r.Context(), me.Email, in.Password); err != nil {
+		fail(w, http.StatusForbidden, "that is not your password")
+		return
+	}
+	p, err := a.Ctl.PersonByID(r.Context(), principalOf(r).account, r.PathValue("id"))
+	if failPerson(w, err) {
+		return
+	}
+	if p.Role == sqlite.RoleOwner {
+		fail(w, http.StatusConflict, "an owner's two-step can only be turned off once they are a viewer: make them a viewer first")
+		return
+	}
+	if err := a.Ctl.DisableTwoStep(r.Context(), p.ID); err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}

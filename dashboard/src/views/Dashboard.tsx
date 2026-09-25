@@ -192,7 +192,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // appears as a tab when the module is on.
   const mapOn = !!mods?.map
   // The Ask button follows its module: off means the entry point is gone too.
-  const askOn = !isShared() && (mods === null || mods.ask !== false)
+  // Ask is the MCP tools and an optional key, not a module: there is nothing to switch off.
+  const askOn = !isShared()
   const sample = useMemo(() => sampleReport(site.id, site.timezone, range.from, range.to), [site.id, site.timezone, range.from, range.to])
   const data = waiting ? sample : real
 
@@ -1039,6 +1040,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
       {full && (
         <section aria-label="Goals and live visits" className="grid3 rise" id="sec-goals">
+          {/* Off means off: with Goals off the script records none, so the card
+              would only ask for something that cannot arrive. */}
+          {(mods === null || mods.goals !== false) && (
           <div className="card">
             <div className="card-head">
               <h2>Goals</h2>
@@ -1058,6 +1062,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               )}
             />
           </div>
+          )}
           {money ? (
             <TabbedCard
               title="Top earners"

@@ -4,6 +4,7 @@ import { Bookmark, Check, ListFilter, Pencil, Search, Trash2 } from 'lucide-reac
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { confirm } from './Confirm'
+import { isViewer } from '../lib/me'
 import { InlineEdit } from './InlineEdit'
 import { usePhoneLock } from './lockScroll'
 
@@ -120,6 +121,8 @@ export default function SavedViewsPop<V extends View>({
                           <span className="sv-sub">{describe(v.query) || 'Every visit'}</span>
                         </span>
                       </button>
+                      {!isViewer() && (
+                      <>
                       <button type="button" className="sv-act" aria-label={`Rename ${v.name}`} title="Rename" onClick={() => setEditing(v.id)}>
                         <Pencil size={15} strokeWidth={1.75} aria-hidden="true" />
                       </button>
@@ -136,13 +139,17 @@ export default function SavedViewsPop<V extends View>({
                         }}>
                         <Trash2 size={15} strokeWidth={1.75} aria-hidden="true" />
                       </button>
+                      </>
+                      )}
                     </>
                   )}
                 </li>
               ))}
             </ul>
             <div className="sv-foot">
-              {canSave ? (
+              {isViewer() ? (
+                <span className="sv-hint">Your account reads this site: an owner saves views.</span>
+              ) : canSave ? (
                 <button type="button" className="sv-save" onClick={() => (close(), onSave())}>
                   <span aria-hidden="true">+</span> Save what you see now
                   <span className="sv-sub">{describe(current)}</span>

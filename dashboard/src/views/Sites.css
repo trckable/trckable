@@ -231,6 +231,7 @@
   min-width: 0;
 }
 .site-card-name {
+  overflow-wrap: anywhere;
   display: flex;
   align-items: center;
   flex-wrap: wrap;

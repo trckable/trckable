@@ -65,7 +65,12 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
             align="right"
             placeholder="Search a currency…"
             value={site.currency}
-            onPick={(currency) => api.updateSite(site.id, { name: site.name, currency }).then(onSiteChange)}
+            onPick={(currency) =>
+              api
+                .updateSite(site.id, { name: site.name, currency })
+                .then(() => (toast(`Revenue is shown in ${currency}`), onSiteChange()))
+                .catch((e: Error) => toast(e.message, 'error'))
+            }
             items={(CURRENCIES.includes(site.currency) ? CURRENCIES : [site.currency, ...CURRENCIES]).map((c) => ({ id: c, label: c }))}
           />
         </span>
