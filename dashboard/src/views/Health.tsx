@@ -152,11 +152,21 @@ export function HealthSettings() {
           <h2>Space for new data</h2>
           <Pill tone={diskTone}>{h.store.days_left > 0 ? h.store.days_left > 3650 ? "Lasts more than ten years" : `Lasts about ${fmtDays(h.store.days_left)}` : 'No visits in the last week'}</Pill>
         </div>
-        <p className="hnote faint">
-          trckable keeps {bytes(h.store.bytes_used)} on the volume that holds its data, which has {bytes(h.store.bytes_free)} free.
-          {h.store.events_per_day ? ` At ${fmtInt(Math.round(h.store.events_per_day))} events a day (the last seven days) and ${h.store.bytes_per_event.toFixed(0)} B each, that lasts ${fmtDays(h.store.days_left)}.` : ''}{' '}
-          When it is full, new visits are turned away until there is room — nothing stored is damaged. Retention in Data &amp; privacy, or a bigger volume, makes room.
-        </p>
+        <div className="hfigs">
+          <span>
+            <span className="faint">trckable's data</span>
+            <b className="num">{bytes(h.store.bytes_used)}</b>
+          </span>
+          <span>
+            <span className="faint">Free on the volume</span>
+            <b className="num">{bytes(h.store.bytes_free)}</b>
+          </span>
+          <span>
+            <span className="faint">Added per day</span>
+            <b className="num">{h.store.events_per_day ? bytes(h.store.events_per_day * h.store.bytes_per_event) : '—'}</b>
+          </span>
+        </div>
+        <p className="hnote faint">When it is full, new visits are turned away until there is room; nothing stored is harmed.</p>
       </section>
 
       <section className="card hcard">

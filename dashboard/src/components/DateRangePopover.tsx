@@ -1,6 +1,8 @@
 // The date picker's popover: presets, the two-month calendar, typed dates and
 // the comparison. Its own chunk, loaded the first time the picker opens.
+import { Check, Clock3 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Switch } from './Switch'
 import { caps, keyFor } from '../lib/keys'
 import { useLockScroll } from './lockScroll'
 import type { Bucket } from '../lib/api'
@@ -49,6 +51,14 @@ function bucketsFor(days: number): (Bucket | undefined)[] {
 
 
 /** Phone labels: the chip has room for "30d", not "Last 30 days". */
+
+// The periods, in the three ways people think about time: what is happening,
+// a rolling stretch, and the calendar's own weeks, months and years.
+const PERIOD_GROUPS = [
+  { name: 'Live', ids: ['now', 'today', 'yesterday'] },
+  { name: 'Rolling', ids: ['7d', '30d', '90d', '12mo'] },
+  { name: 'Calendar', ids: ['wtd', 'mtd', 'lastmonth', 'ytd'] },
+]
 
 export default function Popover({
   value,
@@ -159,59 +169,63 @@ export default function Popover({
       {view === 'periods' ? (
         <div className="periods" role="listbox" aria-label="Periods">
           <div className="periods-head">
+            <Clock3 size={15} strokeWidth={1.75} aria-hidden="true" />
             <span className="num">{new Date().toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZone: tz })}</span>
             <span className="faint">{fmtDay(today, { weekday: true })}</span>
-            {tz && <span className="faint tz">{tz.split('/').pop()?.replace(/_/g, ' ')}</span>}
+            {tz && <span className="tz">{tz.split('/').pop()?.replace(/_/g, ' ')}</span>}
           </div>
-          <div className="periods-grid">
-            {VISIBLE_PRESETS().map((p) => {
-              const on = draft.period === p.id
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  role="option"
-                  aria-selected={on}
-                  className={on ? 'period on' : 'period'}
-                  onClick={() => onApply({ ...draft, period: p.id, range: p.range(today) })}
-                >
-                  {p.label}
-                  {p.id === 'now' && <span className="pulse" aria-hidden="true" />}
-                  {p.key && <span className="kbd">{caps(keyFor('period.' + p.id)).join('')}</span>}
-                </button>
-              )
-            })}
-          </div>
-          <label className="periods-compare">
-            <input
-              type="checkbox"
-              checked={draft.compare !== 'none'}
-              onChange={(e) => setDraft((d) => ({ ...d, compare: e.target.checked ? 'previous' : 'none' }))}
-              style={{ width: 15, height: 15, accentColor: 'var(--accent)' }}
-            />
-            <span className="compare-text">
-              <span>Compare with the period before</span>
-              {draft.compare !== 'none' && cmp && <span className="faint">{fmtRange(cmp, today)}</span>}
-            </span>
-          </label>
-          {onBucket && (
-            <div className="periods-bucket">
-              <span className="faint">Show</span>
-              <div className="seg" role="group" aria-label="Granularity">
-                {bucketsFor(diffDays(draft.range.from, draft.range.to) + 1).map((b) => (
-                  <button key={b ?? 'auto'} type="button" aria-pressed={b === bucket || (!bucket && b === undefined)} onClick={() => onBucket(b)}>
-                    {b ? BUCKET_LABEL[b] : 'Auto'}
-                  </button>
-                ))}
+          {PERIOD_GROUPS.map((g) => (
+            <div key={g.name} className="periods-group">
+              <span className="periods-group-head">{g.name}</span>
+              <div className="periods-grid">
+                {VISIBLE_PRESETS()
+                  .filter((p) => g.ids.includes(p.id))
+                  .map((p) => {
+                    const on = draft.period === p.id
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        role="option"
+                        aria-selected={on}
+                        className={on ? 'period on' : 'period'}
+                        onClick={() => onApply({ ...draft, period: p.id, range: p.range(today) })}
+                      >
+                        {p.id === 'now' && <span className="pulse" aria-hidden="true" />}
+                        <span className="period-name">{p.label}</span>
+                        {on ? <Check size={14} strokeWidth={2.25} className="period-check" aria-hidden="true" /> : p.key && <span className="period-key">{caps(keyFor('period.' + p.id)).join('')}</span>}
+                      </button>
+                    )
+                  })}
               </div>
-              {!bucket && autoBucket && <span className="faint auto-note">{BUCKET_LABEL[autoBucket as Bucket]}</span>}
             </div>
-          )}
+          ))}
+          <div className="periods-options">
+            <label className="periods-compare">
+              <span className="compare-text">
+                <span>Compare with the period before</span>
+                <span className="faint">{draft.compare !== 'none' && cmp ? fmtRange(cmp, today) : 'A second line for the same stretch before'}</span>
+              </span>
+              <Switch on={draft.compare !== 'none'} label="Compare with the period before" onChange={() => setDraft((d) => ({ ...d, compare: d.compare !== 'none' ? 'none' : 'previous' }))} />
+            </label>
+            {onBucket && (
+              <div className="periods-bucket">
+                <span>Detail</span>
+                <div className="seg" role="group" aria-label="Detail">
+                  {bucketsFor(diffDays(draft.range.from, draft.range.to) + 1).map((b) => (
+                    <button key={b ?? 'auto'} type="button" aria-pressed={b === bucket || (!bucket && b === undefined)} onClick={() => onBucket(b)}>
+                      {b ? BUCKET_LABEL[b] : !bucket && autoBucket ? `Auto · ${BUCKET_LABEL[autoBucket as Bucket].toLowerCase()}` : 'Auto'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <div className="periods-foot">
-            <span className="faint num">{fmtRange(draft.range, today)}</span>
+            <span className="periods-range num">{fmtRange(draft.range, today)}</span>
             <button type="button" className="btn" onClick={() => setView('calendar')}>
               <CalendarIcon />
-              Pick dates
+              Custom dates
             </button>
             {draft.compare !== value.compare && (
               <button type="button" className="btn primary" onClick={() => onApply(draft)}>
