@@ -29,12 +29,17 @@ type Person struct {
 	Role      string `json:"role"`
 	CreatedAt int64  `json:"created_at"`
 	TwoStep   bool   `json:"two_step"`
+	// LastSeen is when they last used the dashboard (unix seconds, hourly at
+	// most); 0 means never signed in.
+	LastSeen int64 `json:"last_seen"`
+	// MustChange: they still have a password someone else chose.
+	MustChange bool `json:"must_change"`
 }
 
 // People lists an account's people, oldest first — which is the owner, on any
 // account that started with one person.
 func (s *Store) People(ctx context.Context, account string) ([]Person, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT id, email, COALESCE(name, ''), role, created_at, totp_enabled FROM users WHERE account_id = ? ORDER BY created_at`, account)
+	rows, err := s.DB.QueryContext(ctx, `SELECT id, email, COALESCE(name, ''), role, created_at, totp_enabled, last_seen_at, must_change FROM users WHERE account_id = ? ORDER BY created_at`, account)
 	if err != nil {
 		return nil, err
 	}
@@ -42,11 +47,11 @@ func (s *Store) People(ctx context.Context, account string) ([]Person, error) {
 	var out []Person
 	for rows.Next() {
 		var p Person
-		var two int
-		if err := rows.Scan(&p.ID, &p.Email, &p.Name, &p.Role, &p.CreatedAt, &two); err != nil {
+		var two, must int
+		if err := rows.Scan(&p.ID, &p.Email, &p.Name, &p.Role, &p.CreatedAt, &two, &p.LastSeen, &must); err != nil {
 			return nil, err
 		}
-		p.TwoStep = two == 1
+		p.TwoStep, p.MustChange = two == 1, must == 1
 		out = append(out, p)
 	}
 	return out, rows.Err()
@@ -160,4 +165,32 @@ func lastOwner(ctx context.Context, tx *sql.Tx, account, id string) error {
 		return ErrLastOwner
 	}
 	return nil
+}
+
+// SetMustChange marks whether someone must choose their own password at their
+// next sign-in: yes after one was chosen for them, no once they have.
+func (s *Store) SetMustChange(ctx context.Context, id string, must bool) error {
+	v := 0
+	if must {
+		v = 1
+	}
+	_, err := s.DB.ExecContext(ctx, `UPDATE users SET must_change = ? WHERE id = ?`, v, id)
+	return err
+}
+
+// MustChange reports whether someone still has a password chosen for them.
+func (s *Store) MustChange(ctx context.Context, id string) bool {
+	var v int
+	s.DB.QueryRowContext(ctx, `SELECT must_change FROM users WHERE id = ?`, id).Scan(&v)
+	return v == 1
+}
+
+// PersonByID is one person of an account, for acting on them.
+func (s *Store) PersonByID(ctx context.Context, account, id string) (Person, error) {
+	var p Person
+	err := s.DB.QueryRowContext(ctx, `SELECT id, email, role FROM users WHERE id = ? AND account_id = ?`, id, account).Scan(&p.ID, &p.Email, &p.Role)
+	if errors.Is(err, sql.ErrNoRows) {
+		return p, auth.ErrNotFound
+	}
+	return p, err
 }

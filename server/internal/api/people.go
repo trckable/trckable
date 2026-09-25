@@ -69,6 +69,11 @@ func (a *API) addPerson(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	// A password someone else chose is replaced at their first sign-in.
+	if generated != "" {
+		a.Ctl.SetMustChange(r.Context(), p.ID, true)
+		p.MustChange = true
+	}
 	writeJSON(w, http.StatusCreated, map[string]any{"person": p, "password": generated, "signin": a.Managed})
 }
 
@@ -89,6 +94,32 @@ func (a *API) setPersonRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.people(w, r)
+}
+
+// resetPersonPassword is an owner's answer to "I forgot my password": a new
+// one-time password to pass on, every session of theirs ended, and a new
+// password of their own asked for at the next sign-in. Your own password is
+// changed in your account, with the current one.
+func (a *API) resetPersonPassword(w http.ResponseWriter, r *http.Request) {
+	me := a.owner(w, r)
+	if me == nil {
+		return
+	}
+	if r.PathValue("id") == me.ID {
+		fail(w, http.StatusBadRequest, "change your own password in your account")
+		return
+	}
+	p, err := a.Ctl.PersonByID(r.Context(), principalOf(r).account, r.PathValue("id"))
+	if failPerson(w, err) {
+		return
+	}
+	password := auth.Token("", 12)
+	if err := a.Ctl.ResetPassword(r.Context(), p.Email, password); err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	a.Ctl.SetMustChange(r.Context(), p.ID, true)
+	writeJSON(w, http.StatusOK, map[string]any{"email": p.Email, "password": password})
 }
 
 func (a *API) removePerson(w http.ResponseWriter, r *http.Request) {

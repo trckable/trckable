@@ -88,6 +88,7 @@ func (a *API) changePassword(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	a.Ctl.SetMustChange(r.Context(), u.ID, false) // a password of their own now
 	// ResetPassword drops every session, including this one: hand the browser
 	// a fresh cookie so the person stays signed in here.
 	token, err := a.Ctl.CreateSession(r.Context(), u.ID)

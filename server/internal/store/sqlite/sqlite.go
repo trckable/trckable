@@ -369,6 +369,9 @@ var migrations = []string{
 		erased_at INTEGER NOT NULL,
 		PRIMARY KEY (site_id, kind, value)
 	);`,
+	// 25: a password someone else chose (a new person's, or one an owner
+	// reset) must be replaced at the next sign-in.
+	`ALTER TABLE users ADD COLUMN must_change INTEGER NOT NULL DEFAULT 0;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

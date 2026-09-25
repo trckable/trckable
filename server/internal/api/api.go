@@ -134,6 +134,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("POST /api/v1/people", a.authed(a.addPerson))
 	handle("PATCH /api/v1/people/{id}", a.authed(a.setPersonRole))
 	handle("DELETE /api/v1/people/{id}", a.authed(a.removePerson))
+	handle("POST /api/v1/people/{id}/password", a.authed(a.unmanaged(a.resetPersonPassword)))
 	handle("GET /api/v1/sites/{site}/privacy/person", a.authed(a.person))
 	handle("GET /api/v1/sites/{site}/privacy/export", a.authed(a.exportPerson))
 	handle("DELETE /api/v1/sites/{site}/privacy/person", a.authed(a.erasePerson))
@@ -503,7 +504,7 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 	// The version is for the dashboard's footer; every response carries it in
 	// X-Trckable-Version anyway.
 	keys, _ := a.Ctl.UserKeymap(r.Context(), p.user.ID)
-	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys,
+	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID),
 		// Only owners upgrade, so only their dashboards look.
 		"update_check": a.UpdateCheck && p.user.Role == sqlite.RoleOwner})
 }

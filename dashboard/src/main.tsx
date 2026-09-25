@@ -22,6 +22,7 @@ const Settings = lazy(() => import("./views/Settings").then((m) => ({ default: m
 // signed-in owner never downloads them.
 const Setup = lazy(() => import("./views/Auth").then((m) => ({ default: m.Setup })));
 const Login = lazy(() => import("./views/Auth").then((m) => ({ default: m.Login })));
+const FirstPassword = lazy(() => import("./views/Auth").then((m) => ({ default: m.FirstPassword })));
 const UpdateDialog = lazy(() => import("./components/UpdateDialog"));
 const SettingsDialog = lazy(() => import("./views/Settings").then((m) => ({ default: m.SettingsDialog })));
 const AccountDialog = lazy(() => import("./views/Account").then((m) => ({ default: m.AccountDialog })));
@@ -45,7 +46,7 @@ type Boot =
   | { state: "loading" }
   | { state: "setup" }
   | { state: "login" }
-  | { state: "ready"; email?: string; version?: string; updateCheck?: boolean; sites: Site[] }
+  | { state: "ready"; email?: string; version?: string; updateCheck?: boolean; mustChange?: boolean; sites: Site[] }
   | { state: "error"; message: string };
 
 function App() {
@@ -63,7 +64,7 @@ function App() {
       setRole(me.role);
       loadKeymap(me.keys);
       const { sites } = await api.sites();
-      setBoot({ state: "ready", email: me.email, version: me.version, updateCheck: me.update_check, sites });
+      setBoot({ state: "ready", email: me.email, version: me.version, updateCheck: me.update_check, mustChange: me.must_change, sites });
     } catch (e) {
       setBoot({
         state: "error",
@@ -159,6 +160,14 @@ function App() {
       </Suspense>
     );
   }
+
+  // Signed in with a password someone else chose: choose one's own first.
+  if (boot.mustChange && !managed())
+    return (
+      <Suspense fallback={null}>
+        <FirstPassword email={boot.email} onDone={() => setBoot({ ...boot, mustChange: false })} />
+      </Suspense>
+    );
 
   const refreshSites = () =>
     api.sites().then(({ sites }) => setBoot({ ...boot, sites }));

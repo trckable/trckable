@@ -1,18 +1,14 @@
 // "Ask trckable". Today it connects your own AI assistant over MCP (same
 // read-only tools, scoped to this instance's data). The in-app chat on the same
 // tools turns on once the owner adds an AI key (next release).
-import { useEffect, useRef, useState } from 'react'
-import { api, type Site } from '../lib/api'
+import { useEffect, useRef } from 'react'
+import type { Site } from '../lib/api'
 import { CodeBlock } from '../components/Code'
 import { Name } from '../components/Logo'
 import { openAccount } from '../lib/account'
 
 export function AskPanel({ open, onClose, site, sites = [] }: { open: boolean; onClose: () => void; site: Site; sites?: Site[] }) {
   const ref = useRef<HTMLElement>(null)
-  const [secret, setSecret] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -24,7 +20,7 @@ export function AskPanel({ open, onClose, site, sites = [] }: { open: boolean; o
 
   const host = location.origin
   const domains = (sites.length ? sites : [site]).map((s) => s.domain).slice(0, 2).join(' and ')
-  const key = secret ?? 'tkb_live_…'
+  const key = 'tkb_live_…'
   const config = `{
   "mcpServers": {
     "trckable": {
@@ -61,55 +57,20 @@ export function AskPanel({ open, onClose, site, sites = [] }: { open: boolean; o
             can't change anything.
           </p>
         </div>
-        {/* Two steps, two buttons. The key is shown once, big and copyable,
-            and the config below it already carries it. */}
+        {/* Two steps: a key from your account, then the config to paste. */}
         <div className="step">
           <div className="step-head">
             <span className="step-n">1</span>
             <b>Create a key for your assistant</b>
           </div>
-          {secret ? (
-            <div className="keybox">
-              <code>{secret}</code>
-              <button
-                type="button"
-                className="btn primary"
-                onClick={() => {
-                  navigator.clipboard?.writeText(secret).then(() => {
-                    setCopied(true)
-                    setTimeout(() => setCopied(false), 1600)
-                  })
-                }}
-              >
-                {copied ? 'Copied' : 'Copy key'}
-              </button>
-              <span className="faint">Shown once. It is already filled into the config below.</span>
-            </div>
-          ) : (
-            <>
-              <button
-                type="button"
-                className="btn primary big"
-                disabled={busy}
-                onClick={() => {
-                  setBusy(true)
-                  setError(null)
-                  api
-                    .createKey('Assistant · ' + new Date().toLocaleDateString())
-                    .then((r) => setSecret(r.secret))
-                    .catch((e) => setError(e instanceof Error ? e.message : 'Could not create the key'))
-                    .finally(() => setBusy(false))
-                }}
-              >
-                {busy ? 'Creating…' : 'Create key'}
-              </button>
-              {error && (
-                <span className="chip" style={{ borderColor: 'var(--down)', color: 'var(--down)' }}>
-                  {error}
-                </span>
-              )}
-            </>
-          )}
+          {/* Keys are made, named and revoked in one place: your account. */}
+          <p className="faint" style={{ margin: 0, fontSize: 13 }}>
+            Keys live in your account, where you name them and can revoke them. Make one there, then paste it where the config below says{' '}
+            <code>tkb_live_…</code>.
+          </p>
+          <button type="button" className="btn primary" style={{ alignSelf: 'flex-start' }} onClick={() => (onClose(), openAccount('keys'))}>
+            Create a key in your account →
+          </button>
         </div>
 
         <div className="step">
@@ -127,9 +88,6 @@ export function AskPanel({ open, onClose, site, sites = [] }: { open: boolean; o
           <strong style={{ color: 'var(--text)' }}>Chat right here, coming next</strong>
           <span>The built-in chat uses the same tools with your own AI key (Anthropic, OpenAI-compatible or local Ollama). Off until you add a key, so it costs nothing.</span>
         </div>
-        <button type="button" className="btn ghost" style={{ alignSelf: 'flex-start' }} onClick={() => openAccount('keys')}>
-          Manage API keys →
-        </button>
       </div>
     </aside>
   )

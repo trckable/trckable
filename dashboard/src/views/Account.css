@@ -141,3 +141,158 @@
   line-height: 1.35;
   white-space: normal;
 }
+
+/* ---- People ------------------------------------------------------------------
+   One row per person: who, when they were last here, their role and whether
+   they use a second step; the ⋯ menu for the rest. */
+.people-list {
+  display: grid;
+  gap: 6px;
+}
+.person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.person-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 14px;
+}
+.person-text {
+  display: grid;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.person-name,
+.person-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.person-name {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.person-sub {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.person .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+.menu-note {
+  display: block;
+  max-width: 240px;
+  padding: 8px 10px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+#people .card-head .btn.primary {
+  gap: 7px;
+}
+@media (max-width: 640px) {
+  .person {
+    flex-wrap: wrap;
+  }
+  .person-text {
+    flex: 1 0 calc(100% - 90px);
+  }
+}
+
+/* Adding someone, and the one-time password: small dialogs that fit what they hold. */
+.modal.person-modal {
+  width: min(480px, 100%);
+  gap: 18px;
+}
+.person-form {
+  display: grid;
+  gap: 16px;
+}
+.person-roles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.person-role {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--sunken);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.person-role .menu-sub {
+  white-space: normal;
+}
+.person-role[aria-checked='true'] {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 7%, var(--sunken));
+}
+.person-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.otp-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px 10px 14px;
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  background: var(--sunken);
+}
+.otp-box code {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  user-select: all;
+}
+.otp-box .btn {
+  gap: 6px;
+}
+@media (max-width: 480px) {
+  .person-roles {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Your picture: always a circle, whatever was uploaded. */
+.avatar {
+  overflow: hidden;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.avatar.big {
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+}

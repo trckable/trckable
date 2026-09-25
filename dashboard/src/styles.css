@@ -1294,6 +1294,27 @@ table.t td {
 .confirm-body > :last-child {
   grid-column: 1 / -1;
 }
+/* A dialog's heading: its icon tile, then the title with a line under it.
+   Shared by every dialog, so it stays in the main stylesheet. */
+.modal-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.modal-head > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.modal-head h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.modal-head .faint {
+  font-size: 12.5px;
+  line-height: 1.45;
+}
 /* The dialog heading, with an optional icon tile before it. */
 .modal-badge {
   display: grid;

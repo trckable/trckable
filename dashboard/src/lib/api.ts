@@ -545,6 +545,8 @@ export interface Person {
   role: string
   created_at: number
   two_step: boolean
+  last_seen: number // unix seconds; 0: never signed in
+  must_change: boolean // still has a password someone else chose
 }
 
 export interface TwoStep {
@@ -564,7 +566,7 @@ export const api = {
     call<{ user: { email: string }; site: Site | null }>('POST', '/setup', { token, email, password, domain }),
   login: (email: string, password: string, code?: string) => call<{ user: { email: string } }>('POST', '/login', { email, password, code }),
   logout: () => call<void>('POST', '/logout'),
-  me: () => call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean }>('GET', '/me'),
+  me: () => call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean }>('GET', '/me'),
   setKeys: (keys: Record<string, string>) => call<{ keys: Record<string, string> }>('PUT', '/me/keys', { keys }),
   sites: () => call<{ sites: Site[] }>('GET', '/sites'),
   createSite: (domain: string) => call<Site>('POST', '/sites', { domain }),
@@ -588,6 +590,7 @@ export const api = {
   addPerson: (email: string, role: string) => call<{ person: Person; password: string; signin?: string }>('POST', '/people', { email, role }),
   setPersonRole: (id: string, role: string) => call<{ people: Person[] }>('PATCH', `/people/${id}`, { role }),
   removePerson: (id: string) => call<void>('DELETE', `/people/${id}`),
+  resetPersonPassword: (id: string) => call<{ email: string; password: string }>('POST', `/people/${id}/password`),
   changePassword: (current: string, password: string) => call<void>('POST', '/account/password', { current, password }),
   twoStep: () => call<TwoStep>('GET', '/account/2fa'),
   startTwoStep: (password: string) => call<{ secret: string; uri: string }>('POST', '/account/2fa/start', { password }),
