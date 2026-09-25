@@ -32,7 +32,19 @@ report() {
   site=$(curl -sf -H "Authorization: Bearer $TOK" "localhost:$PORT/api/v1/sites" | python3 -c 'import json,sys;d=json.load(sys.stdin);d=d.get("sites",d);print(d[0]["id"])')
   read -r from to < <(python3 -c 'import datetime as d;t=d.date.today();print(t-d.timedelta(days=29),t)')
   curl -sf -H "Authorization: Bearer $TOK" "localhost:$PORT/api/v1/sites/$site/report?from=$from&to=$to" |
-    python3 -c 'import json,sys;d=json.load(sys.stdin);[d.pop(k,None) for k in ("generated_at","online","cached","took_ms")];print(json.dumps(d,sort_keys=True))'
+    python3 -c '
+import json,sys
+d=json.load(sys.stdin)
+[d.pop(k,None) for k in ("generated_at","online","cached","took_ms")]
+# Averages are summed in parallel, in whatever order the threads finish, so
+# their last digit can move between two runs over the same data: compare them
+# to 9 significant digits. Counts are integers and stay exact.
+def r(v):
+    if isinstance(v,float): return float(f"{v:.9g}")
+    if isinstance(v,dict): return {k:r(x) for k,x in v.items()}
+    if isinstance(v,list): return [r(x) for x in v]
+    return v
+print(json.dumps(r(d),sort_keys=True))'
 }
 ledger() { python3 -c 'import sqlite3,sys;c=sqlite3.connect(sys.argv[1]);print([c.execute("select count(*) from "+t).fetchone()[0] for t in ("sites","pay_payments","pay_inbox","pay_connections")])' "$1/trckable.db"; }
 
