@@ -15,6 +15,9 @@ section into the release.
   domains
 
 ### Fixed
+- For hosts running trckable for others (TRCKABLE_MANAGED): Sign out now
+  signs out of the host too (it sends `?signedout=1` to the host's page), so
+  nobody stays signed in on a shared computer
 - Security: starting a new two-step setup no longer turns two-step off. The
   new phone's secret waits until a code from it is proven, so a setup given
   up half-way leaves the old phone working. While two-step is on, turning it
