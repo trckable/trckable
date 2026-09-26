@@ -6,7 +6,7 @@ approach before you spend time on it.
 
 ## Build and run
 
-You need Go 1.27, Node 22 and pnpm 10.
+You need Go 1.27, Node 22 and pnpm 12.
 
 ```bash
 pnpm install

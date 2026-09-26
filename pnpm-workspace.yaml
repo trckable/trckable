@@ -3,3 +3,5 @@ packages:
   - "e2e"
   - "packages/*"
   - "dashboard"
+allowBuilds:
+  esbuild: false # its install script only re-checks the prebuilt binary; never needed
