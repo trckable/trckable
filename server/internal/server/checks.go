@@ -5,8 +5,9 @@ import (
 	"time"
 )
 
-// runChecks looks for every site's snippet from the outside once a day (the
-// first time a few minutes after boot), so an install that stopped working
+// runChecks looks for the sites' snippets from the outside once a day (the
+// first time a few minutes after boot; VerifyAll says which sites and how
+// many), so an install that stopped working
 // shows up in the site picker and on its dashboard without anyone opening
 // Verify. Each check is one GET of the homepage, plus its scripts when the
 // id is not in the page itself.

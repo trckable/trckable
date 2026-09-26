@@ -120,26 +120,69 @@ func (a *API) remember(ctx context.Context, site string, c installCheck) {
 	_ = a.Ctl.SetCheck(ctx, site, sqlite.SiteCheck{At: time.Now().Unix(), Found: c.Found, Via: c.Via, Error: c.Error})
 }
 
-// VerifyAll checks every site of the installation once, a few seconds apart,
-// so a site whose snippet disappeared is noticed within a day even when
-// nobody opens Verify. One plain GET per site (plus its scripts when the id
-// is not in the page).
+// The daily check's limits. One account cannot make this server read
+// thousands of pages a day (sites pointed at someone else's server, say), nor
+// keep everyone else's sites waiting: each account gets verifyPerAccount
+// checks a day, its sites taking turns, and a few workers share the work.
+const (
+	verifyPerAccount = 50
+	verifyWorkers    = 4
+)
+
+// verifyPause spaces one worker's checks; tests shorten it.
+var verifyPause = 3 * time.Second
+
+// VerifyAll checks the sites of every account that is not suspended, so a
+// site whose snippet disappeared is noticed within a day even when nobody
+// opens Verify. One plain GET per site (plus its scripts when the id is not
+// in the page).
 func (a *API) VerifyAll(ctx context.Context) {
-	rows, err := a.Ctl.AllSites(ctx)
+	all, err := a.Ctl.SitesToCheck(ctx)
 	if err != nil {
 		return
 	}
-	for _, s := range rows {
-		if ctx.Err() != nil {
-			return
-		}
-		a.remember(ctx, s.ID, verifySite(ctx, s.ID, s.Domain))
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(3 * time.Second):
+	// A check in the last day counts against the account's share, whether
+	// this job or Verify made it: a restart does not start the day over.
+	dayAgo := time.Now().Add(-24 * time.Hour).Unix()
+	used := map[string]int{}
+	for _, s := range all {
+		if s.CheckedAt > dayAgo {
+			used[s.Account]++
 		}
 	}
+	var todo []sqlite.SiteToCheck
+	for _, s := range all { // longest unchecked first
+		if s.CheckedAt <= dayAgo && used[s.Account] < verifyPerAccount {
+			used[s.Account]++
+			todo = append(todo, s)
+		}
+	}
+
+	jobs := make(chan sqlite.SiteToCheck)
+	var wg sync.WaitGroup
+	for range verifyWorkers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for s := range jobs {
+				a.remember(ctx, s.ID, verifySite(ctx, s.ID, s.Domain))
+				select {
+				case <-ctx.Done():
+				case <-time.After(verifyPause):
+				}
+			}
+		}()
+	}
+feed:
+	for _, s := range todo {
+		select {
+		case <-ctx.Done():
+			break feed
+		case jobs <- s:
+		}
+	}
+	close(jobs)
+	wg.Wait()
 }
 
 // verifySite reads the homepage, then the scripts it loads, and says whether
