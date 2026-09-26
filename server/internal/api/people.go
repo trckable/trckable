@@ -136,7 +136,7 @@ func (a *API) resetPersonPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	password := auth.Token("", 12)
-	if err := a.Ctl.ResetPassword(r.Context(), p.Email, password); err != nil {
+	if err := a.Ctl.ResetPersonPassword(r.Context(), principalOf(r).account, p.ID, password); err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}

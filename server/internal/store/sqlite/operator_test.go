@@ -109,3 +109,32 @@ func TestOperatorAccountLifecycle(t *testing.T) {
 		t.Fatalf("the email is free again after deletion: %v", err)
 	}
 }
+
+// Resetting a password acts on one person of one account, found by id:
+// another account's person is not found, and keeps their password.
+func TestResetPersonPasswordStaysInItsAccount(t *testing.T) {
+	s := openT(t)
+	ctx := context.Background()
+	a, _, _ := s.CreateAccountWithOwner(ctx, "boss@a.com")
+	b, _, _ := s.CreateAccountWithOwner(ctx, "boss@b.com")
+	them, err := s.AddUser(ctx, a.ID, "them@a.com", "their own password", RoleViewer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.ResetPersonPassword(ctx, b.ID, them.ID, "a password from b!"); !errors.Is(err, auth.ErrNotFound) {
+		t.Fatalf("reset from another account: %v", err)
+	}
+	if _, err := s.Login(ctx, "them@a.com", "their own password"); err != nil {
+		t.Fatalf("another account changed their password: %v", err)
+	}
+	tok, _ := s.CreateSession(ctx, them.ID)
+	if err := s.ResetPersonPassword(ctx, a.ID, them.ID, "a new password for them"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.Login(ctx, "them@a.com", "a new password for them"); err != nil {
+		t.Fatalf("the new password: %v", err)
+	}
+	if _, err := s.SessionUser(ctx, tok); err == nil {
+		t.Fatal("a session outlived the reset")
+	}
+}
