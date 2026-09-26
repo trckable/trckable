@@ -20,6 +20,8 @@ section into the release.
   before) used to be written back after the delete, and after a restart; now
   they are dropped, the site's open visits are forgotten, and other sites keep
   every event
+- Settings → Health remembers the last off-site copy across a restart, instead
+  of saying there was none since the server started
 - Security: starting a new two-step setup no longer turns two-step off. The
   new phone's secret waits until a code from it is proven, so a setup given
   up half-way leaves the old phone working. While two-step is on, turning it

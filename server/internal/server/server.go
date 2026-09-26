@@ -223,6 +223,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		slog.Warn("off-site backups are off", "err", err)
 	} else {
 		s.remote = r
+		s.loadOffsite(ctx)
 	}
 	// Alerts by email, when the owner gives trckable an SMTP server to use.
 	if cfg.SMTPURL != "" {

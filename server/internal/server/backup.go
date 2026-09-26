@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -123,6 +124,44 @@ type offsiteStatus struct {
 	err string
 }
 
+// offsiteKey is where the off-site status is kept in the control database. In
+// memory alone, a restart forgot the last copy and Health said "none since
+// start" for a day, while the bucket held yesterday's.
+const offsiteKey = "offsite_status"
+
+type offsiteSaved struct {
+	To  string `json:"to"` // the bucket it describes, without keys
+	At  int64  `json:"at"`
+	Err string `json:"err,omitempty"`
+}
+
+// loadOffsite reads the kept status back at boot. A status for another bucket
+// says nothing about this one, so it is ignored.
+func (s *Server) loadOffsite(ctx context.Context) {
+	if s.remote == nil {
+		return
+	}
+	raw, ok, err := s.ctl.Meta(ctx, offsiteKey)
+	if err != nil || !ok {
+		return
+	}
+	var v offsiteSaved
+	if json.Unmarshal([]byte(raw), &v) != nil || v.To != s.remote.Where() {
+		return
+	}
+	s.offsite.Store(&offsiteStatus{at: v.At, err: v.Err})
+}
+
+// setOffsite records how a copy went, in memory for Health and in the control
+// database so it outlives a restart.
+func (s *Server) setOffsite(ctx context.Context, st *offsiteStatus) {
+	s.offsite.Store(st)
+	b, _ := json.Marshal(offsiteSaved{To: s.remote.Where(), At: st.at, Err: st.err})
+	if err := s.ctl.SetMeta(context.WithoutCancel(ctx), offsiteKey, string(b)); err != nil {
+		slog.Warn("could not keep the off-site status", "err", err)
+	}
+}
+
 // ship copies one backup off this machine and trims what the bucket keeps.
 // A failed copy is reported, never fatal: the local file is still there.
 func (s *Server) ship(ctx context.Context, path string) {
@@ -137,11 +176,11 @@ func (s *Server) ship(ctx context.Context, path string) {
 	if err := s.remote.Upload(ctx, path); err != nil {
 		st.err = err.Error()
 		slog.Warn("off-site backup failed", "to", s.remote.Where(), "err", err)
-		s.offsite.Store(st)
+		s.setOffsite(ctx, st)
 		return
 	}
 	st.at = time.Now().Unix()
-	s.offsite.Store(st)
+	s.setOffsite(ctx, st)
 	slog.Info("backup copied off-site", "to", s.remote.Where())
 	keep := time.Duration(max(s.cfg.BackupDays, 1)) * 24 * time.Hour
 	if n, err := s.remote.Prune(ctx, keep, time.Now()); err != nil {
