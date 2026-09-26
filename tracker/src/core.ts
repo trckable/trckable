@@ -70,7 +70,6 @@ export function start(c: Config): Tracker {
   const loc = location
   const nav = navigator
   const now = Date.now
-  const noop = (() => {}) as Tracker
 
   // Consent-free mode touches no browser storage at all, not even to read.
   let ls: Storage | null = null
@@ -86,9 +85,9 @@ export function start(c: Config): Tracker {
     // hosts: localhost, 127.x, any IPv6 literal ([…]) and 0.x.
     (!c.dev && (nav.webdriver || /^(localhost|127\.|\[|0\.)/.test(loc.hostname) || loc.protocol == 'file:' || w != w.parent))
   )
-    return noop
+    return (() => {}) as Tracker
 
-  const proxied = new URL(c.api, loc.href).origin == loc.origin // server manages the cookie
+  const proxied = new URL(c.api, loc as any).origin == loc.origin // server manages the cookie (a Location reads as its href)
   // 0: a cookie · 1: no cookie · 2: the visitor declined, and nothing is sent.
   let cookieless = c.cookieless ? 1 : 0
   let last = ''
@@ -313,8 +312,8 @@ export function start(c: Config): Tracker {
   // moment the numbers are final — so this costs no extra request.
   // Everything lives in one object written by the observers and read by the
   // flush, so with the module off nothing here is referenced and the whole
-  // block leaves the script.
-  const cwv: Payload = {}
+  // block leaves the script (an unused 0 is dropped; an unused {} is not).
+  const cwv: Payload = __VITALS__ ? {} : (0 as any)
   if (__VITALS__) {
     const watch = (type: string, cb: (e: any) => void) => {
       try {
@@ -418,7 +417,7 @@ export function start(c: Config): Tracker {
             const v = !cookieless && cookie() // consent-free mode reads nothing
             const m = /(buy\.stripe|lemonsqueezy|polar|dodopayments)\.(com|sh)$/.exec(h)
             if (v && m) {
-              const u = new URL(a.href)
+              const u = new URL(a as any) // an <a> reads as its href
               const k = { b: 'client_reference_id', p: 'reference_id', l: 'checkout[custom][trckable_vid]', d: 'metadata_trckable_vid' }[m[1][0]]!
               // One value for all: these fields allow only [A-Za-z0-9_-]
               if (!u.searchParams.has(k)) u.searchParams.set(k, 'trckable_' + v.replace('.', '_'))

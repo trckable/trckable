@@ -14,6 +14,9 @@ section into the release.
   `GET /_trckable/accounts/{id}/sites` lists an account's sites and their
   domains
 
+### Better
+- The default script is under 2 KB gzipped again, and the size check now holds it there.
+
 ### Fixed
 - Security: starting a new two-step setup no longer turns two-step off. The
   new phone's secret waits until a code from it is proven, so a setup given
