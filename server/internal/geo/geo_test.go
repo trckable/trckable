@@ -116,10 +116,11 @@ func TestSharedPicksUpANewerFile(t *testing.T) {
 	g := New(Country, dir)
 	g.Shared = true
 	followEvery = 10 * time.Millisecond
-	defer func() { followEvery = 10 * time.Minute }()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go g.Run(ctx)
+	done := make(chan struct{})
+	go func() { g.Run(ctx); close(done) }()
+	// Run reads followEvery: it is put back only once Run has returned.
+	defer func() { cancel(); <-done; followEvery = 10 * time.Minute }()
 	deadline := time.Now().Add(2 * time.Second)
 	for !g.Ready() && time.Now().Before(deadline) {
 		time.Sleep(5 * time.Millisecond)
