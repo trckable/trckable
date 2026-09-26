@@ -133,6 +133,7 @@ Go, embedded DuckDB and SQLite, React with an in-house SVG chart kit. Every even
 - [x] npm package [`trckable`](https://www.npmjs.com/package/trckable) with `init` / `doctor` / `mcp`, published from CI with provenance
 - [ ] Live sandbox runs against each payment provider
 - [ ] Ask trckable: an optional in-app assistant on the same read-only tools, with your own AI key
+- [ ] A mobile app (iOS and Android): connect it to your own server or to Cloud, and see your visitors, sources and sales on your phone
 - [x] Releases: one tag publishes the image (x86-64, arm64), the npm package and the GitHub release
 - [ ] Public v1.0: a one-click template for hosts, a public demo
 
