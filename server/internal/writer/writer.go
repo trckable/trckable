@@ -38,6 +38,11 @@ type Options struct {
 	IdleClose  time.Duration    // how often idle sessions are closed without traffic (default 1m)
 	Now        func() time.Time // clock (tests); default time.Now
 	CloseAfter time.Duration    // idle time before a session is written (default 60m; tests only)
+	// Sites reports which of the given site ids still exist. Events for any
+	// other site are dropped: a deleted site's events can still be queued in
+	// the WAL, and without this they would be written back after its purge.
+	// Nil keeps every event.
+	Sites func(ctx context.Context, ids []string) (map[string]bool, error)
 }
 
 // Writer applies WAL records to DuckDB.
@@ -316,6 +321,39 @@ func (w *Writer) importedAlready(ctx context.Context, conn *sql.Conn, batch []de
 	return have, rows.Err()
 }
 
+// liveSites returns which sites in a batch still exist, or nil to keep every
+// event. It asks the control database every batch rather than caching the
+// answer: a cache could still say "exists" just after a delete, and that is
+// the moment that matters. If the question cannot be answered, events are
+// kept: writing a deleted site's leftovers is recoverable (delete it again),
+// dropping a live site's traffic is not.
+func (w *Writer) liveSites(ctx context.Context, batch []decoded) map[string]bool {
+	if w.opts.Sites == nil || len(batch) == 0 {
+		return nil
+	}
+	seen := map[string]bool{}
+	var ids []string
+	for _, d := range batch {
+		if !seen[d.e.Site] {
+			seen[d.e.Site] = true
+			ids = append(ids, d.e.Site)
+		}
+	}
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	live, err := w.opts.Sites(ctx, ids)
+	if err != nil {
+		slog.Warn("writer: could not check which sites exist; keeping the batch", "err", err)
+		return nil
+	}
+	for _, id := range ids {
+		if !live[id] {
+			slog.Info("writer: dropping queued events of a deleted site", "site", id)
+		}
+	}
+	return live
+}
+
 // row is one event ready to append, with its WAL seq and assigned session.
 type row struct {
 	seq     uint64
@@ -332,7 +370,7 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 	rows := make([]row, 0, len(batch))
 	var closed []*Session
 	nowMs := w.now().UnixMilli()
-	fresh := make([]decoded, 0, len(batch))
+	all := make([]decoded, 0, len(batch))
 	for _, r := range batch {
 		var e event.Event
 		if err := event.Unmarshal(r.Payload, &e); err != nil {
@@ -340,10 +378,21 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 			slog.Error("writer: undecodable wal record", "seq", r.Seq, "err", err)
 			continue
 		}
-		if w.dd.seen(e.EventID, nowMs) {
+		all = append(all, decoded{r.Seq, e})
+	}
+	live := w.liveSites(ctx, all)
+	fresh := make([]decoded, 0, len(all))
+	for _, d := range all {
+		// A deleted site's events are skipped like any other record: the
+		// high-water mark still moves past them in this same transaction, so
+		// a replay after a crash asks again and gets the same answer.
+		if live != nil && !live[d.e.Site] {
 			continue
 		}
-		fresh = append(fresh, decoded{r.Seq, e})
+		if w.dd.seen(d.e.EventID, nowMs) {
+			continue
+		}
+		fresh = append(fresh, d)
 	}
 	// Imported history is older than the in-memory window, and a second
 	// import always comes after a restart: its ids are checked against what
@@ -642,6 +691,12 @@ func nzU8(v uint8) any {
 // PurgeSite removes every analytics row for a site. It runs inside the writer,
 // on the connection that owns the tables, so it can never race an ingest
 // batch. Payments and settings live in SQLite and are deleted there.
+//
+// Deleting a site calls it twice: before the site row goes (to count what is
+// removed, and to refuse early when the store is not ready), and again once
+// it is gone, to sweep what the writer applied in between. From then on
+// Options.Sites says the site does not exist, and its queued events are
+// dropped.
 func (w *Writer) PurgeSite(ctx context.Context, site string) (events, sessions int64, err error) {
 	err = w.Do(ctx, func(ctx context.Context, conn *sql.Conn) error {
 		for i, table := range []string{"events", "sessions"} {

@@ -179,6 +179,7 @@ func (a *API) deleteAccount(w http.ResponseWriter, r *http.Request) {
 		}
 		gone.Payments += rest.Payments
 		gone.Connections += rest.Connections
+		a.sweepAnalytics(r.Context(), site, &gone)
 	}
 	if err := a.Ctl.DeleteAccount(r.Context(), id); err != nil {
 		operatorFail(w, err)

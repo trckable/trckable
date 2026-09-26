@@ -56,9 +56,30 @@ func (a *API) deleteSite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	gone.Payments, gone.Connections = rest.Payments, rest.Connections
+	a.sweepAnalytics(r.Context(), site, &gone)
 	a.cache.purgeSite(site)
 	slog.Info("site deleted", "site", site, "domain", info.Domain, "events", gone.Events, "sessions", gone.Sessions, "payments", gone.Payments)
 	writeJSON(w, http.StatusOK, gone)
+}
+
+// sweepAnalytics purges a deleted site's analytics once more, now that its
+// row is gone. Events the writer applied between the first purge and the
+// delete would otherwise stay; after this the writer sees no such site and
+// drops whatever is still queued for it. The site is already gone, so a
+// failure here is logged rather than reported as a failed delete.
+func (a *API) sweepAnalytics(ctx context.Context, site string, gone *sqlite.Removed) {
+	if a.PurgeAnalytics == nil {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Minute)
+	defer cancel()
+	events, sessions, err := a.PurgeAnalytics(ctx, site)
+	if err != nil {
+		slog.Warn("deleted site: could not sweep late analytics rows", "site", site, "err", err)
+		return
+	}
+	gone.Events += events
+	gone.Sessions += sessions
 }
 
 // changePassword needs the current password, and signs every other session out.

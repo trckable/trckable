@@ -394,7 +394,7 @@ func (s *Server) startAnalytics(ctx context.Context) {
 	}
 	s.duck.Store(store)
 	s.backfillSeen(ctx, store)
-	w := writer.New(s.log, store, writer.Options{CloseAfter: s.cfg.SessionCloseAfter, IdleClose: idleClose(s.cfg)})
+	w := writer.New(s.log, store, writer.Options{CloseAfter: s.cfg.SessionCloseAfter, IdleClose: idleClose(s.cfg), Sites: s.ctl.ExistingSites})
 	w.OnCommit = s.hub.Publish
 	s.writer.Store(w)
 	slog.Info("analytics store ready")

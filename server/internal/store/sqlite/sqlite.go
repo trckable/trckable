@@ -604,6 +604,34 @@ func (s *Store) DeleteSite(ctx context.Context, id string) (Removed, error) {
 	return out, s.reloadSites(ctx)
 }
 
+// ExistingSites reports which of ids are still sites. The writer asks before
+// every batch, so events still queued for a deleted site are dropped instead
+// of being written back after the purge. It reads the table, not the cache:
+// the cache leaves out suspended accounts, whose events must still be kept.
+func (s *Store) ExistingSites(ctx context.Context, ids []string) (map[string]bool, error) {
+	out := make(map[string]bool, len(ids))
+	if len(ids) == 0 {
+		return out, nil
+	}
+	args := make([]any, len(ids))
+	for i, id := range ids {
+		args[i] = id
+	}
+	rows, err := s.DB.QueryContext(ctx, `SELECT id FROM sites WHERE id IN (?`+strings.Repeat(`, ?`, len(ids)-1)+`)`, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out[id] = true
+	}
+	return out, rows.Err()
+}
+
 // Removed is what deleting a site took with it, for the dashboard to show.
 type Removed struct {
 	Events   int64 `json:"events"`
