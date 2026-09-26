@@ -63,7 +63,9 @@ func (a *API) addPerson(w http.ResponseWriter, r *http.Request) {
 	p, err := a.Ctl.AddUser(r.Context(), principalOf(r).account, in.Email, in.Password, in.Role)
 	switch {
 	case errors.Is(err, auth.ErrExists):
-		fail(w, http.StatusConflict, "someone already uses that email address")
+		// Only ever someone on this same account: an address used in another
+		// account is added like any other (see AddUser), never refused.
+		fail(w, http.StatusConflict, "that person is already on this account")
 		return
 	case err != nil:
 		fail(w, http.StatusBadRequest, err.Error())
@@ -136,7 +138,7 @@ func (a *API) resetPersonPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	password := auth.Token("", 12)
-	if err := a.Ctl.ResetPassword(r.Context(), p.Email, password); err != nil {
+	if err := a.Ctl.ResetPersonPassword(r.Context(), principalOf(r).account, p.ID, password); err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}

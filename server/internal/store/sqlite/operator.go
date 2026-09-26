@@ -85,8 +85,10 @@ func (s *Store) Accounts(ctx context.Context) ([]AccountInfo, error) {
 		SELECT a.id, a.created_at, a.state, a.max_members,
 		       COALESCE((SELECT email FROM users u WHERE u.account_id = a.id AND u.role = 'owner' ORDER BY created_at LIMIT 1), ''),
 		       (SELECT COUNT(*) FROM sites s WHERE s.account_id = a.id),
-		       (SELECT COUNT(*) FROM users u WHERE u.account_id = a.id AND u.role = 'owner'),
-		       (SELECT COUNT(*) FROM users u WHERE u.account_id = a.id AND u.role = 'viewer')
+		       (SELECT COUNT(*) FROM users u WHERE u.account_id = a.id AND u.role = 'owner') +
+		       (SELECT COUNT(*) FROM waiting_people w WHERE w.account_id = a.id AND w.role = 'owner'),
+		       (SELECT COUNT(*) FROM users u WHERE u.account_id = a.id AND u.role = 'viewer') +
+		       (SELECT COUNT(*) FROM waiting_people w WHERE w.account_id = a.id AND w.role = 'viewer')
 		FROM accounts a WHERE a.id != ? ORDER BY a.created_at, a.id`, DefaultAccount)
 	if err != nil {
 		return nil, err
@@ -233,12 +235,37 @@ func (s *Store) DeleteAccount(ctx context.Context, id string) error {
 	if sites > 0 {
 		return errors.New("the account still has sites: delete them first")
 	}
+	// Its people's addresses are free once they are gone, for anyone another
+	// account added while they were here.
+	var freed []string
+	rows, err := tx.QueryContext(ctx, `SELECT email FROM users WHERE account_id = ?`, id)
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+		var e string
+		if err := rows.Scan(&e); err != nil {
+			rows.Close()
+			return err
+		}
+		freed = append(freed, e)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return err
+	}
 	for _, q := range []string{
 		`DELETE FROM users WHERE account_id = ?`,
+		`DELETE FROM waiting_people WHERE account_id = ?`,
 		`DELETE FROM api_keys WHERE account_id = ?`,
 		`DELETE FROM accounts WHERE id = ?`,
 	} {
 		if _, err := tx.ExecContext(ctx, q, id); err != nil {
+			return err
+		}
+	}
+	for _, e := range freed {
+		if err := letIn(ctx, tx, e); err != nil {
 			return err
 		}
 	}
@@ -251,7 +278,9 @@ func ownersFull(ctx context.Context, q interface {
 	QueryRowContext(context.Context, string, ...any) *sql.Row
 }, account string) error {
 	var max, owners int
-	if err := q.QueryRowContext(ctx, `SELECT max_members, (SELECT COUNT(*) FROM users WHERE account_id = ? AND role = 'owner') FROM accounts WHERE id = ?`, account, account).Scan(&max, &owners); err != nil {
+	if err := q.QueryRowContext(ctx, `SELECT max_members,
+		(SELECT COUNT(*) FROM users WHERE account_id = ? AND role = 'owner') + (SELECT COUNT(*) FROM waiting_people WHERE account_id = ? AND role = 'owner')
+		FROM accounts WHERE id = ?`, account, account, account).Scan(&max, &owners); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil
 		}
