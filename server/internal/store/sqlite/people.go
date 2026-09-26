@@ -194,3 +194,29 @@ func (s *Store) PersonByID(ctx context.Context, account, id string) (Person, err
 	}
 	return p, err
 }
+
+// ResetPersonPassword gives one person of an account a new password and ends
+// their sessions. By id within the account, never by address, so what it
+// changes can only ever be someone of that account.
+func (s *Store) ResetPersonPassword(ctx context.Context, account, id, password string) error {
+	hash, err := auth.HashPassword(password)
+	if err != nil {
+		return err
+	}
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	res, err := tx.ExecContext(ctx, `UPDATE users SET password_hash = ? WHERE id = ? AND account_id = ?`, hash, id, account)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return auth.ErrNotFound
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM auth_sessions WHERE user_id = ?`, id); err != nil {
+		return err
+	}
+	return tx.Commit()
+}

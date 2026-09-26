@@ -160,6 +160,15 @@ func (a *API) widgetPage(w http.ResponseWriter, r *http.Request) {
 type widgetCache struct {
 	mu sync.Mutex
 	m  map[string]cachedNumbers
+	// order is every put, oldest first, so the expired and the oldest are
+	// found at its front without looking at every entry. A put whose key was
+	// put again since, or forgotten, no longer matches m and is skipped.
+	order []queued
+}
+
+type queued struct {
+	key string
+	exp time.Time
 }
 
 type cachedNumbers struct {
@@ -181,13 +190,43 @@ func (c *widgetCache) get(key string, now time.Time) (widgetNumbers, bool) {
 	return e.n, ok && now.Before(e.exp)
 }
 
+// widgetCacheMax bounds the cache. Keys come only from real widgets (a site,
+// a kind, what it shows), so this many at once is a very busy server.
+const widgetCacheMax = 10_000
+
+// put keeps a site's numbers. What has expired is dropped as it goes, as
+// the login limiter does, rather than the cache emptying itself when full
+// (every widget would then read its numbers again at once). If it is full of
+// fresh entries, the oldest makes room: it expires first, and the widget
+// asked for now is the one people are looking at. Both come off the front of
+// order, so a put never walks the whole cache under the lock.
 func (c *widgetCache) put(key string, n widgetNumbers, now time.Time) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.m == nil || len(c.m) > 10000 {
+	if c.m == nil {
 		c.m = map[string]cachedNumbers{}
 	}
-	c.m[key] = cachedNumbers{n: n, exp: now.Add(time.Minute)}
+	for len(c.order) > 0 {
+		q := c.order[0]
+		e, ok := c.m[q.key]
+		current := ok && e.exp.Equal(q.exp)
+		if current && now.Before(q.exp) {
+			break
+		}
+		if current {
+			delete(c.m, q.key) // expired
+		}
+		c.order = c.order[1:]
+	}
+	if _, ok := c.m[key]; !ok && len(c.m) >= widgetCacheMax {
+		// Every entry is fresh, and each has its latest put in order, so the
+		// front is the oldest of them.
+		delete(c.m, c.order[0].key)
+		c.order = c.order[1:]
+	}
+	exp := now.Add(time.Minute)
+	c.m[key] = cachedNumbers{n: n, exp: exp}
+	c.order = append(c.order, queued{key, exp})
 }
 
 func (c *widgetCache) forget(site string) {

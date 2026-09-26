@@ -52,3 +52,32 @@ func (s *Store) CheckOf(ctx context.Context, site string) (SiteCheck, error) {
 	}
 	return c, err
 }
+
+// SiteToCheck is a site the daily install check may read, with its account
+// and when it was last checked (0: never).
+type SiteToCheck struct {
+	ID, Domain, Account string
+	CheckedAt           int64
+}
+
+// SitesToCheck lists the sites of every account that is not suspended (its
+// sites take no events, so there is nothing to verify), the ones checked
+// longest ago first, so a capped account's sites take turns day by day.
+func (s *Store) SitesToCheck(ctx context.Context) ([]SiteToCheck, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT s.id, s.domain, s.account_id, COALESCE(c.checked_at, 0)
+		FROM sites s JOIN accounts a ON a.id = s.account_id LEFT JOIN site_check c ON c.site_id = s.id
+		WHERE a.state != ? ORDER BY COALESCE(c.checked_at, 0), s.created_at, s.id`, StateSuspended)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []SiteToCheck
+	for rows.Next() {
+		var c SiteToCheck
+		if err := rows.Scan(&c.ID, &c.Domain, &c.Account, &c.CheckedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}

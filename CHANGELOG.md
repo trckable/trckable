@@ -28,6 +28,15 @@ section into the release.
   still inside its 90-second window, is refused, so a code seen over a
   shoulder or replayed cannot be used again. The code that turns two-step on
   does not sign in either
+- Security: resetting a person's password goes by their id within the
+  account, never by their email address
+- Security: the daily install check skips suspended accounts, reads at most
+  50 of one account's sites a day (the ones waiting longest first, so they
+  take turns) and at most 4 at once, so one account cannot make the server
+  fetch thousands of pages or hold up everyone else's checks
+- Security: the widget numbers cache no longer empties itself when it holds
+  10,000 entries, which made every widget read its numbers again at once. It
+  drops the expired ones instead and, if all are still fresh, the oldest
 
 ## 0.2.0 (25 Sep 2026)
 
