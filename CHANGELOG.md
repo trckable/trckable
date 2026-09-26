@@ -13,6 +13,11 @@ section into the release.
 - For hosts running trckable for others (the operator API):
   `GET /_trckable/accounts/{id}/sites` lists an account's sites and their
   domains
+- Problems Health shows are now also sent: a failed backup, a failed
+  off-site copy, the write-ahead log refusing events, and an instance key that
+  does not match. Each goes to the alert destinations on the operator's own
+  sites once when it starts and once when it clears, never on every check,
+  and nothing is sent when no alert is set up
 
 ### Fixed
 - Deleting a site now removes all of its analytics for good. Events still
