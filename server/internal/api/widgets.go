@@ -181,11 +181,36 @@ func (c *widgetCache) get(key string, now time.Time) (widgetNumbers, bool) {
 	return e.n, ok && now.Before(e.exp)
 }
 
+// widgetCacheMax bounds the cache. Keys come only from real widgets (a site,
+// a kind, what it shows), so this many at once is a very busy server.
+const widgetCacheMax = 10_000
+
+// put keeps a site's numbers. When full it drops what has expired, as the
+// login limiter does, rather than emptying itself: every widget would then
+// read its numbers again at once. If every entry is still fresh, the one
+// that expires soonest goes: it was read longest ago, and the widget asked
+// for now is the one people are looking at.
 func (c *widgetCache) put(key string, n widgetNumbers, now time.Time) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.m == nil || len(c.m) > 10000 {
+	if c.m == nil {
 		c.m = map[string]cachedNumbers{}
+	}
+	if _, ok := c.m[key]; !ok && len(c.m) >= widgetCacheMax {
+		for k, e := range c.m {
+			if !now.Before(e.exp) {
+				delete(c.m, k)
+			}
+		}
+		if len(c.m) >= widgetCacheMax {
+			var oldest string
+			for k, e := range c.m {
+				if oldest == "" || e.exp.Before(c.m[oldest].exp) {
+					oldest = k
+				}
+			}
+			delete(c.m, oldest)
+		}
 	}
 	c.m[key] = cachedNumbers{n: n, exp: now.Add(time.Minute)}
 }

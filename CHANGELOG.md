@@ -37,6 +37,9 @@ section into the release.
   50 of one account's sites a day (the ones waiting longest first, so they
   take turns) and at most 4 at once, so one account cannot make the server
   fetch thousands of pages or hold up everyone else's checks
+- Security: the widget numbers cache no longer empties itself when it holds
+  10,000 entries, which made every widget read its numbers again at once. It
+  drops the expired ones instead and, if all are still fresh, the oldest
 
 ## 0.2.0 (25 Sep 2026)
 
