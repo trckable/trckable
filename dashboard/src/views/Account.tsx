@@ -20,7 +20,7 @@ import { isViewer } from '../lib/me'
 import { SitesSettings } from './Sites'
 import { InlineEdit } from '../components/InlineEdit'
 import type { Site } from '../lib/api'
-import { managed } from '../lib/managed'
+import { managed, signedOutPage } from '../lib/managed'
 import './Account.css'
 
 // The setup wizard carries the QR encoder, so it is fetched only when someone
@@ -146,7 +146,7 @@ function ProfileTab({ email, p, v, onProfile, onPicture }: { email?: string; p: 
           </>
         )}
         <Line icon={LogOut} label="This browser" hint={`Signed in as ${email ?? 'you'}`}>
-          <button type="button" className="btn" onClick={() => api.logout().finally(() => location.assign(managed() || '/login'))}>
+          <button type="button" className="btn" onClick={() => api.logout().finally(() => location.assign(signedOutPage()))}>
             Sign out
           </button>
         </Line>

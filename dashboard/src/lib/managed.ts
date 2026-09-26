@@ -9,3 +9,12 @@ export const managed = (): string => url
 export function setManaged(u: string | undefined) {
   url = u ?? ''
 }
+
+/** Where Sign out leads: the provider's page, told to end its own session too,
+ * or this instance's sign-in page. */
+export function signedOutPage(): string {
+  if (!url) return '/login'
+  const u = new URL(url, location.href)
+  u.searchParams.set('signedout', '1')
+  return u.href
+}
