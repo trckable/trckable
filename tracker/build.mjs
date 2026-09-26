@@ -14,7 +14,8 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 
 // 2,060 since 24 Sep 2026: a visitor who declines is never counted, and the
 // first page waits for their answer; those rules cost 20 bytes (2,031 → 2,051).
-const BUDGET = 2060 // bytes, gzip, for the full script
+// 2,048 since 26 Sep 2026: trimmed back under 2 KB, so "a 2 KB script" stays true.
+const BUDGET = 2048 // bytes, gzip, for the full script: 2 KB, as the site says
 const TARGET = 1638 // 1.6 KB goal
 
 // Keep in sync with server/internal/modules (Tracker* constants).
