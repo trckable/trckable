@@ -71,7 +71,7 @@ func newRig(t *testing.T) *rig {
 	clock.Store(now.UnixMilli())
 	tick := func() time.Time { return time.UnixMilli(clock.Load()).UTC() }
 	hub := realtime.New()
-	w := writer.New(lg, st, writer.Options{FlushEvery: 5 * time.Millisecond, IdleClose: 20 * time.Millisecond, Now: tick})
+	w := writer.New(lg, st, writer.Options{FlushEvery: 5 * time.Millisecond, IdleClose: 20 * time.Millisecond, Now: tick, Sites: ctl.ExistingSites})
 	w.OnCommit = hub.Publish
 	wctx, cancel := context.WithCancel(ctx)
 	done := make(chan struct{})

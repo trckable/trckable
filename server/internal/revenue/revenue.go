@@ -68,6 +68,15 @@ func New(ctx context.Context, db *sql.DB, box *secrets.Box) (*Service, error) {
 	return s, nil
 }
 
+// KeyMismatch reports whether the instance key is not the one the stored
+// secrets were sealed with. It reads under the lock Start over writes under,
+// so a background check never races it.
+func (s *Service) KeyMismatch() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.KeyErr != nil
+}
+
 // Connection is a provider account connected to a site.
 type Connection struct {
 	ID         string `json:"id"`

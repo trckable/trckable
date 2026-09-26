@@ -207,7 +207,7 @@ export function HealthSettings() {
                 : 'Only on this machine. Set TRCKABLE_BACKUP_S3 to copy each backup to a bucket elsewhere.'
           }
         >
-          <Pill tone={offTone}>{h.backup.offsite ? (h.backup.offsite_at ? since(h.backup.offsite_at) : 'None since start') : 'Off'}</Pill>
+          <Pill tone={offTone}>{h.backup.offsite ? (h.backup.offsite_at ? since(h.backup.offsite_at) : 'None yet') : 'Off'}</Pill>
         </Item>
       </section>
 

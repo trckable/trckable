@@ -52,6 +52,29 @@ func (s *Store) LiveAlerts(ctx context.Context) ([]Alert, error) {
 	return scanAlerts(rows)
 }
 
+// OperatorTargets are where the installation's own problems go (a failed
+// backup, a full disk): every destination of an enabled alert on the
+// operator's sites. Customers' destinations never hear about the server they
+// run on.
+func (s *Store) OperatorTargets(ctx context.Context) ([]string, error) {
+	rows, err := s.DB.QueryContext(ctx, `
+		SELECT DISTINCT a.target FROM alerts a JOIN sites s ON s.id = a.site_id
+		WHERE a.enabled = 1 AND a.target != '' AND s.account_id = ? ORDER BY a.target`, DefaultAccount)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var t string
+		if err := rows.Scan(&t); err != nil {
+			return nil, err
+		}
+		out = append(out, t)
+	}
+	return out, rows.Err()
+}
+
 func scanAlerts(rows interface {
 	Next() bool
 	Scan(...any) error

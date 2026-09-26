@@ -13,8 +13,20 @@ section into the release.
 - For hosts running trckable for others (the operator API):
   `GET /_trckable/accounts/{id}/sites` lists an account's sites and their
   domains
+- Problems Health shows are now also sent: a failed backup, a failed
+  off-site copy, the write-ahead log refusing events, and an instance key that
+  does not match. Each goes to the alert destinations on the operator's own
+  sites once when it starts and once when it clears, never on every check,
+  and nothing is sent when no alert is set up
 
 ### Fixed
+- Deleting a site now removes all of its analytics for good. Events still
+  waiting in the write-ahead log when the site was deleted (or sent a moment
+  before) used to be written back after the delete, and after a restart; now
+  they are dropped, the site's open visits are forgotten, and other sites keep
+  every event
+- Settings → Health remembers the last off-site copy across a restart, instead
+  of saying there was none since the server started
 - Security: starting a new two-step setup no longer turns two-step off. The
   new phone's secret waits until a code from it is proven, so a setup given
   up half-way leaves the old phone working. While two-step is on, turning it
