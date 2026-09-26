@@ -28,11 +28,6 @@ section into the release.
   still inside its 90-second window, is refused, so a code seen over a
   shoulder or replayed cannot be used again. The code that turns two-step on
   does not sign in either
-- Security: adding a person whose address is already someone in another
-  account on the same server no longer says so. The answer, the people list
-  and what an owner can do with them are the same as for a new address;
-  they wait, and join with the role and password they were given as soon as
-  that address is free (removed from the other account, or it is deleted)
 - Security: the daily install check skips suspended accounts, reads at most
   50 of one account's sites a day (the ones waiting longest first, so they
   take turns) and at most 4 at once, so one account cannot make the server

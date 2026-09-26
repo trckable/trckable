@@ -415,21 +415,6 @@ var migrations = []string{
 	`ALTER TABLE users ADD COLUMN totp_pending TEXT NOT NULL DEFAULT '';`,
 	// 32: when that pending secret was made: an unproven one expires.
 	`ALTER TABLE users ADD COLUMN totp_pending_at INTEGER NOT NULL DEFAULT 0;`,
-	// 33: people added to an account while their address is already someone
-	// in another account. They wait here, listed like anyone added, and join
-	// the moment that address is free, so adding them never says the address
-	// is taken elsewhere.
-	`CREATE TABLE waiting_people (
-		id            TEXT PRIMARY KEY,
-		account_id    TEXT NOT NULL REFERENCES accounts(id),
-		email         TEXT NOT NULL COLLATE NOCASE,
-		password_hash TEXT NOT NULL,
-		role          TEXT NOT NULL,
-		must_change   INTEGER NOT NULL DEFAULT 0,
-		created_at    INTEGER NOT NULL,
-		UNIQUE (account_id, email)
-	);
-	CREATE INDEX waiting_people_email ON waiting_people(email);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

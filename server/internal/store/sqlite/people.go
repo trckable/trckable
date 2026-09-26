@@ -37,14 +37,9 @@ type Person struct {
 }
 
 // People lists an account's people, oldest first — which is the owner, on any
-// account that started with one person. Someone still waiting for their
-// address to be free (AddUser) is listed like anyone who has not signed in yet.
+// account that started with one person.
 func (s *Store) People(ctx context.Context, account string) ([]Person, error) {
-	rows, err := s.DB.QueryContext(ctx, `
-		SELECT id, email, COALESCE(name, ''), role, created_at, totp_enabled, last_seen_at, must_change FROM users WHERE account_id = ?
-		UNION ALL
-		SELECT id, email, '', role, created_at, 0, 0, must_change FROM waiting_people WHERE account_id = ?
-		ORDER BY created_at`, account, account)
+	rows, err := s.DB.QueryContext(ctx, `SELECT id, email, COALESCE(name, ''), role, created_at, totp_enabled, last_seen_at, must_change FROM users WHERE account_id = ? ORDER BY created_at`, account)
 	if err != nil {
 		return nil, err
 	}
@@ -62,15 +57,7 @@ func (s *Store) People(ctx context.Context, account string) ([]Person, error) {
 	return out, rows.Err()
 }
 
-// AddUser adds a person to an account with the given role. ErrExists means
-// they are already on this account, which its owner can see anyway.
-//
-// An address that is someone in another account is never refused: that
-// would tell one account about another's people. The person waits instead,
-// listed and answered for exactly like anyone added, and joins with the same
-// role and password the moment their address is free (letIn). Both ways do
-// the same work, the password hash included, so the time taken says nothing
-// either.
+// AddUser adds a person to an account with the given role.
 func (s *Store) AddUser(ctx context.Context, account, email, password, role string) (Person, error) {
 	email = strings.ToLower(strings.TrimSpace(email))
 	if email == "" || !strings.Contains(email, "@") {
@@ -86,70 +73,18 @@ func (s *Store) AddUser(ctx context.Context, account, email, password, role stri
 	if err != nil {
 		return Person{}, err
 	}
-	tx, err := s.DB.BeginTx(ctx, nil)
-	if err != nil {
-		return Person{}, err
-	}
-	defer tx.Rollback()
 	if role == RoleOwner {
-		if err := ownersFull(ctx, tx, account); err != nil {
+		if err := ownersFull(ctx, s.DB, account); err != nil {
 			return Person{}, err
 		}
 	}
-	var here, elsewhere int
-	if err := tx.QueryRowContext(ctx, `SELECT
-		(SELECT COUNT(*) FROM users WHERE account_id = ? AND email = ?) + (SELECT COUNT(*) FROM waiting_people WHERE account_id = ? AND email = ?),
-		(SELECT COUNT(*) FROM users WHERE email = ?)`, account, email, account, email, email).Scan(&here, &elsewhere); err != nil {
-		return Person{}, err
-	}
-	if here > 0 {
+	p := Person{ID: auth.Token("usr_", 10), Email: email, Role: role, CreatedAt: time.Now().Unix()}
+	_, err = s.DB.ExecContext(ctx, `INSERT INTO users (id, account_id, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+		p.ID, account, p.Email, hash, p.Role, p.CreatedAt)
+	if err != nil && strings.Contains(err.Error(), "UNIQUE") {
 		return Person{}, auth.ErrExists
 	}
-	table := "users"
-	if elsewhere > 0 {
-		table = "waiting_people"
-	}
-	p := Person{ID: auth.Token("usr_", 10), Email: email, Role: role, CreatedAt: time.Now().Unix()}
-	if _, err := tx.ExecContext(ctx, `INSERT INTO `+table+` (id, account_id, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-		p.ID, account, p.Email, hash, p.Role, p.CreatedAt); err != nil {
-		return Person{}, err
-	}
-	return p, tx.Commit()
-}
-
-// person finds someone of an account among its people and those waiting,
-// and says which table holds them. ErrNotFound when they are in neither.
-func person(ctx context.Context, q interface {
-	QueryRowContext(context.Context, string, ...any) *sql.Row
-}, account, id string) (p Person, table string, err error) {
-	err = q.QueryRowContext(ctx, `
-		SELECT id, email, role, 'users' FROM users WHERE id = ? AND account_id = ?
-		UNION ALL
-		SELECT id, email, role, 'waiting_people' FROM waiting_people WHERE id = ? AND account_id = ?`,
-		id, account, id, account).Scan(&p.ID, &p.Email, &p.Role, &table)
-	if errors.Is(err, sql.ErrNoRows) {
-		err = auth.ErrNotFound
-	}
-	return p, table, err
-}
-
-// letIn gives a freed address to whoever has waited longest for it, as the
-// person their owner added: same id, role, password and date.
-func letIn(ctx context.Context, tx *sql.Tx, email string) error {
-	var id string
-	err := tx.QueryRowContext(ctx, `SELECT id FROM waiting_people WHERE email = ? ORDER BY created_at, id LIMIT 1`, email).Scan(&id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	if _, err := tx.ExecContext(ctx, `INSERT INTO users (id, account_id, email, password_hash, role, created_at, must_change)
-		SELECT id, account_id, email, password_hash, role, created_at, must_change FROM waiting_people WHERE id = ?`, id); err != nil {
-		return err
-	}
-	_, err = tx.ExecContext(ctx, `DELETE FROM waiting_people WHERE id = ?`, id)
-	return err
+	return p, err
 }
 
 // SetRole changes what someone may do. The last owner cannot be demoted, or
@@ -163,69 +98,67 @@ func (s *Store) SetRole(ctx context.Context, account, id, role string) error {
 		return err
 	}
 	defer tx.Rollback()
-	p, table, err := person(ctx, tx, account, id)
+	if role != RoleOwner {
+		if err := lastOwner(ctx, tx, account, id); err != nil {
+			return err
+		}
+	} else {
+		var cur string
+		if err := tx.QueryRowContext(ctx, `SELECT role FROM users WHERE id = ? AND account_id = ?`, id, account).Scan(&cur); err == nil && cur != RoleOwner {
+			if err := ownersFull(ctx, tx, account); err != nil {
+				return err
+			}
+		}
+	}
+	res, err := tx.ExecContext(ctx, `UPDATE users SET role = ? WHERE id = ? AND account_id = ?`, role, id, account)
 	if err != nil {
 		return err
 	}
-	if role != RoleOwner {
-		if err := lastOwner(ctx, tx, account, p); err != nil {
-			return err
-		}
-	} else if p.Role != RoleOwner {
-		if err := ownersFull(ctx, tx, account); err != nil {
-			return err
-		}
-	}
-	if _, err := tx.ExecContext(ctx, `UPDATE `+table+` SET role = ? WHERE id = ? AND account_id = ?`, role, id, account); err != nil {
-		return err
+	if n, _ := res.RowsAffected(); n == 0 {
+		return auth.ErrNotFound
 	}
 	return tx.Commit()
 }
 
 // RemoveUser deletes an account and every session it holds. The same last-owner
-// rule applies: an instance always keeps someone who can administer it. Their
-// address is free again, for anyone waiting for it.
+// rule applies: an instance always keeps someone who can administer it.
 func (s *Store) RemoveUser(ctx context.Context, account, id string) error {
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-	p, table, err := person(ctx, tx, account, id)
+	if err := lastOwner(ctx, tx, account, id); err != nil {
+		return err
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM auth_sessions WHERE user_id = (SELECT id FROM users WHERE id = ? AND account_id = ?)`, id, account); err != nil {
+		return err
+	}
+	res, err := tx.ExecContext(ctx, `DELETE FROM users WHERE id = ? AND account_id = ?`, id, account)
 	if err != nil {
 		return err
 	}
-	if err := lastOwner(ctx, tx, account, p); err != nil {
-		return err
-	}
-	if table == "waiting_people" {
-		if _, err := tx.ExecContext(ctx, `DELETE FROM waiting_people WHERE id = ? AND account_id = ?`, id, account); err != nil {
-			return err
-		}
-		return tx.Commit()
-	}
-	if _, err := tx.ExecContext(ctx, `DELETE FROM auth_sessions WHERE user_id = ?`, id); err != nil {
-		return err
-	}
-	if _, err := tx.ExecContext(ctx, `DELETE FROM users WHERE id = ? AND account_id = ?`, id, account); err != nil {
-		return err
-	}
-	if err := letIn(ctx, tx, p.Email); err != nil {
-		return err
+	if n, _ := res.RowsAffected(); n == 0 {
+		return auth.ErrNotFound
 	}
 	return tx.Commit()
 }
 
-// lastOwner reports ErrLastOwner when p is its account's only owner left.
-// Owners still waiting count: they are listed as owners, and answering
-// differently for them would say their address is taken elsewhere.
-func lastOwner(ctx context.Context, tx *sql.Tx, account string, p Person) error {
-	if p.Role != RoleOwner {
+// lastOwner reports ErrLastOwner when id is its account's only owner left, and
+// ErrNotFound when id is not in the account at all.
+func lastOwner(ctx context.Context, tx *sql.Tx, account, id string) error {
+	var role string
+	if err := tx.QueryRowContext(ctx, `SELECT role FROM users WHERE id = ? AND account_id = ?`, id, account).Scan(&role); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return auth.ErrNotFound
+		}
+		return err
+	}
+	if role != RoleOwner {
 		return nil
 	}
 	var owners int
-	if err := tx.QueryRowContext(ctx, `SELECT (SELECT count(*) FROM users WHERE role = ? AND account_id = ?) + (SELECT count(*) FROM waiting_people WHERE role = ? AND account_id = ?)`,
-		RoleOwner, account, RoleOwner, account).Scan(&owners); err != nil {
+	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM users WHERE role = ? AND account_id = ?`, RoleOwner, account).Scan(&owners); err != nil {
 		return err
 	}
 	if owners <= 1 {
@@ -241,10 +174,7 @@ func (s *Store) SetMustChange(ctx context.Context, id string, must bool) error {
 	if must {
 		v = 1
 	}
-	if _, err := s.DB.ExecContext(ctx, `UPDATE users SET must_change = ? WHERE id = ?`, v, id); err != nil {
-		return err
-	}
-	_, err := s.DB.ExecContext(ctx, `UPDATE waiting_people SET must_change = ? WHERE id = ?`, v, id)
+	_, err := s.DB.ExecContext(ctx, `UPDATE users SET must_change = ? WHERE id = ?`, v, id)
 	return err
 }
 
@@ -255,35 +185,12 @@ func (s *Store) MustChange(ctx context.Context, id string) bool {
 	return v == 1
 }
 
-// PersonByID is one person of an account, for acting on them, whether they
-// have joined or are still waiting.
+// PersonByID is one person of an account, for acting on them.
 func (s *Store) PersonByID(ctx context.Context, account, id string) (Person, error) {
-	p, _, err := person(ctx, s.DB, account, id)
+	var p Person
+	err := s.DB.QueryRowContext(ctx, `SELECT id, email, role FROM users WHERE id = ? AND account_id = ?`, id, account).Scan(&p.ID, &p.Email, &p.Role)
+	if errors.Is(err, sql.ErrNoRows) {
+		return p, auth.ErrNotFound
+	}
 	return p, err
-}
-
-// ResetPersonPassword gives one person of an account a new password and ends
-// their sessions. By id within the account, never by address: someone
-// waiting shares theirs with a person in another account.
-func (s *Store) ResetPersonPassword(ctx context.Context, account, id, password string) error {
-	hash, err := auth.HashPassword(password)
-	if err != nil {
-		return err
-	}
-	tx, err := s.DB.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-	_, table, err := person(ctx, tx, account, id)
-	if err != nil {
-		return err
-	}
-	if _, err := tx.ExecContext(ctx, `UPDATE `+table+` SET password_hash = ? WHERE id = ? AND account_id = ?`, hash, id, account); err != nil {
-		return err
-	}
-	if _, err := tx.ExecContext(ctx, `DELETE FROM auth_sessions WHERE user_id = ?`, id); err != nil {
-		return err
-	}
-	return tx.Commit()
 }
