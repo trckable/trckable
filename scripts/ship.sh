@@ -43,14 +43,14 @@ step "server: gofmt, vet, tests"
   go test ./... -short -count=1 $([ "$MODE" = --quick ] || echo -race) )
 
 step "tracker: build (size budgets) and tests"
-( cd tracker && pnpm -s build && pnpm -s test )
+( cd tracker && pnpm --reporter=silent build && pnpm --reporter=silent test )
 
 step "dashboard: tests and build"
-( cd dashboard && pnpm -s test && pnpm -s build )
+( cd dashboard && pnpm --reporter=silent test && pnpm --reporter=silent build )
 
 if [ "$MODE" != --quick ]; then
   step "npm package: build and tests"
-  ( cd packages/trckable && pnpm -s build && pnpm -s test )
+  ( cd packages/trckable && pnpm --reporter=silent build && pnpm --reporter=silent test )
 
   step "server binary, then a backup → restore round trip"
   ( cd server && go build -o bin/trckabled ./cmd/trckabled )
