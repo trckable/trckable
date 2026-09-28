@@ -334,7 +334,7 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
 function People({ me }: { me?: string }) {
   const { ask, dialog } = useConfirm()
   const [people, setPeople] = useState<Person[] | null>(null)
-    const [adding, setAdding] = useState(false)
+  const [adding, setAdding] = useState(false)
   const [issued, setIssued] = useState<{ email: string; password: string; reset?: boolean } | null>(null)
   const load = () => api.people().then((r) => setPeople(r.people ?? []))
   const access = useSiteAccess(people)

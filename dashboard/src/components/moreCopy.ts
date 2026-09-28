@@ -10,8 +10,8 @@ export const copy = {
   shortcuts: 'Shortcuts',
   theme: 'Theme',
   themes: { system: 'Auto', dark: 'Dark', light: 'Light' },
-  account: 'Account',
-  accountLabel: 'Your account',
+  account: 'Hideout',
+  accountLabel: 'Hideout, your account',
   milestones: 'Milestones',
   milestonesNew: 'Milestones, new ones',
 }
