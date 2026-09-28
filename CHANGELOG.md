@@ -19,7 +19,7 @@ section into the release.
 
 ### Changed
 
-- `/metrics` is off unless `TRCKABLE_API_TOKEN` is set, and then needs it as a bearer token, so installation-wide counts are not public.
+- `/metrics` stays open as before; set `TRCKABLE_METRICS_TOKEN` to require that bearer token.
 - The key-number tiles show no change chip when the period before has no data at all, instead of "new" on every tile.
 - Share is one compact dialog: pick a card (Spotlight, Leaderboard, Dashboard or a Social post text), a period (24 hours, 7 days, 30 days), the site, light or dark and an accent, and download a PNG drawn by the server (`GET /api/v1/sites/{site}/card`); revenue only where the report shows it, visitors by default. On a phone it is a bottom sheet with the preview first. The read-only link moved to a small Link corner of the dialog; the browser-drawn picture and GIF card are gone. A site icon that fails to load shows its letter.
 - The milestone notice above the numbers is now the Milestones moment (see New): its milestones are stored by the server instead of computed on each load, the first visit from an AI assistant is no longer one, and closing it is remembered per person instead of in the browser.

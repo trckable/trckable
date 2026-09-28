@@ -8,25 +8,24 @@ import (
 	"github.com/trckable/trckable/server/internal/config"
 )
 
-// /metrics is off without an API token and refuses anyone without it.
-func TestMetricsNeedTheAPIToken(t *testing.T) {
-	get := func(s *Server, bearer string) int {
+// /metrics is open unless TRCKABLE_METRICS_TOKEN is set, and then it refuses
+// anyone without that bearer token.
+func TestMetricsTokenIsOptional(t *testing.T) {
+	allowed := func(cfg config.Config, bearer string) bool {
 		r := httptest.NewRequest(http.MethodGet, "/metrics", nil)
 		if bearer != "" {
 			r.Header.Set("Authorization", "Bearer "+bearer)
 		}
-		w := httptest.NewRecorder()
-		s.metrics(w, r)
-		return w.Code
+		return (&Server{cfg: cfg}).metricsAllowed(r)
 	}
-	if code := get(&Server{cfg: config.Config{}}, ""); code != http.StatusNotFound {
-		t.Errorf("no token configured: %d", code)
+	if !allowed(config.Config{}, "") {
+		t.Error("no token configured: refused")
 	}
-	s := &Server{cfg: config.Config{APIToken: "tkb_test_token_0123456789"}} //nolint:gosec // a test value
-	if code := get(s, ""); code != http.StatusUnauthorized {
-		t.Errorf("no bearer: %d", code)
+	locked := config.Config{MetricsToken: "tkb_test_token_0123456789"} //nolint:gosec // a test value
+	if allowed(locked, "") || allowed(locked, "wrong") {
+		t.Error("a token is set: an open or wrong bearer was let in")
 	}
-	if code := get(s, "wrong"); code != http.StatusUnauthorized {
-		t.Errorf("wrong bearer: %d", code)
+	if !allowed(locked, "tkb_test_token_0123456789") {
+		t.Error("the right bearer was refused")
 	}
 }
