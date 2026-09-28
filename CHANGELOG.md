@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.5.0 (28 Sep 2026)
+
 ### New
 
 - AI assistants & crawlers: robot hits are kept as per-day counters (site, day, robot, page), never as events; the card splits AI assistants, training crawlers and search bots and shows which robot read which page. `reportCrawler` now passes every robot the server recognises.
