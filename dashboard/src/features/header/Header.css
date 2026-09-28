@@ -288,3 +288,51 @@
 html {
   overflow-y: scroll;
 }
+
+/* The page's ⋯ ends the period row; the avatar's menu ends the first row. */
+.subbar > .more {
+  flex: none;
+  margin-left: auto;
+}
+.subbar > .range-picker.quiet + .more {
+  margin-left: 0;
+}
+.subbar > .more .more-menu {
+  top: 42px;
+  right: 0;
+  min-width: 220px;
+  z-index: 40;
+}
+.account-menu .more-menu {
+  min-width: 250px;
+}
+.header-tools.quiet .btn.account-btn {
+  width: 40px;
+}
+.avatar.small {
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+}
+.account-btn .avatar {
+  font-size: 13px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .more-menu {
+    animation: none;
+  }
+}
+.subbar > .more {
+  position: relative;
+}
+.subbar > .more > .btn.icon.ghost {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--text-2);
+}
+.subbar > .more > .btn.icon.ghost:hover,
+.subbar > .more > .btn.icon.ghost[aria-expanded='true'] {
+  color: var(--text);
+  background: var(--surface-2);
+}

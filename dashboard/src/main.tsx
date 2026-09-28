@@ -19,7 +19,7 @@ import { siteForSegment } from "./lib/siteRoute";
 import { landing } from "./lib/landing";
 import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
-import { setRole } from "./lib/me";
+import { canChange, setRole } from "./lib/me";
 // Settings and the account dialog are their own screens: the dashboard should
 // not carry them.
 const Settings = lazy(() => import("./views/Settings").then((m) => ({ default: m.Settings })));
@@ -291,7 +291,7 @@ function Header({
       {sites.length > 0 && !settings && (
         <div className="site-zone">
           <SitePicker sites={sites} current={current} all={all} />
-          {current && (
+          {current && canChange() && (
         <button
           type="button"
           className="btn icon ghost gear"

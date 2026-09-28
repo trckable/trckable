@@ -1,4 +1,4 @@
-// The ⋯ menu's words (components/MoreMenu).
+// The header menus' words: the ⋯ next to the period (MoreMenu) and the avatar's (AccountMenu).
 export const copy = {
   more: 'More',
   refresh: 'Refresh',
@@ -10,7 +10,11 @@ export const copy = {
   shortcuts: 'Shortcuts',
   theme: 'Theme',
   themes: { system: 'Auto', dark: 'Dark', light: 'Light' },
+  accountMenu: 'Account',
   account: 'Hideout',
+  signOut: 'Sign out',
+  owner: 'Owner',
+  viewer: 'Viewer',
   accountLabel: 'Hideout, your account',
   milestones: 'Milestones',
   milestonesNew: 'Milestones, new ones',
