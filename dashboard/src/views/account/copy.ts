@@ -1,7 +1,7 @@
 // The account window's own words: its tabs and its title.
 export const copy = {
-  account: 'Hideout',
-  accountLabel: 'Hideout, your account',
+  account: 'Profile',
+  accountLabel: 'Profile, your account',
   owner: 'Owner',
   viewer: 'Viewer',
   tabs: {

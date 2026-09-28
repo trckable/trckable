@@ -96,7 +96,7 @@ test('a viewer is offered no create, edit or delete control anywhere', async ({ 
   await open(page, '/example.com')
   await expect(page.getByRole('button', { name: /^create$/i })).toHaveCount(0)
   await open(page, '/example.com?account=profile')
-  await expect(page.getByRole('tab')).toHaveCount(0)
+  await expect(page.getByRole('dialog').getByRole('tab')).toHaveCount(0)
   await expect(page.getByRole('button', { name: /^Settings for/ })).toHaveCount(0)
   expect(problems).toEqual([])
 })

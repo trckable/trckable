@@ -88,3 +88,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.menu-who .tag.on {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--up) 35%, transparent);
+}

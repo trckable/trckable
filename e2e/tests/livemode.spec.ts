@@ -71,12 +71,10 @@ test('a visit slides in and the numbers move, without a reload', async ({ page }
   await expect(page).toHaveURL(/[?&]view=live/)
   const live = page.getByRole('region', { name: 'Live', exact: true })
   await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
-  // Live is always now: no period, no filters, no Core/Full (not even in ⋯).
+  // Live is always now: no period, no filters, and no ⋯ page menu at all.
   await expect(page.locator('.range-picker')).toHaveCount(0)
-  await expect(page.locator('.header .btn.filter')).toHaveCount(0)
-  await page.getByRole('button', { name: 'More', exact: true }).click()
-  await expect(page.getByRole('menu', { name: 'More' }).getByRole('menuitem', { name: /Core view|Full view/ })).toHaveCount(0)
-  await page.keyboard.press('Escape')
+  await expect(page.locator('.subbar .btn.filter')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'More', exact: true })).toHaveCount(0)
   // One screen: the page itself does not scroll.
   expect(await page.evaluate(() => document.documentElement.scrollHeight - innerHeight)).toBeLessThanOrEqual(0)
 

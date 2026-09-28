@@ -11,11 +11,14 @@ section into the release.
 
 ### Changed
 
-- The Hideout header is cleaner: picture, name, email and a small Owner or Viewer pill.
-- A viewer's Hideout is the same window with the Account section alone: no sites, API keys or People.
+- The account window is now called Profile (it was Hideout).
+- Ask trckable is now called Peek (⌘K). It is the owner's: viewers get no Peek button, key or panel.
+- Filter moved from the top header into the period row, right before the period: same button, count badge and popup.
+- The Profile header is cleaner: picture, name, email and a small Owner or Viewer pill.
+- A viewer's Profile is the same window with the Account section alone: no sites, API keys or People.
 - Viewers see no settings buttons: the site's cog, Site settings in ⋯ and every create, edit and delete control are gone, not just disabled.
 - Limiting a viewer's sites is ⋯ → Allowed sites on their People row: a popup with All sites and a checkbox per site, saved with Save. The row keeps a small summary ("All sites", "4 of 8"). Dialogs now keep Tab inside them and return focus when they close.
-- The avatar's menu holds only what is yours: Hideout, theme, shortcuts and sign out. Refresh, Create, Core/Full, Milestones and Export as CSV moved to a ⋯ beside the period, with their keys; both menus take the arrow keys, Home, End and Escape.
+- The avatar's menu holds only what is yours: Profile, theme, shortcuts and sign out. Refresh, Create, Core/Full, Milestones and Export as CSV moved to a ⋯ beside the period (Data only: Live has none), with their keys; both menus take the arrow keys, Home, End and Escape.
 
 ### Fixed
 

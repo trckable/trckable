@@ -1,6 +1,7 @@
 // The Create menu: a goal, a funnel or a note, each in a short dialog
 // right here. It has no button of its own in the header: the ⋯ menu's Create
-// item and its key (the shortcuts list's 'create') open it (openCreate.ts).
+// item and its key (the shortcuts list's 'create') open it (openCreate.ts),
+// and it opens right under the ⋯ button, like the menu itself.
 // Owners only (a viewer changes nothing), and never on a shared link. With
 // every entry's module off there is no menu, and its key does nothing.
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
@@ -32,10 +33,14 @@ export function CreateMenu(p: CreateMenuProps) {
   // Where focus was when the menu opened (the ⋯ button, usually): it goes
   // back there when the menu closes without a choice.
   const back = useRef<HTMLElement | null>(null)
+  // The ⋯ button the picker hangs from, wherever the picker was asked for.
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null)
   const items = createItems(p.modules)
   const allowed = !isViewer() && !isShared() && items.length > 0
   const show = useCallback(() => {
-    back.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const dots = document.querySelector<HTMLElement>('.more-btn')
+    back.current = dots ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
+    setAnchor(dots)
     setOpen(true)
   }, [])
 
@@ -70,11 +75,15 @@ export function CreateMenu(p: CreateMenuProps) {
       setOpen(false)
       back.current?.focus()
     }
+    // The picker hangs from a button: if the page moves under it, it goes.
+    const close = () => setOpen(false)
     document.addEventListener('mousedown', away)
     document.addEventListener('keydown', esc)
+    window.addEventListener('resize', close)
     return () => {
       document.removeEventListener('mousedown', away)
       document.removeEventListener('keydown', esc)
+      window.removeEventListener('resize', close)
     }
   }, [open])
 
@@ -88,7 +97,7 @@ export function CreateMenu(p: CreateMenuProps) {
     <div ref={root} className="create">
       {open && (
         <Suspense fallback={null}>
-          <CreatePop items={items} onGoal={p.onGoal} onNote={p.onNote} onFunnel={() => setFunnel(true)} onClose={() => setOpen(false)} />
+          <CreatePop anchor={anchor} items={items} onGoal={p.onGoal} onNote={p.onNote} onFunnel={() => setFunnel(true)} onClose={() => setOpen(false)} />
         </Suspense>
       )}
       {funnel && (

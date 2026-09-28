@@ -336,3 +336,49 @@ html {
   color: var(--text);
   background: var(--surface-2);
 }
+
+/* Filter sits in the period row, right before the period. */
+.filter-root {
+  position: relative;
+  flex: none;
+}
+.subbar .btn.filter {
+  height: 36px;
+  color: var(--text-2);
+  padding: 0 10px;
+}
+.subbar .btn.filter:hover,
+.subbar .btn.filter[aria-expanded='true'],
+.subbar .btn.filter.on {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.subbar .btn.filter.on {
+  border-color: transparent;
+}
+@media (max-width: 960px) {
+  .subbar .btn.filter .filter-label {
+    display: none;
+  }
+  .subbar .btn.filter {
+    min-width: 36px;
+    padding: 0 9px;
+    justify-content: center;
+  }
+}
+@media (max-width: 640px) {
+  /* The popup takes the row's width instead of hanging off a button that is far from the left edge. */
+  .subbar {
+    position: relative;
+  }
+  .subbar .filter-root {
+    position: static;
+  }
+  .subbar .filter-pop {
+    left: 0;
+    right: 0;
+    top: 44px;
+    width: auto;
+    max-width: none;
+  }
+}

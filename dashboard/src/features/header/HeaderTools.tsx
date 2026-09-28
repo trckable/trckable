@@ -6,7 +6,7 @@ import { Search, Share2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { AccountMenu } from '../../components/AccountMenu'
 import { caps, keyFor, useKeymap } from '../../lib/keys'
-import { isShared } from '../../lib/me'
+import { canAsk, isShared } from '../../lib/me'
 import { copy } from './copy'
 import './Header.css'
 
@@ -15,10 +15,8 @@ interface Props {
   askOpen: boolean
   onAsk: () => void
   onShare: () => void
-  /** Filter and anything passing (the channel being followed). */
-  filter?: ReactNode
   extra?: ReactNode
-  /** Before the first visit there is nothing to ask about, filter or share. */
+  /** Before the first visit there is nothing to ask about or share. */
   waiting?: boolean
 }
 
@@ -30,14 +28,13 @@ export function HeaderTools(p: Props) {
     <div className="header-tools quiet">
       <div className="spacer" />
       {p.extra}
-      {!shared && !p.waiting && (
+      {canAsk() && !p.waiting && (
         <button type="button" className="btn ghost ask" onClick={p.onAsk} aria-expanded={p.askOpen} aria-label={copy.askLabel} title={copy.askTitle(askKey)}>
           <Search size={17} strokeWidth={1.75} aria-hidden="true" />
           <span className="ask-label">{copy.ask}</span>
           <span className="kbd">{askKey}</span>
         </button>
       )}
-      {!p.waiting && p.filter}
       {!shared && !p.live && !p.waiting && (
         <button type="button" className="btn primary share-btn" onClick={p.onShare} title={copy.shareTitle}>
           <Share2 size={16} strokeWidth={1.9} aria-hidden="true" />

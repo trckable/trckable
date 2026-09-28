@@ -6,16 +6,16 @@ import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
-import { API, TOKEN } from '../playwright.config'
+import { API } from '../playwright.config'
 import { session } from './session'
 
 const BIN = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../server/bin/trckabled')
 const PASSWORD = 'access e2e password 1'
-const AUTH = { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' }
 const tag = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
 const email = `access-${tag}@example.com`
 let viewer = ''
 let viewerId = ''
+let AUTH: Record<string, string> = {}
 
 test.beforeAll(async ({ request }) => {
   for (let i = 0; ; i++) {
@@ -30,6 +30,8 @@ test.beforeAll(async ({ request }) => {
   const res = await fetch(API + '/api/v1/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: PASSWORD }) })
   viewer = /trckable_session=([^;]+)/.exec(res.headers.get('set-cookie') ?? '')?.[1] ?? ''
   expect(viewer).toBeTruthy()
+  // Site access is the owner's: their session, not the API token.
+  AUTH = { Cookie: 'trckable_session=' + (await session('access')), 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
   // More than one site, or there is nothing to choose between.
   for (const n of ['a', 'b']) await request.post(`${API}/api/v1/sites`, { headers: AUTH, data: { domain: `access-${n}-${tag}.example` } })
   const list = await (await request.get(`${API}/api/v1/site-access`, { headers: AUTH })).json()
@@ -40,7 +42,7 @@ test('the owner limits a viewer\'s sites in a popup, saved on Save', async ({ pa
   const owner = await session('access')
   await page.context().addCookies([{ name: 'trckable_session', value: owner, url: API }])
   await page.goto(API + '/example.com?account=people')
-  const window = page.getByRole('dialog', { name: 'Hideout, your account' })
+  const window = page.getByRole('dialog', { name: 'Profile, your account' })
   const row = window.locator('.person', { hasText: email })
   await expect(row).toBeVisible({ timeout: 15_000 })
   // The row only summarizes; it is not a control.
@@ -82,14 +84,22 @@ test('the owner limits a viewer\'s sites in a popup, saved on Save', async ({ pa
 test('a viewer\'s window is their account alone, and their page has no settings cog', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: viewer, url: API }])
   await page.goto(API + '/example.com?account=people')
-  const window = page.getByRole('dialog', { name: 'Hideout, your account' })
+  const window = page.getByRole('dialog', { name: 'Profile, your account' })
   await expect(window).toBeVisible({ timeout: 15_000 })
   await expect(window.getByRole('tab')).toHaveCount(0)
   await expect(window.locator('.account-role')).toHaveText('Viewer')
   await expect(window.getByRole('heading', { name: 'Sign-in and security' })).toBeVisible()
   await expect(window.getByText('Allowed sites')).toHaveCount(0)
+  // With no navigation column the profile takes the window's width, and the email stays on one line.
+  const card = await window.locator('.me-card').boundingBox()
+  expect(card!.width).toBeGreaterThan(360)
+  const line = await window.locator('.me-card .me-email').evaluate((el) => el.getClientRects().length === 1 && el.getBoundingClientRect().height < 30)
+  expect(line).toBe(true)
+  expect(await window.locator('.account-body').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
   await page.keyboard.press('Escape')
   await expect(page.getByRole('button', { name: /^Settings for/ })).toHaveCount(0)
-  await page.getByRole('button', { name: 'More', exact: true }).click()
-  await expect(page.getByRole('menu', { name: 'More' }).getByRole('menuitem', { name: /Site settings|Create/ })).toHaveCount(0)
+  // Peek is the owner's: no button, and its key opens nothing.
+  await expect(page.getByRole('button', { name: 'Peek' })).toHaveCount(0)
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect(page.locator('aside.drawer.ask[aria-hidden="false"]')).toHaveCount(0)
 })

@@ -656,3 +656,8 @@
     flex: none;
   }
 }
+/* The role pill: outlined, so the green text keeps its contrast in light. */
+.account-role.on {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--up) 35%, transparent);
+}

@@ -11,11 +11,11 @@ export const copy = {
   theme: 'Theme',
   themes: { system: 'Auto', dark: 'Dark', light: 'Light' },
   accountMenu: 'Account',
-  account: 'Hideout',
+  account: 'Profile',
   signOut: 'Sign out',
   owner: 'Owner',
   viewer: 'Viewer',
-  accountLabel: 'Hideout, your account',
+  accountLabel: 'Profile, your account',
   milestones: 'Milestones',
   milestonesNew: 'Milestones, new ones',
 }

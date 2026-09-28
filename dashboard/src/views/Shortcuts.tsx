@@ -7,6 +7,7 @@ import { useConfirm } from '../components/Confirm'
 import { Modal } from '../components/Modal'
 import { toast } from '../components/Toast'
 import { api, messageOf } from '../lib/api'
+import { canAsk } from '../lib/me'
 import { ACTIONS, caps, comboOf, customKeys, keyFor, loadKeymap, takenBy, useKeymap, type Group } from '../lib/keys'
 import './Shortcuts.css'
 
@@ -130,7 +131,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
       )}
       <div className="keys-grid">
         {GROUPS.map((g) => {
-          const items = g.id === 'mouse' ? [] : ACTIONS.filter((a) => a.group === g.id)
+          const items = g.id === 'mouse' ? [] : ACTIONS.filter((a) => a.group === g.id && (a.id !== 'ask' || canAsk()))
           return (
             <section key={g.id} className={'keys-group g-' + g.id + (items.length > 6 ? ' wide' : '')}>
               <header>

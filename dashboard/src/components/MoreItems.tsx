@@ -16,20 +16,18 @@ function Kbd({ id }: { id: string }) {
 export default function MoreItems({ p, go }: { p: MoreProps & { onCreate?: () => void }; go: Parameters<MenuItems>[0] }) {
   return (
     <>
-      {!p.live && (
-        <button type="button" role="menuitem" onClick={go(p.onRefresh)}>
-          <RefreshCw size={18} strokeWidth={1.75} aria-hidden="true" />
-          {copy.refresh}
-        </button>
-      )}
-      {!p.live && p.onCreate && (
+      <button type="button" role="menuitem" onClick={go(p.onRefresh)}>
+        <RefreshCw size={18} strokeWidth={1.75} aria-hidden="true" />
+        {copy.refresh}
+      </button>
+      {p.onCreate && (
         <button type="button" role="menuitem" onClick={go(p.onCreate)}>
           <Plus size={18} strokeWidth={1.75} aria-hidden="true" />
           {copy.create}
           <Kbd id="create" />
         </button>
       )}
-      {!p.live && <ModeItem full={p.full} go={go(() => p.onMode(p.full ? 'core' : 'full'))} />}
+      <ModeItem full={p.full} go={go(() => p.onMode(p.full ? 'core' : 'full'))} />
       {p.onSettings && (
         <button type="button" role="menuitem" onClick={go(p.onSettings)}>
           <Cog size={18} strokeWidth={1.75} aria-hidden="true" />

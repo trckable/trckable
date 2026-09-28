@@ -11,7 +11,7 @@ import { unconvertedNote } from '../lib/money'
 import { channelColor, channelLabel } from '../lib/palette'
 import { navigate, readView, setView, useLocation } from '../lib/url'
 import { queryOf, rangeOf } from '../lib/dashQuery'
-import { canChange, isShared, isViewer, sharedModules } from '../lib/me'
+import { canAsk, canChange, isShared, isViewer, sharedModules } from '../lib/me'
 import { openSettings } from '../lib/settings'
 import { isOn, shows } from '../lib/modules'
 import { FilterMenu } from '../components/FilterMenu'
@@ -227,7 +227,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const notesOn = shows(mods, 'cards', 'notes') && (!isShared() || isOn(mods, 'notes'))
   // The Ask button follows its module: off means the entry point is gone too.
   // Ask is the MCP tools and an optional key, not a module: there is nothing to switch off.
-  const askOn = !isShared()
+  const askOn = canAsk()
   const sample = useSample(site, range.from, range.to, waiting)
   const data = waiting ? sample : real
 
@@ -338,7 +338,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // ---- keyboard: ⌘K opens Ask, F toggles Core/Full, Esc clears scrub ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (pressed(e, 'ask')) {
+      if (askOn && pressed(e, 'ask')) {
         e.preventDefault()
         setAskOpen((o) => !o)
         return
@@ -349,7 +349,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [full, view.day])
+  }, [full, view.day, askOn])
 
   const [metric, setMetric] = useState<'visitors' | 'pageviews'>('visitors')
 
@@ -538,16 +538,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           askOpen={askOpen}
           onAsk={() => setAskOpen(true)}
           onShare={() => setSharing(true)}
-          filter={!liveView && !isShared() && (
-            <FilterMenu
-              rows={dims}
-              labelFor={filterLabel}
-              active={view.filters}
-              onPick={addFilter}
-              onRemove={removeFilter}
-              onClear={() => setView({ filters: [] })}
-            />
-          )}
           extra={trail && trailData && (
             <button type="button" className="chip" style={{ borderColor: channelColor(trail) }} title={`Following ${channelLabel(trail)}: click to keep`} onClick={() => addFilter('channel', trail)}>
               <span className="dot" style={{ background: channelColor(trail) }} />
@@ -578,18 +568,19 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           </Suspense>
         )}
         {!liveView && (
-          <DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone}
-            bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />
+          <>
+            {!isShared() && <FilterMenu rows={dims} labelFor={filterLabel} active={view.filters} onPick={addFilter} onRemove={removeFilter} onClear={() => setView({ filters: [] })} />}
+            <DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone}
+              bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />
+            <MoreMenu
+              full={full}
+              onSettings={narrow && canChange() ? () => openSettings(site) : undefined}
+              milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
+              onMode={(m) => setView({ mode: m })} onRefresh={reloadNow}
+              onExport={() => downloadCsv(site.id, query)}
+            />
+          </>
         )}
-        <MoreMenu
-          live={liveView}
-          full={full}
-          onSettings={narrow && canChange() ? () => openSettings(site) : undefined}
-          milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
-          onMode={(m) => setView({ mode: m })}
-          onRefresh={reloadNow}
-          onExport={() => downloadCsv(site.id, query)}
-        />
       </div>}
 
       {liveView && (

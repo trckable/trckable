@@ -1,6 +1,6 @@
 // The avatar's menu at the end of the header's first row: what belongs to the
 // person, not to the page on screen (that is the ⋯ next to the period):
-// Hideout, theme, shortcuts, sign out. The items are their own chunk.
+// Profile, theme, shortcuts, sign out. The items are their own chunk.
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useMenuNav, useOnlyOpen } from '../lib/headerMenu'
 import { lazyLoad, warm, whenIdle } from '../lib/lazyLoad'

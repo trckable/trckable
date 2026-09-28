@@ -45,7 +45,7 @@ export function AccountDialog({ tab: asked, sites, email, onSites }: { tab: Tab;
     api.profile().then(setProfile).catch(() => {})
   }, [])
   return (
-    <Modal label={acopy.accountLabel} className="account" onClose={closeAccount}>
+    <Modal label={acopy.accountLabel} className={tabs.length > 1 ? 'account' : 'account single'} onClose={closeAccount}>
       <AccountHead profile={profile} email={email} v={v} />
 
       {tabs.length > 1 && (
