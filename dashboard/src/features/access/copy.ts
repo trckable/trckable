@@ -2,14 +2,15 @@
 // message files when translations come, and this is what moves.
 export const copy = {
   all: 'All sites',
-  some: (n: number, of: number) => `${n} of ${of} sites`,
+  some: (n: number, of: number) => `${n} of ${of}`,
   none: 'No sites',
-  edit: 'Site access',
-  editFor: (email: string) => `Site access for ${email}`,
-  mode: 'Which sites',
-  allOption: 'All sites',
-  someOption: 'Some',
+  /** The person's ⋯ menu item, and the popup's title. */
+  menuItem: 'Allowed sites',
+  editFor: (email: string) => `Allowed sites for ${email}`,
+  allToggle: 'All sites',
   sitesLabel: 'Sites they may see',
-  done: 'Done',
-  saved: (email: string) => `Site access for ${email} saved`,
+  cancel: 'Cancel',
+  save: 'Save',
+  saving: 'Saving…',
+  saved: (email: string) => `Allowed sites for ${email} saved`,
 }

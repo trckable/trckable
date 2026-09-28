@@ -11,7 +11,7 @@ import { unconvertedNote } from '../lib/money'
 import { channelColor, channelLabel } from '../lib/palette'
 import { navigate, readView, setView, useLocation } from '../lib/url'
 import { queryOf, rangeOf } from '../lib/dashQuery'
-import { isShared, isViewer, sharedModules } from '../lib/me'
+import { canChange, isShared, isViewer, sharedModules } from '../lib/me'
 import { openSettings } from '../lib/settings'
 import { isOn, shows } from '../lib/modules'
 import { FilterMenu } from '../components/FilterMenu'
@@ -40,6 +40,7 @@ import { NoteBar } from '../features/notes/NoteBar'
 import { Loading } from '../components/loading/Loading'
 import { FullGrid } from '../features/fullcharts/FullGrid'
 import { CreateMenu } from '../features/create/CreateMenu'
+import { MoreMenu } from '../components/MoreMenu'
 import { HeaderTools } from '../features/header/HeaderTools'
 import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
 import { useMilestones } from '../features/milestones/useMilestones'
@@ -533,23 +534,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         <HeaderTools
           live={liveView}
           waiting={waiting}
-          full={full}
-          onSettings={narrow && !isShared() ? () => openSettings(site) : undefined}
           askOpen={askOpen}
           onAsk={() => setAskOpen(true)}
           onShare={() => setSharing(true)}
-          milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
-          onMode={(m) => setView({ mode: m })}
-          onRefresh={reloadNow}
-          // A download, not a fetch: the browser writes the file, names it
-          // from the header, and nothing has to be held in memory here.
-          onExport={() => {
-            const a = document.createElement('a')
-            a.href = exportURL(site.id, query)
-            a.download = ''
-            a.click()
-            toast('Building your file…')
-          }}
           filter={!liveView && !isShared() && (
             <FilterMenu
               rows={dims}
@@ -593,6 +580,23 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           <DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone}
             bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />
         )}
+        <MoreMenu
+          live={liveView}
+          full={full}
+          onSettings={narrow && canChange() ? () => openSettings(site) : undefined}
+          milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
+          onMode={(m) => setView({ mode: m })}
+          onRefresh={reloadNow}
+          // A download, not a fetch: the browser writes the file, names it
+          // from the header, and nothing has to be held in memory here.
+          onExport={() => {
+            const a = document.createElement('a')
+            a.href = exportURL(site.id, query)
+            a.download = ''
+            a.click()
+            toast('Building your file…')
+          }}
+        />
       </div>}
 
       {liveView && (

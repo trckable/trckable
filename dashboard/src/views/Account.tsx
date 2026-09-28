@@ -3,6 +3,7 @@
 // Settings page can stay about one site.
 import { BellRing, Camera, Check, Copy, Eye, EyeOff, ImageUp, KeyRound, LockKeyhole, LogOut, ShieldCheck, SunMoon, Trash2, UserPlus, X } from 'lucide-react'
 import { Modal } from '../components/Modal'
+import { PersonAvatar } from '../components/PersonAvatar'
 import { checksHere, setChecksHere } from '../lib/update'
 import { Switch } from '../components/Switch'
 import { Suspense, lazy, useEffect, useRef, useState, type ReactNode } from 'react'
@@ -21,6 +22,7 @@ import { useWindowTabs } from './accountTabs'
 import { copy as acopy } from './account/copy'
 import { Line } from './AccountLine'
 import { AccessTag } from '../features/access/AccessTag'
+import { copy as accessCopy } from '../features/access/copy'
 import { seenText } from './personSeen'
 import { useSiteAccess } from '../features/access/useSiteAccess'
 import './Account.css'
@@ -30,10 +32,12 @@ import { Loading } from '../components/loading/Loading'
 // The setup wizard carries the QR encoder, so it is fetched only when someone
 // actually turns two-step sign-in on.
 const TwoStepSetup = lazy(() => import('./TwoStepSetup'))
+const AccessDialog = lazy(() => import('../features/access/AccessDialog'))
 const AvatarCrop = lazy(() => import('../components/AvatarCrop'))
 
 export function AccountDialog({ tab: asked, sites, email, onSites }: { tab: Tab; sites: Site[]; email?: string; onSites: () => void }) {
   const { tabs, tab } = useWindowTabs(asked)
+  const viewer = isViewer()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [v, bump] = useState(0) // cache-buster after a new picture
   useEffect(() => {
@@ -42,43 +46,38 @@ export function AccountDialog({ tab: asked, sites, email, onSites }: { tab: Tab;
   return (
     <Modal label={acopy.accountLabel} className="account" onClose={closeAccount}>
       <header className="account-head">
-        <Avatar p={profile} email={email} v={v} />
+        <PersonAvatar p={profile} email={email} v={v} size="big" />
         <span className="account-who">
-          <span className="account-title">{acopy.account}</span>{profile?.name && <b>{profile.name}</b>}
-          <span className="faint">{email}</span>
+          <span className="account-name">
+            <b>{profile?.name || email?.split('@')[0]}</b>
+            <span className={'tag account-role' + (viewer ? ' quiet' : ' on')}>{viewer ? acopy.viewer : acopy.owner}</span>
+          </span>
+          <span className="account-email">{email}</span>
         </span>
         <button type="button" className="btn icon close" aria-label="Close" onClick={closeAccount}>
           <X size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </header>
 
-      <div className="account-nav" role="tablist" aria-label="Account sections">
-        {tabs.map((t) => (
-          <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => openAccount(t.id)}>
-            <t.icon size={18} strokeWidth={1.75} aria-hidden="true" />
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {tabs.length > 1 && (
+        <div className="account-nav" role="tablist" aria-label="Account sections">
+          {tabs.map((t) => (
+            <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => openAccount(t.id)}>
+              <t.icon size={18} strokeWidth={1.75} aria-hidden="true" />
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* A viewer sent to an owner's tab (Ask's "Create a key") lands on their own account. */}
       <div key={tab} className="account-body">
-        {tab === 'sites' && <SitesSettings sites={sites} onSites={onSites} />}
-        {tab === 'keys' && !isViewer() && <Keys />}
-        {tab === 'people' && !isViewer() && <People me={email} />}
-        {(tab === 'profile' || (isViewer() && (tab === 'keys' || tab === 'people'))) && <ProfileTab email={email} p={profile} v={v} onProfile={setProfile} onPicture={() => bump((n) => n + 1)} />}
+        {tab === 'sites' && !viewer && <SitesSettings sites={sites} onSites={onSites} />}
+        {tab === 'keys' && !viewer && <Keys />}
+        {tab === 'people' && !viewer && <People me={email} />}
+        {(tab === 'profile' || viewer) && <ProfileTab email={email} p={profile} v={v} onProfile={setProfile} onPicture={() => bump((n) => n + 1)} />}
       </div>
     </Modal>
-  )
-}
-
-/** The picture you chose, or your initial. Both live on this server: no
- *  avatar service is ever asked about your email address. */
-function Avatar({ p, email, v, size }: { p: Profile | null; email?: string; v: number; size?: 'big' | 'huge' }) {
-  return (
-    <span className={'avatar' + (size ? ' ' + size : '')} aria-hidden="true">
-      {p?.has_avatar ? <img src={`/api/v1/account/avatar?v=${v}`} alt="" /> : (p?.name || email || '?').slice(0, 1).toUpperCase()}
-    </span>
   )
 }
 
@@ -197,7 +196,7 @@ function Me({ email, p, v, onProfile, onPicture }: { email?: string; p: Profile 
         }}
       />
       <button type="button" className="me-photo" onClick={() => file.current?.click()} aria-label={p?.has_avatar ? 'Replace your picture' : 'Add a picture'}>
-        <Avatar p={p} email={email} v={v} size="huge" />
+        <PersonAvatar p={p} email={email} v={v} size="huge" />
         <span className="me-cam" aria-hidden="true">
           <Camera size={14} strokeWidth={2} />
         </span>
@@ -216,9 +215,6 @@ function Me({ email, p, v, onProfile, onPicture }: { email?: string; p: Profile 
           }
         />
         <span className="me-email">{email}</span>
-        <span className="me-meta">
-          <span className={'tag' + (isViewer() ? ' quiet' : ' on')}>{isViewer() ? 'Viewer' : 'Owner'}</span>
-        </span>
       </div>
       <div className="me-actions">
         <button type="button" className="btn" onClick={() => file.current?.click()}>
@@ -338,6 +334,7 @@ function People({ me }: { me?: string }) {
   const [issued, setIssued] = useState<{ email: string; password: string; reset?: boolean } | null>(null)
   const load = () => api.people().then((r) => setPeople(r.people ?? []))
   const access = useSiteAccess(people)
+  const [allowing, setAllowing] = useState<string | null>(null)
   useEffect(() => {
     void load()
   }, [])
@@ -481,6 +478,11 @@ function People({ me }: { me?: string }) {
                 >
                   {p.role === 'owner' ? 'Make a viewer' : 'Make an owner'}
                 </button>
+                {p.role !== 'owner' && access.shown && access.of(p.id) && (
+                  <button type="button" role="menuitem" onClick={() => (close(), setAllowing(p.id))}>
+                    {accessCopy.menuItem}
+                  </button>
+                )}
                 {p.role !== 'owner' && (
                   <button type="button" role="menuitem" onClick={() => (close(), reset(p))}>
                     Reset password
@@ -550,6 +552,16 @@ function People({ me }: { me?: string }) {
             if (made.password) setIssued(made)
           }}
         />
+      )}
+      {allowing && access.of(allowing) && (
+        <Suspense fallback={null}>
+          <AccessDialog
+            viewer={access.of(allowing)!}
+            sites={access.sites}
+            onSave={(sites) => access.save(allowing, sites).then(() => toast(accessCopy.saved(access.of(allowing)?.email ?? '')))}
+            onClose={() => setAllowing(null)}
+          />
+        </Suspense>
       )}
       {issued && <OneTimePassword {...issued} onClose={() => setIssued(null)} />}
       {dialog}

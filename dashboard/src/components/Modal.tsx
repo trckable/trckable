@@ -3,7 +3,7 @@
 // containing block for position: fixed, so a wizard opened from inside the
 // account dialog was trapped by it — the backdrop stopped covering the page
 // and the wizard's own heading was clipped out of reach.
-import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useLockScroll } from './lockScroll'
 import './Modal.css'
@@ -16,6 +16,41 @@ if (typeof document !== 'undefined')
     e.stopPropagation()
     stack[stack.length - 1]()
   })
+
+const FOCUSABLE = 'a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])'
+
+/** What Tab can reach inside `box`, in order. */
+function tabbable(box: HTMLElement) {
+  return Array.from(box.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+    (el) => !(el as HTMLButtonElement).disabled && el.tabIndex >= 0 && !el.closest('[hidden], [inert]') && el.getAttribute('type') !== 'hidden' && el.getClientRects().length > 0,
+  )
+}
+
+/** Tab and Shift+Tab stay inside the dialog: from the last control it wraps to
+ *  the first, and back. Only for a key pressed inside this dialog's own box
+ *  (a dialog opened from it, in its own portal, keeps its own trap). */
+export function trapTab(e: Pick<KeyboardEvent, 'key' | 'shiftKey' | 'target' | 'preventDefault'>, box: HTMLElement) {
+  if (e.key !== 'Tab' || !box.contains(e.target as Node)) return
+  const list = tabbable(box)
+  if (list.length === 0) {
+    e.preventDefault()
+    box.focus()
+    return
+  }
+  const first = list[0]
+  const last = list[list.length - 1]
+  const at = document.activeElement
+  if (e.shiftKey && (at === first || at === box)) {
+    e.preventDefault()
+    last.focus()
+  } else if (!e.shiftKey && at === last) {
+    e.preventDefault()
+    first.focus()
+  } else if (!list.includes(at as HTMLElement) && at !== box) {
+    e.preventDefault()
+    first.focus()
+  }
+}
 
 export function Modal({
   label,
@@ -69,11 +104,21 @@ export function Modal({
     ro.observe(el)
     return () => ro.disconnect()
   }, [keepSize])
+  // Focus moves into the dialog when it opens (unless a field in it already
+  // took it) and back to what had it when it closes.
+  useEffect(() => {
+    const el = box.current
+    const before = document.activeElement as HTMLElement | null
+    if (el && !el.contains(document.activeElement)) (tabbable(el)[0] ?? el).focus()
+    return () => {
+      if (before && before.isConnected) before.focus()
+    }
+  }, [])
   return createPortal(
     // Escape is handled above, through the stack; a click on the backdrop is the mouse's way.
     <div className="modal-back" role="presentation" onClick={onClose}>
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- only stops a click inside the dialog from reaching the backdrop (and the page behind the portal) */}
-      <div ref={box} className={('modal rise ' + className).trim()} role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.stopPropagation()}>
+      <div ref={box} tabIndex={-1} className={('modal rise ' + className).trim()} role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => box.current && trapTab(e, box.current)}>
         {children}
       </div>
     </div>,

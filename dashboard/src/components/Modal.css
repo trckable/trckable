@@ -92,3 +92,7 @@
 .modal > .modal-form {
   display: contents;
 }
+
+.modal:focus {
+  outline: none;
+}

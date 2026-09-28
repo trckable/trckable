@@ -2,6 +2,8 @@
 export const copy = {
   account: 'Hideout',
   accountLabel: 'Hideout, your account',
+  owner: 'Owner',
+  viewer: 'Viewer',
   tabs: {
     sites: 'Sites',
     keys: 'API keys',

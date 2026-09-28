@@ -1,23 +1,34 @@
-/* Site access on People: a tag on the row, and its picker. */
-button.access-tag {
-  border: 0;
-  font: inherit;
+/* Site access on People: a muted summary on the row, and its popup. */
+.access-tag {
   font-size: 11px;
-  cursor: pointer;
-}
-button.access-tag:hover {
-  color: var(--text);
-}
-button.access-tag:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
 }
 .modal.access-dialog {
   width: min(400px, calc(100vw - 32px));
+  padding: 20px;
+}
+.access-dialog form {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 22px;
+}
+.access-all {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--grid);
+  font-size: 14px;
+  font-weight: 600;
+}
+.access-error {
+  margin: 0;
+  color: var(--down);
+  font-size: 13px;
+}
+.access-sites:disabled {
+  opacity: 0.6;
 }
 .access-dialog h2 {
   margin: 0;
@@ -34,7 +45,7 @@ button.access-tag:focus-visible {
   margin: 0;
   padding: 0;
   border: 0;
-  max-height: 280px;
+  max-height: min(280px, 40dvh);
   overflow-y: auto;
 }
 .access-site {
@@ -56,8 +67,4 @@ button.access-tag:focus-visible {
 .access-site .faint {
   margin-left: auto;
   font-size: 12px;
-}
-.access-actions {
-  display: flex;
-  justify-content: flex-end;
 }
