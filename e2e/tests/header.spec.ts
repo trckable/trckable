@@ -3,8 +3,9 @@
 // TRCKABLE_A11Y_URL points at one):
 //   TRCKABLE_A11Y_URL=http://localhost:8799 npx playwright test header
 // One row at every width down to 375 px; Share the only filled button; what
-// left the row (Refresh, Create, Core/Full) is in ⋯ with its key, and the keys
-// still work. Each tile carries its change, readable without colour; the
+// left the row (Refresh, Create, Core/Full, Milestones, Export) is in the ⋯
+// beside the period with its key, and the keys still work; the person's own
+// things (Hideout, theme, shortcuts, sign out) are the avatar's menu. Each tile carries its change, readable without colour; the
 // chart starts at the first visit when that falls in the period, draws a
 // short span by the hour, and keeps Replay as a small ▶.
 import { expect, test, type Page } from '@playwright/test'
@@ -61,8 +62,8 @@ for (const width of [1440, 700, 375]) {
   test(`two quiet rows at ${width}px, nothing lost`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await open(page)
-    // Row 1: who and which site, then Ask, Filter, Share, ⋯. Row 2: the
-    // period and Live/Data. Each one line, inside the screen.
+    // Row 1: who and which site, then Ask, Filter, Share, the avatar. Row 2:
+    // Live/Data, the period and ⋯. Each one line, inside the screen.
     for (const sel of ['.header.quiet', '.subbar']) {
       const boxes = await controls(page, sel)
       expect(boxes.length, sel).toBeGreaterThan(1)
@@ -90,10 +91,35 @@ for (const width of [1440, 700, 375]) {
     await expect(items.filter({ hasText: 'Create…' })).toContainText('A')
     await expect(items.filter({ hasText: 'Full view' })).toContainText('F')
     if (width <= 640) await expect(items.filter({ hasText: 'Site settings' })).toBeVisible()
+    await expect(items.filter({ hasText: 'Export as CSV' })).toBeVisible()
+    // Nothing of the person's is in it.
+    await expect(items.filter({ hasText: /Hideout|Shortcuts|Sign out/ })).toHaveCount(0)
     await page.keyboard.press('Escape')
     await expect(menu(page)).toBeHidden()
   })
 }
+
+test('the avatar menu holds the person\'s own things, by keyboard too', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await open(page)
+  const avatar = page.getByRole('button', { name: 'Account', exact: true })
+  await avatar.click()
+  const account = page.getByRole('menu', { name: 'Account' })
+  await expect(account.getByRole('menuitem')).toHaveText([/Hideout/, /Shortcuts/, /Sign out/])
+  await expect(account.getByRole('menuitemradio')).toHaveCount(3)
+  await expect(account.getByRole('menuitem', { name: /Refresh|Create|Export/ })).toHaveCount(0)
+  // Arrows move between items, Escape closes and hands focus back.
+  await expect(account.getByRole('menuitem').first()).toBeFocused()
+  await page.keyboard.press('ArrowDown')
+  await expect(account.getByRole('menuitemradio').first()).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(account).toBeHidden()
+  await expect(avatar).toBeFocused()
+  // Hideout opens the account window.
+  await avatar.click()
+  await account.getByRole('menuitem', { name: 'Hideout, your account' }).click()
+  await expect(page.getByRole('dialog', { name: 'Hideout, your account' })).toBeVisible()
+})
 
 test('Live keeps only Live/Data on row 2, in the same place', async ({ page }) => {
   await open(page)

@@ -49,6 +49,8 @@ export interface TimeChartProps {
   pulses?: Pulse[]
   /** Replay tells a story: the line ends at the playhead, the rest unknown. */
   story?: boolean
+  /** Replay is playing: no hover, touch or keys until it pauses or ends. */
+  locked?: boolean
 }
 
 export type Pulse = { id: string; kind: 'visit' | 'goal' | 'sale'; label?: string }
@@ -60,7 +62,10 @@ const AXIS_H = 26
 export function TimeChart(p: TimeChartProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [w, setW] = useState(900)
-  const [hover, setHover] = useState<number | null>(null)
+  const [picked, setHover] = useState<number | null>(null)
+  // While Replay plays nothing is picked (and what was picked is let go of).
+  if (p.locked && picked !== null) setHover(null)
+  const hover = p.locked ? null : picked
   const dragging = useRef(false)
   const STRIP = p.strip ? 64 : 0
   const H = (p.height ?? 220) + STRIP
@@ -111,6 +116,7 @@ export function TimeChart(p: TimeChartProps) {
   const scrub = p.scrub ?? null
   const { follow, release, onKey } = useCut({ ref, w, n, hover, scrub, setHover, x })
   const hi = hover ?? scrub
+  const leave = () => { release(); setHover(null); dragging.current = false }
   // Beside the point when there is room, never past either edge: on a phone
   // the card is nearly as wide as the chart, and it used to leave the screen.
   const tipW = 244
@@ -122,9 +128,10 @@ export function TimeChart(p: TimeChartProps) {
       ref={ref}
       className="chart-wrap"
       data-story={p.story || undefined}
+      data-locked={p.locked || undefined}
       style={{ height: H }}
       onPointerMove={(e) => {
-        if (!n) return
+        if (!n || p.locked) return
         // On a note's flag its own tooltip speaks; the day's would cover it.
         if ((e.target as Element).closest?.('.note-mark')) return setHover(null)
         const i = indexAt(e.currentTarget, e.clientX)
@@ -135,13 +142,9 @@ export function TimeChart(p: TimeChartProps) {
         follow(e.clientX - e.currentTarget.getBoundingClientRect().left, i)
         setHover(i)
       }}
-      onPointerLeave={() => {
-        release()
-        setHover(null)
-        dragging.current = false
-      }}
+      onPointerLeave={leave}
       onPointerDown={(e) => {
-        if (!n) return
+        if (!n || p.locked) return
         // A finger has no hover: touching the chart is hovering it.
         if (!p.onScrub) {
           setHover(indexAt(e.currentTarget, e.clientX))
@@ -155,11 +158,7 @@ export function TimeChart(p: TimeChartProps) {
         p.onScrub(indexAt(e.currentTarget, e.clientX))
       }}
       onPointerUp={() => (dragging.current = false)}
-      onPointerCancel={() => {
-        dragging.current = false
-        release()
-        setHover(null)
-      }}
+      onPointerCancel={leave}
     >
       {/* The picture is the svg; the note flags beside it are buttons, which
           a role="img" around them would hide from a screen reader. */}
@@ -169,7 +168,7 @@ export function TimeChart(p: TimeChartProps) {
         role="img"
         aria-label={timeCopy.chart(p.metric, n, fmtInt(Math.max(0, ...p.values)))}
         tabIndex={n ? 0 : -1}
-        onKeyDown={onKey}
+        onKeyDown={p.locked ? undefined : onKey}
         onBlur={() => setHover(null)}
       >
         <defs>

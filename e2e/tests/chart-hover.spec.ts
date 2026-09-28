@@ -159,3 +159,24 @@ test('Replay plays the chart on screen: same start, same bucket', async ({ page 
   await page.keyboard.press('Escape')
   await expect(page.locator('.overview-chart .story')).toHaveCount(0)
 })
+
+// While Replay plays, the chart is not hoverable: no crosshair, tooltip or dot,
+// and the cut stays at the playhead. Paused, hover works again.
+test('the chart ignores the pointer while Replay plays and hovers again when paused', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.goto(API + '/example.com?period=7d')
+  const chart = page.locator('.overview-chart .chart-wrap')
+  await expect(chart.locator('svg[role="img"]')).toBeVisible({ timeout: 15_000 })
+  await page.getByRole('button', { name: 'Replay this period hour by hour' }).click()
+  await expect(chart).toHaveAttribute('data-locked', 'true')
+  const box = (await chart.boundingBox())!
+  await page.mouse.move(box.x + box.width * 0.3, box.y + box.height / 2)
+  await page.mouse.move(box.x + box.width * 0.6, box.y + box.height / 2)
+  await expect(chart.locator('.time-tip')).toHaveCount(0)
+  await expect(chart.locator('circle[r="5"]')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Pause replay' }).click()
+  await expect(chart).not.toHaveAttribute('data-locked', 'true')
+  await page.mouse.move(box.x + box.width * 0.4, box.y + box.height / 2)
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2)
+  await expect(chart.locator('.time-tip')).toBeVisible()
+})

@@ -1,7 +1,7 @@
 // The account dialog: everything that belongs to the person, not to the site
 // they happen to be looking at. It opens over whatever is on screen, so the
 // Settings page can stay about one site.
-import { BellRing, Camera, Check, Copy, Eye, EyeOff, ImageUp, KeyRound, LockKeyhole, LogOut, ShieldCheck, SunMoon, Trash2, UserPlus, X } from 'lucide-react'
+import { BellRing, Camera, Check, Copy, Eye, EyeOff, ImageUp, KeyRound, LockKeyhole, LogOut, ShieldCheck, SunMoon, Trash2, UserPlus } from 'lucide-react'
 import { Modal } from '../components/Modal'
 import { PersonAvatar } from '../components/PersonAvatar'
 import { checksHere, setChecksHere } from '../lib/update'
@@ -22,7 +22,9 @@ import { useWindowTabs } from './accountTabs'
 import { copy as acopy } from './account/copy'
 import { Line } from './AccountLine'
 import { AccessTag } from '../features/access/AccessTag'
+import { AllowedSites } from '../features/access/AllowedSites'
 import { copy as accessCopy } from '../features/access/copy'
+import { AccountHead } from './account/Head'
 import { seenText } from './personSeen'
 import { useSiteAccess } from '../features/access/useSiteAccess'
 import './Account.css'
@@ -32,7 +34,6 @@ import { Loading } from '../components/loading/Loading'
 // The setup wizard carries the QR encoder, so it is fetched only when someone
 // actually turns two-step sign-in on.
 const TwoStepSetup = lazy(() => import('./TwoStepSetup'))
-const AccessDialog = lazy(() => import('../features/access/AccessDialog'))
 const AvatarCrop = lazy(() => import('../components/AvatarCrop'))
 
 export function AccountDialog({ tab: asked, sites, email, onSites }: { tab: Tab; sites: Site[]; email?: string; onSites: () => void }) {
@@ -45,19 +46,7 @@ export function AccountDialog({ tab: asked, sites, email, onSites }: { tab: Tab;
   }, [])
   return (
     <Modal label={acopy.accountLabel} className="account" onClose={closeAccount}>
-      <header className="account-head">
-        <PersonAvatar p={profile} email={email} v={v} size="big" />
-        <span className="account-who">
-          <span className="account-name">
-            <b>{profile?.name || email?.split('@')[0]}</b>
-            <span className={'tag account-role' + (viewer ? ' quiet' : ' on')}>{viewer ? acopy.viewer : acopy.owner}</span>
-          </span>
-          <span className="account-email">{email}</span>
-        </span>
-        <button type="button" className="btn icon close" aria-label="Close" onClick={closeAccount}>
-          <X size={18} strokeWidth={1.75} aria-hidden="true" />
-        </button>
-      </header>
+      <AccountHead profile={profile} email={email} v={v} />
 
       {tabs.length > 1 && (
         <div className="account-nav" role="tablist" aria-label="Account sections">
@@ -479,7 +468,10 @@ function People({ me }: { me?: string }) {
                   {p.role === 'owner' ? 'Make a viewer' : 'Make an owner'}
                 </button>
                 {p.role !== 'owner' && access.shown && access.of(p.id) && (
-                  <button type="button" role="menuitem" onClick={() => (close(), setAllowing(p.id))}>
+                  <button type="button" role="menuitem" onClick={() => {
+                    close()
+                    setAllowing(p.id)
+                  }}>
                     {accessCopy.menuItem}
                   </button>
                 )}
@@ -553,16 +545,7 @@ function People({ me }: { me?: string }) {
           }}
         />
       )}
-      {allowing && access.of(allowing) && (
-        <Suspense fallback={null}>
-          <AccessDialog
-            viewer={access.of(allowing)!}
-            sites={access.sites}
-            onSave={(sites) => access.save(allowing, sites).then(() => toast(accessCopy.saved(access.of(allowing)?.email ?? '')))}
-            onClose={() => setAllowing(null)}
-          />
-        </Suspense>
-      )}
+      {allowing && <AllowedSites id={allowing} access={access} onClose={() => setAllowing(null)} />}
       {issued && <OneTimePassword {...issued} onClose={() => setIssued(null)} />}
       {dialog}
     </section>

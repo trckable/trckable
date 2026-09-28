@@ -3,7 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { BarList, type BarItem } from '../charts/BarList'
 import { TimeChart, type Pulse } from '../charts/TimeChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
-import { api, cachedReport, dropReports, exportURL, messageOf, showsInstall, siteState, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
+import { api, cachedReport, dropReports, messageOf, showsInstall, siteState, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
 import { compareLabel, diffDays, fmtDay, setWeekStart, todayIn, type Range } from '../lib/dates'
 import { countryName, delta, flag, fmtDuration, fmtInt, fmtMoney, fmtPct } from '../lib/format'
 import { journeysOn, newShare, newShareShort, newVsReturning } from '../features/cookieless/labels'
@@ -41,6 +41,7 @@ import { Loading } from '../components/loading/Loading'
 import { FullGrid } from '../features/fullcharts/FullGrid'
 import { CreateMenu } from '../features/create/CreateMenu'
 import { MoreMenu } from '../components/MoreMenu'
+import { downloadCsv } from '../lib/download'
 import { HeaderTools } from '../features/header/HeaderTools'
 import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
 import { useMilestones } from '../features/milestones/useMilestones'
@@ -587,15 +588,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
           onMode={(m) => setView({ mode: m })}
           onRefresh={reloadNow}
-          // A download, not a fetch: the browser writes the file, names it
-          // from the header, and nothing has to be held in memory here.
-          onExport={() => {
-            const a = document.createElement('a')
-            a.href = exportURL(site.id, query)
-            a.download = ''
-            a.click()
-            toast('Building your file…')
-          }}
+          onExport={() => downloadCsv(site.id, query)}
         />
       </div>}
 
@@ -741,6 +734,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             bucket={hours ? 'hour' : (data?.bucket ?? 'day')}
             scrub={chartScrub}
             story={telling}
+            locked={playing}
             partialLast={live}
             strip={money && src && !hours ? { values: src.series.slice(fv).map((p) => p.revenue ?? 0), fmt: fmtM, label: 'Revenue' } : undefined}
             notes={notesOn ? notes : []}

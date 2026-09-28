@@ -1,15 +1,15 @@
 {
   "literals": 518,
   "components": {
-    "src/charts/TimeChart.tsx": 311,
+    "src/charts/TimeChart.tsx": 310,
     "src/components/DateRangePopover.tsx": 396,
     "src/components/FilterPop.tsx": 303,
     "src/main.tsx": 330,
-    "src/views/Account.tsx": 751,
+    "src/views/Account.tsx": 746,
     "src/views/Alerts.tsx": 295,
     "src/views/AllSites.tsx": 369,
     "src/views/Auth.tsx": 302,
-    "src/views/Dashboard.tsx": 1204,
+    "src/views/Dashboard.tsx": 1202,
     "src/views/Health.tsx": 293,
     "src/views/Payments.tsx": 691,
     "src/views/Privacy.tsx": 750,

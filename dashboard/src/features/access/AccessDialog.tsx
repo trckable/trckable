@@ -1,6 +1,6 @@
 // The popup behind a person's ⋯ → Allowed sites: All sites, or the ones
 // ticked. Nothing changes until Save; Cancel and Escape leave it as it was.
-import { useState } from 'react'
+import { useState, type SyntheticEvent } from 'react'
 import { DialogActions } from '../../components/DialogActions'
 import { Modal } from '../../components/Modal'
 import { Switch } from '../../components/Switch'
@@ -23,7 +23,7 @@ export default function AccessDialog({ viewer, sites, onSave, onClose }: { viewe
       else next.add(id)
       return next
     })
-  const submit = async (e: React.FormEvent) => {
+  const submit = async (e: SyntheticEvent) => {
     e.preventDefault()
     if (busy) return
     setBusy(true)
