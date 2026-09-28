@@ -19,9 +19,17 @@ REPO=$(cd "$HERE/.." && pwd)
 # The newest release before this commit: on the release's own commit, the one
 # before it (its image may still be building).
 last() { git -C "$REPO" describe --tags --abbrev=0 --match 'v[0-9]*' "$@"; }
-TAG=${UPGRADE_FROM:-$(last)}
+TAG=${UPGRADE_FROM:-$(last 2>/dev/null || true)}
+if [ -z "$TAG" ]; then
+  echo "  no earlier release tag in this repository: nothing to upgrade from, skipped"
+  exit 0
+fi
 if [ -z "${UPGRADE_FROM:-}" ] && [ "$(git -C "$REPO" rev-parse "$TAG^{commit}")" = "$(git -C "$REPO" rev-parse HEAD)" ]; then
-  TAG=$(last "$TAG^")
+  TAG=$(last "$TAG^" 2>/dev/null || true)
+  if [ -z "$TAG" ]; then
+    echo "  this is the first release: nothing to upgrade from, skipped"
+    exit 0
+  fi
 fi
 REL=${TAG#v}
 IMAGE=ghcr.io/trckable/trckable:$REL
