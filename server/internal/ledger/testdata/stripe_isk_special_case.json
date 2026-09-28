@@ -1,0 +1,14 @@
+{
+  "provider": "stripe",
+  "note": "Stripe writes ISK (and UGX) as two-decimal values whose decimals are always 00 (https://docs.stripe.com/currencies#special-cases): amount_received 1250000 is 12,500 kr. Reports use ISO 4217 minor units (ISK has none), so the payment is 12500 and a 2,500 kr refund is 2500, never a hundred times more. Payloads shaped per https://docs.stripe.com/api/payment_intents/object and https://docs.stripe.com/api/refunds/object.",
+  "events": [
+    {"id":"evt_isk_p","created":1758600000,"livemode":true,"type":"payment_intent.succeeded",
+     "data":{"object":{"id":"pi_isk","object":"payment_intent","amount":1250000,"amount_received":1250000,"currency":"isk","customer":"cus_isk","latest_charge":"ch_isk","metadata":{"trckable_vid":"k3j2"},"status":"succeeded"}}},
+    {"id":"evt_isk_r","created":1758700000,"livemode":true,"type":"refund.created",
+     "data":{"object":{"id":"re_isk","object":"refund","amount":250000,"currency":"isk","payment_intent":"pi_isk","charge":"ch_isk","status":"succeeded","created":1758700000}}}
+  ],
+  "currency": "ISK",
+  "expect": [
+    {"id":"pi_isk","amount":12500,"refunded":2500,"visitor":"k3j2","kind":"one_time"}
+  ]
+}

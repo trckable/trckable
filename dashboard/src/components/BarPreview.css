@@ -1,0 +1,6 @@
+/* BarPreview's styles: they load with its chunk, not with the first load. */
+.bar-real {
+  display: grid;
+  min-width: 0;
+  max-width: 100%;
+}

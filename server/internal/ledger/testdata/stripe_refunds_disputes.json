@@ -1,0 +1,29 @@
+{
+  "provider": "stripe",
+  "note": "Two partial refunds, the first arriving before its payment, reported both per refund (refund.*) and cumulatively (charge.refunded): counted once. A second payment is lost to a dispute. A test-mode payment is excluded.",
+  "events": [
+    {"id":"evt_r1a","created":1758600010,"livemode":true,"type":"refund.created",
+     "data":{"object":{"id":"re_1","amount":3000,"currency":"usd","payment_intent":"pi_3","charge":"ch_3","status":"pending","created":1758600010}}},
+    {"id":"evt_r1b","created":1758600020,"livemode":true,"type":"refund.updated",
+     "data":{"object":{"id":"re_1","amount":3000,"currency":"usd","payment_intent":"pi_3","charge":"ch_3","status":"succeeded","created":1758600010}}},
+    {"id":"evt_r2","created":1758700000,"livemode":true,"type":"refund.created",
+     "data":{"object":{"id":"re_2","amount":2000,"currency":"usd","payment_intent":null,"charge":"ch_3","status":"succeeded","created":1758700000}}},
+    {"id":"evt_cr","created":1758700001,"livemode":true,"type":"charge.refunded",
+     "data":{"object":{"id":"ch_3","amount":20000,"amount_refunded":5000,"currency":"usd","payment_intent":"pi_3","refunded":false}}},
+    {"id":"evt_p3","created":1758600000,"livemode":true,"type":"payment_intent.succeeded",
+     "data":{"object":{"id":"pi_3","amount_received":20000,"currency":"usd","customer":null,"metadata":{"trckable_vid":"q1w2e3"}}}},
+    {"id":"evt_p4","created":1758600100,"livemode":true,"type":"payment_intent.succeeded",
+     "data":{"object":{"id":"pi_4","amount_received":4900,"currency":"usd","customer":"cus_4","metadata":{}}}},
+    {"id":"evt_d1","created":1758900000,"livemode":true,"type":"charge.dispute.created",
+     "data":{"object":{"id":"du_1","amount":4900,"currency":"usd","charge":"ch_4","payment_intent":"pi_4","status":"needs_response"}}},
+    {"id":"evt_d2","created":1759900000,"livemode":true,"type":"charge.dispute.closed",
+     "data":{"object":{"id":"du_1","amount":4900,"currency":"usd","charge":"ch_4","payment_intent":"pi_4","status":"lost"}}},
+    {"id":"evt_t","created":1758600200,"livemode":false,"type":"payment_intent.succeeded",
+     "data":{"object":{"id":"pi_test","amount_received":999,"currency":"usd","metadata":{}}}}
+  ],
+  "currency": "USD",
+  "expect": [
+    {"id":"pi_3","amount":20000,"refunded":5000,"visitor":"q1w2e3","kind":"one_time"},
+    {"id":"pi_4","amount":4900,"refunded":4900,"visitor":"","kind":"one_time"}
+  ]
+}

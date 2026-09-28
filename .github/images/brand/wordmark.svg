@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 80" role="img" aria-label="trckable">
+  <title>trckable</title>
+  <!-- width locked so every font renders the same; the ghost mark carries the eyes -->
+  <text x="0" y="58" fill="#0B0D10" textLength="248" lengthAdjust="spacingAndGlyphs"
+        font-family="Geist, 'Inter', ui-sans-serif, system-ui, sans-serif"
+        font-size="60" font-weight="600">trckable</text>
+</svg>

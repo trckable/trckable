@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="250" viewBox="0 0 440 250" role="img" aria-label="Which traffic pays. Every sale credited to the visit that earned it — renewals too.">
+<rect x="0.5" y="0.5" width="439" height="249" rx="16" fill="#111317" stroke="#23272f"/>
+<rect x="14" y="14" width="412" height="148" rx="11" fill="#0b0d10"/>
+<g transform="translate(14 14)">
+    <path d="M30 108c40 0 50-50 90-50s50 34 90 34 60-52 100-52" fill="none" stroke="#c8fa3c" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+    <circle cx="352" cy="44" r="22" fill="none" stroke="#f5a524" stroke-width="3"/>
+    <text x="352" y="51" fill="#f5a524" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="700" text-anchor="middle">$</text>
+    <circle r="6" fill="#f5a524" opacity="0">
+      <animateMotion dur="2.6s" repeatCount="indefinite" path="M30 108c40 0 50-50 90-50s50 34 90 34 60-52 100-52 26 2 32 2"/>
+      <animate attributeName="opacity" values="0;1;1;0" dur="2.6s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+<text x="24" y="196" fill="#f5f7fa" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="650">Which traffic pays</text>
+<text x="24" y="222" fill="#a7b0bd" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="13.5">Every sale credited to the visit that earned it — renewals too.</text>
+</svg>

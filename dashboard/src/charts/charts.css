@@ -1,0 +1,203 @@
+/* The chart kit: cards (the Full grid is FullGrid.css), one axis each, colours from the
+   theme tokens only (both themes), motion only when the reader allows it. */
+.kit-card {
+  gap: 8px;
+}
+/* The chart takes whatever height its row gives the card, centred in it, so
+   the key and the note sit at the foot of every card in a row. */
+.kit-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.kit-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kit-head h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 15px;
+}
+.kit-switch {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+.kit-question,
+.kit-foot {
+  margin: 0;
+  font-size: 12px;
+}
+.kit-error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.kit-empty {
+  margin: 24px 0;
+  font-size: 13px;
+  text-align: center;
+}
+.kit-chart {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+.kit-svg {
+  display: block;
+  overflow: visible;
+  touch-action: pan-y;
+}
+.kit-svg:focus-visible,
+.kit-funnel-step:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.kit-gridline {
+  stroke: var(--grid);
+}
+.kit-axis {
+  fill: var(--text-3);
+  font: 10px var(--mono);
+}
+.kit-flow-label {
+  fill: var(--text-2);
+  font: 10.5px var(--mono);
+  pointer-events: none;
+}
+.kit-cross {
+  stroke: var(--text-3);
+  stroke-dasharray: 3 3;
+}
+.kit-band {
+  opacity: 0.32;
+}
+.kit-band:hover {
+  opacity: 0.6;
+}
+.kit-tip {
+  white-space: nowrap;
+}
+.kit-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.kit-tip-row .num {
+  margin-left: auto;
+  padding-left: 12px;
+}
+.kit-tip-row i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+.kit-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.kit-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.kit-legend .swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.kit-legend .line {
+  width: 14px;
+  border-top-width: 2px;
+}
+.kit-heatkey {
+  gap: 4px;
+}
+.kit-heatkey .swatch {
+  width: 14px;
+  height: 8px;
+  border-radius: 2px;
+}
+.kit-funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.kit-funnel-step {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.kit-funnel-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+.kit-funnel-label b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.kit-funnel-track {
+  height: 14px;
+  border-radius: 7px;
+  background: var(--sunken);
+}
+.kit-funnel-bar {
+  height: 100%;
+  border-radius: 7px;
+}
+.kit-funnel-note {
+  font-size: 11.5px;
+}
+.kit-table {
+  max-height: 260px;
+  overflow: auto;
+}
+.kit-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.kit-table th,
+.kit-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--grid);
+  text-align: left;
+  white-space: nowrap;
+}
+.kit-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  color: var(--text-3);
+  font-weight: 500;
+}
+.kit-table .num {
+  text-align: right;
+}
+.kit-table tbody th {
+  font-weight: 500;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .kit-funnel-bar,
+  .kit-svg rect {
+    transition: opacity 0.15s var(--ease), width 0.4s var(--ease);
+  }
+  .kit-band {
+    transition: opacity 0.15s var(--ease);
+  }
+}

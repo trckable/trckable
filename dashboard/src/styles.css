@@ -1,0 +1,3434 @@
+/* trckable dashboard. Tokens mirror brand/tokens.css; chart channels use the
+ * palette validated with the dataviz validator (dark and light each checked
+ * against their own surface). */
+:root {
+  color-scheme: dark;
+  --bg: #0b0d10;
+  --surface: #12151a;
+  --surface-2: #181c22;
+  --sunken: #0f1216;
+  --row: #1b2028;
+  --border: #242a33;
+  --border-2: #353c46;
+  --grid: #1d2229;
+  --text: #f5f7fa;
+  --text-2: #a7b0bd;
+  --text-3: #8a93a1;
+  --accent: #b8ff3c;
+  /* The accent on a tinted chip, at 11px: the plain accent is 4.18:1 there in
+     the light theme, and AA wants 4.5. */
+  --accent-strong: #b8ff3c;
+  --accent-ink: #0b0d10;
+  --accent-soft: rgba(184, 255, 60, 0.14);
+  --money: #ffb547;
+  --up: #5ee29b;
+  --down: #ff6b6b;
+  --warn: #e8a93a;
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  /* The code view has colours of its own: the chart palette is chosen for
+     fills, and as text on a pale background it does not have the contrast.
+     Every one of these is checked against its own theme's code background. */
+  /* 4.6:1 on a code block's background; the old #6b7482 was 3.97. */
+  --code-com: #767f8d;
+  --code-str: #e0a341;
+  --code-tag: #c98500;
+  --code-key: #b8ff3c;
+  --code-num: #d95926;
+  --ch-1: #3987e5;
+  --ch-2: #d95926;
+  --ch-3: #199e70;
+  --ch-4: #c98500;
+  --ch-5: #d55181;
+  --ch-6: #008300;
+  --ch-7: #9085e9;
+  --font: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+    --bg: #fafaf7;
+    --surface: #ffffff;
+    --surface-2: #f3f4f1;
+    --sunken: #f6f7f4;
+    --row: #eef0eb;
+    --border: #e3e5e0;
+    --border-2: #d2d5cf;
+    --grid: #eef0eb;
+    --text: #0b0d10;
+    --text-2: #4a525e;
+    --text-3: #616874;
+    /* 4.87:1 with white on it. The old #4d8a00 was 4.24 — close enough to
+       look fine and not close enough to be readable. */
+    --accent: #487f00;
+    --accent-strong: #3f7000;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(72, 127, 0, 0.12);
+    --money: #9c5a00;
+    --up: #177a44;
+    --down: #c62828;
+    --warn: #845200;
+    --shadow: 0 12px 32px rgba(20, 24, 30, 0.12);
+    --code-com: #5c6470;
+    --code-str: #8a4f00;
+    --code-tag: #a3341a;
+    --code-key: #3f6f00;
+    --code-num: #1a5fb4;
+    --ch-1: #2a78d6;
+    --ch-2: #eb6834;
+    --ch-3: #1baf7a;
+    --ch-4: #eda100;
+    --ch-5: #e87ba4;
+    --ch-6: #008300;
+    --ch-7: #4a3aa7;
+  }
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #fafaf7;
+  --surface: #ffffff;
+  --surface-2: #f3f4f1;
+  --sunken: #f6f7f4;
+  --row: #eef0eb;
+  --border: #e3e5e0;
+  --border-2: #d2d5cf;
+  --grid: #eef0eb;
+  --text: #0b0d10;
+  --text-2: #4a525e;
+  --text-3: #616874;
+  --accent: #487f00;
+  --accent-strong: #3f7000;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(72, 127, 0, 0.12);
+  --money: #9c5a00;
+  --up: #177a44;
+  --down: #c62828;
+  --warn: #845200;
+  --shadow: 0 12px 32px rgba(20, 24, 30, 0.12);
+  --code-com: #5c6470;
+  --code-str: #8a4f00;
+  --code-tag: #a3341a;
+  --code-key: #3f6f00;
+  --code-num: #1a5fb4;
+  --ch-1: #2a78d6;
+  --ch-2: #eb6834;
+  --ch-3: #1baf7a;
+  --ch-4: #eda100;
+  --ch-5: #e87ba4;
+  --ch-6: #008300;
+  --ch-7: #4a3aa7;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  /* No grey flash on a tap: a pressed control shows its own state. */
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+}
+/* A focus ring for the keyboard only: a click or a tap on a button, a chart
+   or a part of one (an svg) draws none. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+a {
+  color: var(--accent);
+}
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+}
+h2 {
+  font-size: 15px;
+}
+.num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+.muted {
+  color: var(--text-2);
+}
+.faint {
+  color: var(--text-3);
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---- layout ---- */
+.app {
+  max-width: 1440px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 24px 32px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+@media (max-width: 720px) {
+  .app {
+    padding: 12px 16px 32px;
+    gap: 12px;
+  }
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 48px;
+}
+.header .spacer {
+  flex: 1;
+}
+.header-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  /* Two tidy rows: identity on top, tools below, nothing wrapping oddly.
+     Above 760 everything fits on one row (see "The header at every width"). */
+  .header {
+    gap: 8px;
+  }
+  /* The period, Filter and Views have their own row now (the toolbar), so
+     what is left here (Ask, the view, ⋯) stays on the first row, at its end. */
+  .header-tools {
+    flex: 0 0 auto;
+    margin-left: auto;
+    gap: 8px;
+  }
+  .header-tools .spacer {
+    display: none;
+  }
+  .btn.ask .label {
+    display: none;
+  }
+  .btn.ask {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+  .seg button {
+    padding: 0 10px;
+  }
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+/* With a fold button the title still comes first; everything else goes right. */
+.card-head .fold + h2 {
+  margin-right: auto;
+}
+/* A status tag belongs to the title it describes. Without this, space-between
+   parks it in the middle of the header, attached to nothing. */
+.card-head > h2 + .tag {
+  margin-right: auto;
+}
+.card-head .fold {
+  align-self: center;
+}
+
+/* ---- controls ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 14px;
+  white-space: nowrap;
+  text-decoration: none; /* a link can wear this class too */
+  transition: border-color 0.15s, background 0.15s;
+}
+.btn:hover {
+  border-color: var(--border-2);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.btn.primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: transparent;
+  font-weight: 600;
+}
+.btn.ghost {
+  background: transparent;
+  border-color: transparent;
+}
+.btn.ghost:hover {
+  background: var(--surface-2);
+}
+.btn.icon {
+  width: 40px;
+  padding: 0;
+  justify-content: center;
+}
+.kbd {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-3);
+  border: 1px solid var(--border-2);
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+.seg {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.seg button {
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+.seg button[aria-pressed='true'] {
+  background: var(--border);
+  color: var(--text);
+}
+/* The same control, sized to sit in a card's heading. */
+.seg.small {
+  padding: 2px;
+  border-radius: 10px;
+}
+.seg.small button {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.input {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-2);
+  background: var(--bg);
+  width: 100%;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 8px 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+  font-size: 13px;
+  max-width: 320px;
+}
+/* The dimension stays one line ("Entry page is"); the value gives way, cut in
+   the middle so a path keeps its start and its end (the full value is its title). */
+.chip > .faint {
+  white-space: nowrap;
+  flex: none;
+}
+.chip b {
+  min-width: 0;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chip button {
+  border: 0;
+  background: transparent;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+}
+.chip button:hover {
+  background: var(--surface-2);
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s ease-out infinite;
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  80%,
+  100% {
+    box-shadow: 0 0 0 9px transparent;
+  }
+}
+
+/* ---- KPIs ---- */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+.kpis.more {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.kpis.money {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+@media (max-width: 1280px) {
+  .kpis.money {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1000px) {
+  .kpis,
+  .kpis.money {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .kpis,
+  .kpis.money,
+  .kpis.more {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+}
+.kpi {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  min-width: 0;
+}
+button.kpi {
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+button.kpi:hover {
+  border-color: var(--border-2);
+}
+button.kpi[aria-pressed='true'] {
+  border-color: var(--accent);
+}
+.kpi .label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.kpi .value {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.kpi .delta {
+  font-size: 12px;
+  color: var(--text-3);
+  min-height: 16px;
+}
+.kpi.small {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--sunken);
+}
+.kpi.small .value {
+  font-size: 18px;
+}
+@media (max-width: 640px) {
+  .kpi .value {
+    font-size: 22px;
+  }
+}
+
+/* ---- breakdowns ---- */
+.grid4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+/* Behaviour (Full mode): wide cards, one under another, with the same gap as
+   every other section. It had no rule at all, so People sat on Retention. */
+.grid2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+@media (max-width: 1100px) {
+  .grid4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .grid4 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.tabs {
+  display: flex;
+  gap: 2px;
+}
+.tabs button {
+  border: 0;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  min-height: 28px;
+}
+.tabs button[aria-selected='true'] {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.bl {
+  /* A narrow card drops its secondary column before it cuts the names. */
+  container-type: inline-size;
+}
+.cols {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text-3);
+  padding: 0 10px 4px;
+}
+.cols span:first-child {
+  flex: 1;
+}
+.bl-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  transition: opacity 0.25s, background 0.15s;
+}
+.bl-row:hover,
+.bl-row:focus-visible {
+  background: var(--sunken);
+  outline: none;
+}
+.bl-label {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+.bl-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.bl-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bl-track {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--grid);
+  overflow: hidden;
+}
+.bl-bar {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.75;
+  transition: width 0.45s var(--ease), opacity 0.15s;
+}
+.bl-row:hover .bl-bar {
+  opacity: 1;
+}
+.bl-val {
+  width: 60px;
+  flex: none;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.bl-val.sub {
+  width: 52px;
+  color: var(--text-2);
+}
+@container (max-width: 340px) {
+  .bl .sub,
+  .bl .bl-val.sub {
+    display: none;
+  }
+}
+.empty {
+  padding: 18px 8px;
+  color: var(--text-3);
+  font-size: 13px;
+  text-align: center;
+}
+.heat {
+  display: grid;
+  grid-template-columns: 34px repeat(24, minmax(0, 1fr));
+  gap: 3px;
+}
+.heat span.cell {
+  height: 18px;
+  border-radius: 3px;
+}
+
+/* ---- chart ---- */
+.chart-wrap {
+  position: relative;
+  /* Its view-transition name makes it a layer of its own: lifted, so the
+     hover card is never painted under Replay's footer below it. */
+  z-index: 2;
+  touch-action: pan-y;
+  cursor: crosshair;
+  user-select: none;
+}
+.chart-wrap svg {
+  display: block;
+  overflow: visible;
+}
+.chart-wrap svg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+/* The replay cut: one variable moves the grey and the crosshair together.
+   A short glide makes Replay's day-by-day steps read as one motion. */
+.chart-dim,
+.chart-cut {
+  transform: translateX(var(--cut, 200vw));
+  transition: transform 0.12s ease-out;
+}
+.chart-wrap:not([data-cut='on']) .chart-dim,
+.chart-wrap:not([data-cut='on']) .chart-cut {
+  transition: none;
+}
+.chart-cut {
+  stroke: var(--text-2);
+  stroke-dasharray: 3 3;
+  pointer-events: none;
+}
+.chart-cut.is-replay {
+  stroke: var(--text);
+  stroke-width: 1.5;
+  stroke-dasharray: none;
+}
+.chart-wrap[data-cut='off'] .chart-cut {
+  visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chart-dim,
+  .chart-cut {
+    transition: none;
+  }
+}
+/* Replay sits under the chart as its own footer: room above the dates and a
+   quiet line, so the controls never read as part of the axis. */
+.scrub {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--grid);
+}
+.scrub .btn {
+  border-radius: 999px;
+}
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 28px;
+  margin: 0;
+  cursor: pointer;
+  flex: 1;
+  min-width: 80px;
+}
+input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--surface);
+}
+.legend {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--text-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.legend i {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.legend i.ghost {
+  background: repeating-linear-gradient(90deg, var(--text-3) 0 4px, transparent 4px 7px);
+}
+
+/* ---- popovers & drawers ---- */
+.pop {
+  position: absolute;
+  z-index: 20;
+  /* Every dropdown has the dialogs' soft light in its top corner. */
+  background:
+    radial-gradient(300px 120px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  animation: rise 0.18s var(--ease) backwards;
+}
+.rise {
+  animation: rise 0.42s var(--ease) backwards;
+}
+/* backwards, never both: an element still filling a transform animation is the
+   containing block for position: fixed, which would trap any dialog inside it.
+   Both keyframes end at the element's own values, so nothing looks different. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.spin {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border-2);
+  border-top-color: var(--accent);
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2), var(--row), var(--surface-2));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 6px;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px dashed var(--border-2);
+  color: var(--text-2);
+  font-size: 13px;
+}
+pre.code {
+  margin: 0;
+  padding: 14px 16px;
+  background: transparent;
+  border: 0;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+  color: var(--text);
+}
+table.t {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+table.t th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--text-3);
+  font-size: 12px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+table.t td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--grid);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* the ghost peeks up and down while waiting */
+.ghost {
+  display: inline-flex;
+}
+.peek {
+  animation: peek 1.8s var(--ease) infinite;
+}
+@keyframes peek {
+  0%,
+  100% {
+    transform: translateY(6px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@media (max-width: 640px) {
+  .kpis > :last-child:nth-child(odd) {
+    grid-column: span 2;
+  }
+  /* Phone: the date range owns the row; stepping through periods lives in
+     the sheet, where there is space for it. */
+  .range-picker {
+    flex: 1;
+    min-width: 0;
+  }
+  .btn.step {
+    display: none;
+  }
+  .btn.range {
+    width: 100%;
+  }
+  .card {
+    padding: 14px;
+  }
+  .scrub {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .scrub input[type='range'] {
+    order: 3;
+    flex-basis: 100%;
+  }
+  .bl-val.sub {
+    display: none; /* one number per row is enough on a phone */
+  }
+  .tip {
+    min-width: 150px;
+  }
+  .header .kbd,
+  .btn .kbd {
+    display: none;
+  }
+}
+
+.money-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--money);
+}
+
+/* ---- date range picker ---- */
+.preset {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+  font-size: 12px;
+  min-height: 26px;
+}
+.preset:hover {
+  border-color: var(--border-2);
+}
+.preset[aria-selected='true'] {
+  border-color: var(--accent);
+}
+.preset .kbd {
+  font-size: 10px;
+  padding: 1px 5px;
+}
+
+.months {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+.btn.range .num {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@keyframes sheet {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- modules ---- */
+/* A module: its picture, its name and tags, the switch; what it does under
+   the name. On a phone the description takes the card's full width. */
+.module {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'art head switch'
+    'art body switch';
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.module > .switch {
+  grid-area: switch;
+}
+.tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.tag.quiet {
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+.switch {
+  width: 46px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+  padding: 2px;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.switch span {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--text-3);
+  transition: transform 0.18s var(--ease), background 0.15s;
+}
+.switch.on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.switch.on span {
+  transform: translateX(18px);
+  background: var(--accent);
+}
+.switch:disabled {
+  opacity: 0.6;
+}
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+    box-shadow: 0 0 0 rgb(0 0 0 / 0);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+.modal-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.2s ease;
+}
+.modal-close:hover {
+  color: var(--text);
+  border-color: var(--border-2);
+  transform: rotate(90deg);
+}
+.modal-badge.danger {
+  background: color-mix(in srgb, var(--down) 14%, transparent);
+  border-color: color-mix(in srgb, var(--down) 40%, transparent);
+  color: var(--down);
+}
+/* A dialog's heading: its icon tile, then the title with a line under it.
+   Shared by every dialog, so it stays in the main stylesheet. */
+.modal-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.modal-head > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.modal-head h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.modal-head .faint {
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+/* The dialog heading, with an optional icon tile before it. */
+.modal-badge {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--accent);
+  flex: none;
+}
+
+/* A site with no visit yet shows only the waiting card: no sample dashboard
+   behind it. The class drops with the first visit and the real one appears. */
+.sleep {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.sleep.waiting {
+  display: none;
+}
+@media (max-width: 720px) {
+  .sleep {
+    gap: 12px;
+  }
+}
+
+/* ---- Phone header ---------------------------------------------------------
+   Two tight rows and nothing else above the numbers: the mark, the site and
+   settings on one line; the period, Ask and the detail toggle on the next. */
+.brand {
+  display: flex;
+  align-items: center;
+  margin-right: 4px;
+}
+@media (max-width: 640px) {
+  .brand {
+    margin-right: 0;
+  }
+  .brand .tkb-wm {
+    display: none;
+  }
+  .header {
+    gap: 8px;
+    min-height: 0;
+  }
+  .site-pick {
+    flex: 1;
+    min-width: 0;
+  }
+  .site-pick select {
+    width: 100%;
+    height: 40px !important;
+  }
+  .header-tools .btn,
+  .header-tools .btn.icon {
+    height: 40px;
+  }
+  .header-tools .btn.ask {
+    width: 40px;
+  }
+  .kpi {
+    padding: 12px 14px;
+    border-radius: 12px;
+  }
+  .kpi .label {
+    font-size: 12px;
+  }
+  .kpi .value {
+    font-size: 23px;
+  }
+  .kpi .delta {
+    min-height: 0;
+  }
+}
+
+/* ---- Less words on a phone --------------------------------------------------
+   Hover hints and long summaries do not work on touch: the hint line hides and
+   an (i) beside the title shows it on demand; the chart summary clamps to two
+   lines until it is tapped. */
+.info-dot {
+  display: none;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--border-2);
+  background: transparent;
+  color: var(--text-3);
+  font-size: 11px;
+  font-style: italic;
+  line-height: 1;
+  cursor: pointer;
+}
+.info-dot[aria-expanded='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.note-open {
+  flex-basis: 100%;
+}
+@media (max-width: 640px) {
+  .card-note {
+    display: none;
+  }
+  .info-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* ---- One header row on a phone ---------------------------------------------
+   The site picker takes the row, the period is a short chip beside it, and the
+   ⋯ menu holds Ask, the detail level and settings. */
+.pop.menu {
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  min-width: 190px;
+}
+.pop.menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.pop.menu button:hover,
+.pop.menu button:focus-visible {
+  background: var(--sunken);
+}
+.pop.menu svg {
+  color: var(--text-2);
+  flex: none;
+}
+@media (max-width: 640px) {
+  .header-tools .btn.ask,
+  .header-tools .spin {
+    display: none;
+  }
+  .site-pick select {
+    text-overflow: ellipsis;
+  }
+}
+
+/* A thin bar across the very top while a report is on its way. Switching
+   sites, changing the period and reloading all say the same thing. */
+.loadbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 60;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  background-size: 40% 100%;
+  background-repeat: no-repeat;
+  animation: loadbar 1.1s var(--ease) infinite;
+}
+@keyframes loadbar {
+  0% {
+    background-position: -40% 0;
+  }
+  100% {
+    background-position: 140% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loadbar {
+    animation: none;
+    background-position: 30% 0;
+  }
+}
+
+/* ---- Site picker -----------------------------------------------------------
+   The header's own control, not the browser's. */
+.site-pick {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.btn.site-btn {
+  height: 44px;
+  gap: 9px;
+  max-width: 280px;
+  padding: 0 12px;
+}
+.btn.site-btn .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.btn.site-btn svg {
+  color: var(--text-3);
+  flex: none;
+}
+.pop.sites {
+  top: 50px;
+  left: 0;
+  min-width: 268px;
+  max-width: min(360px, calc(100vw - 24px));
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pop.sites .input {
+  height: 36px;
+}
+.site {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.site:hover,
+.site:focus-visible {
+  background: var(--sunken);
+}
+.site .name {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+.site .name b {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.site .name .faint {
+  font-size: 11.5px;
+}
+.site.on .name b {
+  color: var(--text);
+}
+/* An icon on a small rounded square: menu rows and headings. */
+.icon-tile {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 6%, var(--surface-2)), var(--surface-2));
+  color: var(--text-2);
+}
+.icon-tile.accent {
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+@media (max-width: 640px) {
+  .site-pick {
+    flex: 1;
+  }
+  .btn.site-btn {
+    height: 40px;
+    width: 100%;
+    max-width: none;
+  }
+  /* The picker button is narrow; its list is not. */
+  .pop.sites {
+    position: fixed;
+    top: 56px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    min-width: 0;
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .btn.back .label {
+    display: none;
+  }
+  .btn.back {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+  table.t,
+  table.t tbody,
+  table.t tr,
+  table.t td {
+    display: block;
+    width: 100%;
+  }
+  table.t thead {
+    display: none;
+  }
+  table.t tr {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 6px 12px;
+    margin-bottom: 8px;
+  }
+  table.t td {
+    border: 0;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    text-align: left !important;
+  }
+  table.t td::before {
+    content: attr(data-label);
+    color: var(--text-3);
+    font-size: 12px;
+    flex: none;
+  }
+}
+
+/* ---- Numbered steps (Ask, payments, install) -------------------------------
+   Few words, one obvious button per step. */
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--grid);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.btn.big {
+  height: 48px;
+  font-size: 15px;
+  padding: 0 20px;
+}
+.keybox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: var(--sunken);
+}
+.keybox code {
+  flex: 1;
+  min-width: 180px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  word-break: break-all;
+  color: var(--text);
+}
+.keybox .faint {
+  flex-basis: 100%;
+  font-size: 12px;
+}
+/* On a phone a module is a small card: its picture across the top, then the
+   name with its switch, the tags, and what it does. */
+@media (max-width: 640px) {
+  .module {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'art art'
+      'head switch'
+      'body body';
+    column-gap: 12px;
+    row-gap: 10px;
+    padding: 10px 10px 14px;
+    border-radius: 14px;
+  }
+}
+.conn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+/* The install picker has many entries: let them wrap. */
+.tabs.wrap {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+/* ---- Full mode: funnel, journey ------------------------------------------- */
+.funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.journey {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.people {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* Only the visitor list's rows: the account window's People and API keys
+   sections share the class, and their buttons are ordinary .btn buttons. */
+ul.people button {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+ul.people button:hover {
+  background: var(--sunken);
+}
+
+/* A tile per install route: icon, name, and the whole thing is the target.
+   Equal widths, so the row reads as one control. */
+.mtile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  min-width: 148px;
+  height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--sunken);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, transform 0.2s var(--ease);
+}
+.mtile:hover {
+  transform: translateY(-1px);
+  color: var(--text);
+}
+.mtile.on {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.mtile svg {
+  opacity: 0.85;
+}
+.mtile.on svg {
+  color: var(--accent);
+  opacity: 1;
+}
+.mtile.more select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  cursor: pointer;
+}
+.info-dot.static {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+}
+.day {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: 1px auto;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.day:disabled {
+  color: var(--border-2);
+  cursor: default;
+}
+.day.other {
+  box-shadow: inset 0 0 0 1.5px var(--other, var(--ch-7));
+}
+/* Today keeps a dot under the number, so it never fights the range colour. */
+.day.today::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  margin-left: -1.5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+.saved {
+  font-size: 12px;
+  color: var(--up);
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 0.25s, transform 0.25s;
+}
+.saved.on {
+  opacity: 1;
+  transform: none;
+}
+.modal.wizard {
+  /* The install step carries a snippet somebody has to read. */
+  width: min(720px, 100%);
+  max-width: 720px;
+  gap: 20px;
+  padding: 26px 28px 22px;
+}
+/* ---- Searchable picker ----------------------------------------------------- */
+.picker {
+  position: relative;
+  min-width: 0;
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.wiz-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px -20px -20px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--grid);
+}
+/* The first child is the way out, so it sits left and everything else right. */
+.wiz-actions > :first-child {
+  margin-right: auto;
+}
+@media (max-width: 560px) {
+  .wiz-actions {
+    flex-wrap: wrap-reverse;
+  }
+  .wiz-actions > .btn {
+    flex: 1 1 140px;
+    justify-content: center;
+  }
+  .wiz-actions > :first-child {
+    margin-right: 0;
+  }
+}
+.wiz-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0 4px;
+  text-align: center;
+  animation: pop 0.45s var(--ease) both;
+}
+
+/* What a module gives you, and what it takes away. */
+.bullets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13.5px;
+}
+.bullets li {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  color: var(--text-2);
+}
+.bullets li::before {
+  content: '·';
+  color: var(--text-3);
+  line-height: 1.2;
+}
+.bullets.good li::before {
+  content: '✓';
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.bullets.gone li::before {
+  content: '×';
+  color: var(--down);
+  line-height: 1.3;
+}
+
+/* ---- The period control ----------------------------------------------------
+   One card: step back, the range itself, reset, step forward. */
+.range-picker {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  height: 44px;
+  gap: 0 !important;
+  /* No overflow:hidden here — it would clip the calendar that opens below. */
+}
+.range-picker > .btn:first-child {
+  border-radius: 11px 0 0 11px;
+}
+.range-picker > .btn:last-of-type {
+  border-radius: 0 11px 11px 0;
+}
+.range-picker > .btn {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  height: 100%;
+}
+.range-picker > .btn + .btn {
+  box-shadow: inset 1px 0 0 var(--grid);
+}
+.range-picker > .btn:hover:not(:disabled) {
+  background: var(--sunken);
+}
+.range-picker > .btn.range {
+  padding: 0 14px;
+}
+.range-picker > .btn:disabled {
+  opacity: 0.4;
+}
+.info {
+  position: relative;
+  display: inline-flex;
+}
+/* The tooltip itself: dark card, always on top, never wider than a sentence. */
+.tip {
+  position: absolute;
+  top: 26px;
+  left: -8px;
+  z-index: 40;
+  width: max-content;
+  max-width: 260px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: normal;
+  animation: rise 0.14s var(--ease) backwards;
+}
+.tip.right {
+  left: auto;
+  right: -8px;
+}
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---- The toolbar under the header ------------------------------------------
+   Left: the filters in force. Right: period, filter, saved views. */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px 16px;
+  flex-wrap: wrap;
+  margin-top: -4px;
+}
+.toolbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+.toolbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+@media (max-width: 760px) {
+  .toolbar-tools {
+    flex: 1 0 100%;
+    order: -1;
+  }
+}
+/* ---- Header zones ----------------------------------------------------------
+   Left: who and which site. Middle: the period and the view. Right: account
+   and this site's settings. Flex order keeps that true however the pieces are
+   rendered. */
+.header > .brand {
+  order: 0;
+}
+.header > .site-pick {
+  order: 1;
+}
+.header > .gear {
+  order: 1;
+  margin-right: 4px;
+}
+.header-tools {
+  order: 2;
+}
+
+@media (max-width: 640px) {
+  /* One row means one menu: the account lives in the ⋯ menu, and so does the
+     site's settings — the row has space for the site, the period and ⋯. */
+  .header > .gear {
+    display: none;
+  }
+}
+
+/* A popup that lives on the page body, above dialogs and scrolling cards. */
+.pop.menu.floating,
+.pop.picker-pop.floating {
+  position: fixed;
+  z-index: 120;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 15px;
+}
+.tag.live {
+  color: var(--accent-strong, var(--accent));
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* A URL or a key wraps instead of scrolling sideways. */
+pre.code.wrap {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Sentences wrap between words; only a key or a URL breaks mid-word. */
+pre.code.words {
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+.stage-mark {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid var(--grid);
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The chart tooltip's split bar: new against returning, in one line. */
+/* "12 days ago", under the axis where the cursor is. */
+.ago-pill {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ---- Toasts --------------------------------------------------------------- */
+.toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 13.5px;
+  max-width: 340px;
+  animation: toastin 0.22s var(--ease) both;
+}
+.toast.ok svg {
+  color: var(--up);
+}
+.toast.error {
+  border-color: var(--down);
+}
+.toast.error svg {
+  color: var(--down);
+}
+@keyframes toastin {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (max-width: 640px) {
+  .toasts {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+  .toast {
+    max-width: none;
+  }
+}
+
+/* ---- Account dialog, two columns ------------------------------------------
+   Sections on the left, one panel on the right, and a size that does not jump
+   when you move between them. */
+/* A close button you can actually hit. */
+.btn.icon.close {
+  width: 40px;
+  height: 40px;
+  border-color: var(--border);
+}
+
+/* ---- "More numbers" --------------------------------------------------------
+   Full mode keeps every number, but folded: the headline cards stay readable
+   and the rest is one click away. */
+.more-numbers {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--grid);
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: var(--surface);
+}
+.more-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+.more-toggle:hover {
+  color: var(--text);
+}
+.more-toggle .faint {
+  font-size: 12px;
+}
+.more-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px 20px;
+  animation: rise 0.18s var(--ease) backwards;
+}
+.num-cell {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--grid);
+  font-size: 13px;
+}
+.num-cell b {
+  font-weight: 600;
+}
+
+/* ---- Core and Full ------------------------------------------------------
+   Core is one calm screen: bigger type, more air, five rows a card. Full is
+   the working surface: denser, more columns, every section on the page. */
+body[data-mode='core'] .card {
+  padding: 18px 20px;
+}
+body[data-mode='core'] .kpi .value {
+  font-size: 32px;
+}
+body[data-mode='core'] .kpi {
+  padding: 16px 18px;
+}
+body[data-mode='full'] .card {
+  padding: 13px 15px;
+}
+body[data-mode='full'] .kpi {
+  padding: 11px 14px;
+}
+body[data-mode='full'] .kpi .value {
+  font-size: 24px;
+}
+body[data-mode='full'] .card h2 {
+  font-size: 14px;
+}
+body[data-mode='full'] .app {
+  gap: 12px;
+}
+/* The overview sets its own inner spacing (the tiles and the chart each pad
+   themselves), so the modes' card padding stays off it. */
+body[data-mode] .card.overview {
+  padding: 0;
+}
+/* The jump bar: where everything is, one tap away. */
+.jump {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 6px 0;
+  background: linear-gradient(var(--bg) 70%, transparent);
+}
+.jump button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.jump button:hover {
+  color: var(--text);
+  border-color: var(--border-2);
+}
+@media (min-width: 1500px) {
+  /* A wide screen in Full mode shows the breakdowns five across. */
+  body[data-mode='full'] .grid4 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+.periods {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  width: 100%;
+  animation: rise 0.16s var(--ease) backwards;
+}
+.period {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.period:hover {
+  background: var(--sunken);
+  color: var(--text);
+}
+.period.on {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.period .kbd {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 1px 5px;
+}
+.keyrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--grid);
+}
+.switch:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Fold a card you are not reading. */
+.fold {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-left: -4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: transform 0.2s var(--ease), color 0.2s;
+}
+.fold:hover {
+  color: var(--text);
+  background: var(--sunken);
+}
+.card.folded .fold svg {
+  transform: rotate(-90deg);
+}
+.card.folded {
+  padding-bottom: 12px;
+}
+
+/* ---- Notes on the chart ---------------------------------------------------- */
+.note-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+/* The chart's note controls: small chips in the notes' own colour. */
+.note-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color 0.12s var(--ease), border-color 0.12s var(--ease), background 0.12s var(--ease);
+}
+.note-chip svg {
+  color: var(--money);
+}
+.note-chip:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--money) 45%, var(--border));
+  background: color-mix(in srgb, var(--money) 7%, transparent);
+}
+.note-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.note-count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--money) 18%, transparent);
+  color: var(--money);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-chip {
+    transition: none;
+  }
+}
+
+/* Saved views, under the filters. */
+.segments {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.segments .chip {
+  padding-right: 4px;
+}
+.segments .chip button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.segments .chip.on {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* ---- Two-step sign-in ------------------------------------------------------
+   The QR is always black on white: an inverted code defeats many scanners. */
+.tag.on {
+  background: color-mix(in srgb, var(--up) 20%, transparent);
+  color: var(--up);
+}
+.btn.danger {
+  color: var(--down);
+  border-color: color-mix(in srgb, var(--down) 35%, transparent);
+}
+.btn.danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--down) 12%, transparent);
+}
+.qr {
+  width: 172px;
+  height: 172px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line);
+  flex: none;
+}
+.recovery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.recovery li {
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--sunken);
+  border: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+@media (max-width: 520px) {
+  .qr {
+    width: 100%;
+    height: auto;
+    max-width: 240px;
+    margin: 0 auto;
+  }
+}
+/* Timezone and currency sit side by side while there is room: they are one
+   decision about how this site's numbers are read. */
+.edit-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+.app.shared .header {
+  gap: 10px;
+}
+
+/* ---- Live | Data ------------------------------------------------------------
+   Two choices and a pill that glides under the chosen one, with a little
+   overshoot (the landing page's switch). Live itself is its own chunk. */
+.view-switch {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.view-pill {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), inset 0 0 0 1px var(--border-2);
+  transform: translateX(100%);
+  transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.view-switch.live .view-pill {
+  transform: none;
+}
+.view-switch button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font: 600 13px var(--font);
+  color: var(--text-3);
+  cursor: pointer;
+}
+.view-switch button[aria-pressed='true'] {
+  color: var(--text);
+}
+.view-switch button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.view-switch:not(.live) .pulse {
+  animation: none;
+  opacity: 0.55;
+}
+button.kpi-live .label::after {
+  content: '→';
+  margin-left: auto;
+  color: var(--text-3);
+  transition: transform 0.2s var(--ease), color 0.2s;
+}
+button.kpi-live:hover .label::after {
+  color: var(--accent);
+  transform: translateX(2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .view-pill {
+    transition: none;
+  }
+}
+
+/* ---- Which site, and that site's settings ----------------------------------
+   One control with a divider, not two buttons that happen to be adjacent: the
+   cog belongs to the name beside it, and the border says so. */
+.site-zone {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.site-zone .btn.site-btn,
+.site-zone .btn.gear {
+  border: 0;
+  background: transparent;
+  border-radius: 11px;
+}
+.site-zone .btn.site-btn:hover,
+.site-zone .btn.gear:hover {
+  background: var(--surface-2);
+}
+.site-zone .btn.gear {
+  width: 42px;
+  height: 44px;
+  border-left: 1px solid var(--border);
+  border-radius: 0 11px 11px 0;
+}
+.site-zone:focus-within {
+  border-color: var(--border-2);
+}
+
+/* ---- The Filter menu -------------------------------------------------------
+   Clicking a row is still the fast way to filter. This is for when the row
+   you want is the four hundredth, or is not on this screen at all. */
+.btn.filter {
+  gap: 7px;
+}
+.btn.filter.on {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--text);
+}
+.filter-count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* ---- Dropdown menus ---------------------------------------------------------
+   One look for every dropdown (Filter, Views): a heading, a search, two-line
+   rows with an icon tile, the same soft light as the dialogs. */
+.pop.menu-pop {
+  width: 340px;
+  max-height: min(60vh, 460px);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(300px 120px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--surface);
+}
+.menu-search {
+  /* The dropdown is a capped column: only the list may shrink and scroll. */
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  margin: 2px 2px 6px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--sunken);
+  color: var(--text-3);
+}
+.menu-search:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+}
+.menu-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+}
+.menu-text {
+  display: grid;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.menu-title,
+.menu-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menu-title {
+  font-size: 13px;
+  font-weight: 500;
+}
+.menu-sub {
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+.icon-tile.small {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+}
+.chip.more {
+  gap: 6px;
+  cursor: pointer;
+  color: var(--text-2);
+}
+.chip.more:hover,
+.chip.more.on {
+  color: var(--text);
+  border-color: var(--border-2);
+}
+
+/* Saved views: one dropdown in the toolbar, in the menu look above. The name
+   opens a view; rename and delete sit at the row's end, and delete asks in the
+   confirmation dialog. */
+.sv-btn {
+  gap: 7px;
+  max-width: 240px;
+}
+.sv-btn.on {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: var(--accent-soft);
+}
+.sv-btn-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sv-btn .count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--text-2);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.btn.small {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+/* + at the top of the crosshair: a note on the day under the cursor. */
+.note-add {
+  position: absolute;
+  top: -4px;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0 0 1px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--money) 60%, transparent);
+  background: var(--surface);
+  color: var(--money);
+  font: 600 15px/1 var(--font, system-ui);
+  cursor: pointer;
+  z-index: 3;
+  box-shadow: 0 2px 10px #0006;
+}
+.note-add:hover {
+  background: var(--money);
+  color: var(--surface);
+}
+
+/* ---- The header at every width ---------------------------------------------
+   One block that decides, instead of rules in four places that disagreed —
+   which is how the ghost and the settings cog came to be hidden on phones,
+   and how the date button got a divider down its left edge.
+
+   Laptop and up: one row.
+   Tablet: still one row — the date shows its short form and Core/Full is an
+   icon, so nothing wraps under a half-empty first row.
+   Phone and narrow tablet (≤ 760): two rows. The mark and the site (with its
+   settings) on the first, the period, Filter and ⋯ on the second, each row
+   filled edge to edge. */
+@media (max-width: 960px) {
+  /* Ask is its icon alone here, as Core/Full is, and no tool gives up its
+     width: squeezed, the refresh button shrank and ⋯ ran off the edge. */
+  .header-tools .btn.ask .kbd {
+    display: none;
+  }
+  .header-tools .btn.ask {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+  .header-tools > :not(.spacer) {
+    flex: none;
+  }
+}
+/* A narrow tablet on one row: the ghost without its name leaves the tools
+   room to sit inside the edge. */
+@media (min-width: 761px) and (max-width: 880px) {
+  .header > .brand .tkb-wm {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .header {
+    gap: 8px;
+  }
+  .header > .brand {
+    flex: none;
+  }
+  .header > .site-zone {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .site-zone .site-pick {
+    flex: 1;
+    min-width: 0;
+  }
+  /* Only Ask, the view and ⋯ are left up here (the period, Filter and
+     Views are in the toolbar), so they share the first row. */
+  .header-tools {
+    flex: 0 0 auto;
+    gap: 8px;
+  }
+  .header-tools > .spacer {
+    display: none;
+  }
+  .range-picker {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  /* The arrows live in the sheet on a phone. With them hidden the range
+     button is the whole group, so it gets the whole group's corners and no
+     divider on its left. */
+  .range-picker > .btn.range {
+    width: 100%;
+    border-radius: 11px;
+    box-shadow: none;
+  }
+}
+
+/* ---- Live pulse -------------------------------------------------------------
+   A visit rises from today's point as a dot and fades; a goal as a ring that
+   opens; a sale as a coin that says what it was worth. Decoration on top of
+   numbers that are already right, so reduced motion simply goes without. */
+.pulse-visit,
+.pulse-goal,
+.pulse-sale {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+}
+.pulse-visit {
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+  animation: pulse-rise 1.6s var(--ease) forwards;
+}
+.pulse-goal {
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: pulse-ring 1.8s var(--ease) forwards;
+}
+.pulse-sale {
+  transform: translate(-50%, -50%);
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--money);
+  color: #1a1203;
+  font: 700 12px/1.2 var(--mono, ui-monospace);
+  white-space: nowrap;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--money) 70%, transparent);
+  animation: pulse-coin 2.3s var(--ease) forwards;
+}
+@keyframes pulse-rise {
+  0% { transform: translateY(0) scale(0.4); opacity: 0; }
+  15% { opacity: 1; transform: translateY(-4px) scale(1); }
+  100% { transform: translateY(-46px) scale(0.6); opacity: 0; }
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.3); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+@keyframes pulse-coin {
+  0% { transform: translate(-50%, -30%) scale(0.5); opacity: 0; }
+  12% { transform: translate(-50%, -80%) scale(1.08); opacity: 1; }
+  22% { transform: translate(-50%, -95%) scale(1); }
+  80% { opacity: 1; }
+  100% { transform: translate(-50%, -260%) scale(0.95); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse-visit,
+  .pulse-goal,
+  .pulse-sale {
+    display: none;
+  }
+}
+.seg {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.seg button {
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.seg button.on {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* An embedded dashboard: the site's name and a quiet credit, nothing that
+   leads away from the page it sits in. */
+.app.shared.embed .header {
+  min-height: 0;
+  padding-top: 10px;
+  padding-bottom: 6px;
+}
+
+/* ---- Footer: the full logo, the year and the version ----------------------- */
+.app-footer {
+  margin-top: auto; /* on a short page it stays at the bottom */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 14px;
+  padding: 14px 16px 18px;
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+/* The logo keeps its own proportions; the footer only draws it smaller. */
+.app-footer .tkb-logo {
+  zoom: 0.7;
+  color: var(--text);
+  text-decoration: none;
+}
+/* The footer stays out of the way: the logo grey and faint until pointed at
+   (a logotype is exempt from text contrast; the links keep their readable grey). */
+.app-footer .tkb-logo {
+  opacity: 0.45;
+  filter: grayscale(1);
+  transition: opacity 0.2s var(--ease), filter 0.2s var(--ease);
+}
+.app-footer:hover .tkb-logo,
+.app-footer .tkb-logo:focus-visible {
+  opacity: 1;
+  filter: none;
+}
+.app-footer-links {
+  display: flex;
+  gap: 12px;
+}
+.app-footer a:not(.tkb-logo) {
+  color: var(--text-3);
+  text-decoration: none;
+}
+.app-footer a:not(.tkb-logo):hover {
+  color: var(--text-2);
+}
+
+/* ---- Dropdowns on a phone ----------------------------------------------------
+   Centred over the page, the page dimmed behind, the way a dialog opens:
+   anchored to a button, a menu runs off one edge or the other. */
+@media (max-width: 640px) {
+  .pop.menu-pop,
+  .pop.sv-pop,
+  .pop.sites,
+  .pop.sheet.range-pop {
+    position: fixed !important;
+    inset: auto 12px auto 12px !important;
+    top: 50% !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: 80dvh;
+    overflow-y: auto;
+    transform: translateY(-50%);
+    box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.55), var(--shadow);
+    z-index: 130;
+    animation: pop-centre 0.22s var(--ease) both;
+  }
+}
+@keyframes pop-centre {
+  from {
+    opacity: 0;
+    transform: translateY(-46%) scale(0.98);
+  }
+}
+
+/* The header's logo: ghost and name; the ghost alone on a phone. */
+@media (max-width: 640px) {
+  .header > .brand .tkb-wm {
+    display: none;
+  }
+}
+
+/* The toolbar on a phone: one row that fits. The period takes what is left
+   and shortens with an ellipsis; Filter and Views show their icon (and count). */
+@media (max-width: 640px) {
+  .toolbar-tools {
+    gap: 8px;
+    min-width: 0;
+  }
+  .toolbar-tools > .range-picker {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .toolbar-tools .range-picker .btn,
+  .toolbar-tools .range-picker button {
+    min-width: 0;
+  }
+  .toolbar-tools .btn.range {
+    flex: 1 1 auto !important;
+  }
+  .toolbar-tools .range-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .toolbar-tools .sv-btn .sv-btn-name,
+  .toolbar-tools .btn.filter .filter-label {
+    display: none;
+  }
+  .toolbar-tools .btn.filter,
+  .toolbar-tools .sv-btn {
+    flex: none;
+    padding: 0 11px;
+  }
+}
+
+/* ---- The main chart's finish ------------------------------------------------
+   A soft glow under the line, and today's point breathing while it counts. */
+.chart-line {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+.chart-now-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: chart-breathe 2.4s ease-in-out infinite;
+}
+@keyframes chart-breathe {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chart-now-halo {
+    animation: none;
+    opacity: 0.2;
+  }
+}
+
+/* ---- Overview: the key numbers and the chart, one section -------------------
+   The dialogs' soft light across the top; each number on a quiet tile with its
+   own icon; the one being charted is lit. */
+.card.overview {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(700px 240px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--surface);
+}
+.overview > .kpis {
+  padding: 14px;
+  gap: 8px;
+  border-bottom: 1px solid var(--grid);
+}
+.overview .kpi {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--sunken) 70%, transparent);
+  gap: 8px;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s var(--ease);
+}
+.overview button.kpi:hover {
+  border-color: var(--border-2);
+  transform: translateY(-1px);
+}
+.overview button.kpi[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background:
+    radial-gradient(160px 80px at 0% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 75%),
+    var(--sunken);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.overview > .more-numbers {
+  padding: 10px 14px 0;
+}
+.overview-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px 16px;
+}
+.kpi-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  margin-right: 2px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 6%, var(--surface-2)), var(--surface-2));
+  color: var(--text-2);
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.kpi-icon.money {
+  color: var(--money);
+}
+/* A little life: the icon nods when you point at its number, and the charted
+   number's icon is lit. */
+button.kpi:hover .kpi-icon {
+  transform: translateY(-2px) rotate(-6deg);
+}
+button.kpi[aria-pressed='true'] .kpi-icon {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.kpi-icon.live.on {
+  color: var(--accent);
+  animation: kpi-live 2s ease-in-out infinite;
+}
+@keyframes kpi-live {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+}
+@media (max-width: 640px) {
+  .overview > .kpis {
+    padding: 10px;
+  }
+  .overview-chart {
+    padding: 14px 12px 12px;
+  }
+  .kpi-icon {
+    width: 26px;
+    height: 26px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kpi-icon,
+  .overview .kpi {
+    transition: none;
+  }
+  .kpi-icon.live.on {
+    animation: none;
+  }
+}
+
+.kpi-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The tile's spark sits at its foot: quiet grey, lime on the charted number,
+   gold on money. */
+.kpi-spark {
+  display: block;
+  width: 100%;
+  height: 28px;
+  margin-top: auto;
+  color: var(--text-3);
+}
+.kpi.money .kpi-spark {
+  color: var(--money);
+}
+button.kpi[aria-pressed='true'] .kpi-spark {
+  color: var(--accent);
+}
+
+/* The replay bar on a phone: Replay, speed and the scrubber on one row; the
+   day being viewed on its own row under them, shortened if it must be. */
+@media (max-width: 640px) {
+  .scrub {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .scrub input[type='range'] {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+  .scrub > .btn:last-child {
+    order: 3;
+    flex: 1 0 100%;
+    min-width: 0;
+    justify-content: flex-start;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .scrub > .btn:last-child .muted {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* The chart's heading: the title and the legend; on a phone the legend goes
+   under the title. */
+.chart-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px 12px;
+  flex-wrap: wrap;
+}
+.chart-head .legend {
+  margin-left: auto;
+}
+@media (max-width: 640px) {
+  .chart-head > h2 {
+    flex: 1 0 100%;
+  }
+  body[data-mode] .overview .kpi,
+  .overview .kpi {
+    padding: 12px;
+  }
+  .overview > .kpis {
+    gap: 8px;
+  }
+}
+
+/* A newer release: a small lime pill by the logo, and a line in the footer. */
+.update-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+.update-pill .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent);
+  animation: kpi-live 2s ease-in-out infinite;
+}
+.footer-newer {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .update-pill .num {
+    display: none;
+  }
+  .update-pill {
+    width: 26px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .update-pill .dot {
+    animation: none;
+  }
+}
+
+/* A button doing its work: a small spinner beside the words. */
+.btn-spin {
+  width: 13px;
+  height: 13px;
+  margin-right: 2px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.confirm-err {
+  margin: 4px 0 0;
+  color: var(--down);
+  font-size: 13px;
+}
+
+/* The days beside a short preset label: shown only where the button spans the
+   row (the phone toolbar), hidden in the compact header chip. */
+.range-days {
+  display: none;
+  font-size: 12.5px;
+}
+@media (max-width: 640px) {
+  .toolbar-tools .range-days {
+    display: inline;
+  }
+}
+
+/* A tile's number is sized by the tile, not the screen: seven across on a
+   laptop or two by two on a phone, "$111,630" fits either way. */
+.overview .kpi {
+  container-type: inline-size;
+}
+body[data-mode] .overview .kpi .value,
+.overview .kpi .value {
+  font-size: clamp(18px, 15cqi, 30px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The period button's comparison: a small chip in words under the period
+   ("vs last year"), the exact days in its tooltip. */
+.range-vs {
+  margin-left: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--text-3);
+  font-size: 11px;
+  line-height: 17px;
+  white-space: nowrap;
+}
+
+/* A site's mark: its icon, or its letter on its colour (components/SiteMark). */
+.site-mark {
+  flex: none;
+  border-radius: 7px;
+  object-fit: cover;
+}
+.site-mark.letter {
+  display: inline-grid;
+  place-items: center;
+  font-weight: 700;
+  line-height: 1;
+}
+/* The live dot sits on the mark's corner. */
+.mark-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.mark-wrap > .dot {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 9px !important;
+  height: 9px !important;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+/* A site's state (features/sites/StateDot.tsx). */
+.state-dot {
+  border-radius: 50%;
+  border: 1.5px solid var(--dot);
+  background: var(--dot);
+}
+.state-dot.now,
+.state-dot.live {
+  --dot: var(--accent);
+}
+.state-dot.quiet {
+  --dot: var(--money);
+}
+.state-dot.stopped {
+  --dot: var(--down);
+}
+.state-dot.new {
+  --dot: var(--text-3);
+  background: transparent;
+}
+.state-dot.now {
+  animation: dot-now 1.8s ease-out infinite;
+}
+@keyframes dot-now {
+  0% {
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 7px transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .state-dot.now {
+    animation: none;
+  }
+}
+
+/* A site that stopped sending visits: said once, above its numbers. */
+.stopped-notice {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--down) 40%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--down) 7%, var(--surface));
+}
+.tag.danger {
+  color: var(--down);
+  border-color: color-mix(in srgb, var(--down) 40%, transparent);
+}
+@media (max-width: 640px) {
+  .stopped-notice {
+    grid-template-columns: auto 1fr;
+  }
+  .stopped-notice .btn {
+    grid-column: 1 / -1;
+  }
+}
+
+/* A quiet text button: "Look again", "Or paste its contents". */
+.linkish {
+  justify-self: start;
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.linkish:hover {
+  color: var(--text);
+}
+
+/* ---- Scrollbars -------------------------------------------------------------
+   One slim, branded bar everywhere something scrolls: a quiet thumb on no
+   track, brighter under the pointer, the same in both themes. */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--text) 22%, transparent) transparent;
+  }
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 22%, transparent) padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  border-width: 2px;
+  background: color-mix(in srgb, var(--accent) 70%, var(--text)) padding-box;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Cards you can click lift a little under the pointer. */
+.site-card,
+.prov,
+.mtile,
+.person,
+.wg-row,
+.htile {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s;
+}
+.site-card:hover,
+.prov:hover,
+.mtile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.28);
+}
+.person:hover,
+.wg-row:hover {
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.22);
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-card:hover,
+  .prov:hover,
+  .mtile:hover {
+    transform: none;
+  }
+}
+
+/* Refresh, before Ask: the icon turns while every number is fetched again. */
+.btn.icon.refresh.spinning svg {
+  animation: spin 0.8s linear infinite;
+}
+.btn.icon.refresh:disabled {
+  opacity: 1;
+  cursor: progress;
+}
+
+/* ---- Live ↔ Data ---------------------------------------------------------
+   One app changing its mind, not two pages swapping (lib/viewTransition.ts).
+   The top bar stays put; the pill slides under the choice; the view below fades out and
+   settles while the new one rises in, and the visitor count and the chart
+   travel between their places in the two views. Reduced motion: an instant
+   switch (the transition is never started). */
+.header {
+  /* A view-transition name makes the header its own layer; lift that layer
+     over the page, so its menus (⋯, the avatar) open above the toolbar and
+     the cards instead of under them. */
+  position: relative;
+  z-index: 30;
+  view-transition-name: dash-header;
+}
+/* The switch is shown live, not as a picture, so its pill slides as usual
+   and stays under the label instead of floating above it. */
+.view-switch {
+  view-transition-name: view-switch;
+}
+.kpi-live .value,
+.live-online {
+  view-transition-name: online-count;
+}
+.overview .chart-wrap,
+.live-line {
+  view-transition-name: main-chart;
+}
+::view-transition-group(*) {
+  animation-duration: 0.24s;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+::view-transition-old(root) {
+  animation: view-out 0.16s cubic-bezier(0.4, 0, 1, 1) both;
+}
+::view-transition-new(root) {
+  animation: view-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+::view-transition-old(view-switch) {
+  display: none;
+}
+::view-transition-new(view-switch) {
+  animation: none;
+}
+/* The header does not change between the two; it simply stays. */
+::view-transition-old(dash-header),
+::view-transition-new(dash-header) {
+  animation-duration: 0.16s;
+}
+@keyframes view-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.995);
+  }
+}
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+[data-swap='in'] .view-stage {
+  animation: view-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+/* Live's size while its code arrives, so the page below does not jump. */
+.live-wait {
+  display: grid;
+  height: max(460px, calc(100dvh - var(--live-chrome, 248px)));
+}
+@media (max-width: 720px) {
+  .live-wait {
+    height: min(70dvh, 560px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-swap='in'] .view-stage {
+    animation: none;
+  }
+}
+/* Replay as a story: what has not happened yet is not drawn, only a faint
+   unknown ahead of the playhead (features/story). */
+.chart-unknown {
+  fill: color-mix(in srgb, var(--text) 4%, transparent);
+  pointer-events: none;
+}
+.chart-wrap:not([data-cut='on']) .chart-unknown {
+  visibility: hidden;
+}

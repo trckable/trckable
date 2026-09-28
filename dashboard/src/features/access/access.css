@@ -1,0 +1,63 @@
+/* Site access on People: a tag on the row, and its picker. */
+button.access-tag {
+  border: 0;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+button.access-tag:hover {
+  color: var(--text);
+}
+button.access-tag:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.modal.access-dialog {
+  width: min(400px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+}
+.access-dialog h2 {
+  margin: 0;
+  font-size: 17px;
+}
+.access-who {
+  margin: -8px 0 0;
+  font-size: 13px;
+}
+.access-sites {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.access-site {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.access-site:hover {
+  background: var(--surface-2);
+}
+.access-site input {
+  accent-color: var(--accent);
+}
+.access-site .faint {
+  margin-left: auto;
+  font-size: 12px;
+}
+.access-actions {
+  display: flex;
+  justify-content: flex-end;
+}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>trckable example</title>
+  <!-- One line: that's the whole install. -->
+  {{SCRIPT}}
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; }
+    .spacer { height: 2400px; }
+    button, a { margin: 4px 8px 4px 0; }
+  </style>
+</head>
+<body>
+  <h1>trckable example</h1>
+  <p>Every interaction below is tracked, with no extra code except data attributes.</p>
+
+  <!-- Click goal with properties (kebab-case attributes become snake_case props) -->
+  <button id="signup" data-trckable-goal="signup" data-trckable-goal-plan="pro" data-trckable-goal-trial-days="14">
+    Start free trial
+  </button>
+
+  <!-- Single-page-app navigation (history API) -->
+  <nav>
+    <button id="spa-docs" onclick="history.pushState({}, '', 'docs')">Docs (SPA)</button>
+    <button id="spa-same" onclick="history.replaceState({}, '', location.pathname)">Same URL (no view)</button>
+    <button id="spa-blog" onclick="history.pushState({}, '', 'blog')">Blog (SPA)</button>
+  </nav>
+
+  <!-- Automatic: file downloads and outbound links -->
+  <p>
+    <a id="download" href="files/guide.pdf" download>Download the guide (PDF)</a>
+    <a id="outbound" href="https://github.com/trckable/trckable">GitHub</a>
+    <a id="next" href="next.html">Next page</a>
+  </p>
+
+  <div class="spacer"></div>
+
+  <!-- Scroll goal: fires once when half of this section is visible -->
+  <section id="pricing" data-trckable-scroll="saw_pricing">
+    <h2>Pricing</h2>
+    <p>Free. Forever.</p>
+  </section>
+</body>
+</html>

@@ -1,0 +1,321 @@
+/* The loading ghost, in motion. Each size has its own choreography:
+     page    the full story: the ghost traces itself in and fills, then floats
+             while its chart line draws, bars rise out of it and data dots
+             drift up into it; the name fades in under it (2.8 s loop)
+     block   the ghost floating over a compact line-to-bars sweep (2.4 s)
+     inline  the ghost alone, a small hop and a blink (1.8 s)
+   Only transform, opacity and stroke-dashoffset animate, so it stays on the
+   compositor at 60 fps; every step eases, nothing moves linearly. Everything
+   outside the motion query is the still, composed frame reduced motion sees:
+   the ghost filled, the line drawn over its bars. */
+.ld {
+  --ld-t: 2.4s;
+  --ld-ease: cubic-bezier(0.45, 0, 0.55, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-2);
+  font-size: 13px;
+  text-align: center;
+}
+.ld-block {
+  min-height: 120px;
+  padding: 16px;
+}
+.ld-page {
+  --ld-t: 2.8s;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 1;
+}
+.ld-inline {
+  --ld-t: 1.8s;
+  display: inline-flex;
+  vertical-align: middle;
+}
+.ld-mark {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.ld-stage {
+  position: relative;
+  display: block;
+  overflow: visible;
+}
+.ld-glow {
+  position: absolute;
+  inset: -25%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--accent-soft), transparent);
+  opacity: 0.6;
+}
+.ld-inline .ld-glow {
+  display: none;
+}
+.ld-trace {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  opacity: 0;
+}
+.ld-boo,
+.ld-bars rect {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.ld-eyes,
+.ld-eyes circle,
+.ld-dots circle {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.ld-bars rect {
+  fill: var(--accent);
+}
+.ld-line {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+}
+.ld-dots circle {
+  fill: var(--accent);
+  opacity: 0;
+}
+.ld-name {
+  position: relative;
+  font-size: 20px;
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ld .ld-boo {
+    animation: ld-float var(--ld-t) var(--ld-ease) infinite;
+  }
+  .ld .ld-eyes {
+    animation: ld-glance var(--ld-t) var(--ld-ease) infinite;
+  }
+  .ld .ld-eyes circle {
+    animation: ld-blink var(--ld-t) var(--ld-ease) infinite;
+  }
+  .ld .ld-glow {
+    animation: ld-breathe var(--ld-t) var(--ld-ease) infinite;
+  }
+  .ld .ld-line {
+    animation: ld-draw var(--ld-t) cubic-bezier(0.65, 0, 0.35, 1) infinite backwards;
+  }
+  .ld .ld-bars rect {
+    animation: ld-rise var(--ld-t) cubic-bezier(0.3, 1.45, 0.5, 1) infinite backwards;
+  }
+  .ld .ld-bars rect:nth-child(2) {
+    animation-delay: 0.06s;
+  }
+  .ld .ld-bars rect:nth-child(3) {
+    animation-delay: 0.12s;
+  }
+  .ld .ld-bars rect:nth-child(4) {
+    animation-delay: 0.18s;
+  }
+  .ld .ld-bars rect:nth-child(5) {
+    animation-delay: 0.24s;
+  }
+  .ld .ld-dots circle {
+    animation: ld-stream calc(var(--ld-t) / 2) cubic-bezier(0.3, 0, 0.3, 1) infinite backwards;
+  }
+  .ld .ld-dots circle:nth-child(2) {
+    animation-delay: calc(var(--ld-t) / 6);
+  }
+  .ld .ld-dots circle:nth-child(3) {
+    animation-delay: calc(var(--ld-t) / 3);
+  }
+
+  /* The page's opening, once: the outline traces itself, the body fills, the
+     eyes pop open and the name rises in; then the loops above take over. */
+  .ld-page {
+    --ld-intro: 1.1s;
+  }
+  .ld-page .ld-trace {
+    animation: ld-trace var(--ld-intro) cubic-bezier(0.6, 0, 0.2, 1) both;
+  }
+  .ld-page .ld-body {
+    animation: ld-fade 0.5s 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  .ld-page .ld-eyes {
+    animation: ld-pop 0.45s 0.8s cubic-bezier(0.3, 1.6, 0.5, 1) both, ld-glance var(--ld-t) var(--ld-intro) var(--ld-ease) infinite;
+  }
+  .ld-page .ld-name {
+    animation: ld-rise-in 0.6s 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .ld-page .ld-boo,
+  .ld-page .ld-eyes circle,
+  .ld-page .ld-glow,
+  .ld-page .ld-line,
+  .ld-page .ld-bars rect,
+  .ld-page .ld-dots circle {
+    animation-delay: var(--ld-intro);
+  }
+  .ld-page .ld-bars rect:nth-child(2) {
+    animation-delay: calc(var(--ld-intro) + 0.06s);
+  }
+  .ld-page .ld-bars rect:nth-child(3) {
+    animation-delay: calc(var(--ld-intro) + 0.12s);
+  }
+  .ld-page .ld-bars rect:nth-child(4) {
+    animation-delay: calc(var(--ld-intro) + 0.18s);
+  }
+  .ld-page .ld-bars rect:nth-child(5) {
+    animation-delay: calc(var(--ld-intro) + 0.24s);
+  }
+  .ld-page .ld-dots circle:nth-child(2) {
+    animation-delay: calc(var(--ld-intro) + var(--ld-t) / 6);
+  }
+  .ld-page .ld-dots circle:nth-child(3) {
+    animation-delay: calc(var(--ld-intro) + var(--ld-t) / 3);
+  }
+}
+
+/* A crouch before the lift (anticipation), a float up, a settle back. */
+@keyframes ld-float {
+  0%,
+  100% {
+    transform: none;
+  }
+  12% {
+    transform: scale(1.04, 0.94);
+  }
+  45% {
+    transform: translateY(-9%) scale(0.98, 1.03);
+  }
+  72% {
+    transform: translateY(-4%);
+  }
+}
+@keyframes ld-glance {
+  0%,
+  22%,
+  86%,
+  100% {
+    transform: none;
+  }
+  32%,
+  50% {
+    transform: translateX(-6%);
+  }
+  60%,
+  76% {
+    transform: translateX(6%);
+  }
+}
+@keyframes ld-blink {
+  0%,
+  52%,
+  60%,
+  100% {
+    transform: none;
+  }
+  56% {
+    transform: scaleY(0.1);
+  }
+}
+@keyframes ld-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.88);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+/* The line draws in, holds, and hands over to the bars. */
+@keyframes ld-draw {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  4% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  40%,
+  58% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  72%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes ld-rise {
+  0%,
+  46% {
+    transform: scaleY(0);
+    opacity: 1;
+  }
+  64%,
+  86% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  98%,
+  100% {
+    transform: scaleY(1);
+    opacity: 0;
+  }
+}
+@keyframes ld-stream {
+  0% {
+    transform: none;
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-16px) scale(0.4);
+    opacity: 0;
+  }
+}
+@keyframes ld-trace {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  70% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes ld-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ld-pop {
+  from {
+    transform: scale(0);
+  }
+}
+@keyframes ld-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}

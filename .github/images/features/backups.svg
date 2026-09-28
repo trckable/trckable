@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="250" viewBox="0 0 440 250" role="img" aria-label="Encrypted backups. Nightly, seven deep, and the restore is tested.">
+<rect x="0.5" y="0.5" width="439" height="249" rx="16" fill="#111317" stroke="#23272f"/>
+<rect x="14" y="14" width="412" height="148" rx="11" fill="#0b0d10"/>
+<g transform="translate(14 14)">
+    <ellipse cx="170" cy="46" rx="56" ry="14" fill="none" stroke="#6b7482" stroke-width="2"/>
+    <path d="M114 46v56c0 8 25 14 56 14s56-6 56-14V46" fill="none" stroke="#6b7482" stroke-width="2"/>
+    <path d="M114 74c0 8 25 14 56 14s56-6 56-14" fill="none" stroke="#6b7482" stroke-width="2" opacity="0.6"/>
+    <g>
+      <rect x="252" y="66" width="56" height="46" rx="8" fill="none" stroke="#c8fa3c" stroke-width="3"/>
+      <path d="M264 66v-12a16 16 0 0 1 32 0v12" fill="none" stroke="#c8fa3c" stroke-width="3"/>
+      <circle cx="280" cy="88" r="5" fill="#c8fa3c"/>
+      <animateTransform attributeName="transform" type="translate" values="0 -10;0 0" dur="0.6s" fill="freeze"/>
+    </g>
+  </g>
+<text x="24" y="196" fill="#f5f7fa" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="650">Encrypted backups</text>
+<text x="24" y="222" fill="#a7b0bd" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="13.5">Nightly, seven deep, and the restore is tested.</text>
+</svg>

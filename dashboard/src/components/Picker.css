@@ -1,0 +1,85 @@
+/* Picker's styles: they load with its chunk, not with the first load. */
+.btn.picker-btn {
+  height: 38px;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.btn.picker-btn .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker-pop {
+  top: 44px;
+  left: 0;
+  min-width: 260px;
+  max-width: min(360px, calc(100vw - 24px));
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.picker-pop.right {
+  left: auto;
+  right: 0;
+}
+
+.picker-pop .menu-search {
+  margin: 0 0 4px;
+}
+
+.picker-list {
+  display: flex;
+  flex-direction: column;
+  max-height: min(260px, 40vh);
+  overflow-y: auto;
+}
+
+.picker-group {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 10px 10px 4px;
+}
+
+.picker-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.picker-row.on {
+  background: var(--sunken);
+}
+
+.picker-row .name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker-row .faint {
+  font-size: 11.5px;
+}
+
+.pop.picker-pop.floating {
+  top: auto;
+  left: auto;
+  right: auto;
+}

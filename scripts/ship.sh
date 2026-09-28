@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# Ship: run the checks CI runs, then push this branch for a pull request.
+# main takes changes only through pull requests whose checks passed (a
+# GitHub ruleset nobody can bypass), so nothing here pushes main. Some stay in CI only: the
+# Docker image (size, boot, memory), govulncheck and pnpm audit, which need Docker and the
+# network. The upgrade from the last release needs Docker too: it runs here
+# when Docker does. Nothing is deployed from here: self-hosters build it themselves.
+# Nothing is pushed unless everything passes.
+#
+#   scripts/ship.sh           the full gate (about 3 minutes), then push this branch and open its pull request
+#   scripts/ship.sh --check   the gate only, no push (any branch: use it on a pull request)
+#   scripts/ship.sh --quick   Go, tracker and dashboard tests only (the pre-push hook)
+set -euo pipefail
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$ROOT"
+MODE=${1:-}
+step() { printf '\n\033[1m▸ %s\033[0m\n' "$*"; }
+fail() { printf '\n\033[31m✗ %s\033[0m\n' "$*"; exit 1; }
+
+BRANCH=$(git branch --show-current)
+[ -n "$MODE" ] || [ "$BRANCH" != main ] || fail "main takes changes through pull requests: ship from a branch"
+
+step "one version everywhere"
+node scripts/version-check.mjs || fail "one version everywhere: see above"
+node --test scripts/*.test.mjs > /dev/null || fail "the release scripts' tests: node --test scripts/*.test.mjs"
+
+# Every change people will notice brings its own changelog line (stage 2 of
+# ops SHIPPING.md). A release branch only moves the version, so it is exempt.
+if [ "$BRANCH" != main ] && [[ $BRANCH != release-* ]]; then
+  step "a CHANGELOG line for what changed"
+  git fetch -q origin main
+  node scripts/changelog-check.mjs origin/main || fail "add the CHANGELOG line, then ship again"
+fi
+
+# golangci-lint: pinned, built by go run (cached after the first time), never installed.
+GOLANGCI=github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
+
+step "server: gofmt, vet$([ "$MODE" = --quick ] || echo ', golangci-lint'), tests"
+( cd server
+  [ -z "$(gofmt -l .)" ] || { gofmt -l .; fail "gofmt: run gofmt -w on the files above"; }
+  go vet ./...
+  [ "$MODE" = --quick ] || go run "$GOLANGCI" run ./...
+  go test -p 2 ./... -short -count=1 $([ "$MODE" = --quick ] || echo -race) )
+
+step "tracker: build (size budgets) and tests"
+( cd tracker && pnpm --reporter=silent build && pnpm --reporter=silent test )
+
+step "dashboard: $([ "$MODE" = --quick ] || echo 'lint, component sizes, ')tests and build"
+( cd dashboard
+  [ "$MODE" = --quick ] || pnpm --reporter=silent lint
+  pnpm --reporter=silent test && pnpm --reporter=silent build )
+
+if [ "$MODE" != --quick ]; then
+  step "npm package: build and tests"
+  ( cd packages/trckable && pnpm --reporter=silent build && pnpm --reporter=silent test )
+
+  step "server binary, then a backup → restore round trip"
+  ( cd server && go build -o bin/trckabled ./cmd/trckabled )
+  server/bench/roundtrip/roundtrip.sh server/bin/trckabled | tail -1
+
+  step "crash tests: kill -9 and a graceful restart mid-load, exactly once"
+  ( cd server && go run ./bench/crashtest -bin ./bin/trckabled -n 20000 -signal kill | tail -1 \
+      && go run ./bench/crashtest -bin ./bin/trckabled -n 20000 -signal term | tail -1 )
+
+  # Needs Docker for the release's image; CI runs it on every pull request.
+  step "upgrade from the last release: its data, this build, the same reports"
+  if docker info > /dev/null 2>&1; then
+    server/bench/upgrade/upgrade.sh server/bin/trckabled | tail -1
+  else
+    printf '  skipped here: Docker is not running (CI runs it on every pull request)\n'
+  fi
+
+  step "browser suites (Chromium, Firefox, WebKit)"
+  ( cd e2e && npx playwright test --reporter=line )
+
+  # The same accessibility pass as CI, against a server with demo data. Left
+  # out, it skips itself, and a failure would first show up on the pull
+  # request; it did, five pushes running.
+  step "WCAG 2.1 AA on the main screens, both themes (axe-core, demo data)"
+  ( d=$(mktemp -d)
+    trap 'kill $pid 2>/dev/null; rm -rf "$d"' EXIT
+    (cd server && go run ./bench/demoseed -data "$d" -days 30 -daily 150 > /dev/null)
+    echo 'correct horse battery' | TRCKABLE_DATA_DIR="$d" server/bin/trckabled admin add-user me@site.com --role owner > /dev/null
+    TRCKABLE_DATA_DIR="$d" TRCKABLE_ADDR=127.0.0.1:8799 server/bin/trckabled serve > "$d/log" 2>&1 &
+    pid=$!
+    for i in $(seq 1 50); do curl -sf 127.0.0.1:8799/readyz > /dev/null && break; sleep 0.3; done
+    cd e2e && TRCKABLE_A11Y_URL=http://127.0.0.1:8799 npx playwright test a11y fullcharts --reporter=line )
+fi
+
+# The dashboard and the tracker are embedded in the server from committed
+# build output: a build that changed them must be committed first.
+step "build output committed"
+if ! git diff --quiet -- server/internal/web; then
+  git status --short -- server/internal/web
+  fail "the builds above changed committed files: commit them, then ship again"
+fi
+[ -z "$(git status --porcelain)" ] || { git status --short; fail "uncommitted changes: commit or stash them first"; }
+
+[ "$MODE" = --quick ] && { step "quick checks passed"; exit 0; }
+[ "$MODE" = --check ] && { step "all checks passed (not pushed)"; exit 0; }
+
+step "push $BRANCH"
+# The full gate above already ran. With a lease, so a branch rebased onto a
+# freshly merged main can go up, and never over work pushed by someone else.
+git push --no-verify --force-with-lease -u origin "$BRANCH"
+
+# Its pull request: opened the first time, the same one after that. The
+# release script opens its own, with the release notes in it.
+if [[ $BRANCH != release-* ]]; then
+  if URL=$(gh pr view "$BRANCH" --json url,state -q 'select(.state == "OPEN") | .url' 2>/dev/null) && [ -n "$URL" ]; then
+    printf '\n\033[32m✓ pushed %s: its pull request is updated.\033[0m\n  %s\n' "$BRANCH" "$URL"
+  else
+    URL=$(gh pr create --base main --head "$BRANCH" --fill-first 2>&1 | tail -1)
+    printf '\n\033[32m✓ pushed %s and opened its pull request.\033[0m\n  %s\n' "$BRANCH" "$URL"
+  fi
+  echo "  Next: merge it once its checks pass (the branch is then deleted), then pnpm work <next topic>"
+else
+  printf '\n\033[32m✓ pushed %s.\033[0m\n' "$BRANCH"
+fi

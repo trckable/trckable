@@ -1,0 +1,44 @@
+/* AddGoals's styles: they load with its chunk, not with the first load. */
+/* Two by two: four routes in a row squeezed every title onto three lines. */
+.goal-routes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 8px;
+}
+
+.goal-routes .mtile {
+  height: auto;
+  padding: 10px 12px;
+  text-align: left;
+  justify-content: flex-start;
+}
+
+/* Track a goal → the page goals already set up. */
+.pg-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+/* Settings → Search Console: the setup is a real sequence, so it is numbered. */
+.pg-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 6px 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 13.5px;
+}
+
+.pg-list code {
+  color: var(--text-2);
+  margin-right: auto;
+}
+
+.pg-list .btn {
+  height: 28px;
+  font-size: 12.5px;
+}

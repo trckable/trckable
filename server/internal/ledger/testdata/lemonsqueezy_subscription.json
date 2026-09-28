@@ -1,0 +1,23 @@
+{
+  "provider": "lemonsqueezy",
+  "note": "New subscription: order_created counts, the initial subscription invoice does not (same money). The renewal invoice has no custom data and follows the subscription's visitor. Two partial refunds arrive as cumulative order_refunded events, newest first.",
+  "events": [
+    {"meta":{"event_name":"order_created","custom_data":{"trckable_vid":"lsvis1.x"}},
+     "data":{"type":"orders","id":"101","attributes":{"store_id":1,"customer_id":55,"user_email":"a@b.c","currency":"USD","subtotal":2000,"tax":200,"total":2200,"refunded_amount":0,"status":"paid","created_at":"2026-09-01T10:00:00.000000Z","updated_at":"2026-09-01T10:00:00.000000Z","test_mode":false}}},
+    {"meta":{"event_name":"subscription_created","custom_data":{"trckable_vid":"lsvis1.x"}},
+     "data":{"type":"subscriptions","id":"900","attributes":{"store_id":1,"customer_id":55,"order_id":101,"status":"active","created_at":"2026-09-01T10:00:01.000000Z","updated_at":"2026-09-01T10:00:01.000000Z","test_mode":false}}},
+    {"meta":{"event_name":"subscription_payment_success"},
+     "data":{"type":"subscription-invoices","id":"7001","attributes":{"store_id":1,"subscription_id":900,"customer_id":55,"billing_reason":"initial","currency":"USD","subtotal":2000,"tax":200,"total":2200,"refunded_amount":0,"status":"paid","created_at":"2026-09-01T10:00:02.000000Z","updated_at":"2026-09-01T10:00:02.000000Z","test_mode":false}}},
+    {"meta":{"event_name":"subscription_payment_success"},
+     "data":{"type":"subscription-invoices","id":"7002","attributes":{"store_id":1,"subscription_id":900,"customer_id":55,"billing_reason":"renewal","currency":"USD","subtotal":2000,"tax":200,"total":2200,"refunded_amount":0,"status":"paid","created_at":"2026-10-01T10:00:00.000000Z","updated_at":"2026-10-01T10:00:00.000000Z","test_mode":false}}},
+    {"meta":{"event_name":"order_refunded","custom_data":{"trckable_vid":"lsvis1.x"}},
+     "data":{"type":"orders","id":"101","attributes":{"store_id":1,"customer_id":55,"currency":"USD","tax":200,"total":2200,"refunded_amount":1100,"status":"partial_refund","created_at":"2026-09-01T10:00:00.000000Z","updated_at":"2026-09-05T10:00:00.000000Z","test_mode":false}}},
+    {"meta":{"event_name":"order_refunded","custom_data":{"trckable_vid":"lsvis1.x"}},
+     "data":{"type":"orders","id":"101","attributes":{"store_id":1,"customer_id":55,"currency":"USD","tax":200,"total":2200,"refunded_amount":550,"status":"partial_refund","created_at":"2026-09-01T10:00:00.000000Z","updated_at":"2026-09-03T10:00:00.000000Z","test_mode":false}}}
+  ],
+  "currency": "USD",
+  "expect": [
+    {"id":"order:101","amount":2000,"refunded":1000,"visitor":"lsvis1","kind":"subscription"},
+    {"id":"sinv:7002","amount":2000,"refunded":0,"visitor":"lsvis1","kind":"renewal"}
+  ]
+}

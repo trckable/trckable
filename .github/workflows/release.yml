@@ -1,0 +1,150 @@
+# A release: `pnpm release X.Y.Z` pushes the tag vX.Y.Z (matching VERSION, with
+# a section in CHANGELOG.md), and this publishes everything from it:
+#   - the image, ghcr.io/trckable/trckable :X.Y.Z and :latest, x86-64 and arm64,
+#     each built natively on its own runner (no emulation), side by side, with
+#     the layers cached between releases; then one multi-arch tag over both
+#   - the npm package trckable, through npm's Trusted Publishing: npm checks
+#     that this workflow built it, so no npm token is stored anywhere, and the
+#     package carries a provenance statement. It is built next to the image,
+#     not after it
+#   - the GitHub release, with that CHANGELOG section, once the image and the
+#     package are both out
+#   - trckable.com/docs rebuilt (the changelog): the site's own repo, named by
+#     the repository variable SITE_REPO, runs its deploy workflow
+#
+# The tag's code already passed every check on its pull request (the release
+# pull request is merged only when green), the image build included.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  agree:
+    name: the tag, VERSION and CHANGELOG agree
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: v
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          test "$V" = "$(tr -d '[:space:]' < VERSION)" || { echo "tag $GITHUB_REF_NAME, VERSION $(cat VERSION)"; exit 1; }
+          node scripts/version-check.mjs
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+
+  image:
+    name: image (${{ matrix.arch }})
+    needs: agree
+    strategy:
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-24.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Pushed by digest only: no tag points at it until both are in.
+      - id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/${{ matrix.arch }}
+          build-args: VERSION=${{ needs.agree.outputs.version }}
+          outputs: type=image,name=ghcr.io/trckable/trckable,push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=image-${{ matrix.arch }}
+          cache-to: type=gha,scope=image-${{ matrix.arch }},mode=max
+      - env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: mkdir -p digests && touch "digests/${DIGEST#sha256:}"
+      - uses: actions/upload-artifact@v7
+        with: { name: "digest-${{ matrix.arch }}", path: "digests/*", retention-days: 1 }
+
+  tags:
+    name: image tags (:X.Y.Z and :latest, both architectures)
+    needs: [agree, image]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with: { pattern: "digest-*", merge-multiple: true, path: digests }
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: one tag over both
+        env:
+          V: ${{ needs.agree.outputs.version }}
+        run: |
+          test "$(ls digests | wc -l)" -eq 2 || { ls digests; echo "expected two images, one per architecture"; exit 1; }
+          docker buildx imagetools create -t "ghcr.io/trckable/trckable:$V" -t ghcr.io/trckable/trckable:latest \
+            $(printf 'ghcr.io/trckable/trckable@sha256:%s ' $(ls digests))
+          docker buildx imagetools inspect "ghcr.io/trckable/trckable:$V"
+
+  npm:
+    needs: agree
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write # Trusted Publishing (set up on npmjs.com for this workflow)
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 22, registry-url: "https://registry.npmjs.org", cache: pnpm }
+      - run: npm install -g npm@11 # Trusted Publishing needs npm 11.5 or newer
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter trckable build && pnpm --filter trckable test
+      - name: publish (a version already on npm is left alone)
+        working-directory: packages/trckable
+        run: |
+          V=$(node -p "require('./package.json').version")
+          if npm view "trckable@$V" version >/dev/null 2>&1; then echo "trckable@$V is already on npm"; exit 0; fi
+          npm publish --provenance --access public
+
+  github-release:
+    name: GitHub release, from the CHANGELOG section
+    needs: [agree, tags, npm]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          V: ${{ needs.agree.outputs.version }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 && { echo "the release is already there"; exit 0; }
+          awk -v v="## $V" 'index($0, v) == 1 {on = 1; next} /^## / {on = 0} on' CHANGELOG.md > notes.md
+          gh release create "$GITHUB_REF_NAME" --title "trckable $V" --notes-file notes.md
+
+  docs:
+    needs: github-release
+    runs-on: ubuntu-24.04
+    steps:
+      - name: rebuild trckable.com/docs
+        env:
+          GH_TOKEN: ${{ secrets.SITE_DEPLOY_TOKEN }}
+          SITE_REPO: ${{ vars.SITE_REPO }}
+        run: |
+          if [ -z "$GH_TOKEN" ] || [ -z "$SITE_REPO" ]; then echo "::notice::SITE_DEPLOY_TOKEN or SITE_REPO is not set: pnpm release --ship deploys the site from its own repo"; exit 0; fi
+          gh workflow run deploy.yml -R "$SITE_REPO"

@@ -1,0 +1,43 @@
+/* DialogActions's styles: they load with its chunk, not with the first load. */
+/* ---- One footer for every dialog -------------------------------------------
+   The way out on the left, the thing you probably want on the right, under a
+   hairline that reaches the dialog's edges. Before this every dialog invented
+   its own row and none of them agreed. */
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px -20px -20px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--grid);
+}
+
+.dialog-actions-gap {
+  flex: 1;
+}
+
+.dialog-actions .btn.big {
+  height: 44px;
+  padding: 0 20px;
+}
+
+@media (max-width: 560px) {
+  /* The primary goes on top, full width: that is where a thumb reaches. */
+  .dialog-actions {
+    flex-wrap: wrap-reverse;
+    gap: 8px 8px;
+  }
+}
+
+@media (max-width: 560px) {
+  .dialog-actions > .btn {
+    flex: 1 1 140px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .dialog-actions-gap {
+    display: none;
+  }
+}

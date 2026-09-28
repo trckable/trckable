@@ -1,0 +1,88 @@
+// Every word the Full chart grid shows, in one place: this is what moves to
+// the message files when translations come.
+import { fmtInt, fmtPct } from '../../lib/format'
+
+const plural = (n: number, one: string, many: string) => `${fmtInt(n)} ${n === 1 ? one : many}`
+
+export const copy = {
+  failed: (why: string) => `Couldn’t load the charts: ${why}`,
+  day: 'Day',
+
+  sources: {
+    title: 'Sources over time',
+    question: 'Where visits came from, bucket by bucket',
+    label: (n: number) => `Visits by source, stacked, over ${plural(n, 'bucket', 'buckets')}`,
+    other: 'Other',
+    when: 'When',
+    visits: (n: number) => plural(n, 'visit', 'visits'),
+  },
+  funnel: {
+    title: 'Visit to sale',
+    question: 'Where people drop off',
+    label: 'Visitors at each step, from visit to sale',
+    visit: 'Visit',
+    sale: 'Sale',
+    goal: (name: string) => name,
+    ofBefore: (rate: number) => `${fmtPct(rate)} of the step before`,
+    tip: (label: string, n: number, rate: number | null) =>
+      rate === null ? `${label}: ${plural(n, 'visitor', 'visitors')}` : `${label}: ${plural(n, 'visitor', 'visitors')} · ${fmtPct(rate)} of the step before`,
+    step: 'Step',
+    visitors: 'Visitors',
+    rate: 'Of the step before',
+    foot: 'Bar length: share of all visitors. Each step counts only people who did the one before it.',
+  },
+  convert: {
+    title: 'Time to convert',
+    question: 'How long from the first visit to the first sale',
+    label: 'First sales by time since the buyer’s first visit',
+    short: { visit: 'Same', '3d': '0–3d', '7d': '4–7d', '14d': '8–14d', more: '15+d' },
+    spans: { visit: 'Same visit', '3d': '0–3 days', '7d': '4–7 days', '14d': '8–14 days', more: '15+ days' },
+    span: 'Time to convert',
+    sales: 'Sales',
+    tip: (span: string, n: number) => `${span}: ${plural(n, 'sale', 'sales')}`,
+    foot: 'First sales in this period; renewals are not new decisions.',
+  },
+  visitors: {
+    title: 'New vs returning',
+    question: 'Are people coming back?',
+    label: 'New and returning visitors per bucket',
+    new: 'New',
+    returning: 'Returning',
+    unknown: (n: number) => `${plural(n, 'visitor', 'visitors')} without a first-visit date (cookieless) are in neither line.`,
+  },
+  rhythm: {
+    title: 'Weekday × hour',
+    question: 'When your visitors are here',
+    label: (tz: string) => `Visits by weekday and hour, in ${tz}`,
+    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    hour: (h: number) => String(h).padStart(2, '0'),
+    tip: (day: string, h: number, n: number) => `${day} ${String(h).padStart(2, '0')}:00 · ${plural(n, 'visit', 'visits')}`,
+    fewer: 'fewer',
+    more: 'more',
+    weekday: 'Weekday',
+    total: 'All day',
+  },
+  map: {
+    title: 'Revenue by country',
+    question: 'Where the money comes from',
+    label: 'Attributed revenue by country',
+    country: 'Country',
+    revenue: 'Revenue',
+    customers: 'Customers',
+    countries: (n: number) => `${plural(n, 'country', 'countries')} with revenue · hover to see one`,
+  },
+  flow: {
+    title: 'Page flow',
+    question: 'What people open next',
+    label: 'The first three pages of each visit, and where visits ended',
+    heads: ['First page', 'Second', 'Third'],
+    exit: 'Left the site',
+    other: 'Other pages',
+    box: (label: string, n: number) => `${label}: ${plural(n, 'visit', 'visits')}`,
+    band: (from: string, to: string, n: number) => `${from} → ${to}: ${plural(n, 'visit', 'visits')}`,
+    from: 'From',
+    to: 'To',
+    visits: 'Visits',
+    foot: 'Grey: the visit ended there, or a quieter page.',
+  },
+}

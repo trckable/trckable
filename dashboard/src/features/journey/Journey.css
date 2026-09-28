@@ -1,0 +1,514 @@
+/* The visitor journey: an identity card over a timeline per visit. On a
+   phone the dialog becomes a bottom sheet. */
+.modal.journey-dialog {
+  position: relative;
+  width: min(680px, 100%);
+  gap: 16px;
+  padding: 24px 24px 20px;
+  font-variant-numeric: tabular-nums;
+}
+.modal.journey-dialog > * {
+  flex-shrink: 0; /* a tall story scrolls; its parts never squash */
+}
+.jr-corner {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  z-index: 1;
+}
+
+/* Who. */
+.jr-who {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding-right: 84px; /* the corner's buttons */
+  min-width: 0;
+}
+.jr-who-text {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.jr-who h2,
+.jr-title-wait {
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.jr-who-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  font-size: 13px;
+}
+.jr-who-line > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.jr-badges {
+  display: flex;
+  gap: 6px;
+  margin: 2px 0 0;
+}
+.jr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 1px solid var(--border-2);
+  color: var(--text-2);
+  background: var(--sunken);
+}
+.jr-badge.returning {
+  color: var(--ch-1);
+  border-color: color-mix(in srgb, var(--ch-1) 45%, var(--border));
+}
+.jr-badge.live {
+  color: var(--up);
+  border-color: color-mix(in srgb, var(--up) 45%, var(--border));
+}
+
+/* On the site now. */
+.jr-live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  background: color-mix(in srgb, var(--up) 9%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--up) 35%, var(--border));
+  min-width: 0;
+}
+.jr-live b {
+  white-space: nowrap;
+}
+.jr-live-dot {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--up);
+  animation: jr-ping 1.6s ease-out infinite;
+}
+@keyframes jr-ping {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--up) 70%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+/* The numbers. */
+.jr-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--border);
+}
+.jr-fact {
+  display: grid;
+  gap: 3px;
+  align-content: start;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  min-width: 0;
+}
+.jr-fact dt {
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+.jr-fact dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.jr-fact.money {
+  grid-column: 1 / -1;
+  background: color-mix(in srgb, var(--money) 8%, var(--surface-2));
+}
+.jr-fact.money dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  white-space: normal;
+}
+.jr-money {
+  color: var(--money);
+  font-weight: 700;
+}
+.jr-fact.money .jr-money {
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+.jr-refund {
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.jr-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+/* A source chip. */
+.jr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 3px 10px 3px 4px;
+  border-radius: 999px;
+  border: 1px solid var(--border-2);
+  background: var(--sunken);
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.jr-chip .v-mark {
+  border-radius: 999px;
+}
+.jr-chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+button.jr-chip {
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+button.jr-chip:hover,
+button.jr-chip:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* Visits. */
+.jr-visits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.jr-visit {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+  padding: 12px 14px 8px;
+}
+.jr-visit.live {
+  border-color: color-mix(in srgb, var(--up) 40%, var(--border));
+}
+.jr-visit-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+.jr-visit-head h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.jr-visit-no {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+}
+.jr-visit-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-left: auto;
+  font-size: 12.5px;
+}
+.jr-visit-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+/* The timeline: a rail with a node per step. */
+.jr-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+.jr-node {
+  --dot: var(--text-3);
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  padding: 4px 0;
+  animation: jr-in 0.36s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 35ms);
+}
+/* The rail between nodes. */
+.jr-node::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-2);
+}
+.jr-node:first-child::before {
+  top: 50%;
+}
+.jr-node:last-child::before {
+  bottom: 50%;
+}
+.jr-node:only-child::before {
+  display: none;
+}
+.jr-dot {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  margin-left: 4px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 2px solid var(--dot);
+}
+.jr-node.page:first-child {
+  --dot: var(--accent-strong);
+}
+.jr-node.exit .jr-dot {
+  background: var(--dot);
+}
+.jr-node.here {
+  --dot: var(--up);
+}
+.jr-node.here .jr-dot {
+  background: var(--up);
+  animation: jr-ping 1.6s ease-out infinite;
+}
+.jr-node.goal,
+.jr-node.payment {
+  margin: 3px 0;
+  padding: 6px 10px 6px 0;
+  border-radius: 10px;
+}
+.jr-node.goal {
+  --dot: var(--accent-strong);
+  background: linear-gradient(90deg, transparent 0 18px, color-mix(in srgb, var(--accent) 10%, transparent) 18px);
+}
+.jr-node.payment {
+  --dot: var(--money);
+  background: linear-gradient(90deg, transparent 0 18px, color-mix(in srgb, var(--money) 12%, transparent) 18px);
+}
+.jr-node.goal .jr-dot,
+.jr-node.payment .jr-dot {
+  width: 14px;
+  height: 14px;
+  margin-left: 2px;
+  background: var(--dot);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dot) 25%, transparent);
+}
+.jr-node-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding-left: 2px;
+}
+.jr-node.goal .jr-node-main {
+  color: var(--accent-strong);
+}
+.jr-node.payment .jr-node-main {
+  color: var(--money);
+}
+.jr-node-main .faint {
+  white-space: nowrap;
+}
+.jr-kind {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.jr-goal {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jr-props {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+.jr-path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 13px;
+  color: var(--text);
+}
+button.jr-path {
+  border: 0;
+  padding: 2px 6px;
+  margin-left: -6px;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+button.jr-path:hover,
+button.jr-path:focus-visible {
+  background: var(--accent-soft);
+}
+.jr-times {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-2);
+  background: var(--row);
+}
+.jr-tag {
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+}
+.jr-tag.here {
+  color: var(--up);
+}
+.jr-meta {
+  display: inline-flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-self: end;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.jr-when {
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+@keyframes jr-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
+
+/* A phone: a bottom sheet, the timeline's meta under the path. */
+@media (max-width: 560px) {
+  .modal-back:has(> .journey-dialog) {
+    padding: 0;
+    place-items: end stretch;
+  }
+  .modal.journey-dialog {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: 0;
+    padding: 22px 16px 16px;
+    animation: jr-sheet 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .modal.journey-dialog::before {
+    content: '';
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    width: 38px;
+    height: 4px;
+    margin-left: -19px;
+    border-radius: 999px;
+    background: var(--border-2);
+  }
+  .jr-corner {
+    top: 14px;
+    right: 12px;
+  }
+  .jr-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .jr-visit {
+    padding: 10px 12px 6px;
+  }
+  .jr-visit-meta {
+    margin-left: 0;
+  }
+  .jr-node {
+    grid-template-columns: 18px minmax(0, 1fr);
+    row-gap: 0;
+  }
+  .jr-meta {
+    grid-column: 2;
+    justify-self: start;
+    padding-left: 2px;
+  }
+  .jr-node::before {
+    top: 0;
+  }
+}
+@keyframes jr-sheet {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jr-node,
+  .modal.journey-dialog,
+  .jr-live-dot,
+  .jr-node.here .jr-dot {
+    animation: none;
+  }
+}
+
+/* The menu's destructive item. */
+.pop.menu button.danger {
+  color: var(--down);
+}
+.jr-none {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+}

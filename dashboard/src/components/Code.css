@@ -1,0 +1,55 @@
+/* Code's styles: they load with its chunk, not with the first load. */
+/* ---- Code view ------------------------------------------------------------
+   A language label, a copy button and light highlighting. */
+.code-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--sunken);
+}
+
+.code-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 14px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  font-size: 11px;
+}
+
+.code-bar button {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-2);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.code-bar button:hover {
+  color: var(--text);
+  border-color: var(--border-2);
+}
+
+.c-comment {
+  color: var(--code-com);
+}
+
+.c-str {
+  color: var(--code-str);
+}
+
+.c-tag {
+  color: var(--code-tag);
+}
+
+.c-key {
+  color: var(--code-key);
+}
+
+.c-num {
+  color: var(--code-num);
+}

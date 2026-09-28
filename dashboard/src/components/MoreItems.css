@@ -1,0 +1,51 @@
+/* MoreItems's styles: they load with its chunk, not with the first load. */
+/* Theme sits in the ⋯ menu, beside Your account: it belongs to the person, not
+   to the site, and putting it next to the site picker made one look like the
+   other. */
+.pop.menu .menu-kbd {
+  margin-left: auto;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+.menu-theme {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 8px;
+  border-bottom: 1px solid var(--grid);
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.menu-theme > .faint {
+  flex: 1;
+}
+
+.menu-theme .seg.small {
+  flex: none;
+}
+
+/* The menu styles every button inside it, and they come later in this file
+   than the segmented control's own rules, so the chosen one has to say again
+   that it is chosen. */
+.menu-theme .seg button {
+  width: auto;
+  height: 26px;
+  padding: 0 10px;
+  gap: 0;
+  background: transparent;
+  color: var(--text-2);
+}
+
+.menu-theme .seg button[aria-checked='true'] {
+  background: var(--border);
+  color: var(--text);
+}
+
+.menu-theme .seg button:hover {
+  color: var(--text);
+}

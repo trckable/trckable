@@ -1,0 +1,51 @@
+/* ---- Web Vitals (its own chunk: loaded with the card) ----------------------
+   Three numbers with a bar underneath each, so the colour reads before the
+   figure does. */
+.vitals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.vital {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+}
+.vital b {
+  font-size: 19px;
+  font-weight: 600;
+}
+.vital i {
+  height: 3px;
+  border-radius: 2px;
+  margin-top: 2px;
+}
+.vital-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.vital-pages li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.vital-pages li:nth-child(odd) {
+  background: var(--sunken);
+}
+.vital-pages li > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vital-pages .faint {
+  font-size: 12px;
+}

@@ -1,0 +1,40 @@
+/* WorldMap's styles: they load with its chunk, not with the first load. */
+/* ---- Map ------------------------------------------------------------------ */
+.worldmap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.worldmap svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.worldmap path {
+  transition: opacity 0.15s;
+}
+
+.worldmap-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+
+.worldmap-foot .scale {
+  display: flex;
+  gap: 2px;
+}
+
+.worldmap-foot .scale i {
+  width: 16px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+/* The chart's tooltip, reused by the map and the chart kit. */
+.worldmap {
+  position: relative;
+}

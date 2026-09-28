@@ -1,0 +1,22 @@
+/* Copyable's styles: they load with its chunk, not with the first load. */
+.copyable {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.copyable code {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.copyable .btn {
+  height: 32px;
+  font-size: 12.5px;
+}

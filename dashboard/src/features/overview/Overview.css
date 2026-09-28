@@ -1,0 +1,188 @@
+/* ---- The Data view's overview: tiles and the main chart ---------------------
+   Live's look: the charted tile is lit by a slim accent bar and a lifted
+   surface (no heavy border), each tile carries its change as a small chip,
+   Online now pulses, and Replay is a small ▶ whose controls show on hover or
+   focus. Loaded after styles.css; more specific where it overrides it. */
+.overview .kpi-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  min-width: 0;
+}
+.kpi-delta {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.kpi-delta.tone-flat {
+  color: var(--text-2);
+}
+.overview button.kpi[aria-pressed='true'] {
+  border-color: transparent;
+  background: var(--surface-2);
+  box-shadow: 0 6px 18px -10px color-mix(in srgb, #000 60%, transparent);
+}
+.overview button.kpi[aria-pressed='true']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 14px;
+  right: 14px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* Online now: a pulsing dot while anyone is on, and a count that rolls. */
+.kpi-online .label .pulse {
+  flex: none;
+  margin: 0 4px 0 2px;
+}
+.pulse.off {
+  animation: none;
+  background: var(--text-3);
+}
+.roll-box {
+  display: block;
+  overflow: hidden;
+}
+.roll {
+  display: inline-block;
+  animation: roll-in 0.38s var(--ease);
+}
+@keyframes roll-in {
+  from {
+    transform: translateY(70%);
+    opacity: 0;
+  }
+}
+
+/* The chart's head: its name, the "since" chip, then the tools. */
+.overview-chart > .chart-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+}
+.since-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.chart-head-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.btn.ghost.show-since {
+  height: 30px;
+  padding: 0 8px;
+  color: var(--accent-strong);
+  font-size: 13px;
+}
+.replay {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn.icon.ghost.replay-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  color: var(--text-2);
+}
+.btn.icon.ghost.replay-btn:hover {
+  color: var(--text);
+}
+.replaying .replay-btn {
+  color: var(--accent-strong);
+}
+.replay-speed .speed-btn {
+  height: 30px;
+}
+.replay-speed .pop.menu-pop.speed-pop {
+  top: 36px;
+  bottom: auto;
+  left: auto;
+  right: 0;
+}
+
+/* Replay's speed and scrubber: out of the way until the chart is pointed at,
+   focused, playing or on a picked day. Touch screens have no hover: shown. */
+.replay-speed,
+.scrub.quiet {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.overview-chart:hover .replay-speed,
+.overview-chart:focus-within .replay-speed,
+.overview-chart.replaying .replay-speed,
+.overview-chart:hover .scrub.quiet,
+.overview-chart:focus-within .scrub.quiet,
+.overview-chart.replaying .scrub.quiet {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (hover: none) {
+  .replay-speed,
+  .scrub.quiet {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+.scrub.quiet {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+  gap: 10px;
+}
+.scrub-day {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+@media (max-width: 640px) {
+  .btn.ghost.show-since {
+    padding: 0 6px;
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .roll {
+    animation: none;
+  }
+  .replay-speed,
+  .scrub.quiet {
+    transition: none;
+  }
+}
+.overview-chart > .chart-head > h2 {
+  flex: none;
+}
+.speed-slot {
+  display: block;
+  width: 70px;
+  height: 30px;
+}
+/* A phone keeps the head on one line: the button already says since when. */
+@media (max-width: 640px) {
+  .overview-chart > .chart-head {
+    flex-wrap: nowrap;
+  }
+  .overview-chart > .chart-head .since-chip:has(~ .chart-head-tools .show-since) {
+    display: none;
+  }
+}

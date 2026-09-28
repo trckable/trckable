@@ -1,0 +1,24 @@
+/* Shares.tsx: its own styles, loaded with it (not with the first load). */
+
+/* API keys: one line each. */
+.keylist {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.keyrow-name {
+  font-weight: 500;
+  font-size: 13.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45%;
+}
+.keyrow-meta {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

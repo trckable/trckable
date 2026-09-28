@@ -1,0 +1,49 @@
+// Every word the first run shows, in one place: this is what moves to the
+// message files when translations come.
+import { fmtInt } from '../../lib/format'
+
+export const copy = {
+  label: 'Set up your first site',
+  skip: 'Skip for now',
+  skipHint: 'Esc',
+  enterKey: '↵',
+  progress: (at: number, of: number) => `Step ${at} of ${of}`,
+
+  site: {
+    title: 'Which site first?',
+    sub: 'Type its address. You can add more sites later.',
+    domain: 'Domain',
+    placeholder: 'yoursite.com',
+    go: 'Continue',
+    busy: 'Adding…',
+    enter: 'or press Enter ↵',
+  },
+  preview: {
+    label: (domain: string) => `A preview of the dashboard for ${domain}`,
+    empty: 'yoursite.com',
+    sample: 'Sample',
+    live: 'Live',
+    visitors: 'Visitors',
+    pageviews: 'Pageviews',
+    online: 'Online now',
+    none: '—',
+    waiting: 'Your dashboard, ready and waiting',
+    opened: (where: string, path: string) => (where ? `${where} · opened ${path}` : `Opened ${path}`),
+  },
+  install: {
+    title: 'One line in your site’s head',
+    sub: (domain: string) => `Paste it, open ${domain} once, and this moves on by itself.`,
+  },
+  here: {
+    title: 'Someone’s here.',
+    sub: (domain: string) => `Your first visit just landed on ${domain}. Every page they open shows up as it happens.`,
+    go: 'Continue',
+    arrived: (path: string) => `Your first visit arrived: ${path}`,
+  },
+  done: {
+    title: 'You’re live.',
+    sub: (domain: string) => `${domain} is counting.`,
+    live: 'Open Live',
+  },
+  count: (n: number) => fmtInt(n),
+}

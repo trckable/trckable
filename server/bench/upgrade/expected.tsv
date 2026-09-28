@@ -1,0 +1,6 @@
+# Report numbers this build is meant to show differently from a release, on
+# that release's own demo data. upgrade.sh accepts exactly these deltas and
+# fails on any other difference, or if a listed one does not happen.
+# release	metric	delta	commit	reason
+0.2.0	refunds	+1	48dfdca	pi_demo89: $58.31 incl. $9.31 tax, $29.15 refunded; its net share is 2915*4900/5831 = 2449.58 cents, now rounded to 2450, before cut to 2449
+0.2.0	revenue	-1	48dfdca	the same refund: revenue is net of refunds

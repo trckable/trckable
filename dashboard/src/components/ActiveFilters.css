@@ -1,0 +1,22 @@
+/* ActiveFilters.tsx: its own styles, loaded with it (not with the first load). */
+
+.menu-x {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.menu-x:hover {
+  background: var(--surface);
+  color: var(--down);
+}
+.filters-pop {
+  top: 42px;
+  left: 0;
+  width: 320px;
+}

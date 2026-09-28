@@ -1,0 +1,209 @@
+/* The switcher's list: its own styles, loaded with it. */
+/* Moved from styles.css; kept first, so the rules below still win as before. */
+/* About five sites, then it scrolls: the search above finds the rest. */
+.sites-list {
+  display: flex;
+  flex-direction: column;
+  max-height: min(312px, 46vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sites-foot {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 6px;
+}
+
+.foot-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.foot-main:hover,
+.foot-side:hover {
+  background: var(--sunken);
+}
+
+.foot-main span span {
+  display: block;
+}
+
+.foot-main .faint {
+  font-size: 11.5px;
+}
+
+.foot-side {
+  align-self: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--sunken);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.foot-side:hover {
+  color: var(--text);
+  border-color: var(--border-2);
+}
+
+.sites-foot button {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  justify-content: center;
+  padding: 9px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.sites-foot button:hover {
+  background: var(--sunken);
+  color: var(--text);
+}
+
+.site-section + .site-section {
+  margin-top: 4px;
+}
+.site-group {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.site-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 10px;
+}
+.site-row > .site {
+  flex: 1;
+  min-width: 0;
+}
+.site-row[draggable='true'] > .site {
+  cursor: pointer;
+}
+.site-row.dragging {
+  opacity: 0.45;
+}
+/* The ⋯ shows on the row being pointed at or worked with; on a touch
+   screen, where nothing is pointed at, it always shows. */
+.site-row > .btn.icon {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  opacity: 0;
+}
+.site-row:hover > .btn.icon,
+.site-row:focus-within > .btn.icon,
+.site-row > .btn.icon[aria-expanded='true'] {
+  opacity: 1;
+}
+@media (hover: none) {
+  .site-row > .btn.icon {
+    opacity: 1;
+  }
+}
+.site-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0 2px;
+  padding: 2px 10px;
+  min-height: 28px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.site-head.group {
+  padding: 0 0 0 2px;
+}
+.site-head .fold {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.site-head .fold span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.site-head .fold:hover {
+  background: var(--sunken);
+  color: var(--text-2);
+}
+.site-head .fold svg {
+  flex: none;
+  transition: transform 0.15s var(--ease);
+}
+.site-head .fold[aria-expanded='true'] svg {
+  transform: rotate(90deg);
+}
+.site-head > .btn.icon {
+  width: 28px;
+  height: 28px;
+}
+.sites-none {
+  margin: 4px 10px 8px;
+  font-size: 12.5px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.sites-keys {
+  margin: 2px 10px 0;
+  font-size: 11px;
+}
+.now-note {
+  color: var(--accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-head .fold svg {
+    transition: none;
+  }
+}
+@media (max-width: 640px) {
+  .sites-keys {
+    display: none;
+  }
+}

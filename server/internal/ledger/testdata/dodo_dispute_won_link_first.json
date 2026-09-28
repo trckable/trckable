@@ -1,0 +1,23 @@
+{
+  "provider": "dodo",
+  "note": "subscription.active arrives before any payment and carries the checkout metadata; the first payment has none, the renewal neither: both follow the subscription's visitor. A dispute opened then won costs nothing; a refund that failed gives nothing back. Shapes per https://docs.dodopayments.com/developer-resources/webhooks/intents/payment, .../intents/subscription, .../intents/dispute and .../intents/refund (Standard Webhooks envelope: business_id, type, timestamp, data.payload_type).",
+  "events": [
+    {"business_id":"bus_1","type":"subscription.active","timestamp":"2026-09-01T10:00:00Z",
+     "data":{"payload_type":"Subscription","subscription_id":"sub_d","status":"active","customer":{"customer_id":"cus_d","email":"d@example.com","name":"D"},"metadata":{"trckable_vid":"dodov1.x"}}},
+    {"business_id":"bus_1","type":"payment.succeeded","timestamp":"2026-09-01T10:00:05Z",
+     "data":{"payload_type":"Payment","payment_id":"pay_d1","status":"succeeded","total_amount":2400,"tax":400,"currency":"EUR","subscription_id":"sub_d","created_at":"2026-09-01T10:00:02Z","customer":{"customer_id":"cus_d","email":"d@example.com"},"metadata":{}}},
+    {"business_id":"bus_1","type":"payment.succeeded","timestamp":"2026-10-01T10:00:05Z",
+     "data":{"payload_type":"Payment","payment_id":"pay_d2","status":"succeeded","total_amount":2400,"tax":400,"currency":"EUR","subscription_id":"sub_d","created_at":"2026-10-01T10:00:02Z","customer":{"customer_id":"cus_d","email":"d@example.com"},"metadata":{}}},
+    {"business_id":"bus_1","type":"dispute.opened","timestamp":"2026-10-05T10:00:00Z",
+     "data":{"payload_type":"Dispute","dispute_id":"dsp_d","payment_id":"pay_d2","amount":"2400","currency":"EUR","dispute_status":"dispute_opened","dispute_stage":"dispute","created_at":"2026-10-05T10:00:00Z"}},
+    {"business_id":"bus_1","type":"dispute.won","timestamp":"2026-10-20T10:00:00Z",
+     "data":{"payload_type":"Dispute","dispute_id":"dsp_d","payment_id":"pay_d2","amount":"2400","currency":"EUR","dispute_status":"dispute_won","dispute_stage":"dispute","created_at":"2026-10-05T10:00:00Z"}},
+    {"business_id":"bus_1","type":"refund.failed","timestamp":"2026-09-10T10:00:00Z",
+     "data":{"payload_type":"Refund","refund_id":"ref_d","payment_id":"pay_d1","amount":1200,"currency":"EUR","status":"failed","created_at":"2026-09-10T09:59:00Z"}}
+  ],
+  "currency": "EUR",
+  "expect": [
+    {"id":"pay_d1","amount":2000,"refunded":0,"visitor":"dodov1","kind":"subscription"},
+    {"id":"pay_d2","amount":2000,"refunded":0,"visitor":"dodov1","kind":"renewal"}
+  ]
+}

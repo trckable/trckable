@@ -1,0 +1,398 @@
+# trckable CI: correctness, durability and the weight budget are enforced on
+# every push. A change that loses data or makes trckable heavier cannot merge.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 2 * * *" # nightly: everything, whatever changed
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Which tests does this change need (scripts/ci-select.mjs)? A pull request
+  # runs the tests for what it changed: its Go packages and their dependents,
+  # its screens' browser specs, prose nothing heavy; a file no rule knows runs
+  # everything. main, release pull requests, the nightly run and a manual run
+  # always run everything. Every required check still runs and reports.
+  changes:
+    name: what changed
+    runs-on: ubuntu-24.04
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      full: ${{ steps.filter.outputs.full }}
+      server: ${{ steps.filter.outputs.server }}
+      race: ${{ steps.filter.outputs.race }}
+      server_pkgs: ${{ steps.filter.outputs.server_pkgs }}
+      crash: ${{ steps.filter.outputs.crash }}
+      e2e: ${{ steps.filter.outputs.e2e }}
+      demo: ${{ steps.filter.outputs.demo }}
+      dashboard: ${{ steps.filter.outputs.dashboard }}
+      tracker: ${{ steps.filter.outputs.tracker }}
+      image: ${{ steps.filter.outputs.image }}
+      demo_browsers: ${{ steps.filter.outputs.demo_browsers }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { fetch-depth: 0 }
+      - id: filter
+        env:
+          FULL: ${{ (github.event_name != 'pull_request' || startsWith(github.head_ref, 'release-')) && '1' || '' }}
+        run: |
+          [ -n "$FULL" ] && echo "main, a release, nightly or by hand: everything"
+          git diff --name-only "origin/${{ github.base_ref || 'main' }}...HEAD" || true
+          node scripts/ci-select.mjs "origin/${{ github.base_ref || 'main' }}"
+          # The accessibility pass on demo data: Chromium on a pull request, all
+          # three browsers on main, a release, nightly and by hand.
+          if [ -n "$FULL" ]; then b='["chromium","firefox","webkit"]'; else b='["chromium"]'; fi
+          echo "demo_browsers=$b" >> "$GITHUB_OUTPUT"
+      # Every job needs this one, so a release pull request whose versions
+      # disagree fails every required check, with no local gate needed.
+      - name: one version everywhere, and the release scripts' tests
+        run: node scripts/version-check.mjs && node --test scripts/*.test.mjs
+
+  # trckabled, built once and shared with every job that runs it.
+  build:
+    name: build trckabled
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with: { go-version: "1.27", cache-dependency-path: server/go.sum }
+      - run: cd server && go build -trimpath -ldflags="-s -w" -o bin/trckabled ./cmd/trckabled
+      - uses: actions/upload-artifact@v7
+        with: { name: trckabled, path: server/bin/trckabled, retention-days: 1 }
+
+  server-lint:
+    name: server lint (gofmt, vet, golangci-lint, govulncheck)
+    needs: changes
+    if: needs.changes.outputs.server_pkgs != ''
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with: { go-version: "1.27", cache-dependency-path: server/go.sum }
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/golangci-lint
+          key: golangci-lint-${{ runner.os }}-${{ hashFiles('server/go.sum') }}-${{ github.sha }}
+          restore-keys: golangci-lint-${{ runner.os }}-${{ hashFiles('server/go.sum') }}-
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - name: vet
+        run: go vet ./...
+      # Pinned; the same version as scripts/ship.sh. Built by go run, cached.
+      - name: golangci-lint (errcheck, gosec, bodyclose, noctx, staticcheck, …)
+        run: go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run ./...
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+  # The tests in two halves side by side: the ledger and the API take as long
+  # as everything else together. Between them, every package in ./... runs.
+  server-test:
+    name: server tests (${{ matrix.part }})
+    needs: changes
+    if: needs.changes.outputs.server_pkgs != ''
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [ledger and api, the rest]
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with: { go-version: "1.27", cache-dependency-path: server/go.sum }
+      - name: test (race detector when the server changed; network tests skipped)
+        env:
+          CHANGED: ${{ needs.changes.outputs.server_pkgs }}
+        run: |
+          race=-race
+          [ "${{ needs.changes.outputs.race }}" = true ] || { race=""; echo "no server change in this pull request: tests without -race"; }
+          if [ "$CHANGED" = all ]; then
+            all=$(go list ./...)
+          else
+            # The changed packages and every package whose code or tests
+            # depend on one of them, however indirectly.
+            changed=" $(go list $CHANGED 2>/dev/null | tr '\n' ' ') "
+            all=$(go list -test -f '{{.ImportPath}} {{join .Deps " "}}' ./... | awk -v c="$changed" '
+              { p = $1; sub(/\.test$/, "", p); for (i = 1; i <= NF; i++) { d = $i; sub(/\.test$/, "", d); if (index(c, " " d " ")) { print p; break } } }' | sort -u)
+            echo "changed: $CHANGED"
+          fi
+          slow='/internal/(ledger|api)$'
+          if [ "${{ matrix.part }}" = "ledger and api" ]; then
+            pkgs=$(echo "$all" | grep -E "$slow" || true)
+          else
+            pkgs=$(echo "$all" | grep -vE "$slow" || true)
+          fi
+          [ -n "$pkgs" ] || { echo "nothing of this half is affected"; exit 0; }
+          echo "$pkgs"
+          go test $pkgs $race -count=1 -short
+
+  server-crash:
+    name: server crash, backup and upgrade
+    needs: [changes, build]
+    if: needs.changes.outputs.crash == 'true'
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v7
+        with: { fetch-depth: 0 } # the upgrade test starts from the last release's tag
+      - uses: actions/setup-go@v7
+        with: { go-version: "1.27", cache-dependency-path: server/go.sum }
+      - uses: actions/download-artifact@v7
+        with: { name: trckabled, path: server/bin }
+      - run: chmod +x bin/trckabled
+      - name: crash test — kill -9 mid-load, exactly once
+        run: go run ./bench/crashtest -bin ./bin/trckabled -n 20000 -signal kill
+      - name: crash test — graceful redeploy, exactly once
+        run: go run ./bench/crashtest -bin ./bin/trckabled -n 20000 -signal term
+      - name: backup while serving, restore, serve again — identical reports
+        run: bench/roundtrip/roundtrip.sh ./bin/trckabled
+      # The runner has Docker: the last release's image seeds and serves the
+      # data, then this build takes it over.
+      - name: upgrade from the last release — a copy kept first, identical reports
+        run: bench/upgrade/upgrade.sh ./bin/trckabled
+
+  # The required check: green only when every server job above is.
+  server:
+    name: server (tests, race, crash)
+    needs: [changes, build, server-lint, server-test, server-crash]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo '${{ toJSON(needs) }}'
+          [ "${{ needs.changes.result }}" = success ] || exit 1
+          [ "${{ needs.changes.outputs.code }}" = true ] || { echo "prose only: nothing to test"; exit 0; }
+          for r in ${{ needs.build.result }} ${{ needs.server-lint.result }} ${{ needs.server-test.result }} ${{ needs.server-crash.result }}; do
+            [ "$r" = success ] || [ "$r" = skipped ] || exit 1 # skipped: not needed for this change
+          done
+
+  tracker:
+    name: tracker + npm package (tests, size budget)
+    needs: changes
+    runs-on: ubuntu-24.04
+    steps:
+      - if: needs.changes.outputs.tracker == 'true'
+        uses: actions/checkout@v7
+      - if: needs.changes.outputs.tracker == 'true'
+        uses: pnpm/action-setup@v6
+      - if: needs.changes.outputs.tracker == 'true'
+        uses: actions/setup-node@v7
+        with: { node-version: 22, cache: pnpm }
+      - if: needs.changes.outputs.tracker == 'true'
+        run: pnpm install --frozen-lockfile
+      # Every package in the workspace, development tools included: a
+      # known-vulnerable test runner reads files as surely as a shipped one.
+      - if: needs.changes.outputs.tracker == 'true'
+        name: pnpm audit
+        run: pnpm audit --audit-level moderate
+      - if: needs.changes.outputs.tracker == 'true'
+        name: tracker tests
+        run: pnpm --filter @trckable/tracker test
+      - if: needs.changes.outputs.tracker == 'true'
+        name: tracker ≤ 2 KB gzip (and the embedded copy is up to date)
+        run: |
+          pnpm --filter @trckable/tracker size
+          # status, not diff: a file git has never seen (a lost build) counts too
+          test -z "$(git status --porcelain -- server/internal/web/assets/)" || (git status --short -- server/internal/web/assets/ && echo "run: pnpm --filter @trckable/tracker build" && exit 1)
+      # The build comes first: one test reads the built files, because a
+      # feature flag left undefined there is only visible in dist/.
+      - if: needs.changes.outputs.tracker == 'true'
+        name: npm package build (react entry ≤ 2.5 KB gzip) + tests
+        run: pnpm --filter trckable build && pnpm --filter trckable test
+      - if: needs.changes.outputs.tracker == 'true'
+        name: publish the measured numbers (facts)
+        run: node scripts/facts.mjs tracker > facts-tracker.json && cat facts-tracker.json
+      - if: needs.changes.outputs.tracker == 'true'
+        uses: actions/upload-artifact@v7
+        with: { name: facts-tracker, path: facts-tracker.json }
+
+  dashboard:
+    name: dashboard (types, first load ≤ 130 KB gzip, embedded build up to date)
+    needs: changes
+    runs-on: ubuntu-24.04
+    steps:
+      - if: needs.changes.outputs.dashboard == 'true'
+        uses: actions/checkout@v7
+      - if: needs.changes.outputs.dashboard == 'true'
+        uses: pnpm/action-setup@v6
+      - if: needs.changes.outputs.dashboard == 'true'
+        uses: actions/setup-node@v7
+        with: { node-version: 22, cache: pnpm }
+      - if: needs.changes.outputs.dashboard == 'true'
+        run: pnpm install --frozen-lockfile
+      # Every rule an error; literal JSX text and components over 250 lines
+      # may only go down from dashboard/baselines.json.
+      - if: needs.changes.outputs.dashboard == 'true'
+        name: lint and component sizes
+        run: pnpm --filter @trckable/dashboard lint
+      - if: needs.changes.outputs.dashboard == 'true'
+        name: pnpm audit (production dependencies, high and above)
+        run: pnpm audit --prod --audit-level high
+      - if: needs.changes.outputs.dashboard == 'true'
+        run: pnpm --filter @trckable/dashboard build
+      - if: needs.changes.outputs.dashboard == 'true'
+        name: the embedded dashboard matches the source
+        run: |
+          # status, not diff: a build missing from git (untracked after building) counts too
+          test -z "$(git status --porcelain -- server/internal/web/dist)" || (git status --short -- server/internal/web/dist && echo "run: pnpm --filter @trckable/dashboard build" && exit 1)
+      - if: needs.changes.outputs.dashboard == 'true'
+        name: publish the measured numbers (facts)
+        run: node scripts/facts.mjs dashboard > facts-dashboard.json && cat facts-dashboard.json
+      - if: needs.changes.outputs.dashboard == 'true'
+        uses: actions/upload-artifact@v7
+        with: { name: facts-dashboard, path: facts-dashboard.json }
+
+  e2e-browser:
+    name: browsers (${{ matrix.browser }})
+    needs: [changes, build]
+    if: needs.changes.outputs.e2e != ''
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v7
+        with: { name: trckabled, path: server/bin }
+      - run: chmod +x server/bin/trckabled
+      - run: pnpm --filter trckable build
+      # The browser is kept between runs (a minute each time); the system
+      # libraries it needs still come from apt.
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: cd e2e && npx playwright install --with-deps ${{ matrix.browser }}
+      # All of them, or only the specs for what changed (scripts/ci-select.mjs).
+      - env:
+          SPECS: ${{ needs.changes.outputs.e2e }}
+        run: |
+          [ "$SPECS" = all ] && SPECS="" || SPECS=$(printf 'tests/%s.spec.ts ' $SPECS)
+          cd e2e && npx playwright test $SPECS --project=${{ matrix.browser }} --workers=4
+      # A failed browser test keeps its trace (screenshots, DOM, network), so
+      # a failure seen only here can be read instead of guessed.
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: e2e-traces-${{ matrix.browser }}
+          path: e2e/test-results
+          retention-days: 7
+
+  e2e-demo:
+    name: WCAG 2.1 AA and the Full charts on demo data (${{ matrix.browser }})
+    needs: [changes, build]
+    if: needs.changes.outputs.demo == 'true'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: ${{ fromJSON(needs.changes.outputs.demo_browsers) }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with: { go-version: "1.27", cache-dependency-path: server/go.sum }
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v7
+        with: { name: trckabled, path: server/bin }
+      - run: chmod +x server/bin/trckabled
+      - run: pnpm --filter trckable build # the suite's web servers start either way
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: cd e2e && npx playwright install --with-deps ${{ matrix.browser }}
+      - name: WCAG 2.1 AA, the Full charts and the speed budget on demo data (axe-core)
+        run: |
+          d=$(mktemp -d)
+          (cd server && go run ./bench/demoseed -data "$d" -days 30 -daily 150 > /dev/null)
+          echo 'correct horse battery' | TRCKABLE_DATA_DIR="$d" server/bin/trckabled admin add-user me@site.com --role owner
+          TRCKABLE_DATA_DIR="$d" TRCKABLE_ADDR=127.0.0.1:8799 server/bin/trckabled serve > "$d/log" 2>&1 &
+          for i in $(seq 1 50); do curl -sf 127.0.0.1:8799/readyz > /dev/null && break; sleep 0.3; done
+          cd e2e && TRCKABLE_A11Y_URL=http://127.0.0.1:8799 npx playwright test a11y fullcharts speed --project=${{ matrix.browser }} --workers=4
+
+  # The required check: green only when every browser job above is.
+  e2e:
+    name: browsers (Chromium, Firefox, WebKit)
+    needs: [changes, build, e2e-browser, e2e-demo]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo '${{ toJSON(needs) }}'
+          [ "${{ needs.changes.result }}" = success ] || exit 1
+          [ "${{ needs.changes.outputs.code }}" = true ] || { echo "prose only: nothing to test"; exit 0; }
+          for r in ${{ needs.build.result }} ${{ needs.e2e-browser.result }} ${{ needs.e2e-demo.result }}; do
+            [ "$r" = success ] || [ "$r" = skipped ] || exit 1 # skipped: not needed for this change
+          done
+
+  image:
+    name: image (weight budget)
+    needs: changes
+    runs-on: ubuntu-24.04
+    steps:
+      - if: needs.changes.outputs.image == 'true'
+        uses: actions/checkout@v7
+      - if: needs.changes.outputs.image == 'true'
+        name: build image
+        run: docker build -f deploy/Dockerfile -t trckable:ci .
+      - if: needs.changes.outputs.image == 'true'
+        name: compressed size ≤ 30 MB
+        run: |
+          bytes=$(docker save trckable:ci | gzip -1 | wc -c)
+          echo "compressed image: $(awk "BEGIN{printf \"%.1f\", $bytes/1048576}") MB (budget 30 MB)"
+          echo "IMAGE_BYTES=$bytes" >> "$GITHUB_ENV"
+          test "$bytes" -le $(( 30 * 1048576 ))
+      - if: needs.changes.outputs.image == 'true'
+        name: boots, accepts an event, idle memory ≤ 64 MB, stops cleanly
+        run: |
+          docker run -d --name tkb -p 8080:8080 trckable:ci
+          for i in $(seq 1 50); do curl -sf localhost:8080/readyz && break; sleep 0.2; done
+          site=$(docker exec tkb trckabled site add example.com)
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST localhost:8080/api/e \
+            -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36' \
+            -d "{\"s\":\"$site\",\"k\":\"pv\",\"u\":\"https://example.com/\"}")
+          test "$code" = 202
+          # Settled, then the highest of five readings: the figure we publish
+          # is the worst one seen, not a lucky one.
+          sleep 10
+          mem=0
+          for i in 1 2 3 4 5; do
+            m=$(docker stats --no-stream --format '{{.MemUsage}}' tkb | awk '{print $1}')
+            case "$m" in *GiB) echo "idle memory: $m" && exit 1;; esac
+            mem=$(echo "$mem ${m%MiB}" | awk '{print ($2 > $1) ? $2 : $1}')
+            sleep 1
+          done
+          echo "idle memory: ${mem} MiB, highest of 5 readings (budget 64 MiB)"
+          echo "IDLE_MIB=$mem" >> "$GITHUB_ENV"
+          awk "BEGIN{exit !($mem <= 64)}"
+          docker stop -t 30 tkb
+          test "$(docker inspect -f '{{.State.ExitCode}}' tkb)" = 0
+      - if: needs.changes.outputs.image == 'true'
+        name: publish the measured numbers (facts)
+        run: node scripts/facts.mjs image > facts-image.json && cat facts-image.json
+      - if: needs.changes.outputs.image == 'true'
+        uses: actions/upload-artifact@v7
+        with: { name: facts-image, path: facts-image.json }

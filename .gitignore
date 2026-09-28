@@ -1,0 +1,20 @@
+# data & build output
+/data/
+/server/data/
+*.duckdb
+*.duckdb.wal
+/server/bin/
+/dist/
+node_modules/
+.DS_Store
+*.test
+*.out
+# tracker / package / e2e build output (t.js for the server embed IS committed)
+/tracker/dist/
+/packages/*/dist/
+/e2e/test-results/
+/e2e/playwright-report/
+/e2e/data/
+# this machine only (scripts/site-repo.mjs)
+/.trckable.local.json
+*.tsbuildinfo

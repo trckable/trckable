@@ -1,0 +1,94 @@
+/* Modal's styles: they load with its chunk, not with the first load. */
+/* ---- modal ---- */
+.modal-back {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fade-in 0.2s ease both;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 40;
+}
+
+/* Every dialog: a soft light from the top corner, and a small pop as it
+   opens. The same look as the shortcuts list, which is where it started. */
+.modal {
+  width: min(460px, 100%);
+  background:
+    radial-gradient(520px 200px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
+    var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 18px;
+  box-shadow: var(--shadow), 0 30px 80px rgb(0 0 0 / 0.35);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /* A tall dialog scrolls inside itself. Centred content that overflows would
+     otherwise push its own heading off the top of the screen, out of reach. */
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.modal.rise {
+  animation: modal-pop 0.34s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal.rise,
+  .modal-back {
+    animation: none;
+  }
+}
+
+.modal.wide {
+  /* max-width alone would lose to .modal's own width, so both move. */
+  width: min(560px, 100%);
+  max-width: 560px;
+  gap: 12px;
+}
+
+/* The account dialog: a page's worth of settings, over whatever is on screen. */
+.modal.account {
+  max-width: 720px;
+  width: 100%;
+  max-height: 86vh;
+  overflow-y: auto;
+  gap: 14px;
+}
+
+/* ---- Account dialog --------------------------------------------------------
+   The head stays put; only the section below it scrolls. */
+.modal.account {
+  padding: 0;
+  gap: 0;
+}
+
+/* One size for every section: the dialog does not resize when you move
+   between them, the panel scrolls instead. */
+.modal.account {
+  display: grid;
+  overflow: hidden; /* the body scrolls, not the dialog: never two scrollbars */
+  grid-template-columns: 210px minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(940px, calc(100vw - 32px));
+  max-width: none;
+  height: min(700px, 88vh);
+}
+
+@media (max-width: 720px) {
+  .modal.account {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    height: min(600px, 88vh);
+  }
+}
+
+/* A dialog that is a form: the form disappears from the layout so its fields
+   sit in the dialog's own column, exactly as they would without it. */
+.modal > .modal-form {
+  display: contents;
+}

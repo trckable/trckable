@@ -1,0 +1,4 @@
+/* FeedRow's styles: they load with its chunk, not with the first load. */
+.live-row:hover {
+  background: var(--sunken);
+}

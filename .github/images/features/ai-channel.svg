@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="250" viewBox="0 0 440 250" role="img" aria-label="AI assistants, counted. Visits from ChatGPT, Claude, Perplexity and Gemini, apart.">
+<rect x="0.5" y="0.5" width="439" height="249" rx="16" fill="#111317" stroke="#23272f"/>
+<rect x="14" y="14" width="412" height="148" rx="11" fill="#0b0d10"/>
+<g transform="translate(14 14)">
+    <rect x="40" y="30" width="150" height="44" rx="14" fill="#6b7482" opacity="0.25"/>
+    <text x="58" y="57" fill="#a7b0bd" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="13">best tiny analytics?</text>
+    <rect x="130" y="84" width="170" height="44" rx="14" fill="#c8fa3c" opacity="0.9"/>
+    <text x="148" y="111" fill="#0b0d10" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="13" font-weight="600">try trckable →</text>
+    <circle r="5" fill="#c8fa3c" opacity="0">
+      <animateMotion dur="2.2s" repeatCount="indefinite" path="M300 106 C 340 106, 350 60, 380 60"/>
+      <animate attributeName="opacity" values="0;1;1;0" dur="2.2s" repeatCount="indefinite"/>
+    </circle>
+    <text x="378" y="46" fill="#c8fa3c" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" text-anchor="middle">+1</text>
+  </g>
+<text x="24" y="196" fill="#f5f7fa" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="650">AI assistants, counted</text>
+<text x="24" y="222" fill="#a7b0bd" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="13.5">Visits from ChatGPT, Claude, Perplexity and Gemini, apart.</text>
+</svg>

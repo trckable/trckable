@@ -1,0 +1,159 @@
+/* The AI assistants & crawlers card's styles: they load with its chunk, not with the first load. */
+/* ---- Robots ---------------------------------------------------------------- */
+.crawl-chart {
+  position: relative;
+}
+
+.crawl-chart svg {
+  width: 100%;
+  height: 150px;
+  display: block;
+}
+
+.crawl-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.crawl-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.crawl-list button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.crawl-list button:hover {
+  background: var(--sunken);
+}
+
+.crawl-list button[aria-pressed='false'] {
+  color: var(--text-3);
+}
+
+.crawl-name {
+  flex: 1;
+  text-align: left;
+}
+
+.crawl-list .dot {
+  width: 9px;
+  height: 9px;
+}
+
+.crawl-head {
+  flex-wrap: wrap;
+}
+
+.crawl-count {
+  margin-left: 6px;
+}
+
+.crawl-feed {
+  margin-left: auto;
+  height: 30px;
+  font-size: 12.5px;
+}
+
+.crawl-help {
+  margin: 0;
+  font-size: 13.5px;
+}
+
+.crawl-small,
+.crawl-none {
+  font-size: 12px;
+}
+
+.crawl-list .dot,
+.crawl-reads .dot {
+  border-radius: 3px;
+}
+
+.crawl-reads {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: fixed;
+}
+
+.crawl-reads caption {
+  text-align: left;
+  font-size: 12px;
+  padding-bottom: 4px;
+}
+
+.crawl-reads th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 11.5px;
+  padding: 2px 8px;
+}
+
+.crawl-reads td {
+  padding: 4px 8px;
+  border-top: 1px solid var(--border);
+}
+
+.crawl-reads th:nth-child(2),
+.crawl-reads td:nth-child(2) {
+  width: 34%;
+}
+
+.crawl-reads th:last-child,
+.crawl-reads td:last-child {
+  width: 64px;
+  text-align: right;
+}
+
+.crawl-reads td:nth-child(2) .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+}
+
+.crawl-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The path is a button so a tap shows it whole (no title= on a phone). */
+.crawl-path-btn {
+  all: unset;
+  cursor: pointer;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crawl-path-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.crawl-path.whole,
+.crawl-path.whole .crawl-path-btn {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

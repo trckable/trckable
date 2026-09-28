@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="250" viewBox="0 0 440 250" role="img" aria-label="Who crawls you. AI answers, search indexing and training bots, apart.">
+<rect x="0.5" y="0.5" width="439" height="249" rx="16" fill="#111317" stroke="#23272f"/>
+<rect x="14" y="14" width="412" height="148" rx="11" fill="#0b0d10"/>
+<g transform="translate(14 14)">
+    <rect x="70" y="30" width="96" height="92" rx="8" fill="none" stroke="#6b7482" stroke-width="1.6" opacity="0.5"/>
+    <path d="M86 52h64M86 68h64M86 84h40" stroke="#6b7482" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+    <path d="M176 76h60" stroke="#c8fa3c" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="6 6">
+      <animate attributeName="stroke-dashoffset" values="24;0" dur="1.2s" repeatCount="indefinite"/>
+    </path>
+    <path d="M292 34v12" stroke="#c8fa3c" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="292" cy="30" r="5" fill="#c8fa3c"/>
+    <rect x="250" y="46" width="84" height="66" rx="16" fill="none" stroke="#c8fa3c" stroke-width="3"/>
+    <circle cx="275" cy="78" r="7" fill="#c8fa3c"><animate attributeName="r" values="7;7;1.5;7" keyTimes="0;0.8;0.9;1" dur="3.5s" repeatCount="indefinite"/></circle>
+    <circle cx="309" cy="78" r="7" fill="#c8fa3c"><animate attributeName="r" values="7;7;1.5;7" keyTimes="0;0.8;0.9;1" dur="3.5s" repeatCount="indefinite"/></circle>
+  </g>
+<text x="24" y="196" fill="#f5f7fa" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="650">Who crawls you</text>
+<text x="24" y="222" fill="#a7b0bd" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="13.5">AI answers, search indexing and training bots, apart.</text>
+</svg>

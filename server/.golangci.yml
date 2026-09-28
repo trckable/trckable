@@ -1,0 +1,28 @@
+# golangci-lint v2, pinned in scripts/ship.sh and ci.yml (run through go run,
+# nothing installed globally). The standard linters (errcheck, govet,
+# ineffassign, staticcheck, unused) plus gosec, bodyclose and noctx. gofmt
+# stays its own step. Run: go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run
+version: "2"
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - gosec
+    - noctx
+  settings:
+    errcheck:
+      exclude-functions:
+        # defer tx.Rollback() after Commit returns sql.ErrTxDone by design:
+        # the rollback only matters on the paths that never committed.
+        - (*database/sql.Tx).Rollback
+    gosec:
+      excludes:
+        - G104 # unchecked errors: errcheck reports the same lines
+  exclusions:
+    presets:
+      - std-error-handling
+    rules:
+      # A test's requests go to an httptest server that dies with the test;
+      # a context would add nothing.
+      - path: _test\.go
+        linters: [noctx]

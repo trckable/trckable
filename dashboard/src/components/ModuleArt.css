@@ -1,0 +1,17 @@
+/* ModuleArt's styles: they load with its chunk, not with the first load. */
+.mart {
+  border-radius: 9px;
+  transition: transform 0.2s var(--ease);
+}
+
+.mart.large {
+  display: block;
+  width: 100%;
+  height: 122px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mart animate {
+    display: none;
+  }
+}

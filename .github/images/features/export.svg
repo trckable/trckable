@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="250" viewBox="0 0 440 250" role="img" aria-label="Export and API. The view you see, as CSV — or the same numbers over HTTP.">
+<rect x="0.5" y="0.5" width="439" height="249" rx="16" fill="#111317" stroke="#23272f"/>
+<rect x="14" y="14" width="412" height="148" rx="11" fill="#0b0d10"/>
+<g transform="translate(14 14)">
+    <rect x="120" y="22" width="120" height="104" rx="8" fill="none" stroke="#6b7482" stroke-width="1.8" opacity="0.55"/>
+    <path d="M136 44h88" stroke="#6b7482" stroke-width="3" stroke-linecap="round" opacity="0.4"/><path d="M136 60h64" stroke="#6b7482" stroke-width="3" stroke-linecap="round" opacity="0.4"/><path d="M136 76h80" stroke="#6b7482" stroke-width="3" stroke-linecap="round" opacity="0.4"/><path d="M136 92h52" stroke="#6b7482" stroke-width="3" stroke-linecap="round" opacity="0.4"/><path d="M136 108h70" stroke="#6b7482" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+    <text x="180" y="140" fill="#6b7482" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="11" text-anchor="middle">view.csv</text>
+    <g>
+      <path d="M300 34v52m0 0-16-16m16 16 16-16" fill="none" stroke="#c8fa3c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M276 104h48" stroke="#c8fa3c" stroke-width="4" stroke-linecap="round"/>
+      <animateTransform attributeName="transform" type="translate" values="0 -8;0 4;0 -8" dur="1.8s" repeatCount="indefinite"/>
+    </g>
+  </g>
+<text x="24" y="196" fill="#f5f7fa" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="650">Export and API</text>
+<text x="24" y="222" fill="#a7b0bd" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif" font-size="13.5">The view you see, as CSV — or the same numbers over HTTP.</text>
+</svg>

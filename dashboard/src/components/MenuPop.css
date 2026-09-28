@@ -1,0 +1,161 @@
+/* The dropdown menus' shared parts (Filter, the filters in force, replay speed):
+   they load with those menus, not with the first load. */
+.menu-pop-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 6px;
+  font-size: 12.5px;
+}
+
+.menu-pop-head .faint {
+  margin-left: auto;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.menu-list {
+  display: grid;
+  align-content: start;
+  gap: 1px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 38px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  animation: rise 0.16s var(--ease) backwards;
+}
+
+.menu-row:hover,
+.menu-row:focus-visible {
+  background: var(--sunken);
+  outline: none;
+}
+
+.menu-row.idle {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.menu-row.idle:hover {
+  background: none;
+}
+
+.menu-row .num {
+  font-size: 12px;
+}
+
+.menu-foot {
+  flex: none;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.menu-clear {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.menu-clear:hover {
+  background: var(--sunken);
+  color: var(--down);
+}
+
+.menu-foot.split {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.menu-clear.save:hover {
+  color: var(--accent);
+}
+
+.filter-pop {
+  top: 48px;
+  right: 0;
+}
+
+.menu-back {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-left: -4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--sunken);
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.menu-back:hover {
+  color: var(--text);
+}
+
+.menu-group + .menu-group {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.menu-group-head {
+  margin: 4px 10px 2px;
+  color: var(--text-3);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.menu-bar {
+  height: 3px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: var(--grid);
+  overflow: hidden;
+}
+
+.menu-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.7;
+}
+
+.menu-empty {
+  margin: 10px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+.menu-done {
+  margin-left: auto;
+  height: 34px;
+  padding: 0 16px;
+}

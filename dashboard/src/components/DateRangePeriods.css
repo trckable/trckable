@@ -1,0 +1,12 @@
+/* DateRangePeriods's styles: they load with its chunk, not with the first load. */
+/* Presets are a wrapping row across the top: no tall column, no labels
+   breaking over two lines, and the panel stays short. */
+.presets {
+  flex-basis: 100%;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}

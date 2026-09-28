@@ -1,0 +1,26 @@
+{
+  "provider": "stripe",
+  "note": "The running total still counts when a refund fails: re_a (3,000) succeeded but its refund.* event was never delivered, only charge.refunded's amount_refunded knows it. re_b (2,000) was pending in that total and failed afterwards, so it comes out of it: 3,000 refunded, not 0 and not 5,000. On the second payment the failure came first and the later total (3,000) already excludes it: nothing is taken out twice. Shapes per https://docs.stripe.com/api/charges/object#charge_object-amount_refunded and https://docs.stripe.com/api/refunds/object.",
+  "events": [
+    {"id":"evt_g1","object":"event","created":1758600000,"livemode":true,"type":"payment_intent.succeeded",
+     "data":{"object":{"id":"pi_g","object":"payment_intent","amount_received":10000,"currency":"usd","latest_charge":"ch_g","metadata":{}}}},
+    {"id":"evt_g2","object":"event","created":1758700100,"livemode":true,"type":"refund.created",
+     "data":{"object":{"id":"re_b","object":"refund","amount":2000,"currency":"usd","payment_intent":"pi_g","charge":"ch_g","status":"pending","created":1758700100}}},
+    {"id":"evt_g3","object":"event","created":1758700101,"livemode":true,"type":"charge.refunded",
+     "data":{"object":{"id":"ch_g","object":"charge","amount":10000,"amount_refunded":5000,"currency":"usd","payment_intent":"pi_g","refunded":false}}},
+    {"id":"evt_g4","object":"event","created":1758900000,"livemode":true,"type":"refund.failed",
+     "data":{"object":{"id":"re_b","object":"refund","amount":2000,"currency":"usd","payment_intent":"pi_g","charge":"ch_g","status":"failed","created":1758700100}}},
+
+    {"id":"evt_h1","object":"event","created":1758600100,"livemode":true,"type":"payment_intent.succeeded",
+     "data":{"object":{"id":"pi_h","object":"payment_intent","amount_received":10000,"currency":"usd","latest_charge":"ch_h","metadata":{}}}},
+    {"id":"evt_h2","object":"event","created":1758800000,"livemode":true,"type":"refund.failed",
+     "data":{"object":{"id":"re_d","object":"refund","amount":2000,"currency":"usd","payment_intent":"pi_h","charge":"ch_h","status":"failed","created":1758700000}}},
+    {"id":"evt_h3","object":"event","created":1758900000,"livemode":true,"type":"charge.refunded",
+     "data":{"object":{"id":"ch_h","object":"charge","amount":10000,"amount_refunded":3000,"currency":"usd","payment_intent":"pi_h","refunded":false}}}
+  ],
+  "currency": "USD",
+  "expect": [
+    {"id":"pi_g","amount":10000,"refunded":3000,"visitor":"","kind":"one_time"},
+    {"id":"pi_h","amount":10000,"refunded":3000,"visitor":"","kind":"one_time"}
+  ]
+}

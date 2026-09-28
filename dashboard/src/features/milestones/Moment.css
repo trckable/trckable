@@ -1,0 +1,63 @@
+/* The moment. The ghost's motion is the logo's own hover (brand/logo.css),
+   played once. */
+.ms-moment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  --tkb-bg: var(--surface);
+  --ms-ink: var(--accent);
+}
+.ms-moment.money {
+  --ms-ink: var(--money);
+}
+.ms-moment .tkb-line {
+  stroke: var(--ms-ink);
+}
+.ms-words {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+.ms-num {
+  font: 700 22px var(--mono);
+  color: var(--ms-ink);
+  font-variant-numeric: tabular-nums;
+}
+.ms-label {
+  color: var(--text-2);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ms-moment .tkb-boo {
+    animation: tkb-float 1.6s ease-in-out 1;
+  }
+  .ms-moment .tkb-body {
+    animation: tkb-hem 0.45s ease-in-out 2 alternate;
+  }
+  .ms-moment .tkb-line,
+  .ms-moment .tkb-line-edge {
+    animation: tkb-draw 0.8s cubic-bezier(0.3, 0.7, 0.3, 1);
+  }
+}
+/* Something new in the timeline: a dot on ⋯ and on its menu item. */
+.more-btn {
+  position: relative;
+}
+.more-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-left: auto;
+}
+.more-btn .more-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}

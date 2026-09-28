@@ -1,0 +1,27 @@
+{
+  "provider": "stripe",
+  "note": "Subscription with a free trial: the trial invoice is 0 (no PaymentIntent), the first paid invoice converts, then a prorated upgrade. Basil+ invoices name neither PaymentIntent nor subscription at top level: invoice_payment.paid links invoice -> PaymentIntent, parent.subscription_details carries subscription + metadata. The visitor comes from the Checkout session and follows the subscription.",
+  "events": [
+    {"id":"evt_a","created":1758000000,"livemode":true,"type":"checkout.session.completed",
+     "data":{"object":{"id":"cs_t","mode":"subscription","payment_status":"no_payment_required","payment_intent":null,"invoice":"in_0","subscription":"sub_1","customer":"cus_9","client_reference_id":"trckable_zz9y8x_qx9","metadata":{},"total_details":{"amount_tax":0}}}},
+    {"id":"evt_b","created":1758000001,"livemode":true,"type":"invoice.paid",
+     "data":{"object":{"id":"in_0","billing_reason":"subscription_create","customer":"cus_9","total":0,"amount_paid":0,"total_taxes":[],"parent":{"type":"subscription_details","subscription_details":{"subscription":"sub_1","metadata":{}}},"lines":{"data":[]}}}},
+    {"id":"evt_c","created":1759209600,"livemode":true,"type":"invoice.paid",
+     "data":{"object":{"id":"in_1","billing_reason":"subscription_cycle","customer":"cus_9","total":1190,"amount_paid":1190,"total_taxes":[{"amount":190,"tax_behavior":"exclusive","taxable_amount":1000}],"parent":{"type":"subscription_details","subscription_details":{"subscription":"sub_1","metadata":{}}},"lines":{"data":[{"metadata":{}}]}}}},
+    {"id":"evt_d","created":1759209601,"livemode":true,"type":"invoice_payment.paid",
+     "data":{"object":{"id":"inpay_1","object":"invoice_payment","invoice":"in_1","amount_paid":1190,"payment":{"type":"payment_intent","payment_intent":"pi_1"},"status":"paid"}}},
+    {"id":"evt_e","created":1759209599,"livemode":true,"type":"payment_intent.succeeded",
+     "data":{"object":{"id":"pi_1","amount_received":1190,"currency":"usd","customer":"cus_9","metadata":{}}}},
+    {"id":"evt_f","created":1759800000,"livemode":true,"type":"invoice.paid",
+     "data":{"object":{"id":"in_2","billing_reason":"subscription_update","customer":"cus_9","total":550,"amount_paid":550,"total_taxes":[{"amount":50,"tax_behavior":"exclusive","taxable_amount":500}],"parent":{"type":"subscription_details","subscription_details":{"subscription":"sub_1","metadata":{}}},"lines":{"data":[]}}}},
+    {"id":"evt_g","created":1759800001,"livemode":true,"type":"invoice_payment.paid",
+     "data":{"object":{"id":"inpay_2","invoice":"in_2","payment":{"type":"payment_intent","payment_intent":"pi_2"},"status":"paid"}}},
+    {"id":"evt_h","created":1759800000,"livemode":true,"type":"payment_intent.succeeded",
+     "data":{"object":{"id":"pi_2","amount_received":550,"currency":"usd","customer":"cus_9","metadata":{}}}}
+  ],
+  "currency": "USD",
+  "expect": [
+    {"id":"pi_1","amount":1000,"refunded":0,"visitor":"zz9y8x","kind":"subscription"},
+    {"id":"pi_2","amount":500,"refunded":0,"visitor":"zz9y8x","kind":"renewal"}
+  ]
+}

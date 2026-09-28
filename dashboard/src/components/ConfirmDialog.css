@@ -1,0 +1,36 @@
+/* ConfirmDialog's styles: they load with its chunk, not with the first load. */
+.modal.confirm-modal {
+  width: min(460px, 100%);
+}
+
+.confirm-body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px 14px;
+}
+
+.confirm-text {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.confirm-text h2 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+
+.confirm-text p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.confirm-text .field {
+  margin-top: 8px;
+}
+
+.confirm-body > :last-child {
+  grid-column: 1 / -1;
+}

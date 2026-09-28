@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security issue privately
+    url: https://github.com/trckable/trckable/security/advisories/new
+    about: Please do not open a public issue for a vulnerability.
+  - name: Documentation
+    url: https://trckable.com/docs/
+    about: How to install, configure and use trckable.

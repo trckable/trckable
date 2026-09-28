@@ -1,0 +1,23 @@
+/* StoppedNotice's styles: they load with its chunk, not with the first load. */
+.stopped-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--down) 15%, transparent);
+  color: var(--down);
+}
+
+.stopped-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.stopped-text b {
+  color: var(--text);
+  font-size: 14px;
+}

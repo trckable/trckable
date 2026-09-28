@@ -1,0 +1,43 @@
+/* UpdateDialog.tsx: its own styles, loaded with it (not with the first load). */
+
+/* A dialog's heading: its icon tile, then the title with a line under it. */
+
+.modal.update-modal {
+  width: min(560px, 100%);
+  gap: 16px;
+}
+.update-notes {
+  display: grid;
+  gap: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--sunken);
+  font-size: 13px;
+}
+.update-notes p {
+  margin: 0;
+}
+.update-notes p.head {
+  margin-top: 4px;
+  font-weight: 600;
+}
+.update-notes p.bullet {
+  color: var(--text-2);
+}
+.update-steps {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.update-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.update-links .btn svg {
+  margin-left: 2px;
+}

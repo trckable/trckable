@@ -1,0 +1,53 @@
+/* A visitor's avatar and a source's mark: shared by Live and the journey. */
+.v-avatar {
+  --v-hue: 200;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: hsl(var(--v-hue) 70% 94%);
+  background:
+    radial-gradient(circle at 30% 25%, hsl(calc(var(--v-hue) + 40) 80% 62%), transparent 70%),
+    linear-gradient(140deg, hsl(var(--v-hue) 62% 44%), hsl(calc(var(--v-hue) + 60) 58% 32%));
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+.v-avatar.live::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 28%;
+  height: 28%;
+  border-radius: 999px;
+  background: var(--up);
+  box-shadow: 0 0 0 2px var(--surface);
+  animation: v-pulse 1.8s ease-out infinite;
+}
+@keyframes v-pulse {
+  0% {
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 2px color-mix(in srgb, var(--up) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 9px transparent;
+  }
+}
+.v-mark {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--v-ring) 12%, var(--surface-2));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--v-ring) 42%, var(--border));
+}
+.v-mark.letter {
+  font-weight: 750;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+@media (prefers-reduced-motion: reduce) {
+  .v-avatar.live::after {
+    animation: none;
+  }
+}

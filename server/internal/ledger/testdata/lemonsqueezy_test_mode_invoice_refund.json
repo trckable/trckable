@@ -1,0 +1,19 @@
+{
+  "provider": "lemonsqueezy",
+  "note": "Two renewal invoices of a subscription whose first order predates the ledger (the earliest one known is reported as the subscription's first payment, see PAYMENTS-AUDIT); the later one is refunded in part (subscription_payment_refunded carries the invoice's cumulative refunded_amount), and a test-mode order (meta.test_mode true) that never reaches real numbers. Shapes per https://docs.lemonsqueezy.com/help/webhooks/event-types and https://docs.lemonsqueezy.com/api/subscription-invoices/the-subscription-invoice-object.",
+  "events": [
+    {"meta":{"event_name":"subscription_payment_success","test_mode":false},
+     "data":{"type":"subscription-invoices","id":"8000","attributes":{"store_id":1,"subscription_id":950,"customer_id":60,"user_email":"r@example.com","billing_reason":"renewal","currency":"EUR","subtotal":1000,"tax":190,"total":1190,"refunded_amount":0,"status":"paid","created_at":"2026-08-10T10:00:00.000000Z","updated_at":"2026-08-10T10:00:00.000000Z","test_mode":false}}},
+    {"meta":{"event_name":"subscription_payment_success","test_mode":false},
+     "data":{"type":"subscription-invoices","id":"8001","attributes":{"store_id":1,"subscription_id":950,"customer_id":60,"user_email":"r@example.com","billing_reason":"renewal","currency":"EUR","subtotal":1000,"tax":190,"total":1190,"refunded_amount":0,"status":"paid","created_at":"2026-09-10T10:00:00.000000Z","updated_at":"2026-09-10T10:00:00.000000Z","test_mode":false}}},
+    {"meta":{"event_name":"subscription_payment_refunded","test_mode":false},
+     "data":{"type":"subscription-invoices","id":"8001","attributes":{"store_id":1,"subscription_id":950,"customer_id":60,"user_email":"r@example.com","billing_reason":"renewal","currency":"EUR","subtotal":1000,"tax":190,"total":1190,"refunded_amount":595,"status":"partial_refund","created_at":"2026-09-10T10:00:00.000000Z","updated_at":"2026-09-12T10:00:00.000000Z","test_mode":false}}},
+    {"meta":{"event_name":"order_created","test_mode":true,"custom_data":{"trckable_vid":"testv1.x"}},
+     "data":{"type":"orders","id":"555","attributes":{"store_id":1,"customer_id":61,"user_email":"t@example.com","currency":"EUR","subtotal":1000,"tax":0,"total":1000,"refunded_amount":0,"status":"paid","created_at":"2026-09-11T10:00:00.000000Z","updated_at":"2026-09-11T10:00:00.000000Z","test_mode":true}}}
+  ],
+  "currency": "EUR",
+  "expect": [
+    {"id":"sinv:8000","amount":1000,"refunded":0,"visitor":"","kind":"subscription"},
+    {"id":"sinv:8001","amount":1000,"refunded":500,"visitor":"","kind":"renewal"}
+  ]
+}

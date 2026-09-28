@@ -1,0 +1,24 @@
+/* TwoStepSetup.tsx: its own styles, loaded with it (not with the first load). */
+
+.totp-setup {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.totp-manual {
+  flex: 1;
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.keybox.as-button {
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.keybox.as-button:hover {
+  background: var(--surface-2);
+}

@@ -1,0 +1,488 @@
+/* ---- Install flow -----------------------------------------------------------
+   Loaded with the flow itself, so the dashboard's first load never pays for it.
+   Tokens only: both themes come from the variables. */
+.inst {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.inst-card {
+  border-color: var(--border-2);
+}
+.inst-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+.inst-head-text {
+  flex: 1;
+  min-width: 200px;
+}
+.inst-head h2 {
+  font-size: 18px;
+}
+.inst-head p {
+  margin: 4px 0 0;
+}
+.inst-title-small {
+  font-size: 15px;
+}
+.inst-dot-live {
+  background: var(--up);
+  border-radius: 50%;
+}
+
+/* Tabs: a segmented row that scrolls sideways on a phone rather than wrap into
+   a ragged second line; More… stays put at the end. */
+.inst-tabs-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+.inst-tabs {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+  padding: 4px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--sunken);
+  scrollbar-width: none;
+}
+.inst-tab {
+  display: inline-flex;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.inst-tab svg {
+  width: 16px;
+  height: 16px;
+}
+.inst-tab:hover {
+  color: var(--text);
+}
+.inst-tab.on {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.inst-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.inst-tabs-row > .picker > .btn.picker-btn {
+  height: 100%;
+  min-height: 46px;
+  border-radius: 12px;
+}
+.inst-more {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* One method. */
+.inst-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.inst-where {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.inst-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.inst-steps li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.inst-step-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 550;
+}
+.inst-step-n {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 11.5px;
+}
+/* The one block most people copy gets the big button. */
+.inst-code-one .code-bar button {
+  padding: 7px 16px;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.inst-code-one .code-bar button:hover {
+  border-color: var(--accent-strong);
+  background: var(--accent-strong);
+  color: var(--accent-ink);
+}
+.inst-docs {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.inst-docs:hover {
+  color: var(--text);
+}
+
+/* Cookieless. */
+.inst-cl {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.inst-cl-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+.inst-cl-label input {
+  width: 17px;
+  height: 17px;
+  margin: 2px 0 0;
+  flex: none;
+  accent-color: var(--accent);
+}
+.inst-cl-label > span:not(.btn-spin) {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13.5px;
+}
+.inst-cl-label .faint {
+  font-size: 12.5px;
+}
+.inst-cl-hint {
+  margin: 0 0 0 27px;
+  font-size: 12.5px;
+}
+.inst-cl-points {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 12px;
+  padding-left: 18px;
+  color: var(--text-2);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+/* Install with AI. */
+.inst-ai {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+}
+.inst-ai-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+}
+.inst-ai-text h3 {
+  font-size: 14px;
+}
+.inst-ai-text p {
+  margin: 0;
+  font-size: 12.5px;
+}
+.inst-ai-text .linkish {
+  align-self: flex-start;
+}
+.inst-ai-copy {
+  flex: none;
+}
+.inst-ai-prompt {
+  flex-basis: 100%;
+  min-width: 0;
+}
+
+/* "I've installed it", then what was found. */
+.inst-done {
+  align-self: flex-start;
+}
+.inst-check ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.inst-found {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.inst-found > svg,
+.inst-found > .pulse,
+.inst-found > .dot,
+.inst-found > .btn-spin {
+  flex: none;
+  margin-top: 3px;
+}
+.inst-found.ok {
+  border-color: color-mix(in srgb, var(--up) 45%, var(--border));
+}
+.inst-found.ok > svg {
+  color: var(--up);
+}
+.inst-found.warn {
+  border-color: color-mix(in srgb, var(--warn) 50%, var(--border));
+}
+.inst-found.warn > svg {
+  color: var(--warn);
+}
+.inst-found.live {
+  background: color-mix(in srgb, var(--up) 10%, transparent);
+}
+.inst-found.live .dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--up);
+}
+.inst-via {
+  display: block;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.inst-recheck {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 8px 0 0;
+  font-size: 12.5px;
+}
+.inst-recheck .linkish {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+}
+
+@media (max-width: 520px) {
+  /* On a phone the code wraps: half a script tag behind a scrollbar is the
+     worst way to show it. */
+  .inst pre.code,
+  .wait-card pre.code {
+    white-space: pre-wrap;
+    word-break: break-all; /* keep an attribute on its own indented line */
+  }
+  .inst-tab {
+    padding: 0 10px;
+  }
+  .inst-ai-copy,
+  .inst-done {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ---- The new-site card ------------------------------------------------------
+   One calm card, centred, with nothing behind it. */
+.wait-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  width: min(640px, 100%);
+  margin: 48px auto 24px;
+  text-align: center;
+}
+.wait-card > .inst-tabs-row,
+.wait-card > .inst-panel,
+.wait-card > .inst-check {
+  align-self: stretch;
+  text-align: left;
+}
+.wait-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+}
+.wait-mark .ring {
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  animation: wait-ring 2.4s ease-out infinite;
+}
+.wait-mark .ring.b {
+  animation-delay: 1.2s;
+}
+.wait-mark.live .ring {
+  animation: none;
+  opacity: 0;
+}
+@keyframes wait-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wait-mark .ring {
+    animation: none;
+    opacity: 0.25;
+  }
+}
+.wait-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wait-text h2 {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.wait-sub {
+  margin: 0;
+  font-size: 15.5px;
+}
+.wait-sub code {
+  font-family: var(--mono);
+  color: var(--text);
+}
+/* Four small tabs, centred, like pills; More… sits with them. */
+.wait-card .inst-tabs-row {
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+.wait-card .inst-tabs {
+  flex: 0 1 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.wait-card .inst-tab {
+  flex: none;
+  height: 34px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+.wait-card .inst-tab svg {
+  display: none;
+}
+.wait-card .inst-tab.on {
+  box-shadow: none;
+}
+.wait-card .inst-tabs-row > .picker > .btn.picker-btn {
+  min-height: 34px;
+  height: 34px;
+  padding: 0 14px;
+  border-color: transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--text-2);
+}
+.wait-card .inst-where,
+.wait-card .inst-docs {
+  display: none;
+}
+.wait-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.wait-btn {
+  background: none;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--border-2);
+  border-radius: 999px;
+}
+.wait-foot {
+  margin: 0;
+  font-size: 13px;
+}
+@media (max-width: 520px) {
+  .wait-card {
+    margin-top: 24px;
+    gap: 18px;
+  }
+  .wait-text h2 {
+    font-size: 23px;
+  }
+  .wait-card .inst-tabs-row,
+  .wait-card .inst-tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .wait-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "ctx": {
+    "host": "https://stats.example.com",
+    "site": "tkb_a1b2c3d4",
+    "domain": "example.com",
+    "proxyKey": "your-proxy-key"
+  },
+  "methods": {
+    "script": {
+      "name": "Script tag",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "next": {
+      "name": "Next.js",
+      "code": "npm i trckable\n\nimport { Analytics } from 'trckable/next'\n<Analytics site=\"tkb_a1b2c3d4\" />\n\n// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari visitors\nexport { POST } from 'trckable/next'\n\n# .env\nTRCKABLE_HOST=https://stats.example.com\nTRCKABLE_PROXY_KEY=your-proxy-key",
+      "steps": [
+        "npm i trckable",
+        "import { Analytics } from 'trckable/next'\n<Analytics site=\"tkb_a1b2c3d4\" />",
+        "// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari visitors\nexport { POST } from 'trckable/next'",
+        "# .env\nTRCKABLE_HOST=https://stats.example.com\nTRCKABLE_PROXY_KEY=your-proxy-key"
+      ]
+    },
+    "landing": {
+      "name": "Landing page and app",
+      "code": "<!-- landing page, in <head> -->\n<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>\n\nnpm i trckable\n\nimport { Analytics } from 'trckable/next'\n<Analytics site=\"tkb_a1b2c3d4\" />\n\n// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari visitors\nexport { POST } from 'trckable/next'\n\n# .env\nTRCKABLE_HOST=https://stats.example.com\nTRCKABLE_PROXY_KEY=your-proxy-key"
+    },
+    "react": {
+      "name": "npm / React",
+      "code": "npm i trckable\n\nimport { Analytics } from 'trckable/react'\n<Analytics site=\"tkb_a1b2c3d4\" host=\"https://stats.example.com\" />",
+      "steps": [
+        "npm i trckable",
+        "import { Analytics } from 'trckable/react'\n<Analytics site=\"tkb_a1b2c3d4\" host=\"https://stats.example.com\" />"
+      ]
+    },
+    "vue": {
+      "name": "Vue & Nuxt",
+      "code": "npm i trckable\n\n// main.ts\nimport { init } from 'trckable'\ninit({ site: 'tkb_a1b2c3d4', host: 'https://stats.example.com' })\n\n// or nuxt.config.ts\napp: { head: { script: [{ src: 'https://stats.example.com/js/tkb_a1b2c3d4.js', defer: true, 'data-site': 'tkb_a1b2c3d4', 'data-domain': 'example.com' }] } }"
+    },
+    "svelte": {
+      "name": "Svelte & SvelteKit",
+      "code": "<!-- src/app.html, inside <head> -->\n<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>\n\n<!-- or, bundled: -->\nimport { init } from 'trckable'\ninit({ site: 'tkb_a1b2c3d4', host: 'https://stats.example.com' })"
+    },
+    "astro": {
+      "name": "Astro",
+      "code": "---\n// src/layouts/Base.astro\n---\n<head>\n  <script\n    defer\n    data-site=\"tkb_a1b2c3d4\"\n    data-domain=\"example.com\"\n    src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n  </script>\n</head>"
+    },
+    "remix": {
+      "name": "Remix / React Router",
+      "code": "// app/root.tsx\n<head>\n  <Meta />\n  <Links />\n  <script\n    defer\n    data-site=\"tkb_a1b2c3d4\"\n    data-domain=\"example.com\"\n    src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n  </script>\n</head>"
+    },
+    "gatsby": {
+      "name": "Gatsby",
+      "code": "// gatsby-ssr.js\nexports.onRenderBody = ({ setHeadComponents }) =>\n  setHeadComponents([\n    <script key=\"trckable\" defer data-site=\"tkb_a1b2c3d4\" data-domain=\"example.com\" src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\" />,\n  ])"
+    },
+    "angular": {
+      "name": "Angular",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "static": {
+      "name": "Hugo, Jekyll, Eleventy",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "docusaurus": {
+      "name": "Docusaurus",
+      "code": "// docusaurus.config.js\nscripts: [{ src: 'https://stats.example.com/js/tkb_a1b2c3d4.js', defer: true, 'data-site': 'tkb_a1b2c3d4', 'data-domain': 'example.com' }],"
+    },
+    "wordpress": {
+      "name": "WordPress",
+      "code": "<?php // functions.php of your child theme\nadd_action('wp_head', function () { ?>\n  <script\n    defer\n    data-site=\"tkb_a1b2c3d4\"\n    data-domain=\"example.com\"\n    src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n  </script>\n<?php });"
+    },
+    "shopify": {
+      "name": "Shopify",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "ghost": {
+      "name": "Ghost",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "webflow": {
+      "name": "Webflow",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "framer": {
+      "name": "Framer",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "squarespace": {
+      "name": "Squarespace",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "wix": {
+      "name": "Wix",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "carrd": {
+      "name": "Carrd",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "bubble": {
+      "name": "Bubble",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "notion": {
+      "name": "Notion sites (Super, Potion)",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "gtm": {
+      "name": "Google Tag Manager",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "lovable": {
+      "name": "Lovable, Bolt, v0, Replit",
+      "code": "Add this to index.html inside <head>:\n\n<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "backend": {
+      "name": "Laravel, Rails, Django",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "other-js": {
+      "name": "Solid, Qwik, Ember, Flutter web",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "drupal": {
+      "name": "Drupal",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "joomla": {
+      "name": "Joomla",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "magento": {
+      "name": "Magento 2",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "prestashop": {
+      "name": "PrestaShop",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "bigcommerce": {
+      "name": "BigCommerce",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "hubspot": {
+      "name": "HubSpot CMS",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "blogger": {
+      "name": "Blogger",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "weebly": {
+      "name": "Weebly / Square Online",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "softr": {
+      "name": "Softr",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "discourse": {
+      "name": "Discourse",
+      "code": "<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "node": {
+      "name": "Hono, Bun, Deno, Workers",
+      "code": "// the route: any handler that takes a Request\nimport { proxy } from 'trckable/server'\n\nconst forward = proxy({ host: 'https://stats.example.com', proxyKey: process.env.TRCKABLE_PROXY_KEY })\napp.post('/api/e', (c) => forward(c.req.raw))\n\n# .env\nTRCKABLE_PROXY_KEY=your-proxy-key\n\n<!-- every page, in <head> -->\n<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  data-api=\"/api/e\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>"
+    },
+    "server": {
+      "name": "Server-side (any language)",
+      "code": "curl -X POST https://stats.example.com/api/e \\\n  -H 'content-type: application/json' \\\n  -H \"user-agent: <the visitor's browser user agent>\" \\\n  -d '{\"s\":\"tkb_a1b2c3d4\",\"k\":\"pv\",\"u\":\"https://example.com/pricing\"}'"
+    },
+    "proxy": {
+      "name": "Proxy on your own domain",
+      "code": "# Nginx\nlocation /t.js {\n  proxy_pass https://stats.example.com/js/tkb_a1b2c3d4.js;\n  proxy_ssl_server_name on;\n}\nlocation /api/e {\n  proxy_pass https://stats.example.com/api/e;\n  proxy_ssl_server_name on;\n  proxy_set_header X-Trckable-Client-IP $remote_addr;\n  proxy_set_header X-Trckable-Proxy-Key your-proxy-key;\n}\n\n<!-- every page, in <head>: the script and its events from your domain -->\n<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"/t.js\">\n</script>"
+    },
+    "crawlers": {
+      "name": "AI assistants & crawlers",
+      "code": "// Next.js — middleware.ts\nimport { reportCrawler } from 'trckable/server'\n\nexport function middleware(req) {\n  reportCrawler({\n    host: 'https://stats.example.com',\n    site: 'tkb_a1b2c3d4',\n    key: process.env.TRCKABLE_PROXY_KEY,\n    url: req.url,\n    ua: req.headers.get('user-agent'),\n  })\n}"
+    },
+    "app": {
+      "name": "Electron, Tauri, PWA",
+      "code": "import { init } from 'trckable'\ninit({ site: 'tkb_a1b2c3d4', host: 'https://stats.example.com' })"
+    }
+  }
+}

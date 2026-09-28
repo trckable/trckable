@@ -1,0 +1,112 @@
+/* The chart's notes: a flag on the x-axis, and its tooltip. */
+.note-mark {
+  position: absolute;
+  /* Over the chart, under every menu and dialog (.pop is 20). */
+  z-index: 4;
+  /* A 24px target for a finger, drawn as a small flag sitting on the axis. */
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  transform: translate(-50%, -100%);
+  display: grid;
+  place-items: end center;
+  border: 0;
+  background: none;
+  color: var(--money);
+  cursor: pointer;
+}
+.note-mark i {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 10px;
+  height: 10px;
+  margin-bottom: 3px;
+  border-radius: 50%;
+  background: var(--money);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px color-mix(in srgb, var(--money) 35%, transparent);
+  color: var(--surface);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform 0.12s var(--ease), box-shadow 0.12s var(--ease);
+}
+/* Several notes on one day: a round badge with the count, not a second mark. */
+.note-mark i.many {
+  width: 16px;
+  height: 16px;
+  margin-bottom: 0;
+}
+/* Pointing at a flag draws its day up the chart, so it is clear which day
+   the note belongs to. */
+.note-guide {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  height: var(--rise, 0);
+  border-left: 1px dashed color-mix(in srgb, var(--money) 70%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s var(--ease);
+}
+.note-mark:hover .note-guide,
+.note-mark.on .note-guide {
+  opacity: 1;
+}
+.note-mark:hover i,
+.note-mark.on i {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 5px color-mix(in srgb, var(--money) 30%, transparent);
+}
+.note-mark:focus-visible {
+  outline: 2px solid var(--money);
+  outline-offset: 1px;
+  border-radius: 6px;
+}
+.note-tip {
+  position: absolute;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 12.5px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: rise 0.12s var(--ease) backwards;
+}
+.note-tip-day {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--money);
+}
+.note-line {
+  display: grid;
+  gap: 2px;
+  padding-left: 8px;
+  border-left: 2px solid color-mix(in srgb, var(--money) 60%, transparent);
+}
+.note-line p {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.note-line span {
+  font-size: 11.5px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-tip {
+    animation: none;
+  }
+  .note-mark i,
+  .note-guide {
+    transition: none;
+  }
+}

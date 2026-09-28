@@ -1,0 +1,8 @@
+/* Off's styles: they load with its chunk, not with the first load. */
+/* Where cookieless mode leaves a number out (features/cookieless). */
+.cookieless-off {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  font-size: 13px;
+}

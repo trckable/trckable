@@ -1,0 +1,109 @@
+/* Modules.tsx: its own styles, loaded with it (not with the first load). */
+
+.module > .mart-btn {
+  grid-area: art;
+}
+.module-head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  gap: 6px 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.module-head .tag {
+  white-space: nowrap;
+}
+.module-body {
+  grid-area: body;
+  align-self: start;
+  min-width: 0;
+}
+.module-body p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.module-body p.small {
+  margin-top: 2px;
+  font-size: 12px;
+}
+/* ---- Module previews -------------------------------------------------------
+   Every module carries a small drawing of what it gives you; tapping it opens
+   the same picture at a readable size. */
+.mart-btn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  flex: none;
+  line-height: 0;
+}
+.mart-btn:hover .mart,
+.mart-btn:focus-visible .mart {
+  border-color: var(--border-2);
+  transform: translateY(-1px);
+}
+/* In a dialog the band is the tile: as wide as the words under it, so the
+   whole thing reads as one column instead of a picture floating above a
+   paragraph. */
+.mart-hero {
+  display: block;
+  background: var(--sunken);
+  border: 1px solid var(--grid);
+  border-radius: 11px;
+  padding: 10px 0;
+}
+@media (max-width: 640px) {
+  .module > .mart-btn {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    padding: 10px 0;
+    border: 1px solid var(--grid);
+    border-radius: 10px;
+    background: var(--sunken);
+  }
+  .mart-btn .mart {
+    width: auto;
+    height: 72px;
+  }
+  .module-head {
+    padding: 0 4px;
+  }
+  .module-head strong {
+    flex: 1 0 100%;
+    font-size: 15px;
+  }
+  .module-body {
+    padding: 0 4px;
+  }
+}
+/* The module list's whole explanation, in one strip. */
+.size-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.size-strip b {
+  color: var(--accent);
+}
+@media (max-width: 640px) {
+  /* Under the heading, on its own line, instead of squeezed beside it. */
+  .card-head:has(.size-strip) {
+    flex-wrap: wrap;
+  }
+  .card-head .size-strip {
+    flex: 1 0 100%;
+    white-space: nowrap;
+  }
+}
+.bullets-head {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-top: 4px;
+}

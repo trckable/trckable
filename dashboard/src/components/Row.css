@@ -1,0 +1,62 @@
+/* Row's styles: they load with its chunk, not with the first load. */
+/* ---- Settings rows ---------------------------------------------------------
+   One pattern everywhere: what it is on the left, the control on the right. */
+.srow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--grid);
+}
+
+.srow-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.srow-text .faint {
+  font-size: 12px;
+}
+
+.srow-ctl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  max-width: 60%;
+}
+
+.srow-ctl .input {
+  height: 38px;
+  width: auto;
+  min-width: 190px;
+}
+
+.srow.danger .srow-text b {
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .srow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .srow-ctl {
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .srow-ctl .input {
+    flex: 1;
+    min-width: 0;
+  }
+}

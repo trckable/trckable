@@ -1,0 +1,42 @@
+# A change to how releases are built is tried before it is merged: the image is
+# built for both architectures, exactly as the release does (natively, one
+# runner each, the same cache), but not published. On main it fills the layer
+# cache the release reads: a tag's run can read main's cache, never another
+# tag's.
+name: release-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - deploy/Dockerfile
+      - .github/workflows/release.yml
+      - .github/workflows/release-check.yml
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    name: image (${{ matrix.arch }}, not pushed)
+    strategy:
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-24.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - id: v
+        run: echo "version=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/${{ matrix.arch }}
+          build-args: VERSION=${{ steps.v.outputs.version }}
+          push: false
+          cache-from: type=gha,scope=image-${{ matrix.arch }}
+          cache-to: ${{ github.event_name == 'push' && format('type=gha,scope=image-{0},mode=max', matrix.arch) || '' }}

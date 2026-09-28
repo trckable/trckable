@@ -1,0 +1,18 @@
+{
+  "provider": "polar",
+  "note": "A Polar refund that is canceled after being created pending gives nothing back, and an order.updated that still reports refunded_amount 0 agrees. Shapes per https://polar.sh/docs/api-reference/webhooks/refund.updated and https://polar.sh/docs/api-reference/webhooks/order.updated (amounts in cents, refund amount excluding tax).",
+  "events": [
+    {"type":"order.paid","timestamp":"2026-09-01T10:00:00Z",
+     "data":{"id":"ord_c","created_at":"2026-09-01T09:59:00Z","modified_at":"2026-09-01T10:00:00Z","status":"paid","paid":true,"subtotal_amount":2000,"tax_amount":0,"total_amount":2000,"refunded_amount":0,"refunded_tax_amount":0,"currency":"usd","billing_reason":"purchase","customer_id":"cus_c","metadata":{"trckable_vid":"polc1.x"},"customer":{"email":"c@example.com","metadata":{}}}},
+    {"type":"refund.created","timestamp":"2026-09-02T10:00:00Z",
+     "data":{"id":"ref_c","order_id":"ord_c","amount":1000,"tax_amount":0,"currency":"usd","status":"pending","created_at":"2026-09-02T10:00:00Z","modified_at":null}},
+    {"type":"refund.updated","timestamp":"2026-09-03T10:00:00Z",
+     "data":{"id":"ref_c","order_id":"ord_c","amount":1000,"tax_amount":0,"currency":"usd","status":"canceled","created_at":"2026-09-02T10:00:00Z","modified_at":"2026-09-03T10:00:00Z"}},
+    {"type":"order.updated","timestamp":"2026-09-03T10:00:01Z",
+     "data":{"id":"ord_c","created_at":"2026-09-01T09:59:00Z","modified_at":"2026-09-03T10:00:01Z","status":"paid","paid":true,"subtotal_amount":2000,"tax_amount":0,"total_amount":2000,"refunded_amount":0,"refunded_tax_amount":0,"currency":"usd","billing_reason":"purchase","customer_id":"cus_c","metadata":{"trckable_vid":"polc1.x"}}}
+  ],
+  "currency": "USD",
+  "expect": [
+    {"id":"ord_c","amount":2000,"refunded":0,"visitor":"polc1","kind":"one_time"}
+  ]
+}

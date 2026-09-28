@@ -1,0 +1,19 @@
+{
+  "provider": "stripe",
+  "note": "A dispute and a refund that name only the charge (payment_intent null, as on charges made without a PaymentIntent, or on API versions that don't expand it), and no charge.refunded event to link the charge: the PaymentIntent's latest_charge ties them to the payment. Shapes per https://docs.stripe.com/api/payment_intents/object#payment_intent_object-latest_charge, https://docs.stripe.com/api/disputes/object and https://docs.stripe.com/api/refunds/object.",
+  "events": [
+    {"id":"evt_c1","object":"event","created":1758600000,"livemode":true,"type":"payment_intent.succeeded",
+     "data":{"object":{"id":"pi_9","object":"payment_intent","amount_received":4900,"currency":"eur","latest_charge":"ch_9","metadata":{}}}},
+    {"id":"evt_c2","object":"event","created":1758600100,"livemode":true,"type":"payment_intent.succeeded",
+     "data":{"object":{"id":"pi_10","object":"payment_intent","amount_received":10000,"currency":"eur","latest_charge":{"id":"ch_10","object":"charge"},"metadata":{}}}},
+    {"id":"evt_c3","object":"event","created":1758900000,"livemode":true,"type":"charge.dispute.closed",
+     "data":{"object":{"id":"du_9","object":"dispute","amount":4900,"currency":"eur","charge":"ch_9","payment_intent":null,"status":"lost"}}},
+    {"id":"evt_c4","object":"event","created":1758700000,"livemode":true,"type":"refund.created",
+     "data":{"object":{"id":"re_10","object":"refund","amount":2500,"currency":"eur","charge":"ch_10","payment_intent":null,"status":"succeeded","created":1758700000}}}
+  ],
+  "currency": "EUR",
+  "expect": [
+    {"id":"pi_9","amount":4900,"refunded":4900,"visitor":"","kind":"one_time"},
+    {"id":"pi_10","amount":10000,"refunded":2500,"visitor":"","kind":"one_time"}
+  ]
+}
