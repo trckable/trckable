@@ -481,12 +481,15 @@ func (s *Server) readyz(w http.ResponseWriter, r *http.Request) {
 // metrics exposes Prometheus text format with trckable_* names. It is off
 // (404) unless TRCKABLE_API_TOKEN is set, and then needs that token as a
 // bearer token: installation-wide counts are not for the internet.
+// metricsAllowed: /metrics is open, as it always was, unless
+// TRCKABLE_METRICS_TOKEN asks for that bearer token.
+func (s *Server) metricsAllowed(r *http.Request) bool {
+	t := s.cfg.MetricsToken
+	return t == "" || auth.Equal(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "), t)
+}
+
 func (s *Server) metrics(w http.ResponseWriter, r *http.Request) {
-	if s.cfg.APIToken == "" {
-		http.NotFound(w, r)
-		return
-	}
-	if !auth.Equal(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "), s.cfg.APIToken) {
+	if !s.metricsAllowed(r) {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}

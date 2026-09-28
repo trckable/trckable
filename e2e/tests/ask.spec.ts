@@ -28,5 +28,6 @@ test('Create a key opens the API keys', async ({ page, browserName }) => {
   await expect(page.getByRole('button', { name: 'Ask trckable' })).toBeVisible()
   await page.keyboard.press('ControlOrMeta+k')
   await page.getByRole('complementary', { name: 'Ask trckable' }).getByRole('button', { name: 'Create a key' }).click()
+  await expect(page.getByRole('dialog', { name: 'Hideout, your account' })).toBeVisible()
   await expect(page.getByRole('tab', { name: 'API keys', selected: true })).toBeVisible()
 })
