@@ -2,12 +2,12 @@
 // out, the left stays lit, the crosshair sits at the cut. Arrow keys and
 // Replay move the same cut, leaving the chart restores it, a note stays
 // readable in the hover card, and with reduced motion the cut never glides.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { API } from '../playwright.config'
+import { API, HISTORY_DOMAIN } from '../playwright.config'
 
 const BIN = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../server/bin/trckabled')
 const PASSWORD = 'chart hover e2e password 1'
@@ -52,9 +52,20 @@ test.beforeAll(async ({ browser }) => {
 
 async function openChart(page: Page) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(API + '/example.com?compare=previous')
+  // The site with days of history (playwright.config.ts): several buckets at any time of day.
+  await page.goto(`${API}/${HISTORY_DOMAIN}?compare=previous`)
   const chart = page.locator('.chart-wrap')
-  await expect(chart.locator('svg[role="img"]')).toBeVisible({ timeout: 15_000 })
+  await expect(chart.locator('svg[role="img"]')).toBeVisible({ timeout: 30_000 })
+  const points = Number(/(\d+) points/.exec((await chart.locator('svg[role="img"]').getAttribute('aria-label')) ?? '')?.[1] ?? 0)
+  expect(points, `the chart needs at least 3 buckets to hover between, and has ${points}: is ${HISTORY_DOMAIN} seeded?`).toBeGreaterThanOrEqual(3)
+  // The page settles (a scrollbar, a banner) before anything is measured on it.
+  let at = JSON.stringify(await chart.boundingBox())
+  for (let same = 0, i = 0; same < 3 && i < 40; i++) {
+    await page.waitForTimeout(150)
+    const now = JSON.stringify(await chart.boundingBox())
+    same = now === at ? same + 1 : 0
+    at = now
+  }
   return chart
 }
 
@@ -64,6 +75,32 @@ const cut = (page: Page) =>
     at: parseFloat(el.style.getPropertyValue('--cut')),
     width: el.getBoundingClientRect().width,
   }))
+
+/** The cut once it has stopped gliding: a read mid-glide is not where it lands. */
+async function still(page: Page) {
+  let last = await cut(page)
+  for (let i = 0; i < 20; i++) {
+    await page.waitForTimeout(150)
+    const now = await cut(page)
+    if (now.at === last.at && now.state === last.state) return now
+    last = now
+  }
+  return last
+}
+
+/** The line's path once it has stopped moving (its opening tween, or the
+ *  comparison arriving and rescaling it): unchanged for a full second. */
+async function linePath(chart: Locator) {
+  let last = await chart.locator('.chart-line').getAttribute('d')
+  let same = 0
+  for (let i = 0; i < 60 && same < 7; i++) {
+    await chart.page().waitForTimeout(150)
+    const now = await chart.locator('.chart-line').getAttribute('d')
+    same = now === last ? same + 1 : 0
+    last = now
+  }
+  return last!
+}
 
 test('the cut follows the pointer and leaving the chart restores it', async ({ page }) => {
   const chart = await openChart(page)
@@ -78,7 +115,7 @@ test('the cut follows the pointer and leaving the chart restores it', async ({ p
   expect(c.at).toBeLessThan(c.width * 0.5)
   // The line, area, ghost and strip are one masked group: the paths do not
   // change as the cut moves, only the mask's grey rect does.
-  const d = await chart.locator('.chart-line').getAttribute('d')
+  const d = await linePath(chart)
   await page.mouse.move(box.x + box.width * 0.6, box.y + 60)
   c = await cut(page)
   expect(c.at).toBeGreaterThan(c.width * 0.5)
@@ -94,11 +131,11 @@ test('arrow keys move the same cut, a bucket at a time', async ({ page }) => {
   const chart = await openChart(page)
   await chart.locator('svg[role="img"]').focus()
   await page.keyboard.press('End')
-  const end = (await cut(page)).at
+  const end = (await still(page)).at
   await page.keyboard.press('ArrowLeft')
   await page.keyboard.press('ArrowLeft')
   await expect(page.locator('.time-tip')).toBeVisible()
-  const back = await cut(page)
+  const back = await still(page)
   expect(back.state).toBe('on')
   expect(back.at).toBeLessThan(end)
   await page.keyboard.press('Escape')
@@ -164,10 +201,10 @@ test('Replay plays the chart on screen: same start, same bucket', async ({ page 
 // and the cut stays at the playhead. Paused, hover works again.
 test('the chart ignores the pointer while Replay plays and hovers again when paused', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(API + '/example.com?period=7d')
+  await page.goto(`${API}/${HISTORY_DOMAIN}`) // days of history: a replay that lasts long enough to hover over
   const chart = page.locator('.overview-chart .chart-wrap')
   await expect(chart.locator('svg[role="img"]')).toBeVisible({ timeout: 15_000 })
-  await page.getByRole('button', { name: 'Replay this period hour by hour' }).click()
+  await page.getByRole('button', { name: /^Replay this period/ }).click()
   await expect(chart).toHaveAttribute('data-locked', 'true')
   const box = (await chart.boundingBox())!
   await page.mouse.move(box.x + box.width * 0.3, box.y + box.height / 2)
