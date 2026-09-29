@@ -165,15 +165,16 @@ for (const width of [390, 360]) {
     const pill = page.locator('.phone-pill')
     await expect(pill).toContainText('Last 30 days')
     await expect(pill).toContainText('1 filter')
+    // Live/Data sits in the row itself, not only in the sheet.
+    await expect(page.locator('.subbar').getByRole('group', { name: 'View' })).toBeVisible()
     await page.getByRole('button', { name: 'More', exact: true }).click()
     await expect(page.getByRole('menu', { name: 'More' }).getByRole('menuitem').first()).toHaveText(/Share/)
     await page.keyboard.press('Escape')
 
-    // The sheet: Live/Data, quick periods, comparison, filters, Done.
+    // The sheet: quick periods, comparison, filters, Done.
     await pill.click()
     const sheet = page.getByRole('dialog', { name: 'View options' })
     await expect(sheet).toBeVisible()
-    await expect(sheet.getByRole('group', { name: 'View' })).toBeVisible()
     await sheet.getByRole('button', { name: '7d' }).click()
     await expect(sheet.getByRole('button', { name: '7d' })).toHaveAttribute('aria-pressed', 'true')
     await expect(sheet.locator('.chip')).toContainText('Channel is')
