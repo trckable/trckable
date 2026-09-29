@@ -69,6 +69,17 @@
   .cl-table tbody {
     display: block;
   }
+  /* The switched-to column is always the right one: one band, top to bottom. */
+  .cl-table {
+    background: linear-gradient(to right, transparent 50%, var(--accent-soft) 50%);
+    border-radius: 8px;
+  }
+  .cl-table .cl-to,
+  .cl-table thead th.cl-to,
+  .cl-table tbody tr:last-child .cl-to {
+    background: none;
+    border-radius: 0;
+  }
   .cl-table tr {
     display: grid;
     grid-template-columns: 1fr 1fr;
