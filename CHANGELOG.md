@@ -21,6 +21,10 @@ section into the release.
 - The site switcher opens without a jump: its list and layout load ahead, and site icons keep their box while loading.
 - The footer text is one step smaller and fainter.
 - The Milestones window is a hero for the newest milestone (big badge, the number, one sentence, Share the card and Replay the way there), a progress ring for each next step with what is left, and every milestone reached as a badge tile under its year; the badge pops in, the rings fill and the tiles rise in, all still with reduced motion, and a phone gets a full-screen sheet.
+- The chart's cursor is a quiet dashed line in the series colour from the top to the axis, with a date pill under it and a haloed point that eases from bucket to bucket; Live's line chart matches.
+- Selects (the site picker in Share) share one style, with a chevron and a focus ring for the keyboard only, never on a click.
+- The cookieless confirm is a With cookies against Cookieless comparison in four rows, and turning it off asks the same way with Use cookies.
+- The dashboard's first load is 2.4 KB lighter: the milestones moment and the site layout code load when needed.
 
 ## 0.5.1 (29 Sep 2026)
 

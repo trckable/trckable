@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { Tip } from '../../charts/Tip'
 import { smooth } from '../../charts/TimeChart'
+import { CursorMark, CursorPill } from '../../charts/Cursor'
 import { useHover } from '../../charts/useHover'
 import { fmtInt } from '../../lib/format'
 import { useTween } from '../../lib/motion'
@@ -99,14 +100,10 @@ export function LiveLine({ values, onOpen }: { values: number[]; onOpen?: (ago: 
           <path className="live-glow" d={done} fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
           {running && <path d={running} fill="none" stroke="var(--accent)" strokeWidth="2.25" strokeDasharray="3 5" strokeLinecap="round" />}
           {n > 0 && <circle className="live-head" cx={x(n - 1)} cy={y(last)} r="4.5" fill="var(--accent)" />}
-          {at != null && (
-            <g className="live-cross" aria-hidden="true">
-              <line x1={x(at)} x2={x(at)} y1={PAD_T} y2={H} />
-              <circle cx={x(at)} cy={y(vals[at])} r="5" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" />
-            </g>
-          )}
+          {at != null && <CursorMark x={x(at)} y={y(vals[at])} top={PAD_T} bottom={H} />}
         </svg>
         <Tip at={tip} width={w} />
+        {at != null && <CursorPill x={x(at)} w={w} text={copy.minuteAgo(n - 1 - at)} />}
       </div>
       <div className="live-axis faint num" aria-hidden="true">
         <span>{copy.chartStart}</span>
