@@ -97,24 +97,33 @@
 }
 
 /* Folded to its pill: the arrows, dates, comparison and Filter go, and the
-   toggle shows the period and how many filters. Unfolding grows them back. */
+   toggle at the right end shows the period and how many filters. Unfolding
+   grows them back. */
 .ctl-cap .fold-toggle {
   width: 32px;
   padding: 0;
   justify-content: center;
   color: var(--text-3);
 }
+.ctl-cap .fold-toggle:focus-visible {
+  color: var(--text);
+}
 .ctl-see.collapsed .fold-toggle {
   width: auto;
-  padding: 0 12px 0 8px;
+  padding: 0 10px 0 12px;
   color: var(--text);
   font-size: 13px;
 }
-.ctl-see.collapsed > :not(.range-picker),
-.ctl-see.collapsed .range-picker > :not(.fold-toggle) {
+.ctl-see.collapsed .fold-icon {
+  color: var(--text-3);
+}
+.ctl-see.collapsed .fold-toggle:is(:hover, :focus-visible) .fold-icon {
+  color: var(--text);
+}
+.ctl-see.collapsed > :not(.fold-toggle) {
   display: none;
 }
-.ctl-see:not(.collapsed) .range-picker > :is(button:not(.fold-toggle), span) {
+.ctl-see:not(.collapsed) .range-picker > :is(button, span) {
   animation: ctl-grow 0.18s ease-out;
 }
 @keyframes ctl-grow {

@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- The control row's fold toggle moved to the capsule's right end, after Filter, with a fold icon (unfold in the folded pill) instead of a chevron, so ‹ › only mean previous and next period.
+
 ## 0.5.4 (29 Sep 2026)
 
 ### Changed
