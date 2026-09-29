@@ -229,6 +229,18 @@ for (const scheme of ['dark', 'light'] as const) {
   })
 }
 
+test('a dialog opened from ⋯ gives focus back to ⋯ on Escape', async ({ page }) => {
+  const { row } = await open(page)
+  const more = row.getByRole('button', { name: `${email} options` })
+  await more.click()
+  await page.getByRole('menuitem', { name: 'Remove' }).click()
+  const ask = page.getByRole('dialog', { name: `Remove ${email}?` })
+  await expect(ask).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(ask).toHaveCount(0)
+  await expect(more).toBeFocused()
+})
+
 async function noOverflow(page: Page, where: Locator) {
   expect(await page.evaluate(() => document.body.scrollWidth <= document.body.clientWidth)).toBe(true)
   expect(await where.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
