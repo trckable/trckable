@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.5.1 (29 Sep 2026)
+
 ### Changed
 
 - The account window is now called Profile (it was Hideout).
