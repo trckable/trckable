@@ -7,12 +7,12 @@ import { copy } from './copy'
 import type { SiteAccess } from './useSiteAccess'
 import './access.css'
 
-export function SiteChips({ id, access }: { id: string; access: SiteAccess }) {
+export function SiteChips({ id, email, access, onOpen }: { id: string; email: string; access: SiteAccess; onOpen: () => void }) {
   const v = access.of(id)
   if (!access.shown || !v) return null
   const c = siteChips(v.sites, access.sites)
   return (
-    <span className="site-chips" role="group" aria-label={people.sitesLabel}>
+    <button type="button" className="site-chips" aria-label={copy.editFor(email)} onClick={onOpen}>
       {c.all && <span className="chip">{copy.all}</span>}
       {c.none && <span className="chip quiet">{copy.none}</span>}
       {c.names.map((n) => (
@@ -21,6 +21,6 @@ export function SiteChips({ id, access }: { id: string; access: SiteAccess }) {
         </span>
       ))}
       {c.more > 0 && <span className="chip quiet">{people.more(c.more)}</span>}
-    </span>
+    </button>
   )
 }

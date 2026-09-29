@@ -48,9 +48,9 @@ test('the owner limits a viewer\'s sites in a popup, saved on Save', async ({ pa
   const window = page.getByRole('dialog', { name: 'Profile, your account' })
   const row = window.locator('.person', { hasText: email })
   await expect(row).toBeVisible({ timeout: 15_000 })
-  // The row only summarizes; it is not a control.
+  // The chips are one button that opens the same popup.
   await expect(row.locator('.site-chips')).toHaveText('All sites')
-  await expect(row.getByRole('button', { name: /All sites/ })).toHaveCount(0)
+  await expect(row.getByRole('button', { name: `Allowed sites for ${email}` })).toBeVisible()
 
   await row.getByRole('button', { name: `${email} options` }).click()
   await page.getByRole('menuitem', { name: 'Allowed sites' }).click()

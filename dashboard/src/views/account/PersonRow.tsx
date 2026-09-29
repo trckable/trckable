@@ -78,7 +78,7 @@ export function PersonRow({ p, me, owners, waiting, access, act }: { p: Person; 
       </span>
       <span className="person-controls">
         <RoleControl p={p} me={me} owners={owners} onPick={(role) => act.setRole(p, role)} />
-        {p.role !== 'owner' && <SiteChips id={p.id} access={access} />}
+        {p.role !== 'owner' && <SiteChips id={p.id} email={p.email} access={access} onOpen={() => act.allow(p.id)} />}
         <Status p={p} waiting={waiting} />
       </span>
       <RowMenu p={p} self={self} access={access} act={act} />

@@ -15,6 +15,7 @@ export const keys = {
     scripts: 'Scripts',
   },
   docs: 'https://trckable.com/docs/api/mcp/',
+  apiDocs: 'https://trckable.com/docs/api/',
   never: 'never',
   lastUsed: (when: string) => `last used ${when}`,
   secretLabel: 'Your new key',

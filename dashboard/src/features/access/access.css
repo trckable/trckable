@@ -1,10 +1,22 @@
 /* Site access on People: a muted summary on the row, and its popup. */
 .site-chips {
   display: flex;
+  padding: 3px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
   min-width: 0;
+}
+.site-chips:hover {
+  border-color: var(--border-2);
+  background: var(--sunken);
 }
 .site-chips .chip {
   max-width: 96px;

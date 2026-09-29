@@ -12,12 +12,13 @@ export function KeyTiles() {
         {t.tiles.ai}
         <ExternalLink size={12} strokeWidth={1.75} aria-hidden="true" />
       </a>
-      <span className="key-tile">
+      <a className="key-tile" href={t.apiDocs} target="_blank" rel="noreferrer">
         <span className="icon-tile small">
           <Webhook size={15} strokeWidth={1.75} aria-hidden="true" />
         </span>
         {t.tiles.api}
-      </span>
+        <ExternalLink size={12} strokeWidth={1.75} aria-hidden="true" />
+      </a>
       <span className="key-tile">
         <span className="icon-tile small">
           <SquareTerminal size={15} strokeWidth={1.75} aria-hidden="true" />
