@@ -90,7 +90,8 @@ test('fast ticks are saved one at a time, and the newest state wins', async ({ p
   await pop.getByRole('menuitemcheckbox', { name: new RegExp(`rows-b-${tag}`) }).click()
   await page.waitForTimeout(2000)
   expect(await stored(page)).toHaveLength(all - 2)
-  await expect(row.locator('.sites-btn .sites-text')).toHaveText(`${all - 2} of ${all} sites`)
+  // Other suites add sites at the same time: the total may have grown, the ticked count may not.
+  await expect(row.locator('.sites-btn .sites-text')).toHaveText(new RegExp(`^${all - 2} of \\d+ sites$`))
   await page.unroute('**/api/v1/site-access/*')
   await pop.getByRole('button', { name: 'All sites' }).click()
   await expect.poll(() => stored(page)).toBeNull()
