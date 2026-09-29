@@ -8,15 +8,16 @@ import { copy } from './account/copy'
 export interface WindowTab {
   id: AccountTab
   label: string
+  short: string
   icon: typeof Globe
   owner?: true
 }
 
 const OWN: WindowTab[] = [
-  { id: 'sites', label: copy.tabs.sites, icon: Globe, owner: true },
-  { id: 'keys', label: copy.tabs.keys, icon: KeyRound, owner: true },
-  { id: 'people', label: copy.tabs.people, icon: Users, owner: true },
-  { id: 'profile', label: copy.tabs.profile, icon: CircleUser },
+  { id: 'sites', label: copy.tabs.sites, short: copy.short.sites, icon: Globe, owner: true },
+  { id: 'keys', label: copy.tabs.keys, short: copy.short.keys, icon: KeyRound, owner: true },
+  { id: 'people', label: copy.tabs.people, short: copy.short.people, icon: Users, owner: true },
+  { id: 'profile', label: copy.tabs.profile, short: copy.short.profile, icon: CircleUser },
 ]
 
 /** The tabs this person's window has: an owner's four, a viewer's Account alone. */

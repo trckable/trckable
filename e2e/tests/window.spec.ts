@@ -39,7 +39,7 @@ for (const size of SIZES) {
         const now = await box(page)
         expect(now, `section ${i} of ${url}`).toEqual(first)
       }
-      if (size.name === 'phone') expect(first).toMatchObject({ x: 0, y: 0, width: size.width, height: size.height })
+      if (size.name === 'phone') expect(first).toMatchObject({ x: 8, y: 44, width: size.width - 16, height: size.height - 52 })
       await page.keyboard.press('Escape')
       await expect(window).toBeHidden()
     }
