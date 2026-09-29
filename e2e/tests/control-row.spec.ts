@@ -2,8 +2,8 @@
 // unless TRCKABLE_A11Y_URL points at one, like header):
 //   TRCKABLE_A11Y_URL=http://localhost:8799 npx playwright test control-row
 // A wide screen: two capsules on the right; the first shows the real dates,
-// steps with ‹ ›, opens comparison and Filter, and folds to a pill that is
-// remembered. A phone: one short line, a pill that opens a sheet.
+// steps with ‹ ›, opens comparison and Filter, and folds (a toggle at its right
+// end, after Filter) to a pill that is remembered. A phone: one short line, a pill that opens a sheet.
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
@@ -112,11 +112,25 @@ test('the first capsule folds to a pill, and the choice is remembered', async ({
   const toggle = page.locator('.ctl-see .fold-toggle')
   await expect(toggle).toHaveAttribute('aria-expanded', 'true')
   await expect(toggle).toHaveAccessibleName('Collapse')
+  await expect(toggle).toHaveAttribute('title', 'Collapse')
+  // At the capsule's right end, after Filter and a divider; its icon is a fold, not a chevron.
+  const see = page.locator('.ctl-see')
+  const filter = (await see.getByRole('button', { name: 'Filter' }).boundingBox())!
+  const at = (await toggle.boundingBox())!
+  const capsule = (await see.boundingBox())!
+  expect(at.x, 'right of Filter').toBeGreaterThanOrEqual(filter.x + filter.width)
+  expect(capsule.x + capsule.width - (at.x + at.width), 'at the capsule end').toBeLessThanOrEqual(4)
+  await expect(see.locator('button:visible').last()).toHaveAttribute('aria-expanded', 'true')
+  await expect(see.locator('.fold-toggle').locator('xpath=preceding-sibling::*[1]')).toHaveClass(/ctl-div/)
+  await expect(toggle.locator('svg')).toHaveClass(/lucide-fold /)
+  await expect(toggle.locator('svg')).not.toHaveClass(/chevron/)
   await toggle.click()
   await expect(toggle).toHaveAttribute('aria-expanded', 'false')
   await expect(toggle).toHaveAccessibleName('Last 30 days, Expand')
   await expect(toggle).toContainText('Last 30 days')
   await expect(toggle.locator('.filter-count')).toHaveText('1')
+  await expect(toggle.locator('svg').last()).toHaveClass(/lucide-unfold /)
+  await expect(toggle.locator('svg').last()).not.toHaveClass(/chevron/)
   await expect(page.getByRole('button', { name: 'Previous period' })).toBeHidden()
   // ← still moves the period while folded.
   await page.locator('body').click({ position: { x: 5, y: 400 } })
