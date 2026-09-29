@@ -57,7 +57,8 @@ test('the sites popover ticks, searches and saves at once', async ({ page }) => 
   await pop.getByRole('menuitemcheckbox', { name: new RegExp(`rows-a-${tag}`) }).click()
   await expect(pop.getByRole('menuitemcheckbox', { name: new RegExp(`rows-a-${tag}`) })).toHaveAttribute('aria-checked', 'false')
   await expect.poll(async () => (await stored(page))?.length).toBe(all - 1)
-  await expect(row.locator('.sites-btn .sites-text')).toHaveText(`${all - 1} of ${all} sites`)
+  // Other specs add sites meanwhile, so the total may have grown: check the ticked count.
+  await expect(row.locator('.sites-btn .sites-text')).toHaveText(new RegExp(`^${all - 1} of \\d+ sites$`))
 
   // A search narrows the list, and the tick still works on what is left.
   await pop.getByLabel('Find a site').fill(`rows-b-${tag}`)
