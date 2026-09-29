@@ -3,7 +3,7 @@
 // search cost nothing until somebody opens it.
 import { ListFilter } from 'lucide-react'
 import { lazy, Suspense, useRef } from 'react'
-import { filterMenu } from './panelOpen'
+import { closer, filterMenu, toggler } from './panelOpen'
 import type { Row } from '../lib/api'
 import { copy } from '../features/header/copy'
 
@@ -22,7 +22,7 @@ export function FilterMenu(p: {
   const root = useRef<HTMLDivElement>(null)
   const menu = open && (
     <Suspense fallback={null}>
-      <FilterPop {...p} root={root} onClose={() => setOpen(false)} />
+      <FilterPop {...p} root={root} onClose={closer(setOpen)} />
     </Suspense>
   )
   return (
@@ -33,7 +33,7 @@ export function FilterMenu(p: {
         title={copy.filter}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen(!open)}
+        onClick={toggler(setOpen, open)}
       >
         <ListFilter size={17} strokeWidth={1.75} aria-hidden="true" />
         <span className="filter-label">{copy.filter}</span>

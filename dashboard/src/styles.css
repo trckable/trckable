@@ -1842,11 +1842,6 @@ pre.code.words {
   border-radius: 50%;
   border: 2px solid var(--grid);
 }
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 /* The chart tooltip's split bar: new against returning, in one line. */
 
@@ -3171,15 +3166,6 @@ body[data-mode] .overview .kpi .value,
   .mtile:hover {
     transform: none;
   }
-}
-
-/* Refresh, before Ask: the icon turns while every number is fetched again. */
-.btn.icon.refresh.spinning svg {
-  animation: spin 0.8s linear infinite;
-}
-.btn.icon.refresh:disabled {
-  opacity: 1;
-  cursor: progress;
 }
 
 /* ---- Live ↔ Data ---------------------------------------------------------

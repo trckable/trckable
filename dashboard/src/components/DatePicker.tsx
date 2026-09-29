@@ -5,7 +5,7 @@ import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef } from 'react'
 import { copy } from '../features/header/copy'
 import { toggleRowCollapsed, useRowCollapsed } from '../features/header/rowCollapsed'
-import { setPeriodOpen, usePeriodOpen } from './periodOpen'
+import { closer, focusOpener, periodMenu, toggler } from './panelOpen'
 import { pressed, useKeymap } from '../lib/keys'
 import type { Bucket } from '../lib/api'
 import {
@@ -62,7 +62,7 @@ function stepOf(e: KeyboardEvent) {
 export function DatePicker({ value, today, onChange, short, tz, bucket, autoBucket, onBucket, filters = 0 }: Props & { short?: boolean; tz?: string; bucket?: Bucket; autoBucket?: string; onBucket?: (b?: Bucket) => void; filters?: number }) {
   // The period is plain words in the header's row, not a boxed control: the
   // arrows either side, the label opening the calendar.
-  const open = usePeriodOpen()
+  const open = periodMenu.use()
   const collapsed = useRowCollapsed()
   useKeymap()
   const root = useRef<HTMLDivElement>(null)
@@ -101,7 +101,7 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
 
   useEffect(() => {
     if (!open) return
-    const onDown = (e: PointerEvent) => !root.current?.contains(e.target as Node) && setPeriodOpen(false)
+    const onDown = (e: PointerEvent) => !root.current?.contains(e.target as Node) && periodMenu.set(false)
     window.addEventListener('pointerdown', onDown)
     return () => window.removeEventListener('pointerdown', onDown)
   }, [open])
@@ -109,7 +109,7 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
   const canNext = shiftRange(value.range, 1).to <= today
   const cmpText = cmp ? `vs ${compareLabel(value.period, value.compare, value.range)} (${fmtRange(cmp, today)})` : undefined
 
-  useEffect(() => () => setPeriodOpen(false), [])
+  useEffect(() => () => periodMenu.set(false), [])
   const popover = open && (
     <Suspense fallback={null}>
       <Popover
@@ -120,9 +120,10 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
         bucket={bucket}
         autoBucket={autoBucket}
         onBucket={onBucket}
-        onCancel={() => setPeriodOpen(false)}
+        onCancel={closer(periodMenu.set)}
         onApply={(v) => {
-          setPeriodOpen(false)
+          periodMenu.set(false)
+          focusOpener()
           onChange(v)
         }}
       />
@@ -144,7 +145,7 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
           </>
         )}
       </button>
-      <span className="ctl-div" aria-hidden="true" />
+      <span className="ctl-div" />
       <button
         type="button"
         className="btn icon ghost step"
@@ -159,10 +160,7 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
         className="btn range"
         aria-haspopup="dialog"
         aria-expanded={open}
-        // What it is compared with: said on hover and to screen readers; the
-        // tiles' change chips already show it.
-        title={cmpText}
-        onClick={() => setPeriodOpen(!open)}
+        onClick={toggler(periodMenu.set, open)}
       >
         <span className="range-line">
           {calendar}
@@ -182,12 +180,12 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
       >
         <Chevron dir="right" />
       </button>
-      <span className="ctl-div ctl-cmp" aria-hidden="true" />
+      <span className="ctl-div ctl-cmp" />
       <button
         type="button"
         className="btn ghost compare ctl-cmp"
         aria-expanded={open}
-        onClick={() => setPeriodOpen(!open)}
+        onClick={toggler(periodMenu.set, open)}
       >
         {words}
         <Chevron dir="down" />

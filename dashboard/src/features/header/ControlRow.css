@@ -20,7 +20,6 @@
   border: 0;
   border-radius: 11px;
   background: transparent;
-  box-shadow: none;
   color: var(--text-2);
   font-size: 13px;
   white-space: nowrap;
@@ -43,10 +42,8 @@
 }
 .ctl-cap .btn.step {
   width: 32px;
-  padding: 0;
 }
 .ctl-cap .btn.range {
-  min-width: 0;
   padding: 0 10px;
   color: var(--text);
   font-weight: 600;
@@ -58,7 +55,6 @@
   gap: 8px;
 }
 .range-icon {
-  flex: none;
   color: var(--text-2);
 }
 .range-dates {
@@ -69,9 +65,6 @@
 }
 .ctl-cap .btn.compare {
   padding: 0 8px 0 12px;
-}
-.ctl-cap .btn.filter {
-  padding: 0 12px;
 }
 .ctl-cap .filter-root {
   position: static;
@@ -108,7 +101,6 @@
 .ctl-cap .fold-toggle {
   width: 32px;
   padding: 0;
-  gap: 8px;
   justify-content: center;
   color: var(--text-3);
 }
@@ -119,14 +111,9 @@
   font-size: 13px;
 }
 .ctl-see.collapsed > :not(.range-picker),
-.ctl-see.collapsed .range-picker > :not(.fold-toggle),
-.ctl-filter:empty {
+.ctl-see.collapsed .range-picker > :not(.fold-toggle) {
   display: none;
 }
-.ctl-filter {
-  display: flex;
-}
-.ctl-see:not(.collapsed) > :not(.range-picker),
 .ctl-see:not(.collapsed) .range-picker > :is(button:not(.fold-toggle), span) {
   animation: ctl-grow 0.18s ease-out;
 }
@@ -142,16 +129,10 @@
   }
 }
 
-/* Tablet: the dates and Filter's word give way. */
+/* Tablet: the dates, Filter's word and the comparison (it is in the period's popover) give way. */
 @media (max-width: 960px) {
   .ctl-cap .range-dates,
-  .ctl-cap .btn.filter .filter-label {
-    display: none;
-  }
-}
-
-/* Narrower still, the comparison is in the period's popover only. */
-@media (max-width: 760px) {
+  .ctl-cap .btn.filter .filter-label,
   .ctl-cap .ctl-cmp {
     display: none;
   }
@@ -177,12 +158,12 @@
   font: 400 14px var(--font);
   cursor: pointer;
 }
-.phone-pill b {
-  font-weight: 600;
-}
 .phone-row .filter-root > .btn,
 .phone-row .sv-btn {
   display: none;
+}
+.phone-pill b {
+  font-weight: 600;
 }
 .phone-pill > * {
   white-space: nowrap;

@@ -68,12 +68,23 @@ test('comparison and Filter open their popovers, Share and More are named icons'
   const see = page.locator('.ctl-see')
   await see.getByRole('button', { name: /^(vs |no comparison)/ }).click()
   await expect(page.getByRole('dialog', { name: 'Choose a date range' })).toBeVisible()
-  await page.mouse.click(5, 300) // a click elsewhere closes it
-  await expect(page.getByRole('dialog', { name: 'Choose a date range' })).toBeHidden()
+  const picker = page.getByRole('dialog', { name: 'Choose a date range' })
+  await expect(picker).toBeVisible()
+  // Escape closes it and focus goes back to the button that opened it.
+  await page.keyboard.press('Escape')
+  await expect(picker).toBeHidden()
+  await expect(see.getByRole('button', { name: /^(vs |no comparison)/ })).toBeFocused()
+  await see.locator('.btn.range').click()
+  await expect(picker).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(picker).toBeHidden()
+  await expect(see.locator('.btn.range')).toBeFocused()
 
   await see.getByRole('button', { name: 'Filter' }).click()
   await expect(page.locator('.filter-pop')).toBeVisible()
   await page.keyboard.press('Escape')
+  await expect(page.locator('.filter-pop')).toBeHidden()
+  await expect(see.getByRole('button', { name: 'Filter' })).toBeFocused()
 
   const doing = page.locator('.ctl-do')
   for (const name of ['Share', 'More']) {
@@ -167,7 +178,12 @@ for (const width of [390, 360]) {
     await expect(pill).toBeFocused()
     await pill.click()
     await sheet.getByRole('button', { name: 'More', exact: true }).click()
-    await expect(page.getByRole('dialog', { name: 'Choose a date range' })).toBeVisible()
+    const picker = page.getByRole('dialog', { name: 'Choose a date range' })
+    await expect(picker).toBeVisible()
+    await expect(picker.locator(':focus')).toHaveCount(1) // focus moved into it
+    await page.keyboard.press('Escape')
+    await expect(picker).toBeHidden()
+    await expect(pill).toBeFocused()
   })
 }
 
@@ -215,8 +231,10 @@ test('a phone: Add in the sheet opens the filter menu on screen, and Views in â‹
     expect(r.x).toBeGreaterThanOrEqual(0)
     expect(r.x + r.width).toBeLessThanOrEqual(390)
     expect(r.y).toBeGreaterThanOrEqual(0)
+    await expect(menu.locator(':focus')).toHaveCount(1) // focus moved into it
     await page.keyboard.press('Escape')
     await expect(menu).toBeHidden()
+    await expect(page.locator('.phone-pill')).toBeFocused()
     // Views: a real menu item, reached with the arrows; it closes â‹¯ and opens the list; a pick closes it.
     const more = page.getByRole('button', { name: 'More', exact: true })
     await more.focus()
@@ -230,8 +248,15 @@ test('a phone: Add in the sheet opens the filter menu on screen, and Views in â‹
     await expect(page.getByRole('menu', { name: 'More' })).toBeHidden()
     const pick = page.locator('.sv-name', { hasText: 'Direct only' })
     await expect(pick).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(pick).toBeHidden()
+    await expect(more).toBeFocused()
+    await page.keyboard.press('Enter')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('Enter')
     await pick.click()
     await expect(pick).toBeHidden()
+    await expect(more).toBeFocused()
     await expect(page.locator('.phone-pill')).toContainText('1 filter')
   } finally {
     if (made) await page.evaluate(async ([i, m]) => void (await fetch(`/api/v1/sites/${i}/segments/${m}`, { method: 'DELETE', headers: { 'X-Trckable-Request': '1' } })), [id, made])

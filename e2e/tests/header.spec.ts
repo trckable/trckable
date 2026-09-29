@@ -116,7 +116,9 @@ test('the avatar menu holds the person\'s own things, by keyboard too', async ({
   await page.setViewportSize({ width: 1280, height: 900 })
   await open(page)
   const avatar = page.getByRole('button', { name: 'Account', exact: true })
-  await avatar.click()
+  // Opened from the keyboard: a click focuses nothing in Safari, and a key is what puts focus on the first item.
+  await avatar.focus()
+  await page.keyboard.press('Enter')
   const account = page.getByRole('menu', { name: 'Account' })
   await expect(account.getByRole('menuitem')).toHaveText([/Profile/, /Shortcuts/, /Sign out/])
   await expect(account.getByRole('menuitemradio')).toHaveCount(3)

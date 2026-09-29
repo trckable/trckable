@@ -5,8 +5,7 @@ import { ChevronRight, X } from 'lucide-react'
 import { useRef, type PointerEvent, type ReactNode } from 'react'
 import { compareWords, periodLabel, type PickerValue } from '../../components/DatePicker'
 import { Modal } from '../../components/Modal'
-import { filterMenu } from '../../components/panelOpen'
-import { setPeriodOpen } from '../../components/periodOpen'
+import { filterMenu, periodMenu } from '../../components/panelOpen'
 import { truncateMiddle } from '../../lib/visitor'
 import { PRESETS, presetById, type ISODate } from '../../lib/dates'
 import { isShared } from '../../lib/me'
@@ -21,7 +20,8 @@ export interface SheetProps {
   onChange: (v: PickerValue) => void
   /** Live/Data: the row's own switch. */
   switcher?: ReactNode
-  onClose: () => void
+  /** back: focus returns to the pill (not when another panel takes over). */
+  onClose: (back?: boolean) => void
 }
 
 const QUICK = ['today', '7d', '30d']
@@ -29,16 +29,17 @@ const QUICK = ['today', '7d', '30d']
 const DRAG_CLOSE = 70
 
 export default function PhoneSheet(p: SheetProps) {
+  const close = () => p.onClose()
   const box = useRef<HTMLDivElement>(null)
   const from = useRef<number | null>(null)
   // The date-range picker takes over from the sheet.
   const openPicker = () => {
-    p.onClose()
-    setPeriodOpen(true)
+    p.onClose(false)
+    periodMenu.set(true)
   }
   // The filter menu takes over from the sheet, too.
   const openFilter = () => {
-    p.onClose()
+    p.onClose(false)
     filterMenu.set(true)
   }
   const move = (e: PointerEvent) => {
@@ -50,10 +51,10 @@ export default function PhoneSheet(p: SheetProps) {
     const dy = e.clientY - from.current
     from.current = null
     if (box.current) box.current.style.transform = ''
-    if (dy > DRAG_CLOSE) p.onClose()
+    if (dy > DRAG_CLOSE) close()
   }
   return (
-    <Modal label={sheetCopy.sheet} onClose={p.onClose} className="row-sheet" keepSize={false}>
+    <Modal label={sheetCopy.sheet} onClose={close} className="row-sheet" keepSize={false}>
       <div ref={box} className="sheet-body">
         <div
           className="sheet-grab"
@@ -107,7 +108,7 @@ export default function PhoneSheet(p: SheetProps) {
             </div>
           </div>
         )}
-        <button type="button" className="btn sheet-done" onClick={p.onClose}>
+        <button type="button" className="btn sheet-done" onClick={close}>
           {sheetCopy.done}
         </button>
       </div>

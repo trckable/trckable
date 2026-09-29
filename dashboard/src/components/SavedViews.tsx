@@ -4,7 +4,7 @@
 // chunk (SavedViewsPop.tsx), loaded the first time the button is pressed.
 import { Bookmark, ChevronDown } from 'lucide-react'
 import { lazy, Suspense, useRef } from 'react'
-import { savedViews } from './panelOpen'
+import { closer, savedViews, toggler } from './panelOpen'
 import type PopType from './SavedViewsPop'
 
 export type View = { id: string; name: string; query: string }
@@ -30,7 +30,7 @@ export function SavedViews<V extends View>(p: {
   const active = p.views.find((v) => v.query === p.current)
   const pop = open && (
     <Suspense fallback={null}>
-      <SavedViewsPop {...p} btn={btn} onClose={() => setOpen(false)} />
+      <SavedViewsPop {...p} btn={btn} onClose={closer(setOpen)} />
     </Suspense>
   )
   return (
@@ -41,7 +41,7 @@ export function SavedViews<V extends View>(p: {
         className={'btn sv-btn' + (active ? ' on' : '')}
         aria-haspopup="dialog"
         aria-expanded={open}
-        onClick={() => setOpen(!open)}
+        onClick={toggler(setOpen, open)}
       >
         <Bookmark size={16} strokeWidth={1.75} aria-hidden="true" />
         <span className="sv-btn-name">{active ? active.name : 'Views'}</span>

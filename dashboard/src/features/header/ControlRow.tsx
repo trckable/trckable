@@ -33,12 +33,12 @@ export function ControlRow(p: Props) {
           <>
             <div className={collapsed ? 'ctl-cap ctl-see collapsed' : 'ctl-cap ctl-see'}>
               {p.period}
-              {p.filter && <span className="ctl-div" aria-hidden="true" />}
-              <span className="ctl-filter">{p.filter}</span>
+              {p.filter && <span className="ctl-div" />}
+              {p.filter}
             </div>
             <div className="ctl-cap ctl-do">
               {p.share}
-              {p.share && <span className="ctl-div" aria-hidden="true" />}
+              {p.share && <span className="ctl-div" />}
               {p.more}
             </div>
           </>
