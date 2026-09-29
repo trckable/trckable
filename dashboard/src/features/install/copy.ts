@@ -11,6 +11,10 @@ function scriptsRead(n: number): string {
   return `, nor in the ${n} scripts it loads`
 }
 
+/** One line of the comparison: what each way gives, and whether that is good (yes), a cost (meh) or gone (no). */
+export type Tone = 'yes' | 'meh' | 'no'
+type Row = { label: string; cookies: [string, Tone]; cookieless: [string, Tone] }
+
 export const copy = {
   label: 'Install trckable',
   titleCard: (domain: string) => `Add trckable to ${domain}`,
@@ -43,16 +47,20 @@ export const copy = {
     failed: 'That did not save. Nothing changed: try again.',
     viewer: 'Only an owner of this site can change this.',
     dialogTitle: 'Use cookieless tracking?',
-    dialogIntro: 'Honest trade-offs, so you can decide:',
-    points: [
-      'No cookie and nothing in the browser’s storage.',
-      'Visitor ids rotate every day, so one person on two days counts as two visitors.',
-      'Multi-day journeys and revenue attribution get weaker: a sale is only tied to a visit on the same day.',
-      'Journeys and the new-vs-returning breakdown are off while it is on.',
-    ],
+    dialogTitleOff: 'Use cookies again?',
+    colCookies: 'With cookies',
+    colCookieless: 'Cookieless',
+    rows: [
+      { label: 'Browser storage', cookies: ['cookie', 'meh'], cookieless: ['nothing', 'yes'] },
+      { label: 'Returning visitors', cookies: ['recognised', 'yes'], cookieless: ['each day new', 'meh'] },
+      { label: 'Revenue attribution', cookies: ['across days', 'yes'], cookieless: ['same day only', 'meh'] },
+      { label: 'Journeys & new-vs-returning', cookies: ['on', 'yes'], cookieless: ['off', 'no'] },
+    ] as Row[],
+    switchBack: 'You can switch back any time; nothing is lost.',
     docsLink: 'How cookieless mode works',
     cancel: 'Cancel',
     confirm: 'Use cookieless',
+    confirmOff: 'Use cookies',
   },
 
   // Install with AI.

@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 import { api, messageOf, type SiteLayout } from '../../lib/api'
 import { toast } from '../../components/Toast'
-import { EMPTY } from './layout'
+import { EMPTY } from './empty'
 
 let current: SiteLayout | null = null
 let loading: Promise<void> | null = null

@@ -122,11 +122,6 @@ body[data-mode] .live-head-row h2,
 .live-line svg.can-open {
   cursor: pointer;
 }
-.live-cross line {
-  stroke: var(--text-3);
-  stroke-width: 1;
-  stroke-dasharray: 3 4;
-}
 .live-glow {
   filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
 }
@@ -512,4 +507,8 @@ body[data-mode] .live-head-row h2,
 .live-more {
   padding: 8px 14px;
   font-size: 12px;
+}
+/* The cursor's pill sits on the axis row under the plot, not over the line. */
+.live-line .cursor-pill {
+  bottom: -24px;
 }

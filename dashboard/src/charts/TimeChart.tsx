@@ -7,13 +7,13 @@ import type { Annotation, Bucket } from '../lib/api'
 import { markersFor } from '../features/notes/markers'
 import { fmtCompact, fmtInt } from '../lib/format'
 import { useTween } from '../lib/motion'
-import { ago } from './ago'
 import { timeCopy } from './copy'
 import { smooth } from './smooth'
 import { bucketLabel, everyNth, peakIndex, threeScale } from './timeScale'
 import { useCut } from './useCut'
 import { NoteMarkers, TimeTip } from './chartParts'
 import { anchorAt, PeakLabel } from './PeakLabel'
+import { CursorMark, CursorPill } from './Cursor'
 
 export { bucketLabel, smooth }
 
@@ -230,15 +230,13 @@ export function TimeChart(p: TimeChartProps) {
         </g>
         </g>
         {p.story && <g clipPath={`url(#${gradId}-plot)`}><rect className="chart-dim chart-unknown" x={0} y={PAD_T} width={w + 16} height={plotH} /></g>}
-        {/* The crosshair rides the cut: solid for Replay's day, dashed for
-            the pointer, drawn at the variable so it never lags the grey. */}
-        <line className={hover == null ? 'chart-cut is-replay' : 'chart-cut'} x1={0} x2={0} y1={0} y2={PAD_T + plotH} />
+        {/* Replay's day: a solid line at the cut, drawn at the variable so it
+            never lags the grey. The pointer's own cursor is CursorMark. */}
+        {hover == null && <line className="chart-cut is-replay" x1={0} x2={0} y1={0} y2={PAD_T + plotH} />}
         {scrub != null && n > 1 && hover == null && (
           <circle ref={marker} cx={0} cy={0} transform={driven ? undefined : `translate(${x(scrub)} ${y(vals[scrub] ?? 0)})`} r="6" fill="var(--accent)" stroke="var(--surface)" strokeWidth="3" />
         )}
-        {hover != null && (
-          <circle cx={x(hover)} cy={y(vals[hover] ?? 0)} r="5" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" />
-        )}
+        {hover != null && <CursorMark x={x(hover)} y={y(vals[hover] ?? 0)} top={0} bottom={PAD_T + plotH} />}
         {peak >= 0 && hover == null && scrub == null && !p.overlay && <PeakLabel x={x(peak)} y={y(vals[peak] ?? 0)} w={w} text={timeCopy.peak(fmtInt(p.values[peak]), bucketLabel(p.labels[peak], p.bucket))} padL={PAD_L} />}
         {p.strip && (
           <g aria-hidden="true">
@@ -296,12 +294,8 @@ export function TimeChart(p: TimeChartProps) {
             {pl.label}
           </span>
         ))}
-      {/* How long ago that bucket was, pinned under the axis at the cursor. */}
-      {hover != null && n > 0 && ago(p.labels[hover]) && (
-        <span className="ago-pill" style={{ left: Math.max(30, Math.min(x(hover), w - 30)) }}>
-          {ago(p.labels[hover])}
-        </span>
-      )}
+      {/* The bucket's date and time, pinned under the axis at the cursor. */}
+      {hover != null && n > 0 && <CursorPill x={x(hover)} w={w} text={bucketLabel(p.labels[hover], p.bucket, true)} />}
     </div>
   )
 }

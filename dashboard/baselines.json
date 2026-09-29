@@ -1,7 +1,7 @@
 {
   "literals": 473,
   "components": {
-    "src/charts/TimeChart.tsx": 310,
+    "src/charts/TimeChart.tsx": 304,
     "src/components/DateRangePopover.tsx": 396,
     "src/components/FilterPop.tsx": 303,
     "src/main.tsx": 317,

@@ -1,33 +1,34 @@
-// The honest version of "are you sure?": what cookieless mode costs, before
-// it is switched on. Cancel is the default, because nothing is lost by it.
+// The honest version of "are you sure?": what cookieless mode changes, as one
+// small comparison, before it is switched on (or back off). Cancel is the
+// default, because nothing is lost by it.
 import { Cookie, ExternalLink } from 'lucide-react'
 import { useRef } from 'react'
 import { DialogActions } from '../../components/DialogActions'
 import { Modal } from '../../components/Modal'
+import { CookielessTable } from './CookielessTable'
 import { copy } from './copy'
 import { PRIVACY_DOCS } from './snippet'
 import { useFocusTrap } from './useFocusTrap'
 import '../../components/ConfirmDialog.css'
+import './CookielessDialog.css'
 
 const t = copy.cookieless
 
-export function CookielessDialog({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+/** `on`: the site is cookieless now, so this asks to go back to cookies. */
+export function CookielessDialog({ on, onCancel, onConfirm }: { on: boolean; onCancel: () => void; onConfirm: () => void }) {
   const box = useRef<HTMLDivElement>(null)
   useFocusTrap(box)
+  const title = on ? t.dialogTitleOff : t.dialogTitle
   return (
-    <Modal label={t.dialogTitle} className="confirm-modal" onClose={onCancel} keepSize={false}>
-      <div ref={box} className="confirm-body inst-cl-dialog">
+    <Modal label={title} className="confirm-modal cl-modal" onClose={onCancel} keepSize={false}>
+      <div ref={box} className="confirm-body cl-dialog">
         <span className="modal-badge" aria-hidden="true">
           <Cookie size={20} strokeWidth={1.75} />
         </span>
         <div className="confirm-text">
-          <h2>{t.dialogTitle}</h2>
-          <p className="muted">{t.dialogIntro}</p>
-          <ul className="inst-cl-points">
-            {t.points.map((p) => (
-              <li key={p}>{p}</li>
-            ))}
-          </ul>
+          <h2>{title}</h2>
+          <CookielessTable toCookies={on} />
+          <p className="faint cl-back">{t.switchBack}</p>
           <a className="inst-docs" href={PRIVACY_DOCS} target="_blank" rel="noreferrer">
             {t.docsLink}
             <ExternalLink size={13} strokeWidth={1.75} aria-hidden="true" />
@@ -41,7 +42,7 @@ export function CookielessDialog({ onCancel, onConfirm }: { onCancel: () => void
           }
         >
           <button type="button" className="btn primary big" onClick={onConfirm}>
-            {t.confirm}
+            {on ? t.confirmOff : t.confirm}
           </button>
         </DialogActions>
       </div>

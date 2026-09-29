@@ -697,14 +697,9 @@ button.kpi[aria-pressed='true'] {
   transition: none;
 }
 .chart-cut {
-  stroke: var(--text-2);
-  stroke-dasharray: 3 3;
-  pointer-events: none;
-}
-.chart-cut.is-replay {
   stroke: var(--text);
   stroke-width: 1.5;
-  stroke-dasharray: none;
+  pointer-events: none;
 }
 .chart-wrap[data-cut='off'] .chart-cut {
   visibility: hidden;
@@ -1929,20 +1924,6 @@ pre.code.words {
 }
 
 /* The chart tooltip's split bar: new against returning, in one line. */
-/* "12 days ago", under the axis where the cursor is. */
-.ago-pill {
-  position: absolute;
-  bottom: 0;
-  transform: translateX(-50%);
-  padding: 2px 9px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-2);
-  font-size: 11px;
-  white-space: nowrap;
-  pointer-events: none;
-}
 
 /* ---- Toasts --------------------------------------------------------------- */
 .toasts {

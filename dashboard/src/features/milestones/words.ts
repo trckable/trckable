@@ -48,14 +48,7 @@ export function byYear(list: Milestone[]): { year: string; items: Milestone[] }[
   return out
 }
 
-/** The key the server knows a milestone by. */
-export const keyOf = (m: Pick<Milestone, 'kind' | 'step'>): [string, string] => [m.kind, m.step]
-
-/** Whether the menu shows a dot: something stored since the timeline was
- *  last opened, other than the moment on screen. */
-export function hasDot(list: Milestone[], openedAt: number, moment: Milestone | null): boolean {
-  return list.some((m) => m.created_at > openedAt && !(moment && m.kind === moment.kind && m.step === moment.step))
-}
+export { hasDot, keyOf } from './dot'
 
 /** The newest reached milestone: the latest day, then the latest stored. */
 export function newest(list: Milestone[]): Milestone | null {

@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, type Milestone, type Milestones, type Site } from '../../lib/api'
 import { isShared } from '../../lib/me'
-import { hasDot, keyOf } from './words'
+import { hasDot, keyOf } from './dot'
 
 const opened = (site: string) => 'tkb_ms_open_' + site
 
