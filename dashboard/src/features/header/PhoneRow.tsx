@@ -1,6 +1,6 @@
-// The phone's second row: one line. A pill with what the numbers are (the
-// period, and how many filters) that opens the sheet with every choice, and
-// ⋯ (which holds Share and the saved views).
+// The phone's second row: one line. Live/Data, a pill with what the numbers
+// are (the period, and how many filters) that opens the sheet with every
+// choice, and ⋯ (which holds Share and the saved views).
 import { ChevronDown } from 'lucide-react'
 import { lazy, Suspense, useRef, useState, type ReactNode } from 'react'
 import { focusOpener, openedFrom } from '../../components/panelOpen'
@@ -34,6 +34,7 @@ export function PhoneRow(p: PhoneProps & { value: PickerValue; today: ISODate })
   const n = p.active.length
   return (
     <div className="subbar phone-row">
+      {!isShared() && <ViewSwitch live={false} />}
       <button ref={pill} type="button" className="phone-pill" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
         <span className="pill-dot" aria-hidden="true" />
         <b>{periodLabel(p.value, p.today)}</b>
@@ -46,7 +47,7 @@ export function PhoneRow(p: PhoneProps & { value: PickerValue; today: ISODate })
       {p.under}
       {open && (
         <Suspense fallback={null}>
-          <PhoneSheet active={p.active} value={p.value} today={p.today} onChange={p.onChange} switcher={isShared() ? undefined : <ViewSwitch live={false} />} onClose={close} />
+          <PhoneSheet active={p.active} value={p.value} today={p.today} onChange={p.onChange} onClose={close} />
         </Suspense>
       )}
     </div>

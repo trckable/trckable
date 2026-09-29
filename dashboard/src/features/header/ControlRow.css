@@ -164,6 +164,14 @@
 }
 .phone-pill b {
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.phone-row .view-switch {
+  flex: none;
+}
+.phone-row .view-switch button {
+  padding: 0 11px;
 }
 .phone-pill > * {
   white-space: nowrap;
