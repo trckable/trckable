@@ -5,9 +5,9 @@ import { Timeline } from './Timeline'
 import type { MilestonesState } from './useMilestones'
 import './MilestonesDialogs.css'
 
-export default function MilestonesDialogs({ ms, site }: { ms: MilestonesState; site: Site }) {
+export default function MilestonesDialogs({ ms, site, revenue }: { ms: MilestonesState; site: Site; revenue: boolean }) {
   const o = ms.open
   const close = () => ms.setOpen(null)
   if (o && 'share' in o) return <ShareSheet site={site} m={o.share} onClose={close} onChanged={ms.reload} />
-  return <Timeline site={site} onShare={(m) => ms.setOpen({ share: m })} onClose={close} />
+  return <Timeline site={site} revenue={revenue} onShare={(m) => ms.setOpen({ share: m })} onClose={close} />
 }

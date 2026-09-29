@@ -27,12 +27,12 @@ export function NextTile({ n, i }: { n: MilestoneNext; i: number }) {
   )
 }
 
-export function DoneTile({ m, i, onReplay, onShare }: { m: Milestone; i: number; onReplay: () => void; onShare: () => void }) {
-  const label = tileLabel(m)
+export function DoneTile({ m, i, revenue, onReplay, onShare }: { m: Milestone; revenue: boolean; i: number; onReplay: () => void; onShare: () => void }) {
+  const label = tileLabel(m, revenue)
   const I = ICON[m.kind]
   return (
     <li className={isMoney(m.kind) ? 'ms-tile ms-done money' : 'ms-tile ms-done'} style={{ '--i': i } as React.CSSProperties}>
-      <span className="ms-badge">{badge(m) || <I size={22} strokeWidth={1.75} aria-hidden="true" />}</span>
+      <span className="ms-badge">{badge(m, revenue) || <I size={22} strokeWidth={1.75} aria-hidden="true" />}</span>
       <b>{label}</b>
       <span className="ms-when">{fmtDay(m.day)}</span>
       <span className="ms-acts">

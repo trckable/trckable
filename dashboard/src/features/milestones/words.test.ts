@@ -42,14 +42,14 @@ describe('milestone words', () => {
     expect(leftLine({ kind: 'revenue', step: 100, now: 40, currency: 'USD' })).toBe('$60 to go')
     expect(nearest([{ kind: 'visitors', step: 1000, now: 100 }, { kind: 'countries', step: 25, now: 14 }])?.kind).toBe('countries')
   })
-  it('keeps revenue amounts out until Show amount is on', () => {
+  it('shows revenue amounts where the report shows revenue, hides them where it does not', () => {
     const r = m({ kind: 'revenue', step: '1000', value: 1000, currency: 'USD' })
-    expect(badge(r)).toBe('')
-    expect(tileLabel(r)).toBe('Revenue milestone')
-    expect(lineOf(r)).not.toContain('$')
-    const shown = { ...r, amount: true }
-    expect(badge(shown)).toBe('$1,000')
-    expect(lineOf(shown)).toContain('$1,000')
-    expect(badge(m({ kind: 'first_sale', value: 1 }))).toBe('1st')
+    expect(badge(r, false)).toBe('')
+    expect(tileLabel(r, false)).toBe('Revenue milestone')
+    expect(lineOf(r, false)).not.toContain('$')
+    expect(badge(r, true)).toBe('$1,000')
+    expect(tileLabel(r, true)).toBe('$1,000 revenue')
+    expect(lineOf(r, true)).toContain('$1,000')
+    expect(badge(m({ kind: 'first_sale', value: 1 }), true)).toBe('1st')
   })
 })

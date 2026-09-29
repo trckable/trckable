@@ -11,7 +11,7 @@ import { Moment } from './Moment'
 import { byYear, nearest, newest } from './words'
 import './Timeline.css'
 
-export function Timeline({ site, onShare, onClose }: { site: Site; onShare: (m: Milestone) => void; onClose: () => void }) {
+export function Timeline({ site, revenue, onShare, onClose }: { site: Site; revenue: boolean; onShare: (m: Milestone) => void; onClose: () => void }) {
   const [data, setData] = useState<Milestones | null>(null)
   const [replay, setReplay] = useState<{ m: Milestone; n: number } | null>(null)
   const body = useRef<HTMLDivElement>(null)
@@ -44,7 +44,7 @@ export function Timeline({ site, onShare, onClose }: { site: Site; onShare: (m: 
         {data && !data.enabled && <p className="faint">{copy.off}</p>}
         {data && data.enabled && (
           <>
-            <Hero m={newest(list)} next={nearest(next)} onShare={onShare} onReplay={play} />
+            <Hero m={newest(list)} next={nearest(next)} revenue={revenue} onShare={onShare} onReplay={play} />
             {next.length > 0 && (
               <section className="ms-group">
                 <h3>{copy.nextUp}</h3>
@@ -60,7 +60,7 @@ export function Timeline({ site, onShare, onClose }: { site: Site; onShare: (m: 
                 <h3>{copy.reachedIn(y.year)}</h3>
                 <ul className="ms-tiles ms-dones">
                   {y.items.map((m) => (
-                    <DoneTile key={m.kind + m.step} m={m} i={at++} onReplay={() => play(m)} onShare={() => onShare(m)} />
+                    <DoneTile key={m.kind + m.step} m={m} i={at++} revenue={revenue} onReplay={() => play(m)} onShare={() => onShare(m)} />
                   ))}
                 </ul>
               </section>

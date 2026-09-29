@@ -23,9 +23,9 @@ function Frame({ kind, label, kicker, children }: { kind: MilestoneKind; label: 
   )
 }
 
-function Reached({ m, onShare, onReplay }: { m: Milestone; onShare: (m: Milestone) => void; onReplay: (m: Milestone) => void }) {
+function Reached({ m, revenue, onShare, onReplay }: { m: Milestone; revenue: boolean; onShare: (m: Milestone) => void; onReplay: (m: Milestone) => void }) {
   const w = say(m)
-  const big = showsBig(m) ? w.big : ''
+  const big = showsBig(m, revenue) ? w.big : ''
   const unit = w.big && !big ? copy.revenueQuiet : w.label
   return (
     <Frame kind={m.kind} label={copy.newMilestone} kicker={`${copy.newMilestone} · ${fmtDay(m.day)}`}>
@@ -33,7 +33,7 @@ function Reached({ m, onShare, onReplay }: { m: Milestone; onShare: (m: Mileston
         {big && <b>{big}</b>}
         <span>{unit}</span>
       </div>
-      <p>{lineOf(m)}</p>
+      <p>{lineOf(m, revenue)}</p>
       <div className="ms-hero-acts">
         <button type="button" className="btn primary" onClick={() => onShare(m)}>
           <Share2 size={15} strokeWidth={1.75} aria-hidden="true" />
@@ -61,7 +61,7 @@ function Almost({ n }: { n: MilestoneNext }) {
   )
 }
 
-export function Hero({ m, next, onShare, onReplay }: { m: Milestone | null; next: MilestoneNext | null; onShare: (m: Milestone) => void; onReplay: (m: Milestone) => void }) {
-  if (m) return <Reached m={m} onShare={onShare} onReplay={onReplay} />
+export function Hero({ m, next, revenue, onShare, onReplay }: { m: Milestone | null; revenue: boolean; next: MilestoneNext | null; onShare: (m: Milestone) => void; onReplay: (m: Milestone) => void }) {
+  if (m) return <Reached m={m} revenue={revenue} onShare={onShare} onReplay={onReplay} />
   return next ? <Almost n={next} /> : null
 }

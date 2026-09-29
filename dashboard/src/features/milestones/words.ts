@@ -64,23 +64,24 @@ export function newest(list: Milestone[]): Milestone | null {
   return best
 }
 
-/** Money shows its number only once "Show amount" was turned on for it. */
-export const showsBig = (m: Pick<Milestone, 'kind' | 'amount'>) => m.kind !== 'revenue' || !!m.amount
+/** Revenue shows its number wherever the report shows revenue to this person
+ *  (`revenue`); "Show amount" only governs the share card and link. */
+export const showsBig = (m: Pick<Milestone, 'kind'>, revenue: boolean) => m.kind !== 'revenue' || revenue
 
 /** What sits in the badge: the number, "1st" for a one-off, nothing for hidden money. */
-export function badge(m: Milestone): string {
+export function badge(m: Milestone, revenue: boolean): string {
   const w = say(m)
   if (!w.big) return copy.first
-  return showsBig(m) ? w.big : ''
+  return showsBig(m, revenue) ? w.big : ''
 }
 
 /** The one sentence under the number. */
-export function lineOf(m: Milestone): string {
+export function lineOf(m: Milestone, revenue: boolean): string {
   const L = copy.line
   const w = say(m)
   if (m.kind === 'first_goal' || m.kind === 'first_sale') return L[m.kind]
   if (!w.big) return L.firstPageview
-  if (m.kind === 'revenue') return showsBig(m) ? L.revenue(w.big) : L.revenueQuiet
+  if (m.kind === 'revenue') return showsBig(m, revenue) ? L.revenue(w.big) : L.revenueQuiet
   if (m.kind === 'visitors' || m.kind === 'pageviews' || m.kind === 'record_day' || m.kind === 'countries') return L[m.kind](w.big)
   return ''
 }
@@ -108,8 +109,8 @@ export function nearest(list: MilestoneNext[]): MilestoneNext | null {
 }
 
 /** A reached tile's name: "10 countries", "First sale"; hidden money stays unnamed. */
-export function tileLabel(m: Milestone): string {
+export function tileLabel(m: Milestone, revenue: boolean): string {
   const w = say(m)
   if (!w.big) return w.label
-  return showsBig(m) ? `${w.big} ${w.label}` : copy.revenueQuiet
+  return showsBig(m, revenue) ? `${w.big} ${w.label}` : copy.revenueQuiet
 }
