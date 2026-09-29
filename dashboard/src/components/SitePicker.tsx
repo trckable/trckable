@@ -10,14 +10,21 @@ import { copy } from '../features/sites/copy'
 import { StateDot } from '../features/sites/StateDot'
 import { usePhoneLock } from './lockScroll'
 import { SiteMark } from './SiteMark'
-import { lazyLoad, whenIdle } from '../lib/lazyLoad'
+import { lazyLoad, warm, whenIdle } from '../lib/lazyLoad'
+import { layoutReady, preloadLayout } from '../features/sites/useSiteLayout'
 
 const SiteMenu = lazyLoad(() => import('../features/sites/SiteMenu').then((m) => ({ default: m.SiteMenu })))
-const menu = SiteMenu.preload
+const menu = () => {
+  SiteMenu.preload()
+  preloadLayout()
+}
+/** The list opens with its final order: the layout is waited for (300 ms at most) rather than shown late. */
+const LAYOUT_WAIT = 300
 
 export function SitePicker({ sites, current, all }: { sites: Site[]; current: Site | null; all?: boolean }) {
   const [open, setOpen] = useState(false)
-  useEffect(() => whenIdle(menu), [])
+  // Idle fetches only the chunk (the first load keeps its request budget); the layout is asked for once a pointer or focus arrives.
+  useEffect(() => whenIdle(SiteMenu.preload), [])
   usePhoneLock(open)
   const close = useCallback(() => setOpen(false), [])
   useOnlyOpen('sites', open, close)
@@ -29,9 +36,11 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
         className="btn site-btn"
         aria-haspopup="dialog"
         aria-expanded={open}
-        onPointerEnter={menu}
-        onFocus={menu}
-        onClick={() => setOpen((o) => !o)}
+        {...warm(menu)}
+        onClick={() => {
+          if (open) return setOpen(false)
+          void layoutReady(LAYOUT_WAIT).then(() => setOpen(true))
+        }}
       >
         {!all && current && (
           <span className="mark-wrap">

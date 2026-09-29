@@ -9,6 +9,12 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- Share moved from the top header into the site's row, right before ⋯ (icon only on a phone).
+- The site switcher opens without a jump: its list and layout load ahead, and site icons keep their box while loading.
+- The footer text is one step smaller and fainter.
+
 ## 0.5.1 (29 Sep 2026)
 
 ### Changed
