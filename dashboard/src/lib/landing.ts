@@ -16,3 +16,8 @@ export function landing(
   const to = redirectFor(sites)
   return { path: to.path + search, wizard: to.wizard }
 }
+
+/** A link's ?site=… names one of these sites. */
+export function namesSite(sites: { id: string }[], params: URLSearchParams): boolean {
+  return sites.some((x) => x.id === params.get('site'))
+}

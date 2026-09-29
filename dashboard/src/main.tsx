@@ -16,7 +16,7 @@ import { applyTheme } from "./lib/theme";
 import { openAddSite, useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
 import { siteForSegment } from "./lib/siteRoute";
-import { landing } from "./lib/landing";
+import { landing, namesSite } from "./lib/landing";
 import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
 import { canChange, setRole } from "./lib/me";
@@ -117,9 +117,7 @@ function App() {
     // Signed in at the root, or at an address that names none of this
     // person's sites (a typo, someone else's site, one since removed): their
     // main dashboard, never a page made up for an address it does not know.
-    // (An old /settings link that names a site is handled above: it opens that site.)
-    const oldLink = path === "/settings" && boot.state === "ready" && boot.sites.some((x) => x.id === params.get("site"));
-    if (boot.state === "ready" && !gated && !oldLink && path !== "/all" && !siteForSegment(boot.sites, path.slice(1))) {
+    if (boot.state === "ready" && !gated && !(path === "/settings" && namesSite(boot.sites, params)) && path !== "/all" && !siteForSegment(boot.sites, path.slice(1))) {
       const to = landing(boot.sites, new URLSearchParams(location.search));
       navigate(to.path, { replace: true });
       if (to.wizard) openAddSite();
