@@ -17,7 +17,37 @@ export const people = {
   lockLast: 'The only owner: make someone else an owner first',
   waiting: 'Waiting to sign in',
   sitesLabel: 'Sites',
-  more: (n: number) => `+${n}`,
+  sites: {
+    all: 'All sites',
+    none: 'No sites',
+    some: (n: number, of: number) => `${n} of ${of} sites`,
+    of: (n: number, of: number) => `${n} of ${of}`,
+    find: 'Find a site',
+    empty: 'No site found',
+    done: 'Done',
+    failed: 'The sites were not saved',
+  },
+  /** The pill and its popover: what each role may do, in one line. */
+  roles: {
+    owner: { name: 'Owner', what: 'Runs everything: sites, payments, people, keys.' },
+    viewer: { name: 'Viewer', what: 'Reads the sites you allow. Changes nothing.' },
+  },
+  rolePill: (email: string, role: string) => `Role of ${email}: ${role}`,
+  /** The confirmation before a role changes. */
+  change: {
+    ownerTitle: (name: string) => `Make ${name} an owner?`,
+    viewerTitle: (name: string) => `Make ${name} a viewer?`,
+    ownerLines: ['Sees and changes every site', 'Adds and removes people, you too', 'Connects payments, creates keys'],
+    viewerLines: ['Can no longer change anything', 'You choose which sites they see'],
+    trust: 'I trust them with all of this',
+    cancel: 'Cancel',
+    ownerGo: 'Make owner',
+    viewerGo: 'Make viewer',
+    busy: 'Saving…',
+    failed: 'The role was not changed',
+    nowOwner: (name: string) => `${name} is now an owner`,
+    nowViewer: (name: string) => `${name} is now a viewer`,
+  },
   status: {
     active: 'Active',
     waiting: 'Not signed in yet',
@@ -31,9 +61,6 @@ export const people = {
     twoStepOff: 'Turn off two-step',
     remove: 'Remove',
   },
-  making: (email: string, role: string) => `Making ${email} ${role === 'owner' ? 'an owner' : 'a viewer'}…`,
-  madeOwner: (email: string) => `${email} can now run this instance`,
-  madeViewer: (email: string) => `${email} can now only read`,
   reset: {
     title: (email: string) => `New sign-in details for ${email}?`,
     body: 'They are signed out everywhere, get a new one-time password from you, and choose their own at the next sign-in. Type your own password to confirm.',

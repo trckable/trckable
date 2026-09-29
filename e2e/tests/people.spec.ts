@@ -1,6 +1,7 @@
-// People and API keys as one look: an inline row adds someone, the role is
-// two buttons, a viewer's sites are chips, a key is created and revoked in
-// place, and on a phone nothing is wider than the window.
+// People and API keys as one look: an inline row adds someone, the role is a
+// pill, a viewer's sites are a button, a key is created and revoked in place,
+// and on a phone nothing is wider than the window. (people-rows.spec.ts: the
+// popovers and the confirmation.)
 import { expect, test } from '@playwright/test'
 import { API } from '../playwright.config'
 import { session } from './session'
@@ -23,7 +24,7 @@ test.beforeEach(async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: await session('people'), url: API }])
 })
 
-test('add a viewer inline, change their role, limit their sites', async ({ page }) => {
+test('add a viewer inline, limit their sites', async ({ page }) => {
   await page.goto(API + '/example.com?account=people')
   const window = page.getByRole('dialog', { name: 'Profile, your account' })
   await expect(window.getByRole('button', { name: 'Add someone' })).toBeVisible({ timeout: 15_000 })
@@ -41,14 +42,9 @@ test('add a viewer inline, change their role, limit their sites', async ({ page 
 
   const row = window.locator('.person', { hasText: email })
   await expect(row).toBeVisible()
-  const role = row.getByRole('radiogroup', { name: `Role of ${email}` })
-  await expect(role.getByRole('radio', { name: 'Viewer' })).toHaveAttribute('aria-checked', 'true')
-  await role.getByRole('radio', { name: 'Owner' }).click()
-  await expect(role.getByRole('radio', { name: 'Owner' })).toHaveAttribute('aria-checked', 'true')
-  await role.getByRole('radio', { name: 'Viewer' }).click()
-  await expect(role.getByRole('radio', { name: 'Viewer' })).toHaveAttribute('aria-checked', 'true')
-  // A viewer's sites are chips; the person is not signed in yet: a clock.
-  await expect(row.locator('.site-chips')).toHaveText('All sites')
+  await expect(row.getByRole('button', { name: `Role of ${email}: Viewer` })).toBeVisible()
+  // A viewer's sites are one button; the person is not signed in yet: a clock.
+  await expect(row.locator('.sites-btn .sites-text')).toHaveText('All sites')
   await expect(row.getByRole('img', { name: 'Not signed in yet' })).toBeVisible()
 
   await row.getByRole('button', { name: `${email} options` }).click()
@@ -57,7 +53,8 @@ test('add a viewer inline, change their role, limit their sites', async ({ page 
   await popup.getByRole('switch', { name: 'All sites' }).click()
   await popup.getByRole('checkbox').first().check()
   await popup.getByRole('button', { name: 'Save' }).click()
-  await expect(row.locator('.site-chips .chip')).toHaveCount(1)
+  await expect(row.locator('.sites-btn .site-mark')).toHaveCount(1)
+  await expect(row.locator('.sites-btn .sites-text')).toHaveText(/^1 of \d+ sites$/)
 })
 
 test('create a key inline and revoke it', async ({ page }) => {
@@ -89,7 +86,7 @@ test('at 390 px nothing is wider than the window', async ({ page }) => {
     expect(await page.evaluate(() => document.body.scrollWidth <= document.body.clientWidth)).toBe(true)
     expect(await window.locator('.window-body').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
     // Controls are a comfortable size to tap.
-    for (const b of await window.locator('.person .role-seg button, .person .btn').all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(43)
+    for (const b of await window.locator('.person .role-pill, .person .sites-btn, .person .btn').all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(43)
   }
 })
 

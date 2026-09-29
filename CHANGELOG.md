@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- People is one compact row per person: a stack of site icons with "N of M sites" that opens a searchable list (each tick is saved at once), and a role pill that opens the two roles; every role change asks first, and making someone an owner needs their email typed. On a phone the row is two lines and the popovers are sheets from the bottom.
+
 ## 0.5.4 (29 Sep 2026)
 
 ### Changed
