@@ -68,8 +68,10 @@ test('add a site, pick a method, go cookieless, check, and see the first visit',
 
   // Step 1: the domain.
   const wizard = page.getByRole('dialog', { name: 'Add a site' })
-  await wizard.getByLabel('Domain').fill(domain)
-  await wizard.getByRole('button', { name: 'Continue' }).click()
+  await expect(wizard.getByRole('button', { name: 'Continue' })).toBeDisabled()
+  await wizard.getByLabel('Domain').fill(`https://www.${domain}/pricing`)
+  await expect(wizard.getByText(`We’ll count ${domain} and www/subdomains`)).toBeVisible()
+  await wizard.getByLabel('Domain').press('Enter')
   await expect(wizard.getByRole('tablist', { name: 'How to install' })).toBeVisible()
   const site = await siteByDomain(page, domain)
   expect(site?.id).toMatch(/^tkb_/)

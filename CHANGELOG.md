@@ -22,9 +22,14 @@ section into the release.
 - Replay flows instead of stepping: one clock moves the playhead every frame, so the line, its marker and the tiles' numbers glide between points (even at the slowest speed) while the lists and cards move on a calmer beat and moments pop exactly where they happened. Reduced motion still steps from moment to moment.
 - Replay speeds are durations, scaled to the period so a week and most of a year both feel right: Slow (~40 s), Normal (~20 s), Fast (~10 s), Faster (~5 s) and Rapid (~2 s), each shown with the time it takes for the period on screen. The speed is remembered in the browser, and `[` and `]` change it while Replay plays.
 - The Replay speed menu is a compact list: a small speed glyph, the name and its duration, a check on the current one, arrow keys to move; the button shows the speed's name.
+- First run: an owner cannot reach anything until one site has had its first visit. Every address shows the setup (add the site, install it, wait for its first visit) with no Skip, Esc does nothing, and Docs, Profile and Sign out stay reachable. An account with a working site is never held, and neither is one that also has a site still waiting for its first visit; there Add a site closes with Cancel, Esc or a click outside as any dialog does. A viewer with nothing shared sees "No sites shared with you yet."
+- The setup is one centred column: progress dots, step, heading, then the card beneath.
+- The site-less Settings page is gone; Sites live in Profile. `/settings` no longer shows a page: an old `/settings?site=…&tab=…` link opens that site's settings, any other address goes to the main dashboard.
+- Add a site is a compact dialog that is as tall as its step, a bottom sheet on a phone. The domain field cleans a pasted address (`https://www.example.com/path` becomes `example.com`), says what will be counted, flags a domain that is not valid or already added, and Enter continues. The steps are a compact row where finished ones are ticked and can be clicked to go back, and the height follows the step smoothly.
 
 ### Fixed
 
+- A site that has not had its first visit shows the install screen in Live as well as in Data, on first load, when switched to from another site and on a direct address; the Live | Data switch is hidden there, and the first visit opens the dashboard in the mode you had chosen.
 - While Replay is playing the chart ignores the pointer, touch and keys: no crosshair, tooltip or dot pulls at the line. Pausing or ending Replay brings hover back; Live is unchanged.
 
 ## 0.5.0 (28 Sep 2026)

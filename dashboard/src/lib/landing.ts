@@ -1,6 +1,6 @@
 // Where an address that names none of the person's sites goes, keeping the
 // rest of its query: the site a link asked for (?site=<id>), else siteRoute's answer (the first site, or with
-// no site the first run over the settings page).
+// no site the first run).
 import type { Site } from './api'
 import { redirectFor } from './siteRoute'
 

@@ -6,6 +6,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Wordmark } from '../../components/Logo'
 import { api, messageOf, type Site } from '../../lib/api'
+import { openAccount } from '../../lib/account'
+import { signOut } from '../../lib/signOut'
 import { navigate } from '../../lib/url'
 import { useLive } from '../../lib/useLive'
 import { useFocusTrap } from '../install/useFocusTrap'
@@ -21,10 +23,12 @@ import '../../components/Modal.css'
 // Nothing to refresh: the first run only watches for visits.
 const noRefetch = () => {}
 
-export default function Onboarding({ onClose, onSites }: { onClose: () => void; onSites: () => Promise<unknown> }) {
-  const [step, setStep] = useState<Step>('site')
+/** required: nothing else may be reached until the first visit (no Skip, Esc
+ *  does nothing); resume: a site already added that has not had one. */
+export default function Onboarding({ onClose, onSites, required = false, resume }: { onClose: () => void; onSites: () => Promise<unknown>; required?: boolean; resume?: Site }) {
+  const [step, setStep] = useState<Step>(resume ? 'install' : 'site')
   const [domain, setDomain] = useState('')
-  const [site, setSite] = useState<Site | null>(null)
+  const [site, setSite] = useState<Site | null>(resume ?? null)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const stream = useLive(site?.id ?? null, noRefetch)
@@ -67,7 +71,9 @@ export default function Onboarding({ onClose, onSites }: { onClose: () => void; 
       if (path) navigate(path)
     })
   }
-  const skip = () => leave(site ? finishPath(site.domain, false) : null)
+  const skip = () => {
+    if (!required) leave(site ? finishPath(site.domain, false) : null)
+  }
 
   // Keyboard first: Esc skips (unless a menu inside is closing), and Enter
   // moves on from the last two screens wherever the focus is.
@@ -94,13 +100,27 @@ export default function Onboarding({ onClose, onSites }: { onClose: () => void; 
   }
 
   return (
-    <div ref={box} className="ob" role="dialog" aria-modal="true" aria-label={copy.label}>
+    <div ref={box} className={required ? 'ob gated' : 'ob'} role="dialog" aria-modal="true" aria-label={copy.label}>
       <header className="ob-top">
         <Wordmark />
         <Dots at={dotOf(step)} />
-        <button type="button" className="btn ghost ob-skip" onClick={skip} aria-keyshortcuts="Escape">
-          {copy.skip} <span className="kbd">{copy.skipHint}</span>
-        </button>
+        {required ? (
+          <nav className="ob-exits" aria-label={copy.account}>
+            <a className="btn ghost" href="https://trckable.com/docs/">
+              {copy.docs}
+            </a>
+            <button type="button" className="btn ghost" onClick={() => openAccount('profile')}>
+              {copy.profile}
+            </button>
+            <button type="button" className="btn ghost" onClick={() => signOut()}>
+              {copy.signOut}
+            </button>
+          </nav>
+        ) : (
+          <button type="button" className="btn ghost ob-skip" onClick={skip} aria-keyshortcuts="Escape">
+            {copy.skip} <span className="kbd">{copy.skipHint}</span>
+          </button>
+        )}
       </header>
       <main className={`ob-main ob-${step}`} key={step}>
         <div className="ob-text">

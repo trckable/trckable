@@ -20,9 +20,9 @@ import { landing } from "./lib/landing";
 import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
 import { canChange, setRole } from "./lib/me";
+import { NoneShared, useGate } from "./features/onboarding/Gate";
 // Settings and the account dialog are their own screens: the dashboard should
 // not carry them.
-const Settings = lazy(() => import("./views/Settings").then((m) => ({ default: m.Settings })));
 // Sign-in and first-run setup are for the minutes before someone is in: a
 // signed-in owner never downloads them.
 const Setup = lazy(() => import("./views/Auth").then((m) => ({ default: m.Setup })));
@@ -91,19 +91,21 @@ function App() {
   const accountTab = useAccountTab(); // a hook: must run before any early return
   usePreloadDialogs(boot.state === "ready");
   const adding = useAddSite();
+  const { gated, pass } = useGate(boot.state === "ready" ? boot.sites : null, boot.state === "ready" && !!boot.mustChange, path);
   const settingsOpen = useSettings();
   // A newer release, if this owner's dashboard may look (lib/update.ts).
   const latest = useLatest(boot.state === "ready" ? boot.version : undefined, boot.state === "ready" ? boot.updateCheck : false);
   const [showUpdate, setShowUpdate] = useState(false);
-  // An old /settings?site=…&tab=… link (the docs, a bookmark): open the dialog
-  // over that site's dashboard and put the dashboard's address back.
+  // An old /settings?site=…&tab=… link (the docs, a bookmark) opens that
+  // site's settings over its dashboard; the page itself is gone, and any other
+  // /settings address falls through to the main dashboard below.
   useEffect(() => {
-    if (boot.state !== "ready" || path !== "/settings") return;
+    if (boot.state !== "ready" || gated || path !== "/settings") return;
     const s = boot.sites.find((x) => x.id === params.get("site"));
     if (!s) return;
     const visitor = params.get("visitor");
     openSettings(s, (params.get("tab") as SettingsTab) || "site", visitor ? { visitor } : undefined, { replace: true });
-  }, [boot, path, params]);
+  }, [boot, gated, path, params]);
 
   // Keep the address bar honest about the screen shown.
   useEffect(() => {
@@ -114,13 +116,13 @@ function App() {
       navigate("/login", { replace: true });
     // Signed in at the root, or at an address that names none of this
     // person's sites (a typo, someone else's site, one since removed): their
-    // main dashboard, never Settings for an address it does not know.
-    if (boot.state === "ready" && path !== "/settings" && path !== "/all" && !siteForSegment(boot.sites, path.slice(1))) {
+    // main dashboard, never a page made up for an address it does not know.
+    if (boot.state === "ready" && !gated && path !== "/all" && !siteForSegment(boot.sites, path.slice(1))) {
       const to = landing(boot.sites, new URLSearchParams(location.search));
       navigate(to.path, { replace: true });
       if (to.wizard) openAddSite();
     }
-  }, [boot, path, shared]);
+  }, [boot, path, shared, gated]);
 
   if (shared)
     return (
@@ -146,7 +148,7 @@ function App() {
         onDone={(site) => {
           void load().then(() =>
             navigate(
-              site ? "/" + encodeURIComponent(site.domain) : "/settings",
+              site ? "/" + encodeURIComponent(site.domain) : "/",
               { replace: true },
             ),
           );
@@ -172,37 +174,24 @@ function App() {
 
   const refreshSites = () =>
     api.sites().then(({ sites }) => setBoot({ ...boot, sites }));
-  const settings = path === "/settings";
   const all = path === "/all";
-  const site = settings
-    ? (boot.sites.find((s) => s.id === params.get("site")) ?? null)
-    : siteForSegment(boot.sites, path.slice(1));
+  const site = siteForSegment(boot.sites, path.slice(1));
 
   const header = (
-    // The header hides the site picker only on the settings page (an instance
-    // with no site yet); settings over a dashboard keep the dashboard's header.
-    <Header sites={boot.sites} current={site} settings={settings && !site} all={all} update={latest?.v} onUpdate={() => setShowUpdate(true)} />
+    <Header sites={boot.sites} current={site} all={all} update={latest?.v} onUpdate={() => setShowUpdate(true)} />
   );
+  // Until an owner's first site has had a visit, only the first run (Gate).
   let page: React.ReactNode;
-  if (all)
+  if (gated) page = null;
+  else if (boot.sites.length === 0) page = <NoneShared />;
+  else if (all)
     page = (
       <Suspense fallback={<Loading height={320} />}>
         <AllSites sites={boot.sites} header={header} />
       </Suspense>
     );
-  else if (!site && !settings)
-    page = null; // an unknown address, on its way to the main dashboard
   else if (!site)
-    page = (
-      <Suspense fallback={<Loading height={320} />}>
-      <Settings
-        sites={boot.sites}
-        site={site}
-        onSites={refreshSites}
-        header={header}
-      />
-      </Suspense>
-    );
+    page = null; // an unknown address (/settings among them), on its way to the main dashboard
   else
     page = (
       <>
@@ -242,7 +231,7 @@ function App() {
         />
         </Suspense>
       )}
-      <AddSiteHost open={adding} sites={boot.sites} onSites={refreshSites} />
+      <AddSiteHost open={adding || gated} required={gated} onPassed={pass} sites={boot.sites} onSites={refreshSites} />
     </div>
   );
 }
@@ -250,14 +239,12 @@ function App() {
 function Header({
   sites,
   current,
-  settings,
   all,
   update,
   onUpdate,
 }: {
   sites: Site[];
   current: Site | null;
-  settings: boolean;
   all?: boolean;
   /** A newer version, when there is one: a small lime pill by the logo. */
   update?: string;
@@ -288,7 +275,7 @@ function Header({
       {/* One control, two actions: which site, and that site's settings. They
           were two separate buttons sitting next to each other, which read as
           two unrelated things rather than one subject. */}
-      {sites.length > 0 && !settings && (
+      {sites.length > 0 && (
         <div className="site-zone">
           <SitePicker sites={sites} current={current} all={all} />
           {current && canChange() && (

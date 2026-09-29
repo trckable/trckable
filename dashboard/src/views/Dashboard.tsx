@@ -34,6 +34,7 @@ import { hourDetail } from '../features/overview/hourDetail'
 import { LiveSlot } from '../features/live/liveChunk'
 import { OnlineKpi } from '../features/live/OnlineKpi'
 import { entryCopy } from '../features/live/entryCopy'
+import { liveShown } from '../features/live/liveShown'
 import { useNotes } from '../features/notes/useNotes'
 import { jump } from '../features/notes/jump'
 import { Behaviour } from '../features/behaviour/Behaviour'
@@ -104,8 +105,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const today = todayIn(site.timezone)
   const range: Range = useMemo(() => rangeOf(view, today), [view.period, view.from, view.to, today]) // eslint-disable-line react-hooks/exhaustive-deps -- view is new each render: keyed by the fields the range reads
   const full = view.mode === 'full'
-  // A shared link has no stream, so no Live: it always shows Data.
-  const liveView = !!view.live && !isShared()
 
   // Current and previous period come in one request (lib/dashQuery.ts).
   const compareOn = view.compare !== 'none'
@@ -155,6 +154,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   }, [mayBeNew, everTracked, site.id])
   const showInstall = showsInstall({ site, hasData, filtered: view.filters.length > 0, everTracked })
   const waiting = showInstall && stream.visits.length === 0
+  const liveView = liveShown({ wanted: !!view.live, shared: isShared(), waiting }) // Data on a shared link, the install screen first
   const [mods, setMods] = useState<Partial<Record<string, boolean>> | null>(() => (isShared() ? sharedModules() : null))
   useEffect(() => {
     if (mods) return
