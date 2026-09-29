@@ -2,7 +2,8 @@
 // not on the page. The menu (FilterPop.tsx) is its own chunk: its icons and
 // search cost nothing until somebody opens it.
 import { ListFilter } from 'lucide-react'
-import { lazy, Suspense, useRef, useState } from 'react'
+import { lazy, Suspense, useRef } from 'react'
+import { closer, filterMenu, toggler } from './panelOpen'
 import type { Row } from '../lib/api'
 import { copy } from '../features/header/copy'
 
@@ -16,8 +17,14 @@ export function FilterMenu(p: {
   onRemove: (f: { dim: string; value: string }) => void
   onClear: () => void
 }) {
-  const [open, setOpen] = useState(false)
+  const open = filterMenu.use()
+  const setOpen = filterMenu.set
   const root = useRef<HTMLDivElement>(null)
+  const menu = open && (
+    <Suspense fallback={null}>
+      <FilterPop {...p} root={root} onClose={closer(setOpen)} />
+    </Suspense>
+  )
   return (
     <div ref={root} className="filter-root">
       <button
@@ -26,17 +33,13 @@ export function FilterMenu(p: {
         title={copy.filter}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggler(setOpen, open)}
       >
         <ListFilter size={17} strokeWidth={1.75} aria-hidden="true" />
         <span className="filter-label">{copy.filter}</span>
         {p.active.length > 0 && <span className="filter-count num">{p.active.length}</span>}
       </button>
-      {open && (
-        <Suspense fallback={null}>
-          <FilterPop {...p} root={root} onClose={() => setOpen(false)} />
-        </Suspense>
-      )}
+      {menu}
     </div>
   )
 }

@@ -1,7 +1,7 @@
 // The header's first row, after the site: borderless Ask and Filter, the avatar's menu (the person's own things).
 // What the numbers are, Live/Data, the period and the page's ⋯ (Refresh,
 // Create, Core/Full, Milestones, Export), is the row under it, and so is
-// Share: the one filled button, right before ⋯ (the icon alone on a phone).
+// Share: an icon beside ⋯ (on a phone it is ⋯'s first item).
 import { Search, Share2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { AccountMenu } from '../../components/AccountMenu'
@@ -28,7 +28,7 @@ export function HeaderTools(p: Props) {
       <div className="spacer" />
       {p.extra}
       {canAsk() && !p.waiting && (
-        <button type="button" className="btn ghost ask" onClick={p.onAsk} aria-expanded={p.askOpen} aria-label={copy.askLabel} title={copy.askTitle(askKey)}>
+        <button type="button" className="btn ghost ask" onClick={p.onAsk} aria-expanded={p.askOpen} aria-label={copy.ask} title={copy.askTitle(askKey)}>
           <Search size={17} strokeWidth={1.75} aria-hidden="true" />
           <span className="ask-label">{copy.ask}</span>
           <span className="kbd">{askKey}</span>
@@ -41,9 +41,8 @@ export function HeaderTools(p: Props) {
 
 export function ShareButton({ onShare }: { onShare: () => void }) {
   return (
-    <button type="button" className="btn primary share-btn" onClick={onShare} title={copy.shareTitle} aria-label={copy.share}>
-      <Share2 size={16} strokeWidth={1.9} aria-hidden="true" />
-      <span className="label">{copy.share}</span>
+    <button type="button" className="btn icon ghost share-btn" onClick={onShare} title={copy.shareTitle} aria-label={copy.share}>
+      <Share2 size={17} strokeWidth={1.75} aria-hidden="true" />
     </button>
   )
 }

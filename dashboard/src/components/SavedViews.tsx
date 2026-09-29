@@ -3,7 +3,8 @@
 // search keeps working at thirty (the server's limit). The menu is its own
 // chunk (SavedViewsPop.tsx), loaded the first time the button is pressed.
 import { Bookmark, ChevronDown } from 'lucide-react'
-import { lazy, Suspense, useRef, useState } from 'react'
+import { lazy, Suspense, useRef } from 'react'
+import { closer, savedViews, toggler } from './panelOpen'
 import type PopType from './SavedViewsPop'
 
 export type View = { id: string; name: string; query: string }
@@ -23,9 +24,15 @@ export function SavedViews<V extends View>(p: {
   /** What a view narrows to, in words: "Channel Direct · Campaign launch_week". */
   describe: (query: string) => string
 }) {
-  const [open, setOpen] = useState(false)
+  const open = savedViews.use()
+  const setOpen = savedViews.set
   const btn = useRef<HTMLButtonElement>(null)
   const active = p.views.find((v) => v.query === p.current)
+  const pop = open && (
+    <Suspense fallback={null}>
+      <SavedViewsPop {...p} btn={btn} onClose={closer(setOpen)} />
+    </Suspense>
+  )
   return (
     <>
       <button
@@ -34,18 +41,14 @@ export function SavedViews<V extends View>(p: {
         className={'btn sv-btn' + (active ? ' on' : '')}
         aria-haspopup="dialog"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggler(setOpen, open)}
       >
         <Bookmark size={16} strokeWidth={1.75} aria-hidden="true" />
         <span className="sv-btn-name">{active ? active.name : 'Views'}</span>
         {!active && p.views.length > 0 && <span className="count">{p.views.length}</span>}
         <ChevronDown size={15} strokeWidth={1.75} aria-hidden="true" />
       </button>
-      {open && (
-        <Suspense fallback={null}>
-          <SavedViewsPop {...p} btn={btn} onClose={() => setOpen(false)} />
-        </Suspense>
-      )}
+      {pop}
     </>
   )
 }

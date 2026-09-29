@@ -904,18 +904,6 @@ table.t td {
   .kpis > :last-child:nth-child(odd) {
     grid-column: span 2;
   }
-  /* Phone: the date range owns the row; stepping through periods lives in
-     the sheet, where there is space for it. */
-  .range-picker {
-    flex: 1;
-    min-width: 0;
-  }
-  .btn.step {
-    display: none;
-  }
-  .btn.range {
-    width: 100%;
-  }
   .card {
     padding: 14px;
   }
@@ -974,12 +962,6 @@ table.t td {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   min-width: 0;
-}
-.btn.range .num {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 @keyframes sheet {
   from {
@@ -1748,43 +1730,6 @@ ul.people button:hover {
   line-height: 1.3;
 }
 
-/* ---- The period control ----------------------------------------------------
-   One card: step back, the range itself, reset, step forward. */
-.range-picker {
-  position: relative;
-  display: flex;
-  align-items: stretch;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-  height: 44px;
-  gap: 0 !important;
-  /* No overflow:hidden here — it would clip the calendar that opens below. */
-}
-.range-picker > .btn:first-child {
-  border-radius: 11px 0 0 11px;
-}
-.range-picker > .btn:last-of-type {
-  border-radius: 0 11px 11px 0;
-}
-.range-picker > .btn {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  height: 100%;
-}
-.range-picker > .btn + .btn {
-  box-shadow: inset 1px 0 0 var(--grid);
-}
-.range-picker > .btn:hover:not(:disabled) {
-  background: var(--sunken);
-}
-.range-picker > .btn.range {
-  padding: 0 14px;
-}
-.range-picker > .btn:disabled {
-  opacity: 0.4;
-}
 .info {
   position: relative;
   display: inline-flex;
@@ -1821,15 +1766,7 @@ ul.people button:hover {
   }
 }
 
-/* ---- The toolbar under the header ------------------------------------------
-   Left: the filters in force. Right: period, filter, saved views. */
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px 16px;
-  flex-wrap: wrap;
-  margin-top: -4px;
-}
+/* ---- The filters in force, under the control row ---------------------------- */
 .toolbar-filters {
   display: flex;
   align-items: center;
@@ -1837,18 +1774,6 @@ ul.people button:hover {
   flex-wrap: wrap;
   flex: 1;
   min-width: 0;
-}
-.toolbar-tools {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: auto;
-}
-@media (max-width: 760px) {
-  .toolbar-tools {
-    flex: 1 0 100%;
-    order: -1;
-  }
 }
 /* ---- Header zones ----------------------------------------------------------
    Left: who and which site. Middle: the period and the view. Right: account
@@ -1916,11 +1841,6 @@ pre.code.words {
   flex: none;
   border-radius: 50%;
   border: 2px solid var(--grid);
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* The chart tooltip's split bar: new against returning, in one line. */
@@ -2630,18 +2550,6 @@ button.kpi-live:hover .label::after {
   .header-tools > .spacer {
     display: none;
   }
-  .range-picker {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-  /* The arrows live in the sheet on a phone. With them hidden the range
-     button is the whole group, so it gets the whole group's corners and no
-     divider on its left. */
-  .range-picker > .btn.range {
-    width: 100%;
-    border-radius: 11px;
-    box-shadow: none;
-  }
 }
 
 /* ---- Live pulse -------------------------------------------------------------
@@ -2813,41 +2721,6 @@ button.kpi-live:hover .label::after {
 @media (max-width: 640px) {
   .header > .brand .tkb-wm {
     display: none;
-  }
-}
-
-/* The toolbar on a phone: one row that fits. The period takes what is left
-   and shortens with an ellipsis; Filter and Views show their icon (and count). */
-@media (max-width: 640px) {
-  .toolbar-tools {
-    gap: 8px;
-    min-width: 0;
-  }
-  .toolbar-tools > .range-picker {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-  .toolbar-tools .range-picker .btn,
-  .toolbar-tools .range-picker button {
-    min-width: 0;
-  }
-  .toolbar-tools .btn.range {
-    flex: 1 1 auto !important;
-  }
-  .toolbar-tools .range-label {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .toolbar-tools .sv-btn .sv-btn-name,
-  .toolbar-tools .btn.filter .filter-label {
-    display: none;
-  }
-  .toolbar-tools .btn.filter,
-  .toolbar-tools .sv-btn {
-    flex: none;
-    padding: 0 11px;
   }
 }
 
@@ -3121,18 +2994,6 @@ button.kpi[aria-pressed='true'] .kpi-spark {
   font-size: 13px;
 }
 
-/* The days beside a short preset label: shown only where the button spans the
-   row (the phone toolbar), hidden in the compact header chip. */
-.range-days {
-  display: none;
-  font-size: 12.5px;
-}
-@media (max-width: 640px) {
-  .toolbar-tools .range-days {
-    display: inline;
-  }
-}
-
 /* A tile's number is sized by the tile, not the screen: seven across on a
    laptop or two by two on a phone, "$111,630" fits either way. */
 .overview .kpi {
@@ -3144,19 +3005,6 @@ body[data-mode] .overview .kpi .value,
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* The period button's comparison: a small chip in words under the period
-   ("vs last year"), the exact days in its tooltip. */
-.range-vs {
-  margin-left: 24px;
-  padding: 0 7px;
-  border-radius: 999px;
-  background: var(--sunken);
-  color: var(--text-3);
-  font-size: 11px;
-  line-height: 17px;
-  white-space: nowrap;
 }
 
 /* A site's mark: its icon, or its letter on its colour (components/SiteMark). */
@@ -3318,15 +3166,6 @@ body[data-mode] .overview .kpi .value,
   .mtile:hover {
     transform: none;
   }
-}
-
-/* Refresh, before Ask: the icon turns while every number is fetched again. */
-.btn.icon.refresh.spinning svg {
-  animation: spin 0.8s linear infinite;
-}
-.btn.icon.refresh:disabled {
-  opacity: 1;
-  cursor: progress;
 }
 
 /* ---- Live ↔ Data ---------------------------------------------------------

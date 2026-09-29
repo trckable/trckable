@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- The Data view's control row is two capsules on the right (period with its dates and ‹ ›, comparison and Filter, which folds to a small pill; Share and ⋯ as icons, no filled button); on a phone it is one line, a pill that opens a sheet with Live/Data, the periods, comparison and filters.
+
 ## 0.5.3 (29 Sep 2026)
 
 ### Changed
