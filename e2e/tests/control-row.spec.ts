@@ -42,6 +42,8 @@ async function open(page: Page, width: number, query = '') {
   await expect(page.locator('.overview-chart .chart-wrap svg')).toBeVisible({ timeout: 20_000 })
 }
 
+const site = (page: Page) => page.evaluate(async () => (await (await fetch('/api/v1/sites')).json()).sites[0].id as string)
+
 const dates = /^[A-Z][a-z]{2} \d{1,2}( – ([A-Z][a-z]{2} )?\d{1,2})?(, \d{4})?/
 
 test('the capsule shows the real dates and ‹ › move the period', async ({ page }) => {
@@ -64,7 +66,7 @@ test('the capsule shows the real dates and ‹ › move the period', async ({ pa
 test('comparison and Filter open their popovers, Share and More are named icons', async ({ page }) => {
   await open(page, 1280)
   const see = page.locator('.ctl-see')
-  await see.getByRole('button', { name: /Comparison: vs previous|Comparison: no comparison/ }).click()
+  await see.getByRole('button', { name: /^(vs |no comparison)/ }).click()
   await expect(page.getByRole('dialog', { name: 'Choose a date range' })).toBeVisible()
   await page.mouse.click(5, 300) // a click elsewhere closes it
   await expect(page.getByRole('dialog', { name: 'Choose a date range' })).toBeHidden()
@@ -101,7 +103,7 @@ test('the first capsule folds to a pill, and the choice is remembered', async ({
   await expect(toggle).toHaveAccessibleName('Collapse')
   await toggle.click()
   await expect(toggle).toHaveAttribute('aria-expanded', 'false')
-  await expect(toggle).toHaveAccessibleName('Expand')
+  await expect(toggle).toHaveAccessibleName('Last 30 days, Expand')
   await expect(toggle).toContainText('Last 30 days')
   await expect(toggle.locator('.filter-count')).toHaveText('1')
   await expect(page.getByRole('button', { name: 'Previous period' })).toBeHidden()
@@ -127,7 +129,7 @@ for (const width of [390, 360]) {
     await open(page, width, '?f=channel:Direct')
     const box = (await page.locator('.subbar').boundingBox())!
     expect(box.height, 'one line, at most 44 px').toBeLessThanOrEqual(44)
-    for (const b of await page.locator('.subbar button').all()) {
+    for (const b of await page.locator('.subbar button:visible').all()) {
       const r = (await b.boundingBox())!
       expect(r.height, 'controls at most 40 px').toBeLessThanOrEqual(40)
       expect(r.x + r.width, 'inside the screen').toBeLessThanOrEqual(width)
@@ -149,8 +151,9 @@ for (const width of [390, 360]) {
     await expect(sheet.getByRole('group', { name: 'View' })).toBeVisible()
     await sheet.getByRole('button', { name: '7d' }).click()
     await expect(sheet.getByRole('button', { name: '7d' })).toHaveAttribute('aria-pressed', 'true')
-    await sheet.getByRole('button', { name: /Remove Channel/ }).click()
-    await expect(sheet.getByRole('button', { name: /Remove Channel/ })).toHaveCount(0)
+    await expect(sheet.locator('.chip')).toContainText('Channel is')
+    await sheet.getByRole('button', { name: /Remove filter Channel is Direct/ }).click()
+    await expect(sheet.getByRole('button', { name: /Remove filter Channel is Direct/ })).toHaveCount(0)
     await sheet.getByRole('button', { name: 'Done' }).click()
     await expect(sheet).toBeHidden()
     await expect(pill).toBeFocused()
@@ -191,3 +194,46 @@ for (const colorScheme of ['light', 'dark'] as const) {
     })
   })
 }
+
+test('a phone: Add in the sheet opens the filter menu on screen, and Views in ⋯ works by keyboard', async ({ page }) => {
+  await open(page, 390)
+  const id = await site(page)
+  const made = await page.evaluate(async (i) => {
+    const r = await fetch(`/api/v1/sites/${i}/segments`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Trckable-Request': '1' }, body: JSON.stringify({ name: 'Direct only', query: 'f=channel:Direct' }) })
+    return r.ok ? ((await r.json()) as { id: string }).id : ''
+  }, id)
+  try {
+    await page.reload()
+    await expect(page.locator('.overview-chart .chart-wrap svg')).toBeVisible({ timeout: 20_000 })
+    // Add: the sheet closes, the filter menu opens, inside the screen.
+    await page.locator('.phone-pill').click()
+    await page.getByRole('dialog', { name: 'View options' }).getByRole('button', { name: 'Add' }).click()
+    await expect(page.getByRole('dialog', { name: 'View options' })).toBeHidden()
+    const menu = page.locator('.filter-pop')
+    await expect(menu).toBeVisible()
+    const r = (await menu.boundingBox())!
+    expect(r.x).toBeGreaterThanOrEqual(0)
+    expect(r.x + r.width).toBeLessThanOrEqual(390)
+    expect(r.y).toBeGreaterThanOrEqual(0)
+    await page.keyboard.press('Escape')
+    await expect(menu).toBeHidden()
+    // Views: a real menu item, reached with the arrows; it closes ⋯ and opens the list; a pick closes it.
+    const more = page.getByRole('button', { name: 'More', exact: true })
+    await more.focus()
+    await page.keyboard.press('Enter')
+    const items = page.getByRole('menu', { name: 'More' }).getByRole('menuitem')
+    await expect(items.first()).toBeFocused()
+    await page.keyboard.press('ArrowDown')
+    await expect(items.nth(1)).toHaveText(/Views/)
+    await expect(items.nth(1)).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(page.getByRole('menu', { name: 'More' })).toBeHidden()
+    const pick = page.locator('.sv-name', { hasText: 'Direct only' })
+    await expect(pick).toBeVisible()
+    await pick.click()
+    await expect(pick).toBeHidden()
+    await expect(page.locator('.phone-pill')).toContainText('1 filter')
+  } finally {
+    if (made) await page.evaluate(async ([i, m]) => void (await fetch(`/api/v1/sites/${i}/segments/${m}`, { method: 'DELETE', headers: { 'X-Trckable-Request': '1' } })), [id, made])
+  }
+})

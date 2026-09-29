@@ -2,7 +2,8 @@
 // not on the page. The menu (FilterPop.tsx) is its own chunk: its icons and
 // search cost nothing until somebody opens it.
 import { ListFilter } from 'lucide-react'
-import { lazy, Suspense, useRef, useState } from 'react'
+import { lazy, Suspense, useRef } from 'react'
+import { filterMenu } from './panelOpen'
 import type { Row } from '../lib/api'
 import { copy } from '../features/header/copy'
 
@@ -15,31 +16,30 @@ export function FilterMenu(p: {
   onPick: (dim: string, value: string) => void
   onRemove: (f: { dim: string; value: string }) => void
   onClear: () => void
-  /** In the phone's sheet: an Add button, the count is the sheet's own. */
-  add?: boolean
 }) {
-  const [open, setOpen] = useState(false)
+  const open = filterMenu.use()
+  const setOpen = filterMenu.set
   const root = useRef<HTMLDivElement>(null)
-  const label = p.add ? copy.add : copy.filter
+  const menu = open && (
+    <Suspense fallback={null}>
+      <FilterPop {...p} root={root} onClose={() => setOpen(false)} />
+    </Suspense>
+  )
   return (
     <div ref={root} className="filter-root">
       <button
         type="button"
-        className={p.active.length && !p.add ? 'btn ghost filter on' : 'btn ghost filter'}
-        title={label}
+        className={p.active.length ? 'btn ghost filter on' : 'btn ghost filter'}
+        title={copy.filter}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen(!open)}
       >
-        {!p.add && <ListFilter size={17} strokeWidth={1.75} aria-hidden="true" />}
-        <span className="filter-label">{label}</span>
-        {p.active.length > 0 && !p.add && <span className="filter-count num">{p.active.length}</span>}
+        <ListFilter size={17} strokeWidth={1.75} aria-hidden="true" />
+        <span className="filter-label">{copy.filter}</span>
+        {p.active.length > 0 && <span className="filter-count num">{p.active.length}</span>}
       </button>
-      {open && (
-        <Suspense fallback={null}>
-          <FilterPop {...p} root={root} onClose={() => setOpen(false)} />
-        </Suspense>
-      )}
+      {menu}
     </div>
   )
 }

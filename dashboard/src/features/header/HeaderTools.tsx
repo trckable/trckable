@@ -28,7 +28,7 @@ export function HeaderTools(p: Props) {
       <div className="spacer" />
       {p.extra}
       {canAsk() && !p.waiting && (
-        <button type="button" className="btn ghost ask" onClick={p.onAsk} aria-expanded={p.askOpen} aria-label={copy.askLabel} title={copy.askTitle(askKey)}>
+        <button type="button" className="btn ghost ask" onClick={p.onAsk} aria-expanded={p.askOpen} aria-label={copy.ask} title={copy.askTitle(askKey)}>
           <Search size={17} strokeWidth={1.75} aria-hidden="true" />
           <span className="ask-label">{copy.ask}</span>
           <span className="kbd">{askKey}</span>

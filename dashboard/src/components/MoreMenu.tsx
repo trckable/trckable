@@ -4,7 +4,7 @@
 // What belongs to the person (Profile, theme, shortcuts, sign out) is the
 // avatar's menu (AccountMenu).
 import { Ellipsis } from 'lucide-react'
-import { Suspense, type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useMenuNav, useOnlyOpen, type MenuItems } from '../lib/headerMenu'
 import { lazyLoad, warm, whenIdle } from '../lib/lazyLoad'
 import { openCreate, useCreateAvailable } from '../features/create/openCreate'
@@ -22,8 +22,8 @@ export interface MoreProps {
   onRefresh: () => void
   /** A phone: Share is the menu's first item, not a button in the row. */
   onShare?: () => void
-  /** A phone: the saved views, as a row of the menu. */
-  views?: ReactNode
+  /** A phone, with saved views: an item that opens their list. */
+  onViews?: () => void
   onExport: () => void
   /** The milestones timeline; dot: something new in it. Absent while off. */
   milestones?: { open: () => void; dot: boolean }

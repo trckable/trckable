@@ -129,7 +129,7 @@
   .header-tools.quiet .btn.ask {
     display: inline-flex;
   }
-    .header-tools.quiet .btn.ask,
+  .header-tools.quiet .btn.ask,
   .header-tools.quiet .btn.icon.ghost {
     width: 30px;
     min-width: 30px;

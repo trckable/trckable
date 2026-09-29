@@ -10,7 +10,7 @@ import { PhoneRow, type PhoneProps } from './PhoneRow'
 import { useRowCollapsed } from './rowCollapsed'
 import './ControlRow.css'
 
-interface Props extends Omit<PhoneProps, 'more' | 'filter' | 'period'> {
+interface Props extends Omit<PhoneProps, 'more' | 'filter' | 'period' | 'under'> {
   live: boolean
   phone: boolean
   period: ReactNode

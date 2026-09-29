@@ -92,12 +92,3 @@
   background: transparent;
   border: 1px solid color-mix(in srgb, var(--up) 35%, transparent);
 }
-
-/* Saved views, a row of ⋯ on a phone. */
-.menu-views {
-  padding: 2px 6px;
-}
-.menu-views .btn {
-  width: 100%;
-  justify-content: flex-start;
-}

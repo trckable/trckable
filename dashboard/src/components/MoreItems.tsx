@@ -1,5 +1,5 @@
 // The ⋯ menu's items (MoreMenu.tsx). Its own chunk, so the first load carries only the button.
-import { Cog, Download, Flag, Maximize2, Minimize2, Plus, RefreshCw, Share2 } from 'lucide-react'
+import { Bookmark, Cog, Download, Flag, Maximize2, Minimize2, Plus, RefreshCw, Share2 } from 'lucide-react'
 import type { MenuItems } from '../lib/headerMenu'
 import { caps, keyFor } from '../lib/keys'
 import { isShared } from '../lib/me'
@@ -22,7 +22,12 @@ export default function MoreItems({ p, go }: { p: MoreProps & { onCreate?: () =>
           {copy.share}
         </button>
       )}
-      {p.views && <div className="menu-views">{p.views}</div>}
+      {p.onViews && (
+        <button type="button" role="menuitem" onClick={go(p.onViews)}>
+          <Bookmark size={18} strokeWidth={1.75} aria-hidden="true" />
+          {copy.views}
+        </button>
+      )}
       <button type="button" role="menuitem" onClick={go(p.onRefresh)}>
         <RefreshCw size={18} strokeWidth={1.75} aria-hidden="true" />
         {copy.refresh}

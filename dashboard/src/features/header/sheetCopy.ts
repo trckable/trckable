@@ -7,5 +7,7 @@ export const sheetCopy = {
   more: 'More',
   compareRow: 'Compare',
   filtersRow: 'Filters',
-  removeFilter: (text: string) => `Remove ${text}`,
+  add: 'Add',
+  is: 'is',
+  removeFilter: (dim: string, value: string) => `Remove filter ${dim} is ${value}`,
 }

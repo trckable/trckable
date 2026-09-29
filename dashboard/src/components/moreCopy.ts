@@ -2,6 +2,7 @@
 export const copy = {
   more: 'More',
   share: 'Share',
+  views: 'Views',
   refresh: 'Refresh',
   create: 'Create…',
   settings: 'Site settings',

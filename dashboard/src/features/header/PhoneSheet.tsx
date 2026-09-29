@@ -3,22 +3,22 @@
 // filters in force and Add. Its own chunk: nobody opens it on a wide screen.
 import { ChevronRight, X } from 'lucide-react'
 import { useRef, type PointerEvent, type ReactNode } from 'react'
-import { periodLabel, type PickerValue } from '../../components/DatePicker'
+import { compareWords, periodLabel, type PickerValue } from '../../components/DatePicker'
 import { Modal } from '../../components/Modal'
+import { filterMenu } from '../../components/panelOpen'
 import { setPeriodOpen } from '../../components/periodOpen'
+import { truncateMiddle } from '../../lib/visitor'
 import { PRESETS, presetById, type ISODate } from '../../lib/dates'
 import { isShared } from '../../lib/me'
-import { copy } from './copy'
 import { sheetCopy } from './sheetCopy'
 import './PhoneSheet.css'
 
 export interface SheetProps {
   /** The filters in force, each with what removes it. */
-  active: { key: string; text: string; remove: () => void }[]
+  active: { key: string; dim: string; value: string; remove: () => void }[]
   value: PickerValue
   today: ISODate
   onChange: (v: PickerValue) => void
-  filter?: ReactNode
   /** Live/Data: the row's own switch. */
   switcher?: ReactNode
   onClose: () => void
@@ -35,6 +35,11 @@ export default function PhoneSheet(p: SheetProps) {
   const openPicker = () => {
     p.onClose()
     setPeriodOpen(true)
+  }
+  // The filter menu takes over from the sheet, too.
+  const openFilter = () => {
+    p.onClose()
+    filterMenu.set(true)
   }
   const move = (e: PointerEvent) => {
     if (from.current === null || !box.current) return
@@ -77,7 +82,7 @@ export default function PhoneSheet(p: SheetProps) {
         <button type="button" className="sheet-row" aria-haspopup="dialog" onClick={openPicker}>
           <span>{sheetCopy.compareRow}</span>
           <span className="sheet-val">
-            {copy.compareWith[p.value.compare]}
+            {compareWords(p.value)}
             <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
           </span>
         </button>
@@ -87,13 +92,18 @@ export default function PhoneSheet(p: SheetProps) {
             <div className="sheet-chips">
               {p.active.map((f) => (
                 <span key={f.key} className="chip">
-                  {f.text}
-                  <button type="button" aria-label={sheetCopy.removeFilter(f.text)} onClick={f.remove}>
+                  <span className="faint">
+                    {f.dim} {sheetCopy.is}
+                  </span>
+                  <b title={f.value}>{truncateMiddle(f.value, 32)}</b>
+                  <button type="button" aria-label={sheetCopy.removeFilter(f.dim, f.value)} onClick={f.remove}>
                     <X size={13} strokeWidth={2} aria-hidden="true" />
                   </button>
                 </span>
               ))}
-              {p.filter}
+              <button type="button" className="btn ghost filter" aria-haspopup="menu" onClick={openFilter}>
+                {sheetCopy.add}
+              </button>
             </div>
           </div>
         )}

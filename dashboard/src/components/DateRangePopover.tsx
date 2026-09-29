@@ -72,7 +72,8 @@ export default function Popover({
   const active = editing === 'main' ? draft.range : (draft.compareCustom ?? cmp ?? draft.range)
 
   useEffect(() => {
-    dialog.current?.querySelector<HTMLElement>(`[data-day="${focusDay}"]`)?.focus({ preventScroll: true })
+    const box = dialog.current // focus moves in: a day, else the chosen period, else the box
+    ;(box?.querySelector<HTMLElement>(`[data-day="${focusDay}"]`) ?? box?.querySelector<HTMLElement>('[aria-selected=true]') ?? box)?.focus({ preventScroll: true })
     // focus only when the dialog opens
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once on open; later focus moves with the arrow keys
   }, [])
@@ -145,8 +146,7 @@ export default function Popover({
     <div
       ref={dialog}
       className={view === 'periods' ? 'pop sheet range-pop small' : 'pop sheet range-pop'}
-      role="dialog"
-      aria-label={c.dialog}
+      role="dialog" tabIndex={-1} aria-label={c.dialog}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           e.stopPropagation()

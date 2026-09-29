@@ -45,6 +45,7 @@ import { CreateMenu } from '../features/create/CreateMenu'
 import { MoreMenu } from '../components/MoreMenu'
 import { downloadCsv } from '../lib/download'
 import { ControlRow } from '../features/header/ControlRow'
+import { savedViews } from '../components/panelOpen'
 import { FilterRowHost } from '../features/header/FilterRowHost'
 import { SaveViewHost } from '../features/header/SaveViewHost'
 import { HeaderTools, ShareButton } from '../features/header/HeaderTools'
@@ -517,7 +518,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     return trailData && dim === 'channel' ? (cur?.dims.channel ?? []) : dims(dim)
   }
 
-  // The filters in force and the saved views (a phone: the views alone, in ⋯).
   const clearFilters = () => setView({ filters: [] })
   const rowProps = {
     filters: view.filters, dimLabel: (dim: string) => DIM_LABEL[dim] ?? dim, valueLabel: filterLabel, onRemove: removeFilter, onClear: clearFilters, onSave: saveView,
@@ -563,9 +563,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           value={pickerValue}
           today={today}
           onChange={onPicker}
-          active={view.filters.map((f) => ({ key: f.dim + f.value, text: `${DIM_LABEL[f.dim] ?? f.dim} ${filterLabel(f.dim, f.value)}`, remove: () => removeFilter(f) }))}
-          under={narrow ? undefined : <FilterRowHost {...rowProps} />}
-          filter={!isShared() && <FilterMenu rows={dims} labelFor={filterLabel} active={view.filters} onPick={addFilter} onRemove={removeFilter} onClear={clearFilters} add={narrow} />}
+          active={view.filters.map((f) => ({ key: f.dim + f.value, dim: DIM_LABEL[f.dim] ?? f.dim, value: filterLabel(f.dim, f.value), remove: () => removeFilter(f) }))}
+          under={<FilterRowHost {...rowProps} onlyViews={narrow} />}
+          filter={!isShared() && <FilterMenu rows={dims} labelFor={filterLabel} active={view.filters} onPick={addFilter} onRemove={removeFilter} onClear={clearFilters} />}
           period={<DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone} filters={view.filters.length}
             bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />}
           share={!isShared() && !narrow && <ShareButton onShare={() => setSharing(true)} />}
@@ -574,7 +574,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               full={full}
               onSettings={narrow && canChange() ? () => openSettings(site) : undefined}
               onShare={narrow && !isShared() ? () => setSharing(true) : undefined}
-              views={narrow ? <FilterRowHost {...rowProps} onlyViews /> : undefined}
+              onViews={narrow && !isShared() && segments.length > 0 ? () => savedViews.set(true) : undefined}
               milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
               onMode={(m) => setView({ mode: m })} onRefresh={reloadNow}
               onExport={() => downloadCsv(site.id, query)}

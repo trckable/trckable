@@ -42,6 +42,11 @@ const MIN_BACK_YEARS = 20
 /** Which granularities make sense for a period this long (undefined = auto). */
 
 
+/** The comparison in the words the tiles use ("vs last year"). */
+export function compareWords(value: PickerValue) {
+  return value.compare === 'none' ? copy.noComparison : `vs ${compareLabel(value.period, value.compare, value.range)}`
+}
+
 /** The period in words: the preset's name, else its dates. */
 export function periodLabel(value: PickerValue, today: ISODate) {
   return PRESETS.find((p) => p.id === value.period)?.label ?? fmtRange(value.range, today)
@@ -65,6 +70,7 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
   const cmp = compareRange(value.range, value.compare, value.compareCustom, value.period)
   const presetLabel = PRESETS.find((p) => p.id === value.period)?.label
   const label = presetLabel ?? fmtRange(value.range, today)
+  const words = compareWords(value)
   const fold = collapsed ? copy.expand : copy.collapse
   const calendar = <Calendar size={15} strokeWidth={1.75} className="range-icon" aria-hidden="true" />
 
@@ -128,7 +134,7 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
 
   return (
     <div ref={root} className={collapsed ? 'range-picker quiet collapsed' : 'range-picker quiet'}>
-      <button type="button" className="btn ghost fold-toggle" aria-expanded={!collapsed} aria-label={fold} onClick={toggleRowCollapsed}>
+      <button type="button" className="btn ghost fold-toggle" aria-expanded={!collapsed} aria-label={collapsed ? `${label}, ${fold}` : fold} onClick={toggleRowCollapsed}>
         <Chevron dir={collapsed ? 'left' : 'right'} />
         {collapsed && (
           <>
@@ -181,10 +187,9 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
         type="button"
         className="btn ghost compare ctl-cmp"
         aria-expanded={open}
-        aria-label={`${copy.compareLabel}: ${copy.compareWith[value.compare]}`}
         onClick={() => setPeriodOpen(!open)}
       >
-        {copy.compareWith[value.compare]}
+        {words}
         <Chevron dir="down" />
       </button>
       {popover}
