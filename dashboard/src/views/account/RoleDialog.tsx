@@ -3,7 +3,7 @@
 // confirm. The change runs from inside; a refusal shows here and the dialog
 // stays. Enter confirms only while the button is on.
 import { Check, Globe, KeyRound, Lock, UserPlus, Eye, type LucideIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Modal } from '../../components/Modal'
 import { messageOf, type Person } from '../../lib/api'
 import { people } from './peopleCopy'
@@ -25,6 +25,14 @@ export default function RoleDialog({ p, role, run, onClose }: { p: Person; role:
   const icons = promote ? OWNER_ICONS : VIEWER_ICONS
   const go = promote ? t.ownerGo : t.viewerGo
   const allowed = !busy && (!promote || trusted)
+  // A viewer is one plain confirm: Enter lands on it. (Not autoFocus: the
+  // dialog notes what had focus before it opened, and must see the pill.)
+  const goBtn = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (promote) return
+    const f = requestAnimationFrame(() => goBtn.current?.focus())
+    return () => cancelAnimationFrame(f)
+  }, [promote])
   const submit = () => {
     if (!allowed) return
     setBusy(true)
@@ -59,7 +67,7 @@ export default function RoleDialog({ p, role, run, onClose }: { p: Person; role:
           })}
         </ul>
         {promote && (
-          <button type="button" role="checkbox" aria-checked={trusted} className="role-trust" disabled={busy} autoFocus
+          <button type="button" role="checkbox" aria-checked={trusted} className="role-trust" disabled={busy}
             onClick={() => setTrusted((v) => !v)}
             onKeyDown={(e) => {
               // Enter ticks it, and once it is ticked Enter confirms; Space toggles as on any checkbox.
@@ -81,10 +89,10 @@ export default function RoleDialog({ p, role, run, onClose }: { p: Person; role:
           </p>
         )}
         <div className="role-actions">
-          <button type="button" className="btn" disabled={busy} autoFocus={!promote} onClick={onClose}>
+          <button type="button" className="btn" disabled={busy} onClick={onClose}>
             {t.cancel}
           </button>
-          <button type="submit" className="btn primary" disabled={!allowed}>
+          <button ref={goBtn} type="submit" className="btn primary" disabled={!allowed}>
             {busy && <span className="btn-spin" aria-hidden="true" />}
             {busy ? t.busy : go}
           </button>

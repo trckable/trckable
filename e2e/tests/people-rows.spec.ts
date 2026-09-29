@@ -183,7 +183,7 @@ for (const scheme of ['dark', 'light'] as const) {
     const { row, sites, pill } = await open(page)
     const scan = async (where: string) => {
       await page.waitForTimeout(300)
-      const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).exclude('.header > .brand').analyze() // the logotype is exempt (1.4.3)
+      const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).exclude('.tkb-able').analyze() // the logotype is exempt (1.4.3)
       expect(violations.flatMap((v) => v.nodes.map((n) => `${where}: ${v.id} ${n.html.slice(0, 120)}`))).toEqual([])
     }
     await scan('rows')
