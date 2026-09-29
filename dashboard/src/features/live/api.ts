@@ -3,7 +3,9 @@ import { call, type Visit } from '../../lib/api'
 
 /** Someone on the site now: their latest page or goal, and when they were last
  *  seen doing anything (reading counts). */
-export interface NowVisit extends Visit {
+export interface NowVisit extends Omit<Visit, 'kind'> {
+  /** "active": no page or goal in the last day, only other events. */
+  kind: Visit['kind'] | 'active'
   last: number // unix ms
 }
 
@@ -16,6 +18,7 @@ export interface LiveNow {
   previous: number // the 30 minutes before
   sources: { channel: string; visitors: number }[]
   recent: NowVisit[]
+  more?: number // online people the list left out (it holds at most 50)
   // Today's revenue, only while the revenue module is on and payments flow.
   revenue?: { amount: number; currency: string; exponent: number }
 }

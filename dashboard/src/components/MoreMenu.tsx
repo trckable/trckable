@@ -1,12 +1,13 @@
-// The ⋯ menu at the end of the header's one row. What is used now and then
-// lives here, so the row stays quiet: Refresh (the numbers refresh on their
-// own), Create, Core/Full, and on a phone the site's settings;
-// always Export, Shortcuts, Theme and Your account. Each keeps its key, shown
-// beside it.
+// The ⋯ menu next to the period: what belongs to the page on screen. Refresh
+// (the numbers refresh on their own), Create, Core/Full, Milestones and Export,
+// and on a phone the site's settings. Each keeps its key, shown beside it.
+// What belongs to the person (Profile, theme, shortcuts, sign out) is the
+// avatar's menu (AccountMenu).
 import { Ellipsis } from 'lucide-react'
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { useOnlyOpen, type MenuItems } from '../lib/headerMenu'
+import { useMenuNav, useOnlyOpen, type MenuItems } from '../lib/headerMenu'
 import { lazyLoad, warm, whenIdle } from '../lib/lazyLoad'
+import { openCreate, useCreateAvailable } from '../features/create/openCreate'
 import { copy } from './moreCopy'
 
 // The items are their own chunk (MoreItems.tsx), fetched while idle or on the
@@ -15,25 +16,23 @@ const MoreItems = lazyLoad(() => import('./MoreItems'))
 
 export interface MoreProps {
   full: boolean
-  /** Live is on screen: it has no period, so no Refresh, Create or Core/Full. */
-  live: boolean
   /** A phone: the site's cog is not in the row either. */
   onSettings?: () => void
   onMode: (m: 'core' | 'full') => void
   onRefresh: () => void
   onExport: () => void
-  /** Absent where nothing can be created (a viewer, a shared link). */
-  onCreate?: () => void
   /** The milestones timeline; dot: something new in it. Absent while off. */
   milestones?: { open: () => void; dot: boolean }
 }
 
 export function MoreMenu(props: MoreProps) {
   useEffect(() => whenIdle(MoreItems.preload), [])
-  return <Own {...props} />
+  // CreateMenu says whether it has anything to offer (owner, not shared, a module on).
+  const canCreate = useCreateAvailable()
+  return <Own {...props} onCreate={canCreate ? openCreate : undefined} />
 }
 
-function Own(props: MoreProps) {
+function Own(props: MoreProps & { onCreate?: () => void }) {
   const [open, setOpen] = useState(false)
   const close = useCallback(() => setOpen(false), [])
   useOnlyOpen('more', open, close)
@@ -44,14 +43,10 @@ function Own(props: MoreProps) {
     const away = (e: MouseEvent) => {
       if (!root.current?.contains(e.target as Node)) setOpen(false)
     }
-    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
     document.addEventListener('mousedown', away)
-    document.addEventListener('keydown', esc)
-    return () => {
-      document.removeEventListener('mousedown', away)
-      document.removeEventListener('keydown', esc)
-    }
+    return () => document.removeEventListener('mousedown', away)
   }, [open])
+  useMenuNav(open, root, button, close)
   // Focus goes back to ⋯ before the choice runs, so a menu or dialog that it
   // opens hands focus back there when it closes.
   const go = (fn: () => void) => () => {
@@ -74,7 +69,7 @@ function Own(props: MoreProps) {
   )
 }
 
-function Items(p: { p: MoreProps; go: Parameters<MenuItems>[0] }) {
+function Items(p: { p: MoreProps & { onCreate?: () => void }; go: Parameters<MenuItems>[0] }) {
   return (
     <Suspense fallback={null}>
       <MoreItems {...p} />

@@ -219,7 +219,7 @@ func admin(cfg config.Config, args []string) error {
 		if err := ctl.DisableTwoStep(ctx, id); err != nil {
 			return err
 		}
-		fmt.Fprintln(os.Stderr, "two-step sign-in is off for", args[1], "— set it up again from Hideout")
+		fmt.Fprintln(os.Stderr, "two-step sign-in is off for", args[1], "— set it up again from Profile")
 		return nil
 
 	case "set-role", "remove-user":

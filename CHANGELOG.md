@@ -9,6 +9,30 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- The account window is now called Profile (it was Hideout).
+- Ask trckable is now called Peek (⌘K). It is the owner's: viewers get no Peek button, key or panel.
+- Filter moved from the top header into the period row, right before the period: same button, count badge and popup.
+- The Profile header is cleaner: picture, name, email and a small Owner or Viewer pill.
+- A viewer's Profile is the same window with the Account section alone: no sites, API keys or People.
+- Viewers see no settings buttons: the site's cog, Site settings in ⋯ and every create, edit and delete control are gone, not just disabled.
+- Limiting a viewer's sites is ⋯ → Allowed sites on their People row: a popup with All sites and a checkbox per site, saved with Save. The row keeps a small summary ("All sites", "4 of 8"). Dialogs now keep Tab inside them and return focus when they close.
+- The avatar's menu holds only what is yours: Profile, theme, shortcuts and sign out. Refresh, Create, Core/Full, Milestones and Export as CSV moved to a ⋯ beside the period (Data only: Live has none), with their keys; both menus take the arrow keys, Home, End and Escape.
+- Replay flows instead of stepping: one clock moves the playhead every frame, so the line, its marker and the tiles' numbers glide between points (even at the slowest speed) while the lists and cards move on a calmer beat and moments pop exactly where they happened. Reduced motion still steps from moment to moment.
+- Replay speeds are durations, scaled to the period so a week and most of a year both feel right: Slow (~40 s), Normal (~20 s), Fast (~10 s), Faster (~5 s) and Rapid (~2 s), each shown with the time it takes for the period on screen. The speed is remembered in the browser, and `[` and `]` change it while Replay plays.
+- The Replay speed menu is a compact list: a small speed glyph, the name and its duration, a check on the current one, arrow keys to move; the button shows the speed's name.
+- First run: an owner cannot reach anything until one site has had its first visit. Every address shows the setup (add the site, install it, wait for its first visit) with no Skip, Esc does nothing, and Docs, Profile and Sign out stay reachable. An account with a working site is never held, and neither is one that also has a site still waiting for its first visit; there Add a site closes with Cancel, Esc or a click outside as any dialog does. A viewer with nothing shared sees "No sites shared with you yet."
+- The setup is one centred column: progress dots, step, heading, then the card beneath.
+- The site-less Settings page is gone; Sites live in Profile. `/settings` no longer shows a page: an old `/settings?site=…&tab=…` link opens that site's settings, any other address goes to the main dashboard.
+- Add a site is a compact dialog that is as tall as its step, a bottom sheet on a phone. The domain field cleans a pasted address (`https://www.example.com/path` becomes `example.com`), says what will be counted, flags a domain that is not valid or already added, and Enter continues. The steps are a compact row where finished ones are ticked and can be clicked to go back, and the height follows the step smoothly.
+
+### Fixed
+
+- A site that has not had its first visit shows the install screen in Live as well as in Data, on first load, when switched to from another site and on a direct address; the Live | Data switch is hidden there, and the first visit opens the dashboard in the mode you had chosen.
+- While Replay is playing the chart ignores the pointer, touch and keys: no crosshair, tooltip or dot pulls at the line. Pausing or ending Replay brings hover back; Live is unchanged.
+- Live: "On the site right now" lists everyone Online now counts. Someone who opened a page long ago and is still active keeps their latest page (up to a day back), someone with no page at all shows as "Still on the site", and a list longer than 50 says "and N more". The header number is the tile's number. `GET /api/v1/sites/{site}/now` gains `more` (people left out of `recent`, absent when 0), and a `recent` row can have `kind: "active"`.
+
 ## 0.5.0 (28 Sep 2026)
 
 ### New

@@ -9,7 +9,7 @@ import { copy } from './copy'
 // with a slot of its size meanwhile so nothing moves when it arrives.
 const SpeedMenu = lazy(() => import('../../components/SpeedMenu').then((m) => ({ default: m.SpeedMenu })))
 
-export function ReplayButton(p: { playing: boolean; byDay: boolean; byHour?: boolean; speed: number; onPlay: () => void; onSpeed: (n: number) => void }) {
+export function ReplayButton(p: { playing: boolean; byDay: boolean; byHour?: boolean; speed: string; points: number; onPlay: () => void; onSpeed: (id: string) => void }) {
   const Icon = p.playing ? Pause : Play
   let label = copy.replay
   if (p.playing) label = copy.pause
@@ -19,7 +19,7 @@ export function ReplayButton(p: { playing: boolean; byDay: boolean; byHour?: boo
     <span className="replay">
       <span className="replay-speed">
         <Suspense fallback={<span className="speed-slot" />}>
-          <SpeedMenu speed={p.speed} onPick={p.onSpeed} />
+          <SpeedMenu speed={p.speed} points={p.points} onPick={p.onSpeed} />
         </Suspense>
       </span>
       <button type="button" className="btn icon ghost replay-btn" onClick={p.onPlay} aria-label={label} title={label}>

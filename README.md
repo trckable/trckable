@@ -91,7 +91,7 @@ Nothing is paid, limited or held back. The complete list, in words: [Everything 
 </p>
 <p align="center">
   <img src=".github/images/features/crawlers.svg" width="49%" alt="Who crawls you: AI answer bots, search indexing and training crawlers, reported apart">
-  <img src=".github/images/features/ask.svg" width="49%" alt="Ask your own AI: an MCP server with read-only tools, your key and your model">
+  <img src=".github/images/features/ask.svg" width="49%" alt="Peek, your own AI: an MCP server with read-only tools, your key and your model">
 </p>
 <p align="center">
   <img src=".github/images/features/exactly-once.svg" width="49%" alt="Exactly once: CI kills the server mid-load on every change, 40,000 events, 0 lost and 0 counted twice">
@@ -137,7 +137,7 @@ Go, embedded DuckDB and SQLite, React with an in-house SVG chart kit. Every even
 - [x] Self-hosting tools: alerts, encrypted backups, imports, 2FA, share links, WCAG 2.1 AA (axe-core on the dashboard's main screens, both themes, three browsers, in CI)
 - [x] npm package [`trckable`](https://www.npmjs.com/package/trckable) with `init` / `doctor` / `mcp`, published from CI with provenance
 - [ ] Live sandbox runs against each payment provider
-- [ ] Ask trckable: an optional in-app assistant on the same read-only tools, with your own AI key
+- [ ] Peek: an optional in-app assistant on the same read-only tools, with your own AI key
 - [ ] A mobile app (iOS and Android): connect it to your own server and see your visitors, sources and sales on your phone
 - [x] Releases: one tag publishes the image (x86-64, arm64), the npm package and the GitHub release
 - [ ] Public v1.0: a one-click deploy template, a public demo

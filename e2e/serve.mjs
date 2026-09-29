@@ -36,6 +36,13 @@ async function siteInfo() {
 }
 
 const site = await siteInfo()
+// The dashboard holds an account without a working site in its first run, so
+// the test site has had one visit before any test opens it.
+await fetch(TRCKABLE + '/api/e', {
+  method: 'POST',
+  headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36' },
+  body: JSON.stringify({ s: site.id, k: 'pv', u: 'https://example.com/seed' }),
+}).catch(() => undefined)
 const forward = proxy({ host: TRCKABLE, proxyKey: site.key })
 
 const scripts = {

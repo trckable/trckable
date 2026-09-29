@@ -5,7 +5,7 @@
 //
 // It needs a server with no site at all, so it starts one of its own (the
 // shared one is provisioned with example.com), on a fresh data directory.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -22,11 +22,14 @@ const PORTS = { chromium: 18311, firefox: 18312, webkit: 18313 } as Record<strin
 test.describe.configure({ mode: 'serial' })
 
 let server: ChildProcess | undefined
+let dataDir = ''
 let base = ''
 let cookie = ''
+let verified = '' // the first run's site, once it has had its visit
 
 test.beforeAll(async ({ browserName }) => {
   const data = mkdtempSync(join(tmpdir(), 'trckable-first-run-'))
+  dataDir = data
   base = `http://127.0.0.1:${PORTS[browserName]}`
   const env = { ...process.env, TRCKABLE_DATA_DIR: data, TRCKABLE_GEO: 'off', TRCKABLE_LOG_LEVEL: 'warn' }
   execFileSync(BIN, ['admin', 'add-user', 'first@example.com', '--role', 'owner'], { input: PASSWORD + '\n', env, stdio: ['pipe', 'ignore', 'ignore'] })
@@ -61,7 +64,16 @@ async function visit(page: Page, site: string) {
   await ctx.close()
 }
 
-test('Skip for now leaves the first run, and Esc does too', async ({ page }) => {
+/** Two elements' horizontal centres, within a few pixels. */
+async function expectCentred(page: Page, a: Locator, b: Locator) {
+  const [x, y] = await Promise.all([a.boundingBox(), b.boundingBox()])
+  const cx = (r: { x: number; width: number } | null) => r!.x + r!.width / 2
+  expect(Math.abs(cx(x) - cx(y))).toBeLessThan(6)
+  const vw = page.viewportSize()!.width
+  expect(Math.abs(cx(y) - vw / 2)).toBeLessThan(12)
+}
+
+test('with no site the first run cannot be left, and stays on every address', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: base }])
   await page.goto(base + '/')
@@ -72,12 +84,29 @@ test('Skip for now leaves the first run, and Esc does too', async ({ page }) => 
     await page.getByLabel('Domain').fill('mysite.com')
     await page.screenshot({ path: `${SHOTS}/onboarding-375-${test.info().project.name}.png` })
   }
+  await expectCentred(page, run.getByRole('heading', { name: 'Which site first?' }), run.getByLabel('Domain'))
+  // No way out but the account: no Skip, Esc does nothing, other addresses come back.
+  await expect(run.getByRole('button', { name: /Skip/ })).toHaveCount(0)
   await page.keyboard.press('Escape')
-  await expect(run).toBeHidden()
+  await expect(run).toBeVisible()
+  for (const path of ['/settings', '/all', '/nosuch.example']) {
+    await page.goto(base + path)
+    await expect(run).toBeVisible({ timeout: 15_000 })
+    await expect(page).toHaveURL(base + '/')
+  }
+  await page.goBack()
+  await expect(run).toBeVisible()
+  // The account stays reachable: Profile opens over it, Sign out is there.
+  await expect(run.getByRole('button', { name: 'Sign out' })).toBeVisible()
+  await run.getByRole('button', { name: 'Profile' }).click()
+  await expect(page.getByRole('dialog', { name: /Account|Profile/i }).first()).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(run).toBeVisible()
 })
 
 test('a first site, its install, its first visit, then Live', async ({ page, browserName }) => {
   const domain = `first-${browserName}-${Date.now()}.example`
+  verified = domain
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: base }])
   await page.goto(base + '/')
@@ -85,7 +114,7 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   const run = page.getByRole('dialog', { name: 'Set up your first site' })
   await expect(run.getByRole('heading', { name: 'Which site first?' })).toBeVisible({ timeout: 15_000 })
   await expect(run.getByRole('img', { name: 'Step 1 of 3' })).toBeVisible()
-  await expect(run.getByRole('button', { name: /Skip for now/ })).toBeVisible()
+  await expect(run.getByRole('button', { name: /Skip/ })).toHaveCount(0)
 
   // The domain appears in the preview as it is typed; Enter adds the site.
   const input = run.getByLabel('Domain')
@@ -99,6 +128,8 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   await expect(run.getByRole('img', { name: 'Step 2 of 3' })).toBeVisible({ timeout: 15_000 })
   const card = run.getByRole('region', { name: 'Install trckable' })
   await expect(card.getByRole('button', { name: 'Check my site' })).toBeVisible()
+  // One centred column: the heading and the card share a horizontal centre.
+  await expectCentred(page, run.getByRole('heading', { name: 'One line in your site’s head' }), card)
   const sites = (await (await page.request.get(`${base}/api/v1/sites`)).json()).sites as { id: string; domain: string }[]
   const site = sites.find((s) => s.domain === domain)
   expect(site?.id).toMatch(/^tkb_/)
@@ -124,3 +155,68 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/onboarding-5-live-mode-${browserName}.png` })
 })
 
+
+test('after the first verified site, Add a site closes like any dialog and an unverified extra site never gates', async ({ page, browserName }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: base }])
+  const wizard = page.getByRole('dialog', { name: 'Add a site' })
+  const gate = page.getByRole('dialog', { name: 'Set up your first site' })
+  await page.goto(`${base}/${verified}?add=site`)
+  await expect(wizard).toBeVisible({ timeout: 15_000 })
+  // Cancel, Esc and a click on the backdrop each close it.
+  await wizard.getByRole('button', { name: 'Cancel' }).click()
+  await expect(wizard).toBeHidden()
+  await page.goto(`${base}/${verified}?add=site`)
+  await expect(wizard).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(wizard).toBeHidden()
+  await page.goto(`${base}/${verified}?add=site`)
+  await expect(wizard).toBeVisible()
+  await page.mouse.click(4, 4)
+  await expect(wizard).toBeHidden()
+
+  // A second site, left unverified: no gate, and it shows its own install screen.
+  const second = `second-${browserName}-${Date.now()}.example`
+  await page.goto(`${base}/${verified}?add=site`)
+  await wizard.getByLabel('Domain').fill(second)
+  await wizard.getByLabel('Domain').press('Enter')
+  await expect(wizard.getByRole('tablist', { name: 'How to install' })).toBeVisible({ timeout: 15_000 })
+  await wizard.getByRole('button', { name: /do it later/ }).click()
+  await expect(page.getByText('Waiting for the first visit').first()).toBeVisible({ timeout: 15_000 })
+  await expect(gate).toHaveCount(0)
+  for (const path of ['/settings', '/all', '/' + verified]) {
+    await page.goto(base + path)
+    await expect(page.locator('.app')).toBeVisible({ timeout: 15_000 })
+    await expect(gate).toHaveCount(0)
+  }
+  await page.goto(`${base}/${verified}`)
+  await expect(page.getByText('Waiting for the first visit')).toHaveCount(0)
+})
+
+test('/settings is not a page: an owner lands on the dashboard, a viewer is never held in the first run', async ({ page, browserName }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: base }])
+  await page.goto(`${base}/settings`)
+  await expect(page).toHaveURL(new RegExp(`/${verified.replace(/\./g, '\\.')}(\\?|$)`), { timeout: 15_000 })
+  await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toHaveCount(0)
+  // The cog opens that site's settings, over its dashboard.
+  await page.getByRole('button', { name: `Settings for ${verified}` }).click()
+  await expect(page.getByRole('dialog').first()).toBeVisible()
+
+  const env = { ...process.env, TRCKABLE_DATA_DIR: dataDir, TRCKABLE_GEO: 'off' }
+  const email = `viewer-${browserName}@example.com`
+  execFileSync(BIN, ['admin', 'add-user', email, '--role', 'viewer'], { input: PASSWORD + '\n', env, stdio: ['pipe', 'ignore', 'ignore'] })
+  const res = await fetch(base + '/api/v1/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: PASSWORD }) })
+  const value = /trckable_session=([^;]+)/.exec(res.headers.get('set-cookie') ?? '')?.[1] ?? ''
+  const ctx = await page.context().browser()!.newContext()
+  await ctx.addCookies([{ name: 'trckable_session', value, url: base }])
+  const v = await ctx.newPage()
+  for (const path of ['/', '/settings']) {
+    await v.goto(base + path)
+    // The viewer lands on the site's dashboard (its switcher is there) and has no settings cog.
+    await expect(v.getByRole('button', { name: verified })).toBeVisible({ timeout: 15_000 })
+    await expect(v.getByRole('button', { name: `Settings for ${verified}` })).toHaveCount(0)
+    await expect(v.getByRole('dialog', { name: 'Set up your first site' })).toHaveCount(0)
+  }
+  await ctx.close()
+})

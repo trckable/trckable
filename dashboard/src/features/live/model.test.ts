@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Visit } from '../../lib/api'
 import type { LiveNow, NowVisit } from './api'
-import { feedOf, IDLE_MS, keyOf, MAX_ROWS, MINUTE, pct, seriesAt, sharesOf, shiftTo, withVisits } from './model'
+import { feedOf, IDLE_MS, keyOf, MAX_ROWS, MINUTE, moreOf, pct, seriesAt, sharesOf, shiftTo, withVisits } from './model'
 
 const T0 = Date.UTC(2026, 8, 27, 12, 0, 0) // a whole minute
 const pv = (ts: number, o: Partial<Visit> = {}): Visit => ({ kind: 'pageview', ts, path: '/', ...o })
@@ -98,5 +98,14 @@ describe('the sources bar', () => {
     expect(pct(0.004)).toBe('<1%')
     expect(pct(0.316)).toBe('32%')
     expect(pct(0)).toBe('0%')
+  })
+})
+
+describe('people the list leaves out', () => {
+  it('is nothing while the list has room, and the difference once it is full', () => {
+    expect(moreOf(3, 3)).toBe(0)
+    expect(moreOf(null, MAX_ROWS)).toBe(0)
+    expect(moreOf(MAX_ROWS + 7, MAX_ROWS)).toBe(7)
+    expect(moreOf(MAX_ROWS, MAX_ROWS)).toBe(0)
   })
 })

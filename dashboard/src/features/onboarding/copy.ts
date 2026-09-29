@@ -6,6 +6,10 @@ export const copy = {
   label: 'Set up your first site',
   skip: 'Skip for now',
   skipHint: 'Esc',
+  account: 'Account',
+  docs: 'Docs',
+  profile: 'Profile',
+  signOut: 'Sign out',
   enterKey: '↵',
   progress: (at: number, of: number) => `Step ${at} of ${of}`,
 
