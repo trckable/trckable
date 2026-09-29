@@ -1,10 +1,10 @@
 {
-  "literals": 517,
+  "literals": 515,
   "components": {
     "src/charts/TimeChart.tsx": 310,
     "src/components/DateRangePopover.tsx": 396,
     "src/components/FilterPop.tsx": 303,
-    "src/main.tsx": 330,
+    "src/main.tsx": 317,
     "src/views/Account.tsx": 746,
     "src/views/Alerts.tsx": 295,
     "src/views/AllSites.tsx": 369,

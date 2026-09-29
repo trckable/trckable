@@ -1,0 +1,1 @@
+function e(e){let t=2166136261;for(let n=0;n<e.length;n++)t^=e.charCodeAt(n),t=Math.imul(t,16777619);return(t>>>0)%360}function t(e,t=44){if(e.length<=t)return e;let n=t-1,r=Math.ceil(n/2),i=Math.floor(n/2);return e.slice(0,r)+`…`+e.slice(e.length-i)}export{t as n,e as t};
