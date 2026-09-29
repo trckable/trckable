@@ -174,7 +174,7 @@
 }
 .speed-slot {
   display: block;
-  width: 70px;
+  width: 100px;
   height: 30px;
 }
 /* A phone keeps the head on one line: the button already says since when. */

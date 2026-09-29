@@ -16,6 +16,9 @@ section into the release.
 - Viewers see no settings buttons: the site's cog, Site settings in ⋯ and every create, edit and delete control are gone, not just disabled.
 - Limiting a viewer's sites is ⋯ → Allowed sites on their People row: a popup with All sites and a checkbox per site, saved with Save. The row keeps a small summary ("All sites", "4 of 8"). Dialogs now keep Tab inside them and return focus when they close.
 - The avatar's menu holds only what is yours: Hideout, theme, shortcuts and sign out. Refresh, Create, Core/Full, Milestones and Export as CSV moved to a ⋯ beside the period, with their keys; both menus take the arrow keys, Home, End and Escape.
+- Replay flows instead of stepping: one clock moves the playhead every frame, so the line, its marker and the tiles' numbers glide between points (even at the slowest speed) while the lists and cards move on a calmer beat and moments pop exactly where they happened. Reduced motion still steps from moment to moment.
+- Replay speeds are durations, scaled to the period so a week and most of a year both feel right: Slow (~40 s), Normal (~20 s), Fast (~10 s), Faster (~5 s) and Rapid (~2 s), each shown with the time it takes for the period on screen. The speed is remembered in the browser, and `[` and `]` change it while Replay plays.
+- The Replay speed menu is a compact list: a small speed glyph, the name and its duration, a check on the current one, arrow keys to move; the button shows the speed's name.
 
 ### Fixed
 

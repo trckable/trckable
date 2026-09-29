@@ -2,7 +2,7 @@
 // on a phone, and from the account dialog — the keys are the fastest way to
 // use trckable, so they should not be a secret.
 import { useEffect, useState } from 'react'
-import { Calendar, ChartSpline, Compass, Keyboard, MousePointer2, MoveHorizontal, RotateCcw, Rows3, X } from 'lucide-react'
+import { Calendar, ChartSpline, Compass, Gauge, Keyboard, MousePointer2, MoveHorizontal, RotateCcw, Rows3, X } from 'lucide-react'
 import { useConfirm } from '../components/Confirm'
 import { Modal } from '../components/Modal'
 import { toast } from '../components/Toast'
@@ -25,6 +25,7 @@ const MOUSE = [
   { mouse: 'Click a row', what: 'Filter the whole dashboard by it', icon: Rows3 },
   { mouse: 'Click the chart', what: 'See a single day', icon: ChartSpline },
   { mouse: 'Drag the scrubber', what: 'Replay the period', icon: MoveHorizontal },
+  { mouse: '[ and ]', what: 'Slower or faster while Replay plays', icon: Gauge },
 ]
 
 /** The list itself, loaded the first time someone opens it

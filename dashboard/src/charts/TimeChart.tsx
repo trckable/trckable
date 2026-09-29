@@ -114,7 +114,7 @@ export function TimeChart(p: TimeChartProps) {
 
   const markers = useMemo(() => markersFor(p.notes ?? [], p.labels, p.bucket), [p.notes, p.labels, p.bucket])
   const scrub = p.scrub ?? null
-  const { follow, release, onKey } = useCut({ ref, w, n, hover, scrub, setHover, x })
+  const { follow, release, onKey, marker, driven } = useCut({ ref, w, n, hover, scrub, locked: p.locked, vals, setHover, x, y })
   const hi = hover ?? scrub
   const leave = () => { release(); setHover(null); dragging.current = false }
   // Beside the point when there is room, never past either edge: on a phone
@@ -234,7 +234,7 @@ export function TimeChart(p: TimeChartProps) {
             the pointer, drawn at the variable so it never lags the grey. */}
         <line className={hover == null ? 'chart-cut is-replay' : 'chart-cut'} x1={0} x2={0} y1={0} y2={PAD_T + plotH} />
         {scrub != null && n > 1 && hover == null && (
-          <circle cx={x(scrub)} cy={y(vals[scrub] ?? 0)} r="6" fill="var(--accent)" stroke="var(--surface)" strokeWidth="3" />
+          <circle ref={marker} cx={0} cy={0} transform={driven ? undefined : `translate(${x(scrub)} ${y(vals[scrub] ?? 0)})`} r="6" fill="var(--accent)" stroke="var(--surface)" strokeWidth="3" />
         )}
         {hover != null && (
           <circle cx={x(hover)} cy={y(vals[hover] ?? 0)} r="5" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" />

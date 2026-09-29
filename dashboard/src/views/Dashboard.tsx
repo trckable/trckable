@@ -27,7 +27,8 @@ import { KpiTile } from '../features/overview/KpiTile'
 import { ChartHead } from '../features/overview/ChartHead'
 import { ReplayButton, ScrubBar } from '../features/overview/Replay'
 import { useReplayTimer, useSpeed } from '../features/overview/useReplay'
-import { useHourRace, useRaceKpis, useRaceRows, RACE_DIMS } from '../features/overview/useRace'
+import { useRaceNow, useRaceRows, RACE_DIMS } from '../features/overview/useRace'
+import { replaySeconds, speedOf } from '../features/overview/replayTime'
 import { firstVisitAt, hourIn, hourlySpan } from '../features/overview/firstVisit'
 import { hourDetail } from '../features/overview/hourDetail'
 import { LiveSlot } from '../features/live/liveChunk'
@@ -316,7 +317,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const [playing, setPlaying] = useState(false)
   const [story, setStory] = useState<'off' | 'on' | 'end'>('off')
   const [stops, setStops] = useState<number[]>([]) // the story's moments: reduced motion steps through them
-  const [speed, pickSpeed] = useSpeed()
+  const [speed, pickSpeed] = useSpeed(playing)
   // By the hour, the point playing is the page's own: a day in the address would redraw the chart by day.
   const [hourAt, setHourAt] = useState<number | null>(null)
   const setDayIdx = useCallback(
@@ -405,10 +406,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const telling = story === 'on'
   const racing = telling && scrubbing
   const raceTo = racing ? scrubIdx : -1
-  const raceK = useRaceKpis(src, raceTo)
   let k: KPIs | undefined = src?.kpis
-  if (raceK) k = raceK.kpis
-  else if (scrubbing) k = day?.kpis ?? zeroKPIs
+  if (scrubbing) k = day?.kpis ?? zeroKPIs
   // Nothing at all before: no change to show, not "new" on every tile.
   const hasPrev = !scrubbing && !trailData && (data?.previous?.kpis.sessions ?? 0) > 0
   const pk = hasPrev ? data?.previous?.kpis : undefined
@@ -429,8 +428,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const pm = hasPrev ? data?.previous?.money : undefined
   const fmtM = (minor: number) => (money ? fmtMoney(minor, money.currency, money.exponent) : '')
   let dayRev: number | undefined
-  if (raceK) dayRev = raceK.revenue
-  else if (scrubbing) dayRev = day?.money?.revenue ?? 0
+  if (scrubbing) dayRev = day?.money?.revenue ?? 0
 
   // ---- chart ----
   const series = cur?.series ?? []
@@ -463,13 +461,14 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const nowHour = hourIn(site.timezone)
   const chartSeries = hours ? hours.current.series.filter((p) => p.t.slice(0, 13) <= nowHour) : shown
   const values = chartSeries.map((p) => p[metric])
-  const hourK = useHourRace(chartSeries, telling && hours ? hourAt : null, src?.kpis)
-  if (hourK) [k, dayRev] = [hourK.kpis, hourK.revenue]
+  const { raced, follow } = useRaceNow({ src, dates: shown.map((p) => p.t.slice(0, 10)), hourSeries: chartSeries, hours: !!hours, hourAt, idx: scrubIdx - fv, telling, racing, playing })
+  if (raced) [k, dayRev] = [raced.kpis, raced.revenue]
   const revenueNow = dayRev ?? money?.revenue
   const conv = scrubbing ? undefined : money?.conversion
   const soFarRpv = k?.visitors ? (dayRev ?? 0) / k.visitors : 0
-  const rpv = scrubbing || hourK ? soFarRpv : money?.revenue_per_visitor
-  useReplayTimer({ playing, speed, first: hours ? 0 : fv, n: hours ? chartSeries.length : series.length, at: hours ? (hourAt ?? -1) : scrubIdx, step: hours ? setHourAt : setDayIdx, done: () => {
+  const rpv = scrubbing || raced ? soFarRpv : money?.revenue_per_visitor
+  const replayPoints = hours ? chartSeries.length : series.length - fv
+  const settle = useReplayTimer({ playing, secs: replaySeconds(replayPoints, speedOf(speed).secs), first: hours ? 0 : fv, n: hours ? chartSeries.length : series.length, at: hours ? (hourAt ?? -1) : scrubIdx, step: hours ? setHourAt : setDayIdx, done: () => {
     setPlaying(false)
     setStory('end')
   }, stops: stops.map((i) => i + (hours ? 0 : fv)) })
@@ -653,18 +652,18 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           top, the chart under them — they are one story, not two cards. */}
       <section className="card overview" aria-label="Overview">
       <div role="group" aria-label="Key numbers" className={money ? 'kpis money' : 'kpis'}>
-        <KpiTile loading={firstLoad} vs={vs} label="Visitors" icon={Users} spark={chartSeries.map((p) => p.visitors)} value={k?.visitors} fmt={fmtInt} d={delta(k?.visitors ?? 0, pk?.visitors)} pressed={metric === 'visitors'} onClick={() => setMetric('visitors')} />
+        <KpiTile loading={firstLoad} vs={vs} label="Visitors" icon={Users} spark={chartSeries.map((p) => p.visitors)} value={k?.visitors} live={follow((r) => r.kpis.visitors)} fmt={fmtInt} d={delta(k?.visitors ?? 0, pk?.visitors)} pressed={metric === 'visitors'} onClick={() => setMetric('visitors')} />
         {money ? (
           <>
-            <KpiTile loading={firstLoad} vs={vs} label="Revenue" icon={Banknote} spark={sparkOf((d) => d.money?.revenue ?? 0)} money value={revenueNow} fmt={fmtM} d={pm ? delta(money.revenue, pm.revenue) : null} />
+            <KpiTile loading={firstLoad} vs={vs} label="Revenue" icon={Banknote} spark={sparkOf((d) => d.money?.revenue ?? 0)} money value={revenueNow} live={follow((r) => r.revenue)} fmt={fmtM} d={pm ? delta(money.revenue, pm.revenue) : null} />
             <KpiTile loading={firstLoad} vs={vs} label="Conversion" icon={Target} spark={sparkOf((d) => (d.kpis.visitors ? (d.money?.payments ?? 0) / d.kpis.visitors : 0))} value={conv} fmt={(x) => (x * 100).toFixed(x < 0.1 ? 2 : 1) + '%'} d={pm && conv !== undefined ? delta(conv, pm.conversion) : null} />
-            <KpiTile loading={firstLoad} vs={vs} label="Per visitor" icon={Coins} spark={sparkOf((d) => (d.kpis.visitors ? (d.money?.revenue ?? 0) / d.kpis.visitors : 0))} value={rpv} fmt={(x) => fmtMoney(x, money.currency, money.exponent, { cents: true })} d={pm && rpv !== undefined ? delta(rpv, pm.revenue_per_visitor) : null} />
+            <KpiTile loading={firstLoad} vs={vs} label="Per visitor" icon={Coins} spark={sparkOf((d) => (d.kpis.visitors ? (d.money?.revenue ?? 0) / d.kpis.visitors : 0))} value={rpv} live={follow((r) => (r.kpis.visitors ? r.revenue / r.kpis.visitors : 0))} fmt={(x) => fmtMoney(x, money.currency, money.exponent, { cents: true })} d={pm && rpv !== undefined ? delta(rpv, pm.revenue_per_visitor) : null} />
           </>
         ) : (
-          <KpiTile loading={firstLoad} vs={vs} label="Pageviews" icon={Eye} spark={chartSeries.map((p) => p.pageviews)} value={k?.pageviews} fmt={fmtInt} d={delta(k?.pageviews ?? 0, pk?.pageviews)} pressed={metric === 'pageviews'} onClick={() => setMetric('pageviews')} />
+          <KpiTile loading={firstLoad} vs={vs} label="Pageviews" icon={Eye} spark={chartSeries.map((p) => p.pageviews)} value={k?.pageviews} live={follow((r) => r.kpis.pageviews)} fmt={fmtInt} d={delta(k?.pageviews ?? 0, pk?.pageviews)} pressed={metric === 'pageviews'} onClick={() => setMetric('pageviews')} />
         )}
-        <KpiTile loading={firstLoad} vs={vs} label="Bounce rate" icon={CornerUpLeft} spark={sparkOf((d) => d.kpis.bounce_rate)} value={k?.bounce_rate} fmt={fmtPct} d={delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true)} />
-        <KpiTile loading={firstLoad} vs={vs} label="Session time" icon={Timer} spark={sparkOf((d) => d.kpis.avg_session_s)} value={k?.avg_session_s} fmt={fmtDuration} d={delta(k?.avg_session_s ?? 0, pk?.avg_session_s)} />
+        <KpiTile loading={firstLoad} vs={vs} label="Bounce rate" icon={CornerUpLeft} spark={sparkOf((d) => d.kpis.bounce_rate)} value={k?.bounce_rate} live={follow((r) => r.kpis.bounce_rate)} fmt={fmtPct} d={delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true)} />
+        <KpiTile loading={firstLoad} vs={vs} label="Session time" icon={Timer} spark={sparkOf((d) => d.kpis.avg_session_s)} value={k?.avg_session_s} live={follow((r) => r.kpis.avg_session_s)} fmt={fmtDuration} d={delta(k?.avg_session_s ?? 0, pk?.avg_session_s)} />
         {/* A shared page has no live stream, so it says where the number
             comes from instead of waiting to connect forever. */}
         <OnlineKpi online={online} canOpen={!isShared()} note={stream.connected || isShared() ? entryCopy.onlineNote : entryCopy.connecting} />
@@ -707,10 +706,11 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               playing={playing}
               byDay={!canScrub}
               byHour={!!hours}
-              speed={speed}
+              speed={speed} points={canScrub ? replayPoints : diffDays(range.from, range.to) + 1}
               onSpeed={pickSpeed}
               onPlay={() => {
                 if (!playing) setStory('on')
+                if (playing) settle()
                 if (canScrub) return setPlaying((p) => !p)
                 setReplaySoon(true)
                 setView({ bucket: 'day' })
