@@ -4,10 +4,11 @@
 
 # trckable
 
-**Peekaboo. Every visit counted.**
+**See who visits. Then see who pays.**
 
 Tiny, open-source, self-hosted web analytics that also shows you **which traffic pays**.<br>
-One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy, Polar, Paddle and Dodo.
+One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy, Polar, Paddle and Dodo.<br>
+Self-host it free, or let [trckable Cloud](https://cloud.trckable.com) run it for you.
 
 [![Version](https://img.shields.io/badge/version-0.5.4-b8ff3c?style=flat-square)](CHANGELOG.md)
 [![License: AGPL-3.0](https://img.shields.io/badge/server-AGPL--3.0-0b0d10?style=flat-square)](LICENSE)
@@ -31,6 +32,17 @@ One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy,
 </div>
 
 > **Early preview.** Tracking, the dashboard, revenue for all five providers, Full mode, the MCP server and the self-hosting tools are built and tested. Still to come: live sandbox runs against each payment provider, the in-app assistant, and v1.0.
+
+## 🧭 Two ways to use it
+
+| | Self-host | trckable Cloud |
+|---|---|---|
+| Who runs it | You, on your own server: one container | We do, at [cloud.trckable.com](https://cloud.trckable.com) |
+| Price | Free, every feature | 14-day free trial, then a plan that fits your traffic |
+| Updates and backups | Yours | Ours |
+| Start | The quick start below | [Sign up](https://cloud.trckable.com) |
+
+Same product either way, and the same 2 KB script.
 
 ## ⚡ Quick start
 
