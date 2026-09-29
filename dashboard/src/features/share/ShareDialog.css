@@ -166,23 +166,7 @@
   gap: 8px;
 }
 .sd-site {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 34px;
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
   max-width: 220px;
-}
-.sd-site select {
-  min-width: 0;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  font-size: 13px;
-  text-overflow: ellipsis;
 }
 .sd-tool {
   width: 34px;

@@ -3,7 +3,7 @@
 // switcher, All sites and the tests all read one order.
 import type { Site, SiteLayout } from '../../lib/api'
 
-export const EMPTY: SiteLayout = { order: [], pinned: [], groups: [] }
+export { EMPTY } from './empty'
 
 /** Where a site sits: pinned, in a group (by name), or in the plain list. */
 export type Place = { kind: 'pinned' } | { kind: 'group'; name: string } | { kind: 'rest' }

@@ -9,6 +9,13 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- The chart's cursor is a quiet dashed line in the series colour from the top to the axis, with a date pill under it and a haloed point that eases from bucket to bucket; Live's line chart matches.
+- Selects (the site picker in Share) share one style, with a chevron and a focus ring for the keyboard only, never on a click.
+- The cookieless confirm is a With cookies against Cookieless comparison in four rows, and turning it off asks the same way with Use cookies.
+- The dashboard's first load is 2.4 KB lighter: the milestones moment and the site layout code load when needed.
+
 ## 0.5.2 (29 Sep 2026)
 
 ### Changed

@@ -1,0 +1,100 @@
+/* The cookieless dialog: a comparison table, then one quiet line. */
+.modal.cl-modal {
+  width: min(520px, 100%);
+}
+.cl-table {
+  width: 100%;
+  margin: 6px 0 2px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+.cl-table th,
+.cl-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--grid);
+}
+.cl-table thead th {
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.cl-table thead td {
+  border-bottom-color: var(--border);
+}
+.cl-table thead th {
+  border-bottom-color: var(--border);
+}
+.cl-table tbody th {
+  color: var(--text-2);
+  font-weight: 500;
+}
+.cl-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.cl-table .cl-to {
+  background: var(--accent-soft);
+}
+.cl-table thead th.cl-to {
+  color: var(--text);
+  border-radius: 8px 8px 0 0;
+}
+.cl-table tbody tr:last-child .cl-to {
+  border-radius: 0 0 8px 8px;
+}
+.cl-table td {
+  white-space: nowrap;
+}
+.cl-table td svg {
+  vertical-align: -2px;
+  margin-right: 6px;
+}
+.cl-table td[data-tone='yes'] svg {
+  color: var(--up);
+}
+.cl-table td[data-tone='meh'] svg {
+  color: var(--warn);
+}
+.cl-table td[data-tone='no'] svg {
+  color: var(--down);
+}
+.cl-back {
+  font-size: 12.5px;
+}
+/* A phone: each row's name on its own line, its two answers side by side under it. */
+@media (max-width: 520px) {
+  .cl-table,
+  .cl-table thead,
+  .cl-table tbody {
+    display: block;
+  }
+  /* The switched-to column is always the right one: one band, top to bottom. */
+  .cl-table {
+    background: linear-gradient(to right, transparent 50%, var(--accent-soft) 50%);
+    border-radius: 8px;
+  }
+  .cl-table .cl-to,
+  .cl-table thead th.cl-to,
+  .cl-table tbody tr:last-child .cl-to {
+    background: none;
+    border-radius: 0;
+  }
+  .cl-table tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .cl-table thead td {
+    display: none;
+  }
+  .cl-table tbody th {
+    /* The row's name stays in the left column: it never runs into the band. */
+    grid-column: 1;
+    padding-bottom: 0;
+    border-bottom: 0;
+    font-size: 12px;
+  }
+  .cl-table td {
+    white-space: normal;
+  }
+}

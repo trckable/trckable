@@ -1,0 +1,53 @@
+/* The cursor on a line chart (Cursor.tsx): the line and the point ease to the
+   next bucket; the halo eases in once. Reduced motion: no easing at all. */
+.cursor,
+.cursor-dot {
+  transition: transform 0.08s ease-out;
+}
+.cursor line {
+  stroke: var(--accent);
+  stroke-opacity: 0.45;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  pointer-events: none;
+}
+.cursor circle {
+  fill: var(--accent);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.cursor .cursor-halo {
+  fill-opacity: 0.2;
+  stroke: none;
+  animation: cursor-halo 0.2s ease-out;
+}
+@keyframes cursor-halo {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+.cursor-pill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: transform 0.08s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cursor,
+  .cursor-dot,
+  .cursor-pill {
+    transition: none;
+  }
+  .cursor .cursor-halo {
+    animation: none;
+  }
+}

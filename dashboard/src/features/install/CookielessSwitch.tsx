@@ -1,5 +1,5 @@
-// Cookieless mode, right beside the code. Turning it on asks first (it costs
-// something); turning it off does not (it only gives back). The setting is
+// Cookieless mode, right beside the code. Either way it asks first, with the
+// same comparison in the direction of the change. The setting is
 // the site's own, so the script tag never changes: only bundled installs,
 // which never load the server's script, carry it in their code.
 import { lazy, Suspense, useState } from 'react'
@@ -17,14 +17,10 @@ function hintOf(on: boolean, bundled: boolean): string {
 export function CookielessSwitch({ state, bundled }: { state: Cookieless; bundled: boolean }) {
   const [asking, setAsking] = useState(false)
   const on = state.on === true
-  const toggle = () => {
-    if (on) state.set(false)
-    else setAsking(true)
-  }
   return (
     <div className="inst-cl">
       <label className="inst-cl-label">
-        <input type="checkbox" checked={on} disabled={state.on === null || state.saving || state.locked} onChange={toggle} />
+        <input type="checkbox" checked={on} disabled={state.on === null || state.saving || state.locked} onChange={() => setAsking(true)} />
         <span>
           <b>{t.label}</b>
           <span className="faint">{t.hint}</span>
@@ -37,10 +33,11 @@ export function CookielessSwitch({ state, bundled }: { state: Cookieless; bundle
       {asking && (
         <Suspense fallback={null}>
           <CookielessDialog
+            on={on}
             onCancel={() => setAsking(false)}
             onConfirm={() => {
               setAsking(false)
-              state.set(true)
+              state.set(!on)
             }}
           />
         </Suspense>

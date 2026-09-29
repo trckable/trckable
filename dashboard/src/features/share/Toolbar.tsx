@@ -2,6 +2,7 @@
 // the number; and apart, the one thing to do with it.
 import { Check, Copy, Download, Moon, Sun } from 'lucide-react'
 import type { Site } from '../../lib/api'
+import { Select } from '../../components/Select'
 import { SiteMark } from '../../components/SiteMark'
 import { accentsFor, type Look, type Metric } from './card'
 import { copy } from './copy'
@@ -34,16 +35,13 @@ export function Toolbar({ site, sites, onSite, look, set, metrics }: Props) {
   const ThemeIcon = look.theme === 'dark' ? Moon : Sun
   return (
     <div className="sd-toolbar">
-      <label className="sd-site" title={copy.site}>
-        <SiteMark site={site} size={20} />
-        <select value={site.id} aria-label={copy.site} onChange={(e) => onSite(e.target.value)}>
-          {sites.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.domain}
-            </option>
-          ))}
-        </select>
-      </label>
+      <Select className="sd-site" mark={<SiteMark site={site} size={20} />} value={site.id} title={copy.site} aria-label={copy.site} onChange={(e) => onSite(e.target.value)}>
+        {sites.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.domain}
+          </option>
+        ))}
+      </Select>
       {metrics.length > 1 && (
         <div className="seg small" role="group" aria-label={copy.metric}>
           {metrics.map((m) => (

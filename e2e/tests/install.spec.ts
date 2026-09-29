@@ -116,7 +116,7 @@ test('add a site, pick a method, go cookieless, check, and see the first visit',
   await expect(box).toBeEnabled()
   await box.click()
   const ask = page.getByRole('dialog', { name: 'Use cookieless tracking?' })
-  await expect(ask).toContainText('ids rotate every day')
+  await expect(ask.getByRole('row', { name: /Returning visitors/ })).toContainText('each day new')
   await ask.getByRole('button', { name: 'Cancel' }).click()
   await expect(box).not.toBeChecked()
 
@@ -137,8 +137,11 @@ test('add a site, pick a method, go cookieless, check, and see the first visit',
   await wizard.getByRole('tab', { name: 'npm / React' }).click()
   await expect(panel.locator('pre').nth(1)).toContainText('cookieless')
   await expect(wizard).toContainText('Rebuild and deploy')
-  // Unchecking gives it back, no questions asked.
+  // Unchecking asks too: the same comparison, going back to cookies.
   await box.click()
+  const back = page.getByRole('dialog', { name: 'Use cookies again?' })
+  await expect(back.getByRole('row', { name: /Browser storage/ })).toContainText('cookie')
+  await back.getByRole('button', { name: 'Use cookies' }).click()
   await expect.poll(config).toBe(false)
   expect(await served()).toBe(false)
   await expect(panel.locator('pre').nth(1)).not.toContainText('cookieless')
