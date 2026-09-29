@@ -214,10 +214,11 @@ for (const colorScheme of ['light', 'dark'] as const) {
 test('a phone: Add in the sheet opens the filter menu on screen, and Views in â‹¯ works by keyboard', async ({ page }) => {
   await open(page, 390)
   const id = await site(page)
-  const made = await page.evaluate(async (i) => {
-    const r = await fetch(`/api/v1/sites/${i}/segments`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Trckable-Request': '1' }, body: JSON.stringify({ name: 'Direct only', query: 'f=channel:Direct' }) })
+  const name = `Direct only ${Date.now()}`
+  const made = await page.evaluate(async ([i, n]) => {
+    const r = await fetch(`/api/v1/sites/${i}/segments`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Trckable-Request': '1' }, body: JSON.stringify({ name: n, query: 'f=channel:Direct' }) })
     return r.ok ? ((await r.json()) as { id: string }).id : ''
-  }, id)
+  }, [id, name])
   try {
     await page.reload()
     await expect(page.locator('.overview-chart .chart-wrap svg')).toBeVisible({ timeout: 20_000 })
@@ -246,7 +247,7 @@ test('a phone: Add in the sheet opens the filter menu on screen, and Views in â‹
     await expect(items.nth(1)).toBeFocused()
     await page.keyboard.press('Enter')
     await expect(page.getByRole('menu', { name: 'More' })).toBeHidden()
-    const pick = page.locator('.sv-name', { hasText: 'Direct only' })
+    const pick = page.locator('.sv-name', { hasText: name })
     await expect(pick).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(pick).toBeHidden()
