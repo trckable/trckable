@@ -90,11 +90,11 @@ test('every screen meets WCAG 2.1 AA', async ({ page }) => {
     await page.goto(`${BASE}/settings?site=${site}&tab=${tab}`)
     // Settings open as a dialog whose code loads on demand: wait for it to be
     // there, or the scan can start before it and catch it fading in.
-    await page.waitForSelector('.settings-modal .settings-body', { timeout: 15_000 })
+    await page.waitForSelector('.window-body', { timeout: 15_000 })
     await scan('settings, ' + tab)
   }
   await page.goto(BASE + '/site.com?account=profile')
-  await page.waitForSelector('.modal.account', { timeout: 15_000 })
+  await page.waitForSelector('.modal.window', { timeout: 15_000 })
   await scan('your account')
 })
 })

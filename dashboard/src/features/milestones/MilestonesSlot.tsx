@@ -7,14 +7,14 @@ import type { MilestonesState } from './useMilestones'
 
 const MilestonesDialogs = lazy(() => import('./MilestonesDialogs'))
 
-export function MilestonesSlot({ ms, site, quiet }: { ms: MilestonesState; site: Site; quiet: boolean }) {
+export function MilestonesSlot({ ms, site, quiet, revenue }: { ms: MilestonesState; site: Site; quiet: boolean; revenue: boolean }) {
   const m = ms.moment
   return (
     <>
       {m && !quiet && <Moment key={m.kind + m.step} m={m} onClose={ms.close} onShare={() => ms.setOpen({ share: m })} />}
       {ms.open && (
         <Suspense fallback={null}>
-          <MilestonesDialogs ms={ms} site={site} />
+          <MilestonesDialogs ms={ms} site={site} revenue={revenue} />
         </Suspense>
       )}
     </>

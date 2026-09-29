@@ -44,7 +44,7 @@ import { FullGrid } from '../features/fullcharts/FullGrid'
 import { CreateMenu } from '../features/create/CreateMenu'
 import { MoreMenu } from '../components/MoreMenu'
 import { downloadCsv } from '../lib/download'
-import { HeaderTools } from '../features/header/HeaderTools'
+import { HeaderTools, ShareButton } from '../features/header/HeaderTools'
 import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
 import { useMilestones } from '../features/milestones/useMilestones'
 import { ViewSwitch } from '../features/live/ViewSwitch'
@@ -536,7 +536,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           waiting={waiting}
           askOpen={askOpen}
           onAsk={() => setAskOpen(true)}
-          onShare={() => setSharing(true)}
           extra={trail && trailData && (
             <button type="button" className="chip" style={{ borderColor: channelColor(trail) }} title={`Following ${channelLabel(trail)}: click to keep`} onClick={() => addFilter('channel', trail)}>
               <span className="dot" style={{ background: channelColor(trail) }} />
@@ -571,6 +570,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             {!isShared() && <FilterMenu rows={dims} labelFor={filterLabel} active={view.filters} onPick={addFilter} onRemove={removeFilter} onClear={() => setView({ filters: [] })} />}
             <DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone}
               bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />
+            {!isShared() && <ShareButton onShare={() => setSharing(true)} />}
             <MoreMenu
               full={full}
               onSettings={narrow && canChange() ? () => openSettings(site) : undefined}
@@ -622,7 +622,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
 
       {showInstall && <Suspense fallback={null}><Install site={site} visits={stream.visits} /></Suspense>}
-      <MilestonesSlot ms={ms} site={site} quiet={showInstall} />
+      <MilestonesSlot ms={ms} site={site} quiet={showInstall} revenue={mods === null || shows(mods, 'cards', 'revenue')} />
       {!showInstall && !isShared() && siteState(site) === 'stopped' && <StoppedNotice site={site} />}
 
       {view.test && (

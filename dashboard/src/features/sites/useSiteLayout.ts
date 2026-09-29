@@ -22,6 +22,12 @@ function load() {
   return loading
 }
 
+/** Starts reading the layout now (idle, or when the switcher's button is reached). */
+export const preloadLayout = () => void load()
+
+/** Resolves once the layout is here, or after `ms`, whichever comes first. */
+export const layoutReady = (ms: number) => (current ? Promise.resolve() : Promise.race([load(), new Promise<void>((r) => setTimeout(r, ms))]))
+
 /** Save a layout: shown now, kept if the server agrees. */
 export function saveLayout(next: SiteLayout) {
   const was = current ?? EMPTY

@@ -2,7 +2,7 @@
 // trckabled with the demo data (like fullcharts, skipped unless
 // TRCKABLE_A11Y_URL points at one):
 //   TRCKABLE_A11Y_URL=http://localhost:8799 npx playwright test header
-// One row at every width down to 375 px; Share the only filled button; what
+// One row at every width down to 375 px; Share (in the second row) the only filled button; what
 // left the row (Refresh, Create, Core/Full, Milestones, Export) is in the ⋯
 // beside the period with its key, and the keys still work; the person's own
 // things (Profile, theme, shortcuts, sign out) are the avatar's menu.
@@ -66,8 +66,8 @@ for (const width of [1440, 700, 375]) {
   test(`two quiet rows at ${width}px, nothing lost`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await open(page)
-    // Row 1: who and which site, then Peek, Share, the avatar. Row 2:
-    // Live/Data, Filter, the period and ⋯. Each one line, inside the screen.
+    // Row 1: who and which site, then Peek, the avatar. Row 2:
+    // Live/Data, Filter, the period, Share and ⋯. Each one line, inside the screen.
     for (const sel of ['.header.quiet', '.subbar']) {
       const boxes = await controls(page, sel)
       expect(boxes.length, sel).toBeGreaterThan(1)
@@ -78,8 +78,10 @@ for (const width of [1440, 700, 375]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 'no sideways scroll').toBeLessThanOrEqual(0)
 
     // Share is the one filled button; Peek and Filter stay one tap away.
-    await expect(page.locator('.header .btn.primary')).toHaveCount(1)
-    await expect(page.locator('.header .btn.primary')).toHaveText(/Share/)
+    await expect(page.locator('.header .btn.primary')).toHaveCount(0)
+    await expect(page.locator('.subbar .btn.primary')).toHaveCount(1)
+    await expect(page.locator('.subbar').getByRole('button', { name: 'Share' })).toBeVisible()
+    expect((await page.locator('.subbar .share-btn').boundingBox())?.height).toBe(36)
     await expect(page.getByRole('button', { name: 'Peek' })).toBeVisible()
     await expect(page.locator('.subbar .btn.filter')).toBeVisible()
     // Row 2 says what the numbers are; the comparison is the period's title,

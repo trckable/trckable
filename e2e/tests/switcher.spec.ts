@@ -139,3 +139,21 @@ test('on a phone the switcher fits the screen', async ({ page, browserName }) =>
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375)
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/switcher-phone-${browserName}.png` })
 })
+
+test('the first open is final: the popup does not move or resize afterwards', async ({ page, browserName }) => {
+  test.slow()
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await exclusive('switcher', async () => {
+    await makeSites(page.request, `still-${browserName}-${Date.now()}`, 3)
+    await page.goto(`${API}/example.com`)
+    // A cold page: nothing of the switcher is warmed by the pointer.
+    const menu = await open(page)
+    // The layout box, not the painted one: the popup's short rise-in moves the
+    // painted box on purpose; what must not change is where and how big it is.
+    const box = () => menu.evaluate((e: HTMLElement) => ({ x: e.offsetLeft, y: e.offsetTop, w: e.offsetWidth, h: e.offsetHeight }))
+    const first = await box()
+    await page.waitForTimeout(500)
+    expect(await box()).toEqual(first)
+    await cleanUp(page.request)
+  })
+})

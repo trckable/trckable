@@ -51,6 +51,7 @@ export function Modal({
   onClose,
   className = '',
   keepSize = true,
+  focus = 'first',
   children,
 }: {
   label: string
@@ -59,6 +60,9 @@ export function Modal({
   keepSize?: boolean
   /** Left out while the dialog must not be dismissed — mid-delete, say. */
   onClose?: () => void
+  /** Where focus lands when it opens: the first control, or the dialog itself
+   *  (a window whose first control is a close button that should not glow). */
+  focus?: 'first' | 'box'
   className?: string
   children: ReactNode
 }) {
@@ -103,11 +107,11 @@ export function Modal({
   useEffect(() => {
     const el = box.current
     const before = document.activeElement as HTMLElement | null
-    if (el && !el.contains(document.activeElement)) (tabbable(el)[0] ?? el).focus()
+    if (el && !el.contains(document.activeElement)) (focus === 'first' ? tabbable(el)[0] ?? el : el).focus()
     return () => {
       if (before && before.isConnected) before.focus()
     }
-  }, [])
+  }, [focus])
   return createPortal(
     // Escape is handled above, through the stack; a click on the backdrop is the mouse's way.
     <div className="modal-back" role="presentation" onClick={onClose}>

@@ -9,6 +9,17 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- Profile and a site's settings are now one window: same size, head and menu for every section, and a full-screen sheet on a phone.
+- People is one row per person: a role switch (Owner | Viewer), a viewer's sites as chips, a status icon and the ⋯ menu; Add someone opens an inline row instead of a dialog, and the explainer cards are gone.
+- API keys are one row per key with its start, when it was last used and Revoke; Create key is an inline row, the new key shows once with Copy, and three small tiles say what keys are for.
+- Opening the Profile window no longer draws a focus ring on its close button.
+- Share moved from the top header into the site's row, right before ⋯ (icon only on a phone).
+- The site switcher opens without a jump: its list and layout load ahead, and site icons keep their box while loading.
+- The footer text is one step smaller and fainter.
+- The Milestones window is a hero for the newest milestone (big badge, the number, one sentence, Share the card and Replay the way there), a progress ring for each next step with what is left, and every milestone reached as a badge tile under its year; the badge pops in, the rings fill and the tiles rise in, all still with reduced motion, and a phone gets a full-screen sheet.
+
 ## 0.5.1 (29 Sep 2026)
 
 ### Changed

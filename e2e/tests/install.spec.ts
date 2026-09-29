@@ -164,9 +164,9 @@ test('add a site, pick a method, go cookieless, check, and see the first visit',
 
 // The account window's primary buttons keep their colour on hover, with the
 // icon centred on the text (a list's row style once leaked onto them).
-test('New key and Add someone keep their look on hover', async ({ page }) => {
+test('Create key and Add someone keep their look on hover', async ({ page }) => {
   await signIn(page)
-  for (const [tab, name] of [['keys', 'New key'], ['people', 'Add someone']] as const) {
+  for (const [tab, name] of [['keys', 'Create key'], ['people', 'Add someone']] as const) {
     await page.goto(`${API}/example.com?account=${tab}`)
     const btn = page.getByRole('button', { name, exact: true })
     await expect(btn).toBeVisible()

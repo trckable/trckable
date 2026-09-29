@@ -14,6 +14,7 @@
   --text: #f5f7fa;
   --text-2: #a7b0bd;
   --text-3: #8a93a1;
+  --text-4: #737b87; /* the footer line: 4.55:1 on the dark page */
   --accent: #b8ff3c;
   /* The accent on a tinted chip, at 11px: the plain accent is 4.18:1 there in
      the light theme, and AA wants 4.5. */
@@ -60,6 +61,7 @@
     --text: #0b0d10;
     --text-2: #4a525e;
     --text-3: #616874;
+    --text-4: #6d737e; /* 4.56:1 on the light page */
     /* 4.87:1 with white on it. The old #4d8a00 was 4.24 — close enough to
        look fine and not close enough to be readable. */
     --accent: #487f00;
@@ -99,6 +101,7 @@
   --text: #0b0d10;
   --text-2: #4a525e;
   --text-3: #616874;
+  --text-4: #6d737e;
   --accent: #487f00;
   --accent-strong: #3f7000;
   --accent-ink: #ffffff;
@@ -2764,8 +2767,8 @@ button.kpi-live:hover .label::after {
   justify-content: center;
   gap: 6px 14px;
   padding: 14px 16px 18px;
-  color: var(--text-3);
-  font-size: 11.5px;
+  color: var(--text-4);
+  font-size: 11px;
 }
 /* The logo keeps its own proportions; the footer only draws it smaller. */
 .app-footer .tkb-logo {
@@ -2790,7 +2793,7 @@ button.kpi-live:hover .label::after {
   gap: 12px;
 }
 .app-footer a:not(.tkb-logo) {
-  color: var(--text-3);
+  color: var(--text-4);
   text-decoration: none;
 }
 .app-footer a:not(.tkb-logo):hover {

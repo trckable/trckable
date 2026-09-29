@@ -48,9 +48,9 @@ test('the owner limits a viewer\'s sites in a popup, saved on Save', async ({ pa
   const window = page.getByRole('dialog', { name: 'Profile, your account' })
   const row = window.locator('.person', { hasText: email })
   await expect(row).toBeVisible({ timeout: 15_000 })
-  // The row only summarizes; it is not a control.
-  await expect(row.locator('.access-tag')).toHaveText('All sites')
-  await expect(row.getByRole('button', { name: /All sites/ })).toHaveCount(0)
+  // The chips are one button that opens the same popup.
+  await expect(row.locator('.site-chips')).toHaveText('All sites')
+  await expect(row.getByRole('button', { name: `Allowed sites for ${email}` })).toBeVisible()
 
   await row.getByRole('button', { name: `${email} options` }).click()
   await page.getByRole('menuitem', { name: 'Allowed sites' }).click()
@@ -79,7 +79,8 @@ test('the owner limits a viewer\'s sites in a popup, saved on Save', async ({ pa
   await popup.getByRole('checkbox').first().check()
   await popup.getByRole('button', { name: 'Save' }).click()
   await expect(popup).toBeHidden()
-  await expect(row.locator('.access-tag')).toHaveText(/^1 of \d+$/)
+  await expect(row.locator('.site-chips .chip')).toHaveCount(1)
+  await expect(row.locator('.site-chips')).not.toHaveText('All sites')
   const after = await (await request.get(`${API}/api/v1/site-access`, { headers: AUTH })).json()
   expect(after.viewers.find((v: { id: string }) => v.id === viewerId).sites).toHaveLength(1)
 })
@@ -98,7 +99,7 @@ test('a viewer\'s window is their account alone, and their page has no settings 
   expect(card!.width).toBeGreaterThan(360)
   const line = await window.locator('.me-card .me-email').evaluate((el) => el.getClientRects().length === 1 && el.getBoundingClientRect().height < 30)
   expect(line).toBe(true)
-  expect(await window.locator('.account-body').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+  expect(await window.locator('.window-body').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
   await page.keyboard.press('Escape')
   await expect(page.getByRole('button', { name: /^Settings for/ })).toHaveCount(0)
   // Peek is the owner's: no button, and its key opens nothing.

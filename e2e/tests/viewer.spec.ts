@@ -71,7 +71,7 @@ async function writeControls(page: Page): Promise<string[]> {
       else if (re.test(name)) found.push(name)
     }
     // An editable settings field is a write too.
-    for (const el of document.querySelectorAll('.settings-body :is(input, textarea, select):not([type=search]):not([readonly])')) {
+    for (const el of document.querySelectorAll('.window-body :is(input, textarea, select):not([type=search]):not([readonly])')) {
       if (shown(el) && enabled(el)) found.push('field: ' + (el.getAttribute('name') || el.getAttribute('aria-label') || el.id || 'unnamed'))
     }
     return found

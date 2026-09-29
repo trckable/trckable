@@ -1,6 +1,6 @@
 /* ---- The header's one quiet row --------------------------------------------
    The site, the period as plain words with ‹ ›, then borderless Ask and Filter,
-   Share as the only filled button, ⋯.
+   ⋯ (Share, the only filled button, sits in the row under it).
    One row at every width down to 375 px: labels fold into icons as it narrows,
    the period shortens, and Live/Data moves into ⋯. These rules come after
    styles.css and win over its older header rules by being more specific. */
@@ -64,12 +64,26 @@
   color: var(--text);
   border-color: transparent;
 }
-.header-tools.quiet .share-btn {
+.subbar .share-btn {
+  height: 36px;
+  flex: none;
   padding: 0 14px;
-  margin: 0 2px 0 6px;
 }
-.header-tools.quiet .share-btn svg {
+.subbar .share-btn svg {
   display: none;
+}
+@media (max-width: 640px) {
+  .subbar .share-btn {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+  .subbar .share-btn svg {
+    display: block;
+  }
+  .subbar .share-btn .label {
+    display: none;
+  }
 }
 .header-tools.quiet .more {
   position: relative;
@@ -212,19 +226,12 @@
   .range-picker.quiet .range-vs {
     display: none;
   }
-  .header-tools.quiet .share-btn {
-    padding: 0 12px;
-    margin: 0 0 0 4px;
-  }
   .header-tools.quiet .btn.ask,
   .header-tools.quiet .btn.filter,
   .header-tools.quiet .btn.icon.ghost {
     width: 30px;
     min-width: 30px;
     padding: 0;
-  }
-  .header-tools.quiet .share-btn {
-    padding: 0 9px;
   }
   .range-picker.quiet > .btn.range {
     padding: 0 4px;
@@ -294,6 +301,7 @@ html {
   flex: none;
   margin-left: auto;
 }
+.subbar > .share-btn + .more,
 .subbar > .range-picker.quiet + .more {
   margin-left: 0;
 }

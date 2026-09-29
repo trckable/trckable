@@ -51,52 +51,6 @@
   gap: 12px;
 }
 
-/* The account dialog: a page's worth of settings, over whatever is on screen. */
-.modal.account {
-  max-width: 720px;
-  width: 100%;
-  max-height: 86vh;
-  overflow-y: auto;
-  gap: 14px;
-}
-
-/* ---- Account dialog --------------------------------------------------------
-   The head stays put; only the section below it scrolls. */
-.modal.account {
-  padding: 0;
-  gap: 0;
-}
-
-/* One size for every section: the dialog does not resize when you move
-   between them, the panel scrolls instead. */
-.modal.account {
-  display: grid;
-  overflow: hidden; /* the body scrolls, not the dialog: never two scrollbars */
-  grid-template-columns: 210px minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr);
-  width: min(940px, calc(100vw - 32px));
-  max-width: none;
-  height: min(700px, 88vh);
-}
-
-/* One section (a viewer's Account): no navigation column, the body takes the
-   window's whole width. */
-.modal.account.single {
-  grid-template-columns: minmax(0, 1fr);
-  width: min(720px, calc(100vw - 32px));
-}
-
-@media (max-width: 720px) {
-  .modal.account {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto minmax(0, 1fr);
-    height: min(600px, 88vh);
-  }
-  .modal.account.single {
-    grid-template-rows: auto minmax(0, 1fr);
-  }
-}
-
 /* A dialog that is a form: the form disappears from the layout so its fields
    sit in the dialog's own column, exactly as they would without it. */
 .modal > .modal-form {
