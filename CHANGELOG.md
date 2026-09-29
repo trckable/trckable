@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- Profile and a site's settings are now one window: same size, head and menu for every section, and a full-screen sheet on a phone.
+
 ## 0.5.1 (29 Sep 2026)
 
 ### Changed

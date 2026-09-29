@@ -133,7 +133,7 @@ test('the Notes list: search, edit, delete, and a click shows the day', async ({
 
   // The same list in Settings.
   await page.goto(`${API}/settings?site=${site}&tab=notes`)
-  const body = page.locator('.settings-modal .settings-body')
+  const body = page.locator('.window-body')
   await body.getByRole('searchbox', { name: 'Search notes' }).fill(tag)
   await expect(body.getByRole('listitem')).toHaveCount(1)
 })

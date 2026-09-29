@@ -1,8 +1,9 @@
-import { Activity, Bell, Blocks, Check, ChevronLeft, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, RefreshCw, Search, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert, X } from 'lucide-react'
+import { Activity, Bell, Blocks, Check, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, RefreshCw, Search, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { isViewer } from '../lib/me'
 import { api, messageOf, siteState, type InstallCheck, type Site, type SiteState } from '../lib/api'
-import { Modal } from '../components/Modal'
+import { Window, type WindowTab } from '../components/Window'
+import { SettingsHead } from './SettingsHead'
 import { SiteMark } from '../components/SiteMark'
 import { Info } from '../components/Info'
 import { toast } from '../components/Toast'
@@ -105,7 +106,6 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
   const tab = TABS.some((t) => t.id === p.tab) ? p.tab : 'site'
   const go = (id: TabID) => setSettingsTab(id)
   const close = closeSettings
-  const current = TABS.find((t) => t.id === tab) ?? TABS[0]
   // Once visits arrive there is nothing left to install, only to verify.
   const label = (t: (typeof TABS)[number]) => (t.id === 'install' && p.site.last_event_at ? 'Verify' : t.label)
   // Sections that belong to a module say so when it is off, and offer to
@@ -124,78 +124,16 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
     const m = moduleOf(id)
     return mods !== null && m !== undefined && mods[m] === false
   }
-  // On a phone the sections are one row of tabs wider than the screen: the
-  // edges fade and an arrow shows on the side that has more, and the open
-  // one is scrolled into view.
-  const nav = useRef<HTMLElement>(null)
-  const [more, setMore] = useState({ left: false, right: false })
-  const measure = () => {
-    const el = nav.current
-    if (!el) return
-    setMore({ left: el.scrollLeft > 4, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 })
-  }
-  useEffect(() => {
-    nav.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest', inline: 'center' })
-    measure()
-    window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
-  }, [tab])
-  const nudge = (dir: number) => nav.current?.scrollBy({ left: dir * 160, behavior: 'smooth' })
+  const tabs: WindowTab[] = GROUPS.flatMap((g) =>
+    g.tabs.flatMap((id) => {
+      const t = TABS.find((x) => x.id === id)
+      return t ? [{ id: t.id, label: label(t), icon: t.icon, group: g.name, flag: off(t.id) ? <span className="tag quiet">Off</span> : undefined }] : []
+    }),
+  )
   return (
-    <Modal label={`Settings for ${p.site.domain}`} className="settings-modal" onClose={close}>
-      {more.left && (
-        <button type="button" className="settings-scroll left" aria-label="Earlier sections" onClick={() => nudge(-1)}>
-          <ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />
-        </button>
-      )}
-      {more.right && (
-        <button type="button" className="settings-scroll right" aria-label="More sections" onClick={() => nudge(1)}>
-          <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
-        </button>
-      )}
-      <nav ref={nav} onScroll={measure} className={'settings-nav' + (more.left ? ' more-left' : '') + (more.right ? ' more-right' : '')} aria-label="Settings sections">
-        <div className="settings-title">
-          <b>Settings</b>
-          <span className="faint">{p.site.name || p.site.domain}</span>
-        </div>
-        {GROUPS.map((g) => (
-          <div key={g.name} className="settings-group">
-            <span className="settings-group-head">{g.name}</span>
-            {g.tabs.map((id) => {
-              const t = TABS.find((x) => x.id === id)
-              if (!t) return null
-              return (
-                <button key={t.id} type="button" aria-current={tab === t.id} onClick={() => go(t.id)}>
-                  <span className="icon-tile small">
-                    <NavIcon d={t.icon} />
-                  </span>
-                  {label(t)}
-                  {off(t.id) && <span className="tag quiet nav-off">Off</span>}
-                </button>
-              )
-            })}
-          </div>
-        ))}
-      </nav>
-      <div className="settings-pane">
-        <div className="settings-pane-head">
-          <h2>{label(current)}</h2>
-          <button type="button" className="modal-close" aria-label="Close settings" onClick={close}>
-            <X size={16} strokeWidth={1.75} aria-hidden="true" />
-          </button>
-        </div>
-        {/* Focusable, so the section scrolls from the keyboard too — even one,
-            like Health, with nothing else in it to tab to. */}
-        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region must be focusable to scroll it from the keyboard (WCAG 2.1.1) */}
-        <div className="settings-body" key={tab} tabIndex={0} role="region" aria-label={label(current)}>
-          {off(tab) ? (
-            <ModuleOff site={p.site} tab={tab} onOn={loadMods} />
-          ) : (
-            <SettingsSection tab={tab} site={p.site} onSites={p.onSites} />
-          )}
-        </div>
-      </div>
-    </Modal>
+    <Window label={`Settings for ${p.site.domain}`} head={<SettingsHead site={p.site} />} tabs={tabs} tab={tab} onTab={(id) => go(id as TabID)} onClose={close}>
+      {off(tab) ? <ModuleOff site={p.site} tab={tab} onOn={loadMods} /> : <SettingsSection tab={tab} site={p.site} onSites={p.onSites} />}
+    </Window>
   )
 }
 

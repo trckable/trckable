@@ -9,124 +9,16 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  /* Changing section used to slide the whole panel up 8px and fade it in,
-     which read as a stutter every time you moved between them. The size is
-     identical either way, so nothing needs to move: it just appears. */
-  animation: fadein 0.16s var(--ease) backwards;
+  min-width: 0;
 }
 .account-body .card {
   border: 0;
   padding: 0;
   background: transparent;
 }
-.account-head {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 18px 0;
-  background: var(--surface);
-  border-bottom: 1px solid var(--grid);
-}
-.account-who {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-.account-name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-.account-name b {
-  font-size: 15px;
-  font-weight: 650;
-  color: var(--text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .account-role {
   flex: none;
   line-height: 1.5;
-}
-.account-email {
-  font-size: 13px;
-  color: var(--text-3);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.account-head .tabs {
-  flex-basis: 100%;
-  margin-bottom: -1px;
-}
-.account-body {
-  padding: 16px 18px 18px;
-}
-.account-head {
-  grid-column: 1 / -1;
-  position: static;
-  border-bottom: 1px solid var(--grid);
-  padding: 16px 18px;
-}
-.account-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 14px 10px;
-  border-right: 1px solid var(--grid);
-}
-.account-nav button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 42px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text-2);
-  font: inherit;
-  font-size: 14px;
-  text-align: left;
-  cursor: pointer;
-}
-.account-nav button:hover {
-  background: var(--sunken);
-}
-.account-nav button[aria-selected='true'] {
-  background: var(--sunken);
-  color: var(--text);
-}
-.account-nav button[aria-selected='true'] svg {
-  color: var(--accent);
-}
-.account-body {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  /* Reserve the scrollbar's width so the panel never changes size between
-     sections. */
-  scrollbar-gutter: stable;
-  min-height: 0;
-}
-@media (max-width: 720px) {
-  .account-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    border-right: 0;
-    border-bottom: 1px solid var(--grid);
-    padding: 10px;
-  }
-  .account-nav button {
-    flex: none;
-    white-space: nowrap;
-  }
 }
 /* One last question before an account-level change: a strip, not a row, so the
    field and its two buttons never have to share one line. */
@@ -555,6 +447,10 @@
   .me-actions .btn:first-child {
     flex: 1;
   }
+}
+/* On a phone a line's control sits under its label and hint, the whole width:
+   the theme's System / Dark / Light, for one. */
+@media (max-width: 760px) {
   .srow.acct-line {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -563,6 +459,12 @@
   }
   .srow.acct-line .srow-ctl {
     grid-column: 1 / -1;
+  }
+  .srow.acct-line .seg {
+    width: 100%;
+  }
+  .srow.acct-line .seg button {
+    flex: 1;
   }
 }
 
@@ -650,11 +552,6 @@
   font-size: 12px;
   line-height: 1.45;
   white-space: normal;
-}
-@media (max-width: 720px) {
-  .account-nav button {
-    flex: none;
-  }
 }
 /* The role pill: outlined, so the green text keeps its contrast in light. */
 .account-role.on {

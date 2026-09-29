@@ -98,7 +98,7 @@ test('a viewer\'s window is their account alone, and their page has no settings 
   expect(card!.width).toBeGreaterThan(360)
   const line = await window.locator('.me-card .me-email').evaluate((el) => el.getClientRects().length === 1 && el.getBoundingClientRect().height < 30)
   expect(line).toBe(true)
-  expect(await window.locator('.account-body').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+  expect(await window.locator('.window-body').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
   await page.keyboard.press('Escape')
   await expect(page.getByRole('button', { name: /^Settings for/ })).toHaveCount(0)
   // Peek is the owner's: no button, and its key opens nothing.

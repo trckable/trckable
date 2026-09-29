@@ -3,6 +3,7 @@
 // Settings page can stay about one site.
 import { BellRing, Camera, Check, Copy, Eye, EyeOff, ImageUp, KeyRound, LockKeyhole, LogOut, ShieldCheck, SunMoon, Trash2, UserPlus } from 'lucide-react'
 import { Modal } from '../components/Modal'
+import { Window } from '../components/Window'
 import { PersonAvatar } from '../components/PersonAvatar'
 import { checksHere, setChecksHere } from '../lib/update'
 import { Switch } from '../components/Switch'
@@ -45,28 +46,15 @@ export function AccountDialog({ tab: asked, sites, email, onSites }: { tab: Tab;
     api.profile().then(setProfile).catch(() => {})
   }, [])
   return (
-    <Modal label={acopy.accountLabel} className={tabs.length > 1 ? 'account' : 'account single'} onClose={closeAccount}>
-      <AccountHead profile={profile} email={email} v={v} />
-
-      {tabs.length > 1 && (
-        <div className="account-nav" role="tablist" aria-label="Account sections">
-          {tabs.map((t) => (
-            <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => openAccount(t.id)}>
-              <t.icon size={18} strokeWidth={1.75} aria-hidden="true" />
-              {t.label}
-            </button>
-          ))}
-        </div>
-      )}
-
+    <Window label={acopy.accountLabel} head={<AccountHead profile={profile} email={email} v={v} />} tabs={tabs} tab={tab} onTab={(id) => openAccount(id as Tab)} onClose={closeAccount}>
       {/* A viewer sent to an owner's tab (Ask's "Create a key") lands on their own account. */}
-      <div key={tab} className="account-body">
+      <div className="account-body">
         {tab === 'sites' && !viewer && <SitesSettings sites={sites} onSites={onSites} />}
         {tab === 'keys' && !viewer && <Keys />}
         {tab === 'people' && !viewer && <People me={email} />}
         {(tab === 'profile' || viewer) && <ProfileTab email={email} p={profile} v={v} onProfile={setProfile} onPicture={() => bump((n) => n + 1)} />}
       </div>
-    </Modal>
+    </Window>
   )
 }
 

@@ -1,0 +1,242 @@
+/* Window's styles: they load with its chunk. One shell for Profile and a
+   site's settings: same size, same head, same menu, same phone layout. */
+.modal.window {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  width: min(1000px, calc(100vw - 32px));
+  max-width: none;
+  height: min(720px, 88vh);
+  max-height: none;
+  overflow: hidden; /* only the body scrolls: never two scrollbars */
+}
+/* One section (a viewer's Profile): no menu, the body takes the whole width. */
+.modal.window.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.window-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 76px;
+  padding: 0 16px 0 20px;
+  border-bottom: 1px solid var(--grid);
+  background: var(--surface);
+}
+.window-head .close {
+  flex: none;
+}
+.window-who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.window-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.window-name b {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.window-sub {
+  font-size: 13px;
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.window-menu {
+  position: relative;
+  min-height: 0;
+  display: flex;
+  border-right: 1px solid var(--grid);
+  background: color-mix(in srgb, var(--sunken) 55%, transparent);
+}
+.window-nav {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 10px;
+  overflow-y: auto;
+}
+.window-tab {
+  display: grid;
+  gap: 2px;
+}
+.window-group {
+  margin-top: 10px;
+  padding: 6px 12px 4px;
+  color: var(--text-3);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.window-tab:first-child .window-group {
+  margin-top: 0;
+}
+.window-nav button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.window-nav button:hover,
+.window-nav button[aria-selected='true'] {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.window-nav button[aria-selected='true'] .icon-tile {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.window-nav .tag {
+  margin-left: auto;
+  font-size: 10.5px;
+}
+
+.window-body {
+  grid-column: 2;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 28px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Reserve the scrollbar's width so the panel never changes size between
+     sections. */
+  scrollbar-gutter: stable;
+  animation: fadein 0.16s var(--ease) backwards;
+}
+.modal.window.single .window-body {
+  grid-column: 1;
+}
+/* It scrolls, so its parts keep their height: a card with overflow hidden
+   would otherwise shrink under the ones after it. */
+.window-body > * {
+  flex-shrink: 0;
+}
+
+/* The arrows exist on a phone only, where the sections are a scrolling row. */
+.window-scroll {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .modal-back:has(.window) {
+    padding: 0;
+  }
+  .modal.window {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+    border: 0;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .modal.window.single {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .window-head {
+    height: 68px;
+    padding: 0 12px 0 14px;
+  }
+  .window-menu {
+    border-right: 0;
+    border-bottom: 1px solid var(--grid);
+  }
+  .window-nav {
+    flex-direction: row;
+    gap: 6px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+  .window-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .window-tab {
+    display: contents;
+  }
+  .window-group {
+    display: none;
+  }
+  .window-nav button {
+    flex: none;
+    white-space: nowrap;
+    min-height: 38px;
+    padding: 0 12px 0 6px;
+  }
+  .window-body,
+  .modal.window.single .window-body {
+    grid-column: 1;
+    padding: 14px 12px 24px;
+  }
+  .window-nav.more-left {
+    mask-image: linear-gradient(90deg, transparent, #000 48px);
+  }
+  .window-nav.more-right {
+    mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent);
+  }
+  .window-nav.more-left.more-right {
+    mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent);
+  }
+  .window-scroll {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--border-2);
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+  }
+  .window-scroll.left {
+    left: 6px;
+  }
+  .window-scroll.right {
+    right: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .window-body {
+    animation: none;
+  }
+}
