@@ -95,6 +95,21 @@ test('a visit slides in and the numbers move, without a reload', async ({ page }
   expect(reloads).toBe(0)
 })
 
+test('Live has no dots of its own: the switch has the one, and it dims while the connection is down', async ({ page }) => {
+  await signIn(page, '/example.com?view=live')
+  const live = page.getByRole('region', { name: 'Live', exact: true })
+  await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
+  await expect(live.locator('.live-now .pulse, .live-now .live-dot')).toHaveCount(0)
+  const dot = page.getByRole('group', { name: 'View' }).locator('.pulse')
+  await expect(dot).toHaveCount(1)
+  await expect(dot).toHaveCSS('opacity', '1')
+  // The stream refused: Live says so in words, and the switch's dot dims.
+  await page.route('**/api/v1/sites/*/live', (route) => route.abort())
+  await page.reload()
+  await expect(live.getByText('Reconnecting…')).toBeVisible({ timeout: 15_000 })
+  await expect(dot).toHaveCSS('opacity', '0.3')
+})
+
 test('L, the Online now tile and the switch lead to Live and back', async ({ page }) => {
   await signIn(page)
   const tile = page.locator('button.kpi', { has: page.locator('.label', { hasText: 'Online now' }) })
