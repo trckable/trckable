@@ -153,20 +153,18 @@
   display: none;
 }
 
-@media (max-width: 640px) {
-  /* A sheet of one size, 44px under the top and 8px from the other edges:
-     the same for every section. */
+@media (max-width: 760px) {
   .modal-back:has(.window) {
-    padding: max(44px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
-    place-items: stretch;
+    padding: 0;
   }
   .modal.window {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto minmax(0, 1fr);
-    width: 100%;
-    height: 100%;
-    border-radius: 20px;
-    padding: 0;
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+    border: 0;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
   .modal.window.single {
     grid-template-rows: auto minmax(0, 1fr);
@@ -224,7 +222,7 @@
     color: var(--accent-strong);
   }
   .modal.window.equal .window-long,
-  .modal.window.equal .tag {
+  .modal.window.equal .window-nav .tag {
     display: none;
   }
   .modal.window.equal .window-short {
@@ -268,6 +266,22 @@
   }
   .window-scroll.right {
     right: 6px;
+  }
+}
+
+/* On a small phone it is a sheet of one size, 44px under the top and 8px from
+   the other edges: the same for every section. */
+@media (max-width: 640px) {
+  .modal-back:has(.window) {
+    padding: max(44px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    place-items: stretch;
+  }
+  .modal.window {
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    border: 1px solid var(--border-2);
+    padding: 0;
   }
 }
 

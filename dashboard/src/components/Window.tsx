@@ -86,7 +86,7 @@ export function Window({
                       {t.group}
                     </span>
                   )}
-                  <button type="button" role="tab" aria-label={t.label} aria-selected={tab === t.id} aria-current={tab === t.id ? 'true' : undefined} onClick={() => onTab(t.id)}>
+                  <button type="button" role="tab" aria-label={equal ? t.label : undefined} aria-selected={tab === t.id} aria-current={tab === t.id ? 'true' : undefined} onClick={() => onTab(t.id)}>
                     <span className="icon-tile small">
                       <t.icon size={15} strokeWidth={1.75} aria-hidden="true" />
                     </span>
