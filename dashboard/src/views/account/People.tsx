@@ -1,16 +1,19 @@
 // The People tab: who may use this instance. Owners run it, viewers read it,
 // and the server enforces that, not this screen.
 import { UserPlus } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { AllowedSites } from '../../features/access/AllowedSites'
 import { useSiteAccess } from '../../features/access/useSiteAccess'
 import { Loading } from '../../components/loading/Loading'
+import { whenIdle } from '../../lib/lazyLoad'
 import { api, type Person } from '../../lib/api'
 import { AddRow } from './AddRow'
 import { OneTimePassword } from './OneTimePassword'
 import { PersonRow } from './PersonRow'
+import { RoleDialog, RolePop, SitesPop } from './peopleLazy'
 import { copy } from './copy'
 import { people as t } from './peopleCopy'
+import { orderPeople } from './rules'
 import { peopleActions } from './usePeopleActions'
 import './people.css'
 
@@ -19,18 +22,24 @@ export function People({ me }: { me?: string }) {
   const [adding, setAdding] = useState(false)
   const [issued, setIssued] = useState<{ email: string; password: string; reset?: boolean } | null>(null)
   const [allowing, setAllowing] = useState<string | null>(null)
+  // A role change asked for, and the pill it came from (focus goes back there).
+  const [asking, setAsking] = useState<{ p: Person; role: string } | null>(null)
   const load = () => void api.people().then((r) => setList(r.people ?? []))
   const access = useSiteAccess(list)
   useEffect(() => {
     load()
+    // The popovers and the confirmation are fetched now, before anyone clicks.
+    whenIdle(SitesPop.preload)
+    whenIdle(RolePop.preload)
+    whenIdle(RoleDialog.preload)
   }, [])
 
   const owners = list?.filter((p) => p.role === 'owner').length ?? 0
-  const act = { ...peopleActions({ load, setPeople: setList, issue: setIssued }), allow: setAllowing }
+  const act = { ...peopleActions({ load, setPeople: setList, issue: setIssued }), allow: setAllowing, askRole: (p: Person, role: string) => setAsking({ p, role }) }
 
-  // You first; then the people who use it; then the ones still to sign in.
+  // You first, then the owners, then the viewers; the ones still to sign in last, in their own group.
   const waiting = (p: Person) => p.email !== me && (p.must_change || !p.last_seen)
-  const sorted = [...(list ?? [])].sort((x, y) => (y.email === me ? 1 : 0) - (x.email === me ? 1 : 0) || (y.last_seen || 0) - (x.last_seen || 0))
+  const sorted = orderPeople(list ?? [], me)
   const row = (p: Person) => <PersonRow key={p.id} p={p} me={me} owners={owners} waiting={waiting(p)} access={access} act={act} />
   const pending = sorted.filter(waiting)
 
@@ -70,6 +79,11 @@ export function People({ me }: { me?: string }) {
         </div>
       )}
 
+      {asking && (
+        <Suspense fallback={null}>
+          <RoleDialog p={asking.p} role={asking.role} run={() => act.setRole(asking.p, asking.role)} onClose={() => setAsking(null)} />
+        </Suspense>
+      )}
       {allowing && <AllowedSites id={allowing} access={access} onClose={() => setAllowing(null)} />}
       {issued && <OneTimePassword {...issued} onClose={() => setIssued(null)} />}
     </section>

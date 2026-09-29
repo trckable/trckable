@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-BguD1OXD.js";var t=e();function n({left:e,children:n}){return(0,t.jsxs)(`div`,{className:`dialog-actions`,children:[e,(0,t.jsx)(`span`,{className:`dialog-actions-gap`}),n]})}export{n as t};

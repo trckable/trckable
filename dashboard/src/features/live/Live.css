@@ -50,12 +50,6 @@ body[data-mode] .live-head-row h2,
   font-weight: 400;
   color: var(--text-2);
 }
-.live-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-}
 
 /* The two numbers */
 .live-now {
@@ -441,7 +435,7 @@ body[data-mode] .live-head-row h2,
   .live-meta {
     font-size: 11px;
   }
-  /* All is well needs no words on a phone: the pulsing dot says it. */
+  /* All is well needs no words on a phone: the pulsing dot in the Live | Data switch says it. */
   .live-calm {
     display: none;
   }

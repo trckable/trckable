@@ -60,6 +60,12 @@ export function Menu({ label, children }: { label: string; children: (close: () 
     }
   }, [open])
 
+  // Back on the button before what an item opens takes over, so a dialog gives focus back here.
+  const done = () => {
+    setOpen(false)
+    btn.current?.focus()
+  }
+
   return (
     <>
       <button ref={btn} type="button" className="btn icon ghost" aria-haspopup="menu" aria-expanded={open} aria-label={label} onClick={() => setOpen((o) => !o)}>
@@ -68,7 +74,8 @@ export function Menu({ label, children }: { label: string; children: (close: () 
       {open &&
         createPortal(
           <div ref={pop} className="pop menu floating" role="menu" style={{ top: at.top, right: at.right }}>
-            {children(() => setOpen(false))}
+            {/* eslint-disable-next-line react-hooks/refs -- done only touches the button when an item is chosen, never while rendering */}
+            {children(done)}
           </div>,
           document.body,
         )}

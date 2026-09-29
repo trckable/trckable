@@ -1,17 +1,20 @@
-// One person: avatar, name and email, role, the sites a viewer may see, a
-// status icon and the ⋯ menu.
+// One person, one row: avatar, name and email, the sites they see, the role
+// pill, a status icon and the ⋯ menu.
 import { Clock, ShieldCheck } from 'lucide-react'
 import { Menu } from '../../components/Menu'
-import { SiteChips } from '../../features/access/SiteChips'
 import type { SiteAccess } from '../../features/access/useSiteAccess'
 import type { Person } from '../../lib/api'
 import { openAccount } from '../../lib/account'
 import { seenText } from '../personSeen'
-import { RoleControl } from './RoleControl'
 import { people } from './peopleCopy'
+import { RolePill } from './RolePill'
+import { SitesButton } from './SitesButton'
 
 export interface RowActions {
-  setRole: (p: Person, role: string) => void
+  /** Asks first: opens the confirmation for a role change. */
+  askRole: (p: Person, role: string) => void
+  /** The change itself, run by the confirmation. */
+  setRole: (p: Person, role: string) => Promise<unknown>
   reset: (p: Person) => void
   turnOff: (p: Person) => void
   remove: (p: Person) => void
@@ -65,7 +68,7 @@ function RowMenu({ p, self, access, act }: { p: Person; self: boolean; access: S
 export function PersonRow({ p, me, owners, waiting, access, act }: { p: Person; me?: string; owners: number; waiting: boolean; access: SiteAccess; act: RowActions }) {
   const self = p.email === me
   return (
-    <div className={'person' + (self ? ' self' : '') + (waiting ? ' waiting' : '')}>
+    <div className={'person human' + (self ? ' self' : '') + (waiting ? ' waiting' : '')}>
       <span className={'person-avatar' + (p.role === 'owner' ? ' owner' : '')} aria-hidden="true">
         {(p.name || p.email).slice(0, 1).toUpperCase()}
       </span>
@@ -77,8 +80,8 @@ export function PersonRow({ p, me, owners, waiting, access, act }: { p: Person; 
         <span className="person-sub">{p.email}</span>
       </span>
       <span className="person-controls">
-        <RoleControl p={p} me={me} owners={owners} onPick={(role) => act.setRole(p, role)} />
-        {p.role !== 'owner' && <SiteChips id={p.id} email={p.email} access={access} onOpen={() => act.allow(p.id)} />}
+        <SitesButton p={p} access={access} />
+        <RolePill p={p} me={me} owners={owners} onAsk={(role) => act.askRole(p, role)} />
         <Status p={p} waiting={waiting} />
       </span>
       <RowMenu p={p} self={self} access={access} act={act} />
