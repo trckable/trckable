@@ -68,7 +68,7 @@ export function CreateMenu(p: CreateMenuProps) {
   useEffect(() => {
     if (!open) return
     const away = (e: MouseEvent) => {
-      if (!root.current?.contains(e.target as Node)) setOpen(false)
+      if (!root.current?.contains(e.target as Node) && !(e.target as Element).closest?.('.create-menu')) setOpen(false)
     }
     const esc = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return

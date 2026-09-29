@@ -3,6 +3,7 @@
 // Its own chunk, so the first load carries only the button.
 import { Filter, StickyNote, Target, type LucideIcon } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { CreateId } from '../../lib/modules'
 import { copy } from './copy'
 
@@ -39,7 +40,7 @@ export default function CreatePop(p: CreatePopProps) {
     { id: 'note', icon: StickyNote, label: copy.note, hint: copy.noteHint, run: p.onNote },
   ]
   const items = all.filter((it) => p.items.includes(it.id))
-  return (
+  const menu = (
     <div ref={root} className={p.anchor ? 'pop menu floating create-menu' : 'pop menu create-menu'} role="menu" aria-label={copy.menu} style={at ?? undefined}>
       {items.map((it) => (
         <button
@@ -61,4 +62,6 @@ export default function CreatePop(p: CreatePopProps) {
       ))}
     </div>
   )
+  // On the page body, like the ⋯ menu itself: no ancestor can shift or clip it.
+  return p.anchor ? createPortal(menu, document.body) : menu
 }

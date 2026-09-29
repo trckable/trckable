@@ -4,6 +4,15 @@ import { expect, test } from '@playwright/test'
 import { API } from '../playwright.config'
 import { session } from './session'
 
+// The button waits for the site's first visit: make sure there is one.
+test.beforeAll(async ({ browser }) => {
+  const ctx = await browser.newContext()
+  const p = await ctx.newPage()
+  await p.goto(`/r/ask-${Date.now()}/index.html`)
+  await p.waitForTimeout(1500)
+  await ctx.close()
+})
+
 test.beforeEach(async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: await session('ask'), url: API }])
 })

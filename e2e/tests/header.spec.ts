@@ -9,7 +9,7 @@
 // Each tile carries its change, readable without colour; the
 // chart starts at the first visit when that falls in the period, draws a
 // short span by the hour, and keeps Replay as a small ▶.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -46,6 +46,9 @@ async function open(page: Page, query = ''): Promise<string> {
   await expect(page.locator('.overview-chart .chart-wrap svg')).toBeVisible({ timeout: 20_000 })
   return domain
 }
+
+/** After its opening animation: a box measured mid-flight is not where it lands. */
+const settled = (el: Locator) => el.evaluate((n) => Promise.all(n.getAnimations().map((a) => a.finished)))
 
 const more = (page: Page) => page.getByRole('button', { name: 'More', exact: true })
 const menu = (page: Page) => page.getByRole('menu', { name: 'More' })
@@ -144,6 +147,7 @@ test('⋯ runs what left the row, and the keys still work', async ({ page }) => 
   await expect(create.getByRole('menuitem').first()).toBeFocused()
   // The picker hangs right under ⋯, aligned to its right edge, like ⋯'s own menu.
   const dots = (await more(page).boundingBox())!
+  await settled(create)
   const pick = (await create.boundingBox())!
   expect(pick.y).toBeGreaterThanOrEqual(dots.y + dots.height)
   expect(pick.y - (dots.y + dots.height)).toBeLessThan(16)
@@ -155,9 +159,11 @@ test('⋯ runs what left the row, and the keys still work', async ({ page }) => 
   await page.locator('body').click({ position: { x: 5, y: 400 } })
   await page.keyboard.press('a')
   await expect(create).toBeVisible()
+  await settled(create)
   const viaKey = (await create.boundingBox())!
-  expect(Math.abs(viaKey.x + viaKey.width - (dots.x + dots.width))).toBeLessThan(12)
-  expect(viaKey.y).toBeGreaterThanOrEqual(dots.y + dots.height)
+  const dotsNow = (await more(page).boundingBox())!
+  expect(Math.abs(viaKey.x + viaKey.width - (dotsNow.x + dotsNow.width))).toBeLessThan(12)
+  expect(viaKey.y).toBeGreaterThanOrEqual(dotsNow.y + dotsNow.height)
   await page.keyboard.press('Escape')
   await page.keyboard.press('f')
   await expect(page).toHaveURL(/mode=full/)

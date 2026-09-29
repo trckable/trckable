@@ -17,6 +17,9 @@ let viewer = ''
 let viewerId = ''
 let AUTH: Record<string, string> = {}
 
+// One worker for the file: each worker signs in once more, and signing in is limited.
+test.describe.configure({ mode: 'serial' })
+
 test.beforeAll(async ({ request }) => {
   for (let i = 0; ; i++) {
     try {

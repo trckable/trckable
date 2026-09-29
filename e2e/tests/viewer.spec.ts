@@ -17,6 +17,9 @@ const AUTH = { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/js
 let cookie = ''
 let site = ''
 
+// One worker for the file: each worker signs in once more, and signing in is limited.
+test.describe.configure({ mode: 'serial' })
+
 test.beforeAll(async ({ request }) => {
   const email = `viewer-${Date.now()}-${Math.random().toString(36).slice(2, 6)}@example.com`
   for (let i = 0; ; i++) {

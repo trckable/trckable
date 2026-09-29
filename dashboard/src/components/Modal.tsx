@@ -22,34 +22,28 @@ const FOCUSABLE = 'a[href], button, input, select, textarea, summary, [tabindex]
 /** What Tab can reach inside `box`, in order. */
 function tabbable(box: HTMLElement) {
   return Array.from(box.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-    (el) => !(el as HTMLButtonElement).disabled && el.tabIndex >= 0 && !el.closest('[hidden], [inert]') && el.getAttribute('type') !== 'hidden' && el.getClientRects().length > 0,
+    (el) => !el.matches(':disabled') && el.tabIndex >= 0 && !el.closest('[hidden], [inert]') && el.getAttribute('type') !== 'hidden' && el.getClientRects().length > 0,
   )
 }
 
-/** Tab and Shift+Tab stay inside the dialog: from the last control it wraps to
- *  the first, and back. Only for a key pressed inside this dialog's own box
- *  (a dialog opened from it, in its own portal, keeps its own trap). */
+/** Tab and Shift+Tab stay inside the dialog, moved by hand so no browser's own
+ *  idea of what Tab reaches (Safari skips buttons) can walk out of it. Only
+ *  for a key pressed inside this dialog's own box (a dialog opened from it, in
+ *  its own portal, keeps its own trap). */
 export function trapTab(e: Pick<KeyboardEvent, 'key' | 'shiftKey' | 'target' | 'preventDefault'>, box: HTMLElement) {
   if (e.key !== 'Tab' || !box.contains(e.target as Node)) return
+  e.preventDefault()
   const list = tabbable(box)
   if (list.length === 0) {
-    e.preventDefault()
     box.focus()
     return
   }
-  const first = list[0]
-  const last = list[list.length - 1]
-  const at = document.activeElement
-  if (e.shiftKey && (at === first || at === box)) {
-    e.preventDefault()
-    last.focus()
-  } else if (!e.shiftKey && at === last) {
-    e.preventDefault()
-    first.focus()
-  } else if (!list.includes(at as HTMLElement) && at !== box) {
-    e.preventDefault()
-    first.focus()
-  }
+  const at = list.indexOf(document.activeElement as HTMLElement)
+  const step = e.shiftKey ? -1 : 1
+  // Not in the list: a step lands on the first (or, backwards, the last).
+  const outside = step === 1 ? -1 : list.length
+  const from = at === -1 ? outside : at
+  list[(from + step + list.length) % list.length].focus()
 }
 
 export function Modal({
