@@ -8,7 +8,7 @@
   padding: 0;
   width: min(1000px, calc(100vw - 32px));
   max-width: none;
-  height: min(720px, 88vh);
+  height: min(720px, calc(100dvh - 64px));
   max-height: none;
   overflow: hidden; /* only the body scrolls: never two scrollbars */
 }
@@ -144,6 +144,9 @@
 .window-body > * {
   flex-shrink: 0;
 }
+.window-short {
+  display: none;
+}
 
 /* The arrows exist on a phone only, where the sections are a scrolling row. */
 .window-scroll {
@@ -197,6 +200,37 @@
     min-height: 38px;
     padding: 0 12px 0 6px;
   }
+  /* Up to five sections: equal columns, an icon over a short name, no
+     sideways scroll. The open one is marked in the accent. */
+  .modal.window.equal .window-nav {
+    display: grid;
+    grid-template-columns: repeat(var(--tabs), minmax(0, 1fr));
+    gap: 4px;
+    padding: 6px;
+    overflow: hidden;
+  }
+  .modal.window.equal .window-nav button {
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    min-height: 52px;
+    padding: 0 2px;
+    font-size: 11px;
+    text-align: center;
+  }
+  .modal.window.equal .window-nav button[aria-selected='true'] {
+    color: var(--accent-strong);
+  }
+  .modal.window.equal .window-long,
+  .modal.window.equal .window-nav .tag {
+    display: none;
+  }
+  .modal.window.equal .window-short {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .window-body,
   .modal.window.single .window-body {
     grid-column: 1;
@@ -232,6 +266,22 @@
   }
   .window-scroll.right {
     right: 6px;
+  }
+}
+
+/* On a small phone it is a sheet of one size, 44px under the top and 8px from
+   the other edges: the same for every section. */
+@media (max-width: 640px) {
+  .modal-back:has(.window) {
+    padding: max(44px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    place-items: stretch;
+  }
+  .modal.window {
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    border: 1px solid var(--border-2);
+    padding: 0;
   }
 }
 

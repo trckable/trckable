@@ -81,6 +81,7 @@ test('create a key inline and revoke it', async ({ page }) => {
 
 test('at 390 px nothing is wider than the window', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
+  await page.emulateMedia({ reducedMotion: 'reduce' }) // measure the window at rest, not mid-way through its opening scale
   for (const tab of ['people', 'keys']) {
     await page.goto(`${API}/example.com?account=${tab}`)
     const window = page.getByRole('dialog', { name: 'Profile, your account' })

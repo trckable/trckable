@@ -10,6 +10,13 @@ export const copy = {
     people: 'People',
     profile: 'Account',
   },
+  /** What sits under each tab's icon on a phone. */
+  short: {
+    sites: 'Sites',
+    keys: 'Keys',
+    people: 'People',
+    profile: 'Account',
+  },
   /** The People header: "3 · 1 owner · 2 viewers". */
   count: (c: { people: number; owners: number; viewers: number }) =>
     [String(c.people), plural(c.owners, 'owner', 'owners'), plural(c.viewers, 'viewer', 'viewers')].join(' · '),
