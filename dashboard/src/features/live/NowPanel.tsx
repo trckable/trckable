@@ -28,16 +28,12 @@ export function NowPanel(p: { data: LiveNow; series: number[]; online: number; c
   return (
     <section className="card live-panel live-now" aria-labelledby="live-now-title">
       <div className="live-head-row">
-        <span className="pulse" aria-hidden="true" style={{ opacity: p.connected ? 1 : 0.3 }} />
         <h2 id="live-now-title">{copy.title}</h2>
         <Status connected={p.connected} failed={p.failed} />
       </div>
       <div className="live-figures">
         <div className="live-figure">
-          <span className="live-label">
-            <span className="live-dot" aria-hidden="true" />
-            {copy.onlineNow}
-          </span>
+          <span className="live-label">{copy.onlineNow}</span>
           <Rolling className="live-online num" value={p.online} />
         </div>
         <div className="live-figure">

@@ -1,0 +1,1 @@
+import{t as e}from"./react-9bbe84d6.js";var t=e();function n({left:e,children:n}){return(0,t.jsxs)(`div`,{className:`dialog-actions`,children:[e,(0,t.jsx)(`span`,{className:`dialog-actions-gap`}),n]})}export{n as t};

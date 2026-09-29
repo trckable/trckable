@@ -48,8 +48,8 @@ test('the owner limits a viewer\'s sites in a popup, saved on Save', async ({ pa
   const window = page.getByRole('dialog', { name: 'Profile, your account' })
   const row = window.locator('.person', { hasText: email })
   await expect(row).toBeVisible({ timeout: 15_000 })
-  // The chips are one button that opens the same popup.
-  await expect(row.locator('.site-chips')).toHaveText('All sites')
+  // The sites are one button (its popover ticks them at once).
+  await expect(row.locator('.sites-btn .sites-text')).toHaveText('All sites')
   await expect(row.getByRole('button', { name: `Allowed sites for ${email}` })).toBeVisible()
 
   await row.getByRole('button', { name: `${email} options` }).click()
@@ -79,8 +79,8 @@ test('the owner limits a viewer\'s sites in a popup, saved on Save', async ({ pa
   await popup.getByRole('checkbox').first().check()
   await popup.getByRole('button', { name: 'Save' }).click()
   await expect(popup).toBeHidden()
-  await expect(row.locator('.site-chips .chip')).toHaveCount(1)
-  await expect(row.locator('.site-chips')).not.toHaveText('All sites')
+  await expect(row.locator('.sites-btn .site-mark')).toHaveCount(1)
+  await expect(row.locator('.sites-btn .sites-text')).not.toHaveText('All sites')
   const after = await (await request.get(`${API}/api/v1/site-access`, { headers: AUTH })).json()
   expect(after.viewers.find((v: { id: string }) => v.id === viewerId).sites).toHaveLength(1)
 })

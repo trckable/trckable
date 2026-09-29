@@ -3,7 +3,7 @@
 // containing block for position: fixed, so a wizard opened from inside the
 // account dialog was trapped by it — the backdrop stopped covering the page
 // and the wizard's own heading was clipped out of reach.
-import { useEffect, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useLockScroll } from './lockScroll'
 import './Modal.css'
@@ -104,14 +104,16 @@ export function Modal({
   }, [keepSize])
   // Focus moves into the dialog when it opens (unless a field in it already
   // took it) and back to what had it when it closes.
+  // What had focus is noted while rendering, before any autoFocus in the
+  // dialog's own content has moved it.
+  const [before] = useState(() => (typeof document === 'undefined' ? null : (document.activeElement as HTMLElement | null)))
   useEffect(() => {
     const el = box.current
-    const before = document.activeElement as HTMLElement | null
     if (el && !el.contains(document.activeElement)) (focus === 'first' ? tabbable(el)[0] ?? el : el).focus()
     return () => {
       if (before && before.isConnected) before.focus()
     }
-  }, [focus])
+  }, [focus, before])
   return createPortal(
     // Escape is handled above, through the stack; a click on the backdrop is the mouse's way.
     <div className="modal-back" role="presentation" onClick={onClose}>

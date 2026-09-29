@@ -566,7 +566,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           active={view.filters.map((f) => ({ key: f.dim + f.value, dim: DIM_LABEL[f.dim] ?? f.dim, value: filterLabel(f.dim, f.value), remove: () => removeFilter(f) }))}
           under={(view.filters.length > 0 || !!rowProps.views?.list.length) && <FilterRowHost {...rowProps} onlyViews={narrow} />}
           filter={!isShared() && <FilterMenu rows={dims} labelFor={filterLabel} active={view.filters} onPick={addFilter} onRemove={removeFilter} onClear={clearFilters} />}
-          period={<DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone} filters={view.filters.length}
+          period={<DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone}
             bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />}
           share={!isShared() && !narrow && <ShareButton onShare={() => setSharing(true)} />}
           more={

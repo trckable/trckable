@@ -1,0 +1,70 @@
+/* The role confirmation: it loads with its chunk, not with the first load. */
+.modal.role-modal {
+  width: min(400px, 100%);
+}
+.role-body {
+  display: grid;
+  gap: 14px;
+}
+.role-body h2 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+.role-lines {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-2);
+  font-size: 13.5px;
+}
+.role-lines li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.role-lines svg {
+  flex: none;
+  color: var(--text-3);
+}
+.role-trust {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--sunken);
+  color: var(--text);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.role-trust:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.role-err {
+  margin: 0;
+  color: var(--down);
+  font-size: 13px;
+}
+.role-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.role-actions .btn {
+  height: 42px;
+  padding: 0 16px;
+}
+@media (max-width: 560px) {
+  .role-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}

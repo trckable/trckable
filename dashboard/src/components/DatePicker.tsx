@@ -4,7 +4,6 @@
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef } from 'react'
 import { copy } from '../features/header/copy'
-import { toggleRowCollapsed, useRowCollapsed } from '../features/header/rowCollapsed'
 import { closer, focusOpener, periodMenu, toggler } from './panelOpen'
 import { pressed, useKeymap } from '../lib/keys'
 import type { Bucket } from '../lib/api'
@@ -59,19 +58,17 @@ function stepOf(e: KeyboardEvent) {
   return 0
 }
 
-export function DatePicker({ value, today, onChange, short, tz, bucket, autoBucket, onBucket, filters = 0 }: Props & { short?: boolean; tz?: string; bucket?: Bucket; autoBucket?: string; onBucket?: (b?: Bucket) => void; filters?: number }) {
+export function DatePicker({ value, today, onChange, short, tz, bucket, autoBucket, onBucket }: Props & { short?: boolean; tz?: string; bucket?: Bucket; autoBucket?: string; onBucket?: (b?: Bucket) => void }) {
   // The period is plain words in the header's row, not a boxed control: the
   // arrows either side, the label opening the calendar.
   const open = periodMenu.use()
-  const collapsed = useRowCollapsed()
   useKeymap()
   const root = useRef<HTMLDivElement>(null)
   const minDate = addMonths(today, -12 * MIN_BACK_YEARS)
   const cmp = compareRange(value.range, value.compare, value.compareCustom, value.period)
   const presetLabel = PRESETS.find((p) => p.id === value.period)?.label
-  const label = presetLabel ?? fmtRange(value.range, today)
+  const label = periodLabel(value, today)
   const words = compareWords(value)
-  const fold = collapsed ? copy.expand : copy.collapse
   const calendar = <Calendar size={15} strokeWidth={1.75} className="range-icon" aria-hidden="true" />
 
   // Global shortcuts: t/y/7/3/9/w/m/1 pick presets, ← → shift the period, c toggles compare.
@@ -134,18 +131,7 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
   if (short) return <div ref={root}>{popover}</div>
 
   return (
-    <div ref={root} className={collapsed ? 'range-picker quiet collapsed' : 'range-picker quiet'}>
-      <button type="button" className="btn ghost fold-toggle" aria-expanded={!collapsed} aria-label={collapsed ? `${label}, ${fold}` : fold} onClick={toggleRowCollapsed}>
-        <Chevron dir={collapsed ? 'left' : 'right'} />
-        {collapsed && (
-          <>
-            {calendar}
-            <b className="range-label">{label}</b>
-            {filters > 0 && <span className="filter-count num">{filters}</span>}
-          </>
-        )}
-      </button>
-      <span className="ctl-div" />
+    <div ref={root} className="range-picker quiet">
       <button
         type="button"
         className="btn icon ghost step"

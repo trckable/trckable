@@ -3,12 +3,14 @@
 // dashboard already has open (lib/useLive) and the server's last 30 minutes
 // (useLiveNow), and shows the second laid over the first.
 import './Live.css'
+import { useEffect } from 'react'
 import type { Sale, Visit } from '../../lib/api'
 import { useAnnounce } from './announce'
 import { copy } from './copy'
 import { feedOf, seriesAt } from './model'
 import { NowPanel } from './NowPanel'
 import { OnSitePanel } from './OnSitePanel'
+import { liveLink } from './liveLink'
 import { useLiveNow } from './useLiveNow'
 import { Loading } from '../../components/loading/Loading'
 
@@ -24,6 +26,11 @@ export type LiveStream = {
 export default function LiveView({ site, timezone, stream, onVisitor, cookieless }: { site: string; timezone: string; stream: LiveStream; onVisitor?: (visitor: string) => void; cookieless?: boolean }) {
   const { data, failed, clock, skew } = useLiveNow(site, stream)
   const said = useAnnounce(stream.visits)
+  // The switch's dot shows whether the connection is up.
+  useEffect(() => {
+    liveLink.set(stream.connected)
+    return () => liveLink.set(true)
+  }, [stream.connected])
   // The stream's count is the freshest; while it is stuck, the polled one.
   let online = stream.online ?? data?.online ?? null
   if (stream.stale && data) online = data.online

@@ -1,39 +1,4 @@
-/* Site access on People: a muted summary on the row, and its popup. */
-.site-chips {
-  display: flex;
-  padding: 3px;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background: transparent;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-}
-.site-chips:hover {
-  border-color: var(--border-2);
-  background: var(--sunken);
-}
-.site-chips .chip {
-  max-width: 96px;
-  overflow: hidden;
-  padding: 2px 8px;
-  border: 1px solid var(--border-2);
-  border-radius: 999px;
-  color: var(--text-2);
-  font-size: 11.5px;
-  line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.site-chips .chip.quiet {
-  border-color: transparent;
-  color: var(--text-3);
-}
+/* Site access: the popup behind ⋯ → Allowed sites. */
 .modal.access-dialog {
   width: min(400px, calc(100vw - 32px));
   padding: 20px;

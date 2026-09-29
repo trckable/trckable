@@ -2,7 +2,7 @@
 // quick periods (More opens the date-range picker), the comparison, the
 // filters in force and Add. Its own chunk: nobody opens it on a wide screen.
 import { ChevronRight, X } from 'lucide-react'
-import { useRef, type PointerEvent, type ReactNode } from 'react'
+import { useRef, type PointerEvent } from 'react'
 import { compareWords, periodLabel, type PickerValue } from '../../components/DatePicker'
 import { Modal } from '../../components/Modal'
 import { filterMenu, periodMenu } from '../../components/panelOpen'
@@ -18,8 +18,6 @@ export interface SheetProps {
   value: PickerValue
   today: ISODate
   onChange: (v: PickerValue) => void
-  /** Live/Data: the row's own switch. */
-  switcher?: ReactNode
   /** back: focus returns to the pill (not when another panel takes over). */
   onClose: (back?: boolean) => void
 }
@@ -69,7 +67,6 @@ export default function PhoneSheet(p: SheetProps) {
         >
           <span />
         </div>
-        {p.switcher}
         <div className="sheet-quick" role="group" aria-label={sheetCopy.periods}>
           {QUICK.map((id) => (
             <button key={id} type="button" aria-pressed={p.value.period === id} onClick={() => p.onChange({ ...p.value, period: id, range: (presetById(id) ?? PRESETS[0]).range(p.today) })}>

@@ -45,13 +45,6 @@
   border-radius: 2px;
   background: var(--border-2);
 }
-.row-sheet .view-switch {
-  width: 100%;
-  border-radius: 12px;
-}
-.row-sheet .view-switch button {
-  height: 34px;
-}
 .sheet-quick {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

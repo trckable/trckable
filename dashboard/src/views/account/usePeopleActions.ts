@@ -1,8 +1,8 @@
 // What an owner can do to another person: change their role, give new
 // sign-in details, turn their two-step off, remove them.
-import { api, messageOf, type Person } from '../../lib/api'
+import { api, type Person } from '../../lib/api'
 import { confirm, confirmWith } from '../../components/Confirm'
-import { settle, toast } from '../../components/Toast'
+import { toast } from '../../components/Toast'
 import { people } from './peopleCopy'
 
 type Asked = { title: string; body: string; confirmLabel: string; busyLabel: string; done?: string; danger?: boolean }
@@ -29,16 +29,13 @@ const asOwner = async <T,>(o: Asked, act: (mine: string, code?: string) => Promi
 }
 
 export function peopleActions(o: { load: () => void; setPeople: (p: Person[]) => void; issue: (made: { email: string; password: string; reset?: boolean }) => void }) {
-  const setRole = (p: Person, role: string) => {
-    const id = toast(people.making(p.email, role), 'busy')
-    api
-      .setPersonRole(p.id, role)
-      .then((r) => {
-        settle(id, role === 'owner' ? people.madeOwner(p.email) : people.madeViewer(p.email))
-        o.setPeople(r.people ?? [])
-      })
-      .catch((e: unknown) => settle(id, messageOf(e), 'error'))
-  }
+  // Called from the confirmation, which shows a refusal and stays open.
+  const setRole = (p: Person, role: string) =>
+    api.setPersonRole(p.id, role).then((r) => {
+      const name = p.name || p.email.split('@')[0]
+      toast(role === 'owner' ? people.change.nowOwner(name) : people.change.nowViewer(name))
+      o.setPeople(r.people ?? [])
+    })
   const reset = async (p: Person) => {
     const t = people.reset
     let made: { email: string; password: string } | null = null
