@@ -15,8 +15,9 @@
 </div>
 
 Tiny, open-source web analytics that shows which traffic pays. This is the
-client for a [trckable](https://github.com/trckable/trckable) server you run
-yourself; `host` points it there.
+client for a [trckable](https://github.com/trckable/trckable) server: run it
+yourself for free, or let [trckable Cloud](https://cloud.trckable.com) host it
+for you. `host` points the client at either.
 
 - ~2 KB, bundled into your app (no script file for ad blockers to block)
 - Pageviews for any SPA, goals, outbound links, downloads, scroll goals, engagement time

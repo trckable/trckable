@@ -1,7 +1,7 @@
 {
   "name": "trckable",
   "version": "0.5.4",
-  "description": "Tiny, open-source web analytics that shows which traffic pays. Peekaboo. Every visit counted.",
+  "description": "Tiny, open-source web analytics that shows which traffic pays. Self-host it free, or use trckable Cloud. Peekaboo. Every visit counted.",
   "keywords": [
     "analytics",
     "web-analytics",
