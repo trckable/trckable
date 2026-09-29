@@ -5,6 +5,7 @@
 import { useEffect } from 'react'
 import { caps, keyFor, pressed, useKeymap } from '../../lib/keys'
 import { entryCopy as copy } from './entryCopy'
+import { liveLink } from './liveLink'
 import { preloadLive } from './liveChunk'
 import { switchView } from './switchView'
 
@@ -13,6 +14,7 @@ const warm = () => void preloadLive().catch(() => undefined)
 
 export function ViewSwitch({ live }: { live: boolean }) {
   useKeymap()
+  const linked = liveLink.use()
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!pressed(e, 'live') || (e.target as HTMLElement).closest('input, textarea, select, [contenteditable]')) return
@@ -22,8 +24,12 @@ export function ViewSwitch({ live }: { live: boolean }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [live])
   const key = caps(keyFor('live')).join('')
+  // While Live is on and its connection is down, the dot dims.
+  const classes = ['view-switch']
+  if (live) classes.push('live')
+  if (live && !linked) classes.push('lost')
   return (
-    <div className={live ? 'view-switch live' : 'view-switch'} role="group" aria-label={copy.switchLabel} title={copy.switchTitle(key)} onPointerEnter={warm} onFocus={warm}>
+    <div className={classes.join(' ')} role="group" aria-label={copy.switchLabel} title={copy.switchTitle(key)} onPointerEnter={warm} onFocus={warm}>
       <span className="view-pill" aria-hidden="true" />
       <button type="button" aria-pressed={live} aria-keyshortcuts={key} onClick={() => void switchView(true)}>
         <span className="pulse" aria-hidden="true" />
