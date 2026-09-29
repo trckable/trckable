@@ -1,0 +1,9 @@
+import{t as e}from"./jsx-runtime-BguD1OXD.js";import{t}from"./react-CybPckBe.js";import{Mt as n,c as r,xt as i}from"./index-ChNTpC-9.js";import{t as a}from"./Code-CxgGHXot.js";var o=t(),s={title:`Ask`,label:`Ask trckable`,close:`Close Ask trckable`,intro:`Connect your own assistant over MCP.`,docs:`https://trckable.com/docs/api/mcp/`,docsLink:`Setup`,note:`Read-only tools. Paste the key where it says tkb_live_…`,key:`Create a key`},c=e(),l=e=>`{
+  "mcpServers": {
+    "trckable": {
+      "command": "npx",
+      "args": ["-y", "trckable", "mcp"],
+      "env": { "TRCKABLE_HOST": "${e}", "TRCKABLE_API_KEY": "tkb_live_…" }
+    }
+  }
+}`;function u({onClose:e}){return(0,c.jsxs)(`div`,{className:`ask-setup`,children:[(0,c.jsxs)(`p`,{children:[s.intro,` `,(0,c.jsx)(`a`,{href:s.docs,target:`_blank`,rel:`noopener noreferrer`,children:s.docsLink})]}),(0,c.jsx)(a,{code:l(location.origin)}),(0,c.jsx)(`p`,{className:`faint`,children:s.note}),(0,c.jsx)(`button`,{type:`button`,className:`btn`,onClick:()=>{e(),r(`keys`)},children:s.key})]})}function d({open:e,onClose:t}){return(0,o.useEffect)(()=>{if(!e)return;let n=e=>e.key===`Escape`&&t();return window.addEventListener(`keydown`,n),()=>window.removeEventListener(`keydown`,n)},[e,t]),(0,c.jsxs)(`aside`,{className:`drawer ask`,"aria-label":s.label,"aria-hidden":!e,inert:!e,children:[(0,c.jsxs)(`header`,{className:`ask-head`,children:[(0,c.jsxs)(`h2`,{children:[s.title,` `,(0,c.jsx)(i,{})]}),(0,c.jsx)(`button`,{type:`button`,className:`btn icon ghost`,"aria-label":s.close,title:s.close,onClick:t,children:(0,c.jsx)(n,{size:16,"aria-hidden":`true`})})]}),(0,c.jsx)(u,{onClose:t})]})}export{d as AskPanel};

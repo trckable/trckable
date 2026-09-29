@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Fixed
+
+- Live: "On the site right now" lists everyone Online now counts. Someone who opened a page long ago and is still active keeps their latest page (up to a day back), someone with no page at all shows as "Still on the site", and a list longer than 50 says "and N more". The header number is the tile's number. `GET /api/v1/sites/{site}/now` gains `more` (people left out of `recent`, absent when 0), and a `recent` row can have `kind: "active"`.
+
 ## 0.5.0 (28 Sep 2026)
 
 ### New

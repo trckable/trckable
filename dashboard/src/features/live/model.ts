@@ -48,7 +48,7 @@ export type Row = NowVisit & { key: string }
 
 /** A row's identity: the visitor when journeys lets us know them; otherwise
  *  the visit itself, so a person moving on is a new row. */
-export const keyOf = (v: Visit) => (v.visitor ? 'v:' + v.visitor : `t:${v.ts}:${v.kind}:${v.path ?? ''}:${v.goal ?? ''}`)
+export const keyOf = (v: Pick<NowVisit, 'visitor' | 'ts' | 'kind' | 'path' | 'goal'>) => (v.visitor ? 'v:' + v.visitor : `t:${v.ts}:${v.kind}:${v.path ?? ''}:${v.goal ?? ''}`)
 
 /**
  * Who is on the site at `now`: the server's list, with the stream's newer
@@ -67,6 +67,12 @@ export function feedOf(recent: readonly NowVisit[], visits: readonly Visit[], at
     rows.unshift(row)
   }
   return rows.filter((r) => now - r.last < IDLE_MS).slice(0, MAX_ROWS)
+}
+
+/** People online the list does not show: only when it is full, and never
+ *  a guess from the stream's small differences. */
+export function moreOf(online: number | null, rows: number): number {
+  return online !== null && rows >= MAX_ROWS ? Math.max(0, online - rows) : 0
 }
 
 export type Share = { channel: string; visitors: number; share: number }
