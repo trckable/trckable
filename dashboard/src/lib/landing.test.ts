@@ -23,6 +23,6 @@ describe('landing', () => {
   })
 
   it('has no site: the first run over the settings page, on every server', () => {
-    expect(landing([], new URLSearchParams(''))).toEqual({ path: '/settings', wizard: true })
+    expect(landing([], new URLSearchParams(''))).toEqual({ path: '/', wizard: true })
   })
 })

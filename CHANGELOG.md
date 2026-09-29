@@ -15,6 +15,9 @@ section into the release.
 
 ### Changed
 
+- First run: an owner cannot reach anything until one site has had its first visit. Every address shows the setup (add the site, install it, wait for its first visit) with no Skip, Esc does nothing, and Docs, Profile and Sign out stay reachable. An account with a working site is never held, and neither is one that also has a site still waiting for its first visit; there Add a site closes with Cancel, Esc or a click outside as any dialog does. A viewer with nothing shared sees "No sites shared with you yet."
+- The setup is one centred column: progress dots, step, heading, then the card beneath.
+- The site-less Settings page is gone; Sites live in Profile. `/settings` no longer shows a page: an old `/settings?site=…&tab=…` link opens that site's settings, any other address goes to the main dashboard.
 - Add a site is a compact dialog that is as tall as its step, a bottom sheet on a phone. The domain field cleans a pasted address (`https://www.example.com/path` becomes `example.com`), says what will be counted, flags a domain that is not valid or already added, and Enter continues. The steps are a compact row where finished ones are ticked and can be clicked to go back, and the height follows the step smoothly.
 
 ## 0.5.0 (28 Sep 2026)

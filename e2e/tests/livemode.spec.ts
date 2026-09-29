@@ -196,7 +196,7 @@ test('a site with no visit yet shows its install screen in Live, and the mode co
   const domain = `nolive-${Date.now()}.example`
   await signIn(page)
   await page.evaluate(async (d) => {
-    await fetch('/api/v1/sites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ domain: d }) })
+    await fetch('/api/v1/sites', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Trckable-Request': '1' }, body: JSON.stringify({ domain: d }) })
   }, domain)
   const view = page.getByRole('group', { name: 'View' })
   // Live on a working site, then the switcher to the new one.
