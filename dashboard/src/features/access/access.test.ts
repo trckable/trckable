@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { summary } from './AccessTag'
 import { changed } from './draft'
-
-describe('the allowed sites summary on a row', () => {
-  it('says All sites for no limit', () => expect(summary(null, 8)).toBe('All sites'))
-  it('says how many of the sites', () => expect(summary(['a', 'b', 'c', 'd'], 8)).toBe('4 of 8'))
-  it('says No sites for an empty list', () => expect(summary([], 8)).toBe('No sites'))
-})
 
 describe('whether the popup has something to save', () => {
   it('is quiet when nothing moved', () => {

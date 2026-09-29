@@ -2,7 +2,6 @@
 // message files when translations come, and this is what moves.
 export const copy = {
   all: 'All sites',
-  some: (n: number, of: number) => `${n} of ${of}`,
   none: 'No sites',
   /** The person's ⋯ menu item, and the popup's title. */
   menuItem: 'Allowed sites',

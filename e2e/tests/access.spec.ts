@@ -49,7 +49,7 @@ test('the owner limits a viewer\'s sites in a popup, saved on Save', async ({ pa
   const row = window.locator('.person', { hasText: email })
   await expect(row).toBeVisible({ timeout: 15_000 })
   // The row only summarizes; it is not a control.
-  await expect(row.locator('.access-tag')).toHaveText('All sites')
+  await expect(row.locator('.site-chips')).toHaveText('All sites')
   await expect(row.getByRole('button', { name: /All sites/ })).toHaveCount(0)
 
   await row.getByRole('button', { name: `${email} options` }).click()
@@ -79,7 +79,8 @@ test('the owner limits a viewer\'s sites in a popup, saved on Save', async ({ pa
   await popup.getByRole('checkbox').first().check()
   await popup.getByRole('button', { name: 'Save' }).click()
   await expect(popup).toBeHidden()
-  await expect(row.locator('.access-tag')).toHaveText(/^1 of \d+$/)
+  await expect(row.locator('.site-chips .chip')).toHaveCount(1)
+  await expect(row.locator('.site-chips')).not.toHaveText('All sites')
   const after = await (await request.get(`${API}/api/v1/site-access`, { headers: AUTH })).json()
   expect(after.viewers.find((v: { id: string }) => v.id === viewerId).sites).toHaveLength(1)
 })

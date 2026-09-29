@@ -53,7 +53,7 @@ export function Window({
   const current = tabs.find((t) => t.id === tab)
   const fade = (more.left ? ' more-left' : '') + (more.right ? ' more-right' : '')
   return (
-    <Modal label={label} className={tabs.length > 1 ? 'window' : 'window single'} keepSize={false} onClose={onClose}>
+    <Modal label={label} className={tabs.length > 1 ? 'window' : 'window single'} keepSize={false} focus="box" onClose={onClose}>
       <header className="window-head">
         {head}
         <button type="button" className="btn icon close" aria-label="Close" onClick={onClose}>
