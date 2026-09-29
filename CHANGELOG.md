@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- The dashboard's first load is one script and one stylesheet, with React beside them: 1.9 KB lighter.
+
 ## 0.5.4 (29 Sep 2026)
 
 ### Changed
