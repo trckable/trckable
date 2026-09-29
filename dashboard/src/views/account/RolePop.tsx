@@ -22,6 +22,8 @@ export default function RolePop({ anchor, role, onPick, onClose }: { anchor: Ref
               type="button"
               role="menuitemradio"
               aria-checked={role === r.id}
+              // WebKit gives a menuitemradio no name from its children: name it outright.
+              aria-label={`${r.name}. ${r.what}`}
               data-nav
               data-autofocus={role === r.id || undefined}
               className="pop-role"
