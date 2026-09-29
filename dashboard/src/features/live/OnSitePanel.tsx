@@ -3,7 +3,7 @@
 // and leaves. The count in the sticky header rolls to its new value.
 import { copy } from './copy'
 import { FeedRow } from './FeedRow'
-import type { Row } from './model'
+import { moreOf, type Row } from './model'
 import { useLeaving } from './useLeaving'
 import { useTicking } from './useTicking'
 import { useTween } from '../../lib/motion'
@@ -21,6 +21,7 @@ function Count({ n }: { n: number }) {
 
 export function OnSitePanel(p: { rows: Row[]; online: number | null; clock: number; skew?: number; onVisitor?: (visitor: string) => void; cookieless?: boolean }) {
   const rows = useLeaving(p.rows)
+  const more = moreOf(p.online, rows.length)
   const clock = useTicking(p.clock, p.skew ?? 0)
   return (
     <section className="card live-panel live-onsite" aria-labelledby="live-onsite-title">
@@ -33,6 +34,7 @@ export function OnSitePanel(p: { rows: Row[]; online: number | null; clock: numb
         {rows.map((v) => (
           <FeedRow key={v.key} v={v} clock={clock} leaving={v.leaving} onVisitor={p.onVisitor} />
         ))}
+        {more > 0 && <li className="faint num live-more">{copy.more(more)}</li>}
       </ol>
       {p.cookieless && (
         <p className="faint cookieless-note" title={off.why}>

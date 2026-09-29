@@ -32,6 +32,8 @@ export const copy = {
   // Who is on the site.
   onSite: 'On the site right now',
   people: (n: number) => `${fmtInt(n)} ${n === 1 ? 'person' : 'people'}`,
+  more: (n: number) => `and ${fmtInt(n)} more`,
+  stillHere: 'Still on the site',
   empty: 'Nobody on the site right now. New visits appear here as they happen.',
   goal: (name: string) => `Goal: ${name}`,
   ago: (ms: number) => {

@@ -34,8 +34,13 @@ function Face({ v, active }: { v: Row; active: boolean }) {
   )
 }
 
+function pageOf(v: Row) {
+  if (v.kind === 'active') return copy.stillHere
+  return v.kind === 'goal' ? copy.goal(v.goal ?? '') : (v.path ?? '/')
+}
+
 export function FeedRow({ v, clock, leaving, onVisitor }: { v: Row; clock: number; leaving?: boolean; onVisitor?: (visitor: string) => void }) {
-  const page = v.kind === 'goal' ? copy.goal(v.goal ?? '') : (v.path ?? '/')
+  const page = pageOf(v)
   const since = clock - v.last
   const active = since < ACTIVE_MS
   const body = (

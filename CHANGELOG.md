@@ -31,6 +31,7 @@ section into the release.
 
 - A site that has not had its first visit shows the install screen in Live as well as in Data, on first load, when switched to from another site and on a direct address; the Live | Data switch is hidden there, and the first visit opens the dashboard in the mode you had chosen.
 - While Replay is playing the chart ignores the pointer, touch and keys: no crosshair, tooltip or dot pulls at the line. Pausing or ending Replay brings hover back; Live is unchanged.
+- Live: "On the site right now" lists everyone Online now counts. Someone who opened a page long ago and is still active keeps their latest page (up to a day back), someone with no page at all shows as "Still on the site", and a list longer than 50 says "and N more". The header number is the tile's number. `GET /api/v1/sites/{site}/now` gains `more` (people left out of `recent`, absent when 0), and a `recent` row can have `kind: "active"`.
 
 ## 0.5.0 (28 Sep 2026)
 
