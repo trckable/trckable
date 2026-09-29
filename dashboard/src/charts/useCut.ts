@@ -2,6 +2,7 @@
 // The pointer moves it every frame by writing one CSS variable (the paths are
 // drawn once and masked, never redrawn); keys, touch and Replay move it to a
 // bucket.
+import { useDrive } from './useDrive'
 import { useLayoutEffect, useRef, type Dispatch, type KeyboardEvent, type RefObject, type SetStateAction } from 'react'
 
 interface CutArgs {
@@ -10,11 +11,16 @@ interface CutArgs {
   n: number
   hover: number | null
   scrub: number | null
+  /** Replay plays: its playhead moves the cut every frame (useDrive), not this. */
+  locked?: boolean
+  vals: number[]
+  y: (v: number) => number
   setHover: Dispatch<SetStateAction<number | null>>
   x: (i: number) => number
 }
 
-export function useCut({ ref, w, n, hover, scrub, setHover, x }: CutArgs) {
+export function useCut({ ref, w, n, hover, scrub, locked, vals, setHover, x, y }: CutArgs) {
+  const [marker, driven] = useDrive({ ref, locked, vals, x, y })
   // Where the pointer is, and the bucket it picked: the cut sits at the
   // pointer itself only while that bucket is the one being shown.
   const pointerRef = useRef<{ px: number; i: number } | null>(null)
@@ -41,7 +47,14 @@ export function useCut({ ref, w, n, hover, scrub, setHover, x }: CutArgs) {
     }
     el.dataset.cut = 'on'
   }
-  useLayoutEffect(() => setCut(cutAt()))
+  useLayoutEffect(() => {
+    // No glide while the playhead moves it: it is already continuous.
+    if (driven) {
+      if (ref.current) ref.current.dataset.cut = 'jump'
+      return
+    }
+    setCut(cutAt())
+  })
   const onKey = (e: KeyboardEvent<SVGSVGElement>) => {
     if (!n) return
     if (e.key === 'Escape') {
@@ -69,5 +82,5 @@ export function useCut({ ref, w, n, hover, scrub, setHover, x }: CutArgs) {
   const release = () => {
     pointerRef.current = null
   }
-  return { follow, release, onKey }
+  return { follow, release, onKey, marker, driven }
 }
