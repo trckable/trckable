@@ -60,6 +60,7 @@ test('site settings never scrolls sideways on a phone or a big phone, and a tab 
   }
   const flagged = page.locator('.window-nav button:has(.tag)')
   const n = await flagged.count()
+  expect(n).toBeGreaterThan(0)
   for (let i = 0; i < n; i++) {
     const text = (await flagged.nth(i).locator('.tag').innerText()).trim()
     await expect(flagged.nth(i)).toHaveAccessibleName(new RegExp(text))
