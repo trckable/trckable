@@ -19,7 +19,18 @@ export function SiteMark({ site, size = 22 }: { site: Pick<Site, 'domain' | 'col
   // An icon that fails to load is the letter, never a broken picture.
   const [broken, setBroken] = useState('')
   if (site.icon_url && broken !== site.icon_url)
-    return <img className="site-mark" src={site.icon_url} width={size} height={size} alt="" aria-hidden="true" onError={() => setBroken(site.icon_url ?? '')} />
+    return (
+      <img
+        className="site-mark"
+        src={site.icon_url}
+        width={size}
+        height={size}
+        alt=""
+        aria-hidden="true"
+        style={{ background: `color-mix(in srgb, ${siteColor(site)} 16%, transparent)` }} // the letter's tile holds the box while the icon loads
+        onError={() => setBroken(site.icon_url ?? '')}
+      />
+    )
   const c = siteColor(site)
   return (
     <span

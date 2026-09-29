@@ -15,6 +15,9 @@ section into the release.
 - People is one row per person: a role switch (Owner | Viewer), a viewer's sites as chips, a status icon and the ⋯ menu; Add someone opens an inline row instead of a dialog, and the explainer cards are gone.
 - API keys are one row per key with its start, when it was last used and Revoke; Create key is an inline row, the new key shows once with Copy, and three small tiles say what keys are for.
 - Opening the Profile window no longer draws a focus ring on its close button.
+- Share moved from the top header into the site's row, right before ⋯ (icon only on a phone).
+- The site switcher opens without a jump: its list and layout load ahead, and site icons keep their box while loading.
+- The footer text is one step smaller and fainter.
 
 ## 0.5.1 (29 Sep 2026)
 
