@@ -18,6 +18,7 @@ section into the release.
 - Share moved from the top header into the site's row, right before ⋯ (icon only on a phone).
 - The site switcher opens without a jump: its list and layout load ahead, and site icons keep their box while loading.
 - The footer text is one step smaller and fainter.
+- The Milestones window is a hero for the newest milestone (big badge, the number, one sentence, Share the card and Replay the way there), a progress ring for each next step with what is left, and every milestone reached as a badge tile under its year; the badge pops in, the rings fill and the tiles rise in, all still with reduced motion, and a phone gets a full-screen sheet.
 
 ## 0.5.1 (29 Sep 2026)
 

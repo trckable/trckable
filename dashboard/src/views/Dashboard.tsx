@@ -622,7 +622,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
 
       {showInstall && <Suspense fallback={null}><Install site={site} visits={stream.visits} /></Suspense>}
-      <MilestonesSlot ms={ms} site={site} quiet={showInstall} />
+      <MilestonesSlot ms={ms} site={site} quiet={showInstall} revenue={mods === null || shows(mods, 'cards', 'revenue')} />
       {!showInstall && !isShared() && siteState(site) === 'stopped' && <StoppedNotice site={site} />}
 
       {view.test && (
