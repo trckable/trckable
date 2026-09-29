@@ -191,3 +191,24 @@ test('reduced motion: an instant switch, no transition', async ({ page }) => {
   // The pill jumps rather than slides.
   expect(await page.locator('.view-pill').evaluate((el) => parseFloat(getComputedStyle(el).transitionDuration))).toBeLessThan(0.01)
 })
+
+test('a site with no visit yet shows its install screen in Live, and the mode comes back', async ({ page }) => {
+  const domain = `nolive-${Date.now()}.example`
+  await signIn(page)
+  await page.evaluate(async (d) => {
+    await fetch('/api/v1/sites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ domain: d }) })
+  }, domain)
+  const view = page.getByRole('group', { name: 'View' })
+  // Live on a working site, then the switcher to the new one.
+  await view.getByRole('button', { name: 'Live' }).click()
+  await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible({ timeout: 15_000 })
+  await page.goto(`${API}/${domain}?view=live`)
+  await expect(page.getByText('Waiting for the first visit').first()).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('region', { name: 'Live', exact: true })).toHaveCount(0)
+  await expect(view).toHaveCount(0)
+  // Data mode shows the same screen; back on a working site, the choice is kept.
+  await page.goto(`${API}/${domain}`)
+  await expect(page.getByText('Waiting for the first visit').first()).toBeVisible()
+  await page.goto(`${API}/example.com?view=live`)
+  await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible({ timeout: 15_000 })
+})

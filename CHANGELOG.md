@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Fixed
+
+- A site that has not had its first visit shows the install screen in Live as well as in Data, on first load, when switched to from another site and on a direct address; the Live | Data switch is hidden there, and the first visit opens the dashboard in the mode you had chosen.
+
 ### Changed
 
 - Add a site is a compact dialog that is as tall as its step, a bottom sheet on a phone. The domain field cleans a pasted address (`https://www.example.com/path` becomes `example.com`), says what will be counted, flags a domain that is not valid or already added, and Enter continues. The steps are a compact row where finished ones are ticked and can be clicked to go back, and the height follows the step smoothly.
