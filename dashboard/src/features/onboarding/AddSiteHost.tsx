@@ -16,7 +16,7 @@ export function AddSiteHost({ open, sites, onSites }: { open: boolean; sites: Si
   if (!open) return null
   return (
     <Suspense fallback={null}>
-      {firstRun ? <Onboarding onClose={closeAddSite} onSites={onSites} /> : <AddWizard onClose={closeAddSite} onSites={onSites} />}
+      {firstRun ? <Onboarding onClose={closeAddSite} onSites={onSites} /> : <AddWizard onClose={closeAddSite} onSites={onSites} sites={sites} />}
     </Suspense>
   )
 }

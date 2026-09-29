@@ -63,6 +63,25 @@
 .wiz-label {
   white-space: nowrap;
 }
+.wiz-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 2px 6px 2px 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.wiz-go:hover .wiz-dot {
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.wiz-go:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 @keyframes wizin {
   from {
     opacity: 0;
@@ -85,6 +104,16 @@
   flex-direction: column;
   gap: 14px;
   animation: wizin 0.3s var(--ease) backwards;
+}
+/* fit: the height follows the step. The padding and the negative margin give
+   a focus ring room, since the box clips while it moves. */
+.step-body.fit {
+  justify-content: flex-start;
+  overflow: hidden;
+  box-sizing: content-box;
+  margin: -6px;
+  padding: 6px;
+  transition: height 0.28s var(--ease);
 }
 @media (prefers-reduced-motion: reduce) {
   .step-body {

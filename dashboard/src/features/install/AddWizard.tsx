@@ -6,7 +6,6 @@ import { useState } from 'react'
 import { DialogActions } from '../../components/DialogActions'
 import { Name } from '../../components/Logo'
 import { Modal } from '../../components/Modal'
-import { SiteMark } from '../../components/SiteMark'
 import { StepBody } from '../../components/StepBody'
 import { Steps } from '../../components/Steps'
 import { api, messageOf, type Site } from '../../lib/api'
@@ -14,6 +13,8 @@ import { openSettings } from '../../lib/settings'
 import { navigate } from '../../lib/url'
 import { useLive } from '../../lib/useLive'
 import { wizard as t } from './copy'
+import { checkDomain, cleanDomain, isAdded } from './domain'
+import { DomainStep, type Verdict } from './DomainStep'
 import { Install } from './Install'
 import './wizard.css'
 
@@ -26,34 +27,7 @@ function Title({ step, site, live }: { step: number; site: Site | null; live: bo
   return <>{t.title[step - 1]}</>
 }
 
-function DomainStep({ domain, setDomain, clean, err, onSubmit }: { domain: string; setDomain: (d: string) => void; clean: string; err: string | null; onSubmit: () => void }) {
-  return (
-    <form
-      id="wiz-domain"
-      className="wiz-domain"
-      onSubmit={(e) => {
-        e.preventDefault()
-        onSubmit()
-      }}
-    >
-      <label className="wiz-field">
-        <span className="wiz-prefix" aria-hidden="true">
-          {t.prefix}
-        </span>
-        <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder={t.placeholder} aria-label={t.domain} autoFocus required spellCheck={false} autoCapitalize="none" />
-        {clean && <SiteMark site={{ domain: clean }} size={28} />}
-      </label>
-      <span className="faint wiz-help">{t.domainHelp}</span>
-      {err && (
-        <p className="confirm-err" role="alert">
-          {err}
-        </p>
-      )}
-    </form>
-  )
-}
-
-export function AddWizard({ onClose, onSites }: { onClose: () => void; onSites: () => void }) {
+export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => void; onSites: () => void; sites?: Site[] }) {
   const [step, setStep] = useState(1)
   const [domain, setDomain] = useState('')
   const [site, setSite] = useState<Site | null>(null)
@@ -62,12 +36,21 @@ export function AddWizard({ onClose, onSites }: { onClose: () => void; onSites: 
   const stream = useLive(site?.id ?? null, noRefetch)
   const live = stream.visits.length > 0
 
+  const clean = site ? site.domain : cleanDomain(domain)
+  const checked = checkDomain(clean, site ? clean : domain)
+  const verdict: Verdict = checked === 'ok' && !site && isAdded(clean, sites.map((x) => x.domain)) ? 'added' : checked
+  const valid = verdict === 'ok' || site !== null
+  const reason = verdict === 'ok' || site ? '' : t.needs[verdict]
   const create = () => {
+    if (site) {
+      setStep(2)
+      return
+    }
     setBusy(true)
     setErr(null)
     const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
     api
-      .createSite(domain.trim())
+      .createSite(clean)
       .then((s) => api.updateSite(s.id, { timezone: zone }).catch(() => s))
       .then((s) => {
         setSite(s)
@@ -77,7 +60,6 @@ export function AddWizard({ onClose, onSites }: { onClose: () => void; onSites: 
       .catch((e: unknown) => setErr(messageOf(e)))
       .finally(() => setBusy(false))
   }
-  const clean = domain.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
   const open = () => {
     if (!site) return
     onClose()
@@ -90,7 +72,7 @@ export function AddWizard({ onClose, onSites }: { onClose: () => void; onSites: 
   }
 
   return (
-    <Modal label={t.label} className="wizard add-site" onClose={onClose}>
+    <Modal label={t.label} className="wizard add-site" onClose={onClose} keepSize={false}>
       <div className="wiz-head">
         <span className="modal-badge" aria-hidden="true">
           {step === 3 ? <Banknote size={19} strokeWidth={1.75} /> : <Globe size={19} strokeWidth={1.75} />}
@@ -102,10 +84,10 @@ export function AddWizard({ onClose, onSites }: { onClose: () => void; onSites: 
           <span className="faint">{t.sub[step - 1]}</span>
         </div>
       </div>
-      <Steps labels={t.steps} at={step - 1} done={live && step === 2 ? 1 : undefined} />
+      <Steps labels={t.steps} at={step - 1} done={live && step === 2 ? 1 : undefined} onGo={(i) => setStep(i + 1)} />
 
-      <StepBody step={step} className="wiz-step">
-        {step === 1 && <DomainStep domain={domain} setDomain={setDomain} clean={clean} err={err} onSubmit={create} />}
+      <StepBody step={step} className="wiz-step" fit>
+        {step === 1 && <DomainStep domain={site ? site.domain : domain} setDomain={setDomain} clean={clean} verdict={verdict} err={err} locked={site !== null} onSubmit={create} />}
         {step === 2 && site && <Install site={site} visits={stream.visits} variant="wizard" />}
         {step === 3 && <p className="muted wiz-revenue">{t.revenueBody}</p>}
       </StepBody>
@@ -118,7 +100,7 @@ export function AddWizard({ onClose, onSites }: { onClose: () => void; onSites: 
             </button>
           }
         >
-          <button type="submit" form="wiz-domain" className="btn primary big" disabled={busy || !clean}>
+          <button type="submit" form="wiz-domain" className="btn primary big" disabled={busy || !valid} title={reason || undefined} aria-describedby={reason ? 'wiz-status' : undefined}>
             {busy && <span className="btn-spin" aria-hidden="true" />}
             {busy ? t.adding : t.add}
           </button>
