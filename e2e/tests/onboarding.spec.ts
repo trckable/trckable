@@ -213,7 +213,9 @@ test('/settings is not a page: an owner lands on the dashboard, a viewer is neve
   const v = await ctx.newPage()
   for (const path of ['/', '/settings']) {
     await v.goto(base + path)
-    await expect(v.getByRole('button', { name: `Settings for ${verified}` })).toBeVisible({ timeout: 15_000 })
+    // The viewer lands on the site's dashboard (its switcher is there) and has no settings cog.
+    await expect(v.getByRole('button', { name: verified })).toBeVisible({ timeout: 15_000 })
+    await expect(v.getByRole('button', { name: `Settings for ${verified}` })).toHaveCount(0)
     await expect(v.getByRole('dialog', { name: 'Set up your first site' })).toHaveCount(0)
   }
   await ctx.close()

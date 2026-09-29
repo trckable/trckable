@@ -117,12 +117,14 @@ function App() {
     // Signed in at the root, or at an address that names none of this
     // person's sites (a typo, someone else's site, one since removed): their
     // main dashboard, never a page made up for an address it does not know.
-    if (boot.state === "ready" && !gated && path !== "/all" && !siteForSegment(boot.sites, path.slice(1))) {
+    // (An old /settings link that names a site is handled above: it opens that site.)
+    const oldLink = path === "/settings" && boot.state === "ready" && boot.sites.some((x) => x.id === params.get("site"));
+    if (boot.state === "ready" && !gated && !oldLink && path !== "/all" && !siteForSegment(boot.sites, path.slice(1))) {
       const to = landing(boot.sites, new URLSearchParams(location.search));
       navigate(to.path, { replace: true });
       if (to.wizard) openAddSite();
     }
-  }, [boot, path, shared, gated]);
+  }, [boot, path, shared, gated, params]);
 
   if (shared)
     return (
