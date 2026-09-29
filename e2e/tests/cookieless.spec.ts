@@ -115,7 +115,7 @@ test('new vs returning and journeys say Off, never a number', async ({ page, bro
 
   // Data & privacy says what the dashboard shows.
   await page.goto(`${API}/settings?site=${site.id}&tab=privacy`)
-  await expect(page.locator('.settings-body')).toContainText(`“${OFF}”`)
+  await expect(page.locator('.window-body')).toContainText(`“${OFF}”`)
 })
 
 test('a site with cookies still shows its numbers', async ({ page }) => {
