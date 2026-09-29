@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Milestone } from '../../lib/api'
-import { byYear, hasDot, nextLine, say } from './words'
+import { badge, byYear, hasDot, leftLine, lineOf, nearest, newest, nextLine, ringPct, say, tileLabel } from './words'
 
 const m = (o: Partial<Milestone>): Milestone => ({ kind: 'visitors', step: '1000', value: 1000, day: '2026-09-21', created_at: 0, new: false, shared: false, ...o })
 
@@ -25,5 +25,31 @@ describe('milestone words', () => {
     expect(hasDot([a, b], 100, b)).toBe(true)
     expect(hasDot([a, b], 250, b)).toBe(false)
     expect(hasDot([a], 300, null)).toBe(false)
+  })
+  it('picks the newest reached: latest day, then latest stored', () => {
+    const a = m({ day: '2026-09-21', created_at: 5 })
+    const b = m({ kind: 'countries', step: '10', day: '2026-09-28', created_at: 1 })
+    const c = m({ kind: 'pageviews', step: '100', day: '2026-09-28', created_at: 9 })
+    expect(newest([a, b, c])).toBe(c)
+    expect(newest([])).toBeNull()
+  })
+  it('writes the ring as a whole percent and what is left', () => {
+    expect(ringPct({ step: 1000, now: 453.7 })).toBe(45)
+    expect(ringPct({ step: 1000, now: 0 })).toBe(0)
+    expect(ringPct({ step: 1000, now: 999.9 })).toBe(99)
+    expect(leftLine({ kind: 'visitors', step: 1000, now: 453 })).toBe('547 to go')
+    expect(leftLine({ kind: 'revenue', step: 100, now: 0, currency: 'USD' })).toBe('no sale yet')
+    expect(leftLine({ kind: 'revenue', step: 100, now: 40, currency: 'USD' })).toBe('$60 to go')
+    expect(nearest([{ kind: 'visitors', step: 1000, now: 100 }, { kind: 'countries', step: 25, now: 14 }])?.kind).toBe('countries')
+  })
+  it('keeps revenue amounts out until Show amount is on', () => {
+    const r = m({ kind: 'revenue', step: '1000', value: 1000, currency: 'USD' })
+    expect(badge(r)).toBe('')
+    expect(tileLabel(r)).toBe('Revenue milestone')
+    expect(lineOf(r)).not.toContain('$')
+    const shown = { ...r, amount: true }
+    expect(badge(shown)).toBe('$1,000')
+    expect(lineOf(shown)).toContain('$1,000')
+    expect(badge(m({ kind: 'first_sale', value: 1 }))).toBe('1st')
   })
 })

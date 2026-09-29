@@ -21,78 +21,6 @@
 .ms-head h2 {
   margin: 0;
 }
-.ms-list,
-.ms-list ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.ms-list {
-  display: flex;
-  flex-direction: column;
-  max-height: min(60vh, 560px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-.ms-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 12px;
-  border-top: 1px solid var(--border);
-}
-.ms-list > .ms-row:first-child {
-  border-top: 0;
-}
-.ms-row.next {
-  opacity: 0.55;
-}
-.ms-ic {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-.ms-row.money .ms-ic {
-  background: color-mix(in srgb, var(--money) 14%, transparent);
-  color: var(--money);
-}
-.ms-row.next .ms-ic {
-  background: var(--row, var(--surface-2));
-  color: var(--text-2);
-}
-.ms-t {
-  flex: 1;
-  min-width: 0;
-}
-.ms-t b {
-  font-family: var(--mono);
-}
-.ms-row.money .ms-t b {
-  color: var(--money);
-}
-.ms-d {
-  color: var(--text-2);
-  font: 12px var(--mono);
-}
-.ms-acts {
-  display: flex;
-  gap: 4px;
-}
-.ms-year {
-  display: block;
-  padding: 6px 12px;
-  border-top: 1px solid var(--border);
-  background: var(--sunken, var(--bg));
-  color: var(--text-2);
-  font: 600 12px var(--mono);
-}
 .ms-card {
   display: block;
   width: 100%;
@@ -126,12 +54,4 @@
   .ms-sheet {
     grid-template-columns: 1fr;
   }
-  .ms-d {
-    display: none;
-  }
-}
-.ms-acts .btn {
-  height: 28px;
-  padding: 0 9px;
-  font-size: 12px;
 }
