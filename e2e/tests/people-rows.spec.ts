@@ -64,7 +64,8 @@ test('the sites popover ticks, searches and saves at once', async ({ page }) => 
   await pop.getByLabel('Find a site').fill(`rows-b-${tag}`)
   await expect(boxes).toHaveCount(1)
   await pop.getByLabel('Find a site').fill('')
-  await expect(boxes).toHaveCount(all)
+  // Every site is back (other specs may have added more meanwhile).
+  await expect.poll(() => boxes.count()).toBeGreaterThanOrEqual(all)
 
   // All sites: no limit again.
   await pop.getByRole('button', { name: 'All sites' }).click()
