@@ -1,12 +1,13 @@
 // The Data view's second row. A wide screen: Live/Data on the left, two
-// capsules on the right (what you see: period, comparison, Filter; what you
-// do: Share, ⋯), the filters in force as chips under the row. A phone: one
+// capsules on the right (what you see: period, comparison, Filter, and the
+// fold toggle at the end; what you do: Share, ⋯), the filters in force as chips under the row. A phone: one
 // line, a pill that says what the numbers are and opens a sheet, and ⋯.
 // The parts come in as nodes: what they show and do is theirs.
 import type { ReactNode } from 'react'
 import { ViewSwitch } from '../live/ViewSwitch'
 import { isShared } from '../../lib/me'
 import { PhoneRow, type PhoneProps } from './PhoneRow'
+import { FoldToggle } from './FoldToggle'
 import { useRowCollapsed } from './rowCollapsed'
 import './ControlRow.css'
 
@@ -35,6 +36,8 @@ export function ControlRow(p: Props) {
               {p.period}
               {p.filter && <span className="ctl-div" />}
               {p.filter}
+              <span className="ctl-div" />
+              <FoldToggle value={p.value} today={p.today} filters={p.active.length} />
             </div>
             <div className="ctl-cap ctl-do">
               {p.share}
