@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.5.3 (29 Sep 2026)
+
 ### Changed
 
 - The chart's cursor is a quiet dashed line in the series colour from the top to the axis, with a date pill under it and a haloed point that eases from bucket to bucket; Live's line chart matches.
