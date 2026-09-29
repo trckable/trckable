@@ -337,10 +337,17 @@ html {
   background: var(--surface-2);
 }
 
-/* Filter sits in the period row, right before the period. */
+/* Filter sits in the period row, on the right, right before the period. */
 .filter-root {
   position: relative;
   flex: none;
+  margin-left: auto;
+}
+.subbar > .toolbar-filters + .filter-root {
+  margin-left: 0;
+}
+.subbar > .filter-root + .range-picker.quiet {
+  margin-left: 0;
 }
 .subbar .btn.filter {
   height: 36px;
