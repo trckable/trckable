@@ -44,10 +44,13 @@ import { FullGrid } from '../features/fullcharts/FullGrid'
 import { CreateMenu } from '../features/create/CreateMenu'
 import { MoreMenu } from '../components/MoreMenu'
 import { downloadCsv } from '../lib/download'
+import { ControlRow } from '../features/header/ControlRow'
+import { savedViews } from '../components/panelOpen'
+import { FilterRowHost } from '../features/header/FilterRowHost'
+import { SaveViewHost } from '../features/header/SaveViewHost'
 import { HeaderTools, ShareButton } from '../features/header/HeaderTools'
 import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
 import { useMilestones } from '../features/milestones/useMilestones'
-import { ViewSwitch } from '../features/live/ViewSwitch'
 import { filterFrom } from '../features/journey/filterFrom'
 
 // Full mode's extra views live in their own chunk: Core never loads them.
@@ -62,8 +65,6 @@ const NoteDialog = lazy(() => import('../components/NoteDialog').then((m) => ({ 
 // Full mode's live card, the save-view dialog and Live mode: each its own
 // chunk, loaded when shown.
 const FullCharts = lazy(() => import('../features/fullcharts/FullCharts')) // Full mode's chart grid: its own chunk
-const FilterRow = lazy(() => import('../features/header/FilterRow')) // only with filters or saved views
-const SaveViewDialog = lazy(() => import('../components/SaveViewDialog').then((m) => ({ default: m.SaveViewDialog })))
 const JourneyDialog = lazy(() => import('../features/journey/JourneyDialog').then((m) => ({ default: m.JourneyDialog })))
 const ScrollDepth = lazy(() => import('./ScrollDepth').then((m) => ({ default: m.ScrollDepth }))) // Pages → Scroll: Full only
 
@@ -517,6 +518,12 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     return trailData && dim === 'channel' ? (cur?.dims.channel ?? []) : dims(dim)
   }
 
+  const clearFilters = () => setView({ filters: [] })
+  const rowProps = {
+    filters: view.filters, dimLabel: (dim: string) => DIM_LABEL[dim] ?? dim, valueLabel: filterLabel, onRemove: removeFilter, onClear: clearFilters, onSave: saveView,
+    views: isShared() ? undefined : { list: segments, current, onOpen: openView, onRename: renameView, onDelete: removeView },
+  }
+
   // The mode is a property of the page, not of one card: everything from grid
   // density to card padding follows it.
   useEffect(() => {
@@ -546,65 +553,42 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         {!liveView && !waiting && <CreateMenu pages={dims('entry_page')} goals={src?.goals ?? []} modules={mods} onGoal={() => setAddGoals(true)} onNote={() => setNoteFor(view.day ?? today)} onFunnel={(f) => setView({ mode: 'full', funnel: f })} />}
       </div>
 
-      {/* The second row: what the numbers are. Live/Data on the left, where
-          it stays put; filters in force and saved views after it; the period
-          on the right (Live drops only the period). Before the first visit
-          there is nothing to switch or date, so the row waits too. */}
-      {!waiting && <div className="subbar">
-        {!isShared() && <ViewSwitch live={liveView} />}
-        {!liveView && (view.filters.length > 0 || (!isShared() && segments.length > 0)) && (
-          <Suspense fallback={null}>
-            <FilterRow
-              filters={view.filters}
-              dimLabel={(dim) => DIM_LABEL[dim] ?? dim}
-              valueLabel={filterLabel}
-              onRemove={removeFilter}
-              onClear={() => setView({ filters: [] })}
-              onSave={saveView}
-              views={isShared() ? undefined : { list: segments, current, onOpen: openView, onRename: renameView, onDelete: removeView }}
-            />
-          </Suspense>
-        )}
-        {!liveView && (
-          <>
-            {!isShared() && <FilterMenu rows={dims} labelFor={filterLabel} active={view.filters} onPick={addFilter} onRemove={removeFilter} onClear={() => setView({ filters: [] })} />}
-            <DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone}
-              bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />
-            {!isShared() && <ShareButton onShare={() => setSharing(true)} />}
+      {/* The second row: Live/Data on the left, the period and filter and
+          ⋯ on the right (Live drops all but the switch). Before the first
+          visit there is nothing to switch or date, so the row waits too. */}
+      {!waiting && (
+        <ControlRow
+          live={liveView}
+          phone={narrow}
+          value={pickerValue}
+          today={today}
+          onChange={onPicker}
+          active={view.filters.map((f) => ({ key: f.dim + f.value, dim: DIM_LABEL[f.dim] ?? f.dim, value: filterLabel(f.dim, f.value), remove: () => removeFilter(f) }))}
+          under={(view.filters.length > 0 || !!rowProps.views?.list.length) && <FilterRowHost {...rowProps} onlyViews={narrow} />}
+          filter={!isShared() && <FilterMenu rows={dims} labelFor={filterLabel} active={view.filters} onPick={addFilter} onRemove={removeFilter} onClear={clearFilters} />}
+          period={<DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone} filters={view.filters.length}
+            bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />}
+          share={!isShared() && !narrow && <ShareButton onShare={() => setSharing(true)} />}
+          more={
             <MoreMenu
               full={full}
               onSettings={narrow && canChange() ? () => openSettings(site) : undefined}
+              onShare={narrow && !isShared() ? () => setSharing(true) : undefined}
+              onViews={narrow && !isShared() && segments.length > 0 ? () => savedViews.set(true) : undefined}
               milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
               onMode={(m) => setView({ mode: m })} onRefresh={reloadNow}
               onExport={() => downloadCsv(site.id, query)}
             />
-          </>
-        )}
-      </div>}
+          }
+        />
+      )}
 
       {liveView && (
         <LiveSlot key={site.id} site={site.id} timezone={site.timezone} cookieless={site.cookieless} stream={stream} onVisitor={journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined} />
       )}
       {!liveView && <>
       {sharing && <Suspense fallback={null}><ShareDialog site={site} sites={sites} onClose={() => setSharing(false)} /></Suspense>}
-      {naming && (
-        <Suspense fallback={null}>
-        <SaveViewDialog
-          filters={view.filters.length}
-          onClose={() => setNaming(false)}
-          onSave={(name) =>
-            api
-              .saveSegment(site.id, name, current)
-              .then(() => {
-                toast(`Saved "${name}"`)
-                loadSegments()
-                setNaming(false)
-              })
-              .catch((e: unknown) => toast(messageOf(e), 'error'))
-          }
-        />
-        </Suspense>
-      )}
+      {naming && <SaveViewHost site={site.id} filters={view.filters.length} query={current} onClose={() => setNaming(false)} onSaved={loadSegments} />}
 
       {error && (
         <div className="banner" role="alert">

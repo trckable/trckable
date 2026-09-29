@@ -1,0 +1,136 @@
+/* The phone's sheet (PhoneSheet.tsx): a bottom sheet over the dimmed page.
+   Modal's own centring and pop-in give way to it. */
+.modal-back:has(> .row-sheet) {
+  place-items: end center;
+  padding: 0;
+}
+.modal.row-sheet {
+  width: 100%;
+  max-height: 88dvh;
+  border-radius: 20px 20px 0 0;
+  border-bottom: 0;
+  padding: 0 16px calc(16px + env(safe-area-inset-bottom));
+  gap: 0;
+  animation: sheet-up 0.22s ease-out both;
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal.row-sheet {
+    animation: none;
+  }
+}
+.sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sheet-grab {
+  align-self: stretch;
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 4px;
+  touch-action: none;
+  cursor: grab;
+}
+.sheet-grab span {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-2);
+}
+.row-sheet .view-switch {
+  width: 100%;
+  border-radius: 12px;
+}
+.row-sheet .view-switch button {
+  height: 34px;
+}
+.sheet-quick {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.sheet-quick button {
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-2);
+  font: 400 13px var(--font);
+  cursor: pointer;
+}
+.sheet-quick button[aria-pressed='true'] {
+  border-color: var(--text);
+  color: var(--text);
+  font-weight: 600;
+}
+.sheet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: 400 13px var(--font);
+  text-align: left;
+  cursor: pointer;
+}
+.sheet-val {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-2);
+}
+.sheet-filters {
+  align-items: flex-start;
+  cursor: default;
+  padding-top: 6px;
+}
+.sheet-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+}
+.sheet-chips .chip button {
+  display: inline-grid;
+  place-items: center;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.sheet-chips .filter-root {
+  position: static;
+  margin: 0;
+}
+.sheet-chips .btn.filter {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px dashed var(--border-2);
+  color: var(--text-2);
+  font-size: 13px;
+}
+.btn.sheet-done {
+  height: 44px;
+  justify-content: center;
+  border: 0;
+  border-radius: 12px;
+  background: var(--text);
+  color: var(--surface);
+  font-weight: 600;
+  font-size: 14px;
+}

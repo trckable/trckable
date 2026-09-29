@@ -5,7 +5,7 @@ import { ActiveFilters } from '../../components/ActiveFilters'
 import { SavedViews } from '../../components/SavedViews'
 import type { Filter, Segment } from '../../lib/api'
 import { channelColor } from '../../lib/palette'
-import { copy } from './copy'
+import { rowCopy } from './rowCopy'
 
 export interface FilterRowProps {
   filters: Filter[]
@@ -14,6 +14,8 @@ export interface FilterRowProps {
   onRemove: (f: Filter) => void
   onClear: () => void
   onSave: () => void
+  /** A phone: the saved views alone, in ⋯ (the chips are in the sheet). */
+  onlyViews?: boolean
   /** Absent on a shared link: it has no saved views. */
   views?: {
     list: Segment[]
@@ -46,9 +48,11 @@ export default function FilterRow(p: FilterRowProps) {
   }))
   return (
     <>
-      <div className="toolbar-filters" role={on ? 'group' : undefined} aria-label={on ? copy.active : undefined}>
-        <ActiveFilters filters={shown} onRemove={p.onRemove} onClear={p.onClear} onSave={p.onSave} />
-      </div>
+      {!p.onlyViews && (
+        <div className="toolbar-filters" role={on ? 'group' : undefined} aria-label={on ? rowCopy.active : undefined}>
+          <ActiveFilters filters={shown} onRemove={p.onRemove} onClear={p.onClear} onSave={p.onSave} />
+        </div>
+      )}
       {p.views && (
           <SavedViews
             views={p.views.list}

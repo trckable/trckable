@@ -20,6 +20,10 @@ export interface MoreProps {
   onSettings?: () => void
   onMode: (m: 'core' | 'full') => void
   onRefresh: () => void
+  /** A phone: Share is the menu's first item, not a button in the row. */
+  onShare?: () => void
+  /** A phone, with saved views: an item that opens their list. */
+  onViews?: () => void
   onExport: () => void
   /** The milestones timeline; dot: something new in it. Absent while off. */
   milestones?: { open: () => void; dot: boolean }

@@ -1,5 +1,6 @@
 // The ⋯ menu's items (MoreMenu.tsx). Its own chunk, so the first load carries only the button.
-import { Cog, Download, Flag, Maximize2, Minimize2, Plus, RefreshCw } from 'lucide-react'
+import { Bookmark, Cog, Download, Flag, Maximize2, Minimize2, Plus, RefreshCw, Share2 } from 'lucide-react'
+import { openedFrom } from './panelOpen'
 import type { MenuItems } from '../lib/headerMenu'
 import { caps, keyFor } from '../lib/keys'
 import { isShared } from '../lib/me'
@@ -16,6 +17,22 @@ function Kbd({ id }: { id: string }) {
 export default function MoreItems({ p, go }: { p: MoreProps & { onCreate?: () => void }; go: Parameters<MenuItems>[0] }) {
   return (
     <>
+      {p.onShare && (
+        <button type="button" role="menuitem" onClick={go(p.onShare)}>
+          <Share2 size={18} strokeWidth={1.75} aria-hidden="true" />
+          {copy.share}
+        </button>
+      )}
+      {p.onViews && (
+        <button type="button" role="menuitem" // go() has just put focus on ⋯: that is where it comes back to.
+          onClick={go(() => {
+            openedFrom(document.activeElement as HTMLElement)
+            p.onViews?.()
+          })}>
+          <Bookmark size={18} strokeWidth={1.75} aria-hidden="true" />
+          {copy.views}
+        </button>
+      )}
       <button type="button" role="menuitem" onClick={go(p.onRefresh)}>
         <RefreshCw size={18} strokeWidth={1.75} aria-hidden="true" />
         {copy.refresh}

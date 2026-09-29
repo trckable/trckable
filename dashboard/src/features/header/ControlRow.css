@@ -1,0 +1,189 @@
+/* ---- The control row: two capsules -------------------------------------------
+   What you see (period, comparison, Filter) and what you do (Share, ⋯). The
+   period's popover and the filter menu hang under the first capsule, so both
+   wrappers inside it are static and the capsule is the anchor. */
+.ctl-cap.ctl-see {
+  margin-left: auto;
+}
+.ctl-cap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: none;
+  height: 38px;
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.ctl-cap .btn {
+  height: 36px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.ctl-cap .btn:hover:not(:disabled),
+.ctl-cap .btn[aria-expanded='true']:not(.fold-toggle) {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.ctl-div {
+  flex: none;
+  width: 1px;
+  height: 18px;
+  background: var(--border-2);
+}
+
+/* The period: ‹ label dates › */
+.subbar .range-picker.quiet {
+  display: contents;
+}
+.ctl-cap .btn.step {
+  width: 32px;
+}
+.ctl-cap .btn.range {
+  padding: 0 10px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 14px;
+}
+.range-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.range-icon {
+  color: var(--text-2);
+}
+.range-dates {
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.ctl-cap .btn.compare {
+  padding: 0 8px 0 12px;
+}
+.ctl-cap .filter-root {
+  position: static;
+  display: flex;
+}
+
+/* What you do. */
+.ctl-cap .more {
+  position: static;
+}
+.ctl-do .more-menu {
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 220px;
+  z-index: 40;
+}
+.ctl-cap .range-pop,
+.ctl-cap .filter-pop {
+  top: calc(100% + 4px);
+  right: 0;
+}
+
+/* The filters in force stay chips, under the row. */
+.ctl-under {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Folded to its pill: the arrows, dates, comparison and Filter go, and the
+   toggle shows the period and how many filters. Unfolding grows them back. */
+.ctl-cap .fold-toggle {
+  width: 32px;
+  padding: 0;
+  justify-content: center;
+  color: var(--text-3);
+}
+.ctl-see.collapsed .fold-toggle {
+  width: auto;
+  padding: 0 12px 0 8px;
+  color: var(--text);
+  font-size: 13px;
+}
+.ctl-see.collapsed > :not(.range-picker),
+.ctl-see.collapsed .range-picker > :not(.fold-toggle) {
+  display: none;
+}
+.ctl-see:not(.collapsed) .range-picker > :is(button:not(.fold-toggle), span) {
+  animation: ctl-grow 0.18s ease-out;
+}
+@keyframes ctl-grow {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ctl-see * {
+    animation: none !important;
+  }
+}
+
+/* Tablet: the dates, Filter's word and the comparison (it is in the period's popover) give way. */
+@media (max-width: 960px) {
+  .ctl-cap .range-dates,
+  .ctl-cap .btn.filter .filter-label,
+  .ctl-cap .ctl-cmp {
+    display: none;
+  }
+}
+
+/* ---- The phone's row: one line ------------------------------------------- */
+.phone-row {
+  min-height: 40px;
+  margin-top: -6px;
+}
+.phone-pill {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font: 400 14px var(--font);
+  cursor: pointer;
+}
+.phone-row .filter-root > .btn,
+.phone-row .sv-btn {
+  display: none;
+}
+.phone-pill b {
+  font-weight: 600;
+}
+.phone-pill > * {
+  white-space: nowrap;
+}
+.phone-pill svg {
+  margin-left: auto;
+  color: var(--text-3);
+}
+.phone-pill .pill-note {
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pill-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.phone-row .ctl-cap {
+  height: 40px;
+}
