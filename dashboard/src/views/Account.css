@@ -26,7 +26,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
   padding: 16px 18px 0;
   background: var(--surface);
   border-bottom: 1px solid var(--grid);
@@ -34,20 +33,34 @@
 .account-who {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   flex: 1;
   min-width: 0;
-  font-size: 14px;
 }
-.account-title {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.account-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.account-name b {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-role {
+  flex: none;
+  line-height: 1.5;
+}
+.account-email {
+  font-size: 13px;
   color: var(--text-3);
-}
-.account-who .faint {
-  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .account-head .tabs {
   flex-basis: 100%;
@@ -507,14 +520,6 @@
   font-size: 13.5px;
   overflow-wrap: anywhere;
 }
-.me-meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 4px;
-  font-size: 12px;
-}
 .me-actions {
   display: flex;
   gap: 6px;
@@ -549,9 +554,6 @@
   }
   .me-actions .btn:first-child {
     flex: 1;
-  }
-  .me-meta .faint {
-    display: none;
   }
   .srow.acct-line {
     display: grid;
@@ -653,4 +655,9 @@
   .account-nav button {
     flex: none;
   }
+}
+/* The role pill: outlined, so the green text keeps its contrast in light. */
+.account-role.on {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--up) 35%, transparent);
 }

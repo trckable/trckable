@@ -2,7 +2,6 @@ import { Activity, Bell, Blocks, Check, ChevronLeft, ChevronRight, CircleCheck, 
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { isViewer } from '../lib/me'
 import { api, messageOf, siteState, type InstallCheck, type Site, type SiteState } from '../lib/api'
-import { navigate, useLocation } from '../lib/url'
 import { Modal } from '../components/Modal'
 import { SiteMark } from '../components/SiteMark'
 import { Info } from '../components/Info'
@@ -25,7 +24,7 @@ import { SearchSettings } from './Search'
 import { MODULE_WHY, moduleOf } from './settingsModules'
 import { NotesSettings } from '../features/notes/NotesSettings'
 import { MilestonesSetting } from '../features/milestones/MilestonesSetting'
-import { DeleteSite, SitesSettings } from './Sites'
+import { DeleteSite } from './Sites'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import './Settings.css'
 
@@ -396,49 +395,6 @@ function agoText(ts: number): string {
   if (s < 86400) return `${Math.round(s / 3600)} h ago`
   const d = Math.round(s / 86400)
   return d === 1 ? 'a day ago' : `${d} days ago`
-}
-
-/** The page form, kept for an instance with no site yet: there is no
- *  dashboard to open a dialog over, only the list to add the first one. */
-export function Settings(p: { sites: Site[]; site: Site | null; onSites: () => void; header: React.ReactNode }) {
-  const site = p.site ?? p.sites[0] ?? null
-  const { params } = useLocation()
-  const tab = TABS.find((t) => t.id === params.get('tab'))?.id ?? 'site'
-  const go = (id: TabID) => navigate(`/settings?site=${encodeURIComponent(site?.id ?? '')}&tab=${id}`)
-
-  return (
-    <>
-      <div className="header">
-        {p.header}
-        <h1 style={{ fontSize: 18 }}>Settings</h1>
-        <div className="spacer" />
-        {site && (
-          <button type="button" className="btn back" onClick={() => navigate('/' + encodeURIComponent(site.domain))} title="Back to dashboard" aria-label="Back to dashboard">
-            <span aria-hidden="true">←</span>
-            <span className="label">Back to dashboard</span>
-          </button>
-        )}
-      </div>
-
-      <div className="settings">
-        <nav className="settings-nav" aria-label="Settings sections">
-          <span className="nav-group">{site ? site.domain : 'This site'}</span>
-          {TABS.map((t) => (
-            <button key={t.id} type="button" aria-current={tab === t.id} onClick={() => go(t.id)} disabled={!site}>
-              <NavIcon d={t.icon} />
-              {t.label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="settings-body">
-          {!site && <SitesSettings sites={p.sites} onSites={p.onSites} />}
-          {/* The same sections as the dialog, so the two never drift apart. */}
-          {site && <SettingsSection tab={tab} site={site} onSites={p.onSites} />}
-        </div>
-      </div>
-    </>
-  )
 }
 
 /** "Saved" that fades away, so a save needs no button and no banner. */

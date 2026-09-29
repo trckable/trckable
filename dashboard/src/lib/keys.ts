@@ -11,7 +11,7 @@ export type Action = { id: string; label: string; group: Group; def: string }
 // Presets carry their own default keys (lib/dates.ts); the rest are listed here.
 export const ACTIONS: Action[] = [
   { id: 'shortcuts', label: 'This list', group: 'around', def: '?' },
-  { id: 'ask', label: 'Ask trckable', group: 'around', def: 'mod+k' },
+  { id: 'ask', label: 'Peek', group: 'around', def: 'mod+k' },
   { id: 'mode', label: 'Core ↔ Full', group: 'around', def: 'f' },
   { id: 'live', label: 'Live ↔ Data', group: 'around', def: 'l' },
   // C is Compare's, so Create answers to A (add).

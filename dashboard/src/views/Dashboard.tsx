@@ -3,7 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { BarList, type BarItem } from '../charts/BarList'
 import { TimeChart, type Pulse } from '../charts/TimeChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
-import { api, cachedReport, dropReports, exportURL, messageOf, showsInstall, siteState, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
+import { api, cachedReport, dropReports, messageOf, showsInstall, siteState, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
 import { compareLabel, diffDays, fmtDay, setWeekStart, todayIn, type Range } from '../lib/dates'
 import { countryName, delta, flag, fmtDuration, fmtInt, fmtMoney, fmtPct } from '../lib/format'
 import { journeysOn, newShare, newShareShort, newVsReturning } from '../features/cookieless/labels'
@@ -11,7 +11,7 @@ import { unconvertedNote } from '../lib/money'
 import { channelColor, channelLabel } from '../lib/palette'
 import { navigate, readView, setView, useLocation } from '../lib/url'
 import { queryOf, rangeOf } from '../lib/dashQuery'
-import { isShared, isViewer, sharedModules } from '../lib/me'
+import { canAsk, canChange, isShared, isViewer, sharedModules } from '../lib/me'
 import { openSettings } from '../lib/settings'
 import { isOn, shows } from '../lib/modules'
 import { FilterMenu } from '../components/FilterMenu'
@@ -27,12 +27,14 @@ import { KpiTile } from '../features/overview/KpiTile'
 import { ChartHead } from '../features/overview/ChartHead'
 import { ReplayButton, ScrubBar } from '../features/overview/Replay'
 import { useReplayTimer, useSpeed } from '../features/overview/useReplay'
-import { useHourRace, useRaceKpis, useRaceRows, RACE_DIMS } from '../features/overview/useRace'
+import { useRaceNow, useRaceRows, RACE_DIMS } from '../features/overview/useRace'
+import { replaySeconds, speedOf } from '../features/overview/replayTime'
 import { firstVisitAt, hourIn, hourlySpan } from '../features/overview/firstVisit'
 import { hourDetail } from '../features/overview/hourDetail'
 import { LiveSlot } from '../features/live/liveChunk'
 import { OnlineKpi } from '../features/live/OnlineKpi'
 import { entryCopy } from '../features/live/entryCopy'
+import { liveShown } from '../features/live/liveShown'
 import { useNotes } from '../features/notes/useNotes'
 import { jump } from '../features/notes/jump'
 import { Behaviour } from '../features/behaviour/Behaviour'
@@ -40,6 +42,8 @@ import { NoteBar } from '../features/notes/NoteBar'
 import { Loading } from '../components/loading/Loading'
 import { FullGrid } from '../features/fullcharts/FullGrid'
 import { CreateMenu } from '../features/create/CreateMenu'
+import { MoreMenu } from '../components/MoreMenu'
+import { downloadCsv } from '../lib/download'
 import { HeaderTools } from '../features/header/HeaderTools'
 import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
 import { useMilestones } from '../features/milestones/useMilestones'
@@ -101,8 +105,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const today = todayIn(site.timezone)
   const range: Range = useMemo(() => rangeOf(view, today), [view.period, view.from, view.to, today]) // eslint-disable-line react-hooks/exhaustive-deps -- view is new each render: keyed by the fields the range reads
   const full = view.mode === 'full'
-  // A shared link has no stream, so no Live: it always shows Data.
-  const liveView = !!view.live && !isShared()
 
   // Current and previous period come in one request (lib/dashQuery.ts).
   const compareOn = view.compare !== 'none'
@@ -152,6 +154,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   }, [mayBeNew, everTracked, site.id])
   const showInstall = showsInstall({ site, hasData, filtered: view.filters.length > 0, everTracked })
   const waiting = showInstall && stream.visits.length === 0
+  const liveView = liveShown({ wanted: !!view.live, shared: isShared(), waiting }) // Data on a shared link, the install screen first
   const [mods, setMods] = useState<Partial<Record<string, boolean>> | null>(() => (isShared() ? sharedModules() : null))
   useEffect(() => {
     if (mods) return
@@ -225,7 +228,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const notesOn = shows(mods, 'cards', 'notes') && (!isShared() || isOn(mods, 'notes'))
   // The Ask button follows its module: off means the entry point is gone too.
   // Ask is the MCP tools and an optional key, not a module: there is nothing to switch off.
-  const askOn = !isShared()
+  const askOn = canAsk()
   const sample = useSample(site, range.from, range.to, waiting)
   const data = waiting ? sample : real
 
@@ -314,7 +317,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const [playing, setPlaying] = useState(false)
   const [story, setStory] = useState<'off' | 'on' | 'end'>('off')
   const [stops, setStops] = useState<number[]>([]) // the story's moments: reduced motion steps through them
-  const [speed, pickSpeed] = useSpeed()
+  const [speed, pickSpeed] = useSpeed(playing)
   // By the hour, the point playing is the page's own: a day in the address would redraw the chart by day.
   const [hourAt, setHourAt] = useState<number | null>(null)
   const setDayIdx = useCallback(
@@ -336,7 +339,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // ---- keyboard: ⌘K opens Ask, F toggles Core/Full, Esc clears scrub ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (pressed(e, 'ask')) {
+      if (askOn && pressed(e, 'ask')) {
         e.preventDefault()
         setAskOpen((o) => !o)
         return
@@ -347,7 +350,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [full, view.day])
+  }, [full, view.day, askOn])
 
   const [metric, setMetric] = useState<'visitors' | 'pageviews'>('visitors')
 
@@ -403,10 +406,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const telling = story === 'on'
   const racing = telling && scrubbing
   const raceTo = racing ? scrubIdx : -1
-  const raceK = useRaceKpis(src, raceTo)
   let k: KPIs | undefined = src?.kpis
-  if (raceK) k = raceK.kpis
-  else if (scrubbing) k = day?.kpis ?? zeroKPIs
+  if (scrubbing) k = day?.kpis ?? zeroKPIs
   // Nothing at all before: no change to show, not "new" on every tile.
   const hasPrev = !scrubbing && !trailData && (data?.previous?.kpis.sessions ?? 0) > 0
   const pk = hasPrev ? data?.previous?.kpis : undefined
@@ -427,8 +428,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const pm = hasPrev ? data?.previous?.money : undefined
   const fmtM = (minor: number) => (money ? fmtMoney(minor, money.currency, money.exponent) : '')
   let dayRev: number | undefined
-  if (raceK) dayRev = raceK.revenue
-  else if (scrubbing) dayRev = day?.money?.revenue ?? 0
+  if (scrubbing) dayRev = day?.money?.revenue ?? 0
 
   // ---- chart ----
   const series = cur?.series ?? []
@@ -461,13 +461,14 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const nowHour = hourIn(site.timezone)
   const chartSeries = hours ? hours.current.series.filter((p) => p.t.slice(0, 13) <= nowHour) : shown
   const values = chartSeries.map((p) => p[metric])
-  const hourK = useHourRace(chartSeries, telling && hours ? hourAt : null, src?.kpis)
-  if (hourK) [k, dayRev] = [hourK.kpis, hourK.revenue]
+  const { raced, follow } = useRaceNow({ src, dates: shown.map((p) => p.t.slice(0, 10)), hourSeries: chartSeries, hours: !!hours, hourAt, idx: scrubIdx - fv, telling, racing, playing })
+  if (raced) [k, dayRev] = [raced.kpis, raced.revenue]
   const revenueNow = dayRev ?? money?.revenue
   const conv = scrubbing ? undefined : money?.conversion
   const soFarRpv = k?.visitors ? (dayRev ?? 0) / k.visitors : 0
-  const rpv = scrubbing || hourK ? soFarRpv : money?.revenue_per_visitor
-  useReplayTimer({ playing, speed, first: hours ? 0 : fv, n: hours ? chartSeries.length : series.length, at: hours ? (hourAt ?? -1) : scrubIdx, step: hours ? setHourAt : setDayIdx, done: () => {
+  const rpv = scrubbing || raced ? soFarRpv : money?.revenue_per_visitor
+  const replayPoints = hours ? chartSeries.length : series.length - fv
+  const settle = useReplayTimer({ playing, secs: replaySeconds(replayPoints, speedOf(speed).secs), first: hours ? 0 : fv, n: hours ? chartSeries.length : series.length, at: hours ? (hourAt ?? -1) : scrubIdx, step: hours ? setHourAt : setDayIdx, done: () => {
     setPlaying(false)
     setStory('end')
   }, stops: stops.map((i) => i + (hours ? 0 : fv)) })
@@ -533,33 +534,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         <HeaderTools
           live={liveView}
           waiting={waiting}
-          full={full}
-          onSettings={narrow && !isShared() ? () => openSettings(site) : undefined}
           askOpen={askOpen}
           onAsk={() => setAskOpen(true)}
           onShare={() => setSharing(true)}
-          milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
-          onMode={(m) => setView({ mode: m })}
-          onRefresh={reloadNow}
-          // A download, not a fetch: the browser writes the file, names it
-          // from the header, and nothing has to be held in memory here.
-          onExport={() => {
-            const a = document.createElement('a')
-            a.href = exportURL(site.id, query)
-            a.download = ''
-            a.click()
-            toast('Building your file…')
-          }}
-          filter={!liveView && !isShared() && (
-            <FilterMenu
-              rows={dims}
-              labelFor={filterLabel}
-              active={view.filters}
-              onPick={addFilter}
-              onRemove={removeFilter}
-              onClear={() => setView({ filters: [] })}
-            />
-          )}
           extra={trail && trailData && (
             <button type="button" className="chip" style={{ borderColor: channelColor(trail) }} title={`Following ${channelLabel(trail)}: click to keep`} onClick={() => addFilter('channel', trail)}>
               <span className="dot" style={{ background: channelColor(trail) }} />
@@ -590,8 +567,18 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           </Suspense>
         )}
         {!liveView && (
-          <DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone}
-            bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />
+          <>
+            {!isShared() && <FilterMenu rows={dims} labelFor={filterLabel} active={view.filters} onPick={addFilter} onRemove={removeFilter} onClear={() => setView({ filters: [] })} />}
+            <DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone}
+              bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />
+            <MoreMenu
+              full={full}
+              onSettings={narrow && canChange() ? () => openSettings(site) : undefined}
+              milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
+              onMode={(m) => setView({ mode: m })} onRefresh={reloadNow}
+              onExport={() => downloadCsv(site.id, query)}
+            />
+          </>
         )}
       </div>}
 
@@ -656,18 +643,18 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           top, the chart under them — they are one story, not two cards. */}
       <section className="card overview" aria-label="Overview">
       <div role="group" aria-label="Key numbers" className={money ? 'kpis money' : 'kpis'}>
-        <KpiTile loading={firstLoad} vs={vs} label="Visitors" icon={Users} spark={chartSeries.map((p) => p.visitors)} value={k?.visitors} fmt={fmtInt} d={delta(k?.visitors ?? 0, pk?.visitors)} pressed={metric === 'visitors'} onClick={() => setMetric('visitors')} />
+        <KpiTile loading={firstLoad} vs={vs} label="Visitors" icon={Users} spark={chartSeries.map((p) => p.visitors)} value={k?.visitors} live={follow((r) => r.kpis.visitors)} fmt={fmtInt} d={delta(k?.visitors ?? 0, pk?.visitors)} pressed={metric === 'visitors'} onClick={() => setMetric('visitors')} />
         {money ? (
           <>
-            <KpiTile loading={firstLoad} vs={vs} label="Revenue" icon={Banknote} spark={sparkOf((d) => d.money?.revenue ?? 0)} money value={revenueNow} fmt={fmtM} d={pm ? delta(money.revenue, pm.revenue) : null} />
+            <KpiTile loading={firstLoad} vs={vs} label="Revenue" icon={Banknote} spark={sparkOf((d) => d.money?.revenue ?? 0)} money value={revenueNow} live={follow((r) => r.revenue)} fmt={fmtM} d={pm ? delta(money.revenue, pm.revenue) : null} />
             <KpiTile loading={firstLoad} vs={vs} label="Conversion" icon={Target} spark={sparkOf((d) => (d.kpis.visitors ? (d.money?.payments ?? 0) / d.kpis.visitors : 0))} value={conv} fmt={(x) => (x * 100).toFixed(x < 0.1 ? 2 : 1) + '%'} d={pm && conv !== undefined ? delta(conv, pm.conversion) : null} />
-            <KpiTile loading={firstLoad} vs={vs} label="Per visitor" icon={Coins} spark={sparkOf((d) => (d.kpis.visitors ? (d.money?.revenue ?? 0) / d.kpis.visitors : 0))} value={rpv} fmt={(x) => fmtMoney(x, money.currency, money.exponent, { cents: true })} d={pm && rpv !== undefined ? delta(rpv, pm.revenue_per_visitor) : null} />
+            <KpiTile loading={firstLoad} vs={vs} label="Per visitor" icon={Coins} spark={sparkOf((d) => (d.kpis.visitors ? (d.money?.revenue ?? 0) / d.kpis.visitors : 0))} value={rpv} live={follow((r) => (r.kpis.visitors ? r.revenue / r.kpis.visitors : 0))} fmt={(x) => fmtMoney(x, money.currency, money.exponent, { cents: true })} d={pm && rpv !== undefined ? delta(rpv, pm.revenue_per_visitor) : null} />
           </>
         ) : (
-          <KpiTile loading={firstLoad} vs={vs} label="Pageviews" icon={Eye} spark={chartSeries.map((p) => p.pageviews)} value={k?.pageviews} fmt={fmtInt} d={delta(k?.pageviews ?? 0, pk?.pageviews)} pressed={metric === 'pageviews'} onClick={() => setMetric('pageviews')} />
+          <KpiTile loading={firstLoad} vs={vs} label="Pageviews" icon={Eye} spark={chartSeries.map((p) => p.pageviews)} value={k?.pageviews} live={follow((r) => r.kpis.pageviews)} fmt={fmtInt} d={delta(k?.pageviews ?? 0, pk?.pageviews)} pressed={metric === 'pageviews'} onClick={() => setMetric('pageviews')} />
         )}
-        <KpiTile loading={firstLoad} vs={vs} label="Bounce rate" icon={CornerUpLeft} spark={sparkOf((d) => d.kpis.bounce_rate)} value={k?.bounce_rate} fmt={fmtPct} d={delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true)} />
-        <KpiTile loading={firstLoad} vs={vs} label="Session time" icon={Timer} spark={sparkOf((d) => d.kpis.avg_session_s)} value={k?.avg_session_s} fmt={fmtDuration} d={delta(k?.avg_session_s ?? 0, pk?.avg_session_s)} />
+        <KpiTile loading={firstLoad} vs={vs} label="Bounce rate" icon={CornerUpLeft} spark={sparkOf((d) => d.kpis.bounce_rate)} value={k?.bounce_rate} live={follow((r) => r.kpis.bounce_rate)} fmt={fmtPct} d={delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true)} />
+        <KpiTile loading={firstLoad} vs={vs} label="Session time" icon={Timer} spark={sparkOf((d) => d.kpis.avg_session_s)} value={k?.avg_session_s} live={follow((r) => r.kpis.avg_session_s)} fmt={fmtDuration} d={delta(k?.avg_session_s ?? 0, pk?.avg_session_s)} />
         {/* A shared page has no live stream, so it says where the number
             comes from instead of waiting to connect forever. */}
         <OnlineKpi online={online} canOpen={!isShared()} note={stream.connected || isShared() ? entryCopy.onlineNote : entryCopy.connecting} />
@@ -710,10 +697,11 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               playing={playing}
               byDay={!canScrub}
               byHour={!!hours}
-              speed={speed}
+              speed={speed} points={canScrub ? replayPoints : diffDays(range.from, range.to) + 1}
               onSpeed={pickSpeed}
               onPlay={() => {
                 if (!playing) setStory('on')
+                if (playing) settle()
                 if (canScrub) return setPlaying((p) => !p)
                 setReplaySoon(true)
                 setView({ bucket: 'day' })
@@ -737,6 +725,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             bucket={hours ? 'hour' : (data?.bucket ?? 'day')}
             scrub={chartScrub}
             story={telling}
+            locked={playing}
             partialLast={live}
             strip={money && src && !hours ? { values: src.series.slice(fv).map((p) => p.revenue ?? 0), fmt: fmtM, label: 'Revenue' } : undefined}
             notes={notesOn ? notes : []}

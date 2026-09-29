@@ -2,59 +2,112 @@
 // bucket up to the one playing, and the lists add up their rows so leaders
 // overtake each other as the period unfolds.
 import { useMemo } from 'react'
+import { reducedMotion } from '../../lib/motion'
 import type { KPIs, Point, Result, Row } from '../../lib/api'
 
 export const RACE_DIMS = ['channel', 'entry_page', 'country', 'device']
 
-/** The tiles so far: every day up to raceTo, landing on the period's own figures. */
-export function useRaceKpis(src: Result | undefined, raceTo: number) {
-  return useMemo(() => {
-    const days = src?.days
-    if (raceTo < 0 || !days) return null
-    let visitors = 0, sessions = 0, pageviews = 0, bounced = 0, secs = 0, fresh = 0, revenue = 0
-    for (const d of days.slice(0, raceTo + 1)) {
-      const x = d.kpis
-      visitors += x.visitors
-      sessions += x.sessions
-      pageviews += x.pageviews
-      bounced += x.bounce_rate * x.sessions
-      secs += x.avg_session_s * x.sessions
-      fresh += x.new_visitor_share * x.visitors
-      revenue += d.money?.revenue ?? 0
-    }
+/** What one bucket adds to the tiles. */
+export interface Part { visitors: number; sessions: number; pageviews: number; bounced: number; secs: number; fresh: number; revenue: number }
+const KEYS: (keyof Part)[] = ['visitors', 'sessions', 'pageviews', 'bounced', 'secs', 'fresh', 'revenue']
+
+/** The tiles so far, at a position between the chart's points: 2 is the
+ *  third point's day done, 2.5 is half of the fourth added on top. Sums are
+ *  prefix sums, so a frame costs a few additions. Given `whole`, only
+ *  visitors and pageviews race (by the hour) and the rest keep its figures. */
+export function raceAt(parts: Part[], scale: number, whole?: KPIs) {
+  const cum = parts.map(() => ({}) as Record<keyof Part, number>)
+  const run = {} as Record<keyof Part, number>
+  KEYS.forEach((k) => (run[k] = 0))
+  parts.forEach((x, i) => KEYS.forEach((k) => (cum[i][k] = run[k] += x[k])))
+  return (pos: number): { kpis: KPIs; revenue: number } => {
+    const top = parts.length - 1
+    const at = Math.max(0, Math.min(top, pos))
+    const i = Math.floor(at)
+    const f = at - i
+    const v = {} as Record<keyof Part, number>
+    for (const k of KEYS) v[k] = cum[i][k] + f * ((cum[Math.min(top, i + 1)]?.[k] ?? cum[i][k]) - cum[i][k])
+    const visitors = v.visitors * scale
+    if (whole) return { kpis: { ...whole, visitors, pageviews: v.pageviews }, revenue: v.revenue }
     // Someone who came on two days is two daily visitors but one visitor of
     // the period, so the days add up to more than the period. Scaled by that
     // ratio, the count climbs to the period's own figure and stops there,
     // instead of overshooting and dropping back when the replay ends.
-    const allVisitors = days.reduce((a, d) => a + d.kpis.visitors, 0)
-    if (allVisitors && src?.kpis) visitors *= src.kpis.visitors / allVisitors
-    const kpis: KPIs = {
-      visitors, sessions, pageviews,
-      bounce_rate: sessions ? bounced / sessions : 0,
-      avg_session_s: sessions ? secs / sessions : 0,
-      views_per_session: sessions ? pageviews / sessions : 0,
-      new_visitor_share: visitors ? fresh / visitors : 0,
+    return {
+      kpis: {
+        visitors,
+        sessions: v.sessions,
+        pageviews: v.pageviews,
+        bounce_rate: v.sessions ? v.bounced / v.sessions : 0,
+        avg_session_s: v.sessions ? v.secs / v.sessions : 0,
+        views_per_session: v.sessions ? v.pageviews / v.sessions : 0,
+        new_visitor_share: visitors ? v.fresh / visitors : 0,
+      },
+      revenue: v.revenue,
     }
-    return { kpis, revenue }
-  }, [src, raceTo])
+  }
 }
 
-/** By the hour: visitors, pageviews and revenue so far, from the hourly
- *  line; the rest of the tiles keep the period's figures. */
-export function useHourRace(series: Point[], at: number | null, whole: KPIs | undefined) {
+/** The tiles by day: one part per chart point (the days skip empty ones, so
+ *  they are matched by date). */
+export function useDayRace(src: Result | undefined, dates: string[]) {
+  const key = dates.join(',')
   return useMemo(() => {
-    if (at == null || at < 0 || !whole) return null
-    let visitors = 0, pageviews = 0, revenue = 0, all = 0
-    series.forEach((p, i) => {
-      all += p.visitors
-      if (i > at) return
-      visitors += p.visitors
-      pageviews += p.pageviews
-      revenue += p.revenue ?? 0
+    const days = src?.days
+    if (!days || !key) return null
+    const by = new Map(days.map((d) => [d.date, d]))
+    const parts: Part[] = key.split(',').map((date) => {
+      const d = by.get(date)
+      const x = d?.kpis
+      return {
+        visitors: x?.visitors ?? 0,
+        sessions: x?.sessions ?? 0,
+        pageviews: x?.pageviews ?? 0,
+        bounced: x ? x.bounce_rate * x.sessions : 0,
+        secs: x ? x.avg_session_s * x.sessions : 0,
+        fresh: x ? x.new_visitor_share * x.visitors : 0,
+        revenue: d?.money?.revenue ?? 0,
+      }
     })
-    if (all) visitors *= whole.visitors / all
-    return { kpis: { ...whole, visitors, pageviews }, revenue }
-  }, [series, at, whole])
+    const all = parts.reduce((a, x) => a + x.visitors, 0)
+    return raceAt(parts, all && src?.kpis ? src.kpis.visitors / all : 1)
+  }, [src, key])
+}
+
+/** By the hour: visitors, pageviews and revenue so far, from the hourly line. */
+export function useHourRace(series: Point[], whole: KPIs | undefined) {
+  return useMemo(() => {
+    if (!whole || !series.length) return null
+    const parts: Part[] = series.map((p) => ({ visitors: p.visitors, sessions: 0, pageviews: p.pageviews, bounced: 0, secs: 0, fresh: 0, revenue: p.revenue ?? 0 }))
+    const all = parts.reduce((a, x) => a + x.visitors, 0)
+    return raceAt(parts, all ? whole.visitors / all : 1, whole)
+  }, [series, whole])
+}
+
+interface Now {
+  src: Result | undefined
+  dates: string[]
+  hourSeries: Point[]
+  hours: boolean
+  hourAt: number | null
+  idx: number
+  telling: boolean
+  racing: boolean
+  playing: boolean
+}
+
+/** The tiles at the point on screen (`raced`, for the page), and `follow`,
+ *  which makes a tile's number a function of the playhead's position while
+ *  it plays: between two points, frame by frame. */
+export function useRaceNow(a: Now) {
+  const day = useDayRace(a.src, a.dates)
+  const hour = useHourRace(a.hourSeries, a.src?.kpis)
+  const race = a.hours ? hour : day
+  const i = a.hours ? (a.hourAt ?? -1) : a.idx
+  const raced = a.telling && race && (a.hours || a.racing) && i >= 0 ? race(i) : null
+  const smooth = a.playing && a.telling && !reducedMotion() ? race : null
+  const follow = (f: (r: NonNullable<typeof raced>) => number) => (smooth ? (pos: number) => f(smooth(pos)) : undefined)
+  return { raced, follow }
 }
 
 /** The lists so far: each row summed up to raceTo, landing on its period figure. */
@@ -63,14 +116,16 @@ export function useRaceRows(src: Result | undefined, raceTo: number) {
     const out: Record<string, Row[]> = {}
     const days = src?.days
     if (raceTo < 0 || !days) return out
+    // The days skip empty ones: the playhead's day is matched by date.
+    const cutoff = src?.series[raceTo]?.t.slice(0, 10) ?? ''
     for (const dim of RACE_DIMS) {
       // Days keep visitors only; a bounce rate would have to be invented.
       const sum = new Map<string, number>()
       const all = new Map<string, number>()
-      days.forEach((d, i) => {
+      days.forEach((d) => {
         for (const r of d.dims?.[dim] ?? []) {
           all.set(r.value, (all.get(r.value) ?? 0) + r.visitors)
-          if (i <= raceTo) sum.set(r.value, (sum.get(r.value) ?? 0) + r.visitors)
+          if (d.date <= cutoff) sum.set(r.value, (sum.get(r.value) ?? 0) + r.visitors)
         }
       })
       const period = new Map((src?.dims?.[dim] ?? []).map((r) => [r.value, r.visitors]))

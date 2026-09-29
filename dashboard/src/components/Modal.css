@@ -79,11 +79,21 @@
   height: min(700px, 88vh);
 }
 
+/* One section (a viewer's Account): no navigation column, the body takes the
+   window's whole width. */
+.modal.account.single {
+  grid-template-columns: minmax(0, 1fr);
+  width: min(720px, calc(100vw - 32px));
+}
+
 @media (max-width: 720px) {
   .modal.account {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto minmax(0, 1fr);
     height: min(600px, 88vh);
+  }
+  .modal.account.single {
+    grid-template-rows: auto minmax(0, 1fr);
   }
 }
 
@@ -91,4 +101,8 @@
    sit in the dialog's own column, exactly as they would without it. */
 .modal > .modal-form {
   display: contents;
+}
+
+.modal:focus {
+  outline: none;
 }

@@ -33,3 +33,7 @@ export const canChange = () => role === 'owner' && !shared
 /** Which modules the shared site has on: they travel with the link, because a
  *  shared page cannot ask for them itself. */
 export const sharedModules = () => sharedMods
+
+/** Whether Ask is offered: it sets up an AI assistant with an API key, which
+ *  only an owner can make. Never a viewer, never a shared link. */
+export const canAsk = () => canChange()

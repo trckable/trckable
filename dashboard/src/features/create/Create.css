@@ -1,4 +1,4 @@
-/* The header's Create button and its menu. */
+/* The Create picker: it hangs from the ⋯ button (CreatePop). */
 .create {
   flex: none;
   position: relative;

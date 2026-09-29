@@ -19,7 +19,7 @@ export function FilterMenu(p: {
   const [open, setOpen] = useState(false)
   const root = useRef<HTMLDivElement>(null)
   return (
-    <div ref={root} style={{ position: 'relative' }}>
+    <div ref={root} className="filter-root">
       <button
         type="button"
         className={p.active.length ? 'btn ghost filter on' : 'btn ghost filter'}

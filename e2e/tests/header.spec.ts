@@ -3,11 +3,13 @@
 // TRCKABLE_A11Y_URL points at one):
 //   TRCKABLE_A11Y_URL=http://localhost:8799 npx playwright test header
 // One row at every width down to 375 px; Share the only filled button; what
-// left the row (Refresh, Create, Core/Full) is in ⋯ with its key, and the keys
-// still work. Each tile carries its change, readable without colour; the
+// left the row (Refresh, Create, Core/Full, Milestones, Export) is in the ⋯
+// beside the period with its key, and the keys still work; the person's own
+// things (Profile, theme, shortcuts, sign out) are the avatar's menu.
+// Each tile carries its change, readable without colour; the
 // chart starts at the first visit when that falls in the period, draws a
 // short span by the hour, and keeps Replay as a small ▶.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -45,6 +47,9 @@ async function open(page: Page, query = ''): Promise<string> {
   return domain
 }
 
+/** After its opening animation: a box measured mid-flight is not where it lands. */
+const settled = (el: Locator) => el.evaluate((n) => Promise.all(n.getAnimations().map((a) => a.finished)))
+
 const more = (page: Page) => page.getByRole('button', { name: 'More', exact: true })
 const menu = (page: Page) => page.getByRole('menu', { name: 'More' })
 
@@ -61,8 +66,8 @@ for (const width of [1440, 700, 375]) {
   test(`two quiet rows at ${width}px, nothing lost`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await open(page)
-    // Row 1: who and which site, then Ask, Filter, Share, ⋯. Row 2: the
-    // period and Live/Data. Each one line, inside the screen.
+    // Row 1: who and which site, then Peek, Share, the avatar. Row 2:
+    // Live/Data, Filter, the period and ⋯. Each one line, inside the screen.
     for (const sel of ['.header.quiet', '.subbar']) {
       const boxes = await controls(page, sel)
       expect(boxes.length, sel).toBeGreaterThan(1)
@@ -72,11 +77,11 @@ for (const width of [1440, 700, 375]) {
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 'no sideways scroll').toBeLessThanOrEqual(0)
 
-    // Share is the one filled button; Ask and Filter stay one tap away.
+    // Share is the one filled button; Peek and Filter stay one tap away.
     await expect(page.locator('.header .btn.primary')).toHaveCount(1)
     await expect(page.locator('.header .btn.primary')).toHaveText(/Share/)
-    await expect(page.getByRole('button', { name: 'Ask trckable' })).toBeVisible()
-    await expect(page.locator('.header .btn.filter')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Peek' })).toBeVisible()
+    await expect(page.locator('.subbar .btn.filter')).toBeVisible()
     // Row 2 says what the numbers are; the comparison is the period's title,
     // not a line of text.
     await expect(page.locator('.subbar').getByRole('group', { name: 'View' })).toBeVisible()
@@ -90,18 +95,44 @@ for (const width of [1440, 700, 375]) {
     await expect(items.filter({ hasText: 'Create…' })).toContainText('A')
     await expect(items.filter({ hasText: 'Full view' })).toContainText('F')
     if (width <= 640) await expect(items.filter({ hasText: 'Site settings' })).toBeVisible()
+    await expect(items.filter({ hasText: 'Export as CSV' })).toBeVisible()
+    // Nothing of the person's is in it.
+    await expect(items.filter({ hasText: /Profile|Shortcuts|Sign out/ })).toHaveCount(0)
     await page.keyboard.press('Escape')
     await expect(menu(page)).toBeHidden()
   })
 }
 
-test('Live keeps only Live/Data on row 2, in the same place', async ({ page }) => {
+test('the avatar menu holds the person\'s own things, by keyboard too', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await open(page)
+  const avatar = page.getByRole('button', { name: 'Account', exact: true })
+  await avatar.click()
+  const account = page.getByRole('menu', { name: 'Account' })
+  await expect(account.getByRole('menuitem')).toHaveText([/Profile/, /Shortcuts/, /Sign out/])
+  await expect(account.getByRole('menuitemradio')).toHaveCount(3)
+  await expect(account.getByRole('menuitem', { name: /Refresh|Create|Export/ })).toHaveCount(0)
+  // Arrows move between items, Escape closes and hands focus back.
+  await expect(account.getByRole('menuitem').first()).toBeFocused()
+  await page.keyboard.press('ArrowDown')
+  await expect(account.getByRole('menuitemradio').first()).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(account).toBeHidden()
+  await expect(avatar).toBeFocused()
+  // Profile opens the account window.
+  await avatar.click()
+  await account.getByRole('menuitem', { name: 'Profile, your account' }).click()
+  await expect(page.getByRole('dialog', { name: 'Profile, your account' })).toBeVisible()
+})
+
+test('Live keeps only Live/Data on row 2, in the same place, and has no ⋯', async ({ page }) => {
   await open(page)
   const view = page.locator('.subbar').getByRole('group', { name: 'View' })
   const before = await view.boundingBox()
   await view.getByRole('button', { name: 'Live' }).click()
   await expect(page).toHaveURL(/view=live/)
   await expect(page.locator('.subbar .range-picker')).toHaveCount(0)
+  await expect(more(page)).toHaveCount(0)
   expect(await view.boundingBox()).toEqual(before)
 })
 
@@ -114,6 +145,13 @@ test('⋯ runs what left the row, and the keys still work', async ({ page }) => 
   const create = page.getByRole('menu', { name: 'Create something' })
   await expect(create).toBeVisible()
   await expect(create.getByRole('menuitem').first()).toBeFocused()
+  // The picker hangs right under ⋯, aligned to its right edge, like ⋯'s own menu.
+  const dots = (await more(page).boundingBox())!
+  await settled(create)
+  const pick = (await create.boundingBox())!
+  expect(pick.y).toBeGreaterThanOrEqual(dots.y + dots.height)
+  expect(pick.y - (dots.y + dots.height)).toBeLessThan(16)
+  expect(Math.abs(pick.x + pick.width - (dots.x + dots.width))).toBeLessThan(12)
   await page.keyboard.press('Escape')
   await expect(create).toBeHidden()
   await expect(more(page)).toBeFocused()
@@ -121,6 +159,11 @@ test('⋯ runs what left the row, and the keys still work', async ({ page }) => 
   await page.locator('body').click({ position: { x: 5, y: 400 } })
   await page.keyboard.press('a')
   await expect(create).toBeVisible()
+  await settled(create)
+  const viaKey = (await create.boundingBox())!
+  const dotsNow = (await more(page).boundingBox())!
+  expect(Math.abs(viaKey.x + viaKey.width - (dotsNow.x + dotsNow.width))).toBeLessThan(12)
+  expect(viaKey.y).toBeGreaterThanOrEqual(dotsNow.y + dotsNow.height)
   await page.keyboard.press('Escape')
   await page.keyboard.press('f')
   await expect(page).toHaveURL(/mode=full/)
@@ -190,6 +233,32 @@ test('Replay is a small ▶; its speed and scrubber show on hover or focus', asy
   await play.click()
   await expect(page).toHaveURL(/day=\d{4}-\d{2}-\d{2}/)
   await expect(page.getByRole('button', { name: 'Pause replay' })).toBeVisible()
+  await page.getByRole('button', { name: 'Pause replay' }).click()
+})
+
+test('Replay speeds are durations for this period, remembered, and [ ] change them while it plays', async ({ page }) => {
+  await open(page)
+  const trigger = page.locator('.overview-chart .speed-btn')
+  await page.getByRole('button', { name: 'Replay this period day by day' }).focus()
+  await trigger.click()
+  const rows = page.getByRole('menuitemradio')
+  await expect(rows).toHaveCount(5)
+  await expect(rows.nth(0)).toContainText('Slow')
+  await expect(rows.nth(4)).toContainText('Rapid')
+  await expect(rows.nth(1)).toContainText(/~\d+(\.5)? s/)
+  await expect(page.getByRole('menuitemradio', { name: /Normal/ })).toHaveAttribute('aria-checked', 'true')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(trigger).toContainText('Fast')
+  await expect(trigger).toHaveAttribute('aria-label', /Fast, plays in ~/)
+  expect(await page.evaluate(() => localStorage.getItem('tkb_replay_speed'))).toBe('fast')
+  await page.getByRole('button', { name: 'Replay this period day by day' }).click()
+  await expect(page.getByRole('button', { name: 'Pause replay' })).toBeVisible()
+  await page.keyboard.press(']')
+  await expect(trigger).toContainText('Faster')
+  await page.keyboard.press('[')
+  await page.keyboard.press('[')
+  await expect(trigger).toContainText('Normal')
   await page.getByRole('button', { name: 'Pause replay' }).click()
 })
 

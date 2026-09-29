@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/event"
+	"github.com/trckable/trckable/server/internal/query"
 )
 
 // Live mode's numbers are the events' own, counted again here by hand from
@@ -74,11 +75,9 @@ func TestLiveNowIsExact(t *testing.T) {
 		if e.Kind != event.KindPageview && e.Kind != event.KindGoal {
 			continue
 		}
-		if e.TS >= ms-30*60_000 {
-			r := latest[e.Visitor]
-			if r == nil || e.TS > r.ts || e.TS == r.ts && i > r.seq {
-				latest[e.Visitor] = &row{ts: e.TS, path: e.Path, visitor: e.Visitor, seq: i}
-			}
+		// The list looks back a day, so every page or goal here counts.
+		if r := latest[e.Visitor]; r == nil || e.TS > r.ts || e.TS == r.ts && i > r.seq {
+			latest[e.Visitor] = &row{ts: e.TS, path: e.Path, visitor: e.Visitor, seq: i}
 		}
 		if e.Kind != event.KindPageview {
 			continue
@@ -102,9 +101,16 @@ func TestLiveNowIsExact(t *testing.T) {
 		}
 	}
 	var rows []*row
-	for v, r := range latest {
-		if !online[v] {
-			continue
+	for v := range online {
+		r := latest[v]
+		if r == nil { // only other events: a placeholder row at their last event
+			r = &row{ts: 0, visitor: v, path: ""}
+			latest[v] = r
+			for _, e := range evs {
+				if e.Visitor == v && e.TS <= ms && e.TS > r.ts {
+					r.ts = e.TS
+				}
+			}
 		}
 		for _, e := range evs {
 			if e.Visitor == v && e.TS <= ms && e.TS > r.last {
@@ -232,5 +238,73 @@ func TestLiveNowCacheFollowsCommits(t *testing.T) {
 	g.advance(31 * time.Minute)
 	if n := visitors(); n != 0 {
 		t.Fatalf("visitors %v half an hour later", n)
+	}
+}
+
+// The list holds everyone Online counts: a visitor whose page was opened long
+// ago and who is still active is listed with that page, one with no page in
+// the day at all gets a placeholder, an idle one is neither listed nor counted.
+func TestLiveNowListsEveryoneOnline(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	now := g.advance(time.Second)
+	ms := now.UnixMilli()
+	min := int64(60_000)
+	evs := []event.Event{
+		// 1: page 2 hours ago, engaged a minute ago.
+		{Kind: event.KindPageview, EventID: 1, TS: ms - 120*min, Visitor: 1, Pageview: 1, Path: "/old"},
+		{Kind: event.KindEngagement, EventID: 2, TS: ms - min, Visitor: 1, Pageview: 1, Path: "/old"},
+		// 2: only an engagement event, no page or goal at all.
+		{Kind: event.KindEngagement, EventID: 3, TS: ms - 2*min, Visitor: 2, Pageview: 3, Path: "/x"},
+		// 3: a page 20 minutes ago, idle since.
+		{Kind: event.KindPageview, EventID: 4, TS: ms - 20*min, Visitor: 3, Pageview: 4, Path: "/idle"},
+		// 4: a fresh page.
+		{Kind: event.KindPageview, EventID: 5, TS: ms - 10_000, Visitor: 4, Pageview: 5, Path: "/new"},
+	}
+	for _, e := range evs {
+		g.event(t, e)
+	}
+	g.waitApplied(t, 5)
+	code, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/now", "")
+	if code != 200 {
+		t.Fatalf("now: %d %v", code, out)
+	}
+	recent := out["recent"].([]any)
+	if out["online"] != float64(3) || len(recent) != 3 {
+		t.Fatalf("online %v, %d rows: %v", out["online"], len(recent), recent)
+	}
+	if _, more := out["more"]; more {
+		t.Fatalf("more with room to spare: %v", out)
+	}
+	want := []struct{ visitor, kind, path string }{{"4", "pageview", "/new"}, {"1", "pageview", "/old"}, {"2", "active", ""}}
+	for i, w := range want {
+		m := recent[i].(map[string]any)
+		path, _ := m["path"].(string)
+		if m["visitor"] != strconv.FormatUint(func() uint64 { n, _ := strconv.ParseUint(w.visitor, 10, 64); return n }(), 36) || m["kind"] != w.kind || path != w.path {
+			t.Fatalf("row %d: %v, want %+v", i, m, w)
+		}
+	}
+}
+
+// Past NowRows the list stops and says how many it left out, so the count on
+// the tile is always the list plus more.
+func TestLiveNowCapSaysHowManyMore(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	now := g.advance(time.Second)
+	total := query.NowRows + 7
+	for i := 1; i <= total; i++ {
+		g.event(t, event.Event{Kind: event.KindPageview, EventID: uint64(i), TS: now.UnixMilli() - int64(i)*1000, Visitor: uint64(i), Pageview: uint64(i), Path: "/"}) //nolint:gosec // small positive counter
+	}
+	g.waitApplied(t, uint64(total)) //nolint:gosec // small positive counter
+	code, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/now", "")
+	if code != 200 {
+		t.Fatalf("now: %d %v", code, out)
+	}
+	rows := len(out["recent"].([]any))
+	if out["online"] != float64(total) || rows != query.NowRows || out["more"] != float64(7) {
+		t.Fatalf("online %v rows %d more %v", out["online"], rows, out["more"])
 	}
 }

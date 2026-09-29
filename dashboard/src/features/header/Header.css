@@ -288,3 +288,104 @@
 html {
   overflow-y: scroll;
 }
+
+/* The page's ⋯ ends the period row; the avatar's menu ends the first row. */
+.subbar > .more {
+  flex: none;
+  margin-left: auto;
+}
+.subbar > .range-picker.quiet + .more {
+  margin-left: 0;
+}
+.subbar > .more .more-menu {
+  top: 42px;
+  right: 0;
+  min-width: 220px;
+  z-index: 40;
+}
+.account-menu .more-menu {
+  min-width: 250px;
+}
+.header-tools.quiet .btn.account-btn {
+  width: 40px;
+}
+.avatar.small {
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+}
+.account-btn .avatar {
+  font-size: 13px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .more-menu {
+    animation: none;
+  }
+}
+.subbar > .more {
+  position: relative;
+}
+.subbar > .more > .btn.icon.ghost {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--text-2);
+}
+.subbar > .more > .btn.icon.ghost:hover,
+.subbar > .more > .btn.icon.ghost[aria-expanded='true'] {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+/* Filter sits in the period row, on the right, right before the period. */
+.filter-root {
+  position: relative;
+  flex: none;
+  margin-left: auto;
+}
+.subbar > .toolbar-filters + .filter-root {
+  margin-left: 0;
+}
+.subbar > .filter-root + .range-picker.quiet {
+  margin-left: 0;
+}
+.subbar .btn.filter {
+  height: 36px;
+  color: var(--text-2);
+  padding: 0 10px;
+}
+.subbar .btn.filter:hover,
+.subbar .btn.filter[aria-expanded='true'],
+.subbar .btn.filter.on {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.subbar .btn.filter.on {
+  border-color: transparent;
+}
+@media (max-width: 960px) {
+  .subbar .btn.filter .filter-label {
+    display: none;
+  }
+  .subbar .btn.filter {
+    min-width: 36px;
+    padding: 0 9px;
+    justify-content: center;
+  }
+}
+@media (max-width: 640px) {
+  /* The popup takes the row's width instead of hanging off a button that is far from the left edge. */
+  .subbar {
+    position: relative;
+  }
+  .subbar .filter-root {
+    position: static;
+  }
+  .subbar .filter-pop {
+    left: 0;
+    right: 0;
+    top: 44px;
+    width: auto;
+    max-width: none;
+  }
+}

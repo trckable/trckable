@@ -24,9 +24,9 @@ export function siteForSegment(sites: Site[], segment: string): Site | null {
 
 /** Where an address that names none of the person's sites goes: the first
  *  site's dashboard, or, with no site at all, the first run (three steps to
- *  a first visit) over the settings page. */
+ *  a first visit) at the root, which cannot be left before a site exists. */
 export function redirectFor(sites: Site[]): { path: string; wizard: boolean } {
   const first = sites[0]
   if (first) return { path: '/' + encodeURIComponent(first.domain), wizard: false }
-  return { path: '/settings', wizard: true }
+  return { path: '/', wizard: true }
 }

@@ -1,6 +1,6 @@
 // Where an address that names none of the person's sites goes, keeping the
 // rest of its query: the site a link asked for (?site=<id>), else siteRoute's answer (the first site, or with
-// no site the first run over the settings page).
+// no site the first run).
 import type { Site } from './api'
 import { redirectFor } from './siteRoute'
 
@@ -15,4 +15,9 @@ export function landing(
   if (asked) return { path: '/' + encodeURIComponent(asked.domain) + search, wizard: false }
   const to = redirectFor(sites)
   return { path: to.path + search, wizard: to.wizard }
+}
+
+/** A link's ?site=… names one of these sites. */
+export function namesSite(sites: { id: string }[], params: URLSearchParams): boolean {
+  return sites.some((x) => x.id === params.get('site'))
 }

@@ -5,6 +5,7 @@
 import type { LucideIcon } from 'lucide-react'
 import type { Delta } from '../../lib/format'
 import { useTween } from '../../lib/motion'
+import { usePlayhead } from './playhead'
 import { copy } from './copy'
 import './Overview.css'
 
@@ -14,6 +15,8 @@ interface Props {
   /** The number bucket by bucket, drawn small at the foot of the tile. */
   spark?: number[]
   value?: number
+  /** While Replay plays: the number at the playhead's position, between two points. */
+  live?: (pos: number) => number
   fmt: (n: number) => string
   d: Delta | null
   /** The comparison in words, as the period picker says it. */
@@ -25,7 +28,11 @@ interface Props {
 }
 
 export function KpiTile(p: Props) {
-  const v = useTween(p.value ?? 0, 600)
+  // While it plays the number follows the playhead itself, frame by frame,
+  // with no tween of its own to restart at every point.
+  const pos = usePlayhead(!!p.live)
+  const tweened = useTween(p.value ?? 0, p.live ? 0 : 600)
+  const v = p.live ? p.live(pos) : tweened
   const cls = 'kpi' + (p.money ? ' money' : '')
   const body = (
     <>

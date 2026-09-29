@@ -1,6 +1,6 @@
 /* SpeedMenu.tsx: its own styles, loaded with it (not with the first load). */
 
-/* Replay speed: one button beside Replay; the four speeds open above it. */
+/* Replay speed: one button beside Replay; the five speeds open beside it. */
 .speed-menu {
   position: relative;
   flex: none;
@@ -20,10 +20,12 @@
 .pop.menu-pop.speed-pop {
   bottom: 46px;
   left: 0;
-  width: 230px;
+  width: 250px;
+  max-width: calc(100vw - 32px);
 }
 .speed-row {
-  min-height: 42px;
+  min-height: 38px;
+  gap: 10px;
 }
 .speed-row .menu-title {
   flex: 1;
@@ -31,12 +33,18 @@
 .speed-row.on {
   background: color-mix(in srgb, var(--accent) 9%, transparent);
 }
+/* Five bars, lit up to this speed. */
 .speed-bars {
-  display: flex !important;
+  display: flex;
+  flex: none;
   align-items: flex-end;
-  justify-content: center;
   gap: 2px;
-  padding-bottom: 7px;
+  width: 26px;
+  height: 16px;
+  color: var(--text-2);
+}
+.speed-bars.accent {
+  color: var(--accent);
 }
 .speed-bars i {
   width: 3px;
@@ -46,14 +54,11 @@
 .speed-bars i.lit {
   background: currentColor;
 }
-.speed-chip {
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: var(--sunken);
-  color: var(--text-2);
-  font-size: 11.5px;
+.speed-time {
+  color: var(--text-3);
+  font-size: 12px;
 }
-.speed-row.on .speed-chip {
+.speed-row.on .speed-time {
   color: var(--text);
 }
 .speed-check {
@@ -61,4 +66,16 @@
   place-items: center;
   width: 16px;
   color: var(--accent);
+}
+.speed-keys {
+  justify-content: center;
+  margin-top: 2px;
+  padding: 6px 10px 4px;
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+}
+@media (hover: none) {
+  .speed-keys {
+    display: none;
+  }
 }

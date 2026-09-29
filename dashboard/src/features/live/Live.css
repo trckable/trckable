@@ -509,3 +509,7 @@ body[data-mode] .live-head-row h2,
     transform: none;
   }
 }
+.live-more {
+  padding: 8px 14px;
+  font-size: 12px;
+}

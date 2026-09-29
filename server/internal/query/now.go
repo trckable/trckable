@@ -25,6 +25,11 @@ const NowIdle = 5 * time.Minute
 // NowRows caps the list of who is on the site.
 const NowRows = 50
 
+// NowLookback is how far back the list looks for an online visitor's latest
+// page or goal: today's visit, however long they have stayed. Someone with
+// neither in that time is still listed, on a placeholder row.
+const NowLookback = 24 * time.Hour
+
 // Now is Live mode's picture of a site at one moment.
 type Now struct {
 	At int64 `json:"at"` // unix ms the numbers were taken at
@@ -39,6 +44,9 @@ type Now struct {
 	Previous int64       `json:"previous"`
 	Sources  []NowSource `json:"sources"`
 	Recent   []NowVisit  `json:"recent"`
+	// More is how many of the Online visitors the list left out because it
+	// holds at most NowRows; 0 when it lists everyone.
+	More int64 `json:"more,omitempty"`
 }
 
 // NowSource is one channel's visitors in the last 30 minutes.
@@ -51,8 +59,8 @@ type NowSource struct {
 // when they were last seen doing anything. Its fields are named as the live
 // stream's visits are, so the dashboard reads both the same way.
 type NowVisit struct {
-	Kind    string `json:"kind"` // pageview | goal
-	TS      int64  `json:"ts"`   // unix ms of that page or goal
+	Kind    string `json:"kind"` // pageview | goal | active (no page or goal in the look-back)
+	TS      int64  `json:"ts"`   // unix ms of that page or goal (for active: the last event)
 	Last    int64  `json:"last"` // unix ms of their latest event of any kind
 	Path    string `json:"path,omitempty"`
 	Goal    string `json:"goal,omitempty"`
@@ -135,17 +143,21 @@ func (q Q) LiveNow(ctx context.Context, site string, now time.Time, withVisitor 
 	if out.Recent, err = q.onSite(ctx, site, now, withVisitor); err != nil {
 		return nil, err
 	}
+	if more := out.Online - int64(len(out.Recent)); more > 0 {
+		out.More = more
+	}
 	return out, nil
 }
 
-// onSite is everyone Online counts (any event in the last five minutes) who
-// viewed a page or reached a goal in the last 30: one row each, their latest
-// one, most recently active first.
+// onSite is everyone Online counts (any event in the last five minutes): one
+// row each, most recently active first. A row shows the visitor's latest page
+// or goal from the last day; someone with none in that time still gets a row
+// (kind "active"), so the list and the count are the same people.
 func (q Q) onSite(ctx context.Context, site string, now time.Time, withVisitor bool) ([]NowVisit, error) {
 	rows, err := q.DB.QueryContext(ctx, `
 		WITH act AS (
 			SELECT visitor_id, max(ts) AS last
-			FROM events WHERE site_id = ? AND ts >= ? AND ts <= ?
+			FROM events WHERE site_id = ? AND ts >= ?
 			GROUP BY visitor_id
 		), pv AS (
 			SELECT visitor_id, ts, kind, coalesce(path, '') AS path, coalesce(goal, '') AS goal,
@@ -157,13 +169,13 @@ func (q Q) onSite(ctx context.Context, site string, now time.Time, withVisitor b
 			WHERE site_id = ? AND kind IN (1, 2) AND ts >= ? AND ts <= ?
 			  AND visitor_id IN (SELECT visitor_id FROM act)
 		)
-		SELECT pv.visitor_id, epoch_ms(pv.ts), epoch_ms(act.last), pv.kind, pv.path, pv.goal,
-		       pv.channel, pv.ref, pv.country, pv.city, pv.device, pv.browser
-		FROM pv JOIN act USING (visitor_id)
-		WHERE pv.rn = 1
-		ORDER BY act.last DESC, pv.ts DESC, pv.visitor_id
+		SELECT act.visitor_id, coalesce(epoch_ms(pv.ts), epoch_ms(act.last)), epoch_ms(act.last), coalesce(pv.kind, 0),
+		       coalesce(pv.path, ''), coalesce(pv.goal, ''), coalesce(pv.channel, ''), coalesce(pv.ref, ''),
+		       coalesce(pv.country, ''), coalesce(pv.city, ''), coalesce(pv.device, ''), coalesce(pv.browser, '')
+		FROM act LEFT JOIN pv ON pv.visitor_id = act.visitor_id AND pv.rn = 1
+		ORDER BY act.last DESC, pv.ts DESC NULLS LAST, act.visitor_id
 		LIMIT ?`,
-		site, now.Add(-NowIdle), now, site, now.Add(-NowWindow), now, NowRows)
+		site, now.Add(-NowIdle), site, now.Add(-NowLookback), now, NowRows)
 	if err != nil {
 		return nil, err
 	}
@@ -176,9 +188,13 @@ func (q Q) onSite(ctx context.Context, site string, now time.Time, withVisitor b
 		if err := rows.Scan(&visitor, &v.TS, &v.Last, &kind, &v.Path, &v.Goal, &v.Channel, &v.Ref, &v.Country, &v.City, &v.Device, &v.Browser); err != nil {
 			return nil, err
 		}
-		v.Kind = "pageview"
-		if kind == 2 {
+		switch kind {
+		case 1:
+			v.Kind = "pageview"
+		case 2:
 			v.Kind = "goal"
+		default:
+			v.Kind = "active"
 		}
 		// The same id the live stream sends, so a row opens the same journey.
 		if withVisitor {

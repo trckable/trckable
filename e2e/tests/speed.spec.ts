@@ -13,10 +13,10 @@ const EMAIL = process.env.TRCKABLE_A11Y_EMAIL ?? 'me@site.com'
 const PASSWORD = process.env.TRCKABLE_A11Y_PASSWORD ?? 'correct horse battery'
 
 // Requests the dashboard makes before its numbers show: setup, me, sites,
-// then the site's report and its four side reads (modules, saved views,
-// notes, milestones). The live stream is not a request that ends, so it is
-// not counted.
-const FIRST_LOAD_REQUESTS = 8
+// the person's own account (the avatar's picture and name), then the site's
+// report and its four side reads (modules, saved views, notes, milestones).
+// The live stream is not a request that ends, so it is not counted.
+const FIRST_LOAD_REQUESTS = 9
 // 95th percentile server time of an uncached report with its comparison
 // period, on 30 days of demo data (about 100 ms on a laptop; CI runners are
 // slower and shared).

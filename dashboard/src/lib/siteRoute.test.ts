@@ -30,6 +30,6 @@ describe('redirectFor', () => {
     expect(redirectFor(sites)).toEqual({ path: '/example.com', wizard: false })
   })
   it('opens the first run with no sites, on every kind of server', () => {
-    expect(redirectFor([])).toEqual({ path: '/settings', wizard: true })
+    expect(redirectFor([])).toEqual({ path: '/', wizard: true })
   })
 })

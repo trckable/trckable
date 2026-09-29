@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Site } from './api'
-import { landing } from './landing'
+import { landing, namesSite } from './landing'
 
 const sites = [
   { id: 's1', domain: 'one.com' },
@@ -23,6 +23,12 @@ describe('landing', () => {
   })
 
   it('has no site: the first run over the settings page, on every server', () => {
-    expect(landing([], new URLSearchParams(''))).toEqual({ path: '/settings', wizard: true })
+    expect(landing([], new URLSearchParams(''))).toEqual({ path: '/', wizard: true })
+  })
+
+  it('knows when a link names one of the sites', () => {
+    expect(namesSite(sites, new URLSearchParams(`site=${sites[0].id}`))).toBe(true)
+    expect(namesSite(sites, new URLSearchParams('site=nope'))).toBe(false)
+    expect(namesSite(sites, new URLSearchParams(''))).toBe(false)
   })
 })

@@ -1,4 +1,4 @@
-// Ask with your own assistant: the MCP config to paste, a key for it, and the
+// Peek, with your own assistant: the MCP config to paste, a key for it, and the
 // docs.
 import { CodeBlock } from '../../components/Code'
 import { openAccount } from '../../lib/account'
