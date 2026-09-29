@@ -33,9 +33,18 @@ Self-host it free, or let [trckable Cloud](https://cloud.trckable.com) run it fo
 
 > **Early preview.** Tracking, the dashboard, revenue for all five providers, Full mode, the MCP server and the self-hosting tools are built and tested. Still to come: live sandbox runs against each payment provider, the in-app assistant, and v1.0.
 
-## ⚡ Quick start
+## 🧭 Two ways to use it
 
-Rather not run a server? [trckable Cloud](https://cloud.trckable.com) is the same product, hosted, with a 14-day free trial.
+| | Self-host | trckable Cloud |
+|---|---|---|
+| Who runs it | You, on your own server: one container | We do, at [cloud.trckable.com](https://cloud.trckable.com) |
+| Price | Free, every feature | 14-day free trial, then a plan that fits your traffic |
+| Updates and backups | Yours | Ours |
+| Start | The quick start below | [Sign up](https://cloud.trckable.com) |
+
+Same product either way, and the same 2 KB script.
+
+## ⚡ Quick start
 
 ```bash
 docker run -d --name trckable -p 8080:8080 -v trckable-data:/data ghcr.io/trckable/trckable
