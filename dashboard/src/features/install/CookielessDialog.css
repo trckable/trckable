@@ -88,7 +88,8 @@
     display: none;
   }
   .cl-table tbody th {
-    grid-column: 1 / -1;
+    /* The row's name stays in the left column: it never runs into the band. */
+    grid-column: 1;
     padding-bottom: 0;
     border-bottom: 0;
     font-size: 12px;
