@@ -2,7 +2,10 @@
 // start/end fields, and a comparison (previous period, same period last
 // year, or a custom range). Keyboard-first; the view stays in the URL.
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef } from 'react'
+import { copy } from '../features/header/copy'
+import { toggleRowCollapsed, useRowCollapsed } from '../features/header/rowCollapsed'
+import { setPeriodOpen, usePeriodOpen } from './periodOpen'
 import { pressed, useKeymap } from '../lib/keys'
 import type { Bucket } from '../lib/api'
 import {
@@ -39,24 +42,9 @@ const MIN_BACK_YEARS = 20
 /** Which granularities make sense for a period this long (undefined = auto). */
 
 
-/** Phone labels: the header's second row has room for "30d", not "Last 30 days". */
-const SHORT: Record<string, string> = {
-  today: 'Today',
-  yesterday: 'Yest.',
-  '7d': '7d',
-  '14d': '14d',
-  '28d': '28d',
-  '30d': '30d',
-  '90d': '90d',
-  '12mo': '12mo',
-  wtd: 'Week',
-  lastweek: 'Last wk',
-  mtd: 'Month',
-  lastmonth: 'Last mo',
-  qtd: 'Quarter',
-  lastquarter: 'Last qtr',
-  ytd: 'Year',
-  lastyear: 'Last yr',
+/** The period in words: the preset's name, else its dates. */
+export function periodLabel(value: PickerValue, today: ISODate) {
+  return PRESETS.find((p) => p.id === value.period)?.label ?? fmtRange(value.range, today)
 }
 
 /** ← is -1, → is +1, anything else 0. */
@@ -66,15 +54,19 @@ function stepOf(e: KeyboardEvent) {
   return 0
 }
 
-export function DatePicker({ value, today, onChange, short, tz, bucket, autoBucket, onBucket }: Props & { short?: boolean; tz?: string; bucket?: Bucket; autoBucket?: string; onBucket?: (b?: Bucket) => void }) {
+export function DatePicker({ value, today, onChange, short, tz, bucket, autoBucket, onBucket, filters = 0 }: Props & { short?: boolean; tz?: string; bucket?: Bucket; autoBucket?: string; onBucket?: (b?: Bucket) => void; filters?: number }) {
   // The period is plain words in the header's row, not a boxed control: the
   // arrows either side, the label opening the calendar.
-  const [open, setOpen] = useState(false)
+  const open = usePeriodOpen()
+  const collapsed = useRowCollapsed()
   useKeymap()
   const root = useRef<HTMLDivElement>(null)
   const minDate = addMonths(today, -12 * MIN_BACK_YEARS)
   const cmp = compareRange(value.range, value.compare, value.compareCustom, value.period)
-  const presetLabel = short ? SHORT[value.period] : PRESETS.find((p) => p.id === value.period)?.label
+  const presetLabel = PRESETS.find((p) => p.id === value.period)?.label
+  const label = presetLabel ?? fmtRange(value.range, today)
+  const fold = collapsed ? copy.expand : copy.collapse
+  const calendar = <Calendar size={15} strokeWidth={1.75} className="range-icon" aria-hidden="true" />
 
   // Global shortcuts: t/y/7/3/9/w/m/1 pick presets, ← → shift the period, c toggles compare.
   useEffect(() => {
@@ -103,7 +95,7 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
 
   useEffect(() => {
     if (!open) return
-    const onDown = (e: PointerEvent) => !root.current?.contains(e.target as Node) && setOpen(false)
+    const onDown = (e: PointerEvent) => !root.current?.contains(e.target as Node) && setPeriodOpen(false)
     window.addEventListener('pointerdown', onDown)
     return () => window.removeEventListener('pointerdown', onDown)
   }, [open])
@@ -111,13 +103,47 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
   const canNext = shiftRange(value.range, 1).to <= today
   const cmpText = cmp ? `vs ${compareLabel(value.period, value.compare, value.range)} (${fmtRange(cmp, today)})` : undefined
 
+  useEffect(() => () => setPeriodOpen(false), [])
+  const popover = open && (
+    <Suspense fallback={null}>
+      <Popover
+        value={value}
+        today={today}
+        minDate={minDate}
+        tz={tz}
+        bucket={bucket}
+        autoBucket={autoBucket}
+        onBucket={onBucket}
+        onCancel={() => setPeriodOpen(false)}
+        onApply={(v) => {
+          setPeriodOpen(false)
+          onChange(v)
+        }}
+      />
+    </Suspense>
+  )
+  // A phone has no buttons here: its row opens a sheet (features/header),
+  // which hands over to this popover. The keys above stay.
+  if (short) return <div ref={root}>{popover}</div>
+
   return (
-    <div ref={root} className="range-picker quiet">
+    <div ref={root} className={collapsed ? 'range-picker quiet collapsed' : 'range-picker quiet'}>
+      <button type="button" className="btn ghost fold-toggle" aria-expanded={!collapsed} aria-label={fold} onClick={toggleRowCollapsed}>
+        <Chevron dir={collapsed ? 'left' : 'right'} />
+        {collapsed && (
+          <>
+            {calendar}
+            <b className="range-label">{label}</b>
+            {filters > 0 && <span className="filter-count num">{filters}</span>}
+          </>
+        )}
+      </button>
+      <span className="ctl-div" aria-hidden="true" />
       <button
         type="button"
         className="btn icon ghost step"
-        aria-label="Previous period"
-        title="Previous period (←)"
+        aria-label={copy.previous}
+        title={`${copy.previous} (←)`}
         onClick={() => onChange({ ...value, period: 'custom', range: shiftRange(value.range, -1) })}
       >
         <Chevron dir="left" />
@@ -130,43 +156,38 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
         // What it is compared with: said on hover and to screen readers; the
         // tiles' change chips already show it.
         title={cmpText}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setPeriodOpen(!open)}
       >
         <span className="range-line">
-          <span className="range-label">{presetLabel ?? fmtRange(value.range, today)}</span>
+          {calendar}
+          <span className="range-label">{label}</span>
+          {presetLabel && <span className="range-dates">{fmtRange(value.range, today)}</span>}
           {cmpText && <span className="sr">{cmpText}</span>}
           {value.period === 'now' && <span className="pulse" aria-hidden="true" />}
-          <Chevron dir="down" />
         </span>
       </button>
       <button
         type="button"
         className="btn icon ghost step"
-        aria-label="Next period"
-        title="Next period (→)"
+        aria-label={copy.next}
+        title={`${copy.next} (→)`}
         disabled={!canNext}
         onClick={() => onChange({ ...value, period: 'custom', range: shiftRange(value.range, 1) })}
       >
         <Chevron dir="right" />
       </button>
-      {open && (
-        <Suspense fallback={null}>
-        <Popover
-          value={value}
-          today={today}
-          minDate={minDate}
-          tz={tz}
-          bucket={bucket}
-          autoBucket={autoBucket}
-          onBucket={onBucket}
-          onCancel={() => setOpen(false)}
-          onApply={(v) => {
-            setOpen(false)
-            onChange(v)
-          }}
-        />
-        </Suspense>
-      )}
+      <span className="ctl-div ctl-cmp" aria-hidden="true" />
+      <button
+        type="button"
+        className="btn ghost compare ctl-cmp"
+        aria-expanded={open}
+        aria-label={`${copy.compareLabel}: ${copy.compareWith[value.compare]}`}
+        onClick={() => setPeriodOpen(!open)}
+      >
+        {copy.compareWith[value.compare]}
+        <Chevron dir="down" />
+      </button>
+      {popover}
     </div>
   )
 }

@@ -60,31 +60,6 @@
 .header-tools.quiet .btn.ask .kbd {
   display: inline;
 }
-.header-tools.quiet .btn.filter.on {
-  color: var(--text);
-  border-color: transparent;
-}
-.subbar .share-btn {
-  height: 36px;
-  flex: none;
-  padding: 0 14px;
-}
-.subbar .share-btn svg {
-  display: none;
-}
-@media (max-width: 640px) {
-  .subbar .share-btn {
-    width: 36px;
-    padding: 0;
-    justify-content: center;
-  }
-  .subbar .share-btn svg {
-    display: block;
-  }
-  .subbar .share-btn .label {
-    display: none;
-  }
-}
 .header-tools.quiet .more {
   position: relative;
 }
@@ -93,9 +68,6 @@
   right: 0;
   min-width: 220px;
   z-index: 40;
-}
-.subbar .view-switch {
-  margin: 0 4px 0 8px;
 }
 /* The Create menu has no button of its own: it opens under ⋯, from its key
    or ⋯'s Create item (features/create). */
@@ -110,56 +82,6 @@
   height: 100%;
 }
 
-/* The period: words, not a boxed control. */
-.subbar .range-picker.quiet {
-  flex: 0 1 auto;
-  min-width: 0;
-  height: 40px;
-  border: 0;
-  background: transparent;
-  margin-left: auto;
-}
-.range-picker.quiet > .btn {
-  height: 100%;
-  border-radius: 8px;
-  box-shadow: none;
-  color: var(--text);
-}
-.range-picker.quiet > .btn.step {
-  width: 28px;
-  color: var(--text-2);
-}
-.range-picker.quiet > .btn.range {
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 0;
-  min-width: 0;
-  padding: 0 6px;
-  font-weight: 600;
-}
-.range-picker.quiet > .btn:hover:not(:disabled) {
-  background: var(--surface-2);
-}
-.range-line {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  max-width: 100%;
-}
-.range-picker.quiet .range-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.range-picker.quiet .range-line > svg {
-  display: none;
-}
-.range-picker.quiet .range-vs {
-  font-weight: 400;
-}
-
 /* Tablet: Ask and Filter are their icons alone, the logo its ghost. */
 @media (max-width: 880px) {
   .header.quiet > .brand .tkb-wm {
@@ -168,12 +90,10 @@
 }
 @media (max-width: 960px) {
   .header-tools.quiet .btn.ask .ask-label,
-  .header-tools.quiet .btn.ask .kbd,
-  .header-tools.quiet .btn.filter .filter-label {
+  .header-tools.quiet .btn.ask .kbd {
     display: none;
   }
-  .header-tools.quiet .btn.ask,
-  .header-tools.quiet .btn.filter {
+  .header-tools.quiet .btn.ask {
     min-width: 36px;
     padding: 0 9px;
     justify-content: center;
@@ -209,32 +129,11 @@
   .header-tools.quiet .btn.ask {
     display: inline-flex;
   }
-  .subbar .range-picker.quiet {
-    flex: none;
-    margin-left: auto;
-  }
-  .range-picker.quiet > .btn.step {
-    display: none;
-  }
-  .range-picker.quiet > .btn.range {
-    width: auto;
-  }
-  .range-picker.quiet .range-line > svg {
-    display: block;
-    flex: none;
-  }
-  .range-picker.quiet .range-vs {
-    display: none;
-  }
-  .header-tools.quiet .btn.ask,
-  .header-tools.quiet .btn.filter,
+    .header-tools.quiet .btn.ask,
   .header-tools.quiet .btn.icon.ghost {
     width: 30px;
     min-width: 30px;
     padding: 0;
-  }
-  .range-picker.quiet > .btn.range {
-    padding: 0 4px;
   }
 }
 
@@ -266,9 +165,8 @@
 }
 
 /* ---- The second row: what the numbers are ----------------------------------
-   Live/Data on the left, then filters in force and saved views; the period
-   at the right edge. One line, and nothing moves between Live and Data
-   (Live only drops the period). */
+   Live/Data on the left, the two capsules (ControlRow.css) on the right. One
+   line, and nothing moves between Live and Data (Live only drops them). */
 .subbar {
   display: flex;
   align-items: center;
@@ -276,17 +174,9 @@
   min-height: 40px;
   margin-top: -8px;
 }
-.subbar > .toolbar-filters {
-  flex: 1 1 auto;
-  min-width: 0;
-}
 .subbar .view-switch {
   margin: 0;
   flex: none;
-}
-.subbar .range-picker.quiet {
-  margin-left: auto;
-  margin-right: -6px;
 }
 
 /* Live fits one screen and Data scrolls: the scrollbar's room is always
@@ -296,21 +186,7 @@ html {
   overflow-y: scroll;
 }
 
-/* The page's ⋯ ends the period row; the avatar's menu ends the first row. */
-.subbar > .more {
-  flex: none;
-  margin-left: auto;
-}
-.subbar > .share-btn + .more,
-.subbar > .range-picker.quiet + .more {
-  margin-left: 0;
-}
-.subbar > .more .more-menu {
-  top: 42px;
-  right: 0;
-  min-width: 220px;
-  z-index: 40;
-}
+/* The avatar's menu ends the first row. */
 .account-menu .more-menu {
   min-width: 250px;
 }
@@ -328,72 +204,5 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .more-menu {
     animation: none;
-  }
-}
-.subbar > .more {
-  position: relative;
-}
-.subbar > .more > .btn.icon.ghost {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  color: var(--text-2);
-}
-.subbar > .more > .btn.icon.ghost:hover,
-.subbar > .more > .btn.icon.ghost[aria-expanded='true'] {
-  color: var(--text);
-  background: var(--surface-2);
-}
-
-/* Filter sits in the period row, on the right, right before the period. */
-.filter-root {
-  position: relative;
-  flex: none;
-  margin-left: auto;
-}
-.subbar > .toolbar-filters + .filter-root {
-  margin-left: 0;
-}
-.subbar > .filter-root + .range-picker.quiet {
-  margin-left: 0;
-}
-.subbar .btn.filter {
-  height: 36px;
-  color: var(--text-2);
-  padding: 0 10px;
-}
-.subbar .btn.filter:hover,
-.subbar .btn.filter[aria-expanded='true'],
-.subbar .btn.filter.on {
-  color: var(--text);
-  background: var(--surface-2);
-}
-.subbar .btn.filter.on {
-  border-color: transparent;
-}
-@media (max-width: 960px) {
-  .subbar .btn.filter .filter-label {
-    display: none;
-  }
-  .subbar .btn.filter {
-    min-width: 36px;
-    padding: 0 9px;
-    justify-content: center;
-  }
-}
-@media (max-width: 640px) {
-  /* The popup takes the row's width instead of hanging off a button that is far from the left edge. */
-  .subbar {
-    position: relative;
-  }
-  .subbar .filter-root {
-    position: static;
-  }
-  .subbar .filter-pop {
-    left: 0;
-    right: 0;
-    top: 44px;
-    width: auto;
-    max-width: none;
   }
 }

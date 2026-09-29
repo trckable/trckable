@@ -2,7 +2,7 @@
 // trckabled with the demo data (like fullcharts, skipped unless
 // TRCKABLE_A11Y_URL points at one):
 //   TRCKABLE_A11Y_URL=http://localhost:8799 npx playwright test header
-// One row at every width down to 375 px; Share (in the second row) the only filled button; what
+// One row at every width down to 375 px; no filled button (Share is an icon in the second row); what
 // left the row (Refresh, Create, Core/Full, Milestones, Export) is in the ⋯
 // beside the period with its key, and the keys still work; the person's own
 // things (Profile, theme, shortcuts, sign out) are the avatar's menu.
@@ -67,7 +67,7 @@ for (const width of [1440, 700, 375]) {
     await page.setViewportSize({ width, height: 900 })
     await open(page)
     // Row 1: who and which site, then Peek, the avatar. Row 2:
-    // Live/Data, Filter, the period, Share and ⋯. Each one line, inside the screen.
+    // Live/Data, then the period and Filter, Share and ⋯ in two capsules. Each one line, inside the screen.
     for (const sel of ['.header.quiet', '.subbar']) {
       const boxes = await controls(page, sel)
       expect(boxes.length, sel).toBeGreaterThan(1)
@@ -77,22 +77,29 @@ for (const width of [1440, 700, 375]) {
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 'no sideways scroll').toBeLessThanOrEqual(0)
 
-    // Share is the one filled button; Peek and Filter stay one tap away.
+    // No filled button in either row; Share is an icon (in ⋯ on a phone);
+    // Peek and Filter stay one tap away.
     await expect(page.locator('.header .btn.primary')).toHaveCount(0)
-    await expect(page.locator('.subbar .btn.primary')).toHaveCount(1)
-    await expect(page.locator('.subbar').getByRole('button', { name: 'Share' })).toBeVisible()
-    expect((await page.locator('.subbar .share-btn').boundingBox())?.height).toBe(36)
+    await expect(page.locator('.subbar .btn.primary')).toHaveCount(0)
+    if (width > 640) await expect(page.locator('.subbar').getByRole('button', { name: 'Share' })).toBeVisible()
+    else await expect(page.locator('.subbar').getByRole('button', { name: 'Share' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Peek' })).toBeVisible()
-    await expect(page.locator('.subbar .btn.filter')).toBeVisible()
-    // Row 2 says what the numbers are; the comparison is the period's title,
-    // not a line of text.
-    await expect(page.locator('.subbar').getByRole('group', { name: 'View' })).toBeVisible()
+    // Row 2 says what the numbers are. A phone has one pill for it (Live/Data,
+    // the periods and Filter are in its sheet); the comparison is the
+    // period's title, not a line of text.
+    if (width > 640) {
+      await expect(page.locator('.subbar .btn.filter')).toBeVisible()
+      await expect(page.locator('.subbar').getByRole('group', { name: 'View' })).toBeVisible()
+    } else {
+      await expect(page.locator('.subbar .phone-pill')).toBeVisible()
+    }
     await expect(page.locator('.subbar .range-vs')).toHaveCount(0)
     if (width > 640) await expect(page.getByRole('button', { name: 'Next period' })).toBeVisible()
 
     // What left the row is in ⋯, each with its key.
     await more(page).click()
     const items = menu(page).getByRole('menuitem')
+    if (width <= 640) await expect(items.first()).toHaveText(/Share/)
     await expect(items.filter({ hasText: 'Refresh' })).toBeVisible()
     await expect(items.filter({ hasText: 'Create…' })).toContainText('A')
     await expect(items.filter({ hasText: 'Full view' })).toContainText('F')
