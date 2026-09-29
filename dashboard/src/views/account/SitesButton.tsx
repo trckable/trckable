@@ -65,7 +65,7 @@ export function SitesButton({ p, access: acc }: { p: Person; access: SiteAccess 
       </button>
       {open && (
         <Suspense fallback={null}>
-          <SitesPop anchor={btn} viewer={viewer} sites={acc.sites} save={acc.save} email={p.email} onClose={() => setOpen(false)} />
+          <SitesPop anchor={btn} viewer={viewer} sites={acc.sites} save={acc.save} reload={acc.reload} email={p.email} onClose={() => setOpen(false)} />
         </Suspense>
       )}
     </>

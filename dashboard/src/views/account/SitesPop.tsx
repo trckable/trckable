@@ -1,7 +1,7 @@
 // The popover behind a viewer's sites button: a search, one row per site with
 // its icon and domain, "All sites" and Done. Every tick is saved at once.
 import { Check, Search } from 'lucide-react'
-import { useState, type RefObject } from 'react'
+import { useRef, useState, type RefObject } from 'react'
 import { AnchoredPop } from '../../components/AnchoredPop'
 import { SiteMark } from '../../components/SiteMark'
 import { toast } from '../../components/Toast'
@@ -19,6 +19,7 @@ export default function SitesPop({
   sites,
   email,
   save,
+  reload,
   onClose,
 }: {
   anchor: RefObject<HTMLElement | null>
@@ -26,18 +27,41 @@ export default function SitesPop({
   sites: AccessSite[]
   email: string
   save: (id: string, sites: string[] | null) => Promise<unknown>
+  reload: () => Promise<SiteAccessList | null>
   onClose: () => void
 }) {
-  // What is ticked is kept here at once; the save follows, and a refusal puts it back.
+  // What is ticked is kept here at once. Saves go one at a time: ticks made
+  // while one is in flight are sent as one save of the newest state when it
+  // finishes, so answers can never arrive out of order. A refusal reads the
+  // server's list again and shows that.
   const [ticked, setTicked] = useState<string[] | null>(viewer.sites)
   const [query, setQuery] = useState('')
+  const newest = useRef<string[] | null>(viewer.sites)
+  const sending = useRef(false)
+  const flush = () => {
+    if (sending.current) return
+    const sent = newest.current
+    sending.current = true
+    save(viewer.id, sent)
+      .then(() => {
+        sending.current = false
+        if (newest.current !== sent) flush()
+      })
+      .catch((e: unknown) => {
+        sending.current = false
+        toast(messageOf(e) || t.sites.failed, 'error')
+        void reload().then((list) => {
+          const now = list?.viewers.find((v) => v.id === viewer.id)
+          if (!now) return
+          newest.current = now.sites
+          setTicked(now.sites)
+        })
+      })
+  }
   const put = (next: string[] | null) => {
-    const was = ticked
+    newest.current = next
     setTicked(next)
-    save(viewer.id, next).catch((e: unknown) => {
-      setTicked(was)
-      toast(messageOf(e) || t.sites.failed, 'error')
-    })
+    flush()
   }
   const shown = findSites(sites, query)
   const count = ticked === null ? sites.length : sites.filter((s) => ticked.includes(s.id)).length
@@ -67,7 +91,7 @@ export default function SitesPop({
             {shown.length === 0 && <span className="pop-empty faint">{t.sites.empty}</span>}
           </div>
           <div className="pop-foot">
-            <button type="button" data-nav className="pop-link" disabled={ticked === null} onClick={() => put(null)}>
+            <button type="button" data-nav className="pop-link" title={t.sites.allWhy} disabled={ticked === null} onClick={() => put(null)}>
               {t.sites.all}
             </button>
             <button type="button" data-nav className="pop-link primary" onClick={close}>

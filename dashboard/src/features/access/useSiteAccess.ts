@@ -1,7 +1,7 @@
 // Site access for People: the account's sites, and which of them each
 // viewer may see. Loaded again whenever People's lists change (someone added,
-// removed, made an owner); a save is one Save in the popup, and the server's
-// list replaces this one.
+// removed, made an owner); a save is a tick in People's sites popover, and the
+// server's answer replaces this list.
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { api, type Site, type SiteAccessList } from '../../lib/api'
 
@@ -16,14 +16,21 @@ export function useSiteAccess(people: unknown) {
   /** Rejects with the server's refusal, for the popup to show. */
   const save = useCallback((id: string, sites: string[] | null) => api.setSiteAccess(id, sites).then(setList), [])
   const reload = useCallback(() => {
-    api.siteAccess().then(setList).catch(() => {})
+    const done = api
+      .siteAccess()
+      .then((l) => {
+        setList(l)
+        return l
+      })
+      .catch(() => null)
     api
       .sites()
       .then((r) => setLooks(new Map(r.sites.map((s) => [s.id, { color: s.color, icon_url: s.icon_url }]))))
       .catch(() => {})
+    return done
   }, [])
   useEffect(() => {
-    if (people) reload()
+    if (people) void reload()
   }, [people, reload])
   const sites: AccessSite[] = useMemo(() => (list?.sites ?? []).map((s) => ({ ...s, ...looks.get(s.id) })), [list, looks])
   // One site: nothing to choose between, so People shows nothing about it.

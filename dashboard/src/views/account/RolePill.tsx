@@ -25,7 +25,7 @@ export function RolePill({ p, me, owners, onAsk }: { p: Person; me?: string; own
         type="button"
         className={'role-pill' + (p.role === 'owner' ? ' owner' : '')}
         aria-label={label}
-        aria-haspopup="menu"
+        aria-haspopup="dialog"
         aria-expanded={open}
         disabled={lock !== null}
         onPointerEnter={RolePop.preload}

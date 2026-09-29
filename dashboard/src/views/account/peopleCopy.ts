@@ -26,6 +26,7 @@ export const people = {
     empty: 'No site found',
     done: 'Done',
     failed: 'The sites were not saved',
+    allWhy: 'Including sites added later',
   },
   /** The pill and its popover: what each role may do, in one line. */
   roles: {
@@ -38,7 +39,7 @@ export const people = {
     ownerTitle: (name: string) => `Make ${name} an owner?`,
     viewerTitle: (name: string) => `Make ${name} a viewer?`,
     ownerLines: ['Sees and changes every site', 'Adds and removes people, you too', 'Connects payments, creates keys'],
-    viewerLines: ['Can no longer change anything', 'You choose which sites they see'],
+    viewerLines: ['Can no longer change anything', 'Still sees every site until you pick fewer.'],
     trust: 'I trust them with all of this',
     cancel: 'Cancel',
     ownerGo: 'Make owner',

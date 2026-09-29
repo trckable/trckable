@@ -11,7 +11,7 @@ section into the release.
 
 ### Changed
 
-- People is one compact row per person: a stack of site icons with "N of M sites" that opens a searchable list (each tick is saved at once), and a role pill that opens the two roles; every role change asks first, and making someone an owner needs their email typed. On a phone the row is two lines and the popovers are sheets from the bottom.
+- People is one compact row per person: a stack of site icons with "N of M sites" that opens a searchable list (each tick is saved at once), and a role pill that opens the two roles; every role change asks first, and making someone an owner takes one tick ("I trust them with all of this"). On a phone the row is two lines and the popovers are sheets from the bottom.
 - Live mode drops its two green dots (before the title and before "Online now"): the dot in the Live | Data switch is the one, and it dims while Live's connection is down.
 
 ## 0.5.4 (29 Sep 2026)

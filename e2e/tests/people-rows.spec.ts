@@ -74,6 +74,28 @@ test('the sites popover ticks, searches and saves at once', async ({ page }) => 
   await expect(sites).toBeFocused()
 })
 
+test('fast ticks are saved one at a time, and the newest state wins', async ({ page }) => {
+  const { row, sites } = await open(page)
+  await stored(page)
+  const all = sitesTotal
+  // The first save is held for a moment; the next two ticks come while it is out.
+  let puts = 0
+  await page.route('**/api/v1/site-access/*', async (route) => {
+    if (route.request().method() === 'PUT' && puts++ === 0) await new Promise((r) => setTimeout(r, 1200))
+    await route.continue()
+  })
+  await sites.click()
+  const pop = page.locator('.sites-pop')
+  await pop.getByRole('menuitemcheckbox', { name: new RegExp(`rows-a-${tag}`) }).click()
+  await pop.getByRole('menuitemcheckbox', { name: new RegExp(`rows-b-${tag}`) }).click()
+  await page.waitForTimeout(2000)
+  expect(await stored(page)).toHaveLength(all - 2)
+  await expect(row.locator('.sites-btn .sites-text')).toHaveText(`${all - 2} of ${all} sites`)
+  await page.unroute('**/api/v1/site-access/*')
+  await pop.getByRole('button', { name: 'All sites' }).click()
+  await expect.poll(() => stored(page)).toBeNull()
+})
+
 test('keyboard: in with Enter, arrows between the choices, Escape back to the button', async ({ page }) => {
   const { row, sites, pill } = await open(page)
   await sites.focus()
@@ -195,6 +217,14 @@ for (const scheme of ['dark', 'light'] as const) {
     await page.getByRole('menuitemradio', { name: /^Owner/ }).click()
     await scan('make owner')
     await page.keyboard.press('Escape')
+    // The other way: as an owner, the viewer confirmation.
+    await page.request.patch(`${API}/api/v1/people/${personId}`, { headers: AUTH, data: { role: 'owner' } })
+    await open(page)
+    await pill.click()
+    await page.getByRole('menuitemradio', { name: /^Viewer/ }).click()
+    await scan('make viewer')
+    await page.keyboard.press('Escape')
+    await page.request.patch(`${API}/api/v1/people/${personId}`, { headers: AUTH, data: { role: 'viewer' } })
     await expect(row).toBeVisible()
   })
 }
