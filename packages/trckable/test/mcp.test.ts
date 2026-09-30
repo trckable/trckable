@@ -4,7 +4,7 @@ import { createMcpServer, rangeFor } from '../src/mcp'
 const site = { id: 'tkb_abc', domain: 'example.com', name: '', timezone: 'Europe/Berlin', currency: 'USD', proxy_key: 'secret' }
 const kpis = { visitors: 200, sessions: 260, pageviews: 520, bounce_rate: 0.456, avg_session_s: 107.4, views_per_session: 2, new_visitor_share: 0.8 }
 
-function fakeAPI(calls: string[], opts: { sites?: object[]; status?: number } = {}) {
+function fakeAPI(calls: string[], opts: { sites?: object[]; status?: number; before?: object } = {}) {
   return (async (url: string, init?: RequestInit) => {
     calls.push(url)
     expect((init?.headers as Record<string, string>).Authorization).toBe('Bearer tkb_live_test')
@@ -26,7 +26,7 @@ function fakeAPI(calls: string[], opts: { sites?: object[]; status?: number } = 
           money: { currency: 'EUR', exponent: 2, revenue: 123450, refunds: 5000, payments: 12, customers: 11, paying_visitors: 10, conversion: 0.05, revenue_per_visitor: 617.25, new_revenue: 100000, renewal_revenue: 23450, unattributed: 450, unconverted: 0 },
           revenue_dims: { channel: [{ value: 'AI', revenue: 90000, customers: 7 }, { value: 'Search', revenue: 33000, customers: 4 }] },
         },
-        previous: u.searchParams.get('compare') ? { approximate: false, kpis: { ...kpis, visitors: 160 }, series: [], dims: { channel: [{ value: 'AI', visitors: 25 }] }, goals: [] } : undefined,
+        previous: u.searchParams.get('compare') ? { approximate: false, kpis: { ...kpis, visitors: 160 }, series: [], dims: { channel: [{ value: 'AI', visitors: 25 }] }, goals: [], ...opts.before } : undefined,
         previous_from: '2026-08-23',
         previous_to: '2026-09-21',
         online: 4,
@@ -118,9 +118,25 @@ describe('trckable MCP server', () => {
     const srv = createMcpServer({ host: 'https://s', apiKey: 'tkb_live_test', fetch: fakeAPI([]), now })
     const { data } = await call(srv, 'trckable_revenue', { period: '30d' })
     expect(data.totals).toMatchObject({ currency: 'EUR', revenue: 1234.5, refunds: 50, customers: 11, conversion_rate: 5, renewal_revenue: 234.5 })
-    expect(data.by_revenue[0]).toEqual({ value: 'AI', revenue: 900, customers: 7, visitors: 50, revenue_per_visitor: 18 })
+    expect(data.by_revenue[0]).toEqual({ value: 'AI', revenue: 900, customers: 7, visitors: 50, revenue_per_visitor: 18, revenue_previous: null, revenue_change: null })
     const o = await call(srv, 'trckable_overview')
     expect(o.data.revenue.revenue).toBe(1234.5)
+  })
+
+  it('gives each revenue row its previous revenue and change', async () => {
+    const money = { currency: 'EUR', exponent: 2, revenue: 60000, refunds: 0, payments: 5, customers: 5, paying_visitors: 5, conversion: 0.03, revenue_per_visitor: 300, new_revenue: 60000, renewal_revenue: 0, unattributed: 0, unconverted: 0 }
+    const before = { money, dims: { channel: [{ value: 'AI', visitors: 25, revenue: 75000 }] }, revenue_dims: { channel: [{ value: 'AI', revenue: 75000, customers: 5 }, { value: 'Email', revenue: 5000, customers: 1 }] } }
+    const srv = createMcpServer({ host: 'https://s', apiKey: 'tkb_live_test', fetch: fakeAPI([], { before }), now })
+    const { data } = await call(srv, 'trckable_revenue', { period: '30d' })
+    // 900 now against 750 before: up 20%; a value missing from a short list earned nothing before
+    expect(data.by_revenue[0]).toMatchObject({ value: 'AI', revenue: 900, revenue_previous: 750, revenue_change: '+20%' })
+    expect(data.by_revenue[1]).toMatchObject({ value: 'Search', revenue: 330, revenue_previous: 0, revenue_change: null })
+    const none = await call(createMcpServer({ host: 'https://s', apiKey: 'tkb_live_test', fetch: fakeAPI([], { before }), now }), 'trckable_revenue', { compare: 'none' })
+    expect(none.data.by_revenue[0]).toMatchObject({ revenue_previous: null, revenue_change: null })
+    // a full previous list cannot say what a value outside it earned
+    const full = { ...before, revenue_dims: { channel: Array.from({ length: 10 }, (_, i) => ({ value: `x${i}`, revenue: 100 })) }, dims: { channel: [] } }
+    const unsure = await call(createMcpServer({ host: 'https://s', apiKey: 'tkb_live_test', fetch: fakeAPI([], { before: full }), now }), 'trckable_revenue')
+    expect(unsure.data.by_revenue[0]).toMatchObject({ value: 'AI', revenue_previous: null, revenue_change: null })
   })
 
   it('lists milestones since a day, with the next step', async () => {
