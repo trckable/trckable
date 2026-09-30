@@ -396,3 +396,55 @@
     animation: none;
   }
 }
+
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .site-pill
+  ) {
+    font-size: 12px;
+  }
+}
+
+/* The phone scale (phone.css): the name and ⋯ on one line, the actions under
+   them, every button a finger wide. */
+@media (max-width: 640px) {
+  :root .site-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 10px 12px;
+    padding: 12px var(--ph-pad);
+  }
+  :root .site-card > .btn.icon {
+    grid-column: 3;
+    grid-row: 1;
+    margin: -6px -8px 0 0;
+  }
+  :root .site-card-actions {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    margin-left: 0;
+  }
+  :root .site-card-name {
+    font-size: var(--ph-text);
+  }
+  :root .site-card-text .faint {
+    font-size: var(--ph-text-2);
+  }
+  :root .sites-head {
+    padding: 12px var(--ph-pad);
+  }
+  :root .sites-head-text .faint {
+    font-size: var(--ph-text-2);
+  }
+  :root .site-add {
+    min-height: var(--ph-row);
+    font-size: var(--ph-text);
+  }
+  :root .stages {
+    font-size: var(--ph-text);
+  }
+}

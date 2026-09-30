@@ -67,7 +67,7 @@ for (const width of [1440, 700, 375]) {
     await page.setViewportSize({ width, height: 900 })
     await open(page)
     // Row 1: who and which site, then Peek, the avatar. Row 2:
-    // Live/Data, then the period and Filter, Share and ⋯ in two capsules. Each one line, inside the screen.
+    // Live/Data (in row 1 from 1024 px up), then the period and Filter, Share and ⋯ in two capsules. Each one line, inside the screen.
     for (const sel of ['.header.quiet', '.subbar']) {
       const boxes = await controls(page, sel)
       expect(boxes.length, sel).toBeGreaterThan(1)
@@ -84,13 +84,20 @@ for (const width of [1440, 700, 375]) {
     if (width > 640) await expect(page.locator('.subbar').getByRole('button', { name: 'Share' })).toBeVisible()
     else await expect(page.locator('.subbar').getByRole('button', { name: 'Share' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Peek' })).toBeVisible()
-    await expect(page.locator('.site-zone').getByRole('button', { name: /^Settings for/ })).toBeVisible()
+    // The cog is in the site card; on a phone under 420 px it is the first row of the site list instead.
+    if (width < 420) {
+      await page.locator('.site-zone button.site-btn').click()
+      await expect(page.locator('.pop.sites .foot-settings')).toBeVisible()
+      await page.keyboard.press('Escape')
+    } else await expect(page.locator('.site-zone').getByRole('button', { name: /^Settings for/ })).toBeVisible()
     // Row 2 says what the numbers are. A phone has one pill for it (Live/Data,
     // the periods and Filter are in its sheet); the comparison is the
     // period's title, not a line of text.
     if (width > 640) {
       await expect(page.locator('.subbar .btn.filter')).toBeVisible()
-      await expect(page.locator('.subbar').getByRole('group', { name: 'View' })).toBeVisible()
+      const place = width >= 1024 ? '.header-tools' : '.subbar'
+      await expect(page.locator(place).getByRole('group', { name: 'View' })).toBeVisible()
+      await expect(page.getByRole('group', { name: 'View' })).toHaveCount(1)
     } else {
       await expect(page.locator('.subbar .phone-pill')).toBeVisible()
     }
@@ -138,9 +145,10 @@ test('the avatar menu holds the person\'s own things, by keyboard too', async ({
   await expect(page.getByRole('dialog', { name: 'Profile, your account' })).toBeVisible()
 })
 
-test('Live keeps only Live/Data on row 2, in the same place, and has no ⋯', async ({ page }) => {
+test('Live keeps only Live/Data, in the same place, and has no ⋯', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
   await open(page)
-  const view = page.locator('.subbar').getByRole('group', { name: 'View' })
+  const view = page.locator('.header-tools').getByRole('group', { name: 'View' })
   const before = await view.boundingBox()
   await view.getByRole('button', { name: 'Live' }).click()
   await expect(page).toHaveURL(/view=live/)

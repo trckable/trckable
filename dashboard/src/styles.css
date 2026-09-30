@@ -194,6 +194,28 @@ h2 {
 }
 
 /* ---- layout ---- */
+.boot {
+  position: fixed;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 2px;
+  fill: var(--accent);
+  opacity: 0.6;
+}
+
+.boot rect {
+  animation: boot-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes boot-slide {
+  from { transform: translateX(-30px); }
+  to { transform: translateX(100px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot rect { animation: none; }
+}
+
 .app {
   max-width: 1440px;
   min-height: 100dvh;
@@ -578,7 +600,7 @@ textarea:focus-visible {
   border-radius: 2px;
   background: var(--accent);
   opacity: 0.75;
-  transition: width 0.45s var(--ease), opacity 0.15s;
+  transition: width 0.12s var(--ease), opacity 0.15s;
 }
 .bl-row:hover .bl-bar {
   opacity: 1;
@@ -2524,33 +2546,7 @@ button.kpi-live:hover .label::after {
   color: var(--text-2);
 }
 
-/* ---- Dropdowns on a phone ----------------------------------------------------
-   Centred over the page, the page dimmed behind, the way a dialog opens:
-   anchored to a button, a menu runs off one edge or the other. */
-@media (max-width: 640px) {
-  .pop.menu-pop,
-  .pop.sv-pop,
-  .pop.sites,
-  .pop.sheet.range-pop {
-    position: fixed !important;
-    inset: auto 12px auto 12px !important;
-    top: 50% !important;
-    width: auto !important;
-    max-width: none !important;
-    max-height: 80dvh;
-    overflow-y: auto;
-    transform: translateY(-50%);
-    box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.55), var(--shadow);
-    z-index: 130;
-    animation: pop-centre 0.22s var(--ease) both;
-  }
-}
-@keyframes pop-centre {
-  from {
-    opacity: 0;
-    transform: translateY(-46%) scale(0.98);
-  }
-}
+/* ---- Dropdowns on a phone: bottom sheets (phone.css) ---- */
 
 /* The header's logo: ghost and name; the ghost alone on a phone. */
 @media (max-width: 640px) {

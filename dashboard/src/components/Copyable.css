@@ -20,3 +20,14 @@
   height: 32px;
   font-size: 12.5px;
 }
+
+/* The phone scale (phone.css). */
+@media (max-width: 640px) {
+  :root .copyable code {
+    font-size: var(--ph-text-2);
+  }
+  :root .copyable .btn {
+    height: var(--ph-hit);
+    font-size: var(--ph-text-2);
+  }
+}

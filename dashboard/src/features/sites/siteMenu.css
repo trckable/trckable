@@ -76,6 +76,9 @@
 .sites-list {
   display: flex;
   flex-direction: column;
+  /* Room inside for a lifted row's shadow, taken back outside. */
+  margin-inline: -6px;
+  padding-inline: 6px;
   max-height: min(352px, 46vh);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -96,8 +99,43 @@
   align-items: center;
   border-radius: 8px;
 }
+/* Arranging: a grip at the row's edge on hover, and while one is dragged it
+   lifts (surface, shadow, a touch larger) and the others slide aside. */
+.site-row .grip {
+  position: absolute;
+  left: -1px;
+  top: 50%;
+  margin-top: -8px;
+  padding: 2px 0;
+  box-sizing: content-box;
+  color: var(--text-3);
+  opacity: 0;
+  cursor: grab;
+}
+.site-row.sortable:hover .grip,
+.site-row.dragging .grip {
+  opacity: 1;
+}
+.site-row.sortable:hover > .site.on::before,
+.site-row.dragging > .site.on::before {
+  opacity: 0;
+}
 .site-row.dragging {
-  opacity: 0.45;
+  z-index: 2;
+  background: var(--surface-2);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--border-2);
+}
+.site-row.dragging .site,
+.site-row.dragging .site:hover {
+  background: transparent;
+}
+.pop.sites.reordering,
+.pop.sites.reordering * {
+  cursor: grabbing;
+  user-select: none;
+}
+.pop.sites.reordering .site:hover:not(.on) {
+  background: transparent;
 }
 
 .site {
@@ -375,6 +413,12 @@
   gap: 2px;
 }
 
+/* The current site's settings: only where the header has no room for the cog
+   (phone.css shows it on a narrow phone). */
+.foot-settings {
+  display: none;
+}
+
 /* Four to six sites. */
 .pop.sites.mid .site,
 .pop.sites.mid .foot-add {
@@ -445,6 +489,11 @@
   font: inherit;
 }
 @media (hover: none) {
+  :root .sites-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
   .foot-keys {
     display: none;
   }
@@ -458,22 +507,142 @@
     animation: none;
   }
 }
-@media (max-width: 640px) {
+/* A desktop's rows have a little more air: 4 px taller, and the mark a bit
+   further from the name. A phone keeps its own sizes (below). */
+@media (min-width: 641px) {
+  .sites-list {
+    max-height: min(392px, 46vh);
+  }
   .site,
-  .pop.sites.mid .site {
-    height: 40px;
+  .foot-add {
+    height: 34px;
   }
-  .all-chip {
-    height: 32px;
+  .site {
+    gap: 11px;
   }
-  .pop.sites .menu-search {
-    height: 40px;
+  .site.on::before {
+    top: 10px;
+    bottom: 10px;
   }
-  .foot-add,
+  .pop.sites.mid .site,
   .pop.sites.mid .foot-add {
-    height: 40px;
+    height: 38px;
+  }
+  .pop.sites.mid .site {
+    gap: 12px;
+  }
+  .pop.sites.mid .site.on::before {
+    top: 11px;
+    bottom: 11px;
+  }
+  .pop.sites.roomy .site,
+  .pop.sites.roomy .foot-add {
+    height: 44px;
+  }
+  .pop.sites.roomy .site {
+    gap: 14px;
+  }
+  .pop.sites.roomy .site.on::before {
+    top: 13px;
+    bottom: 13px;
+  }
+}
+/* A phone (the phone scale, phone.css): the list is a bottom sheet, every row
+   48 px, the ⋯ and the All sites chip a finger wide. */
+@media (max-width: 640px) {
+  :root .pop.sites {
+    gap: 2px;
+  }
+  :root .pop.sites .site,
+  :root .pop.sites.mid .site,
+  :root .pop.sites.roomy .site {
+    height: var(--ph-sheet-row);
+    gap: 12px;
+    padding: 0 10px;
+    font-size: var(--ph-text);
+  }
+  :root .pop.sites .site.on::before {
+    top: 12px;
+    bottom: 12px;
+  }
+  :root .pop.sites .site-mark {
+    font-size: 12px;
+  }
+  :root .pop.sites .site .tail,
+  :root .pop.sites.roomy .site .tail {
+    font-size: var(--ph-small);
+  }
+  :root .pop.sites .site .tick {
+    width: var(--ph-icon);
+  }
+  :root .pop.sites .site-row > .btn.icon,
+  :root .pop.sites.roomy .site-row > .btn.icon {
+    width: var(--ph-hit);
+    height: var(--ph-hit);
+    border-radius: 10px;
+  }
+  :root .pop.sites .site-head > .btn.icon {
+    width: var(--ph-hit);
+    height: var(--ph-hit);
+  }
+  :root .pop.sites .site-head {
+    min-height: var(--ph-hit);
+    font-size: 12px;
+  }
+  :root .pop.sites .site-head .fold {
+    min-height: var(--ph-hit);
+    padding: 0 10px;
+  }
+  :root .pop.sites .menu-search {
+    height: var(--ph-sheet-row);
+    border-radius: 12px;
+  }
+  :root .pop.sites .menu-search input {
+    height: var(--ph-hit);
+    font-size: var(--ph-text);
+  }
+  :root .pop.sites .sites-strip {
+    padding: 0 2px 6px;
+    margin-bottom: 4px;
+  }
+  :root .all-chip {
+    height: var(--ph-hit);
+    padding: 0 14px;
+    border-radius: 11px;
+    font-size: var(--ph-text-2);
+  }
+  :root .strip-sum {
+    font-size: var(--ph-small);
+  }
+  :root .foot-add,
+  :root .pop.sites.mid .foot-add,
+  :root .pop.sites.roomy .foot-add {
+    height: var(--ph-sheet-row);
+    padding: 0 10px;
+    font-size: var(--ph-text);
+  }
+  :root .foot-add svg {
+    width: var(--ph-icon);
+    height: var(--ph-icon);
+  }
+  :root .sites-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
   }
   .foot-keys {
     display: none;
+  }
+}
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .strip-sum,
+    .site .tail,
+    .site-head
+  ) {
+    font-size: 12px;
   }
 }

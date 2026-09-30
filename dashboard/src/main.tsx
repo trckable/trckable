@@ -5,7 +5,7 @@ import { Ghost } from "./components/Logo";
 import { Loading } from "./components/loading/Loading";
 import { logoInner } from "./brand/logo";
 import { Footer } from "./components/Footer";
-import { api, setUnauthorizedHandler, type Site } from "./lib/api";
+import { api, setUnauthorizedHandler, type Site } from "./lib/api"; import { startEarly, takeEarly } from "./lib/earlyStart";
 import { navigate, useLocation } from "./lib/url";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
 import "./styles.css";
@@ -20,10 +20,8 @@ import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
 import { setRole } from "./lib/me";
 import { NoneShared, useGate } from "./features/onboarding/Gate";
-// Settings and the account dialog are their own screens: the dashboard should
-// not carry them.
-// Sign-in and first-run setup are for the minutes before someone is in: a
-// signed-in owner never downloads them.
+// Settings and the account dialog are their own screens: the dashboard should not carry them.
+// Sign-in and first-run setup are for the minutes before someone is in: a signed-in owner never downloads them.
 const Setup = lazy(() => import("./views/Auth").then((m) => ({ default: m.Setup })));
 const Login = lazy(() => import("./views/Auth").then((m) => ({ default: m.Login })));
 const FirstPassword = lazy(() => import("./views/Auth").then((m) => ({ default: m.FirstPassword })));
@@ -35,6 +33,7 @@ import { ShortcutsHost } from "./components/ShortcutsHost";
 // A shared link is its own entry point: no setup, no sign-in, one site.
 const SharedSite = lazy(() => import("./views/SharedSite"));
 import { Toasts } from "./components/Toast";
+import "./phone.css"; // last: what it sets on a phone wins over the styles imported before it
 
 try {
   applyTheme(localStorage.getItem("trckable:theme") ?? "system");
@@ -56,7 +55,7 @@ function App() {
 
   const load = useCallback(async () => {
     try {
-      const early = api.early(); // /me and /sites go out with /setup: one round trip, not three
+      const early = takeEarly(); // /me and /sites went out with the script, and /setup goes now: one round trip, not three
       const s = await api.setupStatus();
       if (s.needs_setup) {
         setBoot({ state: "setup" });
@@ -289,6 +288,7 @@ function Splash({ children }: { children?: React.ReactNode }) {
 
 const root = document.getElementById("root");
 if (!root) throw new Error("index.html has no #root");
+startEarly(); // first requests leave now (lib/earlyStart.ts)
 createRoot(root).render(
   <StrictMode>
     <App />

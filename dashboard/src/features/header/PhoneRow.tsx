@@ -4,7 +4,7 @@
 import { ChevronDown } from 'lucide-react'
 import { lazy, Suspense, useRef, useState, type ReactNode } from 'react'
 import { focusOpener, openedFrom } from '../../components/panelOpen'
-import { periodLabel, type PickerValue } from '../../components/DatePicker'
+import { periodShort, type PickerValue } from '../../components/DatePicker'
 import type { ISODate } from '../../lib/dates'
 import { isShared } from '../../lib/me'
 import { ViewSwitch } from '../live/ViewSwitch'
@@ -37,7 +37,7 @@ export function PhoneRow(p: PhoneProps & { value: PickerValue; today: ISODate })
       {!isShared() && <ViewSwitch live={false} />}
       <button ref={pill} type="button" className="phone-pill" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
         <span className="pill-dot" aria-hidden="true" />
-        <b>{periodLabel(p.value, p.today)}</b>
+        <b>{periodShort(p.value, p.today)}</b>
         {n > 0 && <span className="pill-note">{copy.filterNote(n)}</span>}
         <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
       </button>

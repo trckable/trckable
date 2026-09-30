@@ -2,15 +2,10 @@
 // buttons: click to filter the whole dashboard; hover (on sources) previews
 // the money trail. The line used to be a block behind the whole row, so the
 // numbers sat half on it and half off — the list read as noise.
-import { Suspense, useLayoutEffect, useRef, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useTween } from '../lib/motion'
 import { fmtInt, fmtPct } from '../lib/format'
 import { Loading } from '../components/loading/Loading'
-import { lazyLoad } from '../lib/lazyLoad'
-import { newCards } from '../lib/tryout'
-
-// The try-out's list (?cards=new) is a chunk of its own.
-const Fresh = lazyLoad(() => import('../features/newcards/BarListNew'))
 
 export interface BarItem {
   key: string
@@ -23,19 +18,7 @@ export interface BarItem {
   dim?: boolean
 }
 
-/** The list as it is; under ?cards=new, the new one. */
-export function BarList(p: BarListProps) {
-  if (!newCards()) return <Classic {...p} />
-  return (
-    <Suspense fallback={<Loading height={164} />}>
-      <Fresh {...p} />
-    </Suspense>
-  )
-}
-
-export type BarListProps = Parameters<typeof Classic>[0]
-
-function Classic(p: {
+export function BarList(p: {
   items: BarItem[]
   total?: number
   dimLabel: string
@@ -55,34 +38,6 @@ function Classic(p: {
   const measure = (i: BarItem) => (p.byRevenue ? (i.rev ?? 0) : i.value)
   const max = Math.max(1, ...p.items.map(measure))
 
-  // Rows that change places slide there instead of jumping — which is what
-  // turns a replay into a race. Each row remembers where it was, and after a
-  // render is moved back there and let go (FLIP), so nobody loses their place
-  // in a list that just reordered under them.
-  const rows = useRef(new Map<string, HTMLElement>())
-  const was = useRef(new Map<string, number>())
-  useLayoutEffect(() => {
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
-    const now = new Map<string, number>()
-    for (const [key, el] of rows.current) now.set(key, el.offsetTop)
-    if (!reduced) {
-      for (const [key, el] of rows.current) {
-        const last = was.current.get(key)
-        const after = now.get(key)
-        if (last === undefined || after === undefined) continue
-        // A row still sliding from the last change starts from where it is
-        // on screen, not from where it was headed.
-        const before = last + new DOMMatrixReadOnly(getComputedStyle(el).transform).m42
-        if (Math.abs(before - after) < 0.5) continue
-        el.style.transition = 'none'
-        el.style.transform = `translateY(${before - after}px)`
-        el.getBoundingClientRect() // commit the start position before letting go
-        el.style.transition = 'transform 0.42s var(--ease)'
-        el.style.transform = ''
-      }
-    }
-    was.current = now
-  })
   if (p.loading)
     return <Loading height={164} />
   return (
@@ -101,10 +56,6 @@ function Classic(p: {
       {p.items.map((it) => (
         <button
           key={it.key}
-          ref={(el) => {
-            if (el) rows.current.set(it.key, el)
-            else rows.current.delete(it.key)
-          }}
           type="button"
           className="bl-row"
           style={{ opacity: it.dim ? 0.38 : 1 }}
@@ -140,8 +91,8 @@ function Classic(p: {
   )
 }
 
-/** A row's number counts to its new value with its bar, instead of jumping,
- *  so during a replay the figures climb as the rows race. */
+/** A row's number settles on its new value in about a tenth of a second,
+ *  with its bar, instead of jumping. */
 function Count({ value, fmt = fmtInt }: { value: number; fmt?: (n: number) => string }) {
-  return <>{fmt(Math.round(useTween(value, 420)))}</>
+  return <>{fmt(Math.round(useTween(value, 120)))}</>
 }

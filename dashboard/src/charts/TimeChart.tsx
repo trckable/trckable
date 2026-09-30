@@ -5,6 +5,7 @@
 // under the line (revenue), or in the line's place (tone: money), as columns
 // until nearly every day sells. Pure SVG; animation comes from useTween.
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { Annotation, Bucket } from '../lib/api'
 import { markersFor } from '../features/notes/markers'
 import { fmtCompact, fmtInt } from '../lib/format'
 import { useTween } from '../lib/motion'
@@ -12,7 +13,8 @@ import { timeCopy } from './copy'
 import { smooth } from './smooth'
 import { bucketLabel, everyNth, fractionScale, peakIndex, threeScale } from './timeScale'
 import { useCut } from './useCut'
-import { ColumnsLayer, ModelChart, NoteMarkers, RevenueLayer, TimeTip, preloadMoney } from './chartParts'
+import { usePin } from './usePin'
+import { ColumnsLayer, NoteMarkers, RevenueLayer, TimeTip, preloadMoney } from './chartParts'
 import { SPLIT_GAP, SPLIT_H, columnWidth, isDense, moneyScale } from './moneyPlot'
 import { NoteAdd } from './NoteAdd'
 import { PeakLabel } from './PeakLabel'
@@ -20,22 +22,63 @@ import { PAD_L, PAD_T, AXIS_H, CHART_H, CHART_MS, tipLeft } from './plot'
 import { TimeDefs } from './TimeDefs'
 import { XLabels, YTicks } from './TimeGrid'
 import { CursorMark, CursorPill } from './Cursor'
-import type { TimeChartProps } from './timeProps'
 
 export { bucketLabel, smooth }
-export type { Pulse, TimeChartProps } from './timeProps'
 
-/** The try-out's models (lib/tryout) draw the chart in a chunk of their own; without one, the chart as it was. */
-export function TimeChart(p: TimeChartProps) {
-  return p.model ? <ModelChart {...p} /> : <PlainChart {...p} />
+export interface TimeChartProps {
+  labels: string[] // local wall-clock bucket starts ("2026-09-20T09:00")
+  values: number[]
+  ghost?: number[] // comparison period, aligned by index
+  ghostLabels?: string[]
+  overlay?: { values: number[]; color: string; name: string }
+  metric: string
+  bucket: Bucket
+  scrub?: number | null
+  partialLast?: boolean // the last bucket is still in progress (today / this hour)
+  /** The values are revenue: the money colour, a money axis, columns (a line once nearly every bucket sold). */
+  tone?: 'money'
+  /** Writes a value for the hover card, the labels and a screen reader (default: a count). */
+  fmt?: (n: number) => string
+  /** The values are fractions (a rate): the axis steps in thousandths, not ones. */
+  fraction?: boolean
+  /** Writes one label on the y-axis (default: compact). */
+  axis?: (n: number) => string
+  /** Revenue under the line: its own plot with its own axis (its own scale, never a second axis). */
+  revenue?: { values: number[]; fmt: (n: number) => string; axis: (n: number) => string; label: string; none: string }
+  /** What a bucket's sales say, under its revenue ("3 sales · $149 new"); null when there were none. */
+  saleNote?: (i: number) => string | null
+  onScrub?: (i: number) => void
+  height?: number
+  /**
+   * Extra lines for the hovered bucket: split bars (new vs returning, or in
+   * cookieless mode a row saying it is off) and name/value rows. The chart
+   * knows how to draw them; the dashboard knows what they mean.
+   */
+  detail?: (i: number) => {
+    /** Split bars: how the bucket divides. tone colours the filled part, fmt writes the numbers. */
+    splits?: { a: number; b: number; aLabel: string; bLabel: string; tone?: string; fmt?: (v: number) => string }[]
+    /** short: the label on a phone's compact card. */
+    rows?: { label: string; value: string; faint?: boolean; short?: string }[]
+  } | null
+  /** Notes pinned to days: a launch, a post, an outage. */
+  notes?: Annotation[]
+  /** Adds a note to a day, from the + at the top of the crosshair. */
+  onAddNote?: (day: string) => void
+  /** Live pulse: things arriving right now, drawn rising from the last point. */
+  pulses?: Pulse[]
+  /** Replay tells a story: the line ends at the playhead, the rest unknown. */
+  story?: boolean
+  /** Replay is playing: no hover, touch or keys until it pauses or ends. */
+  locked?: boolean
 }
 
-function PlainChart(p: TimeChartProps) {
+export type Pulse = { id: string; kind: 'visit' | 'goal' | 'sale'; label?: string }
+
+export function TimeChart(p: TimeChartProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [w, setW] = useState(900)
   const [picked, setHover] = useState<number | null>(null)
-  // While Replay plays nothing is picked (and what was picked is let go of).
-  if (p.locked && picked !== null) setHover(null)
+  if (p.locked && picked !== null) setHover(null) // while Replay plays nothing is picked, and what was picked is let go of
   const hover = p.locked ? null : picked
   const [drag, setDrag] = useState(false)
   const money = p.tone === 'money'
@@ -95,12 +138,11 @@ function PlainChart(p: TimeChartProps) {
   const markers = useMemo(() => markersFor(p.notes ?? [], p.labels, p.bucket), [p.notes, p.labels, p.bucket])
   const scrub = p.scrub ?? null
   const quiet = !p.locked && !drag && hover == null // a picked day is drawn quietly unless hovered, dragged or played
-  // Only these grey the far side of the cut: plain hovering never does.
-  const dim = !!p.locked || drag || (scrub != null && hover == null)
+  const dim = !!p.locked || drag || (scrub != null && hover == null) // only these grey the far side of the cut: plain hovering never does
   const { follow, release, onKey, marker, driven } = useCut({ ref, n, hover, scrub, locked: p.locked, vals, setHover, x, y })
   const leave = () => { release(); setHover(null); setDrag(false) }
-  // Beside the point when there is room, never past either edge: on a phone
-  // the card is nearly as wide as the chart, and it used to leave the screen.
+  const pin = usePin(ref, hover != null, leave)
+  // Beside the point, never past either edge (on a phone the card is nearly as wide as the chart).
   const compact = w < 600 // a phone: a slim card that covers little of the plot
   const tipW = compact ? 160 : 244
   const tipAt = hover != null ? tipLeft(x(hover), w, tipW) : 0
@@ -125,10 +167,10 @@ function PlainChart(p: TimeChartProps) {
         follow(e.clientX - e.currentTarget.getBoundingClientRect().left, i)
         setHover(i)
       }}
-      onPointerLeave={leave}
+      onPointerLeave={pin.leave}
       onPointerDown={(e) => {
         if (!n || p.locked) return
-        // A finger has no hover: touching the chart is hovering it.
+        pin.down(e)
         if (!p.onScrub) {
           setHover(indexAt(e.currentTarget, e.clientX))
           return

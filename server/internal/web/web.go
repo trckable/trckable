@@ -4,17 +4,22 @@
 package web
 
 import (
+	"bytes"
+	"compress/gzip"
 	"crypto/sha256"
 	"embed"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"io/fs"
+	"mime"
 	"net/http"
 	"path"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 //go:embed assets/t.js assets/t-*.js assets/sizes.json
@@ -258,13 +263,92 @@ func Variants() []string {
 // Dashboard serves the dashboard with no page ever framed by another site.
 func Dashboard() http.Handler { return DashboardFramed(nil) }
 
+// The build stores each text file of 1 KB or more once, as name.gz, and
+// removes the plain file (dashboard/scripts/precompress.mjs): the image carries
+// one copy. A browser that takes gzip is sent the stored bytes as they are; any
+// other client, and any range request, gets the file decompressed.
+
+// Accepts reads an Accept-Encoding header for one coding: named, or by *, and
+// not given q=0. A coding the header names settles it, whatever * says.
+func Accepts(header, coding string) bool {
+	star := false
+	for _, part := range strings.Split(header, ",") {
+		name, params, _ := strings.Cut(strings.TrimSpace(part), ";")
+		name = strings.ToLower(strings.TrimSpace(name))
+		if name != coding && name != "*" {
+			continue
+		}
+		q := 1.0
+		if k, v, found := strings.Cut(strings.ReplaceAll(params, " ", ""), "="); found && strings.EqualFold(k, "q") {
+			if f, err := strconv.ParseFloat(v, 64); err == nil {
+				q = f
+			}
+		}
+		if name == coding {
+			return q > 0
+		}
+		star = q > 0
+	}
+	return star
+}
+
+// storedPlain reads a dashboard file in plain bytes, from the file itself or
+// from its gzip.
+func storedPlain(fsys fs.FS, name string) ([]byte, bool) {
+	if b, err := fs.ReadFile(fsys, name); err == nil {
+		return b, true
+	}
+	f, err := fsys.Open(name + ".gz")
+	if err != nil {
+		return nil, false
+	}
+	defer f.Close()
+	zr, err := gzip.NewReader(f)
+	if err != nil {
+		return nil, false
+	}
+	b, err := io.ReadAll(zr)
+	return b, err == nil
+}
+
+// serveStored answers for a file that is kept as name.gz only. It reports
+// whether there is such a file. Every answer varies by Accept-Encoding.
+func serveStored(w http.ResponseWriter, r *http.Request, fsys fs.FS, name string) bool {
+	f, err := fsys.Open(name + ".gz")
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	kind := mime.TypeByExtension(path.Ext(name))
+	w.Header().Add("Vary", "Accept-Encoding")
+	w.Header().Set("Content-Type", kind)
+	body, seekable := f.(io.ReadSeeker)
+	info, err := f.Stat()
+	if seekable && err == nil && r.Header.Get("Range") == "" && Accepts(r.Header.Get("Accept-Encoding"), "gzip") {
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Header().Set("Content-Length", strconv.FormatInt(info.Size(), 10)) // ServeContent leaves it out of an encoded answer
+		http.ServeContent(w, r, name, time.Time{}, body)
+		return true
+	}
+	plain, ok := storedPlain(fsys, name)
+	if !ok {
+		http.Error(w, "unreadable file", http.StatusInternalServerError)
+		return true
+	}
+	http.ServeContent(w, r, name, time.Time{}, bytes.NewReader(plain))
+	return true
+}
+
 // DashboardFramed is Dashboard, with one exception: frame returns the sites
 // allowed to frame this page (space-separated origins), or "" for none. Only
 // an embeddable share link answers anything.
 func DashboardFramed(frame func(*http.Request) string) http.Handler {
 	sub, _ := fs.Sub(dist, "dist")
 	files := http.FileServerFS(sub)
-	index, _ := fs.ReadFile(sub, "index.html")
+	// The page is the one file every route answers with: read once, here, as
+	// it is stored and in plain bytes.
+	index, _ := storedPlain(sub, "index.html")
+	indexGz, _ := fs.ReadFile(sub, "index.html.gz")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		p := strings.TrimPrefix(path.Clean(r.URL.Path), "/")
 		if p != "" && p != "index.html" {
@@ -276,6 +360,13 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 				files.ServeHTTP(w, r)
 				return
 			}
+			if strings.HasPrefix(p, "assets/") {
+				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+			}
+			if serveStored(w, r, sub, p) {
+				return
+			}
+			w.Header().Del("Cache-Control")
 		}
 		h := w.Header()
 		h.Set("Content-Type", "text/html; charset=utf-8")
@@ -294,7 +385,24 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 		if ancestors == "'none'" {
 			h.Set("X-Frame-Options", "DENY") // older browsers that ignore frame-ancestors
 		}
-		h.Set("Referrer-Policy", "same-origin")
-		_, _ = w.Write(index)
+		h.Set("Referrer-Policy", referrerPolicy(r.URL.Path))
+		body := index
+		if len(indexGz) > 0 {
+			h.Add("Vary", "Accept-Encoding")
+			if Accepts(r.Header.Get("Accept-Encoding"), "gzip") {
+				h.Set("Content-Encoding", "gzip")
+				body = indexGz
+			}
+		}
+		_, _ = w.Write(body)
 	})
+}
+
+// referrerPolicy sends nothing at all from a shared page, whose address holds
+// its link's token; everywhere else the address stays inside this origin.
+func referrerPolicy(p string) string {
+	if p == "/s" || strings.HasPrefix(p, "/s/") {
+		return "no-referrer"
+	}
+	return "same-origin"
 }

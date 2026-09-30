@@ -1,5 +1,5 @@
-// The header's first row, after the site: borderless Ask and Filter, the avatar's menu (the person's own things).
-// What the numbers are, Live/Data, the period and the page's ⋯ (Refresh,
+// The header's first row, after the site: Live/Data (on a desktop), borderless Ask and Filter, the avatar's menu (the person's own things).
+// What the numbers are, Live/Data on a phone or tablet, the period and the page's ⋯ (Refresh,
 // Create, Core/Full, Milestones, Export), is the row under it, and so is
 // Share: an icon beside ⋯ (on a phone it is ⋯'s first item).
 import { Search, Share2 } from 'lucide-react'
@@ -7,7 +7,9 @@ import type { ReactNode } from 'react'
 import { AccountMenu } from '../../components/AccountMenu'
 import { caps, keyFor, useKeymap } from '../../lib/keys'
 import { canAsk, isShared } from '../../lib/me'
+import { ViewSwitch } from '../live/ViewSwitch'
 import { copy } from './copy'
+import { useWide } from './useWide'
 import './Header.css'
 
 interface Props {
@@ -22,10 +24,14 @@ interface Props {
 export function HeaderTools(p: Props) {
   useKeymap()
   const shared = isShared()
+  // A desktop has the switch here, before what the page puts in this group;
+  // anywhere narrower it stays in the row under the header.
+  const wide = useWide()
   const askKey = caps(keyFor('ask')).join('')
   return (
     <div className="header-tools quiet">
       <div className="spacer" />
+      {wide && !shared && !p.waiting && <ViewSwitch live={p.live} />}
       {p.extra}
       {canAsk() && !p.waiting && (
         <button type="button" className="btn ghost ask" onClick={p.onAsk} aria-expanded={p.askOpen} aria-label={copy.ask} title={copy.askTitle(askKey)}>

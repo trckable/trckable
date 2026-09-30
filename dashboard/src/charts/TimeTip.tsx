@@ -1,5 +1,6 @@
 // The main chart's hover card: the day, its figures large, how it compares,
 // its note, then the smaller numbers in two columns.
+import { useEffect, useReducer } from 'react'
 import type { Annotation } from '../lib/api'
 import { fmtInt } from '../lib/format'
 import { timeCopy } from './copy'
@@ -13,6 +14,13 @@ import './TimeTip.css'
 import './Tip.css'
 
 export default function TimeTip({ p, i, left, width, compact, notes }: { p: TimeChartProps; i: number; left: number; width: number; compact: boolean; notes: Annotation[] }) {
+  // The card's lines come from a chunk fetched when the browser is idle: a card
+  // open before it arrived draws them the moment it does.
+  const [, redraw] = useReducer((n: number) => n + 1, 0)
+  useEffect(() => {
+    window.addEventListener('trckable:tips', redraw)
+    return () => window.removeEventListener('trckable:tips', redraw)
+  }, [])
   const detail = p.detail?.(i) ?? null
   const fmt = p.fmt ?? fmtInt
   const money = p.tone === 'money'

@@ -256,3 +256,26 @@
     animation: none;
   }
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .al-chip,
+    .al-last
+  ) {
+    font-size: 12px;
+  }
+}
+
+/* The phone scale (phone.css): a 44 px box for the small controls here. */
+@media (max-width: 640px) {
+  :root .al-field input,
+  :root .al-rule .input.num {
+    min-height: var(--ph-hit);
+    font-size: var(--ph-text);
+  }
+  :root .al-rule .input.num {
+    width: 64px;
+  }
+}

@@ -195,9 +195,21 @@
 @media (prefers-reduced-motion: no-preference) {
   .kit-funnel-bar,
   .kit-svg rect {
-    transition: opacity 0.15s var(--ease), width 0.4s var(--ease);
+    transition: opacity 0.15s var(--ease), width 0.12s var(--ease);
   }
   .kit-band {
     transition: opacity 0.15s var(--ease);
+  }
+}
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .kit-axis,
+    .kit-flow-label,
+    .kit-funnel-note
+  ) {
+    font-size: 12px;
   }
 }

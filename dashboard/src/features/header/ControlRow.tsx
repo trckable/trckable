@@ -1,4 +1,4 @@
-// The Data view's second row. A wide screen: Live/Data on the left, two
+// The Data view's second row. A wide screen: two
 // capsules on the right (what you see: period, comparison, Filter, and the
 // fold toggle at the end; what you do: Share, ⋯), the filters in force as chips under the row.
 // Folding runs the first capsule's width to zero, so what it holds sits in a
@@ -10,6 +10,7 @@ import { ViewSwitch } from '../live/ViewSwitch'
 import { isShared } from '../../lib/me'
 import { PhoneRow, type PhoneProps } from './PhoneRow'
 import { FoldToggle } from './FoldToggle'
+import { useWide } from './useWide'
 import { useRowCollapsed, useRowMoving } from './rowCollapsed'
 import './ControlRow.css'
 
@@ -27,12 +28,15 @@ interface Props extends Omit<PhoneProps, 'more' | 'filter' | 'period' | 'under'>
 export function ControlRow(p: Props) {
   const collapsed = useRowCollapsed()
   const moving = useRowMoving()
+  const wide = useWide()
   // Live keeps only the switch; on a phone Data keeps a pill instead of it.
   if (p.phone && !p.live) return <PhoneRow {...p} />
+  // A desktop has the switch in the header, so Live has nothing left here.
+  if (wide && p.live) return null
   return (
     <>
       <div className="subbar">
-        {!isShared() && <ViewSwitch live={p.live} />}
+        {!isShared() && !wide && <ViewSwitch live={p.live} />}
         {!p.live && (
           <>
             <div className={['ctl-cap ctl-see', collapsed && 'collapsed', moving && 'moving'].filter(Boolean).join(' ')}>

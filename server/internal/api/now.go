@@ -126,7 +126,7 @@ func (a *API) revenueToday(r *http.Request, q *query.Q, site string) *nowMoney {
 	if parsed == nil {
 		return nil
 	}
-	res, err := a.cachedReport(ask, q, parsed.Params, parsed.Live)
+	res, err := a.cachedReport(ask, q, parsed.Params)
 	if err != nil || res.Money == nil {
 		return nil
 	}

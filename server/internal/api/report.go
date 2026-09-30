@@ -163,7 +163,7 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			pr, prErr = a.cachedReport(r, q, *prev, false)
+			pr, prErr = a.cachedReport(r, q, *prev)
 		}()
 	}
 	if live {
@@ -174,7 +174,7 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 			online, onlineOK = n, err == nil
 		}()
 	}
-	cur, err := a.cachedReport(r, q, params, live)
+	cur, err := a.cachedReport(r, q, params)
 	wg.Wait()
 	if err != nil {
 		fail(w, http.StatusBadRequest, err.Error())
@@ -246,32 +246,6 @@ func startOfDay(t time.Time, loc *time.Location) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
 }
 
-// ---- result cache ----
-
-// Past ranges never change (sessions are immutable once written), so they are
-// cached for minutes; ranges that include today for a few seconds, which
-// keeps the dashboard instant while staying live.
-type reportCache struct {
-	mu  sync.Mutex
-	max int
-	m   map[string]cacheEntry
-}
-
-type cacheEntry struct {
-	res  *query.Result
-	exp  time.Time
-	site string
-	// ver is the site's commit count when the report was read. A live entry
-	// (a range that includes today) is dropped as soon as a newer visit or
-	// sale is committed, so the dashboard never waits out the TTL for it.
-	ver  uint64
-	live bool
-}
-
-func newReportCache(max int) *reportCache {
-	return &reportCache{max: max, m: map[string]cacheEntry{}}
-}
-
 // attribution reads the model a report asks for, defaulting to last touch —
 // the visit that closed the sale, which is what most people mean by "where
 // this customer came from".
@@ -330,51 +304,4 @@ func cacheKey(p query.Params) string {
 		gs = append(gs, "goal:"+g.Name+"="+g.Path)
 	}
 	return fmt.Sprintf("%s|%d|%d|%s|%s|%v|%v|%v|%s|%s|%v|%v|%v|%s|%s|%v|%v", p.Site, p.From.Unix(), p.To.Unix(), p.TZ, p.Bucket, p.SundayWeeks, p.Daily, p.Deep, strings.Join(fs, "&"), p.Currency, p.Test, p.Revenue, p.Goals, p.Attribution, strings.Join(gs, "&"), p.Sales, p.ByChannel)
-}
-
-func (a *API) cachedReport(r *http.Request, q *query.Q, p query.Params, live bool) (*query.Result, error) {
-	key := cacheKey(p)
-	now := a.Now()
-	var ver uint64
-	if a.Hub != nil {
-		ver = a.Hub.Version(p.Site) // read before the query: a commit during it makes this entry stale
-	}
-	a.cache.mu.Lock()
-	if e, ok := a.cache.m[key]; ok && now.Before(e.exp) && (!e.live || e.ver == ver) {
-		a.cache.mu.Unlock()
-		return e.res, nil
-	}
-	a.cache.mu.Unlock()
-	res, err := q.Report(r.Context(), p)
-	if err != nil {
-		return nil, err
-	}
-	ttl := 10 * time.Minute
-	if live {
-		ttl = 10 * time.Second
-	}
-	a.cache.mu.Lock()
-	if len(a.cache.m) >= a.cache.max {
-		for k, e := range a.cache.m { // evict expired, then arbitrary
-			if now.After(e.exp) || len(a.cache.m) >= a.cache.max {
-				delete(a.cache.m, k)
-			}
-			if len(a.cache.m) < a.cache.max*3/4 {
-				break
-			}
-		}
-	}
-	a.cache.m[key] = cacheEntry{res: res, exp: now.Add(ttl), site: p.Site, ver: ver, live: live}
-	a.cache.mu.Unlock()
-	return res, nil
-}
-
-func (c *reportCache) purgeSite(site string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	for k, e := range c.m {
-		if e.site == site {
-			delete(c.m, k)
-		}
-	}
 }

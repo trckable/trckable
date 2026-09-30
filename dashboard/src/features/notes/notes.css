@@ -110,3 +110,31 @@
     transition: none;
   }
 }
+
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .note-tip-day,
+    .note-line span
+  ) {
+    font-size: 12px;
+  }
+  :root .note-mark i.many {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+  }
+}
+
+/* The phone scale (phone.css): the flag keeps its drawn size in a finger-wide box. */
+@media (max-width: 640px) {
+  :root .note-mark {
+    width: var(--ph-hit);
+    height: var(--ph-hit);
+  }
+  :root .note-line span {
+    font-size: var(--ph-small);
+  }
+}

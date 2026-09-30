@@ -5,7 +5,7 @@
   "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build && node scripts/size.mjs",
+    "build": "tsc --noEmit && vite build && node scripts/precompress.mjs && node scripts/size.mjs",
     "build:map": "node scripts/build-map.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "node scripts/lint.mjs && node scripts/component-size.mjs",

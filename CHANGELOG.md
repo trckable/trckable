@@ -9,9 +9,20 @@ section into the release.
 
 ## Unreleased
 
+- While the dashboard starts, the page shows its own background and a thin loading line, instead of a blank page (which Safari on iOS fills with a large copy of the site icon).
+- The sites popover in People stays inside the window when sites are added while it is open, and a long domain is cut short instead of scrolling the list sideways; the chart's hover card fills in if the pointer was already on it when its numbers arrived.
+- Phones are bigger and easier to use, on screens up to 640 px wide only (a tablet and a desktop look exactly as before). Text is 16 px (15 px for the smaller lines) and nothing is under 12 px; icons are 20 px; every button, tab, chip, toggle and list row is at least 44 px (list rows 52 px), and a small icon keeps its look inside a finger-sized box. The header is two clean rows (the site with room for its name, then Live | Data, the period as "30 days" and ⋯); on a narrow phone the site's settings are the first row of the site list. The key numbers are two columns, the milestone line is one line, and the site list, the ⋯ and avatar menus, the filter, saved-views, comparison, timezone and currency lists and the calendar rise from the bottom edge with a grab handle and rows 48 px tall. A tap on the chart pins its card where the finger was, and a tap outside lets it go. One set of sizes (`--ph-*`) in one place (`dashboard/src/phone.css`), the rules of screens that load later in their own files.
 ### Changed
 
-- The main chart shows the whole period you picked, even for a site younger than it: the days before its first visit are empty instead of cut off. The "since" label and its "Show since" link are gone; the numbers are the same.
+- Faster to open and to switch: the dashboard's script, styles and every JSON answer over 1 KB are compressed on the wire (gzip; the dashboard's files are stored compressed once at build time, the image keeps one copy of each, and a client that does not take gzip is sent them unpacked; live streams are never buffered). A shared link asks for its session and its first report the moment the script runs, and so does a signed-in dashboard for the site the address names, instead of waiting for the page to render first.
+- Picking a period shows what was read for it before at once, however old, and refreshes it in the background; a period that is over is kept for two minutes instead of ten seconds. Opening the period list starts fetching Today, 7, 30 and 90 days, so the pick is already there. Any change to a site's settings, payments or data drops what was kept for it.
+- The server keeps a report for a period that has ended for hours instead of ten minutes, and drops only what a change can reach: a late or repeated visit, a refund, a new exchange rate, a zone, currency or setting change, or a retention delete. Its numbers are checked to be the same as a fresh read.
+- The page no longer shifts while the first numbers load: the chart, its revenue plot and the key numbers keep the room they will take. Bars and their figures settle in about a tenth of a second, and rows no longer slide to new places.
+- A shared link keeps its address (`/s/<token>`) after it opens, so it can be copied, bookmarked and reloaded; a reload, including of a password link, goes straight back in while the session lasts, and a shared page sends no Referer.
+- A shared link's header is one row on a desktop: the site's name on the left, the period, comparison and ⋯ on the right.
+- On a desktop the Live | Data switch is in the header's right group, before the account; a phone or tablet keeps it in the row under the header.
+- The pulsing dot beside Online now is no longer cut off at its edge.
+- The site switcher's rows have a little more air on a desktop (4 px taller, the mark a bit further from the name). Dragging a site is now live: a grip shows at the row's edge, the row you hold lifts and follows the pointer, the others slide aside into the new order, dropping saves it, and Esc puts it back.
 
 ## 0.5.7 (30 Sep 2026)
 
