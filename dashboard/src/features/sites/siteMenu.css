@@ -76,6 +76,9 @@
 .sites-list {
   display: flex;
   flex-direction: column;
+  /* Room inside for a lifted row's shadow, taken back outside. */
+  margin-inline: -6px;
+  padding-inline: 6px;
   max-height: min(352px, 46vh);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -96,8 +99,43 @@
   align-items: center;
   border-radius: 8px;
 }
+/* Arranging: a grip at the row's edge on hover, and while one is dragged it
+   lifts (surface, shadow, a touch larger) and the others slide aside. */
+.site-row .grip {
+  position: absolute;
+  left: -1px;
+  top: 50%;
+  margin-top: -8px;
+  padding: 2px 0;
+  box-sizing: content-box;
+  color: var(--text-3);
+  opacity: 0;
+  cursor: grab;
+}
+.site-row.sortable:hover .grip,
+.site-row.dragging .grip {
+  opacity: 1;
+}
+.site-row.sortable:hover > .site.on::before,
+.site-row.dragging > .site.on::before {
+  opacity: 0;
+}
 .site-row.dragging {
-  opacity: 0.45;
+  z-index: 2;
+  background: var(--surface-2);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--border-2);
+}
+.site-row.dragging .site,
+.site-row.dragging .site:hover {
+  background: transparent;
+}
+.pop.sites.reordering,
+.pop.sites.reordering * {
+  cursor: grabbing;
+  user-select: none;
+}
+.pop.sites.reordering .site:hover:not(.on) {
+  background: transparent;
 }
 
 .site {
@@ -456,6 +494,46 @@
   }
   .pop.sites .state-dot.now {
     animation: none;
+  }
+}
+/* A desktop's rows have a little more air: 4 px taller, and the mark a bit
+   further from the name. A phone keeps its own sizes (below). */
+@media (min-width: 641px) {
+  .sites-list {
+    max-height: min(392px, 46vh);
+  }
+  .site,
+  .foot-add {
+    height: 34px;
+  }
+  .site {
+    gap: 11px;
+  }
+  .site.on::before {
+    top: 10px;
+    bottom: 10px;
+  }
+  .pop.sites.mid .site,
+  .pop.sites.mid .foot-add {
+    height: 38px;
+  }
+  .pop.sites.mid .site {
+    gap: 12px;
+  }
+  .pop.sites.mid .site.on::before {
+    top: 11px;
+    bottom: 11px;
+  }
+  .pop.sites.roomy .site,
+  .pop.sites.roomy .foot-add {
+    height: 44px;
+  }
+  .pop.sites.roomy .site {
+    gap: 14px;
+  }
+  .pop.sites.roomy .site.on::before {
+    top: 13px;
+    bottom: 13px;
   }
 }
 @media (max-width: 640px) {

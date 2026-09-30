@@ -1,8 +1,9 @@
 // The site switcher's list: All sites as a chip at the top, pinned sites,
 // named groups with headers that fold, the other sites, and Add a site at the
 // bottom. ↑/↓ and Enter move and open, 1–9 open the site with that number.
-// Anyone who may change the account arranges it (drag, Alt + ↑/↓, or a
-// site's ⋯ menu); the layout is saved for the whole account.
+// Anyone who may change the account arranges it (drag, with the rows sliding
+// aside as the site moves; Alt + ↑/↓; or a site's ⋯ menu); the layout is
+// saved for the whole account.
 import { Search } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api, type Site, type SiteLayout } from '../../lib/api'
@@ -12,6 +13,7 @@ import { isViewer } from '../../lib/me'
 import { copy } from './menuCopy'
 import { EMPTY, flat, placeKey, sectionsOf, type Place } from './layout'
 import { saveLayout, useSiteLayout } from './useSiteLayout'
+import { useReorder } from './useReorder'
 import { SiteItem } from './SiteItem'
 import { SectionHead } from './SectionHead'
 import { AllStrip } from './AllStrip'
@@ -33,8 +35,9 @@ export interface Arrange {
   sites: Site[]
   layout: SiteLayout
   save: (l: SiteLayout, said?: string) => void
+  /** The site being dragged, and where a press on a row starts a drag. */
   drag: string | null
-  setDrag: (id: string | null) => void
+  grab: (e: React.PointerEvent<HTMLElement>, id: string) => void
 }
 
 export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[]; current: Site | null; all: boolean; onClose: () => void }) {
@@ -43,7 +46,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
   const search = useRef<HTMLInputElement>(null)
   const [q, setQ] = useState('')
   const [said, setSaid] = useState('')
-  const [drag, setDrag] = useState<string | null>(null)
+  const list = useRef<HTMLDivElement>(null)
   const [folded, fold] = useFolded()
   const numbers = useToday()
   const layout = useSiteLayout() ?? EMPTY
@@ -89,7 +92,10 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
     const t = q.trim().toLowerCase()
     return t ? flat(sites, layout).filter((s) => (s.name + ' ' + s.domain).toLowerCase().includes(t)) : null
   }, [sites, layout, q])
-  const sections = sectionsOf(sites, layout)
+  const committed = sectionsOf(sites, layout)
+  const reorder = useReorder(sites, layout, committed, saveLayout, list)
+  // While a site is dragged the rows show where it would land.
+  const sections = reorder.preview ? sectionsOf(sites, reorder.preview) : committed
   // The sites on screen, top to bottom (a folded group's are not): 1–9 pick from them.
   const shown = found ?? sections.filter((sec) => !folded.has(placeKey(sec.place))).flatMap((sec) => sec.sites)
   const pick = (s: Site) => {
@@ -101,8 +107,8 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
     : {
         sites,
         layout,
-        drag,
-        setDrag,
+        drag: reorder.id,
+        grab: reorder.grab,
         save: (l, words) => {
           saveLayout(l)
           if (words) setSaid(words)
@@ -140,7 +146,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
   }, [])
 
   return (
-    <div className={'pop sites ' + density} role="dialog" aria-label={copy.sites} ref={root}>
+    <div className={'pop sites ' + density + (reorder.id ? ' reordering' : '')} role="dialog" aria-label={copy.sites} ref={root}>
       {sites.length > SEARCH_FROM && (
         <label className="menu-search">
           <Search size={17} strokeWidth={1.75} aria-hidden="true" />
@@ -158,7 +164,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
       )}
       {/* Every site on one page, once there is more than one to compare. */}
       {sites.length > 1 && !found && <AllStrip on={all} numbers={numbers} onPick={() => { onClose(); navigate('/all') }} />}
-      <div className="sites-list" title={arrange && sites.length > 1 ? copy.keys : undefined}>
+      <div className="sites-list" ref={list} title={arrange && sites.length > 1 ? copy.keys : undefined}>
         {found && <ul className="site-group">{found.map((s) => item(s, { kind: 'rest' }))}</ul>}
         {found?.length === 0 && <p className="faint sites-none">{copy.noMatch(q)}</p>}
         {!found &&
@@ -167,7 +173,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
             const shut = folded.has(key)
             const headed = sec.place.kind !== 'rest' || sections.length > 1
             return (
-              <section key={key} className="site-section" aria-label={sec.place.kind === 'group' ? sec.place.name : undefined}>
+              <section key={key} className="site-section" data-section={key} aria-label={sec.place.kind === 'group' ? sec.place.name : undefined}>
                 {headed && <SectionHead place={sec.place} count={sec.sites.length} shut={shut} onFold={() => fold(key)} arrange={arrange} />}
                 {!shut && (
                   <ul className="site-group">
