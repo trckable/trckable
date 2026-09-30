@@ -22,6 +22,9 @@ var ErrNeedsCode = errors.New("two-step sign-in is on for this account")
 type Sealer interface {
 	Seal(plain string) (string, error)
 	Open(sealed string) (string, error)
+	// SealFor and OpenFor bind a value to the row it belongs to.
+	SealFor(plain, context string) (string, error)
+	OpenFor(sealed, context string) (string, error)
 	Derive(label string) []byte
 }
 

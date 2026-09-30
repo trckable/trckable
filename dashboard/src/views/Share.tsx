@@ -6,6 +6,7 @@ import { APIError, api, messageOf, setShareMode, type ShareInfo, setShareSession
 import { isEmbed, openShare, shareToken } from '../lib/earlyStart'
 import { setShared } from '../lib/me'
 import { Ghost, Name, Wordmark } from '../components/Logo'
+import { SiteMark } from '../components/SiteMark'
 import './Share.css'
 
 type State = { state: 'loading' } | { state: 'password'; error?: string } | { state: 'ready'; info: ShareInfo } | { state: 'error'; message: string }
@@ -115,9 +116,12 @@ export function ShareHeader({ info }: { info: ShareInfo }) {
       <span className="brand">
         <Wordmark />
       </span>
-      <span className="share-who">
-        <b>{info.site || info.domain}</b>
-        <span className="faint">{info.name || 'Shared with you'}</span>
+      <span className="share-id">
+        <SiteMark site={{ domain: info.domain, color: info.color, icon_url: info.icon_url }} size={20} />
+        <span className="share-who">
+          <b>{info.site || info.domain}</b>
+          <span className="faint">{info.name || 'Shared with you'}</span>
+        </span>
       </span>
     </>
   )
