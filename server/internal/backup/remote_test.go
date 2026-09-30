@@ -86,6 +86,16 @@ func (f *fakeS3) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		delete(f.objects, key)
 		w.WriteHeader(http.StatusNoContent)
 	case http.MethodGet:
+		if key != "" && key != "tk" && key != "tk/" && r.URL.Query().Get("list-type") == "" {
+			b, ok := f.objects[key]
+			if !ok {
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = io.WriteString(w, "<Error><Code>NoSuchKey</Code><Message>The specified key does not exist.</Message></Error>")
+				return
+			}
+			_, _ = w.Write(b)
+			return
+		}
 		var b strings.Builder
 		b.WriteString(`<ListBucketResult><IsTruncated>false</IsTruncated>`)
 		for k := range f.objects {
@@ -136,5 +146,36 @@ func TestRemoteUploadListPrune(t *testing.T) {
 	}
 	if names, _ := r.List(context.Background()); len(names) != 1 {
 		t.Fatalf("after a year: %v", names)
+	}
+}
+
+func TestRemoteDownload(t *testing.T) {
+	fake := &fakeS3{objects: map[string][]byte{"tk/trckable-20260923-030000.tkb": []byte("backup bytes")}}
+	srv := httptest.NewServer(fake)
+	defer srv.Close()
+	r, err := ParseRemote(strings.Replace(srv.URL, "http://", "http://k:s@", 1) + "/bucket/tk")
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	got, err := r.Download(context.Background(), "trckable-20260923-030000.tkb", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := os.ReadFile(got) //nolint:gosec // a file this test wrote under t.TempDir
+	if string(b) != "backup bytes" || filepath.Dir(got) != dir {
+		t.Fatalf("downloaded %q to %s", b, got)
+	}
+	// A second copy into the same place is refused, never overwritten.
+	if _, err := r.Download(context.Background(), "trckable-20260923-030000.tkb", dir); err == nil {
+		t.Fatal("overwrote an existing file")
+	}
+	if _, err := r.Download(context.Background(), "trckable-20990101-000000.tkb", t.TempDir()); err == nil || !strings.Contains(err.Error(), "NoSuchKey") {
+		t.Fatalf("a missing backup: %v", err)
+	}
+	for _, bad := range []string{"", "../secret.key", "a/b.tkb", "notes.txt"} {
+		if _, err := r.Download(context.Background(), bad, dir); err == nil {
+			t.Fatalf("took %q as a backup name", bad)
+		}
 	}
 }
