@@ -11,7 +11,7 @@ section into the release.
 
 ### Added
 
-- The MCP revenue tool gives every row of its ranking the revenue of the comparison period and the change as a fraction (`revenue_previous`, `revenue_change`), so an assistant can say which traffic earns most and whether it is up or down.
+- The MCP revenue tool gives every row of its ranking the revenue of the comparison period and the change as text like +20% (`revenue_previous`, `revenue_change`), so an assistant can say which traffic earns most and whether it is up or down.
 
 ### Fixed
 

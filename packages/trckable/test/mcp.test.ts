@@ -129,7 +129,7 @@ describe('trckable MCP server', () => {
     const srv = createMcpServer({ host: 'https://s', apiKey: 'tkb_live_test', fetch: fakeAPI([], { before }), now })
     const { data } = await call(srv, 'trckable_revenue', { period: '30d' })
     // 900 now against 750 before: up 20%; a value missing from a short list earned nothing before
-    expect(data.by_revenue[0]).toMatchObject({ value: 'AI', revenue: 900, revenue_previous: 750, revenue_change: 0.2 })
+    expect(data.by_revenue[0]).toMatchObject({ value: 'AI', revenue: 900, revenue_previous: 750, revenue_change: '+20%' })
     expect(data.by_revenue[1]).toMatchObject({ value: 'Search', revenue: 330, revenue_previous: 0, revenue_change: null })
     const none = await call(createMcpServer({ host: 'https://s', apiKey: 'tkb_live_test', fetch: fakeAPI([], { before }), now }), 'trckable_revenue', { compare: 'none' })
     expect(none.data.by_revenue[0]).toMatchObject({ revenue_previous: null, revenue_change: null })

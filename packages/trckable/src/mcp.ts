@@ -140,7 +140,7 @@ const TOOLS = [
   {
     name: 'trckable_revenue',
     description:
-      'Revenue from connected payment providers (Stripe, Lemon Squeezy, Polar, Paddle, Dodo), net of tax and refunds, and which traffic earned it: totals, customers, conversion rate, revenue per visitor, new vs renewal revenue, and a ranking by the chosen dimension, each row with its revenue in the comparison period (revenue_previous) and the change as a fraction (revenue_change, 0.2 = up 20%; null when the previous revenue is 0 or unknown, or compare is none). Each payment is credited to the buyer\'s last non-direct visit within 90 days.',
+      'Revenue from connected payment providers (Stripe, Lemon Squeezy, Polar, Paddle, Dodo), net of tax and refunds, and which traffic earned it: totals, customers, conversion rate, revenue per visitor, new vs renewal revenue, and a ranking by the chosen dimension, each row with its revenue in the comparison period (revenue_previous) and the change as text (revenue_change, e.g. "+20%"; null when the previous revenue is 0 or unknown, or compare is none). Each payment is credited to the buyer\'s last non-direct visit within 90 days.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -313,7 +313,7 @@ export function createMcpServer(opts: McpOptions) {
         if (v) (o.visitors = v), (o.revenue_per_visitor = round2(major(r.revenue ?? 0, m) / v))
         const prev = before?.(r.value)
         o.revenue_previous = prev === undefined ? null : major(prev, m)
-        o.revenue_change = prev ? Math.round(((r.revenue ?? 0) - prev) / prev * 1000) / 1000 : null
+        o.revenue_change = prev ? change(r.revenue ?? 0, prev) : null
         return o
       })
       return { ...header(site, rep, cmp), totals: moneyBlock(m, rep.previous?.money), dimension: dim, by_revenue: ranked, attribution: "last non-direct visit within 90 days before the payment" }
