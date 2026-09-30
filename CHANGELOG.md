@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- A text field in focus gets a thin accent border and a faint glow instead of the thick ring buttons get.
+
 ## 0.5.6 (30 Sep 2026)
 
 ### Added
