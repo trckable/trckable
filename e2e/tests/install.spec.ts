@@ -173,11 +173,16 @@ test('Create key and Add someone keep their look on hover', async ({ page }) => 
     await page.goto(`${API}/example.com?account=${tab}`)
     const btn = page.getByRole('button', { name, exact: true })
     await expect(btn).toBeVisible()
-    const bg = () => btn.evaluate((b) => getComputedStyle(b).backgroundColor)
-    const before = await bg()
+    // The tab swaps the button for a new one when its list arrives (an empty
+    // list centres it): read only after that, or the read lands on the old,
+    // removed button, whose style is an empty string.
+    await expect(page.locator('.people [aria-busy="true"]')).toHaveCount(0)
+    // A transition still running would read as a change; wait for the ends.
+    const settled = () => btn.evaluate((b) => Promise.all(b.getAnimations().map((a) => a.finished)).then(() => getComputedStyle(b).backgroundColor))
+    const before = await settled()
+    expect(before).toMatch(/^rgb/)
     await btn.hover()
-    await page.waitForTimeout(250)
-    expect(await bg()).toBe(before)
+    expect(await settled()).toBe(before)
     const [icon, box] = await Promise.all([btn.locator('svg').boundingBox(), btn.boundingBox()])
     expect(Math.abs(icon!.y + icon!.height / 2 - (box!.y + box!.height / 2))).toBeLessThan(2)
   }

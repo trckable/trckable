@@ -111,5 +111,8 @@ test('the search finds an owner\'s controls', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: owner, url: API }])
   await page.goto(`${API}/settings?site=${site}&tab=modules`)
   await page.waitForLoadState('networkidle')
-  expect((await writeControls(page)).filter((c) => c.startsWith('switch: ')).length).toBeGreaterThan(3)
+  // The switches arrive with the tab's data, after the network first goes
+  // quiet in WebKit: ask again until they are there.
+  const switches = async () => (await writeControls(page)).filter((c) => c.startsWith('switch: ')).length
+  await expect.poll(switches).toBeGreaterThan(3)
 })
