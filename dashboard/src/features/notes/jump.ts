@@ -9,7 +9,7 @@ const EVENT = 'trckable:note-day'
 export function jumpPatch(day: ISODate, range: Range, byDay: boolean, today: ISODate): Partial<ViewState> {
   if (byDay && day >= range.from && day <= range.to) return { day }
   const to = addDays(day, 14) > today ? today : addDays(day, 14)
-  return { period: 'custom', from: addDays(to, -29), to, bucket: undefined, day, live: undefined }
+  return { period: 'custom', from: addDays(to, -29), to, bucket: undefined, day, live: false }
 }
 
 /** From outside the dashboard (Settings, over it): ask it to show a day. */

@@ -62,7 +62,7 @@ test.beforeAll(async ({ browser, request }) => {
 // A cookie is kept per host, not per port: the one session serves the proxy too.
 async function signIn(page: Page, base: string) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(base + '/example.com')
+  await page.goto(base + '/example.com?view=data')
 }
 
 const tile = (page: Page, label: string) => page.locator('.kpi').filter({ has: page.locator('.label', { hasText: label }) }).locator('.value')

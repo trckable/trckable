@@ -48,7 +48,10 @@ export interface ViewState {
   metric?: ChartMetricId
   /** Which visit a sale is credited to. Absent = last touch, what closed it. */
   attr?: 'first'
-  /** Live mode: the site right now instead of the period's numbers. */
+  /** Live mode: the site right now instead of the period's numbers. Absent
+   *  in the address means the default (wantsLive, below); "data"
+   *  is the person's choice of the period's numbers, kept when nothing else
+   *  in the address would say so. */
   live?: boolean
   /** Full's funnel: its steps, in order ("fs=page:/pricing"). Absent = a suggested one. */
   funnel?: FunnelStep[]
@@ -63,6 +66,12 @@ function funnelOf(raw: string[]): FunnelStep[] | undefined {
     if (i > 0 && (kind === 'page' || kind === 'goal')) steps.push({ kind, value: r.slice(i + 1) })
   }
   return steps.length ? steps : undefined
+}
+
+function liveOf(v: string | null): boolean | undefined {
+  if (v === 'live') return true
+  if (v === 'data') return false
+  return undefined
 }
 
 export function readView(params: URLSearchParams): ViewState {
@@ -88,7 +97,7 @@ export function readView(params: URLSearchParams): ViewState {
     day: params.get('day') ?? undefined,
     test: params.get('payments') === 'test',
     attr: params.get('attr') === 'first' ? 'first' : undefined,
-    live: params.get('view') === 'live' || undefined,
+    live: liveOf(params.get('view')),
     funnel: funnelOf(params.getAll('fs')),
   }
 }
@@ -113,13 +122,29 @@ export function writeView(v: ViewState): string {
   if (v.day) p.set('day', v.day)
   if (v.test) p.set('payments', 'test')
   for (const s of v.funnel ?? []) p.append('fs', `${s.kind}:${s.value}`)
+  // Data says so only when nothing else in the address does: a bare address
+  // opens Live on a site with visits.
+  if (v.live === false && p.size === 0) p.set('view', 'data')
   const s = p.toString()
   return s ? '?' + s : ''
+}
+
+// Which of Live and Data a dashboard opens in. A site that has had visits opens
+// in Live when the address says nothing about the view: no ?view= and nothing
+// else in it (a period, filters, Full, a day), which only Data has. A link with
+// those, from a saved view or shared earlier, stays Data. A site with no visit
+// yet keeps its install screen and Data.
+export function wantsLive(view: ViewState, site: { last_event_at?: number }): boolean {
+  if (view.live !== undefined) return view.live
+  return !!site.last_event_at && writeView(view) === ''
 }
 
 /** Update part of the view; scrub moves replace history, everything else pushes. */
 export function setView(patch: Partial<ViewState>) {
   const cur = readView(new URLSearchParams(location.search))
-  const next = { ...cur, ...patch }
+  // An address with a period, filters and so on is Data; if this change takes
+  // the last of them out, it keeps saying Data.
+  const data: Partial<ViewState> = cur.live === undefined && writeView(cur) !== '' ? { live: false } : {}
+  const next = { ...cur, ...data, ...patch }
   navigate(location.pathname + writeView(next), { replace: Object.keys(patch).every((k) => k === 'day') })
 }

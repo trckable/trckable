@@ -2,7 +2,7 @@
 // at the top; Data comes back scrolled to where it was left. Live's code is
 // awaited (briefly) before the switch, so the change is one frame to the next
 // with nothing blank in between.
-import { readView, setView } from '../../lib/url'
+import { setView } from '../../lib/url'
 import { transition } from '../../lib/viewTransition'
 import { preloadLive } from './liveChunk'
 import { minuteView } from './minute'
@@ -15,8 +15,7 @@ let dataScroll = 0
 
 const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
-export async function switchView(live: boolean): Promise<void> {
-  const now = !!readView(new URLSearchParams(location.search)).live
+export async function switchView(live: boolean, now: boolean): Promise<void> {
   if (now === live) return
   if (live) {
     dataScroll = scrollY
@@ -24,7 +23,7 @@ export async function switchView(live: boolean): Promise<void> {
   }
   const top = live ? 0 : dataScroll
   await transition(
-    () => setView({ live: live || undefined }),
+    () => setView({ live }),
     () => window.scrollTo(0, top),
   )
 }

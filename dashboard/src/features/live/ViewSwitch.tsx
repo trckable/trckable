@@ -18,7 +18,7 @@ export function ViewSwitch({ live }: { live: boolean }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!pressed(e, 'live') || (e.target as HTMLElement).closest('input, textarea, select, [contenteditable]')) return
-      void switchView(!live)
+      void switchView(!live, live)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -31,11 +31,11 @@ export function ViewSwitch({ live }: { live: boolean }) {
   return (
     <div className={classes.join(' ')} role="group" aria-label={copy.switchLabel} title={copy.switchTitle(key)} onPointerEnter={warm} onFocus={warm}>
       <span className="view-pill" aria-hidden="true" />
-      <button type="button" aria-pressed={live} aria-keyshortcuts={key} onClick={() => void switchView(true)}>
+      <button type="button" aria-pressed={live} aria-keyshortcuts={key} onClick={() => void switchView(true, live)}>
         <span className="pulse" aria-hidden="true" />
         {copy.live}
       </button>
-      <button type="button" aria-pressed={!live} onClick={() => void switchView(false)}>
+      <button type="button" aria-pressed={!live} onClick={() => void switchView(false, live)}>
         {copy.data}
       </button>
     </div>
