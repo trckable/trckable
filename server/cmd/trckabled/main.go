@@ -238,7 +238,7 @@ func admin(cfg config.Config, args []string) error {
 			if err := ctl.RemoveUserAsOperator(ctx, sqlite.DefaultAccount, id); err != nil {
 				return err
 			}
-			fmt.Fprintln(os.Stderr, args[1], "removed, along with every session they held")
+			fmt.Fprintln(os.Stderr, args[1], "removed from this account (a person with no other account is deleted, sessions and all)")
 			return nil
 		}
 		if len(args) < 3 {

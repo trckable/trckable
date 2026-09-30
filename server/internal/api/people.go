@@ -146,9 +146,17 @@ func (a *API) resetPersonPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	password := auth.Token("", 12)
-	if err := a.Ctl.ResetPersonPassword(r.Context(), principalOf(r).account, p.ID, password); busy(w, err) {
+	err = a.Ctl.ResetPersonPassword(r.Context(), principalOf(r).account, p.ID, password)
+	if busy(w, err) {
 		return
-	} else if err != nil {
+	}
+	// The store's own refusals (they joined another account meanwhile, or
+	// left this one) are answers for the caller; anything else is ours.
+	if errors.Is(err, sqlite.ErrElsewhere) || errors.Is(err, auth.ErrNotFound) {
+		failPerson(w, err)
+		return
+	}
+	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -246,7 +254,12 @@ func (a *API) turnOffTwoStep(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusConflict, "an owner's two-step can only be turned off once they are a viewer: make them a viewer first")
 		return
 	}
-	if err := a.Ctl.DisableTwoStep(r.Context(), p.ID); err != nil {
+	err = a.Ctl.DisableTwoStepIn(r.Context(), principalOf(r).account, p.ID)
+	if errors.Is(err, sqlite.ErrElsewhere) || errors.Is(err, auth.ErrNotFound) {
+		failPerson(w, err)
+		return
+	}
+	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}

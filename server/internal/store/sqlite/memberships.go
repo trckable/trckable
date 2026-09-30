@@ -120,7 +120,12 @@ func syncHome(ctx context.Context, tx *sql.Tx, user string) error {
 	return err
 }
 
-// holderOf is the first owner of an account: its oldest owner membership.
+// holderOf is the first owner of an account: its oldest owner membership
+// (by when the membership was made, then by insertion order). It is derived,
+// not stored, so it follows the roles: if the operator steps the first owner
+// down (SetRoleAsOperator), the next oldest owner is the first owner until
+// they are an owner again, when the original is (their membership is still
+// the oldest). The cases are in TestTheFirstOwnerFollowsTheRoles.
 func holderOf(ctx context.Context, q dbtx, account string) (string, error) {
 	var id string
 	err := q.QueryRowContext(ctx, `SELECT user_id FROM memberships WHERE account_id = ? AND role = ? ORDER BY created_at, rowid LIMIT 1`, account, RoleOwner).Scan(&id)

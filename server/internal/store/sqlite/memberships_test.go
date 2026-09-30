@@ -424,3 +424,78 @@ func TestWhichMembershipOpens(t *testing.T) {
 		t.Error("nothing to choose")
 	}
 }
+
+// The first owner is derived from the roles: the oldest owner membership. The
+// operator stepping them down hands the place to the next oldest owner; making
+// them an owner again gives it back, since their membership is still the oldest.
+func TestTheFirstOwnerFollowsTheRoles(t *testing.T) {
+	ctx := context.Background()
+	s := openT(t)
+	first, _ := s.AddUser(ctx, DefaultAccount, "first@a.com", testPassword, RoleOwner)
+	second, _ := s.AddUser(ctx, DefaultAccount, "second@a.com", testPassword, RoleOwner)
+	// Two owners with the same creation second: insertion order still decides.
+	if _, err := s.DB.Exec(`UPDATE memberships SET created_at = 100`); err != nil {
+		t.Fatal(err)
+	}
+	holder := func() string {
+		t.Helper()
+		id, err := holderOf(ctx, s.DB, DefaultAccount)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return id
+	}
+	if holder() != first.ID {
+		t.Fatalf("the first owner is %s", holder())
+	}
+	if err := s.SetRoleAsOperator(ctx, DefaultAccount, first.ID, RoleViewer); err != nil {
+		t.Fatal(err)
+	}
+	if holder() != second.ID {
+		t.Fatal("the next owner is the first owner while the original is a viewer")
+	}
+	if err := s.RemoveUser(ctx, DefaultAccount, second.ID); !errors.Is(err, ErrLastOwner) {
+		t.Fatalf("they are the only owner now: %v", err)
+	}
+	if err := s.SetRole(ctx, DefaultAccount, first.ID, RoleOwner); err != nil {
+		t.Fatal(err)
+	}
+	if holder() != first.ID {
+		t.Fatal("the original is the first owner again")
+	}
+	if err := s.SetRole(ctx, DefaultAccount, second.ID, RoleViewer); err != nil {
+		t.Fatalf("the newer owner steps down: %v", err)
+	}
+}
+
+// Turning off someone's two-step needs them wholly inside the account, checked
+// with the change.
+func TestDisableTwoStepInChecksTheMemberships(t *testing.T) {
+	ctx := context.Background()
+	s, other := membersT(t)
+	p, err := s.AddUser(ctx, DefaultAccount, "p@a.com", testPassword, RoleViewer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	on := func() bool {
+		var n int
+		_ = s.DB.QueryRow(`SELECT totp_enabled FROM users WHERE id = ?`, p.ID).Scan(&n)
+		return n == 1
+	}
+	if _, err := s.DB.Exec(`UPDATE users SET totp_enabled = 1, totp_secret = 'x' WHERE id = ?`, p.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.DisableTwoStepIn(ctx, other, p.ID); !errors.Is(err, auth.ErrNotFound) || !on() {
+		t.Fatalf("someone of another account: %v", err)
+	}
+	join(t, s, p.ID, other, RoleViewer, p.CreatedAt+10)
+	if err := s.DisableTwoStepIn(ctx, DefaultAccount, p.ID); !errors.Is(err, ErrElsewhere) || !on() {
+		t.Fatalf("someone in two accounts: %v", err)
+	}
+	if err := s.RemoveUser(ctx, other, p.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.DisableTwoStepIn(ctx, DefaultAccount, p.ID); err != nil || on() {
+		t.Fatalf("someone in one account: %v", err)
+	}
+}
