@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.5.7 (30 Sep 2026)
+
 - Widgets have their own section in a site's settings, next to Sharing: they go on your own pages, so they no longer sit under share links.
 ### Changed
 
