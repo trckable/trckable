@@ -4,6 +4,7 @@ import { shows } from '../../lib/modules'
 import { DevicesPanel, LocationsPanel, PagesPanel, SourcesPanel } from './Breakdowns'
 import { cardCopy } from './copy'
 import type { CardsCtx } from './ctx'
+import { FullButton } from './FullButton'
 import { EarnersPanel, GoalsPanel } from './Money'
 import { TabCard, type CardTab } from './TabCard'
 
@@ -27,7 +28,7 @@ export function whatTabs(c: CardsCtx): CardTab[] {
 export function CardPair({ c, who, what }: { c: CardsCtx; who: CardTab[]; what: CardTab[] }) {
   return (
     <section aria-label={cardCopy.who + ' / ' + cardCopy.what} className="cards2" id="cards">
-      <TabCard key={c.site.id + 'who'} card="who" site={c.site.id} label={cardCopy.who} tabs={who} />
+      <TabCard key={c.site.id + 'who'} card="who" site={c.site.id} label={cardCopy.who} tabs={who} more={!c.full && !c.shared ? <FullButton onFull={c.onFull} /> : undefined} />
       {what.length > 0 && <TabCard key={c.site.id + 'what'} card="what" site={c.site.id} label={cardCopy.what} tabs={what} want={c.steps.length > 0 ? 'funnel' : undefined} />}
     </section>
   )

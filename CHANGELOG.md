@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The card at the bottom of Compact ("That's the whole story on one screen") is gone. A small Full button with its key sits at the end of the first card's tabs instead, with a tooltip saying what Full adds; ⋯ still has Full view.
 - On a desktop, the filters in force (as chips), Save view and Views sit on the left of the date row, packed at its start, and the two capsules keep the right. Tablets, phones and a shared link's header keep the row under the date row.
 - The chart's line runs across the whole period, along zero on the days before the first visit, instead of starting where the data does.
 
