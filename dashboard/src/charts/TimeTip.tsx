@@ -5,12 +5,17 @@ import { fmtInt } from '../lib/format'
 import { timeCopy } from './copy'
 import type { TimeChartProps } from './TimeChart'
 import { bucketLabel } from './timeScale'
+import { Hero, Versus } from './TimeHero'
 import { CompactTip } from './TimeTipCompact'
 import './TimeTip.css'
 import './Tip.css'
 
 export default function TimeTip({ p, i, left, width, compact, notes }: { p: TimeChartProps; i: number; left: number; width: number; compact: boolean; notes: Annotation[] }) {
   const detail = p.detail?.(i) ?? null
+  const fmt = p.fmt ?? fmtInt
+  const money = p.tone === 'money'
+  const tone = money ? 'var(--money)' : 'var(--accent)'
+  const sales = p.saleNote?.(i) ?? null
   if (compact) return <CompactTip p={p} i={i} left={left} width={width} detail={detail} notes={notes} />
   return (
     <div className="chart-tip time-tip" style={{ left }}>
@@ -29,37 +34,10 @@ export default function TimeTip({ p, i, left, width, compact, notes }: { p: Time
             <p>{note.text}</p>
           </div>
         ))}
-      <div className="ct-hero">
-        <span className="ct-label">
-          <i style={{ background: 'var(--accent)' }} />
-          {p.metric}
-        </span>
-        <span className="ct-big num">{fmtInt(p.values[i] ?? 0)}</span>
-        {p.ghost && p.ghost[i] !== undefined && (
-          <span className="ct-vs num">
-            {(() => {
-              const a = p.values[i] ?? 0
-              const b = p.ghost[i] ?? 0
-              const pct = b ? Math.round(((a - b) / b) * 100) : null
-              return (
-                <>
-                  {pct !== null && <em className={pct >= 0 ? 'tone-up' : 'tone-down'}>{`${pct >= 0 ? '↑ ' : '↓ '}${Math.abs(pct)}%`}</em>} vs {fmtInt(b)}
-                  {p.ghostLabels?.[i] ? ` on ${bucketLabel(p.ghostLabels[i], p.bucket, true)}` : ''}
-                </>
-              )
-            })()}
-          </span>
-        )}
-      </div>
-      {p.strip && (p.strip.values[i] ?? 0) > 0 && (
-        <div className="ct-hero money">
-          <span className="ct-label">
-            <i style={{ background: 'var(--money)' }} />
-            {p.strip.label}
-          </span>
-          <span className="ct-big num">{p.strip.fmt(p.strip.values[i] ?? 0)}</span>
-        </div>
-      )}
+      <Hero label={p.metric} color={tone} big={money && !p.values[i] ? null : fmt(p.values[i] ?? 0)} note={money ? sales : null}>
+        {p.ghost && p.ghost[i] !== undefined && <Versus a={p.values[i] ?? 0} b={p.ghost[i] ?? 0} fmt={fmt} when={p.ghostLabels?.[i]} bucket={p.bucket} />}
+      </Hero>
+      {p.revenue && !money && <Hero label={p.revenue.label} color="var(--money)" big={p.revenue.values[i] > 0 ? p.revenue.fmt(p.revenue.values[i]) : null} note={sales} />}
       {p.overlay && (
         <div className="ct-row">
           <span>

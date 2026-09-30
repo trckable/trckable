@@ -11,10 +11,16 @@
   stroke-dasharray: 3 3;
   pointer-events: none;
 }
+.cursor.money line {
+  stroke: var(--money);
+}
 .cursor circle {
   fill: var(--accent);
   stroke: var(--surface);
   stroke-width: 2;
+}
+.cursor.money circle {
+  fill: var(--money);
 }
 .cursor .cursor-halo {
   fill-opacity: 0.14;
@@ -47,7 +53,10 @@
   .cursor-pill {
     transition: none;
   }
-  .cursor .cursor-halo {
+  .cursor.money circle {
+  fill: var(--money);
+}
+.cursor .cursor-halo {
     animation: none;
   }
 }

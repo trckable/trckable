@@ -1,16 +1,19 @@
 // The cursor on a line chart: a quiet dashed line in the series colour from the
-// top to the axis, and the point on the line with a soft halo. It eases to the
-// next bucket (one transform, so nothing is redrawn); Cursor.css.
+// top to the axis (through every plot under it), and the point on the line with
+// a soft halo. It eases to the next bucket (one transform, so nothing is
+// redrawn); Cursor.css.
 import './Cursor.css'
 
-export function CursorMark({ x, y, top, bottom }: { x: number; y: number; top: number; bottom: number }) {
+export function CursorMark({ x, y, top, bottom, tone, dot = true }: { x: number; y: number; top: number; bottom: number; tone?: 'money'; dot?: boolean }) {
   return (
-    <g className="cursor" aria-hidden="true" style={{ transform: `translateX(${x}px)` }}>
+    <g className={tone === 'money' ? 'cursor money' : 'cursor'} aria-hidden="true" style={{ transform: `translateX(${x}px)` }}>
       <line y1={top} y2={bottom} />
-      <g className="cursor-dot" style={{ transform: `translateY(${y}px)` }}>
-        <circle className="cursor-halo" r="10" />
-        <circle r="5" />
-      </g>
+      {dot && (
+        <g className="cursor-dot" style={{ transform: `translateY(${y}px)` }}>
+          <circle className="cursor-halo" r="10" />
+          <circle r="5" />
+        </g>
+      )}
     </g>
   )
 }

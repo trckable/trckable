@@ -34,8 +34,9 @@
   letter-spacing: -0.02em;
   color: var(--text);
 }
-.compact .ct-line.money b {
-  color: var(--money);
+.compact .ct-line .ct-none {
+  font-style: normal;
+  font-size: 11px;
 }
 .compact .ct-split-bar {
   display: block;
@@ -47,6 +48,11 @@
 .compact .ct-split-bar > span {
   display: block;
   height: 100%;
+}
+/* How many sales made the day's revenue. */
+.compact .ct-sub {
+  font-size: 10.5px;
+  color: var(--text-3);
 }
 /* The small figures in one row, each with its tiny label under it. */
 .compact .ct-tiny {
