@@ -7,7 +7,8 @@ import { API } from '../playwright.config'
 import { session } from './session'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'reads boxes and computed sizes: one engine is enough')
-test.use({ viewport: { width: 390, height: 844 } })
+// Reduced motion: a dialog opens at once, not scaled up from 96% (which would measure its buttons 2 px short).
+test.use({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' })
 
 test.beforeEach(async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: await session('phone'), url: API }])
@@ -113,7 +114,7 @@ test('Settings, and the share card', async ({ page }) => {
 })
 
 test('a tap on the chart pins its card, and a tap outside lets it go', async ({ browser }) => {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true })
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, reducedMotion: 'reduce' })
   await ctx.addCookies([{ name: 'trckable_session', value: await session('phone'), url: API }])
   const page = await ctx.newPage()
   await data(page)
