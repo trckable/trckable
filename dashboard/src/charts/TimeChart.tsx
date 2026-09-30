@@ -1,7 +1,9 @@
 // The main chart, drawn like Live's: one glowing line over a soft fill, three
 // y labels (0, half, top) and one label on the peak; a dashed ghost line for
 // the comparison, an optional overlay (the money trail), and a scrubber.
-// Pure SVG; animation comes from useTween.
+// Revenue joins it two ways, never on a second axis: as a plot of its own
+// under the line (revenue), or in the line's place (tone: money), as columns
+// until nearly every day sells. Pure SVG; animation comes from useTween.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Annotation, Bucket } from '../lib/api'
 import { markersFor } from '../features/notes/markers'
@@ -9,13 +11,15 @@ import { fmtCompact, fmtInt } from '../lib/format'
 import { useTween } from '../lib/motion'
 import { timeCopy } from './copy'
 import { smooth } from './smooth'
-import { bucketLabel, everyNth, peakIndex, threeScale } from './timeScale'
+import { bucketLabel, everyNth, fractionScale, peakIndex, threeScale } from './timeScale'
 import { useCut } from './useCut'
-import { NoteMarkers, TimeTip } from './chartParts'
+import { ColumnsLayer, NoteMarkers, RevenueLayer, TimeTip, preloadMoney } from './chartParts'
+import { SPLIT_GAP, SPLIT_H, columnWidth, isDense, moneyScale } from './moneyPlot'
+import { NoteAdd } from './NoteAdd'
 import { PeakLabel } from './PeakLabel'
-import { PAD_L, PAD_T, AXIS_H, CHART_H, tipLeft } from './plot'
-import { RevenueStrip, STRIP_H } from './RevenueStrip'
-import { XLabels } from './TimeGrid'
+import { PAD_L, PAD_T, AXIS_H, CHART_H, CHART_MS, tipLeft } from './plot'
+import { TimeDefs } from './TimeDefs'
+import { XLabels, YTicks } from './TimeGrid'
 import { CursorMark, CursorPill } from './Cursor'
 
 export { bucketLabel, smooth }
@@ -30,8 +34,18 @@ export interface TimeChartProps {
   bucket: Bucket
   scrub?: number | null
   partialLast?: boolean // the last bucket is still in progress (today / this hour)
-  // Revenue gets its own strip under the chart (its own scale, never a second axis).
-  strip?: { values: number[]; fmt: (n: number) => string; label: string }
+  /** The values are revenue: the money colour, a money axis, columns (a line once nearly every bucket sold). */
+  tone?: 'money'
+  /** Writes a value for the hover card, the labels and a screen reader (default: a count). */
+  fmt?: (n: number) => string
+  /** The values are fractions (a rate): the axis steps in thousandths, not ones. */
+  fraction?: boolean
+  /** Writes one label on the y-axis (default: compact). */
+  axis?: (n: number) => string
+  /** Revenue under the line: its own plot with its own axis (its own scale, never a second axis). */
+  revenue?: { values: number[]; fmt: (n: number) => string; axis: (n: number) => string; label: string; none: string }
+  /** What a bucket's sales say, under its revenue ("3 sales · $149 new"); null when there were none. */
+  saleNote?: (i: number) => string | null
   onScrub?: (i: number) => void
   height?: number
   /**
@@ -67,9 +81,18 @@ export function TimeChart(p: TimeChartProps) {
   if (p.locked && picked !== null) setHover(null)
   const hover = p.locked ? null : picked
   const [drag, setDrag] = useState(false)
-  const STRIP = p.strip ? STRIP_H : 0
+  const money = p.tone === 'money'
+  const tone = money ? 'var(--money)' : 'var(--accent)'
+  const split = money ? undefined : p.revenue
+  const STRIP = split ? SPLIT_H : 0
   const H = (p.height ?? CHART_H) + STRIP
   const plotH = H - PAD_T - AXIS_H - STRIP
+  const fmt = p.fmt ?? fmtInt
+  // Revenue's drawing is a chunk of its own, asked for by a chart that has revenue.
+  const hasRevenue = money || !!split
+  useEffect(() => {
+    if (hasRevenue) preloadMoney()
+  }, [hasRevenue])
 
   useEffect(() => {
     const el = ref.current
@@ -81,14 +104,16 @@ export function TimeChart(p: TimeChartProps) {
 
   const n = p.values.length
   const target = useMemo(() => {
-    const all = [...p.values, ...(p.ghost ?? []).slice(0, n), ...(p.overlay?.values ?? [])]
-    return threeScale(Math.max(1, ...all))
-  }, [p.values, p.ghost, p.overlay, n])
-  const max = useTween(target.max)
-  const vals = useTween(p.values)
-  const ghost = useTween(p.ghost ? pad(p.ghost, n) : zeros(n))
-  const over = useTween(p.overlay ? p.overlay.values : zeros(n))
-  const strip = useTween(p.strip ? pad(p.strip.values, n) : zeros(n))
+    const before = (p.ghost ?? []).slice(0, n)
+    if (money) return moneyScale(p.values, before)
+    const top = Math.max(...p.values, ...before, ...(p.overlay?.values ?? []))
+    const s = p.fraction ? fractionScale(top) : threeScale(Math.max(1, top))
+    return { ticks: [0, s.step, s.max], max: s.max }
+  }, [p.values, p.ghost, p.overlay, n, money, p.fraction])
+  const max = useTween(target.max, CHART_MS)
+  const vals = useTween(p.values, CHART_MS)
+  const ghost = useTween(p.ghost ? pad(p.ghost, n) : zeros(n), CHART_MS)
+  const over = useTween(p.overlay ? p.overlay.values : zeros(n), CHART_MS)
 
   const plotW = w - PAD_L
   const x = (i: number) => PAD_L + (n <= 1 ? plotW / 2 : (i / (n - 1)) * plotW)
@@ -98,7 +123,9 @@ export function TimeChart(p: TimeChartProps) {
   const line = (a: number[]) => smooth(a.map((v, i) => [x(i), y(v)]))
   const area = (a: number[]) => (a.length ? `${line(a)}L${x(a.length - 1).toFixed(1)} ${PAD_T + plotH}L${x(0).toFixed(1)} ${PAD_T + plotH}Z` : '')
 
-  const ticks = [0, target.step, target.max]
+  const columns = money && !isDense(p.values)
+  const bw = columnWidth(plotW, n)
+  const cols = { x, base: PAD_T + plotH, h: plotH, max, w: bw }
   const peak = peakIndex(p.values)
   const labelEvery = everyNth(Math.max(1, Math.ceil(n / Math.max(2, Math.floor(plotW / 90)))), p.bucket)
 
@@ -165,57 +192,33 @@ export function TimeChart(p: TimeChartProps) {
         width={w}
         height={H}
         role="img"
-        aria-label={timeCopy.chart(p.metric, n, fmtInt(Math.max(0, ...p.values)))}
+        aria-label={timeCopy.chart(p.metric, n, fmt(Math.max(0, ...p.values)))}
         tabIndex={n ? 0 : -1}
         onKeyDown={p.locked ? undefined : onKey}
         onBlur={() => setHover(null)}
       >
-        <defs>
-          {/* The data is drawn inside the plot and nowhere else. The svg
-              itself stays overflow: visible so an edge label or the hover
-              dot is not cut in half — but a line or a bar can never paint
-              over the cards above it, whatever a transition does. */}
-          <clipPath id={gradId + '-plot'}>
-            <rect x={PAD_L} y={0} width={Math.max(0, w - PAD_L)} height={H} />
-          </clipPath>
-          {/* Lit left of the cut, hidden right of it (a grey copy of the line
-              shows through). Only the rect moves (a CSS transform), so the
-              paths are never redrawn; it is invisible while merely hovering. */}
-          <mask id={gradId + '-dim'} maskUnits="userSpaceOnUse" x={0} y={-PAD_T} width={w + 16} height={H + PAD_T}>
-            <rect x={0} y={-PAD_T} width={w + 16} height={H + PAD_T} fill="#fff" />
-            <rect className="chart-dim" x={0} y={-PAD_T} width={w + 16} height={H + PAD_T} fill="#000" />
-          </mask>
-          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="var(--accent)" stopOpacity="0.26" />
-            <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
-          </linearGradient>
-          {/* Revenue bars lit from the top, like the line above them. */}
-          <linearGradient id={gradId + '-money'} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="var(--money)" stopOpacity="1" />
-            <stop offset="1" stopColor="var(--money)" stopOpacity="0.45" />
-          </linearGradient>
-        </defs>
-        {ticks.map((t) => (
-          <g key={t}>
-            {t > 0 && <line x1={PAD_L} x2={w} y1={y(t)} y2={y(t)} stroke="var(--grid)" strokeDasharray="2 4" />}
-            <text x={0} y={y(t) + 4} className="num" fontSize="11" fill="var(--text-3)">
-              {fmtCompact(t)}
-            </text>
-          </g>
-        ))}
+        <TimeDefs id={gradId} w={w} h={H} base={PAD_T + plotH} padL={PAD_L} padT={PAD_T} tone={tone} />
+        <YTicks ticks={target.ticks} y={y} w={w} padL={PAD_L} write={p.axis ?? fmtCompact} />
         <line x1={PAD_L} x2={w} y1={PAD_T + plotH} y2={PAD_T + plotH} stroke="var(--border)" />
-        {/* While Replay plays, is dragged or has a day picked, what is past the cut goes grey: this line shows through where the lit one is cut off. */}
-        {dim && !p.story && <path d={line(vals)} fill="none" stroke="var(--text-4)" strokeOpacity="0.55" strokeWidth="1.5" strokeLinejoin="round" clipPath={`url(#${gradId}-plot)`} />}
-        <g clipPath={`url(#${gradId}-plot)`}>
+        {/* While Replay plays, is dragged or has a day picked, what is past the cut goes grey: this copy shows through where the lit one is cut off. */}
+        {dim && !p.story && !columns && <path d={line(vals)} fill="none" stroke="var(--text-4)" strokeOpacity="0.55" strokeWidth="1.5" strokeLinejoin="round" clipPath={`url(#${gradId}-main)`} />}
+        {dim && !p.story && columns && <g clipPath={`url(#${gradId}-main)`}><ColumnsLayer {...cols} id={gradId} values={vals} hover={null} grey /></g>}
+        <g clipPath={`url(#${gradId}-main)`}>
         <g mask={`url(#${gradId}-dim)`}>
-        <g style={{ opacity: p.overlay ? 0.35 : 1, transition: 'opacity .25s' }}>
-          <path d={area(vals)} fill={`url(#${gradId})`} />
-          <path className="chart-line" d={line(p.partialLast && n > 2 ? vals.slice(0, -1) : vals)} fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-          {p.partialLast && n > 2 && (
-            <path d={`M${x(n - 2).toFixed(1)} ${y(vals[n - 2]).toFixed(1)}L${x(n - 1).toFixed(1)} ${y(vals[n - 1]).toFixed(1)}`} fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="3 4" strokeLinecap="round" />
+        <g style={{ opacity: p.overlay ? 0.35 : 1, transition: 'opacity .12s' }}>
+          {columns ? (
+            <ColumnsLayer {...cols} id={gradId} values={vals} ghost={p.ghost ? ghost : undefined} hover={hover} partialLast={p.partialLast} />
+          ) : (
+            <>
+              <path d={area(vals)} fill={`url(#${gradId})`} />
+              <path className={money ? 'chart-line money' : 'chart-line'} d={line(p.partialLast && n > 2 ? vals.slice(0, -1) : vals)} fill="none" stroke={tone} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+              {p.partialLast && n > 2 && (
+                <path d={`M${x(n - 2).toFixed(1)} ${y(vals[n - 2]).toFixed(1)}L${x(n - 1).toFixed(1)} ${y(vals[n - 1]).toFixed(1)}`} fill="none" stroke={tone} strokeWidth="2" strokeDasharray="3 4" strokeLinecap="round" />
+              )}
+            </>
           )}
         </g>
-        {p.ghost && <path d={line(ghost)} fill="none" stroke="var(--text-3)" strokeWidth="1.5" strokeDasharray="4 3" strokeLinejoin="round" />}
+        {p.ghost && !columns && <path d={line(ghost)} fill="none" stroke="var(--text-3)" strokeWidth="1.5" strokeDasharray="4 3" strokeLinejoin="round" />}
         {p.overlay && (
           <g>
             <path d={area(over)} fill={p.overlay.color} fillOpacity="0.22" />
@@ -225,46 +228,32 @@ export function TimeChart(p: TimeChartProps) {
         </g>
         </g>
         {/* Today, still counting: a point that breathes at the line's end, whole even on the plot's edge. */}
-        {p.partialLast && n > 1 && hover == null && scrub == null && (
+        {p.partialLast && n > 1 && hover == null && scrub == null && !columns && (
           <g className="chart-now" aria-hidden="true">
-            <circle cx={x(n - 1)} cy={y(vals[n - 1] ?? 0)} r="9" fill="var(--accent)" className="chart-now-halo" />
-            <circle cx={x(n - 1)} cy={y(vals[n - 1] ?? 0)} r="4" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" />
+            <circle cx={x(n - 1)} cy={y(vals[n - 1] ?? 0)} r="9" fill={tone} className="chart-now-halo" />
+            <circle cx={x(n - 1)} cy={y(vals[n - 1] ?? 0)} r="4" fill={tone} stroke="var(--surface)" strokeWidth="2" />
           </g>
         )}
-        {p.story && <g clipPath={`url(#${gradId}-plot)`}><rect className="chart-dim chart-unknown" x={0} y={PAD_T} width={w + 16} height={plotH} /></g>}
+        {p.story && <g clipPath={`url(#${gradId}-plot)`}><rect className="chart-dim chart-unknown" x={0} y={PAD_T} width={w + 16} height={plotH + STRIP} /></g>}
         {/* Replay's day: a solid line at the cut, drawn at the variable so it
             never lags the grey. The pointer's own cursor is CursorMark. */}
-        {hover == null && <line className="chart-cut is-replay" x1={0} x2={0} y1={0} y2={PAD_T + plotH} />}
+        {hover == null && <line className="chart-cut is-replay" x1={0} x2={0} y1={0} y2={PAD_T + plotH + STRIP} />}
         {scrub != null && n > 1 && hover == null && (
-          <circle ref={marker} cx={0} cy={0} transform={driven ? undefined : `translate(${x(scrub)} ${y(vals[scrub] ?? 0)})`} r={quiet ? 4 : 6} fill="var(--accent)" stroke="var(--surface)" strokeWidth={quiet ? 2 : 3} />
+          <circle ref={marker} cx={0} cy={0} transform={driven ? undefined : `translate(${x(scrub)} ${y(vals[scrub] ?? 0)})`} r={quiet ? 4 : 6} fill={tone} stroke="var(--surface)" strokeWidth={quiet ? 2 : 3} />
         )}
-        {hover != null && <CursorMark x={x(hover)} y={y(vals[hover] ?? 0)} top={0} bottom={PAD_T + plotH} />}
-        {peak >= 0 && hover == null && scrub == null && !p.overlay && <PeakLabel x={x(peak)} y={y(vals[peak] ?? 0)} w={w} text={timeCopy.peak(fmtInt(p.values[peak]), bucketLabel(p.labels[peak], p.bucket))} padL={PAD_L} />}
-        {p.strip && <RevenueStrip values={strip} label={p.strip.label} gradient={gradId + '-money'} x={x} plotW={plotW} top={PAD_T + plotH} hover={hover} clip={gradId + '-plot'} mask={gradId + '-dim'} />}
+        {hover != null && <CursorMark x={x(hover)} y={y(vals[hover] ?? 0)} top={0} bottom={PAD_T + plotH + STRIP} tone={money ? 'money' : undefined} dot={!columns} />}
+        {peak >= 0 && hover == null && scrub == null && !p.overlay && (
+          <PeakLabel x={x(peak)} y={y(vals[peak] ?? 0)} w={w} text={columns ? fmt(p.values[peak]) : timeCopy.peak(fmt(p.values[peak]), bucketLabel(p.labels[peak], p.bucket))} padL={PAD_L} color={tone} dot={!columns} />
+        )}
+        {split && (
+          <RevenueLayer {...split} id={gradId} x={x} w={w} top={PAD_T + plotH + SPLIT_GAP} values={pad(split.values, n)} hover={hover} partialLast={p.partialLast} dim={dim && !p.story} labelled={hover == null && scrub == null} />
+        )}
         <XLabels labels={p.labels} bucket={p.bucket} every={labelEvery} x={x} y={H - 6} skip={hover != null ? x(hover) : null} />
       </svg>
       {/* Notes sit on the axis: a flag per day, its words on hover. */}
       <NoteMarkers markers={markers} x={x} top={PAD_T + plotH} width={w} />
       {hover != null && n > 0 && <TimeTip p={p} i={hover} left={tipAt} width={tipW} compact={compact} notes={markers.find((m) => m.i === hover)?.notes ?? []} />}
-      {/* Add a note to the day under the cursor, without hunting for a
-          button: it sits at the top of the crosshair, beside the tooltip,
-          so moving up to it keeps the same day. */}
-      {hover != null && n > 0 && p.onAddNote && (
-        <button
-          type="button"
-          className="note-add"
-          style={{ left: x(hover) }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation()
-            p.onAddNote?.(p.labels[hover].slice(0, 10))
-          }}
-          aria-label={timeCopy.addNoteOn(bucketLabel(p.labels[hover], p.bucket, true))}
-          title={timeCopy.addNote}
-        >
-          +
-        </button>
-      )}
+      {hover != null && n > 0 && p.onAddNote && <NoteAdd x={x(hover)} day={p.labels[hover].slice(0, 10)} label={bucketLabel(p.labels[hover], p.bucket, true)} onAdd={p.onAddNote} />}
       {/* Live pulse: each visit rises from the last point as a dot, a goal as
           a ring, a sale as a coin with its amount. It is decoration on top of
           numbers that are already right, so it never waits for anything. */}

@@ -34,6 +34,12 @@ export function threeScale(v: number): { max: number; step: number } {
   return { max: 20 * pow, step: 10 * pow }
 }
 
+/** The same for numbers that are fractions (a rate, 0.03): a thousandth is the finest step, where a count's is one. */
+export function fractionScale(v: number): { max: number; step: number } {
+  const s = threeScale(v * 1000)
+  return { max: s.max / 1000, step: s.step / 1000 }
+}
+
 /** The busiest point, or -1 when nothing happened: the one label the chart
  *  writes on its line. The last of equal peaks, as it is the newest. */
 export function peakIndex(values: number[]): number {

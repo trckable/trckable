@@ -15,4 +15,7 @@ export const timeCopy = {
   addNote: 'Add a note on this day',
   addNoteOn: (day: string) => `Add a note on ${day}`,
   peak: (value: string, when: string) => `${value} · ${when}`,
+  noSales: 'No sales',
+  revenue: 'Revenue',
+  noSalesPeriod: 'No sales in this period',
 }
