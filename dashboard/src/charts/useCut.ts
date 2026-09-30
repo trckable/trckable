@@ -1,13 +1,12 @@
 // The replay cut: everything right of it is greyed out, the left stays lit.
 // The pointer moves it every frame by writing one CSS variable (the paths are
 // drawn once and masked, never redrawn); keys, touch and Replay move it to a
-// bucket.
+// bucket. With nothing hovered, dragged or playing there is no cut at all.
 import { useDrive } from './useDrive'
 import { useLayoutEffect, useRef, type Dispatch, type KeyboardEvent, type RefObject, type SetStateAction } from 'react'
 
 interface CutArgs {
   ref: RefObject<HTMLDivElement | null>
-  w: number
   n: number
   hover: number | null
   scrub: number | null
@@ -19,7 +18,7 @@ interface CutArgs {
   x: (i: number) => number
 }
 
-export function useCut({ ref, w, n, hover, scrub, locked, vals, setHover, x, y }: CutArgs) {
+export function useCut({ ref, n, hover, scrub, locked, vals, setHover, x, y }: CutArgs) {
   const [marker, driven] = useDrive({ ref, locked, vals, x, y })
   // Where the pointer is, and the bucket it picked: the cut sits at the
   // pointer itself only while that bucket is the one being shown.
@@ -34,11 +33,12 @@ export function useCut({ ref, w, n, hover, scrub, locked, vals, setHover, x, y }
   const setCut = (cx: number | null) => {
     const el = ref.current
     if (!el) return
-    el.style.setProperty('--cut', `${cx ?? w + 8}px`)
+    // At rest the cut stays where it was and fades out there (styles.css).
     if (cx == null) {
       el.dataset.cut = 'off'
       return
     }
+    el.style.setProperty('--cut', `${cx}px`)
     // Coming in from outside, the cut appears where it is instead of
     // gliding across from the edge; after that it glides.
     if (el.dataset.cut !== 'on') {
