@@ -107,7 +107,7 @@ for (const colorScheme of ['dark', 'light'] as const) {
 test('the tabs answer the arrow keys and are remembered', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   const domain = await signIn(page)
-  await page.goto(`${BASE}/${domain}`)
+  await page.goto(`${BASE}/${domain}?view=data`)
   const who = page.locator('[data-card=who]')
   const tabs = who.locator('.tc-tabs').getByRole('tab')
   await expect(tabs.first()).toHaveAttribute('aria-selected', 'true', { timeout: 20_000 })
@@ -146,7 +146,7 @@ test('the tabs answer the arrow keys and are remembered', async ({ page }) => {
 test('Compact has two cards with goals and what paid; Full adds tabs to both', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   const domain = await signIn(page)
-  await page.goto(`${BASE}/${domain}`)
+  await page.goto(`${BASE}/${domain}?view=data`)
   const what = page.locator('[data-card=what]')
   await expect(page.locator('[data-card]')).toHaveCount(2, { timeout: 20_000 })
   await expect(what.getByRole('tab', { name: 'Goals' })).toBeVisible()
