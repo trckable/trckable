@@ -13,9 +13,20 @@ export const copy = {
   others: 'Other sites',
   emptyGroup: 'Drag a site here, or use a site’s ⋯ menu.',
 
-  // A site's state, under its name, when the dot alone can't say it.
-  notInstalled: 'not installed yet',
+  // A site's state, where its number would be, when the dot alone can't say it.
+  setup: 'setup',
   stopped: 'stopped',
+
+  // The numbers: today's visitors per site, and both totals beside All sites.
+  today: (n: string) => `${n} today`,
+  todayAll: 'Visitors today, all sites',
+  onlineAll: 'Online now, all sites',
+  todayShort: 'today',
+
+  // The keys, said once at the foot (desktop only): move, open, close.
+  keyMove: ['↑', '↓'],
+  keyOpen: '↵',
+  keyClose: 'esc',
 
   // Arranging.
   options: (name: string) => `${name}: arrange`,

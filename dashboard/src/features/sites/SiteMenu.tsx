@@ -1,8 +1,9 @@
-// The site switcher's list: All sites at the top, pinned sites, named groups
-// with headers that fold, the other sites, and Add a site at the bottom.
+// The site switcher's list: All sites as a chip at the top, pinned sites,
+// named groups with headers that fold, the other sites, and Add a site at the
+// bottom. ↑/↓ and Enter move and open, 1–9 open the site with that number.
 // Anyone who may change the account arranges it (drag, Alt + ↑/↓, or a
 // site's ⋯ menu); the layout is saved for the whole account.
-import { LayoutGrid, Plus, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api, type Site, type SiteLayout } from '../../lib/api'
 import { navigate } from '../../lib/url'
@@ -13,6 +14,10 @@ import { EMPTY, flat, placeKey, sectionsOf, type Place } from './layout'
 import { saveLayout, useSiteLayout } from './useSiteLayout'
 import { SiteItem } from './SiteItem'
 import { SectionHead } from './SectionHead'
+import { AllStrip } from './AllStrip'
+import { MenuFoot } from './MenuFoot'
+import { digitIndex, stepFocus, typing } from './nav'
+import { useToday } from './useToday'
 import { useFolded } from './useFolded'
 import { prefetchSite } from '../../lib/dashQuery'
 import './siteMenu.css'
@@ -33,11 +38,13 @@ export interface Arrange {
 
 export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[]; current: Site | null; all: boolean; onClose: () => void }) {
   const root = useRef<HTMLDivElement>(null)
+  const keys = useRef<(e: KeyboardEvent) => void>(() => {})
   const search = useRef<HTMLInputElement>(null)
   const [q, setQ] = useState('')
   const [said, setSaid] = useState('')
   const [drag, setDrag] = useState<string | null>(null)
   const [folded, fold] = useFolded()
+  const numbers = useToday()
   const layout = useSiteLayout() ?? EMPTY
   // The dots come from the sites list, read again on opening (one small
   // query for all of them), so "right now" is right now.
@@ -65,7 +72,10 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
     const key = (e: KeyboardEvent) => e.key === 'Escape' && !document.querySelector('.modal-back, .floating') && onClose()
     document.addEventListener('mousedown', away)
     document.addEventListener('keydown', key)
-    search.current?.focus()
+    // Search takes the typing; without one the site you are on takes the keys.
+    const box = root.current
+    const start = search.current ?? box?.querySelector<HTMLElement>('[aria-current="page"]') ?? box?.querySelector<HTMLElement>('[data-stop]')
+    start?.focus()
     // The site you are on is in view when the list opens, however long it is.
     document.querySelector('.site-pick [aria-current="page"]')?.scrollIntoView({ block: 'nearest' })
     return () => {
@@ -79,6 +89,8 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
     return t ? flat(sites, layout).filter((s) => (s.name + ' ' + s.domain).toLowerCase().includes(t)) : null
   }, [sites, layout, q])
   const sections = sectionsOf(sites, layout)
+  // The sites on screen, top to bottom (a folded group's are not): 1–9 pick from them.
+  const shown = found ?? sections.filter((sec) => !folded.has(placeKey(sec.place))).flatMap((sec) => sec.sites)
   const pick = (s: Site) => {
     onClose()
     if (s.id !== current?.id) navigate('/' + encodeURIComponent(s.domain) + location.search)
@@ -95,7 +107,35 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
           if (words) setSaid(words)
         },
       }
-  const item = (s: Site, place: Place) => <SiteItem key={s.id} site={s} place={place} on={s.id === current?.id} arrange={found ? null : arrange} onPick={() => pick(s)} />
+  const item = (s: Site, place: Place) => {
+    const n = shown.indexOf(s) + 1
+    return <SiteItem key={s.id} site={s} place={place} on={s.id === current?.id} arrange={found ? null : arrange} today={numbers?.get(s.id)?.visitors} key1={n > 0 && n <= 9 ? n : undefined} onPick={() => pick(s)} />
+  }
+  const onKeys = (e: KeyboardEvent) => {
+    const box = root.current
+    // Not a chord (Alt + ↑/↓ moves a site).
+    if (!box || e.altKey || e.ctrlKey || e.metaKey || !box.contains(e.target as Node)) return
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      const stops = [...box.querySelectorAll<HTMLElement>('[data-stop]')]
+      e.preventDefault()
+      stops[stepFocus(stops.indexOf(e.target as HTMLElement), stops.length, e.key === 'ArrowDown' ? 1 : -1)]?.focus()
+      return
+    }
+    const at = typing(e.target) ? -1 : digitIndex(e.key, shown.length)
+    if (at < 0) return
+    e.preventDefault()
+    pick(shown[at])
+  }
+  useEffect(() => {
+    keys.current = onKeys
+  })
+  useEffect(() => {
+    // On the list itself, so the ⋯ menus and dialogs (at the end of the page) keep their own keys.
+    const box = root.current
+    const on = (e: KeyboardEvent) => keys.current(e)
+    box?.addEventListener('keydown', on)
+    return () => box?.removeEventListener('keydown', on)
+  }, [])
 
   return (
     <div className="pop sites" role="dialog" aria-label={copy.sites} ref={root}>
@@ -104,6 +144,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
           <Search size={17} strokeWidth={1.75} aria-hidden="true" />
           <input
             ref={search}
+            data-stop
             type="search"
             placeholder={copy.search}
             aria-label={copy.search}
@@ -113,16 +154,9 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
           />
         </label>
       )}
+      {/* Every site on one page, once there is more than one to compare. */}
+      {sites.length > 1 && !found && <AllStrip on={all} numbers={numbers} onPick={() => { onClose(); navigate('/all') }} />}
       <div className="sites-list" title={arrange && sites.length > 1 ? copy.keys : undefined}>
-        {/* Every site on one page, once there is more than one to compare. */}
-        {sites.length > 1 && !found && (
-          <button type="button" aria-current={all ? 'page' : undefined} className={all ? 'site on' : 'site'} onClick={() => { onClose(); navigate('/all') }}>
-            <span className="icon-tile"><LayoutGrid size={18} strokeWidth={1.75} /></span>
-            <span className="name">
-              <b>{copy.all}</b>
-            </span>
-          </button>
-        )}
         {found && <ul className="site-group">{found.map((s) => item(s, { kind: 'rest' }))}</ul>}
         {found?.length === 0 && <p className="faint sites-none">{copy.noMatch(q)}</p>}
         {!found &&
@@ -146,16 +180,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
       <p className="sr" aria-live="polite">
         {said}
       </p>
-      <div className="sites-foot">
-        {!isViewer() && (
-          <button type="button" className="foot-main" onClick={() => { onClose(); openAddSite() }}>
-            <span className="icon-tile accent" aria-hidden="true">
-              <Plus size={18} strokeWidth={2} />
-            </span>
-            <b>{copy.add}</b>
-          </button>
-        )}
-      </div>
+      <MenuFoot canAdd={!isViewer()} onAdd={() => { onClose(); openAddSite() }} />
     </div>
   )
 }
