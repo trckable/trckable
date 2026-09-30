@@ -14,6 +14,7 @@ import { addGroup, moveTo, pin, placeKey, step, unpin, type Place } from './layo
 import { dotState, StateDot } from './StateDot'
 import type { Arrange } from './SiteMenu'
 import { DRAG, dragging } from './drag'
+import { MARK, type Density } from './density'
 import { prefetchSite } from '../../lib/dashQuery'
 import './SiteItem.css'
 
@@ -37,7 +38,7 @@ function refocus(id: string) {
   requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-site="${CSS.escape(id)}"] .site`)?.focus())
 }
 
-export function SiteItem({ site, place, on, arrange, today, key1, onPick }: { site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; key1?: number; onPick: () => void }) {
+export function SiteItem({ site, place, on, arrange, today, key1, density = 'compact', onPick }: { site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; key1?: number; density?: Density; onPick: () => void }) {
   const name = site.name || site.domain
   const a = arrange
   const moveStep = (dir: -1 | 1) => {
@@ -83,7 +84,7 @@ export function SiteItem({ site, place, on, arrange, today, key1, onPick }: { si
         }}
       >
         <span className="mark-wrap">
-          <SiteMark site={site} size={18} />
+          <SiteMark site={site} size={MARK[density]} />
           <StateDot site={site} />
         </span>
         <span className="name">

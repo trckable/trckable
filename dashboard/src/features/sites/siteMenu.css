@@ -1,5 +1,7 @@
-/* The switcher's list: its own styles, loaded with it. Compact on purpose:
-   30px rows (40px on a phone), an 18px mark, a 6px state dot. */
+/* The switcher's list: its own styles, loaded with it. The density follows the
+   count (density.ts): compact for a long list (30px rows, an 18px mark, a 6px
+   state dot; 40px rows on a phone), 34px rows for four to six sites, roomy
+   40px rows for one to three. The popup's width is the same for all. */
 
 .pop.sites .menu-search {
   height: 32px;
@@ -373,6 +375,81 @@
   gap: 2px;
 }
 
+/* Four to six sites. */
+.pop.sites.mid .site,
+.pop.sites.mid .foot-add {
+  height: 34px;
+}
+.pop.sites.mid .site {
+  gap: 10px;
+}
+.pop.sites.mid .site.on::before {
+  top: 9px;
+  bottom: 9px;
+}
+
+/* One to three: room to breathe, a slightly larger name. */
+.pop.sites.roomy {
+  padding: 8px;
+}
+.pop.sites.roomy .site,
+.pop.sites.roomy .foot-add {
+  height: 40px;
+}
+.pop.sites.roomy .site {
+  gap: 12px;
+  padding: 0 10px;
+  font-size: 14px;
+}
+.pop.sites.roomy .site.on::before {
+  top: 11px;
+  bottom: 11px;
+}
+.pop.sites.roomy .site .tail {
+  font-size: 12px;
+}
+.pop.sites.roomy .mark-wrap > .dot {
+  width: 7px !important;
+  height: 7px !important;
+}
+.pop.sites.roomy .site-mark {
+  border-radius: 6px;
+}
+.pop.sites.roomy .sites-foot {
+  margin-top: 6px;
+  padding-top: 6px;
+}
+.pop.sites.roomy .site-row > .btn.icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* Up to six sites the key hints at the foot are plain, dim glyphs: no boxes. */
+.pop.sites:is(.roomy, .mid) .foot-keys {
+  gap: 10px;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 10.5px;
+}
+.pop.sites:is(.roomy, .mid) .foot-keys > span {
+  gap: 4px;
+}
+.pop.sites:is(.roomy, .mid) .foot-keys kbd {
+  min-width: 0;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+@media (hover: none) {
+  .foot-keys {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .site-head .fold svg {
     transition: none;
@@ -382,7 +459,8 @@
   }
 }
 @media (max-width: 640px) {
-  .site {
+  .site,
+  .pop.sites.mid .site {
     height: 40px;
   }
   .all-chip {
@@ -391,7 +469,8 @@
   .pop.sites .menu-search {
     height: 40px;
   }
-  .foot-add {
+  .foot-add,
+  .pop.sites.mid .foot-add {
     height: 40px;
   }
   .foot-keys {

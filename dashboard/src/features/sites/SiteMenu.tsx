@@ -19,6 +19,7 @@ import { MenuFoot } from './MenuFoot'
 import { digitIndex, stepFocus, typing } from './nav'
 import { useToday } from './useToday'
 import { useFolded } from './useFolded'
+import { densityOf } from './density'
 import { prefetchSite } from '../../lib/dashQuery'
 import './siteMenu.css'
 import '../../components/Modal.css'
@@ -107,9 +108,10 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
           if (words) setSaid(words)
         },
       }
+  const density = densityOf(sites.length)
   const item = (s: Site, place: Place) => {
     const n = shown.indexOf(s) + 1
-    return <SiteItem key={s.id} site={s} place={place} on={s.id === current?.id} arrange={found ? null : arrange} today={numbers?.get(s.id)?.visitors} key1={n > 0 && n <= 9 ? n : undefined} onPick={() => pick(s)} />
+    return <SiteItem key={s.id} site={s} place={place} density={density} on={s.id === current?.id} arrange={found ? null : arrange} today={numbers?.get(s.id)?.visitors} key1={n > 0 && n <= 9 ? n : undefined} onPick={() => pick(s)} />
   }
   const onKeys = (e: KeyboardEvent) => {
     const box = root.current
@@ -138,7 +140,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
   }, [])
 
   return (
-    <div className="pop sites" role="dialog" aria-label={copy.sites} ref={root}>
+    <div className={'pop sites ' + density} role="dialog" aria-label={copy.sites} ref={root}>
       {sites.length > SEARCH_FROM && (
         <label className="menu-search">
           <Search size={17} strokeWidth={1.75} aria-hidden="true" />
