@@ -206,6 +206,12 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 		}
 	}
 
+	if p.SalePages {
+		if res.SalePages, err = salePages(ctx, conn, sqlText, args, winFrom, p); err != nil {
+			return err
+		}
+	}
+
 	// Revenue by every breakdown dimension, from the attributed session.
 	cols := make([]string, len(DefaultDims))
 	sets := make([]string, len(DefaultDims))
@@ -371,6 +377,39 @@ func saleBuckets(ctx context.Context, conn *sql.Conn, sqlText string, args []any
 			return nil, err
 		}
 		out = append(out, s)
+	}
+	return out, rows.Err()
+}
+
+// salePages is the revenue credited to visits that read each page: a payment
+// belongs to the visit that earned it (the model above), and to every page
+// that visit opened. So a payment shows under each of its pages and the rows
+// add up to more than the revenue: each one answers "how much was earned by
+// visits that saw this page", never "what this page sold alone".
+func salePages(ctx context.Context, conn *sql.Conn, sqlText string, args []any, winFrom time.Time, p Params) ([]Row, error) {
+	limit := p.Limit
+	if limit <= 0 {
+		limit = 10
+	}
+	rows, err := conn.QueryContext(ctx, sqlText+`, t AS (SELECT session_id, amount - refunded AS net, customer FROM ar WHERE attributed),
+		pg AS (SELECT DISTINCT session_id, path FROM events
+		       WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts < ? AND coalesce(path, '') <> '' AND session_id IN (SELECT session_id FROM t))
+		SELECT pg.path, sum(t.net) AS rev, count(DISTINCT t.customer) AS payers
+		FROM t JOIN pg USING (session_id) GROUP BY pg.path HAVING sum(t.net) > 0
+		ORDER BY rev DESC, pg.path LIMIT ?`, append(append([]any{}, args...), p.Site, winFrom, p.To.Add(time.Hour), limit)...)
+	if err != nil {
+		return nil, fmt.Errorf("pages that sell: %w", err)
+	}
+	defer rows.Close()
+	var out []Row
+	for rows.Next() {
+		var r Row
+		var rev int64
+		if err := rows.Scan(&r.Value, &rev, &r.Payers); err != nil {
+			return nil, err
+		}
+		r.Revenue = &rev
+		out = append(out, r)
 	}
 	return out, rows.Err()
 }

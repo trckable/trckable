@@ -4,7 +4,7 @@
 // Revenue joins it two ways, never on a second axis: as a plot of its own
 // under the line (revenue), or in the line's place (tone: money), as columns
 // until nearly every day sells. Pure SVG; animation comes from useTween.
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Annotation, Bucket } from '../lib/api'
 import { markersFor } from '../features/notes/markers'
 import { fmtCompact, fmtInt } from '../lib/format'
@@ -14,7 +14,7 @@ import { smooth } from './smooth'
 import { bucketLabel, everyNth, fractionScale, peakIndex, threeScale } from './timeScale'
 import { useCut } from './useCut'
 import { usePin } from './usePin'
-import { ColumnsLayer, NoteMarkers, RevenueLayer, TimeTip, preloadMoney } from './chartParts'
+import { ColumnsLayer, NoteMarkers, Pulses, RevenueLayer, TimeTip, preloadMoney } from './chartParts'
 import { SPLIT_GAP, SPLIT_H, columnWidth, isDense, moneyScale } from './moneyPlot'
 import { NoteAdd } from './NoteAdd'
 import { PeakLabel } from './PeakLabel'
@@ -66,6 +66,8 @@ export interface TimeChartProps {
   onAddNote?: (day: string) => void
   /** Live pulse: things arriving right now, drawn rising from the last point. */
   pulses?: Pulse[]
+  /** Drawn over the plot with the chart's own scales: the rings of spikes and sale bursts. */
+  layer?: (g: { x: (i: number) => number; y: (v: number) => number; vals: number[]; w: number }) => ReactNode
   /** Replay tells a story: the line ends at the playhead, the rest unknown. */
   story?: boolean
   /** Replay is playing: no hover, touch or keys until it pauses or ends. */
@@ -160,7 +162,7 @@ export function TimeChart(p: TimeChartProps) {
       onPointerMove={(e) => {
         if (!n || p.locked) return
         // On a note's flag its own tooltip speaks; the day's would cover it.
-        if ((e.target as Element).closest?.('.note-mark')) return setHover(null)
+        if ((e.target as Element).closest?.('.note-mark, .ring-mark')) return setHover(null)
         const i = indexAt(e.currentTarget, e.clientX)
         if (drag && p.onScrub) {
           p.onScrub(i)
@@ -253,15 +255,9 @@ export function TimeChart(p: TimeChartProps) {
       <NoteMarkers markers={markers} x={x} top={PAD_T + plotH} width={w} />
       {hover != null && n > 0 && <TimeTip p={p} i={hover} left={tipAt} width={tipW} compact={compact} notes={markers.find((m) => m.i === hover)?.notes ?? []} />}
       {hover != null && n > 0 && p.onAddNote && <NoteAdd x={x(hover)} day={p.labels[hover].slice(0, 10)} label={bucketLabel(p.labels[hover], p.bucket, true)} onAdd={p.onAddNote} />}
-      {/* Live pulse: each visit rises from the last point as a dot, a goal as
-          a ring, a sale as a coin with its amount. It is decoration on top of
-          numbers that are already right, so it never waits for anything. */}
-      {n > 0 &&
-        (p.pulses ?? []).map((pl) => (
-          <span key={pl.id} className={'pulse-' + pl.kind} style={{ left: x(n - 1), top: y(vals[n - 1] ?? 0) }} aria-hidden="true">
-            {pl.label}
-          </span>
-        ))}
+      {/* Live pulse: things arriving now, rising from the last point: decoration on numbers that are already right. */}
+      <Pulses pulses={p.pulses} n={n} x={x} y={y} vals={vals} />
+      {p.layer?.({ x, y, vals, w })}
       {/* The bucket's date and time, pinned under the axis at the cursor. */}
       {hover != null && n > 0 && <CursorPill x={x(hover)} w={w} text={bucketLabel(p.labels[hover], p.bucket, true)} />}
     </div>

@@ -75,6 +75,9 @@ type Params struct {
 	// Sales adds the payments bucket by bucket (Result.Sales), for Replay's
 	// moments. Only with Revenue on.
 	Sales bool
+	// SalePages adds the pages that sold (Result.SalePages): the revenue
+	// credited to visits that read each page. Only with Revenue on.
+	SalePages bool
 }
 
 // KPIs are the headline numbers.
@@ -135,6 +138,7 @@ type Result struct {
 	Money       *Money           `json:"money,omitempty"`        // nil until a payment provider is connected
 	RevenueDims map[string][]Row `json:"revenue_dims,omitempty"` // top rows by revenue
 	Sales       []SaleBucket     `json:"-"`                      // with Params.Sales: the payments per bucket
+	SalePages   []Row            `json:"-"`                      // with Params.SalePages: revenue per page the credited visit read
 }
 
 // sessionDims maps API dimension names to sessions columns (the whitelist).

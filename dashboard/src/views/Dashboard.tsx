@@ -17,8 +17,9 @@ import { useLive, onlineNow } from '../lib/useLive'
 import { useReport } from '../lib/useReport'
 import { useSample } from '../lib/useSample'
 import { AskPanel } from './AskLazy'
-import { caps, keyFor, pressed, useKeymap } from '../lib/keys'
-import { StoppedNotice } from './DashboardParts'
+import { pressed, useKeymap } from '../lib/keys'
+import { Notice, StoppedNotice } from './DashboardParts'
+import { extra, ringLayer } from '../features/extras/slots'
 import { KpiStrip } from '../features/overview/KpiStrip'
 import { ChartHead } from '../features/overview/ChartHead'
 import { ReplayButton, ScrubBar } from '../features/overview/Replay'
@@ -540,34 +541,14 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {sharing && <Suspense fallback={null}><ShareDialog site={site} sites={sites} onClose={() => setSharing(false)} /></Suspense>}
       {naming && <Suspense fallback={null}><SaveViewHost site={site.id} filters={view.filters.length} query={current} onClose={() => setNaming(false)} onSaved={loadSegments} /></Suspense>}
 
-      {error && (
-        <div className="banner" role="alert">
-          Couldn't load the report: {error}
-        </div>
-      )}
-
-      {/* Never a silent wait: the store opens in the background on a restart,
-          and nothing was lost while it does. */}
-      {warming && (
-        <div className="banner" role="status">
-          <span className="spin" aria-hidden="true" />
-          Warming up the analytics store — this happens once after a restart. Visits are still being recorded; the numbers appear in a moment.
-        </div>
-      )}
+      {error && <Notice kind="error" text={error} />}
+      {warming && <Notice kind="warming" />}
 
       {showInstall && <Suspense fallback={null}><Install site={site} visits={stream.visits} /></Suspense>}
       <MilestonesSlot ms={ms} site={site} quiet={showInstall} revenue={mods === null || shows(mods, 'cards', 'revenue')} />
       {!showInstall && !isShared() && siteState(site) === 'stopped' && <StoppedNotice site={site} />}
 
-      {view.test && (
-        <div className="banner" style={{ borderColor: 'var(--money)' }}>
-          <span className="money-dot" />
-          Showing <b style={{ color: 'var(--text)' }}>test payments</b> only (sandbox and test-mode purchases).
-          <button type="button" className="btn ghost" style={{ height: 30, marginLeft: 'auto' }} onClick={() => setView({ test: false })}>
-            Back to live revenue
-          </button>
-        </div>
-      )}
+      {view.test && <Notice kind="test" onAct={() => setView({ test: false })} />}
       {money && money.unconverted > 0 && (
         <div className="banner">{unconvertedNote(money)}</div>
       )}
@@ -585,6 +566,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
       <div className={active ? 'overview-chart replaying' : 'overview-chart'} role="group" aria-label={`${name} over time`}>
         <ChartHead title={name}>
+          {live && !isShared() && extra({ part: 'pace', site: site.id, today, filters: query.filters, metric, money: fmtM })}
           {(canScrub || canReplayByDay) && (
             <ReplayButton
               playing={playing}
@@ -622,6 +604,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             partialLast={live}
             {...metricProps(metric, money, revenue)}
             notes={notesOn ? notes : []}
+            layer={isShared() || telling ? undefined : ringLayer({ site: site.id, query, labels: chartSeries.map((p) => p.t), bucket: hours ? 'hour' : (data?.bucket ?? 'day'), money: fmtM })}
             onAddNote={isShared() || isViewer() || !notesOn ? undefined : (day) => setNoteFor(day)}
             pulses={pulses}
             {...chartTips({ series: chartSeries, hours: !!hours, byDay: data?.bucket === 'day', days: cur?.days, site, money, metric })}
@@ -684,23 +667,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
       {hasData && <Cards c={cardsCtx} />}
 
-      {!full && hasData && (
-        <section className="banner" style={{ justifyContent: 'space-between', flexWrap: 'wrap', padding: '20px 24px', borderRadius: 16 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <strong style={{ color: 'var(--text)' }}>That's the whole story on one screen.</strong>
-            <span>Full mode adds tabs to both cards: funnel, retention, people, the charts, exit pages and more. Nothing reloads.</span>
-          </div>
-          <button type="button" className="btn primary" onClick={() => setView({ mode: 'full' })}>
-            Show Full <span className="kbd" style={{ color: 'inherit', borderColor: 'currentColor' }}>{caps(keyFor('mode')).join('')}</span>
-          </button>
-        </section>
-      )}
+      {!full && hasData && <Notice kind="full" onAct={() => setView({ mode: 'full' })} />}
 
-      {cur?.approximate && (
-        <p className="faint" style={{ fontSize: 12, margin: 0 }}>
-          Breakdown visitor counts are estimates (±2%) for ranges above 250,000 sessions. Totals are exact.
-        </p>
-      )}
+      {cur?.approximate && <Notice kind="approx" />}
 
       </div>
       </>}

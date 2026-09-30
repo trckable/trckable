@@ -226,3 +226,40 @@ func TestFirstTouchAndLastTouch(t *testing.T) {
 		t.Errorf("Direct took the credit: last %v, first %v", last, first)
 	}
 }
+
+// Revenue credited to visits that read a page: each payment counts under every
+// page of the visit that earned it, and unattributed money under none.
+func TestSalePages(t *testing.T) {
+	both(t, func(t *testing.T, q Q) {
+		q = withPayments(q)
+		p := sep10
+		p.Bucket, p.Currency, p.Revenue, p.Limit = "hour", "USD", true, 10
+		res, err := q.Report(context.Background(), p)
+		if err != nil || res.SalePages != nil {
+			t.Fatalf("no pages unless asked: %v %v", res.SalePages, err)
+		}
+		p.SalePages = true
+		res, err = q.Report(context.Background(), p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		type pg struct {
+			path       string
+			rev, payer int64
+		}
+		var got []pg
+		for _, r := range res.SalePages {
+			got = append(got, pg{r.Value, *r.Revenue, r.Payers})
+		}
+		// A (Search) read / and /pricing and paid 5000; C's renewal (Search, the same two pages) 700; B (AI) read /blog and paid 1500 net of a refund.
+		want := []pg{{"/", 5700, 2}, {"/pricing", 5700, 2}, {"/blog", 1500, 1}}
+		if len(got) != len(want) {
+			t.Fatalf("got %+v", got)
+		}
+		for i := range want {
+			if got[i] != want[i] {
+				t.Fatalf("got %+v, want %+v", got, want)
+			}
+		}
+	})
+}

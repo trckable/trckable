@@ -9,6 +9,7 @@ import { Loading } from '../components/loading/Loading'
 import { lazyLoad, whenIdle } from '../lib/lazyLoad'
 
 const Stopped = lazyLoad(() => import('../components/StoppedNotice').then((m) => ({ default: m.StoppedNotice })))
+const Note = lazyLoad(() => import('./Notices'))
 const Terms = lazyLoad(() => import('./SearchTerms').then((m) => ({ default: m.SearchTerms })))
 
 whenIdle(Terms.preload)
@@ -29,3 +30,12 @@ export function StoppedNotice(p: ComponentProps<typeof Stopped>) {
   )
 }
 
+
+/** What stands beside the numbers, and is wanted rarely: a failed report, a store still opening, test payments, the invitation to Full, the estimate note. One chunk, fetched when one of them is shown. */
+export function Notice(p: ComponentProps<typeof Note>) {
+  return (
+    <Suspense fallback={null}>
+      <Note {...p} />
+    </Suspense>
+  )
+}

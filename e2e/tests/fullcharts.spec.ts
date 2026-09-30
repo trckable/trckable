@@ -53,7 +53,6 @@ async function signIn(page: Page): Promise<string> {
 // Each Full chart is a tab of one of the two cards: where it is, and what it is called.
 const TABS: [string, 'who' | 'what', string][] = [
   ['sources', 'who', 'Over time'],
-  ['visitors', 'who', 'New vs returning'],
   ['rhythm', 'who', 'Hours'],
   ['money-map', 'who', 'Revenue map'],
   ['funnel', 'what', 'Visit to sale'],
@@ -83,6 +82,12 @@ for (const colorScheme of ['dark', 'light'] as const) {
       await expect(panel.locator('table tbody tr').first(), name).toBeVisible()
       await panel.getByRole('button', { name: /show as a chart/ }).click()
     }
+    // New vs returning is the second small tab of Over time.
+    const over = await open(page, 'who', 'Over time')
+    const small = over!.getByRole('tablist', { name: 'Over time' })
+    await small.getByRole('tab', { name: 'New vs returning', exact: true }).click()
+    await expect(over!.locator('[data-chart=visitors]'), 'New vs returning').toBeVisible({ timeout: 20_000 })
+    await small.getByRole('tab', { name: 'Sources', exact: true }).click()
     // Real marks, not empty frames.
     const who = await open(page, 'who', 'Over time')
     expect(await who!.locator('[data-chart=sources] path').count()).toBeGreaterThan(3)
