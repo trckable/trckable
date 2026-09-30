@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- While the dashboard starts, the page shows its own background and a thin loading line, instead of a blank page (which Safari on iOS fills with a large copy of the site icon).
+
 ## 0.5.7 (30 Sep 2026)
 
 - Widgets have their own section in a site's settings, next to Sharing: they go on your own pages, so they no longer sit under share links.
