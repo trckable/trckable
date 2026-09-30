@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,6 +31,16 @@ const sharePasswordTries = 20
 // of the API's logs.
 const sharePath = "/api/v1/share"
 
+// shareRow is a link as its owner's list shows it: with its address, when one
+// can be given (see sqlite.Share.Token).
+type shareRow struct {
+	sqlite.Share
+	URL string `json:"url,omitempty"`
+}
+
+// shares lists a site's links to an owner, and only to an owner: the address
+// of a link is the credential itself. The answer is never stored or
+// compressed (writeJSON says no-store; plainAnswers leaves it alone).
 func (a *API) shares(w http.ResponseWriter, r *http.Request) {
 	if a.owner(w, r) == nil || !a.siteExists(w, r) {
 		return
@@ -39,7 +50,16 @@ func (a *API) shares(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"shares": list, "base": a.publicBase(r)})
+	base := a.publicBase(r)
+	rows := make([]shareRow, 0, len(list))
+	for _, sh := range list {
+		row := shareRow{Share: sh}
+		if sh.Token != "" {
+			row.URL = base + "/s/" + sh.Token
+		}
+		rows = append(rows, row)
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"shares": rows, "base": base})
 }
 
 func (a *API) createShare(w http.ResponseWriter, r *http.Request) {
@@ -111,6 +131,24 @@ func (a *API) updateShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"notes": *in.Notes})
+}
+
+// newShareAddress gives a link a new address. The old one, and every session
+// opened through it, stops working at once; the answer is the new address.
+func (a *API) newShareAddress(w http.ResponseWriter, r *http.Request) {
+	if a.owner(w, r) == nil || !a.siteExists(w, r) {
+		return
+	}
+	token, err := a.Ctl.RotateShare(r.Context(), r.PathValue("site"), r.PathValue("id"))
+	if errors.Is(err, auth.ErrNotFound) {
+		fail(w, http.StatusNotFound, "no such link")
+		return
+	}
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"url": a.publicBase(r) + "/s/" + token})
 }
 
 func (a *API) deleteShare(w http.ResponseWriter, r *http.Request) {
@@ -286,7 +324,10 @@ func (a *API) shareInfoWith(w http.ResponseWriter, r *http.Request, sh sqlite.Sh
 		mods[m.ID] = set.Has(m.ID)
 	}
 	cfg, _ := a.Ctl.SiteConfig(r.Context(), sh.SiteID)
+	brand := a.Ctl.ShareBrand(r.Context(), sh.SiteID)
 	writeJSON(w, http.StatusOK, map[string]any{
+		"color":      brand.Color,
+		"icon_url":   shareIconURL(brand),
 		"cookieless": cfg.ConsentFree,
 		"name":       sh.Name,
 		"revenue":    sh.Revenue,
@@ -299,6 +340,34 @@ func (a *API) shareInfoWith(w http.ResponseWriter, r *http.Request, sh sqlite.Sh
 		"modules":    mods,
 		"session":    session,
 	})
+}
+
+// shareIconURL is where a shared page loads the site's icon from: this server,
+// with the link's own session, never a third party.
+func shareIconURL(b sqlite.Brand) string {
+	if b.IconAt == 0 {
+		return ""
+	}
+	return sharePath + "/icon?v=" + strconv.FormatInt(b.IconAt, 10)
+}
+
+// shareIcon is the shared site's icon, for the mark beside its name. It needs
+// the link's session like every other answer on this side.
+func (a *API) shareIcon(w http.ResponseWriter, r *http.Request) {
+	sh, ok := a.shared(w, r)
+	if !ok {
+		return
+	}
+	typ, data, err := a.Ctl.BrandIcon(r.Context(), sh.SiteID)
+	if err != nil {
+		fail(w, http.StatusNotFound, "this site has no icon")
+		return
+	}
+	w.Header().Set("Content-Type", typ)
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	// The address carries ?v=<when it changed>, so the browser may keep it.
+	w.Header().Set("Cache-Control", "private, max-age=31536000, immutable")
+	_, _ = w.Write(data)
 }
 
 // shareAnnotations gives a shared page the notes on the chart, when the

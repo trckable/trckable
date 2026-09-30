@@ -1,11 +1,15 @@
 // One link, one compact row: who can open it, what it shows, how often it was
-// opened, when it ends, and a way to revoke it. Only the notes can change on a
-// link that exists (the server takes nothing else), so only they are a button.
-import { CircleDollarSign, Clock, Code, Eye, Globe, Lock, Power, StickyNote } from 'lucide-react'
-import { useEffect, useState } from 'react'
+// opened, when it ends, and what to do with it: copy or open its address (or
+// make a new one, for a link whose address was never kept) and revoke it. Only
+// the notes can change on a link that exists (the server takes nothing else),
+// so only they are a button.
+import { CircleDollarSign, Clock, Code, ExternalLink, Eye, Globe, Lock, Power, RefreshCw, StickyNote } from 'lucide-react'
+import { useState } from 'react'
 import { toast } from '../../components/Toast'
 import { api, messageOf, type Share } from '../../lib/api'
 import { fmtInt } from '../../lib/format'
+import { Ask } from './Ask'
+import { CopyButton } from './CopyButton'
 import { copy, nameOf } from './copy'
 import { endState } from './logic'
 
@@ -64,17 +68,6 @@ function Notes({ site, share, readOnly, onChanged }: { site: string; share: Shar
 function Revoke({ site, share, onDone }: { site: string; share: Share; onDone: () => void }) {
   const [asking, setAsking] = useState(false)
   const [busy, setBusy] = useState(false)
-  // Escape steps back out of the question and nothing else: the dialog around it stays.
-  useEffect(() => {
-    if (!asking || busy) return
-    const esc = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      e.stopPropagation()
-      setAsking(false)
-    }
-    document.addEventListener('keydown', esc, true)
-    return () => document.removeEventListener('keydown', esc, true)
-  }, [asking, busy])
   const go = () => {
     setBusy(true)
     api
@@ -95,20 +88,45 @@ function Revoke({ site, share, onDone }: { site: string; share: Share; onDone: (
         <Power size={15} strokeWidth={1.75} />
       </button>
     )
-  return (
-    <span className="sl-ask" role="group" aria-label={copy.revokeAsk}>
-      <span>{copy.revokeAsk}</span>
-      <button type="button" className="btn ghost small" autoFocus disabled={busy} onClick={() => setAsking(false)}>
-        {copy.keep}
-      </button>
-      <button type="button" className="btn danger small" disabled={busy} onClick={go}>
-        {busy ? copy.revoking : copy.revokeYes}
-      </button>
-    </span>
-  )
+  return <Ask text={copy.revokeAsk} yes={copy.revokeYes} busyText={copy.revoking} busy={busy} danger onNo={() => setAsking(false)} onYes={go} />
 }
 
-export function LinkRow({ site, share, readOnly, onChanged }: { site: string; share: Share; readOnly: boolean; onChanged: () => void }) {
+/** A link made before its address was kept has none to copy: a new one can be
+ *  made, after asking, because the old one stops working. */
+function NewAddress({ site, share, onMade }: { site: string; share: Share; onMade: (url: string) => void }) {
+  const [asking, setAsking] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const go = () => {
+    setBusy(true)
+    api
+      .newShareAddress(site, share.id)
+      .then((r) => onMade(r.url))
+      .catch((e: unknown) => {
+        toast(messageOf(e), 'error')
+        setBusy(false)
+        setAsking(false)
+      })
+  }
+  if (!asking)
+    return (
+      <button type="button" className="btn ghost small" title={copy.newAddressTip} aria-label={`${copy.newAddress}: ${nameOf(share)}`} onClick={() => setAsking(true)}>
+        <RefreshCw size={14} strokeWidth={1.75} aria-hidden="true" />
+        {copy.newAddress}
+      </button>
+    )
+  return <Ask text={copy.newAddressAsk} yes={copy.newAddress} busyText={copy.newAddressing} busy={busy} onNo={() => setAsking(false)} onYes={go} />
+}
+
+interface RowProps {
+  site: string
+  share: Share
+  readOnly: boolean
+  onChanged: () => void
+  /** A link got a new address: the page shows it, the way it shows a new link. */
+  onAddress?: (share: Share, url: string) => void
+}
+
+export function LinkRow({ site, share, readOnly, onChanged, onAddress }: RowProps) {
   const locked = share.has_password
   const embeds = share.embed_origins ?? []
   const seen = share.views > 0 ? copy.lastOpened(day(share.viewed_at)) : copy.neverOpened
@@ -135,7 +153,21 @@ export function LinkRow({ site, share, readOnly, onChanged }: { site: string; sh
         </span>
         <Ends share={share} />
       </span>
-      {!readOnly && <Revoke site={site} share={share} onDone={onChanged} />}
+      {!readOnly && (
+        <span className="sl-acts">
+          {share.url ? (
+            <>
+              <CopyButton icon text={share.url} label={copy.copyRow(nameOf(share))} toastText={copy.copiedToast} />
+              <a className="sl-icon" href={share.url} target="_blank" rel="noreferrer noopener" aria-label={copy.openRow(nameOf(share))} title={copy.open}>
+                <ExternalLink size={15} strokeWidth={1.75} />
+              </a>
+            </>
+          ) : (
+            <NewAddress site={site} share={share} onMade={(url) => onAddress?.(share, url)} />
+          )}
+          <Revoke site={site} share={share} onDone={onChanged} />
+        </span>
+      )}
     </li>
   )
 }

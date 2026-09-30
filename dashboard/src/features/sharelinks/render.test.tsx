@@ -38,10 +38,30 @@ describe('a row', () => {
     expect(row({ expires_at: 4_000_000_000 })).toContain('Ends ')
     expect(row({ expires_at: 1_000 })).toContain('Ended ')
   })
+  it('has Copy and Open for a link with an address, and no way to get a new one', () => {
+    const html = row({ url: 'https://t.example/s/abc' })
+    expect(html).toContain('aria-label="Copy link: Board"')
+    expect(html).toContain('aria-label="Open link: Board"')
+    expect(html).toContain('href="https://t.example/s/abc"')
+    expect(html).not.toContain('New address')
+  })
+  it('offers a new address, and no Copy or Open, for a link made before addresses were kept', () => {
+    const html = row({ url: undefined })
+    expect(html).toContain('New address')
+    expect(html).not.toContain('Copy link')
+    expect(html).not.toContain('Open link')
+    expect(html).toContain('aria-label="Revoke Board"')
+  })
+  it('keeps a password link as it was: its address is copyable, the lock stays', () => {
+    const html = row({ has_password: true, url: 'https://t.example/s/abc' })
+    expect(html).toContain('Password link')
+    expect(html).toContain('Copy link: Board')
+  })
   it('offers a viewer nothing to press', () => {
     const html = row({}, true)
     expect(html).not.toContain('<button')
     expect(html).not.toContain('Revoke')
+    expect(row({ url: 'https://t.example/s/abc' }, true)).not.toContain('Copy link')
   })
 })
 

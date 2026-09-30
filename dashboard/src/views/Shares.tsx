@@ -4,7 +4,7 @@
 import { Link2, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Info } from '../components/Info'
-import { copy } from '../features/sharelinks/copy'
+import { copy, nameOf } from '../features/sharelinks/copy'
 import { Created } from '../features/sharelinks/Created'
 import { LinkRow } from '../features/sharelinks/LinkRow'
 import { NewLink, type Made } from '../features/sharelinks/NewLink'
@@ -71,7 +71,18 @@ export function Shares({ site }: { site: Site }) {
       {!!list?.length && (
         <ul className="sl-list">
           {list.map((s) => (
-            <LinkRow key={s.id} site={site.id} share={s} readOnly={readOnly} onChanged={() => void load()} />
+            <LinkRow
+              key={s.id}
+              site={site.id}
+              share={s}
+              readOnly={readOnly}
+              onChanged={() => void load()}
+              onAddress={(share, url) => {
+                setMaking(false)
+                setMade({ name: nameOf(share), url, sites: share.embed_origins ?? [] })
+                void load()
+              }}
+            />
           ))}
         </ul>
       )}
