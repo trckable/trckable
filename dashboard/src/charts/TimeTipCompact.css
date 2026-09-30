@@ -1,0 +1,94 @@
+/* The phone's hover card (TimeTipCompact.tsx): loads with the card's chunk. */
+.chart-tip.time-tip.compact {
+  gap: 4px;
+  padding: 7px 10px 8px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  font-size: 11px;
+}
+.compact .ct-date {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+}
+.compact .ct-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--text-2);
+}
+.compact .ct-line span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.compact .ct-line i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+}
+.compact .ct-line b {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.compact .ct-line.money b {
+  color: var(--money);
+}
+.compact .ct-split-bar {
+  display: block;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--grid);
+  overflow: hidden;
+}
+.compact .ct-split-bar > span {
+  display: block;
+  height: 100%;
+}
+/* The small figures in one row, each with its tiny label under it. */
+.compact .ct-tiny {
+  display: flex;
+  justify-content: space-between;
+  gap: 3px;
+}
+.compact .ct-tiny span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.compact .ct-tiny b {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--text);
+}
+.compact .ct-tiny em {
+  font-style: normal;
+  font-size: 9px;
+  color: var(--text-3);
+}
+/* A note: one line, cut short, with the notes' small dot. */
+.tip-note-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text);
+}
+.tip-note-line i {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--money);
+}
+.tip-note-line span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -723,13 +723,13 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               const d = cur?.days?.find((x) => x.date === chartSeries[i]?.t.slice(0, 10)) // days skip empty ones: match by date
               if (!d) return null
               const nvr = newVsReturning(d.kpis, site)
-              const rows: { label: string; value: string; faint?: boolean }[] = [{ label: 'Pageviews', value: fmtInt(d.kpis.pageviews) }, ...nvr.rows]
+              const rows: { label: string; value: string; faint?: boolean; short?: string }[] = [{ label: 'Pageviews', short: 'views', value: fmtInt(d.kpis.pageviews) }, ...nvr.rows]
               // Revenue itself is already in the card, next to the bars.
               if (money && d.money) {
-                rows.push({ label: 'Revenue / visitor', value: fmtMoney(d.kpis.visitors ? d.money.revenue / d.kpis.visitors : 0, money.currency, money.exponent, { cents: true }) })
+                rows.push({ label: 'Revenue / visitor', short: '$/visit', value: fmtMoney(d.kpis.visitors ? d.money.revenue / d.kpis.visitors : 0, money.currency, money.exponent, { cents: true }) })
               }
-              rows.push({ label: 'Bounce rate', value: fmtPct(d.kpis.bounce_rate), faint: true })
-              rows.push({ label: 'Session time', value: fmtDuration(d.kpis.avg_session_s), faint: true })
+              rows.push({ label: 'Bounce rate', short: 'bounce', value: fmtPct(d.kpis.bounce_rate), faint: true })
+              rows.push({ label: 'Session time', short: 'session', value: fmtDuration(d.kpis.avg_session_s), faint: true })
               const splits = nvr.splits
               // Where the day's money came from: a flat day can be all renewals.
               if (money && d.money && d.money.renewal > 0)
