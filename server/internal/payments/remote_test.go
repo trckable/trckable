@@ -381,6 +381,8 @@ func TestPaddleRemote(t *testing.T) {
 				jsonAnswer(w, 201, `{"data":{"id":"ntfset_1","destination":"https://stats.example/webhooks/paddle/pc_1","endpoint_secret_key":"pdl_ntfset_01_secret","traffic_source":"all"}}`)
 			case r.URL.Path == "/notification-settings":
 				jsonAnswer(w, 200, `{"data":[{"id":"ntfset_0","destination":"https://stats.example/webhooks/paddle/pc_old"}]}`)
+			case (r.URL.Path == "/transactions" || r.URL.Path == "/adjustments") && r.URL.Query().Get("per_page") == "1":
+				jsonAnswer(w, 200, `{"data":[],"meta":{"pagination":{"per_page":1,"next":"","has_more":false}}}`) // the setup's probe
 			case r.URL.Path == "/transactions" && r.URL.Query().Get("after") == "":
 				if r.URL.Query().Get("updated_at[GTE]") != since.Format(time.RFC3339) || r.URL.Query().Get("status") != "completed" {
 					t.Errorf("transactions query: %v", r.URL.Query())
@@ -403,11 +405,11 @@ func TestPaddleRemote(t *testing.T) {
 
 	// The key says which environment it is, whatever mode was picked.
 	s, err := api.Setup(ctx, "pdl_live_apikey_01", true, "https://stats.example/webhooks/paddle/pc_1")
-	if err != nil || s.Test || liveCalls != 1 {
+	if err != nil || s.Test || liveCalls != 3 { // probe transactions, probe adjustments, create
 		t.Fatalf("a live key with test picked: %+v %v (live calls %d)", s, err, liveCalls)
 	}
 	s, err = api.Setup(ctx, "pdl_sdbx_apikey_01", false, "https://stats.example/webhooks/paddle/pc_1")
-	if err != nil || !s.Test || s.Secret != "pdl_ntfset_01_secret" || liveCalls != 1 {
+	if err != nil || !s.Test || s.Secret != "pdl_ntfset_01_secret" || liveCalls != 3 {
 		t.Fatalf("a sandbox key: %+v %v", s, err)
 	}
 	if hooks, err := api.Hooks(ctx, "pdl_sdbx_apikey_01", false, s); err != nil || len(hooks) != 1 || hooks[0].URL != "https://stats.example/webhooks/paddle/pc_old" {
@@ -417,7 +419,7 @@ func TestPaddleRemote(t *testing.T) {
 	if err != nil || len(raws) != 3 {
 		t.Fatalf("sync: %d %v", len(raws), err)
 	}
-	if sandbox.called("GET /adjustments") != 1 {
+	if sandbox.called("GET /adjustments") != 2 { // the setup's probe, then one page of the sync
 		t.Fatal("paged adjustments past since")
 	}
 	pay, _ := (paddle{}).Parse(raws[1].Body)

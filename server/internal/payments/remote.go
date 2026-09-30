@@ -631,9 +631,10 @@ type PaddleAPI struct{ BaseURL, SandboxURL string }
 
 // paddleSandbox: a Paddle key says which environment it belongs to
 // (pdl_sdbx_… or pdl_live_…, https://developer.paddle.com/api-reference/about/api-keys),
-// and the key wins over the mode picked in the dashboard, so a live key is
-// never sent to the sandbox or counted as test money. Older keys without a
-// prefix follow the picked mode.
+// and the key wins over any picked mode, so a live key is never sent to the
+// sandbox or counted as test money. A key without a prefix (created before
+// May 2025) says nothing: `test` is what Setup found out and the connection
+// remembers (see PaddleAPI.Setup).
 func paddleSandbox(key string, test bool) bool {
 	switch {
 	case strings.HasPrefix(key, "pdl_sdbx_"):
@@ -644,8 +645,9 @@ func paddleSandbox(key string, test bool) bool {
 	return test
 }
 
-func (a *PaddleAPI) base(key string, test bool) string {
-	sandbox := paddleSandbox(key, test)
+func (a *PaddleAPI) base(key string, test bool) string { return a.baseURL(paddleSandbox(key, test)) }
+
+func (a *PaddleAPI) baseURL(sandbox bool) string {
 	switch {
 	case sandbox && a.SandboxURL != "":
 		return a.SandboxURL
@@ -662,21 +664,6 @@ func paddleHdr(key string) map[string]string {
 	h["Content-Type"] = "application/json"
 	h["Paddle-Version"] = "1"
 	return h
-}
-
-func (a *PaddleAPI) Setup(ctx context.Context, key string, test bool, hookURL string) (Setup, error) {
-	body := map[string]any{"description": "trckable revenue attribution", "type": "url", "destination": hookURL,
-		"subscribed_events": PaddleEvents, "api_version": 1, "traffic_source": "all"}
-	var out struct {
-		Data struct {
-			ID                string `json:"id"`
-			EndpointSecretKey string `json:"endpoint_secret_key"`
-		} `json:"data"`
-	}
-	if err := call(ctx, "POST", a.base(key, test)+"/notification-settings", paddleHdr(key), jsonBody(body), &out); err != nil {
-		return Setup{}, err
-	}
-	return Setup{RemoteID: out.Data.ID, Secret: out.Data.EndpointSecretKey, Label: "Paddle", Test: paddleSandbox(key, test)}, nil
 }
 
 func (a *PaddleAPI) Teardown(ctx context.Context, key string, test bool, s Setup) error {

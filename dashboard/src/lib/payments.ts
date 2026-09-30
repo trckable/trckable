@@ -31,3 +31,9 @@ export function testModeName(provider: string) {
   if (SANDBOX_NAMED.has(provider)) return 'Sandbox'
   return 'Test'
 }
+
+/** The small tag on a connection that runs in test mode. */
+export function modeTag(provider: string) {
+  if (SANDBOX_NAMED.has(provider)) return 'Sandbox'
+  return 'test mode'
+}

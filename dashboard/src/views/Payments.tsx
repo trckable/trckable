@@ -11,7 +11,7 @@ import { Ghost } from '../components/Logo'
 import { useEffect, useState } from 'react'
 import { api, messageOf, type PayConnection, type Provider, type Site } from '../lib/api'
 import { navigate } from '../lib/url'
-import { statusOf, testModeName } from '../lib/payments'
+import { modeTag, statusOf, testModeName } from '../lib/payments'
 import { CodeBlock } from '../components/Code'
 import { Picker } from '../components/Picker'
 import { confirmWith, useConfirm } from '../components/Confirm'
@@ -236,7 +236,7 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <strong>{provider?.name ?? c.provider}</strong>
-          {c.mode === 'test' && <span className="tag quiet">test mode</span>}
+          {c.mode === 'test' && <span className="tag quiet">{modeTag(c.provider)}</span>}
         </div>
         <div className="conn-status">
           {busy ? (
