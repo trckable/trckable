@@ -1,5 +1,5 @@
 {
-  "literals": 473,
+  "literals": 472,
   "components": {
     "src/charts/TimeChart.tsx": 304,
     "src/components/DateRangePopover.tsx": 396,

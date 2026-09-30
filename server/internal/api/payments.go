@@ -28,7 +28,7 @@ var providers = []providerInfo{
 	{"stripe", "Stripe", "A restricted key (rk_live_…) with Webhook Endpoints: write and read access to Events, PaymentIntents, Checkout Sessions, Invoices, Refunds, Disputes.", "https://dashboard.stripe.com/apikeys", payments.StripeEvents, false},
 	{"lemonsqueezy", "Lemon Squeezy", "An API key (Settings → API). Live and test-mode events both arrive.", "https://app.lemonsqueezy.com/settings/api", payments.LemonSqueezyEvents, false},
 	{"polar", "Polar", "An organization access token with webhooks:write, orders:read and refunds:read.", "https://polar.sh/dashboard", payments.PolarEvents, true},
-	{"paddle", "Paddle", "An API key with notification settings (write), transactions and adjustments (read). Sandbox keys (pdl_sdbx_…) connect the sandbox.", "https://vendors.paddle.com/authentication-v2", payments.PaddleEvents, true},
+	{"paddle", "Paddle", "An API key with notification_setting.write, transaction.read and adjustment.read. Live (pdl_live_…) and sandbox (pdl_sdbx_…) keys are told apart by the key.", "https://vendors.paddle.com/authentication-v2", payments.PaddleEvents, true},
 	{"dodo", "Dodo Payments", "An API key from Developer → API keys (test and live keys are separate).", "https://app.dodopayments.com", payments.DodoEvents, true},
 	{"custom", "Anything else", "No key: trckable makes a signing secret, and your own code sends each sale to the URL below. Gumroad, Chargebee, Creem, a bank transfer you record by hand — anything that can make an HTTP request.", "", payments.CustomEvents, false},
 }
