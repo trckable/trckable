@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- On a desktop, the filters in force (as chips), Save view and Views sit on the left of the date row, packed at its start, and the two capsules keep the right. Tablets, phones and a shared link's header keep the row under the date row.
 - The chart's line runs across the whole period, along zero on the days before the first visit, instead of starting where the data does.
 
 - A site that has had visits opens in Live when the address names no view: the dashboard of a site that is getting traffic now starts with who is on it. A site with no visit yet still shows its install card, and an address with a period, filters, Full or `?view=data` stays Data, so links made before keep working. Choosing Data is kept in the address, so a reload stays in Data.
