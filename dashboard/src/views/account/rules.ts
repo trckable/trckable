@@ -3,13 +3,15 @@
 // Plain functions, so the rules are tested without a screen.
 import type { Person } from '../../lib/api'
 
-export type RoleLock = 'self' | 'last' | null
+export type RoleLock = 'self' | 'last' | 'holder' | null
 
 /** Why a person's role control is off, or null when it can be used: the only
- *  owner (the instance would be left with none) and yourself (another owner
- *  changes your role). The only owner is named first: it says more. */
-export function roleLock(p: Pick<Person, 'email' | 'role'>, me: string | undefined, owners: number): RoleLock {
+ *  owner (the instance would be left with none), the first owner (who keeps
+ *  the account) and yourself (another owner changes your role). The only
+ *  owner is named first: it says more. */
+export function roleLock(p: Pick<Person, 'email' | 'role'> & { holder?: boolean }, me: string | undefined, owners: number): RoleLock {
   if (p.role === 'owner' && owners <= 1) return 'last'
+  if (p.holder) return 'holder'
   if (p.email === me) return 'self'
   return null
 }

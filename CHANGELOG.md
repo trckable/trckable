@@ -10,7 +10,7 @@ section into the release.
 ## Unreleased
 
 - The chart's line runs across the whole period, along zero on the days before the first visit, instead of starting where the data does.
-
+- A person's account and role now live in a membership (two new migrations; the database keeps a copy of each upgrade first), the first step toward one person belonging to more than one account. Nothing changes on an instance with one account: every person keeps their account, role and site limits. One rule is new: the first owner of an account cannot be removed or made a viewer by another owner (`trckabled set-role` and `remove-user` on the server still can), and an owner cannot reset the password or turn off two-step for someone who is in other accounts too.
 - A site that has had visits opens in Live when the address names no view: the dashboard of a site that is getting traffic now starts with who is on it. A site with no visit yet still shows its install card, and an address with a period, filters, Full or `?view=data` stays Data, so links made before keep working. Choosing Data is kept in the address, so a reload stays in Data.
 - `trckabled restore s3:` restores straight from the off-site bucket in `TRCKABLE_BACKUP_S3`: `s3:` alone takes the newest backup, `s3:<name>` a given one. The file is downloaded to a temporary folder and removed after the restore.
 

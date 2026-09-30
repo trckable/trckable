@@ -14,8 +14,9 @@ import (
 
 // Site access: a viewer may be limited to some of the account's sites.
 //
-// A row in site_access names its subject (a viewer's user id) and the only
-// sites that subject may see. No row: every site of the account. An empty
+// A row in site_access names its subject (a viewer's user id), the account
+// and the only sites that subject may see there. No row: every site of the
+// account. An empty
 // list: none. Owners are never limited: making someone an owner drops their
 // row.
 //
@@ -60,9 +61,9 @@ func siteSet(raw string) map[string]bool {
 func (s *Store) ViewerSites(ctx context.Context, account, id string) (map[string]bool, error) {
 	var role string
 	var raw sql.NullString
-	err := s.DB.QueryRowContext(ctx, `SELECT u.role, x.sites FROM users u
-		LEFT JOIN site_access x ON x.subject = u.id AND x.account_id = u.account_id
-		WHERE u.id = ? AND u.account_id = ?`, id, account).Scan(&role, &raw)
+	err := s.DB.QueryRowContext(ctx, `SELECT m.role, x.sites FROM memberships m
+		LEFT JOIN site_access x ON x.subject = m.user_id AND x.account_id = m.account_id
+		WHERE m.user_id = ? AND m.account_id = ?`, id, account).Scan(&role, &raw)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, auth.ErrNotFound
 	}
@@ -113,7 +114,7 @@ func (s *Store) SetAccess(ctx context.Context, account, subject string, sites []
 	}
 	defer tx.Rollback()
 	var role string
-	err = tx.QueryRowContext(ctx, `SELECT role FROM users WHERE id = ? AND account_id = ?`, subject, account).Scan(&role)
+	err = tx.QueryRowContext(ctx, `SELECT role FROM memberships WHERE user_id = ? AND account_id = ?`, subject, account).Scan(&role)
 	if errors.Is(err, sql.ErrNoRows) {
 		return auth.ErrNotFound
 	}
@@ -124,7 +125,7 @@ func (s *Store) SetAccess(ctx context.Context, account, subject string, sites []
 		return ErrAccessOwner
 	}
 	if sites == nil {
-		if _, err := tx.ExecContext(ctx, `DELETE FROM site_access WHERE subject = ?`, subject); err != nil {
+		if err := dropAccess(ctx, tx, subject, account); err != nil {
 			return err
 		}
 		return tx.Commit()
@@ -135,7 +136,7 @@ func (s *Store) SetAccess(ctx context.Context, account, subject string, sites []
 	}
 	raw, _ := json.Marshal(list)
 	if _, err := tx.ExecContext(ctx, `INSERT INTO site_access (subject, account_id, sites, updated_at) VALUES (?, ?, ?, ?)
-		ON CONFLICT (subject) DO UPDATE SET account_id = excluded.account_id, sites = excluded.sites, updated_at = excluded.updated_at`,
+		ON CONFLICT (subject, account_id) DO UPDATE SET sites = excluded.sites, updated_at = excluded.updated_at`,
 		subject, account, string(raw), time.Now().Unix()); err != nil {
 		return err
 	}
@@ -145,9 +146,10 @@ func (s *Store) SetAccess(ctx context.Context, account, subject string, sites []
 // AccessList is every viewer of account, with their sites (nil: every
 // site). Owners are left out: they see everything.
 func (s *Store) AccessList(ctx context.Context, account string) ([]Access, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT u.id, u.email, u.role, x.sites FROM users u
-		LEFT JOIN site_access x ON x.subject = u.id AND x.account_id = u.account_id
-		WHERE u.account_id = ? AND u.role = ?
+	rows, err := s.DB.QueryContext(ctx, `SELECT u.id, u.email, m.role, x.sites FROM memberships m
+		JOIN users u ON u.id = m.user_id
+		LEFT JOIN site_access x ON x.subject = m.user_id AND x.account_id = m.account_id
+		WHERE m.account_id = ? AND m.role = ?
 		ORDER BY 2`, account, RoleViewer)
 	if err != nil {
 		return nil, err
@@ -172,8 +174,8 @@ func (s *Store) AccessList(ctx context.Context, account string) ([]Access, error
 	return out, rows.Err()
 }
 
-// dropAccess forgets a subject's limits, inside a transaction.
-func dropAccess(ctx context.Context, tx *sql.Tx, subject string) error {
-	_, err := tx.ExecContext(ctx, `DELETE FROM site_access WHERE subject = ?`, subject)
+// dropAccess forgets a subject's limits in one account, inside a transaction.
+func dropAccess(ctx context.Context, tx *sql.Tx, subject, account string) error {
+	_, err := tx.ExecContext(ctx, `DELETE FROM site_access WHERE subject = ? AND account_id = ?`, subject, account)
 	return err
 }
