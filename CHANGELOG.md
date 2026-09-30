@@ -11,6 +11,7 @@ section into the release.
 
 ### Changed
 
+- The site switcher is more compact: 30 px rows (40 px on a phone) with a small mark and a small state dot, today's visitors as a number on the right ("setup" or "stopped" where it applies), a check and a thin bar on the site you are on, All sites as a small chip with online now and today's total, and Add a site as a quiet row with the keys beside it (↑ ↓ enter esc, and 1–9 to open a site). The numbers load after the list opens.
 - A text field in focus gets a thin accent border and a faint glow instead of the thick ring buttons get.
 
 ## 0.5.6 (30 Sep 2026)

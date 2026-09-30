@@ -1,12 +1,15 @@
-// One site in the switcher: its mark and state, a click to open it, and (for
-// anyone who may arrange) a drag handle's worth of row, Alt + ↑/↓, and a ⋯
-// menu with every move, so a phone and a keyboard can do what a mouse does.
+// One site in the switcher: its mark and state dot, today's visitors, a click
+// to open it, and (for anyone who may arrange) a drag handle's worth of row,
+// Alt + ↑/↓, and a ⋯ menu with every move, so a phone and a keyboard can do
+// what a mouse does.
 import { Check } from 'lucide-react'
 import { stoppedWhy, type Site } from '../../lib/api'
 import { Menu } from '../../components/Menu'
 import { SiteMark } from '../../components/SiteMark'
 import { confirmWith } from '../../components/Confirm'
+import { fmtCompact, fmtInt } from '../../lib/format'
 import { copy } from './menuCopy'
+import { copy as first } from './copy'
 import { addGroup, moveTo, pin, placeKey, step, unpin, type Place } from './layout'
 import { dotState, StateDot } from './StateDot'
 import type { Arrange } from './SiteMenu'
@@ -15,21 +18,17 @@ import { prefetchSite } from '../../lib/dashQuery'
 import './SiteItem.css'
 
 /**
- * The line under a site's name, only when its state needs saying: the dot
- * already shows live and quiet sites, and the domain is the row's title.
+ * What stands where the number would: "setup" or "stopped" when the dot alone
+ * can't say it, else today's visitors (nothing until they are loaded).
  */
-function StateNote({ s }: { s: Site }) {
+function Tail({ s, today }: { s: Site; today?: number }) {
   switch (dotState(s)) {
     case 'new':
-      return <span className="faint">{copy.notInstalled}</span>
+      return <span className="tail faint" title={first.dot.new}>{copy.setup}</span>
     case 'stopped':
-      return (
-        <span className="faint stopped-note" title={stoppedWhy(s)}>
-          {copy.stopped}
-        </span>
-      )
+      return <span className="tail stopped-note" title={stoppedWhy(s)}>{copy.stopped}</span>
     default:
-      return null
+      return today === undefined ? null : <span className={today ? 'tail' : 'tail faint'} title={copy.today(fmtInt(today))}>{fmtCompact(today)}</span>
   }
 }
 
@@ -38,7 +37,7 @@ function refocus(id: string) {
   requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-site="${CSS.escape(id)}"] .site`)?.focus())
 }
 
-export function SiteItem({ site, place, on, arrange, onPick }: { site: Site; place: Place; on: boolean; arrange: Arrange | null; onPick: () => void }) {
+export function SiteItem({ site, place, on, arrange, today, key1, onPick }: { site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; key1?: number; onPick: () => void }) {
   const name = site.name || site.domain
   const a = arrange
   const moveStep = (dir: -1 | 1) => {
@@ -70,6 +69,7 @@ export function SiteItem({ site, place, on, arrange, onPick }: { site: Site; pla
     >
       <button
         type="button"
+        data-stop
         aria-current={on ? 'page' : undefined}
         className={on ? 'site on' : 'site'}
         title={site.domain}
@@ -83,14 +83,17 @@ export function SiteItem({ site, place, on, arrange, onPick }: { site: Site; pla
         }}
       >
         <span className="mark-wrap">
-          <SiteMark site={site} size={26} />
+          <SiteMark site={site} size={18} />
           <StateDot site={site} />
         </span>
         <span className="name">
           <b>{name}</b>
-          <StateNote s={site} />
         </span>
-        {on && <Check size={17} strokeWidth={2} color="var(--accent)" aria-hidden="true" />}
+        <span className="right">
+          <Tail s={site} today={today} />
+          {key1 && <kbd className="site-key" aria-hidden="true">{key1}</kbd>}
+        </span>
+        <span className="tick" aria-hidden="true">{on && <Check size={14} strokeWidth={2.25} />}</span>
       </button>
       {a && <Moves site={site} place={place} a={a} step={moveStep} />}
     </li>

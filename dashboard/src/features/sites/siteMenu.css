@@ -1,94 +1,85 @@
-/* The switcher's list: its own styles, loaded with it. */
-/* Moved from styles.css; kept first, so the rules below still win as before. */
-/* About five sites, then it scrolls: the search above finds the rest. */
-.sites-list {
-  display: flex;
-  flex-direction: column;
-  max-height: min(312px, 46vh);
-  overflow-y: auto;
-  overscroll-behavior: contain;
+/* The switcher's list: its own styles, loaded with it. Compact on purpose:
+   30px rows (40px on a phone), an 18px mark, a 6px state dot. */
+
+.pop.sites .menu-search {
+  height: 32px;
+  margin: 0 0 4px;
+  padding: 0 8px;
+  gap: 8px;
+  border-radius: 8px;
+}
+.pop.sites .menu-search input {
+  font-size: 13px;
 }
 
-.sites-foot {
-  display: flex;
-  gap: 6px;
-  align-items: stretch;
-  border-top: 1px solid var(--border);
-  margin-top: 4px;
-  padding-top: 6px;
-}
-
-.foot-main {
+/* All sites, and the totals beside it once they are here. */
+.sites-strip {
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex: 1;
-  padding: 9px 10px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  font-size: 13.5px;
-  text-align: left;
-  cursor: pointer;
+  gap: 8px;
+  padding: 2px 2px 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
 }
-
-.foot-main:hover,
-.foot-side:hover {
-  background: var(--sunken);
-}
-
-.foot-main span span {
-  display: block;
-}
-
-.foot-main .faint {
-  font-size: 11.5px;
-}
-
-.foot-side {
-  align-self: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
+.all-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 9px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 7px;
   background: var(--sunken);
   color: var(--text-2);
+  font: inherit;
+  font-size: 12px;
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease;
 }
-
-.foot-side:hover {
+.all-chip:hover,
+.all-chip:focus-visible {
   color: var(--text);
   border-color: var(--border-2);
 }
-
-.sites-foot button {
-  white-space: nowrap;
+.all-chip.on {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+.strip-sum {
+  margin-left: auto;
   display: flex;
-  align-items: center;
-  gap: 7px;
-  flex: 1;
-  justify-content: center;
-  padding: 9px 8px;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 11.5px;
   color: var(--text-2);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.strip-sum i {
+  font-style: normal;
+  color: var(--text-3);
+}
+.strip-sum .live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.strip-sum .live-dot.on {
+  background: var(--accent);
 }
 
-.sites-foot button:hover {
-  background: var(--sunken);
-  color: var(--text);
+/* About ten rows, then it scrolls: the search above finds the rest. */
+.sites-list {
+  display: flex;
+  flex-direction: column;
+  max-height: min(352px, 46vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
-
 .site-section + .site-section {
-  margin-top: 4px;
+  margin-top: 2px;
 }
 .site-group {
   list-style: none;
@@ -98,49 +89,193 @@
   flex-direction: column;
 }
 .site-row {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 2px;
-  border-radius: 10px;
-}
-.site-row > .site {
-  flex: 1;
-  min-width: 0;
-}
-.site-row[draggable='true'] > .site {
-  cursor: pointer;
+  border-radius: 8px;
 }
 .site-row.dragging {
   opacity: 0.45;
 }
-/* The ⋯ shows on the row being pointed at or worked with; on a touch
-   screen, where nothing is pointed at, it always shows. */
-.site-row > .btn.icon {
-  width: 32px;
-  height: 32px;
+
+.site {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.site:hover,
+.site:focus-visible {
+  background: var(--sunken);
+}
+.site.on::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.site .name {
+  flex: 1;
+  min-width: 0;
+}
+.site .name b {
+  display: block;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.site.on .name b {
+  font-weight: 600;
+}
+.pop.sites .site-mark {
+  border-radius: 5px;
+}
+/* The dot on the mark's corner: small, on the popup's own surface. */
+.pop.sites .mark-wrap > .dot {
+  right: -2px;
+  bottom: -2px;
+  width: 6px !important;
+  height: 6px !important;
+  box-shadow: 0 0 0 1.5px var(--surface);
+}
+.pop.sites .state-dot.now {
+  animation-name: dot-now-s;
+}
+@keyframes dot-now-s {
+  0% {
+    box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 1.5px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 5px transparent;
+  }
+}
+
+/* Today's number, "setup" or "stopped" (and, pointed at, the row's key). */
+.site .right {
   flex: none;
+  display: grid;
+  justify-items: end;
+  min-width: 34px;
+}
+.site .right > * {
+  grid-area: 1 / 1;
+}
+.site .tail {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.site .tail.faint {
+  color: var(--text-3);
+}
+.site-key,
+.foot-keys kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border: 1px solid var(--border-2);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--sunken);
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 10.5px;
+}
+.site-key {
+  visibility: hidden;
+}
+.site .tick {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  color: var(--accent);
+}
+
+/* The ⋯ sits over the check, on the row pointed at or worked with; the row's
+   1–9 key takes the number's place. On a touch screen, where nothing is
+   pointed at, the ⋯ is always there, beside the row, and there is no key. */
+.site-row > .btn.icon {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-color: transparent;
+  border-radius: 6px;
+  background: transparent;
   opacity: 0;
 }
+.site-row > .btn.icon:hover {
+  background: var(--border);
+}
 .site-row:hover > .btn.icon,
-.site-row:focus-within > .btn.icon,
+.site-row:has(:focus-visible) > .btn.icon,
 .site-row > .btn.icon[aria-expanded='true'] {
   opacity: 1;
 }
+.site-row:has(> .btn.icon):hover .tick,
+.site-row:has(> .btn.icon:focus-visible) .tick,
+.site-row:has(> .btn.icon[aria-expanded='true']) .tick {
+  visibility: hidden;
+}
+.site-row:hover .site-key,
+.site:focus-visible .site-key {
+  visibility: visible;
+}
+.site-row:hover .right:has(.site-key) .tail,
+.site:focus-visible .right:has(.site-key) .tail {
+  visibility: hidden;
+}
 @media (hover: none) {
   .site-row > .btn.icon {
+    position: static;
+    transform: none;
+    flex: none;
+    width: 32px;
+    height: 32px;
     opacity: 1;
   }
+  .site-row .site-key {
+    display: none;
+  }
+  .site-row:has(> .btn.icon) .tick {
+    visibility: visible;
+  }
 }
+
 .site-head {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin: 6px 0 2px;
-  padding: 2px 10px;
-  min-height: 28px;
-  font-size: 11px;
+  margin: 4px 0 0;
+  padding: 0 8px;
+  min-height: 24px;
+  font-size: 10.5px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text-3);
 }
@@ -153,7 +288,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 8px;
+  padding: 3px 8px;
   border: 0;
   border-radius: 8px;
   background: none;
@@ -181,29 +316,85 @@
   transform: rotate(90deg);
 }
 .site-head > .btn.icon {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
+  border-color: transparent;
+  background: transparent;
 }
 .sites-none {
-  margin: 4px 10px 8px;
+  margin: 4px 8px 6px;
   font-size: 12.5px;
   text-transform: none;
   letter-spacing: 0;
 }
-.sites-keys {
-  margin: 2px 10px 0;
-  font-size: 11px;
+
+/* Add a site: a quiet row; the keys beside it on a desktop. */
+.sites-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
 }
-.now-note {
-  color: var(--accent);
+.foot-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
 }
+.foot-add svg {
+  color: var(--text-3);
+}
+.foot-add:hover,
+.foot-add:focus-visible {
+  background: var(--sunken);
+  color: var(--text);
+}
+.foot-keys {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 0 4px;
+}
+.foot-keys > span {
+  display: flex;
+  gap: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .site-head .fold svg {
     transition: none;
   }
+  .pop.sites .state-dot.now {
+    animation: none;
+  }
 }
 @media (max-width: 640px) {
-  .sites-keys {
+  .site {
+    height: 40px;
+  }
+  .all-chip {
+    height: 32px;
+  }
+  .pop.sites .menu-search {
+    height: 40px;
+  }
+  .foot-add {
+    height: 40px;
+  }
+  .foot-keys {
     display: none;
   }
 }
