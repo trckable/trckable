@@ -519,6 +519,9 @@ var migrations = []string{
 	);
 	ALTER TABLE sites ADD COLUMN milestones INTEGER NOT NULL DEFAULT 1;
 	ALTER TABLE sites ADD COLUMN milestones_day TEXT NOT NULL DEFAULT '';`,
+	// 39: when a picture was last set or removed (unix milliseconds), so the
+	// people list can say which version of each picture is current
+	`ALTER TABLE users ADD COLUMN avatar_at INTEGER NOT NULL DEFAULT 0;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

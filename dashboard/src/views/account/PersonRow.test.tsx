@@ -10,7 +10,7 @@ beforeAll(async () => {
   PersonRow = (await import('./PersonRow')).PersonRow
 })
 
-const person = (o: Partial<Person>): Person => ({ id: 'usr_a', email: 'ann@site.com', name: 'Ann', role: 'viewer', created_at: 0, two_step: false, last_seen: 1, must_change: false, has_avatar: false, ...o })
+const person = (o: Partial<Person>): Person => ({ id: 'usr_a', email: 'ann@site.com', name: 'Ann', role: 'viewer', created_at: 0, two_step: false, last_seen: 1, must_change: false, has_avatar: false, avatar_v: 0, ...o })
 const access = { shown: false, of: () => null, list: null } as never
 const act = {} as never
 const row = (p: Person, me?: string, waiting = false) => renderToStaticMarkup(<PersonRow p={p} me={me} owners={1} waiting={waiting} access={access} act={act} />)
@@ -26,6 +26,9 @@ describe('a people row', () => {
     const html = row(person({ has_avatar: true }), 'me@site.com')
     expect(html).toContain('src="/api/v1/people/usr_a/avatar?v=0"')
     expect(html).not.toContain('>A<')
+  })
+  it("carries the picture's own version, so someone else's new picture is not served stale", () => {
+    expect(row(person({ has_avatar: true, avatar_v: 1790000000123 }), 'me@site.com')).toContain('avatar?v=1790000000123"')
   })
   it('shows your own picture from the same address as the header, so they change together', () => {
     const html = row(person({ has_avatar: true, email: 'me@site.com' }), 'me@site.com')

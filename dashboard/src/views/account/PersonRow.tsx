@@ -72,7 +72,7 @@ export function PersonRow({ p, me, owners, waiting, access, act }: { p: Person; 
   const self = p.email === me
   return (
     <div className={'person human' + (self ? ' self' : '') + (waiting ? ' waiting' : '')}>
-      <PersonAvatar p={p} id={self ? undefined : p.id} v={v} className={'person-avatar' + (p.role === 'owner' ? ' owner' : '')} />
+      <PersonAvatar p={p} id={self ? undefined : p.id} v={self ? v : p.avatar_v} className={'person-avatar' + (p.role === 'owner' ? ' owner' : '')} />
       <span className="person-text">
         <span className="person-name">
           {p.name || p.email.split('@')[0]}

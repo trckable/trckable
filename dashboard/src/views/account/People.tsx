@@ -24,7 +24,8 @@ export function People({ me }: { me?: string }) {
   const [allowing, setAllowing] = useState<string | null>(null)
   // A role change asked for, and the pill it came from (focus goes back there).
   const [asking, setAsking] = useState<{ p: Person; role: string } | null>(null)
-  const load = () => void api.people().then((r) => setList(r.people ?? []))
+  // Also runs on every profile change: a failed answer keeps the list on screen.
+  const load = () => void api.people().then((r) => setList(r.people ?? [])).catch(() => {})
   const access = useSiteAccess(list)
   useEffect(() => {
     load()

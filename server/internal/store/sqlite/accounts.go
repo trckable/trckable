@@ -361,10 +361,10 @@ func (s *Store) SetName(ctx context.Context, id, name string) error {
 // SetAvatar stores a picture, or removes it when body is empty.
 func (s *Store) SetAvatar(ctx context.Context, id, mime string, body []byte) error {
 	if len(body) == 0 {
-		_, err := s.DB.ExecContext(ctx, `UPDATE users SET avatar = NULL, avatar_type = '' WHERE id = ?`, id)
+		_, err := s.DB.ExecContext(ctx, `UPDATE users SET avatar = NULL, avatar_type = '', avatar_at = ? WHERE id = ?`, time.Now().UnixMilli(), id)
 		return err
 	}
-	_, err := s.DB.ExecContext(ctx, `UPDATE users SET avatar = ?, avatar_type = ? WHERE id = ?`, body, mime, id)
+	_, err := s.DB.ExecContext(ctx, `UPDATE users SET avatar = ?, avatar_type = ?, avatar_at = ? WHERE id = ?`, body, mime, time.Now().UnixMilli(), id)
 	return err
 }
 

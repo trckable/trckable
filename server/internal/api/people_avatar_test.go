@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
@@ -100,6 +101,29 @@ func TestPersonAvatarIsForTheirOwnAccountOnly(t *testing.T) {
 	put(viewer)
 	if code, _, _ := get(owner, viewerID); code != http.StatusOK {
 		t.Errorf("the owner reads a viewer's picture: %d", code)
+	}
+
+	// The list says which version of each picture is current: it moves with
+	// every change, so another person's new picture is fetched at a new address.
+	version := func(email string) float64 {
+		t.Helper()
+		_, out := do(t, owner, "GET", g.srv.URL+"/api/v1/people", "")
+		for _, p := range out["people"].([]any) {
+			if m := p.(map[string]any); m["email"] == email {
+				return m["avatar_v"].(float64)
+			}
+		}
+		return -1
+	}
+	first := version("reader@site.com")
+	if first <= 0 {
+		t.Fatalf("a set picture has a version: %v", first)
+	}
+	g.advance(time.Second)
+	time.Sleep(5 * time.Millisecond)
+	put(viewer)
+	if version("reader@site.com") <= first {
+		t.Error("a new picture must move its version")
 	}
 
 	// Everyone else: 404 or 401, and never the picture.
