@@ -8,7 +8,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { api, type Site, type SiteLayout } from '../../lib/api'
 import { navigate } from '../../lib/url'
 import { openAddSite } from '../../lib/account'
-import { isViewer } from '../../lib/me'
+import { canChange, isViewer } from '../../lib/me'
+import { openSettings } from '../../lib/settings'
 import { copy } from './menuCopy'
 import { EMPTY, flat, placeKey, sectionsOf, type Place } from './layout'
 import { saveLayout, useSiteLayout } from './useSiteLayout'
@@ -182,7 +183,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
       <p className="sr" aria-live="polite">
         {said}
       </p>
-      <MenuFoot canAdd={!isViewer()} onAdd={() => { onClose(); openAddSite() }} />
+      <MenuFoot canAdd={!isViewer()} onAdd={() => { onClose(); openAddSite() }} settings={current && canChange() ? { label: copy.settingsFor(current.domain), open: () => { onClose(); openSettings(current) } } : undefined} />
     </div>
   )
 }

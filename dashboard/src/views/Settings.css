@@ -324,3 +324,52 @@
   min-width: 0;
   display: contents;
 }
+
+/* The phone scale (phone.css): the colour dots keep their drawn size inside a
+   44 px box; the rows under them are finger-high. */
+@media (max-width: 640px) {
+  :root .swatches {
+    gap: 0;
+    margin: -10px 0;
+  }
+  :root .swatch {
+    width: var(--ph-hit);
+    height: var(--ph-hit);
+    padding: 10px;
+    border: 0;
+    background-clip: content-box;
+    box-shadow: none;
+  }
+  :root .swatch[aria-checked='true'] {
+    outline: 2px solid var(--text);
+    outline-offset: -8px;
+    box-shadow: none;
+  }
+  :root .swatch.custom {
+    padding: 0;
+    border-radius: 50%;
+    background-clip: border-box;
+    background-origin: content-box;
+  }
+  :root .swatch.custom input {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  :root .gen-head-text b {
+    font-size: 18px;
+  }
+  :root .gen-head-text .faint,
+  :root .gen-state {
+    font-size: var(--ph-text-2);
+  }
+  :root .card.module-off p,
+  :root .install-check-head p,
+  :root .install-step > span:last-child,
+  :root .install-step .faint {
+    font-size: var(--ph-text-2);
+  }
+  :root .nav-group {
+    font-size: 12px;
+  }
+}

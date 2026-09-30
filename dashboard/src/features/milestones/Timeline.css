@@ -282,3 +282,22 @@
     width: auto;
   }
 }
+
+/* The phone scale (phone.css): Replay and Share are a finger wide. */
+@media (max-width: 640px) {
+  :root .ms-acts {
+    gap: 4px;
+  }
+  :root .ms-acts .btn {
+    min-width: var(--ph-hit);
+    height: var(--ph-hit);
+    font-size: var(--ph-text-2);
+  }
+  :root .ms-tile b {
+    font-size: var(--ph-text);
+  }
+  :root .ms-left,
+  :root .ms-when {
+    font-size: var(--ph-small);
+  }
+}

@@ -285,6 +285,49 @@
   }
 }
 
+/* The phone scale (phone.css): a finger-high close button and section tabs,
+   text at 15 and 16 px. */
+@media (max-width: 640px) {
+  :root .window-head {
+    height: 64px;
+    padding: 0 8px 0 14px;
+  }
+  :root .window-name b {
+    font-size: var(--ph-text);
+  }
+  :root .window-sub {
+    font-size: var(--ph-small);
+  }
+  :root .window-head .btn.icon {
+    width: var(--ph-hit);
+    height: var(--ph-hit);
+  }
+  :root .window-head .btn.icon svg {
+    width: var(--ph-icon);
+    height: var(--ph-icon);
+  }
+  :root .window-nav {
+    padding: 8px 10px;
+  }
+  :root .window-nav button {
+    min-height: var(--ph-hit);
+    font-size: var(--ph-text-2);
+  }
+  :root .modal.window.equal .window-nav button {
+    min-height: 56px;
+    font-size: 12px;
+  }
+  :root .window-scroll {
+    width: var(--ph-hit);
+    height: var(--ph-hit);
+  }
+  :root .window-body,
+  :root .modal.window.single .window-body {
+    padding: 12px var(--ph-edge) 24px;
+    gap: 14px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .window-body {
     animation: none;

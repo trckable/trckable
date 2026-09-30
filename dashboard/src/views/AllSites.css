@@ -307,3 +307,21 @@
     display: none;
   }
 }
+
+/* The phone scale (phone.css). */
+@media (max-width: 640px) {
+  :root .all-search {
+    width: 100%;
+    height: var(--ph-hit);
+    font-size: var(--ph-text);
+  }
+  :root .all-row .n {
+    font-size: var(--ph-text-2);
+  }
+  :root .all-row.all-cols {
+    font-size: var(--ph-small);
+  }
+  :root .all-row.all-cols button {
+    min-height: var(--ph-hit);
+  }
+}

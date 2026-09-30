@@ -9,6 +9,7 @@ import { api, setUnauthorizedHandler, type Site } from "./lib/api";
 import { navigate, useLocation } from "./lib/url";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
 import "./styles.css";
+import "./phone.css";
 import { SiteZone } from "./features/header/SiteZone";
 import { Dashboard } from "./views/Dashboard";
 import { applyTheme } from "./lib/theme";
@@ -20,8 +21,7 @@ import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
 import { setRole } from "./lib/me";
 import { NoneShared, useGate } from "./features/onboarding/Gate";
-// Settings and the account dialog are their own screens: the dashboard should
-// not carry them.
+// Settings and the account dialog are their own screens: the dashboard should not carry them.
 // Sign-in and first-run setup are for the minutes before someone is in: a
 // signed-in owner never downloads them.
 const Setup = lazy(() => import("./views/Auth").then((m) => ({ default: m.Setup })));
