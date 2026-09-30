@@ -9,6 +9,9 @@ section into the release.
 
 ## Unreleased
 
+- While the dashboard starts, the page shows its own background and a thin loading line, instead of a blank page (which Safari on iOS fills with a large copy of the site icon).
+- The sites popover in People stays inside the window when sites are added while it is open, and a long domain is cut short instead of scrolling the list sideways; the chart's hover card fills in if the pointer was already on it when its numbers arrived.
+- Phones are bigger and easier to use, on screens up to 640 px wide only (a tablet and a desktop look exactly as before). Text is 16 px (15 px for the smaller lines) and nothing is under 12 px; icons are 20 px; every button, tab, chip, toggle and list row is at least 44 px (list rows 52 px), and a small icon keeps its look inside a finger-sized box. The header is two clean rows (the site with room for its name, then Live | Data, the period as "30 days" and ⋯); on a narrow phone the site's settings are the first row of the site list. The key numbers are two columns, the milestone line is one line, and the site list, the ⋯ and avatar menus, the filter, saved-views, comparison, timezone and currency lists and the calendar rise from the bottom edge with a grab handle and rows 48 px tall. A tap on the chart pins its card where the finger was, and a tap outside lets it go. One set of sizes (`--ph-*`) in one place (`dashboard/src/phone.css`), the rules of screens that load later in their own files.
 ### Changed
 
 - Faster to open and to switch: the dashboard's script, styles and every JSON answer over 1 KB are compressed on the wire (brotli or gzip, whichever the browser takes; the files are compressed once at build time, and live streams are never buffered). A shared link asks for its session and its first report the moment the script runs, and so does a signed-in dashboard for the site the address names, instead of waiting for the page to render first.

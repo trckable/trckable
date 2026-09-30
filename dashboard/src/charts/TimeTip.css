@@ -156,3 +156,18 @@
   font-weight: 500;
   font-size: 13px;
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .ct-live,
+    .ct-label,
+    .ct-row span:first-child,
+    .ct-vs,
+    .ct-split em,
+    .ct-grid em
+  ) {
+    font-size: 12px;
+  }
+}

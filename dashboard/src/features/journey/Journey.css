@@ -512,3 +512,25 @@ button.jr-path:focus-visible {
   margin: 0 0 6px;
   font-size: 12.5px;
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .jr-badge,
+    .jr-fact dt,
+    .jr-visit-no,
+    .jr-kind,
+    .jr-times,
+    .jr-tag
+  ) {
+    font-size: 12px;
+  }
+}
+
+/* The phone scale (phone.css): a 44 px box for the small controls here. */
+@media (max-width: 640px) {
+  :root :is(.jr-chip, button.jr-path) {
+    min-height: var(--ph-hit);
+  }
+}

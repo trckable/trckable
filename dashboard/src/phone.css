@@ -1,0 +1,372 @@
+/* ---- The phone scale (640 px and under) -------------------------------------
+   Bigger to read and to touch, not roomier: text 16/15 px (nothing under 12),
+   icons 20 px, every control and row a finger wide, with the gaps between
+   things kept tight. Everything is in this one query (and the surfaces that
+   load later have their own, in their own files, using the same variables).
+   Desktop and tablet are untouched: nothing here applies above 640 px.
+
+   A target's hit area is its real box, so a small drawn icon gets a 44 px box
+   and pulls the extra back out of the layout with a negative margin: the
+   thing looks as it did and is easy to hit. This file is imported last in
+   main.tsx, so it wins over the plain class rules before it; the files that
+   load later write their phone rules with a :root in front. */
+@media (max-width: 640px) {
+  :root {
+    --ph-hit: 44px; /* the least a finger target is, both ways */
+    --ph-bar: 46px; /* a control in the header and the row under it */
+    --ph-row: 52px; /* a list row */
+    --ph-sheet-row: 48px; /* a row in a sheet or a menu */
+    --ph-icon: 20px;
+    --ph-text: 16px;
+    --ph-text-2: 15px;
+    --ph-small: 13px; /* a caption: never under 12 */
+    --ph-gap: 14px; /* between cards and sections */
+    --ph-pad: 16px; /* inside a card */
+    --ph-edge: 16px; /* the page's side margin */
+    --ph-ctl: 8px; /* between controls in a row */
+    --ph-mark: 1.2; /* a site's mark, scaled from its desktop size */
+    --ph-mark-min: 12px; /* and the letter in it */
+    --note-half: calc(var(--ph-hit) / 2); /* half a note flag's box: the chart keeps it whole, and its words clear it */
+  }
+  /* ---- The 12 px floor -------------------------------------------------------
+     Every text rule that is under 12 px on a desktop is raised to 12 here;
+     a component that loads later has its own list in its own file (its last
+     block, "The 12 px floor"). The parts of the phone scale below then set
+     what they want above it. */
+  :is(.cursor-pill, .cols, .app-footer, .note-count) {
+    font-size: 12px;
+  }
+  /* ---- The header: the ghost, the site, search, the avatar, all 46 px ---- */
+  .header.quiet {
+    gap: var(--ph-ctl);
+    min-height: var(--ph-bar);
+  }
+  .header.quiet > .header-tools.quiet {
+    gap: var(--ph-ctl);
+  }
+  .header > .brand,
+  .header.quiet > .brand {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: var(--ph-hit);
+    height: var(--ph-hit);
+    margin-left: -6px;
+  }
+  .header.quiet .site-zone {
+    height: var(--ph-bar);
+    padding: 0;
+    border-radius: 14px;
+  }
+  .header.quiet .site-zone .btn.site-btn {
+    height: 44px;
+    padding: 0 2px 0 8px;
+    gap: 7px;
+    font-size: var(--ph-text-2);
+    border-radius: 13px;
+  }
+  .header.quiet .site-zone .btn.site-btn svg {
+    width: var(--ph-icon);
+    height: var(--ph-icon);
+  }
+  .header.quiet .site-zone .btn.gear {
+    width: var(--ph-hit);
+    height: var(--ph-hit);
+    margin-right: 0;
+    border-radius: 13px;
+  }
+  .header.quiet .site-zone .btn.gear svg {
+    width: var(--ph-icon);
+    height: var(--ph-icon);
+  }
+  .header.quiet .site-zone .site-sep {
+    height: 22px;
+  }
+  .header-tools.quiet .btn {
+    height: var(--ph-hit);
+  }
+  .header-tools.quiet .btn.ask,
+  .header-tools.quiet .btn.icon.ghost {
+    width: var(--ph-hit);
+    min-width: var(--ph-hit);
+  }
+  .header-tools.quiet .btn svg {
+    width: var(--ph-icon);
+    height: var(--ph-icon);
+  }
+  .header-tools.quiet .btn.account-btn {
+    width: var(--ph-hit);
+  }
+  .header-tools.quiet .btn.account-btn .avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 15px;
+  }
+
+  /* ---- The row under it: Live | Data, the period, ⋯ --------------------- */
+  .subbar {
+    gap: var(--ph-ctl);
+    min-height: var(--ph-bar);
+    margin-top: -2px;
+  }
+  .view-switch {
+    padding: 0;
+  }
+  .view-switch .view-pill {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 50%;
+  }
+  .view-switch button {
+    height: 44px;
+    min-width: var(--ph-hit);
+    padding: 0 14px;
+    font-size: var(--ph-text-2);
+  }
+  .phone-row .view-switch button {
+    padding: 0 11px;
+    gap: 6px;
+  }
+  .phone-pill {
+    height: var(--ph-bar);
+    padding: 0 8px 0 11px;
+    gap: 7px;
+    font-size: var(--ph-text-2);
+  }
+  .phone-pill svg {
+    width: var(--ph-icon);
+    height: var(--ph-icon);
+  }
+  .phone-row .ctl-cap {
+    height: var(--ph-bar);
+    padding: 0;
+  }
+  .phone-row .ctl-cap .btn,
+  .phone-row .ctl-cap .btn.icon {
+    width: var(--ph-hit);
+    height: 44px;
+    border-radius: 13px;
+  }
+  .phone-row .ctl-cap .btn svg {
+    width: var(--ph-icon);
+    height: var(--ph-icon);
+  }
+
+  /* ---- Cards, tabs, folds, the lists --------------------------------------- */
+  .card {
+    padding: var(--ph-pad);
+    gap: var(--ph-gap);
+    border-radius: 16px;
+  }
+  h2 {
+    font-size: var(--ph-text);
+  }
+  /* The fold arrow and the tabs keep their drawn size: a 44 px box, the extra
+     taken back out of the layout with the margin. */
+  .card-head .fold {
+    width: var(--ph-hit);
+    height: var(--ph-hit);
+    margin: -12px -8px -12px -14px;
+  }
+  .card-head .fold svg {
+    width: var(--ph-icon);
+    height: var(--ph-icon);
+  }
+  .card-head {
+    flex-wrap: wrap;
+  }
+  .tabs {
+    gap: 0;
+  }
+  .tabs button {
+    min-width: var(--ph-hit);
+    min-height: var(--ph-hit);
+    margin: -5px 0;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: var(--ph-small);
+  }
+  /* Three or more tabs take a line of their own, as equal segments. */
+  .tabs:has(> button:nth-child(3)) {
+    flex: 1 1 100%;
+  }
+  .tabs:has(> button:nth-child(3)) button {
+    flex: 1;
+    margin: 0;
+    min-height: var(--ph-hit);
+    background: var(--sunken);
+  }
+  .tabs:has(> button:nth-child(3)) button[aria-selected='true'] {
+    background: var(--surface-2);
+  }
+  .cols {
+    padding: 0 10px 2px;
+    font-size: 12px;
+  }
+  .bl-row {
+    min-height: var(--ph-row);
+    padding: 6px 10px;
+    font-size: var(--ph-text-2);
+  }
+  .bl-label {
+    gap: 7px;
+  }
+  .bl-val {
+    width: 64px;
+    font-size: var(--ph-text-2);
+  }
+  .empty {
+    font-size: var(--ph-text-2);
+  }
+  .btn {
+    height: var(--ph-hit);
+    font-size: var(--ph-text-2);
+  }
+  .btn.icon {
+    width: var(--ph-hit);
+  }
+  .btn.small,
+  .btn.site-btn {
+    height: var(--ph-hit);
+  }
+  .btn svg {
+    flex: none;
+  }
+
+  /* ---- The key numbers ------------------------------------------------------- */
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 6px 4px 0;
+  }
+  .kpi {
+    padding: 8px 10px 10px;
+  }
+  .kpi .kpi-name,
+  .kpi .label {
+    font-size: var(--ph-small);
+  }
+  .kpi .value {
+    font-size: clamp(20px, 16cqi, 30px);
+  }
+  .kpi-delta {
+    font-size: var(--ph-small);
+  }
+
+  /* ---- The main chart ---------------------------------------------------------- */
+  .chart-wrap svg text {
+    font-size: 12px;
+  }
+  .overview-chart > .chart-head {
+    min-height: var(--ph-hit);
+  }
+  .chart-head-tools {
+    gap: 2px;
+  }
+  .btn.icon.ghost.replay-btn {
+    width: var(--ph-hit);
+    height: var(--ph-hit);
+  }
+  .replay-speed .speed-btn {
+    height: var(--ph-hit);
+    font-size: var(--ph-text-2);
+  }
+  .btn.ghost.show-since {
+    height: var(--ph-hit);
+    font-size: var(--ph-text-2);
+  }
+  /* The replay slider: a 44 px touch strip over the same 28 px of layout. */
+  .overview-chart .scrub.quiet input[type='range'] {
+    top: -8px;
+    height: var(--ph-hit);
+  }
+  .scrub-day {
+    font-size: var(--ph-small);
+  }
+
+  /* ---- Banners, the moment, the foot -------------------------------------------- */
+  .banner {
+    font-size: var(--ph-text-2);
+  }
+  .app-footer {
+    padding: 4px 0 8px;
+    font-size: 12px;
+    gap: 0 14px;
+  }
+  .app-footer-links {
+    gap: 4px;
+  }
+  .app-footer a:not(.tkb-logo) {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--ph-hit);
+    min-width: var(--ph-hit);
+    justify-content: center;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+  /* The logo is drawn at 70% (zoom), so its box is asked for in full. */
+  .app-footer .tkb-logo {
+    display: inline-flex;
+    align-items: center;
+    min-height: calc(var(--ph-hit) / 0.7);
+  }
+  /* The + on the crosshair: the same 22 px disc, drawn behind a 44 px box. */
+  .note-chip {
+    height: var(--ph-hit);
+    margin: -8px 0;
+    font-size: var(--ph-small);
+  }
+  .note-add {
+    top: -15px;
+    width: var(--ph-hit);
+    height: var(--ph-hit);
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .note-add::before {
+    content: '';
+    position: absolute;
+    inset: 11px;
+    border: 1px solid color-mix(in srgb, var(--money) 60%, transparent);
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: 0 2px 10px #0006;
+    z-index: -1;
+  }
+  .note-add:hover {
+    background: none;
+  }
+}
+
+/* A small phone (360 px and under): the header gives up what it can. */
+@media (max-width: 360px) {
+  :root {
+    --ph-ctl: 6px;
+  }
+  .header.quiet > .brand {
+    margin-right: -4px;
+  }
+  .pill-dot,
+  .phone-pill > svg,
+  .header.quiet .site-zone .btn.site-btn > svg {
+    display: none;
+  }
+  .phone-row .view-switch button {
+    padding: 0 9px;
+  }
+}
+
+/* On all but the widest phones the cog does not fit beside the site's name
+   (which keeps at least twelve letters before it is cut): it moves into the
+   site list, as its first row. */
+@media (max-width: 419px) {
+  .header.quiet .site-zone .btn.gear,
+  .header.quiet .site-zone .site-sep {
+    display: none;
+  }
+  :root .foot-settings {
+    display: flex;
+  }
+}

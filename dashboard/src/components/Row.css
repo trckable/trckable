@@ -60,3 +60,21 @@
     min-width: 0;
   }
 }
+
+/* The phone scale (phone.css). */
+@media (max-width: 640px) {
+  :root .srow {
+    padding: 12px 0;
+    gap: 6px;
+  }
+  :root .srow-text {
+    font-size: var(--ph-text);
+  }
+  :root .srow-text .faint {
+    font-size: var(--ph-text-2);
+  }
+  :root .viewer-note,
+  :root .look-err {
+    font-size: var(--ph-text-2);
+  }
+}

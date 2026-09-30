@@ -61,3 +61,30 @@
   top: 6px;
   right: 6px;
 }
+
+/* The phone scale (phone.css): one line; the ghost gives way, the words are cut
+   before the buttons are. */
+@media (max-width: 640px) {
+  :root .ms-moment {
+    gap: var(--ph-ctl);
+    padding: 8px 8px 8px 14px;
+  }
+  :root .ms-moment > span.ghost {
+    display: none;
+  }
+  :root .ms-words {
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow: hidden;
+  }
+  :root .ms-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--ph-text-2);
+  }
+  :root .ms-moment .btn {
+    height: var(--ph-hit);
+  }
+}

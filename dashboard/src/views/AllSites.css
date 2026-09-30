@@ -307,3 +307,43 @@
     display: none;
   }
 }
+
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .all-chart-axis,
+    .all-big .delta
+  ) {
+    font-size: 12px;
+  }
+}
+
+/* The phone scale (phone.css). */
+@media (max-width: 640px) {
+  :root .all-search {
+    width: 100%;
+    height: var(--ph-hit);
+    font-size: var(--ph-text);
+  }
+  :root .all-row .n {
+    font-size: var(--ph-text-2);
+  }
+  :root .all-row.all-cols {
+    font-size: var(--ph-small);
+  }
+  :root .all-row.all-cols button {
+    min-height: var(--ph-hit);
+  }
+}
+
+
+/* The phone scale (phone.css): the period choice is finger-high. */
+@media (max-width: 640px) {
+  :root :is(.all-filters, .all-actions) .seg button {
+    min-width: var(--ph-hit);
+    height: var(--ph-hit);
+    font-size: var(--ph-text-2);
+  }
+}

@@ -553,7 +553,7 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
               aria-checked={site.color === c}
               aria-label={c}
               className="swatch"
-              style={{ background: c }}
+              style={{ backgroundColor: c }}
               onClick={() => api.setSiteColor(site.id, c).then(onSaved).catch((e: unknown) => toast(messageOf(e), 'error'))}
             />
           ))}

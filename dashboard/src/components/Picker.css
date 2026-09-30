@@ -83,3 +83,36 @@
   left: auto;
   right: auto;
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .picker-group,
+    .picker-row .faint
+  ) {
+    font-size: 12px;
+  }
+}
+
+/* The phone scale (phone.css): rows 48 px tall; the list itself is a sheet (sheet.css). */
+@media (max-width: 640px) {
+  :root .picker-list {
+    max-height: 56dvh;
+  }
+  :root .picker-row {
+    min-height: var(--ph-sheet-row);
+    align-items: center;
+    padding: 6px 12px;
+    font-size: var(--ph-text);
+  }
+  :root .picker-row .faint {
+    font-size: var(--ph-small);
+  }
+  :root .picker-group {
+    font-size: 12px;
+  }
+  :root .btn.picker-btn {
+    height: var(--ph-hit);
+  }
+}
