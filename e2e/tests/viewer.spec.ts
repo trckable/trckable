@@ -81,7 +81,8 @@ async function writeControls(page: Page): Promise<string[]> {
 }
 
 const PAGES = [
-  '/example.com',
+  '/example.com?view=data',
+  '/example.com?view=live',
   '/example.com?mode=full',
   '/all',
   '/example.com?account=sites',
@@ -98,7 +99,7 @@ test('a viewer is offered no create, edit or delete control anywhere', async ({ 
     for (const c of await writeControls(page)) problems.push(`${path}: ${c}`)
   }
   // The header's Create menu is not there at all, nor are keys and people.
-  await open(page, '/example.com')
+  await open(page, '/example.com?view=data')
   await expect(page.getByRole('button', { name: /^create$/i })).toHaveCount(0)
   await open(page, '/example.com?account=profile')
   await expect(page.getByRole('dialog').getByRole('tab')).toHaveCount(0)

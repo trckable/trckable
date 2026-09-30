@@ -3,7 +3,7 @@
 // hover is the very one the dashboard reads when it opens.
 import { cachedReport, type ReportQuery, type Site } from './api'
 import { calendarPrevious, diffDays, presetById, setWeekStart, todayIn, weekStartsOn, type Range } from './dates'
-import { readView, type ViewState } from './url'
+import { readView, wantsLive, type ViewState } from './url'
 
 export function rangeOf(view: ViewState, today: string): Range {
   if (view.period === 'custom' && view.from && view.to) return { from: view.from, to: view.to > today ? today : view.to }
@@ -38,9 +38,9 @@ export function queryOf(view: ViewState, range: Range): ReportQuery {
  *  address's period and filters: pointing at a site in the switcher does it,
  *  so the numbers are there by the click, and so does the page's start-up
  *  (lib/earlyStart.ts). */
-export function prefetchSite(site: Pick<Site, 'id' | 'timezone' | 'week_start'>, params = new URLSearchParams(location.search)) {
+export function prefetchSite(site: Pick<Site, 'id' | 'timezone' | 'week_start'> & { last_event_at?: number }, params = new URLSearchParams(location.search)) {
   const view = readView(params)
-  if (view.live) return
+  if (wantsLive(view, site)) return
   // "This week" depends on the site's first weekday; put the current one back.
   const was = weekStartsOn()
   setWeekStart(site.week_start)
