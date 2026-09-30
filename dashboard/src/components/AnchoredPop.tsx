@@ -12,6 +12,18 @@ import './AnchoredPop.css'
 const NAV = '[data-nav]:not(:disabled)'
 const phone = () => window.matchMedia('(max-width: 640px)').matches
 
+/** Scrolls the list that holds `item` (inside `box`) just enough to show it. */
+function showInList(item: HTMLElement, box: HTMLElement) {
+  for (let p = item.parentElement; p && p !== box; p = p.parentElement) {
+    if (p.scrollHeight <= p.clientHeight) continue
+    const at = p.getBoundingClientRect()
+    const it = item.getBoundingClientRect()
+    if (it.top < at.top) p.scrollTop -= at.top - it.top
+    else if (it.bottom > at.bottom) p.scrollTop += it.bottom - at.bottom
+    return
+  }
+}
+
 export function AnchoredPop({
   anchor,
   label,
@@ -112,7 +124,12 @@ export function AnchoredPop({
     const list = Array.from(el.querySelectorAll<HTMLElement>(NAV))
     const now = list.indexOf(document.activeElement as HTMLElement)
     const to = { ArrowDown: now + 1, ArrowUp: now - 1, Home: 0, End: list.length - 1 }[e.key] ?? now
-    list[(to + list.length) % list.length]?.focus()
+    const next = list[(to + list.length) % list.length]
+    // Focus without scrolling: the browser would scroll whatever it can reach
+    // (the page too, and a scroll under an open popover closes it). Only the
+    // list inside the popover is moved, to show the choice.
+    next?.focus({ preventScroll: true })
+    if (next) showInList(next, el)
   }
 
   return createPortal(
