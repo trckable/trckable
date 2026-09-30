@@ -108,7 +108,7 @@ func (s *Store) Login(ctx context.Context, email, password string) (User, error)
 	if !ok {
 		return User{}, auth.ErrBadLogin
 	}
-	u, err = viewOf(ctx, s.DB, u)
+	u, err = viewOf(ctx, s.DB, u, "")
 	if errors.Is(err, auth.ErrNotFound) {
 		// Nobody belongs nowhere: the same answer as a wrong password.
 		return User{}, auth.ErrBadLogin
@@ -143,7 +143,7 @@ func (s *Store) SessionUser(ctx context.Context, token string) (User, error) {
 		return User{}, auth.ErrNotFound
 	}
 	if err == nil {
-		u, err = viewOf(ctx, s.DB, u)
+		u, err = viewOf(ctx, s.DB, u, "")
 	}
 	if err == nil {
 		// Someone is using the dashboard. Written at most once an hour.

@@ -34,6 +34,8 @@ var routeRules = map[string]string{
 	"POST /api/v1/logout":                                        "public",
 	"GET /api/v1/me":                                             "read",
 	"PUT /api/v1/me/keys":                                        "selfW",
+	"POST /api/v1/me/account":                                    "selfW",
+	"POST /api/v1/me/leave":                                      "selfW",
 	"GET /api/v1/sites":                                          "read",
 	"GET /api/v1/site-layout":                                    "read",
 	"PUT /api/v1/site-layout":                                    "write",

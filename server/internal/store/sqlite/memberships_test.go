@@ -499,3 +499,118 @@ func TestDisableTwoStepInChecksTheMemberships(t *testing.T) {
 		t.Fatalf("someone in one account: %v", err)
 	}
 }
+
+// Joining another account, remembering the one used last, leaving, and the
+// cap on how many accounts one person can be in.
+func TestJoinRememberLeaveAndTheCap(t *testing.T) {
+	ctx := context.Background()
+	s, other := membersT(t)
+	if _, err := s.AddUser(ctx, DefaultAccount, "boss@a.com", testPassword, RoleOwner); err != nil {
+		t.Fatal(err)
+	}
+	p, err := s.AddUser(ctx, DefaultAccount, "p@a.com", testPassword, RoleViewer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.JoinAccount(ctx, p.ID, other, RoleViewer); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.JoinAccount(ctx, p.ID, other, RoleOwner); err != nil {
+		t.Fatal(err)
+	}
+	if ms, _ := s.Memberships(ctx, p.ID); len(ms) != 2 || ms[1].Role != RoleViewer {
+		t.Fatalf("joining again changes nothing: %+v", ms)
+	}
+	if err := s.JoinAccount(ctx, "usr_nobody", other, RoleViewer); !errors.Is(err, auth.ErrNotFound) {
+		t.Fatalf("someone who is not here: %v", err)
+	}
+	if err := s.JoinAccount(ctx, p.ID, "acc_nowhere", RoleViewer); err == nil {
+		t.Fatal("an account that is not there")
+	}
+	if err := s.SetLastAccount(ctx, p.ID, "acc_nowhere"); !errors.Is(err, ErrNotMember) {
+		t.Fatalf("remembering an account they are not in: %v", err)
+	}
+	if err := s.SetLastAccount(ctx, p.ID, other); err != nil {
+		t.Fatal(err)
+	}
+	tok, _ := s.CreateSession(ctx, p.ID)
+	if u, err := s.SessionUser(ctx, tok); err != nil || u.AccountID != other {
+		t.Fatalf("the account used last opens: %+v %v", u, err)
+	}
+	if u, err := s.In(ctx, User{ID: p.ID, Email: p.Email}, DefaultAccount); err != nil || u.AccountID != DefaultAccount || u.Role != RoleViewer {
+		t.Fatalf("in A: %+v %v", u, err)
+	}
+	if _, err := s.In(ctx, User{ID: p.ID}, "acc_nowhere"); !errors.Is(err, ErrNotMember) {
+		t.Fatalf("in an account they are not in: %v", err)
+	}
+	cards, err := s.AccountCards(ctx, p.ID, 5)
+	if err != nil || len(cards) != 2 || cards[0].ID != DefaultAccount || cards[0].Name != "boss@a.com" || cards[0].Role != RoleViewer {
+		t.Fatalf("cards: %+v %v", cards, err)
+	}
+	// Leaving the account last used: it is forgotten, the other opens.
+	if err := s.Leave(ctx, p.ID, other); err != nil {
+		t.Fatal(err)
+	}
+	if u, err := s.SessionUser(ctx, tok); err != nil || u.AccountID != DefaultAccount {
+		t.Fatalf("after leaving the one used last: %+v %v", u, err)
+	}
+	var last string
+	_ = s.DB.QueryRow(`SELECT last_account FROM users WHERE id = ?`, p.ID).Scan(&last)
+	if last != "" {
+		t.Fatalf("last_account still names the account they left: %q", last)
+	}
+	if err := s.Leave(ctx, p.ID, other); !errors.Is(err, ErrNotMember) {
+		t.Fatalf("leaving an account they are not in: %v", err)
+	}
+
+	// The cap: a person in MaxAccounts accounts joins no more.
+	q, err := s.AddUser(ctx, DefaultAccount, "q@a.com", testPassword, RoleViewer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 1; i < MaxAccounts; i++ {
+		acc, err := s.CreateAccount(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := s.JoinAccount(ctx, q.ID, acc, RoleViewer); err != nil {
+			t.Fatalf("join %d: %v", i+1, err)
+		}
+	}
+	extra, _ := s.CreateAccount(ctx)
+	if err := s.JoinAccount(ctx, q.ID, extra, RoleViewer); !errors.Is(err, ErrTooManyAccounts) {
+		t.Fatalf("the 51st account: %v", err)
+	}
+}
+
+// A limit is per account: a viewer limited in one account is unlimited in
+// another, and the cards count what they may see.
+func TestLimitsArePerAccountInCards(t *testing.T) {
+	ctx := context.Background()
+	s, other := membersT(t)
+	one, _ := s.CreateSite(ctx, DefaultAccount, "one.com", "")
+	if _, err := s.CreateSite(ctx, DefaultAccount, "two.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.CreateSite(ctx, other, "three.com", ""); err != nil {
+		t.Fatal(err)
+	}
+	p, err := s.AddUser(ctx, DefaultAccount, "p@a.com", testPassword, RoleViewer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.JoinAccount(ctx, p.ID, other, RoleViewer); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.SetAccess(ctx, DefaultAccount, p.ID, []string{one}); err != nil {
+		t.Fatal(err)
+	}
+	cards, err := s.AccountCards(ctx, p.ID, 5)
+	if err != nil || len(cards) != 2 || cards[0].Total != 1 || cards[1].Total != 1 || len(cards[0].Sites) != 1 || cards[0].Sites[0].ID != one {
+		t.Fatalf("cards: %+v %v", cards, err)
+	}
+	few, _ := s.AccountCards(ctx, p.ID, 0)
+	if few[1].Total != 1 || len(few[1].Sites) != 0 {
+		t.Fatalf("a short list still counts all: %+v", few[1])
+	}
+}

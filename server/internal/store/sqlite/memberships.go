@@ -21,6 +21,10 @@ var (
 	// ErrHolder refuses the change that would take an account from the person
 	// who started it: the first owner is not removed and not made a viewer.
 	ErrHolder = errors.New("this is the first owner of the account: they keep it")
+	// ErrNotMember: the person is not in that account.
+	ErrNotMember = errors.New("not a member of that account")
+	// ErrTooManyAccounts caps how many accounts one person can be in.
+	ErrTooManyAccounts = errors.New("a person can be in at most 50 accounts")
 	// ErrElsewhere refuses acting on someone's sign-in when they also belong
 	// to another account: they manage their own.
 	ErrElsewhere = errors.New("this person is in other accounts too: they manage their own sign-in")
@@ -82,10 +86,14 @@ func choose(list []Membership, last string) (Membership, bool) {
 	return Membership{}, false
 }
 
+// MaxAccounts is how many accounts one person can be in.
+const MaxAccounts = 50
+
 // viewOf is the person as they act in an account: the account and the role
 // of that membership. With no account named, the fallback in choose applies;
-// a person with no membership at all is not signed in (auth.ErrNotFound).
-func viewOf(ctx context.Context, q dbtx, u User) (User, error) {
+// a person with no membership at all is not signed in (auth.ErrNotFound), and
+// a named account they are not in is ErrNotMember.
+func viewOf(ctx context.Context, q dbtx, u User, want string) (User, error) {
 	var last string
 	if err := q.QueryRowContext(ctx, `SELECT last_account FROM users WHERE id = ?`, u.ID).Scan(&last); err != nil {
 		return User{}, err
@@ -94,12 +102,131 @@ func viewOf(ctx context.Context, q dbtx, u User) (User, error) {
 	if err != nil {
 		return User{}, err
 	}
-	m, ok := choose(list, last)
-	if !ok {
+	if len(list) == 0 {
 		return User{}, auth.ErrNotFound
 	}
+	if want != "" {
+		for _, m := range list {
+			if m.Account == want {
+				u.AccountID, u.Role = m.Account, m.Role
+				return u, nil
+			}
+		}
+		return User{}, ErrNotMember
+	}
+	m, _ := choose(list, last)
 	u.AccountID, u.Role = m.Account, m.Role
 	return u, nil
+}
+
+// In is the person acting in one account they belong to: its role, never the
+// role they have elsewhere. An account they are not in is ErrNotMember.
+func (s *Store) In(ctx context.Context, u User, account string) (User, error) {
+	return viewOf(ctx, s.DB, u, account)
+}
+
+// SetLastAccount remembers the account a person used last: the one that
+// opens when nothing names another. A preference, nothing more; an account
+// they are not in is ErrNotMember.
+func (s *Store) SetLastAccount(ctx context.Context, user, account string) error {
+	res, err := s.DB.ExecContext(ctx, `UPDATE users SET last_account = ? WHERE id = ? AND EXISTS (SELECT 1 FROM memberships WHERE user_id = ? AND account_id = ?)`, account, user, user, account)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrNotMember
+	}
+	return nil
+}
+
+// JoinAccount makes an existing person a member of another account. Where
+// they already are, nothing changes. At most MaxAccounts accounts a person.
+func (s *Store) JoinAccount(ctx context.Context, user, account, role string) error {
+	if role != RoleOwner && role != RoleViewer {
+		return errors.New(`role must be "owner" or "viewer"`)
+	}
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	list, err := membershipsOf(ctx, tx, user)
+	if err != nil {
+		return err
+	}
+	if len(list) == 0 {
+		return auth.ErrNotFound
+	}
+	for _, m := range list {
+		if m.Account == account {
+			return nil
+		}
+	}
+	if len(list) >= MaxAccounts {
+		return ErrTooManyAccounts
+	}
+	if err := addMembership(ctx, tx, user, account, role, nowUnix()); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// Leave takes a person out of one account, for themselves: the same rules as
+// removing them (the first owner and the only owner cannot), and the last
+// account takes the person with it.
+func (s *Store) Leave(ctx context.Context, user, account string) error {
+	err := s.RemoveUser(ctx, account, user)
+	if errors.Is(err, auth.ErrNotFound) {
+		return ErrNotMember
+	}
+	return err
+}
+
+// AccountCard is one account a person belongs to, as the switcher shows it.
+type AccountCard struct {
+	ID string
+	// Name is the account's first owner: their name, else their address.
+	Name  string
+	Role  string
+	Sites []SiteRow // the sites this person sees there, the first few
+	Total int       // how many they see there in all
+}
+
+// AccountCards lists every account a person belongs to, oldest first, with
+// the sites they see in each (first few only).
+func (s *Store) AccountCards(ctx context.Context, user string, few int) ([]AccountCard, error) {
+	list, err := s.Memberships(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]AccountCard, 0, len(list))
+	for _, m := range list {
+		c := AccountCard{ID: m.Account, Role: m.Role}
+		err := s.DB.QueryRowContext(ctx, `SELECT COALESCE(NULLIF(u.name, ''), u.email) FROM memberships m JOIN users u ON u.id = m.user_id
+			WHERE m.account_id = ? AND m.role = ? ORDER BY m.created_at, m.rowid LIMIT 1`, m.Account, RoleOwner).Scan(&c.Name)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return nil, err
+		}
+		sites, err := s.ListSites(ctx, m.Account)
+		if err != nil {
+			return nil, err
+		}
+		seen, err := s.ViewerSites(ctx, m.Account, user)
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range sites {
+			if seen != nil && !seen[r.ID] {
+				continue
+			}
+			c.Total++
+			if len(c.Sites) < few {
+				c.Sites = append(c.Sites, r)
+			}
+		}
+		out = append(out, c)
+	}
+	return out, nil
 }
 
 // addMembership joins a person to an account and keeps the mirror.

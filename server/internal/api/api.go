@@ -110,6 +110,8 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("POST /api/v1/logout", a.logout)
 	handle("GET /api/v1/me", a.authed(a.me))
 	handle("PUT /api/v1/me/keys", a.authed(a.setKeys))
+	handle("POST /api/v1/me/account", a.authed(a.useAccount))
+	handle("POST /api/v1/me/leave", a.authed(a.leaveAccount))
 	handle("GET /api/v1/sites", a.authed(a.sites))
 	handle("GET /api/v1/site-layout", a.authed(a.siteLayout))
 	handle("PUT /api/v1/site-layout", a.authed(a.setSiteLayout))
@@ -338,6 +340,12 @@ func (a *API) authed(h http.HandlerFunc) http.Handler {
 				fail(w, http.StatusUnauthorized, "please sign in")
 				return
 			}
+			// The account this request is for, from the person's memberships
+			// every time, so removing someone takes effect at once.
+			u, ok := a.actingIn(w, r, u)
+			if !ok {
+				return
+			}
 			p = principal{user: &u, cookie: true, account: u.AccountID}
 			if u.Role != sqlite.RoleOwner {
 				sites, err := a.Ctl.ViewerSites(r.Context(), u.AccountID, u.ID)
@@ -388,6 +396,58 @@ func (a *API) authed(h http.HandlerFunc) http.Handler {
 	})
 }
 
+// accountHeader names the account a tab is working in. The tab sends it on
+// every call; it is checked against the person's memberships like anything
+// else, and it says nothing for a route about a site (the site decides).
+const accountHeader = "X-Trckable-Account"
+
+// actingIn settles which of the person's accounts this request is for:
+//   - a route about a site: the site's own account, whatever a header says;
+//     a site of an account they are not in does not exist for them;
+//   - a route about the person themselves (who they are, switching, leaving,
+//     their own settings): the header when it is one of theirs, else the
+//     fallback the store chose (the account used last, the oldest where they
+//     own, the oldest), so a tab whose account is gone can still ask who it is;
+//   - any other: the header; one they are not in is 403 not_member; no
+//     header, the fallback.
+//
+// It answers for the request and reports false when it has.
+func (a *API) actingIn(w http.ResponseWriter, r *http.Request, u sqlite.User) (sqlite.User, bool) {
+	want, site := r.Header.Get(accountHeader), r.PathValue("site")
+	if site != "" {
+		owner, err := a.Ctl.SiteAccount(r.Context(), site)
+		if err != nil {
+			fail(w, http.StatusNotFound, "site not found")
+			return u, false
+		}
+		want = owner
+	}
+	if want == "" || want == u.AccountID {
+		return u, true
+	}
+	in, err := a.Ctl.In(r.Context(), u, want)
+	switch {
+	case err == nil:
+		return in, true
+	case !errors.Is(err, sqlite.ErrNotMember):
+		fail(w, http.StatusServiceUnavailable, "please try again")
+		return u, false
+	case site != "":
+		fail(w, http.StatusNotFound, "site not found")
+		return u, false
+	case personRoute(r):
+		return u, true
+	}
+	writeJSON(w, http.StatusForbidden, map[string]string{"error": "you are not in that account", "code": "not_member"})
+	return u, false
+}
+
+// personRoute is a route about the signed-in person rather than an account.
+func personRoute(r *http.Request) bool {
+	p := r.URL.Path
+	return p == "/api/v1/me" || strings.HasPrefix(p, "/api/v1/me/") || ownAccount(p)
+}
+
 // stillSees asks again whether a long request (the live stream) may still
 // see site: the person still here, in the same account, the site still
 // theirs and still within their limits.
@@ -420,7 +480,7 @@ func mustChangeAllowed(r *http.Request) bool {
 // rather than to the instance: their password, name, picture, second step
 // and keyboard shortcuts.
 func ownAccount(path string) bool {
-	return strings.HasPrefix(path, "/api/v1/account/") || path == "/api/v1/account" || path == "/api/v1/logout" || path == "/api/v1/me/keys" || closingMilestones(path)
+	return strings.HasPrefix(path, "/api/v1/account/") || path == "/api/v1/account" || path == "/api/v1/logout" || path == "/api/v1/me/keys" || path == "/api/v1/me/account" || path == "/api/v1/me/leave" || closingMilestones(path)
 }
 
 // closingMilestones is a person closing a milestone's moment: their own
@@ -660,7 +720,12 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 	// The version is for the dashboard's footer; every response carries it in
 	// X-Trckable-Version anyway.
 	keys, _ := a.Ctl.UserKeymap(r.Context(), p.user.ID)
-	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID),
+	accounts, err := a.accountsOf(r, p.user.ID)
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "account": p.account, "accounts": accounts, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID),
 		// Only owners upgrade, so only their dashboards look.
 		"update_check": a.UpdateCheck && p.user.Role == sqlite.RoleOwner,
 		// The instance's own health (every event, the disk, backups) is for
