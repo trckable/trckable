@@ -38,7 +38,7 @@ func (a *API) moments(w http.ResponseWriter, r *http.Request) {
 	}
 	p := ask.Params
 	p.Daily, p.Deep, p.Sales = false, false, p.Revenue
-	res, err := a.cachedReport(r, q, p, ask.Live)
+	res, err := a.cachedReport(r, q, p)
 	if err != nil {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
@@ -70,7 +70,7 @@ func (a *API) spikesOf(r *http.Request, q *query.Q, p query.Params, loc *time.Lo
 	}
 	back := p
 	back.From, back.Revenue, back.Sales, back.Goals = p.From.AddDate(0, 0, -7), false, false, false
-	res, err := a.cachedReport(r, q, back, live)
+	res, err := a.cachedReport(r, q, back)
 	if err != nil {
 		return nil
 	}

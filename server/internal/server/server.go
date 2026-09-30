@@ -246,6 +246,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		slog.Error("two-step sign-in: authenticator codes cannot be checked with this key; people sign in with a recovery code, or `trckabled admin disable-2fa <email>` turns it off for them")
 	}
 	s.revenue.OnChange = a.PurgeSite
+	s.revenue.OnRates = a.PurgeAll // a new exchange rate changes what past payments are worth
 	s.revenue.OnSale = func(site string, sale revenue.Sale) {
 		s.hub.PublishSale(site, sale.At, sale.Amount, sale.Currency, sale.Exponent)
 	}
@@ -417,6 +418,7 @@ func (s *Server) startAnalytics(ctx context.Context) {
 	s.backfillSeen(ctx, store)
 	w := writer.New(s.log, store, writer.Options{CloseAfter: s.cfg.SessionCloseAfter, IdleClose: idleClose(s.cfg), Sites: s.ctl.ExistingSites, SiteZone: s.ctl.SiteZone})
 	w.OnCommit = s.hub.Publish
+	w.OnTouch = s.api.Touched // closed ranges the commit can reach stop being served from the report cache
 	s.writer.Store(w)
 	slog.Info("analytics store ready")
 	if err := w.Run(ctx); err != nil {

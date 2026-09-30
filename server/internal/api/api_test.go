@@ -75,6 +75,8 @@ func newRig(t *testing.T) *rig {
 	hub := realtime.New()
 	w := writer.New(lg, st, writer.Options{FlushEvery: 5 * time.Millisecond, IdleClose: 20 * time.Millisecond, Now: tick, Sites: ctl.ExistingSites})
 	w.OnCommit = hub.Publish
+	var a *API // made below; the writer only commits once a test sends events
+	w.OnTouch = func(site string, lo, hi int64) { a.Touched(site, lo, hi) }
 	wctx, cancel := context.WithCancel(ctx)
 	done := make(chan struct{})
 	go func() {
@@ -90,7 +92,7 @@ func newRig(t *testing.T) *rig {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a := &API{Ctl: ctl, Hub: hub, Token: "automation-token", SetupEnv: "tkb_setup_test", Now: tick, Revenue: rev, Box: box,
+	a = &API{Ctl: ctl, Hub: hub, Token: "automation-token", SetupEnv: "tkb_setup_test", Now: tick, Revenue: rev, Box: box,
 		PurgeAnalytics: w.PurgeSite,
 		ErasePerson:    w.ErasePerson,
 		Query: func() *query.Q {
@@ -108,6 +110,7 @@ func newRig(t *testing.T) *rig {
 	mux := http.NewServeMux()
 	a.Routes(mux)
 	rev.OnChange = a.PurgeSite
+	rev.OnRates = a.PurgeAll
 	mux.HandleFunc("POST /webhooks/{provider}/{conn}", rev.Webhook)
 	srv := httptest.NewServer(mux)
 	t.Cleanup(func() {
