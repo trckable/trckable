@@ -43,6 +43,8 @@ export function KpiTile(p: Props) {
           is the one thing that announces loading, and it says it once. */}
       {p.loading ? <span className="value skeleton" aria-hidden="true" /> : <span className="value num">{p.value === undefined ? '–' : p.fmt(v)}</span>}
       {p.d && !p.loading && <Change d={p.d} vs={p.vs} />}
+      {/* The change's line is kept while loading: the strip is as tall as it will be. */}
+      {p.loading && <span className="kpi-delta" aria-hidden="true" />}
     </>
   )
   if (!p.onClick) return <div className={cls}>{body}</div>

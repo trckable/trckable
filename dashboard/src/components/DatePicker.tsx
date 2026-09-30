@@ -6,6 +6,8 @@ import { lazy, Suspense, useEffect, useRef } from 'react'
 import { copy } from '../features/header/copy'
 import { closer, compareMenu, focusOpener, periodMenu, toggler } from './panelOpen'
 import { CompareControl } from './CompareMenu'
+import { PERIODS_FIRST } from './dateRangeCopy'
+import { prefetchPeriods } from '../lib/dashQuery'
 import { pressed, useKeymap } from '../lib/keys'
 import type { Bucket } from '../lib/api'
 import {
@@ -64,7 +66,7 @@ function stepOf(e: KeyboardEvent) {
   return 0
 }
 
-export function DatePicker({ value, today, onChange, short, tz, bucket, autoBucket, onBucket }: Props & { short?: boolean; tz?: string; bucket?: Bucket; autoBucket?: string; onBucket?: (b?: Bucket) => void }) {
+export function DatePicker({ value, today, onChange, short, tz, site, bucket, autoBucket, onBucket }: Props & { short?: boolean; tz?: string; site?: string; bucket?: Bucket; autoBucket?: string; onBucket?: (b?: Bucket) => void }) {
   // The period is plain words in the header's row, not a boxed control: the
   // arrows either side, the label opening the calendar.
   const open = periodMenu.use()
@@ -100,6 +102,11 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [value, today, open, minDate, onChange])
+
+  // Opening the list starts fetching what its first choices will show.
+  useEffect(() => {
+    if (open && site && tz) prefetchPeriods(site, tz, PERIODS_FIRST)
+  }, [open, site, tz])
 
   useEffect(() => {
     if (!open) return

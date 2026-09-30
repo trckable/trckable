@@ -73,6 +73,12 @@ type Writer struct {
 	// OnCommit, if set, is called after each committed batch with the stored
 	// events (used by realtime). It must not block.
 	OnCommit func([]event.Event)
+	// OnTouch, if set, is called after each committed batch, once per site
+	// it stored anything for, with the earliest and latest moment (unix ms)
+	// of the events and of the starts of the visits they went into. A report
+	// over a span that does not reach them is unchanged (used by the report
+	// cache). It must not block.
+	OnTouch func(site string, lo, hi int64)
 }
 
 // New creates a writer. Call Run to start it.
@@ -420,21 +426,37 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 	if err != nil {
 		return err
 	}
+	touched := map[string][2]int64{}
 	for _, d := range fresh {
 		if d.e.Imported && have[d.e.EventID] {
 			continue
 		}
 		e := d.e
-		id, prev := w.sess.assign(&e)
+		id, prev, was, now := w.sess.assign(&e)
 		if prev != nil {
 			closed = append(closed, prev)
 		}
 		rows = append(rows, row{seq: d.seq, session: id, e: e})
+		span, seen := touched[e.Site]
+		if !seen {
+			span = [2]int64{e.TS, e.TS}
+		}
+		touched[e.Site] = [2]int64{min(span[0], e.TS, was, now), max(span[1], e.TS, was, now)}
 	}
 	idle, watermark := w.sess.closeIdle(closeAt)
 	closed = append(closed, idle...)
 	if len(batch) == 0 && len(closed) == 0 {
 		return nil
+	}
+	// A session that is written now (idle, or ended by its visitor's next
+	// visit) moves from the open sessions to the table: a read taken between
+	// the two may have seen either, so its whole span counts as touched too.
+	for _, s := range closed {
+		span, seen := touched[s.Site]
+		if !seen {
+			span = [2]int64{s.Start, s.Last}
+		}
+		touched[s.Site] = [2]int64{min(span[0], s.Start, s.Last), max(span[1], s.Start, s.Last)}
 	}
 
 	if _, err := conn.ExecContext(ctx, "BEGIN TRANSACTION"); err != nil {
@@ -488,6 +510,11 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 			out[i] = rows[i].e
 		}
 		w.OnCommit(out)
+	}
+	if w.OnTouch != nil {
+		for site, span := range touched {
+			w.OnTouch(site, span[0], span[1])
+		}
 	}
 	return nil
 }

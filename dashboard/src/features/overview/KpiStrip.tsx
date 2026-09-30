@@ -27,6 +27,8 @@ interface Props {
   rpv?: number
   /** Makes a tile a function of Replay's playhead while it plays. */
   follow: (f: (r: { kpis: KPIs; revenue: number }) => number) => ((pos: number) => number) | undefined
+  /** Revenue, Conversion and Per visitor keep their places while the report loads, so the strip does not reflow when it arrives. */
+  expectMoney?: boolean
   /** Online now, last. */
   online: ReactNode
 }
@@ -50,18 +52,31 @@ export function KpiStrip(p: Props) {
       onClick={canChart(key, p.can) ? () => p.onPick(key) : undefined}
     />
   )
-  return (
-    <div role="group" aria-label={copy.keyNumbers} className="kpis">
-      {tile('visitors', copy.visitors, k?.visitors, fmtInt, delta(k?.visitors ?? 0, pk?.visitors), { live: (r) => r.kpis.visitors })}
-      {money ? (
+  // What follows Visitors: the money numbers, Pageviews without payments, or
+  // the money numbers' empty places while a report that will have them loads.
+  const second = () => {
+    if (money)
+      return (
         <>
           {tile('revenue', copy.revenue, p.revenue, (n) => fmtMoney(n, money.currency, money.exponent), pm ? delta(money.revenue, pm.revenue) : null, { live: (r) => r.revenue, money: true })}
           {tile('conversion', copy.conversion, p.conv, rate, pm && p.conv !== undefined ? delta(p.conv, pm.conversion) : null)}
           {tile('per-visitor', copy.perVisitorTile, p.rpv, cents, pm && p.rpv !== undefined ? delta(p.rpv, pm.revenue_per_visitor) : null, { live: (r) => (r.kpis.visitors ? r.revenue / r.kpis.visitors : 0), money: true })}
         </>
-      ) : (
-        tile('pageviews', copy.pageviews, k?.pageviews, fmtInt, delta(k?.pageviews ?? 0, pk?.pageviews), { live: (r) => r.kpis.pageviews })
-      )}
+      )
+    if (p.loading && p.expectMoney)
+      return (
+        <>
+          {tile('revenue', copy.revenue, undefined, fmtInt, null, { money: true })}
+          {tile('conversion', copy.conversion, undefined, fmtInt, null)}
+          {tile('per-visitor', copy.perVisitorTile, undefined, fmtInt, null, { money: true })}
+        </>
+      )
+    return tile('pageviews', copy.pageviews, k?.pageviews, fmtInt, delta(k?.pageviews ?? 0, pk?.pageviews), { live: (r) => r.kpis.pageviews })
+  }
+  return (
+    <div role="group" aria-label={copy.keyNumbers} className="kpis">
+      {tile('visitors', copy.visitors, k?.visitors, fmtInt, delta(k?.visitors ?? 0, pk?.visitors), { live: (r) => r.kpis.visitors })}
+      {second()}
       {tile('bounce', copy.bounce, k?.bounce_rate, fmtPct, delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true), { live: (r) => r.kpis.bounce_rate })}
       {tile('session', copy.session, k?.avg_session_s, fmtDuration, delta(k?.avg_session_s ?? 0, pk?.avg_session_s), { live: (r) => r.kpis.avg_session_s })}
       {p.online}

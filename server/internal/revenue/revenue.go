@@ -41,6 +41,9 @@ type Service struct {
 
 	KeyErr   error             // set when the encryption key doesn't match the stored data
 	OnChange func(site string) // called after a site's ledger changed (report caches)
+	// OnRates is called after exchange rates were fetched and stored: what past
+	// foreign-currency payments are worth may have changed, for every site.
+	OnRates func()
 	// OnSale is told about a payment the moment it is committed: new, real
 	// (not test mode) and recent, so a dashboard can show it arriving. A
 	// webhook replayed for a payment already in the ledger, or a sync that
@@ -932,6 +935,10 @@ func (s *Service) ensureRatesFor(ctx context.Context) {
 	}
 	if _, err := s.Rates.Fetch(ctx, payments.HTTPClient, feed); err != nil {
 		slog.Warn("payments: couldn't fetch ECB exchange rates (foreign-currency payments wait)", "err", err)
+		return
+	}
+	if s.OnRates != nil {
+		s.OnRates()
 	}
 }
 

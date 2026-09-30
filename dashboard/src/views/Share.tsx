@@ -3,22 +3,12 @@
 // is the one enforcing that, not this file.
 import { useEffect, useState, type SubmitEvent } from 'react'
 import { APIError, api, messageOf, setShareMode, type ShareInfo, setShareSession } from '../lib/api'
+import { isEmbed, openShare, shareToken } from '../lib/earlyStart'
 import { setShared } from '../lib/me'
 import { Ghost, Name, Wordmark } from '../components/Logo'
 import './Share.css'
 
-/** The token out of /s/<token>. It is in the address bar once; after that the
- *  browser carries a session cookie instead, so it stays out of logs. */
-export const shareToken = () => {
-  const m = /^\/s\/([^/]+)/.exec(location.pathname)
-  return m ? decodeURIComponent(m[1]) : ''
-}
-
 type State = { state: 'loading' } | { state: 'password'; error?: string } | { state: 'ready'; info: ShareInfo } | { state: 'error'; message: string }
-
-/** Opens the link, asking for a password only if the server says to. */
-/** ?embed=1: the link is shown inside another site's page. */
-export const isEmbed = () => new URLSearchParams(location.search).get('embed') === '1'
 
 /** An embed keeps its token in the iframe's own address (the page embedding
  *  it has it anyway) and its session in memory. */
@@ -27,12 +17,12 @@ const opened = (info: ShareInfo) => {
   if (!isEmbed()) history.replaceState(null, '', '/s')
 }
 
+/** Opens the link, asking for a password only if the server says to. */
 export function useShare(): State {
   const [s, setS] = useState<State>({ state: 'loading' })
   useEffect(() => {
     setShareMode(true)
     setShared()
-    const token = shareToken()
     const done = (info: ShareInfo) => {
       setShared(info.modules)
       setS({ state: 'ready', info })
@@ -40,15 +30,8 @@ export function useShare(): State {
       // address bar so it is not in a screenshot, a Referer or a bookmark.
       opened(info)
     }
-    // With a token in the address this is a first open; without one it is a
-    // reload, and the cookie from the first open answers instead.
-    const open = token
-      ? api.openShare(token, undefined, isEmbed())
-      : api.shareMe().catch(() =>
-          // No token in the address and no session left: either the address
-          // was cut short, or the time it was open for has passed.
-          Promise.reject(new APIError(410, 'This view has closed, or the address is incomplete. Open the full link you were given again, or ask for a new one.')),
-        )
+    // Already under way since the script started (lib/earlyStart.ts).
+    const open = openShare()
     open.then(done).catch((e: unknown) => {
       if (e instanceof APIError && e.status === 401) return setS({ state: 'password' })
       setS({ state: 'error', message: messageOf(e) })

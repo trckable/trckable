@@ -36,6 +36,8 @@ func (a *API) deleteSite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var gone sqlite.Removed
+	// From the first row removed, whatever happens next, what was cached is stale.
+	defer a.cache.purgeSite(site)
 	if a.PurgeAnalytics != nil {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Minute) // a busy site can hold millions of rows
 		defer cancel()
@@ -57,7 +59,6 @@ func (a *API) deleteSite(w http.ResponseWriter, r *http.Request) {
 	}
 	gone.Payments, gone.Connections = rest.Payments, rest.Connections
 	a.sweepAnalytics(r.Context(), site, &gone)
-	a.cache.purgeSite(site)
 	slog.Info("site deleted", "site", site, "domain", info.Domain, "events", gone.Events, "sessions", gone.Sessions, "payments", gone.Payments)
 	writeJSON(w, http.StatusOK, gone)
 }

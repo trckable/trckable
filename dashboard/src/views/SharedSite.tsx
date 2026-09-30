@@ -3,7 +3,8 @@
 // signing in normally ever downloads it.
 import { useState } from 'react'
 import { Dashboard } from './Dashboard'
-import { EmbedHeader, ShareHeader, SharePassword, ShareShell, isEmbed, useShare } from './Share'
+import { EmbedHeader, ShareHeader, SharePassword, ShareShell, useShare } from './Share'
+import { isEmbed } from '../lib/earlyStart'
 import type { ShareInfo, Site } from '../lib/api'
 
 /** The site, as far as a shared page needs to know it. There is no id to send

@@ -144,22 +144,26 @@ func sessionID(site string, visitor uint64, start int64) uint64 {
 
 // assign returns the session id for e and folds e into that session. When a
 // visitor starts a new session while an old one is still open, the old one is
-// returned in closed so the caller can write it.
-func (z *sessionizer) assign(e *event.Event) (id uint64, closed *Session) {
+// returned in closed so the caller can write it. was and now are the start of
+// the session e went into before and after it: a late retry from earlier in
+// the visit moves the start back, and every report that covered either
+// moment has changed.
+func (z *sessionizer) assign(e *event.Event) (id uint64, closed *Session, was, now int64) {
 	z.mu.Lock()
 	defer z.mu.Unlock()
 	k := visitorKey{e.Site, e.Visitor}
 	if s, ok := z.open[k]; ok {
 		if e.TS-s.Last < SessionTimeout {
+			was = s.Start
 			s.add(e)
-			return s.ID, nil
+			return s.ID, nil, was, s.Start
 		}
 		closed = s
 	}
 	s := &Session{Site: e.Site, ID: sessionID(e.Site, e.Visitor, e.TS), Visitor: e.Visitor, Start: e.TS, Last: e.TS}
 	s.add(e)
 	z.open[k] = s
-	return s.ID, closed
+	return s.ID, closed, s.Start, s.Start
 }
 
 // restore seeds an open session recovered from the database at boot.

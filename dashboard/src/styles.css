@@ -600,7 +600,7 @@ textarea:focus-visible {
   border-radius: 2px;
   background: var(--accent);
   opacity: 0.75;
-  transition: width 0.45s var(--ease), opacity 0.15s;
+  transition: width 0.12s var(--ease), opacity 0.15s;
 }
 .bl-row:hover .bl-bar {
   opacity: 1;
