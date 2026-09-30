@@ -632,6 +632,7 @@ export interface Person {
   two_step: boolean
   last_seen: number // unix seconds; 0: never signed in
   must_change: boolean // still has a password someone else chose
+  has_avatar: boolean // chose a picture: /people/{id}/avatar
 }
 
 /** Which of the account's sites each viewer may see: sites null is every

@@ -2,9 +2,11 @@
 // pill, a status icon and the ⋯ menu.
 import { Clock, ShieldCheck } from 'lucide-react'
 import { Menu } from '../../components/Menu'
+import { PersonAvatar } from '../../components/PersonAvatar'
 import type { SiteAccess } from '../../features/access/useSiteAccess'
 import type { Person } from '../../lib/api'
 import { openAccount } from '../../lib/account'
+import { usePictureVersion } from '../../lib/profile'
 import { seenText } from '../personSeen'
 import { people } from './peopleCopy'
 import { RolePill } from './RolePill'
@@ -66,12 +68,11 @@ function RowMenu({ p, self, access, act }: { p: Person; self: boolean; access: S
 }
 
 export function PersonRow({ p, me, owners, waiting, access, act }: { p: Person; me?: string; owners: number; waiting: boolean; access: SiteAccess; act: RowActions }) {
+  const v = usePictureVersion()
   const self = p.email === me
   return (
     <div className={'person human' + (self ? ' self' : '') + (waiting ? ' waiting' : '')}>
-      <span className={'person-avatar' + (p.role === 'owner' ? ' owner' : '')} aria-hidden="true">
-        {(p.name || p.email).slice(0, 1).toUpperCase()}
-      </span>
+      <PersonAvatar p={p} id={self ? undefined : p.id} v={v} className={'person-avatar' + (p.role === 'owner' ? ' owner' : '')} />
       <span className="person-text">
         <span className="person-name">
           {p.name || p.email.split('@')[0]}

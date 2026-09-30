@@ -147,6 +147,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("POST /api/v1/account/2fa/enable", a.authed(a.enableTwoStep))
 	handle("POST /api/v1/account/2fa/disable", a.authed(a.disableTwoStep))
 	handle("GET /api/v1/people", a.authed(a.people))
+	handle("GET /api/v1/people/{id}/avatar", a.authed(a.getPersonAvatar))
 	handle("POST /api/v1/people", a.authed(a.addPerson))
 	handle("PATCH /api/v1/people/{id}", a.authed(a.setPersonRole))
 	handle("DELETE /api/v1/people/{id}", a.authed(a.removePerson))

@@ -32,6 +32,9 @@ export function People({ me }: { me?: string }) {
     whenIdle(SitesPop.preload)
     whenIdle(RolePop.preload)
     whenIdle(RoleDialog.preload)
+    // A new name or picture (yours, from the profile) shows here at once.
+    window.addEventListener('trckable:profile', load)
+    return () => window.removeEventListener('trckable:profile', load)
   }, [])
 
   const owners = list?.filter((p) => p.role === 'owner').length ?? 0

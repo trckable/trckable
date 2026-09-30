@@ -376,6 +376,15 @@ func (s *Store) Avatar(ctx context.Context, id string) (string, []byte, error) {
 	return mime, body, err
 }
 
+// PersonAvatar returns the picture of one person of an account. A person of
+// another account has none here: sql.ErrNoRows, like an id that is not there.
+func (s *Store) PersonAvatar(ctx context.Context, account, id string) (string, []byte, error) {
+	var mime string
+	var body []byte
+	err := s.DB.QueryRowContext(ctx, `SELECT avatar_type, avatar FROM users WHERE id = ? AND account_id = ?`, id, account).Scan(&mime, &body)
+	return mime, body, err
+}
+
 // CreateAccount makes a new, empty account and returns its id. The instance
 // lives in the default account; tests use another to check that accounts
 // stay apart.

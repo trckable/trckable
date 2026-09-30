@@ -34,12 +34,14 @@ type Person struct {
 	LastSeen int64 `json:"last_seen"`
 	// MustChange: they still have a password someone else chose.
 	MustChange bool `json:"must_change"`
+	// HasAvatar: they chose a picture, served at /api/v1/people/{id}/avatar.
+	HasAvatar bool `json:"has_avatar"`
 }
 
 // People lists an account's people, oldest first — which is the owner, on any
 // account that started with one person.
 func (s *Store) People(ctx context.Context, account string) ([]Person, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT id, email, COALESCE(name, ''), role, created_at, totp_enabled, last_seen_at, must_change FROM users WHERE account_id = ? ORDER BY created_at`, account)
+	rows, err := s.DB.QueryContext(ctx, `SELECT id, email, COALESCE(name, ''), role, created_at, totp_enabled, last_seen_at, must_change, length(coalesce(avatar, '')) FROM users WHERE account_id = ? ORDER BY created_at`, account)
 	if err != nil {
 		return nil, err
 	}
@@ -47,11 +49,11 @@ func (s *Store) People(ctx context.Context, account string) ([]Person, error) {
 	var out []Person
 	for rows.Next() {
 		var p Person
-		var two, must int
-		if err := rows.Scan(&p.ID, &p.Email, &p.Name, &p.Role, &p.CreatedAt, &two, &p.LastSeen, &must); err != nil {
+		var two, must, pic int
+		if err := rows.Scan(&p.ID, &p.Email, &p.Name, &p.Role, &p.CreatedAt, &two, &p.LastSeen, &must, &pic); err != nil {
 			return nil, err
 		}
-		p.TwoStep, p.MustChange = two == 1, must == 1
+		p.TwoStep, p.MustChange, p.HasAvatar = two == 1, must == 1, pic > 0
 		out = append(out, p)
 	}
 	return out, rows.Err()

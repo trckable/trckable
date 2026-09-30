@@ -15,6 +15,7 @@ import { confirm, confirmWith } from '../components/Confirm'
 import { DialogActions } from '../components/DialogActions'
 import { THEMES, useTheme } from '../lib/theme'
 import { isViewer } from '../lib/me'
+import { usePictureVersion } from '../lib/profile'
 import { SitesSettings } from './Sites'
 import { InlineEdit } from '../components/InlineEdit'
 import { signOut } from '../lib/signOut'
@@ -35,7 +36,7 @@ export function AccountDialog({ tab: asked, sites, email, onSites }: { tab: Tab;
   const { tabs, tab } = useWindowTabs(asked)
   const viewer = isViewer()
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [v, bump] = useState(0) // cache-buster after a new picture
+  const v = usePictureVersion() // one cache-buster for the header, this window and the people list
   useEffect(() => {
     api.profile().then(setProfile).catch(() => {})
   }, [])
@@ -46,7 +47,7 @@ export function AccountDialog({ tab: asked, sites, email, onSites }: { tab: Tab;
         {tab === 'sites' && !viewer && <SitesSettings sites={sites} onSites={onSites} />}
         {tab === 'keys' && !viewer && <Keys />}
         {tab === 'people' && !viewer && <People me={email} />}
-        {(tab === 'profile' || viewer) && <ProfileTab email={email} p={profile} v={v} onProfile={setProfile} onPicture={() => bump((n) => n + 1)} />}
+        {(tab === 'profile' || viewer) && <ProfileTab email={email} p={profile} v={v} onProfile={setProfile} />}
       </div>
     </Window>
   )
@@ -57,7 +58,6 @@ interface ProfileProps {
   p: Profile | null
   v: number
   onProfile: (p: Profile) => void
-  onPicture: () => void
 }
 
 function ThemeLine() {
@@ -75,12 +75,12 @@ function ThemeLine() {
   )
 }
 
-function ProfileTab({ email, p, v, onProfile, onPicture }: ProfileProps) {
+function ProfileTab({ email, p, v, onProfile }: ProfileProps) {
   const [updates, setUpdates] = useState(checksHere())
   const [pw, setPw] = useState(false)
   return (
     <>
-      <Me email={email} p={p} v={v} onProfile={onProfile} onPicture={onPicture} />
+      <Me email={email} p={p} v={v} onProfile={onProfile} />
 
       <section className="card acct-group">
         <h2 className="acct-title">Sign-in and security</h2>
@@ -121,7 +121,7 @@ function ProfileTab({ email, p, v, onProfile, onPicture }: ProfileProps) {
 }
 
 /** Who you are here: your picture, your name, your role. */
-function Me({ email, p, v, onProfile, onPicture }: { email?: string; p: Profile | null; v: number; onProfile: (p: Profile) => void; onPicture: () => void }) {
+function Me({ email, p, v, onProfile }: { email?: string; p: Profile | null; v: number; onProfile: (p: Profile) => void }) {
   const file = useRef<HTMLInputElement>(null)
   const [cropping, setCropping] = useState<File | null>(null)
 
@@ -133,7 +133,6 @@ function Me({ email, p, v, onProfile, onPicture }: { email?: string; p: Profile 
     setCropping(null)
     toast('Picture updated')
     if (p) onProfile({ ...p, has_avatar: true })
-    onPicture()
     window.dispatchEvent(new CustomEvent('trckable:profile'))
   }
   const remove = async () => {
