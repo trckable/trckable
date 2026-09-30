@@ -6,7 +6,7 @@
 
 **See who visits. Then see who pays.**
 
-<a href="https://www.npmjs.com/package/trckable"><img src="https://img.shields.io/npm/v/trckable?style=flat-square&color=b8ff3c&label=npm" alt="npm version"></a> <!--f:badge_react--><a href="https://trckable.com/docs/benchmarks/"><img src="https://img.shields.io/badge/react_entry-2264_B_gzip-b8ff3c?style=flat-square" alt="trckable/react adds 2264 B gzip"></a><!--/f--> <a href="https://github.com/trckable/trckable/blob/main/packages/trckable/LICENSE"><img src="https://img.shields.io/badge/license-MIT-0b0d10?style=flat-square" alt="MIT licence"></a>
+<a href="https://www.npmjs.com/package/trckable"><img src="https://img.shields.io/npm/v/trckable?style=flat-square&color=b8ff3c&label=npm" alt="npm version"></a> <!--f:badge_react--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/react_entry-2264_B_gzip-b8ff3c?style=flat-square" alt="trckable/react adds 2264 B gzip"></a><!--/f--> <a href="https://github.com/trckable/trckable/blob/main/packages/trckable/LICENSE"><img src="https://img.shields.io/badge/license-MIT-0b0d10?style=flat-square" alt="MIT licence"></a>
 
 [Docs](https://trckable.com/docs/install/npm/) · [GitHub](https://github.com/trckable/trckable) · [Changelog](https://github.com/trckable/trckable/blob/main/CHANGELOG.md) · [trckable.com](https://trckable.com)
 
