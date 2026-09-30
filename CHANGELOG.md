@@ -11,6 +11,7 @@ section into the release.
 
 ### Changed
 
+- Share these numbers is rebuilt: a new link is made in the card itself, with a name, Public or Password, revenue, notes, an end date (never, 7 or 30 days, or a picked day) and the sites it may be embedded on, next to a small live preview of what the reader will see (the lock shows the password screen). Right after creating, the link is shown once with Copy, Open, a QR code and the embed code. The list is one compact row per link: public or lock, what it shows, views (last opened on hover), end date, notes on or off in the row, and Revoke, which asks in the row.
 - The site switcher is more compact: 30 px rows (40 px on a phone) with a small mark and a small state dot, today's visitors as a number on the right ("setup" or "stopped" where it applies), a check and a thin bar on the site you are on, All sites as a small chip with online now and today's total, and Add a site as a quiet row with the keys beside it (↑ ↓ enter esc, and 1–9 to open a site). The numbers load after the list opens.
 - A text field in focus gets a thin accent border and a faint glow instead of the thick ring buttons get.
 

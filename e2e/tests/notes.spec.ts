@@ -157,11 +157,10 @@ test('a share link shows notes only when the owner allows it, and never the auth
   expect(await notes()).toEqual([])
   await expect(shared.locator('.note-mark')).toHaveCount(0)
 
-  // The owner turns them on from the link's ⋯ menu.
+  // The owner turns them on from the link's row.
   await signIn(page, '/example.com')
   await page.goto(`${API}/settings?site=${site}&tab=sharing`)
-  await page.getByRole('button', { name: `notes ${tag} options` }).click()
-  await page.getByRole('menuitem', { name: 'Show notes' }).click()
+  await page.getByRole('button', { name: `Notes hidden: notes ${tag}` }).click()
   await expect(page.getByText('This link shows the notes now')).toBeVisible()
 
   await shared.reload()
