@@ -755,12 +755,12 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         )}
         {canScrub && (
           <ScrubBar
-            n={series.length}
-            at={scrubIdx}
+            n={series.length - fv}
+            at={scrubIdx < 0 ? -1 : Math.max(0, scrubIdx - fv)}
             day={scrubbing && view.day ? fmtDay(view.day, { weekday: true }) : undefined}
             onScrub={(i) => {
               setPlaying(false)
-              setDayIdx(i)
+              setDayIdx(i + fv)
             }}
             onBack={() => {
               setStory('off')

@@ -11,6 +11,7 @@ section into the release.
 
 ### Fixed
 
+- The chart rests when nothing is happening: after Replay ends it no longer keeps a white line, a dot and a greyed half. They show in full only while you hover, drag or Replay plays and fade out when it stops; a day you picked or paused on stays as a thin dashed line with a small dot. Replay's slider spans the same days as the chart, so its thumb sits at the picked day even when the chart starts at the site's first visit.
 - Live no longer shows the loading bar along the top the whole time: Live loads no report, and shows its own connection state.
 - A person's picture shows wherever their avatar does: their row in People (yours too) uses it instead of the initial, and a new or removed picture changes the header, Profile and People together, without a reload. Pictures stay on this server, and only people of the same account can load one.
 

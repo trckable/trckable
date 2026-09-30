@@ -20,10 +20,12 @@ export function useDrive({ ref, locked, vals, x, y }: DriveArgs): [RefObject<SVG
   const driven = !!locked && !reducedMotion()
   const marker = useRef<SVGCircleElement>(null)
   const frame = useRef<(pos: number) => void>(() => {})
+  const last = useRef<number | null>(null) // where the playhead was drawn last
   useLayoutEffect(() => {
     frame.current = (pos) => {
       if (pos < 0 || !ref.current) return
       const [px, py] = pointOn(vals.map((v, i) => [x(i), y(v)]), pos)
+      last.current = px
       // On the grey and the crosshair themselves: a variable set on the
       // wrapper would restyle everything under it, every frame.
       for (const el of ref.current.querySelectorAll<SVGElement>('.chart-dim, .chart-cut')) el.style.transform = `translateX(${px.toFixed(2)}px)`
@@ -38,6 +40,9 @@ export function useDrive({ ref, locked, vals, x, y }: DriveArgs): [RefObject<SVG
     const wrap = ref.current
     return () => {
       off()
+      // Handed back to the variable at the same place, so the cut fades out
+      // where the playhead stopped instead of jumping to where it last was.
+      if (last.current != null) wrap?.style.setProperty('--cut', `${last.current}px`)
       wrap?.querySelectorAll<SVGElement>('.chart-dim, .chart-cut').forEach((el) => (el.style.transform = ''))
     }
   }, [driven, ref])
