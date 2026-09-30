@@ -11,6 +11,7 @@ section into the release.
 
 ### Changed
 
+- The main chart is tidier and keeps its character: the line keeps a lighter glow, and today's point is drawn whole at the edge of the plot. Hovering no longer turns the rest of the line dark (only Replay, a drag or a picked day grey the far side, as a plain grey line), and the crosshair is lighter. Revenue under the chart is rounded columns, the hovered day in full and the others a little softer, with nothing drawn for a day without revenue. The hover card is tighter, and it leaves out a revenue block or a split of zero. The scrubber lines up with the plot, its knob under the same day's point, and the x labels give way to the date under the cursor.
 - The site switcher is more compact: 30 px rows (40 px on a phone) with a small mark and a small state dot, today's visitors as a number on the right ("setup" or "stopped" where it applies), a check and a thin bar on the site you are on, All sites as a small chip with online now and today's total, and Add a site as a quiet row with the keys beside it (↑ ↓ enter esc, and 1–9 to open a site). The numbers load after the list opens.
 - A text field in focus gets a thin accent border and a faint glow instead of the thick ring buttons get.
 

@@ -11,8 +11,8 @@
    figures below it, on a quiet tint instead of a bar. */
 .tip-note {
   display: grid;
-  gap: 3px;
-  padding: 7px 9px;
+  gap: 2px;
+  padding: 6px 9px;
   border-radius: 9px;
   background: color-mix(in srgb, var(--money) 9%, transparent);
   border: 1px solid color-mix(in srgb, var(--money) 22%, transparent);
@@ -72,7 +72,7 @@
 }
 
 .ct-big {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--text);
@@ -135,8 +135,8 @@
 .ct-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px 12px;
-  padding-top: 10px;
+  gap: 6px 12px;
+  padding-top: 8px;
   border-top: 1px solid var(--border);
 }
 

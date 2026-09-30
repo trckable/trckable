@@ -38,7 +38,7 @@ import { liveShown } from '../features/live/liveShown'
 import { useNotes } from '../features/notes/useNotes'
 import { jump } from '../features/notes/jump'
 import { Behaviour } from '../features/behaviour/Behaviour'
-import { NoteBar } from '../features/notes/NoteBar'
+import { ChartFoot } from '../features/overview/ChartFoot'
 import { Loading } from '../components/loading/Loading'
 import { FullGrid } from '../features/fullcharts/FullGrid'
 import { CreateMenu } from '../features/create/CreateMenu'
@@ -732,7 +732,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               rows.push({ label: 'Session time', value: fmtDuration(d.kpis.avg_session_s), faint: true })
               const splits = nvr.splits
               // Where the day's money came from: a flat day can be all renewals.
-              if (money && d.money && d.money.revenue > 0)
+              if (money && d.money && d.money.renewal > 0)
                 splits.push({ a: d.money.new, b: d.money.renewal, aLabel: 'new', bLabel: 'renewals', tone: 'var(--money)', fmt: fmtM })
               return { splits, rows }
             }}
@@ -762,17 +762,13 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               setPlaying(false)
               setDayIdx(i + fv)
             }}
-            onBack={() => {
-              setStory('off')
-              setPlaying(false)
-              setHourAt(null)
-              setDayIdx(null)
-            }}
           />
         )}
-        {!showInstall && !isShared() && notesOn && (full || notes.length > 0) && (
-          <NoteBar count={notes.length} onAdd={isViewer() ? undefined : () => setNoteFor(view.day ?? today)} onOpen={() => setNotesOpen(true)} />
-        )}
+        <ChartFoot
+          notes={!showInstall && !isShared() && notesOn && (full || notes.length > 0) ? { count: notes.length, onAdd: isViewer() ? undefined : () => setNoteFor(view.day ?? today), onOpen: () => setNotesOpen(true) } : undefined}
+          day={canScrub && scrubbing && view.day ? fmtDay(view.day, { weekday: true }) : undefined}
+          onBack={() => { setStory('off'); setPlaying(false); setHourAt(null); setDayIdx(null) }}
+        />
       </div>
       </section>
 

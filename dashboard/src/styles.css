@@ -732,15 +732,19 @@ button.kpi[aria-pressed='true'] {
   stroke-width: 1.5;
   pointer-events: none;
 }
-/* A day picked or paused (no pointer, drag or playback): the same cut, quiet. */
+/* A day picked or paused (no pointer, drag or playback): the same cut, quiet
+   (a dashed hairline and a small dot; the far side is grey as in playback). */
 .chart-wrap[data-quiet] .chart-cut {
   stroke: var(--text-3);
   stroke-width: 1;
   stroke-dasharray: 3 3;
   opacity: 0.6;
 }
-.chart-wrap[data-quiet] .chart-dim {
-  opacity: 0.5;
+/* Hovering only moves the crosshair: the line stays fully lit. The far side
+   of the cut goes grey (a plain grey line) only while Replay plays, a day is
+   dragged or a day is picked. */
+.chart-wrap:not([data-dim]) .chart-dim:not(.chart-unknown) {
+  opacity: 0;
 }
 .chart-wrap[data-cut='off'] .chart-dim,
 .chart-wrap[data-cut='off'] .chart-cut {
@@ -2740,7 +2744,7 @@ button.kpi-live:hover .label::after {
 /* ---- The main chart's finish ------------------------------------------------
    A soft glow under the line, and today's point breathing while it counts. */
 .chart-line {
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 50%, transparent));
 }
 .chart-now-halo {
   transform-box: fill-box;

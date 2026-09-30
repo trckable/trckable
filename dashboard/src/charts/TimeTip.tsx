@@ -49,7 +49,7 @@ export default function TimeTip({ p, i, left, notes }: { p: TimeChartProps; i: n
           </span>
         )}
       </div>
-      {p.strip && (
+      {p.strip && (p.strip.values[i] ?? 0) > 0 && (
         <div className="ct-hero money">
           <span className="ct-label">
             <i style={{ background: 'var(--money)' }} />
