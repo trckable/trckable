@@ -11,6 +11,7 @@ section into the release.
 
 ### Fixed
 
+- Connecting Paddle with one key finds the right Paddle by itself: live and sandbox keys are told apart by the key, an older key without a prefix is tried against live and then the sandbox, and a sandbox connection is tagged Sandbox and kept out of the real numbers. A key pasted with spaces or quotes is cleaned. A failed connect says what is wrong: the key wasn't accepted, which permission is missing, or that Paddle couldn't be reached.
 - Closing a dialog gives focus back to the button that opened it, also when a field in the dialog took focus as it opened.
 
 ### Changed

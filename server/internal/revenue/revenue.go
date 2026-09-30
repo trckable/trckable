@@ -187,7 +187,7 @@ func (s *Service) Connect(ctx context.Context, r ConnectRequest) (Connection, er
 	if _, ok := payments.Registry[r.Provider]; !ok {
 		return Connection{}, fmt.Errorf("unknown provider %q", r.Provider)
 	}
-	r.APIKey, r.Secret = strings.TrimSpace(r.APIKey), strings.TrimSpace(r.Secret)
+	r.APIKey, r.Secret = payments.CleanKey(r.APIKey), strings.TrimSpace(r.Secret)
 	if r.Mode != "test" {
 		r.Mode = "live"
 	}
@@ -214,7 +214,20 @@ func (s *Service) Connect(ctx context.Context, r ConnectRequest) (Connection, er
 		st, err = payments.Remotes[r.Provider].Setup(ctx, r.APIKey, r.Mode == "test", hook)
 		if err != nil {
 			drop()
+			var plain *payments.UserError
+			if errors.As(err, &plain) {
+				slog.Warn("payments: setup failed", "provider", r.Provider, "err", plain.Err)
+				return Connection{}, err
+			}
 			return Connection{}, fmt.Errorf("couldn't create the webhook: %w", err)
+		}
+		// The key decides the mode where the provider says (Stripe's livemode,
+		// Paddle's key prefix, or the environment that answered for an older
+		// Paddle key); a live key is never filed as test money. Decided before
+		// anything below undoes a setup, which must go to the same environment.
+		r.Mode = "live"
+		if st.Test {
+			r.Mode = "test"
 		}
 		if st.Secret == "" { // nothing could ever be verified: undo, don't half-connect
 			if terr := payments.Remotes[r.Provider].Teardown(ctx, r.APIKey, r.Mode == "test", st); terr != nil {
@@ -222,12 +235,6 @@ func (s *Service) Connect(ctx context.Context, r ConnectRequest) (Connection, er
 			}
 			drop()
 			return Connection{}, fmt.Errorf("couldn't create the webhook: %s created it without a signing secret; try again, or paste the secret yourself", providerTitle(r.Provider))
-		}
-		// The key decides the mode where the provider says (Stripe's livemode,
-		// Paddle's key prefix); a live key is never filed as test money.
-		r.Mode = "live"
-		if st.Test {
-			r.Mode = "test"
 		}
 	case (r.Provider == "lemonsqueezy" || r.Provider == "custom") && r.Secret == "":
 		// Both ends have to agree on a secret and neither provider hands one
