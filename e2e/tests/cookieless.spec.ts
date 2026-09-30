@@ -118,6 +118,31 @@ test('new vs returning and journeys say Off, never a number', async ({ page, bro
   await expect(page.locator('.window-body')).toContainText(`“${OFF}”`)
 })
 
+// The card's lines are written by code fetched when the browser is idle. A
+// pointer that is already on the chart when it arrives must see them, without
+// having to move.
+test('a hover card opened before its lines arrive fills in by itself', async ({ page, browserName }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.goto(API + '/example.com')
+  const site = await cookielessSite(page, page.request, `late-${browserName}-${Date.now()}`)
+  let release = () => {}
+  const held = new Promise<void>((r) => (release = r))
+  await page.route('**/assets/dayTips-*.js', async (route) => {
+    await held
+    await route.continue()
+  })
+  await page.goto(`${API}/${site.domain}?period=7d&mode=full`)
+  const chart = page.locator('.overview-chart .chart-wrap')
+  await expect(chart).toBeVisible({ timeout: 20_000 })
+  const box = (await chart.boundingBox())!
+  await page.mouse.move(box.x + box.width - 2, box.y + box.height / 2)
+  const tip = page.locator('.time-tip')
+  await expect(tip).toContainText('Visitors')
+  await expect(tip).not.toContainText(OFF)
+  release()
+  await expect(tip).toContainText(OFF)
+})
+
 test('a site with cookies still shows its numbers', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   const ctx = await page.context().browser()!.newContext()

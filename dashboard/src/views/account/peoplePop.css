@@ -28,6 +28,8 @@
 }
 .pop-list {
   display: grid;
+  /* One column as wide as the list, so a long domain is cut with an ellipsis and the list never scrolls sideways. */
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: 1px;
   min-height: 0;

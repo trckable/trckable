@@ -155,15 +155,20 @@ test('a role change never applies directly; a new owner needs one tick', async (
   await pill.click()
   await page.getByRole('menuitemradio', { name: /^Owner/ }).click()
   await tick.click()
+  await tick.focus() // a click does not focus a button in Safari: the keys below are for the checkbox
   await expect(tick).toHaveAttribute('aria-checked', 'true')
   await expect(go).toBeEnabled()
   await page.keyboard.press('Space') // unticks
   await expect(go).toBeDisabled()
   await page.keyboard.press('Space')
   await expect(go).toBeEnabled()
+  // The answer first (a refusal shows as its status), then the toast, which is
+  // only up for a few seconds: look for it the moment the change is made.
+  const changed = page.waitForResponse((r) => r.request().method() === 'PATCH' && r.url().endsWith(`/people/${personId}`))
   await page.keyboard.press('Enter')
-  await expect(ask).toHaveCount(0)
+  expect((await changed).status()).toBe(200)
   await expect(page.getByText(`${name} is now an owner`)).toBeVisible()
+  await expect(ask).toHaveCount(0)
   await expect(pill).toHaveText('Owner')
 })
 

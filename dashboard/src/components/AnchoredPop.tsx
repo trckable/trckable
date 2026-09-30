@@ -6,6 +6,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { usePhoneLock } from './lockScroll'
+import { placePop, type PopAt } from './popPlace'
 import { trapTab } from './Modal'
 import './AnchoredPop.css'
 
@@ -42,7 +43,7 @@ export function AnchoredPop({
   const box = useRef<HTMLDivElement>(null)
   const openedAt = useRef(0)
   const [sheet] = useState(phone)
-  const [at, setAt] = useState<{ left: number; top: number } | null>(null)
+  const [at, setAt] = useState<PopAt | null>(null)
   usePhoneLock()
 
   const close = () => {
@@ -58,14 +59,7 @@ export function AnchoredPop({
     const el = box.current
     const btn = anchor.current
     if (!el || !btn || sheet) return
-    const r = btn.getBoundingClientRect()
-    const w = el.offsetWidth
-    const h = el.offsetHeight
-    const below = window.innerHeight - r.bottom
-    setAt({
-      left: Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)),
-      top: below < h + 16 ? Math.max(8, r.top - h - 6) : r.bottom + 6,
-    })
+    setAt(placePop(btn.getBoundingClientRect(), { w: el.offsetWidth, h: el.offsetHeight }, { w: window.innerWidth, h: window.innerHeight }))
   }, [anchor, sheet])
 
   // In first, on what the popover marks data-autofocus, else its first choice:
@@ -141,7 +135,7 @@ export function AnchoredPop({
         className={('pop anchored ' + className).trim()}
         role="dialog"
         aria-label={label}
-        style={at ? { left: at.left, top: at.top } : { visibility: sheet ? undefined : 'hidden' }}
+        style={at ? { left: at.left, top: at.top, bottom: at.bottom, maxHeight: Math.min(420, at.room) } : { visibility: sheet ? undefined : 'hidden' }}
         onKeyDown={keys}
       >
         {children(close)}
