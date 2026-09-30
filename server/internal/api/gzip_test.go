@@ -153,7 +153,7 @@ func TestReportIsCompressedOverTheWire(t *testing.T) {
 	g := newRig(t)
 	c := client()
 	g.setup(t, c)
-	get := func(accept string) (*http.Response, []byte) {
+	get := func(accept string) (http.Header, []byte) {
 		req, _ := http.NewRequest(http.MethodGet, g.srv.URL+"/api/v1/sites/"+g.site+"/report?from=2026-08-01&to=2026-09-22&daily=1", nil)
 		req.Header.Set("Accept-Encoding", accept)
 		plain := &http.Client{Jar: c.Jar, Transport: &http.Transport{DisableCompression: true}, Timeout: 10 * time.Second}
@@ -163,15 +163,15 @@ func TestReportIsCompressedOverTheWire(t *testing.T) {
 		}
 		defer resp.Body.Close()
 		b, _ := io.ReadAll(resp.Body)
-		return resp, b
+		return resp.Header, b
 	}
 	zipped, zb := get("gzip")
 	plain, pb := get("identity")
 	if len(pb) <= gzipMin {
 		t.Skipf("the report is only %d bytes here", len(pb))
 	}
-	if zipped.Header.Get("Content-Encoding") != "gzip" || plain.Header.Get("Content-Encoding") != "" {
-		t.Fatalf("encodings: %q and %q", zipped.Header.Get("Content-Encoding"), plain.Header.Get("Content-Encoding"))
+	if zipped.Get("Content-Encoding") != "gzip" || plain.Get("Content-Encoding") != "" {
+		t.Fatalf("encodings: %q and %q", zipped.Get("Content-Encoding"), plain.Get("Content-Encoding"))
 	}
 	zr, err := gzip.NewReader(bytes.NewReader(zb))
 	if err != nil {

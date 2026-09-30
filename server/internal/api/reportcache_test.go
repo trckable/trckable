@@ -157,7 +157,7 @@ func (o *golden) reports(n int, seed int64) []string {
 		v.Set("from", day(from))
 		v.Set("to", day(to))
 		v.Set("tz", tz)
-		if b := buckets[rnd.Intn(len(buckets))]; b != "" && !(b == "hour" && from-to > 10) {
+		if b := buckets[rnd.Intn(len(buckets))]; b != "" && (b != "hour" || from-to <= 10) {
 			v.Set("bucket", b)
 		}
 		if c := compares[rnd.Intn(len(compares))]; c != "" {
@@ -214,7 +214,7 @@ func TestReportCacheNeverDiffersFromAFreshRead(t *testing.T) {
 	for d := 50; d >= 1; d-- {
 		for i := 0; i < 5; i++ {
 			at := time.Date(2026, 9, 22-d, rnd.Intn(24), rnd.Intn(60), 0, 0, time.UTC)
-			who := uint64(1 + rnd.Intn(40))
+			who := 1 + rnd.Uint64()%40
 			o.visit(at, who, channels[rnd.Intn(len(channels))], countries[rnd.Intn(len(countries))], paths[rnd.Intn(len(paths))], rnd.Intn(5) == 0)
 			if rnd.Intn(2) == 0 {
 				o.visit(at.Add(5*time.Minute), who, channels[rnd.Intn(len(channels))], countries[rnd.Intn(len(countries))], paths[rnd.Intn(len(paths))], false)
@@ -227,7 +227,7 @@ func TestReportCacheNeverDiffersFromAFreshRead(t *testing.T) {
 	o.applied()
 	// Sales, some from people who were there, some not.
 	for i := 0; i < 6; i++ {
-		o.sale("ord_"+strconv.Itoa(i), time.Date(2026, 9, 22-3-rnd.Intn(40), rnd.Intn(24), 0, 0, 0, time.UTC), uint64(1+rnd.Intn(40)), int64(1000+rnd.Intn(9000)))
+		o.sale("ord_"+strconv.Itoa(i), time.Date(2026, 9, 22-3-rnd.Intn(40), rnd.Intn(24), 0, 0, 0, time.UTC), 1+rnd.Uint64()%40, int64(1000+rnd.Intn(9000)))
 	}
 	o.sale("ord_straddle", time.Date(2026, 9, 21, 23, 55, 0, 0, time.UTC), 900, 4900)
 

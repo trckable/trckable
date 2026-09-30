@@ -80,7 +80,7 @@ func (g *gzipWriter) plain() {
 	}
 	g.ResponseWriter.WriteHeader(g.status)
 	if len(g.buf) > 0 {
-		_, _ = g.ResponseWriter.Write(g.buf)
+		_, _ = g.ResponseWriter.Write(g.buf) //nolint:gosec // the handler's own answer, held back only to decide on compression
 		g.buf = nil
 	}
 }
