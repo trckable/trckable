@@ -120,8 +120,8 @@ export function TimeChart(p: TimeChartProps) {
   // max is tweened, so on the very first frame it can still be 0 — and 0/0 is
   // a NaN in the middle of a path the browser then refuses to draw.
   const y = (v: number) => PAD_T + plotH - (v / (max || 1)) * plotH
-  // Where the data begins: what is before it is a faint dotted baseline, not a line along zero.
-  const first = p.values.findIndex((v) => v > 0) < 0 ? n : p.values.findIndex((v) => v > 0)
+  // The line runs the whole period: along zero where there is no data yet.
+  const first = 0
   const line = (a: number[], from = 0) => smooth(a.map((v, i) => [x(i), y(v)]).slice(from))
   const area = (a: number[], from = 0) => (a.length > from ? `${line(a, from)}L${x(a.length - 1).toFixed(1)} ${PAD_T + plotH}L${x(from).toFixed(1)} ${PAD_T + plotH}Z` : '')
 
@@ -211,7 +211,6 @@ export function TimeChart(p: TimeChartProps) {
             <ColumnsLayer {...cols} id={gradId} values={vals} ghost={p.ghost ? ghost : undefined} hover={hover} partialLast={p.partialLast} />
           ) : (
             <>
-              {first > 0 && <line x1={x(0)} x2={x(Math.min(first, n - 1))} y1={PAD_T + plotH} y2={PAD_T + plotH} stroke="var(--text-4)" strokeWidth="1.5" strokeDasharray="0.1 5" strokeLinecap="round" />}
               <path d={area(vals, first)} fill={`url(#${gradId})`} />
               <path className={money ? 'chart-line money' : 'chart-line'} d={line(p.partialLast && n - first > 2 ? vals.slice(0, -1) : vals, first)} fill="none" stroke={tone} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
               {p.partialLast && n - first > 2 && (
