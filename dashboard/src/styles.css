@@ -369,6 +369,36 @@ h2 {
   background: var(--bg);
   width: 100%;
 }
+/* A text field in focus: a thin accent border and a soft glow instead of the
+   thick ring buttons get (keyboard focus stays plain to see). */
+.input,
+input[type='text'],
+input[type='email'],
+input[type='search'],
+input[type='password'],
+input[type='url'],
+input[type='number'],
+textarea {
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input:focus-visible,
+input[type='text']:focus-visible,
+input[type='email']:focus-visible,
+input[type='search']:focus-visible,
+input[type='password']:focus-visible,
+input[type='url']:focus-visible,
+input[type='number']:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .input,
+  textarea {
+    transition: none;
+  }
+}
 .field {
   display: flex;
   flex-direction: column;
@@ -2804,7 +2834,7 @@ button.kpi-live:hover .label::after {
   transform: translateY(-1px);
 }
 .overview button.kpi[aria-pressed='true'] {
-  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   background:
     radial-gradient(160px 80px at 0% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 75%),
     var(--sunken);
@@ -3081,7 +3111,7 @@ body[data-mode] .overview .kpi .value,
 }
 @keyframes dot-now {
   0% {
-    box-shadow: 0 0 0 2px var(--surface), 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent);
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent);
   }
   100% {
     box-shadow: 0 0 0 2px var(--surface), 0 0 0 7px transparent;
