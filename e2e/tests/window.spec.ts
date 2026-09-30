@@ -18,7 +18,9 @@ async function box(page: Page) {
 }
 
 for (const size of SIZES) {
-  test(`Profile and settings keep one window across every section (${size.name})`, async ({ page, request }) => {
+  test(`Profile and settings keep one window across every section (${size.name})`, async ({ page, request, browserName }) => {
+    // Two windows, every section of each, each step waiting for the window to settle: WebKit takes three times Chromium's time.
+    test.slow(browserName === 'webkit')
     const sites = (await (await request.get(`${API}/api/v1/sites`, { headers: { Authorization: 'Bearer ' + TOKEN } })).json()).sites as { id: string; domain: string }[]
     const site = sites.find((s) => s.domain === 'example.com')!.id
     await page.context().addCookies([{ name: 'trckable_session', value: await session('window'), url: API }])

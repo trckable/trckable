@@ -7,6 +7,13 @@
 // release pull requests (release-*), the nightly run and a manual run. The
 // required checks report either way; a job with nothing to do passes.
 //
+// WebKit is the slow browser. A pull request runs the full Chromium and
+// Firefox suites (or the specs it changed) and, on WebKit, the key specs below
+// plus the changed ones. A full run (main, a release, the nightly run, a
+// manual run, or any change this script cannot place) runs the whole suite on
+// WebKit, in parallel shards; the required browsers check refuses to pass
+// without them.
+//
 //   node scripts/ci-select.mjs <base>   writes the selection to $GITHUB_OUTPUT (or prints it)
 //   FULL=1 node scripts/ci-select.mjs   everything
 import { appendFileSync } from 'node:fs'
@@ -36,6 +43,12 @@ const DASHBOARD = [
   ['dashboard/src/lib/useLive', ['live', 'livemode', 'journey']],
   ['dashboard/src/lib/landing', ['landing']],
 ]
+
+// The specs every pull request also runs on WebKit: the tracker and the live
+// stream, the install paths, and the screens Safari has broken before.
+const WEBKIT_SMOKE = ['chart-hover', 'cookieless', 'install', 'journey', 'landing', 'live', 'methods', 'onboarding', 'switcher', 'tracking']
+const WEBKIT_SHARDS = 3 // the whole browser suite on WebKit
+const WEBKIT_DEMO_SHARDS = 2 // the accessibility pass and the Full charts on WebKit
 
 const PROSE = /(\.md$|^(docs|\.github)\/.*\.(png|jpe?g|gif|svg|webp)$)/
 const EMBEDDED = /^server\/internal\/web\/(dist|assets)\//
@@ -90,14 +103,40 @@ export function select(files) {
   return s
 }
 
+/** One job per shard: its name, the browser, the shard ("" when whole) and the specs ("all" or names). */
+const jobs = (browser, shards, specs) => Array.from({ length: shards }, (_, i) => ({
+  name: shards > 1 ? `${browser} ${i + 1}/${shards}` : browser,
+  browser,
+  shard: shards > 1 ? `${i + 1}/${shards}` : '',
+  specs,
+}))
+
+const names = (v) => (v === ALL ? ALL : [...v].sort().join(' '))
+
+/** The browser jobs. Chromium and Firefox run what was selected; WebKit runs it all in shards on a full run, else the key specs and the changed ones. */
+export function browserMatrix(s) {
+  if (s.e2e !== ALL && s.e2e.size === 0) return []
+  const webkit = s.full ? jobs('webkit', WEBKIT_SHARDS, ALL) : jobs('webkit', 1, names(s.e2e === ALL ? new Set(WEBKIT_SMOKE) : new Set([...WEBKIT_SMOKE, ...s.e2e])))
+  return [...jobs('chromium', 1, names(s.e2e)), ...jobs('firefox', 1, names(s.e2e)), ...webkit]
+}
+
+/** The accessibility and demo-data jobs: Chromium on a pull request, all three on a full run. */
+export function demoMatrix(s) {
+  if (!s.demo) return []
+  return [...jobs('chromium', 1, ALL), ...(s.full ? [...jobs('firefox', 1, ALL), ...jobs('webkit', WEBKIT_DEMO_SHARDS, ALL)] : [])]
+}
+
+// A job whose matrix is empty is skipped by its own condition, but the matrix must still parse.
+const matrix = (m) => JSON.stringify(m.length ? m : jobs('none', 1, ALL).map((j) => ({ ...j, browser: 'chromium' })))
+
 /** The selection as GitHub Actions outputs: strings. */
 export function outputs(s) {
-  const list = (v) => (v === ALL ? ALL : [...v].sort().join(' '))
   const flag = (b) => (b ? 'true' : 'false')
   const code = s.full || s.server === ALL || s.server.size > 0 || s.e2e === ALL || s.e2e.size > 0 || s.demo || s.dashboard || s.tracker || s.image || s.crash
   return {
-    code: flag(code), full: flag(s.full), server: flag(s.race), race: flag(s.race), server_pkgs: list(s.server),
-    crash: flag(s.crash), e2e: list(s.e2e), demo: flag(s.demo), dashboard: flag(s.dashboard), tracker: flag(s.tracker), image: flag(s.image),
+    code: flag(code), full: flag(s.full), server: flag(s.race), race: flag(s.race), server_pkgs: names(s.server),
+    crash: flag(s.crash), e2e: names(s.e2e), demo: flag(s.demo), dashboard: flag(s.dashboard), tracker: flag(s.tracker), image: flag(s.image),
+    browsers: matrix(browserMatrix(s)), demo_browsers: matrix(demoMatrix(s)),
   }
 }
 
