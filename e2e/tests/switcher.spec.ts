@@ -86,9 +86,27 @@ test('pin, group, reorder by keyboard and drag, saved for the account, same orde
       await expect.poll(async () => { const l = await layout(page.request); return idx(l, c) < idx(l, b) }).toBe(true)
       await expect(row(page, c).locator('.site')).toBeFocused()
 
-      // Drag: b dropped on c goes just before it (neighbours, so no list
-      // scrolls mid-drag). Moving into a group is the ⋯ menu's, tested above.
-      await row(page, b).locator('.site').dragTo(row(page, c).locator('.site'))
+      // Drag: b dropped on the top of c goes just before it (neighbours, so no
+      // list scrolls mid-drag); the rows slide while it moves, and Esc puts
+      // it back. Moving into a group is the ⋯ menu's, tested above.
+      const grab = (await row(page, b).locator('.site').boundingBox())!
+      const over = (await row(page, c).boundingBox())!
+      await page.mouse.move(grab.x + grab.width / 2, grab.y + grab.height / 2)
+      await page.mouse.down()
+      await page.mouse.move(grab.x + grab.width / 2, over.y + 4, { steps: 10 })
+      await expect(row(page, b)).toHaveClass(/dragging/)
+      await expect.poll(async () => (await row(page, b).boundingBox())!.y < (await row(page, c).boundingBox())!.y).toBe(true)
+      if (SHOTS) await page.screenshot({ path: `${SHOTS}/switcher-drag-${browserName}.png` })
+      await page.keyboard.press('Escape')
+      await page.mouse.up()
+      await expect(row(page, b)).not.toHaveClass(/dragging/)
+      await expect(page.locator('.pop.sites')).toBeVisible()
+      await page.waitForTimeout(300)
+      expect(idx(await layout(page.request), b)).toBeGreaterThan(idx(await layout(page.request), c))
+      await page.mouse.move(grab.x + grab.width / 2, grab.y + grab.height / 2)
+      await page.mouse.down()
+      await page.mouse.move(grab.x + grab.width / 2, over.y + 4, { steps: 10 })
+      await page.mouse.up()
       await expect.poll(async () => { const l = await layout(page.request); return idx(l, b) < idx(l, c) }).toBe(true)
       if (SHOTS) await page.screenshot({ path: `${SHOTS}/switcher-${browserName}.png` })
 
@@ -170,8 +188,8 @@ test('the keys work in the list: ↑/↓ move, a number opens that site, and the
   await expect(rows.nth(1)).toBeFocused()
   await page.keyboard.press('ArrowUp')
   await expect(rows.first()).toBeFocused()
-  // Compact rows: 30 px on a desktop.
-  expect(await rows.first().evaluate((e: HTMLElement) => e.offsetHeight)).toBe(30)
+  // Compact rows: 34 px on a desktop.
+  expect(await rows.first().evaluate((e: HTMLElement) => e.offsetHeight)).toBe(34)
   const second = await rows.nth(1).getAttribute('title')
   await page.keyboard.press('2')
   await expect(page).toHaveURL(new RegExp('/' + encodeURIComponent(second!).replace(/\./g, '\\.')))

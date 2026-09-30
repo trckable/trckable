@@ -10,11 +10,11 @@ import './Share.css'
 
 type State = { state: 'loading' } | { state: 'password'; error?: string } | { state: 'ready'; info: ShareInfo } | { state: 'error'; message: string }
 
-/** An embed keeps its token in the iframe's own address (the page embedding
- *  it has it anyway) and its session in memory. */
+/** An embed keeps its session in memory, since the browser will not send a
+ *  cookie from inside another site's page. The token stays in the address (and
+ *  the page sends no Referer), so the link can be copied, bookmarked and reloaded. */
 const opened = (info: ShareInfo) => {
   if (info.session) setShareSession(info.session)
-  if (!isEmbed()) history.replaceState(null, '', '/s')
 }
 
 /** Opens the link, asking for a password only if the server says to. */
@@ -26,11 +26,11 @@ export function useShare(): State {
     const done = (info: ShareInfo) => {
       setShared(info.modules)
       setS({ state: 'ready', info })
-      // The link has been exchanged for a session: take the token out of the
-      // address bar so it is not in a screenshot, a Referer or a bookmark.
       opened(info)
     }
-    // Already under way since the script started (lib/earlyStart.ts).
+    // Already under way since the script started (lib/earlyStart.ts). With a
+    // token in the address the server opens the link: a reload of a password
+    // link is let in by the session cookie the first open left.
     const open = openShare()
     open.then(done).catch((e: unknown) => {
       if (e instanceof APIError && e.status === 401) return setS({ state: 'password' })
