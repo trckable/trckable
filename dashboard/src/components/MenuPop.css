@@ -154,3 +154,14 @@
   height: 34px;
   padding: 0 16px;
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .menu-pop-head .faint,
+    .menu-group-head
+  ) {
+    font-size: 12px;
+  }
+}

@@ -4,11 +4,14 @@
 import { hueOf } from '../../lib/visitor'
 import './visitor.css'
 
+// A phone draws them a step larger (--ph-mark in phone.css; 1 elsewhere).
+const scaled = (px: number) => `calc(${px}px * var(--ph-mark, 1))`
+
 export function Avatar({ id, size = 40, live = false }: { id: string; size?: number; live?: boolean }) {
   const hue = hueOf(id)
   const cls = live ? 'v-avatar live' : 'v-avatar'
   return (
-    <span className={cls} style={{ width: size, height: size, fontSize: Math.round(size * 0.36), ['--v-hue' as string]: String(hue) }} aria-hidden="true">
+    <span className={cls} style={{ width: scaled(size), height: scaled(size), fontSize: `max(var(--ph-mark-min, 0px), ${scaled(Math.round(size * 0.36))})`, ['--v-hue' as string]: String(hue) }} aria-hidden="true">
       {id.slice(0, 2).toUpperCase()}
     </span>
   )

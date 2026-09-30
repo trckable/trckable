@@ -249,3 +249,14 @@
 .back-link:hover {
   color: var(--text);
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .month-grid th,
+    .periods-compare .compare-text .faint
+  ) {
+    font-size: 12px;
+  }
+}

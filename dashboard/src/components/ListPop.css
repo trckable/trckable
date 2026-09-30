@@ -201,3 +201,29 @@
     animation: none !important;
   }
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .lrow .end.num
+  ) {
+    font-size: 12px;
+  }
+}
+
+/* The phone scale (phone.css): the choices in a list are finger-sized. */
+@media (max-width: 640px) {
+  :root .lopt {
+    min-height: var(--ph-sheet-row);
+    font-size: var(--ph-text-2);
+  }
+  :root .lopt > span:first-child {
+    width: 64px;
+  }
+  :root .lseg button {
+    min-width: var(--ph-hit);
+    height: var(--ph-hit);
+    font-size: var(--ph-text-2);
+  }
+}

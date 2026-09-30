@@ -7,6 +7,7 @@ import { isShared } from '../lib/me'
 import type { MoreProps } from './MoreMenu'
 import { copy } from './moreCopy'
 import './MoreItems.css'
+import './sheet.css'
 
 /** An item's key, as the shortcuts list shows it. */
 function Kbd({ id }: { id: string }) {

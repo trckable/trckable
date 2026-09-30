@@ -439,3 +439,14 @@ a.key-tile:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .people-group-head,
+    .person-name .you
+  ) {
+    font-size: 12px;
+  }
+}

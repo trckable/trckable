@@ -12,6 +12,7 @@ import { useLockScroll } from './lockScroll'
 import type { PickerValue } from './DatePicker'
 import { calendarCopy as c } from './dateRangeCopy'
 import './DateRangePopover.css'
+import './sheet.css'
 
 export default function Popover({
   value,

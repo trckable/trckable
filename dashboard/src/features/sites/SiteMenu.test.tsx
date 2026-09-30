@@ -37,9 +37,9 @@ describe('the switcher list', () => {
     expect(await menu(4)).toContain('class="pop sites mid"')
     expect(await menu(6)).toContain('class="pop sites mid"')
     expect(await menu(7)).toContain('class="pop sites compact"')
-    expect(await menu(3)).toContain('width:22px')
-    expect(await menu(5)).toContain('width:20px')
-    expect(await menu(9)).toContain('width:18px')
+    expect(await menu(3)).toContain('width:calc(22px * var(--ph-mark, 1))')
+    expect(await menu(5)).toContain('width:calc(20px * var(--ph-mark, 1))')
+    expect(await menu(9)).toContain('width:calc(18px * var(--ph-mark, 1))')
   })
 
   it('numbers the first nine sites for the 1–9 keys and marks the one you are on', async () => {

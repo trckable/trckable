@@ -43,3 +43,15 @@
   border-color: var(--accent);
   box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
 }
+
+/* The phone scale (phone.css): the box is a finger tall, and the text in it
+   16 px so the browser does not zoom the page on opening it. */
+@media (max-width: 640px) {
+  :root .select {
+    height: calc(var(--ph-hit) + 2px);
+    padding: 0 12px;
+  }
+  :root .select select {
+    font-size: var(--ph-text);
+  }
+}

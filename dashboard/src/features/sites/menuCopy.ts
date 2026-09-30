@@ -8,6 +8,7 @@ export const copy = {
   search: 'Search sites',
   noMatch: (q: string) => `No site matches “${q}”.`,
   add: 'Add a site',
+  settingsFor: (domain: string) => `Settings for ${domain}`,
   yourOrder: 'Switcher order',
   pinned: 'Pinned',
   others: 'Other sites',

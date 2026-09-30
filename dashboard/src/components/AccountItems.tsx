@@ -11,6 +11,7 @@ import { PersonAvatar } from './PersonAvatar'
 import { openShortcuts } from './ShortcutsHost'
 import { copy } from './moreCopy'
 import './MoreItems.css'
+import './sheet.css'
 
 function ThemeRow() {
   const [theme, pick] = useTheme()

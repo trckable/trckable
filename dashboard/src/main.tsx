@@ -20,8 +20,7 @@ import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
 import { setRole } from "./lib/me";
 import { NoneShared, useGate } from "./features/onboarding/Gate";
-// Settings and the account dialog are their own screens: the dashboard should
-// not carry them.
+// Settings and the account dialog are their own screens: the dashboard should not carry them.
 // Sign-in and first-run setup are for the minutes before someone is in: a
 // signed-in owner never downloads them.
 const Setup = lazy(() => import("./views/Auth").then((m) => ({ default: m.Setup })));
@@ -35,6 +34,7 @@ import { ShortcutsHost } from "./components/ShortcutsHost";
 // A shared link is its own entry point: no setup, no sign-in, one site.
 const SharedSite = lazy(() => import("./views/SharedSite"));
 import { Toasts } from "./components/Toast";
+import "./phone.css"; // last: what it sets on a phone wins over the styles imported before it
 
 try {
   applyTheme(localStorage.getItem("trckable:theme") ?? "system");

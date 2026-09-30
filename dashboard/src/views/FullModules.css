@@ -46,3 +46,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .funnel-meta
+  ) {
+    font-size: 12px;
+  }
+}

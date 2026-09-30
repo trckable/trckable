@@ -44,3 +44,14 @@
     display: none;
   }
 }
+
+/* The phone scale (phone.css): the list is a sheet; each choice a finger tall
+   with its hint at 13 px. */
+@media (max-width: 640px) {
+  :root .create-btn {
+    width: var(--ph-hit);
+  }
+  :root .create-item .faint {
+    font-size: var(--ph-small);
+  }
+}

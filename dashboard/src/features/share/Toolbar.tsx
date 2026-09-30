@@ -58,7 +58,7 @@ export function Toolbar({ site, sites, onSite, look, set, metrics }: Props) {
           </button>
           <div className="sd-swatches" role="radiogroup" aria-label={copy.accent}>
             {accentsFor(site.color).map((c) => (
-              <button key={c} type="button" role="radio" aria-checked={look.accent === c} aria-label={c} className="sd-swatch" style={{ background: c }} onClick={() => set({ accent: c })} />
+              <button key={c} type="button" role="radio" aria-checked={look.accent === c} aria-label={c} className="sd-swatch" style={{ backgroundColor: c }} onClick={() => set({ accent: c })} />
             ))}
           </div>
         </>

@@ -223,3 +223,29 @@
   background: none;
   cursor: pointer;
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .eu-col-head
+  ) {
+    font-size: 12px;
+  }
+}
+
+/* The phone scale (phone.css): a 44 px box for the small controls here. */
+@media (max-width: 640px) {
+  :root .pv-jump button {
+    min-height: var(--ph-hit);
+  }
+  :root .eu-more summary {
+    display: flex;
+    align-items: center;
+    min-height: var(--ph-hit);
+  }
+  :root .request-find .input {
+    min-height: var(--ph-hit);
+    font-size: var(--ph-text);
+  }
+}

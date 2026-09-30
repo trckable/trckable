@@ -506,3 +506,102 @@ body[data-mode] .live-head-row h2,
 .live-line .cursor-pill {
   bottom: -24px;
 }
+
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .live-meta,
+    .live-axis,
+    .live-ago,
+    .live-foot
+  ) {
+    font-size: 12px;
+  }
+}
+
+/* The phone scale (phone.css): text at 15 and 16 px, rows a finger tall and
+   at least 52 px, the chart a little shorter so the list starts higher. */
+@media (max-width: 640px) {
+  :root .live-view {
+    gap: var(--ph-gap);
+  }
+  :root .live-head-row {
+    padding: 12px var(--ph-pad);
+    min-height: var(--ph-row);
+  }
+  :root body[data-mode] .live-head-row h2,
+  :root .live-head-row h2 {
+    font-size: var(--ph-text);
+  }
+  :root .live-meta {
+    font-size: var(--ph-small);
+  }
+  :root .live-label {
+    font-size: var(--ph-text-2);
+  }
+  :root .live-figures {
+    padding: 12px var(--ph-pad) 0;
+  }
+  :root .live-delta {
+    font-size: var(--ph-small);
+  }
+  :root .live-chart {
+    height: 160px;
+    padding: 6px 0 8px;
+  }
+  :root .live-axis {
+    padding: 6px var(--ph-pad) 0;
+    font-size: 12px;
+  }
+  :root .live-sources,
+  :root .live-revenue {
+    padding: 14px var(--ph-pad);
+    gap: 10px;
+  }
+  :root .live-legend {
+    font-size: var(--ph-text-2);
+    gap: 4px 16px;
+  }
+  :root .live-swatch {
+    width: 12px;
+    height: 12px;
+  }
+  :root .live-none {
+    font-size: var(--ph-text-2);
+  }
+  :root .live-sold {
+    font-size: var(--ph-small);
+  }
+  :root .live-row > .live-open,
+  :root .live-row:not(:has(> .live-open)) {
+    min-height: var(--ph-row);
+    padding: 8px var(--ph-pad);
+    gap: 12px;
+  }
+  :root .live-page {
+    font-size: 15.5px;
+  }
+  :root .live-from {
+    font-size: var(--ph-small);
+  }
+  :root .live-ago {
+    padding: 1px 9px;
+    font-size: var(--ph-small);
+  }
+  :root .live-country {
+    font-size: var(--ph-text-2);
+  }
+  :root .live-foot {
+    padding: 10px var(--ph-pad);
+    font-size: 12px;
+  }
+  :root .live-more {
+    min-height: var(--ph-hit);
+    font-size: var(--ph-text-2);
+  }
+  :root .cookieless-note {
+    font-size: var(--ph-small);
+  }
+}

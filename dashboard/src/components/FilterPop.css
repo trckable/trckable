@@ -146,3 +146,25 @@
     transition: none;
   }
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .lsearch .faint,
+    .lrow .sub
+  ) {
+    font-size: 12px;
+  }
+}
+
+/* The phone scale (phone.css): the search box of the Filter list. */
+@media (max-width: 640px) {
+  :root .lsearch {
+    height: var(--ph-sheet-row);
+  }
+  :root .lsearch input {
+    height: var(--ph-hit);
+    font-size: var(--ph-text);
+  }
+}

@@ -175,3 +175,15 @@
     left: 0;
   }
 }
+
+/* The phone scale (phone.css): the box is a finger tall. */
+@media (max-width: 640px) {
+  :root .ie {
+    --ie-h: var(--ph-hit);
+    font-size: var(--ph-text);
+  }
+  :root .ie.lg {
+    --ie-h: var(--ph-sheet-row);
+    font-size: 20px;
+  }
+}

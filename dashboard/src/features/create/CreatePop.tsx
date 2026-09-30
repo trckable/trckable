@@ -6,6 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { CreateId } from '../../lib/modules'
 import { copy } from './copy'
+import '../../components/sheet.css'
 
 type Item = { id: CreateId; icon: LucideIcon; label: string; hint: string; run: () => void }
 

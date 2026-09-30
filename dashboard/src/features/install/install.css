@@ -476,3 +476,25 @@
     justify-content: center;
   }
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .inst-step-n
+  ) {
+    font-size: 12px;
+  }
+}
+
+/* The phone scale (phone.css): a 44 px box for the small controls here. */
+@media (max-width: 640px) {
+  :root .inst-tab {
+    min-height: var(--ph-hit);
+  }
+  :root :is(.inst-docs, .linkish) {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--ph-hit);
+  }
+}

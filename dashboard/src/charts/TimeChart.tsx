@@ -13,6 +13,7 @@ import { timeCopy } from './copy'
 import { smooth } from './smooth'
 import { bucketLabel, everyNth, fractionScale, peakIndex, threeScale } from './timeScale'
 import { useCut } from './useCut'
+import { usePin } from './usePin'
 import { ColumnsLayer, NoteMarkers, RevenueLayer, TimeTip, preloadMoney } from './chartParts'
 import { SPLIT_GAP, SPLIT_H, columnWidth, isDense, moneyScale } from './moneyPlot'
 import { NoteAdd } from './NoteAdd'
@@ -77,8 +78,7 @@ export function TimeChart(p: TimeChartProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [w, setW] = useState(900)
   const [picked, setHover] = useState<number | null>(null)
-  // While Replay plays nothing is picked (and what was picked is let go of).
-  if (p.locked && picked !== null) setHover(null)
+  if (p.locked && picked !== null) setHover(null) // while Replay plays nothing is picked, and what was picked is let go of
   const hover = p.locked ? null : picked
   const [drag, setDrag] = useState(false)
   const money = p.tone === 'money'
@@ -138,12 +138,11 @@ export function TimeChart(p: TimeChartProps) {
   const markers = useMemo(() => markersFor(p.notes ?? [], p.labels, p.bucket), [p.notes, p.labels, p.bucket])
   const scrub = p.scrub ?? null
   const quiet = !p.locked && !drag && hover == null // a picked day is drawn quietly unless hovered, dragged or played
-  // Only these grey the far side of the cut: plain hovering never does.
-  const dim = !!p.locked || drag || (scrub != null && hover == null)
+  const dim = !!p.locked || drag || (scrub != null && hover == null) // only these grey the far side of the cut: plain hovering never does
   const { follow, release, onKey, marker, driven } = useCut({ ref, n, hover, scrub, locked: p.locked, vals, setHover, x, y })
   const leave = () => { release(); setHover(null); setDrag(false) }
-  // Beside the point when there is room, never past either edge: on a phone
-  // the card is nearly as wide as the chart, and it used to leave the screen.
+  const pin = usePin(ref, hover != null, leave)
+  // Beside the point, never past either edge (on a phone the card is nearly as wide as the chart).
   const compact = w < 600 // a phone: a slim card that covers little of the plot
   const tipW = compact ? 160 : 244
   const tipAt = hover != null ? tipLeft(x(hover), w, tipW) : 0
@@ -168,10 +167,10 @@ export function TimeChart(p: TimeChartProps) {
         follow(e.clientX - e.currentTarget.getBoundingClientRect().left, i)
         setHover(i)
       }}
-      onPointerLeave={leave}
+      onPointerLeave={pin.leave}
       onPointerDown={(e) => {
         if (!n || p.locked) return
-        // A finger has no hover: touching the chart is hovering it.
+        pin.down(e)
         if (!p.onScrub) {
           setHover(indexAt(e.currentTarget, e.clientX))
           return

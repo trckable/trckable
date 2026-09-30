@@ -180,7 +180,7 @@ export function WidgetsSettings({ site }: { site: Site }) {
                   aria-checked={look.accent === c}
                   aria-label={c || "trckable's own"}
                   className={'wg-swatch' + (c ? '' : ' own')}
-                  style={c ? { background: c } : undefined}
+                  style={c ? { backgroundColor: c } : undefined}
                   onClick={() => set({ accent: c })}
                 />
               ))}

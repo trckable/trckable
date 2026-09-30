@@ -22,13 +22,16 @@ export function monogram(domain: string): string {
   return (bare.match(/[\p{L}\p{N}]/u)?.[0] ?? '').toUpperCase()
 }
 
+// A phone draws the mark a step larger (--ph-mark in phone.css; 1 elsewhere).
+const scaled = (px: number) => `calc(${px}px * var(--ph-mark, 1))`
+
 export function SourceMark({ channel, referrer, goal = false, size = 28 }: { channel: string; referrer?: string; goal?: boolean; size?: number }) {
   const color = goal ? 'var(--accent)' : channelColor(channel || 'Direct')
   const letter = !goal && referrer ? monogram(referrer) : ''
-  const style = { width: size, height: size, color, ['--v-ring' as string]: color }
+  const style = { width: scaled(size), height: scaled(size), color, ['--v-ring' as string]: color }
   if (letter) {
     return (
-      <span className="v-mark letter" style={{ ...style, fontSize: Math.round(size * 0.46) }} aria-hidden="true">
+      <span className="v-mark letter" style={{ ...style, fontSize: `max(var(--ph-mark-min, 0px), ${scaled(Math.round(size * 0.46))})` }} aria-hidden="true">
         {letter}
       </span>
     )

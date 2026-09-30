@@ -49,3 +49,14 @@
   background: var(--grid);
   opacity: 0.35;
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .cohort-head,
+    .cohort-week b
+  ) {
+    font-size: 12px;
+  }
+}
