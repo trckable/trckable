@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -125,6 +126,44 @@ func (r *Remote) Upload(ctx context.Context, file string) error {
 	return err
 }
 
+// Download copies one backup from the bucket into dir, under its own name,
+// and returns the file's path. The name is a bare backup name from List,
+// never a path, so nothing lands outside dir.
+func (r *Remote) Download(ctx context.Context, name, dir string) (string, error) {
+	if name == "" || name != path.Base(name) || !strings.HasSuffix(name, ".tkb") {
+		return "", fmt.Errorf("%q is not the name of a backup (trckable-….tkb)", name)
+	}
+	req, err := r.request(ctx, http.MethodGet, r.Prefix+name, nil, nil, emptyHash)
+	if err != nil {
+		return "", err
+	}
+	res, err := r.Client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+	if res.StatusCode/100 != 2 {
+		return "", r.failed(req, res)
+	}
+	out := filepath.Join(dir, name)
+	f, err := os.OpenFile(out, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600) //nolint:gosec // a bare backup name inside the directory the operator gave
+	if err != nil {
+		return "", err
+	}
+	n, err := io.Copy(f, io.LimitReader(res.Body, MaxUpload+1))
+	if cerr := f.Close(); err == nil {
+		err = cerr
+	}
+	if err == nil && n > MaxUpload {
+		err = fmt.Errorf("%s is larger than any backup this server writes", name)
+	}
+	if err != nil {
+		_ = os.Remove(out)
+		return "", err
+	}
+	return out, nil
+}
+
 // List returns the backups in the bucket, newest first.
 func (r *Remote) List(ctx context.Context) ([]string, error) {
 	var names []string
@@ -231,19 +270,24 @@ func (r *Remote) do(req *http.Request) ([]byte, error) {
 		return nil, err
 	}
 	defer res.Body.Close()
-	body, _ := io.ReadAll(io.LimitReader(res.Body, 8<<20))
 	if res.StatusCode/100 != 2 {
-		var e struct {
-			Code    string `xml:"Code"`
-			Message string `xml:"Message"`
-		}
-		_ = xml.Unmarshal(body, &e) // not every error body is S3's XML; the status below covers those
-		if e.Code != "" {
-			return nil, fmt.Errorf("%s %s: %s (%s)", req.Method, r.Where(), e.Code, e.Message)
-		}
-		return nil, fmt.Errorf("%s %s: %s", req.Method, r.Where(), res.Status)
+		return nil, r.failed(req, res)
 	}
-	return body, nil
+	return io.ReadAll(io.LimitReader(res.Body, 8<<20))
+}
+
+// failed says why the bucket refused a request, in S3's words when its body has them.
+func (r *Remote) failed(req *http.Request, res *http.Response) error {
+	body, _ := io.ReadAll(io.LimitReader(res.Body, 64<<10))
+	var e struct {
+		Code    string `xml:"Code"`
+		Message string `xml:"Message"`
+	}
+	_ = xml.Unmarshal(body, &e) // not every error body is S3's XML; the status below covers those
+	if e.Code != "" {
+		return fmt.Errorf("%s %s: %s (%s)", req.Method, r.Where(), e.Code, e.Message)
+	}
+	return fmt.Errorf("%s %s: %s", req.Method, r.Where(), res.Status)
 }
 
 // sign adds AWS Signature Version 4 to req.

@@ -443,6 +443,9 @@ usage:
                                that instances read with TRCKABLE_GEO_DIR
   trckabled restore <file> <dir>
                                unpack a backup into an empty directory
+  trckabled restore s3:[name] <dir>
+                               the same from the TRCKABLE_BACKUP_S3 bucket: a
+                               backup by name, or the newest with s3: alone
   trckabled import <site> <file.ndjson|csv>
                                bring history in from another tool (one row per
                                pageview or goal; "-" reads standard input)
@@ -596,10 +599,34 @@ func geoCmd(args []string) error {
 	return nil
 }
 
+// fromBucket fetches a backup from the off-site bucket into dir: the one
+// named, or the newest when no name is given.
+func fromBucket(ctx context.Context, bucket, name, dir string) (string, error) {
+	r, err := backup.ParseRemote(bucket)
+	if err != nil {
+		return "", err
+	}
+	if r == nil {
+		return "", errors.New("restore s3: needs TRCKABLE_BACKUP_S3, the bucket the backups were copied to")
+	}
+	if name == "" {
+		names, err := r.List(ctx)
+		if err != nil {
+			return "", err
+		}
+		if len(names) == 0 {
+			return "", fmt.Errorf("no backups in %s", r.Where())
+		}
+		name = names[0]
+	}
+	fmt.Printf("downloading %s from %s\n", name, r.Where())
+	return r.Download(ctx, name, dir)
+}
+
 // restoreCmd turns a backup into a data directory the server starts from.
 func restoreCmd(cfg config.Config, args []string) error {
 	if len(args) < 2 {
-		return errors.New("usage: trckabled restore <file.tkb> <empty dir>")
+		return errors.New("usage: trckabled restore <file.tkb | s3:[name]> <empty dir>")
 	}
 	// The key must be the one that wrote the backup. secrets.Load would
 	// quietly make a new one if there were none, and every restore would
@@ -616,7 +643,18 @@ func restoreCmd(cfg config.Config, args []string) error {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	res, err := server.Restore(ctx, args[0], args[1], box.Derive("backup"))
+	file := args[0]
+	if name, ok := strings.CutPrefix(file, "s3:"); ok {
+		tmp, err := os.MkdirTemp("", "trckable-restore-")
+		if err != nil {
+			return err
+		}
+		defer func() { _ = os.RemoveAll(tmp) }()
+		if file, err = fromBucket(ctx, cfg.BackupS3, name, tmp); err != nil {
+			return err
+		}
+	}
+	res, err := server.Restore(ctx, file, args[1], box.Derive("backup"))
 	if err != nil {
 		return err
 	}
