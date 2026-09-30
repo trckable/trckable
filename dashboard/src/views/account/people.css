@@ -58,7 +58,8 @@
 .person.waiting .person-avatar {
   opacity: 0.6;
 }
-.person-avatar {
+.person-avatar,
+.avatar.person-avatar {
   display: grid;
   place-items: center;
   width: 40px;
@@ -69,8 +70,11 @@
   border: 1px solid var(--border);
   color: var(--text-2);
   font-weight: 600;
+  font-size: inherit;
+  overflow: hidden;
 }
-.person-avatar.owner {
+.person-avatar.owner,
+.avatar.person-avatar.owner {
   background: var(--accent-soft);
   border-color: color-mix(in srgb, var(--accent) 35%, transparent);
   color: var(--accent);
