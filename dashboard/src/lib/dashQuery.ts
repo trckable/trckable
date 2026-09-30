@@ -36,9 +36,10 @@ export function queryOf(view: ViewState, range: Range): ReportQuery {
 
 /** Starts fetching the report a site's dashboard opens with, at the current
  *  address's period and filters: pointing at a site in the switcher does it,
- *  so the numbers are there by the click. */
-export function prefetchSite(site: Pick<Site, 'id' | 'timezone' | 'week_start'>) {
-  const view = readView(new URLSearchParams(location.search))
+ *  so the numbers are there by the click, and so does the page's start-up
+ *  (lib/earlyStart.ts). */
+export function prefetchSite(site: Pick<Site, 'id' | 'timezone' | 'week_start'>, params = new URLSearchParams(location.search)) {
+  const view = readView(params)
   if (view.live) return
   // "This week" depends on the site's first weekday; put the current one back.
   const was = weekStartsOn()
@@ -46,4 +47,19 @@ export function prefetchSite(site: Pick<Site, 'id' | 'timezone' | 'week_start'>)
   const q = queryOf(view, rangeOf(view, todayIn(site.timezone)))
   setWeekStart(was)
   void cachedReport(site.id, q).catch(() => undefined)
+}
+
+/** Starts fetching the periods the picker offers first (Today, 7, 30 and 90
+ *  days) as they would open from the current address, with its filters and
+ *  comparison: picking one then shows its numbers at once. The one already
+ *  chosen is skipped, and Now, which is the live view, has no report. */
+export function prefetchPeriods(site: string, timezone: string, ids: string[]) {
+  const view = readView(new URLSearchParams(location.search))
+  const today = todayIn(timezone)
+  for (const id of ids) {
+    if (id === 'now' || id === view.period) continue
+    // Leaving Now leaves its hourly detail behind, as picking a period does.
+    const next = { ...view, period: id, from: undefined, to: undefined, day: undefined, bucket: view.period === 'now' ? undefined : view.bucket }
+    void cachedReport(site, queryOf(next, rangeOf(next, today))).catch(() => undefined)
+  }
 }

@@ -31,6 +31,7 @@ import { replaySeconds, speedOf } from '../features/overview/replayTime'
 import { firstVisitAt, hourIn, hourlySpan, previousWhole } from '../features/overview/firstVisit'
 import { chartMetric, ghostValues, metricName, metricProps, metricValues, type ChartMetric } from '../features/overview/chartMetric'
 import { chartTips } from '../features/overview/chartTips'
+import { useChartHold } from '../features/overview/reserve'
 import { LiveSlot } from '../features/live/liveChunk'
 import { OnlineKpi } from '../features/live/OnlineKpi'
 import { entryCopy } from '../features/live/entryCopy'
@@ -177,9 +178,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       .then((r) => setSegments(r.segments ?? []))
       .catch(() => setSegments([]))
   }, [site.id])
-  useEffect(() => {
-    loadSegments()
-  }, [loadSegments])
+  useEffect(() => loadSegments(), [loadSegments])
   // Naming a view gets a real dialog. The browser's prompt() looks like it
   // belongs to some other website, and it cannot say what is being saved.
   const [naming, setNaming] = useState(false)
@@ -500,6 +499,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
   const narrow = useNarrow()
   const name = metricName(metric)
+  const hold = useChartHold({ site: site.id, mods, narrow, view, range, loaded: !!real, hasRevenue: !!money })
   // Replay's controls stay out while nothing is playing or picked.
   const active = playing || telling || scrubbing || (!!hours && hourAt !== null)
   const rows = full ? 12 : 5
@@ -568,7 +568,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           active={view.filters.map((f) => ({ key: f.dim + f.value, dim: DIM_LABEL[f.dim] ?? f.dim, value: filterLabel(f.dim, f.value), remove: () => removeFilter(f) }))}
           under={(view.filters.length > 0 || !!rowProps.views?.list.length) && <FilterRowHost {...rowProps} onlyViews={narrow} />}
           filter={!isShared() && <FilterMenu rows={dims} labelFor={filterLabel} active={view.filters} onPick={addFilter} onRemove={removeFilter} onClear={clearFilters} />}
-          period={<DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone}
+          period={<DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone} site={site.id}
             bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />}
           share={!isShared() && !narrow && <ShareButton onShare={() => setSharing(true)} />}
           more={
@@ -628,7 +628,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           top, the chart under them — they are one story, not two cards. */}
       <section className="card overview" aria-label="Overview">
       <KpiStrip
-        loading={firstLoad} vs={vs} metric={metric} can={canDraw} onPick={pick}
+        loading={firstLoad} vs={vs} metric={metric} can={canDraw} onPick={pick} expectMoney={hold.revenue}
         k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow}
         // A shared page has no live stream, so it says where the number comes from instead of waiting to connect forever.
         online={<OnlineKpi online={online} canOpen={!isShared()} note={stream.connected || isShared() ? entryCopy.onlineNote : entryCopy.connecting} />}
@@ -686,7 +686,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         {/* Until a short span's hours, or the notes that may move a new
             site's start, arrive: never one chart first, then a jump. */}
         {firstLoad || (byHour && !hours) || (firstVisit > 0 && !notesReady) ? (
-          <Loading height={narrow ? 170 : 220} />
+          <Loading height={hold.height} />
         ) : (
           <TimeChart
             height={narrow ? 170 : 220}
