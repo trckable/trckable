@@ -1,29 +1,19 @@
 // A heading in the switcher: Pinned, a named group, or the other sites. A
 // group's heading folds it and has its own ⋯ menu (rename, move, remove);
-// every heading takes a dropped site.
+// a site dragged onto any heading goes first under it (useReorder).
 import { ChevronRight } from 'lucide-react'
 import { Menu } from '../../components/Menu'
 import { confirm, confirmWith } from '../../components/Confirm'
 import { copy } from './menuCopy'
-import { moveTo, removeGroup, renameGroup, stepGroup, type Place } from './layout'
+import { removeGroup, renameGroup, stepGroup, type Place } from './layout'
 import type { Arrange } from './SiteMenu'
-import { DRAG, dragging } from './drag'
 
 const TITLE: Record<'pinned' | 'rest', string> = { pinned: copy.pinned, rest: copy.others }
 
 export function SectionHead({ place, count, shut, onFold, arrange: a }: { place: Place; count: number; shut: boolean; onFold: () => void; arrange: Arrange | null }) {
-  const drop = {
-    onDragOver: (e: React.DragEvent) => a && dragging(e) && e.preventDefault(),
-    onDrop: (e: React.DragEvent) => {
-      e.preventDefault()
-      const id = e.dataTransfer.getData(DRAG)
-      a?.setDrag(null)
-      if (a && id) a.save(moveTo(a.sites, a.layout, id, place))
-    },
-  }
   if (place.kind !== 'group')
     return (
-      <h3 className="site-head" {...drop}>
+      <h3 className="site-head">
         {TITLE[place.kind]}
       </h3>
     )
@@ -37,7 +27,7 @@ export function SectionHead({ place, count, shut, onFold, arrange: a }: { place:
     if (ok && a) a.save(removeGroup(a.layout, name), copy.removeGroup)
   }
   return (
-    <h3 className="site-head group" {...drop}>
+    <h3 className="site-head group">
       <button type="button" className="fold" aria-expanded={!shut} onClick={onFold}>
         <ChevronRight size={14} strokeWidth={2} aria-hidden="true" />
         <span>{copy.collapse(name, count)}</span>

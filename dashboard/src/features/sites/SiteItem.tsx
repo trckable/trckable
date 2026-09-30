@@ -1,8 +1,8 @@
 // One site in the switcher: its mark and state dot, today's visitors, a click
-// to open it, and (for anyone who may arrange) a drag handle's worth of row,
+// to open it, and (for anyone who may arrange) a row to drag (useReorder),
 // Alt + ↑/↓, and a ⋯ menu with every move, so a phone and a keyboard can do
 // what a mouse does.
-import { Check } from 'lucide-react'
+import { Check, GripVertical } from 'lucide-react'
 import { stoppedWhy, type Site } from '../../lib/api'
 import { Menu } from '../../components/Menu'
 import { SiteMark } from '../../components/SiteMark'
@@ -13,7 +13,6 @@ import { copy as first } from './copy'
 import { addGroup, moveTo, pin, placeKey, step, unpin, type Place } from './layout'
 import { dotState, StateDot } from './StateDot'
 import type { Arrange } from './SiteMenu'
-import { DRAG, dragging } from './drag'
 import { MARK, type Density } from './density'
 import { prefetchSite } from '../../lib/dashQuery'
 import './SiteItem.css'
@@ -49,25 +48,11 @@ export function SiteItem({ site, place, on, arrange, today, key1, density = 'com
   return (
     <li
       data-site={site.id}
-      className={a?.drag === site.id ? 'site-row dragging' : 'site-row'}
-      draggable={!!a}
-      onDragStart={(e) => {
-        e.dataTransfer.effectAllowed = 'move'
-        e.dataTransfer.setData(DRAG, site.id)
-        // Restyled a frame later: changing the row as the drag starts makes
-        // Safari drop the drag.
-        requestAnimationFrame(() => a?.setDrag(site.id))
-      }}
-      onDragEnd={() => a?.setDrag(null)}
-      onDragOver={(e) => a && dragging(e) && e.preventDefault()}
-      onDrop={(e) => {
-        e.preventDefault()
-        const id = e.dataTransfer.getData(DRAG)
-        a?.setDrag(null)
-        if (!a || !id || id === site.id) return
-        a.save(moveTo(a.sites, a.layout, id, place, site.id))
-      }}
+      className={['site-row', a && 'sortable', a?.drag === site.id && 'dragging'].filter(Boolean).join(' ')}
+      onPointerDown={(e) => a?.grab(e, site.id)}
+      onDragStart={(e) => e.preventDefault()}
     >
+      {a && <GripVertical className="grip" size={12} strokeWidth={2.25} aria-hidden="true" />}
       <button
         type="button"
         data-stop

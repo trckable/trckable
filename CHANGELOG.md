@@ -18,6 +18,11 @@ section into the release.
 - Picking a period shows what was read for it before at once, however old, and refreshes it in the background; a period that is over is kept for two minutes instead of ten seconds. Opening the period list starts fetching Today, 7, 30 and 90 days, so the pick is already there. Any change to a site's settings, payments or data drops what was kept for it.
 - The server keeps a report for a period that has ended for hours instead of ten minutes, and drops only what a change can reach: a late or repeated visit, a refund, a new exchange rate, a zone, currency or setting change, or a retention delete. Its numbers are checked to be the same as a fresh read.
 - The page no longer shifts while the first numbers load: the chart, its revenue plot and the key numbers keep the room they will take. Bars and their figures settle in about a tenth of a second, and rows no longer slide to new places.
+- A shared link keeps its address (`/s/<token>`) after it opens, so it can be copied, bookmarked and reloaded; a reload, including of a password link, goes straight back in while the session lasts, and a shared page sends no Referer.
+- A shared link's header is one row on a desktop: the site's name on the left, the period, comparison and ⋯ on the right.
+- On a desktop the Live | Data switch is in the header's right group, before the account; a phone or tablet keeps it in the row under the header.
+- The pulsing dot beside Online now is no longer cut off at its edge.
+- The site switcher's rows have a little more air on a desktop (4 px taller, the mark a bit further from the name). Dragging a site is now live: a grip shows at the row's edge, the row you hold lifts and follows the pointer, the others slide aside into the new order, dropping saves it, and Esc puts it back.
 
 ## 0.5.7 (30 Sep 2026)
 

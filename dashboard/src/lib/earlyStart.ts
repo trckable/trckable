@@ -8,8 +8,9 @@ import { prefetchSite } from './dashQuery'
 import { landing } from './landing'
 import { siteForSegment } from './siteRoute'
 
-/** The token out of /s/<token>. It is in the address bar once; after that the
- *  browser carries a session cookie instead, so it stays out of logs. */
+/** The token out of /s/<token>. It stays in the address bar, so the link can
+ *  be copied, bookmarked and reloaded; the page sends no Referer, and the API
+ *  calls after the first carry a session cookie instead. */
 export const shareToken = () => {
   const m = /^\/s\/([^/]+)/.exec(location.pathname)
   return m ? decodeURIComponent(m[1]) : ''
@@ -22,9 +23,9 @@ export const onSharePage = () => location.pathname === '/s' || location.pathname
 
 let opening: Promise<ShareInfo> | null = null
 
-/** Opens the link, once however many ask. With a token in the address this is
- *  a first open; without one it is a reload, and the cookie from the first
- *  open answers instead. */
+/** Opens the link, once however many ask. With a token in the address the
+ *  server opens it (a reload of a password link is let in by the session the
+ *  first open left); an address cut short to /s has only that cookie to go by. */
 export function openShare(): Promise<ShareInfo> {
   opening ??= shareToken()
     ? api.openShare(shareToken(), undefined, isEmbed())
@@ -42,9 +43,8 @@ function startShare() {
   openShare()
     .then((info) => {
       if (info.session) setShareSession(info.session)
-      // A full-page link loses its query when it is opened (views/Share.tsx), so the dashboard starts from the defaults; an embed keeps its own.
-      const params = isEmbed() ? new URLSearchParams(location.search) : new URLSearchParams()
-      prefetchSite({ id: 'shared', timezone: info.timezone }, params)
+      // The address keeps its query, so the dashboard starts from it.
+      prefetchSite({ id: 'shared', timezone: info.timezone }, new URLSearchParams(location.search))
     })
     .catch(() => undefined) // the page itself shows why it could not open
 }

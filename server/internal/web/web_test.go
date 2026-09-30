@@ -287,3 +287,16 @@ func TestDashboardRefusesGzipAndRangesArePlain(t *testing.T) {
 		t.Errorf("range: %d %q %q", w.Code, w.Header().Get("Content-Encoding"), w.Body.Bytes())
 	}
 }
+
+// A shared page's address holds its token, so nothing leaves it as a Referer;
+// every other page keeps the address inside this origin.
+func TestSharedPagesSendNoReferer(t *testing.T) {
+	h := Dashboard()
+	for path, want := range map[string]string{"/s/sometoken": "no-referrer", "/s": "no-referrer", "/": "same-origin", "/settings": "same-origin"} {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest("GET", path, nil))
+		if got := w.Header().Get("Referrer-Policy"); got != want {
+			t.Errorf("%s: Referrer-Policy %q, want %q", path, got, want)
+		}
+	}
+}

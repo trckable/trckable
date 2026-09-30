@@ -535,6 +535,32 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     }
   }, [full])
 
+  // The second row (a shared link on a desktop has it in the header's row); before the first visit there is nothing to switch or date, so it waits.
+  const controls = !waiting && (
+    <ControlRow
+      live={liveView}
+      phone={narrow}
+      value={pickerValue}
+      today={today}
+      onChange={onPicker}
+      active={view.filters.map((f) => ({ key: f.dim + f.value, dim: DIM_LABEL[f.dim] ?? f.dim, value: filterLabel(f.dim, f.value), remove: () => removeFilter(f) }))}
+      under={(view.filters.length > 0 || !!rowProps.views?.list.length) && <FilterRowHost {...rowProps} onlyViews={narrow} />}
+      filter={!isShared() && <FilterMenu rows={dims} labelFor={filterLabel} active={view.filters} onPick={addFilter} onRemove={removeFilter} onClear={clearFilters} />}
+      period={<DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone} site={site.id} bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />}
+      share={!isShared() && !narrow && <ShareButton onShare={() => setSharing(true)} />}
+      more={
+        <MoreMenu
+          full={full}
+          onShare={narrow && !isShared() ? () => setSharing(true) : undefined}
+          onViews={narrow && !isShared() && segments.length > 0 ? () => savedViews.set(true) : undefined}
+          milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
+          onMode={(m) => setView({ mode: m })} onRefresh={reloadNow}
+          onExport={() => downloadCsv(site.id, query)}
+        />
+      }
+    />
+  )
+  const inHeader = isShared() && !narrow
   return (
     <>
       {!liveView && (firstLoad || loading) && <div className="loadbar" role="status" aria-label="Loading" />/* Live loads no report: it shows its own connection */}
@@ -552,37 +578,11 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             </button>
           )}
         />
+        {inHeader && controls}
         {!liveView && !waiting && <Suspense fallback={null}><CreateMenu pages={dims('entry_page')} goals={src?.goals ?? []} modules={mods} onGoal={() => setAddGoals(true)} onNote={() => setNoteFor(view.day ?? today)} onFunnel={(f) => setView({ mode: 'full', funnel: f })} /></Suspense>}
       </div>
 
-      {/* The second row: Live/Data on the left, the period and filter and
-          ⋯ on the right (Live drops all but the switch). Before the first
-          visit there is nothing to switch or date, so the row waits too. */}
-      {!waiting && (
-        <ControlRow
-          live={liveView}
-          phone={narrow}
-          value={pickerValue}
-          today={today}
-          onChange={onPicker}
-          active={view.filters.map((f) => ({ key: f.dim + f.value, dim: DIM_LABEL[f.dim] ?? f.dim, value: filterLabel(f.dim, f.value), remove: () => removeFilter(f) }))}
-          under={(view.filters.length > 0 || !!rowProps.views?.list.length) && <FilterRowHost {...rowProps} onlyViews={narrow} />}
-          filter={!isShared() && <FilterMenu rows={dims} labelFor={filterLabel} active={view.filters} onPick={addFilter} onRemove={removeFilter} onClear={clearFilters} />}
-          period={<DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone} site={site.id}
-            bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />}
-          share={!isShared() && !narrow && <ShareButton onShare={() => setSharing(true)} />}
-          more={
-            <MoreMenu
-              full={full}
-              onShare={narrow && !isShared() ? () => setSharing(true) : undefined}
-              onViews={narrow && !isShared() && segments.length > 0 ? () => savedViews.set(true) : undefined}
-              milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
-              onMode={(m) => setView({ mode: m })} onRefresh={reloadNow}
-              onExport={() => downloadCsv(site.id, query)}
-            />
-          }
-        />
-      )}
+      {!inHeader && controls}
 
       {liveView && (
         <LiveSlot key={site.id} site={site.id} timezone={site.timezone} cookieless={site.cookieless} stream={stream} onVisitor={journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined} />

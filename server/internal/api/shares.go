@@ -25,8 +25,9 @@ const shareCookie = "trckable_share"
 const sharePasswordTries = 20
 
 // sharePath is where the browser sends the share cookie back. The link's token
-// appears in the address bar once; every request after that carries a session
-// instead, so it stays out of logs and Referer headers.
+// stays in the page's address (and the page sends no Referer); every API
+// request after the first carries a session instead, so the token stays out
+// of the API's logs.
 const sharePath = "/api/v1/share"
 
 func (a *API) shares(w http.ResponseWriter, r *http.Request) {
@@ -163,7 +164,13 @@ func (a *API) openShare(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusTooManyRequests, "too many wrong passwords for this link: try again in a few minutes")
 		return
 	}
-	sh, err := a.Ctl.OpenShare(r.Context(), in.Token, in.Password, a.Now())
+	// A reload of /s/<token> arrives without the password: the session this
+	// browser already holds on the same link answers for it.
+	sh, held := a.heldShare(r, in.Token)
+	var err error
+	if !held || in.Password != "" {
+		sh, err = a.Ctl.OpenShare(r.Context(), in.Token, in.Password, a.Now())
+	}
 	if busy(w, err) {
 		return
 	}
@@ -209,6 +216,13 @@ func (a *API) openShare(w http.ResponseWriter, r *http.Request) {
 // link: someone who guesses wrong passwords can hold the link shut for
 // strangers, but not for the people already reading it.
 func (a *API) openedHere(r *http.Request, token string) bool {
+	_, ok := a.heldShare(r, token)
+	return ok
+}
+
+// heldShare is the link this browser already holds a live session on, when
+// it is the one the token belongs to.
+func (a *API) heldShare(r *http.Request, token string) (sqlite.Share, bool) {
 	session := r.Header.Get(shareHeader)
 	if session == "" {
 		if c, err := r.Cookie(shareCookie); err == nil {
@@ -216,10 +230,13 @@ func (a *API) openedHere(r *http.Request, token string) bool {
 		}
 	}
 	if session == "" {
-		return false
+		return sqlite.Share{}, false
 	}
 	sh, err := a.ShareFromSession(r, session)
-	return err == nil && sh.ID != "" && sh.ID == a.Ctl.ShareIDForToken(r.Context(), token)
+	if err != nil || sh.ID == "" || sh.ID != a.Ctl.ShareIDForToken(r.Context(), token) {
+		return sqlite.Share{}, false
+	}
+	return sh, true
 }
 
 // shared resolves the cookie to a link, and answers plainly when it cannot.

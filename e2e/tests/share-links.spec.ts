@@ -136,3 +136,42 @@ test('a phone sees the name and one line of small icons, and nothing spills side
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
   await shot(page, 'form-390')
 })
+
+test('a shared link keeps its address: a reload goes back in, a password link without asking again', async ({ page, browser, browserName }) => {
+  test.skip(browserName !== 'chromium', 'one browser is enough for the address')
+  const site = await open(page)
+  const made = async (data: object) => {
+    const res = await page.request.post(`${API}/api/v1/sites/${site}/shares`, { headers: H, data })
+    return ((await res.json()) as { url: string }).url
+  }
+  const locked = await made({ name: 'Locked', password: 'phrase phrase phrase' })
+  const plain = await made({ name: 'Plain' })
+  const reader = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+  const tab = await reader.newPage()
+
+  // Open the locked link, give the password: the address is still the link.
+  const first = await tab.goto(locked)
+  expect(first!.headers()['referrer-policy']).toBe('no-referrer')
+  await tab.getByLabel('Password').fill('phrase phrase phrase')
+  await tab.getByRole('button', { name: 'Open' }).click()
+  await expect(tab.locator('.header')).toBeVisible()
+  expect(tab.url()).toBe(locked)
+  // One row: the name on the left, the period and ⋯ on the right, centred together.
+  const mid = async (sel: string) => {
+    const b = (await tab.locator(sel).first().boundingBox())!
+    return b.y + b.height / 2
+  }
+  expect(Math.abs((await mid('.header .share-who')) - (await mid('.header .ctl-see')))).toBeLessThanOrEqual(8)
+
+  // A reload is let in by its session; another link does not borrow it.
+  await tab.reload()
+  await expect(tab.locator('.header .share-who')).toContainText('Locked')
+  expect(tab.url()).toBe(locked)
+  await tab.goto(plain)
+  await expect(tab.locator('.header .share-who')).toContainText('Plain')
+  expect(tab.url()).toBe(plain)
+  // The session is now the plain link's: the locked one asks again.
+  await tab.goto(locked)
+  await expect(tab.getByLabel('Password')).toBeVisible()
+  await reader.close()
+})

@@ -10,8 +10,9 @@ export const copy = {
   // The Live view.
   region: entryCopy.live,
   onlineNow: entryCopy.onlineNow,
-  title: 'Live · last 30 minutes',
-  rightNow: 'Right now · updates on its own',
+  title: 'Live',
+  window: 'Last 30 minutes',
+  regionNow: 'Live, last 30 minutes',
   reconnecting: 'Reconnecting…',
   loading: 'Loading the last 30 minutes…',
   failed: 'Couldn’t load the last 30 minutes. Trying again…',

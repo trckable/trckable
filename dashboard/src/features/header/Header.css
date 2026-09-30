@@ -207,6 +207,18 @@
   margin: 0;
   flex: none;
 }
+/* A desktop has Live/Data in the header's right group, as tall as the site's card (38 px). */
+.header-tools .view-switch button {
+  height: 30px;
+}
+/* A shared link on a desktop has this row in the header's own row. */
+.header > .subbar {
+  order: 3;
+  margin-top: 0;
+}
+.header > .ctl-under {
+  flex: 1 1 100%;
+}
 
 /* Live fits one screen and Data scrolls: the scrollbar's room is always
    kept (where it takes room at all), so switching never moves the header

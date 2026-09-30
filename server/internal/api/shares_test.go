@@ -137,6 +137,16 @@ func TestSharePassword(t *testing.T) {
 	if code, _ := do(t, anon, "GET", g.srv.URL+"/api/v1/share/me", ""); code != 200 {
 		t.Error("the session did not stick")
 	}
+	// A reload of /s/<token> sends the token alone: the session this browser
+	// holds on the same link lets it in, and only that link.
+	if code, res := do(t, anon, "POST", g.srv.URL+"/api/v1/share/open", `{"token":"`+token+`"}`); code != 200 || res["domain"] == nil {
+		t.Errorf("a reload with the session was asked for the password: %d %v", code, res)
+	}
+	_, other := do(t, c, "POST", g.srv.URL+"/api/v1/sites/"+g.site+"/shares", `{"name":"y","password":"another password 1"}`, csrf, "1")
+	otherURL := other["url"].(string)
+	if code, _ := do(t, anon, "POST", g.srv.URL+"/api/v1/share/open", `{"token":"`+otherURL[len(otherURL)-26:]+`"}`); code != http.StatusUnauthorized {
+		t.Errorf("the session of one link opened another: %d", code)
+	}
 	// A token that never existed says so, without saying whether it might have.
 	if code, _ := do(t, client(), "POST", g.srv.URL+"/api/v1/share/open", `{"token":"aaaaaaaaaaaaaaaaaaaaaaaaaa"}`); code != http.StatusNotFound {
 		t.Error("an invented token was not refused")
