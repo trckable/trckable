@@ -1704,8 +1704,6 @@ ul.people button:hover {
   /* The install step carries a snippet somebody has to read. */
   width: min(720px, 100%);
   max-width: 720px;
-  gap: 20px;
-  padding: 26px 28px 22px;
 }
 /* ---- Searchable picker ----------------------------------------------------- */
 .picker {
@@ -1729,25 +1727,19 @@ ul.people button:hover {
 .wiz-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
-  margin: 6px -20px -20px;
-  padding: 14px 20px;
-  border-top: 1px solid var(--grid);
+  margin-top: 8px;
 }
-/* The first child is the way out, so it sits left and everything else right. */
-.wiz-actions > :first-child {
-  margin-right: auto;
+/* The way out sits beside the primary, quiet. */
+.wiz-actions > .btn {
+  height: 44px;
 }
 @media (max-width: 560px) {
-  .wiz-actions {
-    flex-wrap: wrap-reverse;
-  }
-  .wiz-actions > .btn {
-    flex: 1 1 140px;
+  .wiz-actions > .btn.primary {
+    flex: 1;
     justify-content: center;
-  }
-  .wiz-actions > :first-child {
-    margin-right: 0;
   }
 }
 .wiz-done {

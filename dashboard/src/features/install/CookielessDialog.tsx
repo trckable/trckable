@@ -4,6 +4,7 @@
 import { Cookie, ExternalLink } from 'lucide-react'
 import { useRef } from 'react'
 import { DialogActions } from '../../components/DialogActions'
+import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../components/Modal'
 import { CookielessTable } from './CookielessTable'
 import { copy } from './copy'
@@ -22,18 +23,15 @@ export function CookielessDialog({ on, onCancel, onConfirm }: { on: boolean; onC
   return (
     <Modal label={title} className="confirm-modal cl-modal" onClose={onCancel} keepSize={false}>
       <div ref={box} className="confirm-body cl-dialog">
-        <span className="modal-badge" aria-hidden="true">
-          <Cookie size={20} strokeWidth={1.75} />
-        </span>
-        <div className="confirm-text">
-          <h2>{title}</h2>
-          <CookielessTable toCookies={on} />
-          <p className="faint cl-back">{t.switchBack}</p>
+        <DialogHead icon={Cookie} heading={title} />
+        <CookielessTable toCookies={on} />
+        <p className="faint cl-back">
+          {t.switchBack}{' '}
           <a className="inst-docs" href={PRIVACY_DOCS} target="_blank" rel="noreferrer">
             {t.docsLink}
             <ExternalLink size={13} strokeWidth={1.75} aria-hidden="true" />
           </a>
-        </div>
+        </p>
         <DialogActions
           left={
             <button type="button" className="btn ghost" onClick={onCancel} autoFocus>

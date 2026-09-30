@@ -4,6 +4,8 @@
 // stays. Enter confirms only while the button is on.
 import { Check, Globe, KeyRound, Lock, UserPlus, Eye, type LucideIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { DialogActions } from '../../components/DialogActions'
+import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../components/Modal'
 import { messageOf, type Person } from '../../lib/api'
 import { people } from './peopleCopy'
@@ -54,7 +56,7 @@ export default function RoleDialog({ p, role, run, onClose }: { p: Person; role:
           submit()
         }}
       >
-        <h2>{title}</h2>
+        <DialogHead icon={promote ? KeyRound : Eye} heading={title} />
         <ul className="role-lines">
           {lines.map((l, i) => {
             const Icon = icons[i]
@@ -88,15 +90,18 @@ export default function RoleDialog({ p, role, run, onClose }: { p: Person; role:
             {err}
           </p>
         )}
-        <div className="role-actions">
-          <button type="button" className="btn" disabled={busy} onClick={onClose}>
-            {t.cancel}
-          </button>
+        <DialogActions
+          left={
+            <button type="button" className="btn ghost" disabled={busy} onClick={onClose}>
+              {t.cancel}
+            </button>
+          }
+        >
           <button ref={goBtn} type="submit" className="btn primary" disabled={!allowed}>
             {busy && <span className="btn-spin" aria-hidden="true" />}
             {busy ? t.busy : go}
           </button>
-        </div>
+        </DialogActions>
       </form>
     </Modal>
   )

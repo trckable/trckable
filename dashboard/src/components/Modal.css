@@ -6,27 +6,28 @@
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  animation: fade-in 0.2s ease both;
+  animation: fade-in 0.16s ease both;
   display: grid;
   place-items: center;
   padding: 16px;
   z-index: 40;
 }
 
-/* Every dialog: a soft light from the top corner, and a small pop as it
-   opens. The same look as the shortcuts list, which is where it started. */
+/* Every dialog: a soft light from the top corner, and a small fade and scale
+   as it opens (and as it closes, through Modal's leaving copy). One padding,
+   one radius, one gap, on the 8 px scale. */
 .modal {
-  width: min(460px, 100%);
+  width: min(480px, 100%);
   background:
     radial-gradient(520px 200px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
     var(--surface);
   border: 1px solid var(--border-2);
-  border-radius: 18px;
+  border-radius: 16px;
   box-shadow: var(--shadow), 0 30px 80px rgb(0 0 0 / 0.35);
-  padding: 22px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   /* A tall dialog scrolls inside itself. Centred content that overflows would
      otherwise push its own heading off the top of the screen, out of reach. */
   max-height: calc(100vh - 32px);
@@ -34,7 +35,35 @@
 }
 
 .modal.rise {
-  animation: modal-pop 0.34s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: modal-in 0.16s ease-out both;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes modal-out {
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* The copy Modal leaves behind for 160 ms when a dialog closes: it fades and
+   scales out, and nothing in it can be reached. */
+.modal-back.leaving {
+  pointer-events: none;
+  animation: fade-out 0.16s ease both;
+}
+.modal-back.leaving .modal {
+  animation: modal-out 0.16s ease-in both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -48,7 +77,6 @@
   /* max-width alone would lose to .modal's own width, so both move. */
   width: min(560px, 100%);
   max-width: 560px;
-  gap: 12px;
 }
 
 /* A dialog that is a form: the form disappears from the layout so its fields
@@ -57,8 +85,65 @@
   display: contents;
 }
 
+/* A plain heading, where a dialog has no DialogHead. */
+.modal > h2,
+.modal > .modal-form > h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
 .modal:focus {
   outline: none;
+}
+
+/* ---- A phone: every dialog is a bottom sheet -----------------------------------
+   The same content, at the bottom edge over the dimmed page, rounded on top,
+   with a grab line, rising as the phone's other sheets do. A window (Settings,
+   Profile) stays a full screen of its own, and the dialogs that draw a sheet
+   of their own (Share, Milestones, the visit's journey, the row sheet) keep it. */
+@media (max-width: 640px) {
+  .modal-back:has(> .modal:not(.window, .journey-dialog, .sd-modal, .row-sheet, .ms-window)) {
+    place-items: end center;
+    padding: 0;
+  }
+  .modal:not(.window, .journey-dialog, .sd-modal, .row-sheet, .ms-window) {
+    width: 100%;
+    max-width: none;
+    max-height: 92dvh;
+    padding: 28px 20px max(20px, env(safe-area-inset-bottom));
+    border-width: 1px 0 0;
+    border-radius: 20px 20px 0 0;
+    background:
+      linear-gradient(var(--border-2), var(--border-2)) center 10px / 36px 4px no-repeat,
+      radial-gradient(520px 200px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
+      var(--surface);
+  }
+  .modal.rise:not(.window, .journey-dialog, .sd-modal, .row-sheet, .ms-window) {
+    animation: modal-sheet-up 0.22s var(--ease) both;
+  }
+  .modal-back.leaving .modal {
+    animation: modal-sheet-down 0.16s ease-in both;
+  }
+}
+@keyframes modal-sheet-up {
+  from {
+    opacity: 0.6;
+    transform: translateY(32px);
+  }
+}
+@keyframes modal-sheet-down {
+  to {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal.rise:not(.window, .journey-dialog, .sd-modal, .row-sheet, .ms-window),
+  .modal-back.leaving .modal,
+  .modal-back.leaving {
+    animation: none;
+  }
 }
 
 /* The phone scale (phone.css): fields at 16 px (a phone's browser zooms into
