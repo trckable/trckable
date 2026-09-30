@@ -287,7 +287,7 @@ for (const width of [390, 360]) {
     await sheet.getByRole('button', { name: 'Done' }).click()
     await expect(sheet).toBeHidden()
     await expect(pill).toBeFocused()
-    await expect(pill).toContainText('Last 7 days')
+    await expect(pill).toContainText('7 days')
     await expect(pill).not.toContainText('filter')
 
     // Escape closes it and returns focus; More hands over to the date-range picker.

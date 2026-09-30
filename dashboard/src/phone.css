@@ -26,13 +26,14 @@
     --ph-ctl: 8px; /* between controls in a row */
     --ph-mark: 1.2; /* a site's mark, scaled from its desktop size */
     --ph-mark-min: 12px; /* and the letter in it */
+    --note-half: calc(var(--ph-hit) / 2); /* half a note flag's box: the chart keeps it whole, and its words clear it */
   }
   /* ---- The 12 px floor -------------------------------------------------------
      Every text rule that is under 12 px on a desktop is raised to 12 here;
      a component that loads later has its own list in its own file (its last
      block, "The 12 px floor"). The parts of the phone scale below then set
      what they want above it. */
-  :is(.cursor-pill, .cols, .app-footer) {
+  :is(.cursor-pill, .cols, .app-footer, .note-count) {
     font-size: 12px;
   }
   /* ---- The header: the ghost, the site, search, the avatar, all 46 px ---- */
