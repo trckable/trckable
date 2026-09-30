@@ -216,6 +216,7 @@ func (s *Service) Connect(ctx context.Context, r ConnectRequest) (Connection, er
 			drop()
 			var plain *payments.UserError
 			if errors.As(err, &plain) {
+				slog.Warn("payments: setup failed", "provider", r.Provider, "err", plain.Err)
 				return Connection{}, err
 			}
 			return Connection{}, fmt.Errorf("couldn't create the webhook: %w", err)

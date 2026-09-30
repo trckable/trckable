@@ -35,13 +35,13 @@ func statusOf(err error) int {
 
 // paddleProblem says in words what Paddle's answer means. perms are the
 // permissions the failed call needs: Paddle answers 403 without naming them.
-func paddleProblem(err error, perms ...string) error {
+func paddleProblem(ctx context.Context, err error, perms ...string) error {
 	switch st := statusOf(err); {
 	case st == http.StatusUnauthorized:
 		return &UserError{msgPaddleRejected, err}
 	case st == http.StatusForbidden && len(perms) > 0:
 		return missingPermissions(err, perms)
-	case st >= 500, st == 0 && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded):
+	case st >= 500, st == 0 && ctx.Err() == nil: // a client timeout is Paddle not answering
 		return &UserError{msgPaddleUnreachable, err}
 	}
 	return err
@@ -58,14 +58,18 @@ func missingPermissions(err error, perms []string) error {
 // probe reads one row of a list: the cheapest call that shows the key works
 // in this environment and holds the permission to read that list.
 func (a *PaddleAPI) probe(ctx context.Context, key string, sandbox bool, list string) error {
-	return call(ctx, "GET", a.baseURL(sandbox)+"/"+list+"?per_page=1", paddleHdr(key), nil, nil)
+	return callN(ctx, probeAttempts, "GET", a.baseURL(sandbox)+"/"+list+"?per_page=1", paddleHdr(key), nil, nil)
 }
+
+// probeAttempts: the owner is waiting on a probe, so a slow Paddle gets one
+// more try instead of the four (and the minute of waiting) a background call has.
+const probeAttempts = 2
 
 // environment finds out which Paddle the key belongs to: the prefix says so;
 // a key without one is tried against live and, when live doesn't know it
 // (401) or won't let it in (403), once against the sandbox. When both refuse
-// it, live's answer is the one reported, unless the sandbox knew the key and
-// refused something else. The transactions list is the probe.
+// it (401, or 403 from both), live's answer is the one reported, unless the
+// sandbox knew the key and refused something else. The transactions list is the probe.
 func (a *PaddleAPI) environment(ctx context.Context, key string) (sandbox bool, err error) {
 	switch {
 	case strings.HasPrefix(key, "pdl_sdbx_"):
@@ -81,7 +85,7 @@ func (a *PaddleAPI) environment(ctx context.Context, key string) (sandbox bool, 
 	if sandboxErr == nil {
 		return true, nil
 	}
-	if statusOf(sandboxErr) == http.StatusUnauthorized {
+	if st := statusOf(sandboxErr); st == http.StatusUnauthorized || (st == http.StatusForbidden && statusOf(liveErr) == http.StatusForbidden) {
 		return false, liveErr
 	}
 	return true, sandboxErr
@@ -98,11 +102,11 @@ func (a *PaddleAPI) Setup(ctx context.Context, key string, _ bool, hookURL strin
 		missing, err = append(missing, permTransactionRead), nil
 	}
 	if err != nil {
-		return Setup{}, paddleProblem(err)
+		return Setup{}, paddleProblem(ctx, err)
 	}
 	if err := a.probe(ctx, key, sandbox, "adjustments"); err != nil {
 		if statusOf(err) != http.StatusForbidden {
-			return Setup{}, paddleProblem(err)
+			return Setup{}, paddleProblem(ctx, err)
 		}
 		missing = append(missing, permAdjustmentRead)
 	}
@@ -118,7 +122,7 @@ func (a *PaddleAPI) Setup(ctx context.Context, key string, _ bool, hookURL strin
 		} `json:"data"`
 	}
 	if err := call(ctx, "POST", a.baseURL(sandbox)+"/notification-settings", paddleHdr(key), jsonBody(body), &out); err != nil {
-		return Setup{}, paddleProblem(err, permNotificationWrite)
+		return Setup{}, paddleProblem(ctx, err, permNotificationWrite)
 	}
 	return Setup{RemoteID: out.Data.ID, Secret: out.Data.EndpointSecretKey, Label: "Paddle", Test: sandbox}, nil
 }

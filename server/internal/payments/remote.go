@@ -100,6 +100,11 @@ var RetryWait = func(ctx context.Context, d time.Duration) error {
 }
 
 func call(ctx context.Context, method, u string, hdr map[string]string, body io.Reader, out any) error {
+	return callN(ctx, maxAttempts, method, u, hdr, body, out)
+}
+
+// callN is call with its own cap on the attempts.
+func callN(ctx context.Context, attempts int, method, u string, hdr map[string]string, body io.Reader, out any) error {
 	var payload []byte
 	if body != nil {
 		b, err := io.ReadAll(body)
@@ -122,7 +127,7 @@ func call(ctx context.Context, method, u string, hdr map[string]string, body io.
 		case ctx.Err() == nil:
 			retry = idempotent // network error
 		}
-		if !retry || attempt >= maxAttempts {
+		if !retry || attempt >= attempts {
 			return err
 		}
 		if wait <= 0 {

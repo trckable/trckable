@@ -37,3 +37,8 @@ export function modeTag(provider: string) {
   if (SANDBOX_NAMED.has(provider)) return 'Sandbox'
   return 'test mode'
 }
+
+/** Paddle's key says live or sandbox itself, so the switch has no say once a key is typed. */
+export function keyPicksMode(provider: string, key: string) {
+  return provider === 'paddle' && key.trim() !== ''
+}

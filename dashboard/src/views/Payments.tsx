@@ -11,7 +11,7 @@ import { Ghost } from '../components/Logo'
 import { useEffect, useState } from 'react'
 import { api, messageOf, type PayConnection, type Provider, type Site } from '../lib/api'
 import { navigate } from '../lib/url'
-import { modeTag, statusOf, testModeName } from '../lib/payments'
+import { keyPicksMode, modeTag, statusOf, testModeName } from '../lib/payments'
 import { CodeBlock } from '../components/Code'
 import { Picker } from '../components/Picker'
 import { confirmWith, useConfirm } from '../components/Confirm'
@@ -586,7 +586,7 @@ function Connect({ site, provider, onCancel, onDone }: { site: Site; provider: P
           <h2>Connect {provider.name}</h2>
         </div>
 
-        {provider.has_modes && (
+        {provider.has_modes && !keyPicksMode(provider.id, key) && (
           <div className="seg" role="group" aria-label="Mode" style={{ alignSelf: 'flex-start' }}>
             <button type="button" aria-pressed={mode === 'live'} onClick={() => setMode('live')}>
               Live

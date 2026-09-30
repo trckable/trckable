@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 )
 
 // paddleFake answers by environment: env(sandbox) → path → status. A path
@@ -156,6 +157,41 @@ func TestPaddleUnreachableAndServerErrors(t *testing.T) {
 	}
 }
 
+// A client timeout is Paddle not answering, not the owner giving up: it is
+// told as "couldn't reach", and the probe is tried once more, not four times.
+func TestPaddleTimeoutIsUnreachable(t *testing.T) {
+	old := HTTPClient
+	HTTPClient = &http.Client{Timeout: 50 * time.Millisecond}
+	t.Cleanup(func() { HTTPClient = old })
+	waits := noWait(t)
+	f := newPaddleFake(t, nil)
+	release := make(chan struct{})
+	f.sandbox.route = func(http.ResponseWriter, *http.Request, []byte) { <-release }
+	t.Cleanup(func() { close(release) })
+	_, err := f.setup("pdl_sdbx_apikey_01_x_y")
+	if err == nil || err.Error() != msgPaddleUnreachable || f.sandbox.called("GET /transactions") != probeAttempts || len(*waits) != probeAttempts-1 {
+		t.Fatalf("%v: %d probes, waits %v", err, f.sandbox.called("GET /transactions"), *waits)
+	}
+	// The owner leaving is not Paddle being down.
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := f.api.Setup(ctx, "pdl_sdbx_apikey_01_x_y", false, "https://stats.example/webhooks/paddle/pc_1"); err == nil || err.Error() == msgPaddleUnreachable {
+		t.Fatalf("a cancelled request: %v", err)
+	}
+}
+
+// When live and the sandbox both answer 403, live's answer is the one
+// reported, and the sandbox is not asked anything else.
+func TestPaddleBothForbiddenReportsLive(t *testing.T) {
+	noWait(t)
+	denied := map[string]int{"GET /transactions": 403}
+	f := newPaddleFake(t, map[string]map[string]int{"live": denied, "sandbox": denied})
+	_, err := f.setup("0123456789abcdef0123456789abcdef0123456789abcdef01")
+	if err == nil || err.Error() != "This Paddle key is missing a permission: transaction.read." || f.sandbox.called("GET /adjustments") != 0 {
+		t.Fatalf("%v, sandbox %v", err, f.sandbox.calls)
+	}
+}
+
 func TestPaddleErrorsNeverCarryTheKey(t *testing.T) {
 	noWait(t)
 	key := "pdl_sdbx_apikey_01hsecretsecretsecret_x_y"
@@ -170,7 +206,7 @@ func TestPaddleErrorsNeverCarryTheKey(t *testing.T) {
 }
 
 func TestCleanKey(t *testing.T) {
-	for in, want := range map[string]string{
+	for in, want := range map[string]string{ //nolint:gosec // made-up keys for tests only
 		"  pdl_live_apikey_x \n": "pdl_live_apikey_x",
 		`"pdl_live_apikey_x"`:    "pdl_live_apikey_x",
 		"'pdl_live_apikey_x' ":   "pdl_live_apikey_x",
