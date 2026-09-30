@@ -12,7 +12,7 @@ section into the release.
 ### Changed
 
 - Faster to open and to switch: the dashboard's script, styles and every JSON answer over 1 KB are compressed on the wire (brotli or gzip, whichever the browser takes; the files are compressed once at build time, and live streams are never buffered). A shared link asks for its session and its first report the moment the script runs, and so does a signed-in dashboard for the site the address names, instead of waiting for the page to render first.
-- Picking a period shows what was read for it before at once, however old, and refreshes it in the background; a period that is over is kept for ten minutes instead of ten seconds. Opening the period list starts fetching Today, 7, 30 and 90 days, so the pick is already there. Any change to a site's settings, payments or data drops what was kept for it.
+- Picking a period shows what was read for it before at once, however old, and refreshes it in the background; a period that is over is kept for two minutes instead of ten seconds. Opening the period list starts fetching Today, 7, 30 and 90 days, so the pick is already there. Any change to a site's settings, payments or data drops what was kept for it.
 - The server keeps a report for a period that has ended for hours instead of ten minutes, and drops only what a change can reach: a late or repeated visit, a refund, a new exchange rate, a zone, currency or setting change, or a retention delete. Its numbers are checked to be the same as a fresh read.
 - The page no longer shifts while the first numbers load: the chart, its revenue plot and the key numbers keep the room they will take. Bars and their figures settle in about a tenth of a second, and rows no longer slide to new places.
 

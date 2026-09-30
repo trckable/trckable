@@ -12,6 +12,12 @@ import (
 // costs more to compress than it saves, and most of the API answers small.
 const gzipMin = 1024
 
+// plainAnswers are the routes whose answers stay uncompressed.
+var plainAnswers = map[string]bool{
+	"GET /api/v1/sites/{site}/shares": true,
+	"GET /api/v1/sites/{site}/alerts": true,
+}
+
 // withGzip compresses a text answer larger than gzipMin for a browser that
 // accepts gzip. It decides on the answer's own type and size, so a live stream
 // (text/event-stream) is never buffered: its first write or flush passes

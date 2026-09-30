@@ -96,6 +96,10 @@ func (a *API) Routes(mux *http.ServeMux) {
 	// another account: a route added later is tested without being listed.
 	handle := func(pattern string, h http.Handler) {
 		a.patterns = append(a.patterns, pattern)
+		if plainAnswers[pattern] { // what the list names carries secrets next to free text: not compressed
+			mux.Handle(pattern, withTiming(h))
+			return
+		}
 		mux.Handle(pattern, withGzip(withTiming(h)))
 	}
 	handleFunc := func(pattern string, f http.HandlerFunc) { handle(pattern, f) }

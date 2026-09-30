@@ -6,10 +6,10 @@ const answer = () => new Response(JSON.stringify({ site: 's', current: {} }), { 
 const NOW = Date.UTC(2026, 8, 30, 12, 0, 0)
 
 describe('how long a report is kept', () => {
-  it('keeps a period that is over for ten minutes, one with today in it for ten seconds', () => {
-    expect(reportTtl({ to: '2026-09-28' }, NOW)).toBe(600_000)
+  it('keeps a period that is over for two minutes, one with today in it for ten seconds', () => {
+    expect(reportTtl({ to: '2026-09-28' }, NOW)).toBe(120_000)
     expect(reportTtl({ to: '2026-09-30' }, NOW)).toBe(10_000)
-    expect(reportTtl({ to: '2026-09-29' }, NOW)).toBe(600_000)
+    expect(reportTtl({ to: '2026-09-29' }, NOW)).toBe(120_000)
     // At 11:00 UTC a site 12 hours behind it is still on the 29th: that day is not over.
     expect(reportTtl({ to: '2026-09-29' }, Date.UTC(2026, 8, 30, 11, 0, 0))).toBe(10_000)
   })
@@ -49,6 +49,19 @@ describe('the report cache', () => {
     await call('POST', '/payments/start-over', {})
     expect(peekReport('a', past)).toBeUndefined()
     expect(peekReport('b', past)).toBeUndefined()
+  })
+
+  it('does not keep or share a read that a write overtook', async () => {
+    let release = () => {}
+    fetchMock.mockImplementationOnce(() => new Promise<Response>((r) => (release = () => r(answer()))))
+    const slow = cachedReport('a', past)
+    await call('PATCH', '/sites/a', { timezone: 'UTC' }) // drops while the read is out
+    const again = cachedReport('a', past) // not the read from before the write
+    release()
+    await slow
+    await again
+    expect(fetchMock).toHaveBeenCalledTimes(3) // the slow report, the write, a fresh report
+    expect(peekReport('a', past)).toBeDefined() // the fresh one is kept, the old one was not
   })
 
   it('hands back an old report to show while a new one is asked for', async () => {

@@ -851,17 +851,22 @@ export const api = {
 
 // A tiny request cache so hovering, re-opening a period, or switching back to
 // a site is instant. The server caches too; this saves the round trip. A
-// period that is over cannot change (bar a late event), so it is kept for ten
-// minutes; one that includes today for ten seconds, and the live stream asks
+// period that is over cannot change (bar a late event or a payment note), so it
+// is kept for two minutes (the server can drop its own copy sooner than a
+// browser can know); one that includes today for ten seconds, and the live stream asks
 // again the moment a visit lands.
 const cache = new Map<string, { at: number; data: Report }>()
-const inflight = new Map<string, Promise<Report>>()
+const inflight = new Map<string, { gen: number; p: Promise<Report> }>()
+// Moves whenever reports are dropped: a read that began before is answered,
+// but neither kept nor shared with a later ask.
+let generation = 0
 const SHORT_MS = 10_000
-const CLOSED_MS = 600_000
+const CLOSED_MS = 120_000
 const KEPT = 96
 
 /** Forget cached reports for a site, so the next read really asks the server. */
 export function dropReports(site?: string) {
+  generation++
   for (const key of [...cache.keys()]) if (!site || key.startsWith(site)) cache.delete(key)
 }
 
@@ -877,18 +882,22 @@ export function cachedReport(site: string, q: ReportQuery, maxAgeMs = reportTtl(
   const hit = cache.get(key)
   if (hit && Date.now() - hit.at < maxAgeMs) return Promise.resolve(hit.data)
   const running = inflight.get(key)
-  if (running) return running
+  if (running && running.gen === generation) return running.p
+  const gen = generation
   const p = api
     .report(site, q)
     .then((data) => {
+      if (gen !== generation) return data // dropped while it ran: it may predate the change
       cache.delete(key) // re-inserted last: the oldest read is the first to go
       cache.set(key, { at: Date.now(), data })
       const oldest = cache.keys().next().value
       if (cache.size > KEPT && oldest !== undefined) cache.delete(oldest)
       return data
     })
-    .finally(() => inflight.delete(key))
-  inflight.set(key, p)
+    .finally(() => {
+      if (inflight.get(key)?.p === p) inflight.delete(key)
+    })
+  inflight.set(key, { gen, p })
   return p
 }
 

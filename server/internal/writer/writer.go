@@ -448,6 +448,16 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 	if len(batch) == 0 && len(closed) == 0 {
 		return nil
 	}
+	// A session that is written now (idle, or ended by its visitor's next
+	// visit) moves from the open sessions to the table: a read taken between
+	// the two may have seen either, so its whole span counts as touched too.
+	for _, s := range closed {
+		span, seen := touched[s.Site]
+		if !seen {
+			span = [2]int64{s.Start, s.Last}
+		}
+		touched[s.Site] = [2]int64{min(span[0], s.Start, s.Last), max(span[1], s.Start, s.Last)}
+	}
 
 	if _, err := conn.ExecContext(ctx, "BEGIN TRANSACTION"); err != nil {
 		return err

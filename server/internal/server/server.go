@@ -418,7 +418,10 @@ func (s *Server) startAnalytics(ctx context.Context) {
 	s.backfillSeen(ctx, store)
 	w := writer.New(s.log, store, writer.Options{CloseAfter: s.cfg.SessionCloseAfter, IdleClose: idleClose(s.cfg), Sites: s.ctl.ExistingSites, SiteZone: s.ctl.SiteZone})
 	w.OnCommit = s.hub.Publish
-	w.OnTouch = s.api.Touched // closed ranges the commit can reach stop being served from the report cache
+	w.OnTouch = func(site string, lo, hi int64) {
+		s.hub.Bump(site)            // a commit that only wrote out idle visits still moves the live reports' version
+		s.api.Touched(site, lo, hi) // closed ranges the commit can reach stop being served from the report cache
+	}
 	s.writer.Store(w)
 	slog.Info("analytics store ready")
 	if err := w.Run(ctx); err != nil {
