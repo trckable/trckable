@@ -226,6 +226,10 @@ test('a period that starts before the first visit: the whole period is on the ch
   await expect(page.locator('.overview-chart .chart-wrap svg[role=img]')).toHaveAttribute('aria-label', /: 90 points,/)
   await expect(page.locator('.overview-chart .since-chip')).toHaveCount(0)
   await expect(page.getByRole('button', { name: /^Show since/ })).toHaveCount(0)
+  // The line itself starts at the period's first day, along zero before the first visit.
+  const plot = await page.locator('.overview-chart .chart-wrap svg[role=img]').boundingBox()
+  const line = await page.locator('.overview-chart .chart-line').first().boundingBox()
+  expect(line && plot && line.x - plot.x).toBeLessThan(60)
 })
 
 test('three days or fewer are drawn by the hour', async ({ page }) => {
