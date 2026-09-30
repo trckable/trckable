@@ -3,7 +3,7 @@ export const sheetCopy = {
   sheet: 'View options',
   done: 'Done',
   periods: 'Periods',
-  quick: { today: 'Today', '7d': '7d', '30d': '30d' } as Record<string, string>,
+  quick: { today: 'Today', '7d': '7d', '30d': '30d', '90d': '90d' } as Record<string, string>,
   more: 'More',
   compareRow: 'Compare',
   filtersRow: 'Filters',

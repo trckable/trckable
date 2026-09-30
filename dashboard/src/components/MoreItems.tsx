@@ -1,5 +1,5 @@
 // The ⋯ menu's items (MoreMenu.tsx). Its own chunk, so the first load carries only the button.
-import { Bookmark, Cog, Download, Flag, Maximize2, Minimize2, Plus, RefreshCw, Share2 } from 'lucide-react'
+import { Bookmark, Download, Flag, Maximize2, Minimize2, Plus, RefreshCw, Share2 } from 'lucide-react'
 import { openedFrom } from './panelOpen'
 import type { MenuItems } from '../lib/headerMenu'
 import { caps, keyFor } from '../lib/keys'
@@ -45,12 +45,6 @@ export default function MoreItems({ p, go }: { p: MoreProps & { onCreate?: () =>
         </button>
       )}
       <ModeItem full={p.full} go={go(() => p.onMode(p.full ? 'core' : 'full'))} />
-      {p.onSettings && (
-        <button type="button" role="menuitem" onClick={go(p.onSettings)}>
-          <Cog size={18} strokeWidth={1.75} aria-hidden="true" />
-          {copy.settings}
-        </button>
-      )}
       {!isShared() && (
         <>
           {p.milestones && (

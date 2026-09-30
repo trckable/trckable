@@ -1,12 +1,60 @@
 /* DateRangePeriods's styles: they load with its chunk, not with the first load. */
-/* Presets are a wrapping row across the top: no tall column, no labels
-   breaking over two lines, and the panel stays short. */
-.presets {
-  flex-basis: 100%;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
+/* The list is narrow; the calendar step widens the same popover (DateRangePopover.css). */
+.range-pop.small {
+  width: 304px;
+  padding: 4px;
+}
+/* The list fills the popover (its shell is a wrapping row for the calendar step). */
+.periods {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+/* More opens the rest in place: the height runs from 0 to its own. */
+.ld-more {
+  color: var(--text-3);
+}
+.ld-more svg {
+  transition: transform 0.25s var(--ease);
+}
+.ld-more.open svg {
+  transform: rotate(180deg);
+}
+.ld-x {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s var(--ease);
+}
+.ld-x.open {
+  grid-template-rows: 1fr;
+}
+.ld-x > div {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0s 0.28s;
+}
+.ld-x.open > div {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.2s;
+}
+.ld-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 2px;
+}
+.ld-2 .lrow {
+  padding: 0 8px;
+  font-size: 12.5px;
+}
+.ld-2 .lrow .k {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ld-more svg,
+  .ld-x,
+  .ld-x > div {
+    transition: none;
+  }
 }
