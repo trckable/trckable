@@ -13,7 +13,8 @@ for (const f of entry) {
   total += n
   console.log(`${(n / 1024).toFixed(1).padStart(7)} KB gz  ${f}`)
 }
-const lazy = readdirSync(join(dir, 'assets')).filter((f) => !entry.includes('assets/' + f))
+// The compressed twins (precompress.mjs) are not chunks of their own.
+const lazy = readdirSync(join(dir, 'assets')).filter((f) => !entry.includes('assets/' + f) && !/\.(?:br|gz)$/.test(f))
 for (const f of lazy) console.log(`${(gz('assets/' + f) / 1024).toFixed(1).padStart(7)} KB gz  assets/${f} (lazy)`)
 const budget = 130 * 1024
 console.log(`first load: ${(total / 1024).toFixed(1)} KB gz (budget ${budget / 1024} KB)`)

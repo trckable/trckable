@@ -46,7 +46,7 @@ const parts = {
     const entry = [...html.matchAll(/(?:src|href)="\/(assets\/[^"]+\.(?:js|css))"/g)].map((m) => m[1])
     const total = entry.reduce((n, f) => n + gz(dir + f), 0)
     // The milestones timeline and share sheet, loaded only when opened.
-    const milestones = readdirSync(join(ROOT, dir, 'assets')).filter((f) => f.startsWith('MilestonesDialogs-')).reduce((n, f) => n + gz(dir + 'assets/' + f), 0)
+    const milestones = readdirSync(join(ROOT, dir, 'assets')).filter((f) => f.startsWith('MilestonesDialogs-') && !/\.(?:br|gz)$/.test(f)).reduce((n, f) => n + gz(dir + 'assets/' + f), 0)
     return {
       dashboard_kb: up1(total / 1024),
       dashboard_budget_kb: budget('dashboard/scripts/size.mjs', /^const budget = (\d+) \* 1024/m),

@@ -8,13 +8,16 @@ import (
 	"embed"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"io/fs"
+	"mime"
 	"net/http"
 	"path"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 //go:embed assets/t.js assets/t-*.js assets/sizes.json
@@ -258,6 +261,81 @@ func Variants() []string {
 // Dashboard serves the dashboard with no page ever framed by another site.
 func Dashboard() http.Handler { return DashboardFramed(nil) }
 
+// encoding is one way the build stores a file next to the plain one
+// (dashboard/scripts/precompress.mjs): app.js.br, app.js.gz.
+type encoding struct{ token, ext string }
+
+// encodings are in the order they are preferred: brotli is the smaller.
+var encodings = []encoding{{"br", ".br"}, {"gzip", ".gz"}}
+
+// Accepts reads an Accept-Encoding header for one coding: named, or by *, and
+// not given q=0. A coding the header names settles it, whatever * says.
+func Accepts(header, coding string) bool {
+	star := false
+	for _, part := range strings.Split(header, ",") {
+		name, params, _ := strings.Cut(strings.TrimSpace(part), ";")
+		name = strings.ToLower(strings.TrimSpace(name))
+		if name != coding && name != "*" {
+			continue
+		}
+		q := 1.0
+		if k, v, found := strings.Cut(strings.ReplaceAll(params, " ", ""), "="); found && strings.EqualFold(k, "q") {
+			if f, err := strconv.ParseFloat(v, 64); err == nil {
+				q = f
+			}
+		}
+		if name == coding {
+			return q > 0
+		}
+		star = q > 0
+	}
+	return star
+}
+
+// twins lists the stored encodings of a file that a browser's header allows.
+func twins(fsys fs.FS, name, accept string) (all bool, ok []encoding) {
+	for _, e := range encodings {
+		if _, err := fs.Stat(fsys, name+e.ext); err != nil {
+			continue
+		}
+		all = true
+		if Accepts(accept, e.token) {
+			ok = append(ok, e)
+		}
+	}
+	return all, ok
+}
+
+// serveEncoded answers with a file's precompressed twin when the browser
+// accepts one. Any file that has a twin varies by Accept-Encoding, whichever
+// way it is answered. It reports whether it answered.
+func serveEncoded(w http.ResponseWriter, r *http.Request, fsys fs.FS, name string) bool {
+	has, ok := twins(fsys, name, r.Header.Get("Accept-Encoding"))
+	if has {
+		w.Header().Add("Vary", "Accept-Encoding")
+	}
+	kind := mime.TypeByExtension(path.Ext(name))
+	// A range is over the plain bytes: it is answered from the plain file.
+	if len(ok) == 0 || kind == "" || r.Header.Get("Range") != "" {
+		return false
+	}
+	f, err := fsys.Open(name + ok[0].ext)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	body, isSeeker := f.(io.ReadSeeker)
+	info, err := f.Stat()
+	if !isSeeker || err != nil {
+		return false
+	}
+	w.Header().Set("Content-Type", kind)
+	w.Header().Set("Content-Encoding", ok[0].token)
+	w.Header().Set("Content-Length", strconv.FormatInt(info.Size(), 10)) // ServeContent leaves it out of an encoded answer
+	http.ServeContent(w, r, name, time.Time{}, body)
+	return true
+}
+
 // DashboardFramed is Dashboard, with one exception: frame returns the sites
 // allowed to frame this page (space-separated origins), or "" for none. Only
 // an embeddable share link answers anything.
@@ -265,6 +343,14 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 	sub, _ := fs.Sub(dist, "dist")
 	files := http.FileServerFS(sub)
 	index, _ := fs.ReadFile(sub, "index.html")
+	// The page is the one file every route answers with: its stored encodings
+	// are read once, here.
+	indexTwin := map[string][]byte{}
+	for _, e := range encodings {
+		if b, err := fs.ReadFile(sub, "index.html"+e.ext); err == nil {
+			indexTwin[e.token] = b
+		}
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		p := strings.TrimPrefix(path.Clean(r.URL.Path), "/")
 		if p != "" && p != "index.html" {
@@ -272,6 +358,9 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 				f.Close()
 				if strings.HasPrefix(p, "assets/") {
 					w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+				}
+				if serveEncoded(w, r, sub, p) {
+					return
 				}
 				files.ServeHTTP(w, r)
 				return
@@ -295,6 +384,17 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 			h.Set("X-Frame-Options", "DENY") // older browsers that ignore frame-ancestors
 		}
 		h.Set("Referrer-Policy", "same-origin")
-		_, _ = w.Write(index)
+		body := index
+		for _, e := range encodings {
+			if b, ok := indexTwin[e.token]; ok && Accepts(r.Header.Get("Accept-Encoding"), e.token) {
+				h.Set("Content-Encoding", e.token)
+				body = b
+				break
+			}
+		}
+		if len(indexTwin) > 0 {
+			h.Add("Vary", "Accept-Encoding")
+		}
+		_, _ = w.Write(body)
 	})
 }

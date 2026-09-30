@@ -96,7 +96,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	// another account: a route added later is tested without being listed.
 	handle := func(pattern string, h http.Handler) {
 		a.patterns = append(a.patterns, pattern)
-		mux.Handle(pattern, withTiming(h))
+		mux.Handle(pattern, withGzip(withTiming(h)))
 	}
 	handleFunc := func(pattern string, f http.HandlerFunc) { handle(pattern, f) }
 	handleFunc("GET /api/v1/setup", a.setupStatus)
