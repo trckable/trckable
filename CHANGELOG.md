@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- The sites popover in People stays inside the window when sites are added while it is open, and a long domain is cut short instead of scrolling the list sideways; the chart's hover card fills in if the pointer was already on it when its numbers arrived.
+
 ## 0.5.7 (30 Sep 2026)
 
 - Widgets have their own section in a site's settings, next to Sharing: they go on your own pages, so they no longer sit under share links.
