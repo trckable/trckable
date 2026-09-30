@@ -535,9 +535,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
   return (
     <>
-      {/* Live does not load the report, so the bar would never end there: Live
-          shows its own connection state. */}
-      {!liveView && (firstLoad || loading) && <div className="loadbar" role="status" aria-label="Loading" />}
+      {!liveView && (firstLoad || loading) && <div className="loadbar" role="status" aria-label="Loading" />/* Live loads no report: it shows its own connection */}
       <div className="header quiet">
         {header}
         <HeaderTools
