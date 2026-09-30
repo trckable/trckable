@@ -6,6 +6,11 @@ export const kitCopy = {
   showTable: (title: string) => `${title}: show as a table`,
   showChart: (title: string) => `${title}: show as a chart`,
   empty: 'Nothing to show for this period yet.',
+  visitors: 'Visitors',
+  revenue: 'Revenue',
+  up: '▲',
+  down: '▼',
+  flat: '–',
 }
 
 // The main time chart's words.
@@ -16,6 +21,7 @@ export const timeCopy = {
   addNoteOn: (day: string) => `Add a note on ${day}`,
   peak: (value: string, when: string) => `${value} · ${when}`,
   noSales: 'No sales',
+  soFar: 'so far',
   revenue: 'Revenue',
   noSalesPeriod: 'No sales in this period',
 }

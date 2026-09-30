@@ -84,6 +84,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     test('the Full dashboard, the site switcher and the Notes list meet WCAG 2.1 AA', async ({ page }) => {
       const site = await start(page)
       await page.goto(`${BASE}/${site.domain}?mode=full`)
+      await page.locator('[data-card=what]').getByRole('tab', { name: 'Page flow' }).click({ timeout: 20_000 })
       await page.waitForSelector('[data-chart=flow] svg', { timeout: 20_000 })
       await scan(page, 'dashboard, full')
       // The site switcher's list and the Notes list load on demand: open each.
@@ -96,9 +97,28 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await scan(page, 'notes list')
     })
 
+    // Every tab of the two cards, one after another: their roles, names and contrast.
+    test('every tab of the two cards meets WCAG 2.1 AA', async ({ page }) => {
+      test.setTimeout(240_000) // a scan for each of a dozen tabs
+      const site = await start(page)
+      await page.goto(`${BASE}/${site.domain}?mode=full`)
+      for (const card of ['who', 'what']) {
+        const tablist = page.locator(`[data-card=${card}]`).getByRole('tablist').first()
+        await expect(tablist.getByRole('tab').first()).toBeVisible({ timeout: 20_000 })
+        await page.locator(`[data-card=${card}]`).getByRole('tab', { name: card === 'what' ? 'Page flow' : 'Over time' }).waitFor({ timeout: 20_000 })
+        const names = await tablist.getByRole('tab').allTextContents()
+        for (const name of names) {
+          await tablist.getByRole('tab', { name, exact: true }).click()
+          await page.waitForTimeout(700)
+          await scan(page, `${card} card, ${name}`)
+        }
+      }
+    })
+
     test('the Full grid, the More and Create menus and the funnel dialog meet WCAG 2.1 AA', async ({ page }) => {
       const site = await start(page)
       await page.goto(`${BASE}/${site.domain}?mode=full`)
+      await page.locator('[data-card=what]').getByRole('tab', { name: 'Page flow' }).click({ timeout: 20_000 })
       await page.waitForSelector('[data-chart=flow] svg', { timeout: 20_000 })
       await scan(page, 'dashboard, full grid')
       await page.getByRole('button', { name: 'More', exact: true }).click()

@@ -26,7 +26,7 @@ export function Versus({ a, b, fmt, when, bucket }: { a: number; b: number; fmt:
   const pct = b ? Math.round(((a - b) / b) * 100) : null
   return (
     <span className="ct-vs num">
-      {pct !== null && <em className={pct >= 0 ? 'tone-up' : 'tone-down'}>{`${pct >= 0 ? '↑ ' : '↓ '}${Math.abs(pct)}%`}</em>} vs {fmt(b)}
+      {pct !== null && <em className={pct >= 0 ? 'tone-up' : 'tone-down'}>{`${pct >= 0 ? '▲ ' : '▼ '}${Math.abs(pct)}%`}</em>} vs {fmt(b)}
       {when ? ` on ${bucketLabel(when, bucket, true)}` : ''}
     </span>
   )

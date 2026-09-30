@@ -4,14 +4,18 @@ import { useEffect, useState } from 'react'
 import { messageOf, type Bucket, type ReportQuery } from '../../lib/api'
 import { fetchCharts, type Charts } from './api'
 
+// The tabs that read these numbers open one after another: the last answer is kept, so each opens with it.
+let last: { key: string; charts: Charts } | null = null
+
 export function useCharts(site: string, query: ReportQuery, bucket: Bucket | undefined) {
-  const [data, setData] = useState<{ key: string; charts: Charts } | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const key = site + JSON.stringify([query.from, query.to, query.filters, query.testPayments, bucket])
+  const [data, setData] = useState<{ key: string; charts: Charts } | null>(last?.key === key ? last : null)
+  const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     const ctl = new AbortController()
     fetchCharts(site, query, bucket, ctl.signal)
       .then((charts) => {
+        last = { key, charts }
         setData({ key, charts })
         setError(null)
       })

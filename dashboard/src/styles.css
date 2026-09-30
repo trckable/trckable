@@ -493,28 +493,120 @@ textarea:focus-visible {
   }
 }
 
-/* ---- breakdowns ---- */
-.grid4 {
+/* ---- the two cards under the chart ---- */
+.cards2 {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  align-items: stretch;
 }
-/* Behaviour (Full mode): wide cards, one under another, with the same gap as
-   every other section. It had no rule at all, so People sat on Retention. */
-.grid2 {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
+.cards2 > :only-child {
+  grid-column: 1 / -1;
 }
-@media (max-width: 1100px) {
-  .grid4 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-@media (max-width: 640px) {
-  .grid4 {
+@media (max-width: 760px) {
+  .cards2 {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+.card.tc {
+  padding: 0 16px 16px;
+  gap: 0;
+}
+/* The tabs: one thin underline on the one picked; a row wider than its card scrolls sideways. */
+.tc-tabs {
+  display: flex;
+  gap: 2px;
+  margin: 0 -8px 12px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tc-tabs::-webkit-scrollbar {
+  display: none;
+}
+.tc-tab {
+  flex: none;
+  margin-bottom: -1px;
+  padding: 11px 12px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-3);
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tc-tab:hover {
+  color: var(--text);
+}
+.tc-tab[aria-selected='true'] {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+  font-weight: 600;
+}
+.tc-tab:focus-visible,
+.tc-sub button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+/* A list's own small tabs: a pill on the one picked. */
+.tc-sub {
+  display: flex;
+  gap: 2px;
+  margin: 0 0 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tc-sub::-webkit-scrollbar {
+  display: none;
+}
+.tc-sub button {
+  flex: none;
+  padding: 4px 9px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-3);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tc-sub button[aria-selected='true'] {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.tc-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 0;
+  margin-bottom: 6px;
+}
+.tc-tools:empty {
+  display: none;
+}
+.tc-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+/* A card or a chart that arrives inside a tab is not a card of its own. */
+.tc-body .card {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.tc-body .card-head > h2,
+.tc-body .kit-head > h2,
+.tc-body .kit-question,
+.tc-body .kit-foot,
+.tc-body .card-note {
+  display: none;
+}
+.tc-body .kit-head {
+  justify-content: flex-end;
 }
 .tabs {
   display: flex;
@@ -533,34 +625,38 @@ textarea:focus-visible {
   color: var(--text);
   background: var(--surface-2);
 }
+/* ---- ranked lists ---- */
 .bl {
   /* A narrow card drops its secondary column before it cuts the names. */
   container-type: inline-size;
 }
-.cols {
+.bl-cols,
+.bl-row {
   display: flex;
-  gap: 12px;
-  font-size: 11px;
-  color: var(--text-3);
-  padding: 0 10px 4px;
+  align-items: center;
+  gap: 8px;
 }
-.cols span:first-child {
+.bl-cols {
+  padding: 0 4px 2px;
+  color: var(--text-3);
+  font-size: 11px;
+}
+.bl-cols > span:first-child,
+.bl-main {
   flex: 1;
+  min-width: 0;
 }
 .bl-row {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 42px;
-  padding: 5px 10px;
+  min-height: 38px;
+  width: 100%;
+  padding: 4px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: var(--text);
   font-size: 13px;
   text-align: left;
-  width: 100%;
   cursor: pointer;
   transition: opacity 0.25s, background 0.15s;
 }
@@ -569,55 +665,105 @@ textarea:focus-visible {
   background: var(--sunken);
   outline: none;
 }
-.bl-label {
-  flex: 1;
-  min-width: 0;
+.bl-main {
   display: grid;
-  gap: 5px;
+  gap: 6px;
 }
 .bl-name {
   display: flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
+  font-size: 13px;
 }
-.bl-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.bl-track {
+.bl-line {
   display: block;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--grid);
-  overflow: hidden;
+  height: 2px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--text) 7%, transparent);
 }
-.bl-bar {
+.bl-line i {
   display: block;
   height: 100%;
-  border-radius: 2px;
+  border-radius: 1px;
   background: var(--accent);
-  opacity: 0.75;
+  opacity: 0.8;
   transition: width 0.12s var(--ease), opacity 0.15s;
 }
-.bl-row:hover .bl-bar {
+.bl-row:hover .bl-line i {
   opacity: 1;
 }
-.bl-val {
-  width: 60px;
+.bl-val,
+.bl-sub,
+.bl-rev,
+.bl-tail,
+.bl-cols .bl-chg {
   flex: none;
   text-align: right;
-  font-variant-numeric: tabular-nums;
+  font-family: var(--mono);
+  font-size: 12.5px;
 }
-.bl-val.sub {
-  width: 52px;
+.bl-val {
+  width: 46px;
+}
+.bl-sub {
+  width: 44px;
   color: var(--text-2);
 }
+.bl-rev {
+  width: 60px;
+}
+/* The column heads are labels, not numbers. */
+.bl-cols .bl-val,
+.bl-cols .bl-sub,
+.bl-cols .bl-rev {
+  font-family: inherit;
+  font-size: 11px;
+}
+.bl-rev.none {
+  color: var(--text-3);
+}
+.bl-cols .bl-chg,
+.bl-tail {
+  position: relative;
+  width: 42px;
+}
+.bl-tail {
+  height: 16px;
+}
+.bl-chg,
+.bl-share {
+  position: absolute;
+  inset: 0 0 0 auto;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+  transition: opacity 0.12s;
+}
+.bl-chg {
+  color: var(--text-3);
+}
+.bl-chg.up {
+  color: var(--up);
+}
+.bl-chg.down {
+  color: var(--down);
+}
+.bl-share {
+  color: var(--text-2);
+  opacity: 0;
+}
+.bl-row:hover .bl-share,
+.bl-row:focus-visible .bl-share {
+  opacity: 1;
+}
+.bl-row:hover .bl-chg,
+.bl-row:focus-visible .bl-chg {
+  opacity: 0;
+}
 @container (max-width: 340px) {
-  .bl .sub,
-  .bl .bl-val.sub {
+  .bl-sub,
+  .bl-cols .bl-sub {
     display: none;
   }
 }
@@ -903,9 +1049,6 @@ table.t td {
   .scrub input[type='range'] {
     order: 3;
     flex-basis: 100%;
-  }
-  .bl-val.sub {
-    display: none; /* one number per row is enough on a phone */
   }
   .tip {
     min-width: 150px;
@@ -1815,68 +1958,7 @@ pre.code.words {
   border-color: var(--border);
 }
 
-/* ---- "More numbers" --------------------------------------------------------
-   Full mode keeps every number, but folded: the headline cards stay readable
-   and the rest is one click away. */
-.more-numbers {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border: 1px solid var(--grid);
-  border-radius: 14px;
-  padding: 10px 14px;
-  background: var(--surface);
-}
-.more-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: 0;
-  background: transparent;
-  color: var(--text-2);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-  padding: 0;
-  text-align: left;
-}
-.more-toggle:hover {
-  color: var(--text);
-}
-.more-toggle .faint {
-  font-size: 12px;
-}
-.more-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px 20px;
-  animation: rise 0.18s var(--ease) backwards;
-}
-.num-cell {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--grid);
-  font-size: 13px;
-}
-.num-cell b {
-  font-weight: 600;
-}
-
-/* ---- Core and Full ------------------------------------------------------
-   Core is one calm screen: bigger type, more air, five rows a card. Full is
-   the working surface: denser, more columns, every section on the page. */
-body[data-mode='core'] .card {
-  padding: 18px 20px;
-}
-body[data-mode='full'] .card {
-  padding: 13px 15px;
-}
-body[data-mode='full'] .card h2 {
-  font-size: 14px;
-}
+/* ---- Core and Full ------------------------------------------------------ */
 body[data-mode='full'] .app {
   gap: 12px;
 }
@@ -1884,37 +1966,6 @@ body[data-mode='full'] .app {
    themselves), so the modes' card padding stays off it. */
 body[data-mode] .card.overview {
   padding: 0;
-}
-/* The jump bar: where everything is, one tap away. */
-.jump {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  padding: 6px 0;
-  background: linear-gradient(var(--bg) 70%, transparent);
-}
-.jump button {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-2);
-  border-radius: 999px;
-  padding: 5px 12px;
-  font: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
-}
-.jump button:hover {
-  color: var(--text);
-  border-color: var(--border-2);
-}
-@media (min-width: 1500px) {
-  /* A wide screen in Full mode shows the breakdowns five across. */
-  body[data-mode='full'] .grid4 {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
 }
 .keyrow {
   display: flex;
@@ -2556,39 +2607,10 @@ button.kpi-live:hover .label::after {
 }
 
 /* ---- The main chart's finish ------------------------------------------------
-   A soft glow under the line (money's is gold, and so are its columns), and
-   today's point breathing while it counts. */
-.chart-line {
-  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 50%, transparent));
-}
-.chart-line.money {
-  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--money) 55%, transparent));
-}
+   Money's columns carry a soft gold glow; the line has none. */
 .money-col {
   filter: drop-shadow(0 0 5px color-mix(in srgb, var(--money) 40%, transparent));
   transition: fill-opacity 0.12s;
-}
-.chart-now-halo {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: chart-breathe 2.4s ease-in-out infinite;
-}
-@keyframes chart-breathe {
-  0%,
-  100% {
-    opacity: 0.25;
-    transform: scale(0.6);
-  }
-  50% {
-    opacity: 0;
-    transform: scale(1.6);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .chart-now-halo {
-    animation: none;
-    opacity: 0.2;
-  }
 }
 
 /* ---- Overview: the key numbers and the chart, one section -------------------
@@ -2601,9 +2623,6 @@ button.kpi-live:hover .label::after {
   background:
     radial-gradient(700px 240px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
     var(--surface);
-}
-.overview > .more-numbers {
-  padding: 10px 14px 0;
 }
 @media (max-width: 640px) {
   .overview-chart {

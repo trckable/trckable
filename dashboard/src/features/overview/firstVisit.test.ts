@@ -1,22 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { firstVisitAt, hourIn, hourlySpan, previousWhole } from './firstVisit'
-
-describe('firstVisitAt', () => {
-  it('starts at the first visit of a site that began in the period', () => {
-    expect(firstVisitAt([0, 0, 0, 92, 1137, 100], 0, false)).toBe(3)
-  })
-  it('keeps the whole period when the site was there before it', () => {
-    expect(firstVisitAt([0, 0, 5, 9], 12, false)).toBe(0)
-  })
-  it('keeps the whole period when filtered or with nothing to compare', () => {
-    expect(firstVisitAt([0, 0, 5], 0, true)).toBe(0)
-    expect(firstVisitAt([0, 0, 5], undefined, false)).toBe(0)
-  })
-  it('has nothing to trim when the first day already had visits, or none did', () => {
-    expect(firstVisitAt([3, 0, 5], 0, false)).toBe(0)
-    expect(firstVisitAt([0, 0, 0], 0, false)).toBe(0)
-  })
-})
+import { hourIn, hourlySpan, previousWhole } from './firstVisit'
 
 describe('hourlySpan', () => {
   it('is three days or fewer', () => {

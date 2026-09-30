@@ -1,0 +1,49 @@
+// The words of Full's own tabs (retention, funnel, people): a chunk of their own.
+import { fmtInt, fmtPct } from '../../lib/format'
+
+export const deepCopy = {
+  tab: {
+    overTime: 'Over time',
+    returning: 'New vs returning',
+    hours: 'Hours',
+    revenueMap: 'Revenue map',
+    crawlers: 'Crawlers',
+    funnel: 'Funnel',
+    visitToSale: 'Visit to sale',
+    toConvert: 'Time to convert',
+    flow: 'Page flow',
+    retention: 'Retention',
+    vitals: 'Vitals',
+    people: 'People',
+  },
+  retention: {
+    title: 'Retention',
+    arrived: 'Arrived',
+    people: 'Visitors',
+    week: (k: number) => `Week ${k}`,
+    open: '·',
+    inProgress: 'in progress',
+    cell: (back: number, size: number) => `${fmtInt(back)} of ${fmtInt(size)} came back`,
+    nextWeek: (share: number) => `${fmtPct(share)} came back the next week`,
+    none: 'Not enough history yet',
+    failed: 'Couldn’t read retention',
+    curve: (weeks: number) => `Share who came back, weeks 1 to ${weeks}`,
+    low: 'fewer',
+    high: 'more',
+  },
+  funnel: {
+    made: (share: number) => `${fmtPct(share)} made it`,
+    median: (t: string) => `${t} median`,
+    typical: (t: string) => `${t} typical`,
+    lost: (pct: number, left: string) => `−${pct}% · ${left} left here`,
+    steps: 'Steps',
+  },
+  people: {
+    title: 'People',
+    online: (n: number) => `${fmtInt(n)} online`,
+    pages: (n: number, time: string) => `${fmtInt(n)} ${n === 1 ? 'page' : 'pages'} · ${time}`,
+    goal: 'goal',
+    none: 'No visits recorded yet.',
+    open: 'See this visitor’s whole journey',
+  },
+}

@@ -143,32 +143,18 @@ button.kpi:focus-visible {
   }
 }
 
-/* The chart's head: its name, the "since" chip, then the tools. */
+/* The chart's head: its name, then the tools. */
 .overview-chart > .chart-head {
   display: flex;
   align-items: center;
   gap: 8px;
   min-height: 32px;
 }
-.since-chip {
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--surface-2);
-  color: var(--text-2);
-  font-size: 12px;
-  white-space: nowrap;
-}
 .chart-head-tools {
   display: flex;
   align-items: center;
   gap: 4px;
   margin-left: auto;
-}
-.btn.ghost.show-since {
-  height: 30px;
-  padding: 0 8px;
-  color: var(--accent-strong);
-  font-size: 13px;
 }
 .replay {
   display: flex;
@@ -233,12 +219,6 @@ button.kpi:focus-visible {
   gap: 6px;
   flex: none;
 }
-@media (max-width: 640px) {
-  .btn.ghost.show-since {
-    padding: 0 6px;
-    font-size: 12px;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .roll {
     animation: none;
@@ -256,13 +236,10 @@ button.kpi:focus-visible {
   width: 100px;
   height: 30px;
 }
-/* A phone keeps the head on one line: the button already says since when. */
+/* A phone keeps the head on one line. */
 @media (max-width: 640px) {
   .overview-chart > .chart-head {
     flex-wrap: nowrap;
-  }
-  .overview-chart > .chart-head .since-chip:has(~ .chart-head-tools .show-since) {
-    display: none;
   }
 }
 

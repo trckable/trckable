@@ -181,7 +181,9 @@ test('on a phone the flag opens with a tap and its words fit the screen', async 
   await signIn(page, '/example.com?period=7d')
   const mark = page.locator('.overview-chart').getByRole('button', { name: new RegExp(`on ${dayName(1)}$`) })
   await expect(mark).toBeVisible({ timeout: 15_000 })
-  await mark.click()
+  // On a week by day the next day's flag is one slot away and its box touches this one's: tap the near edge.
+  const tap = { position: { x: 10, y: 30 } }
+  await mark.click(tap)
   const tip = page.getByRole('tooltip')
   await expect(tip).toBeVisible()
   const box = await tip.boundingBox()
@@ -193,6 +195,6 @@ test('on a phone the flag opens with a tap and its words fit the screen', async 
   for (const m of await page.locator('.overview-chart .note-mark, .overview-chart .note-mark i').all()) await inside(await m.boundingBox(), chart)
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/notes-phone-${browserName}.png` })
   // A second tap closes it.
-  await mark.click()
+  await mark.click(tap)
   await expect(tip).toBeHidden()
 })

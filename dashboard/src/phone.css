@@ -33,7 +33,7 @@
      a component that loads later has its own list in its own file (its last
      block, "The 12 px floor"). The parts of the phone scale below then set
      what they want above it. */
-  :is(.cursor-pill, .cols, .app-footer, .note-count) {
+  :is(.cursor-pill, .cols, .app-footer, .note-count, .bl-cols, .bl-chg, .bl-share) {
     font-size: 12px;
   }
   /* ---- The header: the ghost, the site, search, the avatar, all 46 px ---- */
@@ -203,6 +203,20 @@
   .cols {
     padding: 0 10px 2px;
     font-size: 12px;
+  }
+  :root .bl-cols span {
+    font-size: 12px;
+  }
+  /* The two cards' tabs: a finger tall, the row scrolling sideways. */
+  .tc-tab {
+    min-height: var(--ph-hit);
+    padding: 0 12px;
+    font-size: var(--ph-text-2);
+  }
+  .tc-sub button {
+    min-height: var(--ph-hit);
+    padding: 0 12px;
+    font-size: var(--ph-small);
   }
   .bl-row {
     min-height: var(--ph-row);
