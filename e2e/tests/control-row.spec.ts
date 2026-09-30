@@ -34,7 +34,7 @@ async function session(): Promise<string> {
   return value
 }
 
-async function open(page: Page, width: number, query = '') {
+async function open(page: Page, width: number, query = '?view=data') {
   await page.setViewportSize({ width, height: 900 })
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.context().addCookies([{ name: 'trckable_session', value: await session(), url: BASE! }])

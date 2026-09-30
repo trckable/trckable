@@ -31,7 +31,7 @@ test('Goals off: Create has no Goal', async ({ page }) => {
   expect(pv.ok()).toBe(true)
   await expect.poll(async () => ((await (await page.request.get(`${API}/api/v1/sites/${site}/events?limit=1`, { headers: H })).json()) as { events: unknown[] }).events.length, { timeout: 15_000 }).toBe(1)
 
-  await page.goto(`${API}/${domain}`)
+  await page.goto(`${API}/${domain}?view=data`)
   let menu = await createMenu(page)
   await expect(menu.locator('[data-create=goal]')).toBeVisible()
   await expect(menu.locator('[data-create=site]')).toHaveCount(0)
