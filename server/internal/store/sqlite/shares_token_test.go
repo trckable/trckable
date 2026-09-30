@@ -2,10 +2,12 @@ package sqlite
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/secrets"
 )
 
@@ -75,6 +77,74 @@ func TestShareTokenWithAnotherKeyOrNoKey(t *testing.T) {
 	}
 }
 
+// A session starts only for the token the link has now: an opening that
+// checked the old token just before a new address was made gets nothing.
+func TestShareSessionNeedsTheCurrentToken(t *testing.T) {
+	s := openT(t)
+	ctx := context.Background()
+	s.Sealer = mustBox(t, "race test key")
+	site, _ := s.CreateSite(ctx, DefaultAccount, "a.com", "")
+	_, old, err := s.CreateShare(ctx, site, "Board", "a long enough password", false, false, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now()
+	sh, err := s.OpenShare(ctx, old, "a long enough password", now) // the old token is checked
+	if err != nil {
+		t.Fatal(err)
+	}
+	fresh, err := s.RotateShare(ctx, site, sh.ID) // the owner makes a new address meanwhile
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.StartShareSession(ctx, sh.ID, old, now); !errors.Is(err, auth.ErrNotFound) {
+		t.Fatalf("a session started with the old token: %v", err)
+	}
+	var n int
+	if err := s.DB.QueryRowContext(ctx, `SELECT count(*) FROM share_sessions`).Scan(&n); err != nil || n != 0 {
+		t.Fatalf("sessions left behind: %d %v", n, err)
+	}
+	if _, err := s.StartShareSession(ctx, sh.ID, fresh, now); err != nil {
+		t.Fatalf("the new token: %v", err)
+	}
+	if _, err := s.StartShareSession(ctx, "shr_nothere", fresh, now); !errors.Is(err, auth.ErrNotFound) {
+		t.Fatalf("another link's id: %v", err)
+	}
+}
+
+// A sealed token is bound to its own link: a sealed value that carries the
+// right token but was made for another link (or for none) is not handed out.
+func TestShareTokenSealedValueDoesNotOpenOnAnotherLink(t *testing.T) {
+	s := openT(t)
+	ctx := context.Background()
+	box := mustBox(t, "bound seal key")
+	s.Sealer = box
+	site, _ := s.CreateSite(ctx, DefaultAccount, "a.com", "")
+	sh, token, err := s.CreateShare(ctx, site, "Board", "", false, false, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, context := range map[string]string{"another link": "shr_other", "no link": ""} {
+		sealed, err := box.SealFor(token, context)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := s.DB.ExecContext(ctx, `UPDATE site_shares SET token_enc = ? WHERE id = ?`, sealed, sh.ID); err != nil {
+			t.Fatal(err)
+		}
+		if list, err := s.Shares(ctx, site); err != nil || list[0].Token != "" {
+			t.Fatalf("a token sealed for %s was handed out: %v %v", name, list, err)
+		}
+	}
+	sealed, _ := box.SealFor(token, sh.ID)
+	if _, err := s.DB.ExecContext(ctx, `UPDATE site_shares SET token_enc = ? WHERE id = ?`, sealed, sh.ID); err != nil {
+		t.Fatal(err)
+	}
+	if list, err := s.Shares(ctx, site); err != nil || list[0].Token != token {
+		t.Fatalf("its own seal did not open: %v %v", list, err)
+	}
+}
+
 func mustBox(t *testing.T, key string) Sealer {
 	t.Helper()
 	b, err := secrets.New([]byte(key))
@@ -95,7 +165,7 @@ func TestRotateShareEndsTheOldAddress(t *testing.T) {
 		t.Fatal(err)
 	}
 	now := time.Now()
-	session, err := s.StartShareSession(ctx, sh.ID, now)
+	session, err := s.StartShareSession(ctx, sh.ID, old, now)
 	if err != nil {
 		t.Fatal(err)
 	}

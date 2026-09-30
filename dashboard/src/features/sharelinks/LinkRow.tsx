@@ -1,6 +1,7 @@
 // One link, one compact row: who can open it, what it shows, how often it was
-// opened, when it ends, and what to do with it: copy or open its address (or
-// make a new one, for a link whose address was never kept) and revoke it. Only
+// opened, when it ends, and what to do with it: copy or open its address, make
+// a new one (the only choice for a link whose address cannot be shown) and
+// revoke it. Only
 // the notes can change on a link that exists (the server takes nothing else),
 // so only they are a button.
 import { CircleDollarSign, Clock, Code, ExternalLink, Eye, Globe, Lock, Power, RefreshCw, StickyNote } from 'lucide-react'
@@ -91,9 +92,10 @@ function Revoke({ site, share, onDone }: { site: string; share: Share; onDone: (
   return <Ask text={copy.revokeAsk} yes={copy.revokeYes} busyText={copy.revoking} busy={busy} danger onNo={() => setAsking(false)} onYes={go} />
 }
 
-/** A link made before its address was kept has none to copy: a new one can be
- *  made, after asking, because the old one stops working. */
-function NewAddress({ site, share, onMade }: { site: string; share: Share; onMade: (url: string) => void }) {
+/** A new address can be made, after asking, because the old one stops working:
+ *  the way to get one for a link whose address cannot be shown, and, as a quiet
+ *  icon beside Copy and Open, the way to replace one that got out. */
+function NewAddress({ site, share, quiet, onMade }: { site: string; share: Share; quiet?: boolean; onMade: (url: string) => void }) {
   const [asking, setAsking] = useState(false)
   const [busy, setBusy] = useState(false)
   const go = () => {
@@ -107,6 +109,12 @@ function NewAddress({ site, share, onMade }: { site: string; share: Share; onMad
         setAsking(false)
       })
   }
+  if (!asking && quiet)
+    return (
+      <button type="button" className="sl-icon" title={copy.newAddressRotate} aria-label={`${copy.newAddress}: ${nameOf(share)}`} onClick={() => setAsking(true)}>
+        <RefreshCw size={15} strokeWidth={1.75} />
+      </button>
+    )
   if (!asking)
     return (
       <button type="button" className="btn ghost small" title={copy.newAddressTip} aria-label={`${copy.newAddress}: ${nameOf(share)}`} onClick={() => setAsking(true)}>
@@ -161,6 +169,7 @@ export function LinkRow({ site, share, readOnly, onChanged, onAddress }: RowProp
               <a className="sl-icon" href={share.url} target="_blank" rel="noreferrer noopener" aria-label={copy.openRow(nameOf(share))} title={copy.open}>
                 <ExternalLink size={15} strokeWidth={1.75} />
               </a>
+              <NewAddress site={site} share={share} quiet onMade={(url) => onAddress?.(share, url)} />
             </>
           ) : (
             <NewAddress site={site} share={share} onMade={(url) => onAddress?.(share, url)} />

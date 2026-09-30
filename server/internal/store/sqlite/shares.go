@@ -62,13 +62,14 @@ func splitLines(s string) []string {
 const MaxSharesPerSite = 20
 
 // sealToken is how a token is kept for its owner: sealed with the instance
-// key. Empty when there is no key to seal with: the link then works, and its
-// owner gets a new address instead of a copy.
-func (s *Store) sealToken(token string) string {
+// key and bound to the link's id, so a sealed value moved to another link does
+// not open there. Empty when there is no key to seal with: the link then works,
+// and its owner gets a new address instead of a copy.
+func (s *Store) sealToken(id, token string) string {
 	if s.Sealer == nil {
 		return ""
 	}
-	sealed, err := s.Sealer.Seal(token)
+	sealed, err := s.Sealer.SealFor(token, id)
 	if err != nil {
 		return ""
 	}
@@ -77,12 +78,13 @@ func (s *Store) sealToken(token string) string {
 
 // openToken reads a sealed token back. It is checked against the hash that
 // opens the link, so a value that was swapped, damaged or sealed with another
-// key is never handed out as an address: it reads as "no token kept".
-func (s *Store) openToken(sealed, hash string) string {
+// key or for another link is never handed out as an address: it reads as "no
+// token kept".
+func (s *Store) openToken(id, sealed, hash string) string {
 	if sealed == "" || s.Sealer == nil {
 		return ""
 	}
-	token, err := s.Sealer.Open(sealed)
+	token, err := s.Sealer.OpenFor(sealed, id)
 	if err != nil || !auth.Equal(hex.EncodeToString(auth.Hash(token)), hash) {
 		return ""
 	}
@@ -108,7 +110,7 @@ func (s *Store) Shares(ctx context.Context, site string) ([]Share, error) {
 			return nil, err
 		}
 		sh.Revenue, sh.HasPass, sh.EmbedOrigins = rev == 1, pass, splitLines(origins)
-		sh.Token = s.openToken(sealed, hash)
+		sh.Token = s.openToken(sh.ID, sealed, hash)
 		out = append(out, sh)
 	}
 	return out, rows.Err()
@@ -142,7 +144,7 @@ func (s *Store) CreateShare(ctx context.Context, site, name, password string, re
 	}
 	_, err := s.DB.ExecContext(ctx,
 		`INSERT INTO site_shares (id, site_id, name, token_hash, token_enc, pass_hash, revenue, notes, expires_at, created_at, embed_origins) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		sh.ID, site, sh.Name, hex.EncodeToString(auth.Hash(token)), s.sealToken(token), pass, rev, notes, expires, sh.CreatedAt, strings.Join(origins, "\n"))
+		sh.ID, site, sh.Name, hex.EncodeToString(auth.Hash(token)), s.sealToken(sh.ID, token), pass, rev, notes, expires, sh.CreatedAt, strings.Join(origins, "\n"))
 	return sh, token, err
 }
 
@@ -171,7 +173,7 @@ func (s *Store) RotateShare(ctx context.Context, site, id string) (string, error
 	}
 	defer tx.Rollback() //nolint:errcheck // a no-op once committed
 	res, err := tx.ExecContext(ctx, `UPDATE site_shares SET token_hash = ?, token_enc = ? WHERE site_id = ? AND id = ?`,
-		hex.EncodeToString(auth.Hash(token)), s.sealToken(token), site, id)
+		hex.EncodeToString(auth.Hash(token)), s.sealToken(id, token), site, id)
 	if err != nil {
 		return "", err
 	}
@@ -250,13 +252,23 @@ func (s *Store) TouchShare(ctx context.Context, id string, now time.Time) {
 // ShareSessionTTL is how long one opening of a protected link lasts.
 const ShareSessionTTL = 12 * time.Hour
 
-// StartShareSession trades a checked password for a token the browser keeps in
-// a cookie, so the password is verified once and not on every report.
-func (s *Store) StartShareSession(ctx context.Context, shareID string, now time.Time) (string, error) {
-	token := auth.Token("shs_", 20)
-	_, err := s.DB.ExecContext(ctx, `INSERT INTO share_sessions (token_hash, share_id, expires_at) VALUES (?, ?, ?)`,
-		hex.EncodeToString(auth.Hash(token)), shareID, now.Add(ShareSessionTTL).Unix())
-	return token, err
+// StartShareSession trades a checked opening (the link's token, and its
+// password if it has one) for a token the browser keeps in a cookie, so the
+// password is verified once and not on every report. The session starts only
+// if the link still has that token, in the same statement: an opening that
+// was checked just before the owner made a new address gets nothing.
+func (s *Store) StartShareSession(ctx context.Context, shareID, linkToken string, now time.Time) (string, error) {
+	session := auth.Token("shs_", 20)
+	res, err := s.DB.ExecContext(ctx,
+		`INSERT INTO share_sessions (token_hash, share_id, expires_at) SELECT ?, id, ? FROM site_shares WHERE id = ? AND token_hash = ?`,
+		hex.EncodeToString(auth.Hash(session)), now.Add(ShareSessionTTL).Unix(), shareID, hex.EncodeToString(auth.Hash(strings.TrimSpace(linkToken))))
+	if err != nil {
+		return "", err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return "", auth.ErrNotFound
+	}
+	return session, nil
 }
 
 // ShareOf resolves a session cookie back to its link, and checks the link is

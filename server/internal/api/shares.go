@@ -139,6 +139,13 @@ func (a *API) newShareAddress(w http.ResponseWriter, r *http.Request) {
 	if a.owner(w, r) == nil || !a.siteExists(w, r) {
 		return
 	}
+	a.init()
+	// Each new address is a write that ends every open session: limited, so
+	// a stolen session cannot keep a link from ever staying put.
+	if !a.loginRate.allow("shareaddr:"+r.PathValue("site"), a.Now(), 10, 10*time.Minute) {
+		fail(w, http.StatusTooManyRequests, "tried many times just now: try again in a few minutes")
+		return
+	}
 	token, err := a.Ctl.RotateShare(r.Context(), r.PathValue("site"), r.PathValue("id"))
 	if errors.Is(err, auth.ErrNotFound) {
 		fail(w, http.StatusNotFound, "no such link")
@@ -232,7 +239,12 @@ func (a *API) openShare(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusNotFound, "this link does not exist, or it was revoked")
 		return
 	}
-	session, err := a.Ctl.StartShareSession(r.Context(), sh.ID, a.Now())
+	session, err := a.Ctl.StartShareSession(r.Context(), sh.ID, in.Token, a.Now())
+	if errors.Is(err, auth.ErrNotFound) {
+		// The owner made a new address between the check and here.
+		fail(w, http.StatusNotFound, "this link does not exist, or it was revoked")
+		return
+	}
 	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return

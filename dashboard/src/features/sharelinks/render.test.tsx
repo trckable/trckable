@@ -38,16 +38,19 @@ describe('a row', () => {
     expect(row({ expires_at: 4_000_000_000 })).toContain('Ends ')
     expect(row({ expires_at: 1_000 })).toContain('Ended ')
   })
-  it('has Copy and Open for a link with an address, and no way to get a new one', () => {
+  it('has Copy and Open for a link with an address, and a quiet New address icon after them', () => {
     const html = row({ url: 'https://t.example/s/abc' })
     expect(html).toContain('aria-label="Copy link: Board"')
     expect(html).toContain('aria-label="Open link: Board"')
     expect(html).toContain('href="https://t.example/s/abc"')
-    expect(html).not.toContain('New address')
+    expect(html).toContain('aria-label="New address: Board"')
+    expect(html).toContain('title="Make a new address"')
+    expect(html).not.toContain('>New address<')
   })
-  it('offers a new address, and no Copy or Open, for a link made before addresses were kept', () => {
+  it('offers a new address, and no Copy or Open, for a link whose address cannot be shown', () => {
     const html = row({ url: undefined })
     expect(html).toContain('New address')
+    expect(html).toContain("This address can&#x27;t be shown. Make a new one to copy.")
     expect(html).not.toContain('Copy link')
     expect(html).not.toContain('Open link')
     expect(html).toContain('aria-label="Revoke Board"')

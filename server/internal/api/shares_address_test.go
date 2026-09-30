@@ -183,3 +183,23 @@ func TestShareCarriesTheSitesMark(t *testing.T) {
 		t.Errorf("an icon without a session: %d", stranger.StatusCode)
 	}
 }
+
+// Making new addresses is limited per site, in the same shape as the other
+// limits, so a stolen session cannot keep ending every reader's session.
+func TestShareNewAddressIsRateLimited(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	base := g.srv.URL + "/api/v1/sites/" + g.site
+	_, made := do(t, c, "POST", base+"/shares", `{"name":"Board"}`, csrf, "1")
+	id := made["share"].(map[string]any)["id"].(string)
+	for i := 0; i < 10; i++ {
+		if code, _ := do(t, c, "POST", base+"/shares/"+id+"/address", `{}`, csrf, "1"); code != 200 {
+			t.Fatalf("new address %d: %d", i+1, code)
+		}
+	}
+	code, out := do(t, c, "POST", base+"/shares/"+id+"/address", `{}`, csrf, "1")
+	if code != http.StatusTooManyRequests || out["error"] == nil {
+		t.Errorf("the eleventh new address: %d %v", code, out)
+	}
+}
