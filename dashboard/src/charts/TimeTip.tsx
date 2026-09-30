@@ -29,7 +29,7 @@ export default function TimeTip({ p, i, left, width, compact, notes }: { p: Time
     <div className="chart-tip time-tip" style={{ left }}>
       <div className="ct-head">
         <b>{bucketLabel(p.labels[i], p.bucket, true)}</b>
-        {p.partialLast && i === p.values.length - 1 && <span className="ct-live">In progress</span>}
+        {p.partialLast && i === p.values.length - 1 && <span className="ct-live">{timeCopy.soFar}</span>}
       </div>
       {/* The flag on the axis is a short tag; the whole note is here,
           where there is room to read it. */}

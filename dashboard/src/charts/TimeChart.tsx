@@ -120,8 +120,10 @@ export function TimeChart(p: TimeChartProps) {
   // max is tweened, so on the very first frame it can still be 0 — and 0/0 is
   // a NaN in the middle of a path the browser then refuses to draw.
   const y = (v: number) => PAD_T + plotH - (v / (max || 1)) * plotH
-  const line = (a: number[]) => smooth(a.map((v, i) => [x(i), y(v)]))
-  const area = (a: number[]) => (a.length ? `${line(a)}L${x(a.length - 1).toFixed(1)} ${PAD_T + plotH}L${x(0).toFixed(1)} ${PAD_T + plotH}Z` : '')
+  // Where the data begins: what is before it is a faint dotted baseline, not a line along zero.
+  const first = p.values.findIndex((v) => v > 0) < 0 ? n : p.values.findIndex((v) => v > 0)
+  const line = (a: number[], from = 0) => smooth(a.map((v, i) => [x(i), y(v)]).slice(from))
+  const area = (a: number[], from = 0) => (a.length > from ? `${line(a, from)}L${x(a.length - 1).toFixed(1)} ${PAD_T + plotH}L${x(from).toFixed(1)} ${PAD_T + plotH}Z` : '')
 
   const columns = money && !isDense(p.values)
   const bw = columnWidth(plotW, n)
@@ -200,7 +202,7 @@ export function TimeChart(p: TimeChartProps) {
         <YTicks ticks={target.ticks} y={y} w={w} padL={PAD_L} write={p.axis ?? fmtCompact} />
         <line x1={PAD_L} x2={w} y1={PAD_T + plotH} y2={PAD_T + plotH} stroke="var(--border)" />
         {/* While Replay plays, is dragged or has a day picked, what is past the cut goes grey: this copy shows through where the lit one is cut off. */}
-        {dim && !p.story && !columns && <path d={line(vals)} fill="none" stroke="var(--text-4)" strokeOpacity="0.55" strokeWidth="1.5" strokeLinejoin="round" clipPath={`url(#${gradId}-main)`} />}
+        {dim && !p.story && !columns && <path d={line(vals, first)} fill="none" stroke="var(--text-4)" strokeOpacity="0.55" strokeWidth="1.5" strokeLinejoin="round" clipPath={`url(#${gradId}-main)`} />}
         {dim && !p.story && columns && <g clipPath={`url(#${gradId}-main)`}><ColumnsLayer {...cols} id={gradId} values={vals} hover={null} grey /></g>}
         <g clipPath={`url(#${gradId}-main)`}>
         <g mask={`url(#${gradId}-dim)`}>
@@ -209,15 +211,16 @@ export function TimeChart(p: TimeChartProps) {
             <ColumnsLayer {...cols} id={gradId} values={vals} ghost={p.ghost ? ghost : undefined} hover={hover} partialLast={p.partialLast} />
           ) : (
             <>
-              <path d={area(vals)} fill={`url(#${gradId})`} />
-              <path className={money ? 'chart-line money' : 'chart-line'} d={line(p.partialLast && n > 2 ? vals.slice(0, -1) : vals)} fill="none" stroke={tone} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-              {p.partialLast && n > 2 && (
-                <path d={`M${x(n - 2).toFixed(1)} ${y(vals[n - 2]).toFixed(1)}L${x(n - 1).toFixed(1)} ${y(vals[n - 1]).toFixed(1)}`} fill="none" stroke={tone} strokeWidth="2" strokeDasharray="3 4" strokeLinecap="round" />
+              {first > 0 && <line x1={x(0)} x2={x(Math.min(first, n - 1))} y1={PAD_T + plotH} y2={PAD_T + plotH} stroke="var(--text-4)" strokeWidth="1.5" strokeDasharray="0.1 5" strokeLinecap="round" />}
+              <path d={area(vals, first)} fill={`url(#${gradId})`} />
+              <path className={money ? 'chart-line money' : 'chart-line'} d={line(p.partialLast && n - first > 2 ? vals.slice(0, -1) : vals, first)} fill="none" stroke={tone} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+              {p.partialLast && n - first > 2 && (
+                <path d={`M${x(n - 2).toFixed(1)} ${y(vals[n - 2]).toFixed(1)}L${x(n - 1).toFixed(1)} ${y(vals[n - 1]).toFixed(1)}`} fill="none" stroke={tone} strokeWidth="2" strokeDasharray="0.1 5.5" strokeLinecap="round" />
               )}
             </>
           )}
         </g>
-        {p.ghost && !columns && <path d={line(ghost)} fill="none" stroke="var(--text-3)" strokeWidth="1.5" strokeDasharray="4 3" strokeLinejoin="round" />}
+        {p.ghost && !columns && <path d={line(ghost)} fill="none" stroke="var(--text-3)" strokeOpacity="0.6" strokeWidth="1.25" strokeDasharray="4 4" strokeLinejoin="round" />}
         {p.overlay && (
           <g>
             <path d={area(over)} fill={p.overlay.color} fillOpacity="0.22" />
@@ -226,12 +229,9 @@ export function TimeChart(p: TimeChartProps) {
         )}
         </g>
         </g>
-        {/* Today, still counting: a point that breathes at the line's end, whole even on the plot's edge. */}
-        {p.partialLast && n > 1 && hover == null && scrub == null && !columns && (
-          <g className="chart-now" aria-hidden="true">
-            <circle cx={x(n - 1)} cy={y(vals[n - 1] ?? 0)} r="9" fill={tone} className="chart-now-halo" />
-            <circle cx={x(n - 1)} cy={y(vals[n - 1] ?? 0)} r="4" fill={tone} stroke="var(--surface)" strokeWidth="2" />
-          </g>
+        {/* Today, still counting: a ring at the line's end, whole even on the plot's edge. */}
+        {p.partialLast && n > 1 && hover == null && scrub == null && !columns && n - first > 0 && (
+          <circle cx={x(n - 1)} cy={y(vals[n - 1] ?? 0)} r="4" fill="var(--surface)" stroke={tone} strokeWidth="2" aria-hidden="true" />
         )}
         {p.story && <g clipPath={`url(#${gradId}-plot)`}><rect className="chart-dim chart-unknown" x={0} y={PAD_T} width={w + 16} height={plotH + STRIP} /></g>}
         {/* Replay's day: a solid line at the cut, drawn at the variable so it

@@ -176,14 +176,14 @@ test('with reduced motion the cut moves without a glide', async ({ page }) => {
   expect((await cut(page)).state).toBe('on')
 })
 
-// A new site's week is drawn by the hour from its first visit: Replay plays
-// that chart, hour by hour, and never swaps it for the week by day.
+// A short span is drawn by the hour: Replay plays that chart, hour by hour,
+// and never swaps it for the span by day.
 test('Replay plays the chart on screen: same start, same bucket', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(API + '/example.com?period=7d')
+  const day = (n: number) => new Date(Date.now() - n * 86400_000).toISOString().slice(0, 10)
+  await page.goto(API + `/example.com?from=${day(2)}&to=${day(0)}`)
   const svg = page.locator('.overview-chart .chart-wrap svg[role="img"]')
   await expect(svg).toBeVisible({ timeout: 15_000 })
-  await expect(page.locator('.overview-chart .since-chip')).toBeVisible()
   const before = await svg.getAttribute('aria-label')
   await page.getByRole('button', { name: 'Replay this period hour by hour' }).click()
   await expect(page.getByRole('button', { name: 'Pause replay' })).toBeVisible()
@@ -286,9 +286,8 @@ test('a paused Replay leaves a quiet marker on the picked day', async ({ page })
   await expect(chart.locator('.cursor line')).toHaveCount(1)
 })
 
-// The slider under the chart spans the same days the chart does: with a first
-// visit inside the period the chart starts there ("since Sep 26"), and so
-// does the slider. A day picked on it is where the chart marks it, and the
+// The slider under the chart spans the same days the chart does, the whole
+// period. A day picked on it is where the chart marks it, and the
 // chip names the day the chart's own cursor names.
 const PAD_L = 44 // the plot starts this far in from the chart's left edge
 
@@ -301,7 +300,6 @@ async function thumbAndMarker(page: Page, chart: Locator) {
 
 test('the Replay slider spans the chart, so its thumb sits at the picked day', async ({ page }) => {
   const chart = await openHistory(page)
-  await expect(page.locator('.overview-chart .since-chip')).toBeVisible()
   const points = Number(/(\d+) points/.exec((await chart.locator('svg[role="img"]').getAttribute('aria-label')) ?? '')?.[1] ?? 0)
   const slider = page.locator('#scrub')
   expect(await slider.getAttribute('min')).toBe('0')
@@ -323,7 +321,6 @@ test('the Replay slider spans the chart, so its thumb sits at the picked day', a
 // In Full the chart itself picks the day (a click or drag on it): the thumb follows.
 test('picking a day on the chart moves the Replay slider to it', async ({ page }) => {
   const chart = await openHistory(page, `/${HISTORY_DOMAIN}?mode=full`)
-  await expect(page.locator('.overview-chart .since-chip')).toBeVisible()
   const b = (await chart.boundingBox())!
   await page.mouse.move(b.x + PAD_L + 0.8 * (b.width - PAD_L), b.y + b.height / 2)
   await page.mouse.down()
