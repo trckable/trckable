@@ -162,7 +162,8 @@ func TestRemoteDownload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if b, _ := os.ReadFile(got); string(b) != "backup bytes" || filepath.Dir(got) != dir {
+	b, _ := os.ReadFile(got) //nolint:gosec // a file this test wrote under t.TempDir
+	if string(b) != "backup bytes" || filepath.Dir(got) != dir {
 		t.Fatalf("downloaded %q to %s", b, got)
 	}
 	// A second copy into the same place is refused, never overwritten.
