@@ -1,5 +1,5 @@
 {
-  "literals": 472,
+  "literals": 449,
   "components": {
     "src/charts/TimeChart.tsx": 284,
     "src/components/DateRangePopover.tsx": 396,
@@ -15,7 +15,6 @@
     "src/views/Privacy.tsx": 750,
     "src/views/Search.tsx": 360,
     "src/views/Settings.tsx": 607,
-    "src/views/Shares.tsx": 251,
     "src/views/Sites.tsx": 440,
     "src/views/TwoStepSetup.tsx": 265,
     "src/views/Widgets.tsx": 301
