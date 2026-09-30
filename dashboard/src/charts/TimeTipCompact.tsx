@@ -4,8 +4,7 @@
 import type { Annotation } from '../lib/api'
 import { fmtInt } from '../lib/format'
 import { timeCopy } from './copy'
-import type { TimeChartProps } from './timeProps'
-import { modelBrief } from './models/ModelTip'
+import type { TimeChartProps } from './TimeChart'
 import { bucketLabel } from './timeScale'
 import './TimeTipCompact.css'
 
@@ -29,15 +28,12 @@ export function CompactTip({ p, i, left, width, detail, notes }: { p: TimeChartP
   const rev = p.tone === 'money' ? undefined : p.revenue
   const sold = rev ? (rev.values[i] ?? 0) > 0 : false
   const sales = p.saleNote?.(i)
-  const model = p.model ? modelBrief(p, i) : null
-  const empty = p.tone === 'money' && !p.values[i]
-  const figure = empty ? null : (model?.value ?? fmt(p.values[i] ?? 0))
-  const cells = (model?.cells.length ? model.cells.map((c) => ({ ...c, short: c.label })) : (detail?.rows ?? [])).slice(0, ROW_MAX)
+  const cells = (detail?.rows ?? []).slice(0, ROW_MAX)
   return (
     <div className="chart-tip time-tip compact" style={{ left, width }}>
       <div className="ct-line">
         <b className="ct-date">{bucketLabel(p.labels[i], p.bucket, true)}</b>
-        <Figure label={p.metric} color={paint} value={figure} />
+        <Figure label={p.metric} color={paint} value={p.tone === 'money' && !p.values[i] ? null : fmt(p.values[i] ?? 0)} />
       </div>
       {rev && (
         <div className="ct-line">
@@ -49,7 +45,6 @@ export function CompactTip({ p, i, left, width, detail, notes }: { p: TimeChartP
         </div>
       )}
       {sales && <span className="ct-sub num">{sales}</span>}
-      {model?.sub && <span className="ct-sub num">{model.sub}</span>}
       {detail?.splits?.map((sp) => (
         <span className="ct-split-bar" key={sp.aLabel + sp.bLabel} aria-hidden="true">
           <span style={{ width: `${(sp.a / Math.max(1, sp.a + sp.b)) * 100}%`, background: sp.tone ?? 'var(--accent)' }} />

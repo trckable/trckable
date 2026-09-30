@@ -8,9 +8,9 @@ import { Info } from '../../components/Info'
 import { Loading } from '../../components/loading/Loading'
 import { api, type Cohorts, type ReportQuery, type Site } from '../../lib/api'
 import { fmtInt, fmtPct } from '../../lib/format'
-import { newCopy } from './copy'
+import { deepCopy } from './deepCopy'
 import { retentionOf, shade } from './retentionModel'
-import './newcards.css'
+import './deep.css'
 
 const weekLabel = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 const INFO = 'Each row is the week a group of people first arrived; each column is a week after that. The figure is the share of that group who came back. Someone’s week is when trckable first saw them, not when this report starts.'
@@ -21,7 +21,7 @@ function Curve({ values }: { values: number[] }) {
   const H = 52
   const pts = values.map((v, i) => ({ x: ((i + 0.5) / values.length) * 100, y: 20 + (1 - v / top) * (H - 28) }))
   return (
-    <div className="rt-curve" role="img" aria-label={newCopy.retention.curve(values.length)}>
+    <div className="rt-curve" role="img" aria-label={deepCopy.retention.curve(values.length)}>
       <svg viewBox={`0 0 100 ${H}`} preserveAspectRatio="none" aria-hidden="true">
         <path d={pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(2)} ${p.y.toFixed(1)}`).join('')} fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
       </svg>
@@ -35,7 +35,7 @@ function Curve({ values }: { values: number[] }) {
   )
 }
 
-export default function RetentionNew({ site, query }: { site: Site; query: ReportQuery }) {
+export default function Retention({ site, query }: { site: Site; query: ReportQuery }) {
   const [data, setData] = useState<Cohorts | null>(null)
   const [err, setErr] = useState(false)
   useEffect(() => {
@@ -49,11 +49,10 @@ export default function RetentionNew({ site, query }: { site: Site; query: Repor
     }
   }, [site.id, query])
   const r = retentionOf(data)
-  const c = newCopy.retention
+  const c = deepCopy.retention
   return (
-    <div className="card nc nc-retention">
-      <div className="card-head">
-        <h2>{c.title}</h2>
+    <div className="rt-panel">
+      <div className="tc-tools">
         <Info text={INFO} />
       </div>
       {err && <span className="faint">{c.failed}</span>}

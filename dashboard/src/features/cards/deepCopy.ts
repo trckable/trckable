@@ -1,12 +1,21 @@
-// The new cards' words (try-out).
+// The words of Full's own tabs (retention, funnel, people): a chunk of their own.
 import { fmtInt, fmtPct } from '../../lib/format'
 
-export const newCopy = {
-  up: '▲',
-  down: '▼',
-  flat: '–',
-  share: (pct: string) => pct,
-  revenue: 'Revenue',
+export const deepCopy = {
+  tab: {
+    overTime: 'Over time',
+    returning: 'New vs returning',
+    hours: 'Hours',
+    revenueMap: 'Revenue map',
+    crawlers: 'Crawlers',
+    funnel: 'Funnel',
+    visitToSale: 'Visit to sale',
+    toConvert: 'Time to convert',
+    flow: 'Page flow',
+    retention: 'Retention',
+    vitals: 'Vitals',
+    people: 'People',
+  },
   retention: {
     title: 'Retention',
     arrived: 'Arrived',

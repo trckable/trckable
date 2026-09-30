@@ -75,8 +75,6 @@ type Params struct {
 	// Sales adds the payments bucket by bucket (Result.Sales), for Replay's
 	// moments. Only with Revenue on.
 	Sales bool
-	// ByChannel adds the chart series split by channel (Result.SeriesByChannel).
-	ByChannel bool
 }
 
 // KPIs are the headline numbers.
@@ -112,12 +110,6 @@ type Point struct {
 	Revenue   int64  `json:"revenue,omitempty"`
 }
 
-// ChannelSeries is one channel's visitors, bucket by bucket.
-type ChannelSeries struct {
-	Channel string  `json:"channel"`
-	Values  []int64 `json:"values"`
-}
-
 // Day is one day's numbers for the scrubber.
 type Day struct {
 	Date  string           `json:"date"` // YYYY-MM-DD in the site's zone
@@ -134,19 +126,15 @@ var ExactLimit int64 = 250_000
 
 // Result is a full report.
 type Result struct {
-	Approximate bool    `json:"approximate"` // breakdown visitor counts are HyperLogLog estimates
-	KPIs        KPIs    `json:"kpis"`
-	Series      []Point `json:"series"`
-	// One series per channel, aligned with Series. Each visitor counts once in
-	// a bucket, under the channel of their first visit in it, so the channels
-	// add up to the bucket's visitors.
-	SeriesByChannel []ChannelSeries  `json:"series_by_channel,omitempty"`
-	Dims            map[string][]Row `json:"dims"`
-	Goals           []Row            `json:"goals"`
-	Days            []Day            `json:"days,omitempty"`
-	Money           *Money           `json:"money,omitempty"`        // nil until a payment provider is connected
-	RevenueDims     map[string][]Row `json:"revenue_dims,omitempty"` // top rows by revenue
-	Sales           []SaleBucket     `json:"-"`                      // with Params.Sales: the payments per bucket
+	Approximate bool             `json:"approximate"` // breakdown visitor counts are HyperLogLog estimates
+	KPIs        KPIs             `json:"kpis"`
+	Series      []Point          `json:"series"`
+	Dims        map[string][]Row `json:"dims"`
+	Goals       []Row            `json:"goals"`
+	Days        []Day            `json:"days,omitempty"`
+	Money       *Money           `json:"money,omitempty"`        // nil until a payment provider is connected
+	RevenueDims map[string][]Row `json:"revenue_dims,omitempty"` // top rows by revenue
+	Sales       []SaleBucket     `json:"-"`                      // with Params.Sales: the payments per bucket
 }
 
 // sessionDims maps API dimension names to sessions columns (the whitelist).
@@ -271,11 +259,6 @@ func (q Q) Report(ctx context.Context, p Params) (*Result, error) {
 	}
 	rows.Close()
 	res.Series = fillSeries(got, p)
-	if p.ByChannel {
-		if res.SeriesByChannel, err = byChannel(ctx, conn, cte, args, p, res.Series); err != nil {
-			return nil, err
-		}
-	}
 
 	// All session breakdowns in one grouped scan.
 	if err := groupedBreakdowns(ctx, conn, cte, args, p.Limit, distinct, dimsFor(p.Deep), res.Dims); err != nil {
@@ -650,57 +633,6 @@ func (q Q) Online(ctx context.Context, site string, now time.Time) (int64, error
 }
 
 const localLayout = "2006-01-02T15:04"
-
-// byChannel counts each visitor once per bucket, under the channel of their
-// first session in it, and lines the counts up with the series' buckets.
-func byChannel(ctx context.Context, conn *sql.Conn, cte string, args []any, p Params, series []Point) ([]ChannelSeries, error) {
-	rows, err := conn.QueryContext(ctx, cte+`
-		SELECT b, ch, count(*) FROM (
-			SELECT `+bucketOf(p, "lstart")+` AS b, visitor_id, arg_min(`+sessionDims["channel"]+`, start) AS ch
-			FROM s GROUP BY b, visitor_id
-		) GROUP BY b, ch`, args...)
-	if err != nil {
-		return nil, fmt.Errorf("series by channel: %w", err)
-	}
-	defer rows.Close()
-	at := make(map[string]int, len(series))
-	for i, pt := range series {
-		at[pt.T] = i
-	}
-	by := map[string][]int64{}
-	totals := map[string]int64{}
-	for rows.Next() {
-		var b time.Time
-		var ch string
-		var n int64
-		if err := rows.Scan(&b, &ch, &n); err != nil {
-			return nil, err
-		}
-		i, ok := at[b.Format(localLayout)]
-		if !ok {
-			continue
-		}
-		if by[ch] == nil {
-			by[ch] = make([]int64, len(series))
-		}
-		by[ch][i] = n
-		totals[ch] += n
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	out := make([]ChannelSeries, 0, len(by))
-	for ch, v := range by {
-		out = append(out, ChannelSeries{Channel: ch, Values: v})
-	}
-	sort.Slice(out, func(i, j int) bool {
-		if totals[out[i].Channel] != totals[out[j].Channel] {
-			return totals[out[i].Channel] > totals[out[j].Channel]
-		}
-		return out[i].Channel < out[j].Channel
-	})
-	return out, nil
-}
 
 // fillSeries returns one point per bucket from p.From to p.To (local time),
 // so charts and API clients never have to guess about missing buckets.

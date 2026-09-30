@@ -86,10 +86,8 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 	params := query.Params{
 		Site: siteID, From: startOfDay(from, loc).UTC(), To: startOfDay(to, loc).UTC(),
 		TZ: tzName, Filters: filters, Bucket: bucket, Daily: v.Get("daily") == "1" && days <= 400,
-		Deep: v.Get("deep") == "1",
-		// The chart's split by channel belongs to the period shown, not its comparison.
-		ByChannel: v.Get("channels") == "1",
-		Currency:  si.Currency, Test: v.Get("payments") == "test",
+		Deep:     v.Get("deep") == "1",
+		Currency: si.Currency, Test: v.Get("payments") == "test",
 		// Money and goals are read only while their modules are on. Set before
 		// the comparison period is derived, so both halves match.
 		Revenue: allowRevenue && a.moduleOn(r, siteID, "revenue"),
@@ -107,12 +105,12 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 	case "previous":
 		p := params
 		p.From, p.To = params.From.Add(-to.Sub(from)), params.From
-		p.Daily, p.ByChannel = false, false
+		p.Daily = false
 		prev = &p
 	case "year":
 		p := params
 		p.From, p.To = startOfDay(from.AddDate(-1, 0, 0), loc).UTC(), startOfDay(to.AddDate(-1, 0, 0), loc).UTC()
-		p.Daily, p.ByChannel = false, false
+		p.Daily = false
 		prev = &p
 	case "custom":
 		cf, ct, err := dateRange(v.Get("cfrom"), v.Get("cto"), today)
@@ -121,7 +119,7 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 			return nil
 		}
 		p := params
-		p.From, p.To, p.Daily, p.ByChannel = startOfDay(cf, loc).UTC(), startOfDay(ct, loc).UTC(), false, false
+		p.From, p.To, p.Daily = startOfDay(cf, loc).UTC(), startOfDay(ct, loc).UTC(), false
 		prev = &p
 	}
 
@@ -303,5 +301,5 @@ func cacheKey(p query.Params) string {
 	for _, g := range p.PageGoals {
 		gs = append(gs, "goal:"+g.Name+"="+g.Path)
 	}
-	return fmt.Sprintf("%s|%d|%d|%s|%s|%v|%v|%v|%s|%s|%v|%v|%v|%s|%s|%v|%v", p.Site, p.From.Unix(), p.To.Unix(), p.TZ, p.Bucket, p.SundayWeeks, p.Daily, p.Deep, strings.Join(fs, "&"), p.Currency, p.Test, p.Revenue, p.Goals, p.Attribution, strings.Join(gs, "&"), p.Sales, p.ByChannel)
+	return fmt.Sprintf("%s|%d|%d|%s|%s|%v|%v|%v|%s|%s|%v|%v|%v|%s|%s|%v", p.Site, p.From.Unix(), p.To.Unix(), p.TZ, p.Bucket, p.SundayWeeks, p.Daily, p.Deep, strings.Join(fs, "&"), p.Currency, p.Test, p.Revenue, p.Goals, p.Attribution, strings.Join(gs, "&"), p.Sales)
 }

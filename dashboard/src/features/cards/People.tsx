@@ -8,9 +8,9 @@ import { call, type Site } from '../../lib/api'
 import { countryName, flag } from '../../lib/format'
 import { channelColor, channelLabel } from '../../lib/palette'
 import { liveNow } from '../live/api'
-import { newCopy } from './copy'
+import { deepCopy } from './deepCopy'
 import { ago, peopleOf, span, type EventRow, type Person } from './peopleModel'
-import './newcards.css'
+import './deep.css'
 
 /** The source's first letter on the source's own colour. */
 function Face({ channel }: { channel: string }) {
@@ -23,7 +23,7 @@ function Face({ channel }: { channel: string }) {
 }
 
 function Row({ p, now, onPick }: { p: Person; now: number; onPick: (visitor: string) => void }) {
-  const c = newCopy.people
+  const c = deepCopy.people
   const source = p.referrer ? `${channelLabel(p.channel)} · ${p.referrer}` : channelLabel(p.channel)
   return (
     <li>
@@ -43,7 +43,7 @@ function Row({ p, now, onPick }: { p: Person; now: number; onPick: (visitor: str
   )
 }
 
-export default function PeopleNew({ site, onPick }: { site: Site; onPick: (visitor: string) => void }) {
+export default function People({ site, onPick }: { site: Site; onPick: (visitor: string) => void }) {
   const [people, setPeople] = useState<Person[] | null>(null)
   const [online, setOnline] = useState<number | null>(null)
   const [now, setNow] = useState(() => Date.now())
@@ -68,15 +68,12 @@ export default function PeopleNew({ site, onPick }: { site: Site; onPick: (visit
       clearInterval(t)
     }
   }, [site.id])
-  if (site.cookieless) return <CookielessOff title={newCopy.people.title} />
+  if (site.cookieless) return <CookielessOff title={deepCopy.people.title} />
   return (
-    <div className="card nc nc-people">
-      <div className="card-head">
-        <h2>{newCopy.people.title}</h2>
-        {online !== null && <span className="pp-online num">{newCopy.people.online(online)}</span>}
-      </div>
+    <div className="pp-panel">
+      <div className="tc-tools">{online !== null && <span className="pp-online num">{deepCopy.people.online(online)}</span>}</div>
       {!people && <Loading height={140} />}
-      {people && people.length === 0 && <span className="faint">{newCopy.people.none}</span>}
+      {people && people.length === 0 && <span className="faint">{deepCopy.people.none}</span>}
       {people && people.length > 0 && (
         <ul className="pp">
           {people.map((p) => (

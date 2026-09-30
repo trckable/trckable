@@ -89,13 +89,7 @@ test('new vs returning and journeys say Off, never a number', async ({ page, bro
   expect(listed?.cookieless).toBe(true)
 
   await page.goto(`${API}/${site.domain}?period=7d&mode=full`)
-  const more = page.getByRole('button', { name: /More numbers/ })
-  await expect(more).toBeVisible({ timeout: 20_000 })
-  // Folded: sessions, and no "% new".
-  await expect(more).not.toContainText('% new')
-  await more.click()
-  const cell = page.locator('.more-grid > *', { hasText: 'New visitors' })
-  await expect(cell).toContainText(OFF)
+  await expect(page.locator('.overview-chart')).toBeVisible({ timeout: 20_000 })
 
   // The chart's day: a line saying it is off, not a split bar.
   const chart = page.locator('.overview-chart .chart-wrap')
@@ -106,7 +100,9 @@ test('new vs returning and journeys say Off, never a number', async ({ page, bro
   await expect(tip.locator('.ct-split')).toHaveCount(0)
 
   // Journeys: the People card says Off, and Live opens nobody.
-  const people = page.locator('.card', { has: page.getByRole('heading', { name: 'People' }) })
+  const card = page.locator('[data-card=what]')
+  await card.getByRole('tab', { name: 'People' }).click({ timeout: 20_000 })
+  const people = card.getByRole('tabpanel')
   await expect(people).toContainText(OFF)
   await expect(people.getByRole('button')).toHaveCount(0)
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/cookieless-${browserName}.png`, fullPage: true })
@@ -151,8 +147,9 @@ test('a site with cookies still shows its numbers', async ({ page }) => {
   await p.waitForTimeout(1500)
   await ctx.close()
   await page.goto(`${API}/example.com?period=7d&mode=full`)
-  const more = page.getByRole('button', { name: /More numbers/ })
-  await expect(more).toContainText('% new', { timeout: 20_000 })
+  const card = page.locator('[data-card=what]')
+  await card.getByRole('tab', { name: 'People' }).click({ timeout: 20_000 })
+  await expect(card.getByRole('tabpanel').getByRole('button').first()).toBeVisible({ timeout: 20_000 })
   await expect(page.getByText(OFF)).toHaveCount(0)
 })
 
@@ -162,8 +159,9 @@ test('on a phone the Off labels fit the screen', async ({ page, browserName }) =
   await page.goto(API + '/example.com')
   const site = await cookielessSite(page, page.request, `phone-${browserName}-${Date.now()}`)
   await page.goto(`${API}/${site.domain}?period=7d&mode=full`)
-  await page.getByRole('button', { name: /More numbers/ }).click({ timeout: 20_000 })
-  const cell = page.locator('.more-grid > *', { hasText: 'New visitors' })
+  const card = page.locator('[data-card=what]')
+  await card.getByRole('tab', { name: 'People' }).click({ timeout: 20_000 })
+  const cell = card.getByRole('tabpanel')
   await expect(cell).toContainText(OFF)
   const b = (await cell.boundingBox())!
   expect(b.x + b.width).toBeLessThanOrEqual(375)

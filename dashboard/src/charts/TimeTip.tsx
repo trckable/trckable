@@ -4,12 +4,10 @@ import { useEffect, useReducer } from 'react'
 import type { Annotation } from '../lib/api'
 import { fmtInt } from '../lib/format'
 import { timeCopy } from './copy'
-import type { TimeChartProps } from './timeProps'
+import type { TimeChartProps } from './TimeChart'
 import { bucketLabel } from './timeScale'
 import { Hero, Versus } from './TimeHero'
 import { CompactTip } from './TimeTipCompact'
-import { modelCopy } from './models/modelCopy'
-import { ModelBody } from './models/ModelTip'
 import './TimeTip.css'
 import './Tip.css'
 
@@ -31,7 +29,7 @@ export default function TimeTip({ p, i, left, width, compact, notes }: { p: Time
     <div className="chart-tip time-tip" style={{ left }}>
       <div className="ct-head">
         <b>{bucketLabel(p.labels[i], p.bucket, true)}</b>
-        {p.partialLast && i === p.values.length - 1 && <span className="ct-live">{p.model ? modelCopy.soFar : 'In progress'}</span>}
+        {p.partialLast && i === p.values.length - 1 && <span className="ct-live">{timeCopy.soFar}</span>}
       </div>
       {/* The flag on the axis is a short tag; the whole note is here,
           where there is room to read it. */}
@@ -44,13 +42,9 @@ export default function TimeTip({ p, i, left, width, compact, notes }: { p: Time
             <p>{note.text}</p>
           </div>
         ))}
-      {p.model ? (
-        <ModelBody p={p} i={i} />
-      ) : (
-        <Hero label={p.metric} color={tone} big={money && !p.values[i] ? null : fmt(p.values[i] ?? 0)} note={money ? sales : null}>
-          {p.ghost && p.ghost[i] !== undefined && <Versus a={p.values[i] ?? 0} b={p.ghost[i] ?? 0} fmt={fmt} when={p.ghostLabels?.[i]} bucket={p.bucket} />}
-        </Hero>
-      )}
+      <Hero label={p.metric} color={tone} big={money && !p.values[i] ? null : fmt(p.values[i] ?? 0)} note={money ? sales : null}>
+        {p.ghost && p.ghost[i] !== undefined && <Versus a={p.values[i] ?? 0} b={p.ghost[i] ?? 0} fmt={fmt} when={p.ghostLabels?.[i]} bucket={p.bucket} />}
+      </Hero>
       {p.revenue && !money && <Hero label={p.revenue.label} color="var(--money)" big={p.revenue.values[i] > 0 ? p.revenue.fmt(p.revenue.values[i]) : null} note={sales} />}
       {p.overlay && (
         <div className="ct-row">

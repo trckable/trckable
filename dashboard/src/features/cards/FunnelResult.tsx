@@ -3,14 +3,14 @@
 // between two steps what was lost there.
 import { fmtDuration, fmtInt, fmtPct } from '../../lib/format'
 import type { FunnelResult } from '../../lib/api'
-import { newCopy } from './copy'
+import { deepCopy } from './deepCopy'
 import { funnelOf } from './funnelModel'
-import './newcards.css'
+import './deep.css'
 
-export function FunnelResultNew({ res }: { res: FunnelResult[] }) {
+export function FunnelResult({ res }: { res: FunnelResult[] }) {
   const f = funnelOf(res)
   if (!f) return null
-  const c = newCopy.funnel
+  const c = deepCopy.funnel
   const time = fmtDuration(f.seconds)
   return (
     <div className="fn">

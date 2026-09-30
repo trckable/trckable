@@ -1,9 +1,10 @@
-// Full mode's chart grid against a trckabled with the demo data (the same
+// Full mode's two tabbed cards against a trckabled with the demo data (the same
 // server the accessibility pass uses, so it is skipped unless
 // TRCKABLE_A11Y_URL points at one):
 //   TRCKABLE_A11Y_URL=http://localhost:8799 npx playwright test fullcharts
-// Every card draws, every chart answers a hover, every card has its table,
-// a phone gets one column, and Compact never loads any of it.
+// Every chart tab draws, every chart answers a hover, every one has its table,
+// the tabs answer the arrow keys and are remembered, a phone stacks the two
+// cards, and Compact never loads any of it.
 import { expect, test, type Page } from '@playwright/test'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -49,96 +50,162 @@ async function signIn(page: Page): Promise<string> {
   return page.evaluate(async () => (await (await fetch('/api/v1/sites')).json()).sites[0].domain as string)
 }
 
-const CARDS = ['sources', 'funnel', 'convert', 'visitors', 'rhythm', 'money-map', 'flow']
+// Each Full chart is a tab of one of the two cards: where it is, and what it is called.
+const TABS: [string, 'who' | 'what', string][] = [
+  ['sources', 'who', 'Over time'],
+  ['visitors', 'who', 'New vs returning'],
+  ['rhythm', 'who', 'Hours'],
+  ['money-map', 'who', 'Revenue map'],
+  ['funnel', 'what', 'Visit to sale'],
+  ['convert', 'what', 'Time to convert'],
+  ['flow', 'what', 'Page flow'],
+]
+
+async function open(page: Page, card: 'who' | 'what', name: string) {
+  const tab = page.locator(`[data-card=${card}]`).getByRole('tab', { name, exact: true })
+  if ((await tab.count()) === 0) return null // a module the demo has off
+  await tab.click()
+  return page.locator(`[data-card=${card}]`)
+}
 
 for (const colorScheme of ['dark', 'light'] as const) {
-  test(`every Full card draws the demo data (${colorScheme})`, async ({ page }, info) => {
+  test(`every Full chart tab draws the demo data (${colorScheme})`, async ({ page }, info) => {
     await page.emulateMedia({ colorScheme })
     const domain = await signIn(page)
     await page.goto(`${BASE}/${domain}?mode=full`)
-    const grid = page.getByRole('region', { name: 'Charts', exact: true })
-    await expect(grid.locator('[data-chart=flow] svg')).toBeVisible({ timeout: 20_000 })
-    for (const id of CARDS) await expect(grid.locator(`[data-chart="${id}"]`), id).toBeVisible()
+    await expect(page.locator('[data-card=what]').getByRole('tab', { name: 'Page flow' })).toBeVisible({ timeout: 20_000 })
+    for (const [id, card, name] of TABS) {
+      const panel = await open(page, card, name)
+      if (!panel) continue
+      await expect(panel.locator(`[data-chart="${id}"]`), name).toBeVisible({ timeout: 20_000 })
+      // Every chart turns into a table and back.
+      await panel.getByRole('button', { name: /show as a table/ }).click()
+      await expect(panel.locator('table tbody tr').first(), name).toBeVisible()
+      await panel.getByRole('button', { name: /show as a chart/ }).click()
+    }
     // Real marks, not empty frames.
-    expect(await grid.locator('[data-chart=sources] path').count()).toBeGreaterThan(3)
-    expect(await grid.locator('[data-chart=rhythm] rect').count()).toBe(7 * 24)
-    expect(await grid.locator('[data-chart=flow] path.kit-band').count()).toBeGreaterThan(2)
-
+    const who = await open(page, 'who', 'Over time')
+    expect(await who!.locator('[data-chart=sources] path').count()).toBeGreaterThan(3)
     // A hover names the bucket and every source in it.
-    const svg = grid.locator('[data-chart=sources] svg')
+    const svg = who!.locator('[data-chart=sources] svg')
     await svg.scrollIntoViewIfNeeded()
     const box = (await svg.boundingBox())!
     await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.4)
-    await expect(grid.locator('[data-chart=sources] .kit-tip')).toContainText(/Direct|Search/)
+    await expect(who!.locator('[data-chart=sources] .kit-tip')).toContainText(/Direct|Search/)
     // The keyboard walks the same buckets.
     await svg.focus()
     await page.keyboard.press('End')
-    await expect(grid.locator('[data-chart=sources] .kit-tip')).toBeVisible()
-
-    // Every card turns into a table and back.
-    for (const id of CARDS) {
-      const card = grid.locator(`[data-chart="${id}"]`)
-      await card.getByRole('button', { name: /show as a table/ }).click()
-      await expect(card.locator('table tbody tr').first(), id).toBeVisible()
-      await card.getByRole('button', { name: /show as a chart/ }).click()
-    }
-    if (SHOTS) await grid.screenshot({ path: `${SHOTS}/e2e-full-${colorScheme}-${info.project.name}.png` })
+    await expect(who!.locator('[data-chart=sources] .kit-tip')).toBeVisible()
+    const flow = await open(page, 'what', 'Page flow')
+    expect(await flow!.locator('[data-chart=flow] path.kit-band').count()).toBeGreaterThan(2)
+    if (SHOTS) await page.locator('#cards').screenshot({ path: `${SHOTS}/e2e-full-${colorScheme}-${info.project.name}.png` })
   })
 }
 
-test('on a phone the cards stack, and Compact loads none of it', async ({ page }, info) => {
+// Tabs are real tabs: one selected, the arrow keys, Home and End move between
+// them, and the one picked is remembered for this site and card.
+test('the tabs answer the arrow keys and are remembered', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  const domain = await signIn(page)
+  await page.goto(`${BASE}/${domain}`)
+  const who = page.locator('[data-card=who]')
+  const tabs = who.locator('.tc-tabs').getByRole('tab')
+  await expect(tabs.first()).toHaveAttribute('aria-selected', 'true', { timeout: 20_000 })
+  await expect(tabs.filter({ hasText: /^(Sources|Pages|Locations|Devices)$/ })).toHaveText(['Sources', 'Pages', 'Locations', 'Devices'])
+  await expect(who.getByRole('tabpanel')).toBeVisible()
+  // Only the selected tab is in the tab order.
+  await expect(who.locator('.tc-tabs [role=tab][tabindex="0"]')).toHaveCount(1)
+  await tabs.first().focus()
+  await page.keyboard.press('ArrowRight')
+  await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true')
+  await expect(tabs.nth(1)).toBeFocused()
+  await page.keyboard.press('End')
+  await expect(tabs.nth(3)).toBeFocused()
+  await expect(tabs.nth(3)).toHaveAttribute('aria-selected', 'true')
+  await page.keyboard.press('ArrowRight')
+  await expect(tabs.first()).toBeFocused()
+  await expect(tabs.first()).toHaveAttribute('aria-selected', 'true')
+  await page.keyboard.press('ArrowLeft')
+  await expect(tabs.nth(3)).toBeFocused()
+  await page.keyboard.press('Home')
+  await expect(tabs.first()).toBeFocused()
+  await expect(tabs.first()).toHaveAttribute('aria-selected', 'true')
+  // The panel is named by its tab.
+  await tabs.nth(2).click()
+  await expect(who.getByRole('tabpanel')).toHaveAccessibleName('Locations')
+  // Remembered: a reload opens on it.
+  await page.reload()
+  await expect(who.getByRole('tab', { name: 'Locations' })).toHaveAttribute('aria-selected', 'true', { timeout: 20_000 })
+  // And a list's own small tabs work the same way.
+  const sub = who.getByRole('tablist', { name: 'Locations' })
+  await sub.getByRole('tab').first().focus()
+  await page.keyboard.press('ArrowRight')
+  await expect(sub.getByRole('tab').nth(1)).toHaveAttribute('aria-selected', 'true')
+})
+
+test('Compact has two cards with goals and what paid; Full adds tabs to both', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  const domain = await signIn(page)
+  await page.goto(`${BASE}/${domain}`)
+  const what = page.locator('[data-card=what]')
+  await expect(page.locator('[data-card]')).toHaveCount(2, { timeout: 20_000 })
+  await expect(what.getByRole('tab', { name: 'Goals' })).toBeVisible()
+  await expect(what.getByRole('tab', { name: 'Funnel' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /More numbers/ })).toHaveCount(0)
+  await page.goto(`${BASE}/${domain}?mode=full`)
+  await expect(what.getByRole('tab', { name: 'Page flow' })).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('[data-card]')).toHaveCount(2)
+})
+
+test('on a phone the cards stack, the tab rows scroll sideways, and Compact loads none of Full', async ({ page }, info) => {
   await page.setViewportSize({ width: 375, height: 812 })
   const domain = await signIn(page)
   await page.goto(`${BASE}/${domain}?mode=full`)
-  const grid = page.getByRole('region', { name: 'Charts', exact: true })
-  await expect(grid.locator('[data-chart=flow] svg')).toBeVisible({ timeout: 20_000 })
-  const widths = await grid.locator('[data-chart]').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().width)))
+  const cards = page.locator('[data-card]')
+  await expect(page.locator('[data-card=what]').getByRole('tab', { name: 'Page flow' })).toBeVisible({ timeout: 20_000 })
+  const widths = await cards.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().width)))
   expect(new Set(widths).size, 'one column').toBe(1)
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 'no sideways scroll').toBeLessThanOrEqual(0)
-  if (SHOTS) await grid.screenshot({ path: `${SHOTS}/e2e-full-375-${info.project.name}.png` })
+  const row = await page.locator('[data-card=what] [role=tablist]').first().evaluate((el) => ({ over: el.scrollWidth > el.clientWidth, overflow: getComputedStyle(el).overflowX }))
+  expect(row.over, 'more tabs than fit').toBe(true)
+  expect(row.overflow).toBe('auto')
+  if (SHOTS) await page.locator('#cards').screenshot({ path: `${SHOTS}/e2e-full-375-${info.project.name}.png` })
 
   const chunks: string[] = []
   page.on('request', (r) => chunks.push(r.url()))
   await page.goto(`${BASE}/${domain}`)
   await expect(page.locator('.overview-chart')).toBeVisible({ timeout: 20_000 })
   await page.waitForTimeout(1000)
-  await expect(page.locator('#sec-charts')).toHaveCount(0)
-  expect(chunks.filter((u) => /FullCharts|report\/charts/.test(u))).toEqual([])
+  expect(chunks.filter((u) => /FullCards|ChartPanels|report\/charts/.test(u))).toEqual([])
 })
 
-// Every row of the grid is full, at every width: no holes, whatever cards
-// the site has. And Full is the grid only: the breakdown cards stay in Core.
-for (const width of [1440, 1280, 1024, 768, 375]) {
-  test(`the Full grid has no holes at ${width}px`, async ({ page }) => {
+// The two cards sit side by side on a desktop, one height, edge to edge; on a
+// phone one under the other.
+for (const width of [1440, 1280, 1024, 375]) {
+  test(`the two cards fill their row at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     const domain = await signIn(page)
     await page.goto(`${BASE}/${domain}?mode=full`)
-    const grid = page.getByRole('region', { name: 'Charts', exact: true })
-    await expect(grid.locator('[data-chart=flow] svg')).toBeVisible({ timeout: 20_000 })
-    await expect(page.locator('#sec-sources')).toHaveCount(0)
-    await expect(page.locator('#sec-goals .card').first()).toBeVisible()
-    // Cards load in their own time (the module cards are a lazy chunk).
-    await page.waitForTimeout(1500)
-    const rows = await grid.evaluate((g) => {
+    await expect(page.locator('[data-card=what]').getByRole('tab', { name: 'Page flow' })).toBeVisible({ timeout: 20_000 })
+    const grid = page.locator('#cards')
+    const cells = await grid.evaluate((g) => {
       const box = g.getBoundingClientRect()
-      const cells = [...g.querySelectorAll(':scope > *, :scope [data-group] > *')].map((e) => e.getBoundingClientRect()).filter((r) => r.width > 0)
-      const byTop = new Map<number, DOMRect[]>()
-      for (const r of cells) byTop.set(Math.round(r.top), [...(byTop.get(Math.round(r.top)) ?? []), r])
-      return [...byTop.values()].map((row) => ({
-        left: Math.min(...row.map((r) => r.left)) - box.left,
-        right: box.right - Math.max(...row.map((r) => r.right)),
-        heights: new Set(row.map((r) => Math.round(r.height))).size,
-      }))
+      return [...g.children].map((e) => {
+        const r = e.getBoundingClientRect()
+        return { left: r.left - box.left, right: box.right - r.right, top: Math.round(r.top), height: Math.round(r.height) }
+      })
     })
-    expect(rows.length).toBeGreaterThan(2)
-    for (const [i, r] of rows.entries()) {
-      expect(Math.abs(r.left), `row ${i + 1} starts at the edge`).toBeLessThanOrEqual(1)
-      expect(Math.abs(r.right), `row ${i + 1} reaches the edge`).toBeLessThanOrEqual(1)
-      expect(r.heights, `row ${i + 1}: one height`).toBe(1)
+    expect(cells).toHaveLength(2)
+    for (const c of cells) {
+      expect(Math.abs(c.left) < 1 || Math.abs(c.right) < 1, 'touches an edge').toBe(true)
     }
-    // 768 is left out: the header's first row is a few pixels too wide
-    // there, on its own (a separate fix).
-    if (width !== 768) expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 'no sideways scroll').toBeLessThanOrEqual(0)
+    if (width > 760) {
+      expect(cells[0].top, 'one row').toBe(cells[1].top)
+      expect(cells[0].height, 'one height').toBe(cells[1].height)
+    } else {
+      expect(cells[1].top, 'stacked').toBeGreaterThan(cells[0].top)
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 'no sideways scroll').toBeLessThanOrEqual(0)
   })
 }
 
@@ -178,5 +245,6 @@ test('Create: A opens the menu, and a funnel lands in the address', async ({ pag
   }
   await dialog.getByRole('button', { name: 'Show the funnel' }).click()
   await expect(page).toHaveURL(/mode=full.*fs=/)
-  await expect(page.locator('#sec-behaviour .funnel-steps .chip')).toHaveCount(2)
+  await expect(page.locator('[data-card=what] .funnel-steps .chip')).toHaveCount(2, { timeout: 20_000 })
+  await expect(page.locator('[data-card=what]').getByRole('tab', { name: 'Funnel' })).toHaveAttribute('aria-selected', 'true')
 })
