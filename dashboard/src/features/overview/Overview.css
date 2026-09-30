@@ -1,43 +1,112 @@
-/* ---- The Data view's overview: tiles and the main chart ---------------------
-   Live's look: the charted tile is lit by a slim accent bar and a lifted
-   surface (no heavy border), each tile carries its change as a small chip,
-   Online now pulses, and Replay is a small ▶ whose controls show on hover or
-   focus. Loaded after styles.css; more specific where it overrides it. */
-.overview .kpi-row {
+/* ---- The Data view's overview: the key numbers and the main chart ----------
+   Light as type: no cards, icons or lines in the tiles; Online now pulses, and
+   Replay is a small ▶ whose controls show on hover or focus. Loaded after
+   styles.css; more specific where it overrides it. */
+/* The key numbers: one light strip, no boxes. A name, a number, a change. */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 4px 0;
+  padding: 10px 12px 0;
+  border-bottom: 1px solid var(--grid);
+}
+.kpi {
+  position: relative;
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   min-width: 0;
+  margin: 0;
+  padding: 8px 12px 12px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  container-type: inline-size;
 }
-.kpi-delta {
-  display: inline-flex;
+button.kpi {
+  cursor: pointer;
+}
+.kpi .kpi-name,
+.kpi .label {
+  display: flex;
   align-items: center;
-  padding: 1px 7px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 500;
+  gap: 6px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  background: color-mix(in srgb, currentColor 12%, transparent);
+  font-size: 12.5px;
+  color: var(--text-3);
 }
-.kpi-delta.tone-flat {
+button.kpi:hover .kpi-name,
+button.kpi[aria-pressed='true'] .kpi-name {
+  color: var(--text);
+}
+.kpi .value {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(18px, 15cqi, 28px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+.kpi .value.skeleton {
+  width: 62%;
+  height: 26px;
+  border-radius: 7px;
+}
+/* The change: small, under the number, the arrow and its figure coloured and nothing else. */
+.kpi-delta {
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
   color: var(--text-2);
 }
-.overview button.kpi[aria-pressed='true'] {
-  border-color: transparent;
-  background: var(--surface-2);
-  box-shadow: 0 6px 18px -10px color-mix(in srgb, #000 60%, transparent);
+.kpi-delta.tone-up {
+  color: var(--up);
 }
-.overview button.kpi[aria-pressed='true']::before {
+.kpi-delta.tone-down {
+  color: var(--down);
+}
+.kpi-delta.tone-flat {
+  color: var(--text-3);
+}
+/* The charted one is underlined, gold when it is money. */
+.kpi[aria-pressed='true']::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 14px;
-  right: 14px;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
   height: 2px;
-  border-radius: 0 0 2px 2px;
+  border-radius: 2px;
   background: var(--accent);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.kpi.money[aria-pressed='true']::after {
+  background: var(--money);
+}
+button.kpi:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+@media (max-width: 640px) {
+  .kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 6px 4px 0;
+  }
+  .kpi {
+    padding: 8px 8px 10px;
+  }
+  .kpi[aria-pressed='true']::after {
+    left: 8px;
+    right: 8px;
+  }
 }
 
 /* Online now: a pulsing dot while anyone is on, and a count that rolls. */
@@ -55,7 +124,7 @@
 }
 .roll {
   display: inline-block;
-  animation: roll-in 0.38s var(--ease);
+  animation: roll-in 0.12s var(--ease);
 }
 @keyframes roll-in {
   from {

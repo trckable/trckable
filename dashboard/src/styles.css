@@ -471,91 +471,6 @@ textarea:focus-visible {
   }
 }
 
-/* ---- KPIs ---- */
-.kpis {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
-}
-.kpis.more {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-.kpis.money {
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-}
-@media (max-width: 1280px) {
-  .kpis.money {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-@media (max-width: 1000px) {
-  .kpis,
-  .kpis.money {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-@media (max-width: 640px) {
-  .kpis,
-  .kpis.money,
-  .kpis.more {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-}
-.kpi {
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: var(--surface);
-  border: 1px solid var(--grid);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  text-align: left;
-  min-width: 0;
-}
-button.kpi {
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-button.kpi:hover {
-  border-color: var(--border-2);
-}
-button.kpi[aria-pressed='true'] {
-  border-color: var(--accent);
-}
-.kpi .label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--text-2);
-}
-.kpi .value {
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-.kpi .delta {
-  font-size: 12px;
-  color: var(--text-3);
-  min-height: 16px;
-}
-.kpi.small {
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: var(--sunken);
-}
-.kpi.small .value {
-  font-size: 18px;
-}
-@media (max-width: 640px) {
-  .kpi .value {
-    font-size: 22px;
-  }
-}
-
 /* ---- breakdowns ---- */
 .grid4 {
   display: grid;
@@ -956,9 +871,6 @@ table.t td {
 }
 
 @media (max-width: 640px) {
-  .kpis > :last-child:nth-child(odd) {
-    grid-column: span 2;
-  }
   .card {
     padding: 14px;
   }
@@ -1183,19 +1095,6 @@ table.t td {
   }
   .header-tools .btn.ask {
     width: 40px;
-  }
-  .kpi {
-    padding: 12px 14px;
-    border-radius: 12px;
-  }
-  .kpi .label {
-    font-size: 12px;
-  }
-  .kpi .value {
-    font-size: 23px;
-  }
-  .kpi .delta {
-    min-height: 0;
   }
 }
 
@@ -1950,20 +1849,8 @@ pre.code.words {
 body[data-mode='core'] .card {
   padding: 18px 20px;
 }
-body[data-mode='core'] .kpi .value {
-  font-size: 32px;
-}
-body[data-mode='core'] .kpi {
-  padding: 16px 18px;
-}
 body[data-mode='full'] .card {
   padding: 13px 15px;
-}
-body[data-mode='full'] .kpi {
-  padding: 11px 14px;
-}
-body[data-mode='full'] .kpi .value {
-  font-size: 24px;
 }
 body[data-mode='full'] .card h2 {
   font-size: 14px;
@@ -2673,9 +2560,17 @@ button.kpi-live:hover .label::after {
 }
 
 /* ---- The main chart's finish ------------------------------------------------
-   A soft glow under the line, and today's point breathing while it counts. */
+   A soft glow under the line (money's is gold, and so are its columns), and
+   today's point breathing while it counts. */
 .chart-line {
   filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 50%, transparent));
+}
+.chart-line.money {
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--money) 55%, transparent));
+}
+.money-col {
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--money) 40%, transparent));
+  transition: fill-opacity 0.12s;
 }
 .chart-now-halo {
   transform-box: fill-box;
@@ -2711,32 +2606,13 @@ button.kpi-live:hover .label::after {
     radial-gradient(700px 240px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
     var(--surface);
 }
-.overview > .kpis {
-  padding: 14px;
-  gap: 8px;
-  border-bottom: 1px solid var(--grid);
-}
-.overview .kpi {
-  position: relative;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--sunken) 70%, transparent);
-  gap: 8px;
-  transition: border-color 0.2s, background 0.2s, transform 0.2s var(--ease);
-}
-.overview button.kpi:hover {
-  border-color: var(--border-2);
-  transform: translateY(-1px);
-}
-.overview button.kpi[aria-pressed='true'] {
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  background:
-    radial-gradient(160px 80px at 0% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 75%),
-    var(--sunken);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
-}
 .overview > .more-numbers {
   padding: 10px 14px 0;
+}
+@media (max-width: 640px) {
+  .overview-chart {
+    padding: 14px 12px 12px;
+  }
 }
 .overview-chart {
   display: flex;
@@ -2744,90 +2620,6 @@ button.kpi-live:hover .label::after {
   gap: 12px;
   padding: 18px 20px 16px;
 }
-.kpi-icon {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  flex: none;
-  margin-right: 2px;
-  border-radius: 9px;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 6%, var(--surface-2)), var(--surface-2));
-  color: var(--text-2);
-  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
-}
-.kpi-icon.money {
-  color: var(--money);
-}
-/* A little life: the icon nods when you point at its number, and the charted
-   number's icon is lit. */
-button.kpi:hover .kpi-icon {
-  transform: translateY(-2px) rotate(-6deg);
-}
-button.kpi[aria-pressed='true'] .kpi-icon {
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-.kpi-icon.live.on {
-  color: var(--accent);
-  animation: kpi-live 2s ease-in-out infinite;
-}
-@keyframes kpi-live {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 35%, transparent);
-  }
-  50% {
-    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 0%, transparent);
-  }
-}
-@media (max-width: 640px) {
-  .overview > .kpis {
-    padding: 10px;
-  }
-  .overview-chart {
-    padding: 14px 12px 12px;
-  }
-  .kpi-icon {
-    width: 26px;
-    height: 26px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .kpi-icon,
-  .overview .kpi {
-    transition: none;
-  }
-  .kpi-icon.live.on {
-    animation: none;
-  }
-}
-
-.kpi-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* The tile's spark sits at its foot: quiet grey, lime on the charted number,
-   gold on money. */
-.kpi-spark {
-  display: block;
-  width: 100%;
-  height: 28px;
-  margin-top: auto;
-  color: var(--text-3);
-}
-.kpi.money .kpi-spark {
-  color: var(--money);
-}
-button.kpi[aria-pressed='true'] .kpi-spark {
-  color: var(--accent);
-}
-
 /* The replay bar on a phone: Replay, speed and the scrubber on one row; the
    day being viewed on its own row under them, shortened if it must be. */
 @media (max-width: 640px) {
@@ -2869,15 +2661,17 @@ button.kpi[aria-pressed='true'] .kpi-spark {
   .chart-head > h2 {
     flex: 1 0 100%;
   }
-  body[data-mode] .overview .kpi,
-  .overview .kpi {
-    padding: 12px;
-  }
-  .overview > .kpis {
-    gap: 8px;
-  }
 }
 
+@keyframes kpi-live {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+}
 /* A newer release: a small lime pill by the logo, and a line in the footer. */
 .update-pill {
   display: inline-flex;
@@ -2940,19 +2734,6 @@ button.kpi[aria-pressed='true'] .kpi-spark {
   margin: 4px 0 0;
   color: var(--down);
   font-size: 13px;
-}
-
-/* A tile's number is sized by the tile, not the screen: seven across on a
-   laptop or two by two on a phone, "$111,630" fits either way. */
-.overview .kpi {
-  container-type: inline-size;
-}
-body[data-mode] .overview .kpi .value,
-.overview .kpi .value {
-  font-size: clamp(18px, 15cqi, 30px);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* A site's mark: its icon, or its letter on its colour (components/SiteMark). */

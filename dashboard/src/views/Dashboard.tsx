@@ -1,12 +1,12 @@
-import { Banknote, ChevronDown, ChevronRight, Coins, CornerUpLeft, Eye, Target, Timer, Users } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BarList, type BarItem } from '../charts/BarList'
 import { TimeChart, type Pulse } from '../charts/TimeChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
 import { api, cachedReport, dropReports, messageOf, showsInstall, siteState, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
 import { compareLabel, diffDays, fmtDay, setWeekStart, todayIn, type Range } from '../lib/dates'
-import { countryName, delta, flag, fmtDuration, fmtInt, fmtMoney, fmtPct } from '../lib/format'
-import { journeysOn, newShare, newShareShort, newVsReturning } from '../features/cookieless/labels'
+import { countryName, flag, fmtInt, fmtMoney } from '../lib/format'
+import { journeysOn, newShare, newShareShort } from '../features/cookieless/labels'
 import { unconvertedNote } from '../lib/money'
 import { channelColor, channelLabel } from '../lib/palette'
 import { navigate, readView, setView, useLocation } from '../lib/url'
@@ -22,14 +22,15 @@ import { AskPanel } from './AskLazy'
 import { caps, keyFor, pressed, useKeymap } from '../lib/keys'
 import { SearchTerms, StoppedNotice } from './DashboardParts'
 import { JumpNav } from '../features/fullcharts/JumpNav'
-import { KpiTile } from '../features/overview/KpiTile'
+import { KpiStrip } from '../features/overview/KpiStrip'
 import { ChartHead } from '../features/overview/ChartHead'
 import { ReplayButton, ScrubBar } from '../features/overview/Replay'
 import { useReplayTimer, useSpeed } from '../features/overview/useReplay'
 import { useRaceNow, useRaceRows, RACE_DIMS } from '../features/overview/useRace'
 import { replaySeconds, speedOf } from '../features/overview/replayTime'
-import { firstVisitAt, hourIn, hourlySpan } from '../features/overview/firstVisit'
-import { hourDetail } from '../features/overview/hourDetail'
+import { firstVisitAt, hourIn, hourlySpan, previousWhole } from '../features/overview/firstVisit'
+import { chartMetric, ghostValues, metricName, metricProps, metricValues, type ChartMetric } from '../features/overview/chartMetric'
+import { chartTips } from '../features/overview/chartTips'
 import { LiveSlot } from '../features/live/liveChunk'
 import { OnlineKpi } from '../features/live/OnlineKpi'
 import { entryCopy } from '../features/live/entryCopy'
@@ -352,8 +353,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     return () => window.removeEventListener('keydown', onKey)
   }, [full, view.day, askOn])
 
-  const [metric, setMetric] = useState<'visitors' | 'pageviews'>('visitors')
-
   const pickerValue: PickerValue = {
     period: view.period,
     range,
@@ -409,7 +408,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   let k: KPIs | undefined = src?.kpis
   if (scrubbing) k = day?.kpis ?? zeroKPIs
   // Nothing at all before: no change to show, not "new" on every tile.
-  const hasPrev = !scrubbing && !trailData && (data?.previous?.kpis.sessions ?? 0) > 0
+  const before = data?.previous
+  const hasPrev = !scrubbing && !trailData && (before?.kpis.sessions ?? 0) > 0 && previousWhole(before?.series.map((p) => p.visitors) ?? [], data?.bucket ?? 'day')
   const pk = hasPrev ? data?.previous?.kpis : undefined
   const race = useRaceRows(src, raceTo)
   const soFar = racing ? 'So far' : undefined
@@ -441,9 +441,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   if (fv > 0 && noteDay) fv = Math.min(fv, Math.max(0, series.findIndex((p) => p.t.slice(0, 10) >= noteDay)))
   const firstDay = fv > 0 ? series[fv].t.slice(0, 10) : undefined
   const shown = series.slice(fv)
-  // Each number's own day-by-day line, for the small spark in its tile.
-  const dayRows = (cur?.days ?? []).filter((d) => !firstDay || d.date >= firstDay)
-  const sparkOf = (f: (d: (typeof dayRows)[number]) => number) => (dayRows.length > 1 ? dayRows.map(f) : undefined)
   // Three days or fewer by day is a triangle: drawn by the hour instead,
   // unless a day is picked (a replay by day too) or the bucket was picked by hand.
   const byHour = !!data && data.bucket === 'day' && !view.bucket && !scrubbing && hourlySpan(firstDay ?? range.from, range.to)
@@ -460,7 +457,13 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // has not happened, and is not a drop to zero.
   const nowHour = hourIn(site.timezone)
   const chartSeries = hours ? hours.current.series.filter((p) => p.t.slice(0, 13) <= nowHour) : shown
-  const values = chartSeries.map((p) => p[metric])
+  // What the chart shows follows the address, when this page can draw it (chartMetric).
+  const canDraw = { money: !!money, days: !hours && data?.bucket === 'day' && !!cur?.days }
+  const metric = chartMetric(view.metric, canDraw)
+  const pick = (m: ChartMetric) => setView({ metric: m === 'visitors' ? undefined : m })
+  // Revenue is what src says (a followed channel's own, like the tiles), by the hour what that hour says.
+  const revenue = (hours ? chartSeries : (src?.series.slice(fv) ?? [])).map((p) => p.revenue ?? 0)
+  const values = metricValues(metric, { series: chartSeries, revenue, days: cur?.days })
   const { raced, follow } = useRaceNow({ src, dates: shown.map((p) => p.t.slice(0, 10)), hourSeries: chartSeries, hours: !!hours, hourAt, idx: scrubIdx - fv, telling, racing, playing })
   if (raced) [k, dayRev] = [raced.kpis, raced.revenue]
   const revenueNow = dayRev ?? money?.revenue
@@ -490,13 +493,13 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   let chartScrub = scrubbing && !hours ? scrubIdx - fv : null
   if (hours) chartScrub = hourAt
   const prevSeries = compareOn && !firstDay ? (hours ?? data)?.previous?.series : undefined
-  const ghost = prevSeries?.map((p) => p[metric])
-  const overlay = trail && trailData
+  const ghost = ghostValues(metric, prevSeries)
+  const overlay = trail && trailData && (metric === 'visitors' || metric === 'pageviews')
     ? { values: trailData.current.series.slice(fv).map((p) => p[metric]), color: channelColor(trail), name: channelLabel(trail) }
     : undefined
 
   const narrow = useNarrow()
-  const metricName = metric === 'visitors' ? 'Visitors' : 'Pageviews'
+  const name = metricName(metric)
   // Replay's controls stay out while nothing is playing or picked.
   const active = playing || telling || scrubbing || (!!hours && hourAt !== null)
   const rows = full ? 12 : 5
@@ -624,23 +627,12 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {/* One section for the period at a glance: the key numbers across the
           top, the chart under them — they are one story, not two cards. */}
       <section className="card overview" aria-label="Overview">
-      <div role="group" aria-label="Key numbers" className={money ? 'kpis money' : 'kpis'}>
-        <KpiTile loading={firstLoad} vs={vs} label="Visitors" icon={Users} spark={chartSeries.map((p) => p.visitors)} value={k?.visitors} live={follow((r) => r.kpis.visitors)} fmt={fmtInt} d={delta(k?.visitors ?? 0, pk?.visitors)} pressed={metric === 'visitors'} onClick={() => setMetric('visitors')} />
-        {money ? (
-          <>
-            <KpiTile loading={firstLoad} vs={vs} label="Revenue" icon={Banknote} spark={sparkOf((d) => d.money?.revenue ?? 0)} money value={revenueNow} live={follow((r) => r.revenue)} fmt={fmtM} d={pm ? delta(money.revenue, pm.revenue) : null} />
-            <KpiTile loading={firstLoad} vs={vs} label="Conversion" icon={Target} spark={sparkOf((d) => (d.kpis.visitors ? (d.money?.payments ?? 0) / d.kpis.visitors : 0))} value={conv} fmt={(x) => (x * 100).toFixed(x < 0.1 ? 2 : 1) + '%'} d={pm && conv !== undefined ? delta(conv, pm.conversion) : null} />
-            <KpiTile loading={firstLoad} vs={vs} label="Per visitor" icon={Coins} spark={sparkOf((d) => (d.kpis.visitors ? (d.money?.revenue ?? 0) / d.kpis.visitors : 0))} value={rpv} live={follow((r) => (r.kpis.visitors ? r.revenue / r.kpis.visitors : 0))} fmt={(x) => fmtMoney(x, money.currency, money.exponent, { cents: true })} d={pm && rpv !== undefined ? delta(rpv, pm.revenue_per_visitor) : null} />
-          </>
-        ) : (
-          <KpiTile loading={firstLoad} vs={vs} label="Pageviews" icon={Eye} spark={chartSeries.map((p) => p.pageviews)} value={k?.pageviews} live={follow((r) => r.kpis.pageviews)} fmt={fmtInt} d={delta(k?.pageviews ?? 0, pk?.pageviews)} pressed={metric === 'pageviews'} onClick={() => setMetric('pageviews')} />
-        )}
-        <KpiTile loading={firstLoad} vs={vs} label="Bounce rate" icon={CornerUpLeft} spark={sparkOf((d) => d.kpis.bounce_rate)} value={k?.bounce_rate} live={follow((r) => r.kpis.bounce_rate)} fmt={fmtPct} d={delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true)} />
-        <KpiTile loading={firstLoad} vs={vs} label="Session time" icon={Timer} spark={sparkOf((d) => d.kpis.avg_session_s)} value={k?.avg_session_s} live={follow((r) => r.kpis.avg_session_s)} fmt={fmtDuration} d={delta(k?.avg_session_s ?? 0, pk?.avg_session_s)} />
-        {/* A shared page has no live stream, so it says where the number
-            comes from instead of waiting to connect forever. */}
-        <OnlineKpi online={online} canOpen={!isShared()} note={stream.connected || isShared() ? entryCopy.onlineNote : entryCopy.connecting} />
-      </div>
+      <KpiStrip
+        loading={firstLoad} vs={vs} metric={metric} can={canDraw} onPick={pick}
+        k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow}
+        // A shared page has no live stream, so it says where the number comes from instead of waiting to connect forever.
+        online={<OnlineKpi online={online} canOpen={!isShared()} note={stream.connected || isShared() ? entryCopy.onlineNote : entryCopy.connecting} />}
+      />
 
       {full && (
         <div className="more-numbers rise">
@@ -672,8 +664,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </div>
       )}
 
-      <div className={active ? 'overview-chart replaying' : 'overview-chart'} role="group" aria-label={`${metricName} over time`}>
-        <ChartHead title={metricName} since={firstDay && fmtDay(firstDay)} onShowSince={firstDay ? () => setView({ period: 'custom', from: firstDay, to: range.to, day: undefined }) : undefined}>
+      <div className={active ? 'overview-chart replaying' : 'overview-chart'} role="group" aria-label={`${name} over time`}>
+        <ChartHead title={name} since={firstDay && fmtDay(firstDay)} onShowSince={firstDay ? () => setView({ period: 'custom', from: firstDay, to: range.to, day: undefined }) : undefined}>
           {(canScrub || canReplayByDay) && (
             <ReplayButton
               playing={playing}
@@ -703,37 +695,17 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             ghost={ghost}
             ghostLabels={prevSeries?.map((p) => p.t)}
             overlay={hours ? undefined : overlay}
-            metric={metricName}
+            metric={name}
             bucket={hours ? 'hour' : (data?.bucket ?? 'day')}
             scrub={chartScrub}
             story={telling}
             locked={playing}
             partialLast={live}
-            strip={money && src && !hours ? { values: src.series.slice(fv).map((p) => p.revenue ?? 0), fmt: fmtM, label: 'Revenue' } : undefined}
+            {...metricProps(metric, money, revenue)}
             notes={notesOn ? notes : []}
             onAddNote={isShared() || isViewer() || !notesOn ? undefined : (day) => setNoteFor(day)}
             pulses={pulses}
-            detail={(i) => {
-              // The day's own numbers, when the report carried them — only
-              // while the chart is by day: by week, point i is not day i.
-              if (hours) return hourDetail(chartSeries[i], site)
-              if (data?.bucket !== 'day') return null
-              const d = cur?.days?.find((x) => x.date === chartSeries[i]?.t.slice(0, 10)) // days skip empty ones: match by date
-              if (!d) return null
-              const nvr = newVsReturning(d.kpis, site)
-              const rows: { label: string; value: string; faint?: boolean; short?: string }[] = [{ label: 'Pageviews', short: 'views', value: fmtInt(d.kpis.pageviews) }, ...nvr.rows]
-              // Revenue itself is already in the card, next to the bars.
-              if (money && d.money) {
-                rows.push({ label: 'Revenue / visitor', short: '$/visit', value: fmtMoney(d.kpis.visitors ? d.money.revenue / d.kpis.visitors : 0, money.currency, money.exponent, { cents: true }) })
-              }
-              rows.push({ label: 'Bounce rate', short: 'bounce', value: fmtPct(d.kpis.bounce_rate), faint: true })
-              rows.push({ label: 'Session time', short: 'session', value: fmtDuration(d.kpis.avg_session_s), faint: true })
-              const splits = nvr.splits
-              // Where the day's money came from: a flat day can be all renewals.
-              if (money && d.money && d.money.renewal > 0)
-                splits.push({ a: d.money.new, b: d.money.renewal, aLabel: 'new', bLabel: 'renewals', tone: 'var(--money)', fmt: fmtM })
-              return { splits, rows }
-            }}
+            {...chartTips({ series: chartSeries, hours: !!hours, byDay: data?.bucket === 'day', days: cur?.days, site, money, metric })}
             onScrub={
               canScrub && full && !hours
                 ? (i) => {

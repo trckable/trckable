@@ -1,0 +1,70 @@
+// The key numbers, one light strip: Visitors, then Revenue, Conversion and
+// Per visitor where there are payments (Pageviews where there are not), Bounce
+// rate, Session time, and Online now last. Each is a button that puts it on
+// the main chart when the chart can draw it here (chartMetric).
+import type { ReactNode } from 'react'
+import type { KPIs, Money } from '../../lib/api'
+import { delta, fmtDuration, fmtInt, fmtMoney, fmtPct, type Delta } from '../../lib/format'
+import { canChart, type Can, type ChartMetric } from './chartMetric'
+import { copy } from './copy'
+import { KpiTile } from './KpiTile'
+
+interface Props {
+  loading: boolean
+  /** The comparison in words, as the period picker says it. */
+  vs: string
+  metric: ChartMetric
+  can: Can
+  onPick: (m: ChartMetric) => void
+  k?: KPIs
+  /** The period before, when it is there in full to compare with. */
+  pk?: KPIs
+  money?: Money
+  pm?: Money
+  /** The day's or period's revenue, conversion and revenue per visitor as the page shows them. */
+  revenue?: number
+  conv?: number
+  rpv?: number
+  /** Makes a tile a function of Replay's playhead while it plays. */
+  follow: (f: (r: { kpis: KPIs; revenue: number }) => number) => ((pos: number) => number) | undefined
+  /** Online now, last. */
+  online: ReactNode
+}
+
+export function KpiStrip(p: Props) {
+  const { k, pk, money, pm } = p
+  const rate = (x: number) => (x * 100).toFixed(x < 0.1 ? 2 : 1) + '%'
+  const cents = (x: number) => (money ? fmtMoney(x, money.currency, money.exponent, { cents: true }) : '')
+  const tile = (key: ChartMetric, label: string, value: number | undefined, fmt: (n: number) => string, d: Delta | null, o: { live?: (r: { kpis: KPIs; revenue: number }) => number; money?: boolean } = {}) => (
+    <KpiTile
+      key={key}
+      loading={p.loading}
+      vs={p.vs}
+      label={label}
+      value={value}
+      live={o.live && p.follow(o.live)}
+      fmt={fmt}
+      d={d}
+      money={o.money}
+      pressed={p.metric === key}
+      onClick={canChart(key, p.can) ? () => p.onPick(key) : undefined}
+    />
+  )
+  return (
+    <div role="group" aria-label={copy.keyNumbers} className="kpis">
+      {tile('visitors', copy.visitors, k?.visitors, fmtInt, delta(k?.visitors ?? 0, pk?.visitors), { live: (r) => r.kpis.visitors })}
+      {money ? (
+        <>
+          {tile('revenue', copy.revenue, p.revenue, (n) => fmtMoney(n, money.currency, money.exponent), pm ? delta(money.revenue, pm.revenue) : null, { live: (r) => r.revenue, money: true })}
+          {tile('conversion', copy.conversion, p.conv, rate, pm && p.conv !== undefined ? delta(p.conv, pm.conversion) : null)}
+          {tile('per-visitor', copy.perVisitorTile, p.rpv, cents, pm && p.rpv !== undefined ? delta(p.rpv, pm.revenue_per_visitor) : null, { live: (r) => (r.kpis.visitors ? r.revenue / r.kpis.visitors : 0), money: true })}
+        </>
+      ) : (
+        tile('pageviews', copy.pageviews, k?.pageviews, fmtInt, delta(k?.pageviews ?? 0, pk?.pageviews), { live: (r) => r.kpis.pageviews })
+      )}
+      {tile('bounce', copy.bounce, k?.bounce_rate, fmtPct, delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true), { live: (r) => r.kpis.bounce_rate })}
+      {tile('session', copy.session, k?.avg_session_s, fmtDuration, delta(k?.avg_session_s ?? 0, pk?.avg_session_s), { live: (r) => r.kpis.avg_session_s })}
+      {p.online}
+    </div>
+  )
+}

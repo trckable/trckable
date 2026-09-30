@@ -78,8 +78,9 @@
   color: var(--text);
 }
 
-.ct-hero.money .ct-big {
-  color: var(--money);
+.ct-none {
+  color: var(--text-3);
+  font-size: 13px;
 }
 
 .ct-vs {

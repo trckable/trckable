@@ -15,23 +15,32 @@ export function fmtDuration(s: number) {
 
 export interface Delta {
   text: string
+  /** The number and its arrow, small: "28% ↑". */
+  short: string
   tone: 'up' | 'down' | 'flat'
   label: string
 }
 
-/** Change vs the comparison period. `invert` for metrics where lower is better. */
+/**
+ * Change vs the comparison period. `invert` for metrics where lower is better.
+ * Nothing when there is nothing to compare with: a period with no data before
+ * it has no percentage (it would be infinite), and says nothing instead.
+ */
 export function delta(cur: number, prev: number | undefined, invert = false): Delta | null {
-  if (prev === undefined) return null
-  // Nothing before: not a percentage (it would be infinite), just "new".
-  if (prev === 0) return cur === 0 ? { text: '0%', tone: 'flat', label: 'no change' } : { text: 'new', tone: 'flat', label: 'new' }
+  if (prev === undefined || !(prev > 0)) return null
   const d = (cur - prev) / prev
   const flat = Math.abs(d) < 0.005
   const good = invert ? d < 0 : d > 0
   const pct = Math.abs(d * 100)
-  // Arrow and sign both, so it reads without the colour.
-  const text = (d >= 0 ? '↑ +' : '↓ −') + (pct >= 10 || pct === 0 ? pct.toFixed(0) : pct.toFixed(1)) + '%'
+  const num = pct >= 10 || pct === 0 ? pct.toFixed(0) : pct.toFixed(1)
   const dir = good ? 'up' : 'down'
-  return { text, tone: flat ? 'flat' : dir, label: `${d >= 0 ? 'up' : 'down'} ${pct.toFixed(1)} percent` }
+  return {
+    // Arrow and sign both, so it reads without the colour.
+    text: (d >= 0 ? '↑ +' : '↓ −') + num + '%',
+    short: `${num}% ${d >= 0 ? '↑' : '↓'}`,
+    tone: flat ? 'flat' : dir,
+    label: `${d >= 0 ? 'up' : 'down'} ${pct.toFixed(1)} percent`,
+  }
 }
 
 const countryNames = (() => {
@@ -63,7 +72,7 @@ const moneyFmt = new Map<string, Intl.NumberFormat>()
 export function fmtMoney(minor: number, currency: string, exponent: number, opts: { cents?: boolean } = {}): string {
   const major = minor / Math.pow(10, exponent)
   const cents = opts.cents ?? Math.abs(major) < 100
-  const key = currency + (cents ? ':c' : '')
+  const key = `${currency}:${exponent}${cents ? ':c' : ''}`
   let f = moneyFmt.get(key)
   if (!f) {
     try {
@@ -74,4 +83,20 @@ export function fmtMoney(minor: number, currency: string, exponent: number, opts
     moneyFmt.set(key, f)
   }
   return f.format(major)
+}
+
+const axisFmt = new Map<string, Intl.NumberFormat>()
+
+/** One label on a money axis: the symbol and a short number, "$0", "$50", "$1.5K". */
+export function fmtMoneyAxis(minor: number, currency: string, exponent: number): string {
+  let f = axisFmt.get(currency)
+  if (!f) {
+    try {
+      f = new Intl.NumberFormat('en-US', { style: 'currency', currency, notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 1 })
+    } catch {
+      f = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
+    }
+    axisFmt.set(currency, f)
+  }
+  return f.format(minor / Math.pow(10, exponent))
 }

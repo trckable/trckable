@@ -197,13 +197,14 @@ test('each tile carries its change, readable without colour', async ({ page }) =
   const visitors = tiles.getByRole('button', { name: /^Visitors/ })
   await expect(visitors).toHaveAttribute('aria-pressed', 'true')
   const chip = visitors.locator('.kpi-delta')
-  await expect(chip.locator('[aria-hidden]')).toHaveText(/^(↑ \+|↓ −)[\d.]+%$/)
+  await expect(chip.locator('[aria-hidden]')).toHaveText(/^[\d.]+% (↑|↓)$/)
   // The words a screen reader hears name the comparison too.
-  await expect(chip.locator('.sr')).toHaveText(/(up|down) [\d.]+ percent vs |^new: nothing in the /)
-  // The charted tile: an accent bar, not a heavy border.
-  const lit = await visitors.evaluate((el) => ({ bar: getComputedStyle(el, '::before').content, border: getComputedStyle(el).borderTopColor }))
-  expect(lit.bar).not.toBe('none')
-  expect(lit.border).toMatch(/rgba\(0, 0, 0, 0\)|transparent/)
+  await expect(chip.locator('.sr')).toHaveText(/(up|down) [\d.]+ percent vs /)
+  // The charted tile: a thin underline, no box.
+  const lit = await visitors.evaluate((el) => ({ line: getComputedStyle(el, '::after').content, border: getComputedStyle(el).borderTopWidth, back: getComputedStyle(el).backgroundColor }))
+  expect(lit.line).not.toBe('none')
+  expect(lit.border).toBe('0px')
+  expect(lit.back).toMatch(/rgba\(0, 0, 0, 0\)|transparent/)
 })
 
 test('nothing in the period before: no change chips, not "new" on every tile', async ({ page }) => {

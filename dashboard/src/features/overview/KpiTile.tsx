@@ -1,8 +1,8 @@
-// One key number: its name, the number, and its change against the period
-// before as a small chip (arrow, sign and colour, so it reads without the
-// colour; "new" when there was nothing before). Its line, day by day, sits
-// at its foot. The charted one is lit: a slim accent bar and a lifted surface.
-import type { LucideIcon } from 'lucide-react'
+// One key number, as light as a line of type: its name (small, dim), the
+// number (mono, large) and its change under it as a small "54% ↑", coloured on
+// the arrow and the number only. Nothing at all when there is nothing to
+// compare with. The charted one is underlined, and a number that can be
+// charted is a button.
 import type { Delta } from '../../lib/format'
 import { useTween } from '../../lib/motion'
 import { usePlayhead } from './playhead'
@@ -11,9 +11,6 @@ import './Overview.css'
 
 interface Props {
   label: string
-  icon: LucideIcon
-  /** The number bucket by bucket, drawn small at the foot of the tile. */
-  spark?: number[]
   value?: number
   /** While Replay plays: the number at the playhead's position, between two points. */
   live?: (pos: number) => number
@@ -27,34 +24,25 @@ interface Props {
   loading?: boolean
 }
 
+/** A number changes in a blink, not a count-up: switching period or number is instant. */
+const SETTLE_MS = 120
+
 export function KpiTile(p: Props) {
   // While it plays the number follows the playhead itself, frame by frame,
   // with no tween of its own to restart at every point.
   const pos = usePlayhead(!!p.live)
-  const tweened = useTween(p.value ?? 0, p.live ? 0 : 600)
+  const tweened = useTween(p.value ?? 0, p.live ? 0 : SETTLE_MS)
   const v = p.live ? p.live(pos) : tweened
   const cls = 'kpi' + (p.money ? ' money' : '')
   const body = (
     <>
-      <div className="label">
-        <span className={'kpi-icon' + (p.money ? ' money' : '')} aria-hidden="true">
-          <p.icon size={17} strokeWidth={1.75} />
-        </span>
-        <span className="kpi-name" title={p.label}>
-          {p.label}
-        </span>
-      </div>
+      <span className="label kpi-name" title={p.label}>
+        {p.label}
+      </span>
       {/* The skeleton is decorative: the loading bar at the top of the page
           is the one thing that announces loading, and it says it once. */}
-      {p.loading ? (
-        <div className="value skeleton" style={{ width: '62%', height: 26, borderRadius: 7 }} aria-hidden="true" />
-      ) : (
-        <div className="kpi-row">
-          <span className="value num">{p.value === undefined ? '–' : p.fmt(v)}</span>
-          {p.d && <Change d={p.d} vs={p.vs} />}
-        </div>
-      )}
-      {p.spark && !p.loading && <KpiSpark values={p.spark} />}
+      {p.loading ? <span className="value skeleton" aria-hidden="true" /> : <span className="value num">{p.value === undefined ? '–' : p.fmt(v)}</span>}
+      {p.d && !p.loading && <Change d={p.d} vs={p.vs} />}
     </>
   )
   if (!p.onClick) return <div className={cls}>{body}</div>
@@ -66,30 +54,11 @@ export function KpiTile(p: Props) {
 }
 
 function Change({ d, vs }: { d: Delta; vs: string }) {
-  const label = d.label === 'new' ? copy.newLabel(vs) : copy.change(d.label, vs)
+  const label = copy.change(d.label, vs)
   return (
     <span className={`kpi-delta num tone-${d.tone}`} title={label}>
-      <span aria-hidden="true">{d.text}</span>
+      <span aria-hidden="true">{d.short}</span>
       <span className="sr">{label}</span>
     </span>
-  )
-}
-
-/** A tile's small line: its number bucket by bucket, no axis, no labels —
- *  the shape of the period at a glance. */
-function KpiSpark({ values }: { values: number[] }) {
-  if (values.length < 2) return <span className="kpi-spark" aria-hidden="true" />
-  const w = 120
-  const h = 28
-  const max = Math.max(...values)
-  const min = Math.min(...values)
-  const span = max - min || 1
-  const pts = values.map((v, i) => [(i / (values.length - 1)) * w, h - 3 - ((v - min) / span) * (h - 6)] as const)
-  const line = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join('')
-  return (
-    <svg className="kpi-spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
-      <path d={`${line}L${w} ${h}L0 ${h}Z`} fill="currentColor" opacity="0.1" />
-      <path d={line} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-    </svg>
   )
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bucketLabel, everyNth, peakIndex, threeScale } from './timeScale'
+import { bucketLabel, everyNth, fractionScale, peakIndex, threeScale } from './timeScale'
 
 describe('threeScale', () => {
   it('is 0, half and top, round, just above the peak', () => {
@@ -14,6 +14,17 @@ describe('threeScale', () => {
   })
   it('never cuts the peak off', () => {
     for (const v of [7, 99, 101, 999, 1001, 4999, 123456]) expect(threeScale(v).max).toBeGreaterThanOrEqual(v)
+  })
+})
+
+describe('fractionScale', () => {
+  it('is 0, half and top for a rate, round in percent', () => {
+    expect(fractionScale(0.47)).toEqual({ max: 0.5, step: 0.25 })
+    expect(fractionScale(0.0266)).toEqual({ max: 0.04, step: 0.02 })
+  })
+  it('never cuts the peak off, and has room for an empty period', () => {
+    for (const v of [0.004, 0.03, 0.45, 0.99]) expect(fractionScale(v).max).toBeGreaterThanOrEqual(v)
+    expect(fractionScale(0).max).toBeGreaterThan(0)
   })
 })
 

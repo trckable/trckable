@@ -8,8 +8,9 @@ export function anchorAt(i: number, n: number): 'start' | 'middle' | 'end' {
 }
 
 /** The one label on the line: the peak's value and when, kept inside the
- *  chart at either edge. */
-export function PeakLabel({ x, y, w, text, padL }: { x: number; y: number; w: number; text: string; padL: number }) {
+ *  chart at either edge. On a column there is no point to mark: just the
+ *  figure, above it. */
+export function PeakLabel({ x, y, w, text, padL, color = 'var(--accent)', dot = true }: { x: number; y: number; w: number; text: string; padL: number; color?: string; dot?: boolean }) {
   let anchor: 'start' | 'middle' | 'end' = 'middle'
   let dx = 0
   if (x > w - 90) {
@@ -21,8 +22,8 @@ export function PeakLabel({ x, y, w, text, padL }: { x: number; y: number; w: nu
   }
   return (
     <g className="chart-peak" aria-hidden="true">
-      <circle cx={x} cy={y} r="4" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" />
-      <text x={x + dx} y={Math.max(12, y - 10)} textAnchor={anchor} fontSize="12" fontWeight="600" fill="var(--text)">
+      {dot && <circle cx={x} cy={y} r="4" fill={color} stroke="var(--surface)" strokeWidth="2" />}
+      <text x={x + dx} y={Math.max(12, y - (dot ? 10 : 6))} textAnchor={anchor} fontSize="12" fontWeight="600" fill="var(--text)">
         {text}
       </text>
     </g>
