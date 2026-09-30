@@ -34,6 +34,8 @@ test('first load stays small and the report stays fast', async ({ page, browserN
   await page.fill('input[type=password]', PASSWORD)
   await page.click('button[type=submit]')
   await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 20_000 })
+  // A site with visits opens in Live, which asks for no report: what is timed here is Data.
+  await page.goto(BASE + '/?view=data')
   await expect(page.locator('.kpi .value.num').first()).toBeVisible()
 
   // A cold load of the same dashboard, counted.

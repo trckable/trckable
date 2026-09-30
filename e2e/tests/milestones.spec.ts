@@ -18,7 +18,7 @@ async function open(page: Page, reduced: boolean) {
   expect(res.ok()).toBeTruthy()
   await page.goto(BASE + '/')
   const domain = await page.evaluate(async () => (await (await fetch('/api/v1/sites')).json()).sites[0].domain as string)
-  await page.goto(`${BASE}/${domain}`)
+  await page.goto(`${BASE}/${domain}?view=data`)
   await expect(page.locator('.overview-chart .chart-wrap svg')).toBeVisible({ timeout: 20_000 })
   await page.getByRole('button', { name: 'More', exact: true }).click()
   await page.getByRole('menuitem', { name: /Milestones/ }).click()

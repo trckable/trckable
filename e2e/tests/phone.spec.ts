@@ -58,7 +58,7 @@ async function clean(page: Page) {
 }
 
 async function data(page: Page) {
-  await page.goto(API + '/example.com')
+  await page.goto(API + '/example.com?view=data')
   await expect(page.locator('.overview-chart .chart-wrap svg')).toBeVisible({ timeout: 20_000 })
 }
 

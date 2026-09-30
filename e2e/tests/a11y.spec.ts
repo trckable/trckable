@@ -72,7 +72,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
     test('the compact dashboard and Replay\'s controls meet WCAG 2.1 AA', async ({ page }) => {
       await start(page)
-      await page.goto(BASE + '/')
+      await page.goto(BASE + '/?view=data')
       await expect(page.locator('.kpi .value.num').first()).toBeVisible()
       await scan(page, 'dashboard, compact')
       // Replay's speed and scrubber show on hover or focus: scanned shown.

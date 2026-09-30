@@ -9,14 +9,14 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('an unknown site goes to the main dashboard, not Settings', async ({ page }) => {
-  await page.goto(API + '/no-such-site.example')
-  await expect(page).toHaveURL(API + '/example.com')
+  await page.goto(API + '/no-such-site.example?view=data')
+  await expect(page).toHaveURL(API + '/example.com?view=data')
   await expect(page.locator('.kpi').first()).toBeVisible()
   await expect(page.getByText('Pick a site')).toHaveCount(0)
 })
 
 test('a known site in another case opens as it is', async ({ page }) => {
-  await page.goto(API + '/EXAMPLE.com')
+  await page.goto(API + '/EXAMPLE.com?view=data')
   await expect(page.locator('.kpi').first()).toBeVisible()
-  await expect(page).toHaveURL(API + '/EXAMPLE.com')
+  await expect(page).toHaveURL(API + '/EXAMPLE.com?view=data')
 })

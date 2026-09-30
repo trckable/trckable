@@ -26,7 +26,7 @@ export function OnlineKpi({ online, note, canOpen }: { online: number | null | u
   )
   if (!canOpen) return <div className="kpi kpi-online" title={note}>{body}</div>
   return (
-    <button type="button" className="kpi kpi-live kpi-online" onClick={() => void switchView(true)} onPointerEnter={warm} onFocus={warm} title={`${copy.openLive} · ${note}`}>
+    <button type="button" className="kpi kpi-live kpi-online" onClick={() => void switchView(true, false)} onPointerEnter={warm} onFocus={warm} title={`${copy.openLive} · ${note}`}>
       {body}
     </button>
   )

@@ -99,7 +99,7 @@ test('on a phone the cards stack, and Compact loads none of it', async ({ page }
 
   const chunks: string[] = []
   page.on('request', (r) => chunks.push(r.url()))
-  await page.goto(`${BASE}/${domain}`)
+  await page.goto(`${BASE}/${domain}?view=data`)
   await expect(page.locator('.overview-chart')).toBeVisible({ timeout: 20_000 })
   await page.waitForTimeout(1000)
   await expect(page.locator('#sec-charts')).toHaveCount(0)
@@ -145,7 +145,7 @@ for (const width of [1440, 1280, 1024, 768, 375]) {
 test('Create: A opens the menu, and a funnel lands in the address', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   const domain = await signIn(page)
-  await page.goto(`${BASE}/${domain}`)
+  await page.goto(`${BASE}/${domain}?view=data`)
   await expect(page.locator('.overview-chart')).toBeVisible({ timeout: 20_000 })
   await page.keyboard.press('a')
   const menu = page.getByRole('menu', { name: 'Create something' })
