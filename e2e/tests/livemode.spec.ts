@@ -75,6 +75,8 @@ test('a visit slides in and the numbers move, without a reload', async ({ page }
   await expect(page.locator('.range-picker')).toHaveCount(0)
   await expect(page.locator('.subbar .btn.filter')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'More', exact: true })).toHaveCount(0)
+  // Live loads no report, so the report's loading bar never runs over it.
+  await expect(page.locator('.loadbar')).toHaveCount(0)
   // One screen: the page itself does not scroll.
   expect(await page.evaluate(() => document.documentElement.scrollHeight - innerHeight)).toBeLessThanOrEqual(0)
 

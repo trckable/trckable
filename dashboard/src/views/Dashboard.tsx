@@ -535,7 +535,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
   return (
     <>
-      {(firstLoad || loading) && <div className="loadbar" role="status" aria-label="Loading" />}
+      {!liveView && (firstLoad || loading) && <div className="loadbar" role="status" aria-label="Loading" />/* Live loads no report: it shows its own connection */}
       <div className="header quiet">
         {header}
         <HeaderTools
