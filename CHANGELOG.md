@@ -9,6 +9,12 @@ section into the release.
 
 ## Unreleased
 
+- A shared link keeps its address (`/s/<token>`) after it opens, so it can be copied, bookmarked and reloaded; a reload, including of a password link, goes straight back in while the session lasts, and a shared page sends no Referer.
+- A shared link's header is one row on a desktop: the site's name on the left, the period, comparison and ⋯ on the right.
+- On a desktop the Live | Data switch is in the header's right group, before the account; a phone or tablet keeps it in the row under the header.
+- The pulsing dot beside Online now is no longer cut off at its edge.
+- The site switcher's rows have a little more air on a desktop (4 px taller, the mark a bit further from the name). Dragging a site is now live: a grip shows at the row's edge, the row you hold lifts and follows the pointer, the others slide aside into the new order, dropping saves it, and Esc puts it back.
+
 ## 0.5.7 (30 Sep 2026)
 
 - Widgets have their own section in a site's settings, next to Sharing: they go on your own pages, so they no longer sit under share links.
