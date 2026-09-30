@@ -196,8 +196,11 @@ test('both capsules sit at the right edge of the row', async ({ page }) => {
   const see = (await page.locator('.ctl-see').boundingBox())!
   expect(row.x + row.width - (doing.x + doing.width), 'the right edge').toBeLessThanOrEqual(24)
   expect(doing.x, 'what you do is after what you see').toBeGreaterThan(see.x + see.width)
-  const view = (await page.locator('.subbar .view-switch').boundingBox())!
-  expect(see.x - (view.x + view.width), 'flexible space between').toBeGreaterThan(100)
+  // A desktop has Live/Data in the header's right group, not in this row.
+  await expect(page.locator('.subbar .view-switch')).toHaveCount(0)
+  const view = (await page.locator('.header-tools .view-switch').boundingBox())!
+  const head = (await page.locator('.header-tools').boundingBox())!
+  expect(head.x + head.width - (view.x + view.width), 'in the right group, before Peek and the avatar').toBeGreaterThan(40)
 })
 
 test('the first capsule folds to a pill, and the choice is remembered', async ({ page }) => {

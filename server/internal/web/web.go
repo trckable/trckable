@@ -294,7 +294,16 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 		if ancestors == "'none'" {
 			h.Set("X-Frame-Options", "DENY") // older browsers that ignore frame-ancestors
 		}
-		h.Set("Referrer-Policy", "same-origin")
+		h.Set("Referrer-Policy", referrerPolicy(r.URL.Path))
 		_, _ = w.Write(index)
 	})
+}
+
+// referrerPolicy sends nothing at all from a shared page, whose address holds
+// its link's token; everywhere else the address stays inside this origin.
+func referrerPolicy(p string) string {
+	if p == "/s" || strings.HasPrefix(p, "/s/") {
+		return "no-referrer"
+	}
+	return "same-origin"
 }

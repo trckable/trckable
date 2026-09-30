@@ -7,8 +7,9 @@ import { setShared } from '../lib/me'
 import { Ghost, Name, Wordmark } from '../components/Logo'
 import './Share.css'
 
-/** The token out of /s/<token>. It is in the address bar once; after that the
- *  browser carries a session cookie instead, so it stays out of logs. */
+/** The token out of /s/<token>. It stays in the address bar, so the link can
+ *  be copied, bookmarked and reloaded; the page sends no Referer, and the
+ *  API calls after the first carry a session cookie instead. */
 export const shareToken = () => {
   const m = /^\/s\/([^/]+)/.exec(location.pathname)
   return m ? decodeURIComponent(m[1]) : ''
@@ -20,11 +21,10 @@ type State = { state: 'loading' } | { state: 'password'; error?: string } | { st
 /** ?embed=1: the link is shown inside another site's page. */
 export const isEmbed = () => new URLSearchParams(location.search).get('embed') === '1'
 
-/** An embed keeps its token in the iframe's own address (the page embedding
- *  it has it anyway) and its session in memory. */
+/** An embed keeps its session in memory, since the browser will not send a
+ *  cookie from inside another site's page. */
 const opened = (info: ShareInfo) => {
   if (info.session) setShareSession(info.session)
-  if (!isEmbed()) history.replaceState(null, '', '/s')
 }
 
 export function useShare(): State {
@@ -36,12 +36,11 @@ export function useShare(): State {
     const done = (info: ShareInfo) => {
       setShared(info.modules)
       setS({ state: 'ready', info })
-      // The link has been exchanged for a session: take the token out of the
-      // address bar so it is not in a screenshot, a Referer or a bookmark.
       opened(info)
     }
-    // With a token in the address this is a first open; without one it is a
-    // reload, and the cookie from the first open answers instead.
+    // With a token in the address the server opens the link: a reload of a
+    // password link is let in by the session cookie the first open left. An
+    // address cut short to /s has only that cookie to go by.
     const open = token
       ? api.openShare(token, undefined, isEmbed())
       : api.shareMe().catch(() =>
