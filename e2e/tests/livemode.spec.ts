@@ -66,9 +66,7 @@ async function visit(page: Page, name: string) {
 const num = async (page: Page, sel: string) => Number((await page.locator(sel).innerText()).replace(/[^\d]/g, '') || 0)
 
 test('a visit slides in and the numbers move, without a reload', async ({ page }) => {
-  await signIn(page)
-  await page.getByRole('group', { name: 'View' }).getByRole('button', { name: 'Live' }).click()
-  await expect(page).toHaveURL(/[?&]view=live/)
+  await signIn(page, '/example.com?view=live')
   const live = page.getByRole('region', { name: 'Live', exact: true })
   await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
   // Live is always now: no period, no filters, and no ⋯ page menu at all.
@@ -113,7 +111,7 @@ test('Live has no dots of its own: the switch has the one, and it dims while the
 })
 
 test('L, the Online now tile and the switch lead to Live and back', async ({ page }) => {
-  await signIn(page)
+  await signIn(page, '/example.com?view=data')
   const tile = page.locator('button.kpi', { has: page.locator('.label', { hasText: 'Online now' }) })
   await expect(tile).toBeVisible({ timeout: 15_000 })
   await tile.click()
@@ -148,7 +146,7 @@ test('on a phone the panels stack and the list scrolls inside', async ({ page })
 // top and Data comes back scrolled where it was left.
 test('switching both ways: no blank frame, no shift, scroll kept', async ({ page }) => {
   await visit(page, 'switch') // a site with data shows the full Data view
-  await signIn(page)
+  await signIn(page, '/example.com?view=data')
   const view = page.getByRole('group', { name: 'View' })
   await expect(page.locator('button.kpi', { has: page.locator('.label', { hasText: 'Online now' }) })).toBeVisible({ timeout: 15_000 })
   await page.evaluate(() => {
@@ -195,7 +193,7 @@ test('reduced motion: an instant switch, no transition', async ({ page }) => {
       return real.call(this, cb)
     }
   })
-  await signIn(page)
+  await signIn(page, '/example.com?view=data')
   const view = page.getByRole('group', { name: 'View' })
   await view.getByRole('button', { name: 'Live' }).click()
   await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible()
@@ -209,7 +207,7 @@ test('reduced motion: an instant switch, no transition', async ({ page }) => {
 
 test('a site with no visit yet shows its install screen in Live, and the mode comes back', async ({ page }) => {
   const domain = `nolive-${Date.now()}.example`
-  await signIn(page)
+  await signIn(page, '/example.com?view=data')
   await page.evaluate(async (d) => {
     await fetch('/api/v1/sites', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Trckable-Request': '1' }, body: JSON.stringify({ domain: d }) })
   }, domain)
@@ -226,4 +224,43 @@ test('a site with no visit yet shows its install screen in Live, and the mode co
   await expect(page.getByText('Waiting for the first visit').first()).toBeVisible()
   await page.goto(`${API}/example.com?view=live`)
   await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible({ timeout: 15_000 })
+})
+
+// Live is what a dashboard with visitors opens in: the address says nothing of
+// the view. A period, Full, filters or ?view=data say Data, and a choice of
+// Data stays in the address, so a reload keeps it.
+test('a site with visits opens in Live when the address has no mode, and Data stays Data', async ({ page }) => {
+  await visit(page, 'default')
+  await signIn(page)
+  const live = page.getByRole('region', { name: 'Live', exact: true })
+  const view = page.getByRole('group', { name: 'View' })
+  await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
+  await expect(view.getByRole('button', { name: 'Live' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page).not.toHaveURL(/view=/)
+  await expect(page.locator('.range-picker')).toHaveCount(0)
+
+  // Data, chosen: the address keeps it through a reload.
+  await view.getByRole('button', { name: 'Data' }).click()
+  await expect(page.locator('.range-picker')).toBeVisible()
+  await expect(page).toHaveURL(/[?&]view=data/)
+  await page.reload()
+  await expect(page.locator('.range-picker')).toBeVisible({ timeout: 15_000 })
+  await expect(live).toHaveCount(0)
+
+  // Addresses made before Live was the default stay Data.
+  for (const q of ['?period=7d', '?mode=full', '?f=channel:Direct']) {
+    await page.goto(`${API}/example.com${q}`)
+    await expect(page.locator('.range-picker')).toBeVisible({ timeout: 15_000 })
+    await expect(live).toHaveCount(0)
+  }
+  // Taking the last filter out does not flip to Live.
+  await page.goto(`${API}/example.com?f=channel:Direct`)
+  await page.getByRole('button', { name: /^Clear filters|Remove filter/i }).first().click()
+  await expect(page.locator('.range-picker')).toBeVisible()
+  await expect(live).toHaveCount(0)
+  await expect(page).toHaveURL(/[?&]view=data/)
+
+  // ?view=live still says Live.
+  await page.goto(`${API}/example.com?view=live`)
+  await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
 })

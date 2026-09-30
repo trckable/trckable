@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- A site that has had visits opens in Live when the address names no view: the dashboard of a site that is getting traffic now starts with who is on it. A site with no visit yet still shows its install card, and an address with a period, filters, Full or `?view=data` stays Data, so links made before keep working. Choosing Data is kept in the address, so a reload stays in Data.
 - `trckabled restore s3:` restores straight from the off-site bucket in `TRCKABLE_BACKUP_S3`: `s3:` alone takes the newest backup, `s3:<name>` a given one. The file is downloaded to a temporary folder and removed after the restore.
 
 - While the dashboard starts, the page shows its own background and a thin loading line, instead of a blank page (which Safari on iOS fills with a large copy of the site icon).
