@@ -44,6 +44,12 @@ export function CreateMenu(p: CreateMenuProps) {
     setOpen(true)
   }, [])
 
+  // A choice opens a dialog: focus goes back to the button first, so the dialog
+  // notes it and returns there when it closes (the menu's own item is gone by then).
+  const chosen = (run: () => void) => () => {
+    back.current?.focus()
+    run()
+  }
   useEffect(() => {
     setCreateAvailable(allowed)
     return () => setCreateAvailable(false)
@@ -97,7 +103,7 @@ export function CreateMenu(p: CreateMenuProps) {
     <div ref={root} className="create">
       {open && (
         <Suspense fallback={null}>
-          <CreatePop anchor={anchor} items={items} onGoal={p.onGoal} onNote={p.onNote} onFunnel={() => setFunnel(true)} onClose={() => setOpen(false)} />
+          <CreatePop anchor={anchor} items={items} onGoal={chosen(p.onGoal)} onNote={chosen(p.onNote)} onFunnel={chosen(() => setFunnel(true))} onClose={() => setOpen(false)} />
         </Suspense>
       )}
       {funnel && (

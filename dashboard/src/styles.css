@@ -527,7 +527,6 @@ textarea:focus-visible {
 }
 .tc-head {
   display: flex;
-  align-items: stretch;
   margin: 0 -8px 12px;
 }
 .tc-head .tc-tabs {
@@ -538,7 +537,6 @@ textarea:focus-visible {
 .tc-more {
   display: flex;
   align-items: center;
-  flex: none;
   padding: 0 8px 0 4px;
   border-bottom: 1px solid var(--border);
 }
@@ -557,16 +555,11 @@ textarea:focus-visible {
   font-size: 12.5px;
   cursor: pointer;
 }
-.tc-full:hover,
-.tc-full:focus-visible {
+.tc-full:is(:hover, :focus-visible) {
   background: var(--surface-2);
   color: var(--text);
 }
-.tc-full:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-.tc-full[data-tip]::after {
+.tc-full::after {
   content: attr(data-tip);
   position: absolute;
   top: calc(100% + 6px);
@@ -578,16 +571,13 @@ textarea:focus-visible {
   border: 1px solid var(--border-2);
   border-radius: 10px;
   background: var(--surface);
-  box-shadow: var(--shadow);
   color: var(--text-2);
   font-size: 12px;
-  line-height: 1.45;
   white-space: normal;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.14s;
 }
-.tc-full[data-tip]:is(:hover, :focus-visible)::after {
+.tc-full:is(:hover, :focus-visible)::after {
   opacity: 1;
 }
 .tc-tab {

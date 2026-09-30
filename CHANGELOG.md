@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- Every dialog follows one pattern. The head is the title and at most one short line, with a small ? tooltip for anything longer; choices (the four ways to track a goal) are a grid of equal cards with an icon, a label and a hint, one radio group you move through with the arrow keys; fields have their label above, one height, and their error right under them; each step has exactly one primary button, bottom right, beside a quiet one. The padding, radius and gaps are the same everywhere and the empty band under the buttons is gone. Dialogs fade and scale in and out in 160 ms (not at all with reduced motion), focus moves in and returns, and on a phone every dialog is a bottom sheet. Track a goal lists the goals already set up as small rows with a check above the form, and its words are shorter throughout.
 - The card at the bottom of Compact ("That's the whole story on one screen") is gone. A small Full button with its key sits at the end of the first card's tabs instead, with a tooltip saying what Full adds; ⋯ still has Full view.
 - On a desktop, the filters in force (as chips), Save view and Views sit on the left of the date row, packed at its start, and the two capsules keep the right. Tablets, phones and a shared link's header keep the row under the date row.
 - The chart's line runs across the whole period, along zero on the days before the first visit, instead of starting where the data does.
