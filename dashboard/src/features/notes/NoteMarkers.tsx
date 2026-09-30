@@ -49,7 +49,7 @@ export function NoteMarkers({ markers, x, top, width }: { markers: Marker[]; x: 
           key={m.i}
           type="button"
           className={m.i === open ? 'note-mark on' : 'note-mark'}
-          style={{ left: Math.max(MARK_H / 2, Math.min(width - MARK_H / 2, x(m.i))), top, ['--rise' as string]: `${Math.max(0, top - MARK_H - GUIDE_TOP)}px` }}
+          style={{ left: `clamp(var(--note-half, ${MARK_H / 2}px), ${x(m.i)}px, calc(100% - var(--note-half, ${MARK_H / 2}px)))`, top, ['--rise' as string]: `max(0px, calc(${top - GUIDE_TOP}px - (2 * var(--note-half, ${MARK_H / 2}px))))` }}
           aria-label={copy.marker(m.notes.length, m.day)}
           aria-describedby={m.i === open ? id : undefined}
           aria-expanded={m.i === open}
@@ -72,7 +72,7 @@ export function NoteMarkers({ markers, x, top, width }: { markers: Marker[]; x: 
         </button>
       ))}
       {shown && (
-        <div id={id} role="tooltip" className="note-tip" style={{ left: tipLeft(x(shown.i), TIP_W, width), width: Math.min(TIP_W, width - 8), bottom: `calc(100% - ${top - MARK_H - 4}px)`, maxHeight: Math.max(60, top - MARK_H - 8) }}>
+        <div id={id} role="tooltip" className="note-tip" style={{ left: tipLeft(x(shown.i), TIP_W, width), width: Math.min(TIP_W, width - 8), bottom: `calc(100% - ${top - 4}px + (2 * var(--note-half, ${MARK_H / 2}px)))`, maxHeight: `max(60px, calc(${top - 8}px - (2 * var(--note-half, ${MARK_H / 2}px))))` }}>
           {oneDay && <strong className="note-tip-day num">{fmtDay(shown.day, { weekday: true, year: true })}</strong>}
           {shown.notes.slice(0, TIP_MAX).map((n) => (
             <NoteLine key={n.id} n={n} day={!oneDay} />

@@ -52,6 +52,11 @@ export function periodLabel(value: PickerValue, today: ISODate) {
   return PRESETS.find((p) => p.id === value.period)?.label ?? fmtRange(value.range, today)
 }
 
+/** The same, shorter, for the phone's pill: "30 days", not "Last 30 days". */
+export function periodShort(value: PickerValue, today: ISODate) {
+  return periodLabel(value, today).replace(/^Last (?=\d)/, '')
+}
+
 /** ← is -1, → is +1, anything else 0. */
 function stepOf(e: KeyboardEvent) {
   if (pressed(e, 'back')) return -1

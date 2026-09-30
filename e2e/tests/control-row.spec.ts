@@ -175,8 +175,15 @@ for (const width of [1280, 390]) {
     await open(page, width)
     const zone = page.locator('.site-zone')
     const card = (await zone.boundingBox())!
-    expect(card.height, 'the same height as the capsules under it').toBe(38)
+    // A phone's capsules are 46 px (a finger wide), and its cog is in the site list, not beside the name.
+    expect(card.height, 'the same height as the capsules under it').toBe(width > 640 ? 38 : 46)
     const gear = zone.getByRole('button', { name: /^Settings for/ })
+    if (width <= 640) {
+      await expect(gear).toBeHidden()
+      await zone.locator('button.site-btn').click()
+      await expect(page.locator('.pop.sites .foot-settings')).toBeVisible()
+      return
+    }
     await expect(gear).toBeVisible()
     const g = (await gear.boundingBox())!
     expect(g.x, 'the cog is inside the card').toBeGreaterThanOrEqual(card.x)
@@ -249,17 +256,18 @@ for (const width of [390, 360]) {
   test(`at ${width}px the row is one line, and the sheet applies period and filter`, async ({ page }) => {
     await open(page, width, '?f=channel:Direct')
     const box = (await page.locator('.subbar').boundingBox())!
-    expect(box.height, 'one line, at most 44 px').toBeLessThanOrEqual(44)
+    expect(box.height, 'one line, at most 46 px').toBeLessThanOrEqual(46)
     for (const b of await page.locator('.subbar button:visible').all()) {
       const r = (await b.boundingBox())!
-      expect(r.height, 'controls at most 40 px').toBeLessThanOrEqual(40)
+      expect(r.height, 'controls 44 to 46 px').toBeLessThanOrEqual(46)
+      expect(r.height, 'controls 44 to 46 px').toBeGreaterThanOrEqual(44)
       expect(r.x + r.width, 'inside the screen').toBeLessThanOrEqual(width)
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
     // The chips and Views are not in the page row; Views and Share are in ⋯.
     await expect(page.locator('.ctl-under')).toHaveCount(0)
     const pill = page.locator('.phone-pill')
-    await expect(pill).toContainText('Last 30 days')
+    await expect(pill).toContainText('30 days')
     await expect(pill).toContainText('1 filter')
     // Live/Data sits in the row itself, not only in the sheet.
     await expect(page.locator('.subbar').getByRole('group', { name: 'View' })).toBeVisible()
@@ -282,7 +290,7 @@ for (const width of [390, 360]) {
     await sheet.getByRole('button', { name: 'Done' }).click()
     await expect(sheet).toBeHidden()
     await expect(pill).toBeFocused()
-    await expect(pill).toContainText('Last 7 days')
+    await expect(pill).toContainText('7 days')
     await expect(pill).not.toContainText('filter')
 
     // Escape closes it and returns focus; More hands over to the date-range picker.

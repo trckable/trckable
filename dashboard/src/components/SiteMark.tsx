@@ -15,6 +15,11 @@ export function siteColor(site: Pick<Site, 'domain' | 'color'>): string {
   return site.color || `hsl(${hueOf(site.domain)} 72% 62%)`
 }
 
+// A phone draws the marks a step larger (--ph-mark, phone.css): the size given
+// is the desktop size, scaled by it, and the letter never goes under
+// --ph-mark-min.
+const scaled = (px: number) => `calc(${px}px * var(--ph-mark, 1))`
+
 export function SiteMark({ site, size = 22 }: { site: Pick<Site, 'domain' | 'color' | 'icon_url'>; size?: number }) {
   // An icon that fails to load is the letter, never a broken picture.
   const [broken, setBroken] = useState('')
@@ -27,7 +32,7 @@ export function SiteMark({ site, size = 22 }: { site: Pick<Site, 'domain' | 'col
         height={size}
         alt=""
         aria-hidden="true"
-        style={{ background: `color-mix(in srgb, ${siteColor(site)} 16%, transparent)` }} // the letter's tile holds the box while the icon loads
+        style={{ width: scaled(size), height: scaled(size), background: `color-mix(in srgb, ${siteColor(site)} 16%, transparent)` }} // the letter's tile holds the box while the icon loads
         onError={() => setBroken(site.icon_url ?? '')}
       />
     )
@@ -36,7 +41,7 @@ export function SiteMark({ site, size = 22 }: { site: Pick<Site, 'domain' | 'col
     <span
       className="site-mark letter"
       aria-hidden="true"
-      style={{ width: size, height: size, fontSize: Math.round(size * 0.5), color: c, background: `color-mix(in srgb, ${c} 16%, transparent)` }}
+      style={{ width: scaled(size), height: scaled(size), fontSize: `max(var(--ph-mark-min, 0px), ${scaled(Math.round(size * 0.5))})`, color: c, background: `color-mix(in srgb, ${c} 16%, transparent)` }}
     >
       {site.domain.replace(/^www\./, '')[0]?.toUpperCase() ?? '?'}
     </span>

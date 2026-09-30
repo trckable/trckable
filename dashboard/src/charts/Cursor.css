@@ -60,3 +60,11 @@
     animation: none;
   }
 }
+
+/* The phone scale (phone.css). */
+@media (max-width: 640px) {
+  :root .cursor-pill {
+    padding: 3px 10px;
+    font-size: 12px;
+  }
+}

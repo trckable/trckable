@@ -538,3 +538,15 @@ button.sl-flag:hover {
     flex-basis: 100%;
   }
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .sl-frame,
+    .sl-top b,
+    .sl-tile b
+  ) {
+    font-size: 12px;
+  }
+}

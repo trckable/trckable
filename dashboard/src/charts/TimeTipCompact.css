@@ -98,3 +98,42 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .chart-tip.time-tip.compact,
+    .compact .ct-date,
+    .compact .ct-line .ct-none,
+    .compact .ct-sub,
+    .compact .ct-tiny b,
+    .compact .ct-tiny em
+  ) {
+    font-size: 12px;
+  }
+}
+
+/* The phone scale (phone.css): nothing in the card under 12 px. */
+@media (max-width: 640px) {
+  :root .chart-tip.time-tip.compact {
+    font-size: var(--ph-small);
+  }
+  :root .compact .ct-date {
+    font-size: var(--ph-text-2);
+  }
+  :root .compact .ct-line b {
+    font-size: 18px;
+  }
+  :root .compact .ct-line .ct-none,
+  :root .compact .ct-sub {
+    font-size: 12px;
+  }
+  :root .compact .ct-tiny b {
+    font-size: var(--ph-small);
+  }
+  :root .compact .ct-tiny em {
+    font-size: 12px;
+  }
+}
