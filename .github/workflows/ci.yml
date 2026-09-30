@@ -19,6 +19,10 @@ jobs:
   # its screens' browser specs, prose nothing heavy; a file no rule knows runs
   # everything. main, release pull requests, the nightly run and a manual run
   # always run everything. Every required check still runs and reports.
+  #
+  # WebKit, the slow browser, runs the key specs and the changed ones on a pull
+  # request, and the whole suite, split into shards, on every full run; a full
+  # run that skipped any of it fails the browsers check below.
   changes:
     name: what changed
     runs-on: ubuntu-24.04
@@ -34,6 +38,7 @@ jobs:
       dashboard: ${{ steps.filter.outputs.dashboard }}
       tracker: ${{ steps.filter.outputs.tracker }}
       image: ${{ steps.filter.outputs.image }}
+      browsers: ${{ steps.filter.outputs.browsers }}
       demo_browsers: ${{ steps.filter.outputs.demo_browsers }}
     steps:
       - uses: actions/checkout@v7
@@ -44,11 +49,8 @@ jobs:
         run: |
           [ -n "$FULL" ] && echo "main, a release, nightly or by hand: everything"
           git diff --name-only "origin/${{ github.base_ref || 'main' }}...HEAD" || true
+          # Also the browser jobs: which browser, which shard, which specs.
           node scripts/ci-select.mjs "origin/${{ github.base_ref || 'main' }}"
-          # The accessibility pass on demo data: Chromium on a pull request, all
-          # three browsers on main, a release, nightly and by hand.
-          if [ -n "$FULL" ]; then b='["chromium","firefox","webkit"]'; else b='["chromium"]'; fi
-          echo "demo_browsers=$b" >> "$GITHUB_OUTPUT"
       # Every job needs this one, so a release pull request whose versions
       # disagree fails every required check, with no local gate needed.
       - name: one version everywhere, and the release scripts' tests
@@ -257,15 +259,22 @@ jobs:
         uses: actions/upload-artifact@v7
         with: { name: facts-dashboard, path: facts-dashboard.json }
 
+  # The browsers run in Playwright's own image: its system libraries and
+  # browsers are already there. Installing them on the runner took from 1 to 25
+  # minutes, whatever the tests did, because the package mirror stalls.
   e2e-browser:
-    name: browsers (${{ matrix.browser }})
+    name: browsers (${{ matrix.name }})
     needs: [changes, build]
     if: needs.changes.outputs.e2e != ''
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
+        include: ${{ fromJSON(needs.changes.outputs.browsers) }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -276,37 +285,45 @@ jobs:
         with: { name: trckabled, path: server/bin }
       - run: chmod +x server/bin/trckabled
       - run: pnpm --filter trckable build
-      # The browser is kept between runs (a minute each time); the system
-      # libraries it needs still come from apt.
-      - uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: cd e2e && npx playwright install --with-deps ${{ matrix.browser }}
-      # All of them, or only the specs for what changed (scripts/ci-select.mjs).
-      - env:
-          SPECS: ${{ needs.changes.outputs.e2e }}
+      - name: the image carries the locked Playwright
+        run: |
+          want=$(grep -m1 -o 'playwright:v[0-9.]*' .github/workflows/ci.yml | cut -d v -f2)
+          have=$(cd e2e && npx playwright --version | awk '{print $2}')
+          [ "$want" = "$have" ] || { echo "the image has Playwright $want, pnpm-lock.yaml has $have: change the tag in .github/workflows/ci.yml"; exit 1; }
+      # All of them, or only the specs for what changed (scripts/ci-select.mjs),
+      # in one of its shards.
+      - name: browser specs
+        timeout-minutes: 12
+        env:
+          SPECS: ${{ matrix.specs }}
+          SHARD: ${{ matrix.shard }}
         run: |
           [ "$SPECS" = all ] && SPECS="" || SPECS=$(printf 'tests/%s.spec.ts ' $SPECS)
-          cd e2e && npx playwright test $SPECS --project=${{ matrix.browser }} --workers=4
+          shard=""
+          if [ -n "$SHARD" ]; then shard="--shard=$SHARD"; fi
+          cd e2e && npx playwright test $SPECS $shard --pass-with-no-tests --project=${{ matrix.browser }} --workers=4
       # A failed browser test keeps its trace (screenshots, DOM, network), so
       # a failure seen only here can be read instead of guessed.
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: e2e-traces-${{ matrix.browser }}
+          name: e2e-traces-${{ matrix.browser }}-${{ strategy.job-index }}
           path: e2e/test-results
           retention-days: 7
 
   e2e-demo:
-    name: WCAG 2.1 AA and the Full charts on demo data (${{ matrix.browser }})
+    name: WCAG 2.1 AA and the Full charts on demo data (${{ matrix.name }})
     needs: [changes, build]
     if: needs.changes.outputs.demo == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
     strategy:
       fail-fast: false
       matrix:
-        browser: ${{ fromJSON(needs.changes.outputs.demo_browsers) }}
+        include: ${{ fromJSON(needs.changes.outputs.demo_browsers) }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -319,19 +336,26 @@ jobs:
         with: { name: trckabled, path: server/bin }
       - run: chmod +x server/bin/trckabled
       - run: pnpm --filter trckable build # the suite's web servers start either way
-      - uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: cd e2e && npx playwright install --with-deps ${{ matrix.browser }}
       - name: WCAG 2.1 AA, the Full charts, the header and the speed budget on demo data (axe-core)
+        timeout-minutes: 12
+        env:
+          SHARD: ${{ matrix.shard }}
         run: |
           d=$(mktemp -d)
           (cd server && go run ./bench/demoseed -data "$d" -days 30 -daily 150 > /dev/null)
           echo 'correct horse battery' | TRCKABLE_DATA_DIR="$d" server/bin/trckabled admin add-user me@site.com --role owner
           TRCKABLE_DATA_DIR="$d" TRCKABLE_ADDR=127.0.0.1:8799 server/bin/trckabled serve > "$d/log" 2>&1 &
-          for i in $(seq 1 50); do curl -sf 127.0.0.1:8799/readyz > /dev/null && break; sleep 0.3; done
-          cd e2e && TRCKABLE_A11Y_URL=http://127.0.0.1:8799 npx playwright test a11y fullcharts speed control-row header revenue.spec --project=${{ matrix.browser }} --workers=4
+          ready='fetch("http://127.0.0.1:8799/readyz").then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))'
+          for i in $(seq 1 50); do node -e "$ready" && break; sleep 0.3; done
+          shard=""
+          if [ -n "$SHARD" ]; then shard="--shard=$SHARD"; fi
+          cd e2e && TRCKABLE_A11Y_URL=http://127.0.0.1:8799 npx playwright test a11y fullcharts speed control-row header revenue.spec $shard --pass-with-no-tests --project=${{ matrix.browser }} --workers=4
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: e2e-demo-traces-${{ matrix.browser }}-${{ strategy.job-index }}
+          path: e2e/test-results
+          retention-days: 7
 
   # The required check: green only when every browser job above is.
   e2e:
@@ -347,6 +371,13 @@ jobs:
           for r in ${{ needs.build.result }} ${{ needs.e2e-browser.result }} ${{ needs.e2e-demo.result }}; do
             [ "$r" = success ] || [ "$r" = skipped ] || exit 1 # skipped: not needed for this change
           done
+          # main, a release, the nightly run and a manual run: every browser job,
+          # WebKit's shards included, ran and passed. Skipped is not enough.
+          if [ "${{ needs.changes.outputs.full }}" = true ]; then
+            for r in ${{ needs.e2e-browser.result }} ${{ needs.e2e-demo.result }}; do
+              [ "$r" = success ] || { echo "a full run needs every browser job, WebKit included"; exit 1; }
+            done
+          fi
 
   image:
     name: image (weight budget)
