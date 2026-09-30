@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Added
+
+- The MCP revenue tool gives every row of its ranking the revenue of the comparison period and the change as a fraction (`revenue_previous`, `revenue_change`), so an assistant can say which traffic earns most and whether it is up or down.
+
 ### Fixed
 
 - The chart rests when nothing is happening: after Replay ends it no longer keeps a white line, a dot and a greyed half. They show in full only while you hover, drag or Replay plays and fade out when it stops; a day you picked or paused on stays as a thin dashed line with a small dot. Replay's slider spans the same days as the chart, so its thumb sits at the picked day even when the chart starts at the site's first visit.
