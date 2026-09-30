@@ -4,12 +4,14 @@ import { Suspense, lazy } from 'react'
 import { Loading } from '../../components/loading/Loading'
 import { shows, type Mods } from '../../lib/modules'
 import type { FunnelStep, ReportQuery, Row, Site } from '../../lib/api'
+import { newCards } from '../../lib/tryout'
 
 const Funnel = lazy(() => import('../../views/FullModules').then((m) => ({ default: m.Funnel })))
-const People = lazy(() => import('../../views/FullModules').then((m) => ({ default: m.People })))
+// The try-out's People and Retention (?cards=new) replace the two as they were.
+const People = lazy(() => (newCards() ? import('../newcards/PeopleNew') : import('../../views/FullModules').then((m) => ({ default: m.People }))))
 const Crawlers = lazy(() => import('../crawlers/Crawlers').then((m) => ({ default: m.Crawlers })))
 const Vitals = lazy(() => import('../../views/Vitals').then((m) => ({ default: m.Vitals })))
-const Retention = lazy(() => import('../../views/Retention').then((m) => ({ default: m.Retention })))
+const Retention = lazy(() => (newCards() ? import('../newcards/RetentionNew') : import('../../views/Retention').then((m) => ({ default: m.Retention }))))
 
 const CARDS = ['funnel', 'people', 'crawlers', 'vitals', 'retention']
 

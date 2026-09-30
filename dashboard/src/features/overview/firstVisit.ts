@@ -1,19 +1,7 @@
-// A site whose first visit falls inside the period: its chart and the tiles'
-// small lines start at that visit, not at a month of zeros. No React, so the
-// rules are tested on their own (firstVisit.test.ts).
+// What the overview works out about its periods: whether the period before is
+// there in full, how short a span is drawn by the hour, and the hour it is now.
+// No React, so the rules are tested on their own (firstVisit.test.ts).
 import { diffDays } from '../../lib/dates'
-
-/**
- * The first bucket with a visit, when the site's first visit falls inside
- * the period: nothing at all in the period just before it, nothing filtered
- * (a filter can hide the early days of a site that was there all along).
- * 0 otherwise, meaning the whole period.
- */
-export function firstVisitAt(values: number[], before: number | undefined, filtered: boolean): number {
-  if (filtered || before === undefined || before > 0) return 0
-  const i = values.findIndex((v) => v > 0)
-  return i > 0 ? i : 0
-}
 
 /**
  * Whether the period before this one is there in full, so a change against it

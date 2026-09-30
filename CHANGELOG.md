@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- The main chart shows the whole period you picked, even for a site younger than it: the days before its first visit are empty instead of cut off. The "since" label and its "Show since" link are gone; the numbers are the same.
+
 ## 0.5.7 (30 Sep 2026)
 
 - Widgets have their own section in a site's settings, next to Sharing: they go on your own pages, so they no longer sit under share links.

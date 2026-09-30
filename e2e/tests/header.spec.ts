@@ -7,7 +7,7 @@
 // beside the period with its key, and the keys still work; the person's own
 // things (Profile, theme, shortcuts, sign out) are the avatar's menu.
 // Each tile carries its change, readable without colour; the
-// chart starts at the first visit when that falls in the period, draws a
+// chart shows the whole period (days before the first visit empty), draws a
 // short span by the hour, and keeps Replay as a small ▶.
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
@@ -212,17 +212,12 @@ test('nothing in the period before: no change chips, not "new" on every tile', a
   await expect(page.getByRole('group', { name: 'Key numbers' }).locator('.kpi-delta')).toHaveCount(0)
 })
 
-test('a period that starts before the first visit: the chart starts at it', async ({ page }) => {
-  // The demo data is 30 days old: 90 days start well before it.
+test('a period that starts before the first visit: the whole period is on the chart', async ({ page }) => {
+  // The demo data is 30 days old: 90 days start well before it, and all 90 are drawn (the early ones empty).
   await open(page, '?period=90d')
-  const chip = page.locator('.overview-chart .since-chip')
-  await expect(chip).toHaveText(/^since [A-Z][a-z]{2} \d+$/)
-  const day = (await chip.innerText()).replace('since ', '')
-  const labels = page.locator('.overview-chart .chart-wrap svg text.num')
-  await expect(labels.filter({ hasText: day }).first()).toBeVisible()
-  await page.getByRole('button', { name: `Show since ${day}` }).click()
-  await expect(page).toHaveURL(/from=\d{4}-\d{2}-\d{2}&to=/)
-  await expect(chip).toHaveCount(0)
+  await expect(page.locator('.overview-chart .chart-wrap svg[role=img]')).toHaveAttribute('aria-label', /: 90 points,/)
+  await expect(page.locator('.overview-chart .since-chip')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /^Show since/ })).toHaveCount(0)
 })
 
 test('three days or fewer are drawn by the hour', async ({ page }) => {

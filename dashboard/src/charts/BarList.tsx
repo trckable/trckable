@@ -2,10 +2,15 @@
 // buttons: click to filter the whole dashboard; hover (on sources) previews
 // the money trail. The line used to be a block behind the whole row, so the
 // numbers sat half on it and half off — the list read as noise.
-import { useLayoutEffect, useRef, type ReactNode } from 'react'
+import { Suspense, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { useTween } from '../lib/motion'
 import { fmtInt, fmtPct } from '../lib/format'
 import { Loading } from '../components/loading/Loading'
+import { lazyLoad } from '../lib/lazyLoad'
+import { newCards } from '../lib/tryout'
+
+// The try-out's list (?cards=new) is a chunk of its own.
+const Fresh = lazyLoad(() => import('../features/newcards/BarListNew'))
 
 export interface BarItem {
   key: string
@@ -18,7 +23,19 @@ export interface BarItem {
   dim?: boolean
 }
 
-export function BarList(p: {
+/** The list as it is; under ?cards=new, the new one. */
+export function BarList(p: BarListProps) {
+  if (!newCards()) return <Classic {...p} />
+  return (
+    <Suspense fallback={<Loading height={164} />}>
+      <Fresh {...p} />
+    </Suspense>
+  )
+}
+
+export type BarListProps = Parameters<typeof Classic>[0]
+
+function Classic(p: {
   items: BarItem[]
   total?: number
   dimLabel: string

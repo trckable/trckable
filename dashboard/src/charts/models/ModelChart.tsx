@@ -31,9 +31,10 @@ import { modelTop, running } from './modelMath'
 export default function ModelChart(p: TimeChartProps) {
   // The model asked for, when this number can wear it (money keeps its columns).
   const model = p.tone === 'money' ? null : modelFor(p.model ?? null, p.kind)
-  // Only the buckets on the chart: the report's channels start where its series does.
-  const from = p.stackFrom ?? 0
-  const stack = p.stack?.map((s) => ({ channel: s.channel, values: s.values.slice(from, from + p.values.length) }))
+  // Only the buckets on the chart (by the hour, the day's hours up to now).
+  // A period before with nothing in it has nothing to set this one against.
+  const prev = p.ghost?.some((v) => v > 0) ? p.ghost : undefined
+  const stack = p.stack?.map((s) => ({ channel: s.channel, values: s.values.slice(0, p.values.length) }))
   const ref = useRef<HTMLDivElement>(null)
   const [w, setW] = useState(900)
   const [picked, setHover] = useState<number | null>(null)
@@ -171,7 +172,7 @@ export default function ModelChart(p: TimeChartProps) {
         <g clipPath={`url(#${gradId}-main)`}>
         <g mask={`url(#${gradId}-dim)`}>
         <g style={{ opacity: p.overlay ? 0.35 : 1, transition: 'opacity .12s' }}>
-          {model && <ModelLayer model={model} id={gradId} labels={p.labels} bucket={p.bucket} n={n} x={x} y={y} base={PAD_T + plotH} plotW={plotW} w={w} top={PAD_T} vals={vals} ghost={p.ghost ? ghost : undefined} stack={stack} hover={hover} partialLast={p.partialLast} tone={tone} fmt={fmt} />}
+          {model && <ModelLayer model={model} id={gradId} labels={p.labels} bucket={p.bucket} n={n} x={x} y={y} base={PAD_T + plotH} plotW={plotW} w={w} top={PAD_T} vals={vals} ghost={prev ? ghost : undefined} stack={stack} hover={hover} partialLast={p.partialLast} tone={tone} fmt={fmt} />}
           {!model && columns && <ColumnsLayer {...cols} id={gradId} values={vals} ghost={p.ghost ? ghost : undefined} hover={hover} partialLast={p.partialLast} />}
           {!model && !columns && (
             <>
@@ -217,7 +218,7 @@ export default function ModelChart(p: TimeChartProps) {
       </svg>
       {/* Notes sit on the axis: a flag per day, its words on hover. */}
       <NoteMarkers markers={markers} x={x} top={PAD_T + plotH} width={w} />
-      {hover != null && n > 0 && <TimeTip p={{ ...p, model, stack }} i={hover} left={tipAt} width={tipW} compact={compact} notes={markers.find((m) => m.i === hover)?.notes ?? []} />}
+      {hover != null && n > 0 && <TimeTip p={{ ...p, model, stack, ghost: prev }} i={hover} left={tipAt} width={tipW} compact={compact} notes={markers.find((m) => m.i === hover)?.notes ?? []} />}
       {hover != null && n > 0 && p.onAddNote && <NoteAdd x={x(hover)} day={p.labels[hover].slice(0, 10)} label={bucketLabel(p.labels[hover], p.bucket, true)} onAdd={p.onAddNote} />}
       {/* Live pulse: each visit rises from the last point as a dot, a goal as
           a ring, a sale as a coin with its amount. It is decoration on top of

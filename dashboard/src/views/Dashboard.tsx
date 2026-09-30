@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BarList, type BarItem } from '../charts/BarList'
 import { TimeChart, type Pulse } from '../charts/TimeChart'
@@ -28,11 +28,13 @@ import { ReplayButton, ScrubBar } from '../features/overview/Replay'
 import { useReplayTimer, useSpeed } from '../features/overview/useReplay'
 import { useRaceNow, useRaceRows, RACE_DIMS } from '../features/overview/useRace'
 import { replaySeconds, speedOf } from '../features/overview/replayTime'
-import { firstVisitAt, hourIn, hourlySpan, previousWhole } from '../features/overview/firstVisit'
+import { hourIn, hourlySpan, previousWhole } from '../features/overview/firstVisit'
 import { chartMetric, ghostValues, metricName, metricProps, metricValues, type ChartMetric } from '../features/overview/chartMetric'
 import { chartTips } from '../features/overview/chartTips'
 import { DIM_LABEL, PLACE_LABEL } from '../features/overview/dimLabels'
-import { chartModel, needsPrev } from '../lib/tryout'
+import { chartModel, needsPrev, newCards } from '../lib/tryout'
+import { setBasis } from '../features/newcards/basis'
+import { TabbedCard } from './TabbedCard'
 import { LiveSlot } from '../features/live/liveChunk'
 import { OnlineKpi } from '../features/live/OnlineKpi'
 import { entryCopy } from '../features/live/entryCopy'
@@ -257,7 +259,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const scrubbing = scrubIdx >= 0
   // Notes on the chart: why that spike happened (in Core, once there are any).
   const showDay = useCallback((d: string) => jump(d, range, canScrub, today), [range, canScrub, today])
-  const { notes, load: loadNotes, ready: notesReady } = useNotes(site.id, range, showDay)
+  const { notes, load: loadNotes } = useNotes(site.id, range, showDay)
   const [notesOpen, setNotesOpen] = useState(false)
 
   // ---- live pulse ----
@@ -380,6 +382,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
   // ---- what the numbers show right now: whole period, scrubbed day, or trail ----
   const src = trailData?.current ?? cur
+  setBasis(cur, data?.previous)
   const day = scrubbing ? src?.days?.find((d) => d.date === view.day) : undefined
   // While Replay tells the period (features/story), the page races to the
   // playhead: tiles count up, lists overtake (features/overview/useRace).
@@ -414,21 +417,12 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
   // ---- chart ----
   const series = cur?.series ?? []
-  // A site that began inside the period: the chart and the tiles' lines start
-  // at its first visit, not at a month of zeros (features/overview).
-  // A note on a day before that first visit (the launch, say) keeps its day.
-  const firstVisit = waiting ? 0 : firstVisitAt(series.map((p) => p.visitors), data?.previous?.kpis.visitors, view.filters.length > 0 || compareMode !== 'previous')
-  const noteDay = notes.map((n) => n.day).filter((d) => d >= range.from).sort()[0]
-  let fv = firstVisit
-  if (fv > 0 && noteDay) fv = Math.min(fv, Math.max(0, series.findIndex((p) => p.t.slice(0, 10) >= noteDay)))
-  const firstDay = fv > 0 ? series[fv].t.slice(0, 10) : undefined
-  const shown = series.slice(fv)
   // Three days or fewer by day is a triangle: drawn by the hour instead,
   // unless a day is picked (a replay by day too) or the bucket was picked by hand.
-  const byHour = !!data && data.bucket === 'day' && !view.bucket && !scrubbing && hourlySpan(firstDay ?? range.from, range.to)
+  const byHour = !!data && data.bucket === 'day' && !view.bucket && !scrubbing && hourlySpan(range.from, range.to)
   const hourQuery = useMemo(
-    () => (byHour ? { ...query, from: firstDay ?? query.from, compare: firstDay ? undefined : query.compare, daily: false, deep: false, bucket: 'hour' as const } : null),
-    [byHour, query, firstDay],
+    () => (byHour ? { ...query, daily: false, deep: false, bucket: 'hour' as const } : null),
+    [byHour, query],
   )
   const hourly = useReport(byHour ? site.id : null, hourQuery, { live })
   useEffect(() => {
@@ -438,29 +432,29 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // By the hour, the chart stops at the hour it is now: the rest of today
   // has not happened, and is not a drop to zero.
   const nowHour = hourIn(site.timezone)
-  const chartSeries = hours ? hours.current.series.filter((p) => p.t.slice(0, 13) <= nowHour) : shown
+  const chartSeries = hours ? hours.current.series.filter((p) => p.t.slice(0, 13) <= nowHour) : series
   // What the chart shows follows the address, when this page can draw it (chartMetric).
   const canDraw = { money: !!money, days: !hours && data?.bucket === 'day' && !!cur?.days }
   const metric = chartMetric(view.metric, canDraw)
   const pick = (m: ChartMetric) => setView({ metric: m === 'visitors' ? undefined : m })
   // Revenue is what src says (a followed channel's own, like the tiles), by the hour what that hour says.
-  const revenue = (hours ? chartSeries : (src?.series.slice(fv) ?? [])).map((p) => p.revenue ?? 0)
+  const revenue = (hours ? chartSeries : (src?.series ?? [])).map((p) => p.revenue ?? 0)
   const values = metricValues(metric, { series: chartSeries, revenue, days: cur?.days })
-  const { raced, follow } = useRaceNow({ src, dates: shown.map((p) => p.t.slice(0, 10)), hourSeries: chartSeries, hours: !!hours, hourAt, idx: scrubIdx - fv, telling, racing, playing })
+  const { raced, follow } = useRaceNow({ src, dates: series.map((p) => p.t.slice(0, 10)), hourSeries: chartSeries, hours: !!hours, hourAt, idx: scrubIdx, telling, racing, playing })
   if (raced) [k, dayRev] = [raced.kpis, raced.revenue]
   const revenueNow = dayRev ?? money?.revenue
   const conv = scrubbing ? undefined : money?.conversion
   const soFarRpv = k?.visitors ? (dayRev ?? 0) / k.visitors : 0
   const rpv = scrubbing || raced ? soFarRpv : money?.revenue_per_visitor
-  const replayPoints = hours ? chartSeries.length : series.length - fv
-  const settle = useReplayTimer({ playing, secs: replaySeconds(replayPoints, speedOf(speed).secs), first: hours ? 0 : fv, n: hours ? chartSeries.length : series.length, at: hours ? (hourAt ?? -1) : scrubIdx, step: hours ? setHourAt : setDayIdx, done: () => {
+  const replayPoints = hours ? chartSeries.length : series.length
+  const settle = useReplayTimer({ playing, secs: replaySeconds(replayPoints, speedOf(speed).secs), first: 0, n: hours ? chartSeries.length : series.length, at: hours ? (hourAt ?? -1) : scrubIdx, step: hours ? setHourAt : setDayIdx, done: () => {
     setPlaying(false)
     setStory('end')
-  }, stops: stops.map((i) => i + (hours ? 0 : fv)) })
+  }, stops })
   const jumpTo = (i: number) => {
     setPlaying(false)
     if (hours) setHourAt(i)
-    else setDayIdx(i + fv)
+    else setDayIdx(i)
   }
   const stopStory = () => {
     setPlaying(false)
@@ -472,12 +466,12 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     setStory('on')
     setPlaying(true)
   }
-  let chartScrub = scrubbing && !hours ? scrubIdx - fv : null
+  let chartScrub = scrubbing && !hours ? scrubIdx : null
   if (hours) chartScrub = hourAt
-  const prevSeries = (compareOn || needsPrev()) && !firstDay ? (hours ?? data)?.previous?.series : undefined
+  const prevSeries = (compareOn || needsPrev()) ? (hours ?? data)?.previous?.series : undefined
   const ghost = ghostValues(metric, prevSeries)
   const overlay = trail && trailData && (metric === 'visitors' || metric === 'pageviews')
-    ? { values: trailData.current.series.slice(fv).map((p) => p[metric]), color: channelColor(trail), name: channelLabel(trail) }
+    ? { values: trailData.current.series.map((p) => p[metric]), color: channelColor(trail), name: channelLabel(trail) }
     : undefined
 
   const narrow = useNarrow()
@@ -616,7 +610,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         online={<OnlineKpi online={online} canOpen={!isShared()} note={stream.connected || isShared() ? entryCopy.onlineNote : entryCopy.connecting} />}
       />
 
-      {full && (
+      {full && !newCards() && (
         <div className="more-numbers rise">
           <button type="button" className="more-toggle" aria-expanded={moreOpen} onClick={() => setMoreOpen((o) => !o)}>
             <ChevronRight size={15} strokeWidth={1.75} aria-hidden="true" />
@@ -647,7 +641,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
 
       <div className={active ? 'overview-chart replaying' : 'overview-chart'} role="group" aria-label={`${name} over time`}>
-        <ChartHead title={name} since={firstDay && fmtDay(firstDay)} onShowSince={firstDay ? () => setView({ period: 'custom', from: firstDay, to: range.to, day: undefined }) : undefined}>
+        <ChartHead title={name}>
           {(canScrub || canReplayByDay) && (
             <ReplayButton
               playing={playing}
@@ -667,7 +661,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </ChartHead>
         {/* Until a short span's hours, or the notes that may move a new
             site's start, arrive: never one chart first, then a jump. */}
-        {firstLoad || (byHour && !hours) || (firstVisit > 0 && !notesReady) ? (
+        {firstLoad || (byHour && !hours) ? (
           <Loading height={narrow ? 170 : 220} />
         ) : (
           <TimeChart
@@ -685,7 +679,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             partialLast={live}
             model={chartModel()} kind={metric}
             stack={(hours ? hours.current : cur)?.series_by_channel}
-            stackFrom={hours ? 0 : fv}
             {...metricProps(metric, money, revenue)}
             notes={notesOn ? notes : []}
             onAddNote={isShared() || isViewer() || !notesOn ? undefined : (day) => setNoteFor(day)}
@@ -695,7 +688,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               canScrub && full && !hours
                 ? (i) => {
                     setPlaying(false)
-                    setDayIdx(i + fv)
+                    setDayIdx(i)
                   }
                 : undefined
             }
@@ -710,12 +703,12 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         )}
         {canScrub && (
           <ScrubBar
-            n={series.length - fv}
-            at={scrubIdx < 0 ? -1 : Math.max(0, scrubIdx - fv)}
+            n={series.length}
+            at={Math.max(-1, scrubIdx)}
             day={scrubbing && view.day ? fmtDay(view.day, { weekday: true }) : undefined}
             onScrub={(i) => {
               setPlaying(false)
-              setDayIdx(i + fv)
+              setDayIdx(i)
             }}
           />
         )}
@@ -754,22 +747,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           cards in it. The charts need the signed-in API, so a shared link
           keeps the breakdowns instead. */}
       <FullGrid on={chartsOnly}>
-      {chartsOnly && (
-        <Suspense fallback={<div data-w={4}><Loading height={240} /></div>}>
-          <FullCharts
-            site={site}
-            query={query}
-            bucket={data?.bucket ?? 'day'}
-            modules={mods}
-            money={scrubbing ? undefined : money}
-            countryRevenue={src?.revenue_dims?.country ?? []}
-            fmtMoney={fmtM}
-            onPickCountry={(c) => addFilter('country', c)}
-          />
-        </Suspense>
-      )}
-
-      {!chartsOnly && <section aria-label="Breakdowns" className="grid4" id="sec-sources">
+      {(!chartsOnly || newCards()) && <section aria-label="Breakdowns" className="grid4" id="sec-sources" data-group={chartsOnly || undefined}>
         <TabbedCard
           title="Sources"
           // Hover must never change this card's height. A line that appeared
@@ -906,6 +884,20 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         />
       </section>}
 
+      {chartsOnly && (
+        <Suspense fallback={<div data-w={4}><Loading height={240} /></div>}>
+          <FullCharts
+            site={site}
+            query={query}
+            bucket={data?.bucket ?? 'day'}
+            modules={mods}
+            money={scrubbing ? undefined : money}
+            countryRevenue={src?.revenue_dims?.country ?? []}
+            fmtMoney={fmtM}
+            onPickCountry={(c) => addFilter('country', c)}
+          />
+        </Suspense>
+      )}
       {full && (
         <section aria-label="Goals and revenue" className="grid2 rise" id="sec-goals" data-group>
           {/* Off means off: with Goals off the script records none, so the card
@@ -1024,27 +1016,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   )
 }
 
-/**
- * A card's hint. Wide screens read it beside the title; phones hide that line
- * (see .card-note) and show this (i) instead, which reveals the same words
- * when tapped. Nothing is lost, but the cards stay short.
- */
-function InfoDot({ text }: { text: string }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <>
-      <button type="button" className="info-dot" aria-label={text} title={text} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        i
-      </button>
-      {open && (
-        <span className="faint note-open" style={{ fontSize: 12 }}>
-          {text}
-        </span>
-      )}
-    </>
-  )
-}
-
 /** Whether a media query matches, kept up to date. */
 function useMedia(query: string) {
   const [on, setOn] = useState(() => typeof matchMedia === 'function' && matchMedia(query).matches)
@@ -1068,61 +1039,6 @@ function Num({ label, value }: { label: string; value: string }) {
     <div className="num-cell">
       <span className="faint">{label}</span>
       <b className="num">{value}</b>
-    </div>
-  )
-}
-
-function TabbedCard(p: { title: string; note?: string; extra?: React.ReactNode; tabs: { dim: string; label: string }[]; render: (dim: string) => React.ReactNode }) {
-  const [tab, setTab] = useState(p.tabs[0].dim)
-  // A card you never read can be folded away, and it stays folded.
-  const key = 'trckable:fold:' + p.title
-  const [folded, setFolded] = useState(() => {
-    try {
-      return localStorage.getItem(key) === '1'
-    } catch {
-      return false
-    }
-  })
-  const fold = (v: boolean) => {
-    setFolded(v)
-    try {
-      localStorage.setItem(key, v ? '1' : '0')
-    } catch {
-      /* private mode */
-    }
-  }
-  const active = p.tabs.some((t) => t.dim === tab) ? tab : p.tabs[0].dim
-  return (
-    <div className={folded ? 'card folded' : 'card'}>
-      <div className="card-head" style={{ flexWrap: 'wrap' }}>
-        <button type="button" className="fold" aria-expanded={!folded} aria-label={folded ? `Show ${p.title}` : `Hide ${p.title}`} onClick={() => fold(!folded)}>
-          <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
-        </button>
-        <h2 style={{ whiteSpace: 'nowrap' }}>{p.title}</h2>
-        {p.tabs.length > 1 ? (
-          <div className="tabs" role="tablist" aria-label={`${p.title} breakdown`}>
-            {p.tabs.map((t) => (
-              <button key={t.dim} type="button" role="tab" aria-selected={active === t.dim} onClick={() => setTab(t.dim)}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-        ) : (
-          p.note && (
-            <span className="faint card-note" style={{ fontSize: 12 }}>
-              {p.note}
-            </span>
-          )
-        )}
-        {p.note && <InfoDot text={p.note} />}
-        {p.extra}
-      </div>
-      {p.tabs.length > 1 && p.note && (
-        <span className="faint card-note" style={{ fontSize: 12, marginTop: -6 }}>
-          {p.note}
-        </span>
-      )}
-      {!folded && <div role="tabpanel">{p.render(active)}</div>}
     </div>
   )
 }

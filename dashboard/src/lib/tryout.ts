@@ -13,3 +13,9 @@ export const chartModel = (): ChartModel | null => model
 export const newCards = (): boolean => cards
 /** The models about the period before draw it whether or not Compare is on. */
 export const needsPrev = (): boolean => model === 'C' || model === 'E'
+
+// The new cards' look is keyed on this attribute, in a stylesheet that loads only with the switch.
+if (cards && typeof document !== 'undefined') {
+  document.documentElement.dataset.cards = 'new'
+  void import('../features/newcards/newcards.css')
+}

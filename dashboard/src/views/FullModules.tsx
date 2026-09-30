@@ -8,6 +8,8 @@ import { Picker } from '../components/Picker'
 import { api, messageOf, type FunnelResult, type FunnelStep, type ReportQuery, type Row, type Site } from '../lib/api'
 import { fmtDuration, fmtInt } from '../lib/format'
 import { CookielessOff } from '../features/cookieless/Off'
+import { FunnelResultNew } from '../features/newcards/FunnelResultNew'
+import { newCards } from '../lib/tryout'
 import './FullModules.css'
 import { Loading } from '../components/loading/Loading'
 
@@ -88,7 +90,8 @@ export function Funnel({ site, query, pages, goals, steps, onSteps: setSteps }: 
 
       {err && <span className="faint">{err}</span>}
       {active.length < 2 && !err && <span className="faint">Pick at least two steps.</span>}
-      {res && (
+      {res && newCards() && <FunnelResultNew res={res} />}
+      {res && !newCards() && (
         <div className="funnel">
           {res.map((s, i) => (
             <div key={i} className="funnel-step">

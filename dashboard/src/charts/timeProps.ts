@@ -50,9 +50,8 @@ export interface TimeChartProps {
   locked?: boolean
   /** The try-out's model for the line (lib/tryout); absent is the chart as it was. */
   model?: ChartModel | null
-  /** With model D: the report's visitors by channel, from `stackFrom` on the report's own series. */
+  /** With model D: the report's visitors by channel, aligned with the report's own series. */
   stack?: ChannelSeries[]
-  stackFrom?: number
   /** Which number the chart plots (visitors, pageviews, revenue…): not every model fits every one. */
   kind?: string
 }

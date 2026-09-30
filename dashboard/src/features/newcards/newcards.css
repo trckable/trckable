@@ -1,0 +1,464 @@
+/* The new Full cards (?cards=new). One rhythm for the whole grid: the same gap,
+   the same card padding, the same head (a title, its tabs on the right, never a
+   subtitle), thin marks and numbers in mono. Keyed on :root[data-cards='new'],
+   so nothing changes without the switch. */
+:root[data-cards='new'] .full-grid,
+:root[data-cards='new'] .grid4,
+:root[data-cards='new'] .grid2 {
+  gap: 12px;
+}
+:root[data-cards='new'] .card {
+  padding: 14px 16px 16px;
+  gap: 12px;
+  border-radius: 14px;
+}
+:root[data-cards='new'] .card-head,
+:root[data-cards='new'] .kit-head {
+  align-items: center;
+  min-height: 28px;
+  gap: 10px;
+}
+:root[data-cards='new'] .card-head h2,
+:root[data-cards='new'] .kit-head h2 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+:root[data-cards='new'] .card-note,
+:root[data-cards='new'] .kit-question,
+:root[data-cards='new'] .kit-foot {
+  display: none;
+}
+:root[data-cards='new'] .card-head .fold + h2 {
+  margin-right: auto;
+}
+/* A card's tabs are a row of their own under the title, the same in every card. */
+:root[data-cards='new'] .card-head .tabs {
+  order: 5;
+  flex: 1 0 100%;
+  margin: 0;
+  gap: 16px;
+}
+:root[data-cards='new'] .tabs button {
+  min-height: 26px;
+  padding: 3px 0;
+  border-radius: 0;
+  border-bottom: 1.5px solid transparent;
+  background: none;
+  font-size: 12px;
+}
+:root[data-cards='new'] .tabs button[aria-selected='true'] {
+  border-bottom-color: var(--accent);
+  background: none;
+  color: var(--text);
+}
+:root[data-cards='new'] .kit-switch {
+  height: 26px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--text-3);
+  font-size: 12px;
+}
+:root[data-cards='new'] .seg.small {
+  background: none;
+  border-color: transparent;
+}
+
+/* Visit to sale: a hairline a step, not a block. */
+:root[data-cards='new'] .kit-funnel {
+  gap: 14px;
+}
+:root[data-cards='new'] .kit-funnel-track {
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+:root[data-cards='new'] .kit-funnel-bar {
+  border-radius: 2px;
+  opacity: 0.85;
+}
+:root[data-cards='new'] .kit-funnel-label b {
+  font-weight: 500;
+}
+:root[data-cards='new'] .kit-funnel-label .num {
+  font-size: 12.5px;
+}
+
+/* ---- ranked lists ---- */
+.nl-cols,
+.nl-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nl-cols {
+  padding: 0 4px 2px;
+  color: var(--text-3);
+  font-size: 11px;
+}
+.nl-cols > span:first-child,
+.nl-main {
+  flex: 1;
+  min-width: 0;
+}
+.nl-row {
+  min-height: 38px;
+  padding: 4px;
+  border-radius: 8px;
+}
+.nl-main {
+  display: grid;
+  gap: 6px;
+}
+.nl-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+}
+.nl-line {
+  display: block;
+  height: 2px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+.nl-line i {
+  display: block;
+  height: 100%;
+  border-radius: 1px;
+  background: var(--accent);
+  opacity: 0.8;
+  transition: width 0.45s var(--ease), opacity 0.15s;
+}
+.nl-row:hover .nl-line i {
+  opacity: 1;
+}
+.nl-val,
+.nl-sub,
+.nl-rev,
+.nl-tail,
+.nl-cols .nl-chg {
+  flex: none;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+.nl-val {
+  width: 46px;
+}
+.nl-sub {
+  width: 44px;
+  color: var(--text-2);
+}
+.nl-rev {
+  width: 60px;
+}
+/* The column heads are labels, not numbers. */
+.nl-cols .nl-val,
+.nl-cols .nl-sub,
+.nl-cols .nl-rev {
+  font-family: inherit;
+  font-size: 11px;
+}
+.nl-rev.none {
+  color: var(--text-3);
+}
+.nl-cols .nl-chg,
+.nl-tail {
+  position: relative;
+  width: 42px;
+}
+.nl-tail {
+  height: 16px;
+}
+.nl-chg,
+.nl-share {
+  position: absolute;
+  inset: 0 0 0 auto;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+  transition: opacity 0.12s;
+}
+.nl-chg {
+  color: var(--text-3);
+}
+.nl-chg.up {
+  color: var(--up);
+}
+.nl-chg.down {
+  color: var(--down);
+}
+.nl-share {
+  color: var(--text-2);
+  opacity: 0;
+}
+.nl-row:hover .nl-share,
+.nl-row:focus-visible .nl-share {
+  opacity: 1;
+}
+.nl-row:hover .nl-chg,
+.nl-row:focus-visible .nl-chg {
+  opacity: 0;
+}
+@container (max-width: 340px) {
+  .nl-sub,
+  .nl-cols .nl-sub {
+    display: none;
+  }
+}
+
+/* ---- retention ---- */
+.rt-line {
+  margin: 4px 0;
+  font-size: 15px;
+}
+.rt {
+  display: grid;
+  grid-template-columns: 52px 60px repeat(var(--weeks), minmax(44px, 132px));
+  justify-content: start;
+  gap: 3px 4px;
+  align-items: center;
+  font-size: 12px;
+}
+.rt-row {
+  display: contents;
+}
+.rt-h {
+  color: var(--text-3);
+  font-size: 11px;
+}
+.rt-c {
+  text-align: center;
+}
+.rt-n {
+  text-align: right;
+  padding-right: 6px;
+  color: var(--text-2);
+}
+.rt-week {
+  color: var(--text-2);
+}
+.rt-cell {
+  display: grid;
+  place-items: center;
+  height: 26px;
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 11.5px;
+}
+.rt-open {
+  color: var(--text-4);
+}
+/* The average, over the weeks' columns: a thin line, a ring and its figure on each week. */
+.rt-curve {
+  position: relative;
+  grid-column: 3 / -1;
+  height: 52px;
+  margin-bottom: 4px;
+}
+.rt-curve svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.rt-curve path {
+  vector-effect: non-scaling-stroke;
+}
+.rt-dot {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+.rt-dot i {
+  position: absolute;
+  left: -3.5px;
+  top: -3.5px;
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  background: var(--surface);
+}
+.rt-dot b {
+  position: absolute;
+  bottom: 7px;
+  left: 0;
+  transform: translateX(-50%);
+  color: var(--text-2);
+  font-size: 10.5px;
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ---- funnel result ---- */
+.fn {
+  display: grid;
+}
+.fn-result {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.fn-result b {
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 600;
+}
+.fn-step {
+  display: grid;
+  gap: 6px;
+}
+.fn-loss {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 8px;
+  font-size: 11.5px;
+}
+.fn-loss span {
+  width: 1px;
+  height: 11px;
+  background: var(--border-2);
+}
+.fn-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+}
+.fn-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fn-count {
+  font-size: 12.5px;
+}
+.fn-line {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+.fn-line i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.85;
+  transition: width 0.5s var(--ease);
+}
+:root[data-cards='new'] .funnel-steps {
+  gap: 4px;
+}
+:root[data-cards='new'] .funnel-steps .chip {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 11.5px;
+}
+:root[data-cards='new'] .funnel-steps .picker-btn {
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+}
+
+/* ---- people ---- */
+.pp {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pp-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto 30px;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 7px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.pp-row:hover,
+.pp-row:focus-visible {
+  background: var(--sunken);
+  outline: none;
+}
+.pp-face {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+}
+.pp-what {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.pp-path,
+.pp-from {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pp-path {
+  font-size: 12.5px;
+}
+.pp-from {
+  display: flex;
+  gap: 6px;
+  font-size: 11.5px;
+}
+.pp-chip {
+  padding: 2px 8px;
+  border: 1px solid var(--grid);
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--text-2);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.pp-ago {
+  text-align: right;
+  font-size: 11.5px;
+}
+.pp-online {
+  margin-left: auto;
+  color: var(--up);
+  font-size: 12px;
+}
+.pp-online::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: 1px;
+}
+@media (max-width: 640px) {
+  .pp-chip {
+    display: none;
+  }
+  .pp-row {
+    grid-template-columns: 28px minmax(0, 1fr) 30px;
+  }
+}
