@@ -1,5 +1,6 @@
 import { ChartCard } from '../../../charts/ChartCard'
 import { FlowChart } from '../../../charts/FlowChart'
+import { fmtInt } from '../../../lib/format'
 import type { Charts } from '../api'
 import { copy } from '../copy'
 import { flowModel } from '../model'
@@ -22,7 +23,7 @@ export function FlowCard({ charts }: { charts: Charts | null }) {
           cols={m.cols}
           heads={copy.flow.heads}
           links={m.links}
-          color="var(--ch-1)"
+          fmt={fmtInt}
           label={copy.flow.label}
           boxTip={(_, b) => copy.flow.box(b.label, b.value)}
           bandTip={(a, b, n) => copy.flow.band(a.label, b.label, n)}

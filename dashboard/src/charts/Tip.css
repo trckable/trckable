@@ -43,3 +43,21 @@
     width: min(244px, calc(100% - 8px));
   }
 }
+
+/* The other charts' hover card: the main chart's look (its corner, its glass,
+   its shadow) at the size of a line or two. */
+.chart-tip.kit-tip {
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background:
+    radial-gradient(180px 70px at 0% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
+    color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.4);
+}
+.chart-tip.kit-tip b {
+  color: var(--text);
+  font-weight: 600;
+}

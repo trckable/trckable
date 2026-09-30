@@ -1,6 +1,6 @@
 // Every word the Full chart grid shows, in one place: this is what moves to
 // the message files when translations come.
-import { fmtInt, fmtPct } from '../../lib/format'
+import { fmtInt } from '../../lib/format'
 
 const plural = (n: number, one: string, many: string) => `${fmtInt(n)} ${n === 1 ? one : many}`
 
@@ -23,9 +23,7 @@ export const copy = {
     visit: 'Visit',
     sale: 'Sale',
     goal: (name: string) => name,
-    ofBefore: (rate: number) => `${fmtPct(rate)} of the step before`,
-    tip: (label: string, n: number, rate: number | null) =>
-      rate === null ? `${label}: ${plural(n, 'visitor', 'visitors')}` : `${label}: ${plural(n, 'visitor', 'visitors')} · ${fmtPct(rate)} of the step before`,
+    lost: (pct: number, left: number) => `−${pct}% · ${fmtInt(left)} left`,
     step: 'Step',
     visitors: 'Visitors',
     rate: 'Of the step before',
@@ -75,7 +73,7 @@ export const copy = {
     title: 'Page flow',
     question: 'What people open next',
     label: 'The first three pages of each visit, and where visits ended',
-    heads: ['First page', 'Second', 'Third'],
+    heads: ['Entry', '2nd page', '3rd page'],
     exit: 'Left the site',
     other: 'Other pages',
     box: (label: string, n: number) => `${label}: ${plural(n, 'visit', 'visits')}`,
@@ -83,6 +81,6 @@ export const copy = {
     from: 'From',
     to: 'To',
     visits: 'Visits',
-    foot: 'Grey: the visit ended there, or a quieter page.',
+    foot: 'Hatched: quieter pages, drawn no taller than the busiest one. Red: the visit ended there.',
   },
 }

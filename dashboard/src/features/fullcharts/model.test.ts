@@ -61,10 +61,11 @@ describe('visit to sale', () => {
       { kind: 'goal', value: 'signup', visitors: 20, rate: 0.1 },
       { kind: 'sale', visitors: 5, rate: 0.25 },
     ])
-    expect(m.bars.map((b) => b.label)).toEqual(['Visit', 'signup', 'Sale'])
-    expect(m.bars[0].note).toBeUndefined()
-    expect(m.bars[2].note).toBe('25% of the step before')
-    expect(m.tips[1]).toBe('signup: 20 visitors · 10% of the step before')
+    expect(m.rows.map((r) => r.label)).toEqual(['Visit', 'signup', 'Sale'])
+    expect(m.rows.map((r) => r.share)).toEqual([1, 0.1, 0.025])
+    expect(m.rows[0]).toEqual({ label: 'Visit', count: '200', share: 1 })
+    expect(m.rows[1]).toMatchObject({ of: '10%', drop: '−90% · 180 left' })
+    expect(m.rows[2]).toMatchObject({ count: '5', of: '25%', drop: '−75% · 15 left' })
     expect(m.table.rows[0]).toEqual(['Visit', '200', '–'])
   })
 })
@@ -114,7 +115,7 @@ describe('page flow', () => {
   it('turns nodes into boxes and links into rows with page names', () => {
     const m = flowModel(charts)
     expect(m.cols[1].map((c) => c.label)).toEqual(['/pricing', 'Left the site'])
-    expect(m.cols[1][1].muted).toBe(true)
+    expect(m.cols[1][1].kind).toBe('exit')
     expect(m.links[0]).toEqual({ col: 0, from: '/', to: '(exit)', value: 2 })
     expect(m.table.rows[0]).toEqual(['/', 'Left the site', '2'])
   })

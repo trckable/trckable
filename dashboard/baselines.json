@@ -1,5 +1,5 @@
 {
-  "literals": 421,
+  "literals": 418,
   "components": {
     "src/charts/TimeChart.tsx": 272,
     "src/main.tsx": 296,

@@ -27,7 +27,7 @@ export const cardCopy = {
   trackGoal: '+ Track a goal',
   goal: 'Goal',
   conv: 'Conv.',
-  noGoals: "No goals yet. Track one with trckable('signup').",
+  noGoals: 'No goals yet.',
   credit: 'Which visit gets the credit',
   closedIt: 'Closed it',
   foundThem: 'Found them',

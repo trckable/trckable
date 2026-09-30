@@ -7,7 +7,7 @@ import { useWidth } from './useWidth'
 
 const PAD_L = 30
 const PAD_R = 6
-const PAD_T = 8
+const PAD_T = 14
 const AXIS_H = 22
 
 export function ColumnChart(p: {
@@ -54,6 +54,11 @@ export function ColumnChart(p: {
               opacity={at === null || at === i ? 1 : 0.55}
               onPointerEnter={() => hover.set(i)}
             />
+            {v > 0 && (
+              <text x={cx(i)} y={y(v) - 5} textAnchor="middle" className="kit-axis kit-value">
+                {p.fmt(v)}
+              </text>
+            )}
             <text x={cx(i)} y={h - 6} textAnchor="middle" className="kit-axis">
               {p.labels[i]}
             </text>

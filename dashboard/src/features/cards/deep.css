@@ -100,51 +100,6 @@
   font-size: 18px;
   font-weight: 600;
 }
-.fn-step {
-  display: grid;
-  gap: 6px;
-}
-.fn-loss {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 10px 0 8px;
-  font-size: 11.5px;
-}
-.fn-loss span {
-  width: 1px;
-  height: 11px;
-  background: var(--border-2);
-}
-.fn-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
-}
-.fn-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.fn-count {
-  font-size: 12.5px;
-}
-.fn-line {
-  display: block;
-  height: 4px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--text) 7%, transparent);
-}
-.fn-line i {
-  display: block;
-  height: 100%;
-  border-radius: 2px;
-  background: var(--accent);
-  opacity: 0.85;
-  transition: width 0.5s var(--ease);
-}
 
 /* ---- people ---- */
 .pp {
