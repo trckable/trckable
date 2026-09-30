@@ -686,7 +686,8 @@ button.kpi[aria-pressed='true'] {
   border-radius: 6px;
 }
 /* The replay cut: one variable moves the grey and the crosshair together.
-   A short glide makes Replay's day-by-day steps read as one motion. */
+   A short glide makes Replay's day-by-day steps read as one motion. At rest
+   (data-cut='off') both fade out where they were, then are gone. */
 .chart-dim,
 .chart-cut {
   transform: translateX(var(--cut, 200vw));
@@ -701,12 +702,20 @@ button.kpi[aria-pressed='true'] {
   stroke-width: 1.5;
   pointer-events: none;
 }
+.chart-wrap[data-cut='off'] .chart-dim,
+.chart-wrap[data-cut='off'] .chart-cut {
+  opacity: 0;
+  transition: opacity 0.18s ease-out;
+}
 .chart-wrap[data-cut='off'] .chart-cut {
   visibility: hidden;
+  transition: opacity 0.18s ease-out, visibility 0s 0.18s;
 }
 @media (prefers-reduced-motion: reduce) {
   .chart-dim,
-  .chart-cut {
+  .chart-cut,
+  .chart-wrap[data-cut='off'] .chart-dim,
+  .chart-wrap[data-cut='off'] .chart-cut {
     transition: none;
   }
 }

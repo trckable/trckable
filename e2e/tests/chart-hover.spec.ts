@@ -217,3 +217,54 @@ test('the chart ignores the pointer while Replay plays and hovers again when pau
   await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2)
   await expect(chart.locator('.time-tip')).toBeVisible()
 })
+
+// A vertical line has no width, so Playwright calls it hidden even when drawn:
+// what is asserted is the style the browser resolves for it.
+const atRest = async (chart: Locator) => {
+  await expect(chart).toHaveAttribute('data-cut', 'off')
+  await expect.poll(() => chart.locator('.chart-cut').evaluate((el) => getComputedStyle(el).visibility)).toBe('hidden')
+  await expect.poll(() => chart.locator('.chart-dim:not(.chart-unknown)').evaluate((el) => getComputedStyle(el).opacity)).toBe('0')
+  await expect(chart.locator('svg circle[r="6"]')).toHaveCount(0)
+  await expect(chart.locator('.cursor')).toHaveCount(0)
+}
+
+async function openHistory(page: Page, path = `/${HISTORY_DOMAIN}`) {
+  await page.addInitScript(() => localStorage.setItem('tkb_replay_speed', 'rapid'))
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.goto(API + path)
+  const chart = page.locator('.overview-chart .chart-wrap')
+  await expect(chart.locator('svg[role="img"]')).toBeVisible({ timeout: 15_000 })
+  return chart
+}
+
+// When Replay and its story end, the chart is at rest: no cut line, no dot
+// left at the last point, nothing greyed. Hovering brings the crosshair back.
+// By day (a site with days of history) and by the hour (a new site's week).
+for (const [name, path] of [['daily', `/${HISTORY_DOMAIN}`], ['hourly', '/example.com?period=7d']]) {
+test(`after Replay ends the ${name} chart is at rest and hovering still shows the crosshair`, async ({ page }) => {
+  const chart = await openHistory(page, path)
+  await page.getByRole('button', { name: /^Replay this period/ }).click()
+  await expect(chart).toHaveAttribute('data-locked', 'true')
+  // The story's summary card is what a finished replay leaves behind.
+  await expect(page.locator('.overview-chart .story-end')).toBeVisible({ timeout: 30_000 })
+  await expect(chart).not.toHaveAttribute('data-locked', 'true')
+  await atRest(chart)
+  const box = (await chart.boundingBox())!
+  await page.mouse.move(box.x + box.width * 0.4, box.y + box.height / 2)
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2)
+  await expect(chart.locator('.time-tip')).toBeVisible()
+  await expect(chart.locator('.cursor line')).toHaveCount(1)
+  await expect(chart).toHaveAttribute('data-cut', 'on')
+})
+}
+
+// A replay paused part of the way leaves its day picked for the numbers, but
+// the chart itself is at rest, like one that ended.
+test('a paused Replay leaves the chart at rest', async ({ page }) => {
+  const chart = await openHistory(page)
+  await page.getByRole('button', { name: /^Replay this period/ }).click()
+  await expect(chart).toHaveAttribute('data-locked', 'true')
+  await page.getByRole('button', { name: 'Pause replay' }).click()
+  await expect(chart).not.toHaveAttribute('data-locked', 'true')
+  await atRest(chart)
+})

@@ -66,7 +66,7 @@ export function TimeChart(p: TimeChartProps) {
   // While Replay plays nothing is picked (and what was picked is let go of).
   if (p.locked && picked !== null) setHover(null)
   const hover = p.locked ? null : picked
-  const dragging = useRef(false)
+  const [drag, setDrag] = useState(false)
   const STRIP = p.strip ? 64 : 0
   const H = (p.height ?? 220) + STRIP
   const plotH = H - PAD_T - AXIS_H - STRIP
@@ -113,10 +113,10 @@ export function TimeChart(p: TimeChartProps) {
   }
 
   const markers = useMemo(() => markersFor(p.notes ?? [], p.labels, p.bucket), [p.notes, p.labels, p.bucket])
-  const scrub = p.scrub ?? null
-  const { follow, release, onKey, marker, driven } = useCut({ ref, w, n, hover, scrub, locked: p.locked, vals, setHover, x, y })
+  const scrub = p.locked || drag ? (p.scrub ?? null) : null // a picked day shows only while dragged or played
+  const { follow, release, onKey, marker, driven } = useCut({ ref, n, hover, scrub, locked: p.locked, vals, setHover, x, y })
   const hi = hover ?? scrub
-  const leave = () => { release(); setHover(null); dragging.current = false }
+  const leave = () => { release(); setHover(null); setDrag(false) }
   // Beside the point when there is room, never past either edge: on a phone
   // the card is nearly as wide as the chart, and it used to leave the screen.
   const tipW = 244
@@ -135,7 +135,7 @@ export function TimeChart(p: TimeChartProps) {
         // On a note's flag its own tooltip speaks; the day's would cover it.
         if ((e.target as Element).closest?.('.note-mark')) return setHover(null)
         const i = indexAt(e.currentTarget, e.clientX)
-        if (dragging.current && p.onScrub) {
+        if (drag && p.onScrub) {
           p.onScrub(i)
           return
         }
@@ -151,13 +151,13 @@ export function TimeChart(p: TimeChartProps) {
           return
         }
         // Dragging moves Replay's day; the cut follows that day.
-        dragging.current = true
+        setDrag(true)
         release()
         setHover(null)
         ;(e.target as Element).setPointerCapture?.(e.pointerId)
         p.onScrub(indexAt(e.currentTarget, e.clientX))
       }}
-      onPointerUp={() => (dragging.current = false)}
+      onPointerUp={() => setDrag(false)}
       onPointerCancel={leave}
     >
       {/* The picture is the svg; the note flags beside it are buttons, which
