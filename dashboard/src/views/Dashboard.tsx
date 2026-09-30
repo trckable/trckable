@@ -21,7 +21,7 @@ import { useSample } from '../lib/useSample'
 import { AskPanel } from './AskLazy'
 import { caps, keyFor, pressed, useKeymap } from '../lib/keys'
 import { SearchTerms, StoppedNotice } from './DashboardParts'
-import { JumpNav } from '../features/fullcharts/JumpNav'
+const JumpNav = lazy(() => import('../features/fullcharts/JumpNav').then((m) => ({ default: m.JumpNav }))) // Full mode only
 import { KpiStrip } from '../features/overview/KpiStrip'
 import { ChartHead } from '../features/overview/ChartHead'
 import { ReplayButton, ScrubBar } from '../features/overview/Replay'
@@ -38,17 +38,17 @@ import { entryCopy } from '../features/live/entryCopy'
 import { liveShown } from '../features/live/liveShown'
 import { useNotes } from '../features/notes/useNotes'
 import { jump } from '../features/notes/jump'
-import { Behaviour } from '../features/behaviour/Behaviour'
+const Behaviour = lazy(() => import('../features/behaviour/Behaviour').then((m) => ({ default: m.Behaviour }))) // Full mode only
 import { ChartFoot } from '../features/overview/ChartFoot'
 import { Loading } from '../components/loading/Loading'
 import { FullGrid } from '../features/fullcharts/FullGrid'
-import { CreateMenu } from '../features/create/CreateMenu'
+const CreateMenu = lazy(() => import('../features/create/CreateMenu').then((m) => ({ default: m.CreateMenu }))) // its key and item work once it is here, a moment after the page
 import { MoreMenu } from '../components/MoreMenu'
 import { downloadCsv } from '../lib/download'
 import { ControlRow } from '../features/header/ControlRow'
 import { savedViews } from '../components/panelOpen'
 import { FilterRowHost } from '../features/header/FilterRowHost'
-import { SaveViewHost } from '../features/header/SaveViewHost'
+const SaveViewHost = lazy(() => import('../features/header/SaveViewHost').then((m) => ({ default: m.SaveViewHost }))) // a dialog: only when a view is named
 import { HeaderTools, ShareButton } from '../features/header/HeaderTools'
 import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
 import { useMilestones } from '../features/milestones/useMilestones'
@@ -552,7 +552,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             </button>
           )}
         />
-        {!liveView && !waiting && <CreateMenu pages={dims('entry_page')} goals={src?.goals ?? []} modules={mods} onGoal={() => setAddGoals(true)} onNote={() => setNoteFor(view.day ?? today)} onFunnel={(f) => setView({ mode: 'full', funnel: f })} />}
+        {!liveView && !waiting && <Suspense fallback={null}><CreateMenu pages={dims('entry_page')} goals={src?.goals ?? []} modules={mods} onGoal={() => setAddGoals(true)} onNote={() => setNoteFor(view.day ?? today)} onFunnel={(f) => setView({ mode: 'full', funnel: f })} /></Suspense>}
       </div>
 
       {/* The second row: Live/Data on the left, the period and filter and
@@ -589,7 +589,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
       {!liveView && <>
       {sharing && <Suspense fallback={null}><ShareDialog site={site} sites={sites} onClose={() => setSharing(false)} /></Suspense>}
-      {naming && <SaveViewHost site={site.id} filters={view.filters.length} query={current} onClose={() => setNaming(false)} onSaved={loadSegments} />}
+      {naming && <Suspense fallback={null}><SaveViewHost site={site.id} filters={view.filters.length} query={current} onClose={() => setNaming(false)} onSaved={loadSegments} /></Suspense>}
 
       {error && (
         <div className="banner" role="alert">
@@ -763,7 +763,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </Suspense>
       )}
 
-      {full && hasData && <JumpNav grid={chartsOnly} />}
+      {full && hasData && <Suspense fallback={null}><JumpNav grid={chartsOnly} /></Suspense>}
 
       {/* Full is one grid: the charts, then goals, revenue and the modules as
           cards in it. The charts need the signed-in API, so a shared link
@@ -995,7 +995,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </section>
       )}
 
-      {full && hasData && <Behaviour site={site} query={query} mods={mods} pages={dims('entry_page')} goals={src?.goals ?? []} steps={view.funnel ?? []} onSteps={(f) => setView({ funnel: f })} onPick={setJourney} />}
+      {full && hasData && <Suspense fallback={null}><Behaviour site={site} query={query} mods={mods} pages={dims('entry_page')} goals={src?.goals ?? []} steps={view.funnel ?? []} onSteps={(f) => setView({ funnel: f })} onPick={setJourney} /></Suspense>}
       </FullGrid>
 
       {!full && hasData && (

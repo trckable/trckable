@@ -5,8 +5,7 @@ import { Ghost } from "./components/Logo";
 import { Loading } from "./components/loading/Loading";
 import { logoInner } from "./brand/logo";
 import { Footer } from "./components/Footer";
-import { api, setUnauthorizedHandler, type Site } from "./lib/api";
-import { startEarly, takeEarly } from "./lib/earlyStart";
+import { api, setUnauthorizedHandler, type Site } from "./lib/api"; import { startEarly, takeEarly } from "./lib/earlyStart";
 import { navigate, useLocation } from "./lib/url";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
 import "./styles.css";
@@ -289,7 +288,7 @@ function Splash({ children }: { children?: React.ReactNode }) {
 
 const root = document.getElementById("root");
 if (!root) throw new Error("index.html has no #root");
-startEarly(); // the first requests leave now, not after the first render (lib/earlyStart.ts)
+startEarly(); // first requests leave now (lib/earlyStart.ts)
 createRoot(root).render(
   <StrictMode>
     <App />
