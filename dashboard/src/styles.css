@@ -990,28 +990,6 @@ table.t td {
 }
 
 /* ---- date range picker ---- */
-.preset {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 3px 10px;
-  white-space: nowrap;
-  font-size: 12px;
-  min-height: 26px;
-}
-.preset:hover {
-  border-color: var(--border-2);
-}
-.preset[aria-selected='true'] {
-  border-color: var(--accent);
-}
-.preset .kbd {
-  font-size: 10px;
-  padding: 1px 5px;
-}
-
 .months {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -2301,12 +2279,6 @@ button.kpi-live:hover .label::after {
 .site-zone .btn.site-btn:hover,
 .site-zone .btn.gear:hover {
   background: var(--surface-2);
-}
-.site-zone .btn.gear {
-  width: 42px;
-  height: 44px;
-  border-left: 1px solid var(--border);
-  border-radius: 0 11px 11px 0;
 }
 .site-zone:focus-within {
   border-color: var(--border-2);

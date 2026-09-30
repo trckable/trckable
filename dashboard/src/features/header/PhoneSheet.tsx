@@ -80,7 +80,7 @@ export default function PhoneSheet(p: SheetProps) {
         <button type="button" className="sheet-row" aria-haspopup="dialog" onClick={openPicker}>
           <span>{sheetCopy.compareRow}</span>
           <span className="sheet-val">
-            {compareWords(p.value)}
+            {p.value.compare !== 'none' && compareWords(p.value)}
             <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
           </span>
         </button>
