@@ -4,6 +4,8 @@
 package web
 
 import (
+	"bytes"
+	"compress/gzip"
 	"crypto/sha256"
 	"embed"
 	"encoding/hex"
@@ -261,12 +263,10 @@ func Variants() []string {
 // Dashboard serves the dashboard with no page ever framed by another site.
 func Dashboard() http.Handler { return DashboardFramed(nil) }
 
-// encoding is one way the build stores a file next to the plain one
-// (dashboard/scripts/precompress.mjs): app.js.br, app.js.gz.
-type encoding struct{ token, ext string }
-
-// encodings are in the order they are preferred: brotli is the smaller.
-var encodings = []encoding{{"br", ".br"}, {"gzip", ".gz"}}
+// The build stores each text file of 1 KB or more once, as name.gz, and
+// removes the plain file (dashboard/scripts/precompress.mjs): the image carries
+// one copy. A browser that takes gzip is sent the stored bytes as they are; any
+// other client, and any range request, gets the file decompressed.
 
 // Accepts reads an Accept-Encoding header for one coding: named, or by *, and
 // not given q=0. A coding the header names settles it, whatever * says.
@@ -292,47 +292,50 @@ func Accepts(header, coding string) bool {
 	return star
 }
 
-// twins lists the stored encodings of a file that a browser's header allows.
-func twins(fsys fs.FS, name, accept string) (all bool, ok []encoding) {
-	for _, e := range encodings {
-		if _, err := fs.Stat(fsys, name+e.ext); err != nil {
-			continue
-		}
-		all = true
-		if Accepts(accept, e.token) {
-			ok = append(ok, e)
-		}
+// storedPlain reads a dashboard file in plain bytes, from the file itself or
+// from its gzip.
+func storedPlain(fsys fs.FS, name string) ([]byte, bool) {
+	if b, err := fs.ReadFile(fsys, name); err == nil {
+		return b, true
 	}
-	return all, ok
+	f, err := fsys.Open(name + ".gz")
+	if err != nil {
+		return nil, false
+	}
+	defer f.Close()
+	zr, err := gzip.NewReader(f)
+	if err != nil {
+		return nil, false
+	}
+	b, err := io.ReadAll(zr)
+	return b, err == nil
 }
 
-// serveEncoded answers with a file's precompressed twin when the browser
-// accepts one. Any file that has a twin varies by Accept-Encoding, whichever
-// way it is answered. It reports whether it answered.
-func serveEncoded(w http.ResponseWriter, r *http.Request, fsys fs.FS, name string) bool {
-	has, ok := twins(fsys, name, r.Header.Get("Accept-Encoding"))
-	if has {
-		w.Header().Add("Vary", "Accept-Encoding")
-	}
-	kind := mime.TypeByExtension(path.Ext(name))
-	// A range is over the plain bytes: it is answered from the plain file.
-	if len(ok) == 0 || kind == "" || r.Header.Get("Range") != "" {
-		return false
-	}
-	f, err := fsys.Open(name + ok[0].ext)
+// serveStored answers for a file that is kept as name.gz only. It reports
+// whether there is such a file. Every answer varies by Accept-Encoding.
+func serveStored(w http.ResponseWriter, r *http.Request, fsys fs.FS, name string) bool {
+	f, err := fsys.Open(name + ".gz")
 	if err != nil {
 		return false
 	}
 	defer f.Close()
-	body, isSeeker := f.(io.ReadSeeker)
-	info, err := f.Stat()
-	if !isSeeker || err != nil {
-		return false
-	}
+	kind := mime.TypeByExtension(path.Ext(name))
+	w.Header().Add("Vary", "Accept-Encoding")
 	w.Header().Set("Content-Type", kind)
-	w.Header().Set("Content-Encoding", ok[0].token)
-	w.Header().Set("Content-Length", strconv.FormatInt(info.Size(), 10)) // ServeContent leaves it out of an encoded answer
-	http.ServeContent(w, r, name, time.Time{}, body)
+	body, seekable := f.(io.ReadSeeker)
+	info, err := f.Stat()
+	if seekable && err == nil && r.Header.Get("Range") == "" && Accepts(r.Header.Get("Accept-Encoding"), "gzip") {
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Header().Set("Content-Length", strconv.FormatInt(info.Size(), 10)) // ServeContent leaves it out of an encoded answer
+		http.ServeContent(w, r, name, time.Time{}, body)
+		return true
+	}
+	plain, ok := storedPlain(fsys, name)
+	if !ok {
+		http.Error(w, "unreadable file", http.StatusInternalServerError)
+		return true
+	}
+	http.ServeContent(w, r, name, time.Time{}, bytes.NewReader(plain))
 	return true
 }
 
@@ -342,15 +345,10 @@ func serveEncoded(w http.ResponseWriter, r *http.Request, fsys fs.FS, name strin
 func DashboardFramed(frame func(*http.Request) string) http.Handler {
 	sub, _ := fs.Sub(dist, "dist")
 	files := http.FileServerFS(sub)
-	index, _ := fs.ReadFile(sub, "index.html")
-	// The page is the one file every route answers with: its stored encodings
-	// are read once, here.
-	indexTwin := map[string][]byte{}
-	for _, e := range encodings {
-		if b, err := fs.ReadFile(sub, "index.html"+e.ext); err == nil {
-			indexTwin[e.token] = b
-		}
-	}
+	// The page is the one file every route answers with: read once, here, as
+	// it is stored and in plain bytes.
+	index, _ := storedPlain(sub, "index.html")
+	indexGz, _ := fs.ReadFile(sub, "index.html.gz")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		p := strings.TrimPrefix(path.Clean(r.URL.Path), "/")
 		if p != "" && p != "index.html" {
@@ -359,12 +357,16 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 				if strings.HasPrefix(p, "assets/") {
 					w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 				}
-				if serveEncoded(w, r, sub, p) {
-					return
-				}
 				files.ServeHTTP(w, r)
 				return
 			}
+			if strings.HasPrefix(p, "assets/") {
+				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+			}
+			if serveStored(w, r, sub, p) {
+				return
+			}
+			w.Header().Del("Cache-Control")
 		}
 		h := w.Header()
 		h.Set("Content-Type", "text/html; charset=utf-8")
@@ -385,15 +387,12 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 		}
 		h.Set("Referrer-Policy", "same-origin")
 		body := index
-		for _, e := range encodings {
-			if b, ok := indexTwin[e.token]; ok && Accepts(r.Header.Get("Accept-Encoding"), e.token) {
-				h.Set("Content-Encoding", e.token)
-				body = b
-				break
-			}
-		}
-		if len(indexTwin) > 0 {
+		if len(indexGz) > 0 {
 			h.Add("Vary", "Accept-Encoding")
+			if Accepts(r.Header.Get("Accept-Encoding"), "gzip") {
+				h.Set("Content-Encoding", "gzip")
+				body = indexGz
+			}
 		}
 		_, _ = w.Write(body)
 	})

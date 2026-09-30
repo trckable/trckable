@@ -9,7 +9,7 @@
 // Sizes are gzip level 9, bytes. Megabytes are MiB, rounded up.
 import { readFileSync, readdirSync } from 'node:fs'
 // The image job measures no sizes and installs no packages: load gzip only when needed.
-const { gzipSize } = process.argv[2] === 'image' ? {} : await import('./gzip-size.mjs')
+const { gzipSize, distGzipSize, readDist } = process.argv[2] === 'image' ? {} : await import('./gzip-size.mjs')
 import { join } from 'node:path'
 
 const ROOT = new URL('..', import.meta.url).pathname
@@ -42,11 +42,11 @@ const parts = {
   },
   dashboard: () => {
     const dir = 'server/internal/web/dist/'
-    const html = readFileSync(join(ROOT, dir, 'index.html'), 'utf8')
+    const html = readDist(join(ROOT, dir, 'index.html')).toString('utf8')
     const entry = [...html.matchAll(/(?:src|href)="\/(assets\/[^"]+\.(?:js|css))"/g)].map((m) => m[1])
-    const total = entry.reduce((n, f) => n + gz(dir + f), 0)
+    const total = entry.reduce((n, f) => n + distGzipSize(join(ROOT, dir + f)), 0)
     // The milestones timeline and share sheet, loaded only when opened.
-    const milestones = readdirSync(join(ROOT, dir, 'assets')).filter((f) => f.startsWith('MilestonesDialogs-') && !/\.(?:br|gz)$/.test(f)).reduce((n, f) => n + gz(dir + 'assets/' + f), 0)
+    const milestones = readdirSync(join(ROOT, dir, 'assets')).map((f) => f.replace(/\.gz$/, '')).filter((f, i, all) => f.startsWith('MilestonesDialogs-') && all.indexOf(f) === i).reduce((n, f) => n + distGzipSize(join(ROOT, dir + 'assets/' + f)), 0)
     return {
       dashboard_kb: up1(total / 1024),
       dashboard_budget_kb: budget('dashboard/scripts/size.mjs', /^const budget = (\d+) \* 1024/m),
