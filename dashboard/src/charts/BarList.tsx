@@ -46,7 +46,7 @@ export function BarList(p: {
 
   if (p.loading) return <Loading height={164} />
   return (
-    <div className="bl">
+    <div className={p.money ? 'bl has-rev' : 'bl'}>
       <div className="bl-cols">
         <span>{p.dimLabel}</span>
         <span className="bl-val">{p.valueLabel ?? kitCopy.visitors}</span>

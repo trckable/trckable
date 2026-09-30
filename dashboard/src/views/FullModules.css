@@ -18,3 +18,39 @@
   border-radius: 999px;
   font-size: 11.5px;
 }
+/* In the funnel tab the steps are one line: long paths are cut short (the full one is the tooltip) and a row that is still too wide scrolls. */
+.fn-panel .funnel-steps {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.fn-panel .funnel-steps::-webkit-scrollbar {
+  display: none;
+}
+.fn-panel .funnel-steps > * {
+  flex: none;
+}
+.fn-panel .funnel-steps .chip {
+  max-width: 168px;
+}
+.fn-panel .funnel-steps .chip-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fn-panel .funnel-steps .chip svg {
+  flex: none;
+  color: var(--text-3);
+}
+/* "+ Add step" is a quiet chip: no border until it is pointed at. */
+.fn-panel .funnel-steps .picker-btn {
+  border-color: transparent;
+  background: none;
+  color: var(--text-3);
+}
+.fn-panel .funnel-steps .picker-btn:hover,
+.fn-panel .funnel-steps .picker-btn:focus-visible {
+  border-color: var(--border-2);
+  color: var(--text);
+}

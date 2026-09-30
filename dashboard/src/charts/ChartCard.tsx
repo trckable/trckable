@@ -12,6 +12,8 @@ export function ChartCard(p: {
   question: string
   table: TableData
   legend?: LegendItem[]
+  /** A key that is not a list of series (the heat grid's shades), in the legend's place. */
+  headKey?: ReactNode
   foot?: ReactNode
   wide?: boolean
   loading?: boolean
@@ -21,6 +23,7 @@ export function ChartCard(p: {
 }) {
   const [asTable, setAsTable] = useState(false)
   const head = p.id + '-title'
+  const ready = !p.loading && !p.empty
   const body = () => {
     if (p.loading) return <Loading height={190} />
     if (p.empty) return <p className="faint kit-empty">{p.emptyText ?? kitCopy.empty}</p>
@@ -33,22 +36,21 @@ export function ChartCard(p: {
     <section className={p.wide ? 'card kit-card wide' : 'card kit-card'} aria-labelledby={head} aria-busy={p.loading || undefined} data-chart={p.id} data-w={p.wide ? 2 : 1}>
       <div className="kit-head">
         <h2 id={head}>{p.title}</h2>
-        {!p.loading && !p.empty && (
-          <button
-            type="button"
-            className="btn ghost kit-switch"
-            aria-pressed={asTable}
-            aria-label={asTable ? kitCopy.showChart(p.title) : kitCopy.showTable(p.title)}
-            onClick={() => setAsTable((t) => !t)}
-          >
-            {asTable ? kitCopy.chart : kitCopy.table}
-          </button>
+        {ready && !asTable && (p.legend ? <Legend items={p.legend} /> : p.headKey)}
+        {ready && (
+          <div className="seg small kit-seg" role="group" aria-label={p.title}>
+            <button type="button" aria-pressed={!asTable} aria-label={kitCopy.showChart(p.title)} onClick={() => setAsTable(false)}>
+              {kitCopy.chart}
+            </button>
+            <button type="button" aria-pressed={asTable} aria-label={kitCopy.showTable(p.title)} onClick={() => setAsTable(true)}>
+              {kitCopy.table}
+            </button>
+          </div>
         )}
       </div>
       <p className="faint kit-question">{p.question}</p>
       <div className="kit-body">{body()}</div>
-      {!asTable && !p.loading && !p.empty && p.legend && <Legend items={p.legend} />}
-      {!asTable && !p.loading && !p.empty && p.foot}
+      {!asTable && ready && p.foot}
     </section>
   )
 }

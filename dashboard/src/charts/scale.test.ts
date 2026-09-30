@@ -70,6 +70,26 @@ describe('flowLayout', () => {
     expect(bands[0]).toMatchObject({ y0: 0, h0: 75, y1: 0, h1: 75 })
     expect(bands[1]).toMatchObject({ y0: 75, h0: 25, y1: 81, h1: 25 })
   })
+  it('lays a capped node out at its weight while its bands still add up to the box', () => {
+    const { boxes, bands } = flowLayout(
+      [
+        [{ key: '/', value: 10 }],
+        [
+          { key: '/a', value: 4 },
+          { key: '(other)', value: 6, weight: 4 },
+        ],
+      ],
+      [
+        { col: 0, from: '/', to: '/a', value: 4 },
+        { col: 0, from: '/', to: '(other)', value: 6 },
+      ],
+      100,
+      0,
+    )
+    expect(boxes.find((b) => b.key === '(other)')?.h).toBe(40) // 4 of 8 weights, not 6 of 10
+    expect(bands[1].h1).toBe(40) // the whole box
+    expect(bands[1].h0).toBe(60) // and the source's share
+  })
   it('skips a link whose box is not drawn', () => {
     const { bands } = flowLayout([[{ key: '/', value: 1 }], []], [{ col: 0, from: '/', to: '/gone', value: 1 }], 50)
     expect(bands).toEqual([])

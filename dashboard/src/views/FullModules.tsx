@@ -1,8 +1,10 @@
 // Full mode's funnel tab (a visitor's journey is features/journey). This file
 // is a lazy chunk, so Core never downloads it.
 import { useEffect, useMemo, useState } from 'react'
+import { Target } from 'lucide-react'
 import { Picker } from '../components/Picker'
 import { api, messageOf, type FunnelResult, type FunnelStep, type ReportQuery, type Row, type Site } from '../lib/api'
+import { deepCopy } from '../features/cards/deepCopy'
 import { FunnelResult as Result } from '../features/cards/FunnelResult'
 import './FullModules.css'
 
@@ -46,35 +48,36 @@ export function Funnel({ site, query, pages, goals, steps, onSteps: setSteps }: 
   }, [site.id, query, active])
 
   const options = [...pages.slice(0, 12).map((p) => ({ kind: 'page' as const, value: p.value })), ...goals.slice(0, 12).map((g) => ({ kind: 'goal' as const, value: g.value }))]
+  const c = deepCopy.funnel
   return (
     <div className="fn-panel">
       <div className="funnel-steps">
         {active.map((s, i) => (
-          <span key={i} className="chip">
+          <span key={i} className="chip" title={s.value}>
             <span className="faint">{i + 1}</span>
-            {s.kind === 'goal' ? '🎯 ' : ''}
-            {s.value}
-            <button type="button" aria-label={`Remove ${s.value}`} onClick={() => setSteps(active.filter((_, j) => j !== i))}>
+            {s.kind === 'goal' && <Target size={11} strokeWidth={1.75} aria-hidden="true" />}
+            <span className="chip-name">{s.value}</span>
+            <button type="button" aria-label={c.remove(s.value)} onClick={() => setSteps(active.filter((_, j) => j !== i))}>
               ×
             </button>
           </span>
         ))}
         {active.length < 8 && (
           <Picker
-            label="Add a step"
-            placeholder="Search a page or goal…"
+            label={c.add}
+            placeholder={c.search}
             onPick={(id) => {
               const [kind, ...rest] = id.split(':')
               setSteps([...active, { kind: kind as 'page' | 'goal', value: rest.join(':') }])
             }}
-            items={options.map((o) => ({ id: o.kind + ':' + o.value, label: o.value, group: o.kind === 'goal' ? 'Goals' : 'Pages' }))}
-            trigger={() => <span style={{ fontSize: 13 }}>+ Add step</span>}
+            items={options.map((o) => ({ id: o.kind + ':' + o.value, label: o.value, group: o.kind === 'goal' ? c.goals : c.pages }))}
+            trigger={() => <span>{c.addLabel}</span>}
           />
         )}
       </div>
 
       {err && <span className="faint">{err}</span>}
-      {active.length < 2 && !err && <span className="faint">Pick at least two steps.</span>}
+      {active.length < 2 && !err && <span className="faint">{c.pick}</span>}
       {res && <Result res={res} />}
     </div>
   )

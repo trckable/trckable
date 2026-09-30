@@ -49,3 +49,11 @@
 .vital-pages .faint {
   font-size: 12px;
 }
+.vitals-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.vitals-count {
+  font-size: 12px;
+}
