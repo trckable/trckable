@@ -20,15 +20,15 @@ function Rolling({ value, className }: { value: number; className: string }) {
 function Status({ connected, failed }: { connected: boolean; failed: boolean }) {
   if (failed) return <span className="live-meta live-warn">{copy.failed}</span>
   if (!connected) return <span className="live-meta faint">{copy.reconnecting}</span>
-  return <span className="live-meta faint live-calm">{copy.rightNow}</span>
+  return <span className="live-meta faint live-calm">{copy.window}</span>
 }
 
 export function NowPanel(p: { data: LiveNow; series: number[]; online: number; connected: boolean; failed: boolean; sales: (Sale & { id: number })[]; timezone: string }) {
   const d = delta(p.data.visitors, p.data.previous)
   return (
-    <section className="card live-panel live-now" aria-labelledby="live-now-title">
+    <section className="card live-panel live-now" aria-label={copy.regionNow}>
       <div className="live-head-row">
-        <h2 id="live-now-title">{copy.title}</h2>
+        <h2>{copy.title}</h2>
         <Status connected={p.connected} failed={p.failed} />
       </div>
       <div className="live-figures">

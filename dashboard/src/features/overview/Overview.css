@@ -109,7 +109,14 @@ button.kpi:focus-visible {
   }
 }
 
-/* Online now: a pulsing dot while anyone is on, and a count that rolls. */
+/* Online now: a pulsing dot while anyone is on, and a count that rolls. The
+   label clips its overflow (for the ellipsis), which cut the dot's glow in
+   half: room for the glow inside it, taken back by the margin. */
+.kpi-online .label {
+  max-width: calc(100% + 20px);
+  margin: -10px;
+  padding: 10px;
+}
 .kpi-online .label .pulse {
   flex: none;
   margin: 0 4px 0 2px;
