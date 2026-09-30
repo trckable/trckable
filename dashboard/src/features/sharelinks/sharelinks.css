@@ -334,11 +334,6 @@
   background: var(--accent);
   color: var(--accent-ink);
 }
-.sl-once {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
 .sl-url-row {
   display: flex;
   gap: 8px;
@@ -468,9 +463,24 @@ button.sl-flag:hover {
   background: transparent;
   color: var(--text-3);
 }
+.sl-icon:is(:hover, :focus-visible) {
+  background: var(--border);
+  color: var(--text);
+}
+.sl-acts {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
 .sl-icon.danger:hover {
   background: var(--border);
   color: var(--down);
+}
+/* The question takes the row's width, and what else was there waits. */
+.sl-row:has(.sl-ask) .sl-meta,
+.sl-acts:has(.sl-ask) > :not(.sl-ask) {
+  display: none;
 }
 .sl-ask {
   display: inline-flex;
@@ -521,15 +531,17 @@ button.sl-flag:hover {
     min-width: 0;
     margin-left: 6px;
   }
-  .sl-row > :last-child:not(.sl-meta) {
+  .sl-row > .sl-acts {
     grid-area: act;
   }
-  .sl-row > .sl-ask {
+  .sl-row > .sl-acts:has(.sl-ask) {
     grid-area: meta;
-    flex-wrap: wrap;
+    min-width: 0;
   }
-  .sl-row:has(.sl-ask) .sl-meta {
-    display: none;
+  .sl-acts .sl-ask {
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    min-width: 0;
   }
   .sl-url-row {
     flex-wrap: wrap;

@@ -13,7 +13,7 @@ Self-host it free, or let [trckable Cloud](https://cloud.trckable.com) run it fo
 [![Version](https://img.shields.io/badge/version-0.5.7-b8ff3c?style=flat-square)](CHANGELOG.md)
 [![License: AGPL-3.0](https://img.shields.io/badge/server-AGPL--3.0-0b0d10?style=flat-square)](LICENSE)
 [![Tracker: MIT](https://img.shields.io/badge/tracker-MIT-0b0d10?style=flat-square)](packages/trckable/LICENSE)
-[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/tracker-2045_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2045 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-54_MB-b8ff3c?style=flat-square" alt="Idle memory: 54 MB"></a><!--/f-->
+[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/tracker-2045_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2045 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-51_MB-b8ff3c?style=flat-square" alt="Idle memory: 51 MB"></a><!--/f-->
 
 [Quick start](#-quick-start) · [How it compares](#️-how-it-compares) · [Everything it does](#-everything-it-does) · [Gallery](#-gallery) · [Docs](https://trckable.com/docs/) · [Changelog](CHANGELOG.md)
 
@@ -27,7 +27,7 @@ Self-host it free, or let [trckable Cloud](https://cloud.trckable.com) run it fo
 
 <br><br>
 
-<img src=".github/images/readme/numbers.svg" width="880" alt="2 KB browser script. 1 container, no external database. 54 MB of memory when idle. 0 IP addresses stored.">
+<img src=".github/images/readme/numbers.svg" width="880" alt="2 KB browser script. 1 container, no external database. 51 MB of memory when idle. 0 IP addresses stored.">
 
 </div>
 
@@ -72,7 +72,7 @@ The free, self-hostable tools, plus DataFast (paid, hosted only) for script size
   <img src=".github/images/readme/script-size.svg" width="880" alt="Browser script, gzipped, with goals and outbound links: trckable 2,045 bytes, Plausible CE 2,141, Umami 2,333, GoatCounter 3,467, DataFast 5,253 (paid, no self-hosting documented), Rybbit 11,172, Matomo 28,172.">
 </p>
 <p align="center">
-  <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 54 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
+  <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 51 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
 </p>
 
 **Where it is not the right pick:** with pageviews only, Plausible CE's script is smaller (1,283 B against <!--f:tracker_core_bytes-->1,596<!--/f--> B). And session replay, heatmaps and A/B tests are out of scope on purpose. If you need those, use Matomo.
@@ -146,7 +146,7 @@ Go, embedded DuckDB and SQLite, React with an in-house SVG chart kit. Every even
 ## 🗺 Roadmap
 
 - [x] Tracking, dashboard (Core and Full), revenue for five providers, MCP server
-- [x] Self-hosting tools: alerts, encrypted backups, imports, 2FA, read-only share links (public or password, revenue and notes on or off, an end date, embeddable, revocable), WCAG 2.1 AA (axe-core on the dashboard's main screens, both themes, three browsers, in CI)
+- [x] Self-hosting tools: alerts, encrypted backups, imports, 2FA, read-only share links (public or password, revenue and notes on or off, an end date, embeddable, copyable again, revocable), WCAG 2.1 AA (axe-core on the dashboard's main screens, both themes, three browsers, in CI)
 - [x] npm package [`trckable`](https://www.npmjs.com/package/trckable) with `init` / `doctor` / `mcp`, published from CI with provenance
 - [ ] Live sandbox runs against each payment provider
 - [ ] Peek: an optional in-app assistant on the same read-only tools, with your own AI key

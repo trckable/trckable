@@ -7,7 +7,7 @@ import { countryName, fmtInt, fmtMoney } from '../lib/format'
 import { journeysOn } from '../features/cookieless/labels'
 import { unconvertedNote } from '../lib/money'
 import { channelColor, channelLabel } from '../lib/palette'
-import { navigate, readView, setView, useLocation } from '../lib/url'
+import { navigate, readView, setView, useLocation, wantsLive } from '../lib/url'
 import { queryOf, rangeOf } from '../lib/dashQuery'
 import { canAsk, isShared, isViewer, sharedModules } from '../lib/me'
 import { isOn, shows } from '../lib/modules'
@@ -126,7 +126,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   }, [mayBeNew, everTracked, site.id])
   const showInstall = showsInstall({ site, hasData, filtered: view.filters.length > 0, everTracked })
   const waiting = showInstall && stream.visits.length === 0
-  const liveView = liveShown({ wanted: !!view.live, shared: isShared(), waiting }) // Data on a shared link, the install screen first
+  const liveView = liveShown({ wanted: wantsLive(view, site), shared: isShared(), waiting }) // Data on a shared link, the install screen first
   const [mods, setMods] = useState<Partial<Record<string, boolean>> | null>(() => (isShared() ? sharedModules() : null))
   useEffect(() => {
     if (mods) return
@@ -156,7 +156,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const ms = useMilestones(site)
   const saveView = () => setNaming(true)
   const current = location.search.replace(/^\?/, '')
-  const openView = (g: SavedView) => navigate(location.pathname + '?' + g.query)
+  const openView = (g: SavedView) => navigate(location.pathname + '?' + (g.query || 'view=data'))
   const removeView = (g: SavedView) =>
     api
       .deleteSegment(site.id, g.id)

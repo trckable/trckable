@@ -4,5 +4,5 @@ import { setView, type ViewState } from '../../lib/url'
 
 export function filterFrom(view: ViewState, dim: string, value: string) {
   const rest = view.filters.filter((f) => f.dim !== dim)
-  setView({ filters: [...rest, { dim, value }], day: undefined, live: undefined })
+  setView({ filters: [...rest, { dim, value }], day: undefined, live: false })
 }

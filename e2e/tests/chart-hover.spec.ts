@@ -201,7 +201,7 @@ test('Replay plays the chart on screen: same start, same bucket', async ({ page 
 // and the cut stays at the playhead. Paused, hover works again.
 test('the chart ignores the pointer while Replay plays and hovers again when paused', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(`${API}/${HISTORY_DOMAIN}`) // days of history: a replay that lasts long enough to hover over
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=data`) // days of history: a replay that lasts long enough to hover over
   const chart = page.locator('.overview-chart .chart-wrap')
   await expect(chart.locator('svg[role="img"]')).toBeVisible({ timeout: 15_000 })
   await page.getByRole('button', { name: /^Replay this period/ }).click()
@@ -228,7 +228,7 @@ const atRest = async (chart: Locator) => {
   await expect(chart.locator('.cursor')).toHaveCount(0)
 }
 
-async function openHistory(page: Page, path = `/${HISTORY_DOMAIN}`) {
+async function openHistory(page: Page, path = `/${HISTORY_DOMAIN}?view=data`) {
   await page.addInitScript(() => localStorage.setItem('tkb_replay_speed', 'rapid'))
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(API + path)

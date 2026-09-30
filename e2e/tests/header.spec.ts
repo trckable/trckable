@@ -37,7 +37,7 @@ async function session(): Promise<string> {
   return value
 }
 
-async function open(page: Page, query = ''): Promise<string> {
+async function open(page: Page, query = '?view=data'): Promise<string> {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.context().addCookies([{ name: 'trckable_session', value: await session(), url: BASE! }])
   await page.goto(BASE + '/')

@@ -1,1 +1,0 @@
-import{On as e}from"./index-d87ad3f7.js";var t=(t,n)=>e(`GET`,`/sites/${encodeURIComponent(t)}/now`,void 0,n);export{t};

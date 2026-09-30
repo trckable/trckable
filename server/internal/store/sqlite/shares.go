@@ -22,8 +22,10 @@ var ErrNeedsPassword = errors.New("this link is password-protected")
 // ErrExpired says the link had an end date and has passed it.
 var ErrExpired = errors.New("this link has expired")
 
-// Share is one public link, as the owner sees it. The token itself is
-// returned once, when it is created, and never again.
+// Share is one public link, as the owner sees it. Its token is kept twice:
+// as a hash, which is what opens it, and sealed with the instance key, so its
+// owner can copy the address again. Token is filled only by Shares, for the
+// owner's list, and never leaves the server as part of a Share.
 type Share struct {
 	ID        string `json:"id"`
 	SiteID    string `json:"site_id"`
@@ -38,6 +40,9 @@ type Share struct {
 	// EmbedOrigins are the sites allowed to show this link in an iframe,
 	// like https://example.com. None means it cannot be framed at all.
 	EmbedOrigins []string `json:"embed_origins,omitempty"`
+	// Token is empty for a link made before tokens were kept, or when this
+	// process cannot open what was sealed (no instance key, or another one).
+	Token string `json:"-"`
 }
 
 // MaxEmbedOrigins caps the sites one link may be embedded on.
@@ -56,10 +61,40 @@ func splitLines(s string) []string {
 // MaxSharesPerSite keeps a forgotten loop from filling the table.
 const MaxSharesPerSite = 20
 
-// Shares lists a site's links.
+// sealToken is how a token is kept for its owner: sealed with the instance
+// key and bound to the link's id, so a sealed value moved to another link does
+// not open there. Empty when there is no key to seal with: the link then works,
+// and its owner gets a new address instead of a copy.
+func (s *Store) sealToken(id, token string) string {
+	if s.Sealer == nil {
+		return ""
+	}
+	sealed, err := s.Sealer.SealFor(token, id)
+	if err != nil {
+		return ""
+	}
+	return sealed
+}
+
+// openToken reads a sealed token back. It is checked against the hash that
+// opens the link, so a value that was swapped, damaged or sealed with another
+// key or for another link is never handed out as an address: it reads as "no
+// token kept".
+func (s *Store) openToken(id, sealed, hash string) string {
+	if sealed == "" || s.Sealer == nil {
+		return ""
+	}
+	token, err := s.Sealer.OpenFor(sealed, id)
+	if err != nil || !auth.Equal(hex.EncodeToString(auth.Hash(token)), hash) {
+		return ""
+	}
+	return token
+}
+
+// Shares lists a site's links, each with its token when it can be read.
 func (s *Store) Shares(ctx context.Context, site string) ([]Share, error) {
 	rows, err := s.DB.QueryContext(ctx,
-		`SELECT id, site_id, name, revenue, notes, expires_at, pass_hash <> '', created_at, viewed_at, views, embed_origins
+		`SELECT id, site_id, name, revenue, notes, expires_at, pass_hash <> '', created_at, viewed_at, views, embed_origins, token_hash, token_enc
 		 FROM site_shares WHERE site_id = ? ORDER BY created_at DESC`, site)
 	if err != nil {
 		return nil, err
@@ -70,18 +105,18 @@ func (s *Store) Shares(ctx context.Context, site string) ([]Share, error) {
 		var sh Share
 		var rev int
 		var pass bool
-		var origins string
-		if err := rows.Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views, &origins); err != nil {
+		var origins, hash, sealed string
+		if err := rows.Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views, &origins, &hash, &sealed); err != nil {
 			return nil, err
 		}
 		sh.Revenue, sh.HasPass, sh.EmbedOrigins = rev == 1, pass, splitLines(origins)
+		sh.Token = s.openToken(sh.ID, sealed, hash)
 		out = append(out, sh)
 	}
 	return out, rows.Err()
 }
 
-// CreateShare makes a link and returns its token — the only time it exists in
-// readable form.
+// CreateShare makes a link and returns its token.
 func (s *Store) CreateShare(ctx context.Context, site, name, password string, revenue, notes bool, expires *int64, origins []string) (Share, string, error) {
 	var n int
 	if err := s.DB.QueryRowContext(ctx, `SELECT count(*) FROM site_shares WHERE site_id = ?`, site).Scan(&n); err != nil {
@@ -108,8 +143,8 @@ func (s *Store) CreateShare(ctx context.Context, site, name, password string, re
 		rev = 1
 	}
 	_, err := s.DB.ExecContext(ctx,
-		`INSERT INTO site_shares (id, site_id, name, token_hash, pass_hash, revenue, notes, expires_at, created_at, embed_origins) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		sh.ID, site, sh.Name, hex.EncodeToString(auth.Hash(token)), pass, rev, notes, expires, sh.CreatedAt, strings.Join(origins, "\n"))
+		`INSERT INTO site_shares (id, site_id, name, token_hash, token_enc, pass_hash, revenue, notes, expires_at, created_at, embed_origins) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		sh.ID, site, sh.Name, hex.EncodeToString(auth.Hash(token)), s.sealToken(sh.ID, token), pass, rev, notes, expires, sh.CreatedAt, strings.Join(origins, "\n"))
 	return sh, token, err
 }
 
@@ -124,6 +159,39 @@ func (s *Store) SetShareNotes(ctx context.Context, site, id string, on bool) err
 		return auth.ErrNotFound
 	}
 	return nil
+}
+
+// RotateShare gives a link a new address: a new token and hash, and the old
+// address stops working at once, as does every session opened through it.
+// What the link shows, its password and its end date stay as they were. It
+// returns the new token.
+func (s *Store) RotateShare(ctx context.Context, site, id string) (string, error) {
+	token := auth.Token("", 16)
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback() //nolint:errcheck // a no-op once committed
+	res, err := tx.ExecContext(ctx, `UPDATE site_shares SET token_hash = ?, token_enc = ? WHERE site_id = ? AND id = ?`,
+		hex.EncodeToString(auth.Hash(token)), s.sealToken(id, token), site, id)
+	if err != nil {
+		return "", err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return "", auth.ErrNotFound
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM share_sessions WHERE share_id = ?`, id); err != nil {
+		return "", err
+	}
+	return token, tx.Commit()
+}
+
+// ShareBrand is how the shared site looks, for the mark in a link's header.
+func (s *Store) ShareBrand(ctx context.Context, site string) Brand {
+	var b Brand
+	// A site with no colour or icon has no row: the mark is then the letter.
+	_ = s.DB.QueryRowContext(ctx, `SELECT color, CASE WHEN icon IS NULL THEN 0 ELSE updated_at END FROM site_brand WHERE site_id = ?`, site).Scan(&b.Color, &b.IconAt)
+	return b
 }
 
 // DeleteShare revokes a link. Anyone holding it sees nothing from then on.
@@ -184,13 +252,23 @@ func (s *Store) TouchShare(ctx context.Context, id string, now time.Time) {
 // ShareSessionTTL is how long one opening of a protected link lasts.
 const ShareSessionTTL = 12 * time.Hour
 
-// StartShareSession trades a checked password for a token the browser keeps in
-// a cookie, so the password is verified once and not on every report.
-func (s *Store) StartShareSession(ctx context.Context, shareID string, now time.Time) (string, error) {
-	token := auth.Token("shs_", 20)
-	_, err := s.DB.ExecContext(ctx, `INSERT INTO share_sessions (token_hash, share_id, expires_at) VALUES (?, ?, ?)`,
-		hex.EncodeToString(auth.Hash(token)), shareID, now.Add(ShareSessionTTL).Unix())
-	return token, err
+// StartShareSession trades a checked opening (the link's token, and its
+// password if it has one) for a token the browser keeps in a cookie, so the
+// password is verified once and not on every report. The session starts only
+// if the link still has that token, in the same statement: an opening that
+// was checked just before the owner made a new address gets nothing.
+func (s *Store) StartShareSession(ctx context.Context, shareID, linkToken string, now time.Time) (string, error) {
+	session := auth.Token("shs_", 20)
+	res, err := s.DB.ExecContext(ctx,
+		`INSERT INTO share_sessions (token_hash, share_id, expires_at) SELECT ?, id, ? FROM site_shares WHERE id = ? AND token_hash = ?`,
+		hex.EncodeToString(auth.Hash(session)), now.Add(ShareSessionTTL).Unix(), shareID, hex.EncodeToString(auth.Hash(strings.TrimSpace(linkToken))))
+	if err != nil {
+		return "", err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return "", auth.ErrNotFound
+	}
+	return session, nil
 }
 
 // ShareOf resolves a session cookie back to its link, and checks the link is
