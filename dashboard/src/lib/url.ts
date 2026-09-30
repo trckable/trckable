@@ -28,6 +28,10 @@ export function navigate(to: string, opts: { replace?: boolean } = {}) {
   window.dispatchEvent(new Event(EVENT))
 }
 
+/** The numbers the main chart can draw, besides visitors (its default). */
+export const CHART_METRICS = ['pageviews', 'revenue', 'conversion', 'per-visitor', 'bounce', 'session'] as const
+export type ChartMetricId = (typeof CHART_METRICS)[number]
+
 export interface ViewState {
   period: string // preset id, or "custom" when from/to are set
   from?: string
@@ -40,6 +44,8 @@ export interface ViewState {
   day?: string // scrubbed day
   test?: boolean // show test/sandbox payments instead of live ones
   bucket?: 'hour' | 'day' | 'week' | 'month' // chosen granularity; absent = trckable picks
+  /** What the main chart shows; absent = visitors. */
+  metric?: ChartMetricId
   /** Which visit a sale is credited to. Absent = last touch, what closed it. */
   attr?: 'first'
   /** Live mode: the site right now instead of the period's numbers. */
@@ -78,6 +84,7 @@ export function readView(params: URLSearchParams): ViewState {
     // already shared keep working.
     mode: params.get('mode') === 'full' ? 'full' : 'core',
     bucket: (['hour', 'day', 'week', 'month'] as const).find((b) => b === params.get('bucket')),
+    metric: CHART_METRICS.find((m) => m === params.get('metric')),
     day: params.get('day') ?? undefined,
     test: params.get('payments') === 'test',
     attr: params.get('attr') === 'first' ? 'first' : undefined,
@@ -101,6 +108,7 @@ export function writeView(v: ViewState): string {
   for (const f of v.filters) p.append('f', `${f.dim}:${f.value}`)
   if (v.mode === 'full') p.set('mode', 'full')
   if (v.bucket) p.set('bucket', v.bucket)
+  if (v.metric) p.set('metric', v.metric)
   if (v.attr) p.set('attr', v.attr)
   if (v.day) p.set('day', v.day)
   if (v.test) p.set('payments', 'test')

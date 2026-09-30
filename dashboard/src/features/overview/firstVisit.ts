@@ -15,6 +15,19 @@ export function firstVisitAt(values: number[], before: number | undefined, filte
   return i > 0 ? i : 0
 }
 
+/**
+ * Whether the period before this one is there in full, so a change against it
+ * means something: a site that began inside it has empty buckets at its start
+ * (the tiles would say +2,585% for a month against three days of it), and a
+ * period with no visit at all has nothing to compare with. By the hour a quiet
+ * night is not a young site, so only the days, weeks and months are asked.
+ */
+export function previousWhole(values: number[], bucket: 'hour' | 'day' | 'week' | 'month'): boolean {
+  const first = values.findIndex((v) => v > 0)
+  if (first < 0) return false
+  return bucket === 'hour' || first < Math.max(2, Math.ceil(values.length * 0.1))
+}
+
 /** A span this short drawn by day is two or three points, a triangle: it is
  *  drawn by the hour instead. */
 export const hourlySpan = (from: string, to: string) => diffDays(from, to) <= 2
