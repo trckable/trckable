@@ -6,7 +6,7 @@ import { Hero } from '../TimeHero'
 import type { TimeChartProps } from '../timeProps'
 import { bucketLabel } from '../timeScale'
 import { modelCopy } from './modelCopy'
-import { changePct, paceGap, paceSays, running, stackTotals } from './modelMath'
+import { changePct, foldStack, paceGap, paceSays, running, stackTotals } from './modelMath'
 
 /** ▲ 12% vs 1,234 — a change against the period before, or nothing without one. */
 export function Delta({ a, b, fmt, when }: { a: number; b: number; fmt: (n: number) => string; when?: string }) {
@@ -46,13 +46,14 @@ export function ModelBody({ p, i }: { p: TimeChartProps; i: number }) {
     )
   }
   if (p.model === 'D' && p.stack?.length) {
-    const total = stackTotals(p.stack, p.values.length)[i] ?? 0
+    const layers = foldStack(p.stack)
+    const total = stackTotals(layers, p.values.length)[i] ?? 0
     return (
       <>
         <Hero label={p.metric} color="var(--accent)" big={fmt(total)}>
           {prev !== undefined && <Delta a={total} b={prev} fmt={fmt} when={when} />}
         </Hero>
-        {[...p.stack].reverse().map((l) => (
+        {[...layers].reverse().map((l) => (
           <div className="ct-row" key={l.name}>
             <span>
               <i style={{ background: l.color }} />
@@ -82,6 +83,6 @@ export function modelBrief(p: TimeChartProps, i: number): { value: string; sub: 
   }
   const pct = prev === undefined ? null : changePct(value, prev)
   const sub = pct === null ? null : `${pct >= 0 ? modelCopy.up : modelCopy.down} ${Math.abs(pct)}% ${modelCopy.vs(fmt(prev ?? 0))}`
-  const cells = p.model === 'D' ? [...(p.stack ?? [])].reverse().map((l) => ({ label: l.name, value: fmt(l.values[i] ?? 0) })) : []
+  const cells = p.model === 'D' && p.stack?.length ? [...foldStack(p.stack)].reverse().map((l) => ({ label: l.name, value: fmt(l.values[i] ?? 0) })) : []
   return { value: fmt(value), sub, cells }
 }

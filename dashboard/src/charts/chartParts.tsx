@@ -4,11 +4,13 @@
 // Revenue's plots are one more, fetched only by a chart that has revenue.
 import { Suspense, type ComponentProps } from 'react'
 import { lazyLoad, whenIdle } from '../lib/lazyLoad'
+import { SPLIT_H } from './moneyPlot'
+import { CHART_H } from './plot'
 
 const Tip = lazyLoad(() => import('./TimeTip'))
 const Markers = lazyLoad(() => import('../features/notes/NoteMarkers').then((m) => ({ default: m.NoteMarkers })))
 const Plot = lazyLoad(() => import('./MoneyPlots').then((m) => ({ default: m.RevenuePlot })))
-const Model = lazyLoad(() => import('./models/ModelLayer'))
+const Model = lazyLoad(() => import('./models/ModelChart'))
 const Cols = lazyLoad(() => import('./MoneyPlots').then((m) => ({ default: m.MainColumns })))
 
 whenIdle(() => {
@@ -43,12 +45,10 @@ export function ColumnsLayer(p: ComponentProps<typeof Cols>) {
   )
 }
 
-/** The try-out's drawings of the line: one chunk, fetched as soon as a model is asked for. */
-export const preloadModels = () => Model.preload()
-
-export function ModelLayer(p: ComponentProps<typeof Model>) {
+/** The try-out's chart: a chunk of its own, asked for as soon as a model is. Until it is here, the chart's box. */
+export function ModelChart(p: ComponentProps<typeof Model>) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<div style={{ height: (p.height ?? CHART_H) + (p.revenue ? SPLIT_H : 0) }} />}>
       <Model {...p} />
     </Suspense>
   )

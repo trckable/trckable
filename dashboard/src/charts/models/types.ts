@@ -7,3 +7,9 @@ export interface StackLayer {
   color: string
   values: number[]
 }
+
+/** The report's split of the visitors by channel, for the buckets the chart shows. */
+export interface ChannelSeries {
+  channel: string
+  values: number[]
+}

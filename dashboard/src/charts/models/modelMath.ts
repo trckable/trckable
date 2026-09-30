@@ -2,7 +2,9 @@
 // (modelMath.test.ts).
 import { smooth } from '../smooth'
 import { modelCopy } from './modelCopy'
-import type { ChartModel, StackLayer } from './types'
+import { channelColor, channelLabel } from '../../lib/palette'
+import { otherLabel } from './modelCopy'
+import type { ChannelSeries, ChartModel, StackLayer } from './types'
 
 /** At most this many points is a straight line: a curve through three or four points draws hills that were never there. */
 export const STRAIGHT_MAX = 4
@@ -26,10 +28,9 @@ export function isWeekend(label: string, daily: boolean): boolean {
   return d === 0 || d === 6
 }
 
-/** Where the plot tops out: the highest thing the model draws, as the scale's input. */
-export function modelTop(model: ChartModel, values: number[], before: number[], stack?: StackLayer[]): number {
+/** Where the plot tops out: the highest thing the model draws, as the scale's input (D's layers add up to the visitors, so its top is theirs). */
+export function modelTop(model: ChartModel, values: number[], before: number[]): number {
   if (model === 'E') return Math.max(0, ...running(values), ...running(before))
-  if (model === 'D' && stack?.length) return Math.max(0, ...stackTotals(stack, values.length))
   return Math.max(0, ...values, ...before)
 }
 
@@ -46,6 +47,15 @@ export function stackEdges(stack: StackLayer[], n: number): number[][] {
     edges.push(below.map((b, i) => b + (l.values[i] ?? 0)))
   }
   return edges
+}
+
+/** The report's channels as layers: the biggest few, by the channel's own colour, and the rest folded into one. */
+export function foldStack(raw: ChannelSeries[], keep = 4): StackLayer[] {
+  return foldLayers(
+    raw.map((s) => ({ name: channelLabel(s.channel), color: channelColor(s.channel), values: s.values })),
+    keep,
+    { name: otherLabel, color: 'var(--text-3)' },
+  )
 }
 
 /** The biggest few channels by their total over the period, and everything else as one more layer. */

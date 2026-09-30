@@ -1,7 +1,7 @@
 // What the main chart is given: its series, how to write them, and what hangs
 // off them (notes, the live pulse, Replay).
 import type { Annotation, Bucket } from '../lib/api'
-import type { ChartModel, StackLayer } from './models/types'
+import type { ChannelSeries, ChartModel } from './models/types'
 
 export interface TimeChartProps {
   labels: string[] // local wall-clock bucket starts ("2026-09-20T09:00")
@@ -50,8 +50,11 @@ export interface TimeChartProps {
   locked?: boolean
   /** The try-out's model for the line (lib/tryout); absent is the chart as it was. */
   model?: ChartModel | null
-  /** With model D: the visitors by channel, bucket by bucket. */
-  stack?: StackLayer[]
+  /** With model D: the report's visitors by channel, from `stackFrom` on the report's own series. */
+  stack?: ChannelSeries[]
+  stackFrom?: number
+  /** Which number the chart plots (visitors, pageviews, revenue…): not every model fits every one. */
+  kind?: string
 }
 
 export type Pulse = { id: string; kind: 'visit' | 'goal' | 'sale'; label?: string }

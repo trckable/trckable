@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { changePct, curve, foldLayers, isWeekend, modelTop, paceGap, running, stackEdges, stackTotals } from './modelMath'
+import { changePct, curve, foldLayers, foldStack, isWeekend, modelTop, paceGap, running, stackEdges, stackTotals } from './modelMath'
 
 describe('the models arithmetic', () => {
   it('draws a tiny range in straight lines and a long one as a curve', () => {
@@ -30,6 +30,15 @@ describe('the models arithmetic', () => {
     expect(foldLayers([c('a', [1]), c('b', [2])], 4, { name: 'Other', color: 'grey' }).map((l) => l.name)).toEqual(['b', 'a'])
   })
 
+  it('names and colours the channels, and folds the rest', () => {
+    const raw = ['Direct', 'Search', 'Social', 'Referral', 'AI', 'Email', 'Paid'].map((channel, i) => ({ channel, values: [10 - i] }))
+    const out = foldStack(raw)
+    expect(out.map((l) => l.name)).toEqual(['Direct', 'Search', 'Social', 'Referral', 'Other'])
+    expect(out[0].color).toBe('var(--ch-1)')
+    expect(out[4].values).toEqual([6 + 5 + 4])
+    expect(foldStack([{ channel: 'AI', values: [1] }])[0].name).toBe('AI assistants')
+  })
+
   it('stacks layers on each other', () => {
     const l = (values: number[]) => ({ name: '', color: '', values })
     const stack = [l([1, 2]), l([3, 0]), l([0, 4])]
@@ -38,11 +47,9 @@ describe('the models arithmetic', () => {
   })
 
   it('scales each model to the tallest thing it draws', () => {
-    const l = (values: number[]) => ({ name: '', color: '', values })
     expect(modelTop('A', [1, 5], [9, 2])).toBe(9)
     expect(modelTop('E', [1, 5], [9, 2])).toBe(11) // the period before, added up
-    expect(modelTop('D', [1, 5], [], [l([1, 2]), l([0, 4])])).toBe(6)
-    expect(modelTop('D', [1, 5], [])).toBe(5) // no layers yet: the plain numbers
+    expect(modelTop('D', [1, 5], [])).toBe(5) // the layers add up to the visitors
   })
 
   it('says how far ahead or behind the pace is', () => {

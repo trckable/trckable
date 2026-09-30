@@ -32,7 +32,7 @@ import { firstVisitAt, hourIn, hourlySpan, previousWhole } from '../features/ove
 import { chartMetric, ghostValues, metricName, metricProps, metricValues, type ChartMetric } from '../features/overview/chartMetric'
 import { chartTips } from '../features/overview/chartTips'
 import { DIM_LABEL, PLACE_LABEL } from '../features/overview/dimLabels'
-import { modelProps } from '../features/overview/modelProps'
+import { chartModel, needsPrev } from '../lib/tryout'
 import { LiveSlot } from '../features/live/liveChunk'
 import { OnlineKpi } from '../features/live/OnlineKpi'
 import { entryCopy } from '../features/live/entryCopy'
@@ -474,8 +474,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   }
   let chartScrub = scrubbing && !hours ? scrubIdx - fv : null
   if (hours) chartScrub = hourAt
-  const chart = modelProps(metric, hours ? hours.current : cur, hours ? 0 : fv, chartSeries.length)
-  const prevSeries = (compareOn || chart.prev) && !firstDay ? (hours ?? data)?.previous?.series : undefined
+  const prevSeries = (compareOn || needsPrev()) && !firstDay ? (hours ?? data)?.previous?.series : undefined
   const ghost = ghostValues(metric, prevSeries)
   const overlay = trail && trailData && (metric === 'visitors' || metric === 'pageviews')
     ? { values: trailData.current.series.slice(fv).map((p) => p[metric]), color: channelColor(trail), name: channelLabel(trail) }
@@ -684,8 +683,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             story={telling}
             locked={playing}
             partialLast={live}
-            model={chart.model}
-            stack={chart.stack}
+            model={chartModel()} kind={metric}
+            stack={(hours ? hours.current : cur)?.series_by_channel}
+            stackFrom={hours ? 0 : fv}
             {...metricProps(metric, money, revenue)}
             notes={notesOn ? notes : []}
             onAddNote={isShared() || isViewer() || !notesOn ? undefined : (day) => setNoteFor(day)}

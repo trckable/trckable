@@ -11,3 +11,5 @@ const cards = query.get('cards') === 'new'
 
 export const chartModel = (): ChartModel | null => model
 export const newCards = (): boolean => cards
+/** The models about the period before draw it whether or not Compare is on. */
+export const needsPrev = (): boolean => model === 'C' || model === 'E'

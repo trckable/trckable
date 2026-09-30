@@ -3,11 +3,13 @@
 // TimeChart draws inside the plot; the crosshair, the hover card, the notes and
 // the axes stay TimeChart's own.
 import type { Bucket } from '../../lib/api'
+import { useTween } from '../../lib/motion'
 import { columnPath, columnWidth } from '../moneyPlot'
 import { modelCopy } from './modelCopy'
-import { curve, isWeekend, paceGap, paceSays, running, stackEdges } from './modelMath'
+import { curve, foldStack, isWeekend, paceGap, paceSays, running, stackEdges } from './modelMath'
 import { ModelLegend } from './ModelLegend'
-import type { ChartModel, StackLayer } from './types'
+import { CHART_MS } from '../plot'
+import type { ChannelSeries, ChartModel, StackLayer } from './types'
 import './models.css'
 
 export interface LayerProps {
@@ -27,7 +29,8 @@ export interface LayerProps {
   vals: number[]
   /** The period before, only when there is one to show. */
   ghost?: number[]
-  layers?: StackLayer[]
+  /** With model D: the visitors by channel, as the report has them. */
+  stack?: ChannelSeries[]
   hover: number | null
   partialLast?: boolean
   tone: string
@@ -44,7 +47,7 @@ export default function ModelLayer(p: LayerProps) {
     case 'C':
       return p.ghost ? <Gap {...p} /> : <Clean {...p} />
     case 'D':
-      return p.layers?.length ? <Stack {...p} layers={p.layers} /> : <Clean {...p} />
+      return p.stack?.length ? <Stack {...p} stack={p.stack} /> : <Clean {...p} />
     case 'E':
       return p.ghost ? <Pace {...p} /> : <Clean {...p} />
     default:
@@ -140,8 +143,12 @@ function Gap(p: LayerProps) {
 }
 
 /** D: the visitors stacked by channel, a hairline of the page between layers. */
-function Stack(p: LayerProps & { layers: StackLayer[] }) {
-  const edges = stackEdges(p.layers, p.n)
+function Stack(p: LayerProps & { stack: ChannelSeries[] }) {
+  const raw = foldStack(p.stack)
+  // The layers settle on a new period together, like the line does.
+  const flat = useTween(raw.flatMap((l) => l.values), CHART_MS)
+  const layers: StackLayer[] = raw.map((l, k) => ({ ...l, values: flat.slice(k * p.n, (k + 1) * p.n) }))
+  const edges = stackEdges(layers, p.n)
   const shape = (k: number) => {
     const upper = curve(points(edges[k + 1], p))
     const lower = curve(points(edges[k], p).reverse()).replace(/^M/, 'L')
@@ -149,10 +156,10 @@ function Stack(p: LayerProps & { layers: StackLayer[] }) {
   }
   return (
     <g className="model-d">
-      {p.layers.map((l, k) => (
+      {layers.map((l, k) => (
         <path key={l.name} d={shape(k)} fill={l.color} fillOpacity="0.92" stroke="var(--surface)" strokeWidth="1.5" strokeLinejoin="round" />
       ))}
-      <ModelLegend left={p.w - p.plotW + 4} right={p.w - 4} top={p.top + 4} items={[...p.layers].reverse().map((l) => ({ label: l.name, color: l.color }))} />
+      <ModelLegend left={p.w - p.plotW + 4} right={p.w - 4} top={p.top + 4} items={[...layers].reverse().map((l) => ({ label: l.name, color: l.color }))} />
     </g>
   )
 }
