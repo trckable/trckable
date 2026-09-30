@@ -14,18 +14,22 @@
 }
 .kit-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px 12px;
 }
 .kit-head h2 {
-  flex: 1;
+  flex: none;
   margin: 0;
   font-size: 15px;
 }
-.kit-switch {
-  height: 28px;
-  padding: 0 10px;
-  font-size: 12px;
+.kit-seg,
+.kit-head-end {
+  flex: none;
+  margin-left: auto;
+}
+.kit-head .kit-legend {
+  min-width: 0;
 }
 .kit-question,
 .kit-foot {
@@ -51,8 +55,7 @@
   overflow: visible;
   touch-action: pan-y;
 }
-.kit-svg:focus-visible,
-.kit-funnel-step:focus-visible {
+.kit-svg:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
   border-radius: 6px;
@@ -62,22 +65,11 @@
 }
 .kit-axis {
   fill: var(--text-3);
-  font: 10px var(--mono);
-}
-.kit-flow-label {
-  fill: var(--text-2);
-  font: 10.5px var(--mono);
-  pointer-events: none;
+  font: 11px var(--mono);
 }
 .kit-cross {
   stroke: var(--text-3);
   stroke-dasharray: 3 3;
-}
-.kit-band {
-  opacity: 0.32;
-}
-.kit-band:hover {
-  opacity: 0.6;
 }
 .kit-tip {
   white-space: nowrap;
@@ -129,40 +121,6 @@
   height: 8px;
   border-radius: 2px;
 }
-.kit-funnel {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.kit-funnel-step {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.kit-funnel-label {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 13px;
-}
-.kit-funnel-label b {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 600;
-}
-.kit-funnel-track {
-  height: 14px;
-  border-radius: 7px;
-  background: var(--sunken);
-}
-.kit-funnel-bar {
-  height: 100%;
-  border-radius: 7px;
-}
-.kit-funnel-note {
-  font-size: 11.5px;
-}
 .kit-table {
   max-height: 260px;
   overflow: auto;
@@ -193,12 +151,8 @@
   font-weight: 500;
 }
 @media (prefers-reduced-motion: no-preference) {
-  .kit-funnel-bar,
   .kit-svg rect {
     transition: opacity 0.15s var(--ease), width 0.12s var(--ease);
-  }
-  .kit-band {
-    transition: opacity 0.15s var(--ease);
   }
 }
 
@@ -206,10 +160,12 @@
    desktop is raised to 12 (the phone scale, phone.css). */
 @media (max-width: 640px) {
   :root :is(
-    .kit-axis,
-    .kit-flow-label,
-    .kit-funnel-note
+    .kit-axis
   ) {
     font-size: 12px;
   }
+}
+.kit-value {
+  fill: var(--text-2);
+  pointer-events: none;
 }

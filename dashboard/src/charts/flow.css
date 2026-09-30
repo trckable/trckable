@@ -1,0 +1,43 @@
+/* FlowChart: nodes, ribbons and the name chips. */
+.kit-flow-box {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.kit-flow-in {
+  position: relative;
+}
+.kit-band {
+  opacity: 0.35;
+}
+.kit-band.lit {
+  opacity: 0.7;
+}
+.kit-band.dim {
+  opacity: 0.07;
+}
+.kit-node.dim {
+  opacity: 0.35;
+}
+/* A name sits on a surface chip, so it reads over any ribbon. */
+.kit-flow-chip rect {
+  fill: var(--surface);
+  stroke: var(--border);
+}
+.kit-flow-chip.dim {
+  opacity: 0.45;
+}
+.kit-flow-label {
+  fill: var(--text-2);
+  font: 11px var(--mono);
+  pointer-events: none;
+}
+.kit-flow-count {
+  fill: var(--text-3);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .kit-band,
+  .kit-node,
+  .kit-flow-chip {
+    transition: opacity 0.15s var(--ease);
+  }
+}

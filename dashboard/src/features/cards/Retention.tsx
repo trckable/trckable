@@ -4,6 +4,8 @@
 // curve over the table is the average. With under two whole weeks of history,
 // one line instead of an empty table.
 import { useEffect, useState } from 'react'
+import { ChartHead } from '../../charts/ChartHead'
+import { HeatKey } from '../../charts/HeatGrid'
 import { Info } from '../../components/Info'
 import { Loading } from '../../components/loading/Loading'
 import { api, type Cohorts, type ReportQuery, type Site } from '../../lib/api'
@@ -52,9 +54,7 @@ export default function Retention({ site, query }: { site: Site; query: ReportQu
   const c = deepCopy.retention
   return (
     <div className="rt-panel">
-      <div className="tc-tools">
-        <Info text={INFO} />
-      </div>
+      <ChartHead start={r.kind === 'table' && <HeatKey color="var(--accent)" fewer={c.low} more={c.high} />} end={<Info text={INFO} />} />
       {err && <span className="faint">{c.failed}</span>}
       {!err && !data && <Loading height={140} />}
       {!err && data && r.kind === 'none' && <span className="faint">{c.none}</span>}

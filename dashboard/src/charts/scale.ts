@@ -80,6 +80,13 @@ export interface FlowBox {
   h: number
 }
 
+/** A node to lay out: `weight` is the height it takes when that should be less than its visits (a capped catch-all). */
+export interface FlowIn {
+  key: string
+  value: number
+  weight?: number
+}
+
 /** A band between two boxes, with where it leaves and where it arrives. */
 export interface FlowBand {
   from: FlowBox
@@ -97,12 +104,13 @@ export interface FlowBand {
  * arriving at its target in order, so bands never cross inside a box.
  */
 export function flowLayout(
-  cols: { key: string; value: number }[][],
+  cols: FlowIn[][],
   links: { col: number; from: string; to: string; value: number }[],
   height: number,
   gap = 6,
 ): { boxes: FlowBox[]; bands: FlowBand[] } {
-  const total = Math.max(1, ...cols.map((c) => c.reduce((s, b) => s + b.value, 0)))
+  const size = (b: FlowIn) => b.weight ?? b.value
+  const total = Math.max(1, ...cols.map((c) => c.reduce((s, b) => s + size(b), 0)))
   const most = Math.max(1, ...cols.map((c) => c.length))
   const k = Math.max(0, height - gap * (most - 1)) / total
   const boxes: FlowBox[] = []
@@ -110,7 +118,7 @@ export function flowLayout(
   cols.forEach((col, c) => {
     let y = 0
     for (const b of col) {
-      const box = { col: c, key: b.key, value: b.value, y, h: Math.max(1, b.value * k) }
+      const box = { col: c, key: b.key, value: b.value, y, h: Math.max(1, size(b) * k) }
       boxes.push(box)
       at.set(`${c}|${b.key}`, box)
       y += box.h + gap

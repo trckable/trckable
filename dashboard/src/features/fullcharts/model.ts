@@ -3,7 +3,7 @@
 import { bucketLabel } from '../../charts/TimeChart'
 import type { TableData } from '../../charts/DataTable'
 import type { FlowCol } from '../../charts/FlowChart'
-import type { FunnelBar } from '../../charts/FunnelChart'
+import type { FunnelRow } from '../../charts/FunnelRows'
 import type { Series } from '../../charts/SeriesChart'
 import type { Bucket, Heatmap, Row } from '../../lib/api'
 import { countryName, fmtInt, fmtPct } from '../../lib/format'
@@ -59,11 +59,17 @@ const stepLabel = (s: ConvStep) => {
   return copy.funnel.goal(s.value ?? '')
 }
 
-export function funnelModel(steps: ConvStep[]): { bars: FunnelBar[]; tips: string[]; table: TableData } {
-  const bars = steps.map((s, i) => ({ label: stepLabel(s), value: s.visitors, note: i ? copy.funnel.ofBefore(s.rate) : undefined }))
+export function funnelModel(steps: ConvStep[]): { rows: FunnelRow[]; table: TableData } {
+  const top = Math.max(1, steps[0]?.visitors ?? 1)
+  const rows = steps.map((s, i): FunnelRow => {
+    const row = { label: stepLabel(s), count: fmtInt(s.visitors), share: s.visitors / top }
+    if (i === 0) return row
+    const before = steps[i - 1].visitors
+    const left = Math.max(0, before - s.visitors)
+    return { ...row, of: fmtPct(s.rate), drop: copy.funnel.lost(Math.round((left / Math.max(1, before)) * 100), left) }
+  })
   return {
-    bars,
-    tips: steps.map((s, i) => copy.funnel.tip(stepLabel(s), s.visitors, i ? s.rate : null)),
+    rows,
     table: {
       caption: copy.funnel.title,
       columns: [copy.funnel.step, copy.funnel.visitors, copy.funnel.rate],
@@ -131,7 +137,7 @@ const nodeLabel = (n: FlowNode) => {
 
 export function flowModel(c: Charts): { cols: FlowCol[][]; links: { col: number; from: string; to: string; value: number }[]; table: TableData } {
   const cols = c.flow.steps.map((col) =>
-    (col ?? []).map((n) => ({ key: nodeKey(n), label: nodeLabel(n), value: n.visits, muted: n.kind !== 'page' })),
+    (col ?? []).map((n) => ({ key: nodeKey(n), label: nodeLabel(n), value: n.visits, kind: n.kind })),
   )
   const links = (c.flow.links ?? []).map((l) => ({ col: l.step, from: l.from, to: l.to, value: l.visits }))
   const name = (col: number, key: string) => cols[col]?.find((n) => n.key === key)?.label ?? key

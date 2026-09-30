@@ -5,6 +5,7 @@
 import './Vitals.css'
 import { useEffect, useState } from 'react'
 import { api, type ReportQuery, type Site, type WebVitals } from '../lib/api'
+import { ChartHead } from '../charts/ChartHead'
 import { Info } from '../components/Info'
 import { fmtInt } from '../lib/format'
 import { Loading } from '../components/loading/Loading'
@@ -39,16 +40,18 @@ export function Vitals({ site, query }: { site: Site; query: ReportQuery }) {
   }, [site.id, query])
 
   return (
-    <div className="card">
-      <div className="card-head">
-        <h2>Web Vitals</h2>
-        <Info text="The three scores Google measures a page by, taken from the browsers that visited yours — not from a test machine on a fast connection. Each one is the 75th percentile: three quarters of your visits were at least this good." />
-        {data && data.samples > 0 && (
-          <span className="faint card-note" style={{ fontSize: 12, marginLeft: 'auto' }}>
-            {fmtInt(data.samples)} measured {data.samples === 1 ? 'view' : 'views'}
-          </span>
-        )}
-      </div>
+    <div className="vitals-panel">
+      <ChartHead
+        start={
+          data &&
+          data.samples > 0 && (
+            <span className="faint num vitals-count">
+              {fmtInt(data.samples)} measured {data.samples === 1 ? 'view' : 'views'}
+            </span>
+          )
+        }
+        end={<Info text="The three scores Google measures a page by, taken from the browsers that visited yours — not from a test machine on a fast connection. Each one is the 75th percentile: three quarters of your visits were at least this good." />}
+      />
 
       {err && <span className="faint">Couldn't read the speed scores.</span>}
       {!err && !data && <Loading height={120} />}

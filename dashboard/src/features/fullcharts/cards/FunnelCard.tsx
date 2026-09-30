@@ -1,6 +1,5 @@
 import { ChartCard } from '../../../charts/ChartCard'
-import { FunnelChart } from '../../../charts/FunnelChart'
-import { fmtInt } from '../../../lib/format'
+import { FunnelRows } from '../../../charts/FunnelRows'
 import type { ConvStep } from '../api'
 import { copy } from '../copy'
 import { funnelModel } from '../model'
@@ -15,7 +14,7 @@ export function FunnelCard({ steps }: { steps: ConvStep[] }) {
       table={m.table}
       foot={<p className="faint kit-foot">{copy.funnel.foot}</p>}
     >
-      <FunnelChart steps={m.bars} color="var(--accent)" label={copy.funnel.label} fmt={fmtInt} tip={(i) => m.tips[i]} />
+      <FunnelRows rows={m.rows} color="var(--accent)" label={copy.funnel.label} />
     </ChartCard>
   )
 }

@@ -7,6 +7,8 @@ export interface Step {
   visitors: number
   /** Share of the first step, for the bar's length. */
   bar: number
+  /** Share of the step before that carried on: 1 on the first. */
+  rate: number
   /** What was lost between this step and the one before: null on the first. */
   loss: { pct: number; left: number } | null
 }
@@ -28,6 +30,7 @@ export function funnelOf(res: FunnelResult[]): Funnel | null {
     value: s.value,
     visitors: s.visitors,
     bar: Math.max(0, Math.min(1, s.visitors / top)),
+    rate: Math.max(0, Math.min(1, s.rate)),
     loss: i === 0 ? null : { pct: Math.round((1 - Math.max(0, Math.min(1, s.rate))) * 100), left: res[i - 1].dropped },
   }))
   return {

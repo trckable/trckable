@@ -1,6 +1,7 @@
-// A funnel's result: the line on top ("6.3% made it · 52s median"), then one bar
-// a step, its length its share of the first step and its count beside it, and
-// between two steps what was lost there.
+// A funnel's result: the line on top ("6.3% made it · 52s median"), then the
+// steps as a vertical funnel (charts/FunnelRows): a bar a step, its width its
+// share of the first step, and what was lost between two steps.
+import { FunnelRows, type FunnelRow } from '../../charts/FunnelRows'
 import { fmtDuration, fmtInt, fmtPct } from '../../lib/format'
 import type { FunnelResult } from '../../lib/api'
 import { deepCopy } from './deepCopy'
@@ -12,29 +13,17 @@ export function FunnelResult({ res }: { res: FunnelResult[] }) {
   if (!f) return null
   const c = deepCopy.funnel
   const time = fmtDuration(f.seconds)
+  const rows = f.steps.map((s): FunnelRow => {
+    const row = { label: s.value, count: fmtInt(s.visitors), share: s.bar }
+    return s.loss ? { ...row, of: fmtPct(s.rate), drop: c.lost(s.loss.pct, fmtInt(s.loss.left)) } : row
+  })
   return (
     <div className="fn">
       <p className="fn-result num">
         <b>{c.made(f.made)}</b>
         {f.seconds > 0 && <span>{` · ${f.exact ? c.median(time) : c.typical(time)}`}</span>}
       </p>
-      {f.steps.map((s, i) => (
-        <div key={i} className="fn-step">
-          {s.loss && (
-            <p className="fn-loss num faint">
-              <span aria-hidden="true" />
-              {c.lost(s.loss.pct, fmtInt(s.loss.left))}
-            </p>
-          )}
-          <div className="fn-row">
-            <span className="fn-name">{s.value}</span>
-            <span className="fn-count num">{fmtInt(s.visitors)}</span>
-          </div>
-          <span className="fn-line" aria-hidden="true">
-            <i style={{ width: `${Math.max(0.6, s.bar * 100)}%` }} title={fmtPct(s.bar)} />
-          </span>
-        </div>
-      ))}
+      <FunnelRows rows={rows} color="var(--accent)" label={c.label} />
     </div>
   )
 }

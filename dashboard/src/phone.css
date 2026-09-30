@@ -218,17 +218,59 @@
     padding: 0 12px;
     font-size: var(--ph-small);
   }
+  /* A list row uses the card's whole width: the name on the left, the numbers
+     right-aligned at the inner edge, and the thin bar under the whole row, scaled
+     by share. The change and the small columns are for wider screens. The heads
+     sit on the same two or three columns as the numbers. */
+  .bl-cols,
   .bl-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 64px;
+    column-gap: 8px;
+    align-items: center;
+  }
+  .bl.has-rev :is(.bl-cols, .bl-row) {
+    grid-template-columns: minmax(0, 1fr) 64px 72px;
+  }
+  .bl-cols {
+    padding: 0 10px 2px;
+  }
+  .bl-row {
+    align-content: center;
     min-height: var(--ph-row);
     padding: 6px 10px;
     font-size: var(--ph-text-2);
   }
-  .bl-label {
-    gap: 7px;
+  .bl-main {
+    display: contents;
+  }
+  .bl-name {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .bl-line {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: 6px;
   }
   .bl-val {
-    width: 64px;
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
     font-size: var(--ph-text-2);
+  }
+  .bl-rev {
+    grid-column: 3;
+    grid-row: 1;
+    width: auto;
+  }
+  .bl-tail,
+  .bl-sub,
+  .bl-cols .bl-sub {
+    display: none;
+  }
+  .bl-label {
+    gap: 7px;
   }
   .empty {
     font-size: var(--ph-text-2);

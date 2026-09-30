@@ -606,7 +606,7 @@ textarea:focus-visible {
   display: none;
 }
 .tc-body .kit-head {
-  justify-content: flex-end;
+  min-height: 26px;
 }
 .tabs {
   display: flex;
@@ -772,6 +772,12 @@ textarea:focus-visible {
   color: var(--text-3);
   font-size: 13px;
   text-align: center;
+}
+.goals-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 .heat {
   display: grid;
