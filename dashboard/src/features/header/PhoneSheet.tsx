@@ -22,7 +22,7 @@ export interface SheetProps {
   onClose: (back?: boolean) => void
 }
 
-const QUICK = ['today', '7d', '30d']
+const QUICK = ['today', '7d', '30d', '90d']
 /** A drag down this far closes the sheet. */
 const DRAG_CLOSE = 70
 

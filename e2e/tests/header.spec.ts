@@ -84,6 +84,7 @@ for (const width of [1440, 700, 375]) {
     if (width > 640) await expect(page.locator('.subbar').getByRole('button', { name: 'Share' })).toBeVisible()
     else await expect(page.locator('.subbar').getByRole('button', { name: 'Share' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Peek' })).toBeVisible()
+    await expect(page.locator('.site-zone').getByRole('button', { name: /^Settings for/ })).toBeVisible()
     // Row 2 says what the numbers are. A phone has one pill for it (Live/Data,
     // the periods and Filter are in its sheet); the comparison is the
     // period's title, not a line of text.
@@ -103,7 +104,8 @@ for (const width of [1440, 700, 375]) {
     await expect(items.filter({ hasText: 'Refresh' })).toBeVisible()
     await expect(items.filter({ hasText: 'Create…' })).toContainText('A')
     await expect(items.filter({ hasText: 'Full view' })).toContainText('F')
-    if (width <= 640) await expect(items.filter({ hasText: 'Site settings' })).toBeVisible()
+    // The site's settings are the cog in the site card, on a phone too, not an item here.
+    await expect(items.filter({ hasText: 'Site settings' })).toHaveCount(0)
     await expect(items.filter({ hasText: 'Export as CSV' })).toBeVisible()
     // Nothing of the person's is in it.
     await expect(items.filter({ hasText: /Profile|Shortcuts|Sign out/ })).toHaveCount(0)

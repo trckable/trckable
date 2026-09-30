@@ -11,8 +11,7 @@ import { unconvertedNote } from '../lib/money'
 import { channelColor, channelLabel } from '../lib/palette'
 import { navigate, readView, setView, useLocation } from '../lib/url'
 import { queryOf, rangeOf } from '../lib/dashQuery'
-import { canAsk, canChange, isShared, isViewer, sharedModules } from '../lib/me'
-import { openSettings } from '../lib/settings'
+import { canAsk, isShared, isViewer, sharedModules } from '../lib/me'
 import { isOn, shows } from '../lib/modules'
 import { FilterMenu } from '../components/FilterMenu'
 import { toast } from '../components/Toast'
@@ -572,7 +571,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           more={
             <MoreMenu
               full={full}
-              onSettings={narrow && canChange() ? () => openSettings(site) : undefined}
               onShare={narrow && !isShared() ? () => setSharing(true) : undefined}
               onViews={narrow && !isShared() && segments.length > 0 ? () => savedViews.set(true) : undefined}
               milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}

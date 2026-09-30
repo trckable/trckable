@@ -106,9 +106,6 @@
   .header.quiet {
     gap: 4px;
   }
-  .header.quiet .site-zone .btn.gear {
-    display: none;
-  }
   /* The tools take what they need; the site the rest, down to its mark. */
   .header.quiet > .site-zone {
     flex: 1 1 40px;
@@ -116,7 +113,7 @@
   }
   .header.quiet .site-pick .btn.site-btn {
     overflow: hidden;
-    padding: 0 8px;
+    padding: 0 6px 0 7px;
     gap: 6px;
   }
   .header.quiet > .header-tools.quiet {
@@ -137,31 +134,63 @@
   }
 }
 
-/* The site as words too: its name and ⌄, the cog beside it. */
-.header.quiet .site-zone {
-  border-color: transparent;
-  background: transparent;
-}
-/* The cog is an icon button like the tools on the right: 36 px, the same
-   radius all round, centred on the row, a fill only on hover. */
+/* The site and its settings are one hairline card: the name and ⌄, a thin
+   divider, the cog. 38 px, the same height as the capsules of the row under it
+   (ControlRow.css), on a phone too. */
 .header.quiet .site-zone {
   align-items: center;
+  height: 38px;
+  padding: 1px;
+  gap: 1px;
+  border-color: var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.header.quiet .site-zone:hover,
+.header.quiet .site-zone:focus-within {
+  border-color: var(--border-2);
+}
+.header.quiet .site-zone .btn.site-btn {
+  height: 34px;
+  padding: 0 8px 0 7px;
+  gap: 8px;
+  border-radius: 10px;
+}
+.header.quiet .site-zone .site-sep {
+  flex: none;
+  width: 1px;
+  height: 16px;
+  background: var(--border);
 }
 .header.quiet .site-zone .btn.gear {
-  border-left: 0;
-  width: 36px;
-  height: 36px;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  margin-right: 2px;
   padding: 0;
-  border-radius: 10px;
+  border-left: 0;
+  border-radius: 9px;
   background: transparent;
   box-shadow: none;
+}
+.header.quiet .site-zone .btn.gear svg {
+  width: 17px;
+  height: 17px;
 }
 .header.quiet .site-zone .btn.gear:hover {
   background: var(--surface-2);
 }
-.header.quiet .site-zone .btn.gear:focus-visible {
+.header.quiet .site-zone .btn.gear:focus-visible,
+.header.quiet .site-zone .btn.site-btn:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: -2px;
+}
+/* The switcher hangs a little under the card (a phone has its own sheet). */
+@media (min-width: 641px) {
+  .header.quiet .site-zone .pop.sites {
+    top: calc(100% + 9px);
+    left: -1px;
+  }
 }
 
 /* ---- The second row: what the numbers are ----------------------------------
