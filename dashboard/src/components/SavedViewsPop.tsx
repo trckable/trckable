@@ -10,6 +10,7 @@ import { usePhoneLock } from './lockScroll'
 
 import type { View } from './SavedViews'
 import './SavedViewsPop.css'
+import './sheet.css'
 
 export default function SavedViewsPop<V extends View>({
   views,

@@ -5,6 +5,7 @@ import { useEffect, useRef, type KeyboardEvent } from 'react'
 import { copy } from '../features/overview/copy'
 import { fmtSecs, replaySeconds, SPEEDS, speedOf } from '../features/overview/replayTime'
 import './MenuPop.css'
+import './sheet.css'
 
 export default function SpeedPop({ speed, points, onPick }: { speed: string; points: number; onPick: (id: string) => void }) {
   const list = useRef<HTMLDivElement>(null)

@@ -194,3 +194,14 @@
   padding: 8px 10px;
   color: var(--text-3);
 }
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .sv-head .faint,
+    .sv-sub
+  ) {
+    font-size: 12px;
+  }
+}
