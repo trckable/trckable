@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- Widgets have their own section in a site's settings, next to Sharing: they go on your own pages, so they no longer sit under share links.
 ### Changed
 
 - The main chart is tidier and keeps its character: the line keeps a lighter glow, and today's point is drawn whole at the edge of the plot. Hovering no longer turns the rest of the line dark (only Replay, a drag or a picked day grey the far side, as a plain grey line), and the crosshair is lighter. Revenue under the chart is rounded columns, the hovered day in full and the others a little softer, with nothing drawn for a day without revenue. The hover card is tighter, and it leaves out a revenue block or a split of zero. On a phone it is a slim card (the day and figure on one line, revenue, a thin new/returning bar, four small figures in one row, a note as one line) that covers little of the plot. The scrubber lines up with the plot, its knob under the same day's point, and the x labels give way to the date under the cursor.
