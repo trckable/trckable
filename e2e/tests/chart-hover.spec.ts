@@ -1,5 +1,5 @@
-// The main chart plays back under the cursor: everything right of it greys
-// out, the left stays lit, the crosshair sits at the cut. Arrow keys and
+// The main chart plays back under the cursor: the crosshair sits at the cut
+// (only Replay, a drag or a picked day grey what is right of it). Arrow keys and
 // Replay move the same cut, leaving the chart restores it, a note stays
 // readable in the hover card, and with reduced motion the cut never glides.
 import { expect, test, type Locator, type Page } from '@playwright/test'
@@ -260,7 +260,7 @@ test(`after Replay ends the ${name} chart is at rest and hovering still shows th
 
 // A replay paused part of the way leaves its day picked for the numbers, so
 // the chart still shows which day, quietly: a thin dashed line, a small dot,
-// half the grey. Hovering brings back the full crosshair.
+// the far side grey. Hovering brings back the full crosshair.
 test('a paused Replay leaves a quiet marker on the picked day', async ({ page }) => {
   const chart = await openHistory(page)
   await page.getByRole('button', { name: /^Replay this period/ }).click()
@@ -274,14 +274,15 @@ test('a paused Replay leaves a quiet marker on the picked day', async ({ page })
   expect(await style('.chart-cut', 'stroke-width')).toBe('1px')
   expect(await style('.chart-cut', 'opacity')).toBe('0.6')
   expect(await style('.chart-cut', 'visibility')).toBe('visible')
-  expect(await style('.chart-dim:not(.chart-unknown)', 'opacity')).toBe('0.5')
+  expect(await style('.chart-dim:not(.chart-unknown)', 'opacity')).toBe('1')
   await expect(chart.locator('svg circle[r="4"]')).toHaveCount(1)
   await expect(chart.locator('svg circle[r="6"]')).toHaveCount(0)
   const box = (await chart.boundingBox())!
   await page.mouse.move(box.x + box.width * 0.4, box.y + box.height / 2)
   await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2)
   await expect(chart).not.toHaveAttribute('data-quiet', 'true')
-  await expect.poll(() => style('.chart-dim:not(.chart-unknown)', 'opacity')).toBe('1')
+  // Hovering only moves the crosshair: nothing is greyed.
+  await expect.poll(() => style('.chart-dim:not(.chart-unknown)', 'opacity')).toBe('0')
   await expect(chart.locator('.cursor line')).toHaveCount(1)
 })
 
@@ -289,7 +290,7 @@ test('a paused Replay leaves a quiet marker on the picked day', async ({ page })
 // visit inside the period the chart starts there ("since Sep 26"), and so
 // does the slider. A day picked on it is where the chart marks it, and the
 // chip names the day the chart's own cursor names.
-const PAD_L = 44 // the plot starts this far in from the chart's left edge
+const PAD_L = 40 // the plot starts this far in from the chart's left edge
 
 async function thumbAndMarker(page: Page, chart: Locator) {
   const thumb = await page.locator('#scrub').evaluate((el: HTMLInputElement) => (+el.value - +el.min) / (+el.max - +el.min))

@@ -1,8 +1,9 @@
 // Replay, made small: a ▶ in the chart's corner, with its speed beside it and
 // the scrubber under the chart shown on hover or focus (always while it plays
 // or a day is picked, and always on touch screens, which have no hover).
-import { Pause, Play, X } from 'lucide-react'
+import { Pause, Play } from 'lucide-react'
 import { lazy, Suspense } from 'react'
+import { PAD_L } from '../../charts/plot'
 import { copy } from './copy'
 
 // The speed shows only once the chart is pointed at: its own small chunk,
@@ -23,34 +24,23 @@ export function ReplayButton(p: { playing: boolean; byDay: boolean; byHour?: boo
         </Suspense>
       </span>
       <button type="button" className="btn icon ghost replay-btn" onClick={p.onPlay} aria-label={label} title={label}>
-        <Icon size={15} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
+        <Icon size={14} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
       </button>
     </span>
   )
 }
 
-export function ScrubBar(p: { n: number; at: number; day?: string; onScrub: (i: number) => void; onBack: () => void }) {
+/** The scrubber under the plot: its track starts where the plot does and its
+ *  knob sits under the same bucket's point, so both read as one axis. */
+export function ScrubBar(p: { n: number; at: number; day?: string; onScrub: (i: number) => void }) {
+  const at = p.at < 0 ? p.n - 1 : p.at
   return (
-    <div className="scrub quiet">
+    <div className="scrub quiet" style={{ ['--pad' as string]: `${PAD_L}px`, ['--at' as string]: p.n > 1 ? at / (p.n - 1) : 1 }}>
+      <span className="scrub-track" aria-hidden="true" />
       <label htmlFor="scrub" className="sr">
         {copy.scrub}
       </label>
-      <input
-        id="scrub"
-        type="range"
-        min={0}
-        max={p.n - 1}
-        step={1}
-        value={p.at < 0 ? p.n - 1 : p.at}
-        aria-valuetext={p.day ?? copy.wholePeriod}
-        onChange={(e) => p.onScrub(+e.target.value)}
-      />
-      {p.day && (
-        <button type="button" className="chip scrub-day" onClick={p.onBack} aria-label={copy.backToPeriod(p.day)} title={copy.backToPeriod(p.day)}>
-          <span className="num">{p.day}</span>
-          <X size={13} strokeWidth={2} aria-hidden="true" />
-        </button>
-      )}
+      <input id="scrub" type="range" min={0} max={p.n - 1} step={1} value={at} aria-valuetext={p.day ?? copy.wholePeriod} onChange={(e) => p.onScrub(+e.target.value)} />
     </div>
   )
 }

@@ -1,15 +1,16 @@
-// The cursor on a line chart: a quiet dashed line in the series colour from the
-// top to the axis, and the point on the line with a soft halo. It eases to the
-// next bucket (one transform, so nothing is redrawn); Cursor.css.
+// The cursor on a line chart: a quiet hairline from the top to the axis and
+// the point on the line. It eases to the next bucket (one transform, so
+// nothing is redrawn); Cursor.css.
 import './Cursor.css'
+import { PeakTag } from './PeakLabel'
 
-export function CursorMark({ x, y, top, bottom }: { x: number; y: number; top: number; bottom: number }) {
+export function CursorMark({ x, y, top, bottom, peak }: { x: number; y: number; top: number; bottom: number; peak?: string }) {
   return (
     <g className="cursor" aria-hidden="true" style={{ transform: `translateX(${x}px)` }}>
       <line y1={top} y2={bottom} />
       <g className="cursor-dot" style={{ transform: `translateY(${y}px)` }}>
-        <circle className="cursor-halo" r="10" />
-        <circle r="5" />
+        {peak && <PeakTag text={peak} room={y - top > 30} />}
+        <circle r="4" />
       </g>
     </g>
   )

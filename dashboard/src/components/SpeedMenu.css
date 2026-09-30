@@ -5,20 +5,22 @@
   position: relative;
   flex: none;
 }
-.speed-btn {
-  height: 38px;
-  gap: 6px;
-  padding: 0 10px 0 12px;
-  border-radius: 999px;
-  color: var(--text-2);
-  font-size: 13px;
+.btn.speed-btn {
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-3);
+  font-size: 11.5px;
 }
-.speed-btn:hover,
-.speed-btn[aria-expanded='true'] {
+.btn.speed-btn:hover,
+.btn.speed-btn[aria-expanded='true'] {
+  background: var(--surface-2);
   color: var(--text);
 }
 .pop.menu-pop.speed-pop {
-  bottom: 46px;
+  bottom: 34px;
   left: 0;
   width: 250px;
   max-width: calc(100vw - 32px);

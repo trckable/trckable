@@ -65,7 +65,7 @@ test('flags on the axis, a count for a busy day, words on hover and focus, never
   const chart = page.locator('.overview-chart .chart-wrap')
   const busy = chart.getByRole('button', { name: new RegExp(`^\\d+ notes on ${dayName(OWN[browserName])}`) })
   await expect(busy).toBeVisible({ timeout: 15_000 })
-  await expect(busy.locator('i')).toHaveText(/^\d+$/)
+  await expect(busy.locator('.note-many')).toHaveText(/^\d+$/)
   // No label on the axis any more: only flags.
   await expect(page.locator('.note-flag')).toHaveCount(0)
 

@@ -732,15 +732,18 @@ button.kpi[aria-pressed='true'] {
   stroke-width: 1.5;
   pointer-events: none;
 }
-/* A day picked or paused (no pointer, drag or playback): the same cut, quiet. */
+/* A day picked or paused (no pointer, drag or playback): the same cut, quiet
+   (a dotted hairline and a small dot; the far side is grey as in playback). */
 .chart-wrap[data-quiet] .chart-cut {
   stroke: var(--text-3);
   stroke-width: 1;
   stroke-dasharray: 3 3;
   opacity: 0.6;
 }
-.chart-wrap[data-quiet] .chart-dim {
-  opacity: 0.5;
+/* Hovering only moves the crosshair: nothing is greyed. The far side of the
+   cut goes grey only while Replay plays, a day is dragged or a day is picked. */
+.chart-wrap:not([data-dim]) .chart-dim:not(.chart-unknown) {
+  opacity: 0;
 }
 .chart-wrap[data-cut='off'] .chart-dim,
 .chart-wrap[data-cut='off'] .chart-cut {
@@ -2104,58 +2107,6 @@ body[data-mode] .card.overview {
   padding-bottom: 12px;
 }
 
-/* ---- Notes on the chart ---------------------------------------------------- */
-.note-bar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-/* The chart's note controls: small chips in the notes' own colour. */
-.note-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 28px;
-  padding: 0 10px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: none;
-  color: var(--text-2);
-  font: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
-  transition: color 0.12s var(--ease), border-color 0.12s var(--ease), background 0.12s var(--ease);
-}
-.note-chip svg {
-  color: var(--money);
-}
-.note-chip:hover {
-  color: var(--text);
-  border-color: color-mix(in srgb, var(--money) 45%, var(--border));
-  background: color-mix(in srgb, var(--money) 7%, transparent);
-}
-.note-chip:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-.note-count {
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--money) 18%, transparent);
-  color: var(--money);
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 18px;
-  text-align: center;
-}
-@media (prefers-reduced-motion: reduce) {
-  .note-chip {
-    transition: none;
-  }
-}
-
 /* Saved views, under the filters. */
 .segments {
   display: flex;
@@ -2482,28 +2433,34 @@ button.kpi-live:hover .label::after {
   font-size: 12px;
 }
 
-/* + at the top of the crosshair: a note on the day under the cursor. */
+/* + at the top of the crosshair: a note on the day under the cursor. A quiet
+   circle, in the notes' colour only once it is pointed at. */
 .note-add {
   position: absolute;
-  top: -4px;
+  top: -6px;
   transform: translateX(-50%);
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   display: grid;
   place-items: center;
   padding: 0 0 1px;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--money) 60%, transparent);
+  border: 1px solid var(--border-2);
   background: var(--surface);
-  color: var(--money);
-  font: 600 15px/1 var(--font, system-ui);
+  color: var(--text-3);
+  font: 500 13px/1 var(--font, system-ui);
   cursor: pointer;
   z-index: 3;
-  box-shadow: 0 2px 10px #0006;
+  transition: color 0.12s var(--ease), border-color 0.12s var(--ease);
 }
 .note-add:hover {
-  background: var(--money);
-  color: var(--surface);
+  color: var(--money);
+  border-color: var(--money);
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-add {
+    transition: none;
+  }
 }
 
 /* ---- The header at every width ---------------------------------------------
@@ -2738,30 +2695,27 @@ button.kpi-live:hover .label::after {
 }
 
 /* ---- The main chart's finish ------------------------------------------------
-   A soft glow under the line, and today's point breathing while it counts. */
-.chart-line {
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
-}
+   A plain line, and today's point pulsing softly while it counts. */
 .chart-now-halo {
   transform-box: fill-box;
   transform-origin: center;
-  animation: chart-breathe 2.4s ease-in-out infinite;
+  animation: chart-pulse 2s var(--ease) infinite;
 }
-@keyframes chart-breathe {
-  0%,
-  100% {
-    opacity: 0.25;
-    transform: scale(0.6);
+@keyframes chart-pulse {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
   }
-  50% {
+  80%,
+  100% {
     opacity: 0;
-    transform: scale(1.6);
+    transform: scale(3.2);
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .chart-now-halo {
     animation: none;
-    opacity: 0.2;
+    opacity: 0;
   }
 }
 

@@ -7,151 +7,160 @@
   color: var(--down) !important;
 }
 
-/* The whole note, in the tooltip for its day: a labelled row like the
-   figures below it, on a quiet tint instead of a bar. */
-.tip-note {
-  display: grid;
-  gap: 3px;
-  padding: 7px 9px;
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--money) 9%, transparent);
-  border: 1px solid color-mix(in srgb, var(--money) 22%, transparent);
-}
-
-.tip-note .ct-label i {
-  width: 8px;
-  height: 8px;
-  border-radius: 3px;
-  background: var(--money);
-}
-
-.tip-note p {
-  margin: 0;
-  color: var(--text);
-  font-size: 12.5px;
-  line-height: 1.4;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
+/* The day's date, with "so far" while its bucket is still counting. */
 .ct-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  font-size: 12.5px;
+  color: var(--text-3);
+  font-size: 11px;
 }
 
 .ct-live {
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 10.5px;
-}
-
-.ct-hero {
-  display: grid;
-  gap: 2px;
-}
-
-.ct-label,
-.ct-row span:first-child {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   color: var(--text-2);
-  font-size: 11.5px;
 }
 
-.ct-label i,
-.ct-row i {
+.ct-live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* The figure, what it counts and how it compares, on one line. Revenue takes
+   the next line, smaller, in the money colour. */
+.ct-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 6px;
+}
+
+.time-tip .ct-main .num {
+  color: var(--text);
+}
+
+.ct-main i {
+  display: inline-block;
   width: 8px;
   height: 8px;
+  margin-right: 5px;
   border-radius: 3px;
 }
 
 .ct-big {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: var(--text);
 }
 
-.ct-hero.money .ct-big {
+.time-tip .ct-main.money .num {
   color: var(--money);
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.ct-vs {
+.time-tip .ct-main.money em {
   color: var(--text-3);
-  font-size: 11.5px;
 }
 
-.ct-vs em {
+.time-tip .ct-main.money em.num {
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.ct-main em {
+  margin-left: auto;
   font-style: normal;
-  margin-right: 2px;
+  font-size: 11px;
 }
 
-.ct-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12.5px;
+/* What the change is measured against, on a line of its own. */
+.ct-vs {
+  flex: 1 0 100%;
+  color: var(--text-3) !important;
+  font-size: 10.5px;
 }
 
+/* How the bucket divides: a 2px bar and its two numbers. */
 .ct-split {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px 8px;
+  gap: 3px;
 }
 
 .ct-split-bar {
-  grid-column: 1 / -1;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--grid);
+  height: 2px;
+  border-radius: 1px;
+  background: var(--border-2);
   overflow: hidden;
 }
 
 .ct-split-bar > span {
   display: block;
   height: 100%;
-  border-radius: 2px;
+  border-right: 2px solid var(--surface-2);
 }
 
 .ct-split em {
   font-style: normal;
   color: var(--text-3);
-  font-size: 11px;
+  font-size: 10px;
+  white-space: nowrap;
 }
 
-.ct-split em .num {
+.time-tip .ct-split em .num {
   color: var(--text-2);
 }
 
-.ct-split em.right {
-  text-align: right;
+/* The small figures in one row, each with its tiny label under it. */
+.ct-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 10px;
 }
 
-.ct-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px 12px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-}
-
-.ct-grid span {
+.ct-row span {
   display: grid;
   gap: 1px;
+  white-space: nowrap;
 }
 
-.ct-grid em {
-  font-style: normal;
-  color: var(--text-3);
-  font-size: 10.5px;
-}
-
-.ct-grid b {
+.time-tip .ct-row b {
+  font-size: 11.5px;
   font-weight: 500;
-  font-size: 13px;
+  color: var(--text);
+}
+
+.ct-row em {
+  font-style: normal;
+  font-size: 9.5px;
+  letter-spacing: 0.01em;
+  color: var(--text-3);
+}
+
+/* A note on the day: one line, a small square in the notes' colour. */
+.tip-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.tip-note::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--money);
 }

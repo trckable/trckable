@@ -1,4 +1,4 @@
-// The notes on the chart: a small flag on the x-axis at each day that has
+// The notes on the chart: a small pennant on the x-axis at each day that has
 // any, never a label that runs off the edge. Pointing at one (or focusing it
 // from the keyboard) shows its notes; a tap pins them open on a phone. Every
 // note of one day is one flag with a count.
@@ -12,7 +12,7 @@ import './notes.css'
 const TIP_W = 260
 /** The flag is this tall (and wide); its tooltip sits just above it, never
  *  over it, and at either end of the chart it steps in rather than out. */
-const MARK_H = 24
+const MARK_H = 20
 /** At most this many notes in one tooltip; the list has the rest. */
 const TIP_MAX = 4
 /** The guide a flag draws up the chart stops this far below its top. */
@@ -66,9 +66,15 @@ export function NoteMarkers({ markers, x, top, width }: { markers: Marker[]; x: 
           }}
         >
           <span className="note-guide" aria-hidden="true" />
-          <i className={m.notes.length > 1 ? 'num many' : 'num'} aria-hidden="true">
-            {m.notes.length > 1 ? m.notes.length : null}
-          </i>
+          <svg width="8" height="12" aria-hidden="true">
+            <line x1="0.5" y1="0" x2="0.5" y2="12" />
+            <path d="M1 0.5h6.5l-1.8 2.6 1.8 2.6H1z" strokeLinejoin="round" />
+          </svg>
+          {m.notes.length > 1 && (
+            <b className="num note-many" aria-hidden="true">
+              {m.notes.length}
+            </b>
+          )}
         </button>
       ))}
       {shown && (

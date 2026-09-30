@@ -2,6 +2,7 @@ import { Banknote, ChevronDown, ChevronRight, Coins, CornerUpLeft, Eye, Target, 
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BarList, type BarItem } from '../charts/BarList'
 import { TimeChart, type Pulse } from '../charts/TimeChart'
+import { CHART_H } from '../charts/plot'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
 import { api, cachedReport, dropReports, messageOf, showsInstall, siteState, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
 import { compareLabel, diffDays, fmtDay, setWeekStart, todayIn, type Range } from '../lib/dates'
@@ -38,7 +39,7 @@ import { liveShown } from '../features/live/liveShown'
 import { useNotes } from '../features/notes/useNotes'
 import { jump } from '../features/notes/jump'
 import { Behaviour } from '../features/behaviour/Behaviour'
-import { NoteBar } from '../features/notes/NoteBar'
+import { ChartFoot } from '../features/overview/ChartFoot'
 import { Loading } from '../components/loading/Loading'
 import { FullGrid } from '../features/fullcharts/FullGrid'
 import { CreateMenu } from '../features/create/CreateMenu'
@@ -675,7 +676,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
 
       <div className={active ? 'overview-chart replaying' : 'overview-chart'} role="group" aria-label={`${metricName} over time`}>
-        <ChartHead title={metricName} since={firstDay && fmtDay(firstDay)} onShowSince={firstDay ? () => setView({ period: 'custom', from: firstDay, to: range.to, day: undefined }) : undefined}>
+        <ChartHead title={metricName} since={firstDay && fmtDay(firstDay)}>
           {(canScrub || canReplayByDay) && (
             <ReplayButton
               playing={playing}
@@ -696,10 +697,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         {/* Until a short span's hours, or the notes that may move a new
             site's start, arrive: never one chart first, then a jump. */}
         {firstLoad || (byHour && !hours) || (firstVisit > 0 && !notesReady) ? (
-          <Loading height={narrow ? 170 : 220} />
+          <Loading height={CHART_H} />
         ) : (
           <TimeChart
-            height={narrow ? 170 : 220}
             labels={chartSeries.map((p) => p.t)}
             values={values}
             ghost={ghost}
@@ -723,16 +723,16 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               const d = cur?.days?.find((x) => x.date === chartSeries[i]?.t.slice(0, 10)) // days skip empty ones: match by date
               if (!d) return null
               const nvr = newVsReturning(d.kpis, site)
-              const rows: { label: string; value: string; faint?: boolean }[] = [{ label: 'Pageviews', value: fmtInt(d.kpis.pageviews) }, ...nvr.rows]
+              const rows: { label: string; value: string; faint?: boolean; inline?: boolean }[] = [{ label: 'Views', value: fmtInt(d.kpis.pageviews) }, ...nvr.rows]
               // Revenue itself is already in the card, next to the bars.
               if (money && d.money) {
-                rows.push({ label: 'Revenue / visitor', value: fmtMoney(d.kpis.visitors ? d.money.revenue / d.kpis.visitors : 0, money.currency, money.exponent, { cents: true }) })
+                rows.push({ label: '/visitor', value: fmtMoney(d.kpis.visitors ? d.money.revenue / d.kpis.visitors : 0, money.currency, money.exponent, { cents: true }), inline: true })
               }
-              rows.push({ label: 'Bounce rate', value: fmtPct(d.kpis.bounce_rate), faint: true })
-              rows.push({ label: 'Session time', value: fmtDuration(d.kpis.avg_session_s), faint: true })
+              rows.push({ label: 'Bounce', value: fmtPct(d.kpis.bounce_rate), faint: true })
+              rows.push({ label: 'Session', value: fmtDuration(d.kpis.avg_session_s), faint: true })
               const splits = nvr.splits
               // Where the day's money came from: a flat day can be all renewals.
-              if (money && d.money && d.money.revenue > 0)
+              if (money && d.money && d.money.renewal > 0)
                 splits.push({ a: d.money.new, b: d.money.renewal, aLabel: 'new', bLabel: 'renewals', tone: 'var(--money)', fmt: fmtM })
               return { splits, rows }
             }}
@@ -762,17 +762,15 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               setPlaying(false)
               setDayIdx(i + fv)
             }}
-            onBack={() => {
-              setStory('off')
-              setPlaying(false)
-              setHourAt(null)
-              setDayIdx(null)
-            }}
           />
         )}
-        {!showInstall && !isShared() && notesOn && (full || notes.length > 0) && (
-          <NoteBar count={notes.length} onAdd={isViewer() ? undefined : () => setNoteFor(view.day ?? today)} onOpen={() => setNotesOpen(true)} />
-        )}
+        <ChartFoot
+          since={firstDay && fmtDay(firstDay)}
+          onShowSince={firstDay ? () => setView({ period: 'custom', from: firstDay, to: range.to, day: undefined }) : undefined}
+          notes={!showInstall && !isShared() && notesOn && (full || notes.length > 0) ? { count: notes.length, onAdd: isViewer() ? undefined : () => setNoteFor(view.day ?? today), onOpen: () => setNotesOpen(true) } : undefined}
+          day={canScrub && scrubbing && view.day ? fmtDay(view.day, { weekday: true }) : undefined}
+          onBack={() => { setStory('off'); setPlaying(false); setHourAt(null); setDayIdx(null) }}
+        />
       </div>
       </section>
 
