@@ -271,6 +271,8 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.63.0-noble
       options: --ipc=host
+    env:
+      HOME: /root # Firefox will not start when $HOME belongs to another user
     strategy:
       fail-fast: false
       matrix:
@@ -285,6 +287,15 @@ jobs:
         with: { name: trckabled, path: server/bin }
       - run: chmod +x server/bin/trckabled
       - run: pnpm --filter trckable build
+      # The WordPress snippet is run by PHP in the methods spec. A few megabytes
+      # from the package mirror, with a limit: a mirror that stalls fails this
+      # step in minutes, not in half an hour.
+      - name: PHP (the methods spec runs the WordPress snippet through it)
+        timeout-minutes: 4
+        run: |
+          o="-o Acquire::Retries=5 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20"
+          apt-get $o update -qq && apt-get $o install -y -qq --no-install-recommends php-cli > /dev/null
+          php -v | head -1
       - name: the image carries the locked Playwright
         run: |
           want=$(grep -m1 -o 'playwright:v[0-9.]*' .github/workflows/ci.yml | cut -d v -f2)
@@ -320,6 +331,8 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.63.0-noble
       options: --ipc=host
+    env:
+      HOME: /root # Firefox will not start when $HOME belongs to another user
     strategy:
       fail-fast: false
       matrix:
