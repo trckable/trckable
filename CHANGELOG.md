@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.5.6 (30 Sep 2026)
+
 ### Added
 
 - The MCP revenue tool gives every row of its ranking the revenue of the comparison period and the change as text like +20% (`revenue_previous`, `revenue_change`), so an assistant can say which traffic earns most and whether it is up or down.
