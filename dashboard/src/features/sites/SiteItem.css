@@ -1,4 +1,4 @@
 /* SiteItem's styles: they load with its chunk, not with the first load. */
-.stopped-note {
-  color: var(--down) !important;
+.site .tail.stopped-note {
+  color: var(--down);
 }

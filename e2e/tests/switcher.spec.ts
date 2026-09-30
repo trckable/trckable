@@ -157,3 +157,22 @@ test('the first open is final: the popup does not move or resize afterwards', as
     await cleanUp(page.request)
   })
 })
+
+test('the keys work in the list: ↑/↓ move, a number opens that site, and the numbers show without blocking', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.goto(`${API}/example.com`)
+  const menu = await open(page)
+  // Today's numbers arrive after the list is open.
+  await expect(menu.locator('.site .tail').first()).toBeVisible({ timeout: 15_000 })
+  const rows = menu.locator('.site')
+  await rows.first().focus()
+  await page.keyboard.press('ArrowDown')
+  await expect(rows.nth(1)).toBeFocused()
+  await page.keyboard.press('ArrowUp')
+  await expect(rows.first()).toBeFocused()
+  // Compact rows: 30 px on a desktop.
+  expect(await rows.first().evaluate((e: HTMLElement) => e.offsetHeight)).toBe(30)
+  const second = await rows.nth(1).getAttribute('title')
+  await page.keyboard.press('2')
+  await expect(page).toHaveURL(new RegExp('/' + encodeURIComponent(second!).replace(/\./g, '\\.')))
+})
