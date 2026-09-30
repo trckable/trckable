@@ -3,51 +3,35 @@
 // is the one enforcing that, not this file.
 import { useEffect, useState, type SubmitEvent } from 'react'
 import { APIError, api, messageOf, setShareMode, type ShareInfo, setShareSession } from '../lib/api'
+import { isEmbed, openShare, shareToken } from '../lib/earlyStart'
 import { setShared } from '../lib/me'
 import { Ghost, Name, Wordmark } from '../components/Logo'
 import './Share.css'
 
-/** The token out of /s/<token>. It stays in the address bar, so the link can
- *  be copied, bookmarked and reloaded; the page sends no Referer, and the
- *  API calls after the first carry a session cookie instead. */
-export const shareToken = () => {
-  const m = /^\/s\/([^/]+)/.exec(location.pathname)
-  return m ? decodeURIComponent(m[1]) : ''
-}
-
 type State = { state: 'loading' } | { state: 'password'; error?: string } | { state: 'ready'; info: ShareInfo } | { state: 'error'; message: string }
 
-/** Opens the link, asking for a password only if the server says to. */
-/** ?embed=1: the link is shown inside another site's page. */
-export const isEmbed = () => new URLSearchParams(location.search).get('embed') === '1'
-
 /** An embed keeps its session in memory, since the browser will not send a
- *  cookie from inside another site's page. */
+ *  cookie from inside another site's page. The token stays in the address (and
+ *  the page sends no Referer), so the link can be copied, bookmarked and reloaded. */
 const opened = (info: ShareInfo) => {
   if (info.session) setShareSession(info.session)
 }
 
+/** Opens the link, asking for a password only if the server says to. */
 export function useShare(): State {
   const [s, setS] = useState<State>({ state: 'loading' })
   useEffect(() => {
     setShareMode(true)
     setShared()
-    const token = shareToken()
     const done = (info: ShareInfo) => {
       setShared(info.modules)
       setS({ state: 'ready', info })
       opened(info)
     }
-    // With a token in the address the server opens the link: a reload of a
-    // password link is let in by the session cookie the first open left. An
-    // address cut short to /s has only that cookie to go by.
-    const open = token
-      ? api.openShare(token, undefined, isEmbed())
-      : api.shareMe().catch(() =>
-          // No token in the address and no session left: either the address
-          // was cut short, or the time it was open for has passed.
-          Promise.reject(new APIError(410, 'This view has closed, or the address is incomplete. Open the full link you were given again, or ask for a new one.')),
-        )
+    // Already under way since the script started (lib/earlyStart.ts). With a
+    // token in the address the server opens the link: a reload of a password
+    // link is let in by the session cookie the first open left.
+    const open = openShare()
     open.then(done).catch((e: unknown) => {
       if (e instanceof APIError && e.status === 401) return setS({ state: 'password' })
       setS({ state: 'error', message: messageOf(e) })

@@ -51,6 +51,10 @@ func (h *Hub) Version(site string) uint64 {
 	return 0
 }
 
+// Bump moves the site's version without an event: something a report can see
+// changed in the store (a visit was written out).
+func (h *Hub) Bump(site string) { h.bump(site) }
+
 func (h *Hub) bump(site string) {
 	c, _ := h.ver.LoadOrStore(site, new(atomic.Uint64))
 	c.(*atomic.Uint64).Add(1)

@@ -195,7 +195,7 @@
 @media (prefers-reduced-motion: no-preference) {
   .kit-funnel-bar,
   .kit-svg rect {
-    transition: opacity 0.15s var(--ease), width 0.4s var(--ease);
+    transition: opacity 0.15s var(--ease), width 0.12s var(--ease);
   }
   .kit-band {
     transition: opacity 0.15s var(--ease);

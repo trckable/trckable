@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { APIError, cachedReport, peekReport, type Report, type ReportQuery } from './api'
 
-/** Fetches a report, keeping the last one on screen while the next loads. */
+/** Fetches a report, keeping the last one on screen while the next loads. A
+ *  period read before is shown at once, whatever its age, and refreshed behind
+ *  it when it is older than the cache keeps it (lib/api.ts). */
 export function useReport(site: string | null, q: ReportQuery | null, opts: { live?: boolean } = {}) {
   const [data, setData] = useState<Report | null>(() => (site && q ? (peekReport(site, q) ?? null) : null))
   const [error, setError] = useState<string | null>(null)
@@ -27,6 +29,12 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { li
       setLoading(true)
       const maxAge = fresh.current ? 0 : undefined
       fresh.current = false
+      const seen = peekReport(site, q)
+      if (seen) {
+        setLastKey(key)
+        setData(seen)
+        setError(null)
+      }
       cachedReport(site, q, maxAge)
         .then((r) => {
           if (cancelled) return

@@ -146,6 +146,8 @@ func (a *API) erasePerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	site := r.PathValue("site")
+	// From the first row erased, whatever happens next, what was cached is stale.
+	defer a.cache.purgeSite(site)
 	events, sessions, err := a.ErasePerson(r.Context(), site, visitor)
 	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
@@ -158,7 +160,6 @@ func (a *API) erasePerson(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	a.cache.purgeSite(site)
 	out := map[string]any{
 		"visitor":  strconv.FormatUint(visitor, 36),
 		"events":   events,

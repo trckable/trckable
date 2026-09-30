@@ -415,6 +415,7 @@ export async function call<T>(method: string, path: string, body?: unknown, sign
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
+  if (res.ok && method !== 'GET') dropAfterWrite(path)
   if (res.status === 204) return undefined as T
   const data: unknown = await res.json().catch(() => ({}))
   if (!res.ok) {
@@ -423,6 +424,14 @@ export async function call<T>(method: string, path: string, body?: unknown, sign
     throw new APIError(res.status, f.error ?? res.statusText, f.needs_code === true)
   }
   return data as T
+}
+
+/** A write can change what a report says (a time zone, a currency, payments,
+ *  what counts as a visit, a goal, a delete): the reports kept for that site,
+ *  or for every site when the path names none, are not reused after it. */
+function dropAfterWrite(path: string) {
+  const site = /^\/sites\/([^/?]+)/.exec(path)
+  dropReports(site ? decodeURIComponent(site[1]) : undefined)
 }
 
 /** A request whose answer has nothing to read: a 204, or a body nobody needs. */
@@ -841,31 +850,54 @@ export const api = {
 }
 
 // A tiny request cache so hovering, re-opening a period, or switching back to
-// a site is instant. The server caches too; this saves the round trip.
+// a site is instant. The server caches too; this saves the round trip. A
+// period that is over cannot change (bar a late event or a payment note), so it
+// is kept for two minutes (the server can drop its own copy sooner than a
+// browser can know); one that includes today for ten seconds, and the live stream asks
+// again the moment a visit lands.
 const cache = new Map<string, { at: number; data: Report }>()
-const inflight = new Map<string, Promise<Report>>()
+const inflight = new Map<string, { gen: number; p: Promise<Report> }>()
+// Moves whenever reports are dropped: a read that began before is answered,
+// but neither kept nor shared with a later ask.
+let generation = 0
+const SHORT_MS = 10_000
+const CLOSED_MS = 120_000
+const KEPT = 96
 
 /** Forget cached reports for a site, so the next read really asks the server. */
 export function dropReports(site?: string) {
+  generation++
   for (const key of [...cache.keys()]) if (!site || key.startsWith(site)) cache.delete(key)
 }
 
-export function cachedReport(site: string, q: ReportQuery, maxAgeMs = 10_000): Promise<Report> {
+/** How long a report for this query is good: a range that ended before any
+ *  time zone's today (12 hours behind UTC at most) is over for good. */
+export function reportTtl(q: Pick<ReportQuery, 'to' | 'cto'>, now = Date.now()): number {
+  const latest = q.cto && q.cto > q.to ? q.cto : q.to
+  return latest < new Date(now - 12 * 3_600_000).toISOString().slice(0, 10) ? CLOSED_MS : SHORT_MS
+}
+
+export function cachedReport(site: string, q: ReportQuery, maxAgeMs = reportTtl(q)): Promise<Report> {
   const key = site + reportURL(site, q)
   const hit = cache.get(key)
   if (hit && Date.now() - hit.at < maxAgeMs) return Promise.resolve(hit.data)
   const running = inflight.get(key)
-  if (running) return running
+  if (running && running.gen === generation) return running.p
+  const gen = generation
   const p = api
     .report(site, q)
     .then((data) => {
+      if (gen !== generation) return data // dropped while it ran: it may predate the change
+      cache.delete(key) // re-inserted last: the oldest read is the first to go
       cache.set(key, { at: Date.now(), data })
       const oldest = cache.keys().next().value
-      if (cache.size > 64 && oldest !== undefined) cache.delete(oldest)
+      if (cache.size > KEPT && oldest !== undefined) cache.delete(oldest)
       return data
     })
-    .finally(() => inflight.delete(key))
-  inflight.set(key, p)
+    .finally(() => {
+      if (inflight.get(key)?.p === p) inflight.delete(key)
+    })
+  inflight.set(key, { gen, p })
   return p
 }
 
