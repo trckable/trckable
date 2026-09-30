@@ -31,12 +31,23 @@ export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
   workers: process.env.CI ? undefined : 2, // keep local runs from maxing out every core
-  // CI machines are small and shared: a test gets two more tries there, and
-  // one that only passes on a retry is reported as flaky (listed, not hidden).
-  retries: process.env.CI ? 2 : 0,
-  reporter: [['list']],
+  // CI machines are small and shared: a test gets one more try there, and one
+  // that only passes on a retry is reported as flaky (listed, not hidden).
+  retries: process.env.CI ? 1 : 0,
+  // Nothing hangs silently: a test is cut off at a minute, an action or a page
+  // load at less, and a whole run at ten minutes, with what it had done so far.
   timeout: 60_000,
-  use: { baseURL: 'http://127.0.0.1:18301', trace: 'retain-on-failure', acceptDownloads: true },
+  globalTimeout: process.env.CI ? 10 * 60_000 : undefined,
+  // The slowest tests and every retry, at the end of the run and in the job summary.
+  reporter: [['list'], ['./slowest.mjs']],
+  reportSlowTests: null,
+  use: {
+    baseURL: 'http://127.0.0.1:18301',
+    trace: 'retain-on-failure',
+    acceptDownloads: true,
+    actionTimeout: process.env.CI ? 20_000 : undefined,
+    navigationTimeout: process.env.CI ? 30_000 : undefined,
+  },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
