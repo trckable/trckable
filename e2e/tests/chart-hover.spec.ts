@@ -284,3 +284,53 @@ test('a paused Replay leaves a quiet marker on the picked day', async ({ page })
   await expect.poll(() => style('.chart-dim:not(.chart-unknown)', 'opacity')).toBe('1')
   await expect(chart.locator('.cursor line')).toHaveCount(1)
 })
+
+// The slider under the chart spans the same days the chart does: with a first
+// visit inside the period the chart starts there ("since Sep 26"), and so
+// does the slider. A day picked on it is where the chart marks it, and the
+// chip names the day the chart's own cursor names.
+const PAD_L = 44 // the plot starts this far in from the chart's left edge
+
+async function thumbAndMarker(page: Page, chart: Locator) {
+  const thumb = await page.locator('#scrub').evaluate((el: HTMLInputElement) => (+el.value - +el.min) / (+el.max - +el.min))
+  const b = (await chart.boundingBox())!
+  const m = (await chart.locator('svg circle[r="4"]').boundingBox())!
+  return { thumb, marker: (m.x + m.width / 2 - b.x - PAD_L) / (b.width - PAD_L) }
+}
+
+test('the Replay slider spans the chart, so its thumb sits at the picked day', async ({ page }) => {
+  const chart = await openHistory(page)
+  await expect(page.locator('.overview-chart .since-chip')).toBeVisible()
+  const points = Number(/(\d+) points/.exec((await chart.locator('svg[role="img"]').getAttribute('aria-label')) ?? '')?.[1] ?? 0)
+  const slider = page.locator('#scrub')
+  expect(await slider.getAttribute('min')).toBe('0')
+  expect(await slider.getAttribute('max')).toBe(String(points - 1))
+  await slider.fill('1')
+  await expect(chart).toHaveAttribute('data-quiet', 'true')
+  const chip = page.locator('.scrub-day')
+  await expect(chip).toBeVisible()
+  const at = await thumbAndMarker(page, chart)
+  expect(Math.abs(at.thumb - at.marker)).toBeLessThan(0.04)
+  // The chart's own cursor, put on that marker, names the chip's day.
+  const b = (await chart.boundingBox())!
+  const day = ((await chip.textContent()) ?? '').trim()
+  await page.mouse.move(b.x + PAD_L + at.marker * (b.width - PAD_L), b.y + b.height / 2)
+  await page.mouse.move(b.x + PAD_L + at.marker * (b.width - PAD_L) + 1, b.y + b.height / 2)
+  await expect(chart.locator('.cursor-pill')).toContainText(day)
+})
+
+// In Full the chart itself picks the day (a click or drag on it): the thumb follows.
+test('picking a day on the chart moves the Replay slider to it', async ({ page }) => {
+  const chart = await openHistory(page, `/${HISTORY_DOMAIN}?mode=full`)
+  await expect(page.locator('.overview-chart .since-chip')).toBeVisible()
+  const b = (await chart.boundingBox())!
+  await page.mouse.move(b.x + PAD_L + 0.8 * (b.width - PAD_L), b.y + b.height / 2)
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.locator('.scrub-day')).toBeVisible()
+  await page.mouse.move(5, 5)
+  await expect(chart).toHaveAttribute('data-quiet', 'true')
+  const at = await thumbAndMarker(page, chart)
+  expect(at.thumb).toBeGreaterThan(0.6)
+  expect(Math.abs(at.thumb - at.marker)).toBeLessThan(0.04)
+})
