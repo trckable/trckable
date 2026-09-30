@@ -520,6 +520,7 @@
     border-radius: 12px;
   }
   :root .pop.sites .menu-search input {
+    height: var(--ph-hit);
     font-size: var(--ph-text);
   }
   :root .pop.sites .sites-strip {

@@ -299,6 +299,8 @@
     display: inline-flex;
     align-items: center;
     min-height: var(--ph-hit);
+    min-width: var(--ph-hit);
+    justify-content: center;
     padding: 0 8px;
     font-size: 12px;
   }
@@ -309,6 +311,11 @@
     min-height: calc(var(--ph-hit) / 0.7);
   }
   /* The + on the crosshair: the same 22 px disc, drawn behind a 44 px box. */
+  .note-chip {
+    height: var(--ph-hit);
+    margin: -8px 0;
+    font-size: var(--ph-small);
+  }
   .note-add {
     top: -15px;
     width: var(--ph-hit);
