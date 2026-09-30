@@ -58,10 +58,13 @@ button.kpi[aria-pressed='true'] .kpi-name {
 .kpi .value.skeleton {
   width: 62%;
   height: 26px;
+  /* As tall as the number that replaces it (its line is 1.25 of its size). */
+  margin: calc((1.25em - 26px) / 2) 0;
   border-radius: 7px;
 }
 /* The change: small, under the number, the arrow and its figure coloured and nothing else. */
 .kpi-delta {
+  min-height: 16px;
   font-size: 12px;
   line-height: 16px;
   white-space: nowrap;

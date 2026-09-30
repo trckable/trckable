@@ -112,7 +112,7 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		end := now.Truncate(time.Hour).Add(time.Hour)
 		params.From, params.To, params.Bucket = end.Add(-time.Duration(p.hours)*time.Hour).UTC(), end.UTC(), "hour"
 	}
-	res, err := a.cachedReport(ask, q, params, true)
+	res, err := a.cachedReport(ask, q, params)
 	if err != nil {
 		fail(w, http.StatusBadRequest, err.Error())
 		return cardNumbers{}, false

@@ -1,8 +1,13 @@
 package web
 
 import (
+	"bytes"
+	"compress/gzip"
+	"io"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -143,5 +148,142 @@ func TestDashboardFramesOnlyItsOwnOrigin(t *testing.T) {
 	csp := w.Header().Get("Content-Security-Policy")
 	if !strings.Contains(csp, "frame-src 'self';") || strings.Contains(csp, "frame-src *") || strings.Contains(csp, "child-src") {
 		t.Errorf("CSP %q: want frame-src 'self' only", csp)
+	}
+}
+
+func TestAcceptsReadsAcceptEncoding(t *testing.T) {
+	for _, c := range []struct {
+		header, coding string
+		want           bool
+	}{
+		{"gzip, deflate, br", "br", true},
+		{"gzip, deflate, br", "gzip", true},
+		{"gzip", "br", false},
+		{"", "gzip", false},
+		{"br;q=0", "br", false},
+		{"br;q=0.5, gzip", "br", true},
+		{"*", "br", true},
+		{"*;q=0", "br", false},
+		{"gzip;q=0, *", "gzip", false}, // named beats the wildcard
+		{"GZIP", "gzip", true},
+		{"identity", "gzip", false},
+	} {
+		if got := Accepts(c.header, c.coding); got != c.want {
+			t.Errorf("Accepts(%q, %q) = %v, want %v", c.header, c.coding, got, c.want)
+		}
+	}
+}
+
+// fetch asks the dashboard for a path, saying which encodings the browser takes.
+func fetch(t *testing.T, path, accept string) *httptest.ResponseRecorder {
+	t.Helper()
+	r := httptest.NewRequest(http.MethodGet, path, nil)
+	if accept != "" {
+		r.Header.Set("Accept-Encoding", accept)
+	}
+	w := httptest.NewRecorder()
+	Dashboard().ServeHTTP(w, r)
+	return w
+}
+
+func gunzip(t *testing.T, b []byte) []byte {
+	t.Helper()
+	zr, err := gzip.NewReader(bytes.NewReader(b))
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := io.ReadAll(zr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// firstAsset is a built script the build stored as gzip only.
+func firstAsset(t *testing.T) string {
+	t.Helper()
+	sub, _ := fs.Sub(dist, "dist")
+	names, _ := fs.Glob(sub, "assets/*.js.gz")
+	if len(names) == 0 {
+		t.Fatal("no built script is stored as gzip: run `pnpm --filter @trckable/dashboard build`")
+	}
+	return "/" + strings.TrimSuffix(names[0], ".gz")
+}
+
+func TestDashboardStoresOneCopy(t *testing.T) {
+	sub, _ := fs.Sub(dist, "dist")
+	for _, n := range []string{strings.TrimPrefix(firstAsset(t), "/")} { // index.html is under 1 KB: it stays plain
+		if _, err := fs.Stat(sub, n); err == nil {
+			t.Errorf("%s is stored plain and as gzip: the image would carry both", n)
+		}
+		if _, err := fs.Stat(sub, n+".gz"); err != nil {
+			t.Errorf("%s has no gzip: %v", n, err)
+		}
+	}
+	if m, _ := fs.Glob(sub, "assets/*.br"); len(m) > 0 {
+		t.Errorf("brotli twins are still embedded: %v", m[0])
+	}
+}
+
+func TestDashboardServesStoredGzip(t *testing.T) {
+	asset := firstAsset(t)
+	for _, path := range []string{asset} {
+		stored := fetch(t, path, "gzip, deflate, br")
+		if stored.Code != http.StatusOK || stored.Header().Get("Content-Encoding") != "gzip" {
+			t.Fatalf("%s gzip: %d %q", path, stored.Code, stored.Header().Get("Content-Encoding"))
+		}
+		plain := fetch(t, path, "")
+		if plain.Header().Get("Content-Encoding") != "" || plain.Code != http.StatusOK {
+			t.Fatalf("%s plain: %d %q", path, plain.Code, plain.Header().Get("Content-Encoding"))
+		}
+		if !bytes.Equal(gunzip(t, stored.Body.Bytes()), plain.Body.Bytes()) {
+			t.Errorf("%s: the stored gzip is not the file the other clients get", path)
+		}
+		if stored.Body.Len() >= plain.Body.Len() {
+			t.Errorf("%s: gzip %d bytes, plain %d", path, stored.Body.Len(), plain.Body.Len())
+		}
+		for _, w := range []*httptest.ResponseRecorder{stored, plain} {
+			if !strings.Contains(w.Header().Get("Vary"), "Accept-Encoding") {
+				t.Errorf("%s: no Vary: Accept-Encoding", path)
+			}
+			if w.Header().Get("Content-Type") != plain.Header().Get("Content-Type") || w.Header().Get("Cache-Control") != plain.Header().Get("Cache-Control") {
+				t.Errorf("%s: headers differ between encodings", path)
+			}
+		}
+		{
+			if stored.Header().Get("Content-Length") != strconv.Itoa(stored.Body.Len()) {
+				t.Errorf("Content-Length %q for %d bytes", stored.Header().Get("Content-Length"), stored.Body.Len())
+			}
+			if got := plain.Header().Get("Content-Type"); !strings.Contains(got, "javascript") {
+				t.Errorf("type %q", got)
+			}
+			if !strings.Contains(plain.Header().Get("Cache-Control"), "immutable") {
+				t.Errorf("a built script is no longer cached for good: %q", plain.Header().Get("Cache-Control"))
+			}
+		}
+	}
+	if page := fetch(t, "/some/route", "gzip"); page.Code != http.StatusOK || !strings.Contains(page.Body.String(), `<div id="root">`) {
+		t.Errorf("the page for a route: %d", page.Code)
+	}
+	if csp := fetch(t, "/", "gzip").Header().Get("Content-Security-Policy"); !strings.Contains(csp, "frame-ancestors 'none'") {
+		t.Errorf("the page lost its policy: %q", csp)
+	}
+}
+
+func TestDashboardRefusesGzipAndRangesArePlain(t *testing.T) {
+	asset := firstAsset(t)
+	for _, path := range []string{asset} {
+		if w := fetch(t, path, "gzip;q=0, br"); w.Header().Get("Content-Encoding") != "" {
+			t.Errorf("%s: %q sent to a browser that refuses gzip", path, w.Header().Get("Content-Encoding"))
+		}
+	}
+	plain := fetch(t, asset, "")
+	r := httptest.NewRequest(http.MethodGet, asset, nil)
+	r.Header.Set("Accept-Encoding", "gzip")
+	r.Header.Set("Range", "bytes=0-9")
+	w := httptest.NewRecorder()
+	Dashboard().ServeHTTP(w, r)
+	if w.Code != http.StatusPartialContent || w.Header().Get("Content-Encoding") != "" || !bytes.Equal(w.Body.Bytes(), plain.Body.Bytes()[:10]) {
+		t.Errorf("range: %d %q %q", w.Code, w.Header().Get("Content-Encoding"), w.Body.Bytes())
 	}
 }
