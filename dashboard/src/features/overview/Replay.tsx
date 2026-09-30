@@ -24,7 +24,7 @@ export function ReplayButton(p: { playing: boolean; byDay: boolean; byHour?: boo
         </Suspense>
       </span>
       <button type="button" className="btn icon ghost replay-btn" onClick={p.onPlay} aria-label={label} title={label}>
-        <Icon size={14} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
+        <Icon size={15} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
       </button>
     </span>
   )
@@ -33,14 +33,13 @@ export function ReplayButton(p: { playing: boolean; byDay: boolean; byHour?: boo
 /** The scrubber under the plot: its track starts where the plot does and its
  *  knob sits under the same bucket's point, so both read as one axis. */
 export function ScrubBar(p: { n: number; at: number; day?: string; onScrub: (i: number) => void }) {
-  const at = p.at < 0 ? p.n - 1 : p.at
   return (
-    <div className="scrub quiet" style={{ ['--pad' as string]: `${PAD_L}px`, ['--at' as string]: p.n > 1 ? at / (p.n - 1) : 1 }}>
+    <div className="scrub quiet" style={{ ['--pad' as string]: `${PAD_L}px` }}>
       <span className="scrub-track" aria-hidden="true" />
       <label htmlFor="scrub" className="sr">
         {copy.scrub}
       </label>
-      <input id="scrub" type="range" min={0} max={p.n - 1} step={1} value={at} aria-valuetext={p.day ?? copy.wholePeriod} onChange={(e) => p.onScrub(+e.target.value)} />
+      <input id="scrub" type="range" min={0} max={p.n - 1} step={1} value={p.at < 0 ? p.n - 1 : p.at} aria-valuetext={p.day ?? copy.wholePeriod} onChange={(e) => p.onScrub(+e.target.value)} />
     </div>
   )
 }

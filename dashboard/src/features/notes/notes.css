@@ -1,47 +1,43 @@
-/* The chart's notes: a pennant on the x-axis, and its tooltip. */
+/* The chart's notes: a flag on the x-axis, and its tooltip. */
 .note-mark {
   position: absolute;
   /* Over the chart, under every menu and dialog (.pop is 20). */
   z-index: 4;
-  /* A 20px target, drawn as a small pennant sitting on the axis. */
-  width: 20px;
-  height: 20px;
+  /* A 24px target for a finger, drawn as a small flag sitting on the axis. */
+  width: 24px;
+  height: 24px;
   margin: 0;
   padding: 0;
   transform: translate(-50%, -100%);
+  display: grid;
+  place-items: end center;
   border: 0;
   background: none;
   color: var(--money);
   cursor: pointer;
 }
-.note-mark svg {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-1px);
-  overflow: visible;
-}
-.note-mark svg line {
-  stroke: var(--money);
-}
-.note-mark svg path {
-  fill: color-mix(in srgb, var(--money) 70%, transparent);
-  stroke: var(--money);
-  stroke-width: 1;
-}
-.note-mark:hover svg path,
-.note-mark.on svg path,
-.note-mark:focus-visible svg path {
-  fill: var(--money);
-}
-/* Several notes on one day: their count beside the pennant, not a second mark. */
-.note-many {
-  position: absolute;
-  left: calc(50% + 9px);
-  bottom: 0;
-  font-size: 9.5px;
-  font-weight: 600;
+.note-mark i {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 10px;
+  height: 10px;
+  margin-bottom: 3px;
+  border-radius: 50%;
+  background: var(--money);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px color-mix(in srgb, var(--money) 35%, transparent);
+  color: var(--surface);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
   line-height: 1;
+  transition: transform 0.12s var(--ease), box-shadow 0.12s var(--ease);
+}
+/* Several notes on one day: a round badge with the count, not a second mark. */
+.note-mark i.many {
+  width: 16px;
+  height: 16px;
+  margin-bottom: 0;
 }
 /* Pointing at a flag draws its day up the chart, so it is clear which day
    the note belongs to. */
@@ -58,6 +54,11 @@
 .note-mark:hover .note-guide,
 .note-mark.on .note-guide {
   opacity: 1;
+}
+.note-mark:hover i,
+.note-mark.on i {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 5px color-mix(in srgb, var(--money) 30%, transparent);
 }
 .note-mark:focus-visible {
   outline: 2px solid var(--money);
@@ -104,6 +105,7 @@
   .note-tip {
     animation: none;
   }
+  .note-mark i,
   .note-guide {
     transition: none;
   }

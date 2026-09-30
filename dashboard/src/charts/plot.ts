@@ -1,9 +1,9 @@
 // The main chart's plot box, shared by the chart and the scrubber under it,
 // so the scrubber's track starts where the plot does.
-export const PAD_L = 40
-export const PAD_T = 12
-export const AXIS_H = 22
-export const CHART_H = 208
+export const PAD_L = 44
+export const PAD_T = 8
+export const AXIS_H = 26
+export const CHART_H = 220
 
 /** Where the hover card goes: beside the point, flipped to its left near the
  *  right edge, and never past either edge of the chart. */

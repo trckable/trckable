@@ -290,7 +290,7 @@ test('a paused Replay leaves a quiet marker on the picked day', async ({ page })
 // visit inside the period the chart starts there ("since Sep 26"), and so
 // does the slider. A day picked on it is where the chart marks it, and the
 // chip names the day the chart's own cursor names.
-const PAD_L = 40 // the plot starts this far in from the chart's left edge
+const PAD_L = 44 // the plot starts this far in from the chart's left edge
 
 async function thumbAndMarker(page: Page, chart: Locator) {
   const thumb = await page.locator('#scrub').evaluate((el: HTMLInputElement) => (+el.value - +el.min) / (+el.max - +el.min))

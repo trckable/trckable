@@ -1,6 +1,7 @@
-// How fast a replay runs: one quiet text button beside Replay, showing the speed's
+// How fast a replay runs: one small button beside Replay, showing the speed's
 // name, that opens the speeds with the time each takes for this period. It
 // opens upwards, since it sits at the foot of the chart.
+import { ChevronDown, Gauge } from 'lucide-react'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { copy } from '../features/overview/copy'
 import { fmtSecs, replaySeconds, speedOf } from '../features/overview/replayTime'
@@ -35,7 +36,9 @@ export function SpeedMenu({ speed, points, onPick }: { speed: string; points: nu
   return (
     <div ref={root} className="speed-menu">
       <button ref={btn} type="button" className="btn speed-btn" aria-haspopup="menu" aria-expanded={open} aria-label={label} title={label} {...warm(SpeedPop.preload)} onClick={() => setOpen((o) => !o)}>
+        <Gauge size={15} strokeWidth={1.75} aria-hidden="true" />
         <span className="speed-name">{cur.name}</span>
+        <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
       </button>
       {open && (
         <Suspense fallback={null}>

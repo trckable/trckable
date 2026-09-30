@@ -14,7 +14,5 @@ export const timeCopy = {
   note: 'Note',
   addNote: 'Add a note on this day',
   addNoteOn: (day: string) => `Add a note on ${day}`,
-  peak: 'Peak',
-  soFar: 'so far',
-  vs: (value: string, when?: string) => (when ? `vs ${value} on ${when}` : `vs ${value}`),
+  peak: (value: string, when: string) => `${value} · ${when}`,
 }
