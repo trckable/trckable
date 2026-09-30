@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:server/internal/web/dist/assets/copy-7ec71b4c.js
-import{cn as e}from"./index-358fc22a.js";var t={name:`copy`,size:24,node:[[`rect`,{width:`14`,height:`14`,x:`8`,y:`8`,rx:`2`,ry:`2`,key:`17jyea`}],[`path`,{d:`M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2`,key:`zix9uf`}]]};t.node;var n=e(t);export{n as t};
-========
-import{rn as e}from"./index-66efaad2.js";var t={name:`copy`,size:24,node:[[`rect`,{width:`14`,height:`14`,x:`8`,y:`8`,rx:`2`,ry:`2`,key:`17jyea`}],[`path`,{d:`M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2`,key:`zix9uf`}]]};t.node;var n=e(t);export{n as t};
->>>>>>>> origin/main:server/internal/web/dist/assets/copy-1d117f31.js
