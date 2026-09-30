@@ -60,3 +60,102 @@
 .modal:focus {
   outline: none;
 }
+
+/* The phone scale (phone.css): fields at 16 px (a phone's browser zooms into
+   anything smaller), a finger-high box for every choice, the switch drawn on a
+   44 px-high box. Every dialog loads Modal. */
+@media (max-width: 640px) {
+  /* ---- Fields, segments, switches ----------------------------------------------
+     16 px in a field (a phone's browser zooms the page into anything smaller),
+     a finger-high box for every choice. */
+  :root input[type='text'],
+  :root input[type='email'],
+  :root input[type='search'],
+  :root input[type='password'],
+  :root input[type='url'],
+  :root input[type='number'],
+  :root textarea,
+  :root .input {
+    font-size: var(--ph-text);
+  }
+  :root .input,
+  :root .srow-ctl .input {
+    height: var(--ph-sheet-row);
+  }
+  :root .field {
+    font-size: var(--ph-text-2);
+  }
+  :root .seg button,
+  :root .seg.small button {
+    min-width: var(--ph-hit);
+    height: var(--ph-hit);
+    font-size: var(--ph-text-2);
+  }
+  /* The switch draws its pill on a 44 px-high box. */
+  :root .switch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 54px;
+    height: var(--ph-hit);
+    padding: 0 4px;
+    border: 0;
+    background: transparent;
+  }
+  :root .switch::before {
+    content: '';
+    position: absolute;
+    inset: 7px 0;
+    border: 1px solid var(--border-2);
+    border-radius: 999px;
+    background: var(--surface-2);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  :root .switch.on {
+    background: transparent;
+  }
+  :root .switch.on::before {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  :root .switch span {
+    position: relative;
+    width: 24px;
+    height: 24px;
+  }
+  :root .switch.on span {
+    transform: translateX(22px);
+  }
+  :root .modal-close {
+    width: var(--ph-hit);
+    min-width: var(--ph-hit);
+    min-height: var(--ph-hit);
+  }
+  :root .chip {
+    font-size: var(--ph-text-2);
+  }
+
+  :root :is(.kbd, .tag, .info-dot, .note-count, .filter-count, .menu-sub, .sv-btn .count) {
+    font-size: 12px;
+  }
+  /* The (i) on a card: a 44 px box round a 22 px ring. */
+  :root .info-dot {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: var(--ph-hit);
+    height: var(--ph-hit);
+    margin: -13px;
+    border: 0;
+    background: none;
+    font-size: var(--ph-text-2);
+  }
+  :root .info-dot::before {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--border-2);
+    border-radius: 50%;
+  }
+}

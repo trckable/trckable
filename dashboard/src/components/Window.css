@@ -285,6 +285,19 @@
   }
 }
 
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .window-group,
+    .window-nav .tag,
+    .modal.window.equal .window-nav button
+  ) {
+    font-size: 12px;
+  }
+}
+
 /* The phone scale (phone.css): a finger-high close button and section tabs,
    text at 15 and 16 px. */
 @media (max-width: 640px) {

@@ -283,6 +283,17 @@
   }
 }
 
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .ms-when
+  ) {
+    font-size: 12px;
+  }
+}
+
 /* The phone scale (phone.css): Replay and Share are a finger wide. */
 @media (max-width: 640px) {
   :root .ms-acts {

@@ -24,6 +24,7 @@ import { densityOf } from './density'
 import { prefetchSite } from '../../lib/dashQuery'
 import './siteMenu.css'
 import '../../components/Modal.css'
+import '../../components/sheet.css'
 
 const PREFETCH = 3
 

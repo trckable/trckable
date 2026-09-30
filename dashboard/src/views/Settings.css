@@ -325,6 +325,17 @@
   display: contents;
 }
 
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .nav-group
+  ) {
+    font-size: 12px;
+  }
+}
+
 /* The phone scale (phone.css): the colour dots keep their drawn size inside a
    44 px box; the rows under them are finger-high. */
 @media (max-width: 640px) {

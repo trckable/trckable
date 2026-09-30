@@ -507,6 +507,20 @@ body[data-mode] .live-head-row h2,
   bottom: -24px;
 }
 
+
+/* The 12 px floor on a phone: every text rule of this file under 12 px on a
+   desktop is raised to 12 (the phone scale, phone.css). */
+@media (max-width: 640px) {
+  :root :is(
+    .live-meta,
+    .live-axis,
+    .live-ago,
+    .live-foot
+  ) {
+    font-size: 12px;
+  }
+}
+
 /* The phone scale (phone.css): text at 15 and 16 px, rows a finger tall and
    at least 52 px, the chart a little shorter so the list starts higher. */
 @media (max-width: 640px) {

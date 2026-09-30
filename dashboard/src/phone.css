@@ -7,8 +7,9 @@
 
    A target's hit area is its real box, so a small drawn icon gets a 44 px box
    and pulls the extra back out of the layout with a negative margin: the
-   thing looks as it did and is easy to hit. The selectors start with :root so
-   they win over the plain class rules of styles that load after this file. */
+   thing looks as it did and is easy to hit. This file is imported last in
+   main.tsx, so it wins over the plain class rules before it; the files that
+   load later write their phone rules with a :root in front. */
 @media (max-width: 640px) {
   :root {
     --ph-hit: 44px; /* the least a finger target is, both ways */
@@ -27,160 +28,23 @@
     --ph-mark-min: 12px; /* and the letter in it */
   }
   /* ---- The 12 px floor -------------------------------------------------------
-     Every text rule of a component that is under 12 px on a desktop, raised to
-     12; the parts of the phone scale below then set what they want above it.
-     A new small rule goes in its file's group here (the e2e check reads the
-     computed size of every text on screen). */
-  :root :is(
-    /* charts/Cursor.css */
-    .cursor-pill,
-    /* charts/TimeTip.css */
-    .ct-live,
-    .ct-label,
-    .ct-row span:first-child,
-    .ct-vs,
-    .ct-split em,
-    .ct-grid em,
-    /* charts/TimeTipCompact.css */
-    .chart-tip.time-tip.compact,
-    .compact .ct-date,
-    .compact .ct-line .ct-none,
-    .compact .ct-sub,
-    .compact .ct-tiny b,
-    .compact .ct-tiny em,
-    /* charts/charts.css */
-    .kit-axis,
-    .kit-flow-label,
-    .kit-funnel-note,
-    /* components/Code.css */
-    .code-bar,
-    .code-bar button,
-    /* components/DateRangePopover.css */
-    .month-grid th,
-    .periods-compare .compare-text .faint,
-    /* components/FilterPop.css */
-    .lsearch .faint,
-    .lrow .sub,
-    /* components/ListPop.css */
-    .lrow .end.num,
-    /* components/MenuPop.css */
-    .menu-pop-head .faint,
-    .menu-group-head,
-    /* components/Picker.css */
-    .picker-group,
-    .picker-row .faint,
-    /* components/SavedViewsPop.css */
-    .sv-head .faint,
-    .sv-sub,
-    /* components/SpeedMenu.css */
-    .speed-keys,
-    /* components/Window.css */
-    .window-group,
-    .window-nav .tag,
-    .modal.window.equal .window-nav button,
-    /* features/crawlers/Crawlers.css */
-    .crawl-axis,
-    .crawl-reads th,
-    /* features/install/install.css */
-    .inst-step-n,
-    /* features/journey/Journey.css */
-    .jr-badge,
-    .jr-fact dt,
-    .jr-visit-no,
-    .jr-kind,
-    .jr-times,
-    .jr-tag,
-    /* features/live/Live.css */
-    .live-meta,
-    .live-axis,
-    .live-ago,
-    .live-foot,
-    /* features/milestones/Timeline.css */
-    .ms-when,
-    /* features/notes/NotesList.css */
-    .notes-day-head,
-    /* features/notes/notes.css */
-    .note-tip-day,
-    .note-line span,
-    /* features/onboarding/onboarding.css */
-    .ob-tag,
-    /* features/sharelinks/sharelinks.css */
-    .sl-frame,
-    .sl-top b,
-    .sl-tile b,
-    /* features/sites/siteMenu.css */
-    .strip-sum,
-    .site .tail,
-    .site-head,
-    /* styles.css */
-    .kbd,
-    .cols,
-    .tag,
-    .info-dot,
-    .note-count,
-    .filter-count,
-    .menu-sub,
-    .sv-btn .count,
-    .app-footer,
-    /* views/Alerts.css */
-    .al-chip,
-    .al-last,
-    /* views/AllSites.css */
-    .all-chart-axis,
-    .all-big .delta,
-    /* views/FullModules.css */
-    .funnel-meta,
-    /* views/Modules.css */
-    .bullets-head,
-    /* views/Payments.css */
-    .pay-group-head,
-    /* views/Privacy.css */
-    .eu-col-head,
-    /* views/Retention.css */
-    .cohort-head,
-    .cohort-week b,
-    /* views/Settings.css */
-    .nav-group,
-    /* views/Shortcuts.css */
-    .keys-group header .faint,
-    kbd.cap.small,
-    .keys-mine,
-    .pill-btn .count,
-    /* views/Sites.css */
-    .site-pill,
-    /* views/Widgets.css */
-    .wg-list-head,
-    .wg-part .faint,
-    .wg-place-hint,
-    /* views/account/people.css */
-    .people-group-head,
-    .person-name .you
-  ) {
+     Every text rule that is under 12 px on a desktop is raised to 12 here;
+     a component that loads later has its own list in its own file (its last
+     block, "The 12 px floor"). The parts of the phone scale below then set
+     what they want above it. */
+  :is(.cursor-pill, .cols, .app-footer) {
     font-size: 12px;
   }
-  :root .note-mark i.many {
-    width: 20px;
-    height: 20px;
-    font-size: 12px;
-  }
-  :root body {
-    font-size: var(--ph-text);
-  }
-  :root .app {
-    padding: 12px var(--ph-edge) 24px;
-    gap: var(--ph-gap);
-  }
-
   /* ---- The header: the ghost, the site, search, the avatar, all 46 px ---- */
-  :root .header.quiet {
+  .header.quiet {
     gap: var(--ph-ctl);
     min-height: var(--ph-bar);
   }
-  :root .header.quiet > .header-tools.quiet {
+  .header.quiet > .header-tools.quiet {
     gap: var(--ph-ctl);
   }
-  :root .header > .brand,
-  :root .header.quiet > .brand {
+  .header > .brand,
+  .header.quiet > .brand {
     display: grid;
     place-items: center;
     flex: none;
@@ -188,133 +52,133 @@
     height: var(--ph-hit);
     margin-left: -6px;
   }
-  :root .header.quiet .site-zone {
+  .header.quiet .site-zone {
     height: var(--ph-bar);
     padding: 0;
     border-radius: 14px;
   }
-  :root .header.quiet .site-zone .btn.site-btn {
+  .header.quiet .site-zone .btn.site-btn {
     height: 44px;
     padding: 0 2px 0 8px;
     gap: 7px;
     font-size: var(--ph-text-2);
     border-radius: 13px;
   }
-  :root .header.quiet .site-zone .btn.site-btn svg {
+  .header.quiet .site-zone .btn.site-btn svg {
     width: var(--ph-icon);
     height: var(--ph-icon);
   }
-  :root .header.quiet .site-zone .btn.gear {
+  .header.quiet .site-zone .btn.gear {
     width: var(--ph-hit);
     height: var(--ph-hit);
     margin-right: 0;
     border-radius: 13px;
   }
-  :root .header.quiet .site-zone .btn.gear svg {
+  .header.quiet .site-zone .btn.gear svg {
     width: var(--ph-icon);
     height: var(--ph-icon);
   }
-  :root .header.quiet .site-zone .site-sep {
+  .header.quiet .site-zone .site-sep {
     height: 22px;
   }
-  :root .header-tools.quiet .btn {
+  .header-tools.quiet .btn {
     height: var(--ph-hit);
   }
-  :root .header-tools.quiet .btn.ask,
-  :root .header-tools.quiet .btn.icon.ghost {
+  .header-tools.quiet .btn.ask,
+  .header-tools.quiet .btn.icon.ghost {
     width: var(--ph-hit);
     min-width: var(--ph-hit);
   }
-  :root .header-tools.quiet .btn svg {
+  .header-tools.quiet .btn svg {
     width: var(--ph-icon);
     height: var(--ph-icon);
   }
-  :root .header-tools.quiet .btn.account-btn {
+  .header-tools.quiet .btn.account-btn {
     width: var(--ph-hit);
   }
-  :root .header-tools.quiet .btn.account-btn .avatar {
+  .header-tools.quiet .btn.account-btn .avatar {
     width: 32px;
     height: 32px;
     font-size: 15px;
   }
 
   /* ---- The row under it: Live | Data, the period, ⋯ --------------------- */
-  :root .subbar {
+  .subbar {
     gap: var(--ph-ctl);
     min-height: var(--ph-bar);
     margin-top: -2px;
   }
-  :root .view-switch {
+  .view-switch {
     padding: 0;
   }
-  :root .view-switch .view-pill {
+  .view-switch .view-pill {
     top: 0;
     bottom: 0;
     left: 0;
     width: 50%;
   }
-  :root .view-switch button {
+  .view-switch button {
     height: 44px;
     min-width: var(--ph-hit);
     padding: 0 14px;
     font-size: var(--ph-text-2);
   }
-  :root .phone-row .view-switch button {
+  .phone-row .view-switch button {
     padding: 0 11px;
     gap: 6px;
   }
-  :root .phone-pill {
+  .phone-pill {
     height: var(--ph-bar);
     padding: 0 8px 0 11px;
     gap: 7px;
     font-size: var(--ph-text-2);
   }
-  :root .phone-pill svg {
+  .phone-pill svg {
     width: var(--ph-icon);
     height: var(--ph-icon);
   }
-  :root .phone-row .ctl-cap {
+  .phone-row .ctl-cap {
     height: var(--ph-bar);
     padding: 0;
   }
-  :root .phone-row .ctl-cap .btn,
-  :root .phone-row .ctl-cap .btn.icon {
+  .phone-row .ctl-cap .btn,
+  .phone-row .ctl-cap .btn.icon {
     width: var(--ph-hit);
     height: 44px;
     border-radius: 13px;
   }
-  :root .phone-row .ctl-cap .btn svg {
+  .phone-row .ctl-cap .btn svg {
     width: var(--ph-icon);
     height: var(--ph-icon);
   }
 
   /* ---- Cards, tabs, folds, the lists --------------------------------------- */
-  :root .card {
+  .card {
     padding: var(--ph-pad);
     gap: var(--ph-gap);
     border-radius: 16px;
   }
-  :root h2 {
+  h2 {
     font-size: var(--ph-text);
   }
   /* The fold arrow and the tabs keep their drawn size: a 44 px box, the extra
      taken back out of the layout with the margin. */
-  :root .card-head .fold {
+  .card-head .fold {
     width: var(--ph-hit);
     height: var(--ph-hit);
     margin: -12px -8px -12px -14px;
   }
-  :root .card-head .fold svg {
+  .card-head .fold svg {
     width: var(--ph-icon);
     height: var(--ph-icon);
   }
-  :root .card-head {
+  .card-head {
     flex-wrap: wrap;
   }
-  :root .tabs {
+  .tabs {
     gap: 0;
   }
-  :root .tabs button {
+  .tabs button {
     min-width: var(--ph-hit);
     min-height: var(--ph-hit);
     margin: -5px 0;
@@ -323,139 +187,115 @@
     font-size: var(--ph-small);
   }
   /* Three or more tabs take a line of their own, as equal segments. */
-  :root .tabs:has(> button:nth-child(3)) {
+  .tabs:has(> button:nth-child(3)) {
     flex: 1 1 100%;
   }
-  :root .tabs:has(> button:nth-child(3)) button {
+  .tabs:has(> button:nth-child(3)) button {
     flex: 1;
     margin: 0;
     min-height: var(--ph-hit);
     background: var(--sunken);
   }
-  :root .tabs:has(> button:nth-child(3)) button[aria-selected='true'] {
+  .tabs:has(> button:nth-child(3)) button[aria-selected='true'] {
     background: var(--surface-2);
   }
-  :root .cols {
+  .cols {
     padding: 0 10px 2px;
     font-size: 12px;
   }
-  :root .bl-row {
+  .bl-row {
     min-height: var(--ph-row);
     padding: 6px 10px;
     font-size: var(--ph-text-2);
   }
-  :root .bl-label {
+  .bl-label {
     gap: 7px;
   }
-  :root .bl-val {
+  .bl-val {
     width: 64px;
     font-size: var(--ph-text-2);
   }
-  :root .empty {
+  .empty {
     font-size: var(--ph-text-2);
   }
-  :root .btn {
+  .btn {
     height: var(--ph-hit);
     font-size: var(--ph-text-2);
   }
-  :root .btn.icon {
+  .btn.icon {
     width: var(--ph-hit);
   }
-  :root .btn.small {
+  .btn.small,
+  .btn.site-btn {
     height: var(--ph-hit);
   }
-  :root .btn svg {
+  .btn svg {
     flex: none;
   }
 
   /* ---- The key numbers ------------------------------------------------------- */
-  :root .kpis {
+  .kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 6px 4px 0;
   }
-  :root .kpi {
+  .kpi {
     padding: 8px 10px 10px;
   }
-  :root .kpi .kpi-name,
-  :root .kpi .label {
+  .kpi .kpi-name,
+  .kpi .label {
     font-size: var(--ph-small);
   }
-  :root .kpi .value {
+  .kpi .value {
     font-size: clamp(20px, 16cqi, 30px);
   }
-  :root .kpi-delta {
+  .kpi-delta {
     font-size: var(--ph-small);
   }
 
   /* ---- The main chart ---------------------------------------------------------- */
-  :root .chart-wrap svg text {
+  .chart-wrap svg text {
     font-size: 12px;
   }
-  :root .overview-chart > .chart-head {
+  .overview-chart > .chart-head {
     min-height: var(--ph-hit);
   }
-  :root .chart-head-tools {
+  .chart-head-tools {
     gap: 2px;
   }
-  :root .btn.icon.ghost.replay-btn {
+  .btn.icon.ghost.replay-btn {
     width: var(--ph-hit);
     height: var(--ph-hit);
   }
-  :root .replay-speed .speed-btn {
+  .replay-speed .speed-btn {
     height: var(--ph-hit);
     font-size: var(--ph-text-2);
   }
-  :root .btn.ghost.show-since {
+  .btn.ghost.show-since {
     height: var(--ph-hit);
     font-size: var(--ph-text-2);
   }
   /* The replay slider: a 44 px touch strip over the same 28 px of layout. */
-  :root .overview-chart .scrub.quiet input[type='range'] {
+  .overview-chart .scrub.quiet input[type='range'] {
     top: -8px;
     height: var(--ph-hit);
   }
-  :root .scrub-day {
+  .scrub-day {
     font-size: var(--ph-small);
   }
 
   /* ---- Banners, the moment, the foot -------------------------------------------- */
-  /* One line: the ghost gives way, the words are cut before the buttons are. */
-  :root .ms-moment {
-    gap: var(--ph-ctl);
-    padding: 8px 8px 8px 14px;
-  }
-  :root .ms-moment .tkb-boo,
-  :root .ms-moment > svg,
-  :root .ms-moment > .ghost {
-    display: none;
-  }
-  :root .ms-words {
-    flex-wrap: nowrap;
-    min-width: 0;
-    overflow: hidden;
-  }
-  :root .ms-label {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .banner {
     font-size: var(--ph-text-2);
   }
-  :root .ms-moment .btn {
-    height: var(--ph-hit);
-  }
-  :root .banner {
-    font-size: var(--ph-text-2);
-  }
-  :root .app-footer {
+  .app-footer {
     padding: 4px 0 8px;
     font-size: 12px;
     gap: 0 14px;
   }
-  :root .app-footer-links {
+  .app-footer-links {
     gap: 4px;
   }
-  :root .app-footer a:not(.tkb-logo) {
+  .app-footer a:not(.tkb-logo) {
     display: inline-flex;
     align-items: center;
     min-height: var(--ph-hit);
@@ -463,261 +303,13 @@
     font-size: 12px;
   }
   /* The logo is drawn at 70% (zoom), so its box is asked for in full. */
-  :root .app-footer .tkb-logo {
+  .app-footer .tkb-logo {
     display: inline-flex;
     align-items: center;
     min-height: calc(var(--ph-hit) / 0.7);
   }
-
-  /* ---- Menus and lists as bottom sheets ---------------------------------------
-     The site list, the ⋯ and avatar menus, the Filter and saved-views lists and
-     the calendar rise from the bottom edge over the dimmed page, with a grab
-     handle and rows 48 px tall; the safe area under them is kept. */
-  :root .pop.sites,
-  :root .pop.menu-pop,
-  :root .replay-speed .pop.menu-pop.speed-pop,
-  :root .pop.sv-pop,
-  :root .pop.menu.more-menu,
-  :root .pop.sheet.range-pop:not(.small) {
-    position: fixed;
-    inset: auto 0 0 0;
-    top: auto;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
-    min-width: 0;
-    max-width: none;
-    max-height: 84dvh;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 6px 10px max(14px, env(safe-area-inset-bottom));
-    border: 0;
-    border-radius: 20px 20px 0 0;
-    box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--bg) 55%, transparent), var(--shadow);
-    z-index: 130;
-    transform: none;
-    animation: ph-sheet 0.22s var(--ease) both;
-  }
-  :root .pop.sites::before,
-  :root .pop.menu-pop::before,
-  :root .pop.sv-pop::before,
-  :root .pop.menu.more-menu::before {
-    content: '';
-    display: block;
-    flex: none;
-    width: 40px;
-    height: 5px;
-    margin: 4px auto 12px;
-    border-radius: 3px;
-    background: var(--border-2);
-  }
-  @keyframes ph-sheet {
-    from {
-      opacity: 0;
-      transform: translateY(24px);
-    }
-  }
-  :root .pop.menu button,
-  :root .pop .menu-row,
-  :root .pop .lrow {
-    min-height: var(--ph-sheet-row);
-    font-size: var(--ph-text);
-  }
-  :root .pop .lrow {
-    height: var(--ph-sheet-row);
-  }
-  :root .pop.menu svg,
-  :root .pop .menu-row svg,
-  :root .pop .lrow svg {
-    width: var(--ph-icon);
-    height: var(--ph-icon);
-  }
-  :root .pop.menu .menu-kbd {
-    display: none;
-  }
-
-  /* ---- Fields, segments, switches ----------------------------------------------
-     16 px in a field (a phone's browser zooms the page into anything smaller),
-     a finger-high box for every choice. */
-  :root input[type='text'],
-  :root input[type='email'],
-  :root input[type='search'],
-  :root input[type='password'],
-  :root input[type='url'],
-  :root input[type='number'],
-  :root textarea,
-  :root .input {
-    font-size: var(--ph-text);
-  }
-  :root .input,
-  :root .srow-ctl .input {
-    height: var(--ph-sheet-row);
-  }
-  :root .field {
-    font-size: var(--ph-text-2);
-  }
-  :root .seg button,
-  :root .seg.small button,
-  :root .lseg button {
-    min-width: var(--ph-hit);
-    height: var(--ph-hit);
-    font-size: var(--ph-text-2);
-  }
-  :root .lsearch {
-    height: var(--ph-sheet-row);
-  }
-  :root .lsearch input {
-    font-size: var(--ph-text);
-  }
-  :root .lopt {
-    min-height: var(--ph-sheet-row);
-    font-size: var(--ph-text-2);
-  }
-  :root .lopt > span:first-child {
-    width: 64px;
-  }
-  /* The switch draws its pill on a 44 px-high box. */
-  :root .switch {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 54px;
-    height: var(--ph-hit);
-    padding: 0 4px;
-    border: 0;
-    background: transparent;
-  }
-  :root .switch::before {
-    content: '';
-    position: absolute;
-    inset: 7px 0;
-    border: 1px solid var(--border-2);
-    border-radius: 999px;
-    background: var(--surface-2);
-    transition: background 0.15s, border-color 0.15s;
-  }
-  :root .switch.on {
-    background: transparent;
-  }
-  :root .switch.on::before {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-  }
-  :root .switch span {
-    position: relative;
-    width: 24px;
-    height: 24px;
-  }
-  :root .switch.on span {
-    transform: translateX(22px);
-  }
-  :root .tag {
-    font-size: 12px;
-  }
-  :root .chip {
-    font-size: var(--ph-text-2);
-  }
-  :root .info-dot {
-    width: var(--ph-hit);
-    height: var(--ph-hit);
-    margin: -13px;
-    border: 0;
-    background: none;
-    font-size: var(--ph-text-2);
-  }
-  :root .info-dot::before {
-    content: '';
-    position: absolute;
-    width: 22px;
-    height: 22px;
-    border: 1px solid var(--border-2);
-    border-radius: 50%;
-  }
-  :root .info-dot {
-    position: relative;
-    display: inline-grid;
-    place-items: center;
-  }
-  :root .kbd {
-    font-size: 12px;
-  }
-
-  /* ---- Settings rows ---------------------------------------------------------- */
-  :root .srow {
-    padding: 12px 0;
-    gap: 6px;
-  }
-  :root .srow-text {
-    font-size: var(--ph-text);
-  }
-  :root .srow-text .faint {
-    font-size: var(--ph-text-2);
-  }
-  :root .viewer-note,
-  :root .look-err {
-    font-size: var(--ph-text-2);
-  }
-
-  /* The picker's list (timezone, currency) and the Create list are placed by
-     the script with inline offsets, so their sheets say !important to take
-     them back. */
-  :root .pop.picker-pop.floating,
-  :root .pop.menu.create-menu.floating {
-    position: fixed;
-    inset: auto 0 0 0 !important;
-    top: auto !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0;
-    width: auto;
-    max-width: none;
-    max-height: 84dvh;
-    padding: 6px 10px max(14px, env(safe-area-inset-bottom));
-    border: 0;
-    border-radius: 20px 20px 0 0;
-    box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--bg) 55%, transparent), var(--shadow);
-    z-index: 130;
-    animation: ph-sheet 0.22s var(--ease) both;
-  }
-  :root .pop.picker-pop.floating::before,
-  :root .pop.menu.create-menu.floating::before {
-    content: '';
-    display: block;
-    flex: none;
-    width: 40px;
-    height: 5px;
-    margin: 4px auto 12px;
-    border-radius: 3px;
-    background: var(--border-2);
-  }
-  :root .picker-list {
-    max-height: 56dvh;
-  }
-  :root .picker-row {
-    min-height: var(--ph-sheet-row);
-    align-items: center;
-    padding: 6px 12px;
-    font-size: var(--ph-text);
-  }
-  :root .picker-row .faint {
-    font-size: var(--ph-small);
-  }
-  :root .picker-group {
-    font-size: 12px;
-  }
-  :root .btn.picker-btn {
-    height: var(--ph-hit);
-  }
-  :root .window-nav .tag {
-    font-size: 12px;
-  }
-  :root .lsearch input {
-    height: var(--ph-hit);
-  }
-
   /* The + on the crosshair: the same 22 px disc, drawn behind a 44 px box. */
-  :root .note-add {
+  .note-add {
     top: -15px;
     width: var(--ph-hit);
     height: var(--ph-hit);
@@ -725,7 +317,7 @@
     background: none;
     box-shadow: none;
   }
-  :root .note-add::before {
+  .note-add::before {
     content: '';
     position: absolute;
     inset: 11px;
@@ -735,63 +327,8 @@
     box-shadow: 0 2px 10px #0006;
     z-index: -1;
   }
-  :root .note-add:hover {
+  .note-add:hover {
     background: none;
-  }
-  /* Keys are for a keyboard: a phone does not show them. */
-  :root .speed-keys {
-    display: none;
-  }
-
-  /* ---- Finger boxes -------------------------------------------------------------
-     The small controls of the screens that load later: tabs, chips, links that
-     act, a disclosure, a slim field. Each gets a 44 px box (the drawn part is
-     the same as on a desktop, or a little larger where it is the control). */
-  :root :is(.inst-tab, .wg-tab, .pv-jump button, .code-bar button, .jr-chip, button.jr-path, .modal-close) {
-    min-height: var(--ph-hit);
-  }
-  :root .modal-close {
-    width: var(--ph-hit);
-    min-width: var(--ph-hit);
-  }
-  :root .code-bar button {
-    padding: 0 12px;
-    font-size: 12px;
-  }
-  :root :is(.inst-docs, .linkish, .eu-more summary) {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--ph-hit);
-  }
-  :root .eu-more summary {
-    display: flex;
-  }
-  :root .al-field input,
-  :root .notes-search input,
-  :root .request-find .input,
-  :root .al-rule .input.num {
-    min-height: var(--ph-hit);
-    font-size: var(--ph-text);
-  }
-  :root .al-rule .input.num {
-    width: 64px;
-  }
-  :root .wg-swatches {
-    gap: 0;
-    margin: -8px 0;
-  }
-  :root .wg-swatch {
-    width: var(--ph-hit);
-    height: var(--ph-hit);
-    padding: 9px;
-    border: 0;
-    background-clip: content-box;
-    box-shadow: none;
-  }
-  :root .wg-swatch[aria-checked='true'] {
-    outline: 2px solid var(--text);
-    outline-offset: -7px;
-    box-shadow: none;
   }
 }
 
@@ -800,15 +337,15 @@
   :root {
     --ph-ctl: 6px;
   }
-  :root .header.quiet > .brand {
+  .header.quiet > .brand {
     margin-right: -4px;
   }
-  :root .pill-dot,
-  :root .phone-pill > svg,
-  :root .header.quiet .site-zone .btn.site-btn > svg {
+  .pill-dot,
+  .phone-pill > svg,
+  .header.quiet .site-zone .btn.site-btn > svg {
     display: none;
   }
-  :root .phone-row .view-switch button {
+  .phone-row .view-switch button {
     padding: 0 9px;
   }
 }
@@ -817,8 +354,8 @@
    (which keeps at least twelve letters before it is cut): it moves into the
    site list, as its first row. */
 @media (max-width: 419px) {
-  :root .header.quiet .site-zone .btn.gear,
-  :root .header.quiet .site-zone .site-sep {
+  .header.quiet .site-zone .btn.gear,
+  .header.quiet .site-zone .site-sep {
     display: none;
   }
   :root .foot-settings {

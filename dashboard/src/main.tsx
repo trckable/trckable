@@ -9,7 +9,6 @@ import { api, setUnauthorizedHandler, type Site } from "./lib/api";
 import { navigate, useLocation } from "./lib/url";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
 import "./styles.css";
-import "./phone.css";
 import { SiteZone } from "./features/header/SiteZone";
 import { Dashboard } from "./views/Dashboard";
 import { applyTheme } from "./lib/theme";
@@ -35,6 +34,7 @@ import { ShortcutsHost } from "./components/ShortcutsHost";
 // A shared link is its own entry point: no setup, no sign-in, one site.
 const SharedSite = lazy(() => import("./views/SharedSite"));
 import { Toasts } from "./components/Toast";
+import "./phone.css"; // last: what it sets on a phone wins over the styles imported before it
 
 try {
   applyTheme(localStorage.getItem("trckable:theme") ?? "system");

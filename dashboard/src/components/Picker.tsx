@@ -5,6 +5,7 @@ import { Check, ChevronDown, Search } from 'lucide-react'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './Picker.css'
+import './sheet.css'
 
 export type PickItem = { id: string; label: string; group?: string; hint?: string }
 
