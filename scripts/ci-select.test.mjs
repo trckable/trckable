@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { outputs, select } from './ci-select.mjs'
+import { everything, outputs, select } from './ci-select.mjs'
 
 const out = (...files) => outputs(select(files))
 
@@ -77,4 +77,44 @@ test('anything unknown runs everything', () => {
 
 test('the release scripts are tested by the selection job itself', () => {
   assert.equal(out('scripts/release.mjs', 'scripts/ci-select.test.mjs').code, 'false')
+})
+
+const jobs = (o, key = 'browsers') => JSON.parse(o[key]).map((j) => `${j.name}:${j.specs}`)
+
+test('a pull request runs WebKit on the key specs and the changed ones, in one job', () => {
+  const o = out('dashboard/src/features/notes/N.tsx')
+  assert.deepEqual(jobs(o), [
+    'chromium:chart-hover notes',
+    'firefox:chart-hover notes',
+    'webkit:chart-hover cookieless install journey landing live methods notes onboarding switcher tracking',
+  ])
+  assert.deepEqual(jobs(o, 'demo_browsers'), ['chromium:all'])
+  // Every spec on the other two; the key specs only on WebKit.
+  const wide = out('dashboard/src/styles.css')
+  assert.deepEqual(jobs(wide).slice(0, 2), ['chromium:all', 'firefox:all'])
+  assert.equal(JSON.parse(wide.browsers)[2].specs, 'chart-hover cookieless install journey landing live methods onboarding switcher tracking')
+  assert.equal(wide.full, 'false')
+})
+
+test('main, a release and the nightly run put the whole suite on WebKit, in shards', () => {
+  const o = outputs(everything())
+  assert.equal(o.full, 'true')
+  assert.deepEqual(jobs(o), ['chromium:all', 'firefox:all', 'webkit 1/3:all', 'webkit 2/3:all', 'webkit 3/3:all'])
+  assert.deepEqual(jobs(o, 'demo_browsers'), ['chromium:all', 'firefox:all', 'webkit 1/2:all', 'webkit 2/2:all'])
+  assert.deepEqual(JSON.parse(o.browsers).filter((j) => j.browser === 'webkit').map((j) => j.shard), ['1/3', '2/3', '3/3'])
+})
+
+test('a version bump, or a file nothing knows, cannot skip the whole WebKit suite', () => {
+  for (const f of ['VERSION', 'CHANGELOG.md.new', 'dashboard/src/features/notes/N.tsx']) {
+    const o = out(f, 'VERSION')
+    assert.equal(o.full, 'true', f)
+    assert.ok(jobs(o).includes('webkit 1/3:all'), f)
+  }
+})
+
+test('nothing to run: the matrices still parse', () => {
+  const o = out('README.md')
+  assert.equal(o.e2e, '')
+  assert.equal(JSON.parse(o.browsers).length, 1)
+  assert.equal(JSON.parse(o.demo_browsers).length, 1)
 })

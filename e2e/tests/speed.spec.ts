@@ -44,7 +44,7 @@ test('first load stays small and the report stays fast', async ({ page, browserN
   })
   await page.reload()
   await expect(page.locator('.kpi .value.num').first()).toBeVisible()
-  await page.waitForLoadState('networkidle')
+  await page.waitForLoadState('networkidle', { timeout: 15_000 })
   expect(asked.length, asked.map((a) => a.path).join('\n')).toBeLessThanOrEqual(FIRST_LOAD_REQUESTS)
   // setup, me and sites leave together, not one after another.
   const boot = ['/api/v1/setup', '/api/v1/me', '/api/v1/sites'].map((p) => asked.find((a) => a.path === p)?.at ?? NaN)

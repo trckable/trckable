@@ -46,9 +46,11 @@ test.beforeAll(async ({ request }) => {
 async function open(page: Page, path: string) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(API + path)
-  // The live stream keeps some browsers from ever calling the network idle:
-  // a quiet half second is enough once the page has loaded.
-  await page.waitForLoadState('networkidle', { timeout: 8_000 }).catch(() => page.waitForTimeout(500))
+  // The live stream keeps some browsers from ever calling the network idle,
+  // and a wait for it can run to its limit on every page: a quiet half second
+  // is enough once the page has loaded.
+  await page.waitForLoadState('load')
+  await page.waitForTimeout(500)
 }
 
 // Words on a control that changes something. A viewer's page carries none.
@@ -110,7 +112,7 @@ test('the search finds an owner\'s controls', async ({ page }) => {
   const owner = await session('viewer')
   await page.context().addCookies([{ name: 'trckable_session', value: owner, url: API }])
   await page.goto(`${API}/settings?site=${site}&tab=modules`)
-  await page.waitForLoadState('networkidle')
+  await page.waitForLoadState('load') // not "networkidle": the live stream can keep it from ever coming
   // The switches arrive with the tab's data, after the network first goes
   // quiet in WebKit: ask again until they are there.
   const switches = async () => (await writeControls(page)).filter((c) => c.startsWith('switch: ')).length
