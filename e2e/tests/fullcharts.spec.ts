@@ -214,6 +214,7 @@ test('Create: A opens the menu, and a funnel lands in the address', async ({ pag
   const domain = await signIn(page)
   await page.goto(`${BASE}/${domain}`)
   await expect(page.locator('.overview-chart')).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('[data-card=who] [role=tab]').first()).toBeVisible({ timeout: 20_000 })
   await page.keyboard.press('a')
   const menu = page.getByRole('menu', { name: 'Create something' })
   await expect(menu).toBeVisible()

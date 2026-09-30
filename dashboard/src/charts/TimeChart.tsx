@@ -213,7 +213,7 @@ export function TimeChart(p: TimeChartProps) {
             <>
               {first > 0 && <line x1={x(0)} x2={x(Math.min(first, n - 1))} y1={PAD_T + plotH} y2={PAD_T + plotH} stroke="var(--text-4)" strokeWidth="1.5" strokeDasharray="0.1 5" strokeLinecap="round" />}
               <path d={area(vals, first)} fill={`url(#${gradId})`} />
-              <path className="chart-line" d={line(p.partialLast && n - first > 2 ? vals.slice(0, -1) : vals, first)} fill="none" stroke={tone} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+              <path className={money ? 'chart-line money' : 'chart-line'} d={line(p.partialLast && n - first > 2 ? vals.slice(0, -1) : vals, first)} fill="none" stroke={tone} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
               {p.partialLast && n - first > 2 && (
                 <path d={`M${x(n - 2).toFixed(1)} ${y(vals[n - 2]).toFixed(1)}L${x(n - 1).toFixed(1)} ${y(vals[n - 1]).toFixed(1)}`} fill="none" stroke={tone} strokeWidth="2" strokeDasharray="0.1 5.5" strokeLinecap="round" />
               )}
