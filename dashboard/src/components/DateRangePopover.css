@@ -15,37 +15,6 @@
   }
 }
 
-@media (max-width: 720px) {
-  /* A sheet, not a popover: the calendar needs the whole screen. */
-  .pop.sheet .presets {
-    width: auto;
-    flex-direction: row;
-    overflow-x: auto;
-    border-right: 0;
-    border-bottom: 1px solid var(--border);
-    max-height: none;
-    padding: 10px 12px;
-    gap: 6px;
-    position: sticky;
-    top: 0;
-    background: var(--surface);
-    z-index: 1;
-  }
-}
-
-@media (max-width: 720px) {
-  .pop.sheet .preset {
-    border: 1px solid var(--border);
-    white-space: nowrap;
-  }
-}
-
-@media (max-width: 720px) {
-  .pop.sheet .preset .kbd {
-    display: none;
-  }
-}
-
 .day:hover:not(:disabled):not(.edge) {
   background: color-mix(in srgb, var(--text) 10%, transparent);
 }
@@ -99,9 +68,6 @@
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
-  }
-  .range-pop .presets {
-    max-width: 100%;
   }
   .range-pop .pop-body {
     min-width: 0;

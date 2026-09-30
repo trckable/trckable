@@ -268,6 +268,9 @@ for (const width of [390, 360]) {
     await pill.click()
     const sheet = page.getByRole('dialog', { name: 'View options' })
     await expect(sheet).toBeVisible()
+    // Five quick periods; the Compare row says nothing while there is no comparison.
+    await expect(sheet.locator('.sheet-quick button')).toHaveCount(5)
+    await expect(sheet).not.toContainText(/no comparison/i)
     await sheet.getByRole('button', { name: '7d' }).click()
     await expect(sheet.getByRole('button', { name: '7d' })).toHaveAttribute('aria-pressed', 'true')
     await expect(sheet.locator('.chip')).toContainText('Channel is')
