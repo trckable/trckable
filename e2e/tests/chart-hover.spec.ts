@@ -258,13 +258,29 @@ test(`after Replay ends the ${name} chart is at rest and hovering still shows th
 })
 }
 
-// A replay paused part of the way leaves its day picked for the numbers, but
-// the chart itself is at rest, like one that ended.
-test('a paused Replay leaves the chart at rest', async ({ page }) => {
+// A replay paused part of the way leaves its day picked for the numbers, so
+// the chart still shows which day, quietly: a thin dashed line, a small dot,
+// half the grey. Hovering brings back the full crosshair.
+test('a paused Replay leaves a quiet marker on the picked day', async ({ page }) => {
   const chart = await openHistory(page)
   await page.getByRole('button', { name: /^Replay this period/ }).click()
   await expect(chart).toHaveAttribute('data-locked', 'true')
   await page.getByRole('button', { name: 'Pause replay' }).click()
   await expect(chart).not.toHaveAttribute('data-locked', 'true')
-  await atRest(chart)
+  await expect(chart).toHaveAttribute('data-quiet', 'true')
+  await expect(chart).toHaveAttribute('data-cut', 'on')
+  const style = (sel: string, prop: string) => chart.locator(sel).evaluate((el, p) => getComputedStyle(el).getPropertyValue(p), prop)
+  await expect.poll(() => style('.chart-cut', 'stroke-dasharray')).not.toBe('none')
+  expect(await style('.chart-cut', 'stroke-width')).toBe('1px')
+  expect(await style('.chart-cut', 'opacity')).toBe('0.6')
+  expect(await style('.chart-cut', 'visibility')).toBe('visible')
+  expect(await style('.chart-dim:not(.chart-unknown)', 'opacity')).toBe('0.5')
+  await expect(chart.locator('svg circle[r="4"]')).toHaveCount(1)
+  await expect(chart.locator('svg circle[r="6"]')).toHaveCount(0)
+  const box = (await chart.boundingBox())!
+  await page.mouse.move(box.x + box.width * 0.4, box.y + box.height / 2)
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2)
+  await expect(chart).not.toHaveAttribute('data-quiet', 'true')
+  await expect.poll(() => style('.chart-dim:not(.chart-unknown)', 'opacity')).toBe('1')
+  await expect(chart.locator('.cursor line')).toHaveCount(1)
 })

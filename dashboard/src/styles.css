@@ -702,6 +702,16 @@ button.kpi[aria-pressed='true'] {
   stroke-width: 1.5;
   pointer-events: none;
 }
+/* A day picked or paused (no pointer, drag or playback): the same cut, quiet. */
+.chart-wrap[data-quiet] .chart-cut {
+  stroke: var(--text-3);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.6;
+}
+.chart-wrap[data-quiet] .chart-dim {
+  opacity: 0.5;
+}
 .chart-wrap[data-cut='off'] .chart-dim,
 .chart-wrap[data-cut='off'] .chart-cut {
   opacity: 0;

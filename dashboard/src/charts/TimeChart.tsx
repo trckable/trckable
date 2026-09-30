@@ -113,14 +113,14 @@ export function TimeChart(p: TimeChartProps) {
   }
 
   const markers = useMemo(() => markersFor(p.notes ?? [], p.labels, p.bucket), [p.notes, p.labels, p.bucket])
-  const scrub = p.locked || drag ? (p.scrub ?? null) : null // a picked day shows only while dragged or played
+  const scrub = p.scrub ?? null
+  const quiet = !p.locked && !drag && hover == null // a picked day is drawn quietly unless hovered, dragged or played
   const { follow, release, onKey, marker, driven } = useCut({ ref, n, hover, scrub, locked: p.locked, vals, setHover, x, y })
-  const hi = hover ?? scrub
   const leave = () => { release(); setHover(null); setDrag(false) }
   // Beside the point when there is room, never past either edge: on a phone
   // the card is nearly as wide as the chart, and it used to leave the screen.
   const tipW = 244
-  const tipLeft = hi != null ? Math.max(0, Math.min(w - tipW, x(hi) > w - 270 ? x(hi) - 258 : x(hi) + 14)) : 0
+  const tipLeft = hover != null ? Math.max(0, Math.min(w - tipW, x(hover) > w - 270 ? x(hover) - 258 : x(hover) + 14)) : 0
   const gradId = 'g-area'
 
   return (
@@ -128,7 +128,7 @@ export function TimeChart(p: TimeChartProps) {
       ref={ref}
       className="chart-wrap"
       data-story={p.story || undefined}
-      data-locked={p.locked || undefined}
+      data-locked={p.locked || undefined} data-quiet={quiet || undefined}
       style={{ height: H }}
       onPointerMove={(e) => {
         if (!n || p.locked) return
@@ -234,7 +234,7 @@ export function TimeChart(p: TimeChartProps) {
             never lags the grey. The pointer's own cursor is CursorMark. */}
         {hover == null && <line className="chart-cut is-replay" x1={0} x2={0} y1={0} y2={PAD_T + plotH} />}
         {scrub != null && n > 1 && hover == null && (
-          <circle ref={marker} cx={0} cy={0} transform={driven ? undefined : `translate(${x(scrub)} ${y(vals[scrub] ?? 0)})`} r="6" fill="var(--accent)" stroke="var(--surface)" strokeWidth="3" />
+          <circle ref={marker} cx={0} cy={0} transform={driven ? undefined : `translate(${x(scrub)} ${y(vals[scrub] ?? 0)})`} r={quiet ? 4 : 6} fill="var(--accent)" stroke="var(--surface)" strokeWidth={quiet ? 2 : 3} />
         )}
         {hover != null && <CursorMark x={x(hover)} y={y(vals[hover] ?? 0)} top={0} bottom={PAD_T + plotH} />}
         {peak >= 0 && hover == null && scrub == null && !p.overlay && <PeakLabel x={x(peak)} y={y(vals[peak] ?? 0)} w={w} text={timeCopy.peak(fmtInt(p.values[peak]), bucketLabel(p.labels[peak], p.bucket))} padL={PAD_L} />}
