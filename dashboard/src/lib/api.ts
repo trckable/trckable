@@ -57,6 +57,8 @@ export interface Result {
   approximate: boolean
   kpis: KPIs
   series: Point[]
+  /** With ?channels=1: the visitors by channel, aligned with series (the chart's try-out). */
+  series_by_channel?: { channel: string; values: number[] }[]
   dims: Record<string, Row[] | null>
   goals: Row[] | null
   days?: Day[]
@@ -460,6 +462,8 @@ export interface ReportQuery {
   /** Also break down exit pages, regions and cities. Only Full shows them, so
    *  only Full asks — Core's scan stays the size it has always been. */
   deep?: boolean
+  /** Also split the chart's series by channel (the try-out's stacked model). */
+  channels?: boolean
 }
 
 export interface Filter {
@@ -525,6 +529,7 @@ export function reportURL(site: string, q: ReportQuery): string {
   if (q.bucket) p.set('bucket', q.bucket)
   if (q.daily) p.set('daily', '1')
   if (q.deep) p.set('deep', '1')
+  if (q.channels) p.set('channels', '1')
   if (q.testPayments) p.set('payments', 'test')
   if (q.attr) p.set('attr', q.attr)
   for (const f of q.filters ?? []) p.append('f', f.dim + ':' + f.value)

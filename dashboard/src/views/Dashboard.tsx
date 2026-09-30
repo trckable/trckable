@@ -31,6 +31,8 @@ import { replaySeconds, speedOf } from '../features/overview/replayTime'
 import { firstVisitAt, hourIn, hourlySpan, previousWhole } from '../features/overview/firstVisit'
 import { chartMetric, ghostValues, metricName, metricProps, metricValues, type ChartMetric } from '../features/overview/chartMetric'
 import { chartTips } from '../features/overview/chartTips'
+import { DIM_LABEL, PLACE_LABEL } from '../features/overview/dimLabels'
+import { modelProps } from '../features/overview/modelProps'
 import { LiveSlot } from '../features/live/liveChunk'
 import { OnlineKpi } from '../features/live/OnlineKpi'
 import { entryCopy } from '../features/live/entryCopy'
@@ -67,26 +69,6 @@ const NoteDialog = lazy(() => import('../components/NoteDialog').then((m) => ({ 
 const FullCharts = lazy(() => import('../features/fullcharts/FullCharts')) // Full mode's chart grid: its own chunk
 const JourneyDialog = lazy(() => import('../features/journey/JourneyDialog').then((m) => ({ default: m.JourneyDialog })))
 const ScrollDepth = lazy(() => import('./ScrollDepth').then((m) => ({ default: m.ScrollDepth }))) // Pages → Scroll: Full only
-
-const DIM_LABEL: Record<string, string> = {
-  channel: 'Channel',
-  referrer: 'Referrer',
-  campaign: 'Campaign',
-  entry_page: 'Entry page',
-  exit_page: 'Exit page',
-  page: 'Page',
-  group: 'Section',
-  country: 'Country',
-  device: 'Device',
-  browser: 'Browser',
-  os: 'OS',
-  goal: 'Goal',
-  utm_source: 'utm_source',
-  utm_medium: 'utm_medium',
-}
-
-// The Locations card's column heading.
-const PLACE_LABEL: Record<string, string> = { country: 'Country', region: 'Region', city: 'City' }
 
 /** A filter's value as people read it: a channel's or a country's name. */
 function filterLabel(dim: string, v: string) {
@@ -492,7 +474,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   }
   let chartScrub = scrubbing && !hours ? scrubIdx - fv : null
   if (hours) chartScrub = hourAt
-  const prevSeries = compareOn && !firstDay ? (hours ?? data)?.previous?.series : undefined
+  const chart = modelProps(metric, hours ? hours.current : cur, hours ? 0 : fv, chartSeries.length)
+  const prevSeries = (compareOn || chart.prev) && !firstDay ? (hours ?? data)?.previous?.series : undefined
   const ghost = ghostValues(metric, prevSeries)
   const overlay = trail && trailData && (metric === 'visitors' || metric === 'pageviews')
     ? { values: trailData.current.series.slice(fv).map((p) => p[metric]), color: channelColor(trail), name: channelLabel(trail) }
@@ -701,6 +684,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             story={telling}
             locked={playing}
             partialLast={live}
+            model={chart.model}
+            stack={chart.stack}
             {...metricProps(metric, money, revenue)}
             notes={notesOn ? notes : []}
             onAddNote={isShared() || isViewer() || !notesOn ? undefined : (day) => setNoteFor(day)}

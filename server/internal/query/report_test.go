@@ -202,6 +202,46 @@ func testFilters(t *testing.T, q Q) {
 	}
 }
 
+func TestSeriesByChannelAddsUpToTheVisitors(t *testing.T) { both(t, testSeriesByChannel) }
+
+func testSeriesByChannel(t *testing.T, q Q) {
+	p := Params{Site: "s1", From: time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC), To: time.Date(2026, 9, 12, 0, 0, 0, 0, time.UTC), ByChannel: true}
+	r, err := q.Report(context.Background(), p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string][]int64{}
+	for _, s := range r.SeriesByChannel {
+		got[s.Channel] = s.Values
+	}
+	// Sep 10: A (first visit Search, later Direct), B (AI), C (Search). Sep 11: D (Email).
+	want := map[string][]int64{"Search": {2, 0}, "AI": {1, 0}, "Email": {0, 1}}
+	if len(got) != len(want) {
+		t.Fatalf("channels = %v, want %v", got, want)
+	}
+	for ch, w := range want {
+		if len(got[ch]) != 2 || got[ch][0] != w[0] || got[ch][1] != w[1] {
+			t.Errorf("%s = %v, want %v", ch, got[ch], w)
+		}
+	}
+	if r.SeriesByChannel[0].Channel != "Search" {
+		t.Errorf("the biggest channel comes first, got %s", r.SeriesByChannel[0].Channel)
+	}
+	for i, pt := range r.Series {
+		var sum int64
+		for _, s := range r.SeriesByChannel {
+			sum += s.Values[i]
+		}
+		if sum != pt.Visitors {
+			t.Errorf("bucket %s: channels add up to %d, visitors %d", pt.T, sum, pt.Visitors)
+		}
+	}
+	p.ByChannel = false
+	if r, _ = q.Report(context.Background(), p); r.SeriesByChannel != nil {
+		t.Error("the split is only computed when asked for")
+	}
+}
+
 func TestTimezoneAndDaily(t *testing.T) { both(t, testDaily) }
 
 func testDaily(t *testing.T, q Q) {

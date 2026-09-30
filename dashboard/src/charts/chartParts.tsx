@@ -8,6 +8,7 @@ import { lazyLoad, whenIdle } from '../lib/lazyLoad'
 const Tip = lazyLoad(() => import('./TimeTip'))
 const Markers = lazyLoad(() => import('../features/notes/NoteMarkers').then((m) => ({ default: m.NoteMarkers })))
 const Plot = lazyLoad(() => import('./MoneyPlots').then((m) => ({ default: m.RevenuePlot })))
+const Model = lazyLoad(() => import('./models/ModelLayer'))
 const Cols = lazyLoad(() => import('./MoneyPlots').then((m) => ({ default: m.MainColumns })))
 
 whenIdle(() => {
@@ -38,6 +39,17 @@ export function ColumnsLayer(p: ComponentProps<typeof Cols>) {
   return (
     <Suspense fallback={null}>
       <Cols {...p} />
+    </Suspense>
+  )
+}
+
+/** The try-out's drawings of the line: one chunk, fetched as soon as a model is asked for. */
+export const preloadModels = () => Model.preload()
+
+export function ModelLayer(p: ComponentProps<typeof Model>) {
+  return (
+    <Suspense fallback={null}>
+      <Model {...p} />
     </Suspense>
   )
 }

@@ -1,13 +1,12 @@
 {
-  "literals": 439,
+  "literals": 438,
   "components": {
-    "src/charts/TimeChart.tsx": 273,
     "src/main.tsx": 296,
     "src/views/Account.tsx": 369,
     "src/views/Alerts.tsx": 295,
     "src/views/AllSites.tsx": 369,
     "src/views/Auth.tsx": 302,
-    "src/views/Dashboard.tsx": 1143,
+    "src/views/Dashboard.tsx": 1128,
     "src/views/Health.tsx": 293,
     "src/views/Payments.tsx": 691,
     "src/views/Privacy.tsx": 750,

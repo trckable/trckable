@@ -4,6 +4,7 @@
 import { cachedReport, type ReportQuery, type Site } from './api'
 import { calendarPrevious, diffDays, presetById, setWeekStart, todayIn, weekStartsOn, type Range } from './dates'
 import { readView, type ViewState } from './url'
+import { chartModel } from './tryout'
 
 export function rangeOf(view: ViewState, today: string): Range {
   if (view.period === 'custom' && view.from && view.to) return { from: view.from, to: view.to > today ? today : view.to }
@@ -31,6 +32,7 @@ export function queryOf(view: ViewState, range: Range): ReportQuery {
     bucket: view.bucket,
     attr: view.attr,
     deep: view.mode === 'full',
+    channels: chartModel() === 'D' || undefined,
   }
 }
 
