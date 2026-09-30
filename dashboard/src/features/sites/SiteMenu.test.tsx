@@ -31,6 +31,17 @@ describe('the switcher list', () => {
     expect(await menu(7)).toContain('type="search"')
   })
 
+  it('sets its density by the count: roomy to three sites, middle to six, compact beyond', async () => {
+    expect(await menu(1)).toContain('class="pop sites roomy"')
+    expect(await menu(3)).toContain('class="pop sites roomy"')
+    expect(await menu(4)).toContain('class="pop sites mid"')
+    expect(await menu(6)).toContain('class="pop sites mid"')
+    expect(await menu(7)).toContain('class="pop sites compact"')
+    expect(await menu(3)).toContain('width:22px')
+    expect(await menu(5)).toContain('width:20px')
+    expect(await menu(9)).toContain('width:18px')
+  })
+
   it('numbers the first nine sites for the 1–9 keys and marks the one you are on', async () => {
     const html = await menu(10)
     expect(html.match(/class="site-key"/g)).toHaveLength(9)

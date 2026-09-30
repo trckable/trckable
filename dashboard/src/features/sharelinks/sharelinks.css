@@ -1,0 +1,540 @@
+/* Settings → Sharing (views/Shares.tsx): loaded with it, not with the first load. */
+.sl-card {
+  gap: 12px;
+  container-type: inline-size;
+}
+.sl-new-btn {
+  margin-left: auto;
+}
+.sl-card .btn.small {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+.sl-card .btn.danger {
+  background: var(--down);
+  border-color: transparent;
+  color: #0b0d10;
+  font-weight: 600;
+}
+.sl-err {
+  color: var(--down);
+  font-size: 13px;
+}
+.sl-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---- empty ---- */
+.sl-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 14px;
+  border: 1px dashed var(--border-2);
+  border-radius: 12px;
+  color: var(--text-2);
+}
+.sl-empty .btn {
+  margin-left: auto;
+}
+
+/* ---- new link: the form, and a picture of the result ---- */
+.sl-new {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--sunken);
+}
+.sl-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.sl-access button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 38px;
+}
+.sl-opts {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.sl-opt {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 8px 12px;
+  min-height: 48px;
+}
+.sl-opt + .sl-opt {
+  border-top: 1px solid var(--grid);
+}
+.sl-opt-icon {
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+}
+.sl-opt-label {
+  font-size: 14px;
+}
+.sl-opt-control {
+  display: flex;
+  justify-content: flex-end;
+}
+.sl-opt-below {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 0 6px;
+}
+.sl-opt-below .input {
+  height: 38px;
+}
+.sl-date {
+  max-width: 200px;
+  align-self: flex-end;
+}
+.sl-card input[aria-invalid='true'] {
+  border-color: var(--down);
+}
+
+/* ---- the thumbnail ---- */
+.sl-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.sl-preview-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.sl-lock {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-2);
+}
+.sl-lock[aria-pressed='true'] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text);
+}
+.sl-frame {
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg);
+  min-height: 250px;
+  font-size: 10px;
+  color: var(--text-2);
+}
+.sl-chrome {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 9px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.sl-chrome i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border-2);
+}
+.sl-chrome span {
+  flex: 1;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--sunken);
+  font-family: var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sl-page {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 9px;
+}
+.sl-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.sl-top b {
+  min-width: 0;
+  color: var(--text);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sl-ends {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  white-space: nowrap;
+}
+.sl-range {
+  flex: none;
+  white-space: nowrap;
+  margin-left: auto;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.sl-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+.sl-tiles.four {
+  grid-template-columns: repeat(4, 1fr);
+}
+.sl-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  min-width: 0;
+}
+.sl-tile b {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.sl-tile b.money,
+.sl-panel i.money,
+.sl-bar {
+  color: var(--money);
+}
+.sl-chart {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+.sl-line {
+  stroke: var(--accent);
+  stroke-width: 1.6;
+}
+.sl-area {
+  fill: var(--accent-soft);
+}
+.sl-bar {
+  fill: currentColor;
+  opacity: 0.75;
+}
+.sl-note line {
+  stroke: var(--ch-7);
+  stroke-dasharray: 2 2;
+  stroke-width: 1;
+}
+.sl-note circle {
+  fill: var(--ch-7);
+}
+.sl-panels {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 5px;
+}
+.sl-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+.sl-panel i {
+  display: block;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--accent-soft);
+}
+.sl-panel i.money {
+  background: currentColor;
+  opacity: 0.35;
+}
+.sl-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 210px;
+}
+.sl-locked b {
+  color: var(--text);
+  font-size: 12px;
+}
+.sl-fake {
+  width: 60%;
+  padding: 6px 8px;
+  border: 1px solid var(--border-2);
+  border-radius: 6px;
+  background: var(--surface);
+  letter-spacing: 2px;
+}
+
+/* ---- just created ---- */
+.sl-created {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  background: var(--sunken);
+}
+.sl-created-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sl-check {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.sl-once {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.sl-url-row {
+  display: flex;
+  gap: 8px;
+}
+.sl-url {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+}
+.sl-qr {
+  width: 132px;
+  height: 132px;
+  border-radius: 8px;
+}
+.sl-embed {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+}
+.sl-code {
+  align-self: stretch;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---- the list ---- */
+.sl-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.sl-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 6px 12px;
+}
+.sl-row + .sl-row {
+  border-top: 1px solid var(--grid);
+}
+.sl-row:hover {
+  background: var(--surface-2);
+}
+.sl-kind {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+.sl-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sl-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.sl-flag {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-4);
+}
+.sl-flag.on {
+  color: var(--text);
+}
+.sl-flag.on:has(svg.lucide-circle-dollar-sign) {
+  color: var(--money);
+}
+button.sl-flag:hover {
+  background: var(--border);
+}
+.sl-views,
+.sl-ends-col {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 56px;
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.sl-ends-col {
+  min-width: 68px;
+}
+.sl-ends-col.past {
+  color: var(--down);
+}
+.sl-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-3);
+}
+.sl-icon.danger:hover {
+  background: var(--border);
+  color: var(--down);
+}
+.sl-ask {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.sl-card :is(button, a, input, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The card, not the screen, decides: Settings is a dialog with a side list. */
+@container (max-width: 640px) {
+  .sl-new {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 12px;
+  }
+  .sl-opt {
+    gap: 4px 8px;
+    padding: 8px 10px;
+  }
+  .sl-opt .seg.small button {
+    padding: 0 7px;
+  }
+  .sl-row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    grid-template-areas: 'kind name act' '. meta meta';
+    gap: 2px 10px;
+    padding: 8px 12px;
+  }
+  .sl-kind {
+    grid-area: kind;
+  }
+  .sl-name {
+    grid-area: name;
+  }
+  .sl-meta {
+    grid-area: meta;
+    gap: 6px;
+  }
+  .sl-views,
+  .sl-ends-col {
+    min-width: 0;
+    margin-left: 6px;
+  }
+  .sl-row > :last-child:not(.sl-meta) {
+    grid-area: act;
+  }
+  .sl-row > .sl-ask {
+    grid-area: meta;
+    flex-wrap: wrap;
+  }
+  .sl-row:has(.sl-ask) .sl-meta {
+    display: none;
+  }
+  .sl-url-row {
+    flex-wrap: wrap;
+  }
+  .sl-url {
+    flex-basis: 100%;
+  }
+}

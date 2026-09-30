@@ -42,7 +42,8 @@ export interface TimeChartProps {
   detail?: (i: number) => {
     /** Split bars: how the bucket divides. tone colours the filled part, fmt writes the numbers. */
     splits?: { a: number; b: number; aLabel: string; bLabel: string; tone?: string; fmt?: (v: number) => string }[]
-    rows?: { label: string; value: string; faint?: boolean }[]
+    /** short: the label on a phone's compact card. */
+    rows?: { label: string; value: string; faint?: boolean; short?: string }[]
   } | null
   /** Notes pinned to days: a launch, a post, an outage. */
   notes?: Annotation[]
@@ -116,7 +117,8 @@ export function TimeChart(p: TimeChartProps) {
   const leave = () => { release(); setHover(null); setDrag(false) }
   // Beside the point when there is room, never past either edge: on a phone
   // the card is nearly as wide as the chart, and it used to leave the screen.
-  const tipW = 244
+  const compact = w < 600 // a phone: a slim card that covers little of the plot
+  const tipW = compact ? 160 : 244
   const tipAt = hover != null ? tipLeft(x(hover), w, tipW) : 0
   const gradId = 'g-area'
 
@@ -243,7 +245,7 @@ export function TimeChart(p: TimeChartProps) {
       </svg>
       {/* Notes sit on the axis: a flag per day, its words on hover. */}
       <NoteMarkers markers={markers} x={x} top={PAD_T + plotH} width={w} />
-      {hover != null && n > 0 && <TimeTip p={p} i={hover} left={tipAt} notes={markers.find((m) => m.i === hover)?.notes ?? []} />}
+      {hover != null && n > 0 && <TimeTip p={p} i={hover} left={tipAt} width={tipW} compact={compact} notes={markers.find((m) => m.i === hover)?.notes ?? []} />}
       {/* Add a note to the day under the cursor, without hunting for a
           button: it sits at the top of the crosshair, beside the tooltip,
           so moving up to it keeps the same day. */}

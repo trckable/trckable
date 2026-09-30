@@ -96,11 +96,6 @@
   color: var(--accent);
 }
 
-.filter-pop {
-  top: 48px;
-  right: 0;
-}
-
 .menu-back {
   display: grid;
   place-items: center;

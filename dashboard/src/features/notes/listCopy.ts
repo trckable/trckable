@@ -31,14 +31,6 @@ export const copy = {
   removed: 'Note deleted',
   close: 'Close',
 
-  // Settings and share links.
+  // Settings.
   tab: 'Notes',
-  shareLabel: 'Notes on the chart',
-  shareOn: 'The chart shows your notes (the day and the words, never who wrote them).',
-  shareOff: 'Notes stay private: the server leaves them out of the link.',
-  shareTag: 'notes',
-  shareShow: 'Show notes',
-  shareHide: 'Hide notes',
-  shareShown: 'This link shows the notes now',
-  shareHidden: 'This link hides the notes now',
 }

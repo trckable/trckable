@@ -5,11 +5,13 @@ import { fmtInt } from '../lib/format'
 import { timeCopy } from './copy'
 import type { TimeChartProps } from './TimeChart'
 import { bucketLabel } from './timeScale'
+import { CompactTip } from './TimeTipCompact'
 import './TimeTip.css'
 import './Tip.css'
 
-export default function TimeTip({ p, i, left, notes }: { p: TimeChartProps; i: number; left: number; notes: Annotation[] }) {
+export default function TimeTip({ p, i, left, width, compact, notes }: { p: TimeChartProps; i: number; left: number; width: number; compact: boolean; notes: Annotation[] }) {
   const detail = p.detail?.(i) ?? null
+  if (compact) return <CompactTip p={p} i={i} left={left} width={width} detail={detail} notes={notes} />
   return (
     <div className="chart-tip time-tip" style={{ left }}>
       <div className="ct-head">

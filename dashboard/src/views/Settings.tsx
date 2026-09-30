@@ -1,4 +1,4 @@
-import { Activity, Bell, Blocks, Check, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, RefreshCw, Search, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert } from 'lucide-react'
+import { Activity, Bell, Blocks, Check, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, LayoutTemplate, RefreshCw, Search, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { isViewer } from '../lib/me'
 import { api, messageOf, siteState, type InstallCheck, type Site, type SiteState } from '../lib/api'
@@ -41,6 +41,7 @@ const TABS: { id: TabID; label: string; icon: typeof Cog }[] = [
   { id: 'install', label: 'Install', icon: Code },
   { id: 'modules', label: 'Modules', icon: Blocks },
   { id: 'sharing', label: 'Sharing', icon: Share2 },
+  { id: 'widgets', label: 'Widgets', icon: LayoutTemplate },
   { id: 'notes', label: 'Notes', icon: StickyNote },
   { id: 'payments', label: 'Payments', icon: CreditCard },
   { id: 'search', label: 'Search Console', icon: Search },
@@ -93,7 +94,7 @@ function ModuleOff({ site, tab, onOn }: { site: Site; tab: TabID; onOn: () => vo
 
 // The dialog's menu, grouped the way an owner looks for things.
 const GROUPS: { name: string; tabs: TabID[] }[] = [
-  { name: 'This site', tabs: ['site', 'install', 'modules', 'sharing', 'notes'] },
+  { name: 'This site', tabs: ['site', 'install', 'modules', 'sharing', 'widgets', 'notes'] },
   { name: 'Money', tabs: ['payments'] },
   { name: 'Data', tabs: ['search', 'privacy', 'alerts'] },
   { name: 'Instance', tabs: ['health'] },
@@ -149,12 +150,9 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
           {!isViewer() && <DangerZone site={site} onSites={onSites} />}
         </>
       )}
-      {tab === 'sharing' && (
-        <>
-          <Shares key={'sh' + site.id} site={site} />
-          <Locked><WidgetsSettings key={'wg' + site.id} site={site} /></Locked>
-        </>
-      )}
+      {tab === 'sharing' && <Shares key={'sh' + site.id} site={site} />}
+      {/* Widgets go on your own pages, so they are their own section, not a kind of share. */}
+      {tab === 'widgets' && <Locked><WidgetsSettings key={'wg' + site.id} site={site} /></Locked>}
       {tab === 'install' && <InstallSection site={site} />}
       {tab === 'notes' && <><NotesSettings key={'n' + site.id} site={site} /><MilestonesSetting key={'ms' + site.id} site={site} /></>}
       {tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}

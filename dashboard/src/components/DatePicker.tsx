@@ -4,7 +4,8 @@
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef } from 'react'
 import { copy } from '../features/header/copy'
-import { closer, focusOpener, periodMenu, toggler } from './panelOpen'
+import { closer, compareMenu, focusOpener, periodMenu, toggler } from './panelOpen'
+import { CompareControl } from './CompareMenu'
 import { pressed, useKeymap } from '../lib/keys'
 import type { Bucket } from '../lib/api'
 import {
@@ -68,7 +69,6 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
   const cmp = compareRange(value.range, value.compare, value.compareCustom, value.period)
   const presetLabel = PRESETS.find((p) => p.id === value.period)?.label
   const label = periodLabel(value, today)
-  const words = compareWords(value)
   const calendar = <Calendar size={15} strokeWidth={1.75} className="range-icon" aria-hidden="true" />
 
   // Global shortcuts: t/y/7/3/9/w/m/1 pick presets, ← → shift the period, c toggles compare.
@@ -123,6 +123,7 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
           focusOpener()
           onChange(v)
         }}
+        onChange={onChange}
       />
     </Suspense>
   )
@@ -146,7 +147,10 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
         className="btn range"
         aria-haspopup="dialog"
         aria-expanded={open}
-        onClick={toggler(periodMenu.set, open)}
+        onClick={(e) => {
+          compareMenu.set(false)
+          toggler(periodMenu.set, open)(e)
+        }}
       >
         <span className="range-line">
           {calendar}
@@ -166,16 +170,7 @@ export function DatePicker({ value, today, onChange, short, tz, bucket, autoBuck
       >
         <Chevron dir="right" />
       </button>
-      <span className="ctl-div ctl-cmp" />
-      <button
-        type="button"
-        className="btn ghost compare ctl-cmp"
-        aria-expanded={open}
-        onClick={toggler(periodMenu.set, open)}
-      >
-        {words}
-        <Chevron dir="down" />
-      </button>
+      <CompareControl value={value} onChange={onChange} />
       {popover}
     </div>
   )

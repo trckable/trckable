@@ -1,4 +1,3 @@
-import { Settings as Cog } from "lucide-react";
 import { StrictMode, Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { loadKeymap } from "./lib/keys";
 import { createRoot } from "react-dom/client";
@@ -10,7 +9,7 @@ import { api, setUnauthorizedHandler, type Site } from "./lib/api";
 import { navigate, useLocation } from "./lib/url";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
 import "./styles.css";
-import { SitePicker } from "./components/SitePicker";
+import { SiteZone } from "./features/header/SiteZone";
 import { Dashboard } from "./views/Dashboard";
 import { applyTheme } from "./lib/theme";
 import { openAddSite, useAccountTab, useAddSite } from "./lib/account";
@@ -19,7 +18,7 @@ import { siteForSegment } from "./lib/siteRoute";
 import { landing, namesSite } from "./lib/landing";
 import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
-import { canChange, setRole } from "./lib/me";
+import { setRole } from "./lib/me";
 import { NoneShared, useGate } from "./features/onboarding/Gate";
 // Settings and the account dialog are their own screens: the dashboard should
 // not carry them.
@@ -272,28 +271,8 @@ function Header({
         </button>
       )}
 
-      {/* One control, two actions: which site, and that site's settings. They
-          were two separate buttons sitting next to each other, which read as
-          two unrelated things rather than one subject. */}
-      {sites.length > 0 && (
-        <div className="site-zone">
-          <SitePicker sites={sites} current={current} all={all} />
-          {current && canChange() && (
-        <button
-          type="button"
-          className="btn icon ghost gear"
-          aria-label={`Settings for ${current.domain}`}
-          title={`Settings for ${current.domain}`}
-          onClick={() => openSettings(current)}
-        >
-          {/* A cog, with teeth. It used to be a circle with rays, which is a
-              sun — so the one button that opens a site's settings looked like
-              a light/dark switch. */}
-          <Cog size={19} strokeWidth={1.75} color="var(--text-2)" aria-hidden="true" />
-        </button>
-          )}
-        </div>
-      )}
+      {/* One control, two actions: which site, and that site's settings. */}
+      {sites.length > 0 && <SiteZone sites={sites} current={current} all={all} />}
     </>
   );
 }

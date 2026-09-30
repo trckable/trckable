@@ -16,6 +16,6 @@ export function miniStore<T>(first: T) {
       value = next
       subs.forEach((f) => f())
     },
-    use: () => useSyncExternalStore(subscribe, () => value),
+    use: () => useSyncExternalStore(subscribe, () => value, () => value),
   }
 }

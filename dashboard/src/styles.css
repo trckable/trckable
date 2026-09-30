@@ -26,6 +26,8 @@
   --down: #ff6b6b;
   --warn: #e8a93a;
   --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  /* The popovers' own: a hairline of contact and a wide soft fall. */
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px -6px rgba(0, 0, 0, 0.45);
   /* The code view has colours of its own: the chart palette is chosen for
      fills, and as text on a pale background it does not have the contrast.
      Every one of these is checked against its own theme's code background. */
@@ -73,6 +75,7 @@
     --down: #c62828;
     --warn: #845200;
     --shadow: 0 12px 32px rgba(20, 24, 30, 0.12);
+    --shadow-soft: 0 1px 2px rgba(20, 24, 30, 0.06), 0 8px 24px -8px rgba(20, 24, 30, 0.14);
     --code-com: #5c6470;
     --code-str: #8a4f00;
     --code-tag: #a3341a;
@@ -111,6 +114,7 @@
   --down: #c62828;
   --warn: #845200;
   --shadow: 0 12px 32px rgba(20, 24, 30, 0.12);
+  --shadow-soft: 0 1px 2px rgba(20, 24, 30, 0.06), 0 8px 24px -8px rgba(20, 24, 30, 0.14);
   --code-com: #5c6470;
   --code-str: #8a4f00;
   --code-tag: #a3341a;
@@ -837,13 +841,11 @@ input[type='range']::-moz-range-thumb {
 .pop {
   position: absolute;
   z-index: 20;
-  /* Every dropdown has the dialogs' soft light in its top corner. */
-  background:
-    radial-gradient(300px 120px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
-    var(--surface);
-  border: 1px solid var(--border-2);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
+  /* Hairline border, flat surface, a soft fall: the dropdowns stay light. */
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
   animation: rise 0.18s var(--ease) backwards;
 }
 .rise {
@@ -988,28 +990,6 @@ table.t td {
 }
 
 /* ---- date range picker ---- */
-.preset {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 3px 10px;
-  white-space: nowrap;
-  font-size: 12px;
-  min-height: 26px;
-}
-.preset:hover {
-  border-color: var(--border-2);
-}
-.preset[aria-selected='true'] {
-  border-color: var(--accent);
-}
-.preset .kbd {
-  font-size: 10px;
-  padding: 1px 5px;
-}
-
 .months {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1806,14 +1786,6 @@ ul.people button:hover {
   order: 2;
 }
 
-@media (max-width: 640px) {
-  /* One row means one menu: the account lives in the ⋯ menu, and so does the
-     site's settings — the row has space for the site, the period and ⋯. */
-  .header > .gear {
-    display: none;
-  }
-}
-
 /* A popup that lives on the page body, above dialogs and scrolling cards. */
 .pop.menu.floating,
 .pop.picker-pop.floating {
@@ -2034,41 +2006,6 @@ body[data-mode] .card.overview {
   body[data-mode='full'] .grid4 {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
-}
-.periods {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  width: 100%;
-  animation: rise 0.16s var(--ease) backwards;
-}
-.period {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 10px;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--text-2);
-  font: inherit;
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-}
-.period:hover {
-  background: var(--sunken);
-  color: var(--text);
-}
-.period.on {
-  border-color: var(--accent);
-  color: var(--text);
-}
-.period .kbd {
-  margin-left: auto;
-  font-size: 10px;
-  padding: 1px 5px;
 }
 .keyrow {
   display: flex;
@@ -2342,12 +2279,6 @@ button.kpi-live:hover .label::after {
 .site-zone .btn.site-btn:hover,
 .site-zone .btn.gear:hover {
   background: var(--surface-2);
-}
-.site-zone .btn.gear {
-  width: 42px;
-  height: 44px;
-  border-left: 1px solid var(--border);
-  border-radius: 0 11px 11px 0;
 }
 .site-zone:focus-within {
   border-color: var(--border-2);

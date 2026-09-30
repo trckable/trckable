@@ -1,10 +1,14 @@
-// Whether the period's popover, the Filter menu and the saved views' list are open. Stores, so a
+// Whether the period's popover, the comparison menu, the Filter menu and the saved views' list are open. Stores, so a
 // phone's sheet and ⋯ can hand over to them once they have closed themselves.
 import { miniStore } from '../lib/miniStore'
 
 export const periodMenu = miniStore(false)
 export const filterMenu = miniStore(false)
 export const savedViews = miniStore(false)
+/** The comparison's small menu (its own button in the period's row). */
+export const compareMenu = miniStore(false)
+/** Where the period's popover opens: on its list, or on the calendar for the comparison's own dates. */
+export const periodStart = miniStore<'periods' | 'compare'>('periods')
 
 // Where focus goes when the panel that is open closes: the control that opened
 // it, named by whoever opened it (a browser may not focus a button on a click,

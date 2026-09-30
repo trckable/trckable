@@ -5,7 +5,6 @@ export const copy = {
   views: 'Views',
   refresh: 'Refresh',
   create: 'Create…',
-  settings: 'Site settings',
   core: 'Core view',
   full: 'Full view',
   export: 'Export as CSV',

@@ -4,6 +4,8 @@
 import { miniStore } from '../../lib/miniStore'
 
 const KEY = 'trckable:row-collapsed'
+/** How long the row's width takes to run (ControlRow.css), plus a breath. */
+const MOVING_MS = 400
 
 function read() {
   try {
@@ -16,8 +18,17 @@ function read() {
 const folded = miniStore(read())
 export const useRowCollapsed = folded.use
 
+// True while the width runs: the row clips its content only then, so the
+// menus that hang under it are never cut off.
+const moving = miniStore(false)
+export const useRowMoving = moving.use
+let settle = 0
+
 export function toggleRowCollapsed() {
   folded.set(!folded.get())
+  moving.set(true)
+  clearTimeout(settle)
+  settle = window.setTimeout(() => moving.set(false), MOVING_MS)
   try {
     localStorage.setItem(KEY, folded.get() ? '1' : '0')
   } catch {

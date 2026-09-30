@@ -1,14 +1,17 @@
-// The date picker's first step: the periods in one even grid, the comparison
-// and the chart's detail under them, and the way on to custom dates.
-import { Check, Clock3 } from 'lucide-react'
-import { useId } from 'react'
-import { Switch } from './Switch'
+// The date picker's first step: five periods as a plain list, and More, which
+// opens the rest in place with the comparison, the chart's detail and the way
+// on to custom dates. Key hints show when a row is pointed at.
+import { Check, ChevronDown } from 'lucide-react'
+import { useState } from 'react'
 import { caps, keyFor } from '../lib/keys'
 import type { Bucket } from '../lib/api'
-import { VISIBLE_PRESETS, diffDays, fmtDay, fmtRange, type ISODate, type Preset, type Range } from '../lib/dates'
+import { PRESETS, diffDays, fmtRange, type CompareMode, type ISODate, type Preset } from '../lib/dates'
 import { CalendarIcon, type PickerValue } from './DatePicker'
-import { BUCKET_LABEL, PERIOD_GROUPS, periodsCopy as t } from './dateRangeCopy'
+import { BUCKET_LABEL, CMP_LABEL, PERIODS_FIRST, PERIODS_MORE, periodsCopy as t } from './dateRangeCopy'
+import './ListPop.css'
 import './DateRangePeriods.css'
+
+const COMPARES: CompareMode[] = ['previous', 'year', 'custom']
 
 /** Which granularities make sense for a period this long (undefined = auto). */
 function bucketsFor(days: number): (Bucket | undefined)[] {
@@ -20,124 +23,94 @@ function bucketsFor(days: number): (Bucket | undefined)[] {
   return out.length > 2 ? out : []
 }
 
-/** The row's last column: the tick when chosen, else its key, else nothing,
- *  in a slot of the same width either way so every label lines up. */
-function PeriodEnd({ preset, on }: { preset: Preset; on: boolean }) {
-  if (on) return <Check size={14} strokeWidth={2.25} className="period-end period-check" aria-hidden="true" />
-  if (!preset.key) return <span className="period-end" aria-hidden="true" />
+const byId = (ids: string[]) => ids.flatMap((id) => PRESETS.filter((p) => p.id === id))
+
+function Row({ p, on, onPick }: { p: Preset; on: boolean; onPick: () => void }) {
   return (
-    <span className="period-end period-key" aria-hidden="true">
-      {caps(keyFor('period.' + preset.id)).join('')}
-    </span>
+    <button type="button" className={on ? 'lrow on' : 'lrow'} aria-pressed={on} data-initial={on || undefined} onClick={onPick}>
+      <span>{p.label}</span>
+      {p.id === 'now' && <span className="pulse" aria-hidden="true" />}
+      <span className="end" aria-hidden="true">
+        {on && <Check size={14} strokeWidth={2.25} className="ok" />}
+        {!on && p.key && <span className="k">{caps(keyFor('period.' + p.id)).join('')}</span>}
+      </span>
+    </button>
   )
 }
 
 export function Periods({
-  draft,
   value,
   today,
   tz,
   bucket,
   autoBucket,
-  compareRange,
-  onDraft,
   onBucket,
-  onApply,
+  onPeriod,
+  onCompare,
   onCustom,
 }: {
-  draft: PickerValue
   value: PickerValue
   today: ISODate
   tz?: string
   bucket?: Bucket
   autoBucket?: string
-  compareRange: Range | null
-  onDraft: (f: (d: PickerValue) => PickerValue) => void
   onBucket?: (b?: Bucket) => void
-  onApply: (v: PickerValue) => void
+  onPeriod: (p: Preset) => void
+  onCompare: (m: CompareMode) => void
   onCustom: () => void
 }) {
-  const compareId = useId()
-  const comparing = draft.compare !== 'none'
+  // Open from the start when what is chosen lives under More.
+  const [more, setMore] = useState(PERIODS_MORE.includes(value.period) || value.compare === 'custom')
   const bucketName = (b: Bucket | undefined) => {
     if (b) return BUCKET_LABEL[b]
     if (!bucket && autoBucket) return t.autoWith(BUCKET_LABEL[autoBucket as Bucket].toLowerCase())
     return t.auto
   }
-  const compareNote = () => {
-    if (comparing && compareRange) return fmtRange(compareRange, today)
-    return t.compareHint
-  }
-  const presets = VISIBLE_PRESETS()
-
+  const row = (p: Preset) => <Row key={p.id} p={p} on={value.period === p.id} onPick={() => onPeriod(p)} />
+  const buckets = onBucket ? bucketsFor(diffDays(value.range.from, value.range.to) + 1) : []
   return (
-    <div className="periods" role="listbox" aria-label={t.panelLabel}>
-      <div className="periods-head">
-        <Clock3 size={14} strokeWidth={1.75} aria-hidden="true" />
-        <span className="num">{new Date().toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZone: tz })}</span>
-        <span className="faint">{fmtDay(today, { weekday: true })}</span>
-        {tz && <span className="tz">{tz.split('/').pop()?.replace(/_/g, ' ')}</span>}
-      </div>
-      {PERIOD_GROUPS.map((g) => (
-        <div key={g.name} className="periods-group" role="group" aria-label={g.name}>
-          <span className="periods-group-head" aria-hidden="true">
-            {g.name}
-          </span>
-          <div className="periods-grid">
-            {presets
-              .filter((p) => g.ids.includes(p.id))
-              .map((p) => {
-                const on = draft.period === p.id
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    role="option"
-                    aria-selected={on}
-                    className={on ? 'period on' : 'period'}
-                    onClick={() => onApply({ ...draft, period: p.id, range: p.range(today) })}
-                  >
-                    <span className="period-name">{p.label}</span>
-                    {p.id === 'now' && <span className="pulse" aria-hidden="true" />}
-                    <PeriodEnd preset={p} on={on} />
-                  </button>
-                )
-              })}
-          </div>
-        </div>
-      ))}
-      <div className="periods-options">
-        <label className="periods-compare" htmlFor={compareId}>
-          <span className="compare-text">
+    <div className="periods" role="group" aria-label={t.panelLabel}>
+      {byId(PERIODS_FIRST).map(row)}
+      <button type="button" className={more ? 'lrow ld-more open' : 'lrow ld-more'} aria-expanded={more} onClick={() => setMore(!more)}>
+        <span>{t.more}</span>
+        <span className="end">
+          <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
+        </span>
+      </button>
+      <div className={more ? 'ld-x open' : 'ld-x'}>
+        <div inert={!more}>
+          <div className="ld-2">{byId(PERIODS_MORE).map(row)}</div>
+          <div className="lline" />
+          <div className="lopt">
             <span>{t.compare}</span>
-            <span className="faint">{compareNote()}</span>
-          </span>
-          <Switch id={compareId} on={comparing} label={t.compare} onChange={() => onDraft((d) => ({ ...d, compare: d.compare !== 'none' ? 'none' : 'previous' }))} />
-        </label>
-        {onBucket && (
-          <div className="periods-bucket">
-            <span>{t.detail}</span>
-            <div className="seg" role="group" aria-label={t.detail}>
-              {bucketsFor(diffDays(draft.range.from, draft.range.to) + 1).map((b) => (
-                <button key={b ?? 'auto'} type="button" aria-pressed={b === bucket || (!bucket && b === undefined)} onClick={() => onBucket(b)}>
-                  {bucketName(b)}
+            <div className="lseg cmp" role="group" aria-label={t.compare}>
+              {COMPARES.map((m) => (
+                <button key={m} type="button" aria-pressed={value.compare === m} onClick={() => onCompare(m)}>
+                  {CMP_LABEL[m]}
                 </button>
               ))}
             </div>
           </div>
-        )}
-      </div>
-      <div className="periods-foot">
-        <span className="periods-range num">{fmtRange(draft.range, today)}</span>
-        <button type="button" className="btn" onClick={onCustom}>
-          <CalendarIcon />
-          {t.customDates}
-        </button>
-        {draft.compare !== value.compare && (
-          <button type="button" className="btn primary" onClick={() => onApply(draft)}>
-            {t.apply}
+          {buckets.length > 0 && (
+            <div className="lopt">
+              <span>{t.detail}</span>
+              <div className="lseg" role="group" aria-label={t.detail}>
+                {buckets.map((b) => (
+                  <button key={b ?? 'auto'} type="button" aria-pressed={b === bucket || (!bucket && b === undefined)} onClick={() => onBucket?.(b)}>
+                    {bucketName(b)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <button type="button" className="lrow" onClick={onCustom}>
+            <CalendarIcon />
+            <span>{t.customDates}</span>
+            <span className="end num" title={tz}>
+              {fmtRange(value.range, today)}
+            </span>
           </button>
-        )}
+        </div>
       </div>
     </div>
   )

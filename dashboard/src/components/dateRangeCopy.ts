@@ -4,22 +4,18 @@ import type { CompareMode } from '../lib/dates'
 
 export const periodsCopy = {
   panelLabel: 'Periods',
-  compare: 'Compare with the period before',
-  compareHint: 'A second line for the same stretch before',
+  more: 'More',
+  compare: 'Compare',
   detail: 'Detail',
   auto: 'Auto',
   autoWith: (bucket: string) => `Auto · ${bucket}`,
   customDates: 'Custom dates',
-  apply: 'Apply',
 }
 
-// The periods, in the three ways people think about time: what is happening,
-// a rolling stretch, and the calendar's own weeks, months and years.
-export const PERIOD_GROUPS = [
-  { name: 'Live', ids: ['now', 'today', 'yesterday'] },
-  { name: 'Rolling', ids: ['7d', '30d', '90d', '12mo'] },
-  { name: 'Calendar', ids: ['wtd', 'mtd', 'lastmonth', 'ytd'] },
-]
+// The five periods people pick most, then the rest under More (two columns,
+// read across).
+export const PERIODS_FIRST = ['now', 'today', '7d', '30d', '90d']
+export const PERIODS_MORE = ['yesterday', '12mo', 'wtd', 'mtd', 'lastmonth', 'ytd']
 
 export const BUCKET_LABEL: Record<Bucket, string> = { hour: 'Hourly', day: 'Daily', week: 'Weekly', month: 'Monthly' }
 
