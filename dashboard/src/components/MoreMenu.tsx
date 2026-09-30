@@ -1,6 +1,6 @@
 // The ⋯ menu next to the period: what belongs to the page on screen. Refresh
-// (the numbers refresh on their own), Create, Core/Full, Milestones and Export,
-// and on a phone the site's settings. Each keeps its key, shown beside it.
+// (the numbers refresh on their own), Create, Core/Full, Milestones and Export.
+// Each keeps its key, shown beside it.
 // What belongs to the person (Profile, theme, shortcuts, sign out) is the
 // avatar's menu (AccountMenu).
 import { Ellipsis } from 'lucide-react'
@@ -16,8 +16,6 @@ const MoreItems = lazyLoad(() => import('./MoreItems'))
 
 export interface MoreProps {
   full: boolean
-  /** A phone: the site's cog is not in the row either. */
-  onSettings?: () => void
   onMode: (m: 'core' | 'full') => void
   onRefresh: () => void
   /** A phone: Share is the menu's first item, not a button in the row. */

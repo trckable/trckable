@@ -7,7 +7,7 @@ const none: KPIs = { visitors: 0, sessions: 0, pageviews: 0, bounce_rate: 0, avg
 
 export function hourDetail(pt: { pageviews: number } | undefined, site: Pick<Site, 'cookieless'>) {
   if (!pt) return null
-  const rows = [{ label: 'Pageviews', value: fmtInt(pt.pageviews) }]
+  const rows: { label: string; value: string; faint?: boolean; short?: string }[] = [{ label: 'Pageviews', short: 'views', value: fmtInt(pt.pageviews) }]
   // Cookieless says what it cannot count, by the hour as by the day.
   if (site.cookieless) rows.push(...newVsReturning(none, site).rows)
   return { rows }
