@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Fixed
+
+- A person's picture shows wherever their avatar does: their row in People (yours too) uses it instead of the initial, and a new or removed picture changes the header, Profile and People together, without a reload. Pictures stay on this server, and only people of the same account can load one.
+
 ## 0.5.5 (30 Sep 2026)
 
 ### Fixed

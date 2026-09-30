@@ -75,6 +75,7 @@ var routeRules = map[string]string{
 	"POST /api/v1/account/2fa/enable":                            "selfW",
 	"POST /api/v1/account/2fa/disable":                           "selfW",
 	"GET /api/v1/people":                                         "owner",
+	"GET /api/v1/people/{id}/avatar":                             "self",
 	"GET /api/v1/site-access":                                    "owner",
 	"PUT /api/v1/site-access/{subject}":                          "write",
 	"POST /api/v1/people":                                        "write",

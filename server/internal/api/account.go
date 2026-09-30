@@ -311,6 +311,23 @@ func (a *API) getAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	mime, body, err := a.Ctl.Avatar(r.Context(), u.ID)
+	sendAvatar(w, r, mime, body, err)
+}
+
+// getPersonAvatar serves another person's picture to a signed-in person of
+// the same account (owner or viewer). A key, a share link, another account's
+// person and a person without a picture all get the same 404.
+func (a *API) getPersonAvatar(w http.ResponseWriter, r *http.Request) {
+	p := principalOf(r)
+	if p.user == nil {
+		http.NotFound(w, r)
+		return
+	}
+	mime, body, err := a.Ctl.PersonAvatar(r.Context(), p.account, r.PathValue("id"))
+	sendAvatar(w, r, mime, body, err)
+}
+
+func sendAvatar(w http.ResponseWriter, r *http.Request, mime string, body []byte, err error) {
 	if err != nil || len(body) == 0 {
 		http.NotFound(w, r)
 		return

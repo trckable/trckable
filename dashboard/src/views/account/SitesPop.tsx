@@ -74,7 +74,8 @@ export default function SitesPop({
             <input data-nav data-autofocus aria-label={t.sites.find} placeholder={t.sites.find} value={query} onChange={(e) => setQuery(e.target.value)} />
             <span className="faint num">{t.sites.of(count, sites.length)}</span>
           </label>
-          <div className="pop-list" role="menu" aria-label={t.sitesLabel}>
+          {/* A list that scrolls is a tab stop of its own, so the keyboard can always reach it. */}
+          <div className="pop-list" role="menu" aria-label={t.sitesLabel} tabIndex={0}>
             {shown.map((s) => {
               const on = ticked === null || ticked.includes(s.id)
               return (

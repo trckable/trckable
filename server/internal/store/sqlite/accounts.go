@@ -361,10 +361,10 @@ func (s *Store) SetName(ctx context.Context, id, name string) error {
 // SetAvatar stores a picture, or removes it when body is empty.
 func (s *Store) SetAvatar(ctx context.Context, id, mime string, body []byte) error {
 	if len(body) == 0 {
-		_, err := s.DB.ExecContext(ctx, `UPDATE users SET avatar = NULL, avatar_type = '' WHERE id = ?`, id)
+		_, err := s.DB.ExecContext(ctx, `UPDATE users SET avatar = NULL, avatar_type = '', avatar_at = ? WHERE id = ?`, time.Now().UnixMilli(), id)
 		return err
 	}
-	_, err := s.DB.ExecContext(ctx, `UPDATE users SET avatar = ?, avatar_type = ? WHERE id = ?`, body, mime, id)
+	_, err := s.DB.ExecContext(ctx, `UPDATE users SET avatar = ?, avatar_type = ?, avatar_at = ? WHERE id = ?`, body, mime, time.Now().UnixMilli(), id)
 	return err
 }
 
@@ -373,6 +373,15 @@ func (s *Store) Avatar(ctx context.Context, id string) (string, []byte, error) {
 	var mime string
 	var body []byte
 	err := s.DB.QueryRowContext(ctx, `SELECT avatar_type, avatar FROM users WHERE id = ?`, id).Scan(&mime, &body)
+	return mime, body, err
+}
+
+// PersonAvatar returns the picture of one person of an account. A person of
+// another account has none here: sql.ErrNoRows, like an id that is not there.
+func (s *Store) PersonAvatar(ctx context.Context, account, id string) (string, []byte, error) {
+	var mime string
+	var body []byte
+	err := s.DB.QueryRowContext(ctx, `SELECT avatar_type, avatar FROM users WHERE id = ? AND account_id = ?`, id, account).Scan(&mime, &body)
 	return mime, body, err
 }
 
