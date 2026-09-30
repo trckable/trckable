@@ -166,11 +166,13 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("POST /api/v1/sites/{site}/shares", a.authed(a.createShare))
 	handle("PATCH /api/v1/sites/{site}/shares/{id}", a.authed(a.updateShare))
 	handle("DELETE /api/v1/sites/{site}/shares/{id}", a.authed(a.deleteShare))
+	handle("POST /api/v1/sites/{site}/shares/{id}/address", a.authed(a.newShareAddress))
 	// The public side: no session, no account, one site, read-only.
 	handleFunc("POST /api/v1/share/open", a.openShare)
 	handleFunc("GET /api/v1/share/me", a.shareMe)
 	handleFunc("GET /api/v1/share/report", a.shareReport)
 	handleFunc("GET /api/v1/share/annotations", a.shareAnnotations)
+	handleFunc("GET /api/v1/share/icon", a.shareIcon)
 	handle("GET /api/v1/sites/{site}/report", a.authed(a.report))
 	handle("GET /api/v1/sites/{site}/card", a.authed(a.shareCard))
 	handle("GET /api/v1/sites/{site}/moments", a.authed(a.moments))

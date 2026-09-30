@@ -14,8 +14,9 @@ const gzipMin = 1024
 
 // plainAnswers are the routes whose answers stay uncompressed.
 var plainAnswers = map[string]bool{
-	"GET /api/v1/sites/{site}/shares": true,
-	"GET /api/v1/sites/{site}/alerts": true,
+	"GET /api/v1/sites/{site}/shares":               true,
+	"POST /api/v1/sites/{site}/shares/{id}/address": true,
+	"GET /api/v1/sites/{site}/alerts":               true,
 }
 
 // withGzip compresses a text answer larger than gzipMin for a browser that

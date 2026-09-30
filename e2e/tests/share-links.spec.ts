@@ -1,6 +1,7 @@
-// Settings → Sharing: make a link in the card (no modal), copy it once, see it
-// in the list, revoke it with the question in the row. Also the pictures for
-// the review: POLISH_SHOTS=<folder> saves them.
+// Settings → Sharing: make a link in the card (no modal), copy it, see it in
+// the list and copy or open it again there, give an old link a new address,
+// revoke one with the question in the row. Also the pictures for the review:
+// POLISH_SHOTS=<folder> saves them.
 import { expect, test, type Page } from '@playwright/test'
 import { API } from '../playwright.config'
 import { session } from './session'
@@ -79,16 +80,16 @@ test('make a link in the card, copy it, revoke it', async ({ page, context, brow
   await expect(create).toBeEnabled()
   await create.click()
 
-  // Just created: the link, once.
+  // Just created: the link, with what to do with it.
   const url = card.locator('.sl-url')
   await expect(url).toHaveValue(/\/s\/[a-z0-9]{20,}$/)
-  await expect(card.getByText('shown once')).toBeVisible()
+  const made = await url.inputValue()
   await expect(card.locator('.sl-code')).toContainText('<iframe')
   await card.getByRole('button', { name: 'QR code' }).click()
   await expect(card.getByRole('img', { name: 'QR code of the link' })).toBeVisible()
   await shot(page, 'created')
   await card.getByRole('button', { name: 'Copy', exact: true }).click()
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(await url.inputValue())
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(made)
   await card.getByRole('button', { name: 'Done' }).click()
   await expect(card.locator('.sl-url')).toHaveCount(0)
 
@@ -98,6 +99,11 @@ test('make a link in the card, copy it, revoke it', async ({ page, context, brow
   await expect(row.getByRole('img', { name: 'Embeddable on https://example.org' })).toBeVisible()
   await expect(row.getByRole('img', { name: 'Revenue shown' })).toBeVisible()
   await expect(row.getByText(/^Ends /)).toBeAttached()
+  // The address can be copied, and opened, again from the row.
+  await row.getByRole('button', { name: 'Copy link: For the board' }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(made)
+  await expect(page.getByText('Link copied').last()).toBeVisible()
+  await expect(row.getByRole('link', { name: 'Open link: For the board' })).toHaveAttribute('href', made)
   // Notes are the one thing that changes on a link that exists.
   const notes = row.getByRole('button', { name: /^Notes shown/ })
   await notes.click()
@@ -113,6 +119,50 @@ test('make a link in the card, copy it, revoke it', async ({ page, context, brow
   await row.getByRole('button', { name: 'Revoke', exact: true }).click()
   await expect(card.locator('.sl-row', { hasText: 'For the board' })).toHaveCount(0)
   await expect(card.getByText('No links yet')).toBeVisible()
+})
+
+test('a link made before addresses were kept gets a new address, and the old one stops', async ({ page, context, browserName }) => {
+  test.skip(browserName !== 'chromium', 'clipboard permissions are Chromium only')
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: API })
+  const site = await open(page)
+  const res = await page.request.post(`${API}/api/v1/sites/${site}/shares`, { headers: H, data: { name: 'Old link', password: 'phrase phrase phrase' } })
+  const old = ((await res.json()) as { url: string }).url
+  const oldToken = old.slice(old.lastIndexOf('/') + 1)
+  // Such a link lists without an address: the same answer, minus the url.
+  await page.route(`**/api/v1/sites/${site}/shares`, async (route) => {
+    if (route.request().method() !== 'GET') return route.fallback()
+    const body = (await (await route.fetch()).json()) as { shares: { url?: string }[] }
+    for (const s of body.shares) delete s.url
+    await route.fulfill({ json: body })
+  })
+  await sharing(page, site)
+  const card = page.locator('#shares')
+  const row = card.locator('.sl-row', { hasText: 'Old link' })
+  await expect(row.getByRole('button', { name: /^Copy link/ })).toHaveCount(0)
+  await shot(page, 'old-link')
+
+  // The question is in the row, and says the old address stops working.
+  await row.getByRole('button', { name: /^New address/ }).click()
+  await expect(row.getByText('The old address stops working.')).toBeVisible()
+  await shot(page, 'new-address-ask')
+  await page.keyboard.press('Escape')
+  await expect(row.getByText('The old address stops working.')).toHaveCount(0)
+  expect((await page.request.post(`${API}/api/v1/share/open`, { headers: H, data: { token: oldToken, password: 'phrase phrase phrase' } })).status()).toBe(200)
+  await row.getByRole('button', { name: /^New address/ }).click()
+  await row.getByRole('button', { name: 'New address', exact: true }).click()
+
+  // The new address is shown the way a new link is, with Copy.
+  const url = card.locator('.sl-url')
+  await expect(url).toHaveValue(/\/s\/[a-z0-9]{20,}$/)
+  const fresh = await url.inputValue()
+  expect(fresh).not.toBe(old)
+  await card.getByRole('button', { name: 'Copy', exact: true }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(fresh)
+  await shot(page, 'new-address')
+  const gone = await page.request.post(`${API}/api/v1/share/open`, { headers: H, data: { token: oldToken, password: 'phrase phrase phrase' } })
+  expect(gone.status()).toBe(404)
+  const token = fresh.slice(fresh.lastIndexOf('/') + 1)
+  expect((await page.request.post(`${API}/api/v1/share/open`, { headers: H, data: { token, password: 'phrase phrase phrase' } })).status()).toBe(200)
 })
 
 test('a phone sees the name and one line of small icons, and nothing spills sideways', async ({ page, browserName }) => {
@@ -162,6 +212,11 @@ test('a shared link keeps its address: a reload goes back in, a password link wi
     return b.y + b.height / 2
   }
   expect(Math.abs((await mid('.header .share-who')) - (await mid('.header .ctl-see')))).toBeLessThanOrEqual(8)
+  // The site's own mark comes first, on the same line as its name.
+  const mark = (await tab.locator('.header .share-id .site-mark').boundingBox())!
+  const name = (await tab.locator('.header .share-who b').boundingBox())!
+  expect(mark.x + mark.width).toBeLessThanOrEqual(name.x)
+  expect(Math.abs(mark.y + mark.height / 2 - (name.y + name.height / 2))).toBeLessThanOrEqual(12)
 
   // A reload is let in by its session; another link does not borrow it.
   await tab.reload()

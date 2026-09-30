@@ -95,7 +95,12 @@ func (b *Box) Derive(label string) []byte {
 }
 
 // Seal encrypts plaintext; the result is safe to store as text.
-func (b *Box) Seal(plain string) (string, error) {
+func (b *Box) Seal(plain string) (string, error) { return b.SealFor(plain, "") }
+
+// SealFor is Seal bound to a context (the row the value belongs to): the
+// result opens only with OpenFor and the same context, so a sealed value
+// copied into another row does not open there.
+func (b *Box) SealFor(plain, context string) (string, error) {
 	if plain == "" {
 		return "", nil
 	}
@@ -103,11 +108,22 @@ func (b *Box) Seal(plain string) (string, error) {
 	if _, err := rand.Read(nonce); err != nil {
 		return "", err
 	}
-	return "v1:" + base64.RawStdEncoding.EncodeToString(b.aead.Seal(nonce, nonce, []byte(plain), nil)), nil
+	return "v1:" + base64.RawStdEncoding.EncodeToString(b.aead.Seal(nonce, nonce, []byte(plain), aad(context))), nil
 }
 
 // Open decrypts a Seal result.
-func (b *Box) Open(sealed string) (string, error) {
+func (b *Box) Open(sealed string) (string, error) { return b.OpenFor(sealed, "") }
+
+// aad is the bound context as GCM's associated data; none for a plain Seal.
+func aad(context string) []byte {
+	if context == "" {
+		return nil
+	}
+	return []byte(context)
+}
+
+// OpenFor decrypts a SealFor result made with the same context.
+func (b *Box) OpenFor(sealed, context string) (string, error) {
 	if sealed == "" {
 		return "", nil
 	}
@@ -116,7 +132,7 @@ func (b *Box) Open(sealed string) (string, error) {
 		return "", errors.New("secrets: malformed value")
 	}
 	n := b.aead.NonceSize()
-	plain, err := b.aead.Open(nil, raw[:n], raw[n:], nil)
+	plain, err := b.aead.Open(nil, raw[:n], raw[n:], aad(context))
 	if err != nil {
 		return "", ErrWrongKey
 	}

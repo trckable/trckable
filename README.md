@@ -146,7 +146,7 @@ Go, embedded DuckDB and SQLite, React with an in-house SVG chart kit. Every even
 ## 🗺 Roadmap
 
 - [x] Tracking, dashboard (Core and Full), revenue for five providers, MCP server
-- [x] Self-hosting tools: alerts, encrypted backups, imports, 2FA, read-only share links (public or password, revenue and notes on or off, an end date, embeddable, revocable), WCAG 2.1 AA (axe-core on the dashboard's main screens, both themes, three browsers, in CI)
+- [x] Self-hosting tools: alerts, encrypted backups, imports, 2FA, read-only share links (public or password, revenue and notes on or off, an end date, embeddable, copyable again, revocable), WCAG 2.1 AA (axe-core on the dashboard's main screens, both themes, three browsers, in CI)
 - [x] npm package [`trckable`](https://www.npmjs.com/package/trckable) with `init` / `doctor` / `mcp`, published from CI with provenance
 - [ ] Live sandbox runs against each payment provider
 - [ ] Peek: an optional in-app assistant on the same read-only tools, with your own AI key

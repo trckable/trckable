@@ -17,7 +17,7 @@ func TestNotesAndLayoutMigrations(t *testing.T) {
 	}
 	defer st.Close()
 	// Back to the schema before these two, with a note and a link on it.
-	if _, err := st.DB.ExecContext(ctx, `DROP TABLE site_access; DROP TABLE site_layout; ALTER TABLE annotations DROP COLUMN author_id; ALTER TABLE site_shares DROP COLUMN notes; ALTER TABLE invitations DROP COLUMN sent_at; ALTER TABLE invitations DROP COLUMN sends; DROP TABLE milestone_shares; DROP TABLE milestone_seen; DROP TABLE milestones; ALTER TABLE sites DROP COLUMN milestones; ALTER TABLE sites DROP COLUMN milestones_day; ALTER TABLE users DROP COLUMN avatar_at; PRAGMA user_version = 33`); err != nil {
+	if _, err := st.DB.ExecContext(ctx, `DROP TABLE site_access; DROP TABLE site_layout; ALTER TABLE annotations DROP COLUMN author_id; ALTER TABLE site_shares DROP COLUMN notes; ALTER TABLE invitations DROP COLUMN sent_at; ALTER TABLE invitations DROP COLUMN sends; DROP TABLE milestone_shares; DROP TABLE milestone_seen; DROP TABLE milestones; ALTER TABLE sites DROP COLUMN milestones; ALTER TABLE sites DROP COLUMN milestones_day; ALTER TABLE users DROP COLUMN avatar_at; ALTER TABLE site_shares DROP COLUMN token_enc; PRAGMA user_version = 33`); err != nil {
 		t.Fatal(err)
 	}
 	site, err := st.CreateSite(ctx, DefaultAccount, "old.com", "Old")

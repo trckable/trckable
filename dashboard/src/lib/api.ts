@@ -570,6 +570,10 @@ export interface ShareInfo {
   timezone: string
   currency: string
   modules: Record<string, boolean>
+  /** The site's own look, for the mark in the header: its colour, and its icon
+   *  (an address on this server) when it has one. */
+  color?: string
+  icon_url?: string
   /** Only for an embedded link: the session the page sends as a header,
    *  because a browser does not send cookies into another site's iframe. */
   session?: string
@@ -588,6 +592,9 @@ export interface Share {
   views: number
   /** Sites allowed to show this link in an iframe. */
   embed_origins?: string[]
+  /** The link's address, for its owner to copy again. None for a link made
+   *  before addresses were kept, or when the server cannot read it. */
+  url?: string
 }
 
 export interface Health {
@@ -770,6 +777,8 @@ export const api = {
   createShare: (site: string, body: { name: string; password?: string; revenue: boolean; notes?: boolean; days: number; embed_origins?: string[] }) =>
     call<{ share: Share; url: string }>('POST', `/sites/${site}/shares`, body),
   deleteShare: (site: string, id: string) => act('DELETE', `/sites/${site}/shares/${id}`),
+  /** A new address for a link; the old one stops working. */
+  newShareAddress: (site: string, id: string) => call<{ url: string }>('POST', `/sites/${site}/shares/${id}/address`, {}),
   openShare: (token: string, password?: string, embed?: boolean) => call<ShareInfo>('POST', '/share/open', { token, password, embed }),
   shareMe: () => call<ShareInfo>('GET', '/share/me'),
   people: () => call<{ people: Person[] }>('GET', '/people'),

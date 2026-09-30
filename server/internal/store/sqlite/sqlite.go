@@ -24,9 +24,10 @@ import (
 // Store wraps the control-plane database and an in-memory site cache.
 type Store struct {
 	DB *sql.DB
-	// Sealer encrypts what the store keeps for people's second step, with
-	// the instance key. Nil (tests, commands that never check a code) keeps
-	// new secrets as they are and refuses sealed ones.
+	// Sealer encrypts what the store keeps for people's second step and the
+	// tokens of share links, with the instance key. Nil (tests, commands that
+	// never check a code) keeps new secrets as they are, refuses sealed ones,
+	// and keeps no share token to copy again.
 	Sealer Sealer
 
 	mu         sync.RWMutex
@@ -522,6 +523,10 @@ var migrations = []string{
 	// 39: when a picture was last set or removed (unix milliseconds), so the
 	// people list can say which version of each picture is current
 	`ALTER TABLE users ADD COLUMN avatar_at INTEGER NOT NULL DEFAULT 0;`,
+	// 40: a share link's token, sealed with the instance key (shares.go), so
+	// its owner can copy the address again. Empty for a link made before this:
+	// its token was never kept, only its hash.
+	`ALTER TABLE site_shares ADD COLUMN token_enc TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
