@@ -94,7 +94,7 @@ func serve(cfg config.Config) error {
 }
 
 func site(cfg config.Config, args []string) error {
-	if err := os.MkdirAll(cfg.DataDir, 0o700); err != nil {
+	if err := server.PrepareDataDir(cfg.DataDir); err != nil {
 		return err
 	}
 	ctl, err := openControl(context.Background(), cfg)
@@ -259,7 +259,7 @@ func admin(cfg config.Config, args []string) error {
 // does it; the analytics store is not waited for, so a command run next to a
 // live older server says so at once.
 func openControl(ctx context.Context, cfg config.Config) (*sqlite.Store, error) {
-	if err := os.MkdirAll(cfg.DataDir, 0o700); err != nil {
+	if err := server.PrepareDataDir(cfg.DataDir); err != nil {
 		return nil, err
 	}
 	return server.OpenControl(ctx, cfg, 0)

@@ -410,6 +410,13 @@ jobs:
           echo "IMAGE_BYTES=$bytes" >> "$GITHUB_ENV"
           test "$bytes" -le $(( 30 * 1048576 ))
       - if: needs.changes.outputs.image == 'true'
+        name: runs as an unprivileged user, and says what to run for a volume it cannot write
+        run: |
+          [ "$(docker inspect -f '{{.Config.User}}' trckable:ci)" = 65532:65532 ]
+          d=$(mktemp -d)
+          if out=$(docker run --rm -v "$d":/data trckable:ci site list 2>&1); then echo "an unwritable volume was accepted"; exit 1; fi
+          echo "$out" | grep -q 'chown -R 65532:65532 /data' || { echo "$out"; exit 1; }
+      - if: needs.changes.outputs.image == 'true'
         name: boots, accepts an event, idle memory ≤ 64 MB, stops cleanly
         run: |
           docker run -d --name tkb -p 8080:8080 trckable:ci

@@ -6,7 +6,10 @@
 # One static binary (DuckDB, libstdc++ and glibc linked in; Go's own DNS and
 # user lookups) on distroless "static": CA certificates, time zones and
 # nothing else, no shell, no package manager. About a third smaller than the
-# glibc base it replaced, in the image and in memory.
+# glibc base it replaced, in the image and in memory. It runs as the
+# unprivileged user 65532 (the "nonroot" tag): a new volume takes /data's
+# owner from the image; a volume an older image filled as root needs
+# `chown -R 65532:65532` once (the server says so when it cannot write).
 
 FROM golang:1.27-trixie AS build
 WORKDIR /src
@@ -20,15 +23,16 @@ RUN V=${VERSION:-$(cat VERSION)} && cd server && CGO_ENABLED=1 go build -trimpat
       -o /out/trckabled ./cmd/trckabled \
  && mkdir -p /out/data
 
-FROM gcr.io/distroless/static-debian13
+FROM gcr.io/distroless/static-debian13:nonroot
 LABEL org.opencontainers.image.title="trckable" \
       org.opencontainers.image.description="Tiny self-hosted web analytics that shows which traffic pays" \
       org.opencontainers.image.source="https://github.com/trckable/trckable" \
       org.opencontainers.image.licenses="AGPL-3.0-only" \
       org.opencontainers.image.vendor="trckable"
 COPY --from=build /out/trckabled /usr/local/bin/trckabled
-COPY --from=build /out/data /data
+COPY --from=build --chown=65532:65532 /out/data /data
 ENV TRCKABLE_DATA_DIR=/data
+USER 65532:65532
 # No VOLUME instruction: Railway rejects it (it mounts its own volume at /data);
 # with plain Docker, mount one explicitly: -v trckable-data:/data
 EXPOSE 8080
