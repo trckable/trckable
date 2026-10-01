@@ -1,0 +1,1 @@
+import{Mn as e}from"./index-70e1c38b.js";var t=(t,n)=>e(`GET`,`/sites/${encodeURIComponent(t)}/now`,void 0,n);export{t};
