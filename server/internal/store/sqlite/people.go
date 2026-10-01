@@ -5,14 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
-	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
 )
 
 // Two roles, and that is the whole model: an owner runs the instance, a viewer
 // reads it. A viewer may be limited to some of the account's sites
-// (siteaccess.go); teams belong to a later version.
+// (siteaccess.go). The role is a person's in one account (memberships.go).
 const (
 	RoleOwner  = "owner"
 	RoleViewer = "viewer"
@@ -36,6 +35,9 @@ type Person struct {
 	MustChange bool `json:"must_change"`
 	// HasAvatar: they chose a picture, served at /api/v1/people/{id}/avatar.
 	HasAvatar bool `json:"has_avatar"`
+	// Holder: the first owner of the account. They keep it: not removed, not
+	// made a viewer.
+	Holder bool `json:"holder"`
 	// AvatarV moves whenever the picture is set or removed: the address of
 	// the picture carries it, so a new one is never served from a cache.
 	AvatarV int64 `json:"avatar_v"`
@@ -44,7 +46,12 @@ type Person struct {
 // People lists an account's people, oldest first — which is the owner, on any
 // account that started with one person.
 func (s *Store) People(ctx context.Context, account string) ([]Person, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT id, email, COALESCE(name, ''), role, created_at, totp_enabled, last_seen_at, must_change, length(coalesce(avatar, '')), avatar_at FROM users WHERE account_id = ? ORDER BY created_at`, account)
+	holder, err := holderOf(ctx, s.DB, account)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := s.DB.QueryContext(ctx, `SELECT u.id, u.email, COALESCE(u.name, ''), m.role, m.created_at, u.totp_enabled, u.last_seen_at, u.must_change, length(coalesce(u.avatar, '')), u.avatar_at
+		FROM memberships m JOIN users u ON u.id = m.user_id WHERE m.account_id = ? ORDER BY m.created_at, m.rowid`, account)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +63,7 @@ func (s *Store) People(ctx context.Context, account string) ([]Person, error) {
 		if err := rows.Scan(&p.ID, &p.Email, &p.Name, &p.Role, &p.CreatedAt, &two, &p.LastSeen, &must, &pic, &p.AvatarV); err != nil {
 			return nil, err
 		}
-		p.TwoStep, p.MustChange, p.HasAvatar = two == 1, must == 1, pic > 0
+		p.TwoStep, p.MustChange, p.HasAvatar, p.Holder = two == 1, must == 1, pic > 0, p.ID == holder
 		out = append(out, p)
 	}
 	return out, rows.Err()
@@ -78,18 +85,39 @@ func (s *Store) AddUser(ctx context.Context, account, email, password, role stri
 	if err != nil {
 		return Person{}, err
 	}
-	p := Person{ID: auth.Token("usr_", 10), Email: email, Role: role, CreatedAt: time.Now().Unix()}
-	_, err = s.DB.ExecContext(ctx, `INSERT INTO users (id, account_id, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+	p := Person{ID: auth.Token("usr_", 10), Email: email, Role: role, CreatedAt: nowUnix()}
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return Person{}, err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx, `INSERT INTO users (id, account_id, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
 		p.ID, account, p.Email, hash, p.Role, p.CreatedAt)
 	if err != nil && strings.Contains(err.Error(), "UNIQUE") {
 		return Person{}, auth.ErrExists
 	}
-	return p, err
+	if err != nil {
+		return Person{}, err
+	}
+	if err := addMembership(ctx, tx, p.ID, account, p.Role, p.CreatedAt); err != nil {
+		return Person{}, err
+	}
+	return p, tx.Commit()
 }
 
 // SetRole changes what someone may do. The last owner cannot be demoted, or
 // the instance would have no one left to administer it.
 func (s *Store) SetRole(ctx context.Context, account, id, role string) error {
+	return s.setRole(ctx, account, id, role, false)
+}
+
+// SetRoleAsOperator is SetRole for the command line on the server itself: it
+// may also step down the first owner, the way back when that person is gone.
+func (s *Store) SetRoleAsOperator(ctx context.Context, account, id, role string) error {
+	return s.setRole(ctx, account, id, role, true)
+}
+
+func (s *Store) setRole(ctx context.Context, account, id, role string, operator bool) error {
 	if role != RoleOwner && role != RoleViewer {
 		return errors.New(`role must be "owner" or "viewer"`)
 	}
@@ -99,11 +127,11 @@ func (s *Store) SetRole(ctx context.Context, account, id, role string) error {
 	}
 	defer tx.Rollback()
 	if role != RoleOwner {
-		if err := lastOwner(ctx, tx, account, id); err != nil {
+		if err := lastOwner(ctx, tx, account, id, operator); err != nil {
 			return err
 		}
 	}
-	res, err := tx.ExecContext(ctx, `UPDATE users SET role = ? WHERE id = ? AND account_id = ?`, role, id, account)
+	res, err := tx.ExecContext(ctx, `UPDATE memberships SET role = ? WHERE user_id = ? AND account_id = ?`, role, id, account)
 	if err != nil {
 		return err
 	}
@@ -112,45 +140,53 @@ func (s *Store) SetRole(ctx context.Context, account, id, role string) error {
 	}
 	// Owners see every site: any limit a viewer had goes with the role.
 	if role == RoleOwner {
-		if err := dropAccess(ctx, tx, id); err != nil {
+		if err := dropAccess(ctx, tx, id, account); err != nil {
 			return err
 		}
+	}
+	if err := syncHome(ctx, tx, id); err != nil {
+		return err
 	}
 	return tx.Commit()
 }
 
-// RemoveUser deletes an account and every session it holds. The same last-owner
-// rule applies: an instance always keeps someone who can administer it.
+// RemoveUser takes a person out of an account: their membership and their
+// site limits there. A person with no other account is deleted, with every
+// session they held; one who has others keeps those and their sessions. The
+// same last-owner rule applies: an instance always keeps someone who can
+// administer it, and the first owner is never removed.
 func (s *Store) RemoveUser(ctx context.Context, account, id string) error {
+	return s.removeUser(ctx, account, id, false)
+}
+
+// RemoveUserAsOperator is RemoveUser for the command line on the server
+// itself: it may also remove the first owner, the way back when that person
+// is gone.
+func (s *Store) RemoveUserAsOperator(ctx context.Context, account, id string) error {
+	return s.removeUser(ctx, account, id, true)
+}
+
+func (s *Store) removeUser(ctx context.Context, account, id string, operator bool) error {
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-	if err := lastOwner(ctx, tx, account, id); err != nil {
+	if err := lastOwner(ctx, tx, account, id, operator); err != nil {
 		return err
 	}
-	if _, err := tx.ExecContext(ctx, `DELETE FROM auth_sessions WHERE user_id = (SELECT id FROM users WHERE id = ? AND account_id = ?)`, id, account); err != nil {
-		return err
-	}
-	res, err := tx.ExecContext(ctx, `DELETE FROM users WHERE id = ? AND account_id = ?`, id, account)
-	if err != nil {
-		return err
-	}
-	if n, _ := res.RowsAffected(); n == 0 {
-		return auth.ErrNotFound
-	}
-	if err := dropAccess(ctx, tx, id); err != nil {
+	if err := removeMembership(ctx, tx, account, id); err != nil {
 		return err
 	}
 	return tx.Commit()
 }
 
-// lastOwner reports ErrLastOwner when id is its account's only owner left, and
+// lastOwner reports ErrLastOwner when id is its account's only owner left,
+// ErrHolder when id is its first owner (unless the operator acts), and
 // ErrNotFound when id is not in the account at all.
-func lastOwner(ctx context.Context, tx *sql.Tx, account, id string) error {
+func lastOwner(ctx context.Context, tx *sql.Tx, account, id string, operator bool) error {
 	var role string
-	if err := tx.QueryRowContext(ctx, `SELECT role FROM users WHERE id = ? AND account_id = ?`, id, account).Scan(&role); err != nil {
+	if err := tx.QueryRowContext(ctx, `SELECT role FROM memberships WHERE user_id = ? AND account_id = ?`, id, account).Scan(&role); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return auth.ErrNotFound
 		}
@@ -160,11 +196,21 @@ func lastOwner(ctx context.Context, tx *sql.Tx, account, id string) error {
 		return nil
 	}
 	var owners int
-	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM users WHERE role = ? AND account_id = ?`, RoleOwner, account).Scan(&owners); err != nil {
+	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM memberships WHERE role = ? AND account_id = ?`, RoleOwner, account).Scan(&owners); err != nil {
 		return err
 	}
 	if owners <= 1 {
 		return ErrLastOwner
+	}
+	if operator {
+		return nil
+	}
+	holder, err := holderOf(ctx, tx, account)
+	if err != nil {
+		return err
+	}
+	if holder == id {
+		return ErrHolder
 	}
 	return nil
 }
@@ -195,7 +241,8 @@ func (s *Store) MustChange(ctx context.Context, id string) bool {
 // PersonByID is one person of an account, for acting on them.
 func (s *Store) PersonByID(ctx context.Context, account, id string) (Person, error) {
 	var p Person
-	err := s.DB.QueryRowContext(ctx, `SELECT id, email, role FROM users WHERE id = ? AND account_id = ?`, id, account).Scan(&p.ID, &p.Email, &p.Role)
+	err := s.DB.QueryRowContext(ctx, `SELECT u.id, u.email, m.role FROM users u
+		JOIN memberships m ON m.user_id = u.id WHERE u.id = ? AND m.account_id = ?`, id, account).Scan(&p.ID, &p.Email, &p.Role)
 	if errors.Is(err, sql.ErrNoRows) {
 		return p, auth.ErrNotFound
 	}
@@ -215,12 +262,21 @@ func (s *Store) ResetPersonPassword(ctx context.Context, account, id, password s
 		return err
 	}
 	defer tx.Rollback()
-	res, err := tx.ExecContext(ctx, `UPDATE users SET password_hash = ? WHERE id = ? AND account_id = ?`, hash, id, account)
+	res, err := tx.ExecContext(ctx, `UPDATE users SET password_hash = ? WHERE id = ? AND id IN (SELECT user_id FROM memberships WHERE account_id = ?)`, hash, id, account)
 	if err != nil {
 		return err
 	}
 	if n, _ := res.RowsAffected(); n == 0 {
 		return auth.ErrNotFound
+	}
+	// Someone who is in other accounts too manages their own sign-in: one
+	// owner must not be able to take them all.
+	var other int
+	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM memberships WHERE user_id = ? AND account_id <> ?`, id, account).Scan(&other); err != nil {
+		return err
+	}
+	if other > 0 {
+		return ErrElsewhere
 	}
 	if _, err := tx.ExecContext(ctx, `DELETE FROM auth_sessions WHERE user_id = ?`, id); err != nil {
 		return err
