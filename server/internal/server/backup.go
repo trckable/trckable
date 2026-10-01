@@ -34,10 +34,51 @@ const TriggerFile = ".backup-now"
 // asks through TriggerFile) can say so at once instead of waiting.
 const FailedFile = ".backup-failed"
 
-// runBackups writes one backup a few minutes after boot, then one a day, and
-// one whenever the trigger file appears.
+// The daily backup, how young the newest file must be for a start to leave it
+// alone, and how long a start waits before it backs up.
+const (
+	backupEvery = 24 * time.Hour
+	backupFresh = 12 * time.Hour
+	backupBoot  = 10 * time.Minute
+)
+
+// firstBackupIn is how long after a start the first backup is due. Ten
+// minutes, unless the newest file is younger than backupFresh and the last
+// backup worked and so did the last off-site copy (a bucket that never got
+// one counts as not worked): then the next daily one, 24 hours after the
+// newest, so a redeploy every few hours still gets one backup a day instead
+// of one per start.
+func (s *Server) firstBackupIn(now time.Time) time.Duration {
+	last, _ := s.LastBackup()
+	if last.IsZero() || last.After(now) || now.Sub(last) > backupFresh || s.backupFailed() {
+		return backupBoot
+	}
+	// A bucket that never got a copy counts as not fine either.
+	if st := s.offsite.Load(); s.remote != nil && (st == nil || st.err != "" || st.at == 0) {
+		return backupBoot
+	}
+	return last.Add(backupEvery).Sub(now)
+}
+
+// backupFailed is whether the last local backup failed, kept on disk so it is
+// known after a restart too.
+func (s *Server) backupFailed() bool {
+	if s.backupErr.Load() != nil {
+		return true
+	}
+	_, err := os.Stat(filepath.Join(s.backupsDir(), FailedFile))
+	return err == nil
+}
+
+// runBackups writes one backup a few minutes after boot (unless a recent one
+// exists, see firstBackupIn), then one a day, and one whenever the trigger
+// file appears.
 func (s *Server) runBackups(ctx context.Context) {
-	timer := time.NewTimer(10 * time.Minute)
+	wait := s.firstBackupIn(time.Now())
+	if wait > backupBoot {
+		slog.Info("backup at start skipped, the newest is recent", "next", time.Now().Add(wait).UTC().Format(time.RFC3339))
+	}
+	timer := time.NewTimer(wait)
 	defer timer.Stop()
 	poll := time.NewTicker(3 * time.Second)
 	defer poll.Stop()
@@ -47,7 +88,7 @@ func (s *Server) runBackups(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-timer.C:
-			timer.Reset(24 * time.Hour)
+			timer.Reset(backupEvery)
 		case <-poll.C:
 			if _, err := os.Stat(trigger); err != nil {
 				continue
@@ -186,7 +227,7 @@ func (s *Server) ship(ctx context.Context, path string) {
 	s.setOffsite(ctx, st)
 	slog.Info("backup copied off-site", "to", s.remote.Where())
 	keep := time.Duration(max(s.cfg.BackupDays, 1)) * 24 * time.Hour
-	if n, err := s.remote.Prune(ctx, keep, time.Now()); err != nil {
+	if n, err := s.remote.Prune(ctx, keep, time.Now(), filepath.Base(path)); err != nil {
 		slog.Warn("could not trim off-site backups", "err", err)
 	} else if n > 0 {
 		slog.Info("old off-site backups removed", "count", n)

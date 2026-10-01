@@ -89,7 +89,7 @@ function backupHint(b: H['backup']) {
 
 function offsiteHint(b: H['backup']) {
   if (b.offsite_error) return `The last copy failed: ${b.offsite_error}`
-  if (b.offsite) return `${b.offsite} · kept ${b.offsite_days} days`
+  if (b.offsite) return `${b.offsite} · every copy for 7 days, then the newest of each day, up to ${b.offsite_days} days`
   return 'Only on this machine. Set TRCKABLE_BACKUP_S3 to copy each backup to a bucket elsewhere.'
 }
 

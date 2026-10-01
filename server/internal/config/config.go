@@ -40,7 +40,7 @@ type Config struct {
 	// server itself never calls out.
 	UpdateCheck bool
 	BackupS3    string // TRCKABLE_BACKUP_S3: https://key:secret@host/bucket/prefix?region=… (optional)
-	BackupDays  int    // TRCKABLE_BACKUP_KEEP_DAYS: how long off-site copies are kept (default 30)
+	BackupDays  int    // TRCKABLE_BACKUP_KEEP_DAYS: off-site copies, every one for 7 days, then the newest of each day, up to this many days (default 30)
 	// TRCKABLE_UNSAFE_SESSION_CLOSE_MS shortens how long sessions stay open
 	// before they are written. Tests only: never in production.
 	SessionCloseAfter time.Duration
