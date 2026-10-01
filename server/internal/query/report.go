@@ -75,6 +75,15 @@ type Params struct {
 	// Sales adds the payments bucket by bucket (Result.Sales), for Replay's
 	// moments. Only with Revenue on.
 	Sales bool
+	// SalePages adds the pages that sold (Result.SalePages): the revenue
+	// credited to visits that read each page. Only with Revenue on.
+	SalePages bool
+	// Buyers adds the latest sales with the way to each (Result.Buyers): this
+	// many, newest first. Only with Revenue on.
+	Buyers int
+	// NewReferrers adds the referring sites that sent nobody before the period
+	// (Result.NewReferrers): this many, the busiest first.
+	NewReferrers int
 }
 
 // KPIs are the headline numbers.
@@ -126,15 +135,18 @@ var ExactLimit int64 = 250_000
 
 // Result is a full report.
 type Result struct {
-	Approximate bool             `json:"approximate"` // breakdown visitor counts are HyperLogLog estimates
-	KPIs        KPIs             `json:"kpis"`
-	Series      []Point          `json:"series"`
-	Dims        map[string][]Row `json:"dims"`
-	Goals       []Row            `json:"goals"`
-	Days        []Day            `json:"days,omitempty"`
-	Money       *Money           `json:"money,omitempty"`        // nil until a payment provider is connected
-	RevenueDims map[string][]Row `json:"revenue_dims,omitempty"` // top rows by revenue
-	Sales       []SaleBucket     `json:"-"`                      // with Params.Sales: the payments per bucket
+	Approximate  bool             `json:"approximate"` // breakdown visitor counts are HyperLogLog estimates
+	KPIs         KPIs             `json:"kpis"`
+	Series       []Point          `json:"series"`
+	Dims         map[string][]Row `json:"dims"`
+	Goals        []Row            `json:"goals"`
+	Days         []Day            `json:"days,omitempty"`
+	Money        *Money           `json:"money,omitempty"`        // nil until a payment provider is connected
+	RevenueDims  map[string][]Row `json:"revenue_dims,omitempty"` // top rows by revenue
+	Sales        []SaleBucket     `json:"-"`                      // with Params.Sales: the payments per bucket
+	SalePages    []Row            `json:"-"`                      // with Params.SalePages: revenue per page the credited visit read
+	Buyers       []Buyer          `json:"-"`                      // with Params.Buyers: the latest sales and their way there
+	NewReferrers []NewReferrer    `json:"-"`                      // with Params.NewReferrers: sites that sent nobody before
 }
 
 // sessionDims maps API dimension names to sessions columns (the whitelist).
@@ -300,6 +312,11 @@ func (q Q) Report(ctx context.Context, p Params) (*Result, error) {
 	if q.Payments != nil && p.Revenue {
 		if err := q.revenue(ctx, conn, p, cte, args, res); err != nil {
 			return nil, fmt.Errorf("revenue: %w", err)
+		}
+	}
+	if p.NewReferrers > 0 {
+		if res.NewReferrers, err = newReferrers(ctx, conn, p); err != nil {
+			return nil, err
 		}
 	}
 	return res, nil
