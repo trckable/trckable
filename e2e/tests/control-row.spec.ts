@@ -91,8 +91,8 @@ test('comparison, the period and Filter open their popovers, Share and More are 
   await expect(see).not.toContainText(/no comparison/i)
   await compare.click()
   const menu = page.getByRole('menu', { name: 'Compare with' })
-  await expect(menu.getByRole('menuitemradio')).toHaveText([/^Period before/, 'Last year', 'Custom'])
-  await expect(menu.getByRole('menuitem', { name: 'No comparison' })).toHaveCount(0)
+  await expect(menu.getByRole('menuitemradio')).toHaveText(['No comparison', /^Period before/, 'Last year', 'Custom'])
+  await expect(menu.getByRole('menuitemradio', { name: 'No comparison' })).toHaveAttribute('aria-checked', 'true')
   // Escape closes it and focus goes back to the button that opened it.
   await page.keyboard.press('Escape')
   await expect(menu).toBeHidden()
@@ -103,7 +103,8 @@ test('comparison, the period and Filter open their popovers, Share and More are 
   await expect(set).toBeVisible()
   await expect(set).toBeFocused()
   await set.click()
-  await menu.getByRole('menuitem', { name: 'No comparison' }).click()
+  await expect(menu.getByRole('menuitemradio', { name: 'Last year' })).toHaveAttribute('aria-checked', 'true')
+  await menu.getByRole('menuitemradio', { name: 'No comparison' }).click()
   await expect(see.getByRole('button', { name: 'Compare' })).toBeVisible()
   // The C key still toggles it without the menu.
   await page.locator('body').click({ position: { x: 5, y: 400 } })

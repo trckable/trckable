@@ -11,6 +11,8 @@ section into the release.
 
 ### Changed
 
+- Replay's playhead is a thin lime line that fades out towards the top, with a soft glow, in place of the white one. A small chip at its top names the moment ("Sep 14, 15:00" by the hour), the dot rides the line's own value with a ring around it, and what has not been played yet is drawn dim (30%) instead of left out, so progress reads at a glance. It moves smoothly, and steps from moment to moment with reduced motion. The playhead is a lazy chunk, so the first load did not grow. Until Replay reaches a first visit, the key numbers show a dash instead of 0, 0% and 0s.
+- The comparison menu lists No comparison first, then Period before, Last year and Custom, with a check on the one in force (the small dashes before each choice are gone).
 - Every control in the dashboard's header row is one height (38 px), with the same corners and the same gap: the site card, Live/Data, Ask and the avatar, and the capsules of a shared link. On All sites the picker is the same card as on a site's page. The Live card's title leads with the same pulsing dot as the switch (still for a person who asked for less motion). CSS only; the first load did not grow.
 
 ## 0.5.8 (1 Oct 2026)
