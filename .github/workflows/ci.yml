@@ -362,7 +362,7 @@ jobs:
           for i in $(seq 1 50); do node -e "$ready" && break; sleep 0.3; done
           shard=""
           if [ -n "$SHARD" ]; then shard="--shard=$SHARD"; fi
-          cd e2e && TRCKABLE_A11Y_URL=http://127.0.0.1:8799 npx playwright test a11y fullcharts speed control-row header revenue.spec $shard --pass-with-no-tests --project=${{ matrix.browser }} --workers=4
+          cd e2e && TRCKABLE_A11Y_URL=http://127.0.0.1:8799 npx playwright test a11y fullcharts extras.spec speed control-row header revenue.spec $shard --pass-with-no-tests --project=${{ matrix.browser }} --workers=4
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

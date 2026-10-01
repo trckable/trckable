@@ -51,3 +51,17 @@ export function NoteMarkers(p: ComponentProps<typeof Markers>) {
     </Suspense>
   )
 }
+
+/** Live pulse: each visit rises from the last point as a dot, a goal as a ring, a sale as a coin with its amount. */
+export function Pulses({ pulses, n, x, y, vals }: { pulses?: { id: string; kind: string; label?: string }[]; n: number; x: (i: number) => number; y: (v: number) => number; vals: number[] }) {
+  if (!n) return null
+  return (
+    <>
+      {(pulses ?? []).map((pl) => (
+        <span key={pl.id} className={'pulse-' + pl.kind} style={{ left: x(n - 1), top: y(vals[n - 1] ?? 0) }} aria-hidden="true">
+          {pl.label}
+        </span>
+      ))}
+    </>
+  )
+}
