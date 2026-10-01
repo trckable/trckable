@@ -13,12 +13,28 @@ test.beforeAll(async () => {
   cookie = await session('dialog-height')
 })
 
-/** The space between the dialog's last element and its bottom edge, less its padding. */
-const slack = (page: Page) =>
+/** The dialog as it is now: its height, the space between its last element and its bottom edge (less the padding), and whether it is still easing. */
+const look = (page: Page) =>
   page.getByRole('dialog', { name: 'Add goals' }).evaluate((box) => {
     const last = box.lastElementChild as HTMLElement
-    return Math.round(box.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom - parseFloat(getComputedStyle(box).paddingBottom))
+    const slack = box.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom - parseFloat(getComputedStyle(box).paddingBottom)
+    return { height: box.getBoundingClientRect().height, slack: Math.round(slack), easing: (box as HTMLElement).style.height !== '' }
   })
+
+/** The dialog at rest: not easing, and the same two looks apart (a tab's content lands a frame after the click, and WebKit and Chromium differ by that frame), then its numbers. */
+async function atRest(page: Page, tab: string) {
+  let rest = { height: 0, slack: 0 }
+  await expect
+    .poll(async () => {
+      const a = await look(page)
+      await page.waitForTimeout(260)
+      const b = await look(page)
+      rest = b
+      return !a.easing && !b.easing && a.height === b.height
+    }, { message: `${tab}: it settles` })
+    .toBe(true)
+  return rest
+}
 
 test('Track a goal: every tab, in any order, ends at its own content', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
@@ -40,9 +56,9 @@ test('Track a goal: every tab, in any order, ends at its own content', async ({ 
   // The tallest first, then back to each shorter one.
   for (const tab of ['Page visit', 'Your code', 'Your server', 'Page visit', 'Button or link', 'Page visit']) {
     await box.getByRole('radio', { name: new RegExp(tab) }).click()
-    // The height eases for a moment, then rests on the content: nothing under the last button.
-    await expect.poll(() => slack(page), { message: `${tab}: an empty block under the buttons` }).toBeLessThanOrEqual(2)
-    const h = (await box.boundingBox())!.height
+    // The height eases for a moment, then rests on the content: nothing under the last button, and nothing cut off.
+    const { height: h, slack } = await atRest(page, tab)
+    expect(Math.abs(slack), `${tab}: it ends at its content, no empty block under the buttons`).toBeLessThanOrEqual(2)
     if (heights.has(tab)) expect(Math.abs(h - heights.get(tab)!), `${tab}: the same size every time`).toBeLessThanOrEqual(1)
     heights.set(tab, h)
   }
