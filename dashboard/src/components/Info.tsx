@@ -2,6 +2,7 @@
 // a second on a desktop, so anywhere an (i) explains something, it is this:
 // hover, focus or tap, all three.
 import { useEffect, useId, useRef, useState } from 'react'
+import './Info.css'
 
 export function Info({ text, align = 'left' }: { text: string; align?: 'left' | 'right' }) {
   const [open, setOpen] = useState(false)
