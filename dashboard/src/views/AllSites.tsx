@@ -241,7 +241,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
                     onClick={() => (quiet ? openSettings(r, 'install') : navigate('/' + encodeURIComponent(r.domain)))}
                   >
                     <span className="all-name">
-                      <SiteMark site={brandOf(r.id, r.domain)} size={32} />
+                      <SiteMark site={{ ...brandOf(r.id, r.domain), color: colorOf(r.id) }} size={32} />
                       <span>
                         <b>{r.name || r.domain}</b>
                         <span className="faint">

@@ -27,25 +27,45 @@ test('no two sites share a colour, and the ones past the palette are Other', asy
   }
   await expect.poll(async () => ((await (await page.request.get(`${API}/api/v1/overview?days=30`, { headers: H })).json()) as { sites: { domain: string; visitors: number }[] }).sites.filter((s) => s.domain.endsWith(`-${tag}.example.org`) && s.visitors > 0).length, { timeout: 30_000 }).toBe(9)
 
+  // The account's sites in their own order: the n-th has the n-th colour, whether or not it has visits.
+  const listed = ((await (await page.request.get(`${API}/api/v1/sites`, { headers: H })).json()) as { sites: { domain: string; name: string }[] }).sites
+  expect(listed.length).toBeGreaterThan(7)
+
   await page.goto(`${API}/all`)
   const key = page.locator('.all-legend span')
   await expect(key.first()).toBeVisible()
   const swatches = await key.evaluateAll((els) => els.map((e) => ({ name: (e.textContent ?? '').trim(), color: getComputedStyle(e.querySelector('i')!).backgroundColor })))
-  const named = swatches.filter((s) => s.name !== 'Other sites')
-  // More than seven sites have visits: seven colours, then one grey band.
-  expect(named).toHaveLength(7)
-  expect(swatches.at(-1)!.name).toBe('Other sites')
-  expect(new Set(named.map((s) => s.color)).size, 'every coloured site has its own colour').toBe(7)
-  expect(named.map((s) => s.color), 'Other is not one of the seven').not.toContain(swatches.at(-1)!.color)
+  const palette = await page.evaluate((n) => Array.from({ length: n }, (_, i) => {
+    const probe = document.body.appendChild(document.createElement('i'))
+    probe.style.color = `var(--ch-${i + 1})`
+    const c = getComputedStyle(probe).color
+    probe.remove()
+    return c
+  }), 7)
+  const other = swatches.find((s) => s.name === 'Other sites')
+  const named = swatches.filter((s) => s !== other)
+
+  expect(named.length).toBeLessThanOrEqual(7)
+  expect(new Set(named.map((s) => s.color)).size, 'no two sites share a colour').toBe(named.length)
+  for (const s of named) {
+    const at = listed.findIndex((l) => (l.name || l.domain) === s.name)
+    expect(at, `${s.name}: one of the account's first seven sites`).toBeGreaterThanOrEqual(0)
+    expect(at).toBeLessThan(7)
+    expect(s.color, `${s.name}: the colour of its place in the list`).toBe(palette[at])
+  }
+  // Past the palette: one grey band, never a colour taken again. Our nine sites are the newest, so some are past it.
+  expect(other, 'the sites past the seventh are one Other band').toBeDefined()
+  expect(named.map((s) => s.color)).not.toContain(other!.color)
+  expect(swatches.at(-1)).toBe(other)
 
   // The row's line is the key's colour: a colour belongs to the site, here and there.
   for (const s of named) {
     const row = page.locator('.all-row', { has: page.locator('.all-name b', { hasText: new RegExp(`^${s.name.replace(/\./g, '\\.')}$`) }) })
     const stroke = await row.locator('.all-spark path[stroke]').evaluate((p) => getComputedStyle(p).stroke)
     expect(stroke, `${s.name}: its line and its key agree`).toBe(s.color)
+    expect(await row.locator('.site-mark').evaluate((m) => getComputedStyle(m).color), `${s.name}: its mark is the same colour`).toBe(s.color)
   }
-  // The newest site is past the palette: no colour of its own in its row either.
+  // The newest site is past the palette: its row line is the neutral one too.
   const last = page.locator('.all-row', { has: page.locator('.all-name b', { hasText: `colors8-${tag}.example.org` }) })
-  const other = await last.locator('.all-spark path[stroke]').evaluate((p) => getComputedStyle(p).stroke)
-  expect(named.map((s) => s.color)).not.toContain(other)
+  expect(await last.locator('.all-spark path[stroke]').evaluate((p) => getComputedStyle(p).stroke)).toBe(other!.color)
 })
