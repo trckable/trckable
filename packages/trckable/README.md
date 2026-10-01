@@ -14,10 +14,11 @@
 
 </div>
 
-Tiny, open-source web analytics that shows which traffic pays. This is the
-client for a [trckable](https://github.com/trckable/trckable) server: run it
-yourself for free, or let [trckable Cloud](https://cloud.trckable.com) host it
-for you. `host` points the client at either.
+Tiny, free and open-source web analytics that shows which traffic pays. This is
+the client (MIT) for a [trckable](https://github.com/trckable/trckable) server,
+which is free and open source too (AGPL-3.0): run it yourself for free, or let
+[trckable Cloud](https://cloud.trckable.com) host it for you. `host` points the
+client at either.
 
 - ~2 KB, bundled into your app (no script file for ad blockers to block)
 - Pageviews for any SPA, goals, outbound links, downloads, scroll goals, engagement time
