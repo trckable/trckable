@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- Every control in the dashboard's header row is one height (38 px), with the same corners and the same gap: the site card, Live/Data, Ask and the avatar, and the capsules of a shared link. On All sites the picker is the same card as on a site's page. The Live card's title leads with the same pulsing dot as the switch (still for a person who asked for less motion). CSS only; the first load did not grow.
+
 ## 0.5.8 (1 Oct 2026)
 
 ### Added
