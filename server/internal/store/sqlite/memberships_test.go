@@ -499,3 +499,34 @@ func TestDisableTwoStepInChecksTheMemberships(t *testing.T) {
 		t.Fatalf("someone in one account: %v", err)
 	}
 }
+
+// An owner resetting a member's password forgets the browsers remembered for
+// the old one, as a reset by the person or from the command line does.
+func TestOwnersResetForgetsTheMembersRememberedBrowsers(t *testing.T) {
+	ctx := context.Background()
+	s, _ := membersT(t)
+	p, err := s.AddUser(ctx, DefaultAccount, "p@a.com", testPassword, RoleViewer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 2; i++ {
+		if _, err := s.NewKnownDevice(ctx, p.ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	count := func() (n int) {
+		if err := s.DB.QueryRowContext(ctx, `SELECT count(*) FROM known_devices WHERE user_id = ?`, p.ID).Scan(&n); err != nil {
+			t.Fatal(err)
+		}
+		return n
+	}
+	if count() != 2 {
+		t.Fatalf("setup: %d remembered browsers", count())
+	}
+	if err := s.ResetPersonPassword(ctx, DefaultAccount, p.ID, "another long password"); err != nil {
+		t.Fatal(err)
+	}
+	if n := count(); n != 0 {
+		t.Fatalf("%d remembered browsers after an owner reset the password", n)
+	}
+}

@@ -281,5 +281,9 @@ func (s *Store) ResetPersonPassword(ctx context.Context, account, id, password s
 	if _, err := tx.ExecContext(ctx, `DELETE FROM auth_sessions WHERE user_id = ?`, id); err != nil {
 		return err
 	}
+	// The browsers remembered for the old password go with it.
+	if _, err := tx.ExecContext(ctx, `DELETE FROM known_devices WHERE user_id = ?`, id); err != nil {
+		return err
+	}
 	return tx.Commit()
 }
