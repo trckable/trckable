@@ -1,6 +1,7 @@
 // How a site's server reports the robots it answers.
 import { CodeBlock } from '../../components/Code'
 import { DialogActions } from '../../components/DialogActions'
+import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../components/Modal'
 import type { Site } from '../../lib/api'
 import { copy } from './copy'
@@ -28,8 +29,7 @@ export function FeedHelp({ site, onClose }: { site: Site; onClose: () => void })
   const host = location.origin
   return (
     <Modal label={copy.help.label} className="wide" onClose={onClose}>
-      <h2>{copy.help.title}</h2>
-      <p className="muted crawl-help">{copy.help.intro}</p>
+      <DialogHead heading={copy.help.title} hint={copy.help.hint} help={copy.help.help} />
       <CodeBlock lang="js" code={middleware(host, site.id)} />
       <CodeBlock lang="shell" code={curl(host, site)} />
       <span className="faint crawl-small">{copy.help.note}</span>

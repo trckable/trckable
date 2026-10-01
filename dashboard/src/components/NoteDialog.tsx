@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Modal } from './Modal'
 import { DialogActions } from './DialogActions'
+import { DialogHead } from './DialogHead'
 import { Chevron } from './DatePicker'
 import { Month } from './DateRangeMonth'
 import { toast } from './Toast'
@@ -101,7 +102,7 @@ export function NoteDialog({
           save()
         }}
       >
-        <h2>Add a note</h2>
+        <DialogHead heading="Add a note" />
 
         {days.length > 1 && (
           <div className="note-strip" role="group" aria-label="Pick the day">

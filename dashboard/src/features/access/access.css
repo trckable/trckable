@@ -1,12 +1,11 @@
 /* Site access: the popup behind ⋯ → Allowed sites. */
 .modal.access-dialog {
-  width: min(400px, calc(100vw - 32px));
-  padding: 20px;
+  width: min(420px, calc(100vw - 32px));
 }
 .access-dialog form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 .access-all {
   display: flex;
@@ -26,14 +25,6 @@
 }
 .access-sites:disabled {
   opacity: 0.6;
-}
-.access-dialog h2 {
-  margin: 0;
-  font-size: 17px;
-}
-.access-who {
-  margin: -8px 0 0;
-  font-size: 13px;
 }
 .access-sites {
   display: flex;

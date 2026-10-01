@@ -2,6 +2,8 @@
 // password an owner reset. Shown once; trckable sends no email.
 import { Check, Copy, KeyRound } from 'lucide-react'
 import { useState } from 'react'
+import { DialogActions } from '../../components/DialogActions'
+import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../components/Modal'
 import { people } from './peopleCopy'
 
@@ -17,15 +19,7 @@ export function OneTimePassword({ email, password, reset, onClose }: { email: st
   }
   return (
     <Modal label={t.label} className="person-modal" onClose={onClose}>
-      <div className="modal-head">
-        <span className="modal-badge" aria-hidden="true">
-          <KeyRound size={19} strokeWidth={1.75} />
-        </span>
-        <div>
-          <h2>{reset ? t.titleReset : t.titleNew}</h2>
-          <span className="faint">{t.body(email)}</span>
-        </div>
-      </div>
+      <DialogHead icon={KeyRound} heading={reset ? t.titleReset : t.titleNew} hint={t.hint(email)} help={t.help} />
       <div className="otp-box">
         <code>{password}</code>
         <button type="button" className="btn" onClick={() => copy('pw')}>
@@ -33,14 +27,17 @@ export function OneTimePassword({ email, password, reset, onClose }: { email: st
           {copied === 'pw' ? t.copied : t.copy}
         </button>
       </div>
-      <div className="person-actions">
-        <button type="button" className="btn ghost" onClick={() => copy('all')}>
-          {copied === 'all' ? t.copied : t.copyAll}
-        </button>
+      <DialogActions
+        left={
+          <button type="button" className="btn ghost" onClick={() => copy('all')}>
+            {copied === 'all' ? t.copied : t.copyAll}
+          </button>
+        }
+      >
         <button type="button" className="btn primary" onClick={onClose}>
           {t.done}
         </button>
-      </div>
+      </DialogActions>
     </Modal>
   )
 }

@@ -27,8 +27,9 @@ export const copy = {
   help: {
     label: 'Report crawlers',
     title: 'Let your server report robots',
-    intro: 'Crawlers do not run JavaScript, so the only honest way to count them is from the server that answers them. One middleware, no visitor data: the path and the user agent.',
-    note: 'Only robots trckable recognises are counted, per day and page; everything else is ignored. No IP, no cookie, nothing about a person.',
+    hint: 'Crawlers run no JavaScript: count them from your server.',
+    help: 'One middleware sends the path and the user agent, never visitor data.',
+    note: 'Only robots trckable recognises are counted, per day and page. No IP, no cookie.',
     done: 'Done',
   },
 }

@@ -46,6 +46,24 @@ export function trapTab(e: Pick<KeyboardEvent, 'key' | 'shiftKey' | 'target' | '
   list[(from + step + list.length) % list.length].focus()
 }
 
+/** The dialog's last moment: a copy of what was on screen fades and scales out
+ *  over 160 ms, then goes. Not while React is only re-running the effect (the
+ *  node is still in the page then) and not under reduced motion. */
+function leave(node: HTMLElement) {
+  if (node.isConnected || typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  const ghost = node.cloneNode(true) as HTMLElement
+  ghost.classList.add('leaving')
+  ghost.setAttribute('aria-hidden', 'true')
+  ghost.setAttribute('inert', '')
+  ghost.querySelectorAll('[role=dialog]').forEach((d) => {
+    d.removeAttribute('role')
+    d.removeAttribute('aria-modal')
+    d.removeAttribute('aria-label')
+  })
+  document.body.appendChild(ghost)
+  setTimeout(() => ghost.remove(), 170)
+}
+
 export function Modal({
   label,
   onClose,
@@ -103,20 +121,30 @@ export function Modal({
     return () => ro.disconnect()
   }, [keepSize])
   // Focus moves into the dialog when it opens (unless a field in it already
-  // took it) and back to what had it when it closes.
+  // took it) and back to what had it when it closes. A help dot is never the
+  // first stop: its tip would open by itself.
   // What had focus is noted while rendering, before any autoFocus in the
   // dialog's own content has moved it.
   const [before] = useState(() => (typeof document === 'undefined' ? null : (document.activeElement as HTMLElement | null)))
   useEffect(() => {
     const el = box.current
-    if (el && !el.contains(document.activeElement)) (focus === 'first' ? tabbable(el)[0] ?? el : el).focus()
+    if (el && !el.contains(document.activeElement)) (focus === 'first' ? tabbable(el).find((c) => !c.matches('.info-dot')) ?? el : el).focus()
     return () => {
       if (before && before.isConnected) before.focus()
     }
   }, [focus, before])
+  // When the dialog goes, a copy of it stays for the length of its exit
+  // animation and fades out. The copy is inert: no role, nothing to reach.
+  const back = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = back.current
+    return () => {
+      if (el) leave(el)
+    }
+  }, [])
   return createPortal(
     // Escape is handled above, through the stack; a click on the backdrop is the mouse's way.
-    <div className="modal-back" role="presentation" onClick={onClose}>
+    <div ref={back} className="modal-back" role="presentation" onClick={onClose}>
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- only stops a click inside the dialog from reaching the backdrop (and the page behind the portal) */}
       <div ref={box} tabIndex={-1} className={('modal rise ' + className).trim()} role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => box.current && trapTab(e, box.current)}>
         {children}

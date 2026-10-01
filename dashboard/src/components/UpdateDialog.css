@@ -4,7 +4,6 @@
 
 .modal.update-modal {
   width: min(560px, 100%);
-  gap: 16px;
 }
 .update-notes {
   display: grid;
@@ -32,12 +31,15 @@
   gap: 8px;
   font-size: 13px;
 }
-.update-links {
+.update-label {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
-.update-links .btn svg {
+.update-label .info {
+  position: relative;
+  display: inline-flex;
+}
+.update-modal .dialog-actions .btn svg {
   margin-left: 2px;
 }

@@ -246,10 +246,28 @@ test('the first capsule folds to a pill, and the choice is remembered', async ({
   await expect(page.getByRole('button', { name: 'Previous period' })).toBeVisible()
 })
 
-test('an active filter shows a count and its chip under the row', async ({ page }) => {
+test('an active filter shows a count, and on a desktop its chip is on the left of the row', async ({ page }) => {
   await open(page, 1280, '?f=channel:Direct')
   await expect(page.locator('.ctl-see .filter-root .filter-count')).toHaveText('1')
+  const chips = page.locator('.subbar .ctl-inline [role=group]')
+  await expect(chips).toBeVisible()
+  await expect(page.locator('.ctl-under')).toHaveCount(0)
+  // Chips, then Save view, then Views, packed at the left; the capsules keep the right.
+  const chip = (await chips.boundingBox())!
+  const save = (await page.locator('.ctl-inline').getByRole('button', { name: 'Save view' }).boundingBox())!
+  const views = (await page.locator('.ctl-inline').getByRole('button', { name: /^Views/ }).boundingBox())!
+  const capsule = (await page.locator('.ctl-see').boundingBox())!
+  expect(chip.x, 'the chips first').toBeLessThan(save.x)
+  expect(save.x, 'then Save view').toBeLessThan(views.x)
+  expect(views.x + views.width, 'Views ends before the capsules').toBeLessThan(capsule.x)
+  expect(views.x - (save.x + save.width), 'Views follows Save view closely').toBeLessThan(24)
+  expect(Math.abs(chip.y + chip.height / 2 - (capsule.y + capsule.height / 2)), 'on the capsules\' line').toBeLessThan(6)
+})
+
+test('a tablet keeps the chips in their own row under the capsules', async ({ page }) => {
+  await open(page, 900, '?f=channel:Direct')
   await expect(page.locator('.ctl-under [role=group]')).toBeVisible()
+  await expect(page.locator('.ctl-inline')).toHaveCount(0)
 })
 
 for (const width of [390, 360]) {

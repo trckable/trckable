@@ -1,1 +1,0 @@
-.dialog-actions{border-top:1px solid var(--grid);align-items:center;gap:8px;margin:6px -20px -20px;padding:14px 20px;display:flex}.dialog-actions-gap{flex:1}.dialog-actions .btn.big{height:44px;padding:0 20px}@media (max-width:560px){.dialog-actions{flex-wrap:wrap-reverse;gap:8px}.dialog-actions>.btn{flex:140px;justify-content:center}.dialog-actions-gap{display:none}}

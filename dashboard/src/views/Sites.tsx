@@ -7,6 +7,9 @@ import { HoldButton } from '../components/HoldButton'
 import { closeAccount } from '../lib/account'
 import { SiteMark } from '../components/SiteMark'
 import { DialogActions } from '../components/DialogActions'
+import { DialogHead } from '../components/DialogHead'
+import { Field } from '../components/Field'
+import { Info } from '../components/Info'
 import { Modal } from '../components/Modal'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import { Picker } from '../components/Picker'
@@ -189,61 +192,42 @@ function EditSite({ site, onClose, onSaved }: { site: Site; onClose: () => void;
         e.preventDefault()
         save()
       }}>
-        <div>
-          <h2>{site.domain}</h2>
-          <p className="muted" style={{ margin: '4px 0 0' }}>
-            The domain never changes — it is what the snippet reports. Everything else is yours.
-          </p>
-        </div>
+        <DialogHead heading={site.domain} hint="The domain never changes." help="It is what the snippet reports. Everything else is yours." />
 
-        <label className="field">
-          Display name
-          <input className="input" style={{ height: 44 }} value={name} placeholder={site.domain} autoFocus onChange={(e) => setName(e.target.value)} />
-          <span className="faint" style={{ fontSize: 12 }}>
-            What you call this site in trckable.
-          </span>
-        </label>
+        <Field label="Display name">
+          {(f) => <input {...f} className="input" value={name} placeholder={site.domain} autoFocus onChange={(e) => setName(e.target.value)} />}
+        </Field>
 
         <div className="edit-pair">
-          <label className="field">
-            Timezone
-            <Picker
-              label="Timezone"
-              placeholder="Search a city or zone…"
-              value={timezone}
-              onPick={setTimezone}
-              items={withCurrent(zones, timezone, (z) => z.replace(/_/g, ' '))}
-            />
-            <span className="faint" style={{ fontSize: 12 }}>
-              Which day and hour a visit belongs to. Changing it reshapes past days.
-            </span>
-          </label>
-          <label className="field">
-            Currency
-            <Picker label="Currency" placeholder="Search a currency…" value={currency} onPick={setCurrency} items={withCurrent(CURRENCIES, currency)} />
-            <span className="faint" style={{ fontSize: 12 }}>
-              Revenue is converted at the payment date, so past sales keep their value.
-            </span>
-          </label>
+          <Field label="Timezone" plain help="Which day and hour a visit belongs to. Changing it reshapes past days.">
+            {() => <Picker label="Timezone" placeholder="Search a city or zone…" value={timezone} onPick={setTimezone} items={withCurrent(zones, timezone, (z) => z.replace(/_/g, ' '))} />}
+          </Field>
+          <Field label="Currency" plain help="Revenue is converted at the payment date, so past sales keep their value.">
+            {() => <Picker label="Currency" placeholder="Search a currency…" value={currency} onPick={setCurrency} items={withCurrent(CURRENCIES, currency)} />}
+          </Field>
         </div>
 
         {err && (
-          <span role="alert" style={{ color: 'var(--down)', fontSize: 13 }}>
+          <span role="alert" className="dlg-field-err">
             {err}
           </span>
         )}
-        <div className="wiz-actions">
-          <button type="button" className="btn ghost" onClick={() => openSettings(site)}>
-            More settings →
-          </button>
-          <span className="spacer" style={{ flex: 1 }} />
-          <button type="button" className="btn ghost" onClick={onClose}>
-            Cancel
-          </button>
+        <DialogActions
+          left={
+            <>
+              <button type="button" className="btn ghost" onClick={() => openSettings(site)}>
+                More settings →
+              </button>
+              <button type="button" className="btn ghost" onClick={onClose}>
+                Cancel
+              </button>
+            </>
+          }
+        >
           <button type="submit" className="btn primary" disabled={busy || !changed}>
             {busy ? 'Saving…' : 'Save'}
           </button>
-        </div>
+        </DialogActions>
       </form>
     </Modal>
   )
@@ -300,17 +284,14 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
     <Modal label={`Delete ${site.domain}`} className="danger-modal" keepSize={false} onClose={step === 'what' || step === 'last' ? onClose : undefined}>
       {step === 'what' && (
         <>
-          <div className="danger-head danger-step" key="what">
-            <span className="danger-mark" aria-hidden="true">
-              <TriangleAlert size={22} strokeWidth={1.9} />
-            </span>
-            <div>
-              <h2>Delete {site.domain}?</h2>
-              <span>This removes the site and everything recorded for it. There is no undo.</span>
-            </div>
+          <div className="danger-step" key="what">
+            <DialogHead icon={TriangleAlert} danger heading={`Delete ${site.domain}?`} hint="Removes the site and all its data. There is no undo." />
           </div>
           <div className="danger-list danger-step">
-            <b>What goes</b>
+            <b className="danger-what">
+              What goes
+              <Info text="Backups made before now still hold it until they age out. Payment providers keep the webhooks they were given; remove those there." />
+            </b>
             <ul>
               {lines.map(([label, n]) => (
                 <li key={label}>
@@ -319,23 +300,24 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
               ))}
               <li>Its settings, modules, verification and look</li>
             </ul>
-            <span className="faint">Backups made before now still hold it until they age out. Payment providers keep the webhooks they were given; remove those there.</span>
           </div>
-          <label className="field danger-type">
-            <span>
-              Type <b>{site.domain}</b> to continue
-            </span>
-            <input
-              className="input"
-              value={typed}
-              onChange={(e) => setTyped(e.target.value)}
-              placeholder={site.domain}
-              autoComplete="off"
-              spellCheck={false}
-              autoFocus
-              onKeyDown={(e) => e.key === 'Enter' && named && setStep('last')}
-            />
-          </label>
+          <div className="danger-type">
+            <Field label={`Type ${site.domain} to continue`}>
+              {(f) => (
+                <input
+                  {...f}
+                  className="input"
+                  value={typed}
+                  onChange={(e) => setTyped(e.target.value)}
+                  placeholder={site.domain}
+                  autoComplete="off"
+                  spellCheck={false}
+                  autoFocus
+                  onKeyDown={(e) => e.key === 'Enter' && named && setStep('last')}
+                />
+              )}
+            </Field>
+          </div>
           <DialogActions
             left={
               <button type="button" className="btn ghost" onClick={onClose} autoFocus={false}>
@@ -352,14 +334,8 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
 
       {step === 'last' && (
         <>
-          <div className="danger-head danger-step" key="last">
-            <span className="danger-mark" aria-hidden="true">
-              <TriangleAlert size={22} strokeWidth={1.9} />
-            </span>
-            <div>
-              <h2>Last check</h2>
-              <span>Once you hold the button, {site.domain} is deleted for good. Nobody, including trckable, can bring it back from here.</span>
-            </div>
+          <div className="danger-step" key="last">
+            <DialogHead icon={TriangleAlert} danger heading="Last check" hint={`Hold the button and ${site.domain} is gone for good.`} help="Nobody, including trckable, can bring it back from here." />
           </div>
           <div className="danger-list danger-final danger-step">
             <span>
@@ -401,7 +377,7 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
           <span className="shred-bar" aria-hidden="true">
             <span />
           </span>
-          <span className="faint">A busy site can hold millions of rows: this can take a moment. Keep this open.</span>
+          <span className="faint">This can take a moment. Keep this open.</span>
         </div>
       )}
 

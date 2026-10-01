@@ -1,7 +1,6 @@
 /* The timeline and the share sheet: loaded with them, not with the first load. */
 .ms-modal {
   width: min(620px, calc(100vw - 32px));
-  gap: 12px;
 }
 .ms-sheet {
   width: min(880px, calc(100vw - 32px));

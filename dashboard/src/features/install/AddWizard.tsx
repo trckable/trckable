@@ -4,6 +4,7 @@
 import { Banknote, Globe } from 'lucide-react'
 import { useState } from 'react'
 import { DialogActions } from '../../components/DialogActions'
+import { DialogHead } from '../../components/DialogHead'
 import { Name } from '../../components/Logo'
 import { Modal } from '../../components/Modal'
 import { StepBody } from '../../components/StepBody'
@@ -73,17 +74,7 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
 
   return (
     <Modal label={t.label} className="wizard add-site" onClose={onClose} keepSize={false}>
-      <div className="wiz-head">
-        <span className="modal-badge" aria-hidden="true">
-          {step === 3 ? <Banknote size={19} strokeWidth={1.75} /> : <Globe size={19} strokeWidth={1.75} />}
-        </span>
-        <div>
-          <h2>
-            <Title step={step} site={site} live={live} />
-          </h2>
-          <span className="faint">{t.sub[step - 1]}</span>
-        </div>
-      </div>
+      <DialogHead icon={step === 3 ? Banknote : Globe} heading={<Title step={step} site={site} live={live} />} hint={t.sub[step - 1]} />
       <Steps labels={t.steps} at={step - 1} done={live && step === 2 ? 1 : undefined} onGo={(i) => setStep(i + 1)} />
 
       <StepBody step={step} className="wiz-step" fit>
@@ -127,7 +118,7 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
             </button>
           }
         >
-          <button type="button" className="btn big" onClick={open}>
+          <button type="button" className="btn ghost" onClick={open}>
             {t.revenueSkip}
           </button>
           <button type="button" className="btn primary big" onClick={payments}>

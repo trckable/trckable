@@ -4,6 +4,8 @@
 import { ArrowRight, Banknote, Check, Info, Link2, TriangleAlert } from 'lucide-react'
 import { Menu } from '../components/Menu'
 import { DialogActions } from '../components/DialogActions'
+import { DialogHead } from '../components/DialogHead'
+import { Field } from '../components/Field'
 import { Modal } from '../components/Modal'
 import { StepBody } from '../components/StepBody'
 import { Steps } from '../components/Steps'
@@ -381,7 +383,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
 
   return (
     <Modal label={`${provider?.name} webhook`} className="wizard" onClose={onClose}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div className="dlg-head">
         <ProviderMark id={c.provider} />
         <h2>{provider?.name} webhook</h2>
       </div>
@@ -391,7 +393,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
         {step === 1 && (
           <>
             <p className="muted" style={{ margin: 0 }}>
-              {own ? 'Post every sale to this URL, from your server. It is only ever called by code you write.' : `In ${provider?.name}, add a webhook endpoint with this URL.`}
+              {own ? 'Post every sale to this URL, from your server.' : `In ${provider?.name}, add a webhook endpoint with this URL.`}
             </p>
             <CodeBlock code={c.webhook_url} lang="url" />
             <div className="wiz-actions">
@@ -409,7 +411,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
           (own ? (
             <>
               <p className="muted" style={{ margin: 0 }}>
-                Sign the body with your secret, so nobody else can invent a sale. Amounts are in minor units — cents, not euros.
+                Sign the body with your secret. Amounts are in cents, not euros.
               </p>
               {shown ? <CodeBlock code={shown} lang="secret" /> : (
                 <button type="button" className="btn" onClick={() => api.paymentSecret(site.id, c.id).then((r) => setShown(r.secret))}>
@@ -454,7 +456,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
               <div className="wiz-done">
                 <Ghost size={40} peek />
                 <b>Waiting for your first sale.</b>
-                <span className="muted">Send one and it appears here within a minute. Send the same id twice and it is still one sale.</span>
+                <span className="muted">Send one and it appears within a minute. The same id twice is one sale.</span>
               </div>
             )}
             {!own && done && (
@@ -495,7 +497,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
                 }}
               >
                 <p className="muted" style={{ margin: 0 }}>
-                  Paste the signing secret {provider?.name} showed for that endpoint.
+                  Paste the signing secret {provider?.name} shows for that endpoint.
                 </p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <input className="input num" style={{ flex: 1, minWidth: 200, height: 48 }} value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="whsec_…" autoComplete="off" autoFocus />
@@ -550,28 +552,19 @@ function Connect({ site, provider, onCancel, onDone }: { site: Site; provider: P
   if (provider.id === 'custom')
     return (
       <Modal label="Connect anything" className="wide" onClose={onCancel}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="dlg-head">
           <ProviderMark id={provider.id} />
-          <h2>Anything else</h2>
-        </div>
-        <p className="muted" style={{ margin: 0 }}>
-          There is no account to connect. trckable gives you a URL and a signing secret, and your own code posts each sale to it — whatever
-          took the money.
-        </p>
-        {err && (
-          <div role="alert" style={{ color: 'var(--down)', fontSize: 13 }}>
-            {err}
+          <div className="dlg-head-text">
+            <h2>Anything else</h2>
+            <span className="faint">Your own code posts each sale to a URL.</span>
           </div>
-        )}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        </div>
+        {err && <div role="alert" className="dlg-field-err">{err}</div>}
+        <DialogActions left={<button type="button" className="btn ghost" onClick={onCancel}>Cancel</button>}>
           <button type="button" className="btn primary big" disabled={busy} onClick={() => submit(true)}>
             {busy ? 'Setting up…' : 'Give me the URL and secret'}
           </button>
-          <span className="spacer" style={{ flex: 1 }} />
-          <button type="button" className="btn ghost" onClick={onCancel}>
-            Cancel
-          </button>
-        </div>
+        </DialogActions>
       </Modal>
     )
 
@@ -581,9 +574,12 @@ function Connect({ site, provider, onCancel, onDone }: { site: Site; provider: P
         e.preventDefault()
         submit(false)
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="dlg-head">
           <ProviderMark id={provider.id} />
-          <h2>Connect {provider.name}</h2>
+          <div className="dlg-head-text">
+            <h2>Connect {provider.name}</h2>
+            <span className="faint">Paste a restricted API key.</span>
+          </div>
         </div>
 
         {provider.has_modes && !keyPicksMode(provider.id, key) && (
@@ -597,32 +593,29 @@ function Connect({ site, provider, onCancel, onDone }: { site: Site; provider: P
           </div>
         )}
 
-        <input className="input num" style={{ height: 50, fontSize: 15 }} value={key} onChange={(e) => setKey(e.target.value)} autoComplete="off" spellCheck={false} placeholder={provider.key_hint} aria-label="API key" />
-        <span className="faint" style={{ fontSize: 12 }}>
-          <a href={provider.key_url} target="_blank" rel="noreferrer noopener">
-            Where to find it →
-          </a>{' '}
-          Stored encrypted. Used to create the webhook and to check for missed payments.
-        </span>
+        <Field label="API key" plain help="Stored encrypted. Used to create the webhook and to check for missed payments." error={err}>
+          {() => <input className="input num" value={key} onChange={(e) => setKey(e.target.value)} autoComplete="off" spellCheck={false} placeholder={provider.key_hint} aria-label="API key" />}
+        </Field>
+        <a className="key-link" href={provider.key_url} target="_blank" rel="noreferrer noopener">
+          Where to find it →
+        </a>
 
-        {err && (
-          <div role="alert" style={{ color: 'var(--down)', fontSize: 13 }}>
-            {err}
-          </div>
-        )}
-
-        <button type="submit" className="btn primary big" disabled={busy || !key.trim()}>
-          {busy ? 'Connecting…' : 'Connect ' + provider.name}
-        </button>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <button type="button" className="btn ghost" disabled={busy} onClick={() => submit(true)}>
-            I'll add the webhook myself
+        <DialogActions
+          left={
+            <>
+              <button type="button" className="btn ghost" disabled={busy} onClick={() => submit(true)}>
+                I'll add the webhook myself
+              </button>
+              <button type="button" className="btn ghost" onClick={onCancel}>
+                Cancel
+              </button>
+            </>
+          }
+        >
+          <button type="submit" className="btn primary big" disabled={busy || !key.trim()}>
+            {busy ? 'Connecting…' : 'Connect ' + provider.name}
           </button>
-          <span className="spacer" style={{ flex: 1 }} />
-          <button type="button" className="btn ghost" onClick={onCancel}>
-            Cancel
-          </button>
-        </div>
+        </DialogActions>
       </form>
     </Modal>
   )
@@ -668,10 +661,7 @@ function Attribution({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState('Payment links')
   return (
     <Modal label="Attribute each sale" className="wide" onClose={onClose}>
-      <h2>Attribute each sale to its visit</h2>
-      <p className="muted" style={{ margin: 0 }}>
-        Pass the visitor id to your checkout. Renewals follow it automatically. Without it, revenue still counts in totals but shows as unattributed.
-      </p>
+      <DialogHead heading="Attribute each sale" hint="Pass the visitor id to your checkout." help="Renewals follow it automatically. Without it, revenue still counts in totals but shows as unattributed." />
       <div className="prov-tabs" role="tablist" aria-label="Checkout">
         {Object.entries(SNIP_FOR).map(([label, id]) => (
           <button key={label} type="button" role="tab" aria-selected={tab === label} className={tab === label ? 'mtile on' : 'mtile'} onClick={() => setTab(label)}>

@@ -1,15 +1,10 @@
 /* The role confirmation: it loads with its chunk, not with the first load. */
 .modal.role-modal {
-  width: min(400px, 100%);
+  width: min(440px, 100%);
 }
 .role-body {
   display: grid;
-  gap: 14px;
-}
-.role-body h2 {
-  margin: 0;
-  font-size: 17px;
-  letter-spacing: -0.02em;
+  gap: 16px;
 }
 .role-lines {
   display: grid;
@@ -52,19 +47,4 @@
   margin: 0;
   color: var(--down);
   font-size: 13px;
-}
-.role-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-.role-actions .btn {
-  height: 42px;
-  padding: 0 16px;
-}
-@media (max-width: 560px) {
-  .role-actions .btn {
-    flex: 1;
-    justify-content: center;
-  }
 }

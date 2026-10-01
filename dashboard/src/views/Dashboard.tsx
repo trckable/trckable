@@ -17,7 +17,7 @@ import { useLive, onlineNow } from '../lib/useLive'
 import { useReport } from '../lib/useReport'
 import { useSample } from '../lib/useSample'
 import { AskPanel } from './AskLazy'
-import { caps, keyFor, pressed, useKeymap } from '../lib/keys'
+import { pressed, useKeymap } from '../lib/keys'
 import { StoppedNotice } from './DashboardParts'
 import { KpiStrip } from '../features/overview/KpiStrip'
 import { ChartHead } from '../features/overview/ChartHead'
@@ -465,7 +465,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     site, query, bucket: data?.bucket ?? 'day', full, shared: isShared(), deep: full && hasData && !isShared(), loading: firstLoad, scrubbing, mods, money, fmtMoney: fmtM,
     rows, soFar, cur, prev: trail ? undefined : data?.previous, dims, sourceRows, perDay, trail, dimTrail: !!trail, onSourceHover, addFilter, mapOn,
     goals: src?.goals ?? [], revenueDims: src?.revenue_dims ?? {}, countryRevenue: src?.revenue_dims?.country ?? [],
-    attrFirst: view.attr === 'first', onAttr: (first) => setView({ attr: first ? 'first' : undefined }), onTrackGoal: () => setAddGoals(true),
+    attrFirst: view.attr === 'first', onAttr: (first) => setView({ attr: first ? 'first' : undefined }), onTrackGoal: () => setAddGoals(true), onFull: () => setView({ mode: 'full' }),
     steps: view.funnel ?? [], onSteps: (f) => setView({ funnel: f }), onPickVisitor: setJourney, visitors: k?.visitors ?? 0,
   }
 
@@ -538,7 +538,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
       {!liveView && <>
       {sharing && <Suspense fallback={null}><ShareDialog site={site} sites={sites} onClose={() => setSharing(false)} /></Suspense>}
-      {naming && <Suspense fallback={null}><SaveViewHost site={site.id} filters={view.filters.length} query={current} onClose={() => setNaming(false)} onSaved={loadSegments} /></Suspense>}
+      {naming && <Suspense fallback={null}><SaveViewHost site={site.id} query={current} onClose={() => setNaming(false)} onSaved={loadSegments} /></Suspense>}
 
       {error && (
         <div className="banner" role="alert">
@@ -683,18 +683,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
 
       {hasData && <Cards c={cardsCtx} />}
-
-      {!full && hasData && (
-        <section className="banner" style={{ justifyContent: 'space-between', flexWrap: 'wrap', padding: '20px 24px', borderRadius: 16 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <strong style={{ color: 'var(--text)' }}>That's the whole story on one screen.</strong>
-            <span>Full mode adds tabs to both cards: funnel, retention, people, the charts, exit pages and more. Nothing reloads.</span>
-          </div>
-          <button type="button" className="btn primary" onClick={() => setView({ mode: 'full' })}>
-            Show Full <span className="kbd" style={{ color: 'inherit', borderColor: 'currentColor' }}>{caps(keyFor('mode')).join('')}</span>
-          </button>
-        </section>
-      )}
 
       {cur?.approximate && (
         <p className="faint" style={{ fontSize: 12, margin: 0 }}>

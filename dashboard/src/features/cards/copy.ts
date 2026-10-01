@@ -1,6 +1,9 @@
 // The two cards under the chart: their tabs, and the small words on their lists.
 export const cardCopy = {
   who: 'Who came',
+  full: 'Full',
+  fullLabel: 'Show the Full view',
+  fullTip: 'Full adds funnel, retention, people and more',
   what: 'What they did',
   sources: 'Sources',
   pages: 'Pages',

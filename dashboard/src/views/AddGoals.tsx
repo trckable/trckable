@@ -1,30 +1,28 @@
 // "How do I track a signup?" — four answers. The first needs no code at all:
 // a page seen is a goal reached, counted from the pageviews trckable already
 // has, so it reads history too. The other three are one snippet each.
-import { Code, FileCheck, MousePointerClick, Server } from 'lucide-react'
+import { Check, Code, FileCheck, MousePointerClick, Server, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { DialogActions } from '../components/DialogActions'
+import { DialogHead } from '../components/DialogHead'
+import { Field } from '../components/Field'
 import { Modal } from '../components/Modal'
 import { CodeBlock } from '../components/Code'
+import { OptionCards, type Option } from '../components/OptionCards'
 import { api, messageOf, type ContentGroup, type SiteConfig, type Site } from '../lib/api'
 import { isViewer } from '../lib/me'
 import { toast } from '../components/Toast'
+import { copy } from './addGoalsCopy'
+import './AddGoals.css'
 
 type Route = 'page' | 'html' | 'js' | 'api'
 
-const ROUTES: { id: Route; name: string; what: string; icon: typeof Code }[] = [
-  { id: 'page', name: 'When a page is visited', what: 'No code at all', icon: FileCheck },
-  { id: 'html', name: 'On a button or link', what: 'One attribute, no code', icon: MousePointerClick },
-  { id: 'js', name: 'From your code', what: 'A call when something succeeds', icon: Code },
-  { id: 'api', name: 'From your server', what: 'For anything the browser never sees', icon: Server },
+const ROUTES: Option<Route>[] = [
+  { id: 'page', label: copy.routes.page.name, hint: copy.routes.page.hint, icon: FileCheck },
+  { id: 'html', label: copy.routes.html.name, hint: copy.routes.html.hint, icon: MousePointerClick },
+  { id: 'js', label: copy.routes.js.name, hint: copy.routes.js.hint, icon: Code },
+  { id: 'api', label: copy.routes.api.name, hint: copy.routes.api.hint, icon: Server },
 ]
-
-// The one thing to know under each snippet.
-const HINT: Record<Exclude<Route, 'page'>, string> = {
-  html: 'Any element works. Extra data-trckable-* attributes become properties you can break the goal down by.',
-  js: 'Call it when the action succeeded, not when the button was clicked — a failed signup is not a signup.',
-  api: 'Server-side goals need the visitor id from the trckable_vid cookie, so the goal lands on the right visit.',
-}
 
 export function AddGoals({ site, pages, onClose, onChanged }: { site: Site; pages: string[]; onClose: () => void; onChanged: () => void }) {
   const [route, setRoute] = useState<Route>('page')
@@ -40,7 +38,6 @@ trckable('goal', 'signup', { plan: 'pro' })
 
 // or from the npm package
 import { track } from 'trckable'
-import './AddGoals.css'
 track('signup', { plan: 'pro' })`,
     api: `curl -X POST ${host}/api/e \\
   -H 'content-type: application/json' \\
@@ -50,51 +47,32 @@ track('signup', { plan: 'pro' })`,
   }
 
   return (
-    <Modal label="Add goals" className="wide" onClose={onClose}>
-      <h2>Track a goal</h2>
-      <p className="muted" style={{ margin: 0 }}>
-        A goal is anything worth counting: a signup, a trial, a download. Mark it once and it appears here, with the sources and pages that produced it.
-      </p>
-
-      <div className="goal-routes">
-        {ROUTES.map((r) => (
-          <button key={r.id} type="button" className={route === r.id ? 'mtile on' : 'mtile'} aria-pressed={route === r.id} onClick={() => setRoute(r.id)} style={{ minWidth: 0, flex: 1 }}>
-            <r.icon size={19} strokeWidth={1.75} aria-hidden="true" />
-            <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
-              {r.name}
-              <span className="faint" style={{ fontSize: 11 }}>
-                {r.what}
-              </span>
-            </span>
-          </button>
-        ))}
-      </div>
-
+    <Modal label={copy.label} className="wide" onClose={onClose}>
+      <DialogHead heading={copy.title} hint={copy.hint} />
+      <OptionCards label={copy.methods} options={ROUTES} value={route} onChange={setRoute} />
       {route === 'page' ? (
-        <PageGoals site={site} pages={pages} onChanged={onChanged} />
+        <PageGoals site={site} pages={pages} onChanged={onChanged} onClose={onClose} />
       ) : (
         <>
-      <CodeBlock code={code[route]} />
-      <span className="faint" style={{ fontSize: 12 }}>
-        {HINT[route]}
-      </span>
+          <CodeBlock code={code[route]} />
+          <span className="faint goal-hint">{copy.hints[route]}</span>
+          <DialogActions>
+            <button type="button" className="btn primary big" onClick={onClose}>
+              {copy.done}
+            </button>
+          </DialogActions>
         </>
       )}
-
-      <DialogActions>
-        <button type="button" className="btn primary big" onClick={onClose}>
-          Done
-        </button>
-      </DialogActions>
     </Modal>
   )
 }
 
-/** Goals that are pages: a name, a path, and the ones already set up. */
-function PageGoals({ site, pages, onChanged }: { site: Site; pages: string[]; onChanged: () => void }) {
+/** Goals that are pages: the ones already set up, a name, a path. */
+function PageGoals({ site, pages, onChanged, onClose }: { site: Site; pages: string[]; onChanged: () => void; onClose: () => void }) {
   const [cfg, setCfg] = useState<SiteConfig | null>(null)
   const [name, setName] = useState('')
   const [path, setPath] = useState('')
+  const [nameErr, setNameErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const viewer = isViewer()
   useEffect(() => {
@@ -120,67 +98,82 @@ function PageGoals({ site, pages, onChanged }: { site: Site; pages: string[]; on
     let p = path.trim()
     if (p && !p.startsWith('/')) p = '/' + p
     if (!n || !p) return
-    if (goals.some((g) => g.name === n)) return toast('There is already a goal with that name', 'error')
-    save([...goals, { name: n, path: p }], `"${n}" counts from now on, and for the past too`)
+    if (goals.some((g) => g.name === n)) {
+      setNameErr(copy.exists)
+      return
+    }
+    save([...goals, { name: n, path: p }], copy.counts(n))
     setName('')
     setPath('')
   }
 
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
-      <span className="faint" style={{ fontSize: 12.5 }}>
-        Reached by any visit that sees the page. It is counted from the pageviews already recorded, so it shows the past as well. End a path
-        with * for everything under it, like /blog/*.
-      </span>
-      {viewer ? (
-        <p className="muted" style={{ margin: 0 }}>Your account reads this site. An owner adds goals.</p>
-      ) : (
-        <form
-          style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'flex-end' }}
-          onSubmit={(e) => {
-            e.preventDefault()
-            add()
-          }}
-        >
-          <label style={{ display: 'grid', gap: 4, flex: '1 1 180px', fontSize: 12.5 }}>
-            <span className="muted">Goal name</span>
-            <input id="pg-name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Saw pricing" maxLength={60} />
-          </label>
-          <label style={{ display: 'grid', gap: 4, flex: '1 1 200px', fontSize: 12.5 }}>
-            <span className="muted">Page</span>
-            <input id="pg-path" className="input mono" list="pg-pages" value={path} onChange={(e) => setPath(e.target.value)} placeholder="/pricing" maxLength={200} />
-            <datalist id="pg-pages">
-              {pages.map((p) => (
-                <option key={p} value={p} />
-              ))}
-            </datalist>
-          </label>
-          <button type="submit" className="btn primary" disabled={busy || !cfg || !name.trim() || !path.trim()}>
-            Add goal
-          </button>
-        </form>
-      )}
+    <>
       {goals.length > 0 && (
-        <ul className="pg-list" aria-label="Page goals">
+        <ul className="pg-list" aria-label={copy.added}>
           {goals.map((g) => (
             <li key={g.name}>
+              <Check size={15} strokeWidth={2} aria-hidden="true" />
               <b>{g.name}</b>
               <code className="num">{g.path}</code>
               {!viewer && (
-                <button
-                  type="button"
-                  className="btn ghost"
-                  aria-label={`Remove the goal ${g.name}`}
-                  disabled={busy}
-                  onClick={() => save(goals.filter((x) => x.name !== g.name), `"${g.name}" removed`)}
-                >
-                  Remove
+                <button type="button" className="btn icon ghost" aria-label={copy.remove(g.name)} title={copy.removeTip} disabled={busy} onClick={() => save(goals.filter((x) => x.name !== g.name), copy.removed(g.name))}>
+                  <X size={15} strokeWidth={1.75} aria-hidden="true" />
                 </button>
               )}
             </li>
           ))}
         </ul>
       )}
-    </div>
+      {viewer ? (
+        <p className="muted goal-viewer">{copy.viewer}</p>
+      ) : (
+        <form
+          id="pg-form"
+          className="goal-fields"
+          onSubmit={(e) => {
+            e.preventDefault()
+            add()
+          }}
+        >
+          <Field label={copy.name} error={nameErr}>
+            {(f) => (
+              <input
+                {...f}
+                className="input"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  setNameErr(null)
+                }}
+                placeholder={copy.namePlaceholder}
+                maxLength={60}
+              />
+            )}
+          </Field>
+          <Field label={copy.page} help={copy.pageHelp}>
+            {(f) => <input {...f} className="input mono" list="pg-pages" value={path} onChange={(e) => setPath(e.target.value)} placeholder={copy.pagePlaceholder} maxLength={200} />}
+          </Field>
+          <datalist id="pg-pages">
+            {pages.map((p) => (
+              <option key={p} value={p} />
+            ))}
+          </datalist>
+        </form>
+      )}
+      <DialogActions
+        left={
+          <button type="button" className="btn ghost" onClick={onClose}>
+            {copy.done}
+          </button>
+        }
+      >
+        {!viewer && (
+          <button type="submit" form="pg-form" className="btn primary big" disabled={busy || !cfg || !name.trim() || !path.trim()}>
+            {copy.add}
+          </button>
+        )}
+      </DialogActions>
+    </>
   )
 }

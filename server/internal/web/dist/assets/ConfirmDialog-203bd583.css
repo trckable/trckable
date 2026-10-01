@@ -1,1 +1,0 @@
-.modal.confirm-modal{width:min(460px,100%)}.confirm-body{grid-template-columns:auto 1fr;gap:16px 14px;display:grid}.confirm-text{gap:6px;min-width:0;display:grid}.confirm-text h2{letter-spacing:-.02em;margin:0;font-size:17px}.confirm-text p{margin:0;font-size:13.5px;line-height:1.5}.confirm-text .field{margin-top:8px}.confirm-body>:last-child{grid-column:1/-1}

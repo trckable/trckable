@@ -3,6 +3,7 @@
 // filters around it and survives a reload or a shared link.
 import { useState } from 'react'
 import { DialogActions } from '../../components/DialogActions'
+import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../components/Modal'
 import { Picker } from '../../components/Picker'
 import type { FunnelStep, Row } from '../../lib/api'
@@ -31,11 +32,8 @@ export function FunnelDialog({ pages, goals, onClose, onSave }: { pages: Row[]; 
           if (steps.length >= 2) onSave(steps)
         }}
       >
-        <h2>{copy.title}</h2>
-        <p className="muted create-intro">
-          {copy.intro}
-        </p>
-        <ol className="funnel-steps create-steps">
+        <DialogHead heading={copy.title} hint={copy.hint} help={copy.help} />
+        <ol className="funnel-steps create-steps" aria-label={copy.steps}>
           {steps.map((s, i) => (
             <li key={i} className="chip">
               <span className="faint">{i + 1}</span>

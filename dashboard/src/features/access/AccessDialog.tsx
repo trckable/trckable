@@ -2,6 +2,7 @@
 // ticked. Nothing changes until Save; Cancel and Escape leave it as it was.
 import { useState, type SyntheticEvent } from 'react'
 import { DialogActions } from '../../components/DialogActions'
+import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../components/Modal'
 import { Switch } from '../../components/Switch'
 import { messageOf, type SiteAccessList } from '../../lib/api'
@@ -41,8 +42,7 @@ export default function AccessDialog({ viewer, sites, onSave, onClose }: { viewe
   return (
     <Modal label={copy.editFor(viewer.email)} className="access-dialog" keepSize={false} onClose={busy ? undefined : onClose}>
       <form onSubmit={submit}>
-        <h2>{copy.menuItem}</h2>
-        <p className="faint access-who">{viewer.email}</p>
+        <DialogHead heading={copy.menuItem} hint={viewer.email} />
         <div className="access-all">
           <span>{copy.allToggle}</span>
           <Switch on={all} label={copy.allToggle} disabled={busy} onChange={() => setAll((a) => !a)} />
@@ -63,7 +63,7 @@ export default function AccessDialog({ viewer, sites, onSave, onClose }: { viewe
         )}
         <DialogActions
           left={
-            <button type="button" className="btn" disabled={busy} onClick={onClose}>
+            <button type="button" className="btn ghost" disabled={busy} onClick={onClose}>
               {copy.cancel}
             </button>
           }

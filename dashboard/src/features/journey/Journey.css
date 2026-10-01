@@ -3,8 +3,6 @@
 .modal.journey-dialog {
   position: relative;
   width: min(680px, 100%);
-  gap: 16px;
-  padding: 24px 24px 20px;
   font-variant-numeric: tabular-nums;
 }
 .modal.journey-dialog > * {

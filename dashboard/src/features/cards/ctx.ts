@@ -36,6 +36,8 @@ export interface CardsCtx {
   attrFirst: boolean
   onAttr: (first: boolean) => void
   onTrackGoal: () => void
+  /** Compact's way into Full. */
+  onFull: () => void
   steps: { kind: 'page' | 'goal'; value: string }[]
   onSteps: (s: { kind: 'page' | 'goal'; value: string }[]) => void
   onPickVisitor: (visitor: string) => void

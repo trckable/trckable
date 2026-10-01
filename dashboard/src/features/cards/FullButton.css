@@ -1,0 +1,52 @@
+/* FullButton's styles: they load with its chunk, not with the first load. */
+/* Compact's way into Full: small and quiet, its tooltip a CSS one (a title never shows on a phone). */
+.tc-full {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-3);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.tc-full:is(:hover, :focus-visible) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.tc-full::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: 220px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 12px;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+}
+.tc-full:is(:hover, :focus-visible)::after {
+  opacity: 1;
+}
+/* A phone: a finger tall, no key. */
+@media (max-width: 640px) {
+  .tc-full {
+    min-height: var(--ph-hit);
+    padding: 0 10px;
+    font-size: var(--ph-text-2);
+  }
+  .tc-full .kbd {
+    display: none;
+  }
+}

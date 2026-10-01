@@ -3,11 +3,9 @@
 .modal.keys-modal {
   max-width: 1040px;
   width: calc(100vw - 32px);
-  gap: 18px;
-  padding: 24px;
 }
 .keys-head {
-  gap: 14px;
+  gap: 16px;
 }
 .keys-head > div:not(.modal-tools) {
   display: grid;

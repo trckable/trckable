@@ -102,7 +102,7 @@
 .step-inner {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   animation: wizin 0.3s var(--ease) backwards;
 }
 /* fit: the height follows the step. The padding and the negative margin give

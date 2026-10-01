@@ -5,6 +5,8 @@
 import { Check, Crosshair, ImageUp, ZoomIn, ZoomOut } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
 import { messageOf } from '../lib/api'
+import { DialogActions } from './DialogActions'
+import { DialogHead } from './DialogHead'
 import { Modal } from './Modal'
 import { copy } from './crop/copy'
 import { drawRect, OUT, placed, VIEW } from './crop/math'
@@ -104,15 +106,7 @@ export default function AvatarCrop({
 
   return (
     <Modal label={title} className="crop-modal" onClose={busy || saved ? undefined : onCancel}>
-      <div className="modal-head">
-        <span className="modal-badge" aria-hidden="true">
-          <ImageUp size={19} strokeWidth={1.75} />
-        </span>
-        <div>
-          <h2>{title}</h2>
-          <span className="faint">{copy.hint}</span>
-        </div>
-      </div>
+      <DialogHead icon={ImageUp} heading={title} hint={copy.hint} />
       {!(err && !img) && (
         <div
           className={'crop-stage' + (busy ? ' saving' : '') + (saved ? ' saved' : '')}
@@ -175,16 +169,19 @@ export default function AvatarCrop({
           {err}
         </p>
       )}
-      <div className="person-actions">
-        <button type="button" className="btn ghost" onClick={onCancel} disabled={busy || saved}>
-          {copy.cancel}
-        </button>
+      <DialogActions
+        left={
+          <button type="button" className="btn ghost" onClick={onCancel} disabled={busy || saved}>
+            {copy.cancel}
+          </button>
+        }
+      >
         <button type="button" className="btn primary" onClick={save} disabled={busy || saved || !img} aria-live="polite">
           {busy && <span className="btn-spin" aria-hidden="true" />}
           {saved && <Check size={16} strokeWidth={2.25} aria-hidden="true" />}
           {saveLabel()}
         </button>
-      </div>
+      </DialogActions>
     </Modal>
   )
 }
