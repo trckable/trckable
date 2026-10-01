@@ -2,23 +2,21 @@
 // Owner | Viewer. The password to pass on follows in its own dialog.
 import { X } from 'lucide-react'
 import { useState, type KeyboardEvent } from 'react'
-import { api, messageOf } from '../../lib/api'
+import { api, fail } from '../../lib/api'
 import { people } from './peopleCopy'
 
 export function AddRow({ onClose, onAdded }: { onClose: () => void; onAdded: (made: { email: string; password: string }) => void }) {
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('viewer')
   const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
   const ok = email.includes('@')
 
   const create = () => {
     setBusy(true)
-    setErr(null)
     api
       .addPerson(email.trim(), role)
       .then((r) => onAdded({ email: r.person.email, password: r.password }))
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => fail(e, create))
       .finally(() => setBusy(false))
   }
 
@@ -52,11 +50,6 @@ export function AddRow({ onClose, onAdded }: { onClose: () => void; onAdded: (ma
       <button type="button" className="btn icon ghost" aria-label={people.cancel} disabled={busy} onClick={onClose}>
         <X size={18} strokeWidth={1.75} aria-hidden="true" />
       </button>
-      {err && (
-        <span className="add-err" role="alert">
-          {err}
-        </span>
-      )}
     </form>
   )
 }

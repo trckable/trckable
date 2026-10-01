@@ -2,7 +2,8 @@
 // asked again every 20 seconds, so "on the site now" and the current page
 // stay true while the dialog is open.
 import { useEffect, useMemo, useState } from 'react'
-import { api, messageOf, type JourneyResult, type ReportQuery } from '../../lib/api'
+import { api, type JourneyResult, type ReportQuery } from '../../lib/api'
+import { words } from '../../lib/errors'
 import { buildStory, type Story } from './model'
 
 const REFRESH_MS = 20_000
@@ -28,7 +29,7 @@ export function useJourney(site: string, visitor: string, query: ReportQuery): J
           const story = buildStory(result, at)
           if (story.identity.live) timer = window.setTimeout(load, REFRESH_MS)
         })
-        .catch((e: unknown) => live && setError(messageOf(e)))
+        .catch((e: unknown) => live && setError(words(e)))
     }
     load()
     return () => {

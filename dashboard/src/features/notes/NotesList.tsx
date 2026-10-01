@@ -3,7 +3,8 @@
 // click one to see its day on the chart. A lazy chunk: never in the first load.
 import { Search, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { api, messageOf, type Annotation, type Site } from '../../lib/api'
+import { api, type Annotation, type Site } from '../../lib/api'
+import { words } from '../../lib/errors'
 import { fmtDay } from '../../lib/dates'
 import { Modal } from '../../components/Modal'
 import { copy } from './listCopy'
@@ -40,7 +41,7 @@ export function NotesPanel({ site, onJump, onChanged }: { site: Site; onJump: (d
         // The newest day first: the note looked for is usually recent.
         setList([...(r.annotations ?? [])].reverse())
       })
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => setErr(words(e)))
   useEffect(() => {
     void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load is a new function every render; refetch only when the site changes

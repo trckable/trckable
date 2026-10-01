@@ -2,8 +2,7 @@
 // sites. A change shows at once and is saved behind it; if the server says
 // no, the last saved layout comes back with the reason as a toast.
 import { useEffect, useState } from 'react'
-import { api, messageOf, type SiteLayout } from '../../lib/api'
-import { toast } from '../../components/Toast'
+import { api, fail, type SiteLayout } from '../../lib/api'
 import { EMPTY } from './empty'
 
 let current: SiteLayout | null = null
@@ -37,7 +36,7 @@ export function saveLayout(next: SiteLayout) {
     .then(emit)
     .catch((e: unknown) => {
       emit(was)
-      toast(messageOf(e), 'error')
+      fail(e)
     })
 }
 

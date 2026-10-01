@@ -1,5 +1,7 @@
 // Typed client for the trckable REST API (/api/v1). Cookie auth; every
 // non-GET request carries the CSRF header the server requires.
+// `fail` is said once, from where every caller already imports the client: it tells a person that something failed.
+export { fail } from '../components/toastBus'
 
 export interface KPIs {
   visitors: number
@@ -392,6 +394,8 @@ export class APIError extends Error {
     message: string,
     /** Sign-in only: the password was right, the second step is missing. */
     public needsCode = false,
+    /** The server's short code for a refusal, when it sent one (lib/errors.ts turns it into words). */
+    public code = '',
   ) {
     super(message)
   }
@@ -400,8 +404,12 @@ export class APIError extends Error {
 /** What went wrong, in words, whatever was thrown. */
 export const messageOf = (e: unknown): string => (e instanceof Error ? e.message : String(e))
 
+/** A refusal of what was typed (a wrong password or code), not a failure of the server: the field says so, in these words. */
+export const refused = (e: unknown): boolean => e instanceof APIError && [400, 401, 403, 422].includes(e.status)
+export const wrong = "That isn't right · Try again"
+
 /** The error body the server sends with a failed request. */
-type Failure = { error?: string; needs_code?: boolean }
+type Failure = { error?: string; needs_code?: boolean; code?: string }
 
 export async function call<T>(method: string, path: string, body?: unknown, signal?: AbortSignal, quiet = false): Promise<T> {
   const res = await fetch('/api/v1' + path, {
@@ -421,7 +429,7 @@ export async function call<T>(method: string, path: string, body?: unknown, sign
   if (!res.ok) {
     const f = data as Failure
     if (res.status === 401 && !quiet && !path.startsWith('/login') && !path.startsWith('/setup')) onUnauthorized()
-    throw new APIError(res.status, f.error ?? res.statusText, f.needs_code === true)
+    throw new APIError(res.status, f.error ?? res.statusText, f.needs_code === true, typeof f.code === 'string' ? f.code : '')
   }
   return data as T
 }
@@ -447,7 +455,7 @@ async function raw(method: string, path: string, body: Blob): Promise<void> {
   })
   if (!res.ok) {
     const f = (await res.json().catch(() => ({}))) as Failure
-    throw new APIError(res.status, f.error ?? res.statusText)
+    throw new APIError(res.status, f.error ?? res.statusText, false, typeof f.code === 'string' ? f.code : '')
   }
 }
 

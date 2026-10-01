@@ -4,6 +4,7 @@
 // is instead.
 import { useEffect, useState } from 'react'
 import { api, messageOf, type ReportQuery, type SearchReport, type Site } from '../lib/api'
+import { words } from '../lib/errors'
 import { BarList } from '../charts/BarList'
 import { fmtInt, fmtPct } from '../lib/format'
 import { openSettings } from '../lib/settings'
@@ -24,7 +25,7 @@ export function SearchTerms({ site, query, rows, full }: { site: Site; query: Re
         if (ac.signal.aborted) return
         const msg = messageOf(e)
         setRep(null)
-        setErr(/not connected/i.test(msg) ? { code: 'off', msg } : { code: 'other', msg })
+        setErr(/not connected/i.test(msg) ? { code: 'off', msg } : { code: 'other', msg: words(e) })
       })
     return () => ac.abort()
   }, [key]) // eslint-disable-line react-hooks/exhaustive-deps -- key is site + query's content; query is a new object each render

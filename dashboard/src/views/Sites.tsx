@@ -14,7 +14,7 @@ import { Modal } from '../components/Modal'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import { Picker } from '../components/Picker'
 import { useEffect, useState } from 'react'
-import { api, messageOf, siteState, stoppedWhy, type Site, type SiteState } from '../lib/api'
+import { api, siteState, stoppedWhy, fail, type Site, type SiteState } from '../lib/api'
 import { fmtInt } from '../lib/format'
 import { navigate } from '../lib/url'
 import { Menu } from '../components/Menu'
@@ -169,12 +169,10 @@ function EditSite({ site, onClose, onSaved }: { site: Site; onClose: () => void;
   const [timezone, setTimezone] = useState(site.timezone)
   const [currency, setCurrency] = useState(site.currency)
   const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
   const changed = name !== site.name || timezone !== site.timezone || currency !== site.currency
 
   const save = () => {
     setBusy(true)
-    setErr(null)
     api
       .updateSite(site.id, { name: name.trim() || site.domain, timezone, currency })
       .then(() => {
@@ -182,7 +180,7 @@ function EditSite({ site, onClose, onSaved }: { site: Site; onClose: () => void;
         onSaved()
         onClose()
       })
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => fail(e, save))
       .finally(() => setBusy(false))
   }
 
@@ -207,11 +205,6 @@ function EditSite({ site, onClose, onSaved }: { site: Site; onClose: () => void;
           </Field>
         </div>
 
-        {err && (
-          <span role="alert" className="dlg-field-err">
-            {err}
-          </span>
-        )}
         <DialogActions
           left={
             <>
@@ -243,14 +236,12 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
   const [step, setStep] = useState<'what' | 'last' | 'working' | 'done'>('what')
   const [counts, setCounts] = useState<Record<string, number> | null>(null)
   const [gone, setGone] = useState<{ events: number; sessions: number; payments: number } | null>(null)
-  const [err, setErr] = useState<string | null>(null)
   useEffect(() => {
     api.deletePreview(site.id).then(setCounts).catch(() => setCounts({}))
   }, [site.id])
   const named = typed.trim().toLowerCase() === site.domain.toLowerCase()
 
   const run = () => {
-    setErr(null)
     setStep('working')
     // At least a moment on screen: a small site goes in milliseconds, and a
     // flash of the working step read as a glitch.
@@ -265,7 +256,7 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
         setStep('done')
       })
       .catch((e: unknown) => {
-        setErr(messageOf(e))
+        fail(e, run)
         setStep('last')
       })
   }
@@ -348,11 +339,6 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
               <b className="num">{fmtInt(counts?.payments ?? 0)}</b> payments
             </span>
           </div>
-          {err && (
-            <p className="confirm-err" role="alert">
-              {err}
-            </p>
-          )}
           <DialogActions
             left={
               <button type="button" className="btn ghost" onClick={() => setStep('what')}>

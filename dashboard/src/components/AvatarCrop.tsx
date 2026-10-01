@@ -4,13 +4,13 @@
 // as WebP, well under the server's 256 KB, whatever size the original was.
 import { Check, Crosshair, ImageUp, ZoomIn, ZoomOut } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
-import { messageOf } from '../lib/api'
 import { DialogActions } from './DialogActions'
 import { DialogHead } from './DialogHead'
 import { Modal } from './Modal'
 import { copy } from './crop/copy'
 import { drawRect, OUT, placed, VIEW } from './crop/math'
 import { useCrop } from './crop/useCrop'
+import { fail } from './toastBus'
 import './AvatarCrop.css'
 
 // Say which file and why, not just "no". A PNG the browser knows yet cannot
@@ -87,7 +87,7 @@ export default function AvatarCrop({
           })
           .catch((e: unknown) => {
             setBusy(false)
-            setErr(messageOf(e))
+            fail(e)
           })
       },
       'image/webp',

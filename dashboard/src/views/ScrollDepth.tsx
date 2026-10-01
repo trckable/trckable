@@ -2,7 +2,8 @@
 // period and filters. A page nobody reads past the fold says more than its
 // view count does.
 import { useEffect, useState } from 'react'
-import { api, messageOf, type ReportQuery, type ScrollReport, type Site } from '../lib/api'
+import { api, type ReportQuery, type ScrollReport, type Site } from '../lib/api'
+import { words } from '../lib/errors'
 import { BarList } from '../charts/BarList'
 import { fmtInt, fmtPct } from '../lib/format'
 
@@ -18,7 +19,7 @@ export function ScrollDepth({ site, query, rows }: { site: Site; query: ReportQu
       .scroll(site.id, query, ac.signal)
       .then(setRep)
       .catch((e: unknown) => {
-        if (!ac.signal.aborted) setErr(messageOf(e))
+        if (!ac.signal.aborted) setErr(words(e))
       })
     return () => ac.abort()
   }, [key]) // eslint-disable-line react-hooks/exhaustive-deps -- key is site + query's content; query is a new object each render

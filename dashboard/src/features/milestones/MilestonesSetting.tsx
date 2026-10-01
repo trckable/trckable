@@ -2,12 +2,11 @@
 // the timeline; the nightly check keeps running, so turning it back on
 // loses nothing.
 import { useEffect, useState } from 'react'
-import { api, messageOf, type Site } from '../../lib/api'
+import { api, fail, type Site } from '../../lib/api'
 import { isViewer } from '../../lib/me'
 import { Row } from '../../components/Row'
 import { shareApi } from './share'
 import { Switch } from '../../components/Switch'
-import { toast } from '../../components/Toast'
 import { copy } from './copy'
 
 export function MilestonesSetting({ site }: { site: Site }) {
@@ -23,7 +22,7 @@ export function MilestonesSetting({ site }: { site: Site }) {
     setOn(!on)
     shareApi.setOn(site.id, !on).catch((e: unknown) => {
       setOn(on)
-      toast(messageOf(e), 'error')
+      fail(e)
     })
   }
   return (

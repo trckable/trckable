@@ -16,6 +16,7 @@ import { Templates } from './Templates'
 import { GoButton, Toolbar } from './Toolbar'
 import { Periods } from './Periods'
 import './ShareDialog.css'
+import { fail } from '../../components/toastBus'
 
 const METRICS: Metric[] = ['visitors', 'revenue']
 
@@ -69,7 +70,7 @@ export default function ShareDialog({ site: first, sites, onClose }: { site: Sit
       }
       setDone(true)
     } catch (e) {
-      toast(e instanceof Error ? e.message : String(e), 'error')
+      fail(e)
     } finally {
       setBusy(false)
     }

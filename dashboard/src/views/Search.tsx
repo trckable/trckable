@@ -4,7 +4,8 @@
 // firewall. The key is sealed on the server and never comes back here.
 import { Check, CircleCheck, ExternalLink, FileCheck2, FileUp, LockKeyhole, Search as SearchIcon, TriangleAlert } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { api, messageOf, type SearchConnection, type SearchProperty, type Site } from '../lib/api'
+import { api, fail, type SearchConnection, type SearchProperty, type Site } from '../lib/api'
+import { words } from '../lib/errors'
 import { useSearchProperties } from './useSearchProperties'
 import { Row } from '../components/Row'
 import { Copyable } from '../components/Copyable'
@@ -115,7 +116,7 @@ export function SearchSettings({ site }: { site: Site }) {
                         connected(r)
                         settle(id, `Reading ${property.replace(/^sc-domain:/, '')}`)
                       })
-                      .catch((e: unknown) => settle(id, messageOf(e), 'error'))
+                      .catch((e: unknown) => settle(id, words(e), 'error'))
                   }}
                   items={props.map((p) => ({ id: p.url, label: p.url.replace(/^sc-domain:/, '') + (p.url.startsWith('sc-domain:') ? ' (whole domain)' : ''), hint: p.permission.replace(/^site/, '').replace(/User$/, ' user') }))}
                 />
@@ -180,30 +181,25 @@ function Connect({ site, replacing, onDone, onCancel }: { site: Site; replacing:
   const [paste, setPaste] = useState(false)
   const [drag, setDrag] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState('')
   const file = useRef<HTMLInputElement>(null)
   const parsed = readKey(key)
 
   const connect = () => {
     setBusy(true)
-    setErr('')
     api
       .setSearchConsole(site.id, { key: key.trim() })
       .then((r) => {
         onDone(r)
         toast(r.connection.property ? `Connected · reading ${r.connection.property.replace(/^sc-domain:/, '')}` : 'Connected · pick the property to read')
       })
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => fail(e, connect))
       .finally(() => setBusy(false))
   }
   const take = (f?: File | null) => {
     if (!f) return
     f.text()
-      .then((t) => {
-        setKey(t)
-        setErr('')
-      })
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .then((t) => setKey(t))
+      .catch((e: unknown) => fail(e))
   }
 
   const steps = [
@@ -334,9 +330,9 @@ function Connect({ site, replacing, onDone, onCancel }: { site: Site; replacing:
         </li>
       </ol>
 
-      {(parsed.error || err) && (
+      {parsed.error && (
         <p className="confirm-err" role="alert">
-          {err || parsed.error}
+          {parsed.error}
         </p>
       )}
 

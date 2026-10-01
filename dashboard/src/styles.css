@@ -1814,60 +1814,6 @@ pre.code.words {
 
 /* The chart tooltip's split bar: new against returning, in one line. */
 
-/* ---- Toasts --------------------------------------------------------------- */
-.toasts {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 200;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: none;
-}
-.toast {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--border-2);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  font-size: 13.5px;
-  max-width: 340px;
-  animation: toastin 0.22s var(--ease) both;
-}
-.toast.ok svg {
-  color: var(--up);
-}
-.toast.error {
-  border-color: var(--down);
-}
-.toast.error svg {
-  color: var(--down);
-}
-@keyframes toastin {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@media (max-width: 640px) {
-  .toasts {
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-  }
-  .toast {
-    max-width: none;
-  }
-}
-
 /* ---- Account dialog, two columns ------------------------------------------
    Sections on the left, one panel on the right, and a size that does not jump
    when you move between them. */

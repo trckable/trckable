@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { TimeChart, type Pulse } from '../charts/GuardedChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
-import { api, cachedReport, dropReports, messageOf, showsInstall, siteState, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
+import { api, cachedReport, dropReports, showsInstall, siteState, fail, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
 import { compareLabel, diffDays, fmtDay, setWeekStart, todayIn, type Range } from '../lib/dates'
 import { countryName, fmtInt, fmtMoney } from '../lib/format'
 import { journeysOn } from '../features/cookieless/labels'
@@ -165,7 +165,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         toast(`Deleted "${g.name}"`)
         loadSegments()
       })
-      .catch((e: unknown) => toast(messageOf(e), 'error'))
+      .catch((e: unknown) => fail(e))
   const renameView = (g: SavedView, name: string) =>
     api
       .renameSegment(site.id, g.id, name)
@@ -174,7 +174,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         loadSegments()
       })
       .catch((e: unknown) => {
-        toast(messageOf(e), 'error')
+        fail(e)
         throw e
       })
   // The map is a module, and its outlines are a separate download, so it only

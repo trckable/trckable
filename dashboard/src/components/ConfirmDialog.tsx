@@ -1,13 +1,13 @@
 // The confirmation dialog itself (Confirm.tsx has the questions and the host).
 import { CircleHelp, TriangleAlert } from 'lucide-react'
 import { useState } from 'react'
-import { messageOf } from '../lib/api'
 import type { Req } from './Confirm'
 import { toast } from './Toast'
 import { DialogActions } from './DialogActions'
 import { DialogHead } from './DialogHead'
 import { Field } from './Field'
 import { Modal } from './Modal'
+import { fail, refused, wrong } from '../lib/api'
 import './ConfirmDialog.css'
 
 export default function ConfirmDialog({ req, done }: { req: Req; done: (v: string | null) => void }) {
@@ -29,7 +29,11 @@ export default function ConfirmDialog({ req, done }: { req: Req; done: (v: strin
         if (req.done) toast(req.done)
         done(v)
       })
-      .catch((e: unknown) => setErr(messageOf(e) || 'That did not work — try again.'))
+      .catch((e: unknown) => {
+        // A refused answer to the question itself (a wrong password) stays at the field; anything else is a toast.
+        if (req.field && refused(e)) setErr(wrong)
+        else fail(e)
+      })
       .finally(() => setBusy(false))
   }
   const Mark = req.danger ? TriangleAlert : CircleHelp
@@ -42,11 +46,6 @@ export default function ConfirmDialog({ req, done }: { req: Req; done: (v: strin
           <Field label={req.field.label} error={err}>
             {(f) => <input {...f} className="input" type={req.field?.type ?? 'text'} autoComplete={req.field?.autoComplete} autoFocus value={value} onChange={(e) => setValue(e.target.value)} />}
           </Field>
-        )}
-        {err && !req.field && (
-          <p className="confirm-err" role="alert">
-            {err}
-          </p>
         )}
         <DialogActions
           left={

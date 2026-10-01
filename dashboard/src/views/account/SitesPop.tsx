@@ -4,9 +4,8 @@ import { Check, Search } from 'lucide-react'
 import { useRef, useState, type RefObject } from 'react'
 import { AnchoredPop } from '../../components/AnchoredPop'
 import { SiteMark } from '../../components/SiteMark'
-import { toast } from '../../components/Toast'
 import type { AccessSite } from '../../features/access/useSiteAccess'
-import { messageOf, type SiteAccessList } from '../../lib/api'
+import { fail, type SiteAccessList } from '../../lib/api'
 import { people as t } from './peopleCopy'
 import { findSites, toggledSites } from './rules'
 import './peoplePop.css'
@@ -49,7 +48,7 @@ export default function SitesPop({
       })
       .catch((e: unknown) => {
         sending.current = false
-        toast(messageOf(e) || t.sites.failed, 'error')
+        fail(e)
         void reload().then((list) => {
           const now = list?.viewers.find((v) => v.id === viewer.id)
           if (!now) return

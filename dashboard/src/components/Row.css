@@ -73,8 +73,7 @@
   :root .srow-text .faint {
     font-size: var(--ph-text-2);
   }
-  :root .viewer-note,
-  :root .look-err {
+  :root .viewer-note {
     font-size: var(--ph-text-2);
   }
 }

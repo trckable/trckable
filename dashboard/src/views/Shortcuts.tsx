@@ -6,7 +6,7 @@ import { Calendar, ChartSpline, Compass, Gauge, Keyboard, MousePointer2, MoveHor
 import { useConfirm } from '../components/Confirm'
 import { Modal } from '../components/Modal'
 import { toast } from '../components/Toast'
-import { api, messageOf } from '../lib/api'
+import { api, fail } from '../lib/api'
 import { canAsk } from '../lib/me'
 import { ACTIONS, caps, comboOf, customKeys, keyFor, loadKeymap, takenBy, useKeymap, type Group } from '../lib/keys'
 import './Shortcuts.css'
@@ -47,7 +47,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
     api
       .setKeys(next)
       .then((r) => (loadKeymap(r.keys), toast(said)))
-      .catch((e: unknown) => toast(messageOf(e), 'error'))
+      .catch((e: unknown) => fail(e))
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {

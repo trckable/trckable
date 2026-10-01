@@ -5,7 +5,7 @@
 // Its own lazy chunk: only the first run ever loads it.
 import { useEffect, useRef, useState } from 'react'
 import { Wordmark } from '../../components/Logo'
-import { api, messageOf, type Site } from '../../lib/api'
+import { api, fail, type Site } from '../../lib/api'
 import { openAccount } from '../../lib/account'
 import { signOut } from '../../lib/signOut'
 import { navigate } from '../../lib/url'
@@ -30,7 +30,6 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
   const [domain, setDomain] = useState('')
   const [site, setSite] = useState<Site | null>(resume ?? null)
   const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
   const stream = useLive(site?.id ?? null, noRefetch)
   const box = useRef<HTMLDivElement>(null)
   const heading = useRef<HTMLHeadingElement>(null)
@@ -50,7 +49,6 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
 
   const create = () => {
     setBusy(true)
-    setErr(null)
     const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
     api
       .createSite(clean)
@@ -59,7 +57,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
         setSite(s)
         setStep('install')
       })
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => fail(e, create))
       .finally(() => setBusy(false))
   }
 
@@ -129,7 +127,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
             {titles[step]}
           </h1>
           <p className="muted">{subs[step]}</p>
-          {step === 'site' && <SiteStep domain={domain} onDomain={setDomain} busy={busy} err={err} ready={!!clean} onSubmit={create} />}
+          {step === 'site' && <SiteStep domain={domain} onDomain={setDomain} busy={busy} ready={!!clean} onSubmit={create} />}
           {step === 'here' && (
             <div className="ob-actions">
               <button type="button" className="btn primary big" onClick={next}>

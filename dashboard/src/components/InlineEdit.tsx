@@ -3,10 +3,11 @@
 // same box, at the same size and place, into the field — nothing jumps.
 // Enter or ✓ saves, Escape or × puts it back, leaving the field saves a
 // change. While it saves the text dims and ✓ spins; once saved, "Saved"
-// shows in the box for a moment; a failure keeps the field open and says why.
+// shows in the box for a moment; a failure keeps the field open and says so
+// in a toast.
 import { Check, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { messageOf } from '../lib/api'
+import { fail } from './toastBus'
 import './InlineEdit.css'
 
 export function InlineEdit({
@@ -80,7 +81,7 @@ export function InlineEdit({
         setSaved(true)
         setTimeout(() => setSaved(false), 1600)
       })
-      .catch((e: unknown) => setErr(messageOf(e) || 'That did not save — try again.'))
+      .catch((e: unknown) => fail(e, save))
       .finally(() => setBusy(false))
   }
 

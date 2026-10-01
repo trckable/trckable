@@ -3,7 +3,7 @@
 // script and sets no cookie; only the numbers its design shows are public.
 import { Activity, BadgeCheck, Banknote, CircleDot, Copy, ShieldCheck, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { api, messageOf, type Site, type Widget, type WidgetKind, type WidgetLook } from '../lib/api'
+import { api, fail, type Site, type Widget, type WidgetKind, type WidgetLook } from '../lib/api'
 import { CodeBlock } from '../components/Code'
 import { Switch } from '../components/Switch'
 import { confirm } from '../components/Confirm'
@@ -111,7 +111,7 @@ export function WidgetsSettings({ site }: { site: Site }) {
         void load()
         toast('Widget ready — copy it onto your page')
       })
-      .catch((e: unknown) => toast(messageOf(e), 'error'))
+      .catch((e: unknown) => fail(e))
       .finally(() => setBusy(false))
   }
   const { w, h } = size(look)
@@ -248,7 +248,7 @@ function WidgetRow({ site, w, base, onChange }: { site: Site; w: Widget; base: s
       })
       .catch((e: unknown) => {
         setOn(on)
-        toast(messageOf(e), 'error')
+        fail(e)
       })
   }
   return (

@@ -2,7 +2,7 @@
 // shows and for how long, with a picture of the result beside it.
 import { Globe, Link2, Lock } from 'lucide-react'
 import { useState } from 'react'
-import { api, messageOf, type Site } from '../../lib/api'
+import { api, fail, type Site } from '../../lib/api'
 import { copy } from './copy'
 import { EMPTY, linkBody, problem, type Access, type Draft } from './logic'
 import { Options } from './Options'
@@ -24,7 +24,6 @@ export function NewLink({ site, onClose, onMade }: { site: Site; onClose: () => 
   const [draft, setDraft] = useState<Draft>(EMPTY)
   const [lockShown, setLockShown] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
   const numbers = usePreviewNumbers(site)
   const set = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }))
   const blocked = problem(draft)
@@ -33,12 +32,11 @@ export function NewLink({ site, onClose, onMade }: { site: Site; onClose: () => 
     if (blocked || busy) return
     const body = linkBody(draft, site.domain)
     setBusy(true)
-    setErr(null)
     api
       .createShare(site.id, body)
       .then((r) => onMade({ name: body.name, url: r.url, sites: body.embed_origins }))
       .catch((e: unknown) => {
-        setErr(messageOf(e))
+        fail(e, create)
         setBusy(false)
       })
   }
@@ -65,11 +63,6 @@ export function NewLink({ site, onClose, onMade }: { site: Site; onClose: () => 
           <input className="input" type="password" aria-label={copy.password} autoComplete="new-password" value={draft.password} onChange={(e) => set({ password: e.target.value })} />
         )}
         <Options draft={draft} set={set} />
-        {err && (
-          <span role="alert" className="sl-err">
-            {err}
-          </span>
-        )}
         <div className="sl-actions">
           <button type="button" className="btn ghost" onClick={onClose}>
             {copy.cancel}

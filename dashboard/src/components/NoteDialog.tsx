@@ -11,7 +11,7 @@ import { DialogHead } from './DialogHead'
 import { Chevron } from './DatePicker'
 import { Month } from './DateRangeMonth'
 import { toast } from './Toast'
-import { api, messageOf, type Annotation, type Site } from '../lib/api'
+import { api, fail, type Annotation, type Site } from '../lib/api'
 import { addDays, fmtDay, type ISODate } from '../lib/dates'
 import { fmtInt } from '../lib/format'
 import './NoteDialog.css'
@@ -66,7 +66,7 @@ export function NoteDialog({
         onSaved()
         onClose()
       })
-      .catch((e: unknown) => toast(messageOf(e), 'error'))
+      .catch((e: unknown) => fail(e))
       .finally(() => setBusy(false))
   }
 
@@ -180,7 +180,7 @@ export function NoteDialog({
                         toast('Note removed')
                         onSaved()
                       })
-                      .catch((e: unknown) => toast(messageOf(e), 'error'))
+                      .catch((e: unknown) => fail(e))
                   }
                 >
                   ×

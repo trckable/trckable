@@ -2,7 +2,7 @@
 // the chart; edit in place; delete behind the one confirmation dialog.
 import { Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { api, messageOf, type Annotation, type Site } from '../../lib/api'
+import { api, fail, type Annotation, type Site } from '../../lib/api'
 import { isViewer } from '../../lib/me'
 import { confirm } from '../../components/Confirm'
 import { toast } from '../../components/Toast'
@@ -45,7 +45,6 @@ function NoteEdit({ n, site, onDone, onChanged }: { n: Annotation; site: Site; o
   const [day, setDay] = useState(n.day)
   const [text, setText] = useState(n.text)
   const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
   // Escape leaves the edit, not the dialog around it.
   const esc = (e: React.KeyboardEvent) => {
     if (e.key !== 'Escape') return
@@ -54,7 +53,6 @@ function NoteEdit({ n, site, onDone, onChanged }: { n: Annotation; site: Site; o
   }
   const save = () => {
     setBusy(true)
-    setErr(null)
     api
       .updateAnnotation(site.id, n.id, day, text)
       .then(() => {
@@ -62,7 +60,7 @@ function NoteEdit({ n, site, onDone, onChanged }: { n: Annotation; site: Site; o
         onDone()
         onChanged()
       })
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => fail(e, save))
       .finally(() => setBusy(false))
   }
   return (
@@ -82,11 +80,6 @@ function NoteEdit({ n, site, onDone, onChanged }: { n: Annotation; site: Site; o
           {copy.text}
           <input className="input" required maxLength={140} autoFocus value={text} onKeyDown={esc} onChange={(e) => setText(e.target.value)} />
         </label>
-        {err && (
-          <span role="alert" className="note-err">
-            {err}
-          </span>
-        )}
         <span className="note-form-actions">
           <button type="button" className="btn ghost" onClick={onDone}>
             {copy.cancel}
