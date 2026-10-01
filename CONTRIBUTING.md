@@ -22,16 +22,15 @@ The server prints a one-time setup link on first start. `go run
 
 ## How changes land
 
-Five stages, one command each.
+Four stages, one command each.
 
 | Stage | Command | What it does |
 | --- | --- | --- |
 | 1. Work | `pnpm work <topic>` | A fresh branch from the latest `main`. One topic per branch, never a branch on top of an unmerged one |
 | 2. Land | `pnpm ship` | The full gate (below), then push and open the pull request (or update it). Once every check is green it is squash-merged, and the branch is deleted |
 | 3. Prepare a release | `pnpm release X.Y.Z` | Every version bumped, the Unreleased notes dated, CI's figures and the screenshots whose inputs changed brought up to date, and the release pull request; the checks on that pull request are the gate |
-| 3–4 in one | `pnpm release X.Y.Z --ship` | Prepare, wait for every check, merge, tag, wait for the release workflow, check GitHub, npm and the image, then the site's deploy; the time of each step at the end |
+| 3–4 in one | `pnpm release X.Y.Z --ship` | Prepare, wait for every check, merge, tag, wait for the release workflow, check GitHub, npm and the image; the time of each step at the end |
 | 4. Publish | `pnpm release tag X.Y.Z` | After that pull request is merged: tags `main`, waits for the release workflow, then checks the GitHub release, npm and the Docker image |
-| 5. The site | `web:ship` | trckable.com and the docs, checked live |
 
 `pnpm status` shows where everything stands: open pull requests and their
 checks, what is waiting to be released, and the version on GitHub, npm, the
@@ -40,9 +39,8 @@ is merged (`pnpm work` runs it too).
 
 The rules on `main`:
 
-- Seven checks are required and a ruleset without a bypass enforces them, so
-  nobody merges with a failing check, maintainers included: server, tracker
-  and npm package, dashboard, browsers, image, the changelog line, and the CLA.
+- Six checks are required on `main`: server, tracker and npm package,
+  dashboard, browsers, image, and the CLA. The changelog line is checked too.
 - A pull request from anyone else needs the maintainer's review (CODEOWNERS).
   The maintainer's own are merged with admin rights once every check is green.
 - Every change people will notice carries its own line in CHANGELOG.md under
