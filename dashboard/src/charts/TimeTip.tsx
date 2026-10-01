@@ -13,10 +13,13 @@ import './Tip.css'
 
 export default function TimeTip({ p, i, left, width, compact, notes }: { p: TimeChartProps; i: number; left: number; width: number; compact: boolean; notes: Annotation[] }) {
   // The card's lines come from a chunk fetched when the browser is idle: a card
-  // open before it arrived draws them the moment it does.
+  // open before it arrived draws them the moment it does. The chunk can land
+  // between this card's first draw and its listener (effects run after the
+  // paint), so a card draws once more as it starts listening: it never misses it.
   const [, redraw] = useReducer((n: number) => n + 1, 0)
   useEffect(() => {
     window.addEventListener('trckable:tips', redraw)
+    redraw()
     return () => window.removeEventListener('trckable:tips', redraw)
   }, [])
   const detail = p.detail?.(i) ?? null
