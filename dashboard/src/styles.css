@@ -47,6 +47,8 @@
   --font: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Every control in the header's row (a phone has its own sizes) is this tall. */
+  --hdr-h: 38px;
 }
 
 @media (prefers-color-scheme: light) {

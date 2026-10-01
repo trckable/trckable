@@ -32,6 +32,29 @@ body[data-mode] .live-head-row h2,
   font-weight: 600;
   letter-spacing: -0.01em;
 }
+/* The Live card's title leads with the switch's dot: lime and pulsing while the
+   feed is connected, grey and still when it is not (and still, lime, for a
+   person who asked for less motion). */
+.live-now .live-head-row h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.live-now .live-head-row h2::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.live-now .live-head-row:has(.live-calm) h2::before {
+  background: var(--accent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .live-now .live-head-row:has(.live-calm) h2::before {
+    animation: pulse 2s ease-out infinite;
+  }
+}
 .live-meta {
   margin-left: auto;
   font-family: var(--mono);

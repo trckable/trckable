@@ -38,7 +38,7 @@
   display: block;
 }
 .header-tools.quiet .btn {
-  height: 36px;
+  height: var(--hdr-h);
 }
 .header-tools.quiet .btn.ghost {
   color: var(--text-2);
@@ -51,7 +51,7 @@
   background: var(--surface-2);
 }
 .header-tools.quiet .btn.icon.ghost {
-  width: 36px;
+  width: var(--hdr-h);
   padding: 0;
 }
 .header-tools.quiet .btn.ask {
@@ -135,11 +135,11 @@
 }
 
 /* The site and its settings are one hairline card: the name and ⌄, a thin
-   divider, the cog. 38 px, the same height as the capsules of the row under it
-   (ControlRow.css), on a phone too. */
+   divider, the cog. --hdr-h tall, like every control in the row and the
+   capsules of the row under it (ControlRow.css); a phone has its own sizes. */
 .header.quiet .site-zone {
   align-items: center;
-  height: 38px;
+  height: var(--hdr-h);
   padding: 1px;
   gap: 1px;
   border-color: var(--border);
@@ -151,7 +151,7 @@
   border-color: var(--border-2);
 }
 .header.quiet .site-zone .btn.site-btn {
-  height: 34px;
+  height: calc(var(--hdr-h) - 4px);
   padding: 0 8px 0 7px;
   gap: 8px;
   border-radius: 10px;
@@ -207,9 +207,16 @@
   margin: 0;
   flex: none;
 }
-/* A desktop has Live/Data in the header's right group, as tall as the site's card (38 px). */
+/* A desktop has Live/Data in the header's right group, as tall as the site's card (--hdr-h), with its corner. */
+.header-tools .view-switch {
+  border-radius: 12px;
+}
+.header-tools .view-switch .view-pill,
 .header-tools .view-switch button {
-  height: 30px;
+  border-radius: 8px;
+}
+.header-tools .view-switch button {
+  height: calc(var(--hdr-h) - 8px);
 }
 /* A shared link on a desktop has this row in the header's own row. */
 .header > .subbar {
@@ -230,9 +237,6 @@ html {
 /* The avatar's menu ends the first row. */
 .account-menu .more-menu {
   min-width: 250px;
-}
-.header-tools.quiet .btn.account-btn {
-  width: 40px;
 }
 .avatar.small {
   width: 28px;
