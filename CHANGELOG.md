@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The key numbers keep one tile width: without payments, the five tiles are as wide as they are with Revenue, Conversion and Per visitor, and the free room sits on the right instead of stretching them across the row. Tablet and phone layouts are as before.
 - Yesterday is in the date picker's quick list, right after Today (Now, Today, Yesterday, Last 7, 30 and 90 days, then More), no longer under More. `?period=yesterday` and the Y key are as before; it compares with the day before, and ← → step a day at a time.
 - What goes wrong is said in a toast, not in red text under a form. A toast has a mark for each kind (success, info, warning, error), at most three show at once, it can be closed, it clears itself (an error stays longest, and stays while it is pointed at or focused), and it may carry one button such as Retry. Errors and warnings are announced at once to a screen reader, the rest politely. A failed request says a few friendly words ("Something went wrong", "Can't reach the server", "Not allowed", "Too many tries"), never the server's own text; what is wrong with a field (a domain, a wrong password, an empty name) stays under the field, short.
 - Track a goal → In HTML shows goal properties as `data-trckable-goal-plan="pro"`, the attribute the tracker reads (it showed `data-trckable-plan`, which counted the goal without its property). `npx trckable` points to your account → API keys, where keys are made, not Settings.

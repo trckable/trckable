@@ -2,10 +2,12 @@
    Light as type: no cards, icons or lines in the tiles; Online now pulses, and
    Replay is a small ▶ whose controls show on hover or focus. Loaded after
    styles.css; more specific where it overrides it. */
-/* The key numbers: one light strip, no boxes. A name, a number, a change. */
+/* The key numbers: one light strip, no boxes. A name, a number, a change. The
+   tracks are the ones seven tiles make (with payments), so a tile is as wide
+   with five: auto-fill keeps the empty ones, and the room sits on the right. */
 .kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(max(118px, calc(100% / 7 - 1px)), 1fr));
   gap: 4px 0;
   padding: 10px 12px 0;
   border-bottom: 1px solid var(--grid);
