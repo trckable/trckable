@@ -42,7 +42,8 @@ type Event struct {
 // ErrUnsafeTarget is returned for a destination trckable will not call.
 var ErrUnsafeTarget = fmt.Errorf("that address is not reachable from outside this server")
 
-// CheckTarget rejects anything that is not a public https (or http) URL, or
+// CheckTarget rejects anything that is not a public https URL (a webhook
+// address is a secret, and http would send it in the clear), or
 // an email address when this server can send email.
 func CheckTarget(ctx context.Context, raw string) error {
 	if strings.HasPrefix(strings.TrimSpace(raw), "mailto:") {
@@ -55,7 +56,7 @@ func CheckTarget(ctx context.Context, raw string) error {
 		return nil
 	}
 	u, err := url.Parse(strings.TrimSpace(raw))
-	if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" {
+	if err != nil || u.Scheme != "https" || u.Host == "" {
 		return fmt.Errorf("a webhook URL starts with https://")
 	}
 	host := u.Hostname()

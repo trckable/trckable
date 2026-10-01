@@ -245,9 +245,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) reject(w http.ResponseWriter, code int, err error) {
 	h.Stats.Rejected.Add(1)
+	msg := err.Error()
+	if code >= http.StatusInternalServerError { // the reason is for the log
+		slog.Error("ingest: event not accepted", "status", code, "err", err)
+		msg = "internal error"
+	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(code)
-	_, _ = io.WriteString(w, err.Error()) // if this fails the client has gone
+	_, _ = io.WriteString(w, msg) // if this fails the client has gone
 }
 
 func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.Cookie, error) {

@@ -245,7 +245,24 @@ func busy(w http.ResponseWriter, err error) bool {
 	return true
 }
 
-func fail(w http.ResponseWriter, code int, msg string) { writeJSON(w, code, apiError{msg}) }
+// fail answers with a message the person can act on. A 500 is not one: what
+// the store or the runtime said is for the log, not for whoever asked.
+func fail(w http.ResponseWriter, code int, msg string) {
+	if code == http.StatusInternalServerError {
+		slog.Error("request failed", "status", code, "err", msg)
+		msg = internalError
+	}
+	writeJSON(w, code, apiError{msg})
+}
+
+// internalError is all a client is told about a 500; the detail is logged.
+const internalError = "internal error: the details are in the server's log"
+
+// serverError is fail(500) for the handlers that answer in plain text.
+func serverError(w http.ResponseWriter, err error) {
+	slog.Error("request failed", "status", http.StatusInternalServerError, "err", err)
+	http.Error(w, internalError, http.StatusInternalServerError)
+}
 
 // jsonOnly refuses a request a plain HTML form on another site could send:
 // login, setup and opening a share link must come as JSON or with the
@@ -454,7 +471,20 @@ func (l *attempts) full(key string, now time.Time, max int, window time.Duration
 func (l *attempts) record(key string, now time.Time) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	l.m[key] = append(l.m[key], now)
+	recent := l.m[key][:0]
+	for _, t := range l.m[key] {
+		if now.Sub(t) <= time.Hour { // the longest window in use
+			recent = append(recent, t)
+		}
+	}
+	l.m[key] = append(recent, now)
+	if len(l.m) > 10_000 { // bound memory: keys can come from the request (an email), not only from people who exist
+		for k, ts := range l.m {
+			if len(ts) == 0 || now.Sub(ts[len(ts)-1]) > time.Hour { // the longest window in use
+				delete(l.m, k)
+			}
+		}
+	}
 }
 
 func (l *attempts) clear(key string) {
@@ -531,7 +561,7 @@ func (a *API) setup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.init()
-	if !a.loginRate.allow("setup:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
+	if !a.loginRate.allow("setup:"+a.ip(r), a.Now(), a.ipMax(r, 10), 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")
 		return
 	}
@@ -589,7 +619,7 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.init()
-	if !a.loginRate.allow("login:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
+	if a.loginIPBlocked(r) {
 		fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")
 		return
 	}
@@ -598,11 +628,16 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, "bad request")
 		return
 	}
+	if a.loginAccountBlocked(in.Email) {
+		fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")
+		return
+	}
 	u, err := a.Ctl.Login(r.Context(), in.Email, in.Password)
 	if busy(w, err) {
 		return
 	}
 	if err != nil {
+		a.loginFailed(r, in.Email, true)
 		fail(w, http.StatusUnauthorized, auth.ErrBadLogin.Error())
 		return
 	}
@@ -623,6 +658,7 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	case errors.Is(err, auth.ErrBadLogin):
+		a.loginFailed(r, in.Email, false)
 		writeJSON(w, http.StatusUnauthorized, map[string]any{
 			"error":      "that code is not right — check your phone's clock, or use a recovery code",
 			"needs_code": true,
@@ -638,6 +674,7 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.setCookie(w, r, tok, int(sqlite.SessionTTL.Seconds()))
+	a.loginSucceeded(in.Email)
 	writeJSON(w, http.StatusOK, map[string]any{"user": map[string]string{"email": u.Email}})
 }
 

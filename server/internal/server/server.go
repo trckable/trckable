@@ -73,6 +73,8 @@ type Server struct {
 	stopWrite context.CancelFunc
 	writerWG  sync.WaitGroup
 	started   time.Time
+	// readyzLogged is when /readyz last logged a failure (unix nanoseconds).
+	readyzLogged atomic.Int64
 	// remote is the bucket backups are copied to (TRCKABLE_BACKUP_S3), and
 	// offsite how the last copy went.
 	remote  *backup.Remote
@@ -84,8 +86,8 @@ type Server struct {
 
 // New performs boot steps 1–2 and prepares the listener.
 func New(ctx context.Context, cfg config.Config) (*Server, error) {
-	if err := os.MkdirAll(cfg.DataDir, 0o700); err != nil {
-		return nil, fmt.Errorf("data dir: %w", err)
+	if err := PrepareDataDir(cfg.DataDir); err != nil {
+		return nil, err
 	}
 	// The write-ahead log first: its lock proves no other trckabled runs on
 	// this data directory, before an upgrade copies and migrates it.
@@ -259,7 +261,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	mux.HandleFunc("GET /_trckable/whoami", s.whoami)
 	s.http = &http.Server{
 		Addr:              cfg.Addr,
-		Handler:           withHeaders(mux),
+		Handler:           withHeaders(s.proxyHint(mux)),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      30 * time.Second,
@@ -331,6 +333,31 @@ func ipResolver(cfg config.Config) ingest.IPResolver {
 		}
 		return ingest.RemoteIP
 	}
+}
+
+// proxyWarning is logged once, the first time a request comes through what
+// looks like a reverse proxy while no forwarded address is trusted.
+const proxyWarning = "requests arrive through a reverse proxy, but TRCKABLE_TRUST_PROXY is not set, so every visitor looks like one address: " +
+	"the sign-in limits are shared by everyone and visitor countries show the proxy's place. " +
+	"Set TRCKABLE_TRUST_PROXY=xff when one proxy in front of trckable adds X-Forwarded-For (Caddy, nginx, Traefik do), " +
+	"or header:<Name> for a header your proxy sets (header:X-Real-IP, header:CF-Connecting-IP), then restart. " +
+	"Check it with: npx trckable doctor"
+
+// proxyHint warns, once, about the setup that locks everyone out together:
+// the mode is "auto" (which trusts nothing off Railway), the connection comes
+// from a private or loopback address, and the request carries the headers a
+// proxy adds. A direct visit from localhost carries none, and says nothing.
+func (s *Server) proxyHint(h http.Handler) http.Handler {
+	if s.cfg.TrustProxy != "auto" || s.cfg.OnRailway {
+		return h
+	}
+	var said atomic.Bool
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !said.Load() && ingest.SawProxyHeaders(r) && ingest.SharedPeer(r, ingest.RemoteIP(r)) && said.CompareAndSwap(false, true) {
+			slog.Warn(proxyWarning)
+		}
+		h.ServeHTTP(w, r)
+	})
 }
 
 func withHeaders(h http.Handler) http.Handler {
@@ -470,31 +497,58 @@ func (s *Server) readyz(w http.ResponseWriter, r *http.Request) {
 			rd.WALLag = committed - rd.WALApplied
 		}
 	}
+	// The answer names the part that is failing and nothing else: the
+	// detail (a path, a driver's words) goes to the log, a minute apart at
+	// most, because a probe asks every few seconds.
 	code := http.StatusOK
 	if err := s.log.Err(); err != nil {
-		rd.Status, rd.Error, code = "unavailable", err.Error(), http.StatusServiceUnavailable
+		rd.Status, rd.Error, code = "unavailable", "the write-ahead log is failing", http.StatusServiceUnavailable
+		s.readyzLog(rd.Error, err)
 	} else if err := s.ctl.Ping(r.Context()); err != nil {
-		rd.Status, rd.Error, code = "unavailable", err.Error(), http.StatusServiceUnavailable
+		rd.Status, rd.Error, code = "unavailable", "the control database is not answering", http.StatusServiceUnavailable
+		s.readyzLog(rd.Error, err)
 	} else if v := s.writerErr.Load(); v != nil {
-		rd.Status, rd.Error = "degraded", v.(error).Error() // events still durable in the WAL
+		rd.Status, rd.Error = "degraded", "the analytics writer reported an error" // events still durable in the WAL
+		s.readyzLog(rd.Error, v.(error))
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	_ = json.NewEncoder(w).Encode(rd)
 }
 
+// readyzLog logs why /readyz is not healthy, at most once a minute.
+func (s *Server) readyzLog(what string, err error) {
+	now := time.Now().UnixNano()
+	last := s.readyzLogged.Load()
+	if now-last < int64(time.Minute) || !s.readyzLogged.CompareAndSwap(last, now) {
+		return
+	}
+	slog.Warn("readyz: "+what, "err", err)
+}
+
 // metrics exposes Prometheus text format with trckable_* names. It is off
-// (404) unless TRCKABLE_API_TOKEN is set, and then needs that token as a
-// bearer token: installation-wide counts are not for the internet.
-// metricsAllowed: /metrics is open, as it always was, unless
-// TRCKABLE_METRICS_TOKEN asks for that bearer token.
+// (404) unless a token is set, and then needs it as a bearer token:
+// installation-wide counts are not for the internet. The token is
+// TRCKABLE_METRICS_TOKEN, made for this; TRCKABLE_API_TOKEN opens it too.
+func (s *Server) metricsOpen() bool { return s.cfg.MetricsToken != "" || s.cfg.APIToken != "" }
+
 func (s *Server) metricsAllowed(r *http.Request) bool {
-	t := s.cfg.MetricsToken
-	return t == "" || auth.Equal(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "), t)
+	got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+	for _, t := range []string{s.cfg.MetricsToken, s.cfg.APIToken} {
+		if t != "" && auth.Equal(got, t) {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Server) metrics(w http.ResponseWriter, r *http.Request) {
+	if !s.metricsOpen() {
+		http.NotFound(w, r)
+		return
+	}
 	if !s.metricsAllowed(r) {
+		w.Header().Set("WWW-Authenticate", "Bearer")
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -522,12 +576,6 @@ func (s *Server) whoami(w http.ResponseWriter, r *http.Request) {
 		"forwarded": r.Header.Get("X-Forwarded-For") != "",
 		"trust":     s.cfg.TrustProxy,
 		"railway":   s.cfg.OnRailway,
-	}
-	if os.Getenv("TRCKABLE_DEBUG_HEADERS") == "1" { // temporary, for deploy verification
-		out["remote_addr"] = r.RemoteAddr
-		out["x_forwarded_for"] = r.Header.Values("X-Forwarded-For")
-		out["x_real_ip"] = r.Header.Get("X-Real-IP")
-		out["x_envoy_external_address"] = r.Header.Get("X-Envoy-External-Address")
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")

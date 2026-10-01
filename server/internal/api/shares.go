@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +12,7 @@ import (
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/modules"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
+	"github.com/trckable/trckable/server/internal/weburl"
 )
 
 // A link to one site's numbers for someone with no account. Everything it may
@@ -185,7 +185,7 @@ func (a *API) openShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.init()
-	if !a.loginRate.allow("share:"+a.ip(r), a.Now(), 30, 10*time.Minute) {
+	if !a.loginRate.allow("share:"+a.ip(r), a.Now(), a.ipMax(r, 30), 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")
 		return
 	}
@@ -434,7 +434,8 @@ func (a *API) ShareFromSession(r *http.Request, session string) (sqlite.Share, e
 }
 
 // embedOrigins checks the sites a link may be embedded on: an origin each,
-// https (http only for localhost), no path, at most a handful.
+// https (http only for localhost), no path, a plain host (the value goes
+// into a Content-Security-Policy header), at most a handful.
 func embedOrigins(in []string) ([]string, error) {
 	var out []string
 	for _, raw := range in {
@@ -442,12 +443,11 @@ func embedOrigins(in []string) ([]string, error) {
 		if raw == "" {
 			continue
 		}
-		u, err := url.Parse(raw)
-		local := err == nil && (u.Hostname() == "localhost" || u.Hostname() == "127.0.0.1")
-		if err != nil || u.Host == "" || (u.Scheme != "https" && (u.Scheme != "http" || !local)) || (u.Path != "" && u.Path != "/") || u.RawQuery != "" || u.User != nil {
+		origin, ok := weburl.Origin(raw)
+		if !ok {
 			return nil, fmt.Errorf("%q is not a site address: use one like https://example.com", raw)
 		}
-		out = append(out, u.Scheme+"://"+u.Host)
+		out = append(out, origin)
 	}
 	if len(out) > sqlite.MaxEmbedOrigins {
 		return nil, fmt.Errorf("a link can be embedded on %d sites at most", sqlite.MaxEmbedOrigins)
