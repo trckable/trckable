@@ -416,6 +416,11 @@ jobs:
           d=$(mktemp -d)
           if out=$(docker run --rm -v "$d":/data trckable:ci site list 2>&1); then echo "an unwritable volume was accepted"; exit 1; fi
           echo "$out" | grep -q 'chown -R 65532:65532 /data' || { echo "$out"; exit 1; }
+      # A volume the last release (root) filled: refused with the chown to
+      # run, then taken over after it, with the same data.
+      - if: needs.changes.outputs.image == 'true'
+        name: upgrade from a root-owned volume — refused with the fix, then the same data
+        run: server/bench/rootvolume/rootvolume.sh trckable:ci
       - if: needs.changes.outputs.image == 'true'
         name: boots, accepts an event, idle memory ≤ 64 MB, stops cleanly
         run: |

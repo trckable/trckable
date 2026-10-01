@@ -9,7 +9,8 @@
 # glibc base it replaced, in the image and in memory. It runs as the
 # unprivileged user 65532 (the "nonroot" tag): a new volume takes /data's
 # owner from the image; a volume an older image filled as root needs
-# `chown -R 65532:65532` once (the server says so when it cannot write).
+# `chown -R 65532:65532` once (the server says so when it cannot write), and
+# Railway, which mounts its volume as root, needs RAILWAY_RUN_UID=0 on the service.
 
 FROM golang:1.27-trixie AS build
 WORKDIR /src
