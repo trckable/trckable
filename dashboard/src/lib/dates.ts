@@ -9,10 +9,6 @@ export const toDate = (d: ISODate) => new Date(d + 'T00:00:00Z')
 export const fromDate = (d: Date): ISODate => d.toISOString().slice(0, 10)
 export const addDays = (d: ISODate, n: number) => fromDate(new Date(toDate(d).getTime() + n * DAY))
 export const diffDays = (a: ISODate, b: ISODate) => Math.round((toDate(b).getTime() - toDate(a).getTime()) / DAY)
-export function clampDate(d: ISODate, lo: ISODate, hi: ISODate): ISODate {
-  if (d < lo) return lo
-  return d > hi ? hi : d
-}
 
 export function addMonths(d: ISODate, n: number): ISODate {
   const t = toDate(d)
@@ -60,9 +56,6 @@ export interface Preset {
   hidden?: boolean
   range: (today: ISODate) => Range
 }
-
-/** The periods offered in the picker. */
-export const VISIBLE_PRESETS = () => PRESETS.filter((p) => !p.hidden)
 
 export const PRESETS: Preset[] = [
   // "Now" is today, by the hour, refreshing itself — the live view.
