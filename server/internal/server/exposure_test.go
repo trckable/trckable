@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -39,9 +41,8 @@ func get(s *Server, path, bearer string) (int, string) {
 	return w.Code, string(b)
 }
 
-// /metrics counts the whole installation: with no token set it does not
-// exist, and with one it answers only to that bearer. The operator's API
-// token opens it too.
+// /metrics counts the whole installation: with no metrics token set it does
+// not exist, and with one it answers only to that bearer.
 func TestMetricsIsClosedByDefault(t *testing.T) {
 	if code, _ := get(newTestServer(t, config.Config{}), "/metrics", ""); code != http.StatusNotFound {
 		t.Fatalf("no token configured: %d, want 404", code)
@@ -62,12 +63,17 @@ func TestMetricsIsClosedByDefault(t *testing.T) {
 		t.Fatalf("the right bearer: %d %q", code, body)
 	}
 
+	// The automation token does not open it: that token reads every site.
 	s = newTestServer(t, config.Config{APIToken: "tkb_test_api_0123456789"}) //nolint:gosec // a test value
-	if code, _ := get(s, "/metrics", ""); code != http.StatusUnauthorized {
-		t.Fatalf("API token set, no bearer: %d, want 401", code)
+	if code, _ := get(s, "/metrics", ""); code != http.StatusNotFound {
+		t.Fatalf("only an API token set: %d, want 404", code)
 	}
-	if code, _ := get(s, "/metrics", "tkb_test_api_0123456789"); code != http.StatusOK {
-		t.Fatalf("the API token as bearer: %d, want 200", code)
+	if code, _ := get(s, "/metrics", "tkb_test_api_0123456789"); code != http.StatusNotFound {
+		t.Fatalf("the API token as bearer, no metrics token: %d, want 404", code)
+	}
+	s = newTestServer(t, config.Config{APIToken: "tkb_test_api_0123456789", MetricsToken: "tkb_test_metrics_0123456789"}) //nolint:gosec // test values
+	if code, _ := get(s, "/metrics", "tkb_test_api_0123456789"); code != http.StatusUnauthorized {
+		t.Fatalf("the API token as bearer, a metrics token set: %d, want 401", code)
 	}
 }
 
@@ -155,5 +161,42 @@ func TestProxyWithoutTrustIsSaidOnce(t *testing.T) {
 	}
 	if n := logged(config.Config{OnRailway: true}, "172.18.0.2:5000", xff, 2); n != 0 {
 		t.Errorf("Railway: %d warnings, want 0", n)
+	}
+}
+
+// `trckabled admin reset-password` runs in another process: it leaves an
+// email in a file, and the server forgets that account's sign-in counters, so
+// a locked-out owner can sign in at once.
+func TestResetPasswordClearsTheSignInLimits(t *testing.T) {
+	s := newTestServer(t, config.Config{})
+	if _, err := s.ctl.CompleteSetup(context.Background(), "me@site.com", "correct horse battery"); err != nil {
+		t.Fatal(err)
+	}
+	login := func(password string) int {
+		r := httptest.NewRequest(http.MethodPost, "/api/v1/login", strings.NewReader(`{"email":"me@site.com","password":"`+password+`"}`))
+		r.Header.Set("Content-Type", "application/json")
+		r.RemoteAddr = "203.0.113.77:4000"
+		w := httptest.NewRecorder()
+		s.http.Handler.ServeHTTP(w, r)
+		return w.Code
+	}
+	for i := 0; i < 10; i++ {
+		if code := login("wrong password"); code != http.StatusUnauthorized {
+			t.Fatalf("wrong password %d: %d", i+1, code)
+		}
+	}
+	if code := login("correct horse battery"); code != http.StatusTooManyRequests {
+		t.Fatalf("the owner's own address after ten wrong ones: %d, want 429", code)
+	}
+	path := filepath.Join(s.cfg.DataDir, ClearLoginsFile)
+	if err := os.WriteFile(path, []byte("Someone@else.com\nME@site.com\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s.takeLoginResets()
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Errorf("the file was left behind: %v", err)
+	}
+	if code := login("correct horse battery"); code != http.StatusOK {
+		t.Fatalf("after the reset: %d, want 200", code)
 	}
 }

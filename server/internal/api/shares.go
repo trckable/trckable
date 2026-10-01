@@ -201,13 +201,20 @@ func (a *API) openShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Wrong passwords are counted per link as well: the limit per address
-	// alone lets many addresses guess one link's password without end. Only
-	// real links with a password count (the key is the token's hash), so
-	// this stays as small as the number of such links.
-	guesses := "sharepw:" + hex.EncodeToString(auth.Hash(strings.TrimSpace(in.Token)))
-	if a.loginRate.full(guesses, a.Now(), sharePasswordTries, 10*time.Minute) && !a.openedHere(r, in.Token) {
-		fail(w, http.StatusTooManyRequests, "too many wrong passwords for this link: try again in a few minutes")
-		return
+	// alone lets many addresses (or a wider ceiling behind a proxy) guess one
+	// link's password without end. Only real links with a password count (the
+	// key is the token's hash), so this stays as small as the number of such
+	// links. The slot is taken before the password is checked, so a burst
+	// cannot all pass; a right password gives it back.
+	guess := limit{"sharepw:" + hex.EncodeToString(auth.Hash(strings.TrimSpace(in.Token))), sharePasswordTries, 10 * time.Minute}
+	now := a.Now()
+	reserved := false
+	if in.Password != "" && !a.openedHere(r, in.Token) {
+		if !a.loginRate.reserve(now, guess) {
+			fail(w, http.StatusTooManyRequests, "too many wrong passwords for this link: try again in a few minutes")
+			return
+		}
+		reserved = true
 	}
 	// A reload of /s/<token> arrives without the password: the session this
 	// browser already holds on the same link answers for it.
@@ -216,14 +223,11 @@ func (a *API) openShare(w http.ResponseWriter, r *http.Request) {
 	if !held || in.Password != "" {
 		sh, err = a.Ctl.OpenShare(r.Context(), in.Token, in.Password, a.Now())
 	}
+	if reserved && !errors.Is(err, auth.ErrBadLogin) {
+		a.loginRate.release(now, guess)
+	}
 	if busy(w, err) {
 		return
-	}
-	switch {
-	case err == nil && in.Password != "":
-		a.loginRate.clear(guesses)
-	case errors.Is(err, auth.ErrBadLogin):
-		a.loginRate.record(guesses, a.Now())
 	}
 	switch {
 	case errors.Is(err, sqlite.ErrNeedsPassword):

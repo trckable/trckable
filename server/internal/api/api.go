@@ -487,6 +487,78 @@ func (l *attempts) record(key string, now time.Time) {
 	}
 }
 
+// limit is one counter a sign-in attempt is held against.
+type limit struct {
+	key    string
+	max    int
+	window time.Duration
+}
+
+// reserve takes a slot on every limit, or on none: an attempt that finds any
+// of them full is refused. The slot is taken before the password is hashed,
+// under the lock, so a burst of requests that arrive together cannot all
+// pass a look-then-count check while the hashing queue drains. A slot stays
+// taken (a wrong password) unless release gives it back.
+func (l *attempts) reserve(now time.Time, lims ...limit) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for _, lim := range lims {
+		n := 0
+		for _, t := range l.m[lim.key] {
+			if now.Sub(t) < lim.window {
+				n++
+			}
+		}
+		if n >= lim.max {
+			return false
+		}
+	}
+	for _, lim := range lims {
+		recent := l.m[lim.key][:0]
+		for _, t := range l.m[lim.key] {
+			if now.Sub(t) < lim.window {
+				recent = append(recent, t)
+			}
+		}
+		l.m[lim.key] = append(recent, now)
+	}
+	if len(l.m) > 10_000 { // bound memory: keys come from the request (an email, an address)
+		for k, ts := range l.m {
+			if len(ts) == 0 || now.Sub(ts[len(ts)-1]) > time.Hour { // the longest window in use
+				delete(l.m, k)
+			}
+		}
+	}
+	return true
+}
+
+// release gives back the slot reserve took at now on each limit: the password
+// was right, so it was not a guess.
+func (l *attempts) release(now time.Time, lims ...limit) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for _, lim := range lims {
+		ts := l.m[lim.key]
+		for i, t := range ts {
+			if t.Equal(now) {
+				l.m[lim.key] = append(ts[:i], ts[i+1:]...)
+				break
+			}
+		}
+	}
+}
+
+// clearPrefix forgets every counter whose key starts with prefix.
+func (l *attempts) clearPrefix(prefix string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for k := range l.m {
+		if strings.HasPrefix(k, prefix) {
+			delete(l.m, k)
+		}
+	}
+}
+
 func (l *attempts) clear(key string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -619,37 +691,52 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.init()
-	if a.loginIPBlocked(r) {
-		fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")
-		return
-	}
 	var in struct{ Email, Password, Code string }
 	if err := decode(r, &in); err != nil {
 		fail(w, http.StatusBadRequest, "bad request")
 		return
 	}
-	if a.loginAccountBlocked(in.Email) {
+	// Every guess is held against the address, the account on that address,
+	// and the account everywhere (see loginLimits); the slot is taken before
+	// the password is checked.
+	lims := a.loginLimits(r, in.Email)
+	now := a.Now()
+	if !a.loginRate.reserve(now, lims...) {
 		fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")
 		return
 	}
 	u, err := a.Ctl.Login(r.Context(), in.Email, in.Password)
-	if busy(w, err) {
-		return
-	}
 	if err != nil {
-		a.loginFailed(r, in.Email, true)
+		if busy(w, err) {
+			a.loginRate.release(now, lims...) // not a guess
+			return
+		}
+		if !errors.Is(err, auth.ErrBadLogin) {
+			a.loginRate.release(now, lims...)
+		}
 		fail(w, http.StatusUnauthorized, auth.ErrBadLogin.Error())
 		return
 	}
-	// The password was right. If this account has two-step sign-in, ask for
-	// the code — as a separate answer, so the dashboard can show that step
-	// instead of repeating "wrong email or password".
-	// Wrong codes are counted per person too, not only per address (codeTries).
-	if in.Code != "" && !a.codeTries(w, &u) {
-		return
+	// The password was right: it was no guess. If this account has two-step
+	// sign-in, ask for the code — as a separate answer, so the dashboard can
+	// show that step instead of repeating "wrong email or password".
+	a.loginRate.release(now, lims...)
+	// Wrong codes are counted per person too, not only per address (codeTries),
+	// and a code is held against the same limits as a password.
+	if in.Code != "" {
+		if !a.codeTries(w, &u) {
+			return
+		}
+		if !a.loginRate.reserve(now, lims...) {
+			fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")
+			return
+		}
 	}
 	err = a.Ctl.CheckSecondStep(r.Context(), u.ID, cleanCode(in.Code), a.unix)
 	a.codeResult(&u, in.Code, err)
+	if in.Code != "" && !errors.Is(err, auth.ErrBadLogin) {
+		a.loginRate.release(now, lims...)
+	}
 	switch {
 	case errors.Is(err, sqlite.ErrNeedsCode):
 		writeJSON(w, http.StatusUnauthorized, map[string]any{
@@ -658,7 +745,6 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	case errors.Is(err, auth.ErrBadLogin):
-		a.loginFailed(r, in.Email, false)
 		writeJSON(w, http.StatusUnauthorized, map[string]any{
 			"error":      "that code is not right — check your phone's clock, or use a recovery code",
 			"needs_code": true,
@@ -674,7 +760,7 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.setCookie(w, r, tok, int(sqlite.SessionTTL.Seconds()))
-	a.loginSucceeded(in.Email)
+	a.rememberDevice(w, r, u.ID, in.Email)
 	writeJSON(w, http.StatusOK, map[string]any{"user": map[string]string{"email": u.Email}})
 }
 

@@ -69,4 +69,12 @@ func TestCookieBarLinkIsAWebAddress(t *testing.T) {
 	if cfg.Banner.Policy != "" || cfg.Banner.Text != "x" {
 		t.Errorf("stored javascript: link read back as %+v", cfg.Banner)
 	}
+	for _, stored := range []string{"//evil.example/x", `/\\evil.example`} {
+		if _, err := g.ctl.DB.Exec(`UPDATE site_settings SET banner = ?`, `{"text":"x","policy":"`+stored+`"}`); err != nil {
+			t.Fatal(err)
+		}
+		if cfg, err := g.ctl.SiteConfig(t.Context(), g.site); err != nil || cfg.Banner.Policy != "" {
+			t.Errorf("stored %q read back as %+v, %v", stored, cfg.Banner, err)
+		}
+	}
 }

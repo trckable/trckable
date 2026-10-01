@@ -390,6 +390,7 @@ func (s *Server) Run(ctx context.Context) error {
 	go s.revenue.Run(wctx)
 	go s.runRetention(wctx)    // each site's own "keep for N days"
 	go s.runBackups(wctx)      // one encrypted copy a day, kept on the volume
+	go s.runLoginResets(wctx)  // sign-in limits cleared when an owner resets a password
 	go s.runAlerts(wctx)       // the four things worth being told about
 	go s.runHealthAlerts(wctx) // the installation's own problems, sent as they start and clear
 	go s.runChecks(wctx)       // each site's snippet, looked for once a day
@@ -527,19 +528,15 @@ func (s *Server) readyzLog(what string, err error) {
 }
 
 // metrics exposes Prometheus text format with trckable_* names. It is off
-// (404) unless a token is set, and then needs it as a bearer token:
-// installation-wide counts are not for the internet. The token is
-// TRCKABLE_METRICS_TOKEN, made for this; TRCKABLE_API_TOKEN opens it too.
-func (s *Server) metricsOpen() bool { return s.cfg.MetricsToken != "" || s.cfg.APIToken != "" }
+// (404) unless TRCKABLE_METRICS_TOKEN is set, and then needs that token as a
+// bearer token: installation-wide counts are not for the internet. The API
+// token does not open it: it reads every site, this reads one page of counts,
+// and the two are not given to the same scraper.
+func (s *Server) metricsOpen() bool { return s.cfg.MetricsToken != "" }
 
 func (s *Server) metricsAllowed(r *http.Request) bool {
 	got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-	for _, t := range []string{s.cfg.MetricsToken, s.cfg.APIToken} {
-		if t != "" && auth.Equal(got, t) {
-			return true
-		}
-	}
-	return false
+	return s.metricsOpen() && auth.Equal(got, s.cfg.MetricsToken)
 }
 
 func (s *Server) metrics(w http.ResponseWriter, r *http.Request) {

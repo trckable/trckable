@@ -340,7 +340,38 @@ func (s *Store) ResetPassword(ctx context.Context, email, password string) error
 	if _, err := tx.ExecContext(ctx, `DELETE FROM auth_sessions WHERE user_id = ?`, id); err != nil {
 		return err
 	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM known_devices WHERE user_id = ?`, id); err != nil {
+		return err
+	}
 	return tx.Commit()
+}
+
+// MaxKnownDevices is how many browsers one person keeps remembered; a new
+// one past it replaces the oldest.
+const MaxKnownDevices = 20
+
+// NewKnownDevice remembers a browser that just signed in and returns the id
+// for its cookie (only the id's hash is kept).
+func (s *Store) NewKnownDevice(ctx context.Context, userID string) (string, error) {
+	id := auth.Token("tkb_d_", 16)
+	if _, err := s.DB.ExecContext(ctx, `INSERT INTO known_devices (token_hash, user_id, created_at) VALUES (?, ?, ?)`,
+		auth.Hash(id), userID, time.Now().Unix()); err != nil {
+		return "", err
+	}
+	_, _ = s.DB.ExecContext(ctx, `DELETE FROM known_devices WHERE user_id = ? AND rowid NOT IN
+		(SELECT rowid FROM known_devices WHERE user_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?)`, userID, userID, MaxKnownDevices)
+	return id, nil
+}
+
+// KnownDeviceEmail is the email of the person a remembered browser belongs
+// to, or "" when the id is not one.
+func (s *Store) KnownDeviceEmail(ctx context.Context, id string) string {
+	var email string
+	err := s.DB.QueryRowContext(ctx, `SELECT u.email FROM known_devices d JOIN users u ON u.id = d.user_id WHERE d.token_hash = ?`, auth.Hash(id)).Scan(&email)
+	if err != nil {
+		return ""
+	}
+	return email
 }
 
 // ---- profile ---------------------------------------------------------------

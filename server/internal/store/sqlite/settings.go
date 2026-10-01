@@ -145,7 +145,7 @@ func readBanner(s string) BannerText {
 	if s != "" {
 		_ = json.Unmarshal([]byte(s), &b) // unreadable wording falls back to the default bar
 	}
-	b.Policy, _ = weburl.Link(b.Policy) // placed on the site's pages: a web address or a path, whatever was stored
+	b.Policy = link(b.Policy) // placed on the site's pages: a web address or a path, whatever was stored
 	return b
 }
 
@@ -186,8 +186,10 @@ func writeBanner(b BannerText) string {
 // link keeps the privacy link to a web address or a path; anything else
 // (javascript:, data:) is dropped rather than passed into the visitor's page.
 func link(v string) string {
-	v, _ = weburl.Link(v)
-	return v
+	if safe, ok := weburl.Link(v); ok {
+		return safe
+	}
+	return ""
 }
 
 // colour keeps the picked colours to what a colour input produces. Anything
