@@ -67,6 +67,9 @@ func TestBootBackupSkipsARecentOne(t *testing.T) {
 
 	// A failed off-site copy asks for another try; a bucket that is fine does not.
 	s.remote, _ = backup.ParseRemote("https://key:secret@s3.example.com/bucket")
+	if got := s.firstBackupIn(now); got != backupBoot {
+		t.Fatalf("a bucket that never got a copy: %s", got)
+	}
 	s.offsite.Store(&offsiteStatus{at: now.Unix()})
 	if got := s.firstBackupIn(now); got != 23*time.Hour {
 		t.Fatalf("with a good off-site copy: %s", got)

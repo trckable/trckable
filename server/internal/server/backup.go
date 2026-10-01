@@ -44,7 +44,8 @@ const (
 
 // firstBackupIn is how long after a start the first backup is due. Ten
 // minutes, unless the newest file is younger than backupFresh and the last
-// backup and the last off-site copy both worked: then the next daily one,
+// backup and the last off-site copy (when a bucket is set) both worked: then
+// the next daily one,
 // 24 hours after the newest, so a redeploy every few hours still gets one
 // backup a day instead of one per start.
 func (s *Server) firstBackupIn(now time.Time) time.Duration {
@@ -52,7 +53,8 @@ func (s *Server) firstBackupIn(now time.Time) time.Duration {
 	if last.IsZero() || last.After(now) || now.Sub(last) > backupFresh || s.backupFailed() {
 		return backupBoot
 	}
-	if st := s.offsite.Load(); s.remote != nil && st != nil && st.err != "" {
+	// A bucket that never got a copy counts as not fine either.
+	if st := s.offsite.Load(); s.remote != nil && (st == nil || st.err != "" || st.at == 0) {
 		return backupBoot
 	}
 	return last.Add(backupEvery).Sub(now)
