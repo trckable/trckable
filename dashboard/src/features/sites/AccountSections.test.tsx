@@ -34,9 +34,9 @@ describe('the other accounts in the switcher', () => {
 
   it('lists each other account folded: name, role and how many sites', async () => {
     const html = await sections([card('a', 'Ann', 'owner', 2), card('b', 'Bo’s team', 'viewer', 3), card('c', 'Cy', 'owner', 1)], 'a')
-    expect(html).toContain('Bo’s team · Viewer · 3 sites')
-    expect(html).toContain('Cy · Owner · 1 site')
-    expect(html).not.toContain('Ann ·')
+    expect(html).toContain('>Bo’s team</span><span class="acct-meta"> · Viewer · 3 sites<')
+    expect(html).toContain('>Cy</span><span class="acct-meta"> · Owner · 1 site<')
+    expect(html).not.toContain('>Ann<')
     expect(html).toContain('aria-expanded="false"')
     // Folded: no site of theirs is on the list yet.
     expect(html).not.toContain('b0.example')
@@ -63,7 +63,7 @@ describe('the other accounts in the switcher', () => {
       const sites = [site(1), site(2)]
       return renderToStaticMarkup(<SiteMenu sites={sites} current={sites[0]} all={false} onClose={noop} />)
     }
-    expect(await menu([card('a', 'Ann', 'owner', 2), card('b', 'Bo', 'viewer', 3)])).toContain('Bo · Viewer · 3 sites')
+    expect(await menu([card('a', 'Ann', 'owner', 2), card('b', 'Bo', 'viewer', 3)])).toContain(' · Viewer · 3 sites')
     expect(await menu([card('a', 'Ann', 'owner', 2)])).not.toContain('Viewer · ')
   })
 })

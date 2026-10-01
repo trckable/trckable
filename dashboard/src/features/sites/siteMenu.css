@@ -344,6 +344,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.site-head .fold .acct-meta {
+  flex: none;
+  white-space: pre;
+}
 .site-head .fold:hover {
   background: var(--sunken);
   color: var(--text-2);

@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
 import { API } from '../playwright.config'
 import { seedTeam, type Team } from './accounts'
+import { session } from './session'
 
 const BIN = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../server/bin/trckabled')
 const PASSWORD = 'accounts e2e password 1'
@@ -20,6 +21,7 @@ let home = ''
 test.describe.configure({ mode: 'serial' })
 
 test.beforeAll(async () => {
+  await session('accounts') // the instance has an owner, who names the person's own account
   const tag = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
   const email = `member-${tag}@example.com`
   for (let i = 0; ; i++) {
@@ -44,6 +46,11 @@ const me = async (request: import('@playwright/test').APIRequestContext, account
 test('joins a team as a viewer, switches to it, sees only its allowed sites, and leaves', async ({ page, context }) => {
   test.slow()
   const request = context.request
+  // Screenshots of the switcher (MEMBERSHIPS_SHOTS=dir MEMBERSHIPS_WIDTH=390): dark, at the width asked for.
+  if (SHOTS) {
+    await page.setViewportSize({ width: Number(process.env.MEMBERSHIPS_WIDTH ?? 1280), height: 844 })
+    await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' })
+  }
   await context.addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   const person = await me(request)
   expect(person.accounts).toHaveLength(2)
@@ -57,7 +64,7 @@ test('joins a team as a viewer, switches to it, sees only its allowed sites, and
   const pick = page.locator('.site-pick .site-btn')
   await expect(pick).toBeVisible()
   // The header names the account in view, for a person in two.
-  await expect.poll(() => pick.locator('.name').evaluate((el) => getComputedStyle(el, '::before').content)).not.toMatch(/^(none|normal)$/)
+  await expect.poll(() => pick.locator('.name').evaluate((el) => getComputedStyle(el, '::before').content)).toMatch(/^"[^"]+"$/)
 
   await pick.click()
   const menu = page.getByRole('dialog', { name: 'Sites' })
@@ -69,8 +76,7 @@ test('joins a team as a viewer, switches to it, sees only its allowed sites, and
   await expect(menu.getByRole('button', { name: team.sites[0].domain })).toBeVisible()
   await expect(menu.getByText(team.sites[1].domain)).toHaveCount(0) // not allowed
   if (SHOTS) {
-    await page.emulateMedia({ colorScheme: 'dark' })
-    await page.waitForTimeout(300)
+    await page.waitForTimeout(400)
     await page.screenshot({ path: `${SHOTS}/switcher-${page.viewportSize()?.width ?? 0}-dark.png` })
   }
 

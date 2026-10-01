@@ -19,7 +19,8 @@ export function Section({ a, shut, onFold, onClose }: { a: AccountCard; shut: bo
       <h3 className="site-head group">
         <button type="button" data-stop className="fold" aria-expanded={!shut} onClick={onFold}>
           <ChevronRight size={14} strokeWidth={2} aria-hidden="true" />
-          <span>{copy.account.head(a.name, a.role, a.total)}</span>
+          <span className="acct-name">{a.name}</span>
+          <span className="acct-meta">{copy.account.meta(a.role, a.total)}</span>
         </button>
       </h3>
       {!shut && (

@@ -16,7 +16,7 @@ export const copy = {
 
   // The person's other accounts, one folded section each: "Name · Viewer · 3 sites".
   account: {
-    head: (name: string, role: string, n: number) => `${name} · ${role === 'owner' ? 'Owner' : 'Viewer'} · ${n === 1 ? '1 site' : `${n} sites`}`,
+    meta: (role: string, n: number) => ` · ${role === 'owner' ? 'Owner' : 'Viewer'} · ${n === 1 ? '1 site' : `${n} sites`}`,
     more: (n: number) => `${n} more`,
   },
 
