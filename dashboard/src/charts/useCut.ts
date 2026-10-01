@@ -2,7 +2,9 @@
 // The pointer moves it every frame by writing one CSS variable (the paths are
 // drawn once and masked, never redrawn); keys, touch and Replay move it to a
 // bucket. With nothing hovered, dragged or playing there is no cut at all.
-import { useDrive } from './useDrive'
+// While Replay plays with motion, its playhead moves the cut itself, every
+// frame (ReplayHead), and this only keeps out of the way.
+import { reducedMotion } from '../lib/motion'
 import { useLayoutEffect, useRef, type Dispatch, type KeyboardEvent, type RefObject, type SetStateAction } from 'react'
 
 interface CutArgs {
@@ -10,16 +12,15 @@ interface CutArgs {
   n: number
   hover: number | null
   scrub: number | null
-  /** Replay plays: its playhead moves the cut every frame (useDrive), not this. */
+  /** Replay plays: its playhead moves the cut every frame, not this. */
   locked?: boolean
-  vals: number[]
-  y: (v: number) => number
   setHover: Dispatch<SetStateAction<number | null>>
   x: (i: number) => number
 }
 
-export function useCut({ ref, n, hover, scrub, locked, vals, setHover, x, y }: CutArgs) {
-  const [marker, driven] = useDrive({ ref, locked, vals, x, y })
+export function useCut({ ref, n, hover, scrub, locked, setHover, x }: CutArgs) {
+  // With reduced motion the cut steps from moment to moment instead.
+  const driven = !!locked && !reducedMotion()
   // Where the pointer is, and the bucket it picked: the cut sits at the
   // pointer itself only while that bucket is the one being shown.
   const pointerRef = useRef<{ px: number; i: number } | null>(null)
@@ -82,5 +83,5 @@ export function useCut({ ref, n, hover, scrub, locked, vals, setHover, x, y }: C
   const release = () => {
     pointerRef.current = null
   }
-  return { follow, release, onKey, marker, driven }
+  return { follow, release, onKey, driven }
 }

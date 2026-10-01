@@ -16,6 +16,8 @@ interface Props {
   value?: number
   /** While Replay plays: the number at the playhead's position, between two points. */
   live?: (pos: number) => number
+  /** Replay has not reached a first visit: a dash, not 0, 0% or 0s. */
+  blank?: (pos: number) => boolean
   fmt: (n: number) => string
   d: Delta | null
   /** The comparison in words, as the period picker says it. */
@@ -37,6 +39,7 @@ export function KpiTile(p: Props) {
   const pos = usePlayhead(!!p.live)
   const tweened = useTween(p.value ?? 0, p.live ? 0 : SETTLE_MS)
   const v = p.live ? p.live(pos) : tweened
+  const none = !!p.blank?.(pos)
   const cls = 'kpi' + (p.money ? ' money' : '')
   const body = (
     <>
@@ -46,10 +49,10 @@ export function KpiTile(p: Props) {
       </span>
       {/* The skeleton is decorative: the loading bar at the top of the page
           is the one thing that announces loading, and it says it once. */}
-      {p.loading ? <span className="value skeleton" aria-hidden="true" /> : <span className="value num">{p.value === undefined ? '–' : p.fmt(v)}</span>}
-      {p.d && !p.loading && <Change d={p.d} vs={p.vs} />}
-      {/* The change's line is kept while loading: the strip is as tall as it will be. */}
-      {p.loading && <span className="kpi-delta" aria-hidden="true" />}
+      {p.loading ? <span className="value skeleton" aria-hidden="true" /> : <span className="value num">{p.value === undefined || none ? '–' : p.fmt(v)}</span>}
+      {p.d && !p.loading && !none && <Change d={p.d} vs={p.vs} />}
+      {/* The change's line is kept while loading, and while a dash stands for nothing yet: the strip is as tall as it will be. */}
+      {(p.loading || (none && p.d)) && <span className="kpi-delta" aria-hidden="true" />}
     </>
   )
   if (!p.onClick) return <div className={cls}>{body}</div>

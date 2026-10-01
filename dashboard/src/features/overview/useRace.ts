@@ -84,6 +84,9 @@ export function useHourRace(series: Point[], whole: KPIs | undefined) {
   }, [series, whole])
 }
 
+/** Fewer than half a visitor, half a pageview and half a cent so far: nothing to show. */
+export const nothingYet = (r: { kpis: KPIs; revenue: number } | null) => !!r && r.kpis.visitors < 0.5 && r.kpis.pageviews < 0.5 && r.revenue < 0.5
+
 interface Now {
   src: Result | undefined
   dates: string[]
@@ -107,7 +110,9 @@ export function useRaceNow(a: Now) {
   const raced = a.telling && race && (a.hours || a.racing) && i >= 0 ? race(i) : null
   const smooth = a.playing && a.telling && !reducedMotion() ? race : null
   const follow = (f: (r: NonNullable<typeof raced>) => number) => (smooth ? (pos: number) => f(smooth(pos)) : undefined)
-  return { raced, follow }
+  // Nothing has happened yet: the tiles say so with a dash, as before a first visit, not with 0, 0% and 0s.
+  const blank = (pos: number) => nothingYet(smooth ? smooth(pos) : raced)
+  return { raced, follow, blank }
 }
 
 /** The lists so far: each row summed up to raceTo, landing on its period figure. */

@@ -4,13 +4,3 @@
   left: 0;
   width: 200px;
 }
-.cmp-sw {
-  flex: none;
-  width: 8px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--border-2);
-}
-.lrow.on .cmp-sw {
-  background: var(--ch-7);
-}
