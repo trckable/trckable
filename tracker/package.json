@@ -18,6 +18,6 @@
     "esbuild": "^0.28.2",
     "happy-dom": "^20.14.5",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.2"
   }
 }
