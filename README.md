@@ -53,6 +53,8 @@ docker logs trckable   # a one-time setup link: open it, create your account, ad
 
 The image is for x86-64 and arm64; pin a [release](https://github.com/trckable/trckable/releases) with its tag, `ghcr.io/trckable/trckable:<version>`. You can also build it yourself: `docker build -t trckable -f deploy/Dockerfile https://github.com/trckable/trckable.git`.
 
+The container runs as an unprivileged user (65532), not root. A new volume just works. A volume an older image filled as root needs its owner changed once: `docker run --rm -v trckable-data:/data busybox chown -R 65532:65532 /data` (for a bind mount, `chown -R 65532:65532` on that folder). If the data folder is not writable, trckable says so at start and prints this command. Behind a reverse proxy (Caddy, nginx, Traefik) also set `TRCKABLE_TRUST_PROXY=xff`, or `header:X-Real-IP`, so the sign-in limits and the country lookup see each visitor and not the proxy; `npx trckable doctor` checks it.
+
 ```html
 <script
   defer
