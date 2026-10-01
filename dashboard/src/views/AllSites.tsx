@@ -9,9 +9,11 @@ import { delta, fmtInt, fmtMoney, fmtPct } from '../lib/format'
 import { isViewer } from '../lib/me'
 import { navigate } from '../lib/url'
 import './AllSites.css'
-import { SiteMark, hueOf as hueFromDomain } from '../components/SiteMark'
+import { SiteMark } from '../components/SiteMark'
 import { openSettings } from '../lib/settings'
 import { Loading } from '../components/loading/Loading'
+import { Stacked } from './AllSitesChart'
+import { siteColors } from './allSitesColors'
 import { Spark } from './AllSitesSpark'
 import { EMPTY, flat } from '../features/sites/layout'
 import { useSiteLayout } from '../features/sites/useSiteLayout'
@@ -25,94 +27,6 @@ const PERIODS = [
 ]
 
 type SortKey = 'order' | 'visitors' | 'pageviews' | 'bounce_rate' | 'revenue' | 'domain'
-
-/** A site's hue, from its domain, so its chart band, spark and share bar
-    stay the same everywhere (components/SiteMark.tsx). */
-const hueOf = hueFromDomain
-
-/** The day so many days before today, as "Sep 25". */
-function dayLabel(ago: number) {
-  const d = new Date(Date.now() - ago * 864e5)
-  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
-}
-
-/** Every site's visitors over the period, stacked, each in its own colour.
-    Point at a day to read each site's share of it. */
-function Stacked({ rows, days }: { rows: SiteRow[]; days: number }) {
-  const [at, setAt] = useState<number | null>(null)
-  const shown = rows.filter((r) => r.series?.some((v) => v > 0))
-  const n = Math.max(0, ...shown.map((r) => r.series?.length ?? 0))
-  if (!n) return <div className="all-chart-empty faint">No visits in this period yet.</div>
-  const W = 640
-  const H = 180
-  const sums = Array.from({ length: n }, (_, i) => shown.reduce((a, r) => a + (r.series?.[i] ?? 0), 0))
-  const max = Math.max(1, ...sums)
-  const x = (i: number) => (n > 1 ? (i / (n - 1)) * W : W / 2)
-  const y = (v: number) => H - (v / max) * (H - 8)
-  // Bottom-up: the biggest site sits at the bottom, the smaller ones on top.
-  const order = [...shown].sort((a, b) => b.visitors - a.visitors)
-  const base = new Array<number>(n).fill(0)
-  const bands = order.map((r) => {
-    const lo = [...base]
-    const hi = base.map((b, i) => b + (r.series?.[i] ?? 0))
-    hi.forEach((v, i) => (base[i] = v))
-    const top = hi.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join('')
-    const bottom = lo.map((_, i) => `L${x(n - 1 - i).toFixed(1)} ${y(lo[n - 1 - i]).toFixed(1)}`).join('')
-    return { r, d: top + bottom + 'Z', line: top }
-  })
-  const step = days / n // days per point: a day, or a week for 12 months
-  const when = (i: number) => dayLabel(Math.round((n - 1 - i) * step))
-  return (
-    <div className="all-chart" onMouseLeave={() => setAt(null)}>
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        preserveAspectRatio="none"
-        className="all-chart-svg"
-        onMouseMove={(e) => {
-          const b = e.currentTarget.getBoundingClientRect()
-          setAt(Math.max(0, Math.min(n - 1, Math.round(((e.clientX - b.left) / b.width) * (n - 1)))))
-        }}
-        role="img"
-        aria-label="Visitors per day, every site stacked"
-      >
-        {bands.map(({ r, d, line }) => (
-          <g key={r.id}>
-            <path d={d} fill={`hsl(${hueOf(r.domain)} 70% 60% / 0.16)`} />
-            <path d={line} fill="none" stroke={`hsl(${hueOf(r.domain)} 80% 65%)`} strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
-          </g>
-        ))}
-        {at !== null && <line x1={x(at)} x2={x(at)} y1="0" y2={H} stroke="var(--text-3)" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />}
-      </svg>
-      <div className="all-chart-axis faint">
-        <span>{when(0)}</span>
-        <span>{when(n - 1)}</span>
-      </div>
-      {at !== null && (
-        <div className="all-chart-tip" style={{ left: `${(x(at) / W) * 100}%` }}>
-          <b>{when(at)}</b>
-          {order.map((r) => (
-            <span key={r.id}>
-              <i style={{ background: `hsl(${hueOf(r.domain)} 80% 65%)` }} />
-              {r.name || r.domain}
-              <em>{fmtInt(r.series?.[at] ?? 0)}</em>
-            </span>
-          ))}
-          <span className="sum">
-            All sites <em>{fmtInt(sums[at] ?? 0)}</em>
-          </span>
-        </div>
-      )}
-      <div className="all-legend">
-        {order.map((r) => (
-          <span key={r.id}>
-            <i style={{ background: `hsl(${hueOf(r.domain)} 80% 65%)` }} />
-            {r.name || r.domain}
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 type Show = 'all' | 'active' | 'waiting' | 'revenue'
 
@@ -155,6 +69,9 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'order', desc: false })
   const layout = useSiteLayout() ?? EMPTY
   const rank = new Map(flat(sites, layout).map((s, i) => [s.id, i]))
+  // A site's colour is its place in the account's list, not its place on this page.
+  const colors = siteColors(sites)
+  const colorOf = (id: string) => colors.get(id) ?? 'var(--text-3)'
   const [q, setQ] = useState('')
   const [show, setShow] = useState<Show>('all')
 
@@ -254,7 +171,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
                     {d && <span className={'delta tone-' + d.tone}>{d.text} vs the {days} days before</span>}
                   </div>
                 </div>
-                <Stacked rows={list} days={days} />
+                <Stacked rows={list} days={days} colors={colors} />
               </div>
               <div className="all-tiles">
                 <div className="all-tile">
@@ -338,7 +255,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
                         Waiting for the first visit · <b>Install the script →</b>
                       </span>
                     ) : (
-                      <Spark values={r.series ?? []} color={`hsl(${hueOf(r.domain)} 80% 65%)`} />
+                      <Spark values={r.series ?? []} color={colorOf(r.id)} />
                     )}
                     {!quiet && (<>
                     <span className="n all-big">
@@ -346,7 +263,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
                       {dv && <span className={'delta tone-' + dv.tone}>{dv.text}</span>}
                       {list.length > 1 && !quiet && (
                         <span className="all-share" title={`${Math.round(share * 100)}% of all visitors`}>
-                          <i style={{ width: `${Math.max(share * 100, share ? 2 : 0)}%`, background: `hsl(${hueOf(r.domain)} 80% 65%)` }} />
+                          <i style={{ width: `${Math.max(share * 100, share ? 2 : 0)}%`, background: colorOf(r.id) }} />
                         </span>
                       )}
                     </span>
