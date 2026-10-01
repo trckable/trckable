@@ -100,7 +100,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
         </span>
         <div>
           <h2>Keyboard shortcuts</h2>
-          <span className="faint">{rec ? 'Press the new key. Esc to cancel.' : 'Try one and its key lights up. Click a key to make it yours.'}</span>
+          <span className="faint">{rec ? 'Press the new key. Esc to cancel.' : 'Click a key to make it yours.'}</span>
         </div>
         <div className="modal-tools">
           {changed && !rec && (
@@ -206,7 +206,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
         })}
       </div>
       <footer className="keys-foot">
-        <span className="faint">Changes are kept with your account, so they follow you to any browser.</span>
+        <span className="faint">Saved with your account.</span>
         <span className="faint">
           Open this with{' '}
           {caps(keyFor('shortcuts')).map((c) => (

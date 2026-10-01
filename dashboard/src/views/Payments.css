@@ -217,3 +217,13 @@
     font-size: 12px;
   }
 }
+
+/* Connect: the one link under the key field. */
+.key-link {
+  align-self: flex-start;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.key-link:hover {
+  color: var(--text);
+}

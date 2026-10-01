@@ -1,11 +1,11 @@
 // Every dialog ends the same way, so nobody has to work out where to look.
 //
-//   left   the way out — Cancel, Later, Back. Quiet, and always on the left.
-//   right  the one thing you probably came to do. Exactly one primary.
+//   left      the quiet way out — Cancel, Done, Back — a ghost button
+//   children  the one thing you probably came to do: exactly one primary
 //
-// The bar reaches the dialog's edges and sits under a hairline, so it reads as
-// a footer rather than as two more buttons in the content. On a phone the
-// primary takes the top line at full width, because that is where a thumb is.
+// Both sit at the bottom right, on one row, with no band or rule of their own:
+// the dialog's padding is the only space around them. On a phone the primary
+// takes the width the quiet button leaves, where a thumb reaches.
 import type { ReactNode } from 'react'
 import './DialogActions.css'
 
@@ -13,7 +13,6 @@ export function DialogActions({ left, children }: { left?: ReactNode; children?:
   return (
     <div className="dialog-actions">
       {left}
-      <span className="dialog-actions-gap" />
       {children}
     </div>
   )

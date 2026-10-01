@@ -6,11 +6,10 @@ import { api, messageOf } from '../../lib/api'
 
 const SaveViewDialog = lazy(() => import('../../components/SaveViewDialog').then((m) => ({ default: m.SaveViewDialog })))
 
-export function SaveViewHost(p: { site: string; filters: number; query: string; onClose: () => void; onSaved: () => void }) {
+export function SaveViewHost(p: { site: string; query: string; onClose: () => void; onSaved: () => void }) {
   return (
     <Suspense fallback={null}>
       <SaveViewDialog
-        filters={p.filters}
         onClose={p.onClose}
         onSave={(name) =>
           api

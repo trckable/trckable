@@ -7,7 +7,7 @@ const count = (n: number) => (n === 1 ? '1 note' : `${n} notes`)
 export const copy = {
   by: (author: string) => `by ${author}`,
   title: 'Notes',
-  intro: 'Notes pinned to days on the chart: a launch, a post, an outage. Click one to see its day on the chart.',
+  intro: 'Notes pinned to days on the chart. Click one to jump to its day.',
   search: 'Search notes',
   loading: 'Loading notes…',
   failed: 'Couldn’t load the notes.',

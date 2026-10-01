@@ -45,7 +45,7 @@
 .crop-zoom input {
   flex: 1;
 }
-.crop-modal .person-actions {
+.crop-modal .dialog-actions {
   align-self: stretch;
 }
 
