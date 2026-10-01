@@ -45,8 +45,8 @@ func TestLink(t *testing.T) {
 		"vbscript:x", "file:///etc/passwd", "http://example.com/privacy", "//evil.example/x", `/\evil.example`, "privacy", "mailto:a@b.c",
 		"https://user:pw@example.com/p", "https:example.com", "https://",
 	} {
-		if got, ok := Link(in); ok {
-			t.Errorf("Link(%q) = %q, want a refusal", in, got)
+		if got, ok := Link(in); ok || got != "" {
+			t.Errorf("Link(%q) = %q, %v; want an empty refusal", in, got, ok)
 		}
 	}
 }

@@ -32,7 +32,10 @@ func Link(raw string) (string, bool) {
 		return "", false
 	}
 	if strings.HasPrefix(raw, "/") {
-		return raw, !strings.HasPrefix(raw, "//") && !strings.Contains(raw, `\`)
+		if strings.HasPrefix(raw, "//") || strings.Contains(raw, `\`) { // "//host" and "/\host" leave the site
+			return "", false
+		}
+		return raw, true
 	}
 	if _, ok := parse(raw); !ok {
 		return "", false
