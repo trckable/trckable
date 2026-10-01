@@ -25,11 +25,13 @@ type accountSite struct {
 }
 
 type accountOut struct {
-	ID    string        `json:"id"`
-	Name  string        `json:"name"`
-	Role  string        `json:"role"`
-	Sites []accountSite `json:"sites"`
-	Total int           `json:"total"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Role string `json:"role"`
+	// Holder: the person is this account's first owner: leaving it is not offered.
+	Holder bool          `json:"holder"`
+	Sites  []accountSite `json:"sites"`
+	Total  int           `json:"total"`
 }
 
 // accountsOf is every account the person is in, oldest first, with the sites
@@ -41,7 +43,7 @@ func (a *API) accountsOf(r *http.Request, user string) ([]accountOut, error) {
 	}
 	out := make([]accountOut, 0, len(cards))
 	for _, c := range cards {
-		o := accountOut{ID: c.ID, Name: c.Name, Role: c.Role, Total: c.Total, Sites: []accountSite{}}
+		o := accountOut{ID: c.ID, Name: c.Name, Role: c.Role, Holder: c.Holder, Total: c.Total, Sites: []accountSite{}}
 		for _, s := range c.Sites {
 			o.Sites = append(o.Sites, accountSite{ID: s.ID, Domain: s.Domain, Name: s.Name})
 		}

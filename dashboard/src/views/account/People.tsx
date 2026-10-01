@@ -6,7 +6,8 @@ import { AllowedSites } from '../../features/access/AllowedSites'
 import { useSiteAccess } from '../../features/access/useSiteAccess'
 import { Loading } from '../../components/loading/Loading'
 import { whenIdle } from '../../lib/lazyLoad'
-import { api, type Person } from '../../lib/api'
+import type { Person } from '../../lib/api'
+import { peopleApi } from '../../lib/peopleApi'
 import { AddRow } from './AddRow'
 import { OneTimePassword } from './OneTimePassword'
 import { PersonRow } from './PersonRow'
@@ -25,7 +26,7 @@ export function People({ me }: { me?: string }) {
   // A role change asked for, and the pill it came from (focus goes back there).
   const [asking, setAsking] = useState<{ p: Person; role: string } | null>(null)
   // Also runs on every profile change: a failed answer keeps the list on screen.
-  const load = () => void api.people().then((r) => setList(r.people ?? [])).catch(() => {})
+  const load = () => void peopleApi.people().then((r) => setList(r.people ?? [])).catch(() => {})
   const access = useSiteAccess(list)
   useEffect(() => {
     load()

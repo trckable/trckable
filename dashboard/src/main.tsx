@@ -18,7 +18,7 @@ import { siteForSegment } from "./lib/siteRoute";
 import { landing, namesSite } from "./lib/landing";
 import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
-import { setRole } from "./lib/me";
+import { inAccount } from "./lib/accountBoot";
 import { NoneShared, useGate } from "./features/onboarding/Gate";
 // Settings and the account dialog are their own screens: the dashboard should not carry them.
 // Sign-in and first-run setup are for the minutes before someone is in: a signed-in owner never downloads them.
@@ -66,10 +66,9 @@ function App() {
         setBoot({ state: "login" });
         return;
       }
-      setRole(me.role);
       loadKeymap(me.keys);
       // Before choosing their own password a person may do nothing else (the server refuses /sites).
-      const { sites } = me.must_change ? { sites: [] } : ((await early.sites) ?? (await api.sites()));
+      const { sites } = await inAccount(me, me.must_change ? [] : ((await early.sites) ?? (await api.sites())).sites);
       setBoot({ state: "ready", email: me.email, version: me.version, updateCheck: me.update_check, mustChange: me.must_change, sites });
     } catch (e) {
       setBoot({

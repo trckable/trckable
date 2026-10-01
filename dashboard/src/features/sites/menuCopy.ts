@@ -14,6 +14,12 @@ export const copy = {
   others: 'Other sites',
   emptyGroup: 'Drag a site here, or use a site’s ⋯ menu.',
 
+  // The person's other accounts, one folded section each: "Name · Viewer · 3 sites".
+  account: {
+    head: (name: string, role: string, n: number) => `${name} · ${role === 'owner' ? 'Owner' : 'Viewer'} · ${n === 1 ? '1 site' : `${n} sites`}`,
+    more: (n: number) => `${n} more`,
+  },
+
   // A site's state, where its number would be, when the dot alone can't say it.
   setup: 'setup',
   stopped: 'stopped',

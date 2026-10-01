@@ -5,6 +5,7 @@ import { Clock, Cookie, Cookie as CookieIcon, EyeOff, MapPin, ShieldCheck } from
 import { useEffect, useState } from 'react'
 import { Switch } from '../components/Switch'
 import { api, messageOf, type BannerText, type ContentGroup, type PersonFound, type PersonPayment, type Site, type SiteConfig } from '../lib/api'
+import { privacyApi } from '../lib/privacyApi'
 import { Info } from '../components/Info'
 import { Picker } from '../components/Picker'
 import { toast } from '../components/Toast'
@@ -28,7 +29,6 @@ const KEEP = [
   { id: '730', label: '2 years' },
   { id: '1095', label: '3 years' },
 ]
-
 /** What the site keeps in the browser, as one of the summary's facts. */
 function cookieFact(free: boolean, consent?: boolean) {
   if (free) return 'Cookieless: nothing in the browser'
@@ -606,7 +606,7 @@ function DataRequest({ site }: { site: Site }) {
     setBusy(true)
     setErr(null)
     setFound(null)
-    api
+    privacyApi
       .findPerson(site.id, how, who.trim())
       .then(setFound)
       .catch((e: unknown) => setErr(messageOf(e)))
@@ -631,7 +631,7 @@ function DataRequest({ site }: { site: Site }) {
       confirmLabel: 'Erase',
       danger: true,
       busyLabel: 'Erasing…',
-      run: () => api.erasePerson(site.id, by, value.trim()).then((r) => toast(`Erased ${r.events} events and ${r.sessions} visits`)),
+      run: () => privacyApi.erasePerson(site.id, by, value.trim()).then((r) => toast(`Erased ${r.events} events and ${r.sessions} visits`)),
     })
     if (ok) {
       setFound(null)
@@ -722,7 +722,7 @@ function DataRequest({ site }: { site: Site }) {
             <p className="faint" style={{ margin: 0, fontSize: 13 }}>Nothing is held for this visitor. There is nothing to export or erase.</p>
           ) : (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <a className="btn primary" href={api.exportPersonURL(site.id, by, value.trim())} download>
+              <a className="btn primary" href={privacyApi.exportPersonURL(site.id, by, value.trim())} download>
                 Download their data
               </a>
               <button type="button" className="btn danger" onClick={erase}>

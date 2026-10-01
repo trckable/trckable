@@ -26,6 +26,7 @@ import { AccountHead } from './account/Head'
 import './Account.css'
 import { Keys } from './account/Keys'
 import { People } from './account/People'
+import { SharedWith } from './account/SharedWith'
 
 // The setup wizard carries the QR encoder, so it is fetched only when someone
 // actually turns two-step sign-in on.
@@ -81,7 +82,7 @@ function ProfileTab({ email, p, v, onProfile }: ProfileProps) {
   return (
     <>
       <Me email={email} p={p} v={v} onProfile={onProfile} />
-
+      <SharedWith />
       <section className="card acct-group">
         <h2 className="acct-title">Sign-in and security</h2>
         <Line icon={LockKeyhole} label="Password" hint="Changing it signs you out everywhere else">
@@ -96,7 +97,6 @@ function ProfileTab({ email, p, v, onProfile }: ProfileProps) {
           </button>
         </Line>
       </section>
-
       <section className="card acct-group">
         <h2 className="acct-title">Preferences</h2>
         <ThemeLine />

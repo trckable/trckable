@@ -19,6 +19,10 @@ import { SiteItem } from './SiteItem'
 import { SectionHead } from './SectionHead'
 import { AllStrip } from './AllStrip'
 import { MenuFoot } from './MenuFoot'
+import { AccountSections } from './AccountSections'
+
+// The start-up for a person in several accounts lives in this chunk (the list is fetched when idle anyway).
+export { settle } from '../../lib/accountMove'
 import { digitIndex, stepFocus, typing } from './nav'
 import { useToday } from './useToday'
 import { useFolded } from './useFolded'
@@ -186,6 +190,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
               </section>
             )
           })}
+        {!found && <AccountSections onClose={onClose} />}
       </div>
       <p className="sr" aria-live="polite">
         {said}

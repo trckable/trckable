@@ -1394,6 +1394,14 @@ table.t td {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* A person in two or more accounts has the one in view named above the site
+   (--account is set by the start-up, lib/accountMove.ts). */
+.btn.site-btn .name::before {
+  content: var(--account, none);
+  display: block;
+  color: var(--text-3);
+  font-size: 10.5px;
+}
 .btn.site-btn svg {
   color: var(--text-3);
   flex: none;

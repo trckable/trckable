@@ -1,5 +1,7 @@
 // Typed client for the trckable REST API (/api/v1). Cookie auth; every
-// non-GET request carries the CSRF header the server requires.
+// non-GET request carries the CSRF header the server requires, and every call
+// the account this tab works in (lib/accountView.ts).
+import { view, type AccountCard } from './accountView'
 
 export interface KPIs {
   visitors: number
@@ -403,7 +405,21 @@ export const messageOf = (e: unknown): string => (e instanceof Error ? e.message
 /** The error body the server sends with a failed request. */
 type Failure = { error?: string; needs_code?: boolean }
 
-export async function call<T>(method: string, path: string, body?: unknown, signal?: AbortSignal, quiet = false): Promise<T> {
+/** What /me says about the person. */
+export interface Me {
+  kind: string
+  email?: string
+  role?: string
+  version?: string
+  keys?: Record<string, string>
+  update_check?: boolean
+  must_change?: boolean
+  /** The account this tab is in (its role is `role`), and every one the person is in. */
+  account?: string
+  accounts?: AccountCard[]
+}
+
+export async function call<T>(method: string, path: string, body?: unknown, signal?: AbortSignal, quiet = false, account = view.account): Promise<T> {
   const res = await fetch('/api/v1' + path, {
     method,
     signal,
@@ -412,6 +428,7 @@ export async function call<T>(method: string, path: string, body?: unknown, sign
       ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
       ...(method !== 'GET' ? { 'X-Trckable-Request': '1' } : {}),
       ...(shareSession ? { 'X-Trckable-Share': shareSession } : {}),
+      'X-Trckable-Account': account,
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
@@ -435,7 +452,7 @@ function dropAfterWrite(path: string) {
 }
 
 /** A request whose answer has nothing to read: a 204, or a body nobody needs. */
-const act = (method: string, path: string, body?: unknown): Promise<void> => call<unknown>(method, path, body).then(() => undefined)
+export const act = (method: string, path: string, body?: unknown): Promise<void> => call<unknown>(method, path, body).then(() => undefined)
 
 /** A body that is not JSON (today: a profile picture). */
 async function raw(method: string, path: string, body: Blob): Promise<void> {
@@ -740,12 +757,12 @@ export const api = {
     call<{ user: { email: string }; site: Site | null }>('POST', '/setup', { token, email, password, domain }),
   login: (email: string, password: string, code?: string) => call<{ user: { email: string } }>('POST', '/login', { email, password, code }),
   logout: () => act('POST', '/logout'),
-  me: () => call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean }>('GET', '/me'),
+  me: () => call<Me>('GET', '/me'),
   /** /me and /sites, asked at start-up alongside /setup. Quiet: a 401 here
    *  only means "not signed in yet" (or "set up first"), which /setup and /me
    *  already say, so it must not trigger the sign-in screen on its own. */
   early: () => ({
-    me: call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean }>('GET', '/me', undefined, undefined, true).catch(() => null),
+    me: call<Me>('GET', '/me', undefined, undefined, true).catch(() => null),
     sites: call<{ sites: Site[] }>('GET', '/sites', undefined, undefined, true).catch(() => null),
   }),
   setKeys: (keys: Record<string, string>) => call<{ keys: Record<string, string> }>('PUT', '/me/keys', { keys }),
@@ -755,16 +772,6 @@ export const api = {
   createSite: (domain: string) => call<Site>('POST', '/sites', { domain }),
   updateSite: (id: string, patch: { name?: string; timezone?: string; currency?: string }) => call<Site>('PATCH', `/sites/${id}`, patch),
   deleteSite: (id: string, domain: string) => call<{ events: number; sessions: number; payments: number; connections: number }>('DELETE', `/sites/${id}`, { domain }),
-  findPerson: (site: string, by: 'visitor' | 'email', value: string) =>
-    call<{ found: PersonFound; payments: PersonPayment[] }>('GET', `/sites/${site}/privacy/person?${by}=${encodeURIComponent(value)}`),
-  exportPersonURL: (site: string, by: 'visitor' | 'email', value: string) => `/api/v1/sites/${site}/privacy/export?${by}=${encodeURIComponent(value)}`,
-  erasePerson: (site: string, by: 'visitor' | 'email', value: string) =>
-    call<{ visitor: string; events: number; sessions: number; payments: number; kept?: string }>(
-      'DELETE',
-      `/sites/${site}/privacy/person?${by}=${encodeURIComponent(value)}`,
-    ),
-  turnOffTwoStepFor: (id: string, password: string, code?: string) => act('POST', `/people/${id}/two-step/off`, { password, code }),
-  startOverKeys: (password: string) => call<{ connections: number }>('POST', '/payments/start-over', { password }),
   milestones: (site: string, next = false) => call<Milestones>('GET', `/sites/${encodeURIComponent(site)}/milestones${next ? '?next=1' : ''}`),
   closeMilestones: (site: string, keys: [string, string][]) => act('POST', `/sites/${encodeURIComponent(site)}/milestones/seen`, { keys }),
 
@@ -782,17 +789,12 @@ export const api = {
   newShareAddress: (site: string, id: string) => call<{ url: string }>('POST', `/sites/${site}/shares/${id}/address`, {}),
   openShare: (token: string, password?: string, embed?: boolean) => call<ShareInfo>('POST', '/share/open', { token, password, embed }),
   shareMe: () => call<ShareInfo>('GET', '/share/me'),
-  people: () => call<{ people: Person[] }>('GET', '/people'),
-  addPerson: (email: string, role: string) => call<Added>('POST', '/people', { email, role }),
-  setPersonRole: (id: string, role: string) => call<{ people: Person[] }>('PATCH', `/people/${id}`, { role }),
-  removePerson: (id: string) => act('DELETE', `/people/${id}`),
   siteAccess: () => call<SiteAccessList>('GET', '/site-access'),
   setSiteAccess: (id: string, sites: string[] | null) => call<SiteAccessList>('PUT', `/site-access/${id}`, { sites }),
   setSiteIcon: (site: string, picture: Blob) => raw('PUT', `/sites/${site}/icon`, picture),
   clearSiteIcon: (site: string) => call<Brand>('DELETE', `/sites/${site}/icon`),
   fetchSiteFavicon: (site: string) => call<Brand>('POST', `/sites/${site}/icon/favicon`),
   setSiteColor: (site: string, color: string) => call<Brand>('PUT', `/sites/${site}/color`, { color }),
-  resetPersonPassword: (id: string, password: string, code?: string) => call<{ email: string; password: string }>('POST', `/people/${id}/password`, { password, code }),
   changePassword: (current: string, password: string) => act('POST', '/account/password', { current, password }),
   twoStep: () => call<TwoStep>('GET', '/account/2fa'),
   startTwoStep: (password: string, code?: string) => call<{ secret: string; uri: string }>('POST', '/account/2fa/start', { password, code }),

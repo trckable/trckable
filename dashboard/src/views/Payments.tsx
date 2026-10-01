@@ -10,6 +10,7 @@ import { Steps } from '../components/Steps'
 import { Ghost } from '../components/Logo'
 import { useEffect, useState } from 'react'
 import { api, messageOf, type PayConnection, type Provider, type Site } from '../lib/api'
+import { privacyApi } from '../lib/privacyApi'
 import { navigate } from '../lib/url'
 import { keyPicksMode, modeTag, statusOf, testModeName } from '../lib/payments'
 import { CodeBlock } from '../components/Code'
@@ -20,7 +21,6 @@ import { settle, toast } from '../components/Toast'
 import './Payments.css'
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'CHF', 'JPY', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'INR', 'BRL', 'MXN', 'SGD', 'NZD', 'ZAR']
-
 type Data = { connections: PayConnection[]; providers: Provider[]; webhook_base: string; key_error?: string }
 
 export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteChange: () => void }) {
@@ -103,7 +103,7 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
                     danger: true,
                     busyLabel: 'Starting over…',
                     done: 'Started over — reconnect each provider',
-                    run: (mine) => api.startOverKeys(mine),
+                    run: (mine) => privacyApi.startOverKeys(mine),
                   })
                   if (pw !== null) load()
                 }}

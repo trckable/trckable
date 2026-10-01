@@ -186,10 +186,12 @@ func (s *Store) Leave(ctx context.Context, user, account string) error {
 type AccountCard struct {
 	ID string
 	// Name is the account's first owner: their name, else their address.
-	Name  string
-	Role  string
-	Sites []SiteRow // the sites this person sees there, the first few
-	Total int       // how many they see there in all
+	Name string
+	Role string
+	// Holder: this person is the account's first owner, who cannot leave it.
+	Holder bool
+	Sites  []SiteRow // the sites this person sees there, the first few
+	Total  int       // how many they see there in all
 }
 
 // AccountCards lists every account a person belongs to, oldest first, with
@@ -207,6 +209,11 @@ func (s *Store) AccountCards(ctx context.Context, user string, few int) ([]Accou
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}
+		holder, err := holderOf(ctx, s.DB, m.Account)
+		if err != nil {
+			return nil, err
+		}
+		c.Holder = holder == user
 		sites, err := s.ListSites(ctx, m.Account)
 		if err != nil {
 			return nil, err
