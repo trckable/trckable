@@ -44,6 +44,16 @@
     transform: scale(0.97);
   }
 }
+/* A full screen (Settings, Profile, Milestones on a phone) only fades: scaling
+   a surface that fills the screen would show the page behind its edges. */
+@media (max-width: 760px) {
+  .modal.rise:is(.window, .ms-window) {
+    animation-name: fade-in;
+  }
+  .modal-back.leaving .modal:is(.window, .ms-window) {
+    animation-name: fade-out;
+  }
+}
 @keyframes modal-out {
   to {
     opacity: 0;
