@@ -1,0 +1,1 @@
+.kpis{container-type:inline-size}.kpi-pay{width:28px;height:28px;color:var(--text-3);cursor:pointer;background:0 0;border:0;border-radius:6px;grid-area:1/-2;justify-content:center;place-self:end;align-items:center;margin:0 12px 8px 0;padding:0;display:none}.kpi-pay:hover,.kpi-pay:focus-visible{color:var(--accent)}@container (width>=708px){.kpi-pay{display:inline-flex}}

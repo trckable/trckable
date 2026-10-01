@@ -227,3 +227,81 @@
 .key-link:hover {
   color: var(--text);
 }
+
+/* Moved here from styles.css: only Settings → Payments uses them, so the
+   first load does not carry them. */
+/* A tile per install route: icon, name, and the whole thing is the target.
+   Equal widths, so the row reads as one control. */
+.mtile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  min-width: 148px;
+  height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--sunken);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, transform 0.2s var(--ease);
+}
+.mtile:hover {
+  transform: translateY(-1px);
+  color: var(--text);
+}
+.mtile.on {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.mtile svg {
+  opacity: 0.85;
+}
+.mtile.on svg {
+  color: var(--accent);
+  opacity: 1;
+}
+.mtile.more select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  cursor: pointer;
+}
+.wiz-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+/* The way out sits beside the primary, quiet. */
+.wiz-actions > .btn {
+  height: 44px;
+}
+@media (max-width: 560px) {
+  .wiz-actions > .btn.primary {
+    flex: 1;
+    justify-content: center;
+  }
+}
+.prov,
+.mtile {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s;
+}
+.prov:hover,
+.mtile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.28);
+}
+@media (prefers-reduced-motion: reduce) {
+  .prov:hover,
+  .mtile:hover {
+    transform: none;
+  }
+}
