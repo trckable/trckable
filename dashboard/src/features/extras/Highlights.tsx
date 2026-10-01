@@ -14,7 +14,7 @@ const ICON: Record<Tone, LucideIcon> = { up: TrendingUp, down: TrendingDown, mon
 /** What the server found for the period; null until it answers, and empty for a quiet site. */
 export function useInsights(site: string, query: ReportQuery, on: boolean): Insight[] | null {
   const [found, setFound] = useState<{ key: string; list: Insight[] } | null>(null)
-  const key = `${site}|${query.from}|${query.to}`
+  const key = `${site}|${query.from}|${query.to}|${query.attr ?? ''}|${query.testPayments ? 'test' : ''}`
   useEffect(() => {
     if (!on) return
     let live = true

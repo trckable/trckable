@@ -566,7 +566,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
       <div className={active ? 'overview-chart replaying' : 'overview-chart'} role="group" aria-label={`${name} over time`}>
         <ChartHead title={name}>
-          {live && !isShared() && extra({ part: 'pace', site: site.id, today, filters: query.filters, metric, money: fmtM })}
+          {live && !isShared() && extra({ part: 'pace', site: site.id, today, filters: query.filters, test: query.testPayments, metric, money: fmtM })}
           {(canScrub || canReplayByDay) && (
             <ReplayButton
               playing={playing}

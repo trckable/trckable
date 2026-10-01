@@ -7,20 +7,25 @@ import { cachedReport, type ReportQuery } from '../../lib/api'
 import { fmtInt } from '../../lib/format'
 import { extrasCopy } from './copy'
 import { monthSoFar, paceOf } from './pace'
+import { whenQuiet } from './quiet'
 import './pace.css'
 
-export default function PaceLine({ site, today, filters, metric, money }: { site: string; today: string; filters?: ReportQuery['filters']; metric: string; money?: (minor: number) => string }) {
+export default function PaceLine({ site, today, filters, test, metric, money }: { site: string; today: string; filters?: ReportQuery['filters']; test?: boolean; metric: string; money?: (minor: number) => string }) {
   const span = monthSoFar(today)
-  const key = [site, span?.from, span?.to, JSON.stringify(filters ?? [])].join('|')
+  const key = [site, span?.from, span?.to, test ? 'test' : '', JSON.stringify(filters ?? [])].join('|')
   const [sum, setSum] = useState<{ key: string; visitors: number; revenue: number } | null>(null)
   useEffect(() => {
     if (!span) return
     let live = true
-    cachedReport(site, { from: span.from, to: span.to, filters, bucket: 'day' })
-      .then((r) => live && setSum({ key, visitors: r.current.kpis.visitors, revenue: r.current.money?.revenue ?? 0 }))
-      .catch(() => undefined)
+    // After the page is quiet: never a slot among the requests the first load needs.
+    const cancel = whenQuiet(() => {
+      cachedReport(site, { from: span.from, to: span.to, filters, bucket: 'day', testPayments: test })
+        .then((r) => live && setSum({ key, visitors: r.current.kpis.visitors, revenue: r.current.money?.revenue ?? 0 }))
+        .catch(() => undefined)
+    })
     return () => {
       live = false
+      cancel()
     }
   }, [key]) // eslint-disable-line react-hooks/exhaustive-deps -- keyed by content
   if (!span || !sum || sum.key !== key || (metric !== 'visitors' && metric !== 'revenue')) return null

@@ -31,6 +31,7 @@ export interface ChartMarker {
 
 /** One sale and the way to it. Never a name, an email or an id. */
 export interface Buyer {
+  id: string
   at: string
   amount: number
   kind: string
@@ -41,10 +42,14 @@ export interface Buyer {
   seconds?: number
 }
 
+/** The report's own selectors, and the two that change what is credited: test payments and the first-touch model. */
+const qs = (q: ReportQuery) => rangeQS(q) + (q.testPayments ? '&payments=test' : '') + (q.attr ? '&attr=first' : '')
+
 export const extrasApi = {
-  insights: (site: string, q: ReportQuery) => call<{ insights: Insight[] }>('GET', `/sites/${site}/insights?from=${q.from}&to=${q.to}`),
+  // Highlights are about the whole site: no filters.
+  insights: (site: string, q: ReportQuery) => call<{ insights: Insight[] }>('GET', `/sites/${site}/insights` + qs({ ...q, filters: undefined })),
   markers: (site: string, q: ReportQuery, bucket: 'day' | 'hour', signal?: AbortSignal) =>
-    call<{ markers: ChartMarker[]; currency?: string; exponent?: number }>('GET', `/sites/${site}/markers` + rangeQS(q) + '&bucket=' + bucket, undefined, signal),
-  pagesSell: (site: string, q: ReportQuery) => call<{ pages: Row[] }>('GET', `/sites/${site}/report/pages-sell` + rangeQS(q) + (q.attr ? '&attr=first' : '')),
-  buyers: (site: string, q: ReportQuery) => call<{ buyers: Buyer[] }>('GET', `/sites/${site}/buyers` + rangeQS(q) + '&n=8'),
+    call<{ markers: ChartMarker[]; currency?: string; exponent?: number }>('GET', `/sites/${site}/markers` + qs(q) + '&bucket=' + bucket, undefined, signal),
+  pagesSell: (site: string, q: ReportQuery) => call<{ pages: Row[] }>('GET', `/sites/${site}/report/pages-sell` + qs(q)),
+  buyers: (site: string, q: ReportQuery) => call<{ buyers: Buyer[] }>('GET', `/sites/${site}/buyers` + qs(q) + '&n=8'),
 }

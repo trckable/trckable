@@ -28,7 +28,7 @@ function Spark({ values }: { values: number[] }) {
 
 export default function AiPanel({ site, query, all, rows, onPick }: { site: string; query: ReportQuery; all: number; rows: number; onPick: (referrer: string) => void }) {
   const [found, setFound] = useState<{ key: string; res: { current: Result; previous?: Result } | null } | null>(null)
-  const key = `${site}|${query.from}|${query.to}|${query.compare ?? ''}|${query.cfrom ?? ''}|${JSON.stringify(query.filters ?? [])}`
+  const key = `${site}|${query.from}|${query.to}|${query.compare ?? ''}|${query.cfrom ?? ''}|${query.testPayments ? 'test' : ''}|${JSON.stringify(query.filters ?? [])}`
   useEffect(() => {
     let live = true
     cachedReport(site, { ...query, daily: false, deep: false, filters: [...(query.filters ?? []), { dim: 'channel', value: 'AI' }] })

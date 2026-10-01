@@ -1,1 +1,0 @@
-import{Mn as e,Pn as t}from"./index-0a94fa41.js";var n={insights:(t,n)=>e(`GET`,`/sites/${t}/insights?from=${n.from}&to=${n.to}`),markers:(n,r,i,a)=>e(`GET`,`/sites/${n}/markers`+t(r)+`&bucket=`+i,void 0,a),pagesSell:(n,r)=>e(`GET`,`/sites/${n}/report/pages-sell`+t(r)+(r.attr?`&attr=first`:``)),buyers:(n,r)=>e(`GET`,`/sites/${n}/buyers`+t(r)+`&n=8`)};export{n as t};

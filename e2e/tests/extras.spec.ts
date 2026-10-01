@@ -44,7 +44,7 @@ async function signIn(page: Page) {
   await page.goto(BASE + '/')
   return page.evaluate(async () => {
     const s = (await (await fetch('/api/v1/sites')).json()).sites[0]
-    return { domain: s.domain as string, timezone: s.timezone as string }
+    return { id: s.id as string, domain: s.domain as string, timezone: s.timezone as string }
   })
 }
 
@@ -130,6 +130,13 @@ test('Full: Sources that pay, Pages that sell and Latest buyers, and never an em
   await expect(rows.first().locator('.by-amount')).toContainText('$')
   const text = await what.locator('.by').innerText()
   expect(text, 'a buyer is never named').not.toMatch(/@/)
+  // The buyers are read the way the report credits a sale: its filters and its test mode apply.
+  const asked = async (qs: string) => ((await (await page.request.get(`${BASE}/api/v1/sites/${site.id}/buyers?${qs}`)).json()) as { buyers: { channel?: string }[] }).buyers
+  const ai = await asked('f=channel:AI&n=20')
+  expect(ai.length).toBeGreaterThan(0)
+  expect(ai.every((b) => b.channel === 'AI')).toBe(true)
+  // Test mode reads the report's own way (live and test payments together): at least what live mode shows.
+  expect((await asked('payments=test&n=20')).length).toBeGreaterThanOrEqual((await asked('n=20')).length)
   // The tabs come in this order.
   const names = await what.getByRole('tablist').first().getByRole('tab').allTextContents()
   expect(names.slice(0, 4)).toEqual(['Goals', 'Sources that pay', 'Pages that sell', 'Latest buyers'])

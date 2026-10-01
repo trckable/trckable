@@ -56,33 +56,27 @@ func TestBurstsOfNeedMoney(t *testing.T) {
 	}
 }
 
-// A sale is read the way it is credited: the latest visit that came from
-// somewhere, and only the visits before it.
-func TestBuyerPath(t *testing.T) {
+// While a period is still running its comparison stops at the same elapsed
+// time: today at 09:00 is set against yesterday until 09:00, not all of it.
+func TestFairPrevious(t *testing.T) {
 	at := func(d, h int) time.Time { return time.Date(2026, 9, d, h, 0, 0, 0, time.UTC) }
-	paid := at(10, 12)
-	j := &query.Journey{Visits: []query.JourneyVisit{
-		{Start: at(10, 11), Channel: "Direct", Events: []query.JourneyEvent{{Kind: "pageview", Path: "/pricing"}, {Kind: "pageview", Path: "/checkout"}}}, // newest: Direct
-		{Start: at(8, 9), Channel: "Search", Referrer: "google.com", Events: []query.JourneyEvent{
-			{Kind: "pageview", Path: "/blog"}, {Kind: "pageview", Path: "/blog"}, {Kind: "goal", Goal: "signup"}, {Kind: "pageview", Path: "/pricing"}, {Kind: "pageview", Path: "/docs"}, {Kind: "pageview", Path: "/x"},
-		}},
-		{Start: at(1, 9), Channel: "Social"},
-		{Start: at(11, 9), Channel: "Email"}, // after the payment: not part of it
-	}}
-	visits, first, pick := buyerOf(paid, j)
-	if visits != 3 || !first.Equal(at(1, 9)) {
-		t.Fatalf("visits %d first %v", visits, first)
+	// Today, and it is 09:00.
+	cur := query.Params{From: at(30, 0), To: at(31, 0)}
+	got := fairPrevious(cur, at(30, 9))
+	if !got.From.Equal(at(29, 0)) || !got.To.Equal(at(29, 9)) {
+		t.Fatalf("today at 09:00 against yesterday until 09:00: %v to %v", got.From, got.To)
 	}
-	if pick == nil || pick.Channel != "Search" {
-		t.Fatalf("the Search visit earned it, not the Direct one: %+v", pick)
+	// A week still running: the week before, to the same moment of it.
+	week := query.Params{From: at(24, 0), To: at(31, 0)}
+	got = fairPrevious(week, at(30, 9))
+	if !got.From.Equal(at(17, 0)) || !got.To.Equal(at(17, 0).Add(6*24*time.Hour+9*time.Hour)) {
+		t.Fatalf("week so far: %v to %v", got.From, got.To)
 	}
-	if got := strings.Join(pagesOf(pick), " "); got != "/blog /pricing /docs" {
-		t.Fatalf("three pages, a goal is not one, a repeat is one: %q", got)
-	}
-	// With nothing but Direct, the latest is the one.
-	_, _, pick = buyerOf(paid, &query.Journey{Visits: []query.JourneyVisit{{Start: at(9, 9), Channel: "Direct"}, {Start: at(3, 9), Channel: "Direct"}}})
-	if pick == nil || !pick.Start.Equal(at(9, 9)) {
-		t.Fatalf("got %+v", pick)
+	// A period that is over: the whole period before.
+	past := query.Params{From: at(20, 0), To: at(23, 0)}
+	got = fairPrevious(past, at(30, 9))
+	if !got.From.Equal(at(17, 0)) || !got.To.Equal(at(20, 0)) {
+		t.Fatalf("a past period: %v to %v", got.From, got.To)
 	}
 }
 

@@ -1,0 +1,1 @@
+import{Mn as e}from"./index-a3d751db.js";var t=(t,n)=>e(`GET`,`/sites/${encodeURIComponent(t)}/now`,void 0,n);export{t};

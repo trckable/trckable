@@ -11,7 +11,7 @@ import './extras.css'
 
 export default function SalePages({ site, query, money, rows, onPick }: { site: string; query: ReportQuery; money: (minor: number) => string; rows: number; onPick: (page: string) => void }) {
   const [found, setFound] = useState<{ key: string; list: Row[] | null } | null>(null)
-  const key = `${site}|${query.from}|${query.to}|${query.attr ?? ''}|${JSON.stringify(query.filters ?? [])}`
+  const key = `${site}|${query.from}|${query.to}|${query.attr ?? ''}|${query.testPayments ? 'test' : ''}|${JSON.stringify(query.filters ?? [])}`
   useEffect(() => {
     let live = true
     extrasApi

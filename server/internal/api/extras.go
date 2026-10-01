@@ -31,9 +31,9 @@ func (a *API) insights(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cur := ask.Params
-	cur.Filters, cur.Daily, cur.Deep, cur.Sales = nil, false, false, false
-	prev := cur
-	prev.From, prev.To = cur.From.Add(-cur.To.Sub(cur.From)), cur.From
+	cur.Filters, cur.Daily, cur.Deep, cur.Sales, cur.NewReferrers = nil, false, false, false, 5
+	prev := fairPrevious(cur, a.Now())
+	prev.NewReferrers = 0
 	now, err := a.cachedReport(r, q, cur)
 	if err != nil {
 		fail(w, http.StatusBadRequest, err.Error())
@@ -48,10 +48,8 @@ func (a *API) insights(w http.ResponseWriter, r *http.Request) {
 		Visitors: now.KPIs.Visitors, Channels: now.Dims["channel"], PrevChannels: was.Dims["channel"],
 		Pages: now.Dims["entry_page"], PrevPages: was.Dims["entry_page"], HasRevenue: now.Money != nil,
 	}
-	if fresh, err := q.NewReferrers(r.Context(), cur.Site, cur.From, cur.To, 5); err == nil {
-		for _, n := range fresh {
-			in.Newcomers = append(in.Newcomers, insights.Newcomer{Referrer: n.Referrer, Visitors: n.Visitors})
-		}
+	for _, n := range now.NewReferrers {
+		in.Newcomers = append(in.Newcomers, insights.Newcomer{Referrer: n.Referrer, Visitors: n.Visitors})
 	}
 	out := map[string]any{"insights": insights.Find(in), "approximate": now.Approximate || was.Approximate}
 	if now.Money != nil {
@@ -59,6 +57,19 @@ func (a *API) insights(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Cache-Control", "private, max-age=30")
 	writeJSON(w, http.StatusOK, out)
+}
+
+// fairPrevious is the period an insight compares with: the same length, right
+// before. While the period is still running (it reaches past now) the
+// comparison stops at the same elapsed time, so today so far is set against
+// yesterday so far, never against all of yesterday.
+func fairPrevious(cur query.Params, now time.Time) query.Params {
+	prev := cur
+	prev.From, prev.To = cur.From.Add(-cur.To.Sub(cur.From)), cur.From
+	if elapsed := now.Sub(cur.From); now.Before(cur.To) && elapsed > 0 {
+		prev.To = prev.From.Add(elapsed)
+	}
+	return prev
 }
 
 // Marker is one ring on the main chart: a spike of visitors (with who sent
@@ -203,110 +214,42 @@ func (a *API) pagesSell(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-// Buyer is one sale and the path that led to it: where the buyer came from,
-// the first pages of that visit, how many visits and how long it took. Never
-// a name, an email or an id.
-type Buyer struct {
-	At       time.Time `json:"at"`
-	Amount   int64     `json:"amount"` // net, minor units
-	Kind     string    `json:"kind"`
-	Channel  string    `json:"channel,omitempty"`
-	Referrer string    `json:"referrer,omitempty"`
-	Pages    []string  `json:"pages,omitempty"`
-	Visits   int       `json:"visits,omitempty"`
-	Seconds  int64     `json:"seconds,omitempty"` // from the first visit to the sale
-}
-
-// MaxBuyerPages is how many pages of the winning visit a line names.
-const MaxBuyerPages = 3
-
-// buyerOf reads one journey the way a sale is credited: the latest visit that
-// came from somewhere, else the latest of all, before the payment.
-func buyerOf(f time.Time, j *query.Journey) (visits int, first time.Time, pick *query.JourneyVisit) {
-	for i := range j.Visits {
-		v := &j.Visits[i] // newest first
-		if v.Start.After(f.Add(time.Minute)) {
-			continue
-		}
-		visits++
-		if first.IsZero() || v.Start.Before(first) {
-			first = v.Start
-		}
-		if pick == nil {
-			pick = v
-		}
-		if pickDirect(pick) && !pickDirect(v) && f.Sub(v.Start) <= query.AttributionWindow {
-			pick = v
-		}
-	}
-	return visits, first, pick
-}
-
-func pickDirect(v *query.JourneyVisit) bool { return v.Channel == "" || v.Channel == "Direct" }
-
 // buyers serves GET /api/v1/sites/{site}/buyers: the latest sales in the
-// period (new customers, not renewals), newest first, each with its path.
-// Needs the revenue and journeys modules: the same reads the People tab and
-// the report already make.
+// period (new customers, not renewals), newest first, each with its path. The
+// report's own reading: its attribution, its filters, test payments when it
+// asks for them. Needs the revenue and journeys modules: the same reads the
+// People tab and the report already make. Never a name, an email or an id.
 func (a *API) buyers(w http.ResponseWriter, r *http.Request) {
 	if !a.needs(w, r, "revenue") || !a.needs(w, r, "journeys") {
 		return
 	}
-	q, p, ok := a.params(w, r)
-	if !ok {
+	q := a.Query()
+	if q == nil {
+		w.Header().Set("Retry-After", "2")
+		fail(w, http.StatusServiceUnavailable, "analytics store warming up")
 		return
 	}
-	if a.Revenue == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"buyers": []Buyer{}})
+	ask := a.parse(w, r, r.PathValue("site"), true)
+	if ask == nil {
 		return
 	}
 	n, _ := strconv.Atoi(r.URL.Query().Get("n"))
 	if n <= 0 || n > 20 {
 		n = 8
 	}
-	facts, err := a.Revenue.Facts(r.Context(), p.Site, p.Currency, p.From, p.To, false)
+	p := ask.Params
+	p.Daily, p.Deep, p.Sales, p.Buyers = false, false, false, n
+	res, err := a.cachedReport(r, q, p)
 	if err != nil {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	sort.SliceStable(facts, func(i, j int) bool { return facts[i].PaidAt.After(facts[j].PaidAt) })
-	out := []Buyer{}
-	for _, f := range facts {
-		if len(out) == n {
-			break
-		}
-		if f.Kind == "renewal" || !f.Converted {
-			continue
-		}
-		b := Buyer{At: f.PaidAt, Amount: f.Amount - f.Refunded, Kind: f.Kind}
-		if f.Visitor != 0 {
-			if j, err := q.Journey(r.Context(), p.Site, f.Visitor, f.PaidAt.Add(time.Minute)); err == nil {
-				visits, first, pick := buyerOf(f.PaidAt, j)
-				b.Visits = visits
-				if !first.IsZero() {
-					b.Seconds = int64(f.PaidAt.Sub(first).Seconds())
-				}
-				if pick != nil {
-					b.Channel, b.Referrer, b.Pages = pick.Channel, pick.Referrer, pagesOf(pick)
-				}
-			}
-		}
-		out = append(out, b)
+	out := map[string]any{"buyers": res.Buyers}
+	if res.Buyers == nil {
+		out["buyers"] = []query.Buyer{}
 	}
-	resp := map[string]any{"buyers": out, "currency": p.Currency}
-	writeJSON(w, http.StatusOK, resp)
-}
-
-// pagesOf is the first distinct pages of a visit, in the order they were opened.
-func pagesOf(v *query.JourneyVisit) []string {
-	var out []string
-	for _, e := range v.Events {
-		if e.Kind != "pageview" || e.Path == "" || len(out) == MaxBuyerPages {
-			continue
-		}
-		if len(out) == 0 || out[len(out)-1] != e.Path {
-			out = append(out, e.Path)
-		}
+	if res.Money != nil {
+		out["currency"], out["exponent"] = res.Money.Currency, res.Money.Exponent
 	}
-	return out
+	writeJSON(w, http.StatusOK, out)
 }

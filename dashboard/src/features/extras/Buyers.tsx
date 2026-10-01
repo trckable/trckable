@@ -21,7 +21,7 @@ export const pathOf = (b: Buyer): string[] => {
 export default function Buyers({ site, query, money }: { site: string; query: ReportQuery; money: (minor: number) => string }) {
   const [now] = useState(() => Date.now())
   const [found, setFound] = useState<{ key: string; list: Buyer[] | null } | null>(null)
-  const key = `${site}|${query.from}|${query.to}`
+  const key = `${site}|${query.from}|${query.to}|${query.attr ?? ''}|${query.testPayments ? 'test' : ''}|${JSON.stringify(query.filters ?? [])}`
   useEffect(() => {
     let live = true
     extrasApi
@@ -41,7 +41,7 @@ export default function Buyers({ site, query, money }: { site: string; query: Re
       {here.list.map((b) => {
         const path = pathOf(b)
         return (
-          <li key={`${b.at}${b.amount}`} className="by-row">
+          <li key={b.id} className="by-row">
             <span className="by-top">
               <b className="num by-amount">{money(b.amount)}</b>
               <span className="faint num">{c.ago(Math.max(0, (now - Date.parse(b.at)) / 1000))}</span>

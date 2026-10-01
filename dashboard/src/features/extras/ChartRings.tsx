@@ -7,6 +7,7 @@ import { useEffect, useId, useState } from 'react'
 import type { Bucket, ReportQuery } from '../../lib/api'
 import { extrasApi, type ChartMarker } from './extrasApi'
 import { fmtDay } from '../../lib/dates'
+import { whenQuiet } from './quiet'
 import { markerBucket, ringLabel, ringsAt, ringWhy } from './rings'
 import './rings.css'
 
@@ -24,14 +25,20 @@ export default function ChartRings({ g, site, query, labels, bucket, money }: { 
   const [open, setOpen] = useState<number | null>(null)
   const id = useId()
   const which = markerBucket(bucket)
-  const key = [site, query.from, query.to, which, JSON.stringify(query.filters ?? [])].join('|')
+  const key = [site, query.from, query.to, which, query.testPayments ? 'test' : '', JSON.stringify(query.filters ?? [])].join('|')
   useEffect(() => {
     const ctl = new AbortController()
-    extrasApi
-      .markers(site, query, which, ctl.signal)
-      .then((d) => setFound({ key, list: d.markers }))
-      .catch(() => undefined) // rings are a garnish: no rings is the answer to any failure
-    return () => ctl.abort()
+    // After the page is quiet: never a slot among the requests the first load needs.
+    const cancel = whenQuiet(() => {
+      extrasApi
+        .markers(site, query, which, ctl.signal)
+        .then((d) => setFound({ key, list: d.markers }))
+        .catch(() => undefined) // rings are a garnish: no rings is the answer to any failure
+    })
+    return () => {
+      cancel()
+      ctl.abort()
+    }
   }, [key]) // eslint-disable-line react-hooks/exhaustive-deps -- keyed by content: query is a new object each render
   if (!found || found.key !== key) return null
   const rings = ringsAt(found.list, labels)

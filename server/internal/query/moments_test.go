@@ -66,24 +66,35 @@ func TestSaleBuckets(t *testing.T) {
 	}
 }
 
-// A referrer is new when nobody came from it before the range.
+// A referrer is new when nobody came from it in the year before the range.
 func TestNewReferrers(t *testing.T) {
-	q := golden(t, false)
-	ctx := context.Background()
-	got, err := q.NewReferrers(ctx, "s1", sep10.From, sep10.To, 10)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// google.com sent visitors 1 and 3, chatgpt.com visitor 2; nothing came before.
-	if len(got) != 2 || got[0] != (NewReferrer{"google.com", 2}) || got[1] != (NewReferrer{"chatgpt.com", 1}) {
-		t.Fatalf("got %+v", got)
-	}
-	// The next day they are not new any more (and the Email visit has no referrer).
-	got, _ = q.NewReferrers(ctx, "s1", sep10.To, sep10.To.Add(24*time.Hour), 10)
-	if len(got) != 0 {
-		t.Fatalf("Sep 11: %+v", got)
-	}
-	if got, _ = q.NewReferrers(ctx, "s1", sep10.From, sep10.To, 1); len(got) != 1 {
-		t.Fatalf("limit: %+v", got)
-	}
+	both(t, func(t *testing.T, q Q) {
+		ctx := context.Background()
+		ask := func(from, to time.Time, n int) []NewReferrer {
+			p := sep10
+			p.From, p.To, p.NewReferrers = from, to, n
+			res, err := q.Report(ctx, p)
+			if err != nil {
+				t.Fatal(err)
+			}
+			return res.NewReferrers
+		}
+		got := ask(sep10.From, sep10.To, 10)
+		// google.com sent visitors 1 and 3, chatgpt.com visitor 2; nothing came before.
+		if len(got) != 2 || got[0] != (NewReferrer{"google.com", 2}) || got[1] != (NewReferrer{"chatgpt.com", 1}) {
+			t.Fatalf("got %+v", got)
+		}
+		// The next day they are not new any more (and the Email visit has no referrer).
+		if got := ask(sep10.To, sep10.To.Add(24*time.Hour), 10); len(got) != 0 {
+			t.Fatalf("Sep 11: %+v", got)
+		}
+		if got := ask(sep10.From, sep10.To, 1); len(got) != 1 {
+			t.Fatalf("limit: %+v", got)
+		}
+		// Not asked for, not read.
+		p := sep10
+		if res, err := q.Report(ctx, p); err != nil || res.NewReferrers != nil {
+			t.Fatalf("%v %v", res.NewReferrers, err)
+		}
+	})
 }

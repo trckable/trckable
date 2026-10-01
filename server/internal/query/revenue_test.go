@@ -3,6 +3,7 @@ package query
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -260,6 +261,64 @@ func TestSalePages(t *testing.T) {
 			if got[i] != want[i] {
 				t.Fatalf("got %+v, want %+v", got, want)
 			}
+		}
+	})
+}
+
+// The latest sales, read the way the report credits them: newest first,
+// renewals left out, the earning visit's channel, referrer and first pages, the
+// visits in the window and the time since the buyer was first seen; money with no
+// visit is an amount and a time only; and a filter applies to the earning visit.
+func TestBuyers(t *testing.T) {
+	both(t, func(t *testing.T, q Q) {
+		q = withPayments(q)
+		p := sep10
+		p.Bucket, p.Currency, p.Revenue, p.Buyers = "hour", "USD", true, 10
+		res, err := q.Report(context.Background(), p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		at := func(h, m int) time.Time { return time.Date(2026, 9, 10, h, m, 0, 0, time.UTC) }
+		sinceJan := int64(at(15, 5).Sub(time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)).Seconds())
+		got := res.Buyers
+		if len(got) != 3 {
+			t.Fatalf("got %+v", got)
+		}
+		eq(t, "newest", got[0].At, at(15, 5))
+		eq(t, "amount", got[0].Amount, int64(5000))
+		eq(t, "kind", got[0].Kind, "one_time")
+		eq(t, "channel", got[0].Channel, "Search")
+		eq(t, "referrer", got[0].Referrer, "google.com")
+		eq(t, "pages", strings.Join(got[0].Pages, " "), "/ /pricing")
+		eq(t, "visits", got[0].Visits, int64(2))
+		eq(t, "first seen", got[0].Seconds, sinceJan)
+		// Unattributed money: an amount and a time.
+		eq(t, "no visit", got[1].Amount, int64(1000))
+		if got[1].Channel != "" || got[1].Visits != 0 || len(got[1].Pages) != 0 {
+			t.Fatalf("a payment with no visit has no path: %+v", got[1])
+		}
+		// B paid net of a refund, after his AI visit to /blog.
+		eq(t, "net", got[2].Amount, int64(1500))
+		eq(t, "ai", got[2].Channel, "AI")
+		eq(t, "ai pages", strings.Join(got[2].Pages, " "), "/blog")
+		eq(t, "time to buy", got[2].Seconds, int64(1800))
+		if got[0].ID == "" || got[0].ID == got[1].ID || got[1].ID == got[2].ID {
+			t.Fatalf("ids tell rows apart: %q %q %q", got[0].ID, got[1].ID, got[2].ID)
+		}
+		// Not asked for, not read; one at a time when asked for one.
+		p.Buyers = 0
+		if res, _ := q.Report(context.Background(), p); res.Buyers != nil {
+			t.Fatalf("not asked for: %+v", res.Buyers)
+		}
+		p.Buyers = 1
+		if res, _ := q.Report(context.Background(), p); len(res.Buyers) != 1 || res.Buyers[0].Amount != 5000 {
+			t.Fatalf("the limit: %+v", res.Buyers)
+		}
+		// A filter applies to the visit that earned the sale: only the AI buyer is left.
+		p.Buyers, p.Filters = 10, []Filter{{Dim: "channel", Value: "AI"}}
+		res, err = q.Report(context.Background(), p)
+		if err != nil || len(res.Buyers) != 1 || res.Buyers[0].Amount != 1500 {
+			t.Fatalf("filtered: %+v %v", res.Buyers, err)
 		}
 	})
 }
