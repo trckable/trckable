@@ -71,7 +71,7 @@ func parse(raw string) (*url.URL, bool) {
 // cleanHost accepts "name", "name:port", an IPv4 address or "[v6]" with an
 // optional port, and returns it in lower case.
 func cleanHost(h string) (string, bool) {
-	name, port := h, ""
+	var name, port string
 	if strings.HasPrefix(h, "[") {
 		end := strings.IndexByte(h, ']')
 		if end < 0 {
@@ -120,7 +120,7 @@ func validName(s string) bool {
 			return false
 		}
 		for _, c := range label {
-			if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '-') {
+			if (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && (c < '0' || c > '9') && c != '-' {
 				return false
 			}
 		}

@@ -46,7 +46,7 @@ func writableDir(dir string) error {
 	// Files an older, root-running image left behind can be unwritable even
 	// when the directory itself was handed over.
 	for _, f := range privateFiles {
-		h, err := os.OpenFile(filepath.Join(dir, f), os.O_RDWR, 0)
+		h, err := os.OpenFile(filepath.Join(dir, f), os.O_RDWR, 0) //nolint:gosec // the data directory is the operator's own setting
 		if err == nil {
 			h.Close()
 		} else if !errors.Is(err, fs.ErrNotExist) {
