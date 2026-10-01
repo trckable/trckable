@@ -118,7 +118,7 @@ Nothing is paid, limited or held back. The complete list, in words: [Everything 
 
 <table>
 <tr>
-<td width="50%"><img src=".github/images/gallery/full.png" alt="Full mode: two tabbed cards under the chart, who came and what they did, with revenue and conversion on every row"><br><sub><b>Full mode.</b> Two tabbed cards; revenue and conversion on every row.</sub></td>
+<td width="50%"><img src=".github/images/gallery/full.png" alt="Full mode: rings and a pace line on the chart, then two tabbed cards under it, who came and what they did, with revenue and conversion on every row"><br><sub><b>Full mode.</b> Two tabbed cards; revenue and conversion on every row, highlights, the AI assistants, the pages that sell and the latest buyers.</sub></td>
 <td width="50%"><img src=".github/images/gallery/money-trail.png" alt="Hovering a channel highlights where those visitors went and what they paid"><br><sub><b>Money trail.</b> Hover a source, follow its visitors and their money.</sub></td>
 </tr>
 <tr>

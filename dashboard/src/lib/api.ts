@@ -518,7 +518,7 @@ export interface JourneyResult {
 }
 
 /** The report selectors a module endpoint understands (range, zone, filters). */
-function rangeQS(q: ReportQuery): string {
+export function rangeQS(q: ReportQuery): string {
   const p = new URLSearchParams({ from: q.from, to: q.to })
   for (const f of q.filters ?? []) p.append('f', f.dim + ':' + f.value)
   return '?' + p.toString()
