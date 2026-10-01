@@ -179,7 +179,7 @@ export function createMcpServer(opts: McpOptions) {
   async function get<T>(path: string): Promise<T> {
     const res = await f(host + '/api/v1' + path, { headers: { Authorization: 'Bearer ' + opts.apiKey, Accept: 'application/json' } })
     const body = (await res.json().catch(() => ({}))) as { error?: string }
-    if (!res.ok) throw new Error(res.status === 401 ? 'trckable rejected the API key (TRCKABLE_API_KEY). Create one in Settings → API keys.' : `trckable API ${res.status}: ${body.error ?? 'error'}`)
+    if (!res.ok) throw new Error(res.status === 401 ? 'trckable rejected the API key (TRCKABLE_API_KEY). Create one in your account → API keys.' : `trckable API ${res.status}: ${body.error ?? 'error'}`)
     return body as T
   }
 

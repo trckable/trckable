@@ -8,16 +8,17 @@
 
 <a href="https://www.npmjs.com/package/trckable"><img src="https://img.shields.io/npm/v/trckable?style=flat-square&color=b8ff3c&label=npm" alt="npm version"></a> <!--f:badge_react--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/react_entry-2264_B_gzip-b8ff3c?style=flat-square" alt="trckable/react adds 2264 B gzip"></a><!--/f--> <a href="https://github.com/trckable/trckable/blob/main/packages/trckable/LICENSE"><img src="https://img.shields.io/badge/license-MIT-0b0d10?style=flat-square" alt="MIT licence"></a>
 
-[Docs](https://trckable.com/docs/install/npm/) · [GitHub](https://github.com/trckable/trckable) · [Changelog](https://github.com/trckable/trckable/blob/main/CHANGELOG.md) · [trckable.com](https://trckable.com)
+[Docs](https://docs.trckable.com/install/npm/) · [GitHub](https://github.com/trckable/trckable) · [Changelog](https://github.com/trckable/trckable/blob/main/CHANGELOG.md) · [trckable.com](https://trckable.com)
 
 <img src="https://raw.githubusercontent.com/trckable/trckable/main/.github/images/gallery/tour.webp" width="880" alt="A tour of the trckable dashboard on the demo site: the last 30 days against the 30 before, a pointer across the chart showing each day's visitors and revenue, the Share dialog, the money trail of visitors from Search, Full mode, then Replay playing the period day by day">
 
 </div>
 
-Tiny, open-source web analytics that shows which traffic pays. This is the
-client for a [trckable](https://github.com/trckable/trckable) server: run it
-yourself for free, or let [trckable Cloud](https://cloud.trckable.com) host it
-for you. `host` points the client at either.
+Tiny, free and open-source web analytics that shows which traffic pays. This is
+the client (MIT) for a [trckable](https://github.com/trckable/trckable) server,
+which is free and open source too (AGPL-3.0): run it yourself for free, or let
+[trckable Cloud](https://cloud.trckable.com) host it for you. `host` points the
+client at either.
 
 - ~2 KB, bundled into your app (no script file for ad blockers to block)
 - Pageviews for any SPA, goals, outbound links, downloads, scroll goals, engagement time
@@ -183,7 +184,7 @@ Hosted checkout links (Stripe Payment Links, Lemon Squeezy, Polar and Dodo check
 
 ## Ask your AI (MCP)
 
-`npx trckable mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server, so any MCP-capable assistant can answer questions from your analytics. Create a key in your dashboard (Settings → API keys). Keys are read-only.
+`npx trckable mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server, so any MCP-capable assistant can answer questions from your analytics. Create a key in your dashboard (your account → API keys). Keys are read-only.
 
 ```json
 {
@@ -197,7 +198,17 @@ Hosted checkout links (Stripe Payment Links, Lemon Squeezy, Polar and Dodo check
 }
 ```
 
-Tools: `trckable_sites`, `trckable_overview`, `trckable_sources`, `trckable_pages`, `trckable_audience`, `trckable_goals`, `trckable_revenue`, `trckable_realtime`. Dates follow each site's timezone; periods like `7d`, `mtd` or `lastmonth`, or exact `from`/`to` dates, with an optional comparison.
+Tools: `trckable_sites`, `trckable_overview`, `trckable_sources`, `trckable_pages`, `trckable_audience`, `trckable_goals`, `trckable_revenue`, `trckable_realtime`, `trckable_milestones`. Dates follow each site's timezone; periods like `7d`, `mtd` or `lastmonth`, or exact `from`/`to` dates, with an optional comparison.
+
+## Command line
+
+```bash
+npx trckable init --host https://stats.example.com --site tkb_a1b2c3d4   # shows what it would change; --yes writes it
+npx trckable doctor --host https://stats.example.com --url https://example.com   # checks an install from the outside
+npx trckable mcp                                                                  # the MCP server above
+```
+
+`init` recognises Next.js, React, SvelteKit, Astro, Nuxt and plain HTML, prints the full diff first, and never edits checkout or payment code. `doctor` only reads.
 
 ## Options
 
