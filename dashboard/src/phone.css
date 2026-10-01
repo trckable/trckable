@@ -213,15 +213,6 @@
     padding: 0 12px;
     font-size: var(--ph-text-2);
   }
-  /* Compact's way into Full, at the end of the first card's tabs: a finger tall, no key. */
-  .tc-full {
-    min-height: var(--ph-hit);
-    padding: 0 10px;
-    font-size: var(--ph-text-2);
-  }
-  .tc-full .kbd {
-    display: none;
-  }
   .tc-sub button {
     min-height: var(--ph-hit);
     padding: 0 12px;
