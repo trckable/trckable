@@ -183,7 +183,7 @@ Hosted checkout links (Stripe Payment Links, Lemon Squeezy, Polar and Dodo check
 
 ## Ask your AI (MCP)
 
-`npx trckable mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server, so any MCP-capable assistant can answer questions from your analytics. Create a key in your dashboard (Settings → API keys). Keys are read-only.
+`npx trckable mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server, so any MCP-capable assistant can answer questions from your analytics. Create a key in your dashboard (your account → API keys). Keys are read-only.
 
 ```json
 {
@@ -197,7 +197,17 @@ Hosted checkout links (Stripe Payment Links, Lemon Squeezy, Polar and Dodo check
 }
 ```
 
-Tools: `trckable_sites`, `trckable_overview`, `trckable_sources`, `trckable_pages`, `trckable_audience`, `trckable_goals`, `trckable_revenue`, `trckable_realtime`. Dates follow each site's timezone; periods like `7d`, `mtd` or `lastmonth`, or exact `from`/`to` dates, with an optional comparison.
+Tools: `trckable_sites`, `trckable_overview`, `trckable_sources`, `trckable_pages`, `trckable_audience`, `trckable_goals`, `trckable_revenue`, `trckable_realtime`, `trckable_milestones`. Dates follow each site's timezone; periods like `7d`, `mtd` or `lastmonth`, or exact `from`/`to` dates, with an optional comparison.
+
+## Command line
+
+```bash
+npx trckable init --host https://stats.example.com --site tkb_a1b2c3d4   # shows what it would change; --yes writes it
+npx trckable doctor --host https://stats.example.com --url https://example.com   # checks an install from the outside
+npx trckable mcp                                                                  # the MCP server above
+```
+
+`init` recognises Next.js, React, SvelteKit, Astro, Nuxt and plain HTML, prints the full diff first, and never edits checkout or payment code. `doctor` only reads.
 
 ## Options
 
