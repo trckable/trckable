@@ -23,7 +23,7 @@ usage:
   npx trckable mcp [--host URL] [--key tkb_live_…]
       Run the MCP server for any MCP-capable assistant (stdio).
       Reads TRCKABLE_HOST and TRCKABLE_API_KEY when the flags are omitted.
-      Create a read-only key in your dashboard: Settings → API keys.
+      Create a read-only key in your dashboard: your account → API keys.
 
   npx trckable init --host URL --site tkb_… [--domain example.com] [--yes]
       Look at this project, print exactly what would change, and write it
@@ -49,7 +49,7 @@ function mcp() {
   const host = flag('host') ?? proc.env.TRCKABLE_HOST
   const apiKey = flag('key') ?? proc.env.TRCKABLE_API_KEY
   if (!host || !apiKey) {
-    proc.stderr.write('trckable mcp: set TRCKABLE_HOST (your trckable URL) and TRCKABLE_API_KEY (Settings → API keys).\n')
+    proc.stderr.write('trckable mcp: set TRCKABLE_HOST (your trckable URL) and TRCKABLE_API_KEY (your account → API keys).\n')
     return proc.exit(2)
   }
   const server = createMcpServer({ host, apiKey })
