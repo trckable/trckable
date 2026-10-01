@@ -5,6 +5,7 @@
 // and the wizard's own heading was clipped out of reach.
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { useGlide } from './glide'
 import { useLockScroll } from './lockScroll'
 import './Modal.css'
 
@@ -73,8 +74,8 @@ export function Modal({
   children,
 }: {
   label: string
-  /** Never shrink while open (tabs, steps). Off for a dialog whose later
-   *  step is meant to be shorter. */
+  /** Ease from one height to the next while open (tabs, steps), instead of
+   *  jumping. Off for a dialog that should follow its content at once. */
   keepSize?: boolean
   /** Left out while the dialog must not be dismissed — mid-delete, say. */
   onClose?: () => void
@@ -99,27 +100,12 @@ export function Modal({
       if (at !== -1) stack.splice(at, 1)
     }
   }, [])
-  // While it is open, a dialog never shrinks: switching a tab or a step keeps
-  // its size, and only more content makes it grow. A dialog that jumped with
-  // every tab felt broken. Capped by the screen, so a phone keyboard or a
-  // smaller window still fits it.
+  // While it is open, a dialog that changes shape (a tab, a step) eases to
+  // its new height instead of jumping, and always ends at its content's own
+  // height. A dialog that kept the tallest tab's height left an empty block
+  // under its buttons on the shorter ones.
   const box = useRef<HTMLDivElement>(null)
-  useLayoutEffect(() => {
-    const el = box.current
-    if (!el || !keepSize) return
-    let tallest = 0
-    const hold = () => {
-      const h = el.offsetHeight
-      if (h > tallest) {
-        tallest = h
-        el.style.minHeight = `min(${h}px, calc(100dvh - 32px))`
-      }
-    }
-    hold()
-    const ro = new ResizeObserver(hold)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [keepSize])
+  useGlide(box, keepSize)
   // Focus moves into the dialog when it opens (unless a field in it already
   // took it) and back to what had it when it closes. A help dot is never the
   // first stop: its tip would open by itself.
