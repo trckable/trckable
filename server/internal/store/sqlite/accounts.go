@@ -10,7 +10,8 @@ import (
 	"github.com/trckable/trckable/server/internal/auth"
 )
 
-// User is a dashboard login.
+// User is a dashboard login, as it acts in one account: AccountID and Role
+// are those of its membership there (memberships.go), not of the user row.
 type User struct {
 	ID, AccountID, Email, Role string
 }
@@ -69,9 +70,13 @@ func (s *Store) CompleteSetup(ctx context.Context, email, password string) (User
 	if n > 0 {
 		return User{}, auth.ErrSetupDone
 	}
-	u := User{ID: auth.Token("usr_", 10), AccountID: DefaultAccount, Email: email, Role: "owner"}
+	u := User{ID: auth.Token("usr_", 10), AccountID: DefaultAccount, Email: email, Role: RoleOwner}
+	now := nowUnix()
 	if _, err := tx.ExecContext(ctx, `INSERT INTO users (id, account_id, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-		u.ID, u.AccountID, u.Email, hash, u.Role, time.Now().Unix()); err != nil {
+		u.ID, u.AccountID, u.Email, hash, u.Role, now); err != nil {
+		return User{}, err
+	}
+	if err := addMembership(ctx, tx, u.ID, u.AccountID, u.Role, now); err != nil {
 		return User{}, err
 	}
 	if _, err := tx.ExecContext(ctx, `DELETE FROM meta WHERE key = 'setup_token'`); err != nil {
@@ -85,8 +90,8 @@ func (s *Store) CompleteSetup(ctx context.Context, email, password string) (User
 func (s *Store) Login(ctx context.Context, email, password string) (User, error) {
 	var u User
 	var hash string
-	err := s.DB.QueryRowContext(ctx, `SELECT id, account_id, email, role, password_hash FROM users WHERE email = ?`,
-		strings.ToLower(strings.TrimSpace(email))).Scan(&u.ID, &u.AccountID, &u.Email, &u.Role, &hash)
+	err := s.DB.QueryRowContext(ctx, `SELECT id, email, password_hash FROM users WHERE email = ?`,
+		strings.ToLower(strings.TrimSpace(email))).Scan(&u.ID, &u.Email, &hash)
 	if errors.Is(err, sql.ErrNoRows) {
 		if _, err := auth.VerifyPasswordCtx(ctx, dummyHash(), password); err != nil {
 			return User{}, err
@@ -103,7 +108,12 @@ func (s *Store) Login(ctx context.Context, email, password string) (User, error)
 	if !ok {
 		return User{}, auth.ErrBadLogin
 	}
-	return u, nil
+	u, err = viewOf(ctx, s.DB, u)
+	if errors.Is(err, auth.ErrNotFound) {
+		// Nobody belongs nowhere: the same answer as a wrong password.
+		return User{}, auth.ErrBadLogin
+	}
+	return u, err
 }
 
 // dummyHash equalizes login timing for unknown emails: the same parameters
@@ -126,11 +136,14 @@ func (s *Store) CreateSession(ctx context.Context, userID string) (string, error
 // SessionUser resolves a session cookie.
 func (s *Store) SessionUser(ctx context.Context, token string) (User, error) {
 	var u User
-	err := s.DB.QueryRowContext(ctx, `SELECT u.id, u.account_id, u.email, u.role FROM auth_sessions a
+	err := s.DB.QueryRowContext(ctx, `SELECT u.id, u.email FROM auth_sessions a
 		JOIN users u ON u.id = a.user_id WHERE a.token_hash = ? AND a.expires_at > ?`,
-		auth.Hash(token), time.Now().Unix()).Scan(&u.ID, &u.AccountID, &u.Email, &u.Role)
+		auth.Hash(token), time.Now().Unix()).Scan(&u.ID, &u.Email)
 	if errors.Is(err, sql.ErrNoRows) {
 		return User{}, auth.ErrNotFound
+	}
+	if err == nil {
+		u, err = viewOf(ctx, s.DB, u)
 	}
 	if err == nil {
 		// Someone is using the dashboard. Written at most once an hour.
@@ -381,7 +394,8 @@ func (s *Store) Avatar(ctx context.Context, id string) (string, []byte, error) {
 func (s *Store) PersonAvatar(ctx context.Context, account, id string) (string, []byte, error) {
 	var mime string
 	var body []byte
-	err := s.DB.QueryRowContext(ctx, `SELECT avatar_type, avatar FROM users WHERE id = ? AND account_id = ?`, id, account).Scan(&mime, &body)
+	err := s.DB.QueryRowContext(ctx, `SELECT u.avatar_type, u.avatar FROM users u
+		JOIN memberships m ON m.user_id = u.id WHERE u.id = ? AND m.account_id = ?`, id, account).Scan(&mime, &body)
 	return mime, body, err
 }
 
