@@ -27,7 +27,9 @@ export function TabCard({ card, site, label, tabs, want, more }: { card: string;
     setWanted(want)
     if (want) setAsked(want)
   }
-  const active = tabs.find((t) => t.id === asked) ?? tabs[0]
+  // With nothing picked, the card opens on the tab that was first when it first drew: a tab that arrives later never swaps what is on screen.
+  const [first] = useState(() => tabs[0]?.id)
+  const active = tabs.find((t) => t.id === asked) ?? tabs.find((t) => t.id === first) ?? tabs[0]
   if (!active) return null
   const pick = (id: string) => {
     setAsked(id)

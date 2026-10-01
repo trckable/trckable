@@ -2,8 +2,10 @@ package query
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"database/sql/driver"
+	"encoding/hex"
 	"fmt"
 	"sort"
 	"strings"
@@ -206,6 +208,18 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 		}
 	}
 
+	if p.SalePages {
+		if res.SalePages, err = salePages(ctx, conn, sqlText, args, winFrom, p); err != nil {
+			return err
+		}
+	}
+
+	if p.Buyers > 0 {
+		if res.Buyers, err = buyers(ctx, conn, sqlText, args, winFrom, p); err != nil {
+			return err
+		}
+	}
+
 	// Revenue by every breakdown dimension, from the attributed session.
 	cols := make([]string, len(DefaultDims))
 	sets := make([]string, len(DefaultDims))
@@ -373,4 +387,133 @@ func saleBuckets(ctx context.Context, conn *sql.Conn, sqlText string, args []any
 		out = append(out, s)
 	}
 	return out, rows.Err()
+}
+
+// salePages is the revenue credited to visits that read each page: a payment
+// belongs to the visit that earned it (the model above), and to every page
+// that visit opened. So a payment shows under each of its pages and the rows
+// add up to more than the revenue: each one answers "how much was earned by
+// visits that saw this page", never "what this page sold alone".
+func salePages(ctx context.Context, conn *sql.Conn, sqlText string, args []any, winFrom time.Time, p Params) ([]Row, error) {
+	limit := p.Limit
+	if limit <= 0 {
+		limit = 10
+	}
+	rows, err := conn.QueryContext(ctx, sqlText+`, t AS (SELECT session_id, amount - refunded AS net, customer FROM ar WHERE attributed),
+		pg AS (SELECT DISTINCT session_id, path FROM events
+		       WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts < ? AND coalesce(path, '') <> '' AND session_id IN (SELECT session_id FROM t))
+		SELECT pg.path, sum(t.net) AS rev, count(DISTINCT t.customer) AS payers
+		FROM t JOIN pg USING (session_id) GROUP BY pg.path HAVING sum(t.net) > 0
+		ORDER BY rev DESC, pg.path LIMIT ?`, append(append([]any{}, args...), p.Site, winFrom, p.To.Add(time.Hour), limit)...)
+	if err != nil {
+		return nil, fmt.Errorf("pages that sell: %w", err)
+	}
+	defer rows.Close()
+	var out []Row
+	for rows.Next() {
+		var r Row
+		var rev int64
+		if err := rows.Scan(&r.Value, &rev, &r.Payers); err != nil {
+			return nil, err
+		}
+		r.Revenue = &rev
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+// Buyer is one sale and the way to it: where the visit that earned it came
+// from, the first pages of that visit, how many visits the buyer made in the
+// attribution window, and how long since they were first seen. Never a name, an
+// email or an id of the person: ID only tells two rows apart.
+type Buyer struct {
+	ID       string    `json:"id"`
+	At       time.Time `json:"at"`
+	Amount   int64     `json:"amount"` // net, minor units
+	Kind     string    `json:"kind"`
+	Channel  string    `json:"channel,omitempty"`
+	Referrer string    `json:"referrer,omitempty"`
+	Pages    []string  `json:"pages,omitempty"`
+	Visits   int64     `json:"visits,omitempty"` // within the window before the sale
+	Seconds  int64     `json:"seconds,omitempty"`
+}
+
+// BuyerPages is how many pages of the earning visit a buyer's line names.
+const BuyerPages = 3
+
+// buyers is the latest sales (new customers, not renewals), newest first, each
+// read the way the report credits it: the visit that earned it is the
+// attributed one (so a visit older than the attribution window is unattributed,
+// and the report's filters apply to that visit). A payment with no known visit
+// is a row with an amount and a time only.
+func buyers(ctx context.Context, conn *sql.Conn, sqlText string, args []any, winFrom time.Time, p Params) ([]Buyer, error) {
+	rows, err := conn.QueryContext(ctx, sqlText+`, t AS (
+			SELECT payment_id, paid_at, amount - refunded AS net, kind, visitor_id, attributed, session_id,
+			       coalesce(channel, 'Direct') AS ch, coalesce(referrer, '') AS ref
+			FROM ar WHERE kind <> 'renewal' ORDER BY paid_at DESC, payment_id LIMIT ?)
+		SELECT t.payment_id, t.paid_at, t.net, t.kind, t.attributed, CAST(t.session_id AS VARCHAR), t.ch, t.ref,
+		       (SELECT count(*) FROM cand c WHERE c.visitor_id = t.visitor_id AND t.visitor_id <> 0
+		          AND c.start <= t.paid_at + INTERVAL 1 MINUTE AND c.start >= t.paid_at - INTERVAL 90 DAY),
+		       (SELECT min(coalesce(c.first_seen, c.start)) FROM cand c WHERE c.visitor_id = t.visitor_id AND t.visitor_id <> 0
+		          AND c.start <= t.paid_at + INTERVAL 1 MINUTE AND c.start >= t.paid_at - INTERVAL 90 DAY)
+		FROM t ORDER BY t.paid_at DESC, t.payment_id`, append(append([]any{}, args...), p.Buyers)...)
+	if err != nil {
+		return nil, fmt.Errorf("latest buyers: %w", err)
+	}
+	var out []Buyer
+	var sessions []string
+	byRow := map[string]int{}
+	for rows.Next() {
+		var pid, kind, ch, ref string
+		var at time.Time
+		var net, visits int64
+		var attributed bool
+		var session sql.NullString
+		var first sql.NullTime
+		if err := rows.Scan(&pid, &at, &net, &kind, &attributed, &session, &ch, &ref, &visits, &first); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		sum := sha256.Sum256([]byte(p.Site + "\x00" + pid))
+		b := Buyer{ID: hex.EncodeToString(sum[:6]), At: at.UTC(), Amount: net, Kind: kind}
+		if attributed {
+			b.Channel, b.Referrer, b.Visits = ch, ref, visits
+			if first.Valid {
+				b.Seconds = int64(at.Sub(first.Time).Seconds())
+			}
+			if session.Valid {
+				sessions = append(sessions, session.String)
+				byRow[session.String] = len(out)
+			}
+		}
+		out = append(out, b)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if len(sessions) == 0 {
+		return out, nil
+	}
+	// The first pages of each earning visit, in the order they were opened.
+	//nolint:gosec // session ids are our own numbers read back from the store, never text from a request; the rest is bound
+	ev, err := conn.QueryContext(ctx, `SELECT CAST(session_id AS VARCHAR), path FROM events
+		WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts < ? AND coalesce(path, '') <> '' AND session_id IN (`+strings.Join(sessions, ", ")+`)
+		ORDER BY ts`, p.Site, winFrom, p.To.Add(time.Hour))
+	if err != nil {
+		return nil, fmt.Errorf("latest buyers' pages: %w", err)
+	}
+	defer ev.Close()
+	for ev.Next() {
+		var sid, path string
+		if err := ev.Scan(&sid, &path); err != nil {
+			return nil, err
+		}
+		i, ok := byRow[sid]
+		if !ok || len(out[i].Pages) == BuyerPages || (len(out[i].Pages) > 0 && out[i].Pages[len(out[i].Pages)-1] == path) {
+			continue
+		}
+		out[i].Pages = append(out[i].Pages, path)
+	}
+	return out, ev.Err()
 }

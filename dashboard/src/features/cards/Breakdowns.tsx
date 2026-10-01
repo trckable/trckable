@@ -15,6 +15,7 @@ import { priorOf } from './prior'
 import { Tabs, type TabItem } from './Tabs'
 
 const WorldMap = lazy(() => import('../../views/WorldMap').then((m) => ({ default: m.WorldMap })))
+const AiPanel = lazy(() => import('../extras/AiPanel'))
 const ScrollDepth = lazy(() => import('../../views/ScrollDepth').then((m) => ({ default: m.ScrollDepth })))
 
 /** The small tabs of one list, and the list of the one picked. */
@@ -41,36 +42,42 @@ export function SourcesPanel({ c }: { c: CardsCtx }) {
     { id: 'channel', label: cardCopy.channels },
     { id: 'referrer', label: cardCopy.referrers },
     { id: 'campaign', label: cardCopy.campaigns },
+    // What the AI assistants sent, in Full: the rules are the server's own.
+    ...(c.full && !c.shared ? [{ id: 'ai', label: cardCopy.ai }] : []),
     // Google's own numbers, once Search Console is connected. A share link cannot reach them, so it never shows the tab.
     ...(c.mods !== null && shows(c.mods, 'tabs', 'search') && !c.shared ? [{ id: 'search', label: cardCopy.search }] : []),
   ]
+  return <SubPanel id="src" label={cardCopy.sources} tabs={tabs} c={c} render={(dim) => sourceList(c, dim)} />
+}
+
+function sourceList(c: CardsCtx, dim: string) {
+  if (dim === 'search') return <SearchTerms site={c.site} query={c.query} rows={c.rows} full={c.full} />
+  if (dim === 'ai') {
+    return (
+      <Suspense fallback={<Loading height={164} />}>
+        <AiPanel site={c.site.id} query={c.query} all={c.visitors} rows={c.rows} onPick={(host) => c.addFilter('referrer', host)} />
+      </Suspense>
+    )
+  }
   return (
-    <SubPanel id="src" label={cardCopy.sources} tabs={tabs} c={c}
-      render={(dim) =>
-        dim === 'search' ? (
-          <SearchTerms site={c.site} query={c.query} rows={c.rows} full={c.full} />
-        ) : (
-          <BarList
-            {...listProps(c, dim)}
-            dimLabel={DIM_LABEL[dim]}
-            subLabel={c.full && !c.scrubbing ? convOrBounce(c) : undefined}
-            onPick={(v) => c.addFilter(dim, v)}
-            onHover={dim === 'channel' ? c.onSourceHover : undefined}
-            money={c.full && c.money && !c.scrubbing ? c.fmtMoney : undefined}
-            emptyText={!c.perDay(dim) ? cardCopy.perDayChannels : undefined}
-            items={c.sourceRows(dim).slice(0, c.rows).map((r) => ({
-              key: r.value,
-              label: dim === 'channel' ? channelLabel(r.value) : r.value || '(none)',
-              title: r.value,
-              value: r.visitors,
-              sub: c.full && c.money && !c.scrubbing ? convOf(r) : r.bounce_rate,
-              rev: r.revenue,
-              color: dim === 'channel' ? channelColor(r.value) : undefined,
-              dim: c.dimTrail && dim === 'channel' && r.value !== c.trail,
-            }))}
-          />
-        )
-      }
+    <BarList
+      {...listProps(c, dim)}
+      dimLabel={DIM_LABEL[dim]}
+      subLabel={c.full && !c.scrubbing ? convOrBounce(c) : undefined}
+      onPick={(v) => c.addFilter(dim, v)}
+      onHover={dim === 'channel' ? c.onSourceHover : undefined}
+      money={c.full && c.money && !c.scrubbing ? c.fmtMoney : undefined}
+      emptyText={!c.perDay(dim) ? cardCopy.perDayChannels : undefined}
+      items={c.sourceRows(dim).slice(0, c.rows).map((r) => ({
+        key: r.value,
+        label: dim === 'channel' ? channelLabel(r.value) : r.value || '(none)',
+        title: r.value,
+        value: r.visitors,
+        sub: c.full && c.money && !c.scrubbing ? convOf(r) : r.bounce_rate,
+        rev: r.revenue,
+        color: dim === 'channel' ? channelColor(r.value) : undefined,
+        dim: c.dimTrail && dim === 'channel' && r.value !== c.trail,
+      }))}
     />
   )
 }

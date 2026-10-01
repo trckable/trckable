@@ -1,13 +1,17 @@
 // The tabs both modes have: card 1, who came (sources, pages, locations,
 // devices) and card 2, what they did (goals, what paid).
 import { lazy, Suspense } from 'react'
+import { Loading } from '../../components/loading/Loading'
+import { lazyLoad, whenIdle } from '../../lib/lazyLoad'
 import { shows } from '../../lib/modules'
 import { DevicesPanel, LocationsPanel, PagesPanel, SourcesPanel } from './Breakdowns'
 import { cardCopy } from './copy'
 import type { CardsCtx } from './ctx'
-import { EarnersPanel, GoalsPanel } from './Money'
+import { GoalsPanel } from './Money'
 import { TabCard, type CardTab } from './TabCard'
 
+const Earners = lazyLoad(() => import('./Earners'))
+whenIdle(Earners.preload)
 const FullButton = lazy(() => import('./FullButton'))
 
 export function whoTabs(c: CardsCtx): CardTab[] {
@@ -22,7 +26,7 @@ export function whoTabs(c: CardsCtx): CardTab[] {
 export function whatTabs(c: CardsCtx): CardTab[] {
   const tabs: CardTab[] = []
   if (shows(c.mods, 'cards', 'goals')) tabs.push({ id: 'goals', label: cardCopy.goals, render: () => <GoalsPanel c={c} /> })
-  if (c.money) tabs.push({ id: 'earners', label: cardCopy.earners, render: () => <EarnersPanel c={c} /> })
+  if (c.money) tabs.push({ id: 'earners', label: cardCopy.earners, render: () => <Suspense fallback={<Loading height={164} />}><Earners c={c} /></Suspense> })
   return tabs
 }
 

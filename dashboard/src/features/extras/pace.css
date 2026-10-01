@@ -1,0 +1,6 @@
+/* The chart head's pace line: quiet, beside the title, never louder than it. */
+.pace-line {
+  margin-right: 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}

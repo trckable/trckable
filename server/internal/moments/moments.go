@@ -85,3 +85,37 @@ func Sort(ms []Moment) {
 		return rank[ms[a].Kind] < rank[ms[b].Kind]
 	})
 }
+
+// Burst is a bucket with far more sales than the buckets that had any.
+type Burst struct {
+	I      int
+	Factor float64 // times the usual busy bucket
+}
+
+// Bursts finds the buckets with at least min sales and at least factor times
+// the median of the buckets that had any sale at all. The "usual" is a
+// median so one big day cannot raise its own bar, and it needs three buckets
+// with sales: two are not a pattern, so a site's first sales are never a burst.
+func Bursts(counts []int64, min int64, factor float64) []Burst {
+	var some []int64
+	for _, c := range counts {
+		if c > 0 {
+			some = append(some, c)
+		}
+	}
+	if len(some) < 3 {
+		return nil
+	}
+	sort.Slice(some, func(a, b int) bool { return some[a] < some[b] })
+	med := float64(some[len(some)/2])
+	if len(some)%2 == 0 {
+		med = float64(some[len(some)/2-1]+some[len(some)/2]) / 2
+	}
+	var out []Burst
+	for i, c := range counts {
+		if f := float64(c) / med; c >= min && f >= factor {
+			out = append(out, Burst{I: i, Factor: f})
+		}
+	}
+	return out
+}

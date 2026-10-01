@@ -61,3 +61,27 @@ func TestSort(t *testing.T) {
 		t.Fatalf("got %+v", ms)
 	}
 }
+
+func TestBursts(t *testing.T) {
+	// Sales most days, a few on a usual one, nine on another.
+	c := []int64{1, 2, 0, 1, 9, 2, 1, 0, 2}
+	got := Bursts(c, 3, 2)
+	if len(got) != 1 || got[0].I != 4 || got[0].Factor != 4.5 {
+		t.Fatalf("one burst at 4, 4.5 times the median of 2, got %+v", got)
+	}
+}
+
+func TestBurstsNeedAPattern(t *testing.T) {
+	// Two days with sales are no pattern: nothing is a burst.
+	if got := Bursts([]int64{0, 1, 0, 9}, 3, 2); got != nil {
+		t.Fatalf("got %+v", got)
+	}
+	// Enough days, but the big day is under the minimum count.
+	if got := Bursts([]int64{1, 1, 1, 1, 2}, 3, 2); got != nil {
+		t.Fatalf("got %+v", got)
+	}
+	// A steady site has no bursts.
+	if got := Bursts([]int64{4, 5, 4, 5, 6, 5}, 3, 2); got != nil {
+		t.Fatalf("got %+v", got)
+	}
+}

@@ -4,6 +4,7 @@ import { fmtInt, fmtPct } from '../../lib/format'
 export const deepCopy = {
   tab: {
     overTime: 'Over time',
+    sources: 'Sources',
     returning: 'New vs returning',
     hours: 'Hours',
     revenueMap: 'Revenue map',

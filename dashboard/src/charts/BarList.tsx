@@ -18,6 +18,8 @@ export interface BarItem {
   rev?: number // revenue, minor units
   color?: string
   dim?: boolean
+  /** What the ▲ / ▼ is measured on when it is not the value (revenue, for a list of customers). */
+  moved?: { now: number; was: number | undefined }
 }
 
 export function BarList(p: {
@@ -31,6 +33,8 @@ export function BarList(p: {
   /** How the value column reads; counts by default. */
   fmtValue?: (n: number) => string
   subLabel?: string
+  /** How the sub column reads; a share by default. */
+  fmtSub?: (n: number) => string
   loading?: boolean
   emptyText?: string
   onPick?: (key: string) => void
@@ -46,7 +50,7 @@ export function BarList(p: {
 
   if (p.loading) return <Loading height={164} />
   return (
-    <div className={p.money ? 'bl has-rev' : 'bl'}>
+    <div className={'bl' + (p.money ? ' has-rev' : '') + (p.fmtSub ? ' wide-sub' : '')}>
       <div className="bl-cols">
         <span>{p.dimLabel}</span>
         <span className="bl-val">{p.valueLabel ?? kitCopy.visitors}</span>
@@ -84,10 +88,10 @@ export function BarList(p: {
               <Count value={it.value} fmt={p.fmtValue} />
             </span>
             <span className="bl-tail">
-              <Change now={it.value} was={p.prior?.(it.key)} />
+              <Change now={it.moved?.now ?? it.value} was={it.moved ? it.moved.was : p.prior?.(it.key)} />
               <span className="bl-share num">{fmtPct(share)}</span>
             </span>
-            {p.subLabel && <span className="bl-sub num">{it.sub !== undefined ? fmtPct(it.sub) : ''}</span>}
+            {p.subLabel && <span className="bl-sub num">{it.sub !== undefined ? (p.fmtSub ?? fmtPct)(it.sub) : ''}</span>}
             {p.money && <span className={it.rev ? 'bl-rev num' : 'bl-rev num none'}>{it.rev ? p.money(it.rev) : '–'}</span>}
           </button>
         )
