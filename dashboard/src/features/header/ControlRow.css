@@ -139,7 +139,20 @@
   right: auto;
 }
 
-/* The filters in force stay chips, under the row. */
+/* On a wide screen they sit on the left of the date row instead, packed at
+   the start: the chips, Save view, then Views. The capsules keep the right. */
+.ctl-inline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.ctl-inline .toolbar-filters {
+  flex: 0 1 auto;
+}
+/* Tablet, phone and a shared link's header: the chips stay under the row. */
 .ctl-under {
   display: flex;
   align-items: center;

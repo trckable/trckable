@@ -13,6 +13,8 @@ import { toast } from '../components/Toast'
 import { closeAccount, openAccount, type AccountTab as Tab } from '../lib/account'
 import { confirm, confirmWith } from '../components/Confirm'
 import { DialogActions } from '../components/DialogActions'
+import { DialogHead } from '../components/DialogHead'
+import { Field } from '../components/Field'
 import { THEMES, useTheme } from '../lib/theme'
 import { isViewer } from '../lib/me'
 import { usePictureVersion } from '../lib/profile'
@@ -236,35 +238,27 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
   return (
     <Modal label="Change your password" className="person-modal" onClose={busy ? undefined : onClose}>
       <form
-        className="person-form"
+        className="modal-form"
         onSubmit={(e) => {
           e.preventDefault()
           submit()
         }}
         aria-busy={busy}
       >
-        <div className="modal-head">
-          <span className="modal-badge" aria-hidden="true">
-            <LockKeyhole size={19} strokeWidth={1.75} />
-          </span>
-          <div>
-            <h2>Change your password</h2>
-            <span className="faint">Every other browser and device is signed out. This one stays signed in.</span>
-          </div>
-        </div>
-        <label className="field">
-          Current password
-          <input className="input" type="password" autoFocus autoComplete="current-password" value={cur} onChange={(e) => setCur(e.target.value)} />
-        </label>
-        <label className="field">
-          New password
-          <span className="pw-field">
-            <input className="input" type={show ? 'text' : 'password'} autoComplete="new-password" minLength={MIN} value={next} onChange={(e) => setNext(e.target.value)} />
-            <button type="button" className="pw-eye" aria-label={show ? 'Hide the new password' : 'Show the new password'} aria-pressed={show} onClick={() => setShow(!show)}>
-              <Eyes size={16} strokeWidth={1.75} aria-hidden="true" />
-            </button>
-          </span>
-        </label>
+        <DialogHead icon={LockKeyhole} heading="Change your password" hint="Your other devices are signed out." />
+        <Field label="Current password">
+          {(f) => <input {...f} className="input" type="password" autoFocus autoComplete="current-password" value={cur} onChange={(e) => setCur(e.target.value)} />}
+        </Field>
+        <Field label="New password">
+          {(f) => (
+            <span className="pw-field">
+              <input {...f} className="input" type={show ? 'text' : 'password'} autoComplete="new-password" minLength={MIN} value={next} onChange={(e) => setNext(e.target.value)} />
+              <button type="button" className="pw-eye" aria-label={show ? 'Hide the new password' : 'Show the new password'} aria-pressed={show} onClick={() => setShow(!show)}>
+                <Eyes size={16} strokeWidth={1.75} aria-hidden="true" />
+              </button>
+            </span>
+          )}
+        </Field>
         <div className={'pw-meter' + (ok ? ' ok' : '')} aria-live="polite">
           <span className="pw-bar">
             <span style={{ width: `${fill * 100}%` }} />

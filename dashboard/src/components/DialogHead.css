@@ -1,0 +1,30 @@
+/* DialogHead's styles: they load with its chunk, not with the first load. */
+.dlg-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.dlg-head-text {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.dlg-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.dlg-head .faint {
+  font-size: 13px;
+  line-height: 1.4;
+}
+/* The help dot sits beside the title, not over it, and its tip opens under it. */
+.dlg-head .info {
+  position: relative;
+  display: inline-flex;
+  font-weight: 400;
+  letter-spacing: 0;
+}

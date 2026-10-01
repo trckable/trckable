@@ -3,6 +3,7 @@
 // views — so the list doubles as the weight budget.
 import { Info } from '../components/Info'
 import { DialogActions } from '../components/DialogActions'
+import { DialogHead } from '../components/DialogHead'
 import { Modal } from '../components/Modal'
 import { useEffect, useState } from 'react'
 import { ModuleArt } from '../components/ModuleArt'
@@ -100,10 +101,7 @@ export function ModulesSettings({ site }: { site: Site }) {
           <div className="mart-hero">
             <ModuleArt id={preview.id} large />
           </div>
-          <h2>{preview.name}</h2>
-          <p className="muted" style={{ margin: 0 }}>
-            {preview.summary}
-          </p>
+          <DialogHead heading={preview.name} hint={preview.summary} />
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <DataTag m={preview} />
             {preview.tracker_bytes ? <span className="tag quiet num">+{preview.tracker_bytes} B in the browser</span> : <span className="tag quiet">0 B in the browser</span>}
@@ -136,9 +134,7 @@ export function ModulesSettings({ site }: { site: Site }) {
           <div className="mart-hero">
             <ModuleArt id={confirm.id} large />
           </div>
-          <h2>
-            {confirm.enabled ? 'Turn off' : 'Turn on'} {confirm.name}?
-          </h2>
+          <DialogHead heading={`${confirm.enabled ? 'Turn off' : 'Turn on'} ${confirm.name}?`} />
 
           {!confirm.enabled && confirm.gives && (
             <ul className="bullets good">
@@ -167,7 +163,7 @@ export function ModulesSettings({ site }: { site: Site }) {
           )}
           {confirm.enabled && confirm.collects && (
             <p className="faint" style={{ margin: 0, fontSize: 12.5 }}>
-              You can turn it back on whenever you like, but the days in between will have no data.
+              Turn it back on any time; the days in between stay empty.
             </p>
           )}
 
