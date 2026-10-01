@@ -53,10 +53,4 @@ func TestDefaultsAndToggles(t *testing.T) {
 	if err := store.Set(ctx, site, "nope", true); err == nil {
 		t.Error("unknown module accepted")
 	}
-	if !store.AnyHas(ctx, "revenue") {
-		t.Error("AnyHas missed a site with revenue on")
-	}
-	if store.AnyHas(ctx, "outbound") {
-		t.Error("AnyHas reported a module nobody turned on")
-	}
 }

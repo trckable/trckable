@@ -541,9 +541,6 @@ func idleClose(cfg config.Config) time.Duration {
 	return 0 // default
 }
 
-// Control exposes the control plane to CLI subcommands.
-func (s *Server) Control() *sqlite.Store { return s.ctl }
-
 // backfillSeen fills in when each site last sent an event, for databases that
 // pre-date the column. Without it a site with years of history would read as
 // "not installed yet" until its next visit.

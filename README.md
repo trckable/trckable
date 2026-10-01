@@ -51,7 +51,7 @@ docker run -d --name trckable -p 8080:8080 -v trckable-data:/data ghcr.io/trckab
 docker logs trckable   # a one-time setup link: open it, create your account, add your site
 ```
 
-The image is for x86-64 and arm64; pin a version with `ghcr.io/trckable/trckable:0.1.0`. You can also build it yourself: `docker build -t trckable -f deploy/Dockerfile https://github.com/trckable/trckable.git`.
+The image is for x86-64 and arm64; pin a [release](https://github.com/trckable/trckable/releases) with its tag, `ghcr.io/trckable/trckable:<version>`. You can also build it yourself: `docker build -t trckable -f deploy/Dockerfile https://github.com/trckable/trckable.git`.
 
 ```html
 <script

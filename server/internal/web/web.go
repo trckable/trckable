@@ -15,7 +15,6 @@ import (
 	"mime"
 	"net/http"
 	"path"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -246,16 +245,6 @@ func Tracker(features SiteFeatures, opts SiteScript) http.Handler {
 		}
 		_, _ = w.Write(s.body)
 	})
-}
-
-// Variants lists the built script variants, smallest first (for the docs).
-func Variants() []string {
-	out := make([]string, 0, len(TrackerSizes().Variants))
-	for k := range TrackerSizes().Variants {
-		out = append(out, k)
-	}
-	sort.Strings(out)
-	return out
 }
 
 // Dashboard serves the single-page app: real files when they exist (hashed
