@@ -349,13 +349,22 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 				files.ServeHTTP(w, r)
 				return
 			}
-			if strings.HasPrefix(p, "assets/") {
+			assetPath := strings.HasPrefix(p, "assets/")
+			if assetPath {
 				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 			}
 			if serveStored(w, r, sub, p) {
 				return
 			}
 			w.Header().Del("Cache-Control")
+			// A file of a build that is gone (a tab opened before a deploy asks
+			// for it) is a 404 a script loader can tell from a script, never
+			// the page: the page would load as a module and fail on its type.
+			if assetPath {
+				w.Header().Set("Cache-Control", "no-store")
+				http.Error(w, "not found", http.StatusNotFound)
+				return
+			}
 		}
 		h := w.Header()
 		h.Set("Content-Type", "text/html; charset=utf-8")

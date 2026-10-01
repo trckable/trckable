@@ -1,0 +1,1 @@
+import{jn as e}from"./index-bccf34ef.js";var t=(t,n)=>e(`GET`,`/sites/${encodeURIComponent(t)}/now`,void 0,n);export{t};

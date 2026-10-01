@@ -21,3 +21,23 @@
   color: var(--text);
   font-size: 14px;
 }
+
+/* A site that stopped sending visits: said once, above its numbers. */
+.stopped-notice {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--down) 40%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--down) 7%, var(--surface));
+}
+@media (max-width: 640px) {
+  .stopped-notice {
+    grid-template-columns: auto 1fr;
+  }
+  .stopped-notice .btn {
+    grid-column: 1 / -1;
+  }
+}

@@ -1,0 +1,33 @@
+/* Info's tooltip: it loads with it, not with the first load. */
+.info {
+  position: relative;
+  display: inline-flex;
+}
+/* The tooltip itself: dark card, always on top, never wider than a sentence. */
+.tip {
+  position: absolute;
+  top: 26px;
+  left: -8px;
+  z-index: 40;
+  width: max-content;
+  max-width: 260px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: normal;
+  animation: rise 0.14s var(--ease) backwards;
+}
+.tip.right {
+  left: auto;
+  right: -8px;
+}
+@media (max-width: 640px) {
+  .tip {
+    min-width: 150px;
+  }
+}

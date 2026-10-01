@@ -33,7 +33,7 @@
      a component that loads later has its own list in its own file (its last
      block, "The 12 px floor"). The parts of the phone scale below then set
      what they want above it. */
-  :is(.cursor-pill, .cols, .app-footer, .note-count, .bl-cols, .bl-chg, .bl-share) {
+  :is(.cursor-pill, .app-footer, .note-count, .bl-cols, .bl-chg, .bl-share) {
     font-size: 12px;
   }
   /* ---- The header: the ghost, the site, search, the avatar, all 46 px ---- */
@@ -200,10 +200,6 @@
   .tabs:has(> button:nth-child(3)) button[aria-selected='true'] {
     background: var(--surface-2);
   }
-  .cols {
-    padding: 0 10px 2px;
-    font-size: 12px;
-  }
   :root .bl-cols span {
     font-size: 12px;
   }
@@ -269,9 +265,6 @@
   .bl-cols .bl-sub {
     display: none;
   }
-  .bl-label {
-    gap: 7px;
-  }
   .empty {
     font-size: var(--ph-text-2);
   }
@@ -324,10 +317,6 @@
     height: var(--ph-hit);
   }
   .replay-speed .speed-btn {
-    height: var(--ph-hit);
-    font-size: var(--ph-text-2);
-  }
-  .btn.ghost.show-since {
     height: var(--ph-hit);
     font-size: var(--ph-text-2);
   }
