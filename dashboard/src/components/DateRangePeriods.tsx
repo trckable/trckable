@@ -1,4 +1,4 @@
-// The date picker's first step: five periods as a plain list, and More, which
+// The date picker's first step: six periods as a plain list, and More, which
 // opens the rest in place with the comparison, the chart's detail and the way
 // on to custom dates. Key hints show when a row is pointed at.
 import { Check, ChevronDown } from 'lucide-react'

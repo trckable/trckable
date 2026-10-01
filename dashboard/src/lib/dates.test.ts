@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calendarPrevious, compareRange } from './dates'
+import { calendarPrevious, compareLabel, compareRange, presetById, shiftRange } from './dates'
 
 describe('comparing a calendar period', () => {
   it('compares this year to date with last year to date', () => {
@@ -16,5 +16,24 @@ describe('comparing a calendar period', () => {
     expect(calendarPrevious('30d', { from: '2026-08-26', to: '2026-09-24' })).toBeNull()
     expect(compareRange({ from: '2026-08-26', to: '2026-09-24' }, 'previous', undefined, '30d')).toEqual({ from: '2026-07-27', to: '2026-08-25' })
     expect(compareRange({ from: '2026-01-01', to: '2026-09-24' }, 'previous', undefined, 'ytd')).toEqual({ from: '2025-01-01', to: '2025-09-24' })
+  })
+})
+
+describe('Yesterday', () => {
+  const yesterday = presetById('yesterday')
+  it('is the site\'s previous day, also across a month and a year', () => {
+    expect(yesterday?.label).toBe('Yesterday')
+    expect(yesterday?.range('2026-10-01')).toEqual({ from: '2026-09-30', to: '2026-09-30' })
+    expect(yesterday?.range('2027-01-01')).toEqual({ from: '2026-12-31', to: '2026-12-31' })
+  })
+  it('compares with the day before it', () => {
+    const r = { from: '2026-09-30', to: '2026-09-30' }
+    expect(compareRange(r, 'previous', undefined, 'yesterday')).toEqual({ from: '2026-09-29', to: '2026-09-29' })
+    expect(compareLabel('yesterday', 'previous', r)).toBe('the day before')
+  })
+  it('shifts a day at a time with the arrows', () => {
+    const r = { from: '2026-09-30', to: '2026-09-30' }
+    expect(shiftRange(r, -1)).toEqual({ from: '2026-09-29', to: '2026-09-29' })
+    expect(shiftRange(r, 1)).toEqual({ from: '2026-10-01', to: '2026-10-01' })
   })
 })
