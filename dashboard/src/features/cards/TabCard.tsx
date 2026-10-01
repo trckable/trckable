@@ -19,7 +19,7 @@ function read(site: string, card: string): string | null {
 }
 
 /** `want`: a tab the address asks for (a funnel in it), which wins over the remembered one while it is there. */
-export function TabCard({ card, site, label, tabs, want }: { card: string; site: string; label: string; tabs: CardTab[]; want?: string }) {
+export function TabCard({ card, site, label, tabs, want, more }: { card: string; site: string; label: string; tabs: CardTab[]; want?: string; more?: ReactNode }) {
   const prefix = useId().replace(/:/g, '') + card
   const [asked, setAsked] = useState(() => want ?? read(site, card))
   const [wanted, setWanted] = useState(want)
@@ -41,7 +41,14 @@ export function TabCard({ card, site, label, tabs, want }: { card: string; site:
   }
   return (
     <section className="card tc" aria-label={label} data-card={card}>
-      <Tabs prefix={prefix} label={label} tabs={tabs} value={active.id} onChange={pick} />
+      {more ? (
+        <div className="tc-head">
+          <Tabs prefix={prefix} label={label} tabs={tabs} value={active.id} onChange={pick} />
+          <div className="tc-more">{more}</div>
+        </div>
+      ) : (
+        <Tabs prefix={prefix} label={label} tabs={tabs} value={active.id} onChange={pick} />
+      )}
       <div className="tc-body" role="tabpanel" id={panelId(prefix)} aria-labelledby={tabId(prefix, active.id)}>
         {active.render()}
       </div>

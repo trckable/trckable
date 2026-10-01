@@ -1,7 +1,6 @@
 /* Share your numbers: the cards on the left, the preview and its row. */
 .modal.sd-modal {
   width: min(980px, 100%);
-  gap: 16px;
 }
 .sd-head {
   display: flex;
@@ -16,7 +15,7 @@
 }
 .sd-title h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: 18px;
 }
 .sd-body {
   display: grid;

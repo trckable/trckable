@@ -5,6 +5,8 @@ import { messageOf } from '../lib/api'
 import type { Req } from './Confirm'
 import { toast } from './Toast'
 import { DialogActions } from './DialogActions'
+import { DialogHead } from './DialogHead'
+import { Field } from './Field'
 import { Modal } from './Modal'
 import './ConfirmDialog.css'
 
@@ -34,31 +36,18 @@ export default function ConfirmDialog({ req, done }: { req: Req; done: (v: strin
   return (
     <Modal label={req.title} className="confirm-modal" onClose={busy ? undefined : () => done(null)}>
       <form className="confirm-body" onSubmit={(e) => { e.preventDefault(); submit() }} aria-busy={busy}>
-        <span className={'modal-badge' + (req.danger ? ' danger' : '')} aria-hidden="true">
-          <Mark size={20} strokeWidth={1.75} />
-        </span>
-        <div className="confirm-text">
-          <h2>{req.title}</h2>
-          {req.body && <p className="muted">{req.body}</p>}
-          {err && (
-            <p className="confirm-err" role="alert">
-              {err}
-            </p>
-          )}
-          {req.field && (
-            <label className="field">
-              {req.field.label}
-              <input
-                className="input"
-                type={req.field.type ?? 'text'}
-                autoComplete={req.field.autoComplete}
-                autoFocus
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-              />
-            </label>
-          )}
-        </div>
+        <DialogHead icon={Mark} danger={req.danger} heading={req.title} />
+        {req.body && <p className="muted confirm-lead">{req.body}</p>}
+        {req.field && (
+          <Field label={req.field.label} error={err}>
+            {(f) => <input {...f} className="input" type={req.field?.type ?? 'text'} autoComplete={req.field?.autoComplete} autoFocus value={value} onChange={(e) => setValue(e.target.value)} />}
+          </Field>
+        )}
+        {err && !req.field && (
+          <p className="confirm-err" role="alert">
+            {err}
+          </p>
+        )}
         <DialogActions
           left={
             <button type="button" className="btn ghost" onClick={() => done(null)} autoFocus={!req.field} disabled={busy}>

@@ -61,12 +61,6 @@
 
 .modal.person-modal {
   width: min(480px, 100%);
-  gap: 18px;
-}
-.person-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
 }
 .otp-box {
   display: flex;

@@ -1,44 +1,66 @@
 /* AddGoals's styles: they load with its chunk, not with the first load. */
-/* Two by two: four routes in a row squeezed every title onto three lines. */
-.goal-routes {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-  gap: 8px;
-}
-
-.goal-routes .mtile {
-  height: auto;
-  padding: 10px 12px;
-  text-align: left;
-  justify-content: flex-start;
-}
-
-/* Track a goal → the page goals already set up. */
+/* The goals already set up: one small row each, a check in front. */
 .pg-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 4px;
+  gap: 8px;
+  max-height: 152px;
+  overflow-y: auto;
 }
 
-/* Settings → Search Console: the setup is a real sequence, so it is numbered. */
 .pg-list li {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 6px 6px 6px 12px;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 4px 4px 12px;
   border: 1px solid var(--border);
   border-radius: 10px;
   font-size: 13.5px;
 }
 
+.pg-list li > svg {
+  flex: none;
+  color: var(--up);
+}
+
+.pg-list b {
+  font-weight: 500;
+}
+
 .pg-list code {
   color: var(--text-2);
   margin-right: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.pg-list .btn {
-  height: 28px;
+.pg-list .btn.icon {
+  width: 32px;
+  height: 32px;
+  flex: none;
+}
+
+/* Name and page side by side, one column on a phone. */
+.goal-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 560px) {
+  .goal-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.goal-hint {
   font-size: 12.5px;
+}
+
+.goal-viewer {
+  margin: 0;
 }

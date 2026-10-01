@@ -466,7 +466,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     site, query, bucket: data?.bucket ?? 'day', full, shared: isShared(), deep: full && hasData && !isShared(), loading: firstLoad, scrubbing, mods, money, fmtMoney: fmtM,
     rows, soFar, cur, prev: trail ? undefined : data?.previous, dims, sourceRows, perDay, trail, dimTrail: !!trail, onSourceHover, addFilter, mapOn,
     goals: src?.goals ?? [], revenueDims: src?.revenue_dims ?? {}, countryRevenue: src?.revenue_dims?.country ?? [],
-    attrFirst: view.attr === 'first', onAttr: (first) => setView({ attr: first ? 'first' : undefined }), onTrackGoal: () => setAddGoals(true),
+    attrFirst: view.attr === 'first', onAttr: (first) => setView({ attr: first ? 'first' : undefined }), onTrackGoal: () => setAddGoals(true), onFull: () => setView({ mode: 'full' }),
     steps: view.funnel ?? [], onSteps: (f) => setView({ funnel: f }), onPickVisitor: setJourney, visitors: k?.visitors ?? 0,
   }
 
@@ -539,7 +539,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
       {!liveView && <>
       {sharing && <Suspense fallback={null}><ShareDialog site={site} sites={sites} onClose={() => setSharing(false)} /></Suspense>}
-      {naming && <Suspense fallback={null}><SaveViewHost site={site.id} filters={view.filters.length} query={current} onClose={() => setNaming(false)} onSaved={loadSegments} /></Suspense>}
+      {naming && <Suspense fallback={null}><SaveViewHost site={site.id} query={current} onClose={() => setNaming(false)} onSaved={loadSegments} /></Suspense>}
 
       {error && <Notice kind="error" text={error} />}
       {warming && <Notice kind="warming" />}
@@ -666,8 +666,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
 
       {hasData && <Cards c={cardsCtx} />}
-
-      {!full && hasData && <Notice kind="full" onAct={() => setView({ mode: 'full' })} />}
 
       {cur?.approximate && <Notice kind="approx" />}
 

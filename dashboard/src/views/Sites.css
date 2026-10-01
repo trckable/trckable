@@ -180,36 +180,10 @@
 /* ---- Deleting: a dialog that looks as serious as it is ---------------------- */
 .modal.danger-modal {
   width: min(520px, 100%);
-  gap: 18px;
   border-color: color-mix(in srgb, var(--down) 45%, var(--border));
   background:
     radial-gradient(520px 180px at 0% 0%, color-mix(in srgb, var(--down) 12%, transparent), transparent 70%),
     var(--surface);
-}
-.danger-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-}
-.danger-head h2 {
-  margin: 0 0 4px;
-  font-size: 19px;
-}
-.danger-head span {
-  font-size: 13.5px;
-  color: var(--text-2);
-  line-height: 1.5;
-}
-.danger-mark {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  flex: none;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--down) 45%, transparent);
-  background: color-mix(in srgb, var(--down) 16%, transparent);
-  color: var(--down);
 }
 .danger-list {
   display: grid;
@@ -240,13 +214,16 @@
   font-size: 12px;
   line-height: 1.45;
 }
-.danger-type b {
-  color: var(--text);
-  font-family: var(--mono);
-  font-weight: 500;
+.danger-what {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.danger-what .info {
+  position: relative;
+  display: inline-flex;
 }
 .danger-type .input {
-  height: 46px;
   font-family: var(--mono);
 }
 .danger-type .input:focus {

@@ -3,6 +3,9 @@
 import { ExternalLink, Sparkles } from 'lucide-react'
 import type { Latest } from '../lib/update'
 import { CodeBlock } from './Code'
+import { DialogActions } from './DialogActions'
+import { DialogHead } from './DialogHead'
+import { Info } from './Info'
 import { Modal } from './Modal'
 import './UpdateDialog.css'
 
@@ -19,15 +22,7 @@ export default function UpdateDialog({ latest, current, onClose }: { latest: Lat
   const notes = lines(latest.notes)
   return (
     <Modal label={`trckable ${latest.v} is out`} className="update-modal" onClose={onClose}>
-      <div className="modal-head">
-        <span className="modal-badge" aria-hidden="true">
-          <Sparkles size={19} strokeWidth={1.75} />
-        </span>
-        <div>
-          <h2>trckable {latest.v} is out</h2>
-          <span className="faint">This server runs {current}. Every release is free, the same day for everyone.</span>
-        </div>
-      </div>
+      <DialogHead icon={Sparkles} heading={`trckable ${latest.v} is out`} hint={`This server runs ${current}.`} help="Every release is free, the same day for everyone." />
       {notes.length > 0 && (
         <div className="update-notes">
           {notes.map((l, i) => (
@@ -38,7 +33,10 @@ export default function UpdateDialog({ latest, current, onClose }: { latest: Lat
         </div>
       )}
       <div className="update-steps">
-        <b>Upgrade with docker compose</b>
+        <b className="update-label">
+          Upgrade with docker compose
+          <Info text="A plain docker run install is replaced the same way: pull, then remove the container and run it again with the same volume. On Railway, redeploy. Nothing the server accepted is lost while it restarts." />
+        </b>
         <CodeBlock
           wrap
           lang="bash"
@@ -46,24 +44,25 @@ export default function UpdateDialog({ latest, current, onClose }: { latest: Lat
 docker compose pull
 docker compose up -d`}
         />
-        <span className="faint">
-          A plain docker run install is replaced the same way: pull, then remove the container and run it again with the same volume (docker restart keeps the old image). On Railway, redeploy. Nothing the server
-          accepted is lost while it restarts.
-        </span>
       </div>
-      <div className="update-links">
-        <a className="btn" href="https://trckable.com/docs/self-host/upgrading/" target="_blank" rel="noreferrer">
+      <DialogActions
+        left={
+          <>
+            {latest.url && (
+              <a className="btn ghost" href={latest.url} target="_blank" rel="noreferrer">
+                Release notes <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />
+              </a>
+            )}
+            <button type="button" className="btn ghost" onClick={onClose}>
+              Later
+            </button>
+          </>
+        }
+      >
+        <a className="btn primary" href="https://trckable.com/docs/self-host/upgrading/" target="_blank" rel="noreferrer">
           Upgrade guide <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />
         </a>
-        {latest.url && (
-          <a className="btn ghost" href={latest.url} target="_blank" rel="noreferrer">
-            Release notes <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />
-          </a>
-        )}
-        <button type="button" className="btn primary" style={{ marginLeft: 'auto' }} onClick={onClose}>
-          Later
-        </button>
-      </div>
+      </DialogActions>
     </Modal>
   )
 }

@@ -1,9 +1,7 @@
 // The notices beside the numbers that are wanted rarely (DashboardParts): a
 // failed report, a store still opening after a restart (never a silent wait),
-// test payments, the invitation to Full, and the note that breakdowns are estimates.
-import { caps, keyFor } from '../lib/keys'
-
-type Kind = 'error' | 'warming' | 'test' | 'full' | 'approx'
+// test payments, and the note that breakdowns are estimates.
+type Kind = 'error' | 'warming' | 'test' | 'approx'
 
 export default function Notices({ kind, text, onAct }: { kind: Kind; text?: string; onAct?: () => void }) {
   if (kind === 'error') {
@@ -32,22 +30,9 @@ export default function Notices({ kind, text, onAct }: { kind: Kind; text?: stri
       </div>
     )
   }
-  if (kind === 'approx') {
-    return (
-      <p className="faint" style={{ fontSize: 12, margin: 0 }}>
-        Breakdown visitor counts are estimates (±2%) for ranges above 250,000 sessions. Totals are exact.
-      </p>
-    )
-  }
   return (
-    <section className="banner" style={{ justifyContent: 'space-between', flexWrap: 'wrap', padding: '20px 24px', borderRadius: 16 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <strong style={{ color: 'var(--text)' }}>That's the whole story on one screen.</strong>
-        <span>Full mode adds tabs to both cards: funnel, retention, people, the charts, exit pages and more. Nothing reloads.</span>
-      </div>
-      <button type="button" className="btn primary" onClick={onAct}>
-        Show Full <span className="kbd" style={{ color: 'inherit', borderColor: 'currentColor' }}>{caps(keyFor('mode')).join('')}</span>
-      </button>
-    </section>
+    <p className="faint" style={{ fontSize: 12, margin: 0 }}>
+      Breakdown visitor counts are estimates (±2%) for ranges above 250,000 sessions. Totals are exact.
+    </p>
   )
 }

@@ -2,7 +2,9 @@
 // the message files when translations come.
 export const dialogCopy = {
   title: 'New funnel',
-  intro: 'Pick the pages and goals people pass through, in order. The funnel opens in Full with this period and these filters.',
+  hint: 'Pick the pages and goals people pass through, in order.',
+  help: 'The funnel opens in Full, with this period and these filters.',
+  steps: 'Steps',
   add: 'Add a step',
   search: 'Search a page or goal…',
   addLabel: '+ Add step',
