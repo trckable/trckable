@@ -274,11 +274,6 @@ button.sites-btn:hover {
   flex: 1;
   min-width: 160px;
 }
-.add-err {
-  flex-basis: 100%;
-  color: var(--down);
-  font-size: 13px;
-}
 
 /* API keys. */
 .key-tiles {

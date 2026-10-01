@@ -5,7 +5,7 @@ import { DialogActions } from '../../components/DialogActions'
 import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../components/Modal'
 import { Switch } from '../../components/Switch'
-import { messageOf, type SiteAccessList } from '../../lib/api'
+import { fail, type SiteAccessList } from '../../lib/api'
 import { copy } from './copy'
 import { changed } from './draft'
 import './access.css'
@@ -16,7 +16,6 @@ export default function AccessDialog({ viewer, sites, onSave, onClose }: { viewe
   const [all, setAll] = useState(viewer.sites === null)
   const [chosen, setChosen] = useState(() => new Set(viewer.sites ?? []))
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
   const toggle = (id: string) =>
     setChosen((was) => {
       const next = new Set(was)
@@ -28,13 +27,12 @@ export default function AccessDialog({ viewer, sites, onSave, onClose }: { viewe
     e.preventDefault()
     if (busy) return
     setBusy(true)
-    setError('')
     try {
       // In the server's own order, whatever order they were ticked in.
       await onSave(all ? null : sites.filter((s) => chosen.has(s.id)).map((s) => s.id))
       onClose()
     } catch (err) {
-      setError(messageOf(err))
+      fail(err)
       setBusy(false)
     }
   }
@@ -56,11 +54,6 @@ export default function AccessDialog({ viewer, sites, onSave, onClose }: { viewe
             </label>
           ))}
         </fieldset>
-        {error && (
-          <p className="access-error" role="alert">
-            {error}
-          </p>
-        )}
         <DialogActions
           left={
             <button type="button" className="btn ghost" disabled={busy} onClick={onClose}>

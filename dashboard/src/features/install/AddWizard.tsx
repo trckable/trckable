@@ -9,7 +9,7 @@ import { Name } from '../../components/Logo'
 import { Modal } from '../../components/Modal'
 import { StepBody } from '../../components/StepBody'
 import { Steps } from '../../components/Steps'
-import { api, messageOf, type Site } from '../../lib/api'
+import { api, fail, type Site } from '../../lib/api'
 import { openSettings } from '../../lib/settings'
 import { navigate } from '../../lib/url'
 import { useLive } from '../../lib/useLive'
@@ -33,7 +33,6 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
   const [domain, setDomain] = useState('')
   const [site, setSite] = useState<Site | null>(null)
   const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
   const stream = useLive(site?.id ?? null, noRefetch)
   const live = stream.visits.length > 0
 
@@ -48,7 +47,6 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
       return
     }
     setBusy(true)
-    setErr(null)
     const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
     api
       .createSite(clean)
@@ -58,7 +56,7 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
         onSites()
         setStep(2)
       })
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => fail(e, create))
       .finally(() => setBusy(false))
   }
   const open = () => {
@@ -78,7 +76,7 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
       <Steps labels={t.steps} at={step - 1} done={live && step === 2 ? 1 : undefined} onGo={(i) => setStep(i + 1)} />
 
       <StepBody step={step} className="wiz-step" fit>
-        {step === 1 && <DomainStep domain={site ? site.domain : domain} setDomain={setDomain} clean={clean} verdict={verdict} err={err} locked={site !== null} onSubmit={create} />}
+        {step === 1 && <DomainStep domain={site ? site.domain : domain} setDomain={setDomain} clean={clean} verdict={verdict} locked={site !== null} onSubmit={create} />}
         {step === 2 && site && <Install site={site} visits={stream.visits} variant="wizard" />}
         {step === 3 && <p className="muted wiz-revenue">{t.revenueBody}</p>}
       </StepBody>

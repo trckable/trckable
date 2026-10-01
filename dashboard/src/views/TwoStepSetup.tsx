@@ -1,7 +1,7 @@
 // Turning on two-step sign-in, in three steps. It loads only when someone
 // starts the setup, so the QR encoder never reaches anyone else.
 import { useMemo, useState } from "react";
-import { api, messageOf } from "../lib/api";
+import { api, fail, refused, wrong } from "../lib/api";
 import { DialogActions } from "../components/DialogActions";
 import { DialogHead } from "../components/DialogHead";
 import { Field } from "../components/Field";
@@ -44,7 +44,7 @@ export default function TwoStepSetup({
         setUri(r.uri);
         setStep(1);
       })
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => (refused(e) ? setErr(wrong) : fail(e)))
       .finally(() => setBusy(false));
   };
 
@@ -58,7 +58,7 @@ export default function TwoStepSetup({
         setStep(2);
         onDone();
       })
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => (refused(e) ? setErr(wrong) : fail(e)))
       .finally(() => setBusy(false));
   };
 

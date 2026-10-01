@@ -1,19 +1,19 @@
 {
   "literals": 367,
   "components": {
-    "src/charts/TimeChart.tsx": 267,
+    "src/charts/TimeChart.tsx": 265,
     "src/main.tsx": 296,
     "src/views/Account.tsx": 363,
     "src/views/Alerts.tsx": 295,
-    "src/views/AllSites.tsx": 286,
+    "src/views/AllSites.tsx": 275,
     "src/views/Auth.tsx": 302,
     "src/views/Dashboard.tsx": 710,
-    "src/views/Health.tsx": 293,
-    "src/views/Payments.tsx": 681,
-    "src/views/Privacy.tsx": 750,
-    "src/views/Search.tsx": 360,
-    "src/views/Settings.tsx": 605,
-    "src/views/Sites.tsx": 416,
+    "src/views/Health.tsx": 275,
+    "src/views/Payments.tsx": 671,
+    "src/views/Privacy.tsx": 740,
+    "src/views/Search.tsx": 356,
+    "src/views/Settings.tsx": 592,
+    "src/views/Sites.tsx": 402,
     "src/views/TwoStepSetup.tsx": 255,
     "src/views/Widgets.tsx": 301
   }

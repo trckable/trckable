@@ -1,6 +1,6 @@
 import { copy } from './copy'
 
-export function SiteStep(p: { domain: string; onDomain: (d: string) => void; busy: boolean; err: string | null; ready: boolean; onSubmit: () => void }) {
+export function SiteStep(p: { domain: string; onDomain: (d: string) => void; busy: boolean; ready: boolean; onSubmit: () => void }) {
   return (
     <form
       className="ob-form"
@@ -24,14 +24,7 @@ export function SiteStep(p: { domain: string; onDomain: (d: string) => void; bus
         autoCapitalize="none"
         autoComplete="url"
         inputMode="url"
-        aria-invalid={!!p.err}
-        aria-describedby={p.err ? 'ob-err' : undefined}
       />
-      {p.err && (
-        <p id="ob-err" className="confirm-err" role="alert">
-          {p.err}
-        </p>
-      )}
       <div className="ob-actions">
         <button type="submit" className="btn primary big" disabled={!p.ready || p.busy}>
           {p.busy && <span className="btn-spin" aria-hidden="true" />}

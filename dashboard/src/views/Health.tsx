@@ -3,8 +3,8 @@
 // how long that lasts, whether backups are being made, and whether payments
 // are arriving.
 import { Activity, ArchiveRestore, CircleCheck, CloudUpload, Cpu, CreditCard, HardDrive, Inbox, RefreshCcw, TriangleAlert, Webhook } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { api, messageOf, type Health as H } from '../lib/api'
+import { type Health as H } from '../lib/api'
+import { useHealth } from './useHealth'
 import { fmtInt } from '../lib/format'
 import './Health.css'
 import { Loading } from '../components/loading/Loading'
@@ -132,25 +132,7 @@ function Item({ icon: Icon, label, hint, children }: { icon: typeof Cpu; label: 
 }
 
 export function HealthSettings() {
-  const [h, setH] = useState<H | null>(null)
-  const [at, setAt] = useState<Date | null>(null)
-  const [err, setErr] = useState<string | null>(null)
-  useEffect(() => {
-    const load = () => {
-      api
-        .health()
-        .then((r) => {
-          setH(r)
-          setAt(new Date())
-          setErr(null)
-        })
-        .catch((e: unknown) => setErr(messageOf(e)))
-    }
-    load()
-    const t = setInterval(load, 15_000)
-    return () => clearInterval(t)
-  }, [])
-
+  const { h, at, err } = useHealth()
   if (err && !h) return <div className="banner">{err}</div>
   if (!h) return <Loading height={320} />
   const lagTone: Tone = h.events.lag > 5000 ? 'warn' : 'ok'

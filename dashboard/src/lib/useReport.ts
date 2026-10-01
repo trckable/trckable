@@ -48,7 +48,10 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { li
           if (e instanceof APIError && e.status === 503) {
             setWarming(true)
             retry = setTimeout(load, 2000)
-          } else setError(e instanceof Error ? e.message : String(e))
+          } else {
+            // The words for a failure are their own chunk (lib/errors.ts), fetched now; if that fails too, the plainest line.
+            void import('./errors').then((m) => setError(m.words(e)), () => setError('Something went wrong'))
+          }
         })
         .finally(() => !cancelled && setLoading(false))
     }

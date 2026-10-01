@@ -8,7 +8,7 @@ import { PersonAvatar } from '../components/PersonAvatar'
 import { checksHere, setChecksHere } from '../lib/update'
 import { Switch } from '../components/Switch'
 import { Suspense, lazy, useEffect, useRef, useState, type ReactNode } from 'react'
-import { api, messageOf, type Profile, type TwoStep as TwoStepState, type Site } from '../lib/api'
+import { api, fail, refused, wrong, type Profile, type TwoStep as TwoStepState, type Site } from '../lib/api'
 import { toast } from '../components/Toast'
 import { closeAccount, openAccount, type AccountTab as Tab } from '../lib/account'
 import { confirm, confirmWith } from '../components/Confirm'
@@ -231,7 +231,7 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
         toast('Password changed — other devices were signed out')
         onClose()
       })
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => (refused(e) ? setErr(wrong) : fail(e)))
       .finally(() => setBusy(false))
   }
   const Eyes = show ? EyeOff : Eye

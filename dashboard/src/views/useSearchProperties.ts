@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { api, messageOf, type SearchConnection, type SearchProperty } from '../lib/api'
+import { api, type SearchConnection, type SearchProperty } from '../lib/api'
+import { words } from '../lib/errors'
 import { isViewer } from '../lib/me'
 
 // The properties the connected Google account may read, for the picker.
@@ -15,7 +16,7 @@ export function useSearchProperties(siteID: string, conn: SearchConnection | nul
     api
       .searchProperties(siteID)
       .then((r) => setProps(r.properties))
-      .catch((e: unknown) => setPropsErr(messageOf(e)))
+      .catch((e: unknown) => setPropsErr(words(e)))
   }, [conn?.client_email, siteID]) // eslint-disable-line react-hooks/exhaustive-deps -- only a new account needs its properties read again, not every other change to conn
   return { props, setProps, propsErr }
 }

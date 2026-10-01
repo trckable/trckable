@@ -2,9 +2,10 @@
 // them up; each row is that site's own dashboard in one line, read in its own
 // timezone and currency; click it to open the site. A site that has had no
 // visit yet says so, and opens straight to its install tab.
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { openAddSite } from '../lib/account'
-import { api, messageOf, type Site, type SiteRow } from '../lib/api'
+import { type Site, type SiteRow } from '../lib/api'
+import { useOverview } from './useOverview'
 import { delta, fmtInt, fmtMoney, fmtPct } from '../lib/format'
 import { isViewer } from '../lib/me'
 import { navigate } from '../lib/url'
@@ -63,8 +64,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
     const d = Number(new URLSearchParams(location.search).get('days'))
     return PERIODS.some((p) => p.days === d) ? d : 30
   })
-  const [rows, setRows] = useState<SiteRow[] | null>(null)
-  const [err, setErr] = useState('')
+  const { rows, err } = useOverview(days)
   // The switcher's order (pins and groups first) until a column is picked.
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'order', desc: false })
   const layout = useSiteLayout() ?? EMPTY
@@ -74,17 +74,6 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
   const colorOf = (id: string) => colors.get(id) ?? 'var(--text-3)'
   const [q, setQ] = useState('')
   const [show, setShow] = useState<Show>('all')
-
-  useEffect(() => {
-    const ac = new AbortController()
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- a new period starts a new fetch, so the last one's error goes
-    setErr('')
-    api
-      .overview(days, ac.signal)
-      .then((r) => setRows(r.sites))
-      .catch((e: unknown) => !ac.signal.aborted && setErr(messageOf(e)))
-    return () => ac.abort()
-  }, [days])
 
   const waiting = (r: SiteRow) => !r.visitors && !r.previous_visitors && !r.error
   const is: Record<Show, (r: SiteRow) => boolean> = {

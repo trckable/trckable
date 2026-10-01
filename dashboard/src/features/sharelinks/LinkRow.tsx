@@ -7,7 +7,7 @@
 import { CircleDollarSign, Clock, Code, ExternalLink, Eye, Globe, Lock, Power, RefreshCw, StickyNote } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from '../../components/Toast'
-import { api, messageOf, type Share } from '../../lib/api'
+import { api, fail, type Share } from '../../lib/api'
 import { fmtInt } from '../../lib/format'
 import { Ask } from './Ask'
 import { CopyButton } from './CopyButton'
@@ -58,7 +58,7 @@ function Notes({ site, share, readOnly, onChanged }: { site: string; share: Shar
         toast(on ? copy.notesHidden : copy.notesShown)
         onChanged()
       })
-      .catch((e: unknown) => toast(messageOf(e), 'error'))
+      .catch((e: unknown) => fail(e))
   return (
     <button type="button" className={on ? 'sl-flag on' : 'sl-flag'} aria-pressed={on} aria-label={on ? copy.notesOn(name) : copy.notesOff(name)} title={copy.notesTip(on)} onClick={flip}>
       <StickyNote size={14} strokeWidth={1.75} />
@@ -78,7 +78,7 @@ function Revoke({ site, share, onDone }: { site: string; share: Share; onDone: (
         onDone()
       })
       .catch((e: unknown) => {
-        toast(messageOf(e), 'error')
+        fail(e)
         setBusy(false)
         setAsking(false)
       })
@@ -104,7 +104,7 @@ function NewAddress({ site, share, quiet, onMade }: { site: string; share: Share
       .newShareAddress(site, share.id)
       .then((r) => onMade(r.url))
       .catch((e: unknown) => {
-        toast(messageOf(e), 'error')
+        fail(e)
         setBusy(false)
         setAsking(false)
       })

@@ -153,11 +153,6 @@
 .note-form-text {
   flex: 1 1 200px;
 }
-.note-err {
-  flex-basis: 100%;
-  color: var(--down);
-  font-size: 13px;
-}
 .note-form-actions {
   flex-basis: 100%;
   display: flex;

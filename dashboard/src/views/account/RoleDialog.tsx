@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { DialogActions } from '../../components/DialogActions'
 import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../components/Modal'
-import { messageOf, type Person } from '../../lib/api'
+import { fail, type Person } from '../../lib/api'
 import { people } from './peopleCopy'
 import './peoplePop.css'
 import './roleDialog.css'
@@ -19,7 +19,6 @@ const VIEWER_ICONS: LucideIcon[] = [Lock, Eye]
 export default function RoleDialog({ p, role, run, onClose }: { p: Person; role: string; run: () => Promise<unknown>; onClose: () => void }) {
   const [trusted, setTrusted] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState('')
   const promote = role === 'owner'
   const name = p.name || p.email.split('@')[0]
   const title = promote ? t.ownerTitle(name) : t.viewerTitle(name)
@@ -38,11 +37,10 @@ export default function RoleDialog({ p, role, run, onClose }: { p: Person; role:
   const submit = () => {
     if (!allowed) return
     setBusy(true)
-    setErr('')
     run()
       .then(onClose)
       .catch((e: unknown) => {
-        setErr(messageOf(e) || t.failed)
+        fail(e)
         setBusy(false)
       })
   }
@@ -84,11 +82,6 @@ export default function RoleDialog({ p, role, run, onClose }: { p: Person; role:
             </span>
             {t.trust}
           </button>
-        )}
-        {err && (
-          <p className="role-err" role="alert">
-            {err}
-          </p>
         )}
         <DialogActions
           left={

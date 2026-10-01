@@ -26,7 +26,6 @@ export const people = {
     find: 'Find a site',
     empty: 'No site found',
     done: 'Done',
-    failed: 'The sites were not saved',
     allWhy: 'Including sites added later',
   },
   /** The pill and its popover: what each role may do, in one line. */
@@ -46,7 +45,6 @@ export const people = {
     ownerGo: 'Make owner',
     viewerGo: 'Make viewer',
     busy: 'Saving…',
-    failed: 'The role was not changed',
     nowOwner: (name: string) => `${name} is now an owner`,
     nowViewer: (name: string) => `${name} is now a viewer`,
   },
