@@ -4,7 +4,7 @@
 // A wide screen: two capsules on the right; the first shows the real dates,
 // steps with ‹ ›, has the comparison (an icon and a small menu) and Filter, and
 // folds (» at its right end, « once folded) to a pill that is remembered; the
-// period opens as five choices with More. The site and its cog are one card.
+// period opens as six choices with More. The site and its cog are one card.
 // A phone: one short line, a pill that opens a sheet.
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
@@ -65,6 +65,24 @@ test('the capsule shows the real dates and ‹ › move the period', async ({ pa
   await expect(see.locator('.range-label')).toHaveText(shown)
 })
 
+test('Yesterday is the second quick choice, shows its date, and ‹ › step a day from it', async ({ page }) => {
+  await open(page, 1280, '?view=data&period=yesterday')
+  const see = page.locator('.ctl-see')
+  await expect(see.locator('.range-label')).toHaveText('Yesterday')
+  await expect(see.locator('.range-dates')).toHaveText(/^[A-Z][a-z]{2}, [A-Z][a-z]{2} \d{1,2}/)
+  await see.locator('.btn.range').click()
+  const picker = page.getByRole('dialog', { name: 'Choose a date range' })
+  await expect(picker.locator('.periods > .lrow').nth(2)).toHaveText(/^Yesterday/)
+  await expect(picker.getByRole('button', { name: /^Yesterday/ })).toHaveAttribute('aria-pressed', 'true')
+  await page.keyboard.press('Escape')
+  // › from yesterday is one day on, ‹ twice is a day before yesterday: always a single day, by its date.
+  const yesterday = (await see.locator('.range-dates').textContent()) ?? ''
+  await see.getByRole('button', { name: 'Next period' }).click()
+  await expect(see.locator('.range-label')).toHaveText(/^[A-Z][a-z]{2}, [A-Z][a-z]{2} \d{1,2}/)
+  await expect(see.locator('.range-label')).not.toHaveText(yesterday)
+  await expect(see.getByRole('button', { name: 'Next period' })).toBeDisabled()
+})
+
 test('comparison, the period and Filter open their popovers, Share and More are named icons', async ({ page }) => {
   await open(page, 1280)
   const see = page.locator('.ctl-see')
@@ -118,16 +136,16 @@ test('comparison, the period and Filter open their popovers, Share and More are 
   await expect(page.locator('.subbar .btn.primary')).toHaveCount(0)
 })
 
-test('the period opens as five choices; More opens the rest in place; compare and Detail apply at once', async ({ page }) => {
+test('the period opens as six choices; More opens the rest in place; compare and Detail apply at once', async ({ page }) => {
   await open(page, 1280)
   const see = page.locator('.ctl-see')
   await see.locator('.btn.range').click()
   const picker = page.getByRole('dialog', { name: 'Choose a date range' })
   await expect(picker).toBeVisible()
-  // Five rows and More: no section heads, no clock, none of the rest yet.
-  for (const name of [/^Now/, /^Today/, /^Last 7 days/, /^Last 30 days/, /^Last 90 days/]) await expect(picker.getByRole('button', { name })).toBeVisible()
+  // Six rows and More: no section heads, no clock, none of the rest yet.
+  for (const name of [/^Now/, /^Today/, /^Yesterday/, /^Last 7 days/, /^Last 30 days/, /^Last 90 days/]) await expect(picker.getByRole('button', { name })).toBeVisible()
   await expect(picker).not.toContainText(/rolling|calendar|\d:\d\d/i)
-  await expect(picker.getByRole('button', { name: /^Yesterday/ })).toHaveCount(0)
+  await expect(picker.getByRole('button', { name: /^Last 12 months/ })).toHaveCount(0)
   // A key shows only when the row is pointed at.
   const today = picker.getByRole('button', { name: /^Today/ })
   await expect(today.locator('.k')).toHaveCSS('opacity', '0')
@@ -136,7 +154,7 @@ test('the period opens as five choices; More opens the rest in place; compare an
   await expect(today.locator('.k')).toHaveText('T')
   // More: the other periods, Compare, Detail and Custom dates, in place.
   await picker.getByRole('button', { name: 'More' }).click()
-  for (const name of [/^Yesterday/, /^Last 12 months/, /^This week/, /^This month/, /^Last month/, /^This year/, /^Custom dates/]) await expect(picker.getByRole('button', { name })).toBeVisible()
+  for (const name of [/^Last 12 months/, /^This week/, /^This month/, /^Last month/, /^This year/, /^Custom dates/]) await expect(picker.getByRole('button', { name })).toBeVisible()
   await expect(picker.getByRole('group', { name: 'Detail' })).toBeVisible()
   // Compare applies at once and the popover stays open; pressing it again clears it.
   await picker.getByRole('group', { name: 'Compare' }).getByRole('button', { name: 'Last year' }).click()

@@ -12,10 +12,10 @@ export const periodsCopy = {
   customDates: 'Custom dates',
 }
 
-// The five periods people pick most, then the rest under More (two columns,
+// The six periods people pick most, then the rest under More (two columns,
 // read across).
-export const PERIODS_FIRST = ['now', 'today', '7d', '30d', '90d']
-export const PERIODS_MORE = ['yesterday', '12mo', 'wtd', 'mtd', 'lastmonth', 'ytd']
+export const PERIODS_FIRST = ['now', 'today', 'yesterday', '7d', '30d', '90d']
+export const PERIODS_MORE = ['12mo', 'wtd', 'mtd', 'lastmonth', 'ytd']
 
 export const BUCKET_LABEL: Record<Bucket, string> = { hour: 'Hourly', day: 'Daily', week: 'Weekly', month: 'Monthly' }
 

@@ -23,7 +23,7 @@ function periods(v: PickerValue) {
 }
 
 describe('the period list', () => {
-  it('is five rows, then More, with no section headers, subtitles or clock', () => {
+  it('is six rows, then More, with no section headers, subtitles or clock', () => {
     const html = periods(at('30d'))
     for (const id of PERIODS_FIRST) expect(html).toContain(preset(id).label)
     expect(html).toContain('More')
