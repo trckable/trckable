@@ -300,3 +300,41 @@ func TestSharedPagesSendNoReferer(t *testing.T) {
 		}
 	}
 }
+
+// A tab opened before a deploy asks for chunks the new build no longer has:
+// the answer must be a plain 404 a loader can tell from a script, not the page.
+func TestMissingAssetIsNotFoundNotThePage(t *testing.T) {
+	for _, path := range []string{"/assets/AccountItems-137721bf.js", "/assets/gone-00000000.css", "/assets/nested/gone.js"} {
+		rec := fetch(t, path, "gzip")
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("%s: %d, want 404", path, rec.Code)
+		}
+		if ct := rec.Header().Get("Content-Type"); !strings.HasPrefix(ct, "text/plain") {
+			t.Errorf("%s: content type %q, want text/plain", path, ct)
+		}
+		if cc := rec.Header().Get("Cache-Control"); cc != "no-store" {
+			t.Errorf("%s: Cache-Control %q, want no-store (a missing file must never be remembered)", path, cc)
+		}
+		if strings.Contains(rec.Body.String(), "<html") || strings.Contains(rec.Body.String(), `id="root"`) {
+			t.Errorf("%s: the answer is the page", path)
+		}
+	}
+}
+
+// The page itself is never cached, and a route is still the page: a site's
+// address has a dot in it.
+func TestPageIsNeverCachedAndRoutesStillAnswerWithIt(t *testing.T) {
+	for _, path := range []string{"/", "/albas.al", "/albas.al?period=ytd"} {
+		rec := fetch(t, path, "")
+		if rec.Code != http.StatusOK || !strings.HasPrefix(rec.Header().Get("Content-Type"), "text/html") {
+			t.Errorf("%s: %d %q, want the page", path, rec.Code, rec.Header().Get("Content-Type"))
+		}
+		if cc := rec.Header().Get("Cache-Control"); cc != "no-cache" {
+			t.Errorf("%s: Cache-Control %q, want no-cache", path, cc)
+		}
+	}
+	// A built asset is still cached for good.
+	if cc := fetch(t, firstAsset(t), "gzip").Header().Get("Cache-Control"); !strings.Contains(cc, "immutable") {
+		t.Errorf("a hashed asset: Cache-Control %q, want immutable", cc)
+	}
+}

@@ -56,6 +56,7 @@ section into the release.
 - On a desktop the Live | Data switch is in the header's right group, before the account; a phone or tablet keeps it in the row under the header.
 - The pulsing dot beside Online now is no longer cut off at its edge.
 - The site switcher's rows have a little more air on a desktop (4 px taller, the mark a bit further from the name). Dragging a site is now live: a grip shows at the row's edge, the row you hold lifts and follows the pointer, the others slide aside into the new order, dropping saves it, and Esc puts it back.
+- A dashboard tab left open across an update no longer goes black. A file of the old build that is no longer there (a script the date picker asks for, say) used to be answered with the page itself, which a browser refuses as a script; the server now answers 404, plain text, never kept, and the dashboard reloads itself once, on the same address (period, filters and the number on the chart stay), and never twice in a minute. Changing the period with the pointer resting on the chart no longer throws either: the picked day is let go of when the new period has fewer days. A chart or the two cards under it that cannot be drawn now say so in their own place ("Couldn't draw this.", with a Reload), and anything else that breaks shows the same line instead of a black page.
 
 ## 0.5.7 (30 Sep 2026)
 

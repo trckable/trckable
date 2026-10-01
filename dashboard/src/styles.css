@@ -616,8 +616,7 @@ textarea:focus-visible {
 .tc-body .card-head > h2,
 .tc-body .kit-head > h2,
 .tc-body .kit-question,
-.tc-body .kit-foot,
-.tc-body .card-note {
+.tc-body .kit-foot {
   display: none;
 }
 .tc-body .kit-head {
@@ -794,15 +793,6 @@ textarea:focus-visible {
   align-items: center;
   gap: 10px;
 }
-.heat {
-  display: grid;
-  grid-template-columns: 34px repeat(24, minmax(0, 1fr));
-  gap: 3px;
-}
-.heat span.cell {
-  height: 18px;
-  border-radius: 3px;
-}
 
 /* ---- chart ---- */
 .chart-wrap {
@@ -920,25 +910,6 @@ input[type='range']::-moz-range-thumb {
   border-radius: 50%;
   background: var(--accent);
   border: 3px solid var(--surface);
-}
-.legend {
-  display: flex;
-  gap: 14px;
-  font-size: 12px;
-  color: var(--text-2);
-  align-items: center;
-  flex-wrap: wrap;
-}
-.legend i {
-  display: inline-block;
-  width: 14px;
-  height: 2px;
-  border-radius: 1px;
-  vertical-align: middle;
-  margin-right: 6px;
-}
-.legend i.ghost {
-  background: repeating-linear-gradient(90deg, var(--text-3) 0 4px, transparent 4px 7px);
 }
 
 /* ---- popovers & drawers ---- */
@@ -1071,9 +1042,6 @@ table.t td {
     order: 3;
     flex-basis: 100%;
   }
-  .tip {
-    min-width: 150px;
-  }
   .header .kbd,
   .btn .kbd {
     display: none;
@@ -1164,13 +1132,6 @@ table.t td {
 .switch:disabled {
   opacity: 0.6;
 }
-@keyframes modal-pop {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.96);
-    box-shadow: 0 0 0 rgb(0 0 0 / 0);
-  }
-}
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -1197,27 +1158,6 @@ table.t td {
   background: color-mix(in srgb, var(--down) 14%, transparent);
   border-color: color-mix(in srgb, var(--down) 40%, transparent);
   color: var(--down);
-}
-/* A dialog's heading: its icon tile, then the title with a line under it.
-   Shared by every dialog, so it stays in the main stylesheet. */
-.modal-head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.modal-head > div {
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-}
-.modal-head h2 {
-  margin: 0;
-  font-size: 18px;
-  letter-spacing: -0.02em;
-}
-.modal-head .faint {
-  font-size: 12.5px;
-  line-height: 1.45;
 }
 /* The dialog heading, with an optional icon tile before it. */
 .modal-badge {
@@ -1306,13 +1246,7 @@ table.t td {
   border-color: var(--accent);
   color: var(--accent);
 }
-.note-open {
-  flex-basis: 100%;
-}
 @media (max-width: 640px) {
-  .card-note {
-    display: none;
-  }
   .info-dot {
     display: inline-flex;
     align-items: center;
@@ -1800,33 +1734,6 @@ ul.people button:hover {
   line-height: 1.3;
 }
 
-.info {
-  position: relative;
-  display: inline-flex;
-}
-/* The tooltip itself: dark card, always on top, never wider than a sentence. */
-.tip {
-  position: absolute;
-  top: 26px;
-  left: -8px;
-  z-index: 40;
-  width: max-content;
-  max-width: 260px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--border-2);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  color: var(--text-2);
-  font-size: 12px;
-  line-height: 1.45;
-  white-space: normal;
-  animation: rise 0.14s var(--ease) backwards;
-}
-.tip.right {
-  left: auto;
-  right: -8px;
-}
 @keyframes fadein {
   from {
     opacity: 0;
@@ -1980,14 +1887,6 @@ body[data-mode='full'] .app {
 body[data-mode] .card.overview {
   padding: 0;
 }
-.keyrow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--grid);
-}
 .switch:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -2010,12 +1909,6 @@ body[data-mode] .card.overview {
 .fold:hover {
   color: var(--text);
   background: var(--sunken);
-}
-.card.folded .fold svg {
-  transform: rotate(-90deg);
-}
-.card.folded {
-  padding-bottom: 12px;
 }
 
 /* ---- Notes on the chart ---------------------------------------------------- */
@@ -2682,9 +2575,6 @@ button.kpi-live:hover .label::after {
   gap: 6px 12px;
   flex-wrap: wrap;
 }
-.chart-head .legend {
-  margin-left: auto;
-}
 @media (max-width: 640px) {
   .chart-head > h2 {
     flex: 1 0 100%;
@@ -2827,28 +2717,9 @@ button.kpi-live:hover .label::after {
   }
 }
 
-/* A site that stopped sending visits: said once, above its numbers. */
-.stopped-notice {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, var(--down) 40%, var(--border));
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--down) 7%, var(--surface));
-}
 .tag.danger {
   color: var(--down);
   border-color: color-mix(in srgb, var(--down) 40%, transparent);
-}
-@media (max-width: 640px) {
-  .stopped-notice {
-    grid-template-columns: auto 1fr;
-  }
-  .stopped-notice .btn {
-    grid-column: 1 / -1;
-  }
 }
 
 /* A quiet text button: "Look again", "Or paste its contents". */

@@ -32,7 +32,7 @@ import { ConfirmHost } from "./components/Confirm";
 import { ShortcutsHost } from "./components/ShortcutsHost";
 // A shared link is its own entry point: no setup, no sign-in, one site.
 const SharedSite = lazy(() => import("./views/SharedSite"));
-import { Toasts } from "./components/Toast";
+import { Toasts } from "./components/Toast"; import { Boundary } from "./components/Boundary";
 import "./phone.css"; // last: what it sets on a phone wins over the styles imported before it
 
 try {
@@ -291,6 +291,6 @@ if (!root) throw new Error("index.html has no #root");
 startEarly(); // first requests leave now (lib/earlyStart.ts)
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <Boundary><App /></Boundary>
   </StrictMode>,
 );
