@@ -648,6 +648,7 @@ export interface Person {
   two_step: boolean
   last_seen: number // unix seconds; 0: never signed in
   must_change: boolean // still has a password someone else chose
+  holder: boolean // the first owner: not removed, not made a viewer
   has_avatar: boolean // chose a picture: /people/{id}/avatar
   avatar_v: number // moves when the picture changes: its cache-buster
 }
@@ -814,14 +815,11 @@ export const api = {
   keys: () => call<{ keys: APIKey[] }>('GET', '/keys'),
   heatmap: (site: string, q: ReportQuery) => call<Heatmap>('GET', `/sites/${site}/report/heatmap` + rangeQS(q)),
   funnel: (site: string, q: ReportQuery, steps: FunnelStep[]) => call<{ steps: FunnelResult[] }>('GET', `/sites/${site}/report/funnel` + rangeQS(q) + '&steps=' + encodeURIComponent(JSON.stringify(steps))),
-  goalProps: (site: string, q: ReportQuery, goal: string) =>
-    call<{ goal: string; properties: { value: string; visitors: number }[] }>('GET', `/sites/${site}/report/goal-props` + rangeQS(q) + '&goal=' + encodeURIComponent(goal)),
   journey: (site: string, visitor: string, q: ReportQuery) => call<JourneyResult>('GET', `/sites/${site}/journey/${visitor}` + rangeQS(q)),
   siteConfig: (site: string) => call<SiteConfig>('GET', `/sites/${site}/config`),
   setSiteConfig: (site: string, c: SiteConfig) => call<SiteConfig>('PUT', `/sites/${site}/config`, c),
   alerts: (site: string) => call<{ alerts: Alert[]; kinds: string[]; mail?: boolean }>('GET', `/sites/${site}/alerts`),
   saveAlert: (site: string, a: Partial<Alert>) => call<Alert>('PUT', `/sites/${site}/alerts`, a),
-  deleteAlert: (site: string, id: string) => act('DELETE', `/sites/${site}/alerts/${id}`),
   testAlert: (site: string, target: string) => act('POST', `/sites/${site}/alerts/test`, { target }),
   segments: (site: string) => call<{ segments: Segment[] }>('GET', `/sites/${site}/segments`),
   saveSegment: (site: string, name: string, query: string) => call<Segment>('POST', `/sites/${site}/segments`, { name, query }),
