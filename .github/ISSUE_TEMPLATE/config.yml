@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/trckable/trckable/security/advisories/new
     about: Please do not open a public issue for a vulnerability.
   - name: Documentation
-    url: https://trckable.com/docs/
+    url: https://docs.trckable.com/
     about: How to install, configure and use trckable.
