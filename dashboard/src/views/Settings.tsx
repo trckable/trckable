@@ -1,7 +1,8 @@
 import { Activity, Bell, Blocks, Check, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, LayoutTemplate, RefreshCw, Search, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { isViewer } from '../lib/me'
-import { api, messageOf, siteState, type InstallCheck, type Site, type SiteState } from '../lib/api'
+import { api, siteState, fail, type InstallCheck, type Site, type SiteState } from '../lib/api'
+import { words } from '../lib/errors'
 import { Window, type WindowTab } from '../components/Window'
 import { SettingsHead } from './SettingsHead'
 import { SiteMark } from '../components/SiteMark'
@@ -81,7 +82,7 @@ function ModuleOff({ site, tab, onOn }: { site: Site; tab: TabID; onOn: () => vo
             api
               .setModule(site.id, id, true)
               .then(onOn)
-              .catch((e: unknown) => toast(messageOf(e), 'error'))
+              .catch((e: unknown) => fail(e))
               .finally(() => setBusy(false))
           }}
         >
@@ -187,7 +188,7 @@ function InstallSection({ site }: { site: Site }) {
     const t0 = Date.now()
     const wait = (ms: number) => new Promise((r) => setTimeout(r, Math.max(0, ms - (Date.now() - t0))))
     setPend({ page: true, visits })
-    const pageP = api.checkInstall(site.id).catch((e: unknown): InstallCheck => ({ url: `https://${site.domain}/`, scripts: 0, error: messageOf(e) }))
+    const pageP = api.checkInstall(site.id).catch((e: unknown): InstallCheck => ({ url: `https://${site.domain}/`, scripts: 0, error: words(e) }))
     const lastP = visits ? latest() : null
     const [pg] = await Promise.all([pageP, wait(750)])
     setPage(pg)
@@ -372,7 +373,6 @@ const STATE_TEXT: Record<SiteState, string> = { live: 'Receiving visits', quiet:
 function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
   const [name, setName] = useState(site.name)
   const [saved, flash] = useSaved()
-  const [err, setErr] = useState<string | null>(null)
   const save = (patch: { name?: string; timezone?: string; currency?: string }) =>
     api
       .updateSite(site.id, { name, ...patch })
@@ -380,7 +380,7 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
         flash()
         onSaved()
       })
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => fail(e))
 
   const state = siteState(site)
   const stateText = STATE_TEXT[state]
@@ -463,11 +463,6 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
         </Row>
       )}
 
-      {err && (
-        <span role="alert" style={{ color: 'var(--down)', fontSize: 13, paddingTop: 10 }}>
-          {err}
-        </span>
-      )}
     </section>
     </>
   )
@@ -483,10 +478,8 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
   const colourTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const [cropping, setCropping] = useState<File | null>(null)
   const [busy, setBusy] = useState<'favicon' | 'remove' | null>(null)
-  const [err, setErr] = useState<string | null>(null)
   const act = (what: 'favicon' | 'remove', run: () => Promise<unknown>, said: string) => {
     setBusy(what)
-    setErr(null)
     // At least a moment of "Looking…": a quick no used to look like nothing.
     const t0 = Date.now()
     const settled = (fn: () => void) => setTimeout(fn, Math.max(0, 600 - (Date.now() - t0)))
@@ -500,7 +493,7 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
       )
       .catch((e: unknown) =>
         settled(() => {
-          setErr(messageOf(e))
+          fail(e)
           setBusy(null)
         }),
       )
@@ -537,12 +530,6 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
           </button>
         )}
       </Row>
-      {err && (
-        <p className="look-err" role="alert">
-          <TriangleAlert size={15} strokeWidth={1.75} aria-hidden="true" />
-          {err}
-        </p>
-      )}
       <Row label="Colour" hint="The site's letter and marks, when it has no icon">
         <div className="swatches" role="radiogroup" aria-label="Colour">
           {SWATCHES.map((c) => (
@@ -554,7 +541,7 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
               aria-label={c}
               className="swatch"
               style={{ backgroundColor: c }}
-              onClick={() => api.setSiteColor(site.id, c).then(onSaved).catch((e: unknown) => toast(messageOf(e), 'error'))}
+              onClick={() => api.setSiteColor(site.id, c).then(onSaved).catch((e: unknown) => fail(e))}
             />
           ))}
           <label className="swatch custom" title="Another colour">
@@ -567,14 +554,14 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
                 const c = e.target.value
                 clearTimeout(colourTimer.current)
                 colourTimer.current = setTimeout(() => {
-                  api.setSiteColor(site.id, c).then(onSaved).catch((err: unknown) => toast(messageOf(err), 'error'))
+                  api.setSiteColor(site.id, c).then(onSaved).catch((err: unknown) => fail(err))
                 }, 400)
               }}
               aria-label="Another colour"
             />
           </label>
           {site.color && (
-            <button type="button" className="btn ghost small" onClick={() => api.setSiteColor(site.id, '').then(onSaved).catch((e: unknown) => toast(messageOf(e), 'error'))}>
+            <button type="button" className="btn ghost small" onClick={() => api.setSiteColor(site.id, '').then(onSaved).catch((e: unknown) => fail(e))}>
               None
             </button>
           )}

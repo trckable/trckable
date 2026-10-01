@@ -188,26 +188,6 @@
   cursor: pointer;
 }
 
-/* Why the favicon could not be used, under its row rather than in a toast. */
-.look-err {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--grid));
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--warn) 8%, transparent);
-  color: var(--text-2);
-  font-size: 12.5px;
-  animation: fadein 0.2s var(--ease) backwards;
-}
-.look-err svg {
-  flex: none;
-  margin-top: 1px;
-  color: var(--warn);
-}
-
 .icon-tile.warn {
   border-color: color-mix(in srgb, var(--warn) 40%, transparent);
   background: color-mix(in srgb, var(--warn) 12%, transparent);

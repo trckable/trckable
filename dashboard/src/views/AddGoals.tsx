@@ -9,7 +9,7 @@ import { Field } from '../components/Field'
 import { Modal } from '../components/Modal'
 import { CodeBlock } from '../components/Code'
 import { OptionCards, type Option } from '../components/OptionCards'
-import { api, messageOf, type ContentGroup, type SiteConfig, type Site } from '../lib/api'
+import { api, fail, type ContentGroup, type SiteConfig, type Site } from '../lib/api'
 import { isViewer } from '../lib/me'
 import { toast } from '../components/Toast'
 import { copy } from './addGoalsCopy'
@@ -75,7 +75,7 @@ function PageGoals({ site, pages, onChanged, onClose }: { site: Site; pages: str
         toast(said)
         onChanged()
       })
-      .catch((e: unknown) => toast(messageOf(e), 'error'))
+      .catch((e: unknown) => fail(e))
       .finally(() => setBusy(false))
   }
   const add = () => {

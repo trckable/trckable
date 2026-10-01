@@ -2,7 +2,8 @@
 // the same dashboard, with everything that writes taken away — and the server
 // is the one enforcing that, not this file.
 import { useEffect, useState, type SubmitEvent } from 'react'
-import { APIError, api, messageOf, setShareMode, type ShareInfo, setShareSession } from '../lib/api'
+import { APIError, api, setShareMode, setShareSession, fail, refused, wrong, type ShareInfo } from '../lib/api'
+import { words } from '../lib/errors'
 import { isEmbed, openShare, shareToken } from '../lib/earlyStart'
 import { setShared } from '../lib/me'
 import { Ghost, Name, Wordmark } from '../components/Logo'
@@ -35,7 +36,7 @@ export function useShare(): State {
     const open = openShare()
     open.then(done).catch((e: unknown) => {
       if (e instanceof APIError && e.status === 401) return setS({ state: 'password' })
-      setS({ state: 'error', message: messageOf(e) })
+      setS({ state: 'error', message: words(e) })
     })
   }, [])
   return s
@@ -57,7 +58,7 @@ export function SharePassword({ onOpen, error }: { onOpen: (info: ShareInfo) => 
         opened(info)
         onOpen(info)
       })
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => (refused(e) ? setErr(wrong) : fail(e)))
       .finally(() => setBusy(false))
   }
   return (

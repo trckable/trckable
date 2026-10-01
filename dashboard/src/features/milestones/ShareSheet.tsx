@@ -3,7 +3,7 @@
 // Money shows its amount only once "Show amount" is on; it starts off.
 import { Download, Image as ImageIcon, Link2, Link2Off, Mail, Moon, Sun, X } from 'lucide-react'
 import { useState } from 'react'
-import { messageOf, type Milestone, type Site } from '../../lib/api'
+import { fail, type Milestone, type Site } from '../../lib/api'
 import { shareApi } from './share'
 import { isViewer } from '../../lib/me'
 import { Modal } from '../../components/Modal'
@@ -35,7 +35,7 @@ export function ShareSheet({ site, m, onClose, onChanged }: { site: Site; m: Mil
         onChanged()
         return navigator.clipboard?.writeText(r.url).then(() => toast(copy.copied))
       })
-      .catch((e: unknown) => toast(messageOf(e), 'error'))
+      .catch((e: unknown) => fail(e))
   const revoke = () =>
     shareApi
       .revoke(site.id, m)
@@ -45,7 +45,7 @@ export function ShareSheet({ site, m, onClose, onChanged }: { site: Site; m: Mil
         onChanged()
         toast(copy.revoked)
       })
-      .catch((e: unknown) => toast(messageOf(e), 'error'))
+      .catch((e: unknown) => fail(e))
   const ThemeIcon = theme === 'dark' ? Sun : Moon
   return (
     <Modal label={copy.sheet} className="ms-modal ms-sheet" onClose={onClose}>
@@ -80,7 +80,7 @@ export function ShareSheet({ site, m, onClose, onChanged }: { site: Site; m: Mil
           {copy.download}
         </a>
         {typeof ClipboardItem !== 'undefined' && (
-          <button type="button" className="btn" onClick={() => copyImage(card('png')).then(() => toast(copy.imageCopied), (e: unknown) => toast(messageOf(e), 'error'))}>
+          <button type="button" className="btn" onClick={() => copyImage(card('png')).then(() => toast(copy.imageCopied), (e: unknown) => fail(e))}>
             <ImageIcon size={15} strokeWidth={1.75} aria-hidden="true" />
             {copy.copyImage}
           </button>

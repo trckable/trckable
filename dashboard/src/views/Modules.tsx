@@ -7,7 +7,8 @@ import { DialogHead } from '../components/DialogHead'
 import { Modal } from '../components/Modal'
 import { useEffect, useState } from 'react'
 import { ModuleArt } from '../components/ModuleArt'
-import { api, messageOf, type ModuleInfo, type ScriptInfo, type Site } from '../lib/api'
+import { api, fail, type ModuleInfo, type ScriptInfo, type Site } from '../lib/api'
+import { words } from '../lib/errors'
 import './Modules.css'
 import { Loading } from '../components/loading/Loading'
 import { canChange } from '../lib/me'
@@ -34,7 +35,7 @@ export function ModulesSettings({ site }: { site: Site }) {
     setScript(d.script)
   }
   useEffect(() => {
-    api.modules(site.id).then(take).catch((e: unknown) => setErr(messageOf(e)))
+    api.modules(site.id).then(take).catch((e: unknown) => setErr(words(e)))
   }, [site.id])
 
   const apply = (m: ModuleInfo, enabled: boolean) => {
@@ -43,7 +44,7 @@ export function ModulesSettings({ site }: { site: Site }) {
     api
       .setModule(site.id, m.id, enabled)
       .then(take)
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => fail(e))
       .finally(() => setBusy(''))
   }
 

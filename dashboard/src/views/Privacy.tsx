@@ -4,7 +4,8 @@
 import { Clock, Cookie, Cookie as CookieIcon, EyeOff, MapPin, ShieldCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Switch } from '../components/Switch'
-import { api, messageOf, type BannerText, type ContentGroup, type PersonFound, type PersonPayment, type Site, type SiteConfig } from '../lib/api'
+import { api, fail, type BannerText, type ContentGroup, type PersonFound, type PersonPayment, type Site, type SiteConfig } from '../lib/api'
+import { words } from '../lib/errors'
 import { Info } from '../components/Info'
 import { Picker } from '../components/Picker'
 import { toast } from '../components/Toast'
@@ -48,7 +49,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
         setC(r)
         setPaths((r.exclude_paths ?? []).join('\n'))
       })
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => setErr(words(e)))
   }, [site.id])
 
   // Which modules are on decides what this site records, so both the banner
@@ -72,7 +73,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
         // The dashboard reads the week's first day and cookieless mode from the site list.
         if ('week_start' in patch || 'consent_free' in patch) onSites?.()
       })
-      .catch((e: unknown) => toast(messageOf(e), 'error'))
+      .catch((e: unknown) => fail(e))
   }
 
   if (err) return <div className="banner">{err}</div>
@@ -531,7 +532,7 @@ export function ReportSettings({ site, onSites }: { site: Site; onSites?: () => 
         toast(said ?? 'Saved')
         if ('week_start' in patch) onSites?.()
       })
-      .catch((e: unknown) => toast(messageOf(e), 'error'))
+      .catch((e: unknown) => fail(e))
   }
   return (
     <>
@@ -599,24 +600,21 @@ function DataRequest({ site }: { site: Site }) {
   // A journey can send someone here with the visitor already in hand.
   const [value, setValue] = useState(() => settingsParam('visitor') ?? '')
   const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
   const [found, setFound] = useState<{ found: PersonFound; payments: PersonPayment[] } | null>(null)
 
   const look = (who = value, how = by) => {
     setBusy(true)
-    setErr(null)
     setFound(null)
     api
       .findPerson(site.id, how, who.trim())
       .then(setFound)
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => fail(e, look))
       .finally(() => setBusy(false))
   }
 
   // Arriving from a visitor's journey: the lookup is why they came.
   useEffect(() => {
     const from = settingsParam('visitor')
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- arriving with a visitor in the URL starts that lookup's fetch, and look() shows it as busy
     if (from) look(from, 'visitor')
     // eslint-disable-next-line react-hooks/exhaustive-deps -- look is a new function each render; the lookup from the URL runs once per site
   }, [site.id])
@@ -656,14 +654,12 @@ function DataRequest({ site }: { site: Site }) {
           <button type="button" aria-pressed={by === 'visitor'} onClick={() => {
               setBy('visitor')
               setFound(null)
-              setErr(null)
             }}>
             Visitor id
           </button>
           <button type="button" aria-pressed={by === 'email'} onClick={() => {
               setBy('email')
               setFound(null)
-              setErr(null)
             }}>
             Email
           </button>
@@ -682,12 +678,6 @@ function DataRequest({ site }: { site: Site }) {
           {busy ? 'Looking…' : 'Look up'}
         </button>
       </div>
-      {err && (
-        <span role="alert" style={{ color: 'var(--down)', fontSize: 13 }}>
-          {err}
-        </span>
-      )}
-
       {found && (
         <div className="request-found">
           <div className="request-facts">

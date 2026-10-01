@@ -11,7 +11,8 @@ import { StepBody } from '../components/StepBody'
 import { Steps } from '../components/Steps'
 import { Ghost } from '../components/Logo'
 import { useEffect, useState } from 'react'
-import { api, messageOf, type PayConnection, type Provider, type Site } from '../lib/api'
+import { api, fail, type PayConnection, type Provider, type Site } from '../lib/api'
+import { words } from '../lib/errors'
 import { navigate } from '../lib/url'
 import { keyPicksMode, modeTag, statusOf, testModeName } from '../lib/payments'
 import { CodeBlock } from '../components/Code'
@@ -35,7 +36,7 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
     api
       .payments(site.id)
       .then(setData)
-      .catch((e: unknown) => setErr(messageOf(e)))
+      .catch((e: unknown) => setErr(words(e)))
   }
   useEffect(() => {
     load()
@@ -76,7 +77,7 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
                   toast(`Revenue is shown in ${currency}`)
                   onSiteChange()
                 })
-                .catch((e: unknown) => toast(messageOf(e), 'error'))
+                .catch((e: unknown) => fail(e))
             }
             items={(CURRENCIES.includes(site.currency) ? CURRENCIES : [site.currency, ...CURRENCIES]).map((c) => ({ id: c, label: c }))}
           />
@@ -285,7 +286,7 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
                 api
                   .syncPayments(site.id, c.id)
                   .then((r) => settle(id, r.added ? `Found ${r.added} new event${r.added > 1 ? 's' : ''}` : 'Up to date — nothing was missed'))
-                  .catch((e: unknown) => settle(id, messageOf(e), 'error'))
+                  .catch((e: unknown) => settle(id, words(e), 'error'))
                   .finally(() => {
                     setBusy('')
                     onChange()
@@ -376,7 +377,6 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
   const [secret, setSecret] = useState('')
   const [shown, setShown] = useState<string | null>(null)
   const [done, setDone] = useState(c.has_secret)
-  const [err, setErr] = useState<string | null>(null)
   const ls = c.provider === 'lemonsqueezy'
   const own = c.provider === 'custom' // our own format: there is no provider to configure
   const steps = own ? ['Where to send', 'How to sign', 'First sale'] : ['Endpoint', 'Events', 'Secret']
@@ -491,9 +491,8 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
                     .then(() => {
                       setSecret('')
                       setDone(true)
-                      setErr(null)
                     })
-                    .catch((e: unknown) => setErr(messageOf(e)))
+                    .catch((e: unknown) => fail(e))
                 }}
               >
                 <p className="muted" style={{ margin: 0 }}>
@@ -505,11 +504,6 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
                     Save
                   </button>
                 </div>
-                {err && (
-                  <span role="alert" style={{ color: 'var(--down)', fontSize: 13 }}>
-                    {err}
-                  </span>
-                )}
               </form>
             )}
             <div className="wiz-actions">
@@ -531,10 +525,8 @@ function Connect({ site, provider, onCancel, onDone }: { site: Site; provider: P
   const [key, setKey] = useState('')
   const [mode, setMode] = useState<'live' | 'test'>('live')
   const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
   const submit = (manual: boolean) => {
     setBusy(true)
-    setErr(null)
     const id = toast(manual ? `Adding ${provider.name}…` : `Connecting ${provider.name} and creating the webhook…`, 'busy')
     api
       .connectPayments(site.id, { provider: provider.id, mode, api_key: manual ? undefined : key.trim() })
@@ -543,8 +535,7 @@ function Connect({ site, provider, onCancel, onDone }: { site: Site; provider: P
         onDone(c)
       })
       .catch((e: unknown) => {
-        setErr(messageOf(e))
-        settle(id, messageOf(e), 'error')
+        settle(id, words(e), 'error')
       })
       .finally(() => setBusy(false))
   }
@@ -559,7 +550,6 @@ function Connect({ site, provider, onCancel, onDone }: { site: Site; provider: P
             <span className="faint">Your own code posts each sale to a URL.</span>
           </div>
         </div>
-        {err && <div role="alert" className="dlg-field-err">{err}</div>}
         <DialogActions left={<button type="button" className="btn ghost" onClick={onCancel}>Cancel</button>}>
           <button type="button" className="btn primary big" disabled={busy} onClick={() => submit(true)}>
             {busy ? 'Setting up…' : 'Give me the URL and secret'}
@@ -593,7 +583,7 @@ function Connect({ site, provider, onCancel, onDone }: { site: Site; provider: P
           </div>
         )}
 
-        <Field label="API key" plain help="Stored encrypted. Used to create the webhook and to check for missed payments." error={err}>
+        <Field label="API key" plain help="Stored encrypted. Used to create the webhook and to check for missed payments.">
           {() => <input className="input num" value={key} onChange={(e) => setKey(e.target.value)} autoComplete="off" spellCheck={false} placeholder={provider.key_hint} aria-label="API key" />}
         </Field>
         <a className="key-link" href={provider.key_url} target="_blank" rel="noreferrer noopener">

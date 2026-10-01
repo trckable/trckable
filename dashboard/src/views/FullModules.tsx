@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Target } from 'lucide-react'
 import { Picker } from '../components/Picker'
-import { api, messageOf, type FunnelResult, type FunnelStep, type ReportQuery, type Row, type Site } from '../lib/api'
+import { api, type FunnelResult, type FunnelStep, type ReportQuery, type Row, type Site } from '../lib/api'
+import { words } from '../lib/errors'
 import { deepCopy } from '../features/cards/deepCopy'
 import { FunnelResult as Result } from '../features/cards/FunnelResult'
 import './FullModules.css'
@@ -41,7 +42,7 @@ export function Funnel({ site, query, pages, goals, steps, onSteps: setSteps }: 
         setRes(d.steps)
         setErr(null)
       })
-      .catch((e: unknown) => live && setErr(messageOf(e)))
+      .catch((e: unknown) => live && setErr(words(e)))
     return () => {
       live = false
     }

@@ -6,7 +6,8 @@ import { Banknote, Bell, CalendarDays, Check, HardDrive, Mail, MessageSquare, Se
 import { useEffect, useState } from 'react'
 import './Alerts.css'
 import { Switch } from '../components/Switch'
-import { api, messageOf, type Alert, type Site } from '../lib/api'
+import { api, fail, type Alert, type Site } from '../lib/api'
+import { words } from '../lib/errors'
 import { toast } from '../components/Toast'
 
 const DAYS = ['Sunday', 'Monday']
@@ -107,7 +108,7 @@ export function AlertsSettings({ site }: { site: Site }) {
         toast(next.enabled ? `${label}: on` : `${label}: off`)
         return load()
       })
-      .catch((e: unknown) => toast(messageOf(e), 'error'))
+      .catch((e: unknown) => fail(e))
   }
 
   // Changing where alerts go has to move the ones already set up, or the URL
@@ -121,7 +122,7 @@ export function AlertsSettings({ site }: { site: Site }) {
         toast(`Alerts now go to ${to.startsWith('mailto:') ? shown(to) : new URL(to).host}`)
         return load()
       })
-      .catch((e: unknown) => toast(messageOf(e), 'error'))
+      .catch((e: unknown) => fail(e))
   }
 
   // Long enough to see it leave, even when the answer is instant.
@@ -136,8 +137,7 @@ export function AlertsSettings({ site }: { site: Site }) {
       })
       .catch(async (e: unknown) => {
         await seen
-        const why = messageOf(e)
-        setTest({ state: 'bad', text: why.charAt(0).toUpperCase() + why.slice(1) })
+        setTest({ state: 'bad', text: words(e) })
       })
   }
   if (!list) return <div className="skeleton" style={{ height: 240 }} />

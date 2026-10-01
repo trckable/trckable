@@ -40,7 +40,7 @@ function Status({ verdict, clean, shown }: { verdict: Verdict; clean: string; sh
   )
 }
 
-export function DomainStep(p: { domain: string; setDomain: (d: string) => void; clean: string; verdict: Verdict; err: string | null; locked: boolean; onSubmit: () => void }) {
+export function DomainStep(p: { domain: string; setDomain: (d: string) => void; clean: string; verdict: Verdict; locked: boolean; onSubmit: () => void }) {
   const [left, setLeft] = useState(false)
   const [tried, setTried] = useState(false)
   const shown = left || tried
@@ -80,11 +80,6 @@ export function DomainStep(p: { domain: string; setDomain: (d: string) => void; 
         <SiteMark site={{ domain: p.clean || p.domain || '?' }} size={28} />
       </label>
       {!p.locked && <Status verdict={p.verdict} clean={p.clean} shown={shown} />}
-      {p.err && (
-        <p className="confirm-err" role="alert">
-          {p.err}
-        </p>
-      )}
     </form>
   )
 }
