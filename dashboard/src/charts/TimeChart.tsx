@@ -4,7 +4,7 @@
 // Revenue joins it two ways, never on a second axis: as a plot of its own
 // under the line (revenue), or in the line's place (tone: money), as columns
 // until nearly every day sells. Pure SVG; animation comes from useTween.
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Annotation, Bucket } from '../lib/api'
 import { markersFor } from '../features/notes/markers'
 import { fmtCompact, fmtInt } from '../lib/format'
@@ -75,6 +75,10 @@ export interface TimeChartProps {
   locked?: boolean
 }
 
+// Replay's playhead (its line, dot and chip) is its own chunk: the first load does not carry it.
+const ReplayLine = lazy(() => import('./ReplayHead').then((m) => ({ default: m.ReplayLine })))
+const ReplayChip = lazy(() => import('./ReplayHead').then((m) => ({ default: m.ReplayChip })))
+
 export type Pulse = { id: string; kind: 'visit' | 'goal' | 'sale'; label?: string }
 
 export function TimeChart(p: TimeChartProps) {
@@ -141,7 +145,7 @@ export function TimeChart(p: TimeChartProps) {
   const scrub = p.scrub ?? null
   const quiet = !p.locked && !drag && hover == null // a picked day is drawn quietly unless hovered, dragged or played
   const dim = !!p.locked || drag || (scrub != null && hover == null) // only these grey the far side of the cut: plain hovering never does
-  const { follow, release, onKey, marker, driven } = useCut({ ref, n, hover, scrub, locked: p.locked, vals, setHover, x, y })
+  const { follow, release, onKey, driven } = useCut({ ref, n, hover, scrub, locked: p.locked, setHover, x })
   const leave = () => { release(); setHover(null); setDrag(false) }
   const pin = usePin(ref, hover != null, leave)
   // Beside the point, never past either edge (on a phone the card is nearly as wide as the chart).
@@ -202,8 +206,8 @@ export function TimeChart(p: TimeChartProps) {
         <YTicks ticks={target.ticks} y={y} w={w} padL={PAD_L} write={p.axis ?? fmtCompact} />
         <line x1={PAD_L} x2={w} y1={PAD_T + plotH} y2={PAD_T + plotH} stroke="var(--border)" />
         {/* While Replay plays, is dragged or has a day picked, what is past the cut goes grey: this copy shows through where the lit one is cut off. */}
-        {dim && !p.story && !columns && <path d={line(vals)} fill="none" stroke="var(--text-4)" strokeOpacity="0.55" strokeWidth="1.5" strokeLinejoin="round" clipPath={`url(#${gradId}-main)`} />}
-        {dim && !p.story && columns && <g clipPath={`url(#${gradId}-main)`}><ColumnsLayer {...cols} id={gradId} values={vals} hover={null} grey /></g>}
+        {dim && !columns && <path d={line(vals)} fill="none" stroke={p.story ? tone : 'var(--text-4)'} strokeOpacity={p.story ? 0.3 : 0.55} strokeWidth="1.5" strokeLinejoin="round" clipPath={`url(#${gradId}-main)`} />}
+        {dim && columns && <g clipPath={`url(#${gradId}-main)`}><ColumnsLayer {...cols} id={gradId} values={vals} hover={null} grey /></g>}
         <g clipPath={`url(#${gradId}-main)`}>
         <g mask={`url(#${gradId}-dim)`}>
         <g style={{ opacity: p.overlay ? 0.35 : 1, transition: 'opacity .12s' }}>
@@ -233,12 +237,7 @@ export function TimeChart(p: TimeChartProps) {
           <circle cx={x(n - 1)} cy={y(vals[n - 1] ?? 0)} r="4" fill="var(--surface)" stroke={tone} strokeWidth="2" aria-hidden="true" />
         )}
         {p.story && <g clipPath={`url(#${gradId}-plot)`}><rect className="chart-dim chart-unknown" x={0} y={PAD_T} width={w + 16} height={plotH + STRIP} /></g>}
-        {/* Replay's day: a solid line at the cut, drawn at the variable so it
-            never lags the grey. The pointer's own cursor is CursorMark. */}
-        {hover == null && <line className="chart-cut is-replay" x1={0} x2={0} y1={0} y2={PAD_T + plotH + STRIP} />}
-        {scrub != null && n > 1 && hover == null && (
-          <circle ref={marker} cx={0} cy={0} transform={driven ? undefined : `translate(${x(scrub)} ${y(vals[scrub] ?? 0)})`} r={quiet ? 4 : 6} fill={tone} stroke="var(--surface)" strokeWidth={quiet ? 2 : 3} />
-        )}
+        {hover == null && <Suspense fallback={null}><ReplayLine id={gradId} tone={tone} bottom={PAD_T + plotH + STRIP} at={scrub != null && n > 1 ? scrub : null} driven={driven} quiet={quiet} x={x} y={y} vals={vals} /></Suspense>}
         {hover != null && <CursorMark x={x(hover)} y={y(vals[hover] ?? 0)} top={0} bottom={PAD_T + plotH + STRIP} tone={money ? 'money' : undefined} dot={!columns} />}
         {peak >= 0 && hover == null && scrub == null && !p.overlay && (
           <PeakLabel x={x(peak)} y={y(vals[peak] ?? 0)} w={w} text={columns ? fmt(p.values[peak]) : timeCopy.peak(fmt(p.values[peak]), bucketLabel(p.labels[peak], p.bucket))} padL={PAD_L} color={tone} dot={!columns} />
@@ -250,6 +249,7 @@ export function TimeChart(p: TimeChartProps) {
       </svg>
       {/* Notes sit on the axis: a flag per day, its words on hover. */}
       <NoteMarkers markers={markers} x={x} top={PAD_T + plotH} width={w} />
+      {hover == null && scrub != null && n > 1 && <Suspense fallback={null}><ReplayChip labels={p.labels} bucket={p.bucket} at={scrub} x={x} width={w} driven={driven} /></Suspense>}
       {hover != null && n > 0 && <TimeTip p={p} i={hover} left={tipAt} width={tipW} compact={compact} notes={markers.find((m) => m.i === hover)?.notes ?? []} />}
       {hover != null && n > 0 && p.onAddNote && <NoteAdd x={x(hover)} day={p.labels[hover].slice(0, 10)} label={bucketLabel(p.labels[hover], p.bucket, true)} onAdd={p.onAddNote} />}
       {/* Live pulse: things arriving now, rising from the last point: decoration on numbers that are already right. */}

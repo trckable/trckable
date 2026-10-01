@@ -1,0 +1,55 @@
+/* Replay's playhead (ReplayHead.tsx): a thin line in the series colour,
+   brightest at the axis and gone at the top, with a soft glow; a dot with a
+   ring on the line's value, and a chip naming the moment, in the hover
+   card's glass. The line's gradient is TimeDefs'. */
+.chart-cut {
+  stroke-width: 1.5;
+  pointer-events: none;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+.chart-wrap[data-quiet] .chart-cut {
+  filter: none;
+}
+.replay-ring {
+  fill-opacity: 0.14;
+  stroke-opacity: 0.4;
+  stroke-width: 1;
+  pointer-events: none;
+}
+.replay-chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border-2);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--shadow);
+  color: var(--text-2);
+  font-size: 11.5px;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: transform 0.12s ease-out;
+}
+/* No glide while the playhead moves it (it is already continuous), nor before the cut is on. */
+.chart-wrap:not([data-cut='on']) .replay-chip {
+  transition: none;
+}
+.chart-wrap[data-quiet] .replay-chip {
+  color: var(--text-3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .replay-chip {
+    transition: none;
+  }
+}
+@media (max-width: 640px) {
+  :root .replay-chip {
+    padding: 3px 10px;
+    font-size: 12px;
+  }
+}

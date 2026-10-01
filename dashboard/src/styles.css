@@ -827,11 +827,6 @@ textarea:focus-visible {
 .chart-wrap:not([data-cut='on']) .chart-cut {
   transition: none;
 }
-.chart-cut {
-  stroke: var(--text);
-  stroke-width: 1.5;
-  pointer-events: none;
-}
 /* A day picked or paused (no pointer, drag or playback): the same cut, quiet
    (a dashed hairline and a small dot; the far side is grey as in playback). */
 .chart-wrap[data-quiet] .chart-cut {

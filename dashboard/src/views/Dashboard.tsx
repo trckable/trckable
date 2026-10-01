@@ -409,7 +409,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // Revenue is what src says (a followed channel's own, like the tiles), by the hour what that hour says.
   const revenue = (hours ? chartSeries : (src?.series ?? [])).map((p) => p.revenue ?? 0)
   const values = metricValues(metric, { series: chartSeries, revenue, days: cur?.days })
-  const { raced, follow } = useRaceNow({ src, dates: series.map((p) => p.t.slice(0, 10)), hourSeries: chartSeries, hours: !!hours, hourAt, idx: scrubIdx, telling, racing, playing })
+  const { raced, follow, blank } = useRaceNow({ src, dates: series.map((p) => p.t.slice(0, 10)), hourSeries: chartSeries, hours: !!hours, hourAt, idx: scrubIdx, telling, racing, playing })
   if (raced) [k, dayRev] = [raced.kpis, raced.revenue]
   const revenueNow = dayRev ?? money?.revenue
   const conv = scrubbing ? undefined : money?.conversion
@@ -559,7 +559,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       <section className="card overview" aria-label="Overview">
       <KpiStrip
         loading={firstLoad} vs={vs} metric={metric} can={canDraw} onPick={pick} expectMoney={hold.revenue}
-        k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} site={site}
+        k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} blank={blank} site={site}
         // A shared page has no live stream, so it says where the number comes from instead of waiting to connect forever.
         online={<OnlineKpi online={online} canOpen={!isShared()} note={stream.connected || isShared() ? entryCopy.onlineNote : entryCopy.connecting} />}
       />

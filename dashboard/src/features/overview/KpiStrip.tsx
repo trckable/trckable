@@ -28,6 +28,8 @@ interface Props {
   rpv?: number
   /** Makes a tile a function of Replay's playhead while it plays. */
   follow: (f: (r: { kpis: KPIs; revenue: number }) => number) => ((pos: number) => number) | undefined
+  /** While Replay has not reached a first visit: those tiles show a dash. */
+  blank?: (pos: number) => boolean
   /** Revenue, Conversion and Per visitor keep their places while the report loads, so the strip does not reflow when it arrives. */
   expectMoney?: boolean
   /** Online now, last. */
@@ -49,6 +51,7 @@ export function KpiStrip(p: Props) {
       icon={key}
       value={value}
       live={o.live && p.follow(o.live)}
+      blank={o.live && p.blank}
       fmt={fmt}
       d={d}
       money={o.money}
