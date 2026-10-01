@@ -13,6 +13,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -196,8 +197,12 @@ func (r *Remote) List(ctx context.Context) ([]string, error) {
 				names = append(names, name)
 			}
 		}
-		if !page.Truncated || page.Next == "" {
+		if !page.Truncated {
 			break
+		}
+		if page.Next == "" {
+			// Half a listing would make the newest copy look like an old one.
+			return nil, fmt.Errorf("the bucket's listing says it goes on, but gives no way to continue it")
 		}
 		token = page.Next
 	}
@@ -205,19 +210,60 @@ func (r *Remote) List(ctx context.Context) ([]string, error) {
 	return names, nil
 }
 
-// Prune deletes remote backups older than keep, but never the newest one:
-// a server that stopped writing backups must not delete its last.
-func (r *Remote) Prune(ctx context.Context, keep time.Duration, now time.Time) (int, error) {
+// KeepAll is how far back the bucket keeps every copy. Older ones are thinned
+// to the newest of each UTC day (see Thin).
+const KeepAll = 7 * 24 * time.Hour
+
+// Thin says which of the named backups to delete. Every copy from the last
+// KeepAll stays; older ones stay only as the newest of their UTC day, up to
+// keep; beyond keep they go. The newest copy is never named, however old, and
+// a name that does not carry a time is left alone.
+func Thin(names []string, keep time.Duration, now time.Time) []string {
+	type entry struct {
+		name string
+		at   time.Time
+	}
+	var all []entry
+	newest := -1
+	lastOfDay := map[string]time.Time{}
+	for _, name := range names {
+		at, ok := backupTime(name)
+		if !ok {
+			continue
+		}
+		all = append(all, entry{name, at})
+		if newest < 0 || at.After(all[newest].at) {
+			newest = len(all) - 1
+		}
+		if day := at.Format("20060102"); at.After(lastOfDay[day]) {
+			lastOfDay[day] = at
+		}
+	}
+	var out []string
+	for i, c := range all {
+		age := now.Sub(c.at)
+		switch {
+		case i == newest, age <= KeepAll && age <= keep:
+		case age > keep, !c.at.Equal(lastOfDay[c.at.Format("20060102")]):
+			out = append(out, c.name)
+		}
+	}
+	return out
+}
+
+// Prune deletes the remote backups Thin names. fresh is the copy just
+// uploaded: a listing that does not show it is partial, and nothing is
+// deleted from a partial listing, nor when the listing fails.
+func (r *Remote) Prune(ctx context.Context, keep time.Duration, now time.Time, fresh string) (int, error) {
 	names, err := r.List(ctx)
 	if err != nil {
 		return 0, err
 	}
+	if fresh != "" && !slices.Contains(names, fresh) {
+		return 0, fmt.Errorf("the bucket's listing does not show %s, so nothing was removed", fresh)
+	}
 	removed := 0
-	for i, name := range names {
-		at, ok := backupTime(name)
-		if i == 0 || !ok || now.Sub(at) <= keep {
-			continue
-		}
+	for _, name := range Thin(names, keep, now) {
 		req, err := r.request(ctx, http.MethodDelete, r.Prefix+name, nil, nil, emptyHash)
 		if err != nil {
 			return removed, err

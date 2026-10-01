@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -132,7 +134,7 @@ func TestRemoteUploadListPrune(t *testing.T) {
 	if err != nil || len(names) != 4 || names[0] != "trckable-20260923-030000.tkb" {
 		t.Fatalf("list: %v %v", names, err)
 	}
-	n, err := r.Prune(context.Background(), 30*24*time.Hour, now)
+	n, err := r.Prune(context.Background(), 30*24*time.Hour, now, "trckable-20260923-030000.tkb")
 	if err != nil || n != 2 {
 		t.Fatalf("pruned %d, %v", n, err)
 	}
@@ -141,7 +143,7 @@ func TestRemoteUploadListPrune(t *testing.T) {
 	}
 	// The newest backup is never pruned, however old it is.
 	later := now.AddDate(1, 0, 0)
-	if n, _ := r.Prune(context.Background(), 30*24*time.Hour, later); n != 1 {
+	if n, _ := r.Prune(context.Background(), 30*24*time.Hour, later, ""); n != 1 {
 		t.Fatalf("pruned %d a year later, want 1 (keeping the newest)", n)
 	}
 	if names, _ := r.List(context.Background()); len(names) != 1 {
@@ -177,5 +179,94 @@ func TestRemoteDownload(t *testing.T) {
 		if _, err := r.Download(context.Background(), bad, dir); err == nil {
 			t.Fatalf("took %q as a backup name", bad)
 		}
+	}
+}
+
+// Thin keeps every copy of the last seven days, the newest copy of each UTC
+// day after that up to the keep limit, and the newest copy always.
+func TestThin(t *testing.T) {
+	now := time.Date(2026, 9, 23, 12, 0, 0, 0, time.UTC)
+	const day = 24 * time.Hour
+	name := func(at time.Time) string { return "trckable-" + at.Format("20060102-150405") + ".tkb" }
+	ago := func(d time.Duration) string { return name(now.Add(-d)) }
+	for _, c := range []struct {
+		what  string
+		names []string
+		keep  time.Duration
+		gone  []string
+	}{
+		{"an empty list", nil, 30 * day, nil},
+		{"the last seven days are all kept", []string{ago(0), ago(2 * time.Hour), ago(day), ago(day + time.Hour), ago(6 * day)}, 30 * day, nil},
+		{"one copy a day after seven days", []string{ago(0), ago(8 * day), ago(8*day + time.Hour), ago(8*day + 2*time.Hour), ago(9 * day), ago(9*day + time.Hour)}, 30 * day,
+			[]string{ago(8*day + time.Hour), ago(8*day + 2*time.Hour), ago(9*day + time.Hour)}},
+		{"the newest of a UTC day, not the first listed", []string{ago(0), name(time.Date(2026, 9, 10, 1, 0, 0, 0, time.UTC)), name(time.Date(2026, 9, 10, 23, 0, 0, 0, time.UTC)), name(time.Date(2026, 9, 10, 9, 0, 0, 0, time.UTC))}, 30 * day,
+			[]string{name(time.Date(2026, 9, 10, 1, 0, 0, 0, time.UTC)), name(time.Date(2026, 9, 10, 9, 0, 0, 0, time.UTC))}},
+		{"beyond the keep limit they go", []string{ago(0), ago(20 * day), ago(31 * day), ago(90 * day)}, 30 * day, []string{ago(31 * day), ago(90 * day)}},
+		{"a keep limit under seven days wins", []string{ago(0), ago(2 * day), ago(5 * day)}, 3 * day, []string{ago(5 * day)}},
+		{"the newest is never deleted", []string{ago(400 * day), ago(500 * day)}, 30 * day, []string{ago(500 * day)}},
+		{"the newest of a day in the window outlives older copies of that day", []string{ago(7*day - time.Hour), ago(7*day + time.Hour), ago(0)}, 30 * day, []string{ago(7*day + time.Hour)}},
+		{"names without a time are left alone", []string{ago(0), "trckable-latest.tkb", "notes.tkb", "trckable-2026-09-01.tkb", ago(60 * day)}, 30 * day, []string{ago(60 * day)}},
+		{"only names without a time", []string{"a.tkb", "b.tkb"}, 30 * day, nil},
+	} {
+		got := Thin(c.names, c.keep, now)
+		sort.Strings(got)
+		want := append([]string(nil), c.gone...)
+		sort.Strings(want)
+		if !slices.Equal(got, want) {
+			t.Errorf("%s: deleted %v, want %v", c.what, got, want)
+		}
+	}
+}
+
+// A bucket that is thinned keeps its days and loses the rest, and a listing
+// that cannot be trusted deletes nothing.
+func TestRemotePruneThinsAndTrustsOnlyAWholeListing(t *testing.T) {
+	now := time.Date(2026, 9, 23, 12, 0, 0, 0, time.UTC)
+	fake := &fakeS3{objects: map[string][]byte{}}
+	for _, at := range []time.Time{now, now.Add(-time.Hour), now.Add(-9 * 24 * time.Hour), now.Add(-9*24*time.Hour - time.Hour), now.Add(-10 * 24 * time.Hour)} {
+		fake.objects["tk/trckable-"+at.Format("20060102-150405")+".tkb"] = []byte("b")
+	}
+	srv := httptest.NewServer(fake)
+	defer srv.Close()
+	r, err := ParseRemote(strings.Replace(srv.URL, "http://", "http://k:s@", 1) + "/bucket/tk")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	fresh := "trckable-" + now.Format("20060102-150405") + ".tkb"
+	if _, err := r.Prune(ctx, 30*24*time.Hour, now, "trckable-20990101-000000.tkb"); err == nil || len(fake.objects) != 5 {
+		t.Fatalf("pruned a listing without the fresh copy: %v, %d left", err, len(fake.objects))
+	}
+	n, err := r.Prune(ctx, 30*24*time.Hour, now, fresh)
+	if err != nil || n != 1 || len(fake.objects) != 4 {
+		t.Fatalf("pruned %d, %v, %d left", n, err, len(fake.objects))
+	}
+	if _, ok := fake.objects["tk/trckable-20260913-110000.tkb"]; ok {
+		t.Fatal("kept the older copy of a day")
+	}
+
+	// A listing that stops without saying where it goes on is half a listing.
+	partial := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if req.Method == http.MethodDelete {
+			t.Error("deleted from a partial listing")
+		}
+		_, _ = io.WriteString(w, `<ListBucketResult><IsTruncated>true</IsTruncated><Contents><Key>tk/trckable-20240101-000000.tkb</Key></Contents></ListBucketResult>`)
+	}))
+	defer partial.Close()
+	p, _ := ParseRemote(strings.Replace(partial.URL, "http://", "http://k:s@", 1) + "/bucket/tk")
+	if n, err := p.Prune(ctx, 24*time.Hour, now, ""); err == nil || n != 0 {
+		t.Fatalf("a partial listing: %d, %v", n, err)
+	}
+	// And one that fails outright.
+	down := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if req.Method == http.MethodDelete {
+			t.Error("deleted after a failed listing")
+		}
+		http.Error(w, "boom", http.StatusInternalServerError)
+	}))
+	defer down.Close()
+	d, _ := ParseRemote(strings.Replace(down.URL, "http://", "http://k:s@", 1) + "/bucket/tk")
+	if n, err := d.Prune(ctx, 24*time.Hour, now, ""); err == nil || n != 0 {
+		t.Fatalf("a failed listing: %d, %v", n, err)
 	}
 }
