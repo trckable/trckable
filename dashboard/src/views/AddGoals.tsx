@@ -13,6 +13,7 @@ import { api, messageOf, type ContentGroup, type SiteConfig, type Site } from '.
 import { isViewer } from '../lib/me'
 import { toast } from '../components/Toast'
 import { copy } from './addGoalsCopy'
+import { goalCode } from './goalCode'
 import './AddGoals.css'
 
 type Route = 'page' | 'html' | 'js' | 'api'
@@ -28,23 +29,7 @@ export function AddGoals({ site, pages, onClose, onChanged }: { site: Site; page
   const [route, setRoute] = useState<Route>('page')
   const host = location.origin
 
-  const code: Record<Exclude<Route, 'page'>, string> = {
-    html: `<button data-trckable-goal="signup">Create account</button>
-
-<!-- with properties -->
-<button data-trckable-goal="signup" data-trckable-plan="pro">Go pro</button>`,
-    js: `// after the thing actually succeeded
-trckable('goal', 'signup', { plan: 'pro' })
-
-// or from the npm package
-import { track } from 'trckable'
-track('signup', { plan: 'pro' })`,
-    api: `curl -X POST ${host}/api/e \\
-  -H 'content-type: application/json' \\
-  -d '{"s":"${site.id}","u":"https://${site.domain}/welcome",
-       "e":"goal","n":"signup","p":{"plan":"pro"},
-       "id":"<visitor id from the cookie>","pv":"<pageview id>"}'`,
-  }
+  const code = goalCode(host, site)
 
   return (
     <Modal label={copy.label} className="wide" onClose={onClose}>
