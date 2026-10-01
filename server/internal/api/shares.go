@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +12,7 @@ import (
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/modules"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
+	"github.com/trckable/trckable/server/internal/weburl"
 )
 
 // A link to one site's numbers for someone with no account. Everything it may
@@ -185,7 +185,7 @@ func (a *API) openShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.init()
-	if !a.loginRate.allow("share:"+a.ip(r), a.Now(), 30, 10*time.Minute) {
+	if !a.loginRate.allow("share:"+a.ip(r), a.Now(), a.ipMax(r, 30), 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")
 		return
 	}
@@ -201,13 +201,20 @@ func (a *API) openShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Wrong passwords are counted per link as well: the limit per address
-	// alone lets many addresses guess one link's password without end. Only
-	// real links with a password count (the key is the token's hash), so
-	// this stays as small as the number of such links.
-	guesses := "sharepw:" + hex.EncodeToString(auth.Hash(strings.TrimSpace(in.Token)))
-	if a.loginRate.full(guesses, a.Now(), sharePasswordTries, 10*time.Minute) && !a.openedHere(r, in.Token) {
-		fail(w, http.StatusTooManyRequests, "too many wrong passwords for this link: try again in a few minutes")
-		return
+	// alone lets many addresses (or a wider ceiling behind a proxy) guess one
+	// link's password without end. Only real links with a password count (the
+	// key is the token's hash), so this stays as small as the number of such
+	// links. The slot is taken before the password is checked, so a burst
+	// cannot all pass; a right password gives it back.
+	guess := limit{"sharepw:" + hex.EncodeToString(auth.Hash(strings.TrimSpace(in.Token))), sharePasswordTries, 10 * time.Minute}
+	now := a.Now()
+	reserved := false
+	if in.Password != "" && !a.openedHere(r, in.Token) {
+		if !a.loginRate.reserve(now, guess) {
+			fail(w, http.StatusTooManyRequests, "too many wrong passwords for this link: try again in a few minutes")
+			return
+		}
+		reserved = true
 	}
 	// A reload of /s/<token> arrives without the password: the session this
 	// browser already holds on the same link answers for it.
@@ -216,14 +223,11 @@ func (a *API) openShare(w http.ResponseWriter, r *http.Request) {
 	if !held || in.Password != "" {
 		sh, err = a.Ctl.OpenShare(r.Context(), in.Token, in.Password, a.Now())
 	}
+	if reserved && !errors.Is(err, auth.ErrBadLogin) {
+		a.loginRate.release(now, guess)
+	}
 	if busy(w, err) {
 		return
-	}
-	switch {
-	case err == nil && in.Password != "":
-		a.loginRate.clear(guesses)
-	case errors.Is(err, auth.ErrBadLogin):
-		a.loginRate.record(guesses, a.Now())
 	}
 	switch {
 	case errors.Is(err, sqlite.ErrNeedsPassword):
@@ -434,7 +438,8 @@ func (a *API) ShareFromSession(r *http.Request, session string) (sqlite.Share, e
 }
 
 // embedOrigins checks the sites a link may be embedded on: an origin each,
-// https (http only for localhost), no path, at most a handful.
+// https (http only for localhost), no path, a plain host (the value goes
+// into a Content-Security-Policy header), at most a handful.
 func embedOrigins(in []string) ([]string, error) {
 	var out []string
 	for _, raw := range in {
@@ -442,12 +447,11 @@ func embedOrigins(in []string) ([]string, error) {
 		if raw == "" {
 			continue
 		}
-		u, err := url.Parse(raw)
-		local := err == nil && (u.Hostname() == "localhost" || u.Hostname() == "127.0.0.1")
-		if err != nil || u.Host == "" || (u.Scheme != "https" && (u.Scheme != "http" || !local)) || (u.Path != "" && u.Path != "/") || u.RawQuery != "" || u.User != nil {
+		origin, ok := weburl.Origin(raw)
+		if !ok {
 			return nil, fmt.Errorf("%q is not a site address: use one like https://example.com", raw)
 		}
-		out = append(out, u.Scheme+"://"+u.Host)
+		out = append(out, origin)
 	}
 	if len(out) > sqlite.MaxEmbedOrigins {
 		return nil, fmt.Errorf("a link can be embedded on %d sites at most", sqlite.MaxEmbedOrigins)
