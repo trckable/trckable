@@ -200,6 +200,38 @@ func (s *Store) DisableTwoStep(ctx context.Context, id string) error {
 	return err
 }
 
+// DisableTwoStepIn is an owner turning it off for someone else: only for a
+// person of the account whose every membership is in it, checked in the same
+// transaction as the change, so they cannot join another account in between.
+// ErrNotFound: not in the account; ErrElsewhere: in other accounts too.
+func (s *Store) DisableTwoStepIn(ctx context.Context, account, id string) error {
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	list, err := membershipsOf(ctx, tx, id)
+	if err != nil {
+		return err
+	}
+	here := false
+	for _, m := range list {
+		if m.Account == account {
+			here = true
+		}
+	}
+	if !here {
+		return auth.ErrNotFound
+	}
+	if len(list) > 1 {
+		return ErrElsewhere
+	}
+	if _, err := tx.ExecContext(ctx, `UPDATE users SET totp_enabled = 0, totp_secret = '', totp_pending = '', recovery = '', totp_last_step = 0 WHERE id = ?`, id); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 // CheckSecondStep accepts an authenticator code or one recovery code, which is
 // then used up.
 func (s *Store) CheckSecondStep(ctx context.Context, id, code string, now func() int64) error {

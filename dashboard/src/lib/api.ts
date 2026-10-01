@@ -648,6 +648,7 @@ export interface Person {
   two_step: boolean
   last_seen: number // unix seconds; 0: never signed in
   must_change: boolean // still has a password someone else chose
+  holder: boolean // the first owner: not removed, not made a viewer
   has_avatar: boolean // chose a picture: /people/{id}/avatar
   avatar_v: number // moves when the picture changes: its cache-buster
 }

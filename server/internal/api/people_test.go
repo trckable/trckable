@@ -77,7 +77,8 @@ func TestTheLastOwnerStays(t *testing.T) {
 		t.Fatalf("removing yourself: %d", code)
 	}
 
-	// With a second owner, either may step down.
+	// With a second owner, the first still keeps their place; the second may
+	// step down.
 	code, out := do(t, c, "POST", g.srv.URL+"/api/v1/people", `{"email":"two@site.com","role":"owner"}`, csrf, "1")
 	if code != http.StatusCreated {
 		t.Fatalf("add owner: %d %v", code, out)
@@ -85,11 +86,22 @@ func TestTheLastOwnerStays(t *testing.T) {
 	if len(list()) != 2 {
 		t.Fatal("the new owner is missing from the list")
 	}
-	if code, _ := do(t, c, "PATCH", g.srv.URL+"/api/v1/people/"+me["id"].(string), `{"role":"viewer"}`, csrf, "1"); code != 200 {
+	if list()[0].(map[string]any)["holder"] != true {
+		t.Fatal("the first owner is not marked as the holder")
+	}
+	if code, _ := do(t, c, "PATCH", g.srv.URL+"/api/v1/people/"+me["id"].(string), `{"role":"viewer"}`, csrf, "1"); code != http.StatusConflict {
+		t.Fatalf("stepping down as the first owner: %d", code)
+	}
+	two := signInFirst(t, g, "two@site.com", out["password"].(string))
+	if code, _ := do(t, two, "DELETE", g.srv.URL+"/api/v1/people/"+me["id"].(string), "", csrf, "1"); code != http.StatusConflict {
+		t.Fatalf("removing the first owner: %d", code)
+	}
+	secondID := out["person"].(map[string]any)["id"].(string)
+	if code, _ := do(t, two, "PATCH", g.srv.URL+"/api/v1/people/"+secondID, `{"role":"viewer"}`, csrf, "1"); code != 200 {
 		t.Fatalf("stepping down beside another owner: %d", code)
 	}
 	// And the moment they step down, this list is no longer theirs to read.
-	if code, _ := do(t, c, "GET", g.srv.URL+"/api/v1/people", ""); code != http.StatusForbidden {
+	if code, _ := do(t, two, "GET", g.srv.URL+"/api/v1/people", ""); code != http.StatusForbidden {
 		t.Fatalf("a former owner still sees the people: %d", code)
 	}
 }

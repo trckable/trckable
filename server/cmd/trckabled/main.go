@@ -235,17 +235,17 @@ func admin(cfg config.Config, args []string) error {
 			return err
 		}
 		if args[0] == "remove-user" {
-			if err := ctl.RemoveUser(ctx, sqlite.DefaultAccount, id); err != nil {
+			if err := ctl.RemoveUserAsOperator(ctx, sqlite.DefaultAccount, id); err != nil {
 				return err
 			}
-			fmt.Fprintln(os.Stderr, args[1], "removed, along with every session they held")
+			fmt.Fprintln(os.Stderr, args[1], "removed from this account (a person with no other account is deleted, sessions and all)")
 			return nil
 		}
 		if len(args) < 3 {
 			return errors.New(adminUse)
 		}
 		role := args[2]
-		if err := ctl.SetRole(ctx, sqlite.DefaultAccount, id, role); err != nil {
+		if err := ctl.SetRoleAsOperator(ctx, sqlite.DefaultAccount, id, role); err != nil {
 			return err
 		}
 		fmt.Fprintln(os.Stderr, args[1], "is now a", role)
