@@ -59,7 +59,7 @@ function RowMenu({ p, self, access, act }: { p: Person; self: boolean; access: S
             {viewer && access.shown && access.of(p.id) && item(m.sites, () => act.allow(p.id))}
             {viewer && item(m.reset, () => act.reset(p))}
             {viewer && p.two_step && item(m.twoStepOff, () => act.turnOff(p))}
-            {item(m.remove, () => act.remove(p), true)}
+            {!p.holder && item(m.remove, () => act.remove(p), true)}
           </>
         )
       }}

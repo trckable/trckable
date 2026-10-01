@@ -527,6 +527,36 @@ var migrations = []string{
 	// its owner can copy the address again. Empty for a link made before this:
 	// its token was never kept, only its hash.
 	`ALTER TABLE site_shares ADD COLUMN token_enc TEXT NOT NULL DEFAULT '';`,
+	// 41: one person can belong to several accounts (memberships.go). The role
+	// of a person in an account is the membership's; users.account_id and
+	// users.role stay, as a mirror of the person's oldest membership. Every
+	// person starts with the one membership they had. last_account is the
+	// account they used last, a preference only.
+	`CREATE TABLE memberships (
+		user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+		role       TEXT NOT NULL,
+		created_at INTEGER NOT NULL,
+		PRIMARY KEY (user_id, account_id)
+	);
+	CREATE INDEX memberships_account ON memberships(account_id);
+	INSERT INTO memberships (user_id, account_id, role, created_at)
+		SELECT id, account_id, role, created_at FROM users ORDER BY created_at, rowid;
+	ALTER TABLE users ADD COLUMN last_account TEXT NOT NULL DEFAULT '';`,
+	// 42: a viewer's site limits are per account: the key is the person and
+	// the account. Nothing else points at this table.
+	`CREATE TABLE site_access_new (
+		subject    TEXT NOT NULL,
+		account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+		sites      TEXT NOT NULL,
+		updated_at INTEGER NOT NULL,
+		PRIMARY KEY (subject, account_id)
+	);
+	INSERT INTO site_access_new (subject, account_id, sites, updated_at)
+		SELECT subject, account_id, sites, updated_at FROM site_access;
+	DROP TABLE site_access;
+	ALTER TABLE site_access_new RENAME TO site_access;
+	CREATE INDEX site_access_account ON site_access(account_id);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

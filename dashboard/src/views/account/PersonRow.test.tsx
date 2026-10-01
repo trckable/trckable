@@ -10,7 +10,7 @@ beforeAll(async () => {
   PersonRow = (await import('./PersonRow')).PersonRow
 })
 
-const person = (o: Partial<Person>): Person => ({ id: 'usr_a', email: 'ann@site.com', name: 'Ann', role: 'viewer', created_at: 0, two_step: false, last_seen: 1, must_change: false, has_avatar: false, avatar_v: 0, ...o })
+const person = (o: Partial<Person>): Person => ({ id: 'usr_a', email: 'ann@site.com', name: 'Ann', role: 'viewer', created_at: 0, two_step: false, last_seen: 1, must_change: false, holder: false, has_avatar: false, avatar_v: 0, ...o })
 const access = { shown: false, of: () => null, list: null } as never
 const act = {} as never
 const row = (p: Person, me?: string, waiting = false) => renderToStaticMarkup(<PersonRow p={p} me={me} owners={1} waiting={waiting} access={access} act={act} />)

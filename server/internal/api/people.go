@@ -136,6 +136,9 @@ func (a *API) resetPersonPassword(w http.ResponseWriter, r *http.Request) {
 	if failPerson(w, err) {
 		return
 	}
+	if a.elsewhere(w, r, p.ID) {
+		return
+	}
 	// An owner's password is theirs: another owner makes them a viewer first,
 	// which everyone on the instance can see, and can undo.
 	if p.Role == sqlite.RoleOwner {
@@ -143,9 +146,17 @@ func (a *API) resetPersonPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	password := auth.Token("", 12)
-	if err := a.Ctl.ResetPersonPassword(r.Context(), principalOf(r).account, p.ID, password); busy(w, err) {
+	err = a.Ctl.ResetPersonPassword(r.Context(), principalOf(r).account, p.ID, password)
+	if busy(w, err) {
 		return
-	} else if err != nil {
+	}
+	// The store's own refusals (they joined another account meanwhile, or
+	// left this one) are answers for the caller; anything else is ours.
+	if errors.Is(err, sqlite.ErrElsewhere) || errors.Is(err, auth.ErrNotFound) {
+		failPerson(w, err)
+		return
+	}
+	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -171,6 +182,21 @@ func (a *API) removePerson(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// elsewhere refuses, and reports true, when the person is in other accounts
+// too: an owner acts on the sign-in of people who are wholly in their own
+// account, and everyone else manages theirs.
+func (a *API) elsewhere(w http.ResponseWriter, r *http.Request, id string) bool {
+	only, err := a.Ctl.OnlyInAccount(r.Context(), id, principalOf(r).account)
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return true
+	}
+	if !only {
+		fail(w, http.StatusConflict, sqlite.ErrElsewhere.Error())
+	}
+	return !only
+}
+
 // failPerson turns the store's refusals into the right status, and reports
 // whether the request is finished.
 func failPerson(w http.ResponseWriter, err error) bool {
@@ -179,7 +205,7 @@ func failPerson(w http.ResponseWriter, err error) bool {
 		return false
 	case errors.Is(err, auth.ErrNotFound):
 		fail(w, http.StatusNotFound, "no such person")
-	case errors.Is(err, sqlite.ErrLastOwner):
+	case errors.Is(err, sqlite.ErrLastOwner), errors.Is(err, sqlite.ErrHolder), errors.Is(err, sqlite.ErrElsewhere):
 		fail(w, http.StatusConflict, err.Error())
 	default:
 		fail(w, http.StatusBadRequest, err.Error())
@@ -221,11 +247,19 @@ func (a *API) turnOffTwoStep(w http.ResponseWriter, r *http.Request) {
 	if failPerson(w, err) {
 		return
 	}
+	if a.elsewhere(w, r, p.ID) {
+		return
+	}
 	if p.Role == sqlite.RoleOwner {
 		fail(w, http.StatusConflict, "an owner's two-step can only be turned off once they are a viewer: make them a viewer first")
 		return
 	}
-	if err := a.Ctl.DisableTwoStep(r.Context(), p.ID); err != nil {
+	err = a.Ctl.DisableTwoStepIn(r.Context(), principalOf(r).account, p.ID)
+	if errors.Is(err, sqlite.ErrElsewhere) || errors.Is(err, auth.ErrNotFound) {
+		failPerson(w, err)
+		return
+	}
+	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}

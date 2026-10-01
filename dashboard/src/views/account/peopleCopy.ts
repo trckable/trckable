@@ -15,6 +15,7 @@ export const people = {
   roleOf: (email: string) => `Role of ${email}`,
   lockSelf: 'Your own role is changed by another owner',
   lockLast: 'The only owner: make someone else an owner first',
+  lockHolder: 'The first owner keeps this role',
   waiting: 'Waiting to sign in',
   sitesLabel: 'Sites',
   sites: {

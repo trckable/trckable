@@ -100,3 +100,29 @@ func TestOwnerTurnsOffSomeonesTwoStep(t *testing.T) {
 		t.Fatalf("another owner's two-step: %d", code)
 	}
 }
+
+// An owner acts on someone's sign-in only if the person belongs to no other
+// account: one who is in another account too manages their own.
+func TestNoResetAcrossAccounts(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	code, out := do(t, owner, "POST", g.srv.URL+"/api/v1/people", `{"email":"ada@site.com","role":"viewer"}`, csrf, "1")
+	if code != http.StatusCreated {
+		t.Fatalf("add: %d %v", code, out)
+	}
+	id := out["person"].(map[string]any)["id"].(string)
+	other, err := g.ctl.CreateAccount(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := g.ctl.DB.Exec(`INSERT INTO memberships (user_id, account_id, role, created_at) VALUES (?, ?, 'viewer', 99999999999)`, id, other); err != nil {
+		t.Fatal(err)
+	}
+	if code, out := do(t, owner, "POST", g.srv.URL+"/api/v1/people/"+id+"/password", `{"password":"correct horse battery"}`, csrf, "1"); code != http.StatusConflict {
+		t.Fatalf("a reset across accounts: %d %v", code, out)
+	}
+	if code, out := do(t, owner, "POST", g.srv.URL+"/api/v1/people/"+id+"/two-step/off", `{"password":"correct horse battery"}`, csrf, "1"); code != http.StatusConflict {
+		t.Fatalf("two-step off across accounts: %d %v", code, out)
+	}
+}

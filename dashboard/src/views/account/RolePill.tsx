@@ -9,7 +9,7 @@ import { people } from './peopleCopy'
 import { RolePop } from './peopleLazy'
 import { roleLock, type RoleLock } from './rules'
 
-const LOCKS: Record<Exclude<RoleLock, null>, string> = { self: people.lockSelf, last: people.lockLast }
+const LOCKS: Record<Exclude<RoleLock, null>, string> = { self: people.lockSelf, last: people.lockLast, holder: people.lockHolder }
 
 export function RolePill({ p, me, owners, onAsk }: { p: Person; me?: string; owners: number; onAsk: (role: string) => void }) {
   const [open, setOpen] = useState(false)

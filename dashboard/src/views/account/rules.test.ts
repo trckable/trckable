@@ -11,6 +11,10 @@ describe('the role control', () => {
   })
   it('is off on the last owner', () => expect(roleLock(owner, 'z@x.com', 1)).toBe('last'))
   it('says last, not self, when you are the last owner', () => expect(roleLock(owner, 'a@x.com', 1)).toBe('last'))
+  it('is off on the first owner, even beside another owner', () => {
+    expect(roleLock({ ...owner, holder: true }, 'z@x.com', 2)).toBe('holder')
+    expect(roleLock({ ...owner, holder: true }, 'a@x.com', 2)).toBe('holder')
+  })
   it('is on for another owner while there are two', () => expect(roleLock(owner, 'z@x.com', 2)).toBeNull())
   it('is on for a viewer', () => expect(roleLock(viewer, 'a@x.com', 1)).toBeNull())
 })
