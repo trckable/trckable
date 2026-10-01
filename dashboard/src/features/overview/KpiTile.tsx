@@ -3,8 +3,10 @@
 // the arrow and the number only. Nothing at all when there is nothing to
 // compare with. The charted one is underlined, and a number that can be
 // charted is a button.
+import type { ComponentProps } from 'react'
 import type { Delta } from '../../lib/format'
 import { useTween } from '../../lib/motion'
+import { KpiMark } from './kpiMark'
 import { usePlayhead } from './playhead'
 import { copy } from './copy'
 import './Overview.css'
@@ -22,6 +24,8 @@ interface Props {
   onClick?: () => void
   money?: boolean
   loading?: boolean
+  /** Which mark stands before the name (KpiMarks). */
+  icon?: Exclude<ComponentProps<typeof KpiMark>['k'], 'pay'>
 }
 
 /** A number changes in a blink, not a count-up: switching period or number is instant. */
@@ -37,6 +41,7 @@ export function KpiTile(p: Props) {
   const body = (
     <>
       <span className="label kpi-name" title={p.label}>
+        {p.icon && <KpiMark k={p.icon} />}
         {p.label}
       </span>
       {/* The skeleton is decorative: the loading bar at the top of the page

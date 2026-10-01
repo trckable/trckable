@@ -3,11 +3,12 @@
 // rate, Session time, and Online now last. Each is a button that puts it on
 // the main chart when the chart can draw it here (chartMetric).
 import type { ReactNode } from 'react'
-import type { KPIs, Money } from '../../lib/api'
+import type { KPIs, Money, Site } from '../../lib/api'
 import { delta, fmtDuration, fmtInt, fmtMoney, fmtPct, type Delta } from '../../lib/format'
 import { canChart, type Can, type ChartMetric } from './chartMetric'
 import { copy } from './copy'
 import { KpiTile } from './KpiTile'
+import { KpiMark } from './kpiMark'
 
 interface Props {
   loading: boolean
@@ -31,6 +32,8 @@ interface Props {
   expectMoney?: boolean
   /** Online now, last. */
   online: ReactNode
+  /** The site whose Settings → Payments the quiet hint opens. */
+  site: Site
 }
 
 export function KpiStrip(p: Props) {
@@ -43,6 +46,7 @@ export function KpiStrip(p: Props) {
       loading={p.loading}
       vs={p.vs}
       label={label}
+      icon={key}
       value={value}
       live={o.live && p.follow(o.live)}
       fmt={fmt}
@@ -80,6 +84,7 @@ export function KpiStrip(p: Props) {
       {tile('bounce', copy.bounce, k?.bounce_rate, fmtPct, delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true), { live: (r) => r.kpis.bounce_rate })}
       {tile('session', copy.session, k?.avg_session_s, fmtDuration, delta(k?.avg_session_s ?? 0, pk?.avg_session_s), { live: (r) => r.kpis.avg_session_s })}
       {p.online}
+      <KpiMark k="pay" site={p.site} money={!!money} loading={p.loading} />
     </div>
   )
 }
