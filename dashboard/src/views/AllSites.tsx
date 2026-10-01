@@ -117,7 +117,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
   const by = (key: SortKey) => setSort((s) => ({ key, desc: s.key === key ? !s.desc : key !== 'domain' }))
   return (
     <>
-      <div className="header">{header}</div>
+      <div className="header quiet">{header}</div>
       <main className="all-sites">
         <div className="all-head">
           <div>

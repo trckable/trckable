@@ -1,6 +1,6 @@
 /* ---- The control row: two capsules -------------------------------------------
    What you see (period, comparison, Filter) and what you do (Share, ⋯): each a
-   hairline card, 38 px, like the site's card above. The period's popover hangs
+   hairline card, --hdr-h tall, like the site's card above. The period's popover hangs
    under the first capsule; the comparison's menu and the Filter list hang under
    their own buttons, so those roots are the anchors. */
 .ctl-cap.ctl-see {
@@ -11,14 +11,14 @@
   display: flex;
   align-items: center;
   flex: none;
-  height: 38px;
+  height: var(--hdr-h);
   padding: 2px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface);
 }
 .ctl-cap .btn {
-  height: 32px;
+  height: calc(var(--hdr-h) - 6px);
   border: 0;
   border-radius: 8px;
   background: transparent;
