@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
+	"github.com/trckable/trckable/server/internal/weburl"
 )
 
 // A share is a link to one site's numbers for someone without an account: an
@@ -327,7 +328,16 @@ func (s *Store) EmbedOriginsFor(ctx context.Context, token string, now time.Time
 	if err != nil || (expires != nil && now.Unix() > *expires) {
 		return nil
 	}
-	return splitLines(origins)
+	// Each one is checked again on the way out, because this value goes into a
+	// Content-Security-Policy header: one that was stored before the check
+	// existed must not carry anything but a host.
+	var safe []string
+	for _, o := range splitLines(origins) {
+		if o, ok := weburl.Origin(o); ok {
+			safe = append(safe, o)
+		}
+	}
+	return safe
 }
 
 // ShareIDForToken is the id of the link a token opens, or "" when none: to

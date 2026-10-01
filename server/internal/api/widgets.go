@@ -316,7 +316,7 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 
 	var buf bytes.Buffer
 	if err := widgetTmpl.Execute(&buf, view); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 	_, _ = w.Write(buf.Bytes())

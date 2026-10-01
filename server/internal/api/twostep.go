@@ -101,7 +101,7 @@ func (a *API) codeResult(u *sqlite.User, code string, err error) {
 func (a *API) startTwoStep(w http.ResponseWriter, r *http.Request) {
 	// Each of these does real work (outside fetches, or a password hash):
 	// limited, so a busy button or a stolen session cannot make it a flood.
-	if !a.loginRate.allow("twostep:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
+	if !a.loginRate.allow("twostep:"+a.ip(r), a.Now(), a.ipMax(r, 10), 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "too many tries: wait a few minutes")
 		return
 	}
@@ -160,7 +160,7 @@ func (a *API) enableTwoStep(w http.ResponseWriter, r *http.Request) {
 	}
 	// A session alone must not be able to finish someone else's setup: the
 	// password again, and few tries, so a pending code cannot be guessed.
-	if !a.loginRate.allow("twostep:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
+	if !a.loginRate.allow("twostep:"+a.ip(r), a.Now(), a.ipMax(r, 10), 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "too many tries: wait a few minutes")
 		return
 	}
@@ -196,7 +196,7 @@ func (a *API) enableTwoStep(w http.ResponseWriter, r *http.Request) {
 func (a *API) disableTwoStep(w http.ResponseWriter, r *http.Request) {
 	// Each of these does real work (outside fetches, or a password hash):
 	// limited, so a busy button or a stolen session cannot make it a flood.
-	if !a.loginRate.allow("twostep:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
+	if !a.loginRate.allow("twostep:"+a.ip(r), a.Now(), a.ipMax(r, 10), 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "too many tries: wait a few minutes")
 		return
 	}

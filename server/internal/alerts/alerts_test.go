@@ -18,6 +18,8 @@ func TestCheckTargetRefusesInternalAddresses(t *testing.T) {
 	for _, bad := range []string{
 		"http://localhost:8080/hook",
 		"http://127.0.0.1/hook",
+		"http://example.com/hook", // a webhook address is a secret: https only
+		"javascript:alert(1)",
 		"https://trckable.railway.internal/hook",
 		"https://printer.local/hook",
 		"ftp://example.com/hook",

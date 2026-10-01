@@ -54,7 +54,7 @@ func Recent(d *sql.DB) http.HandlerFunc {
 			ORDER BY seq DESC LIMIT ?`,
 			r.PathValue("site"), after, prefix, prefix, limit)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			serverError(w, err)
 			return
 		}
 		defer rows.Close()
@@ -67,7 +67,7 @@ func Recent(d *sql.DB) http.HandlerFunc {
 			if err := rows.Scan(&e.Seq, &e.TS, &kind, &visitor, &session, &pv, &e.Path, &e.Hostname,
 				&e.Channel, &e.Referrer, &e.Country, &e.Browser, &e.OS, &e.Device, &e.Goal, &props,
 				&e.EngagedMs, &e.ScrollPct); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				serverError(w, err)
 				return
 			}
 			e.Kind = kinds[kind]
@@ -84,7 +84,7 @@ func Recent(d *sql.DB) http.HandlerFunc {
 			out = append(out, e)
 		}
 		if err := rows.Err(); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			serverError(w, err)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")

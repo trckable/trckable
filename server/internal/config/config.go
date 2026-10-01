@@ -28,7 +28,7 @@ type Config struct {
 	Geo          string   // TRCKABLE_GEO: country (default, ~4 MB) | city (~130 MB) | off
 	GeoShared    string   // TRCKABLE_GEO_DIR: a shared, read-only geo directory kept fresh elsewhere
 	APIToken     string   // TRCKABLE_API_TOKEN: automation bearer token for /api/v1
-	MetricsToken string   // TRCKABLE_METRICS_TOKEN: optional bearer token for /metrics (open without it)
+	MetricsToken string   // TRCKABLE_METRICS_TOKEN: bearer token for /metrics (off, 404, without it)
 	SetupToken   string   // TRCKABLE_SETUP_TOKEN: first-run setup secret (Railway template generates it)
 	BaseURL      string   // TRCKABLE_BASE_URL, or https://$RAILWAY_PUBLIC_DOMAIN
 	Secret       string   // TRCKABLE_SECRET: encrypts provider keys (else data/secret.key)

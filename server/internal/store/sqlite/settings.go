@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 	"time"
+
+	"github.com/trckable/trckable/server/internal/weburl"
 )
 
 // SiteConfig is everything a site's owner can change about how trckable
@@ -143,6 +145,7 @@ func readBanner(s string) BannerText {
 	if s != "" {
 		_ = json.Unmarshal([]byte(s), &b) // unreadable wording falls back to the default bar
 	}
+	b.Policy = link(b.Policy) // placed on the site's pages: a web address or a path, whatever was stored
 	return b
 }
 
@@ -169,7 +172,7 @@ func writeBanner(b BannerText) string {
 	}
 	b = BannerText{
 		Mode: b.Mode,
-		Text: clip(b.Text), Accept: clip(b.Accept), Decline: clip(b.Decline), Policy: clip(b.Policy),
+		Text: clip(b.Text), Accept: clip(b.Accept), Decline: clip(b.Decline), Policy: link(clip(b.Policy)),
 		Bg: colour(b.Bg), Fg: colour(b.Fg), Button: colour(b.Button), ButtonFg: colour(b.ButtonFg),
 		Position: b.Position, Radius: b.Radius, CSS: css,
 	}
@@ -178,6 +181,15 @@ func writeBanner(b BannerText) string {
 	}
 	out, _ := json.Marshal(b)
 	return string(out)
+}
+
+// link keeps the privacy link to a web address or a path; anything else
+// (javascript:, data:) is dropped rather than passed into the visitor's page.
+func link(v string) string {
+	if safe, ok := weburl.Link(v); ok {
+		return safe
+	}
+	return ""
 }
 
 // colour keeps the picked colours to what a colour input produces. Anything

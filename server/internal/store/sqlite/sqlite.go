@@ -557,6 +557,16 @@ var migrations = []string{
 	DROP TABLE site_access;
 	ALTER TABLE site_access_new RENAME TO site_access;
 	CREATE INDEX site_access_account ON site_access(account_id);`,
+	// 43: browsers that signed in before. A random id in a cookie, kept hashed:
+	// while an account's sign-in is being hammered from many addresses, a
+	// correct password from one of these still gets in. Gone when the
+	// password is changed or reset.
+	`CREATE TABLE known_devices (
+		token_hash BLOB PRIMARY KEY,
+		user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		created_at INTEGER NOT NULL
+	);
+	CREATE INDEX known_devices_user ON known_devices(user_id);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

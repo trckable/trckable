@@ -35,7 +35,7 @@ export default function UpdateDialog({ latest, current, onClose }: { latest: Lat
       <div className="update-steps">
         <b className="update-label">
           Upgrade with docker compose
-          <Info text="A plain docker run install is replaced the same way: pull, then remove the container and run it again with the same volume. On Railway, redeploy. Nothing the server accepted is lost while it restarts." />
+          <Info text="A plain docker run install is replaced the same way: pull, then remove the container and run it again with the same volume. The image runs as an unprivileged user: a volume an older image filled as root needs chown -R 65532:65532 on it once, and on Railway set RAILWAY_RUN_UID=0 on the service before redeploying. Nothing the server accepted is lost while it restarts." />
         </b>
         <CodeBlock
           wrap

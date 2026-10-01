@@ -11,6 +11,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
+	"github.com/trckable/trckable/server/internal/weburl"
 )
 
 // deleteSite removes a site, its control-plane rows and its analytics data.
@@ -43,7 +44,8 @@ func (a *API) deleteSite(w http.ResponseWriter, r *http.Request) {
 		defer cancel()
 		events, sessions, err := a.PurgeAnalytics(ctx, site)
 		if err != nil {
-			fail(w, http.StatusServiceUnavailable, "could not remove this site's analytics data: "+err.Error())
+			slog.Error("site delete: could not remove the analytics data", "site", site, "err", err)
+			fail(w, http.StatusServiceUnavailable, "could not remove this site's analytics data: try again, or see the server's log")
 			return
 		}
 		gone.Events, gone.Sessions = events, sessions
@@ -87,7 +89,7 @@ func (a *API) sweepAnalytics(ctx context.Context, site string, gone *sqlite.Remo
 func (a *API) changePassword(w http.ResponseWriter, r *http.Request) {
 	// Each of these does real work (outside fetches, or a password hash):
 	// limited, so a busy button or a stolen session cannot make it a flood.
-	if !a.loginRate.allow("password:"+a.ip(r), a.Now(), 10, 10*time.Minute) {
+	if !a.loginRate.allow("password:"+a.ip(r), a.Now(), a.ipMax(r, 10), 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "too many tries: wait a few minutes")
 		return
 	}
@@ -177,6 +179,14 @@ func (a *API) setSiteConfig(w http.ResponseWriter, r *http.Request) {
 		clean = append(clean, p)
 	}
 	in.ExcludePaths = clean
+	// The cookie bar's link is placed on the owner's own pages: a web address
+	// or a path, never javascript: or data:.
+	if p := strings.TrimSpace(in.Banner.Policy); p != "" {
+		if _, ok := weburl.Link(p); !ok {
+			fail(w, http.StatusBadRequest, "the privacy link starts with https:// (or is a path like /privacy)")
+			return
+		}
+	}
 	if in.RetentionDays != 0 && in.RetentionDays < 7 {
 		fail(w, http.StatusBadRequest, "keep data for at least 7 days")
 		return

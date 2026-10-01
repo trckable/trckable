@@ -94,7 +94,7 @@ func serve(cfg config.Config) error {
 }
 
 func site(cfg config.Config, args []string) error {
-	if err := os.MkdirAll(cfg.DataDir, 0o700); err != nil {
+	if err := server.PrepareDataDir(cfg.DataDir); err != nil {
 		return err
 	}
 	ctl, err := openControl(context.Background(), cfg)
@@ -164,6 +164,11 @@ func admin(cfg config.Config, args []string) error {
 			fmt.Println("new password:", password)
 		}
 		fmt.Fprintln(os.Stderr, "password updated; all sessions for", args[1], "were signed out")
+		// The sign-in counters live in the running server's memory: ask it
+		// to forget them, so a locked-out owner can sign in at once.
+		if err := askClearLogins(cfg.DataDir, args[1]); err != nil {
+			fmt.Fprintln(os.Stderr, "could not ask a running server to clear its sign-in limits (they end by themselves within ten minutes, or on a restart):", err)
+		}
 		return nil
 
 	case "add-user":
@@ -254,12 +259,22 @@ func admin(cfg config.Config, args []string) error {
 	return errors.New(adminUse)
 }
 
+// askClearLogins appends the email to the file a running server watches.
+func askClearLogins(dir, email string) error {
+	f, err := os.OpenFile(filepath.Join(dir, server.ClearLoginsFile), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600) //nolint:gosec // inside the owner's own data directory
+	if err != nil {
+		return err
+	}
+	_, werr := fmt.Fprintln(f, strings.ToLower(strings.TrimSpace(email)))
+	return errors.Join(werr, f.Close())
+}
+
 // openControl opens the control database for a command. A data directory an
 // older trckable wrote is upgraded first, with a copy kept, as the server
 // does it; the analytics store is not waited for, so a command run next to a
 // live older server says so at once.
 func openControl(ctx context.Context, cfg config.Config) (*sqlite.Store, error) {
-	if err := os.MkdirAll(cfg.DataDir, 0o700); err != nil {
+	if err := server.PrepareDataDir(cfg.DataDir); err != nil {
 		return nil, err
 	}
 	return server.OpenControl(ctx, cfg, 0)
