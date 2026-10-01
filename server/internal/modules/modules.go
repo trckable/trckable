@@ -305,31 +305,3 @@ func (st Store) Set(ctx context.Context, site, id string, on bool) error {
 		site, id, on, time.Now().Unix())
 	return err
 }
-
-// AnyHas reports whether any site has the module on (for instance-wide jobs:
-// no site with Revenue on means no reconciliation and no rate fetching).
-func (st Store) AnyHas(ctx context.Context, id string) bool {
-	m, ok := Get(id)
-	if !ok {
-		return false
-	}
-	// When the database cannot answer, the instance-wide job skips this round
-	// rather than run on a guess.
-	var off, on int
-	if err := st.DB.QueryRowContext(ctx, `SELECT
-			count(*) FILTER (WHERE enabled = 0), count(*) FILTER (WHERE enabled = 1)
-		FROM site_modules WHERE module_id = ?`, id).Scan(&off, &on); err != nil {
-		return false
-	}
-	if on > 0 {
-		return true
-	}
-	if !m.On {
-		return false
-	}
-	var sites int // on by default: any site without an explicit "off" row has it
-	if err := st.DB.QueryRowContext(ctx, `SELECT count(*) FROM sites`).Scan(&sites); err != nil {
-		return false
-	}
-	return sites > off
-}

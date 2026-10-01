@@ -38,12 +38,6 @@ var Steps = map[string][]float64{
 // is, and on a shared card only with the amount turned on.
 func Money(kind string) bool { return kind == Revenue || kind == FirstSale }
 
-// Known says whether kind is a family.
-func Known(kind string) bool {
-	_, ok := weight[kind]
-	return ok
-}
-
 // weight orders the families when several are new at once: only the
 // biggest gets the moment.
 var weight = map[string]int{Revenue: 7, Visitors: 6, Pageviews: 5, FirstSale: 4, Countries: 3, RecordDay: 2, FirstGoal: 1}
