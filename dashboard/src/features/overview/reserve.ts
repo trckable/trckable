@@ -4,7 +4,7 @@
 // dashboard remembers, per site, whether the chart last had a revenue plot.
 import { useEffect } from 'react'
 import { SPLIT_H } from '../../charts/moneyPlot'
-import { CHART_H } from '../../charts/plot'
+import { CHART_H, LANE_H } from '../../charts/plot'
 import { diffDays, type Range } from '../../lib/dates'
 import { isShared } from '../../lib/me'
 import { shows, type Mods } from '../../lib/modules'
@@ -69,5 +69,5 @@ export function useChartHold(o: Hold): { height: number; revenue: boolean } {
   useRememberRevenue(o.site, o.loaded, o.hasRevenue)
   const revenue = expectsRevenue(o.site, o.mods)
   const scrub = expectsScrub(o.view, o.range)
-  return { height: (o.narrow ? 170 : CHART_H) + (revenue ? SPLIT_H : 0) + (scrub ? SCRUB_ROW : 0), revenue }
+  return { height: (o.narrow ? 170 : CHART_H) + (isShared() ? 0 : LANE_H) + (revenue ? SPLIT_H : 0) + (scrub ? SCRUB_ROW : 0), revenue }
 }

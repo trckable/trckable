@@ -5,4 +5,9 @@
 import { miniStore } from '../../lib/miniStore'
 import type { Pin } from './pins'
 
-export const openMark = miniStore<{ pins: Pin[]; at: number } | null>(null)
+export interface Open {
+  pins: Pin[]
+  at: number
+}
+
+export const openMark = miniStore<Open | null>(null)

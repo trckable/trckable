@@ -5,9 +5,9 @@ import { addDays, todayIn } from '../../lib/dates'
 import type { Moment } from '../story/moments'
 
 export const momentsApi = {
-  /** What happened in the period, bucket by bucket (the server's /moments), by the day or by the hour. */
+  /** What happened in the period, bucket by bucket (the server's /moments), by the day or by the hour. Never narrowed by a filter: a moment is the site's own (its figure is the day's or the hour's whole traffic), so the marker, its line and its card say the same number whatever the page is filtered to. */
   moments: (site: string, q: ReportQuery, bucket: 'day' | 'hour', signal?: AbortSignal) =>
-    call<{ moments: Moment[]; currency?: string; exponent?: number }>('GET', reportURL(site, { ...q, compare: undefined, daily: false, deep: false, bucket }).replace('/report?', '/moments?'), undefined, signal, true),
+    call<{ moments: Moment[]; currency?: string; exponent?: number }>('GET', reportURL(site, { ...q, filters: undefined, compare: undefined, daily: false, deep: false, bucket }).replace('/report?', '/moments?'), undefined, signal, true),
 }
 
 /** Days a source's own chart shows (its sparkline's request: server/internal/query/sparks.go). */

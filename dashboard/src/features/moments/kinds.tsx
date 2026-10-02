@@ -17,6 +17,9 @@ const KINDS: Record<PinKind, { Icon: LucideIcon; tint: string }> = {
   pays: { Icon: Coins, tint: 'var(--money)' },
 }
 
+/** The icon a kind wears: on the card and on its marker alike. */
+export const iconOf = (kind: PinKind): LucideIcon => KINDS[kind].Icon
+
 export function kindOf(pin: Pin): SideKind {
   const { Icon, tint } = KINDS[pin.kind]
   return { icon: <Icon size={14} strokeWidth={2} />, label: titleOf(pin), tint }
