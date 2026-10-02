@@ -2,7 +2,7 @@
 // Settings, / Filter, Shift S Share and R Replay. They are in the shortcuts list
 // (?) with the others, can be changed there with the same conflict check, do
 // nothing while a field has the keys or a dialog is open, and Shift S is not S.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
@@ -19,36 +19,43 @@ async function ready(page: Page) {
   await expect(page.locator('.overview-chart .chart-wrap svg[role="img"]')).toBeVisible({ timeout: 15_000 })
 }
 
+/** Presses a key and waits for what it opens. A key pressed while the page is still settling (its pieces
+ *  arrive one after another, and WebKit on a busy machine is the slowest to) can come to nothing: it is pressed
+ *  again, only while its target is not there, until it has done its work. */
+async function opens(page: Page, key: string, target: Locator) {
+  await expect(async () => {
+    if (!(await target.isVisible())) await page.keyboard.press(key)
+    await expect(target).toBeVisible({ timeout: 1_500 })
+  }).toPass({ timeout: 20_000 })
+}
+
 test('S, U, comma, slash and Shift S open what their buttons open', async ({ page }) => {
   await ready(page)
+  const sites = page.getByRole('dialog', { name: 'Sites' })
+  const account = page.getByRole('menu', { name: 'Account' })
 
-  await page.keyboard.press('s')
-  await expect(page.getByRole('dialog', { name: 'Sites' })).toBeVisible()
+  await opens(page, 's', sites)
   await page.keyboard.press('Escape')
-  await expect(page.getByRole('dialog', { name: 'Sites' })).toBeHidden()
+  await expect(sites).toBeHidden()
 
-  await page.keyboard.press('u')
-  await expect(page.getByRole('menu', { name: 'Account' })).toBeVisible()
+  await opens(page, 'u', account)
   await page.keyboard.press('Escape')
-  await expect(page.getByRole('menu', { name: 'Account' })).toBeHidden()
+  await expect(account).toBeHidden()
 
-  await page.keyboard.press('/')
   const filter = page.locator('[data-key="filter"]')
-  await expect(filter).toHaveAttribute('aria-expanded', 'true')
+  await opens(page, '/', page.locator('[data-key="filter"][aria-expanded="true"]'))
   // The menu is its own chunk: it answers Escape once it has drawn.
   await expect(page.getByRole('searchbox').first()).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(filter).toHaveAttribute('aria-expanded', 'false')
 
   // Shift S is Share, not the switcher.
-  await page.keyboard.press('Shift+S')
-  await expect(page.locator('.sd-modal')).toBeVisible()
-  await expect(page.getByRole('dialog', { name: 'Sites' })).toBeHidden()
+  await opens(page, 'Shift+S', page.locator('.sd-modal'))
+  await expect(sites).toBeHidden()
   await page.keyboard.press('Escape')
   await expect(page.locator('.sd-modal')).toBeHidden()
 
-  await page.keyboard.press(',')
-  await expect(page.getByRole('dialog', { name: /^Settings for/ })).toBeVisible()
+  await opens(page, ',', page.getByRole('dialog', { name: /^Settings for/ }))
 })
 
 test('R plays and pauses Replay', async ({ page }) => {

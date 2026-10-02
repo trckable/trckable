@@ -62,9 +62,13 @@ export async function exclusive<T>(name: string, fn: () => Promise<T>): Promise<
 /** The report as a site with no payment provider connected answers it. Another suite connects one to example.com (landing.spec), and a suite about what an owner sees without payments must not depend on which ran first. */
 export async function withoutPayments(page: Page) {
   await page.route(/\/api\/v1\/sites\/[^/]+\/report\?/, async (route) => {
-    const res = await route.fetch()
-    const body = await res.json()
-    for (const r of [body.current, body.previous]) if (r) delete r.money
-    await route.fulfill({ response: res, json: body })
+    try {
+      const res = await route.fetch()
+      const body = await res.json()
+      for (const r of [body.current, body.previous]) if (r) delete r.money
+      await route.fulfill({ response: res, json: body })
+    } catch {
+      // A report still being asked for as the test ends: the page is gone, there is nobody to answer.
+    }
   })
 }
