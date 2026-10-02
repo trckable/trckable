@@ -28,6 +28,7 @@ func (s *Server) runRetention(ctx context.Context) {
 		if err := s.pruneNotices(ctx); err != nil && ctx.Err() == nil {
 			slog.Warn("payment notice pass failed", "err", err)
 		}
+		s.ctl.PruneSalts(ctx) // old cookieless salts go even on a day with no visits
 		timer.Reset(24 * time.Hour)
 	}
 }

@@ -431,6 +431,10 @@ func paymentsCmd(cfg config.Config, args []string) error {
 		if err != nil {
 			return err
 		}
+		if e, _ := svc.EmptiedNotices(ctx, st.ID); e > 0 {
+			fmt.Printf("%s: %d stored webhooks applied on top of the ledger; %d older ones are emptied, so nothing was reset\n", st.Domain, n-e, e)
+			return nil
+		}
 		fmt.Printf("%s: ledger rebuilt from %d stored webhooks\n", st.Domain, n)
 		return nil
 	}

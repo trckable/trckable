@@ -2,8 +2,13 @@ package revenue
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
+
+type rowQuerier interface {
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+}
 
 // DefaultNoticeDays is how long the provider's raw notice of a payment is
 // kept once it has been read into the ledger.
@@ -13,6 +18,10 @@ const DefaultNoticeDays = 30
 // ledger more than days ago. A provider's notice carries the payer's email,
 // name and address; the ledger keeps only the amounts, the ids and a keyed
 // hash of the email, so after the window nothing in the inbox names anyone.
+//
+// A notice that could not be read (its error is set) is left alone: it is the
+// only copy of a payment the ledger does not have yet, and a fix to the parser
+// could still bring it in.
 //
 // A site with its own, shorter retention (retention) is held to that instead.
 // days <= 0 keeps every notice. The row stays, with its key: a provider's
@@ -26,7 +35,7 @@ func (s *Service) PruneNotices(ctx context.Context, days int, retention map[stri
 	defer s.mu.Unlock()
 	now := s.Now()
 	cutoff := func(d int) int64 { return now.Add(-time.Duration(d) * 24 * time.Hour).UnixMilli() }
-	const blank = `UPDATE pay_inbox SET body = x'' WHERE processed_at IS NOT NULL AND processed_at < ? AND length(body) > 0`
+	const blank = `UPDATE pay_inbox SET body = x'' WHERE processed_at IS NOT NULL AND error = '' AND processed_at < ? AND length(body) > 0`
 	var total int64
 	// The sites with a retention of their own, whichever is shorter.
 	for site, r := range retention {
@@ -51,4 +60,15 @@ func (s *Service) PruneNotices(ctx context.Context, days int, retention map[stri
 	}
 	n, _ := res.RowsAffected()
 	return total + n, nil
+}
+
+// EmptiedNotices is how many of a site's notices have had their body emptied.
+func (s *Service) EmptiedNotices(ctx context.Context, site string) (int, error) {
+	return emptiedNotices(ctx, s.DB, site)
+}
+
+func emptiedNotices(ctx context.Context, q rowQuerier, site string) (n int, err error) {
+	err = q.QueryRowContext(ctx, `SELECT count(*) FROM pay_inbox i JOIN pay_connections c ON c.id = i.connection_id
+		WHERE c.site_id = ? AND i.processed_at IS NOT NULL AND length(i.body) = 0`, site).Scan(&n)
+	return n, err
 }

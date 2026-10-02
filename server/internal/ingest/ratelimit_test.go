@@ -17,7 +17,8 @@ func total(l *limiter) int {
 }
 
 // An address that goes quiet is forgotten after ten minutes, without waiting
-// for the map to grow, and one that is still active is not.
+// for the map to grow, and one that is still active is not. One request, in
+// any shard, is enough to clean every shard.
 func TestIdleBucketsAreEvictedByTime(t *testing.T) {
 	l := newLimiter(10, 60)
 	now := time.Now()
@@ -30,19 +31,13 @@ func TestIdleBucketsAreEvictedByTime(t *testing.T) {
 	}
 	// Nine minutes on, nothing is old enough to go.
 	l.allow("active", now.Add(9*time.Minute))
-	for i := 0; i < 2000; i++ { // lands in every shard
-		l.allow(fmt.Sprintf("probe%d", i), now.Add(9*time.Minute))
+	if got := total(l); got != 201 {
+		t.Fatalf("buckets went early: %d", got)
 	}
-	if total(l) != 2201 {
-		t.Fatalf("buckets went early: %d", total(l))
-	}
-	// Eleven minutes on, the 200 quiet ones go; "active" was seen at nine.
-	late := now.Add(11 * time.Minute)
-	for i := 0; i < 2000; i++ {
-		l.allow(fmt.Sprintf("probe%d", i), late)
-	}
-	if got := total(l); got != 2001 {
-		t.Fatalf("after the sweep %d buckets, want the 2000 probes and the active one", got)
+	// Eleven minutes on: the 200 quiet ones go, "active" (seen at nine) stays.
+	l.allow("someone new", now.Add(11*time.Minute))
+	if got := total(l); got != 2 {
+		t.Fatalf("after the sweep %d buckets, want the active one and the new one", got)
 	}
 }
 

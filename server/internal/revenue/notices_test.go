@@ -127,3 +127,30 @@ func TestNoticesFollowTheSitesRetention(t *testing.T) {
 		t.Fatalf("a 7-day retention should empty a 10-day-old notice: n=%d err=%v", n, err)
 	}
 }
+
+// A notice the parser could not read is the only copy of that payment. It is
+// kept, whatever its age, until a fix can read it.
+func TestUnreadableNoticesAreKept(t *testing.T) {
+	g := newRig(t, t.TempDir(), "instance key for tests")
+	ctx := context.Background()
+	c, err := g.svc.Connect(ctx, ConnectRequest{Site: g.site, Provider: "stripe", Secret: "whsec_test", PublicBase: "http://localhost:8080"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := []byte(fmt.Sprintf(`{"id":"evt_bad","type":"payment_intent.succeeded","created":%d,"livemode":true,
+ "data":{"object":{"id":"pi_bad","amount_received":"oops","currency":"usd","receipt_email":"ada@example.com"}}}`, time.Now().Unix()))
+	if code := g.post(t, HookPath("stripe", c.ID), stripeSigned("whsec_test", body, time.Now()), body); code != 200 {
+		t.Fatal(code)
+	}
+	if _, err := g.svc.Process(ctx); err != nil {
+		t.Fatal(err)
+	}
+	var msg string
+	if err := g.st.DB.QueryRow(`SELECT error FROM pay_inbox WHERE event_key = 'evt_bad'`).Scan(&msg); err != nil || msg == "" {
+		t.Fatalf("the notice should have failed to parse: %q, %v", msg, err)
+	}
+	g.svc.Now = func() time.Time { return time.Now().Add(400 * 24 * time.Hour) }
+	if n, err := g.svc.PruneNotices(ctx, DefaultNoticeDays, map[string]int{g.site: 7}); err != nil || n != 0 {
+		t.Fatalf("emptied %d unreadable notices, %v", n, err)
+	}
+}

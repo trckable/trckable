@@ -721,9 +721,8 @@ func (s *Service) Reprocess(ctx context.Context, site string) (int, error) {
 		return 0, err
 	}
 	defer tx.Rollback()
-	var pruned int
-	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM pay_inbox i JOIN pay_connections c ON c.id = i.connection_id
-		WHERE c.site_id = ? AND i.processed_at IS NOT NULL AND length(i.body) = 0`, site).Scan(&pruned); err != nil {
+	pruned, err := emptiedNotices(ctx, tx, site)
+	if err != nil {
 		return 0, err
 	}
 	if pruned == 0 {

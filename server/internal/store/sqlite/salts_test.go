@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"context"
 	"testing"
 	"time"
 )
@@ -39,5 +40,21 @@ func TestOnlyTodayAndYesterdaySaltsAreKept(t *testing.T) {
 	// The first salt of a day still wins.
 	if again, _ := s.DailySalt(day(0), []byte("other")); string(again) != "fresh" {
 		t.Fatalf("a second ask changed today's salt: %q", again)
+	}
+}
+
+// A day with no visits still clears old salts: the daily pass calls PruneSalts.
+func TestPruneSaltsWithoutAVisit(t *testing.T) {
+	s := openT(t)
+	for _, back := range []int{3, 2, 1, 0} {
+		d := time.Now().UTC().AddDate(0, 0, -back).Format("2006-01-02")
+		if _, err := s.DB.Exec(`INSERT INTO daily_salts (day, salt) VALUES (?, ?)`, d, []byte("x")); err != nil {
+			t.Fatal(err)
+		}
+	}
+	s.PruneSalts(context.Background())
+	var n int
+	if err := s.DB.QueryRow(`SELECT count(*) FROM daily_salts`).Scan(&n); err != nil || n != 2 {
+		t.Fatalf("%d salts kept, %v; want 2", n, err)
 	}
 }

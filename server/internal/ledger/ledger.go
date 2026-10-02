@@ -1,7 +1,8 @@
 // Package ledger stores money facts in SQLite, the source of truth for
 // revenue. Writes are idempotent, versioned upserts (newer event wins, empty
 // fields never erase known ones), so webhooks can arrive late, twice or out
-// of order, and the whole ledger can be rebuilt from the inbox at any time.
+// of order, and the ledger can be rebuilt from the inbox for as long as the inbox
+// still holds the notices (the provider's raw notice is emptied after a while).
 package ledger
 
 import (

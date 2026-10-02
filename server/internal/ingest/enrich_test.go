@@ -81,7 +81,7 @@ func TestReferrerIsPrivacySafe(t *testing.T) {
 func TestHashModeDropsWhatIsNotARoute(t *testing.T) {
 	cases := []struct{ page, want string }{
 		{"https://site.com/app#/settings", "/app/#/settings"},
-		{"https://site.com/app#!/settings/billing", "/app/#/settings/billing"},
+		{"https://site.com/app#!/settings/billing", "/app/#!/settings/billing"},
 		{"https://site.com/app#/orders/4821", "/app/#/orders/4821"},
 		{"https://site.com/app#/search?q=ann@example.com&token=abc", "/app/#/search"},
 		{"https://site.com/app#/callback#access_token=abc123", "/app/#/callback"},
@@ -92,6 +92,14 @@ func TestHashModeDropsWhatIsNotARoute(t *testing.T) {
 		{"https://site.com/app#/reset/9f8a7b6c5d4e3f2a1b0c9d8e", "/app/#/reset/:redacted"},
 		{"https://site.com/app#/auth/eyJhbGciOi.eyJzdWIiOiIx.c2ln", "/app/#/auth/:redacted"},
 		{"https://site.com/app#pricing", "/app/#pricing"},
+		{"https://site.com/app#/blog/how-to-use-trckable-2026-edition", "/app/#/blog/how-to-use-trckable-2026-edition"},
+		{"https://site.com/app#/internationalization-and-localization-settings", "/app/#/internationalization-and-localization-settings"},
+		{"https://site.com/app#/reset/abc+def123ghi456jkl789mno", "/app/#/reset/:redacted"},
+		{"https://site.com/app#/invite/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef", "/app/#/invite/:redacted"},
+		{"https://site.com/app#/verify/12345678901234567890123", "/app/#/verify/:redacted"},
+		{"https://site.com/app#/verify/code:9f8a7b6c5d4e3f2a1b0c", "/app/#/verify/:redacted"},
+		{"https://site.com/app#/call/+491701234567", "/app/#/call/:redacted"},
+		{"https://site.com/app#/o/123e4567-e89b-12d3-a456-426614174000", "/app/#/o/:redacted"},
 		{"https://site.com/app#", "/app"},
 	}
 	for _, c := range cases {
