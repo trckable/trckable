@@ -142,6 +142,15 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   await expect(run.getByRole('img', { name: 'Step 3 of 3' })).toBeVisible()
   await expect(run.locator('.ob-feed')).toContainText('/')
   await expect(run.locator('.ob-tag')).toHaveText('Live')
+  // The first screen's actions: the importer's formats and command; no mail
+  // server here, so there is no weekly switch to offer in the first run.
+  await run.getByRole('button', { name: 'Import your history' }).click()
+  await expect(page.getByRole('dialog', { name: 'Import your history' })).toContainText('trckabled import')
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog', { name: 'Import your history' })).toHaveCount(0)
+  await expect(run.getByRole('switch', { name: 'Weekly email' })).toHaveCount(0)
+  // Closing it gives the focus back to its button, where Enter would open it again: move on from the heading.
+  await run.getByRole('heading', { name: 'Someone’s here.' }).focus()
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/onboarding-3-here-${browserName}.png` })
 
   // Enter, Enter: "You're live", then Live mode, where the visit is.

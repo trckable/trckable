@@ -62,6 +62,8 @@ var routeRules = map[string]string{
 	"POST /api/v1/sites/{site}/milestones/{kind}/{step}/share":   "write",
 	"DELETE /api/v1/sites/{site}/milestones/{kind}/{step}/share": "write",
 	"GET /m/{token}":                                             "public",
+	"GET /u/{token}":                                             "public",
+	"POST /u/{token}":                                            "public",
 	"GET /api/v1/sites/{site}/config":                            "read",
 	"PUT /api/v1/sites/{site}/config":                            "write",
 	"POST /api/v1/account/password":                              "selfW",

@@ -34,6 +34,7 @@ type Config struct {
 	Secret       string   // TRCKABLE_SECRET: encrypts provider keys (else data/secret.key)
 	SMTPURL      string   // TRCKABLE_SMTP_URL: smtp://user:pass@host:587, for alerts by email (optional)
 	MailFrom     string   // TRCKABLE_MAIL_FROM: the sender address for those emails
+	ResendKey    string   // TRCKABLE_RESEND_KEY: send them through Resend's HTTPS API, where the host blocks SMTP (optional)
 	// UpdateCheck: whether the dashboard may look for a newer release
 	// (TRCKABLE_UPDATE_CHECK=off turns it off for everyone). The check runs
 	// in the owner's browser, once a day, against GitHub's release list; the
@@ -72,6 +73,7 @@ func Load() Config {
 		Secret:       envFile("TRCKABLE_SECRET"),
 		SMTPURL:      os.Getenv("TRCKABLE_SMTP_URL"),
 		MailFrom:     os.Getenv("TRCKABLE_MAIL_FROM"),
+		ResendKey:    os.Getenv("TRCKABLE_RESEND_KEY"),
 		BackupS3:     envFile("TRCKABLE_BACKUP_S3"),
 		UpdateCheck:  !strings.EqualFold(strings.TrimSpace(os.Getenv("TRCKABLE_UPDATE_CHECK")), "off"),
 		BackupDays:   envInt("TRCKABLE_BACKUP_KEEP_DAYS", 30),

@@ -37,6 +37,9 @@ type Event struct {
 	// is refused), so the same line goes in both.
 	Text    string `json:"text"`
 	Content string `json:"content"`
+	// Unsubscribe is the address that stops this alert, put in an email's
+	// headers and last line. Chat tools have their own mute; it is not sent.
+	Unsubscribe string `json:"-"`
 }
 
 // ErrUnsafeTarget is returned for a destination trckable will not call.

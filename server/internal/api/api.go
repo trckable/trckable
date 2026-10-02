@@ -138,6 +138,8 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("POST /api/v1/sites/{site}/milestones/{kind}/{step}/share", a.authed(a.shareMilestone))
 	handle("DELETE /api/v1/sites/{site}/milestones/{kind}/{step}/share", a.authed(a.revokeMilestoneShare))
 	handleFunc("GET /m/{token}", a.milestoneLink)
+	handleFunc("GET /u/{token}", a.stopShow)
+	handleFunc("POST /u/{token}", a.stopDo)
 	handle("GET /api/v1/sites/{site}/config", a.authed(a.siteConfig))
 	handle("PUT /api/v1/sites/{site}/config", a.authed(a.setSiteConfig))
 	handle("POST /api/v1/account/password", a.authed(a.changePassword))
@@ -679,6 +681,8 @@ func (a *API) setup(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	// Sites the server was started with have waited for an owner to tell.
+	a.defaultAlertsForAccount(r.Context(), u.AccountID)
 	tok, err := a.Ctl.CreateSession(r.Context(), u.ID)
 	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
@@ -880,6 +884,7 @@ func (a *API) createSite(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	a.defaultAlerts(r.Context(), principalOf(r).account, id)
 	si, _ := a.Ctl.SiteInfo(r.Context(), id)
 	writeJSON(w, http.StatusCreated, si)
 }

@@ -101,6 +101,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		return nil, err
 	}
 	keepPrivate(cfg.DataDir)
+	var newSites []string
 	for _, d := range cfg.Sites { // headless provisioning via TRCKABLE_SITES
 		id, created, err := ctl.EnsureSite(ctx, sqlite.DefaultAccount, d)
 		if err != nil {
@@ -109,6 +110,9 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			return nil, fmt.Errorf("TRCKABLE_SITES %q: %w", d, err)
 		}
 		slog.Info("site", "domain", d, "id", id, "created", created)
+		if created {
+			newSites = append(newSites, id)
+		}
 	}
 	s := &Server{cfg: cfg, ctl: ctl, log: lg, started: time.Now()}
 	s.geo = geo.New(geo.Mode(cfg.Geo), cfg.GeoDir())
@@ -233,12 +237,24 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		s.remote = r
 		s.loadOffsite(ctx)
 	}
-	// Alerts by email, when the owner gives trckable an SMTP server to use.
-	if cfg.SMTPURL != "" {
-		if m, err := alerts.ParseMailer(cfg.SMTPURL, cfg.MailFrom); err != nil {
+	// Alerts by email, when the owner gives trckable an SMTP server (or a
+	// Resend key, for hosts that block SMTP) to use.
+	if cfg.SMTPURL != "" || cfg.ResendKey != "" {
+		m, err := alerts.ParseMailer(cfg.SMTPURL, cfg.MailFrom)
+		if cfg.ResendKey != "" {
+			m, err = alerts.ParseResend(cfg.ResendKey, cfg.MailFrom)
+		}
+		if err != nil {
 			slog.Warn("email alerts are off", "err", err)
 		} else {
 			alerts.Mail = m
+		}
+	}
+	// A site added to TRCKABLE_SITES after the owner exists starts like any
+	// new site (before the owner exists there is no one to tell; setup does it).
+	for _, id := range newSites {
+		if _, err := ctl.DefaultAlerts(ctx, sqlite.DefaultAccount, id, alerts.Mail != nil); err != nil {
+			slog.Warn("default alerts not set", "err", err)
 		}
 	}
 	a.Routes(mux)

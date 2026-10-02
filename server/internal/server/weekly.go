@@ -36,6 +36,14 @@ func weeklyDue(now time.Time, loc *time.Location, weekStart int, lastFired int64
 	return first.AddDate(0, 0, -7), first, true
 }
 
+// hadAWeek says whether a site has a week to report: it sent something at
+// some point, and it existed before that week ended. A report on a site that
+// never sent anything would only say "nothing arrived" every Monday, which the
+// dashboard and "tracking stopped" already say better.
+func hadAWeek(createdAt, lastEventAt int64, weekEnd time.Time) bool {
+	return lastEventAt > 0 && createdAt < weekEnd.Unix()
+}
+
 var channelNames = map[string]string{"AI": "AI assistants"}
 
 func change(cur, prev float64) string {
@@ -120,6 +128,10 @@ func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, link
 			lines = append(lines, line)
 		}
 	}
+	if more := weeklyInsights(cur, prev); len(more) > 0 {
+		lines = append(lines, "")
+		lines = append(lines, more...)
+	}
 	if link != "" {
 		lines = append(lines, "", link)
 	}
@@ -153,22 +165,29 @@ func (s *Server) weekly(ctx context.Context, siteID string, lastFired int64, now
 	if !due {
 		return ev, false
 	}
+	var created int64
+	if err := s.ctl.DB.QueryRowContext(ctx, `SELECT created_at FROM sites WHERE id = ?`, siteID).Scan(&created); err != nil || !hadAWeek(created, info.LastEventAt, to) {
+		return ev, false
+	}
 	set, _ := modules.Store{DB: s.ctl.DB}.Of(ctx, siteID)
-	p := query.Params{Site: siteID, From: from.UTC(), To: to.UTC(), TZ: loc.String(), Bucket: "day", Limit: 3,
-		Currency: info.Currency, Revenue: set.Has("revenue"), Goals: set.Has("goals")}
+	// More rows than the email shows: the findings compare whole breakdowns.
+	p := query.Params{Site: siteID, From: from.UTC(), To: to.UTC(), TZ: loc.String(), Bucket: "day", Limit: 10,
+		Currency: info.Currency, Revenue: set.Has("revenue"), Goals: set.Has("goals"), NewReferrers: 5}
 	cur, err := q.Report(ctx, p)
 	if err != nil {
 		return ev, false
 	}
 	pp := p
 	pp.From, pp.To = from.AddDate(0, 0, -7).UTC(), from.UTC()
+	pp.NewReferrers = 0
 	prev, err := q.Report(ctx, pp)
 	if err != nil {
 		return ev, false
 	}
 	link := ""
 	if s.cfg.BaseURL != "" {
-		link = strings.TrimSuffix(s.cfg.BaseURL, "/") + "/" + info.Domain
+		// The dashboard on that week, against the one before it.
+		link = fmt.Sprintf("%s/%s?from=%s&to=%s&compare=previous", strings.TrimSuffix(s.cfg.BaseURL, "/"), info.Domain, from.Format("2006-01-02"), to.AddDate(0, 0, -1).Format("2006-01-02"))
 	}
 	ev.Title, ev.Message, ev.Data = weeklyText(info.Domain, from, to, cur, prev, link)
 	ev.Text = ev.Title + " — " + ev.Message
