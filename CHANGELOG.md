@@ -9,6 +9,14 @@ section into the release.
 
 ## Unreleased
 
+### Added
+
+- A new site starts with the weekly report and "tracking stopped" on, so the numbers and the one alert that matters reach the owner without opening the dashboard. They go to where the account's other alerts already go (a Slack or Discord webhook someone set up), else to the account's first owner by email when the server can send email (`TRCKABLE_SMTP_URL`, or `TRCKABLE_RESEND_KEY` where the host blocks SMTP, as Railway does, with `TRCKABLE_MAIL_FROM`). With nowhere to send them nothing is turned on and the dashboard offers the weekly email as a switch that opens Alerts. Sites that already exist keep exactly the settings they have: nothing is changed on upgrade. A site that has never had a visit is not sent a weekly report.
+- The weekly report ends with up to three findings from the week, the same ones Highlights show and under the same floors on volume (a source that moved, the source that pays best per visitor, a page that lost buyers, a new referrer), and one link to the dashboard on that week against the week before. When nothing clears a floor there are no lines, and money lines come only when payments are connected.
+- Every alert email carries a link that stops that one alert, in its last line and in the `List-Unsubscribe` headers mail clients use for their own Unsubscribe button (one click, RFC 8058). It works without signing in, is signed with a key only the server has, names one alert on one site, and opening it changes nothing: the page asks for one click, and the same page turns the alert back on. Needs `TRCKABLE_BASE_URL`.
+- The first screen has two short actions, for an owner: Import your history (what the importer reads today, GA4's BigQuery export and CSV, and the command that runs it, with the docs) and Weekly email with its switch. They show when the first visit arrives and on a new site's install card. Lazy: the first load did not grow.
+- `TRCKABLE_RESEND_KEY` sends alert emails through Resend's HTTPS API, for hosts that block outgoing SMTP.
+
 ### Changed
 
 - Replay's playhead is a thin lime line that fades out towards the top, with a soft glow, in place of the white one. A small chip at its top names the moment ("Sep 14, 15:00" by the hour), the dot rides the line's own value with a ring around it, and what has not been played yet is drawn dim (30%) instead of left out, so progress reads at a glance. It moves smoothly, and steps from moment to moment with reduced motion. The playhead is a lazy chunk, so the first load did not grow. Until Replay reaches a first visit, the key numbers show a dash instead of 0, 0% and 0s.
