@@ -29,7 +29,7 @@ func TestNothingWhenNothingClearsItsFloor(t *testing.T) {
 		Channels:     []query.Row{row("Search", 60, 0, 0), row("Direct", 30, 0, 0)},
 		PrevChannels: []query.Row{row("Search", 40, 0, 0), row("Direct", 30, 0, 0)},
 		HasRevenue:   true,
-		Newcomers:    []Newcomer{{"small.example", 5}},
+		Newcomers:    []Newcomer{{"small.example", 5, ""}},
 	}
 	if got := Find(in); len(got) != 0 {
 		t.Fatalf("a small site says nothing, got %+v", got)
@@ -118,7 +118,7 @@ func TestConversionDrop(t *testing.T) {
 }
 
 func TestNewReferrerTakesTheBiggest(t *testing.T) {
-	in := Input{Newcomers: []Newcomer{{"b.example", 30}, {"a.example", 30}, {"c.example", 12}}}
+	in := Input{Newcomers: []Newcomer{{"b.example", 30, ""}, {"a.example", 30, ""}, {"c.example", 12, ""}}}
 	got := Find(in)
 	if len(got) != 1 || got[0].Kind != NewReferrer || got[0].Value != "a.example" || got[0].Now != 30 {
 		t.Fatalf("a tie goes to the first name, got %+v", got)
@@ -133,11 +133,45 @@ func TestOrderAndAtMostFour(t *testing.T) {
 		PrevChannels: []query.Row{row("Search", 500, 0, 0), row("Email", 300, 0, 0)},
 		Pages:        []query.Row{row("/pricing", 1000, 10, 0)},
 		PrevPages:    []query.Row{row("/pricing", 1000, 30, 0)},
-		Newcomers:    []Newcomer{{"new.example", 50}},
+		Newcomers:    []Newcomer{{"new.example", 50, ""}},
 	}
 	got := kinds(Find(in))
 	want := []string{"source_move:Search", "top_revenue:Email", "conversion_drop:/pricing", "new_referrer:new.example"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("got %v", got)
+	}
+}
+
+func TestNewReferrerSaysItsDay(t *testing.T) {
+	got := Find(Input{Newcomers: []Newcomer{{"a.example", 30, "2026-09-12"}, {"b.example", 25, "2026-09-14"}}})
+	if len(got) != 1 || got[0].Since != "2026-09-12" {
+		t.Fatalf("got %+v", got)
+	}
+}
+
+func TestDropStartIsWhereTheBuyingRateFell(t *testing.T) {
+	// Ten days of 100 visitors: 5 sales a day for six days, then 1 a day.
+	visitors := []int64{100, 100, 100, 100, 100, 100, 100, 100, 100, 100}
+	sales := []int64{5, 5, 5, 5, 5, 5, 1, 1, 1, 1}
+	if got := DropStart(visitors, sales); got != 6 {
+		t.Fatalf("the fall starts on day 6, got %d", got)
+	}
+	// No fall, no day.
+	if got := DropStart(visitors, []int64{3, 3, 3, 3, 3, 3, 3, 3, 3, 3}); got != -1 {
+		t.Fatalf("flat: %d", got)
+	}
+	// A rise is not a drop.
+	if got := DropStart(visitors, []int64{1, 1, 1, 1, 1, 1, 5, 5, 5, 5}); got != -1 {
+		t.Fatalf("rising: %d", got)
+	}
+	// One quiet day at the end is not a side: each stretch holds a fifth of the visitors.
+	if got := DropStart([]int64{100, 100, 100, 100, 5}, []int64{5, 5, 5, 5, 0}); got != -1 {
+		t.Fatalf("a tail of 1%% of the visitors: %d", got)
+	}
+	if got := DropStart(nil, nil); got != -1 {
+		t.Fatalf("empty: %d", got)
+	}
+	if got := DropStart([]int64{1, 2}, []int64{1}); got != -1 {
+		t.Fatalf("mismatched: %d", got)
 	}
 }

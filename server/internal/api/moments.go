@@ -14,7 +14,7 @@ import (
 //	from, to, tz, f   as the report
 //	bucket            day | hour (Replay plays nothing else)
 //
-// Spikes, a country's first visit ever, the first AI assistant visit (with
+// Spikes (with the visitors they held), a country's first visit ever, the first AI assistant visit (with
 // the crawlers module on), sales summed per bucket, milestones reached and
 // the site's notes. Aggregates only, the same as the report: never a visitor
 // or a single payment. Sales and money milestones are there only where the
@@ -87,7 +87,7 @@ func (a *API) spikesOf(r *http.Request, q *query.Q, p query.Params, loc *time.Lo
 	}
 	var out []moments.Moment
 	for _, s := range moments.Top(moments.Spikes(values, start, period, 7, 3, 10), 5) {
-		m := moments.Moment{T: series[s.I].T, Kind: "spike", Factor: float64(int(s.Factor*10)) / 10}
+		m := moments.Moment{T: series[s.I].T, Kind: "spike", Factor: float64(int(s.Factor*10)) / 10, Visitors: values[s.I]}
 		if at, err := time.ParseInLocation("2006-01-02T15:04", m.T, loc); err == nil {
 			m.Referrer, _ = q.TopReferrer(r.Context(), p.Site, at.UTC(), at.Add(step).UTC())
 		}

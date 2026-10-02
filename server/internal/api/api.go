@@ -839,7 +839,7 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 		if c, err := a.Ctl.SiteConfig(r.Context(), s.ID); err == nil {
 			week, cookieless = c.WeekStart, c.ConsentFree
 		}
-		out = append(out, sqlite.SiteInfo{ID: s.ID, Domain: s.Domain, Name: s.Name, Timezone: s.Timezone, Currency: s.Currency, ProxyKey: a.proxyKeyFor(r, s.ProxyKey), LastEventAt: s.LastEventAt,
+		out = append(out, sqlite.SiteInfo{ID: s.ID, Domain: s.Domain, Name: s.Name, Timezone: s.Timezone, Currency: s.Currency, ProxyKey: a.proxyKeyFor(r, s.ProxyKey), LastEventAt: s.LastEventAt, CreatedAt: s.CreatedAt,
 			Color: b.Color, IconURL: iconURL(s.ID, b), WeekStart: week, Cookieless: cookieless})
 		if c, ok := checks[s.ID]; ok {
 			out[len(out)-1].Check = &c

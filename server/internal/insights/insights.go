@@ -56,12 +56,19 @@ type Insight struct {
 
 	Rate    float64 `json:"rate,omitempty"`     // conversion_drop: customers per visitor now
 	WasRate float64 `json:"was_rate,omitempty"` // and before
+
+	// Since is the day the finding starts, on the site's own clock
+	// ("2026-09-27"), where the dashboard puts its marker on the chart:
+	// new_referrer's first visit, conversion_drop's change point (see
+	// DropStart). Empty when it is not known.
+	Since string `json:"since,omitempty"`
 }
 
 // Newcomer is a referrer first seen in the period.
 type Newcomer struct {
 	Referrer string
 	Visitors int64
+	First    string // the day it first sent anyone ("2026-09-27"), if known
 }
 
 // Input is the two periods' breakdowns, as the report returns them.
@@ -208,5 +215,42 @@ func newReferrer(in Input) (Insight, bool) {
 	if len(ns) == 0 || ns[0].Visitors < NewMinVisitors {
 		return Insight{}, false
 	}
-	return Insight{Kind: NewReferrer, Dim: "referrer", Value: ns[0].Referrer, Now: ns[0].Visitors}, true
+	return Insight{Kind: NewReferrer, Dim: "referrer", Value: ns[0].Referrer, Now: ns[0].Visitors, Since: ns[0].First}, true
+}
+
+// DropStart is the day a page's buying fell, from its days: visitors and
+// sales, one value per day in the period. It is the day that splits the
+// period into the two stretches whose buying rates differ most (the gap in
+// rate, weighted by how many visitors both stretches hold, so a long even
+// stretch outweighs a short odd one), with at least a fifth of the visitors
+// on each side so one quiet day cannot be the answer, and a rate that fell by
+// DropMinShare at least. -1 when no day does.
+func DropStart(visitors, sales []int64) int {
+	n := len(visitors)
+	if n < 2 || len(sales) != n {
+		return -1
+	}
+	var allV, allS int64
+	for i := range visitors {
+		allV += visitors[i]
+		allS += sales[i]
+	}
+	best, bestGap := -1, 0.0
+	var v, s int64
+	for k := 1; k < n; k++ {
+		v, s = v+visitors[k-1], s+sales[k-1]
+		restV, restS := allV-v, allS-s
+		if v*5 < allV || restV*5 < allV {
+			continue
+		}
+		was, now := float64(s)/float64(v), float64(restS)/float64(restV)
+		if now > was*(1-DropMinShare) { // the same fall the insight itself needs
+			continue
+		}
+		gap := (was - now) * float64(v) * float64(restV) / float64(allV)
+		if gap > bestGap {
+			best, bestGap = k, gap
+		}
+	}
+	return best
 }
