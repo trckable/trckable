@@ -1,1 +1,0 @@
-import{kn as e}from"./index-db27150b.js";var t=(t,n)=>e(`GET`,`/sites/${encodeURIComponent(t)}/now`,void 0,n);export{t};

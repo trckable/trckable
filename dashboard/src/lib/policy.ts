@@ -80,7 +80,7 @@ export function policyText(p: PolicyInput): string {
   if (p.modules.revenue) {
     out.push(
       `**Purchases.** If you buy something, our payment provider tells us the amount and which visit led to it, so we know which parts of the site are worth keeping. ` +
-        `The provider's notice of the payment, which includes your email address and may include your name and address, is kept on our own server for up to 30 days so the figures stay correct, and then emptied; what stays is the amount, the date, and a code made from your email address that cannot be turned back into it. ` +
+        `The provider's notice of the payment, which includes your email address and may include your name and address, is kept on our own server for up to 30 days so the figures stay correct, and then emptied; what stays is the amount, the date, and a code made from your email address that only matches if someone already has the address. ` +
         `If you ask us to erase your data, any notice still held is deleted and the payment is no longer linked to you, and your card details never reach us.`,
     )
     out.push('')
@@ -111,7 +111,11 @@ export function policyCaveats(p: PolicyInput): string[] {
   if (p.config.retention_days === 0) out.push('Nothing expires. A retention period is easier to justify than keeping everything forever.')
   if (p.modules.goals) out.push('Goals can carry properties you choose. Do not put names, emails or anything else personal in them — trckable stores whatever you send.')
   out.push('This text assumes you run trckable yourself, on your own server. If someone else runs it for you, they handle this data on your behalf: name them in the paragraph.')
-  if (p.modules.revenue) out.push('Payment notices are emptied after 30 days unless you changed TRCKABLE_PAYMENT_NOTICE_DAYS or set a shorter retention for the site. If you did, change the number in the Purchases paragraph.')
+  if (p.modules.revenue) {
+    out.push('Payment notices are emptied after 30 days unless you changed TRCKABLE_PAYMENT_NOTICE_DAYS or set a shorter retention for the site. If you did, change the number in the Purchases paragraph.')
+    out.push('A notice trckable could not read is kept until a fix can read it, so it keeps the payer\'s details until then.')
+  }
+  out.push('If you copy backups off the server, they hold what the server holds for as long as you keep them. Say where they go.')
   out.push('This covers trckable only. Anything else on your site — embedded video, fonts, chat, ads — needs its own paragraph.')
   return out
 }

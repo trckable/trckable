@@ -78,7 +78,10 @@ describe('policyText', () => {
     const t = policyText(input({ modules: { revenue: true } }))
     expect(t).toContain('up to 30 days')
     expect(t).toContain('your email address and may include your name and address')
-    expect(policyCaveats(input({ modules: { revenue: true } })).some((c) => c.includes('TRCKABLE_PAYMENT_NOTICE_DAYS'))).toBe(true)
+    const cs = policyCaveats(input({ modules: { revenue: true } }))
+    expect(cs.some((c) => c.includes('TRCKABLE_PAYMENT_NOTICE_DAYS'))).toBe(true)
+    expect(cs.some((c) => c.includes('could not read'))).toBe(true)
+    expect(policyCaveats(input()).some((c) => c.includes('could not read'))).toBe(false)
   })
 
   it('does not claim that no data leaves, or that the cookie holds nothing personal', () => {
@@ -104,6 +107,10 @@ describe('policyText', () => {
   it('does not say no name or email is kept once payments are connected', () => {
     expect(policyText(input({ modules: { revenue: true } }))).toContain('no name or email address beyond the payment notice above')
     expect(policyText(input())).toContain('we keep no IP address, name or email address, we will')
+  })
+
+  it('reminds that off-site backups hold the same data', () => {
+    expect(policyCaveats(input()).some((c) => c.includes('copy backups off the server'))).toBe(true)
   })
 
   it('says the text assumes trckable is run by the site itself', () => {
