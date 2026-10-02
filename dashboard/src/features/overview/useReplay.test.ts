@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { replayPath, replayStart } from './useReplay'
-import { advance, commitAt, fmtSecs, rateOf, replaySeconds, speedId, speedOf, SPEEDS } from './replayTime'
-import { raceAt, type Part } from './useRace'
+import { advance, commitAt, raceAt, rateOf, replayPath, replayStart, type Part } from './replayEngine'
+import { fmtSecs, replaySeconds, speedId, speedOf, SPEEDS } from './replayTime'
 import { pointOn, smooth } from '../../charts/smooth'
 
 describe('replayStart', () => {

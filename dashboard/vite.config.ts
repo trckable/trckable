@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { copy } from './src/components/loading/copy'
 import { bootHtml } from './src/components/loading/markup'
+import { wordmarkFont } from './wordmarkFont'
 
 // The first paint, before any JavaScript, is the loading ghost rather than a
 // blank page: its markup goes straight into #root (React replaces it), and its
@@ -26,7 +27,7 @@ const split = {
 // The build lands inside the Go server, which embeds it: one binary, one deploy.
 // `pnpm dev` proxies the API to a local trckabled (TRCKABLE_DEV_API, default :8080).
 export default defineConfig({
-  plugins: [react(), bootGhost],
+  plugins: [react(), bootGhost, wordmarkFont()],
   build: {
     outDir: '../server/internal/web/dist',
     emptyOutDir: true,
