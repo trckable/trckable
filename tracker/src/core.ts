@@ -65,17 +65,24 @@ const MAX_AGE = 18e5 // 30 min: queued events older than this are dropped
 const DOWNLOAD = /\.(pdf|zip|dmg|exe|csv|xlsx?|docx?|mp[34])$/i
 
 export function start(c: Config): Tracker {
-  const w = window
+  const w: any = window
   const d = document
   const loc = location
   const nav = navigator
   const now = Date.now
+  if (w.__trk) return w.__trk // loaded twice (tag and bundle, two bundles): one tracker per page
 
   // Consent-free mode touches no browser storage at all, not even to read.
   let ls: Storage | null = null
   if (!c.cookieless)
     try {
       ls = localStorage
+      // ?trckable=ignore leaves this browser out of the counts (your own
+      // visits); ?trckable=track undoes it. A flag on the site's own origin,
+      // so it works through a proxy as well. Consent-free mode has no storage
+      // to keep it in.
+      if (/trckable=ignore/.test(loc.href)) ls.setItem('trckable_ignore', 1 as any)
+      if (/trckable=track/.test(loc.href)) ls.removeItem('trckable_ignore')
     } catch {}
   if (
     !c.site ||
@@ -83,18 +90,17 @@ export function start(c: Config): Tracker {
     // Automation is ignored, except in dev mode so you can test your own site
     // (Playwright, Cypress); the server only honours that on localhost. Local
     // hosts: localhost, 127.x, any IPv6 literal ([…]) and 0.x.
-    (!c.dev && (nav.webdriver || /^(localhost|127\.|\[|0\.)/.test(loc.hostname) || loc.protocol == 'file:' || w != w.parent))
+    (!c.dev && (nav.webdriver || /^(localhost|127\.|\[|0\.|$)/.test(loc.hostname) || w != w.parent))
   )
     return (() => {}) as Tracker
 
-  const proxied = new URL(c.api, loc as any).origin == loc.origin // server manages the cookie (a Location reads as its href)
   // 0: a cookie · 1: no cookie · 2: the visitor declined, and nothing is sent.
-  let cookieless = c.cookieless ? 1 : 0
-  let last = ''
-  let pv = ''
-  let visible = 0 // when the page last became visible (0 = hidden)
-  let engaged = 0
-  let scroll = 0
+  let cookieless = +!!c.cookieless
+  let last!: string
+  let pv!: string
+  let visible!: number // when the page last became visible (0 = hidden)
+  let engaged!: number
+  let scroll!: number
   let ref = d.referrer
 
   const rid = () => {
@@ -102,11 +108,11 @@ export function start(c: Config): Tracker {
     return (a[0] * 2097152 + (a[1] >>> 11)).toString(36) // 53 random bits
   }
 
-  const cookie = () => d.cookie.match(/(^|; )trckable_vid=([^;]+)/)?.[2]
+  const cookie = () => /trckable_vid=([^;]+)/.exec(d.cookie)?.[1]
   // Writes the visitor cookie; an empty value with no age deletes it.
   const put = (v: string, age: number) => {
     d.cookie =
-      VID + '=' + v + '; Max-Age=' + age + '; Path=/; SameSite=Lax' + (c.domain ? '; Domain=' + c.domain : '') + (loc.protocol[4] == 's' ? '; Secure' : '') // https:
+      'trckable_vid=' + v + '; Max-Age=' + age + '; Path=/; SameSite=Lax' + (c.domain ? '; Domain=' + c.domain : '') + (loc.protocol > 'http:' ? '; Secure' : '') // https: sorts after http:
   }
   const shown = () => (d.hidden ? 0 : now())
 
@@ -210,10 +216,10 @@ export function start(c: Config): Tracker {
         const b = c.banner || {}
         const host = d.createElement('div')
         const root = host.attachShadow({ mode: 'open' })
-        // The site's own CSS is appended last, as a text node rather than
-        // markup, so it cannot end the <style> it lives in.
+        // The site's own CSS is appended last, as text rather than markup,
+        // so it cannot end the <style> it lives in.
         root.innerHTML = '<style>' + BAR_STYLE + '</style>' + BAR_HTML
-        if (b.css) root.firstChild!.appendChild(d.createTextNode(b.css))
+        if (b.css) (root.firstChild as Element).append(b.css)
         const say = root.querySelector('p')!
         const btn = root.querySelectorAll('button')
         say.textContent = b.text || 'We count visits with one cookie and a short queue on this device. Nothing is shared.'
@@ -243,17 +249,13 @@ export function start(c: Config): Tracker {
     }
   }
 
-  // Visitor id "<id>.<first-seen seconds>", both base36. When events go through
-  // a same-origin proxy the server sets it (Safari keeps it 400 days); otherwise
-  // the tracker does (Safari caps script-set cookies at 7 days).
-  const vid = () => {
-    let v = cookie()
-    if (!v && !proxied) {
-      v = rid() + '.' + (now() / 1e3 >>> 0).toString(36) // whole seconds; >>> keeps it right until 2106
-      put(v, 34560000)
-    }
-    return v
-  }
+  // Visitor id "<id>.<first-seen seconds>", both base36, made here and written
+  // at once, so every event of a visit carries the same one, even a click that
+  // leaves before the first answer. Through a same-origin proxy the server
+  // sets it again as its own cookie (Safari keeps that 400 days, and caps a
+  // script-set one at 7). A browser that refuses the cookie gets none: those
+  // visitors are counted without one, not as a new visitor per event.
+  const vid = (v = rid() + '.' + (now() / 1e3 >>> 0).toString(36)) => cookie() || (put(v, 34560000), cookie() && v) // whole seconds; >>> keeps it right until 2106
 
   const queue = (): [Payload, number][] => {
     try {
@@ -268,15 +270,19 @@ export function start(c: Config): Tracker {
     } catch {}
   }
 
-  const post = (p: Payload, age?: number) => {
+  const post = (p: Payload, age = 0) => {
     if (age) p.a = age
+    // Not acknowledged: a cookie-mode event stays in the queue for the next
+    // page; one sent without a cookie has no queue, so it is tried again here,
+    // from memory, with the same id (the server drops duplicates).
     fetch(c.api, { method: 'POST', body: JSON.stringify(p), keepalive: true })
       .then((r) => {
         // 5xx / 429: keep it queued for a retry; anything else is final.
-        // Cookieless mode never touches storage, not even to clean up.
-        if (!cookieless && r.status < 500 && r.status != 429) save(queue().filter((x) => x[0].id != p.id))
+        // Events sent without a cookie never touch storage, not even to clean up.
+        if (r.status > 499 || r.status == 429) throw 0
+        if (!p.c) save(queue().filter((x) => x[0].id != p.id))
       })
-      .catch(() => {})
+      .catch(() => p.c && age < 6e3 && setTimeout(() => post(p, age + 2e3 + age), 2e3 + age))
   }
 
   // A payload is filled in once; one held back comes here again when it is
@@ -293,16 +299,14 @@ export function start(c: Config): Tracker {
       if ((__CONSENT__ || __BANNER__) && held) return held.push(p)
     }
     if (cookieless > 1) return // declined: nothing is sent
-    if (cookieless) p.c = 1 // the server must not set a cookie either
+    const v = cookieless ? 0 : vid()
+    if (!v) p.c = 1 // no cookie: the server must not set one either
     else {
-      const v = vid()
-      if (v) p.v = v
+      p.v = v
       // Write-ahead: queued before sending, removed once acknowledged. Anything
       // left (page closed mid-flight, offline, server restarting) is retried on
       // the next page; the server drops duplicates by event id.
-      const q = queue()
-      q.push([p, now()])
-      save(q)
+      save([...queue(), [p, now()]])
     }
     post(p)
   }
@@ -352,7 +356,9 @@ export function start(c: Config): Tracker {
   }
 
   const page = () => {
-    const url = c.hash ? loc.href : loc.href.split('#')[0]
+    // A new page is a new path (and route, in hash mode): a query that changes
+    // while typing in a search box or ticking a filter is the same page.
+    const url = loc.pathname + (c.hash ? loc.hash : '')
     if (url == last) return // SPA frameworks often push/replace the same URL
     if (last) flushEngagement()
     last = url
@@ -374,8 +380,8 @@ export function start(c: Config): Tracker {
   const observeScrollGoals = () => {
     if (!w.IntersectionObserver) return
     d.querySelectorAll<HTMLElement>('[data-trckable-scroll]').forEach((el) => {
-      if (seen.has(el)) return
-      seen.add(el)
+      if ((el as any)._t) return
+      ;(el as any)._t = 1
       const io = new IntersectionObserver(
         (es) => {
           if (es[0].isIntersecting) {
@@ -434,10 +440,7 @@ export function start(c: Config): Tracker {
     )
 
   // Engagement: only visible time counts.
-  d.addEventListener('visibilitychange', () => {
-    if (shown()) visible = now()
-    else flushEngagement()
-  })
+  d.addEventListener('visibilitychange', () => (d.hidden ? flushEngagement() : (visible = now())))
   w.addEventListener('pagehide', flushEngagement)
   w.addEventListener(
     'scroll',
@@ -446,7 +449,6 @@ export function start(c: Config): Tracker {
       const pct = h > 0 ? Math.min(100, Math.round((scrollY / h) * 100)) : 100
       if (pct > scroll) scroll = pct
     },
-    { passive: true },
   )
 
   // SPA navigation.
@@ -461,7 +463,7 @@ export function start(c: Config): Tracker {
   w.addEventListener('popstate', page)
   if (c.hash) w.addEventListener('hashchange', page)
   // Back/forward cache restores are real page views.
-  w.addEventListener('pageshow', (e) => {
+  w.addEventListener('pageshow', (e: PageTransitionEvent) => {
     if (e.persisted) {
       last = ''
       page()
@@ -470,16 +472,16 @@ export function start(c: Config): Tracker {
 
   // Retry what an earlier page could not deliver.
   if (!cookieless) {
-    const q = queue().filter((x) => now() - x[1] < MAX_AGE)
+    const q = queue().filter((x) => now() - x[1] < 18e5)
     save(q)
     q.forEach((x) => post(x[0], now() - x[1]))
   }
 
   // Count the first view once the page is actually shown (not while prerendering).
-  if ((d as any).prerendering) d.addEventListener('prerenderingchange', page, { once: true })
+  if ((d as any).prerendering) d.addEventListener('prerenderingchange', page)
   else page()
 
-  return ((cmd: string, a?: any, b?: Props) => {
+  return (w.__trk = ((cmd: string, a?: any, b?: Props) => {
     if (__GOALS__ && (cmd == 'goal' || cmd == 'track')) goal(a, b)
     else if (cmd == 'pageview') {
       last = ''
@@ -491,5 +493,5 @@ export function start(c: Config): Tracker {
         cookieless = a ? 0 : (put('', 0), 2) // no: the cookie goes, and so does counting
       }
     }
-  }) as Tracker
+  }) as Tracker)
 }
