@@ -12,8 +12,8 @@ const cards = () => [...document.body.querySelectorAll('.side-card')]
 const draw = (ui: React.ReactNode) => {
   act(() => root.render(ui))
 }
-const card = (id: string, onClose = () => undefined) => (
-  <SideCard key={id} id={id} label={'Card ' + id} closeLabel="Close" title={'Title ' + id} onClose={onClose} actions={<button type="button">{'Go ' + id}</button>}>
+const card = (id: string, onClose = () => undefined, asked = false) => (
+  <SideCard key={id} id={id} asked={asked} label={'Card ' + id} closeLabel="Close" title={'Title ' + id} onClose={onClose} actions={<button type="button">{'Go ' + id}</button>}>
     <p>{'Body ' + id}</p>
   </SideCard>
 )
@@ -76,5 +76,29 @@ describe('the side card', () => {
     expect(cards().map((c) => c.getAttribute('aria-label'))).toEqual(['Card b'])
     draw(null)
     expect(cards()).toHaveLength(0)
+  })
+
+  it('a card someone asked for takes the slot from one that came up by itself, which comes back after', () => {
+    draw(card('a'))
+    expect(cards().map((c) => c.getAttribute('aria-label'))).toEqual(['Card a'])
+    draw(
+      <>
+        {card('a')}
+        {card('b', undefined, true)}
+      </>,
+    )
+    expect(cards().map((c) => c.getAttribute('aria-label'))).toEqual(['Card b'])
+    draw(card('a'))
+    expect(cards().map((c) => c.getAttribute('aria-label'))).toEqual(['Card a'])
+  })
+
+  it('two asked-for cards queue like any other: the second does not push out the first', () => {
+    draw(
+      <>
+        {card('a', undefined, true)}
+        {card('b', undefined, true)}
+      </>,
+    )
+    expect(cards().map((c) => c.getAttribute('aria-label'))).toEqual(['Card a'])
   })
 })

@@ -81,7 +81,7 @@ func TestNewReferrers(t *testing.T) {
 		}
 		got := ask(sep10.From, sep10.To, 10)
 		// google.com sent visitors 1 and 3, chatgpt.com visitor 2; nothing came before.
-		if len(got) != 2 || got[0] != (NewReferrer{"google.com", 2}) || got[1] != (NewReferrer{"chatgpt.com", 1}) {
+		if len(got) != 2 || got[0] != (NewReferrer{"google.com", 2, "2026-09-10"}) || got[1] != (NewReferrer{"chatgpt.com", 1, "2026-09-10"}) {
 			t.Fatalf("got %+v", got)
 		}
 		// The next day they are not new any more (and the Email visit has no referrer).

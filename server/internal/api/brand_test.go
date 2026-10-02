@@ -42,6 +42,9 @@ func TestSiteBrand(t *testing.T) {
 	}
 	_, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites", "")
 	site := out["sites"].([]any)[0].(map[string]any)
+	if created, _ := site["created_at"].(float64); created <= 0 {
+		t.Fatalf("the sites list says when a site was added: %v", site)
+	}
 	if site["color"] != "#ff5500" || !strings.HasPrefix(site["icon_url"].(string), base+"/icon?v=") {
 		t.Fatalf("site brand: %v", site)
 	}

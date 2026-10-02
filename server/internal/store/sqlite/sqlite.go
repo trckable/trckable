@@ -685,6 +685,7 @@ func (s *Store) reloadSites(ctx context.Context) error {
 type SiteRow struct {
 	ID, Domain, Name, Timezone, Currency, ProxyKey string
 	LastEventAt                                    int64
+	CreatedAt                                      int64 // unix seconds
 }
 
 // SeenSite records that a site just sent an event. Called at most once a
@@ -833,7 +834,7 @@ func (s *Store) AllSites(ctx context.Context) ([]SiteRow, error) {
 }
 
 func (s *Store) listSites(ctx context.Context, where string, args ...any) ([]SiteRow, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT id, domain, name, timezone, currency, proxy_key, last_event_at FROM sites `+where+` ORDER BY created_at`, args...) //nolint:gosec // where is a constant fragment from the two callers above; values are bound as parameters
+	rows, err := s.DB.QueryContext(ctx, `SELECT id, domain, name, timezone, currency, proxy_key, last_event_at, created_at FROM sites `+where+` ORDER BY created_at`, args...) //nolint:gosec // where is a constant fragment from the two callers above; values are bound as parameters
 	if err != nil {
 		return nil, err
 	}
@@ -841,7 +842,7 @@ func (s *Store) listSites(ctx context.Context, where string, args ...any) ([]Sit
 	var out []SiteRow
 	for rows.Next() {
 		var r SiteRow
-		if err := rows.Scan(&r.ID, &r.Domain, &r.Name, &r.Timezone, &r.Currency, &r.ProxyKey, &r.LastEventAt); err != nil {
+		if err := rows.Scan(&r.ID, &r.Domain, &r.Name, &r.Timezone, &r.Currency, &r.ProxyKey, &r.LastEventAt, &r.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, r)

@@ -1,7 +1,7 @@
 // What the Data view says beyond its lists, against a trckabled with the demo
 // data (skipped unless TRCKABLE_A11Y_URL points at one):
 //   TRCKABLE_A11Y_URL=http://localhost:8799 npx playwright test extras
-// Highlights, the pace line and the rings on the chart, the AI and revenue
+// Highlights, the pace line and the moments on the chart, the AI and revenue
 // tabs, Latest buyers (and no email anywhere in it), and Compact without any
 // of the Full-only ones.
 import AxeBuilder from '@axe-core/playwright'
@@ -65,22 +65,22 @@ test('the pace line sits in the chart head once three days of the month have gon
   }
 })
 
-test('rings mark a spike on the chart, at most three, each saying why', async ({ page }, info) => {
+test('moments mark the chart, at most six, each saying what it is', async ({ page }, info) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   const site = await signIn(page)
   await page.goto(`${BASE}/${site.domain}?view=data`)
-  const rings = page.locator('.overview-chart .ring-mark')
-  await expect(rings.first()).toBeVisible({ timeout: 20_000 })
-  expect(await rings.count()).toBeLessThanOrEqual(3)
-  await rings.first().hover()
-  await expect(page.locator('.ring-tip')).toContainText(/the usual/)
-  // The chart's own hover card steps aside while a ring speaks.
+  const marks = page.locator('.overview-chart .moment-mark')
+  await expect(marks.first()).toBeVisible({ timeout: 20_000 })
+  expect(await marks.count()).toBeLessThanOrEqual(6)
+  await marks.first().hover()
+  await expect(page.locator('.moment-tip')).toBeVisible()
+  // The chart's own hover card steps aside while a marker speaks.
   await expect(page.locator('.chart-tip')).toHaveCount(0)
-  if (SHOTS) await page.locator('.overview').screenshot({ path: `${SHOTS}/extras-rings-${info.project.name}.png` })
+  if (SHOTS) await page.locator('.overview').screenshot({ path: `${SHOTS}/extras-moments-${info.project.name}.png` })
   // Reachable and readable from the keyboard.
   await page.mouse.move(5, 5)
-  await rings.first().focus()
-  await expect(page.locator('.ring-tip')).toBeVisible()
+  await marks.first().focus()
+  await expect(page.locator('.moment-tip')).toBeVisible()
   const { violations } = await new AxeBuilder({ page }).include('.overview-chart').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
   expect(violations.map((v) => v.id)).toEqual([])
 })
@@ -153,5 +153,5 @@ test('Compact has none of the Full-only ones', async ({ page }) => {
   await expect(page.locator('[data-card=what]').getByRole('tab', { name: 'Latest buyers' })).toHaveCount(0)
   await expect(page.locator('[data-card=what]').getByRole('tab', { name: 'Pages that sell' })).toHaveCount(0)
   await expect(who.getByRole('tablist', { name: 'Sources' }).getByRole('tab', { name: 'AI' })).toHaveCount(0)
-  await expect(page.locator('.overview-chart .ring-mark').first()).toBeVisible() // the rings cost nothing: Compact has them
+  await expect(page.locator('.overview-chart .moment-mark').first()).toBeVisible() // the markers cost nothing: Compact has them
 })

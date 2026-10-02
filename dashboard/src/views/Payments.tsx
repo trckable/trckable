@@ -20,6 +20,7 @@ import { Picker } from '../components/Picker'
 import { confirmWith, useConfirm } from '../components/Confirm'
 import { isViewer } from '../lib/me'
 import { settle, toast } from '../components/Toast'
+import { useConnectFirst } from './useConnectFirst'
 import './Payments.css'
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'CHF', 'JPY', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'INR', 'BRL', 'MXN', 'SGD', 'NZD', 'ZAR']
@@ -49,6 +50,7 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
   const connected = data?.connections ?? []
   const recorded = connected.reduce((n, c) => n + c.payments, 0)
   const available = data?.providers.filter((p) => !connected.some((c) => c.provider === p.id)) ?? []
+  useConnectFirst(available, setAdding)
   return (
     <section className="pay" id="payments">
       <div className="pay-head">
@@ -123,9 +125,7 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
           <Info size={17} strokeWidth={1.75} aria-hidden="true" />
           <span>
             <b>Providers cannot reach this server yet</b>
-            <span>
-              Webhooks would go to {data.webhook_base}. Set TRCKABLE_BASE_URL to this server's public https address.
-            </span>
+            <span>Webhooks would go to {data.webhook_base}. Set TRCKABLE_BASE_URL to this server's public https address.</span>
           </span>
         </div>
       )}

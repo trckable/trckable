@@ -14,12 +14,14 @@ import { isOn, shows } from '../lib/modules'
 import { FilterMenu } from '../components/FilterMenu'
 import { toast } from '../components/Toast'
 import { useLive, onlineNow } from '../lib/useLive'
+import { useNarrow } from '../lib/useNarrow'
 import { useReport } from '../lib/useReport'
 import { useSample } from '../lib/useSample'
 import { AskPanel } from './AskLazy'
 import { pressed, useKeymap } from '../lib/keys'
 import { Notice, StoppedNotice } from './DashboardParts'
-import { extra, ringLayer } from '../features/extras/slots'
+import { extra } from '../features/extras/slots'
+import { momentLayer } from '../features/moments/slots'
 import { KpiStrip } from '../features/overview/KpiStrip'
 import { ChartHead } from '../features/overview/ChartHead'
 import { ReplayButton, ScrubBar } from '../features/overview/Replay'
@@ -604,7 +606,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             partialLast={live}
             {...metricProps(metric, money, revenue)}
             notes={notesOn ? notes : []}
-            layer={isShared() || telling ? undefined : ringLayer({ site: site.id, query, labels: chartSeries.map((p) => p.t), bucket: hours ? 'hour' : (data?.bucket ?? 'day'), money: fmtM })}
+            layer={isShared() || telling ? undefined : momentLayer({ site, query, labels: chartSeries.map((p) => p.t), bucket: hours ? 'hour' : (data?.bucket ?? 'day'), money: fmtM, onShare: () => setSharing(true) })}
             onAddNote={isShared() || isViewer() || !notesOn ? undefined : (day) => setNoteFor(day)}
             pulses={pulses}
             {...chartTips({ series: chartSeries, hours: !!hours, byDay: data?.bucket === 'day', days: cur?.days, site, money, metric })}
@@ -691,20 +693,5 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     </>
   )
 }
-
-/** Whether a media query matches, kept up to date. */
-function useMedia(query: string) {
-  const [on, setOn] = useState(() => typeof matchMedia === 'function' && matchMedia(query).matches)
-  useEffect(() => {
-    const mq = matchMedia(query)
-    const change = () => setOn(mq.matches)
-    mq.addEventListener('change', change)
-    return () => mq.removeEventListener('change', change)
-  }, [query])
-  return on
-}
-
-/** True on phone-width screens, so the chart and cards can shrink. */
-const useNarrow = () => useMedia('(max-width: 640px)')
 
 const zeroKPIs: KPIs = { visitors: 0, sessions: 0, pageviews: 0, bounce_rate: 0, avg_session_s: 0, views_per_session: 0, new_visitor_share: 0 }

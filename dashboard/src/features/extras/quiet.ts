@@ -1,4 +1,4 @@
-// The chart's extras (rings, pace) are garnish: they ask the server for their
+// The chart's extras (moments, pace) are garnish: they ask the server for their
 // numbers only once the page has been quiet, so they never take a slot among the
 // requests the first load needs. The first time, that is when the browser is idle
 // and a moment more; after that (a new period, a filter) the page is already up and

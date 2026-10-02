@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { caps, comboOf, keyFor, loadKeymap, pressed, takenBy } from './keys'
+import { caps, comboOf, keyFor, loadKeymap, pressed } from './keys'
+import { takenBy } from './shortcutList'
 
 // The tests run without a browser: a key press is its fields, and the keymap's
 // change event goes to a bare EventTarget.

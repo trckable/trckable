@@ -8,7 +8,8 @@ import { Modal } from '../components/Modal'
 import { toast } from '../components/Toast'
 import { api, fail } from '../lib/api'
 import { canAsk } from '../lib/me'
-import { ACTIONS, caps, comboOf, customKeys, keyFor, loadKeymap, takenBy, useKeymap, type Group } from '../lib/keys'
+import { caps, comboOf, customKeys, keyFor, loadKeymap, useKeymap } from '../lib/keys'
+import { ACTIONS, takenBy, type Group } from '../lib/shortcutList'
 import './Shortcuts.css'
 
 const ICON = { around: Compass, period: Calendar, mouse: MousePointer2 }

@@ -18,7 +18,9 @@ import (
 // insights serves GET /api/v1/sites/{site}/insights: up to four lines about
 // the period against the one before it (same length, right before), by rules
 // with a floor on volume (package insights). An empty list is the answer of a
-// quiet site. Filters are not applied: these are about the whole site.
+// quiet site. Filters are not applied: these are about the whole site. A
+// new_referrer and a conversion_drop also say the day they start (since), so
+// the dashboard can sit them on that day of its chart.
 func (a *API) insights(w http.ResponseWriter, r *http.Request) {
 	q := a.Query()
 	if q == nil {
@@ -49,14 +51,54 @@ func (a *API) insights(w http.ResponseWriter, r *http.Request) {
 		Pages: now.Dims["entry_page"], PrevPages: was.Dims["entry_page"], HasRevenue: now.Money != nil,
 	}
 	for _, n := range now.NewReferrers {
-		in.Newcomers = append(in.Newcomers, insights.Newcomer{Referrer: n.Referrer, Visitors: n.Visitors})
+		in.Newcomers = append(in.Newcomers, insights.Newcomer{Referrer: n.Referrer, Visitors: n.Visitors, First: n.First})
 	}
-	out := map[string]any{"insights": insights.Find(in), "approximate": now.Approximate || was.Approximate}
+	found := insights.Find(in)
+	for i := range found {
+		if found[i].Kind == insights.ConversionDrop {
+			found[i].Since = a.dropSince(r, q, cur, found[i].Value)
+		}
+	}
+	out := map[string]any{"insights": found, "approximate": now.Approximate || was.Approximate}
 	if now.Money != nil {
 		out["currency"], out["exponent"] = now.Money.Currency, now.Money.Exponent
 	}
 	w.Header().Set("Cache-Control", "private, max-age=30")
 	writeJSON(w, http.StatusOK, out)
+}
+
+// dropSince is the day a page's buyers fell away: its own days in the period,
+// read with the page as a filter, split where its buying rate changed most
+// (insights.DropStart). Empty when the days do not say.
+func (a *API) dropSince(r *http.Request, q *query.Q, cur query.Params, page string) string {
+	p := cur
+	p.Bucket, p.Sales = "day", p.Revenue
+	p.Filters = []query.Filter{{Dim: "entry_page", Value: page}}
+	res, err := a.cachedReport(r, q, p)
+	if err != nil {
+		return ""
+	}
+	return dropStartOf(res)
+}
+
+// dropStartOf reads the days of a page's report: its visitors, and the sales
+// credited to them, one value for each day.
+func dropStartOf(res *query.Result) string {
+	if res.Money == nil || len(res.Series) < 2 {
+		return ""
+	}
+	sold := map[string]int64{}
+	for _, s := range res.Sales {
+		sold[s.T[:10]] = s.Count
+	}
+	visitors, sales := make([]int64, len(res.Series)), make([]int64, len(res.Series))
+	for i, pt := range res.Series {
+		visitors[i], sales[i] = pt.Visitors, sold[pt.T[:10]]
+	}
+	if k := insights.DropStart(visitors, sales); k >= 0 {
+		return res.Series[k].T[:10]
+	}
+	return ""
 }
 
 // fairPrevious is the period an insight compares with: the same length, right
