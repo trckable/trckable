@@ -1,6 +1,7 @@
 package ingest
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -46,5 +47,43 @@ func TestAccuracyCookielessVisitorsAcrossUTCMidnight(t *testing.T) {
 	}
 	if stranger == morning {
 		t.Errorf("two people behind two addresses are one visitor")
+	}
+}
+
+// A visit made while the server was down arrives hours later and says how old
+// it is: it is stored on the day it happened, not on the day it arrived. The
+// server is back at three in the morning (UTC); a two-hour-old visit is last
+// night, a twenty-hour-old one is yesterday afternoon, and one older than any
+// tracker keeps an event (25 hours) is refused rather than put on a day it was
+// never on.
+func TestAccuracyEventsAfterALongOutageAreOnTheirOwnDay(t *testing.T) {
+	h, l := newHandler(t)
+	h.Now = func() time.Time { return time.Date(2026, 9, 22, 3, 0, 0, 0, time.UTC) }
+	for _, tc := range []struct {
+		age  time.Duration
+		day  string
+		code int
+	}{
+		{0, "2026-09-22", http.StatusAccepted},
+		{2 * time.Hour, "2026-09-22", http.StatusAccepted},
+		{3*time.Hour + time.Second, "2026-09-21", http.StatusAccepted},
+		{20 * time.Hour, "2026-09-21", http.StatusAccepted},
+		{24 * time.Hour, "2026-09-21", http.StatusAccepted},
+		{25 * time.Hour, "2026-09-21", http.StatusAccepted},
+		{25*time.Hour + time.Millisecond, "", http.StatusBadRequest},
+		{72 * time.Hour, "", http.StatusBadRequest},
+	} {
+		body := fmt.Sprintf(`{"s":"tkb_test","k":"pv","u":"https://site.com/","a":%d}`, tc.age.Milliseconds())
+		if w := post(h, body, chromeUA); w.Code != tc.code {
+			t.Errorf("age %v: status %d, want %d", tc.age, w.Code, tc.code)
+			continue
+		}
+		if tc.code != http.StatusAccepted {
+			continue
+		}
+		e, _ := lastEvent(t, l)
+		if got := time.UnixMilli(e.TS).UTC().Format("2006-01-02"); got != tc.day {
+			t.Errorf("age %v: stored on %s, want %s", tc.age, got, tc.day)
+		}
 	}
 }

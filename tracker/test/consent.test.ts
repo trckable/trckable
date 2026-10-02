@@ -11,6 +11,7 @@ type Sent = Record<string, any>
 
 let win: Window
 let sent: Sent[]
+let status = 202
 
 function browser(url = 'https://site.com/') {
   win = new Window({ url, width: 1440, height: 900 })
@@ -29,7 +30,7 @@ function browser(url = 'https://site.com/') {
     navigator: { language: 'en-GB', webdriver: false },
     fetch: vi.fn(async (_url: string, init: { body: string }) => {
       sent.push(JSON.parse(init.body))
-      return { status: 202 }
+      return { status }
     }),
   }
   for (const [k, v] of Object.entries(defs)) Object.defineProperty(g, k, { value: v, configurable: true, writable: true })
@@ -41,6 +42,7 @@ const last = () => sent[sent.length - 1]
 
 beforeEach(() => {
   sent = []
+  status = 202
   browser()
 })
 afterEach(() => vi.restoreAllMocks())
@@ -218,4 +220,51 @@ it('still answers trckable("consent", true) for banners that speak neither stand
   t('pageview')
   await flush()
   expect(last().v).toBeTruthy()
+})
+
+it('does not send what an earlier visit left in the queue before the visitor says yes', async () => {
+  const left = { id: 'left', k: 'pv', s: 'tkb_test', u: 'https://site.com/earlier', v: 'abc.def', a: Date.now() - 60_000 }
+  win.localStorage.setItem('trckable_q', JSON.stringify([left]))
+  ;(win as any).dataLayer = [['consent', 'default', { analytics_storage: 'denied' }]]
+  tracker()
+  win.dispatchEvent(new win.Event('online')) // the retry triggers do not get round the wait
+  Object.defineProperty(win.document, 'hidden', { value: false, configurable: true })
+  win.document.dispatchEvent(new win.Event('visibilitychange') as any)
+  await flush()
+  expect(sent).toEqual([])
+  expect(JSON.parse(win.localStorage.getItem('trckable_q')!)).toEqual([left]) // and it is still there, untouched
+
+  // The next page, once the answer is yes: it goes.
+  const stored = win.localStorage.getItem('trckable_q')!
+  browser()
+  win.localStorage.setItem('trckable_q', stored)
+  ;(win as any).dataLayer = [['consent', 'update', { analytics_storage: 'granted' }]]
+  tracker()
+  await flush()
+  await flush()
+  expect(sent.map((e) => e.id)).toContain('left')
+})
+
+it('a page counted without a cookie is retried from memory, and stores nothing, not even to clean up', async () => {
+  vi.useFakeTimers({ toFake: ['setTimeout'] })
+  vi.spyOn(Date, 'now').mockReturnValue(1_000_000)
+  try {
+    status = 503
+    ;(win as any).dataLayer = [['consent', 'default', { analytics_storage: 'denied' }]]
+    tracker()
+    win.dispatchEvent(new win.Event('pagehide')) // leaves without an answer: counted, without a cookie
+    await vi.advanceTimersByTimeAsync(0)
+    expect(sent).toHaveLength(1)
+    expect(sent[0].c).toBe(1)
+    status = 202
+    ;(Date.now as any).mockReturnValue(1_002_000)
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(sent).toHaveLength(2)
+    expect(sent[1].id).toBe(sent[0].id)
+    expect(sent[1].a).toBe(2000)
+    expect(win.localStorage.getItem('trckable_q')).toBeNull()
+    expect(win.localStorage.length).toBe(0)
+  } finally {
+    vi.useRealTimers()
+  }
 })

@@ -33,7 +33,7 @@ const (
 	// and a visit counts up to a minute after the sale it is credited with.
 	// A renewal is credited to the visit that started its subscription, which
 	// can be older than this; that holds because every event that reaches the
-	// store live is at most 30 minutes old (a retry queue's limit), and an
+	// store live is at most 25 hours old (event.MaxAge, a retry queue's limit), and an
 	// import of history runs offline, with no reports cached. An import that
 	// ran online would have to purge the site when it finished.
 	lookBack  = query.AttributionWindow

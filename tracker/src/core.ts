@@ -100,11 +100,11 @@ export function start(c: Config): Tracker {
   let engaged!: number
   let scroll!: number
   let ref = d.referrer
+  let pending: Payload[] = [] // what has not been acknowledged yet, oldest first
 
-  const rid = () => {
-    const a = crypto.getRandomValues(new Uint32Array(2))
-    return (a[0] * 2097152 + (a[1] >>> 11)).toString(36) // 53 random bits
-  }
+  // An id is made to be unique, not to be secret: about 52 random bits, the
+  // digits of a random fraction in base 36 (the server reads up to 13).
+  const rid = () => Math.random().toString(36).slice(2)
 
   const cookie = () => /trckable_vid=([^;]+)/.exec(d.cookie)?.[1]
   // Writes the visitor cookie; an empty value with no age deletes it.
@@ -155,6 +155,7 @@ export function start(c: Config): Tracker {
       // expired by the server with the next event, which now says cookieless.
       if (!was && cookieless) {
         put('', 0)
+        pending = []
         ls?.removeItem(QUEUE)
       }
       if (ok || final) release()
@@ -257,32 +258,53 @@ export function start(c: Config): Tracker {
   // agrees with whichever write won.
   const vid = (v = rid() + '.' + (now() / 1e3 >>> 0).toString(36)) => cookie() || (put(v, 34560000), cookie()) // whole seconds; >>> keeps it right until 2106
 
-  const queue = (): [Payload, number][] => {
+  // What has not been acknowledged yet; each event carries the time it was made
+  // in `a`, which becomes its age on the wire. A cookie visitor's events are
+  // kept in localStorage: 24 hours, 200 events, the oldest dropped first, and
+  // sent again, with their own ids and their own age, by the next page or visit. An event sent without a cookie is kept in memory
+  // only, for as long as the page is open: consent-free mode touches no
+  // storage, so a visitor in it who closes the page during an outage loses
+  // what was not delivered.
+  const queue = (): Payload[] => {
     try {
       return JSON.parse(ls!.getItem(QUEUE)!) || []
     } catch {
       return []
     }
   }
-  const save = (q: [Payload, number][]) => {
+  const save = (q: Payload[]) => {
     try {
-      ls!.setItem(QUEUE, JSON.stringify(q.slice(-50)))
+      ls!.setItem(QUEUE, JSON.stringify(q.slice(-200)))
     } catch {}
   }
+  // One try. The age is how long the event has waited, so that the server puts
+  // it on the day it happened. A 5xx or 429 is a "not now" (the event stays
+  // queued); anything else is final, and the event goes.
+  const go = (p: Payload) =>
+    fetch(c.api, { method: 'POST', body: JSON.stringify({ ...p, a: now() - (p.a as number) }), keepalive: true }).then((r) => {
+      if (r.status > 499 || r.status == 429) throw 0
+      pending = pending.filter((y) => y != p)
+      if (!cookieless) save(queue().filter((y) => y.id != p.id))
+    })
 
-  const post = (p: Payload, age = 0) => {
-    if (age) p.a = age
-    // Not acknowledged: a cookie-mode event stays in the queue for the next
-    // page; one sent without a cookie has no queue, so it is tried again here,
-    // from memory, with the same id (the server drops duplicates).
-    fetch(c.api, { method: 'POST', body: JSON.stringify(p), keepalive: true })
-      .then((r) => {
-        // 5xx / 429: keep it queued for a retry; anything else is final.
-        // Events sent without a cookie never touch storage, not even to clean up.
-        if (r.status > 499 || r.status == 429) throw 0
-        if (!p.c) save(queue().filter((x) => x[0].id != p.id))
-      })
-      .catch(() => p.c && age < 6e3 && setTimeout(() => post(p, age + 2e3 + age), 2e3 + age))
+  // After a failure, the queue is worked through oldest first and one request
+  // at a time (so the visits of a long outage reach the server in the order
+  // they happened), with a pause that doubles from 2 seconds to about 4
+  // minutes, and again at once when the browser says it is online or the tab
+  // is shown. Until the queue is empty, new events wait their turn; while it
+  // is healthy they go out as they happen, on their own.
+  let fly = 0 // a request of the retry loop is out
+  let tries = 0 // failures in a row: 0 is healthy
+  const back = () => setTimeout(run, 1e3 << Math.min(++tries, 8))
+  const run = () => {
+    if (!fly && pending[0]) {
+      fly = 1
+      go(pending[0])
+        .then(
+          () => ((fly = tries = 0), run()),
+          () => ((fly = 0), back()),
+        )
+    }
   }
 
   // A payload is filled in once; one held back comes here again when it is
@@ -300,15 +322,17 @@ export function start(c: Config): Tracker {
     }
     if (cookieless > 1) return // declined: nothing is sent
     const v = cookieless ? 0 : vid()
+    p.a = now() // when it was made: the wire's age is how long ago
     if (!v) p.c = 1 // no cookie: the server must not set one either
     else {
       p.v = v
       // Write-ahead: queued before sending, removed once acknowledged. Anything
-      // left (page closed mid-flight, offline, server restarting) is retried on
-      // the next page; the server drops duplicates by event id.
-      save([...queue(), [p, now()]])
+      // left (page closed mid-flight, offline, server down) is sent again later;
+      // the server drops duplicates by event id.
+      save([...queue(), p])
     }
-    post(p)
+    pending.push(p)
+    fly || tries || go(p).catch(back)
   }
 
   // Core Web Vitals, measured by the browser itself. They ride along with the
@@ -316,9 +340,10 @@ export function start(c: Config): Tracker {
   // moment the numbers are final — so this costs no extra request.
   // Everything lives in one object written by the observers and read by the
   // flush, so with the module off nothing here is referenced and the whole
-  // block leaves the script (an unused 0 is dropped; an unused {} is not).
-  const cwv: Payload = __VITALS__ ? {} : (0 as any)
+  // block leaves the script.
+  let cwv!: Payload
   if (__VITALS__) {
+    cwv = {}
     const watch = (type: string, cb: (e: any) => void) => {
       try {
         new PerformanceObserver((l) => l.getEntries().forEach(cb)).observe({ type, buffered: true })
@@ -439,13 +464,13 @@ export function start(c: Config): Tracker {
     )
 
   // Engagement: only visible time counts.
-  d.addEventListener('visibilitychange', () => (d.hidden ? flushEngagement() : (visible = now())))
+  d.addEventListener('visibilitychange', () => (d.hidden ? flushEngagement() : (run(), (visible = now()))))
   w.addEventListener('pagehide', flushEngagement)
   w.addEventListener(
     'scroll',
     () => {
       const h = d.documentElement.scrollHeight - innerHeight
-      const pct = h > 0 ? Math.min(100, Math.round((scrollY / h) * 100)) : 100
+      const pct = Math.min(100, Math.round((scrollY / h) * 100)) || 100
       if (pct > scroll) scroll = pct
     },
   )
@@ -469,12 +494,11 @@ export function start(c: Config): Tracker {
     }
   })
 
-  // Retry what an earlier page could not deliver.
-  if (!cookieless) {
-    const q = queue().filter((x) => now() - x[1] < 18e5) // 30 min: older ones are dropped, the server would date them wrong
-    save(q)
-    q.forEach((x) => post(x[0], now() - x[1]))
-  }
+  // Retry what an earlier page could not deliver. Older than a day is dropped:
+  // the server would refuse it (it dates events up to 25 hours back).
+  if (!cookieless) save((pending = queue().filter((x) => now() - (x.a as number) < 864e5)))
+  run()
+  w.addEventListener('online', run)
 
   // Count the first view once the page is actually shown (not while prerendering).
   if ((d as any).prerendering) d.addEventListener('prerenderingchange', page)
@@ -489,7 +513,7 @@ export function start(c: Config): Tracker {
       // The site's own answer from its own banner: yes, or a final no.
       if (__CONSENT__ || __BANNER__) grant(a, 1)
       else {
-        cookieless = a ? 0 : (put('', 0), 2) // no: the cookie goes, and so does counting
+        cookieless = a ? 0 : (put('', 0), (pending = []), 2) // no: the cookie goes, and so does counting
       }
     }
   }) as Tracker)

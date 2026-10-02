@@ -22,9 +22,13 @@ client at either.
 
 - ~2 KB, bundled into your app (no script file for ad blockers to block)
 - Pageviews for any SPA, goals, outbound links, downloads, scroll goals, engagement time
-- Events that fail to send are kept in the browser and sent again on a later page;
-  cookieless mode keeps nothing, so it tries again from memory while the page is
-  open. The server counts each one once
+- Events that fail to send are kept in the browser, up to 24 hours and 200 events,
+  and sent again oldest first as soon as the server answers (on a later page or
+  visit, when the browser is back online, when the tab is shown, or after a pause
+  that doubles up to about 4 minutes), each with the time it waited, so a visit
+  made while your server was down is counted once, on the day it happened.
+  Cookieless mode keeps nothing in the browser, so it tries again from memory
+  while the page is open, and what is not delivered by then is lost
 - The script runs once per page, however many copies load (the tag and the package, or two bundles)
 - Cookieless mode stores nothing in the browser
 - The visitor cookie `trckable_vid` holds a random id, which counts as personal data, and nothing else about the visitor. It lasts 400 days (7 days in Safari when the browser script sets it, 400 when your server route does). In the EU it normally needs consent first; cookieless mode sets none

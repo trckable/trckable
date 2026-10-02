@@ -8,6 +8,9 @@ let win: Window
 let sent: Sent[]
 let status: number
 let fetchFails: boolean
+let gate: Promise<void> | null // while set, answers wait for it
+let inflight: number
+let peak: number // the most requests that were out at the same time
 
 // A fresh browser per test: start() adds listeners and patches history, so
 // sharing one window would leak state between tests.
@@ -28,8 +31,14 @@ function browser(url = 'https://site.com/pricing?utm_source=hn', referrer = 'htt
     navigator: { language: 'de-DE', webdriver: false },
     fetch: vi.fn(async (_url: string, init: { body: string }) => {
       sent.push(JSON.parse(init.body))
-      if (fetchFails) throw new TypeError('network down')
-      return { status }
+      peak = Math.max(peak, ++inflight)
+      try {
+        if (gate) await gate
+        if (fetchFails) throw new TypeError('network down')
+        return { status }
+      } finally {
+        inflight--
+      }
     }),
   }
   for (const [k, v] of Object.entries(defs)) Object.defineProperty(g, k, { value: v, configurable: true, writable: true })
@@ -39,11 +48,18 @@ const tracker = (c: Partial<Config> = {}) => start({ site: 'tkb_test', api: 'htt
 const flush = () => new Promise((r) => setTimeout(r, 0))
 const byKind = (k: string) => sent.filter((e) => e.k === k)
 const queued = () => JSON.parse(win.localStorage.getItem('trckable_q') || '[]')
+const online = () => win.dispatchEvent(new win.Event('online'))
+const hidden = (h: boolean) => {
+  Object.defineProperty(win.document, 'hidden', { value: h, configurable: true })
+  win.document.dispatchEvent(new win.Event('visibilitychange'))
+}
 
 beforeEach(() => {
   sent = []
   status = 202
   fetchFails = false
+  gate = null
+  inflight = peak = 0
   browser()
 })
 afterEach(() => vi.restoreAllMocks())
@@ -236,6 +252,16 @@ describe('engagement', () => {
 })
 
 describe('delivery (write-ahead queue)', () => {
+  afterEach(() => vi.useRealTimers())
+  const HOUR = 3_600_000
+
+  // A later page load in the same browser: a new window that has the same storage.
+  const nextPage = (url = 'https://site.com/next', referrer = 'https://site.com/pricing') => {
+    const storage = win.localStorage.getItem('trckable_q')
+    browser(url, referrer)
+    if (storage) win.localStorage.setItem('trckable_q', storage)
+    sent = []
+  }
   it('removes an event from the queue once acknowledged', async () => {
     tracker()
     await flush()
@@ -249,15 +275,12 @@ describe('delivery (write-ahead queue)', () => {
     tracker()
     await flush()
     expect(queued()).toHaveLength(1)
-    const lost = queued()[0][0]
+    const lost = queued()[0]
 
     // Next page load, 10 s later, network is back.
     fetchFails = false
     ;(Date.now as any).mockReturnValue(5_010_000)
-    const storage = win.localStorage.getItem('trckable_q')!
-    browser('https://site.com/next', 'https://site.com/pricing')
-    win.localStorage.setItem('trckable_q', storage)
-    sent = []
+    nextPage()
     tracker()
     await flush()
     await flush()
@@ -272,23 +295,197 @@ describe('delivery (write-ahead queue)', () => {
     await flush()
     await flush()
     expect(queued()).toHaveLength(1)
-    const storage = win.localStorage.getItem('trckable_q')!
+    const id = queued()[0].id
     status = 400 // e.g. the site was deleted: retrying forever would be pointless
-    browser()
-    win.localStorage.setItem('trckable_q', storage)
-    sent = []
+    nextPage()
     tracker()
     await flush()
     await flush()
-    expect(sent.filter((e) => e.id === JSON.parse(storage)[0][0].id)).toHaveLength(1) // it was retried…
+    expect(sent.filter((e) => e.id === id)).toHaveLength(1) // it was retried…
     expect(queued()).toHaveLength(0) // …and dropped after the 4xx
   })
 
-  it('drops queued events older than 30 minutes', async () => {
-    win.localStorage.setItem('trckable_q', JSON.stringify([[{ id: 'old', k: 'pv' }, Date.now() - 31 * 60_000]]))
+  it('keeps an event a day, and sends it with the age it has: the day it happened on', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'Date'] })
+    fetchFails = true
+    tracker()
+    await vi.advanceTimersByTimeAsync(0)
+    const id = queued()[0].id
+    expect(queued()[0].id).toBe(id)
+
+    // The visitor comes back 20 hours later; the server is up.
+    vi.setSystemTime(Date.now() + 20 * HOUR)
+    fetchFails = false
+    nextPage()
+    tracker()
+    await vi.advanceTimersByTimeAsync(0)
+    const retry = sent.find((e) => e.id === id)!
+    expect(retry.a).toBe(20 * HOUR)
+    expect(queued()).toHaveLength(0)
+  })
+
+  it('drops what is older than 24 hours, and keeps what is a little younger', async () => {
+    const t = Date.now()
+    const old = (id: string, age: number) => ({ id, k: 'pv', s: 'tkb_test', u: 'https://site.com/old', a: t - age })
+    win.localStorage.setItem('trckable_q', JSON.stringify([old('stale', 24 * HOUR + 1000), old('fresh', 24 * HOUR - 60_000)]))
     tracker()
     await flush()
-    expect(sent.find((e) => e.id === 'old')).toBeUndefined()
+    expect(sent.find((e) => e.id === 'stale')).toBeUndefined()
+    expect(sent.find((e) => e.id === 'fresh')!.a).toBeGreaterThan(24 * HOUR - 61_000)
+    expect(queued().some((e: any) => e.id === 'stale')).toBe(false)
+  })
+
+  it('ignores a queue written by an earlier version of the script, and does not send it', async () => {
+    win.localStorage.setItem('trckable_q', JSON.stringify([[{ id: 'older', k: 'pv' }, Date.now() - 60_000]]))
+    tracker()
+    await flush()
+    expect(sent.find((e) => e.id === 'older')).toBeUndefined()
+    expect(sent.every((e) => typeof e.s == 'string')).toBe(true)
+  })
+
+  it('keeps the newest 200, the oldest dropped first', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'Date'] })
+    fetchFails = true
+    tracker()
+    for (let i = 0; i < 250; i++) (win as any).__trk('goal', 'g' + i)
+    await vi.advanceTimersByTimeAsync(0)
+    const q = queued()
+    expect(q).toHaveLength(200)
+    expect(q[q.length - 1].n).toBe('g249')
+    expect(q[0].n).toBe('g50') // the pageview and the first 49 goals are the oldest
+  })
+
+  it('sends a backlog oldest first, one request at a time, before the page that found it', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'Date'] })
+    const t = Date.now()
+    const ev = (n: number) => ({ id: 'q' + n, k: 'g', n: 'goal' + n, s: 'tkb_test', u: 'https://site.com/old', v: 'abc.def', a: t - (5 - n) * HOUR })
+    win.localStorage.setItem('trckable_q', JSON.stringify([ev(1), ev(2), ev(3)]))
+    gate = new Promise((r) => setTimeout(r, 100)) // every answer takes 100 ms
+    tracker()
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(sent.map((e) => e.id).slice(0, 3)).toEqual(['q1', 'q2', 'q3'])
+    expect(sent[3].k).toBe('pv') // this page's own view comes after them
+    expect(peak).toBe(1) // one at a time
+    expect(sent[0].a).toBe(4 * HOUR)
+    expect(queued()).toHaveLength(0)
+  })
+
+  it('backs off while the server is down: 2 s, 4 s, 8 s, then no more than about 4 minutes', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'Date'] })
+    status = 503
+    tracker()
+    await vi.advanceTimersByTimeAsync(0)
+    const at: number[] = []
+    let n = sent.length
+    const start = Date.now()
+    for (let ms = 0; ms < 3_600_000; ms += 500) {
+      await vi.advanceTimersByTimeAsync(500)
+      if (sent.length > n) {
+        at.push(Date.now() - start)
+        n = sent.length
+      }
+    }
+    expect(at.slice(0, 4)).toEqual([2000, 6000, 14_000, 30_000]) // each wait twice the one before
+    const gaps = at.slice(1).map((x, i) => x - at[i])
+    expect(Math.max(...gaps)).toBeLessThanOrEqual(260_000)
+    expect(Math.max(...gaps)).toBeGreaterThanOrEqual(250_000) // and it settles there
+    expect(new Set(sent.map((e) => e.id)).size).toBe(1) // always the same event, never a copy with a new id
+    expect(peak).toBe(1)
+  })
+
+  it('tries again at once when the browser is online again, or the tab is shown', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'Date'] })
+    status = 503
+    tracker()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(sent).toHaveLength(1)
+    status = 202
+    online()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(sent).toHaveLength(2) // no waiting for the next pause
+    expect(queued()).toHaveLength(0)
+
+    status = 503
+    ;(win as any).__trk('goal', 'again')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(sent).toHaveLength(3)
+    status = 202
+    hidden(true)
+    hidden(false)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(sent.filter((e) => e.n == 'again')).toHaveLength(2)
+    expect(queued()).toHaveLength(0)
+  })
+
+  it('never has two requests of the retry loop out at once', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'Date'] })
+    status = 503
+    tracker()
+    await vi.advanceTimersByTimeAsync(0)
+    for (let i = 0; i < 5; i++) (win as any).__trk('goal', 'w' + i) // wait their turn
+    status = 202
+    let release!: () => void
+    gate = new Promise<void>((r) => (release = r)) // the next answer hangs
+    online()
+    online()
+    hidden(false)
+    await vi.advanceTimersByTimeAsync(10)
+    expect(inflight).toBe(1)
+    release()
+    gate = null
+    await vi.advanceTimersByTimeAsync(10)
+    expect(peak).toBe(1)
+    expect(queued()).toHaveLength(0)
+    expect(sent.filter((e) => e.k == 'g').map((e) => e.n)).toEqual(expect.arrayContaining(['w0', 'w1', 'w2', 'w3', 'w4']))
+  })
+
+  it('while the server answers, each event goes out at once and on its own', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'Date'] })
+    let release!: () => void
+    gate = new Promise<void>((r) => (release = r))
+    tracker()
+    ;(win as any).__trk('goal', 'quick')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(sent.map((e) => e.k)).toEqual(['pv', 'g']) // the goal does not wait for the page view's answer
+    release()
+    await vi.advanceTimersByTimeAsync(0)
+  })
+
+  it('does not send an event again and again when the browser will not let it be removed from the queue', async () => {
+    const left = { id: 'left', k: 'pv', s: 'tkb_test', u: 'https://site.com/earlier', v: 'abc.def', a: Date.now() - 60_000 }
+    win.localStorage.setItem('trckable_q', JSON.stringify([left]))
+    const real = win.localStorage
+    // Full: it can be read, and nothing more can be written.
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: {
+        getItem: (k: string) => real.getItem(k),
+        removeItem: (k: string) => real.removeItem(k),
+        setItem: () => {
+          throw new DOMException('full', 'QuotaExceededError')
+        },
+      },
+      configurable: true,
+      writable: true,
+    })
+    tracker()
+    await flush()
+    await flush()
+    await flush()
+    expect(sent.filter((e) => e.id === 'left')).toHaveLength(1)
+    expect(sent).toHaveLength(2) // the one left behind, and this page's own
+  })
+
+  it('stops sending, and forgets what is queued, when the visitor says no', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'Date'] })
+    status = 503
+    const t = tracker()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(sent).toHaveLength(1)
+    t('consent', false)
+    status = 202
+    online()
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(sent).toHaveLength(1)
   })
 })
 
@@ -296,7 +493,7 @@ describe('delivery without storage', () => {
   afterEach(() => vi.useRealTimers())
 
   it('retries a cookieless event from memory with the same id, and never touches storage', async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout'] })
+    vi.useFakeTimers({ toFake: ['setTimeout', 'Date'] })
     status = 503 // a deploy in progress
     tracker({ cookieless: true })
     await vi.advanceTimersByTimeAsync(0)
@@ -311,22 +508,41 @@ describe('delivery without storage', () => {
     expect(win.localStorage.length).toBe(0)
   })
 
-  it('retries after a dropped connection, and gives up after a few tries', async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout'] })
+  it('keeps trying, with longer and longer pauses, for as long as the page is open', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'Date'] })
     fetchFails = true
     tracker({ cookieless: true })
     await vi.advanceTimersByTimeAsync(60_000)
-    expect(sent.length).toBeGreaterThan(1)
-    expect(sent.length).toBeLessThan(5)
+    expect(sent.length).toBeGreaterThan(3)
+    await vi.advanceTimersByTimeAsync(2 * 3_600_000)
+    expect(sent.length).toBeLessThan(40) // 4-minute pauses, not a flood
     expect(new Set(sent.map((e) => e.id)).size).toBe(1)
+    fetchFails = false
+    online()
+    await vi.advanceTimersByTimeAsync(10)
+    expect(sent[sent.length - 1].a).toBeGreaterThan(2 * 3_600_000) // and the server is told how long it waited
+    expect(win.localStorage.length).toBe(0) // nothing was kept, not even a failed attempt
   })
 
   it('does not retry a rejected event (4xx)', async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout'] })
+    vi.useFakeTimers({ toFake: ['setTimeout', 'Date'] })
     status = 400
     tracker({ cookieless: true })
     await vi.advanceTimersByTimeAsync(60_000)
     expect(sent).toHaveLength(1)
+  })
+
+  it('loses what was not delivered when the page closes: a new page starts with nothing', async () => {
+    fetchFails = true
+    tracker({ cookieless: true })
+    await flush()
+    expect(win.localStorage.length).toBe(0)
+    browser()
+    fetchFails = false
+    sent = []
+    tracker({ cookieless: true })
+    await flush()
+    expect(sent).toHaveLength(1) // only this page's view
   })
 })
 
@@ -368,6 +584,7 @@ describe('privacy and modes', () => {
 
   it('counts a browser that refuses cookies without an id, not as a new visitor per event', async () => {
     Object.defineProperty(win.document, 'cookie', { get: () => '', set: () => {}, configurable: true })
+    vi.spyOn(Date, 'now').mockReturnValue(1_000_000) // no time passes, so no time on the first page to report
     const t = tracker()
     t('goal', 'signup')
     win.history.pushState({}, '', '/docs')

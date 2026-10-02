@@ -19,6 +19,8 @@ import { proxy } from '../../packages/trckable/dist/server.js'
 const HERE = resolve(fileURLToPath(new URL('.', import.meta.url)))
 const BIN = process.env.TRCKABLE_BIN ?? resolve(HERE, '../../server/bin/trckabled')
 const TOKEN = 'accuracy-token'
+// The script as built (committed beside the server), for scenarios whose page must still load it while trckabled is down.
+const SCRIPT = process.env.TRCKABLE_SCRIPT ?? resolve(HERE, '../../server/internal/web/assets/t.js')
 
 export const CHROME_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'
 
@@ -54,10 +56,13 @@ export interface Report {
   kpis: { visitors: number; sessions: number; pageviews: number; bounce_rate: number; avg_session_s: number }
   dims: Record<string, Row[]>
   goals: Row[]
+  /** Each day in the range, in the site's zone (UTC here), with that day's numbers. */
+  days?: { date: string; kpis: Report['kpis'] }[]
 }
 
 export interface Ev {
   seq: number
+  ts: string // when it happened, as the server dates it
   kind: 'pageview' | 'goal' | 'engagement'
   path: string
   visitor: string
@@ -152,7 +157,7 @@ export class Server {
 
   async report(site: Site): Promise<Report> {
     const day = (back: number) => new Date(Date.now() - back * 86_400_000).toISOString().slice(0, 10)
-    const q = `from=${day(1)}&to=${day(0)}&tz=UTC&deep=1`
+    const q = `from=${day(1)}&to=${day(0)}&tz=UTC&deep=1&daily=1`
     const r = (await (await this.api(`/sites/${site.id}/report?${q}`)).json()) as { current: Report }
     return r.current
   }
@@ -192,6 +197,7 @@ export type Mode =
   | 'proxy' // the script and /api/e come from the site's own origin, forwarded by trckable/server with the key
   | 'nokey' // the same, but the proxy has no key
   | 'plain' // a reverse proxy that passes everything through and adds nothing
+  | 'local' // the script comes from the site's own origin (so it loads while trckabled is down), and events go straight to trckabled
 
 /** A small web server for the scenarios' pages, one per worker. */
 export class Web {
@@ -249,6 +255,10 @@ export class Web {
   tag(site: Site, mode: Mode, prefix: string, extra = ''): string {
     const s = this.server
     if (mode === 'direct') return `<script defer src="${s.url}/js/t.js" data-site="${site.id}" data-dev ${extra}></script>`
+    if (mode === 'local') {
+      this.file(`${prefix}/t.js`, SCRIPT)
+      return `<script defer src="${prefix}/t.js" data-site="${site.id}" data-api="${s.url}/api/e" data-dev ${extra}></script>`
+    }
     if (mode === 'site') return `<script defer src="${s.url}/js/${site.id}.js" data-dev ${extra}></script>`
     this.sameOrigin(site, mode, prefix)
     return `<script defer src="${prefix}/js/t.js" data-site="${site.id}" data-api="${prefix}/api/e" data-dev ${extra}></script>`
@@ -307,6 +317,8 @@ export interface Truth {
   converted?: Record<string, number>
   /** Page views in order, as paths. */
   pages?: string[]
+  /** Visits and page views on each day (UTC) they happened on, and on no other day. */
+  days?: Record<string, { sessions: number; pageviews: number }>
   /** Sessions by channel, source, medium, campaign, referrer and entry page: the whole table, nothing more. */
   channels?: Record<string, number>
   sources?: Record<string, number>
@@ -350,6 +362,12 @@ export function checks(t: Truth, r: Report, evs: Ev[], prefix = ''): Check[] {
   }
   if (t.converted) add('visitors who converted', sorted(t.converted), sorted(Object.fromEntries(r.goals.map((g) => [g.value, g.visitors]))))
   if (t.pages) add('page views, in order', t.pages, evs.filter((e) => e.kind === 'pageview').map((e) => e.path.slice(prefix.length) || '/'))
+  if (t.days) {
+    const day = (d: { date: string; kpis: Report['kpis'] }) => [d.date, { sessions: d.kpis.sessions, pageviews: d.kpis.pageviews }] as const
+    const got = (r.days ?? []).filter((d) => d.kpis.sessions > 0 || d.kpis.pageviews > 0).map(day)
+    const byDate = (a: readonly [string, unknown], b: readonly [string, unknown]) => (a[0] < b[0] ? -1 : 1)
+    add('sessions and page views by day', Object.entries(t.days).sort(byDate), got.sort(byDate))
+  }
   const dim = (name: string, want: Record<string, number> | undefined, key: string) => want && add(name, sorted(want), sorted(table(r.dims[key])))
   dim('sessions by channel', t.channels, 'channel')
   dim('sessions by source', t.sources, 'source')
