@@ -30,20 +30,24 @@ export function policyText(p: PolicyInput): string {
   if (p.modules.goals) collected.push('which of a handful of marked actions you took, such as signing up')
   if (p.modules.outbound) collected.push('which links you followed away from the site, and which files you downloaded')
 
+  // The daily number is what counts a visit that has no cookie.
+  const daily = p.config.consent_free || p.modules.consent
   const out: string[] = []
   out.push(`## Analytics on ${p.domain}`)
   out.push('')
   out.push(
-    `We measure how ${p.domain} is used with trckable, an open-source analytics tool that we run ourselves on ${p.host}. ` +
-      `No data about you is sent to any other company, and none of it is sold, shared or used for advertising.`,
+    `We measure how ${p.domain} is used with trckable, an open-source analytics tool that we run ourselves, on our own server at ${p.host}. ` +
+      `What it records stays on that server, and none of it is sold, shared or used for advertising.`,
   )
   out.push('')
   out.push(`**What is recorded.** For each visit: ${join(collected)}.`)
   out.push('')
   out.push(
-    `**What is not recorded.** Your IP address is never stored. It is used once, in memory, to work out your country` +
+    `**What is not recorded.** Your IP address is never written to a log, a database or a disk. While your visit is being handled it is used in memory, to work out your country` +
       (p.config.record_city && !p.config.consent_free ? ', region and city' : '') +
-      `, and is then discarded — it is not written to a log or a database. We do not build a profile of you, and we cannot identify you from what is kept.`,
+      `, to tell robots and floods of requests from people` +
+      (daily ? ', and to make the daily number below' : '') +
+      `, and is then discarded. We do not record your name${p.modules.revenue ? ' (apart from the payment notice described below)' : ' or email address'}, and we do not build a profile of you.`,
   )
   out.push('')
   // One module, two ways of asking; only trckable's own bar keeps the answer.
@@ -53,7 +57,7 @@ export function policyText(p: PolicyInput): string {
     out.push(
       `**Cookies, and only if you say so.** Until you answer our cookie banner, nothing about your visit is sent. If you decline, your visit is not counted at all. If you leave without answering, the pages you saw are counted without a cookie, using a number derived from your request that changes every day. ` +
         `If you agree, one cookie, \`trckable_vid\`, holds a random number so that a return visit is not counted as a new person. ` +
-        `It contains no personal data, is only ever sent to this site, and is never used for advertising. A few visits waiting to be sent may sit in your browser's storage for a moment. If you change your mind, that cookie is deleted.` +
+        `The cookie holds that random id, which counts as personal data, and nothing else about you; it is only ever sent to this site, and is never used for advertising. A few visits waiting to be sent may sit in your browser's storage for a moment. If you change your mind, that cookie is deleted.` +
         (ownBar ? ` Your answer itself — yes or no — is kept in your browser, so that we do not ask again on every page.` : ''),
     )
   } else if (p.config.consent_free) {
@@ -64,7 +68,7 @@ export function policyText(p: PolicyInput): string {
   } else {
     out.push(
       `**Cookies.** One cookie, \`trckable_vid\`, holds a random number so that a return visit is not counted as a new person. ` +
-        `It contains no personal data, is only ever sent to this site, and is never used for advertising. A few visits waiting to be sent may sit in your browser's storage for a moment. ` +
+        `The cookie holds that random id, which counts as personal data, and nothing else about you; it is only ever sent to this site, and is never used for advertising. A few visits waiting to be sent may sit in your browser's storage for a moment. ` +
         `Depending on where you are, your consent may be required before it is set.`,
     )
   }
@@ -76,8 +80,8 @@ export function policyText(p: PolicyInput): string {
   if (p.modules.revenue) {
     out.push(
       `**Purchases.** If you buy something, our payment provider tells us the amount and which visit led to it, so we know which parts of the site are worth keeping. ` +
-        `The provider's notice of the payment, which includes your email address, is kept on our own server so the figures stay correct. ` +
-        `If you ask us to erase your data, that notice is deleted and the payment is no longer linked to you, and your card details never reach us.`,
+        `The provider's notice of the payment, which includes your email address and may include your name and address, is kept on our own server for up to 30 days so the figures stay correct, and then emptied; what stays is the amount, the date, and a code made from your email address that cannot be turned back into it. ` +
+        `If you ask us to erase your data, any notice still held is deleted and the payment is no longer linked to you, and your card details never reach us.`,
     )
     out.push('')
   }
@@ -85,7 +89,7 @@ export function policyText(p: PolicyInput): string {
   out.push('')
   out.push(
     `**Your rights.** You can ask us what we hold about you and ask us to delete it. ` +
-      `Because we store no name, email or IP address, we will usually need something to find you by — the id in the \`trckable_vid\` cookie, or the email address you used at checkout.`,
+      `Because we keep no IP address${p.modules.revenue ? ', and no name or email address beyond the payment notice above,' : ', name or email address,'} we will usually need something to find you by — the id in the \`trckable_vid\` cookie${p.modules.revenue ? ', or the email address you used at checkout' : ''}.`,
   )
   return out.join('\n')
 }
@@ -106,6 +110,8 @@ export function policyCaveats(p: PolicyInput): string[] {
   if (p.config.record_city && !p.config.consent_free) out.push('Region and city are being recorded. They are derived from the IP address and never stored with it, but they are more precise than country alone.')
   if (p.config.retention_days === 0) out.push('Nothing expires. A retention period is easier to justify than keeping everything forever.')
   if (p.modules.goals) out.push('Goals can carry properties you choose. Do not put names, emails or anything else personal in them — trckable stores whatever you send.')
+  out.push('This text assumes you run trckable yourself, on your own server. If someone else runs it for you, they handle this data on your behalf: name them in the paragraph.')
+  if (p.modules.revenue) out.push('Payment notices are emptied after 30 days unless you changed TRCKABLE_PAYMENT_NOTICE_DAYS or set a shorter retention for the site. If you did, change the number in the Purchases paragraph.')
   out.push('This covers trckable only. Anything else on your site — embedded video, fonts, chat, ads — needs its own paragraph.')
   return out
 }

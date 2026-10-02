@@ -30,7 +30,7 @@ describe('policyText', () => {
   it('names the site and where trckable runs', () => {
     const t = policyText(input())
     expect(t).toContain('## Analytics on site.com')
-    expect(t).toContain('we run ourselves on stats.site.com')
+    expect(t).toContain('we run ourselves, on our own server at stats.site.com')
   })
 
   it('lists what is collected with one "and", not several', () => {
@@ -72,6 +72,42 @@ describe('policyText', () => {
 
   it('mentions payments only when revenue is on', () => {
     expect(policyText(input({ modules: { revenue: true } }))).toContain('your card details never reach us')
+  })
+
+  it('says how long the payment notice is kept, and that it names the payer', () => {
+    const t = policyText(input({ modules: { revenue: true } }))
+    expect(t).toContain('up to 30 days')
+    expect(t).toContain('your email address and may include your name and address')
+    expect(policyCaveats(input({ modules: { revenue: true } })).some((c) => c.includes('TRCKABLE_PAYMENT_NOTICE_DAYS'))).toBe(true)
+  })
+
+  it('does not claim that no data leaves, or that the cookie holds nothing personal', () => {
+    for (const p of [input(), input({ modules: { consent: true } }), input({ config: config({ consent_free: true }) })]) {
+      const t = policyText(p)
+      expect(t).not.toContain('No data about you is sent to any other company')
+      expect(t).not.toContain('contains no personal data')
+      expect(t).not.toContain('cannot identify you')
+      expect(t).not.toContain('used once')
+    }
+    expect(policyText(input())).toContain('random id, which counts as personal data')
+  })
+
+  it('is exact about the IP address: in memory for several jobs, never written down', () => {
+    const t = policyText(input())
+    expect(t).toContain('never written to a log, a database or a disk')
+    expect(t).toContain('tell robots and floods of requests from people')
+    expect(t).not.toContain('daily number below')
+    expect(policyText(input({ config: config({ consent_free: true }) }))).toContain('to make the daily number below')
+    expect(policyText(input({ modules: { consent: true } }))).toContain('to make the daily number below')
+  })
+
+  it('does not say no name or email is kept once payments are connected', () => {
+    expect(policyText(input({ modules: { revenue: true } }))).toContain('no name or email address beyond the payment notice above')
+    expect(policyText(input())).toContain('we keep no IP address, name or email address, we will')
+  })
+
+  it('says the text assumes trckable is run by the site itself', () => {
+    expect(policyCaveats(input()).some((c) => c.includes('run trckable yourself'))).toBe(true)
   })
 })
 

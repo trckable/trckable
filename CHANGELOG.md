@@ -9,8 +9,16 @@ section into the release.
 
 ## Unreleased
 
+### Added
+
+- `TRCKABLE_PAYMENT_NOTICE_DAYS` (default 30; 0 keeps them): a payment provider's raw notice carries the payer's email, name and address, and trckable keeps it so the ledger can be rebuilt. Once a notice has been read into the ledger and is that old, its body is emptied each day (the row and its key stay, so a retry or a reconciliation still finds it, and a site with a shorter retention is held to that). The ledger keeps what it always kept: amounts, dates, ids and a keyed hash of the email. Because a rebuild can no longer see emptied notices, `payments reprocess` on a site that has some applies the notices that are left on top of the ledger instead of resetting it first. Off-site backups still hold what they held when they were taken, until they age out.
+
 ### Changed
 
+- The cookieless salts keep two days on disk instead of three: today's and yesterday's, and making a new day's salt deletes the rest.
+- In a site that routes by the part after `#`, that part is stored only if it looks like a route. A `key=value` pair, a query inside it, a second `#`, an address with `@` and a long opaque token (a JWT, a reset key) are dropped, so `#access_token=...` and `#/user/ann@example.com` no longer reach the stored path.
+- The rate limiter keys every address with a hash seeded by a random value that exists only in the running process, and forgets an address ten minutes after its last request, whatever the size of its table.
+- The words about privacy say exactly what happens. The cookie bar reads "We count visits with one cookie and a short queue on this device. Nothing is shared." The paragraph for a site's privacy policy says the cookie holds a random id that counts as personal data, no longer says no data goes to any other company, says what the IP address is used for in memory (country, robots and floods, the daily number) and that it is never written down, and, with payments connected, names the payment notice (email, possibly name and address, 30 days) and no longer says nothing identifies the visitor. The README says the same, and the npm package's README gives the cookie's lifetime.
 - Replay's playhead is a thin lime line that fades out towards the top, with a soft glow, in place of the white one. A small chip at its top names the moment ("Sep 14, 15:00" by the hour), the dot rides the line's own value with a ring around it, and what has not been played yet is drawn dim (30%) instead of left out, so progress reads at a glance. It moves smoothly, and steps from moment to moment with reduced motion. The playhead is a lazy chunk, so the first load did not grow. Until Replay reaches a first visit, the key numbers show a dash instead of 0, 0% and 0s.
 - The comparison menu lists No comparison first, then Period before, Last year and Custom, with a check on the one in force (the small dashes before each choice are gone).
 - Every control in the dashboard's header row is one height (38 px), with the same corners and the same gap: the site card, Live/Data, Ask and the avatar, and the capsules of a shared link. On All sites the picker is the same card as on a site's page. The Live card's title leads with the same pulsing dot as the switch (still for a person who asked for less motion). CSS only; the first load did not grow.
