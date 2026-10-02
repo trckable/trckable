@@ -356,7 +356,7 @@ func TestStricterFilteringDropsDataCentres(t *testing.T) {
 	asked := 0
 	h.Hosting = func(ip string) bool { asked++; return ip == "203.0.113.77" }
 
-	// A site with the default filtering is not asked about at all.
+	// A site that has stricter filtering off is not asked about at all.
 	post(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/"}`, chrome)
 	if asked != 0 {
 		t.Fatal("the network was checked for a site without stricter filtering")
@@ -425,6 +425,60 @@ func TestProxyForwardingXRealIP(t *testing.T) {
 		}
 		if *used != tc.want {
 			t.Fatalf("key %s: geo used %q, want %q", tc.key, *used, tc.want)
+		}
+	}
+}
+
+// Behind the npm proxy a browser's Do Not Track and Global Privacy Control
+// reach the server as headers of the proxy's request; a site that honours
+// them must not count those visitors.
+func TestHonorDNTAndGPCThroughTheProxy(t *testing.T) {
+	h, l := newHandler(t)
+	h.Sites = fakeSites{"tkb_test": {ID: "tkb_test", Domain: "site.com", ProxyKey: "tkb_px_secret", HonorDNT: true}}
+	body := `{"s":"tkb_test","k":"pv","u":"https://site.com/"}`
+	send := func(header, value string) {
+		req := httptest.NewRequest(http.MethodPost, "/api/e", strings.NewReader(body))
+		req.Header.Set("User-Agent", chromeUA)
+		req.Header.Set("X-Trckable-Proxy-Key", "tkb_px_secret")
+		if header != "" {
+			req.Header.Set(header, value)
+		}
+		req.RemoteAddr = "10.0.0.5:4444"
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		if w.Code != http.StatusAccepted {
+			t.Fatalf("%s: status %d", header, w.Code)
+		}
+	}
+	before, _ := l.Committed()
+	send("DNT", "1")
+	send("Sec-GPC", "1")
+	if after, _ := l.Committed(); after != before {
+		t.Fatal("a visitor who asked not to be tracked was counted")
+	}
+	send("", "")
+	if after, _ := l.Committed(); after != before+1 {
+		t.Fatal("a visitor who did not ask was dropped")
+	}
+}
+
+// A visit through the proxy whose second event leaves before the first answer
+// is back carries the id the browser made. It is the same visitor, and the
+// server sets that same id as its own cookie.
+func TestProxiedFirstVisitKeepsTheIdTheBrowserMade(t *testing.T) {
+	h, l := newHandler(t)
+	id := "k3j2h1g0.m1a2b3"
+	first := proxied(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/","v":"`+id+`"}`, "tkb_px_secret")
+	a, _ := lastEvent(t, l)
+	second := proxied(h, `{"s":"tkb_test","k":"g","n":"checkout_click","u":"https://site.com/","v":"`+id+`"}`, "tkb_px_secret")
+	b, _ := lastEvent(t, l)
+	if a.Visitor == 0 || a.Visitor != b.Visitor {
+		t.Fatalf("one person became two visitors: %d and %d", a.Visitor, b.Visitor)
+	}
+	for _, w := range []*httptest.ResponseRecorder{first, second} {
+		cs := w.Result().Cookies()
+		if len(cs) != 1 || cs[0].Value != id || cs[0].MaxAge != 400*24*3600 {
+			t.Fatalf("the server did not set the browser's id as its cookie: %+v", cs)
 		}
 	}
 }
