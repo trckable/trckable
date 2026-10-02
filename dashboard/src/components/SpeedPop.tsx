@@ -2,7 +2,7 @@
 // Each is a duration for this period, written on the right; ↑ ↓ move, Enter picks.
 import { Check } from 'lucide-react'
 import { useEffect, useRef, type KeyboardEvent } from 'react'
-import { laterCopy } from '../features/overview/laterCopy'
+import { speedCopy } from '../features/overview/speedCopy'
 import { fmtSecs, replaySeconds, SPEEDS, speedOf } from '../features/overview/replayTime'
 import './MenuPop.css'
 import './sheet.css'
@@ -24,10 +24,10 @@ export default function SpeedPop({ speed, points, onPick }: { speed: string; poi
     all[(to + all.length) % all.length]?.focus()
   }
   return (
-    <div className="pop menu-pop speed-pop" role="menu" tabIndex={-1} aria-label={laterCopy.speed} onKeyDown={onKey}>
+    <div className="pop menu-pop speed-pop" role="menu" tabIndex={-1} aria-label={speedCopy.speed} onKeyDown={onKey}>
       <div className="menu-pop-head">
-        <b>{laterCopy.speed}</b>
-        <span className="faint">{laterCopy.playsIn(fmtSecs(replaySeconds(points, speedOf(speed).secs)))}</span>
+        <b>{speedCopy.speed}</b>
+        <span className="faint">{speedCopy.playsIn(fmtSecs(replaySeconds(points, speedOf(speed).secs)))}</span>
       </div>
       <div className="menu-list" ref={list}>
         {SPEEDS.map((s, i) => {
@@ -50,7 +50,7 @@ export default function SpeedPop({ speed, points, onPick }: { speed: string; poi
         })}
       </div>
       <div className="menu-pop-head speed-keys faint" aria-hidden="true">
-        {laterCopy.speedKeys}
+        {speedCopy.speedKeys}
       </div>
     </div>
   )

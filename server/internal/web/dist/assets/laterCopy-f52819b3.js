@@ -1,1 +1,0 @@
-var e={speed:`Replay speed`,speedNow:e=>`Replay speed: ${e}`,playsIn:e=>`plays in ${e}`,speedKeys:`Slower [  Faster ]`,perVisitor:`Revenue / visitor`,perVisitorShort:`$/visit`,conversionShort:`conv.`,sales:e=>e===1?`1 sale`:`${e} sales`,newAmount:e=>`${e} new`,renewalAmount:e=>`${e} renewal`};export{e as t};

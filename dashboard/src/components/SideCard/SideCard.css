@@ -1,7 +1,7 @@
 /* The side card (SideCard.tsx): fixed, so it never moves the page. Bottom
    right above the Peek bubble (56px high, 28px from the corner); a bottom
    sheet with a grab handle on a phone. Under the toasts (200), over the page and
-   the bubble. A calm card: a soft shadow and a thin line of its own colour on its
+   the bubble (under the header's menus). A calm card: a soft shadow and a thin line of its own colour on its
    left edge; the ghost only for a milestone and a first sale. A deck of several
    shows the next ones peeking out behind it. */
 .side-deck {
@@ -9,7 +9,8 @@
   position: fixed;
   right: 28px;
   bottom: 96px;
-  z-index: 35;
+  /* Over the page, under the header (30): its menus, which can reach down a phone's screen, open over a card, not under it. */
+  z-index: 29;
   box-sizing: border-box;
   width: min(340px, calc(100vw - 32px));
   padding-bottom: 0;
