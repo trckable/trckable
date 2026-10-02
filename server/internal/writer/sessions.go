@@ -41,8 +41,15 @@ type Session struct {
 
 	Pageviews uint32
 	Goals     uint32
-	lastPV    int64             // ts of the latest pageview (for the exit page)
-	eng       map[uint64]uint32 // pageview → max engaged ms (running totals)
+	lastPV    int64               // ts of the latest pageview (for the exit page)
+	eng       map[uint64]uint32   // pageview → max engaged ms (running totals)
+	pvs       map[uint64]struct{} // the pageviews of this session, so a late engagement report finds its own
+}
+
+// has reports whether pageview id belongs to this session.
+func (s *Session) has(id uint64) bool {
+	_, ok := s.pvs[id]
+	return id != 0 && ok
 }
 
 // EngagedMs sums the per-pageview maximums.
@@ -92,6 +99,12 @@ func (s *Session) add(e *event.Event) {
 			s.Campaign, s.Source, s.Medium = e.UTMCampaign, e.UTMSource, e.UTMMedium
 		}
 		s.Pageviews++
+		if e.Pageview != 0 {
+			if s.pvs == nil {
+				s.pvs = map[uint64]struct{}{}
+			}
+			s.pvs[e.Pageview] = struct{}{}
+		}
 		if e.TS >= s.lastPV {
 			s.lastPV, s.ExitPage = e.TS, e.Path
 		}
@@ -112,6 +125,10 @@ func (s *Session) clone() Session {
 	c.eng = make(map[uint64]uint32, len(s.eng))
 	for k, v := range s.eng {
 		c.eng[k] = v
+	}
+	c.pvs = make(map[uint64]struct{}, len(s.pvs))
+	for k := range s.pvs {
+		c.pvs[k] = struct{}{}
 	}
 	return c
 }
@@ -153,7 +170,11 @@ func (z *sessionizer) assign(e *event.Event) (id uint64, closed *Session, was, n
 	defer z.mu.Unlock()
 	k := visitorKey{e.Site, e.Visitor}
 	if s, ok := z.open[k]; ok {
-		if e.TS-s.Last < SessionTimeout {
+		// A visitor who reads one page for longer than the timeout sends its
+		// engaged time only when the page is hidden: long after the last event.
+		// That report belongs to the visit its page view opened; it extends
+		// it, and never starts a visit of its own.
+		if e.TS-s.Last < SessionTimeout || (e.Kind == event.KindEngagement && s.has(e.Pageview)) {
 			was = s.Start
 			s.add(e)
 			return s.ID, nil, was, s.Start

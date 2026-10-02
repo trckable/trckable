@@ -46,7 +46,7 @@ type Site struct {
 	ExcludePaths []string // globs that are never recorded, e.g. /admin/*
 	HonorDNT     bool     // drop visits from browsers sending DNT or GPC
 	NoCity       bool     // keep the country, drop region and city
-	BotStrict    bool     // also drop headless and unknown clients
+	BotStrict    bool     // drop visits from data centres and clients that name no browser
 	// ConsentFree keeps nothing in the browser and no city, so the site can
 	// run analytics without a consent banner. Enforced here, not trusted to
 	// the tracker: a stale script cannot opt back in.
@@ -66,15 +66,6 @@ func (s Site) Skip(path string) bool {
 		}
 	}
 	return false
-}
-
-// ignoreCookie marks a browser that should never be counted (the owner's own).
-const ignoreCookie = "trckable_ignore"
-
-// ignored says whether this browser opted out of being counted.
-func ignored(r *http.Request) bool {
-	c, err := r.Cookie(ignoreCookie)
-	return err == nil && c.Value == "1"
 }
 
 // Geo resolves a client IP to a location (the IP is not kept).
@@ -277,16 +268,13 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 		}
 	}
 	// Paths the owner excluded, and browsers they promised to respect, are
-	// dropped before anything is parsed or stored.
+	// dropped before anything is parsed or stored. (A browser the owner asked
+	// to leave out, ?trckable=ignore, never sends: the tracker keeps that flag
+	// itself, so it works behind a proxy as well.)
 	if site.Skip(u.Path) {
 		return nil, true, nil, nil
 	}
 	if site.HonorDNT && (r.Header.Get("DNT") == "1" || r.Header.Get("Sec-GPC") == "1") {
-		return nil, true, nil, nil
-	}
-	// A visitor who asked not to be counted (the owner's own browser, usually)
-	// carries this cookie. It is set by opening ?trckable=ignore on the site.
-	if ignored(r) {
 		return nil, true, nil, nil
 	}
 	ua := parseUA(r.UserAgent(), p.Width)

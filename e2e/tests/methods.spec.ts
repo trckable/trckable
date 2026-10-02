@@ -320,8 +320,9 @@ test('Next.js: <Analytics />, the route and the two variables count, through you
   })
   await page.goto(`http://example.com/m/${run}`)
   await counted(request, `/m/${run}`)
-  // Through the route with the key: trckable set the cookie, on the site's domain.
-  await expect.poll(async () => (await context.cookies('http://example.com')).find((x) => x.name === 'trckable_vid')?.domain).toBe('.example.com')
+  // Through the route with the key: trckable set the cookie, on the site's domain
+  // (the script's own host-only copy of the same id is there too, from the first event).
+  await expect.poll(async () => (await context.cookies('http://example.com')).some((x) => x.name === 'trckable_vid' && x.domain === '.example.com')).toBe(true)
   await context.close()
 })
 

@@ -19,6 +19,7 @@ import { setSettingsTab, settingsParam } from '../lib/settings'
 import './Privacy.css'
 import { Loading } from '../components/loading/Loading'
 import { ReportRows } from './ReportRows'
+import { Filtering } from './Filtering'
 
 const KEEP = [
   { id: '0', label: 'Keep everything' },
@@ -171,9 +172,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
           <Switch on={c.honor_dnt || free} disabled={free} onChange={() => save({ honor_dnt: !c.honor_dnt }, c.honor_dnt ? 'DNT and GPC are ignored again' : 'DNT and GPC will be honoured')} />
         </Row>
 
-        <Row label="Stricter bot filtering" hint="Also drops clients that name no browser, and visits from data centres such as AWS or Hetzner (downloaded, then refreshed monthly, about 5 MB). Private Relay and VPN users still count">
-          <Switch on={c.bot_strict} onChange={() => save({ bot_strict: !c.bot_strict })} />
-        </Row>
+        <Filtering site={site} c={c} save={save} />
 
         <Row label="Excluded paths" hint="One per line. /admin/* skips everything under it. Never recorded, so nothing to delete later.">
           <textarea

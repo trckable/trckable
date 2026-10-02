@@ -637,7 +637,7 @@ func (s *Store) reloadSites(ctx context.Context) error {
 	rows, err := s.DB.QueryContext(ctx, `
 		SELECT s.id, s.domain, s.allowed, s.hash_mode, s.proxy_key,
 		       coalesce(c.exclude_paths, ''), coalesce(c.honor_dnt, 0),
-		       coalesce(c.record_city, 1), coalesce(c.bot_strict, 0),
+		       coalesce(c.record_city, 1), coalesce(c.bot_strict, 1),
 		       coalesce(c.consent_free, 0)
 		FROM sites s LEFT JOIN site_settings c ON c.site_id = s.id`)
 	if err != nil {
