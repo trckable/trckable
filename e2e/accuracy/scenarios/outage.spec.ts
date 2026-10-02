@@ -40,6 +40,16 @@ async function own(lab: Lab, run: (own: Lab, server: Server) => Promise<void>) {
   }
 }
 
+/**
+ * Every answer takes 400 ms, as a real network's would: a visit sent one event at a
+ * time then spans several of the server's write batches, and must still be one visit.
+ */
+const slow = (page: Page) =>
+  page.route('**/api/e', async (route) => {
+    await new Promise((r) => setTimeout(r, 400))
+    await route.continue()
+  })
+
 const goto = async (page: Page, url: string) => {
   await page.goto(url)
   await page.waitForLoadState('load')
@@ -71,6 +81,7 @@ test('a server that is down for two hours, then back: the visit made meanwhile i
     // Two hours later, on the visitor's clock, the server is back.
     await page.evaluate((ms) => ((window as unknown as { __skew: number }).__skew = ms), 2 * HOUR)
     await server.start()
+    await slow(page)
     await page.evaluate(() => window.dispatchEvent(new Event('online'))) // the browser knows before the next pause is over
 
     const then = day(from - 2 * HOUR) === day(to - 2 * HOUR) ? { days: { [day(from - 2 * HOUR)]: { sessions: 1, pageviews: 3 } } } : {}
@@ -114,6 +125,7 @@ test('a server that is down for twenty hours and a visitor who comes back the ne
     await context.addInitScript('window.__skew = ' + 20 * HOUR)
     await server.start()
     const back = await context.newPage()
+    await slow(back)
     const returned = Date.now()
     await goto(back, s.url('/d'))
     const returnedTo = Date.now()
