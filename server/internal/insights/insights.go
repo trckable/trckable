@@ -237,8 +237,9 @@ func DropStart(visitors, sales []int64) int {
 	}
 	best, bestGap := -1, 0.0
 	var v, s int64
-	for k := 1; k < n; k++ {
-		v, s = v+visitors[k-1], s+sales[k-1]
+	for i, vi := range visitors[:n-1] {
+		k := i + 1 // the day the later stretch would start on
+		v, s = v+vi, s+sales[i]
 		restV, restS := allV-v, allS-s
 		if v*5 < allV || restV*5 < allV {
 			continue

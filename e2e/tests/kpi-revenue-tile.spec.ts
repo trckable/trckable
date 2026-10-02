@@ -5,7 +5,7 @@
 import { expect, test } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { API } from '../playwright.config'
-import { session } from './session'
+import { session, withoutPayments } from './session'
 
 // Set KPI_SHOTS to a folder to also take the pictures for review.
 const SHOTS = process.env.KPI_SHOTS
@@ -14,6 +14,7 @@ const MONEY = { currency: 'USD', exponent: 2, revenue: 12_300, refunds: 0, payme
 
 test('a dimmed Revenue tile stands in the second place for an owner without payments', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: await session('kpi-revenue-tile'), url: API }])
+  await withoutPayments(page)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto(`${API}/example.com?view=data`)

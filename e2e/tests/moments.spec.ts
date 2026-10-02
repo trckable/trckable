@@ -12,7 +12,7 @@ import { mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { API } from '../playwright.config'
-import { session } from './session'
+import { session, withoutPayments } from './session'
 
 const SHOTS = process.env.MOMENTS_SHOTS
 const BIN = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../server/bin/trckabled')
@@ -34,6 +34,7 @@ const insights = () => [
 
 /** The server's findings, given: all of them, none (`quiet`), or only the findings that have a day (`findings`). */
 async function given(page: Page, what: 'all' | 'quiet' | 'findings' = 'all') {
+  await withoutPayments(page)
   await page.route(/\/api\/v1\/sites\/[^/]+\/moments\?/, (r) => r.fulfill({ json: { bucket: 'day', moments: what === 'all' ? moments() : [] } }))
   await page.route(/\/api\/v1\/sites\/[^/]+\/insights\?/, (r) => r.fulfill({ json: { insights: what === 'quiet' ? [] : insights() } }))
 }

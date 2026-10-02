@@ -6,7 +6,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { API } from '../playwright.config'
-import { session } from './session'
+import { session, withoutPayments } from './session'
 
 // Set KPI_SHOTS to a folder to also take the pictures for review.
 const SHOTS = process.env.KPI_SHOTS
@@ -21,6 +21,7 @@ test.beforeEach(async ({ page }) => {
 /** The Data view, with payments connected (the report carries money) or without. */
 async function open(page: Page, width: number, revenue: boolean) {
   await page.setViewportSize({ width, height: 900 })
+  if (!revenue) await withoutPayments(page)
   if (revenue) {
     // The revenue module is off until a provider is connected: switch it on, and give the report its money.
     await page.route(/\/api\/v1\/sites\/[^/]+\/modules$/, async (route) => {
