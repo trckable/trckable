@@ -18,3 +18,4 @@ node_modules/
 # this machine only (scripts/site-repo.mjs)
 /.trckable.local.json
 *.tsbuildinfo
+/e2e/accuracy/results/

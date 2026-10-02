@@ -5,11 +5,12 @@
 //   node scripts/facts.mjs tracker     after the tracker and npm package builds
 //   node scripts/facts.mjs dashboard   after the dashboard build
 //   node scripts/facts.mjs image       with IMAGE_BYTES and IDLE_MIB set
+//   node scripts/facts.mjs accuracy    with ACCURACY_DIR: the accuracy suite's results, one file a browser
 //
 // Sizes are gzip level 9, bytes. Megabytes are MiB, rounded up.
-import { readFileSync, readdirSync } from 'node:fs'
-// The image job measures no sizes and installs no packages: load gzip only when needed.
-const { gzipSize, distGzipSize, readDist } = process.argv[2] === 'image' ? {} : await import('./gzip-size.mjs')
+import { appendFileSync, readFileSync, readdirSync } from 'node:fs'
+// The image and accuracy jobs measure no sizes and install no packages: load gzip only when needed.
+const { gzipSize, distGzipSize, readDist } = ['image', 'accuracy'].includes(process.argv[2]) ? {} : await import('./gzip-size.mjs')
 import { join } from 'node:path'
 
 const ROOT = new URL('..', import.meta.url).pathname
@@ -54,6 +55,55 @@ const parts = {
       milestones_chunk_budget_kb: budget('dashboard/scripts/size.mjs', /^const milestonesBudget = (\d+) \* 1024/m),
     }
   },
+  // The accuracy suite (e2e/accuracy, and the TestAccuracy… Go tests): scripted
+  // visitors with known truth, every number compared exactly. It fails, with
+  // the scenarios that were not exact, when anything was less than exact, when
+  // a browser is missing, or when a browser ran other scenarios than another.
+  accuracy: () => {
+    const dir = process.env.ACCURACY_DIR
+    if (!dir) throw new Error('ACCURACY_DIR is not set')
+    const runs = []
+    for (const f of readdirSync(dir).sort()) {
+      if (/^accuracy-.+\.json$/.test(f)) for (const r of JSON.parse(readFileSync(join(dir, f), 'utf8')).runs) runs.push(r)
+      if (f === 'accuracy-go.jsonl') {
+        for (const line of readFileSync(join(dir, f), 'utf8').split('\n')) {
+          if (!line.trim().startsWith('{')) continue
+          const e = JSON.parse(line)
+          if (!e.Test || e.Test.includes('/') || !['pass', 'fail'].includes(e.Action)) continue
+          const words = e.Test.replace(/^TestAccuracy/, '').replace(/([A-Z])/g, ' $1').trim().toLowerCase()
+          runs.push({ scenario: words, project: 'go', kind: 'server', exact: e.Action === 'pass', checks: [] })
+        }
+      }
+    }
+    if (!runs.length) throw new Error(`no accuracy results in ${dir}`)
+    const browsers = [...new Set(runs.map((r) => r.project).filter((p) => p !== 'go'))].sort()
+    const wrong = []
+    for (const b of ['chromium', 'firefox', 'webkit']) if (!browsers.includes(b)) wrong.push(`no results from ${b}`)
+    // Every browser ran the same scenarios, or the number "N scenarios, 3 browsers" is not true.
+    const titles = (b) => new Set(runs.filter((r) => r.project === b).map((r) => r.scenario))
+    const all = new Set(runs.filter((r) => r.project !== 'go').map((r) => r.scenario))
+    for (const b of browsers) for (const t of all) if (!titles(b).has(t)) wrong.push(`${b} did not run: ${t}`)
+    for (const r of runs) if (!r.exact) wrong.push(`${r.project}: ${r.scenario}${r.checks.filter((c) => !c.ok).map((c) => ` (${c.name}: expected ${JSON.stringify(c.expected)}, got ${JSON.stringify(c.actual)})`).join('')}`)
+    const checks = runs.flatMap((r) => r.checks)
+    const out = {
+      accuracy_scenarios: new Set(runs.map((r) => r.scenario)).size,
+      accuracy_browser_scenarios: all.size,
+      accuracy_browsers: browsers.length,
+      accuracy_runs: runs.length,
+      accuracy_checks: checks.length,
+      accuracy_exact_percent: Math.round((runs.filter((r) => r.exact).length / runs.length) * 1000) / 10,
+    }
+    if (process.env.GITHUB_STEP_SUMMARY) {
+      const lines = [`### Accuracy: ${out.accuracy_exact_percent}% exact`, '', `${out.accuracy_scenarios} scenarios, ${out.accuracy_browsers} browsers, ${out.accuracy_runs} runs, ${out.accuracy_checks} numbers compared.`, '']
+      for (const w of wrong) lines.push(`- ${w}`)
+      appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n')
+    }
+    if (wrong.length) {
+      console.log(JSON.stringify(out, null, 2))
+      throw new Error('accuracy is not exact:\n  ' + wrong.join('\n  '))
+    }
+    return out
+  },
   image: () => ({
     image_mb: up1(+process.env.IMAGE_BYTES / 1048576),
     image_budget_mb: budget('.github/workflows/ci.yml', /\(budget (\d+) MB\)/),
@@ -63,7 +113,7 @@ const parts = {
 }
 
 const part = parts[process.argv[2]]
-if (!part) throw new Error('usage: node scripts/facts.mjs tracker|dashboard|image')
+if (!part) throw new Error('usage: node scripts/facts.mjs tracker|dashboard|image|accuracy')
 const out = part()
 for (const [k, v] of Object.entries(out)) if (!Number.isFinite(v)) throw new Error(`${k} is not a number`)
 console.log(JSON.stringify(out, null, 2))

@@ -29,10 +29,12 @@ usage:
       Look at this project, print exactly what would change, and write it
       only with --yes. It never edits checkout or payment code.
 
-  npx trckable doctor [--host URL] [--site tkb_…] [--url https://your.site]
+  npx trckable doctor [--host URL] [--site tkb_…] [--url https://your.site] [--proxy]
       Check an install from the outside: is the server there, is the script
       served, will browsers be allowed to post, does trckable see a real
-      address, and is the snippet on your page. It reads only.
+      address, and is the snippet on your page. With --proxy (or
+      TRCKABLE_PROXY_KEY set) it also checks that the proxy key is there.
+      It reads only.
 
   npx trckable help
 
@@ -135,7 +137,11 @@ async function doctorCmd() {
     proc.stderr.write('trckable doctor: pass --host https://stats.yoursite.com (or set TRCKABLE_HOST).\n')
     return proc.exit(2)
   }
-  const checks = await doctor({ host, site: flag('site') ?? proc.env.TRCKABLE_SITE, url: flag('url') })
+  // --proxy: this app sends events through its own /api/e. Having a proxy key
+  // in the environment says the same, so that is checked too.
+  const key = flag('proxy-key') ?? proc.env.TRCKABLE_PROXY_KEY
+  const proxy = proc.argv.includes('--proxy') || key ? { key } : undefined
+  const checks = await doctor({ host, site: flag('site') ?? proc.env.TRCKABLE_SITE, url: flag('url'), proxy })
   proc.stdout.write(format(checks) + '\n')
   if (checks.some((c) => !c.ok)) proc.exit(1)
 }

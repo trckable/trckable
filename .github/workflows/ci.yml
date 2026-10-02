@@ -37,6 +37,7 @@ jobs:
       demo: ${{ steps.filter.outputs.demo }}
       dashboard: ${{ steps.filter.outputs.dashboard }}
       tracker: ${{ steps.filter.outputs.tracker }}
+      accuracy: ${{ steps.filter.outputs.accuracy }}
       image: ${{ steps.filter.outputs.image }}
       browsers: ${{ steps.filter.outputs.browsers }}
       demo_browsers: ${{ steps.filter.outputs.demo_browsers }}
@@ -370,10 +371,102 @@ jobs:
           path: e2e/test-results
           retention-days: 7
 
+  # Accuracy: scripted visitors whose true numbers are known before they arrive
+  # (e2e/accuracy), in the three browsers against a real trckabled, and the
+  # scenarios that need a clock in Go. Every count must match exactly; only
+  # time is a range. The score is published as facts (scripts/facts.mjs accuracy).
+  accuracy-browser:
+    name: accuracy (${{ matrix.browser }})
+    needs: [changes, build]
+    if: needs.changes.outputs.accuracy == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
+    env:
+      HOME: /root # Firefox will not start when $HOME belongs to another user
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with: { name: trckabled, path: server/bin }
+      - run: chmod +x server/bin/trckabled
+      - run: pnpm --filter trckable build # the proxy the scenarios send events through
+      - name: scenarios
+        timeout-minutes: 15
+        run: cd e2e && npx playwright test -c accuracy/playwright.config.ts --project=${{ matrix.browser }} --workers=2
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: accuracy-${{ matrix.browser }}
+          path: e2e/accuracy/results
+          retention-days: 7
+      # A failed scenario keeps its trace.
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: accuracy-traces-${{ matrix.browser }}
+          path: e2e/test-results
+          retention-days: 7
+
+  accuracy-server:
+    name: accuracy (server scenarios)
+    needs: changes
+    if: needs.changes.outputs.accuracy == 'true'
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with: { go-version: "1.27", cache-dependency-path: server/go.sum }
+      - name: scenarios (TestAccuracy…, every package)
+        run: |
+          mkdir -p ../e2e/accuracy/results
+          go test ./... -run '^TestAccuracy' -count=1 -json > ../e2e/accuracy/results/accuracy-go.jsonl || { grep -E '"Action":"(fail|output)"' ../e2e/accuracy/results/accuracy-go.jsonl | grep -E 'FAIL|fail' | head -40; exit 1; }
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: accuracy-go
+          path: e2e/accuracy/results
+          retention-days: 7
+
+  # The score: every scenario of every browser, and the one that is allowed to
+  # be less than all of them is none.
+  accuracy:
+    name: accuracy (exact counts)
+    needs: [changes, accuracy-browser, accuracy-server]
+    if: always() && needs.changes.outputs.accuracy == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version: 22 }
+      - uses: actions/download-artifact@v8
+        with: { pattern: accuracy-*, path: accuracy-results, merge-multiple: true }
+        continue-on-error: true
+      - name: publish the measured numbers (facts)
+        run: |
+          [ "${{ needs.accuracy-browser.result }}" = success ] && [ "${{ needs.accuracy-server.result }}" = success ] || echo "a scenario job failed: the score below is of what ran"
+          ACCURACY_DIR=accuracy-results node scripts/facts.mjs accuracy > facts-accuracy.json && cat facts-accuracy.json
+          [ "${{ needs.accuracy-browser.result }}" = success ] && [ "${{ needs.accuracy-server.result }}" = success ]
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with: { name: facts-accuracy, path: facts-accuracy.json }
+
   # The required check: green only when every browser job above is.
   e2e:
     name: browsers (Chromium, Firefox, WebKit)
-    needs: [changes, build, e2e-browser, e2e-demo]
+    needs: [changes, build, e2e-browser, e2e-demo, accuracy]
     if: always()
     runs-on: ubuntu-24.04
     steps:
@@ -381,14 +474,14 @@ jobs:
           echo '${{ toJSON(needs) }}'
           [ "${{ needs.changes.result }}" = success ] || exit 1
           [ "${{ needs.changes.outputs.code }}" = true ] || { echo "prose only: nothing to test"; exit 0; }
-          for r in ${{ needs.build.result }} ${{ needs.e2e-browser.result }} ${{ needs.e2e-demo.result }}; do
+          for r in ${{ needs.build.result }} ${{ needs.e2e-browser.result }} ${{ needs.e2e-demo.result }} ${{ needs.accuracy.result }}; do
             [ "$r" = success ] || [ "$r" = skipped ] || exit 1 # skipped: not needed for this change
           done
           # main, a release, the nightly run and a manual run: every browser job,
           # WebKit's shards included, ran and passed. Skipped is not enough.
           if [ "${{ needs.changes.outputs.full }}" = true ]; then
-            for r in ${{ needs.e2e-browser.result }} ${{ needs.e2e-demo.result }}; do
-              [ "$r" = success ] || { echo "a full run needs every browser job, WebKit included"; exit 1; }
+            for r in ${{ needs.e2e-browser.result }} ${{ needs.e2e-demo.result }} ${{ needs.accuracy.result }}; do
+              [ "$r" = success ] || { echo "a full run needs every browser job, WebKit and the accuracy score included"; exit 1; }
             done
           fi
 

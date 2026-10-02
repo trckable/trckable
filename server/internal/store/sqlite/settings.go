@@ -81,9 +81,11 @@ type Group struct {
 // stops being a summary.
 const MaxGroups = 30
 
-// DefaultSiteConfig is what a new site gets.
+// DefaultSiteConfig is what a new site gets. Stricter bot filtering is on:
+// a browser running in a data centre is a script, and counting it makes every
+// number wrong. A site that wants those visits back turns it off.
 func DefaultSiteConfig() SiteConfig {
-	return SiteConfig{RecordCity: true, WeekStart: 1}
+	return SiteConfig{RecordCity: true, WeekStart: 1, BotStrict: true}
 }
 
 // SiteConfig reads a site's configuration, falling back to the defaults.

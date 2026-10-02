@@ -22,8 +22,10 @@ client at either.
 
 - ~2 KB, bundled into your app (no script file for ad blockers to block)
 - Pageviews for any SPA, goals, outbound links, downloads, scroll goals, engagement time
-- Events that fail to send are kept in the browser and sent again on a later page
-  (not in cookieless mode, which keeps nothing); the server counts each one once
+- Events that fail to send are kept in the browser and sent again on a later page;
+  cookieless mode keeps nothing, so it tries again from memory while the page is
+  open. The server counts each one once
+- The script runs once per page, however many copies load (the tag and the package, or two bundles)
 - Cookieless mode stores nothing in the browser
 - The visitor cookie `trckable_vid` holds a random id, which counts as personal data, and nothing else about the visitor. It lasts 400 days (7 days in Safari when the browser script sets it, 400 when your server route does). In the EU it normally needs consent first; cookieless mode sets none
 
@@ -74,6 +76,22 @@ Install) in your environment. Events then go through your own domain:
 
 - ad blockers can't tell them apart from your app's own requests
 - Safari keeps the visitor cookie for 400 days instead of 7
+- the visitor's Do Not Track and Global Privacy Control signals are passed on, so
+  a site that honours them still does
+
+Both variables are required. The proxy answers `500` with what to set when the
+key is missing, because without it trckable cannot trust the visitor address you
+forward and would see every visitor as your server: one visitor, one country.
+`npx trckable doctor --host https://stats.example.com --proxy` checks the key (it
+also runs when `TRCKABLE_PROXY_KEY` is set).
+
+## Leave out your own visits
+
+Open your site once in each browser you use, with `?trckable=ignore` on the end
+of any address (`https://example.com/?trckable=ignore`). That browser is left out
+of the counts from then on, through a proxy or not. `?trckable=track` puts it
+back. The choice is kept in that browser's storage, so it does not work in
+cookieless mode, which stores nothing. Settings → Data & privacy has both links.
 
 ## Landing page + app
 

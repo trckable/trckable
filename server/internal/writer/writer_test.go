@@ -223,8 +223,8 @@ type sessRow struct {
 func (e *env) session(t *testing.T) sessRow {
 	t.Helper()
 	var r sessRow
-	err := e.store.DB.QueryRow(`SELECT count(*), any_value(channel), any_value(entry_page), any_value(exit_page),
-		any_value(country), coalesce(sum(pvs),0), coalesce(sum(goals),0), coalesce(sum(engaged_ms),0) FROM sessions`).
+	err := e.store.DB.QueryRow(`SELECT count(*), coalesce(any_value(channel), ''), coalesce(any_value(entry_page), ''), coalesce(any_value(exit_page), ''),
+		coalesce(any_value(country), ''), coalesce(sum(pvs),0), coalesce(sum(goals),0), coalesce(sum(engaged_ms),0) FROM sessions`).
 		Scan(&r.n, &r.channel, &r.entry, &r.exit, &r.country, &r.pvs, &r.goals, &r.engaged)
 	if err != nil && r.n != 0 {
 		t.Fatal(err)
@@ -472,5 +472,68 @@ func TestJobQueuedWhileParkingRunsAtOnce(t *testing.T) {
 	case <-ran:
 	case <-time.After(5 * time.Second):
 		t.Fatal("the job waited for the idle timer")
+	}
+}
+
+// A page read for longer than the session timeout reports its engaged time
+// only when it is hidden, long after the last event. That report belongs to the
+// visit its page view opened: it must extend it, not start a visit of its own
+// (which has no page view and would be dropped, taking the time with it).
+func TestLongReadKeepsItsTimeInItsOwnSession(t *testing.T) {
+	e := newEnv(t, t.TempDir())
+	defer e.close()
+	base := time.Now().Add(-3 * time.Hour).UnixMilli()
+	read := int64(35 * 60_000)
+	e.append(t, event.Event{Site: "s1", Kind: event.KindPageview, EventID: 1, TS: base, Visitor: 9, Pageview: 100, Path: "/docs", Channel: "Search"})
+	e.append(t, event.Event{Site: "s1", Kind: event.KindEngagement, EventID: 2, TS: base + read, Visitor: 9, Pageview: 100, EngagedMs: uint32(read)})
+	e.runAt(t, 2, func() time.Time { return time.UnixMilli(base + read + 60_000) })
+	e.runAt(t, 2, func() time.Time { return time.UnixMilli(base + 4*3600_000) })
+
+	r := e.session(t)
+	if r.n != 1 || r.pvs != 1 || r.engaged != read || r.channel != "Search" {
+		t.Fatalf("long read: %+v, want one session with 1 pageview and %d ms engaged", r, read)
+	}
+	if n := e.count(t, `SELECT count(DISTINCT session_id) FROM events`); n != 1 {
+		t.Fatalf("the report opened %d sessions, want 1", n)
+	}
+	if d := e.count(t, `SELECT cast(max(dur) AS BIGINT) FROM sessions`); d < read/1000 {
+		t.Fatalf("session duration %d s, want at least %d", d, read/1000)
+	}
+}
+
+// The same, when the server restarts while the page is being read: the
+// recovered session still knows which page views are its own.
+func TestLongReadAfterRestartKeepsItsTime(t *testing.T) {
+	dir := t.TempDir()
+	base := time.Now().Add(-3 * time.Hour).UnixMilli()
+	read := int64(40 * 60_000)
+	e := newEnv(t, dir)
+	e.append(t, event.Event{Site: "s1", Kind: event.KindPageview, EventID: 1, TS: base, Visitor: 9, Pageview: 100, Path: "/docs"})
+	e.runAt(t, 1, func() time.Time { return time.UnixMilli(base + 60_000) })
+	e.close()
+
+	e = newEnv(t, dir)
+	defer e.close()
+	e.append(t, event.Event{Site: "s1", Kind: event.KindEngagement, EventID: 2, TS: base + read, Visitor: 9, Pageview: 100, EngagedMs: uint32(read)})
+	e.runAt(t, 2, func() time.Time { return time.UnixMilli(base + read + 60_000) })
+	e.runAt(t, 2, func() time.Time { return time.UnixMilli(base + 4*3600_000) })
+	if r := e.session(t); r.n != 1 || r.pvs != 1 || r.engaged != read {
+		t.Fatalf("long read across a restart: %+v", r)
+	}
+}
+
+// Only the visitor's own page views can reach back: a report for a page the
+// open session never saw is not folded into it.
+func TestEngagementForAnotherPageDoesNotStretchASession(t *testing.T) {
+	e := newEnv(t, t.TempDir())
+	defer e.close()
+	base := time.Now().Add(-3 * time.Hour).UnixMilli()
+	late := int64(35 * 60_000)
+	e.append(t, event.Event{Site: "s1", Kind: event.KindPageview, EventID: 1, TS: base, Visitor: 9, Pageview: 100, Path: "/a"})
+	e.append(t, event.Event{Site: "s1", Kind: event.KindEngagement, EventID: 2, TS: base + late, Visitor: 9, Pageview: 777, EngagedMs: 5000})
+	e.runAt(t, 2, func() time.Time { return time.UnixMilli(base + late + 60_000) })
+	e.runAt(t, 2, func() time.Time { return time.UnixMilli(base + 4*3600_000) })
+	if r := e.session(t); r.n != 1 || r.engaged != 0 {
+		t.Fatalf("a stranger's report was folded in: %+v", r)
 	}
 }

@@ -55,10 +55,10 @@ const EMBEDDED = /^server\/internal\/web\/(dist|assets)\//
 const ALL = 'all'
 
 /** An empty selection: nothing to run. */
-const none = () => ({ full: false, race: false, server: new Set(), crash: false, e2e: new Set(), demo: false, dashboard: false, tracker: false, image: false })
+const none = () => ({ full: false, race: false, server: new Set(), crash: false, e2e: new Set(), demo: false, dashboard: false, tracker: false, image: false, accuracy: false })
 
 /** Everything, as on main. */
-export const everything = () => ({ full: true, race: true, server: ALL, crash: true, e2e: ALL, demo: true, dashboard: true, tracker: true, image: true })
+export const everything = () => ({ full: true, race: true, server: ALL, crash: true, e2e: ALL, demo: true, dashboard: true, tracker: true, image: true, accuracy: true })
 
 /** The selection for a list of changed files. */
 export function select(files) {
@@ -85,12 +85,14 @@ export function select(files) {
       s.race = true
       if (f.endsWith('_test.go') || f.includes('/testdata/')) continue // only its own package
       if (f.startsWith('server/bench/')) { s.crash = true; continue }
-      s.crash = s.image = s.demo = true
+      s.crash = s.image = s.demo = s.accuracy = true
       addE2e(ALL) // the API the dashboard and the tracker talk to
       continue
     }
-    if (f.startsWith('tracker/')) { s.tracker = s.image = true; if (!/\.test\.ts$/.test(f)) addE2e(ALL); continue }
-    if (f.startsWith('packages/trckable/')) { s.tracker = true; if (!/\.test\.tsx?$/.test(f)) addE2e(['methods', 'landing']); continue }
+    if (f.startsWith('tracker/')) { s.tracker = s.image = true; if (!/\.test\.ts$/.test(f)) { addE2e(ALL); s.accuracy = true } continue }
+    if (f.startsWith('packages/trckable/')) { s.tracker = true; if (!/\.test\.tsx?$/.test(f)) { addE2e(['methods', 'landing']); s.accuracy = true } continue }
+    // The accuracy suite: scripted visitors with known truth (e2e/accuracy).
+    if (f.startsWith('e2e/accuracy/')) { s.accuracy = true; continue }
     const spec = f.match(/^e2e\/tests\/([\w-]+)\.spec\.ts$/)
     if (spec) { spec[1] === 'a11y' || spec[1] === 'fullcharts' ? (s.demo = true) : addE2e([spec[1]]); continue }
     if (f === 'deploy/Dockerfile') { s.image = true; continue }
@@ -132,10 +134,10 @@ const matrix = (m) => JSON.stringify(m.length ? m : jobs('none', 1, ALL).map((j)
 /** The selection as GitHub Actions outputs: strings. */
 export function outputs(s) {
   const flag = (b) => (b ? 'true' : 'false')
-  const code = s.full || s.server === ALL || s.server.size > 0 || s.e2e === ALL || s.e2e.size > 0 || s.demo || s.dashboard || s.tracker || s.image || s.crash
+  const code = s.full || s.server === ALL || s.server.size > 0 || s.e2e === ALL || s.e2e.size > 0 || s.demo || s.dashboard || s.tracker || s.image || s.crash || s.accuracy
   return {
     code: flag(code), full: flag(s.full), server: flag(s.race), race: flag(s.race), server_pkgs: names(s.server),
-    crash: flag(s.crash), e2e: names(s.e2e), demo: flag(s.demo), dashboard: flag(s.dashboard), tracker: flag(s.tracker), image: flag(s.image),
+    crash: flag(s.crash), e2e: names(s.e2e), demo: flag(s.demo), dashboard: flag(s.dashboard), tracker: flag(s.tracker), image: flag(s.image), accuracy: flag(s.accuracy),
     browsers: matrix(browserMatrix(s)), demo_browsers: matrix(demoMatrix(s)),
   }
 }

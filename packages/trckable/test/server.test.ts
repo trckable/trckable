@@ -32,24 +32,46 @@ describe('proxy', () => {
     expect(init.body).toBe('{"s":"tkb_test","k":"pv"}')
   })
 
-  it('never forwards a client IP without a proxy key (it would not be trusted anyway)', async () => {
+  it('refuses to forward without a proxy key, saying what to set, and sends nothing', async () => {
+    delete process.env.TRCKABLE_PROXY_KEY
     const upstream = vi.fn(async () => new Response(null, { status: 202 }))
     globalThis.fetch = upstream as any
-    await proxy({ host: 'https://stats.site.com' })(incoming())
-    expect((upstream.mock.calls[0] as any)[1].headers['x-trckable-client-ip']).toBeUndefined()
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const res = await proxy({ host: 'https://stats.site.com' })(incoming())
+    expect(res.status).toBe(500)
+    expect(await res.text()).toContain('TRCKABLE_PROXY_KEY')
+    expect(upstream).not.toHaveBeenCalled()
+    expect(log).toHaveBeenCalled()
+  })
+
+  it('takes the key from the environment when none is passed', async () => {
+    process.env.TRCKABLE_PROXY_KEY = 'tkb_px_env'
+    const upstream = vi.fn(async () => new Response(null, { status: 202 }))
+    globalThis.fetch = upstream as any
+    expect((await proxy({ host: 'https://stats.site.com' })(incoming())).status).toBe(202)
+    delete process.env.TRCKABLE_PROXY_KEY
+  })
+
+  it('passes Do Not Track and Global Privacy Control on, so the server can honour them', async () => {
+    const upstream = vi.fn(async () => new Response(null, { status: 202 }))
+    globalThis.fetch = upstream as any
+    await proxy({ host: 'https://stats.site.com', proxyKey: 'tkb_px_k' })(incoming({ dnt: '1', 'sec-gpc': '1' }))
+    expect((upstream.mock.calls[0] as any)[1].headers).toMatchObject({ dnt: '1', 'sec-gpc': '1' })
+    await proxy({ host: 'https://stats.site.com', proxyKey: 'tkb_px_k' })(incoming())
+    expect((upstream.mock.calls[1] as any)[1].headers.dnt).toBeUndefined()
   })
 
   it('answers 503 when trckable is unreachable, so the tracker retries', async () => {
     globalThis.fetch = vi.fn(async () => {
       throw new TypeError('connect ECONNREFUSED')
     }) as any
-    const res = await proxy({ host: 'https://stats.site.com' })(incoming())
+    const res = await proxy({ host: 'https://stats.site.com', proxyKey: 'tkb_px_k' })(incoming())
     expect(res.status).toBe(503)
     expect(res.headers.get('retry-after')).toBe('5')
   })
 
   it('rejects non-POST and explains a missing host', async () => {
-    expect((await proxy({ host: 'https://x.com' })(incoming({}, 'GET'))).status).toBe(405)
+    expect((await proxy({ host: 'https://x.com', proxyKey: 'tkb_px_k' })(incoming({}, 'GET'))).status).toBe(405)
     const res = await proxy({})(incoming())
     expect(res.status).toBe(500)
     expect(await res.text()).toContain('TRCKABLE_HOST')

@@ -85,7 +85,8 @@ it('starts the cookie when someone agrees, and remembers it next page', async ()
   expect(win.document.cookie).toContain('trckable_vid=')
 
   sent = []
-  tracker() // a second page load
+  delete (win as any).__trk // a second page load is a fresh window
+  tracker()
   await flush()
   expect(bar()).toBe(null)
   expect(last().c).toBeUndefined()

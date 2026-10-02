@@ -61,3 +61,28 @@ describe('doctor', () => {
     expect(checks.find((c) => c.name === 'Snippet')?.ok).toBe(false)
   })
 })
+
+describe('doctor: the proxy key', () => {
+  const healthy = () =>
+    reply({
+      '/healthz': {},
+      '/api/e': { headers: { 'access-control-allow-origin': '*' } },
+      '/_trckable/whoami': { body: JSON.stringify({ ip: '203.0.113.7' }) },
+    })
+
+  it('fails a proxy without its key and says where to find it', async () => {
+    healthy()
+    const checks = await doctor({ host: 'https://stats.example.com', proxy: {} })
+    const key = checks.find((c) => c.name === 'Proxy key')!
+    expect(key.ok).toBe(false)
+    expect(key.fix).toMatch(/Settings → Install/)
+    expect(format(checks)).toContain('1 thing to fix.')
+  })
+
+  it('passes a proxy key that looks like one, and says nothing without a proxy', async () => {
+    healthy()
+    expect((await doctor({ host: 'https://stats.example.com', proxy: { key: 'tkb_px_abc' } })).find((c) => c.name === 'Proxy key')?.ok).toBe(true)
+    expect((await doctor({ host: 'https://stats.example.com', proxy: { key: 'tkb_live_abc' } })).find((c) => c.name === 'Proxy key')?.ok).toBe(false)
+    expect((await doctor({ host: 'https://stats.example.com' })).find((c) => c.name === 'Proxy key')).toBeUndefined()
+  })
+})

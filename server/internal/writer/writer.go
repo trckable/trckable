@@ -660,6 +660,26 @@ func (w *Writer) restore(ctx context.Context, conn *sql.Conn) error {
 			}
 		}
 		eng.Close()
+		pvs, err := conn.QueryContext(ctx, `
+			SELECT session_id, pageview_id FROM events
+			WHERE ts >= ? AND kind = 1 AND pageview_id IS NOT NULL`, wm)
+		if err != nil {
+			return err
+		}
+		for pvs.Next() {
+			var sid, pv uint64
+			if err := pvs.Scan(&sid, &pv); err != nil {
+				pvs.Close()
+				return err
+			}
+			if s := recovered[sid]; s != nil {
+				if s.pvs == nil {
+					s.pvs = map[uint64]struct{}{}
+				}
+				s.pvs[pv] = struct{}{}
+			}
+		}
+		pvs.Close()
 	}
 	for _, s := range recovered {
 		w.sess.restore(s)

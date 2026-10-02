@@ -58,6 +58,14 @@ pnpm check      # what CI runs, on any branch: Go, tracker, dashboard, npm packa
 ```
 
 - Keep the tracker inside its size budget: the build fails if it grows past it.
+- A change to the tracker, the npm package or the server's ingest, sessions or
+  reports runs the accuracy suite in CI (`e2e/accuracy`): scripted visitors
+  whose true numbers are known beforehand, in Chromium, Firefox and WebKit,
+  against a real server. Every count must match exactly (only time is a
+  range). A bug you fix there gets a scenario: say what the visitor does and
+  what the numbers should be. One scenario, one browser:
+  `cd e2e && npx playwright test -c accuracy/playwright.config.ts --project=chromium -g "three pages"`
+  (after `pnpm --filter trckable build` and a server build in `server/bin`).
 - The dashboard and tracker builds are committed (`server/internal/web/`), so
   commit them together with the source change.
 - Every visible string is plain English and short. Every feature works when

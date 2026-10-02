@@ -78,6 +78,36 @@ describe('pageviews', () => {
     expect(new Set(byKind('pv').map((e) => e.pv)).size).toBe(3)
   })
 
+  it('does not count a query that changes on the same path (search boxes, filters)', async () => {
+    tracker()
+    win.history.replaceState({}, '', '/pricing?q=a')
+    win.history.replaceState({}, '', '/pricing?q=ab')
+    win.history.pushState({}, '', '/pricing?page=2')
+    await flush()
+    expect(byKind('pv')).toHaveLength(1)
+    win.history.pushState({}, '', '/docs?q=ab')
+    await flush()
+    expect(byKind('pv').map((e) => new URL(e.u).pathname)).toEqual(['/pricing', '/docs'])
+  })
+
+  it('counts a changed #/route in hash mode, query inside the route included', async () => {
+    browser('https://site.com/app#/list?page=1', '')
+    tracker({ hash: true })
+    win.history.replaceState({}, '', '/app#/list?page=2')
+    win.history.replaceState({}, '', '/app#/list?page=2')
+    await flush()
+    expect(byKind('pv').map((e) => new URL(e.u).hash)).toEqual(['#/list?page=1', '#/list?page=2'])
+  })
+
+  it('runs once per page however many times it is loaded (tag and bundle)', async () => {
+    const first = tracker()
+    const second = tracker()
+    expect(second).toBe(first)
+    win.history.pushState({}, '', '/docs')
+    await flush()
+    expect(byKind('pv')).toHaveLength(2) // not one per copy
+  })
+
   it('counts #/routes in hash mode', async () => {
     browser('https://site.com/app#/home', '')
     tracker({ hash: true })
@@ -262,6 +292,44 @@ describe('delivery (write-ahead queue)', () => {
   })
 })
 
+describe('delivery without storage', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it('retries a cookieless event from memory with the same id, and never touches storage', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] })
+    status = 503 // a deploy in progress
+    tracker({ cookieless: true })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(sent).toHaveLength(1)
+    status = 202
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(sent).toHaveLength(2)
+    expect(sent[1].id).toBe(sent[0].id)
+    expect(sent[1].a).toBeGreaterThanOrEqual(2000) // the server dates it when it happened
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(sent).toHaveLength(2) // acknowledged: no more
+    expect(win.localStorage.length).toBe(0)
+  })
+
+  it('retries after a dropped connection, and gives up after a few tries', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] })
+    fetchFails = true
+    tracker({ cookieless: true })
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(sent.length).toBeGreaterThan(1)
+    expect(sent.length).toBeLessThan(5)
+    expect(new Set(sent.map((e) => e.id)).size).toBe(1)
+  })
+
+  it('does not retry a rejected event (4xx)', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] })
+    status = 400
+    tracker({ cookieless: true })
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(sent).toHaveLength(1)
+  })
+})
+
 describe('privacy and modes', () => {
   it('cookieless mode stores nothing in the browser', async () => {
     tracker({ cookieless: true })
@@ -287,10 +355,55 @@ describe('privacy and modes', () => {
     expect(byKind('g')[0].v).toMatch(/\./)
   })
 
-  it('does not write the cookie itself behind a same-origin proxy (the server sets it)', async () => {
-    tracker({ api: '/api/e' })
+  it('gives a same-origin proxy the id from the first event on, so an instant click is the same visitor', async () => {
+    const t = tracker({ api: '/api/e' })
+    t('goal', 'checkout_click') // leaves before the first answer could set a cookie
     await flush()
-    expect(win.document.cookie).not.toContain('trckable_vid')
+    const ids = sent.map((e) => e.v)
+    expect(ids).toHaveLength(2)
+    expect(ids[0]).toMatch(/^[0-9a-z]+\.[0-9a-z]+$/)
+    expect(ids[1]).toBe(ids[0])
+    expect(win.document.cookie).toContain('trckable_vid=' + ids[0]) // the server sets the same value again
+  })
+
+  it('counts a browser that refuses cookies without an id, not as a new visitor per event', async () => {
+    Object.defineProperty(win.document, 'cookie', { get: () => '', set: () => {}, configurable: true })
+    const t = tracker()
+    t('goal', 'signup')
+    win.history.pushState({}, '', '/docs')
+    await flush()
+    expect(sent).toHaveLength(3)
+    expect(sent.every((e) => e.c === 1 && e.v === undefined)).toBe(true)
+    expect(queued()).toEqual([]) // nothing is kept for them in storage either
+  })
+
+  it('leaves this browser out with ?trckable=ignore, and back in with ?trckable=track', async () => {
+    browser('https://site.com/?trckable=ignore', '')
+    tracker()
+    await flush()
+    expect(sent).toHaveLength(0)
+    expect(win.localStorage.getItem('trckable_ignore')).toBe('1')
+
+    browser('https://site.com/pricing', '') // another page: the flag is still there
+    win.localStorage.setItem('trckable_ignore', '1')
+    tracker()
+    await flush()
+    expect(sent).toHaveLength(0)
+
+    browser('https://site.com/?utm_source=x&trckable=track', '')
+    win.localStorage.setItem('trckable_ignore', '1')
+    tracker()
+    await flush()
+    expect(win.localStorage.getItem('trckable_ignore')).toBe(null)
+    expect(byKind('pv')).toHaveLength(1)
+  })
+
+  it('keeps no exclusion flag in consent-free mode, which stores nothing', async () => {
+    browser('https://site.com/?trckable=ignore', '')
+    tracker({ cookieless: true })
+    await flush()
+    expect(win.localStorage.length).toBe(0)
+    expect(byKind('pv')).toHaveLength(1)
   })
 
   it('reuses an existing visitor cookie', async () => {
