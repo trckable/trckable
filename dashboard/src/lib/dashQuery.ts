@@ -34,6 +34,14 @@ export function queryOf(view: ViewState, range: Range): ReportQuery {
   }
 }
 
+/** Whether the page shows change figures (the tiles, the lists' arrows, the chips): only while a comparison is on. "No comparison" says none of them, so the tiles, the cards, the file and the chips never disagree. */
+export const showsChange = (view: ViewState): boolean => view.compare !== 'none'
+
+/** The query a CSV export asks with: the page's own, without the comparison when none is on (the file then has no comparison row either). */
+export function exportQuery(view: ViewState, query: ReportQuery): ReportQuery {
+  return showsChange(view) ? query : { ...query, compare: undefined, cfrom: undefined, cto: undefined }
+}
+
 /** Starts fetching the report a site's dashboard opens with, at the current
  *  address's period and filters: pointing at a site in the switcher does it,
  *  so the numbers are there by the click, and so does the page's start-up

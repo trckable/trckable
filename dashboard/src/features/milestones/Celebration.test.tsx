@@ -29,10 +29,15 @@ describe('a milestone reached', () => {
   it('is a side card with what was reached, the card to share and Share', () => {
     const share = vi.fn()
     const close = vi.fn()
+    vi.useFakeTimers()
     act(() => root.render(<Celebration m={m} site="tkb_x" onShare={share} onClose={close} />))
     const card = document.body.querySelector('.side-card')
     expect(card?.textContent).toContain('10,000 visitors')
+    // The picture is asked for once the page has had its moment (the first load asks for nothing it does not need).
+    expect(card?.querySelector('img')?.getAttribute('src')).toBeNull()
+    act(() => void vi.advanceTimersByTime(1600))
     expect(card?.querySelector('img')?.getAttribute('src')).toBe('/api/v1/sites/tkb_x/milestones/visitors/10000/card?format=svg&theme=dark')
+    vi.useRealTimers()
     act(() => (card?.querySelector('.btn.primary') as HTMLButtonElement).click())
     expect(share).toHaveBeenCalledTimes(1)
     act(() => (card?.querySelector('button[aria-label="Dismiss"]') as HTMLButtonElement).click())

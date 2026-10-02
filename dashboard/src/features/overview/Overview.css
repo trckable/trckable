@@ -88,18 +88,10 @@ button.kpi[aria-pressed='true'] .kpi-name {
 .kpi-delta.tone-flat {
   color: var(--text-3);
 }
-/* The line under the change (vs usual, the month's pace): its room is kept, so the strip never moves when it arrives. */
-.kpi-hint {
-  display: block;
-  max-width: 100%;
-  min-height: 16px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 11.5px;
-  line-height: 16px;
-}
+/* The chip after the change (vs usual, the month's pace): on the change's own line, so the strip is as tall with it as without. A tile too narrow for both leaves it out. */
 .kpi-chip {
+  margin-left: 8px;
+  font-size: 11.5px;
   color: var(--text-3);
   cursor: help;
 }
@@ -108,6 +100,11 @@ button.kpi[aria-pressed='true'] .kpi-name {
 }
 .kpi-chip.tone-down {
   color: var(--down);
+}
+@container (max-width: 150px) {
+  .kpi-chip {
+    display: none;
+  }
 }
 /* The charted one is underlined, gold when it is money. */
 .kpi[aria-pressed='true']::after {

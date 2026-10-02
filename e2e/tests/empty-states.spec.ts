@@ -39,6 +39,12 @@ test('goals: a line and the button that starts one', async ({ page }) => {
 })
 
 test('notes: the list says what a note is for and offers one', async ({ page }) => {
+  // Other suites leave notes on this site: the list is read as empty.
+  await page.route(/\/api\/v1\/sites\/[^/]+\/annotations\?/, async (route) => {
+    if (route.request().method() !== 'GET') return route.continue()
+    const res = await route.fetch()
+    await route.fulfill({ response: res, json: { ...(await res.json()), annotations: [] } })
+  })
   await page.goto(`${API}/${HISTORY_DOMAIN}?mode=full`)
   await page.locator('.note-bar').getByRole('button', { name: /^Notes/ }).click()
   const dialog = page.getByRole('dialog', { name: 'Notes' })

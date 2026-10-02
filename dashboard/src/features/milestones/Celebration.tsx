@@ -8,6 +8,7 @@ import { SideCard } from '../../components/SideCard/SideCard'
 import { Ghost } from '../../components/Logo'
 import type { Milestone } from '../../lib/api'
 import { reducedMotion } from '../../lib/motion'
+import { useSettled } from '../../lib/settle'
 import { copy } from './copy'
 import { shareApi } from './share'
 import { say } from './words'
@@ -31,6 +32,7 @@ function Party({ money }: { money: boolean }) {
 
 export function Celebration({ m, site, onShare, onClose }: { m: Milestone; site: string; onShare: () => void; onClose: () => void }) {
   const w = say(m)
+  const settled = useSettled()
   const line = `${w.big} ${w.label}`.trim()
   return (
     <>
@@ -48,7 +50,8 @@ export function Celebration({ m, site, onShare, onClose }: { m: Milestone; site:
           </button>
         }
       >
-        <img className="ms-peek" src={shareApi.cardURL(site, m, { format: 'svg', theme: 'dark', amount: false })} width={1200} height={630} alt={copy.card} loading="lazy" />
+        {/* The picture is asked for once the page has had its moment; its room is kept. */}
+        <img className="ms-peek" src={settled ? shareApi.cardURL(site, m, { format: 'svg', theme: 'dark', amount: false }) : undefined} width={1200} height={630} alt={copy.card} />
       </SideCard>
     </>
   )

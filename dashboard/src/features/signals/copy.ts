@@ -4,6 +4,8 @@
 export const signals = {
   sale: (amount: string) => `Cha-ching! ${amount}`,
   // Settings.
+  on: 'On',
+  off: 'Off',
   tab: { label: 'Live count in the tab', hint: 'A ● and how many are online, in the title of this browser tab' },
   sound: { label: 'Sale sound', hint: 'A short chime when a payment arrives' },
   notify: { label: 'Browser notices', hint: 'A first sale from a new source, a spike, or tracking stopping, while a trckable tab is open' },

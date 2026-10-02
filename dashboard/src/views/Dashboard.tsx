@@ -8,7 +8,7 @@ import { journeysOn } from '../features/cookieless/labels'
 import { unconvertedNote } from '../lib/money'
 import { channelColor, channelLabel } from '../lib/palette'
 import { navigate, readView, setView, useLocation, wantsLive } from '../lib/url'
-import { queryOf, rangeOf } from '../lib/dashQuery'
+import { exportQuery, queryOf, rangeOf, showsChange } from '../lib/dashQuery'
 import { canAsk, isShared, isViewer, sharedModules } from '../lib/me'
 import { isOn, shows } from '../lib/modules'
 import { FilterMenu } from '../components/FilterMenu'
@@ -87,7 +87,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const full = view.mode === 'full'
 
   // Current and previous period come in one request (lib/dashQuery.ts).
-  const compareOn = view.compare !== 'none'
+  const compareOn = showsChange(view)
   const compareMode: Exclude<typeof view.compare, 'none'> = view.compare === 'none' ? 'previous' : view.compare
   const filtersKey = JSON.stringify(view.filters)
   const query: ReportQuery = useMemo(
@@ -334,7 +334,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   if (scrubbing) k = day?.kpis ?? zeroKPIs
   // Nothing at all before: no change to show, not "new" on every tile.
   const before = data?.previous
-  const hasPrev = !scrubbing && !trailData && (before?.kpis.sessions ?? 0) > 0 && previousWhole(before?.series.map((p) => p.visitors) ?? [], data?.bucket ?? 'day')
+  const hasPrev = compareOn && !scrubbing && !trailData && (before?.kpis.sessions ?? 0) > 0 && previousWhole(before?.series.map((p) => p.visitors) ?? [], data?.bucket ?? 'day')
   const pk = hasPrev ? data?.previous?.kpis : undefined
   const race = useRaceRows(src, raceTo)
   const soFar = racing ? 'So far' : undefined
@@ -435,7 +435,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // What the two cards under the chart read from this page.
   const cardsCtx: CardsCtx = {
     site, query, bucket: data?.bucket ?? 'day', full, shared: isShared(), deep: full && hasData && !isShared(), loading: firstLoad, scrubbing, mods, money, fmtMoney: fmtM,
-    rows, soFar, cur, prev: trail ? undefined : data?.previous, dims, sourceRows, perDay, trail, dimTrail: !!trail, onSourceHover, addFilter, mapOn,
+    rows, soFar, cur, prev: compareOn && !trail ? data?.previous : undefined, compare: compareOn, dims, sourceRows, perDay, trail, dimTrail: !!trail, onSourceHover, addFilter, mapOn,
     goals: src?.goals ?? [], revenueDims: src?.revenue_dims ?? {}, countryRevenue: src?.revenue_dims?.country ?? [],
     attrFirst: view.attr === 'first', onAttr: (first) => setView({ attr: first ? 'first' : undefined }), onTrackGoal: () => setAddGoals(true), onFull: () => setView({ mode: 'full' }),
     steps: view.funnel ?? [], onSteps: (f) => setView({ funnel: f }), onPickVisitor: setJourney, visitors: k?.visitors ?? 0,
@@ -476,7 +476,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           onViews={narrow && !isShared() && segments.length > 0 ? () => savedViews.set(true) : undefined}
           milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
           onMode={(m) => setView({ mode: m })} onRefresh={reloadNow}
-          onExport={() => downloadCsv(site.id, query)}
+          onExport={() => downloadCsv(site.id, exportQuery(view, query))}
         />
       }
     />
@@ -531,7 +531,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       <KpiStrip
         loading={firstLoad} vs={vs} metric={metric} can={canDraw} onPick={pick} expectMoney={hold.revenue}
         k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} blank={blank} site={site}
-        hint={scrubbing || raced || trailData ? undefined : visitorsHint({ site: site.id, timezone: site.timezone, period: view.period, day: range.to, filters: view.filters, visitors: k?.visitors, series })}
+        hint={compareOn && !scrubbing && !raced && !trailData ? visitorsHint({ site: site.id, period: view.period, day: range.to, filters: view.filters }) : undefined}
         // A shared page has no live stream, so it says where the number comes from instead of waiting to connect forever.
         online={<OnlineKpi online={online} canOpen={!isShared()} note={stream.connected || isShared() ? entryCopy.onlineNote : entryCopy.connecting} />}
       />

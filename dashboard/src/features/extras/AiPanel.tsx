@@ -26,7 +26,7 @@ function Spark({ values }: { values: number[] }) {
   )
 }
 
-export default function AiPanel({ site, query, all, rows, onPick }: { site: string; query: ReportQuery; all: number; rows: number; onPick: (referrer: string) => void }) {
+export default function AiPanel({ site, query, all, rows, compare, onPick }: { site: string; query: ReportQuery; all: number; rows: number; compare: boolean; onPick: (referrer: string) => void }) {
   const [found, setFound] = useState<{ key: string; res: { current: Result; previous?: Result } | null } | null>(null)
   const key = `${site}|${query.from}|${query.to}|${query.compare ?? ''}|${query.cfrom ?? ''}|${query.testPayments ? 'test' : ''}|${JSON.stringify(query.filters ?? [])}`
   useEffect(() => {
@@ -43,8 +43,10 @@ export default function AiPanel({ site, query, all, rows, onPick }: { site: stri
   const res = here.res
   const visitors = res?.current.kpis.visitors ?? 0
   if (!res || visitors === 0) return <p className="faint kit-empty">{c.none}</p>
-  const move = moveOf(visitors, res.previous?.kpis.visitors)
-  const before = new Map(byAssistant(res.previous?.dims.referrer ?? []).map((a) => [a.name, a.visitors]))
+  // The change shows only while a comparison is on, like every other change figure.
+  const previous = compare ? res.previous : undefined
+  const move = moveOf(visitors, previous?.kpis.visitors)
+  const before = new Map(byAssistant(previous?.dims.referrer ?? []).map((a) => [a.name, a.visitors]))
   return (
     <>
       <div className="ai-head">
@@ -58,7 +60,7 @@ export default function AiPanel({ site, query, all, rows, onPick }: { site: stri
         loading={false}
         whole={visitors}
         barColor={channelColor('AI')}
-        prior={(host) => (res.previous ? (before.get(assistantOf(host)) ?? 0) : undefined)}
+        prior={(host) => (previous ? (before.get(assistantOf(host)) ?? 0) : undefined)}
         emptyText={c.none}
         onPick={onPick}
         pickLabel={(host) => c.pick(assistantOf(host), host)}

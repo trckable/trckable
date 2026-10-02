@@ -39,7 +39,7 @@ function sourceList(c: CardsCtx, dim: string) {
   if (dim === 'ai') {
     return (
       <Suspense fallback={<Loading height={164} />}>
-        <AiPanel site={c.site.id} query={c.query} all={c.visitors} rows={c.rows} onPick={(host) => c.addFilter('referrer', host)} />
+        <AiPanel site={c.site.id} query={c.query} all={c.visitors} rows={c.rows} compare={c.compare} onPick={(host) => c.addFilter('referrer', host)} />
       </Suspense>
     )
   }

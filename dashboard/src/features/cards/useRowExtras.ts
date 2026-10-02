@@ -4,6 +4,7 @@
 // shared link or a single day picked; no pictures for a shared link (it has no
 // session to ask with).
 import { useEffect, useState } from 'react'
+import { SETTLE_MS } from '../../lib/settle'
 import type { CardsCtx } from './ctx'
 import type { Extras } from './rowExtras'
 
@@ -20,12 +21,16 @@ export function useRowExtras(c: CardsCtx, dim: string, keys: string[]): Extras |
   useEffect(() => {
     if (!on) return
     let live = true
-    void import('./rowExtras')
-      .then((m) => m.fetchRowExtras({ site: c.site.id, tz: c.site.timezone, dim, keys, filters: c.query.filters ?? [], spark, icons }))
-      .then((extras) => live && setGot({ id, extras }))
-      .catch(() => {})
+    // Decoration: after the page has had its moment, and not for a list that is changing under the pointer.
+    const wait = setTimeout(() => {
+      void import('./rowExtras')
+        .then((m) => m.fetchRowExtras({ site: c.site.id, tz: c.site.timezone, dim, keys, filters: c.query.filters ?? [], spark, icons }))
+        .then((extras) => live && setGot({ id, extras }))
+        .catch(() => {})
+    }, SETTLE_MS)
     return () => {
       live = false
+      clearTimeout(wait)
     }
   }, [on, id]) // eslint-disable-line react-hooks/exhaustive-deps -- id says everything the request reads
   if (!on) return undefined
