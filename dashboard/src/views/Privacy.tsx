@@ -329,7 +329,7 @@ function Consent({ config, on, onSave }: { site: Site; config: SiteConfig; on: b
         <>
           <div className={previewClass(b.position)} style={look}>
             <BarPreview
-              text={b.text || 'We count visits with one cookie. Nothing else, and nothing shared.'}
+              text={b.text || 'We count visits with one cookie and a short queue on this device. Nothing is shared.'}
               accept={b.accept || 'Accept'}
               decline={b.decline || 'Decline'}
               policy={b.policy}
@@ -338,7 +338,7 @@ function Consent({ config, on, onSave }: { site: Site; config: SiteConfig; on: b
           </div>
 
           <Row label="What it says" hint="Leave any field empty to keep the English default">
-            <input className="input" style={{ width: 300 }} aria-label="What the cookie bar says" placeholder="We count visits with one cookie. Nothing else, and nothing shared." {...field('text')} />
+            <input className="input" style={{ width: 300 }} aria-label="What the cookie bar says" placeholder="We count visits with one cookie and a short queue on this device. Nothing is shared." {...field('text')} />
           </Row>
           <Row label="Agree button">
             <input className="input" style={{ width: 300 }} aria-label="The agree button's words" placeholder="Accept" {...field('accept')} />

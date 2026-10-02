@@ -42,6 +42,11 @@ type Config struct {
 	UpdateCheck bool
 	BackupS3    string // TRCKABLE_BACKUP_S3: https://key:secret@host/bucket/prefix?region=… (optional)
 	BackupDays  int    // TRCKABLE_BACKUP_KEEP_DAYS: off-site copies, every one for 7 days, then the newest of each day, up to this many days (default 30)
+	// NoticeDays: how long a payment provider's raw notice (it carries the
+	// payer's email, name and address) is kept after it was read into the
+	// ledger (TRCKABLE_PAYMENT_NOTICE_DAYS, default 30; 0 keeps them). A site's
+	// own shorter retention wins.
+	NoticeDays int
 	// TRCKABLE_UNSAFE_SESSION_CLOSE_MS shortens how long sessions stay open
 	// before they are written. Tests only: never in production.
 	SessionCloseAfter time.Duration
@@ -72,6 +77,7 @@ func Load() Config {
 		BackupS3:     envFile("TRCKABLE_BACKUP_S3"),
 		UpdateCheck:  !strings.EqualFold(strings.TrimSpace(os.Getenv("TRCKABLE_UPDATE_CHECK")), "off"),
 		BackupDays:   envInt("TRCKABLE_BACKUP_KEEP_DAYS", 30),
+		NoticeDays:   envDays("TRCKABLE_PAYMENT_NOTICE_DAYS", 30),
 	}
 	if c.BaseURL == "" && os.Getenv("RAILWAY_PUBLIC_DOMAIN") != "" {
 		c.BaseURL = "https://" + os.Getenv("RAILWAY_PUBLIC_DOMAIN")
@@ -150,6 +156,14 @@ func env(k, def string) string {
 
 func envInt(k string, def int) int {
 	if v, err := strconv.Atoi(os.Getenv(k)); err == nil && v > 0 {
+		return v
+	}
+	return def
+}
+
+// envDays is envInt that also accepts 0 (the setting's "never").
+func envDays(k string, def int) int {
+	if v, err := strconv.Atoi(strings.TrimSpace(os.Getenv(k))); err == nil && v >= 0 {
 		return v
 	}
 	return def

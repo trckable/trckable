@@ -849,8 +849,10 @@ func (s *Store) listSites(ctx context.Context, where string, args ...any) ([]Sit
 	return out, rows.Err()
 }
 
-// DailySalt implements ingest.SaltStore: the first salt stored for a day wins,
-// and salts older than two days are deleted.
+// DailySalt implements ingest.SaltStore: the first salt stored for a day wins.
+// Only today's and yesterday's salts are kept (yesterday's so a restart just
+// after midnight finds what it needs); older ones are deleted each time a new
+// day's salt is asked for.
 func (s *Store) DailySalt(day string, fresh []byte) ([]byte, error) {
 	ctx := context.Background()
 	if _, err := s.DB.ExecContext(ctx, `INSERT OR IGNORE INTO daily_salts (day, salt) VALUES (?, ?)`, day, fresh); err != nil {
@@ -860,9 +862,16 @@ func (s *Store) DailySalt(day string, fresh []byte) ([]byte, error) {
 	if err := s.DB.QueryRowContext(ctx, `SELECT salt FROM daily_salts WHERE day = ?`, day).Scan(&salt); err != nil {
 		return nil, err
 	}
-	cutoff := time.Now().UTC().AddDate(0, 0, -2).Format("2006-01-02")
-	_, _ = s.DB.ExecContext(ctx, `DELETE FROM daily_salts WHERE day < ?`, cutoff)
+	s.PruneSalts(ctx)
 	return salt, nil
+}
+
+// PruneSalts deletes every salt older than yesterday's. It runs whenever a new
+// day's salt is made, and once a day besides, so an instance that gets no
+// visits does not keep old salts either.
+func (s *Store) PruneSalts(ctx context.Context) {
+	cutoff := time.Now().UTC().AddDate(0, 0, -1).Format("2006-01-02")
+	_, _ = s.DB.ExecContext(ctx, `DELETE FROM daily_salts WHERE day < ?`, cutoff)
 }
 
 // Ping reports whether the database is usable.
