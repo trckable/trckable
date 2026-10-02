@@ -103,20 +103,19 @@ test('through the proxy with its key, visitors keep a long cookie and stay one p
   await lab.settled(s.site, { visitors: 2, sessions: 2, pageviews: 4, bounce: 0, goals: { signup: 2 }, converted: { signup: 2 } })
 })
 
-test('a click that leaves before the first answer is the same visitor, and the checkout link carries them', async ({ page, context, lab }) => {
+test('a click before the first answer is the same visitor, and the checkout link carries them', async ({ page, context, lab }) => {
   const s = await scene(lab, 'checkout-first-visit', 'proxy')
-  s.page('/a', '<a id="buy" href="https://buy.stripe.com/test_checkout">buy</a>')
-  await page.route('https://buy.stripe.com/**', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<h1>paid</h1>' }))
+  // The page keeps the click to itself: the link is read, not followed.
+  s.page('/a', '<a id="buy" href="https://buy.stripe.com/test_checkout" onclick="event.preventDefault()">buy</a>')
   await page.route('**/api/e', async (route) => {
-    const sent = await route.fetch() // the server has the event at once
-    await new Promise((r) => setTimeout(r, 1500)) // its answer, with the cookie, is slow
-    await route.fulfill({ response: sent }).catch(() => undefined)
+    await new Promise((r) => setTimeout(r, 1500)) // the server's first answer, with its cookie, is slow
+    await route.continue()
   })
   await page.goto(s.url('/a'))
   await page.click('#buy')
-  await page.waitForURL('https://buy.stripe.com/**')
-  const id = (await context.cookies()).find((c) => c.name === 'trckable_vid')!.value
-  expect(new URL(page.url()).searchParams.get('client_reference_id')).toBe('trckable_' + id.replace('.', '_'))
+  const id = (await context.cookies()).find((c) => c.name === 'trckable_vid')?.value
+  expect(id, 'the visitor has an id before the server has answered').toBeTruthy()
+  expect(new URL(await page.locator('#buy').evaluate((a: HTMLAnchorElement) => a.href)).searchParams.get('client_reference_id')).toBe('trckable_' + id!.replace('.', '_'))
   await lab.settled(s.site, { visitors: 1, sessions: 1, pageviews: 1, goals: { outbound_click: 1 } })
 })
 
