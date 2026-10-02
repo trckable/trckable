@@ -25,6 +25,7 @@ client at either.
 - Events that fail to send are kept in the browser and sent again on a later page
   (not in cookieless mode, which keeps nothing); the server counts each one once
 - Cookieless mode stores nothing in the browser
+- The visitor cookie `trckable_vid` holds a random id, which counts as personal data, and nothing else about the visitor. It lasts 400 days (7 days in Safari when the browser script sets it, 400 when your server route does). In the EU it normally needs consent first; cookieless mode sets none
 
 Tracking needs no key: only the site's public id (`tkb_…`). The Next.js route
 and other server proxies use the site's proxy key, kept on your server, and

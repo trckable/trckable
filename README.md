@@ -89,7 +89,7 @@ Nothing is paid, limited or held back. The complete list, in words: [Everything 
 </p>
 <p align="center">
   <img src=".github/images/features/lightweight.svg" width="49%" alt="A 2 KB script, gzipped and gated in CI; modules that are off cost 0 bytes">
-  <img src=".github/images/features/no-ip.svg" width="49%" alt="No IP address is ever stored: used once in memory for the country, then discarded">
+  <img src=".github/images/features/no-ip.svg" width="49%" alt="No IP address is ever stored: it is used in memory for the country, bot checks, rate limits and the cookieless hash, and never written to disk, a log or the WAL">
 </p>
 <p align="center">
   <img src=".github/images/features/core-full.svg" width="49%" alt="Core is one calm screen; press F for Full, every number on the same page">

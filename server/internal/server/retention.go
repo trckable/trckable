@@ -25,6 +25,10 @@ func (s *Server) runRetention(ctx context.Context) {
 		if err := s.pruneOnce(ctx); err != nil && ctx.Err() == nil {
 			slog.Warn("retention pass failed", "err", err)
 		}
+		if err := s.pruneNotices(ctx); err != nil && ctx.Err() == nil {
+			slog.Warn("payment notice pass failed", "err", err)
+		}
+		s.ctl.PruneSalts(ctx) // old cookieless salts go even on a day with no visits
 		timer.Reset(24 * time.Hour)
 	}
 }
@@ -50,4 +54,18 @@ func (s *Server) pruneOnce(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// pruneNotices empties the raw payment notices that are past their time: the
+// provider's own copy of who paid. The ledger keeps the money.
+func (s *Server) pruneNotices(ctx context.Context) error {
+	plan, err := s.ctl.RetentionPlan(ctx)
+	if err != nil {
+		return err
+	}
+	n, err := s.revenue.PruneNotices(ctx, s.cfg.NoticeDays, plan)
+	if n > 0 {
+		slog.Info("retention", "payment notices emptied", n)
+	}
+	return err
 }

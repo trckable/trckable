@@ -216,7 +216,7 @@ export function start(c: Config): Tracker {
         if (b.css) root.firstChild!.appendChild(d.createTextNode(b.css))
         const say = root.querySelector('p')!
         const btn = root.querySelectorAll('button')
-        say.textContent = b.text || 'We count visits with one cookie. Nothing else, and nothing shared.'
+        say.textContent = b.text || 'We count visits with one cookie and a short queue on this device. Nothing is shared.'
         // Refusing has to be as easy as agreeing, so both are one click and
         // the same size.
         btn[0].textContent = b.decline || 'Decline'

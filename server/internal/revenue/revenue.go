@@ -708,6 +708,11 @@ func saleKind(k string) string {
 const liveWindow = 10 * time.Minute
 
 // Reprocess rebuilds a site's ledger from its inbox in one transaction.
+//
+// Once old notices have been emptied (see PruneNotices) the inbox no longer
+// holds the whole history, so a reset would delete payments it cannot bring
+// back. Then nothing is reset: the notices that are left are applied again on
+// top of the ledger, which only ever upserts, and older rows stay as they are.
 func (s *Service) Reprocess(ctx context.Context, site string) (int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -716,8 +721,14 @@ func (s *Service) Reprocess(ctx context.Context, site string) (int, error) {
 		return 0, err
 	}
 	defer tx.Rollback()
-	if err := ledger.Reset(ctx, tx, site); err != nil {
+	pruned, err := emptiedNotices(ctx, tx, site)
+	if err != nil {
 		return 0, err
+	}
+	if pruned == 0 {
+		if err := ledger.Reset(ctx, tx, site); err != nil {
+			return 0, err
+		}
 	}
 	rows, err := tx.QueryContext(ctx, `SELECT i.body, c.provider, c.id, c.mode FROM pay_inbox i JOIN pay_connections c ON c.id = i.connection_id
 		WHERE c.site_id = ? ORDER BY i.id`, site)
