@@ -118,3 +118,17 @@ test('nothing to run: the matrices still parse', () => {
   assert.equal(JSON.parse(o.browsers).length, 1)
   assert.equal(JSON.parse(o.demo_browsers).length, 1)
 })
+
+test('the accuracy suite runs when what it measures changes, and not for a screen', () => {
+  assert.equal(out('tracker/src/core.ts').accuracy, 'true')
+  assert.equal(out('tracker/test/core.test.ts').accuracy, 'false')
+  assert.equal(out('packages/trckable/src/server.ts').accuracy, 'true')
+  assert.equal(out('packages/trckable/test/server.test.ts').accuracy, 'false')
+  assert.equal(out('server/internal/writer/sessions.go').accuracy, 'true')
+  assert.equal(out('server/internal/writer/writer_test.go').accuracy, 'false')
+  assert.equal(out('e2e/accuracy/harness.ts').accuracy, 'true')
+  assert.equal(out('e2e/accuracy/harness.ts').e2e, '') // its own jobs, not the suite's browser specs
+  assert.equal(out('dashboard/src/features/journey/Journey.tsx').accuracy, 'false')
+  assert.equal(out('README.md').accuracy, 'false')
+  assert.equal(outputs(everything()).accuracy, 'true')
+})
