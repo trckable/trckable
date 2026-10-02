@@ -62,10 +62,10 @@ func (e *env) runUntil(t *testing.T, target uint64) {
 	}
 }
 
-func (e *env) count(t *testing.T, q string) int64 {
+func (e *env) count(t *testing.T, q string, args ...any) int64 {
 	t.Helper()
 	var n int64
-	if err := e.store.DB.QueryRow(q).Scan(&n); err != nil {
+	if err := e.store.DB.QueryRow(q, args...).Scan(&n); err != nil {
 		t.Fatal(err)
 	}
 	return n
@@ -535,5 +535,55 @@ func TestEngagementForAnotherPageDoesNotStretchASession(t *testing.T) {
 	e.runAt(t, 2, func() time.Time { return time.UnixMilli(base + 4*3600_000) })
 	if r := e.session(t); r.n != 1 || r.engaged != 0 {
 		t.Fatalf("a stranger's report was folded in: %+v", r)
+	}
+}
+
+// The tracker keeps an unsent event for 24 hours. When the server comes back
+// the visit arrives whole and old: one session, written at once, on the day it
+// happened and not on the day it arrived.
+func TestAccuracyAVisitMadeDuringALongOutageIsOneSessionOnItsOwnDay(t *testing.T) {
+	e := newEnv(t, t.TempDir())
+	defer e.close()
+	base := time.Now().Add(-20 * time.Hour).UnixMilli()
+	for _, ev := range visit(base) {
+		ev.Late = true // the browser kept it back for twenty hours
+		e.append(t, ev)
+	}
+	e.runAt(t, 5, func() time.Time { return time.UnixMilli(base + 20*3600_000) })
+	if n := e.count(t, `SELECT count(*) FROM sessions`); n != 0 {
+		t.Fatalf("the visit was written the moment it arrived (%d sessions): more of it may be on its way", n)
+	}
+	e.runAt(t, 5, func() time.Time { return time.UnixMilli(base + 21*3600_000 + 1) }) // an hour on
+
+	if r := e.session(t); r.n != 1 || r.pvs != 2 || r.goals != 1 {
+		t.Fatalf("a late visit: %+v, want one session with 2 page views and a goal", r)
+	}
+	if n := e.count(t, `SELECT count(*) FROM sessions WHERE epoch_ms(start) = ?`, base); n != 1 {
+		t.Fatalf("the session does not start when the visit did")
+	}
+	if n := e.count(t, `SELECT count(*) FROM events WHERE epoch_ms(ts) BETWEEN ? AND ?`, base, base+95_000); n != 5 {
+		t.Fatalf("%d events on the day of the visit, want 5", n)
+	}
+}
+
+// A resend that comes a day after the first copy, across a restart, is
+// stored once: the ids of what was stored are read back at boot.
+func TestAccuracyAResendAfterADayAndARestartIsStoredOnce(t *testing.T) {
+	dir := t.TempDir()
+	base := time.Now().Add(-26 * time.Hour).UnixMilli()
+	e := newEnv(t, dir)
+	e.append(t, pv("s1", 1, 11, base))
+	e.append(t, pv("s1", 2, 12, base+1000))
+	e.runAt(t, 2, func() time.Time { return time.UnixMilli(base + 2000) })
+	e.close()
+
+	e = newEnv(t, dir)
+	defer e.close()
+	e.append(t, pv("s1", 1, 11, base))      // the same event, sent again 24 h later (age 24 h)
+	e.append(t, pv("s1", 2, 12, base+1000)) // and the other
+	e.append(t, pv("s1", 3, 13, base+500))  // one that never got through
+	e.runAt(t, 5, func() time.Time { return time.UnixMilli(base + 24*3600_000 + 2000) })
+	if n := e.count(t, `SELECT count(*) FROM events`); n != 3 {
+		t.Fatalf("%d rows, want 3: the resends were stored again", n)
 	}
 }

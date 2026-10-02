@@ -179,10 +179,53 @@ func TestQueuedEventKeepsItsTime(t *testing.T) {
 	if e.TS != want {
 		t.Fatalf("ts %d, want %d", e.TS, want)
 	}
-	post(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/","a":99999999}`, chromeUA) // absurd age is clamped
-	e, _ = lastEvent(t, l)
-	if h.Now().UnixMilli()-e.TS != maxAgeMs {
-		t.Fatalf("age not clamped: %d", h.Now().UnixMilli()-e.TS)
+}
+
+// The tracker keeps an unsent event for 24 hours, so a visit that was made
+// during a long outage arrives with the day it happened on.
+func TestEventAfterALongOutageKeepsItsDay(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		age  time.Duration
+	}{
+		{"2 hours", 2 * time.Hour},
+		{"20 hours", 20 * time.Hour},
+		{"24 hours", 24 * time.Hour},
+		{"the oldest accepted", event.MaxAge},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h, l := newHandler(t)
+			w := post(h, fmt.Sprintf(`{"s":"tkb_test","k":"pv","u":"https://site.com/","id":"a1","a":%d}`, tc.age.Milliseconds()), chromeUA)
+			if w.Code != http.StatusAccepted {
+				t.Fatalf("status %d: %s", w.Code, w.Body)
+			}
+			e, _ := lastEvent(t, l)
+			if want := h.Now().Add(-tc.age).UnixMilli(); e.TS != want {
+				t.Fatalf("ts %d, want %d", e.TS, want)
+			}
+		})
+	}
+}
+
+// An age past what any tracker keeps is a wrong clock, or someone choosing a
+// date: the event is refused with a 4xx (the tracker drops it) and nothing is
+// stored on a day it was never on. A negative age is a fast clock: now.
+func TestAbsurdAgeIsRefused(t *testing.T) {
+	h, l := newHandler(t)
+	for _, age := range []int64{event.MaxAge.Milliseconds() + 1, 48 * 3600_000, 99999999999} {
+		w := post(h, fmt.Sprintf(`{"s":"tkb_test","k":"pv","u":"https://site.com/","a":%d}`, age), chromeUA)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("age %d: status %d, want 400", age, w.Code)
+		}
+	}
+	if committed, _ := l.Committed(); committed != 0 {
+		t.Fatalf("%d events stored for refused ages", committed)
+	}
+	if w := post(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/","a":-5000}`, chromeUA); w.Code != http.StatusAccepted {
+		t.Fatalf("negative age: status %d", w.Code)
+	}
+	if e, _ := lastEvent(t, l); e.TS != h.Now().UnixMilli() {
+		t.Fatalf("negative age: ts %d, want now", e.TS)
 	}
 }
 
@@ -480,5 +523,19 @@ func TestProxiedFirstVisitKeepsTheIdTheBrowserMade(t *testing.T) {
 		if len(cs) != 1 || cs[0].Value != id || cs[0].MaxAge != 400*24*3600 {
 			t.Fatalf("the server did not set the browser's id as its cookie: %+v", cs)
 		}
+	}
+}
+
+// An event a browser kept for hours is marked late, so the writer holds its
+// visit open while the rest of it arrives; a slow retry is not late.
+func TestEventKeptForHoursIsMarkedLate(t *testing.T) {
+	h, l := newHandler(t)
+	post(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/","a":600000}`, chromeUA) // 10 min
+	if e, _ := lastEvent(t, l); e.Late {
+		t.Fatal("a ten-minute retry is not late")
+	}
+	post(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/","a":7200000}`, chromeUA) // 2 h
+	if e, _ := lastEvent(t, l); !e.Late {
+		t.Fatal("an event kept for two hours is late")
 	}
 }

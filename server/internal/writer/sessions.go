@@ -13,8 +13,11 @@ const (
 	SessionTimeout int64 = 30 * 60 * 1000 // ms
 	// DefaultCloseAfter is how long a session stays open in memory after its
 	// last event before it is written to the sessions table. It is longer than
-	// the timeout so late retries (the tracker queues for up to 30 min) still
-	// land in the right session.
+	// the timeout so a brief retry still lands in the right session. A retry
+	// that comes after a long outage (the tracker queues for up to 24 h) finds
+	// its visit already written: a visit that was whole in the queue is stored
+	// as one session on its own day, and one the outage cut in two is stored
+	// as two.
 	DefaultCloseAfter int64 = 60 * 60 * 1000 // ms
 )
 
@@ -41,6 +44,7 @@ type Session struct {
 
 	Pageviews uint32
 	Goals     uint32
+	held      int64               // wall-clock ms when an event that was late for its visit last reached it: from then, not from the visit's own last event, the session is idle
 	lastPV    int64               // ts of the latest pageview (for the exit page)
 	eng       map[uint64]uint32   // pageview → max engaged ms (running totals)
 	pvs       map[uint64]struct{} // the pageviews of this session, so a late engagement report finds its own
@@ -159,13 +163,25 @@ func sessionID(site string, visitor uint64, start int64) uint64 {
 	return h.Sum64()
 }
 
+// hold notes that e reached a session at wall-clock time now. A late event (a
+// browser sending what it kept during an outage, see event.Event.Late) says it
+// happened hours ago, so measured by its own time the session is idle already
+// and would be written before the rest of the visit, a few requests behind it,
+// arrives. Such a session stays open for closeAfter from now instead. What
+// arrives live, or is replayed or imported, is not held: it closes as before.
+func hold(s *Session, e *event.Event, now int64) {
+	if e.Late {
+		s.held = now
+	}
+}
+
 // assign returns the session id for e and folds e into that session. When a
 // visitor starts a new session while an old one is still open, the old one is
 // returned in closed so the caller can write it. was and now are the start of
 // the session e went into before and after it: a late retry from earlier in
 // the visit moves the start back, and every report that covered either
 // moment has changed.
-func (z *sessionizer) assign(e *event.Event) (id uint64, closed *Session, was, now int64) {
+func (z *sessionizer) assign(e *event.Event, wall int64) (id uint64, closed *Session, was, now int64) {
 	z.mu.Lock()
 	defer z.mu.Unlock()
 	k := visitorKey{e.Site, e.Visitor}
@@ -177,12 +193,14 @@ func (z *sessionizer) assign(e *event.Event) (id uint64, closed *Session, was, n
 		if e.TS-s.Last < SessionTimeout || (e.Kind == event.KindEngagement && s.has(e.Pageview)) {
 			was = s.Start
 			s.add(e)
+			hold(s, e, wall)
 			return s.ID, nil, was, s.Start
 		}
 		closed = s
 	}
 	s := &Session{Site: e.Site, ID: sessionID(e.Site, e.Visitor, e.TS), Visitor: e.Visitor, Start: e.TS, Last: e.TS}
 	s.add(e)
+	hold(s, e, wall)
 	z.open[k] = s
 	return s.ID, closed, s.Start, s.Start
 }
@@ -206,7 +224,7 @@ func (z *sessionizer) closeIdle(now int64) (closed []*Session, watermark int64) 
 	defer z.mu.Unlock()
 	watermark = now - z.closeAfter
 	for k, s := range z.open {
-		if now-s.Last >= z.closeAfter {
+		if now-max(s.Last, s.held) >= z.closeAfter {
 			closed = append(closed, s)
 			delete(z.open, k)
 		} else if s.Start < watermark {
