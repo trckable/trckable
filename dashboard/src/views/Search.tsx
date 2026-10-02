@@ -4,7 +4,7 @@
 // firewall. The key is sealed on the server and never comes back here.
 import { Check, CircleCheck, ExternalLink, FileCheck2, FileUp, LockKeyhole, Search as SearchIcon, TriangleAlert } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { api, fail, type SearchConnection, type SearchProperty, type Site } from '../lib/api'
+import { fail, type SearchConnection, type SearchProperty, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { useSearchProperties } from './useSearchProperties'
 import { Row } from '../components/Row'
@@ -49,7 +49,7 @@ export function SearchSettings({ site }: { site: Site }) {
   const { ask, dialog } = useConfirm()
 
   const load = () => {
-    api
+    more
       .searchConsole(site.id)
       .then((r) => setConn(r.connected && r.connection ? r.connection : null))
       .catch(() => setConn(null))
@@ -110,7 +110,7 @@ export function SearchSettings({ site }: { site: Site }) {
                   value={conn.property || undefined}
                   onPick={(property) => {
                     const id = toast('Checking with Google…', 'busy')
-                    api
+                    more
                       .setSearchConsole(site.id, { property })
                       .then((r) => {
                         connected(r)
@@ -141,7 +141,7 @@ export function SearchSettings({ site }: { site: Site }) {
                       danger: true,
                       busyLabel: 'Disconnecting…',
                       done: 'Search Console disconnected',
-                      run: () => api.deleteSearchConsole(site.id),
+                      run: () => more.deleteSearchConsole(site.id),
                     })
                     if (ok) {
                       setConn(null)
@@ -186,7 +186,7 @@ function Connect({ site, replacing, onDone, onCancel }: { site: Site; replacing:
 
   const connect = () => {
     setBusy(true)
-    api
+    more
       .setSearchConsole(site.id, { key: key.trim() })
       .then((r) => {
         onDone(r)

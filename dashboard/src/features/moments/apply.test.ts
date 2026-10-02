@@ -25,6 +25,19 @@ describe('what a click on a pin does to the address', () => {
     expect(patchFor(spike, at({ bucket: 'hour' }))).toEqual({ filters: [{ dim: 'referrer', value: 'news.example' }], day: undefined })
   })
 
+  it('a finding whose day the period does not reach opens a month around it, and picks no day', () => {
+    const referrer: Pin = { id: 'r', kind: 'referrer', score: 60, day: '2026-09-27', filters: [{ dim: 'referrer', value: 'google.com' }], showDay: false, n: {} }
+    const today = at({ range: { from: '2026-10-02', to: '2026-10-02' }, bucket: 'hour' })
+    expect(patchFor(referrer, today)).toEqual({ period: 'custom', from: '2026-09-03', to: '2026-10-02', bucket: undefined, day: undefined, live: false, filters: [{ dim: 'referrer', value: 'google.com' }] })
+    // Inside the period it is the filter alone.
+    expect(patchFor(referrer, at())).toEqual({ filters: [{ dim: 'referrer', value: 'google.com' }], day: undefined })
+  })
+
+  it('a moment of a day the hourly chart does not reach opens that day by day too', () => {
+    const patch = patchFor(spike, at({ range: { from: '2026-10-02', to: '2026-10-02' }, bucket: 'hour' }))
+    expect(patch).toMatchObject({ period: 'custom', day: '2026-09-19', live: false })
+  })
+
   it('a day the chart does not draw by day opens a month around it, as a note does', () => {
     const patch = patchFor(spike, at({ bucket: 'week' }))
     expect(patch).toMatchObject({ period: 'custom', day: '2026-09-19', live: false })

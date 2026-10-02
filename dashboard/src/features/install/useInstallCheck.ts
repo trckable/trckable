@@ -3,7 +3,7 @@
 // the script is not found yet, it looks again every 30 seconds; once it is,
 // only the live stream matters, and nothing more is fetched.
 import { useCallback, useEffect, useState } from 'react'
-import { api, APIError, type InstallCheck } from '../../lib/api'
+import { APIError, type InstallCheck, more } from '../../lib/apiMore'
 
 export const RECHECK_MS = 30_000
 /** After a 429 the server's window is ten minutes: wait out a good part of it. */
@@ -47,7 +47,7 @@ export function useInstallCheck(site: string, live: boolean) {
     let current = true
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the check starts now: say so while it runs
     setState((s) => ({ phase: 'checking', last: lastOf(s) }))
-    api
+    more
       .checkInstall(site)
       .then((result) => current && setState({ phase: 'done', result }))
       .catch((e: unknown) => {

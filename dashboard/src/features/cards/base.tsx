@@ -4,7 +4,7 @@ import { lazy, Suspense } from 'react'
 import { Loading } from '../../components/loading/Loading'
 import { lazyLoad, whenIdle } from '../../lib/lazyLoad'
 import { shows } from '../../lib/modules'
-import { DevicesPanel, LocationsPanel, PagesPanel, SourcesPanel } from './Breakdowns'
+import { PagesPanel, SourcesPanel } from './Breakdowns'
 import { cardCopy } from './copy'
 import type { CardsCtx } from './ctx'
 import { GoalsPanel } from './Money'
@@ -12,14 +12,19 @@ import { TabCard, type CardTab } from './TabCard'
 
 const Earners = lazyLoad(() => import('./Earners'))
 whenIdle(Earners.preload)
+// Where from in the world and on what: not the tab a card opens on, so a chunk of their own, fetched when the browser is idle.
+const Locations = lazyLoad(() => import('./PlacePanels').then((m) => ({ default: m.LocationsPanel })))
+const Devices = lazyLoad(() => import('./PlacePanels').then((m) => ({ default: m.DevicesPanel })))
+whenIdle(Locations.preload)
+const later = (node: React.ReactNode) => <Suspense fallback={<Loading height={164} />}>{node}</Suspense>
 const FullButton = lazy(() => import('./FullButton'))
 
 export function whoTabs(c: CardsCtx): CardTab[] {
   return [
     { id: 'sources', label: cardCopy.sources, render: () => <SourcesPanel c={c} /> },
     { id: 'pages', label: cardCopy.pages, render: () => <PagesPanel c={c} /> },
-    { id: 'locations', label: cardCopy.locations, render: () => <LocationsPanel c={c} /> },
-    { id: 'devices', label: cardCopy.devices, render: () => <DevicesPanel c={c} /> },
+    { id: 'locations', label: cardCopy.locations, render: () => later(<Locations c={c} />) },
+    { id: 'devices', label: cardCopy.devices, render: () => later(<Devices c={c} />) },
   ]
 }
 

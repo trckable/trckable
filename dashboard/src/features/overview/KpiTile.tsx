@@ -3,7 +3,7 @@
 // the arrow and the number only. Nothing at all when there is nothing to
 // compare with. The charted one is underlined, and a number that can be
 // charted is a button.
-import type { ComponentProps } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 import type { Delta } from '../../lib/format'
 import { useTween } from '../../lib/motion'
 import { KpiMark } from './kpiMark'
@@ -26,6 +26,8 @@ interface Props {
   onClick?: () => void
   money?: boolean
   loading?: boolean
+  /** A small chip after the change, on its line (vs usual, the month's pace): only where the change itself is shown. */
+  hint?: ReactNode
   /** Which mark stands before the name (KpiMarks). */
   icon?: ComponentProps<typeof KpiMark>['k']
 }
@@ -50,7 +52,7 @@ export function KpiTile(p: Props) {
       {/* The skeleton is decorative: the loading bar at the top of the page
           is the one thing that announces loading, and it says it once. */}
       {p.loading ? <span className="value skeleton" aria-hidden="true" /> : <span className="value num">{p.value === undefined || none ? '–' : p.fmt(v)}</span>}
-      {p.d && !p.loading && !none && <Change d={p.d} vs={p.vs} />}
+      {p.d && !p.loading && !none && <Change d={p.d} vs={p.vs} hint={p.hint} />}
       {/* The change's line is kept while loading, and while a dash stands for nothing yet: the strip is as tall as it will be. */}
       {(p.loading || (none && p.d)) && <span className="kpi-delta" aria-hidden="true" />}
     </>
@@ -63,12 +65,13 @@ export function KpiTile(p: Props) {
   )
 }
 
-function Change({ d, vs }: { d: Delta; vs: string }) {
+function Change({ d, vs, hint }: { d: Delta; vs: string; hint?: ReactNode }) {
   const label = copy.change(d.label, vs)
   return (
     <span className={`kpi-delta num tone-${d.tone}`} title={label}>
       <span aria-hidden="true">{d.short}</span>
       <span className="sr">{label}</span>
+      {hint}
     </span>
   )
 }

@@ -81,3 +81,28 @@ func TestWeeklyText(t *testing.T) {
 		t.Errorf("an empty week says so:\n%s", quiet)
 	}
 }
+
+// "Send it now" is the week that just ended, however far into the next one it is.
+func TestLastWeekIsTheOneThatJustEnded(t *testing.T) {
+	berlin, _ := time.LoadLocation("Europe/Berlin")
+	at := func(s string) time.Time { v, _ := time.ParseInLocation("2006-01-02 15:04", s, berlin); return v }
+	for _, c := range []struct {
+		now, from, to string
+		start         int
+	}{
+		{"2026-09-21 07:00", "2026-09-14 00:00", "2026-09-21 00:00", 1}, // Monday morning, before it would be sent
+		{"2026-09-24 11:00", "2026-09-14 00:00", "2026-09-21 00:00", 1},
+		{"2026-09-27 23:30", "2026-09-14 00:00", "2026-09-21 00:00", 1}, // Sunday night
+		{"2026-09-24 11:00", "2026-09-13 00:00", "2026-09-20 00:00", 0}, // a site whose week starts on Sunday
+	} {
+		from, to := lastWeek(at(c.now), berlin, c.start)
+		if !from.Equal(at(c.from)) || !to.Equal(at(c.to)) {
+			t.Errorf("%s (week starts %d): %v – %v, want %s – %s", c.now, c.start, from, to, c.from, c.to)
+		}
+	}
+	// Across the clock change in October the week still runs midnight to midnight.
+	from, to := lastWeek(at("2026-10-28 10:00"), berlin, 1)
+	if !from.Equal(at("2026-10-19 00:00")) || !to.Equal(at("2026-10-26 00:00")) {
+		t.Errorf("over the clock change: %v – %v", from, to)
+	}
+}

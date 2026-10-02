@@ -14,7 +14,7 @@ import { Modal } from '../components/Modal'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import { Picker } from '../components/Picker'
 import { useEffect, useState } from 'react'
-import { api, siteState, stoppedWhy, fail, type Site, type SiteState } from '../lib/api'
+import { siteState, stoppedWhy, fail, type Site, type SiteState, more } from '../lib/apiMore'
 import { fmtInt } from '../lib/format'
 import { navigate } from '../lib/url'
 import { Menu } from '../components/Menu'
@@ -173,7 +173,7 @@ function EditSite({ site, onClose, onSaved }: { site: Site; onClose: () => void;
 
   const save = () => {
     setBusy(true)
-    api
+    more
       .updateSite(site.id, { name: name.trim() || site.domain, timezone, currency })
       .then(() => {
         toast('Saved')
@@ -237,7 +237,7 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
   const [counts, setCounts] = useState<Record<string, number> | null>(null)
   const [gone, setGone] = useState<{ events: number; sessions: number; payments: number } | null>(null)
   useEffect(() => {
-    api.deletePreview(site.id).then(setCounts).catch(() => setCounts({}))
+    more.deletePreview(site.id).then(setCounts).catch(() => setCounts({}))
   }, [site.id])
   const named = typed.trim().toLowerCase() === site.domain.toLowerCase()
 
@@ -246,7 +246,7 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
     // At least a moment on screen: a small site goes in milliseconds, and a
     // flash of the working step read as a glitch.
     const shown = new Promise((r) => setTimeout(r, 1200))
-    api
+    more
       .deleteSite(site.id, typed.trim())
       .then(async (r) => {
         await shown

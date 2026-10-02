@@ -3,7 +3,7 @@
 // an AI assistant fetching for someone now, a crawler collecting training
 // data, or a search bot indexing.
 import { useEffect, useMemo, useState } from 'react'
-import { api, type CrawlerReport, type ReportQuery, type Site } from '../../lib/api'
+import { type CrawlerReport, type ReportQuery, type Site, more } from '../../lib/apiMore'
 import { fmtInt } from '../../lib/format'
 import { Loading } from '../../components/loading/Loading'
 import { CrawlerChart } from './CrawlerChart'
@@ -29,7 +29,7 @@ export function Crawlers({ site, query }: { site: Site; query: ReportQuery }) {
 
   useEffect(() => {
     let live = true
-    api
+    more
       .crawlers(site.id, query)
       .then((d) => live && setData(d))
       .catch(() => live && setErr(true))

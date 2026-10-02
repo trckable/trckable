@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, type SearchConnection, type SearchProperty } from '../lib/api'
+import { type SearchConnection, type SearchProperty, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { isViewer } from '../lib/me'
 
@@ -13,7 +13,7 @@ export function useSearchProperties(siteID: string, conn: SearchConnection | nul
     if (!conn || isViewer()) return
     // eslint-disable-next-line react-hooks/set-state-in-effect -- a new account or site starts a new fetch, so the last one's error goes
     setPropsErr('')
-    api
+    more
       .searchProperties(siteID)
       .then((r) => setProps(r.properties))
       .catch((e: unknown) => setPropsErr(words(e)))

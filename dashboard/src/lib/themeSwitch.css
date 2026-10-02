@@ -1,0 +1,43 @@
+/* Changing the theme while the page is up (lib/themeSwitch.ts): one short crossfade of the whole
+   page, or, without View Transitions, colours that ease for the length of the switch only. */
+html[data-theme-switch] * {
+  view-transition-name: none !important;
+}
+html[data-theme-switch='view']::view-transition-old(root) {
+  animation: theme-out 0.2s ease both;
+}
+html[data-theme-switch='view']::view-transition-new(root) {
+  animation: theme-in 0.2s ease both;
+}
+html[data-theme-switch='fade'] *,
+html[data-theme-switch='fade'] *::before,
+html[data-theme-switch='fade'] *::after {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    fill 0.2s ease,
+    stroke 0.2s ease !important;
+}
+@keyframes theme-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes theme-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme-switch] ::view-transition-group(*),
+  html[data-theme-switch] ::view-transition-old(root),
+  html[data-theme-switch] ::view-transition-new(root) {
+    animation: none;
+  }
+  html[data-theme-switch='fade'] *,
+  html[data-theme-switch='fade'] *::before,
+  html[data-theme-switch='fade'] *::after {
+    transition: none !important;
+  }
+}

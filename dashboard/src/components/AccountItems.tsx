@@ -9,7 +9,7 @@ import { signOut } from '../lib/signOut'
 import { THEMES, useTheme } from '../lib/theme'
 import { PersonAvatar } from './PersonAvatar'
 import { openShortcuts } from './ShortcutsHost'
-import { copy } from './moreCopy'
+import { copy } from './itemsCopy'
 import './MoreItems.css'
 import './sheet.css'
 

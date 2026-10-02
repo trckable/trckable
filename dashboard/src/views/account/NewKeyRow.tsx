@@ -3,7 +3,7 @@
 import { Check, Copy, X } from 'lucide-react'
 import { useState, type KeyboardEvent } from 'react'
 import { toast } from '../../components/Toast'
-import { api, fail } from '../../lib/api'
+import { fail, more } from '../../lib/apiMore'
 import { keys as t } from './keysCopy'
 
 export function NewKeyRow({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
@@ -14,7 +14,7 @@ export function NewKeyRow({ onClose, onCreated }: { onClose: () => void; onCreat
 
   const create = () => {
     setBusy(true)
-    api
+    more
       .createKey(name.trim() || t.defaultName)
       .then((r) => {
         setSecret(r.secret)

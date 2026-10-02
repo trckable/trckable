@@ -2,14 +2,14 @@
 // first card's tabs. Its tooltip says what Full adds; the key is in the button.
 import { Maximize2 } from 'lucide-react'
 import { caps, keyFor } from '../../lib/keys'
-import { cardCopy } from './copy'
+import { laterCopy } from './copyLater'
 import './FullButton.css'
 
 export default function FullButton({ onFull }: { onFull: () => void }) {
   return (
-    <button type="button" className="tc-full" data-tip={cardCopy.fullTip} aria-label={cardCopy.fullLabel} onClick={onFull}>
+    <button type="button" className="tc-full" data-tip={laterCopy.fullTip} aria-label={laterCopy.fullLabel} onClick={onFull}>
       <Maximize2 size={13} strokeWidth={1.75} aria-hidden="true" />
-      {cardCopy.full}
+      {laterCopy.full}
       <span className="kbd">{caps(keyFor('mode')).join('')}</span>
     </button>
   )

@@ -5,7 +5,7 @@
 // send to, and the card opens Alerts instead of saying yes to nothing.
 import { useEffect, useState } from 'react'
 import { toast } from '../../components/Toast'
-import { api, fail, type Alert, type Site } from '../../lib/api'
+import { fail, type Alert, type Site, more } from '../../lib/apiMore'
 import { openSettings } from '../../lib/settings'
 import { first } from './firstCopy'
 import { destination } from './weeklyTarget'
@@ -27,7 +27,7 @@ export function useWeeklyEmail(site: Site): WeeklyEmail {
   const [busy, setBusy] = useState(false)
   useEffect(() => {
     let live = true
-    Promise.all([api.alerts(site.id), api.me().catch(() => null)])
+    Promise.all([more.alerts(site.id), more.me().catch(() => null)])
       .then(([r, me]) => {
         if (!live) return
         setList(r.alerts)
@@ -48,7 +48,7 @@ export function useWeeklyEmail(site: Site): WeeklyEmail {
       return
     }
     setBusy(true)
-    api
+    more
       .saveAlert(site.id, { id: weekly?.id, kind: 'weekly', enabled: !on, target, threshold: weekly?.threshold ?? 0 })
       .then((a) => {
         setList((l) => [...(l ?? []).filter((x) => x.kind !== 'weekly'), a])

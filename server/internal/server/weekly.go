@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/modules"
 	"github.com/trckable/trckable/server/internal/query"
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
 // The weekly report: last week's numbers, delivered on the first morning of the site's week to the
@@ -169,6 +171,13 @@ func (s *Server) weekly(ctx context.Context, siteID string, lastFired int64, now
 	if err := s.ctl.DB.QueryRowContext(ctx, `SELECT created_at FROM sites WHERE id = ?`, siteID).Scan(&created); err != nil || !hadAWeek(created, info.LastEventAt, to) {
 		return ev, false
 	}
+	return s.weeklyEvent(ctx, q, info, loc, from, to, ev)
+}
+
+// weeklyEvent words one week's report: the numbers, the week before for
+// comparison, and a link into the dashboard when the instance has an address.
+func (s *Server) weeklyEvent(ctx context.Context, q *query.Q, info sqlite.SiteInfo, loc *time.Location, from, to time.Time, ev alerts.Event) (alerts.Event, bool) {
+	siteID := ev.Site
 	set, _ := modules.Store{DB: s.ctl.DB}.Of(ctx, siteID)
 	// More rows than the email shows: the findings compare whole breakdowns.
 	p := query.Params{Site: siteID, From: from.UTC(), To: to.UTC(), TZ: loc.String(), Bucket: "day", Limit: 10,
@@ -192,4 +201,46 @@ func (s *Server) weekly(ctx context.Context, siteID string, lastFired int64, now
 	ev.Title, ev.Message, ev.Data = weeklyText(info.Domain, from, to, cur, prev, link)
 	ev.Text = ev.Title + " — " + ev.Message
 	return ev, true
+}
+
+// sendWeeklyNow sends the last complete week's report, the one Monday's email
+// carries, to one address now. It is for the person who asked: nothing is
+// marked as sent, so the scheduled report still goes out when it is due.
+func (s *Server) sendWeeklyNow(ctx context.Context, siteID, email string) error {
+	q := s.api.Query()
+	if q == nil {
+		return errors.New("the report is not ready yet: try again in a moment")
+	}
+	info, err := s.ctl.SiteInfo(ctx, siteID)
+	if err != nil {
+		return err
+	}
+	loc, err := time.LoadLocation(info.Timezone)
+	if err != nil {
+		loc = time.UTC
+	}
+	weekStart := 1
+	if c, err := s.ctl.SiteConfig(ctx, siteID); err == nil {
+		weekStart = c.WeekStart
+	}
+	now := time.Now()
+	from, to := lastWeek(now, loc, weekStart)
+	ev, ok := s.weeklyEvent(ctx, q, info, loc, from, to, alerts.Event{Kind: "weekly", Site: siteID, Domain: info.Domain, At: now})
+	if !ok {
+		return errors.New("the report could not be made")
+	}
+	return alerts.Send(ctx, "mailto:"+email, ev)
+}
+
+// lastWeek is the week that just ended: from the first day of the site's week
+// before this one, to the first day of this one.
+func lastWeek(now time.Time, loc *time.Location, weekStart int) (from, to time.Time) {
+	t := now.In(loc)
+	day := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
+	back := (int(day.Weekday()) + 6) % 7
+	if weekStart == 0 {
+		back = int(day.Weekday())
+	}
+	first := day.AddDate(0, 0, -back)
+	return first.AddDate(0, 0, -7), first
 }

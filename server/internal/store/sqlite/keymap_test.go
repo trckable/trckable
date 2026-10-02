@@ -28,10 +28,15 @@ func TestUserKeymap(t *testing.T) {
 	if km["period.today"] != "d" || km["ask"] != "mod+j" {
 		t.Fatalf("keymap not kept: %v", km)
 	}
+	// Shift is part of a combo (Share is Shift S).
+	if err := s.SetUserKeymap(ctx, u.ID, Keymap{"share": "shift+s", "settings": ","}); err != nil {
+		t.Fatalf("shift and a comma are keys: %v", err)
+	}
 	for name, bad := range map[string]Keymap{
 		"two actions on one key": {"period.today": "d", "compare": "d"},
 		"not an action":          {"<script>": "d"},
 		"not a key":              {"ask": "mod+shift+ctrl+k"},
+		"shift twice":            {"ask": "shift+shift+k"},
 	} {
 		if err := s.SetUserKeymap(ctx, u.ID, bad); !errors.Is(err, ErrKeymap) {
 			t.Errorf("%s: want ErrKeymap, got %v", name, err)

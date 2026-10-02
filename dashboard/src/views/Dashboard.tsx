@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { TimeChart, type Pulse } from '../charts/GuardedChart'
+import { TimeChart } from '../charts/GuardedChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
 import { api, cachedReport, dropReports, showsInstall, siteState, fail, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
 import { compareLabel, diffDays, fmtDay, setWeekStart, todayIn, type Range } from '../lib/dates'
@@ -8,7 +8,7 @@ import { journeysOn } from '../features/cookieless/labels'
 import { unconvertedNote } from '../lib/money'
 import { channelColor, channelLabel } from '../lib/palette'
 import { navigate, readView, setView, useLocation, wantsLive } from '../lib/url'
-import { queryOf, rangeOf } from '../lib/dashQuery'
+import { exportQuery, queryOf, rangeOf, showsChange } from '../lib/dashQuery'
 import { canAsk, isShared, isViewer, sharedModules } from '../lib/me'
 import { isOn, shows } from '../lib/modules'
 import { FilterMenu } from '../components/FilterMenu'
@@ -23,6 +23,7 @@ import { Notice, StoppedNotice } from './DashboardParts'
 import { extra } from '../features/extras/slots'
 import { momentLayer } from '../features/moments/slots'
 import { KpiStrip } from '../features/overview/KpiStrip'
+import { visitorsHint } from '../features/overview/visitorsHint'
 import { ChartHead } from '../features/overview/ChartHead'
 import { ReplayButton, ScrubBar } from '../features/overview/Replay'
 import { useReplayTimer, useSpeed } from '../features/overview/useReplay'
@@ -33,6 +34,7 @@ import { chartMetric, ghostValues, metricName, metricProps, metricValues, type C
 import { chartTips } from '../features/overview/chartTips'
 import { useChartHold } from '../features/overview/reserve'
 import { LiveSlot } from '../features/live/liveChunk'
+import { useLivePulses } from '../features/live/useLivePulses'
 import { OnlineKpi } from '../features/live/OnlineKpi'
 import { entryCopy } from '../features/live/entryCopy'
 import { liveShown } from '../features/live/liveShown'
@@ -60,6 +62,7 @@ import { filterFrom } from '../features/journey/filterFrom'
 const ShareDialog = lazy(() => import('../features/share/ShareDialog'))
 const Story = lazy(() => import('../features/story/Story')) // Replay as a story: loaded when Replay starts
 const Install = lazy(() => import('../features/install/Install')) // new sites only: never in the first load
+const Signals = lazy(() => import('../features/signals/Signals')) // the tab's count, the sale toast and the notices: once the stream has spoken
 const AddGoals = lazy(() => import('./AddGoals').then((m) => ({ default: m.AddGoals })))
 const NotesDialog = lazy(() => import('../features/notes/NotesList').then((m) => ({ default: m.NotesDialog })))
 const NoteDialog = lazy(() => import('../components/NoteDialog').then((m) => ({ default: m.NoteDialog })))
@@ -84,7 +87,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const full = view.mode === 'full'
 
   // Current and previous period come in one request (lib/dashQuery.ts).
-  const compareOn = view.compare !== 'none'
+  const compareOn = showsChange(view)
   const compareMode: Exclude<typeof view.compare, 'none'> = view.compare === 'none' ? 'previous' : view.compare
   const filtersKey = JSON.stringify(view.filters)
   const query: ReportQuery = useMemo(
@@ -235,42 +238,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const [notesOpen, setNotesOpen] = useState(false)
 
   // ---- live pulse ----
-  // Things arriving while you watch, drawn rising from today's point. Only
-  // when the chart ends at now and is not showing a single past day — a dot
-  // rising from last Tuesday would be a lie.
   const pulsing = live && !scrubbing && !isShared()
-  const [pulses, setPulses] = useState<Pulse[]>([])
-  const addPulse = useCallback((pl: Pulse) => {
-    setPulses((ps) => [...ps.slice(-14), pl])
-    setTimeout(() => setPulses((ps) => ps.filter((x) => x.id !== pl.id)), 2400)
-  }, [])
-  // The stream starts empty and only ever carries what happens after the page
-  // opened, so every visit it delivers is news; ids start at 1.
-  const lastVisit = useRef(0)
-  const lastSale = useRef(0)
-  // Events are written in small batches, so several can reach the page in one
-  // render. Each one gets its own pulse — up to a handful, staggered so a
-  // burst reads as a burst — rather than only the newest.
-  useEffect(() => {
-    const fresh = stream.visits.filter((v) => v.id > lastVisit.current)
-    if (!fresh.length) return
-    lastVisit.current = fresh[0].id
-    if (!pulsing) return
-    fresh
-      .slice(0, 6)
-      .reverse()
-      .forEach((v, i) => setTimeout(() => addPulse({ id: `v${v.id}`, kind: v.kind === 'goal' ? 'goal' : 'visit' }), i * 140))
-  }, [stream.visits, pulsing, addPulse])
-  useEffect(() => {
-    const fresh = stream.sales.filter((x) => x.id > lastSale.current)
-    if (!fresh.length) return
-    lastSale.current = fresh[0].id
-    if (!pulsing) return
-    fresh
-      .slice(0, 4)
-      .reverse()
-      .forEach((x, i) => setTimeout(() => addPulse({ id: `s${x.id}`, kind: 'sale', label: '+' + fmtMoney(x.amount, x.currency, x.exponent) }), i * 400))
-  }, [stream.sales, pulsing, addPulse])
+  const pulses = useLivePulses(stream, pulsing)
   const [playing, setPlaying] = useState(false)
   const [story, setStory] = useState<'off' | 'on' | 'end'>('off')
   const [stops, setStops] = useState<number[]>([]) // the story's moments: reduced motion steps through them
@@ -365,7 +334,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   if (scrubbing) k = day?.kpis ?? zeroKPIs
   // Nothing at all before: no change to show, not "new" on every tile.
   const before = data?.previous
-  const hasPrev = !scrubbing && !trailData && (before?.kpis.sessions ?? 0) > 0 && previousWhole(before?.series.map((p) => p.visitors) ?? [], data?.bucket ?? 'day')
+  const hasPrev = compareOn && !scrubbing && !trailData && (before?.kpis.sessions ?? 0) > 0 && previousWhole(before?.series.map((p) => p.visitors) ?? [], data?.bucket ?? 'day')
   const pk = hasPrev ? data?.previous?.kpis : undefined
   const race = useRaceRows(src, raceTo)
   const soFar = racing ? 'So far' : undefined
@@ -466,7 +435,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // What the two cards under the chart read from this page.
   const cardsCtx: CardsCtx = {
     site, query, bucket: data?.bucket ?? 'day', full, shared: isShared(), deep: full && hasData && !isShared(), loading: firstLoad, scrubbing, mods, money, fmtMoney: fmtM,
-    rows, soFar, cur, prev: trail ? undefined : data?.previous, dims, sourceRows, perDay, trail, dimTrail: !!trail, onSourceHover, addFilter, mapOn,
+    rows, soFar, cur, prev: compareOn && !trail ? data?.previous : undefined, compare: compareOn, dims, sourceRows, perDay, trail, dimTrail: !!trail, onSourceHover, addFilter, mapOn,
     goals: src?.goals ?? [], revenueDims: src?.revenue_dims ?? {}, countryRevenue: src?.revenue_dims?.country ?? [],
     attrFirst: view.attr === 'first', onAttr: (first) => setView({ attr: first ? 'first' : undefined }), onTrackGoal: () => setAddGoals(true), onFull: () => setView({ mode: 'full' }),
     steps: view.funnel ?? [], onSteps: (f) => setView({ funnel: f }), onPickVisitor: setJourney, visitors: k?.visitors ?? 0,
@@ -507,7 +476,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           onViews={narrow && !isShared() && segments.length > 0 ? () => savedViews.set(true) : undefined}
           milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
           onMode={(m) => setView({ mode: m })} onRefresh={reloadNow}
-          onExport={() => downloadCsv(site.id, query)}
+          onExport={() => downloadCsv(site.id, exportQuery(view, query))}
         />
       }
     />
@@ -562,6 +531,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       <KpiStrip
         loading={firstLoad} vs={vs} metric={metric} can={canDraw} onPick={pick} expectMoney={hold.revenue}
         k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} blank={blank} site={site}
+        hint={compareOn && !scrubbing && !raced && !trailData ? visitorsHint({ site: site.id, period: view.period, day: range.to, filters: view.filters }) : undefined}
         // A shared page has no live stream, so it says where the number comes from instead of waiting to connect forever.
         online={<OnlineKpi online={online} canOpen={!isShared()} note={stream.connected || isShared() ? entryCopy.onlineNote : entryCopy.connecting} />}
       />
@@ -606,7 +576,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             partialLast={live}
             {...metricProps(metric, money, revenue)}
             notes={notesOn ? notes : []}
-            layer={isShared() || telling ? undefined : momentLayer({ site, query, labels: chartSeries.map((p) => p.t), bucket: hours ? 'hour' : (data?.bucket ?? 'day'), money: fmtM, onShare: () => setSharing(true) })}
+            layer={isShared() || telling ? undefined : momentLayer({ site, query, labels: chartSeries.map((p) => p.t), series: chartSeries, bucket: hours ? 'hour' : (data?.bucket ?? 'day'), money: fmtM, onShare: () => setSharing(true) })}
             onAddNote={isShared() || isViewer() || !notesOn ? undefined : (day) => setNoteFor(day)}
             pulses={pulses}
             {...chartTips({ series: chartSeries, hours: !!hours, byDay: data?.bucket === 'day', days: cur?.days, site, money, metric })}
@@ -648,7 +618,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
       {notesOpen && notesOn && (
         <Suspense fallback={null}>
-          <NotesDialog site={site} onJump={showDay} onChanged={loadNotes} onClose={() => setNotesOpen(false)} />
+          <NotesDialog site={site} onJump={showDay} onChanged={loadNotes} onClose={() => setNotesOpen(false)} onAdd={isViewer() ? undefined : () => { setNotesOpen(false); setNoteFor(view.day ?? today) }} />
         </Suspense>
       )}
       {noteFor && notesOn && (
@@ -689,6 +659,11 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </Suspense>
       )}
 
+      {!isShared() && (stream.online !== null || stream.sales.length > 0) && (
+        <Suspense fallback={null}>
+          <Signals key={site.id} site={site} online={stream.online} visits={stream.visits} sales={stream.sales} scope={site.id + range.from + range.to + filtersKey} sources={live && !scrubbing && cur?.revenue_dims ? (cur.revenue_dims.channel ?? []).map((r) => r.value) : undefined} />
+        </Suspense>
+      )}
       <AskPanel open={askOn && askOpen} onClose={() => setAskOpen(false)} />
     </>
   )

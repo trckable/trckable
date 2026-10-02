@@ -4,7 +4,6 @@
 // mean nothing (every visitor new, every journey one day long).
 export const copy = {
   off: 'Off: cookieless mode',
-  why: 'Cookieless mode counts visitors by a daily hash: nobody is recognised the next day, so there is no new vs returning and no journey to follow.',
   newVsReturning: 'New vs returning',
   journeys: 'Journeys',
   journeysOff: 'Journeys · Off: cookieless mode',

@@ -8,7 +8,7 @@ import { ChartHead } from '../../charts/ChartHead'
 import { HeatKey } from '../../charts/HeatGrid'
 import { Info } from '../../components/Info'
 import { Loading } from '../../components/loading/Loading'
-import { api, type Cohorts, type ReportQuery, type Site } from '../../lib/api'
+import { type Cohorts, type ReportQuery, type Site, more } from '../../lib/apiMore'
 import { fmtInt, fmtPct } from '../../lib/format'
 import { deepCopy } from './deepCopy'
 import { retentionOf, shade } from './retentionModel'
@@ -42,7 +42,7 @@ export default function Retention({ site, query }: { site: Site; query: ReportQu
   const [err, setErr] = useState(false)
   useEffect(() => {
     let live = true
-    api
+    more
       .retention(site.id, query)
       .then((d) => live && setData(d))
       .catch(() => live && setErr(true))

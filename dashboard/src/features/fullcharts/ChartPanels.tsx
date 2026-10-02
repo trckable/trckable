@@ -2,7 +2,7 @@
 // the Full grid. One chunk: it comes the first time one of them is opened, and
 // they share the numbers they read (useCharts).
 import type { CardsCtx } from '../cards/ctx'
-import { kitCopy } from '../../charts/copy'
+import { kitLater } from '../../charts/kitLater'
 import { Loading } from '../../components/loading/Loading'
 import { ConvertCard } from './cards/ConvertCard'
 import { FlowCard } from './cards/FlowCard'
@@ -25,7 +25,7 @@ export default function ChartPanel({ tab, c }: { tab: ChartTab; c: CardsCtx }) {
   if (tab === 'flow') return <FlowCard charts={charts} />
   if (!charts) return <Loading height={190} />
   const steps = charts.conversion ?? []
-  if (tab === 'visit-to-sale') return steps.length >= 2 ? <FunnelCard steps={steps} /> : <p className="faint kit-empty">{kitCopy.empty}</p>
+  if (tab === 'visit-to-sale') return steps.length >= 2 ? <FunnelCard steps={steps} /> : <p className="faint kit-empty">{kitLater.empty}</p>
   const spans = charts.to_convert
-  return spans && spans.some((s) => s.sales > 0) ? <ConvertCard spans={spans} /> : <p className="faint kit-empty">{kitCopy.empty}</p>
+  return spans && spans.some((s) => s.sales > 0) ? <ConvertCard spans={spans} /> : <p className="faint kit-empty">{kitLater.empty}</p>
 }

@@ -4,7 +4,7 @@
 import { PRESETS } from './dates'
 import { defaultOf, keyFor } from './keys'
 
-export type Group = 'around' | 'period'
+export type Group = 'around' | 'page' | 'period'
 export type Action = { id: string; label: string; group: Group; def: string }
 
 const named = (id: string, label: string, group: Group): Action => ({ id, label, group, def: defaultOf(id) })
@@ -15,6 +15,13 @@ export const ACTIONS: Action[] = [
   named('mode', 'Core ↔ Full', 'around'),
   named('live', 'Live ↔ Data', 'around'),
   named('create', 'Create a goal, funnel or note', 'around'),
+  named('site', 'Switch site', 'around'),
+  named('user', 'Your menu', 'around'),
+  named('settings', 'Settings', 'around'),
+  // Each answers to the control on the page that does it (ShortcutsHost): one that is not there answers nothing.
+  named('filter', 'Filter', 'page'),
+  named('share', 'Share', 'page'),
+  named('replay', 'Replay: play or pause', 'page'),
   ...PRESETS.flatMap((p) => (p.key ? [named('period.' + p.id, p.label, 'period')] : [])),
   named('back', 'Step back', 'period'),
   named('forward', 'Step forward', 'period'),

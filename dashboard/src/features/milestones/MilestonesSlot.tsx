@@ -1,11 +1,12 @@
-// Where milestones meet the dashboard: the moment above the numbers, and
-// the timeline and share sheet, loaded only when opened (one lazy chunk).
+// Where milestones meet the dashboard: the celebration and its side card when
+// one is reached, and the timeline and share sheet, loaded only when opened
+// (one lazy chunk).
 import { Suspense, lazy } from 'react'
 import type { Site } from '../../lib/api'
 import type { MilestonesState } from './useMilestones'
 
-// The moment shows after the milestones arrive, so it is its own chunk too.
-const Moment = lazy(() => import('./Moment').then((m) => ({ default: m.Moment })))
+// The celebration shows after the milestones arrive, so it is its own chunk too.
+const Celebration = lazy(() => import('./Celebration').then((m) => ({ default: m.Celebration })))
 const MilestonesDialogs = lazy(() => import('./MilestonesDialogs'))
 
 export function MilestonesSlot({ ms, site, quiet, revenue }: { ms: MilestonesState; site: Site; quiet: boolean; revenue: boolean }) {
@@ -14,7 +15,7 @@ export function MilestonesSlot({ ms, site, quiet, revenue }: { ms: MilestonesSta
     <>
       {m && !quiet && (
         <Suspense fallback={null}>
-          <Moment key={m.kind + m.step} m={m} onClose={ms.close} onShare={() => ms.setOpen({ share: m })} />
+          <Celebration key={m.kind + m.step} m={m} site={site.id} onClose={ms.close} onShare={() => ms.setOpen({ share: m })} />
         </Suspense>
       )}
       {ms.open && (

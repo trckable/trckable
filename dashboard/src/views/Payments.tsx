@@ -11,7 +11,7 @@ import { StepBody } from '../components/StepBody'
 import { Steps } from '../components/Steps'
 import { Ghost } from '../components/Logo'
 import { useEffect, useState } from 'react'
-import { api, fail, type PayConnection, type Provider, type Site } from '../lib/api'
+import { fail, type PayConnection, type Provider, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { navigate } from '../lib/url'
 import { keyPicksMode, modeTag, statusOf, testModeName } from '../lib/payments'
@@ -34,7 +34,7 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
   const [setup, setSetup] = useState<PayConnection | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const load = () => {
-    api
+    more
       .payments(site.id)
       .then(setData)
       .catch((e: unknown) => setErr(words(e)))
@@ -73,7 +73,7 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
             placeholder="Search a currency…"
             value={site.currency}
             onPick={(currency) =>
-              api
+              more
                 .updateSite(site.id, { name: site.name, currency })
                 .then(() => {
                   toast(`Revenue is shown in ${currency}`)
@@ -108,7 +108,7 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
                     danger: true,
                     busyLabel: 'Starting over…',
                     done: 'Started over — reconnect each provider',
-                    run: (mine) => api.startOverKeys(mine),
+                    run: (mine) => more.startOverKeys(mine),
                   })
                   if (pw !== null) load()
                 }}
@@ -283,7 +283,7 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
                 close()
                 setBusy('sync')
                 const id = toast(`Checking ${provider?.name} for missed payments…`, 'busy')
-                api
+                more
                   .syncPayments(site.id, c.id)
                   .then((r) => settle(id, r.added ? `Found ${r.added} new event${r.added > 1 ? 's' : ''}` : 'Up to date — nothing was missed'))
                   .catch((e: unknown) => settle(id, words(e), 'error'))
@@ -320,7 +320,7 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
                 danger: true,
                 busyLabel: 'Disconnecting…',
                 done: `${provider?.name} disconnected · recorded revenue kept`,
-                run: () => api.disconnectPayments(site.id, c.id),
+                run: () => more.disconnectPayments(site.id, c.id),
               })
               if (ok) onChange()
             }}
@@ -414,7 +414,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
                 Sign the body with your secret. Amounts are in cents, not euros.
               </p>
               {shown ? <CodeBlock code={shown} lang="secret" /> : (
-                <button type="button" className="btn" onClick={() => api.paymentSecret(site.id, c.id).then((r) => setShown(r.secret))}>
+                <button type="button" className="btn" onClick={() => more.paymentSecret(site.id, c.id).then((r) => setShown(r.secret))}>
                   Show the secret
                 </button>
               )}
@@ -472,7 +472,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
                   Lemon Squeezy asks you for a signing secret. Use this one.
                 </p>
                 {shown ? <CodeBlock code={shown} lang="secret" /> : (
-                  <button type="button" className="btn primary big" onClick={() => api.paymentSecret(site.id, c.id).then((r) => {
+                  <button type="button" className="btn primary big" onClick={() => more.paymentSecret(site.id, c.id).then((r) => {
                     setShown(r.secret)
                     setDone(true)
                   })}>
@@ -486,7 +486,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
                 style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
                 onSubmit={(e) => {
                   e.preventDefault()
-                  api
+                  more
                     .setPaymentSecret(site.id, c.id, secret)
                     .then(() => {
                       setSecret('')
@@ -528,7 +528,7 @@ function Connect({ site, provider, onCancel, onDone }: { site: Site; provider: P
   const submit = (manual: boolean) => {
     setBusy(true)
     const id = toast(manual ? `Adding ${provider.name}…` : `Connecting ${provider.name} and creating the webhook…`, 'busy')
-    api
+    more
       .connectPayments(site.id, { provider: provider.id, mode, api_key: manual ? undefined : key.trim() })
       .then((c) => {
         settle(id, manual ? `${provider.name} added — finish the webhook setup` : `${provider.name} connected · revenue is on`)

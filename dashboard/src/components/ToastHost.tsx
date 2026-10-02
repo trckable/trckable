@@ -8,7 +8,7 @@
 // clears itself (an error stays longest; pointing at it or tabbing into it
 // holds it). At most three show at once. Errors and warnings are announced at
 // once (role=alert), the rest politely (role=status).
-import { Check, CircleAlert, Info, TriangleAlert, X } from 'lucide-react'
+import { Check, CircleAlert, Coins, Info, TriangleAlert, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { friendly } from '../lib/errors'
 import { errorCopy } from '../lib/errorCopy'
@@ -20,7 +20,7 @@ type Item = { id: number; text: string; kind: Kind; action?: ToastAction }
 
 const MAX = 3
 /** How long each kind stays, in ms (busy stays until it is replaced). */
-const HOLD: Record<Exclude<Kind, 'busy'>, number> = { success: 3500, info: 5000, warning: 7000, error: 9000 }
+const HOLD: Record<Exclude<Kind, 'busy'>, number> = { success: 3500, info: 5000, warning: 7000, error: 9000, sale: 5000 }
 
 /** A failure, put into friendly words (nothing for a request cancelled on purpose). */
 function said(d: Told): Told | null {
@@ -35,6 +35,7 @@ function Mark({ kind }: { kind: Kind }) {
   if (kind === 'busy')
     return <span className="stage-mark" aria-hidden="true" style={{ animation: 'spin 0.8s linear infinite', borderColor: 'var(--accent)', borderRightColor: 'transparent' }} />
   if (kind === 'success') return <Check size={17} strokeWidth={2} aria-hidden="true" />
+  if (kind === 'sale') return <Coins size={17} strokeWidth={1.75} aria-hidden="true" />
   if (kind === 'info') return <Info size={17} strokeWidth={1.75} aria-hidden="true" />
   if (kind === 'warning') return <TriangleAlert size={17} strokeWidth={1.75} aria-hidden="true" />
   return <CircleAlert size={17} strokeWidth={1.75} aria-hidden="true" />

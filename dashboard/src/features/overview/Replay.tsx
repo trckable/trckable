@@ -23,7 +23,7 @@ export function ReplayButton(p: { playing: boolean; byDay: boolean; byHour?: boo
           <SpeedMenu speed={p.speed} points={p.points} onPick={p.onSpeed} />
         </Suspense>
       </span>
-      <button type="button" className="btn icon ghost replay-btn" onClick={p.onPlay} aria-label={label} title={label}>
+      <button type="button" className="btn icon ghost replay-btn" data-key="replay" onClick={p.onPlay} aria-label={label} title={label}>
         <Icon size={15} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
       </button>
     </span>
