@@ -154,3 +154,26 @@ func TestBurstsNeedAPattern(t *testing.T) {
 		t.Fatalf("got %+v", got)
 	}
 }
+
+func TestDedupeKeepsEachMilestoneOnceAtItsEarliestDay(t *testing.T) {
+	ms := []Moment{
+		{T: "2026-09-12T00:00", Kind: "milestone", Family: "visitors", Step: "100", Value: 100},
+		{T: "2026-09-12T00:00", Kind: "milestone", Family: "countries", Step: "10", Value: 10},
+		{T: "2026-09-12T00:00", Kind: "milestone", Family: "countries", Step: "25", Value: 25},
+		{T: "2026-09-10T00:00", Kind: "milestone", Family: "visitors", Step: "100", Value: 100},
+		{T: "2026-09-12T00:00", Kind: "milestone", Family: "visitors", Step: "100", Value: 100},
+		{T: "2026-09-12T00:00", Kind: "spike", Visitors: 40},
+		{T: "2026-09-12T00:00", Kind: "spike", Visitors: 40},
+		{T: "2026-09-12T00:00", Kind: "spike", Visitors: 41},
+	}
+	got := Dedupe(ms)
+	if len(got) != 5 {
+		t.Fatalf("got %d moments, want 5: %+v", len(got), got)
+	}
+	if got[0].Family != "visitors" || got[0].T != "2026-09-10T00:00" {
+		t.Errorf("the visitors milestone is not at its earliest day: %+v", got[0])
+	}
+	if got[3].Visitors != 40 || got[4].Visitors != 41 {
+		t.Errorf("the spikes: %+v", got[3:])
+	}
+}

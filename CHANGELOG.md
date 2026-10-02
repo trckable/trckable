@@ -54,6 +54,7 @@ section into the release.
 ### Fixed
 
 - The count on a chart marker where several moments landed together is 12 px, like the rest of the text on a phone (it was 10 px).
+- Opening a marker that holds several moments no longer lists the same lines again and again. Milestones reached on one day (100 visitors, 10 countries, the first pageview) shared one id, and the list keyed by it was drawn over and over; each is now its own, and a milestone or moment told twice, by the server or by two requests, shows once, on the day it was first reached. The card lists at most three others, the milestones together in one row ("4 milestones", the list on tap) and "+N more" opens the rest in place, and it is never taller than 60% of the screen: the list scrolls inside it, and the figure and Share stay.
 
 ## 0.5.8 (1 Oct 2026)
 
