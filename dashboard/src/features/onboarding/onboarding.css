@@ -213,6 +213,15 @@
 .ob.gated {
   z-index: 39;
 }
+/* A side card over the first run: above it. Over a gated one it shares the
+   overlay's level and is drawn after it, so the account window (Modal, 40)
+   still opens over both. */
+body:has(.ob:not(.gated)) .side-card {
+  z-index: 61;
+}
+body:has(.ob.gated) .side-card {
+  z-index: 39;
+}
 .ob-exits {
   display: flex;
   gap: 4px;

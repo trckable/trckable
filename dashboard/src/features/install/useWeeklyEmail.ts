@@ -1,8 +1,8 @@
-// The weekly email's switch on the first screen. Where it goes is already
+// The weekly email's card on the first screen. Where it goes is already
 // decided: the site's own alerts' destination (a new site has the weekly report
 // and "tracking stopped" on from the start, to the owner's email), else the
 // owner's email when the server can send mail. With neither there is nothing to
-// send to, and the switch opens Alerts instead of saying yes to nothing.
+// send to, and the card opens Alerts instead of saying yes to nothing.
 import { useEffect, useState } from 'react'
 import { toast } from '../../components/Toast'
 import { api, fail, type Alert, type Site } from '../../lib/api'
@@ -14,10 +14,11 @@ export interface WeeklyEmail {
   /** Loaded: nothing is drawn before the server has answered. */
   ready: boolean
   on: boolean
-  /** There is somewhere to send it: the switch can be turned on from here. */
+  /** There is somewhere to send it: the card can turn it on from here. */
   deliverable: boolean
   busy: boolean
-  toggle: () => void
+  /** `done` runs once it has been answered: saved, or handed to Alerts. */
+  toggle: (done?: () => void) => void
 }
 
 export function useWeeklyEmail(site: Site): WeeklyEmail {
@@ -40,9 +41,10 @@ export function useWeeklyEmail(site: Site): WeeklyEmail {
 
   const weekly = list?.find((a) => a.kind === 'weekly')
   const on = !!weekly?.enabled
-  const toggle = () => {
+  const toggle = (done?: () => void) => {
     if (!target) {
       openSettings(site, 'alerts')
+      done?.()
       return
     }
     setBusy(true)
@@ -51,6 +53,7 @@ export function useWeeklyEmail(site: Site): WeeklyEmail {
       .then((a) => {
         setList((l) => [...(l ?? []).filter((x) => x.kind !== 'weekly'), a])
         toast(on ? first.weeklyStopped : first.weeklyOn)
+        done?.()
       })
       .catch((e: unknown) => fail(e))
       .finally(() => setBusy(false))

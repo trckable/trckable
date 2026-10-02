@@ -11,7 +11,7 @@ import { signOut } from '../../lib/signOut'
 import { navigate } from '../../lib/url'
 import { useLive } from '../../lib/useLive'
 import { useFocusTrap } from '../install/useFocusTrap'
-import { FirstActions } from '../install/FirstActions'
+import { FirstCards } from '../install/FirstCards'
 import { Install } from '../install/Install'
 import { copy } from './copy'
 import { Dots } from './Dots'
@@ -34,7 +34,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
   const stream = useLive(site?.id ?? null, noRefetch)
   const box = useRef<HTMLDivElement>(null)
   const heading = useRef<HTMLHeadingElement>(null)
-  useFocusTrap(box)
+  useFocusTrap(box, '.side-card')
   const clean = cleanDomain(domain)
   const shown = site?.domain ?? clean
 
@@ -75,14 +75,15 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
   }
 
   // Keyboard first: Esc skips (unless a menu inside is closing), and Enter
-  // moves on from the last two screens wherever the focus is.
+  // moves on from the last two screens wherever the focus is. Esc inside a side
+  // card puts that card away, and only that.
   const next = () => {
     if (step === 'here') setStep('done')
     else if (step === 'done' && site) leave(finishPath(site.domain, true))
   }
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const inner = (e.target as Element | null)?.closest?.('[role=menu], [role=listbox], .modal')
+      const inner = (e.target as Element | null)?.closest?.('[role=menu], [role=listbox], .modal, .side-card')
       if (e.key === 'Escape' && !e.defaultPrevented && !inner) skip()
       if (e.key === 'Enter' && !(e.target as Element | null)?.closest?.('button, a, input, textarea, select')) next()
     }
@@ -129,7 +130,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
           </h1>
           <p className="muted">{subs[step]}</p>
           {step === 'site' && <SiteStep domain={domain} onDomain={setDomain} busy={busy} ready={!!clean} onSubmit={create} />}
-          {step === 'here' && site && <FirstActions site={site} quiet />}
+          {step === 'here' && site && <FirstCards site={site} quiet />}
           {step === 'here' && (
             <div className="ob-actions">
               <button type="button" className="btn primary big" onClick={next}>

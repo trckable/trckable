@@ -84,6 +84,23 @@ test('add a site, pick a method, go cookieless, check, and see the first visit',
   await expect(card.getByRole('button', { name: 'Check my site' })).toBeVisible()
   await expect(card.getByRole('button', { name: 'Copy a prompt for your AI editor' })).toBeVisible()
   await expect(board.getByRole('region', { name: 'Overview' })).toBeHidden()
+  // The first screen's nudges are side cards, one at a time, never a line in
+  // the page: Escape from inside puts one away, the next comes, and what was
+  // put away stays away after a reload.
+  const importCard = board.getByRole('complementary', { name: 'Import your history' })
+  const weeklyCard = board.getByRole('complementary', { name: 'Weekly email' })
+  await expect(importCard).toBeVisible()
+  await expect(weeklyCard).toHaveCount(0)
+  await importCard.getByRole('button', { name: 'Close' }).focus()
+  await board.keyboard.press('Escape')
+  await expect(importCard).toHaveCount(0)
+  await expect(card).toBeVisible()
+  await expect(weeklyCard).toBeVisible()
+  await weeklyCard.getByRole('button', { name: 'Close' }).click()
+  await expect(weeklyCard).toHaveCount(0)
+  await board.reload()
+  await expect(card.getByRole('heading', { name: 'Waiting for the first visit' })).toBeVisible()
+  await expect(board.getByRole('complementary')).toHaveCount(0)
   await board.close()
 
   // Tabs: the script tag first, with this site's id and domain.

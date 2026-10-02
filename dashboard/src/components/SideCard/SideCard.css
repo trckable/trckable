@@ -1,0 +1,102 @@
+/* The side card (SideCard.tsx): fixed, so it never moves the page. Bottom
+   right above the Peek bubble (56px high, 28px from the corner); a bottom
+   sheet on a phone. Under the toasts (200), over the page and the bubble. */
+.side-card {
+  position: fixed;
+  right: 28px;
+  bottom: 96px;
+  z-index: 35;
+  box-sizing: border-box;
+  width: min(340px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 14px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 14px;
+  box-shadow: var(--shadow);
+  animation: side-in 220ms var(--ease) both;
+}
+@keyframes side-in {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+.side-card-title {
+  padding-right: 24px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.side-card-x {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.side-card-x:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+.side-card-x:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.side-card-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.side-card-input {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+.side-card-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.side-card-error {
+  color: var(--down);
+  font-size: 13px;
+}
+@media (max-width: 560px) {
+  .side-card {
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    border-width: 1px 0 0;
+    border-radius: 16px 16px 0 0;
+    animation-name: side-up;
+  }
+}
+@keyframes side-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .side-card {
+    animation: none;
+  }
+}
