@@ -59,9 +59,7 @@ type Payload = Record<string, unknown>
 
 import { BAR_HTML, BAR_STYLE } from './bar'
 
-const VID = 'trckable_vid'
 const QUEUE = 'trckable_q'
-const MAX_AGE = 18e5 // 30 min: queued events older than this are dropped
 const DOWNLOAD = /\.(pdf|zip|dmg|exe|csv|xlsx?|docx?|mp[34])$/i
 
 export function start(c: Config): Tracker {
@@ -253,9 +251,11 @@ export function start(c: Config): Tracker {
   // at once, so every event of a visit carries the same one, even a click that
   // leaves before the first answer. Through a same-origin proxy the server
   // sets it again as its own cookie (Safari keeps that 400 days, and caps a
-  // script-set one at 7). A browser that refuses the cookie gets none: those
-  // visitors are counted without one, not as a new visitor per event.
-  const vid = (v = rid() + '.' + (now() / 1e3 >>> 0).toString(36)) => cookie() || (put(v, 34560000), cookie() && v) // whole seconds; >>> keeps it right until 2106
+  // script-set one at 7). What is read back is what is used, so a browser that
+  // refuses the cookie gets none (those visitors are counted without one, not
+  // as a new visitor per event) and a second tab that wrote at the same moment
+  // agrees with whichever write won.
+  const vid = (v = rid() + '.' + (now() / 1e3 >>> 0).toString(36)) => cookie() || (put(v, 34560000), cookie()) // whole seconds; >>> keeps it right until 2106
 
   const queue = (): [Payload, number][] => {
     try {
@@ -376,7 +376,6 @@ export function start(c: Config): Tracker {
   if (__FORMS__) watchForms(goal)
 
   // Scroll goals: <section data-trckable-scroll="saw_pricing" data-trckable-threshold="0.5">
-  const seen = new WeakSet<Element>()
   const observeScrollGoals = () => {
     if (!w.IntersectionObserver) return
     d.querySelectorAll<HTMLElement>('[data-trckable-scroll]').forEach((el) => {
@@ -472,7 +471,7 @@ export function start(c: Config): Tracker {
 
   // Retry what an earlier page could not deliver.
   if (!cookieless) {
-    const q = queue().filter((x) => now() - x[1] < 18e5)
+    const q = queue().filter((x) => now() - x[1] < 18e5) // 30 min: older ones are dropped, the server would date them wrong
     save(q)
     q.forEach((x) => post(x[0], now() - x[1]))
   }
