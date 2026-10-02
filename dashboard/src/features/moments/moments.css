@@ -1,36 +1,73 @@
-/* The moments on the chart (MomentLayer) and the card they open (WhyCard). A
-   marker is a small ring on the line with a shape of its own inside, so it
-   reads without its colour; the colour only says which kind. */
+/* The moments on the chart (MomentLayer) and the card they open (WhyCard). The
+   markers sit on a thin lane above the plot, never on the line: a small ring
+   with a shape of its own inside, so it reads without its colour (the colour
+   only says which kind); several on one day are one, its count beside the icon
+   inside the ring, which is why no two touch (marks.ts). */
 .moment-marks {
   display: contents;
+}
+.chart-wrap:has(.moment-lane) .note-add {
+  top: 22px;
+}
+.moment-lane {
+  position: absolute;
+  z-index: 3;
+  height: 1px;
+  background: var(--border);
+  pointer-events: none;
+}
+/* The day the open card is about: a soft band from the lane to the axis, in the kind's colour. */
+.moment-day {
+  --mk: var(--accent);
+  position: absolute;
+  z-index: 1;
+  transform: translateX(-50%);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--mk) 13%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mk) 28%, transparent);
+  pointer-events: none;
 }
 .moment-mark {
   --mk: var(--accent);
   position: absolute;
   z-index: 4;
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
   margin: 0;
   padding: 0;
   transform: translate(-50%, -50%);
   border: 1.5px solid var(--mk);
-  border-radius: 50%;
+  border-radius: 11px;
   background: var(--surface);
   color: var(--mk);
   cursor: pointer;
 }
-.moment-mark.sale {
+.moment-mark.many {
+  width: auto;
+  padding: 0 6px 0 5px;
+}
+.moment-mark svg {
+  flex: none;
+}
+.moment-mark.sale,
+.moment-day.sale {
   --mk: var(--money);
 }
-.moment-mark.drop {
+.moment-mark.drop,
+.moment-day.drop {
   --mk: var(--down);
 }
-.moment-mark.referrer {
+.moment-mark.referrer,
+.moment-day.referrer {
   --mk: var(--ch-1);
 }
-.moment-mark.ai {
+.moment-mark.ai,
+.moment-day.ai {
   --mk: var(--ch-5);
 }
 /* A finger-sized target around the small ring. */
@@ -41,11 +78,16 @@
   border-radius: 50%;
 }
 .moment-mark:hover,
-.moment-mark:focus-visible,
-.moment-mark.on {
+.moment-mark:focus-visible {
   border-width: 2.5px;
   background: color-mix(in srgb, var(--mk) 18%, var(--surface));
   outline: none;
+}
+/* The one whose card is open. */
+.moment-mark.on {
+  border-width: 2.5px;
+  background: var(--mk);
+  color: var(--surface);
 }
 .moment-mark:focus-visible {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--text) 35%, transparent);
@@ -69,26 +111,20 @@
     box-shadow: 0 0 0 14px color-mix(in srgb, var(--mk) 0%, transparent);
   }
 }
-/* Markers that landed together are one, with how many. */
+/* Markers that landed together are one, with how many: beside the icon, inside the ring. */
 .moment-n {
-  position: absolute;
-  top: -8px;
-  right: -9px;
-  min-width: 16px;
-  padding: 0 3px;
-  border: 1px solid var(--border-2);
-  border-radius: 9px;
-  background: var(--surface-2);
   color: var(--text);
   font-size: 12px;
   font-style: normal;
-  line-height: 14px;
-  text-align: center;
+  font-weight: 600;
+  line-height: 1;
+}
+.moment-mark.on .moment-n {
+  color: var(--surface);
 }
 .moment-tip {
   position: absolute;
   z-index: 6;
-  transform: translateY(-100%);
   padding: 6px 10px;
   border: 1px solid var(--border-2);
   border-radius: 10px;
@@ -108,6 +144,12 @@
   .moment-tip {
     font-size: 12px;
   }
+}
+
+/* A card's header is to look at, not to select: a double tap or a swipe never leaves its words highlighted. */
+.side-card .side-kind {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* The card: the figure, what stands behind it, and the others beside it. */
@@ -197,7 +239,8 @@
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-@media (max-height: 560px) {
+/* A cluster's card is the short one: its small chart goes where the screen is not tall. */
+@media (max-height: 780px) {
   .side-card:has(> .why-more) .side-chart {
     display: none;
   }

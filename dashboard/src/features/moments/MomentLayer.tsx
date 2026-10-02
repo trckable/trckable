@@ -1,30 +1,36 @@
-// The moments on the main chart: a small marker on the line at each, at most
-// six, the most important first, with the same words as the card on opening.
-// Pointing at or focusing one says it in a line; a click applies its filter
-// (and its day) through the address and opens the card with the numbers. Each
-// is a button in the page's tab order and has a shape of its own, so none
-// depends on colour. It also brings the card the Data view says on its own
-// (Ambient). In the chart extras' chunk, fetched when the chart is first drawn.
-import { Bot, Coins, Flag, Sparkles, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
+// The moments on the main chart: a small marker for each on a lane above the
+// plot (never on the line, so the curve stays readable), at most six and one a
+// day, the most important first, with the same words as the card on opening.
+// Pointing at or focusing one says it in a line, unless a card is open (one
+// thing at a time: then it only lights up); a click applies its filter (and its
+// day) through the address and opens the card with the numbers, and the chart
+// tints the day it is about. Each is a button in the page's tab order and has a
+// shape of its own, so none depends on colour. It also brings the card the Data
+// view says on its own (Ambient). In the chart extras' chunk, fetched when the
+// chart is first drawn.
 import { useEffect, useId, useMemo, useState } from 'react'
 import type { Bucket, Point, ReportQuery, Site } from '../../lib/api'
 import { fmtDay, todayIn } from '../../lib/dates'
 import { readView, setView } from '../../lib/url'
 import { rangeOf } from '../../lib/dashQuery'
+import { LANE_H } from '../../charts/plot'
 import { patchFor } from './apply'
 import Ambient from './Ambient'
 import { copy } from './copy'
 import { HIT, HIT_MS } from './focus'
-import { pickMarks, placePins, type ChartGeo, type Mark } from './marks'
+import { iconOf } from './kinds'
+import { MARK_EDGE, pickMarks, placePins, tipOf, type ChartGeo, type Mark } from './marks'
 import { openMark } from './open'
-import type { Pin, PinKind } from './pins'
+import type { Pin } from './pins'
+import { settle } from './settle'
 import { useMoments } from './useMoments'
 import { say } from './words'
 import { WhyCard } from './WhyCard'
 import './moments.css'
 
 const TIP_W = 290
-const ICON: Partial<Record<PinKind, LucideIcon>> = { spike: TrendingUp, sale: Coins, referrer: Sparkles, drop: TrendingDown, milestone: Flag, ai: Bot }
+/** The middle of the lane above the plot that the markers sit on. */
+const LANE = LANE_H / 2
 
 export interface LayerProps {
   g: ChartGeo
@@ -47,7 +53,9 @@ export default function MomentLayer(p: LayerProps) {
   // The marker "See it" lit: for a moment, so the click always has something to show.
   const [hit, setHit] = useState<string | null>(null)
   const id = useId()
-  const current = openMark.use()
+  const opened = openMark.use()
+  // The card says what the chart says: one number for one moment.
+  const current = useMemo(() => opened && settle(opened, pins), [opened, pins])
   useEffect(() => {
     let off: ReturnType<typeof setTimeout> | undefined
     const on = (e: Event) => {
@@ -64,7 +72,7 @@ export default function MomentLayer(p: LayerProps) {
   // The card belongs to the chart it was opened on: when the chart goes (another site, Replay), so does it.
   useEffect(() => () => openMark.set(null), [])
   const placed = useMemo(() => placePins(pins ?? [], p.labels, p.bucket), [pins, p.labels, p.bucket])
-  const marks = useMemo(() => pickMarks(placed, g.x), [placed, g.w, p.labels.length]) // eslint-disable-line react-hooks/exhaustive-deps -- g.x changes with the width and the number of buckets, which are listed
+  const marks = useMemo(() => pickMarks(placed, g.x, [g.x(0), g.w - MARK_EDGE]), [placed, g.w, p.labels.length]) // eslint-disable-line react-hooks/exhaustive-deps -- g.x changes with the width and the number of buckets, which are listed
   /** Applies a pin to the address; `drop` is the pin it replaces, whose filter goes. */
   const apply = (pin: Pin, drop?: Pin) => {
     const view = readView(new URLSearchParams(location.search))
@@ -76,22 +84,26 @@ export default function MomentLayer(p: LayerProps) {
     apply(m.pin)
     openMark.set({ pins: [m.pin, ...m.more], at: 0 })
   }
-  const tip = marks.find((m) => m.i === shown)
+  // One thing at a time: with a card open, a marker is only lit by the pointer, never explained.
+  const tip = tipOf(marks, shown, !!current)
+  const day = current && placed.find((q) => q.pin.id === current.pins[current.at].id)
   return (
     <>
       <Ambient site={p.site} series={p.series} />
+      {marks.length > 0 && <i className="moment-lane" aria-hidden="true" style={{ left: g.x(0), width: g.w - g.x(0), top: LANE }} />}
+      {day && <i className={`moment-day ${day.pin.kind}`} aria-hidden="true" style={{ left: g.x(day.i), width: Math.max(8, g.x(1) - g.x(0)), top: LANE_H, height: g.y(0) - LANE_H }} />}
       <div role="group" aria-label={copy.moments} className="moment-marks">
         {marks.map((m) => {
-          const Icon = ICON[m.pin.kind] ?? Flag
+          const Icon = iconOf(m.pin.kind)
           const line = say(m.pin, fmt).line
           return (
             <button
               key={m.pin.id}
               type="button"
-              className={`moment-mark ${m.pin.kind}${current?.pins[0].id === m.pin.id ? ' on' : ''}${hit && (m.pin.id === hit || m.more.some((q) => q.id === hit)) ? ' hit' : ''}`}
-              style={{ left: g.x(m.i), top: g.y(g.vals[m.i] ?? 0) }}
+              className={`moment-mark ${m.pin.kind}${m.more.length ? ' many' : ''}${current?.pins[0].id === m.pin.id ? ' on' : ''}${hit && (m.pin.id === hit || m.more.some((q) => q.id === hit)) ? ' hit' : ''}`}
+              style={{ left: m.at, top: LANE }}
               aria-label={copy.marker(fmtDay(m.pin.day ?? ''), line, m.more.length)}
-              aria-describedby={shown === m.i ? id : undefined}
+              aria-describedby={tip?.i === m.i ? id : undefined}
               onPointerDown={(e) => e.stopPropagation()}
               onPointerEnter={() => setShown(m.i)}
               onPointerLeave={() => setShown(null)}
@@ -104,8 +116,8 @@ export default function MomentLayer(p: LayerProps) {
               }}
               onClick={() => click(m)}
             >
-              <Icon size={11} strokeWidth={2.25} aria-hidden="true" />
-              {m.more.length > 0 && <i className="moment-n num" aria-hidden="true">{m.more.length + 1}</i>}
+              <Icon size={12} strokeWidth={2.25} aria-hidden="true" />
+              {m.more.length > 0 && <i className="moment-n num" aria-hidden="true">{m.more.length > 98 ? '99+' : m.more.length + 1}</i>}
             </button>
           )
         })}
@@ -124,7 +136,7 @@ export default function MomentLayer(p: LayerProps) {
         />
       )}
       {tip && (
-        <div id={id} role="tooltip" className="moment-tip" style={{ left: Math.max(4, Math.min(g.x(tip.i) - TIP_W / 2, g.w - TIP_W - 4)), top: g.y(g.vals[tip.i] ?? 0) - 16, maxWidth: TIP_W }}>
+        <div id={id} role="tooltip" className="moment-tip" style={{ left: Math.max(4, Math.min(tip.at - TIP_W / 2, g.w - TIP_W - 4)), top: LANE + 20, maxWidth: TIP_W }}>
           {say(tip.pin, fmt).line}
           {tip.more.length > 0 && <span className="faint"> · {copy.more(tip.more.length)}</span>}
         </div>

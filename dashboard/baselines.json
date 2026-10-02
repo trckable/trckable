@@ -1,7 +1,7 @@
 {
   "literals": 367,
   "components": {
-    "src/charts/TimeChart.tsx": 265,
+    "src/charts/TimeChart.tsx": 264,
     "src/main.tsx": 296,
     "src/views/Account.tsx": 355,
     "src/views/AllSites.tsx": 275,

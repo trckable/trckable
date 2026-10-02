@@ -19,7 +19,7 @@ import { ColumnsLayer, NoteMarkers, Pulses, RevenueLayer, TimeTip, preloadMoney 
 import { SPLIT_GAP, SPLIT_H, columnWidth, isDense, moneyScale } from './moneyPlot'
 import { NoteAdd } from './NoteAdd'
 import { PeakLabel } from './PeakLabel'
-import { PAD_L, PAD_T, AXIS_H, CHART_H, CHART_MS, tipLeft } from './plot'
+import { PAD_L, PAD_T, AXIS_H, CHART_H, CHART_MS, LANE_H, pad, tipLeft, zeros } from './plot'
 import { TimeDefs } from './TimeDefs'
 import { XLabels, YTicks } from './TimeGrid'
 import { CursorMark, CursorPill } from './Cursor'
@@ -67,7 +67,7 @@ export interface TimeChartProps {
   onAddNote?: (day: string) => void
   /** Live pulse: things arriving right now, drawn rising from the last point. */
   pulses?: Pulse[]
-  /** Drawn over the plot with the chart's own scales: the moments (spikes, sales, firsts). */
+  /** Drawn over the plot with the chart's own scales: the moments (spikes, sales, firsts), their markers on a lane above the plot (`LANE_H`: its height). A chart with a layer, or telling a story, has the lane: the plot keeps its height and the chart grows by it. */
   layer?: (g: { x: (i: number) => number; y: (v: number) => number; vals: number[]; w: number }) => ReactNode
   /** Replay tells a story: the line ends at the playhead, the rest unknown. */
   story?: boolean
@@ -90,8 +90,10 @@ export function TimeChart(p: TimeChartProps) {
   const tone = money ? 'var(--money)' : 'var(--accent)'
   const split = money ? undefined : p.revenue
   const STRIP = split ? SPLIT_H : 0
-  const H = (p.height ?? CHART_H) + STRIP
-  const plotH = H - PAD_T - AXIS_H - STRIP
+  const top = PAD_T + (p.layer || p.story ? LANE_H : 0) // the plot starts under the lane
+  const H = (p.height ?? CHART_H) + STRIP + top - PAD_T
+  const plotH = H - top - AXIS_H - STRIP
+  const base = top + plotH
   const fmt = p.fmt ?? fmtInt
   // Revenue's drawing is a chunk of its own, asked for by a chart that has revenue.
   const hasRevenue = money || !!split
@@ -111,8 +113,8 @@ export function TimeChart(p: TimeChartProps) {
   const target = useMemo(() => {
     const before = (p.ghost ?? []).slice(0, n)
     if (money) return moneyScale(p.values, before)
-    const top = Math.max(...p.values, ...before, ...(p.overlay?.values ?? []))
-    const s = p.fraction ? fractionScale(top) : threeScale(Math.max(1, top))
+    const high = Math.max(...p.values, ...before, ...(p.overlay?.values ?? []))
+    const s = p.fraction ? fractionScale(high) : threeScale(Math.max(1, high))
     return { ticks: [0, s.step, s.max], max: s.max }
   }, [p.values, p.ghost, p.overlay, n, money, p.fraction])
   const max = useTween(target.max, CHART_MS)
@@ -124,14 +126,14 @@ export function TimeChart(p: TimeChartProps) {
   const x = (i: number) => PAD_L + (n <= 1 ? plotW / 2 : (i / (n - 1)) * plotW)
   // max is tweened, so on the very first frame it can still be 0 — and 0/0 is
   // a NaN in the middle of a path the browser then refuses to draw.
-  const y = (v: number) => PAD_T + plotH - (v / (max || 1)) * plotH
+  const y = (v: number) => base - (v / (max || 1)) * plotH
   // The line runs the whole period: along zero where there is no data yet.
   const line = (a: number[]) => smooth(a.map((v, i) => [x(i), y(v)]))
-  const area = (a: number[]) => (a.length ? `${line(a)}L${x(a.length - 1).toFixed(1)} ${PAD_T + plotH}L${x(0).toFixed(1)} ${PAD_T + plotH}Z` : '')
+  const area = (a: number[]) => (a.length ? `${line(a)}L${x(a.length - 1).toFixed(1)} ${base}L${x(0).toFixed(1)} ${base}Z` : '')
 
   const columns = money && !isDense(p.values)
   const bw = columnWidth(plotW, n)
-  const cols = { x, base: PAD_T + plotH, h: plotH, max, w: bw }
+  const cols = { x, base, h: plotH, max, w: bw }
   const peak = peakIndex(p.values)
   const labelEvery = everyNth(Math.max(1, Math.ceil(n / Math.max(2, Math.floor(plotW / 90)))), p.bucket)
 
@@ -202,9 +204,9 @@ export function TimeChart(p: TimeChartProps) {
         onKeyDown={p.locked ? undefined : onKey}
         onBlur={() => setHover(null)}
       >
-        <TimeDefs id={gradId} w={w} h={H} base={PAD_T + plotH} padL={PAD_L} padT={PAD_T} tone={tone} />
+        <TimeDefs id={gradId} w={w} h={H} base={base} padL={PAD_L} padT={top} tone={tone} />
         <YTicks ticks={target.ticks} y={y} w={w} padL={PAD_L} write={p.axis ?? fmtCompact} />
-        <line x1={PAD_L} x2={w} y1={PAD_T + plotH} y2={PAD_T + plotH} stroke="var(--border)" />
+        <line x1={PAD_L} x2={w} y1={base} y2={base} stroke="var(--border)" />
         {/* While Replay plays, is dragged or has a day picked, what is past the cut goes grey: this copy shows through where the lit one is cut off. */}
         {dim && !columns && <path d={line(vals)} fill="none" stroke={p.story ? tone : 'var(--text-4)'} strokeOpacity={p.story ? 0.3 : 0.55} strokeWidth="1.5" strokeLinejoin="round" clipPath={`url(#${gradId}-main)`} />}
         {dim && columns && <g clipPath={`url(#${gradId}-main)`}><ColumnsLayer {...cols} id={gradId} values={vals} hover={null} grey /></g>}
@@ -236,19 +238,19 @@ export function TimeChart(p: TimeChartProps) {
         {p.partialLast && n > 1 && hover == null && scrub == null && !columns && (
           <circle cx={x(n - 1)} cy={y(vals[n - 1] ?? 0)} r="4" fill="var(--surface)" stroke={tone} strokeWidth="2" aria-hidden="true" />
         )}
-        {p.story && <g clipPath={`url(#${gradId}-plot)`}><rect className="chart-dim chart-unknown" x={0} y={PAD_T} width={w + 16} height={plotH + STRIP} /></g>}
-        {hover == null && <Suspense fallback={null}><ReplayLine id={gradId} tone={tone} bottom={PAD_T + plotH + STRIP} at={scrub != null && n > 1 ? scrub : null} driven={driven} quiet={quiet} x={x} y={y} vals={vals} /></Suspense>}
-        {hover != null && <CursorMark x={x(hover)} y={y(vals[hover] ?? 0)} top={0} bottom={PAD_T + plotH + STRIP} tone={money ? 'money' : undefined} dot={!columns} />}
+        {p.story && <g clipPath={`url(#${gradId}-plot)`}><rect className="chart-dim chart-unknown" x={0} y={top} width={w + 16} height={plotH + STRIP} /></g>}
+        {hover == null && <Suspense fallback={null}><ReplayLine id={gradId} tone={tone} bottom={base + STRIP} at={scrub != null && n > 1 ? scrub : null} driven={driven} quiet={quiet} x={x} y={y} vals={vals} /></Suspense>}
+        {hover != null && <CursorMark x={x(hover)} y={y(vals[hover] ?? 0)} top={0} bottom={base + STRIP} tone={money ? 'money' : undefined} dot={!columns} />}
         {peak >= 0 && hover == null && scrub == null && !p.overlay && (
           <PeakLabel x={x(peak)} y={y(vals[peak] ?? 0)} w={w} text={columns ? fmt(p.values[peak]) : timeCopy.peak(fmt(p.values[peak]), bucketLabel(p.labels[peak], p.bucket))} padL={PAD_L} color={tone} dot={!columns} />
         )}
         {split && (
-          <RevenueLayer {...split} id={gradId} x={x} w={w} top={PAD_T + plotH + SPLIT_GAP} values={pad(split.values, n)} hover={hover} partialLast={p.partialLast} dim={dim && !p.story} labelled={hover == null && scrub == null} />
+          <RevenueLayer {...split} id={gradId} x={x} w={w} top={base + SPLIT_GAP} values={pad(split.values, n)} hover={hover} partialLast={p.partialLast} dim={dim && !p.story} labelled={hover == null && scrub == null} />
         )}
         <XLabels labels={p.labels} bucket={p.bucket} every={labelEvery} x={x} y={H - 6} skip={hover != null ? x(hover) : null} />
       </svg>
       {/* Notes sit on the axis: a flag per day, its words on hover. */}
-      <NoteMarkers markers={markers} x={x} top={PAD_T + plotH} width={w} />
+      <NoteMarkers markers={markers} x={x} top={base} width={w} />
       {hover == null && scrub != null && n > 1 && <Suspense fallback={null}><ReplayChip labels={p.labels} bucket={p.bucket} at={scrub} x={x} width={w} driven={driven} /></Suspense>}
       {hover != null && n > 0 && <TimeTip p={p} i={hover} left={tipAt} width={tipW} compact={compact} notes={markers.find((m) => m.i === hover)?.notes ?? []} />}
       {hover != null && n > 0 && p.onAddNote && <NoteAdd x={x(hover)} day={p.labels[hover].slice(0, 10)} label={bucketLabel(p.labels[hover], p.bucket, true)} onAdd={p.onAddNote} />}
@@ -260,6 +262,3 @@ export function TimeChart(p: TimeChartProps) {
     </div>
   )
 }
-
-const zeros = (n: number) => Array<number>(n).fill(0)
-const pad = (a: number[], n: number) => (a.length >= n ? a.slice(0, n) : [...a, ...zeros(n - a.length)])

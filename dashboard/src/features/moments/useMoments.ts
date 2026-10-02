@@ -1,6 +1,6 @@
 // The pins of the period on screen: the server's moments (spikes, sales, an AI
 // assistant's first visit, milestones) and the findings that have a day (a new
-// referrer, a page whose buyers fell away). Asked for once the page is quiet,
+// referrer, a page whose buyers fell away), whatever the page is filtered to (api.ts). Asked for once the page is quiet,
 // so they never take a slot among the requests the first load needs; a failure
 // is no pins, never an error: markers are garnish.
 import { useEffect, useState } from 'react'
@@ -16,7 +16,7 @@ export const momentBucket = (chart: Bucket): 'day' | 'hour' => (chart === 'hour'
 export function useMoments(site: string, query: ReportQuery, bucket: Bucket): Pin[] | null {
   const [found, setFound] = useState<{ key: string; pins: Pin[] } | null>(null)
   const which = momentBucket(bucket)
-  const key = [site, query.from, query.to, which, query.testPayments ? 'test' : '', query.attr ?? '', JSON.stringify(query.filters ?? [])].join('|')
+  const key = [site, query.from, query.to, which, query.testPayments ? 'test' : '', query.attr ?? ''].join('|')
   useEffect(() => {
     const ctl = new AbortController()
     const cancel = whenQuiet(() => {
