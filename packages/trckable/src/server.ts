@@ -7,8 +7,9 @@ export interface ProxyOptions {
   host?: string
   /**
    * The site's proxy key (Settings → Install, "tkb_px_…"). Defaults to
-   * $TRCKABLE_PROXY_KEY. With it, trckable trusts the visitor IP this proxy
-   * forwards and sets the visitor cookie server-side.
+   * $TRCKABLE_PROXY_KEY. Required: it is how trckable trusts the visitor IP
+   * this proxy forwards and sets the visitor cookie server-side. Without it
+   * every visitor would arrive from the proxy's own address.
    */
   proxyKey?: string
 }
@@ -16,10 +17,13 @@ export interface ProxyOptions {
 const env = (k: string): string | undefined =>
   typeof process !== 'undefined' ? process.env?.[k] : undefined
 
+const NO_KEY = 'trckable: set TRCKABLE_PROXY_KEY (Settings → Install) or pass { proxyKey }; without it every visitor counts as one'
+let warned = false
+
 /**
  * A same-origin proxy for tracking events. Mount it at /api/e:
  *
- *   // app/api/e/route.ts (Next.js)
+ *   // app/api/e/route.ts (Next.js; set TRCKABLE_HOST and TRCKABLE_PROXY_KEY)
  *   export { POST } from 'trckable/next'
  *
  *   // Hono
@@ -31,14 +35,30 @@ export function proxy(options: ProxyOptions = {}): (req: Request) => Promise<Res
     if (!host) return new Response('trckable: set TRCKABLE_HOST or pass { host }', { status: 500 })
     if (req.method !== 'POST') return new Response(null, { status: 405 })
 
+    // Without the key trckable cannot trust the visitor address this proxy
+    // forwards, so it would see every visitor as the proxy itself: one
+    // visitor, one country, one rate limit. Refuse, loudly, rather than count
+    // wrongly in silence.
     const key = options.proxyKey ?? env('TRCKABLE_PROXY_KEY')
+    if (!key) {
+      if (!warned) console.error(NO_KEY)
+      warned = true
+      return new Response(NO_KEY, { status: 500 })
+    }
     const ip = clientIP(req.headers)
     const headers: Record<string, string> = {
       'content-type': 'text/plain',
       'user-agent': req.headers.get('user-agent') ?? '',
+      'x-trckable-proxy-key': key,
     }
-    if (key) headers['x-trckable-proxy-key'] = key
-    if (key && ip) headers['x-trckable-client-ip'] = ip
+    if (ip) headers['x-trckable-client-ip'] = ip
+    // A visitor's Do Not Track and Global Privacy Control choices travel on
+    // the browser's request to this app; pass them on, or a site that honours
+    // them would count those visitors anyway.
+    for (const h of ['dnt', 'sec-gpc']) {
+      const v = req.headers.get(h)
+      if (v) headers[h] = v
+    }
 
     let res: Response
     try {

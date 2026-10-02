@@ -9,6 +9,12 @@ export interface DoctorOptions {
   site?: string
   /** The page to check, when you want the script verified on a real URL. */
   url?: string
+  /**
+   * The proxy setup of this app. Pass `{ key }` (the value of
+   * TRCKABLE_PROXY_KEY, or undefined when it is not set) to have it checked;
+   * leave it out for an install that loads the script tag directly.
+   */
+  proxy?: { key?: string }
 }
 
 export interface Check {
@@ -99,7 +105,19 @@ export async function doctor(o: DoctorOptions): Promise<Check[]> {
     /* an older server may not have the endpoint; not worth failing over */
   }
 
-  // 6. If a page was given, is the snippet actually on it?
+  // 6. A same-origin proxy needs its key, or every visitor is the proxy.
+  if (o.proxy) {
+    const key = o.proxy.key?.trim()
+    const ok = !!key && key.startsWith('tkb_px_')
+    out.push({
+      ok,
+      name: 'Proxy key',
+      detail: ok ? 'TRCKABLE_PROXY_KEY is set' : key ? 'TRCKABLE_PROXY_KEY does not look like a proxy key' : 'TRCKABLE_PROXY_KEY is not set',
+      fix: ok ? undefined : 'Copy the proxy key from Settings → Install (it starts with tkb_px_) into TRCKABLE_PROXY_KEY on the server that runs /api/e. Without it every visitor counts as one.',
+    })
+  }
+
+  // 7. If a page was given, is the snippet actually on it?
   if (o.url) {
     try {
       const res = await fetch(o.url, { signal: timeout(8000) })
