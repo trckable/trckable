@@ -28,6 +28,11 @@
   --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
   /* The popovers' own: a hairline of contact and a wide soft fall. */
   --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px -6px rgba(0, 0, 0, 0.45);
+  /* The raised surface (the side card): a step above the cards behind it, with its own line, well and shadow. */
+  --raised: #1f242c;
+  --raised-well: #151920;
+  --raised-line: #3b434e;
+  --raised-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 12px 32px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
   /* The code view has colours of its own: the chart palette is chosen for
      fills, and as text on a pale background it does not have the contrast.
      Every one of these is checked against its own theme's code background. */
@@ -78,6 +83,10 @@
     --warn: #845200;
     --shadow: 0 12px 32px rgba(20, 24, 30, 0.12);
     --shadow-soft: 0 1px 2px rgba(20, 24, 30, 0.06), 0 8px 24px -8px rgba(20, 24, 30, 0.14);
+    --raised: #ffffff;
+    --raised-well: #f1f2ee;
+    --raised-line: #c9cdc6;
+    --raised-shadow: 0 1px 0 #ffffff inset, 0 12px 32px rgba(20, 24, 30, 0.16), 0 2px 8px rgba(20, 24, 30, 0.1);
     --code-com: #5c6470;
     --code-str: #8a4f00;
     --code-tag: #a3341a;
@@ -117,6 +126,10 @@
   --warn: #845200;
   --shadow: 0 12px 32px rgba(20, 24, 30, 0.12);
   --shadow-soft: 0 1px 2px rgba(20, 24, 30, 0.06), 0 8px 24px -8px rgba(20, 24, 30, 0.14);
+  --raised: #ffffff;
+  --raised-well: #f1f2ee;
+  --raised-line: #c9cdc6;
+  --raised-shadow: 0 1px 0 #ffffff inset, 0 12px 32px rgba(20, 24, 30, 0.16), 0 2px 8px rgba(20, 24, 30, 0.1);
   --code-com: #5c6470;
   --code-str: #8a4f00;
   --code-tag: #a3341a;
