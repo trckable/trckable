@@ -38,6 +38,7 @@ section into the release.
 
 ### Changed
 
+- The side card floats clearly above the page in both themes: a raised surface a step lighter than the cards behind it, a crisp line, a layered shadow, and a darker, smaller deck peeking out behind it.
 - A spike on a site whose usual is under ten visitors a day (or an hour, under two), or with less than a week behind it, no longer says "230.0× the usual": it is New traffic, told as the visitor count and the main source, in the chart's moments, One thing today, Replay and the busy-day alert (`GET /api/v1/sites/{site}/moments` and `/markers` leave `factor` out for it). Above that, a multiplier is rounded the same way in the dashboard, the weekly email and alerts: one decimal under ten (2.4×), whole numbers from ten (3×, 12×).
 - "No comparison" now hides every change figure, not only the chart's dashed line: the arrows under the key numbers, the arrows beside the lists' rows, the "vs usual" chip, and the comparison row of the CSV export. Pick a comparison and they all come back, in the same words.
 
