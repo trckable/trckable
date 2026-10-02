@@ -8,7 +8,8 @@ import { say as milestone } from '../milestones/words'
 import { fmtDay } from '../../lib/dates'
 import { fmtInt, fmtPct } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
-import { copy } from './copy'
+import { times } from '../../lib/times'
+import { copy, titleOf } from './copy'
 
 export interface Said {
   title: string
@@ -19,18 +20,19 @@ export interface Said {
 }
 
 const when = (day?: string) => (day ? fmtDay(day, { weekday: true }) : '')
-const times = (f: number) => f.toFixed(1)
 const signed = (x: number) => (x >= 0 ? '+' : '−') + fmtPct(Math.abs(x))
 
 /** `money` writes an amount in the site's currency. */
 export function say(pin: Pin, money: (minor: number) => string): Said {
   const { n } = pin
-  const title = copy.title[pin.kind]
+  const title = titleOf(pin)
   const name = pin.filters[0]?.dim === 'channel' ? channelLabel(n.name ?? '') : (n.name ?? '')
   switch (pin.kind) {
     case 'spike': {
-      const line = [extrasCopy.ring.spike(n.factor ?? 3), n.referrer ? extrasCopy.ring.from(n.referrer) : ''].filter(Boolean).join(' · ')
-      return { title, line, big: n.visitors ? copy.visitors(n.visitors) : `${times(n.factor ?? 3)}×`, facts: [copy.usual(times(n.factor ?? 3)), n.referrer ? extrasCopy.ring.from(n.referrer) : '', when(pin.day)].filter(Boolean) }
+      const from = n.referrer ? extrasCopy.ring.from(n.referrer) : ''
+      // Without a usual to multiply (a quiet or young site) it is new traffic: the count and the source.
+      if (!n.factor) return { title, line: [extrasCopy.ring.newTraffic(n.visitors ?? 0), from].filter(Boolean).join(' · '), big: copy.visitors(n.visitors ?? 0), facts: [from, when(pin.day)].filter(Boolean) }
+      return { title, line: [extrasCopy.ring.spike(n.factor), from].filter(Boolean).join(' · '), big: n.visitors ? copy.visitors(n.visitors) : times(n.factor), facts: [copy.usual(times(n.factor)), from, when(pin.day)].filter(Boolean) }
     }
     case 'sale': {
       const channel = n.channel ? copy.mostly(channelLabel(n.channel)) : ''

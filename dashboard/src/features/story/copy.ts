@@ -1,7 +1,10 @@
 // Replay as a story: the pops on the timeline and the card at its end. What
 // moves to the message files when translations come.
+import { fmtInt } from '../../lib/format'
+
 export const copy = {
-  spike: (factor: string) => `Traffic ×${factor}`,
+  spike: (factor: string) => `Traffic ${factor}`,
+  newTraffic: (visitors: number) => `New traffic · ${visitors === 1 ? '1 visitor' : `${fmtInt(visitors)} visitors`}`,
   from: (who: string) => `from ${who}`,
   sale: (n: number) => (n === 1 ? 'Sale' : `${n} sales`),
   country: (name: string) => `First visitor from ${name}`,
