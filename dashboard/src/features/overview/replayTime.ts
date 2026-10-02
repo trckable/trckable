@@ -44,24 +44,5 @@ export function fmtSecs(s: number): string {
   return `~${s < 10 ? Math.round(s * 2) / 2 : Math.round(s)} s`
 }
 
-/** Points per millisecond: the whole path, first to last point, in `secs`. */
-export function rateOf(first: number, n: number, secs: number): number {
-  return Math.max(0, n - 1 - first) / (secs * 1000)
-}
-
-/** The playhead after dt milliseconds. A new speed changes the rate only, so
- *  the position carries on from where it is. */
-export function advance(pos: number, dt: number, rate: number, last: number): number {
-  return Math.min(last, pos + Math.max(0, Math.min(dt, 250)) * rate)
-}
-
-/** The point to hand to the page (its lists, cards and address) now, or null.
- *  Every point in passing is throttled to one per minMs, but a moment (a stop)
- *  is never skipped or late: it commits the frame the playhead reaches it. */
-export function commitAt(pos: number, committed: number, stops: number[] | undefined, sinceMs: number, minMs: number): number | null {
-  const idx = Math.floor(pos + 1e-9)
-  if (idx <= committed) return null
-  const stop = stops?.find((s) => s > committed && s <= idx)
-  if (stop !== undefined) return stop
-  return sinceMs >= minMs ? idx : null
-}
+/** The lists that race while Replay tells the period. */
+export const RACE_DIMS = ['channel', 'entry_page', 'country', 'device']

@@ -39,6 +39,7 @@ section into the release.
 
 ### Changed
 
+- The dashboard's first load is 3.9 KB lighter (129.1 KB gzip, was 133.1), with nothing different on screen. The logo's font, which sat inside the first stylesheet, is a file of its own, asked for in the page's head beside the script so it is there before the logo is drawn; and Replay's clock and the arithmetic of its race (the tiles counting up, the lists overtaking) load when Replay starts, fetched as soon as its button is pointed at or focused.
 - The side card floats clearly above the page in both themes: a raised surface a step lighter than the cards behind it, a crisp line, a layered shadow, and a darker, smaller deck peeking out behind it.
 - A spike on a site whose usual is under ten visitors a day (or an hour, under two), or with less than a week behind it, no longer says "230.0× the usual": it is New traffic, told as the visitor count and the main source, in the chart's moments, One thing today, Replay and the busy-day alert (`GET /api/v1/sites/{site}/moments` and `/markers` leave `factor` out for it). Above that, a multiplier is rounded the same way in the dashboard, the weekly email and alerts: one decimal under ten (2.4×), whole numbers from ten (3×, 12×).
 - Stricter bot filtering is on for a new site (and for a site that never saved the setting): visits from data centres such as AWS, Hetzner and Alibaba, and clients that name no browser, are dropped. Sites that already saved the setting keep what they chose, and Settings → Data & privacy still turns it off.
