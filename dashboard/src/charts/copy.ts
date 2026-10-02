@@ -1,11 +1,6 @@
 // The chart kit's own words: the card's table switch. Everything a chart says
 // about its data comes from the feature that draws it.
 export const kitCopy = {
-  table: 'Table',
-  chart: 'Chart',
-  showTable: (title: string) => `${title}: show as a table`,
-  showChart: (title: string) => `${title}: show as a chart`,
-  empty: 'Nothing to show for this period yet.',
   failed: "Couldn't draw this.",
   reload: 'Reload',
   updated: 'Updated, reloading…',

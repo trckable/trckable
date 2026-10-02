@@ -32,8 +32,11 @@ section into the release.
 - Settings → Alerts: "Send me this week's email now" sends the last week's report to the address of the person who pressed it, three times a day at most, only where the server can send email, and without changing when the scheduled one goes (`POST /api/v1/sites/{site}/alerts/weekly/send`).
 - Shortcuts: S switches site, U opens your menu, "," opens Settings, / opens Filter, Shift S shares and R plays or pauses Replay. Each presses the control that does it, so a key does nothing where that control is not on the page, nor while a field has the keys or a dialog is open. They are in the list (?) under "On a dashboard" and "Getting around", can be changed there with the same conflict check, and Shift S is now told from S (and Shift C from C) everywhere.
 - Goals, funnels, Sources that pay, notes and alerts, when they have nothing yet, show the ghost, one short line and one action (Track a goal, Create a funnel, Payments settings, Add a note, Add where to send them) instead of a bare line.
+- Changing the theme is a short crossfade of the whole page (about 200 ms) where the browser has View Transitions, and elsewhere the colours ease for the length of the switch only; with reduced motion it is instant. Nothing re-renders, so the charts do not redraw or re-animate. The saved theme is applied by a tiny script before the first frame (`/theme.js`), so a person who chose Light does not see a dark frame first.
 
 ### Changed
+
+- "No comparison" now hides every change figure, not only the chart's dashed line: the arrows under the key numbers, the arrows beside the lists' rows, the "vs usual" chip, and the comparison row of the CSV export. Pick a comparison and they all come back, in the same words.
 
 - The rings on the chart (a spike, a burst of sales) are now the markers above (a spike, and the biggest days of sales), and the quiet payments icon at the key numbers' end is the Revenue tile. `GET /api/v1/sites/{site}/markers` is still there for anyone who reads it.
 - The cookieless salts keep two days on disk instead of three: today's and yesterday's, and making a new day's salt, or the daily pass, deletes the rest.

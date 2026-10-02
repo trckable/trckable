@@ -36,7 +36,8 @@ export function useTheme(): [Theme, (t: Theme) => void] {
     }
   }, [])
   const pick = (t: Theme) => {
-    applyTheme(t)
+    // The crossfade is its own small chunk, fetched when a theme is first chosen.
+    void import('./themeSwitch').then((m) => m.switchTheme(t, applyTheme))
     try {
       localStorage.setItem(KEY, t)
     } catch {
