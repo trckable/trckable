@@ -53,7 +53,8 @@ export function pinsFromMoments(list: Moment[], money: boolean): Pin[] {
   const biggest = Math.max(1, ...list.filter((m) => m.kind === 'sale').map((m) => m.amount ?? 0))
   const out: Pin[] = []
   for (const m of list) {
-    const base = { id: `${m.kind}:${m.t}`, day: day(m.t), at: m.t }
+    // A milestone is its family and step (several are reached on one day); the others are told apart by their bucket.
+    const base = { id: m.kind === 'milestone' ? `milestone:${m.family}:${m.step}` : `${m.kind}:${m.t}`, day: day(m.t), at: m.t }
     switch (m.kind) {
       case 'spike':
         out.push({ ...base, kind: 'spike', score: 80 + Math.min(15, m.factor ?? 0), filters: m.referrer ? [{ dim: 'referrer', value: m.referrer }] : [], showDay: true, n: { factor: m.factor, visitors: m.visitors, referrer: m.referrer } })
@@ -70,6 +71,16 @@ export function pinsFromMoments(list: Moment[], money: boolean): Pin[] {
     }
   }
   return out
+}
+
+/** One pin per id (a milestone is its family and step, a spike its bucket), the earliest day kept: the same thing told twice is still one. */
+export function dedupePins(list: Pin[]): Pin[] {
+  const seen = new Map<string, Pin>()
+  for (const p of list) {
+    const was = seen.get(p.id)
+    if (!was || (p.day ?? '') < (was.day ?? '')) seen.set(p.id, p)
+  }
+  return [...seen.values()]
 }
 
 /** The findings that have a day (a new referrer's first visit, the day a page's buyers fell away) sit on the chart; the others are for the card on opening. */

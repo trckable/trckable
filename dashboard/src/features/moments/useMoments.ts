@@ -8,7 +8,7 @@ import type { Bucket, ReportQuery } from '../../lib/api'
 import { extrasApi } from '../extras/extrasApi'
 import { whenQuiet } from '../extras/quiet'
 import { momentsApi } from './api'
-import { pinsFromInsights, pinsFromMoments, type Pin } from './pins'
+import { dedupePins, pinsFromInsights, pinsFromMoments, type Pin } from './pins'
 
 /** Moments come by the day, or by the hour for an hourly chart; a week or a month holds the days it is made of. */
 export const momentBucket = (chart: Bucket): 'day' | 'hour' => (chart === 'hour' ? 'hour' : 'day')
@@ -24,7 +24,7 @@ export function useMoments(site: string, query: ReportQuery, bucket: Bucket): Pi
       void Promise.all([
         momentsApi.moments(site, query, which, ctl.signal).then((d) => pinsFromMoments(d.moments ?? [], true)).catch(none),
         extrasApi.insights(site, query).then((d) => pinsFromInsights(d.insights ?? []).filter((p) => p.day)).catch(none),
-      ]).then(([a, b]) => !ctl.signal.aborted && setFound({ key, pins: [...a, ...b] }))
+      ]).then(([a, b]) => !ctl.signal.aborted && setFound({ key, pins: dedupePins([...a, ...b]) }))
     })
     return () => {
       cancel()

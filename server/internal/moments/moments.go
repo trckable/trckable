@@ -146,6 +146,34 @@ func Sort(ms []Moment) {
 	})
 }
 
+// Dedupe keeps each thing once: a milestone once per (family, step), the day
+// it was first reached, and any other moment once however often it was found.
+// The store already holds a milestone once per site; this is the guard for
+// the response, so no way of finding them (a backfill, overlapping reads) can
+// tell the same one twice. Order is kept.
+func Dedupe(ms []Moment) []Moment {
+	out := make([]Moment, 0, len(ms))
+	first := map[[2]string]int{} // a milestone's (family, step) -> its place in out
+	seen := map[Moment]bool{}
+	for _, m := range ms {
+		if m.Kind == "milestone" {
+			key := [2]string{m.Family, m.Step}
+			if at, ok := first[key]; ok {
+				if m.T < out[at].T {
+					out[at] = m
+				}
+				continue
+			}
+			first[key] = len(out)
+		} else if seen[m] {
+			continue
+		}
+		seen[m] = true
+		out = append(out, m)
+	}
+	return out
+}
+
 // Burst is a bucket with far more sales than the buckets that had any.
 type Burst struct {
 	I      int

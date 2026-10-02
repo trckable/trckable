@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Insight } from '../extras/extrasApi'
 import type { Moment } from '../story/moments'
-import { byScore, pinsFromInsights, pinsFromMilestones, pinsFromMoments } from './pins'
+import { byScore, dedupePins, pinsFromInsights, pinsFromMilestones, pinsFromMoments } from './pins'
 
 const spike: Moment = { t: '2026-09-19T00:00', kind: 'spike', factor: 4.2, visitors: 816, referrer: 'news.example' }
 const sale = (t: string, amount: number): Moment => ({ t, kind: 'sale', count: 2, amount, channel: 'Email' })
@@ -48,6 +48,35 @@ describe('pins from the server\'s moments', () => {
   it('an AI assistant\'s first visit filters to the AI channel, not to a day', () => {
     const [p] = pinsFromMoments([{ t: '2026-09-04T00:00', kind: 'ai', bot: 'ChatGPT' }], true)
     expect(p).toMatchObject({ kind: 'ai', showDay: false, filters: [{ dim: 'channel', value: 'AI' }], n: { name: 'ChatGPT' } })
+  })
+})
+
+describe('milestones that share a day', () => {
+  const at = '2026-09-10T00:00'
+  const list: Moment[] = [
+    { t: at, kind: 'milestone', family: 'visitors', value: 100, step: '100' },
+    { t: at, kind: 'milestone', family: 'countries', value: 10, step: '10' },
+    { t: at, kind: 'milestone', family: 'countries', value: 25, step: '25' },
+    { t: at, kind: 'milestone', family: 'pageviews', value: 1, step: '1' },
+  ]
+
+  it('each has its own id (a list keyed by it is never drawn twice over)', () => {
+    const ids = pinsFromMoments(list, true).map((p) => p.id)
+    expect(new Set(ids).size).toBe(4)
+    expect(ids[1]).toBe('milestone:countries:10')
+  })
+
+  it('told twice (by two requests, two periods), one is kept: the earliest', () => {
+    const pins = pinsFromMoments([...list, { ...list[0], t: '2026-09-12T00:00' }], true)
+    const out = dedupePins([...pins, ...pinsFromMoments([{ ...list[1], t: '2026-09-08T00:00' }], true)])
+    expect(out).toHaveLength(4)
+    expect(out.find((p) => p.id === 'milestone:visitors:100')?.day).toBe('2026-09-10')
+    expect(out.find((p) => p.id === 'milestone:countries:10')?.day).toBe('2026-09-08')
+  })
+
+  it('keeps the other kinds as they are', () => {
+    const both = pinsFromMoments([spike, sale('2026-09-19T00:00', 1000), spike], true)
+    expect(dedupePins(both).map((p) => p.kind)).toEqual(['spike', 'sale'])
   })
 })
 

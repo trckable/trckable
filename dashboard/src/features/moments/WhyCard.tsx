@@ -1,13 +1,13 @@
 // "Here's why": the card a marker opens, with the numbers and one action. The
 // click has already applied its filter; this says what it is (the same card as
 // the one on opening: its kind, when, the figure, the chart of the moment).
-// Markers that landed together are listed under it, each a button that moves the
-// card (and the filter) to it.
+// Markers that landed together are listed under it (ClusterList), each a button that
+// moves the card (and the filter) to it.
 import type { Point } from '../../lib/api'
+import { ClusterList } from './ClusterList'
 import { copy } from './copy'
 import { openMark } from './open'
 import { PinCard } from './PinCard'
-import { say } from './words'
 
 export function WhyCard({ open, site, series, money, onShare, onPick }: { open: NonNullable<ReturnType<typeof openMark.get>>; site: { id: string; timezone: string }; series: readonly Point[]; money: (minor: number) => string; onShare?: () => void; onPick: (at: number) => void }) {
   const close = () => openMark.set(null)
@@ -32,21 +32,7 @@ export function WhyCard({ open, site, series, money, onShare, onPick }: { open: 
           </button>
         )
       }
-      extra={
-        open.pins.length > 1 && (
-          <ul className="why-more">
-            {open.pins.map((q, k) =>
-              k === open.at ? null : (
-                <li key={q.id}>
-                  <button type="button" onClick={() => onPick(k)}>
-                    {say(q, money).line}
-                  </button>
-                </li>
-              ),
-            )}
-          </ul>
-        )
-      }
+      extra={open.pins.length > 1 && <ClusterList key={open.pins[0].id} pins={open.pins} at={open.at} money={money} onPick={onPick} />}
     />
   )
 }

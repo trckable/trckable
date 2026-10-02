@@ -52,10 +52,10 @@ test.beforeAll(async ({ browser }) => {
   await ctx.close()
 })
 
-async function open(page: Page, width = 1280, domain = DOMAIN) {
+async function open(page: Page, width = 1280, domain = DOMAIN, height = 900) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.setViewportSize({ width, height: 900 })
+  await page.setViewportSize({ width, height })
   await page.goto(`${API}/${domain}?view=data`)
   await expect(page.locator('.chart-wrap svg[role="img"]')).toBeVisible({ timeout: 30_000 })
 }
@@ -315,4 +315,61 @@ test('at 390 px the markers and their card fit the screen', async ({ page }) => 
   expect(box!.x).toBeGreaterThanOrEqual(0)
   expect(box!.x + box!.width).toBeLessThanOrEqual(390)
   await shoot(page, 'marker-card')
+})
+
+/** Eight moments on one day: three milestones, a spike, a sale, an AI assistant and two new referrers. */
+const crowd = () => ({
+  moments: [
+    { t: `${day(5)}T00:00`, kind: 'spike', factor: 4.2, visitors: 816, referrer: 'news.example' },
+    { t: `${day(5)}T00:00`, kind: 'sale', count: 3, amount: 14700, channel: 'Email' },
+    { t: `${day(5)}T00:00`, kind: 'milestone', family: 'visitors', value: 100, step: '100' },
+    { t: `${day(5)}T00:00`, kind: 'milestone', family: 'countries', value: 10, step: '10' },
+    { t: `${day(5)}T00:00`, kind: 'milestone', family: 'pageviews', value: 1000, step: '1000' },
+    { t: `${day(5)}T00:00`, kind: 'ai', bot: 'ChatGPT' },
+  ],
+  insights: [
+    { kind: 'new_referrer', dim: 'referrer', value: 'google.com', now: 6204, since: day(5) },
+    { kind: 'new_referrer', dim: 'referrer', value: 'linkedin.com', now: 463, since: day(5) },
+  ],
+})
+
+test('at 390 px a cluster of eight is a short card: three lines, "+N more" in place, milestones in one row, one Share', async ({ page }) => {
+  await only(page, crowd())
+  await open(page, 390, DOMAIN, 844)
+  const mark = page.locator('.moment-mark', { has: page.locator('.moment-n') })
+  await expect(mark).toBeVisible({ timeout: 20_000 })
+  await expect(mark.locator('.moment-n')).toHaveText('8')
+  await mark.click()
+  const why = card(page, 'Traffic spike')
+  await expect(why).toBeVisible()
+  // Three rows, then "+2 more"; the milestones are one row.
+  const rows = why.locator('.why-more > li > button:not(.why-all)')
+  await expect(rows).toHaveCount(3)
+  await expect(why.getByRole('button', { name: '3 milestones' })).toBeVisible()
+  await expect(why.getByRole('button', { name: '+2 more' })).toBeVisible()
+  await expect(why.getByRole('button', { name: 'Share' })).toHaveCount(1)
+  const fits = async () => {
+    const box = (await why.boundingBox())!
+    expect(box.height).toBeLessThanOrEqual(844 * 0.6 + 1)
+    expect(box.y + box.height).toBeLessThanOrEqual(844)
+  }
+  await fits()
+  await shoot(page, 'cluster-collapsed')
+  // "+N more" opens the rest where it is; the milestones open on tap.
+  await why.getByRole('button', { name: '+2 more' }).click()
+  await expect(why.getByRole('button', { name: '+2 more' })).toHaveCount(0)
+  await expect(rows).toHaveCount(5)
+  await why.getByRole('button', { name: '3 milestones' }).click()
+  await expect(why.locator('.why-group ul button')).toHaveCount(3)
+  await fits()
+  // Each line is there once.
+  const lines = await why.locator('.why-more button').allInnerTexts()
+  expect(new Set(lines).size).toBe(lines.length)
+  await shoot(page, 'cluster-open')
+  // A milestone picked becomes the card, with its one Share.
+  await why.locator('.why-group ul button').first().click()
+  const milestone = card(page, 'Milestone')
+  await expect(milestone).toBeVisible()
+  await expect(milestone.getByRole('button', { name: 'Share' })).toHaveCount(1)
+  await expect(page.getByRole('complementary')).toHaveCount(1)
 })

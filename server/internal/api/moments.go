@@ -49,6 +49,7 @@ func (a *API) moments(w http.ResponseWriter, r *http.Request) {
 	out = append(out, salesOf(res)...)
 	out = append(out, a.firstsOf(r, q, p)...)
 	out = append(out, a.dayMoments(r, site, ask)...)
+	out = moments.Dedupe(out)
 	moments.Sort(out)
 	if len(out) > maxMoments {
 		out = out[:maxMoments]
