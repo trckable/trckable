@@ -80,9 +80,10 @@ func TestResendSendsTheSameMessageOverHTTPS(t *testing.T) {
 	if _, err := ParseResend("re_abc", "nope"); err == nil {
 		t.Error("a sender that is no address was accepted")
 	}
-	m, err := ParseResend("re_abc", "trckable@example.com")
-	if err != nil {
-		t.Fatal(err)
+	// A sender written with a name is the address inside it, as the From line is built from it.
+	m, err := ParseResend("re_abc", "trckable <trckable@example.com>")
+	if err != nil || m.from != "trckable@example.com" {
+		t.Fatalf("%v %v", m, err)
 	}
 	m.resend.endpoint = srv.URL
 	link := "https://stats.example.com/u/alert_1.sig"

@@ -38,10 +38,11 @@ func ParseMailer(raw, from string) (*Mailer, error) {
 	if err != nil || (u.Scheme != "smtp" && u.Scheme != "smtps") || u.Hostname() == "" {
 		return nil, errors.New("TRCKABLE_SMTP_URL looks like smtp://user:password@smtp.example.com:587")
 	}
-	if _, err := mail.ParseAddress(from); err != nil {
+	sender, err := mail.ParseAddress(from)
+	if err != nil {
 		return nil, errors.New("TRCKABLE_MAIL_FROM must be an email address, like trckable@example.com")
 	}
-	m := &Mailer{host: u.Hostname(), port: u.Port(), implicit: u.Scheme == "smtps", from: from}
+	m := &Mailer{host: u.Hostname(), port: u.Port(), implicit: u.Scheme == "smtps", from: sender.Address}
 	if m.port == "" {
 		m.port = "587"
 		if m.implicit {
@@ -62,10 +63,11 @@ func ParseResend(key, from string) (*Mailer, error) {
 	if !strings.HasPrefix(strings.TrimSpace(key), "re_") {
 		return nil, errors.New("TRCKABLE_RESEND_KEY is the API key from resend.com, and starts with re_")
 	}
-	if _, err := mail.ParseAddress(from); err != nil {
+	sender, err := mail.ParseAddress(from)
+	if err != nil {
 		return nil, errors.New("TRCKABLE_MAIL_FROM must be an email address, like trckable@example.com")
 	}
-	return &Mailer{from: from, resend: &resendAPI{key: strings.TrimSpace(key), endpoint: "https://api.resend.com/emails"}}, nil
+	return &Mailer{from: sender.Address, resend: &resendAPI{key: strings.TrimSpace(key), endpoint: "https://api.resend.com/emails"}}, nil
 }
 
 // mailAddress returns the address in a mailto: target.
