@@ -75,3 +75,33 @@ func TestReferrerIsPrivacySafe(t *testing.T) {
 		t.Fatalf("got %q %q", host, clean)
 	}
 }
+
+// A hash can carry a secret: an OAuth answer, a magic-link token, an email.
+// None of it reaches the stored path; the route does.
+func TestHashModeDropsWhatIsNotARoute(t *testing.T) {
+	cases := []struct{ page, want string }{
+		{"https://site.com/app#/settings", "/app/#/settings"},
+		{"https://site.com/app#!/settings/billing", "/app/#/settings/billing"},
+		{"https://site.com/app#/orders/4821", "/app/#/orders/4821"},
+		{"https://site.com/app#/search?q=ann@example.com&token=abc", "/app/#/search"},
+		{"https://site.com/app#/callback#access_token=abc123", "/app/#/callback"},
+		{"https://site.com/app#access_token=abc123&state=x", "/app"},
+		{"https://site.com/app#email=ann@example.com", "/app"},
+		{"https://site.com/app#/user/ann@example.com", "/app"},
+		{"https://site.com/app#/user/ann%40example.com/edit", "/app"},
+		{"https://site.com/app#/reset/9f8a7b6c5d4e3f2a1b0c9d8e", "/app/#/reset/:redacted"},
+		{"https://site.com/app#/auth/eyJhbGciOi.eyJzdWIiOiIx.c2ln", "/app/#/auth/:redacted"},
+		{"https://site.com/app#pricing", "/app/#pricing"},
+		{"https://site.com/app#", "/app"},
+	}
+	for _, c := range cases {
+		p, ok := parsePageURL(c.page, true)
+		if !ok || p.Path != c.want {
+			t.Errorf("%s -> %q, want %q", c.page, p.Path, c.want)
+		}
+	}
+	// Off: the fragment never reaches the path at all.
+	if p, _ := parsePageURL("https://site.com/app#/x?token=abc", false); p.Path != "/app" {
+		t.Fatalf("hash mode off: %q", p.Path)
+	}
+}

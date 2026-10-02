@@ -73,8 +73,10 @@ func parsePageURL(raw string, hashMode bool) (parsedURL, bool) {
 	if p.Path == "" {
 		p.Path = "/"
 	}
-	if hashMode && u.Fragment != "" {
-		p.Path = strings.TrimSuffix(p.Path, "/") + "/#" + u.Fragment
+	if hashMode {
+		if f := routeFragment(u.Fragment); f != "" {
+			p.Path = strings.TrimSuffix(p.Path, "/") + "/#" + f
+		}
 	}
 	if len(p.Path) > 1 {
 		p.Path = strings.TrimSuffix(p.Path, "/")

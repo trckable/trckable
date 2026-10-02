@@ -1,7 +1,7 @@
 package ingest
 
 import (
-	"hash/fnv"
+	"hash/maphash"
 	"sync"
 	"time"
 )
@@ -19,12 +19,25 @@ const (
 	perIPBurst = 2000
 )
 
+// A bucket nobody has touched for this long is forgotten. The limiter holds
+// an address only as a keyed hash, in memory, and only for as long as that
+// address is active.
+const (
+	idleAfter  = 10 * time.Minute
+	sweepEvery = time.Minute
+)
+
 type limiter struct {
-	rate   float64 // tokens per second
-	burst  float64
+	rate  float64 // tokens per second
+	burst float64
+	// seed keys the hash of every address. It is random per process and never
+	// leaves it, so the keys in the maps cannot be turned back into addresses
+	// by hashing a list of them.
+	seed   maphash.Seed
 	shards [64]struct {
 		sync.Mutex
-		m map[uint64]*bucket
+		m     map[uint64]*bucket
+		swept time.Time
 	}
 }
 
@@ -34,7 +47,7 @@ type bucket struct {
 }
 
 func newLimiter(rate, burst float64) *limiter {
-	l := &limiter{rate: rate, burst: burst}
+	l := &limiter{rate: rate, burst: burst, seed: maphash.MakeSeed()}
 	for i := range l.shards {
 		l.shards[i].m = make(map[uint64]*bucket)
 	}
@@ -42,15 +55,21 @@ func newLimiter(rate, burst float64) *limiter {
 }
 
 func (l *limiter) allow(key string, now time.Time) bool {
-	h := fnv.New64a()
-	h.Write([]byte(key))
-	k := h.Sum64()
+	k := maphash.String(l.seed, key)
 	s := &l.shards[k%uint64(len(l.shards))]
 	s.Lock()
 	defer s.Unlock()
+	if now.Sub(s.swept) >= sweepEvery {
+		for kk, bb := range s.m {
+			if now.Sub(bb.last) > idleAfter {
+				delete(s.m, kk)
+			}
+		}
+		s.swept = now
+	}
 	b, ok := s.m[k]
 	if !ok {
-		if len(s.m) > 50_000 { // bound memory: drop idle buckets
+		if len(s.m) > 50_000 { // bound memory in a flood: drop whatever is merely quiet
 			for kk, bb := range s.m {
 				if now.Sub(bb.last) > time.Minute {
 					delete(s.m, kk)
