@@ -8,6 +8,7 @@ import { Ghost } from '../../components/Logo'
 import type { Site, Visit } from '../../lib/api'
 import type { Ctx } from '../../lib/install'
 import { CheckPanel } from './CheckPanel'
+import { FirstActions } from './FirstActions'
 import { aiPrompt, copy, waitCard as t } from './copy'
 import { MethodPanel } from './MethodPanel'
 import { MethodTabs } from './MethodTabs'
@@ -23,7 +24,8 @@ function Sub({ id, where, domain }: { id: string; where: string; domain: string 
   )
 }
 
-export function WaitingCard({ site, visits, ctx, pick, onPick }: { site: Site; visits: Visit[]; ctx: Ctx; pick: string; onPick: (id: string) => void }) {
+/** setup: inside the first run, which shows these actions on its own next screen. */
+export function WaitingCard({ site, visits, ctx, pick, onPick, setup }: { site: Site; visits: Visit[]; ctx: Ctx; pick: string; onPick: (id: string) => void; setup?: boolean }) {
   const [started, setStarted] = useState(false)
   const [copied, setCopied] = useState(false)
   const first = visits[0]
@@ -64,6 +66,7 @@ export function WaitingCard({ site, visits, ctx, pick, onPick }: { site: Site; v
         </button>
       </div>
       {started && <CheckPanel state={check.state} domain={site.domain} first={first} onAgain={check.start} />}
+      {!setup && <FirstActions site={site} />}
       <p className="faint wait-foot">{t.foot}</p>
     </section>
   )

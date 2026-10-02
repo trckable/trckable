@@ -56,3 +56,4 @@ const BY_GROUP: Record<Method['group'], string> = {
 export const docsFor = (m: Method) => DOCS + (PAGES[m.id] ?? BY_GROUP[m.group])
 
 export const PRIVACY_DOCS = DOCS + 'privacy/'
+export const MIGRATE_DOCS = DOCS + 'migrate/'

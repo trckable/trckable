@@ -18,7 +18,7 @@ const KINDS: { id: Alert['kind']; label: string; Icon: typeof Bell; before?: str
   { id: 'spike', label: 'Busy day', Icon: TrendingUp, before: 'Today reaches', unit: '× a normal day', fallback: 3, hint: () => 'and at least 50 visitors' },
   { id: 'customer', label: 'Someone paid', Icon: Banknote, fallback: 0, hint: () => 'New payments since the last message, at most once every six hours' },
   { id: 'disk', label: 'Disk filling up', Icon: HardDrive, before: 'Less than', unit: 'days of room left', fallback: 14, hint: () => 'at the rate the last week wrote' },
-  { id: 'weekly', label: 'Weekly report', Icon: CalendarDays, fallback: 0, hint: (site) => `${DAYS[site.week_start === 0 ? 0 : 1]} from 8:00: last week's visitors, sources, pages, goals and revenue` },
+  { id: 'weekly', label: 'Weekly report', Icon: CalendarDays, fallback: 0, hint: (site) => `${DAYS[site.week_start === 0 ? 0 : 1]} from 8:00: last week's visitors, sources, pages, goals and revenue, then what changed` },
   { id: 'milestone', label: 'Milestone reached', Icon: Trophy, fallback: 0, hint: () => 'A round number, the day after it is reached; money without the amount' },
 ]
 

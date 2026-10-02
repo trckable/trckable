@@ -11,6 +11,7 @@ import { signOut } from '../../lib/signOut'
 import { navigate } from '../../lib/url'
 import { useLive } from '../../lib/useLive'
 import { useFocusTrap } from '../install/useFocusTrap'
+import { FirstActions } from '../install/FirstActions'
 import { Install } from '../install/Install'
 import { copy } from './copy'
 import { Dots } from './Dots'
@@ -128,6 +129,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
           </h1>
           <p className="muted">{subs[step]}</p>
           {step === 'site' && <SiteStep domain={domain} onDomain={setDomain} busy={busy} ready={!!clean} onSubmit={create} />}
+          {step === 'here' && site && <FirstActions site={site} quiet />}
           {step === 'here' && (
             <div className="ob-actions">
               <button type="button" className="btn primary big" onClick={next}>
@@ -145,7 +147,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
         </div>
         {step === 'install' && site ? (
           <div className="ob-install">
-            <Install site={site} visits={stream.visits} variant="card" />
+            <Install site={site} visits={stream.visits} variant="card" setup />
           </div>
         ) : (
           <Preview domain={shown} visits={stream.visits} />
