@@ -777,9 +777,27 @@ textarea:focus-visible {
 .bl-row:focus-visible .bl-chg {
   opacity: 0;
 }
+/* A row's last 30 days, between its name and its number. */
+.bl-spark {
+  flex: none;
+  display: flex;
+  align-items: center;
+  width: 56px;
+  height: 18px;
+  color: var(--text-3);
+}
+.bl-row:hover .bl-spark,
+.bl-row:focus-visible .bl-spark {
+  color: var(--accent);
+}
 @container (max-width: 340px) {
   .bl-sub,
   .bl-cols .bl-sub {
+    display: none;
+  }
+}
+@container (max-width: 420px) {
+  .bl-spark {
     display: none;
   }
 }
@@ -788,12 +806,6 @@ textarea:focus-visible {
   color: var(--text-3);
   font-size: 13px;
   text-align: center;
-}
-.goals-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
 }
 
 /* ---- chart ---- */

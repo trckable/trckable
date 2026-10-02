@@ -5,7 +5,8 @@
 // screen's own.
 import { useEffect, useMemo, useState } from 'react'
 import { SideCard } from '../../components/SideCard/SideCard'
-import { api, type Site } from '../../lib/api'
+import type { Site } from '../../lib/api'
+import { more } from '../../lib/apiMore'
 import { setView } from '../../lib/url'
 import { openSettings } from '../../lib/settings'
 import { first } from '../install/firstCopy'
@@ -24,7 +25,7 @@ export function Discover({ site, today, onAway }: { site: Site; today: string; o
   const [kept, setKept] = useState(() => keptOf(site.id))
   useEffect(() => {
     let live = true
-    api
+    more
       .searchConsole(site.id)
       .then((r) => live && setSearch(r.connected))
       .catch(() => live && setSearch(true)) // on error assume it is set up: never nag on a guess

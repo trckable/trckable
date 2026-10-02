@@ -262,6 +262,7 @@
   }
   .bl-tail,
   .bl-sub,
+  .bl-spark,
   .bl-cols .bl-sub {
     display: none;
   }

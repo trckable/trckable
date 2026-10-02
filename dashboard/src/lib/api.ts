@@ -445,10 +445,10 @@ function dropAfterWrite(path: string) {
 }
 
 /** A request whose answer has nothing to read: a 204, or a body nobody needs. */
-const act = (method: string, path: string, body?: unknown): Promise<void> => call<unknown>(method, path, body).then(() => undefined)
+export const act = (method: string, path: string, body?: unknown): Promise<void> => call<unknown>(method, path, body).then(() => undefined)
 
 /** A body that is not JSON (today: a profile picture). */
-async function raw(method: string, path: string, body: Blob): Promise<void> {
+export async function raw(method: string, path: string, body: Blob): Promise<void> {
   const res = await fetch('/api/v1' + path, {
     method,
     credentials: 'same-origin',
@@ -758,112 +758,26 @@ export const api = {
     me: call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean }>('GET', '/me', undefined, undefined, true).catch(() => null),
     sites: call<{ sites: Site[] }>('GET', '/sites', undefined, undefined, true).catch(() => null),
   }),
-  setKeys: (keys: Record<string, string>) => call<{ keys: Record<string, string> }>('PUT', '/me/keys', { keys }),
   sites: () => call<{ sites: Site[] }>('GET', '/sites'),
   siteLayout: () => call<SiteLayout>('GET', '/site-layout'),
   setSiteLayout: (l: SiteLayout) => call<SiteLayout>('PUT', '/site-layout', l),
-  createSite: (domain: string) => call<Site>('POST', '/sites', { domain }),
-  updateSite: (id: string, patch: { name?: string; timezone?: string; currency?: string }) => call<Site>('PATCH', `/sites/${id}`, patch),
-  deleteSite: (id: string, domain: string) => call<{ events: number; sessions: number; payments: number; connections: number }>('DELETE', `/sites/${id}`, { domain }),
-  findPerson: (site: string, by: 'visitor' | 'email', value: string) =>
-    call<{ found: PersonFound; payments: PersonPayment[] }>('GET', `/sites/${site}/privacy/person?${by}=${encodeURIComponent(value)}`),
-  exportPersonURL: (site: string, by: 'visitor' | 'email', value: string) => `/api/v1/sites/${site}/privacy/export?${by}=${encodeURIComponent(value)}`,
-  erasePerson: (site: string, by: 'visitor' | 'email', value: string) =>
-    call<{ visitor: string; events: number; sessions: number; payments: number; kept?: string }>(
-      'DELETE',
-      `/sites/${site}/privacy/person?${by}=${encodeURIComponent(value)}`,
-    ),
-  turnOffTwoStepFor: (id: string, password: string, code?: string) => act('POST', `/people/${id}/two-step/off`, { password, code }),
-  startOverKeys: (password: string) => call<{ connections: number }>('POST', '/payments/start-over', { password }),
   milestones: (site: string, next = false) => call<Milestones>('GET', `/sites/${encodeURIComponent(site)}/milestones${next ? '?next=1' : ''}`),
   closeMilestones: (site: string, keys: [string, string][]) => act('POST', `/sites/${encodeURIComponent(site)}/milestones/seen`, { keys }),
 
-  deletePreview: (site: string) => call<Record<string, number>>('GET', `/sites/${encodeURIComponent(site)}/delete-preview`),
-  widgets: (site: string) => call<{ widgets: Widget[]; base: string }>('GET', `/sites/${site}/widgets`),
-  createWidget: (site: string, w: WidgetLook) => call<Widget>('POST', `/sites/${site}/widgets`, w),
-  updateWidget: (site: string, id: string, w: WidgetLook & { on: boolean }) => call<Widget>('PUT', `/sites/${site}/widgets/${id}`, w),
-  deleteWidget: (site: string, id: string) => act('DELETE', `/sites/${site}/widgets/${id}`),
-  shares: (site: string) => call<{ shares: Share[]; base: string }>('GET', `/sites/${site}/shares`),
-  updateShare: (site: string, id: string, notes: boolean) => call<{ notes: boolean }>('PATCH', `/sites/${site}/shares/${id}`, { notes }),
-  createShare: (site: string, body: { name: string; password?: string; revenue: boolean; notes?: boolean; days: number; embed_origins?: string[] }) =>
-    call<{ share: Share; url: string }>('POST', `/sites/${site}/shares`, body),
-  deleteShare: (site: string, id: string) => act('DELETE', `/sites/${site}/shares/${id}`),
-  /** A new address for a link; the old one stops working. */
-  newShareAddress: (site: string, id: string) => call<{ url: string }>('POST', `/sites/${site}/shares/${id}/address`, {}),
   openShare: (token: string, password?: string, embed?: boolean) => call<ShareInfo>('POST', '/share/open', { token, password, embed }),
   shareMe: () => call<ShareInfo>('GET', '/share/me'),
-  people: () => call<{ people: Person[] }>('GET', '/people'),
-  addPerson: (email: string, role: string) => call<Added>('POST', '/people', { email, role }),
-  setPersonRole: (id: string, role: string) => call<{ people: Person[] }>('PATCH', `/people/${id}`, { role }),
-  removePerson: (id: string) => act('DELETE', `/people/${id}`),
-  siteAccess: () => call<SiteAccessList>('GET', '/site-access'),
-  setSiteAccess: (id: string, sites: string[] | null) => call<SiteAccessList>('PUT', `/site-access/${id}`, { sites }),
-  setSiteIcon: (site: string, picture: Blob) => raw('PUT', `/sites/${site}/icon`, picture),
-  clearSiteIcon: (site: string) => call<Brand>('DELETE', `/sites/${site}/icon`),
-  fetchSiteFavicon: (site: string) => call<Brand>('POST', `/sites/${site}/icon/favicon`),
-  setSiteColor: (site: string, color: string) => call<Brand>('PUT', `/sites/${site}/color`, { color }),
-  resetPersonPassword: (id: string, password: string, code?: string) => call<{ email: string; password: string }>('POST', `/people/${id}/password`, { password, code }),
-  changePassword: (current: string, password: string) => act('POST', '/account/password', { current, password }),
-  twoStep: () => call<TwoStep>('GET', '/account/2fa'),
-  startTwoStep: (password: string, code?: string) => call<{ secret: string; uri: string }>('POST', '/account/2fa/start', { password, code }),
-  enableTwoStep: (password: string, code: string) => call<{ recovery: string[] }>('POST', '/account/2fa/enable', { password, code }),
-  // While two-step is on, changing it needs a code from the app (or a recovery code) as well.
-  disableTwoStep: (password: string, code: string) => act('POST', '/account/2fa/disable', { password, code }),
   profile: () => call<Profile>('GET', '/account'),
-  health: () => call<Health>('GET', '/health'),
-  setName: (name: string) => call<Profile>('PATCH', '/account', { name }),
-  setAvatar: (file: Blob) => raw('PUT', '/account/avatar', file),
-  clearAvatar: () => act('DELETE', '/account/avatar'),
   report: (site: string, q: ReportQuery, signal?: AbortSignal) => call<Report>('GET', reportURL(site, q), undefined, signal),
-  /** This server reads the site's homepage and looks for the snippet. */
-  checkInstall: (site: string) => call<InstallCheck>('POST', `/sites/${encodeURIComponent(site)}/install/check`),
   events: (site: string, limit = 20) =>
     call<{ events: { ts: string; path: string; kind: string; visitor?: string; goal?: string; channel?: string; country?: string; device?: string; browser?: string }[] }>(
       'GET',
       `/sites/${site}/events?limit=${limit}`,
     ),
-  keys: () => call<{ keys: APIKey[] }>('GET', '/keys'),
-  heatmap: (site: string, q: ReportQuery) => call<Heatmap>('GET', `/sites/${site}/report/heatmap` + rangeQS(q)),
-  funnel: (site: string, q: ReportQuery, steps: FunnelStep[]) => call<{ steps: FunnelResult[] }>('GET', `/sites/${site}/report/funnel` + rangeQS(q) + '&steps=' + encodeURIComponent(JSON.stringify(steps))),
-  journey: (site: string, visitor: string, q: ReportQuery) => call<JourneyResult>('GET', `/sites/${site}/journey/${visitor}` + rangeQS(q)),
-  siteConfig: (site: string) => call<SiteConfig>('GET', `/sites/${site}/config`),
-  setSiteConfig: (site: string, c: SiteConfig) => call<SiteConfig>('PUT', `/sites/${site}/config`, c),
-  alerts: (site: string) => call<{ alerts: Alert[]; kinds: string[]; mail?: boolean }>('GET', `/sites/${site}/alerts`),
-  saveAlert: (site: string, a: Partial<Alert>) => call<Alert>('PUT', `/sites/${site}/alerts`, a),
-  testAlert: (site: string, target: string) => act('POST', `/sites/${site}/alerts/test`, { target }),
   segments: (site: string) => call<{ segments: Segment[] }>('GET', `/sites/${site}/segments`),
-  saveSegment: (site: string, name: string, query: string) => call<Segment>('POST', `/sites/${site}/segments`, { name, query }),
   renameSegment: (site: string, id: string, name: string) => call<Segment>('PATCH', `/sites/${site}/segments/${id}`, { name }),
   deleteSegment: (site: string, id: string) => act('DELETE', `/sites/${site}/segments/${id}`),
   annotations: (site: string, from: string, to: string) => call<{ annotations: Annotation[] }>('GET', shareMode ? `/share/annotations?from=${from}&to=${to}` : `/sites/${site}/annotations?from=${from}&to=${to}`),
-  addAnnotation: (site: string, day: string, text: string) => call<Annotation>('POST', `/sites/${site}/annotations`, { day, text }),
-  updateAnnotation: (site: string, id: string, day: string, text: string) => call<Annotation>('PATCH', `/sites/${site}/annotations/${id}`, { day, text }),
-  deleteAnnotation: (site: string, id: string) => act('DELETE', `/sites/${site}/annotations/${id}`),
-  searchConsole: (site: string) => call<{ connected: boolean; connection?: SearchConnection }>('GET', `/sites/${site}/search-console`),
-  setSearchConsole: (site: string, body: { key?: string; property?: string }) =>
-    call<{ connected: boolean; connection: SearchConnection; properties?: SearchProperty[] }>('PUT', `/sites/${site}/search-console`, body),
-  deleteSearchConsole: (site: string) => act('DELETE', `/sites/${site}/search-console`),
-  searchProperties: (site: string) => call<{ properties: SearchProperty[] }>('GET', `/sites/${site}/search-console/properties`),
-  searchReport: (site: string, q: ReportQuery, dim: 'query' | 'page', signal?: AbortSignal) =>
-    call<SearchReport>('GET', `/sites/${site}/report/search` + rangeQS(q) + '&dim=' + dim, undefined, signal),
-  overview: (days: number, signal?: AbortSignal) => call<{ days: number; sites: SiteRow[] }>('GET', `/overview?days=${days}`, undefined, signal),
-  scroll: (site: string, q: ReportQuery, signal?: AbortSignal) => call<ScrollReport>('GET', `/sites/${site}/report/scroll` + rangeQS(q) + '&limit=10', undefined, signal),
-  crawlers: (site: string, q: ReportQuery) => call<CrawlerReport>('GET', `/sites/${site}/report/crawlers` + rangeQS(q)),
-  vitals: (site: string, q: ReportQuery) => call<WebVitals>('GET', `/sites/${site}/report/vitals` + rangeQS(q)),
-  retention: (site: string, q: ReportQuery) => call<Cohorts>('GET', `/sites/${site}/report/retention` + rangeQS(q)),
   modules: (site: string) => call<{ modules: ModuleInfo[]; script: ScriptInfo }>('GET', `/sites/${site}/modules`),
-  setModule: (site: string, id: string, enabled: boolean) =>
-    call<{ modules: ModuleInfo[]; script: ScriptInfo }>('PUT', `/sites/${site}/modules/${id}`, { enabled }),
-  payments: (site: string) =>
-    call<{ connections: PayConnection[]; providers: Provider[]; webhook_base: string; key_error?: string }>('GET', `/sites/${site}/payments`),
-  connectPayments: (site: string, body: { provider: string; mode?: string; api_key?: string; secret?: string }) =>
-    call<PayConnection>('POST', `/sites/${site}/payments`, body),
-  disconnectPayments: (site: string, id: string) => act('DELETE', `/sites/${site}/payments/${id}`),
-  syncPayments: (site: string, id: string) => call<{ added: number }>('POST', `/sites/${site}/payments/${id}/sync`),
-  setPaymentSecret: (site: string, id: string, secret: string) => act('PATCH', `/sites/${site}/payments/${id}`, { secret }),
-  paymentSecret: (site: string, id: string) => call<{ secret: string }>('GET', `/sites/${site}/payments/${id}/secret`),
-  createKey: (name: string) => call<{ key: APIKey; secret: string }>('POST', '/keys', { name }),
-  revokeKey: (id: string) => act('DELETE', `/keys/${id}`),
 }
 
 // A tiny request cache so hovering, re-opening a period, or switching back to

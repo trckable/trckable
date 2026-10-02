@@ -2,8 +2,10 @@
 // is a lazy chunk, so Core never downloads it.
 import { useEffect, useMemo, useState } from 'react'
 import { Target } from 'lucide-react'
+import { EmptyState } from '../components/EmptyState'
 import { Picker } from '../components/Picker'
-import { api, type FunnelResult, type FunnelStep, type ReportQuery, type Row, type Site } from '../lib/api'
+import { openCreate } from '../features/create/openCreate'
+import { type FunnelResult, type FunnelStep, type ReportQuery, type Row, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { deepCopy } from '../features/cards/deepCopy'
 import { FunnelResult as Result } from '../features/cards/FunnelResult'
@@ -35,7 +37,7 @@ export function Funnel({ site, query, pages, goals, steps, onSteps: setSteps }: 
   useEffect(() => {
     if (active.length < 2) return
     let live = true
-    api
+    more
       .funnel(site.id, query, active)
       .then((d) => {
         if (!live) return
@@ -78,7 +80,7 @@ export function Funnel({ site, query, pages, goals, steps, onSteps: setSteps }: 
       </div>
 
       {err && <span className="faint">{err}</span>}
-      {active.length < 2 && !err && <span className="faint">{c.pick}</span>}
+      {active.length < 2 && !err && <EmptyState line={c.empty} action={c.emptyAction} onAction={openCreate} />}
       {res && <Result res={res} />}
     </div>
   )

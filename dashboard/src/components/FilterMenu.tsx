@@ -31,6 +31,7 @@ export function FilterMenu(p: {
         type="button"
         className={p.active.length ? 'btn ghost filter on' : 'btn ghost filter'}
         title={copy.filter}
+        data-key="filter"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={toggler(setOpen, open)}

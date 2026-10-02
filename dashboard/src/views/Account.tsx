@@ -1,21 +1,20 @@
 // The account dialog: everything that belongs to the person, not to the site
 // they happen to be looking at. It opens over whatever is on screen, so the
 // Settings page can stay about one site.
-import { BellRing, Camera, Eye, EyeOff, ImageUp, LockKeyhole, LogOut, ShieldCheck, SunMoon, Trash2 } from 'lucide-react'
+import { BellRing, Camera, Eye, EyeOff, ImageUp, LockKeyhole, LogOut, ShieldCheck, Trash2 } from 'lucide-react'
 import { Modal } from '../components/Modal'
 import { Window } from '../components/Window'
 import { PersonAvatar } from '../components/PersonAvatar'
 import { checksHere, setChecksHere } from '../lib/update'
 import { Switch } from '../components/Switch'
 import { Suspense, lazy, useEffect, useRef, useState, type ReactNode } from 'react'
-import { api, fail, refused, wrong, type Profile, type TwoStep as TwoStepState, type Site } from '../lib/api'
+import { api, fail, refused, wrong, type Profile, type TwoStep as TwoStepState, type Site, more } from '../lib/apiMore'
 import { toast } from '../components/Toast'
 import { closeAccount, openAccount, type AccountTab as Tab } from '../lib/account'
 import { confirm, confirmWith } from '../components/Confirm'
 import { DialogActions } from '../components/DialogActions'
 import { DialogHead } from '../components/DialogHead'
 import { Field } from '../components/Field'
-import { THEMES, useTheme } from '../lib/theme'
 import { isViewer } from '../lib/me'
 import { usePictureVersion } from '../lib/profile'
 import { SitesSettings } from './Sites'
@@ -27,6 +26,8 @@ import { Line } from './AccountLine'
 import { AccountHead } from './account/Head'
 import './Account.css'
 import { Keys } from './account/Keys'
+import { ThemeLine } from './account/ThemeLine'
+import { SaleLines, TabCountLine } from '../features/signals/PrefLines'
 import { People } from './account/People'
 
 // The setup wizard carries the QR encoder, so it is fetched only when someone
@@ -62,21 +63,6 @@ interface ProfileProps {
   onProfile: (p: Profile) => void
 }
 
-function ThemeLine() {
-  const [theme, pick] = useTheme()
-  return (
-    <Line icon={SunMoon} label="Theme" hint="System follows your device">
-      <div className="seg" role="group" aria-label="Theme">
-        {THEMES.map((t) => (
-          <button key={t} type="button" aria-pressed={theme === t} onClick={() => pick(t)}>
-            {t[0].toUpperCase() + t.slice(1)}
-          </button>
-        ))}
-      </div>
-    </Line>
-  )
-}
-
 function ProfileTab({ email, p, v, onProfile }: ProfileProps) {
   const [updates, setUpdates] = useState(checksHere())
   const [pw, setPw] = useState(false)
@@ -100,8 +86,14 @@ function ProfileTab({ email, p, v, onProfile }: ProfileProps) {
       </section>
 
       <section className="card acct-group">
-        <h2 className="acct-title">Preferences</h2>
+        <h2 className="acct-title">{acopy.appearance}</h2>
         <ThemeLine />
+        <TabCountLine />
+      </section>
+
+      <section className="card acct-group">
+        <h2 className="acct-title">Preferences</h2>
+        <SaleLines />
         {/* The check itself is in lib/update.ts: this browser, once a day, nothing about the instance sent. */}
         {!isViewer() && (
           <Line icon={BellRing} label="New versions" hint="Once a day this browser asks GitHub's list of releases. Nothing about this server is sent.">
@@ -130,7 +122,7 @@ function Me({ email, p, v, onProfile }: { email?: string; p: Profile | null; v: 
   // The crop dialog saves: it stays open with its button busy until the server
   // has the picture, shows the error if it refuses, and says Saved before it
   // closes.
-  const upload = (picture: Blob) => api.setAvatar(picture)
+  const upload = (picture: Blob) => more.setAvatar(picture)
   const uploaded = () => {
     setCropping(null)
     toast('Picture updated')
@@ -144,7 +136,7 @@ function Me({ email, p, v, onProfile }: { email?: string; p: Profile | null; v: 
       confirmLabel: 'Remove',
       busyLabel: 'Removing…',
       done: 'Picture removed',
-      run: () => api.clearAvatar(),
+      run: () => more.clearAvatar(),
     })
     if (ok && p) onProfile({ ...p, has_avatar: false })
     if (ok) window.dispatchEvent(new CustomEvent('trckable:profile'))
@@ -180,7 +172,7 @@ function Me({ email, p, v, onProfile }: { email?: string; p: Profile | null; v: 
           value={p?.name ?? ''}
           placeholder={email?.split('@')[0] ?? 'Your name'}
           onSave={(n) =>
-            api.setName(n).then((r) => {
+            more.setName(n).then((r) => {
               onProfile(r)
               window.dispatchEvent(new CustomEvent('trckable:profile'))
             })
@@ -225,7 +217,7 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
     if (!cur || !ok || same) return
     setBusy(true)
     setErr(null)
-    api
+    more
       .changePassword(cur, next)
       .then(() => {
         toast('Password changed — other devices were signed out')
@@ -294,7 +286,7 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
 function TwoStep() {
   const [state, setState] = useState<TwoStepState | null>(null)
   const [setup, setSetup] = useState(false)
-  const load = () => api.twoStep().then(setState).catch(() => {})
+  const load = () => more.twoStep().then(setState).catch(() => {})
   useEffect(() => {
     void load()
   }, [])
@@ -319,7 +311,7 @@ function TwoStep() {
       busyLabel: 'Turning off…',
       done: 'Two-step sign-in is off',
       // A wrong code or password is said in the dialog, which stays open for another go.
-      run: (code) => api.disableTwoStep(pw, code),
+      run: (code) => more.disableTwoStep(pw, code),
     })
     if (code !== null) void load()
   }

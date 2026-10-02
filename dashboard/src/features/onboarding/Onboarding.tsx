@@ -5,7 +5,7 @@
 // Its own lazy chunk: only the first run ever loads it.
 import { useEffect, useRef, useState } from 'react'
 import { Wordmark } from '../../components/Logo'
-import { api, fail, type Site } from '../../lib/api'
+import { fail, type Site, more } from '../../lib/apiMore'
 import { openAccount } from '../../lib/account'
 import { signOut } from '../../lib/signOut'
 import { navigate } from '../../lib/url'
@@ -51,9 +51,9 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
   const create = () => {
     setBusy(true)
     const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
-    api
+    more
       .createSite(clean)
-      .then((s) => api.updateSite(s.id, { timezone: zone }).catch(() => s))
+      .then((s) => more.updateSite(s.id, { timezone: zone }).catch(() => s))
       .then((s) => {
         setSite(s)
         setStep('install')

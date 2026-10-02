@@ -3,7 +3,7 @@
 // the arrow and the number only. Nothing at all when there is nothing to
 // compare with. The charted one is underlined, and a number that can be
 // charted is a button.
-import type { ComponentProps } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 import type { Delta } from '../../lib/format'
 import { useTween } from '../../lib/motion'
 import { KpiMark } from './kpiMark'
@@ -26,6 +26,8 @@ interface Props {
   onClick?: () => void
   money?: boolean
   loading?: boolean
+  /** A small line under the change (vs usual, the month's pace). Its room is kept while it is not there yet; undefined means no line. */
+  hint?: ReactNode
   /** Which mark stands before the name (KpiMarks). */
   icon?: ComponentProps<typeof KpiMark>['k']
 }
@@ -53,6 +55,7 @@ export function KpiTile(p: Props) {
       {p.d && !p.loading && !none && <Change d={p.d} vs={p.vs} />}
       {/* The change's line is kept while loading, and while a dash stands for nothing yet: the strip is as tall as it will be. */}
       {(p.loading || (none && p.d)) && <span className="kpi-delta" aria-hidden="true" />}
+      {p.hint !== undefined && !p.loading && <span className="kpi-hint">{p.hint}</span>}
     </>
   )
   if (!p.onClick) return <div className={cls}>{body}</div>

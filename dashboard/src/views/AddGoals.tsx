@@ -9,7 +9,7 @@ import { Field } from '../components/Field'
 import { Modal } from '../components/Modal'
 import { CodeBlock } from '../components/Code'
 import { OptionCards, type Option } from '../components/OptionCards'
-import { api, fail, type ContentGroup, type SiteConfig, type Site } from '../lib/api'
+import { fail, type ContentGroup, type SiteConfig, type Site, more } from '../lib/apiMore'
 import { isViewer } from '../lib/me'
 import { toast } from '../components/Toast'
 import { copy } from './addGoalsCopy'
@@ -61,14 +61,14 @@ function PageGoals({ site, pages, onChanged, onClose }: { site: Site; pages: str
   const [busy, setBusy] = useState(false)
   const viewer = isViewer()
   useEffect(() => {
-    api.siteConfig(site.id).then(setCfg).catch(() => setCfg(null))
+    more.siteConfig(site.id).then(setCfg).catch(() => setCfg(null))
   }, [site.id])
   const goals = cfg?.page_goals ?? []
 
   const save = (next: ContentGroup[], said: string) => {
     if (!cfg) return
     setBusy(true)
-    api
+    more
       .setSiteConfig(site.id, { ...cfg, page_goals: next })
       .then((r) => {
         setCfg(r)

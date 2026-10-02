@@ -1,6 +1,6 @@
 // The instance's health, read again every fifteen seconds while the tab is open.
 import { useEffect, useState } from 'react'
-import { api, type Health as H } from '../lib/api'
+import { type Health as H, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 
 export function useHealth() {
@@ -9,7 +9,7 @@ export function useHealth() {
   const [err, setErr] = useState<string | null>(null)
   useEffect(() => {
     const load = () => {
-      api
+      more
         .health()
         .then((r) => {
           setH(r)

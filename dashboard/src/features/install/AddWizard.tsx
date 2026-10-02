@@ -9,7 +9,7 @@ import { Name } from '../../components/Logo'
 import { Modal } from '../../components/Modal'
 import { StepBody } from '../../components/StepBody'
 import { Steps } from '../../components/Steps'
-import { api, fail, type Site } from '../../lib/api'
+import { fail, type Site, more } from '../../lib/apiMore'
 import { openSettings } from '../../lib/settings'
 import { navigate } from '../../lib/url'
 import { useLive } from '../../lib/useLive'
@@ -48,9 +48,9 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
     }
     setBusy(true)
     const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
-    api
+    more
       .createSite(clean)
-      .then((s) => api.updateSite(s.id, { timezone: zone }).catch(() => s))
+      .then((s) => more.updateSite(s.id, { timezone: zone }).catch(() => s))
       .then((s) => {
         setSite(s)
         onSites()

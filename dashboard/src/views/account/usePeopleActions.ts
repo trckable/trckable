@@ -1,6 +1,6 @@
 // What an owner can do to another person: change their role, give new
 // sign-in details, turn their two-step off, remove them.
-import { api, type Person } from '../../lib/api'
+import { type Person, more } from '../../lib/apiMore'
 import { confirm, confirmWith } from '../../components/Confirm'
 import { toast } from '../../components/Toast'
 import { people } from './peopleCopy'
@@ -15,7 +15,7 @@ const asOwner = async <T,>(o: Asked, act: (mine: string, code?: string) => Promi
   const t = people.own
   const password = { label: t.password, type: 'password', autoComplete: 'current-password' } as const
   // Not known (a failed read): ask for the code anyway; the server ignores it when two-step is off.
-  const on = await api.twoStep().then((s) => s.enabled).catch(() => true)
+  const on = await more.twoStep().then((s) => s.enabled).catch(() => true)
   if (!on) return confirmWith({ ...o, field: password, run: (mine) => act(mine) })
   const mine = await confirmWith({ ...o, done: undefined, busyLabel: undefined, confirmLabel: t.next, field: password })
   if (mine === null) return null
@@ -31,7 +31,7 @@ const asOwner = async <T,>(o: Asked, act: (mine: string, code?: string) => Promi
 export function peopleActions(o: { load: () => void; setPeople: (p: Person[]) => void; issue: (made: { email: string; password: string; reset?: boolean }) => void }) {
   // Called from the confirmation, which shows a refusal and stays open.
   const setRole = (p: Person, role: string) =>
-    api.setPersonRole(p.id, role).then((r) => {
+    more.setPersonRole(p.id, role).then((r) => {
       const name = p.name || p.email.split('@')[0]
       toast(role === 'owner' ? people.change.nowOwner(name) : people.change.nowViewer(name))
       o.setPeople(r.people ?? [])
@@ -39,7 +39,7 @@ export function peopleActions(o: { load: () => void; setPeople: (p: Person[]) =>
   const reset = async (p: Person) => {
     const t = people.reset
     let made: { email: string; password: string } | null = null
-    const pw = await asOwner({ title: t.title(p.email), body: t.body, confirmLabel: t.confirm, busyLabel: t.busy }, (mine, code) => api.resetPersonPassword(p.id, mine, code).then((r) => (made = r)))
+    const pw = await asOwner({ title: t.title(p.email), body: t.body, confirmLabel: t.confirm, busyLabel: t.busy }, (mine, code) => more.resetPersonPassword(p.id, mine, code).then((r) => (made = r)))
     if (pw !== null && made) {
       o.issue({ ...(made as { email: string; password: string }), reset: true })
       o.load()
@@ -49,12 +49,12 @@ export function peopleActions(o: { load: () => void; setPeople: (p: Person[]) =>
   // set two-step up again.
   const turnOff = async (p: Person) => {
     const t = people.twoStepOff
-    const pw = await asOwner({ title: t.title(p.email), body: t.body, confirmLabel: t.confirm, danger: true, busyLabel: t.busy, done: t.done(p.email) }, (mine, code) => api.turnOffTwoStepFor(p.id, mine, code))
+    const pw = await asOwner({ title: t.title(p.email), body: t.body, confirmLabel: t.confirm, danger: true, busyLabel: t.busy, done: t.done(p.email) }, (mine, code) => more.turnOffTwoStepFor(p.id, mine, code))
     if (pw !== null) o.load()
   }
   const remove = async (p: Person) => {
     const t = people.remove
-    const ok = await confirm({ title: t.title(p.email), body: t.body, confirmLabel: t.confirm, danger: true, busyLabel: t.busy, done: t.done(p.email), run: () => api.removePerson(p.id) })
+    const ok = await confirm({ title: t.title(p.email), body: t.body, confirmLabel: t.confirm, danger: true, busyLabel: t.busy, done: t.done(p.email), run: () => more.removePerson(p.id) })
     if (ok) o.load()
   }
   return { setRole, reset, turnOff, remove }

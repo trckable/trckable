@@ -14,6 +14,12 @@ const DEFAULTS: Record<string, string> = {
   mode: 'f',
   live: 'l',
   create: 'a',
+  site: 's',
+  user: 'u',
+  settings: ',',
+  filter: '/',
+  share: 'shift+s',
+  replay: 'r',
   back: 'arrowleft',
   forward: 'arrowright',
   compare: 'c',
@@ -46,7 +52,9 @@ export function comboOf(e: KeyboardEvent): string {
   // Some layouts report the shifted slash as "/" with Shift held.
   if (e.shiftKey && e.code === 'Slash') k = '?'
   if (k === ' ') k = 'space'
-  return (e.metaKey || e.ctrlKey ? 'mod+' : '') + (e.altKey ? 'alt+' : '') + k
+  // Shift makes a different key of a letter ("shift+s"); a symbol already says it is shifted.
+  const shift = e.shiftKey && /^[a-z]$/.test(k) ? 'shift+' : ''
+  return (e.metaKey || e.ctrlKey ? 'mod+' : '') + (e.altKey ? 'alt+' : '') + shift + k
 }
 
 /** Whether a key press is the one an action answers to. */
@@ -61,6 +69,7 @@ const NAMES: Record<string, string> = { arrowleft: '←', arrowright: '→', arr
 function cap(p: string): string {
   if (p === 'mod') return MAC ? '⌘' : 'Ctrl'
   if (p === 'alt') return MAC ? '⌥' : 'Alt'
+  if (p === 'shift') return MAC ? '⇧' : 'Shift'
   return NAMES[p] ?? p.toUpperCase()
 }
 

@@ -2,20 +2,21 @@
 // on a phone, and from the account dialog — the keys are the fastest way to
 // use trckable, so they should not be a secret.
 import { useEffect, useState } from 'react'
-import { Calendar, ChartSpline, Compass, Gauge, Keyboard, MousePointer2, MoveHorizontal, RotateCcw, Rows3, X } from 'lucide-react'
+import { Calendar, ChartSpline, Compass, Gauge, Keyboard, LayoutDashboard, MousePointer2, MoveHorizontal, RotateCcw, Rows3, X } from 'lucide-react'
 import { useConfirm } from '../components/Confirm'
 import { Modal } from '../components/Modal'
 import { toast } from '../components/Toast'
-import { api, fail } from '../lib/api'
+import { fail, more } from '../lib/apiMore'
 import { canAsk } from '../lib/me'
 import { caps, comboOf, customKeys, keyFor, loadKeymap, useKeymap } from '../lib/keys'
 import { ACTIONS, takenBy, type Group } from '../lib/shortcutList'
 import './Shortcuts.css'
 
-const ICON = { around: Compass, period: Calendar, mouse: MousePointer2 }
+const ICON = { around: Compass, page: LayoutDashboard, period: Calendar, mouse: MousePointer2 }
 
 const GROUPS: { id: Group | 'mouse'; title: string; hint: string }[] = [
   { id: 'around', title: 'Getting around', hint: 'Anywhere in trckable' },
+  { id: 'page', title: 'On a dashboard', hint: 'Its controls, by key' },
   { id: 'period', title: 'The period', hint: 'On a site’s dashboard' },
   { id: 'mouse', title: 'Reading the chart', hint: 'With the mouse or a finger' },
 ]
@@ -45,7 +46,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
   const changed = Object.keys(customKeys()).length > 0
 
   const save = (next: Record<string, string>, said: string) =>
-    api
+    more
       .setKeys(next)
       .then((r) => (loadKeymap(r.keys), toast(said)))
       .catch((e: unknown) => fail(e))
@@ -113,7 +114,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
                   danger: true,
                   busyLabel: 'Resetting…',
                   done: 'Shortcuts are back to the defaults',
-                  run: () => api.setKeys({}).then((r) => loadKeymap(r.keys)),
+                  run: () => more.setKeys({}).then((r) => loadKeymap(r.keys)),
                 })
               }} title="Put every key back as it came">
               <RotateCcw size={15} strokeWidth={1.75} aria-hidden="true" />
@@ -135,7 +136,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
         {GROUPS.map((g) => {
           const items = g.id === 'mouse' ? [] : ACTIONS.filter((a) => a.group === g.id && (a.id !== 'ask' || canAsk()))
           return (
-            <section key={g.id} className={'keys-group g-' + g.id + (items.length > 6 ? ' wide' : '')}>
+            <section key={g.id} className={'keys-group g-' + g.id + (g.id === 'period' ? ' wide' : '')}>
               <header>
                 <span className="keys-gicon">
                   {(() => {

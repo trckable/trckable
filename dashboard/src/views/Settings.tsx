@@ -1,7 +1,7 @@
 import { Activity, Bell, Blocks, Check, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, LayoutTemplate, RefreshCw, Search, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { isViewer } from '../lib/me'
-import { api, siteState, fail, type InstallCheck, type Site, type SiteState } from '../lib/api'
+import { api, siteState, fail, type InstallCheck, type Site, type SiteState, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { Window, type WindowTab } from '../components/Window'
 import { SettingsHead } from './SettingsHead'
@@ -79,7 +79,7 @@ function ModuleOff({ site, tab, onOn }: { site: Site; tab: TabID; onOn: () => vo
           disabled={busy}
           onClick={() => {
             setBusy(true)
-            api
+            more
               .setModule(site.id, id, true)
               .then(onOn)
               .catch((e: unknown) => fail(e))
@@ -188,7 +188,7 @@ function InstallSection({ site }: { site: Site }) {
     const t0 = Date.now()
     const wait = (ms: number) => new Promise((r) => setTimeout(r, Math.max(0, ms - (Date.now() - t0))))
     setPend({ page: true, visits })
-    const pageP = api.checkInstall(site.id).catch((e: unknown): InstallCheck => ({ url: `https://${site.domain}/`, scripts: 0, error: words(e) }))
+    const pageP = more.checkInstall(site.id).catch((e: unknown): InstallCheck => ({ url: `https://${site.domain}/`, scripts: 0, error: words(e) }))
     const lastP = visits ? latest() : null
     const [pg] = await Promise.all([pageP, wait(750)])
     setPage(pg)
@@ -374,7 +374,7 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
   const [name, setName] = useState(site.name)
   const [saved, flash] = useSaved()
   const save = (patch: { name?: string; timezone?: string; currency?: string }) =>
-    api
+    more
       .updateSite(site.id, { name, ...patch })
       .then(() => {
         flash()
@@ -412,7 +412,7 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
           value={site.name || site.domain}
           placeholder={site.domain}
           onSave={(n) =>
-            api.updateSite(site.id, { name: n || site.domain }).then(() => {
+            more.updateSite(site.id, { name: n || site.domain }).then(() => {
               setName(n || site.domain)
               flash()
               onSaved()
@@ -517,7 +517,7 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
             e.target.value = ''
           }}
         />
-        <button type="button" className="btn" disabled={!!busy} onClick={() => act('favicon', () => api.fetchSiteFavicon(site.id), 'Using the site\'s favicon')}>
+        <button type="button" className="btn" disabled={!!busy} onClick={() => act('favicon', () => more.fetchSiteFavicon(site.id), 'Using the site\'s favicon')}>
           {busy === 'favicon' && <span className="btn-spin" aria-hidden="true" />}
           {busy === 'favicon' ? `Looking at ${site.domain}…` : 'Use its favicon'}
         </button>
@@ -525,7 +525,7 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
           Upload
         </button>
         {site.icon_url && (
-          <button type="button" className="btn ghost" disabled={!!busy} onClick={() => act('remove', () => api.clearSiteIcon(site.id), 'Icon removed')}>
+          <button type="button" className="btn ghost" disabled={!!busy} onClick={() => act('remove', () => more.clearSiteIcon(site.id), 'Icon removed')}>
             Remove
           </button>
         )}
@@ -541,7 +541,7 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
               aria-label={c}
               className="swatch"
               style={{ backgroundColor: c }}
-              onClick={() => api.setSiteColor(site.id, c).then(onSaved).catch((e: unknown) => fail(e))}
+              onClick={() => more.setSiteColor(site.id, c).then(onSaved).catch((e: unknown) => fail(e))}
             />
           ))}
           <label className="swatch custom" title="Another colour">
@@ -554,14 +554,14 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
                 const c = e.target.value
                 clearTimeout(colourTimer.current)
                 colourTimer.current = setTimeout(() => {
-                  api.setSiteColor(site.id, c).then(onSaved).catch((err: unknown) => fail(err))
+                  more.setSiteColor(site.id, c).then(onSaved).catch((err: unknown) => fail(err))
                 }, 400)
               }}
               aria-label="Another colour"
             />
           </label>
           {site.color && (
-            <button type="button" className="btn ghost small" onClick={() => api.setSiteColor(site.id, '').then(onSaved).catch((e: unknown) => fail(e))}>
+            <button type="button" className="btn ghost small" onClick={() => more.setSiteColor(site.id, '').then(onSaved).catch((e: unknown) => fail(e))}>
               None
             </button>
           )}
@@ -574,7 +574,7 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
             square
             title="The site's icon"
             onCancel={() => setCropping(null)}
-            onSave={(picture) => api.setSiteIcon(site.id, picture)}
+            onSave={(picture) => more.setSiteIcon(site.id, picture)}
             onDone={() => {
               setCropping(null)
               toast('Icon saved')

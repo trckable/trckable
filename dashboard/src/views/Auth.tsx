@@ -2,7 +2,7 @@
 // in the URL fragment so it never reaches access logs) and sign-in.
 import { Suspense, lazy, useEffect, useState, type ReactNode, type SubmitEvent } from 'react'
 import { Wordmark } from '../components/Logo'
-import { api, APIError, messageOf, type Site } from '../lib/api'
+import { api, APIError, messageOf, type Site, more } from '../lib/apiMore'
 import { browserZone } from '../lib/dates'
 import './Auth.css'
 
@@ -57,7 +57,7 @@ export function Setup({ onDone }: { onDone: (site: Site | null) => void }) {
       .then(async (r) => {
         history.replaceState(null, '', '/') // drop the token from the address bar
         // Reports count days in the site's timezone; start from the owner's.
-        const site = r.site ? await api.updateSite(r.site.id, { timezone: browserZone() }).catch(() => r.site) : null
+        const site = r.site ? await more.updateSite(r.site.id, { timezone: browserZone() }).catch(() => r.site) : null
         onDone(site)
       })
       .catch((e: unknown) => setError(messageOf(e)))
@@ -234,12 +234,12 @@ export function FirstPassword({ email, onDone }: { email?: string; onDone: () =>
     }
     setBusy(true)
     setError(null)
-    api
+    more
       .changePassword(current, password)
       // Two-step only for someone who has not got it: an owner's reset leaves
       // it on, and offering it again would say it was gone.
       .then(() =>
-        api
+        more
           .twoStep()
           .then((t) => (t.enabled ? onDone() : setStage('second')))
           .catch(() => setStage('second')),

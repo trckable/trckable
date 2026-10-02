@@ -3,7 +3,7 @@
 // the list opens and kept for a short while; the list never waits for them,
 // and shows no number until they are here.
 import { useEffect, useState } from 'react'
-import { api, type SiteRow } from '../../lib/api'
+import { type SiteRow, more } from '../../lib/apiMore'
 
 export interface Today {
   visitors: number
@@ -42,7 +42,7 @@ export function useToday(): Map<string, Today> | null {
   useEffect(() => {
     if (fresh()) return
     const ac = new AbortController()
-    api
+    more
       .overview(7, ac.signal)
       .then((r) => {
         kept = { at: Date.now(), by: todayOf(r.sites) }

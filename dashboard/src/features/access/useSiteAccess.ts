@@ -3,7 +3,7 @@
 // removed, made an owner); a save is a tick in People's sites popover, and the
 // server's answer replaces this list.
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { api, type Site, type SiteAccessList } from '../../lib/api'
+import { api, type Site, type SiteAccessList, more } from '../../lib/apiMore'
 
 export type SiteAccess = ReturnType<typeof useSiteAccess>
 /** A site as People draws it: its names and, when the owner set one, its look. */
@@ -14,9 +14,9 @@ export function useSiteAccess(people: unknown) {
   // The access list names the sites; their icons and colours come from the sites themselves.
   const [looks, setLooks] = useState<Map<string, Pick<Site, 'color' | 'icon_url'>>>(new Map())
   /** Rejects with the server's refusal, for the popup to show. */
-  const save = useCallback((id: string, sites: string[] | null) => api.setSiteAccess(id, sites).then(setList), [])
+  const save = useCallback((id: string, sites: string[] | null) => more.setSiteAccess(id, sites).then(setList), [])
   const reload = useCallback(() => {
-    const done = api
+    const done = more
       .siteAccess()
       .then((l) => {
         setList(l)
