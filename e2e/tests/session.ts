@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import type { Page } from '@playwright/test'
 import { API } from '../playwright.config'
 
 const BIN = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../server/bin/trckabled')
@@ -56,4 +57,14 @@ export async function exclusive<T>(name: string, fn: () => Promise<T>): Promise<
   } finally {
     rmSync(lock, { force: true })
   }
+}
+
+/** The report as a site with no payment provider connected answers it. Another suite connects one to example.com (landing.spec), and a suite about what an owner sees without payments must not depend on which ran first. */
+export async function withoutPayments(page: Page) {
+  await page.route(/\/api\/v1\/sites\/[^/]+\/report\?/, async (route) => {
+    const res = await route.fetch()
+    const body = await res.json()
+    for (const r of [body.current, body.previous]) if (r) delete r.money
+    await route.fulfill({ response: res, json: body })
+  })
 }

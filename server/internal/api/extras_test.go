@@ -56,6 +56,35 @@ func TestBurstsOfNeedMoney(t *testing.T) {
 	}
 }
 
+// The day a page's buyers fell away is read off its own days: the visitors it
+// had and the sales credited to them, and only where the report has money.
+func TestDropStartOfAPagesDays(t *testing.T) {
+	res := &query.Result{}
+	for d := 1; d <= 10; d++ {
+		res.Series = append(res.Series, query.Point{T: time.Date(2026, 9, d, 0, 0, 0, 0, time.UTC).Format("2006-01-02T15:04"), Visitors: 100})
+		n := int64(5)
+		if d > 6 {
+			n = 1
+		}
+		res.Sales = append(res.Sales, query.SaleBucket{T: res.Series[d-1].T, Count: n})
+	}
+	if got := dropStartOf(res); got != "" {
+		t.Fatalf("no money, no day: %q", got)
+	}
+	res.Money = &query.Money{Currency: "USD", Exponent: 2}
+	if got := dropStartOf(res); got != "2026-09-07" {
+		t.Fatalf("the buying rate fell on Sep 7, got %q", got)
+	}
+	// A day without a sale bucket is a day without sales.
+	res.Sales = res.Sales[:6]
+	if got := dropStartOf(res); got != "2026-09-07" {
+		t.Fatalf("days without a bucket sold nothing, got %q", got)
+	}
+	if got := dropStartOf(&query.Result{Money: res.Money}); got != "" {
+		t.Fatalf("no days: %q", got)
+	}
+}
+
 // While a period is still running its comparison stops at the same elapsed
 // time: today at 09:00 is set against yesterday until 09:00, not all of it.
 func TestFairPrevious(t *testing.T) {

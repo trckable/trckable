@@ -1,10 +1,19 @@
-// The chart's two extras in one chunk: the pace line in its head and the rings
-// over its plot. Asked for once the page is up; a chart never waits for either.
+// What the chart and the page draw beyond the numbers, in one chunk, asked for
+// once the page is up (a chart never waits for it): the pace line in the
+// chart's head, and the moments over its plot (which bring the card the Data
+// view says on its own, now and then).
+import MomentLayer from '../moments/MomentLayer'
 import PaceLine from './PaceLine'
-import ChartRings from './ChartRings'
 
-export type ExtraProps = ({ part: 'pace' } & Parameters<typeof PaceLine>[0]) | ({ part: 'rings' } & Parameters<typeof ChartRings>[0])
+export type ExtraProps =
+  | ({ part: 'pace' } & Parameters<typeof PaceLine>[0])
+  | ({ part: 'moments' } & Parameters<typeof MomentLayer>[0])
 
 export default function ChartExtras(p: ExtraProps) {
-  return p.part === 'pace' ? <PaceLine {...p} /> : <ChartRings {...p} />
+  switch (p.part) {
+    case 'pace':
+      return <PaceLine {...p} />
+    case 'moments':
+      return <MomentLayer {...p} />
+  }
 }

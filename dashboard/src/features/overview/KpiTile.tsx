@@ -27,7 +27,7 @@ interface Props {
   money?: boolean
   loading?: boolean
   /** Which mark stands before the name (KpiMarks). */
-  icon?: Exclude<ComponentProps<typeof KpiMark>['k'], 'pay'>
+  icon?: ComponentProps<typeof KpiMark>['k']
 }
 
 /** A number changes in a blink, not a count-up: switching period or number is instant. */

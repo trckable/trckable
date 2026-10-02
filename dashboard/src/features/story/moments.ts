@@ -12,6 +12,7 @@ export interface Moment {
   kind: MomentKind
   factor?: number
   referrer?: string
+  visitors?: number
   count?: number
   amount?: number
   channel?: string

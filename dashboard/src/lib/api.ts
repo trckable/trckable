@@ -90,6 +90,8 @@ export interface Site {
   proxy_key: string
   /** Unix seconds of the last event; absent means nothing has arrived yet. */
   last_event_at?: number
+  /** Unix seconds the site was added: what is only said in a site's first days. */
+  created_at?: number
   /** The site's own look, when the owner set one: #rrggbb, and its icon. */
   color?: string
   icon_url?: string

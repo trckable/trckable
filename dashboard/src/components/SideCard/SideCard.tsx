@@ -17,14 +17,16 @@ export interface SideCardProps {
   label: string
   /** The close button's name (the caller's words). */
   closeLabel: string
+  /** Someone asked for it (a click): it does not wait behind a card that came up by itself. */
+  asked?: boolean
   title: string
   onClose: () => void
   actions: ReactNode
   children?: ReactNode
 }
 
-export function SideCard({ id, label, closeLabel, title, onClose, actions, children }: SideCardProps) {
-  const mine = useSideCard(id)
+export function SideCard({ id, label, closeLabel, asked, title, onClose, actions, children }: SideCardProps) {
+  const mine = useSideCard(id, asked)
   const card = useRef<HTMLElement>(null)
   const before = useRef<Element | null>(null)
   useEffect(() => {

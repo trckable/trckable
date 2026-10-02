@@ -5,34 +5,35 @@
 import { useEffect, useState } from 'react'
 import { PRESETS } from './dates'
 
-export type Group = 'around' | 'period'
-export type Action = { id: string; label: string; group: Group; def: string }
+// The default key of each action; their names and groups are in the shortcuts
+// list (views/Shortcuts.tsx), which only loads when it is opened. Presets carry
+// their own default keys (lib/dates.ts). C is Compare's, so Create answers to A (add).
+const DEFAULTS: Record<string, string> = {
+  shortcuts: '?',
+  ask: 'mod+k',
+  mode: 'f',
+  live: 'l',
+  create: 'a',
+  back: 'arrowleft',
+  forward: 'arrowright',
+  compare: 'c',
+  ...Object.fromEntries(PRESETS.flatMap((p) => (p.key ? [['period.' + p.id, p.key]] : []))),
+}
 
-// Presets carry their own default keys (lib/dates.ts); the rest are listed here.
-export const ACTIONS: Action[] = [
-  { id: 'shortcuts', label: 'This list', group: 'around', def: '?' },
-  { id: 'ask', label: 'Peek', group: 'around', def: 'mod+k' },
-  { id: 'mode', label: 'Core ↔ Full', group: 'around', def: 'f' },
-  { id: 'live', label: 'Live ↔ Data', group: 'around', def: 'l' },
-  // C is Compare's, so Create answers to A (add).
-  { id: 'create', label: 'Create a goal, funnel or note', group: 'around', def: 'a' },
-  ...PRESETS.flatMap((p) => (p.key ? [{ id: 'period.' + p.id, label: p.label, group: 'period' as const, def: p.key }] : [])),
-  { id: 'back', label: 'Step back', group: 'period', def: 'arrowleft' },
-  { id: 'forward', label: 'Step forward', group: 'period', def: 'arrowright' },
-  { id: 'compare', label: 'Compare', group: 'period', def: 'c' },
-]
+/** The key an action answers to before anyone changes it. */
+export const defaultOf = (id: string): string => DEFAULTS[id] ?? ''
 
 let custom: Record<string, string> = {}
 
 /** The key each action answers to now. */
 export function keyFor(id: string): string {
-  return custom[id] ?? ACTIONS.find((a) => a.id === id)?.def ?? ''
+  return custom[id] ?? defaultOf(id)
 }
 
 /** Set by the boot code from /me, and again after each change. */
 export function loadKeymap(saved: Record<string, string> | undefined) {
   custom = {}
-  for (const [id, k] of Object.entries(saved ?? {})) if (ACTIONS.some((a) => a.id === id) && k) custom[id] = k
+  for (const [id, k] of Object.entries(saved ?? {})) if (id in DEFAULTS && k) custom[id] = k
   window.dispatchEvent(new CustomEvent('trckable:keys'))
 }
 
@@ -50,9 +51,6 @@ export function comboOf(e: KeyboardEvent): string {
 
 /** Whether a key press is the one an action answers to. */
 export const pressed = (e: KeyboardEvent, id: string) => comboOf(e) === keyFor(id)
-
-/** The action a key already belongs to, if any, so two never share one. */
-export const takenBy = (combo: string, except: string) => ACTIONS.find((a) => a.id !== except && keyFor(a.id) === combo)
 
 // navigator.platform is deprecated, but its replacement (userAgentData) is
 // Chromium-only and untyped; platform still answers everywhere.

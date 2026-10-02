@@ -14,6 +14,7 @@ type Moment struct {
 
 	Factor   float64 `json:"factor,omitempty"`   // spike: times the usual
 	Referrer string  `json:"referrer,omitempty"` // spike: who sent them
+	Visitors int64   `json:"visitors,omitempty"` // spike: visitors in the bucket
 	Count    int64   `json:"count,omitempty"`    // sale: payments in the bucket
 	Amount   int64   `json:"amount,omitempty"`   // sale: net, minor units
 	Channel  string  `json:"channel,omitempty"`  // sale: the channel that earned most of it

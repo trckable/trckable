@@ -8,6 +8,7 @@ import { call, reportURL, type Bucket, type ReportQuery } from '../../lib/api'
 import { isShared } from '../../lib/me'
 import { bucketLabel } from '../../charts/timeScale'
 import { channelLabel } from '../../lib/palette'
+import { markUsed } from '../moments/store'
 import { copy } from './copy'
 import { neighbour, periodOf, place, salesIn, type Moment } from './moments'
 import { StoryEnd } from './StoryEnd'
@@ -51,6 +52,7 @@ const leftOf = (i: number, n: number) => `calc(var(--plot-l) + (100% - var(--plo
 
 export default function Story(p: StoryProps) {
   const [list, setList] = useState<Moment[]>([])
+  useEffect(() => markUsed('replay'), []) // a card that offers Replay is not for someone who has played it
   const url = reportURL(p.site, { ...p.query, compare: undefined, daily: false, deep: false, bucket: p.bucket }).replace('/report?', '/moments?')
   useEffect(() => {
     // A shared link has no moments: its reader gets the plain replay.
