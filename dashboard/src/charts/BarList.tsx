@@ -7,6 +7,7 @@ import { useTween } from '../lib/motion'
 import { fmtInt, fmtPct } from '../lib/format'
 import { Loading } from '../components/loading/Loading'
 import { moveOf, shareOf } from './change'
+import { SPARK_H, SPARK_W, sparkPoints } from './sparkPath'
 import { kitCopy } from './copy'
 
 export interface BarItem {
@@ -37,12 +38,16 @@ export function BarList(p: {
   fmtSub?: (n: number) => string
   loading?: boolean
   emptyText?: string
+  /** Instead of the plain line: a list that has to be started (EmptyState). */
+  emptyState?: ReactNode
   onPick?: (key: string) => void
   onHover?: (key: string | null) => void
   pickLabel?: (key: string) => string
   barColor?: string
   money?: (minor: number) => string // shows a Revenue column
   byRevenue?: boolean // bars measure revenue (Top earners)
+  /** A small chart for each row (its key → a value per day). A list that is given it keeps the column while the charts load. */
+  spark?: Record<string, number[]>
 }) {
   const measure = (i: BarItem) => (p.byRevenue ? (i.rev ?? 0) : i.value)
   const max = Math.max(1, ...p.items.map(measure))
@@ -53,12 +58,13 @@ export function BarList(p: {
     <div className={'bl' + (p.money ? ' has-rev' : '') + (p.fmtSub ? ' wide-sub' : '')}>
       <div className="bl-cols">
         <span>{p.dimLabel}</span>
+        {p.spark && <span className="bl-spark" aria-hidden="true" />}
         <span className="bl-val">{p.valueLabel ?? kitCopy.visitors}</span>
         <span className="bl-tail" />
         {p.subLabel && <span className="bl-sub">{p.subLabel}</span>}
         {p.money && <span className="bl-rev">{kitCopy.revenue}</span>}
       </div>
-      {p.items.length === 0 && <div className="empty">{p.emptyText ?? 'Nothing here yet… peekaboo.'}</div>}
+      {p.items.length === 0 && (p.emptyState ?? <div className="empty">{p.emptyText ?? 'Nothing here yet… peekaboo.'}</div>)}
       {p.items.map((it) => {
         const share = shareOf(it.value, whole)
         return (
@@ -84,6 +90,7 @@ export function BarList(p: {
                 <i style={{ width: `${(measure(it) / max) * 100}%`, background: it.color ?? p.barColor }} />
               </span>
             </span>
+            {p.spark && <Spark values={p.spark[it.key]} />}
             <span className="bl-val num">
               <Count value={it.value} fmt={p.fmtValue} />
             </span>
@@ -116,4 +123,18 @@ function Change({ now, was }: { now: number; was: number | undefined }) {
  *  with its bar, instead of jumping. */
 function Count({ value, fmt = fmtInt }: { value: number; fmt?: (n: number) => string }) {
   return <>{fmt(Math.round(useTween(value, 120)))}</>
+}
+
+/** The row's last days as a line; the room is kept while they are on their way. */
+function Spark({ values }: { values?: number[] }) {
+  const pts = values ? sparkPoints(values) : ''
+  return (
+    <span className="bl-spark" aria-hidden="true">
+      {pts && (
+        <svg width={SPARK_W} height={SPARK_H} viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}>
+          <polyline points={pts} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </span>
+  )
 }

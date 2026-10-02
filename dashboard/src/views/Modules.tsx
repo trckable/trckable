@@ -7,7 +7,7 @@ import { DialogHead } from '../components/DialogHead'
 import { Modal } from '../components/Modal'
 import { useEffect, useState } from 'react'
 import { ModuleArt } from '../components/ModuleArt'
-import { api, fail, type ModuleInfo, type ScriptInfo, type Site } from '../lib/api'
+import { api, fail, type ModuleInfo, type ScriptInfo, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import './Modules.css'
 import { Loading } from '../components/loading/Loading'
@@ -41,7 +41,7 @@ export function ModulesSettings({ site }: { site: Site }) {
   const apply = (m: ModuleInfo, enabled: boolean) => {
     setBusy(m.id)
     setConfirm(null)
-    api
+    more
       .setModule(site.id, m.id, enabled)
       .then(take)
       .catch((e: unknown) => fail(e))

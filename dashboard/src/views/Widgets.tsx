@@ -3,7 +3,7 @@
 // script and sets no cookie; only the numbers its design shows are public.
 import { Activity, BadgeCheck, Banknote, CircleDot, Copy, ShieldCheck, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { api, fail, type Site, type Widget, type WidgetKind, type WidgetLook } from '../lib/api'
+import { fail, type Site, type Widget, type WidgetKind, type WidgetLook, more } from '../lib/apiMore'
 import { CodeBlock } from '../components/Code'
 import { Switch } from '../components/Switch'
 import { confirm } from '../components/Confirm'
@@ -82,7 +82,7 @@ export function WidgetsSettings({ site }: { site: Site }) {
   const [busy, setBusy] = useState(false)
   const [made, setMade] = useState<Widget | null>(null)
   const load = () =>
-    api
+    more
       .widgets(site.id)
       .then((r) => {
         setList(r.widgets)
@@ -104,7 +104,7 @@ export function WidgetsSettings({ site }: { site: Site }) {
     `/api/v1/sites/${encodeURIComponent(site.id)}/widgets/preview?kind=${l.kind}&theme=${l.theme}&accent=${encodeURIComponent(l.accent)}&radius=${l.radius}&shows=${l.shows.join(',')}`
   const create = () => {
     setBusy(true)
-    api
+    more
       .createWidget(site.id, look)
       .then((w) => {
         setMade(w)
@@ -240,7 +240,7 @@ function WidgetRow({ site, w, base, onChange }: { site: Site; w: Widget; base: s
   const [on, setOn] = useState(w.on)
   const toggle = () => {
     setOn(!on)
-    api
+    more
       .updateWidget(site.id, w.id, { ...w, on: !on })
       .then(() => {
         toast(on ? 'Widget off — its page answers not found' : 'Widget on')
@@ -287,7 +287,7 @@ function WidgetRow({ site, w, base, onChange }: { site: Site; w: Widget; base: s
                 danger: true,
                 busyLabel: 'Deleting…',
                 done: 'Widget deleted',
-                run: () => api.deleteWidget(site.id, w.id),
+                run: () => more.deleteWidget(site.id, w.id),
               })
               if (ok) onChange()
             }}

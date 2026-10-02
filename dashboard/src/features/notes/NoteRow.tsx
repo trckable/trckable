@@ -2,7 +2,7 @@
 // the chart; edit in place; delete behind the one confirmation dialog.
 import { Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { api, fail, type Annotation, type Site } from '../../lib/api'
+import { fail, type Annotation, type Site, more } from '../../lib/apiMore'
 import { isViewer } from '../../lib/me'
 import { confirm } from '../../components/Confirm'
 import { toast } from '../../components/Toast'
@@ -19,7 +19,7 @@ export function NoteRow({ n, site, onJump, onChanged }: { n: Annotation; site: S
       danger: true,
       busyLabel: copy.removing,
       done: copy.removed,
-      run: () => api.deleteAnnotation(site.id, n.id),
+      run: () => more.deleteAnnotation(site.id, n.id),
     }).then((ok) => ok && onChanged())
   return (
     <li className="note-row">
@@ -53,7 +53,7 @@ function NoteEdit({ n, site, onDone, onChanged }: { n: Annotation; site: Site; o
   }
   const save = () => {
     setBusy(true)
-    api
+    more
       .updateAnnotation(site.id, n.id, day, text)
       .then(() => {
         toast(copy.saved)

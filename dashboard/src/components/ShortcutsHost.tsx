@@ -1,9 +1,19 @@
 // Listens for the shortcuts key everywhere and opens the list. The list is
-// its own chunk: the key costs nothing until somebody presses it.
+// its own chunk: the key costs nothing until somebody presses it. The keys that
+// open a menu or press a button on the page (Switch site, Your menu, Settings,
+// Filter, Share, Replay) click the control that carries their name in
+// data-key, so a key does exactly what its button does, and nothing when the
+// page has no such button.
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { pressed } from '../lib/keys'
 
 const Shortcuts = lazy(() => import('../views/Shortcuts'))
+const CLICKS = ['site', 'user', 'settings', 'filter', 'share', 'replay']
+
+/** The control a shortcut stands for, when it is on the page, on screen and enabled. */
+function control(id: string): HTMLElement | undefined {
+  return [...document.querySelectorAll<HTMLElement>(`[data-key="${id}"]`)].find((el) => el.offsetParent !== null && !(el as HTMLButtonElement).disabled)
+}
 
 /** Open the list from anywhere: a menu item, a button, another dialog. */
 export function openShortcuts() {
@@ -20,6 +30,15 @@ export function ShortcutsHost() {
       if (pressed(e, 'shortcuts')) {
         e.preventDefault()
         setOpen((o) => !o)
+        return
+      }
+      // Under a dialog the page is not the one being used.
+      if (document.querySelector('[aria-modal="true"]')) return
+      const id = CLICKS.find((c) => pressed(e, c))
+      const button = id && control(id)
+      if (button) {
+        e.preventDefault()
+        button.click()
       }
     }
     window.addEventListener('trckable:shortcuts', show)

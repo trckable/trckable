@@ -22,6 +22,7 @@ export const copy = {
   dismiss: 'Dismiss',
   // The window.
   newMilestone: 'New milestone',
+  today: 'today',
   almostThere: 'Almost there',
   shareCard: 'Share the card',
   replayWay: 'Replay the way there',

@@ -2,13 +2,16 @@
 // the dashboard, plus one short report a week; everything else is noise. They
 // go to a webhook, because every tool already takes one, or to an email
 // address once the server has a mail server to use (TRCKABLE_SMTP_URL).
-import { Banknote, Bell, CalendarDays, Check, HardDrive, Mail, MessageSquare, Send, TrendingUp, TriangleAlert, Trophy, Webhook, WifiOff } from 'lucide-react'
+import { Banknote, Bell, CalendarDays, HardDrive, Send, TrendingUp, TriangleAlert, Trophy, WifiOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import './Alerts.css'
 import { Switch } from '../components/Switch'
-import { api, fail, type Alert, type Site } from '../lib/api'
+import { fail, type Alert, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { toast } from '../components/Toast'
+import { EmptyState } from '../components/EmptyState'
+import { WeeklyNow } from './WeeklyNow'
+import { advice, ago, kindOf, SEND_LABEL, SendIcon, shown, stored, whereOf } from './alertsParts'
 
 const DAYS = ['Sunday', 'Monday']
 
@@ -22,64 +25,13 @@ const KINDS: { id: Alert['kind']; label: string; Icon: typeof Bell; before?: str
   { id: 'milestone', label: 'Milestone reached', Icon: Trophy, fallback: 0, hint: () => 'A round number, the day after it is reached; money without the amount' },
 ]
 
-// Email addresses are stored as mailto: targets and shown without it.
-const shown = (t: string) => t.replace(/^mailto:/, '')
-const stored = (t: string) => (/^[^\s@/:]+@[^\s@/]+\.[^\s@/]+$/.test(t.trim()) ? 'mailto:' + t.trim() : t.trim())
-
-// What the destination is, from its address.
-function kindOf(t: string): { name: string; Icon: typeof Bell } | null {
-  const v = t.trim()
-  if (!v) return null
-  if (/^[^\s@/:]+@[^\s@/]+\.[^\s@/]+$/.test(v) || v.startsWith('mailto:')) return { name: 'Email', Icon: Mail }
-  if (/hooks\.slack\.com/.test(v)) return { name: 'Slack', Icon: MessageSquare }
-  if (/discord(app)?\.com\/api\/webhooks/.test(v)) return { name: 'Discord', Icon: MessageSquare }
-  if (/^https?:\/\//.test(v)) return { name: 'Webhook', Icon: Webhook }
-  return null
-}
-
-// The destination as the summary line names it: the address, or the host.
-function whereOf(target: string): string {
-  if (!target.trim()) return ''
-  if (target.includes('@') && !target.startsWith('http')) return shown(target)
-  try {
-    return new URL(stored(target)).host
-  } catch {
-    return target
-  }
-}
-
-// What to do about a failed test, in words.
-function advice(why: string): string {
-  if (/not reachable from outside|private|internal/i.test(why)) return 'Use a public https address: trckable never calls addresses inside your own network.'
-  if (/email is not set up|SMTP/i.test(why)) return 'Set TRCKABLE_SMTP_URL on the server, or send them to a webhook instead.'
-  if (/40[0-9]|invalid|not found/i.test(why)) return 'The other end refused it: check the webhook URL is complete and still active.'
-  if (/timeout|deadline|refused|no such host/i.test(why)) return 'The other end did not answer: check the address, or try again in a moment.'
-  return 'Check the address and try again.'
-}
-
-// The test button, by where the last test got to.
-const SEND_LABEL = { idle: 'Send a test', busy: 'Sending…', ok: 'Delivered', bad: 'Try again' }
-
-function SendIcon({ state }: { state?: 'busy' | 'ok' | 'bad' }) {
-  if (state === 'ok') return <Check size={15} strokeWidth={2.4} />
-  if (state === 'bad') return <TriangleAlert size={15} strokeWidth={2} />
-  return <Send size={15} strokeWidth={1.75} />
-}
-
-function ago(unix: number): string {
-  const s = Math.max(0, Date.now() / 1000 - unix)
-  if (s < 3600) return `${Math.max(1, Math.round(s / 60))} min ago`
-  if (s < 86400) return `${Math.round(s / 3600)} h ago`
-  return `${Math.round(s / 86400)} days ago`
-}
-
 export function AlertsSettings({ site }: { site: Site }) {
   const [list, setList] = useState<Alert[] | null>(null)
   const [target, setTarget] = useState('')
   const [mail, setMail] = useState(false)
   const [test, setTest] = useState<{ state: 'busy' | 'ok' | 'bad'; text: string } | null>(null)
   const load = () =>
-    api
+    more
       .alerts(site.id)
       .then((r) => {
         setList(r.alerts)
@@ -101,7 +53,7 @@ export function AlertsSettings({ site }: { site: Site }) {
       toast(mail ? 'Add a webhook URL or an email address first' : 'Add a webhook URL first', 'error')
       return
     }
-    return api
+    return more
       .saveAlert(site.id, next)
       .then(() => {
         const label = KINDS.find((k) => k.id === kind)?.label ?? kind
@@ -117,7 +69,7 @@ export function AlertsSettings({ site }: { site: Site }) {
     const to = stored(target)
     const set = (list ?? []).filter((a) => a.target !== to)
     if (!to || set.length === 0) return
-    Promise.all(set.map((a) => api.saveAlert(site.id, { ...a, target: to })))
+    Promise.all(set.map((a) => more.saveAlert(site.id, { ...a, target: to })))
       .then(() => {
         toast(`Alerts now go to ${to.startsWith('mailto:') ? shown(to) : new URL(to).host}`)
         return load()
@@ -129,7 +81,7 @@ export function AlertsSettings({ site }: { site: Site }) {
   const sendTest = () => {
     setTest({ state: 'busy', text: 'Sending a test…' })
     const seen = new Promise((r) => setTimeout(r, 900))
-    api
+    more
       .testAlert(site.id, stored(target))
       .then(async () => {
         await seen
@@ -230,6 +182,7 @@ export function AlertsSettings({ site }: { site: Site }) {
         {status()}
       </div>
 
+      {!target.trim() && !list.length && <EmptyState line="Alerts tell you when something needs you." action="Add where to send them" onAction={() => document.querySelector<HTMLInputElement>('.al-field input')?.focus()} />}
       <div className={'al-kinds' + (target.trim() ? '' : ' waiting')}>
         {KINDS.map((k) => {
           const a = find(k.id)
@@ -253,6 +206,7 @@ export function AlertsSettings({ site }: { site: Site }) {
                   )}
                 </span>
                 {a?.last_fired ? <span className="faint al-last">Last sent {ago(a.last_fired)}</span> : null}
+                {k.id === 'weekly' && mail && <WeeklyNow site={site.id} />}
               </span>
               <Switch on={isOn} label={k.label} disabled={!target.trim()} onChange={() => save(k.id, { enabled: !isOn })} />
             </div>

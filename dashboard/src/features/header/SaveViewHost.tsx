@@ -2,7 +2,7 @@
 // under a name, then the saved views reload. Its own chunk.
 import { lazy, Suspense } from 'react'
 import { toast } from '../../components/Toast'
-import { api, fail } from '../../lib/api'
+import { fail, more } from '../../lib/apiMore'
 
 const SaveViewDialog = lazy(() => import('../../components/SaveViewDialog').then((m) => ({ default: m.SaveViewDialog })))
 
@@ -12,7 +12,7 @@ export function SaveViewHost(p: { site: string; query: string; onClose: () => vo
       <SaveViewDialog
         onClose={p.onClose}
         onSave={(name) =>
-          api
+          more
             .saveSegment(p.site, name, p.query)
             .then(() => {
               toast(`Saved "${name}"`)

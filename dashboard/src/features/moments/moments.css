@@ -50,6 +50,25 @@
 .moment-mark:focus-visible {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--text) 35%, transparent);
 }
+/* "See it" lit it: a ring that spreads and fades twice. With reduced motion the ring just stays while it is lit. */
+.moment-mark.hit {
+  border-width: 2.5px;
+  background: color-mix(in srgb, var(--mk) 22%, var(--surface));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--mk) 35%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .moment-mark.hit {
+    animation: moment-hit 1.1s ease-out 2;
+  }
+}
+@keyframes moment-hit {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--mk) 60%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 14px color-mix(in srgb, var(--mk) 0%, transparent);
+  }
+}
 /* Markers that landed together are one, with how many. */
 .moment-n {
   position: absolute;

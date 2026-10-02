@@ -1,23 +1,25 @@
 // "Here's why": the card a marker opens, with the numbers and one action. The
-// click has already applied its filter; this says what it is. Markers that
-// landed together are listed under the numbers, each a button that moves the
+// click has already applied its filter; this says what it is (the same card as
+// the one on opening: its kind, when, the figure, the chart of the moment).
+// Markers that landed together are listed under it, each a button that moves the
 // card (and the filter) to it.
-import { SideCard } from '../../components/SideCard/SideCard'
+import type { Point } from '../../lib/api'
 import { copy } from './copy'
 import { openMark } from './open'
-import { PinBody } from './PinBody'
+import { PinCard } from './PinCard'
 import { say } from './words'
 
-export function WhyCard({ open, money, onShare, onPick }: { open: NonNullable<ReturnType<typeof openMark.get>>; money: (minor: number) => string; onShare?: () => void; onPick: (at: number) => void }) {
-  const said = say(open.pins[open.at], money)
+export function WhyCard({ open, site, series, money, onShare, onPick }: { open: NonNullable<ReturnType<typeof openMark.get>>; site: { id: string; timezone: string }; series: readonly Point[]; money: (minor: number) => string; onShare?: () => void; onPick: (at: number) => void }) {
   const close = () => openMark.set(null)
   return (
-    <SideCard
+    <PinCard
       id="moment-why"
       asked
-      label={said.title}
       closeLabel={copy.close}
-      title={said.title}
+      pin={open.pins[open.at]}
+      site={site}
+      series={series}
+      money={money}
       onClose={close}
       actions={
         onShare ? (
@@ -30,21 +32,21 @@ export function WhyCard({ open, money, onShare, onPick }: { open: NonNullable<Re
           </button>
         )
       }
-    >
-      <PinBody said={said} />
-      {open.pins.length > 1 && (
-        <ul className="why-more">
-          {open.pins.map((q, k) =>
-            k === open.at ? null : (
-              <li key={q.id}>
-                <button type="button" onClick={() => onPick(k)}>
-                  {say(q, money).line}
-                </button>
-              </li>
-            ),
-          )}
-        </ul>
-      )}
-    </SideCard>
+      extra={
+        open.pins.length > 1 && (
+          <ul className="why-more">
+            {open.pins.map((q, k) =>
+              k === open.at ? null : (
+                <li key={q.id}>
+                  <button type="button" onClick={() => onPick(k)}>
+                    {say(q, money).line}
+                  </button>
+                </li>
+              ),
+            )}
+          </ul>
+        )
+      }
+    />
   )
 }

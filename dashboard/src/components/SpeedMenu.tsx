@@ -3,7 +3,7 @@
 // opens upwards, since it sits at the foot of the chart.
 import { ChevronDown, Gauge } from 'lucide-react'
 import { Suspense, useEffect, useRef, useState } from 'react'
-import { copy } from '../features/overview/copy'
+import { speedCopy } from '../features/overview/speedCopy'
 import { fmtSecs, replaySeconds, speedOf } from '../features/overview/replayTime'
 import { lazyLoad, warm } from '../lib/lazyLoad'
 import './SpeedMenu.css'
@@ -32,7 +32,7 @@ export function SpeedMenu({ speed, points, onPick }: { speed: string; points: nu
     }
   }, [open])
   const cur = speedOf(speed)
-  const label = `${copy.speedNow(cur.name)}, ${copy.playsIn(fmtSecs(replaySeconds(points, cur.secs)))}`
+  const label = `${speedCopy.speedNow(cur.name)}, ${speedCopy.playsIn(fmtSecs(replaySeconds(points, cur.secs)))}`
   return (
     <div ref={root} className="speed-menu">
       <button ref={btn} type="button" className="btn speed-btn" aria-haspopup="menu" aria-expanded={open} aria-label={label} title={label} {...warm(SpeedPop.preload)} onClick={() => setOpen((o) => !o)}>

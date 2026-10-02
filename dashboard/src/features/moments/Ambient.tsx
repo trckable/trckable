@@ -5,7 +5,7 @@
 // link. A card someone asked for (a marker's, the Revenue tile's) takes its
 // place until it is closed (SideCard's `asked`). In the chart extras' chunk.
 import { useEffect, useState } from 'react'
-import type { Site } from '../../lib/api'
+import type { Point, Site } from '../../lib/api'
 import { todayIn } from '../../lib/dates'
 import { canChange } from '../../lib/me'
 import { readView, useLocation } from '../../lib/url'
@@ -18,11 +18,11 @@ import { useOneThing } from './useOneThing'
 import './moments.css'
 
 /** Not before the first visit: a site waiting for one has its install card. */
-export default function Ambient({ site }: { site: Site }) {
-  return site.last_event_at ? <Say site={site} /> : null
+export default function Ambient({ site, series }: { site: Site; series: readonly Point[] }) {
+  return site.last_event_at ? <Say site={site} series={series} /> : null
 }
 
-function Say({ site }: { site: Site }) {
+function Say({ site, series }: { site: Site; series: readonly Point[] }) {
   const today = todayIn(site.timezone)
   const [seen] = useState(() => visitOf(site.id, today))
   const [gone, setGone] = useState(seen.gone === today)
@@ -42,7 +42,7 @@ function Say({ site }: { site: Site }) {
     if (items?.length) markShown(site.id, today, items.map((p) => p.id))
   }, [items]) // eslint-disable-line react-hooks/exhaustive-deps -- once the findings are in
   if (gone || !found) return null
-  if (found.items.length) return <OneThing site={site} found={found} since={seen.prev} onAway={away} />
+  if (found.items.length) return <OneThing site={site} found={found} since={seen.prev} series={series} onAway={away} />
   if (!canChange() || !fresh) return null
   return <Discover site={site} today={today} onAway={away} />
 }

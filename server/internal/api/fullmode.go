@@ -526,6 +526,38 @@ func (a *API) testAlert(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// weeklyNowPerDay is how many times one person may have a site's weekly report
+// sent to them now, per day: it is a button, not a way to send mail.
+const weeklyNowPerDay = 3
+
+// sendWeeklyNow serves POST /api/v1/sites/{site}/alerts/weekly/send: last
+// week's report, to the address of the person who pressed the button. Never
+// to an address typed in the request, so it cannot be pointed at anyone else.
+func (a *API) sendWeeklyNow(w http.ResponseWriter, r *http.Request) {
+	site := r.PathValue("site")
+	if !a.siteExists(w, r) {
+		return
+	}
+	u := principalOf(r).user
+	if u == nil {
+		fail(w, http.StatusForbidden, "only a signed-in person can have the report sent to them")
+		return
+	}
+	if alerts.Mail == nil || a.SendWeekly == nil {
+		fail(w, http.StatusConflict, "email is not set up on this server: set TRCKABLE_SMTP_URL")
+		return
+	}
+	if !a.loginRate.allow("weekly-now:"+u.ID+":"+site, a.Now(), weeklyNowPerDay, 24*time.Hour) {
+		fail(w, http.StatusTooManyRequests, "that is enough for today: the report can be sent to you three times a day")
+		return
+	}
+	if err := a.SendWeekly(r.Context(), site, u.Email); err != nil {
+		fail(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"sent_to": u.Email})
+}
+
 // scroll is reading depth: how far down each page people got. It needs no
 // module, because every engagement ping already carries it.
 func (a *API) scroll(w http.ResponseWriter, r *http.Request) {

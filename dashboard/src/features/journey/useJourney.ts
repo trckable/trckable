@@ -2,7 +2,7 @@
 // asked again every 20 seconds, so "on the site now" and the current page
 // stay true while the dialog is open.
 import { useEffect, useMemo, useState } from 'react'
-import { api, type JourneyResult, type ReportQuery } from '../../lib/api'
+import { type JourneyResult, type ReportQuery, more } from '../../lib/apiMore'
 import { words } from '../../lib/errors'
 import { buildStory, type Story } from './model'
 
@@ -17,7 +17,7 @@ export function useJourney(site: string, visitor: string, query: ReportQuery): J
     let live = true
     let timer = 0
     const load = () => {
-      void api
+      void more
         .journey(site, visitor, query)
         .then((answer) => {
           if (!live) return

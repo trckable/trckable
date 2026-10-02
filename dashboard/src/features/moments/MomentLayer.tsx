@@ -7,13 +7,14 @@
 // (Ambient). In the chart extras' chunk, fetched when the chart is first drawn.
 import { Bot, Coins, Flag, Sparkles, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
 import { useEffect, useId, useMemo, useState } from 'react'
-import type { Bucket, ReportQuery, Site } from '../../lib/api'
+import type { Bucket, Point, ReportQuery, Site } from '../../lib/api'
 import { fmtDay, todayIn } from '../../lib/dates'
 import { readView, setView } from '../../lib/url'
 import { rangeOf } from '../../lib/dashQuery'
 import { patchFor } from './apply'
 import Ambient from './Ambient'
 import { copy } from './copy'
+import { HIT, HIT_MS } from './focus'
 import { pickMarks, placePins, type ChartGeo, type Mark } from './marks'
 import { openMark } from './open'
 import type { Pin, PinKind } from './pins'
@@ -30,6 +31,8 @@ export interface LayerProps {
   site: Site
   query: ReportQuery
   labels: string[]
+  /** The chart's own buckets, for the small chart on a card. */
+  series: readonly Point[]
   bucket: Bucket
   /** Writes an amount in the site's currency (a sale is only a moment where the reader sees revenue: the server leaves it out otherwise). */
   money: (minor: number) => string
@@ -41,8 +44,23 @@ export default function MomentLayer(p: LayerProps) {
   const pins = useMoments(p.site.id, p.query, p.bucket)
   const fmt = p.money
   const [shown, setShown] = useState<number | null>(null)
+  // The marker "See it" lit: for a moment, so the click always has something to show.
+  const [hit, setHit] = useState<string | null>(null)
   const id = useId()
   const current = openMark.use()
+  useEffect(() => {
+    let off: ReturnType<typeof setTimeout> | undefined
+    const on = (e: Event) => {
+      setHit((e as CustomEvent<string>).detail)
+      clearTimeout(off)
+      off = setTimeout(() => setHit(null), HIT_MS)
+    }
+    window.addEventListener(HIT, on)
+    return () => {
+      window.removeEventListener(HIT, on)
+      clearTimeout(off)
+    }
+  }, [])
   // The card belongs to the chart it was opened on: when the chart goes (another site, Replay), so does it.
   useEffect(() => () => openMark.set(null), [])
   const placed = useMemo(() => placePins(pins ?? [], p.labels, p.bucket), [pins, p.labels, p.bucket])
@@ -61,7 +79,7 @@ export default function MomentLayer(p: LayerProps) {
   const tip = marks.find((m) => m.i === shown)
   return (
     <>
-      <Ambient site={p.site} />
+      <Ambient site={p.site} series={p.series} />
       <div role="group" aria-label={copy.moments} className="moment-marks">
         {marks.map((m) => {
           const Icon = ICON[m.pin.kind] ?? Flag
@@ -70,7 +88,7 @@ export default function MomentLayer(p: LayerProps) {
             <button
               key={m.pin.id}
               type="button"
-              className={`moment-mark ${m.pin.kind}${current?.pins[0].id === m.pin.id ? ' on' : ''}`}
+              className={`moment-mark ${m.pin.kind}${current?.pins[0].id === m.pin.id ? ' on' : ''}${hit && (m.pin.id === hit || m.more.some((q) => q.id === hit)) ? ' hit' : ''}`}
               style={{ left: g.x(m.i), top: g.y(g.vals[m.i] ?? 0) }}
               aria-label={copy.marker(fmtDay(m.pin.day ?? ''), line, m.more.length)}
               aria-describedby={shown === m.i ? id : undefined}
@@ -95,6 +113,8 @@ export default function MomentLayer(p: LayerProps) {
       {current && (
         <WhyCard
           open={current}
+          site={p.site}
+          series={p.series}
           money={fmt}
           onShare={p.onShare}
           onPick={(at) => {

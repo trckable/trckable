@@ -199,8 +199,8 @@ test('⋯ runs what left the row, and the keys still work', async ({ page }) => 
 })
 
 test('each tile carries its change, readable without colour', async ({ page }) => {
-  // The demo data is 30 days old: a week has a week before it.
-  await open(page, '?period=7d')
+  // The demo data is 30 days old: a week has a week before it. Changes show with a comparison on.
+  await open(page, '?period=7d&compare=previous')
   const tiles = page.getByRole('group', { name: 'Key numbers' })
   const visitors = tiles.getByRole('button', { name: /^Visitors/ })
   await expect(visitors).toHaveAttribute('aria-pressed', 'true')

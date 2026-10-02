@@ -1,7 +1,7 @@
 // One card, one question: a title, the question it answers, the chart, a
 // key, and a switch to the same numbers as a table.
 import { useState, type ReactNode } from 'react'
-import { kitCopy } from './copy'
+import { kitLater } from './kitLater'
 import { DataTable, type TableData } from './DataTable'
 import { Legend, type LegendItem } from './Legend'
 import { Loading } from '../components/loading/Loading'
@@ -26,7 +26,7 @@ export function ChartCard(p: {
   const ready = !p.loading && !p.empty
   const body = () => {
     if (p.loading) return <Loading height={190} />
-    if (p.empty) return <p className="faint kit-empty">{p.emptyText ?? kitCopy.empty}</p>
+    if (p.empty) return <p className="faint kit-empty">{p.emptyText ?? kitLater.empty}</p>
     if (asTable) return <DataTable data={p.table} />
     return p.children
   }
@@ -39,11 +39,11 @@ export function ChartCard(p: {
         {ready && !asTable && (p.legend ? <Legend items={p.legend} /> : p.headKey)}
         {ready && (
           <div className="seg small kit-seg" role="group" aria-label={p.title}>
-            <button type="button" aria-pressed={!asTable} aria-label={kitCopy.showChart(p.title)} onClick={() => setAsTable(false)}>
-              {kitCopy.chart}
+            <button type="button" aria-pressed={!asTable} aria-label={kitLater.showChart(p.title)} onClick={() => setAsTable(false)}>
+              {kitLater.chart}
             </button>
-            <button type="button" aria-pressed={asTable} aria-label={kitCopy.showTable(p.title)} onClick={() => setAsTable(true)}>
-              {kitCopy.table}
+            <button type="button" aria-pressed={asTable} aria-label={kitLater.showTable(p.title)} onClick={() => setAsTable(true)}>
+              {kitLater.table}
             </button>
           </div>
         )}

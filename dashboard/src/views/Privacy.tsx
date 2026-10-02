@@ -4,7 +4,7 @@
 import { Clock, Cookie, Cookie as CookieIcon, EyeOff, MapPin, ShieldCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Switch } from '../components/Switch'
-import { api, fail, type BannerText, type ContentGroup, type PersonFound, type PersonPayment, type Site, type SiteConfig } from '../lib/api'
+import { api, fail, type BannerText, type ContentGroup, type PersonFound, type PersonPayment, type Site, type SiteConfig, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { Info } from '../components/Info'
 import { Picker } from '../components/Picker'
@@ -43,7 +43,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
   const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
-    api
+    more
       .siteConfig(site.id)
       .then((r) => {
         setC(r)
@@ -65,7 +65,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
     if (!c) return
     const next = { ...c, ...patch }
     setC(next)
-    api
+    more
       .setSiteConfig(site.id, next)
       .then((r) => {
         setC(r)
@@ -519,13 +519,13 @@ function PrivacyPolicy({ site, config, modules }: { site: Site; config: SiteConf
 export function ReportSettings({ site, onSites }: { site: Site; onSites?: () => void }) {
   const [c, setC] = useState<SiteConfig | null>(null)
   useEffect(() => {
-    api.siteConfig(site.id).then(setC).catch(() => {})
+    more.siteConfig(site.id).then(setC).catch(() => {})
   }, [site.id])
   if (!c) return null
   const save = (patch: Partial<SiteConfig>, said?: string) => {
     const next = { ...c, ...patch }
     setC(next)
-    api
+    more
       .setSiteConfig(site.id, next)
       .then((r) => {
         setC(r)
@@ -605,7 +605,7 @@ function DataRequest({ site }: { site: Site }) {
   const look = (who = value, how = by) => {
     setBusy(true)
     setFound(null)
-    api
+    more
       .findPerson(site.id, how, who.trim())
       .then(setFound)
       .catch((e: unknown) => fail(e, look))
@@ -629,7 +629,7 @@ function DataRequest({ site }: { site: Site }) {
       confirmLabel: 'Erase',
       danger: true,
       busyLabel: 'Erasing…',
-      run: () => api.erasePerson(site.id, by, value.trim()).then((r) => toast(`Erased ${r.events} events and ${r.sessions} visits`)),
+      run: () => more.erasePerson(site.id, by, value.trim()).then((r) => toast(`Erased ${r.events} events and ${r.sessions} visits`)),
     })
     if (ok) {
       setFound(null)
@@ -712,7 +712,7 @@ function DataRequest({ site }: { site: Site }) {
             <p className="faint" style={{ margin: 0, fontSize: 13 }}>Nothing is held for this visitor. There is nothing to export or erase.</p>
           ) : (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <a className="btn primary" href={api.exportPersonURL(site.id, by, value.trim())} download>
+              <a className="btn primary" href={more.exportPersonURL(site.id, by, value.trim())} download>
                 Download their data
               </a>
               <button type="button" className="btn danger" onClick={erase}>

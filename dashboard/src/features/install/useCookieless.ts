@@ -2,7 +2,7 @@
 // settings live (consent_free). It is the one source of truth: the server
 // writes it into the site's own script, so the snippet never has to change.
 import { useEffect, useState } from 'react'
-import { api, type SiteConfig } from '../../lib/api'
+import { type SiteConfig, more } from '../../lib/apiMore'
 import { isViewer } from '../../lib/me'
 import { toast } from '../../components/Toast'
 import { copy } from './copy'
@@ -21,7 +21,7 @@ export function useCookieless(site: string): Cookieless {
   const [saving, setSaving] = useState(false)
   useEffect(() => {
     let live = true
-    api
+    more
       .siteConfig(site)
       .then((c) => live && setCfg(c))
       .catch(() => {})
@@ -33,7 +33,7 @@ export function useCookieless(site: string): Cookieless {
   const set = (on: boolean) => {
     if (!cfg || saving) return
     setSaving(true)
-    api
+    more
       .setSiteConfig(site, { ...cfg, consent_free: on })
       .then((c) => {
         setCfg(c)

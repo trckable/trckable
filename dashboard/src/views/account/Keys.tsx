@@ -3,7 +3,7 @@
 import { KeyRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Loading } from '../../components/loading/Loading'
-import { api, type APIKey } from '../../lib/api'
+import { type APIKey, more } from '../../lib/apiMore'
 import { KeyRow } from './KeyRow'
 import { KeyTiles } from './KeyTiles'
 import { NewKeyRow } from './NewKeyRow'
@@ -13,7 +13,7 @@ import './people.css'
 export function Keys() {
   const [list, setList] = useState<APIKey[] | null>(null)
   const [creating, setCreating] = useState(false)
-  const load = () => void api.keys().then((r) => setList(r.keys ?? []))
+  const load = () => void more.keys().then((r) => setList(r.keys ?? []))
   useEffect(() => {
     load()
   }, [])

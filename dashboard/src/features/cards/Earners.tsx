@@ -2,11 +2,15 @@
 // (Compact's second card opens on Goals, so this waits for the tab).
 import { useState } from 'react'
 import { BarList } from '../../charts/BarList'
+import { EmptyState } from '../../components/EmptyState'
+import { canChange } from '../../lib/me'
+import { openSettings } from '../../lib/settings'
 import { channelColor, channelLabel } from '../../lib/palette'
 import { DIM_LABEL } from '../overview/dimLabels'
 import { cardCopy } from './copy'
 import type { CardsCtx } from './ctx'
 import { Tabs } from './Tabs'
+import { laterCopy } from './copyLater'
 
 const DIMS = ['channel', 'referrer', 'campaign', 'entry_page']
 
@@ -18,26 +22,27 @@ export default function EarnersPanel({ c }: { c: CardsCtx }) {
   return (
     <>
       <div className="tc-tools">
-        <div className="seg small" role="group" aria-label={cardCopy.credit}>
+        <div className="seg small" role="group" aria-label={laterCopy.credit}>
           <button type="button" aria-pressed={!c.attrFirst} onClick={() => c.onAttr(false)}>
-            {cardCopy.closedIt}
+            {laterCopy.closedIt}
           </button>
           <button type="button" aria-pressed={c.attrFirst} onClick={() => c.onAttr(true)}>
-            {cardCopy.foundThem}
+            {laterCopy.foundThem}
           </button>
         </div>
       </div>
-      <Tabs prefix={`earn-${c.site.id}`} label={cardCopy.earners} tabs={DIMS.map((d) => ({ id: d, label: d === 'entry_page' ? cardCopy.page : DIM_LABEL[d] }))} value={asked} onChange={setAsked} sub />
+      <Tabs prefix={`earn-${c.site.id}`} label={cardCopy.earners} tabs={DIMS.map((d) => ({ id: d, label: d === 'entry_page' ? laterCopy.page : DIM_LABEL[d] }))} value={asked} onChange={setAsked} sub />
       <BarList
         dimLabel={DIM_LABEL[asked]}
-        valueLabel={cardCopy.customers}
-        subLabel={cardCopy.perVisitor}
+        valueLabel={laterCopy.customers}
+        subLabel={laterCopy.perVisitor}
         fmtSub={c.fmtMoney}
         loading={c.loading}
         byRevenue
         money={c.fmtMoney}
         barColor="var(--money)"
-        emptyText={c.scrubbing ? cardCopy.wholePeriod : cardCopy.noRevenue}
+        emptyText={c.scrubbing ? laterCopy.wholePeriod : undefined}
+        emptyState={c.scrubbing ? undefined : <EmptyState line={laterCopy.noRevenue} action={canChange() ? laterCopy.noRevenueAction : undefined} onAction={() => openSettings(c.site, 'payments')} />}
         onPick={(v) => c.addFilter(asked, v)}
         items={(c.scrubbing ? [] : (c.revenueDims[asked] ?? [])).slice(0, c.rows).map((r) => {
           const seen = visitors.get(r.value)

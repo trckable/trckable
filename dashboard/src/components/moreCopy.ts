@@ -1,22 +1,5 @@
 // The header menus' words: the ⋯ next to the period (MoreMenu) and the avatar's (AccountMenu).
 export const copy = {
   more: 'More',
-  share: 'Share',
-  views: 'Views',
-  refresh: 'Refresh',
-  create: 'Create…',
-  core: 'Core view',
-  full: 'Full view',
-  export: 'Export as CSV',
-  shortcuts: 'Shortcuts',
-  theme: 'Theme',
-  themes: { system: 'Auto', dark: 'Dark', light: 'Light' },
   accountMenu: 'Account',
-  account: 'Profile',
-  signOut: 'Sign out',
-  owner: 'Owner',
-  viewer: 'Viewer',
-  accountLabel: 'Profile, your account',
-  milestones: 'Milestones',
-  milestonesNew: 'Milestones, new ones',
 }

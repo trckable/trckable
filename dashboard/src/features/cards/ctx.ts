@@ -21,7 +21,10 @@ export interface CardsCtx {
   /** The heading of the value column ("So far" while a race runs). */
   soFar?: string
   cur?: Result
+  /** The period before, for the change figures: only while a comparison is on. */
   prev?: Result
+  /** Whether a comparison is on: change figures show only then. */
+  compare: boolean
   dims: (dim: string) => Row[]
   sourceRows: (dim: string) => Row[]
   perDay: (dim: string) => boolean

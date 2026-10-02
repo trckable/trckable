@@ -1,7 +1,7 @@
 // What a toast is told with, apart from drawing it: a message said before the
 // host has loaded (it is its own chunk) waits here and is shown the moment it
 // does. Everything calls toast() / settle(); nothing else is needed.
-export type Kind = 'success' | 'info' | 'warning' | 'error' | 'busy'
+export type Kind = 'success' | 'info' | 'warning' | 'error' | 'busy' | 'sale'
 /** 'ok' is an older name for 'success'. */
 type Asked = Kind | 'ok'
 export type ToastAction = { label: string; run: () => void }

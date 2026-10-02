@@ -1,5 +1,6 @@
 // Card 2's first tab, what they did: the goals they reached.
 import { BarList, type BarItem } from '../../charts/BarList'
+import { EmptyState } from '../../components/EmptyState'
 import { cardCopy } from './copy'
 import type { CardsCtx } from './ctx'
 import { priorOf } from './prior'
@@ -8,12 +9,7 @@ export function GoalsPanel({ c }: { c: CardsCtx }) {
   // Nothing to list: one line and the button that starts one, not an empty table.
   if (!c.loading && c.goals.length === 0) {
     return (
-      <div className="empty goals-empty">
-        <span>{cardCopy.noGoals}</span>
-        <button type="button" className="btn ghost" onClick={c.onTrackGoal}>
-          {cardCopy.trackGoal}
-        </button>
-      </div>
+      <EmptyState line={cardCopy.noGoals} action={cardCopy.trackGoal} onAction={c.onTrackGoal} />
     )
   }
   return (

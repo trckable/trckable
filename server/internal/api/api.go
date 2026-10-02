@@ -54,14 +54,18 @@ type API struct {
 	// same reason; nil until the store is ready, and an erasure then is
 	// refused rather than half-done.
 	ErasePerson func(ctx context.Context, site string, visitor uint64) (events, sessions int64, err error)
-	BaseURL     string // public https address (TRCKABLE_BASE_URL), for webhook URLs
-	Version     string // this build's version, shown in the dashboard's footer
+	// SendWeekly sends a site's last weekly report to one address now (Settings →
+	// Alerts). Set by the server, which owns the report's words.
+	SendWeekly func(ctx context.Context, site, email string) error
+	BaseURL    string // public https address (TRCKABLE_BASE_URL), for webhook URLs
+	Version    string // this build's version, shown in the dashboard's footer
 	// Box seals the keys trckable stores for other services (Search Console).
 	Box *secrets.Box
 	// GSCHTTP replaces the HTTP client used to reach Google; tests only.
 	GSCHTTP    *http.Client
 	cache      *reportCache
-	nowCache   nowCache // Live mode's answers, two seconds each
+	nowCache   nowCache  // Live mode's answers, two seconds each
+	refIcons   *refIcons // the icons of referring sites, fetched and kept here
 	search     *searchState
 	searchOnce sync.Once
 	loginRate  *attempts
@@ -81,6 +85,7 @@ func (a *API) Stop() {
 func (a *API) init() {
 	a.once.Do(func() {
 		a.cache = newReportCache(256)
+		a.refIcons = newRefIcons()
 		a.loginRate = &attempts{m: map[string][]time.Time{}}
 		a.stopping = make(chan struct{})
 		if a.Now == nil {
@@ -180,6 +185,10 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/moments", a.authed(a.moments))
 	handle("GET /api/v1/sites/{site}/insights", a.authed(a.insights))
 	handle("GET /api/v1/sites/{site}/markers", a.authed(a.markers))
+	handle("GET /api/v1/sites/{site}/sparks", a.authed(a.sparks))
+	handle("GET /api/v1/referrer-icons", a.authed(a.referrerIcons))
+	handle("GET /api/v1/referrer-icons/{host}", a.authed(a.referrerIcon))
+	handle("GET /api/v1/sites/{site}/usual", a.authed(a.usual))
 	handle("GET /api/v1/sites/{site}/buyers", a.authed(a.buyers))
 	handle("GET /api/v1/sites/{site}/export.csv", a.authed(a.export))
 	handle("GET /api/v1/sites/{site}/events", a.authed(a.recent))
@@ -206,6 +215,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/alerts", a.authed(a.alertList))
 	handle("PUT /api/v1/sites/{site}/alerts", a.authed(a.saveAlert))
 	handle("POST /api/v1/sites/{site}/alerts/test", a.authed(a.testAlert))
+	handle("POST /api/v1/sites/{site}/alerts/weekly/send", a.authed(a.sendWeeklyNow))
 	handle("DELETE /api/v1/sites/{site}/alerts/{id}", a.authed(a.deleteAlert))
 	handle("GET /api/v1/sites/{site}/segments", a.authed(a.segments))
 	handle("POST /api/v1/sites/{site}/segments", a.authed(a.saveSegment))

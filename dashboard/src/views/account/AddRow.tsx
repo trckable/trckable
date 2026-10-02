@@ -2,7 +2,7 @@
 // Owner | Viewer. The password to pass on follows in its own dialog.
 import { X } from 'lucide-react'
 import { useState, type KeyboardEvent } from 'react'
-import { api, fail } from '../../lib/api'
+import { fail, more } from '../../lib/apiMore'
 import { people } from './peopleCopy'
 
 export function AddRow({ onClose, onAdded }: { onClose: () => void; onAdded: (made: { email: string; password: string }) => void }) {
@@ -13,7 +13,7 @@ export function AddRow({ onClose, onAdded }: { onClose: () => void; onAdded: (ma
 
   const create = () => {
     setBusy(true)
-    api
+    more
       .addPerson(email.trim(), role)
       .then((r) => onAdded({ email: r.person.email, password: r.password }))
       .catch((e: unknown) => fail(e, create))

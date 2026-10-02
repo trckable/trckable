@@ -279,3 +279,12 @@
     width: 64px;
   }
 }
+
+/* The weekly report's "send it now", under its rule. */
+.al-now {
+  align-self: flex-start;
+  margin-top: 6px;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}

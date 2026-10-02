@@ -11,7 +11,7 @@ import { DialogHead } from './DialogHead'
 import { Chevron } from './DatePicker'
 import { Month } from './DateRangeMonth'
 import { toast } from './Toast'
-import { api, fail, type Annotation, type Site } from '../lib/api'
+import { fail, type Annotation, type Site, more } from '../lib/apiMore'
 import { addDays, fmtDay, type ISODate } from '../lib/dates'
 import { fmtInt } from '../lib/format'
 import './NoteDialog.css'
@@ -59,7 +59,7 @@ export function NoteDialog({
     const t = text.trim()
     if (!t || busy) return
     setBusy(true)
-    api
+    more
       .addAnnotation(site.id, on, t)
       .then(() => {
         toast(`Note added to ${fmtDay(on)}`)
@@ -174,7 +174,7 @@ export function NoteDialog({
                   type="button"
                   aria-label={`Remove note: ${n.text}`}
                   onClick={() =>
-                    api
+                    more
                       .deleteAnnotation(site.id, n.id)
                       .then(() => {
                         toast('Note removed')

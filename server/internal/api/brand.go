@@ -121,12 +121,12 @@ var linkAttr = regexp.MustCompile(`(?is)\b(rel|href)\s*=\s*["']([^"']*)["']`)
 // out, since SVG can carry script and is not kept. reached is false when the
 // site did not answer at all.
 func declaredIcons(ctx context.Context, client *http.Client, home string) (icons []string, reached bool) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, home, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, home, nil) //nolint:gosec // home is a site's own address or a referring site's name checked by refHost; every connection goes through the guard alerts use (SafeClient)
 	if err != nil {
 		return nil, false
 	}
 	req.Header.Set("User-Agent", "trckable (site icon)")
-	res, err := client.Do(req)
+	res, err := client.Do(req) //nolint:gosec // the client is SafeClient: public hosts only, every connection checked, size and time limited
 	if err != nil {
 		return nil, false
 	}
@@ -166,12 +166,12 @@ func iconLinks(page []byte, home string) []string {
 }
 
 func getIcon(ctx context.Context, client *http.Client, url string) ([]byte, bool) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil) //nolint:gosec // the address came from the page of a host the guard already let us reach, and is fetched through the same SafeClient
 	if err != nil {
 		return nil, false
 	}
 	req.Header.Set("User-Agent", "trckable (site icon)")
-	res, err := client.Do(req)
+	res, err := client.Do(req) //nolint:gosec // the client is SafeClient (see declaredIcons): public hosts only, every connection checked
 	if err != nil {
 		return nil, false
 	}

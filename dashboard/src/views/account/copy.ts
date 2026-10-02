@@ -1,6 +1,7 @@
 // The account window's own words: its tabs and its title.
 export const copy = {
   account: 'Profile',
+  appearance: 'Appearance',
   accountLabel: 'Profile, your account',
   owner: 'Owner',
   viewer: 'Viewer',

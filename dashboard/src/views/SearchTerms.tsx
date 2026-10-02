@@ -3,7 +3,7 @@
 // searches, not visits, so they cannot filter the page; each row says what it
 // is instead.
 import { useEffect, useState } from 'react'
-import { api, messageOf, type ReportQuery, type SearchReport, type Site } from '../lib/api'
+import { messageOf, type ReportQuery, type SearchReport, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { BarList } from '../charts/BarList'
 import { fmtInt, fmtPct } from '../lib/format'
@@ -18,7 +18,7 @@ export function SearchTerms({ site, query, rows, full }: { site: Site; query: Re
     const ac = new AbortController()
     // eslint-disable-next-line react-hooks/set-state-in-effect -- a new period or filter starts a new fetch; clear the last one's error with it
     setErr(null)
-    api
+    more
       .searchReport(site.id, query, 'query', ac.signal)
       .then(setRep)
       .catch((e: unknown) => {

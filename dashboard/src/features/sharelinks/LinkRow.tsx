@@ -7,7 +7,7 @@
 import { CircleDollarSign, Clock, Code, ExternalLink, Eye, Globe, Lock, Power, RefreshCw, StickyNote } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from '../../components/Toast'
-import { api, fail, type Share } from '../../lib/api'
+import { fail, type Share, more } from '../../lib/apiMore'
 import { fmtInt } from '../../lib/format'
 import { Ask } from './Ask'
 import { CopyButton } from './CopyButton'
@@ -52,7 +52,7 @@ function Notes({ site, share, readOnly, onChanged }: { site: string; share: Shar
       </Flag>
     )
   const flip = () =>
-    api
+    more
       .updateShare(site, share.id, !on)
       .then(() => {
         toast(on ? copy.notesHidden : copy.notesShown)
@@ -71,7 +71,7 @@ function Revoke({ site, share, onDone }: { site: string; share: Share; onDone: (
   const [busy, setBusy] = useState(false)
   const go = () => {
     setBusy(true)
-    api
+    more
       .deleteShare(site, share.id)
       .then(() => {
         toast(copy.revoked)
@@ -100,7 +100,7 @@ function NewAddress({ site, share, quiet, onMade }: { site: string; share: Share
   const [busy, setBusy] = useState(false)
   const go = () => {
     setBusy(true)
-    api
+    more
       .newShareAddress(site, share.id)
       .then((r) => onMade(r.url))
       .catch((e: unknown) => {

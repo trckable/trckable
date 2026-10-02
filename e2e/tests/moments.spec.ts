@@ -106,7 +106,9 @@ test('a new referrer sits on the day it first sent anyone', async ({ page }) => 
   // It filters to the referrer; it has no day to pick, so the period stays whole.
   await expect(page).toHaveURL(/[?&]f=referrer(:|%3A)linkedin\.com/)
   await expect(page).not.toHaveURL(/[?&]day=/)
-  await expect(card(page, 'New referrer')).toContainText(`first seen ${new Date(Date.now() - 4 * 86400_000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}`)
+  // When it first sent anyone: in words, with the date as its tooltip.
+  await expect(card(page, 'New referrer').locator('.side-when')).toHaveText('4 days ago')
+  await expect(card(page, 'New referrer').locator('.side-when')).toHaveAttribute('title', new Date(Date.now() - 4 * 86400_000).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }))
 })
 
 test('a marker applies its filter and day through the address, and opens the card with the numbers', async ({ page }) => {
@@ -120,8 +122,10 @@ test('a marker applies its filter and day through the address, and opens the car
   await expect(page).toHaveURL(new RegExp(`[?&]day=${day(2)}`))
   const why = card(page, 'Traffic spike')
   await expect(why).toBeVisible()
-  await expect(why).toContainText('816 visitors')
-  await expect(why).toContainText('4.2× the usual')
+  await expect(why).toContainText('816')
+  await expect(why).toContainText('visitors')
+  await expect(why).toContainText('4.2×')
+  await expect(why.getByText('news.example')).toBeVisible()
   await shoot(page, 'marker-card')
   // One action: Share opens the share dialog.
   await why.getByRole('button', { name: 'Share' }).click()
@@ -134,27 +138,94 @@ test('a marker applies its filter and day through the address, and opens the car
   await expect(why).toHaveCount(0)
 })
 
-test('one thing today: the best first, Next steps to the others, See it applies, put away it stays away for the day', async ({ page }) => {
+test('one thing today: the best first, ← → turn to the others, See it shows it and the card leaves, put away it stays away for the day', async ({ page }) => {
   await given(page)
   await open(page)
   const today = card(page, 'One thing today')
   await expect(today).toBeVisible({ timeout: 20_000 })
-  await expect(today).toContainText('This week') // a first visit has no last one to count from
-  await expect(today).toContainText('1 of 3')
+  // Where it is in the deck: dots, with the next card peeking out behind.
+  await expect(today.getByRole('img', { name: '1 of 3' })).toBeVisible()
+  await expect(page.locator('.side-peek')).toHaveCount(2)
   // The page that lost buyers matters most.
   await expect(today).toContainText('/pricing')
+  await expect(today.getByRole('button', { name: 'Previous' })).toBeDisabled()
   await shoot(page, 'one-thing')
   await today.getByRole('button', { name: 'Next' }).click()
-  await expect(today).toContainText('2 of 3')
-  await today.getByRole('button', { name: 'See it' }).click()
+  await expect(today.getByRole('img', { name: '2 of 3' })).toBeVisible()
+  await today.getByRole('button', { name: 'Previous' }).click()
+  await expect(today.getByRole('img', { name: '1 of 3' })).toBeVisible()
+  // The arrow keys turn it with focus in the card (they are the page's own for the period, otherwise).
+  await today.getByRole('button', { name: 'Next' }).focus()
+  await page.keyboard.press('ArrowRight')
+  await expect(today.getByRole('img', { name: '2 of 3' })).toBeVisible()
+  await page.keyboard.press('ArrowLeft')
+  await expect(today.getByRole('img', { name: '1 of 3' })).toBeVisible()
+  await today.getByRole('button', { name: 'Next' }).click()
+  await today.getByRole('button', { name: /^Show / }).click()
   await expect(page).toHaveURL(/[?&]f=/)
-  await today.getByRole('button', { name: 'Close' }).click()
   await expect(today).toHaveCount(0)
   // Put away: not back on a reload the same day.
   await page.reload()
   await expect(page.locator('.moment-mark').first()).toBeVisible({ timeout: 20_000 })
   await page.waitForTimeout(500)
   await expect(today).toHaveCount(0)
+})
+
+/** The findings the server makes, only these. */
+async function only(page: Page, found: { moments?: object[]; insights?: object[] }) {
+  await withoutPayments(page)
+  await page.route(/\/api\/v1\/sites\/[^/]+\/moments\?/, (r) => r.fulfill({ json: { bucket: 'day', moments: found.moments ?? [] } }))
+  await page.route(/\/api\/v1\/sites\/[^/]+\/insights\?/, (r) => r.fulfill({ json: { insights: found.insights ?? [] } }))
+}
+
+const toast = (page: Page) => page.getByRole('status').filter({ hasText: 'Showing' })
+
+// "See it" is never a click that seems to do nothing: whatever the kind, the card leaves, a toast says what
+// is on screen (and clears it), the chart comes into view and the marker lights up.
+for (const kind of [
+  { name: 'a spike', found: () => ({ moments: [{ t: `${day(3)}T00:00`, kind: 'spike', factor: 6, visitors: 900, referrer: 'news.example' }] }), card: 'Traffic spike', button: /^Show /, url: /[?&]f=referrer(:|%3A)news\.example/, said: /Showing news\.example · /, lit: true },
+  { name: 'a new referrer', found: () => ({ insights: [{ kind: 'new_referrer', dim: 'referrer', value: 'google.com', now: 312, since: day(3) }] }), card: 'One thing today', button: 'Filter source', url: /[?&]f=referrer(:|%3A)google\.com/, said: /Showing google\.com · /, lit: true },
+  { name: 'lost buyers', found: () => ({ insights: [{ kind: 'conversion_drop', dim: 'entry_page', value: '/pricing', now: 350, was: 400, rate: 0.031, was_rate: 0.048, change: -0.35, since: day(3) }] }), card: 'One thing today', button: 'Filter page', url: /[?&]f=entry_page(:|%3A)(\/|%2F)pricing/, said: /Showing \/pricing · /, lit: true },
+]) {
+  test(`See it on ${kind.name}: the card leaves, the toast says what is shown, the chart is in view`, async ({ page }) => {
+    await only(page, kind.found())
+    await open(page)
+    const today = card(page, 'One thing today').or(card(page, 'Traffic spike'))
+    await expect(today.first()).toBeVisible({ timeout: 20_000 })
+    await today.first().getByRole('button', { name: kind.button }).click()
+    await expect(page).toHaveURL(kind.url)
+    await expect(today).toHaveCount(0)
+    await expect(toast(page)).toContainText(kind.said)
+    await expect(page.locator('.overview-chart')).toBeInViewport()
+    // The marker is lit for a moment (it has a day on the chart).
+    await expect(page.locator('.moment-mark.hit').first()).toBeVisible({ timeout: 5000 })
+    // Clear takes the filter off again.
+    await toast(page).getByRole('button', { name: 'Clear' }).click()
+    await expect(page).not.toHaveURL(/[?&]f=/)
+  })
+}
+
+test('See it with everything already applied still closes the card, says what is shown and lights the marker', async ({ page }) => {
+  await only(page, { insights: [{ kind: 'new_referrer', dim: 'referrer', value: 'linkedin.com', now: 463, since: day(4) }] })
+  await open(page)
+  const card1 = card(page, 'One thing today')
+  await expect(card1).toBeVisible({ timeout: 20_000 })
+  await card1.getByRole('button', { name: 'Filter source' }).click()
+  await expect(page).toHaveURL(/[?&]f=referrer(:|%3A)linkedin\.com/)
+  await expect(card1).toHaveCount(0)
+  // The same click again, from a card that is back (a new day): the address is already what it asks for.
+  const url = page.url()
+  await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('trckable:today:')).forEach((k) => localStorage.removeItem(k)))
+  await page.reload()
+  await expect(page).toHaveURL(url)
+  const again = card(page, 'One thing today')
+  await expect(again).toBeVisible({ timeout: 20_000 })
+  await again.getByRole('button', { name: 'Filter source' }).click()
+  await expect(page).toHaveURL(url)
+  await expect(again).toHaveCount(0)
+  await expect(toast(page)).toContainText('Showing linkedin.com')
+  await expect(page.locator('.overview-chart')).toBeInViewport()
+  await expect(page.locator('.moment-mark.hit').first()).toBeVisible({ timeout: 5000 })
 })
 
 test('with nothing to say, a new site gets one first-week card, and not another that day', async ({ page }) => {

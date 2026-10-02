@@ -14,7 +14,7 @@ type Keymap map[string]string
 
 var (
 	keyAction = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{0,31}$`)
-	keyCombo  = regexp.MustCompile(`^(mod\+)?(alt\+)?[^+\s]{1,12}$`)
+	keyCombo  = regexp.MustCompile(`^(mod\+)?(alt\+)?(shift\+)?[^+\s]{1,12}$`)
 	// ErrKeymap: a keymap that is not a short list of action → key.
 	ErrKeymap = errors.New("that is not a list of shortcuts")
 )

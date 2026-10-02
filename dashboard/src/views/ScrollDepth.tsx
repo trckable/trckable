@@ -2,7 +2,7 @@
 // period and filters. A page nobody reads past the fold says more than its
 // view count does.
 import { useEffect, useState } from 'react'
-import { api, type ReportQuery, type ScrollReport, type Site } from '../lib/api'
+import { type ReportQuery, type ScrollReport, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { BarList } from '../charts/BarList'
 import { fmtInt, fmtPct } from '../lib/format'
@@ -15,7 +15,7 @@ export function ScrollDepth({ site, query, rows }: { site: Site; query: ReportQu
     const ac = new AbortController()
     // eslint-disable-next-line react-hooks/set-state-in-effect -- a new period or filter starts a new fetch; clear the last one's error with it
     setErr('')
-    api
+    more
       .scroll(site.id, query, ac.signal)
       .then(setRep)
       .catch((e: unknown) => {

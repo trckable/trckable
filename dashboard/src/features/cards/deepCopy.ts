@@ -44,6 +44,8 @@ export const deepCopy = {
     addLabel: '+ Add step',
     search: 'Search a page or goal…',
     pick: 'Pick at least two steps.',
+    empty: 'A funnel shows where people drop off between two steps.',
+    emptyAction: 'Create a funnel',
     goals: 'Goals',
     pages: 'Pages',
   },

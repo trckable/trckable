@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { api, type Annotation, type Site } from '../../lib/api'
 import { words } from '../../lib/errors'
 import { fmtDay } from '../../lib/dates'
+import { EmptyState } from '../../components/EmptyState'
 import { Modal } from '../../components/Modal'
 import { copy } from './listCopy'
 import { NoteRow } from './NoteRow'
@@ -29,7 +30,7 @@ export function byDay(list: Annotation[]): [string, Annotation[]][] {
   return [...days]
 }
 
-export function NotesPanel({ site, onJump, onChanged }: { site: Site; onJump: (day: string) => void; onChanged?: () => void }) {
+export function NotesPanel({ site, onJump, onChanged, onAdd }: { site: Site; onJump: (day: string) => void; onChanged?: () => void; onAdd?: () => void }) {
   const [list, setList] = useState<Annotation[] | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [q, setQ] = useState('')
@@ -59,12 +60,12 @@ export function NotesPanel({ site, onJump, onChanged }: { site: Site; onJump: (d
         <Search size={17} strokeWidth={1.75} aria-hidden="true" />
         <input type="search" placeholder={copy.search} aria-label={copy.search} value={q} onChange={(e) => setQ(e.target.value)} />
       </label>
-      <Body list={list} err={err} shown={shown} q={q} site={site} onJump={onJump} onChanged={changed} />
+      <Body list={list} err={err} shown={shown} q={q} site={site} onJump={onJump} onChanged={changed} onAdd={onAdd} />
     </div>
   )
 }
 
-function Body(p: { list: Annotation[] | null; err: string | null; shown: Annotation[]; q: string; site: Site; onJump: (day: string) => void; onChanged: () => void }) {
+function Body(p: { list: Annotation[] | null; err: string | null; shown: Annotation[]; q: string; site: Site; onJump: (day: string) => void; onChanged: () => void; onAdd?: () => void }) {
   if (p.err)
     return (
       <p role="alert" className="notes-state">
@@ -77,7 +78,7 @@ function Body(p: { list: Annotation[] | null; err: string | null; shown: Annotat
         {copy.loading}
       </p>
     )
-  if (!p.list.length) return <p className="faint notes-state">{copy.empty}</p>
+  if (!p.list.length) return <EmptyState line={copy.empty} action={copy.emptyAction} onAction={p.onAdd} />
   if (!p.shown.length) return <p className="faint notes-state">{copy.noMatch(p.q)}</p>
   return (
     <>
@@ -101,7 +102,7 @@ function Body(p: { list: Annotation[] | null; err: string | null; shown: Annotat
 }
 
 /** The list over the dashboard, from the chart. Jumping closes it. */
-export function NotesDialog({ site, onJump, onChanged, onClose }: { site: Site; onJump: (day: string) => void; onChanged: () => void; onClose: () => void }) {
+export function NotesDialog({ site, onJump, onChanged, onClose, onAdd }: { site: Site; onJump: (day: string) => void; onChanged: () => void; onClose: () => void; onAdd?: () => void }) {
   return (
     <Modal label={copy.title} className="notes-modal" onClose={onClose}>
       <div className="notes-head">
@@ -113,6 +114,7 @@ export function NotesDialog({ site, onJump, onChanged, onClose }: { site: Site; 
       <NotesPanel
         site={site}
         onChanged={onChanged}
+        onAdd={onAdd}
         onJump={(day) => {
           onClose()
           onJump(day)

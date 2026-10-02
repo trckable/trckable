@@ -4,7 +4,7 @@
 // average nobody had.
 import './Vitals.css'
 import { useEffect, useState } from 'react'
-import { api, type ReportQuery, type Site, type WebVitals } from '../lib/api'
+import { type ReportQuery, type Site, type WebVitals, more } from '../lib/apiMore'
 import { ChartHead } from '../charts/ChartHead'
 import { Info } from '../components/Info'
 import { fmtInt } from '../lib/format'
@@ -30,7 +30,7 @@ export function Vitals({ site, query }: { site: Site; query: ReportQuery }) {
 
   useEffect(() => {
     let live = true
-    api
+    more
       .vitals(site.id, query)
       .then((d) => live && setData(d))
       .catch(() => live && setErr(true))

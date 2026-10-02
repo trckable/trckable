@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ChartCard } from '../../../charts/ChartCard'
 import { HeatGrid, HeatKey } from '../../../charts/HeatGrid'
-import { api, type Heatmap, type ReportQuery } from '../../../lib/api'
+import { type Heatmap, type ReportQuery, more } from '../../../lib/apiMore'
 import { copy } from '../copy'
 import { rhythmModel } from '../model'
 
@@ -15,7 +15,7 @@ export function RhythmCard({ site, query, timezone }: { site: string; query: Rep
   const key = site + JSON.stringify([query.from, query.to, query.filters])
   useEffect(() => {
     let live = true
-    api
+    more
       .heatmap(site, query)
       .then((h) => live && setData({ key, h }))
       .catch(() => live && setFailed(true))

@@ -5,7 +5,7 @@ import type { MenuItems } from '../lib/headerMenu'
 import { caps, keyFor } from '../lib/keys'
 import { isShared } from '../lib/me'
 import type { MoreProps } from './MoreMenu'
-import { copy } from './moreCopy'
+import { copy } from './itemsCopy'
 import './MoreItems.css'
 import './sheet.css'
 

@@ -41,6 +41,28 @@
 .toast.success > svg {
   color: var(--up);
 }
+.toast.sale {
+  border-color: color-mix(in srgb, var(--money) 45%, var(--border-2));
+}
+.toast.sale > svg {
+  color: var(--money);
+}
+.toast.sale .toast-text {
+  font-weight: 600;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .toast.sale > svg {
+    animation: coin-flip 0.9s var(--ease) 0.15s 1 both;
+  }
+}
+@keyframes coin-flip {
+  from {
+    transform: rotateY(0);
+  }
+  to {
+    transform: rotateY(720deg);
+  }
+}
 .toast.info > svg {
   color: var(--accent);
 }

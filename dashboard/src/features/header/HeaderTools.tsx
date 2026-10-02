@@ -47,7 +47,7 @@ export function HeaderTools(p: Props) {
 
 export function ShareButton({ onShare }: { onShare: () => void }) {
   return (
-    <button type="button" className="btn icon ghost share-btn" onClick={onShare} title={copy.shareTitle} aria-label={copy.share}>
+    <button type="button" className="btn icon ghost share-btn" data-key="share" onClick={onShare} title={copy.shareTitle} aria-label={copy.share}>
       <Share2 size={17} strokeWidth={1.75} aria-hidden="true" />
     </button>
   )

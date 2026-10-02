@@ -5,9 +5,9 @@ import { BarList } from '../../charts/BarList'
 import { Info } from '../../components/Info'
 import type { ReportQuery, Row } from '../../lib/api'
 import { extrasApi } from './extrasApi'
-import { cardCopy } from '../cards/copy'
 import { extrasCopy } from './copy'
 import './extras.css'
+import { laterCopy } from '../cards/copyLater'
 
 export default function SalePages({ site, query, money, rows, onPick }: { site: string; query: ReportQuery; money: (minor: number) => string; rows: number; onPick: (page: string) => void }) {
   const [found, setFound] = useState<{ key: string; list: Row[] | null } | null>(null)
@@ -31,7 +31,7 @@ export default function SalePages({ site, query, money, rows, onPick }: { site: 
       </div>
       <BarList
         dimLabel={extrasCopy.sells.page}
-        valueLabel={cardCopy.customers}
+        valueLabel={laterCopy.customers}
         loading={!here}
         byRevenue
         money={money}

@@ -14,7 +14,7 @@ export function SiteZone({ sites, current, all }: { sites: Site[]; current: Site
       <SitePicker sites={sites} current={current} all={all} />
       {settings && <span className="site-sep" aria-hidden="true" />}
       {settings && (
-        <button type="button" className="btn icon ghost gear" aria-label={copy.settingsFor(settings.domain)} title={copy.settingsFor(settings.domain)} onClick={() => openSettings(settings)}>
+        <button type="button" className="btn icon ghost gear" data-key="settings" aria-label={copy.settingsFor(settings.domain)} title={copy.settingsFor(settings.domain)} onClick={() => openSettings(settings)}>
           {/* A cog, with teeth. It used to be a circle with rays, which is a
               sun — so the one button that opens a site's settings looked like
               a light/dark switch. */}

@@ -228,6 +228,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			return w.ErasePerson(ctx, site, visitor)
 		},
 	}
+	a.SendWeekly = s.sendWeeklyNow
 	s.api = a
 	// Off-site backups, when the owner names a bucket. A bad value is said
 	// loudly and leaves backups local, rather than stopping the server.

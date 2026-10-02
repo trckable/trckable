@@ -20,8 +20,12 @@ export interface Where {
 export function patchFor(pin: Pin, at: Where): Partial<ViewState> {
   const mine = pin.filters
   const filters = [...at.filters.filter((f) => !mine.some((m) => m.dim === f.dim)), ...mine]
-  // By the hour the day is already on the chart, and picking it would redraw the chart by day.
-  if (pin.showDay && pin.day && at.bucket !== 'hour') return { ...jumpPatch(pin.day, at.range, at.bucket === 'day', at.today), filters }
+  // A day the period does not reach is never left off screen: a month around it opens, as it does for a note.
+  const outside = !!pin.day && (pin.day < at.range.from || pin.day > at.range.to)
+  // By the hour a day inside the period is already on the chart, and picking it would redraw the chart by day.
+  if (pin.showDay && pin.day && (at.bucket !== 'hour' || outside)) return { ...jumpPatch(pin.day, at.range, at.bucket === 'day', at.today), filters }
+  // A finding with a day (a new referrer's first visit) is on the chart too, but only the filter is applied: no day is picked.
+  if (outside && pin.day) return { ...jumpPatch(pin.day, at.range, false, at.today), filters, day: undefined }
   return { filters, day: undefined }
 }
 

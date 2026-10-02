@@ -34,6 +34,7 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
       <button
         type="button"
         className="btn site-btn"
+        data-key="site"
         aria-haspopup="dialog"
         aria-expanded={open}
         {...warm(menu)}

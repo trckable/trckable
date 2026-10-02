@@ -1,52 +1,75 @@
-// One thing today: on opening the Data view, one card with the most important
-// thing since the last visit; Next steps to the second and third; See it
-// applies its filter (and its day) through the address, the way the chart's
-// markers do. Put away, it stays away for the day.
-import { ArrowRight } from 'lucide-react'
+// One thing today: on opening the Data view, a card with the most important
+// thing since the last visit; ← → turn to the second and third (dots say where,
+// the next peeks out behind). Its action applies the pin's filter (and day)
+// through the address, the way a marker does, and always shows something: the
+// card leaves, a toast says what is on screen ("Showing google.com · Sep 27")
+// with Clear, the chart comes into view and the marker lights up. Put away, it
+// stays away for the day.
 import { useState } from 'react'
-import { SideCard } from '../../components/SideCard/SideCard'
-import type { Site } from '../../lib/api'
+import { useCardClose } from '../../components/SideCard/SideCard'
+import { toast } from '../../components/Toast'
+import type { Point, Site } from '../../lib/api'
+import { chartBucket, patchFor } from './apply'
 import { rangeOf } from '../../lib/dashQuery'
 import { todayIn } from '../../lib/dates'
 import { readView, setView } from '../../lib/url'
-import { chartBucket, patchFor } from './apply'
 import { copy } from './copy'
-import { PinBody } from './PinBody'
+import { seeLabel, showing } from './figure'
+import { focusMoment } from './focus'
+import { PinCard } from './PinCard'
+import type { Pin } from './pins'
 import type { Today } from './useOneThing'
-import { say } from './words'
 
-export function OneThing({ site, found, since, onAway }: { site: Site; found: Today; since?: string; onAway: () => void }) {
+/** Takes the pin's filters (and the day it picked) off the address again. */
+function clearPin(pin: Pin) {
+  const view = readView(new URLSearchParams(location.search))
+  setView({ filters: view.filters.filter((f) => !pin.filters.some((m) => m.dim === f.dim && m.value === f.value)), day: pin.showDay ? undefined : view.day })
+}
+
+/** What "See it" does: the address, a word about it, and the chart in view with the marker lit. */
+export function seeIt(pin: Pin, site: Pick<Site, 'timezone'>) {
+  const view = readView(new URLSearchParams(location.search))
+  const today = todayIn(site.timezone)
+  const range = rangeOf(view, today)
+  setView(patchFor(pin, { filters: view.filters, range, today, bucket: chartBucket(view, range) }))
+  toast(showing(pin), 'info', { label: copy.clear, run: () => clearPin(pin) })
+  focusMoment(pin)
+}
+
+export function OneThing({ site, found, series, onAway }: { site: Site; found: Today; since?: string; series: readonly Point[]; onAway: () => void }) {
   const [at, setAt] = useState(0)
   const { items } = found
   const t = copy.today
-  const see = () => {
-    const view = readView(new URLSearchParams(location.search))
-    const today = todayIn(site.timezone)
-    const range = rangeOf(view, today)
-    setView(patchFor(items[at], { filters: view.filters, range, today, bucket: chartBucket(view, range) }))
-  }
+  const pin = items[at]
   return (
-    <SideCard
+    <PinCard
       id="one-thing"
       label={t.label}
       closeLabel={copy.close}
-      title={since ? t.sinceVisit : t.thisWeek}
+      pin={pin}
+      site={site}
+      series={series}
+      money={found.money}
       onClose={onAway}
-      actions={
-        <>
-          {items.length > 1 && <span className="today-count faint num">{t.of(at + 1, items.length)}</span>}
-          {at < items.length - 1 && (
-            <button type="button" className="btn" aria-label={t.next} title={t.next} onClick={() => setAt(at + 1)}>
-              <ArrowRight size={15} strokeWidth={2} aria-hidden="true" />
-            </button>
-          )}
-          <button type="button" className="btn primary" onClick={see}>
-            {t.see}
-          </button>
-        </>
-      }
+      deck={{ index: at, count: items.length, onNext: () => setAt(at + 1), onPrev: () => setAt(at - 1), prevLabel: t.previous, nextLabel: t.next, position: t.of(at + 1, items.length) }}
+      actions={<SeeButton pin={pin} site={site} />}
+    />
+  )
+}
+
+/** The action: it shows the pin, and the card, being done, leaves. */
+function SeeButton({ pin, site }: { pin: Pin; site: Site }) {
+  const leave = useCardClose()
+  return (
+    <button
+      type="button"
+      className="btn primary"
+      onClick={() => {
+        seeIt(pin, site)
+        leave()
+      }}
     >
-      <PinBody kind said={say(items[at], found.money)} />
-    </SideCard>
+      {seeLabel(pin)}
+    </button>
   )
 }

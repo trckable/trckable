@@ -8,7 +8,7 @@ import { copy, nameOf } from '../features/sharelinks/copy'
 import { Created } from '../features/sharelinks/Created'
 import { LinkRow } from '../features/sharelinks/LinkRow'
 import { NewLink, type Made } from '../features/sharelinks/NewLink'
-import { api, type Share, type Site } from '../lib/api'
+import { type Share, type Site, more } from '../lib/apiMore'
 import { isViewer } from '../lib/me'
 import '../features/sharelinks/sharelinks.css'
 
@@ -17,7 +17,7 @@ export function Shares({ site }: { site: Site }) {
   const [making, setMaking] = useState(false)
   const [made, setMade] = useState<Made | null>(null)
   const readOnly = isViewer()
-  const load = () => api.shares(site.id).then((r) => setList(r.shares ?? [])).catch(() => setList([]))
+  const load = () => more.shares(site.id).then((r) => setList(r.shares ?? [])).catch(() => setList([]))
   useEffect(() => {
     void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load is a new function every render; refetch only when the site changes

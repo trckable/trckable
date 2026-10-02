@@ -36,7 +36,7 @@ export function AccountMenu() {
   }
   return (
     <div ref={root} className="more account-menu">
-      <button ref={button} type="button" className="btn icon ghost account-btn" aria-haspopup="menu" aria-expanded={open} aria-label={copy.accountMenu} title={copy.accountMenu} {...warm(AccountItems.preload)} onClick={() => setOpen((o) => !o)}>
+      <button ref={button} type="button" className="btn icon ghost account-btn" data-key="user" aria-haspopup="menu" aria-expanded={open} aria-label={copy.accountMenu} title={copy.accountMenu} {...warm(AccountItems.preload)} onClick={() => setOpen((o) => !o)}>
         <PersonAvatar p={profile} v={v} size="small" />
       </button>
       {open && (

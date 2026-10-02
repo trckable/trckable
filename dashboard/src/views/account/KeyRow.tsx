@@ -1,7 +1,7 @@
 // One API key: name, its start in mono, when it was last used, Revoke.
 import { KeyRound } from 'lucide-react'
 import { confirm } from '../../components/Confirm'
-import { api, type APIKey } from '../../lib/api'
+import { type APIKey, more } from '../../lib/apiMore'
 import { ago } from './ago'
 import { keys as t } from './keysCopy'
 
@@ -14,7 +14,7 @@ export function KeyRow({ k, onRevoked }: { k: APIKey; onRevoked: () => void }) {
       danger: true,
       busyLabel: t.revoking,
       done: t.revoked,
-      run: () => api.revokeKey(k.id),
+      run: () => more.revokeKey(k.id),
     })
     if (ok) onRevoked()
   }

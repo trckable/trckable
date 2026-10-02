@@ -3,7 +3,7 @@
 // show is decided on the server: without revenue the figure is never read.
 import { ArrowLeft, Check, Copy, Link2 } from 'lucide-react'
 import { useState } from 'react'
-import { api, fail, type Site } from '../../lib/api'
+import { fail, type Site, more } from '../../lib/apiMore'
 import { Switch } from '../../components/Switch'
 import { toast } from '../../components/Toast'
 import { copy } from './copy'
@@ -16,7 +16,7 @@ export function LinkPanel({ site, onBack }: { site: Site; onBack: () => void }) 
   const [copied, setCopied] = useState(false)
   const create = () => {
     setBusy(true)
-    api
+    more
       .createShare(site.id, { name: site.domain, password: password || undefined, revenue, days: 0 })
       .then((r) => setUrl(r.url))
       .catch((e: unknown) => fail(e))

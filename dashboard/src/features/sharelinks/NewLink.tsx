@@ -2,7 +2,7 @@
 // shows and for how long, with a picture of the result beside it.
 import { Globe, Link2, Lock } from 'lucide-react'
 import { useState } from 'react'
-import { api, fail, type Site } from '../../lib/api'
+import { fail, type Site, more } from '../../lib/apiMore'
 import { copy } from './copy'
 import { EMPTY, linkBody, problem, type Access, type Draft } from './logic'
 import { Options } from './Options'
@@ -32,7 +32,7 @@ export function NewLink({ site, onClose, onMade }: { site: Site; onClose: () => 
     if (blocked || busy) return
     const body = linkBody(draft, site.domain)
     setBusy(true)
-    api
+    more
       .createShare(site.id, body)
       .then((r) => onMade({ name: body.name, url: r.url, sites: body.embed_origins }))
       .catch((e: unknown) => {
