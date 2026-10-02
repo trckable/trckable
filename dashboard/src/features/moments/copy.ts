@@ -31,6 +31,7 @@ export const copy = {
   moments: 'Moments on the chart',
   marker: (day: string, line: string, more: number) => `${day}: ${line}${more ? `, and ${more} more` : ''}. Show it`,
   more: (n: number) => `+${n} more`,
+  milestones: (n: number) => `${n} milestones`,
   close: 'Close',
   share: 'Share',
   visitors: (n: number) => `${fmtInt(n)} visitors`,

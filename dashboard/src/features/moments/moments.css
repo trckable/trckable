@@ -161,3 +161,49 @@
   background: var(--surface);
   color: var(--text);
 }
+.why-group > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.why-group > button svg {
+  transition: transform 0.15s var(--ease);
+}
+.why-group > button svg.open {
+  transform: rotate(180deg);
+}
+.why-group ul {
+  display: grid;
+  gap: 2px;
+  margin: 2px 0 4px 10px;
+  padding: 0 0 0 6px;
+  border-left: 1px solid var(--border);
+  list-style: none;
+}
+.why-more .why-all {
+  color: var(--accent);
+}
+/* A cluster's card is never taller than 60% of the screen: the list scrolls inside it, the figure and the action stay. */
+.side-card:has(> .why-more) {
+  max-height: 60vh;
+  max-height: 60dvh;
+}
+.side-card:has(> .why-more) > * {
+  flex: none;
+}
+.side-card:has(> .why-more) > .why-more {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (max-height: 560px) {
+  .side-card:has(> .why-more) .side-chart {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .why-group > button svg {
+    transition: none;
+  }
+}
