@@ -28,7 +28,7 @@ import (
 
 const (
 	maxBody   = 8 << 10
-	maxAgeMs  = 30 * 60 * 1000 // matches the tracker's queue lifetime
+	maxAgeMs  = int64(event.MaxAge / time.Millisecond) // the tracker's queue lifetime, 24 h, and an hour of margin
 	maxProps  = 10
 	maxPropKV = 255
 )
@@ -322,16 +322,22 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 	}
 
 	now := h.Now()
+	// An event made after a long outage says how old it is. A negative age is a
+	// clock that runs fast: it is today's. One older than the tracker ever keeps
+	// is not a late visit but a wrong clock (or someone choosing a date), and a
+	// day it was never on is worse than a missing event: it is refused, and the
+	// tracker, which treats a 4xx as final, drops it.
 	age := p.Age
 	if age < 0 {
 		age = 0
 	} else if age > maxAgeMs {
-		age = maxAgeMs
+		return nil, false, nil, errBadPayload
 	}
 	e := &event.Event{
 		Site:     site.ID,
 		TS:       now.UnixMilli() - age,
 		EventID:  parseID(p.ID),
+		Late:     age > int64(event.LateAfter/time.Millisecond),
 		Pageview: parseID(p.PV),
 		Hostname: u.Host,
 		Path:     clip(u.Path, 512),

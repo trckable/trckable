@@ -5,7 +5,21 @@
 // never reach the WAL or the database.
 package event
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
+
+// MaxAge is the oldest an event may claim to be when it arrives. The tracker
+// keeps an unsent event for 24 hours; the hour on top is for a slow clock and
+// a slow retry. Ingest refuses anything older, and the writer remembers event
+// ids for at least this long, so a resend of an event that was already stored
+// is still recognised.
+const MaxAge = 25 * time.Hour
+
+// LateAfter is how old an event is when it arrives for it to count as late: a
+// slow network or a short retry is minutes, an outage is hours.
+const LateAfter = 30 * time.Minute
 
 // Kind of event.
 const (
@@ -66,6 +80,12 @@ type Event struct {
 
 	// Imported marks history brought in by `trckabled import`.
 	Imported bool `json:"im,omitempty"`
+
+	// Late marks an event a browser kept back for longer than a visit lasts
+	// (a server that was down), so the rest of its visit may be on the way, a
+	// request at a time. Sessions it reaches stay open from the moment it
+	// arrived, not from the time it says it happened.
+	Late bool `json:"lt,omitempty"`
 }
 
 // Marshal encodes the event for the WAL.

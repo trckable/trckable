@@ -102,7 +102,7 @@ func New(log *wal.Log, store *duck.Store, opts Options) *Writer {
 		opts:  opts,
 		now:   now,
 		sess:  newSessionizer(opts.CloseAfter.Milliseconds()),
-		dd:    newDedupe(30*60*1000, 4_000_000),
+		dd:    newDedupe(dedupePeriod.Milliseconds(), dedupeGens, dedupeMaxIDs),
 		jobs:  make(chan maintenance, 8),
 	}
 }
@@ -432,7 +432,7 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 			continue
 		}
 		e := d.e
-		id, prev, was, now := w.sess.assign(&e)
+		id, prev, was, now := w.sess.assign(&e, nowMs)
 		if prev != nil {
 			closed = append(closed, prev)
 		}
@@ -701,8 +701,8 @@ func (w *Writer) restore(ctx context.Context, conn *sql.Conn) error {
 		slog.Info("writer: recovered open sessions", "count", len(recovered))
 	}
 
-	// Dedupe window: recent event ids.
-	since := w.now().Add(-90 * time.Minute).UTC()
+	// Dedupe window: the ids a resend can still come for.
+	since := w.now().Add(-dedupeLookBack).UTC()
 	ids, err := conn.QueryContext(ctx, `SELECT event_id FROM events WHERE ts >= ? AND event_id IS NOT NULL`, since)
 	if err != nil {
 		return err
