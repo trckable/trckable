@@ -12,6 +12,11 @@ const SHOTS = process.env.KPI_SHOTS
 
 const MONEY = { currency: 'USD', exponent: 2, revenue: 12_300, refunds: 0, payments: 3, customers: 3, paying_visitors: 3, conversion: 0.5, revenue_per_visitor: 4100, new_revenue: 12_300, renewal_revenue: 0, unattributed: 0, unconverted: 0 }
 
+// A report fetch still on its way when the test ends is let go, not reported as an error of the run.
+test.afterEach(async ({ page }) => {
+  await page.unrouteAll({ behavior: 'ignoreErrors' })
+})
+
 test('a dimmed Revenue tile stands in the second place for an owner without payments', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: await session('kpi-revenue-tile'), url: API }])
   await withoutPayments(page)

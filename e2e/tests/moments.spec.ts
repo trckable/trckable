@@ -178,6 +178,21 @@ async function only(page: Page, found: { moments?: object[]; insights?: object[]
   await page.route(/\/api\/v1\/sites\/[^/]+\/insights\?/, (r) => r.fulfill({ json: { insights: found.insights ?? [] } }))
 }
 
+/** The marker "See it" lights is lit for a couple of seconds, and a slow machine can be late for that: watch for it
+ *  from before the click, so that it counts when it was lit, not only when it is looked at. */
+async function watchLit(page: Page) {
+  await page.evaluate(() => {
+    const w = window as unknown as { __lit: boolean }
+    w.__lit = false
+    const look = () => {
+      if (document.querySelector('.moment-mark.hit')) w.__lit = true
+    }
+    new MutationObserver(look).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] })
+    look()
+  })
+}
+const lit = (page: Page) => expect.poll(() => page.evaluate(() => (window as unknown as { __lit: boolean }).__lit), { timeout: 10_000 }).toBe(true)
+
 const toast = (page: Page) => page.getByRole('status').filter({ hasText: 'Showing' })
 
 // "See it" is never a click that seems to do nothing: whatever the kind, the card leaves, a toast says what
@@ -192,13 +207,14 @@ for (const kind of [
     await open(page)
     const today = card(page, 'One thing today').or(card(page, 'Traffic spike'))
     await expect(today.first()).toBeVisible({ timeout: 20_000 })
+    await watchLit(page)
     await today.first().getByRole('button', { name: kind.button }).click()
     await expect(page).toHaveURL(kind.url)
     await expect(today).toHaveCount(0)
     await expect(toast(page)).toContainText(kind.said)
     await expect(page.locator('.overview-chart')).toBeInViewport()
     // The marker is lit for a moment (it has a day on the chart).
-    await expect(page.locator('.moment-mark.hit').first()).toBeVisible({ timeout: 5000 })
+    await lit(page)
     // Clear takes the filter off again.
     await toast(page).getByRole('button', { name: 'Clear' }).click()
     await expect(page).not.toHaveURL(/[?&]f=/)
@@ -220,12 +236,13 @@ test('See it with everything already applied still closes the card, says what is
   await expect(page).toHaveURL(url)
   const again = card(page, 'One thing today')
   await expect(again).toBeVisible({ timeout: 20_000 })
+  await watchLit(page)
   await again.getByRole('button', { name: 'Filter source' }).click()
   await expect(page).toHaveURL(url)
   await expect(again).toHaveCount(0)
   await expect(toast(page)).toContainText('Showing linkedin.com')
   await expect(page.locator('.overview-chart')).toBeInViewport()
-  await expect(page.locator('.moment-mark.hit').first()).toBeVisible({ timeout: 5000 })
+  await lit(page)
 })
 
 test('with nothing to say, a new site gets one first-week card, and not another that day', async ({ page }) => {
@@ -286,6 +303,10 @@ test('at 390 px the markers and their card fit the screen', async ({ page }) => 
   const marks = page.locator('.moment-mark')
   await expect(marks.first()).toBeVisible({ timeout: 20_000 })
   expect(await marks.count()).toBeLessThanOrEqual(6)
+  // Markers that landed together carry a count, and it is text: 12 px at the least, like all of it.
+  const counts = page.locator('.moment-n')
+  expect(await counts.count()).toBeGreaterThan(0)
+  expect(await counts.evaluateAll((all) => Math.min(...all.map((e) => parseFloat(getComputedStyle(e).fontSize))))).toBeGreaterThanOrEqual(12)
   await shoot(page, 'chart-markers')
   await page.getByRole('button', { name: /4\.2× the usual/ }).click()
   const why = card(page, 'Traffic spike')

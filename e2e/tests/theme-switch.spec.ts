@@ -48,9 +48,9 @@ test('switching the theme does not reload, and does not redraw or re-animate the
   })
   expect(afterLight).toEqual({ same: 1, node: true })
 
-  // Once the switch is over nothing in the chart is animating, and the mark of the switch is gone.
-  await page.waitForTimeout(600)
-  expect(await page.evaluate(() => document.documentElement.hasAttribute('data-theme-switch'))).toBe(false)
+  // Once the switch is over nothing in the chart is animating, and the mark of the switch is gone. How long
+  // the crossfade takes is the browser's (WebKit starts a view transition late on a busy machine): wait for it.
+  await expect(page.locator('html')).not.toHaveAttribute('data-theme-switch', /.*/, { timeout: 10_000 })
   expect(await page.evaluate(() => document.querySelector('.overview-chart .chart-wrap')!.getAnimations({ subtree: true }).length)).toBe(0)
 })
 

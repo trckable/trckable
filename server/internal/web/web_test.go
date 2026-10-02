@@ -262,7 +262,13 @@ func TestDashboardServesStoredGzip(t *testing.T) {
 			}
 		}
 	}
-	if page := fetch(t, "/some/route", "gzip"); page.Code != http.StatusOK || !strings.Contains(page.Body.String(), `<div id="root">`) {
+	// The page is stored as gzip once it is 1 KB or more, and a browser that takes gzip is handed it as it is.
+	page := fetch(t, "/some/route", "gzip")
+	html := page.Body.Bytes()
+	if page.Header().Get("Content-Encoding") == "gzip" {
+		html = gunzip(t, html)
+	}
+	if page.Code != http.StatusOK || !bytes.Contains(html, []byte(`<div id="root">`)) {
 		t.Errorf("the page for a route: %d", page.Code)
 	}
 	if csp := fetch(t, "/", "gzip").Header().Get("Content-Security-Policy"); !strings.Contains(csp, "frame-ancestors 'none'") {

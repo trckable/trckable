@@ -18,6 +18,11 @@ test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
 })
 
+// A report fetch still on its way when the test ends is let go, not reported as an error of the run.
+test.afterEach(async ({ page }) => {
+  await page.unrouteAll({ behavior: 'ignoreErrors' })
+})
+
 /** The Data view, with payments connected (the report carries money) or without. */
 async function open(page: Page, width: number, revenue: boolean) {
   await page.setViewportSize({ width, height: 900 })
