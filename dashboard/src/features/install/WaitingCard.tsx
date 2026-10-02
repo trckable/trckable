@@ -8,7 +8,7 @@ import { Ghost } from '../../components/Logo'
 import type { Site, Visit } from '../../lib/api'
 import type { Ctx } from '../../lib/install'
 import { CheckPanel } from './CheckPanel'
-import { FirstActions } from './FirstActions'
+import { FirstCards } from './FirstCards'
 import { aiPrompt, copy, waitCard as t } from './copy'
 import { MethodPanel } from './MethodPanel'
 import { MethodTabs } from './MethodTabs'
@@ -66,7 +66,7 @@ export function WaitingCard({ site, visits, ctx, pick, onPick, setup }: { site: 
         </button>
       </div>
       {started && <CheckPanel state={check.state} domain={site.domain} first={first} onAgain={check.start} />}
-      {!setup && <FirstActions site={site} />}
+      {!setup && <FirstCards site={site} />}
       <p className="faint wait-foot">{t.foot}</p>
     </section>
   )
