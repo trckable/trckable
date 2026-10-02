@@ -3,6 +3,7 @@
 // Every figure is the server's own, as words.ts has it. Pure: figure.test.ts.
 import { diffDays, fmtDay, type ISODate } from '../../lib/dates'
 import { fmtInt, fmtPct } from '../../lib/format'
+import { times } from '../../lib/times'
 import { say as milestone } from '../milestones/words'
 import { copy } from './copy'
 import type { Pin } from './pins'
@@ -19,7 +20,6 @@ export interface Figure {
   mult?: string
 }
 
-const times = (f: number) => `${f.toFixed(1)}×`
 const signed = (x: number) => (x >= 0 ? '+' : '−') + fmtPct(Math.abs(x))
 
 /** `money` writes an amount in the site's currency. */
@@ -27,7 +27,9 @@ export function figureOf(pin: Pin, money: (minor: number) => string): Figure {
   const { n } = pin
   switch (pin.kind) {
     case 'spike':
-      return n.visitors ? { n: n.visitors, fmt: fmtInt, unit: copy.unit.visitors, mult: times(n.factor ?? 3) } : { text: times(n.factor ?? 3) }
+      // No usual to multiply (a quiet or young site): the count and the source, no multiplier.
+      if (!n.factor) return { n: n.visitors ?? 0, fmt: fmtInt, unit: copy.unit.visitors }
+      return n.visitors ? { n: n.visitors, fmt: fmtInt, unit: copy.unit.visitors, mult: times(n.factor) } : { text: times(n.factor) }
     case 'sale':
       return { n: n.amount ?? 0, fmt: (v) => money(Math.round(v)), text: money(n.amount ?? 0) }
     case 'referrer':

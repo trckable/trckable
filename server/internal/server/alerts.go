@@ -12,6 +12,7 @@ import (
 	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/api"
 	"github.com/trckable/trckable/server/internal/ledger"
+	"github.com/trckable/trckable/server/internal/moments"
 	"github.com/trckable/trckable/server/internal/payments"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
@@ -152,6 +153,7 @@ func (s *Server) evaluateReport(ctx context.Context, a sqlite.Alert, ev alerts.E
 		// Today against the median of the seven days before it, so one good
 		// Tuesday does not raise the bar for the rest of the week.
 		var todayN, median float64
+		var before int
 		err := st.DB.QueryRowContext(ctx, `
 			WITH d AS (
 				SELECT strftime(timezone(?, ts), '%Y-%m-%d') AS day, count(DISTINCT visitor_id) AS visitors
@@ -159,8 +161,9 @@ func (s *Server) evaluateReport(ctx context.Context, a sqlite.Alert, ev alerts.E
 				GROUP BY 1
 			)
 			SELECT coalesce(max(CASE WHEN day = ? THEN visitors END), 0),
-			       coalesce(median(CASE WHEN day <> ? THEN visitors END), 0)
-			FROM d`, info.Timezone, a.SiteID, today, today).Scan(&todayN, &median)
+			       coalesce(median(CASE WHEN day <> ? THEN visitors END), 0),
+			       count(CASE WHEN day <> ? THEN 1 END)
+			FROM d`, info.Timezone, a.SiteID, today, today, today).Scan(&todayN, &median, &before)
 		if err != nil {
 			return ev, false
 		}
@@ -171,8 +174,7 @@ func (s *Server) evaluateReport(ctx context.Context, a sqlite.Alert, ev alerts.E
 		if median <= 0 || todayN < 50 || todayN < median*times {
 			return ev, false
 		}
-		ev.Title = "Busy day"
-		ev.Message = fmt.Sprintf("%s has %.0f visitors today — about %.1f× a normal day.", info.Domain, todayN, todayN/median)
+		ev.Title, ev.Message = busyDay(info.Domain, todayN, median, before)
 		ev.Data = map[string]any{"visitors": todayN, "usual": median}
 		return ev, true
 
@@ -196,6 +198,16 @@ func (s *Server) evaluateReport(ctx context.Context, a sqlite.Alert, ev alerts.E
 		return ev, true
 	}
 	return ev, false
+}
+
+// busyDay words the busy-day alert. Against a usual under ten visitors a day,
+// or a site with fewer than a week of days behind it, a multiplier says
+// nothing ("230×" of one visitor), so it is new traffic: the count alone.
+func busyDay(domain string, today, usual float64, days int) (title, message string) {
+	if usual < moments.MinUsual || days < moments.MinHistory {
+		return "New traffic", fmt.Sprintf("%s has %.0f visitors today, more than it usually gets.", domain, today)
+	}
+	return "Busy day", fmt.Sprintf("%s has %.0f visitors today — about %s a normal day.", domain, today, moments.Times(today/usual))
 }
 
 // paidSince counts a site's real payments after `since` (unix seconds;

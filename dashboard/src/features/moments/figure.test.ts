@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { figureOf, seeLabel, showing, whenOf } from './figure'
+import { fmtInt } from '../../lib/format'
 import type { Pin } from './pins'
 
 const money = (m: number) => `$${(m / 100).toFixed(2)}`
@@ -7,9 +8,11 @@ const pin = (o: Partial<Pin>): Pin => ({ id: 'x', kind: 'spike', score: 1, filte
 
 describe('a pin as a card tells it', () => {
   it('counts a spike up in visitors, with how many times the usual', () => {
-    expect(figureOf(pin({ kind: 'spike', n: { visitors: 2813, factor: 17.2 } }), money)).toMatchObject({ n: 2813, unit: 'visitors', mult: '17.2×' })
+    expect(figureOf(pin({ kind: 'spike', n: { visitors: 2813, factor: 17.2 } }), money)).toMatchObject({ n: 2813, unit: 'visitors', mult: '17×' })
+    // A spike on a quiet site has no usual to multiply: the count, no multiplier.
+    expect(figureOf(pin({ kind: 'spike', n: { visitors: 230 } }), money)).toEqual({ n: 230, fmt: fmtInt, unit: 'visitors' })
     // A spike without a count is only its factor.
-    expect(figureOf(pin({ kind: 'spike', n: { factor: 4 } }), money)).toEqual({ text: '4.0×' })
+    expect(figureOf(pin({ kind: 'spike', n: { factor: 4 } }), money)).toEqual({ text: '4×' })
   })
 
   it('counts a sale up in money, and writes a drop as the rate it fell from and to', () => {

@@ -2,7 +2,7 @@
 // all from the dashboard's tokens (so both themes keep their contrast).
 import { Bot, Coins, Flag, Link2, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
 import type { SideKind } from '../../components/SideCard/SideCard'
-import { copy } from './copy'
+import { titleOf } from './copy'
 import type { Chip } from './SourceChip'
 import type { Pin, PinKind } from './pins'
 
@@ -19,7 +19,7 @@ const KINDS: Record<PinKind, { Icon: LucideIcon; tint: string }> = {
 
 export function kindOf(pin: Pin): SideKind {
   const { Icon, tint } = KINDS[pin.kind]
-  return { icon: <Icon size={14} strokeWidth={2} />, label: copy.title[pin.kind], tint }
+  return { icon: <Icon size={14} strokeWidth={2} />, label: titleOf(pin), tint }
 }
 
 /** The ghost sits in the corner of a milestone and of a first sale only. */

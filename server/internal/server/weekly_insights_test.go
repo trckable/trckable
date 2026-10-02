@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/insights"
 	"github.com/trckable/trckable/server/internal/query"
 )
 
@@ -116,5 +117,16 @@ func TestAWeekIsReportedOnlyForASiteThatHadOne(t *testing.T) {
 	}
 	if !hadAWeek(before, before+60, end) {
 		t.Error("a site that sent something in its first week has one")
+	}
+}
+
+// The multiplier is written the way the dashboard writes it: a decimal only
+// under ten, never "230.0×".
+func TestInsightLineTimes(t *testing.T) {
+	for in, want := range map[float64]string{1.9: "1.9× the average", 3.0: "3× the average", 12.3: "12× the average"} {
+		line := insightLine(insights.Insight{Kind: insights.TopRevenue, Dim: "channel", Value: "Search", PerVisitor: 49, Times: in}, &query.Money{Currency: "USD", Exponent: 2})
+		if !strings.HasSuffix(line, want) {
+			t.Errorf("%v: %q", in, line)
+		}
 	}
 }

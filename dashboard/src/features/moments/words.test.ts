@@ -13,6 +13,20 @@ describe('what a pin says', () => {
     expect(s.facts).toEqual(['4.2× the usual', 'mostly from news.example', 'Sat, Sep 19'])
   })
 
+  it('a spike with no usual to multiply is new traffic: the count and the source, never a multiplier', () => {
+    const s = say(pin('spike', { day: '2026-09-19', n: { visitors: 230, referrer: 'news.example' } }), usd)
+    expect(s.title).toBe('New traffic')
+    expect(s.line).toBe('New traffic · 230 visitors · mostly from news.example')
+    expect(s.big).toBe('230 visitors')
+    expect(s.facts).toEqual(['mostly from news.example', 'Sat, Sep 19'])
+    expect([s.line, s.big, ...s.facts].join(' ')).not.toMatch(/×|usual/)
+  })
+
+  it('a multiplier is rounded: a decimal only under ten', () => {
+    expect(say(pin('spike', { n: { factor: 12.4, visitors: 900 } }), usd).line).toBe('Spike · 12× the usual')
+    expect(say(pin('spike', { n: { factor: 3, visitors: 900 } }), usd).facts[0]).toBe('3× the usual')
+  })
+
   it('sales: the amount, how many and who earned most', () => {
     const s = say(pin('sale', { day: '2026-09-02', n: { count: 3, amount: 132200, channel: 'AI' } }), usd)
     expect(s.line).toBe('3 sales · $1,322 · mostly AI assistants')

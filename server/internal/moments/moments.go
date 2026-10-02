@@ -4,7 +4,11 @@
 // channel); it never sees a visitor.
 package moments
 
-import "sort"
+import (
+	"math"
+	"sort"
+	"strconv"
+)
 
 // Moment is one thing worth a pop on the timeline, at bucket T (the site's
 // own clock, "2026-09-27T20:00", the same keys as the report's series).
@@ -12,7 +16,7 @@ type Moment struct {
 	T    string `json:"t"`
 	Kind string `json:"kind"` // spike | sale | country | ai | milestone | note
 
-	Factor   float64 `json:"factor,omitempty"`   // spike: times the usual
+	Factor   float64 `json:"factor,omitempty"`   // spike: times the usual; absent for new traffic (see Quiet)
 	Referrer string  `json:"referrer,omitempty"` // spike: who sent them
 	Visitors int64   `json:"visitors,omitempty"` // spike: visitors in the bucket
 	Count    int64   `json:"count,omitempty"`    // sale: payments in the bucket
@@ -31,6 +35,44 @@ type Moment struct {
 type Spike struct {
 	I      int
 	Factor float64
+	// Quiet: the usual it was measured against is too small, or too young, to
+	// be worth a multiplier ("230×" of one visitor a day says nothing). It is
+	// new traffic, told as a count and a source.
+	Quiet bool
+}
+
+const (
+	// MinUsual is the least a day's usual may be for a multiplier to mean
+	// anything: under it a spike is new traffic.
+	MinUsual = 10
+	// MinUsualHour is the same floor for one hour of the day (about 50 visitors a day).
+	MinUsualHour = 2
+	// MinHistory is how many cycles (days) a site must have had before a
+	// multiplier is told.
+	MinHistory = 7
+)
+
+// minUsual is the floor for buckets of this period (1: a day, 24: an hour).
+func minUsual(period int) float64 {
+	if period > 1 {
+		return MinUsualHour
+	}
+	return MinUsual
+}
+
+// Round writes a factor the way it is told: one decimal under ten, whole
+// numbers from ten on (2.4, 3, 12), never 230.0.
+func Round(f float64) float64 {
+	if r := math.Round(f*10) / 10; r < 10 {
+		return r
+	}
+	return math.Round(f)
+}
+
+// Times is Round as words: "2.4×", "3×", "12×". The dashboard writes it the
+// same way, so a line reads the same in the card, the email and an alert.
+func Times(f float64) string {
+	return strconv.FormatFloat(Round(f), 'f', -1, 64) + "×"
 }
 
 // Spikes finds the buckets from start on at least factor times their
@@ -39,8 +81,18 @@ type Spike struct {
 // 24 by the hour: the same hour on the days before, so an afternoon is not a
 // spike against the night). It needs two cycles; a zero baseline is one
 // visitor, so a quiet site's first dozen is a spike and its first one is not.
+// A spike whose baseline is under the floor (MinUsual a day), or on a site
+// whose first visitor came less than MinHistory cycles before it, is Quiet.
 func Spikes(values []int64, start, period, window int, factor float64, min int64) []Spike {
 	var out []Spike
+	first := -1 // the first bucket with anybody: before it the site did not exist
+	for i, v := range values {
+		if v > 0 {
+			first = i
+			break
+		}
+	}
+	floor := minUsual(period)
 	for i := start; i < len(values); i++ {
 		var sum int64
 		n := 0
@@ -52,24 +104,31 @@ func Spikes(values []int64, start, period, window int, factor float64, min int64
 			continue
 		}
 		base := float64(sum) / float64(n)
+		quiet := base < floor || first < 0 || (i-first+period-1)/period < MinHistory
 		if base < 1 {
 			base = 1
 		}
 		f := float64(values[i]) / base
 		if values[i] >= min && f >= factor {
-			out = append(out, Spike{I: i, Factor: f})
+			out = append(out, Spike{I: i, Factor: f, Quiet: quiet})
 		}
 	}
 	return out
 }
 
-// Top keeps the biggest spikes only: n of them, back in time order.
+// Top keeps the biggest spikes only: n of them, back in time order. A spike
+// with a real baseline outranks new traffic, whatever its multiplier says.
 func Top(s []Spike, n int) []Spike {
 	if len(s) <= n {
 		return s
 	}
 	c := append([]Spike(nil), s...)
-	sort.SliceStable(c, func(a, b int) bool { return c[a].Factor > c[b].Factor })
+	sort.SliceStable(c, func(a, b int) bool {
+		if c[a].Quiet != c[b].Quiet {
+			return !c[a].Quiet
+		}
+		return c[a].Factor > c[b].Factor
+	})
 	c = c[:n]
 	sort.Slice(c, func(a, b int) bool { return c[a].I < c[b].I })
 	return c

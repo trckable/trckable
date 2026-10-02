@@ -3,6 +3,7 @@ import { Bot, Coins, Flag, Globe, StickyNote, TrendingUp, type LucideIcon } from
 import type { MilestoneKind } from '../../lib/api'
 import { countryName, flag } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
+import { times } from '../../lib/times'
 import { say } from '../milestones/words'
 import { copy } from './copy'
 import type { Moment, MomentKind } from './moments'
@@ -20,7 +21,7 @@ export function wordsOf(m: Moment, fmt?: (minor: number) => string): Words {
   const icon = ICONS[m.kind]
   switch (m.kind) {
     case 'spike':
-      return { icon, line: copy.spike(String(m.factor ?? 3)), sub: m.referrer ? copy.from(m.referrer) : undefined }
+      return { icon, line: m.factor ? copy.spike(times(m.factor)) : copy.newTraffic(m.visitors ?? 0), sub: m.referrer ? copy.from(m.referrer) : undefined }
     case 'sale': {
       const sub = [fmt && m.amount ? '+' + fmt(m.amount) : '', m.channel ? channelLabel(m.channel) : ''].filter(Boolean).join(' · ')
       return { icon, line: copy.sale(m.count ?? 1), sub: sub || undefined }
