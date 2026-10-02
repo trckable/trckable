@@ -1,0 +1,1 @@
+function e(e){let t=Math.round(e*10)/10;return String(t<10?t:Math.round(e))+`×`}export{e as t};

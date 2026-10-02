@@ -96,6 +96,10 @@ func TestSpikesAndNewReferrersCarryTheirDays(t *testing.T) {
 	if spike == nil || spike["t"] != "2026-09-17T00:00" || spike["visitors"] != 25.0 || spike["referrer"] != "news.example" {
 		t.Fatalf("spike: %v", out["moments"])
 	}
+	// Two visitors a day is no usual to multiply: new traffic carries no factor.
+	if f, has := spike["factor"]; has {
+		t.Fatalf("a usual of two is new traffic, got factor %v", f)
+	}
 
 	_, out = do(t, c, "GET", base+"/insights?from=2026-09-14&to=2026-09-18&tz=UTC", "")
 	found := out["insights"].([]any)

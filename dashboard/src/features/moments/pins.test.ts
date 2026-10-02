@@ -17,6 +17,14 @@ describe('pins from the server\'s moments', () => {
     expect(p.filters).toEqual([])
   })
 
+  it('a spike without a usual (new traffic) carries no factor and ranks under one with', () => {
+    const [fresh] = pinsFromMoments([{ t: '2026-09-20T00:00', kind: 'spike', visitors: 230, referrer: 'news.example' }], true)
+    const [real] = pinsFromMoments([spike], true)
+    expect(fresh.n.factor).toBeUndefined()
+    expect(fresh.n.visitors).toBe(230)
+    expect(fresh.score).toBeLessThan(real.score)
+  })
+
   it('sales are weighed against the biggest day, and need money to be seen', () => {
     const list = [sale('2026-09-01T00:00', 1000), sale('2026-09-02T00:00', 4000)]
     const [a, b] = pinsFromMoments(list, true)

@@ -118,8 +118,8 @@ func fairPrevious(cur query.Params, now time.Time) query.Params {
 // them) or a burst of sales, at the bucket it happened in.
 type Marker struct {
 	T        string  `json:"t"`
-	Kind     string  `json:"kind"` // spike | sale
-	Factor   float64 `json:"factor"`
+	Kind     string  `json:"kind"`               // spike | sale
+	Factor   float64 `json:"factor,omitempty"`   // spike: absent for new traffic
 	Referrer string  `json:"referrer,omitempty"` // spike: the referring site that sent most of it
 	Count    int64   `json:"count,omitempty"`    // sale: payments in the bucket
 	Amount   int64   `json:"amount,omitempty"`   // sale: net, minor units
@@ -179,7 +179,7 @@ func burstsOf(res *query.Result) []Marker {
 	var out []Marker
 	for _, b := range moments.Bursts(counts, 3, 2) {
 		s := by[res.Series[b.I].T]
-		out = append(out, Marker{T: s.T, Kind: "sale", Factor: float64(int(b.Factor*10)) / 10, Count: s.Count, Amount: s.Amount, Channel: s.Channel})
+		out = append(out, Marker{T: s.T, Kind: "sale", Factor: moments.Round(b.Factor), Count: s.Count, Amount: s.Amount, Channel: s.Channel})
 	}
 	return out
 }

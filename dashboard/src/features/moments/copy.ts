@@ -3,12 +3,14 @@
 // finding reads the same wherever it appears). What moves to the message files
 // when translations come.
 import { fmtInt } from '../../lib/format'
+import type { Pin } from './pins'
 
 const sales = (n: number) => `${fmtInt(n)} ${n === 1 ? 'sale' : 'sales'}`
 
 export const copy = {
   title: {
     spike: 'Traffic spike',
+    newTraffic: 'New traffic',
     sale: 'Sales',
     referrer: 'New referrer',
     drop: 'Fewer buyers',
@@ -33,12 +35,12 @@ export const copy = {
   share: 'Share',
   visitors: (n: number) => `${fmtInt(n)} visitors`,
   sales,
-  usual: (times: string) => `${times}× the usual`,
+  usual: (times: string) => `${times} the usual`,
   mostly: (channel: string) => `mostly ${channel}`,
   since: (day: string) => `since ${day}`,
   firstSeen: (day: string) => `first seen ${day}`,
   firstAi: 'First AI assistant visit',
-  average: (times: string) => `${times}× the average`,
+  average: (times: string) => `${times} the average`,
   perVisitor: (each: string) => `${each} a visitor`,
   // The first-week cards (the weekly email's is the first screen's own).
   discover: {
@@ -58,3 +60,6 @@ export const copy = {
     previous: 'Previous',
   },
 }
+
+/** A pin's name: a spike with no usual to multiply is new traffic. */
+export const titleOf = (pin: Pin) => (pin.kind === 'spike' && !pin.n.factor ? copy.title.newTraffic : copy.title[pin.kind])

@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/trckable/trckable/server/internal/insights"
+	"github.com/trckable/trckable/server/internal/moments"
 	"github.com/trckable/trckable/server/internal/query"
 )
 
@@ -56,7 +57,7 @@ func insightLine(i insights.Insight, m *query.Money) string {
 		}
 		return fmt.Sprintf("%s %s %s · %s → %s visitors", name, dir, percent(math.Abs(i.Change)), number(i.Was), number(i.Now))
 	case insights.TopRevenue:
-		return fmt.Sprintf("%s earns %s a visitor, %.1f× the average", name, each(i.PerVisitor, m), i.Times)
+		return fmt.Sprintf("%s earns %s a visitor, %s the average", name, each(i.PerVisitor, m), moments.Times(i.Times))
 	case insights.ConversionDrop:
 		return fmt.Sprintf("%s converts %s, was %s", name, percent(i.Rate), percent(i.WasRate))
 	}

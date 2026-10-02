@@ -46,8 +46,77 @@ func TestSpikesSameHour(t *testing.T) {
 	}
 }
 
+// Against about one visitor a day, 230 visitors is new traffic: no multiplier
+// is told. Against a real baseline of a week or more it is a spike.
+func TestSpikesBelowTheFloorAreNewTraffic(t *testing.T) {
+	quiet := []int64{1, 1, 0, 2, 1, 1, 1, 1, 230}
+	got := Spikes(quiet, 8, 1, 7, 3, 10)
+	if len(got) != 1 || !got[0].Quiet {
+		t.Fatalf("a usual of one is new traffic, got %+v", got)
+	}
+	busy := []int64{100, 110, 95, 105, 100, 98, 102, 101, 450}
+	got = Spikes(busy, 8, 1, 7, 3, 10)
+	if len(got) != 1 || got[0].Quiet {
+		t.Fatalf("a usual of 100 keeps its multiplier, got %+v", got)
+	}
+}
+
+// A site younger than a week has no usual to speak of, whatever it gets a day.
+func TestSpikesOfAYoungSiteAreNewTraffic(t *testing.T) {
+	v := []int64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 110, 105, 400}
+	got := Spikes(v, 13, 1, 7, 3, 10)
+	if len(got) != 1 || !got[0].Quiet {
+		t.Fatalf("three days of history is new traffic, got %+v", got)
+	}
+	old := append([]int64{100, 110, 105, 100, 95, 100, 102}, 400)
+	if got := Spikes(old, 7, 1, 7, 3, 10); len(got) != 1 || got[0].Quiet {
+		t.Fatalf("a week of history is enough, got %+v", got)
+	}
+}
+
+// By the hour the floor is per hour, and the first hours of the site's first
+// day do not count against it.
+func TestSpikesByTheHourFloor(t *testing.T) {
+	day := func(afternoon int64) []int64 {
+		d := make([]int64, 24)
+		for h := range d {
+			d[h] = 5
+		}
+		d[15] = afternoon
+		return d
+	}
+	var v []int64
+	for i := 0; i < 7; i++ {
+		v = append(v, day(5)...)
+	}
+	v = append(v, day(60)...)
+	got := Spikes(v, 168, 24, 7, 3, 10)
+	if len(got) != 1 || got[0].Quiet {
+		t.Fatalf("5 visitors an hour is a baseline, got %+v", got)
+	}
+}
+
+func TestTopPutsRealSpikesFirst(t *testing.T) {
+	s := []Spike{{I: 1, Factor: 230, Quiet: true}, {I: 4, Factor: 4}, {I: 6, Factor: 5}}
+	got := Top(s, 2)
+	if len(got) != 2 || got[0].I != 4 || got[1].I != 6 {
+		t.Fatalf("new traffic does not outrank a spike, got %+v", got)
+	}
+}
+
+func TestTimes(t *testing.T) {
+	for in, want := range map[float64]string{3: "3×", 3.04: "3×", 2.44: "2.4×", 9.96: "10×", 12.4: "12×", 230.03: "230×", 17.2: "17×"} {
+		if got := Times(in); got != want {
+			t.Errorf("Times(%v) = %q, want %q", in, got, want)
+		}
+	}
+	if Round(230.0) != 230 || Round(4.26) != 4.3 || Round(14.6) != 15 {
+		t.Fatalf("Round: %v %v %v", Round(230.0), Round(4.26), Round(14.6))
+	}
+}
+
 func TestTop(t *testing.T) {
-	s := []Spike{{1, 3}, {4, 9}, {6, 5}, {9, 4}}
+	s := []Spike{{I: 1, Factor: 3}, {I: 4, Factor: 9}, {I: 6, Factor: 5}, {I: 9, Factor: 4}}
 	got := Top(s, 2)
 	if len(got) != 2 || got[0].I != 4 || got[1].I != 6 {
 		t.Fatalf("the two biggest in time order, got %+v", got)

@@ -56,7 +56,7 @@ export function pinsFromMoments(list: Moment[], money: boolean): Pin[] {
     const base = { id: `${m.kind}:${m.t}`, day: day(m.t), at: m.t }
     switch (m.kind) {
       case 'spike':
-        out.push({ ...base, kind: 'spike', score: 80 + Math.min(15, m.factor ?? 3), filters: m.referrer ? [{ dim: 'referrer', value: m.referrer }] : [], showDay: true, n: { factor: m.factor, visitors: m.visitors, referrer: m.referrer } })
+        out.push({ ...base, kind: 'spike', score: 80 + Math.min(15, m.factor ?? 0), filters: m.referrer ? [{ dim: 'referrer', value: m.referrer }] : [], showDay: true, n: { factor: m.factor, visitors: m.visitors, referrer: m.referrer } })
         break
       case 'sale':
         if (money) out.push({ ...base, kind: 'sale', score: 60 + 20 * ((m.amount ?? 0) / biggest), filters: m.channel ? [{ dim: 'channel', value: m.channel }] : [], showDay: true, n: { count: m.count, amount: m.amount, channel: m.channel } })

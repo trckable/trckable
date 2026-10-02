@@ -2,15 +2,17 @@
 // moments say, Highlights, the revenue tabs, Latest buyers and AI assistants. Messages with
 // the rest of the dashboard's words, for when translations come.
 import { fmtInt, fmtPct } from '../../lib/format'
+import { times } from '../../lib/times'
 
 const plural = (n: number, one: string, many: string) => `${fmtInt(n)} ${n === 1 ? one : many}`
-const times = (f: number) => `${f.toFixed(1)}×`
 
 export const extrasCopy = {
   pace: (total: string) => `On pace for ~${total} this month`,
   /** What a spike or a burst of sales says (the moments on the chart). */
   ring: {
     spike: (factor: number) => `Spike · ${times(factor)} the usual`,
+    /** A spike on a site whose usual is too small for a multiplier: the count says it. */
+    newTraffic: (visitors: number) => `New traffic · ${plural(visitors, 'visitor', 'visitors')}`,
     from: (referrer: string) => `mostly from ${referrer}`,
     sales: (count: number, amount: string) => `${plural(count, 'sale', 'sales')} · ${amount}`,
     burst: (factor: number) => `Sales burst · ${times(factor)} the usual`,
