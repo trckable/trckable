@@ -3,6 +3,7 @@
 // is already used or set up, and a card put away or acted on does not come
 // back (firstWeek.ts). The weekly email's words and switch are the first
 // screen's own.
+import { Mail, Maximize2, Play, Search, type LucideIcon } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { SideCard } from '../../components/SideCard/SideCard'
 import type { Site } from '../../lib/api'
@@ -15,6 +16,14 @@ import { useWeeklyEmail } from '../install/useWeeklyEmail'
 import { copy } from './copy'
 import { keptOf, pick, remember, type CardId } from './firstWeek'
 import { wasUsed } from './store'
+
+/** What each card is: its icon and its own colour. */
+const KIND: Record<CardId, { Icon: LucideIcon; tint: string }> = {
+  replay: { Icon: Play, tint: 'var(--ch-7)' },
+  full: { Icon: Maximize2, tint: 'var(--accent)' },
+  weekly: { Icon: Mail, tint: 'var(--ch-5)' },
+  search: { Icon: Search, tint: 'var(--ch-1)' },
+}
 
 /** Presses Replay where it is: the card has no state of the chart's to start it with. */
 const playReplay = () => document.querySelector<HTMLButtonElement>('.replay-btn')?.click()
@@ -50,6 +59,7 @@ export function Discover({ site, today, onAway }: { site: Site; today: string; o
     onAway()
   }
   const t = id === 'weekly' ? first.cards.weekly : copy.discover[id]
+  const { Icon } = KIND[id]
   const go: Record<CardId, () => void> = {
     replay: () => {
       away()
@@ -70,6 +80,7 @@ export function Discover({ site, today, onAway }: { site: Site; today: string; o
       id="discover"
       label={t.label}
       closeLabel={copy.close}
+      kind={{ icon: <Icon size={14} strokeWidth={2} />, label: t.label, tint: KIND[id].tint }}
       title={t.title}
       onClose={away}
       actions={

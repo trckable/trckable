@@ -4,8 +4,8 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Milestone } from '../../lib/api'
 
-let reduced = false
-vi.mock('../../lib/motion', () => ({ reducedMotion: () => reduced }))
+let reduced = true
+vi.mock('../../lib/motion', () => ({ reducedMotion: () => reduced, useTween: (n: number) => n }))
 
 import { Celebration, SPARKS } from './Celebration'
 
@@ -32,7 +32,10 @@ describe('a milestone reached', () => {
     vi.useFakeTimers()
     act(() => root.render(<Celebration m={m} site="tkb_x" onShare={share} onClose={close} />))
     const card = document.body.querySelector('.side-card')
-    expect(card?.textContent).toContain('10,000 visitors')
+    expect(card?.textContent).toContain('New milestone')
+    expect(card?.textContent).toContain('10,000')
+    expect(card?.textContent).toContain('visitors')
+    expect(card?.querySelector('.side-ghost')).not.toBeNull() // a milestone is the one kind that has the ghost in its corner
     // The picture is asked for once the page has had its moment (the first load asks for nothing it does not need).
     expect(card?.querySelector('img')?.getAttribute('src')).toBeNull()
     act(() => void vi.advanceTimersByTime(1600))

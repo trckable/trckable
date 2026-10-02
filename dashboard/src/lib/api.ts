@@ -750,7 +750,6 @@ export const api = {
     call<{ user: { email: string }; site: Site | null }>('POST', '/setup', { token, email, password, domain }),
   login: (email: string, password: string, code?: string) => call<{ user: { email: string } }>('POST', '/login', { email, password, code }),
   logout: () => act('POST', '/logout'),
-  me: () => call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean }>('GET', '/me'),
   /** /me and /sites, asked at start-up alongside /setup. Quiet: a 401 here
    *  only means "not signed in yet" (or "set up first"), which /setup and /me
    *  already say, so it must not trigger the sign-in screen on its own. */

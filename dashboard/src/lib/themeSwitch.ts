@@ -14,7 +14,10 @@ type Doc = Document & { startViewTransition?: (update: () => void) => { finished
  *  interactions are not slowed. Reduced motion: at once. */
 export function switchTheme(t: string, applyTheme: (t: string) => void) {
   const root = document.documentElement
-  if (reducedMotion()) return applyTheme(t)
+  if (reducedMotion()) {
+    applyTheme(t)
+    return
+  }
   const doc = document as Doc
   if (typeof doc.startViewTransition === 'function') {
     root.dataset.themeSwitch = 'view'

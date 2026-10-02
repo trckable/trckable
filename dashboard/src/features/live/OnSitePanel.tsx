@@ -8,6 +8,7 @@ import { useLeaving } from './useLeaving'
 import { useTicking } from './useTicking'
 import { useTween } from '../../lib/motion'
 import { copy as off } from '../cookieless/copy'
+import { why } from '../cookieless/why'
 import './OnSitePanel.css'
 
 function Count({ n }: { n: number }) {
@@ -37,7 +38,7 @@ export function OnSitePanel(p: { rows: Row[]; online: number | null; clock: numb
         {more > 0 && <li className="faint num live-more">{copy.more(more)}</li>}
       </ol>
       {p.cookieless && (
-        <p className="faint cookieless-note" title={off.why}>
+        <p className="faint cookieless-note" title={why}>
           {off.journeysOff}
         </p>
       )}

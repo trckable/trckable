@@ -1,6 +1,7 @@
 // The first screen's two nudges, for an owner, as side cards: bring history in,
 // and the weekly email. One at a time, each shown until it is acted on or put
 // away, then never again for that site. The words are in firstCopy.ts.
+import { FileUp, Mail } from 'lucide-react'
 import { lazy, Suspense, useState } from 'react'
 import { SideCard } from '../../components/SideCard/SideCard'
 import type { Site } from '../../lib/api'
@@ -34,6 +35,7 @@ function Cards({ site, quiet }: { site: Site; quiet: boolean }) {
           id="first-import"
           label={t.import.label}
           closeLabel={t.close}
+          kind={{ icon: <FileUp size={14} strokeWidth={2} />, label: t.import.label, tint: 'var(--ch-1)' }}
           title={t.import.title}
           onClose={putImportAway}
           actions={
@@ -57,6 +59,7 @@ function Cards({ site, quiet }: { site: Site; quiet: boolean }) {
           id="first-weekly"
           label={t.weekly.label}
           closeLabel={t.close}
+          kind={{ icon: <Mail size={14} strokeWidth={2} />, label: t.weekly.label, tint: 'var(--ch-5)' }}
           title={t.weekly.title}
           onClose={putWeeklyAway}
           actions={

@@ -576,7 +576,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             partialLast={live}
             {...metricProps(metric, money, revenue)}
             notes={notesOn ? notes : []}
-            layer={isShared() || telling ? undefined : momentLayer({ site, query, labels: chartSeries.map((p) => p.t), bucket: hours ? 'hour' : (data?.bucket ?? 'day'), money: fmtM, onShare: () => setSharing(true) })}
+            layer={isShared() || telling ? undefined : momentLayer({ site, query, labels: chartSeries.map((p) => p.t), series: chartSeries, bucket: hours ? 'hour' : (data?.bucket ?? 'day'), money: fmtM, onShare: () => setSharing(true) })}
             onAddNote={isShared() || isViewer() || !notesOn ? undefined : (day) => setNoteFor(day)}
             pulses={pulses}
             {...chartTips({ series: chartSeries, hours: !!hours, byDay: data?.bucket === 'day', days: cur?.days, site, money, metric })}

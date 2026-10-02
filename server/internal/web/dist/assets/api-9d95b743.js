@@ -1,1 +1,0 @@
-import{Un as e}from"./index-c3f06252.js";var t=(t,n)=>e(`GET`,`/sites/${encodeURIComponent(t)}/now`,void 0,n);export{t};

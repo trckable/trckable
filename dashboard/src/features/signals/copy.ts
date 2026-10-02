@@ -22,7 +22,7 @@ export const signals = {
     label: 'Notices',
     title: 'Get notified?',
     body: 'A notice for a first sale from a new source, a spike or tracking stopping. Only while a trckable tab is open.',
-    yes: 'Yes',
+    yes: 'Turn on',
     close: 'Close',
   },
 }

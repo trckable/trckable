@@ -1,40 +1,139 @@
 /* The side card (SideCard.tsx): fixed, so it never moves the page. Bottom
    right above the Peek bubble (56px high, 28px from the corner); a bottom
-   sheet on a phone. Under the toasts (200), over the page and the bubble. */
-.side-card {
+   sheet with a grab handle on a phone. Under the toasts (200), over the page and
+   the bubble. A calm card: a soft shadow and a thin line of its own colour on its
+   left edge; the ghost only for a milestone and a first sale. A deck of several
+   shows the next ones peeking out behind it. */
+.side-deck {
+  --spring: cubic-bezier(0.34, 1.4, 0.5, 1);
   position: fixed;
   right: 28px;
   bottom: 96px;
   z-index: 35;
   box-sizing: border-box;
   width: min(340px, calc(100vw - 32px));
+  padding-bottom: 0;
+}
+.side-deck.is-stack {
+  padding-bottom: 14px;
+}
+.side-peek {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 6px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.side-peek.p2 {
+  left: 20px;
+  right: 20px;
+  bottom: 0;
+  opacity: 0.6;
+}
+.side-card {
+  --tint: var(--accent);
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 16px;
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  padding: 14px;
+  border: 1px solid var(--border);
   border-radius: 14px;
-  background: var(--surface-2);
+  background: var(--surface);
   color: var(--text);
   font-size: 14px;
-  box-shadow: var(--shadow);
-  animation: side-in 220ms var(--ease) both;
+  box-shadow: var(--shadow-soft, var(--shadow));
+  overflow: hidden;
+  outline: none;
+  animation: side-in 0.5s var(--spring) both;
+}
+.side-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.side-card.leaving {
+  animation: side-out 0.2s var(--ease) both;
+}
+/* A thin line of the card's own colour on its left edge. */
+.side-card.has-kind::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--tint);
+  opacity: 0.8;
 }
 @keyframes side-in {
   from {
     opacity: 0;
-    transform: translateX(28px);
+    transform: translateY(10px) scale(0.98);
   }
+}
+@keyframes side-out {
+  to {
+    opacity: 0;
+    transform: translateX(-24px) rotate(-1.5deg);
+  }
+}
+.side-kind {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 24px;
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+}
+.side-ic {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--tint) 16%, transparent);
+  color: var(--tint);
+}
+.side-when {
+  margin-left: auto;
+  border-bottom: 1px dotted var(--border-2);
+  color: var(--text-3);
+  font: 12px var(--mono);
+  cursor: help;
+}
+.side-when:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .side-card-title {
   padding-right: 24px;
   font-weight: 600;
   overflow-wrap: anywhere;
 }
+.side-card.has-kind .side-card-title {
+  padding-right: 0;
+}
+.side-ghost {
+  position: absolute;
+  right: -10px;
+  bottom: -12px;
+  pointer-events: none;
+  transform: rotate(-12deg);
+  opacity: 0.9;
+}
 .side-card-x {
   position: absolute;
   top: 8px;
   right: 8px;
+  z-index: 2;
   display: grid;
   place-items: center;
   width: 28px;
@@ -46,7 +145,7 @@
   cursor: pointer;
 }
 .side-card-x:hover {
-  background: var(--surface);
+  background: var(--surface-2);
   color: var(--text);
 }
 .side-card-x:focus-visible {
@@ -55,8 +154,28 @@
 }
 .side-card-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
   justify-content: flex-end;
+  margin-top: 2px;
+}
+.side-dots {
+  display: flex;
+  gap: 5px;
+  margin-right: auto;
+}
+.side-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border-2);
+  transition:
+    width 0.3s var(--ease),
+    background 0.3s;
+}
+.side-dots i.on {
+  width: 16px;
+  background: var(--text-2);
 }
 .side-card-input {
   width: 100%;
@@ -79,24 +198,188 @@
   font-size: 13px;
 }
 @media (max-width: 560px) {
-  .side-card {
+  .side-deck {
     right: 0;
     bottom: 0;
     left: 0;
     width: auto;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+  .side-card {
+    padding: 22px 14px calc(16px + env(safe-area-inset-bottom, 0px));
     border-width: 1px 0 0;
     border-radius: 16px 16px 0 0;
-    animation-name: side-up;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
   }
-}
-@keyframes side-up {
-  from {
-    transform: translateY(100%);
+  /* The grab handle. */
+  .side-card::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 36px;
+    height: 4px;
+    margin-left: -18px;
+    border-radius: 2px;
+    background: var(--border-2);
+  }
+  .side-card.has-kind::before {
+    display: none;
+  }
+  .side-peek {
+    display: none;
+  }
+  .side-deck.is-stack {
+    padding-bottom: 0;
+  }
+  /* Targets a finger can hit: 44 px, like every other control on a phone. */
+  .side-card-x {
+    top: 6px;
+    right: 6px;
+    width: 44px;
+    height: 44px;
+  }
+  .side-kind {
+    padding-right: 44px;
+  }
+  .side-card-actions .btn {
+    height: 44px;
+  }
+  .side-card-actions .btn.icon {
+    width: 44px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .side-card {
+  .side-card,
+  .side-card.leaving {
     animation: none;
   }
+  .side-dots i {
+    transition: none;
+  }
+}
+
+/* The small chart of the moment (Chart.tsx): drawn in the card's tint; the line draws itself,
+   the area fades in and the dot pops. Reduced motion: drawn at once. */
+.side-chart {
+  display: block;
+  width: 100%;
+  height: 46px;
+  margin: 2px 0 0;
+  overflow: visible;
+  color: var(--tint);
+}
+.side-chart .base {
+  stroke: var(--text-4, var(--text-3));
+  stroke-dasharray: 3 3;
+  stroke-width: 1;
+}
+.side-chart .ln {
+  fill: none;
+  stroke: var(--tint);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.side-chart .ar {
+  fill: color-mix(in srgb, var(--tint) 18%, transparent);
+}
+.side-chart .pt {
+  fill: var(--tint);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.side-chart .bar {
+  fill: var(--tint);
+}
+.side-chart .bar.empty {
+  fill: var(--border-2);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .side-chart .ln {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: side-draw 0.9s 0.1s var(--ease) forwards;
+  }
+  .side-chart .ar {
+    opacity: 0;
+    animation: side-fade 0.6s 0.4s forwards;
+  }
+  .side-chart .pt {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: side-pop 0.4s 0.85s var(--spring) both;
+  }
+}
+@keyframes side-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes side-fade {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes side-pop {
+  from {
+    transform: scale(0);
+  }
+}
+
+/* The card's figure, where it came from and what stands behind it (a card's figure, chips and notes: PinCard.tsx, Celebration.tsx). */
+.side-num {
+  display: block;
+  font: 700 28px/1.1 var(--mono);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.side-num small {
+  margin-left: 6px;
+  font: 500 13px var(--font, inherit);
+  letter-spacing: 0;
+  color: var(--text-2);
+}
+.side-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.side-mult {
+  font: 700 12.5px var(--mono);
+  color: var(--tint);
+}
+.side-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 2px 8px 2px 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.side-chip .ref-mark {
+  margin: 0;
+}
+.side-chip.side-path {
+  padding-left: 8px;
+  font-family: var(--mono);
+}
+.side-dot {
+  width: 10px;
+  height: 10px;
+  margin-left: 4px;
+  border-radius: 50%;
+}
+.side-facts {
+  margin: 0;
+  font-size: 12.5px;
 }

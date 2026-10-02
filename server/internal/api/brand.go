@@ -171,7 +171,7 @@ func getIcon(ctx context.Context, client *http.Client, url string) ([]byte, bool
 		return nil, false
 	}
 	req.Header.Set("User-Agent", "trckable (site icon)")
-	res, err := client.Do(req)
+	res, err := client.Do(req) //nolint:gosec // the client is SafeClient (see declaredIcons): public hosts only, every connection checked
 	if err != nil {
 		return nil, false
 	}

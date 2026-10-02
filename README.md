@@ -122,7 +122,8 @@ Nothing is paid, limited or held back. The complete list, in words: [Everything 
 - **Cha-ching**: a coin toast when a sale arrives, over any view, with an optional chime. Browser notices for a first sale from a new source, a spike or tracking stopping are opt-in, and asked for only from a button.
 - **Sparklines** on the top Sources and Pages, **vs usual** under Visitors ("+18% vs usual", against the same weekday) and **where the month is heading** ("≈ 41k by 31 Oct").
 - **Site icons** beside referrers, fetched by your server once and kept there: your visitors' browsers never ask a third party.
-- **Milestones** celebrate with a short ghost hop and a card ready to share.
+- **Milestones** celebrate with a short ghost hop and a card ready to share. The cards that come up by themselves (a milestone, the one thing today, a nudge) are one design: what it is, when, its figure counting up, where it came from, a small chart of the moment, and a deck you turn with ← → or a swipe.
+- **Smooth theme switch**: a short crossfade, nothing redrawn, and the saved theme is on before the first frame.
 
 ### Keyboard shortcuts
 
