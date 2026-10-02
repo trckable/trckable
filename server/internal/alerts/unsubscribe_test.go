@@ -102,7 +102,7 @@ func TestResendSendsTheSameMessageOverHTTPS(t *testing.T) {
 	// A refusal says why, and never the key.
 	bad := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(403)
-		io.WriteString(w, `{"message":"The sender domain is not verified"}`)
+		_, _ = io.WriteString(w, `{"message":"The sender domain is not verified"}`)
 	}))
 	defer bad.Close()
 	m.resend.endpoint = bad.URL
