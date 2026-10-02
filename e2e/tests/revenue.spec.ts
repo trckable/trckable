@@ -191,8 +191,8 @@ for (const colorScheme of ['dark', 'light'] as const) {
   test(`a phone gets a slim card over both plots, nothing spills sideways (${colorScheme})`, async ({ page }) => {
     await page.emulateMedia({ colorScheme })
     const chart = await open(page, 390)
-    // A side card (a milestone reached) is a sheet over the page's foot: put it away to reach the chart.
-    for (const x of await page.locator('aside.side-card .side-card-x').all()) await x.click()
+    // A side card (a milestone reached) is a sheet over the page's foot, and it can slide in at any moment: the chart goes to the top, out of its reach.
+    await chart.evaluate((el) => el.scrollIntoView({ block: 'start' }))
     const box = (await chart.boundingBox())!
     await page.mouse.click(box.x + box.width * 0.6, box.y + box.height * 0.85)
     await expect(chart.locator('.chart-tip.compact')).toBeVisible()
