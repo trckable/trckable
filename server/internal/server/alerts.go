@@ -59,6 +59,7 @@ func (s *Server) checkAlerts(ctx context.Context) error {
 		if !fire {
 			continue
 		}
+		ev.Unsubscribe = s.stopLink(a.ID)
 		if err := alerts.Send(ctx, a.Target, ev); err != nil {
 			slog.Warn("alert not delivered", "kind", a.Kind, "err", err)
 			continue
@@ -67,6 +68,15 @@ func (s *Server) checkAlerts(ctx context.Context) error {
 		slog.Info("alert sent", "kind", a.Kind, "site", a.SiteID)
 	}
 	return nil
+}
+
+// stopLink is the address an email gives for stopping one alert: it works
+// without signing in. Without a public address there is none to give.
+func (s *Server) stopLink(alertID string) string {
+	if s.cfg.BaseURL == "" || s.box == nil {
+		return ""
+	}
+	return strings.TrimSuffix(s.cfg.BaseURL, "/") + "/u/" + alerts.UnsubscribeToken(s.box.Derive(alerts.KeyLabel), alertID)
 }
 
 // evaluate decides whether one alert should fire right now.
