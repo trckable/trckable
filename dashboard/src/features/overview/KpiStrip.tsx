@@ -1,6 +1,7 @@
 // The key numbers, one light strip: Visitors, then Revenue, Conversion and
-// Per visitor where there are payments (Pageviews where there are not), Bounce
-// rate, Session time, and Online now last. Each is a button that puts it on
+// Per visitor where there are payments (Pageviews where there are not, with a
+// dimmed Revenue tile before it for an owner), Bounce rate, Session time, and
+// Online now last. Each is a button that puts it on
 // the main chart when the chart can draw it here (chartMetric).
 import type { ReactNode } from 'react'
 import type { KPIs, Money, Site } from '../../lib/api'
@@ -9,6 +10,7 @@ import { canChart, type Can, type ChartMetric } from './chartMetric'
 import { copy } from './copy'
 import { KpiTile } from './KpiTile'
 import { KpiMark } from './kpiMark'
+import { canChange } from '../../lib/me'
 
 interface Props {
   loading: boolean
@@ -34,7 +36,7 @@ interface Props {
   expectMoney?: boolean
   /** Online now, last. */
   online: ReactNode
-  /** The site whose Settings → Payments the quiet hint opens. */
+  /** The site whose Settings → Payments the Revenue tile opens. */
   site: Site
 }
 
@@ -61,6 +63,8 @@ export function KpiStrip(p: Props) {
   )
   // What follows Visitors: the money numbers, Pageviews without payments, or
   // the money numbers' empty places while a report that will have them loads.
+  // Where there are none, an owner (canChange: never a viewer or a shared
+  // link) has the dimmed Revenue tile before Pageviews.
   const second = () => {
     if (money)
       return (
@@ -78,7 +82,12 @@ export function KpiStrip(p: Props) {
           {tile('per-visitor', copy.perVisitorTile, undefined, fmtInt, null, { money: true })}
         </>
       )
-    return tile('pageviews', copy.pageviews, k?.pageviews, fmtInt, delta(k?.pageviews ?? 0, pk?.pageviews), { live: (r) => r.kpis.pageviews })
+    return (
+      <>
+        {canChange() && <KpiMark k="revenue" tile={p.site} />}
+        {tile('pageviews', copy.pageviews, k?.pageviews, fmtInt, delta(k?.pageviews ?? 0, pk?.pageviews), { live: (r) => r.kpis.pageviews })}
+      </>
+    )
   }
   return (
     <div role="group" aria-label={copy.keyNumbers} className="kpis">
@@ -87,7 +96,6 @@ export function KpiStrip(p: Props) {
       {tile('bounce', copy.bounce, k?.bounce_rate, fmtPct, delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true), { live: (r) => r.kpis.bounce_rate })}
       {tile('session', copy.session, k?.avg_session_s, fmtDuration, delta(k?.avg_session_s ?? 0, pk?.avg_session_s), { live: (r) => r.kpis.avg_session_s })}
       {p.online}
-      <KpiMark k="pay" site={p.site} money={!!money} loading={p.loading} />
     </div>
   )
 }

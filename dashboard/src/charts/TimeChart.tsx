@@ -67,7 +67,7 @@ export interface TimeChartProps {
   onAddNote?: (day: string) => void
   /** Live pulse: things arriving right now, drawn rising from the last point. */
   pulses?: Pulse[]
-  /** Drawn over the plot with the chart's own scales: the rings of spikes and sale bursts. */
+  /** Drawn over the plot with the chart's own scales: the moments (spikes, sales, firsts). */
   layer?: (g: { x: (i: number) => number; y: (v: number) => number; vals: number[]; w: number }) => ReactNode
   /** Replay tells a story: the line ends at the playhead, the rest unknown. */
   story?: boolean
@@ -164,7 +164,7 @@ export function TimeChart(p: TimeChartProps) {
       onPointerMove={(e) => {
         if (!n || p.locked) return
         // On a note's flag its own tooltip speaks; the day's would cover it.
-        if ((e.target as Element).closest?.('.note-mark, .ring-mark')) return setHover(null)
+        if ((e.target as Element).closest?.('.note-mark, .moment-mark')) return setHover(null)
         const i = indexAt(e.currentTarget, e.clientX)
         if (drag && p.onScrub) {
           p.onScrub(i)

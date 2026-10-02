@@ -1,7 +1,8 @@
-// The key numbers keep one width: a tile is as wide without payments (five
-// tiles) as with them (seven), and the free room sits at the right instead of
-// the five stretching across the whole row. Wrapping on a tablet and a phone
-// is unchanged, so the check runs at each width.
+// The key numbers keep one width: a tile is as wide without payments (six
+// tiles, one of them the dimmed Revenue tile) as with them (seven), and the
+// free room sits at the right instead of the six stretching across the whole
+// row. Wrapping on a tablet and a phone is unchanged, so the check runs at each
+// width.
 import { expect, test, type Page } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { API } from '../playwright.config'
@@ -38,7 +39,8 @@ async function open(page: Page, width: number, revenue: boolean) {
   await page.goto(`${API}/example.com?view=data`)
   const tiles = page.getByRole('group', { name: 'Key numbers' })
   await expect(tiles.locator('.kpi .value.num').first()).toBeVisible()
-  await expect(tiles.locator('.kpi')).toHaveCount(revenue ? 7 : 5)
+  // Without payments an owner has the dimmed Revenue tile in the money numbers' place: six.
+  await expect(tiles.locator('.kpi')).toHaveCount(revenue ? 7 : 6)
   return tiles
 }
 
@@ -55,7 +57,7 @@ for (const width of [1280, 1024, 768, 390]) {
     const without = await box(page, width, false)
     const withRev = await box(page, width, true)
     expect(Math.abs(without.tile - withRev.tile)).toBeLessThan(1)
-    // The five do not stretch across the strip when seven would fit: the room is on the right.
+    // The six do not stretch across the strip when seven would fit: the room is on the right.
     if (width >= 1024) expect(without.last.x + without.last.width).toBeLessThan(without.strip.x + without.strip.width - without.tile / 2)
   })
 }

@@ -1,0 +1,144 @@
+/* The moments on the chart (MomentLayer) and the card they open (WhyCard). A
+   marker is a small ring on the line with a shape of its own inside, so it
+   reads without its colour; the colour only says which kind. */
+.moment-marks {
+  display: contents;
+}
+.moment-mark {
+  --mk: var(--accent);
+  position: absolute;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid var(--mk);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--mk);
+  cursor: pointer;
+}
+.moment-mark.sale {
+  --mk: var(--money);
+}
+.moment-mark.drop {
+  --mk: var(--down);
+}
+.moment-mark.referrer {
+  --mk: var(--ch-1);
+}
+.moment-mark.ai {
+  --mk: var(--ch-5);
+}
+/* A finger-sized target around the small ring. */
+.moment-mark::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+}
+.moment-mark:hover,
+.moment-mark:focus-visible,
+.moment-mark.on {
+  border-width: 2.5px;
+  background: color-mix(in srgb, var(--mk) 18%, var(--surface));
+  outline: none;
+}
+.moment-mark:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--text) 35%, transparent);
+}
+/* Markers that landed together are one, with how many. */
+.moment-n {
+  position: absolute;
+  top: -7px;
+  right: -8px;
+  min-width: 14px;
+  padding: 0 3px;
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 10px;
+  font-style: normal;
+  line-height: 12px;
+  text-align: center;
+}
+.moment-tip {
+  position: absolute;
+  z-index: 6;
+  transform: translateY(-100%);
+  padding: 6px 10px;
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: 12.5px;
+  pointer-events: none;
+  animation: rise 0.12s var(--ease) backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .moment-tip {
+    animation: none;
+  }
+}
+@media (max-width: 640px) {
+  .moment-tip {
+    font-size: 12px;
+  }
+}
+
+/* The card: the figure, what stands behind it, and the others beside it. */
+.why-body {
+  margin: 0;
+}
+.why-kind {
+  font-size: 12.5px;
+}
+.today-count {
+  margin-right: auto;
+  align-self: center;
+  font-size: 12.5px;
+}
+.why-big {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.why-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  margin: 0;
+  font-size: 12.5px;
+}
+.why-more {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 6px 0 0;
+  border-top: 1px solid var(--border);
+  list-style: none;
+}
+.why-more button {
+  width: 100%;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.why-more button:hover,
+.why-more button:focus-visible {
+  background: var(--surface);
+  color: var(--text);
+}

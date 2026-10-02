@@ -1,0 +1,44 @@
+/* The Revenue tile before payments: dimmed, a button like the other tiles. */
+.kpi.dim .value,
+.kpi.dim .kpi-name {
+  color: var(--text-3);
+}
+.kpi.dim:hover .kpi-name,
+.kpi.dim:focus-visible .kpi-name {
+  color: var(--text);
+}
+/* The card's providers: one row each, the name and a quiet Connect. */
+.prov-links {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.prov-links button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.prov-links button:hover,
+.prov-links button:focus-visible {
+  background: var(--surface);
+}
+.prov-links button:hover .faint,
+.prov-links button:focus-visible .faint {
+  color: var(--accent);
+}
+.prov-body {
+  margin: 0;
+}
