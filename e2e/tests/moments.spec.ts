@@ -138,6 +138,63 @@ test('a marker applies its filter and day through the address, and opens the car
   await expect(why).toHaveCount(0)
 })
 
+/** New traffic on a quiet site (no usual to multiply): its count is the line, the card and the figure. */
+const quiet = () => ({ moments: [{ t: `${day(3)}T00:00`, kind: 'spike', visitors: 1955, referrer: 'google.com' }, { t: `${day(10)}T00:00`, kind: 'spike', factor: 3.2, visitors: 300, referrer: 'news.example' }] })
+
+test('one number for one moment: the line, the card and the markers after the filter say the same, and a card open says one thing at a time', async ({ page }) => {
+  await only(page, quiet())
+  const asked: string[] = []
+  page.on('request', (r) => /\/moments\?/.test(r.url()) && asked.push(r.url()))
+  await open(page)
+  const mark = page.getByRole('button', { name: /New traffic · 1,955 visitors · mostly from google\.com/ })
+  await expect(mark).toBeVisible({ timeout: 20_000 })
+  await mark.hover()
+  await expect(page.getByRole('tooltip')).toContainText('1,955 visitors')
+  await mark.click()
+  // The filter is applied; the moments are the site's, so they were not asked again narrowed by it.
+  await expect(page).toHaveURL(/[?&]f=referrer(:|%3A)google\.com/)
+  const why = card(page, 'New traffic')
+  await expect(why).toContainText('1,955')
+  await expect(mark).toBeVisible()
+  expect(asked.filter((u) => /[?&]f=/.test(u))).toEqual([])
+  // One thing at a time: pointing at another marker lights it and says nothing.
+  const other = page.locator('.moment-mark:not(.on)').first()
+  await other.hover()
+  await expect(page.getByRole('tooltip')).toHaveCount(0)
+  await expect(why).toContainText('1,955')
+  // The card is docked in the corner, over nothing the markers need; the chart tints the day it is about.
+  const box = (await why.boundingBox())!
+  const viewport = page.viewportSize()!
+  expect(box.x + box.width).toBeLessThanOrEqual(viewport.width)
+  expect(box.y + box.height).toBeLessThanOrEqual(viewport.height - 84)
+  await expect(page.locator('.moment-day')).toHaveCount(1)
+  // When it happened in plain sans, the date in a tooltip, nothing underlined; the header is not selectable.
+  const when = why.locator('.side-when')
+  await expect(when).toHaveText('3 days ago')
+  expect(await when.evaluate((e) => getComputedStyle(e).borderBottomWidth)).toBe('0px')
+  expect(await when.evaluate((e) => getComputedStyle(e).fontFamily.toLowerCase())).not.toContain('mono')
+  expect(await why.locator('.side-kind').evaluate((e) => getComputedStyle(e).userSelect)).toBe('none')
+})
+
+test('markers sit on a lane above the plot, one a day, none touching another', async ({ page }) => {
+  await given(page)
+  await open(page)
+  const marks = page.locator('.moment-mark')
+  await expect(marks.first()).toBeVisible({ timeout: 20_000 })
+  const boxes = await marks.evaluateAll((all) => all.map((e) => e.getBoundingClientRect().toJSON() as { x: number; y: number; width: number; height: number }))
+  const line = (await page.locator('.chart-wrap .chart-line').first().boundingBox())!
+  for (const b of boxes) expect(b.y + b.height).toBeLessThanOrEqual(line.y + 0.5)
+  for (let a = 0; a < boxes.length; a++) for (let b = a + 1; b < boxes.length; b++) expect(boxes[a].x + boxes[a].width <= boxes[b].x || boxes[b].x + boxes[b].width <= boxes[a].x).toBe(true)
+  const days = (await marks.evaluateAll((all) => all.map((e) => (e.getAttribute('aria-label') ?? '').split(':')[0])))
+  expect(new Set(days).size).toBe(days.length)
+  // The count of a cluster is inside its marker.
+  for (const n of await page.locator('.moment-n').all()) {
+    const [m, c] = await Promise.all([n.locator('xpath=..').boundingBox(), n.boundingBox()])
+    expect(c!.x).toBeGreaterThanOrEqual(m!.x)
+    expect(c!.x + c!.width).toBeLessThanOrEqual(m!.x + m!.width)
+  }
+})
+
 test('one thing today: the best first, ← → turn to the others, See it shows it and the card leaves, put away it stays away for the day', async ({ page }) => {
   await given(page)
   await open(page)
