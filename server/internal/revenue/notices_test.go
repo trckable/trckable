@@ -111,7 +111,9 @@ func TestNoticesFollowTheSitesRetention(t *testing.T) {
 	g.svc.Now = func() time.Time { return time.Now().Add(10 * 24 * time.Hour) }
 	empty := func() int {
 		var n int
-		g.st.DB.QueryRow(`SELECT count(*) FROM pay_inbox WHERE length(body) = 0`).Scan(&n)
+		if err := g.st.DB.QueryRow(`SELECT count(*) FROM pay_inbox WHERE length(body) = 0`).Scan(&n); err != nil {
+			t.Fatal(err)
+		}
 		return n
 	}
 	if n, _ := g.svc.PruneNotices(ctx, 0, nil); n != 0 || empty() != 0 {
