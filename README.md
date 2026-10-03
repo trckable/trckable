@@ -4,7 +4,7 @@
 
 # trckable
 
-**See who visits. Then see who pays.**
+**Privacy-first analytics. Free and open source.**
 
 **Free and open source (AGPL-3.0)**, self-hosted web analytics that also shows you **which traffic pays**.<br>
 One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy, Polar, Paddle and Dodo.<br>
