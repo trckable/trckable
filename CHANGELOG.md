@@ -11,6 +11,7 @@ section into the release.
 
 ### Added
 
+- Widgets fit phones: the embed code carries a small loader (`/js/w.js`) that sets the frame's height from the card, the cards are fluid from 280 to 480 px, and the corner script scales down with a safe-area inset and a 44 px close target. Code pasted before keeps working at a fixed height.
 - A small open-site icon on each row of the site switcher and of the All sites list: on hover or keyboard focus (always shown on a phone, as a 44 px target) it opens the site's address in a new tab, without switching the dashboard; Shift + Enter on a focused row does the same, and the switcher's footer lists the key. Sites without a domain have none.
 - A privacy report per site: Settings → Data & privacy → Privacy report (View, or Print / PDF through the browser). It states, from the site's real settings, whether cookieless mode and consent mode are on, what is collected and what is not (no IP stored, no cross-site id; in cookie mode the first-party cookie `trckable_vid` and its 400 days), retention, how many paths and IP addresses are excluded, which modules are on and what each adds, where the data is, the privacy-policy paragraph, and a short "Do I need a banner?" with a not-legal-advice line. It opens only when asked (its code loads then), follows the dashboard language, and the translations are marked as needing review.
 

@@ -22,8 +22,10 @@ import (
 )
 
 // Public widgets: a small card a site shows on its own pages. The page is
-// HTML and CSS only — no script, no cookie, no request back to anyone — and
-// refreshes itself once a minute. It shows only the numbers its design shows,
+// HTML and CSS, plus one fixed inline script that only tells the embedding
+// page how tall the card is (a postMessage; it reads nothing and sends
+// nothing anywhere). No cookie, no request back to anyone; it refreshes
+// itself once a minute. It shows only the numbers its design shows,
 // read at most once a minute per site, and it is never counted as a visit.
 //
 //	GET    /api/v1/sites/{site}/widgets              the site's widgets
@@ -258,8 +260,9 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 	h.Set("Content-Type", "text/html; charset=utf-8")
 	h.Set("X-Content-Type-Options", "nosniff")
 	h.Set("Referrer-Policy", "no-referrer")
-	// Styles only: nothing can run, load or send from this page.
-	h.Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors *; base-uri 'none'; form-action 'none'")
+	// Styles, and the one script by its hash: nothing else can run, load or
+	// send from this page.
+	h.Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src '"+web.WidgetPageScriptHash+"'; frame-ancestors *; base-uri 'none'; form-action 'none'")
 	if public {
 		// Kept, but checked on every load (an ETag answers with a bare 304):
 		// a change in Settings shows on the next load, the numbers are
@@ -544,7 +547,7 @@ func number(n int64) string {
 	return s
 }
 
-var widgetTmpl = template.Must(template.New("w").Parse(`<!doctype html>
+var widgetTmpl = template.Must(template.New("w").Parse(strings.Replace(`<!doctype html>
 <html lang="{{.Lang}}" data-theme="{{.Theme}}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="refresh" content="{{.Refresh}}">
@@ -556,14 +559,16 @@ var widgetTmpl = template.Must(template.New("w").Parse(`<!doctype html>
 :root[data-theme=light]{--bg:#fff;--fg:#15161a;--mute:#6b7280;--line:#e7e7ea;--tip:#15161a;--acc:{{.AccentLight}};color-scheme:light}
 :root[data-theme=light] .gb{stroke:#15161a;stroke-width:3.4;stroke-linejoin:round}
 *{box-sizing:border-box;margin:0}
-html,body{overflow:hidden;background:transparent;font:14px/1.35 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--fg)}
-.card{background:var(--bg);border:1px solid var(--line);border-radius:{{.Radius}}px;padding:18px 20px}
+body{container-type:inline-size;min-width:0}
+html,body{overflow:hidden;background:transparent;overflow-wrap:anywhere;font:14px/1.35 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--fg)}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:{{.Radius}}px;padding:clamp(12px,5cqw,18px) clamp(14px,6cqw,20px);min-width:0}
+body>.card:not(.pill):not(.badge){max-width:560px}
 .lab{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
-.big{display:flex;align-items:center;gap:10px;font-size:34px;font-weight:700;letter-spacing:-.02em;margin:6px 0 12px;font-variant-numeric:tabular-nums}
+.big{display:flex;align-items:center;gap:10px;font-size:clamp(26px,10cqw,34px);font-weight:700;letter-spacing:-.02em;margin:6px 0 12px;font-variant-numeric:tabular-nums}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--acc);flex:none;animation:p 2s infinite}
 @keyframes p{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--acc) 60%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
 @media (prefers-reduced-motion:reduce){.dot{animation:none}}
-.bars{position:relative;display:flex;align-items:flex-end;gap:2px;height:76px}
+.bars{position:relative;display:flex;align-items:flex-end;gap:2px;height:clamp(56px,22cqw,76px)}
 .bars i{position:relative;flex:1;height:100%;display:flex;align-items:flex-end}
 .bars i s{display:block;width:100%;background:var(--acc);border-radius:2px 2px 0 0;min-height:1px;opacity:.9}
 .bars i s.z{background:var(--line)}
@@ -583,7 +588,7 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 .by b{font-weight:760;letter-spacing:-.04em;color:var(--fg)}.by i{font-style:normal;font-weight:360;letter-spacing:-.03em}
 .by svg{flex:none}
 .badge{display:flex;align-items:center;gap:12px;padding:12px 16px}
-.badge b{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.badge b{font-size:clamp(18px,7cqw,22px);font-weight:700;font-variant-numeric:tabular-nums}
 .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:{{.Radius}}px;font-weight:600;font-variant-numeric:tabular-nums}
 .pill.on{padding:8px 12px 8px 14px;gap:8px;white-space:nowrap}
 .pill.on .gh{display:flex;margin-left:2px}
@@ -594,6 +599,9 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 .card .by{width:auto;margin:14px 0 0;padding:0;border:0;border-radius:0;background:none}
 .foot{margin-top:12px;font-size:11px;color:var(--mute)}
 .off{color:var(--mute);font-size:13px}
+.facts li{align-items:flex-start}
+.facts li span:nth-child(2){white-space:normal;overflow:visible}
+@container (max-width:359px){.bars{gap:1px}.badge,.pill:not(.on){flex-wrap:wrap}.lab{letter-spacing:.04em}.ax{font-size:10px}}
 </style></head><body>
 {{if .Off}}<div class="card off">{{.Off}}</div>
 {{else if eq .Kind "live"}}<div class="card">
@@ -613,7 +621,7 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 </div>
 {{else if eq .Kind "privacy"}}<div class="card">
 <div class="lab">{{.L.seal_title}}</div>
-<ul>{{range .Facts}}<li><span class="ok">✓</span><span>{{.}}</span></li>{{end}}</ul>
+<ul class="facts">{{range .Facts}}<li><span class="ok">✓</span><span>{{.}}</span></li>{{end}}</ul>
 <div class="foot">{{.L.seal_foot}}</div>
 </div>
 {{else if eq .Kind "online"}}{{if eq .Mode "card"}}<div class="card">
@@ -628,4 +636,4 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 {{else}}<div class="card pill on"><span class="dot"></span><span>{{.Count}} {{.L.online}}</span>{{if .Bars}}<span class="spark" aria-hidden="true">{{range .Bars}}<i><s{{if eq .H 0}} class="z"{{end}} style="height:{{.H}}%"></s></i>{{end}}</span>{{end}}{{if .Brand}}<a class="gh" href="https://trckable.com" target="_blank" rel="noopener" title="{{.L.brand}} trckable" aria-label="{{.L.brand}} trckable">{{.Ghost}}</a>{{end}}</div>{{end}}
 {{else}}<div class="card pill"><span class="dot"></span>{{.L.counter}}</div>{{end}}
 {{if and .Brand (ne .Kind "online")}}{{template "by" .}}{{end}}
-</body></html>{{define "by"}}<a class="by" href="https://trckable.com" target="_blank" rel="noopener">{{.Ghost}}<span>{{.L.brand}} <b>trck</b><i>able</i></span></a>{{end}}`))
+<script>@SCRIPT@</script></body></html>{{define "by"}}<a class="by" href="https://trckable.com" target="_blank" rel="noopener">{{.Ghost}}<span>{{.L.brand}} <b>trck</b><i>able</i></span></a>{{end}}`, "@SCRIPT@", web.WidgetPageScript, 1)))

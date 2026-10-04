@@ -7,6 +7,7 @@ import { TEXT } from './widgetKinds'
 export interface WidgetMenuItem {
   label: string
   icon: ReactNode
+  hint?: string
   run: () => void
 }
 
@@ -36,6 +37,7 @@ export function WidgetMenu({ items }: { items: WidgetMenuItem[] }) {
               key={it.label}
               type="button"
               role="menuitem"
+              title={it.hint}
               onClick={() => {
                 setOpen(false)
                 button.current?.focus()

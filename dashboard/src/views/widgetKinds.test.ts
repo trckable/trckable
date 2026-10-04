@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import type { Widget, WidgetLook } from '../lib/apiMore'
-import { EMPTY_LOOK, LANGS, MODES, TEXT_FIELDS, cornerCode, defaultName, frameCode, modeOf, partsOf, placeOf, previewUrl, size, snippet, withPlace } from './widgetKinds'
+import { EMPTY_LOOK, LANGS, MODES, TEXT_FIELDS, cornerCode, defaultName, frameCode, hasOldCode, modeOf, partsOf, placeOf, previewUrl, size, snippet, withPlace } from './widgetKinds'
 
 const look = (patch: Partial<WidgetLook>): WidgetLook => ({ ...EMPTY_LOOK, ...patch })
 const widget = (patch: Partial<Widget> = {}): Widget => ({ ...EMPTY_LOOK, name: 'x', id: 'w_abc', site_id: 'tkb_s', on: true, created_at: 0, kind: 'online', shows: ['spark'], ...patch })
@@ -37,6 +37,10 @@ describe('the code for a page', () => {
   it('is a frame, or for the online design a script tag for a corner', () => {
     const w = widget()
     expect(frameCode('https://t.example', w, 'site.com')).toContain('<iframe src="https://t.example/w/w_abc" width="230" height="44"')
+    // The loader that sets the height comes with it, and a pill only shrinks to fit.
+    expect(frameCode('https://t.example', w, 'site.com')).toContain('max-width:100%')
+    expect(frameCode('https://t.example', w, 'site.com')).toContain('<script async src="https://t.example/js/w.js"></script>')
+    expect(frameCode('https://t.example', widget({ kind: 'live', shows: [] }), 'site.com')).toContain('width:100%;max-width:320px')
     expect(cornerCode('https://t.example', w)).toBe('<script async src="https://t.example/js/w_abc.online.js"></script>')
     expect(snippet('https://t.example', w, 'site.com', 'br')).toBe(cornerCode('https://t.example', w))
     // The corner is kept with the widget, not in the pasted tag.
@@ -47,6 +51,13 @@ describe('the code for a page', () => {
     expect(snippet('https://t.example', w, 'site.com', 'inline')).toBe(frameCode('https://t.example', w, 'site.com'))
     // Another design floats in a fixed box, still without a script.
     expect(snippet('https://t.example', widget({ kind: 'live', shows: [] }), 'site.com', 'bl')).toContain('position:fixed;left:16px')
+  })
+})
+
+describe('old embed code', () => {
+  it('is suspected only for a widget made before the loader', () => {
+    expect(hasOldCode(widget({ created_at: 1_700_000_000 }))).toBe(true)
+    expect(hasOldCode(widget({ created_at: 1_800_000_000 }))).toBe(false)
   })
 })
 

@@ -201,7 +201,7 @@ func TestWidgetLanguageAndTextsOnThePage(t *testing.T) {
 		t.Fatalf("edit: %d", code)
 	}
 	body, _ = get(id, "")
-	if strings.Contains(body, "<script") || strings.Contains(body, "<img") || !strings.Contains(body, "&lt;script&gt;alert(1)&lt;/script&gt;") {
+	if strings.Count(body, "<script") != 1 || strings.Contains(body, "<img") || !strings.Contains(body, "&lt;script&gt;alert(1)&lt;/script&gt;") {
 		t.Fatalf("an owner's text must be escaped: %s", body)
 	}
 

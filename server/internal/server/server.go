@@ -196,7 +196,12 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	}
 	tracker := web.Tracker(feat, opts)
 	online := web.OnlineScript(func(ctx context.Context, id string) (web.OnlineLook, bool) { return s.api.OnlineLook(ctx, id) })
+	loader := web.WidgetLoader()
 	mux.HandleFunc("GET /js/{file}", func(w http.ResponseWriter, r *http.Request) {
+		if r.PathValue("file") == web.WidgetLoaderFile {
+			loader.ServeHTTP(w, r)
+			return
+		}
 		if strings.HasSuffix(r.PathValue("file"), web.OnlineSuffix) {
 			online.ServeHTTP(w, r)
 			return

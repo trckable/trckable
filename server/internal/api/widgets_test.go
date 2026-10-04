@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/event"
+	"github.com/trckable/trckable/server/internal/web"
 )
 
 // A widget shows only its numbers, runs nothing, and goes away when it is off.
@@ -49,11 +50,17 @@ func TestWidgets(t *testing.T) {
 	if st != http.StatusOK {
 		t.Fatalf("public page: %d", st)
 	}
-	if csp := h.Get("Content-Security-Policy"); !strings.Contains(csp, "default-src 'none'") || strings.Contains(csp, "script-src") {
-		t.Fatalf("the page must run nothing: %q", csp)
+	// Only the one fixed script that reports the card's height may run, by its hash.
+	if csp := h.Get("Content-Security-Policy"); !strings.Contains(csp, "default-src 'none'") || !strings.Contains(csp, "script-src '"+web.WidgetPageScriptHash+"';") || strings.Contains(csp, "unsafe-eval") {
+		t.Fatalf("the page may run only its height script: %q", csp)
 	}
-	if h.Get("Set-Cookie") != "" || strings.Contains(body, "<script") {
-		t.Fatal("a widget sets no cookie and carries no script")
+	if h.Get("Set-Cookie") != "" || strings.Count(body, "<script") != 1 || !strings.Contains(body, "<script>"+web.WidgetPageScript+"</script>") {
+		t.Fatal("a widget sets no cookie and carries only the height script")
+	}
+	for _, want := range []string{"postMessage({type:'trckable:h',id:", "ResizeObserver", "'resize'", "'load'"} {
+		if !strings.Contains(web.WidgetPageScript, want) {
+			t.Fatalf("the height script must send on load, on resize and on change: missing %q", want)
+		}
 	}
 	if !strings.Contains(body, ">3<") || !strings.Contains(body, "Germany") || !strings.Contains(body, "France") {
 		t.Fatalf("three visitors from Germany and France: %s", body)
