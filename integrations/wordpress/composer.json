@@ -1,0 +1,19 @@
+{
+  "name": "trckable/wordpress-plugin",
+  "description": "Development tools for the trckable WordPress plugin (not shipped in the zip).",
+  "type": "project",
+  "license": "GPL-2.0-or-later",
+  "require-dev": {
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+    "phpcompatibility/phpcompatibility-wp": "^2.1",
+    "wp-coding-standards/wpcs": "^3.1"
+  },
+  "config": {
+    "allow-plugins": { "dealerdirect/phpcodesniffer-composer-installer": true },
+    "sort-packages": true
+  },
+  "scripts": {
+    "lint": "phpcs",
+    "fix": "phpcbf"
+  }
+}
