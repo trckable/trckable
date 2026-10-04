@@ -2,6 +2,7 @@
 // so nothing has to be opened to read it.
 import type { WidgetLook } from '../lib/apiMore'
 import { LANGS, type Place } from './widgetKinds'
+import { copy } from './widgetCopy'
 
 export const ACCENTS = [
   { id: '', name: 'lime' },
@@ -20,7 +21,7 @@ export const THEME_NAME = { auto: 'Auto', dark: 'Dark', light: 'Light' }
 export const PLACE_SHORT: Record<Place, string> = { inline: 'Inline', br: 'Corner ↘', bl: 'Corner ↙' }
 const SEP = ' · '
 
-export const SECTION = { look: 'Look', placement: 'Placement', language: 'Language & texts', brand: 'Brand', show: 'Show' }
+export const SECTION = copy.section
 
 const radiusName = (r: number) => RADII.find((x) => x.id === r)?.label ?? `${r} px`
 const accentName = (a: string) => ACCENTS.find((x) => x.id === a)?.name ?? a

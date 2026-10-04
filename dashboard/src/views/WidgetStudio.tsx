@@ -30,8 +30,8 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
   const parts = partsOf(look)
   const { open, toggle } = useAccordion()
   const hasShow = look.kind === 'online' || parts.length > 0
-  // Without a Show group (a counter has no parts) the first group is Look.
-  const current = open === 'show' && !hasShow ? 'look' : open
+  // A kept Show group does not open for a design that has none (a counter).
+  const current = open === 'show' && !hasShow ? '' : open
   const group = (id: string) => ({ open: current === id, onToggle: () => toggle(id) })
   return (
     <>

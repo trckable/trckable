@@ -162,6 +162,10 @@
 .wg-row-text .faint {
   font-size: 12px;
 }
+.wg-acts {
+  display: flex;
+  gap: 2px;
+}
 @media (max-width: 760px) {
   .wg-studio {
     grid-template-columns: 1fr;

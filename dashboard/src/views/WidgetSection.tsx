@@ -1,7 +1,8 @@
 // One collapsible group of the widget editor: a button with a one-line summary
 // of what is set inside, and the settings below it, opening and closing
-// smoothly. The groups are an accordion: one open at a time, and which one is
-// kept for the session, so making a widget and editing one open the same.
+// smoothly. The groups are an accordion: they start shut, one open at a time,
+// and which one is kept for the session, so making a widget and editing one
+// open the same.
 import { ChevronRight } from 'lucide-react'
 import { useId, useState, type ReactNode } from 'react'
 
@@ -9,9 +10,9 @@ const KEY = 'trckable.widget-section'
 
 function read() {
   try {
-    return sessionStorage.getItem(KEY) ?? 'show'
+    return sessionStorage.getItem(KEY) ?? ''
   } catch {
-    return 'show'
+    return ''
   }
 }
 
