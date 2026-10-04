@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:server/internal/web/dist/assets/themeSwitch-a6f0fcf6.js
-import{Ht as e}from"./index-c9c17ea4.js";function t(t,n){let r=document.documentElement;if(e()){n(t);return}let i=document;if(typeof i.startViewTransition==`function`){r.dataset.themeSwitch=`view`;let e=i.startViewTransition.call(i,()=>n(t)),a=()=>delete r.dataset.themeSwitch;e.finished.then(a,a);return}r.dataset.themeSwitch=`fade`,n(t),setTimeout(()=>delete r.dataset.themeSwitch,260)}export{t as switchTheme};
-========
-import{zt as e}from"./index-9247a3be.js";function t(t,n){let r=document.documentElement;if(e()){n(t);return}let i=document;if(typeof i.startViewTransition==`function`){r.dataset.themeSwitch=`view`;let e=i.startViewTransition.call(i,()=>n(t)),a=()=>delete r.dataset.themeSwitch;e.finished.then(a,a);return}r.dataset.themeSwitch=`fade`,n(t),setTimeout(()=>delete r.dataset.themeSwitch,260)}export{t as switchTheme};
->>>>>>>> 4e718a5b (Sign in with Google, Microsoft Entra or any OIDC provider):server/internal/web/dist/assets/themeSwitch-31c91df8.js
