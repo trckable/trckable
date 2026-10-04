@@ -10,6 +10,8 @@ export const DIM_LABEL: Record<string, string> = {
   country: 'Country',
   device: 'Device',
   browser: 'Browser',
+  browser_version: 'Browser version',
+  screen: 'Screen',
   os: 'OS',
   goal: 'Goal',
   utm_source: 'utm_source',
@@ -17,4 +19,4 @@ export const DIM_LABEL: Record<string, string> = {
 }
 
 // The Locations card's column heading.
-export const PLACE_LABEL: Record<string, string> = { country: 'Country', region: 'Region', city: 'City' }
+export const PLACE_LABEL: Record<string, string> = { country: 'Country', region: 'Region', city: 'City', language: 'Language' }

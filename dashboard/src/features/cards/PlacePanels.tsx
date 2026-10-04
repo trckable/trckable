@@ -4,7 +4,6 @@
 import { lazy, Suspense } from 'react'
 import { BarList } from '../../charts/BarList'
 import { Loading } from '../../components/loading/Loading'
-import { countryName, flag } from '../../lib/format'
 import { channelColor } from '../../lib/palette'
 import { DIM_LABEL, PLACE_LABEL } from '../overview/dimLabels'
 import { cardCopy } from './copy'
@@ -12,13 +11,14 @@ import type { CardsCtx } from './ctx'
 import { listProps, SubPanel } from './SubPanel'
 import type { TabItem } from './Tabs'
 import { laterCopy } from './copyLater'
+import { placeLabel, placeTitle } from './placeLabels'
 
 const WorldMap = lazy(() => import('../../views/WorldMap').then((m) => ({ default: m.WorldMap })))
 
 export function LocationsPanel({ c }: { c: CardsCtx }) {
   const tabs: TabItem[] = [
     { id: 'country', label: laterCopy.countries },
-    ...(c.full ? [{ id: 'region', label: laterCopy.regions }, { id: 'city', label: laterCopy.cities }] : []),
+    ...(c.full ? [{ id: 'region', label: laterCopy.regions }, { id: 'city', label: laterCopy.cities }, { id: 'language', label: laterCopy.languages }] : []),
     ...(c.mapOn ? [{ id: 'map', label: laterCopy.map }] : []),
   ]
   return (
@@ -37,8 +37,8 @@ export function LocationsPanel({ c }: { c: CardsCtx }) {
             barColor={c.trail ? channelColor(c.trail) : undefined}
             items={c.dims(dim).slice(0, c.rows).map((r) => ({
               key: r.value,
-              label: dim === 'country' ? `${flag(r.value)} ${countryName(r.value)}` : r.value || 'Unknown',
-              title: dim === 'country' ? countryName(r.value) : r.value,
+              label: placeLabel(dim, r.value),
+              title: placeTitle(dim, r.value),
               value: r.visitors,
               sub: r.bounce_rate,
               rev: r.revenue,
@@ -55,7 +55,9 @@ export function DevicesPanel({ c }: { c: CardsCtx }) {
   const tabs: TabItem[] = [
     { id: 'device', label: laterCopy.device },
     { id: 'browser', label: laterCopy.browser },
+    ...(c.full ? [{ id: 'browser_version', label: laterCopy.browserVersion }] : []),
     { id: 'os', label: laterCopy.os },
+    ...(c.full ? [{ id: 'screen', label: laterCopy.screen }] : []),
   ]
   return (
     <SubPanel id="dev" label={cardCopy.devices} tabs={tabs} c={c}

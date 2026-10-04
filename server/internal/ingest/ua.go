@@ -2,6 +2,7 @@ package ingest
 
 import (
 	"regexp"
+	"strconv"
 
 	"github.com/mileusna/useragent"
 )
@@ -12,7 +13,19 @@ var botRE = regexp.MustCompile(`(?i)(bot|crawl|spider|slurp|scrap|headless|phant
 
 type uaInfo struct {
 	Browser, OS, Device string
-	Bot                 bool
+	// Version is the browser and its major version ("Chrome 129"), empty when
+	// the user agent names no version. Only the major: the next digits tell
+	// nothing a person can act on and would split one release into hundreds.
+	Version string
+	Bot     bool
+}
+
+// browserVersion is "Chrome 129" for a browser and its major version.
+func browserVersion(name string, major int) string {
+	if name == "" || major <= 0 {
+		return ""
+	}
+	return name + " " + strconv.Itoa(major)
 }
 
 func parseUA(s string, screenWidth int) uaInfo {
@@ -26,7 +39,7 @@ func parseUA(s string, screenWidth int) uaInfo {
 	if ua.Bot {
 		return uaInfo{Bot: true}
 	}
-	info := uaInfo{Browser: ua.Name, OS: ua.OS}
+	info := uaInfo{Browser: ua.Name, OS: ua.OS, Version: browserVersion(ua.Name, ua.VersionNo.Major)}
 	switch {
 	case ua.Tablet:
 		info.Device = "Tablet"

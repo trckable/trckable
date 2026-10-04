@@ -587,3 +587,29 @@ func TestAccuracyAResendAfterADayAndARestartIsStoredOnce(t *testing.T) {
 		t.Fatalf("%d rows, want 3: the resends were stored again", n)
 	}
 }
+
+// A visit's browser version and the width of its entry pageview survive a
+// restart while the session is open, and are written with it.
+func TestVersionAndScreenSurviveRestart(t *testing.T) {
+	dir := t.TempDir()
+	base := time.Now().Add(-3 * time.Hour).UnixMilli()
+	first := event.Event{Site: "s1", Kind: event.KindPageview, EventID: 1, TS: base, Visitor: 9, Pageview: 1, Path: "/", Browser: "Chrome", BrowserVersion: "Chrome 130", Screen: 390}
+	later := event.Event{Site: "s1", Kind: event.KindPageview, EventID: 2, TS: base + 60_000, Visitor: 9, Pageview: 2, Path: "/pricing", Browser: "Chrome", BrowserVersion: "Chrome 130", Screen: 1440}
+	e := newEnv(t, dir)
+	e.append(t, first)
+	e.runAt(t, 1, func() time.Time { return time.UnixMilli(base + 30_000) })
+	e.close() // the session is open in memory only
+
+	e = newEnv(t, dir)
+	defer e.close()
+	e.append(t, later)
+	e.runAt(t, 2, func() time.Time { return time.UnixMilli(base + 4*3600_000) })
+	var version string
+	var screen int
+	if err := e.store.DB.QueryRow(`SELECT browser_version, screen FROM sessions`).Scan(&version, &screen); err != nil {
+		t.Fatal(err)
+	}
+	if version != "Chrome 130" || screen != 390 {
+		t.Fatalf("session: %q at %d px, want Chrome 130 at the entry's 390", version, screen)
+	}
+}
