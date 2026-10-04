@@ -152,8 +152,11 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   await nudge.getByRole('button', { name: 'Import' }).click()
   await expect(nudge).toHaveCount(0)
   await expect(page.getByRole('dialog', { name: 'Import your history' })).toContainText('trckabled import')
-  await page.keyboard.press('Escape')
-  await expect(page.getByRole('dialog', { name: 'Import your history' })).toHaveCount(0)
+  // An Escape sent as the dialog settles can come to nothing in WebKit: sent again while it is open.
+  await expect(async () => {
+    if (await page.getByRole('dialog', { name: 'Import your history' }).count()) await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog', { name: 'Import your history' })).toHaveCount(0, { timeout: 1_500 })
+  }).toPass({ timeout: 15_000 })
   await expect(run).toBeVisible()
   // Closing it leaves the focus on the page: move on from the heading.
   await run.getByRole('heading', { name: 'Someone’s here.' }).focus()

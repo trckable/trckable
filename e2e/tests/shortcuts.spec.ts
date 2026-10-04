@@ -21,12 +21,19 @@ async function ready(page: Page) {
 
 /** Presses a key and waits for what it opens. A key pressed while the page is still settling (its pieces
  *  arrive one after another, and WebKit on a busy machine is the slowest to) can come to nothing: it is pressed
- *  again, only while its target is not there, until it has done its work. */
+ *  again, but only after a long wait and never while its target is there, so a slow answer is not pressed twice. */
 async function opens(page: Page, key: string, target: Locator) {
-  await expect(async () => {
-    if (!(await target.isVisible())) await page.keyboard.press(key)
-    await expect(target).toBeVisible({ timeout: 1_500 })
-  }).toPass({ timeout: 20_000 })
+  for (let i = 0; i < 4; i++) {
+    if (await target.isVisible()) return
+    await page.keyboard.press(key)
+    try {
+      await expect(target).toBeVisible({ timeout: 6_000 })
+      return
+    } catch {
+      // lost: press again
+    }
+  }
+  await expect(target).toBeVisible()
 }
 
 test('S, U, comma, slash and Shift S open what their buttons open', async ({ page }) => {
