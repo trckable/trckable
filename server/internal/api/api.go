@@ -256,6 +256,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/report/retention", a.authed(a.retention))
 	handle("GET /api/v1/sites/{site}/report/scroll", a.authed(a.scroll))
 	handle("GET /api/v1/sites/{site}/heat", a.authed(a.gated("GET /api/v1/sites/{site}/heat", a.heat)))
+	handle("GET /api/v1/sites/{site}/heat-frame", a.authed(a.gated("GET /api/v1/sites/{site}/heat-frame", a.heatFrame)))
 	handle("GET /api/v1/sites/{site}/heat/ask", a.authed(a.heatAsk))
 	handle("GET /api/v1/sites/{site}/search-console", a.authed(a.searchConsole))
 	handle("PUT /api/v1/sites/{site}/search-console", a.authed(a.setSearchConsole))

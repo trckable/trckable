@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { HeatMap, Spot } from './api'
-import { busiest, exampleHeat, fit, frameURL, glow, hasViews, heatColor, pageSize, place, scrollGradient, strength } from './model'
+import { busiest, exampleHeat, fit, frameSrc, glow, hasViews, isRisky, heatColor, pageSize, place, scrollGradient, strength } from './model'
 
 const spot = (o: Partial<Spot> = {}): Spot => ({ el: 'a.buy', cx: 0, cy: 0, n: 5, x: 100, y: 300, w: 200, h: 40, ...o })
 
@@ -75,8 +75,13 @@ describe('the scroll map', () => {
 })
 
 describe('the frame', () => {
-  it('is the site’s page at its own path', () => {
-    expect(frameURL('site.com', '/pricing')).toBe('https://site.com/pricing')
+  it('is this server’s frame page for the site and path, escaped, never the site’s own address', () => {
+    expect(frameSrc('tkb_x', '/pricing')).toBe('/api/v1/sites/tkb_x/heat-frame?path=%2Fpricing')
+    expect(frameSrc('tkb_x', '/#/a b?c')).toBe('/api/v1/sites/tkb_x/heat-frame?path=%2F%23%2Fa%20b%3Fc')
+  })
+  it('knows the pages that do something by being opened', () => {
+    for (const p of ['/logout', '/signout', '/Sign-Out', '/log_off', '/logout?next=/', '/unsubscribe']) expect(isRisky(p), p).toBe(true)
+    for (const p of ['/', '/pricing', '/blog/how-to-logout', '/signature', '/login']) expect(isRisky(p), p).toBe(false)
   })
   it('knows which widths have views', () => {
     const m = { widths: [{ width: 390, views: 0 }, { width: 768, views: 4 }, { width: 1280, views: 9 }] } as Pick<HeatMap, 'widths'>

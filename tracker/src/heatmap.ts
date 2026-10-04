@@ -18,12 +18,13 @@
 export interface Heat {
   site: string
   api: string // the heat endpoint, e.g. https://stats.example.com/api/h
-  sample?: number // the share of page views that report, 0–1
+  sample: number // the share of page views that report, 0–1
   dev?: boolean
+  hash?: boolean // routes are #/… (the base script's data-hash): a page is its path and its hash
 }
 
 const STABLE = /^[a-z][a-z-]{1,22}$/i // a name made of letters: not a build hash, not a counter
-const NAME = /^[\w.[\]-]{1,40}$/
+const NAME = /^(?!.*\d{3})[\w.[\]-]{1,40}$/ // a run of digits is a counter or an id, not a field's name
 const MAX = 60 // items per page view
 
 export function heat(c: Heat) {
@@ -43,6 +44,7 @@ export function heat(c: Heat) {
   const fields: Record<string, string> = {} // form → the field last reached, until it is sent
   const reached = new Set<string>()
 
+  const here = () => loc.pathname + (c.hash ? loc.hash : '')
   const flush = () => {
     if (q.length)
       fetch(c.api, {
@@ -63,13 +65,13 @@ export function heat(c: Heat) {
   // Notices a new page (a route change in a single-page app): what was gathered
   // belongs to the last one, and the new one is sampled on its own.
   const page = () => {
-    if (path == loc.pathname) return
+    if (path == here()) return
     if (path) leave()
-    path = loc.pathname
+    path = here()
     url = loc.href
     n = 0
     reached.clear()
-    on = Math.random() < (c.sample ?? 1)
+    on = Math.random() < c.sample
     if (on) q.push(['v'])
   }
   const add = (i: any[]) => {
@@ -83,7 +85,8 @@ export function heat(c: Heat) {
   const pick = (e: Element) => {
     let s = ''
     for (let i = 0; e && e != d.body && e != d.documentElement && i < 4; i++, e = e.parentElement!) {
-      let p = e.localName
+      const tag = e.localName
+      let p = tag.replace(/[^\w-]/g, '') || 'x' // a custom element's name can be anything
       if (e.id && STABLE.test(e.id)) {
         s = p + '#' + e.id + (s && '>' + s)
         break
@@ -91,7 +94,7 @@ export function heat(c: Heat) {
       const k = [...e.classList].find((x) => STABLE.test(x))
       if (k) p += '.' + k
       else {
-        const same = [...(e.parentElement?.children || [])].filter((x) => x.localName == p)
+        const same = [...(e.parentElement?.children || [])].filter((x) => x.localName == tag)
         if (same.length > 1) p += ':' + (same.indexOf(e) + 1)
       }
       s = p + (s && '>' + s)
@@ -103,7 +106,9 @@ export function heat(c: Heat) {
     const r = t.getBoundingClientRect()
     const cell = (v: number, size: number) => Math.min(9, Math.max(0, ((v / (size || 1)) * 10) | 0))
     const ww = innerWidth || 1
-    return [kind, pick(t), cell(x - r.left, r.width), cell(y - r.top, r.height), Math.round(((r.left + scrollX) / ww) * 1e3), Math.round(r.top + scrollY), Math.round((r.width / ww) * 1e3), Math.round(r.height)]
+    // Inside what the server takes: nothing negative, nothing wider than five windows.
+    const lim = (v: number, m: number) => Math.min(m, Math.max(0, Math.round(v)))
+    return [kind, pick(t), cell(x - r.left, r.width), cell(y - r.top, r.height), lim(((r.left + scrollX) / ww) * 1e3, 5e3), lim(r.top + scrollY, 2e5), lim((r.width / ww) * 1e3, 5e3), lim(r.height, 2e5)]
   }
 
   d.addEventListener(
@@ -133,30 +138,37 @@ export function heat(c: Heat) {
     true,
   )
 
+  // A form is its id or name when that is a plain word, else just "form"; a field is its
+  // name, with the numbers of a list (items[3][name]) taken out, and none with a counter in it.
+  const formKey = (f: HTMLFormElement) => [f.id, f.getAttribute('name') || ''].find((x) => STABLE.test(x)) || 'form'
+  const fieldName = (f: HTMLInputElement) => {
+    const n = (f.name || '').replace(/\[\d+\]/g, '[]')
+    return NAME.test(n) ? n : ''
+  }
+
   // Form fields, by name only. A password field is not even named.
   d.addEventListener(
     'focusin',
     (e) => {
       const f = e.target as HTMLInputElement
       const form = f.form
-      if (!form || f.type == 'password' || !NAME.test(f.name || '')) return
-      const key = (form.id || form.getAttribute('name') || 'form').slice(0, 40)
-      if (!NAME.test(key)) return
-      const id = key + '>' + f.name
+      const name = form && f.type != 'password' && fieldName(f)
+      if (!form || !name) return
+      const key = formKey(form)
+      const id = key + '>' + name
       page()
       if (on && !reached.has(id)) {
         reached.add(id)
         add(['fr', id])
       }
-      fields[key] = f.name
+      fields[key] = name
     },
     true,
   )
   d.addEventListener(
     'submit',
     (e) => {
-      const f = e.target as HTMLFormElement
-      delete fields[(f.id || f.getAttribute('name') || 'form').slice(0, 40)]
+      delete fields[formKey(e.target as HTMLFormElement)]
     },
     true,
   )

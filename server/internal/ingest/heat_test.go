@@ -8,6 +8,7 @@ import (
 	"net/netip"
 	"strings"
 	"testing"
+	"time"
 )
 
 func heatPost(h *Handler, body string, edit ...func(*http.Request)) *httptest.ResponseRecorder {
@@ -89,22 +90,23 @@ func TestHeatWidthBuckets(t *testing.T) {
 func TestHeatRefusesWhatOurScriptNeverSends(t *testing.T) {
 	good := `["c","main>button.buy",2,5,69,50,69,40]`
 	for name, item := range map[string]string{
-		"a sentence for an element":  `["c","I clicked on Buy now",2,5,69,50,69,40]`,
-		"markup for an element":      `["c","<script>",2,5,69,50,69,40]`,
-		"an empty element":           `["c","",2,5,69,50,69,40]`,
-		"a long element":             `["c","` + strings.Repeat("a", 121) + `",2,5,69,50,69,40]`,
-		"a cell past the tenth":      `["c","main>a",10,5,69,50,69,40]`,
-		"a negative place":           `["c","main>a",2,5,-1,50,69,40]`,
-		"a fraction":                 `["c","main>a",2,5,6.9,50,69,40]`,
-		"a place far off the page":   `["c","main>a",2,5,69,5000000,69,40]`,
-		"a click with a missing end": `["c","main>a",2,5,69,50,69]`,
-		"an unknown kind":            `["x","main>a"]`,
-		"a view that carries a text": `["v","main>a"]`,
-		"a field with no form":       `["fr","email"]`,
-		"a field with a space":       `["fr","signup>first name"]`,
-		"two forms in a field":       `["fr","a>b>c"]`,
-		"a kind that is a number":    `[7,"main>a"]`,
-		"nothing":                    `[]`,
+		"a sentence for an element":    `["c","I clicked on Buy now",2,5,69,50,69,40]`,
+		"markup for an element":        `["c","<script>",2,5,69,50,69,40]`,
+		"an empty element":             `["c","",2,5,69,50,69,40]`,
+		"a long element":               `["c","` + strings.Repeat("a", 121) + `",2,5,69,50,69,40]`,
+		"a click with a missing end":   `["c","main>a",2,5,69,50,69]`,
+		"an unknown kind":              `["x","main>a"]`,
+		"a view that carries a text":   `["v","main>a"]`,
+		"a field with no form":         `["fr","email"]`,
+		"a field with a space":         `["fr","signup>first name"]`,
+		"two forms in a field":         `["fr","a>b>c"]`,
+		"a form with a counter":        `["fr","form2024>email"]`,
+		"a form with an id in it":      `["fr","form-3f9a8c1>email"]`,
+		"a field with an id in it":     `["fr","signup>user_1234567"]`,
+		"a field with a list number":   `["fr","signup>items[3][title]"]`,
+		"a click that is not a number": `["c","main>a",2,5,"69",50,69,40]`,
+		"a kind that is a number":      `[7,"main>a"]`,
+		"nothing":                      `[]`,
 	} {
 		h, _ := newHandler(t)
 		body := `{"s":"tkb_test","u":"https://site.com/","w":1440,"h":900,"i":[["v"],` + good + `,` + item + `]}`
@@ -258,7 +260,8 @@ func TestHeatSiteWideLimit(t *testing.T) {
 func TestHeatMemoryIsBounded(t *testing.T) {
 	var c HeatCounts
 	for i := 0; i < heatMaxKeys+500; i++ {
-		c.add(heatKey{Site: "s", Day: "d", Path: fmt.Sprintf("/p/%d", i), Kind: "v"}, heatSum{N: 1})
+		// Many sites, each within its own share, so only the whole is full.
+		c.add(heatKey{Site: fmt.Sprintf("s%d", i/1000), Day: "d", Path: fmt.Sprintf("/p/%d", i), Kind: "v"}, heatSum{N: 1})
 	}
 	if n := len(c.Drain()); n != heatMaxKeys {
 		t.Errorf("%d counters held, want at most %d", n, heatMaxKeys)
@@ -297,5 +300,114 @@ func TestHeatRowsCarryNoPerson(t *testing.T) {
 		if strings.Contains(strings.ToLower(string(b)), `"`+bad) {
 			t.Errorf("a heat row has a %q field", bad)
 		}
+	}
+}
+
+// A page whose element is off to the left, or runs past five windows, still
+// reports: the place is brought to the nearest one the map can show, not the
+// whole batch refused.
+func TestHeatClampsAPlaceInsteadOfRefusingTheBatch(t *testing.T) {
+	h, _ := newHandler(t)
+	body := `{"s":"tkb_test","u":"https://site.com/","w":1440,"h":900,"i":[["v"],["c","main>a",10,5,-80,-4,9999999,6.6]]}`
+	if w := heatPost(h, body); w.Code != http.StatusAccepted {
+		t.Fatalf("status %d: %s", w.Code, w.Body)
+	}
+	c, ok := find(h.Heats.Drain(), "c", "main>a")
+	if !ok || c.CX != 9 || c.CY != 5 || c.X != 0 || c.Y != 0 || c.W != 5000 || c.H != 7 {
+		t.Fatalf("clamped click = %+v", c)
+	}
+}
+
+func TestHeatAcceptsAFieldTheScriptCouldHaveSent(t *testing.T) {
+	h, _ := newHandler(t)
+	body := `{"s":"tkb_test","u":"https://site.com/","w":1440,"h":900,"i":[["v"],["fr","signup>items[][title]"],["fr","form>full_name"],["fd","signup>zip12"]]}`
+	if w := heatPost(h, body); w.Code != http.StatusAccepted {
+		t.Fatalf("status %d: %s", w.Code, w.Body)
+	}
+	if n := len(h.Heats.Drain()); n != 4 {
+		t.Fatalf("%d counters, want 4", n)
+	}
+}
+
+// In a hash-routed site a page is its path and its hash.
+func TestHeatKnowsHashRoutes(t *testing.T) {
+	h, _ := newHandler(t)
+	h.Sites = fakeSites{"tkb_test": {ID: "tkb_test", Domain: "site.com", HashMode: true}}
+	body := `{"s":"tkb_test","u":"https://site.com/#/pricing","w":1440,"h":900,"i":[["v"]]}`
+	if w := heatPost(h, body); w.Code != http.StatusAccepted {
+		t.Fatalf("status %d", w.Code)
+	}
+	rows := h.Heats.Drain()
+	if len(rows) != 1 || rows[0].Path != "/#/pricing" {
+		t.Fatalf("a hash route is filed as %+v", rows)
+	}
+	h.Sites = fakeSites{"tkb_test": {ID: "tkb_test", Domain: "site.com"}}
+	heatPost(h, body)
+	if rows := h.Heats.Drain(); len(rows) != 1 || rows[0].Path != "/" {
+		t.Fatalf("without hash mode the route is the path: %+v", rows)
+	}
+}
+
+// What is kept per day is the site's own day, like its other reports.
+func TestHeatDaysAreTheSitesOwn(t *testing.T) {
+	h, _ := newHandler(t) // 12:00 UTC on 22 September
+	berlin, _ := time.LoadLocation("Europe/Berlin")
+	losAngeles, _ := time.LoadLocation("America/Los_Angeles")
+	late := time.Date(2026, 9, 22, 23, 30, 0, 0, time.UTC)
+	h.Now = func() time.Time { return late }
+	for zone, want := range map[*time.Location]string{nil: "2026-09-22", berlin: "2026-09-23", losAngeles: "2026-09-22"} {
+		h.Sites = fakeSites{"tkb_test": {ID: "tkb_test", Domain: "site.com", Location: zone}}
+		heatPost(h, `{"s":"tkb_test","u":"https://site.com/","w":1440,"h":900,"i":[["v"]]}`)
+		if rows := h.Heats.Drain(); len(rows) != 1 || rows[0].Day != want {
+			t.Errorf("zone %v: %+v, want day %s", zone, rows, want)
+		}
+	}
+}
+
+func TestHeatHonoursStrictBotFiltering(t *testing.T) {
+	h, _ := newHandler(t)
+	h.Sites = fakeSites{"tkb_test": {ID: "tkb_test", Domain: "site.com", BotStrict: true}}
+	h.Hosting = func(ip string) bool { return ip == "203.0.113.99" }
+	rented := func(r *http.Request) { r.RemoteAddr = "203.0.113.99:1" }
+	heatPost(h, heatBatchAt("/blog"), rented)
+	if n := len(h.Heats.Drain()); n != 0 {
+		t.Errorf("a rented server: %d counters were kept", n)
+	}
+	// Without strict filtering the same server is counted.
+	h.Sites = fakeSites{"tkb_test": {ID: "tkb_test", Domain: "site.com"}}
+	heatPost(h, heatBatchAt("/blog"), rented)
+	if n := len(h.Heats.Drain()); n == 0 {
+		t.Error("a rented server was refused without strict filtering")
+	}
+	h.Sites = fakeSites{"tkb_test": {ID: "tkb_test", Domain: "site.com", BotStrict: true}}
+	heatPost(h, heatBatchAt("/blog"))
+	if n := len(h.Heats.Drain()); n == 0 {
+		t.Error("an ordinary browser was not counted")
+	}
+}
+
+func heatBatchAt(path string) string {
+	return strings.Replace(heatBatch, "/pricing?utm=x", path, 1)
+}
+
+// One site that is flooded with made-up elements fills its own share and no
+// more: the others still count.
+func TestHeatOneSiteCannotTakeTheRoomOfTheOthers(t *testing.T) {
+	var c HeatCounts
+	for i := 0; i < heatSiteKeys+300; i++ {
+		c.add(heatKey{Site: "noisy", Day: "d", Path: fmt.Sprintf("/p/%d", i), Kind: "v"}, heatSum{N: 1})
+	}
+	c.add(heatKey{Site: "quiet", Day: "d", Path: "/", Kind: "v"}, heatSum{N: 1})
+	per := map[string]int{}
+	for _, r := range c.Drain() {
+		per[r.Site]++
+	}
+	if per["noisy"] != heatSiteKeys || per["quiet"] != 1 {
+		t.Fatalf("counters held: %v, want %d for the noisy site and 1 for the quiet one", per, heatSiteKeys)
+	}
+	// The share is per drain: after it the site counts again.
+	c.add(heatKey{Site: "noisy", Day: "d", Path: "/again", Kind: "v"}, heatSum{N: 1})
+	if n := len(c.Drain()); n != 1 {
+		t.Fatalf("after a drain the site holds %d counters, want 1", n)
 	}
 }

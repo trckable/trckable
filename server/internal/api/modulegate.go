@@ -23,6 +23,7 @@ var moduleWrites = map[string]string{
 var moduleReads = map[string]string{
 	"GET /api/v1/sites/{site}/annotations": "notes",
 	"GET /api/v1/sites/{site}/heat":        "heatmaps",
+	"GET /api/v1/sites/{site}/heat-frame":  "heatmaps",
 }
 
 // gated wraps h so it answers 404 while the route's module is off.

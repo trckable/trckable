@@ -42,6 +42,9 @@ type Site struct {
 	Allowed  []string // extra allowed hostnames (cross-domain)
 	HashMode bool
 	ProxyKey string // secret sent by same-origin proxies (X-Trckable-Proxy-Key)
+	// Location is the site's own time zone, for what is kept per day (the
+	// heatmaps); nil means UTC.
+	Location *time.Location
 
 	// Per-site choices (Settings → General and Privacy). Defaults keep every
 	// analytics signal: a site only gives something up when its owner says so.

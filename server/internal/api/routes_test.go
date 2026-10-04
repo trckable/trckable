@@ -59,6 +59,7 @@ var routeRules = map[string]string{
 	"DELETE /api/v1/sites/{site}":                                "write",
 	"GET /api/v1/sites/{site}/delete-preview":                    "read",
 	"GET /api/v1/sites/{site}/heat":                              "read",
+	"GET /api/v1/sites/{site}/heat-frame":                        "read",
 	"GET /api/v1/sites/{site}/heat/ask":                          "read",
 	"GET /api/v1/sites/{site}/milestones":                        "read",
 	"PUT /api/v1/sites/{site}/milestones":                        "write",

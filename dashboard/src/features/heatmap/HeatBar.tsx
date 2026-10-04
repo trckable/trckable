@@ -15,7 +15,7 @@ const LAYER_ICON: Record<keyof Layers, ReactNode> = {
   page: <FileImage size={15} />,
 }
 
-export function HeatBar(p: { map: HeatMap | null; path: string; width: Width | 0; onWidth: (w: Width) => void; layers: Layers; onLayer: (k: keyof Layers) => void; demo: boolean; onClose: () => void }) {
+export function HeatBar(p: { map: HeatMap | null; path: string; width: Width | 0; onWidth: (w: Width) => void; layers: Layers; onLayer: (k: keyof Layers) => void; noPage: boolean; demo: boolean; onClose: () => void }) {
   return (
     <div className="heat-bar">
       <Flame size={16} aria-hidden="true" />
@@ -35,7 +35,7 @@ export function HeatBar(p: { map: HeatMap | null; path: string; width: Width | 0
       </div>
       <div className="tabs" role="group">
         {(Object.keys(LAYER_ICON) as (keyof Layers)[]).map((k) => (
-          <button key={k} type="button" aria-pressed={p.layers[k]} title={heatCopy.layers[k]} aria-label={heatCopy.layers[k]} onClick={() => p.onLayer(k)}>
+          <button key={k} type="button" disabled={k === 'page' && p.noPage} aria-pressed={p.layers[k]} title={heatCopy.layers[k]} aria-label={heatCopy.layers[k]} onClick={() => p.onLayer(k)}>
             {LAYER_ICON[k]}
           </button>
         ))}

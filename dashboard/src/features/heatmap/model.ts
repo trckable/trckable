@@ -58,8 +58,11 @@ export function scrollGradient(reach: readonly number[], pageH: number, first: n
 /** How much to shrink a page that is wider than the room it is shown in. */
 export const fit = (room: number, pageW: number) => (room >= pageW || room <= 0 ? 1 : room / pageW)
 
-/** The page's address for the frame: the site's own domain and the path as the Pages list names it. */
-export const frameURL = (domain: string, path: string) => `https://${domain}${path}`
+/** The page for the frame: a page of this server that frames the site's own page (it checks the site allows it, and says so when it does not). The dashboard itself never frames another site. */
+export const frameSrc = (site: string, path: string) => `/api/v1/sites/${encodeURIComponent(site)}/heat-frame?path=${encodeURIComponent(path)}`
+
+/** A page that does something just by being opened: never loaded for a heatmap (the server refuses it too). */
+export const isRisky = (path: string) => /^\/(log|sign)[-_]?(out|off)\b|^\/unsubscribe\b/i.test(path)
 
 /** The widths that have views, busiest first; the others stay in the switch, disabled. */
 export const hasViews = (m: Pick<HeatMap, 'widths'>, w: Width) => (m.widths.find((x) => x.width === w)?.views ?? 0) > 0

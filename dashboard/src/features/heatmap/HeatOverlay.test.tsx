@@ -65,10 +65,9 @@ describe('the heatmap overlay', () => {
   it('shows a page in a frame that runs nothing, with its clicks laid over it', async () => {
     await mount(<HeatOverlay site={site} path="/pricing" query={{ from: '2026-09-01', to: '2026-09-30' }} onClose={() => undefined} />)
     expect(asked).toEqual(['/pricing@0'])
+    // never the site itself: a page of this server that frames it, sandboxed, under its own policy
     const frame = must(q('iframe'))
-    expect(frame.getAttribute('src')).toBe('https://site.com/pricing')
-    // sandbox with no tokens at all: no scripts, no forms, no same-origin
-    expect(frame.getAttribute('sandbox')).toBe('')
+    expect(frame.getAttribute('src')).toBe('/api/v1/sites/s1/heat-frame?path=%2Fpricing')
     expect(frame.getAttribute('referrerpolicy')).toBe('no-referrer')
     expect(dialog().querySelectorAll('.heat-dots circle[fill="url(#heat-glow)"]').length).toBe(exampleHeat(1280).clicks.length)
     expect(dialog().querySelectorAll('.heat-dead').length).toBeGreaterThan(0)
@@ -129,6 +128,13 @@ describe('the heatmap overlay', () => {
     expect(dialog().textContent).toContain('Example data')
     expect(q('iframe')).toBeNull() // no page of anyone's is loaded for an example
     expect(q('.heat-sample')).not.toBeNull()
+  })
+
+  it('does not open a page that does something by being opened', async () => {
+    await mount(<HeatOverlay site={site} path="/logout" query={{ from: 'a', to: 'b' }} onClose={() => undefined} />)
+    expect(q('iframe')).toBeNull()
+    expect(button('The page').disabled).toBe(true)
+    expect(dialog().querySelectorAll('.heat-dots circle').length).toBeGreaterThan(0) // the map itself is still there
   })
 
   it('closes', async () => {

@@ -3,6 +3,7 @@ package ingest
 import (
 	"encoding/json"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -67,7 +68,7 @@ func (h *Handler) Heat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 		return
 	}
-	u, ok := parsePageURL(p.URL, false)
+	u, ok := parsePageURL(p.URL, site.HashMode)
 	if !ok || !hostAllowed(u.Host, site, p.Dev == 1) {
 		h.reject(w, http.StatusBadRequest, errHost)
 		return
@@ -86,12 +87,19 @@ func (h *Handler) Heat(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 		return
 	}
-	if ua := parseUA(r.UserAgent(), p.Width); ua.Bot && (p.Dev != 1 || !isLocalHost(u.Host)) {
+	ua := parseUA(r.UserAgent(), p.Width)
+	if ua.Bot && (p.Dev != 1 || !isLocalHost(u.Host)) {
+		w.WriteHeader(http.StatusAccepted)
+		return
+	}
+	// Strict filtering is the owner's word for events and for this alike: no
+	// client that names no browser, and nothing from a rented server.
+	if site.BotStrict && (ua.Browser == "" || ua.Browser == "Other") {
 		w.WriteHeader(http.StatusAccepted)
 		return
 	}
 	ip := h.heatIP(r, site)
-	if site.SkipIP(ip) {
+	if site.SkipIP(ip) || (site.BotStrict && h.Hosting != nil && h.Hosting(ip)) {
 		w.WriteHeader(http.StatusAccepted)
 		return
 	}
@@ -106,7 +114,7 @@ func (h *Handler) Heat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	base := heatKey{Site: site.ID, Day: now.UTC().Format(time.DateOnly), Path: clip(u.Path, 512), Width: heatBucket(p.Width)}
+	base := heatKey{Site: site.ID, Day: heatDay(site, now), Path: clip(u.Path, 512), Width: heatBucket(p.Width)}
 	if p.Height < 0 || p.Height > heatMaxPx {
 		p.Height = 0
 	}
@@ -130,6 +138,15 @@ func (h *Handler) Heat(w http.ResponseWriter, r *http.Request) {
 	}
 	h.markSeen(site.ID, now)
 	w.WriteHeader(http.StatusAccepted)
+}
+
+// heatDay is the day a report belongs to: the site's own, so the days of the
+// heatmap are the days of the rest of its reports. UTC for a site with no zone.
+func heatDay(site Site, now time.Time) string {
+	if site.Location != nil {
+		return now.In(site.Location).Format(time.DateOnly)
+	}
+	return now.UTC().Format(time.DateOnly)
 }
 
 // heatIP is the address the rate limit counts, by the same rules as events:
@@ -164,6 +181,8 @@ const (
 	// What is held in memory between two writes, in distinct counters. More is
 	// dropped: a flood of made-up elements cannot grow the server.
 	heatMaxKeys = 50_000
+	// And what one site may hold of them.
+	heatSiteKeys = 5_000
 )
 
 // The widths a page is looked at in. A visit is filed under the one it is
@@ -188,6 +207,22 @@ func heatBucket(w int) uint16 {
 // siblings; a field is "form>field". Letters, digits and a few signs: nothing
 // that could carry a sentence.
 var heatEl = regexp.MustCompile(`^[\w#.:>\[\]-]{1,120}$`)
+
+// A form is a plain word (the script writes "form" for anything else) and a
+// field a name with no counter in it: no run of three digits, and no number in
+// brackets, which the script takes out. What the script would not send is not
+// taken, so a sender that is not our script cannot fill the store with ids.
+var (
+	heatForm  = regexp.MustCompile(`^[A-Za-z][A-Za-z-]{1,22}$`)
+	heatField = regexp.MustCompile(`^[\w.\[\]-]{1,40}$`)
+	heatCount = regexp.MustCompile(`\d{3}|\[\d+\]`)
+)
+
+// heatFieldOK says whether "form>field" is one the script could have sent.
+func heatFieldOK(el string) bool {
+	form, field, ok := strings.Cut(el, ">")
+	return ok && heatForm.MatchString(form) && heatField.MatchString(field) && !heatCount.MatchString(field)
+}
 
 // Kinds of report. A page is counted ("v"), a click lands ("c"), a click that
 // looks clickable changes nothing ("d"), three clicks on one element in a
@@ -214,13 +249,16 @@ type heatKey struct {
 // width and H the page's height, summed, so the page can be drawn as it was.
 type heatSum struct{ N, X, Y, W, H uint64 }
 
-// num reads a whole number in [0, max] out of a decoded JSON value.
+// num reads a number out of a decoded JSON value and brings it into [0, max]:
+// a page whose element sits off to the left or runs past five windows still
+// reports, as the nearest place the map can show. Anything that is not a
+// number is not ours.
 func num(v any, max float64) (uint64, bool) {
 	f, ok := v.(float64)
-	if !ok || f < 0 || f > max || f != float64(uint64(f)) {
+	if !ok || math.IsNaN(f) {
 		return 0, false
 	}
-	return uint64(f), true
+	return uint64(math.Round(math.Min(max, math.Max(0, f)))), true
 }
 
 // heatItem checks one reported item and says what it adds.
@@ -262,7 +300,7 @@ func heatItem(base heatKey, it []any, width, height int) (heatKey, heatSum, bool
 			return base, heatSum{}, false
 		}
 		el, ok := it[1].(string)
-		if !ok || !heatEl.MatchString(el) || strings.Count(el, ">") != 1 {
+		if !ok || !heatFieldOK(el) {
 			return base, heatSum{}, false
 		}
 		k.El = el
@@ -287,6 +325,10 @@ type HeatRow struct {
 type HeatCounts struct {
 	mu sync.Mutex
 	m  map[heatKey]heatSum
+	// per is how many distinct counters each site holds since the last drain,
+	// so one site that is flooded with made-up elements cannot take the room of
+	// the others.
+	per map[string]int
 }
 
 func (c *HeatCounts) add(k heatKey, s heatSum) {
@@ -296,8 +338,14 @@ func (c *HeatCounts) add(k heatKey, s heatSum) {
 		c.m = map[heatKey]heatSum{}
 	}
 	cur, seen := c.m[k]
-	if !seen && len(c.m) >= heatMaxKeys {
-		return
+	if !seen {
+		if len(c.m) >= heatMaxKeys || c.per[k.Site] >= heatSiteKeys {
+			return
+		}
+		if c.per == nil {
+			c.per = map[string]int{}
+		}
+		c.per[k.Site]++
 	}
 	cur.N += s.N
 	cur.X += s.X
@@ -313,7 +361,7 @@ func (c *HeatCounts) add(k heatKey, s heatSum) {
 func (c *HeatCounts) Drain() []HeatRow {
 	c.mu.Lock()
 	m := c.m
-	c.m = nil
+	c.m, c.per = nil, nil
 	c.mu.Unlock()
 	out := make([]HeatRow, 0, len(m))
 	for k, s := range m {

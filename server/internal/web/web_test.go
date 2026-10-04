@@ -170,16 +170,15 @@ func TestOnlyEmbeddableLinksCanBeFramed(t *testing.T) {
 	}
 }
 
-// The dashboard frames its own origin's pages and https pages (the heatmap
-// overlay's one sandboxed frame), never anything through a wildcard or
-// http, which would be mixed content under an https dashboard.
-func TestDashboardFramesOnlyItsOwnOriginAndHTTPS(t *testing.T) {
+// The dashboard frames only pages of its own origin; another site's page
+// never loads inside it.
+func TestDashboardFramesOnlyItsOwnOrigin(t *testing.T) {
 	h := DashboardFramed(func(*http.Request) string { return "" })
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, httptest.NewRequest("GET", "/", nil))
 	csp := w.Header().Get("Content-Security-Policy")
-	if !strings.Contains(csp, "frame-src 'self' https:;") || strings.Contains(csp, "frame-src *") || strings.Contains(csp, "child-src") {
-		t.Errorf("CSP %q: want frame-src 'self' https: only", csp)
+	if !strings.Contains(csp, "frame-src 'self';") || strings.Contains(csp, "frame-src *") || strings.Contains(csp, "child-src") {
+		t.Errorf("CSP %q: want frame-src 'self' only", csp)
 	}
 }
 

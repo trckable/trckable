@@ -77,7 +77,8 @@ type Heat struct {
 }
 
 const (
-	heatSpotLimit = 400 // spots per kind: the busiest places are the map
+	heatSpotLimit = 400  // spots per kind: the busiest places are the map
+	heatSpotRows  = 1500 // and the rows read for all three: a page with thousands of places is not read whole
 	heatElLimit   = 30
 	heatFldLimit  = 40
 )
@@ -147,7 +148,8 @@ func (q Q) HeatFor(ctx context.Context, p Params, path string, width int) (*Heat
 		FROM heat_daily
 		WHERE site_id = ? AND day >= CAST(? AS DATE) AND day < CAST(? AS DATE) AND path = ? AND width = ? AND kind IN ('c', 'd', 'r')
 		GROUP BY kind, el, cx, cy
-		ORDER BY n DESC, el, cx, cy`, p.Site, from, to, path, width)
+		ORDER BY n DESC, el, cx, cy
+		LIMIT ?`, p.Site, from, to, path, width, heatSpotRows)
 	if err != nil {
 		return nil, fmt.Errorf("heatmap: %w", err)
 	}

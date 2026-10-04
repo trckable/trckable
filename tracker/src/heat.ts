@@ -8,6 +8,7 @@ const ds = s.dataset
 heat({
   site: ds.site!,
   api: (ds.api || new URL('/api/e', s.src).href).replace(/\/e$/, '/h'),
-  sample: +(ds.heatSample || 1) || 1,
+  sample: +ds.heatSample! >= 0 ? +ds.heatSample! : 1, // 0 is none, and what is not a number is all
   dev: 'dev' in ds,
+  hash: 'hash' in ds,
 })

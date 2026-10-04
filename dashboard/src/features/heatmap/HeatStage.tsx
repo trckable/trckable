@@ -4,7 +4,7 @@
 // so every point sits where it did on the page.
 import type { HeatMap, Spot } from './api'
 import { heatCopy } from './copy'
-import { busiest, FIRST_SCREEN, fit, frameURL, glow, pageSize, place, scrollGradient, strength } from './model'
+import { busiest, FIRST_SCREEN, fit, frameSrc, glow, pageSize, place, scrollGradient, strength } from './model'
 import { useWidth } from '../../charts/useWidth'
 
 export interface Layers {
@@ -60,7 +60,7 @@ function Sample({ map }: { map: HeatMap }) {
   )
 }
 
-export function HeatStage({ map, layers, domain, demo }: { map: HeatMap; layers: Layers; domain: string; demo: boolean }) {
+export function HeatStage({ map, layers, site, demo }: { map: HeatMap; layers: Layers; site: string; demo: boolean }) {
   const { ref, w: room } = useWidth<HTMLDivElement>(640)
   const { w, h } = pageSize(map)
   const k = fit(room, w)
@@ -68,7 +68,7 @@ export function HeatStage({ map, layers, domain, demo }: { map: HeatMap; layers:
     <div ref={ref} className="heat-room">
       <div className="heat-fit" style={{ width: w * k, height: h * k }}>
         <div className="heat-page" style={{ width: w, height: h, transform: `scale(${k})` }}>
-          {layers.page && (demo ? <Sample map={map} /> : <iframe className="heat-frame" title={heatCopy.frame} sandbox="" referrerPolicy="no-referrer" tabIndex={-1} loading="lazy" src={frameURL(domain, map.path)} />)}
+          {layers.page && (demo ? <Sample map={map} /> : <iframe className="heat-frame" title={heatCopy.frame} referrerPolicy="no-referrer" tabIndex={-1} loading="lazy" src={frameSrc(site, map.path)} />)}
           {layers.scroll && <div className="heat-scroll" style={{ backgroundImage: scrollGradient(map.scroll, h, FIRST_SCREEN[map.width]) }} title={heatCopy.layers.scroll} />}
           <svg className="heat-dots" width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
             <defs>

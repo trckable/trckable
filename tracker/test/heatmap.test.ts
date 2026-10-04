@@ -39,7 +39,7 @@ function browser(over: { dnt?: boolean; tracker?: boolean } = {}) {
   if (over.tracker !== false) (win as any).__trk = () => {}
 }
 
-const start = (c: Partial<Heat> = {}) => heat({ site: 'tkb_test', api: 'https://stats.site.com/api/h', ...c })
+const start = (c: Partial<Heat> = {}) => heat({ site: 'tkb_test', api: 'https://stats.site.com/api/h', sample: 1, ...c })
 const q = (s: string) => win.document.querySelector(s) as unknown as HTMLElement
 const click = (s: string) => q(s).dispatchEvent(new win.MouseEvent('click', { bubbles: true, clientX: 5, clientY: 5 }) as any)
 const items = () => sent.flatMap((b) => b.i)
@@ -174,6 +174,81 @@ describe('heatmaps', () => {
     expect(body).not.toContain('ada@')
     expect(body).not.toContain('hunter2')
     expect(body).toContain('signup>email')
+  })
+
+  it('names a form by a plain id or name, and just "form" for anything else', () => {
+    browser()
+    q('#signup').id = 'form-3f9a8c1' // a generated id
+    start()
+    q('[name=email]').dispatchEvent(new win.FocusEvent('focusin', { bubbles: true }) as any)
+    win.dispatchEvent(new win.Event('pagehide'))
+    expect(items().filter((i) => i[0] == 'fr').map((i) => i[1])).toEqual(['form>email'])
+  })
+
+  it('falls back to the form’s name when its id is not a plain word', () => {
+    browser()
+    const form = q('#signup')
+    form.setAttribute('name', 'newsletter')
+    form.id = 'f_1'
+    start()
+    q('[name=email]').dispatchEvent(new win.FocusEvent('focusin', { bubbles: true }) as any)
+    expect(items().length).toBe(0) // nothing sent yet: still on the page
+    win.dispatchEvent(new win.Event('pagehide'))
+    expect(items().filter((i) => i[0] == 'fr').map((i) => i[1])).toEqual(['newsletter>email'])
+  })
+
+  it('takes the numbers out of a list field’s name, and skips a name with a counter in it', () => {
+    browser()
+    const form = q('#signup')
+    for (const n of ['items[3][title]', 'user_1234567', 'token934']) {
+      const input = win.document.createElement('input')
+      input.name = n
+      form.append(input as any)
+    }
+    start()
+    for (const n of ['items[3][title]', 'user_1234567', 'token934']) q(`[name="${n}"]`).dispatchEvent(new win.FocusEvent('focusin', { bubbles: true }) as any)
+    win.dispatchEvent(new win.Event('pagehide'))
+    expect(items().filter((i) => i[0] == 'fr').map((i) => i[1])).toEqual(['signup>items[][title]'])
+  })
+
+  it('never reports a negative place or one wider than five windows', () => {
+    browser()
+    ;(q('.buy') as any).getBoundingClientRect = () => ({ left: -300, top: -40, width: 90000, height: 9e6 })
+    start()
+    click('.buy')
+    hide()
+    const c = items().find((i) => i[0] == 'c')!
+    expect(c.slice(4)).toEqual([0, 0, 5000, 200000])
+  })
+
+  it('writes a custom element’s name in letters, digits and dashes only', () => {
+    browser()
+    const el = win.document.createElement('my-ünï-widget')
+    q('main').append(el as any)
+    start()
+    el.dispatchEvent(new win.MouseEvent('click', { bubbles: true }) as any)
+    hide()
+    expect(items().find((i) => i[0] == 'c')![1]).toMatch(/^[\w#.:>\[\]-]+$/)
+  })
+
+  it('counts a page as its path and hash in a hash-routed site, and as its path alone otherwise', () => {
+    browser()
+    start({ hash: true })
+    click('.buy')
+    win.location.hash = '#/pricing'
+    click('.buy')
+    hide()
+    expect(sent.length).toBe(2) // the route change sent the first page's batch
+  })
+
+  it('does not take a change of hash for a new page when routes are paths', () => {
+    browser()
+    start()
+    click('.buy')
+    win.location.hash = '#/pricing'
+    click('.buy')
+    hide()
+    expect(sent.length).toBe(1)
   })
 
   it('stops after 60 items a page view', () => {

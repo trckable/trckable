@@ -694,7 +694,7 @@ func (s *Store) Site(id string) (ingest.Site, bool) {
 
 func (s *Store) reloadSites(ctx context.Context) error {
 	rows, err := s.DB.QueryContext(ctx, `
-		SELECT s.id, s.domain, s.allowed, s.hash_mode, s.proxy_key,
+		SELECT s.id, s.domain, s.allowed, s.hash_mode, s.proxy_key, s.timezone,
 		       coalesce(c.exclude_paths, ''), coalesce(c.honor_dnt, 0),
 		       coalesce(c.record_city, 1), coalesce(c.bot_strict, 1),
 		       coalesce(c.consent_free, 0), coalesce(c.exclude_ips, '')
@@ -706,15 +706,16 @@ func (s *Store) reloadSites(ctx context.Context) error {
 	next := map[string]ingest.Site{}
 	for rows.Next() {
 		var site ingest.Site
-		var allowed, exclude, ips string
+		var allowed, exclude, ips, zone string
 		var hash, dnt, city, strict, free int
-		if err := rows.Scan(&site.ID, &site.Domain, &allowed, &hash, &site.ProxyKey, &exclude, &dnt, &city, &strict, &free, &ips); err != nil {
+		if err := rows.Scan(&site.ID, &site.Domain, &allowed, &hash, &site.ProxyKey, &zone, &exclude, &dnt, &city, &strict, &free, &ips); err != nil {
 			return err
 		}
 		if allowed != "" {
 			site.Allowed = strings.Split(allowed, ",")
 		}
 		site.HashMode = hash == 1
+		site.Location, _ = time.LoadLocation(zone) // an unknown zone leaves it nil: UTC
 		site.HonorDNT = dnt == 1
 		site.NoCity = city == 0
 		site.BotStrict = strict == 1

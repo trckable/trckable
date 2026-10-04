@@ -2,7 +2,10 @@ package api
 
 import (
 	"context"
+	"errors"
+	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -132,5 +135,138 @@ func TestHeatmapsModuleIsOffUntilTurnedOnAndSaysItsSize(t *testing.T) {
 	}
 	if b, _ := m["tracker_bytes"].(float64); b < 500 || b > 1536 {
 		t.Errorf("heatmaps module is %v B, want a measured size within its 1.5 KB budget", m["tracker_bytes"])
+	}
+}
+
+// The overlay frames a page of this server, which frames the owner's own site
+// with nothing allowed in it, under a policy that lets it frame that site and
+// be framed by this server only.
+func TestHeatFrameFramesTheOwnersSiteWithNothingAllowed(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	base := g.srv.URL + "/api/v1/sites/" + g.site
+	do(t, c, "PUT", base+"/modules/heatmaps", `{"enabled":true}`, csrf, "1")
+	var asked []string
+	headers := http.Header{}
+	status := http.StatusOK
+	was := checkClient
+	defer func() { checkClient = was }()
+	checkClient = func() *http.Client {
+		return &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+			asked = append(asked, r.URL.String())
+			if status == 0 {
+				return nil, errors.New("no route to host")
+			}
+			return &http.Response{StatusCode: status, Header: headers.Clone(), Body: io.NopCloser(strings.NewReader("")), Request: r}, nil
+		})}
+	}
+	get := func(path string) (int, http.Header, string) {
+		t.Helper()
+		resp, err := c.Get(base + "/heat-frame?path=" + url.QueryEscape(path))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		b, _ := io.ReadAll(resp.Body)
+		return resp.StatusCode, resp.Header, string(b)
+	}
+	hint := func(body string) bool {
+		return strings.Contains(body, heatFrameHint) && !strings.Contains(body, "<iframe")
+	}
+
+	code, h, body := get("/pricing")
+	if code != http.StatusOK || !strings.Contains(body, `<iframe sandbox="" referrerpolicy="no-referrer"`) || !strings.Contains(body, `src="https://site.com/pricing"`) {
+		t.Fatalf("a page that can be framed: %d %s", code, body)
+	}
+	if strings.Contains(strings.ToLower(body), "<script") {
+		t.Error("the frame page runs a script")
+	}
+	csp := h.Get("Content-Security-Policy")
+	for _, want := range []string{"default-src 'none'", "frame-src https://site.com https://*.site.com", "frame-ancestors 'self'"} {
+		if !strings.Contains(csp, want) {
+			t.Errorf("CSP %q lacks %q", csp, want)
+		}
+	}
+	if h.Get("X-Frame-Options") != "SAMEORIGIN" || h.Get("Cache-Control") != "no-store" {
+		t.Errorf("headers: %v", h)
+	}
+	if len(asked) != 1 || asked[0] != "https://site.com/pricing" {
+		t.Errorf("the check asked for %v, want the page itself", asked)
+	}
+
+	// A hash route and a path with characters in it are carried, escaped.
+	if _, _, body = get("/#/pricing?x=1"); strings.Contains(body, "<iframe") {
+		t.Errorf("a query string is not a path of the list: %s", body)
+	}
+	if _, _, body = get("/#/pricing"); !strings.Contains(body, `src="https://site.com/#/pricing"`) {
+		t.Errorf("a hash route: %s", body)
+	}
+
+	// A site that refuses framing.
+	headers.Set("X-Frame-Options", "DENY")
+	if _, _, body = get("/pricing"); !hint(body) {
+		t.Errorf("X-Frame-Options DENY: %s", body)
+	}
+	headers.Del("X-Frame-Options")
+	headers.Set("Content-Security-Policy", "frame-ancestors 'none'")
+	if _, _, body = get("/pricing"); !hint(body) {
+		t.Errorf("frame-ancestors 'none': %s", body)
+	}
+	headers.Set("Content-Security-Policy", "default-src 'self'; frame-ancestors *")
+	if _, _, body = get("/pricing"); hint(body) {
+		t.Errorf("frame-ancestors *: %s", body)
+	}
+	headers.Del("Content-Security-Policy")
+
+	// A page that cannot be read is not shown.
+	status = 0
+	if _, _, body = get("/pricing"); !hint(body) {
+		t.Errorf("an unreachable site: %s", body)
+	}
+	status = http.StatusOK
+
+	// Opening some pages is itself something done: never framed, never even asked for.
+	asked = nil
+	for _, p := range []string{"/logout", "/signout", "/Sign-Out", "/log_off", "/unsubscribe"} {
+		if _, _, body = get(p); !hint(body) {
+			t.Errorf("%s was framed: %s", p, body)
+		}
+	}
+	if len(asked) != 0 {
+		t.Errorf("the site was asked for %v", asked)
+	}
+
+	// Nothing but a path of the site is taken.
+	for _, p := range []string{"", "pricing", "//evil.example/", "/a b", `/"onload="x`, "/<script>", "/" + strings.Repeat("a", 600)} {
+		if code, _, _ := get(p); code != http.StatusBadRequest {
+			t.Errorf("path %.30q: %d, want 400", p, code)
+		}
+	}
+}
+
+func TestRefusesFraming(t *testing.T) {
+	const us = "https://trckable.example"
+	for name, c := range map[string]struct {
+		h    map[string]string
+		deny bool
+	}{
+		"nothing said":           {nil, false},
+		"X-Frame-Options":        {map[string]string{"X-Frame-Options": "SAMEORIGIN"}, true},
+		"ancestors none":         {map[string]string{"Content-Security-Policy": "frame-ancestors 'none'"}, true},
+		"ancestors self":         {map[string]string{"Content-Security-Policy": "frame-ancestors 'self'"}, true},
+		"ancestors another site": {map[string]string{"Content-Security-Policy": "frame-ancestors https://other.example"}, true},
+		"ancestors everyone":     {map[string]string{"Content-Security-Policy": "frame-ancestors *"}, false},
+		"ancestors this server":  {map[string]string{"Content-Security-Policy": "script-src 'self'; frame-ancestors https://trckable.example"}, false},
+		"ancestors https":        {map[string]string{"Content-Security-Policy": "frame-ancestors https:"}, false},
+		"a policy about scripts": {map[string]string{"Content-Security-Policy": "script-src 'self'"}, false},
+	} {
+		h := http.Header{}
+		for k, v := range c.h {
+			h.Set(k, v)
+		}
+		if got := refusesFraming(h, us); got != c.deny {
+			t.Errorf("%s: refuses = %v, want %v", name, got, c.deny)
+		}
 	}
 }

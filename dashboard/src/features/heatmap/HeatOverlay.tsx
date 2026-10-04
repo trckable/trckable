@@ -12,14 +12,15 @@ import { heatCopy } from './copy'
 import { HeatBar } from './HeatBar'
 import { HeatSide } from './HeatSide'
 import { HeatStage, type Layers } from './HeatStage'
-import { exampleHeat } from './model'
+import { exampleHeat, isRisky } from './model'
 import './heatmap.css'
 
 const SHOWN: Layers = { clicks: true, scroll: false, trouble: true, page: true }
 
+
 export default function HeatOverlay({ site, path, query, demo = false, onClose }: { site: Site; path: string; query: ReportQuery; demo?: boolean; onClose: () => void }) {
   const [width, setWidth] = useState<Width | 0>(0)
-  const [layers, setLayers] = useState<Layers>(SHOWN)
+  const [layers, setLayers] = useState<Layers>({ ...SHOWN, page: !isRisky(path) }) // a sign-out page is not opened to look at it
   const [got, setGot] = useState<{ key: string; map: HeatMap } | null>(null)
   const [err, setErr] = useState<{ key: string; text: string } | null>(null)
   const key = JSON.stringify([site.id, path, query.from, query.to, width])
@@ -41,13 +42,13 @@ export default function HeatOverlay({ site, path, query, demo = false, onClose }
   const empty = !!map && map.views === 0 && map.clicks.length === 0
   return (
     <Modal label={heatCopy.open(path)} className="heat" keepSize={false} onClose={onClose}>
-      <HeatBar map={map} path={path} width={width} onWidth={setWidth} layers={layers} onLayer={(k) => setLayers((l) => ({ ...l, [k]: !l[k] }))} demo={demo} onClose={onClose} />
+      <HeatBar map={map} path={path} width={width} onWidth={setWidth} layers={layers} onLayer={(k) => setLayers((l) => ({ ...l, [k]: !l[k] }))} noPage={isRisky(path)} demo={demo} onClose={onClose} />
       {failed && <div className="empty">{failed}</div>}
       {!map && !failed && <div className="empty">{heatCopy.loading}</div>}
       {empty && <div className="empty">{width ? heatCopy.noneWidth : heatCopy.none}</div>}
       {map && !empty && (
         <div className="heat-body">
-          <HeatStage map={map} layers={layers} domain={site.domain} demo={demo} />
+          <HeatStage map={map} layers={layers} site={site.id} demo={demo} />
           <HeatSide map={map} />
         </div>
       )}
