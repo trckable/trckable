@@ -9,6 +9,7 @@ const plural = (n: number, one: string, many: string) => `${fmtInt(n)} ${n === 1
 
 export const extrasCopy = defineCopy('extras', {
   pace: (total: string) => `On pace for ~${total} this month`,
+  paceShort: (total: string) => `→ ~${total} this month`,
   /** What a spike or a burst of sales says (the moments on the chart). */
   ring: {
     spike: (factor: number) => `Spike · ${times(factor)} the usual`,

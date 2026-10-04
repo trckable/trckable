@@ -1,26 +1,25 @@
-// "On pace for ~9,400 this month", one quiet line in the chart's head: the
-// visitors (or the revenue) of this month's whole days so far, spread over the
-// days of the month. Nothing before three whole days, and nothing for a metric
-// that does not add up (a rate). A chunk of its own.
+// "→ ~9.4k this month", one quiet line in the Visitors tile: the visitors of
+// this month's whole days so far, spread over the days of the month. Nothing
+// before three whole days. Its tooltip says it in full. A chunk of its own.
 import { useEffect, useState } from 'react'
 import { cachedReport, type ReportQuery } from '../../lib/api'
-import { fmtInt } from '../../lib/format'
+import { fmtCompact } from '../../lib/format'
 import { extrasCopy } from './copy'
 import { monthSoFar, paceOf } from './pace'
 import { whenQuiet } from './quiet'
 import './pace.css'
 
-export default function PaceLine({ site, today, filters, test, metric, money }: { site: string; today: string; filters?: ReportQuery['filters']; test?: boolean; metric: string; money?: (minor: number) => string }) {
+export default function PaceLine({ site, today, filters, test }: { site: string; today: string; filters?: ReportQuery['filters']; test?: boolean }) {
   const span = monthSoFar(today)
   const key = [site, span?.from, span?.to, test ? 'test' : '', JSON.stringify(filters ?? [])].join('|')
-  const [sum, setSum] = useState<{ key: string; visitors: number; revenue: number } | null>(null)
+  const [sum, setSum] = useState<{ key: string; visitors: number } | null>(null)
   useEffect(() => {
     if (!span) return
     let live = true
     // After the page is quiet: never a slot among the requests the first load needs.
     const cancel = whenQuiet(() => {
       cachedReport(site, { from: span.from, to: span.to, filters, bucket: 'day', testPayments: test })
-        .then((r) => live && setSum({ key, visitors: r.current.kpis.visitors, revenue: r.current.money?.revenue ?? 0 }))
+        .then((r) => live && setSum({ key, visitors: r.current.kpis.visitors }))
         .catch(() => undefined)
     })
     return () => {
@@ -28,8 +27,13 @@ export default function PaceLine({ site, today, filters, test, metric, money }: 
       cancel()
     }
   }, [key]) // eslint-disable-line react-hooks/exhaustive-deps -- keyed by content
-  if (!span || !sum || sum.key !== key || (metric !== 'visitors' && metric !== 'revenue')) return null
-  const p = paceOf(metric === 'revenue' ? sum.revenue : sum.visitors, today)
+  if (!span || !sum || sum.key !== key) return null
+  const p = paceOf(sum.visitors, today)
   if (!p) return null
-  return <span className="faint pace-line">{extrasCopy.pace(metric === 'revenue' && money ? money(p.total) : fmtInt(p.total))}</span>
+  const total = fmtCompact(p.total)
+  return (
+    <span className="kpi-pace num" title={extrasCopy.pace(total)}>
+      {extrasCopy.paceShort(total)}
+    </span>
+  )
 }

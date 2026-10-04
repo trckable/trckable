@@ -51,14 +51,14 @@ async function signIn(page: Page) {
 // "Last 30 days" ends today, so it is live; the pace line needs three whole days of this month.
 const dayOfMonth = (tz: string) => Number(new Intl.DateTimeFormat('en-CA', { timeZone: tz, day: '2-digit' }).format(new Date()))
 
-test('the pace line sits in the chart head once three days of the month have gone', async ({ page }) => {
+test('the pace line sits in the Visitors tile once three days of the month have gone', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   const site = await signIn(page)
   await page.goto(`${BASE}/${site.domain}?view=data`)
   await expect(page.locator('.overview-chart')).toBeVisible({ timeout: 20_000 })
-  const pace = page.locator('.chart-head .pace-line')
+  const pace = page.locator('.kpis .kpi-pace')
   if (dayOfMonth(site.timezone) > 3) {
-    await expect(pace).toHaveText(/^On pace for ~[\d,]+ this month$/, { timeout: 20_000 })
+    await expect(pace).toHaveText(/^→ ~[\d.,]+[KkM]? this month$/, { timeout: 20_000 })
   } else {
     await page.waitForTimeout(2000)
     await expect(pace, 'under three whole days: nothing is said').toHaveCount(0)

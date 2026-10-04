@@ -1,6 +1,6 @@
 // What the chart and the page draw beyond the numbers, in one chunk, asked for
 // once the page is up (a chart never waits for it): the pace line in the
-// chart's head, and the moments over its plot (which bring the card the Data
+// Visitors tile, and the moments over its plot (which bring the card the Data
 // view says on its own, now and then).
 import MomentLayer from '../moments/MomentLayer'
 import PaceLine from './PaceLine'

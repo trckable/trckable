@@ -1245,6 +1245,7 @@ export default {
 
   // extras
   'extras.pace': (total: string) => `Op koers voor ~${total} deze maand`,
+  'extras.paceShort': (total: string) => `→ ~${total} deze maand`,
   'extras.ring.spike': (factor: number) => `Piek · ${times(factor)} het gebruikelijke`,
   'extras.ring.newTraffic': (visitors: number) => `Nieuw verkeer · ${count(visitors, 'bezoeker', 'bezoekers')}`,
   'extras.ring.from': (referrer: string) => `vooral van ${referrer}`,

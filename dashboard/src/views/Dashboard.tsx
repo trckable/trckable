@@ -526,6 +526,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       <KpiStrip
         loading={firstLoad} vs={vs} metric={metric} can={canDraw} onPick={pick} expectMoney={hold.revenue}
         k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} blank={blank} site={site} bots={data?.bots}
+        pace={live && !isShared() ? extra({ part: 'pace', site: site.id, today, filters: query.filters, test: query.testPayments }) : undefined}
         hint={compareOn && !scrubbing && !raced && !trailData ? visitorsHint({ site: site.id, period: view.period, day: range.to, filters: view.filters }) : undefined}
         // A shared page has no live stream, so it says where the number comes from instead of waiting to connect forever.
         online={<OnlineKpi online={online} canOpen={!isShared()} note={stream.connected || isShared() ? entryCopy.onlineNote : entryCopy.connecting} />}
@@ -534,7 +535,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       <div className={active ? 'overview-chart replaying' : 'overview-chart'} role="group" aria-label={`${name} over time`}>
         <ChartHead title={view.cal ? toggleCopy.calendar : name}>
           {!waiting && <CalendarToggle cal={!!view.cal} onPick={(c) => setView({ cal: c ? '1' : undefined, day: undefined })} />}
-          {live && !view.cal && !isShared() && extra({ part: 'pace', site: site.id, today, filters: query.filters, test: query.testPayments, metric, money: fmtM })}
           {!view.cal && (canScrub || canReplayByDay) && (
             <ReplayButton
               playing={playing}

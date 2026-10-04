@@ -37,6 +37,8 @@ interface Props {
   expectMoney?: boolean
   /** The Visitors tile's small line, when its period has one (visitorsHint). */
   hint?: ReactNode
+  /** The Visitors tile's month pace line, when this period has one (features/extras/PaceLine). */
+  pace?: ReactNode
   /** What was filtered out of the period: a line in the Visitors tile's tooltip. */
   bots?: Bots
   /** Online now, last. */
@@ -49,7 +51,7 @@ export function KpiStrip(p: Props) {
   const { k, pk, money, pm } = p
   const rate = (x: number) => fmtRatio(x, x < 0.1 ? 2 : 1)
   const cents = (x: number) => (money ? fmtMoney(x, money.currency, money.exponent, { cents: true }) : '')
-  const tile = (key: ChartMetric, label: string, value: number | undefined, fmt: (n: number) => string, d: Delta | null, o: { live?: (r: { kpis: KPIs; revenue: number }) => number; money?: boolean; hint?: ReactNode; tip?: string } = {}) => (
+  const tile = (key: ChartMetric, label: string, value: number | undefined, fmt: (n: number) => string, d: Delta | null, o: { live?: (r: { kpis: KPIs; revenue: number }) => number; money?: boolean; hint?: ReactNode; pace?: ReactNode; tip?: string } = {}) => (
     <KpiTile
       key={key}
       loading={p.loading}
@@ -63,6 +65,7 @@ export function KpiStrip(p: Props) {
       d={d}
       money={o.money}
       hint={o.hint}
+      pace={o.pace}
       tip={o.tip}
       pressed={p.metric === key}
       onClick={canChart(key, p.can) ? () => p.onPick(key) : undefined}
@@ -98,7 +101,7 @@ export function KpiStrip(p: Props) {
   }
   return (
     <div role="group" aria-label={copy.keyNumbers} className="kpis">
-      {tile('visitors', copy.visitors, k?.visitors, fmtInt, delta(k?.visitors ?? 0, pk?.visitors), { live: (r) => r.kpis.visitors, hint: p.hint, tip: botsLine(p.bots) })}
+      {tile('visitors', copy.visitors, k?.visitors, fmtInt, delta(k?.visitors ?? 0, pk?.visitors), { live: (r) => r.kpis.visitors, hint: p.hint, pace: p.pace, tip: botsLine(p.bots) })}
       {second()}
       {tile('bounce', copy.bounce, k?.bounce_rate, fmtPct, delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true), { live: (r) => r.kpis.bounce_rate })}
       {tile('session', copy.session, k?.avg_session_s, fmtDuration, delta(k?.avg_session_s ?? 0, pk?.avg_session_s), { live: (r) => r.kpis.avg_session_s })}

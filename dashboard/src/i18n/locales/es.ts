@@ -1258,6 +1258,7 @@ export default {
 
   // extras
   'extras.pace': (total: string) => `Al ritmo de ~${total} este mes`,
+  'extras.paceShort': (total: string) => `→ ~${total} este mes`,
   'extras.ring.spike': (factor: number) => `Pico · ${times(factor)} lo habitual`,
   'extras.ring.newTraffic': (visitors: number) => `Tráfico nuevo · ${count(visitors, 'visitante', 'visitantes')}`,
   'extras.ring.from': (referrer: string) => `sobre todo de ${referrer}`,

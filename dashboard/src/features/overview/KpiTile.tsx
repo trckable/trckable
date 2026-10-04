@@ -28,6 +28,8 @@ interface Props {
   loading?: boolean
   /** A small chip after the change, on its line (vs usual, the month's pace): only where the change itself is shown. */
   hint?: ReactNode
+  /** The month's pace, quiet after the change (or on a line of its own when there is no change): the Visitors tile's. */
+  pace?: ReactNode
   /** A line more for the tile's tooltip: what the number leaves out (Visitors: the bots filtered). */
   tip?: string
   /** Which mark stands before the name (KpiMarks). */
@@ -54,7 +56,8 @@ export function KpiTile(p: Props) {
       {/* The skeleton is decorative: the loading bar at the top of the page
           is the one thing that announces loading, and it says it once. */}
       {p.loading ? <span className="value skeleton" aria-hidden="true" /> : <span className="value num">{p.value === undefined || none ? '–' : p.fmt(v)}</span>}
-      {p.d && !p.loading && !none && <Change d={p.d} vs={p.vs} hint={p.hint} />}
+      {p.d && !p.loading && !none && <Change d={p.d} vs={p.vs} hint={p.hint} pace={p.pace} />}
+      {!p.d && !p.loading && !none && p.pace && <span className="kpi-pace-row">{p.pace}</span>}
       {/* The change's line is kept while loading, and while a dash stands for nothing yet: the strip is as tall as it will be. */}
       {(p.loading || (none && p.d)) && <span className="kpi-delta" aria-hidden="true" />}
     </>
@@ -70,13 +73,14 @@ export function KpiTile(p: Props) {
 /** A tooltip with its extra line under it, when there is one. */
 const tipped = (title: string, tip?: string) => (tip ? `${title}\n${tip}` : title)
 
-function Change({ d, vs, hint }: { d: Delta; vs: string; hint?: ReactNode }) {
+function Change({ d, vs, hint, pace }: { d: Delta; vs: string; hint?: ReactNode; pace?: ReactNode }) {
   const label = copy.change(d.label, vs)
   return (
     <span className={`kpi-delta num tone-${d.tone}`} title={label}>
       <span aria-hidden="true">{d.short}</span>
       <span className="sr">{label}</span>
       {hint}
+      {pace}
     </span>
   )
 }
