@@ -53,7 +53,7 @@ var (
 // same file.
 func safeValue(v string) bool {
 	l := strings.ToLower(v)
-	for _, bad := range []string{"javascript", "data:", "vbscript", "expression", "image-set", "@", "<", "\\", "&"} {
+	for _, bad := range []string{"javascript", "data:", "vbscript", "expression", "image-set", "src(", "@", "<", "\\", "&"} {
 		if strings.Contains(l, bad) {
 			return false
 		}

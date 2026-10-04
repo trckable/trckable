@@ -5,7 +5,6 @@
     "src/main.tsx": 296,
     "src/views/Account.tsx": 355,
     "src/views/AllSites.tsx": 275,
-    "src/views/Auth.tsx": 302,
     "src/views/Dashboard.tsx": 672,
     "src/views/Health.tsx": 275,
     "src/views/Payments.tsx": 671,

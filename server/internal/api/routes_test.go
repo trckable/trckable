@@ -31,6 +31,9 @@ var routeRules = map[string]string{
 	"POST /api/v1/setup":                                         "public",
 	"POST /api/v1/payments/start-over":                           "write",
 	"POST /api/v1/login":                                         "public",
+	"GET /api/v1/oidc/{provider}/start":                          "public",
+	"GET /api/v1/oidc/{provider}/callback":                       "public",
+	"POST /api/v1/oidc/code":                                     "public",
 	"POST /api/v1/logout":                                        "public",
 	"GET /api/v1/me":                                             "read",
 	"PUT /api/v1/me/keys":                                        "selfW",
@@ -261,7 +264,7 @@ func TestEveryRouteChecksWhoIsAsking(t *testing.T) {
 		return res.StatusCode, string(raw)
 	}
 
-	fill := strings.NewReplacer("{site}", g.site, "{id}", "x", "{module}", "goals", "{visitor}", "1")
+	fill := strings.NewReplacer("{site}", g.site, "{provider}", "x", "{id}", "x", "{module}", "goals", "{visitor}", "1")
 	seen := map[string]bool{}
 	for _, pattern := range g.api.patterns {
 		seen[pattern] = true

@@ -49,6 +49,7 @@ func TestCleanSVGRefusesWhatCanRunOrLoad(t *testing.T) {
 		"import behind a child": open + `<style><title>x</title>@import url(https://evil.example/x.css);</style></svg>`,
 		"image-set":             open + `<rect width="1" height="1" style="background-image:image-set('https://evil.example/p.png' 1x)"/></svg>`,
 		"webkit image-set":      open + `<rect width="1" height="1" style="background-image:-webkit-image-set(url(#a) 1x)"/></svg>`,
+		"css src()":             open + `<rect width="1" height="1" style="background-image:src('https://evil.example/p.png')"/></svg>`,
 		"smil animate":          open + `<rect width="1" height="1"><animate attributeName="href" to="javascript:alert(1)"/></rect></svg>`,
 		"prefixed attribute":    open + `<rect width="1" height="1" xlink:actuate="onLoad"/></svg>`,
 	}

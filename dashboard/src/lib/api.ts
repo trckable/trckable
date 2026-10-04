@@ -443,7 +443,7 @@ export async function call<T>(method: string, path: string, body?: unknown, sign
   const data: unknown = await res.json().catch(() => ({}))
   if (!res.ok) {
     const f = data as Failure
-    if (res.status === 401 && !quiet && !path.startsWith('/login') && !path.startsWith('/setup')) onUnauthorized()
+    if (res.status === 401 && !quiet && !path.startsWith('/login') && !path.startsWith('/setup') && !path.startsWith('/oidc')) onUnauthorized()
     throw new APIError(res.status, f.error ?? res.statusText, f.needs_code === true, typeof f.code === 'string' ? f.code : '', f.hide_brand === true)
   }
   return data as T
@@ -777,10 +777,13 @@ export interface Profile {
   email: string
   name: string
   has_avatar: boolean
+  /** The identity provider this session signed in with; absent for a password. */
+  signed_in_with?: string
 }
 
 export const api = {
-  setupStatus: () => call<{ needs_setup: boolean }>('GET', '/setup'),
+  setupStatus: () => call<{ needs_setup: boolean; sso?: { id: string; label: string }[] }>('GET', '/setup'),
+  ssoCode: (code: string) => call<{ return_to: string }>('POST', '/oidc/code', { code }),
   setup: (token: string, email: string, password: string, domain: string) =>
     call<{ user: { email: string }; site: Site | null }>('POST', '/setup', { token, email, password, domain }),
   login: (email: string, password: string, code?: string) => call<{ user: { email: string } }>('POST', '/login', { email, password, code }),
