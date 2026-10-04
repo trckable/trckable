@@ -5,7 +5,7 @@ import { fmtInt } from '../../lib/format'
 export const heatCopy = defineCopy('heatmap', {
   open: (path: string) => `Heatmap of ${path}`,
   close: 'Close',
-  width: { 390: 'Phone', 768: 'Tablet', 1280: 'Desktop' } as Record<number, string>,
+  width: { 390: 'Phone', 768: 'Tablet', 1280: 'Desktop' },
   widthTip: (name: string, views: number) => `${name}: ${fmtInt(views)} ${views === 1 ? 'view' : 'views'}`,
   layers: { clicks: 'Clicks', scroll: 'How far down', trouble: 'Dead and rage clicks', page: 'The page' },
   views: (n: number) => `${fmtInt(n)} ${n === 1 ? 'view' : 'views'}`,
