@@ -30,6 +30,11 @@ define( 'TRCKABLE_FILE', __FILE__ );
 require_once __DIR__ . '/includes/class-trckable-options.php';
 require_once __DIR__ . '/includes/class-trckable-tracker.php';
 require_once __DIR__ . '/includes/class-trckable-proxy.php';
+require_once __DIR__ . '/includes/class-trckable-stats.php';
+require_once __DIR__ . '/includes/class-trckable-view.php';
+require_once __DIR__ . '/includes/class-trckable-page-parts.php';
+require_once __DIR__ . '/includes/class-trckable-page.php';
+require_once __DIR__ . '/includes/class-trckable-ajax.php';
 require_once __DIR__ . '/includes/class-trckable-widget.php';
 require_once __DIR__ . '/includes/class-trckable-settings.php';
 
@@ -37,3 +42,4 @@ Trckable_Tracker::init();
 Trckable_Proxy::init();
 Trckable_Widget::init();
 Trckable_Settings::init();
+Trckable_Ajax::init();

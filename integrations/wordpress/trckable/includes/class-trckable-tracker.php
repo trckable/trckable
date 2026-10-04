@@ -34,7 +34,7 @@ class Trckable_Tracker {
 		if ( Trckable_Options::proxy_ready( $o ) ) {
 			return rest_url( Trckable_Proxy::NAMESPACE_ . '/js/' . $o['site'] . '.js' );
 		}
-		return Trckable_Options::clean_host( $o['host'] ) . '/js/' . rawurlencode( $o['site'] ) . '.js';
+		return Trckable_Options::server_url( $o ) . '/js/' . rawurlencode( $o['site'] ) . '.js';
 	}
 
 	/**

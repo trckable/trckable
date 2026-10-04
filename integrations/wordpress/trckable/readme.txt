@@ -16,7 +16,7 @@ trckable counts visitors without following them. It sets no cookie in its cookie
 
 This plugin adds trckable's tracking script to your site and nothing else. It does not bundle the script: the browser loads it from your trckable server, so the tracker is always the version your server runs.
 
-* Site ID and server address in one small settings page.
+* A branded settings page with a first-run card, a choice of server (trckable Cloud, or your own), and a live preview of what you will see.
 * Cookieless switch: no cookie, no banner needed.
 * Admins and editors are left out of the numbers (on by default), and so is any role you pick.
 * Optional first-party proxy: the script and the events go through your own domain, so blocklists do not see them and every visitor keeps their own country.
@@ -29,9 +29,9 @@ trckable is open source, and so is this plugin. Questions: support@trckable.com.
 == Installation ==
 
 1. Upload the plugin and activate it, or install it from Plugins, Add New.
-2. In trckable, open Settings, Install, and copy your site ID (it starts with `tkb_`).
-3. In WordPress, open Settings, trckable and paste the site ID. If you run your own trckable, put its address in Server.
-4. Save. Open your site in a private window to check that the script is in the page source.
+2. Open the new trckable menu. The first-run card asks where your trckable runs: trckable Cloud, or your own server (then its https address).
+3. In trckable, open Settings, Install, and copy your site ID (it starts with `tkb_`), and paste it. Check connection tells you whether the server knows it.
+4. Visit your site in a private window. With a read-only API key the page shows the first visit arriving.
 
 == Frequently Asked Questions ==
 
@@ -69,10 +69,11 @@ Write to support@trckable.com, or read the install guides at https://docs.trckab
 
 == Screenshots ==
 
-1. Settings, trckable: the site ID, the server and the switches.
+1. The trckable page: status, the site, the server, the switches, and a live preview with the tag that is added.
 2. The dashboard widget: visitors today and who is on the site now.
 3. The trckable dashboard.
-4. The cookieless switch.
+4. The switches and the preview that follows them.
+5. The first-run card: where trckable runs, the site ID, the first visit.
 
 == Privacy ==
 
@@ -84,13 +85,13 @@ Deleting the plugin removes its settings.
 
 == External services ==
 
-This plugin connects to a trckable server, the analytics service it is built for. By default that is `https://cloud.trckable.com`, run by trckable. If you self-host trckable, you set your own address in Settings, trckable, and then no data goes to us.
+This plugin connects to a trckable server, the analytics service it is built for. You choose it on the trckable page (the first-run card, or the Server card later): "trckable Cloud" is `https://cloud.trckable.com`, run by trckable; "My own server" is the address of a trckable you run yourself, and then no data goes to us. Nothing is sent anywhere until a site ID is set. The Check connection button asks the chosen server for its script and whether it knows the site ID; it sends no visitor data.
 
 **The tracking script** is loaded from the server in the visitor's browser (or through your site, with the proxy on). For each page view it sends the server the page address, the referrer, the screen width and the browser language. The server also receives the visitor's IP address with the request, uses it for the country and to filter bots, and does not store it. Without Cookieless it also sets one first-party cookie, `trckable_vid`, to recognise returning visitors.
 
 **The proxy (optional)** receives the script and the events on your site and forwards them to the server, adding the visitor's IP address, user agent and the proxy key you entered.
 
-**The dashboard widget (optional)** asks the server for visitors today and the number online, from the admin's browser session through your site's server, using the read-only API key you entered. Nothing about your visitors is sent.
+**The trckable page and the dashboard widget (optional)** ask the server, from your site's server, for who is online, visitors today, the last seven days and the top pages, using the read-only API key you entered. Without a key the preview shows sample data and nothing is asked. Nothing about your visitors is sent.
 
 Terms of service: https://trckable.com/terms/
 Privacy policy: https://trckable.com/privacy/

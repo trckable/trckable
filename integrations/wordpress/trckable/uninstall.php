@@ -15,7 +15,7 @@ defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 function trckable_uninstall_site() {
 	delete_option( 'trckable_settings' );
 	delete_transient( 'trckable_script' );
-	delete_transient( 'trckable_widget' );
+	delete_transient( 'trckable_stats' );
 }
 
 if ( is_multisite() ) {

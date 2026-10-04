@@ -39,5 +39,5 @@ wp user create reader reader@example.test --role=subscriber --user_pass=reader-l
 
 "$here/../build.sh" "$dir/trckable.zip" >/dev/null
 wp plugin install "$dir/trckable.zip" --force --activate --quiet
-wp option update trckable_settings "{\"site\":\"tkb_test00000001\",\"host\":\"http://127.0.0.1:$mock_port\",\"cookieless\":0,\"exclude_staff\":1,\"exclude_roles\":[],\"proxy\":0,\"proxy_key\":\"\",\"api_key\":\"\"}" --format=json --quiet
+wp option update trckable_settings "{\"site\":\"tkb_test00000001\",\"server\":\"own\",\"host\":\"http://127.0.0.1:$mock_port\",\"cookieless\":0,\"exclude_staff\":1,\"exclude_roles\":[],\"proxy\":0,\"proxy_key\":\"\",\"api_key\":\"\"}" --format=json --quiet
 echo "ready: $dir/wordpress"

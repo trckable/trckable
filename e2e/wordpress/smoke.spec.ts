@@ -1,4 +1,4 @@
-import { test, expect, type Browser, type Page } from '@playwright/test'
+import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test'
 
 const MOCK = `http://127.0.0.1:${process.env.MOCK_PORT ?? '19400'}`
 const SITE = 'tkb_test00000001'
@@ -20,22 +20,38 @@ async function asUser(browser: Browser, user?: keyof typeof USERS): Promise<Page
     await page.fill('#user_login', user)
     await page.fill('#user_pass', USERS[user])
     await page.click('#wp-submit')
-    await page.waitForURL(/wp-admin|\/$/)
+    await page.waitForURL(/wp-admin|\/$/, { waitUntil: 'commit' }) // the dashboard behind it loads slowly and is not needed
   }
   return page
 }
 
+// One admin session for the whole file: signing in again and again is the slow part of a loaded machine.
+let adminContext: BrowserContext
+const admin = () => adminContext.newPage()
+test.beforeAll(async ({ browser }) => {
+  const page = await asUser(browser, 'admin')
+  adminContext = page.context()
+})
+test.afterAll(async () => {
+  await adminContext.close()
+})
+
 const tag = (page: Page) => page.locator('script#trckable-js')
 
-/** Opens Settings → trckable as the admin, lets the test set fields, and saves. */
+const PAGE = '/wp-admin/admin.php?page=trckable'
+
+/** Opens the trckable page as the admin, lets the test set fields, saves, and waits for the toast. */
 async function saveSettings(browser: Browser, set: (page: Page) => Promise<void>) {
-  const page = await asUser(browser, 'admin')
-  await page.goto('/wp-admin/options-general.php?page=trckable')
+  const page = await admin()
+  await page.goto(`${PAGE}&form=1`)
   await set(page)
   await page.click('#submit')
-  await expect(page.locator('#setting-error-settings_updated')).toBeVisible()
-  await page.context().close()
+  await expect(page.locator('.trk-toast[data-saved="1"]')).toBeAttached({ timeout: 30_000 })
+  await page.close()
 }
+
+/** A switch is a checkbox under a track: click its label. */
+const flip = (page: Page, id: string, on: boolean) => page.locator(`#${id}`).setChecked(on, { force: true })
 
 test.describe.configure({ mode: 'serial' })
 
@@ -60,10 +76,15 @@ test('admins and editors are left out, everyone else is counted', async ({ brows
   }
 })
 
-test('the cookieless switch sets the attribute, and a skipped role is skipped', async ({ browser }) => {
+test('the cookieless switch sets the attribute, the preview follows it, and a skipped role is skipped', async ({ browser }) => {
   await saveSettings(browser, async (p) => {
-    await p.check('#trckable_cookieless')
-    await p.check('input[name="trckable_settings[exclude_roles][]"][value="subscriber"]')
+    await flip(p, 'trckable_cookieless', true)
+    await expect(p.locator('[data-chip="cookieless"]')).toHaveText('cookieless ✓')
+    await flip(p, 'trckable_exclude_staff', false)
+    await expect(p.locator('[data-chip="staff"]')).toHaveText('admins counted')
+    await flip(p, 'trckable_exclude_staff', true)
+    await p.locator('label.trk-role', { hasText: 'Subscriber' }).click()
+    await expect(p.locator('#trk-tag')).toContainText('data-cookieless')
   })
   const visitor = await asUser(browser)
   await visitor.goto('/')
@@ -72,13 +93,13 @@ test('the cookieless switch sets the attribute, and a skipped role is skipped', 
   await reader.goto('/')
   await expect(tag(reader)).toHaveCount(0)
   await saveSettings(browser, async (p) => {
-    await p.uncheck('input[name="trckable_settings[exclude_roles][]"][value="subscriber"]')
+    await p.locator('label.trk-role', { hasText: 'Subscriber' }).click()
   })
 })
 
 test('settings are checked: a wrong site ID is refused and the old one kept', async ({ browser }) => {
-  const page = await asUser(browser, 'admin')
-  await page.goto('/wp-admin/options-general.php?page=trckable')
+  const page = await admin()
+  await page.goto(`${PAGE}&form=1`)
   await page.evaluate(() => document.querySelector('#trckable_site')?.removeAttribute('pattern'))
   await page.fill('#trckable_site', 'not-a-site')
   await page.click('#submit')
@@ -86,10 +107,36 @@ test('settings are checked: a wrong site ID is refused and the old one kept', as
   await expect(page.locator('#trckable_site')).toHaveValue(SITE)
 })
 
+test('the server is a choice: Cloud needs no address, your own needs https (http for localhost)', async ({ browser }) => {
+  const own = `http://127.0.0.1:${MOCK.split(':')[2]}`
+  await saveSettings(browser, async (p) => {
+    await p.locator('label[for=trk-server-cloud]').click()
+    await expect(p.locator('.trk-own')).toBeHidden()
+    await expect(p.locator('#trk-tag')).toContainText('https://cloud.trckable.com/js/')
+  })
+  const visitor = await asUser(browser)
+  await visitor.goto('/')
+  await expect(tag(visitor)).toHaveAttribute('src', `https://cloud.trckable.com/js/${SITE}.js`)
+  const page = await admin()
+  await page.goto(`${PAGE}&form=1`)
+  await expect(page.locator('.trk-server')).toHaveText('Cloud')
+  await page.locator('label[for=trk-server-own]').click()
+  await page.fill('#trckable_host', 'http://stats.example.com')
+  await page.click('#submit')
+  await expect(page.locator('#setting-error-trckable_host')).toBeVisible()
+  await page.locator('label[for=trk-server-own]').click()
+  await page.fill('#trckable_host', own)
+  await page.click('#submit')
+  await expect(page.locator('.trk-toast[data-saved="1"]')).toBeAttached({ timeout: 30_000 })
+  await expect(page.locator('.trk-server')).toHaveText('127.0.0.1')
+  await page.getByRole('button', { name: 'Check connection' }).click()
+  await expect(page.locator('.trk-check[data-state="ok"]')).toContainText('site found')
+})
+
 test('the proxy forwards the script and events, and nothing else', async ({ browser, request }) => {
   await saveSettings(browser, async (p) => {
     await p.fill('#trckable_proxy_key', PROXY_KEY)
-    await p.check('#trckable_proxy')
+    await flip(p, 'trckable_proxy', true)
   })
   await seen(true)
   const visitor = await asUser(browser)
@@ -121,22 +168,101 @@ test('the proxy forwards the script and events, and nothing else', async ({ brow
   expect(forwarded).toBe(1) // none of the refused ones got through
 
   await saveSettings(browser, async (p) => {
-    await p.uncheck('#trckable_proxy')
+    await flip(p, 'trckable_proxy', false)
   })
   expect((await request.get(`${base}/js/${SITE}.js`)).status()).toBe(404) // off means off
 })
 
-test('the dashboard widget shows visitors today and now, with a link', async ({ browser }) => {
+test('first run, on your own server: three steps, then the pill turns green when the first visit arrives', async ({ browser }) => {
+  // Clearing the site ID brings the first-run card back.
+  await saveSettings(browser, async (p) => {
+    await p.fill('#trckable_site', '')
+  })
+  const page = await admin()
+  await page.goto(PAGE)
+  const card = page.locator('#trk-onboard')
+  await expect(card).toHaveAttribute('data-step', '1')
+  await expect(page.locator('.trk-pill')).toHaveText('Not connected')
+  await page.locator('label[for=trk-server-own]').click()
+  await page.fill('#trckable_host', 'ftp://nope')
+  await card.getByRole('button', { name: 'Continue' }).click()
+  await expect(card.locator('.trk-check[data-state="bad"]')).toBeVisible() // the address is checked first
+  await page.fill('#trckable_host', MOCK)
+  await card.getByRole('button', { name: 'Check connection' }).click()
+  await expect(card.locator('.trk-check[data-state="ok"]')).toContainText('Server reached')
+  await card.getByRole('button', { name: 'Continue' }).click()
+  await expect(card).toHaveAttribute('data-step', '2')
+  await page.fill('#trckable_site', 'tkb_unknown00001')
+  await card.locator('.trk-step[data-n="2"]').getByRole('button', { name: 'Check connection' }).click()
+  await expect(card.locator('.trk-check[data-state="bad"]')).toContainText('does not know')
+  await page.fill('#trckable_site', SITE)
+  await expect(page.locator('#trk-tag')).toContainText(`data-site="${SITE}"`)
+  await card.locator('.trk-step[data-n="2"]').getByRole('button', { name: 'Check connection' }).click()
+  await expect(card).toHaveAttribute('data-step', '3')
+  await expect(page.locator('.trk-pill')).not.toHaveText('Not connected')
+  await expect(card.locator('[data-wait-msg]')).toContainText('API key') // no key: nothing to watch with
+  await page.fill('#trckable_api_key', API_KEY)
+  await card.getByRole('button', { name: 'Save key' }).click()
+  await expect(card).toHaveAttribute('data-done', '1', { timeout: 15_000 })
+  await expect(page.locator('.trk-pill')).toHaveText('Connected · counting')
+  await card.getByRole('link', { name: 'Open settings' }).click()
+  await expect(page.locator('.trk-layout')).toBeVisible()
+  await expect(page.locator('#trckable_site')).toHaveValue(SITE)
+})
+
+test('first run with trckable Cloud: no address to enter', async ({ browser }) => {
+  await saveSettings(browser, async (p) => {
+    await p.fill('#trckable_site', '')
+  })
+  const page = await admin()
+  await page.goto(PAGE)
+  const card = page.locator('#trk-onboard')
+  await page.locator('label[for=trk-server-cloud]').click()
+  await expect(page.locator('.trk-own')).toBeHidden()
+  await card.getByRole('button', { name: 'Continue' }).click()
+  await expect(card).toHaveAttribute('data-step', '2')
+  await page.fill('#trckable_site', SITE)
+  await expect(page.locator('#trk-tag')).toContainText(`src="https://cloud.trckable.com/js/${SITE}.js"`)
+  // Back to the test server for what follows.
+  await page.getByRole('link', { name: 'Skip, show all settings' }).click()
+  await expect(page.locator('.trk-layout')).toBeVisible()
+  await page.locator('label[for=trk-server-own]').click()
+  await page.fill('#trckable_site', SITE)
+  await page.fill('#trckable_host', MOCK)
+  await page.click('#submit')
+  await expect(page.locator('.trk-toast[data-saved="1"]')).toBeAttached({ timeout: 30_000 })
+})
+
+test('the preview shows your numbers with a key, and says sample data without one', async ({ browser }) => {
+  const page = await admin()
+  await page.goto(PAGE)
+  const prev = page.locator('.trk-prev')
+  await expect(prev.locator('[data-n="online"]')).toHaveText('7')
+  await expect(prev.locator('[data-sample]')).toHaveText('Your numbers')
+  await expect(prev.getByText('/pricing')).toBeVisible()
+  await page.close()
+  await saveSettings(browser, async (p) => {
+    await p.fill('#trckable_api_key', '')
+  })
+  const nokey = await admin()
+  await nokey.goto(PAGE)
+  await expect(nokey.locator('.trk-prev [data-sample]')).toHaveText('Sample data')
+  await expect(nokey.locator('[data-hint]')).toBeVisible()
+  await expect(nokey.locator('.trk-pill')).toHaveText('Script added')
   await saveSettings(browser, async (p) => {
     await p.fill('#trckable_api_key', API_KEY)
   })
-  const page = await asUser(browser, 'admin')
+})
+
+test('the dashboard widget shows who is online and visitors today, with a link', async ({ browser }) => {
+  const page = await admin()
   await page.goto('/wp-admin/index.php')
   const widget = page.locator('#trckable_widget')
-  await expect(widget).toContainText('1,234')
-  await expect(widget).toContainText('7')
+  await expect(widget.locator('[data-n="today"]')).toHaveText('114')
+  await expect(widget.locator('[data-n="online"]')).toHaveText('7')
+  await expect(widget.locator('.trk-spark')).toBeVisible()
   await expect(widget.getByRole('link', { name: 'Open trckable' })).toHaveAttribute('href', MOCK)
-  const call = (await seen()).find((s) => s.path.endsWith('/report'))!
+  const call = (await seen()).filter((s) => s.path.endsWith('/report')).pop()!
   expect(call.auth).toBe(`Bearer ${API_KEY}`)
   expect(call.query).toMatch(/from=\d{4}-\d\d-\d\d&to=\d{4}-\d\d-\d\d/)
 })

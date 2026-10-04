@@ -15,7 +15,7 @@ class Trckable_Options {
 	const NAME = 'trckable_settings';
 
 	/**
-	 * The server a new install points at.
+	 * The server of the "trckable Cloud" choice.
 	 */
 	const DEFAULT_HOST = 'https://cloud.trckable.com';
 
@@ -27,13 +27,15 @@ class Trckable_Options {
 	public static function defaults() {
 		return array(
 			'site'          => '',
-			'host'          => self::DEFAULT_HOST,
+			'server'        => 'cloud',
+			'host'          => '',
 			'cookieless'    => 0,
 			'exclude_staff' => 1,
 			'exclude_roles' => array(),
 			'proxy'         => 0,
 			'proxy_key'     => '',
 			'api_key'       => '',
+			'onboarding'    => 0,
 		);
 	}
 
@@ -58,21 +60,58 @@ class Trckable_Options {
 	}
 
 	/**
-	 * Cleans a server address: http(s) only, no credentials, path, query or trailing slash.
+	 * Saves some settings and leaves the others as they are.
+	 *
+	 * @param array $changes Setting names and their new values.
+	 * @return void
+	 */
+	public static function change( $changes ) {
+		update_option( self::NAME, array_merge( self::get(), $changes ) );
+	}
+
+	/**
+	 * Cleans the address of a server of your own: https, or http for localhost only;
+	 * no credentials, path, query or trailing slash.
 	 *
 	 * @param string $url What was typed.
 	 * @return string The address, or an empty string when it is not one.
 	 */
 	public static function clean_host( $url ) {
 		$parts = wp_parse_url( trim( (string) $url ) );
-		if ( ! is_array( $parts ) || empty( $parts['host'] ) || ! isset( $parts['scheme'] ) ) {
+		if ( ! is_array( $parts ) || empty( $parts['host'] ) || ! isset( $parts['scheme'] ) || isset( $parts['user'] ) || isset( $parts['pass'] ) ) {
 			return '';
 		}
-		if ( ! in_array( $parts['scheme'], array( 'http', 'https' ), true ) || isset( $parts['user'] ) || isset( $parts['pass'] ) ) {
+		$host  = strtolower( $parts['host'] );
+		$local = in_array( $host, array( 'localhost', '127.0.0.1', '[::1]', '::1' ), true ) || '.localhost' === substr( $host, -10 );
+		if ( 'https' !== $parts['scheme'] && ! ( 'http' === $parts['scheme'] && $local ) ) {
 			return '';
 		}
-		$host = esc_url_raw( $parts['scheme'] . '://' . $parts['host'] . ( isset( $parts['port'] ) ? ':' . (int) $parts['port'] : '' ) );
-		return untrailingslashit( $host );
+		$clean = esc_url_raw( $parts['scheme'] . '://' . $parts['host'] . ( isset( $parts['port'] ) ? ':' . (int) $parts['port'] : '' ) );
+		return untrailingslashit( $clean );
+	}
+
+	/**
+	 * The server the plugin talks to: trckable Cloud, or the address of your own.
+	 *
+	 * @param array $o Settings.
+	 * @return string The address, or an empty string while a server of your own has none.
+	 */
+	public static function server_url( $o ) {
+		return 'own' === $o['server'] ? self::clean_host( $o['host'] ) : self::DEFAULT_HOST;
+	}
+
+	/**
+	 * A short name for the server, for the status pill: "Cloud" or the host name.
+	 *
+	 * @param array $o Settings.
+	 * @return string
+	 */
+	public static function server_label( $o ) {
+		if ( 'own' !== $o['server'] ) {
+			return __( 'Cloud', 'trckable' );
+		}
+		$host = wp_parse_url( self::clean_host( $o['host'] ), PHP_URL_HOST );
+		return is_string( $host ) ? $host : '';
 	}
 
 	/**
@@ -92,7 +131,7 @@ class Trckable_Options {
 	 * @return bool
 	 */
 	public static function configured( $o ) {
-		return self::valid_site( $o['site'] ) && '' !== self::clean_host( $o['host'] );
+		return self::valid_site( $o['site'] ) && '' !== self::server_url( $o );
 	}
 
 	/**

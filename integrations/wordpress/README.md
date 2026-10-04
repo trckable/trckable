@@ -4,7 +4,7 @@ The plugin adds the trckable script to a WordPress site. It lives here until it
 has a home of its own; `trckable/` is exactly what goes in the zip.
 
 ```
-trckable/            the plugin (trckable.php, includes/, uninstall.php, readme.txt, license.txt)
+trckable/            the plugin (trckable.php, includes/, admin/ (one css, one js), uninstall.php, readme.txt, license.txt)
 assets/              wordpress.org directory assets: banners, icons, screenshots
 build.sh             builds trckable.zip
 phpcs.xml.dist       the WordPress coding standards, with PHP 7.4 and WordPress 6.0 as the floor
@@ -14,8 +14,14 @@ SUBMIT.md            how the plugin gets into the wordpress.org directory
 
 ## What it does
 
-Settings → trckable takes the site ID and the server (a self-hoster puts their
-own address there), a cookieless switch, and leaves logged-in admins and editors
+The trckable menu (the ghost in the admin sidebar) opens a first-run card when
+no site ID is set: where trckable runs (Cloud, or your own server with its
+https address, http only for localhost), the site ID with a connection check,
+and the first visit, which turns the status pill green when a read-only API key
+lets the page see it. After that the page is cards (Site, Server, Counting,
+Accuracy, Dashboard widget) beside a live preview: online now, visitors today,
+a seven-day sparkline, top pages (sample data without a key), chips that follow
+the switches, and the exact script tag, with a copy button. It takes a cookieless switch, and leaves logged-in admins and editors
 (and any role you pick) out of the numbers. The tag is the documented one,
 enqueued in the head with `wp_enqueue_script` and deferred (the `strategy` of
 WordPress 6.3 and later, an attribute before that): `data-site`, and

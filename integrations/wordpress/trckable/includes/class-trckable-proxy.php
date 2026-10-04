@@ -94,7 +94,7 @@ class Trckable_Proxy {
 		if ( $site !== $o['site'] ) {
 			return new WP_Error( 'trckable_site', __( 'Unknown site.', 'trckable' ), array( 'status' => 404 ) );
 		}
-		$host  = Trckable_Options::clean_host( $o['host'] );
+		$host  = Trckable_Options::server_url( $o );
 		$stamp = md5( $host . '|' . $site );
 		$kept  = get_transient( 'trckable_script' );
 		if ( is_array( $kept ) && isset( $kept['stamp'], $kept['body'] ) && $kept['stamp'] === $stamp ) {
@@ -155,7 +155,7 @@ class Trckable_Proxy {
 			return new WP_Error( 'trckable_event', __( 'Not an event of this site.', 'trckable' ), array( 'status' => 400 ) );
 		}
 		$res = wp_remote_post(
-			Trckable_Options::clean_host( $o['host'] ) . '/api/e',
+			Trckable_Options::server_url( $o ) . '/api/e',
 			array(
 				'timeout'     => 5,
 				'redirection' => 0,

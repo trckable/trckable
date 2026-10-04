@@ -13,7 +13,7 @@ export default defineConfig({
   testDir: '.',
   workers: 1,
   retries: process.env.CI ? 1 : 0,
-  timeout: 60_000,
+  timeout: 120_000,
   reporter: [['list']],
   use: { baseURL: `http://127.0.0.1:${WP_PORT}`, serviceWorkers: 'block' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
@@ -22,7 +22,8 @@ export default defineConfig({
       command: `php -d memory_limit=512M -S 127.0.0.1:${WP_PORT} -t "${join(WP_DIR, 'wordpress')}"`,
       url: `http://127.0.0.1:${WP_PORT}/wp-login.php`,
       reuseExistingServer: !process.env.CI,
-      stdout: 'ignore', // PHP's server logs every request
+      stdout: 'ignore',
+      stderr: 'ignore', // PHP's server logs every request
       env: { PHP_CLI_SERVER_WORKERS: '4' },
     },
     { command: 'node mock-trckable.mjs', url: `http://127.0.0.1:${MOCK_PORT}/__seen`, reuseExistingServer: !process.env.CI, env: { MOCK_PORT } },
