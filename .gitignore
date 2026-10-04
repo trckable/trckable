@@ -19,3 +19,5 @@ node_modules/
 /.trckable.local.json
 *.tsbuildinfo
 /e2e/accuracy/results/
+integrations/wordpress/vendor/
+integrations/wordpress/trckable.zip
