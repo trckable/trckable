@@ -29,7 +29,9 @@ export default function CreatePop(p: CreatePopProps) {
     const r = p.anchor.getBoundingClientRect()
     const height = root.current?.offsetHeight ?? 180
     const below = window.innerHeight - r.bottom
-    setAt({ top: below < height + 16 ? Math.max(8, r.top - height - 6) : r.bottom + 6, right: Math.max(8, window.innerWidth - r.right) })
+    const top = below < height + 16 ? r.top - height - 6 : r.bottom + 6
+    // The page may be scrolled so the button is out of sight (the key works from anywhere): then the list sits at the top of the window, never above it.
+    setAt({ top: Math.min(Math.max(8, top), Math.max(8, window.innerHeight - height - 8)), right: Math.max(8, window.innerWidth - r.right) })
   }, [p.anchor])
   // Opened by its key, the first choice has focus, ready for the arrows.
   useEffect(() => {

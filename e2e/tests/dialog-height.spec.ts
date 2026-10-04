@@ -47,6 +47,8 @@ test('Track a goal: every tab, in any order, ends at its own content', async ({ 
 
   await page.goto(`${API}/${domain}?view=data`)
   await page.locator('body').click({ position: { x: 5, y: 400 } })
+  // The key works from anywhere: with the page scrolled down, the header's ⋯ button is out of sight and the list still opens within the window.
+  await page.evaluate(() => window.scrollTo(0, 300))
   await page.keyboard.press('a')
   await page.locator('[data-create=goal]').click()
   const box = page.getByRole('dialog', { name: 'Add goals' })
