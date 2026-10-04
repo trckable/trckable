@@ -62,6 +62,7 @@ func mergeImported(ctx context.Context, conn *sql.Conn, p Params, res *Result) e
 	if !ok {
 		return nil
 	}
+	//nolint:gosec // scope is the constant fragment of importedScope and the bucket a checked name; every value is bound
 	rows, err := conn.QueryContext(ctx, `
 		SELECT `+bucketOf(p, "CAST(day AS TIMESTAMP)")+` AS b, sum(sessions)::BIGINT, sum(users)::BIGINT, sum(views)::BIGINT,
 		       count(*)::BIGINT, min(day), max(day)
@@ -117,6 +118,7 @@ func mergeImported(ctx context.Context, conn *sql.Conn, p Params, res *Result) e
 }
 
 func mergeImportedDims(ctx context.Context, conn *sql.Conn, p Params, scope string, args []any, res *Result) error {
+	//nolint:gosec // scope is the constant fragment of importedScope; every value is bound
 	rows, err := conn.QueryContext(ctx, `
 		SELECT dim, value, users, sessions, views FROM (
 			SELECT dim, value, sum(users)::BIGINT AS users, sum(sessions)::BIGINT AS sessions, sum(views)::BIGINT AS views

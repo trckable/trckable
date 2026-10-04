@@ -19,6 +19,7 @@ import (
 	"github.com/trckable/trckable/server/internal/ga"
 )
 
+//nolint:gosec // fixed fake credentials for tests
 const (
 	ClientID     = "ga-client-1.apps.googleusercontent.com"
 	ClientSecret = "GOCSPX-client-secret-for-tests"
@@ -92,7 +93,7 @@ func (f *Fake) auth(w http.ResponseWriter, r *http.Request) {
 	v.Set("code", code)
 	v.Set("state", q.Get("state"))
 	to.RawQuery = v.Encode()
-	http.Redirect(w, r, to.String(), http.StatusFound)
+	http.Redirect(w, r, to.String(), http.StatusFound) //nolint:gosec // the fake Google sends the code to the redirect URI it was told, as Google does
 }
 
 func (f *Fake) token(w http.ResponseWriter, r *http.Request) {
