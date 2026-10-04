@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import type { Widget, WidgetLook } from '../lib/apiMore'
-import { EMPTY_LOOK, LANGS, MODES, TEXT_FIELDS, cornerCode, defaultName, frameCode, modeOf, partsOf, previewUrl, size, snippet } from './widgetKinds'
+import { EMPTY_LOOK, LANGS, MODES, TEXT_FIELDS, cornerCode, defaultName, frameCode, modeOf, partsOf, placeOf, previewUrl, size, snippet, withPlace } from './widgetKinds'
 
 const look = (patch: Partial<WidgetLook>): WidgetLook => ({ ...EMPTY_LOOK, ...patch })
 const widget = (patch: Partial<Widget> = {}): Widget => ({ ...EMPTY_LOOK, name: 'x', id: 'w_abc', site_id: 'tkb_s', on: true, created_at: 0, kind: 'online', shows: ['spark'], ...patch })
@@ -38,8 +38,12 @@ describe('the code for a page', () => {
     const w = widget()
     expect(frameCode('https://t.example', w, 'site.com')).toContain('<iframe src="https://t.example/w/w_abc" width="230" height="44"')
     expect(cornerCode('https://t.example', w)).toBe('<script async src="https://t.example/js/w_abc.online.js"></script>')
-    expect(cornerCode('https://t.example', w, 'bl')).toContain('data-pos="bl"')
-    expect(snippet('https://t.example', w, 'site.com', 'br')).toBe(cornerCode('https://t.example', w, 'br'))
+    expect(snippet('https://t.example', w, 'site.com', 'br')).toBe(cornerCode('https://t.example', w))
+    // The corner is kept with the widget, not in the pasted tag.
+    expect(withPlace(['spark'], 'bl')).toEqual(['spark', 'left'])
+    expect(withPlace(['spark', 'left'], 'br')).toEqual(['spark', 'right'])
+    expect(withPlace(['left'], 'inline')).toEqual([])
+    expect(placeOf(['card', 'left'])).toBe('bl')
     expect(snippet('https://t.example', w, 'site.com', 'inline')).toBe(frameCode('https://t.example', w, 'site.com'))
     // Another design floats in a fixed box, still without a script.
     expect(snippet('https://t.example', widget({ kind: 'live', shows: [] }), 'site.com', 'bl')).toContain('position:fixed;left:16px')
