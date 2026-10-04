@@ -86,6 +86,13 @@ func TestAISearchTab(t *testing.T) {
 	if one := fetch("&f=page:/docs"); one["crawled"] != float64(12) {
 		t.Fatalf("one page's robots: %v", one)
 	}
+	// Robots have one page to be narrowed to: "is not" and "any of" leave their counts alone.
+	if not := fetch("&f=page!:/docs"); not["crawled"] != float64(13) {
+		t.Fatalf("page is not: %v", not)
+	}
+	if any := fetch("&f=page:/docs&f=page:/pricing"); any["crawled"] != float64(13) {
+		t.Fatalf("page is any of two: %v", any)
+	}
 
 	// Search Console connected: Google's clicks per page ride along, one question to Google for the hour.
 	key, _ := json.Marshal(map[string]string{"key": serviceAccountKey(t)})

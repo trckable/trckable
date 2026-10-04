@@ -25,13 +25,27 @@ func (a *API) aiSearch(w http.ResponseWriter, r *http.Request) {
 	site := r.PathValue("site")
 	opts := query.AIOptions{}
 	var device string
+	// A robot has one page to be narrowed to: "is not" and a second value ("any
+	// of") are left to the visitors' side, which can take them, like Google's.
+	pages, devices := 0, 0
 	for _, f := range p.Filters {
+		if f.Op == query.OpNot {
+			continue
+		}
 		switch f.Dim {
 		case "page", "entry_page":
+			pages++
 			opts.Page = f.Value
 		case "device":
+			devices++
 			device = f.Value
 		}
+	}
+	if pages != 1 {
+		opts.Page = ""
+	}
+	if devices != 1 {
+		device = ""
 	}
 	crawlersOn := a.moduleOn(r, site, "crawlers")
 	if !crawlersOn {
