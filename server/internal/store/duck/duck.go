@@ -231,11 +231,31 @@ var migrations = []string{
 		n       UBIGINT NOT NULL,
 		PRIMARY KEY (site_id, day, kind)
 	);`,
+	// 8: what the heatmaps script reported, as counters: one row per (site, day,
+	// page, window width, kind, element, place in the element). Counts and the
+	// sums their average place and size are worked out from, and nothing else:
+	// no visitor, no session, no order, no time of day, no typed text.
+	`CREATE TABLE heat_daily (
+		site_id VARCHAR   NOT NULL,
+		day     DATE      NOT NULL,
+		path    VARCHAR   NOT NULL,
+		width   USMALLINT NOT NULL,
+		kind    VARCHAR   NOT NULL,
+		el      VARCHAR   NOT NULL,
+		cx      UTINYINT  NOT NULL,
+		cy      UTINYINT  NOT NULL,
+		n       UBIGINT   NOT NULL,
+		sx      UBIGINT   NOT NULL,
+		sy      UBIGINT   NOT NULL,
+		sw      UBIGINT   NOT NULL,
+		sh      UBIGINT   NOT NULL,
+		PRIMARY KEY (site_id, day, path, width, kind, el, cx, cy)
+	);`,
 }
 
 // tableSince is the migration that created each table added after the first
 // release, so a backup written before it restores without one.
-var tableSince = map[string]int{"crawler_hits": 5, "bot_daily": 7}
+var tableSince = map[string]int{"crawler_hits": 5, "bot_daily": 7, "heat_daily": 8}
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
 

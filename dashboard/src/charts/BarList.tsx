@@ -48,6 +48,8 @@ export function BarList(p: {
   byRevenue?: boolean // bars measure revenue (Top earners)
   /** A small chart for each row (its key → a value per day). A list that is given it keeps the column while the charts load. */
   spark?: Record<string, number[]>
+  /** A button at the end of every row, shown on hover or focus: a way into something about that row, apart from the row's own click. */
+  action?: { icon: ReactNode; label: (key: string) => string; onAct: (key: string) => void }
 }) {
   const measure = (i: BarItem) => (p.byRevenue ? (i.rev ?? 0) : i.value)
   const max = Math.max(1, ...p.items.map(measure))
@@ -55,7 +57,7 @@ export function BarList(p: {
 
   if (p.loading) return <Loading height={164} />
   return (
-    <div className={'bl' + (p.money ? ' has-rev' : '') + (p.fmtSub ? ' wide-sub' : '')}>
+    <div className={'bl' + (p.money ? ' has-rev' : '') + (p.fmtSub ? ' wide-sub' : '') + (p.action ? ' has-act' : '')}>
       <div className="bl-cols">
         <span>{p.dimLabel}</span>
         {p.spark && <span className="bl-spark" aria-hidden="true" />}
@@ -67,7 +69,7 @@ export function BarList(p: {
       {p.items.length === 0 && (p.emptyState ?? <div className="empty">{p.emptyText ?? 'Nothing here yet… peekaboo.'}</div>)}
       {p.items.map((it) => {
         const share = shareOf(it.value, whole)
-        return (
+        const row = (
           <button
             key={it.key}
             type="button"
@@ -101,6 +103,16 @@ export function BarList(p: {
             {p.subLabel && <span className="bl-sub num">{it.sub !== undefined ? (p.fmtSub ?? fmtPct)(it.sub) : ''}</span>}
             {p.money && <span className={it.rev ? 'bl-rev num' : 'bl-rev num none'}>{it.rev ? p.money(it.rev) : '–'}</span>}
           </button>
+        )
+        if (!p.action) return row
+        const label = p.action.label(it.key)
+        return (
+          <div key={it.key} className="bl-item">
+            {row}
+            <button type="button" className="bl-act" aria-label={label} title={label} onClick={() => p.action?.onAct(it.key)}>
+              {p.action.icon}
+            </button>
+          </div>
         )
       })}
     </div>

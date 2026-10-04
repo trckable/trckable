@@ -9,7 +9,8 @@ import { unconvertedNote } from '../lib/money'
 import { channelColor, channelLabel } from '../lib/palette'
 import { navigate, readView, setView, useLocation, wantsLive } from '../lib/url'
 import { exportQuery, queryOf, rangeOf, showsChange } from '../lib/dashQuery'
-import { canAsk, isShared, isViewer, sharedModules } from '../lib/me'
+import { canAsk, isShared, isViewer } from '../lib/me'
+import { useMods } from '../lib/useMods'
 import { isOn, shows } from '../lib/modules'
 import { FilterMenu } from '../components/FilterMenu'
 import { toast } from '../components/Toast'
@@ -134,15 +135,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const showInstall = showsInstall({ site, hasData, filtered: view.filters.length > 0, everTracked })
   const waiting = showInstall && stream.visits.length === 0
   const liveView = liveShown({ wanted: wantsLive(view, site), shared: isShared(), waiting }) // Data on a shared link, the install screen first
-  const [mods, setMods] = useState<Partial<Record<string, boolean>> | null>(() => (isShared() ? sharedModules() : null))
-  useEffect(() => {
-    if (mods) return
-    if (isShared()) return // the link carried them
-    api
-      .modules(site.id)
-      .then((d) => setMods(Object.fromEntries(d.modules.map((m) => [m.id, m.enabled]))))
-      .catch(() => setMods({})) // a module view that 404s simply hides itself
-  }, [full, mods, site.id])
+  const mods = useMods(site.id)
   const [journey, setJourney] = useState<string | null>(null)
   const [addGoals, setAddGoals] = useState(false)
   const [noteFor, setNoteFor] = useState<string | null>(null)
