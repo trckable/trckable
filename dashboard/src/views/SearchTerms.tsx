@@ -1,4 +1,4 @@
-// Sources → Search: what people searched on Google before they came, from
+// AI & Search → Google: what people searched on Google before they came, from
 // the site's own Search Console, for the dashboard's period. Google's rows are
 // searches, not visits, so they cannot filter the page; each row says what it
 // is instead.
@@ -6,10 +6,11 @@ import { useEffect, useState } from 'react'
 import { messageOf, type ReportQuery, type SearchReport, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { BarList } from '../charts/BarList'
-import { fmtInt, fmtPct } from '../lib/format'
-import { openSettings } from '../lib/settings'
+import { fmtInt } from '../lib/format'
+import { ConnectSearch } from '../features/aisearch/ConnectSearch'
+import { aiCopy } from '../features/aisearch/copy'
 
-export function SearchTerms({ site, query, rows, full }: { site: Site; query: ReportQuery; rows: number; full: boolean }) {
+export function SearchTerms({ site, query, rows }: { site: Site; query: ReportQuery; rows: number }) {
   const [rep, setRep] = useState<SearchReport | null>(null)
   const [err, setErr] = useState<{ code: 'off' | 'other'; msg: string } | null>(null)
   const key = JSON.stringify([site.id, query.from, query.to, query.filters])
@@ -25,20 +26,12 @@ export function SearchTerms({ site, query, rows, full }: { site: Site; query: Re
         if (ac.signal.aborted) return
         const msg = messageOf(e)
         setRep(null)
-        setErr(/not connected/i.test(msg) ? { code: 'off', msg } : { code: 'other', msg: words(e) })
+        setErr(/not connected|module is off/i.test(msg) ? { code: 'off', msg } : { code: 'other', msg: words(e) })
       })
     return () => ac.abort()
   }, [key]) // eslint-disable-line react-hooks/exhaustive-deps -- key is site + query's content; query is a new object each render
 
-  if (err?.code === 'off')
-    return (
-      <div className="empty" style={{ display: 'grid', gap: 8, justifyItems: 'start' }}>
-        <span>Connect Google Search Console to see the searches that showed this site.</span>
-        <button type="button" className="btn" onClick={() => openSettings(site, 'search')}>
-          Connect Search Console
-        </button>
-      </div>
-    )
+  if (err?.code === 'off') return <ConnectSearch site={site} />
   if (err) return <div className="empty">Google said: {err.msg}</div>
 
   const list = rep?.rows ?? []
@@ -46,11 +39,10 @@ export function SearchTerms({ site, query, rows, full }: { site: Site; query: Re
   return (
     <>
       <BarList
-        dimLabel="Search"
-        valueLabel="Clicks"
-        subLabel={full ? 'CTR' : undefined}
+        dimLabel={aiCopy.search}
+        valueLabel={aiCopy.clicks}
         loading={!rep}
-        emptyText="No searches showed this site in this period."
+        emptyText={aiCopy.noGoogle}
         pickLabel={(k) => {
           const r = list.find((x) => x.key === k)
           return r ? `${k}: ${fmtInt(r.clicks)} clicks from ${fmtInt(r.impressions)} impressions, average position ${r.position.toFixed(1)}` : k
@@ -60,15 +52,9 @@ export function SearchTerms({ site, query, rows, full }: { site: Site; query: Re
           label: r.key,
           title: `${fmtInt(r.impressions)} impressions · average position ${r.position.toFixed(1)}`,
           value: r.clicks,
-          sub: r.ctr,
         }))}
       />
-      {rep && (
-        <p className="faint" style={{ margin: '10px 0 0', fontSize: 12 }}>
-          From Google Search Console · across the top 100 searches: {fmtInt(rep.impressions)} impressions, {fmtPct(rep.impressions ? rep.clicks / rep.impressions : 0)} clicked. Google's last three days may still change.
-          {ignored && ` Google can't apply the ${ignored.join(', ')} filter, so it's left out here.`}
-        </p>
-      )}
+      {ignored && <p className="faint ais-note">{aiCopy.ignored(ignored)}</p>}
     </>
   )
 }

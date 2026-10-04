@@ -1,0 +1,137 @@
+/* The AI & Search tab: it loads with the tab, not with the first load. */
+.ais-wrap {
+  container-type: inline-size;
+}
+.ais {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px 12px;
+}
+.ais-col {
+  min-width: 0;
+}
+.ais-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 6px;
+  padding: 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.ais-head b {
+  font-size: 15px;
+  color: var(--text);
+}
+.ais-connect {
+  display: grid;
+  justify-items: start;
+  padding: 10px 4px;
+}
+.ais-connect .btn {
+  gap: 6px;
+  max-width: 100%;
+  height: auto;
+  min-height: 34px;
+  padding-block: 6px;
+  white-space: normal;
+  text-align: left;
+}
+.ais-note {
+  margin: 6px 4px 0;
+  font-size: 12px;
+}
+.ais-sub {
+  margin: 12px 0 2px;
+  padding: 0 4px;
+  font-size: 11px;
+}
+.ais-pages ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ais-pages {
+  min-width: 0;
+}
+.ais-pg {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  gap: 2px;
+  padding-bottom: 2px;
+}
+.ais-pg-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 30px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.ais-pg-main:hover,
+.ais-pg-main:focus-visible {
+  background: var(--sunken);
+  outline: none;
+}
+.ais-pg-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ais-pg-nums {
+  display: flex;
+  gap: 8px;
+  color: var(--text-2);
+  font-size: 12px;
+}
+.ais-pg-nums span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.ais-pg .info {
+  margin-left: 4px;
+}
+.info-badge {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: help;
+}
+.ais-flag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border-2);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+.ais-flag.uncredited {
+  border-color: color-mix(in srgb, var(--down) 45%, transparent);
+  color: var(--down);
+}
+.ais-flag.unread {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--accent);
+}
+/* A narrow card stacks the three lists. */
+@container (max-width: 560px) {
+  .ais {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+}

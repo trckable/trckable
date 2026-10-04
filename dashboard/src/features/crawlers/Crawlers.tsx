@@ -9,7 +9,7 @@ import { Loading } from '../../components/loading/Loading'
 import { CrawlerChart } from './CrawlerChart'
 import { CrawlerList } from './CrawlerList'
 import { CrawlerReads } from './CrawlerReads'
-import { FeedHelp } from './FeedHelp'
+import { CrawlerSetup } from './CrawlerSetup'
 import { copy, KINDS, type CrawlKind } from './copy'
 import { Info } from '../../components/Info'
 import './Crawlers.css'
@@ -74,7 +74,7 @@ export function Crawlers({ site, query }: { site: Site; query: ReportQuery }) {
         </>
       )}
 
-      {help && <FeedHelp site={site} onClose={() => setHelp(false)} />}
+      {help && <CrawlerSetup site={site} on onChanged={() => undefined} onClose={() => setHelp(false)} />}
     </div>
   )
 }

@@ -1,14 +1,28 @@
 // One of the two cards under the chart: a row of tabs on top, the tab's own
 // content below. The tab a person chose is remembered for this site and card,
 // in this browser.
-import { useId, useState, type ReactNode } from 'react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
 import { panelId, tabId, Tabs, type TabItem } from './Tabs'
 
 export interface CardTab extends TabItem {
   render: () => ReactNode
 }
 
+const EVENT = 'trckable:tab'
+
+/** Opens a tab of a card from anywhere (a guide card's action): the card that has it switches. */
+export const openTab = (card: string, tab: string) => window.dispatchEvent(new CustomEvent(EVENT, { detail: { card, tab } }))
+
 const key = (site: string, card: string) => `trckable:tab:${site}:${card}`
+
+/** Makes `tab` the one a card opens on for this site, for a card that is not drawn yet (Full's tabs are a chunk of their own). */
+export function rememberTab(site: string, card: string, tab: string) {
+  try {
+    localStorage.setItem(key(site, card), tab)
+  } catch {
+    /* private mode */
+  }
+}
 
 function read(site: string, card: string): string | null {
   try {
@@ -30,7 +44,6 @@ export function TabCard({ card, site, label, tabs, want, more }: { card: string;
   // With nothing picked, the card opens on the tab that was first when it first drew: a tab that arrives later never swaps what is on screen.
   const [first] = useState(() => tabs[0]?.id)
   const active = tabs.find((t) => t.id === asked) ?? tabs.find((t) => t.id === first) ?? tabs[0]
-  if (!active) return null
   const pick = (id: string) => {
     setAsked(id)
     try {
@@ -39,6 +52,16 @@ export function TabCard({ card, site, label, tabs, want, more }: { card: string;
       /* private mode */
     }
   }
+  const ids = tabs.map((t) => t.id).join(' ')
+  useEffect(() => {
+    const on = (e: Event) => {
+      const d = (e as CustomEvent<{ card: string; tab: string }>).detail
+      if (d.card === card && ids.split(' ').includes(d.tab)) pick(d.tab)
+    }
+    window.addEventListener(EVENT, on)
+    return () => window.removeEventListener(EVENT, on)
+  }, [card, site, ids]) // eslint-disable-line react-hooks/exhaustive-deps -- pick only sets this card's own state
+  if (!active) return null
   return (
     <section className="card tc" aria-label={label} data-card={card}>
       {more ? (

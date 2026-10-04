@@ -84,9 +84,32 @@ func amount(minor int64, cur string, exp int) string {
 	return sym + number(whole)
 }
 
+// aiWeek is what AI did in the week: the visitors its assistants sent, and the
+// hits its crawlers made (answering and training; zero with the crawlers module off).
+type aiWeek struct{ Visitors, Crawls int64 }
+
+// aiLine is the report's one line about AI, or none when it was quiet.
+func aiLine(a aiWeek) string {
+	plural := func(n int64, one, many string) string {
+		if n == 1 {
+			return number(n) + " " + one
+		}
+		return number(n) + " " + many
+	}
+	switch {
+	case a.Visitors > 0 && a.Crawls > 0:
+		return fmt.Sprintf("AI assistants sent %s; crawlers read %s.", plural(a.Visitors, "visitor", "visitors"), plural(a.Crawls, "page", "pages"))
+	case a.Visitors > 0:
+		return fmt.Sprintf("AI assistants sent %s.", plural(a.Visitors, "visitor", "visitors"))
+	case a.Crawls > 0:
+		return fmt.Sprintf("AI crawlers read %s.", plural(a.Crawls, "page", "pages"))
+	}
+	return ""
+}
+
 // weeklyText words the report. It is plain text on purpose: every chat tool
 // and every mail client shows it the same.
-func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, link string) (title, msg string, data map[string]any) {
+func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, link string) (title, msg string, data map[string]any) {
 	last := to.AddDate(0, 0, -1)
 	title = "Your week"
 	lines := []string{fmt.Sprintf("%s, %s – %s", domain, from.Format("Jan 2"), last.Format("Jan 2"))}
@@ -115,6 +138,9 @@ func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, link
 			return v
 		})
 		top("Top pages", cur.Dims["entry_page"], func(v string) string { return v })
+		if line := aiLine(ai); line != "" {
+			lines = append(lines, line)
+		}
 		if len(cur.Goals) > 0 {
 			g := cur.Goals[0]
 			lines = append(lines, fmt.Sprintf("Top goal: %s, %s visitors", g.Value, number(g.Visitors)))
@@ -193,12 +219,23 @@ func (s *Server) weeklyEvent(ctx context.Context, q *query.Q, info sqlite.SiteIn
 	if err != nil {
 		return ev, false
 	}
+	ai := aiWeek{}
+	for _, r := range cur.Dims["channel"] {
+		if r.Value == "AI" {
+			ai.Visitors = r.Visitors
+		}
+	}
+	if set.Has("crawlers") {
+		if rep, err := q.Crawlers(ctx, p); err == nil {
+			ai.Crawls = rep.Kinds["answer"] + rep.Kinds["train"]
+		}
+	}
 	link := ""
 	if s.cfg.BaseURL != "" {
 		// The dashboard on that week, against the one before it.
 		link = fmt.Sprintf("%s/%s?from=%s&to=%s&compare=previous", strings.TrimSuffix(s.cfg.BaseURL, "/"), info.Domain, from.Format("2006-01-02"), to.AddDate(0, 0, -1).Format("2006-01-02"))
 	}
-	ev.Title, ev.Message, ev.Data = weeklyText(info.Domain, from, to, cur, prev, link)
+	ev.Title, ev.Message, ev.Data = weeklyText(info.Domain, from, to, cur, prev, ai, link)
 	ev.Text = ev.Title + " — " + ev.Message
 	return ev, true
 }
