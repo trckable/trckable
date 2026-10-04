@@ -48,7 +48,7 @@ export function NoteMarkers({ markers, x, top, width }: { markers: Marker[]; x: 
         <button
           key={m.i}
           type="button"
-          className={m.i === open ? 'note-mark on' : 'note-mark'}
+          className={(m.i === open ? 'note-mark on' : 'note-mark') + (m.notes.every((n) => n.planned) ? ' planned' : '')}
           style={{ left: `clamp(var(--note-half, ${MARK_H / 2}px), ${x(m.i)}px, calc(100% - var(--note-half, ${MARK_H / 2}px)))`, top, ['--rise' as string]: `max(0px, calc(${top - GUIDE_TOP}px - (2 * var(--note-half, ${MARK_H / 2}px))))` }}
           aria-label={copy.marker(m.notes.length, m.day)}
           aria-describedby={m.i === open ? id : undefined}

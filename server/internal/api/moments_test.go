@@ -38,7 +38,7 @@ func TestMomentsRoute(t *testing.T) {
 	g.setup(t, owner)
 	ctx := context.Background()
 	day := time.Now().UTC().Format("2006-01-02")
-	if _, err := g.ctl.AddAnnotation(ctx, g.site, "", day, "Launched on the forum"); err != nil {
+	if _, err := g.ctl.AddAnnotation(ctx, g.site, "", day, "Launched on the forum", false); err != nil {
 		t.Fatal(err)
 	}
 	url := g.srv.URL + "/api/v1/sites/" + g.site + "/moments?from=" + day + "&to=" + day

@@ -59,6 +59,8 @@ import { HeaderTools, ShareButton } from '../features/header/HeaderTools'
 import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
 import { useMilestones } from '../features/milestones/useMilestones'
 import { filterFrom } from '../features/journey/filterFrom'
+import { CalendarSlot, CalendarToggle } from '../features/calendar/CalendarSlot'
+import { toggleCopy } from '../features/calendar/toggleCopy'
 
 // Full mode's extra views live in their own chunk: Core never loads them.
 // The share dialog is its own chunk: nothing of it loads until Share is pressed.
@@ -299,6 +301,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       cto: v.compare === 'custom' ? v.compareCustom?.to : undefined,
       day: undefined,
       bucket,
+      cal: view.cal ? '1' : undefined, // the calendar follows the period's month
     })
   }
 
@@ -529,9 +532,10 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       />
 
       <div className={active ? 'overview-chart replaying' : 'overview-chart'} role="group" aria-label={`${name} over time`}>
-        <ChartHead title={name}>
-          {live && !isShared() && extra({ part: 'pace', site: site.id, today, filters: query.filters, test: query.testPayments, metric, money: fmtM })}
-          {(canScrub || canReplayByDay) && (
+        <ChartHead title={view.cal ? toggleCopy.calendar : name}>
+          {!waiting && <CalendarToggle cal={!!view.cal} onPick={(c) => setView({ cal: c ? '1' : undefined, day: undefined })} />}
+          {live && !view.cal && !isShared() && extra({ part: 'pace', site: site.id, today, filters: query.filters, test: query.testPayments, metric, money: fmtM })}
+          {!view.cal && (canScrub || canReplayByDay) && (
             <ReplayButton
               playing={playing}
               byDay={!canScrub}
@@ -548,6 +552,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             />
           )}
         </ChartHead>
+        {view.cal ? <CalendarSlot site={site.id} cal={view.cal} periodEnd={range.to} filters={view.filters} test={view.test} plans={notesOn && !isShared() && !isViewer()} onChanged={loadNotes} /> : <>
         {/* Until a short span's hours, or the notes that may move a new
             site's start, arrive: never one chart first, then a jump. */}
         {firstLoad || (byHour && !hours) ? (
@@ -605,6 +610,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           day={canScrub && scrubbing && view.day ? fmtDay(view.day, { weekday: true }) : undefined} imported={cur?.imported}
           onBack={() => { setStory('off'); setPlaying(false); setHourAt(null); setDayIdx(null) }}
         />
+        </>}
       </div>
       </section>
 
