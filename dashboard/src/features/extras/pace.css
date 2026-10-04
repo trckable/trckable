@@ -5,7 +5,11 @@
   color: var(--text-3);
   cursor: help;
 }
-@container (max-width: 150px) {
+/* Alone on its line (no comparison on), it starts at the tile's edge. */
+.kpi-delta > .kpi-pace:first-child {
+  margin-left: 0;
+}
+@container (max-width: 120px) {
   .kpi-pace {
     display: none;
   }
