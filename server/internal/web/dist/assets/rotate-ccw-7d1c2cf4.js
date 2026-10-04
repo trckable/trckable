@@ -1,0 +1,5 @@
+<<<<<<<< HEAD:server/internal/web/dist/assets/rotate-ccw-4369c454.js
+import{Nn as e}from"./index-c9c17ea4.js";var t={name:`rotate-ccw`,size:24,node:[[`path`,{d:`M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8`,key:`1357e3`}],[`path`,{d:`M3 3v5h5`,key:`1xhq8a`}]]};t.node;var n=e(t);export{n as t};
+========
+import{An as e}from"./index-9247a3be.js";var t={name:`rotate-ccw`,size:24,node:[[`path`,{d:`M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8`,key:`1357e3`}],[`path`,{d:`M3 3v5h5`,key:`1xhq8a`}]]};t.node;var n=e(t);export{n as t};
+>>>>>>>> 4e718a5b (Sign in with Google, Microsoft Entra or any OIDC provider):server/internal/web/dist/assets/rotate-ccw-7d1c2cf4.js

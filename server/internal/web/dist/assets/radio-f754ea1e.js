@@ -1,0 +1,5 @@
+<<<<<<<< HEAD:server/internal/web/dist/assets/radio-a9db4366.js
+import{Nn as e}from"./index-c9c17ea4.js";var t={name:`radio`,size:24,node:[[`path`,{d:`M16.247 7.761a6 6 0 0 1 0 8.478`,key:`1fwjs5`}],[`path`,{d:`M19.075 4.933a10 10 0 0 1 0 14.134`,key:`ehdyv1`}],[`path`,{d:`M4.925 19.067a10 10 0 0 1 0-14.134`,key:`1q22gi`}],[`path`,{d:`M7.753 16.239a6 6 0 0 1 0-8.478`,key:`r2q7qm`}],[`circle`,{cx:`12`,cy:`12`,r:`2`,key:`1c9p78`}]]};t.node;var n=e(t);export{n as t};
+========
+import{An as e}from"./index-9247a3be.js";var t={name:`radio`,size:24,node:[[`path`,{d:`M16.247 7.761a6 6 0 0 1 0 8.478`,key:`1fwjs5`}],[`path`,{d:`M19.075 4.933a10 10 0 0 1 0 14.134`,key:`ehdyv1`}],[`path`,{d:`M4.925 19.067a10 10 0 0 1 0-14.134`,key:`1q22gi`}],[`path`,{d:`M7.753 16.239a6 6 0 0 1 0-8.478`,key:`r2q7qm`}],[`circle`,{cx:`12`,cy:`12`,r:`2`,key:`1c9p78`}]]};t.node;var n=e(t);export{n as t};
+>>>>>>>> 4e718a5b (Sign in with Google, Microsoft Entra or any OIDC provider):server/internal/web/dist/assets/radio-f754ea1e.js

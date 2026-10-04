@@ -14,6 +14,9 @@ import (
 // are those of its membership there (memberships.go), not of the user row.
 type User struct {
 	ID, AccountID, Email, Role string
+	// SignedInWith is the identity provider this session came from ("" for
+	// a password). Set only for a user read from a session.
+	SignedInWith string
 }
 
 // SessionTTL is how long a login lasts.
@@ -125,10 +128,16 @@ func dummyHash() string {
 
 // CreateSession starts a login session and returns its cookie value.
 func (s *Store) CreateSession(ctx context.Context, userID string) (string, error) {
+	return s.CreateSessionVia(ctx, userID, "")
+}
+
+// CreateSessionVia is CreateSession for someone an identity provider signed
+// in: its name is kept with the session.
+func (s *Store) CreateSessionVia(ctx context.Context, userID, provider string) (string, error) {
 	tok := auth.Token("tkb_s_", 24)
 	now := time.Now()
-	_, err := s.DB.ExecContext(ctx, `INSERT INTO auth_sessions (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)`,
-		auth.Hash(tok), userID, now.Unix(), now.Add(SessionTTL).Unix())
+	_, err := s.DB.ExecContext(ctx, `INSERT INTO auth_sessions (token_hash, user_id, created_at, expires_at, via) VALUES (?, ?, ?, ?, ?)`,
+		auth.Hash(tok), userID, now.Unix(), now.Add(SessionTTL).Unix(), provider)
 	_, _ = s.DB.ExecContext(ctx, `DELETE FROM auth_sessions WHERE expires_at < ?`, now.Unix())
 	return tok, err
 }
@@ -136,9 +145,9 @@ func (s *Store) CreateSession(ctx context.Context, userID string) (string, error
 // SessionUser resolves a session cookie.
 func (s *Store) SessionUser(ctx context.Context, token string) (User, error) {
 	var u User
-	err := s.DB.QueryRowContext(ctx, `SELECT u.id, u.email FROM auth_sessions a
+	err := s.DB.QueryRowContext(ctx, `SELECT u.id, u.email, a.via FROM auth_sessions a
 		JOIN users u ON u.id = a.user_id WHERE a.token_hash = ? AND a.expires_at > ?`,
-		auth.Hash(token), time.Now().Unix()).Scan(&u.ID, &u.Email)
+		auth.Hash(token), time.Now().Unix()).Scan(&u.ID, &u.Email, &u.SignedInWith)
 	if errors.Is(err, sql.ErrNoRows) {
 		return User{}, auth.ErrNotFound
 	}
@@ -388,6 +397,9 @@ type Profile struct {
 	Email     string `json:"email"`
 	Name      string `json:"name"`
 	HasAvatar bool   `json:"has_avatar"`
+	// SignedInWith is the identity provider this session came from, filled
+	// in by the API from the session; "" for a password.
+	SignedInWith string `json:"signed_in_with,omitempty"`
 }
 
 // Profile returns a user's name and whether they have a picture.

@@ -1,0 +1,5 @@
+<<<<<<<< HEAD:server/internal/web/dist/assets/share-08503291.js
+import{Zn as e}from"./index-c9c17ea4.js";var t=(e,t)=>`/sites/${encodeURIComponent(e)}/milestones/${encodeURIComponent(t.kind)}/${encodeURIComponent(t.step)}`,n={setOn:(t,n)=>e(`PUT`,`/sites/${encodeURIComponent(t)}/milestones`,{enabled:n}),share:(n,r,i)=>e(`POST`,t(n,r)+`/share`,{amount:i}),revoke:(n,r)=>e(`DELETE`,t(n,r)+`/share`),cardURL:(e,n,r)=>`/api/v1${t(e,n)}/card?format=${r.format}&theme=${r.theme}${r.amount?`&amount=1`:``}`};export{n as t};
+========
+import{Jn as e}from"./index-9247a3be.js";var t=(e,t)=>`/sites/${encodeURIComponent(e)}/milestones/${encodeURIComponent(t.kind)}/${encodeURIComponent(t.step)}`,n={setOn:(t,n)=>e(`PUT`,`/sites/${encodeURIComponent(t)}/milestones`,{enabled:n}),share:(n,r,i)=>e(`POST`,t(n,r)+`/share`,{amount:i}),revoke:(n,r)=>e(`DELETE`,t(n,r)+`/share`),cardURL:(e,n,r)=>`/api/v1${t(e,n)}/card?format=${r.format}&theme=${r.theme}${r.amount?`&amount=1`:``}`};export{n as t};
+>>>>>>>> 4e718a5b (Sign in with Google, Microsoft Entra or any OIDC provider):server/internal/web/dist/assets/share-8334658f.js

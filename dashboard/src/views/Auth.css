@@ -12,3 +12,17 @@
 .linkish:hover{
   text-decoration: underline;
 }
+/* The identity providers a server offers, under the password form. */
+.sso{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.sso-btn{
+  height: 44px;
+  justify-content: center;
+  text-decoration: none;
+  color: inherit;
+}

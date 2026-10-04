@@ -25,6 +25,7 @@ import (
 	"github.com/trckable/trckable/server/internal/realtime"
 	"github.com/trckable/trckable/server/internal/revenue"
 	"github.com/trckable/trckable/server/internal/secrets"
+	"github.com/trckable/trckable/server/internal/sso"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -61,6 +62,14 @@ type API struct {
 	Version    string // this build's version, shown in the dashboard's footer
 	// Box seals the keys trckable stores for other services (Search Console).
 	Box *secrets.Box
+	// SSO: the identity providers people may sign in with (sso.go); nil, none.
+	// It works only with BaseURL (the address the provider sends people back
+	// to) and Box (which seals the flow's cookie).
+	SSO *sso.Registry
+	// SSORequireTOTP asks for the authenticator code after the provider, for
+	// accounts that have two-step. SSOSignup lets someone from a provider's
+	// allowed domain create their own account (a viewer).
+	SSORequireTOTP, SSOSignup bool
 	// GSCHTTP replaces the HTTP client used to reach Google; tests only.
 	GSCHTTP    *http.Client
 	cache      *reportCache
@@ -112,6 +121,9 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("POST /api/v1/setup", a.setup)
 	handle("POST /api/v1/payments/start-over", a.authed(a.startOverKeys))
 	handleFunc("POST /api/v1/login", a.login)
+	handleFunc("GET /api/v1/oidc/{provider}/start", a.ssoStart)
+	handleFunc("GET /api/v1/oidc/{provider}/callback", a.ssoCallback)
+	handleFunc("POST /api/v1/oidc/code", a.ssoCode)
 	handleFunc("POST /api/v1/logout", a.logout)
 	handle("GET /api/v1/me", a.authed(a.me))
 	handle("PUT /api/v1/me/keys", a.authed(a.setKeys))
@@ -642,7 +654,7 @@ func (a *API) setupStatus(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"needs_setup": !has})
+	writeJSON(w, http.StatusOK, map[string]any{"needs_setup": !has, "sso": a.ssoChoices(has)})
 }
 
 func (a *API) setup(w http.ResponseWriter, r *http.Request) {

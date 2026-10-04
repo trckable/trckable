@@ -79,6 +79,25 @@ The same image everywhere, with its data volume, health check and a pinned relea
 | Umbrel | [`deploy/umbrel/trckable`](deploy/umbrel/trckable) |
 | Kubernetes | [`charts/trckable`](charts/trckable) (Helm) |
 
+## 🔑 Sign in with Google, Microsoft or OIDC
+
+Free on every install. People sign in with an account they already have. Set `TRCKABLE_BASE_URL` (`https://stats.example.com`) and register `https://stats.example.com/api/v1/oidc/<name>/callback` at the provider, `<name>` being the lower-case name below.
+
+| Provider | Settings |
+|---|---|
+| Google | `OIDC_GOOGLE_CLIENT_ID`, `OIDC_GOOGLE_CLIENT_SECRET` |
+| Microsoft Entra | `OIDC_MICROSOFT_CLIENT_ID`, `OIDC_MICROSOFT_CLIENT_SECRET`, `OIDC_MICROSOFT_TENANT` (your directory id) |
+| Any OpenID Connect provider | `OIDC_<NAME>_CLIENT_ID`, `OIDC_<NAME>_CLIENT_SECRET`, `OIDC_<NAME>_ISSUER` (https), optional `OIDC_<NAME>_LABEL` |
+
+A secret can come from a file (`OIDC_GOOGLE_CLIENT_SECRET_FILE`). The buttons appear on the sign-in screen only for providers that are set up, and Account says "Signed in with Google" for a session that came from one.
+
+- **Who gets in.** Someone who is already on this instance (Settings → People) with exactly the email the provider verified (`email_verified`), and only once first-run setup has created the owner. An unverified address is never matched. The first sign-in records the provider's own id for the person; the same email arriving later with another id is refused.
+- **Google.** Google says an address is verified for any Google account, whatever domain it puts there, so it counts only for `@gmail.com` and `@googlemail.com`, or when the token's `hd` (the Google Workspace the account belongs to) is the address's own domain. Anything else is refused.
+- **Microsoft: the trust model.** Entra's email claim is whatever its holder or a directory administrator set; Microsoft does not verify it. So it counts only when all of these hold: the token's directory (`tid`) is one you allow and its issuer names the same one (one directory id in `OIDC_MICROSOFT_TENANT`, or `organizations` / `common` together with `OIDC_MICROSOFT_ALLOWED_TENANTS`, directory ids comma separated); it is not a guest (`acct` is not 1, and `idp` is the directory itself); and the domain is verified, either by the optional claim `xms_edov` being true (add it under Token configuration → Add optional claim → ID → `xms_edov` in the app registration) or, when that claim is not sent, by the domain being listed in `OIDC_MICROSOFT_ALLOWED_DOMAINS`. A claim that is sent as false refuses. Personal Microsoft accounts are refused.
+- **Let a domain join.** `OIDC_<NAME>_ALLOWED_DOMAINS=acme.com` together with `OIDC_ALLOW_SIGNUP=true` creates a viewer for anyone from those domains at their first sign-in. Without both, nobody is created. Domains match exactly what follows the `@`: `acme.com` does not include `mail.acme.com`. List only domains whose addresses are all yours: a domain that unrelated people share (a free mail provider, a shared parent domain) lets all of them in.
+- **The authenticator code.** An owner who turned two-step on is always asked for the code after the provider. For everyone else it is asked too, unless you set `OIDC_REQUIRE_TOTP=false` (the default is true). People without two-step are not asked.
+Use a provider you trust to hand out your domain's addresses. Every sign-in is logged as "signed in with google".
+
 ## ⚖️ How it compares
 
 The free, self-hostable tools, plus DataFast (paid, hosted only) for script size, all measured the same way. The full tables, sources and caveats: [How it compares](https://docs.trckable.com/compare/).

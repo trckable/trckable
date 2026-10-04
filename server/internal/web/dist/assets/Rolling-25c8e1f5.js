@@ -1,0 +1,1 @@
+import{t as e}from"./react-9bbe84d6.js";import{Bt as t}from"./index-9247a3be.js";var n=e();function r({to:e,fmt:r}){return(0,n.jsx)(n.Fragment,{children:r(Math.round(t(e,700)))})}export{r as t};
