@@ -32,7 +32,7 @@ func dimsRig(t *testing.T, open bool) Q {
 
 	at := func(h, m int) int64 { return time.Date(2026, 9, 10, h, m, 0, 0, time.UTC).UnixMilli() }
 	pv := func(ts int64, v uint64, ver string, width uint16) event.Event {
-		return event.Event{Site: "s1", Kind: event.KindPageview, TS: ts, Visitor: v, Pageview: v*10 + uint64(ts%7), Path: "/",
+		return event.Event{Site: "s1", Kind: event.KindPageview, TS: ts, Visitor: v, Path: "/",
 			Browser: "Chrome", BrowserVersion: ver, Screen: width}
 	}
 	evs := []event.Event{
@@ -48,6 +48,7 @@ func dimsRig(t *testing.T, open bool) Q {
 	}
 	for i := range evs {
 		evs[i].EventID = uint64(i + 1)
+		evs[i].Pageview = uint64(i + 1)
 		b, _ := evs[i].Marshal()
 		if _, err := lg.Append(ctx, b); err != nil {
 			t.Fatal(err)
