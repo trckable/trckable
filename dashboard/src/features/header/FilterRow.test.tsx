@@ -73,4 +73,10 @@ describe('the filter chips', () => {
     draw([{ dim: 'country', value: 'DE' }, { dim: 'country', value: 'AT' }])
     expect(button(/Save as segment\?/)).toBeTruthy()
   })
+  it('keep the offer, as an icon after +N more, past two chips', () => {
+    draw([{ dim: 'channel', value: 'Direct' }, { dim: 'country', value: 'DE' }, { dim: 'device', value: 'Mobile' }])
+    expect(button(/^\+1 more$/)).toBeTruthy()
+    act(() => button(/Save as segment\?/)?.click())
+    expect(calls.save).toHaveBeenCalledOnce()
+  })
 })

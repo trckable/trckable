@@ -102,6 +102,10 @@ func TestReportTakesIsNotAnyOfAndSegments(t *testing.T) {
 	if !strings.Contains(buf.String(), "total,2026-09-22 to 2026-09-22,2,") {
 		t.Errorf("the export did not take the same filters:\n%s", buf.String())
 	}
+	// And it says them the way the chips do, ahead of the numbers.
+	if lines := strings.Split(buf.String(), "\n"); len(lines) < 3 || !strings.HasPrefix(lines[1], "filters,Country is Germany or Austria,") || !strings.HasPrefix(lines[2], "total,") {
+		t.Errorf("the file does not state its filters first:\n%s", buf.String())
+	}
 
 	// A saved segment is a name for such a query, and the API takes it by id.
 	q := url.Values{"f": {"country:DE", "country:AT", "device!:Mobile"}, "period": {"7d"}}.Encode()
@@ -147,5 +151,20 @@ func TestReportTakesIsNotAnyOfAndSegments(t *testing.T) {
 	// Saving checks the filters too: a view that could never open is refused.
 	if code, _ := do(t, c, "POST", base+"/segments", `{"name":"bad","query":"f=bogus%3Ax"}`, csrf, "1"); code != http.StatusBadRequest {
 		t.Errorf("a bad segment was saved: %d", code)
+	}
+}
+
+func TestFilterWordsAreTheChipsWords(t *testing.T) {
+	got := filterWords([]query.Filter{
+		{Dim: "country", Op: "is", Value: "US"}, {Dim: "country", Op: "is", Value: "DE"},
+		{Dim: "device", Op: "not", Value: "Mobile"},
+		{Dim: "channel", Value: "AI"}, {Dim: "entry_page", Op: "not", Value: "/pricing"}, {Dim: "region", Value: "Bavaria"},
+	})
+	want := "Country is United States or Germany; Device is not Mobile; Channel is AI assistants; Entry page is not /pricing; region is Bavaria"
+	if got != want {
+		t.Errorf("got  %q\nwant %q", got, want)
+	}
+	if filterWords(nil) != "" {
+		t.Error("a file with no filters has no line about them")
 	}
 }

@@ -43,3 +43,10 @@
   background: var(--surface-2);
   color: var(--text);
 }
+
+/* The save offer beside "+N more": the bookmark alone. */
+.chip.more.icon {
+  padding: 0;
+  width: 36px;
+  justify-content: center;
+}

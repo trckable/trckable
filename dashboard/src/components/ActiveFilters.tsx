@@ -78,6 +78,7 @@ export function ActiveFilters<T>({ filters, onRemove, onFlip, onClear, onSave, c
     <>
       {filters.slice(0, IN_SIGHT).map(chip)}
       {rest > 0 ? (
+        <>
         <div ref={root} style={{ position: 'relative' }}>
           <button type="button" className={'chip more' + (open ? ' on' : '')} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
             {IN_SIGHT ? t.more(rest) : t.count(filters.length)}
@@ -121,6 +122,13 @@ export function ActiveFilters<T>({ filters, onRemove, onFlip, onClear, onSave, c
             </div>
           )}
         </div>
+        {/* Three or more: the same offer, as one small icon at the row's end. */}
+        {IN_SIGHT > 0 && compound && (
+          <button type="button" className="chip more icon" onClick={onSave} aria-label={t.saveSegment} title={t.saveSegmentTitle}>
+            <Bookmark size={14} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        )}
+        </>
       ) : (
         <button type="button" className="chip more" onClick={onSave} title={compound ? t.saveSegmentTitle : t.saveOneTitle}>
           <Bookmark size={13} strokeWidth={1.75} aria-hidden="true" />
