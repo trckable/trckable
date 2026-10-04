@@ -344,3 +344,55 @@ func TestPageIsNeverCachedAndRoutesStillAnswerWithIt(t *testing.T) {
 		t.Errorf("a hashed asset: Cache-Control %q, want immutable", cc)
 	}
 }
+
+// The worker is a script a browser runs for the whole site, so it has to
+// arrive as one: its own type, allowed to control "/", never kept, and with the
+// page's hash in it instead of the placeholder (a deploy is a new worker).
+func TestServiceWorkerIsServedAsAWorker(t *testing.T) {
+	rec := fetch(t, "/sw.js", "gzip")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("/sw.js: status %d, want 200", rec.Code)
+	}
+	if ct := rec.Header().Get("Content-Type"); !strings.HasPrefix(ct, "text/javascript") {
+		t.Errorf("Content-Type %q, want text/javascript", ct)
+	}
+	if got := rec.Header().Get("Service-Worker-Allowed"); got != "/" {
+		t.Errorf("Service-Worker-Allowed %q, want /", got)
+	}
+	if cc := rec.Header().Get("Cache-Control"); cc != "no-cache" {
+		t.Errorf("Cache-Control %q, want no-cache", cc)
+	}
+	if rec.Header().Get("Content-Encoding") != "" {
+		t.Errorf("the worker is sent as plain text, got Content-Encoding %q", rec.Header().Get("Content-Encoding"))
+	}
+	body := rec.Body.String()
+	if strings.Contains(body, "__V__") || !strings.Contains(body, "const V = '") {
+		t.Errorf("the version was not filled in: %.120q", body)
+	}
+}
+
+// The version follows the page: another page, another worker.
+func TestServiceWorkerVersionFollowsThePage(t *testing.T) {
+	sub, _ := fs.Sub(dist, "dist")
+	a := serviceWorker(sub, []byte("one"))
+	b := serviceWorker(sub, []byte("two"))
+	if a == nil || bytes.Equal(a, b) {
+		t.Error("two pages gave the same worker: a deploy would not replace it")
+	}
+	if !bytes.Equal(a, serviceWorker(sub, []byte("one"))) {
+		t.Error("the same page gave two workers: the browser would reinstall it on every visit")
+	}
+}
+
+func TestManifestHasItsOwnType(t *testing.T) {
+	rec := fetch(t, "/manifest.webmanifest", "")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d, want 200", rec.Code)
+	}
+	if ct := rec.Header().Get("Content-Type"); ct != "application/manifest+json" {
+		t.Errorf("Content-Type %q, want application/manifest+json", ct)
+	}
+	if !strings.Contains(rec.Body.String(), `"scope": "/"`) {
+		t.Errorf("the manifest does not name its scope: %.120q", rec.Body.String())
+	}
+}
