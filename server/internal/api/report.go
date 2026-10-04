@@ -195,6 +195,14 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 	if onlineOK {
 		out["online"] = online
 	}
+	// What was turned away is a count of the whole site: under a filter it
+	// would say something else, so it is not offered. Read outside the report
+	// cache, which a flush every minute would not invalidate.
+	if len(params.Filters) == 0 {
+		if b, err := q.Bots(r.Context(), params); err == nil {
+			out["bots"] = b
+		}
+	}
 	writeJSON(w, http.StatusOK, out)
 }
 

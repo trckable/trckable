@@ -468,6 +468,7 @@ func (s *Server) startAnalytics(ctx context.Context) {
 		s.api.Touched(site, lo, hi) // closed ranges the commit can reach stop being served from the report cache
 	}
 	s.writer.Store(w)
+	go s.flushBotsEvery(ctx)
 	slog.Info("analytics store ready")
 	if err := w.Run(ctx); err != nil {
 		slog.Error("writer stopped", "err", err)
@@ -480,8 +481,11 @@ func (s *Server) shutdown() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.cfg.DrainSeconds)*time.Second)
 	defer cancel()
 	herr := s.http.Shutdown(ctx) // stop accepting; finish in-flight requests
-	werr := s.log.Close()        // commit every queued append
-	s.stopWrite()                // writer drains what is durable, then returns
+	bctx, bcancel := context.WithTimeout(ctx, 10*time.Second)
+	s.flushBots(bctx) // the last minute of bot counts, while the writer still runs
+	bcancel()
+	werr := s.log.Close() // commit every queued append
+	s.stopWrite()         // writer drains what is durable, then returns
 	s.writerWG.Wait()
 	var derr error
 	if st := s.duck.Load(); st != nil {

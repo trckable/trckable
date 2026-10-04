@@ -30,8 +30,8 @@ func TestBrowserVersionAndScreenMigrateAnExistingStore(t *testing.T) {
 	if err := s.Migrate(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if have, want, _ := s.Schema(ctx); have != want || have != 6 {
-		t.Fatalf("schema %d of %d, want 6", have, want)
+	if have, want, _ := s.Schema(ctx); have != want || have != Migrations() {
+		t.Fatalf("schema %d of %d, want %d", have, want, Migrations())
 	}
 	var evV, seV *string
 	var seS *int

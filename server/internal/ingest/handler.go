@@ -107,6 +107,10 @@ type Handler struct {
 	// is on. Only endpoints that exist for one module ask (the crawler one).
 	Module func(site, id string) bool
 
+	// Bots counts what was turned away, per site and day, for the Visitors
+	// tile. The server writes it out once a minute (botcount.go).
+	Bots BotCounts
+
 	limitOnce sync.Once
 	limit     *limiter
 	limitIP   *limiter
@@ -194,8 +198,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.reject(w, http.StatusBadRequest, errBadPayload)
 		return
 	}
-	ev, bot, cookie, err := h.build(r, &p)
-	if err == nil && !bot && ev != nil {
+	ev, drop, cookie, err := h.build(r, &p)
+	if err == nil && drop == "" && ev != nil {
 		h.markSeen(ev.Site, h.Now())
 	}
 	if err == errRate {
@@ -207,8 +211,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.reject(w, http.StatusBadRequest, err)
 		return
 	}
-	if bot {
+	if drop != "" {
 		h.Stats.Bots.Add(1)
+		if drop != dropOwner {
+			h.Bots.Add(p.Site, h.Now(), drop) // only for a site build found: it knew the id
+		}
 		w.WriteHeader(http.StatusAccepted) // don't tell bots anything
 		return
 	}
@@ -246,17 +253,23 @@ func (h *Handler) reject(w http.ResponseWriter, code int, err error) {
 	_, _ = io.WriteString(w, msg) // if this fails the client has gone
 }
 
-func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.Cookie, error) {
+// dropOwner marks a visit the site's owner chose to leave out (an excluded
+// path, Do Not Track): dropped like a bot, but never counted as one.
+const dropOwner = "owner"
+
+// build makes the event for a payload. drop is empty for a visit that is kept;
+// otherwise the visit is dropped, as one of the Bot kinds or dropOwner.
+func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *http.Cookie, error) {
 	site, ok := h.Sites.Site(p.Site)
 	if !ok {
-		return nil, false, nil, errUnknown
+		return nil, "", nil, errUnknown
 	}
 	u, ok := parsePageURL(p.URL, site.HashMode)
 	if !ok {
-		return nil, false, nil, errBadPayload
+		return nil, "", nil, errBadPayload
 	}
 	if !hostAllowed(u.Host, site, p.Dev == 1) {
-		return nil, false, nil, errHost
+		return nil, "", nil, errHost
 	}
 	// A browser always says which site it is on. When it does, that site must
 	// be the page the event claims: a script on one site cannot post events
@@ -264,7 +277,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 	// sends "null"; neither is refused here.
 	if o := r.Header.Get("Origin"); o != "" && o != "null" {
 		if ou, err := url.Parse(o); err == nil && (ou.Scheme == "http" || ou.Scheme == "https") && strings.TrimPrefix(strings.ToLower(ou.Hostname()), "www.") != u.Host {
-			return nil, false, nil, errHost
+			return nil, "", nil, errHost
 		}
 	}
 	// Paths the owner excluded, and browsers they promised to respect, are
@@ -272,21 +285,21 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 	// to leave out, ?trckable=ignore, never sends: the tracker keeps that flag
 	// itself, so it works behind a proxy as well.)
 	if site.Skip(u.Path) {
-		return nil, true, nil, nil
+		return nil, dropOwner, nil, nil
 	}
 	if site.HonorDNT && (r.Header.Get("DNT") == "1" || r.Header.Get("Sec-GPC") == "1") {
-		return nil, true, nil, nil
+		return nil, dropOwner, nil, nil
 	}
 	ua := parseUA(r.UserAgent(), p.Width)
 	// Dev mode lets developers test their own site with automated browsers,
 	// but only on localhost: a dev flag on a real hostname changes nothing.
 	if ua.Bot && (p.Dev != 1 || !isLocalHost(u.Host)) {
-		return nil, true, nil, nil
+		return nil, ua.BotKind, nil, nil
 	}
 	// Strict mode also drops clients that name no browser at all: quieter
 	// numbers, at the cost of missing a few odd but real visitors.
 	if site.BotStrict && (ua.Browser == "" || ua.Browser == "Other") {
-		return nil, true, nil, nil
+		return nil, BotOther, nil, nil
 	}
 
 	// A same-origin proxy proves itself with the site's secret; only then do
@@ -308,7 +321,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 	// Stricter filtering also drops visits from rented servers: a browser
 	// running in a data centre is a script, not a reader.
 	if site.BotStrict && h.Hosting != nil && h.Hosting(ip) {
-		return nil, true, nil, nil
+		return nil, BotHosting, nil, nil
 	}
 	h.limitOnce.Do(func() {
 		h.limit = newLimiter(10, 60)
@@ -318,7 +331,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 	// comes from the client, so a script that invents a new one per request
 	// would otherwise never be limited.
 	if !h.limit.allow(ip+"|"+p.Visitor, h.Now()) || !h.limitIP.allow(site.ID+"|"+ip, h.Now()) {
-		return nil, false, nil, errRate
+		return nil, "", nil, errRate
 	}
 
 	now := h.Now()
@@ -331,7 +344,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 	if age < 0 {
 		age = 0
 	} else if age > maxAgeMs {
-		return nil, false, nil, errBadPayload
+		return nil, "", nil, errBadPayload
 	}
 	e := &event.Event{
 		Site:     site.ID,
@@ -357,7 +370,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 		e.RefHost, e.RefURL = parseReferrer(p.Referrer, u.Host)
 		// Referrer spam is never a visit, whatever the site's settings.
 		if isSpam(e.RefHost) {
-			return nil, true, nil, nil
+			return nil, BotOther, nil, nil
 		}
 		e.Channel = classify(u, e.RefHost, e.RefURL)
 		e.UTMSource, e.UTMMedium, e.UTMCampaign, e.UTMTerm, e.UTMContent =
@@ -369,7 +382,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 		e.Kind = event.KindGoal
 		e.Goal = normGoal(p.Goal)
 		if e.Goal == "" {
-			return nil, false, nil, errBadPayload
+			return nil, "", nil, errBadPayload
 		}
 		e.Props = cleanProps(p.Props)
 	case "e":
@@ -391,7 +404,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 			e.INPms = p.INP
 		}
 	default:
-		return nil, false, nil, errBadPayload
+		return nil, "", nil, errBadPayload
 	}
 
 	if h.Geo != nil {
@@ -413,7 +426,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 	if site.ConsentFree {
 		e.Visitor = h.Salts.Cookieless(now, site.ID, ip, r.UserAgent())
 		e.FirstSeen = 0
-		return e, false, forget(proxied, u, site), nil
+		return e, "", forget(proxied, u, site), nil
 	}
 	if id, fs, ok := parseVisitor(p.Visitor); ok {
 		e.Visitor, e.FirstSeen = id, fs
@@ -431,7 +444,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 			cookie = forget(proxied, u, site) // consent withdrawn: the cookie we set goes too
 		}
 	}
-	return e, false, cookie, nil
+	return e, "", cookie, nil
 }
 
 // forget expires the visitor cookie this server set, with the same domain and

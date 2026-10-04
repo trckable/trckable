@@ -28,6 +28,8 @@ interface Props {
   loading?: boolean
   /** A small chip after the change, on its line (vs usual, the month's pace): only where the change itself is shown. */
   hint?: ReactNode
+  /** A line more for the tile's tooltip: what the number leaves out (Visitors: the bots filtered). */
+  tip?: string
   /** Which mark stands before the name (KpiMarks). */
   icon?: ComponentProps<typeof KpiMark>['k']
 }
@@ -45,7 +47,7 @@ export function KpiTile(p: Props) {
   const cls = 'kpi' + (p.money ? ' money' : '')
   const body = (
     <>
-      <span className="label kpi-name" title={p.label}>
+      <span className="label kpi-name" title={tipped(p.label, p.tip)}>
         {p.icon && <KpiMark k={p.icon} />}
         {p.label}
       </span>
@@ -59,11 +61,14 @@ export function KpiTile(p: Props) {
   )
   if (!p.onClick) return <div className={cls}>{body}</div>
   return (
-    <button type="button" className={cls} aria-pressed={p.pressed} onClick={p.onClick} title={copy.chartTile(p.label)}>
+    <button type="button" className={cls} aria-pressed={p.pressed} onClick={p.onClick} title={tipped(copy.chartTile(p.label), p.tip)}>
       {body}
     </button>
   )
 }
+
+/** A tooltip with its extra line under it, when there is one. */
+const tipped = (title: string, tip?: string) => (tip ? `${title}\n${tip}` : title)
 
 function Change({ d, vs, hint }: { d: Delta; vs: string; hint?: ReactNode }) {
   const label = copy.change(d.label, vs)

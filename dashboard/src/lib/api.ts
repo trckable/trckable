@@ -77,6 +77,14 @@ export interface Report {
   previous_from?: string
   previous_to?: string
   online?: number
+  /** What was turned away over the period, for the Visitors tile. Absent under a filter. */
+  bots?: Bots
+}
+
+/** Robots, AI crawlers, headless browsers and data-centre visits filtered out of the period. */
+export interface Bots {
+  total: number
+  kinds: Record<string, number>
 }
 
 export type Bucket = 'hour' | 'day' | 'week' | 'month'
