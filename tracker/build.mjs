@@ -43,6 +43,11 @@ const WITH_OPTIONAL_BUDGET = 2700
 // it is off unless a site asks for it.
 const BANNER_BUDGET = 3400
 
+// The heatmaps module is a script of its own, sent after the base script only
+// to a site that turned it on, so none of it counts against BUDGET. It has a
+// budget of its own: 1.5 KB gzip.
+const HEAT_BUDGET = 1536
+
 // The bar and the read-someone-else's-banner module answer the same question,
 // so a site has one or the other (modules.Module.Excludes). The variant with
 // both is built for completeness but no site is ever served it, so it is not
@@ -95,9 +100,25 @@ mkdirSync('../server/internal/web/assets', { recursive: true })
 writeFileSync('../server/internal/web/assets/t.js', all.js)
 for (const v of Object.values(built)) writeFileSync(`../server/internal/web/assets/t-${v.name}.js`, v.js)
 
+// The heatmaps module: one file, appended to a site's script by the server.
+// No banner and no strict-mode line: it follows the base script in the same file.
+await build({
+  entryPoints: ['src/heat.ts'],
+  bundle: true,
+  minify: true,
+  format: 'iife',
+  target: ['es2020', 'safari14'],
+  outfile: 'dist/heat.js',
+  legalComments: 'none',
+})
+const heatJs = readFileSync('dist/heat.js')
+const heatGzip = gzipSize(heatJs)
+writeFileSync('../server/internal/web/assets/heat.js', heatJs)
+
 // What each feature costs on its own, measured (core + feature − core).
 const cost = {}
 for (const [f, code] of FEATURES) cost[f] = built[code].gzip - core.gzip
+cost.heat = heatGzip // Keep in sync with modules.TrackHeat
 writeFileSync(
   '../server/internal/web/assets/sizes.json',
   JSON.stringify({ core: core.gzip, full: all.gzip, feature: cost, variants: Object.fromEntries(Object.entries(built).map(([k, v]) => [k, v.gzip])) }, null, 2) + '\n',
@@ -123,6 +144,7 @@ const heaviest = built[variantName(new Set(FEATURES.map(([f]) => f).filter((f) =
 console.log(`the most a site can ship: ${heaviest.bytes} B minified · ${heaviest.gzip} B gzip (budget ${budgetFor(heaviest.name)}) ${heaviest.gzip <= budgetFor(heaviest.name) ? '✓' : '✗ OVER'}`)
 console.log(`core only:            ${core.bytes} B minified · ${core.gzip} B gzip ${mark(core.gzip)}`)
 for (const [f] of FEATURES) console.log(`  + ${f.padEnd(9)} ${String(cost[f]).padStart(4)} B gzip`)
+console.log(`heatmaps module (a script of its own): ${heatJs.length} B minified · ${heatGzip} B gzip (budget ${HEAT_BUDGET}) ${heatGzip <= HEAT_BUDGET ? '✓' : '✗ OVER'}`)
 
 console.log(`online.js (the corner widget): ${online.length} B minified · ${onlineGzip} B gzip (budget ${ONLINE_BUDGET}) ${onlineGzip <= ONLINE_BUDGET ? '✓' : '✗ OVER BUDGET'}`)
 if (onlineGzip > ONLINE_BUDGET) {
@@ -133,4 +155,5 @@ if (onlineGzip > ONLINE_BUDGET) {
 const possible = ([name]) => !([...IMPOSSIBLE].every((c) => name.includes(c)))
 const overBudget = Object.entries(built).filter(possible).filter(([name, v]) => v.gzip > budgetFor(name))
 for (const [name, v] of overBudget) console.error(`✗ variant ${name} is ${v.gzip} B gzip, over budget`)
-if (process.argv.includes('--check') && overBudget.length) process.exit(1)
+if (heatGzip > HEAT_BUDGET) console.error(`✗ the heatmaps module is ${heatGzip} B gzip, over its budget of ${HEAT_BUDGET}`)
+if (process.argv.includes('--check') && (overBudget.length || heatGzip > HEAT_BUDGET)) process.exit(1)
