@@ -20,6 +20,10 @@ export default defineConfig({
         test: { name: 'banner', include: ['test/banner.test.ts'] },
         define: { __GOALS__: 'true', __OUTBOUND__: 'true', __CHECKOUT__: 'true', __VITALS__: 'true', __CONSENT__: 'false', __BANNER__: 'true', __FORMS__: 'false' },
       },
+      {
+        // The heatmaps module is a script of its own: it has no feature flags.
+        test: { name: 'heatmaps', include: ['test/heatmap.test.ts'] },
+      },
     ],
   },
 })

@@ -120,6 +120,36 @@ func TestFormsVariant(t *testing.T) {
 	}
 }
 
+// The heatmaps module is a file of its own: a site with it gets the base script
+// byte for byte, then the module; a site without it gets neither a byte of it.
+func TestHeatmapsFollowTheBaseScript(t *testing.T) {
+	get := func(features ...string) string {
+		h := Tracker(func(string) []string { return features }, nil)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/js/tkb_x.js", nil))
+		if w.Code != http.StatusOK {
+			t.Fatalf("status %d", w.Code)
+		}
+		body, _ := strings.CutPrefix(w.Body.String(), `document.currentScript.dataset.site=document.currentScript.dataset.site||"tkb_x";`)
+		return body
+	}
+	plain := get("goals")
+	with := get("goals", "heat")
+	heat, err := assets.ReadFile("assets/heat.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(plain, string(heat)) {
+		t.Error("a site without the module was sent it")
+	}
+	if want := plain + ";" + string(heat); with != want {
+		t.Errorf("the script with heatmaps is not the base script, a semicolon and the module (%d bytes, want %d)", len(with), len(want))
+	}
+	if get("heat") == get("goals", "heat") {
+		t.Error("the module was sent after the wrong base script")
+	}
+}
+
 func TestOnlyEmbeddableLinksCanBeFramed(t *testing.T) {
 	h := DashboardFramed(func(r *http.Request) string {
 		if r.URL.Path == "/s/embeddable" {

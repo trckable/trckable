@@ -809,6 +809,49 @@ textarea:focus-visible {
     display: none;
   }
 }
+/* A button at the end of a row (the Pages list's heatmap): there on hover, and
+   always on a screen with no hover. The head leaves its room. */
+.bl-item {
+  display: flex;
+  align-items: center;
+}
+.bl-item .bl-row {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+.bl.has-act .bl-cols {
+  padding-right: 30px;
+}
+.bl-act {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s, color 0.12s, background 0.12s;
+}
+.bl-item:hover .bl-act,
+.bl-act:focus-visible {
+  opacity: 1;
+}
+.bl-act:hover,
+.bl-act:focus-visible {
+  color: var(--accent);
+  background: var(--sunken);
+  outline: none;
+}
+@media (hover: none) {
+  .bl-act {
+    opacity: 0.7;
+  }
+}
 @container (max-width: 340px) {
   .bl-sub,
   .bl-cols .bl-sub {

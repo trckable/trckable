@@ -65,6 +65,7 @@ const (
 	TrackConsent  = "consent"  // reads the site's cookie banner before setting a cookie
 	TrackBanner   = "banner"   // the same module in "bar" mode: trckable asks, with a bar of its own
 	TrackForms    = "forms"    // form submissions, counted as goals
+	TrackHeat     = "heat"     // heatmaps: a script of its own, sent after the base script
 )
 
 // All modules, in the order the dashboard shows them.
@@ -212,6 +213,21 @@ var All = []Module{
 			"Search forms and forms marked data-trckable-ignore are left out",
 		},
 		Loses: []string{"New form submissions stop being counted", "Recorded ones stay in your goals"}},
+	{ID: "heatmaps", Name: "Heatmaps", Summary: "Where people click on a page, and where they stop. Nobody is recorded.",
+		Tracker: TrackHeat, Collects: true, Gap: "Click, scroll and form counts stop being recorded. Past ones stay.",
+		Server: "counts per element, page and day, kept in memory and written once a minute",
+		Gives: []string{
+			"A click map on any page, for phone, tablet and desktop widths",
+			"Dead clicks (nothing happens) and rage clicks (three in a second), and how far down people scroll",
+			"The form field people leave a form at, by the field's name",
+		},
+		Costs: []string{
+			"Adds {bytes} to the browser script, a separate file only your site gets",
+			"Never recorded: sessions, visitor ids, cookies, typed text, passwords or a video of anyone",
+			"Kept: counts per element and day, no visitor behind any of them",
+			"Off for visitors who send Do Not Track, and while Cookie consent is on",
+		},
+		Loses: []string{"New clicks, dead and rage clicks and form drop-offs stop being counted", "Counts already kept stay in your heatmaps"}},
 	{ID: "search", Name: "Search Console", Summary: "The Google searches that showed your site, and which of them were clicked.",
 		Server: "reads Google Search Console when a report asks, at most once an hour; nothing runs while idle",
 		Gives: []string{

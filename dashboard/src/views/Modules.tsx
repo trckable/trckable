@@ -12,6 +12,7 @@ import { words } from '../lib/errors'
 import './Modules.css'
 import { Loading } from '../components/loading/Loading'
 import { canChange } from '../lib/me'
+import { modulesChanged } from '../lib/useMods'
 
 const bytes = (n: number) => (n >= 1024 ? `${(n / 1024).toFixed(2)} KB` : `${n} B`)
 
@@ -43,7 +44,10 @@ export function ModulesSettings({ site }: { site: Site }) {
     setConfirm(null)
     more
       .setModule(site.id, m.id, enabled)
-      .then(take)
+      .then((d) => {
+        take(d)
+        modulesChanged() // the dashboard behind reads them again
+      })
       .catch((e: unknown) => fail(e))
       .finally(() => setBusy(''))
   }

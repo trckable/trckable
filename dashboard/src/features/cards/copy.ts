@@ -23,4 +23,5 @@ export const cardCopy = {
   perDayChannels: 'Per-day data covers channels only',
   perDayEntry: 'Per-day data covers entry pages only',
   loading: 'Loading',
+  heatmap: (page: string) => `Heatmap of ${page}`,
 }

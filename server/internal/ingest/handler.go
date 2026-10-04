@@ -42,6 +42,9 @@ type Site struct {
 	Allowed  []string // extra allowed hostnames (cross-domain)
 	HashMode bool
 	ProxyKey string // secret sent by same-origin proxies (X-Trckable-Proxy-Key)
+	// Location is the site's own time zone, for what is kept per day (the
+	// heatmaps); nil means UTC.
+	Location *time.Location
 
 	// Per-site choices (Settings → General and Privacy). Defaults keep every
 	// analytics signal: a site only gives something up when its owner says so.
@@ -119,6 +122,12 @@ type Handler struct {
 	// Bots counts what was turned away, per site and day, for the Visitors
 	// tile. The server writes it out once a minute (botcount.go).
 	Bots BotCounts
+
+	// Heats counts what the heatmaps script reported, per element and day
+	// (heat.go). Written out with the bot counts.
+	Heats                      HeatCounts
+	heatOnce                   sync.Once
+	heatLimitIP, heatLimitSite *limiter
 
 	limitOnce sync.Once
 	limit     *limiter

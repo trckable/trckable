@@ -1,0 +1,200 @@
+/* The heatmap overlay. It loads with its chunk, not with the first load. */
+.modal.heat {
+  width: min(1240px, 100%);
+  height: calc(100vh - 32px);
+  gap: 12px;
+  padding: 16px;
+  --heat: #ff5a1f;
+}
+.heat-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.heat-title {
+  font-size: 14px;
+  min-width: 0;
+  max-width: 40ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.heat-grow {
+  flex: 1;
+}
+.heat-bar .tabs button {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+}
+.heat-bar .tabs button:disabled {
+  opacity: 0.35;
+}
+.heat-bar .tabs button[aria-pressed='true'] {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.heat-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 16px;
+  min-height: 0;
+  flex: 1;
+}
+.heat-room {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--sunken);
+}
+.heat-fit {
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+}
+.heat-page {
+  position: absolute;
+  inset: 0 auto auto 0;
+  transform-origin: 0 0;
+  background: #fff;
+}
+.heat-frame,
+.heat-scroll,
+.heat-dots,
+.heat-sample {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.heat-frame {
+  background: #fff;
+  color-scheme: light;
+  pointer-events: none;
+}
+/* An example page: a heading and some lines, and a block under each element that was clicked. */
+.heat-sample {
+  background:
+    linear-gradient(#e9ebe6 0 0) 8% 120px / 40% 28px no-repeat,
+    linear-gradient(#f0f1ed 0 0) 8% 200px / 70% 16px no-repeat,
+    linear-gradient(#f0f1ed 0 0) 8% 232px / 56% 16px no-repeat,
+    #fff;
+}
+.heat-sample i {
+  position: absolute;
+  border-radius: 6px;
+  background: #e3e6dc;
+}
+.heat-scroll {
+  pointer-events: none;
+}
+.heat-dots circle,
+.heat-dots g {
+  pointer-events: auto;
+}
+.heat-dead circle,
+.heat-rage circle {
+  fill: #fff;
+  stroke-width: 2.5;
+}
+.heat-dead circle {
+  stroke: #d99a00;
+}
+.heat-rage circle {
+  fill: color-mix(in srgb, var(--down) 85%, #fff);
+  stroke: #b3262b;
+}
+.heat-dead path,
+.heat-rage path {
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+.heat-dead path {
+  stroke: #d99a00;
+}
+.heat-rage path {
+  stroke: #fff;
+}
+.heat-side {
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.heat-side h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+.heat-side ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.heat-side li {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 8px;
+  font-size: 12.5px;
+}
+.heat-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono);
+}
+.heat-n {
+  color: var(--text-2);
+  font-family: var(--mono);
+}
+.heat-side li i {
+  grid-column: 1 / -1;
+  display: block;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--heat);
+  opacity: 0.8;
+}
+.heat-bad {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--down);
+}
+@media (max-width: 760px) {
+  /* Name and close on the first line, the two sets of controls under it. */
+  .heat-grow {
+    display: none;
+  }
+  .heat-title {
+    flex: 1;
+  }
+  .heat-bar .heat-close {
+    order: 2;
+  }
+  .heat-bar .tabs {
+    order: 3;
+    flex: 1 1 140px;
+  }
+  .modal.heat {
+    height: calc(100dvh - 16px);
+    padding: 12px;
+  }
+  .heat-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .heat-side {
+    max-height: 30vh;
+  }
+}

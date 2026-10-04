@@ -41,6 +41,7 @@ export const MODULES: Record<string, EntryPoints> = {
   crawlers: { cards: ['crawlers'] },
   forms: {},
   search: { settings: ['search'] },
+  heatmaps: { cards: ['heatmaps'] },
 }
 
 /** On for a site that has not said otherwise (the server's default_on). */

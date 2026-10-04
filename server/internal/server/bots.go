@@ -19,6 +19,7 @@ func (s *Server) flushBots(ctx context.Context) {
 	if w == nil {
 		return // no store yet: the counts wait
 	}
+	s.flushHeat(ctx, w) // the heatmaps' counters go out with the bot counts, on the same clock
 	rows := s.ingest.Bots.Drain()
 	if len(rows) == 0 {
 		return
@@ -47,5 +48,30 @@ func (s *Server) flushBotsEvery(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		}
+	}
+}
+
+// heatChunk is how many counters are written in one transaction: a busy
+// minute can hold tens of thousands, and one transaction that big is memory
+// the store does not need to ask for.
+const heatChunk = 2000
+
+// flushHeat writes what the heatmaps script reported since the last time, the
+// same way: handed over once, and given back when a write fails (the chunk
+// that failed and everything after it, never what was already written).
+func (s *Server) flushHeat(ctx context.Context, w *writer.Writer) {
+	rows := s.ingest.Heats.Drain()
+	for len(rows) > 0 {
+		n := min(heatChunk, len(rows))
+		out := make([]writer.HeatRow, n)
+		for i, r := range rows[:n] {
+			out[i] = writer.HeatRow{Site: r.Site, Day: r.Day, Path: r.Path, Width: r.Width, Kind: r.Kind, El: r.El, CX: r.CX, CY: r.CY, N: r.N, X: r.X, Y: r.Y, W: r.W, H: r.H}
+		}
+		if err := w.AddHeat(ctx, out); err != nil {
+			s.ingest.Heats.Restore(rows)
+			slog.Warn("could not write the heatmap counts, will try again", "err", err)
+			return
+		}
+		rows = rows[n:]
 	}
 }

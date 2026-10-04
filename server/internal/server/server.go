@@ -19,6 +19,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -144,12 +145,19 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	mux := http.NewServeMux()
 	mux.Handle("/api/e", s.ingest)
 	mux.HandleFunc("/api/crawl", s.ingest.Crawl) // robots, reported by the site's own server
+	mux.HandleFunc("/api/h", s.ingest.Heat)      // clicks and form fields, from the heatmaps script
 	feat := func(site string) []string {
 		set, err := (modules.Store{DB: ctl.DB}).Of(ctx, site)
 		if err != nil {
 			return []string{"goals", "outbound", "checkout"} // fail open: a site keeps tracking
 		}
 		out := set.Tracker()
+		// Heatmaps keep no visitor and no cookie, but a visitor who declined the
+		// banner is promised not to be counted at all, and the heatmaps script
+		// cannot read the answer. So while consent is asked for, it is not sent.
+		if set.Has("consent") {
+			out = slices.DeleteFunc(out, func(f string) bool { return f == modules.TrackHeat })
+		}
 		// One consent module, two ways of asking. Reading the banner a site
 		// already runs is 197 B; trckable's own bar is 940, so the choice
 		// decides which one the browser downloads.

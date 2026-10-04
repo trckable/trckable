@@ -219,6 +219,18 @@ export const ART: Record<string, React.ReactNode> = {
       </path>
     </g>
   ),
+  // A page with warm spots where it was clicked.
+  heatmaps: (
+    <g>
+      <rect x="22" y="9" width="60" height="40" rx="5" fill="none" stroke={T3} strokeWidth="2" opacity="0.45" />
+      <path d="M30 18h24M30 25h36" stroke={T3} strokeWidth="2.2" strokeLinecap="round" opacity="0.35" />
+      <circle cx="62" cy="34" r="9" fill={M} opacity="0.28">
+        <animate attributeName="r" values="7;11;7" dur="2.4s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="62" cy="34" r="4.2" fill={M} opacity="0.85" />
+      <circle cx="40" cy="38" r="5" fill={M} opacity="0.3" />
+    </g>
+  ),
   core: (
     <g>
       <path d="M16 42c10 0 14-16 24-16s14 10 24 10 14-18 24-18" fill="none" stroke={A} strokeWidth="2.2" strokeLinecap="round" />

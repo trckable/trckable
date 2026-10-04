@@ -37,6 +37,7 @@ const parts = {
     tracker_max_bytes: Math.max(...servable.map(([, n]) => n)), // every module a site can turn on
     ...Object.fromEntries(Object.entries(sz.feature).map(([f, n]) => ['module_' + f + '_bytes', n])),
     tracker_budget_bytes: budget('tracker/build.mjs', /^const BUDGET = (\d+)/m),
+    tracker_heat_budget_bytes: budget('tracker/build.mjs', /^const HEAT_BUDGET = (\d+)/m), // the heatmaps module, a script of its own
     react_bytes: gz('packages/trckable/dist/react.js') + gz('packages/trckable/dist/index.js'),
     react_budget_bytes: budget('packages/trckable/build.mjs', /^const BUDGET = (\d+)/m),
     }
