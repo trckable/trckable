@@ -38,9 +38,9 @@ func TestOnlineWidgetKinds(t *testing.T) {
 		}
 		do(t, owner, "DELETE", base+"/"+out["id"].(string), "", csrf, "1")
 	}
-	// Left unsaid, it starts as the pill with a sparkline.
+	// Left unsaid, it starts as the plain pill.
 	_, out := do(t, owner, "POST", base, `{"kind":"online"}`, csrf, "1")
-	if got := toJSON(out["shows"]); got != `["spark"]` {
+	if got := toJSON(out["shows"]); got != `[]` {
 		t.Fatalf("default mode: %s", got)
 	}
 }

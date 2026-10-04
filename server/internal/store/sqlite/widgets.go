@@ -85,7 +85,7 @@ var widgetParts = map[string]map[string]bool{
 	"online":  {"spark": true, "card": true, "pages": true, "countries": true},
 }
 
-var widgetDefaults = map[string][]string{"live": {"bars", "countries"}, "revenue": {"channels"}, "online": {"spark"}}
+var widgetDefaults = map[string][]string{"live": {"bars", "countries"}, "revenue": {"channels"}, "online": {}}
 
 // HexColor says whether s is a #rrggbb colour.
 func HexColor(s string) bool { return hexColor.MatchString(s) }

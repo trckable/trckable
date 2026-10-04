@@ -35,7 +35,7 @@ export const PARTS: Record<WidgetKind, { id: string; name: string; hint?: string
   revenue: [{ id: 'channels', name: 'Where it came from', hint: 'The channels that brought the money' }],
   privacy: [],
 }
-export const DEFAULT_PARTS: Record<WidgetKind, string[]> = { live: ['bars', 'countries'], online: ['spark'], badge: [], counter: [], revenue: ['channels'], privacy: [] }
+export const DEFAULT_PARTS: Record<WidgetKind, string[]> = { live: ['bars', 'countries'], online: [], badge: [], counter: [], revenue: ['channels'], privacy: [] }
 
 // The online design's three modes, each a set of parts.
 export const MODES = [
