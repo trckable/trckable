@@ -31,7 +31,7 @@ func TestNotesAndLayoutMigrations(t *testing.T) {
 		t.Fatal(err)
 	}
 	// The owner's address list came later still: it goes last, because the sites are read with it.
-	if _, err := st.DB.ExecContext(ctx, `ALTER TABLE site_settings DROP COLUMN exclude_ips`); err != nil {
+	if _, err := st.DB.ExecContext(ctx, `ALTER TABLE site_settings DROP COLUMN exclude_ips; DROP TABLE site_share_look`); err != nil {
 		t.Fatal(err)
 	}
 	if err := st.MigrateTo(ctx, len(migrations)); err != nil {

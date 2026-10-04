@@ -397,3 +397,52 @@
     box-shadow: 0 -10px 14px var(--surface);
   }
 }
+/* The look of the links: logo, colour, switch and domain, under the link. */
+.sd-look {
+  display: grid;
+  gap: 12px;
+  max-width: 420px;
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.sd-look h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 14px;
+}
+.sd-look-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.sd-look-row > span,
+.sd-look-row > label {
+  min-width: 56px;
+}
+.sd-look-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sd-logo {
+  max-width: 120px;
+  max-height: 32px;
+  object-fit: contain;
+}
+.sd-colour {
+  width: 36px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+.sd-cname {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}

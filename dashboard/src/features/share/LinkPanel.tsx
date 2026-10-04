@@ -7,6 +7,7 @@ import { fail, type Site, more } from '../../lib/apiMore'
 import { Switch } from '../../components/Switch'
 import { toast } from '../../components/Toast'
 import { copy } from './copy'
+import { LookPanel } from './LookPanel'
 
 export function LinkPanel({ site, onBack }: { site: Site; onBack: () => void }) {
   const [password, setPassword] = useState('')
@@ -63,6 +64,7 @@ export function LinkPanel({ site, onBack }: { site: Site; onBack: () => void }) 
           </button>
         </div>
       )}
+      <LookPanel site={site} />
       <span className="faint sd-manage">{copy.manage}</span>
     </div>
   )

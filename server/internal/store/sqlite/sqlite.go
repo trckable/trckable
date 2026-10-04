@@ -571,6 +571,21 @@ var migrations = []string{
 	// 44: the owner's own addresses and ranges, one per line, left out of the
 	// counts before anything is hashed. Only this list is kept.
 	`ALTER TABLE site_settings ADD COLUMN exclude_ips TEXT NOT NULL DEFAULT '';`,
+	// 45: how a site's share links look to the people who open them: the
+	// owner's own logo, a colour, "hide trckable branding", and the address
+	// (a domain pointed at this server) the links are opened on. One row per
+	// site; a domain belongs to one site.
+	`CREATE TABLE site_share_look (
+		site_id    TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		color      TEXT NOT NULL DEFAULT '',
+		hide_brand INTEGER NOT NULL DEFAULT 0,
+		domain     TEXT NOT NULL DEFAULT '',
+		logo       BLOB,
+		logo_type  TEXT NOT NULL DEFAULT '',
+		logo_at    INTEGER NOT NULL DEFAULT 0,
+		updated_at INTEGER NOT NULL
+	);
+	CREATE UNIQUE INDEX site_share_look_domain ON site_share_look(domain) WHERE domain <> '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
