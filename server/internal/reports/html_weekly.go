@@ -118,7 +118,7 @@ func WeeklyHTML(d Data, x Weekly) string {
 				b.WriteString(`<tr><td class="tk-ink" style="padding:6px 8px 3px 0;color:#14161a;max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" >` + esc(ellipsize(r.Name, 40)) + `</td>`)
 				b.WriteString(`<td class="tk-ink" align="right" style="padding:6px 0 3px;white-space:nowrap;color:#14161a">` + esc(w.Number(r.Value)) + `</td></tr>`)
 				b.WriteString(`<tr><td colspan="2" style="padding:0 0 4px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>`)
-				b.WriteString(fmt.Sprintf(`<td class="tk-fill" width="%d%%" height="6" bgcolor="#487f00" style="width:%d%%;height:6px;background:#487f00;border-radius:3px;font-size:0;line-height:0">&nbsp;</td>`, pct, pct))
+				fmt.Fprintf(&b, `<td class="tk-fill" width="%d%%" height="6" bgcolor="#487f00" style="width:%d%%;height:6px;background:#487f00;border-radius:3px;font-size:0;line-height:0">&nbsp;</td>`, pct, pct)
 				if pct < 100 {
 					b.WriteString(`<td class="tk-track" bgcolor="#eef0f3" height="6" style="height:6px;background:#eef0f3;border-radius:3px;font-size:0;line-height:0">&nbsp;</td>`)
 				}

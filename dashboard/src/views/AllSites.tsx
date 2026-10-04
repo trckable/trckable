@@ -18,16 +18,11 @@ import { siteColors } from './allSitesColors'
 import { Spark } from './AllSitesSpark'
 import { EMPTY, flat } from '../features/sites/layout'
 import { useSiteLayout } from '../features/sites/useSiteLayout'
-import { AllTools } from '../features/header/AllTools'
+import { AllBar } from '../features/header/AllBar'
 import { OpenSite } from '../features/sites/OpenSite'
 import { copy as sitesCopy } from '../features/sites/menuCopy'
 
-const PERIODS = [
-  { days: 7, label: '7 days' },
-  { days: 30, label: '30 days' },
-  { days: 90, label: '90 days' },
-  { days: 365, label: '12 months' },
-]
+const PERIODS = [{ days: 7, label: '7 days' }, { days: 30, label: '30 days' }, { days: 90, label: '90 days' }, { days: 365, label: '12 months' }]
 
 type SortKey = 'order' | 'visitors' | 'pageviews' | 'bounce_rate' | 'revenue' | 'domain'
 
@@ -119,10 +114,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
   const by = (key: SortKey) => setSort((s) => ({ key, desc: s.key === key ? !s.desc : key !== 'domain' }))
   return (
     <>
-      <div className="header quiet">
-        {header}
-        <AllTools />
-      </div>
+      <AllBar header={header} />
       <main className="all-sites">
         <div className="all-head">
           <div>

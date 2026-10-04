@@ -49,7 +49,7 @@ func TestWeeklyHTML(t *testing.T) {
 		t.Errorf("one button, no script")
 	}
 	if os.Getenv("WEEKLY_HTML_OUT") != "" {
-		if err := os.WriteFile(os.Getenv("WEEKLY_HTML_OUT"), []byte(page), 0o644); err != nil {
+		if err := os.WriteFile(os.Getenv("WEEKLY_HTML_OUT"), []byte(page), 0o600); err != nil {
 			t.Fatal(err)
 		}
 	}
