@@ -216,8 +216,8 @@ func TestWidgetLanguageAndTextsOnThePage(t *testing.T) {
 	if res.StatusCode != http.StatusOK || !strings.Contains(string(b), "3 qui &lt;b&gt;ora&lt;/b&gt;") || !strings.Contains(string(b), "Contato da") {
 		t.Fatalf("preview: %d %s", res.StatusCode, b)
 	}
-	if res, _ = owner.Get(g.srv.URL + "/api/v1/sites/" + g.site + "/widgets/preview?kind=counter&lang=xx"); res.StatusCode != http.StatusBadRequest {
-		t.Fatalf("preview in a language we do not speak: %d", res.StatusCode)
+	if code, _ := do(t, owner, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/widgets/preview?kind=counter&lang=xx", ""); code != http.StatusBadRequest {
+		t.Fatalf("preview in a language we do not speak: %d", code)
 	}
 }
 
