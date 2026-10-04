@@ -83,7 +83,8 @@ if [ "$MODE" != --quick ]; then
     echo 'correct horse battery' | TRCKABLE_DATA_DIR="$d" server/bin/trckabled admin add-user me@site.com --role owner > /dev/null
     TRCKABLE_DATA_DIR="$d" TRCKABLE_ADDR=127.0.0.1:8799 server/bin/trckabled serve > "$d/log" 2>&1 &
     pid=$!
-    for i in $(seq 1 50); do curl -sf 127.0.0.1:8799/readyz > /dev/null && break; sleep 0.3; done
+    # Ready is not enough: the writer takes the seed's events in after the start.
+    for i in $(seq 1 200); do curl -sf 127.0.0.1:8799/readyz | grep -q '"analytics_ready":true,"wal_committed":[1-9][0-9]*,"wal_applied":[0-9]*,"wal_lag":0' && break; sleep 0.3; done
     cd e2e && TRCKABLE_A11Y_URL=http://127.0.0.1:8799 npx playwright test a11y fullcharts --reporter=line )
 fi
 
