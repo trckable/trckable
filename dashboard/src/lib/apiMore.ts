@@ -6,7 +6,7 @@ import { act, call, raw, rangeQS } from './api'
 
 // Lazy screens import everything API-shaped from here: the names of lib/api, and `more`.
 export * from './api'
-import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, WebVitals, Widget, WidgetLook } from './api'
+import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, WebVitals, Widget, WidgetLook } from './api'
 
 /** A robot on one errand, and how often it came. */
 export interface AiBot {
@@ -75,6 +75,11 @@ export const more = {
   verifyShareDomain: (site: string) => call<ShareLook>('POST', `/sites/${site}/share-look/verify`, {}),
   setShareLogo: (site: string, logo: Blob) => raw('PUT', `/sites/${site}/share-logo`, logo),
   clearShareLogo: (site: string) => call<ShareLook>('DELETE', `/sites/${site}/share-logo`),
+  reportSchedules: (site: string) => call<ReportSchedules>('GET', `/sites/${site}/report-schedules`),
+  saveReportSchedule: (site: string, s: Omit<ReportSchedule, 'id' | 'site_id' | 'last_sent'> & { id?: string }) =>
+    call<ReportSchedule>(s.id ? 'PUT' : 'POST', `/sites/${site}/report-schedules${s.id ? '/' + s.id : ''}`, s),
+  deleteReportSchedule: (site: string, id: string) => act('DELETE', `/sites/${site}/report-schedules/${id}`),
+  testReportSchedule: (site: string, id: string) => call<{ sent_to: string }>('POST', `/sites/${site}/report-schedules/${id}/test`, {}),
   people: () => call<{ people: Person[] }>('GET', '/people'),
   addPerson: (email: string, role: string) => call<Added>('POST', '/people', { email, role }),
   setPersonRole: (id: string, role: string) => call<{ people: Person[] }>('PATCH', `/people/${id}`, { role }),

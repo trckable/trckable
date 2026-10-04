@@ -601,6 +601,24 @@ var migrations = []string{
 		updated_at INTEGER NOT NULL
 	);
 	CREATE UNIQUE INDEX site_share_look_domain ON site_share_look(domain) WHERE domain <> '' AND domain_ok = 1;`,
+	// 47: scheduled reports for a site's clients: weekly or monthly, by email
+	// and optionally with a PDF, to up to ten addresses, in the client's own
+	// language. last_sent is when the last one went (unix seconds), so a
+	// period is sent once. A person leaves a list by their own link, which
+	// removes just their address.
+	`CREATE TABLE report_schedules (
+		id         TEXT PRIMARY KEY,
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		name       TEXT NOT NULL DEFAULT '',
+		cadence    TEXT NOT NULL,
+		lang       TEXT NOT NULL DEFAULT 'en',
+		pdf        INTEGER NOT NULL DEFAULT 1,
+		recipients TEXT NOT NULL DEFAULT '',
+		enabled    INTEGER NOT NULL DEFAULT 1,
+		last_sent  INTEGER NOT NULL DEFAULT 0,
+		created_at INTEGER NOT NULL
+	);
+	CREATE INDEX report_schedules_site ON report_schedules(site_id);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

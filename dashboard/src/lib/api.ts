@@ -191,6 +191,28 @@ export interface Alert {
   created_at: number
 }
 
+/** A scheduled report for a site's clients (Settings → Alerts). */
+export interface ReportSchedule {
+  id: string
+  site_id: string
+  name: string
+  cadence: 'weekly' | 'monthly'
+  lang: string
+  pdf: boolean
+  recipients: string[]
+  enabled: boolean
+  last_sent: number
+}
+
+export interface ReportSchedules {
+  schedules: ReportSchedule[]
+  /** The server can send reports: email, and an address for the stop links. */
+  ready: boolean
+  mail: boolean
+  langs: string[]
+  max_recipients: number
+}
+
 export interface Segment {
   id: string
   name: string

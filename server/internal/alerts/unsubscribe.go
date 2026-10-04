@@ -36,3 +36,30 @@ func sign(key []byte, id string) string {
 	m.Write([]byte(id))
 	return base64.RawURLEncoding.EncodeToString(m.Sum(nil)[:16])
 }
+
+// A scheduled report goes to many people, so its link names one of them: it
+// removes that address from that schedule and does nothing else.
+
+// ReportKeyLabel names the key the report links are signed with.
+const ReportKeyLabel = "report unsubscribe v1"
+
+// ReportToken is "<schedule and address>.<signature>", safe in a URL.
+func ReportToken(key []byte, scheduleID, email string) string {
+	who := scheduleID + "|" + strings.ToLower(email)
+	return base64.RawURLEncoding.EncodeToString([]byte(who)) + "." + sign(key, "report:"+who)
+}
+
+// ReportUnsubscribe returns the schedule and the address a token names, when
+// its signature is this server's.
+func ReportUnsubscribe(key []byte, token string) (scheduleID, email string, ok bool) {
+	i := strings.LastIndexByte(token, '.')
+	if i <= 0 {
+		return "", "", false
+	}
+	raw, err := base64.RawURLEncoding.DecodeString(token[:i])
+	if err != nil || !hmac.Equal([]byte(token[i+1:]), []byte(sign(key, "report:"+string(raw)))) {
+		return "", "", false
+	}
+	scheduleID, email, found := strings.Cut(string(raw), "|")
+	return scheduleID, email, found && scheduleID != "" && email != ""
+}

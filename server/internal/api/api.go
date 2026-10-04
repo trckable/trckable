@@ -59,8 +59,13 @@ type API struct {
 	// SendWeekly sends a site's last weekly report to one address now (Settings →
 	// Alerts). Set by the server, which owns the report's words.
 	SendWeekly func(ctx context.Context, site, email string) error
-	BaseURL    string // public https address (TRCKABLE_BASE_URL), for webhook URLs
-	Version    string // this build's version, shown in the dashboard's footer
+	// SendReport sends a report schedule's last period to one address now;
+	// ReportsReady says the server can send reports at all (a mail server and a
+	// public address). Both are set by the server, which owns the report.
+	SendReport   func(ctx context.Context, sc sqlite.ReportSchedule, email string) error
+	ReportsReady func() bool
+	BaseURL      string // public https address (TRCKABLE_BASE_URL), for webhook URLs
+	Version      string // this build's version, shown in the dashboard's footer
 	// Box seals the keys trckable stores for other services (Search Console).
 	Box *secrets.Box
 	// SSO: the identity providers people may sign in with (sso.go); nil, none.
@@ -170,7 +175,14 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}/milestones/{kind}/{step}/share", a.authed(a.revokeMilestoneShare))
 	handleFunc("GET /m/{token}", a.milestoneLink)
 	handleFunc("GET /u/{token}", a.stopShow)
+	handleFunc("GET /r/{token}", a.reportStopShow)
+	handleFunc("POST /r/{token}", a.reportStopDo)
 	handleFunc("POST /u/{token}", a.stopDo)
+	handle("GET /api/v1/sites/{site}/report-schedules", a.authed(a.reportSchedules))
+	handle("POST /api/v1/sites/{site}/report-schedules", a.authed(a.createReportSchedule))
+	handle("PUT /api/v1/sites/{site}/report-schedules/{id}", a.authed(a.updateReportSchedule))
+	handle("DELETE /api/v1/sites/{site}/report-schedules/{id}", a.authed(a.deleteReportSchedule))
+	handle("POST /api/v1/sites/{site}/report-schedules/{id}/test", a.authed(a.testReportSchedule))
 	handle("GET /api/v1/sites/{site}/config", a.authed(a.siteConfig))
 	handle("PUT /api/v1/sites/{site}/config", a.authed(a.setSiteConfig))
 	handle("POST /api/v1/account/password", a.authed(a.changePassword))

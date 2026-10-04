@@ -21,7 +21,7 @@ import { Locked } from '../components/Locked'
 import { Shares } from './Shares'
 import { WidgetsSettings } from './Widgets'
 import { HealthSettings } from './Health'
-import { AlertsSettings } from './Alerts'
+import { AlertsTab } from '../features/reports/AlertsTab'
 import { SearchSettings } from './Search'
 import { MODULE_WHY, moduleOf } from './settingsModules'
 import { NotesSettings } from '../features/notes/NotesSettings'
@@ -160,7 +160,7 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
       {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}
       {tab === 'search' && <SearchSettings key={'sc' + site.id} site={site} />}
       {tab === 'privacy' && <Locked><PrivacySettings key={'pv' + site.id} site={site} onSites={onSites} /></Locked>}
-      {tab === 'alerts' && <Locked><AlertsSettings key={'al' + site.id} site={site} /></Locked>}
+      {tab === 'alerts' && <Locked><AlertsTab key={'al' + site.id} site={site} /></Locked>}
       {tab === 'health' && <HealthSettings />}
     </>
   )
