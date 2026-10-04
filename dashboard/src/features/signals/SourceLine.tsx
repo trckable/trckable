@@ -1,7 +1,7 @@
 // "Mostly from Facebook", with the source's own icon (from this server's cache,
 // never from the site) or its first letter.
 import { RefMark } from '../cards/refIcons'
-import { useHostIcon } from '../moments/SourceChip'
+import { useHostIcon } from './useHostIcon'
 import { sourceHost, sourceLine, type Surge } from './surge'
 
 export function SourceLine({ surge }: { surge: Surge }) {

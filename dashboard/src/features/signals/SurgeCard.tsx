@@ -6,8 +6,8 @@
 // pulses twice, no confetti, and none of it moves with reduced motion. The
 // browser notice (only for someone who said yes, and only when the tab is out of
 // sight) is told once for each surge.
-import { Zap } from 'lucide-react'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { TrendingUp } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Chart } from '../../components/SideCard/Chart'
 import { SideCard, useCardClose } from '../../components/SideCard/SideCard'
 import { Ghost } from '../../components/Logo'
@@ -17,12 +17,11 @@ import { Rolling } from '../moments/Rolling'
 import { signals } from './copy'
 import { tell } from './notify'
 import { SourceLine } from './SourceLine'
+import SurgeModal from './SurgeModal' // the story: in this card's own chunk, which is itself lazy
 import { sourceLine, surgeChip, surgeNotice, type Surge } from './surge'
 import { useSurge } from './useSurge'
 import { useSurgeActions } from './useSurgeActions'
 import './surge.css'
-
-const SurgeModal = lazy(() => import('./SurgeModal')) // the story: fetched when More is pressed
 
 const t = signals.surge
 
@@ -57,7 +56,7 @@ function Card({ surge, tz }: { surge: Surge; tz: string }) {
         asked // it will not keep: it comes up over a card that came up by itself
         label={t.label}
         closeLabel={t.close}
-        kind={{ icon: <Zap size={14} strokeWidth={2} />, label: t.label, tint: 'var(--accent)' }}
+        kind={{ icon: <TrendingUp size={14} strokeWidth={2} />, label: t.label, tint: 'var(--accent)' }}
         title={t.title}
         onClose={putAway}
         chart={series ? <Chart spec={{ values: series, base: surge.usual }} /> : undefined}
@@ -77,11 +76,7 @@ function Card({ surge, tz }: { surge: Surge; tz: string }) {
         </div>
         {sourceLine(surge) && <SourceLine surge={surge} />}
       </SideCard>
-      {story && (
-        <Suspense fallback={null}>
-          <SurgeModal surge={surge} tz={tz} onClose={() => setStory(false)} onSee={putAway} />
-        </Suspense>
-      )}
+      {story && <SurgeModal surge={surge} tz={tz} onClose={() => setStory(false)} onSee={putAway} />}
     </>
   )
 }

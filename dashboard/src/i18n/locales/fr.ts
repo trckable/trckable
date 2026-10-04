@@ -1085,7 +1085,6 @@ export default {
   'moments.unit.visitors': 'visiteurs',
   'moments.unit.buying': 'achètent',
   'moments.unit.eachVisitor': 'par visiteur',
-  'moments.unit.online': 'en ligne',
   'moments.ago.today': 'aujourd’hui',
   'moments.ago.yesterday': 'hier',
   'moments.ago.days': (n: number) => `il y a ${n} jours`,

@@ -34,6 +34,13 @@
   width: 30px !important;
   height: 30px !important;
 }
+/* A page on a light ground sets --tkb-outline (an ink colour) so the lime ghost
+   keeps an edge there: lime alone is about 1.2 to 1 on white. Unset: no outline. */
+.tkb-body {
+  stroke: var(--tkb-outline, none);
+  stroke-width: 3.4;
+  stroke-linejoin: round;
+}
 .tkb-line-edge {
   stroke: var(--tkb-bg, var(--bg, #0b0d10));
 }

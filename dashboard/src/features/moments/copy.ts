@@ -22,7 +22,7 @@ export const copy = defineCopy('moments', {
     pays: 'Best payer',
   },
   // The figure's unit, when it happened and what the action says: the card is a deck of kinds.
-  unit: { visitors: 'visitors', online: 'online', buying: 'buying', eachVisitor: 'a visitor' },
+  unit: { visitors: 'visitors', buying: 'buying', eachVisitor: 'a visitor' },
   ago: { today: 'today', yesterday: 'yesterday', days: (n: number) => `${n} days ago` },
   show: (day: string) => `Show ${day}`,
   filterSource: 'Filter source',

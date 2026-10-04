@@ -1084,7 +1084,6 @@ export default {
   'moments.unit.visitors': 'bezoekers',
   'moments.unit.buying': 'kopen',
   'moments.unit.eachVisitor': 'per bezoeker',
-  'moments.unit.online': 'online',
   'moments.ago.today': 'vandaag',
   'moments.ago.yesterday': 'gisteren',
   'moments.ago.days': (n: number) => `${n} dagen geleden`,

@@ -3,12 +3,12 @@
 // order, tiles for who sent them, the page, the countries and the devices, the
 // honest sentence about what is and is not visible, and the actions. A full-height
 // sheet on a phone. Everything in it was counted; nothing says why.
-import { Bell, X, Zap } from 'lucide-react'
+import { Bell, X, TrendingUp } from 'lucide-react'
 import { Modal } from '../../components/Modal'
 import { countryName, fmtInt, flag } from '../../lib/format'
 import { RefMark } from '../cards/refIcons'
+import { useHostIcon } from './useHostIcon'
 import { Rolling } from '../moments/Rolling'
-import { useHostIcon } from '../moments/SourceChip'
 import { signals } from './copy'
 import { beats, deviceShare, honestLine, surgeChip, type Story, type Surge } from './surge'
 import { SurgeChart } from './SurgeChart'
@@ -31,7 +31,7 @@ export default function SurgeModal({ surge, tz, onClose, onSee }: { surge: Surge
       </button>
       <header className="sgm-hero">
         <span className="sgm-badge" aria-hidden="true">
-          <Zap size={18} strokeWidth={2} />
+          <TrendingUp size={18} strokeWidth={2} />
         </span>
         <b className="sgm-count">
           <Rolling to={surge.online} fmt={fmtInt} />

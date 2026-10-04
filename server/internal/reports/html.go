@@ -79,7 +79,7 @@ func HTML(d Data) string {
 	}
 
 	// The foot: who sent it, and how to stop it.
-	b.WriteString(`<tr><td style="padding:24px 28px;font-size:12px;color:#9ca3af">`)
+	b.WriteString(`<tr><td style="padding:24px 28px;font-size:12px;color:#6b7280">`)
 	if !d.Brand.HideBrand {
 		b.WriteString(esc(fmt.Sprintf(w.SentBy, "trckable")) + ` · `)
 	}

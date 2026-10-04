@@ -6,11 +6,11 @@ const usd = (n: number) => `$${(n / 100).toLocaleString('en-US')}`
 const pin = (kind: Pin['kind'], over: Partial<Pin>): Pin => ({ id: kind, kind, score: 1, filters: [], showDay: false, n: {}, ...over })
 
 describe('what a surge says', () => {
-  it('is the source as a name and the people online, never a cause', () => {
+  it('is the source as a name and the people counted, never a cause', () => {
     const s = say(pin('surge', { day: '2026-10-06', n: { name: 'Facebook', visitors: 53, factor: 2.7 } }), usd)
     expect(s.title).toBe('Busy moment')
-    expect(s.line).toBe('Surge from Facebook · 53 online')
-    expect(s.big).toBe('53 online')
+    expect(s.line).toBe('Surge from Facebook')
+    expect(s.big).toBe('53 visitors')
     expect(s.facts).toEqual(['2.7× the usual', 'Tue, Oct 6'])
   })
 })
