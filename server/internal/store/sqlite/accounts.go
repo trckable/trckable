@@ -355,6 +355,11 @@ func (s *Store) ResetPassword(ctx context.Context, email, password string) error
 	if _, err := tx.ExecContext(ctx, `DELETE FROM known_devices WHERE user_id = ?`, id); err != nil {
 		return err
 	}
+	// Who they are to an identity provider is forgotten with the password:
+	// the next sign-in with one links again.
+	if _, err := tx.ExecContext(ctx, `DELETE FROM sso_links WHERE user_id = ?`, id); err != nil {
+		return err
+	}
 	return tx.Commit()
 }
 

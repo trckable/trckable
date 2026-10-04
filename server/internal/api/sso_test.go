@@ -599,6 +599,46 @@ func TestSSOTwoStep(t *testing.T) {
 		c := stepper()
 		landed(t, s.callback(t, c, ""), "/login?sso=code")
 	})
+	t.Run("a stranger's id cannot take an owner's link while the code is still to come", func(t *testing.T) {
+		s := newSSO(t)
+		secret := enable(t, s)
+		stranger := func(c map[string]any) { c["email"] = "me@site.com"; c["sub"] = "subject-X" }
+		s.idp.Claims = stranger
+		c := stepper()
+		landed(t, s.callback(t, c, ""), "/login?sso=code")
+		if code, _ := do(t, c, "POST", s.srv.URL+"/api/v1/oidc/code", `{"code":"000000"}`, csrf, "1"); code != http.StatusUnauthorized {
+			t.Fatalf("a wrong code: %d", code)
+		}
+		// The owner arrives: not turned away as the wrong person.
+		s.advance(11 * time.Minute)
+		s.idp.Claims = func(c map[string]any) { c["email"] = "me@site.com" } // subject-1
+		c = stepper()
+		landed(t, s.callback(t, c, ""), "/login?sso=code")
+		s.advance(61 * time.Second)
+		code, _ := auth.TOTPCode(secret, s.api.Now())
+		if st, out := do(t, c, "POST", s.srv.URL+"/api/v1/oidc/code", `{"code":"`+code+`"}`, csrf, "1"); st != 200 {
+			t.Fatalf("the right code: %d %v", st, out)
+		}
+		// Now it is linked: the stranger's id is turned away.
+		s.advance(11 * time.Minute)
+		s.idp.Claims = stranger
+		c = stepper()
+		s.refused(t, s.callback(t, c, ""), c, "failed")
+	})
+	t.Run("an owner of another account is asked even when the account they act in has them as a viewer", func(t *testing.T) {
+		s := newSSO(t, func(_ *config.OIDCProvider, a *API) { a.SSORequireTOTP = false })
+		enableFor(t, s, "ada@example.com", "a password nobody types")
+		other, err := s.ctl.CreateAccount(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		u, _ := s.ctl.UserByEmail(context.Background(), "ada@example.com")
+		if _, err := s.ctl.DB.Exec(`INSERT INTO memberships (user_id, account_id, role, created_at) VALUES (?, ?, 'owner', 2)`, u.ID, other); err != nil {
+			t.Fatal(err)
+		}
+		c := stepper()
+		landed(t, s.callback(t, c, ""), "/login?sso=code")
+	})
 	t.Run("with the setting on, the code is asked for", func(t *testing.T) {
 		s := newSSO(t, func(_ *config.OIDCProvider, a *API) { a.SSORequireTOTP = true })
 		secret := enable(t, s)

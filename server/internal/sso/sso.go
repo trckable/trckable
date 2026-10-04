@@ -263,11 +263,12 @@ var googleOwn = []string{"gmail.com", "googlemail.com"}
 //
 // Google: email_verified: true, and the domain must be Google's own, or the
 // token's hd (the Workspace the account belongs to) must be that domain.
-// Without that, any Google account may claim another organisation's
-// address on a domain it does not own.
+// Without that, any Google identity account (one made with an address that
+// is not Gmail, on any domain) may claim another organisation's address on a
+// domain it does not own.
 //
 // A generic provider must say email_verified: true; what that means is the
-// provider's, which is why only one the operator trusts to hand out these
+// provider's, which is why only one the person who runs the server trusts to hand out these
 // addresses is set up.
 //
 // Microsoft Entra: the email claim is whatever the directory's administrators
@@ -277,7 +278,7 @@ var googleOwn = []string{"gmail.com", "googlemail.com"}
 // an idp that is not the directory), and only when the directory says the
 // domain is verified (the optional claim xms_edov: true), or, when the
 // claim is not sent, when the domain is one of the provider's allowed
-// domains. The address is the email claim, or when there is none the sign-in
+// domains (for one directory only: with several, the claim is required). The address is the email claim, or when there is none the sign-in
 // name, when that looks like one.
 func (p *Provider) identity(iss string, c claims) (Identity, error) {
 	if p.Cfg.Kind != config.KindEntra {
@@ -311,7 +312,9 @@ func (p *Provider) identity(iss string, c claims) (Identity, error) {
 	if !ok {
 		return Identity{}, ErrUnverified
 	}
-	if c.EDOV.set && !c.EDOV.val || !c.EDOV.set && !p.DomainAllowed(email) {
+	// Many directories: the claim, and nothing weaker. A list of domains
+	// cannot say which directory may hold an address on one of them.
+	if c.EDOV.set && !c.EDOV.val || !c.EDOV.set && (p.Cfg.MultiTenant() || !p.DomainAllowed(email)) {
 		return Identity{}, ErrUnverified
 	}
 	return Identity{Email: email, Tenant: tid}, nil

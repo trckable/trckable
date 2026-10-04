@@ -7,6 +7,7 @@
 //	trckabled admin reset-password <email>
 //	trckabled admin add-user <email> [--role viewer|owner]
 //	trckabled admin list-users | set-role <email> <role> | remove-user <email>
+//	trckabled admin clear-sso <email>
 //	trckabled admin disable-2fa <email>
 //	trckabled payments list | sync [site] | reprocess <site>
 //	trckabled version               print the version
@@ -129,7 +130,8 @@ const adminUse = `usage:
   trckabled admin list-users
   trckabled admin set-role <email> <viewer|owner>
   trckabled admin remove-user <email>
-  trckabled admin disable-2fa <email>                      (lost phone, no codes)`
+  trckabled admin disable-2fa <email>                      (lost phone, no codes)
+  trckabled admin clear-sso <email>                        (their account at the identity provider was replaced)`
 
 func admin(cfg config.Config, args []string) error {
 	if len(args) == 0 {
@@ -209,6 +211,24 @@ func admin(cfg config.Config, args []string) error {
 			}
 			fmt.Printf("%-8s %s%s\n", p.Role, p.Email, two)
 		}
+		return nil
+
+	case "clear-sso":
+		// Who someone is to an identity provider is kept at their first
+		// sign-in with it; a later sign-in with the same email but another
+		// id is refused. This forgets it, for a person whose account there
+		// was deleted and made again.
+		if len(args) != 2 {
+			return errors.New(adminUse)
+		}
+		id, err := userIDFor(ctx, ctl, args[1])
+		if err != nil {
+			return err
+		}
+		if err := ctl.ClearSSOLinks(ctx, id); err != nil {
+			return err
+		}
+		fmt.Fprintln(os.Stderr, "the provider's id is forgotten for", args[1], "— the next sign-in with a provider links again")
 		return nil
 
 	case "disable-2fa":

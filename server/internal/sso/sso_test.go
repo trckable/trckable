@@ -212,6 +212,30 @@ func TestEntraAddressNeedsTheDomainToBeVerified(t *testing.T) {
 	}
 }
 
+// Many directories: only Entra's own word for the domain counts. A list of
+// domains cannot say which of the directories may hold an address on one.
+func TestEntraManyDirectoriesNeedTheDomainClaim(t *testing.T) {
+	for _, tenant := range []string{"organizations", "common"} {
+		for name, ok := range map[string]bool{"xms_edov true": true, "no claim, domain listed": false, "xms_edov false": false} {
+			t.Run(tenant+" "+name, func(t *testing.T) {
+				p, f := entra(t, tenant, tenantA)
+				p.Cfg.AllowedDomains = []string{"example.com"}
+				f.DiscoveryIssuer = "https://login.example/{tenantid}/v2.0"
+				switch name {
+				case "no claim, domain listed":
+					with(f, func(c map[string]any) { delete(c, "xms_edov") })
+				case "xms_edov false":
+					with(f, func(c map[string]any) { c["xms_edov"] = false })
+				}
+				id, err := walk(t, p, f)
+				if ok != (err == nil) || (!ok && !errors.Is(err, sso.ErrUnverified)) {
+					t.Fatalf("%+v %v", id, err)
+				}
+			})
+		}
+	}
+}
+
 func TestPKCEIsNeeded(t *testing.T) {
 	// The provider itself checks the verifier against the challenge; a wrong
 	// one is refused there, and so is none.

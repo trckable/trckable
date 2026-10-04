@@ -98,6 +98,8 @@ type ssoState struct {
 
 type ssoWait struct {
 	Provider string `json:"p"`
+	Issuer   string `json:"i"` // with Subject, who the provider says this is: linked once the code is right
+	Subject  string `json:"b"`
 	User     string `json:"u"`
 	Return   string `json:"r"`
 	Exp      int64  `json:"e"`
@@ -298,26 +300,31 @@ func (a *API) ssoCallback(w http.ResponseWriter, r *http.Request) {
 		a.ssoRefuse(w, r, "no_account")
 		return
 	}
-	if err := a.Ctl.LinkSSO(ctx, u.ID, id.Issuer, id.Subject); err != nil {
+	// Only looked at here: the link is made in ssoSession, once the sign-in
+	// is whole (a code that is still to be typed must not let a stranger's id
+	// take the person's link before the person arrives).
+	if err := a.Ctl.CheckSSOLink(ctx, u.ID, id.Issuer, id.Subject); err != nil {
 		if errors.Is(err, sqlite.ErrNotTheSamePerson) {
 			slog.Warn("sign-in with a provider: the provider's id for this person is not the one linked", "provider", name, "user", u.ID)
 		} else {
-			slog.Error("sign-in with a provider: could not link", "user", u.ID, "err", err)
+			slog.Error("sign-in with a provider: could not check the link", "user", u.ID, "err", err)
 		}
 		a.ssoRefuse(w, r, "failed")
 		return
 	}
 	// The authenticator code is asked of every owner who has one, whatever the
-	// setting: an address at a provider is only as good as the provider's
-	// word for it, and an owner's account is the one worth the second check.
-	// For everyone else it is asked unless OIDC_REQUIRE_TOTP is off.
+	// setting (an owner in any account they belong to, not only the one they
+	// act in): an address at a provider is only as good as the provider's word
+	// for it, and an owner's account is the one worth the second check. For
+	// everyone else it is asked unless OIDC_REQUIRE_TOTP is off.
 	two, err := a.Ctl.TwoStepOf(ctx, u.ID)
-	if err != nil {
+	owner, err2 := a.Ctl.IsOwnerAnywhere(ctx, u.ID)
+	if err != nil || err2 != nil {
 		a.ssoRefuse(w, r, "failed")
 		return
 	}
-	if two.Enabled && (a.SSORequireTOTP || u.Role == sqlite.RoleOwner) {
-		wait, err := a.sealSSO(ssoWait{Provider: name, User: u.ID, Return: st.Return, Exp: a.Now().Add(ssoCodeTTL).Unix()}, ssoPendingCtx)
+	if two.Enabled && (a.SSORequireTOTP || owner) {
+		wait, err := a.sealSSO(ssoWait{Provider: name, Issuer: id.Issuer, Subject: id.Subject, User: u.ID, Return: st.Return, Exp: a.Now().Add(ssoCodeTTL).Unix()}, ssoPendingCtx)
 		if err != nil {
 			a.ssoRefuse(w, r, "failed")
 			return
@@ -326,7 +333,7 @@ func (a *API) ssoCallback(w http.ResponseWriter, r *http.Request) {
 		ssoRedirect(w, "/login?sso=code")
 		return
 	}
-	if !a.ssoSession(w, r, u, name, created) {
+	if !a.ssoSession(w, r, u, name, id.Issuer, id.Subject, created) {
 		a.ssoRefuse(w, r, "failed")
 		return
 	}
@@ -372,7 +379,13 @@ func (a *API) ssoPerson(ctx context.Context, p *sso.Provider, id sso.Identity) (
 // ssoSession opens the session, the same one a password sign-in opens, and
 // records it: the log line says who and with what; the session keeps the
 // provider's name for the account to show.
-func (a *API) ssoSession(w http.ResponseWriter, r *http.Request, u sqlite.User, provider string, created bool) bool {
+func (a *API) ssoSession(w http.ResponseWriter, r *http.Request, u sqlite.User, provider, iss, sub string, created bool) bool {
+	// Who they are to the provider is kept now, with everything checked: a
+	// later sign-in with this email and another id is refused.
+	if err := a.Ctl.LinkSSO(r.Context(), u.ID, iss, sub); err != nil {
+		slog.Warn("sign-in with a provider: could not link the provider's id", "provider", provider, "user", u.ID, "err", err)
+		return false
+	}
 	// A password an owner chose for this person, not yet replaced, ends here.
 	if a.Ctl.MustChange(r.Context(), u.ID) {
 		if err := a.Ctl.RetirePassword(r.Context(), u.ID, auth.Token("", 24)); err != nil {
@@ -437,7 +450,7 @@ func (a *API) ssoCode(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, "could not sign in")
 		return
 	}
-	if !a.ssoSession(w, r, u, wait.Provider, false) {
+	if !a.ssoSession(w, r, u, wait.Provider, wait.Issuer, wait.Subject, false) {
 		fail(w, http.StatusInternalServerError, "could not sign in")
 		return
 	}
