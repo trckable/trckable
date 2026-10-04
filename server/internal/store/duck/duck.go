@@ -221,11 +221,21 @@ var migrations = []string{
 	`ALTER TABLE events ADD COLUMN browser_version VARCHAR;
 	ALTER TABLE sessions ADD COLUMN browser_version VARCHAR;
 	ALTER TABLE sessions ADD COLUMN screen USMALLINT;`,
+	// 7: robots and scripts the ingest endpoint turned away, as counters: one
+	// row per (site, UTC day, kind). A number and nothing else: no user agent,
+	// no address, nothing that could describe who sent it.
+	`CREATE TABLE bot_daily (
+		site_id VARCHAR NOT NULL,
+		day     DATE    NOT NULL,
+		kind    VARCHAR NOT NULL,
+		n       UBIGINT NOT NULL,
+		PRIMARY KEY (site_id, day, kind)
+	);`,
 }
 
 // tableSince is the migration that created each table added after the first
 // release, so a backup written before it restores without one.
-var tableSince = map[string]int{"crawler_hits": 5}
+var tableSince = map[string]int{"crawler_hits": 5, "bot_daily": 7}
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
 
