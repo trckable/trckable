@@ -6,6 +6,7 @@ package web
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/sha256"
 	"embed"
 	"encoding/hex"
@@ -21,7 +22,7 @@ import (
 	"time"
 )
 
-//go:embed assets/t.js assets/t-*.js assets/sizes.json
+//go:embed assets/t.js assets/t-*.js assets/sizes.json assets/online.js
 var assets embed.FS
 
 // dist is the built dashboard (dashboard/ → vite build → internal/web/dist).
@@ -244,6 +245,56 @@ func Tracker(features SiteFeatures, opts SiteScript) http.Handler {
 			return
 		}
 		_, _ = w.Write(s.body)
+	})
+}
+
+// OnlineSuffix ends the name of a corner widget's script: /js/<widget id>.online.js.
+const OnlineSuffix = ".online.js"
+
+// OnlineLook is what the corner script needs to know about one widget.
+type OnlineLook struct {
+	ID    string
+	W, H  int    // the frame, in px
+	Theme string // auto, dark or light
+}
+
+// OnlineScript serves /js/<widget id>.online.js: the small separate script
+// that puts an "online" widget in a corner of the page it is pasted into
+// (never part of the tracker). The widget's own settings reach it the way a
+// site's settings reach the tracker, as data attributes on its own tag, so
+// the file stays cacheable. An unknown id, a widget that is off and one of
+// another design all answer not found: nothing shows.
+func OnlineScript(look func(ctx context.Context, id string) (OnlineLook, bool)) http.Handler {
+	body, err := assets.ReadFile("assets/online.js")
+	if err != nil {
+		panic(err) // build error: the script was not embedded
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := strings.TrimSuffix(path.Base(r.URL.Path), OnlineSuffix)
+		l, ok := look(r.Context(), id)
+		if !ok {
+			http.NotFound(w, r)
+			return
+		}
+		q := func(v any) string { b, _ := json.Marshal(v); return string(b) }
+		pre := ""
+		for _, kv := range [][2]string{{"id", l.ID}, {"w", strconv.Itoa(l.W)}, {"h", strconv.Itoa(l.H)}, {"theme", l.Theme}} {
+			pre += "document.currentScript.dataset." + kv[0] + "=" + q(kv[1]) + ";"
+		}
+		out := append([]byte(pre), body...)
+		sum := sha256.Sum256(out)
+		etag := `"` + hex.EncodeToString(sum[:8]) + `"`
+		h := w.Header()
+		h.Set("Content-Type", "application/javascript; charset=utf-8")
+		h.Set("X-Content-Type-Options", "nosniff")
+		// Short: a widget turned off or changed shows that within minutes.
+		h.Set("Cache-Control", "public, max-age=300")
+		h.Set("ETag", etag)
+		if r.Header.Get("If-None-Match") == etag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		_, _ = w.Write(out)
 	})
 }
 
