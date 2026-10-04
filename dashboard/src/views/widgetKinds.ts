@@ -3,6 +3,7 @@
 // has the same sizes for the online design's corner script (api/widgetonline.go).
 import { Activity, BadgeCheck, Banknote, CircleDot, ShieldCheck, Users } from 'lucide-react'
 import type { Widget, WidgetKind, WidgetLook } from '../lib/apiMore'
+import { copy } from './widgetCopy'
 
 export type Place = 'inline' | 'br' | 'bl'
 
@@ -123,48 +124,9 @@ export const MAX_NAME = 40
 const MODE_NAME: Record<string, string> = { pill: 'Online pill', spark: 'Online pill + graph', card: 'Online card' }
 export const defaultName = (look: WidgetLook) => (look.kind === 'online' ? MODE_NAME[modeOf(look.shows)] : kindOf(look.kind).name)
 
-export const STAGE = { title: 'Widget preview', tone: 'Page tone', view: 'View', light: 'Light', dark: 'Dark', alone: 'Alone', page: 'On a page' }
+export const STAGE = copy.stage
 
-export const TEXT = {
-  pageTitle: 'Widgets',
-  pageHint: 'A small card with live numbers, for your own pages. It runs no script and sets no cookie, and only the numbers it shows are public.',
-  newWidget: 'New widget',
-  ready: 'Widget ready: copy it onto your page',
-  done: 'Done',
-  none: 'No widgets yet',
-  mode: 'Mode',
-  show: 'Show',
-  theme: 'Theme',
-  colour: 'Colour',
-  corners: 'Corners',
-  placement: 'Placement',
-  nameLabel: 'Name',
-  only: ' · only in trckable',
-  made: '· made',
-  edit: 'Edit',
-  rename: 'Rename',
-  delete: 'Delete',
-  menu: 'Widget menu',
-  name: 'Widget name',
-  editTitle: 'Edit widget',
-  editHint: 'The code on your pages stays the same',
-  make: ['Make this widget', 'Making it…'],
-  save: 'Save changes',
-  saving: 'Saving…',
-  cancel: 'Cancel',
-  saved: 'Widget saved. Pages that show it follow within a minute',
-  language: 'Language',
-  texts: 'Texts',
-  credit: 'Show "Counted by trckable"',
-  textsHint: 'Leave empty for the translated default',
-  frame: 'Paste this where the card should appear',
-  corner: 'Or paste this once, to float it in a corner of every page. Visitors can close it',
-  copyFrame: 'Copy embed code',
-  copyCorner: 'Copy the corner script',
-  snippet: 'Snippet copied',
-  newCode: 'Copy the new code to get auto height',
-  script: 'Script copied',
-}
+export const TEXT = copy.text
 
 // The page's height for a look, so the frame never scrolls or leaves a gap.
 const LIST = 104 // a heading and three rows
