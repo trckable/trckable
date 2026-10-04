@@ -7,7 +7,18 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-width: calc(100vw - 32px); /* never hangs off the edge of a narrow screen */
   pointer-events: none;
+}
+/* The Share dialog is a bottom sheet on a phone and its controls sit low: a
+   toast goes to the top there, in the strip the sheet leaves. */
+@media (max-width: 640px) {
+  body:has(.sd-modal) .toasts {
+    top: calc(8px + env(safe-area-inset-top));
+    bottom: auto;
+    left: 16px;
+    right: 16px;
+  }
 }
 .toast-group {
   display: flex;
@@ -27,7 +38,7 @@
   background: var(--surface);
   box-shadow: var(--shadow);
   font-size: 13.5px;
-  max-width: 360px;
+  max-width: min(360px, calc(100vw - 32px));
   pointer-events: auto;
   animation: toastin 0.22s var(--ease) both;
 }

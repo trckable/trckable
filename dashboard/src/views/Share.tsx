@@ -10,7 +10,7 @@ import { Ghost, Name, Wordmark } from '../components/Logo'
 import { SiteMark } from '../components/SiteMark'
 import './Share.css'
 
-type State = { state: 'loading' } | { state: 'password'; error?: string } | { state: 'ready'; info: ShareInfo } | { state: 'error'; message: string }
+type State = { state: 'loading' } | { state: 'password'; error?: string; hideBrand?: boolean } | { state: 'ready'; info: ShareInfo } | { state: 'error'; message: string }
 
 /** An embed keeps its session in memory, since the browser will not send a
  *  cookie from inside another site's page. The token stays in the address (and
@@ -35,7 +35,7 @@ export function useShare(): State {
     // link is let in by the session cookie the first open left.
     const open = openShare()
     open.then(done).catch((e: unknown) => {
-      if (e instanceof APIError && e.status === 401) return setS({ state: 'password' })
+      if (e instanceof APIError && e.status === 401) return setS({ state: 'password', hideBrand: e.hideBrand })
       setS({ state: 'error', message: words(e) })
     })
   }, [])
@@ -43,7 +43,7 @@ export function useShare(): State {
 }
 
 /** The password gate, and the frame around it. */
-export function SharePassword({ onOpen, error }: { onOpen: (info: ShareInfo) => void; error?: string }) {
+export function SharePassword({ onOpen, error, hideBrand }: { onOpen: (info: ShareInfo) => void; error?: string; hideBrand?: boolean }) {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(error ?? null)
@@ -62,7 +62,7 @@ export function SharePassword({ onOpen, error }: { onOpen: (info: ShareInfo) => 
       .finally(() => setBusy(false))
   }
   return (
-    <ShareShell title="Shared with you" sub="This link asks for a password.">
+    <ShareShell title="Shared with you" sub="This link asks for a password." plain={hideBrand}>
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <label className="field">
           Password
@@ -81,11 +81,11 @@ export function SharePassword({ onOpen, error }: { onOpen: (info: ShareInfo) => 
   )
 }
 
-export function ShareShell({ title, sub, children }: { title: string; sub: string; children?: React.ReactNode }) {
+export function ShareShell({ title, sub, plain, children }: { title: string; sub: string; plain?: boolean; children?: React.ReactNode }) {
   return (
     <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 16 }}>
       <div className="card rise" style={{ width: 'min(420px, 100%)', padding: 28, gap: 18 }}>
-        <Wordmark />
+        {!plain && <Wordmark />}
         <div>
           <h1 style={{ fontSize: 22, letterSpacing: '-0.01em' }}>{title}</h1>
           <p className="muted" style={{ margin: '6px 0 0' }}>
@@ -104,9 +104,11 @@ export function EmbedHeader({ info }: { info: ShareInfo }) {
   return (
     <span className="share-who embed-who">
       <b>{info.site || info.domain}</b>
-      <span className="faint">
-        <Ghost size={14} /> analytics by <Name />
-      </span>
+      {!info.hide_brand && (
+        <span className="faint">
+          <Ghost size={14} /> analytics by <Name />
+        </span>
+      )}
     </span>
   )
 }
@@ -115,7 +117,8 @@ export function ShareHeader({ info }: { info: ShareInfo }) {
   return (
     <>
       <span className="brand">
-        <Wordmark />
+        {info.logo_url && <img className="share-logo" src={info.logo_url} alt={info.site || info.domain} />}
+        {!info.logo_url && !info.hide_brand && <Wordmark />}
       </span>
       <span className="share-id">
         <SiteMark site={{ domain: info.domain, color: info.color, icon_url: info.icon_url }} size={20} />
@@ -123,6 +126,11 @@ export function ShareHeader({ info }: { info: ShareInfo }) {
           <b>{info.site || info.domain}</b>
           <span className="faint">{info.name || 'Shared with you'}</span>
         </span>
+        {info.logo_url && !info.hide_brand && (
+          <span className="faint share-credit">
+            <Ghost size={14} /> <Name />
+          </span>
+        )}
       </span>
     </>
   )

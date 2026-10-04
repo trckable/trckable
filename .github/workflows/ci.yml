@@ -129,7 +129,7 @@ jobs:
             # depend on one of them, however indirectly.
             changed=" $(go list $CHANGED 2>/dev/null | tr '\n' ' ') "
             all=$(go list -test -f '{{.ImportPath}} {{join .Deps " "}}' ./... | awk -v c="$changed" '
-              { p = $1; sub(/\.test$/, "", p); for (i = 1; i <= NF; i++) { d = $i; sub(/\.test$/, "", d); if (index(c, " " d " ")) { print p; break } } }' | sort -u)
+              { p = $1; sub(/\.test$/, "", p); sub(/_test$/, "", p); for (i = 1; i <= NF; i++) { d = $i; sub(/\.test$/, "", d); if (index(c, " " d " ")) { print p; break } } }' | sort -u)
             echo "changed: $CHANGED"
           fi
           slow='/internal/(ledger|api)$'

@@ -50,7 +50,7 @@ func (a *API) shares(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	base := a.publicBase(r)
+	base := a.shareBase(r, r.PathValue("site"))
 	rows := make([]shareRow, 0, len(list))
 	for _, sh := range list {
 		row := shareRow{Share: sh}
@@ -105,7 +105,7 @@ func (a *API) createShare(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusCreated, map[string]any{"share": sh, "url": a.publicBase(r) + "/s/" + token})
+	writeJSON(w, http.StatusCreated, map[string]any{"share": sh, "url": a.shareBase(r, r.PathValue("site")) + "/s/" + token})
 }
 
 // updateShare changes what an existing link shows. Only the notes switch for
@@ -155,7 +155,7 @@ func (a *API) newShareAddress(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"url": a.publicBase(r) + "/s/" + token})
+	writeJSON(w, http.StatusOK, map[string]any{"url": a.shareBase(r, r.PathValue("site")) + "/s/" + token})
 }
 
 func (a *API) deleteShare(w http.ResponseWriter, r *http.Request) {
@@ -231,10 +231,10 @@ func (a *API) openShare(w http.ResponseWriter, r *http.Request) {
 	}
 	switch {
 	case errors.Is(err, sqlite.ErrNeedsPassword):
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "this link asks for a password", "needs_password": true})
+		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "this link asks for a password", "needs_password": true, "hide_brand": a.hidesBrand(r, in.Token)})
 		return
 	case errors.Is(err, auth.ErrBadLogin):
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "that password is not right", "needs_password": true})
+		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "that password is not right", "needs_password": true, "hide_brand": a.hidesBrand(r, in.Token)})
 		return
 	case errors.Is(err, sqlite.ErrExpired):
 		fail(w, http.StatusGone, "this link has expired — ask for a new one")
@@ -341,8 +341,16 @@ func (a *API) shareInfoWith(w http.ResponseWriter, r *http.Request, sh sqlite.Sh
 	}
 	cfg, _ := a.Ctl.SiteConfig(r.Context(), sh.SiteID)
 	brand := a.Ctl.ShareBrand(r.Context(), sh.SiteID)
+	look := a.Ctl.ShareLookOf(r.Context(), sh.SiteID)
+	mark := brand.Color
+	if look.Color != "" {
+		mark = look.Color
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"color":      brand.Color,
+		"color":      mark,
+		"accent":     look.Color, // the page's own colour, only when the owner chose one
+		"logo_url":   shareLogoURL(look),
+		"hide_brand": look.HideBrand,
 		"icon_url":   shareIconURL(brand),
 		"cookieless": cfg.ConsentFree,
 		"name":       sh.Name,
@@ -484,4 +492,11 @@ func shareToken(path string) string {
 		return ""
 	}
 	return rest
+}
+
+// hidesBrand says whether the link's site leaves trckable's name off its
+// pages: the password page asks before anything else is known.
+func (a *API) hidesBrand(r *http.Request, token string) bool {
+	site := a.Ctl.ShareSiteForToken(r.Context(), token)
+	return site != "" && a.Ctl.ShareLookOf(r.Context(), site).HideBrand
 }

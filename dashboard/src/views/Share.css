@@ -37,3 +37,34 @@
   gap: 5px;
   font-size: 12px;
 }
+
+/* An owner's own logo in place of the wordmark, and the small credit that
+   stays beside it unless they hide it. */
+.share-logo {
+  display: block;
+  height: 28px;
+  width: auto;
+  max-width: 140px;
+  object-fit: contain;
+}
+
+/* The header's brand slot is sized for the ghost: it lets a logo be its own width. */
+.header > .brand:has(> .share-logo) {
+  flex: none;
+  width: auto;
+  max-width: 140px;
+}
+
+@media (max-width: 640px) {
+  .header > .brand:has(> .share-logo) {
+    max-width: 96px;
+    margin-left: 0;
+  }
+}
+
+.share-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}

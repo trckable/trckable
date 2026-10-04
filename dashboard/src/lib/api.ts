@@ -409,6 +409,8 @@ export class APIError extends Error {
     public needsCode = false,
     /** The server's short code for a refusal, when it sent one (lib/errors.ts turns it into words). */
     public code = '',
+    /** A password page of a link whose site leaves trckable's name off. */
+    public hideBrand = false,
   ) {
     super(message)
   }
@@ -422,7 +424,7 @@ export const refused = (e: unknown): boolean => e instanceof APIError && [400, 4
 export const wrong = "That isn't right · Try again"
 
 /** The error body the server sends with a failed request. */
-type Failure = { error?: string; needs_code?: boolean; code?: string }
+type Failure = { error?: string; needs_code?: boolean; code?: string; hide_brand?: boolean }
 
 export async function call<T>(method: string, path: string, body?: unknown, signal?: AbortSignal, quiet = false): Promise<T> {
   const res = await fetch('/api/v1' + path, {
@@ -442,7 +444,7 @@ export async function call<T>(method: string, path: string, body?: unknown, sign
   if (!res.ok) {
     const f = data as Failure
     if (res.status === 401 && !quiet && !path.startsWith('/login') && !path.startsWith('/setup') && !path.startsWith('/oidc')) onUnauthorized()
-    throw new APIError(res.status, f.error ?? res.statusText, f.needs_code === true, typeof f.code === 'string' ? f.code : '')
+    throw new APIError(res.status, f.error ?? res.statusText, f.needs_code === true, typeof f.code === 'string' ? f.code : '', f.hide_brand === true)
   }
   return data as T
 }
@@ -597,9 +599,29 @@ export interface ShareInfo {
    *  (an address on this server) when it has one. */
   color?: string
   icon_url?: string
+  /** The owner's own look for the link: a colour for the page, a logo (an
+   *  address on this server) and whether trckable's name is left off. */
+  accent?: string
+  logo_url?: string
+  hide_brand?: boolean
   /** Only for an embedded link: the session the page sends as a header,
    *  because a browser does not send cookies into another site's iframe. */
   session?: string
+}
+
+/** How a site's share links look to the people who open them (Share dialog). */
+export interface ShareLook {
+  color: string
+  hide_brand: boolean
+  domain: string
+  /** The domain was verified, so it is served; until then it is pending. */
+  domain_ok: boolean
+  /** A pending domain's proof: a TXT record at verify_name with verify_value. */
+  verify_name?: string
+  verify_value?: string
+  logo_url: string
+  /** What a custom domain's CNAME points at: this server's own host. */
+  target: string
 }
 
 export interface Share {

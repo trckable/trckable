@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
@@ -82,6 +83,19 @@ type API struct {
 	stopping   chan struct{} // closed by Stop: live streams end so a restart need not wait for them
 	patterns   []string      // every route Routes registered
 	stopOnce   sync.Once
+	shareHosts atomic.Pointer[map[string]string] // verified share domain -> site, kept in memory
+	shareTried atomic.Int64                      // when the list was last tried and failed (unix nanoseconds)
+	// ReservedHosts are names that can never be a share domain, besides the
+	// dashboard's own address (TRCKABLE_RESERVED_HOSTS).
+	ReservedHosts []string
+	// ShareDomainSkipVerify serves a share domain as soon as it is set, for an
+	// instance whose one owner controls every name (TRCKABLE_SHARE_DOMAIN_SKIP_VERIFY).
+	ShareDomainSkipVerify bool
+	// ShareDomainAskOpen lets any caller, not only a proxy on this machine,
+	// ask which domains are served (TRCKABLE_SHARE_DOMAIN_ASK_OPEN).
+	ShareDomainAskOpen bool
+	// LookupTXT reads a name's TXT records: the system's resolver, except in tests.
+	LookupTXT func(ctx context.Context, name string) ([]string, error)
 }
 
 // Stop ends every live stream. The server calls it when it starts shutting
@@ -186,12 +200,20 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("PATCH /api/v1/sites/{site}/shares/{id}", a.authed(a.updateShare))
 	handle("DELETE /api/v1/sites/{site}/shares/{id}", a.authed(a.deleteShare))
 	handle("POST /api/v1/sites/{site}/shares/{id}/address", a.authed(a.newShareAddress))
+	handle("GET /api/v1/sites/{site}/share-look", a.authed(a.shareLook))
+	handle("PUT /api/v1/sites/{site}/share-look", a.authed(a.setShareLook))
+	handle("POST /api/v1/sites/{site}/share-look/verify", a.authed(a.verifyShareDomain))
+	handle("GET /api/v1/sites/{site}/share-logo", a.authed(a.shareLogoOwner))
+	handle("PUT /api/v1/sites/{site}/share-logo", a.authed(a.setShareLogo))
+	handle("DELETE /api/v1/sites/{site}/share-logo", a.authed(a.clearShareLogo))
+	handleFunc("GET /api/v1/share-domain/ask", a.shareDomainAsk)
 	// The public side: no session, no account, one site, read-only.
 	handleFunc("POST /api/v1/share/open", a.openShare)
 	handleFunc("GET /api/v1/share/me", a.shareMe)
 	handleFunc("GET /api/v1/share/report", a.shareReport)
 	handleFunc("GET /api/v1/share/annotations", a.shareAnnotations)
 	handleFunc("GET /api/v1/share/icon", a.shareIcon)
+	handleFunc("GET /api/v1/share/logo", a.shareLogo)
 	handle("GET /api/v1/sites/{site}/report", a.authed(a.report))
 	handle("GET /api/v1/sites/{site}/card", a.authed(a.shareCard))
 	handle("GET /api/v1/sites/{site}/moments", a.authed(a.moments))
