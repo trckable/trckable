@@ -61,6 +61,7 @@ func (a *API) deleteSite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	gone.Payments, gone.Connections = rest.Payments, rest.Connections
+	a.loadShareHosts(r) // the site's share domain is no longer anyone's
 	a.sweepAnalytics(r.Context(), site, &gone)
 	slog.Info("site deleted", "site", site, "domain", info.Domain, "events", gone.Events, "sessions", gone.Sessions, "payments", gone.Payments)
 	writeJSON(w, http.StatusOK, gone)
@@ -237,6 +238,7 @@ func (a *API) profile(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	p.SignedInWith = a.ssoLabel(u.SignedInWith)
 	writeJSON(w, http.StatusOK, p)
 }
 

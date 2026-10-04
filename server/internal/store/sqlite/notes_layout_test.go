@@ -17,7 +17,7 @@ func TestNotesAndLayoutMigrations(t *testing.T) {
 	}
 	defer st.Close()
 	// Back to the schema before these two, with a note and a link on it.
-	if _, err := st.DB.ExecContext(ctx, `DROP TABLE known_devices; DROP TABLE memberships; ALTER TABLE users DROP COLUMN last_account; DROP TABLE site_access; DROP TABLE site_layout; ALTER TABLE annotations DROP COLUMN author_id; ALTER TABLE site_shares DROP COLUMN notes; ALTER TABLE invitations DROP COLUMN sent_at; ALTER TABLE invitations DROP COLUMN sends; DROP TABLE milestone_shares; DROP TABLE milestone_seen; DROP TABLE milestones; ALTER TABLE sites DROP COLUMN milestones; ALTER TABLE sites DROP COLUMN milestones_day; ALTER TABLE users DROP COLUMN avatar_at; ALTER TABLE site_shares DROP COLUMN token_enc; PRAGMA user_version = 33`); err != nil {
+	if _, err := st.DB.ExecContext(ctx, `ALTER TABLE widgets DROP COLUMN texts; ALTER TABLE widgets DROP COLUMN lang; ALTER TABLE widgets DROP COLUMN name; DROP TABLE known_devices; DROP TABLE memberships; ALTER TABLE users DROP COLUMN last_account; DROP TABLE site_access; DROP TABLE site_layout; ALTER TABLE annotations DROP COLUMN author_id; ALTER TABLE site_shares DROP COLUMN notes; ALTER TABLE invitations DROP COLUMN sent_at; ALTER TABLE invitations DROP COLUMN sends; DROP TABLE milestone_shares; DROP TABLE milestone_seen; DROP TABLE milestones; ALTER TABLE sites DROP COLUMN milestones; ALTER TABLE sites DROP COLUMN milestones_day; ALTER TABLE users DROP COLUMN avatar_at; ALTER TABLE site_shares DROP COLUMN token_enc; PRAGMA user_version = 33`); err != nil {
 		t.Fatal(err)
 	}
 	site, err := st.CreateSite(ctx, DefaultAccount, "old.com", "Old")
@@ -31,7 +31,7 @@ func TestNotesAndLayoutMigrations(t *testing.T) {
 		t.Fatal(err)
 	}
 	// The owner's address list came later still: it goes last, because the sites are read with it.
-	if _, err := st.DB.ExecContext(ctx, `ALTER TABLE site_settings DROP COLUMN exclude_ips`); err != nil {
+	if _, err := st.DB.ExecContext(ctx, `DROP TABLE report_schedules; DROP TABLE sso_links; DROP TABLE site_share_look; ALTER TABLE auth_sessions DROP COLUMN via; ALTER TABLE site_settings DROP COLUMN exclude_ips`); err != nil {
 		t.Fatal(err)
 	}
 	if err := st.MigrateTo(ctx, len(migrations)); err != nil {

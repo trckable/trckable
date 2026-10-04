@@ -108,6 +108,18 @@ func (m *Mailer) send(ctx context.Context, to string, e Event) error {
 	if m.resend != nil {
 		return m.resend.send(ctx, m.from, to, subject, body, headers)
 	}
+	var extra strings.Builder
+	for _, h := range headers {
+		extra.WriteString(h[0] + ": " + h[1] + "\r\n")
+	}
+	raw := fmt.Sprintf("From: trckable <%s>\r\nTo: <%s>\r\nSubject: %s\r\nDate: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: 8bit\r\n%s\r\n%s\r\n",
+		m.from, to, subject, e.At.Format(time.RFC1123Z), extra.String(), strings.ReplaceAll(body, "\n", "\r\n"))
+	return m.deliver(ctx, to, []byte(raw))
+}
+
+// deliver hands one finished message (headers and body, CRLF line ends) to the
+// SMTP server for one recipient.
+func (m *Mailer) deliver(ctx context.Context, to string, raw []byte) error {
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 	d := net.Dialer{}
@@ -156,12 +168,9 @@ func (m *Mailer) send(ctx context.Context, to string, e Event) error {
 	if err != nil {
 		return err
 	}
-	var extra strings.Builder
-	for _, h := range headers {
-		extra.WriteString(h[0] + ": " + h[1] + "\r\n")
+	if _, err := w.Write(raw); err != nil {
+		return err
 	}
-	fmt.Fprintf(w, "From: trckable <%s>\r\nTo: <%s>\r\nSubject: %s\r\nDate: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: 8bit\r\n%s\r\n%s\r\n",
-		m.from, to, subject, e.At.Format(time.RFC1123Z), extra.String(), strings.ReplaceAll(body, "\n", "\r\n"))
 	if err := w.Close(); err != nil {
 		return err
 	}

@@ -254,3 +254,171 @@
     box-shadow: none;
   }
 }
+
+.wg-name,
+.wg-text input {
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+.wg-texts summary {
+  cursor: pointer;
+}
+.wg-texts[open] {
+  gap: 8px;
+}
+.wg-text {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.wg-text span {
+  color: var(--text-2);
+  font-size: 12px;
+}
+.wg-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.wg-menu {
+  position: relative;
+}
+.wg-menu .pop {
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 210px;
+}
+.wg-thumb {
+  position: relative;
+  flex: none;
+  width: 120px;
+  height: 72px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--sunken);
+  cursor: pointer;
+}
+span.wg-thumb {
+  cursor: default;
+}
+.wg-thumb.dark {
+  background: #26292e;
+}
+.wg-thumb.light {
+  background: #f3f4f6;
+}
+.wg-thumb iframe {
+  position: absolute;
+  border: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+  background: transparent;
+}
+.wg-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  min-width: 0;
+}
+.wg-title svg {
+  flex: none;
+  color: var(--text-2);
+}
+
+.wg-modal {
+  width: min(1040px, 100%);
+}
+.wg-stage-box {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+}
+.wg-stage-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wg-stage-box .wg-stage {
+  min-height: 340px;
+}
+.wg-stage.dark {
+  background-color: #17191d;
+}
+.wg-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(100%, 520px);
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+}
+.wg-stage.dark .wg-page {
+  background: #0f1114;
+  border-color: #2a2e34;
+}
+.wg-page-bar,
+.wg-line {
+  display: block;
+  height: 9px;
+  border-radius: 5px;
+  background: #e4e4e7;
+}
+.wg-stage.dark .wg-page-bar,
+.wg-stage.dark .wg-line {
+  background: #23272d;
+}
+.wg-page-bar {
+  width: 38%;
+  height: 12px;
+  margin-bottom: 8px;
+}
+.w50 { width: 50%; }
+.w60 { width: 60%; }
+.w75 { width: 75%; }
+.w90 { width: 90%; }
+.wg-inline {
+  margin: 6px 0;
+}
+.wg-corner {
+  position: absolute;
+  bottom: 12px;
+}
+.wg-corner.br {
+  right: 12px;
+}
+.wg-corner.bl {
+  left: 12px;
+}
+.wg-page iframe,
+.wg-stage iframe {
+  display: block;
+}
+.wg-modal > * {
+  flex: none;
+}
+/* The last row's menu opens upward: below it, the window's own edge cuts it off. */
+.wg-row:last-child .wg-menu .pop {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+@media (max-width: 640px) {
+  .wg-stage-bar {
+    justify-content: flex-start;
+  }
+}

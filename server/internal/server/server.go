@@ -38,6 +38,7 @@ import (
 	"github.com/trckable/trckable/server/internal/realtime"
 	"github.com/trckable/trckable/server/internal/revenue"
 	"github.com/trckable/trckable/server/internal/secrets"
+	"github.com/trckable/trckable/server/internal/sso"
 	"github.com/trckable/trckable/server/internal/store/duck"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 	"github.com/trckable/trckable/server/internal/upgrade"
@@ -184,7 +185,15 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			BannerCSS:      c.Banner.CSS,
 		}
 	}
-	mux.Handle("GET /js/{file}", web.Tracker(feat, opts))
+	tracker := web.Tracker(feat, opts)
+	online := web.OnlineScript(func(ctx context.Context, id string) (web.OnlineLook, bool) { return s.api.OnlineLook(ctx, id) })
+	mux.HandleFunc("GET /js/{file}", func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.PathValue("file"), web.OnlineSuffix) {
+			online.ServeHTTP(w, r)
+			return
+		}
+		tracker.ServeHTTP(w, r)
+	})
 	s.hub = realtime.New()
 	box, err := secrets.Load(cfg.DataDir, cfg.Secret)
 	s.box = box
@@ -201,7 +210,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	}
 	a := &api.API{
 		Ctl: ctl, Hub: s.hub, Token: cfg.APIToken, SetupEnv: cfg.SetupToken, ClientIP: s.ingest.ClientIP,
-		Revenue: s.revenue, BaseURL: cfg.BaseURL, Box: box, Version: Version, UpdateCheck: cfg.UpdateCheck,
+		Revenue: s.revenue, BaseURL: cfg.BaseURL, ReservedHosts: cfg.ReservedHosts, ShareDomainSkipVerify: cfg.ShareDomainSkipVerify, ShareDomainAskOpen: cfg.ShareDomainAskOpen, Box: box, Version: Version, UpdateCheck: cfg.UpdateCheck,
 		Query: func() *query.Q {
 			st, w := s.duck.Load(), s.writer.Load()
 			if st == nil || w == nil || !w.Ready() {
@@ -229,6 +238,21 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		},
 	}
 	a.SendWeekly = s.sendWeeklyNow
+	if len(cfg.OIDC) > 0 {
+		if cfg.BaseURL == "" {
+			// The provider sends people back to one fixed address. The request's
+			// own Host is never trusted for that.
+			slog.Warn("sign-in with a provider is off: set TRCKABLE_BASE_URL to this server's public address")
+		} else {
+			a.SSO = sso.NewRegistry(cfg.OIDC, nil, nil)
+			a.SSORequireTOTP, a.SSOSignup = cfg.OIDCRequireTOTP, cfg.OIDCSignup
+			for _, p := range cfg.OIDC {
+				slog.Info("sign-in with a provider is on", "provider", p.Name, "callback", strings.TrimSuffix(cfg.BaseURL, "/")+"/api/v1/oidc/"+p.Name+"/callback")
+			}
+		}
+	}
+	a.SendReport = s.sendReportNow
+	a.ReportsReady = s.reportsReady
 	s.api = a
 	// Off-site backups, when the owner names a bucket. A bad value is said
 	// loudly and leaves backups local, rather than stopping the server.
@@ -278,7 +302,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	mux.HandleFunc("GET /_trckable/whoami", s.whoami)
 	s.http = &http.Server{
 		Addr:              cfg.Addr,
-		Handler:           withHeaders(s.proxyHint(mux)),
+		Handler:           withHeaders(s.proxyHint(a.ShareDomains(mux))),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      30 * time.Second,

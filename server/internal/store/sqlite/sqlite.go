@@ -571,6 +571,61 @@ var migrations = []string{
 	// 44: the owner's own addresses and ranges, one per line, left out of the
 	// counts before anything is hashed. Only this list is kept.
 	`ALTER TABLE site_settings ADD COLUMN exclude_ips TEXT NOT NULL DEFAULT '';`,
+	// 45: which identity provider a session was signed in with (empty: a
+	// password), so the account can say so; and who a person is to a provider
+	// (its issuer and the person's id there), kept the first time they sign in
+	// with it, so a later sign-in with the same email but another id is refused.
+	`ALTER TABLE auth_sessions ADD COLUMN via TEXT NOT NULL DEFAULT '';
+	CREATE TABLE sso_links (
+		user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		iss        TEXT NOT NULL,
+		sub        TEXT NOT NULL,
+		created_at INTEGER NOT NULL,
+		PRIMARY KEY (user_id, iss)
+	);
+	CREATE UNIQUE INDEX sso_links_who ON sso_links(iss, sub);`,
+	// 46: how a site's share links look to the people who open them: the
+	// owner's own logo, a colour, "hide trckable branding", and the address
+	// (a domain pointed at this server) the links are opened on. One row per
+	// site; a domain belongs to one site.
+	`CREATE TABLE site_share_look (
+		site_id    TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		color      TEXT NOT NULL DEFAULT '',
+		hide_brand INTEGER NOT NULL DEFAULT 0,
+		domain     TEXT NOT NULL DEFAULT '',
+		domain_ok  INTEGER NOT NULL DEFAULT 0,
+		domain_token TEXT NOT NULL DEFAULT '',
+		logo       BLOB,
+		logo_type  TEXT NOT NULL DEFAULT '',
+		logo_at    INTEGER NOT NULL DEFAULT 0,
+		updated_at INTEGER NOT NULL
+	);
+	CREATE UNIQUE INDEX site_share_look_domain ON site_share_look(domain) WHERE domain <> '' AND domain_ok = 1;`,
+	// 47: scheduled reports for a site's clients: weekly or monthly, by email
+	// and optionally with a PDF, to up to ten addresses, in the client's own
+	// language. last_sent is when the last one went (unix seconds), so a
+	// period is sent once. A person leaves a list by their own link, which
+	// removes just their address.
+	`CREATE TABLE report_schedules (
+		id         TEXT PRIMARY KEY,
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		name       TEXT NOT NULL DEFAULT '',
+		cadence    TEXT NOT NULL,
+		lang       TEXT NOT NULL DEFAULT 'en',
+		pdf        INTEGER NOT NULL DEFAULT 1,
+		recipients TEXT NOT NULL DEFAULT '',
+		enabled    INTEGER NOT NULL DEFAULT 1,
+		last_sent  INTEGER NOT NULL DEFAULT 0,
+		created_at INTEGER NOT NULL
+	);
+	CREATE INDEX report_schedules_site ON report_schedules(site_id);`,
+	// 48: a widget's name, so several can be told apart. Blank is the
+	// design's own name.
+	`ALTER TABLE widgets ADD COLUMN name TEXT NOT NULL DEFAULT '';`,
+	// 49: a widget's language (auto follows the visitor) and the labels its
+	// owner reworded, as JSON. Blank is the translated defaults.
+	`ALTER TABLE widgets ADD COLUMN lang TEXT NOT NULL DEFAULT 'auto';
+	ALTER TABLE widgets ADD COLUMN texts TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

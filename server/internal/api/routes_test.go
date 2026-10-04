@@ -31,6 +31,9 @@ var routeRules = map[string]string{
 	"POST /api/v1/setup":                                         "public",
 	"POST /api/v1/payments/start-over":                           "write",
 	"POST /api/v1/login":                                         "public",
+	"GET /api/v1/oidc/{provider}/start":                          "public",
+	"GET /api/v1/oidc/{provider}/callback":                       "public",
+	"POST /api/v1/oidc/code":                                     "public",
 	"POST /api/v1/logout":                                        "public",
 	"GET /api/v1/me":                                             "read",
 	"PUT /api/v1/me/keys":                                        "selfW",
@@ -64,6 +67,13 @@ var routeRules = map[string]string{
 	"GET /m/{token}":                                             "public",
 	"GET /u/{token}":                                             "public",
 	"POST /u/{token}":                                            "public",
+	"GET /r/{token}":                                             "public",
+	"POST /r/{token}":                                            "public",
+	"GET /api/v1/sites/{site}/report-schedules":                  "owner",
+	"POST /api/v1/sites/{site}/report-schedules":                 "write",
+	"PUT /api/v1/sites/{site}/report-schedules/{id}":             "write",
+	"DELETE /api/v1/sites/{site}/report-schedules/{id}":          "write",
+	"POST /api/v1/sites/{site}/report-schedules/{id}/test":       "write",
 	"GET /api/v1/sites/{site}/config":                            "read",
 	"PUT /api/v1/sites/{site}/config":                            "write",
 	"POST /api/v1/account/password":                              "selfW",
@@ -98,6 +108,14 @@ var routeRules = map[string]string{
 	"GET /api/v1/share/report":                                   "public",
 	"GET /api/v1/share/annotations":                              "public",
 	"GET /api/v1/share/icon":                                     "public",
+	"GET /api/v1/share/logo":                                     "public",
+	"GET /api/v1/share-domain/ask":                               "public",
+	"GET /api/v1/sites/{site}/share-look":                        "owner",
+	"PUT /api/v1/sites/{site}/share-look":                        "write",
+	"POST /api/v1/sites/{site}/share-look/verify":                "write",
+	"GET /api/v1/sites/{site}/share-logo":                        "owner",
+	"PUT /api/v1/sites/{site}/share-logo":                        "write",
+	"DELETE /api/v1/sites/{site}/share-logo":                     "write",
 	"GET /api/v1/sites/{site}/report":                            "read",
 	"GET /api/v1/sites/{site}/card":                              "read",
 	"GET /api/v1/sites/{site}/moments":                           "read",
@@ -253,7 +271,7 @@ func TestEveryRouteChecksWhoIsAsking(t *testing.T) {
 		return res.StatusCode, string(raw)
 	}
 
-	fill := strings.NewReplacer("{site}", g.site, "{id}", "x", "{module}", "goals", "{visitor}", "1")
+	fill := strings.NewReplacer("{site}", g.site, "{provider}", "x", "{id}", "x", "{module}", "goals", "{visitor}", "1")
 	seen := map[string]bool{}
 	for _, pattern := range g.api.patterns {
 		seen[pattern] = true

@@ -64,7 +64,7 @@ The container runs as an unprivileged user (65532), not root. A new Docker volum
 </script>
 ```
 
-Your site's own script, from Settings → Install: it carries the modules and the privacy settings you chose. Or `npm i trckable` for React and Next.js, where events go through your own domain. Every route is in the docs: [install](https://docs.trckable.com/install/) · [platforms](https://docs.trckable.com/install/platforms/) · [revenue](https://docs.trckable.com/revenue/) · [MCP](https://docs.trckable.com/api/mcp/).
+Your site's own script, from Settings → Install: it carries the modules and the privacy settings you chose. Or `npm i trckable` for React and Next.js, where events go through your own domain. On WordPress, the [plugin](integrations/wordpress) adds the tag for you: settings, a cookieless switch, an optional proxy through your own domain and a dashboard widget (GPLv2 or later; the server stays AGPL). Every route is in the docs: [install](https://docs.trckable.com/install/) · [platforms](https://docs.trckable.com/install/platforms/) · [revenue](https://docs.trckable.com/revenue/) · [MCP](https://docs.trckable.com/api/mcp/).
 
 ## 🚀 Deploy
 
@@ -78,6 +78,25 @@ The same image everywhere, with its data volume, health check and a pinned relea
 | Dokploy | [`deploy/dokploy`](deploy/dokploy) |
 | Umbrel | [`deploy/umbrel/trckable`](deploy/umbrel/trckable) |
 | Kubernetes | [`charts/trckable`](charts/trckable) (Helm) |
+
+## 🔑 Sign in with Google, Microsoft or OIDC
+
+Free on every install. People sign in with an account they already have. Set `TRCKABLE_BASE_URL` (`https://stats.example.com`) and register `https://stats.example.com/api/v1/oidc/<name>/callback` at the provider, `<name>` being the lower-case name below.
+
+| Provider | Settings |
+|---|---|
+| Google | `OIDC_GOOGLE_CLIENT_ID`, `OIDC_GOOGLE_CLIENT_SECRET` |
+| Microsoft Entra | `OIDC_MICROSOFT_CLIENT_ID`, `OIDC_MICROSOFT_CLIENT_SECRET`, `OIDC_MICROSOFT_TENANT` (your directory id) |
+| Any OpenID Connect provider | `OIDC_<NAME>_CLIENT_ID`, `OIDC_<NAME>_CLIENT_SECRET`, `OIDC_<NAME>_ISSUER` (https), optional `OIDC_<NAME>_LABEL` |
+
+A secret can come from a file (`OIDC_GOOGLE_CLIENT_SECRET_FILE`). The buttons appear on the sign-in screen only for providers that are set up, and Account says "Signed in with Google" for a session that came from one.
+
+- **Who gets in.** Someone who is already on this instance (Settings → People) with exactly the email the provider verified (`email_verified`), and only once first-run setup has created the owner. An unverified address is never matched. The first finished sign-in (the authenticator code included, where it is asked) records the provider's own id for the person; the same email arriving later with another id is refused. If someone's account at the provider was deleted and made again, an owner resetting their password forgets the id, or the person who runs the server runs `trckabled admin clear-sso <email>`.
+- **Google.** Google says an address is verified for any Google account, whatever domain it puts there, so it counts only for `@gmail.com` and `@googlemail.com`, or when the token's `hd` (the Google Workspace the account belongs to) is the address's own domain. Anything else is refused. `hd` names a Workspace's primary domain: an address on one of its alias domains is refused, so use the primary-domain address (or add the person under that address).
+- **Microsoft: the trust model.** Entra's email claim is whatever its holder or a directory administrator set; Microsoft does not verify it. So it counts only when all of these hold: the token's directory (`tid`) is one you allow and its issuer names the same one (one directory id in `OIDC_MICROSOFT_TENANT`, or `organizations` / `common` together with `OIDC_MICROSOFT_ALLOWED_TENANTS`, directory ids comma separated); it is not a guest (`acct` is not 1, and `idp` is the directory itself); and the domain is verified, either by the optional claim `xms_edov` being true (add it under Token configuration → Add optional claim → ID → `xms_edov` in the app registration) or, for a single directory only, when that claim is not sent, by the domain being listed in `OIDC_MICROSOFT_ALLOWED_DOMAINS`. With `organizations` or `common` the claim is required: a list of domains cannot say which directory may hold an address on one. A claim that is sent as false refuses. Personal Microsoft accounts are refused.
+- **Let a domain join.** `OIDC_<NAME>_ALLOWED_DOMAINS=acme.com` together with `OIDC_ALLOW_SIGNUP=true` creates a viewer for anyone from those domains at their first sign-in. Without both, nobody is created. Domains match exactly what follows the `@`: `acme.com` does not include `mail.acme.com`. List only domains whose addresses are all yours: a domain that unrelated people share (a free mail provider, a shared parent domain) lets all of them in.
+- **The authenticator code.** An owner (in any account they belong to) who turned two-step on is always asked for the code after the provider. For everyone else it is asked too, unless you set `OIDC_REQUIRE_TOTP=false` (the default is true). People without two-step are not asked.
+Use a provider you trust to hand out your domain's addresses. Every sign-in is logged as "signed in with google".
 
 ## ⚖️ How it compares
 
@@ -129,6 +148,22 @@ Nothing is paid, limited or held back. The complete list, in words: [Everything 
   <img src=".github/images/features/export.svg" width="49%" alt="Export the view you are looking at as CSV, or read the same numbers over the HTTP API">
 </p>
 
+### Widgets for your site
+
+Settings → Widgets makes a small card for your own pages: live now, last 7 days, a counter, open revenue, a privacy seal, and **Online**, how many people are on the site now. Each is a page of HTML and CSS under `/w/<id>`: no script, no cookie, nothing sent anywhere. It is off until you make it, only the numbers its design shows are public, and it is never counted as a visit. Every widget has a name, a language (or the visitor's own), wording you can change, and an Edit view that shows the real card on a light or dark page, inline or in a corner; saving keeps the same id, so the code on your pages keeps working.
+
+Online has three modes: a **pill** ("12 online" with a pulsing dot), the pill with a **30-minute sparkline**, and a **card** with the chart and the top pages or countries. It counts the last five minutes, the same as the dashboard's Online. Below three people it says "A few" and draws no chart, and a page or country appears only with three or more on it. Put it where you like, as a frame:
+
+```html
+<iframe src="https://stats.example.com/w/w_abc123" width="230" height="44" style="border:0;background:transparent"></iframe>
+```
+
+or float it in a corner with one small script (under 1 KB gzipped, separate from the tracker; the visitor can close it, it is hidden in print and fades in only without reduced motion). `data-pos="bl"` puts it bottom left:
+
+```html
+<script async src="https://stats.example.com/js/w_abc123.online.js"></script>
+```
+
 ### When your server is down
 
 A visitor's browser keeps what it could not send, up to 24 hours and 200 events, and sends it when your server answers again: the visits made meanwhile are counted once, on the day they happened. The server takes events up to 25 hours old; the browser's queue is the only copy until then, so a visitor who clears their site data in that time takes it with them. A visitor counted without a cookie has nothing stored in the browser, so what could not be sent is kept in memory and sent again for as long as the page is open: if they close the page first, those events are lost. A visit that was cut in two by the outage is stored as two visits, with every page view counted.
@@ -142,6 +177,43 @@ A visitor's browser keeps what it could not send, up to 24 hours and 200 events,
 - **Milestones** celebrate with a short ghost hop and a card ready to share. The cards that come up by themselves (a milestone, the one thing today, a nudge) are one design: what it is, when, its figure counting up, where it came from, a small chart of the moment, and a deck you turn with ← → or a swipe.
 - **Install on your phone**: the dashboard is an installable app. On Android and desktop Chrome or Edge, open the avatar menu and choose **Install app**. On an iPhone or iPad, tap Share in Safari, then **Add to Home Screen**. It opens in its own window with the ghost icon. Only the page's own files are kept for an offline start; your numbers, the API and shared pages always come from your server, never from a copy in the browser.
 - **Smooth theme switch**: a short crossfade, nothing redrawn, and the saved theme is on before the first frame.
+
+### Your own look on share links
+
+A site's share links can carry your logo and colour instead of trckable's: in **Share → Link**, upload a logo (PNG, JPEG, GIF or SVG, up to 128 KB; an SVG is checked against a list of what a logo may contain and refused if it holds script or links to anything outside itself), pick a colour, and switch on **Hide trckable branding** to leave the wordmark and the small credit off the page and the password screen. You can also give the links a domain of their own, like `reports.example.com`. A domain is served only after you show it is yours: the dialog gives you a TXT record to add (`_trckable.reports.example.com` with a value it shows), and **Check** looks for it; until then the domain is pending and nothing changes. Then point a `CNAME` record for it at your trckable host (the dialog shows the exact line), and have your proxy serve it over https: links on that domain are always written as `https://`, so the proxy must provide the TLS (the dashboard's own address stays as it is). On a verified domain trckable answers share pages of that site only, and nothing else: no sign-in, no dashboard, no other site's link. A site can change its domain five times a day. Names that can never be a share domain: the dashboard's own address, and any you list in `TRCKABLE_RESERVED_HOSTS` (comma-separated). On an instance with one owner who controls every name, `TRCKABLE_SHARE_DOMAIN_SKIP_VERIFY=1` serves a domain as soon as it is set; it is off by default.
+
+With Caddy, which gets a certificate for a name on the first visit once trckable says the name is one it serves:
+
+```
+{
+	on_demand_tls {
+		ask http://localhost:8080/api/v1/share-domain/ask
+	}
+}
+
+dash.example.com {
+	reverse_proxy localhost:8080
+}
+
+https:// {
+	tls {
+		on_demand
+	}
+	reverse_proxy localhost:8080
+}
+```
+
+The `ask` address answers only a caller on the same machine that did not come through a proxy, which is how Caddy calls it; `TRCKABLE_SHARE_DOMAIN_ASK_OPEN=1` opens it to any caller. When Caddy runs in a container (Docker, Compose, Kubernetes) its call reaches trckable from the container network and not from the machine itself, so set `TRCKABLE_SHARE_DOMAIN_ASK_OPEN=1` there; the answer is only yes or no for one name.
+
+Other proxies work the same way: forward the `Host` header unchanged, and get the certificate however you usually do. Shared pages send a Content-Security-Policy that allows nothing from outside the server, and a logo is only ever shown as a picture.
+
+### Client reports
+
+For an agency or a freelancer: **Settings → Alerts → Client reports** sends a site's numbers on a schedule to the people who pay for them. Each report is weekly (the first morning of the site's week, 08:00 in its time zone) or monthly (the first morning of the month, for the month that ended), goes to up to 10 addresses, is written in the language you pick for that schedule (English, German, French, Spanish, Italian or Dutch; the translations are marked "needs review" in `server/internal/reports/lang.go`, and a correction is a pull request to that one file) and wears the site's look from **Share → Link**: its logo, colour and "Hide trckable branding". It is an HTML email with the visitors, pageviews, bounce rate and visit length against the period before, revenue when payments are connected, the top sources, pages and goals, and, if you leave it on, a one-page PDF with the same numbers and a bar a day. A site can have five schedules; "Send me a test" sends the last period to you, three times a day at most.
+
+The PDF is written by trckable itself, in plain Go, with no browser and no library: one page of Helvetica, so Western European letters only (a character outside them is drawn as "?"). A PNG, JPEG or GIF logo is placed in the email and the PDF; an SVG logo is not (mail clients and PDF readers do not draw it), so the name stands in its place.
+
+Every email carries a link that stops it for that one address, and the headers mail clients use for their own Unsubscribe button; it works without signing in and removes only that address. Reports need email on the server (`TRCKABLE_SMTP_URL`, or `TRCKABLE_RESEND_KEY` where SMTP is blocked, with `TRCKABLE_MAIL_FROM`) and `TRCKABLE_BASE_URL`, which the stop links are built from: without both nothing is sent.
 
 ### Keyboard shortcuts
 
@@ -197,7 +269,7 @@ Go, embedded DuckDB and SQLite, React with an in-house SVG chart kit. Every even
 ## 🗺 Roadmap
 
 - [x] Tracking, dashboard (Live, Core and Full), revenue for five providers, MCP server
-- [x] Self-hosting tools: alerts (a new site starts with the weekly report, with the week's findings, and "tracking stopped" on, by email to the owner or to the webhook already in use; every email has a link that stops it), encrypted backups (copied to your own bucket, restored straight from it), imports, 2FA, read-only share links (public or password, revenue and notes on or off, an end date, embeddable, copyable again, revocable), WCAG 2.1 AA (axe-core on the dashboard's main screens, both themes, three browsers, in CI)
+- [x] Self-hosting tools: alerts (a new site starts with the weekly report, with the week's findings, and "tracking stopped" on, by email to the owner or to the webhook already in use; every email has a link that stops it), encrypted backups (copied to your own bucket, restored straight from it), imports, 2FA, read-only share links (public or password, revenue and notes on or off, an end date, embeddable, your own logo, colour and domain, copyable again, revocable), WCAG 2.1 AA (axe-core on the dashboard's main screens, both themes, three browsers, in CI)
 - [x] npm package [`trckable`](https://www.npmjs.com/package/trckable) with `init` / `doctor` / `mcp`, published from CI with provenance
 - [ ] Live sandbox runs against each payment provider
 - [ ] Peek: an optional in-app assistant on the same read-only tools, with your own AI key
@@ -211,6 +283,6 @@ Contributions are welcome: how to build, test and send a change is in [CONTRIBUT
 
 ## License
 
-Server and dashboard [AGPL-3.0](LICENSE) · tracker and the `trckable` npm package [MIT](packages/trckable/LICENSE) · geolocation by [DB-IP](https://db-ip.com) (CC BY 4.0)
+Server and dashboard [AGPL-3.0](LICENSE) · tracker and the `trckable` npm package [MIT](packages/trckable/LICENSE) · WordPress plugin [GPL-2.0-or-later](integrations/wordpress/trckable/license.txt) · geolocation by [DB-IP](https://db-ip.com) (CC BY 4.0)
 
 The name trckable and the logo are not part of those licenses: a fork is welcome, under its own name. See [TRADEMARKS.md](TRADEMARKS.md).

@@ -11,6 +11,13 @@ test('prose runs nothing heavy', () => {
   assert.equal(o.server_pkgs, '')
 })
 
+test('the WordPress plugin runs nothing here: it has its own workflow', () => {
+  const o = out('integrations/wordpress/trckable/trckable.php', 'e2e/wordpress/smoke.spec.ts')
+  assert.equal(o.code, 'false')
+  assert.equal(o.e2e, '')
+  assert.equal(o.full, 'false')
+})
+
 test('a dashboard feature runs its specs, the accessibility pass and the dashboard job', () => {
   const o = out('dashboard/src/features/journey/Journey.tsx', 'server/internal/web/dist/assets/index.js')
   assert.equal(o.e2e, 'journey')

@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
@@ -25,6 +26,7 @@ import (
 	"github.com/trckable/trckable/server/internal/realtime"
 	"github.com/trckable/trckable/server/internal/revenue"
 	"github.com/trckable/trckable/server/internal/secrets"
+	"github.com/trckable/trckable/server/internal/sso"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -57,10 +59,23 @@ type API struct {
 	// SendWeekly sends a site's last weekly report to one address now (Settings →
 	// Alerts). Set by the server, which owns the report's words.
 	SendWeekly func(ctx context.Context, site, email string) error
-	BaseURL    string // public https address (TRCKABLE_BASE_URL), for webhook URLs
-	Version    string // this build's version, shown in the dashboard's footer
+	// SendReport sends a report schedule's last period to one address now;
+	// ReportsReady says the server can send reports at all (a mail server and a
+	// public address). Both are set by the server, which owns the report.
+	SendReport   func(ctx context.Context, sc sqlite.ReportSchedule, email string) error
+	ReportsReady func() bool
+	BaseURL      string // public https address (TRCKABLE_BASE_URL), for webhook URLs
+	Version      string // this build's version, shown in the dashboard's footer
 	// Box seals the keys trckable stores for other services (Search Console).
 	Box *secrets.Box
+	// SSO: the identity providers people may sign in with (sso.go); nil, none.
+	// It works only with BaseURL (the address the provider sends people back
+	// to) and Box (which seals the flow's cookie).
+	SSO *sso.Registry
+	// SSORequireTOTP asks for the authenticator code after the provider, for
+	// accounts that have two-step. SSOSignup lets someone from a provider's
+	// allowed domain create their own account (a viewer).
+	SSORequireTOTP, SSOSignup bool
 	// GSCHTTP replaces the HTTP client used to reach Google; tests only.
 	GSCHTTP    *http.Client
 	cache      *reportCache
@@ -73,6 +88,19 @@ type API struct {
 	stopping   chan struct{} // closed by Stop: live streams end so a restart need not wait for them
 	patterns   []string      // every route Routes registered
 	stopOnce   sync.Once
+	shareHosts atomic.Pointer[map[string]string] // verified share domain -> site, kept in memory
+	shareTried atomic.Int64                      // when the list was last tried and failed (unix nanoseconds)
+	// ReservedHosts are names that can never be a share domain, besides the
+	// dashboard's own address (TRCKABLE_RESERVED_HOSTS).
+	ReservedHosts []string
+	// ShareDomainSkipVerify serves a share domain as soon as it is set, for an
+	// instance whose one owner controls every name (TRCKABLE_SHARE_DOMAIN_SKIP_VERIFY).
+	ShareDomainSkipVerify bool
+	// ShareDomainAskOpen lets any caller, not only a proxy on this machine,
+	// ask which domains are served (TRCKABLE_SHARE_DOMAIN_ASK_OPEN).
+	ShareDomainAskOpen bool
+	// LookupTXT reads a name's TXT records: the system's resolver, except in tests.
+	LookupTXT func(ctx context.Context, name string) ([]string, error)
 }
 
 // Stop ends every live stream. The server calls it when it starts shutting
@@ -112,6 +140,9 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("POST /api/v1/setup", a.setup)
 	handle("POST /api/v1/payments/start-over", a.authed(a.startOverKeys))
 	handleFunc("POST /api/v1/login", a.login)
+	handleFunc("GET /api/v1/oidc/{provider}/start", a.ssoStart)
+	handleFunc("GET /api/v1/oidc/{provider}/callback", a.ssoCallback)
+	handleFunc("POST /api/v1/oidc/code", a.ssoCode)
 	handleFunc("POST /api/v1/logout", a.logout)
 	handle("GET /api/v1/me", a.authed(a.me))
 	handle("PUT /api/v1/me/keys", a.authed(a.setKeys))
@@ -144,7 +175,14 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}/milestones/{kind}/{step}/share", a.authed(a.revokeMilestoneShare))
 	handleFunc("GET /m/{token}", a.milestoneLink)
 	handleFunc("GET /u/{token}", a.stopShow)
+	handleFunc("GET /r/{token}", a.reportStopShow)
+	handleFunc("POST /r/{token}", a.reportStopDo)
 	handleFunc("POST /u/{token}", a.stopDo)
+	handle("GET /api/v1/sites/{site}/report-schedules", a.authed(a.reportSchedules))
+	handle("POST /api/v1/sites/{site}/report-schedules", a.authed(a.createReportSchedule))
+	handle("PUT /api/v1/sites/{site}/report-schedules/{id}", a.authed(a.updateReportSchedule))
+	handle("DELETE /api/v1/sites/{site}/report-schedules/{id}", a.authed(a.deleteReportSchedule))
+	handle("POST /api/v1/sites/{site}/report-schedules/{id}/test", a.authed(a.testReportSchedule))
 	handle("GET /api/v1/sites/{site}/config", a.authed(a.siteConfig))
 	handle("PUT /api/v1/sites/{site}/config", a.authed(a.setSiteConfig))
 	handle("POST /api/v1/account/password", a.authed(a.changePassword))
@@ -174,12 +212,20 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("PATCH /api/v1/sites/{site}/shares/{id}", a.authed(a.updateShare))
 	handle("DELETE /api/v1/sites/{site}/shares/{id}", a.authed(a.deleteShare))
 	handle("POST /api/v1/sites/{site}/shares/{id}/address", a.authed(a.newShareAddress))
+	handle("GET /api/v1/sites/{site}/share-look", a.authed(a.shareLook))
+	handle("PUT /api/v1/sites/{site}/share-look", a.authed(a.setShareLook))
+	handle("POST /api/v1/sites/{site}/share-look/verify", a.authed(a.verifyShareDomain))
+	handle("GET /api/v1/sites/{site}/share-logo", a.authed(a.shareLogoOwner))
+	handle("PUT /api/v1/sites/{site}/share-logo", a.authed(a.setShareLogo))
+	handle("DELETE /api/v1/sites/{site}/share-logo", a.authed(a.clearShareLogo))
+	handleFunc("GET /api/v1/share-domain/ask", a.shareDomainAsk)
 	// The public side: no session, no account, one site, read-only.
 	handleFunc("POST /api/v1/share/open", a.openShare)
 	handleFunc("GET /api/v1/share/me", a.shareMe)
 	handleFunc("GET /api/v1/share/report", a.shareReport)
 	handleFunc("GET /api/v1/share/annotations", a.shareAnnotations)
 	handleFunc("GET /api/v1/share/icon", a.shareIcon)
+	handleFunc("GET /api/v1/share/logo", a.shareLogo)
 	handle("GET /api/v1/sites/{site}/report", a.authed(a.report))
 	handle("GET /api/v1/sites/{site}/card", a.authed(a.shareCard))
 	handle("GET /api/v1/sites/{site}/moments", a.authed(a.moments))
@@ -642,7 +688,7 @@ func (a *API) setupStatus(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"needs_setup": !has})
+	writeJSON(w, http.StatusOK, map[string]any{"needs_setup": !has, "sso": a.ssoChoices(has)})
 }
 
 func (a *API) setup(w http.ResponseWriter, r *http.Request) {

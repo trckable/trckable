@@ -3,6 +3,7 @@ package web
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"io"
 	"io/fs"
 	"net/http"
@@ -394,5 +395,57 @@ func TestManifestHasItsOwnType(t *testing.T) {
 	}
 	if !strings.Contains(rec.Body.String(), `"scope": "/"`) {
 		t.Errorf("the manifest does not name its scope: %.120q", rec.Body.String())
+	}
+}
+
+// The corner script for the online widget is its own file: it carries its
+// widget's settings in front of it, never answers for a widget that is not
+// there, and stays within 1 KB gzip, prelude included (tracker/build.mjs
+// checks the file itself against the same budget).
+func TestOnlineScript(t *testing.T) {
+	h := OnlineScript(func(_ context.Context, id string) (OnlineLook, bool) {
+		if id != "w_abcdefghijklmnop" {
+			return OnlineLook{}, false
+		}
+		return OnlineLook{ID: id, W: 280, H: 454, Theme: "light"}, true
+	})
+	get := func(file string) *httptest.ResponseRecorder {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/js/"+file, nil))
+		return w
+	}
+	if w := get("w_other.online.js"); w.Code != http.StatusNotFound {
+		t.Fatalf("a widget that is not there: %d", w.Code)
+	}
+	w := get("w_abcdefghijklmnop.online.js")
+	if w.Code != http.StatusOK {
+		t.Fatalf("status %d", w.Code)
+	}
+	body := w.Body.String()
+	for _, want := range []string{`dataset.id="w_abcdefghijklmnop";`, `dataset.w="280";`, `dataset.h="454";`, `dataset.theme="light";`} {
+		if !strings.HasPrefix(body, "document.currentScript.") || !strings.Contains(body, want) {
+			t.Fatalf("the script misses %s: %.200q", want, body)
+		}
+	}
+	if ct := w.Header().Get("Content-Type"); !strings.HasPrefix(ct, "application/javascript") {
+		t.Fatalf("content type %q", ct)
+	}
+	again := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/js/w_abcdefghijklmnop.online.js", nil)
+	r.Header.Set("If-None-Match", w.Header().Get("ETag"))
+	h.ServeHTTP(again, r)
+	if again.Code != http.StatusNotModified {
+		t.Fatalf("a script the browser has: %d", again.Code)
+	}
+
+	var z bytes.Buffer
+	zw, _ := gzip.NewWriterLevel(&z, gzip.BestCompression)
+	_, _ = zw.Write(w.Body.Bytes())
+	_ = zw.Close()
+	if z.Len() > 1024 {
+		t.Fatalf("the corner script is %d B gzip, over its 1 KB budget", z.Len())
+	}
+	if strings.Contains(body, "localStorage") || strings.Contains(body, "cookie") || strings.Contains(body, "sessionStorage") {
+		t.Fatal("the corner script keeps nothing in the visitor's browser")
 	}
 }
