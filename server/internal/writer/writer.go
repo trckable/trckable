@@ -772,8 +772,10 @@ func nzU8(v uint8) any {
 // dropped.
 func (w *Writer) PurgeSite(ctx context.Context, site string) (events, sessions int64, err error) {
 	err = w.Do(ctx, func(ctx context.Context, conn *sql.Conn) error {
-		if _, err := conn.ExecContext(ctx, `DELETE FROM crawler_hits WHERE site_id = ?`, site); err != nil {
-			return fmt.Errorf("purge crawler_hits: %w", err)
+		for _, table := range []string{"crawler_hits", "bot_daily"} {
+			if _, err := conn.ExecContext(ctx, `DELETE FROM `+table+` WHERE site_id = ?`, site); err != nil { //nolint:gosec // table is from the fixed list above; the site is bound as a parameter
+				return fmt.Errorf("purge %s: %w", table, err)
+			}
 		}
 		for i, table := range []string{"events", "sessions"} {
 			res, err := conn.ExecContext(ctx, `DELETE FROM `+table+` WHERE site_id = ?`, site) //nolint:gosec // table is from the fixed list above; the site is bound as a parameter
@@ -807,6 +809,7 @@ func (w *Writer) PruneBefore(ctx context.Context, site string, cutoffMs int64) (
 			`DELETE FROM events WHERE site_id = ? AND ts < make_timestamp(?)`,
 			`DELETE FROM sessions WHERE site_id = ? AND start < make_timestamp(?)`,
 			`DELETE FROM crawler_hits WHERE site_id = ? AND day < CAST(make_timestamp(?) AS DATE)`,
+			`DELETE FROM bot_daily WHERE site_id = ? AND day < CAST(make_timestamp(?) AS DATE)`,
 		} {
 			res, err := conn.ExecContext(ctx, q, site, cutoffMs*1000) // DuckDB counts microseconds
 			if err != nil {
