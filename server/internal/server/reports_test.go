@@ -151,14 +151,13 @@ func TestDueSchedulesAreSentOncePerPeriodToEachAddress(t *testing.T) {
 	delete(reportTried, sc.ID)
 	reportTriedMu.Unlock()
 
-	s.cfg.BaseURL = ""
-	s.checkReports(ctx)
-	select {
-	case m := <-got:
-		t.Fatalf("a report went out without a stop link:\n%.300s", m)
-	case <-time.After(300 * time.Millisecond):
+	// Without an address to build the stop link from, reports are not even tried.
+	if bare := newTestServer(t, config.Config{}); bare.reportsReady() {
+		t.Fatal("a server with no public address is ready to send reports")
 	}
-	s.cfg.BaseURL = "https://dash.example.com"
+	if !s.reportsReady() {
+		t.Fatal("a server with mail and an address is not ready")
+	}
 	reportTriedMu.Lock()
 	delete(reportTried, sc.ID)
 	reportTriedMu.Unlock()
