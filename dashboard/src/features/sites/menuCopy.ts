@@ -29,6 +29,9 @@ export const copy = defineCopy('sites.menu', {
   keyMove: ['↑', '↓'],
   keyOpen: '↵',
   keyClose: 'esc',
+  keyOpenSite: '⇧↵',
+  openSite: (domain: string) => `Open ${domain}`,
+  openSiteKey: 'Shift + Enter opens the site',
 
   // Arranging.
   options: (name: string) => `${name}: arrange`,

@@ -26,6 +26,7 @@ export function MenuFoot({ canAdd, onAdd, settings }: { canAdd: boolean; onAdd: 
           ))}
         </span>
         <kbd>{copy.keyOpen}</kbd>
+        <kbd title={copy.openSiteKey}>{copy.keyOpenSite}</kbd>
         <kbd>{copy.keyClose}</kbd>
       </span>
     </div>

@@ -902,6 +902,8 @@ export default {
   'sites.menu.onlineAll': 'Nu online, alle sites',
   'sites.menu.todayShort': 'vandaag',
   'sites.menu.keyClose': 'esc',
+  'sites.menu.openSite': (domain: string) => `Open ${domain}`,
+  'sites.menu.openSiteKey': 'Shift + Enter opent de site',
   'sites.menu.options': (name: string) => `${name}: ordenen`,
   'sites.menu.up': 'Omhoog',
   'sites.menu.down': 'Omlaag',

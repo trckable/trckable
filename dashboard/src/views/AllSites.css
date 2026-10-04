@@ -29,6 +29,45 @@
   display: grid;
   gap: 6px;
 }
+.site-open {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--text-2);
+}
+.site-open:hover {
+  background: var(--border);
+  color: var(--text);
+}
+.all-item {
+  position: relative;
+  display: grid;
+}
+.all-item > .site-open {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  opacity: 0;
+}
+.all-item:hover > .site-open,
+.all-item:has(:focus-visible) > .site-open {
+  opacity: 1;
+}
+@media (hover: none), (max-width: 640px) {
+  .all-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+  }
+  .all-item > .site-open {
+    position: static;
+    width: 44px;
+    height: 44px;
+    opacity: 1;
+  }
+}
 .all-row {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(150px, 1.2fr) repeat(4, minmax(80px, 1fr));

@@ -18,6 +18,7 @@ import { siteColors } from './allSitesColors'
 import { Spark } from './AllSitesSpark'
 import { EMPTY, flat } from '../features/sites/layout'
 import { useSiteLayout } from '../features/sites/useSiteLayout'
+import { OpenSite } from '../features/sites/OpenSite'
 import { copy as sitesCopy } from '../features/sites/menuCopy'
 
 const PERIODS = [
@@ -223,7 +224,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
                 const quiet = waiting(r)
                 const share = total ? r.visitors / total : 0
                 return (
-                  <div key={r.id} role="listitem" style={{ display: 'grid' }}>
+                  <div key={r.id} role="listitem" className="all-item">
                   <button
                     type="button"
                     className={'all-row' + (quiet ? ' quiet' : '')}
@@ -233,9 +234,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
                       <SiteMark site={{ ...brandOf(r.id, r.domain), color: colorOf(r.id) }} size={32} />
                       <span>
                         <b>{r.name || r.domain}</b>
-                        <span className="faint">
-                          {subline(r)}
-                        </span>
+                        <span className="faint">{subline(r)}</span>
                       </span>
                     </span>
                     {quiet ? (
@@ -263,6 +262,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
                     </span>
                     </>)}
                   </button>
+                  <OpenSite domain={r.domain} />
                   </div>
                 )
               })}

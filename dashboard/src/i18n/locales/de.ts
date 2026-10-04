@@ -912,6 +912,8 @@ export default {
   'sites.menu.onlineAll': 'Jetzt online, alle Websites',
   'sites.menu.todayShort': 'heute',
   'sites.menu.keyClose': 'esc',
+  'sites.menu.openSite': (domain: string) => `${domain} öffnen`,
+  'sites.menu.openSiteKey': 'Umschalt + Eingabe öffnet die Website',
   'sites.menu.options': (name: string) => `${name}: anordnen`,
   'sites.menu.up': 'Nach oben',
   'sites.menu.down': 'Nach unten',

@@ -903,6 +903,8 @@ export default {
   'sites.menu.onlineAll': 'En ligne maintenant, tous les sites',
   'sites.menu.todayShort': 'auj.',
   'sites.menu.keyClose': 'esc',
+  'sites.menu.openSite': (domain: string) => `Ouvrir ${domain}`,
+  'sites.menu.openSiteKey': 'Maj + Entrée ouvre le site',
   'sites.menu.options': (name: string) => `${name} : organiser`,
   'sites.menu.up': 'Monter',
   'sites.menu.down': 'Descendre',
