@@ -22,7 +22,7 @@ import (
 	"time"
 )
 
-//go:embed assets/t.js assets/t-*.js assets/sizes.json assets/online.js
+//go:embed assets/t.js assets/t-*.js assets/heat.js assets/sizes.json assets/online.js
 var assets embed.FS
 
 // dist is the built dashboard (dashboard/ → vite build → internal/web/dist).
@@ -103,20 +103,38 @@ var (
 	scripts   = map[string]script{}
 )
 
-// scriptFor loads a variant, falling back to the full script.
+// scriptFor loads a variant, falling back to the full script. With the
+// heatmaps module among the features, the module's own file follows it: the
+// base script is the same bytes with or without it, and the two run one after
+// the other as the same <script> element, which is how the module reads the
+// tag's settings. The semicolon keeps the base script's last statement from
+// running into the module's first.
 func scriptFor(features []string) script {
 	name := variantFor(features)
+	for _, f := range features {
+		if f == "heat" { // modules.TrackHeat
+			name += "+heat"
+		}
+	}
 	scriptsMu.RLock()
 	s, ok := scripts[name]
 	scriptsMu.RUnlock()
 	if ok {
 		return s
 	}
-	body, err := assets.ReadFile("assets/t-" + name + ".js")
+	base := strings.TrimSuffix(name, "+heat")
+	body, err := assets.ReadFile("assets/t-" + base + ".js")
 	if err != nil {
 		if body, err = assets.ReadFile("assets/t.js"); err != nil {
 			panic(err) // build error: the tracker was not embedded
 		}
+	}
+	if base != name {
+		heat, err := assets.ReadFile("assets/heat.js")
+		if err != nil {
+			panic(err) // build error: the heatmaps module was not embedded
+		}
+		body = append(append(append([]byte{}, body...), ';'), heat...)
 	}
 	sum := sha256.Sum256(body)
 	s = script{body: body, etag: `"` + hex.EncodeToString(sum[:8]) + `"`}

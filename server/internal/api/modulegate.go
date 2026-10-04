@@ -22,6 +22,7 @@ var moduleWrites = map[string]string{
 // moduleReads is the same for reads that exist only for one module.
 var moduleReads = map[string]string{
 	"GET /api/v1/sites/{site}/annotations": "notes",
+	"GET /api/v1/sites/{site}/heat":        "heatmaps",
 }
 
 // gated wraps h so it answers 404 while the route's module is off.

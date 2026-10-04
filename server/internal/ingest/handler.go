@@ -120,6 +120,12 @@ type Handler struct {
 	// tile. The server writes it out once a minute (botcount.go).
 	Bots BotCounts
 
+	// Heats counts what the heatmaps script reported, per element and day
+	// (heat.go). Written out with the bot counts.
+	Heats                      HeatCounts
+	heatOnce                   sync.Once
+	heatLimitIP, heatLimitSite *limiter
+
 	limitOnce sync.Once
 	limit     *limiter
 	limitIP   *limiter
