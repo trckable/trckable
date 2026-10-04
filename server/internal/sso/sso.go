@@ -242,9 +242,10 @@ func (n *flexInt) UnmarshalJSON(raw []byte) error {
 		n.set, n.val = 1, int(v)
 	case string:
 		n.set, n.val = 1, -1
-		if v == "1" {
+		switch v {
+		case "1":
 			n.val = 1
-		} else if v == "0" {
+		case "0":
 			n.val = 0
 		}
 	}
