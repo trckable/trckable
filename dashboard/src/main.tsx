@@ -24,7 +24,7 @@ import { NoneShared, useGate } from "./features/onboarding/Gate";
 // Sign-in and first-run setup are for the minutes before someone is in: a signed-in owner never downloads them.
 const Setup = lazy(() => import("./views/Auth").then((m) => ({ default: m.Setup })));
 const Login = lazy(() => import("./views/Auth").then((m) => ({ default: m.Login })));
-const FirstPassword = lazy(() => import("./views/Auth").then((m) => ({ default: m.FirstPassword })));
+const FirstPassword = lazy(() => import("./views/FirstPassword").then((m) => ({ default: m.FirstPassword })));
 const UpdateDialog = lazy(() => import("./components/UpdateDialog"));
 // Only people with more than one site open it, so it loads when asked.
 const AllSites = lazy(() => import("./views/AllSites").then((m) => ({ default: m.AllSites })));

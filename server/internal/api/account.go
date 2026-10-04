@@ -237,6 +237,7 @@ func (a *API) profile(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	p.SignedInWith = a.ssoLabel(u.SignedInWith)
 	writeJSON(w, http.StatusOK, p)
 }
 

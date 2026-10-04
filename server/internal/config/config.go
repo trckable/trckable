@@ -50,6 +50,15 @@ type Config struct {
 	// TRCKABLE_UNSAFE_SESSION_CLOSE_MS shortens how long sessions stay open
 	// before they are written. Tests only: never in production.
 	SessionCloseAfter time.Duration
+	// OIDC: the identity providers people may sign in with (oidc.go), from
+	// OIDC_<NAME>_* variables. OIDCRequireTOTP keeps the authenticator code
+	// for people who have two-step on (on unless OIDC_REQUIRE_TOTP=false; an
+	// owner with two-step is always asked); OIDCSignup lets
+	// a person from a provider's allowed domain create their own account as a
+	// viewer (OIDC_ALLOW_SIGNUP=true).
+	OIDC            []OIDCProvider
+	OIDCRequireTOTP bool
+	OIDCSignup      bool
 }
 
 // Load resolves the configuration from the environment.
@@ -78,6 +87,12 @@ func Load() Config {
 		UpdateCheck:  !strings.EqualFold(strings.TrimSpace(os.Getenv("TRCKABLE_UPDATE_CHECK")), "off"),
 		BackupDays:   envInt("TRCKABLE_BACKUP_KEEP_DAYS", 30),
 		NoticeDays:   envDays("TRCKABLE_PAYMENT_NOTICE_DAYS", 30),
+	}
+	c.OIDCRequireTOTP = !strings.EqualFold(strings.TrimSpace(os.Getenv("OIDC_REQUIRE_TOTP")), "false") && os.Getenv("OIDC_REQUIRE_TOTP") != "0"
+	c.OIDCSignup = envBool("OIDC_ALLOW_SIGNUP")
+	var err error
+	if c.OIDC, err = parseOIDC(os.Environ(), envFile); err != nil {
+		fileErrs = append(fileErrs, err)
 	}
 	if c.BaseURL == "" && os.Getenv("RAILWAY_PUBLIC_DOMAIN") != "" {
 		c.BaseURL = "https://" + os.Getenv("RAILWAY_PUBLIC_DOMAIN")
@@ -152,6 +167,11 @@ func env(k, def string) string {
 		return v
 	}
 	return def
+}
+
+func envBool(k string) bool {
+	v := strings.ToLower(strings.TrimSpace(os.Getenv(k)))
+	return v == "true" || v == "1" || v == "yes"
 }
 
 func envInt(k string, def int) int {

@@ -73,3 +73,34 @@ func TestMustChangeFirstReportsFailure(t *testing.T) {
 		t.Fatal("a failed flag was reported as done")
 	}
 }
+
+// clear-sso forgets who a person is to an identity provider.
+func TestAdminClearSSO(t *testing.T) {
+	cfg := config.Config{DataDir: t.TempDir()}
+	if err := admin(cfg, []string{"add-user", "p@site.com", "--role", "owner"}); err != nil {
+		t.Fatal(err)
+	}
+	ctl, err := server.OpenControl(context.Background(), cfg, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := ctl.LinkSSO(context.Background(), mustID(t, ctl, "p@site.com"), "https://idp.example", "sub-1"); err != nil {
+		t.Fatal(err)
+	}
+	ctl.Close()
+	if err := admin(cfg, []string{"clear-sso", "p@site.com"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := admin(cfg, []string{"clear-sso", "nobody@site.com"}); err == nil {
+		t.Error("clear-sso for someone who is not here did not fail")
+	}
+	ctl, err = server.OpenControl(context.Background(), cfg, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ctl.Close()
+	var n int
+	if err := ctl.DB.QueryRow(`SELECT count(*) FROM sso_links`).Scan(&n); err != nil || n != 0 {
+		t.Fatalf("%d links left (%v)", n, err)
+	}
+}

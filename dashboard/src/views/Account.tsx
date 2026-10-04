@@ -22,7 +22,7 @@ import { InlineEdit } from '../components/InlineEdit'
 import { signOut } from '../lib/signOut'
 import { useWindowTabs } from './accountTabs'
 import { copy as acopy } from './account/copy'
-import { Line } from './AccountLine'
+import { Line, SignedInWith } from './AccountLine'
 import { AccountHead } from './account/Head'
 import './Account.css'
 import { Keys } from './account/Keys'
@@ -77,7 +77,7 @@ function ProfileTab({ email, p, v, onProfile }: ProfileProps) {
             Change password
           </button>
         </Line>
-        <TwoStep />
+        <TwoStep /><SignedInWith provider={p?.signed_in_with} />
         <Line icon={LogOut} label="This browser" hint={`Signed in as ${email ?? 'you'}`}>
           <button type="button" className="btn" onClick={() => signOut()}>
             Sign out
