@@ -15,6 +15,15 @@ export const openTab = (card: string, tab: string) => window.dispatchEvent(new C
 
 const key = (site: string, card: string) => `trckable:tab:${site}:${card}`
 
+/** Makes `tab` the one a card opens on for this site, for a card that is not drawn yet (Full's tabs are a chunk of their own). */
+export function rememberTab(site: string, card: string, tab: string) {
+  try {
+    localStorage.setItem(key(site, card), tab)
+  } catch {
+    /* private mode */
+  }
+}
+
 function read(site: string, card: string): string | null {
   try {
     return localStorage.getItem(key(site, card))

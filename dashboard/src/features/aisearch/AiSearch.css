@@ -32,6 +32,12 @@
 }
 .ais-connect .btn {
   gap: 6px;
+  max-width: 100%;
+  height: auto;
+  min-height: 34px;
+  padding-block: 6px;
+  white-space: normal;
+  text-align: left;
 }
 .ais-note {
   margin: 6px 4px 0;

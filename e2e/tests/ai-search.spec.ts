@@ -88,3 +88,30 @@ test('pictures: dark and light at 1280, and 390', async ({ page }) => {
     await who.screenshot({ path: join(SHOTS!, `ai-search-${scheme}-${width}.png`) })
   }
 })
+
+test('pictures: Search Console answering, the two badges, and the setup sheet', async ({ page }) => {
+  test.skip(!SHOTS, 'set TRCKABLE_SHOTS to a folder')
+  // Search Console cannot be reached from a demo server: it answers here with fixed rows, and one page it ranks that no AI crawler reads.
+  await page.route('**/report/search?*', (route) =>
+    route.fulfill({ json: { rows: [{ key: 'self hosted analytics', clicks: 120, impressions: 2400, ctr: 0.05, position: 4.2 }, { key: 'privacy friendly analytics', clicks: 64, impressions: 1900, ctr: 0.034, position: 6.8 }], clicks: 184, impressions: 4300 } }),
+  )
+  await page.route('**/report/ai-search?*', async (route) => {
+    const res = await route.fetch()
+    const body = await res.json()
+    body.google = true
+    body.pages = [...body.pages.slice(0, 3), { path: '/guide/self-hosting', read: 0, sent: 0, clicks: 80, flag: 'unread' }]
+    await route.fulfill({ response: res, json: body })
+  })
+  const { who } = await open(page)
+  await expect(who.locator('.ais-flag.unread')).toBeVisible()
+  await who.scrollIntoViewIfNeeded()
+  await who.screenshot({ path: join(SHOTS!, 'ai-search-badges-1280.png') })
+  await who.locator('.ais-flag.unread').hover()
+  await expect(page.getByRole('tooltip')).toContainText('80 clicks')
+  await who.screenshot({ path: join(SHOTS!, 'ai-search-badge-tooltip-1280.png') })
+  await page.mouse.move(0, 0)
+  await who.getByRole('tab', { name: 'Crawlers' }).click()
+  await page.getByRole('button', { name: 'How to feed this' }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.screenshot({ path: join(SHOTS!, 'ai-search-setup-sheet-1280.png') })
+})

@@ -11,7 +11,7 @@ import { more } from '../../lib/apiMore'
 import { setView } from '../../lib/url'
 import { guideCopy } from '../aisearch/copy'
 import { useAiSeen, type AiSeen } from '../aisearch/useAiSeen'
-import { openTab } from '../cards/TabCard'
+import { openTab, rememberTab } from '../cards/TabCard'
 import { choose, canLeaveOut, stateOf } from '../exclude/ownVisits'
 import { openSettings } from '../../lib/settings'
 import { first } from '../install/firstCopy'
@@ -41,10 +41,12 @@ function textOf(id: CardId, ai: AiSeen | null | undefined) {
   return copy.discover[id]
 }
 
-/** Brings the AI & Search tab into view: the card's one action. */
-const openAiSearch = () => {
+/** Brings the AI & Search tab into view: the card's one action. Compact has no such tab, so it opens in Full, on that tab. */
+const openAiSearch = (site: Site) => {
+  rememberTab(site.id, 'who', 'ai-search')
+  setView({ mode: 'full' })
   openTab('who', 'ai-search')
-  document.getElementById('cards')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  setTimeout(() => document.getElementById('cards')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)
 }
 
 /** `fresh`: the site is in its first week, so the getting-started cards are in play too. */
@@ -94,7 +96,7 @@ export function Discover({ site, today, fresh, onAway }: { site: Site; today: st
     },
     ai: () => {
       away()
-      openAiSearch()
+      openAiSearch(site)
     },
     full: () => {
       away()
