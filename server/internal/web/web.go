@@ -338,8 +338,21 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 	// it is stored and in plain bytes.
 	index, _ := storedPlain(sub, "index.html")
 	indexGz, _ := fs.ReadFile(sub, "index.html.gz")
+	worker := serviceWorker(sub, index)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		p := strings.TrimPrefix(path.Clean(r.URL.Path), "/")
+		switch p {
+		case "sw.js":
+			if worker != nil {
+				serveWorker(w, r, worker)
+				return
+			}
+		case "manifest.webmanifest":
+			// Go's table of types may not know this one, and a browser that is
+			// sent text/plain does not read it as a manifest.
+			w.Header().Set("Content-Type", "application/manifest+json")
+			w.Header().Set("Cache-Control", "no-cache")
+		}
 		if p != "" && p != "index.html" {
 			if f, err := sub.Open(p); err == nil {
 				f.Close()
@@ -394,6 +407,33 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 		}
 		_, _ = w.Write(body)
 	})
+}
+
+// serviceWorker is public/sw.js with its version filled in: the hash of the
+// page. A deploy that changes the dashboard changes the page's name for every
+// file in it, so the worker's bytes change too, and the browser installs it
+// and drops the old shell. nil when the build has no worker.
+func serviceWorker(fsys fs.FS, index []byte) []byte {
+	src, ok := storedPlain(fsys, "sw.js")
+	if !ok {
+		return nil
+	}
+	sum := sha256.Sum256(index)
+	return bytes.ReplaceAll(src, []byte("__V__"), []byte(hex.EncodeToString(sum[:6])))
+}
+
+// serveWorker answers /sw.js. It is never kept (a stale worker is a stale app,
+// whatever a proxy in between thinks) and may control the whole site, which is
+// the dashboard's own scope.
+func serveWorker(w http.ResponseWriter, r *http.Request, body []byte) {
+	h := w.Header()
+	h.Set("Content-Type", "text/javascript; charset=utf-8")
+	h.Set("Cache-Control", "no-cache")
+	h.Set("Service-Worker-Allowed", "/")
+	if r.Method == http.MethodHead {
+		return
+	}
+	_, _ = w.Write(body)
 }
 
 // referrerPolicy sends nothing at all from a shared page, whose address holds

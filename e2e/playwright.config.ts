@@ -45,6 +45,9 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:18301',
     trace: 'retain-on-failure',
     acceptDownloads: true,
+    // The dashboard registers a worker (app-install.spec.ts turns it back on). One that
+    // answers a page's requests hides them from page.route(), which the other specs rely on.
+    serviceWorkers: 'block',
     actionTimeout: process.env.CI ? 20_000 : undefined,
     navigationTimeout: process.env.CI ? 30_000 : undefined,
   },

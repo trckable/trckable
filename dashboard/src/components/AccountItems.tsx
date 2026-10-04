@@ -1,14 +1,16 @@
 // The avatar menu's items (AccountMenu.tsx). Its own chunk, so the first load carries only the button.
-import { CircleUser, Keyboard, LogOut } from 'lucide-react'
+import { CircleUser, Keyboard, LogOut, Smartphone } from 'lucide-react'
 import { openAccount } from '../lib/account'
 import type { Profile } from '../lib/api'
 import type { MenuItems } from '../lib/headerMenu'
+import { install, useWayToInstall } from '../lib/installApp'
 import { caps, keyFor } from '../lib/keys'
 import { isViewer } from '../lib/me'
 import { signOut } from '../lib/signOut'
 import { THEMES, useTheme } from '../lib/theme'
 import { PersonAvatar } from './PersonAvatar'
 import { openShortcuts } from './ShortcutsHost'
+import { toast } from './toastBus'
 import { copy } from './itemsCopy'
 import './MoreItems.css'
 import './sheet.css'
@@ -47,6 +49,18 @@ function Who({ profile, v }: { profile: Profile | null; v: number }) {
   )
 }
 
+/** Install the app: the browser's own dialog, or on iOS the way through Share. Only where it can be done. */
+function InstallItem({ go }: { go: Parameters<MenuItems>[0] }) {
+  const way = useWayToInstall()
+  if (!way) return null
+  return (
+    <button type="button" role="menuitem" title={way === 'ios' ? copy.installHint : undefined} onClick={go(() => (way === 'ios' ? toast(copy.installHint, 'info') : void install()))}>
+      <Smartphone size={18} strokeWidth={1.75} aria-hidden="true" />
+      {copy.install}
+    </button>
+  )
+}
+
 /** The items of the avatar menu. */
 export default function AccountItems({ profile, v, go }: { profile: Profile | null; v: number; go: Parameters<MenuItems>[0] }) {
   return (
@@ -62,6 +76,7 @@ export default function AccountItems({ profile, v, go }: { profile: Profile | nu
         {copy.shortcuts}
         <kbd className="menu-kbd">{caps(keyFor('shortcuts')).join('')}</kbd>
       </button>
+      <InstallItem go={go} />
       <button type="button" role="menuitem" onClick={go(signOut)}>
         <LogOut size={18} strokeWidth={1.75} aria-hidden="true" />
         {copy.signOut}

@@ -10,6 +10,8 @@ export const copy = {
   full: 'Full view',
   export: 'Export as CSV',
   shortcuts: 'Shortcuts',
+  install: 'Install app',
+  installHint: 'Tap Share, then Add to Home Screen',
   theme: 'Theme',
   themes: { system: 'Auto', dark: 'Dark', light: 'Light' },
   account: 'Profile',
