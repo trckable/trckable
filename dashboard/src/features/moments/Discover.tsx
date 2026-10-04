@@ -3,22 +3,24 @@
 // is already used or set up, and a card put away or acted on does not come
 // back (firstWeek.ts). The weekly email's words and switch are the first
 // screen's own.
-import { Mail, Maximize2, Play, Search, type LucideIcon } from 'lucide-react'
+import { EyeOff, Mail, Maximize2, Play, Search, type LucideIcon } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { SideCard } from '../../components/SideCard/SideCard'
 import type { Site } from '../../lib/api'
 import { more } from '../../lib/apiMore'
 import { setView } from '../../lib/url'
+import { choose, canLeaveOut, stateOf } from '../exclude/ownVisits'
 import { openSettings } from '../../lib/settings'
 import { first } from '../install/firstCopy'
 import { wasSeen } from '../install/seen'
 import { useWeeklyEmail } from '../install/useWeeklyEmail'
 import { copy } from './copy'
-import { keptOf, pick, remember, type CardId } from './firstWeek'
+import { keptOf, pick, remember, trafficDay, type CardId } from './firstWeek'
 import { wasUsed } from './store'
 
 /** What each card is: its icon and its own colour. */
 const KIND: Record<CardId, { Icon: LucideIcon; tint: string }> = {
+  exclude: { Icon: EyeOff, tint: 'var(--ch-2)' },
   replay: { Icon: Play, tint: 'var(--ch-7)' },
   full: { Icon: Maximize2, tint: 'var(--accent)' },
   weekly: { Icon: Mail, tint: 'var(--ch-5)' },
@@ -31,6 +33,7 @@ const playReplay = () => document.querySelector<HTMLButtonElement>('.replay-btn'
 export function Discover({ site, today, onAway }: { site: Site; today: string; onAway: () => void }) {
   const weekly = useWeeklyEmail(site)
   const [search, setSearch] = useState<boolean | null>(null)
+  const [firstDay] = useState(() => trafficDay(site.id, today)) // before kept is read: it writes the day into it
   const [kept, setKept] = useState(() => keptOf(site.id))
   useEffect(() => {
     let live = true
@@ -44,8 +47,8 @@ export function Discover({ site, today, onAway }: { site: Site; today: string; o
   }, [site.id])
   const ready = weekly.ready && search !== null
   const id = useMemo(
-    () => (ready ? pick({ replayed: wasUsed('replay'), fullOpened: wasUsed('full'), weekly: weekly.on || wasSeen('weekly', site.id), search }, kept, today) : null),
-    [ready, weekly.on, search, kept, today, site.id],
+    () => (ready ? pick({ replayed: wasUsed('replay'), fullOpened: wasUsed('full'), weekly: weekly.on || wasSeen('weekly', site.id), search, exclude: firstDay === today && canLeaveOut(site) && stateOf(site) !== 'excluded' }, kept, today) : null),
+    [ready, weekly.on, search, kept, today, site, firstDay],
   )
   // Today's pick is remembered, so a reload shows the same card and no other.
   useEffect(() => {
@@ -53,7 +56,7 @@ export function Discover({ site, today, onAway }: { site: Site; today: string; o
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps -- kept only changes together with id
   if (!id) return null
   const away = () => {
-    const next = { done: [...kept.done, id], day: today, id }
+    const next = { ...kept, done: [...kept.done, id], day: today, id }
     remember(site.id, next)
     setKept(next)
     onAway()
@@ -61,6 +64,10 @@ export function Discover({ site, today, onAway }: { site: Site; today: string; o
   const t = id === 'weekly' ? first.cards.weekly : copy.discover[id]
   const { Icon } = KIND[id]
   const go: Record<CardId, () => void> = {
+    exclude: () => {
+      away()
+      choose(site, 'ignore')
+    },
     replay: () => {
       away()
       playReplay()

@@ -96,6 +96,13 @@ of any address (`https://example.com/?trckable=ignore`). That browser is left ou
 of the counts from then on, through a proxy or not. `?trckable=track` puts it
 back. The choice is kept in that browser's storage, so it does not work in
 cookieless mode, which stores nothing. Settings → Data & privacy has both links.
+The avatar menu's "Exclude this browser" opens the same link for the site on
+screen.
+
+To leave out a home or office instead of a browser, list its address in Settings →
+Data & privacy → Exclude IP ranges: up to 50 IPs or ranges such as
+`198.51.100.0/24` or `2001:db8::/32`. Those visits are dropped before anything is
+counted, and only the list itself is stored.
 
 ## Landing page + app
 

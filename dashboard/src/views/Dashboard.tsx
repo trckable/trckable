@@ -489,7 +489,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         {header}
         <HeaderTools
           live={liveView}
-          waiting={waiting}
+          waiting={waiting} site={site}
           askOpen={askOpen}
           onAsk={() => setAskOpen(true)}
           extra={trail && trailData && (

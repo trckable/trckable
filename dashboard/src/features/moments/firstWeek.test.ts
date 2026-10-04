@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it } from 'vitest'
-import { eligible, FIRST_WEEK_S, inFirstWeek, keptOf, pick, remember, type Known } from './firstWeek'
+import { eligible, FIRST_WEEK_S, inFirstWeek, keptOf, pick, remember, trafficDay, type Known } from './firstWeek'
 import { markUsed, wasUsed } from './store'
 
 afterEach(() => localStorage.clear())
 
-const none: Known = { replayed: false, fullOpened: false, weekly: false, search: false }
+const none: Known = { replayed: false, fullOpened: false, weekly: false, search: false, exclude: false }
 const fresh = { done: [] }
 
 describe('a site\'s first week', () => {
@@ -23,8 +23,8 @@ describe('which card', () => {
   })
 
   it('never one for something already used or set up', () => {
-    expect(eligible({ replayed: true, fullOpened: true, weekly: true, search: false }, fresh)).toEqual(['search'])
-    expect(eligible({ replayed: true, fullOpened: true, weekly: true, search: true }, fresh)).toEqual([])
+    expect(eligible({ ...none, replayed: true, fullOpened: true, weekly: true }, fresh)).toEqual(['search'])
+    expect(eligible({ ...none, replayed: true, fullOpened: true, weekly: true, search: true }, fresh)).toEqual([])
   })
 
   it('never one that was put away or acted on', () => {
@@ -43,6 +43,35 @@ describe('which card', () => {
   it('a card that became unnecessary today is not swapped for another today', () => {
     const picked = { done: [], day: '2026-10-02', id: 'weekly' as const }
     expect(pick({ ...none, weekly: true }, picked, '2026-10-02')).toBeNull()
+  })
+})
+
+describe('the card about your own visits', () => {
+  const asked = { ...none, exclude: true }
+
+  it('comes first, and only when it is asked for', () => {
+    expect(eligible(asked, fresh)).toEqual(['exclude', 'replay', 'full', 'weekly', 'search'])
+    expect(eligible(none, fresh)).not.toContain('exclude')
+  })
+
+  it('is the one card of the day, and the next one waits until tomorrow', () => {
+    expect(pick(asked, fresh, '2026-10-02')).toBe('exclude')
+    const away = { done: ['exclude' as const], day: '2026-10-02', id: 'exclude' as const }
+    expect(pick(asked, away, '2026-10-02')).toBeNull()
+    expect(pick(none, away, '2026-10-03')).toBe('replay')
+  })
+
+  it('is asked on the first day with traffic, and never on a later one', () => {
+    expect(trafficDay('tkb_a', '2026-10-02')).toBe('2026-10-02')
+    expect(trafficDay('tkb_a', '2026-10-03')).toBe('2026-10-02') // the day is kept, so tomorrow is not it
+    expect(trafficDay('tkb_b', '2026-10-03')).toBe('2026-10-03') // another site has its own
+  })
+
+  it('keeps the day when a card is put away, and does not ask again once put away', () => {
+    trafficDay('tkb_a', '2026-10-02')
+    remember('tkb_a', { ...keptOf('tkb_a'), done: ['exclude'], day: '2026-10-02', id: 'exclude' })
+    expect(keptOf('tkb_a').traffic).toBe('2026-10-02')
+    expect(eligible(asked, keptOf('tkb_a'))).not.toContain('exclude')
   })
 })
 

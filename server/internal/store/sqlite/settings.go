@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/ipfilter"
 	"github.com/trckable/trckable/server/internal/weburl"
 )
 
@@ -35,6 +36,9 @@ type SiteConfig struct {
 	// Banner is how the consent module asks. Every field is optional; empty
 	// wording means the built-in English.
 	Banner BannerText `json:"banner"`
+	// ExcludeIPs are the owner's own addresses and ranges (at most
+	// ipfilter.Max): visits from them are dropped before anything is hashed.
+	ExcludeIPs []string `json:"exclude_ips"`
 }
 
 // BannerText is what trckable's cookie bar says and how it looks. It asks
@@ -96,12 +100,12 @@ func (s *Store) SiteConfig(ctx context.Context, site string) (SiteConfig, error)
 	if err := s.DB.QueryRowContext(ctx, `SELECT hash_mode FROM sites WHERE id = ?`, site).Scan(&hash); err == nil {
 		c.HashMode = hash == 1
 	}
-	var paths, groups, banner, pageGoals string
+	var paths, ips, groups, banner, pageGoals string
 	var dnt, city, strict, free int
 	err := s.DB.QueryRowContext(ctx, `
-		SELECT exclude_paths, honor_dnt, record_city, retention_days, week_start, bot_strict, consent_free, groups, banner, page_goals
+		SELECT exclude_paths, exclude_ips, honor_dnt, record_city, retention_days, week_start, bot_strict, consent_free, groups, banner, page_goals
 		FROM site_settings WHERE site_id = ?`, site).
-		Scan(&paths, &dnt, &city, &c.RetentionDays, &c.WeekStart, &strict, &free, &groups, &banner, &pageGoals)
+		Scan(&paths, &ips, &dnt, &city, &c.RetentionDays, &c.WeekStart, &strict, &free, &groups, &banner, &pageGoals)
 	if err != nil {
 		return c, nil // no row yet: the defaults are the answer, not an error
 	}
@@ -110,6 +114,11 @@ func (s *Store) SiteConfig(ctx context.Context, site string) (SiteConfig, error)
 	for _, line := range strings.Split(paths, "\n") {
 		if line = strings.TrimSpace(line); line != "" {
 			c.ExcludePaths = append(c.ExcludePaths, line)
+		}
+	}
+	for _, line := range strings.Split(ips, "\n") {
+		if line = strings.TrimSpace(line); line != "" {
+			c.ExcludeIPs = append(c.ExcludeIPs, line)
 		}
 	}
 	c.Groups = parseGroups(groups)
@@ -248,16 +257,22 @@ func (s *Store) SetSiteConfig(ctx context.Context, site string, c SiteConfig) er
 	if len(c.PageGoals) > MaxGroups {
 		c.PageGoals = c.PageGoals[:MaxGroups]
 	}
-	_, err := s.DB.ExecContext(ctx, `
-		INSERT INTO site_settings (site_id, exclude_paths, honor_dnt, record_city, retention_days, week_start, bot_strict, consent_free, groups, banner, page_goals, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	// Only a list that reads cleanly is kept, spelled one way and at most
+	// ipfilter.Max long; the API has already said why a bad one was refused.
+	ips, err := ipfilter.Clean(c.ExcludeIPs)
+	if err != nil {
+		return err
+	}
+	_, err = s.DB.ExecContext(ctx, `
+		INSERT INTO site_settings (site_id, exclude_paths, exclude_ips, honor_dnt, record_city, retention_days, week_start, bot_strict, consent_free, groups, banner, page_goals, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT (site_id) DO UPDATE SET
-			exclude_paths = excluded.exclude_paths, honor_dnt = excluded.honor_dnt,
+			exclude_paths = excluded.exclude_paths, exclude_ips = excluded.exclude_ips, honor_dnt = excluded.honor_dnt,
 			record_city = excluded.record_city, retention_days = excluded.retention_days,
 			week_start = excluded.week_start, bot_strict = excluded.bot_strict,
 			consent_free = excluded.consent_free, groups = excluded.groups,
 			banner = excluded.banner, page_goals = excluded.page_goals, updated_at = excluded.updated_at`,
-		site, strings.Join(c.ExcludePaths, "\n"), b(c.HonorDNT), b(c.RecordCity), c.RetentionDays, c.WeekStart, b(c.BotStrict), b(c.ConsentFree), writeGroups(c.Groups), writeBanner(c.Banner), writeGroups(c.PageGoals), time.Now().Unix())
+		site, strings.Join(c.ExcludePaths, "\n"), strings.Join(ips, "\n"), b(c.HonorDNT), b(c.RecordCity), c.RetentionDays, c.WeekStart, b(c.BotStrict), b(c.ConsentFree), writeGroups(c.Groups), writeBanner(c.Banner), writeGroups(c.PageGoals), time.Now().Unix())
 	if err != nil {
 		return err
 	}

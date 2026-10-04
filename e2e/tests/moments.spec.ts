@@ -305,11 +305,12 @@ test('See it with everything already applied still closes the card, says what is
 test('with nothing to say, a new site gets one first-week card, and not another that day', async ({ page }) => {
   await given(page, 'quiet')
   await open(page)
-  const replay = card(page, 'Replay')
-  await expect(replay).toBeVisible({ timeout: 20_000 })
-  await expect(replay).toContainText('Replay this period')
+  // On the first day with traffic, the first card is about your own visits.
+  const own = card(page, 'Your visits')
+  await expect(own).toBeVisible({ timeout: 20_000 })
+  await expect(own).toContainText('Exclude your own visits?')
   await shoot(page, 'first-week')
-  await replay.getByRole('button', { name: 'Close' }).click()
+  await own.getByRole('button', { name: 'Close' }).click()
   await page.reload()
   await expect(page.locator('.chart-wrap svg[role="img"]')).toBeVisible()
   await page.waitForTimeout(3500)

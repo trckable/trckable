@@ -5,7 +5,7 @@
 // One row at every width down to 375 px; no filled button (Share is an icon in the second row); what
 // left the row (Refresh, Create, Core/Full, Milestones, Export) is in the ⋯
 // beside the period with its key, and the keys still work; the person's own
-// things (Profile, theme, shortcuts, sign out) are the avatar's menu.
+// things (Profile, leaving this browser out of the counts, theme, shortcuts, sign out) are the avatar's menu.
 // Each tile carries its change, readable without colour; the
 // chart shows the whole period (days before the first visit empty), draws a
 // short span by the hour, and keeps Replay as a small ▶.
@@ -129,11 +129,13 @@ test('the avatar menu holds the person\'s own things, by keyboard too', async ({
   await avatar.focus()
   await page.keyboard.press('Enter')
   const account = page.getByRole('menu', { name: 'Account' })
-  await expect(account.getByRole('menuitem')).toHaveText([/Profile/, /Shortcuts/, /Sign out/])
+  await expect(account.getByRole('menuitem')).toHaveText([/Profile/, /Exclude this browser/, /Shortcuts/, /Sign out/])
   await expect(account.getByRole('menuitemradio')).toHaveCount(3)
   await expect(account.getByRole('menuitem', { name: /Refresh|Create|Export/ })).toHaveCount(0)
   // Arrows move between items, Escape closes and hands focus back.
   await expect(account.getByRole('menuitem').first()).toBeFocused()
+  await page.keyboard.press('ArrowDown')
+  await expect(account.getByRole('menuitem', { name: /Exclude this browser/ })).toBeFocused()
   await page.keyboard.press('ArrowDown')
   await expect(account.getByRole('menuitemradio').first()).toBeFocused()
   await page.keyboard.press('Escape')

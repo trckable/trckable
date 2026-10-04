@@ -45,6 +45,7 @@ export const copy = {
   perVisitor: (each: string) => `${each} a visitor`,
   // The first-week cards (the weekly email's is the first screen's own).
   discover: {
+    exclude: { label: 'Your visits', title: 'Exclude your own visits?', body: 'Your own clicks count as visitors.', go: 'Exclude this browser' },
     replay: { label: 'Replay', title: 'Replay this period', body: 'Your days, played as a story.', go: 'Play week' },
     full: { label: 'Full mode', title: 'See everything', body: 'Every card, not only the basics.', go: 'Open Full' },
     search: { label: 'Search Console', title: 'See what people search for', body: 'Google’s numbers, beside yours.', go: 'Connect' },

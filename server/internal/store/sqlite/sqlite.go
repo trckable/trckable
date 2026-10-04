@@ -19,6 +19,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/ingest"
+	"github.com/trckable/trckable/server/internal/ipfilter"
 )
 
 // Store wraps the control-plane database and an in-memory site cache.
@@ -567,6 +568,9 @@ var migrations = []string{
 		created_at INTEGER NOT NULL
 	);
 	CREATE INDEX known_devices_user ON known_devices(user_id);`,
+	// 44: the owner's own addresses and ranges, one per line, left out of the
+	// counts before anything is hashed. Only this list is kept.
+	`ALTER TABLE site_settings ADD COLUMN exclude_ips TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
@@ -638,7 +642,7 @@ func (s *Store) reloadSites(ctx context.Context) error {
 		SELECT s.id, s.domain, s.allowed, s.hash_mode, s.proxy_key,
 		       coalesce(c.exclude_paths, ''), coalesce(c.honor_dnt, 0),
 		       coalesce(c.record_city, 1), coalesce(c.bot_strict, 1),
-		       coalesce(c.consent_free, 0)
+		       coalesce(c.consent_free, 0), coalesce(c.exclude_ips, '')
 		FROM sites s LEFT JOIN site_settings c ON c.site_id = s.id`)
 	if err != nil {
 		return err
@@ -647,9 +651,9 @@ func (s *Store) reloadSites(ctx context.Context) error {
 	next := map[string]ingest.Site{}
 	for rows.Next() {
 		var site ingest.Site
-		var allowed, exclude string
+		var allowed, exclude, ips string
 		var hash, dnt, city, strict, free int
-		if err := rows.Scan(&site.ID, &site.Domain, &allowed, &hash, &site.ProxyKey, &exclude, &dnt, &city, &strict, &free); err != nil {
+		if err := rows.Scan(&site.ID, &site.Domain, &allowed, &hash, &site.ProxyKey, &exclude, &dnt, &city, &strict, &free, &ips); err != nil {
 			return err
 		}
 		if allowed != "" {
@@ -670,6 +674,7 @@ func (s *Store) reloadSites(ctx context.Context) error {
 				site.ExcludePaths = append(site.ExcludePaths, line)
 			}
 		}
+		site.ExcludeIPs = ipfilter.Prefixes(strings.Split(ips, "\n"))
 		next[site.ID] = site
 	}
 	if err := rows.Err(); err != nil {

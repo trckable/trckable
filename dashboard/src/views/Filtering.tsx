@@ -2,6 +2,7 @@
 // the visitor having to do anything — robots in data centres, and your own.
 import { Row } from '../components/Row'
 import { Switch } from '../components/Switch'
+import { ExcludeIps } from '../features/exclude/ExcludeIps'
 import type { Site, SiteConfig } from '../lib/apiMore'
 
 const words = {
@@ -40,6 +41,7 @@ export function Filtering({ site, c, save }: { site: Site; c: SiteConfig; save: 
           </>
         )}
       </Row>
+      <ExcludeIps c={c} save={save} />
     </>
   )
 }

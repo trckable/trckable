@@ -13,6 +13,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"strconv"
 	"strings"
@@ -21,6 +22,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/event"
+	"github.com/trckable/trckable/server/internal/ipfilter"
 	"github.com/trckable/trckable/server/internal/wal"
 
 	"github.com/trckable/trckable/server/internal/auth"
@@ -51,6 +53,10 @@ type Site struct {
 	// run analytics without a consent banner. Enforced here, not trusted to
 	// the tracker: a stale script cannot opt back in.
 	ConsentFree bool
+	// ExcludeIPs are the owner's own addresses and ranges. A visit from one is
+	// dropped before the address is hashed or looked up, so it is never counted,
+	// billed or stored. Only this list is kept, never who matched it.
+	ExcludeIPs []netip.Prefix
 }
 
 // Skip reports whether a path is excluded for this site. A trailing * matches
@@ -67,6 +73,9 @@ func (s Site) Skip(path string) bool {
 	}
 	return false
 }
+
+// SkipIP reports whether a visitor address is one the owner left out.
+func (s Site) SkipIP(ip string) bool { return ipfilter.Match(s.ExcludeIPs, ip) }
 
 // Geo resolves a client IP to a location (the IP is not kept).
 type Geo func(ip string) (country, region, city string)
@@ -317,6 +326,11 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 		if fwd != "" {
 			ip = fwd
 		}
+	}
+	// The owner's own addresses are left out first: before the data-centre
+	// lookup, the rate limit and the hash, so nothing about them is used.
+	if site.SkipIP(ip) {
+		return nil, dropOwner, nil, nil // the owner's choice: not counted as a bot either
 	}
 	// Stricter filtering also drops visits from rented servers: a browser
 	// running in a data centre is a script, not a reader.

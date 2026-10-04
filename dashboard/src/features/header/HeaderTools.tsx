@@ -4,6 +4,7 @@
 // Share: an icon beside ⋯ (on a phone it is ⋯'s first item).
 import { Search, Share2 } from 'lucide-react'
 import type { ReactNode } from 'react'
+import type { Site } from '../../lib/api'
 import { AccountMenu } from '../../components/AccountMenu'
 import { caps, keyFor, useKeymap } from '../../lib/keys'
 import { canAsk, isShared } from '../../lib/me'
@@ -19,6 +20,8 @@ interface Props {
   extra?: ReactNode
   /** Before the first visit there is nothing to ask about. */
   waiting?: boolean
+  /** The site on screen: the avatar's menu has a choice about it. */
+  site?: Site
 }
 
 export function HeaderTools(p: Props) {
@@ -40,7 +43,7 @@ export function HeaderTools(p: Props) {
           <span className="kbd">{askKey}</span>
         </button>
       )}
-      {!shared && <AccountMenu />}
+      {!shared && <AccountMenu site={p.site} />}
     </div>
   )
 }
