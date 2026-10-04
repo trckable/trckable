@@ -183,7 +183,7 @@ A visitor's browser keeps what it could not send, up to 24 hours and 200 events,
 ### Little things you notice
 
 - **Live count in the tab**: "● 8 · trckable" in the browser tab and a dot on its icon while anyone is online. Off with one switch.
-- **Cha-ching**: a coin toast when a sale arrives, over any view, with an optional chime. Browser notices for a first sale from a new source, a spike or tracking stopping are opt-in, and asked for only from a button.
+- **Cha-ching**: a coin toast when a sale arrives, over any view, with an optional chime. Browser notices for a first sale from a new source, a surge (twice the usual number of people online, with who sent them), a spike or tracking stopping are opt-in, and asked for only from a button.
 - **Sparklines** on the top Sources and Pages, **vs usual** under Visitors ("+18% vs usual", against the same weekday) and **where the month is heading** ("≈ 41k by 31 Oct").
 - **Site icons** beside referrers, fetched by your server once and kept there: your visitors' browsers never ask a third party.
 - **Milestones** celebrate with a short ghost hop and a card ready to share. The cards that come up by themselves (a milestone, the one thing today, a nudge) are one design: what it is, when, its figure counting up, where it came from, a small chart of the moment, and a deck you turn with ← → or a swipe.

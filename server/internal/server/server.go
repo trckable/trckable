@@ -246,6 +246,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		},
 	}
 	a.SendWeekly = s.sendWeeklyNow
+	a.OnSurge = s.tellSurge
 	if len(cfg.OIDC) > 0 {
 		if cfg.BaseURL == "" {
 			// The provider sends people back to one fixed address. The request's

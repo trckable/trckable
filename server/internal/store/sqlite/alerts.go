@@ -15,6 +15,9 @@ import (
 //	spike     today is far above the usual
 //	customer  someone paid
 //	disk      the volume is filling up
+//
+// A surge (the site far busier than usual right now) is the seventh, and
+// weekly and milestone the others.
 type Alert struct {
 	ID        string  `json:"id"`
 	SiteID    string  `json:"site_id"`
@@ -26,9 +29,9 @@ type Alert struct {
 	Created   int64   `json:"created_at"`
 }
 
-// AlertKinds are the four, plus the weekly report and milestones reached,
-// in the order the dashboard shows them.
-var AlertKinds = []string{"stopped", "spike", "customer", "disk", "weekly", "milestone"}
+// AlertKinds are the four, plus the weekly report, milestones reached and a
+// traffic surge, in the order the dashboard shows them.
+var AlertKinds = []string{"stopped", "spike", "customer", "disk", "weekly", "milestone", "surge"}
 
 // Alerts lists a site's alerts.
 func (s *Store) Alerts(ctx context.Context, site string) ([]Alert, error) {

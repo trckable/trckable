@@ -19,7 +19,7 @@ func alertsOf(t *testing.T, s *Store, site string) map[string]Alert {
 	return out
 }
 
-func TestANewSiteGetsTheWeeklyReportAndTrackingStopped(t *testing.T) {
+func TestANewSiteGetsTheWeeklyReportTrackingStoppedAndASurgeAlert(t *testing.T) {
 	ctx := context.Background()
 	s, err := Open(ctx, filepath.Join(t.TempDir(), "trckable.db"))
 	if err != nil {
@@ -40,10 +40,10 @@ func TestANewSiteGetsTheWeeklyReportAndTrackingStopped(t *testing.T) {
 		t.Fatalf("with mail: %v %v", on, err)
 	}
 	got := alertsOf(t, s, site)
-	if len(got) != 2 {
-		t.Fatalf("want weekly and stopped, got %v", got)
+	if len(got) != 3 {
+		t.Fatalf("want weekly, stopped and a surge, got %v", got)
 	}
-	for _, kind := range []string{"weekly", "stopped"} {
+	for _, kind := range []string{"weekly", "stopped", "surge"} {
 		if a := got[kind]; !a.Enabled || a.Target != "mailto:owner@example.com" {
 			t.Errorf("%s: %+v", kind, a)
 		}

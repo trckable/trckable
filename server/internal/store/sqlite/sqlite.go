@@ -626,6 +626,19 @@ var migrations = []string{
 	// owner reworded, as JSON. Blank is the translated defaults.
 	`ALTER TABLE widgets ADD COLUMN lang TEXT NOT NULL DEFAULT 'auto';
 	ALTER TABLE widgets ADD COLUMN texts TEXT NOT NULL DEFAULT '';`,
+	// 50: a site's busy spells (surges.go): when one began and ended, the most
+	// online at once, the usual for that hour, and who they were as JSON
+	// (a source, a page, a country). Counts only, never a visitor.
+	`CREATE TABLE surges (
+		id         TEXT PRIMARY KEY,
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		started_at INTEGER NOT NULL,
+		ended_at   INTEGER NOT NULL DEFAULT 0,
+		peak       INTEGER NOT NULL,
+		usual      REAL NOT NULL,
+		why        TEXT NOT NULL DEFAULT ''
+	);
+	CREATE INDEX surges_site ON surges(site_id, started_at);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

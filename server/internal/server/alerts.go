@@ -39,6 +39,7 @@ func (s *Server) runAlerts(ctx context.Context) {
 		case <-t.C:
 		}
 		s.checkMilestones(ctx)
+		s.checkSurges(ctx)
 		if err := s.checkAlerts(ctx); err != nil && ctx.Err() == nil {
 			slog.Warn("alert check failed", "err", err)
 		}

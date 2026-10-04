@@ -2,7 +2,7 @@
 // the dashboard, plus one short report a week; everything else is noise. They
 // go to a webhook, because every tool already takes one, or to an email
 // address once the server has a mail server to use (TRCKABLE_SMTP_URL).
-import { Banknote, Bell, CalendarDays, HardDrive, Send, TrendingUp, TriangleAlert, Trophy, WifiOff } from 'lucide-react'
+import { Banknote, Bell, CalendarDays, HardDrive, Send, TrendingUp, TriangleAlert, Trophy, WifiOff, Zap } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import './Alerts.css'
 import { Switch } from '../components/Switch'
@@ -19,6 +19,7 @@ const DAYS = ['Sunday', 'Monday']
 const KINDS: { id: Alert['kind']; label: string; Icon: typeof Bell; before?: string; unit?: string; fallback: number; hint: (site: Site) => string }[] = [
   { id: 'stopped', label: 'Tracking stopped', Icon: WifiOff, before: 'No visits for', unit: 'hours', fallback: 6, hint: () => 'when it normally has some by then' },
   { id: 'spike', label: 'Busy day', Icon: TrendingUp, before: 'Today reaches', unit: '× a normal day', fallback: 3, hint: () => 'and at least 50 visitors' },
+  { id: 'surge', label: 'Traffic surge', Icon: Zap, fallback: 0, hint: () => 'Twice as busy as usual right now, and at least 10 people: who sent them, at most once every three hours' },
   { id: 'customer', label: 'Someone paid', Icon: Banknote, fallback: 0, hint: () => 'New payments since the last message, at most once every six hours' },
   { id: 'disk', label: 'Disk filling up', Icon: HardDrive, before: 'Less than', unit: 'days of room left', fallback: 14, hint: () => 'at the rate the last week wrote' },
   { id: 'weekly', label: 'Weekly report', Icon: CalendarDays, fallback: 0, hint: (site) => `${DAYS[site.week_start === 0 ? 0 : 1]} from 8:00: last week's visitors, sources, pages, goals and revenue, then what changed` },

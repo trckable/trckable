@@ -30,6 +30,8 @@ export function figureOf(pin: Pin, money: (minor: number) => string): Figure {
       // No usual to multiply (a quiet or young site): the count and the source, no multiplier.
       if (!n.factor) return { n: n.visitors ?? 0, fmt: fmtInt, unit: copy.unit.visitors }
       return n.visitors ? { n: n.visitors, fmt: fmtInt, unit: copy.unit.visitors, mult: times(n.factor) } : { text: times(n.factor) }
+    case 'surge':
+      return n.visitors ? { n: n.visitors, fmt: fmtInt, unit: copy.unit.online, mult: n.factor ? times(n.factor) : undefined } : { text: n.factor ? times(n.factor) : '' }
     case 'sale':
       return { n: n.amount ?? 0, fmt: (v) => money(Math.round(v)), text: money(n.amount ?? 0) }
     case 'referrer':
