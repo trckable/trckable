@@ -1,3 +1,5 @@
+import { execFileSync } from 'node:child_process'
+import { join } from 'node:path'
 import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test'
 
 const MOCK = `http://127.0.0.1:${process.env.MOCK_PORT ?? '19400'}`
@@ -53,7 +55,19 @@ async function saveSettings(browser: Browser, set: (page: Page) => Promise<void>
 /** A switch is a checkbox under a track: click its label. */
 const flip = (page: Page, id: string, on: boolean) => page.locator(`#${id}`).setChecked(on, { force: true })
 
-test.describe.configure({ mode: 'serial' })
+// Every test starts from the same settings, whatever ran before it.
+const WP_PATH = join(process.env.WP_DIR ?? '', 'wordpress')
+const BASE = { site: SITE, server: 'own', host: MOCK, cookieless: 0, exclude_staff: 1, exclude_roles: [], proxy: 0, proxy_key: '', api_key: '', onboarding: 0 }
+function reset(changes: Record<string, unknown> = {}) {
+  // WP-CLI with room to run, and without a newer PHP's deprecation notices.
+  const bin = execFileSync('which', ['wp']).toString().trim()
+  const code = "update_option('trckable_settings', json_decode(getenv('TKB_SETTINGS'), true)); delete_transient('trckable_stats'); delete_transient('trckable_script');"
+  execFileSync('php', ['-d', 'memory_limit=512M', '-d', 'error_reporting=E_ALL&~E_DEPRECATED', bin, `--path=${WP_PATH}`, 'eval', code], {
+    stdio: 'pipe',
+    env: { ...process.env, TKB_SETTINGS: JSON.stringify({ ...BASE, ...changes }) },
+  })
+}
+test.beforeEach(() => reset())
 
 test('a visitor gets the documented script tag in the head', async ({ browser }) => {
   const page = await asUser(browser)
@@ -92,9 +106,6 @@ test('the cookieless switch sets the attribute, the preview follows it, and a sk
   const reader = await asUser(browser, 'reader')
   await reader.goto('/')
   await expect(tag(reader)).toHaveCount(0)
-  await saveSettings(browser, async (p) => {
-    await p.locator('label.trk-role', { hasText: 'Subscriber' }).click()
-  })
 })
 
 test('settings are checked: a wrong site ID is refused and the old one kept', async ({ browser }) => {
@@ -140,10 +151,16 @@ test('the proxy forwards the script and events, and nothing else', async ({ brow
   })
   await seen(true)
   const visitor = await asUser(browser)
+  const log: string[] = []
+  visitor.on('response', (r) => r.url().includes('trckable') && log.push(`${r.status()} ${r.request().method()} ${r.url()}`))
+  visitor.on('console', (m) => log.push(`console: ${m.text()}`))
+  const posted = visitor.waitForResponse((r) => r.url().endsWith('/trckable/v1/e'), { timeout: 20_000 })
   await visitor.goto('/')
   await expect(tag(visitor)).toHaveAttribute('src', /\/wp-json\/trckable\/v1\/js\/tkb_test00000001\.js$/)
   await expect(tag(visitor)).toHaveAttribute('data-api', /\/wp-json\/trckable\/v1\/e$/)
-  await expect.poll(async () => (await seen()).filter((s) => s.path === '/api/e').length).toBe(1)
+  const answer = await posted.catch(() => null)
+  expect(answer?.status(), `the event was not answered: ${log.join(' | ')}`).toBe(202)
+  await expect.poll(async () => (await seen()).filter((s) => s.path === '/api/e').length, { message: log.join(' | ') }).toBe(1)
   const event = (await seen()).find((s) => s.path === '/api/e')!
   expect(event.key).toBe(PROXY_KEY)
   expect(event.ip).toMatch(/^127\.0\.0\.1$|^::1$/)
@@ -174,10 +191,7 @@ test('the proxy forwards the script and events, and nothing else', async ({ brow
 })
 
 test('first run, on your own server: three steps, then the pill turns green when the first visit arrives', async ({ browser }) => {
-  // Clearing the site ID brings the first-run card back.
-  await saveSettings(browser, async (p) => {
-    await p.fill('#trckable_site', '')
-  })
+  reset({ site: '' }) // no site ID: the first-run card
   const page = await admin()
   await page.goto(PAGE)
   const card = page.locator('#trk-onboard')
@@ -211,9 +225,7 @@ test('first run, on your own server: three steps, then the pill turns green when
 })
 
 test('first run with trckable Cloud: no address to enter', async ({ browser }) => {
-  await saveSettings(browser, async (p) => {
-    await p.fill('#trckable_site', '')
-  })
+  reset({ site: '' })
   const page = await admin()
   await page.goto(PAGE)
   const card = page.locator('#trk-onboard')
@@ -223,17 +235,10 @@ test('first run with trckable Cloud: no address to enter', async ({ browser }) =
   await expect(card).toHaveAttribute('data-step', '2')
   await page.fill('#trckable_site', SITE)
   await expect(page.locator('#trk-tag')).toContainText(`src="https://cloud.trckable.com/js/${SITE}.js"`)
-  // Back to the test server for what follows.
-  await page.getByRole('link', { name: 'Skip, show all settings' }).click()
-  await expect(page.locator('.trk-layout')).toBeVisible()
-  await page.locator('label[for=trk-server-own]').click()
-  await page.fill('#trckable_site', SITE)
-  await page.fill('#trckable_host', MOCK)
-  await page.click('#submit')
-  await expect(page.locator('.trk-toast[data-saved="1"]')).toBeAttached({ timeout: 30_000 })
 })
 
 test('the preview shows your numbers with a key, and says sample data without one', async ({ browser }) => {
+  reset({ api_key: API_KEY })
   const page = await admin()
   await page.goto(PAGE)
   const prev = page.locator('.trk-prev')
@@ -249,12 +254,10 @@ test('the preview shows your numbers with a key, and says sample data without on
   await expect(nokey.locator('.trk-prev [data-sample]')).toHaveText('Sample data')
   await expect(nokey.locator('[data-hint]')).toBeVisible()
   await expect(nokey.locator('.trk-pill')).toHaveText('Script added')
-  await saveSettings(browser, async (p) => {
-    await p.fill('#trckable_api_key', API_KEY)
-  })
 })
 
 test('the dashboard widget shows who is online and visitors today, with a link', async ({ browser }) => {
+  reset({ api_key: API_KEY })
   const page = await admin()
   await page.goto('/wp-admin/index.php')
   const widget = page.locator('#trckable_widget')
