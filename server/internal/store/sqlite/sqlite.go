@@ -639,6 +639,18 @@ var migrations = []string{
 		why        TEXT NOT NULL DEFAULT ''
 	);
 	CREATE INDEX surges_site ON surges(site_id, started_at);`,
+	// 51: the traffic surge alert for sites that already have alerts on: one
+	// per site, to where its newest enabled alert goes. A site whose alerts are
+	// all off, or that has no destination, gets none, and one that already has
+	// a surge alert (even switched off, or stopped by its unsubscribe link) is
+	// left as it is.
+	`INSERT INTO alerts (id, site_id, kind, enabled, target, threshold, last_fired, created_at)
+	SELECT 'alert_' || lower(hex(randomblob(8))), site_id, 'surge', 1, target, 0, 0, CAST(strftime('%s', 'now') AS INTEGER)
+	FROM (
+		SELECT site_id, target, row_number() OVER (PARTITION BY site_id ORDER BY created_at DESC, rowid DESC) AS rn
+		FROM alerts WHERE enabled = 1 AND target != ''
+	)
+	WHERE rn = 1 AND site_id NOT IN (SELECT site_id FROM alerts WHERE kind = 'surge');`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
