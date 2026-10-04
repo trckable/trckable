@@ -56,9 +56,13 @@ func (a *API) listModules(w http.ResponseWriter, r *http.Request) {
 		m.Costs = costs
 		out = append(out, row{Module: m, Enabled: set.Has(m.ID)})
 	}
+	script := sizes.Variants[web.VariantName(set.Tracker())]
+	if set.Has("heatmaps") && !set.Has("consent") { // sent after the base script, so the site's script is both
+		script += sizes.Feature[modules.TrackHeat]
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"modules": out,
-		"script":  map[string]any{"bytes": sizes.Variants[web.VariantName(set.Tracker())], "core": sizes.Core, "full": sizes.Full, "url": "/js/" + site + ".js"},
+		"script":  map[string]any{"bytes": script, "core": sizes.Core, "full": sizes.Full, "url": "/js/" + site + ".js"},
 	})
 }
 
