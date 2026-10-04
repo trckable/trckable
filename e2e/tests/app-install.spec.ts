@@ -6,6 +6,8 @@
 import { expect, test, type Page } from '@playwright/test'
 import { API } from '../playwright.config'
 
+test.use({ serviceWorkers: 'allow' })
+
 async function controlled(page: Page) {
   await page.goto(API + '/')
   await page.evaluate(() => navigator.serviceWorker.ready)
