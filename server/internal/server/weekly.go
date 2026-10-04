@@ -193,8 +193,7 @@ func (s *Server) weekly(ctx context.Context, siteID string, lastFired int64, now
 	if !due {
 		return ev, false
 	}
-	var created int64
-	if err := s.ctl.DB.QueryRowContext(ctx, `SELECT created_at FROM sites WHERE id = ?`, siteID).Scan(&created); err != nil || !hadAWeek(created, info.LastEventAt, to) {
+	if !hadAWeek(info.CreatedAt, info.LastEventAt, to) {
 		return ev, false
 	}
 	return s.weeklyEvent(ctx, q, info, loc, from, to, ev)

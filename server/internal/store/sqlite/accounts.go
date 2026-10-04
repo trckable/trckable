@@ -285,8 +285,8 @@ type SiteInfo struct {
 // SiteInfo returns one site.
 func (s *Store) SiteInfo(ctx context.Context, id string) (SiteInfo, error) {
 	var si SiteInfo
-	err := s.DB.QueryRowContext(ctx, `SELECT id, domain, name, timezone, currency, proxy_key FROM sites WHERE id = ?`, id).
-		Scan(&si.ID, &si.Domain, &si.Name, &si.Timezone, &si.Currency, &si.ProxyKey)
+	err := s.DB.QueryRowContext(ctx, `SELECT id, domain, name, timezone, currency, proxy_key, last_event_at, created_at FROM sites WHERE id = ?`, id).
+		Scan(&si.ID, &si.Domain, &si.Name, &si.Timezone, &si.Currency, &si.ProxyKey, &si.LastEventAt, &si.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return si, auth.ErrNotFound
 	}
