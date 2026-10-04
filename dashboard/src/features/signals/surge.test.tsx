@@ -8,8 +8,7 @@ vi.mock('../../lib/url', () => ({ setView: (p: unknown) => setView(p) }))
 vi.mock('../../components/Toast', () => ({ toast: vi.fn() }))
 
 import SurgeCard from './SurgeCard'
-import { pref } from './prefs'
-import { clock, startSlice, storyLines, surgeFilter, surgeLines, surgeNotice, surgeNow, type Story, type Surge } from './surge'
+import { beats, clock, deviceShare, honestLine, peakSlice, sourceHost, sourceLine, startSlice, surgeChip, surgeFilter, surgeNotice, type Story, type Surge } from './surge'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -24,6 +23,8 @@ const story: Story = {
   mobile: 30,
   devices: 40,
   countries: [{ country: 'AL', n: 20 }, { country: 'US', n: 8 }],
+  sources: [{ name: 'Facebook', n: 34 }, { name: 'Google', n: 6 }],
+  pages: [{ name: '/blog/launch-post', n: 30 }],
 }
 
 const surge: Surge = {
@@ -37,18 +38,13 @@ const surge: Surge = {
 }
 
 describe('what the card says', () => {
-  it('writes the headline, the source with its usual, the page and the jump, all counted', () => {
-    expect(surgeNow(surge)).toBe('53 people on your site right now, about 2.7× usual.')
-    expect(surgeLines(surge)).toEqual([
-      '34 of them came from Facebook (usually about 2).',
-      'Most of them are reading /blog/launch-post.',
-      'From 20 to 53 in 15 minutes.',
-    ])
-  })
-  it('says nothing it did not count: no source, no page, no jump that is not one', () => {
-    const bare: Surge = { ...surge, why: { source_usual: 0, before: 60, minutes: 15 } }
-    expect(surgeLines(bare)).toEqual([])
-    expect(surgeLines({ ...surge, why: { ...surge.why, source: 'Direct', source_dim: 'channel', source_value: 'Direct', source_usual: 0.2 } })[0]).toBe('34 of them came straight to the site (usually next to none).')
+  it('says who sent most of them in one line, and how many only when it is not most', () => {
+    expect(sourceLine(surge)).toBe('Mostly from Facebook')
+    expect(sourceLine({ ...surge, why: { ...surge.why, source_n: 20 } })).toBe('20 from Facebook')
+    expect(sourceLine({ ...surge, why: { ...surge.why, source: 'Direct', source_dim: 'channel', source_value: 'Direct', source_n: 40 } })).toBe('Mostly direct visits')
+    expect(sourceLine({ ...surge, why: { source_usual: 0, before: 0, minutes: 15 } })).toBe('')
+    expect(sourceHost(surge)).toBe('facebook.com')
+    expect(surgeChip(surge)).toBe('2.7× usual')
   })
   it('filters to the source, and to nothing when there is none', () => {
     expect(surgeFilter(surge)).toEqual({ dim: 'referrer', value: 'l.facebook.com' })
@@ -61,20 +57,28 @@ describe('what the card says', () => {
 })
 
 describe('the story', () => {
-  it('tells when it began and from where as "looks like", the peak and now, the phones and the countries', () => {
-    const lines = storyLines(surge, 'UTC', (c) => ({ AL: 'Albania', US: 'United States' })[c] ?? c)
-    expect(lines[0]).toBe(`Looks like a link on Facebook, landing on /blog/launch-post, started sending people around ${clock(story.start ?? 0, 'UTC')} (the exact post isn’t visible).`)
-    expect(lines[1]).toBe(`Peaked at 53 at ${clock(story.peak_at, 'UTC')}, 31 now.`)
-    expect(lines.slice(2)).toEqual(['75% on phones.', 'Top countries: Albania 20, United States 8.'])
+  it('has three beats in time order: when it began and from where, the peak, now', () => {
+    const b = beats(surge, 'UTC')
+    expect(b.map((x) => x.key)).toEqual(['start', 'peak', 'now'])
+    expect(b[0].text).toBe(`${clock(story.start ?? 0, 'UTC')} started · Facebook`)
+    expect(b[1].text).toBe(`${clock(story.peak_at, 'UTC')} peak 53`)
+    expect(b[2].text).toBe('now 31')
   })
-  it('says it has been busy longer when the climb began before the hour, and skips a split that is not clear', () => {
-    const lines = storyLines({ ...surge, story: { ...story, start: undefined, mobile: 21, devices: 40 } }, 'UTC', (c) => c)
-    expect(lines[0]).toBe('It has been busy for more than an hour.')
-    expect(lines.some((l) => l.includes('phones') || l.includes('computers'))).toBe(false)
+  it('says it has been busy longer when the climb began before the hour', () => {
+    expect(beats({ ...surge, story: { ...story, start: undefined } }, 'UTC')[0].text).toBe('Busy for more than an hour')
   })
-  it('marks the slice the climb began in', () => {
+  it('says what it only looks like, and never claims the exact post', () => {
+    expect(honestLine(surge)).toBe('Looks like a link on Facebook, landing on /blog/launch-post, started sending people. The exact post isn’t visible.')
+    expect(honestLine({ ...surge, why: { source_usual: 0, before: 0, minutes: 15 } })).toBe('The climb began without a referring site we can see.')
+  })
+  it('splits phones and computers only with five people whose device is known', () => {
+    expect(deviceShare(story)).toEqual({ phone: 75, computer: 25 })
+    expect(deviceShare({ ...story, devices: 4 })).toBeNull()
+  })
+  it('marks the slice the climb began in and the busiest one', () => {
     expect(startSlice(story)).toBe(8)
     expect(startSlice({ ...story, start: undefined })).toBeUndefined()
+    expect(peakSlice(story)).toBe(9)
   })
 })
 
@@ -113,20 +117,39 @@ describe('the surge card', () => {
     expect(card()).toBeNull()
   })
 
-  it('shows the headline and two lines, and More opens the rest of the story', async () => {
+  it('is a number, a chip, one line and two buttons: no paragraphs', async () => {
     answer(surge)
     await draw()
-    expect(card()?.textContent).toContain('53 people on your site right now, about 2.7× usual.')
-    expect(card()?.textContent).toContain('34 of them came from Facebook')
-    expect(card()?.textContent).not.toContain('From 20 to 53')
-    expect(card()?.textContent).not.toContain('Peaked at')
+    expect(card()?.querySelector('.sg-count')?.textContent).toBe('53')
+    expect(card()?.querySelector('.sg-chip')?.textContent).toBe('2.7× usual')
+    expect(card()?.querySelector('.sg-source span:last-child')?.textContent).toBe('Mostly from Facebook')
+    expect(card()?.querySelector('svg.side-chart')).not.toBeNull()
+    expect([...(card()?.querySelectorAll('.side-card-actions button') ?? [])].map((b) => b.textContent)).toEqual(['More', 'See it'])
+    expect(card()?.querySelectorAll('p').length).toBe(1)
+  })
+
+  it('More opens the story as a dialog with the beats, the tiles and the honest line, and Escape closes it', async () => {
+    answer(surge)
+    await draw()
     const more = [...document.body.querySelectorAll<HTMLButtonElement>('.side-card button')].find((b) => b.textContent === 'More')
     act(() => {
       more?.click()
     })
-    expect(card()?.textContent).toContain('From 20 to 53 in 15 minutes.')
-    expect(card()?.textContent).toContain('Peaked at 53')
-    expect(card()?.querySelector('svg.side-chart')).not.toBeNull()
+    for (let i = 0; i < 40 && !document.body.querySelector('[role="dialog"]'); i++) await act(() => new Promise((r) => setTimeout(r, 25)))
+    const dlg = document.body.querySelector('[role="dialog"]')
+    expect(dlg?.getAttribute('aria-modal')).toBe('true')
+    expect(dlg?.textContent).toContain('20 → 53 in 15 min')
+    expect(dlg?.textContent).toContain('peak 53')
+    expect(dlg?.textContent).toContain('now 31')
+    expect(dlg?.textContent).toContain('Albania')
+    expect(dlg?.textContent).toContain('Phone')
+    expect(dlg?.textContent).toContain('/blog/launch-post')
+    expect(dlg?.textContent).toContain('The exact post isn’t visible.')
+    expect(dlg?.querySelector('svg[role="img"]')).not.toBeNull()
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    })
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull()
   })
 
   it('See it opens today in Data, filtered to the source, and the card is put away for good', async () => {
@@ -141,27 +164,10 @@ describe('the surge card', () => {
     expect(localStorage.getItem('trckable:card:surge:surge_1')).toBe('1')
   })
 
-  it('offers the browser notice only to someone who has not decided, and asks the browser only from its button', async () => {
-    answer(surge)
-    await draw()
-    const notify = [...document.body.querySelectorAll<HTMLButtonElement>('.side-card button')].find((b) => b.textContent?.includes('Get notified next time'))
-    expect(notify).toBeDefined()
-    expect(pref('notify')).toBe(false)
-    await act(() => {
-      notify?.click()
-      return Promise.resolve()
-    })
-    expect(pref('notify')).toBe(true)
-  })
-
-  it('does not come back once put away, and not for a blocked browser either', async () => {
+  it('does not come back once put away', async () => {
     localStorage.setItem('trckable:card:surge:surge_1', '1')
     answer(surge)
     await draw()
     expect(card()).toBeNull()
-    localStorage.clear()
-    vi.stubGlobal('Notification', Object.assign(function Notification() {}, { permission: 'denied', requestPermission: () => Promise.resolve('denied') }))
-    await draw()
-    expect([...document.body.querySelectorAll('.side-card button')].some((b) => b.textContent?.includes('Get notified'))).toBe(false)
   })
 })

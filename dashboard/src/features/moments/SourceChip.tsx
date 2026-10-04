@@ -9,7 +9,7 @@ import { RefMark } from '../cards/refIcons'
 
 export type Chip = { host: string } | { channel: string } | { path: string }
 
-function useHostIcon(host: string | null): boolean {
+export function useHostIcon(host: string | null): boolean {
   const [got, setGot] = useState<{ host: string; has: boolean } | null>(null)
   useEffect(() => {
     if (!host) return

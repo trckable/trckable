@@ -56,13 +56,15 @@ export interface SideCardProps {
   deck?: DeckProps
   /** The ghost in the corner: for a milestone and a first sale only. */
   ghost?: boolean
+  /** A class of the card's own, for a card that looks like itself. */
+  className?: string
 }
 
 /** How long a card takes to leave: its exit animation (SideCard.css, side-out), so what follows waits for it. */
 const LEAVE_MS = 200
 const SWIPE = 40
 
-export function SideCard({ id, label, closeLabel, asked, title, onClose, actions, children, kind, when, chart, deck, ghost }: SideCardProps) {
+export function SideCard({ id, label, closeLabel, asked, title, onClose, actions, children, kind, when, chart, deck, ghost, className }: SideCardProps) {
   const mine = useSideCard(id, asked)
   const card = useRef<HTMLElement>(null)
   const before = useRef<Element | null>(null)
@@ -153,7 +155,7 @@ export function SideCard({ id, label, closeLabel, asked, title, onClose, actions
       <aside
         ref={card}
         tabIndex={-1}
-        className={'side-card' + (kind ? ' has-kind' : '') + (leaving ? ' leaving' : '')}
+        className={'side-card' + (kind ? ' has-kind' : '') + (leaving ? ' leaving' : '') + (className ? ' ' + className : '')}
         style={kind?.tint ? ({ '--tint': kind.tint } as CSSProperties) : undefined}
         aria-label={label}
       >

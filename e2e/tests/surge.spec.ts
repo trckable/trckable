@@ -17,7 +17,7 @@ const surge = {
   online: 53,
   usual: 20,
   times: 2.7,
-  story: { at: now, series: [18, 22, 19, 21, 20, 23, 19, 22, 40, 53, 49, 31], step: 5, start: now - 20 * 60, peak: 53, peak_at: now - 15 * 60, now: 31, mobile: 30, devices: 40, countries: [{ country: 'AL', n: 20 }, { country: 'US', n: 8 }] },
+  story: { at: now, sources: [{ name: 'Facebook', n: 34 }, { name: 'Google', n: 6 }], pages: [{ name: '/blog/launch-post', n: 30 }], series: [18, 22, 19, 21, 20, 23, 19, 22, 40, 53, 49, 31], step: 5, start: now - 20 * 60, peak: 53, peak_at: now - 15 * 60, now: 31, mobile: 30, devices: 40, countries: [{ country: 'AL', n: 20 }, { country: 'US', n: 8 }] },
   why: { source: 'Facebook', source_dim: 'referrer', source_value: 'l.facebook.com', source_n: 34, source_usual: 2, page: '/blog/launch-post', page_n: 30, before: 20, minutes: 15 },
 }
 
@@ -42,6 +42,7 @@ async function open(page: Page, view: 'live' | 'data', width = 1280) {
 }
 
 const card = (page: Page) => page.getByRole('complementary', { name: 'Busy' })
+const story = (page: Page) => page.getByRole('dialog', { name: 'The busy moment' })
 
 async function shoot(page: Page, name: string) {
   if (!SHOTS) return
@@ -49,35 +50,67 @@ async function shoot(page: Page, name: string) {
   const width = page.viewportSize()!.width
   for (const scheme of ['dark', 'light'] as const) {
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
-    await page.waitForTimeout(400)
+    await page.waitForTimeout(500)
     await page.screenshot({ path: `${SHOTS}/${name}-${width}-${scheme}.png` })
   }
 }
 
-test('the card comes up in Live and in Data, says it in numbers, and More tells the story', async ({ page }) => {
+test('the card comes up in Live and in Data: a number, a chip, one line, two buttons', async ({ page }) => {
   await open(page, 'live')
   await expect(card(page)).toBeVisible({ timeout: 30_000 })
-  await expect(card(page)).toContainText('53 people on your site right now, about 2.7× usual.')
-  await expect(card(page)).toContainText('34 of them came from Facebook (usually about 2).')
-  await expect(card(page)).not.toContainText('Peaked at')
+  await expect(card(page).locator('.sg-count')).toHaveText('53')
+  await expect(card(page).locator('.sg-chip')).toHaveText('2.7× usual')
+  await expect(card(page).locator('.sg-source')).toContainText('Mostly from Facebook')
+  await expect(card(page).getByRole('button')).toHaveText(['', 'More', 'See it'])
   await shoot(page, 'surge-card')
-  await card(page).getByRole('button', { name: 'More' }).click()
-  await expect(card(page)).toContainText('From 20 to 53 in 15 minutes.')
-  await expect(card(page)).toContainText('Looks like a link on Facebook')
-  await expect(card(page)).toContainText('Peaked at 53')
-  await expect(card(page)).toContainText('Top countries: Albania 20, United States 8.')
-  await expect(card(page).locator('svg.side-chart')).toBeVisible()
-  await shoot(page, 'surge-card-more')
-
   await open(page, 'data')
   await expect(card(page)).toBeVisible({ timeout: 30_000 })
 })
 
-test('See it opens today in Data filtered to the source, and the card does not come back', async ({ page }) => {
+test('the entrance, in three frames', async ({ page }) => {
+  test.skip(!SHOTS, 'pictures only')
+  await open(page, 'live')
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.reload()
+  await expect(card(page)).toBeAttached({ timeout: 30_000 })
+  mkdirSync(SHOTS!, { recursive: true })
+  const clip = { x: 1280 - 400, y: 900 - 520, width: 400, height: 440 }
+  for (const [i, ms] of [0, 220, 700].entries()) {
+    await page.waitForTimeout(ms)
+    await page.screenshot({ path: `${SHOTS}/surge-entrance-${i + 1}.png`, clip })
+  }
+})
+
+test('More opens the story as a dialog; Escape closes it and focus comes back', async ({ page }) => {
+  await open(page, 'live')
+  await expect(card(page)).toBeVisible({ timeout: 30_000 })
+  const more = card(page).getByRole('button', { name: 'More' })
+  await more.click()
+  await expect(story(page)).toBeVisible()
+  await expect(story(page)).toContainText('20 → 53 in 15 min')
+  await expect(story(page)).toContainText('peak 53')
+  await expect(story(page)).toContainText('now 31')
+  await expect(story(page)).toContainText('Albania')
+  await expect(story(page)).toContainText('/blog/launch-post')
+  await expect(story(page)).toContainText('The exact post isn’t visible.')
+  await expect(story(page).getByRole('img', { name: /People online in the last hour/ })).toBeVisible()
+  await shoot(page, 'surge-story')
+  await page.keyboard.press('Escape')
+  await expect(story(page)).toHaveCount(0)
+  await expect(more).toBeFocused()
+})
+
+test('on a phone the story is a sheet that fills the screen; See it in Data filters to the source', async ({ page }) => {
   await open(page, 'live', 390)
   await expect(card(page)).toBeVisible({ timeout: 30_000 })
   await shoot(page, 'surge-card')
-  await card(page).getByRole('button', { name: 'See it' }).click()
+  await card(page).getByRole('button', { name: 'More' }).click()
+  await expect(story(page)).toBeVisible()
+  const box = await story(page).boundingBox()
+  expect(box!.width).toBeGreaterThanOrEqual(389)
+  expect(box!.height).toBeGreaterThanOrEqual((await page.evaluate(() => window.innerHeight)) - 1)
+  await shoot(page, 'surge-story')
+  await story(page).getByRole('button', { name: 'See it in Data' }).click()
   await expect(page).toHaveURL(/[?&]f=referrer(:|%3A)l\.facebook\.com/)
   await expect(page).toHaveURL(/[?&]period=today/)
   await expect(card(page)).toHaveCount(0)

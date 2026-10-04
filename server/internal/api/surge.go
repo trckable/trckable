@@ -182,7 +182,7 @@ func (a *API) surgeStory(ctx context.Context, site string, s surge.Surge) *surge
 		return nil
 	}
 	seen := seenOf(who)
-	story := surge.BuildStory(series, now, s.Usual, seen.Devices, seen.Countries)
+	story := surge.BuildStory(series, now, s.Usual, seen)
 	a.storyMu.Lock()
 	if a.stories == nil {
 		a.stories = map[string]storyEntry{}

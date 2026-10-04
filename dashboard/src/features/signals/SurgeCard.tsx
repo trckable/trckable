@@ -1,22 +1,28 @@
-// The card for a surge: the site is far busier than usual right now. It says
-// how many are on and how many times the usual, who sent most of them, which
-// page, and the jump, all counted. Calm: a small ghost, no confetti. It slides
-// in over Live and Data alike, and "See it" opens today in Data, filtered to the
-// source. The browser notice (only for someone who said yes, and only when the
-// tab is out of sight) is told once for each surge.
-import { Bell, Zap } from 'lucide-react'
-import { useEffect, useState } from 'react'
+// The card for a surge: the site is far busier than usual right now. A big
+// number counting up to who is on, how many times the usual as a chip, one line
+// about who sent most of them (with the source's icon), the last hour drawing
+// itself, and a small ghost hopping. Two buttons: More (the story, in a dialog)
+// and See it (today in Data, filtered to the source). Calm: a soft glow that
+// pulses twice, no confetti, and none of it moves with reduced motion. The
+// browser notice (only for someone who said yes, and only when the tab is out of
+// sight) is told once for each surge.
+import { Zap } from 'lucide-react'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { Chart } from '../../components/SideCard/Chart'
 import { SideCard, useCardClose } from '../../components/SideCard/SideCard'
-import { toast } from '../../components/Toast'
-import { setView } from '../../lib/url'
+import { Ghost } from '../../components/Logo'
+import { fmtInt } from '../../lib/format'
 import { useSeen, wasSeen, markSeen } from '../install/seen'
+import { Rolling } from '../moments/Rolling'
 import { signals } from './copy'
-import { askPermission, canNotify, tell } from './notify'
-import { pref, setPref } from './prefs'
-import { surgeFilter, surgeLines, surgeNotice, surgeNow, type Surge } from './surge'
-import { SurgeShape, SurgeStory } from './SurgeStory'
+import { tell } from './notify'
+import { SourceLine } from './SourceLine'
+import { sourceLine, surgeChip, surgeNotice, type Surge } from './surge'
 import { useSurge } from './useSurge'
-import './signals.css'
+import { useSurgeActions } from './useSurgeActions'
+import './surge.css'
+
+const SurgeModal = lazy(() => import('./SurgeModal')) // the story: fetched when More is pressed
 
 const t = signals.surge
 
@@ -41,70 +47,57 @@ function useNotice(surge: Surge | null, domain: string) {
 
 function Card({ surge, tz }: { surge: Surge; tz: string }) {
   const [gone, putAway] = useSeen('surge', surge.id)
-  const [more, setMore] = useState(false)
+  const [story, setStory] = useState(false)
   if (gone) return null
-  const lines = surgeLines(surge)
-  const story = !!surge.story
+  const series = surge.story?.series
   return (
-    <SideCard
-      id="surge"
-      asked // it will not keep: it comes up over a card that came up by itself
-      ghost
-      label={t.label}
-      closeLabel={t.close}
-      kind={{ icon: <Zap size={14} strokeWidth={2} />, label: t.label, tint: 'var(--accent)' }}
-      title={t.title}
-      onClose={putAway}
-      chart={more && story ? <SurgeShape surge={surge} /> : undefined}
-      actions={<Actions surge={surge} done={putAway} />}
-    >
-      <p className="sg-body sg-lead">{surgeNow(surge)}</p>
-      {lines.slice(0, 2).map((l) => (
-        <p key={l} className="muted sg-body">
-          {l}
-        </p>
-      ))}
-      {more && (
-        <>
-          {lines.slice(2).map((l) => (
-            <p key={l} className="muted sg-body">
-              {l}
-            </p>
-          ))}
-          <SurgeStory surge={surge} tz={tz} />
-        </>
+    <>
+      <SideCard
+        id="surge"
+        asked // it will not keep: it comes up over a card that came up by itself
+        className="surge-card"
+        label={t.label}
+        closeLabel={t.close}
+        kind={{ icon: <Zap size={14} strokeWidth={2} />, label: t.label, tint: 'var(--accent)' }}
+        title={t.title}
+        onClose={putAway}
+        chart={series ? <Chart spec={{ values: series, base: surge.usual }} /> : undefined}
+        actions={<Actions surge={surge} done={putAway} more={() => setStory(true)} />}
+      >
+        <div className="sg-hero">
+          <b className="sg-count">
+            <Rolling to={surge.online} fmt={fmtInt} />
+          </b>
+          <span className="sg-meta">
+            <span className="sg-chip">{surgeChip(surge)}</span>
+            <span className="sg-unit">{t.onlineNow}</span>
+          </span>
+          <span className="sg-ghost" aria-hidden="true">
+            <Ghost size={44} />
+          </span>
+        </div>
+        {sourceLine(surge) && <SourceLine surge={surge} />}
+      </SideCard>
+      {story && (
+        <Suspense fallback={null}>
+          <SurgeModal surge={surge} tz={tz} onClose={() => setStory(false)} onSee={putAway} />
+        </Suspense>
       )}
-      {(story || lines.length > 2) && (
-        <button type="button" className="btn ghost sg-more" aria-expanded={more} onClick={() => setMore(!more)}>
-          {more ? t.less : t.more}
-        </button>
-      )}
-    </SideCard>
+    </>
   )
 }
 
-function Actions({ surge, done }: { surge: Surge; done: () => void }) {
+function Actions({ surge, done, more }: { surge: Surge; done: () => void; more: () => void }) {
   const close = useCardClose()
-  const filter = surgeFilter(surge)
-  const ask = canNotify() && Notification.permission === 'default' && !pref('notify')
-  const see = () => {
-    setView({ live: false, period: 'today', from: undefined, to: undefined, filters: filter ? [filter] : [], day: undefined })
+  const { see } = useSurgeActions(surge, () => {
     done()
     close()
-  }
-  const notify = () => {
-    void askPermission().then((p) => {
-      setPref('notify', p === 'granted')
-      if (p === 'denied') toast(signals.blocked, 'warning')
-    })
-  }
+  })
   return (
     <>
-      {ask && (
-        <button type="button" className="btn ghost" onClick={notify}>
-          <Bell size={14} strokeWidth={2} aria-hidden="true" /> {t.notify}
-        </button>
-      )}
+      <button type="button" className="btn ghost" aria-haspopup="dialog" onClick={more}>
+        {t.more}
+      </button>
       <button type="button" className="btn primary" onClick={see}>
         {t.see}
       </button>
