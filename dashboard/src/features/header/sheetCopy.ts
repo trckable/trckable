@@ -8,6 +8,4 @@ export const sheetCopy = {
   compareRow: 'Compare',
   filtersRow: 'Filters',
   add: 'Add',
-  is: 'is',
-  removeFilter: (dim: string, value: string) => `Remove filter ${dim} is ${value}`,
 }

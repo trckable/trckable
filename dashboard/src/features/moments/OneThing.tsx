@@ -12,6 +12,7 @@ import type { Point, Site } from '../../lib/api'
 import { chartBucket, patchFor } from './apply'
 import { rangeOf } from '../../lib/dashQuery'
 import { todayIn } from '../../lib/dates'
+import { sameFilter } from '../../lib/filterSet'
 import { readView, setView } from '../../lib/url'
 import { copy } from './copy'
 import { seeLabel, showing } from './figure'
@@ -23,7 +24,7 @@ import type { Today } from './useOneThing'
 /** Takes the pin's filters (and the day it picked) off the address again. */
 function clearPin(pin: Pin) {
   const view = readView(new URLSearchParams(location.search))
-  setView({ filters: view.filters.filter((f) => !pin.filters.some((m) => m.dim === f.dim && m.value === f.value)), day: pin.showDay ? undefined : view.day })
+  setView({ filters: view.filters.filter((f) => !pin.filters.some((m) => sameFilter(m, f))), day: pin.showDay ? undefined : view.day })
 }
 
 /** What "See it" does: the address, a word about it, and the chart in view with the marker lit. */

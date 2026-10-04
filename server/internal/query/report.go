@@ -32,12 +32,6 @@ type Q struct {
 	Payments Payments     // optional; nil = no revenue
 }
 
-// Filter restricts a report to sessions matching a dimension value.
-type Filter struct {
-	Dim   string `json:"dim"`
-	Value string `json:"value"`
-}
-
 // Params select a report.
 type Params struct {
 	Site     string
@@ -392,57 +386,6 @@ func safeBucket(b string) string {
 		return b
 	}
 	return "day"
-}
-
-// filterWhere turns the report's filters into a WHERE clause over session
-// columns (page/goal filters look up events between evFrom and evTo).
-func filterWhere(p Params, evFrom, evTo time.Time) (string, []any, error) {
-	var conds []string
-	var args []any
-	for _, f := range p.Filters {
-		switch f.Dim {
-		case "goal":
-			// A page goal is a page seen, not an event sent.
-			if g, ok := pageGoal(p.PageGoals, f.Value); ok {
-				cond, ok := pageMatch(g, "path")
-				if !ok {
-					return "", nil, fmt.Errorf("page goal %q has no path", f.Value)
-				}
-				conds = append(conds, `session_id IN (SELECT session_id FROM events
-				WHERE site_id = ? AND ts >= ? AND ts < ? + INTERVAL 1 DAY AND kind = 1 AND `+cond+`)`)
-				args = append(args, p.Site, evFrom, evTo)
-				continue
-			}
-			conds = append(conds, `session_id IN (SELECT session_id FROM events
-				WHERE site_id = ? AND ts >= ? AND ts < ? + INTERVAL 1 DAY AND kind = 2 AND goal = ?)`)
-			args = append(args, p.Site, evFrom, evTo, f.Value)
-		case "page":
-			conds = append(conds, `session_id IN (SELECT session_id FROM events
-				WHERE site_id = ? AND ts >= ? AND ts < ? + INTERVAL 1 DAY AND kind = 1 AND path = ?)`)
-			args = append(args, p.Site, evFrom, evTo, f.Value)
-		case "group":
-			// Filtering by a section means "visits that read anything in it",
-			// the same way a page filter means "visits that read that page".
-			expr, matched := groupExpr(p.Groups, "path")
-			if !matched {
-				return "", nil, fmt.Errorf("this site has no content groups")
-			}
-			conds = append(conds, `session_id IN (SELECT session_id FROM events
-				WHERE site_id = ? AND ts >= ? AND ts < ? + INTERVAL 1 DAY AND kind = 1 AND `+expr+` = ?)`)
-			args = append(args, p.Site, evFrom, evTo, f.Value)
-		default:
-			expr, ok := sessionDims[f.Dim]
-			if !ok {
-				return "", nil, fmt.Errorf("unknown filter dimension %q", f.Dim)
-			}
-			conds = append(conds, expr+" = ?")
-			args = append(args, f.Value)
-		}
-	}
-	if len(conds) == 0 {
-		return "", nil, nil
-	}
-	return " WHERE " + strings.Join(conds, " AND "), args, nil
 }
 
 // sessionsCTE returns "WITH s AS (...)" selecting the report's sessions

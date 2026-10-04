@@ -58,7 +58,7 @@ func TestWeeklyText(t *testing.T) {
 		Money: &query.Money{Currency: "USD", Exponent: 2, Revenue: 421000, Payments: 38},
 	}
 	prev := &query.Result{KPIs: query.KPIs{Visitors: 4000}, Money: &query.Money{Revenue: 390000}}
-	title, msg, data := weeklyText("demo.trckable.com", from, from.AddDate(0, 0, 7), cur, prev, "https://stats.example.com/demo.trckable.com")
+	title, msg, data := weeklyText("demo.trckable.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "https://stats.example.com/demo.trckable.com")
 	for _, want := range []string{
 		"demo.trckable.com, Sep 14 – Sep 20",
 		"4,512 visitors, up 13% on the week before.",
@@ -76,9 +76,45 @@ func TestWeeklyText(t *testing.T) {
 	if title != "Your week" || data["visitors"] != int64(4512) {
 		t.Errorf("title %q data %v", title, data)
 	}
-	_, quiet, _ := weeklyText("x.com", from, from.AddDate(0, 0, 7), &query.Result{}, &query.Result{KPIs: query.KPIs{Visitors: 50}}, "")
+	_, quiet, _ := weeklyText("x.com", from, from.AddDate(0, 0, 7), &query.Result{}, &query.Result{KPIs: query.KPIs{Visitors: 50}}, aiWeek{}, "")
 	if !strings.Contains(quiet, "Nothing arrived this week") || !strings.Contains(quiet, "down 100%") {
 		t.Errorf("an empty week says so:\n%s", quiet)
+	}
+}
+
+// One line says what AI did: the visitors its assistants sent and the pages its
+// crawlers read. It says only what is true: a week with one of the two says
+// that one, a quiet week says nothing, and it is never a line of zeros.
+func TestWeeklyAILine(t *testing.T) {
+	from := time.Date(2026, 9, 14, 0, 0, 0, 0, time.UTC)
+	cur := &query.Result{KPIs: query.KPIs{Visitors: 900, Pageviews: 2000}}
+	prev := &query.Result{KPIs: query.KPIs{Visitors: 800}}
+	for _, c := range []struct {
+		ai   aiWeek
+		want string // "" = no AI line at all
+	}{
+		{aiWeek{Visitors: 128, Crawls: 2340}, "AI assistants sent 128 visitors; crawlers read 2,340 pages."},
+		{aiWeek{Visitors: 1, Crawls: 1}, "AI assistants sent 1 visitor; crawlers read 1 page."},
+		{aiWeek{Visitors: 12}, "AI assistants sent 12 visitors."},
+		{aiWeek{Crawls: 3}, "AI crawlers read 3 pages."},
+		{aiWeek{}, ""},
+	} {
+		_, msg, _ := weeklyText("x.com", from, from.AddDate(0, 0, 7), cur, prev, c.ai, "")
+		if c.want == "" {
+			if strings.Contains(msg, "AI ") {
+				t.Errorf("a quiet week mentions AI:\n%s", msg)
+			}
+			continue
+		}
+		got := 0
+		for _, line := range strings.Split(msg, "\n") {
+			if line == c.want {
+				got++
+			}
+		}
+		if got != 1 || strings.Count(msg, "AI ") != 1 {
+			t.Errorf("want exactly the one line %q in:\n%s", c.want, msg)
+		}
 	}
 }
 

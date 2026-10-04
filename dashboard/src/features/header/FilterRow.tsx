@@ -4,14 +4,17 @@
 import { ActiveFilters } from '../../components/ActiveFilters'
 import { SavedViews } from '../../components/SavedViews'
 import type { Filter, Segment } from '../../lib/api'
+import { parseFilterParam, setsOf, type FilterSet } from '../../lib/filterSet'
 import { channelColor } from '../../lib/palette'
 import { rowCopy } from './rowCopy'
+import { setWords } from './setWords'
 
 export interface FilterRowProps {
   filters: Filter[]
   dimLabel: (dim: string) => string
   valueLabel: (dim: string, value: string) => string
-  onRemove: (f: Filter) => void
+  onRemove: (set: FilterSet) => void
+  onFlip: (set: FilterSet) => void
   onClear: () => void
   onSave: () => void
   /** A phone: the saved views alone, in ⋯ (the chips are in the sheet). */
@@ -26,31 +29,30 @@ export interface FilterRowProps {
   }
 }
 
-/** What a saved view narrows to, in words: "Channel Direct · Campaign launch_week". */
+/** What a saved view narrows to, in the chips' words: "Channel is Direct · Campaign is launch_week". */
 function describe(p: FilterRowProps, q: string) {
-  return new URLSearchParams(q)
-    .getAll('f')
-    .map((f) => {
-      const [dim = '', ...rest] = f.split(':')
-      return `${p.dimLabel(dim)} ${p.valueLabel(dim, rest.join(':'))}`
+  const filters: Filter[] = new URLSearchParams(q).getAll('f').flatMap((f) => parseFilterParam(f) ?? [])
+  return setsOf(filters)
+    .map((set) => {
+      const w = setWords(set, p.dimLabel, p.valueLabel)
+      return `${w.dim} ${w.op} ${w.value}`
     })
     .join(' · ')
 }
 
 export default function FilterRow(p: FilterRowProps) {
   const on = p.filters.length > 0
-  const shown = p.filters.map((f) => ({
-    key: f.dim + '\u0000' + f.value,
-    dim: p.dimLabel(f.dim),
-    value: p.valueLabel(f.dim, f.value),
-    dot: f.dim === 'channel' ? channelColor(f.value) : undefined,
-    raw: f,
+  const shown = setsOf(p.filters).map((set) => ({
+    key: set.dim + '\u0000' + set.op,
+    ...setWords(set, p.dimLabel, p.valueLabel),
+    dot: set.dim === 'channel' && set.values.length === 1 ? channelColor(set.values[0]) : undefined,
+    raw: set,
   }))
   return (
     <>
       {!p.onlyViews && (
         <div className="toolbar-filters" role={on ? 'group' : undefined} aria-label={on ? rowCopy.active : undefined}>
-          <ActiveFilters filters={shown} onRemove={p.onRemove} onClear={p.onClear} onSave={p.onSave} />
+          <ActiveFilters filters={shown} onRemove={p.onRemove} onFlip={p.onFlip} onClear={p.onClear} onSave={p.onSave} compound={p.filters.length > 1} />
         </div>
       )}
       {p.views && (

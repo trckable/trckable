@@ -1,13 +1,14 @@
-// The first-week cards: leaving your own visits out (on the first day with
-// traffic only), Replay, Full, the weekly email, Search Console. At most one a
-// day during a site's first seven days, in that order, never for
+// The guide cards: leaving your own visits out (on the first day with
+// traffic only), the first AI visitor or crawler, then Replay, Full, the weekly
+// email and Search Console. At most one a day, in that order, never for
 // something already used or set up, and none again once put away or acted on.
+// Only the AI one is for a site past its first seven days.
 // What is remembered is per site (what was put away and today's pick) in this
 // browser (store.ts). Pure over what the caller knows: firstWeek.test.ts.
 import { read, write } from './store'
 
-export type CardId = 'exclude' | 'replay' | 'full' | 'weekly' | 'search'
-export const ORDER: CardId[] = ['exclude', 'replay', 'full', 'weekly', 'search']
+export type CardId = 'exclude' | 'ai' | 'replay' | 'full' | 'weekly' | 'search'
+export const ORDER: CardId[] = ['exclude', 'ai', 'replay', 'full', 'weekly', 'search']
 
 /** A site's first week, in seconds. */
 export const FIRST_WEEK_S = 7 * 86400
@@ -25,6 +26,10 @@ export interface Known {
   /** Whether to ask about leaving your own visits out: the first day this
    *  browser saw traffic for the site, and the browser is not already left out. */
   exclude: boolean
+  /** An AI assistant has sent a visitor, or an AI crawler has read the site. */
+  ai: boolean
+  /** The site is in its first week: the cards about getting started. */
+  fresh: boolean
 }
 
 export interface Kept {
@@ -39,8 +44,8 @@ export interface Kept {
 
 /** The cards not yet needed, in the order they come. */
 export function eligible(k: Known, kept: Kept): CardId[] {
-  const skip: Record<CardId, boolean> = { exclude: !k.exclude, replay: k.replayed, full: k.fullOpened, weekly: k.weekly, search: k.search }
-  return ORDER.filter((id) => !skip[id] && !kept.done.includes(id))
+  const skip: Record<CardId, boolean> = { exclude: !k.exclude, ai: !k.ai, replay: k.replayed, full: k.fullOpened, weekly: k.weekly, search: k.search }
+  return ORDER.filter((id) => !skip[id] && !kept.done.includes(id) && (k.fresh || id === 'ai'))
 }
 
 /** The one card for `today`: the one already picked today if it still stands, else the first eligible. None when nothing is left. */

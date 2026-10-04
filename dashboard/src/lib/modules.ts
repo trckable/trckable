@@ -17,7 +17,7 @@ export interface EntryPoints {
   cards?: string[]
   /** Filter dimensions only this module produces. */
   filters?: string[]
-  /** Tabs inside cards (the Sources card's Search tab, the map tab). */
+  /** Tabs inside cards (the map tab). */
   tabs?: string[]
   /** Settings sections that exist for this module. */
   settings?: SettingsTab[]
@@ -40,7 +40,7 @@ export const MODULES: Record<string, EntryPoints> = {
   consent: {},
   crawlers: { cards: ['crawlers'] },
   forms: {},
-  search: { tabs: ['search'], settings: ['search'] },
+  search: { settings: ['search'] },
 }
 
 /** On for a site that has not said otherwise (the server's default_on). */

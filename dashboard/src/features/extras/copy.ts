@@ -1,5 +1,5 @@
 // Every word of the Data view's extras: the pace line, the lines the chart's
-// moments say, Highlights, the revenue tabs, Latest buyers and AI assistants. Messages with
+// moments say, Highlights, the revenue tabs, Latest buyers. Messages with
 // the rest of the dashboard's words, for when translations come.
 import { fmtInt, fmtPct } from '../../lib/format'
 import { times } from '../../lib/times'
@@ -54,14 +54,5 @@ export const extrasCopy = {
       if (s < 86400) return `${Math.round(s / 3600)} h ago`
       return `${Math.round(s / 86400)} d ago`
     },
-  },
-  ai: {
-    tab: 'AI',
-    label: 'Visitors from AI assistants',
-    share: (pct: string) => `${pct} of all visitors`,
-    trend: 'Visitors from AI assistants, day by day',
-    assistant: 'Assistant',
-    none: 'No visit from an AI assistant in this period.',
-    pick: (name: string, host: string) => `${name}: filter by ${host}`,
   },
 }

@@ -8,6 +8,40 @@ import { act, call, raw, rangeQS } from './api'
 export * from './api'
 import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, WebVitals, Widget, WidgetLook } from './api'
 
+/** A robot on one errand, and how often it came. */
+export interface AiBot {
+  name: string
+  /** answer, train or index. */
+  kind: string
+  hits: number
+}
+
+/** One page's two numbers: how often AI read it, and how many visitors AI sent to it. */
+export interface AiPage {
+  path: string
+  read: number
+  sent: number
+  /** Who read it, most first. */
+  bots?: AiBot[]
+  /** Google's clicks, when Search Console is connected. */
+  clicks?: number
+  /** uncredited: read, nobody sent. unread: Google ranks it, no AI robot read it. */
+  flag?: 'uncredited' | 'unread'
+}
+
+/** The AI & Search tab, less Google's terms. */
+export interface AiSearchReport {
+  visitors: number
+  referrers: { value: string; visitors: number }[]
+  crawled: number
+  bots: AiBot[]
+  pages: AiPage[]
+  /** The crawlers module is on: robots are being recorded. */
+  crawlers: boolean
+  /** Search Console answered: pages carry its clicks. */
+  google: boolean
+}
+
 export const more = {
   me: () => call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean }>('GET', '/me'),
   setKeys: (keys: Record<string, string>) => call<{ keys: Record<string, string> }>('PUT', '/me/keys', { keys }),
@@ -86,6 +120,9 @@ export const more = {
     call<SearchReport>('GET', `/sites/${site}/report/search` + rangeQS(q) + '&dim=' + dim, undefined, signal),
   overview: (days: number, signal?: AbortSignal) => call<{ days: number; sites: SiteRow[] }>('GET', `/overview?days=${days}`, undefined, signal),
   scroll: (site: string, q: ReportQuery, signal?: AbortSignal) => call<ScrollReport>('GET', `/sites/${site}/report/scroll` + rangeQS(q) + '&limit=10', undefined, signal),
+  aiSearch: (site: string, q: ReportQuery, limit: number, signal?: AbortSignal) =>
+    call<AiSearchReport>('GET', `/sites/${site}/report/ai-search` + rangeQS(q) + `&limit=${limit}`, undefined, signal),
+  aiSeen: (site: string) => call<{ visitor: boolean; crawler: boolean }>('GET', `/sites/${site}/report/ai-seen`),
   crawlers: (site: string, q: ReportQuery) => call<CrawlerReport>('GET', `/sites/${site}/report/crawlers` + rangeQS(q)),
   vitals: (site: string, q: ReportQuery) => call<WebVitals>('GET', `/sites/${site}/report/vitals` + rangeQS(q)),
   retention: (site: string, q: ReportQuery) => call<Cohorts>('GET', `/sites/${site}/report/retention` + rangeQS(q)),

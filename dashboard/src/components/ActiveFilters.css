@@ -20,3 +20,33 @@
   left: 0;
   width: 320px;
 }
+
+/* The "is" of a chip is a switch: pressing it turns it into "is not". */
+.chip .op,
+.menu-op {
+  display: inline;
+  width: auto;
+  height: auto;
+  padding: 1px 4px;
+  margin: 0 -2px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.chip .op:hover,
+.menu-op:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* The save offer beside "+N more": the bookmark alone. */
+.chip.more.icon {
+  padding: 0;
+  width: 36px;
+  justify-content: center;
+}

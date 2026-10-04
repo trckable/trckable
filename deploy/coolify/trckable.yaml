@@ -1,0 +1,33 @@
+# documentation: https://docs.trckable.com/deploy/
+# slogan: Tiny self-hosted web analytics that shows which traffic pays.
+# category: analytics
+# tags: analytics, privacy, revenue, web analytics, statistics
+# logo: svgs/trckable.svg
+# port: 8080
+
+# Coolify: Services, add a Docker Compose service with this file, or send it to
+# coollabsio/coolify as templates/compose/trckable.yaml.
+# Open the generated address /setup and paste the setup token (the variable
+# TRCKABLE_SETUP_TOKEN in the service's Environment Variables) to create the
+# first account. Update: change the tag, then Redeploy.
+services:
+  trckable:
+    image: ghcr.io/trckable/trckable:0.5.8
+    environment:
+      - SERVICE_URL_TRCKABLE_8080
+      - TRCKABLE_BASE_URL=${SERVICE_URL_TRCKABLE}
+      - TRCKABLE_SECRET=${SERVICE_PASSWORD_64_SECRET}
+      - TRCKABLE_SETUP_TOKEN=${SERVICE_PASSWORD_SETUP}
+      - TRCKABLE_TRUST_PROXY=xff
+      - TRCKABLE_DRAIN_SECONDS=25
+    volumes:
+      - trckable-data:/data
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/trckabled", "version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  trckable-data: {}
