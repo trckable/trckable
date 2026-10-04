@@ -185,7 +185,15 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			BannerCSS:      c.Banner.CSS,
 		}
 	}
-	mux.Handle("GET /js/{file}", web.Tracker(feat, opts))
+	tracker := web.Tracker(feat, opts)
+	online := web.OnlineScript(func(ctx context.Context, id string) (web.OnlineLook, bool) { return s.api.OnlineLook(ctx, id) })
+	mux.HandleFunc("GET /js/{file}", func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.PathValue("file"), web.OnlineSuffix) {
+			online.ServeHTTP(w, r)
+			return
+		}
+		tracker.ServeHTTP(w, r)
+	})
 	s.hub = realtime.New()
 	box, err := secrets.Load(cfg.DataDir, cfg.Secret)
 	s.box = box

@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"slices"
 	"time"
 )
 
@@ -10,6 +11,7 @@ import (
 // this week. Nothing else about the site is read for a widget.
 type WidgetNumbers struct {
 	Now       int64          `json:"now"`     // distinct visitors, last 30 minutes
+	Online    int64          `json:"online"`  // distinct visitors, last 5 minutes: what the dashboard's Online counts (only when asked)
 	Minutes   [30]int64      `json:"minutes"` // oldest first; the last is the current minute
 	Countries []CountryCount `json:"countries"`
 	Week      int64          `json:"week"`               // distinct visitors, last 7 days
@@ -27,7 +29,14 @@ type NamedCount struct {
 // WidgetAsk says which of the extra numbers a widget shows; nothing else is read.
 type WidgetAsk struct {
 	Week, Pages, Channels, AI bool
+	// Online reads who is on the site now (the last five minutes, as
+	// Online does), and takes the countries and pages from that same stretch.
+	Online bool
 }
+
+// OnlineMin is the fewest visitors a public "online" widget will put a
+// number, a country or a page to: below it, one person could be picked out.
+const OnlineMin = 3
 
 type CountryCount struct {
 	Code     string `json:"code"`
@@ -59,8 +68,17 @@ func (q Q) Widget(ctx context.Context, site string, now time.Time, ask WidgetAsk
 		}
 	}
 	rows.Close()
+	// The lists cover the same stretch as the count they sit under.
+	listFrom := from
+	if ask.Online {
+		since := now.UTC().Add(-NowIdle)
+		listFrom = since
+		if err := q.DB.QueryRowContext(ctx, `SELECT count(DISTINCT visitor_id) FROM events WHERE site_id = ? AND ts >= ?`, site, since).Scan(&out.Online); err != nil {
+			return out, err
+		}
+	}
 	rows, err = q.DB.QueryContext(ctx, `SELECT country, count(DISTINCT visitor_id) AS n FROM events
-		WHERE site_id = ? AND ts >= ? AND ts < ? AND coalesce(country, '') <> '' GROUP BY country ORDER BY n DESC, country LIMIT 3`, site, from, end)
+		WHERE site_id = ? AND ts >= ? AND ts < ? AND coalesce(country, '') <> '' GROUP BY country ORDER BY n DESC, country LIMIT 3`, site, listFrom, end)
 	if err != nil {
 		return out, err
 	}
@@ -76,7 +94,7 @@ func (q Q) Widget(ctx context.Context, site string, now time.Time, ask WidgetAsk
 	top := func(col string) ([]NamedCount, error) {
 		//nolint:gosec // col is one of the constant column expressions passed below; values are bound as parameters
 		rows, err := q.DB.QueryContext(ctx, `SELECT `+col+` AS v, count(DISTINCT visitor_id) AS n FROM events
-			WHERE site_id = ? AND ts >= ? AND ts < ? GROUP BY v HAVING v IS NOT NULL AND v <> '' ORDER BY n DESC, v LIMIT 3`, site, from, end)
+			WHERE site_id = ? AND ts >= ? AND ts < ? GROUP BY v HAVING v IS NOT NULL AND v <> '' ORDER BY n DESC, v LIMIT 3`, site, listFrom, end)
 		if err != nil {
 			return nil, err
 		}
@@ -100,6 +118,11 @@ func (q Q) Widget(ctx context.Context, site string, now time.Time, ask WidgetAsk
 		if out.Channels, err = top("coalesce(channel, 'Direct')"); err != nil {
 			return out, err
 		}
+	}
+	if ask.Online {
+		// Never a country or a page that fewer than OnlineMin people are on.
+		out.Countries = slices.DeleteFunc(out.Countries, func(c CountryCount) bool { return c.Visitors < OnlineMin })
+		out.Pages = slices.DeleteFunc(out.Pages, func(c NamedCount) bool { return c.Visitors < OnlineMin })
 	}
 	if ask.Week || ask.AI {
 		var ai int64

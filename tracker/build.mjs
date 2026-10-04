@@ -103,6 +103,14 @@ writeFileSync(
   JSON.stringify({ core: core.gzip, full: all.gzip, feature: cost, variants: Object.fromEntries(Object.entries(built).map(([k, v]) => [k, v.gzip])) }, null, 2) + '\n',
 )
 
+// The corner script for the "online" widget is its own file with its own
+// budget, and the tracker never includes it.
+const ONLINE_BUDGET = 1024 // bytes, gzip
+await build({ entryPoints: ['src/online.ts'], bundle: true, minify: true, format: 'iife', target: ['es2020', 'safari14'], outfile: 'dist/online.js', legalComments: 'none' })
+const online = readFileSync('dist/online.js')
+writeFileSync('../server/internal/web/assets/online.js', online)
+const onlineGzip = gzipSize(online)
+
 const budgetFor = (name) => {
   if (name.includes('b')) return BANNER_BUDGET
   if (FEATURES.some(([f, code]) => OPTIONAL.has(f) && name.includes(code))) return WITH_OPTIONAL_BUDGET
@@ -115,6 +123,12 @@ const heaviest = built[variantName(new Set(FEATURES.map(([f]) => f).filter((f) =
 console.log(`the most a site can ship: ${heaviest.bytes} B minified · ${heaviest.gzip} B gzip (budget ${budgetFor(heaviest.name)}) ${heaviest.gzip <= budgetFor(heaviest.name) ? '✓' : '✗ OVER'}`)
 console.log(`core only:            ${core.bytes} B minified · ${core.gzip} B gzip ${mark(core.gzip)}`)
 for (const [f] of FEATURES) console.log(`  + ${f.padEnd(9)} ${String(cost[f]).padStart(4)} B gzip`)
+
+console.log(`online.js (the corner widget): ${online.length} B minified · ${onlineGzip} B gzip (budget ${ONLINE_BUDGET}) ${onlineGzip <= ONLINE_BUDGET ? '✓' : '✗ OVER BUDGET'}`)
+if (onlineGzip > ONLINE_BUDGET) {
+  console.error(`✗ online.js is ${onlineGzip} B gzip, over its ${ONLINE_BUDGET} B budget`)
+  if (process.argv.includes('--check')) process.exit(1)
+}
 
 const possible = ([name]) => !([...IMPOSSIBLE].every((c) => name.includes(c)))
 const overBudget = Object.entries(built).filter(possible).filter(([name, v]) => v.gzip > budgetFor(name))
