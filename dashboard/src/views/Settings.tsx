@@ -16,7 +16,7 @@ import { Copyable } from '../components/Copyable'
 import { Install } from '../features/install/Install'
 import { ModulesSettings } from './Modules'
 import { PaymentsSettings } from './Payments'
-import { PrivacySettings, ReportSettings } from './Privacy'
+import { PrivacyTab, ReportSettings } from '../features/privacy/PrivacyTab'
 import { Locked } from '../components/Locked'
 import { Shares } from './Shares'
 import { WidgetsSettings } from './Widgets'
@@ -159,7 +159,7 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
       {tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
       {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}
       {tab === 'search' && <SearchSettings key={'sc' + site.id} site={site} />}
-      {tab === 'privacy' && <Locked><PrivacySettings key={'pv' + site.id} site={site} onSites={onSites} /></Locked>}
+      {tab === 'privacy' && <Locked><PrivacyTab key={'pv' + site.id} site={site} onSites={onSites} /></Locked>}
       {tab === 'alerts' && <Locked><AlertsTab key={'al' + site.id} site={site} /></Locked>}
       {tab === 'health' && <HealthSettings />}
     </>

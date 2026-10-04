@@ -172,6 +172,9 @@ Off for a new site; Settings → Modules turns it on, and says its size and what
 - **Never collected:** a recording of any kind, a visitor or session id, a cookie or anything in the browser's storage, what was typed or any field's value, a password field (not even its name), the mouse's path, a screenshot, or the order in which anyone did anything. A batch is added to the counters and forgotten; nothing in it says who sent it.
 - **Quiet when asked:** it sends nothing for a browser with Do Not Track or Global Privacy Control, nothing for the paths and addresses you excluded, and nothing while the Cookie consent module is on (a visitor who declined is never counted at all). `data-heat-sample="0.2"` on the script tag reports one page view in five. A form is named by its id or name when that is a plain word, and a field by its name with list numbers and anything with a counter in it left out.
 - **Limits:** the busiest 60 reports of a page view, 20 000 distinct counters a site a day, and per-address and per-site rate limits on `/api/h`, which answers 202 and does nothing while the module is off. Through your own proxy, forward `/api/h` as well as `/api/e`.
+### A privacy report for every site
+
+Settings → Data & privacy → Privacy report states what the site is set to collect and what it is not, in the dashboard's language: cookieless and consent mode, the cookie and its lifetime, retention, exclusions, the modules that are on, where the data is, the privacy-policy paragraph and a short "do I need a banner?". View it, or print it / save it as a PDF from the browser.
 
 ### When your server is down
 
