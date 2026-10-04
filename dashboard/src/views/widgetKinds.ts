@@ -117,6 +117,15 @@ export const defaultName = (look: WidgetLook) => (look.kind === 'online' ? MODE_
 export const STAGE = { title: 'Widget preview', tone: 'Page tone', view: 'View', light: 'Light', dark: 'Dark', alone: 'Alone', page: 'On a page' }
 
 export const TEXT = {
+  mode: 'Mode',
+  show: 'Show',
+  theme: 'Theme',
+  colour: 'Colour',
+  corners: 'Corners',
+  placement: 'Placement',
+  nameLabel: 'Name',
+  only: ' · only in trckable',
+  made: '· made',
   edit: 'Edit',
   rename: 'Rename',
   delete: 'Delete',

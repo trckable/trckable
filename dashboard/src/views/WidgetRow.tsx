@@ -110,7 +110,7 @@ export function WidgetRow({ site, w, base, onChange, onEdit }: { site: Site; w: 
           </b>
         )}
         <span className="faint num">
-          {[w.theme, ...w.shows].join(' · ')} · made {new Date(w.created_at * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+          {[w.theme, ...w.shows].join(' · ')} {TEXT.made} {new Date(w.created_at * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
         </span>
       </span>
       {!isViewer() && <Switch on={on} label={`${w.name} on`} onChange={toggle} />}

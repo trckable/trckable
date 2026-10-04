@@ -43,7 +43,7 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
       </div>
       <p className="wg-hint">
         {kind.hint}
-        {kind.fresh && <span className="wg-only"> · only in trckable</span>}
+        {kind.fresh && <span className="wg-only">{TEXT.only}</span>}
       </p>
 
       <div className="wg-studio">
@@ -51,7 +51,7 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
         <div className="wg-options">
           {look.kind === 'online' && (
             <label className="wg-opt">
-              <span>Mode</span>
+              <span>{TEXT.mode}</span>
               <span className="seg" role="group" aria-label="Mode">
                 {MODES.map((m) => (
                   <button key={m.id} type="button" aria-pressed={modeOf(look.shows) === m.id} onClick={() => set({ shows: m.shows })}>
@@ -63,7 +63,7 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
           )}
           {parts.length > 0 && (
             <div className="wg-opt">
-              <span>Show</span>
+              <span>{TEXT.show}</span>
               <div className="wg-parts">
                 {parts.map((p) => (
                   <label key={p.id} className="wg-part" title={p.hint}>
@@ -78,7 +78,7 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
             </div>
           )}
           <label className="wg-opt">
-            <span>Theme</span>
+            <span>{TEXT.theme}</span>
             <span className="seg" role="group" aria-label="Theme">
               {(['auto', 'dark', 'light'] as const).map((t) => (
                 <button key={t} type="button" aria-pressed={look.theme === t} onClick={() => set({ theme: t })}>
@@ -88,7 +88,7 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
             </span>
           </label>
           <div className="wg-opt">
-            <span>Colour</span>
+            <span>{TEXT.colour}</span>
             <span className="wg-swatches" role="radiogroup" aria-label="Colour">
               {ACCENTS.map((c) => (
                 <button
@@ -105,7 +105,7 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
             </span>
           </div>
           <label className="wg-opt">
-            <span>Corners</span>
+            <span>{TEXT.corners}</span>
             <span className="seg" role="group" aria-label="Corners">
               {RADII.map((r) => (
                 <button key={r.id} type="button" aria-pressed={look.radius === r.id} onClick={() => set({ radius: r.id })}>
@@ -115,7 +115,7 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
             </span>
           </label>
           <label className="wg-opt">
-            <span>Placement</span>
+            <span>{TEXT.placement}</span>
             <span className="seg wg-place" role="group" aria-label="Placement">
               {PLACES.map((p) => (
                 <button key={p.id} type="button" aria-pressed={place === p.id} onClick={() => onPlace(p.id)}>
@@ -148,7 +148,7 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
             </details>
           )}
           <label className="wg-opt">
-            <span>Name</span>
+            <span>{TEXT.nameLabel}</span>
             <input className="wg-name" value={look.name ?? ''} maxLength={MAX_NAME} placeholder={defaultName(look)} aria-label={TEXT.name} onChange={(e) => set({ name: e.target.value })} />
           </label>
           {footer}
