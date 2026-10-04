@@ -909,6 +909,8 @@ export default {
   'sites.menu.onlineAll': 'Online ora, tutti i siti',
   'sites.menu.todayShort': 'oggi',
   'sites.menu.keyClose': 'esc',
+  'sites.menu.openSite': (domain: string) => `Apri ${domain}`,
+  'sites.menu.openSiteKey': 'Maiusc + Invio apre il sito',
   'sites.menu.options': (name: string) => `${name}: organizza`,
   'sites.menu.up': 'Sposta su',
   'sites.menu.down': 'Sposta giù',

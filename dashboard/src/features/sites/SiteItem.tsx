@@ -1,6 +1,6 @@
 // One site in the switcher: its mark and state dot, today's visitors, a click
 // to open it, and (for anyone who may arrange) a row to drag (useReorder),
-// Alt + ↑/↓, and a ⋯ menu with every move, so a phone and a keyboard can do
+// Alt + ↑/↓, Shift + Enter to open the site itself, and a ⋯ menu with every move, so a phone and a keyboard can do
 // what a mouse does.
 import { Check, GripVertical } from 'lucide-react'
 import { stoppedWhy, type Site } from '../../lib/api'
@@ -15,6 +15,7 @@ import { dotState, StateDot } from './StateDot'
 import type { Arrange } from './SiteMenu'
 import { MARK, type Density } from './density'
 import { prefetchSite } from '../../lib/dashQuery'
+import { OpenSite, openSiteTab } from './OpenSite'
 import './SiteItem.css'
 
 /**
@@ -63,6 +64,11 @@ export function SiteItem({ site, place, on, arrange, today, key1, density = 'com
         onPointerEnter={on ? undefined : () => prefetchSite(site)}
         onFocus={on ? undefined : () => prefetchSite(site)}
         onKeyDown={(e) => {
+          if (e.shiftKey && e.key === 'Enter' && site.domain) {
+            e.preventDefault()
+            openSiteTab(site.domain)
+            return
+          }
           if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return
           e.preventDefault()
           moveStep(e.key === 'ArrowUp' ? -1 : 1)
@@ -81,6 +87,7 @@ export function SiteItem({ site, place, on, arrange, today, key1, density = 'com
         </span>
         <span className="tick" aria-hidden="true">{on && <Check size={14} strokeWidth={2.25} />}</span>
       </button>
+      <OpenSite domain={site.domain} />
       {a && <Moves site={site} place={place} a={a} step={moveStep} />}
     </li>
   )
