@@ -68,6 +68,7 @@
     --border-2: #d2d5cf;
     --grid: #eef0eb;
     --text: #0b0d10;
+    --tkb-outline: #0b0d10; /* the logo's ghost keeps an ink edge on a light page */
     --text-2: #4a525e;
     --text-3: #616874;
     --text-4: #6d737e; /* 4.56:1 on the light page */
@@ -113,6 +114,7 @@
   --border-2: #d2d5cf;
   --grid: #eef0eb;
   --text: #0b0d10;
+  --tkb-outline: #0b0d10;
   --text-2: #4a525e;
   --text-3: #616874;
   --text-4: #6d737e;

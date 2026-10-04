@@ -3,11 +3,11 @@
 // (the hash of the page), so every deploy is a new worker and a new cache.
 //
 // It answers only the page and its own files. Everything else, the API, the
-// script, shared pages, anything signed in, is not handled here at all: it goes
+// script, widget pages, shared pages, anything signed in, is not handled here at all: it goes
 // to the network as if there were no worker.
 const V = '__V__'
 const SHELL = ['/theme.js', '/favicon.svg']
-const OWN = /^\/(api|js|s|webhooks|_trckable|healthz|readyz|metrics)(\/|$)/
+const OWN = /^\/(api|js|w|s|webhooks|_trckable|healthz|readyz|metrics)(\/|$)/
 const hold = { cacheName: V, ignoreVary: true }
 
 self.addEventListener('install', (e) =>

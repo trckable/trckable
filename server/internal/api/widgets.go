@@ -2,7 +2,9 @@ package api
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"html/template"
@@ -16,6 +18,7 @@ import (
 	"github.com/trckable/trckable/server/internal/importer"
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
+	"github.com/trckable/trckable/server/internal/web"
 )
 
 // Public widgets: a small card a site shows on its own pages. The page is
@@ -103,7 +106,7 @@ func (a *API) widgetPreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	v := r.URL.Query()
-	wd := sqlite.Widget{SiteID: si.ID, Kind: v.Get("kind"), Theme: v.Get("theme"), Accent: v.Get("accent"), Brand: true}
+	wd := sqlite.Widget{SiteID: si.ID, Kind: v.Get("kind"), Theme: v.Get("theme"), Accent: v.Get("accent"), Brand: v.Get("brand") != "0"}
 	if _, err := fmt.Sscan(v.Get("radius"), &wd.Radius); err != nil {
 		wd.Radius = 16 // none given, or not a number: the default
 	}
@@ -142,6 +145,7 @@ func (a *API) widgetPage(w http.ResponseWriter, r *http.Request) {
 	gone := func() {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors *")
+		w.Header().Set("Cache-Control", "no-store")
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprint(w, `<!doctype html><title></title>`)
 	}
@@ -257,7 +261,10 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 	// Styles only: nothing can run, load or send from this page.
 	h.Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors *; base-uri 'none'; form-action 'none'")
 	if public {
-		h.Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(widgetFresh(wd.Kind)/time.Second)))
+		// Kept, but checked on every load (an ETag answers with a bare 304):
+		// a change in Settings shows on the next load, the numbers are
+		// cached on the server (widgetFresh).
+		h.Set("Cache-Control", "public, no-cache")
 	} else {
 		h.Set("Cache-Control", "no-store")
 	}
@@ -344,6 +351,15 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 	if err := widgetTmpl.Execute(&buf, view); err != nil {
 		serverError(w, err)
 		return
+	}
+	sum := sha256.Sum256(buf.Bytes())
+	etag := `"` + hex.EncodeToString(sum[:8]) + `"`
+	if public {
+		h.Set("ETag", etag)
+		if web.ETagMatch(r.Header.Get("If-None-Match"), etag) {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 	}
 	_, _ = w.Write(buf.Bytes())
 }
@@ -536,8 +552,9 @@ var widgetTmpl = template.Must(template.New("w").Parse(`<!doctype html>
 <title>{{.Domain}}</title>
 <style>
 :root{--bg:#141619;--fg:#f3f4f6;--mute:#8b929c;--line:#26292e;--tip:#23262b;--acc:{{.AccentDark}};color-scheme:dark}
-@media (prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#fff;--fg:#15161a;--mute:#6b7280;--line:#e7e7ea;--tip:#15161a;--acc:{{.AccentLight}};color-scheme:light}}
+@media (prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#fff;--fg:#15161a;--mute:#6b7280;--line:#e7e7ea;--tip:#15161a;--acc:{{.AccentLight}};color-scheme:light}:root:not([data-theme=dark]) .gb{stroke:#15161a;stroke-width:3.4;stroke-linejoin:round}}
 :root[data-theme=light]{--bg:#fff;--fg:#15161a;--mute:#6b7280;--line:#e7e7ea;--tip:#15161a;--acc:{{.AccentLight}};color-scheme:light}
+:root[data-theme=light] .gb{stroke:#15161a;stroke-width:3.4;stroke-linejoin:round}
 *{box-sizing:border-box;margin:0}
 html,body{overflow:hidden;background:transparent;font:14px/1.35 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--fg)}
 .card{background:var(--bg);border:1px solid var(--line);border-radius:{{.Radius}}px;padding:18px 20px}
@@ -562,7 +579,7 @@ li{display:flex;align-items:center;gap:8px}
 li span:nth-child(2){flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 li b{font-weight:500;font-variant-numeric:tabular-nums}
 .ok{color:var(--acc);font-weight:700}
-.by{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:8px;font-size:11px;color:var(--mute);text-decoration:none}
+.by{display:flex;align-items:center;justify-content:center;gap:5px;width:max-content;max-width:100%;margin:6px auto 0;padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:11px;color:var(--mute);text-decoration:none}
 .by b{font-weight:760;letter-spacing:-.04em;color:var(--fg)}.by i{font-style:normal;font-weight:360;letter-spacing:-.03em}
 .by svg{flex:none}
 .badge{display:flex;align-items:center;gap:12px;padding:12px 16px}
@@ -574,7 +591,7 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 .spark i{flex:1;height:100%;display:flex;align-items:flex-end}
 .spark s{display:block;width:100%;background:var(--acc);border-radius:1px 1px 0 0;min-height:1px;opacity:.9}
 .spark s.z{background:var(--line)}
-.card .by{margin-top:14px}
+.card .by{width:auto;margin:14px 0 0;padding:0;border:0;border-radius:0;background:none}
 .foot{margin-top:12px;font-size:11px;color:var(--mute)}
 .off{color:var(--mute);font-size:13px}
 </style></head><body>

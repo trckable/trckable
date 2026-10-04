@@ -7,12 +7,12 @@ import { DialogHead } from '../components/DialogHead'
 import { Modal } from '../components/Modal'
 import { toast } from '../components/Toast'
 import { fail, type Site, type Widget, type WidgetLook, more } from '../lib/apiMore'
-import { TEXT, type Place } from './widgetKinds'
+import { TEXT, placeOf, type Place } from './widgetKinds'
 import { WidgetStudio } from './WidgetStudio'
 
 export function WidgetEditor({ site, w, onClose, onSaved }: { site: Site; w: Widget; onClose: () => void; onSaved: () => void }) {
   const [look, setLook] = useState<WidgetLook>({ name: w.name, kind: w.kind, theme: w.theme, accent: w.accent, radius: w.radius, brand: w.brand, lang: w.lang, texts: w.texts, shows: w.shows })
-  const [place, setPlace] = useState<Place>('inline')
+  const [place, setPlace] = useState<Place>(w.kind === 'online' ? placeOf(w.shows) : 'inline')
   const [busy, setBusy] = useState(false)
   const save = () => {
     setBusy(true)
@@ -28,7 +28,7 @@ export function WidgetEditor({ site, w, onClose, onSaved }: { site: Site; w: Wid
   }
   return (
     <Modal label={TEXT.editTitle} className="wg-modal" onClose={busy ? undefined : onClose}>
-      <DialogHead heading={w.name} hint={TEXT.editHint} />
+      <DialogHead heading={w.name} help={TEXT.editHint} />
       <WidgetStudio
         site={site}
         look={look}

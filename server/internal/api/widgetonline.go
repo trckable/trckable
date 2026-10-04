@@ -84,8 +84,8 @@ func onlineSize(wd sqlite.Widget) (w, h int) {
 	return 180, 44
 }
 
-// OnlineLook is what the corner script needs to frame one widget: its size
-// and its theme. It is false for a widget that does not exist, is off, or is
+// OnlineLook is what the corner script needs to frame one widget: its size,
+// its theme and its corner. It is false for a widget that does not exist, is off, or is
 // of another design: the script then answers not found, and nothing shows.
 func (a *API) OnlineLook(ctx context.Context, id string) (web.OnlineLook, bool) {
 	wd, err := a.Ctl.WidgetByID(ctx, id)
@@ -96,5 +96,12 @@ func (a *API) OnlineLook(ctx context.Context, id string) (web.OnlineLook, bool) 
 		return web.OnlineLook{}, false
 	}
 	w, h := onlineSize(wd)
-	return web.OnlineLook{ID: wd.ID, W: w, H: h, Theme: wd.Theme}, true
+	pos := ""
+	switch {
+	case wd.Has("left"):
+		pos = "bl"
+	case wd.Has("right"):
+		pos = "br"
+	}
+	return web.OnlineLook{ID: wd.ID, W: w, H: h, Theme: wd.Theme, Pos: pos}, true
 }
