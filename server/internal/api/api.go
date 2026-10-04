@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
+	"github.com/trckable/trckable/server/internal/ga"
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/realtime"
 	"github.com/trckable/trckable/server/internal/revenue"
@@ -80,6 +81,9 @@ type API struct {
 	// accounts that have two-step. SSOSignup lets someone from a provider's
 	// allowed domain create their own account (a viewer).
 	SSORequireTOTP, SSOSignup bool
+	// GA imports a site's history from Google Analytics (ga.go); nil, or
+	// without an OAuth client, it is off.
+	GA *ga.Manager
 	// GSCHTTP replaces the HTTP client used to reach Google; tests only.
 	GSCHTTP    *http.Client
 	cache      *reportCache
@@ -114,7 +118,12 @@ type API struct {
 // down; browsers reconnect to the next process on their own.
 func (a *API) Stop() {
 	a.init()
-	a.stopOnce.Do(func() { close(a.stopping) })
+	a.stopOnce.Do(func() {
+		close(a.stopping)
+		if a.GA != nil {
+			a.GA.Stop() // imports end and their tokens are forgotten
+		}
+	})
 }
 
 func (a *API) init() {
@@ -150,6 +159,12 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("GET /api/v1/oidc/{provider}/start", a.ssoStart)
 	handleFunc("GET /api/v1/oidc/{provider}/callback", a.ssoCallback)
 	handleFunc("POST /api/v1/oidc/code", a.ssoCode)
+	handle("GET /api/v1/sites/{site}/ga", a.authed(a.gaStatus))
+	handle("GET /api/v1/sites/{site}/ga/start", a.authed(a.gaStart))
+	handle("GET /api/v1/ga/callback", a.authed(a.gaCallback))
+	handle("GET /api/v1/sites/{site}/ga/properties", a.authed(a.gaProperties))
+	handle("POST /api/v1/sites/{site}/ga/import", a.authed(a.gaImport))
+	handle("DELETE /api/v1/sites/{site}/ga", a.authed(a.gaDisconnect))
 	handleFunc("POST /api/v1/logout", a.logout)
 	handle("GET /api/v1/me", a.authed(a.me))
 	handle("PUT /api/v1/me/keys", a.authed(a.setKeys))

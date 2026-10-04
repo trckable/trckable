@@ -35,7 +35,7 @@ export function say(pin: Pin, money: (minor: number) => string): Said {
       return { title, line: [extrasCopy.ring.spike(n.factor), from].filter(Boolean).join(' · '), big: n.visitors ? copy.visitors(n.visitors) : times(n.factor), facts: [copy.usual(times(n.factor)), from, when(pin.day)].filter(Boolean) }
     }
     case 'surge': {
-      const online = n.visitors ? copy.online(n.visitors) : ''
+      const online = n.visitors ? `${fmtInt(n.visitors)} ${copy.unit.online}` : ''
       return { title, line: [copy.surgeFrom(n.name), online].filter(Boolean).join(' · '), big: online || (n.factor ? times(n.factor) : ''), facts: [n.factor ? copy.usual(times(n.factor)) : '', when(pin.day)].filter(Boolean) }
     }
     case 'sale': {

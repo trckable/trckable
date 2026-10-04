@@ -48,11 +48,6 @@ export interface Figures {
 
 const day = (t: string) => t.slice(0, 10)
 
-/** What a click on a surge narrows to: the host that sent most of them, else their channel. */
-function surgeFilters(m: Moment): Filter[] {
-  if (m.referrer) return [{ dim: 'referrer', value: m.referrer }]
-  return m.channel ? [{ dim: 'channel', value: m.channel }] : []
-}
 
 /** The moments a chart shows: spikes, sales, an AI assistant's first visit and milestones (a country's first and notes have their own places). Money moments only where the reader may see revenue. */
 export function pinsFromMoments(list: Moment[], money: boolean): Pin[] {
@@ -63,10 +58,8 @@ export function pinsFromMoments(list: Moment[], money: boolean): Pin[] {
     const base = { id: m.kind === 'milestone' ? `milestone:${m.family}:${m.step}` : `${m.kind}:${m.t}`, day: day(m.t), at: m.t }
     switch (m.kind) {
       case 'spike':
-        out.push({ ...base, kind: 'spike', score: 80 + Math.min(15, m.factor ?? 0), filters: m.referrer ? [{ dim: 'referrer', value: m.referrer }] : [], showDay: true, n: { factor: m.factor, visitors: m.visitors, referrer: m.referrer } })
-        break
       case 'surge':
-        out.push({ ...base, kind: 'surge', score: 85 + Math.min(10, m.factor ?? 0), filters: surgeFilters(m), showDay: true, n: { factor: m.factor, visitors: m.visitors, name: m.text, referrer: m.referrer, channel: m.channel } })
+        out.push({ ...base, kind: m.kind, score: (m.kind === 'surge' ? 85 : 80) + Math.min(15, m.factor ?? 0), filters: m.referrer ? [{ dim: 'referrer', value: m.referrer }] : [], showDay: true, n: { factor: m.factor, visitors: m.visitors, referrer: m.referrer, name: m.text } })
         break
       case 'sale':
         if (money) out.push({ ...base, kind: 'sale', score: 60 + 20 * ((m.amount ?? 0) / biggest), filters: m.channel ? [{ dim: 'channel', value: m.channel }] : [], showDay: true, n: { count: m.count, amount: m.amount, channel: m.channel } })

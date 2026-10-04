@@ -9,13 +9,14 @@ import { DialogActions } from '../../components/DialogActions'
 import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../components/Modal'
 import { first } from './firstCopy'
+import { GoogleStep } from './GoogleStep'
 import { useFocusTrap } from './useFocusTrap'
 import '../../components/ConfirmDialog.css'
 import './firstActions.css'
 
 const t = first.importDialog
 
-export function ImportDialog({ domain, onClose }: { domain: string; onClose: () => void }) {
+export function ImportDialog({ domain, site, onClose }: { domain: string; site: string; onClose: () => void }) {
   const box = useRef<HTMLDivElement>(null)
   useFocusTrap(box)
   return (
@@ -38,6 +39,7 @@ export function ImportDialog({ domain, onClose }: { domain: string; onClose: () 
             <span className="faint">{t.csvSub}</span>
           </li>
         </ul>
+        <GoogleStep site={site} />
         <Copyable value={t.command(domain)} />
         <DialogActions
           left={

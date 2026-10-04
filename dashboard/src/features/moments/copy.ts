@@ -38,7 +38,6 @@ export const copy = defineCopy('moments', {
   share: 'Share',
   visitors: (n: number) => `${fmtInt(n)} visitors`,
   sales,
-  online: (n: number) => `${fmtInt(n)} online`,
   surgeFrom: (name?: string) => (name ? `Surge from ${name}` : 'Surge'),
   usual: (times: string) => `${times} the usual`,
   mostly: (channel: string) => `mostly ${channel}`,

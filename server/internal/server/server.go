@@ -31,6 +31,7 @@ import (
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/backup"
 	"github.com/trckable/trckable/server/internal/config"
+	"github.com/trckable/trckable/server/internal/ga"
 	"github.com/trckable/trckable/server/internal/geo"
 	"github.com/trckable/trckable/server/internal/ingest"
 	"github.com/trckable/trckable/server/internal/ledger"
@@ -258,6 +259,14 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			for _, p := range cfg.OIDC {
 				slog.Info("sign-in with a provider is on", "provider", p.Name, "callback", strings.TrimSuffix(cfg.BaseURL, "/")+"/api/v1/oidc/"+p.Name+"/callback")
 			}
+		}
+	}
+	if cfg.GAClientID != "" && cfg.GAClientSecret != "" {
+		if cfg.BaseURL == "" {
+			slog.Warn("importing from Google Analytics is off: set TRCKABLE_BASE_URL to this server's public address")
+		} else {
+			a.GA = &ga.Manager{Client: &ga.Client{ID: cfg.GAClientID, Secret: ga.NewSecret(cfg.GAClientSecret)}, Sink: gaSink{s}, Changed: a.PurgeSite}
+			slog.Info("importing from Google Analytics is on", "callback", strings.TrimSuffix(cfg.BaseURL, "/")+"/api/v1/ga/callback")
 		}
 	}
 	a.SendReport = s.sendReportNow

@@ -2,10 +2,7 @@
    not with the first page. Every moving thing stops under reduced motion. */
 
 /* ---- the card ---- */
-.surge-card {
-  --tint: var(--accent);
-}
-.surge-card .sg-hero {
+.side-card:has(.sg-hero) .sg-hero {
   position: relative;
   display: flex;
   align-items: center;
@@ -62,7 +59,7 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   /* A soft glow that pulses twice, then rests. */
-  .surge-card {
+  .side-card:has(.sg-hero) {
     animation: side-in 0.5s var(--spring, cubic-bezier(0.34, 1.4, 0.5, 1)) both, sg-glow 1.8s ease-out 0.4s 2;
   }
   .sg-ghost {

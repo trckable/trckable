@@ -1,17 +1,18 @@
 // Under the chart: the note controls (add a note, not for a viewer; open every
 // note) as two small chips with an icon each, and, while a day is picked, one
 // to go back to the whole period.
-import { StickyNote, StickyNotePlus, X } from 'lucide-react'
+import { History, StickyNote, StickyNotePlus, X } from 'lucide-react'
 import { copy as notesCopy } from '../notes/copy'
 import { copy } from './copy'
 
 interface Props {
   notes?: { count: number; onAdd?: () => void; onOpen: () => void }
   day?: string
+  imported?: { from: string; to: string }
   onBack: () => void
 }
 
-export function ChartFoot({ notes, day, onBack }: Props) {
+export function ChartFoot({ notes, day, imported, onBack }: Props) {
   return (
     <div className="note-bar">
       {notes?.onAdd && (
@@ -26,6 +27,12 @@ export function ChartFoot({ notes, day, onBack }: Props) {
           {notesCopy.list}
           {notes.count > 0 && <b className="num note-count">{notes.count}</b>}
         </button>
+      )}
+      {imported && (
+        <span className="chip imported-chip" title={copy.importedRange(imported.from, imported.to)}>
+          <History size={13} strokeWidth={1.75} aria-hidden="true" />
+          {copy.imported}
+        </span>
       )}
       {day && (
         <button type="button" className="chip scrub-day" onClick={onBack} aria-label={copy.backToPeriod(day)} title={copy.backToPeriod(day)}>

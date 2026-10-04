@@ -55,7 +55,6 @@ function Card({ surge, tz }: { surge: Surge; tz: string }) {
       <SideCard
         id="surge"
         asked // it will not keep: it comes up over a card that came up by itself
-        className="surge-card"
         label={t.label}
         closeLabel={t.close}
         kind={{ icon: <Zap size={14} strokeWidth={2} />, label: t.label, tint: 'var(--accent)' }}

@@ -5,7 +5,6 @@ import { defineCopy } from '../../i18n'
 
 export const copy = defineCopy('story', {
   spike: (factor: string) => `Traffic ${factor}`,
-  surge: (online: number, factor: string) => [`${online} online`, factor && `${factor} usual`].filter(Boolean).join(', '),
   newTraffic: (visitors: number) => `New traffic · ${visitors === 1 ? '1 visitor' : `${fmtInt(visitors)} visitors`}`,
   from: (who: string) => `from ${who}`,
   sale: (n: number) => (n === 1 ? 'Sale' : `${n} sales`),
