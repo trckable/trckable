@@ -6,7 +6,14 @@
   cursor: help;
 }
 /* Alone on its line (no comparison on), it starts at the tile's edge. */
-.kpi-delta > .kpi-pace:first-child {
+.kpi-pace-row {
+  min-height: 16px;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.kpi-delta > .kpi-pace:first-child,
+.kpi-pace-row > .kpi-pace {
   margin-left: 0;
 }
 @container (max-width: 120px) {

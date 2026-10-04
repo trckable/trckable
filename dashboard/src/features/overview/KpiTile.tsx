@@ -57,7 +57,7 @@ export function KpiTile(p: Props) {
           is the one thing that announces loading, and it says it once. */}
       {p.loading ? <span className="value skeleton" aria-hidden="true" /> : <span className="value num">{p.value === undefined || none ? '–' : p.fmt(v)}</span>}
       {p.d && !p.loading && !none && <Change d={p.d} vs={p.vs} hint={p.hint} pace={p.pace} />}
-      {!p.d && !p.loading && !none && p.pace && <span className="kpi-delta">{p.pace}</span>}
+      {!p.d && !p.loading && !none && p.pace && <span className="kpi-pace-row">{p.pace}</span>}
       {/* The change's line is kept while loading, and while a dash stands for nothing yet: the strip is as tall as it will be. */}
       {(p.loading || (none && p.d)) && <span className="kpi-delta" aria-hidden="true" />}
     </>
