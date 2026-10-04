@@ -949,3 +949,35 @@ func TestLoginLimitCountsAnIPv6SlashSixtyFourAsOne(t *testing.T) {
 		t.Fatal("limitKey")
 	}
 }
+
+// The file carries the browser version, the screen width and the language
+// beside the other breakdowns, and a visit from before versions were kept is
+// Unknown rather than missing.
+func TestExportCSVHasVersionScreenAndLanguage(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	ts := time.Date(2026, 9, 20, 9, 0, 0, 0, time.UTC).UnixMilli()
+	g.event(t, event.Event{Kind: event.KindPageview, TS: ts, EventID: 1, Visitor: 1, Path: "/", Browser: "Chrome", BrowserVersion: "Chrome 130", Screen: 1280, Language: "de"})
+	g.event(t, event.Event{Kind: event.KindPageview, TS: ts + 1000, EventID: 2, Visitor: 2, Path: "/", Browser: "Chrome", Screen: 390, Language: "en"})
+	g.waitApplied(t, 2)
+	req, _ := http.NewRequest("GET", g.srv.URL+"/api/v1/sites/"+g.site+"/export.csv?from=2026-09-14&to=2026-09-20", nil)
+	resp, err := c.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	rows, err := csv.NewReader(resp.Body).ReadAll()
+	if err != nil {
+		t.Fatalf("not valid CSV: %v", err)
+	}
+	got := map[string]string{}
+	for _, r := range rows[1:] {
+		got[r[0]+"|"+r[1]] = r[2]
+	}
+	for _, key := range []string{"browser version|Chrome 130", "browser version|Unknown", "screen width|1025–1440", "screen width|≤640", "language|de", "language|en"} {
+		if got[key] != "1" {
+			t.Errorf("%s = %q, want 1 visitor (rows: %v)", key, got[key], got)
+		}
+	}
+}

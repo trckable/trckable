@@ -215,6 +215,12 @@ var migrations = []string{
 		       count(*), count(*) FILTER (WHERE goal = 'error')
 		FROM events WHERE kind = 4 GROUP BY ALL;
 	DELETE FROM events WHERE kind = 4;`,
+	// 6: the browser's major version ("Chrome 129") and the width of the
+	// window a visit began in. Null on every row recorded before this release,
+	// which the reports call Unknown rather than guess.
+	`ALTER TABLE events ADD COLUMN browser_version VARCHAR;
+	ALTER TABLE sessions ADD COLUMN browser_version VARCHAR;
+	ALTER TABLE sessions ADD COLUMN screen USMALLINT;`,
 }
 
 // tableSince is the migration that created each table added after the first

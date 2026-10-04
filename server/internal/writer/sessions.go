@@ -41,6 +41,8 @@ type Session struct {
 	Campaign, Source, Medium               string
 	Country, Region, City                  string
 	Device, Browser, OS, Language          string
+	BrowserVersion                         string
+	Screen                                 uint16 // the entry pageview's window width in pixels, 0 = unknown
 
 	Pageviews uint32
 	Goals     uint32
@@ -94,6 +96,7 @@ func (s *Session) add(e *event.Event) {
 	fill(&s.City, e.City)
 	fill(&s.Device, e.Device)
 	fill(&s.Browser, e.Browser)
+	fill(&s.BrowserVersion, e.BrowserVersion)
 	fill(&s.OS, e.OS)
 	fill(&s.Language, e.Language)
 	switch e.Kind {
@@ -101,6 +104,7 @@ func (s *Session) add(e *event.Event) {
 		if s.Pageviews == 0 { // entry pageview decides the source
 			s.Channel, s.Referrer, s.EntryPage = e.Channel, e.RefHost, e.Path
 			s.Campaign, s.Source, s.Medium = e.UTMCampaign, e.UTMSource, e.UTMMedium
+			s.Screen = e.Screen
 		}
 		s.Pageviews++
 		if e.Pageview != 0 {

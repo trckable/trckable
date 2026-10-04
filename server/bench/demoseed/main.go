@@ -154,7 +154,8 @@ func main() {
 				id++
 				pv := id
 				e := event.Event{Site: site, Kind: event.KindPageview, EventID: id, TS: ts.UnixMilli(), Visitor: visitor, FirstSeen: firstSeen[visitor], Pageview: pv,
-					Hostname: *domain, Path: path, Country: c.code, City: c.city, Device: dv.dev, OS: dv.os, Browser: dv.br, Language: "en"}
+					Hostname: *domain, Path: path, Country: c.code, City: c.city, Device: dv.dev, OS: dv.os, Browser: dv.br, Language: demoLanguage(c.code, visitor)}
+				e.BrowserVersion, e.Screen = demoBrowser(dv.br, visitor), demoScreen(dv.dev, visitor)
 				if p == 0 {
 					e.Channel, e.RefHost, e.UTMCampaign = ch.name, ref, utm
 					if utm != "" {
@@ -389,4 +390,40 @@ func depthFor(path string, rng *rand.Rand) uint8 {
 		d = 100
 	}
 	return uint8(d)
+}
+
+// demoBrowser gives a visitor a recent major version of their browser, the
+// same one every visit, from the visitor id: no random draw is spent, so the
+// rest of the demo data stays exactly as it was.
+func demoBrowser(br string, visitor uint64) string {
+	versions := map[string][]int{
+		"Chrome": {130, 130, 129, 128, 126}, "Safari": {18, 18, 17, 16}, "Edge": {130, 129, 128},
+		"Firefox": {131, 130, 128}, "Samsung Internet": {26, 25},
+	}
+	v := versions[br]
+	if len(v) == 0 {
+		return ""
+	}
+	return br + " " + strconv.Itoa(v[visitor%uint64(len(v))])
+}
+
+// demoScreen is a window width that fits the device, chosen from the visitor
+// id for the same reason.
+func demoScreen(dev string, visitor uint64) uint16 {
+	widths := map[string][]uint16{
+		"Desktop": {1280, 1366, 1440, 1536, 1920, 1920, 2560},
+		"Mobile":  {390, 390, 412, 360, 428},
+		"Tablet":  {768, 820, 1024},
+	}[dev]
+	return widths[(visitor>>8)%uint64(len(widths))]
+}
+
+// demoLanguage is the language a visitor from a country mostly reads in, with
+// a share reading English anyway, chosen from the visitor id (no random draw).
+func demoLanguage(country string, visitor uint64) string {
+	own := map[string]string{"DE": "de", "FR": "fr", "BR": "pt", "ES": "es", "NL": "nl", "PL": "pl", "JP": "ja", "SE": "sv", "IT": "it", "AL": "sq", "IN": "hi"}[country]
+	if own == "" || visitor%10 < 4 {
+		return "en"
+	}
+	return own
 }

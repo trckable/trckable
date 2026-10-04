@@ -165,7 +165,21 @@ var sessionDims = map[string]string{
 	"browser":    "browser",
 	"os":         "os",
 	"language":   "language",
+
+	// A version only newer visits carry: the rest are Unknown, not missing.
+	"browser_version": "coalesce(browser_version, 'Unknown')",
+	"screen":          screenBucket,
 }
+
+// screenBucket groups the width of the window a visit began in. Exact widths
+// would be a list of a thousand one-visit rows; these five are the ones a
+// designer chooses between. A visit that never said stays out of the list.
+const screenBucket = `CASE WHEN screen IS NULL THEN NULL
+		WHEN screen <= 640 THEN '≤640'
+		WHEN screen <= 1024 THEN '641–1024'
+		WHEN screen <= 1440 THEN '1025–1440'
+		WHEN screen <= 1920 THEN '1441–1920'
+		ELSE '>1920' END`
 
 // DefaultDims are computed for every report (Core + Full).
 var DefaultDims = []string{"channel", "referrer", "campaign", "entry_page", "country", "device", "browser", "os"}
@@ -173,7 +187,7 @@ var DefaultDims = []string{"channel", "referrer", "campaign", "entry_page", "cou
 // DeepDims are the ones only Full mode shows, and the ones its filter menu
 // offers. They ride along in the same GROUPING SETS scan, so asking for them
 // costs one wider scan rather than six more queries — but Core does not ask.
-var DeepDims = []string{"exit_page", "region", "city", "source", "medium", "language"}
+var DeepDims = []string{"exit_page", "region", "city", "source", "medium", "language", "browser_version", "screen"}
 
 // dimsFor is the breakdowns one report computes.
 func dimsFor(deep bool) []string {

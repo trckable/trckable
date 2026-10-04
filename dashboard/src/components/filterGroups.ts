@@ -15,6 +15,7 @@ import {
   Megaphone,
   MonitorSmartphone,
   Radio,
+  Ruler,
   Tag,
   Target,
   type LucideIcon,
@@ -58,6 +59,8 @@ export const FILTER_GROUPS: FilterGroup[] = [
     dims: [
       { dim: 'device', label: 'Device', icon: MonitorSmartphone },
       { dim: 'browser', label: 'Browser', icon: AppWindow },
+      { dim: 'browser_version', label: 'Browser version', icon: AppWindow, note: 'Full mode' },
+      { dim: 'screen', label: 'Screen', icon: Ruler, note: 'Full mode' },
       { dim: 'os', label: 'OS', icon: Cpu },
       { dim: 'language', label: 'Language', icon: Languages, note: 'Full mode' },
     ],

@@ -66,6 +66,9 @@ type Event struct {
 	Language string `json:"la,omitempty"`
 	Screen   uint16 `json:"sw,omitempty"`
 
+	// BrowserVersion is the browser and its major version ("Chrome 129").
+	BrowserVersion string `json:"bv,omitempty"`
+
 	Goal  string            `json:"g,omitempty"`
 	Props map[string]string `json:"pr,omitempty"`
 

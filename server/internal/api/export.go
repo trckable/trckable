@@ -32,6 +32,9 @@ var exportDims = []struct{ dim, label string }{
 	{"device", "device"},
 	{"browser", "browser"},
 	{"os", "operating system"},
+	{"browser_version", "browser version"},
+	{"screen", "screen width"},
+	{"language", "language"},
 }
 
 // export serves GET /api/v1/sites/{site}/export.csv

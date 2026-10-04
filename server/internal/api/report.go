@@ -19,7 +19,7 @@ import (
 //	compare    previous | year | custom (cfrom, cto) | none (default none)
 //	f          filters, repeatable: f=channel:Search&f=country:DE
 //	daily      1 = include per-day data for the scrubber
-//	deep       1 = also break down exit pages, regions and cities (Full mode)
+//	deep       1 = also break down exit pages, regions, cities, languages, browser versions and screens (Full mode)
 //	tz         override the site's timezone
 func (a *API) report(w http.ResponseWriter, r *http.Request) {
 	a.reportFor(w, r, r.PathValue("site"), true)
