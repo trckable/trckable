@@ -915,6 +915,8 @@ export default {
   'sites.menu.onlineAll': 'En línea ahora, todos los sitios',
   'sites.menu.todayShort': 'hoy',
   'sites.menu.keyClose': 'esc',
+  'sites.menu.openSite': (domain: string) => `Abrir ${domain}`,
+  'sites.menu.openSiteKey': 'Mayús + Intro abre el sitio',
   'sites.menu.options': (name: string) => `${name}: ordenar`,
   'sites.menu.up': 'Subir',
   'sites.menu.down': 'Bajar',
