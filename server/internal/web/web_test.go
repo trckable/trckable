@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"io"
 	"io/fs"
 	"net/http"
@@ -483,5 +485,46 @@ func TestOnlineScript(t *testing.T) {
 	}
 	if strings.Contains(body, "localStorage") || strings.Contains(body, "cookie") || strings.Contains(body, "sessionStorage") {
 		t.Fatal("the corner script keeps nothing in the visitor's browser")
+	}
+}
+
+// The loader a page that embeds widgets includes: it sets a frame's height
+// only from a message of the origin it came from, sent by that frame's own
+// window, for the widget the frame shows.
+func TestWidgetLoader(t *testing.T) {
+	w := httptest.NewRecorder()
+	WidgetLoader().ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/js/"+WidgetLoaderFile, nil))
+	if w.Code != http.StatusOK || !strings.HasPrefix(w.Header().Get("Content-Type"), "application/javascript") {
+		t.Fatalf("loader: %d %q", w.Code, w.Header().Get("Content-Type"))
+	}
+	js := w.Body.String()
+	for _, want := range []string{
+		"document.currentScript.src.split('/').slice(0,3).join('/')", // its own origin
+		"e.origin!==o",                       // another origin is ignored
+		"d.type!=='trckable:h'",              // so is any other message
+		"f[i].contentWindow===e.source",      // only a frame of the page
+		"f[i].src.indexOf(o+'/w/'+d.id)===0", // only the widget that frame shows
+		"Math.min(d.h,4000)",                 // never absurdly tall
+	} {
+		if !strings.Contains(js, want) {
+			t.Errorf("loader lacks %q", want)
+		}
+	}
+	if len(js) > 600 {
+		t.Errorf("the loader is %d bytes: it should stay a few hundred", len(js))
+	}
+	if strings.Contains(js, "fetch") || strings.Contains(js, "XMLHttpRequest") || strings.Contains(js, "cookie") {
+		t.Error("the loader makes no request and reads no cookie")
+	}
+}
+
+// The widget page's own script is the one its policy names, and only posts.
+func TestWidgetPageScript(t *testing.T) {
+	sum := sha256.Sum256([]byte(WidgetPageScript))
+	if WidgetPageScriptHash != "sha256-"+base64.StdEncoding.EncodeToString(sum[:]) {
+		t.Fatal("the policy hash must be the script's")
+	}
+	if !strings.Contains(WidgetPageScript, "postMessage({type:'trckable:h',id:") || strings.Contains(WidgetPageScript, "fetch") || strings.Contains(WidgetPageScript, "cookie") {
+		t.Fatal("the page script only posts its height")
 	}
 }

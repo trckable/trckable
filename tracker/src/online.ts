@@ -16,11 +16,13 @@ if (s) {
   const host = document.createElement('div')
   const root = host.attachShadow({ mode: 'open' })
   const css = document.createElement('style')
+  const e = left ? 'left' : 'right'
   css.textContent =
-    ':host{position:fixed;bottom:16px;' + (left ? 'left' : 'right') + ':16px;z-index:2147483646;max-width:calc(100vw - 32px)}' +
+    ':host{position:fixed;bottom:max(12px,env(safe-area-inset-bottom));' + e + ':max(12px,env(safe-area-inset-' + e + '));z-index:2147483646;max-width:calc(100vw - 24px)}' +
     'iframe{display:block;border:0;max-width:100%;background:none}' +
-    'button{position:absolute;top:-9px;' + (left ? 'right' : 'left') + ':-9px;width:20px;height:20px;padding:0;border:1px solid #8b929c;border-radius:50%;' +
-    'background:#15161a;color:#f3f4f6;font:14px/1 system-ui,sans-serif;cursor:pointer}' +
+    'button{position:absolute;top:-22px;' + (left ? 'right' : 'left') + ':-22px;width:44px;height:44px;padding:0;border:0;background:none;color:#f3f4f6;font:14px/1 system-ui,sans-serif;cursor:pointer}' +
+    'button:before{content:"\\d7";display:block;width:20px;height:20px;margin:12px;border:1px solid #8b929c;border-radius:50%;background:#15161a;line-height:18px}' +
+    '@media(max-width:480px){:host{transform:scale(.88);transform-origin:bottom ' + e + '}}' +
     '@media print{:host{display:none}}'
   const frame = document.createElement('iframe')
   frame.src = new URL(s.src).origin + '/w/' + q.id
@@ -29,11 +31,14 @@ if (s) {
   frame.title = 'People online'
   if (q.theme !== 'auto') frame.style.colorScheme = q.theme!
   const x = document.createElement('button')
-  x.textContent = '×'
   x.title = 'Close'
   x.setAttribute('aria-label', 'Close')
   x.onclick = () => host.remove()
   root.append(css, frame, x)
+  // The card tells the page how tall it is; only its own frame is believed.
+  addEventListener('message', (m) => {
+    if (m.source === frame.contentWindow && m.data && m.data.type === 'trckable:h' && m.data.h > 0) frame.height = String(Math.min(m.data.h, 4000))
+  })
   const show = () => {
     document.body.append(host)
     if (!matchMedia('(prefers-reduced-motion:reduce)').matches) host.animate([{ opacity: 0 }, { opacity: 1 }], 300)

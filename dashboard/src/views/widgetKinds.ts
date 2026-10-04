@@ -162,6 +162,7 @@ export const TEXT = {
   copyFrame: 'Copy embed code',
   copyCorner: 'Copy the corner script',
   snippet: 'Snippet copied',
+  newCode: 'Copy the new code to get auto height',
   script: 'Script copied',
 }
 
@@ -178,15 +179,27 @@ export const size = (look: WidgetLook) => {
   let h = 0
   if (look.kind === 'live') h = 106 + (has('bars') ? 100 : 0) + LIST * ['countries', 'channels', 'pages'].filter(has).length
   else if (look.kind === 'revenue') h = 106 + (has('channels') ? LIST : 0)
-  else if (look.kind === 'privacy') h = 250
+  else if (look.kind === 'privacy') h = 300
   else if (look.kind === 'badge') h = 72
   else h = 44
   return { w: kindOf(look.kind).w, h: h + brand }
 }
 
+// Widgets made before the frame code carried its height loader: their pasted
+// code may still be the old one, which keeps a fixed height.
+export const AUTO_HEIGHT_SINCE = 1791108024 // 4 Oct 2026
+
+export const hasOldCode = (w: Widget) => w.created_at < AUTO_HEIGHT_SINCE
+
+// Cards fill their container up to their own width; the one-line designs keep
+// their size and only shrink to fit. The loader sets the height from the card.
+const FLUID = new Set(['live', 'revenue', 'privacy'])
+
 export function frameCode(base: string, w: Widget, domain: string) {
   const { w: width, h } = size(w)
-  return `<iframe src="${base}/w/${w.id}" width="${width}" height="${h}" style="border:0;background:transparent" loading="lazy" title="${kindOf(w.kind).name} on ${domain}"></iframe>`
+  const card = FLUID.has(w.kind) || (w.kind === 'online' && w.shows.includes('card'))
+  const fit = card ? `width:100%;max-width:${width}px` : 'max-width:100%'
+  return `<iframe src="${base}/w/${w.id}" width="${width}" height="${h}" style="border:0;background:transparent;${fit}" loading="lazy" title="${kindOf(w.kind).name} on ${domain}"></iframe>\n<script async src="${base}/js/w.js"></script>`
 }
 
 // The online design's corner placement: one script tag, no markup of its own.

@@ -82,6 +82,16 @@ createServer(async (req, res) => {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(`<!doctype html><html><head><title>Installed</title>${tag}</head><body><h1>Installed</h1></body></html>`)
       return
     }
+    // A customer page with one widget frame, as Settings → Widgets writes it
+    // (widget-responsive.spec.ts): ?id, w, h, fit (the frame's style) and loader=0 for old code.
+    if (url.pathname === '/widget-embed') {
+      const q = url.searchParams
+      const esc = (v) => String(v).replace(/[^\w ;:.%/-]/g, '')
+      const frame = `<iframe src="${TRCKABLE}/w/${esc(q.get('id'))}" width="${esc(q.get('w'))}" height="${esc(q.get('h'))}" style="border:0;background:transparent;${esc(q.get('fit'))}" title="widget"></iframe>`
+      const loader = q.get('loader') === '0' ? '' : `<script async src="${TRCKABLE}/js/w.js"></script>`
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Customer</title></head><body style="margin:0;padding:8px;background:#fff">${frame}${loader}</body></html>`)
+      return
+    }
     // A page carrying an online widget's corner script, as Settings → Widgets writes it.
     const corner = url.pathname.match(/^\/online\/(w_[a-z0-9]+)$/)
     if (corner) {
