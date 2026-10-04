@@ -179,7 +179,7 @@ func TestEntraAddress(t *testing.T) {
 
 // nOAuth: in a directory (or a multi-tenant sign-up) the email claim can be
 // set to an address its holder does not own. Entra's own word that the
-// domain is verified, or the operator's list of domains, is what counts.
+// domain is verified, or the list of the person who runs the server of domains, is what counts.
 func TestEntraAddressNeedsTheDomainToBeVerified(t *testing.T) {
 	for name, tt := range map[string]struct {
 		domains []string

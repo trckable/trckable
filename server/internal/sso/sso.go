@@ -254,7 +254,7 @@ func (n *flexInt) UnmarshalJSON(raw []byte) error {
 
 // googleOwn are the domains Google itself is the authority for: it makes
 // the address and no one else can have it. Any other domain at Google is
-// someone's own, put on a Workspace or a Cloud Identity account, which can be
+// someone's own, put on a Workspace or a Google identity account, which can be
 // made by whoever controls DNS for it, or by someone who only knows that an
 // address exists there, so for those the hd claim must name the same domain.
 var googleOwn = []string{"gmail.com", "googlemail.com"}
