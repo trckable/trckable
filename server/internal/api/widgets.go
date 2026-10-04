@@ -584,24 +584,23 @@ li{display:flex;align-items:center;gap:8px}
 li span:nth-child(2){flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 li b{font-weight:500;font-variant-numeric:tabular-nums}
 .ok{color:var(--acc);font-weight:700}
-.by{display:flex;align-items:center;justify-content:center;gap:5px;width:max-content;max-width:100%;margin:6px auto 0;padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:11px;color:var(--mute);text-decoration:none}
+.by{display:flex;align-items:center;gap:5px;width:max-content;max-width:100%;margin:14px 0 0;font-size:11px;color:var(--mute);text-decoration:none}
 .by b{font-weight:760;letter-spacing:-.04em;color:var(--fg)}.by i{font-style:normal;font-weight:360;letter-spacing:-.03em}
 .by svg{flex:none}
-.badge{display:flex;align-items:center;gap:12px;padding:12px 16px}
-.badge b{font-size:clamp(18px,7cqw,22px);font-weight:700;font-variant-numeric:tabular-nums}
-.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:{{.Radius}}px;font-weight:600;font-variant-numeric:tabular-nums}
+.badge{padding:12px 16px}.badge .row{display:flex;align-items:center;gap:12px}
+.badge .row b{font-size:clamp(18px,7cqw,22px);font-weight:700;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:{{.Radius}}px;font-weight:600;font-variant-numeric:tabular-nums}.pill:not(.on){display:inline-block}.pill .row{display:flex;align-items:center;gap:8px}.pill:not(.on) .by,.badge .by{margin-top:6px}
 .pill.on{padding:8px 12px 8px 14px;gap:8px;white-space:nowrap}
 .pill.on .gh{display:flex;margin-left:2px}
 .spark{display:flex;align-items:flex-end;gap:1px;height:18px;width:60px}
 .spark i{flex:1;height:100%;display:flex;align-items:flex-end}
 .spark s{display:block;width:100%;background:var(--acc);border-radius:1px 1px 0 0;min-height:1px;opacity:.9}
 .spark s.z{background:var(--line)}
-.card .by{width:auto;margin:14px 0 0;padding:0;border:0;border-radius:0;background:none}
 .foot{margin-top:12px;font-size:11px;color:var(--mute)}
 .off{color:var(--mute);font-size:13px}
 .facts li{align-items:flex-start}
 .facts li span:nth-child(2){white-space:normal;overflow:visible}
-@container (max-width:359px){.bars{gap:1px}.badge,.pill:not(.on){flex-wrap:wrap}.lab{letter-spacing:.04em}.ax{font-size:10px}}
+@container (max-width:359px){.bars{gap:1px}.badge .row,.pill .row{flex-wrap:wrap}.lab{letter-spacing:.04em}.ax{font-size:10px}}
 </style></head><body>
 {{if .Off}}<div class="card off">{{.Off}}</div>
 {{else if eq .Kind "live"}}<div class="card">
@@ -612,17 +611,20 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 {{if .Countries}}<h3>{{.L.from}}</h3><ul>{{range .Countries}}<li><span>{{.Mark}}</span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
 {{if .Pages}}<h3>{{.L.reading}}</h3><ul>{{range .Pages}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
 {{if .Channels}}<h3>{{.L.came}}</h3><ul>{{range .Channels}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
+{{if .Brand}}{{template "by" .}}{{end}}
 </div>
-{{else if eq .Kind "badge"}}<div class="card badge"><span class="dot"></span><span><b>{{.Week}}</b><br><span class="lab">{{.L.week}}{{if .AI}} · {{.L.ai}}{{end}}</span></span></div>
+{{else if eq .Kind "badge"}}<div class="card badge"><div class="row"><span class="dot"></span><span><b>{{.Week}}</b><br><span class="lab">{{.L.week}}{{if .AI}} · {{.L.ai}}{{end}}</span></span></div>{{if .Brand}}{{template "by" .}}{{end}}</div>
 {{else if eq .Kind "revenue"}}<div class="card">
 <div class="lab">{{.L.rev_title}}</div>
 <div class="big">{{.Revenue}}</div>
 {{if .Channels}}<h3>{{.L.rev_channels}}</h3><ul>{{range .Channels}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
+{{if .Brand}}{{template "by" .}}{{end}}
 </div>
 {{else if eq .Kind "privacy"}}<div class="card">
 <div class="lab">{{.L.seal_title}}</div>
 <ul class="facts">{{range .Facts}}<li><span class="ok">✓</span><span>{{.}}</span></li>{{end}}</ul>
 <div class="foot">{{.L.seal_foot}}</div>
+{{if .Brand}}{{template "by" .}}{{end}}
 </div>
 {{else if eq .Kind "online"}}{{if eq .Mode "card"}}<div class="card">
 <div class="lab">{{.L.online_title}}</div>
@@ -634,6 +636,5 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 {{if .Brand}}{{template "by" .}}{{end}}
 </div>
 {{else}}<div class="card pill on"><span class="dot"></span><span>{{.Count}} {{.L.online}}</span>{{if .Bars}}<span class="spark" aria-hidden="true">{{range .Bars}}<i><s{{if eq .H 0}} class="z"{{end}} style="height:{{.H}}%"></s></i>{{end}}</span>{{end}}{{if .Brand}}<a class="gh" href="https://trckable.com" target="_blank" rel="noopener" title="{{.L.brand}} trckable" aria-label="{{.L.brand}} trckable">{{.Ghost}}</a>{{end}}</div>{{end}}
-{{else}}<div class="card pill"><span class="dot"></span>{{.L.counter}}</div>{{end}}
-{{if and .Brand (ne .Kind "online")}}{{template "by" .}}{{end}}
+{{else}}<div class="card pill"><div class="row"><span class="dot"></span>{{.L.counter}}</div>{{if .Brand}}{{template "by" .}}{{end}}</div>{{end}}
 <script>@SCRIPT@</script></body></html>{{define "by"}}<a class="by" href="https://trckable.com" target="_blank" rel="noopener">{{.Ghost}}<span>{{.L.brand}} <b>trck</b><i>able</i></span></a>{{end}}`, "@SCRIPT@", web.WidgetPageScript, 1)))

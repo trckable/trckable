@@ -1,5 +1,5 @@
 // One of a site's widgets in Settings → Widgets: a thumbnail, its name, and a
-// ⋯ menu to edit, rename, copy its code or delete it.
+// kind, Edit, Copy code and Rename at hand, and a ⋯ menu for the rest.
 import { Copy, Pencil, PanelBottomOpen, TextCursorInput, Trash2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { fail, type Site, type Widget, more } from '../lib/apiMore'
@@ -59,15 +59,9 @@ export function WidgetRow({ site, w, base, onChange, onEdit }: { site: Site; w: 
     if (!cancelled.current && name.trim() !== w.name) void save({ name: name.trim() })
     cancelled.current = false
   }
-  const items: WidgetMenuItem[] = [
-    { label: TEXT.copyFrame, icon: <Copy size={18} strokeWidth={1.75} aria-hidden="true" />, run: () => copy(frameCode(base, w, site.domain), TEXT.snippet), hint: hasOldCode(w) ? TEXT.newCode : undefined },
-  ]
+  const items: WidgetMenuItem[] = []
   if (w.kind === 'online') items.push({ label: TEXT.copyCorner, icon: <PanelBottomOpen size={18} strokeWidth={1.75} aria-hidden="true" />, run: () => copy(cornerCode(base, w), TEXT.script) })
   if (!isViewer()) {
-    items.unshift(
-      { label: TEXT.edit, icon: <Pencil size={18} strokeWidth={1.75} aria-hidden="true" />, run: () => onEdit(w) },
-      { label: TEXT.rename, icon: <TextCursorInput size={18} strokeWidth={1.75} aria-hidden="true" />, run: () => setRenaming(true) },
-    )
     items.push({
       label: TEXT.delete,
       icon: <Trash2 size={18} strokeWidth={1.75} aria-hidden="true" />,
@@ -83,6 +77,7 @@ export function WidgetRow({ site, w, base, onChange, onEdit }: { site: Site; w: 
         }).then((ok) => ok && onChange()),
     })
   }
+  const copyCode = () => copy(frameCode(base, w, site.domain), TEXT.snippet)
   return (
     <div className="wg-row">
       <Thumb site={site} w={w} onOpen={isViewer() ? undefined : () => onEdit(w)} />
@@ -109,12 +104,25 @@ export function WidgetRow({ site, w, base, onChange, onEdit }: { site: Site; w: 
             {w.name}
           </b>
         )}
-        <span className="faint num">
-          {[w.theme, ...w.shows].join(' · ')} {TEXT.made} {new Date(w.created_at * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-        </span>
+        <span className="faint">{k.name}</span>
+      </span>
+      <span className="wg-acts">
+        {!isViewer() && (
+          <button type="button" className="btn icon ghost" aria-label={TEXT.edit} title={TEXT.edit} onClick={() => onEdit(w)}>
+            <Pencil size={17} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        )}
+        <button type="button" className="btn icon ghost" aria-label={TEXT.copyFrame} title={hasOldCode(w) ? `${TEXT.copyFrame}. ${TEXT.newCode}` : TEXT.copyFrame} onClick={copyCode}>
+          <Copy size={17} strokeWidth={1.75} aria-hidden="true" />
+        </button>
+        {!isViewer() && (
+          <button type="button" className="btn icon ghost" aria-label={TEXT.rename} title={TEXT.rename} onClick={() => setRenaming(true)}>
+            <TextCursorInput size={17} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        )}
       </span>
       {!isViewer() && <Switch on={on} label={`${w.name} on`} onChange={toggle} />}
-      <WidgetMenu items={items} />
+      {items.length > 0 && <WidgetMenu items={items} />}
     </div>
   )
 }

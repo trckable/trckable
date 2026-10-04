@@ -1,8 +1,11 @@
 // The trckable mark on every widget, in every theme, on every accent: drawn
 // for real, measured against the widget's own background. A light widget must
 // not lose its ghost on white (lime on white is about 1.2 to 1), so the ghost
-// gets an ink outline there. Also writes one contact sheet of all of them (to
-// SHEET_OUT, default test-results/widget-logo-sheet.png).
+// gets an ink outline there. The brand line sits inside the card, so it keeps
+// the card's own contrast on any host page. Also writes two contact sheets (to
+// SHEET_OUT, default test-results/widget-logo-sheet.png, and the brand line on
+// white, black and mid-grey hosts to HOSTS_OUT, default
+// test-results/widget-brand-hosts.png).
 import { expect, test } from '@playwright/test'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
@@ -124,6 +127,28 @@ test('the trckable mark and name keep their contrast on every widget, theme and 
   mkdirSync(dirname(out), { recursive: true })
   writeFileSync(out, await sheet.screenshot({ fullPage: true }))
   await sheet.close()
+
+  // The brand line on the three hosts a page is likely to have.
+  const HOSTS = [
+    { name: 'white', page: '#ffffff' },
+    { name: 'black', page: '#000000' },
+    { name: 'grey', page: '#808080' },
+  ]
+  const hostSheet = await browser.newPage({ viewport: { width: 1200, height: 800 } })
+  const hostRows = DESIGNS.flatMap((d) => GROUNDS.map((g) => ({ d: d.name, g: g.name })))
+  const hostHtml = hostRows
+    .map((r) => {
+      const c = cells.find((x) => x.design === r.d && x.accent === 'own' && x.ground === r.g)
+      const tds = HOSTS.map((h) => `<td style="background:${h.page}">${c ? `<img src="data:image/png;base64,${c.png}">` : ''}</td>`).join('')
+      return `<tr><th>${r.d}<br>${r.g}</th>${tds}</tr>`
+    })
+    .join('')
+  await hostSheet.setContent(`<style>body{margin:0;font:12px system-ui;background:#888}table{border-collapse:collapse}th{width:150px;text-align:left;padding:6px;background:#eee}td{width:340px;padding:8px;vertical-align:middle;border:1px solid #888}img{display:block}</style>
+<table><tr><th></th>${HOSTS.map((h) => `<th>${h.name}</th>`).join('')}</tr>${hostHtml}</table>`)
+  const hostsOut = process.env.HOSTS_OUT ?? 'test-results/widget-brand-hosts.png'
+  mkdirSync(dirname(hostsOut), { recursive: true })
+  writeFileSync(hostsOut, await hostSheet.screenshot({ fullPage: true }))
+  await hostSheet.close()
 
   expect(failures).toEqual([])
 })
