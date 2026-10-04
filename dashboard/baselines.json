@@ -12,7 +12,6 @@
     "src/views/Search.tsx": 356,
     "src/views/Settings.tsx": 592,
     "src/views/Sites.tsx": 402,
-    "src/views/TwoStepSetup.tsx": 255,
-    "src/views/Widgets.tsx": 301
+    "src/views/TwoStepSetup.tsx": 255
   }
 }

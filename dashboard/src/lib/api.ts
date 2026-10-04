@@ -778,17 +778,24 @@ export interface Milestones {
   next?: MilestoneNext[]
 }
 
-export type WidgetKind = 'live' | 'badge' | 'counter' | 'revenue' | 'privacy'
+export type WidgetKind = 'live' | 'badge' | 'counter' | 'revenue' | 'privacy' | 'online'
 export interface WidgetLook {
+  /** What the owner calls it, at most 40 characters; blank is the design's own name. */
+  name?: string
   kind: WidgetKind
   theme: 'auto' | 'dark' | 'light'
   accent: string
   radius: number
   brand: boolean
-  /** The parts the design shows: bars, countries, pages, channels (live); ai (badge); channels (revenue). */
+  /** The language of its words: auto follows the visitor's browser. */
+  lang: string
+  /** Labels the owner reworded, by key; a key left out keeps the translated default. */
+  texts: Record<string, string>
+  /** The parts the design shows: bars, countries, pages, channels (live); ai (badge); channels (revenue); the mode (online): spark, or card with pages and countries. */
   shows: string[]
 }
 export interface Widget extends WidgetLook {
+  name: string
   id: string
   site_id: string
   on: boolean
