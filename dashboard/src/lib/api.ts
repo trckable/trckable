@@ -2,6 +2,7 @@
 // non-GET request carries the CSRF header the server requires.
 // `fail` is said once, from where every caller already imports the client: it tells a person that something failed.
 export { fail } from '../components/toastBus'
+import { filterParam } from './filterSet'
 
 export interface KPIs {
   visitors: number
@@ -493,6 +494,8 @@ export interface ReportQuery {
 
 export interface Filter {
   dim: string
+  /** Absent = is. Values of one dimension and op are alternatives (any of). */
+  op?: 'not'
   value: string
 }
 
@@ -540,7 +543,7 @@ export interface JourneyResult {
 /** The report selectors a module endpoint understands (range, zone, filters). */
 export function rangeQS(q: ReportQuery): string {
   const p = new URLSearchParams({ from: q.from, to: q.to })
-  for (const f of q.filters ?? []) p.append('f', f.dim + ':' + f.value)
+  for (const f of q.filters ?? []) p.append('f', filterParam(f))
   return '?' + p.toString()
 }
 
@@ -556,7 +559,7 @@ export function reportURL(site: string, q: ReportQuery): string {
   if (q.deep) p.set('deep', '1')
   if (q.testPayments) p.set('payments', 'test')
   if (q.attr) p.set('attr', q.attr)
-  for (const f of q.filters ?? []) p.append('f', f.dim + ':' + f.value)
+  for (const f of q.filters ?? []) p.append('f', filterParam(f))
   // A shared link has no site of its own to name: the cookie says which one,
   // so the address cannot be edited into someone else's numbers.
   if (shareMode) return `/share/report?${p}`

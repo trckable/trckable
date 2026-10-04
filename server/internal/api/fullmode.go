@@ -50,7 +50,7 @@ func (a *API) params(w http.ResponseWriter, r *http.Request) (*query.Q, query.Pa
 		fail(w, http.StatusBadRequest, err.Error())
 		return nil, query.Params{}, false
 	}
-	filters, err := parseFilters(v["f"])
+	filters, err := a.filtersOf(r.Context(), site, v)
 	if err != nil {
 		fail(w, http.StatusBadRequest, err.Error())
 		return nil, query.Params{}, false
@@ -362,6 +362,12 @@ func (a *API) saveSegment(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(in.Query) > 2000 {
 		fail(w, http.StatusBadRequest, "that view is too complicated to save")
+		return
+	}
+	// A view is a dashboard address, so its filters are checked the way the
+	// report checks them: one that could never open is not worth keeping.
+	if !viewRuns(in.Query) {
+		fail(w, http.StatusBadRequest, "that view has a filter trckable cannot run")
 		return
 	}
 	g, err := a.Ctl.SaveSegment(r.Context(), r.PathValue("site"), in.Name, in.Query)
