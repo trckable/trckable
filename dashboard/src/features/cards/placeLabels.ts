@@ -1,5 +1,6 @@
 // What a row of the Locations card is called: a country with its flag, a
 // language by its name. Part of the same lazy chunk as the card.
+import { tag } from '../../i18n'
 import { countryName, flag } from '../../lib/format'
 
 let names: Intl.DisplayNames | null | undefined
@@ -8,7 +9,7 @@ let names: Intl.DisplayNames | null | undefined
 export function languageName(code: string): string {
   if (names === undefined) {
     try {
-      names = new Intl.DisplayNames(['en'], { type: 'language' })
+      names = new Intl.DisplayNames([tag ?? 'en'], { type: 'language' })
     } catch {
       names = null
     }

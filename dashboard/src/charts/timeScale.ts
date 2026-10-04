@@ -1,12 +1,15 @@
 // The main chart's arithmetic: bucket labels, its three-label axis and its
 // peak. No React, so each is tested on its own (timeScale.test.ts).
+import { defineCopy, intl } from '../i18n'
 import type { Bucket } from '../lib/api'
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const words = defineCopy('chart.scale', { weekOf: (day: string, year: number) => `Week of ${day}, ${year}` })
 
 export function bucketLabel(t: string, bucket: Bucket, long = false): string {
   if (!t) return ''
+  if (intl.bucket) return intl.bucket(t, bucket, long, words.weekOf)
   const d = new Date(t + ':00Z')
   const md = `${months[d.getUTCMonth()]} ${d.getUTCDate()}`
   switch (bucket) {
@@ -17,7 +20,7 @@ export function bucketLabel(t: string, bucket: Bucket, long = false): string {
     case 'day':
       return long ? `${days[d.getUTCDay()]}, ${md}` : md
     case 'week':
-      return long ? `Week of ${md}, ${d.getUTCFullYear()}` : md
+      return long ? words.weekOf(md, d.getUTCFullYear()) : md
     case 'month':
       return `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`
   }

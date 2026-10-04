@@ -3,10 +3,11 @@
 import { fmtInt } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import { entryCopy } from './entryCopy'
+import { defineCopy } from '../../i18n'
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
-export const copy = {
+export const copy = defineCopy('live', {
   // The Live view.
   region: entryCopy.live,
   onlineNow: entryCopy.onlineNow,
@@ -54,4 +55,4 @@ export const copy = {
   footer: 'New visits slide in · visitors idle for 5 minutes leave',
   announce: (page: string, source: string) => `New visit: ${page}, from ${source}`,
   announceMany: (n: number) => `${n} new visits`,
-}
+})

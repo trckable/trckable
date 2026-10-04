@@ -1,7 +1,8 @@
 // Every word of Settings → Sharing: loaded with it, never with the first screen.
 import type { Share } from '../../lib/api'
+import { defineCopy } from '../../i18n'
 
-export const copy = {
+export const copy = defineCopy('links', {
   title: 'Share these numbers',
   tip: 'A read-only link to this one site: no account, nothing to change. With revenue off, the server never sends the figure.',
   empty: 'No links yet',
@@ -86,7 +87,7 @@ export const copy = {
   keep: 'Keep',
   fallbackName: 'Shared link',
   changeFailed: 'Could not change the link',
-}
+})
 
 /** What a link is called when its name is empty. */
 export const nameOf = (s: Pick<Share, 'name'>) => s.name || copy.fallbackName

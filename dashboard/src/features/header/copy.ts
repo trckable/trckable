@@ -1,6 +1,8 @@
 // The header row's words (features/header): what moves to the message files
 // when translations come.
-export const copy = {
+import { defineCopy } from '../../i18n'
+
+export const copy = defineCopy('header', {
   ask: 'Peek',
   askTitle: (key: string) => `Peek (${key})`,
   filter: 'Filter',
@@ -16,4 +18,4 @@ export const copy = {
   collapse: 'Collapse',
   expand: 'Expand',
   filterNote: (n: number) => `· ${n} filter${n === 1 ? '' : 's'}`,
-}
+})

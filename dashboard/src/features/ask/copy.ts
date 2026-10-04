@@ -1,5 +1,7 @@
 // The Peek panel's words (features/ask): how to connect your own assistant.
-export const copy = {
+import { defineCopy } from '../../i18n'
+
+export const copy = defineCopy('peek', {
   title: 'Peek',
   label: 'Peek',
   close: 'Close Peek',
@@ -8,4 +10,4 @@ export const copy = {
   docsLink: 'Setup',
   note: 'Read-only tools. Paste the key where it says tkb_live_…',
   key: 'Create a key',
-}
+})

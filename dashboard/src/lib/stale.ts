@@ -14,8 +14,10 @@ export const staleChunk = (e: unknown) => /dynamically imported module|Importing
 async function reload() {
   try {
     if (Date.now() - Number(sessionStorage.getItem(KEY)) < 60_000) return false
-    const entry = document.querySelector('script[type=module][src]')?.getAttribute('src') ?? ''
-    if ((await (await fetch('/', { cache: 'no-store' })).text()).includes(entry)) return false // still the same build: nothing is stale
+    // The page's own scripts (the first load is a few, in order): all of them still in the page the server serves now means the same build.
+    const mine = Array.from(document.querySelectorAll('script[type=module][src]'), (s) => s.getAttribute('src') ?? '')
+    const now = await (await fetch('/', { cache: 'no-store' })).text()
+    if (mine.every((src) => now.includes(src))) return false // still the same build: nothing is stale
     sessionStorage.setItem(KEY, String(Date.now()))
     location.reload()
     return true

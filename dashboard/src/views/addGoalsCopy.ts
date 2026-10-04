@@ -1,6 +1,8 @@
 // Every word of the Track a goal dialog (AddGoals.tsx): this is what moves to
 // the message files when translations come.
-export const copy = {
+import { defineCopy } from '../i18n'
+
+export const copy = defineCopy('goals', {
   label: 'Add goals',
   title: 'Track a goal',
   hint: 'Count a signup, a trial, a download.',
@@ -30,4 +32,4 @@ export const copy = {
   removed: (n: string) => `"${n}" removed`,
   remove: (n: string) => `Remove the goal ${n}`,
   removeTip: 'Remove',
-}
+})

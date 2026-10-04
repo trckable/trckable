@@ -1,5 +1,7 @@
 // Every word of the Save view dialog (SaveViewDialog.tsx).
-export const saveViewCopy = {
+import { defineCopy } from '../i18n'
+
+export const saveViewCopy = defineCopy('saveView', {
   label: 'Save this view',
   title: 'Save this view',
   hint: 'Saves the period, the filters and the mode.',
@@ -9,4 +11,4 @@ export const saveViewCopy = {
   cancel: 'Cancel',
   save: 'Save view',
   saving: 'Saving…',
-}
+})

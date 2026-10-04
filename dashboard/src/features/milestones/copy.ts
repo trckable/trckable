@@ -1,7 +1,9 @@
 // The words of milestones: the moment, the timeline and the share sheet.
 // The dashboard's text moves to message files when translations come, and
 // this is what moves.
-export const copy = {
+import { defineCopy } from '../../i18n'
+
+export const copy = defineCopy('milestones', {
   // What each family's number is.
   label: {
     visitors: 'visitors',
@@ -68,4 +70,4 @@ export const copy = {
   // Settings.
   setting: 'Milestones',
   settingHint: 'A quiet note when the site reaches a round number',
-}
+})
