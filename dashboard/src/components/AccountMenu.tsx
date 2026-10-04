@@ -2,6 +2,7 @@
 // person, not to the page on screen (that is the ⋯ next to the period):
 // Profile, theme, shortcuts, sign out. The items are their own chunk.
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import type { Site } from '../lib/api'
 import { useMenuNav, useOnlyOpen } from '../lib/headerMenu'
 import { lazyLoad, warm, whenIdle } from '../lib/lazyLoad'
 import { useProfile } from '../lib/profile'
@@ -10,7 +11,7 @@ import { copy } from './moreCopy'
 
 const AccountItems = lazyLoad(() => import('./AccountItems'))
 
-export function AccountMenu() {
+export function AccountMenu({ site }: { site?: Site }) {
   useEffect(() => whenIdle(AccountItems.preload), [])
   const { profile, v } = useProfile()
   const [open, setOpen] = useState(false)
@@ -42,7 +43,7 @@ export function AccountMenu() {
       {open && (
         <div className="pop menu more-menu" role="menu" aria-label={copy.accountMenu}>
           <Suspense fallback={null}>
-            <AccountItems profile={profile} v={v} go={go} />
+            <AccountItems profile={profile} v={v} go={go} site={site} />
           </Suspense>
         </div>
       )}
