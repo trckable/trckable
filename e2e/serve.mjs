@@ -89,6 +89,13 @@ createServer(async (req, res) => {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(`<!doctype html><html><head><title>Customer</title></head><body><h1>Hello</h1>${tag}</body></html>`)
       return
     }
+    // A page carrying the plain frame of a widget, as Settings → Widgets writes it.
+    const framed = url.pathname.match(/^\/frame\/(w_[a-z0-9]+)$/)
+    if (framed) {
+      const tag = `<iframe src="${TRCKABLE}/w/${framed[1]}" width="280" height="248" title="Widget" style="border:0"></iframe>`
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(`<!doctype html><html><head><title>Customer</title></head><body><h1>Hello</h1>${tag}</body></html>`)
+      return
+    }
     // A sign-up form carrying a site's own script, with the heatmaps module in it
     // when the site has it on (heatmaps.spec.ts: what is typed is never sent).
     const heat = url.pathname.match(/^\/heat\/(tkb_[a-z0-9]+)\/[\w-]+$/)

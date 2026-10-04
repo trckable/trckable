@@ -13,7 +13,7 @@ import { WidgetMenu, type WidgetMenuItem } from './WidgetMenu'
 const copy = (code: string, said: string) => void navigator.clipboard?.writeText(code).then(() => toast(said))
 
 // The thumbnail is the real preview page, scaled down into a fixed box.
-const THUMB = { w: 120, h: 72 }
+const THUMB = { w: 96, h: 52 }
 function Thumb({ site, w, onOpen }: { site: Site; w: Widget; onOpen?: () => void }) {
   const { w: fw, h: fh } = size(w)
   const scale = Math.min(THUMB.w / fw, THUMB.h / fh, 1)

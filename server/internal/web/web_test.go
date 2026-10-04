@@ -437,7 +437,7 @@ func TestOnlineScript(t *testing.T) {
 		if id != "w_abcdefghijklmnop" {
 			return OnlineLook{}, false
 		}
-		return OnlineLook{ID: id, W: 280, H: 454, Theme: "light"}, true
+		return OnlineLook{ID: id, W: 280, H: 454, Theme: "light", Pos: "bl"}, true
 	})
 	get := func(file string) *httptest.ResponseRecorder {
 		w := httptest.NewRecorder()
@@ -452,13 +452,19 @@ func TestOnlineScript(t *testing.T) {
 		t.Fatalf("status %d", w.Code)
 	}
 	body := w.Body.String()
-	for _, want := range []string{`dataset.id="w_abcdefghijklmnop";`, `dataset.w="280";`, `dataset.h="454";`, `dataset.theme="light";`} {
+	for _, want := range []string{`dataset.id="w_abcdefghijklmnop";`, `dataset.w="280";`, `dataset.h="454";`, `dataset.theme="light";`, `dataset.pos="bl";`} {
 		if !strings.HasPrefix(body, "document.currentScript.") || !strings.Contains(body, want) {
 			t.Fatalf("the script misses %s: %.200q", want, body)
 		}
 	}
 	if ct := w.Header().Get("Content-Type"); !strings.HasPrefix(ct, "application/javascript") {
 		t.Fatalf("content type %q", ct)
+	}
+	if cc := w.Header().Get("Cache-Control"); cc != "no-cache" {
+		t.Fatalf("Cache-Control %q: a change in Settings must reach the next page load", cc)
+	}
+	if !ETagMatch(`W/`+w.Header().Get("ETag")+`, "other"`, w.Header().Get("ETag")) || ETagMatch(`"other"`, w.Header().Get("ETag")) {
+		t.Fatal("ETagMatch: a weak copy of the tag is the tag, another tag is not")
 	}
 	again := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/js/w_abcdefghijklmnop.online.js", nil)

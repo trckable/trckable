@@ -82,7 +82,7 @@ var widgetParts = map[string]map[string]bool{
 	"live":    {"bars": true, "countries": true, "pages": true, "channels": true},
 	"badge":   {"ai": true},
 	"revenue": {"channels": true},
-	"online":  {"spark": true, "card": true, "pages": true, "countries": true},
+	"online":  {"spark": true, "card": true, "pages": true, "countries": true, "left": true, "right": true},
 }
 
 var widgetDefaults = map[string][]string{"live": {"bars", "countries"}, "revenue": {"channels"}, "online": {}}
@@ -203,19 +203,28 @@ func (w *Widget) Clean() error {
 // sparkline of its own: it draws the full chart.
 func onlineMode(shows []string) []string {
 	has := func(p string) bool { return slices.Contains(shows, p) }
+	var out []string
 	switch {
 	case has("card"):
-		out := []string{"card"}
+		out = []string{"card"}
 		for _, p := range []string{"pages", "countries"} {
 			if has(p) {
 				out = append(out, p)
 			}
 		}
-		return out
 	case has("spark"):
-		return []string{"spark"}
+		out = []string{"spark"}
+	default:
+		out = []string{}
 	}
-	return []string{}
+	// The corner the script floats it in, one of two: left wins if both came.
+	switch {
+	case has("left"):
+		out = append(out, "left")
+	case has("right"):
+		out = append(out, "right")
+	}
+	return out
 }
 
 func widgetID() string {

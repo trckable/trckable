@@ -266,6 +266,17 @@ func Tracker(features SiteFeatures, opts SiteScript) http.Handler {
 	})
 }
 
+// ETagMatch says whether an If-None-Match header holds a validator: the tag
+// itself, or its weak form (a compressed answer carries the tag as W/"x").
+func ETagMatch(header, etag string) bool {
+	for _, t := range strings.Split(header, ",") {
+		if strings.TrimPrefix(strings.TrimSpace(t), "W/") == etag {
+			return true
+		}
+	}
+	return false
+}
+
 // OnlineSuffix ends the name of a corner widget's script: /js/<widget id>.online.js.
 const OnlineSuffix = ".online.js"
 
@@ -274,13 +285,14 @@ type OnlineLook struct {
 	ID    string
 	W, H  int    // the frame, in px
 	Theme string // auto, dark or light
+	Pos   string // bl or br when Settings chose a corner; empty leaves it to the pasted tag
 }
 
 // OnlineScript serves /js/<widget id>.online.js: the small separate script
 // that puts an "online" widget in a corner of the page it is pasted into
 // (never part of the tracker). The widget's own settings reach it the way a
 // site's settings reach the tracker, as data attributes on its own tag, so
-// the file stays cacheable. An unknown id, a widget that is off and one of
+// the file is kept by the browser but checked on every load. An unknown id, a widget that is off and one of
 // another design all answer not found: nothing shows.
 func OnlineScript(look func(ctx context.Context, id string) (OnlineLook, bool)) http.Handler {
 	body, err := assets.ReadFile("assets/online.js")
@@ -291,12 +303,17 @@ func OnlineScript(look func(ctx context.Context, id string) (OnlineLook, bool)) 
 		id := strings.TrimSuffix(path.Base(r.URL.Path), OnlineSuffix)
 		l, ok := look(r.Context(), id)
 		if !ok {
+			w.Header().Set("Cache-Control", "no-store")
 			http.NotFound(w, r)
 			return
 		}
 		q := func(v any) string { b, _ := json.Marshal(v); return string(b) }
 		pre := ""
-		for _, kv := range [][2]string{{"id", l.ID}, {"w", strconv.Itoa(l.W)}, {"h", strconv.Itoa(l.H)}, {"theme", l.Theme}} {
+		look := [][2]string{{"id", l.ID}, {"w", strconv.Itoa(l.W)}, {"h", strconv.Itoa(l.H)}, {"theme", l.Theme}}
+		if l.Pos != "" {
+			look = append(look, [2]string{"pos", l.Pos})
+		}
+		for _, kv := range look {
 			pre += "document.currentScript.dataset." + kv[0] + "=" + q(kv[1]) + ";"
 		}
 		out := append([]byte(pre), body...)
@@ -305,10 +322,12 @@ func OnlineScript(look func(ctx context.Context, id string) (OnlineLook, bool)) 
 		h := w.Header()
 		h.Set("Content-Type", "application/javascript; charset=utf-8")
 		h.Set("X-Content-Type-Options", "nosniff")
-		// Short: a widget turned off or changed shows that within minutes.
-		h.Set("Cache-Control", "public, max-age=300")
+		// Checked on every load, answered with a bare 304 while nothing changed:
+		// the look (size, theme, corner) is in the file, so a change in Settings
+		// reaches the next page that loads it.
+		h.Set("Cache-Control", "no-cache")
 		h.Set("ETag", etag)
-		if r.Header.Get("If-None-Match") == etag {
+		if ETagMatch(r.Header.Get("If-None-Match"), etag) {
 			w.WriteHeader(http.StatusNotModified)
 			return
 		}

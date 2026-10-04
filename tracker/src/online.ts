@@ -2,8 +2,9 @@
 // of the tracker, served as /js/<widget id>.online.js. It frames the widget's
 // own page in a fixed corner, and does nothing else: no request but the frame,
 // no cookie, no storage. The server adds the widget's size, theme and id as
-// data attributes on this very tag; the corner is data-pos ("bl", else bottom
-// right). The visitor can close it for the page; it is hidden in print, and
+// data attributes on this very tag, including the corner it was given in
+// Settings (pos "bl"); a tag's own data-pos stands when Settings gave none
+// ("bl", else bottom right). The visitor can close it for the page; it is hidden in print, and
 // fades in only for people who have not asked for less motion.
 //
 // Budget: 1 KB gzip, checked by build.mjs and by a Go test.
