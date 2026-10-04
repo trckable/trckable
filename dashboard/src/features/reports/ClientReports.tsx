@@ -69,7 +69,18 @@ export function ClientReports({ site }: { site: Site }) {
         </span>
         <span className="rp-head">
           <h2>{copy.title}</h2>
-          <span className="faint">{data.ready ? copy.subtitle : copy.needsMail}</span>
+          <span className="faint">
+            {data.ready ? (
+              copy.subtitle
+            ) : (
+              <>
+                {copy.needsMail} ·{' '}
+                <a href={copy.setupUrl} target="_blank" rel="noreferrer">
+                  {copy.setup}
+                </a>
+              </>
+            )}
+          </span>
         </span>
         <button type="button" className="btn" onClick={() => setEditing('new')}>
           {copy.add}

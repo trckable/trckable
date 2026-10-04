@@ -6,7 +6,9 @@ const langNames: Record<string, string> = { en: 'English', de: 'Deutsch', fr: 'F
 export const copy = defineCopy('reports', {
   title: 'Client reports',
   subtitle: 'The numbers, by email, on a schedule',
-  needsMail: 'Needs email (TRCKABLE_SMTP_URL) and TRCKABLE_BASE_URL on this server',
+  needsMail: 'Reports need email on this server',
+  setup: 'How to set it up',
+  setupUrl: 'https://trckable.com/docs/self-host/configuration/',
   none: 'No reports yet',
   add: 'Add a report',
   untitled: 'Report',

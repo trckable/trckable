@@ -8,6 +8,8 @@ import { session } from './session'
 
 const SHOTS = process.env.POLISH_SHOTS
 const SCHEME = process.env.POLISH_SCHEME === 'dark' ? 'dark' : 'light'
+// With TRCKABLE_SMTP_URL and TRCKABLE_BASE_URL in the environment the server can send reports (for the review pictures of that state).
+const MAILED = !!process.env.TRCKABLE_SMTP_URL && !!process.env.TRCKABLE_BASE_URL
 const WIDTH = Number(process.env.POLISH_WIDTH ?? 0)
 test.use({ colorScheme: SCHEME, ...(WIDTH ? { viewport: { width: WIDTH, height: 844 } } : {}) })
 const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
@@ -35,8 +37,12 @@ test('add, change, switch off and delete a client report', async ({ page, browse
   const card = page.getByRole('region', { name: 'Client reports' })
   await expect(card).toBeVisible({ timeout: 15_000 })
   await expect(card.getByText('No reports yet')).toBeVisible()
-  // This server has no mail server: the card says what is missing, and the test button waits.
-  await expect(card.getByText(/TRCKABLE_SMTP_URL/)).toBeVisible()
+  // Without a mail server the card says so, with a link and no setting names, and Send now waits.
+  if (!MAILED) {
+    await expect(card.getByText('Reports need email on this server')).toBeVisible()
+    await expect(card.getByRole('link', { name: 'How to set it up' })).toHaveAttribute('href', /docs/)
+    await expect(card).not.toContainText('TRCKABLE_')
+  }
 
   // Adding opens a dialog: focus goes in, Escape closes it and focus comes back to the button.
   const add = card.getByRole('button', { name: 'Add a report' })
@@ -54,7 +60,7 @@ test('add, change, switch off and delete a client report', async ({ page, browse
   await dlg.getByLabel('Addresses').fill('client@example.com\nteam@example.com, client@example.com')
   await expect(dlg.locator('.rp-summary')).toContainText('Monthly · Deutsch · PDF · 2 addresses')
   if (SHOTS) await page.waitForTimeout(400) // let the button's colour transition finish
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/client-reports-form-${SCHEME}-${WIDTH || 'desktop'}.png` })
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/client-reports-form-${SCHEME}-${WIDTH || 'desktop'}${MAILED ? '-mail' : ''}.png` })
   await dlg.getByRole('button', { name: 'Save' }).click()
   await expect(dlg).toBeHidden()
 
@@ -62,8 +68,8 @@ test('add, change, switch off and delete a client report', async ({ page, browse
   await expect(row).toHaveCount(1)
   await expect(row).toContainText('Acme GmbH')
   await expect(row).toContainText('Monthly · Deutsch · PDF · 2 addresses')
-  await expect(row.getByRole('button', { name: /Send now/ })).toBeDisabled()
-  if (SHOTS) await card.screenshot({ path: `${SHOTS}/client-reports-list-${SCHEME}-${WIDTH || 'desktop'}.png` })
+  if (!MAILED) await expect(row.getByRole('button', { name: /Send now/ })).toBeDisabled()
+  if (SHOTS) await card.screenshot({ path: `${SHOTS}/client-reports-list-${SCHEME}-${WIDTH || 'desktop'}${MAILED ? '-mail' : ''}.png` })
 
   const got = async () => ((await (await page.request.get(`${API}/api/v1/sites/${site}/report-schedules`)).json()) as { schedules: { cadence: string; lang: string; enabled: boolean; recipients: string[]; pdf: boolean }[] }).schedules
   expect(await got()).toMatchObject([{ cadence: 'monthly', lang: 'de', enabled: true, pdf: true, recipients: ['client@example.com', 'team@example.com'] }])

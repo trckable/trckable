@@ -5,7 +5,6 @@ import { useState } from 'react'
 import { DialogActions } from '../../components/DialogActions'
 import { Switch } from '../../components/Switch'
 import { fail, more, type ReportSchedule } from '../../lib/apiMore'
-import { toast } from '../../components/Toast'
 import { copy } from './copy'
 
 export type Draft = Omit<ReportSchedule, 'id' | 'site_id' | 'last_sent'> & { id?: string }
@@ -28,7 +27,6 @@ export function ReportForm({ site, from, langs, max, onDone }: { site: string; f
     more
       .saveReportSchedule(site, { ...d, recipients: lines(text) })
       .then((s) => {
-        toast(copy.saved)
         onDone(s)
       })
       .catch((e: unknown) => fail(e))

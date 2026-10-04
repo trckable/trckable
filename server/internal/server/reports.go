@@ -244,7 +244,7 @@ func (s *Server) reportBrand(ctx context.Context, site, name string) reports.Bra
 // for the person who asked. Nothing is marked as sent.
 func (s *Server) sendReportNow(ctx context.Context, sc sqlite.ReportSchedule, email string) error {
 	if !s.reportsReady() {
-		return errors.New("reports need email and TRCKABLE_BASE_URL on this server")
+		return errors.New("reports need email set up on this server")
 	}
 	q := s.api.Query()
 	if q == nil {
