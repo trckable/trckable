@@ -104,20 +104,29 @@ describe('a sale', () => {
 })
 
 describe('the question about notices', () => {
+  const sold = { kind: 'sale' as const, ts: 1, amount: 1250, currency: 'USD', exponent: 2 }
   const ask = vi.fn(() => Promise.resolve('granted' as NotificationPermission))
   const stub = (permission: NotificationPermission) => vi.stubGlobal('Notification', Object.assign(function Notification() {}, { permission, requestPermission: ask }))
   beforeEach(() => ask.mockClear())
 
   it('is a side card after a sale, and never asks the browser until the button is pressed', async () => {
     stub('default')
-    draw(<NotifyAsk sold={false} />)
+    draw(<NotifyAsk />)
     expect(document.body.querySelector('.side-card')).toBeNull()
-    draw(<NotifyAsk sold />)
+    draw(<NotifyAsk sale={sold} />)
     const card = document.body.querySelector('.side-card')
     expect(card?.textContent).toContain('Get notified?')
+    // The card's button opens the dialog; only the dialog's button asks the browser.
+    act(() => {
+      ;(card?.querySelector('.btn.primary') as HTMLButtonElement).click()
+    })
+    for (let i = 0; i < 40 && !document.body.querySelector('[role="dialog"]'); i++) await act(() => new Promise((r) => setTimeout(r, 25)))
+    const dlg = document.body.querySelector('[role="dialog"]')
+    expect(dlg?.textContent).toContain('Your latest sale')
+    expect(dlg?.textContent).toContain('$12.50')
     expect(ask).not.toHaveBeenCalled()
     await act(async () => {
-      ;(card?.querySelector('.btn.primary') as HTMLButtonElement).click()
+      ;(dlg?.querySelector('.btn.primary') as HTMLButtonElement).click()
       await Promise.resolve()
     })
     expect(ask).toHaveBeenCalledTimes(1)
@@ -125,14 +134,14 @@ describe('the question about notices', () => {
   })
   it('leaves a blocked browser alone, and an answered question, and one put away', () => {
     stub('denied')
-    draw(<NotifyAsk sold />)
+    draw(<NotifyAsk sale={sold} />)
     expect(document.body.querySelector('.side-card')).toBeNull()
     stub('granted')
-    draw(<NotifyAsk sold />)
+    draw(<NotifyAsk sale={sold} />)
     expect(document.body.querySelector('.side-card')).toBeNull()
     stub('default')
     localStorage.setItem('trckable:card:notify:*', '1')
-    draw(<NotifyAsk sold />)
+    draw(<NotifyAsk sale={sold} />)
     expect(document.body.querySelector('.side-card')).toBeNull()
   })
 })

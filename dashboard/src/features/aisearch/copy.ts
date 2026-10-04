@@ -49,3 +49,17 @@ export const guideCopy = defineCopy('aisearch.guide', {
   visitor: { label: 'AI & Search', title: 'An AI assistant sent a visitor', body: 'See which assistants, and which pages.', go: 'Open AI & Search' },
   crawler: { label: 'AI & Search', title: 'An AI crawler read your site', body: 'See which robots, and which pages.', go: 'Open AI & Search' },
 })
+
+/** The dialog behind the guide card. */
+export const aiModalCopy = defineCopy('aisearch.modal', {
+  visitors: 'visitors from AI',
+  crawled: 'reads by AI crawlers',
+  landed: 'Landed on',
+  readPages: 'Pages read',
+  when: 'When',
+  whenLabel: 'AI visitors for each day of the period',
+  meansVisitor: 'An AI assistant named your site in an answer, and a person followed the link.',
+  meansCrawler: 'AI crawlers are robots. They read your pages to answer or train, and they are not counted as visitors.',
+  seeAll: 'See all in AI & Search',
+  reads: (n: number) => `${fmtInt(n)} ${n === 1 ? 'read' : 'reads'}`,
+})

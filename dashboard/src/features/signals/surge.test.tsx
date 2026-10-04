@@ -117,14 +117,14 @@ describe('the surge card', () => {
     expect(card()).toBeNull()
   })
 
-  it('is a number, a chip, one line and two buttons: no paragraphs', async () => {
+  it('is a number, a chip, one line and one button: no paragraphs', async () => {
     answer(surge)
     await draw()
     expect(card()?.querySelector('.sg-count')?.textContent).toBe('53')
     expect(card()?.querySelector('.sg-chip')?.textContent).toBe('2.7× usual')
     expect(card()?.querySelector('.sg-source span:last-child')?.textContent).toBe('Mostly from Facebook')
     expect(card()?.querySelector('svg.sg-spark')).not.toBeNull()
-    expect([...(card()?.querySelectorAll('.side-card-actions button') ?? [])].map((b) => b.textContent)).toEqual(['More', 'See it'])
+    expect([...(card()?.querySelectorAll('.side-card-actions button') ?? [])].map((b) => b.textContent)).toEqual(['More'])
     expect(card()?.querySelectorAll('p').length).toBe(1)
   })
 
@@ -152,11 +152,16 @@ describe('the surge card', () => {
     expect(document.body.querySelector('[role="dialog"]')).toBeNull()
   })
 
-  it('See it opens today in Data, filtered to the source, and the card is put away for good', async () => {
+  it('the card has one button, More; See it in Data, in the story, opens today in Data filtered to the source, and the card is put away for good', async () => {
     answer(surge)
     await draw()
-    const see = document.body.querySelector<HTMLButtonElement>('.side-card .btn.primary')
-    expect(see?.textContent).toBe('See it')
+    const buttons = [...document.body.querySelectorAll<HTMLButtonElement>('.side-card .side-card-actions button')]
+    expect(buttons.map((b) => b.textContent)).toEqual(['More'])
+    act(() => {
+      buttons[0].click()
+    })
+    for (let i = 0; i < 40 && !document.body.querySelector('[role="dialog"]'); i++) await act(() => new Promise((r) => setTimeout(r, 25)))
+    const see = [...document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find((b) => b.textContent === 'See it in Data')
     act(() => {
       see?.click()
     })
