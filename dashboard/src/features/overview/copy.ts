@@ -18,4 +18,6 @@ export const copy = {
   session: 'Session time',
   perVisitorTile: 'Per visitor',
   conversion: 'Conversion',
+  botsFiltered: (n: string) => `${n} bots and AI crawlers filtered`,
+  botFiltered: '1 bot or AI crawler filtered',
 }
