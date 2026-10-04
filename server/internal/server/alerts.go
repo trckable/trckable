@@ -42,6 +42,7 @@ func (s *Server) runAlerts(ctx context.Context) {
 		if err := s.checkAlerts(ctx); err != nil && ctx.Err() == nil {
 			slog.Warn("alert check failed", "err", err)
 		}
+		s.checkReports(ctx)
 	}
 }
 
