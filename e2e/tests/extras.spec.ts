@@ -1,8 +1,8 @@
 // What the Data view says beyond its lists, against a trckabled with the demo
 // data (skipped unless TRCKABLE_A11Y_URL points at one):
 //   TRCKABLE_A11Y_URL=http://localhost:8799 npx playwright test extras
-// Highlights, the pace line and the moments on the chart, the AI and revenue
-// tabs, Latest buyers (and no email anywhere in it), and Compact without any
+// Highlights, the pace line and the moments on the chart, the AI & Search and
+// revenue tabs, Latest buyers (and no email anywhere in it), and Compact without any
 // of the Full-only ones.
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
@@ -99,16 +99,16 @@ test('Full: Highlights lead Who came, and a line applies its filter', async ({ p
   await expect(page).toHaveURL(/[?&]f=/)
 })
 
-test('Full: AI is a small tab of Sources, with the assistants by name', async ({ page }) => {
+test('Full: AI & Search is one tab of Who came, with the assistants by name', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   const site = await signIn(page)
   await page.goto(`${BASE}/${site.domain}?mode=full`)
   const who = page.locator('[data-card=who]')
-  await who.getByRole('tab', { name: 'Sources', exact: true }).click({ timeout: 20_000 })
-  await who.getByRole('tablist', { name: 'Sources' }).getByRole('tab', { name: 'AI', exact: true }).click()
-  await expect(who.locator('.ai-head .ai-count')).toBeVisible({ timeout: 20_000 })
-  await expect(who.locator('.ai-head')).toContainText(/of all visitors/)
-  await expect(who.locator('.bl-row').first()).toContainText(/ChatGPT|Claude|Perplexity|Gemini|Copilot/)
+  await who.getByRole('tab', { name: 'AI & Search', exact: true }).click({ timeout: 20_000 })
+  await expect(who.getByRole('group', { name: 'AI assistants' }).locator('.bl-row').first()).toContainText(/ChatGPT|Claude|Perplexity|Gemini|Copilot/, { timeout: 20_000 })
+  // The old AI and Search tabs of Sources are gone.
+  await who.getByRole('tab', { name: 'Sources', exact: true }).click()
+  await expect(who.getByRole('tablist', { name: 'Sources' }).getByRole('tab', { name: /^(AI|Search)$/ })).toHaveCount(0)
 })
 
 test('Full: Sources that pay, Pages that sell and Latest buyers, and never an email', async ({ page }) => {
@@ -152,6 +152,6 @@ test('Compact has none of the Full-only ones', async ({ page }) => {
   await expect(who.getByRole('tab', { name: 'Highlights' })).toHaveCount(0)
   await expect(page.locator('[data-card=what]').getByRole('tab', { name: 'Latest buyers' })).toHaveCount(0)
   await expect(page.locator('[data-card=what]').getByRole('tab', { name: 'Pages that sell' })).toHaveCount(0)
-  await expect(who.getByRole('tablist', { name: 'Sources' }).getByRole('tab', { name: 'AI' })).toHaveCount(0)
+  await expect(who.getByRole('tab', { name: 'AI & Search' })).toHaveCount(0)
   await expect(page.locator('.overview-chart .moment-mark').first()).toBeVisible() // the markers cost nothing: Compact has them
 })

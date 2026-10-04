@@ -803,6 +803,12 @@ textarea:focus-visible {
 .bl-row:focus-visible .bl-spark {
   color: var(--accent);
 }
+@container (max-width: 240px) {
+  .bl-tail,
+  .bl-cols .bl-tail {
+    display: none;
+  }
+}
 @container (max-width: 340px) {
   .bl-sub,
   .bl-cols .bl-sub {
