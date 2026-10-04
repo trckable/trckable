@@ -177,7 +177,7 @@ class Trckable_Page_Parts {
 	private static function tag_text( $o ) {
 		$site  = '' === $o['site'] ? 'tkb_…' : $o['site'];
 		$proxy = Trckable_Options::proxy_ready( $o );
-		$src   = $proxy ? rest_url( Trckable_Proxy::NAMESPACE_ . '/js/' . $site . '.js' ) : Trckable_Options::server_url( $o ) . '/js/' . $site . '.js';
+		$src   = $proxy ? rest_url( Trckable_Proxy::NAMESPACE_ . '/js/' . $site ) : Trckable_Options::server_url( $o ) . '/js/' . $site . '.js';
 		$tag   = '<script data-site="' . $site . '"' . ( $o['cookieless'] ? ' data-cookieless' : '' );
 		$tag  .= $proxy ? ' data-api="' . rest_url( Trckable_Proxy::NAMESPACE_ . '/e' ) . '"' : '';
 		return $tag . ' data-wp-strategy="defer" defer id="trckable-js" src="' . $src . '"></script>';

@@ -33,9 +33,14 @@ that blocks analytics hosts never sees them and every visitor keeps their own
 address. Two REST routes exist, and nothing else is ever forwarded:
 
 ```
-GET  /wp-json/trckable/v1/js/<site id>.js    the site's script, kept for an hour
+GET  /wp-json/trckable/v1/js/<site id>       the site's script, kept for an hour
 POST /wp-json/trckable/v1/e                  one event, at most 16 KB, a JSON object for this site
 ```
+
+The script's address has no `.js`: a web server that serves that suffix as a
+static file (nginx and others often do) would answer 404 before WordPress runs.
+With plain permalinks the same routes are `?rest_route=/trckable/v1/js/<site id>`
+and `?rest_route=/trckable/v1/e`; `rest_url()` picks the form that works.
 
 The event is sent on with `X-Trckable-Proxy-Key` and `X-Trckable-Client-IP` (the
 address as the platform in front of the site reports it: Cloudflare, Netlify,

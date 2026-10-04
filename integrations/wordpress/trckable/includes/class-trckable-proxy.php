@@ -5,7 +5,9 @@
  * visitor's address still reaches trckable.
  *
  * Exactly two routes exist, and nothing else is ever forwarded:
- *   GET  /wp-json/trckable/v1/js/<site id>.js   the site's script
+ *   GET  /wp-json/trckable/v1/js/<site id>      the site's script (no .js: hosts that serve that
+ *                                               suffix as a file would answer 404 before WordPress runs;
+ *                                               with plain permalinks it is ?rest_route=/trckable/v1/js/<site id>)
  *   POST /wp-json/trckable/v1/e                 one tracking event
  *
  * @package trckable
@@ -48,7 +50,7 @@ class Trckable_Proxy {
 	public static function routes() {
 		register_rest_route(
 			self::NAMESPACE_,
-			'/js/(?P<site>tkb_[A-Za-z0-9]+)\.js',
+			'/js/(?P<site>tkb_[A-Za-z0-9]+)(?:\.js)?',
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( __CLASS__, 'script' ),

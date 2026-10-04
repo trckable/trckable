@@ -58,13 +58,13 @@ const flip = (page: Page, id: string, on: boolean) => page.locator(`#${id}`).set
 // Every test starts from the same settings, whatever ran before it.
 const WP_PATH = join(process.env.WP_DIR ?? '', 'wordpress')
 const BASE = { site: SITE, server: 'own', host: MOCK, cookieless: 0, exclude_staff: 1, exclude_roles: [], proxy: 0, proxy_key: '', api_key: '', onboarding: 0 }
-function reset(changes: Record<string, unknown> = {}) {
+function reset(changes: Record<string, unknown> = {}, permalinks = '/%postname%/') {
   // WP-CLI with room to run, and without a newer PHP's deprecation notices.
   const bin = execFileSync('which', ['wp']).toString().trim()
-  const code = "update_option('trckable_settings', json_decode(getenv('TKB_SETTINGS'), true)); delete_transient('trckable_stats'); delete_transient('trckable_script');"
+  const code = "update_option('trckable_settings', json_decode(getenv('TKB_SETTINGS'), true)); delete_transient('trckable_stats'); delete_transient('trckable_script'); update_option('permalink_structure', getenv('TKB_PERMALINKS')); flush_rewrite_rules();"
   execFileSync('php', ['-d', 'memory_limit=512M', '-d', 'error_reporting=E_ALL&~E_DEPRECATED', bin, `--path=${WP_PATH}`, 'eval', code], {
     stdio: 'pipe',
-    env: { ...process.env, TKB_SETTINGS: JSON.stringify({ ...BASE, ...changes }) },
+    env: { ...process.env, TKB_SETTINGS: JSON.stringify({ ...BASE, ...changes }), TKB_PERMALINKS: permalinks },
   })
 }
 test.beforeEach(() => reset())
@@ -156,7 +156,7 @@ test('the proxy forwards the script and events, and nothing else', async ({ brow
   visitor.on('console', (m) => log.push(`console: ${m.text()}`))
   const posted = visitor.waitForResponse((r) => r.url().endsWith('/trckable/v1/e'), { timeout: 20_000 })
   await visitor.goto('/')
-  await expect(tag(visitor)).toHaveAttribute('src', /\/wp-json\/trckable\/v1\/js\/tkb_test00000001\.js$/)
+  await expect(tag(visitor)).toHaveAttribute('src', /\/wp-json\/trckable\/v1\/js\/tkb_test00000001$/)
   await expect(tag(visitor)).toHaveAttribute('data-api', /\/wp-json\/trckable\/v1\/e$/)
   const answer = await posted.catch(() => null)
   expect(answer?.status(), `the event was not answered: ${log.join(' | ')}`).toBe(202)
@@ -171,11 +171,11 @@ test('the proxy forwards the script and events, and nothing else', async ({ brow
   expect(cookies.map((c) => c.name)).not.toContain('other')
 
   const base = '/wp-json/trckable/v1'
-  const script = await request.get(`${base}/js/${SITE}.js`)
+  const script = await request.get(`${base}/js/${SITE}`)
   expect(script.status()).toBe(200)
   expect(script.headers()['content-type']).toContain('javascript')
   expect(await script.text()).toContain('currentScript')
-  expect((await request.get(`${base}/js/tkb_other0000001.js`)).status()).toBe(404)
+  expect((await request.get(`${base}/js/tkb_other0000001`)).status()).toBe(404)
   expect((await request.get(`${base}/api/v1/sites`)).status()).toBe(404)
   expect((await request.get(`${base}/e`)).status()).toBe(404)
   expect((await request.post(`${base}/e`, { data: JSON.stringify({ s: 'tkb_other0000001', k: 'pv' }) })).status()).toBe(400)
@@ -187,7 +187,18 @@ test('the proxy forwards the script and events, and nothing else', async ({ brow
   await saveSettings(browser, async (p) => {
     await flip(p, 'trckable_proxy', false)
   })
-  expect((await request.get(`${base}/js/${SITE}.js`)).status()).toBe(404) // off means off
+  expect((await request.get(`${base}/js/${SITE}`)).status()).toBe(404) // off means off
+})
+
+test('the proxy also works with plain permalinks, through ?rest_route=', async ({ browser, request }) => {
+  reset({ proxy: 1, proxy_key: PROXY_KEY }, '')
+  await seen(true)
+  const visitor = await asUser(browser)
+  await visitor.goto('/')
+  await expect(tag(visitor)).toHaveAttribute('src', /\?rest_route=(\/|%2F)trckable(\/|%2F)v1(\/|%2F)js(\/|%2F)tkb_test00000001$/)
+  await expect.poll(async () => (await seen()).filter((s) => s.path === '/api/e').length).toBe(1)
+  expect((await request.get(`/?rest_route=/trckable/v1/js/${SITE}`)).status()).toBe(200)
+  expect((await request.get(`/?rest_route=/trckable/v1/js/tkb_other0000001`)).status()).toBe(404)
 })
 
 test('first run, on your own server: three steps, then the pill turns green when the first visit arrives', async ({ browser }) => {

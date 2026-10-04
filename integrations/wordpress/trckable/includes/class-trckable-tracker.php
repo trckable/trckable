@@ -32,7 +32,7 @@ class Trckable_Tracker {
 	 */
 	public static function src( $o ) {
 		if ( Trckable_Options::proxy_ready( $o ) ) {
-			return rest_url( Trckable_Proxy::NAMESPACE_ . '/js/' . $o['site'] . '.js' );
+			return rest_url( Trckable_Proxy::NAMESPACE_ . '/js/' . $o['site'] );
 		}
 		return Trckable_Options::server_url( $o ) . '/js/' . rawurlencode( $o['site'] ) . '.js';
 	}

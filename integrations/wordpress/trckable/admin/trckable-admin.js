@@ -45,7 +45,7 @@
 		var base = sv.own ? ( sv.host || 'https://…' ) : cfg.cloud;
 		var out = '<script data-site="' + site + '"' + ( cookieless && cookieless.checked ? ' data-cookieless' : '' );
 		out += viaSite ? ' data-api="' + cfg.tag.e + '"' : '';
-		return out + ' data-wp-strategy="defer" defer id="trckable-js" src="' + ( viaSite ? cfg.tag.js + site + '.js' : base + '/js/' + site + '.js' ) + '"></script>';
+		return out + ' data-wp-strategy="defer" defer id="trckable-js" src="' + ( viaSite ? cfg.tag.js + site : base + '/js/' + site + '.js' ) + '"></script>';
 	}
 	function paintTag() {
 		var link = $( '[data-open-trckable]' );
