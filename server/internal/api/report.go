@@ -17,7 +17,9 @@ import (
 //	from, to   YYYY-MM-DD in the site's timezone, inclusive (default: last 30 days)
 //	bucket     hour | day | week | month (default: picked from the range length)
 //	compare    previous | year | custom (cfrom, cto) | none (default none)
-//	f          filters, repeatable: f=channel:Search&f=country:DE
+//	f          filters, repeatable: f=channel:Search&f=country:DE (is). f=country!:US is "is not".
+//	           The same dimension twice means any of: f=country:DE&f=country:AT
+//	segment    a saved segment's id: its filters are added to the f ones
 //	daily      1 = include per-day data for the scrubber
 //	deep       1 = also break down exit pages, regions, cities, languages, browser versions and screens (Full mode)
 //	tz         override the site's timezone
@@ -64,7 +66,7 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 		fail(w, http.StatusBadRequest, err.Error())
 		return nil
 	}
-	filters, err := parseFilters(v["f"])
+	filters, err := a.filtersOf(r.Context(), siteID, v)
 	if err != nil {
 		fail(w, http.StatusBadRequest, err.Error())
 		return nil
@@ -206,20 +208,6 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 	writeJSON(w, http.StatusOK, out)
 }
 
-// parseFilters turns repeated f=dim:value parameters into filters, rejecting
-// anything outside the dimension whitelist.
-func parseFilters(raw []string) ([]query.Filter, error) {
-	var out []query.Filter
-	for _, f := range raw {
-		dim, val, ok := strings.Cut(f, ":")
-		if !ok || !query.ValidDim(dim) || val == "" {
-			return nil, fmt.Errorf("bad filter %q (use dim:value)", f)
-		}
-		out = append(out, query.Filter{Dim: dim, Value: val})
-	}
-	return out, nil
-}
-
 // dateRange parses inclusive YYYY-MM-DD dates into [from, to+1d) at midnight
 // in today's location. Defaults to the last 30 days including today.
 func dateRange(fromS, toS string, today time.Time) (time.Time, time.Time, error) {
@@ -299,7 +287,7 @@ func pageGoals(ctx context.Context, a *API, site string) []query.Group {
 func cacheKey(p query.Params) string {
 	fs := make([]string, len(p.Filters))
 	for i, f := range p.Filters {
-		fs[i] = f.Dim + "=" + f.Value
+		fs[i] = f.Dim + "|" + f.Op + "=" + f.Value
 	}
 	sort.Strings(fs)
 	gs := make([]string, 0, len(p.Groups)+len(p.PageGoals))

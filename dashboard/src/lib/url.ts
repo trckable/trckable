@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from 'react'
 import type { Filter, FunnelStep } from './api'
 import type { CompareMode } from './dates'
+import { filterParam, parseFilterParam } from './filterSet'
 
 const EVENT = 'trckable:navigate'
 
@@ -85,10 +86,7 @@ export function readView(params: URLSearchParams): ViewState {
     compare: cmp === 'previous' || cmp === 'year' || cmp === 'custom' ? cmp : 'none',
     cfrom: params.get('cfrom') ?? undefined,
     cto: params.get('cto') ?? undefined,
-    filters: params.getAll('f').flatMap((f) => {
-      const i = f.indexOf(':')
-      return i > 0 ? [{ dim: f.slice(0, i), value: f.slice(i + 1) }] : []
-    }),
+    filters: params.getAll('f').flatMap((f) => parseFilterParam(f) ?? []),
     // 'compact' was this mode's name until it became Core; links people
     // already shared keep working.
     mode: params.get('mode') === 'full' ? 'full' : 'core',
@@ -114,7 +112,7 @@ export function writeView(v: ViewState): string {
     p.set('cfrom', v.cfrom)
     p.set('cto', v.cto)
   }
-  for (const f of v.filters) p.append('f', `${f.dim}:${f.value}`)
+  for (const f of v.filters) p.append('f', filterParam(f))
   if (v.mode === 'full') p.set('mode', 'full')
   if (v.bucket) p.set('bucket', v.bucket)
   if (v.metric) p.set('metric', v.metric)

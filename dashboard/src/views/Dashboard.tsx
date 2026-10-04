@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { TimeChart } from '../charts/GuardedChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
-import { api, cachedReport, dropReports, showsInstall, siteState, fail, type Filter, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
+import { api, cachedReport, dropReports, showsInstall, siteState, fail, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
 import { compareLabel, diffDays, fmtDay, setWeekStart, todayIn, type Range } from '../lib/dates'
 import { countryName, fmtInt, fmtMoney } from '../lib/format'
 import { journeysOn } from '../features/cookieless/labels'
@@ -45,6 +45,7 @@ import { Loading } from '../components/loading/Loading'
 import { Cards } from '../features/cards/Cards'
 import type { CardsCtx } from '../features/cards/ctx'
 import { DIM_LABEL } from '../features/overview/dimLabels'
+import { activeChips, filterOps, siblingRows } from '../features/header/filterOps'
 const CreateMenu = lazy(() => import('../features/create/CreateMenu').then((m) => ({ default: m.CreateMenu }))) // its key and item work once it is here, a moment after the page
 import { MoreMenu } from '../components/MoreMenu'
 import { downloadCsv } from '../lib/download'
@@ -319,8 +320,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     const keep = view.filters.filter((f) => shows(mods, 'filters', f.dim))
     if (keep.length !== view.filters.length) setView({ filters: keep })
   }, [mods, view.filters])
-  const removeFilter = (f: Filter) => setView({ filters: view.filters.filter((x) => x !== f && !(x.dim === f.dim && x.value === f.value)) })
-
   // ---- what the numbers show right now: whole period, scrubbed day, or trail ----
   const src = trailData?.current ?? cur
   const day = scrubbing ? src?.days?.find((d) => d.date === view.day) : undefined
@@ -443,7 +442,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
   const clearFilters = () => setView({ filters: [] })
   const rowProps = {
-    filters: view.filters, dimLabel: (dim: string) => DIM_LABEL[dim] ?? dim, valueLabel: filterLabel, onRemove: removeFilter, onClear: clearFilters, onSave: saveView,
+    filters: view.filters, dimLabel: (dim: string) => DIM_LABEL[dim] ?? dim, valueLabel: filterLabel, onRemove: filterOps.dropSet, onFlip: filterOps.flip, onClear: clearFilters, onSave: saveView,
     views: isShared() ? undefined : { list: segments, current, onOpen: openView, onRename: renameView, onDelete: removeView },
   }
 
@@ -464,9 +463,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       value={pickerValue}
       today={today}
       onChange={onPicker}
-      active={view.filters.map((f) => ({ key: f.dim + f.value, dim: DIM_LABEL[f.dim] ?? f.dim, value: filterLabel(f.dim, f.value), remove: () => removeFilter(f) }))}
+      active={activeChips(view.filters, filterLabel)}
       under={(view.filters.length > 0 || !!rowProps.views?.list.length) && <FilterRowHost {...rowProps} onlyViews={narrow} />}
-      filter={!isShared() && <FilterMenu rows={dims} labelFor={filterLabel} active={view.filters} onPick={addFilter} onRemove={removeFilter} onClear={clearFilters} />}
+      filter={!isShared() && <FilterMenu rows={dims} siblings={siblingRows(site.id, query)} labelFor={filterLabel} active={view.filters} onPick={filterOps.pick} onRemove={filterOps.dropValue} onClear={clearFilters} />}
       period={<DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone} site={site.id} bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />}
       share={!isShared() && !narrow && <ShareButton onShare={() => setSharing(true)} />}
       more={

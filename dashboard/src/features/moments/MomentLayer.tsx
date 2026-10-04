@@ -11,6 +11,7 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import type { Bucket, Point, ReportQuery, Site } from '../../lib/api'
 import { fmtDay, todayIn } from '../../lib/dates'
+import { sameFilter } from '../../lib/filterSet'
 import { readView, setView } from '../../lib/url'
 import { rangeOf } from '../../lib/dashQuery'
 import { LANE_H } from '../../charts/plot'
@@ -77,7 +78,7 @@ export default function MomentLayer(p: LayerProps) {
   const apply = (pin: Pin, drop?: Pin) => {
     const view = readView(new URLSearchParams(location.search))
     const today = todayIn(p.site.timezone)
-    const filters = view.filters.filter((f) => !drop?.filters.some((d) => d.dim === f.dim && d.value === f.value))
+    const filters = view.filters.filter((f) => !drop?.filters.some((d) => sameFilter(d, f)))
     setView(patchFor(pin, { filters, range: rangeOf(view, today), today, bucket: p.bucket }))
   }
   const click = (m: Mark) => {

@@ -9,12 +9,14 @@ import { filterMenu, periodMenu } from '../../components/panelOpen'
 import { truncateMiddle } from '../../lib/visitor'
 import { PRESETS, presetById, type ISODate } from '../../lib/dates'
 import { isShared } from '../../lib/me'
+import { rowCopy } from './rowCopy'
 import { sheetCopy } from './sheetCopy'
+import '../../components/ActiveFilters.css'
 import './PhoneSheet.css'
 
 export interface SheetProps {
   /** The filters in force, each with what removes it. */
-  active: { key: string; dim: string; value: string; remove: () => void }[]
+  active: { key: string; dim: string; op: string; not: boolean; value: string; flip: () => void; remove: () => void }[]
   value: PickerValue
   today: ISODate
   onChange: (v: PickerValue) => void
@@ -91,10 +93,13 @@ export default function PhoneSheet(p: SheetProps) {
               {p.active.map((f) => (
                 <span key={f.key} className="chip">
                   <span className="faint">
-                    {f.dim} {sheetCopy.is}
+                    {f.dim}{' '}
+                    <button type="button" className="op" aria-label={rowCopy.flip(f.dim, f.not)} onClick={f.flip}>
+                      {f.op}
+                    </button>
                   </span>
                   <b title={f.value}>{truncateMiddle(f.value, 32)}</b>
-                  <button type="button" aria-label={sheetCopy.removeFilter(f.dim, f.value)} onClick={f.remove}>
+                  <button type="button" aria-label={rowCopy.removeSet(f.dim, f.op, f.value)} onClick={f.remove}>
                     <X size={13} strokeWidth={2} aria-hidden="true" />
                   </button>
                 </span>

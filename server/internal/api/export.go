@@ -113,6 +113,13 @@ func (a *API) export(w http.ResponseWriter, r *http.Request) {
 		_ = c.Write(out)
 	}
 
+	// What the numbers are of, in the chips' words, before the numbers: a file
+	// taken from a filtered page says so, the way the page does.
+	if words := filterWords(p.Filters); words != "" {
+		blank := make([]string, len(head)-2)
+		_ = c.Write(append([]string{"filters", csvText(words)}, blank...))
+	}
+
 	// The totals first, so the file opens on the number somebody is checking.
 	total := query.Row{Visitors: res.KPIs.Visitors, Sessions: res.KPIs.Sessions, Pageviews: res.KPIs.Pageviews, Bounce: res.KPIs.BounceRate}
 	if money {

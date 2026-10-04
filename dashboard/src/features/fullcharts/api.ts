@@ -1,6 +1,7 @@
 // Full mode's chart grid in one read (server/internal/api/charts.go): the
 // same period, filters and payment mode as the report on screen.
 import { call, type Bucket, type ReportQuery } from '../../lib/api'
+import { filterParam } from '../../lib/filterSet'
 
 export interface SourceBand {
   channel: string
@@ -44,7 +45,7 @@ export function chartsURL(site: string, q: ReportQuery, bucket: Bucket | undefin
   const p = new URLSearchParams({ from: q.from, to: q.to })
   if (bucket) p.set('bucket', bucket)
   if (q.testPayments) p.set('payments', 'test')
-  for (const f of q.filters ?? []) p.append('f', f.dim + ':' + f.value)
+  for (const f of q.filters ?? []) p.append('f', filterParam(f))
   return `/sites/${encodeURIComponent(site)}/report/charts?${p}`
 }
 
