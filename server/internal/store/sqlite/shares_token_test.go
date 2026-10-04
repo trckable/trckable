@@ -203,7 +203,7 @@ func TestShareTokenMigration(t *testing.T) {
 	ctx := context.Background()
 	s.Sealer = mustBox(t, "migration test key")
 	site, _ := s.CreateSite(ctx, DefaultAccount, "a.com", "")
-	if _, err := s.DB.ExecContext(ctx, `DROP TABLE surges; ALTER TABLE widgets DROP COLUMN texts; ALTER TABLE widgets DROP COLUMN lang; ALTER TABLE widgets DROP COLUMN name; DROP TABLE report_schedules; DROP TABLE site_share_look; DROP TABLE sso_links; ALTER TABLE auth_sessions DROP COLUMN via; ALTER TABLE site_settings DROP COLUMN exclude_ips; DROP TABLE known_devices; DROP TABLE memberships; ALTER TABLE users DROP COLUMN last_account; ALTER TABLE site_shares DROP COLUMN token_enc; PRAGMA user_version = 39`); err != nil {
+	if _, err := s.DB.ExecContext(ctx, `DROP TABLE surges; ALTER TABLE annotations DROP COLUMN planned; ALTER TABLE widgets DROP COLUMN texts; ALTER TABLE widgets DROP COLUMN lang; ALTER TABLE widgets DROP COLUMN name; DROP TABLE report_schedules; DROP TABLE site_share_look; DROP TABLE sso_links; ALTER TABLE auth_sessions DROP COLUMN via; ALTER TABLE site_settings DROP COLUMN exclude_ips; DROP TABLE known_devices; DROP TABLE memberships; ALTER TABLE users DROP COLUMN last_account; ALTER TABLE site_shares DROP COLUMN token_enc; PRAGMA user_version = 39`); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.DB.ExecContext(ctx, `INSERT INTO site_shares (id, site_id, name, token_hash, created_at) VALUES ('shr_old', ?, 'Old', 'h', 1)`, site); err != nil {

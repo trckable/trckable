@@ -73,8 +73,8 @@ func TestOnlineWidgetThresholdAndCache(t *testing.T) {
 		if res.StatusCode != http.StatusOK {
 			t.Fatalf("page: %d %s", res.StatusCode, b)
 		}
-		if res.Header.Get("Set-Cookie") != "" || strings.Contains(string(b), "<script") {
-			t.Fatal("a widget sets no cookie and carries no script")
+		if res.Header.Get("Set-Cookie") != "" || strings.Count(string(b), "<script") != 1 {
+			t.Fatal("a widget sets no cookie and carries only the height script")
 		}
 		return string(b)
 	}

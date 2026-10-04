@@ -35,7 +35,7 @@ func TestSurgeAlertBackfill(t *testing.T) {
 	add(chose, "surge", "mailto:b@example.com", false, 2) // switched off by its unsubscribe link
 	add(hook, "customer", "https://hooks.example.com/x", true, 1)
 	// The schema as it was before the migration.
-	if _, err := s.DB.ExecContext(ctx, `DELETE FROM alerts WHERE kind = 'surge' AND site_id != ?; PRAGMA user_version = 50`, chose); err != nil {
+	if _, err := s.DB.ExecContext(ctx, `DELETE FROM alerts WHERE kind = 'surge' AND site_id != ?; PRAGMA user_version = 51`, chose); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.MigrateTo(ctx, len(migrations)); err != nil {
@@ -63,7 +63,7 @@ func TestSurgeAlertBackfill(t *testing.T) {
 		t.Fatalf("a choice made is kept: %+v", a)
 	}
 	// Again changes nothing.
-	if _, err := s.DB.ExecContext(ctx, `PRAGMA user_version = 50`); err != nil {
+	if _, err := s.DB.ExecContext(ctx, `PRAGMA user_version = 51`); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.MigrateTo(ctx, len(migrations)); err != nil {

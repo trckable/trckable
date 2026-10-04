@@ -626,7 +626,10 @@ var migrations = []string{
 	// owner reworded, as JSON. Blank is the translated defaults.
 	`ALTER TABLE widgets ADD COLUMN lang TEXT NOT NULL DEFAULT 'auto';
 	ALTER TABLE widgets ADD COLUMN texts TEXT NOT NULL DEFAULT '';`,
-	// 50: a site's busy spells (surges.go): when one began and ended, the most
+	// 50: a plan is a note for a day to come (the calendar shows it dashed,
+	// then scores it against the usual once the day is past).
+	`ALTER TABLE annotations ADD COLUMN planned INTEGER NOT NULL DEFAULT 0;`,
+	// 51: a site's busy spells (surges.go): when one began and ended, the most
 	// online at once, the usual for that hour, and who they were as JSON
 	// (a source, a page, a country). Counts only, never a visitor.
 	`CREATE TABLE surges (
@@ -639,7 +642,7 @@ var migrations = []string{
 		why        TEXT NOT NULL DEFAULT ''
 	);
 	CREATE INDEX surges_site ON surges(site_id, started_at);`,
-	// 51: the traffic surge alert for sites that already have alerts on: one
+	// 52: the traffic surge alert for sites that already have alerts on: one
 	// per site, to where its newest enabled alert goes. A site whose alerts are
 	// all off, or that has no destination, gets none, and one that already has
 	// a surge alert (even switched off, or stopped by its unsubscribe link) is

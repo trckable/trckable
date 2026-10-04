@@ -114,6 +114,7 @@ export const more = {
   testAlert: (site: string, target: string) => act('POST', `/sites/${site}/alerts/test`, { target }),
   saveSegment: (site: string, name: string, query: string) => call<Segment>('POST', `/sites/${site}/segments`, { name, query }),
   addAnnotation: (site: string, day: string, text: string) => call<Annotation>('POST', `/sites/${site}/annotations`, { day, text }),
+  addPlan: (site: string, day: string, text: string) => call<Annotation>('POST', `/sites/${site}/annotations`, { day, text, planned: true }),
   updateAnnotation: (site: string, id: string, day: string, text: string) => call<Annotation>('PATCH', `/sites/${site}/annotations/${id}`, { day, text }),
   deleteAnnotation: (site: string, id: string) => act('DELETE', `/sites/${site}/annotations/${id}`),
   searchConsole: (site: string) => call<{ connected: boolean; connection?: SearchConnection }>('GET', `/sites/${site}/search-console`),

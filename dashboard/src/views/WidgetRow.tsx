@@ -7,7 +7,7 @@ import { Switch } from '../components/Switch'
 import { confirm } from '../components/Confirm'
 import { toast } from '../components/Toast'
 import { isViewer } from '../lib/me'
-import { MAX_NAME, TEXT, cornerCode, frameCode, kindOf, previewUrl, size } from './widgetKinds'
+import { MAX_NAME, TEXT, cornerCode, frameCode, hasOldCode, kindOf, previewUrl, size } from './widgetKinds'
 import { WidgetMenu, type WidgetMenuItem } from './WidgetMenu'
 
 const copy = (code: string, said: string) => void navigator.clipboard?.writeText(code).then(() => toast(said))
@@ -60,7 +60,7 @@ export function WidgetRow({ site, w, base, onChange, onEdit }: { site: Site; w: 
     cancelled.current = false
   }
   const items: WidgetMenuItem[] = [
-    { label: TEXT.copyFrame, icon: <Copy size={18} strokeWidth={1.75} aria-hidden="true" />, run: () => copy(frameCode(base, w, site.domain), TEXT.snippet) },
+    { label: TEXT.copyFrame, icon: <Copy size={18} strokeWidth={1.75} aria-hidden="true" />, run: () => copy(frameCode(base, w, site.domain), TEXT.snippet), hint: hasOldCode(w) ? TEXT.newCode : undefined },
   ]
   if (w.kind === 'online') items.push({ label: TEXT.copyCorner, icon: <PanelBottomOpen size={18} strokeWidth={1.75} aria-hidden="true" />, run: () => copy(cornerCode(base, w), TEXT.script) })
   if (!isViewer()) {

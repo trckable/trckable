@@ -409,6 +409,7 @@ func (a *API) shareAnnotations(w http.ResponseWriter, r *http.Request) {
 		Day  string `json:"day"`
 		Text string `json:"text"`
 		At   int64  `json:"created_at"`
+		Plan bool   `json:"planned,omitempty"`
 	}
 	out := []note{}
 	if !sh.Notes || !a.modulesOf(r, sh.SiteID).Has("notes") {
@@ -422,7 +423,7 @@ func (a *API) shareAnnotations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, n := range list {
-		out = append(out, note{n.ID, n.Day, n.Text, n.Created})
+		out = append(out, note{n.ID, n.Day, n.Text, n.Created, n.Planned})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"annotations": out})
 }
