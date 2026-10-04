@@ -330,7 +330,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 	// The owner's own addresses are left out first: before the data-centre
 	// lookup, the rate limit and the hash, so nothing about them is used.
 	if site.SkipIP(ip) {
-		return nil, true, nil, nil
+		return nil, dropOwner, nil, nil // the owner's choice: not counted as a bot either
 	}
 	// Stricter filtering also drops visits from rented servers: a browser
 	// running in a data centre is a script, not a reader.

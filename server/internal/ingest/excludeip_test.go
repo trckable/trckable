@@ -56,6 +56,9 @@ func TestExcludedAddressIsNeverCounted(t *testing.T) {
 	if seen.n.Load() != 0 {
 		t.Fatal("an excluded visit marked the site as live")
 	}
+	if rows := h.Bots.Drain(); len(rows) != 0 {
+		t.Fatalf("an excluded visit was counted as a bot: %v", rows)
+	}
 
 	// Anyone else is counted as before.
 	if w := postFrom(h, "198.51.100.5:1", visit, nil); w.Code != http.StatusAccepted {
