@@ -73,7 +73,7 @@ function Cards({ site, quiet }: { site: Site; quiet: boolean }) {
       )}
       {importing && (
         <Suspense fallback={null}>
-          <ImportDialog domain={site.domain} onClose={() => setImporting(false)} />
+          <ImportDialog domain={site.domain} site={site.id} onClose={() => setImporting(false)} />
         </Suspense>
       )}
     </>

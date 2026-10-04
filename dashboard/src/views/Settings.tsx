@@ -26,6 +26,7 @@ import { SearchSettings } from './Search'
 import { MODULE_WHY, moduleOf } from './settingsModules'
 import { NotesSettings } from '../features/notes/NotesSettings'
 import { MilestonesSetting } from '../features/milestones/MilestonesSetting'
+import { ImportSetting } from '../features/install/ImportSetting'
 import { DeleteSite } from './Sites'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import './Settings.css'
@@ -100,7 +101,6 @@ const GROUPS: { name: string; tabs: TabID[] }[] = [
   { name: 'Data', tabs: ['search', 'privacy', 'alerts'] },
   { name: 'Instance', tabs: ['health'] },
 ]
-
 /** A site's settings as a dialog over its dashboard: the sections on the
  *  left, the section on the right. Opening it does not change the address
  *  (lib/settings.ts); closing it leaves the dashboard exactly as it was. */
@@ -154,7 +154,7 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
       {tab === 'sharing' && <Shares key={'sh' + site.id} site={site} />}
       {/* Widgets go on your own pages, so they are their own section, not a kind of share. */}
       {tab === 'widgets' && <Locked><WidgetsSettings key={'wg' + site.id} site={site} /></Locked>}
-      {tab === 'install' && <InstallSection site={site} />}
+      {tab === 'install' && <><InstallSection site={site} /><ImportSetting key={'im' + site.id} site={site} /></>}
       {tab === 'notes' && <><NotesSettings key={'n' + site.id} site={site} /><MilestonesSetting key={'ms' + site.id} site={site} /></>}
       {tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
       {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}
