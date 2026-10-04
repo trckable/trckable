@@ -1,8 +1,10 @@
 // The switcher's words on the first screen: its button and the state dots
 // (menuCopy.ts has the list's). The dashboard's text moves to message files
 // when translations come, and this is what moves.
+import { defineCopy } from '../../i18n'
 
-export const copy = {
+
+export const copy = defineCopy('sites', {
   pick: 'Pick a site',
   all: 'All sites',
   dot: {
@@ -12,4 +14,4 @@ export const copy = {
     stopped: 'Stopped: no visits, and the snippet was not found',
     new: 'Not installed yet',
   },
-}
+})

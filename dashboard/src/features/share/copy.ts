@@ -1,6 +1,8 @@
 // The Share dialog's words (features/share): what moves to the message files
 // when translations come.
-export const copy = {
+import { defineCopy } from '../../i18n'
+
+export const copy = defineCopy('share', {
   title: 'Share your numbers',
   subtitle: 'A card for a post, drawn from this site.',
   close: 'Close',
@@ -61,4 +63,4 @@ export const copy = {
   check: 'Check',
   verified: 'Verified',
   notYet: 'The record was not found yet. DNS can take a while.',
-}
+})

@@ -6,7 +6,7 @@
 import { timeCopy } from '../../charts/copy'
 import type { TimeChartProps } from '../../charts/TimeChart'
 import type { Day, Money, Point } from '../../lib/api'
-import { fmtDuration, fmtMoney, fmtMoneyAxis, fmtPct } from '../../lib/format'
+import { fmtDuration, fmtMoney, fmtMoneyAxis, fmtPct, fmtRatio } from '../../lib/format'
 import type { ChartMetricId } from '../../lib/url'
 import { copy } from './copy'
 
@@ -60,8 +60,8 @@ export function ghostValues(m: ChartMetric, series: Point[] | undefined): number
   return m === 'revenue' ? series.map((p) => p.revenue ?? 0) : undefined
 }
 
-const rate = (x: number) => (x * 100).toFixed(x < 0.1 ? 2 : 1) + '%'
-const axisRate = (x: number) => `${+(x * 100).toFixed(1)}%`
+const rate = (x: number) => fmtRatio(x, x < 0.1 ? 2 : 1)
+const axisRate = (x: number) => fmtRatio(x, 1, 0)
 
 /**
  * The chart's props for a metric: how a value and an axis label are written,

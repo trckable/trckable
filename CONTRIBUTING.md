@@ -105,6 +105,52 @@ node dashboard/scripts/component-size.mjs --lower   # record shorter components
 The golangci-lint version is pinned in `scripts/ship.sh` and `.github/workflows/ci.yml`;
 `go run` builds it once into Go's cache, nothing is installed.
 
+## Translations
+
+The dashboard speaks English, German, French, Spanish, Italian and Dutch. English
+is the words written in the code (`dashboard/src/**/*opy*.ts`, one `defineCopy('name', {...})`
+per feature); every other language is one file of its own in
+`dashboard/src/i18n/locales/`, named by two letters (`de.ts`), that holds the same
+keys with its words. A key a language does not have shows in English, so a file
+can be fixed or grown a few lines at a time, and a missing key never breaks a
+screen.
+
+**Fix a word**: edit the line in the language's file and open a pull request, on
+GitHub's web editor if you like. The files are marked "needs native review" in
+their header: when a native speaker has read one through, that line can go.
+
+**Add a language**: copy `de.ts` to the two letters of the new language
+(`pt.ts`), translate the values (never the keys, and keep the arguments of each
+function), and add one line for it to `dashboard/src/i18n/languages.ts`. Mark it
+`partial: true` there until it is complete: the check then lists what is missing
+instead of failing on it. The picker, Auto (the browser's language) and the date
+and number formats pick it up from there.
+
+**What a file may hold**: a string, a list of strings (the weekday names, in the
+same order) or a function that builds a sentence from the same arguments as the
+English one. Plurals use `plural` and `count` from `../helpers` (the language's
+own rule: French reads 0 as one), numbers `int`, percentages `pct` and days
+`dayLabel`. Import nothing else from the app: a message file is loaded before
+the rest of it. Brand and feature names, code, paths and URLs stay as they are.
+
+**The check** runs with the other dashboard tests, in `pnpm check` and in CI:
+
+```bash
+cd dashboard && pnpm test src/i18n
+```
+
+It lists every key a complete language is missing, every key the English words do
+not have, any key whose kind or number of arguments differs, and any function
+that leaves out one of the values the English one writes, or writes "undefined".
+A new English word in a pull request therefore needs its translations in the
+same pull request; if you cannot write them, say so and a maintainer will.
+
+**New English words**: put them in the feature's `*Copy.ts` (not in the
+component), formatted with `fmtInt`, `fmtMoney` and the other helpers in
+`lib/format.ts` (never `toFixed` or `toLocaleString` without the language), and
+use `fmtDay` for days. Where text is joined from pieces, make it one function so
+a language can order the pieces its own way.
+
 ## Licensing of contributions
 
 The server and dashboard are AGPL-3.0; the tracker and the npm package are

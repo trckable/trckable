@@ -5,7 +5,7 @@
 // the main chart when the chart can draw it here (chartMetric).
 import type { ReactNode } from 'react'
 import type { Bots, KPIs, Money, Site } from '../../lib/api'
-import { delta, fmtDuration, fmtInt, fmtMoney, fmtPct, type Delta } from '../../lib/format'
+import { delta, fmtDuration, fmtInt, fmtMoney, fmtPct, fmtRatio, type Delta } from '../../lib/format'
 import { canChart, type Can, type ChartMetric } from './chartMetric'
 import { botsLine } from './botsLine'
 import { copy } from './copy'
@@ -47,7 +47,7 @@ interface Props {
 
 export function KpiStrip(p: Props) {
   const { k, pk, money, pm } = p
-  const rate = (x: number) => (x * 100).toFixed(x < 0.1 ? 2 : 1) + '%'
+  const rate = (x: number) => fmtRatio(x, x < 0.1 ? 2 : 1)
   const cents = (x: number) => (money ? fmtMoney(x, money.currency, money.exponent, { cents: true }) : '')
   const tile = (key: ChartMetric, label: string, value: number | undefined, fmt: (n: number) => string, d: Delta | null, o: { live?: (r: { kpis: KPIs; revenue: number }) => number; money?: boolean; hint?: ReactNode; tip?: string } = {}) => (
     <KpiTile

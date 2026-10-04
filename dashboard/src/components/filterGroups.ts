@@ -20,6 +20,7 @@ import {
   Target,
   type LucideIcon,
 } from 'lucide-react'
+import { filterCopy as t } from './filterCopy'
 
 export type FilterGroup = {
   name: string
@@ -28,44 +29,44 @@ export type FilterGroup = {
 
 export const FILTER_GROUPS: FilterGroup[] = [
   {
-    name: 'Acquisition',
+    name: t.group.acquisition,
     dims: [
-      { dim: 'channel', label: 'Channel', icon: Radio },
-      { dim: 'referrer', label: 'Referrer', icon: Link },
-      { dim: 'campaign', label: 'Campaign', icon: Megaphone },
-      { dim: 'source', label: 'utm_source', icon: Tag, note: 'Full mode' },
-      { dim: 'medium', label: 'utm_medium', icon: Tag, note: 'Full mode' },
+      { dim: 'channel', label: t.dim.channel, icon: Radio },
+      { dim: 'referrer', label: t.dim.referrer, icon: Link },
+      { dim: 'campaign', label: t.dim.campaign, icon: Megaphone },
+      { dim: 'source', label: t.dim.source, icon: Tag, note: t.fullMode },
+      { dim: 'medium', label: t.dim.medium, icon: Tag, note: t.fullMode },
     ],
   },
   {
-    name: 'Content',
+    name: t.group.content,
     dims: [
-      { dim: 'entry_page', label: 'Entry page', icon: LogIn },
-      { dim: 'page', label: 'Page', icon: FileText },
-      { dim: 'exit_page', label: 'Exit page', icon: LogOut, note: 'Full mode' },
-      { dim: 'group', label: 'Section', icon: FolderTree, note: 'None yet' },
+      { dim: 'entry_page', label: t.dim.entry_page, icon: LogIn },
+      { dim: 'page', label: t.dim.page, icon: FileText },
+      { dim: 'exit_page', label: t.dim.exit_page, icon: LogOut, note: t.fullMode },
+      { dim: 'group', label: t.dim.group, icon: FolderTree, note: t.noneYet },
     ],
   },
   {
-    name: 'Location',
+    name: t.group.location,
     dims: [
-      { dim: 'country', label: 'Country', icon: Globe },
-      { dim: 'region', label: 'Region', icon: MapIcon, note: 'Full mode' },
-      { dim: 'city', label: 'City', icon: Building2, note: 'Full mode' },
+      { dim: 'country', label: t.dim.country, icon: Globe },
+      { dim: 'region', label: t.dim.region, icon: MapIcon, note: t.fullMode },
+      { dim: 'city', label: t.dim.city, icon: Building2, note: t.fullMode },
     ],
   },
   {
-    name: 'Device',
+    name: t.group.device,
     dims: [
-      { dim: 'device', label: 'Device', icon: MonitorSmartphone },
-      { dim: 'browser', label: 'Browser', icon: AppWindow },
-      { dim: 'browser_version', label: 'Browser version', icon: AppWindow, note: 'Full mode' },
-      { dim: 'screen', label: 'Screen', icon: Ruler, note: 'Full mode' },
-      { dim: 'os', label: 'OS', icon: Cpu },
-      { dim: 'language', label: 'Language', icon: Languages, note: 'Full mode' },
+      { dim: 'device', label: t.dim.device, icon: MonitorSmartphone },
+      { dim: 'browser', label: t.dim.browser, icon: AppWindow },
+      { dim: 'browser_version', label: t.dim.browser_version, icon: AppWindow, note: t.fullMode },
+      { dim: 'screen', label: t.dim.screen, icon: Ruler, note: t.fullMode },
+      { dim: 'os', label: t.dim.os, icon: Cpu },
+      { dim: 'language', label: t.dim.language, icon: Languages, note: t.fullMode },
     ],
   },
-  { name: 'Behaviour', dims: [{ dim: 'goal', label: 'Goal', icon: Target, note: 'None yet' }] },
+  { name: t.group.behaviour, dims: [{ dim: 'goal', label: t.dim.goal, icon: Target, note: t.noneYet }] },
 ]
 
 export const ALL_DIMS = FILTER_GROUPS.flatMap((g) => g.dims)
