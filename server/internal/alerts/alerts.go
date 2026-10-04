@@ -40,6 +40,12 @@ type Event struct {
 	// Unsubscribe is the address that stops this alert, put in an email's
 	// headers and last line. Chat tools have their own mute; it is not sent.
 	Unsubscribe string `json:"-"`
+	// HTML, when set, dresses the email as a designed message (the plain text
+	// stays as its twin); it is given the stop link, which is known only at
+	// the moment of sending. Inline are the files it shows. Chat tools get
+	// neither.
+	HTML   func(unsubscribe string) string `json:"-"`
+	Inline []Attachment                    `json:"-"`
 }
 
 // ErrUnsafeTarget is returned for a destination trckable will not call.

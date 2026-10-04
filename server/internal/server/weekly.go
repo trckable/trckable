@@ -11,6 +11,7 @@ import (
 	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/modules"
 	"github.com/trckable/trckable/server/internal/query"
+	"github.com/trckable/trckable/server/internal/reports"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 	"github.com/trckable/trckable/server/internal/surge"
 )
@@ -108,6 +109,55 @@ func aiLine(a aiWeek) string {
 	return ""
 }
 
+// goalLine is the report's line about its top goal, or none.
+func goalLine(cur *query.Result) string {
+	if len(cur.Goals) == 0 {
+		return ""
+	}
+	g := cur.Goals[0]
+	return fmt.Sprintf("Top goal: %s, %s visitors", g.Value, number(g.Visitors))
+}
+
+// revenueLine is the report's line about money, or none without payments.
+func revenueLine(cur, prev *query.Result) string {
+	m := cur.Money
+	if m == nil || m.Payments == 0 {
+		return ""
+	}
+	line := fmt.Sprintf("Revenue: %s from %s payment", amount(m.Revenue, m.Currency, m.Exponent), number(m.Payments))
+	if m.Payments != 1 {
+		line += "s"
+	}
+	if prev.Money != nil {
+		line += ", " + change(float64(m.Revenue), float64(prev.Money.Revenue))
+	}
+	return line
+}
+
+// weeklyHTML is the report as a designed email: the same numbers and
+// sentences as weeklyText, laid out by package reports. It returns the page
+// as a function of the stop link, which is known only when it is sent.
+func weeklyHTML(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link string) func(string) string {
+	var x reports.Weekly
+	x.Link = link
+	if cur.KPIs.Visitors > 0 {
+		for _, line := range []string{aiLine(ai), revenueLine(cur, prev), goalLine(cur)} {
+			if line != "" {
+				x.Facts = append(x.Facts, line)
+			}
+		}
+		if busiest != "" {
+			x.Moments = append(x.Moments, busiest)
+		}
+		x.Moments = append(x.Moments, weeklyInsights(cur, prev)...)
+	}
+	d := reports.Data{Site: domain, Cadence: "weekly", Lang: "en", From: from, To: to, Cur: cur, Prev: prev}
+	return func(stop string) string {
+		d.Unsubscribe = stop
+		return reports.WeeklyHTML(d, x)
+	}
+}
+
 // weeklyText words the report. It is plain text on purpose: every chat tool
 // and every mail client shows it the same.
 func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link string) (title, msg string, data map[string]any) {
@@ -142,18 +192,10 @@ func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, ai a
 		if line := aiLine(ai); line != "" {
 			lines = append(lines, line)
 		}
-		if len(cur.Goals) > 0 {
-			g := cur.Goals[0]
-			lines = append(lines, fmt.Sprintf("Top goal: %s, %s visitors", g.Value, number(g.Visitors)))
+		if line := goalLine(cur); line != "" {
+			lines = append(lines, line)
 		}
-		if m := cur.Money; m != nil && m.Payments > 0 {
-			line := fmt.Sprintf("Revenue: %s from %s payment", amount(m.Revenue, m.Currency, m.Exponent), number(m.Payments))
-			if m.Payments != 1 {
-				line += "s"
-			}
-			if prev.Money != nil {
-				line += ", " + change(float64(m.Revenue), float64(prev.Money.Revenue))
-			}
+		if line := revenueLine(cur, prev); line != "" {
 			lines = append(lines, line)
 		}
 	}
@@ -244,6 +286,8 @@ func (s *Server) weeklyEvent(ctx context.Context, q *query.Q, info sqlite.SiteIn
 	}
 	ev.Title, ev.Message, ev.Data = weeklyText(info.Domain, from, to, cur, prev, ai, busiest, link)
 	ev.Text = ev.Title + " — " + ev.Message
+	ev.HTML = weeklyHTML(info.Domain, from, to, cur, prev, ai, busiest, link)
+	ev.Inline = []alerts.Attachment{{Name: "logo.png", Type: "image/png", Data: reports.Logo, Inline: reports.LogoCID}}
 	return ev, true
 }
 

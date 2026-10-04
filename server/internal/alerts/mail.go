@@ -105,6 +105,9 @@ func (m *Mailer) message(to string, e Event) (subject, body string, headers [][2
 
 func (m *Mailer) send(ctx context.Context, to string, e Event) error {
 	subject, body, headers := m.message(to, e)
+	if e.HTML != nil {
+		return m.sendReport(ctx, to, Report{FromName: "trckable", Subject: subject, Text: body, HTML: e.HTML(e.Unsubscribe), Unsubscribe: e.Unsubscribe, Attachments: e.Inline, At: e.At})
+	}
 	if m.resend != nil {
 		return m.resend.send(ctx, m.from, to, subject, body, headers)
 	}

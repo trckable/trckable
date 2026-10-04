@@ -34,6 +34,8 @@ type Words struct {
 	Stopped         string
 	SentBy          string // "Sent by %s"
 	AI              string // the AI assistants channel
+	YourWeek        string // the weekly email's title
+	OpenWeek        string // its button
 	Date            func(time.Time) string
 	Thousands       string // the digit group separator
 	Months          [12]string
@@ -57,7 +59,7 @@ var words = map[string]Words{
 		VsWeek: "vs the week before", VsMonth: "vs the month before", Up: "up", Down: "down", Same: "about the same", New: "new",
 		NoVisitors: "No visitors arrived in this period.",
 		Stop:       "Stop receiving this report", StopTitle: "Stop this report", StopBody: "Stop sending this report to %s?", StopButton: "Stop it", Stopped: "Done. This report will not be sent to %s again.",
-		SentBy: "Sent by %s", AI: "AI assistants", Thousands: ",",
+		SentBy: "Sent by %s", AI: "AI assistants", YourWeek: "Your week", OpenWeek: "Open your week", Thousands: ",",
 		Months: [12]string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"},
 	},
 	// NEEDS REVIEW: German, French, Spanish, Italian and Dutch below were not
@@ -68,7 +70,7 @@ var words = map[string]Words{
 		VsWeek: "gegenüber der Vorwoche", VsMonth: "gegenüber dem Vormonat", Up: "plus", Down: "minus", Same: "ungefähr gleich", New: "neu",
 		NoVisitors: "In diesem Zeitraum gab es keine Besucher.",
 		Stop:       "Diesen Bericht abbestellen", StopTitle: "Bericht abbestellen", StopBody: "Diesen Bericht nicht mehr an %s senden?", StopButton: "Abbestellen", Stopped: "Erledigt. Dieser Bericht wird nicht mehr an %s gesendet.",
-		SentBy: "Gesendet von %s", AI: "KI-Assistenten", Thousands: ".",
+		SentBy: "Gesendet von %s", AI: "KI-Assistenten", YourWeek: "Deine Woche", OpenWeek: "Deine Woche öffnen", Thousands: ".",
 		Months: [12]string{"Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"},
 	},
 	"fr": {
@@ -77,7 +79,7 @@ var words = map[string]Words{
 		VsWeek: "par rapport à la semaine précédente", VsMonth: "par rapport au mois précédent", Up: "en hausse de", Down: "en baisse de", Same: "à peu près stable", New: "nouveau",
 		NoVisitors: "Aucun visiteur sur cette période.",
 		Stop:       "Ne plus recevoir ce rapport", StopTitle: "Arrêter ce rapport", StopBody: "Ne plus envoyer ce rapport à %s ?", StopButton: "Arrêter", Stopped: "C’est fait. Ce rapport ne sera plus envoyé à %s.",
-		SentBy: "Envoyé par %s", AI: "Assistants IA", Thousands: " ",
+		SentBy: "Envoyé par %s", AI: "Assistants IA", YourWeek: "Votre semaine", OpenWeek: "Ouvrir votre semaine", Thousands: " ",
 		Months: [12]string{"janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."},
 	},
 	"es": {
@@ -86,7 +88,7 @@ var words = map[string]Words{
 		VsWeek: "respecto a la semana anterior", VsMonth: "respecto al mes anterior", Up: "sube", Down: "baja", Same: "casi igual", New: "nuevo",
 		NoVisitors: "No hubo visitantes en este periodo.",
 		Stop:       "Dejar de recibir este informe", StopTitle: "Dejar de recibir este informe", StopBody: "¿Dejar de enviar este informe a %s?", StopButton: "Dejar de enviarlo", Stopped: "Hecho. Este informe ya no se enviará a %s.",
-		SentBy: "Enviado por %s", AI: "Asistentes de IA", Thousands: ".",
+		SentBy: "Enviado por %s", AI: "Asistentes de IA", YourWeek: "Tu semana", OpenWeek: "Abrir tu semana", Thousands: ".",
 		Months: [12]string{"ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"},
 	},
 	"it": {
@@ -95,7 +97,7 @@ var words = map[string]Words{
 		VsWeek: "rispetto alla settimana precedente", VsMonth: "rispetto al mese precedente", Up: "in aumento del", Down: "in calo del", Same: "più o meno uguale", New: "nuovo",
 		NoVisitors: "Nessun visitatore in questo periodo.",
 		Stop:       "Non ricevere più questo rapporto", StopTitle: "Interrompi questo rapporto", StopBody: "Interrompere l’invio di questo rapporto a %s?", StopButton: "Interrompi", Stopped: "Fatto. Questo rapporto non sarà più inviato a %s.",
-		SentBy: "Inviato da %s", AI: "Assistenti IA", Thousands: ".",
+		SentBy: "Inviato da %s", AI: "Assistenti IA", YourWeek: "La tua settimana", OpenWeek: "Apri la tua settimana", Thousands: ".",
 		Months: [12]string{"gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"},
 	},
 	"nl": {
@@ -104,7 +106,7 @@ var words = map[string]Words{
 		VsWeek: "ten opzichte van de week ervoor", VsMonth: "ten opzichte van de maand ervoor", Up: "omhoog", Down: "omlaag", Same: "ongeveer gelijk", New: "nieuw",
 		NoVisitors: "Er waren geen bezoekers in deze periode.",
 		Stop:       "Dit rapport niet meer ontvangen", StopTitle: "Dit rapport stoppen", StopBody: "Dit rapport niet meer naar %s sturen?", StopButton: "Stoppen", Stopped: "Klaar. Dit rapport wordt niet meer naar %s gestuurd.",
-		SentBy: "Verzonden door %s", AI: "AI-assistenten", Thousands: ".",
+		SentBy: "Verzonden door %s", AI: "AI-assistenten", YourWeek: "Jouw week", OpenWeek: "Open je week", Thousands: ".",
 		Months: [12]string{"jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"},
 	},
 }
