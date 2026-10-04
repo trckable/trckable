@@ -82,6 +82,13 @@ createServer(async (req, res) => {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(`<!doctype html><html><head><title>Installed</title>${tag}</head><body><h1>Installed</h1></body></html>`)
       return
     }
+    // A page carrying an online widget's corner script, as Settings → Widgets writes it.
+    const corner = url.pathname.match(/^\/online\/(w_[a-z0-9]+)$/)
+    if (corner) {
+      const tag = `<script async src="${TRCKABLE}/js/${corner[1]}.online.js"></script>`
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(`<!doctype html><html><head><title>Customer</title></head><body><h1>Hello</h1>${tag}</body></html>`)
+      return
+    }
     const m = url.pathname.match(/^\/([rp])\/[\w-]+\/(.*)$/)
     if (m) {
       const [, mode, rest] = m
