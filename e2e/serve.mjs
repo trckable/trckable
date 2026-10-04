@@ -89,6 +89,22 @@ createServer(async (req, res) => {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(`<!doctype html><html><head><title>Customer</title></head><body><h1>Hello</h1>${tag}</body></html>`)
       return
     }
+    // A sign-up form carrying a site's own script, with the heatmaps module in it
+    // when the site has it on (heatmaps.spec.ts: what is typed is never sent).
+    const heat = url.pathname.match(/^\/heat\/(tkb_[a-z0-9]+)\/[\w-]+$/)
+    if (heat) {
+      const form = ['email', 'full_name', 'company', 'secret', 'card'].map((n) => `<input name="${n}" type="${n === 'secret' ? 'password' : 'text'}" autocomplete="off">`).join('\n      ')
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(`<!doctype html><html><head><title>Sign up</title>
+  <script defer src="${TRCKABLE}/js/${heat[1]}.js" data-dev></script></head><body><main id="page">
+    <button class="join" type="button">Join</button>
+    <div class="card" style="cursor:pointer">A card that does nothing</div>
+    <form id="signup" action="/heat/${heat[1]}/thanks">
+      ${form}
+      <button type="submit">Go</button>
+    </form>
+  </main></body></html>`)
+      return
+    }
     const m = url.pathname.match(/^\/([rp])\/[\w-]+\/(.*)$/)
     if (m) {
       const [, mode, rest] = m

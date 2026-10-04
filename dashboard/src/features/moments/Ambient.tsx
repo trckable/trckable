@@ -8,6 +8,8 @@ import { useEffect, useState } from 'react'
 import type { Point, Site } from '../../lib/api'
 import { todayIn } from '../../lib/dates'
 import { canChange } from '../../lib/me'
+import { heatDone, useHeatAsk } from '../heatmap/guide'
+import { HeatGuide } from '../heatmap/HeatGuide'
 import { readView, useLocation } from '../../lib/url'
 import { Discover } from './Discover'
 import { inFirstWeek } from './firstWeek'
@@ -38,11 +40,16 @@ function Say({ site, series }: { site: Site; series: readonly Point[] }) {
     setGone(true)
   }
   const items = found?.items
+  // A busy page, with heatmaps off: the one card of the day when there is nothing else to say.
+  const wantsHeat = !!found && !found.items.length && !gone && canChange() && !heatDone(site.id)
+  const heat = useHeatAsk(site.id, wantsHeat)
   useEffect(() => {
     if (items?.length) markShown(site.id, today, items.map((p) => p.id))
   }, [items]) // eslint-disable-line react-hooks/exhaustive-deps -- once the findings are in
   if (gone || !found) return null
   if (found.items.length) return <OneThing site={site} found={found} since={seen.prev} series={series} onAway={away} />
   if (!canChange()) return null
+  if (wantsHeat && !heat) return null // not yet known: the other card would only be swapped for it
+  if (heat?.ask && heat.path) return <HeatGuide site={site} path={heat.path} views={heat.views ?? 0} query={{ from: today, to: today }} onAway={away} />
   return <Discover site={site} today={today} fresh={fresh} onAway={away} />
 }

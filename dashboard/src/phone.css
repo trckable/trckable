@@ -231,6 +231,9 @@
   .bl-cols {
     padding: 0 10px 2px;
   }
+  .bl.has-act .bl-cols {
+    padding-right: 36px;
+  }
   .bl-row {
     align-content: center;
     min-height: var(--ph-row);
