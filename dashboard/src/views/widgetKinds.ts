@@ -59,6 +59,7 @@ export const partsOf = (look: WidgetLook) => (look.kind === 'online' && modeOf(l
 // The look a widget is drawn from, as the preview page takes it.
 export const previewUrl = (site: string, l: WidgetLook) => {
   const q = new URLSearchParams({ kind: l.kind, theme: l.theme, accent: l.accent, radius: String(l.radius), shows: l.shows.join(','), lang: l.lang })
+  if (!l.brand) q.set('brand', '0')
   for (const [k, v] of Object.entries(l.texts)) if (v) q.set('text.' + k, v)
   return `/api/v1/sites/${encodeURIComponent(site)}/widgets/preview?${q.toString()}`
 }
@@ -125,6 +126,12 @@ export const defaultName = (look: WidgetLook) => (look.kind === 'online' ? MODE_
 export const STAGE = { title: 'Widget preview', tone: 'Page tone', view: 'View', light: 'Light', dark: 'Dark', alone: 'Alone', page: 'On a page' }
 
 export const TEXT = {
+  pageTitle: 'Widgets',
+  pageHint: 'A small card with live numbers, for your own pages. It runs no script and sets no cookie, and only the numbers it shows are public.',
+  newWidget: 'New widget',
+  ready: 'Widget ready: copy it onto your page',
+  done: 'Done',
+  none: 'No widgets yet',
   mode: 'Mode',
   show: 'Show',
   theme: 'Theme',
@@ -148,6 +155,7 @@ export const TEXT = {
   saved: 'Widget saved. Pages that show it follow within a minute',
   language: 'Language',
   texts: 'Texts',
+  credit: 'Show "Counted by trckable"',
   textsHint: 'Leave empty for the translated default',
   frame: 'Paste this where the card should appear',
   corner: 'Or paste this once, to float it in a corner of every page. Visitors can close it',

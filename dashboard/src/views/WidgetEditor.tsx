@@ -28,7 +28,7 @@ export function WidgetEditor({ site, w, onClose, onSaved }: { site: Site; w: Wid
   }
   return (
     <Modal label={TEXT.editTitle} className="wg-modal" onClose={busy ? undefined : onClose}>
-      <DialogHead heading={w.name} hint={TEXT.editHint} />
+      <DialogHead heading={w.name} help={TEXT.editHint} />
       <WidgetStudio
         site={site}
         look={look}
