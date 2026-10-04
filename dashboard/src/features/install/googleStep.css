@@ -1,0 +1,31 @@
+/* The Google step of the import dialog. Tokens only. */
+.ga-step {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 14px;
+}
+.ga-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ga-pick select {
+  flex: 1;
+  min-width: 0;
+}
+.ga-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ga-progress progress {
+  flex: 1;
+  height: 6px;
+  accent-color: var(--accent);
+}
+.ga-error {
+  margin: 0;
+  color: var(--down);
+  font-size: 13px;
+}

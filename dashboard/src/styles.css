@@ -2836,3 +2836,11 @@ button.kpi-live:hover .label::after {
 .chart-wrap:not([data-cut='on']) .chart-unknown {
   visibility: hidden;
 }
+
+/* The mark under the chart when days in it were imported. */
+.imported-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: default;
+}

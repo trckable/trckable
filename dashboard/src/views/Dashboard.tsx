@@ -42,6 +42,7 @@ import { liveShown } from '../features/live/liveShown'
 import { useNotes } from '../features/notes/useNotes'
 import { jump } from '../features/notes/jump'
 import { ChartFoot } from '../features/overview/ChartFoot'
+import { GaReturn } from '../features/install/GaReturn'
 import { Loading } from '../components/loading/Loading'
 import { Cards } from '../features/cards/Cards'
 import type { CardsCtx } from '../features/cards/ctx'
@@ -503,11 +504,10 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {!liveView && <>
       {sharing && <Suspense fallback={null}><ShareDialog site={site} sites={sites} onClose={() => setSharing(false)} /></Suspense>}
       {naming && <Suspense fallback={null}><SaveViewHost site={site.id} query={current} onClose={() => setNaming(false)} onSaved={loadSegments} /></Suspense>}
-
       {error && <Notice kind="error" text={error} />}
       {warming && <Notice kind="warming" />}
-
       {showInstall && <Suspense fallback={null}><Install site={site} visits={stream.visits} /></Suspense>}
+      {!isShared() && <GaReturn site={site} />}
       <MilestonesSlot ms={ms} site={site} quiet={showInstall} revenue={mods === null || shows(mods, 'cards', 'revenue')} />
       {!showInstall && !isShared() && siteState(site) === 'stopped' && <StoppedNotice site={site} />}
 
@@ -602,7 +602,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         )}
         <ChartFoot
           notes={!showInstall && !isShared() && notesOn && (full || notes.length > 0) ? { count: notes.length, onAdd: isViewer() ? undefined : () => setNoteFor(view.day ?? today), onOpen: () => setNotesOpen(true) } : undefined}
-          day={canScrub && scrubbing && view.day ? fmtDay(view.day, { weekday: true }) : undefined}
+          day={canScrub && scrubbing && view.day ? fmtDay(view.day, { weekday: true }) : undefined} imported={cur?.imported}
           onBack={() => { setStory('off'); setPlaying(false); setHourAt(null); setDayIdx(null) }}
         />
       </div>
