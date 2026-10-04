@@ -10,7 +10,7 @@ func TestNameGroupsAReferrersHosts(t *testing.T) {
 		"l.facebook.com": "Facebook", "m.facebook.com": "Facebook", "www.reddit.com": "Reddit", "news.ycombinator.com": "Hacker News",
 		"t.co": "X", "blog.example.org": "example.org",
 	} {
-		if got := Name(host); got != want && !(host == "blog.example.org" && got == "blog.example.org") {
+		if got := Name(host); got != want {
 			t.Errorf("Name(%q) = %q, want %q", host, got, want)
 		}
 	}
