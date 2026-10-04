@@ -6,7 +6,9 @@ package api
 // account the owner adds to Search Console as a read-only user.
 
 import (
+	"context"
 	"errors"
+	"maps"
 	"net/http"
 	"strings"
 	"sync"
@@ -319,27 +321,35 @@ func (a *API) searchReport(w http.ResponseWriter, r *http.Request) {
 			ignored = append(ignored, f.Dim)
 		}
 	}
-	key := strings.Join([]string{site, c.Property, dim, from.Format("2006-01-02"), last.Format("2006-01-02"), q.Page, q.Device}, "|")
+	body, status, err := a.searchBody(r.Context(), site, c, loc, q, from, last)
+	if err != nil {
+		fail(w, status, err.Error())
+		return
+	}
+	body["ignored_filters"] = ignored
+	writeJSON(w, http.StatusOK, body)
+}
+
+// searchBody is Google's answer for one query: from the hour's cache, else
+// asked now. The map it returns is the caller's own copy. On failure the
+// status says whose fault it was.
+func (a *API) searchBody(ctx context.Context, site string, c sqlite.SearchConsole, loc *time.Location, q gsc.Query, from, last time.Time) (map[string]any, int, error) {
+	key := strings.Join([]string{site, c.Property, q.Dimension, from.Format("2006-01-02"), last.Format("2006-01-02"), q.Page, q.Device}, "|")
 	st := a.searchInit()
 	st.mu.Lock()
 	if ans, ok := st.answers[key]; ok && a.Now().Sub(ans.at) < searchTTL {
 		st.mu.Unlock()
-		body := ans.body
-		body["ignored_filters"] = ignored
-		writeJSON(w, http.StatusOK, body)
-		return
+		return maps.Clone(ans.body), 0, nil
 	}
 	st.mu.Unlock()
 	cl, err := a.gscFor(c)
 	if err != nil {
-		fail(w, http.StatusBadRequest, err.Error())
-		return
+		return nil, http.StatusBadRequest, err
 	}
-	rows, err := cl.Search(r.Context(), c.Property, q)
-	_ = a.Ctl.SearchConsoleStatus(r.Context(), site, err)
+	rows, err := cl.Search(ctx, c.Property, q)
+	_ = a.Ctl.SearchConsoleStatus(ctx, site, err)
 	if err != nil {
-		fail(w, http.StatusBadGateway, err.Error())
-		return
+		return nil, http.StatusBadGateway, err
 	}
 	var clicks, impressions float64
 	for _, row := range rows {
@@ -347,7 +357,7 @@ func (a *API) searchReport(w http.ResponseWriter, r *http.Request) {
 		impressions += row.Impressions
 	}
 	body := map[string]any{
-		"property": c.Property, "dim": dim, "rows": rows,
+		"property": c.Property, "dim": q.Dimension, "rows": rows,
 		"from": from.Format("2006-01-02"), "to": last.Format("2006-01-02"),
 		"clicks": clicks, "impressions": impressions,
 		// Google revises its last two or three days; the card marks them.
@@ -356,10 +366,5 @@ func (a *API) searchReport(w http.ResponseWriter, r *http.Request) {
 	st.mu.Lock()
 	st.answers[key] = searchAnswer{at: a.Now(), body: body}
 	st.mu.Unlock()
-	out := map[string]any{}
-	for k, v := range body {
-		out[k] = v
-	}
-	out["ignored_filters"] = ignored
-	writeJSON(w, http.StatusOK, out)
+	return maps.Clone(body), 0, nil
 }

@@ -21,11 +21,13 @@ export interface WeeklyEmail {
   toggle: (done?: () => void) => void
 }
 
-export function useWeeklyEmail(site: Site): WeeklyEmail {
+/** `wanted` false asks nothing: for a card that is not going to show it. */
+export function useWeeklyEmail(site: Site, wanted = true): WeeklyEmail {
   const [list, setList] = useState<Alert[] | null>(null)
   const [target, setTarget] = useState('')
   const [busy, setBusy] = useState(false)
   useEffect(() => {
+    if (!wanted) return
     let live = true
     Promise.all([more.alerts(site.id), more.me().catch(() => null)])
       .then(([r, me]) => {
@@ -37,7 +39,7 @@ export function useWeeklyEmail(site: Site): WeeklyEmail {
     return () => {
       live = false
     }
-  }, [site.id])
+  }, [site.id, wanted])
 
   const weekly = list?.find((a) => a.kind === 'weekly')
   const on = !!weekly?.enabled
@@ -58,5 +60,5 @@ export function useWeeklyEmail(site: Site): WeeklyEmail {
       .catch((e: unknown) => fail(e))
       .finally(() => setBusy(false))
   }
-  return { ready: list !== null, on, deliverable: !!target, busy, toggle }
+  return { ready: !wanted || list !== null, on, deliverable: !!target, busy, toggle }
 }

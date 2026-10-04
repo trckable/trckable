@@ -5,7 +5,7 @@ import { markUsed, wasUsed } from './store'
 
 afterEach(() => localStorage.clear())
 
-const none: Known = { replayed: false, fullOpened: false, weekly: false, search: false, exclude: false }
+const none: Known = { replayed: false, fullOpened: false, weekly: false, search: false, exclude: false, ai: false, fresh: true }
 const fresh = { done: [] }
 
 describe('a site\'s first week', () => {
@@ -72,6 +72,38 @@ describe('the card about your own visits', () => {
     remember('tkb_a', { ...keptOf('tkb_a'), done: ['exclude'], day: '2026-10-02', id: 'exclude' })
     expect(keptOf('tkb_a').traffic).toBe('2026-10-02')
     expect(eligible(asked, keptOf('tkb_a'))).not.toContain('exclude')
+  })
+})
+
+describe('the card about AI', () => {
+  const seen = { ...none, ai: true }
+
+  it('only when an AI assistant has sent a visitor or an AI crawler has read the site', () => {
+    expect(eligible(none, fresh)).not.toContain('ai')
+    expect(eligible(seen, fresh)).toEqual(['ai', 'replay', 'full', 'weekly', 'search'])
+  })
+
+  it('comes before the getting-started cards, and after the one about your own visits', () => {
+    expect(eligible({ ...seen, exclude: true }, fresh).slice(0, 2)).toEqual(['exclude', 'ai'])
+  })
+
+  it('is the one card of its day, and the next one waits until tomorrow', () => {
+    expect(pick(seen, fresh, '2026-10-02')).toBe('ai')
+    const away = { done: ['ai' as const], day: '2026-10-02', id: 'ai' as const }
+    expect(pick(seen, away, '2026-10-02')).toBeNull()
+    expect(pick(seen, away, '2026-10-03')).toBe('replay')
+  })
+
+  it('never again once put away', () => {
+    expect(eligible(seen, { done: ['ai'] })).not.toContain('ai')
+    expect(pick(seen, { done: ['ai'] }, '2026-12-01')).toBe('replay')
+  })
+
+  it('is for a site of any age: past its first week only this one is left', () => {
+    const old = { ...none, fresh: false }
+    expect(eligible(old, fresh)).toEqual([])
+    expect(eligible({ ...old, ai: true }, fresh)).toEqual(['ai'])
+    expect(pick({ ...old, ai: true }, { done: ['ai'] }, '2026-12-01')).toBeNull()
   })
 })
 

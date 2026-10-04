@@ -73,6 +73,15 @@ test('tracker, npm package, specs and the Dockerfile', () => {
   assert.equal(d.e2e, '')
 })
 
+test('the deploy templates and the chart are checked by their own workflow', () => {
+  for (const f of ['deploy/compose.yml', 'deploy/umbrel/trckable/docker-compose.yml', 'deploy/dokploy/template.toml', 'charts/trckable/values.yaml', 'scripts/deploy-check.sh', '.github/workflows/deploy-check.yml']) {
+    const o = out(f)
+    assert.equal(o.full, 'false', f)
+    assert.equal(o.e2e, '', f)
+    assert.equal(o.image, 'false', f)
+  }
+})
+
 test('anything unknown runs everything', () => {
   for (const f of ['.github/workflows/ci.yml', 'pnpm-lock.yaml', 'scripts/facts.mjs', 'something/new.txt']) {
     const o = out('dashboard/src/features/notes/N.tsx', f)

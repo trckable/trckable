@@ -43,6 +43,6 @@ function Say({ site, series }: { site: Site; series: readonly Point[] }) {
   }, [items]) // eslint-disable-line react-hooks/exhaustive-deps -- once the findings are in
   if (gone || !found) return null
   if (found.items.length) return <OneThing site={site} found={found} since={seen.prev} series={series} onAway={away} />
-  if (!canChange() || !fresh) return null
-  return <Discover site={site} today={today} onAway={away} />
+  if (!canChange()) return null
+  return <Discover site={site} today={today} fresh={fresh} onAway={away} />
 }
