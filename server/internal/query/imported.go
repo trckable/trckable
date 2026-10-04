@@ -54,6 +54,14 @@ func firstRecorded(ctx context.Context, conn *sql.Conn, site string) (sql.NullTi
 
 // mergeImported adds the imported days to a finished report.
 func mergeImported(ctx context.Context, conn *sql.Conn, p Params, res *Result) error {
+	// Most sites never imported anything: ask the small table before the big one.
+	var any bool
+	if err := conn.QueryRowContext(ctx, `SELECT count(*) > 0 FROM imported_daily WHERE site_id = ?`, p.Site).Scan(&any); err != nil {
+		return fmt.Errorf("imported days: %w", err)
+	}
+	if !any {
+		return nil
+	}
 	first, err := firstRecorded(ctx, conn, p.Site)
 	if err != nil {
 		return fmt.Errorf("imported days: %w", err)

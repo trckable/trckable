@@ -245,7 +245,7 @@ func newManager(t *testing.T) (*ga.Manager, *gatest.Fake, *memSink) {
 	sink := &memSink{}
 	m := &ga.Manager{Client: c, Sink: sink}
 	t.Cleanup(m.Stop)
-	m.Hold("s1", "u1", ga.NewSecret(gatest.AccessToken), time.Now().Add(time.Hour))
+	m.Hold("a1", "s1", "u1", ga.NewSecret(gatest.AccessToken), time.Now().Add(time.Hour))
 	return m, f, sink
 }
 
@@ -264,7 +264,7 @@ func TestImportRunsAndRunningItAgainChangesNothing(t *testing.T) {
 	if _, ok := m.Token("s1", "u1"); ok {
 		t.Error("the token outlived the import")
 	}
-	m.Hold("s1", "u1", ga.NewSecret(gatest.AccessToken), time.Now().Add(time.Hour))
+	m.Hold("a1", "s1", "u1", ga.NewSecret(gatest.AccessToken), time.Now().Add(time.Hour))
 	if _, err := m.Start("s1", "u1", "properties/111", "2024-01-01", "2024-04-30", false); err != nil {
 		t.Fatal(err)
 	}
@@ -282,7 +282,7 @@ func TestQuotaPausesAndResumeSkipsWhatIsDone(t *testing.T) {
 	}
 	wait(t, m, "s1", ga.Done)
 	// Start over with the first chunk done and Google throttling.
-	m.Hold("s1", "u1", ga.NewSecret(gatest.AccessToken), time.Now().Add(time.Hour))
+	m.Hold("a1", "s1", "u1", ga.NewSecret(gatest.AccessToken), time.Now().Add(time.Hour))
 	f.Throttle = 1000
 	f.Requests = 0
 	if _, err := m.Start("s1", "u1", "properties/111", "2024-01-01", "2024-07-31", false); err != nil {
@@ -347,7 +347,7 @@ func TestAnExpiredTokenIsNotUsed(t *testing.T) {
 	c, _ := newClient(t)
 	m := &ga.Manager{Client: c, Sink: &memSink{}}
 	t.Cleanup(m.Stop)
-	m.Hold("s1", "u1", ga.NewSecret(gatest.AccessToken), time.Now().Add(-time.Minute))
+	m.Hold("a1", "s1", "u1", ga.NewSecret(gatest.AccessToken), time.Now().Add(-time.Minute))
 	if _, err := m.Start("s1", "u1", "properties/111", "2024-01-01", "2024-01-10", false); err != ga.ErrNotSignedIn {
 		t.Errorf("%v", err)
 	}
@@ -365,7 +365,7 @@ func TestTheTokenIsNeverLoggedOrShownByAnImport(t *testing.T) {
 	}
 	s := wait(t, m, "s1", ga.Paused)
 	sink.fail = nil
-	m.Hold("s1", "u1", ga.NewSecret(gatest.AccessToken), time.Now().Add(time.Hour))
+	m.Hold("a1", "s1", "u1", ga.NewSecret(gatest.AccessToken), time.Now().Add(time.Hour))
 	f.Denied = false
 	js, _ := json.Marshal(s)
 	if strings.Contains(string(js), "FAKE-ACCESS") || strings.Contains(logs.String(), "FAKE-ACCESS") || strings.Contains(logs.String(), gatest.ClientSecret) {
@@ -397,4 +397,36 @@ func TestOnlyOneImportPerSite(t *testing.T) {
 		t.Errorf("a second import of the same site: %v", err)
 	}
 	close(block)
+}
+
+func TestHeldSignInsAreBoundedPerAccountAndKeptPerPerson(t *testing.T) {
+	m := &ga.Manager{Client: &ga.Client{}, Sink: &memSink{}}
+	t.Cleanup(m.Stop)
+	exp := time.Now().Add(time.Hour)
+	// Two owners of one site do not replace each other.
+	m.Hold("a1", "s1", "u1", ga.NewSecret("t1"), exp)
+	m.Hold("a1", "s1", "u2", ga.NewSecret("t2"), exp)
+	if tok, ok := m.Token("s1", "u1"); !ok || tok.Reveal() != "t1" {
+		t.Error("the second owner's sign-in replaced the first's")
+	}
+	if tok, ok := m.Token("s1", "u2"); !ok || tok.Reveal() != "t2" {
+		t.Error("the second owner has no sign-in")
+	}
+	// One account holds ten; the oldest makes room, and another account is untouched.
+	m.Hold("b1", "sb", "ub", ga.NewSecret("tb"), exp)
+	for i := 0; i < 12; i++ {
+		if !m.Hold("a1", fmt.Sprintf("site%d", i), "u1", ga.NewSecret("x"), exp) {
+			t.Fatal("a sign-in was refused although the account may drop its oldest")
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if _, ok := m.Token("s1", "u1"); ok {
+		t.Error("the oldest sign-in was kept past the cap")
+	}
+	if _, ok := m.Token("site11", "u1"); !ok {
+		t.Error("the newest sign-in was dropped")
+	}
+	if _, ok := m.Token("sb", "ub"); !ok {
+		t.Error("one account's sign-ins pushed out another's")
+	}
 }

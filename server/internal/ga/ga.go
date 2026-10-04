@@ -397,7 +397,19 @@ func (c *Client) pace() time.Duration {
 	return c.Pace
 }
 
+// maxMetric bounds a number from Google: no real count is larger, and a
+// sum of many never overflows.
+const maxMetric = 1_000_000_000_000
+
 func atou(s string) uint64 {
+	n := atouRaw(s)
+	if n > maxMetric {
+		return maxMetric
+	}
+	return n
+}
+
+func atouRaw(s string) uint64 {
 	n, err := strconv.ParseUint(strings.TrimSpace(s), 10, 64)
 	if err != nil {
 		f, ferr := strconv.ParseFloat(s, 64)

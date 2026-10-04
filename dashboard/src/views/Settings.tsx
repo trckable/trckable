@@ -25,7 +25,8 @@ import { AlertsTab } from '../features/reports/AlertsTab'
 import { SearchSettings } from './Search'
 import { MODULE_WHY, moduleOf } from './settingsModules'
 import { NotesSettings } from '../features/notes/NotesSettings'
-import { MilestonesSetting } from '../features/milestones/MilestonesSetting'; import { ImportSetting } from '../features/install/ImportSetting'
+import { MilestonesSetting } from '../features/milestones/MilestonesSetting'
+import { ImportSetting } from '../features/install/ImportSetting'
 import { DeleteSite } from './Sites'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import './Settings.css'
@@ -100,7 +101,6 @@ const GROUPS: { name: string; tabs: TabID[] }[] = [
   { name: 'Data', tabs: ['search', 'privacy', 'alerts'] },
   { name: 'Instance', tabs: ['health'] },
 ]
-
 /** A site's settings as a dialog over its dashboard: the sections on the
  *  left, the section on the right. Opening it does not change the address
  *  (lib/settings.ts); closing it leaves the dashboard exactly as it was. */

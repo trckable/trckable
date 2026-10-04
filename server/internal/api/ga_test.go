@@ -432,3 +432,14 @@ func TestGAIsOffWithoutAnOAuthClient(t *testing.T) {
 	}
 	r.api.GA = nil
 }
+
+func TestGAPropertiesWithoutAnOAuthClientIsNotAPanic(t *testing.T) {
+	r := newGA(t)
+	r.api.GA = nil
+	if code, out := do(t, r.owner, "GET", r.path("/properties"), ""); code != http.StatusNotFound {
+		t.Errorf("properties without a client: %d %v", code, out)
+	}
+	if code, _ := r.importIt(t, r.owner, "properties/111", false); code != http.StatusNotFound {
+		t.Errorf("import without a client: %d", code)
+	}
+}

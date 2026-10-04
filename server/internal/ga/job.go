@@ -51,10 +51,19 @@ type Snapshot struct {
 	RetryAt  time.Time `json:"retry_at,omitzero"`
 }
 
+// perAccount is how many sign-ins one account may hold at once; the oldest
+// is dropped for a newer one. overall bounds the whole server.
+const (
+	perAccount = 10
+	overall    = 4096
+)
+
 type conn struct {
-	user   string
-	tok    Secret
-	expiry time.Time
+	account string
+	made    time.Time
+	user    string
+	tok     Secret
+	expiry  time.Time
 }
 
 type job struct {
@@ -77,7 +86,7 @@ type Manager struct {
 	Changed func(site string)
 
 	mu    sync.Mutex
-	conns map[string]*conn // by site
+	conns map[string]*conn // by site and person: two owners of a site do not replace each other
 	jobs  map[string]*job  // by site
 	wg    sync.WaitGroup
 }
@@ -89,24 +98,44 @@ func (m *Manager) now() time.Time {
 	return time.Now()
 }
 
+func connKey(site, user string) string { return site + "\x00" + user }
+
 // Hold keeps a person's access token for a site, for the import and nothing
-// else. A second sign-in replaces the first.
-func (m *Manager) Hold(site, user string, tok Secret, expiry time.Time) {
+// else, and says whether it did: an account holds a few at a time (the
+// oldest makes room), and the server holds a bounded number.
+func (m *Manager) Hold(account, site, user string, tok Secret, expiry time.Time) bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.conns == nil {
 		m.conns = map[string]*conn{}
 	}
-	// Bounded: a connection nobody used is dropped before the next is kept.
+	now := m.now()
 	for k, c := range m.conns {
-		if m.now().After(c.expiry) {
+		if now.After(c.expiry) {
 			delete(m.conns, k)
 		}
 	}
-	if len(m.conns) >= 256 {
-		return
+	key := connKey(site, user)
+	if _, again := m.conns[key]; !again {
+		if len(m.conns) >= overall {
+			return false
+		}
+		n, oldest := 0, ""
+		for k, c := range m.conns {
+			if c.account != account {
+				continue
+			}
+			n++
+			if oldest == "" || c.made.Before(m.conns[oldest].made) {
+				oldest = k
+			}
+		}
+		if n >= perAccount {
+			delete(m.conns, oldest)
+		}
 	}
-	m.conns[site] = &conn{user: user, tok: tok, expiry: expiry}
+	m.conns[key] = &conn{account: account, made: now, user: user, tok: tok, expiry: expiry}
+	return true
 }
 
 // Token is the held token of this person for this site; false for another
@@ -114,7 +143,7 @@ func (m *Manager) Hold(site, user string, tok Secret, expiry time.Time) {
 func (m *Manager) Token(site, user string) (Secret, bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	c := m.conns[site]
+	c := m.conns[connKey(site, user)]
 	if c == nil || c.user != user || m.now().After(c.expiry) {
 		return Secret{}, false
 	}
@@ -198,9 +227,7 @@ func (m *Manager) Resume(site, user string) (Snapshot, error) {
 func (m *Manager) Disconnect(site, user string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if c := m.conns[site]; c != nil && c.user == user {
-		delete(m.conns, site)
-	}
+	delete(m.conns, connKey(site, user))
 	if j := m.jobs[site]; j != nil && j.user == user {
 		j.cancel()
 		if j.snap.Status == Running || j.snap.Status == Paused {
@@ -252,9 +279,7 @@ func (m *Manager) finish(j *job, status, code string, retry time.Time, drop bool
 	}
 	j.snap.Status, j.snap.Code, j.snap.RetryAt = status, code, retry
 	if drop {
-		if c := m.conns[j.site]; c != nil && c.user == j.user {
-			delete(m.conns, j.site)
-		}
+		delete(m.conns, connKey(j.site, j.user))
 	}
 }
 
@@ -305,7 +330,7 @@ func (m *Manager) run(ctx context.Context, j *job, tok Secret, resume bool) {
 func (m *Manager) expiryOf(j *job) time.Time {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if c := m.conns[j.site]; c != nil && c.user == j.user {
+	if c := m.conns[connKey(j.site, j.user)]; c != nil {
 		return c.expiry
 	}
 	return time.Time{}

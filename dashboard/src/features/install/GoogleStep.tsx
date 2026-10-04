@@ -17,7 +17,8 @@ export function GoogleStep({ site }: { site: string }) {
   const property = picked || job?.property || ga.properties?.[0]?.id || ''
   const busy = job?.status === 'running'
   const code = ga.error || job?.code || ''
-  const message = code ? (t.errors[code] ?? t.errors.other) : ''
+  const known = Object.hasOwn(t.errors, code) ? t.errors[code] : t.errors.other
+  const message = code ? known : ''
   return (
     <div className="ga-step">
       {message && (

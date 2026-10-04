@@ -176,7 +176,10 @@ func (a *API) gaCallback(w http.ResponseWriter, r *http.Request) {
 		gaBack(w, info.Domain, "failed")
 		return
 	}
-	a.GA.Hold(st.Site, u.ID, tok, expiry)
+	if !a.GA.Hold(p.account, st.Site, u.ID, tok, expiry) {
+		gaBack(w, info.Domain, "failed")
+		return
+	}
 	gaBack(w, info.Domain, "")
 }
 
@@ -186,8 +189,12 @@ func (a *API) gaProperties(w http.ResponseWriter, r *http.Request) {
 	if u == nil {
 		return
 	}
+	if !a.gaReady() {
+		fail(w, http.StatusNotFound, "importing from Google Analytics is not set up on this server")
+		return
+	}
 	tok, ok := a.GA.Token(r.PathValue("site"), u.ID)
-	if !a.gaReady() || !ok {
+	if !ok {
 		fail(w, http.StatusConflict, "sign in with Google first")
 		return
 	}

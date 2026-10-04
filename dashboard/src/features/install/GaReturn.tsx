@@ -2,13 +2,14 @@
 // opens on its own. Lazy: the dialog is not in the first load.
 import { lazy, Suspense, useState } from 'react'
 import type { Site } from '../../lib/api'
+import { canChange } from '../../lib/me'
 
 const ImportDialog = lazy(() => import('./ImportDialog').then((m) => ({ default: m.ImportDialog })))
 
 const returning = () => new URLSearchParams(location.search).get('import') === 'ga'
 
 export function GaReturn({ site }: { site: Site }) {
-  const [open, setOpen] = useState(returning)
+  const [open, setOpen] = useState(() => canChange() && returning())
   if (!open) return null
   const close = () => {
     const q = new URLSearchParams(location.search)

@@ -506,8 +506,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {naming && <Suspense fallback={null}><SaveViewHost site={site.id} query={current} onClose={() => setNaming(false)} onSaved={loadSegments} /></Suspense>}
       {error && <Notice kind="error" text={error} />}
       {warming && <Notice kind="warming" />}
-
-      {showInstall && <Suspense fallback={null}><Install site={site} visits={stream.visits} /></Suspense>}{!isShared() && <GaReturn site={site} />}
+      {showInstall && <Suspense fallback={null}><Install site={site} visits={stream.visits} /></Suspense>}
+      {!isShared() && <GaReturn site={site} />}
       <MilestonesSlot ms={ms} site={site} quiet={showInstall} revenue={mods === null || shows(mods, 'cards', 'revenue')} />
       {!showInstall && !isShared() && siteState(site) === 'stopped' && <StoppedNotice site={site} />}
 
