@@ -15,6 +15,7 @@ import (
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/gsc"
 	"github.com/trckable/trckable/server/internal/modules"
+	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -297,7 +298,7 @@ func (a *API) searchReport(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, "dim must be query or page")
 		return
 	}
-	filters, err := parseFilters(v["f"])
+	filters, err := a.filtersOf(r.Context(), site, v)
 	if err != nil {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
@@ -305,10 +306,14 @@ func (a *API) searchReport(w http.ResponseWriter, r *http.Request) {
 	q := gsc.Query{From: from, To: last, Dimension: dim, Limit: 100}
 	var ignored []string
 	for _, f := range filters {
-		switch f.Dim {
-		case "page", "entry_page":
+		// Google's data has one page and one device to ask about: "is not" and
+		// a second value are listed back as ignored, like a dimension it lacks.
+		switch {
+		case f.Op == query.OpNot || ((f.Dim == "page" || f.Dim == "entry_page") && q.Page != "") || (f.Dim == "device" && q.Device != ""):
+			ignored = append(ignored, f.Dim)
+		case f.Dim == "page" || f.Dim == "entry_page":
 			q.Page = f.Value
-		case "device":
+		case f.Dim == "device":
 			q.Device = strings.ToUpper(f.Value)
 		default:
 			ignored = append(ignored, f.Dim)
