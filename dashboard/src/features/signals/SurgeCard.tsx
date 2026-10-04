@@ -26,8 +26,8 @@ const SurgeModal = lazy(() => import('./SurgeModal')) // the story: fetched when
 
 const t = signals.surge
 
-export default function SurgeCard({ site }: { site: { id: string; domain: string; timezone: string } }) {
-  const surge = useSurge(site.id)
+export default function SurgeCard({ site, first }: { site: { id: string; domain: string; timezone: string }; first?: number }) {
+  const surge = useSurge(site.id, first)
   useNotice(surge, site.domain)
   if (!surge) return null
   return <Card key={surge.id} surge={surge} tz={site.timezone} />

@@ -5,8 +5,10 @@ import { useEffect, useState } from 'react'
 import { surgeApi, type Surge } from './surge'
 
 const MINUTE = 60_000
+/** The first look waits a little, so it is not one of the requests a page's first load makes. */
+export const FIRST_LOOK_MS = 8000
 
-export function useSurge(site: string): Surge | null {
+export function useSurge(site: string, first = FIRST_LOOK_MS): Surge | null {
   const [got, setGot] = useState<{ site: string; surge: Surge | null } | null>(null)
   useEffect(() => {
     const ctl = new AbortController()
@@ -17,14 +19,15 @@ export function useSurge(site: string): Surge | null {
         .then((surge) => setGot({ site, surge }))
         .catch(() => {})
     }
-    ask()
+    const soon = setTimeout(ask, first)
     const timer = setInterval(ask, MINUTE)
     document.addEventListener('visibilitychange', ask)
     return () => {
       ctl.abort()
+      clearTimeout(soon)
       clearInterval(timer)
       document.removeEventListener('visibilitychange', ask)
     }
-  }, [site])
+  }, [site, first])
   return got?.site === site ? got.surge : null
 }

@@ -88,7 +88,7 @@ const answer = (s: Surge | null) =>
   vi.stubGlobal('fetch', () => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ surge: s }) }))
 const draw = async () => {
   await act(() => {
-    root.render(<SurgeCard site={{ id: 'tkb_x', domain: 'a.com', timezone: 'UTC' }} />)
+    root.render(<SurgeCard site={{ id: 'tkb_x', domain: 'a.com', timezone: 'UTC' }} first={0} />)
     return Promise.resolve()
   })
   await act(() => Promise.resolve())
