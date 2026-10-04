@@ -264,8 +264,9 @@ func (a *API) annotations(w http.ResponseWriter, r *http.Request) {
 
 // noteIn is a note as the dashboard sends it.
 type noteIn struct {
-	Day  string `json:"day"`
-	Text string `json:"text"`
+	Day     string `json:"day"`
+	Text    string `json:"text"`
+	Planned bool   `json:"planned"`
 }
 
 // authorOf is the person a note is written by: empty for the automation
@@ -287,7 +288,11 @@ func (a *API) addAnnotation(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, "bad request")
 		return
 	}
-	note, err := a.Ctl.AddAnnotation(r.Context(), site, authorOf(r), in.Day, in.Text)
+	if in.Planned && in.Day < a.today(r, site) {
+		fail(w, http.StatusBadRequest, "a plan is for today or a day to come")
+		return
+	}
+	note, err := a.Ctl.AddAnnotation(r.Context(), site, authorOf(r), in.Day, in.Text, in.Planned)
 	if errors.Is(err, sqlite.ErrNoteText) {
 		fail(w, http.StatusBadRequest, "a note needs some words, on a day like 2026-09-27")
 		return
@@ -590,4 +595,13 @@ func alertKinds(p principal) []string {
 		out = append(out, k)
 	}
 	return out
+}
+
+// today is the site's own date now, for what must not be in the past.
+func (a *API) today(r *http.Request, site string) string {
+	loc, err := time.LoadLocation(a.Ctl.SiteZone(r.Context(), site))
+	if err != nil {
+		loc = time.UTC
+	}
+	return a.Now().In(loc).Format("2006-01-02")
 }

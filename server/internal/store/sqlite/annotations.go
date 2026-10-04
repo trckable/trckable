@@ -16,6 +16,10 @@ type Annotation struct {
 	Day     string `json:"day"` // YYYY-MM-DD, in the site's timezone
 	Text    string `json:"text"`
 	Created int64  `json:"created_at"`
+	// Planned marks a plan: a note for a day that had not come when it was
+	// written ("newsletter goes out", "launch"). Once the day is past it is
+	// scored against what the weekday usually brings.
+	Planned bool `json:"planned,omitempty"`
 	// Author is who left it, by display name (or email when they set
 	// none); empty for notes from before names were kept. Share links never
 	// carry it: a stranger has no need of a teammate's name.
@@ -47,7 +51,7 @@ const MaxAnnotationText = 140
 // Annotations lists a site's notes for a period (inclusive).
 func (s *Store) Annotations(ctx context.Context, site, from, to string) ([]Annotation, error) {
 	rows, err := s.DB.QueryContext(ctx,
-		`SELECT a.id, a.day, a.text, a.created_at, a.author_id, coalesce(nullif(u.name, ''), u.email, '')
+		`SELECT a.id, a.day, a.text, a.created_at, a.planned, a.author_id, coalesce(nullif(u.name, ''), u.email, '')
 		 FROM annotations a LEFT JOIN users u ON u.id = a.author_id AND a.author_id <> ''
 		 WHERE a.site_id = ? AND a.day >= ? AND a.day <= ? ORDER BY a.day, a.created_at`,
 		site, from, to)
@@ -58,7 +62,7 @@ func (s *Store) Annotations(ctx context.Context, site, from, to string) ([]Annot
 	out := []Annotation{}
 	for rows.Next() {
 		var a Annotation
-		if err := rows.Scan(&a.ID, &a.Day, &a.Text, &a.Created, &a.AuthorID, &a.Author); err != nil {
+		if err := rows.Scan(&a.ID, &a.Day, &a.Text, &a.Created, &a.Planned, &a.AuthorID, &a.Author); err != nil {
 			return nil, err
 		}
 		out = append(out, a)
@@ -67,15 +71,15 @@ func (s *Store) Annotations(ctx context.Context, site, from, to string) ([]Annot
 }
 
 // AddAnnotation pins a note to a day. author is the user who left it, or
-// empty for the automation token.
-func (s *Store) AddAnnotation(ctx context.Context, site, author, day, text string) (Annotation, error) {
+// empty for the automation token. planned makes it a plan.
+func (s *Store) AddAnnotation(ctx context.Context, site, author, day, text string, planned bool) (Annotation, error) {
 	text = noteText(text)
 	if text == "" || !noteDay(day) {
 		return Annotation{}, ErrNoteText
 	}
-	a := Annotation{ID: auth.Token("note_", 8), Day: day, Text: text, Created: time.Now().Unix(), AuthorID: author}
-	_, err := s.DB.ExecContext(ctx, `INSERT INTO annotations (id, site_id, day, text, created_at, author_id) VALUES (?, ?, ?, ?, ?, ?)`,
-		a.ID, site, a.Day, a.Text, a.Created, author)
+	a := Annotation{ID: auth.Token("note_", 8), Day: day, Text: text, Created: time.Now().Unix(), Planned: planned, AuthorID: author}
+	_, err := s.DB.ExecContext(ctx, `INSERT INTO annotations (id, site_id, day, text, created_at, author_id, planned) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		a.ID, site, a.Day, a.Text, a.Created, author, planned)
 	if err != nil {
 		return Annotation{}, err
 	}
@@ -103,10 +107,10 @@ func (s *Store) UpdateAnnotation(ctx context.Context, site, id, day, text string
 func (s *Store) annotation(ctx context.Context, site, id string) (Annotation, error) {
 	var a Annotation
 	err := s.DB.QueryRowContext(ctx,
-		`SELECT a.id, a.day, a.text, a.created_at, a.author_id, coalesce(nullif(u.name, ''), u.email, '')
+		`SELECT a.id, a.day, a.text, a.created_at, a.planned, a.author_id, coalesce(nullif(u.name, ''), u.email, '')
 		 FROM annotations a LEFT JOIN users u ON u.id = a.author_id AND a.author_id <> ''
 		 WHERE a.site_id = ? AND a.id = ?`, site, id).
-		Scan(&a.ID, &a.Day, &a.Text, &a.Created, &a.AuthorID, &a.Author)
+		Scan(&a.ID, &a.Day, &a.Text, &a.Created, &a.Planned, &a.AuthorID, &a.Author)
 	return a, err
 }
 

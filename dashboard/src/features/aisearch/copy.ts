@@ -9,7 +9,6 @@ const visitors = (n: number) => `${fmtInt(n)} ${n === 1 ? 'visitor' : 'visitors'
 const kind: Record<string, string> = { answer: 'answers', train: 'training' }
 
 export const aiCopy = defineCopy('aisearch', {
-  tab: 'AI & Search',
   label: 'Google, AI assistants and AI crawlers',
   failed: 'Couldn’t read AI & Search.',
   google: 'Google',
