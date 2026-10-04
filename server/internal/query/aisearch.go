@@ -125,6 +125,7 @@ func (q Q) AISearch(ctx context.Context, p Params, o AIOptions) (*AISearch, erro
 	// What the robots did, by crawler.
 	span := []any{p.Site, from, to}
 	scope := `site_id = ? AND day >= CAST(? AS DATE) AND day < CAST(? AS DATE) AND kind IN ('` + crawlAnswer + `', '` + crawlTrain + `')`
+	//nolint:gosec // scope and pathIf are constant fragments of this file; every value is bound
 	bots, err := conn.QueryContext(ctx, `
 		SELECT name, kind, sum(hits)::BIGINT AS n FROM crawler_hits WHERE `+scope+pathIf(o.Page)+`
 		GROUP BY 1, 2 ORDER BY n DESC, 1, 2 LIMIT ?`, append(withPage(span, o.Page), aiMaxBots)...)
@@ -145,6 +146,7 @@ func (q Q) AISearch(ctx context.Context, p Params, o AIOptions) (*AISearch, erro
 	}
 
 	// Which robot read which page.
+	//nolint:gosec // scope and pathIf are constant fragments of this file; every value is bound
 	reads, err := conn.QueryContext(ctx, `
 		SELECT path, name, kind, sum(hits)::BIGINT AS n FROM crawler_hits WHERE `+scope+` AND path <> ?`+pathIf(o.Page)+`
 		GROUP BY 1, 2, 3 ORDER BY n DESC, 1, 2 LIMIT ?`, append(withPage(append(span, crawlOther), o.Page), aiMaxReads)...)
