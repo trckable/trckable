@@ -12,9 +12,10 @@ import { type Cohorts, type ReportQuery, type Site, more } from '../../lib/apiMo
 import { fmtInt, fmtPct } from '../../lib/format'
 import { deepCopy } from './deepCopy'
 import { retentionOf, shade } from './retentionModel'
+import { tag } from '../../i18n'
 import './deep.css'
 
-const weekLabel = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+const weekLabel = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString(tag, { day: 'numeric', month: 'short' })
 const INFO = 'Each row is the week a group of people first arrived; each column is a week after that. The figure is the share of that group who came back. Someone’s week is when trckable first saw them, not when this report starts.'
 
 /** The average share back, week by week, over the columns of the table below it. */

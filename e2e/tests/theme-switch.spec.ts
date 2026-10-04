@@ -19,7 +19,7 @@ test('the saved theme is applied before the dashboard renders', async ({ page })
 
   await page.addInitScript(() => localStorage.setItem('trckable:theme', 'light'))
   // Hold the app's own script back: what is on screen then is only what the first script set.
-  await page.route(/\/assets\/index-[^/]+\.js$/, (route) => new Promise<void>((resolve) => setTimeout(() => resolve(route.continue()), 1500)))
+  await page.route(/\/assets\/(?:index|core)-[^/]+\.js$/, (route) => new Promise<void>((resolve) => setTimeout(() => resolve(route.continue()), 1500)))
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=data`, { waitUntil: 'commit' })
   await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe('light')
   expect(await page.evaluate(() => document.querySelector('.kpis') === null)).toBe(true)

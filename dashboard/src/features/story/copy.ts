@@ -1,8 +1,9 @@
 // Replay as a story: the pops on the timeline and the card at its end. What
 // moves to the message files when translations come.
 import { fmtInt } from '../../lib/format'
+import { defineCopy } from '../../i18n'
 
-export const copy = {
+export const copy = defineCopy('story', {
   spike: (factor: string) => `Traffic ${factor}`,
   newTraffic: (visitors: number) => `New traffic · ${visitors === 1 ? '1 visitor' : `${fmtInt(visitors)} visitors`}`,
   from: (who: string) => `from ${who}`,
@@ -26,4 +27,4 @@ export const copy = {
   again: 'Replay again',
   close: 'Close',
   summary: 'Replay summary',
-}
+})

@@ -1,6 +1,8 @@
 // Every word site access shows, in one place: the dashboard's text moves to
 // message files when translations come, and this is what moves.
-export const copy = {
+import { defineCopy } from '../../i18n'
+
+export const copy = defineCopy('access', {
   all: 'All sites',
   none: 'No sites',
   /** The person's ⋯ menu item, and the popup's title. */
@@ -12,4 +14,4 @@ export const copy = {
   save: 'Save',
   saving: 'Saving…',
   saved: (email: string) => `Allowed sites for ${email} saved`,
-}
+})

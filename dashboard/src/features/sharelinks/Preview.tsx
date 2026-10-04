@@ -5,6 +5,7 @@ import type { Numbers } from './numbers'
 import { copy } from './copy'
 import { previewParts } from './logic'
 import type { Draft } from './logic'
+import { tag } from '../../i18n'
 
 const W = 300
 const H = 64
@@ -89,7 +90,7 @@ export function Preview({ draft, numbers, domain, lockShown, onLock }: { draft: 
               {parts.ends && (
                 <span className="sl-ends">
                   <Clock size={10} strokeWidth={1.75} />
-                  {parts.ends.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                  {parts.ends.toLocaleDateString(tag, { day: 'numeric', month: 'short' })}
                 </span>
               )}
               <span className="sl-range">{copy.rangeLabel}</span>
