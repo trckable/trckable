@@ -1,7 +1,8 @@
 // The avatar menu's items (AccountMenu.tsx). Its own chunk, so the first load carries only the button.
-import { CircleUser, Keyboard, LogOut, Smartphone } from 'lucide-react'
+import { CircleUser, Eye, EyeOff, Keyboard, LogOut, Smartphone } from 'lucide-react'
+import { choose, canLeaveOut, nextChoice, stateOf } from '../features/exclude/ownVisits'
 import { openAccount } from '../lib/account'
-import type { Profile } from '../lib/api'
+import type { Profile, Site } from '../lib/api'
 import type { MenuItems } from '../lib/headerMenu'
 import { install, useWayToInstall } from '../lib/installApp'
 import { caps, keyFor } from '../lib/keys'
@@ -11,6 +12,7 @@ import { THEMES, useTheme } from '../lib/theme'
 import { PersonAvatar } from './PersonAvatar'
 import { openShortcuts } from './ShortcutsHost'
 import { toast } from './toastBus'
+import { copy as exclude } from '../features/exclude/copy'
 import { copy } from './itemsCopy'
 import './MoreItems.css'
 import './sheet.css'
@@ -61,8 +63,20 @@ function InstallItem({ go }: { go: Parameters<MenuItems>[0] }) {
   )
 }
 
+/** Leave this browser out of the site's counts, or count it again: opens the site, where the tracker keeps the choice. */
+function OwnVisits({ site, go }: { site: Site; go: Parameters<MenuItems>[0] }) {
+  const next = nextChoice(stateOf(site))
+  const Icon = next === 'ignore' ? EyeOff : Eye
+  return (
+    <button type="button" role="menuitem" onClick={go(() => choose(site, next))}>
+      <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
+      {next === 'ignore' ? exclude.leave : exclude.again}
+    </button>
+  )
+}
+
 /** The items of the avatar menu. */
-export default function AccountItems({ profile, v, go }: { profile: Profile | null; v: number; go: Parameters<MenuItems>[0] }) {
+export default function AccountItems({ profile, v, go, site }: { profile: Profile | null; v: number; go: Parameters<MenuItems>[0]; site?: Site }) {
   return (
     <>
       <Who profile={profile} v={v} />
@@ -70,6 +84,7 @@ export default function AccountItems({ profile, v, go }: { profile: Profile | nu
         <CircleUser size={18} strokeWidth={1.75} aria-hidden="true" />
         {copy.account}
       </button>
+      {site && canLeaveOut(site) && <OwnVisits site={site} go={go} />}
       <ThemeRow />
       <button type="button" role="menuitem" onClick={go(openShortcuts)}>
         <Keyboard size={18} strokeWidth={1.75} aria-hidden="true" />

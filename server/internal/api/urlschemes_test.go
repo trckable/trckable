@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -76,5 +77,39 @@ func TestCookieBarLinkIsAWebAddress(t *testing.T) {
 		if cfg, err := g.ctl.SiteConfig(t.Context(), g.site); err != nil || cfg.Banner.Policy != "" {
 			t.Errorf("stored %q read back as %+v, %v", stored, cfg.Banner, err)
 		}
+	}
+}
+
+// The owner's own addresses: each an IP or a range, at most fifty, kept in one
+// spelling, and a bad list changes nothing.
+func TestExcludedAddressesAreValidated(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	put := g.srv.URL + "/api/v1/sites/" + g.site + "/config"
+	for _, bad := range []string{`["nope"]`, `["203.0.113.0/33"]`, `["203.0.113.1","1.2.3.4-1.2.3.9"]`, `["fe80::1%eth0"]`} {
+		if code, _ := do(t, c, "PUT", put, `{"exclude_ips":`+bad+`}`, csrf, "1"); code != http.StatusBadRequest {
+			t.Errorf("excluded %s: %d, want 400", bad, code)
+		}
+	}
+	code, out := do(t, c, "PUT", put, `{"exclude_ips":["203.0.113.77/24"," 2001:DB8::1 ",""]}`, csrf, "1")
+	got, _ := out["exclude_ips"].([]any)
+	if code != http.StatusOK || len(got) != 2 || got[0] != "203.0.113.0/24" || got[1] != "2001:db8::1" {
+		t.Fatalf("a good list: %d %v", code, out["exclude_ips"])
+	}
+
+	fifty := make([]string, 0, 51)
+	for i := 0; i < 51; i++ {
+		fifty = append(fifty, `"10.0.`+strconv.Itoa(i)+`.1"`)
+	}
+	if code, _ := do(t, c, "PUT", put, `{"exclude_ips":[`+strings.Join(fifty[:50], ",")+`]}`, csrf, "1"); code != http.StatusOK {
+		t.Errorf("fifty addresses: %d, want 200", code)
+	}
+	if code, _ := do(t, c, "PUT", put, `{"exclude_ips":[`+strings.Join(fifty, ",")+`]}`, csrf, "1"); code != http.StatusBadRequest {
+		t.Errorf("fifty-one addresses: %d, want 400", code)
+	}
+	cfg, _ := g.ctl.SiteConfig(t.Context(), g.site)
+	if len(cfg.ExcludeIPs) != 50 {
+		t.Errorf("a refused list changed what was kept: %d", len(cfg.ExcludeIPs))
 	}
 }

@@ -288,6 +288,8 @@ export interface CrawlerReport {
 export interface SiteConfig {
   consent_free: boolean
   exclude_paths: string[]
+  /** The owner's own addresses and ranges: never counted. */
+  exclude_ips?: string[]
   honor_dnt: boolean
   record_city: boolean
   retention_days: number

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
+	"github.com/trckable/trckable/server/internal/ipfilter"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 	"github.com/trckable/trckable/server/internal/weburl"
 )
@@ -179,6 +180,13 @@ func (a *API) setSiteConfig(w http.ResponseWriter, r *http.Request) {
 		clean = append(clean, p)
 	}
 	in.ExcludePaths = clean
+	// The owner's own addresses: each an IP or a range, at most fifty.
+	ips, err := ipfilter.Clean(in.ExcludeIPs)
+	if err != nil {
+		fail(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	in.ExcludeIPs = ips
 	// The cookie bar's link is placed on the owner's own pages: a web address
 	// or a path, never javascript: or data:.
 	if p := strings.TrimSpace(in.Banner.Policy); p != "" {
