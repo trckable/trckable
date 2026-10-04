@@ -8,7 +8,6 @@
 // sight) is told once for each surge.
 import { TrendingUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Chart } from '../../components/SideCard/Chart'
 import { SideCard, useCardClose } from '../../components/SideCard/SideCard'
 import { Ghost } from '../../components/Logo'
 import { fmtInt } from '../../lib/format'
@@ -17,6 +16,7 @@ import { Rolling } from '../moments/Rolling'
 import { signals } from './copy'
 import { tell } from './notify'
 import { SourceLine } from './SourceLine'
+import { SurgeSpark } from './SurgeChart'
 import SurgeModal from './SurgeModal' // the story: in this card's own chunk, which is itself lazy
 import { sourceLine, surgeChip, surgeNotice, type Surge } from './surge'
 import { useSurge } from './useSurge'
@@ -48,7 +48,6 @@ function Card({ surge, tz }: { surge: Surge; tz: string }) {
   const [gone, putAway] = useSeen('surge', surge.id)
   const [story, setStory] = useState(false)
   if (gone) return null
-  const series = surge.story?.series
   return (
     <>
       <SideCard
@@ -59,7 +58,7 @@ function Card({ surge, tz }: { surge: Surge; tz: string }) {
         kind={{ icon: <TrendingUp size={14} strokeWidth={2} />, label: t.label, tint: 'var(--accent)' }}
         title={t.title}
         onClose={putAway}
-        chart={series ? <Chart spec={{ values: series, base: surge.usual }} /> : undefined}
+        chart={<SurgeSpark surge={surge} />}
         actions={<Actions surge={surge} done={putAway} more={() => setStory(true)} />}
       >
         <div className="sg-hero">

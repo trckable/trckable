@@ -123,7 +123,7 @@ describe('the surge card', () => {
     expect(card()?.querySelector('.sg-count')?.textContent).toBe('53')
     expect(card()?.querySelector('.sg-chip')?.textContent).toBe('2.7× usual')
     expect(card()?.querySelector('.sg-source span:last-child')?.textContent).toBe('Mostly from Facebook')
-    expect(card()?.querySelector('svg.side-chart')).not.toBeNull()
+    expect(card()?.querySelector('svg.sg-spark')).not.toBeNull()
     expect([...(card()?.querySelectorAll('.side-card-actions button') ?? [])].map((b) => b.textContent)).toEqual(['More', 'See it'])
     expect(card()?.querySelectorAll('p').length).toBe(1)
   })

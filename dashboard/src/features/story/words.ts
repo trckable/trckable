@@ -21,9 +21,8 @@ export function wordsOf(m: Moment, fmt?: (minor: number) => string): Words {
   const icon = ICONS[m.kind]
   switch (m.kind) {
     case 'spike':
-      return { icon, line: m.factor ? copy.spike(times(m.factor)) : copy.newTraffic(m.visitors ?? 0), sub: m.referrer ? copy.from(m.referrer) : undefined }
     case 'surge':
-      return { icon, line: copy.spike(times(m.factor ?? 0)), sub: m.text ? copy.from(m.text) : undefined }
+      return { icon, line: m.factor ? copy.spike(times(m.factor)) : copy.newTraffic(m.visitors ?? 0), sub: m.referrer ? copy.from(m.referrer) : undefined }
     case 'sale': {
       const sub = [fmt && m.amount ? '+' + fmt(m.amount) : '', m.channel ? channelLabel(m.channel) : ''].filter(Boolean).join(' · ')
       return { icon, line: copy.sale(m.count ?? 1), sub: sub || undefined }

@@ -646,3 +646,57 @@
     font-size: 12px;
   }
 }
+
+/* The open-site link (OpenSite.tsx), pointed at or focused: over the check's
+   place (beside the check on the current row, beside the ⋯ when arranging);
+   the number and key move over for it. On a touch screen it is always there,
+   a 44 px target. */
+.site-open {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--text-2);
+}
+.site-open:hover {
+  background: var(--border);
+  color: var(--text);
+}
+.site-row {
+  --open-r: 2px;
+}
+.site-row:has(> .site.on) {
+  --open-r: 24px;
+}
+.site-row:has(> .btn.icon) {
+  --open-r: 28px;
+}
+.site-row > .site-open {
+  position: absolute;
+  right: var(--open-r);
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+}
+.site-row:hover > .site-open,
+.site-row:has(:focus-visible) > .site-open {
+  opacity: 1;
+}
+.site-row:has(> .site-open):is(:hover, :has(:focus-visible)) .site .right {
+  margin-right: calc(var(--open-r) + 4px);
+}
+@media (hover: none), (max-width: 640px) {
+  .site-row > .site-open {
+    position: static;
+    transform: none;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    margin: -7px 0;
+    opacity: 1;
+  }
+  .site-row:has(> .site-open):is(:hover, :has(:focus-visible)) .site .right {
+    margin-right: 0;
+  }
+}

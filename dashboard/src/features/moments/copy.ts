@@ -11,7 +11,7 @@ const sales = (n: number) => `${fmtInt(n)} ${n === 1 ? 'sale' : 'sales'}`
 export const copy = defineCopy('moments', {
   title: {
     spike: 'Traffic spike',
-    surge: 'Busy moment',
+    surge: 'Surge',
     newTraffic: 'New traffic',
     sale: 'Sales',
     referrer: 'New referrer',
@@ -38,7 +38,7 @@ export const copy = defineCopy('moments', {
   share: 'Share',
   visitors: (n: number) => `${fmtInt(n)} visitors`,
   sales,
-  surgeFrom: (name?: string) => (name ? `Surge from ${name}` : 'Surge'),
+  surgeFrom: (name: string) => `Surge from ${name}`,
   usual: (times: string) => `${times} the usual`,
   mostly: (channel: string) => `mostly ${channel}`,
   since: (day: string) => `since ${day}`,

@@ -35,7 +35,7 @@ export function say(pin: Pin, money: (minor: number) => string): Said {
       return { title, line: [extrasCopy.ring.spike(n.factor), from].filter(Boolean).join(' · '), big: n.visitors ? copy.visitors(n.visitors) : times(n.factor), facts: [copy.usual(times(n.factor)), from, when(pin.day)].filter(Boolean) }
     }
     case 'surge':
-      return { title, line: copy.surgeFrom(n.name), big: copy.visitors(n.visitors ?? 0), facts: [copy.usual(times(n.factor ?? 0)), when(pin.day)] }
+      return { title, line: n.name ? copy.surgeFrom(n.name) : title, big: copy.visitors(n.visitors ?? 0), facts: [copy.usual(times(n.factor ?? 0)), when(pin.day)] }
     case 'sale': {
       const channel = n.channel ? copy.mostly(channelLabel(n.channel)) : ''
       return { title, line: [extrasCopy.ring.sales(n.count ?? 1, money(n.amount ?? 0)), channel].filter(Boolean).join(' · '), big: money(n.amount ?? 0), facts: [copy.sales(n.count ?? 1), channel, when(pin.day)].filter(Boolean) }
