@@ -91,7 +91,7 @@ const draw = async () => {
     root.render(<SurgeCard site={{ id: 'tkb_x', domain: 'a.com', timezone: 'UTC' }} first={0} />)
     return Promise.resolve()
   })
-  await act(() => Promise.resolve())
+  await act(() => new Promise((r) => setTimeout(r, 40)))
   await act(() => Promise.resolve())
 }
 const card = () => document.body.querySelector('.side-card')
