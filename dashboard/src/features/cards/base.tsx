@@ -5,7 +5,7 @@ import { Loading } from '../../components/loading/Loading'
 import { lazyLoad, whenIdle } from '../../lib/lazyLoad'
 import { isOn, shows } from '../../lib/modules'
 import { PagesPanel, SourcesPanel } from './Breakdowns'
-import { aiCopy } from '../aisearch/copy'
+import { aiTab } from '../aisearch/tabCopy'
 import { cardCopy } from './copy'
 import type { CardsCtx } from './ctx'
 import { GoalsPanel } from './Money'
@@ -32,7 +32,7 @@ export function whoTabs(c: CardsCtx): CardTab[] {
     { id: 'locations', label: cardCopy.locations, render: () => later(<Locations c={c} />) },
     { id: 'devices', label: cardCopy.devices, render: () => later(<Devices c={c} />) },
   ]
-  if (showsAiSearch(c)) tabs.push({ id: 'ai-search', label: aiCopy.tab, render: () => later(<AiSearch c={c} />) })
+  if (showsAiSearch(c)) tabs.push({ id: 'ai-search', label: aiTab.label, render: () => later(<AiSearch c={c} />) })
   return tabs
 }
 

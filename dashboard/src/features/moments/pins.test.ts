@@ -6,6 +6,15 @@ import { byScore, dedupePins, pinsFromInsights, pinsFromMilestones, pinsFromMome
 const spike: Moment = { t: '2026-09-19T00:00', kind: 'spike', factor: 4.2, visitors: 816, referrer: 'news.example' }
 const sale = (t: string, amount: number): Moment => ({ t, kind: 'sale', count: 2, amount, channel: 'Email' })
 
+describe('a surge on the chart', () => {
+  it('is a pin that filters to the source host, ranks over a spike, and carries the source as a name', () => {
+    const m: Moment = { t: '2026-10-06T18:00', kind: 'surge', factor: 2.7, visitors: 53, referrer: 'l.facebook.com', text: 'Facebook' }
+    const [p] = pinsFromMoments([m], true)
+    expect(p).toMatchObject({ kind: 'surge', day: '2026-10-06', showDay: true, filters: [{ dim: 'referrer', value: 'l.facebook.com' }], n: { name: 'Facebook', visitors: 53, factor: 2.7 } })
+    expect(p.score).toBeGreaterThan(pinsFromMoments([spike], true)[0].score)
+  })
+})
+
 describe('pins from the server\'s moments', () => {
   it('a spike filters to its referrer and shows its day', () => {
     const [p] = pinsFromMoments([spike], true)

@@ -185,7 +185,7 @@ export interface Visit {
 export interface Alert {
   id: string
   site_id: string
-  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone'
+  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone' | 'surge'
   enabled: boolean
   target: string
   threshold: number
@@ -229,6 +229,8 @@ export interface Annotation {
   created_at: number
   /** Who left it: a teammate's name or email. Never on a share link. */
   author?: string
+  /** A plan: a note for a day that had not come when it was written. */
+  planned?: boolean
 }
 
 /** How an account arranged its sites in the switcher: the order, the

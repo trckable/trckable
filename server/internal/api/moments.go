@@ -46,6 +46,7 @@ func (a *API) moments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out := a.spikesOf(r, q, p, ask.Loc, ask.Live)
+	out = append(out, a.surgeMoments(r, site, p, ask.Loc)...)
 	out = append(out, salesOf(res)...)
 	out = append(out, a.firstsOf(r, q, p)...)
 	out = append(out, a.dayMoments(r, site, ask)...)

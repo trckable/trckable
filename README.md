@@ -185,7 +185,7 @@ A visitor's browser keeps what it could not send, up to 24 hours and 200 events,
 ### Little things you notice
 
 - **Live count in the tab**: "● 8 · trckable" in the browser tab and a dot on its icon while anyone is online. Off with one switch.
-- **Cha-ching**: a coin toast when a sale arrives, over any view, with an optional chime. Browser notices for a first sale from a new source, a spike or tracking stopping are opt-in, and asked for only from a button.
+- **Cha-ching**: a coin toast when a sale arrives, over any view, with an optional chime. Browser notices for a first sale from a new source, a surge (twice the usual number of people online, with who sent them), a spike or tracking stopping are opt-in, and asked for only from a button.
 - **Sparklines** on the top Sources and Pages, **vs usual** under Visitors ("+18% vs usual", against the same weekday) and **where the month is heading** ("≈ 41k by 31 Oct").
 - **Site icons** beside referrers, fetched by your server once and kept there: your visitors' browsers never ask a third party.
 - **Milestones** celebrate with a short ghost hop and a card ready to share. The cards that come up by themselves (a milestone, the one thing today, a nudge) are one design: what it is, when, its figure counting up, where it came from, a small chart of the moment, and a deck you turn with ← → or a swipe.
@@ -283,7 +283,7 @@ Go, embedded DuckDB and SQLite, React with an in-house SVG chart kit. Every even
 
 ## 🗺 Roadmap
 
-- [x] Tracking, dashboard (Live, Core and Full), revenue for five providers, MCP server
+- [x] Tracking, dashboard (Live, Core and Full, and a month calendar with plans for the days to come), revenue for five providers, MCP server
 - [x] Self-hosting tools: alerts (a new site starts with the weekly report, with the week's findings, and "tracking stopped" on, by email to the owner or to the webhook already in use; every email has a link that stops it), encrypted backups (copied to your own bucket, restored straight from it), imports, 2FA, read-only share links (public or password, revenue and notes on or off, an end date, embeddable, your own logo, colour and domain, copyable again, revocable), WCAG 2.1 AA (axe-core on the dashboard's main screens, both themes, three browsers, in CI)
 - [x] npm package [`trckable`](https://www.npmjs.com/package/trckable) with `init` / `doctor` / `mcp`, published from CI with provenance
 - [ ] Live sandbox runs against each payment provider

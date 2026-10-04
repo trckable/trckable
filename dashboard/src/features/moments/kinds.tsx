@@ -8,6 +8,7 @@ import type { Pin, PinKind } from './pins'
 
 const KINDS: Record<PinKind, { Icon: LucideIcon; tint: string }> = {
   spike: { Icon: TrendingUp, tint: 'var(--accent)' },
+  surge: { Icon: TrendingUp, tint: 'var(--accent)' },
   sale: { Icon: Coins, tint: 'var(--money)' },
   referrer: { Icon: Link2, tint: 'var(--ch-1)' },
   drop: { Icon: TrendingDown, tint: 'var(--down)' },
@@ -34,6 +35,7 @@ export function chipsOf(pin: Pin): Chip[] {
   const f = pin.filters[0]
   switch (pin.kind) {
     case 'spike':
+    case 'surge':
       return n.referrer ? [{ host: n.referrer }] : []
     case 'sale':
       return n.channel ? [{ channel: n.channel }] : []

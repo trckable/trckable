@@ -58,7 +58,7 @@ func TestWeeklyText(t *testing.T) {
 		Money: &query.Money{Currency: "USD", Exponent: 2, Revenue: 421000, Payments: 38},
 	}
 	prev := &query.Result{KPIs: query.KPIs{Visitors: 4000}, Money: &query.Money{Revenue: 390000}}
-	title, msg, data := weeklyText("demo.trckable.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "https://stats.example.com/demo.trckable.com")
+	title, msg, data := weeklyText("demo.trckable.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", "https://stats.example.com/demo.trckable.com")
 	for _, want := range []string{
 		"demo.trckable.com, Sep 14 – Sep 20",
 		"4,512 visitors, up 13% on the week before.",
@@ -76,7 +76,7 @@ func TestWeeklyText(t *testing.T) {
 	if title != "Your week" || data["visitors"] != int64(4512) {
 		t.Errorf("title %q data %v", title, data)
 	}
-	_, quiet, _ := weeklyText("x.com", from, from.AddDate(0, 0, 7), &query.Result{}, &query.Result{KPIs: query.KPIs{Visitors: 50}}, aiWeek{}, "")
+	_, quiet, _ := weeklyText("x.com", from, from.AddDate(0, 0, 7), &query.Result{}, &query.Result{KPIs: query.KPIs{Visitors: 50}}, aiWeek{}, "", "")
 	if !strings.Contains(quiet, "Nothing arrived this week") || !strings.Contains(quiet, "down 100%") {
 		t.Errorf("an empty week says so:\n%s", quiet)
 	}
@@ -99,7 +99,7 @@ func TestWeeklyAILine(t *testing.T) {
 		{aiWeek{Crawls: 3}, "AI crawlers read 3 pages."},
 		{aiWeek{}, ""},
 	} {
-		_, msg, _ := weeklyText("x.com", from, from.AddDate(0, 0, 7), cur, prev, c.ai, "")
+		_, msg, _ := weeklyText("x.com", from, from.AddDate(0, 0, 7), cur, prev, c.ai, "", "")
 		if c.want == "" {
 			if strings.Contains(msg, "AI ") {
 				t.Errorf("a quiet week mentions AI:\n%s", msg)
