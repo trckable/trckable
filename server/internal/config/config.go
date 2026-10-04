@@ -31,10 +31,20 @@ type Config struct {
 	MetricsToken string   // TRCKABLE_METRICS_TOKEN: bearer token for /metrics (off, 404, without it)
 	SetupToken   string   // TRCKABLE_SETUP_TOKEN: first-run setup secret (Railway template generates it)
 	BaseURL      string   // TRCKABLE_BASE_URL, or https://$RAILWAY_PUBLIC_DOMAIN
-	Secret       string   // TRCKABLE_SECRET: encrypts provider keys (else data/secret.key)
-	SMTPURL      string   // TRCKABLE_SMTP_URL: smtp://user:pass@host:587, for alerts by email (optional)
-	MailFrom     string   // TRCKABLE_MAIL_FROM: the sender address for those emails
-	ResendKey    string   // TRCKABLE_RESEND_KEY: send them through Resend's HTTPS API, where the host blocks SMTP (optional)
+	// ReservedHosts are names that can never be a share domain, besides the
+	// dashboard's own address (TRCKABLE_RESERVED_HOSTS, comma-separated).
+	ReservedHosts []string
+	// ShareDomainSkipVerify serves a site's share domain as soon as it is set,
+	// without the DNS check (TRCKABLE_SHARE_DOMAIN_SKIP_VERIFY=1), for an
+	// instance whose one owner controls every name. Off by default.
+	ShareDomainSkipVerify bool
+	// ShareDomainAskOpen lets a caller that is not on this machine ask which
+	// share domains are served (TRCKABLE_SHARE_DOMAIN_ASK_OPEN=1). Off by default.
+	ShareDomainAskOpen bool
+	Secret             string // TRCKABLE_SECRET: encrypts provider keys (else data/secret.key)
+	SMTPURL            string // TRCKABLE_SMTP_URL: smtp://user:pass@host:587, for alerts by email (optional)
+	MailFrom           string // TRCKABLE_MAIL_FROM: the sender address for those emails
+	ResendKey          string // TRCKABLE_RESEND_KEY: send them through Resend's HTTPS API, where the host blocks SMTP (optional)
 	// UpdateCheck: whether the dashboard may look for a newer release
 	// (TRCKABLE_UPDATE_CHECK=off turns it off for everyone). The check runs
 	// in the owner's browser, once a day, against GitHub's release list; the
@@ -84,6 +94,13 @@ func Load() Config {
 	}
 	if ms := envInt("TRCKABLE_UNSAFE_SESSION_CLOSE_MS", 0); ms > 0 {
 		c.SessionCloseAfter = time.Duration(ms) * time.Millisecond
+	}
+	c.ShareDomainSkipVerify = os.Getenv("TRCKABLE_SHARE_DOMAIN_SKIP_VERIFY") == "1"
+	c.ShareDomainAskOpen = os.Getenv("TRCKABLE_SHARE_DOMAIN_ASK_OPEN") == "1"
+	for _, h := range strings.Split(os.Getenv("TRCKABLE_RESERVED_HOSTS"), ",") {
+		if h = strings.TrimSuffix(strings.ToLower(strings.TrimSpace(h)), "."); h != "" {
+			c.ReservedHosts = append(c.ReservedHosts, h)
+		}
 	}
 	for _, d := range strings.Split(os.Getenv("TRCKABLE_SITES"), ",") {
 		if d = strings.TrimSpace(d); d != "" {

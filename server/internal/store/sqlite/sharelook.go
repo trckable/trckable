@@ -19,6 +19,11 @@ type ShareLook struct {
 	Color     string `json:"color"`
 	HideBrand bool   `json:"hide_brand"`
 	Domain    string `json:"domain"`
+	// DomainOK says the domain was verified (a TXT record with DomainToken was
+	// found), so it is served. Until then it is pending. DomainToken is for the
+	// owner only.
+	DomainOK    bool   `json:"domain_ok"`
+	DomainToken string `json:"-"`
 	// LogoAt is when the logo last changed (0: no logo), for caching.
 	LogoAt int64 `json:"logo_at"`
 }
@@ -31,7 +36,7 @@ const MaxShareLogo = 128 << 10
 var ErrBadDomain = errors.New("write the domain only, like reports.example.com: letters, digits and dashes, no https:// and no path")
 
 // ErrDomainTaken: a domain opens the links of one site.
-var ErrDomainTaken = errors.New("another site already uses that domain")
+var ErrDomainTaken = errors.New("that domain cannot be used")
 
 var domainLabel = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 
@@ -66,37 +71,75 @@ func ShareDomain(in string) (string, error) {
 // empty look (trckable's name, the site's own colour, no domain).
 func (s *Store) ShareLookOf(ctx context.Context, site string) ShareLook {
 	var l ShareLook
-	var hide int
-	_ = s.DB.QueryRowContext(ctx, `SELECT color, hide_brand, domain, logo_at FROM site_share_look WHERE site_id = ?`, site).Scan(&l.Color, &hide, &l.Domain, &l.LogoAt)
-	l.HideBrand = hide == 1
+	var hide, ok int
+	_ = s.DB.QueryRowContext(ctx, `SELECT color, hide_brand, domain, domain_ok, domain_token, logo_at FROM site_share_look WHERE site_id = ?`, site).Scan(&l.Color, &hide, &l.Domain, &ok, &l.DomainToken, &l.LogoAt)
+	l.HideBrand, l.DomainOK = hide == 1, ok == 1
 	return l
 }
 
 // SetShareLook saves the colour, the switch and the domain, and leaves the
-// logo as it is. The domain must already be tidy (ShareDomain).
-func (s *Store) SetShareLook(ctx context.Context, site, color string, hide bool, domain string) error {
+// logo as it is. The domain must already be tidy (ShareDomain). A domain that
+// is new starts pending with a token to prove it by; the same one keeps what
+// it had; with skipVerify (an instance whose owner says so) a new domain is
+// served at once.
+func (s *Store) SetShareLook(ctx context.Context, site, color string, hide bool, domain string, skipVerify bool) error {
 	if color != "" && !hexColor.MatchString(color) {
 		return ErrBadColor
 	}
-	if domain != "" {
-		var other string
-		err := s.DB.QueryRowContext(ctx, `SELECT site_id FROM site_share_look WHERE domain = ? AND site_id <> ?`, domain, site).Scan(&other)
-		if err == nil {
-			return ErrDomainTaken
+	cur := s.ShareLookOf(ctx, site)
+	ok, token := cur.DomainOK, cur.DomainToken
+	if domain != cur.Domain {
+		ok, token = skipVerify && domain != "", ""
+		if domain != "" {
+			token = "trckable-verify=" + auth.Token("", 16)
 		}
-		if !errors.Is(err, sql.ErrNoRows) {
-			return err
+		if ok {
+			if err := s.domainFree(ctx, domain, site); err != nil {
+				return err
+			}
 		}
 	}
 	h := 0
 	if hide {
 		h = 1
 	}
-	_, err := s.DB.ExecContext(ctx, `INSERT INTO site_share_look (site_id, color, hide_brand, domain, updated_at) VALUES (?, ?, ?, ?, ?)
-		ON CONFLICT (site_id) DO UPDATE SET color = excluded.color, hide_brand = excluded.hide_brand, domain = excluded.domain, updated_at = excluded.updated_at`,
-		site, color, h, domain, time.Now().Unix())
+	_, err := s.DB.ExecContext(ctx, `INSERT INTO site_share_look (site_id, color, hide_brand, domain, domain_ok, domain_token, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT (site_id) DO UPDATE SET color = excluded.color, hide_brand = excluded.hide_brand, domain = excluded.domain,
+			domain_ok = excluded.domain_ok, domain_token = excluded.domain_token, updated_at = excluded.updated_at`,
+		site, color, h, domain, boolInt(ok), token, time.Now().Unix())
 	if err != nil && strings.Contains(err.Error(), "UNIQUE") {
 		return ErrDomainTaken // two requests at once for one domain
+	}
+	return err
+}
+
+// domainFree says whether another site already serves a domain.
+func (s *Store) domainFree(ctx context.Context, domain, site string) error {
+	var other string
+	err := s.DB.QueryRowContext(ctx, `SELECT site_id FROM site_share_look WHERE domain = ? AND domain_ok = 1 AND site_id <> ?`, domain, site).Scan(&other)
+	if err == nil {
+		return ErrDomainTaken
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+	return nil
+}
+
+// VerifyShareDomain marks a site's pending domain as verified, once the
+// caller has found its token in DNS. Another site that verified the same
+// domain first keeps it.
+func (s *Store) VerifyShareDomain(ctx context.Context, site string) error {
+	cur := s.ShareLookOf(ctx, site)
+	if cur.Domain == "" {
+		return ErrBadDomain
+	}
+	if err := s.domainFree(ctx, cur.Domain, site); err != nil {
+		return err
+	}
+	_, err := s.DB.ExecContext(ctx, `UPDATE site_share_look SET domain_ok = 1, updated_at = ? WHERE site_id = ? AND domain <> ''`, time.Now().Unix(), site)
+	if err != nil && strings.Contains(err.Error(), "UNIQUE") {
+		return ErrDomainTaken
 	}
 	return err
 }
@@ -127,9 +170,9 @@ func (s *Store) ShareLogo(ctx context.Context, site string) (string, []byte, err
 	return typ, data, err
 }
 
-// ShareDomains maps every share domain to the site whose links it opens.
+// ShareDomains maps every verified share domain to the site whose links it opens.
 func (s *Store) ShareDomains(ctx context.Context) (map[string]string, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT domain, site_id FROM site_share_look WHERE domain <> ''`)
+	rows, err := s.DB.QueryContext(ctx, `SELECT domain, site_id FROM site_share_look WHERE domain <> '' AND domain_ok = 1`)
 	if err != nil {
 		return nil, err
 	}

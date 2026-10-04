@@ -36,7 +36,7 @@ test('a link wears the owner\'s logo and colour, and hides trckable\'s name', as
     // On a phone Share is in ⋯.
     await page.getByRole('button', { name: 'More', exact: true }).click()
     await page.getByRole('menu', { name: 'More' }).getByRole('menuitem', { name: /Share/ }).click()
-  } else await page.keyboard.press('Shift+S')
+  } else await page.locator('.subbar').getByRole('button', { name: 'Share' }).click()
   const dialog = page.getByRole('dialog', { name: 'Share your numbers' })
   await dialog.locator('.sd-linkbtn').click()
   const look = dialog.locator('.sd-look')
@@ -53,16 +53,17 @@ test('a link wears the owner\'s logo and colour, and hides trckable\'s name', as
   await expect.poll(async () => ((await (await page.request.get(`${API}/api/v1/sites/${site}/share-look`)).json()) as { color: string; hide_brand: boolean }).hide_brand).toBe(true)
   await expect.poll(async () => ((await (await page.request.get(`${API}/api/v1/sites/${site}/share-look`)).json()) as { color: string }).color).toBe('#336699')
 
-  // A domain: a bad one is told, a good one shows the CNAME line.
+  // A domain: a bad one is told, a good one asks for its TXT record.
   const field = look.getByLabel('Domain')
   await field.fill('https://reports.example.com')
   await field.press('Enter')
   await expect(page.getByRole('alert').or(page.locator('.toast')).first()).toBeVisible()
   await field.fill(`reports-${Date.now()}.example.com`)
   await field.press('Enter')
-  await expect(look.locator('.sd-cname')).toContainText('CNAME')
+  await expect(look.locator('.sd-cname')).toContainText(/_trckable\.reports-\d+\.example\.com TXT trckable-verify=/)
+  await expect(look.getByRole('button', { name: 'Check' })).toBeVisible()
 
-  if (SHOTS) await dialog.screenshot({ path: `${SHOTS}/share-look-dialog-${SCHEME}-${WIDTH || 'desktop'}.png` })
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/share-look-dialog-${SCHEME}-${WIDTH || 'desktop'}.png` })
 
   // The link, opened with no account.
   await dialog.getByRole('button', { name: 'Create link' }).click()

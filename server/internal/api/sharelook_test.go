@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"image"
 	"image/png"
 	"io"
@@ -133,6 +134,7 @@ func TestShareLookIsStoredAndAppliedOnTheServer(t *testing.T) {
 // dashboard, not the sign-in, not another site's link.
 func TestShareDomainOpensShareLinksOnly(t *testing.T) {
 	g := newRig(t)
+	g.api.ShareDomainSkipVerify = true // the DNS check has a test of its own
 	ctx := context.Background()
 	c := client()
 	g.setup(t, c)
@@ -157,7 +159,7 @@ func TestShareDomainOpensShareLinksOnly(t *testing.T) {
 	if l["domain"] != "reports.example.com" {
 		t.Fatalf("the domain, tidied: %v", l)
 	}
-	if code, out := do(t, c, "PUT", g.srv.URL+"/api/v1/sites/"+other+"/share-look", `{"domain":"reports.example.com"}`, csrf, "1"); code != 400 || !strings.Contains(out["error"].(string), "another site") {
+	if code, out := do(t, c, "PUT", g.srv.URL+"/api/v1/sites/"+other+"/share-look", `{"domain":"reports.example.com"}`, csrf, "1"); code != 400 || !strings.Contains(out["error"].(string), "cannot be used") {
 		t.Errorf("one domain for two sites: %d %v", code, out)
 	}
 
@@ -201,6 +203,18 @@ func TestShareDomainOpensShareLinksOnly(t *testing.T) {
 			t.Errorf("on the share domain, %s: %d, want %d", path, got, want)
 		}
 	}
+	// The same name written another way is the same name.
+	for _, host := range []string{"reports.example.com.", "reports.example.com.:443", "REPORTS.example.com"} {
+		if got := ask(host, "/login"); got != 404 {
+			t.Errorf("%s opened /login: %d", host, got)
+		}
+	}
+	// Paths a proxy and this server could read differently are refused.
+	for _, p := range []string{"/assets/../login", "/api/v1/share/../sites", "/assets/%2e%2e/login", "/api/v1/share/..%2f..%2fsites", "//login", "/assets/a%2fb", `/assets/a\b`} {
+		if got := ask("reports.example.com", p); got != 404 {
+			t.Errorf("%s was let through: %d", p, got)
+		}
+	}
 	// Any other host is untouched.
 	for _, host := range []string{"dash.example.com", "localhost:8080"} {
 		if got := ask(host, "/"); got != 200 {
@@ -208,6 +222,10 @@ func TestShareDomainOpensShareLinksOnly(t *testing.T) {
 		}
 	}
 
+	// Behind a proxy the question is not answered: the proxy's own call has no forwarding header, anyone else's does.
+	if code, _ := do(t, client(), "GET", g.srv.URL+"/api/v1/share-domain/ask?domain=reports.example.com", "", "X-Forwarded-For", "203.0.113.9"); code != 404 {
+		t.Errorf("ask answered a forwarded request: %d", code)
+	}
 	// A proxy asks before it gets a certificate for a name.
 	for q, want := range map[string]int{"reports.example.com": 200, "other.example.com": 404, "": 404, "bad/host": 404} {
 		if code, _ := do(t, client(), "GET", g.srv.URL+"/api/v1/share-domain/ask?domain="+q, ""); code != want {
@@ -224,5 +242,127 @@ func TestShareDomainOpensShareLinksOnly(t *testing.T) {
 	}
 	if code, _ := do(t, c, "PUT", g.srv.URL+"/api/v1/sites/"+other+"/share-look", `{"domain":"reports.example.com"}`, csrf, "1"); code != 200 {
 		t.Errorf("the freed domain: %d", code)
+	}
+}
+
+// A domain is served only after its owner shows they control it: a TXT record
+// at _trckable.<domain> with the site's token. Until then it is pending, and
+// nothing is gated, served or vouched for.
+func TestShareDomainNeedsProof(t *testing.T) {
+	g := newRig(t)
+	ctx := context.Background()
+	c := client()
+	g.setup(t, c)
+	base := g.srv.URL + "/api/v1/sites/" + g.site
+	txt := map[string][]string{}
+	g.api.LookupTXT = func(_ context.Context, name string) ([]string, error) { return txt[name], nil }
+	g.api.ReservedHosts = []string{"keep.example.com"}
+
+	for _, d := range []string{"keep.example.com", "127.0.0.1"} {
+		if code, _ := do(t, c, "PUT", base+"/share-look", `{"domain":"`+d+`"}`, csrf, "1"); code != 400 {
+			t.Errorf("%s was accepted as a share domain: %d", d, code)
+		}
+	}
+	code, l := do(t, c, "PUT", base+"/share-look", `{"domain":"client.example.com"}`, csrf, "1")
+	if code != 200 || l["domain_ok"] != false || l["verify_name"] != "_trckable.client.example.com" || !strings.HasPrefix(l["verify_value"].(string), "trckable-verify=") {
+		t.Fatalf("a new domain is pending, with its proof: %d %v", code, l)
+	}
+	token := l["verify_value"].(string)
+
+	// Pending: no link on it, nothing gated, no certificate.
+	if _, out := do(t, c, "POST", base+"/shares", `{"name":"Client"}`, csrf, "1"); strings.Contains(out["url"].(string), "client.example.com") {
+		t.Errorf("a pending domain was used for a link: %v", out["url"])
+	}
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte("inner")) })
+	r := httptest.NewRequest("GET", "http://client.example.com/login", nil)
+	w := httptest.NewRecorder()
+	g.api.ShareDomains(inner).ServeHTTP(w, r)
+	if w.Code != 200 {
+		t.Errorf("a pending domain was gated: %d", w.Code)
+	}
+	ask := func() int {
+		code, _ := do(t, client(), "GET", g.srv.URL+"/api/v1/share-domain/ask?domain=client.example.com", "")
+		return code
+	}
+	if ask() != 404 {
+		t.Error("a pending domain was vouched for")
+	}
+
+	// No record, a wrong one: not verified. The right one: served.
+	if code, _ := do(t, c, "POST", base+"/share-look/verify", "", csrf, "1"); code != 400 {
+		t.Errorf("verified with no record: %d", code)
+	}
+	txt["_trckable.client.example.com"] = []string{"trckable-verify=somebody-elses"}
+	if code, _ := do(t, c, "POST", base+"/share-look/verify", "", csrf, "1"); code != 400 {
+		t.Errorf("verified with a wrong record: %d", code)
+	}
+	txt["_trckable.client.example.com"] = []string{"v=spf1 -all", " " + token + " "}
+	if code, l := do(t, c, "POST", base+"/share-look/verify", "", csrf, "1"); code != 200 || l["domain_ok"] != true {
+		t.Fatalf("verify: %d %v", code, l)
+	}
+	if ask() != 200 {
+		t.Error("a verified domain was not vouched for")
+	}
+	w = httptest.NewRecorder()
+	g.api.ShareDomains(inner).ServeHTTP(w, httptest.NewRequest("GET", "http://client.example.com/login", nil))
+	if w.Code != 404 {
+		t.Errorf("a verified domain was not gated: %d", w.Code)
+	}
+	if _, out := do(t, c, "POST", base+"/shares", `{"name":"Client"}`, csrf, "1"); !strings.HasPrefix(out["url"].(string), "https://client.example.com/s/") {
+		t.Errorf("a verified domain was not used for a link: %v", out["url"])
+	}
+
+	// Changing the name starts again; the old one stops being served.
+	_, l = do(t, c, "PUT", base+"/share-look", `{"domain":"other.example.com"}`, csrf, "1")
+	if l["domain_ok"] != false || l["verify_value"] == token {
+		t.Errorf("a changed domain kept its proof: %v", l)
+	}
+	if ask() != 404 {
+		t.Error("the old domain is still served")
+	}
+
+	// Another site cannot take a name that is served, even with a record.
+	other, _ := g.ctl.CreateSite(ctx, sqlite.DefaultAccount, "other.com", "")
+	do(t, c, "PUT", base+"/share-look", `{"domain":"client.example.com"}`, csrf, "1")
+	txt["_trckable.client.example.com"] = nil
+	_, l = do(t, c, "GET", base+"/share-look", "")
+	txt["_trckable.client.example.com"] = []string{l["verify_value"].(string)}
+	do(t, c, "POST", base+"/share-look/verify", "", csrf, "1")
+	do(t, c, "PUT", g.srv.URL+"/api/v1/sites/"+other+"/share-look", `{"domain":"client.example.com"}`, csrf, "1")
+	_, l = do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+other+"/share-look", "")
+	txt["_trckable.client.example.com"] = []string{l["verify_value"].(string)}
+	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/sites/"+other+"/share-look/verify", "", csrf, "1"); code != 400 {
+		t.Errorf("a second site verified a domain that is served: %d", code)
+	}
+
+	// Deleting the site frees the name at once.
+	if code, _ := do(t, c, "DELETE", base, `{"domain":"site.com"}`, csrf, "1"); code != 200 {
+		t.Fatalf("delete: %d", code)
+	}
+	if ask() != 404 {
+		t.Error("a deleted site's domain is still served")
+	}
+}
+
+// Changing the domain is limited, so a name cannot be tried one after another.
+func TestShareDomainChangesAreLimited(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	base := g.srv.URL + "/api/v1/sites/" + g.site
+	got := 0
+	for i := range 8 {
+		code, _ := do(t, c, "PUT", base+"/share-look", fmt.Sprintf(`{"domain":"try%d.example.com"}`, i), csrf, "1")
+		if code == http.StatusTooManyRequests {
+			break
+		}
+		got++
+	}
+	if got != 5 {
+		t.Errorf("%d changes in a day were let through, want 5", got)
+	}
+	// The same domain again, or the colour, is no change of name.
+	if code, _ := do(t, c, "PUT", base+"/share-look", `{"domain":"try4.example.com","color":"#112233"}`, csrf, "1"); code != 200 {
+		t.Errorf("a colour was refused with the limit hit: %d", code)
 	}
 }

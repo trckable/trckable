@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"errors"
 	"image"
@@ -12,8 +13,11 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"path"
+	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
@@ -58,18 +62,26 @@ func logoType(data []byte) (string, []byte, error) {
 }
 
 // shareLookAnswer is a site's look as its owner edits it: the settings, where
-// the logo is, and the address a domain is to be pointed at.
+// the logo is, and what a domain still needs: the TXT record that proves it is
+// theirs, and the address its CNAME points at.
 func (a *API) shareLookAnswer(w http.ResponseWriter, r *http.Request, site string) {
 	l := a.Ctl.ShareLookOf(r.Context(), site)
 	logo := ""
 	if l.LogoAt > 0 {
 		logo = "/api/v1/sites/" + site + "/share-logo?v=" + strconv.FormatInt(l.LogoAt, 10)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"color": l.Color, "hide_brand": l.HideBrand, "domain": l.Domain, "logo_url": logo,
+	out := map[string]any{
+		"color": l.Color, "hide_brand": l.HideBrand, "domain": l.Domain, "domain_ok": l.DomainOK, "logo_url": logo,
 		"target": hostOnly(a.publicBase(r)), // what the domain's CNAME points at
-	})
+	}
+	if l.Domain != "" && !l.DomainOK {
+		out["verify_name"], out["verify_value"] = verifyName(l.Domain), l.DomainToken
+	}
+	writeJSON(w, http.StatusOK, out)
 }
+
+// verifyName is where the TXT record that proves a domain goes.
+func verifyName(domain string) string { return "_trckable." + domain }
 
 func (a *API) shareLook(w http.ResponseWriter, r *http.Request) {
 	if a.owner(w, r) == nil || !a.siteExists(w, r) {
@@ -92,22 +104,99 @@ func (a *API) setShareLook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	domain, err := sqlite.ShareDomain(in.Domain)
-	if err == nil && domain != "" && (domain == hostOnly(a.publicBase(r)) || domain == hostOnly(r.Host)) {
-		err = errors.New("that is the address of this dashboard: use another domain for share links")
-	}
 	if err != nil {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	site := r.PathValue("site")
-	if err := a.Ctl.SetShareLook(r.Context(), site, strings.TrimSpace(in.Color), in.HideBrand, domain); err != nil {
-		if busy(w, err) {
-			return
-		}
-		fail(w, http.StatusBadRequest, err.Error())
+	if domain != "" && a.reservedHost(r, domain) {
+		fail(w, http.StatusBadRequest, errDomainRefused.Error())
+		return
+	}
+	// A domain is a name this server will answer to: changing it is limited,
+	// so it cannot be used to try names one after another.
+	if domain != a.Ctl.ShareLookOf(r.Context(), site).Domain && !a.loginRate.allow("sharedomain:"+site, a.Now(), 5, 24*time.Hour) {
+		fail(w, http.StatusTooManyRequests, "the domain was changed many times today: try again tomorrow")
+		return
+	}
+	err = a.Ctl.SetShareLook(r.Context(), site, strings.TrimSpace(in.Color), in.HideBrand, domain, a.ShareDomainSkipVerify)
+	if busy(w, err) {
+		return
+	}
+	if !a.lookError(w, err) {
 		return
 	}
 	a.loadShareHosts(r)
+	a.shareLookAnswer(w, r, site)
+}
+
+// errDomainRefused is all a person is told when a domain cannot be used: that
+// it is the dashboard's own, reserved, or already served for another site is
+// not something to tell whoever asks.
+var errDomainRefused = errors.New("that domain cannot be used")
+
+// lookError answers a store's error in words that name nothing internal, and
+// says whether there was none.
+func (a *API) lookError(w http.ResponseWriter, err error) bool {
+	switch {
+	case err == nil:
+		return true
+	case errors.Is(err, sqlite.ErrBadColor):
+		fail(w, http.StatusBadRequest, sqlite.ErrBadColor.Error())
+	case errors.Is(err, sqlite.ErrBadDomain):
+		fail(w, http.StatusBadRequest, sqlite.ErrBadDomain.Error())
+	case errors.Is(err, sqlite.ErrDomainTaken):
+		fail(w, http.StatusBadRequest, errDomainRefused.Error())
+	default:
+		fail(w, http.StatusInternalServerError, err.Error()) // logged, and the client is told only that it failed
+	}
+	return false
+}
+
+// reservedHost says a name is one this server must keep for itself: the
+// dashboard's address (as configured and as asked for), and the names the
+// operator listed.
+func (a *API) reservedHost(r *http.Request, domain string) bool {
+	if domain == hostOnly(a.publicBase(r)) || domain == hostOnly(r.Host) || (a.BaseURL != "" && domain == hostOnly(a.BaseURL)) {
+		return true
+	}
+	return slices.Contains(a.ReservedHosts, domain)
+}
+
+// verifyShareDomain looks for the TXT record that shows the owner controls
+// the domain, and serves the domain once it is there.
+func (a *API) verifyShareDomain(w http.ResponseWriter, r *http.Request) {
+	if a.owner(w, r) == nil || !a.siteExists(w, r) {
+		return
+	}
+	site := r.PathValue("site")
+	if !a.loginRate.allow("sharedomain-verify:"+site, a.Now(), 10, time.Hour) {
+		fail(w, http.StatusTooManyRequests, "checked many times just now: DNS can take a while, try again later")
+		return
+	}
+	l := a.Ctl.ShareLookOf(r.Context(), site)
+	if l.Domain == "" {
+		fail(w, http.StatusBadRequest, "set a domain first")
+		return
+	}
+	if !l.DomainOK {
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		defer cancel()
+		lookup := a.LookupTXT
+		if lookup == nil {
+			lookup = net.DefaultResolver.LookupTXT
+		}
+		records, _ := lookup(ctx, verifyName(l.Domain))
+		found := slices.ContainsFunc(records, func(s string) bool { return strings.TrimSpace(s) == l.DomainToken })
+		if !found {
+			fail(w, http.StatusBadRequest, "the record was not found yet: DNS can take a while")
+			return
+		}
+		if !a.lookError(w, a.Ctl.VerifyShareDomain(r.Context(), site)) {
+			return
+		}
+		a.loadShareHosts(r)
+	}
 	a.shareLookAnswer(w, r, site)
 }
 
@@ -208,26 +297,31 @@ func hostOnly(s string) string {
 		s = u.Host
 	}
 	if h, _, err := net.SplitHostPort(s); err == nil {
-		return strings.ToLower(h)
+		s = h
 	}
-	return strings.ToLower(s)
+	return strings.TrimSuffix(strings.ToLower(s), ".") // "example.com." is the same name
 }
 
-// loadShareHosts reads the share domains into memory, so a request on the
-// ingest path costs one map lookup and no query.
+// loadShareHosts reads the verified share domains into memory, so a request
+// on the ingest path costs one map lookup and no query. When the read fails
+// the last list stays, and it is not tried again for a few seconds.
 func (a *API) loadShareHosts(r *http.Request) {
 	m, err := a.Ctl.ShareDomains(r.Context())
 	if err != nil {
-		return // the last list stays
+		a.shareTried.Store(time.Now().UnixNano())
+		return
 	}
 	a.shareHosts.Store(&m)
 }
 
 // shareDomainSite is the site whose share links a Host opens, when the host
-// is a share domain.
+// is a verified share domain.
 func (a *API) shareDomainSite(r *http.Request) (string, bool) {
 	m := a.shareHosts.Load()
 	if m == nil {
+		if time.Since(time.Unix(0, a.shareTried.Load())) < 5*time.Second {
+			return "", false
+		}
 		a.loadShareHosts(r)
 		if m = a.shareHosts.Load(); m == nil {
 			return "", false
@@ -241,8 +335,8 @@ func (a *API) shareDomainSite(r *http.Request) (string, bool) {
 // has one (the proxy in front provides the https), else this server's
 // address.
 func (a *API) shareBase(r *http.Request, site string) string {
-	if d := a.Ctl.ShareLookOf(r.Context(), site).Domain; d != "" {
-		return "https://" + d
+	if l := a.Ctl.ShareLookOf(r.Context(), site); l.Domain != "" && l.DomainOK {
+		return "https://" + l.Domain
 	}
 	return a.publicBase(r)
 }
@@ -259,6 +353,14 @@ func (a *API) onShareDomain(next http.Handler) http.Handler {
 			return
 		}
 		p := r.URL.Path
+		// Only a path that is already plain: no dot segments, double slashes or
+		// escaped dots and slashes, which a proxy and this server could read
+		// differently.
+		esc := strings.ToLower(r.URL.EscapedPath())
+		if path.Clean(p) != p || strings.Contains(esc, "%2e") || strings.Contains(esc, "%2f") || strings.Contains(esc, "%5c") || strings.Contains(p, "\\") {
+			http.NotFound(w, r)
+			return
+		}
 		allowed := false
 		switch {
 		case p == "/s" || strings.HasPrefix(p, "/s/"):
@@ -283,9 +385,15 @@ func (a *API) ShareDomains(next http.Handler) http.Handler {
 }
 
 // shareDomainAsk answers a proxy that asks before it gets a certificate for
-// a name (Caddy's on_demand_tls "ask"): 200 for a domain a site uses for its
-// share links, 404 for any other. It says nothing more.
+// a name (Caddy's on_demand_tls "ask"): 200 for a verified domain a site uses
+// for its share links, 404 for any other. It answers only a caller on this
+// machine that did not come through a proxy (no forwarding headers), unless
+// the operator opened it (ShareDomainAskOpen), and says nothing more.
 func (a *API) shareDomainAsk(w http.ResponseWriter, r *http.Request) {
+	if !a.ShareDomainAskOpen && !direct(r) {
+		http.NotFound(w, r)
+		return
+	}
 	d, err := sqlite.ShareDomain(r.URL.Query().Get("domain"))
 	if err != nil || d == "" {
 		http.NotFound(w, r)
@@ -306,4 +414,23 @@ func (a *API) shareDomainAsk(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(http.StatusOK)
+}
+
+// direct says a request came from this machine itself, not through a proxy
+// that sits in front of the server (a proxy adds forwarding headers).
+func direct(r *http.Request) bool {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return false
+	}
+	ip := net.ParseIP(host)
+	if ip == nil || !ip.IsLoopback() {
+		return false
+	}
+	for _, h := range []string{"X-Forwarded-For", "X-Forwarded-Host", "X-Real-IP", "Forwarded"} {
+		if r.Header.Get(h) != "" {
+			return false
+		}
+	}
+	return true
 }

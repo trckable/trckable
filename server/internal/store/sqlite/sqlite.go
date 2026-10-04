@@ -580,12 +580,14 @@ var migrations = []string{
 		color      TEXT NOT NULL DEFAULT '',
 		hide_brand INTEGER NOT NULL DEFAULT 0,
 		domain     TEXT NOT NULL DEFAULT '',
+		domain_ok  INTEGER NOT NULL DEFAULT 0,
+		domain_token TEXT NOT NULL DEFAULT '',
 		logo       BLOB,
 		logo_type  TEXT NOT NULL DEFAULT '',
 		logo_at    INTEGER NOT NULL DEFAULT 0,
 		updated_at INTEGER NOT NULL
 	);
-	CREATE UNIQUE INDEX site_share_look_domain ON site_share_look(domain) WHERE domain <> '';`,
+	CREATE UNIQUE INDEX site_share_look_domain ON site_share_look(domain) WHERE domain <> '' AND domain_ok = 1;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

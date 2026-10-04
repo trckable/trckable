@@ -38,6 +38,7 @@ export const more = {
   newShareAddress: (site: string, id: string) => call<{ url: string }>('POST', `/sites/${site}/shares/${id}/address`, {}),
   shareLook: (site: string) => call<ShareLook>('GET', `/sites/${site}/share-look`),
   setShareLook: (site: string, look: Pick<ShareLook, 'color' | 'hide_brand' | 'domain'>) => call<ShareLook>('PUT', `/sites/${site}/share-look`, look),
+  verifyShareDomain: (site: string) => call<ShareLook>('POST', `/sites/${site}/share-look/verify`, {}),
   setShareLogo: (site: string, logo: Blob) => raw('PUT', `/sites/${site}/share-logo`, logo),
   clearShareLogo: (site: string) => call<ShareLook>('DELETE', `/sites/${site}/share-logo`),
   people: () => call<{ people: Person[] }>('GET', '/people'),

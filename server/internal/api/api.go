@@ -74,7 +74,19 @@ type API struct {
 	stopping   chan struct{} // closed by Stop: live streams end so a restart need not wait for them
 	patterns   []string      // every route Routes registered
 	stopOnce   sync.Once
-	shareHosts atomic.Pointer[map[string]string] // share domain -> site, kept in memory
+	shareHosts atomic.Pointer[map[string]string] // verified share domain -> site, kept in memory
+	shareTried atomic.Int64                      // when the list was last tried and failed (unix nanoseconds)
+	// ReservedHosts are names that can never be a share domain, besides the
+	// dashboard's own address (TRCKABLE_RESERVED_HOSTS).
+	ReservedHosts []string
+	// ShareDomainSkipVerify serves a share domain as soon as it is set, for an
+	// instance whose one owner controls every name (TRCKABLE_SHARE_DOMAIN_SKIP_VERIFY).
+	ShareDomainSkipVerify bool
+	// ShareDomainAskOpen lets any caller, not only a proxy on this machine,
+	// ask which domains are served (TRCKABLE_SHARE_DOMAIN_ASK_OPEN).
+	ShareDomainAskOpen bool
+	// LookupTXT reads a name's TXT records: the system's resolver, except in tests.
+	LookupTXT func(ctx context.Context, name string) ([]string, error)
 }
 
 // Stop ends every live stream. The server calls it when it starts shutting
@@ -178,6 +190,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("POST /api/v1/sites/{site}/shares/{id}/address", a.authed(a.newShareAddress))
 	handle("GET /api/v1/sites/{site}/share-look", a.authed(a.shareLook))
 	handle("PUT /api/v1/sites/{site}/share-look", a.authed(a.setShareLook))
+	handle("POST /api/v1/sites/{site}/share-look/verify", a.authed(a.verifyShareDomain))
 	handle("GET /api/v1/sites/{site}/share-logo", a.authed(a.shareLogoOwner))
 	handle("PUT /api/v1/sites/{site}/share-logo", a.authed(a.setShareLogo))
 	handle("DELETE /api/v1/sites/{site}/share-logo", a.authed(a.clearShareLogo))

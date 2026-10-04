@@ -7,7 +7,9 @@ import { fail, type Site, more } from '../../lib/apiMore'
 import { Switch } from '../../components/Switch'
 import { toast } from '../../components/Toast'
 import { copy } from './copy'
+import { LinkPreview } from './LinkPreview'
 import { LookPanel } from './LookPanel'
+import { useLook } from './useLook'
 
 export function LinkPanel({ site, onBack }: { site: Site; onBack: () => void }) {
   const [password, setPassword] = useState('')
@@ -15,6 +17,7 @@ export function LinkPanel({ site, onBack }: { site: Site; onBack: () => void }) 
   const [busy, setBusy] = useState(false)
   const [url, setUrl] = useState('')
   const [copied, setCopied] = useState(false)
+  const look = useLook(site.id)
   const create = () => {
     setBusy(true)
     more
@@ -29,43 +32,46 @@ export function LinkPanel({ site, onBack }: { site: Site; onBack: () => void }) 
       toast(copy.linkCopied)
     })
   return (
-    <div className="sd-link">
-      <button type="button" className="btn ghost sd-back" onClick={onBack}>
-        <ArrowLeft size={16} strokeWidth={1.8} aria-hidden="true" />
-        {copy.back}
-      </button>
-      <h3>
-        <Link2 size={17} strokeWidth={1.8} aria-hidden="true" />
-        {copy.linkTitle}
-      </h3>
-      {!url && (
-        <>
-          <label className="field">
-            {copy.password}
-            <input className="input" type="password" autoComplete="new-password" placeholder={copy.passwordHint} value={password} onChange={(e) => setPassword(e.target.value)} />
-          </label>
-          <label className="sd-toggle">
-            <span>{copy.revenue}</span>
-            <Switch on={revenue} label={copy.revenue} onChange={() => setRevenue((x) => !x)} />
-          </label>
-          <button type="button" className="btn primary" disabled={busy} onClick={create}>
-            {busy && <span className="btn-spin" aria-hidden="true" />}
-            {copy.create}
-          </button>
-        </>
-      )}
-      {url && (
-        <div className="sd-url">
-          <input className="input" readOnly value={url} onFocus={(e) => e.target.select()} />
-          <button type="button" className="btn primary" onClick={copyUrl}>
-            {copied && <Check size={16} strokeWidth={2.4} aria-hidden="true" />}
-            {!copied && <Copy size={16} strokeWidth={1.8} aria-hidden="true" />}
-            {copy.copyLink}
-          </button>
-        </div>
-      )}
-      <LookPanel site={site} />
-      <span className="faint sd-manage">{copy.manage}</span>
+    <div className="sd-linkgrid">
+      <div className="sd-link">
+        <button type="button" className="btn ghost sd-back" onClick={onBack}>
+          <ArrowLeft size={16} strokeWidth={1.8} aria-hidden="true" />
+          {copy.back}
+        </button>
+        <h3>
+          <Link2 size={17} strokeWidth={1.8} aria-hidden="true" />
+          {copy.linkTitle}
+        </h3>
+        {!url && (
+          <>
+            <label className="field">
+              {copy.password}
+              <input className="input" type="password" autoComplete="new-password" placeholder={copy.passwordHint} value={password} onChange={(e) => setPassword(e.target.value)} />
+            </label>
+            <label className="sd-toggle">
+              <span>{copy.revenue}</span>
+              <Switch on={revenue} label={copy.revenue} onChange={() => setRevenue((x) => !x)} />
+            </label>
+            <button type="button" className="btn primary" disabled={busy} onClick={create}>
+              {busy && <span className="btn-spin" aria-hidden="true" />}
+              {copy.create}
+            </button>
+          </>
+        )}
+        {url && (
+          <div className="sd-url">
+            <input className="input" readOnly value={url} onFocus={(e) => e.target.select()} />
+            <button type="button" className="btn primary" onClick={copyUrl}>
+              {copied && <Check size={16} strokeWidth={2.4} aria-hidden="true" />}
+              {!copied && <Copy size={16} strokeWidth={1.8} aria-hidden="true" />}
+              {copy.copyLink}
+            </button>
+          </div>
+        )}
+        <LookPanel state={look} />
+        <span className="faint sd-manage">{copy.manage}</span>
+      </div>
+      <LinkPreview site={site} state={look} />
     </div>
   )
 }

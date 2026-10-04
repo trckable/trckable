@@ -102,6 +102,7 @@ var routeRules = map[string]string{
 	"GET /api/v1/share-domain/ask":                               "public",
 	"GET /api/v1/sites/{site}/share-look":                        "owner",
 	"PUT /api/v1/sites/{site}/share-look":                        "write",
+	"POST /api/v1/sites/{site}/share-look/verify":                "write",
 	"GET /api/v1/sites/{site}/share-logo":                        "owner",
 	"PUT /api/v1/sites/{site}/share-logo":                        "write",
 	"DELETE /api/v1/sites/{site}/share-logo":                     "write",

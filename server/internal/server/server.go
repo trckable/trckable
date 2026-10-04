@@ -201,7 +201,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	}
 	a := &api.API{
 		Ctl: ctl, Hub: s.hub, Token: cfg.APIToken, SetupEnv: cfg.SetupToken, ClientIP: s.ingest.ClientIP,
-		Revenue: s.revenue, BaseURL: cfg.BaseURL, Box: box, Version: Version, UpdateCheck: cfg.UpdateCheck,
+		Revenue: s.revenue, BaseURL: cfg.BaseURL, ReservedHosts: cfg.ReservedHosts, ShareDomainSkipVerify: cfg.ShareDomainSkipVerify, ShareDomainAskOpen: cfg.ShareDomainAskOpen, Box: box, Version: Version, UpdateCheck: cfg.UpdateCheck,
 		Query: func() *query.Q {
 			st, w := s.duck.Load(), s.writer.Load()
 			if st == nil || w == nil || !w.Ready() {

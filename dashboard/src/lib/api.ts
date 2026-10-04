@@ -611,6 +611,11 @@ export interface ShareLook {
   color: string
   hide_brand: boolean
   domain: string
+  /** The domain was verified, so it is served; until then it is pending. */
+  domain_ok: boolean
+  /** A pending domain's proof: a TXT record at verify_name with verify_value. */
+  verify_name?: string
+  verify_value?: string
   logo_url: string
   /** What a custom domain's CNAME points at: this server's own host. */
   target: string
