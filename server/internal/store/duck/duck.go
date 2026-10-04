@@ -251,11 +251,25 @@ var migrations = []string{
 		sh      UBIGINT   NOT NULL,
 		PRIMARY KEY (site_id, day, path, width, kind, el, cx, cy)
 	);`,
+	// 9: history brought in from Google Analytics through its Data API, as
+	// daily counters and never as events: one row per (site, day, dimension,
+	// value), where the dimension "total" is the day itself. Reports add these
+	// days only before the site's first recorded event.
+	`CREATE TABLE imported_daily (
+		site_id  VARCHAR NOT NULL,
+		day      DATE    NOT NULL,
+		dim      VARCHAR NOT NULL,
+		value    VARCHAR NOT NULL,
+		sessions UBIGINT NOT NULL,
+		users    UBIGINT NOT NULL,
+		views    UBIGINT NOT NULL,
+		PRIMARY KEY (site_id, day, dim, value)
+	);`,
 }
 
 // tableSince is the migration that created each table added after the first
 // release, so a backup written before it restores without one.
-var tableSince = map[string]int{"crawler_hits": 5, "bot_daily": 7, "heat_daily": 8}
+var tableSince = map[string]int{"crawler_hits": 5, "bot_daily": 7, "heat_daily": 8, "imported_daily": 9}
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
 
