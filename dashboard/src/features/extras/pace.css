@@ -1,6 +1,12 @@
-/* The chart head's pace line: quiet, beside the title, never louder than it. */
-.pace-line {
-  margin-right: 12px;
-  font-size: 12px;
-  white-space: nowrap;
+/* The Visitors tile's pace line: quiet, on the change's own line, after it. A tile too narrow for it leaves it out. */
+.kpi-pace {
+  margin-left: 8px;
+  font-size: 11.5px;
+  color: var(--text-3);
+  cursor: help;
+}
+@container (max-width: 150px) {
+  .kpi-pace {
+    display: none;
+  }
 }

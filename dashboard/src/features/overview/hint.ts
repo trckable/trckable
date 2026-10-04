@@ -1,7 +1,7 @@
 import { defineCopy, tag } from '../../i18n'
 // The small chip after the Visitors change: today (or yesterday) against what
 // that weekday usually brings ("+18% vs usual"). Pure, so the tile and the tests
-// read the same rules. Where this month is heading is the chart head's pace line
+// read the same rules. Where this month is heading is the Visitors tile's pace line
 // (features/extras/PaceLine), which already says it.
 
 export interface Chip {
