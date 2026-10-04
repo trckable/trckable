@@ -14,22 +14,6 @@ test.beforeAll(async () => {
   cookie = await session('heatmaps')
 })
 
-const PAGE = (script: string) => `<!doctype html><html><head><title>Sign up</title></head><body>
-  <main id="page">
-    <button class="join" type="button">Join</button>
-    <div class="card" style="cursor:pointer">A card that does nothing</div>
-    <form id="signup" action="/thanks">
-      <input name="email" type="email" autocomplete="off">
-      <input name="full_name" type="text" autocomplete="off">
-      <input name="company" type="text" autocomplete="off">
-      <input name="secret" type="password" autocomplete="off">
-      <input name="card" type="text" autocomplete="off">
-      <button type="submit">Go</button>
-    </form>
-  </main>
-  <script defer src="${script}" data-dev></script>
-</body></html>`
-
 test('what is typed is never sent: field names are, values never', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   const domain = `heat-${Date.now()}.example.org`
@@ -47,9 +31,8 @@ test('what is typed is never sent: field names are, values never', async ({ page
   page.on('request', (r) => sent.push({ url: r.url(), body: r.postData() ?? '' }))
   const answers: number[] = []
   page.on('response', (r) => r.url().endsWith('/api/h') && answers.push(r.status()))
-  await page.route(`http://${domain}/**`, (route) => route.fulfill({ contentType: 'text/html', body: route.request().url().endsWith('/thanks') ? '<h1>thanks</h1>' : PAGE(`${API}/js/${site}.js`) }))
-
-  await page.goto(`http://${domain}/signup`)
+  // The suite's site serves a sign-up form that carries this site's own script, as a local page (data-dev).
+  await page.goto(`/heat/${site}/signup`)
   await page.locator('.join').click()
   await page.locator('.card').click()
   await page.fill('[name=email]', TYPED[0])

@@ -258,11 +258,7 @@ func (q Q) heatScroll(ctx context.Context, p Params, path string, width int, out
 	default:
 		lo = 1024
 	}
-	var cols string
 	args := []any{p.From, p.To, p.Site, p.From, p.To, path, lo, hi}
-	for d := 10; d <= 100; d += 10 {
-		cols += fmt.Sprintf(", coalesce(avg((depth >= %d)::INT), 0)", d)
-	}
 	row := q.DB.QueryRowContext(ctx, `
 		WITH pv AS (
 			SELECT e.pageview_id, max(coalesce(x.scroll_pct, 0)) AS depth
@@ -272,7 +268,12 @@ func (q Q) heatScroll(ctx context.Context, p Params, path string, width int, out
 			WHERE e.site_id = ? AND e.ts >= ? AND e.ts < ? AND e.kind = 1 AND e.path = ?
 			  AND coalesce(e.screen, 1280) >= ? AND coalesce(e.screen, 1280) < ?
 			GROUP BY e.pageview_id)
-		SELECT count(*)`+cols+` FROM pv`, args...)
+		SELECT count(*),
+		       coalesce(avg((depth >= 10)::INT), 0), coalesce(avg((depth >= 20)::INT), 0), coalesce(avg((depth >= 30)::INT), 0),
+		       coalesce(avg((depth >= 40)::INT), 0), coalesce(avg((depth >= 50)::INT), 0), coalesce(avg((depth >= 60)::INT), 0),
+		       coalesce(avg((depth >= 70)::INT), 0), coalesce(avg((depth >= 80)::INT), 0), coalesce(avg((depth >= 90)::INT), 0),
+		       coalesce(avg((depth >= 100)::INT), 0)
+		FROM pv`, args...)
 	vals := make([]float64, 10)
 	dest := []any{&out.ScrollSample}
 	for i := range vals {
