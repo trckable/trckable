@@ -1,7 +1,9 @@
 // Every word of the header's Create menu (the funnel dialog's are in
 // dialogCopy.ts, its own chunk): this is what moves to the message files when
 // translations come.
-export const copy = {
+import { defineCopy } from '../../i18n'
+
+export const copy = defineCopy('create', {
   button: 'Create',
   menu: 'Create something',
   keyHint: (key: string) => `Create (${key})`,
@@ -11,4 +13,4 @@ export const copy = {
   funnelHint: 'Steps in order, and who carried on',
   note: 'Note',
   noteHint: 'Why a day looks the way it does',
-}
+})

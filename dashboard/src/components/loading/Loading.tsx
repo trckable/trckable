@@ -1,8 +1,12 @@
 import type { CSSProperties, ReactNode } from 'react'
 import '../../brand/logo.css'
-import { copy } from './copy'
+import { defineCopy } from '../../i18n'
+import { copy as english } from './copy'
 import './Loading.css'
 import { markHtml, type LoadingSize } from './markup'
+
+// The boot page (index.html) reads the English file at build time; the app says it in the chosen language.
+const copy = defineCopy('loading', english)
 
 // The page-size loader is the app itself on its way; the rest, a part of it.
 const DEFAULT: Record<LoadingSize, string> = { inline: copy.label, block: copy.label, page: copy.boot }

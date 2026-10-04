@@ -1,5 +1,7 @@
 // Every word on the People tab, outside the sentences a dialog asks.
-export const people = {
+import { defineCopy } from '../../i18n'
+
+export const people = defineCopy('account.people', {
   title: 'People',
   add: 'Add someone',
   adding: 'Adding…',
@@ -101,4 +103,4 @@ export const people = {
     message: (origin: string, email: string, password: string) =>
       `Sign in to trckable at ${origin} as ${email} with this one-time password: ${password}\nYou will choose your own right after.`,
   },
-}
+})

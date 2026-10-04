@@ -1,4 +1,6 @@
 // Every word of the toasts (Toast.tsx).
-export const toastCopy = {
+import { defineCopy } from '../i18n'
+
+export const toastCopy = defineCopy('toast', {
   dismiss: 'Dismiss',
-}
+})

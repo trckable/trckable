@@ -1,8 +1,9 @@
 // Every word the first run shows, in one place: this is what moves to the
 // message files when translations come.
 import { fmtInt } from '../../lib/format'
+import { defineCopy } from '../../i18n'
 
-export const copy = {
+export const copy = defineCopy('onboarding', {
   label: 'Set up your first site',
   skip: 'Skip for now',
   skipHint: 'Esc',
@@ -50,4 +51,4 @@ export const copy = {
     live: 'Open Live',
   },
   count: (n: number) => fmtInt(n),
-}
+})

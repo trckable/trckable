@@ -1,16 +1,18 @@
 // Every word the AI assistants & crawlers card shows, in one place: the
 // dashboard's text moves to message files when translations come, and this is
 // what moves.
+import { defineCopy } from '../../i18n'
+
 
 export type CrawlKind = 'answer' | 'train' | 'index'
 
-export const KINDS: readonly { id: CrawlKind; label: string; what: string }[] = [
+export const KINDS: readonly { id: CrawlKind; label: string; what: string }[] = defineCopy('crawlers.kinds', [
   { id: 'answer', label: 'AI assistants', what: 'Fetched by an assistant to answer someone right now' },
   { id: 'train', label: 'Training crawlers', what: 'Collected as training data' },
   { id: 'index', label: 'Search bots', what: 'Crawled so your pages can be found' },
-]
+])
 
-export const copy = {
+export const copy = defineCopy('crawlers', {
   title: 'AI assistants & crawlers',
   tabs: 'What the robot wanted',
   feed: 'How to feed this',
@@ -53,7 +55,7 @@ export const copy = {
     docs: 'Docs',
     done: 'Done',
   },
-}
+})
 
 /** The row the server folds pages into past fair use. */
 export const OTHER = '(other)'

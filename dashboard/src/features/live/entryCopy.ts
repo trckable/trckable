@@ -1,6 +1,8 @@
 // The few words Live's way in says: the switch and the Online now tile. They
 // load with the dashboard, so they live apart from the view's own (copy.ts).
-export const entryCopy = {
+import { defineCopy } from '../../i18n'
+
+export const entryCopy = defineCopy('live.entry', {
   switchLabel: 'View',
   live: 'Live',
   data: 'Data',
@@ -9,4 +11,4 @@ export const entryCopy = {
   onlineNote: 'visitors in the last 5 min',
   connecting: 'connecting…',
   openLive: 'Open Live',
-}
+})

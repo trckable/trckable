@@ -25,12 +25,12 @@ describe('the one reload', () => {
   beforeEach(() => {
     store = {}
     reload = vi.fn()
-    served = '<script type="module" src="/assets/index-bbbb2222.js"></script>' // the build the server runs now
+    served = '<script type="module" src="/assets/react-cccc3333.js"></script><script type="module" src="/assets/index-bbbb2222.js"></script>' // the build the server runs now (the same React, another app)
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-10-01T12:00:00Z'))
     vi.stubGlobal('sessionStorage', { getItem: (k: string) => store[k] ?? null, setItem: (k: string, v: string) => void (store[k] = v) })
     vi.stubGlobal('location', { reload })
-    vi.stubGlobal('document', { querySelector: () => ({ getAttribute: () => '/assets/index-aaaa1111.js' }) }) // the build this page runs
+    vi.stubGlobal('document', { querySelectorAll: () => [{ getAttribute: () => '/assets/react-cccc3333.js' }, { getAttribute: () => '/assets/index-aaaa1111.js' }] }) // the build this page runs
     vi.stubGlobal('fetch', () => Promise.resolve({ text: () => Promise.resolve(served) }))
   })
   afterEach(() => {
@@ -45,11 +45,11 @@ describe('the one reload', () => {
     expect(reload).toHaveBeenCalledTimes(1)
   })
   it('does not happen when the server runs the same build: a download aborted by leaving the page proves nothing', async () => {
-    served = '<script type="module" src="/assets/index-aaaa1111.js"></script>'
+    served = '<script type="module" src="/assets/react-cccc3333.js"></script><script type="module" src="/assets/index-aaaa1111.js"></script>'
     const { reloadOnce } = await load()
     expect(await reloadOnce()).toBe(false)
     expect(reload).not.toHaveBeenCalled()
-    served = '<script type="module" src="/assets/index-bbbb2222.js"></script>' // a deploy lands later
+    served = '<script type="module" src="/assets/react-cccc3333.js"></script><script type="module" src="/assets/index-bbbb2222.js"></script>' // a deploy lands later
     expect(await reloadOnce()).toBe(true)
   })
   it('does not happen when the server cannot be asked', async () => {

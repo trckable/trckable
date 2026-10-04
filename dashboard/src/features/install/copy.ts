@@ -3,6 +3,7 @@
 // prompt lives here too: it is text people read (and paste), not code.
 import { initCall, nextComponent, type Ctx, type Method } from '../../lib/install'
 import { tagFor } from './snippet'
+import { defineCopy } from '../../i18n'
 
 /** ", nor in the 3 scripts it loads", said properly for none and one. */
 function scriptsRead(n: number): string {
@@ -15,7 +16,7 @@ function scriptsRead(n: number): string {
 export type Tone = 'yes' | 'meh' | 'no'
 type Row = { label: string; cookies: [string, Tone]; cookieless: [string, Tone] }
 
-export const copy = {
+export const copy = defineCopy('install', {
   label: 'Install trckable',
   titleCard: (domain: string) => `Add trckable to ${domain}`,
   titleSettings: (domain: string) => `Install on ${domain}`,
@@ -89,10 +90,10 @@ export const copy = {
   },
   waiting: (domain: string) => `Waiting for the first visit. Open ${domain} in a browser tab: this updates by itself.`,
   live: (path: string) => `Live: a visit to ${path} just arrived.`,
-}
+})
 
 /** The new-site card on the dashboard: one calm card, nothing behind it. */
-export const waitCard = {
+export const waitCard = defineCopy('install.wait', {
   title: 'Waiting for the first visit',
   subScript: ['Add this to the', '<head>', (domain: string) => `of ${domain}, then open the site once.`] as const,
   subOther: (where: string) => `${where} Then open the site once.`,
@@ -100,10 +101,10 @@ export const waitCard = {
   prompt: 'Copy a prompt for your AI editor',
   promptCopied: 'Prompt copied',
   foot: 'Your dashboard opens here by itself the moment a visit arrives.',
-}
+})
 
 /** The add-site wizard: Your site → Install → Revenue (optional). */
-export const wizard = {
+export const wizard = defineCopy('install.wizard', {
   label: 'Add a site',
   steps: ['Your site', 'Install', 'Revenue (optional)'],
   title: ['Add a site', '', 'Attribute revenue'],
@@ -141,7 +142,7 @@ export const wizard = {
   revenueConnect: 'Connect payments',
   revenueSkip: 'Skip, open the dashboard',
   open: 'Open the dashboard',
-}
+})
 
 /** Which line the check shows, by what it found. A lookup, one case a line. */
 export type Outcome = 'site' | 'none' | 'nosite' | 'other' | 'unreachable'

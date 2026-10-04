@@ -1,6 +1,8 @@
 // The filter chips' words (FilterRow.tsx, ActiveFilters.tsx); they load with
 // them, not with the page.
-export const rowCopy = {
+import { defineCopy } from '../../i18n'
+
+export const rowCopy = defineCopy('header.row', {
   active: 'Active filters',
   is: 'is',
   isNot: 'is not',
@@ -19,4 +21,4 @@ export const rowCopy = {
   saveSegmentTitle: 'Keep these filters as a segment, to open in one click',
   saveInMenu: 'Save as segment',
   saveInMenuOne: 'Save this view',
-}
+})

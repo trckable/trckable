@@ -1,7 +1,9 @@
 // The words of the two header menus' items (MoreItems, AccountItems): lazy
 // chunks, so none of this is carried by the first load (moreCopy.ts has the
 // buttons' own).
-export const copy = {
+import { defineCopy } from '../i18n'
+
+export const copy = defineCopy('items', {
   share: 'Share',
   views: 'Views',
   refresh: 'Refresh',
@@ -12,6 +14,8 @@ export const copy = {
   shortcuts: 'Shortcuts',
   install: 'Install app',
   installHint: 'Tap Share, then Add to Home Screen',
+  language: 'Language',
+  languageAuto: 'Auto',
   theme: 'Theme',
   themes: { system: 'Auto', dark: 'Dark', light: 'Light' },
   account: 'Profile',
@@ -21,4 +25,4 @@ export const copy = {
   accountLabel: 'Profile, your account',
   milestones: 'Milestones',
   milestonesNew: 'Milestones, new ones',
-}
+})

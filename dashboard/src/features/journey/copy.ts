@@ -1,10 +1,11 @@
 // Every word the visitor journey shows, in one place: the dashboard's text
 // moves to message files when translations come, and this is what moves.
 import { channelLabel } from '../../lib/palette'
+import { defineCopy } from '../../i18n'
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
-export const copy = {
+export const copy = defineCopy('journey', {
   dialog: 'Visitor journey',
   title: (id: string) => `Visitor ${id}`,
   loading: 'Loading this visitor’s journey…',
@@ -56,4 +57,4 @@ export const copy = {
   dataRequest: 'Data request…',
   dataRequestHint: 'Export or erase everything held about this visitor',
   erase: 'Erase visitor…',
-}
+})

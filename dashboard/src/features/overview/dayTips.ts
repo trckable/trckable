@@ -3,7 +3,7 @@
 // split), and how the day's sales add up.
 import type { TimeChartProps } from '../../charts/TimeChart'
 import type { Day, Money, Point, Site } from '../../lib/api'
-import { fmtDuration, fmtInt, fmtMoney, fmtPct } from '../../lib/format'
+import { fmtDuration, fmtInt, fmtMoney, fmtPct, fmtRatio } from '../../lib/format'
 import { newVsReturning } from '../cookieless/labels'
 import type { ChartMetric } from './chartMetric'
 import { copy } from './copy'
@@ -12,7 +12,7 @@ import { hourDetail } from './hourDetail'
 
 type Row = { label: string; value: string; faint?: boolean; short?: string }
 
-const conversion = (x: number) => (x * 100).toFixed(x < 0.1 ? 2 : 1) + '%'
+const conversion = (x: number) => fmtRatio(x, x < 0.1 ? 2 : 1)
 
 /** "3 sales · $149 new · $49 renewal": the parts that are nothing are left out. Null when there were no sales. */
 export function saleNote(d: Day | undefined, fmt: (minor: number) => string): string | null {
@@ -25,7 +25,7 @@ export function saleNote(d: Day | undefined, fmt: (minor: number) => string): st
 }
 
 /** The row a metric already says as the card's headline. */
-const OWN: Partial<Record<ChartMetric, string>> = { pageviews: 'Pageviews', conversion: copy.conversion, 'per-visitor': tipCopy.perVisitor, bounce: copy.bounce, session: copy.session }
+const OWN: Partial<Record<ChartMetric, string>> = { pageviews: tipCopy.pageviews, conversion: copy.conversion, 'per-visitor': tipCopy.perVisitor, bounce: copy.bounce, session: copy.session }
 
 /** A day's lines. Where the visits lead they come first and the money follows; where another number is the chart, the visitors are a line and what the headline says is not repeated. */
 export function dayDetail(d: Day, o: { site: Pick<Site, 'cookieless'>; money?: Money; metric: ChartMetric }): { rows: Row[]; splits: ReturnType<typeof newVsReturning>['splits'] } {
@@ -36,12 +36,12 @@ export function dayDetail(d: Day, o: { site: Pick<Site, 'cookieless'>; money?: M
     paid.push({ label: tipCopy.perVisitor, short: tipCopy.perVisitorShort, value: fmtMoney(perVisitor, o.money.currency, o.money.exponent, { cents: true }) })
     paid.push({ label: copy.conversion, short: tipCopy.conversionShort, value: d.kpis.visitors ? conversion(d.money.payments / d.kpis.visitors) : '–' })
   }
-  const views: Row = { label: 'Pageviews', short: 'views', value: fmtInt(d.kpis.pageviews) }
+  const views: Row = { label: tipCopy.pageviews, short: tipCopy.short.views, value: fmtInt(d.kpis.pageviews) }
   const rest: Row[] = [
-    { label: copy.bounce, short: 'bounce', value: fmtPct(d.kpis.bounce_rate), faint: true },
-    { label: copy.session, short: 'session', value: fmtDuration(d.kpis.avg_session_s), faint: true },
+    { label: copy.bounce, short: tipCopy.short.bounce, value: fmtPct(d.kpis.bounce_rate), faint: true },
+    { label: copy.session, short: tipCopy.short.session, value: fmtDuration(d.kpis.avg_session_s), faint: true },
   ]
-  const visitors: Row = { label: copy.visitors, short: 'visitors', value: fmtInt(d.kpis.visitors) }
+  const visitors: Row = { label: copy.visitors, short: tipCopy.short.visitors, value: fmtInt(d.kpis.visitors) }
   const rows = o.metric === 'visitors' ? [views, ...nvr.rows, ...paid, ...rest] : [visitors, ...paid, views, ...nvr.rows, ...rest]
   return { rows: rows.filter((r) => r.label !== OWN[o.metric]), splits: nvr.splits }
 }

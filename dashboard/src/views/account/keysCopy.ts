@@ -1,5 +1,7 @@
 // Every word on the API keys tab.
-export const keys = {
+import { defineCopy } from '../../i18n'
+
+export const keys = defineCopy('account.keys', {
   title: 'API keys',
   max: 20,
   count: (used: number, max: number) => `${used} / ${max}`,
@@ -37,4 +39,4 @@ export const keys = {
     yesterday: 'yesterday',
     days: (n: number) => `${n} days ago`,
   },
-}
+})

@@ -1,4 +1,5 @@
 // The avatar menu's items (AccountMenu.tsx). Its own chunk, so the first load carries only the button.
+import { useState } from 'react'
 import { CircleUser, Eye, EyeOff, Keyboard, LogOut, Smartphone } from 'lucide-react'
 import { choose, canLeaveOut, nextChoice, stateOf } from '../features/exclude/ownVisits'
 import { openAccount } from '../lib/account'
@@ -10,6 +11,7 @@ import { isViewer } from '../lib/me'
 import { signOut } from '../lib/signOut'
 import { THEMES, useTheme } from '../lib/theme'
 import { PersonAvatar } from './PersonAvatar'
+import { LanguageList, LanguageRow } from './LanguageItems'
 import { openShortcuts } from './ShortcutsHost'
 import { toast } from './toastBus'
 import { copy as exclude } from '../features/exclude/copy'
@@ -77,6 +79,19 @@ function OwnVisits({ site, go }: { site: Site; go: Parameters<MenuItems>[0] }) {
 
 /** The items of the avatar menu. */
 export default function AccountItems({ profile, v, go, site }: { profile: Profile | null; v: number; go: Parameters<MenuItems>[0]; site?: Site }) {
+  // The language list takes the menu's place until a choice or Back; Back puts focus on the row again.
+  const [listing, setListing] = useState(false)
+  const [back, setBack] = useState(false)
+  if (listing)
+    return (
+      <LanguageList
+        go={go}
+        onBack={() => {
+          setBack(true)
+          setListing(false)
+        }}
+      />
+    )
   return (
     <>
       <Who profile={profile} v={v} />
@@ -86,6 +101,7 @@ export default function AccountItems({ profile, v, go, site }: { profile: Profil
       </button>
       {site && canLeaveOut(site) && <OwnVisits site={site} go={go} />}
       <ThemeRow />
+      <LanguageRow back={back} onOpen={() => setListing(true)} />
       <button type="button" role="menuitem" onClick={go(openShortcuts)}>
         <Keyboard size={18} strokeWidth={1.75} aria-hidden="true" />
         {copy.shortcuts}

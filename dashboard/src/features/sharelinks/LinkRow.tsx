@@ -13,8 +13,9 @@ import { Ask } from './Ask'
 import { CopyButton } from './CopyButton'
 import { copy, nameOf } from './copy'
 import { endState } from './logic'
+import { tag } from '../../i18n'
 
-const day = (unix?: number | null) => (unix ? new Date(unix * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '')
+const day = (unix?: number | null) => (unix ? new Date(unix * 1000).toLocaleDateString(tag, { day: 'numeric', month: 'short', year: 'numeric' }) : '')
 
 function Flag({ on, label, children }: { on: boolean; label: string; children: React.ReactNode }) {
   return (
@@ -36,7 +37,7 @@ function Ends({ share }: { share: Share }) {
   return (
     <span className={state === 'past' ? 'sl-ends-col past' : 'sl-ends-col'} title={label}>
       <Clock size={13} strokeWidth={1.75} aria-hidden="true" />
-      <span aria-hidden="true">{state === 'none' ? '∞' : new Date((share.expires_at ?? 0) * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span>
+      <span aria-hidden="true">{state === 'none' ? '∞' : new Date((share.expires_at ?? 0) * 1000).toLocaleDateString(tag, { day: 'numeric', month: 'short' })}</span>
       <span className="sr">{label}</span>
     </span>
   )

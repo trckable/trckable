@@ -4,6 +4,7 @@ import { Check, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { ALL_DIMS, FILTER_GROUPS } from './filterGroups'
 import { filterCopy as t } from './filterCopy'
+import { fmtInt } from '../lib/format'
 
 export interface Value {
   dim: string
@@ -54,7 +55,7 @@ export function ValueRows({ values, showDim, isOn, onPick }: { values: Value[]; 
             {showDim && <d.icon size={15} strokeWidth={1.75} aria-hidden="true" />}
             <span className="lbl">{v.label || '/'}</span>
             {showDim && <span className="sub">{d.label}</span>}
-            <span className="end num">{on ? <Check size={14} strokeWidth={2.25} className="ok" aria-label={t.filtered} /> : v.visitors.toLocaleString()}</span>
+            <span className="end num">{on ? <Check size={14} strokeWidth={2.25} className="ok" aria-label={t.filtered} /> : fmtInt(v.visitors)}</span>
           </button>
         )
       })}

@@ -20,6 +20,11 @@ const bootGhost = {
 const split = {
   groups: [
     { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/, priority: 1 },
+    // Which language the page speaks, and the helper that loads a lazy file: files of their own,
+    // because the first script waits for the language's words (src/i18n/index.ts) and those words
+    // load through, and import, these. Inside the first script they would wait for it while it
+    // waits for them.
+    { name: 'lang', test: /src[\\/]i18n[\\/]lang\.ts$|preload-helper/, priority: 2 },
     { name: 'core', tags: ['$initial' as const] },
   ],
 }

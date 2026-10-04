@@ -1,5 +1,7 @@
 // The two cards under the chart: their tabs, and the small words on their lists.
-export const cardCopy = {
+import { defineCopy } from '../../i18n'
+
+export const cardCopy = defineCopy('cards', {
   who: 'Who came',
   what: 'What they did',
   sources: 'Sources',
@@ -24,4 +26,4 @@ export const cardCopy = {
   perDayEntry: 'Per-day data covers entry pages only',
   loading: 'Loading',
   heatmap: (page: string) => `Heatmap of ${page}`,
-}
+})

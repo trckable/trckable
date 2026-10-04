@@ -1,8 +1,9 @@
 // Every word of the site switcher's list, loaded with it (copy.ts has the
 // button's few).
 import { copy as first } from './copy'
+import { defineCopy } from '../../i18n'
 
-export const copy = {
+export const copy = defineCopy('sites.menu', {
   all: first.all,
   sites: 'Sites',
   search: 'Search sites',
@@ -55,4 +56,4 @@ export const copy = {
   remove: 'Remove',
   keys: 'Alt + ↑ / ↓ moves the focused site. Drag to reorder.',
   dragged: (name: string, where: string) => `${name} moved to ${where}`,
-}
+})

@@ -1,1 +1,0 @@
-import{i as e}from"./react-9bbe84d6.js";var t=e(),n=(e,t)=>`trckable:card:${e}:${t}`;function r(e,t){try{return localStorage.getItem(n(e,t))===`1`}catch{return!1}}function i(e,t){try{localStorage.setItem(n(e,t),`1`)}catch{}}function a(e,n){let[a,o]=(0,t.useState)(!1);return[a||r(e,n),()=>{i(e,n),o(!0)}]}export{r as n,a as t};

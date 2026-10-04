@@ -1,7 +1,16 @@
 // Calendar math on plain "YYYY-MM-DD" strings. Dates are days in the site's
 // timezone; we do arithmetic on UTC midnights so DST never shifts a day.
 
+import { defineCopy, intl } from '../i18n'
+
 export type ISODate = string
+
+// The words of the periods and comparisons, and the day and month names: the
+// language's own through Intl, English by hand (the form it always had).
+const words = defineCopy('dates', {
+  period: { now: 'Now', today: 'Today', yesterday: 'Yesterday', '7d': 'Last 7 days', '14d': 'Last 14 days', '28d': 'Last 28 days', '30d': 'Last 30 days', '90d': 'Last 90 days', '12mo': 'Last 12 months', wtd: 'This week', lastweek: 'Last week', mtd: 'This month', lastmonth: 'Last month', qtd: 'This quarter', ytd: 'This year', lastyear: 'Last year' },
+  before: { year: 'a year before', custom: 'your dates', wtd: 'last week', mtd: 'last month', ytd: 'last year', today: 'yesterday', day: 'the day before', days: (n: number) => `the ${n} days before` },
+})
 
 const DAY = 86_400_000
 
@@ -59,33 +68,33 @@ export interface Preset {
 
 export const PRESETS: Preset[] = [
   // "Now" is today, by the hour, refreshing itself — the live view.
-  { id: 'now', label: 'Now', key: 'n', range: (t) => ({ from: t, to: t }) },
-  { id: 'today', label: 'Today', key: 't', range: (t) => ({ from: t, to: t }) },
-  { id: 'yesterday', label: 'Yesterday', key: 'y', range: (t) => ({ from: addDays(t, -1), to: addDays(t, -1) }) },
-  { id: '7d', label: 'Last 7 days', key: '7', range: (t) => ({ from: addDays(t, -6), to: t }) },
-  { hidden: true, id: '14d', label: 'Last 14 days', range: (t) => ({ from: addDays(t, -13), to: t }) },
-  { hidden: true, id: '28d', label: 'Last 28 days', key: '4', range: (t) => ({ from: addDays(t, -27), to: t }) },
-  { id: '30d', label: 'Last 30 days', key: '3', range: (t) => ({ from: addDays(t, -29), to: t }) },
-  { id: '90d', label: 'Last 90 days', key: '9', range: (t) => ({ from: addDays(t, -89), to: t }) },
-  { id: '12mo', label: 'Last 12 months', key: '1', range: (t) => ({ from: addDays(addMonths(t, -12), 1), to: t }) },
-  { id: 'wtd', label: 'This week', key: 'w', range: (t) => ({ from: startOfWeek(t), to: t }) },
-  { hidden: true, id: 'lastweek', label: 'Last week', range: (t) => ({ from: addDays(startOfWeek(t), -7), to: addDays(startOfWeek(t), -1) }) },
-  { id: 'mtd', label: 'This month', key: 'm', range: (t) => ({ from: startOfMonth(t), to: t }) },
-  { id: 'lastmonth', label: 'Last month', range: (t) => ({ from: startOfMonth(addMonths(startOfMonth(t), -1)), to: addDays(startOfMonth(t), -1) }) },
+  { id: 'now', label: words.period.now, key: 'n', range: (t) => ({ from: t, to: t }) },
+  { id: 'today', label: words.period.today, key: 't', range: (t) => ({ from: t, to: t }) },
+  { id: 'yesterday', label: words.period.yesterday, key: 'y', range: (t) => ({ from: addDays(t, -1), to: addDays(t, -1) }) },
+  { id: '7d', label: words.period['7d'], key: '7', range: (t) => ({ from: addDays(t, -6), to: t }) },
+  { hidden: true, id: '14d', label: words.period['14d'], range: (t) => ({ from: addDays(t, -13), to: t }) },
+  { hidden: true, id: '28d', label: words.period['28d'], key: '4', range: (t) => ({ from: addDays(t, -27), to: t }) },
+  { id: '30d', label: words.period['30d'], key: '3', range: (t) => ({ from: addDays(t, -29), to: t }) },
+  { id: '90d', label: words.period['90d'], key: '9', range: (t) => ({ from: addDays(t, -89), to: t }) },
+  { id: '12mo', label: words.period['12mo'], key: '1', range: (t) => ({ from: addDays(addMonths(t, -12), 1), to: t }) },
+  { id: 'wtd', label: words.period.wtd, key: 'w', range: (t) => ({ from: startOfWeek(t), to: t }) },
+  { hidden: true, id: 'lastweek', label: words.period.lastweek, range: (t) => ({ from: addDays(startOfWeek(t), -7), to: addDays(startOfWeek(t), -1) }) },
+  { id: 'mtd', label: words.period.mtd, key: 'm', range: (t) => ({ from: startOfMonth(t), to: t }) },
+  { id: 'lastmonth', label: words.period.lastmonth, range: (t) => ({ from: startOfMonth(addMonths(startOfMonth(t), -1)), to: addDays(startOfMonth(t), -1) }) },
   {
     hidden: true,
     id: 'qtd',
-    label: 'This quarter',
+    label: words.period.qtd,
     range: (t) => {
       const m = Math.floor((toDate(t).getUTCMonth()) / 3) * 3 + 1
       return { from: `${t.slice(0, 4)}-${String(m).padStart(2, '0')}-01`, to: t }
     },
   },
-  { id: 'ytd', label: 'This year', range: (t) => ({ from: t.slice(0, 4) + '-01-01', to: t }) },
+  { id: 'ytd', label: words.period.ytd, range: (t) => ({ from: t.slice(0, 4) + '-01-01', to: t }) },
   {
     hidden: true,
     id: 'lastyear',
-    label: 'Last year',
+    label: words.period.lastyear,
     range: (t) => {
       const y = String(+t.slice(0, 4) - 1)
       return { from: y + '-01-01', to: y + '-12-31' }
@@ -123,22 +132,22 @@ export function calendarPrevious(period: string, r: Range): Range | null {
 /** What a comparison is against, in words: "last year", "last month", "the
  *  30 days before". The exact days go in a tooltip. */
 export function compareLabel(period: string, mode: CompareMode, r: Range): string {
-  if (mode === 'year') return 'a year before'
-  if (mode === 'custom') return 'your dates'
+  if (mode === 'year') return words.before.year
+  if (mode === 'custom') return words.before.custom
   switch (period) {
     case 'wtd':
-      return 'last week'
+      return words.before.wtd
     case 'mtd':
-      return 'last month'
+      return words.before.mtd
     case 'ytd':
-      return 'last year'
+      return words.before.ytd
     case 'today':
-      return 'yesterday'
+      return words.before.today
     case 'yesterday':
-      return 'the day before'
+      return words.before.day
   }
   const n = diffDays(r.from, r.to) + 1
-  return n === 1 ? 'the day before' : `the ${n} days before`
+  return n === 1 ? words.before.day : words.before.days(n)
 }
 
 export function compareRange(r: Range, mode: CompareMode, custom?: Range, period?: string): Range | null {
@@ -168,11 +177,12 @@ export function shiftRange(r: Range, dir: -1 | 1): Range {
 
 // ---- display ----
 
-const monthShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-export const monthLong = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-export const dayShort = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const monthShort = intl.monthShort ?? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+export const monthLong = intl.monthLong ?? ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+export const dayShort = intl.dayShort ?? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 export function fmtDay(d: ISODate, opts: { year?: boolean; weekday?: boolean } = {}) {
+  if (intl.day) return intl.day(d, opts)
   const t = toDate(d)
   let s = `${monthShort[t.getUTCMonth()]} ${t.getUTCDate()}`
   if (opts.weekday) s = `${dayShort[(toDate(d).getUTCDay() + 6) % 7]}, ${s}`
@@ -184,6 +194,7 @@ export function fmtRange(r: Range, today: ISODate): string {
   const sameYear = r.from.slice(0, 4) === r.to.slice(0, 4)
   const showYear = !sameYear || r.from.slice(0, 4) !== today.slice(0, 4)
   if (r.from === r.to) return fmtDay(r.from, { year: showYear, weekday: true })
+  if (intl.range) return intl.range(r.from, r.to, showYear)
   if (sameYear && r.from.slice(0, 7) === r.to.slice(0, 7)) {
     return `${fmtDay(r.from)} – ${toDate(r.to).getUTCDate()}${showYear ? ', ' + r.to.slice(0, 4) : ''}`
   }

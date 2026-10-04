@@ -1,9 +1,23 @@
-const nf = new Intl.NumberFormat('en-US')
-const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
+import { defineCopy, intl, tag } from '../i18n'
+
+// Numbers, money and names follow the language: English keeps the US form it always had.
+const loc = tag ?? 'en-US'
+const nf = new Intl.NumberFormat(loc)
+const compact = new Intl.NumberFormat(loc, { notation: 'compact', maximumFractionDigits: 1 })
+const words = defineCopy('format', { change: (up: boolean, pct: string) => `${up ? 'up' : 'down'} ${pct} percent` })
+
+/** A number with a fixed count of decimals, in the language's own separators. */
+export const fmtFixed = (x: number, digits: number) => (intl.fixed ? intl.fixed(x, digits) : x.toFixed(digits))
+
+/** A share (0.123) as a percentage with up to `digits` decimals, at least `min`: "12.3%", "12,3 %". */
+export const fmtRatio = (x: number, digits: number, min = digits) => {
+  if (intl.ratio) return intl.ratio(x, digits, min)
+  return String(min < digits ? +(x * 100).toFixed(digits) : (x * 100).toFixed(digits)) + '%'
+}
 
 export const fmtInt = (n: number) => nf.format(Math.round(n))
 export const fmtCompact = (n: number) => (Math.abs(n) < 10_000 ? fmtInt(n) : compact.format(n))
-export const fmtPct = (x: number) => (x * 100).toFixed(x > 0 && x < 0.1 ? 1 : 0) + '%'
+export const fmtPct = (x: number) => fmtRatio(x, x > 0 && x < 0.1 ? 1 : 0)
 
 export function fmtDuration(s: number) {
   s = Math.round(s)
@@ -32,20 +46,20 @@ export function delta(cur: number, prev: number | undefined, invert = false): De
   const flat = Math.abs(d) < 0.005
   const good = invert ? d < 0 : d > 0
   const pct = Math.abs(d * 100)
-  const num = pct >= 10 || pct === 0 ? pct.toFixed(0) : pct.toFixed(1)
+  const num = fmtFixed(pct, pct >= 10 || pct === 0 ? 0 : 1)
   const dir = good ? 'up' : 'down'
   return {
     // Arrow and sign both, so it reads without the colour.
     text: (d >= 0 ? '↑ +' : '↓ −') + num + '%',
     short: `${num}% ${d >= 0 ? '↑' : '↓'}`,
     tone: flat ? 'flat' : dir,
-    label: `${d >= 0 ? 'up' : 'down'} ${pct.toFixed(1)} percent`,
+    label: words.change(d >= 0, fmtFixed(pct, 1)),
   }
 }
 
 const countryNames = (() => {
   try {
-    return new Intl.DisplayNames(['en'], { type: 'region' })
+    return new Intl.DisplayNames([tag ?? 'en'], { type: 'region' })
   } catch {
     return null
   }
@@ -76,9 +90,9 @@ export function fmtMoney(minor: number, currency: string, exponent: number, opts
   let f = moneyFmt.get(key)
   if (!f) {
     try {
-      f = new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: cents ? exponent : 0, minimumFractionDigits: cents ? Math.min(exponent, 2) : 0 })
+      f = new Intl.NumberFormat(loc, { style: 'currency', currency, maximumFractionDigits: cents ? exponent : 0, minimumFractionDigits: cents ? Math.min(exponent, 2) : 0 })
     } catch {
-      f = new Intl.NumberFormat('en-US', { maximumFractionDigits: cents ? 2 : 0 })
+      f = new Intl.NumberFormat(loc, { maximumFractionDigits: cents ? 2 : 0 })
     }
     moneyFmt.set(key, f)
   }
@@ -92,9 +106,9 @@ export function fmtMoneyAxis(minor: number, currency: string, exponent: number):
   let f = axisFmt.get(currency)
   if (!f) {
     try {
-      f = new Intl.NumberFormat('en-US', { style: 'currency', currency, notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 1 })
+      f = new Intl.NumberFormat(loc, { style: 'currency', currency, notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 1 })
     } catch {
-      f = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
+      f = new Intl.NumberFormat(loc, { notation: 'compact', maximumFractionDigits: 1 })
     }
     axisFmt.set(currency, f)
   }

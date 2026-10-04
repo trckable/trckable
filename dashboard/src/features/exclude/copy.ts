@@ -1,6 +1,8 @@
 // Every word of "exclude my visits": the avatar menu's item, the first day's
 // card (its own are in moments/copy.ts) and the Settings field.
-export const copy = {
+import { defineCopy } from '../../i18n'
+
+export const copy = defineCopy('exclude', {
   leave: 'Exclude this browser',
   again: 'Count this browser again',
   ips: {
@@ -12,4 +14,4 @@ export const copy = {
     saved: (n: number) => `${n} ${n === 1 ? 'address' : 'addresses'} excluded`,
     cleared: 'No addresses are excluded now',
   },
-}
+})

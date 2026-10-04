@@ -26,7 +26,7 @@ async function deployed(page: Page) {
   await page.route(`${API}/`, async (route) => {
     if (route.request().resourceType() !== 'fetch') return route.fallback()
     const res = await route.fetch()
-    await route.fulfill({ response: res, body: (await res.text()).replace(/assets\/index-[0-9a-f]+\.js/g, 'assets/index-00000000.js') })
+    await route.fulfill({ response: res, body: (await res.text()).replace(/assets\/(index|core)-[0-9a-f]+\.js/g, 'assets/$1-00000000.js') })
   })
 }
 

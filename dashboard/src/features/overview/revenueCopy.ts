@@ -1,6 +1,8 @@
 // The Revenue tile's words and the card it opens, apart from the first load's:
 // they are only read once its chunk is.
-export const revenueCopy = {
+import { defineCopy } from '../../i18n'
+
+export const revenueCopy = defineCopy('overview.revenue', {
   connectPayments: 'Connect payments to see revenue',
   card: {
     label: 'Revenue',
@@ -18,4 +20,4 @@ export const revenueCopy = {
     { id: 'paddle', name: 'Paddle' },
     { id: 'dodo', name: 'Dodo Payments' },
   ],
-}
+})

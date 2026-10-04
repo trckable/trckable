@@ -6,11 +6,12 @@ import type { SiteRow } from '../lib/api'
 import { fmtInt } from '../lib/format'
 import { bandsOf } from './allSitesColors'
 import { copy } from './allSitesCopy'
+import { tag } from '../i18n'
 
 /** The day so many days before today, as "Sep 25". */
 function dayLabel(ago: number) {
   const d = new Date(Date.now() - ago * 864e5)
-  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+  return d.toLocaleDateString(tag, { day: 'numeric', month: 'short' })
 }
 
 export function Stacked({ rows, days, colors }: { rows: SiteRow[]; days: number; colors: Map<string, string> }) {
