@@ -3,10 +3,7 @@
 // campaigns; entry, top, exit; countries, cities; devices, browsers, systems).
 import { lazy, Suspense } from 'react'
 import { BarList } from '../../charts/BarList'
-import { Loading } from '../../components/loading/Loading'
-import { SearchTerms } from '../../views/DashboardParts'
 import type { Row } from '../../lib/api'
-import { shows } from '../../lib/modules'
 import { channelColor, channelLabel } from '../../lib/palette'
 import { DIM_LABEL } from '../overview/dimLabels'
 import { cardCopy } from './copy'
@@ -16,7 +13,6 @@ import { useRowExtras } from './useRowExtras'
 import { listProps, SubPanel } from './SubPanel'
 import type { TabItem } from './Tabs'
 
-const AiPanel = lazy(() => import('../extras/AiPanel'))
 const ScrollDepth = lazy(() => import('../../views/ScrollDepth').then((m) => ({ default: m.ScrollDepth })))
 
 const convOrBounce = (c: CardsCtx) => (c.money ? 'Conv.' : 'Bounce')
@@ -26,24 +22,8 @@ export function SourcesPanel({ c }: { c: CardsCtx }) {
     { id: 'channel', label: cardCopy.channels },
     { id: 'referrer', label: cardCopy.referrers },
     { id: 'campaign', label: cardCopy.campaigns },
-    // What the AI assistants sent, in Full: the rules are the server's own.
-    ...(c.full && !c.shared ? [{ id: 'ai', label: cardCopy.ai }] : []),
-    // Google's own numbers, once Search Console is connected. A share link cannot reach them, so it never shows the tab.
-    ...(c.mods !== null && shows(c.mods, 'tabs', 'search') && !c.shared ? [{ id: 'search', label: cardCopy.search }] : []),
   ]
-  return <SubPanel id="src" label={cardCopy.sources} tabs={tabs} c={c} render={(dim) => sourceList(c, dim)} />
-}
-
-function sourceList(c: CardsCtx, dim: string) {
-  if (dim === 'search') return <SearchTerms site={c.site} query={c.query} rows={c.rows} full={c.full} />
-  if (dim === 'ai') {
-    return (
-      <Suspense fallback={<Loading height={164} />}>
-        <AiPanel site={c.site.id} query={c.query} all={c.visitors} rows={c.rows} compare={c.compare} onPick={(host) => c.addFilter('referrer', host)} />
-      </Suspense>
-    )
-  }
-  return <SourceBars c={c} dim={dim} />
+  return <SubPanel id="src" label={cardCopy.sources} tabs={tabs} c={c} render={(dim) => <SourceBars c={c} dim={dim} />} />
 }
 
 function SourceBars({ c, dim }: { c: CardsCtx; dim: string }) {
