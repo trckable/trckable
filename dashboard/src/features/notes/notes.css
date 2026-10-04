@@ -75,6 +75,15 @@
 .note-mark.on i {
   transform: scale(1.15);
 }
+/* A plan is a flag that has not been raised yet: outlined, its pole dashed. */
+.note-mark.planned::before {
+  background: none;
+  border-left: 1.5px dashed var(--money);
+  width: 0;
+}
+.note-mark.planned i {
+  background: color-mix(in srgb, var(--money) 40%, var(--surface));
+}
 .note-mark:focus-visible {
   outline: 2px solid var(--money);
   outline-offset: 1px;

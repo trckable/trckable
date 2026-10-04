@@ -54,6 +54,8 @@ export interface ViewState {
    *  is the person's choice of the period's numbers, kept when nothing else
    *  in the address would say so. */
   live?: boolean
+  /** The calendar instead of the chart: "1" follows the period's month, "2026-09" is one month, "2026-09-07" is that day opened. */
+  cal?: string
   /** Full's funnel: its steps, in order ("fs=page:/pricing"). Absent = a suggested one. */
   funnel?: FunnelStep[]
 }
@@ -97,6 +99,7 @@ export function readView(params: URLSearchParams): ViewState {
     attr: params.get('attr') === 'first' ? 'first' : undefined,
     live: liveOf(params.get('view')),
     funnel: funnelOf(params.getAll('fs')),
+    cal: params.get('cal')?.match(/^(1|\d{4}-\d{2}(-\d{2})?)$/)?.[0],
   }
 }
 
@@ -119,6 +122,7 @@ export function writeView(v: ViewState): string {
   if (v.attr) p.set('attr', v.attr)
   if (v.day) p.set('day', v.day)
   if (v.test) p.set('payments', 'test')
+  if (v.cal) p.set('cal', v.cal)
   for (const s of v.funnel ?? []) p.append('fs', `${s.kind}:${s.value}`)
   // Data says so only when nothing else in the address does: a bare address
   // opens Live on a site with visits.

@@ -626,6 +626,9 @@ var migrations = []string{
 	// owner reworded, as JSON. Blank is the translated defaults.
 	`ALTER TABLE widgets ADD COLUMN lang TEXT NOT NULL DEFAULT 'auto';
 	ALTER TABLE widgets ADD COLUMN texts TEXT NOT NULL DEFAULT '';`,
+	// 50: a plan is a note for a day to come (the calendar shows it dashed,
+	// then scores it against the usual once the day is past).
+	`ALTER TABLE annotations ADD COLUMN planned INTEGER NOT NULL DEFAULT 0;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
