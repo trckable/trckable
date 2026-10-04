@@ -204,7 +204,7 @@ func TestShareDomainOpensShareLinksOnly(t *testing.T) {
 		}
 	}
 	// The same name written another way is the same name.
-	for _, host := range []string{"reports.example.com.", "reports.example.com.:443", "REPORTS.example.com"} {
+	for _, host := range []string{"reports.example.com.", "reports.example.com..", "reports.example.com.:443", "REPORTS.example.com"} {
 		if got := ask(host, "/login"); got != 404 {
 			t.Errorf("%s opened /login: %d", host, got)
 		}
@@ -312,6 +312,13 @@ func TestShareDomainNeedsProof(t *testing.T) {
 		t.Errorf("a verified domain was not used for a link: %v", out["url"])
 	}
 
+	// A name reserved after it was set is not verified.
+	g.api.ReservedHosts = append(g.api.ReservedHosts, "client.example.com")
+	if code, _ := do(t, c, "POST", base+"/share-look/verify", "", csrf, "1"); code != 400 {
+		t.Errorf("a reserved name was verified: %d", code)
+	}
+	g.api.ReservedHosts = g.api.ReservedHosts[:1]
+
 	// Changing the name starts again; the old one stops being served.
 	_, l = do(t, c, "PUT", base+"/share-look", `{"domain":"other.example.com"}`, csrf, "1")
 	if l["domain_ok"] != false || l["verify_value"] == token {
@@ -364,5 +371,9 @@ func TestShareDomainChangesAreLimited(t *testing.T) {
 	// The same domain again, or the colour, is no change of name.
 	if code, _ := do(t, c, "PUT", base+"/share-look", `{"domain":"try4.example.com","color":"#112233"}`, csrf, "1"); code != 200 {
 		t.Errorf("a colour was refused with the limit hit: %d", code)
+	}
+	// Taking the domain away is not a try at a name.
+	if code, _ := do(t, c, "PUT", base+"/share-look", `{"domain":""}`, csrf, "1"); code != 200 {
+		t.Errorf("clearing the domain was counted: %d", code)
 	}
 }

@@ -115,7 +115,7 @@ func (a *API) setShareLook(w http.ResponseWriter, r *http.Request) {
 	}
 	// A domain is a name this server will answer to: changing it is limited,
 	// so it cannot be used to try names one after another.
-	if domain != a.Ctl.ShareLookOf(r.Context(), site).Domain && !a.loginRate.allow("sharedomain:"+site, a.Now(), 5, 24*time.Hour) {
+	if domain != "" && domain != a.Ctl.ShareLookOf(r.Context(), site).Domain && !a.loginRate.allow("sharedomain:"+site, a.Now(), 5, 24*time.Hour) {
 		fail(w, http.StatusTooManyRequests, "the domain was changed many times today: try again tomorrow")
 		return
 	}
@@ -155,7 +155,7 @@ func (a *API) lookError(w http.ResponseWriter, err error) bool {
 
 // reservedHost says a name is one this server must keep for itself: the
 // dashboard's address (as configured and as asked for), and the names the
-// operator listed.
+// person who runs the server listed.
 func (a *API) reservedHost(r *http.Request, domain string) bool {
 	if domain == hostOnly(a.publicBase(r)) || domain == hostOnly(r.Host) || (a.BaseURL != "" && domain == hostOnly(a.BaseURL)) {
 		return true
@@ -177,6 +177,10 @@ func (a *API) verifyShareDomain(w http.ResponseWriter, r *http.Request) {
 	l := a.Ctl.ShareLookOf(r.Context(), site)
 	if l.Domain == "" {
 		fail(w, http.StatusBadRequest, "set a domain first")
+		return
+	}
+	if a.reservedHost(r, l.Domain) { // a name reserved after it was set is not verified now
+		fail(w, http.StatusBadRequest, errDomainRefused.Error())
 		return
 	}
 	if !l.DomainOK {
@@ -299,7 +303,7 @@ func hostOnly(s string) string {
 	if h, _, err := net.SplitHostPort(s); err == nil {
 		s = h
 	}
-	return strings.TrimSuffix(strings.ToLower(s), ".") // "example.com." is the same name
+	return strings.TrimRight(strings.ToLower(s), ".") // "example.com." is the same name
 }
 
 // loadShareHosts reads the verified share domains into memory, so a request
@@ -388,7 +392,7 @@ func (a *API) ShareDomains(next http.Handler) http.Handler {
 // a name (Caddy's on_demand_tls "ask"): 200 for a verified domain a site uses
 // for its share links, 404 for any other. It answers only a caller on this
 // machine that did not come through a proxy (no forwarding headers), unless
-// the operator opened it (ShareDomainAskOpen), and says nothing more.
+// the person who runs the server opened it (ShareDomainAskOpen), and says nothing more.
 func (a *API) shareDomainAsk(w http.ResponseWriter, r *http.Request) {
 	if !a.ShareDomainAskOpen && !direct(r) {
 		http.NotFound(w, r)

@@ -69,7 +69,8 @@ func cleanSVG(svg []byte) ([]byte, error) {
 	dec.Entity = nil // no entities: nothing expands into something else
 	var out bytes.Buffer
 	var open []string
-	skip := 0 // inside an editor's own element: read and dropped
+	skip := 0                 // inside an editor's own element: read and dropped
+	var style strings.Builder // the text of the style sheet being read, judged whole when it closes
 	tokens := 0
 	seenRoot := false
 	for {
@@ -85,6 +86,11 @@ func cleanSVG(svg []byte) ([]byte, error) {
 		}
 		switch t := tok.(type) {
 		case xml.StartElement:
+			// A style sheet is text and nothing else: an element in it, even an
+			// editor's, could split a word in two so that no piece looks wrong.
+			if len(open) > 0 && open[len(open)-1] == "style" {
+				return nil, errors.New("that SVG's style sheet holds more than text")
+			}
 			if skip > 0 {
 				skip++
 				continue
@@ -92,9 +98,6 @@ func cleanSVG(svg []byte) ([]byte, error) {
 			if editorName(t.Name) {
 				skip = 1
 				continue
-			}
-			if len(open) > 0 && open[len(open)-1] == "style" {
-				return nil, errors.New("that SVG's style sheet holds more than text")
 			}
 			if t.Name.Space != svgNS || !svgElements[t.Name.Local] {
 				return nil, errors.New("that SVG uses something a logo may not: " + t.Name.Local)
@@ -128,18 +131,27 @@ func cleanSVG(svg []byte) ([]byte, error) {
 				skip--
 				continue
 			}
+			if t.Name.Local == "style" {
+				if !safeValue(style.String()) {
+					return nil, errors.New("that SVG's style sheet uses something a logo may not")
+				}
+				style.Reset()
+			}
 			out.WriteString("</" + t.Name.Local + ">")
 			open = open[:len(open)-1]
 		case xml.CharData:
 			if skip > 0 {
 				continue
 			}
-			if len(open) > 0 && open[len(open)-1] == "style" && !safeValue(string(t)) {
-				return nil, errors.New("that SVG's style sheet uses something a logo may not")
+			if len(open) > 0 && open[len(open)-1] == "style" {
+				style.Write(t)
 			}
 			_ = xml.EscapeText(&out, t)
 		case xml.Comment, xml.ProcInst:
-			// Dropped: an editor's note, or the XML line.
+			if skip == 0 && len(open) > 0 && open[len(open)-1] == "style" {
+				return nil, errors.New("that SVG's style sheet holds more than text")
+			}
+			// Otherwise dropped: an editor's note, or the XML line.
 		case xml.Directive:
 			return nil, errors.New("that SVG has a DOCTYPE, which a logo may not")
 		}

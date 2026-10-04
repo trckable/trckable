@@ -88,3 +88,21 @@ func TestCleanSVGDropsEditorBookkeeping(t *testing.T) {
 		t.Errorf("the drawing was lost:\n%s", s)
 	}
 }
+
+// A word split across pieces of a style sheet (by a comment, an instruction, a
+// CDATA section or an element) is still the word: the sheet is read whole, and
+// anything in it but text is refused.
+func TestSVGStyleSplitCannotHideAWord(t *testing.T) {
+	for name, in := range map[string]string{
+		"comment":  `<svg xmlns="http://www.w3.org/2000/svg"><style>svg{background:ur<!-- x -->l(https://evil.example/p.png)}</style></svg>`,
+		"cdata":    `<svg xmlns="http://www.w3.org/2000/svg"><style>svg{background:ur<![CDATA[l(https://evil.example/p.png)}]]></style></svg>`,
+		"editor":   `<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><style>svg{background:ur<inkscape:x/>l(https://evil.example/p.png)}</style></svg>`,
+		"pi":       `<svg xmlns="http://www.w3.org/2000/svg"><style>svg{background:ur<?x y?>l(https://evil.example/p.png)}</style></svg>`,
+		"imageset": `<svg xmlns="http://www.w3.org/2000/svg"><style>svg{background:image-<!---->set("https://evil.example/p.png" 1x)}</style></svg>`,
+		"js":       `<svg xmlns="http://www.w3.org/2000/svg"><style>svg{background:url(java<!---->script:alert(1))}</style></svg>`,
+	} {
+		if out, err := cleanSVG([]byte(in)); err == nil {
+			t.Errorf("%s accepted: %s", name, out)
+		}
+	}
+}

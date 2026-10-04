@@ -168,7 +168,7 @@ https:// {
 }
 ```
 
-The `ask` address answers only a caller on the same machine that did not come through a proxy, which is how Caddy calls it; `TRCKABLE_SHARE_DOMAIN_ASK_OPEN=1` opens it to any caller.
+The `ask` address answers only a caller on the same machine that did not come through a proxy, which is how Caddy calls it; `TRCKABLE_SHARE_DOMAIN_ASK_OPEN=1` opens it to any caller. When Caddy runs in a container (Docker, Compose, Kubernetes) its call reaches trckable from the container network and not from the machine itself, so set `TRCKABLE_SHARE_DOMAIN_ASK_OPEN=1` there; the answer is only yes or no for one name.
 
 Other proxies work the same way: forward the `Host` header unchanged, and get the certificate however you usually do. Shared pages send a Content-Security-Policy that allows nothing from outside the server, and a logo is only ever shown as a picture.
 
