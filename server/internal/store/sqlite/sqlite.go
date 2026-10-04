@@ -629,6 +629,31 @@ var migrations = []string{
 	// 50: a plan is a note for a day to come (the calendar shows it dashed,
 	// then scores it against the usual once the day is past).
 	`ALTER TABLE annotations ADD COLUMN planned INTEGER NOT NULL DEFAULT 0;`,
+	// 51: a site's busy spells (surges.go): when one began and ended, the most
+	// online at once, the usual for that hour, and who they were as JSON
+	// (a source, a page, a country). Counts only, never a visitor.
+	`CREATE TABLE surges (
+		id         TEXT PRIMARY KEY,
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		started_at INTEGER NOT NULL,
+		ended_at   INTEGER NOT NULL DEFAULT 0,
+		peak       INTEGER NOT NULL,
+		usual      REAL NOT NULL,
+		why        TEXT NOT NULL DEFAULT ''
+	);
+	CREATE INDEX surges_site ON surges(site_id, started_at);`,
+	// 52: the traffic surge alert for sites that already have alerts on: one
+	// per site, to where its newest enabled alert goes. A site whose alerts are
+	// all off, or that has no destination, gets none, and one that already has
+	// a surge alert (even switched off, or stopped by its unsubscribe link) is
+	// left as it is.
+	`INSERT INTO alerts (id, site_id, kind, enabled, target, threshold, last_fired, created_at)
+	SELECT 'alert_' || lower(hex(randomblob(8))), site_id, 'surge', 1, target, 0, 0, CAST(strftime('%s', 'now') AS INTEGER)
+	FROM (
+		SELECT site_id, target, row_number() OVER (PARTITION BY site_id ORDER BY created_at DESC, rowid DESC) AS rn
+		FROM alerts WHERE enabled = 1 AND target != ''
+	)
+	WHERE rn = 1 AND site_id NOT IN (SELECT site_id FROM alerts WHERE kind = 'surge');`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

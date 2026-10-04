@@ -5,7 +5,7 @@ import { bucketLabel } from '../../charts/timeScale'
 import { fmtDay } from '../../lib/dates'
 import { copy } from './copy'
 
-export type MomentKind = 'spike' | 'sale' | 'country' | 'ai' | 'milestone' | 'note'
+export type MomentKind = 'spike' | 'surge' | 'sale' | 'country' | 'ai' | 'milestone' | 'note'
 
 export interface Moment {
   t: string

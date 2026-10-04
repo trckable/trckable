@@ -5,6 +5,16 @@ import { say } from './words'
 const usd = (n: number) => `$${(n / 100).toLocaleString('en-US')}`
 const pin = (kind: Pin['kind'], over: Partial<Pin>): Pin => ({ id: kind, kind, score: 1, filters: [], showDay: false, n: {}, ...over })
 
+describe('what a surge says', () => {
+  it('is the source as a name and the people counted, never a cause', () => {
+    const s = say(pin('surge', { day: '2026-10-06', n: { name: 'Facebook', visitors: 53, factor: 2.7 } }), usd)
+    expect(s.title).toBe('Surge')
+    expect(s.line).toBe('Surge from Facebook')
+    expect(s.big).toBe('53 visitors')
+    expect(s.facts).toEqual(['2.7× the usual', 'Tue, Oct 6'])
+  })
+})
+
 describe('what a pin says', () => {
   it('a spike: the line the rings said, the figure and who sent it', () => {
     const s = say(pin('spike', { day: '2026-09-19', n: { factor: 4.2, visitors: 816, referrer: 'news.example' } }), usd)
