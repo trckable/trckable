@@ -64,7 +64,7 @@ The container runs as an unprivileged user (65532), not root. A new Docker volum
 </script>
 ```
 
-Your site's own script, from Settings → Install: it carries the modules and the privacy settings you chose. Or `npm i trckable` for React and Next.js, where events go through your own domain. Every route is in the docs: [install](https://docs.trckable.com/install/) · [platforms](https://docs.trckable.com/install/platforms/) · [revenue](https://docs.trckable.com/revenue/) · [MCP](https://docs.trckable.com/api/mcp/).
+Your site's own script, from Settings → Install: it carries the modules and the privacy settings you chose. Or `npm i trckable` for React and Next.js, where events go through your own domain. On WordPress, the [plugin](integrations/wordpress) adds the tag for you: settings, a cookieless switch, an optional proxy through your own domain and a dashboard widget (GPLv2 or later; the server stays AGPL). Every route is in the docs: [install](https://docs.trckable.com/install/) · [platforms](https://docs.trckable.com/install/platforms/) · [revenue](https://docs.trckable.com/revenue/) · [MCP](https://docs.trckable.com/api/mcp/).
 
 ## 🚀 Deploy
 
@@ -230,6 +230,6 @@ Contributions are welcome: how to build, test and send a change is in [CONTRIBUT
 
 ## License
 
-Server and dashboard [AGPL-3.0](LICENSE) · tracker and the `trckable` npm package [MIT](packages/trckable/LICENSE) · geolocation by [DB-IP](https://db-ip.com) (CC BY 4.0)
+Server and dashboard [AGPL-3.0](LICENSE) · tracker and the `trckable` npm package [MIT](packages/trckable/LICENSE) · WordPress plugin [GPL-2.0-or-later](integrations/wordpress/trckable/license.txt) · geolocation by [DB-IP](https://db-ip.com) (CC BY 4.0)
 
 The name trckable and the logo are not part of those licenses: a fork is welcome, under its own name. See [TRADEMARKS.md](TRADEMARKS.md).

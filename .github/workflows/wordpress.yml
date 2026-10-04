@@ -1,0 +1,76 @@
+# The WordPress plugin (integrations/wordpress): its own workflow, run only
+# when it or its test changes. Syntax on the oldest and newest PHP it supports,
+# the WordPress coding standards, the zip, and a browser smoke test against a
+# real WordPress (SQLite, PHP's own server) with a stand-in trckable server.
+name: wordpress
+
+on:
+  push:
+    branches: [main]
+    paths: ["integrations/**", "e2e/wordpress/**", ".github/workflows/wordpress.yml"]
+  pull_request:
+    paths: ["integrations/**", "e2e/wordpress/**", ".github/workflows/wordpress.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  plugin:
+    name: wordpress plugin (syntax, coding standards, zip)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: "7.4", tools: composer }
+      - name: php -l (7.4)
+        run: find integrations/wordpress/trckable -name '*.php' -print0 | xargs -0 -n1 php -l
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: "8.3", tools: composer }
+      - name: php -l (8.3)
+        run: find integrations/wordpress/trckable -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: coding standards (phpcs, WPCS)
+        working-directory: integrations/wordpress
+        run: composer install --no-interaction --no-progress && vendor/bin/phpcs
+      - name: the zip
+        run: |
+          integrations/wordpress/build.sh
+          unzip -Z1 integrations/wordpress/trckable.zip | sort
+          # Only the plugin goes in: its folder, no tests, no tooling.
+          ! unzip -Z1 integrations/wordpress/trckable.zip | grep -vE '^trckable/'
+      - uses: actions/upload-artifact@v7
+        with: { name: trckable-zip, path: integrations/wordpress/trckable.zip }
+
+  smoke:
+    name: wordpress plugin (browser smoke test, Plugin Check)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: "8.3", tools: "wp-cli" }
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile --filter @trckable/e2e
+      - run: cd e2e && pnpm exec playwright install --with-deps chromium
+      - name: a WordPress with the plugin
+        run: integrations/wordpress/tests/setup.sh "$RUNNER_TEMP/wp"
+      - name: Plugin Check
+        working-directory: ${{ runner.temp }}/wp/wordpress
+        run: |
+          wp plugin install plugin-check --activate
+          wp plugin check trckable --exclude-directories=tests
+      - name: browser smoke test
+        working-directory: e2e
+        env:
+          WP_DIR: ${{ runner.temp }}/wp
+        run: pnpm exec playwright test -c wordpress/wordpress.config.ts --project=chromium --workers=1
+      - name: uninstall removes what it stored
+        working-directory: ${{ runner.temp }}/wp/wordpress
+        run: |
+          wp option get trckable_settings > /dev/null
+          wp plugin deactivate trckable
+          wp plugin uninstall trckable
+          ! wp option get trckable_settings 2>/dev/null

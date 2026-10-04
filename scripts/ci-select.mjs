@@ -95,6 +95,8 @@ export function select(files) {
     if (f.startsWith('e2e/accuracy/')) { s.accuracy = true; continue }
     const spec = f.match(/^e2e\/tests\/([\w-]+)\.spec\.ts$/)
     if (spec) { spec[1] === 'a11y' || spec[1] === 'fullcharts' ? (s.demo = true) : addE2e([spec[1]]); continue }
+    // The WordPress plugin has its own workflow (wordpress.yml); nothing here runs for it.
+    if (f.startsWith('integrations/') || f.startsWith('e2e/wordpress/')) continue
     if (f === 'deploy/Dockerfile') { s.image = true; continue }
     // The deploy templates and the chart: their own check (deploy-check.yml) runs them; nothing here.
     if (/^(deploy\/(compose\.yml|(coolify|dokploy|railway|umbrel)\/)|charts\/|scripts\/deploy-check\.sh$|\.github\/workflows\/deploy-check\.yml$)/.test(f)) continue
