@@ -359,8 +359,10 @@ jobs:
           (cd server && go run ./bench/demoseed -data "$d" -days 30 -daily 150 > /dev/null)
           echo 'correct horse battery' | TRCKABLE_DATA_DIR="$d" server/bin/trckabled admin add-user me@site.com --role owner
           TRCKABLE_DATA_DIR="$d" TRCKABLE_ADDR=127.0.0.1:8799 server/bin/trckabled serve > "$d/log" 2>&1 &
-          ready='fetch("http://127.0.0.1:8799/readyz").then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))'
-          for i in $(seq 1 50); do node -e "$ready" && break; sleep 0.3; done
+          # Ready is not enough: the writer takes the seed's events in after the start, and
+          # a page opened before it has caught up draws days with no visitors in them.
+          ready='fetch("http://127.0.0.1:8799/readyz").then((r) => r.json()).then((d) => process.exit(d.analytics_ready && d.wal_committed > 0 && d.wal_lag === 0 ? 0 : 1), () => process.exit(1))'
+          for i in $(seq 1 200); do node -e "$ready" && break; sleep 0.3; done
           shard=""
           if [ -n "$SHARD" ]; then shard="--shard=$SHARD"; fi
           cd e2e && TRCKABLE_A11Y_URL=http://127.0.0.1:8799 npx playwright test a11y fullcharts extras.spec speed control-row header revenue.spec $shard --pass-with-no-tests --project=${{ matrix.browser }} --workers=4
