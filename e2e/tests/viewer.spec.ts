@@ -45,7 +45,8 @@ test.beforeAll(async ({ request }) => {
 
 async function open(page: Page, path: string) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(API + path)
+  // WebKit on a busy machine sometimes drops a navigation ("internal error"): once more, then it is a failure.
+  await page.goto(API + path).catch(() => page.goto(API + path))
   // The live stream keeps some browsers from ever calling the network idle,
   // and a wait for it can run to its limit on every page: a quiet half second
   // is enough once the page has loaded.
