@@ -9,6 +9,7 @@ export const first = defineCopy('install.first', {
     import: { label: 'Import your history', title: 'Import your history', body: 'From GA4 or a CSV.', go: 'Import' },
     weekly: { label: 'Weekly email', title: 'Turn on the weekly email', body: 'The week’s numbers, in your inbox.', go: 'Turn on' },
   },
+  importSetting: 'Import history',
   weeklyOn: 'Weekly email: on',
   weeklyStopped: 'Weekly email: off',
   importDialog: {

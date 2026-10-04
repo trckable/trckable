@@ -25,7 +25,7 @@ import { AlertsTab } from '../features/reports/AlertsTab'
 import { SearchSettings } from './Search'
 import { MODULE_WHY, moduleOf } from './settingsModules'
 import { NotesSettings } from '../features/notes/NotesSettings'
-import { MilestonesSetting } from '../features/milestones/MilestonesSetting'
+import { MilestonesSetting } from '../features/milestones/MilestonesSetting'; import { ImportSetting } from '../features/install/ImportSetting'
 import { DeleteSite } from './Sites'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import './Settings.css'
@@ -154,7 +154,7 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
       {tab === 'sharing' && <Shares key={'sh' + site.id} site={site} />}
       {/* Widgets go on your own pages, so they are their own section, not a kind of share. */}
       {tab === 'widgets' && <Locked><WidgetsSettings key={'wg' + site.id} site={site} /></Locked>}
-      {tab === 'install' && <InstallSection site={site} />}
+      {tab === 'install' && <><InstallSection site={site} /><ImportSetting key={'im' + site.id} site={site} /></>}
       {tab === 'notes' && <><NotesSettings key={'n' + site.id} site={site} /><MilestonesSetting key={'ms' + site.id} site={site} /></>}
       {tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
       {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}
