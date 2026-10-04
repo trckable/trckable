@@ -1,7 +1,6 @@
 package server
 
 import (
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -47,11 +46,6 @@ func TestWeeklyHTML(t *testing.T) {
 	}
 	if strings.Contains(page, "<script") || strings.Count(page, `class="tk-btn"`) != 1 {
 		t.Errorf("one button, no script")
-	}
-	if os.Getenv("WEEKLY_HTML_OUT") != "" {
-		if err := os.WriteFile(os.Getenv("WEEKLY_HTML_OUT"), []byte(page), 0o600); err != nil {
-			t.Fatal(err)
-		}
 	}
 	// No address, no button; a week with nobody says so.
 	quiet := weeklyHTML("x.com", from, from.AddDate(0, 0, 7), &query.Result{}, prev, aiWeek{}, "", "")("")
