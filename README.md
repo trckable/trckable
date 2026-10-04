@@ -172,6 +172,9 @@ Off for a new site; Settings → Modules turns it on, and says its size and what
 - **Never collected:** a recording of any kind, a visitor or session id, a cookie or anything in the browser's storage, what was typed or any field's value, a password field (not even its name), the mouse's path, a screenshot, or the order in which anyone did anything. A batch is added to the counters and forgotten; nothing in it says who sent it.
 - **Quiet when asked:** it sends nothing for a browser with Do Not Track or Global Privacy Control, nothing for the paths and addresses you excluded, and nothing while the Cookie consent module is on (a visitor who declined is never counted at all). `data-heat-sample="0.2"` on the script tag reports one page view in five. A form is named by its id or name when that is a plain word, and a field by its name with list numbers and anything with a counter in it left out.
 - **Limits:** the busiest 60 reports of a page view, 20 000 distinct counters a site a day, and per-address and per-site rate limits on `/api/h`, which answers 202 and does nothing while the module is off. Through your own proxy, forward `/api/h` as well as `/api/e`.
+### A privacy report for every site
+
+Settings → Data & privacy → Privacy report states what the site is set to collect and what it is not, in the dashboard's language: cookieless and consent mode, the cookie and its lifetime, retention, exclusions, the modules that are on, where the data is, the privacy-policy paragraph and a short "do I need a banner?". View it, or print it / save it as a PDF from the browser.
 
 ### When your server is down
 
@@ -185,6 +188,7 @@ A visitor's browser keeps what it could not send, up to 24 hours and 200 events,
 - **Site icons** beside referrers, fetched by your server once and kept there: your visitors' browsers never ask a third party.
 - **Milestones** celebrate with a short ghost hop and a card ready to share. The cards that come up by themselves (a milestone, the one thing today, a nudge) are one design: what it is, when, its figure counting up, where it came from, a small chart of the moment, and a deck you turn with ← → or a swipe.
 - **Install on your phone**: the dashboard is an installable app. On Android and desktop Chrome or Edge, open the avatar menu and choose **Install app**. On an iPhone or iPad, tap Share in Safari, then **Add to Home Screen**. It opens in its own window with the ghost icon. Only the page's own files are kept for an offline start; your numbers, the API and shared pages always come from your server, never from a copy in the browser.
+- **Your language**: the dashboard speaks English, German, French, Spanish, Italian and Dutch. Open the avatar menu, choose **Language**, and pick one, or leave it on Auto to follow the browser. Numbers, money, dates and months follow it too; the CSV export stays raw. The translations are marked as needing a native speaker's review: fixing or adding a language is one file and a pull request ([CONTRIBUTING.md](CONTRIBUTING.md#translations)).
 - **Smooth theme switch**: a short crossfade, nothing redrawn, and the saved theme is on before the first frame.
 
 ### Your own look on share links

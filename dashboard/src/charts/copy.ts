@@ -1,6 +1,8 @@
 // The chart kit's own words: the card's table switch. Everything a chart says
 // about its data comes from the feature that draws it.
-export const kitCopy = {
+import { defineCopy } from '../i18n'
+
+export const kitCopy = defineCopy('chart.kit', {
   failed: "Couldn't draw this.",
   reload: 'Reload',
   updated: 'Updated, reloading…',
@@ -9,10 +11,10 @@ export const kitCopy = {
   up: '▲',
   down: '▼',
   flat: '–',
-}
+})
 
 // The main time chart's words.
-export const timeCopy = {
+export const timeCopy = defineCopy('chart.time', {
   chart: (metric: string, n: number, peak: string) => `${metric} over time: ${n} points, peak ${peak}. Arrow keys move through the buckets.`,
   note: 'Note',
   addNote: 'Add a note on this day',
@@ -22,4 +24,4 @@ export const timeCopy = {
   soFar: 'so far',
   revenue: 'Revenue',
   noSalesPeriod: 'No sales in this period',
-}
+})

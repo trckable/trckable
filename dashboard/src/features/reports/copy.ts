@@ -1,5 +1,9 @@
 // The words of Settings → Alerts → Client reports.
-export const copy = {
+import { defineCopy } from '../../i18n'
+
+const langNames: Record<string, string> = { en: 'English', de: 'Deutsch', fr: 'Français', es: 'Español', it: 'Italiano', nl: 'Nederlands' }
+
+export const copy = defineCopy('reports', {
   title: 'Client reports',
   subtitle: 'The numbers, by email, on a schedule',
   needsMail: 'Needs email (TRCKABLE_SMTP_URL) and TRCKABLE_BASE_URL on this server',
@@ -33,5 +37,5 @@ export const copy = {
   removed: 'Report deleted',
   removeTitle: (name: string) => `Delete “${name}”?`,
   removeBody: 'It stops being sent. Nothing else changes.',
-  langNames: { en: 'English', de: 'Deutsch', fr: 'Français', es: 'Español', it: 'Italiano', nl: 'Nederlands' } as Record<string, string>,
-}
+  langNames,
+})

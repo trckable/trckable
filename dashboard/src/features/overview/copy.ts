@@ -1,6 +1,8 @@
 // The Data view's overview words: its tiles and the main chart's head. What
 // moves to the message files when translations come.
-export const copy = {
+import { defineCopy } from '../../i18n'
+
+export const copy = defineCopy('overview', {
   replay: 'Replay this period day by day',
   replayByHour: 'Replay this period hour by hour',
   replayByDay: 'Replay this period day by day (switches the chart to days)',
@@ -20,4 +22,4 @@ export const copy = {
   conversion: 'Conversion',
   botsFiltered: (n: string) => `${n} bots and AI crawlers filtered`,
   botFiltered: '1 bot or AI crawler filtered',
-}
+})

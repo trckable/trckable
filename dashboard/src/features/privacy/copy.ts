@@ -1,0 +1,71 @@
+// Every word of the privacy report: the card in Settings → Data & privacy, the
+// sheet it opens and prints, and the facts it states.
+import { defineCopy } from '../../i18n'
+
+export const copy = defineCopy('privacy', {
+  card: { title: 'Privacy report', view: 'View', print: 'Print / PDF' },
+  sheet: {
+    title: (domain: string) => `Privacy report: ${domain}`,
+    made: (date: string) => `Read from this site's settings on ${date}`,
+    close: 'Close',
+    print: 'Print / PDF',
+    failed: 'The report could not be read',
+  },
+  part: {
+    settings: 'Settings',
+    collected: 'What is collected',
+    notCollected: 'What is not collected',
+    modules: 'Modules that are on',
+    where: 'Where the data is',
+    banner: 'Do I need a banner?',
+    policy: 'Privacy policy paragraph',
+  },
+  on: 'On',
+  off: 'Off',
+  settings: {
+    cookieless: 'Cookieless mode',
+    consent: 'Consent mode (Consent Mode v2, TCF)',
+    retention: 'Retention',
+    paths: 'Excluded paths',
+    ips: 'Excluded IP addresses',
+    dnt: 'Do Not Track and Global Privacy Control honoured',
+    keepAll: 'Visits are kept until you delete them',
+    keepDays: (n: number) => `Visits are deleted after ${n} ${n === 1 ? 'day' : 'days'}`,
+    count: (n: number) => String(n),
+  },
+  collected: {
+    page: 'The page and the site that sent the visitor',
+    country: 'Country',
+    city: 'Country, region and city',
+    device: 'Browser, operating system and device type',
+    time: 'How long the visitor stayed',
+  },
+  notCollected: {
+    ip: 'No IP address is stored: it is used in memory and discarded',
+    crossSite: 'No identifier that follows a visitor from site to site',
+    person: 'No name or email address',
+    cookieless: 'No cookie and nothing stored in the browser',
+    cookie: (name: string, days: number) => `A first-party cookie, ${name}, holding a random id for ${days} days. It is never sent to another site`,
+    cookieAsk: (name: string, days: number) => `A first-party cookie, ${name}, holding a random id for ${days} days, set only after the visitor agrees`,
+  },
+  adds: {
+    goals: 'Goals: the actions you mark, with the properties you send',
+    outbound: 'Outbound links and downloads: which links were followed away and which files were fetched',
+    revenue: 'Revenue: the amount and date of a payment, and a code made from the email address; the provider\'s notice is emptied after 30 days',
+    funnels: 'Funnels: which step of a path a visitor reached',
+    journeys: 'Journeys: one visitor\'s pages, goals and payments joined by the random id (cookie mode only)',
+    retention: 'Retention: how many people came back, counted by the random id (cookie mode only)',
+    vitals: 'Core Web Vitals: loading and response times measured by the visitor\'s browser',
+    consent: 'Cookie consent: the answer, kept in the visitor\'s browser if trckable\'s own bar asks',
+    crawlers: 'AI assistants and crawlers: robots that read the site, never visitors',
+    forms: 'Form submissions: that a form was sent, never what was typed',
+    search: 'Search Console: Google\'s searches and clicks, as Google reports them',
+  },
+  where: 'On your server. Nothing is sent to another company',
+  banner: {
+    free: 'Usually not. Cookieless mode stores nothing on the device, and several countries allow that without consent. Germany and Austria generally still ask for it.',
+    asks: 'Yes, and trckable waits for the visitor\'s answer before it sets its cookie.',
+    cookie: 'Yes. This site sets a cookie, which in the EU and the UK normally needs consent first.',
+    note: 'This is not legal advice. Check the rules where your visitors are.',
+  },
+})

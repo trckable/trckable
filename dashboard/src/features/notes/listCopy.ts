@@ -1,10 +1,11 @@
 // Every word of the Notes list and the share switch: loaded with them, never
 // with the first screen (copy.ts has the chart's few).
 import { fmtDay } from '../../lib/dates'
+import { defineCopy } from '../../i18n'
 
 const count = (n: number) => (n === 1 ? '1 note' : `${n} notes`)
 
-export const copy = {
+export const copy = defineCopy('notes.list', {
   by: (author: string) => `by ${author}`,
   title: 'Notes',
   intro: 'Notes pinned to days on the chart. Click one to jump to its day.',
@@ -34,4 +35,4 @@ export const copy = {
 
   // Settings.
   tab: 'Notes',
-}
+})

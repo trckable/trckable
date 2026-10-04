@@ -3,10 +3,11 @@
 // the rest of the dashboard's words, for when translations come.
 import { fmtInt, fmtPct } from '../../lib/format'
 import { times } from '../../lib/times'
+import { defineCopy } from '../../i18n'
 
 const plural = (n: number, one: string, many: string) => `${fmtInt(n)} ${n === 1 ? one : many}`
 
-export const extrasCopy = {
+export const extrasCopy = defineCopy('extras', {
   pace: (total: string) => `On pace for ~${total} this month`,
   /** What a spike or a burst of sales says (the moments on the chart). */
   ring: {
@@ -55,4 +56,4 @@ export const extrasCopy = {
       return `${Math.round(s / 86400)} d ago`
     },
   },
-}
+})

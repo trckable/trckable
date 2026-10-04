@@ -5,10 +5,11 @@ import { TriangleAlert } from 'lucide-react'
 import { stoppedWhy, type Site } from '../lib/api'
 import { isViewer } from '../lib/me'
 import { openSettings } from '../lib/settings'
+import { tag } from '../i18n'
 import './StoppedNotice.css'
 
 const when = (unix: number) =>
-  new Date(unix * 1000).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  new Date(unix * 1000).toLocaleString(tag, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 export function StoppedNotice({ site }: { site: Site }) {
   if (!site.last_event_at || !site.check) return null

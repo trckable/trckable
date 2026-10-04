@@ -1,7 +1,8 @@
 // The words of Full's own tabs (retention, funnel, people): a chunk of their own.
 import { fmtInt, fmtPct } from '../../lib/format'
+import { defineCopy } from '../../i18n'
 
-export const deepCopy = {
+export const deepCopy = defineCopy('cards.deep', {
   tab: {
     overTime: 'Over time',
     sources: 'Sources',
@@ -57,4 +58,4 @@ export const deepCopy = {
     none: 'No visits recorded yet.',
     open: 'See this visitor’s whole journey',
   },
-}
+})

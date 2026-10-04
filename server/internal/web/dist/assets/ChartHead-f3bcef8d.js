@@ -1,0 +1,1 @@
+import{t as e}from"./react-e12729a5.js";/* empty css               */var t=e();function n({start:e,end:n}){return(0,t.jsxs)(`div`,{className:`kit-head`,children:[e,n&&(0,t.jsx)(`span`,{className:`kit-head-end`,children:n})]})}export{n as t};

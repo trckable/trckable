@@ -1,7 +1,9 @@
 // The words of the live extras: the count in the tab, the sale toast, the
 // browser notices and the card that asks for them. This is what moves to the
 // message files.
-export const signals = {
+import { defineCopy } from '../../i18n'
+
+export const signals = defineCopy('signals', {
   sale: (amount: string) => `Cha-ching! ${amount}`,
   // Settings.
   on: 'On',
@@ -25,4 +27,4 @@ export const signals = {
     yes: 'Turn on',
     close: 'Close',
   },
-}
+})

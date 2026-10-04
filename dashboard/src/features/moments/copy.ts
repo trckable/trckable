@@ -4,10 +4,11 @@
 // when translations come.
 import { fmtInt } from '../../lib/format'
 import type { Pin } from './pins'
+import { defineCopy } from '../../i18n'
 
 const sales = (n: number) => `${fmtInt(n)} ${n === 1 ? 'sale' : 'sales'}`
 
-export const copy = {
+export const copy = defineCopy('moments', {
   title: {
     spike: 'Traffic spike',
     newTraffic: 'New traffic',
@@ -61,7 +62,7 @@ export const copy = {
     of: (at: number, total: number) => `${at} of ${total}`,
     previous: 'Previous',
   },
-}
+})
 
 /** A pin's name: a spike with no usual to multiply is new traffic. */
 export const titleOf = (pin: Pin) => (pin.kind === 'spike' && !pin.n.factor ? copy.title.newTraffic : copy.title[pin.kind])
