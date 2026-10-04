@@ -454,14 +454,16 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 		// Nothing loads from anywhere but this server: no fonts, no CDN, no
 		// third party. German courts have fined sites for embedding Google
 		// Fonts, and trckable never asks a browser to talk to anyone else.
-		// Frames too: only this origin's own pages, never another site's.
+		// Frames too: this origin's own pages, and https pages for the one frame
+		// the heatmap overlay draws, which shows the owner's own page as a plain
+		// document (sandbox without allow-scripts: nothing in it runs).
 		ancestors := "'none'"
 		if frame != nil {
 			if o := frame(r); o != "" {
 				ancestors = o
 			}
 		}
-		h.Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://api.github.com; frame-src 'self'; frame-ancestors "+ancestors+"; base-uri 'self'; form-action 'self'; object-src 'none'")
+		h.Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://api.github.com; frame-src 'self' https:; frame-ancestors "+ancestors+"; base-uri 'self'; form-action 'self'; object-src 'none'")
 		if ancestors == "'none'" {
 			h.Set("X-Frame-Options", "DENY") // older browsers that ignore frame-ancestors
 		}
