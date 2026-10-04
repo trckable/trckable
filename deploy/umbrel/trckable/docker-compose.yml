@@ -1,0 +1,25 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: trckable_server_1
+      APP_PORT: 8080
+      # The script, the tracking and the payment webhooks are called by sites and
+      # providers, not by someone signed in to Umbrel; everything else stays behind it.
+      PROXY_AUTH_WHITELIST: "/js/*,/api/e,/api/crawl,/webhooks/*"
+
+  server:
+    # Refresh the tag and the digest (the multi-arch index) on every update:
+    #   docker buildx imagetools inspect ghcr.io/trckable/trckable:<version>
+    image: ghcr.io/trckable/trckable:0.5.8@sha256:03daab2a19f0394171dd811674f169726cee48af31e8fa175ea987a9b1604ee2
+    user: "1000:1000"
+    restart: on-failure
+    stop_grace_period: 1m
+    environment:
+      TRCKABLE_SECRET: ${APP_SEED}
+      TRCKABLE_SETUP_TOKEN: ${APP_PASSWORD}
+      TRCKABLE_TRUST_PROXY: xff
+      TRCKABLE_DRAIN_SECONDS: "25"
+    volumes:
+      - ${APP_DATA_DIR}/data/trckable:/data

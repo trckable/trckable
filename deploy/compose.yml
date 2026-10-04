@@ -1,18 +1,33 @@
-# trckable with Docker Compose:  docker compose -f deploy/compose.yml up -d
+# trckable on any server with Docker Compose.
+#
+#   docker compose -f deploy/compose.yml up -d
+#   docker compose -f deploy/compose.yml logs trckable   # the one-time setup link
+#
+# The data lives in the trckable-data volume, always: never run it without one.
+# To update, change the tag below to the new release, then
+#   docker compose -f deploy/compose.yml pull && docker compose -f deploy/compose.yml up -d
+# Behind a reverse proxy (Caddy, nginx, Traefik) set TRCKABLE_TRUST_PROXY=xff,
+# and TRCKABLE_BASE_URL to the address people reach it at.
 services:
   trckable:
-    image: ghcr.io/trckable/trckable:latest
+    image: ghcr.io/trckable/trckable:0.5.8
     build:
       context: ..
       dockerfile: deploy/Dockerfile
     restart: unless-stopped
     ports:
       - "8080:8080"
+    environment:
+      TRCKABLE_BASE_URL: ${TRCKABLE_BASE_URL:-}
+      TRCKABLE_TRUST_PROXY: ${TRCKABLE_TRUST_PROXY:-}
+      TRCKABLE_SETUP_TOKEN: ${TRCKABLE_SETUP_TOKEN:-}
     volumes:
       - trckable-data:/data
     stop_grace_period: 30s
     healthcheck:
       test: ["CMD", "/usr/local/bin/trckabled", "version"]
       interval: 30s
+      timeout: 5s
+      retries: 3
 volumes:
   trckable-data:

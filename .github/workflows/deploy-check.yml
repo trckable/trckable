@@ -1,0 +1,31 @@
+# The one-click deploy templates (deploy/, charts/) are tried before they are
+# merged: every compose file resolves, the Helm chart lints and renders, and
+# the template files parse (scripts/deploy-check.sh). Its own workflow, so a
+# change to a template runs this and not the browsers.
+name: deploy-check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - deploy/**
+      - charts/**
+      - scripts/deploy-check.sh
+      - .github/workflows/deploy-check.yml
+  pull_request:
+    paths:
+      - deploy/**
+      - charts/**
+      - scripts/deploy-check.sh
+      - .github/workflows/deploy-check.yml
+
+permissions:
+  contents: read
+
+jobs:
+  templates:
+    name: deploy templates (compose, Helm)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: scripts/deploy-check.sh
