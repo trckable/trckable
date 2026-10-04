@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Dashboard } from './Dashboard'
 import { EmbedHeader, ShareHeader, SharePassword, ShareShell, useShare } from './Share'
 import { isEmbed } from '../lib/earlyStart'
+import { accentVars } from './shareAccent'
 import type { ShareInfo, Site } from '../lib/api'
 
 /** The site, as far as a shared page needs to know it. There is no id to send
@@ -27,11 +28,11 @@ export default function SharedSite() {
 
   if (info)
     return (
-      <div className={isEmbed() ? 'app shared embed' : 'app shared'}>
+      <div className={isEmbed() ? 'app shared embed' : 'app shared'} style={accentVars(info.accent)}>
         <Dashboard key={info.domain} site={asSite(info)} sites={[]} header={isEmbed() ? <EmbedHeader info={info} /> : <ShareHeader info={info} />} />
       </div>
     )
-  if (s.state === 'password') return <SharePassword onOpen={setOpened} error={s.error} />
+  if (s.state === 'password') return <SharePassword onOpen={setOpened} error={s.error} hideBrand={s.hideBrand} />
   if (s.state === 'error') return <ShareShell title="Nothing here" sub={s.message} />
   return <ShareShell title="Opening…" sub="One moment." />
 }
