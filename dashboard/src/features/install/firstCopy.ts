@@ -40,7 +40,7 @@ export const first = defineCopy('install.first', {
         quota: 'Quota used up · Try later',
         expired: 'Sign-in ended',
         other: 'Something went wrong',
-      } as Record<string, string>,
+      },
     },
   },
 })

@@ -10,7 +10,8 @@ describe('importing from Google Analytics', () => {
   })
 
   it('says every code the server can leave, and never the provider\'s own words', () => {
-    for (const code of ['failed', 'denied', 'quota', 'expired']) expect(first.importDialog.google.errors[code]).toBeTruthy()
+    const errors: Record<string, string> = first.importDialog.google.errors
+    for (const code of ['failed', 'denied', 'quota', 'expired']) expect(errors[code]).toBeTruthy()
   })
 
   it('names the imported period on one day or many', () => {

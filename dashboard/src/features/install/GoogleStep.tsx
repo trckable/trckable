@@ -8,6 +8,7 @@ import { gaStartUrl, useGaImport } from './gaImport'
 import './googleStep.css'
 
 const t = first.importDialog.google
+const errors: Record<string, string> = t.errors
 
 export function GoogleStep({ site }: { site: string }) {
   const ga = useGaImport(site)
@@ -17,7 +18,7 @@ export function GoogleStep({ site }: { site: string }) {
   const property = picked || job?.property || ga.properties?.[0]?.id || ''
   const busy = job?.status === 'running'
   const code = ga.error || job?.code || ''
-  const known = Object.hasOwn(t.errors, code) ? t.errors[code] : t.errors.other
+  const known = Object.hasOwn(errors, code) ? errors[code] : t.errors.other
   const message = code ? known : ''
   return (
     <div className="ga-step">
