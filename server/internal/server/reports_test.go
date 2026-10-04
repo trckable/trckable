@@ -120,7 +120,11 @@ func TestDueSchedulesAreSentOncePerPeriodToEachAddress(t *testing.T) {
 
 	s := newTestServer(t, config.Config{BaseURL: "https://dash.example.com"})
 	ctx := context.Background()
-	for i := 0; i < 100 && s.api.Query() == nil; i++ {
+	run, stop := context.WithCancel(ctx)
+	done := make(chan struct{})
+	go func() { _ = s.Run(run); close(done) }()
+	t.Cleanup(func() { stop(); <-done })
+	for i := 0; i < 200 && s.api.Query() == nil; i++ {
 		time.Sleep(50 * time.Millisecond)
 	}
 	if s.api.Query() == nil {

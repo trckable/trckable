@@ -111,8 +111,15 @@ func (s *Server) checkReports(ctx context.Context) {
 	now := reportClock()
 	for _, sc := range list {
 		info, err := s.ctl.SiteInfo(ctx, sc.SiteID)
-		if err != nil || info.LastEventAt == 0 {
-			continue // a site that never sent anything has nothing to report
+		if err != nil {
+			continue
+		}
+		// SiteInfo does not carry these two: read here. A site that never sent
+		// anything has nothing to report, and nor does one added after the
+		// period ended.
+		var created, last int64
+		if err := s.ctl.DB.QueryRowContext(ctx, `SELECT created_at, last_event_at FROM sites WHERE id = ?`, sc.SiteID).Scan(&created, &last); err != nil || last == 0 {
+			continue
 		}
 		loc, weekStart := s.scheduleClock(ctx, sc.SiteID, info)
 		var from, to time.Time
@@ -122,7 +129,7 @@ func (s *Server) checkReports(ctx context.Context) {
 		} else {
 			from, to, due = weeklyDue(now, loc, weekStart, sc.LastSent)
 		}
-		if !due || info.CreatedAt >= to.Unix() || recentlyTried(sc.ID, now) {
+		if !due || created >= to.Unix() || recentlyTried(sc.ID, now) {
 			continue
 		}
 		sent, err := s.sendSchedule(ctx, q, sc, info, loc, periodOf(sc.Cadence, from, to), sc.Recipients)

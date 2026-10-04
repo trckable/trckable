@@ -178,8 +178,6 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("GET /r/{token}", a.reportStopShow)
 	handleFunc("POST /r/{token}", a.reportStopDo)
 	handleFunc("POST /u/{token}", a.stopDo)
-	handleFunc("GET /r/{token}", a.reportStopShow)
-	handleFunc("POST /r/{token}", a.reportStopDo)
 	handle("GET /api/v1/sites/{site}/report-schedules", a.authed(a.reportSchedules))
 	handle("POST /api/v1/sites/{site}/report-schedules", a.authed(a.createReportSchedule))
 	handle("PUT /api/v1/sites/{site}/report-schedules/{id}", a.authed(a.updateReportSchedule))
