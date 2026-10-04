@@ -80,7 +80,7 @@ export function WidgetsSettings({ site }: { site: Site }) {
           {made.kind === 'online' && (
             <>
               <b>{TEXT.corner}</b>
-              <CodeBlock code={cornerCode(base, made, place)} lang="html" wrap />
+              <CodeBlock code={cornerCode(base, made)} lang="html" wrap />
             </>
           )}
         </div>

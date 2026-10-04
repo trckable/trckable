@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { Select } from '../components/Select'
 import { Switch } from '../components/Switch'
 import type { Site, WidgetKind, WidgetLook } from '../lib/apiMore'
-import { DEFAULT_PARTS, KINDS, LANGS, MAX_NAME, MAX_TEXT, MODES, TEXT, TEXT_FIELDS, defaultName, kindOf, modeOf, partsOf, type Place } from './widgetKinds'
+import { DEFAULT_PARTS, KINDS, LANGS, MAX_NAME, MAX_TEXT, MODES, TEXT, TEXT_FIELDS, defaultName, kindOf, modeOf, partsOf, placeOf, withPlace, type Place } from './widgetKinds'
 import { WidgetStage } from './WidgetStage'
 
 const ACCENTS = ['', '#38bdf8', '#818cf8', '#f472b6', '#fb923c', '#facc15']
@@ -25,8 +25,13 @@ const THEME_NAME = { auto: 'Auto', dark: 'Dark', light: 'Light' }
 export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { site: Site; look: WidgetLook; onLook: (patch: Partial<WidgetLook>) => void; place: Place; onPlace: (p: Place) => void; footer: ReactNode }) {
   const set = onLook
   // The words of one design are not the words of the next.
-  const pick = (kind: WidgetKind) => set({ kind, shows: DEFAULT_PARTS[kind], texts: {} })
+  const pick = (kind: WidgetKind) => set({ kind, shows: kind === 'online' ? withPlace(DEFAULT_PARTS[kind], place) : DEFAULT_PARTS[kind], texts: {} })
   const setText = (key: string, value: string) => set({ texts: { ...look.texts, [key]: value } })
+  // The online design keeps its corner with the widget; the others only change the code.
+  const setPlace = (p: Place) => {
+    onPlace(p)
+    if (look.kind === 'online') set({ shows: withPlace(look.shows, p) })
+  }
   const togglePart = (p: string) => set({ shows: look.shows.includes(p) ? look.shows.filter((x) => x !== p) : [...look.shows, p] })
   const parts = partsOf(look)
   const kind = kindOf(look.kind)
@@ -54,7 +59,7 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
               <span>{TEXT.mode}</span>
               <span className="seg" role="group" aria-label="Mode">
                 {MODES.map((m) => (
-                  <button key={m.id} type="button" aria-pressed={modeOf(look.shows) === m.id} onClick={() => set({ shows: m.shows })}>
+                  <button key={m.id} type="button" aria-pressed={modeOf(look.shows) === m.id} onClick={() => set({ shows: withPlace(m.shows, placeOf(look.shows)) })}>
                     {m.label}
                   </button>
                 ))}
@@ -118,7 +123,7 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
             <span>{TEXT.placement}</span>
             <span className="seg wg-place" role="group" aria-label="Placement">
               {PLACES.map((p) => (
-                <button key={p.id} type="button" aria-pressed={place === p.id} onClick={() => onPlace(p.id)}>
+                <button key={p.id} type="button" aria-pressed={place === p.id} onClick={() => setPlace(p.id)}>
                   {PLACE_SHORT[p.id]}
                 </button>
               ))}

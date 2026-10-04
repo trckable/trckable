@@ -2,7 +2,9 @@ package api
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"html/template"
@@ -16,6 +18,7 @@ import (
 	"github.com/trckable/trckable/server/internal/importer"
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
+	"github.com/trckable/trckable/server/internal/web"
 )
 
 // Public widgets: a small card a site shows on its own pages. The page is
@@ -142,6 +145,7 @@ func (a *API) widgetPage(w http.ResponseWriter, r *http.Request) {
 	gone := func() {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors *")
+		w.Header().Set("Cache-Control", "no-store")
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprint(w, `<!doctype html><title></title>`)
 	}
@@ -257,7 +261,10 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 	// Styles only: nothing can run, load or send from this page.
 	h.Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors *; base-uri 'none'; form-action 'none'")
 	if public {
-		h.Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(widgetFresh(wd.Kind)/time.Second)))
+		// Kept, but checked on every load (an ETag answers with a bare 304):
+		// a change in Settings shows on the next load, the numbers are
+		// cached on the server (widgetFresh).
+		h.Set("Cache-Control", "public, no-cache")
 	} else {
 		h.Set("Cache-Control", "no-store")
 	}
@@ -344,6 +351,15 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 	if err := widgetTmpl.Execute(&buf, view); err != nil {
 		serverError(w, err)
 		return
+	}
+	sum := sha256.Sum256(buf.Bytes())
+	etag := `"` + hex.EncodeToString(sum[:8]) + `"`
+	if public {
+		h.Set("ETag", etag)
+		if web.ETagMatch(r.Header.Get("If-None-Match"), etag) {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 	}
 	_, _ = w.Write(buf.Bytes())
 }

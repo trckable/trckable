@@ -43,6 +43,14 @@ export const MODES = [
   { id: 'spark', label: 'Pill + graph', shows: ['spark'] },
   { id: 'card', label: 'Card', shows: ['card', 'pages'] },
 ]
+// The corner of the online design is kept with the widget (the parts left and
+// right), so a change in Settings reaches a corner script already on a page.
+const SIDE: Partial<Record<Place, string>> = { bl: 'left', br: 'right' }
+export function placeOf(shows: string[]): Place {
+  if (shows.includes('left')) return 'bl'
+  return shows.includes('right') ? 'br' : 'inline'
+}
+export const withPlace = (shows: string[], place: Place) => [...shows.filter((x) => x !== 'left' && x !== 'right'), ...(SIDE[place] ? [SIDE[place]] : [])]
 export const modeOf = (shows: string[]) => MODES.find((m) => shows.includes(m.id))?.id ?? 'pill'
 
 // What the part list shows for a look: the online design has lists only in its card.
@@ -174,13 +182,13 @@ export function frameCode(base: string, w: Widget, domain: string) {
 }
 
 // The online design's corner placement: one script tag, no markup of its own.
-export function cornerCode(base: string, w: Widget, place: Place = 'br') {
-  return `<script async src="${base}/js/${w.id}.online.js"${place === 'bl' ? ' data-pos="bl"' : ''}></script>`
+export function cornerCode(base: string, w: Widget) {
+  return `<script async src="${base}/js/${w.id}.online.js"></script>`
 }
 
 export function snippet(base: string, w: Widget, domain: string, place: Place = 'inline') {
   if (place === 'inline') return frameCode(base, w, domain)
-  if (w.kind === 'online') return cornerCode(base, w, place)
+  if (w.kind === 'online') return cornerCode(base, w)
   // Floating: a fixed corner, still no script.
   const side = place === 'br' ? 'right' : 'left'
   return `<div style="position:fixed;${side}:16px;bottom:16px;z-index:50;max-width:calc(100vw - 32px)">\n  ${frameCode(base, w, domain)}\n</div>`
