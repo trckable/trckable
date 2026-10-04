@@ -27,6 +27,7 @@ export function figureOf(pin: Pin, money: (minor: number) => string): Figure {
   const { n } = pin
   switch (pin.kind) {
     case 'spike':
+    case 'surge':
       // No usual to multiply (a quiet or young site): the count and the source, no multiplier.
       if (!n.factor) return { n: n.visitors ?? 0, fmt: fmtInt, unit: copy.unit.visitors }
       return n.visitors ? { n: n.visitors, fmt: fmtInt, unit: copy.unit.visitors, mult: times(n.factor) } : { text: times(n.factor) }

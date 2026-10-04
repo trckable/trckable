@@ -9,7 +9,7 @@ import (
 )
 
 // DefaultAlerts turns on what a new site should be telling its owner without
-// being asked: the weekly report, and "tracking stopped". It does so only for a
+// being asked: the weekly report, "tracking stopped" and a traffic surge. It does so only for a
 // site with no alerts yet, only where there is somewhere to send them, and
 // never for a site that already has settings, so it can run for every new site
 // and change nothing that someone chose.
@@ -28,7 +28,7 @@ func (s *Store) DefaultAlerts(ctx context.Context, account, site string, mail bo
 	if err != nil || target == "" {
 		return false, err
 	}
-	for _, kind := range []string{"weekly", "stopped"} {
+	for _, kind := range []string{"weekly", "stopped", "surge"} {
 		if _, err := s.SaveAlert(ctx, Alert{SiteID: site, Kind: kind, Enabled: true, Target: target}); err != nil {
 			return false, err
 		}

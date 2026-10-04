@@ -12,6 +12,7 @@ import (
 	"github.com/trckable/trckable/server/internal/modules"
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
+	"github.com/trckable/trckable/server/internal/surge"
 )
 
 // The weekly report: last week's numbers, delivered on the first morning of the site's week to the
@@ -109,7 +110,7 @@ func aiLine(a aiWeek) string {
 
 // weeklyText words the report. It is plain text on purpose: every chat tool
 // and every mail client shows it the same.
-func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, link string) (title, msg string, data map[string]any) {
+func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link string) (title, msg string, data map[string]any) {
 	last := to.AddDate(0, 0, -1)
 	title = "Your week"
 	lines := []string{fmt.Sprintf("%s, %s – %s", domain, from.Format("Jan 2"), last.Format("Jan 2"))}
@@ -155,6 +156,9 @@ func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, ai a
 			}
 			lines = append(lines, line)
 		}
+	}
+	if busiest != "" && k.Visitors > 0 {
+		lines = append(lines, busiest)
 	}
 	if more := weeklyInsights(cur, prev); len(more) > 0 {
 		lines = append(lines, "")
@@ -234,7 +238,11 @@ func (s *Server) weeklyEvent(ctx context.Context, q *query.Q, info sqlite.SiteIn
 		// The dashboard on that week, against the one before it.
 		link = fmt.Sprintf("%s/%s?from=%s&to=%s&compare=previous", strings.TrimSuffix(s.cfg.BaseURL, "/"), info.Domain, from.Format("2006-01-02"), to.AddDate(0, 0, -1).Format("2006-01-02"))
 	}
-	ev.Title, ev.Message, ev.Data = weeklyText(info.Domain, from, to, cur, prev, ai, link)
+	busiest := ""
+	if b, err := s.ctl.BusiestSurge(ctx, siteID, from.Unix(), to.Unix()); err == nil && b != nil {
+		busiest = surge.Busiest(*b, time.Unix(b.Started, 0).In(loc))
+	}
+	ev.Title, ev.Message, ev.Data = weeklyText(info.Domain, from, to, cur, prev, ai, busiest, link)
 	ev.Text = ev.Title + " — " + ev.Message
 	return ev, true
 }

@@ -35,12 +35,12 @@ func alertsFor(t *testing.T, g *rig, c *http.Client, site string) map[string]map
 	return got
 }
 
-func TestANewSiteStartsWithTheWeeklyEmailAndTrackingStopped(t *testing.T) {
+func TestANewSiteStartsWithTheWeeklyEmailTrackingStoppedAndSurge(t *testing.T) {
 	withMail(t)
 	g := newRig(t)
 	c := client()
 	g.setup(t, c) // the site the server started with waits for its owner, and gets them now
-	if got := alertsFor(t, g, c, g.site); len(got) != 2 || got["weekly"]["enabled"] != true || got["stopped"]["target"] != "mailto:me@site.com" {
+	if got := alertsFor(t, g, c, g.site); len(got) != 3 || got["surge"]["enabled"] != true || got["weekly"]["enabled"] != true || got["stopped"]["target"] != "mailto:me@site.com" {
 		t.Fatalf("the site that was there before the owner: %v", got)
 	}
 	code, out := do(t, c, "POST", g.srv.URL+"/api/v1/sites", `{"domain":"new.example.com"}`, csrf, "1")
@@ -48,7 +48,7 @@ func TestANewSiteStartsWithTheWeeklyEmailAndTrackingStopped(t *testing.T) {
 		t.Fatalf("create: %d %v", code, out)
 	}
 	got := alertsFor(t, g, c, out["id"].(string))
-	if len(got) != 2 || got["weekly"]["enabled"] != true || got["stopped"]["enabled"] != true || got["weekly"]["target"] != "mailto:me@site.com" {
+	if len(got) != 3 || got["surge"]["enabled"] != true || got["weekly"]["enabled"] != true || got["stopped"]["enabled"] != true || got["weekly"]["target"] != "mailto:me@site.com" {
 		t.Fatalf("a new site: %v", got)
 	}
 	// An existing site is not touched by a new one's defaults.

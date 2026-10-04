@@ -14,13 +14,14 @@ export interface Words {
   sub?: string
 }
 
-const ICONS: Record<MomentKind, LucideIcon> = { spike: TrendingUp, sale: Coins, country: Globe, ai: Bot, milestone: Flag, note: StickyNote }
+const ICONS: Record<MomentKind, LucideIcon> = { spike: TrendingUp, surge: TrendingUp, sale: Coins, country: Globe, ai: Bot, milestone: Flag, note: StickyNote }
 
 /** fmt writes an amount in the site's currency (sales only exist with it). */
 export function wordsOf(m: Moment, fmt?: (minor: number) => string): Words {
   const icon = ICONS[m.kind]
   switch (m.kind) {
     case 'spike':
+    case 'surge':
       return { icon, line: m.factor ? copy.spike(times(m.factor)) : copy.newTraffic(m.visitors ?? 0), sub: m.referrer ? copy.from(m.referrer) : undefined }
     case 'sale': {
       const sub = [fmt && m.amount ? '+' + fmt(m.amount) : '', m.channel ? channelLabel(m.channel) : ''].filter(Boolean).join(' · ')

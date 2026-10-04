@@ -14,11 +14,11 @@ import (
 // own clock, "2026-09-27T20:00", the same keys as the report's series).
 type Moment struct {
 	T    string `json:"t"`
-	Kind string `json:"kind"` // spike | sale | country | ai | milestone | note
+	Kind string `json:"kind"` // spike | surge | sale | country | ai | milestone | note
 
-	Factor   float64 `json:"factor,omitempty"`   // spike: times the usual; absent for new traffic (see Quiet)
-	Referrer string  `json:"referrer,omitempty"` // spike: who sent them
-	Visitors int64   `json:"visitors,omitempty"` // spike: visitors in the bucket
+	Factor   float64 `json:"factor,omitempty"`   // spike, surge: times the usual; absent for new traffic (see Quiet)
+	Referrer string  `json:"referrer,omitempty"` // spike: who sent them; surge: the referring host of the source
+	Visitors int64   `json:"visitors,omitempty"` // spike: visitors in the bucket; surge: the most online at once
 	Count    int64   `json:"count,omitempty"`    // sale: payments in the bucket
 	Amount   int64   `json:"amount,omitempty"`   // sale: net, minor units
 	Channel  string  `json:"channel,omitempty"`  // sale: the channel that earned most of it
@@ -28,7 +28,7 @@ type Moment struct {
 	Family   string  `json:"family,omitempty"`   // milestone: its kind (visitors, revenue, ...)
 	Value    float64 `json:"value,omitempty"`    // milestone: the round number reached
 	Currency string  `json:"currency,omitempty"` // milestone: revenue's currency
-	Text     string  `json:"text,omitempty"`     // note: its words
+	Text     string  `json:"text,omitempty"`     // note: its words; surge: the source as a name ("Facebook")
 }
 
 // Spike is a bucket far above the ones before it.
@@ -137,7 +137,7 @@ func Top(s []Spike, n int) []Spike {
 // Sort puts moments in time order; within a bucket, a fixed order of kinds so
 // the story reads the same every time.
 func Sort(ms []Moment) {
-	rank := map[string]int{"note": 0, "milestone": 1, "spike": 2, "country": 3, "ai": 4, "sale": 5}
+	rank := map[string]int{"note": 0, "milestone": 1, "spike": 2, "surge": 3, "country": 4, "ai": 5, "sale": 6}
 	sort.SliceStable(ms, func(a, b int) bool {
 		if ms[a].T != ms[b].T {
 			return ms[a].T < ms[b].T

@@ -141,6 +141,7 @@ var routeRules = map[string]string{
 	"GET /api/v1/sites/{site}/events":                            "read",
 	"GET /api/v1/sites/{site}/live":                              "read",
 	"GET /api/v1/sites/{site}/now":                               "read",
+	"GET /api/v1/sites/{site}/surge":                             "read",
 	"GET /api/v1/health":                                         "read",
 	"GET /api/v1/keys":                                           "owner",
 	"POST /api/v1/keys":                                          "write",

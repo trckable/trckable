@@ -4,6 +4,7 @@
 // page itself (except the card): the Live layout is untouched.
 import type { Sale, Site, Visit } from '../../lib/api'
 import { NotifyAsk } from './NotifyAsk'
+import SurgeCard from './SurgeCard'
 import { useNotices } from './useNotices'
 import { useSaleToast } from './useSaleToast'
 import { useTabCount } from './useTabCount'
@@ -21,5 +22,10 @@ export default function Signals(p: SignalsProps) {
   useTabCount(p.online)
   useSaleToast(p.sales)
   useNotices(p)
-  return <NotifyAsk sold={p.sales.length > 0} />
+  return (
+    <>
+      <NotifyAsk sold={p.sales.length > 0} />
+      <SurgeCard site={p.site} />
+    </>
+  )
 }

@@ -29,6 +29,7 @@ import (
 	"github.com/trckable/trckable/server/internal/secrets"
 	"github.com/trckable/trckable/server/internal/sso"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
+	"github.com/trckable/trckable/server/internal/surge"
 )
 
 const sessionCookie = "trckable_session"
@@ -63,6 +64,9 @@ type API struct {
 	// SendReport sends a report schedule's last period to one address now;
 	// ReportsReady says the server can send reports at all (a mail server and a
 	// public address). Both are set by the server, which owns the report.
+	// OnSurge is told once when a site's surge begins, to send the alerts. Set
+	// by the server, which owns the words.
+	OnSurge      func(s surge.Surge)
 	SendReport   func(ctx context.Context, sc sqlite.ReportSchedule, email string) error
 	ReportsReady func() bool
 	BaseURL      string // public https address (TRCKABLE_BASE_URL), for webhook URLs
@@ -83,8 +87,11 @@ type API struct {
 	// GSCHTTP replaces the HTTP client used to reach Google; tests only.
 	GSCHTTP    *http.Client
 	cache      *reportCache
-	nowCache   nowCache  // Live mode's answers, two seconds each
-	refIcons   *refIcons // the icons of referring sites, fetched and kept here
+	nowCache   nowCache   // Live mode's answers, two seconds each
+	surges     surge.Book // each site's busy spell, if it has one
+	storyMu    sync.Mutex
+	stories    map[string]storyEntry // how each site's surge went, kept half a minute
+	refIcons   *refIcons             // the icons of referring sites, fetched and kept here
 	search     *searchState
 	searchOnce sync.Once
 	loginRate  *attempts
@@ -257,6 +264,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/events", a.authed(a.recent))
 	handle("GET /api/v1/sites/{site}/live", a.authed(a.live))
 	handle("GET /api/v1/sites/{site}/now", a.authed(a.liveNow))
+	handle("GET /api/v1/sites/{site}/surge", a.authed(a.surgeNow))
 	handle("GET /api/v1/health", a.authed(a.health))
 	handle("GET /api/v1/keys", a.authed(a.keys))
 	handle("POST /api/v1/keys", a.authed(a.createKey))

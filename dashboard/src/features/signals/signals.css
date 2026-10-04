@@ -2,3 +2,16 @@
 .sg-body {
   margin: 0;
 }
+
+/* The surge card (SurgeCard.tsx): the headline a little larger; "More" sits quietly under the lines. */
+.sg-lead {
+  font-weight: 600;
+}
+/* The little ghost sits in the corner: the buttons keep clear of it. */
+.side-card:has(.sg-lead) .side-card-actions {
+  padding-right: 38px;
+}
+.sg-more {
+  align-self: flex-start;
+  margin-top: 6px;
+}
