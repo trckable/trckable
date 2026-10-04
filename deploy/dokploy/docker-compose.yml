@@ -1,0 +1,21 @@
+services:
+  trckable:
+    image: ghcr.io/trckable/trckable:0.5.8
+    restart: unless-stopped
+    environment:
+      TRCKABLE_BASE_URL: ${TRCKABLE_BASE_URL}
+      TRCKABLE_SECRET: ${TRCKABLE_SECRET}
+      TRCKABLE_SETUP_TOKEN: ${TRCKABLE_SETUP_TOKEN}
+      TRCKABLE_TRUST_PROXY: xff
+      TRCKABLE_DRAIN_SECONDS: "25"
+    volumes:
+      - trckable-data:/data
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/trckabled", "version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  trckable-data: {}

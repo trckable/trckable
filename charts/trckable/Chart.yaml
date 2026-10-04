@@ -1,0 +1,13 @@
+apiVersion: v2
+name: trckable
+description: Tiny self-hosted web analytics that shows which traffic pays
+type: application
+version: 0.5.8
+appVersion: "0.5.8"
+home: https://trckable.com
+sources:
+  - https://github.com/trckable/trckable
+keywords:
+  - analytics
+  - web-analytics
+  - privacy

@@ -1,0 +1,74 @@
+# trckable is one process that owns its data directory: a single replica with
+# one persistent volume. Do not scale it out.
+
+image:
+  repository: ghcr.io/trckable/trckable
+  # Empty: the chart's appVersion, the release this chart was made for.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# The address people reach it at, e.g. https://stats.example.com. Payment
+# providers send their webhooks here.
+baseUrl: ""
+
+# "xff" behind an ingress that adds X-Forwarded-For (it is set for you when the
+# ingress below is on), or "header:X-Real-IP". Empty leaves trckable's default.
+trustProxy: ""
+
+# Seconds trckable takes to finish in-flight requests at shutdown. The pod's
+# grace period must be longer.
+drainSeconds: 25
+terminationGracePeriodSeconds: 35
+
+# TRCKABLE_SECRET encrypts the payment keys stored in the data volume, and
+# TRCKABLE_SETUP_TOKEN guards the first-run setup page.
+secret:
+  # An existing Secret with the keys "secret" and "setup-token" (the setup token
+  # is optional). Empty: the chart makes one, with random values that stay the
+  # same across upgrades.
+  existingSecret: ""
+
+# Anything else, e.g. TRCKABLE_SMTP_URL or TRCKABLE_RESEND_KEY.
+extraEnv: []
+#  - name: TRCKABLE_MAIL_FROM
+#    value: stats@example.com
+
+persistence:
+  # The data folder. Always kept: without it every restart starts empty.
+  size: 5Gi
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  # Use a claim you already have instead of creating one.
+  existingClaim: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: stats.example.com
+      path: /
+      pathType: Prefix
+  tls: []
+  #  - secretName: trckable-tls
+  #    hosts:
+  #      - stats.example.com
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

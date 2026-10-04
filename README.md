@@ -66,6 +66,19 @@ The container runs as an unprivileged user (65532), not root. A new Docker volum
 
 Your site's own script, from Settings → Install: it carries the modules and the privacy settings you chose. Or `npm i trckable` for React and Next.js, where events go through your own domain. Every route is in the docs: [install](https://docs.trckable.com/install/) · [platforms](https://docs.trckable.com/install/platforms/) · [revenue](https://docs.trckable.com/revenue/) · [MCP](https://docs.trckable.com/api/mcp/).
 
+## 🚀 Deploy
+
+The same image everywhere, with its data volume, health check and a pinned release. How to set each one up: [deploy/README.md](deploy/README.md).
+
+| Where | |
+|---|---|
+| Any server with Docker | [`deploy/compose.yml`](deploy/compose.yml) |
+| Railway | [`deploy/railway`](deploy/railway) |
+| Coolify | [`deploy/coolify/trckable.yaml`](deploy/coolify/trckable.yaml) |
+| Dokploy | [`deploy/dokploy`](deploy/dokploy) |
+| Umbrel | [`deploy/umbrel/trckable`](deploy/umbrel/trckable) |
+| Kubernetes | [`charts/trckable`](charts/trckable) (Helm) |
+
 ## ⚖️ How it compares
 
 The free, self-hostable tools, plus DataFast (paid, hosted only) for script size, all measured the same way. The full tables, sources and caveats: [How it compares](https://docs.trckable.com/compare/).

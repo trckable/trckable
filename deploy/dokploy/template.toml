@@ -1,0 +1,17 @@
+[variables]
+main_domain = "${domain}"
+secret = "${password:64}"
+setup_token = "${password:32}"
+
+[config]
+mounts = []
+
+[[config.domains]]
+serviceName = "trckable"
+port = 8080
+host = "${main_domain}"
+
+[config.env]
+TRCKABLE_BASE_URL = "https://${main_domain}"
+TRCKABLE_SECRET = "${secret}"
+TRCKABLE_SETUP_TOKEN = "${setup_token}"

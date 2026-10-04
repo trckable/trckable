@@ -1,0 +1,12 @@
+trckable {{ .Chart.AppVersion }} is starting. It keeps its data in the volume {{ include "trckable.claimName" . }}.
+
+First start: open /setup on the address people reach it at and create the account. The setup token is
+  kubectl get secret {{ include "trckable.secretName" . }} -n {{ .Release.Namespace }} -o jsonpath='{.data.setup-token}' | base64 -d
+The same link is also in the log: kubectl logs deploy/{{ include "trckable.fullname" . }} -n {{ .Release.Namespace }}
+{{- if not .Values.ingress.enabled }}
+
+No ingress is on. To look at it from here:
+  kubectl port-forward svc/{{ include "trckable.fullname" . }} 8080:{{ .Values.service.port }} -n {{ .Release.Namespace }}
+{{- end }}
+
+Keep the Secret: TRCKABLE_SECRET decrypts the payment keys stored in the volume.

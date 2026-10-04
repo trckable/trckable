@@ -8,6 +8,15 @@ export const VERSION_PLACES = [
   ['packages/trckable/package.json', (v) => `"version": "${v}"`],
   ['server/internal/server/server.go', (v) => `var Version = "${v}"`],
   ['README.md', (v) => `badge/version-${v}-`],
+  // The deploy templates pin the release's image (the Umbrel package, whose
+  // digest changes with it, is refreshed when it is submitted).
+  ['deploy/compose.yml', (v) => `ghcr.io/trckable/trckable:${v}`],
+  ['deploy/coolify/trckable.yaml', (v) => `ghcr.io/trckable/trckable:${v}`],
+  ['deploy/dokploy/docker-compose.yml', (v) => `ghcr.io/trckable/trckable:${v}`],
+  ['deploy/dokploy/meta.json', (v) => `"version": "${v}"`],
+  ['deploy/README.md', (v) => `ghcr.io/trckable/trckable:${v}`],
+  ['deploy/README.md', (v) => `--branch v${v}`],
+  ['charts/trckable/Chart.yaml', (v) => `version: ${v}\nappVersion: "${v}"`],
 ]
 
 /** True when version a is newer than version b (both X.Y.Z). */
@@ -19,10 +28,10 @@ export function newer(a, b) {
 
 /** The same text with the old version moved to the new one; throws when a place does not carry the old one. */
 export function bump(file, text, from, to) {
-  const place = VERSION_PLACES.find(([f]) => f === file)
-  if (!place) throw new Error(`${file} does not carry the version`)
-  const next = text.replace(place[1](from), place[1](to))
-  if (next === text) throw new Error(`${file}: nothing to change (${place[1](from)})`)
+  const places = VERSION_PLACES.filter(([f]) => f === file)
+  if (!places.length) throw new Error(`${file} does not carry the version`)
+  const next = places.reduce((t, [, carries]) => t.replaceAll(carries(from), carries(to)), text)
+  if (next === text) throw new Error(`${file}: nothing to change (${places[0][1](from)})`)
   return next
 }
 

@@ -1,0 +1,32 @@
+manifestVersion: 1
+id: trckable
+storage:
+  dataRoot: data
+category: developer
+name: trckable
+version: "0.5.8"
+tagline: Tiny web analytics that shows which traffic pays
+description: >-
+  trckable is free, open source web analytics for your own sites: a 2 KB script, no cookies, and one small server that keeps everything on your Umbrel. It also shows which traffic pays, by reading payments from Stripe, Lemon Squeezy, Polar, Paddle and Dodo Payments.
+
+
+  First start
+
+  Open the app and create your account on the setup page. It asks for a setup token: Umbrel shows it as the app password.
+
+
+  Your sites send visits to trckable, so it has to be reachable from the internet. The easiest way is the Cloudflare Tunnel app, pointed at this app, and then Settings, Install in trckable gives you the script to paste into your site.
+releaseNotes: ""
+developer: trckable
+website: https://trckable.com
+dependencies: []
+repo: https://github.com/trckable/trckable
+support: https://github.com/trckable/trckable/issues
+port: 26541
+gallery: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+deterministicPassword: true
+submitter: trckable
+submission: ""

@@ -12,6 +12,9 @@ test('newer compares each part as a number', () => {
 test('bump moves the version where it lives, and refuses a place without the old one', () => {
   assert.equal(bump('server/internal/server/server.go', 'var Version = "0.4.0"\n', '0.4.0', '0.4.1'), 'var Version = "0.4.1"\n')
   assert.equal(bump('README.md', '![v](badge/version-0.4.0-blue)', '0.4.0', '0.4.1'), '![v](badge/version-0.4.1-blue)')
+  assert.equal(bump('charts/trckable/Chart.yaml', 'version: 0.4.0\nappVersion: "0.4.0"\n', '0.4.0', '0.4.1'), 'version: 0.4.1\nappVersion: "0.4.1"\n')
+  assert.equal(bump('deploy/compose.yml', 'image: ghcr.io/trckable/trckable:0.4.0\n# ghcr.io/trckable/trckable:0.4.0\n', '0.4.0', '0.4.1'), 'image: ghcr.io/trckable/trckable:0.4.1\n# ghcr.io/trckable/trckable:0.4.1\n')
+  assert.equal(bump('deploy/README.md', 'ghcr.io/trckable/trckable:0.4.0 --branch v0.4.0', '0.4.0', '0.4.1'), 'ghcr.io/trckable/trckable:0.4.1 --branch v0.4.1')
   assert.throws(() => bump('tracker/package.json', '"version": "0.3.0"', '0.4.0', '0.4.1'), /nothing to change/)
   assert.throws(() => bump('other.txt', '', '0.4.0', '0.4.1'), /does not carry/)
 })
@@ -22,11 +25,18 @@ test('versionMismatches names every place that disagrees', () => {
     'packages/trckable/package.json': '"version": "0.4.1"',
     'server/internal/server/server.go': 'var Version = "0.4.1"',
     'README.md': 'badge/version-0.4.1-',
+    'deploy/compose.yml': 'image: ghcr.io/trckable/trckable:0.4.1',
+    'deploy/coolify/trckable.yaml': 'image: ghcr.io/trckable/trckable:0.4.1',
+    'deploy/dokploy/docker-compose.yml': 'image: ghcr.io/trckable/trckable:0.4.1',
+    'deploy/dokploy/meta.json': '"version": "0.4.1"',
+    'deploy/README.md': 'ghcr.io/trckable/trckable:0.4.1 --branch v0.4.1',
+    'charts/trckable/Chart.yaml': 'version: 0.4.1\nappVersion: "0.4.1"',
     'CHANGELOG.md': '## Unreleased\n\n## 0.4.1 (27 Sep 2026)\n- a\n',
   }
   assert.deepEqual(versionMismatches('0.4.1', (f) => files[f]), [])
   assert.deepEqual(versionMismatches('0.4.2', (f) => files[f]), [
-    'tracker/package.json', 'packages/trckable/package.json', 'server/internal/server/server.go', 'README.md', 'CHANGELOG.md',
+    'tracker/package.json', 'packages/trckable/package.json', 'server/internal/server/server.go', 'README.md',
+    'deploy/compose.yml', 'deploy/coolify/trckable.yaml', 'deploy/dokploy/docker-compose.yml', 'deploy/dokploy/meta.json', 'deploy/README.md', 'deploy/README.md', 'charts/trckable/Chart.yaml', 'CHANGELOG.md',
   ])
   // 0.4.1 must not pass on a section for 0.4.10
   assert.deepEqual(versionMismatches('0.4.1', (f) => (f === 'CHANGELOG.md' ? '## 0.4.10 (1 Oct 2026)\n' : files[f])), ['CHANGELOG.md'])

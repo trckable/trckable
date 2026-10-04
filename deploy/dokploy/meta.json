@@ -1,0 +1,13 @@
+{
+  "id": "trckable",
+  "name": "trckable",
+  "version": "0.5.8",
+  "description": "Tiny self-hosted web analytics that shows which traffic pays: one container, free and open source.",
+  "logo": "trckable.svg",
+  "links": {
+    "github": "https://github.com/trckable/trckable",
+    "website": "https://trckable.com",
+    "docs": "https://docs.trckable.com/deploy/"
+  },
+  "tags": ["analytics"]
+}

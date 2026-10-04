@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "trckable.fullname" . }}
+  labels:
+    {{- include "trckable.labels" . | nindent 4 }}
+spec:
+  # One writer owns the data: one replica, and the old pod stops before the new one starts.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "trckable.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "trckable.selectorLabels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: trckable
+          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: TRCKABLE_DATA_DIR
+              value: /data
+            - name: TRCKABLE_DRAIN_SECONDS
+              value: {{ .Values.drainSeconds | quote }}
+            - name: TRCKABLE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "trckable.secretName" . }}
+                  key: secret
+            - name: TRCKABLE_SETUP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "trckable.secretName" . }}
+                  key: setup-token
+                  optional: true
+            {{- with .Values.baseUrl }}
+            - name: TRCKABLE_BASE_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.trustProxy }}
+            - name: TRCKABLE_TRUST_PROXY
+              value: {{ .Values.trustProxy | quote }}
+            {{- else if .Values.ingress.enabled }}
+            - name: TRCKABLE_TRUST_PROXY
+              value: xff
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 3
+            failureThreshold: 40
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "trckable.claimName" . }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

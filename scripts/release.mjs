@@ -96,7 +96,7 @@ function prepare() {
   run('git', 'checkout', '-q', '-b', `release-${V}`)
 
   writeFileSync(join(ROOT, 'VERSION'), V + '\n')
-  for (const [file] of VERSION_PLACES) {
+  for (const file of new Set(VERSION_PLACES.map(([f]) => f))) {
     const path = join(ROOT, file)
     writeFileSync(path, bump(file, readFileSync(path, 'utf8'), OLD, V))
   }
