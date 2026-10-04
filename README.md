@@ -148,6 +148,22 @@ Nothing is paid, limited or held back. The complete list, in words: [Everything 
   <img src=".github/images/features/export.svg" width="49%" alt="Export the view you are looking at as CSV, or read the same numbers over the HTTP API">
 </p>
 
+### Widgets for your site
+
+Settings → Widgets makes a small card for your own pages: live now, last 7 days, a counter, open revenue, a privacy seal, and **Online**, how many people are on the site now. Each is a page of HTML and CSS under `/w/<id>`: no script, no cookie, nothing sent anywhere. It is off until you make it, only the numbers its design shows are public, and it is never counted as a visit. Every widget has a name, a language (or the visitor's own), wording you can change, and an Edit view that shows the real card on a light or dark page, inline or in a corner; saving keeps the same id, so the code on your pages keeps working.
+
+Online has three modes: a **pill** ("12 online" with a pulsing dot), the pill with a **30-minute sparkline**, and a **card** with the chart and the top pages or countries. It counts the last five minutes, the same as the dashboard's Online. Below three people it says "A few" and draws no chart, and a page or country appears only with three or more on it. Put it where you like, as a frame:
+
+```html
+<iframe src="https://stats.example.com/w/w_abc123" width="230" height="44" style="border:0;background:transparent"></iframe>
+```
+
+or float it in a corner with one small script (under 1 KB gzipped, separate from the tracker; the visitor can close it, it is hidden in print and fades in only without reduced motion). `data-pos="bl"` puts it bottom left:
+
+```html
+<script async src="https://stats.example.com/js/w_abc123.online.js"></script>
+```
+
 ### When your server is down
 
 A visitor's browser keeps what it could not send, up to 24 hours and 200 events, and sends it when your server answers again: the visits made meanwhile are counted once, on the day they happened. The server takes events up to 25 hours old; the browser's queue is the only copy until then, so a visitor who clears their site data in that time takes it with them. A visitor counted without a cookie has nothing stored in the browser, so what could not be sent is kept in memory and sent again for as long as the page is open: if they close the page first, those events are lost. A visit that was cut in two by the outage is stored as two visits, with every page view counted.

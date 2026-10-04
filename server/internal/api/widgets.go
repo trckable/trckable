@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -110,6 +111,13 @@ func (a *API) widgetPreview(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, "unknown widget kind")
 		return
 	}
+	wd.Lang = v.Get("lang")
+	wd.Texts = map[string]string{}
+	for k := range sqlite.WidgetTexts[wd.Kind] {
+		if t := v.Get("text." + k); t != "" {
+			wd.Texts[k] = t
+		}
+	}
 	wd.Shows = []string{}
 	for _, p := range strings.Split(v.Get("shows"), ",") {
 		if sqlite.WidgetPart(wd.Kind, p) {
@@ -196,6 +204,13 @@ const widgetCacheMax = 10_000
 // asked for now is the one people are looking at. Both come off the front of
 // order, so a put never walks the whole cache under the lock.
 func (c *widgetCache) put(key string, n widgetNumbers, now time.Time) {
+	c.putFor(key, n, now, time.Minute)
+}
+
+// putFor is put for numbers that go stale sooner than a minute. The expiry
+// sweep stops at the first entry still fresh, so a short-lived entry behind
+// a longer one waits to be dropped; get never serves it past its time.
+func (c *widgetCache) putFor(key string, n widgetNumbers, now time.Time, ttl time.Duration) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.m == nil {
@@ -219,7 +234,7 @@ func (c *widgetCache) put(key string, n widgetNumbers, now time.Time) {
 		delete(c.m, c.order[0].key)
 		c.order = c.order[1:]
 	}
-	exp := now.Add(time.Minute)
+	exp := now.Add(ttl)
 	c.m[key] = cachedNumbers{n: n, exp: exp}
 	c.order = append(c.order, queued{key, exp})
 }
@@ -242,7 +257,7 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 	// Styles only: nothing can run, load or send from this page.
 	h.Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors *; base-uri 'none'; form-action 'none'")
 	if public {
-		h.Set("Cache-Control", "public, max-age=60")
+		h.Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(widgetFresh(wd.Kind)/time.Second)))
 	} else {
 		h.Set("Cache-Control", "no-store")
 	}
@@ -251,14 +266,20 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 	if err != nil {
 		loc = time.UTC
 	}
-	view := widgetView(wd, si, now, loc)
+	lang := widgetLang(wd.Lang, r)
+	words := newWidgetWords(lang, wd)
+	h.Set("Content-Language", lang)
+	if wd.Lang == "" || wd.Lang == "auto" {
+		h.Add("Vary", "Accept-Language") // the same address answers in each visitor's language
+	}
+	view := widgetView(wd, si, now, loc, words)
 
 	switch wd.Kind {
 	case "privacy":
 		// Read from the site's own settings, now: a seal that cannot say more
 		// than the site does.
 		c, _ := a.Ctl.SiteConfig(r.Context(), si.ID)
-		view.Facts = privacyFacts(c, a.moduleOn(r, si.ID, "consent"))
+		view.Facts = privacyFacts(c, a.moduleOn(r, si.ID, "consent"), words)
 	case "revenue":
 		// Money is public only while the site records it, and only if the
 		// owner made a revenue widget.
@@ -282,8 +303,9 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 		ask := query.WidgetAsk{
 			Week:     wd.Kind == "badge",
 			AI:       wd.Kind == "badge" && wd.Has("ai"),
-			Pages:    wd.Kind == "live" && wd.Has("pages"),
+			Pages:    (wd.Kind == "live" || wd.Kind == "online") && wd.Has("pages"),
 			Channels: wd.Kind == "live" && wd.Has("channels"),
+			Online:   wd.Kind == "online",
 		}
 		key := fmt.Sprintf("%s|%s|%v", si.ID, wd.Kind, ask)
 		nums, ok := a.widgetCache.get(key, now)
@@ -309,10 +331,14 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 				}
 				nums.WidgetNumbers = n
 			}
-			a.widgetCache.put(key, nums, now)
+			a.widgetCache.putFor(key, nums, now, widgetFresh(wd.Kind))
 		}
-		fill(&view, wd, si, nums, now, loc)
+		fill(&view, wd, si, nums, now, loc, words)
+		if wd.Kind == "online" {
+			fillOnline(&view, wd, nums, words)
+		}
 	}
+	view.L = widgetLabels(words, view)
 
 	var buf bytes.Buffer
 	if err := widgetTmpl.Execute(&buf, view); err != nil {
@@ -323,6 +349,7 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 }
 
 type widgetData struct {
+	Lang            string
 	Kind, Theme     string
 	AccentDark      template.CSS
 	AccentLight     template.CSS
@@ -341,6 +368,11 @@ type widgetData struct {
 	Facts           []string
 	Checked         string
 	ShowBars        bool
+	Refresh         int               // seconds until the page reads itself again
+	Count, Mode     string            // online: the count as it may be shown, and pill, spark or card
+	N               string            // the number the owner's {n} stands for
+	L               map[string]string // every label, in the page's language and with the owner's own words
+	Pill            bool              // online, in a pill: the brand is a mark in it, not a line under it
 }
 
 type widgetBar struct {
@@ -352,22 +384,41 @@ type widgetLine struct {
 	Mark, Name, N string
 }
 
-func widgetView(wd sqlite.Widget, si sqlite.SiteInfo, now time.Time, loc *time.Location) widgetData {
-	d := widgetData{Kind: wd.Kind, Theme: wd.Theme, Radius: wd.Radius, Brand: wd.Brand, Domain: si.Domain, Ghost: template.HTML(widgetGhost), ShowBars: wd.Has("bars")} //nolint:gosec // widgetGhost is our own constant SVG, never input
+func widgetView(wd sqlite.Widget, si sqlite.SiteInfo, now time.Time, loc *time.Location, words widgetWords) widgetData {
+	d := widgetData{Lang: words.lang, Kind: wd.Kind, Theme: wd.Theme, Radius: wd.Radius, Brand: wd.Brand, Domain: si.Domain, Ghost: template.HTML(widgetGhost), ShowBars: wd.Has("bars"), Refresh: widgetRefresh(wd.Kind)} //nolint:gosec // widgetGhost is our own constant SVG, never input
 	d.AccentDark, d.AccentLight = "#b8ff3c", "#3f6212"
 	// Checked again here, whatever the caller did: it is written into CSS.
 	if sqlite.HexColor(wd.Accent) {
 		d.AccentDark, d.AccentLight = template.CSS(wd.Accent), template.CSS(wd.Accent) //nolint:gosec // only a #rrggbb colour gets here, checked on the line above
 	}
 	d.Checked = now.In(loc).Format("15:04")
-	d.Month = now.In(loc).Format("January")
+	d.Month = words.plain("month." + strconv.Itoa(int(now.In(loc).Month())))
 	return d
 }
 
-var channelLabel = map[string]string{"AI": "AI assistants"}
+// channelName is a channel as the page says it: the one trckable names
+// itself, in the page's language; the rest as the site's own data has them.
+func channelName(name string, words widgetWords) string {
+	if name == "AI" {
+		return words.plain("ai_channel")
+	}
+	return name
+}
 
-func fill(d *widgetData, wd sqlite.Widget, si sqlite.SiteInfo, n widgetNumbers, now time.Time, loc *time.Location) {
+// widgetLabels is every label the page has, so its template holds no words.
+// The owner's {n}, {pct}, {month}, {domain} and {time} are filled in here.
+func widgetLabels(words widgetWords, d widgetData) map[string]string {
+	vars := []string{"n", d.N, "pct", d.AI, "month", d.Month, "domain", d.Domain, "time", d.Checked}
+	out := map[string]string{"brand": words.plain("brand")}
+	for _, k := range []string{"online", "online_title", "from", "reading", "came", "live_title", "week", "ai", "counter", "rev_title", "rev_channels", "seal_title", "seal_foot"} {
+		out[k] = words.msg(k, vars...)
+	}
+	return out
+}
+
+func fill(d *widgetData, wd sqlite.Widget, si sqlite.SiteInfo, n widgetNumbers, now time.Time, loc *time.Location, words widgetWords) {
 	d.Now, d.Week = number(n.Now), number(n.Week)
+	d.N = d.Now
 	if wd.Has("ai") && n.Week > 0 {
 		d.AI = fmt.Sprintf("%.0f%%", n.AIShare*100)
 	}
@@ -382,10 +433,7 @@ func fill(d *widgetData, wd sqlite.Widget, si sqlite.SiteInfo, n widgetNumbers, 
 			h = max(h, 6)
 		}
 		at := end.Add(time.Duration(i-29) * time.Minute).Format("15:04")
-		label := at + " · " + number(v) + " visitor"
-		if v != 1 {
-			label += "s"
-		}
+		label := words.plural("bar", v, "time", at)
 		d.Bars = append(d.Bars, widgetBar{H: h, Label: label})
 	}
 	d.From, d.Mid, d.Till = end.Add(-29*time.Minute).Format("15:04"), end.Add(-15*time.Minute).Format("15:04"), end.Format("15:04")
@@ -398,11 +446,7 @@ func fill(d *widgetData, wd sqlite.Widget, si sqlite.SiteInfo, n widgetNumbers, 
 		d.Pages = append(d.Pages, widgetLine{Name: p.Name, N: number(p.Visitors)})
 	}
 	for _, c := range n.Channels {
-		name := c.Name
-		if l, ok := channelLabel[name]; ok {
-			name = l
-		}
-		d.Channels = append(d.Channels, widgetLine{Name: name, N: number(c.Visitors)})
+		d.Channels = append(d.Channels, widgetLine{Name: channelName(c.Name, words), N: number(c.Visitors)})
 	}
 	if wd.Kind == "revenue" {
 		exp := fx.Exponent(si.Currency)
@@ -416,11 +460,7 @@ func fill(d *widgetData, wd sqlite.Widget, si sqlite.SiteInfo, n widgetNumbers, 
 				if row.Revenue == nil || *row.Revenue <= 0 {
 					continue
 				}
-				name := row.Value
-				if l, ok := channelLabel[name]; ok {
-					name = l
-				}
-				d.Channels = append(d.Channels, widgetLine{Name: name, N: money(*row.Revenue, si.Currency, exp)})
+				d.Channels = append(d.Channels, widgetLine{Name: channelName(row.Value, words), N: money(*row.Revenue, si.Currency, exp)})
 			}
 		}
 	}
@@ -428,42 +468,35 @@ func fill(d *widgetData, wd sqlite.Widget, si sqlite.SiteInfo, n widgetNumbers, 
 
 // privacyFacts are the seal's lines, each one a setting of this site as it
 // is right now; nothing is claimed that the settings do not do.
-func privacyFacts(c sqlite.SiteConfig, consent bool) []string {
-	out := []string{"No IP addresses stored"}
+func privacyFacts(c sqlite.SiteConfig, consent bool, words widgetWords) []string {
+	out := []string{words.plain("p_noip")}
 	switch {
 	case c.ConsentFree:
-		out = append(out, "No cookies: nothing is stored in your browser")
+		out = append(out, words.plain("p_nocookie"))
 	case consent:
-		out = append(out, "A cookie only after you agree")
+		out = append(out, words.plain("p_consent"))
 	default:
-		out = append(out, "One first-party cookie, never used for ads")
+		out = append(out, words.plain("p_cookie"))
 	}
 	if c.RecordCity && !c.ConsentFree {
-		out = append(out, "Location: country and city")
+		out = append(out, words.plain("p_loc_city"))
 	} else {
-		out = append(out, "Location: country only")
+		out = append(out, words.plain("p_loc_country"))
 	}
 	if c.HonorDNT || c.ConsentFree {
-		out = append(out, "Do Not Track respected")
+		out = append(out, words.plain("p_dnt"))
 	}
-	switch d := c.RetentionDays; {
+	switch d := int64(c.RetentionDays); {
 	case d <= 0:
-		out = append(out, "Visits kept until the site deletes them")
+		out = append(out, words.plain("p_ret_forever"))
 	case d%365 == 0:
-		out = append(out, fmt.Sprintf("Visits deleted after %d year%s", d/365, plural(d/365)))
+		out = append(out, words.plural("p_ret_years", d/365))
 	case d%30 == 0:
-		out = append(out, fmt.Sprintf("Visits deleted after %d months", d/30))
+		out = append(out, words.plural("p_ret_months", d/30))
 	default:
-		out = append(out, fmt.Sprintf("Visits deleted after %d days", d))
+		out = append(out, words.plural("p_ret_days", d))
 	}
-	return append(out, "Never sold, never used for advertising")
-}
-
-func plural(n int) string {
-	if n == 1 {
-		return ""
-	}
-	return "s"
+	return append(out, words.plain("p_never"))
 }
 
 func money(minor int64, cur string, exp int) string {
@@ -496,9 +529,9 @@ func number(n int64) string {
 }
 
 var widgetTmpl = template.Must(template.New("w").Parse(`<!doctype html>
-<html lang="en" data-theme="{{.Theme}}"><head><meta charset="utf-8">
+<html lang="{{.Lang}}" data-theme="{{.Theme}}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="refresh" content="60">
+<meta http-equiv="refresh" content="{{.Refresh}}">
 <meta name="robots" content="noindex">
 <title>{{.Domain}}</title>
 <style>
@@ -535,30 +568,47 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 .badge{display:flex;align-items:center;gap:12px;padding:12px 16px}
 .badge b{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
 .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:{{.Radius}}px;font-weight:600;font-variant-numeric:tabular-nums}
+.pill.on{padding:8px 12px 8px 14px;gap:8px;white-space:nowrap}
+.pill.on .gh{display:flex;margin-left:2px}
+.spark{display:flex;align-items:flex-end;gap:1px;height:18px;width:60px}
+.spark i{flex:1;height:100%;display:flex;align-items:flex-end}
+.spark s{display:block;width:100%;background:var(--acc);border-radius:1px 1px 0 0;min-height:1px;opacity:.9}
+.spark s.z{background:var(--line)}
+.card .by{margin-top:14px}
 .foot{margin-top:12px;font-size:11px;color:var(--mute)}
 .off{color:var(--mute);font-size:13px}
 </style></head><body>
 {{if .Off}}<div class="card off">{{.Off}}</div>
 {{else if eq .Kind "live"}}<div class="card">
-<div class="lab">Visitors in the last 30 minutes</div>
+<div class="lab">{{.L.live_title}}</div>
 <div class="big">{{.Now}}<span class="dot"></span></div>
 {{if .ShowBars}}<div class="bars">{{range .Bars}}<i><s{{if eq .H 0}} class="z"{{end}} style="height:{{.H}}%"></s><b>{{.Label}}</b></i>{{end}}</div>
 <div class="ax"><span>{{.From}}</span><span>{{.Mid}}</span><span>{{.Till}}</span></div>{{end}}
-{{if .Countries}}<h3>Where from</h3><ul>{{range .Countries}}<li><span>{{.Mark}}</span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
-{{if .Pages}}<h3>Reading now</h3><ul>{{range .Pages}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
-{{if .Channels}}<h3>Came from</h3><ul>{{range .Channels}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
+{{if .Countries}}<h3>{{.L.from}}</h3><ul>{{range .Countries}}<li><span>{{.Mark}}</span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
+{{if .Pages}}<h3>{{.L.reading}}</h3><ul>{{range .Pages}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
+{{if .Channels}}<h3>{{.L.came}}</h3><ul>{{range .Channels}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
 </div>
-{{else if eq .Kind "badge"}}<div class="card badge"><span class="dot"></span><span><b>{{.Week}}</b><br><span class="lab">visitors in the last 7 days{{if .AI}} · {{.AI}} from AI assistants{{end}}</span></span></div>
+{{else if eq .Kind "badge"}}<div class="card badge"><span class="dot"></span><span><b>{{.Week}}</b><br><span class="lab">{{.L.week}}{{if .AI}} · {{.L.ai}}{{end}}</span></span></div>
 {{else if eq .Kind "revenue"}}<div class="card">
-<div class="lab">Revenue in {{.Month}}</div>
+<div class="lab">{{.L.rev_title}}</div>
 <div class="big">{{.Revenue}}</div>
-{{if .Channels}}<h3>Where it came from</h3><ul>{{range .Channels}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
+{{if .Channels}}<h3>{{.L.rev_channels}}</h3><ul>{{range .Channels}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
 </div>
 {{else if eq .Kind "privacy"}}<div class="card">
-<div class="lab">How {{.Domain}} measures visits</div>
+<div class="lab">{{.L.seal_title}}</div>
 <ul>{{range .Facts}}<li><span class="ok">✓</span><span>{{.}}</span></li>{{end}}</ul>
-<div class="foot">Read live from this site's settings at {{.Checked}}</div>
+<div class="foot">{{.L.seal_foot}}</div>
 </div>
-{{else}}<div class="card pill"><span class="dot"></span>{{.Now}} in the last 30 min</div>{{end}}
-{{if .Brand}}<a class="by" href="https://trckable.com" target="_blank" rel="noopener">{{.Ghost}}<span>Counted by <b>trck</b><i>able</i></span></a>{{end}}
-</body></html>`))
+{{else if eq .Kind "online"}}{{if eq .Mode "card"}}<div class="card">
+<div class="lab">{{.L.online_title}}</div>
+<div class="big"><span class="dot"></span>{{.Count}}</div>
+{{if .Bars}}<div class="bars">{{range .Bars}}<i><s{{if eq .H 0}} class="z"{{end}} style="height:{{.H}}%"></s><b>{{.Label}}</b></i>{{end}}</div>
+<div class="ax"><span>{{.From}}</span><span>{{.Mid}}</span><span>{{.Till}}</span></div>{{end}}
+{{if .Countries}}<h3>{{.L.from}}</h3><ul>{{range .Countries}}<li><span>{{.Mark}}</span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
+{{if .Pages}}<h3>{{.L.reading}}</h3><ul>{{range .Pages}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
+{{if .Brand}}{{template "by" .}}{{end}}
+</div>
+{{else}}<div class="card pill on"><span class="dot"></span><span>{{.Count}} {{.L.online}}</span>{{if .Bars}}<span class="spark" aria-hidden="true">{{range .Bars}}<i><s{{if eq .H 0}} class="z"{{end}} style="height:{{.H}}%"></s></i>{{end}}</span>{{end}}{{if .Brand}}<a class="gh" href="https://trckable.com" target="_blank" rel="noopener" title="{{.L.brand}} trckable" aria-label="{{.L.brand}} trckable">{{.Ghost}}</a>{{end}}</div>{{end}}
+{{else}}<div class="card pill"><span class="dot"></span>{{.L.counter}}</div>{{end}}
+{{if and .Brand (ne .Kind "online")}}{{template "by" .}}{{end}}
+</body></html>{{define "by"}}<a class="by" href="https://trckable.com" target="_blank" rel="noopener">{{.Ghost}}<span>{{.L.brand}} <b>trck</b><i>able</i></span></a>{{end}}`))

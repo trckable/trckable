@@ -619,6 +619,13 @@ var migrations = []string{
 		created_at INTEGER NOT NULL
 	);
 	CREATE INDEX report_schedules_site ON report_schedules(site_id);`,
+	// 48: a widget's name, so several can be told apart. Blank is the
+	// design's own name.
+	`ALTER TABLE widgets ADD COLUMN name TEXT NOT NULL DEFAULT '';`,
+	// 49: a widget's language (auto follows the visitor) and the labels its
+	// owner reworded, as JSON. Blank is the translated defaults.
+	`ALTER TABLE widgets ADD COLUMN lang TEXT NOT NULL DEFAULT 'auto';
+	ALTER TABLE widgets ADD COLUMN texts TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
