@@ -349,6 +349,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, bool, *http.
 	if p.Width > 0 && p.Width < 20000 {
 		e.Screen = uint16(p.Width)
 	}
+	e.BrowserVersion = ua.Version
 
 	switch p.Kind {
 	case "pv", "":
