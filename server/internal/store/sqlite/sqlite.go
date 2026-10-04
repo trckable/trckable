@@ -571,6 +571,19 @@ var migrations = []string{
 	// 44: the owner's own addresses and ranges, one per line, left out of the
 	// counts before anything is hashed. Only this list is kept.
 	`ALTER TABLE site_settings ADD COLUMN exclude_ips TEXT NOT NULL DEFAULT '';`,
+	// 45: which identity provider a session was signed in with (empty: a
+	// password), so the account can say so; and who a person is to a provider
+	// (its issuer and the person's id there), kept the first time they sign in
+	// with it, so a later sign-in with the same email but another id is refused.
+	`ALTER TABLE auth_sessions ADD COLUMN via TEXT NOT NULL DEFAULT '';
+	CREATE TABLE sso_links (
+		user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		iss        TEXT NOT NULL,
+		sub        TEXT NOT NULL,
+		created_at INTEGER NOT NULL,
+		PRIMARY KEY (user_id, iss)
+	);
+	CREATE UNIQUE INDEX sso_links_who ON sso_links(iss, sub);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

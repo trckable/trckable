@@ -38,6 +38,7 @@ import (
 	"github.com/trckable/trckable/server/internal/realtime"
 	"github.com/trckable/trckable/server/internal/revenue"
 	"github.com/trckable/trckable/server/internal/secrets"
+	"github.com/trckable/trckable/server/internal/sso"
 	"github.com/trckable/trckable/server/internal/store/duck"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 	"github.com/trckable/trckable/server/internal/upgrade"
@@ -229,6 +230,19 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		},
 	}
 	a.SendWeekly = s.sendWeeklyNow
+	if len(cfg.OIDC) > 0 {
+		if cfg.BaseURL == "" {
+			// The provider sends people back to one fixed address. The request's
+			// own Host is never trusted for that.
+			slog.Warn("sign-in with a provider is off: set TRCKABLE_BASE_URL to this server's public address")
+		} else {
+			a.SSO = sso.NewRegistry(cfg.OIDC, nil, nil)
+			a.SSORequireTOTP, a.SSOSignup = cfg.OIDCRequireTOTP, cfg.OIDCSignup
+			for _, p := range cfg.OIDC {
+				slog.Info("sign-in with a provider is on", "provider", p.Name, "callback", strings.TrimSuffix(cfg.BaseURL, "/")+"/api/v1/oidc/"+p.Name+"/callback")
+			}
+		}
+	}
 	s.api = a
 	// Off-site backups, when the owner names a bucket. A bad value is said
 	// loudly and leaves backups local, rather than stopping the server.
