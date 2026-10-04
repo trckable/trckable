@@ -68,6 +68,8 @@ describe('the heatmap overlay', () => {
     // never the site itself: a page of this server that frames it, sandboxed, under its own policy
     const frame = must(q('iframe'))
     expect(frame.getAttribute('src')).toBe('/api/v1/sites/s1/heat-frame?path=%2Fpricing')
+    // and that page is itself in a sandbox that keeps only its origin (for the sign-in cookie), no scripts
+    expect(frame.getAttribute('sandbox')).toBe('allow-same-origin')
     expect(frame.getAttribute('referrerpolicy')).toBe('no-referrer')
     expect(dialog().querySelectorAll('.heat-dots circle[fill="url(#heat-glow)"]').length).toBe(exampleHeat(1280).clicks.length)
     expect(dialog().querySelectorAll('.heat-dead').length).toBeGreaterThan(0)

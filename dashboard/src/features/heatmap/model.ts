@@ -61,8 +61,8 @@ export const fit = (room: number, pageW: number) => (room >= pageW || room <= 0 
 /** The page for the frame: a page of this server that frames the site's own page (it checks the site allows it, and says so when it does not). The dashboard itself never frames another site. */
 export const frameSrc = (site: string, path: string) => `/api/v1/sites/${encodeURIComponent(site)}/heat-frame?path=${encodeURIComponent(path)}`
 
-/** A page that does something just by being opened: never loaded for a heatmap (the server refuses it too). */
-export const isRisky = (path: string) => /^\/(log|sign)[-_]?(out|off)\b|^\/unsubscribe\b/i.test(path)
+/** A page that does something just by being opened: never loaded for a heatmap (the server refuses it too); any segment of the path counts. */
+export const isRisky = (path: string) => /(^|\/)((log|sign)[-_]?(out|off)|unsubscribe)\b/i.test(path)
 
 /** The widths that have views, busiest first; the others stay in the switch, disabled. */
 export const hasViews = (m: Pick<HeatMap, 'widths'>, w: Width) => (m.widths.find((x) => x.width === w)?.views ?? 0) > 0

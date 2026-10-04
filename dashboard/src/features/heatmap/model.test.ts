@@ -80,7 +80,7 @@ describe('the frame', () => {
     expect(frameSrc('tkb_x', '/#/a b?c')).toBe('/api/v1/sites/tkb_x/heat-frame?path=%2F%23%2Fa%20b%3Fc')
   })
   it('knows the pages that do something by being opened', () => {
-    for (const p of ['/logout', '/signout', '/Sign-Out', '/log_off', '/logout?next=/', '/unsubscribe']) expect(isRisky(p), p).toBe(true)
+    for (const p of ['/logout', '/signout', '/Sign-Out', '/log_off', '/logout?next=/', '/unsubscribe', '/account/logout', '/app/sign-out/']) expect(isRisky(p), p).toBe(true)
     for (const p of ['/', '/pricing', '/blog/how-to-logout', '/signature', '/login']) expect(isRisky(p), p).toBe(false)
   })
   it('knows which widths have views', () => {

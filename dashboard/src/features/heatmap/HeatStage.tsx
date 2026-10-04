@@ -68,7 +68,7 @@ export function HeatStage({ map, layers, site, demo }: { map: HeatMap; layers: L
     <div ref={ref} className="heat-room">
       <div className="heat-fit" style={{ width: w * k, height: h * k }}>
         <div className="heat-page" style={{ width: w, height: h, transform: `scale(${k})` }}>
-          {layers.page && (demo ? <Sample map={map} /> : <iframe className="heat-frame" title={heatCopy.frame} referrerPolicy="no-referrer" tabIndex={-1} loading="lazy" src={frameSrc(site, map.path)} />)}
+          {layers.page && (demo ? <Sample map={map} /> : <iframe className="heat-frame" title={heatCopy.frame} sandbox="allow-same-origin" referrerPolicy="no-referrer" tabIndex={-1} loading="lazy" src={frameSrc(site, map.path)} />)}
           {layers.scroll && <div className="heat-scroll" style={{ backgroundImage: scrollGradient(map.scroll, h, FIRST_SCREEN[map.width]) }} title={heatCopy.layers.scroll} />}
           <svg className="heat-dots" width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
             <defs>

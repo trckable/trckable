@@ -228,13 +228,18 @@ func TestHeatFrameFramesTheOwnersSiteWithNothingAllowed(t *testing.T) {
 
 	// Opening some pages is itself something done: never framed, never even asked for.
 	asked = nil
-	for _, p := range []string{"/logout", "/signout", "/Sign-Out", "/log_off", "/unsubscribe"} {
+	for _, p := range []string{"/logout", "/signout", "/Sign-Out", "/log_off", "/unsubscribe", "/account/logout", "/app/user/sign-out/", "/en/unsubscribe/abc"} {
 		if _, _, body = get(p); !hint(body) {
 			t.Errorf("%s was framed: %s", p, body)
 		}
 	}
 	if len(asked) != 0 {
 		t.Errorf("the site was asked for %v", asked)
+	}
+
+	// A blog post that is about signing out is only a post.
+	if _, _, body = get("/blog/how-to-logout"); hint(body) {
+		t.Errorf("a post was taken for a sign-out: %s", body)
 	}
 
 	// Nothing but a path of the site is taken.
@@ -246,7 +251,7 @@ func TestHeatFrameFramesTheOwnersSiteWithNothingAllowed(t *testing.T) {
 }
 
 func TestRefusesFraming(t *testing.T) {
-	const us = "https://trckable.example"
+	const us = "https://stats.trckable.example"
 	for name, c := range map[string]struct {
 		h    map[string]string
 		deny bool
@@ -257,7 +262,7 @@ func TestRefusesFraming(t *testing.T) {
 		"ancestors self":         {map[string]string{"Content-Security-Policy": "frame-ancestors 'self'"}, true},
 		"ancestors another site": {map[string]string{"Content-Security-Policy": "frame-ancestors https://other.example"}, true},
 		"ancestors everyone":     {map[string]string{"Content-Security-Policy": "frame-ancestors *"}, false},
-		"ancestors this server":  {map[string]string{"Content-Security-Policy": "script-src 'self'; frame-ancestors https://trckable.example"}, false},
+		"ancestors this server":  {map[string]string{"Content-Security-Policy": "script-src 'self'; frame-ancestors https://stats.trckable.example"}, false},
 		"ancestors https":        {map[string]string{"Content-Security-Policy": "frame-ancestors https:"}, false},
 		"a policy about scripts": {map[string]string{"Content-Security-Policy": "script-src 'self'"}, false},
 	} {
@@ -268,5 +273,60 @@ func TestRefusesFraming(t *testing.T) {
 		if got := refusesFraming(h, us); got != c.deny {
 			t.Errorf("%s: refuses = %v, want %v", name, got, c.deny)
 		}
+	}
+}
+
+// Behind a proxy that ends TLS the request itself says http, and the frame
+// check must still judge against the address people use: the public base URL,
+// or the scheme a proxy says it was.
+func TestHeatFrameJudgesFramingAgainstTheAddressPeopleUse(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	base := g.srv.URL + "/api/v1/sites/" + g.site
+	do(t, c, "PUT", base+"/modules/heatmaps", `{"enabled":true}`, csrf, "1")
+	policy := ""
+	was := checkClient
+	defer func() { checkClient = was }()
+	checkClient = func() *http.Client {
+		return &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+			h := http.Header{}
+			h.Set("Content-Security-Policy", policy)
+			return &http.Response{StatusCode: 200, Header: h, Body: io.NopCloser(strings.NewReader("")), Request: r}, nil
+		})}
+	}
+	framed := func(extra ...string) bool {
+		t.Helper()
+		req, _ := http.NewRequest("GET", base+"/heat-frame?path=/pricing", nil)
+		for i := 0; i+1 < len(extra); i += 2 {
+			req.Header.Set(extra[i], extra[i+1])
+		}
+		resp, err := c.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		b, _ := io.ReadAll(resp.Body)
+		return strings.Contains(string(b), "<iframe")
+	}
+
+	policy = "frame-ancestors https://stats.example.org"
+	g.api.BaseURL = ""
+	if framed() {
+		t.Error("a site that allows only https://stats.example.org was framed from the test server's own address")
+	}
+	g.api.BaseURL = "https://stats.example.org/"
+	if !framed() {
+		t.Error("with the public base URL set, the framer is that address, whatever the request says")
+	}
+
+	// No base URL: https where a proxy says so, and where it does not, http.
+	policy = "frame-ancestors https:"
+	g.api.BaseURL = ""
+	if framed() {
+		t.Error("a site that allows https framers was framed from an http address")
+	}
+	if !framed("X-Forwarded-Proto", "https") {
+		t.Error("a request a proxy says came over https was judged as http")
 	}
 }

@@ -93,7 +93,8 @@ var heatFrameHost = regexp.MustCompile(`^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$`)
 
 // A page that does something just by being opened. The frame never loads one,
 // and the overlay does not offer it.
-var heatFrameRisky = regexp.MustCompile(`(?i)^/(log|sign)[-_]?(out|off)\b|^/unsubscribe\b`)
+// Any segment of the path counts: /account/logout is as much a sign-out as /logout.
+var heatFrameRisky = regexp.MustCompile(`(?i)(^|/)((log|sign)[-_]?(out|off)|unsubscribe)\b`)
 
 const heatFrameCSP = "default-src 'none'; style-src 'unsafe-inline'; frame-src https://%[1]s https://*.%[1]s; frame-ancestors 'self'"
 
@@ -130,7 +131,7 @@ func (a *API) heatFrame(w http.ResponseWriter, r *http.Request) {
 	src := ""
 	switch {
 	case heatFrameRisky.MatchString(path):
-	case framable(r, host, path):
+	case a.framable(r, host, path):
 		src = "https://" + host + path
 	}
 	h := w.Header()
@@ -151,7 +152,7 @@ const heatFrameHint = "This page cannot be shown here."
 
 // framable reports whether the site's page would let this server's page frame
 // it. A page that cannot be read at all is not shown either.
-func framable(r *http.Request, host, path string) bool {
+func (a *API) framable(r *http.Request, host, path string) bool {
 	ctx, cancel := context.WithTimeout(r.Context(), 6*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://"+host+path, nil) //nolint:gosec // the host is the site's own domain, checked by heatFrameHost, and the path by heatFramePath; every connection goes through the guard alerts use (SafeClient)
@@ -164,11 +165,9 @@ func framable(r *http.Request, host, path string) bool {
 		return false
 	}
 	_ = res.Body.Close()
-	origin := "https://" + r.Host
-	if r.TLS == nil {
-		origin = "http://" + r.Host
-	}
-	return !refusesFraming(res.Header, origin)
+	// The framer is this server as people reach it: the public address when one
+	// is set (behind a proxy that ends TLS the request itself says http).
+	return !refusesFraming(res.Header, a.publicBase(r))
 }
 
 // refusesFraming reads X-Frame-Options and a CSP's frame-ancestors the way a
@@ -187,7 +186,7 @@ func refusesFraming(h http.Header, origin string) bool {
 			}
 			allowed := false
 			for _, src := range f[1:] {
-				if src == "*" || strings.EqualFold(src, origin) || strings.EqualFold(src, strings.SplitN(origin, ":", 2)[0]+":") {
+				if sourceCovers(src, origin) {
 					allowed = true
 				}
 			}
@@ -197,4 +196,30 @@ func refusesFraming(h http.Header, origin string) bool {
 		}
 	}
 	return false
+}
+
+// sourceCovers says whether a CSP host source lets a framer at origin in: *, a
+// scheme alone (https:), the origin itself, or a host with a leading wildcard
+// label (https://*.example.com, which covers subdomains and not the bare domain).
+func sourceCovers(src, origin string) bool {
+	src, origin = strings.ToLower(src), strings.ToLower(origin)
+	if src == "*" || src == origin {
+		return true
+	}
+	scheme, host, _ := strings.Cut(origin, "://")
+	if src == scheme+":" {
+		return true
+	}
+	pattern := src
+	if s, rest, ok := strings.Cut(src, "://"); ok {
+		if s != scheme {
+			return false
+		}
+		pattern = rest
+	}
+	suffix, ok := strings.CutPrefix(pattern, "*.")
+	if !ok || strings.ContainsAny(suffix, "*/") {
+		return false
+	}
+	return strings.HasSuffix(strings.SplitN(host, ":", 2)[0], "."+strings.SplitN(suffix, ":", 2)[0])
 }
