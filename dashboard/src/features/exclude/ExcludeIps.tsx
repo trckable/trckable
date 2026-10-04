@@ -25,6 +25,7 @@ export function ExcludeIps({ c, save }: { c: SiteConfig; save: (patch: Partial<S
         style={{ minHeight: 76, width: 260, padding: '8px 10px', fontFamily: 'var(--mono)', fontSize: 12.5 }}
         value={text}
         spellCheck={false}
+        aria-label={copy.ips.label}
         aria-invalid={wrong}
         placeholder={copy.ips.placeholder}
         onChange={(e) => setText(e.target.value)}
