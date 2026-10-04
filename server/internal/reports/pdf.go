@@ -9,6 +9,7 @@ import (
 	_ "image/gif" // registers the formats a logo can be in
 	_ "image/jpeg"
 	_ "image/png"
+	"strconv"
 	"strings"
 
 	"github.com/trckable/trckable/server/internal/query"
@@ -140,8 +141,7 @@ func parseColor(hex string) rgb {
 		return rgb{0.28, 0.5, 0}
 	}
 	for i := range c {
-		var v int
-		fmt.Sscanf(hex[1+2*i:3+2*i], "%02x", &v)
+		v, _ := strconv.ParseUint(hex[1+2*i:3+2*i], 16, 8) // a bad pair is 0: the colour was checked where it was set
 		c[i] = float64(v) / 255
 	}
 	return c
@@ -224,7 +224,7 @@ func maxInt(a, b int64) int64 {
 func winAnsi(r rune) (byte, bool) {
 	switch {
 	case r >= 32 && r < 127, r >= 160 && r <= 255:
-		return byte(r), true
+		return byte(r), true //nolint:gosec // r is 32 to 126 or 160 to 255 here
 	}
 	if b, ok := map[rune]byte{'€': 0x80, '‚': 0x82, '„': 0x84, '…': 0x85, '‘': 0x91, '’': 0x92, '“': 0x93, '”': 0x94, '•': 0x95, '–': 0x96, '—': 0x97, ' ': 32, ' ': 160}[r]; ok {
 		return b, true
@@ -335,7 +335,7 @@ func newImage(data []byte, typ string) *pdfImage {
 		for x := 0; x < w; x++ {
 			r, g, bl, a := src.At(b.Min.X+x*b.Dx()/w, b.Min.Y+y*b.Dy()/h).RGBA()
 			// Over white, the page's own colour.
-			over := func(c uint32) byte { return byte((c + (0xffff - a)) >> 8) }
+			over := func(c uint32) byte { return byte((c + (0xffff - a)) >> 8) } //nolint:gosec // c is at most a, so the sum is at most 0xffff and the shift gives at most 255
 			pix = append(pix, over(r), over(g), over(bl))
 		}
 	}

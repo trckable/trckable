@@ -109,7 +109,7 @@ func scanSchedule(row interface{ Scan(...any) error }) (ReportSchedule, error) {
 }
 
 func (s *Store) schedules(ctx context.Context, where string, args ...any) ([]ReportSchedule, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT `+reportCols+` FROM report_schedules `+where, args...)
+	rows, err := s.DB.QueryContext(ctx, `SELECT `+reportCols+` FROM report_schedules `+where, args...) //nolint:gosec // where is one of the fixed clauses in this file; every value travels as an argument
 	if err != nil {
 		return nil, err
 	}

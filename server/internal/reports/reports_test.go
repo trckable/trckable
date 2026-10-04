@@ -159,7 +159,9 @@ func pdfObjects(t *testing.T, b []byte) map[int]string {
 	}
 	lines := strings.Split(string(b[at:]), "\n")
 	var n int
-	fmt.Sscanf(lines[1], "0 %d", &n)
+	if _, err := fmt.Sscanf(lines[1], "0 %d", &n); err != nil {
+		t.Fatal(err)
+	}
 	objs := map[int]string{}
 	for i := 1; i < n; i++ {
 		off, _ := strconv.Atoi(strings.Fields(lines[2+i])[0])
