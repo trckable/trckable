@@ -1,0 +1,20 @@
+/* The privacy report sheet, on screen and on paper. */
+.pr-modal { width: min(640px, 100%); }
+.pr-part { display: flex; flex-direction: column; gap: 8px; }
+.pr-part h3 { margin: 0; font-size: 14px; }
+.pr-part ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; }
+.pr-part p { margin: 0; font-size: 13.5px; }
+.pr-facts { margin: 0; display: grid; gap: 6px; font-size: 13.5px; }
+.pr-facts div { display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.pr-facts dt { color: var(--muted); }
+.pr-facts dd { margin: 0; font-weight: 600; text-align: right; }
+.pr-policy { margin: 0; white-space: pre-wrap; font: inherit; font-size: 13px; background: var(--surface-2, transparent); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.pr-actions { display: flex; justify-content: space-between; gap: 8px; }
+
+@media print {
+  body.pr-printing > #root { display: none; }
+  body.pr-printing .modal-back { position: static; display: block; padding: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; animation: none; }
+  body.pr-printing .pr-modal { width: 100%; max-height: none; overflow: visible; box-shadow: none; border: 0; background: none; padding: 0; animation: none; color: #000; }
+  body.pr-printing .pr-actions { display: none; }
+  body.pr-printing .pr-part { break-inside: avoid; }
+}

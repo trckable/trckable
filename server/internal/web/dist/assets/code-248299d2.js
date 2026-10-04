@@ -1,1 +1,0 @@
-import{Fn as e}from"./core-ab1a825d.js";var t={name:`code`,size:24,node:[[`path`,{d:`m16 18 6-6-6-6`,key:`eg8j8`}],[`path`,{d:`m8 6-6 6 6 6`,key:`ppft3o`}]]};t.node;var n=e(t);export{n as t};

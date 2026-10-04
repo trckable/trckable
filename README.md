@@ -164,6 +164,10 @@ or float it in a corner with one small script (under 1 KB gzipped, separate from
 <script async src="https://stats.example.com/js/w_abc123.online.js"></script>
 ```
 
+### A privacy report for every site
+
+Settings → Data & privacy → Privacy report states what the site is set to collect and what it is not, in the dashboard's language: cookieless and consent mode, the cookie and its lifetime, retention, exclusions, the modules that are on, where the data is, the privacy-policy paragraph and a short "do I need a banner?". View it, or print it / save it as a PDF from the browser.
+
 ### When your server is down
 
 A visitor's browser keeps what it could not send, up to 24 hours and 200 events, and sends it when your server answers again: the visits made meanwhile are counted once, on the day they happened. The server takes events up to 25 hours old; the browser's queue is the only copy until then, so a visitor who clears their site data in that time takes it with them. A visitor counted without a cookie has nothing stored in the browser, so what could not be sent is kept in memory and sent again for as long as the page is open: if they close the page first, those events are lost. A visit that was cut in two by the outage is stored as two visits, with every page view counted.
