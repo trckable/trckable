@@ -17,8 +17,13 @@ test('every visit keeps the source it arrived with, through pages and routes', a
     p.page.on('response', (res) => {
       const r = res.request()
       if (r.method() !== 'POST' || !r.url().includes('/api/e')) return
-      const u = /"u":"[^"]*\/(a|b|c)\?/.exec(r.postData() ?? '') ?? /"u":"[^"]*\/(a|b|c)"/.exec(r.postData() ?? '')
-      if (u) seen.add(u[1])
+      const body = r.postData() ?? ''
+      if (!body.includes('"k":"pv"')) return
+      const u = /"u":"[^"]*\/(a|b|c)\?/.exec(body) ?? /"u":"[^"]*\/(a|b|c)"/.exec(body)
+      if (!u) return
+      // Only an accepted pageview counts: any other answer is kept to be read in the report.
+      if (res.status() === 202) seen.add(u[1])
+      else console.log(`attribution: the pageview of /${u[1]} was answered ${res.status()}`)
     })
     await p.page.goto(s.url(url), referer ? { referer } : undefined)
     await p.page.click('#b')
