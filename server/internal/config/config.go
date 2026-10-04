@@ -69,6 +69,11 @@ type Config struct {
 	OIDC            []OIDCProvider
 	OIDCRequireTOTP bool
 	OIDCSignup      bool
+	// GAClientID and GAClientSecret are a Google OAuth client
+	// (GA_OAUTH_CLIENT_ID, GA_OAUTH_CLIENT_SECRET or _FILE) that lets an owner
+	// import a site's history from Google Analytics with one sign-in. Both,
+	// or the import stays the command line's.
+	GAClientID, GAClientSecret string
 }
 
 // Load resolves the configuration from the environment.
@@ -100,6 +105,8 @@ func Load() Config {
 	}
 	c.OIDCRequireTOTP = !strings.EqualFold(strings.TrimSpace(os.Getenv("OIDC_REQUIRE_TOTP")), "false") && os.Getenv("OIDC_REQUIRE_TOTP") != "0"
 	c.OIDCSignup = envBool("OIDC_ALLOW_SIGNUP")
+	c.GAClientID = strings.TrimSpace(os.Getenv("GA_OAUTH_CLIENT_ID"))
+	c.GAClientSecret = strings.TrimSpace(envFile("GA_OAUTH_CLIENT_SECRET"))
 	var err error
 	if c.OIDC, err = parseOIDC(os.Environ(), envFile); err != nil {
 		fileErrs = append(fileErrs, err)

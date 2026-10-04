@@ -47,6 +47,7 @@ export interface Point {
   visitors: number
   pageviews: number
   revenue?: number
+  imported?: boolean // counts from an imported day (Google Analytics) are in this point
 }
 
 export interface Day {
@@ -60,6 +61,7 @@ export interface Result {
   approximate: boolean
   kpis: KPIs
   series: Point[]
+  imported?: { days: number; from: string; to: string }
   dims: Record<string, Row[] | null>
   goals: Row[] | null
   days?: Day[]

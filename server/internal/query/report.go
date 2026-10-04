@@ -111,6 +111,7 @@ type Point struct {
 	Visitors  int64  `json:"visitors"`
 	Pageviews int64  `json:"pageviews"`
 	Revenue   int64  `json:"revenue,omitempty"`
+	Imported  bool   `json:"imported,omitempty"` // counts from an imported day (Google Analytics) are in this bucket
 }
 
 // Day is one day's numbers for the scrubber.
@@ -132,6 +133,7 @@ type Result struct {
 	Approximate  bool             `json:"approximate"` // breakdown visitor counts are HyperLogLog estimates
 	KPIs         KPIs             `json:"kpis"`
 	Series       []Point          `json:"series"`
+	Imported     *Imported        `json:"imported,omitempty"` // nil unless days from an import are in the report
 	Dims         map[string][]Row `json:"dims"`
 	Goals        []Row            `json:"goals"`
 	Days         []Day            `json:"days,omitempty"`
@@ -326,6 +328,9 @@ func (q Q) Report(ctx context.Context, p Params) (*Result, error) {
 		if res.NewReferrers, err = newReferrers(ctx, conn, p); err != nil {
 			return nil, err
 		}
+	}
+	if err := mergeImported(ctx, conn, p, res); err != nil {
+		return nil, err
 	}
 	return res, nil
 }

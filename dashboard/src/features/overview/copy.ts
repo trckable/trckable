@@ -22,4 +22,6 @@ export const copy = defineCopy('overview', {
   conversion: 'Conversion',
   botsFiltered: (n: string) => `${n} bots and AI crawlers filtered`,
   botFiltered: '1 bot or AI crawler filtered',
+  imported: 'Imported',
+  importedRange: (from: string, to: string) => (from === to ? from : `${from} – ${to}`),
 })
