@@ -1,7 +1,7 @@
 // The loading ghost: the first paint (before any JavaScript) and the app's
 // wait for the server are the ghost, announced as a status, and it holds
 // still for people who ask for reduced motion.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 
 // Hold the app's first question to the server so the loader stays up.

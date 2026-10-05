@@ -2,7 +2,7 @@
 // shows "A few" while fewer than three people are on the site and the count
 // once there are, and the visitor can close it. A site of its own, so no other
 // suite's counts move.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

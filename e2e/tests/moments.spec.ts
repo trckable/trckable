@@ -6,7 +6,7 @@
 // owner only; and a first-week card. What the server finds is given by the
 // browser here (its rules are tested in Go); everything else is real.
 //   MOMENTS_SHOTS=/some/folder  also takes the pictures for review.
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'

@@ -5,7 +5,7 @@
 //
 // It needs a server with no site at all, so it starts one of its own (the
 // shared one is provisioned with example.com), on a fresh data directory.
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from './fixtures'
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'

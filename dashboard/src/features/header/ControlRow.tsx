@@ -40,6 +40,7 @@ export function ControlRow(p: Props) {
     <>
       <div className="subbar">
         {!isShared() && !wide && <ViewSwitch live={p.live} />}
+        {!p.live && <div id="sv-slot" className="sv-slot" />}
         {!p.live && (
           <>
             {inline && p.under && <div className="ctl-inline">{p.under}</div>}

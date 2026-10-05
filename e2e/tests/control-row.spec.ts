@@ -7,7 +7,7 @@
 // period opens as six choices with More. The site and its cog are one card.
 // A phone: one short line, a pill that opens a sheet.
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

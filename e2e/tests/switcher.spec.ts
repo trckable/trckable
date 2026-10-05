@@ -3,7 +3,7 @@
 // "right now" dot; saved for the account (a reload keeps it) and the same
 // order in All sites. The layout is the whole account's, so the browsers take
 // turns (exclusive) instead of rearranging each other's list mid-test.
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { expect, test, type APIRequestContext, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { exclusive, session } from './session'
 

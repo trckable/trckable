@@ -2,7 +2,7 @@
 // segment: in the address, in the chips, in the API and in a saved view, in the
 // same words. The history site has visitors 1 to 4 days ago, each entering on
 // "/" or "/pricing".
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
 

@@ -4,7 +4,7 @@
 // A hero for the newest one with Share and Replay, a ring for each next
 // step, the reached ones as badges under their year, and everything shown
 // at once when the person asks for reduced motion.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 
 const BASE = process.env.TRCKABLE_A11Y_URL
 const EMAIL = process.env.TRCKABLE_A11Y_EMAIL ?? 'me@site.com'

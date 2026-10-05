@@ -6,7 +6,7 @@
 // pointer and keyboard. The Revenue tile puts revenue on the main plot (the
 // choice is in the address). A period with one sale or none says so quietly,
 // and a share link without revenue never draws any of it.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

@@ -2,7 +2,7 @@
 // chip naming the moment, the dot on the line's value, and what has not been
 // played drawn dim instead of hidden. The key numbers show a dash, not 0, until
 // something has happened. And the comparison menu: set, clear, set another.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
 

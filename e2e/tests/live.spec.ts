@@ -1,7 +1,7 @@
 // The dashboard keeps today current on its own: a visit shows in Online now
 // and the Visitors tile without a reload — over the live stream, and by
 // polling when the stream is blocked or held back by a buffering proxy.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { createServer, request as forward, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
