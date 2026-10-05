@@ -32,6 +32,8 @@ export function useChipFit(sig: string, count: number, off: boolean) {
         if (used > room) break
         n++
       }
+      // Always one chip in sight, so the row says what it is narrowed to; it shortens instead (ActiveFilters.css).
+      n = Math.max(1, n)
     }
     setFit((f) => (f.sig === sig && f.n === n ? f : { sig, n }))
   }, [sig, count])

@@ -155,6 +155,25 @@
   flex: 1 1 0;
   min-width: 0;
 }
+/* The one chip always in sight shortens its value rather than leave the row. */
+.ctl-inline .toolbar-filters {
+  min-width: 0;
+}
+.ctl-inline .chip {
+  overflow: hidden;
+  min-width: 0;
+  flex-shrink: 1;
+}
+.ctl-inline .chip > .faint {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ctl-inline .chip b {
+  flex-shrink: 0;
+}
 /* Tablet and a shared link's header: the same parts in a row under the controls. */
 .ctl-under {
   display: flex;
