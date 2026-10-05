@@ -100,6 +100,8 @@ section into the release.
 
 ### Fixed
 
+- A side card opened with Details (such as "An AI assistant sent a visitor") goes away once its card is closed, instead of staying in the corner beside the page; a side card cut off while it slides out still closes.
+
 - A site with imported history but no live visit yet no longer shows "Waiting for the first visit" (and no period controls) when the chosen period is empty, such as a Monday's "This week".
 - A widget changed in Settings reaches the pages that already carry its code at the next load, not minutes later. The widget page (`/w/<id>`) and the online corner script (`/js/<id>.online.js`) were kept by the browser for 15 to 300 seconds without asking; both are now kept but checked on every load (an ETag answers with a bare 304 while nothing changed), and the widget's service-worker scope no longer includes `/w/`. The corner of the online widget (bottom left or right) is now kept with the widget in Settings instead of in the pasted tag's `data-pos`, so it changes without pasting again. A script or page for a widget that is off, or gone, is never remembered.
 - The weekly email now goes out on its own. The check that a site has sent something read a site's last event and creation time as zero, so the scheduled report was skipped for every site and only "Send me this week's email now" worked. A site with no events at all is still not sent one.
