@@ -112,7 +112,7 @@ export default function StoryView(p: StoryViewProps) {
             />
           </div>
           <ol className="sv-moments" aria-label={copy.momentsTitle}>
-            {marks.length === 0 && <li className="faint">{copy.noMoments}</li>}
+            {marks.length === 0 && pins && <li className="faint">{copy.noMoments}</li>}
             {marks.map((m, n) => (
               <li key={m.pin.id}>
                 <button type="button" onClick={() => open(m)}>
