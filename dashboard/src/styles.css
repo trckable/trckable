@@ -2813,6 +2813,37 @@ button.kpi-live:hover .label::after {
     transform: translateY(8px);
   }
 }
+/* A switch between the story and Explore: the page dims under the ghost
+   until the new numbers are in, then comes back in one soft step. */
+.view-stage {
+  position: relative;
+}
+.view-stage.sv-switching > :not(.sv-veil) {
+  opacity: 0.25;
+  filter: blur(2px);
+  transition: opacity 0.18s, filter 0.18s;
+}
+.view-stage.sv-settled > * {
+  animation: view-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.sv-veil {
+  position: absolute;
+  z-index: 5;
+  inset: 0 0 auto;
+  height: min(70vh, 100%);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .view-stage.sv-switching > :not(.sv-veil) {
+    filter: none;
+    transition: none;
+  }
+  .view-stage.sv-settled > * {
+    animation: none;
+  }
+}
 [data-swap='in'] .view-stage {
   animation: view-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
 }
