@@ -1,6 +1,6 @@
 // Peek: ⌘K opens a panel that says how to connect your own assistant
 // over MCP: the config to paste, a link to the docs and a way to make a key.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

@@ -2,7 +2,7 @@
 // "On the site right now" and moves the numbers, without a reload; the switch,
 // the L key and the Online now tile all lead there; a phone gets the panels
 // stacked with the list scrolling inside.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'

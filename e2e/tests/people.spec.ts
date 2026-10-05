@@ -2,7 +2,7 @@
 // pill, a viewer's sites are a button, a key is created and revoked in place,
 // and on a phone nothing is wider than the window. (people-rows.spec.ts: the
 // popovers and the confirmation.)
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

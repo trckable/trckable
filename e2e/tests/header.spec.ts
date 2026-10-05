@@ -9,7 +9,7 @@
 // Each tile carries its change, readable without colour; the
 // chart shows the whole period (days before the first visit empty), draws a
 // short span by the hour, and keeps Replay as a small ▶.
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from './fixtures'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

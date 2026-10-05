@@ -1,7 +1,7 @@
 // A cookieless site says "Off: cookieless mode" where the dashboard would
 // show new vs returning or journeys: a daily hash recognises nobody the next
 // day, so those numbers would be every visitor new and every journey a day.
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { expect, test, type APIRequestContext, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'

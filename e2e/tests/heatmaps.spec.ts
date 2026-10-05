@@ -3,7 +3,7 @@
 // field (a password too), clicks around and leaves; everything the browser
 // sent to trckable in the meantime is read, and none of it holds a typed
 // value. Field names go (that is the point); values, never.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

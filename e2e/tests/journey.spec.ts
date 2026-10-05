@@ -3,7 +3,7 @@
 // and payments marked — and is a bottom sheet on a phone. The journey's
 // answer is fixed here (a real visitor opens it), so the story is the same
 // every run: a returning, paying visitor still on the site.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { session } from './session'
 import { API } from '../playwright.config'
 

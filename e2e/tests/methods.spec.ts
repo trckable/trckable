@@ -31,7 +31,7 @@
 // Automation is ignored by the tracker unless data-dev is set, and the
 // snippets must stay exactly as written, so navigator.webdriver is hidden
 // instead. Everything else is the browsers' own.
-import { expect, test, type APIRequestContext, type BrowserContext, type Page } from '@playwright/test'
+import { expect, test, type APIRequestContext, type BrowserContext, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'

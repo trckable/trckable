@@ -1,6 +1,6 @@
 // The site icon cropper: a wide logo can be moved, zoomed out until it fits
 // whole, centred again, and what is saved is what the frame showed.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'

@@ -3,7 +3,7 @@
 // free room sits at the right instead of the six stretching across the whole
 // row. Wrapping on a tablet and a phone is unchanged, so the check runs at each
 // width.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { mkdirSync } from 'node:fs'
 import { API } from '../playwright.config'
 import { session, withoutPayments } from './session'

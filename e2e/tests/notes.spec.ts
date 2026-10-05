@@ -2,7 +2,7 @@
 // focus or tap, never past the chart's edges; one flag with a count for a
 // busy day; the Notes list (search, edit, delete, jump to the day) from the
 // chart and from Settings; share links show notes only when allowed.
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { expect, test, type APIRequestContext, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

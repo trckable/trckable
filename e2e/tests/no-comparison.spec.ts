@@ -1,7 +1,7 @@
 // "No comparison" says no change figures anywhere they appear: the key
 // numbers, the lists' arrows, the "vs usual" chip and the CSV (no comparison
 // row). Turn a comparison on and every one of them is back, in the same words.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
 

@@ -3,7 +3,7 @@
 // would load as a script and fail on its type); the dashboard reloads once, on
 // the same address, and never twice in a minute; a page that still cannot load
 // says so in a line and offers the reload, instead of going black.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
 

@@ -1,6 +1,6 @@
 // Profile and a site's settings are one window: whichever section is open, it
 // keeps its size and its place, on a phone and on a desktop.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API, TOKEN } from '../playwright.config'
 import { session } from './session'
 
