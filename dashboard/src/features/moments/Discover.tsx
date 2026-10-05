@@ -6,9 +6,11 @@
 import { Bot, EyeOff, Mail, Maximize2, Play, Search, type LucideIcon } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { SideCard } from '../../components/SideCard/SideCard'
-import type { Site } from '../../lib/api'
+import { cardModal } from '../../components/CardModal/copy'
+import type { Point, Site } from '../../lib/api'
 import { more } from '../../lib/apiMore'
 import { setView } from '../../lib/url'
+import AiModal from '../aisearch/AiModal'
 import { guideCopy } from '../aisearch/copy'
 import { useAiSeen, type AiSeen } from '../aisearch/useAiSeen'
 import { openTab, rememberTab } from '../cards/TabCard'
@@ -18,8 +20,10 @@ import { first } from '../install/firstCopy'
 import { wasSeen } from '../install/seen'
 import { useWeeklyEmail } from '../install/useWeeklyEmail'
 import { copy } from './copy'
+import DiscoverModal from './DiscoverModal'
 import { keptOf, pick, remember, trafficDay, type CardId } from './firstWeek'
 import { wasUsed } from './store'
+
 
 /** What each card is: its icon and its own colour. */
 const KIND: Record<CardId, { Icon: LucideIcon; tint: string }> = {
@@ -50,7 +54,8 @@ const openAiSearch = (site: Site) => {
 }
 
 /** `fresh`: the site is in its first week, so the getting-started cards are in play too. */
-export function Discover({ site, today, fresh, onAway }: { site: Site; today: string; fresh: boolean; onAway: () => void }) {
+export function Discover({ site, today, fresh, series, onAway }: { site: Site; today: string; fresh: boolean; series: readonly Point[]; onAway: () => void }) {
+  const [open, setOpen] = useState(false)
   const weekly = useWeeklyEmail(site, fresh)
   const [search, setSearch] = useState<boolean | null>(null)
   const [firstDay] = useState(() => trafficDay(site.id, today)) // before kept is read: it writes the day into it
@@ -108,21 +113,30 @@ export function Discover({ site, today, fresh, onAway }: { site: Site; today: st
       openSettings(site, 'search')
     },
   }
+  const modal = () => {
+    if (!open) return null
+    const shut = () => setOpen(false)
+    if (id === 'ai') return <AiModal site={site} seen={aiSeen ?? 'visitor'} onClose={shut} onGo={go.ai} />
+    return <DiscoverModal id={id} Icon={Icon} tint={KIND[id].tint} text={t} tz={site.timezone} series={series} busy={id === 'weekly' && weekly.busy} onClose={shut} onGo={go[id]} />
+  }
   return (
-    <SideCard
-      id="discover"
-      label={t.label}
-      closeLabel={copy.close}
-      kind={{ icon: <Icon size={14} strokeWidth={2} />, label: t.label, tint: KIND[id].tint }}
-      title={t.title}
-      onClose={away}
-      actions={
-        <button type="button" className="btn primary" disabled={id === 'weekly' && weekly.busy} onClick={go[id]}>
-          {t.go}
-        </button>
-      }
-    >
-      <p className="muted why-body">{t.body}</p>
-    </SideCard>
+    <>
+      <SideCard
+        id="discover"
+        label={t.label}
+        closeLabel={copy.close}
+        kind={{ icon: <Icon size={14} strokeWidth={2} />, label: t.label, tint: KIND[id].tint }}
+        title={t.title}
+        onClose={away}
+        actions={
+          <button type="button" className="btn primary" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+            {cardModal.details}
+          </button>
+        }
+      >
+        <p className="muted why-body">{t.body}</p>
+      </SideCard>
+      {modal()}
+    </>
   )
 }

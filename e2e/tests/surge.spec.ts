@@ -1,6 +1,6 @@
 // The surge card: the site is far busier than usual right now. What the server
 // finds is given by the browser here (its rules are tested in Go); the card, its
-// More, See it and the way it comes up in Live and in Data are real.
+// More, the story's See it and the way it comes up in Live and in Data are real.
 //   SURGE_SHOTS=/some/folder  also takes the pictures for review.
 import { expect, test, type Page } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
@@ -55,13 +55,13 @@ async function shoot(page: Page, name: string) {
   }
 }
 
-test('the card comes up in Live and in Data: a number, a chip, one line, two buttons', async ({ page }) => {
+test('the card comes up in Live and in Data: a number, a chip, one line, one button', async ({ page }) => {
   await open(page, 'live')
   await expect(card(page)).toBeVisible({ timeout: 30_000 })
   await expect(card(page).locator('.sg-count')).toHaveText('53')
   await expect(card(page).locator('.sg-chip')).toHaveText('2.7× usual')
   await expect(card(page).locator('.sg-source')).toContainText('Mostly from Facebook')
-  await expect(card(page).getByRole('button')).toHaveText(['', 'More', 'See it'])
+  await expect(card(page).getByRole('button')).toHaveText(['', 'More'])
   await shoot(page, 'surge-card')
   await open(page, 'data')
   await expect(card(page)).toBeVisible({ timeout: 30_000 })

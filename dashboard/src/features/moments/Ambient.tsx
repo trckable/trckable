@@ -51,5 +51,5 @@ function Say({ site, series }: { site: Site; series: readonly Point[] }) {
   if (!canChange()) return null
   if (wantsHeat && !heat) return null // not yet known: the other card would only be swapped for it
   if (heat?.ask && heat.path) return <HeatGuide site={site} path={heat.path} views={heat.views ?? 0} query={{ from: today, to: today }} onAway={away} />
-  return <Discover site={site} today={today} fresh={fresh} onAway={away} />
+  return <Discover site={site} today={today} fresh={fresh} series={series} onAway={away} />
 }
