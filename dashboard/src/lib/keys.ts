@@ -11,6 +11,7 @@ import { PRESETS } from './dates'
 const DEFAULTS: Record<string, string> = {
   shortcuts: '?',
   ask: 'mod+k',
+  features: 'e',
   mode: 'f',
   live: 'l',
   create: 'a',
