@@ -30,7 +30,6 @@ export const signals = defineCopy('signals', {
     mostlyDirect: 'Mostly direct visits',
     someDirect: (n: number) => `${n} direct`,
     more: 'More',
-    see: 'See it',
     seeData: 'See it in Data',
     notify: 'Get notified next time',
     close: 'Close',
@@ -68,5 +67,6 @@ export const signals = defineCopy('signals', {
     body: 'A notice for a first sale from a new source, a spike or tracking stopping. Only while a trckable tab is open.',
     yes: 'Turn on',
     close: 'Close',
+    latest: 'Your latest sale',
   },
 })

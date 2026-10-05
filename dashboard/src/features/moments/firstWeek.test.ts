@@ -5,7 +5,7 @@ import { markUsed, wasUsed } from './store'
 
 afterEach(() => localStorage.clear())
 
-const none: Known = { replayed: false, fullOpened: false, weekly: false, search: false, exclude: false, ai: false, fresh: true }
+const none: Known = { replayed: false, fullOpened: false, weekly: false, search: false, exclude: false, ai: false, crawlers: false, fresh: true }
 const fresh = { done: [] }
 
 describe('a site\'s first week', () => {
@@ -104,6 +104,25 @@ describe('the card about AI', () => {
     expect(eligible(old, fresh)).toEqual([])
     expect(eligible({ ...old, ai: true }, fresh)).toEqual(['ai'])
     expect(pick({ ...old, ai: true }, { done: ['ai'] }, '2026-12-01')).toBeNull()
+  })
+})
+
+describe('the card about AI crawlers', () => {
+  const off = { ...none, ai: true, crawlers: true }
+
+  it('only when an AI assistant sent a visitor and the module is off', () => {
+    expect(eligible({ ...none, ai: true }, fresh)).not.toContain('crawlers')
+    expect(eligible(off, fresh)).toEqual(['ai', 'crawlers', 'replay', 'full', 'weekly', 'search'])
+  })
+
+  it('waits a day behind the card about AI, and is for a site of any age', () => {
+    expect(pick(off, { done: ['ai'], day: '2026-10-02', id: 'ai' }, '2026-10-02')).toBeNull()
+    expect(pick(off, { done: ['ai'], day: '2026-10-02', id: 'ai' }, '2026-10-03')).toBe('crawlers')
+    expect(eligible({ ...off, fresh: false }, { done: ['ai'] })).toEqual(['crawlers'])
+  })
+
+  it('never again once put away', () => {
+    expect(eligible(off, { done: ['ai', 'crawlers'] })).not.toContain('crawlers')
   })
 })
 

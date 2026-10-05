@@ -1,14 +1,14 @@
 // The card for a surge: the site is far busier than usual right now. A big
 // number counting up to who is on, how many times the usual as a chip, one line
 // about who sent most of them (with the source's icon), the last hour drawing
-// itself, and a small ghost hopping. Two buttons: More (the story, in a dialog)
-// and See it (today in Data, filtered to the source). Calm: a soft glow that
+// itself, and a small ghost hopping. One button: More, the story in a dialog, which
+// has See it (today in Data, filtered to the source). Calm: a soft glow that
 // pulses twice, no confetti, and none of it moves with reduced motion. The
 // browser notice (only for someone who said yes, and only when the tab is out of
 // sight) is told once for each surge.
 import { TrendingUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { SideCard, useCardClose } from '../../components/SideCard/SideCard'
+import { SideCard } from '../../components/SideCard/SideCard'
 import { Ghost } from '../../components/Logo'
 import { fmtInt } from '../../lib/format'
 import { useSeen, wasSeen, markSeen } from '../install/seen'
@@ -20,7 +20,6 @@ import { SurgeSpark } from './SurgeChart'
 import SurgeModal from './SurgeModal' // the story: in this card's own chunk, which is itself lazy
 import { sourceLine, surgeChip, surgeNotice, type Surge } from './surge'
 import { useSurge } from './useSurge'
-import { useSurgeActions } from './useSurgeActions'
 import './surge.css'
 
 const t = signals.surge
@@ -59,7 +58,7 @@ function Card({ surge, tz }: { surge: Surge; tz: string }) {
         title={t.title}
         onClose={putAway}
         chart={<SurgeSpark surge={surge} />}
-        actions={<Actions surge={surge} done={putAway} more={() => setStory(true)} />}
+        actions={<Actions more={() => setStory(true)} />}
       >
         <div className="sg-hero">
           <b className="sg-count">
@@ -80,20 +79,10 @@ function Card({ surge, tz }: { surge: Surge; tz: string }) {
   )
 }
 
-function Actions({ surge, done, more }: { surge: Surge; done: () => void; more: () => void }) {
-  const close = useCardClose()
-  const { see } = useSurgeActions(surge, () => {
-    done()
-    close()
-  })
+function Actions({ more }: { more: () => void }) {
   return (
-    <>
-      <button type="button" className="btn ghost" aria-haspopup="dialog" onClick={more}>
-        {t.more}
-      </button>
-      <button type="button" className="btn primary" onClick={see}>
-        {t.see}
-      </button>
-    </>
+    <button type="button" className="btn primary" aria-haspopup="dialog" onClick={more}>
+      {t.more}
+    </button>
   )
 }

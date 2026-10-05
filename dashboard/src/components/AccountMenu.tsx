@@ -9,7 +9,11 @@ import { useProfile } from '../lib/profile'
 import { PersonAvatar } from './PersonAvatar'
 import { copy } from './moreCopy'
 
-const AccountItems = lazyLoad(() => import('./AccountItems'))
+const load = () => import('./AccountItems')
+const AccountItems = lazyLoad(load)
+
+/** Open the Features pop-up from anywhere. It lives in the menu's chunk (which the first load already knows how to fetch), and fetches its own. */
+export const openFeatures = () => void load().then((m) => m.showFeatures())
 
 export function AccountMenu({ site }: { site?: Site }) {
   useEffect(() => whenIdle(AccountItems.preload), [])
