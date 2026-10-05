@@ -6,6 +6,7 @@
   --bg: #0b0d10;
   --surface: #12151a;
   --surface-2: #181c22;
+  --pop: #181c22; /* a pop-up, one step above the page (light: the plain surface, so text keeps its contrast) */
   --sunken: #0f1216;
   --row: #1b2028;
   --border: #242a33;
@@ -62,6 +63,7 @@
     --bg: #fafaf7;
     --surface: #ffffff;
     --surface-2: #f3f4f1;
+  --pop: #ffffff;
     --sunken: #f6f7f4;
     --row: #eef0eb;
     --border: #e3e5e0;
@@ -108,6 +110,7 @@
   --bg: #fafaf7;
   --surface: #ffffff;
   --surface-2: #f3f4f1;
+  --pop: #ffffff;
   --sunken: #f6f7f4;
   --row: #eef0eb;
   --border: #e3e5e0;
@@ -991,7 +994,7 @@ input[type='range']::-moz-range-thumb {
   z-index: 20;
   /* One step above the page, a clear edge, a soft fall: a pop-up reads as
      lifted off the page instead of blending into it. */
-  background: var(--surface-2);
+  background: var(--pop);
   border: 1px solid var(--border-2);
   border-radius: 12px;
   box-shadow: var(--shadow);
