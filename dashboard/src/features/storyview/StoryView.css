@@ -10,6 +10,13 @@
   gap: 4px;
   margin: 0 0 14px;
 }
+/* in the control row: beside the period, the row's own spacing */
+.sv-slot {
+  margin-right: auto;
+}
+.sv-slot .sv-switch {
+  margin: 0;
+}
 .sv-switch button {
   padding: 7px 16px;
   border: 1px solid var(--border);
