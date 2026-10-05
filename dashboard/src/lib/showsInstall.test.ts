@@ -7,6 +7,9 @@ describe('showsInstall', () => {
   it('shows at once for a site that never had a visit', () => {
     expect(showsInstall({ ...base, site: { last_event_at: 0 } })).toBe(true)
   })
+  it('hides it once the events check finds imported history', () => {
+    expect(showsInstall({ ...base, site: { last_event_at: 0 }, everTracked: true })).toBe(false)
+  })
   it('waits for the events check on a site that had visits', () => {
     expect(showsInstall({ ...base, site: { last_event_at: 1 } })).toBe(false)
     expect(showsInstall({ ...base, site: { last_event_at: 1 }, everTracked: false })).toBe(true)
