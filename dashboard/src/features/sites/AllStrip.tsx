@@ -1,11 +1,13 @@
 // The top of the switcher: All sites as a small chip, and once the numbers
 // are here, how many are online now and today's visitors over every site.
 import { LayoutGrid } from 'lucide-react'
+import { useOnlineAll } from '../../lib/allOnline'
 import { fmtCompact } from '../../lib/format'
 import { copy } from './menuCopy'
 import { totalOf, type Today } from './useToday'
 
 export function AllStrip({ on, numbers, onPick }: { on: boolean; numbers: Map<string, Today> | null; onPick: () => void }) {
+  const online = useOnlineAll()
   const sum = numbers && totalOf(numbers)
   return (
     <div className="sites-strip">
@@ -16,8 +18,8 @@ export function AllStrip({ on, numbers, onPick }: { on: boolean; numbers: Map<st
       {sum && (
         <span className="strip-sum">
           <span title={copy.onlineAll}>
-            <i className={sum.online ? 'live-dot on' : 'live-dot'} aria-hidden="true" />
-            {fmtCompact(sum.online)}
+            <i className={online ? 'live-dot on' : 'live-dot'} aria-hidden="true" />
+            {fmtCompact(online ?? 0)}
           </span>
           <span title={copy.todayAll}>
             {fmtCompact(sum.visitors)} <i>{copy.todayShort}</i>

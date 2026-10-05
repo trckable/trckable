@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react'
 import { openAddSite } from '../lib/account'
 import { type Site, type SiteRow } from '../lib/api'
 import { useOverview } from './useOverview'
+import { OnlineTile } from './OnlineTile'
 import { delta, fmtInt, fmtMoney, fmtPct } from '../lib/format'
 import { isViewer } from '../lib/me'
 import { navigate } from '../lib/url'
@@ -97,7 +98,6 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
   const prevTotal = list?.reduce((a, r) => a + r.previous_visitors, 0) ?? 0
   const pageviews = list?.reduce((a, r) => a + r.pageviews, 0) ?? 0
   const bounce = total ? (list ?? []).reduce((a, r) => a + r.bounce_rate * r.visitors, 0) / total : 0
-  const online = list?.reduce((a, r) => a + r.online, 0) ?? 0
   const d = list && (total || prevTotal) ? delta(total, prevTotal) : null
   // Revenue adds up only in one currency; otherwise it says how many.
   const paying = list?.filter((r) => r.revenue !== undefined) ?? []
@@ -175,13 +175,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
                   <b className="num">{total ? fmtPct(bounce) : '–'}</b>
                   <span className="faint">across these sites</span>
                 </div>
-                <div className="all-tile">
-                  <span className="faint">Online now</span>
-                  <b className="num">
-                    {online > 0 && <span className="pulse" aria-hidden="true" />} {fmtInt(online)}
-                  </b>
-                  <span className="faint">in the last 5 minutes</span>
-                </div>
+                <OnlineTile />
               </div>
             </div>
 
