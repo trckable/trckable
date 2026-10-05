@@ -1,0 +1,1 @@
+import{O as e,Qn as t,k as n}from"./core-d551576e.js";var r=r=>{n(r.id,`who`,`ai-search`),t({mode:`full`}),e(`who`,`ai-search`),setTimeout(()=>document.getElementById(`cards`)?.scrollIntoView({block:`center`,behavior:`smooth`}),300)};export{r as t};
