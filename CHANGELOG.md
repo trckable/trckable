@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- The pop-ups in the header (the avatar menu and the other dropdowns) sit one step lighter than the page, with a clearer edge and a softer, deeper shadow, so they stand out from the near-black page; the avatar menu's items are fetched as soon as a pointer, focus or touch reaches the avatar, so it opens without a wait.
+
 ### Added
 
 - Client reports are added and changed in a dialog (a full-height sheet on a phone) with a live summary, and the page is a plain list with Edit, Send now, Pause and Delete.
