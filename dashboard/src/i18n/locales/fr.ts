@@ -1960,7 +1960,7 @@ export default {
   'storyview.oneThenGo': 'la plupart partent après une seule page',
   'storyview.shorter': "ils restent moins longtemps qu'avant",
   'storyview.quietNote': (name: string, pct: string) => `Rien ne demande votre attention. Votre première source, ${name}, a envoyé ${pct} des visiteurs.`,
-  'storyview.newNote': "D'ici une semaine environ, trckable connaît votre normale et commence à vous dire ce qui a changé. D'ici là, deux choses améliorent la première histoire :",
+  'storyview.newNote': "D'ici une semaine environ, trckable connaît votre normale et commence à vous dire ce qui a changé.",
   'storyview.trackerOn': 'Traceur installé',
   'storyview.goalOn': 'Une inscription ou une vente est comptée',
   'storyview.goalOff': 'Compter une inscription ou une vente',
