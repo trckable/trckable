@@ -35,6 +35,21 @@ export interface StoryViewProps {
   onGoal?: () => void
 }
 
+/** The room one numbered marker needs, so days close together never cover each other. */
+const MARK_ROOM = 26
+
+/** Moves markers apart to at least `gap` pixels, keeping their order and the last one where it was. */
+export function spread(xs: number[], gap: number): number[] {
+  const out = [...xs]
+  for (let k = 1; k < out.length; k++) out[k] = Math.max(out[k], out[k - 1] + gap)
+  const end = xs[xs.length - 1]
+  if (out.length && out[out.length - 1] > end) {
+    out[out.length - 1] = end
+    for (let k = out.length - 2; k >= 0; k--) out[k] = Math.min(out[k], out[k + 1] - gap)
+  }
+  return out
+}
+
 /** The most the story marks: three moments, so each can be told. */
 const MOMENTS = 3
 const TOP = (pins: Mark[]) => pins.slice(0, MOMENTS)
@@ -57,15 +72,18 @@ export default function StoryView(p: StoryViewProps) {
   const fmt = p.money ?? (() => '')
   const open = (m: Mark) => setView({ ...patchFor(m.pin, { filters: [], range: p.range, today, bucket }), v: 'explore', story: 'moment' })
 
-  const layer = (g: { x: (i: number) => number }) => (
+  const layer = (g: { x: (i: number) => number }) => {
+    const at = spread(marks.map((m) => g.x(m.i)), MARK_ROOM)
+    return (
     <div role="group" aria-label={copy.momentsTitle} style={{ display: 'contents' }}>
       {marks.map((m, n) => (
-        <button key={m.pin.id} type="button" className={`sv-mark ${m.pin.kind}`} style={{ left: g.x(m.i) }} aria-label={copy.openMoment(fmtDay(m.pin.day ?? ''), say(m.pin, fmt).line)} onPointerDown={(e) => e.stopPropagation()} onClick={() => open(m)}>
+        <button key={m.pin.id} type="button" className={`sv-mark ${m.pin.kind}`} style={{ left: at[n] }} aria-label={copy.openMoment(fmtDay(m.pin.day ?? ''), say(m.pin, fmt).line)} onPointerDown={(e) => e.stopPropagation()} onClick={() => open(m)}>
           {n + 1}
         </button>
       ))}
     </div>
-  )
+    )
+  }
   const period = `${fmtDay(data.from)} ${bar.to} ${fmtDay(data.to)}`
   const h = facts.headline
   return (

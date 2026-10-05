@@ -407,8 +407,8 @@
     padding: 14px 12px 10px;
   }
 }
-/* A phone keeps Story | Explore in the period's row: one pill like Live | Data,
-   the two pictures only (the names stay for screen readers), and the period gives way. */
+/* A phone keeps Story | Explore in the period's row: one pill that looks like
+   Live | Data, the two pictures only (the names stay for screen readers). */
 @media (max-width: 640px) {
   .sv-slot {
     margin-right: 0;
@@ -419,14 +419,22 @@
     padding: 0;
     border: 1px solid var(--border);
     border-radius: 999px;
+    background: var(--surface);
   }
   .sv-slot .sv-switch button {
     justify-content: center;
-    width: 44px;
+    width: 40px;
     height: 44px;
     padding: 0;
     border: 0;
     border-radius: 999px;
+    background: none;
+    color: var(--text-3);
+  }
+  .sv-slot .sv-switch button.on {
+    background: var(--surface-2);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), inset 0 0 0 1px var(--border-2);
+    color: var(--text);
   }
   .sv-slot .sv-switch svg {
     width: 18px;
@@ -440,19 +448,25 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  .sv-slot .sv-switch button {
-    width: 36px;
-  }
   .phone-row:has(.sv-switch) {
     gap: 6px;
-  }
-  /* with the pill in the row, Live | Data and the period pare down so "30 days" stays whole */
-  .phone-row:has(.sv-switch) .view-switch button {
-    padding: 0 10px;
   }
   .phone-row:has(.sv-switch) .phone-pill {
     flex: 1;
     min-width: 0;
+  }
+  .phone-row:has(.sv-switch) .phone-pill b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+/* Live | Data and the period pare down so "30 days" stays whole */
+@media (max-width: 640px) {
+  .phone-row:has(.sv-switch) .view-switch button {
+    padding: 0 10px;
+  }
+  .phone-row:has(.sv-switch) .phone-pill {
     justify-content: center;
     padding: 0 4px;
   }
@@ -461,8 +475,10 @@
   }
   .phone-row:has(.sv-switch) .phone-pill b {
     font-size: 14px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  }
+}
+@media (max-width: 400px) {
+  .sv-slot .sv-switch button {
+    width: 36px;
   }
 }
