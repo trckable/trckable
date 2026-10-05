@@ -1959,7 +1959,7 @@ export default {
   'storyview.oneThenGo': 'de meesten vertrekken na één pagina',
   'storyview.shorter': 'ze blijven korter dan eerder',
   'storyview.quietNote': (name: string, pct: string) => `Niets heeft je nodig. Je grootste bron, ${name}, stuurde ${pct} van de bezoekers.`,
-  'storyview.newNote': 'Over ongeveer een week kent trckable jouw normaal en vertelt het wat er veranderde. Tot dan maken twee dingen het eerste verhaal beter:',
+  'storyview.newNote': 'Over ongeveer een week kent trckable jouw normaal en vertelt het wat er veranderde.',
   'storyslot.preparing': 'Je cijfers worden klaargezet…',
   'storyview.trackerOn': 'Tracker geïnstalleerd',
   'storyview.goalOn': 'Een aanmelding of verkoop wordt geteld',

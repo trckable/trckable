@@ -1962,7 +1962,7 @@ export default {
   'storyview.oneThenGo': 'die meisten gehen nach einer Seite wieder',
   'storyview.shorter': 'sie bleiben kürzer als zuvor',
   'storyview.quietNote': (name: string, pct: string) => `Nichts braucht dich. Deine größte Quelle, ${name}, brachte ${pct} der Besucher.`,
-  'storyview.newNote': 'In etwa einer Woche kennt trckable dein Normal und sagt dir, was sich verändert hat. Bis dahin machen zwei Dinge die erste Geschichte besser:',
+  'storyview.newNote': 'In etwa einer Woche kennt trckable dein Normal und sagt dir, was sich verändert hat.',
   'storyslot.preparing': 'Deine Zahlen werden vorbereitet…',
   'storyview.trackerOn': 'Tracker installiert',
   'storyview.goalOn': 'Eine Anmeldung oder ein Verkauf wird gezählt',

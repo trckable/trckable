@@ -22,7 +22,7 @@ export const copy = defineCopy('storyview', {
   oneThenGo: 'most of them leave after one page',
   shorter: 'they stay for a shorter time than before',
   quietNote: (name: string, pct: string) => `Nothing needs you. Your top source, ${name}, sent ${pct} of the visitors.`,
-  newNote: 'In about a week, trckable knows your normal and starts telling you what changed. Until then, two things make the first story better:',
+  newNote: 'In about a week trckable knows your normal and starts telling you what changed.',
   trackerOn: 'Tracker installed',
   goalOn: 'A sign-up or a sale is counted',
   goalOff: 'Count a sign-up or a sale',
