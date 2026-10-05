@@ -359,6 +359,10 @@
   border-radius: 12px;
   font-size: 14px;
 }
+.sv-from .sv-link {
+  align-self: center;
+  font-size: 14px;
+}
 .sv-grow {
   flex: 1;
 }
