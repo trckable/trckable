@@ -1,0 +1,96 @@
+.rp-modal {
+  width: min(520px, 100%);
+}
+.rp-form {
+  display: grid;
+  gap: 16px;
+}
+.rp-summary {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.rp-summary .faint {
+  font-size: 12px;
+}
+.rp-sec {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.rp-sec legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.rp-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.rp-seg {
+  display: flex;
+  gap: 6px;
+}
+.rp-seg .btn {
+  flex: 1;
+  justify-content: center;
+}
+.rp-seg .btn.on {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.rp-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+}
+.rp-hint {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.rp-hint .faint {
+  font-size: 12px;
+}
+.rp-hint .over {
+  color: var(--down);
+}
+@media (max-width: 640px) {
+  /* A full-height sheet on a phone. */
+  .modal-back:has(> .rp-modal) {
+    place-items: stretch;
+  }
+  .modal.rp-modal {
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    border-width: 0;
+  }
+  .rp-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .rp-form .dialog-actions {
+    margin-top: auto;
+  }
+  .rp-two {
+    grid-template-columns: 1fr;
+  }
+}

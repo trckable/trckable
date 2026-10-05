@@ -11,6 +11,7 @@ section into the release.
 
 ### Added
 
+- Client reports are added and changed in a dialog (a full-height sheet on a phone) with a live summary, and the page is a plain list with Edit, Send now, Pause and Delete.
 - The weekly email ("Your week") is a designed email, not plain text: the trckable header, the four numbers with their change on the week before, top sources and pages as small bars (long paths cut with an ellipsis), the AI line, the week's findings (a new referrer among them) and one button, Open your week. It reads in a dark mail app, is 600 px wide and uses only tables and inline styles, so Gmail, Apple Mail and Outlook draw it alike; the plain-text version still goes with it for clients that show only that. All sites now ends its header with the same avatar menu a site's page has.
 - Settings → Widgets is compact: each widget is one row with its thumbnail, name and kind, and Edit, Copy code and Rename at hand; the editor's groups start shut, one open at a time, beside the live preview. The "Counted by trckable" line now sits inside the card, in the card's own colours, so it reads on a white, black, grey or coloured page. The page's words are in the message files (German, French, Spanish, Italian and Dutch need review).
 - Widgets fit phones: the embed code carries a small loader (`/js/w.js`) that sets the frame's height from the card, the cards are fluid from 280 to 480 px, and the corner script scales down with a safe-area inset and a 44 px close target. Code pasted before keeps working at a fixed height.
