@@ -6,7 +6,7 @@
 // step; focus in, trapped, and back on close; a bottom sheet on a phone. And
 // Compact's quiet way into Full, now that its card at the bottom is gone.
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

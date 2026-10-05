@@ -2,7 +2,7 @@
 // language, PDF, addresses), see it in the list, change it, switch it off,
 // have the test button wait for a mail server, and delete it with a question.
 // Also the pictures for the review: POLISH_SHOTS=<folder> saves them.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

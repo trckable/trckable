@@ -2,7 +2,7 @@
 // going to the tallest and back must leave the short one exactly as tall as its
 // own content, never with the tallest tab's height kept as an empty block
 // under the buttons.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

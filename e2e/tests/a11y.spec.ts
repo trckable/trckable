@@ -6,7 +6,7 @@
 // TRCKABLE_A11Y_URL points at one:
 //   TRCKABLE_A11Y_URL=http://localhost:8799 npx playwright test a11y
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

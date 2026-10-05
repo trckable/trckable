@@ -2,7 +2,7 @@
 // least 44 x 44, no text is under 12 px, and nothing runs off the side, on the
 // screens a person uses (Data, Live, the site list, the period sheet, the ⋯
 // menu, Settings, Share). Chromium only: it reads boxes and computed sizes.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

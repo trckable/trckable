@@ -3,7 +3,7 @@
 //   TRCKABLE_A11Y_URL=http://localhost:8799 npx playwright test ai-search --project=chromium --workers=1
 // One tab in Who came with three columns, a click that filters, the setup
 // sheet from the crawler column, and (with TRCKABLE_SHOTS) the pictures.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

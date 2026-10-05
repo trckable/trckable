@@ -2,7 +2,7 @@
 // history to a year of mostly empty buckets and back: nothing may throw, the
 // app stays on the page and the chart is drawn each time. A crash is a page
 // error or a blank app; a fresh load of the same address is checked too.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
 

@@ -1,6 +1,6 @@
 // The privacy report: Settings → Data & privacy → Privacy report opens a sheet
 // that states what the site is set to collect, and it follows the settings.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

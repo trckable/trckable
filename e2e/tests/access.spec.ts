@@ -5,7 +5,7 @@
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

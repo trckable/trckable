@@ -4,7 +4,7 @@
 // Real domain names come from a forward proxy (serve.mjs, PROXY_PORT), so the
 // cookie rules under test are the browsers' own, in all three engines.
 import { createHmac } from 'node:crypto'
-import { expect, test, type APIRequestContext } from '@playwright/test'
+import { expect, test, type APIRequestContext } from './fixtures'
 import { API, TOKEN } from '../playwright.config'
 
 type Ev = { seq: number; kind: string; path: string; visitor: string; session: string; channel?: string }

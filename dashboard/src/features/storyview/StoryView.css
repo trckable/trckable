@@ -1,0 +1,483 @@
+/* Data's Story view and the bar that leads back to it from Explore. */
+.story-view {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+.sv-switch {
+  display: inline-flex;
+  gap: 4px;
+  margin: 0 0 14px;
+}
+/* in the control row: beside the period, the row's own spacing */
+.sv-slot {
+  margin-right: auto;
+}
+/* a small picture beside each name: lines of text for Story, bars for Explore */
+.sv-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sv-switch svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.sv-slot .sv-switch {
+  margin: 0;
+}
+.sv-switch button {
+  padding: 7px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted, var(--text));
+  font: 500 14px var(--font);
+  cursor: pointer;
+}
+.sv-switch button.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+.sv-eyebrow {
+  font: 500 12px var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint, var(--text));
+  opacity: 0.7;
+}
+.sv-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 980px;
+}
+.sv-line {
+  margin: 0;
+  font-size: clamp(24px, 3.4vw, 40px);
+  line-height: 1.14;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.sv-strong {
+  color: var(--accent);
+}
+.sv-note {
+  margin: 0;
+  max-width: 62ch;
+  opacity: 0.75;
+  font-size: 15px;
+}
+.sv-steps {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+}
+.sv-steps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sv-steps li span {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+}
+.sv-steps li.done span {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.sv-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.sv-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 14px;
+}
+.sv-tile.dim {
+  border-style: dashed;
+}
+.sv-tile-name {
+  font-size: 13px;
+  opacity: 0.7;
+}
+.sv-tile-value {
+  font: 600 26px var(--mono);
+}
+.sv-tile-value.warn,
+.sv-tile-verdict.warn {
+  color: var(--warn);
+}
+.sv-tile-value.off {
+  opacity: 0.5;
+  font-size: 22px;
+}
+.sv-tile-verdict {
+  font-size: 13px;
+  opacity: 0.85;
+}
+.sv-tile-verdict.good {
+  color: var(--up);
+  opacity: 1;
+}
+.sv-tile-verdict.bad {
+  color: var(--down);
+  opacity: 1;
+}
+.sv-link {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: 500 13px var(--font);
+  cursor: pointer;
+  text-align: left;
+}
+.sv-link:hover {
+  text-decoration: underline;
+}
+.sv-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 22px 14px;
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 16px;
+}
+.sv-chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.sv-chart-head b {
+  font-size: 15px;
+}
+.sv-chart-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  gap: 22px;
+  align-items: start;
+}
+.sv-plot {
+  position: relative;
+  min-width: 0;
+}
+.sv-mark {
+  position: absolute;
+  z-index: 4;
+  top: 13px;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 700 11px var(--mono);
+  cursor: pointer;
+}
+.sv-mark.drop {
+  background: var(--warn);
+}
+.sv-moments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+.sv-moments button {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sv-moments button:hover {
+  background: var(--row);
+}
+.sv-n {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 700 11px var(--mono);
+}
+.sv-n.drop {
+  background: var(--warn);
+}
+.sv-answers {
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.sv-answers-title {
+  margin: 0;
+  padding: 16px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--grid);
+}
+.sv-answer {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) auto;
+  gap: 22px;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--grid);
+}
+.sv-answer:last-child {
+  border-bottom: 0;
+}
+.sv-answer.fix {
+  background: color-mix(in srgb, var(--warn) 7%, transparent);
+}
+.sv-answer.fix .sv-q {
+  color: var(--warn);
+}
+.sv-q {
+  font-size: 15px;
+  opacity: 0.75;
+}
+.sv-a {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.sv-a-line {
+  font-size: 17px;
+  font-weight: 600;
+}
+.sv-answer.quiet .sv-a-line {
+  opacity: 0.7;
+}
+.sv-a-sub {
+  font-size: 14px;
+  opacity: 0.75;
+}
+.sv-act {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.sv-btn {
+  padding: 9px 14px;
+  border: 1px solid var(--raised-line, var(--border));
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: 600 14px var(--font);
+  cursor: pointer;
+}
+.sv-btn:hover {
+  background: var(--row);
+}
+.sv-btn.main {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.sv-btn.fix {
+  background: var(--warn);
+  border-color: var(--warn);
+  color: var(--accent-ink);
+}
+.sv-btn.small {
+  padding: 6px 11px;
+  font-weight: 500;
+  font-size: 13px;
+}
+.sv-ask {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--sunken);
+  border: 1px solid var(--grid);
+  border-radius: 14px;
+}
+.sv-ask label {
+  font-size: 15px;
+  font-weight: 500;
+}
+.sv-ask input {
+  flex: 1 1 280px;
+  min-width: 0;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--raised-line, var(--border));
+  border-radius: 10px;
+  color: inherit;
+  font: 15px var(--font);
+}
+.sv-useful {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+.sv-from {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 12px;
+  font-size: 14px;
+}
+.sv-from .sv-link {
+  align-self: center;
+  font-size: 14px;
+}
+.sv-grow {
+  flex: 1;
+}
+@media (max-width: 900px) {
+  .sv-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sv-chart-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sv-answer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 16px 18px;
+  }
+  .sv-act {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 480px) {
+  .sv-tile {
+    padding: 12px 14px;
+  }
+  .sv-tile-value {
+    font-size: 21px;
+  }
+  .sv-chart {
+    padding: 14px 12px 10px;
+  }
+}
+/* Below 1000 px (and on a phone, in the period's row) Story | Explore is one
+   pill that looks like Live | Data, the two pictures only (the names stay for
+   screen readers): the row has no room for the words until then. */
+@media (max-width: 1000px) {
+  .sv-slot .sv-switch {
+    gap: 0;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+  }
+  .sv-slot .sv-switch button {
+    justify-content: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--text-3);
+  }
+  .sv-slot .sv-switch button.on {
+    background: var(--surface-2);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), inset 0 0 0 1px var(--border-2);
+    color: var(--text);
+  }
+  .sv-slot .sv-switch svg {
+    width: 18px;
+    height: 18px;
+  }
+  .sv-slot .sv-word {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+@media (max-width: 640px) {
+  .sv-slot {
+    margin-right: 0;
+    flex: none;
+  }
+  .phone-row:has(.sv-switch) {
+    gap: 6px;
+  }
+  .phone-row:has(.sv-switch) .phone-pill {
+    flex: 1;
+    min-width: 0;
+  }
+  .phone-row:has(.sv-switch) .phone-pill b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+/* Live | Data and the period pare down so "30 days" stays whole */
+@media (max-width: 640px) {
+  .phone-row:has(.sv-switch) .view-switch button {
+    padding: 0 10px;
+  }
+  .phone-row:has(.sv-switch) .phone-pill {
+    justify-content: center;
+    padding: 0 4px;
+  }
+  .phone-row:has(.sv-switch) .phone-pill :is(.pill-dot, svg) {
+    display: none;
+  }
+  .phone-row:has(.sv-switch) .phone-pill b {
+    font-size: 14px;
+  }
+}

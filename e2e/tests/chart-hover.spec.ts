@@ -2,7 +2,7 @@
 // (only Replay, a drag or a picked day grey what is right of it). Arrow keys and
 // Replay move the same cut, leaving the chart restores it, a note stays
 // readable in the hover card, and with reduced motion the cut never glides.
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'

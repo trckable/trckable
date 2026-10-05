@@ -3,7 +3,7 @@
 // Ask, the avatar; on a site's page, on All sites and in a shared link (its
 // capsules). The Live card's title leads with the pulsing dot.
 // Pictures for the review: HH_SHOTS=<folder> HH_SCHEME=light|dark.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

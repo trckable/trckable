@@ -2,7 +2,7 @@
 // finds is given by the browser here (its rules are tested in Go); the card, its
 // More, the story's See it and the way it comes up in Live and in Data are real.
 //   SURGE_SHOTS=/some/folder  also takes the pictures for review.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { mkdirSync } from 'node:fs'
 import { API } from '../playwright.config'
 import { session, withoutPayments } from './session'

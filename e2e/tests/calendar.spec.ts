@@ -1,7 +1,7 @@
 // The calendar in Data: the switch between the chart and the month grid, a
 // day's card and the way into the day, the keyboard, and a plan for a day to
 // come (kept as a note, dashed in its cell).
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
 

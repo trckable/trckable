@@ -1,7 +1,7 @@
 // What goes wrong is said in a toast, in a few friendly words: never the
 // server's own text, never red text under a form. A failed Add site (the
 // server refuses it) is the case a person meets first.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { mkdirSync } from 'node:fs'
 import { API } from '../playwright.config'
 import { session } from './session'

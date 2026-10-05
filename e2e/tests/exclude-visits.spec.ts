@@ -3,7 +3,7 @@
 // Settings → Data & privacy → Exclude IP ranges drops visits from your own
 // addresses before anything is counted. A site of its own, so no other suite's
 // counts move.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

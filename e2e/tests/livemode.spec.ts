@@ -2,7 +2,7 @@
 // "On the site right now" and moves the numbers, without a reload; the switch,
 // the L key and the Online now tile all lead there; a phone gets the panels
 // stacked with the list scrolling inside.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -231,7 +231,7 @@ test('a site with no visit yet shows its install screen in Live, and the mode co
 // Data stays in the address, so a reload keeps it.
 test('a site with visits opens in Live when the address has no mode, and Data stays Data', async ({ page }) => {
   await visit(page, 'default')
-  await signIn(page)
+  await signIn(page, '/example.com?v=') // an empty v is the address with no view, which the suite would otherwise send to Explore
   const live = page.getByRole('region', { name: 'Live', exact: true })
   const view = page.getByRole('group', { name: 'View' })
   await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
@@ -242,7 +242,7 @@ test('a site with visits opens in Live when the address has no mode, and Data st
   // Data, chosen: the address keeps it through a reload.
   await view.getByRole('button', { name: 'Data' }).click()
   await expect(page.locator('.range-picker')).toBeVisible()
-  await expect(page).toHaveURL(/[?&]view=data/)
+  await expect(page).toHaveURL(/[?&](view=data|v=explore)/)
   await page.reload()
   await expect(page.locator('.range-picker')).toBeVisible({ timeout: 15_000 })
   await expect(live).toHaveCount(0)
@@ -258,7 +258,7 @@ test('a site with visits opens in Live when the address has no mode, and Data st
   await page.getByRole('button', { name: /^Clear filters|Remove filter/i }).first().click()
   await expect(page.locator('.range-picker')).toBeVisible()
   await expect(live).toHaveCount(0)
-  await expect(page).toHaveURL(/[?&]view=data/)
+  await expect(page).toHaveURL(/[?&](view=data|v=explore)/)
 
   // ?view=live still says Live.
   await page.goto(`${API}/example.com?view=live`)

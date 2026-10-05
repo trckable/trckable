@@ -2,7 +2,7 @@
 // closing it (its Close, or Escape) puts the side card away with it, for the day. What the server finds is
 // given by the browser here (its rules are tested in Go); the card, the dialog and its focus are real.
 //   CARD_MODAL_SHOTS=/some/folder  also takes the pictures for review.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { mkdirSync } from 'node:fs'
 import { API } from '../playwright.config'
 import { session } from './session'

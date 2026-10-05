@@ -2,7 +2,7 @@
 // Profile and their row in People all change together, with no reload.
 // It signs in as the suite's shared owner and takes the picture off again:
 // signing in is limited per address, so this spec makes no sign-in of its own.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

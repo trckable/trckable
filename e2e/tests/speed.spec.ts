@@ -6,7 +6,7 @@
 //
 // It runs against a trckabled with the demo data, so it is skipped unless
 // TRCKABLE_A11Y_URL points at one (the same server the a11y suite uses).
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 
 const BASE = process.env.TRCKABLE_A11Y_URL
 const EMAIL = process.env.TRCKABLE_A11Y_EMAIL ?? 'me@site.com'

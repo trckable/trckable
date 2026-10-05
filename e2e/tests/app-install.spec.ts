@@ -3,7 +3,7 @@
 // answer from the API, the tracking script or a shared page must never come
 // from what the worker kept. The proof is two ways: the cache holds none of
 // them, and with the network gone they fail instead of being answered.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 
 test.use({ serviceWorkers: 'allow' })

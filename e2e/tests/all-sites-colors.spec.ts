@@ -2,7 +2,7 @@
 // the account has a colour of its own (the chart's key and its row's line agree,
 // and no two repeat); the sites past the palette are one "Other sites" band,
 // never a colour taken again.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

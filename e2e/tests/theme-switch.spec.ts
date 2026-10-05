@@ -1,6 +1,6 @@
 // The theme changes smoothly: no reload, no flash on the first frame, and the
 // chart is not redrawn or re-animated when the colours change.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
 

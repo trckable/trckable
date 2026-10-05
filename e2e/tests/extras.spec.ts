@@ -5,7 +5,7 @@
 // revenue tabs, Latest buyers (and no email anywhere in it), and Compact without any
 // of the Full-only ones.
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

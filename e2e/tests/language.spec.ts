@@ -1,6 +1,6 @@
 // The language picker in the avatar menu: Deutsch changes the dashboard's words
 // and its numbers, the choice survives a reload, and English comes back.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
 

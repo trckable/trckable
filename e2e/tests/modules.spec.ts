@@ -1,7 +1,7 @@
 // A module that is off takes its way in with it: with Goals off the Create
 // menu offers no goal, and the key still opens it for what is left. A site
 // of its own, so the suites that count goals on example.com never see it off.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

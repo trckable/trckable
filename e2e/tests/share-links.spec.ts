@@ -2,7 +2,7 @@
 // the list and copy or open it again there, give an old link a new address,
 // revoke one with the question in the row. Also the pictures for the review:
 // POLISH_SHOTS=<folder> saves them.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

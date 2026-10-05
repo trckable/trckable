@@ -1,7 +1,7 @@
 // The look of a site's share links, from Share → Link: a logo, a colour, the
 // "Hide trckable branding" switch and a domain; then the link, opened by
 // someone with no account, wears it. An SVG with script in it is refused.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 
