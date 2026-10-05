@@ -33,7 +33,7 @@ export interface PinCardProps extends Pick<SideCardProps, 'id' | 'asked' | 'onCl
 }
 
 /** The pages and sources whose own days make their chart: asked for once the card is up. */
-function useOwn(pin: Pin, site: { id: string; timezone: string }): Own | undefined {
+export function useOwn(pin: Pin, site: { id: string; timezone: string }): Own | undefined {
   const [got, setGot] = useState<{ id: string; own: Own } | null>(null)
   const f = pin.filters[0]
   const wants = (pin.kind === 'referrer' || pin.kind === 'move') && f

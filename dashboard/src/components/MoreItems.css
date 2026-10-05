@@ -105,3 +105,13 @@
   flex: none;
   justify-content: center;
 }
+
+/* The small dot after an item that has something new (Features). */
+.pop.menu .menu-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--accent);
+}

@@ -12,6 +12,7 @@ const named = (id: string, label: string, group: Group): Action => ({ id, label,
 export const ACTIONS: Action[] = [
   named('shortcuts', 'This list', 'around'),
   named('ask', 'Peek', 'around'),
+  named('features', 'Features', 'around'),
   named('mode', 'Core ↔ Full', 'around'),
   named('live', 'Live ↔ Data', 'around'),
   named('create', 'Create a goal, funnel or note', 'around'),

@@ -49,6 +49,7 @@ export const copy = defineCopy('moments', {
   // The first-week cards (the weekly email's is the first screen's own).
   discover: {
     exclude: { label: 'Your visits', title: 'Exclude your own visits?', body: 'Your own clicks count as visitors.', go: 'Exclude this browser' },
+    crawlers: { label: 'AI crawlers', title: 'See which AI robots read you', body: 'An assistant sent a visitor. Now see who else reads.', go: 'Turn on' },
     replay: { label: 'Replay', title: 'Replay this period', body: 'Your days, played as a story.', go: 'Play week' },
     full: { label: 'Full mode', title: 'See everything', body: 'Every card, not only the basics.', go: 'Open Full' },
     search: { label: 'Search Console', title: 'See what people search for', body: 'Google’s numbers, beside yours.', go: 'Connect' },

@@ -501,9 +501,6 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 	if _, err := conn.ExecContext(ctx, "COMMIT"); err != nil {
 		return fmt.Errorf("writer commit: %w", err)
 	}
-	if len(batch) > 0 {
-		w.applied.Store(batch[len(batch)-1].Seq)
-	}
 	if w.OnCommit != nil && len(rows) > 0 {
 		out := make([]event.Event, len(rows))
 		for i := range rows {
@@ -515,6 +512,10 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 		for site, span := range touched {
 			w.OnTouch(site, span[0], span[1])
 		}
+	}
+	// Last, so whoever waits on Applied finds the cache already told.
+	if len(batch) > 0 {
+		w.applied.Store(batch[len(batch)-1].Seq)
 	}
 	return nil
 }

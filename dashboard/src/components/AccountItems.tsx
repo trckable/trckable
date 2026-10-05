@@ -1,8 +1,9 @@
 // The avatar menu's items (AccountMenu.tsx). Its own chunk, so the first load carries only the button.
 import { useState } from 'react'
-import { CircleUser, Eye, EyeOff, Keyboard, LogOut, Smartphone } from 'lucide-react'
+import { CircleUser, Eye, EyeOff, Keyboard, LogOut, Smartphone, Sparkle } from 'lucide-react'
 import { choose, canLeaveOut, nextChoice, stateOf } from '../features/exclude/ownVisits'
 import { openAccount } from '../lib/account'
+import { openFeatures } from './AccountMenu'
 import type { Profile, Site } from '../lib/api'
 import type { MenuItems } from '../lib/headerMenu'
 import { install, useWayToInstall } from '../lib/installApp'
@@ -77,6 +78,30 @@ function OwnVisits({ site, go }: { site: Site; go: Parameters<MenuItems>[0] }) {
   )
 }
 
+/** Fetches the Features pop-up (its own chunk) and shows it. */
+export const showFeatures = () => import('../features/hub/show').then((m) => m.default())
+
+/** The Features pop-up, with a small dot while the list has something this person has not seen. */
+// What the pop-up writes when it is opened (features/hub/seen.ts): the same key and value, kept here so this menu's chunk does not need that file.
+const dot = (user: string) => {
+  try {
+    return localStorage.getItem(`trckable:features:${user}`) !== '1'
+  } catch {
+    return false
+  }
+}
+
+function FeaturesItem({ go, user }: { go: Parameters<MenuItems>[0]; user: string }) {
+  const fresh = dot(user)
+  return (
+    <button type="button" role="menuitem" aria-label={fresh ? copy.featuresNew : copy.features} onClick={go(() => openFeatures())}>
+      <Sparkle size={18} strokeWidth={1.75} aria-hidden="true" />
+      {copy.features}
+      {fresh && <span className="menu-dot" aria-hidden="true" />}
+    </button>
+  )
+}
+
 /** The items of the avatar menu. */
 export default function AccountItems({ profile, v, go, site }: { profile: Profile | null; v: number; go: Parameters<MenuItems>[0]; site?: Site }) {
   // The language list takes the menu's place until a choice or Back; Back puts focus on the row again.
@@ -102,6 +127,7 @@ export default function AccountItems({ profile, v, go, site }: { profile: Profil
       {site && canLeaveOut(site) && <OwnVisits site={site} go={go} />}
       <ThemeRow />
       <LanguageRow back={back} onOpen={() => setListing(true)} />
+      <FeaturesItem go={go} user={profile?.email ?? ''} />
       <button type="button" role="menuitem" onClick={go(openShortcuts)}>
         <Keyboard size={18} strokeWidth={1.75} aria-hidden="true" />
         {copy.shortcuts}

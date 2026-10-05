@@ -6,7 +6,7 @@
 // with Clear, the chart comes into view and the marker lights up. Put away, it
 // stays away for the day.
 import { useState } from 'react'
-import { useCardClose } from '../../components/SideCard/SideCard'
+import { cardModal } from '../../components/CardModal/copy'
 import { toast } from '../../components/Toast'
 import type { Point, Site } from '../../lib/api'
 import { chartBucket, patchFor } from './apply'
@@ -15,11 +15,13 @@ import { todayIn } from '../../lib/dates'
 import { sameFilter } from '../../lib/filterSet'
 import { readView, setView } from '../../lib/url'
 import { copy } from './copy'
-import { seeLabel, showing } from './figure'
+import { showing } from './figure'
 import { focusMoment } from './focus'
 import { PinCard } from './PinCard'
+import PinModal from './PinModal'
 import type { Pin } from './pins'
 import type { Today } from './useOneThing'
+
 
 /** Takes the pin's filters (and the day it picked) off the address again. */
 function clearPin(pin: Pin) {
@@ -39,38 +41,41 @@ export function seeIt(pin: Pin, site: Pick<Site, 'timezone'>) {
 
 export function OneThing({ site, found, series, onAway }: { site: Site; found: Today; since?: string; series: readonly Point[]; onAway: () => void }) {
   const [at, setAt] = useState(0)
+  const [open, setOpen] = useState(false)
   const { items } = found
   const t = copy.today
   const pin = items[at]
   return (
-    <PinCard
-      id="one-thing"
-      label={t.label}
-      closeLabel={copy.close}
-      pin={pin}
-      site={site}
-      series={series}
-      money={found.money}
-      onClose={onAway}
-      deck={{ index: at, count: items.length, onNext: () => setAt(at + 1), onPrev: () => setAt(at - 1), prevLabel: t.previous, nextLabel: t.next, position: t.of(at + 1, items.length) }}
-      actions={<SeeButton pin={pin} site={site} />}
-    />
-  )
-}
-
-/** The action: it shows the pin, and the card, being done, leaves. */
-function SeeButton({ pin, site }: { pin: Pin; site: Site }) {
-  const leave = useCardClose()
-  return (
-    <button
-      type="button"
-      className="btn primary"
-      onClick={() => {
-        seeIt(pin, site)
-        leave()
-      }}
-    >
-      {seeLabel(pin)}
-    </button>
+    <>
+      <PinCard
+        id="one-thing"
+        label={t.label}
+        closeLabel={copy.close}
+        pin={pin}
+        site={site}
+        series={series}
+        money={found.money}
+        onClose={onAway}
+        deck={{ index: at, count: items.length, onNext: () => setAt(at + 1), onPrev: () => setAt(at - 1), prevLabel: t.previous, nextLabel: t.next, position: t.of(at + 1, items.length) }}
+        actions={
+          <button type="button" className="btn primary" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+            {cardModal.details}
+          </button>
+        }
+      />
+      {open && (
+        <PinModal
+          pin={pin}
+          site={site}
+          series={series}
+          money={found.money}
+          onClose={() => setOpen(false)}
+          onSee={() => {
+            onAway()
+            seeIt(pin, site)
+          }}
+        />
+      )}
+    </>
   )
 }

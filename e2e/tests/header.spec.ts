@@ -129,7 +129,7 @@ test('the avatar menu holds the person\'s own things, by keyboard too', async ({
   await avatar.focus()
   await page.keyboard.press('Enter')
   const account = page.getByRole('menu', { name: 'Account' })
-  await expect(account.getByRole('menuitem')).toHaveText([/Profile/, /Exclude this browser/, /Language/, /Shortcuts/, /Sign out/])
+  await expect(account.getByRole('menuitem')).toHaveText([/Profile/, /Exclude this browser/, /Language/, /Features/, /Shortcuts/, /Sign out/])
   await expect(account.getByRole('menuitemradio')).toHaveCount(3)
   await expect(account.getByRole('menuitem', { name: /Refresh|Create|Export/ })).toHaveCount(0)
   // Arrows move between items, Escape closes and hands focus back.

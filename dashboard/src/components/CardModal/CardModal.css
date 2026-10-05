@@ -1,0 +1,216 @@
+/* The dialog behind a side card (CardModal.tsx). Loads with it, never with the first page. */
+.modal.card-modal {
+  position: relative;
+  width: min(560px, 100%);
+  gap: 0;
+  padding: 0;
+}
+.cm {
+  --tint: var(--accent);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 24px 24px;
+}
+.cm-x {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.cm-x:hover {
+  background: var(--hover, color-mix(in srgb, var(--text) 8%, transparent));
+  color: var(--text);
+}
+.cm-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 36px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.cm-ic {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--tint) 16%, transparent);
+  color: var(--tint);
+}
+.cm-when {
+  margin-left: auto;
+  font-weight: 400;
+  font-size: 12px;
+}
+.cm-title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.cm-title small {
+  margin-left: 8px;
+  color: var(--text-3);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.cm-part {
+  padding: 12px 14px;
+  border: 1px solid var(--raised-line, var(--border));
+  border-radius: 12px;
+  background: var(--raised-well, var(--surface-2));
+}
+.cm-part h3 {
+  margin: 0 0 8px;
+  color: var(--text-3);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.cm-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13.5px;
+}
+.cm-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cm-row b {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.cm-bars i {
+  display: block;
+  height: 5px;
+  margin-top: 4px;
+  border-radius: 3px;
+  background: var(--tint);
+  transform-origin: 0 50%;
+}
+.cm-spark {
+  position: relative;
+  margin: 0;
+}
+.cm-spark svg {
+  display: block;
+  width: 100%;
+  height: 96px;
+  overflow: visible;
+}
+.cm-spark .base {
+  stroke: var(--text-4, var(--text-3));
+  stroke-dasharray: 3 3;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.cm-spark .ln {
+  fill: none;
+  stroke: var(--tint);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.cm-spark .ar {
+  fill: color-mix(in srgb, var(--tint) 16%, transparent);
+}
+.cm-spark .pt {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: var(--tint);
+  box-shadow: 0 0 0 2px var(--raised-well, var(--surface));
+}
+.cm-meaning {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.cm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cm-spark .ln {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: cm-draw 0.9s ease-out 0.15s forwards;
+  }
+  .cm-spark .ar,
+  .cm-spark .pt {
+    animation: fade-in 0.7s ease-out 0.5s both;
+  }
+  .cm-bars i {
+    animation: cm-grow 0.6s cubic-bezier(0.3, 0.7, 0.3, 1) 0.2s both;
+  }
+}
+@keyframes cm-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes cm-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+/* A phone: a sheet that fills the screen. */
+@media (max-width: 760px) {
+  .modal-back:has(.card-modal) {
+    display: block;
+    padding: 0;
+  }
+  .modal.card-modal {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    border-width: 0;
+    padding: 0;
+    background: var(--surface);
+  }
+  .cm {
+    min-height: 100%;
+    box-sizing: border-box;
+    padding: 20px 16px max(24px, env(safe-area-inset-bottom));
+  }
+  .cm-actions {
+    margin-top: auto;
+  }
+  .cm-actions .btn {
+    flex: 1 1 100%;
+    height: 44px;
+  }
+}

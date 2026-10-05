@@ -6,7 +6,7 @@
 // owner only; and a first-week card. What the server finds is given by the
 // browser here (its rules are tested in Go); everything else is real.
 //   MOMENTS_SHOTS=/some/folder  also takes the pictures for review.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { execFileSync } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -61,6 +61,12 @@ async function open(page: Page, width = 1280, domain = DOMAIN, height = 900) {
 }
 
 const card = (page: Page, name: string) => page.getByRole('complementary', { name })
+
+/** A card's one button opens its dialog; the dialog's own button shows the moment. */
+async function seeIn(page: Page, from: Locator, name: string | RegExp) {
+  await from.getByRole('button', { name: 'Details' }).click()
+  await page.getByRole('dialog').getByRole('button', { name }).click()
+}
 
 /** One picture of the page, both themes, at the width the page is at. */
 async function shoot(page: Page, name: string) {
@@ -218,7 +224,7 @@ test('one thing today: the best first, ← → turn to the others, See it shows 
   await page.keyboard.press('ArrowLeft')
   await expect(today.getByRole('img', { name: '1 of 3' })).toBeVisible()
   await today.getByRole('button', { name: 'Next' }).click()
-  await today.getByRole('button', { name: /^Show / }).click()
+  await seeIn(page, today, /^Show /)
   await expect(page).toHaveURL(/[?&]f=/)
   await expect(today).toHaveCount(0)
   // Put away: not back on a reload the same day.
@@ -265,7 +271,7 @@ for (const kind of [
     const today = card(page, 'One thing today').or(card(page, 'Traffic spike'))
     await expect(today.first()).toBeVisible({ timeout: 20_000 })
     await watchLit(page)
-    await today.first().getByRole('button', { name: kind.button }).click()
+    await seeIn(page, today.first(), kind.button)
     await expect(page).toHaveURL(kind.url)
     await expect(today).toHaveCount(0)
     await expect(toast(page)).toContainText(kind.said)
@@ -283,7 +289,7 @@ test('See it with everything already applied still closes the card, says what is
   await open(page)
   const card1 = card(page, 'One thing today')
   await expect(card1).toBeVisible({ timeout: 20_000 })
-  await card1.getByRole('button', { name: 'Filter source' }).click()
+  await seeIn(page, card1, 'Filter source')
   await expect(page).toHaveURL(/[?&]f=referrer(:|%3A)linkedin\.com/)
   await expect(card1).toHaveCount(0)
   // The same click again, from a card that is back (a new day): the address is already what it asks for.
@@ -294,7 +300,7 @@ test('See it with everything already applied still closes the card, says what is
   const again = card(page, 'One thing today')
   await expect(again).toBeVisible({ timeout: 20_000 })
   await watchLit(page)
-  await again.getByRole('button', { name: 'Filter source' }).click()
+  await seeIn(page, again, 'Filter source')
   await expect(page).toHaveURL(url)
   await expect(again).toHaveCount(0)
   await expect(toast(page)).toContainText('Showing linkedin.com')

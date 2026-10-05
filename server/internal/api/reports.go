@@ -101,7 +101,7 @@ func (a *API) testReportSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if a.SendReport == nil || a.ReportsReady == nil || !a.ReportsReady() {
-		fail(w, http.StatusConflict, "reports need email (TRCKABLE_SMTP_URL) and TRCKABLE_BASE_URL on this server")
+		fail(w, http.StatusConflict, "reports need email set up on this server")
 		return
 	}
 	sc, err := a.Ctl.ReportScheduleByID(r.Context(), r.PathValue("id"))

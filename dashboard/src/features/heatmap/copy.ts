@@ -32,5 +32,7 @@ export const heatCopy = defineCopy('heatmap', {
     preview: 'Preview',
     close: 'Close',
     on: 'Heatmaps are on',
+    views: 'views today',
+    byHour: 'Views of this page by the hour',
   },
 } as const)

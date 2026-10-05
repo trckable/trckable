@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       trckable – Private, Open-Source Analytics
- * Plugin URI:        https://trckable.com
+ * Plugin URI:        https://github.com/trckable/trckable/tree/main/integrations/wordpress
  * Description:       The only analytics you need. Private, free and open source.
  * Version:           1.0.0
  * Requires at least: 6.0

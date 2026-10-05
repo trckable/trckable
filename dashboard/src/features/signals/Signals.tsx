@@ -24,7 +24,7 @@ export default function Signals(p: SignalsProps) {
   useNotices(p)
   return (
     <>
-      <NotifyAsk sold={p.sales.length > 0} />
+      <NotifyAsk sale={p.sales[0]} />
       <SurgeCard site={p.site} />
     </>
   )

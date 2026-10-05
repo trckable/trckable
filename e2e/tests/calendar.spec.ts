@@ -41,7 +41,9 @@ test('a day opens its card, and Open this day filters Data to it', async ({ page
   const card = page.getByRole('complementary')
   await expect(card.locator('.cal-strip')).toBeVisible()
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/calendar-day.png` })
-  await card.getByRole('button', { name: 'Open this day' }).click()
+  // The card's button opens the day's dialog; its main button opens the day.
+  await card.getByRole('button', { name: 'Details' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Open this day' }).click()
   await expect(page).toHaveURL(new RegExp(`from=${day}&to=${day}`))
   await expect(page).not.toHaveURL(/cal=/)
 })

@@ -42,7 +42,6 @@ import { liveShown } from '../features/live/liveShown'
 import { useNotes } from '../features/notes/useNotes'
 import { jump } from '../features/notes/jump'
 import { ChartFoot } from '../features/overview/ChartFoot'
-import { GaReturn } from '../features/install/GaReturn'
 import { Loading } from '../components/loading/Loading'
 import { Cards } from '../features/cards/Cards'
 import type { CardsCtx } from '../features/cards/ctx'
@@ -65,6 +64,7 @@ import { toggleCopy } from '../features/calendar/toggleCopy'
 // Full mode's extra views live in their own chunk: Core never loads them.
 // The share dialog is its own chunk: nothing of it loads until Share is pressed.
 const ShareDialog = lazy(() => import('../features/share/ShareDialog'))
+const GaReturn = lazy(() => import('../features/install/GaReturn').then((m) => ({ default: m.GaReturn }))) // only on the way back from Google (?import=ga)
 const Story = lazy(() => import('../features/story/Story')) // Replay as a story: loaded when Replay starts
 const Install = lazy(() => import('../features/install/Install')) // new sites only: never in the first load
 const Signals = lazy(() => import('../features/signals/Signals')) // the tab's count, the sale toast and the notices: once the stream has spoken
@@ -510,7 +510,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {error && <Notice kind="error" text={error} />}
       {warming && <Notice kind="warming" />}
       {showInstall && <Suspense fallback={null}><Install site={site} visits={stream.visits} /></Suspense>}
-      {!isShared() && <GaReturn site={site} />}
+      {!isShared() && location.search.includes('import=ga') && <Suspense fallback={null}><GaReturn site={site} /></Suspense>}
       <MilestonesSlot ms={ms} site={site} quiet={showInstall} revenue={mods === null || shows(mods, 'cards', 'revenue')} />
       {!showInstall && !isShared() && siteState(site) === 'stopped' && <StoppedNotice site={site} />}
 

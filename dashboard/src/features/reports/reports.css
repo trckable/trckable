@@ -40,6 +40,14 @@
 .rp-row.off .rp-main {
   opacity: 0.6;
 }
+.rp-paused {
+  font-size: 12px;
+  padding: 1px 8px;
+  border: 1px solid var(--border-2);
+  border-radius: 999px;
+  margin-left: 8px;
+  font-weight: 500;
+}
 .rp-main {
   display: grid;
   flex: 1;
@@ -55,50 +63,6 @@
   align-items: center;
   gap: 4px;
 }
-.rp-form {
-  display: grid;
-  gap: 12px;
-  max-width: 520px;
-}
-.rp-two {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-.rp-seg {
-  display: flex;
-  gap: 6px;
-}
-.rp-seg .btn {
-  flex: 1;
-  justify-content: center;
-}
-.rp-seg .btn.on {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-}
-.rp-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 14px;
-}
-.rp-hint {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-}
-.rp-hint .faint {
-  font-size: 12px;
-}
-.rp-hint .over {
-  color: var(--down);
-}
-.rp-actions {
-  display: flex;
-  gap: 8px;
-}
 @media (max-width: 640px) {
   .rp .card-head {
     display: grid;
@@ -107,9 +71,6 @@
   .rp .card-head > .btn {
     grid-column: 1 / -1;
     justify-content: center;
-  }
-  .rp-two {
-    grid-template-columns: 1fr;
   }
   .rp-row {
     flex-direction: column;

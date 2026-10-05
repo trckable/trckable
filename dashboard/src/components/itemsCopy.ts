@@ -11,6 +11,8 @@ export const copy = defineCopy('items', {
   core: 'Core view',
   full: 'Full view',
   export: 'Export as CSV',
+  features: 'Features',
+  featuresNew: 'Features, new ones',
   shortcuts: 'Shortcuts',
   install: 'Install app',
   installHint: 'Tap Share, then Add to Home Screen',
