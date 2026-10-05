@@ -1,0 +1,1 @@
+function e(e){if(e.length<2)return``;let t=Math.max(...e,1);return e.map((n,r)=>`${(1.5+r/(e.length-1)*53).toFixed(1)},${(16.5-n/t*15).toFixed(1)}`).join(` `)}export{e as t};
