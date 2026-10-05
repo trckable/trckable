@@ -407,13 +407,10 @@
     padding: 14px 12px 10px;
   }
 }
-/* A phone keeps Story | Explore in the period's row: one pill that looks like
-   Live | Data, the two pictures only (the names stay for screen readers). */
-@media (max-width: 640px) {
-  .sv-slot {
-    margin-right: 0;
-    flex: none;
-  }
+/* Below 1000 px (and on a phone, in the period's row) Story | Explore is one
+   pill that looks like Live | Data, the two pictures only (the names stay for
+   screen readers): the row has no room for the words until then. */
+@media (max-width: 1000px) {
   .sv-slot .sv-switch {
     gap: 0;
     padding: 0;
@@ -448,6 +445,12 @@
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
+  }
+}
+@media (max-width: 640px) {
+  .sv-slot {
+    margin-right: 0;
+    flex: none;
   }
   .phone-row:has(.sv-switch) {
     gap: 6px;
