@@ -32,6 +32,7 @@ const chips = () => [...host.querySelectorAll('.chip:not(.more)')].map((c) => [.
 const button = (name: RegExp) => [...host.querySelectorAll('button')].find((b) => name.test(b.getAttribute('aria-label') ?? b.textContent ?? ''))
 
 beforeEach(() => {
+  vi.restoreAllMocks()
   Object.values(calls).forEach((c) => c.mockClear())
   window.matchMedia = ((q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} })) as never
   host = document.createElement('div')
@@ -62,21 +63,26 @@ describe('the filter chips', () => {
     act(() => button(/^Remove filter Channel is Direct$/)?.click())
     expect(calls.remove).toHaveBeenCalledWith({ dim: 'channel', op: 'is', values: ['Direct'] })
   })
-  it('offer Save as segment? from two filters on, and Save view for one', () => {
+  it('offer Save view as an icon, for one filter or several', () => {
     draw([{ dim: 'channel', value: 'Direct' }])
-    expect(button(/^Save view$/)).toBeTruthy()
-    expect(button(/Save as segment\?/)).toBeFalsy()
-    draw([{ dim: 'channel', value: 'Direct' }, { dim: 'country', value: 'DE' }])
-    act(() => button(/Save as segment\?/)?.click())
+    act(() => button(/^Save view$/)?.click())
     expect(calls.save).toHaveBeenCalledOnce()
-    // Two values of one dimension are two filters, too.
     draw([{ dim: 'country', value: 'DE' }, { dim: 'country', value: 'AT' }])
-    expect(button(/Save as segment\?/)).toBeTruthy()
+    expect(button(/^Save view$/)).toBeTruthy()
   })
-  it('keep the offer, as an icon after +N more, past two chips', () => {
+  it('fold the chips that do not fit into +N more, and list them all there', () => {
+    // A row 300 px wide, each chip 120 px: one chip and the +N chip fit.
+    const row = { clientWidth: 300 }
+    const sizes = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (this: HTMLElement) {
+      if (this.matches('[data-chip]')) return 120
+      return this.matches('.chip.more.icon') ? 36 : 84
+    })
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => row.clientWidth)
     draw([{ dim: 'channel', value: 'Direct' }, { dim: 'country', value: 'DE' }, { dim: 'device', value: 'Mobile' }])
-    expect(button(/^\+1 more$/)).toBeTruthy()
-    act(() => button(/Save as segment\?/)?.click())
-    expect(calls.save).toHaveBeenCalledOnce()
+    expect(chips()).toHaveLength(1)
+    expect(button(/^\+2 more$/)).toBeTruthy()
+    act(() => button(/^\+2 more$/)?.click())
+    expect(host.querySelectorAll('.menu-row')).toHaveLength(3)
+    sizes.mockRestore()
   })
 })

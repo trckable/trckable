@@ -11,6 +11,7 @@ section into the release.
 
 ### Changed
 
+- The Data header's controls are one row that never wraps: the Story/Explore switch, a small "← question" chip back to the story (replacing the green bar), the filters in force, then Save view and Views as icons, with the period and Share on the right; filters that do not fit fold into a "+N more" menu.
 - The Story view's header for a new site is tidier: the note under the headline is one short sentence, and the two first steps (tracker installed, count a sign-up or a sale) sit side by side as small chips, the finished one dimmed.
 - The switcher's online count and the All sites "Online now" tile are now one number: both read the same value, which is read again every 15 seconds while either is on screen, so they agree and stay current without a refresh.
 - The pop-ups in the header (the avatar menu and the other dropdowns) sit one step lighter than the page, with a clearer edge and a softer, deeper shadow, so they stand out from the near-black page; the avatar menu's items are fetched as soon as a pointer, focus or touch reaches the avatar, so it opens without a wait.

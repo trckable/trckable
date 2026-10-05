@@ -1,11 +1,9 @@
-// The bar over Explore when it was opened from the story (its own chunk), and
+// The way back over Explore when it was opened from the story (its own chunk), and
 // the questions' names the story view shares.
 import { defineCopy } from '../../i18n'
 
 export const bar = defineCopy('storyview.bar', {
-  fromStory: 'From your story',
   back: 'Back to the story',
-  clear: 'Clear filters',
   to: 'to',
   fromMoment: 'A moment',
   q: {

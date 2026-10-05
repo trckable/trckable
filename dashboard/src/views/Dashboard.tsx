@@ -521,7 +521,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         <div className="banner">{unconvertedNote(money)}</div>
       )}
 
-      <StorySlot view={view} site={site} query={query} data={real} range={range} ready={hasData && !showInstall} waiting={waiting} filterLabel={filterLabel} money={money ? fmtM : undefined} narrow={narrow} onGoal={() => setAddGoals(true)} onClear={clearFilters}>
+      <StorySlot view={view} site={site} query={query} data={real} range={range} ready={hasData && !showInstall} waiting={waiting} money={money ? fmtM : undefined} narrow={narrow} onGoal={() => setAddGoals(true)}>
       {/* One section for the period at a glance: the key numbers across the
           top, the chart under them — they are one story, not two cards. */}
       <section className="card overview" aria-label="Overview">

@@ -389,11 +389,10 @@ export default {
   'header.row.count': (n: number) => `${n} ${n === 1 ? 'filtro' : 'filtros'}`,
   'header.row.clear': 'Quitar todos',
   'header.row.saveOne': 'Guardar vista',
-  'header.row.saveOneTitle': 'Guardar estos filtros como vista',
-  'header.row.saveSegment': '¿Guardar como segmento?',
-  'header.row.saveSegmentTitle': 'Conserva estos filtros como segmento, para abrirlos con un clic',
   'header.row.saveInMenu': 'Guardar como segmento',
   'header.row.saveInMenuOne': 'Guardar esta vista',
+  'header.row.views': 'Vistas',
+  'header.row.viewsActive': (name: string) => `Vistas: ${name}`,
 
   // create
   'create.button': 'Crear',
@@ -1938,9 +1937,7 @@ export default {
   'featureList.modules.line': 'Activa piezas y mira lo que pesan',
   'featureList.health.name': 'Estado',
   'featureList.health.line': 'Cómo va este servidor',
-  'storyview.bar.fromStory': 'Desde tu historia',
   'storyview.bar.back': 'Volver a la historia',
-  'storyview.bar.clear': 'Quitar filtros',
   'storyview.bar.to': 'a',
   'storyview.bar.fromMoment': 'Un momento',
   'storyview.bar.q.did': '¿Funcionó?',

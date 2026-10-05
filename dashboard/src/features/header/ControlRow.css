@@ -139,21 +139,29 @@
   right: auto;
 }
 
-/* The filters in force, Save as segment and Views: one row under the
-   controls, packed at the start, every part the chips' height. */
+/* The way back to the story sits right after the switch; it takes no room of
+   its own while empty. */
+.sv-back {
+  display: contents;
+}
+
+/* A wide screen: the filters in force, Save view and Views on the left of the
+   row, packed at the start and never wrapping (what does not fit folds into
+   "+N", see ActiveFilters). The capsules keep the right. */
+.ctl-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 0;
+  min-width: 0;
+}
+/* Tablet and a shared link's header: the same parts in a row under the controls. */
 .ctl-under {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
-}
-.ctl-under .toolbar-filters {
-  flex: 0 1 auto;
-}
-.ctl-under .sv-btn {
-  height: 36px;
-  border-radius: 999px;
 }
 
 /* Folded: the first capsule's width runs to zero (a grid track from 1fr to
@@ -287,7 +295,7 @@
   cursor: pointer;
 }
 .phone-row .filter-root > .btn,
-.phone-row .sv-btn {
+.phone-row .views-btn {
   display: none;
 }
 .phone-pill b {

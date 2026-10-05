@@ -6,7 +6,6 @@ import { SavedViews } from '../../components/SavedViews'
 import type { Filter, Segment } from '../../lib/api'
 import { parseFilterParam, setsOf, type FilterSet } from '../../lib/filterSet'
 import { channelColor } from '../../lib/palette'
-import { rowCopy } from './rowCopy'
 import { setWords } from './setWords'
 
 export interface FilterRowProps {
@@ -50,11 +49,7 @@ export default function FilterRow(p: FilterRowProps) {
   }))
   return (
     <>
-      {!p.onlyViews && (
-        <div className="toolbar-filters" role={on ? 'group' : undefined} aria-label={on ? rowCopy.active : undefined}>
-          <ActiveFilters filters={shown} onRemove={p.onRemove} onFlip={p.onFlip} onClear={p.onClear} onSave={p.onSave} compound={p.filters.length > 1} />
-        </div>
-      )}
+      {!p.onlyViews && <ActiveFilters filters={shown} onRemove={p.onRemove} onFlip={p.onFlip} onClear={p.onClear} onSave={p.onSave} compound={p.filters.length > 1} />}
       {p.views && (
           <SavedViews
             views={p.views.list}

@@ -1,23 +1,24 @@
-// The filters in force, on the toolbar's left: one chip for each dimension
-// and op ("Country is DE or AT"), whose "is" turns into "is not" when pressed.
-// Two stay in sight as chips; the rest fold into "+N more", a dropdown that
-// lists every one with its own ×, and holds Clear all and Save. A row of five
-// chips and two buttons wrapped onto a second line and read as clutter.
-import { Bookmark, X } from 'lucide-react'
+// The filters in force, first on the control row's left: one chip for each
+// dimension and op ("Country is DE or AT"), whose "is" turns into "is not" when
+// pressed. The row is one line, so the chips that do not fit fold into "+N
+// more", a dropdown that lists every one with its own ×, and holds Clear all
+// and Save. After them comes Save view, as an icon.
+import { Bookmark, BookmarkPlus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { rowCopy as t } from '../features/header/rowCopy'
 import { usePhoneLock } from './lockScroll'
 import './ActiveFilters.css'
 import './MenuPop.css'
+import { useChipFit } from './useChipFit'
 import { truncateMiddle } from '../lib/visitor'
 
 /** One chip as a person reads it; `raw` is what goes back on remove and flip. */
 export type Shown<T> = { key: string; dim: string; op: string; not: boolean; value: string; dot?: string; raw: T }
 
-// Chips kept in sight: two on a wide screen; none on a phone, where even
-// two wrap onto a second row — there one pill says how many and opens the list.
+// A phone keeps none in sight: one pill says how many and opens the list. Any
+// wider screen counts what fits (useChipFit).
 const phoneQuery = '(max-width: 640px)'
-function useInSight() {
+function usePhone() {
   const [phone, setPhone] = useState(() => window.matchMedia(phoneQuery).matches)
   useEffect(() => {
     const m = window.matchMedia(phoneQuery)
@@ -25,7 +26,7 @@ function useInSight() {
     m.addEventListener('change', on)
     return () => m.removeEventListener('change', on)
   }, [])
-  return phone ? 0 : 2
+  return phone
 }
 
 interface Props<T> {
@@ -40,7 +41,8 @@ interface Props<T> {
 
 export function ActiveFilters<T>({ filters, onRemove, onFlip, onClear, onSave, compound }: Props<T>) {
   const [open, setOpen] = useState(false)
-  const IN_SIGHT = useInSight()
+  const phone = usePhone()
+  const { box, n: IN_SIGHT } = useChipFit(filters.map((f) => f.key + f.op + f.value).join('\u0000'), filters.length, phone)
   const root = useRef<HTMLDivElement>(null)
   usePhoneLock(open)
   useEffect(() => {
@@ -58,7 +60,7 @@ export function ActiveFilters<T>({ filters, onRemove, onFlip, onClear, onSave, c
   if (!filters.length) return null
 
   const chip = (f: Shown<T>) => (
-    <span key={f.key} className="chip">
+    <span key={f.key} className="chip" data-chip>
       {f.dot && <span className="dot" style={{ background: f.dot }} />}
       <span className="faint">
         {f.dim}{' '}
@@ -73,13 +75,12 @@ export function ActiveFilters<T>({ filters, onRemove, onFlip, onClear, onSave, c
     </span>
   )
   const rest = filters.length - IN_SIGHT
-  const saveChip = compound ? t.saveSegment : t.saveOne
   return (
     <>
-      {filters.slice(0, IN_SIGHT).map(chip)}
-      {rest > 0 ? (
-        <>
-        <div ref={root} style={{ position: 'relative' }}>
+      <div ref={box} className="toolbar-filters" role="group" aria-label={t.active}>
+        {filters.slice(0, IN_SIGHT).map(chip)}
+        {rest > 0 && (
+        <div ref={root} className="filters-more" data-more>
           <button type="button" className={'chip more' + (open ? ' on' : '')} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
             {IN_SIGHT ? t.more(rest) : t.count(filters.length)}
           </button>
@@ -122,19 +123,11 @@ export function ActiveFilters<T>({ filters, onRemove, onFlip, onClear, onSave, c
             </div>
           )}
         </div>
-        {/* Three or more: the same offer, as one small icon at the row's end. */}
-        {IN_SIGHT > 0 && compound && (
-          <button type="button" className="chip more icon" onClick={onSave} aria-label={t.saveSegment} title={t.saveSegmentTitle}>
-            <Bookmark size={14} strokeWidth={1.75} aria-hidden="true" />
-          </button>
         )}
-        </>
-      ) : (
-        <button type="button" className="chip more" onClick={onSave} title={compound ? t.saveSegmentTitle : t.saveOneTitle}>
-          <Bookmark size={13} strokeWidth={1.75} aria-hidden="true" />
-          {saveChip}
-        </button>
-      )}
+      </div>
+      <button type="button" className="chip more icon" onClick={onSave} aria-label={t.saveOne} title={t.saveOne}>
+        <BookmarkPlus size={16} strokeWidth={1.75} aria-hidden="true" />
+      </button>
     </>
   )
 }

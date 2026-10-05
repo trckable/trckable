@@ -1,24 +1,21 @@
-// Over Explore when it was opened from the story: where it came from and the
-// way back. What it is narrowed to is the filter row's chips, just above. It rides with the host chunk.
+// Over Explore when it was opened from the story: one small chip, first in the
+// control row's chips, that names the question it came from and leads back.
+// It rides with the host chunk and lands in the row's slot (ControlRow).
+import { useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 import { bar, fromTitle } from './barCopy'
 
-export default function FromStory({ from, onBack, onClear }: { from?: string; onBack: () => void; onClear?: () => void }) {
+const noop = () => () => {}
+
+export default function FromStory({ from, onBack }: { from?: string; onBack: () => void }) {
+  const slot = useSyncExternalStore(noop, () => document.getElementById('sv-back'), () => null)
   const title = fromTitle(from)
-  if (!title) return null
-  return (
-    <div className="sv-from" role="status">
-      <span>
-        {bar.fromStory}: <b>{title}</b>
-      </span>
-      <span className="sv-grow" />
-      <button type="button" className="sv-link" onClick={onBack}>
-        ← {bar.back}
-      </button>
-      {onClear && (
-        <button type="button" className="sv-link" onClick={onClear}>
-          {bar.clear}
-        </button>
-      )}
-    </div>
+  if (!title || !slot) return null
+  return createPortal(
+    <button type="button" className="chip from-story" title={bar.back} aria-label={`${bar.back}: ${title}`} onClick={onBack}>
+      <span aria-hidden="true">←</span>
+      <b>{title}</b>
+    </button>,
+    slot,
   )
 }

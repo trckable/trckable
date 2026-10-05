@@ -367,24 +367,26 @@
   font-size: 14px;
   opacity: 0.9;
 }
-.sv-from {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin: 0 0 14px;
-  padding: 10px 14px;
+/* Over Explore, opened from the story: the way back is the first chip in the
+   control row. */
+.chip.from-story {
+  gap: 6px;
+  padding: 0 12px;
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
   background: var(--accent-soft);
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-  border-radius: 12px;
-  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  flex: none;
 }
-.sv-from .sv-link {
-  align-self: center;
-  font-size: 14px;
+.chip.from-story:hover {
+  border-color: var(--accent);
 }
-.sv-grow {
-  flex: 1;
+.chip.from-story:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.chip.from-story b {
+  font-weight: 500;
 }
 @media (max-width: 900px) {
   .sv-tiles {

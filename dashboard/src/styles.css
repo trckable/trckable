@@ -1760,13 +1760,12 @@ ul.people button:hover {
   }
 }
 
-/* ---- The filters in force, under the control row ---------------------------- */
+/* ---- The filters in force, on the control row (one line) ---------------------------- */
 .toolbar-filters {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
 }
 /* ---- Header zones ----------------------------------------------------------
@@ -2215,20 +2214,18 @@ button.kpi-live:hover .label::after {
 /* Saved views: one dropdown in the toolbar, in the menu look above. The name
    opens a view; rename and delete sit at the row's end, and delete asks in the
    confirmation dialog. */
-.sv-btn {
-  gap: 7px;
-  max-width: 240px;
+.views-btn {
+  gap: 4px;
+  height: 36px;
+  padding: 0 9px;
+  border-radius: 999px;
+  flex: none;
 }
-.sv-btn.on {
+.views-btn.on {
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);
   background: var(--accent-soft);
 }
-.sv-btn-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.sv-btn .count {
+.views-btn .count {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;

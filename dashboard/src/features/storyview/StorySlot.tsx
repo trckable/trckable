@@ -11,7 +11,7 @@ import type { StoryHostProps } from './StoryHost'
 const StoryHost = lazy(() => import('./StoryHost')) // the story, its switch and the way back from Explore: only where Data has numbers
 
 /** What Dashboard hands over; the rest goes on to the host as it is. */
-export type StorySlotProps = Omit<StoryHostProps, 'on' | 'from' | 'data' | 'filters'> & {
+export type StorySlotProps = Omit<StoryHostProps, 'on' | 'from' | 'data'> & {
   view: ViewState
   data: Report | null
   /** Data has numbers to tell and is not on the install screen. */
@@ -27,7 +27,7 @@ export function StorySlot({ view, data, ready, waiting, children, ...rest }: Sto
     <div className={waiting ? 'sleep view-stage waiting' : 'sleep view-stage'} aria-hidden={waiting || undefined} inert={waiting}>
       {switchOn && data && (
         <Suspense fallback={null}>
-          <StoryHost {...rest} on={shown} from={view.story} data={data} filters={view.filters} />
+          <StoryHost {...rest} on={shown} from={view.story} data={data} />
         </Suspense>
       )}
       {!shown && children}

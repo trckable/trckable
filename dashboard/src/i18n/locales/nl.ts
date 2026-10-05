@@ -376,11 +376,10 @@ export default {
   'header.row.count': (n: number) => count(n, 'filter', 'filters'),
   'header.row.clear': 'Alles wissen',
   'header.row.saveOne': 'Weergave opslaan',
-  'header.row.saveOneTitle': 'Deze filters opslaan als weergave',
-  'header.row.saveSegment': 'Opslaan als segment?',
-  'header.row.saveSegmentTitle': 'Bewaar deze filters als segment, om met één klik te openen',
   'header.row.saveInMenu': 'Opslaan als segment',
   'header.row.saveInMenuOne': 'Deze weergave opslaan',
+  'header.row.views': 'Weergaven',
+  'header.row.viewsActive': (name: string) => `Weergaven: ${name}`,
 
   // create
   'create.button': 'Maken',
@@ -1932,9 +1931,7 @@ export default {
   'featureList.modules.line': 'Zet onderdelen aan, zie hun gewicht',
   'featureList.health.name': 'Gezondheid',
   'featureList.health.line': 'Hoe het met deze server gaat',
-  'storyview.bar.fromStory': 'Uit je verhaal',
   'storyview.bar.back': 'Terug naar het verhaal',
-  'storyview.bar.clear': 'Filters wissen',
   'storyview.bar.to': 'tot',
   'storyview.bar.fromMoment': 'Een moment',
   'storyview.bar.q.did': 'Werkte het?',
