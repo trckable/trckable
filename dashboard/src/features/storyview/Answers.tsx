@@ -1,11 +1,12 @@
-// "Your five questions, answered": a plain answer each and one button that
-// opens Explore with the matching filters, so the story's claim can be checked.
+// "Your five questions, answered": a card each, as on the landing page's
+// features: an icon and the question, the answer in a few words, and one link
+// that opens Explore with the matching filters, so the claim can be checked.
+import { ArrowRight, Coins, FileText, Scale, TrendingUp, Wrench, type LucideIcon } from 'lucide-react'
 import { setView } from '../../lib/url'
 import { copy } from './copy'
 import type { Answer } from './rules'
 
-/** Which button is set apart: the first answer's, and the fix. */
-const BUTTON: Partial<Record<Answer['key'], string>> = { did: 'main', fix: 'fix' }
+const ICON: Record<Answer['key'], LucideIcon> = { did: TrendingUp, page: FileText, fix: Wrench, pays: Coins, fine: Scale }
 
 export function Answers({ answers, onConnect, onGoal }: { answers: Answer[]; onConnect: () => void; onGoal?: () => void }) {
   const go = (a: Answer) => {
@@ -15,32 +16,41 @@ export function Answers({ answers, onConnect, onGoal }: { answers: Answer[]; onC
   return (
     <section className="sv-answers" aria-label={copy.questionsTitle}>
       <h2 className="sv-answers-title">{copy.questionsTitle}</h2>
-      {answers.map((a) => (
-        <div key={a.key} className={`sv-answer ${a.look}`}>
-          <div className="sv-q">{a.question}</div>
-          <div className="sv-a">
-            <b className="sv-a-line">{a.line}</b>
-            <span className="sv-a-sub">{a.sub}</span>
-          </div>
-          <div className="sv-act">
-            {a.act && (
-              <button type="button" className={`sv-btn ${BUTTON[a.key] ?? ''}`.trim()} onClick={() => go(a)}>
-                {a.act.label}
-              </button>
-            )}
-            {a.connect && onGoal && !a.act && (
-              <button type="button" className="sv-btn" onClick={onGoal}>
-                {copy.paysCount}
-              </button>
-            )}
-            {a.connect && (
-              <button type="button" className="sv-btn" onClick={onConnect}>
-                {copy.stripe}
-              </button>
-            )}
-          </div>
-        </div>
-      ))}
+      <div className="sv-cards">
+        {answers.map((a) => {
+          const Icon = ICON[a.key]
+          return (
+            <article key={a.key} className={`sv-answer ${a.key} ${a.look}`}>
+              <div className="sv-q">
+                <span className="sv-q-i" aria-hidden="true">
+                  <Icon size={15} strokeWidth={1.8} />
+                </span>
+                {a.question}
+              </div>
+              <b className="sv-a-line">{a.line}</b>
+              <span className="sv-a-sub">{a.sub}</span>
+              <div className="sv-act">
+                {a.act && (
+                  <button type="button" className="sv-link" onClick={() => go(a)}>
+                    {a.act.label}
+                    <ArrowRight size={14} aria-hidden="true" />
+                  </button>
+                )}
+                {a.connect && onGoal && !a.act && (
+                  <button type="button" className="sv-link" onClick={onGoal}>
+                    {copy.paysCount}
+                  </button>
+                )}
+                {a.connect && (
+                  <button type="button" className="sv-link" onClick={onConnect}>
+                    {copy.stripe}
+                  </button>
+                )}
+              </div>
+            </article>
+          )
+        })}
+      </div>
     </section>
   )
 }

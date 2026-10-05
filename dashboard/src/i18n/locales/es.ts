@@ -1963,6 +1963,7 @@ export default {
   'storyview.shorter': 'se quedan menos tiempo que antes',
   'storyview.quietNote': (name: string, pct: string) => `Nada te necesita. Tu fuente principal, ${name}, envió ${pct} de los visitantes.`,
   'storyview.newNote': 'En una semana más o menos, trckable conoce tu normal y empieza a decirte qué cambió.',
+  'storyslot.preparing': 'Preparando tus números…',
   'storyview.trackerOn': 'Rastreador instalado',
   'storyview.goalOn': 'Se cuenta un registro o una venta',
   'storyview.goalOff': 'Contar un registro o una venta',
