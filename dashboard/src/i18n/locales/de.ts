@@ -386,11 +386,10 @@ export default {
   'header.row.count': (n: number) => `${n} Filter`,
   'header.row.clear': 'Alle löschen',
   'header.row.saveOne': 'Ansicht speichern',
-  'header.row.saveOneTitle': 'Diese Filter als Ansicht speichern',
-  'header.row.saveSegment': 'Als Segment speichern?',
-  'header.row.saveSegmentTitle': 'Diese Filter als Segment behalten, um sie mit einem Klick zu öffnen',
   'header.row.saveInMenu': 'Als Segment speichern',
   'header.row.saveInMenuOne': 'Diese Ansicht speichern',
+  'header.row.views': 'Ansichten',
+  'header.row.viewsActive': (name: string) => `Ansichten: ${name}`,
 
   // create
   'create.button': 'Erstellen',
@@ -1935,9 +1934,7 @@ export default {
   'featureList.modules.line': 'Teile ein- und ausschalten, ihr Gewicht sehen',
   'featureList.health.name': 'Zustand',
   'featureList.health.line': 'Wie es diesem Server geht',
-  'storyview.bar.fromStory': 'Aus deiner Geschichte',
   'storyview.bar.back': 'Zurück zur Geschichte',
-  'storyview.bar.clear': 'Filter löschen',
   'storyview.bar.to': 'bis',
   'storyview.bar.fromMoment': 'Ein Moment',
   'storyview.bar.q.did': 'Hat es gewirkt?',

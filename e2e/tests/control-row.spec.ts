@@ -271,7 +271,7 @@ test('an active filter shows a count, and on a desktop its chip is on the left o
   const chips = page.locator('.subbar .ctl-inline [role=group]')
   await expect(chips).toBeVisible()
   await expect(page.locator('.ctl-under')).toHaveCount(0)
-  // Chips, then Save view, then Views, packed at the left; the capsules keep the right.
+  // Chips, then Save view, then Views, icons only and packed at the left; the capsules keep the right.
   const chip = (await chips.boundingBox())!
   const save = (await page.locator('.ctl-inline').getByRole('button', { name: 'Save view' }).boundingBox())!
   const views = (await page.locator('.ctl-inline').getByRole('button', { name: /^Views/ }).boundingBox())!
@@ -280,7 +280,28 @@ test('an active filter shows a count, and on a desktop its chip is on the left o
   expect(save.x, 'then Save view').toBeLessThan(views.x)
   expect(views.x + views.width, 'Views ends before the capsules').toBeLessThan(capsule.x)
   expect(views.x - (save.x + save.width), 'Views follows Save view closely').toBeLessThan(24)
+  expect(save.height, 'as tall as a chip').toBe(36)
+  expect(views.height, 'as tall as a chip').toBe(36)
   expect(Math.abs(chip.y + chip.height / 2 - (capsule.y + capsule.height / 2)), 'on the capsules\' line').toBeLessThan(6)
+})
+
+// Five filters on a 1280 screen: the header is still two rows, and what does not fit is "+N more".
+test('five filters at 1280 stay on one line and fold into +N more', async ({ page }) => {
+  const q = ['channel:Direct', 'device:Desktop', 'country:DE', 'browser:Chrome', 'os:macOS'].map((f) => 'f=' + f).join('&')
+  await open(page, 1280, '?' + q)
+  const row = page.locator('.subbar')
+  await expect(page.locator('.subbar .ctl-inline [role=group]')).toBeVisible()
+  const more = page.getByRole('button', { name: /^\+\d+ more$/ })
+  await expect(more).toBeVisible()
+  const box = (await row.boundingBox())!
+  expect(box.height, 'one line').toBeLessThanOrEqual(48)
+  const capsule = (await page.locator('.ctl-see').boundingBox())!
+  const views = page.locator('.ctl-inline').getByRole('button', { name: 'Save view' })
+  const save = (await views.boundingBox())!
+  expect(save.x + save.width, 'nothing runs under the capsules').toBeLessThan(capsule.x)
+  expect(Math.abs(save.y + save.height / 2 - (capsule.y + capsule.height / 2)), 'on the capsules\' line').toBeLessThan(6)
+  await more.click()
+  await expect(page.getByRole('menu').locator('.menu-row')).toHaveCount(5)
 })
 
 test('a tablet keeps the chips in their own row under the capsules', async ({ page }) => {
