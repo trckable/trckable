@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Site } from '../../lib/api'
+import { feedOnline } from '../../lib/allOnline'
+import type { Site, SiteRow } from '../../lib/api'
 import { AllStrip } from './AllStrip'
 import { SiteItem } from './SiteItem'
 
@@ -103,7 +104,8 @@ describe('the All sites chip', () => {
     const bare = renderToStaticMarkup(<AllStrip on={false} numbers={null} onPick={noop} />)
     expect(bare).toContain('All sites')
     expect(bare).not.toContain('strip-sum')
-    const by = new Map([['a', { visitors: 12, online: 2 }], ['b', { visitors: 30, online: 1 }]])
+    feedOnline([{ id: 'a', online: 2 }, { id: 'b', online: 1 }] as SiteRow[])
+    const by = new Map([['a', { visitors: 12 }], ['b', { visitors: 30 }]])
     const full = renderToStaticMarkup(<AllStrip on={false} numbers={by} onPick={noop} />)
     expect(full).toContain('strip-sum')
     expect(full).toContain('>3<')
