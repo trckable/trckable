@@ -637,7 +637,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </Suspense>
       )}
 
-      {hasData && <Suspense fallback={<div aria-hidden="true" style={{ minHeight: 420 }} />}><Cards c={cardsCtx} /></Suspense>}
+      {hasData && <Suspense fallback={<div aria-hidden="true" style={{ minHeight: 325 }} />}><Cards c={cardsCtx} /></Suspense>}
       </StorySlot>
       {cur?.approximate && <Notice kind="approx" />}
       </>}
