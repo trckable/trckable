@@ -11,6 +11,7 @@ section into the release.
 
 ### Changed
 
+- The Data header's controls are one row that never wraps: the Story/Explore switch, a small "← question" chip back to the story (replacing the green bar), the filters in force, then Save view and Views as icons, with the period and Share on the right; filters that do not fit fold into a "+N more" menu.
 - The Story view's five answers are cards, as on the landing page: an icon and the question, the answer in bold, a short faint line under it and a plain link instead of a heavy button. Clicking a link or switching between Story and Explore dims the page under the loading ghost ("Preparing your numbers…") until the new numbers are in, then the view fades back in, instead of jumping.
 - The Story view's header for a new site is tidier: the note under the headline is one short sentence, and the two first steps (tracker installed, count a sign-up or a sale) sit side by side as small chips, the finished one dimmed.
 - The switcher's online count and the All sites "Online now" tile are now one number: both read the same value, which is read again every 15 seconds while either is on screen, so they agree and stay current without a refresh.

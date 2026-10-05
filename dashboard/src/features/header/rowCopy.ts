@@ -16,9 +16,8 @@ export const rowCopy = defineCopy('header.row', {
   count: (n: number) => `${n} filter${n === 1 ? '' : 's'}`,
   clear: 'Clear all',
   saveOne: 'Save view',
-  saveOneTitle: 'Save these filters as a view',
-  saveSegment: 'Save as segment?',
-  saveSegmentTitle: 'Keep these filters as a segment, to open in one click',
   saveInMenu: 'Save as segment',
   saveInMenuOne: 'Save this view',
+  views: 'Views',
+  viewsActive: (name: string) => `Views: ${name}`,
 })

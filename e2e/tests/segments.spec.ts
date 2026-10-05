@@ -55,13 +55,12 @@ test('is not, any of and a saved segment say the same thing everywhere', async (
   await expect(page.getByRole('button', { name: 'Entry page is not: change to is' })).toBeVisible()
   await expect.poll(() => visitors(page)).toBe(all - pricing)
 
-  // A second filter: the offer to keep them.
-  await expect(page.getByRole('button', { name: 'Save as segment?' })).toHaveCount(0)
+  // A second filter: keep them with the bookmark icon.
   await pick(page, 'Channel', /^Direct/)
   await expect(chip(page)).toHaveCount(2)
-  await page.getByRole('button', { name: 'Save as segment?' }).click()
+  await page.locator('.toolbar-filters + button').click()
   await page.getByLabel('Name').fill('Not pricing, direct')
-  await page.getByRole('button', { name: 'Save view' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Save view' }).click()
   await expect(page.getByRole('button', { name: /^Not pricing, direct/ })).toBeVisible()
 
   // The API takes the same words: the filter in the address, and the segment by its id.

@@ -139,20 +139,42 @@
   right: auto;
 }
 
-/* On a wide screen they sit on the left of the date row instead, packed at
-   the start: the chips, Save view, then Views. The capsules keep the right. */
+/* The way back to the story sits right after the switch; it takes no room of
+   its own while empty. */
+.sv-back {
+  display: contents;
+}
+
+/* A wide screen: the filters in force, Save view and Views on the left of the
+   row, packed at the start and never wrapping (what does not fit folds into
+   "+N", see ActiveFilters). The capsules keep the right. */
 .ctl-inline {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 8px;
   flex: 1 1 0;
   min-width: 0;
 }
+/* The one chip always in sight shortens its value rather than leave the row. */
 .ctl-inline .toolbar-filters {
-  flex: 0 1 auto;
+  min-width: 0;
 }
-/* Tablet, phone and a shared link's header: the chips stay under the row. */
+.ctl-inline .chip {
+  overflow: hidden;
+  min-width: 0;
+  flex-shrink: 1;
+}
+.ctl-inline .chip > .faint {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ctl-inline .chip b {
+  flex-shrink: 0;
+}
+/* Tablet and a shared link's header: the same parts in a row under the controls. */
 .ctl-under {
   display: flex;
   align-items: center;
@@ -292,7 +314,7 @@
   cursor: pointer;
 }
 .phone-row .filter-root > .btn,
-.phone-row .sv-btn {
+.phone-row .views-btn {
   display: none;
 }
 .phone-pill b {

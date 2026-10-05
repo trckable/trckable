@@ -44,7 +44,15 @@
   color: var(--text);
 }
 
-/* The save offer beside "+N more": the bookmark alone. */
+/* The chips share one line: none shrinks or wraps (useChipFit folds the rest). */
+.toolbar-filters > * {
+  flex: none;
+}
+.filters-more {
+  position: relative;
+}
+
+/* Save view: the bookmark alone, as tall as the chips. */
 .chip.more.icon {
   padding: 0;
   width: 36px;

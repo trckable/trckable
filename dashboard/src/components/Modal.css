@@ -230,7 +230,7 @@
     font-size: var(--ph-text-2);
   }
 
-  :root :is(.kbd, .tag, .info-dot, .note-count, .filter-count, .menu-sub, .sv-btn .count) {
+  :root :is(.kbd, .tag, .info-dot, .note-count, .filter-count, .menu-sub, .views-btn .count) {
     font-size: 12px;
   }
   /* The (i) on a card: a 44 px box round a 22 px ring. */

@@ -377,11 +377,10 @@ export default {
   'header.row.count': (n: number) => count(n, 'filtre', 'filtres'),
   'header.row.clear': 'Tout effacer',
   'header.row.saveOne': 'Enregistrer la vue',
-  'header.row.saveOneTitle': 'Enregistrer ces filtres comme vue',
-  'header.row.saveSegment': 'Enregistrer comme segment ?',
-  'header.row.saveSegmentTitle': 'Garder ces filtres comme segment, à ouvrir en un clic',
   'header.row.saveInMenu': 'Enregistrer comme segment',
   'header.row.saveInMenuOne': 'Enregistrer cette vue',
+  'header.row.views': 'Vues',
+  'header.row.viewsActive': (name: string) => `Vues: ${name}`,
 
   // create
   'create.button': 'Créer',
@@ -1933,9 +1932,7 @@ export default {
   'featureList.modules.line': 'Activez des briques, voyez leur poids',
   'featureList.health.name': 'État',
   'featureList.health.line': 'Comment va ce serveur',
-  'storyview.bar.fromStory': 'Depuis votre histoire',
   'storyview.bar.back': "Retour à l'histoire",
-  'storyview.bar.clear': 'Effacer les filtres',
   'storyview.bar.to': 'au',
   'storyview.bar.fromMoment': 'Un moment',
   'storyview.bar.q.did': 'Ça a marché ?',

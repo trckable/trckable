@@ -5,6 +5,7 @@
 import { Bookmark, ChevronDown } from 'lucide-react'
 import { lazy, Suspense, useRef } from 'react'
 import { closer, savedViews, toggler } from './panelOpen'
+import { rowCopy as t } from '../features/header/rowCopy'
 import type PopType from './SavedViewsPop'
 
 export type View = { id: string; name: string; query: string }
@@ -38,13 +39,14 @@ export function SavedViews<V extends View>(p: {
       <button
         ref={btn}
         type="button"
-        className={'btn sv-btn' + (active ? ' on' : '')}
+        className={'btn views-btn' + (active ? ' on' : '')}
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-label={active ? t.viewsActive(active.name) : t.views}
+        title={active ? t.viewsActive(active.name) : t.views}
         onClick={toggler(setOpen, open)}
       >
         <Bookmark size={16} strokeWidth={1.75} aria-hidden="true" />
-        <span className="sv-btn-name">{active ? active.name : 'Views'}</span>
         {!active && p.views.length > 0 && <span className="count">{p.views.length}</span>}
         <ChevronDown size={15} strokeWidth={1.75} aria-hidden="true" />
       </button>
