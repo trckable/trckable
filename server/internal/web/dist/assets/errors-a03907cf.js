@@ -1,0 +1,1 @@
+import{n as e}from"./errors-adc3077f.js";export{e as words};
