@@ -6,7 +6,8 @@ import { API } from '../playwright.config'
 
 export * from '@playwright/test'
 
-const NOT_DATA = /^\/(settings|login|setup|api|r|s|embed)(\/|$)|^\/_/
+// The site server (18301) and anything not on this machine are not the dashboard.
+const NOT_DATA = /^\/(settings|login|setup|api|r|s|embed|widget-embed)(\/|$)|^\/_|\.html$/
 
 function onExplore(address: string): string {
   let url: URL
@@ -15,7 +16,7 @@ function onExplore(address: string): string {
   } catch {
     return address
   }
-  if (url.origin !== API || NOT_DATA.test(url.pathname) || url.pathname.split('/').length > 2 || url.searchParams.has('v')) return address
+  if (!/^(127\.0\.0\.1|localhost)$/.test(url.hostname) || url.port === '18301' || NOT_DATA.test(url.pathname) || url.pathname.split('/').length > 2 || url.searchParams.has('v')) return address
   url.searchParams.set('v', 'explore')
   return url.toString()
 }
