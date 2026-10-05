@@ -131,13 +131,14 @@ export function siteState(s: Site): SiteState {
 
 /** Whether the dashboard shows the install card over sample numbers. A site
     that never had a visit (the sites list says so at once) shows it from the
-    first frame, so a refresh never flashes an empty dashboard first. A site
-    that had visits shows it only once the events check (`everTracked`, null
+    first frame, so a refresh never flashes an empty dashboard first; the events
+    check can still take it away (imported history has events but no last visit).
+    A site that had visits shows it only once the events check (`everTracked`, null
     while unknown or not asked) finds none, as before. Real numbers or a
     filter always win. */
 export function showsInstall(o: { site: Pick<Site, 'last_event_at'>; hasData: boolean; filtered: boolean; everTracked: boolean | null }): boolean {
   if (o.hasData || o.filtered) return false
-  if (!o.site.last_event_at) return true
+  if (!o.site.last_event_at) return o.everTracked !== true
   return o.everTracked === false
 }
 
