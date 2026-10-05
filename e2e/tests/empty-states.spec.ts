@@ -1,6 +1,6 @@
 // Where a person has to start something, an empty list says so kindly: the ghost,
 // one short line and one action. Goals, funnels, revenue, notes and alerts.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { mkdirSync } from 'node:fs'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'

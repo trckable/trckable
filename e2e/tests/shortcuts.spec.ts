@@ -2,7 +2,7 @@
 // Settings, / Filter, Shift S Share and R Replay. They are in the shortcuts list
 // (?) with the others, can be changed there with the same conflict check, do
 // nothing while a field has the keys or a dialog is open, and Shift S is not S.
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from './fixtures'
 import { mkdirSync } from 'node:fs'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'

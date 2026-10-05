@@ -2,7 +2,7 @@
 // ring where its mark should be (the stopped banner's class styled the dot),
 // and Settings → Install squeezed the "Not verified" card under the code panel
 // (the scrolling column shrank it).
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

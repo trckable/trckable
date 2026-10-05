@@ -8,7 +8,7 @@
 // networks (so nobody can point it inward), which a local test page is. That
 // check is covered against a local page in Go (TestCheckOnDemandFinds…);
 // here its answer is given at the browser, and everything else is real.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'

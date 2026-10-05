@@ -1,6 +1,6 @@
 // The account window keeps one size on every tab, and on a phone its tabs are
 // one row that does not scroll sideways.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { API, TOKEN } from '../playwright.config'
 import { session } from './session'
 

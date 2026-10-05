@@ -2,7 +2,7 @@
 // owner without a connected provider sees a dimmed Revenue tile in the second
 // place, as wide as the others, where the money numbers will stand. It opens
 // the card of providers, and is gone once the report carries money.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { mkdirSync } from 'node:fs'
 import { API } from '../playwright.config'
 import { session, withoutPayments } from './session'

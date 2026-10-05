@@ -2,7 +2,7 @@
 // searches, switches a module on for an owner, traps focus, closes on Escape,
 // and fills a phone's screen. A site of its own, so no other suite sees its
 // modules change. FEATURES_SHOTS=<dir> also saves the screenshots.
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

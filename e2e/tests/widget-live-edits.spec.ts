@@ -2,7 +2,7 @@
 // after that (theme, mode, corner, words) shows on the next visit, with
 // nothing pasted again: the browser keeps both files but asks the server on
 // every load. A site of its own, so no other suite's counts move.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 

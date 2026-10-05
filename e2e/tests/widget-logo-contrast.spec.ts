@@ -6,7 +6,7 @@
 // SHEET_OUT, default test-results/widget-logo-sheet.png, and the brand line on
 // white, black and mid-grey hosts to HOSTS_OUT, default
 // test-results/widget-brand-hosts.png).
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { API } from '../playwright.config'
