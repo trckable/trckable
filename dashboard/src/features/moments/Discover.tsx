@@ -11,6 +11,7 @@ import { more } from '../../lib/apiMore'
 import { setView } from '../../lib/url'
 import { guideCopy } from '../aisearch/copy'
 import { useAiSeen, type AiSeen } from '../aisearch/useAiSeen'
+import { useCrawlersOff } from '../aisearch/useCrawlersOff'
 import { openTab, rememberTab } from '../cards/TabCard'
 import { choose, canLeaveOut, stateOf } from '../exclude/ownVisits'
 import { openSettings } from '../../lib/settings'
@@ -25,6 +26,7 @@ import { wasUsed } from './store'
 const KIND: Record<CardId, { Icon: LucideIcon; tint: string }> = {
   exclude: { Icon: EyeOff, tint: 'var(--ch-2)' },
   ai: { Icon: Bot, tint: 'var(--ch-6)' },
+  crawlers: { Icon: Bot, tint: 'var(--ch-3)' },
   replay: { Icon: Play, tint: 'var(--ch-7)' },
   full: { Icon: Maximize2, tint: 'var(--accent)' },
   weekly: { Icon: Mail, tint: 'var(--ch-5)' },
@@ -55,7 +57,7 @@ export function Discover({ site, today, fresh, onAway }: { site: Site; today: st
   const [search, setSearch] = useState<boolean | null>(null)
   const [firstDay] = useState(() => trafficDay(site.id, today)) // before kept is read: it writes the day into it
   const [kept, setKept] = useState(() => keptOf(site.id))
-  const aiSeen = useAiSeen(site.id, !kept.done.includes('ai')) // asked no more once it has been put away
+  const aiSeen = useAiSeen(site.id, !kept.done.includes('ai') || !kept.done.includes('crawlers')) // asked no more once both AI cards are put away
   useEffect(() => {
     if (!fresh) return
     let live = true
@@ -67,10 +69,11 @@ export function Discover({ site, today, fresh, onAway }: { site: Site; today: st
       live = false
     }
   }, [site.id, fresh])
-  const ready = weekly.ready && (search !== null || !fresh) && aiSeen !== undefined
+  const crawlersOff = useCrawlersOff(site.id, aiSeen === 'visitor' && !kept.done.includes('crawlers'))
+  const ready = weekly.ready && (search !== null || !fresh) && aiSeen !== undefined && crawlersOff !== undefined
   const id = useMemo(
-    () => (ready ? pick({ replayed: wasUsed('replay'), fullOpened: wasUsed('full'), weekly: weekly.on || wasSeen('weekly', site.id), search: search === true, exclude: fresh && firstDay === today && canLeaveOut(site) && stateOf(site) !== 'excluded', ai: !!aiSeen, fresh }, kept, today) : null),
-    [ready, weekly.on, search, kept, today, site, firstDay, aiSeen, fresh],
+    () => (ready ? pick({ replayed: wasUsed('replay'), fullOpened: wasUsed('full'), weekly: weekly.on || wasSeen('weekly', site.id), search: search === true, exclude: fresh && firstDay === today && canLeaveOut(site) && stateOf(site) !== 'excluded', ai: !!aiSeen, crawlers: crawlersOff, fresh }, kept, today) : null),
+    [ready, weekly.on, search, kept, today, site, firstDay, aiSeen, crawlersOff, fresh],
   )
   // Today's pick is remembered, so a reload shows the same card and no other.
   useEffect(() => {
@@ -97,6 +100,10 @@ export function Discover({ site, today, fresh, onAway }: { site: Site; today: st
     ai: () => {
       away()
       openAiSearch(site)
+    },
+    crawlers: () => {
+      away()
+      void import('../aisearch/turnOnCrawlers').then((m) => m.default(site))
     },
     full: () => {
       away()

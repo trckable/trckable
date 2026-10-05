@@ -1,0 +1,173 @@
+/* The Features pop-up (FeaturesDialog.tsx): loads with its chunk. */
+.modal.feat-modal {
+  width: min(880px, calc(100vw - 32px));
+  height: min(760px, calc(100dvh - 64px));
+  padding: 0;
+  gap: 0;
+}
+.feat-top {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  gap: 12px;
+  padding: 20px 24px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--grid);
+}
+.feat-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.feat-head h2 {
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.feat-head .faint {
+  font-size: 12.5px;
+}
+.feat-head .modal-close {
+  margin-left: auto;
+}
+.feat-search {
+  position: relative;
+  display: block;
+  color: var(--text-3);
+}
+.feat-search svg {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.feat-search input {
+  height: 40px;
+  width: 100%;
+  padding: 0 14px 0 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border-2);
+  background: var(--bg);
+  color: var(--text);
+}
+.feat-none {
+  margin: 0;
+  padding: 32px 24px;
+  text-align: center;
+}
+.feat-group {
+  display: grid;
+  gap: 10px;
+  padding: 18px 24px 4px;
+}
+.feat-group:last-child {
+  padding-bottom: 24px;
+}
+.feat-group h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.feat-group ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.feat {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--sunken);
+  scroll-margin-top: 130px;
+}
+.feat-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+.feat-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.feat-text b {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.feat-text .faint {
+  font-size: 12px;
+  line-height: 1.35;
+}
+.feat-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.feat-end .btn {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12.5px;
+}
+
+@media (max-width: 760px) {
+  .feat-group ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* A phone: the whole screen, a finger-high close and rows. */
+@media (max-width: 640px) {
+  .modal-back:has(.feat-modal) {
+    padding: 0;
+  }
+  .modal.feat-modal {
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    border: 0;
+  }
+  .feat-top {
+    padding: max(14px, env(safe-area-inset-top)) 14px 12px;
+  }
+  .feat-head .modal-close {
+    width: 40px;
+    height: 40px;
+  }
+  .feat-search input {
+    height: 44px;
+    font-size: 16px;
+  }
+  .feat-group {
+    padding: 16px 14px 4px;
+  }
+  .feat-group:last-child {
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+  .feat {
+    grid-template-columns: 36px minmax(0, 1fr);
+    row-gap: 10px;
+  }
+  .feat-end {
+    grid-column: 2;
+    justify-content: space-between;
+  }
+  .feat-end .btn {
+    height: 36px;
+  }
+}

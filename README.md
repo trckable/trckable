@@ -238,6 +238,7 @@ Press `?` in the dashboard for the list; every key can be changed there and foll
 |---|---|
 | `?` | The shortcuts list |
 | `⌘K` / `Ctrl K` | Peek, your own AI |
+| `E` | Features: every feature in one pop-up |
 | `F` | Core ↔ Full |
 | `L` | Live ↔ Data |
 | `A` | Create a goal, funnel or note |
