@@ -1,7 +1,7 @@
 // The suite's `test`. Data opens on Story; almost every suite is about the
 // numbers on Explore, so a dashboard address opened without a view goes to
 // Explore. A suite about Story asks for ?v=story.
-import { test as base } from '@playwright/test'
+import { test as base, type BrowserContext, type Page } from '@playwright/test'
 import { API } from '../playwright.config'
 
 export * from '@playwright/test'
@@ -20,10 +20,26 @@ function onExplore(address: string): string {
   return url.toString()
 }
 
+function onPage(page: Page): Page {
+  const goto = page.goto.bind(page)
+  page.goto = (url, options) => goto(onExplore(url), options)
+  return page
+}
+
+function onContext<T extends BrowserContext>(context: T): T {
+  const newPage = context.newPage.bind(context)
+  context.newPage = async () => onPage(await newPage())
+  return context
+}
+
+// Every page the suite opens, the built-in `page` and the ones a test makes
+// from its own context, goes through here.
 export const test = base.extend({
-  page: async ({ page }, use) => {
-    const goto = page.goto.bind(page)
-    page.goto = (url, options) => goto(onExplore(url), options)
-    await use(page)
+  browser: async ({ browser }, use) => {
+    const newContext = browser.newContext.bind(browser)
+    browser.newContext = async (options) => onContext(await newContext(options))
+    const newPage = browser.newPage.bind(browser)
+    browser.newPage = async (options) => onPage(await newPage(options))
+    await use(browser)
   },
 })

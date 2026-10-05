@@ -423,7 +423,8 @@
   }
   .sv-slot .sv-switch button {
     justify-content: center;
-    width: 40px;
+    flex: none;
+    width: 44px;
     height: 44px;
     padding: 0;
     border: 0;
@@ -475,10 +476,5 @@
   }
   .phone-row:has(.sv-switch) .phone-pill b {
     font-size: 14px;
-  }
-}
-@media (max-width: 400px) {
-  .sv-slot .sv-switch button {
-    width: 36px;
   }
 }

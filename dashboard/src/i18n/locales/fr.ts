@@ -2046,5 +2046,5 @@ export default {
   'storyview.loading': 'Lecture de vos chiffres',
   'storyview.switch.story': 'Histoire',
   'storyview.switch.explore': 'Explore',
-  'storyview.switch.label': 'Vue des données',
+  'storyview.switch.label': 'Story ou Explore',
 } satisfies Messages

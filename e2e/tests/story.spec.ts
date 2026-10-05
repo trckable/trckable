@@ -9,11 +9,11 @@ test('Data opens on Story, switches to Explore and back', async ({ page, context
   await expect(page.locator('.sv-line')).toBeVisible()
   await expect(page.locator('.sv-tile')).toHaveCount(4)
 
-  await page.locator('[aria-label="Data view"] button', { hasText: 'Explore' }).click()
+  await page.locator('[aria-label="Story or Explore"] button', { hasText: 'Explore' }).click()
   await expect(page).toHaveURL(/v=explore/)
   await expect(page.locator('.sv-line')).toHaveCount(0)
 
-  await page.locator('[aria-label="Data view"] button', { hasText: 'Story' }).click()
+  await page.locator('[aria-label="Story or Explore"] button', { hasText: 'Story' }).click()
   await expect(page).toHaveURL(/v=story/)
   await expect(page.locator('.sv-tile')).toHaveCount(4)
 })

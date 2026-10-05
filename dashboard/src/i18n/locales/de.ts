@@ -2048,5 +2048,5 @@ export default {
   'storyview.loading': 'Deine Zahlen werden gelesen',
   'storyview.switch.story': 'Geschichte',
   'storyview.switch.explore': 'Explore',
-  'storyview.switch.label': 'Datenansicht',
+  'storyview.switch.label': 'Story oder Explore',
 } satisfies Messages

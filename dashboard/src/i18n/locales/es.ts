@@ -2051,5 +2051,5 @@ export default {
   'storyview.loading': 'Leyendo tus cifras',
   'storyview.switch.story': 'Historia',
   'storyview.switch.explore': 'Explore',
-  'storyview.switch.label': 'Vista de datos',
+  'storyview.switch.label': 'Story o Explore',
 } satisfies Messages

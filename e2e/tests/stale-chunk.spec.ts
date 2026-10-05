@@ -8,7 +8,7 @@ import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
 
 const FLAG = 'trckable:reloaded'
-const ADDRESS = `${API}/${HISTORY_DOMAIN}?period=7d&metric=pageviews&view=data`
+const ADDRESS = `${API}/${HISTORY_DOMAIN}?period=7d&metric=pageviews&view=data&v=explore`
 
 let cookie = ''
 test.beforeAll(async () => {

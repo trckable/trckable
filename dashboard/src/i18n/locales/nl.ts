@@ -2045,5 +2045,5 @@ export default {
   'storyview.loading': 'Je cijfers worden gelezen',
   'storyview.switch.story': 'Verhaal',
   'storyview.switch.explore': 'Explore',
-  'storyview.switch.label': 'Gegevensweergave',
+  'storyview.switch.label': 'Story of Explore',
 } satisfies Messages
