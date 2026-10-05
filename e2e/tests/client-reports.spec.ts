@@ -37,7 +37,7 @@ test('add, change, switch off and delete a client report', async ({ page, browse
   const card = page.getByRole('region', { name: 'Client reports' })
   await expect(card).toBeVisible({ timeout: 15_000 })
   await expect(card.getByText('No reports yet')).toBeVisible()
-  // Without a mail server the card says so, with a link and no setting names, and Send now waits.
+  // Without a mail server the card says so, with a link and no setting names, and Send me a copy waits.
   if (!MAILED) {
     await expect(card.getByText('Reports need email on this server')).toBeVisible()
     await expect(card.getByRole('link', { name: 'How to set it up' })).toHaveAttribute('href', /docs/)
@@ -68,7 +68,7 @@ test('add, change, switch off and delete a client report', async ({ page, browse
   await expect(row).toHaveCount(1)
   await expect(row).toContainText('Acme GmbH')
   await expect(row).toContainText('Monthly · Deutsch · PDF · 2 addresses')
-  if (!MAILED) await expect(row.getByRole('button', { name: /Send now/ })).toBeDisabled()
+  if (!MAILED) await expect(row.getByRole('button', { name: /Send me a copy/ })).toBeDisabled()
   if (SHOTS) await card.screenshot({ path: `${SHOTS}/client-reports-list-${SCHEME}-${WIDTH || 'desktop'}${MAILED ? '-mail' : ''}.png` })
 
   const got = async () => ((await (await page.request.get(`${API}/api/v1/sites/${site}/report-schedules`)).json()) as { schedules: { cadence: string; lang: string; enabled: boolean; recipients: string[]; pdf: boolean }[] }).schedules

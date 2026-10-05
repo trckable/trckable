@@ -1639,7 +1639,7 @@ export default {
   'reports.turnedOff': (name: string) => `${name}: uit`,
   'reports.edit': 'Bewerken',
   'reports.remove': 'Verwijderen',
-  'reports.test': 'Nu versturen',
+  'reports.test': 'Stuur mij een kopie',
   'reports.testSent': (to: string) => `Verstuurd naar ${to}`,
   'reports.name': 'Voor',
   'reports.namePlaceholder': 'Klant of team',

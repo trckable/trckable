@@ -1640,7 +1640,7 @@ export default {
   'reports.turnedOff': (name: string) => `${name} : désactivé`,
   'reports.edit': 'Modifier',
   'reports.remove': 'Supprimer',
-  'reports.test': 'Envoyer maintenant',
+  'reports.test': 'M’envoyer une copie',
   'reports.testSent': (to: string) => `Envoyé à ${to}`,
   'reports.name': 'Pour',
   'reports.namePlaceholder': 'Client ou équipe',

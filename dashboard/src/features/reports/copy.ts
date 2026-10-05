@@ -24,7 +24,7 @@ export const copy = defineCopy('reports', {
   turnedOff: (name: string) => `${name}: off`,
   edit: 'Edit',
   remove: 'Delete',
-  test: 'Send now',
+  test: 'Send me a copy',
   testSent: (to: string) => `Sent to ${to}`,
   name: 'For',
   namePlaceholder: 'Client or team',
