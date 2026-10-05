@@ -119,6 +119,19 @@ describe('the side card', () => {
     vi.useRealTimers()
   })
 
+  it('cut off while it springs out (a dialog it opened takes the screen), it is still closed, once', () => {
+    reduced = false
+    vi.useFakeTimers()
+    const close = vi.fn()
+    draw(card('a', close))
+    act(() => (document.body.querySelector('button[aria-label="Close"]') as HTMLButtonElement).click())
+    draw(null)
+    expect(close).toHaveBeenCalledTimes(1)
+    act(() => void vi.advanceTimersByTime(250))
+    expect(close).toHaveBeenCalledTimes(1)
+    vi.useRealTimers()
+  })
+
   describe('what it is, and a deck of several', () => {
     const rich = (o: Partial<SideCardProps> = {}) => (
       <SideCard

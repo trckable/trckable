@@ -1,0 +1,1 @@
+import{ii as e}from"./core-e1c0de50.js";var t=e(`access`,{all:`All sites`,none:`No sites`,menuItem:`Allowed sites`,editFor:e=>`Allowed sites for ${e}`,allToggle:`All sites`,sitesLabel:`Sites they may see`,cancel:`Cancel`,save:`Save`,saving:`Saving…`,saved:e=>`Allowed sites for ${e} saved`});export{t};

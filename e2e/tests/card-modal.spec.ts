@@ -1,5 +1,5 @@
 // The side cards' dialogs: a card's one button opens a dialog that tells the moment in detail, and
-// closing it (its Close, or Escape) leaves focus on the card's button. What the server finds is
+// closing it (its Close, or Escape) puts the side card away with it, for the day. What the server finds is
 // given by the browser here (its rules are tested in Go); the card, the dialog and its focus are real.
 //   CARD_MODAL_SHOTS=/some/folder  also takes the pictures for review.
 import { expect, test, type Page } from '@playwright/test'
@@ -73,7 +73,7 @@ async function shoot(page: Page, name: string) {
   }
 }
 
-test('the AI & Search card opens its dialog and closes it: Close and Escape both give the focus back to the card', async ({ page }) => {
+test('the AI & Search card opens its dialog; closing it (Close or Escape) puts the side card away too', async ({ page }) => {
   await given(page, true)
   await open(page)
   const card = page.getByRole('complementary', { name: 'AI & Search' })
@@ -91,13 +91,20 @@ test('the AI & Search card opens its dialog and closes it: Close and Escape both
   await shoot(page, 'ai-search-modal')
   await dialog.getByRole('button', { name: 'Close' }).first().click()
   await expect(dialog).toHaveCount(0)
-  await expect(details).toBeFocused()
-  await expect(card).toBeVisible()
-  await details.click()
+  await expect(card).toHaveCount(0)
+})
+
+test('Escape closes the AI & Search dialog and the side card with it', async ({ page }) => {
+  await given(page, true)
+  await open(page)
+  const card = page.getByRole('complementary', { name: 'AI & Search' })
+  await expect(card).toBeVisible({ timeout: 20_000 })
+  await card.getByRole('button', { name: 'Details' }).click()
+  const dialog = page.getByRole('dialog', { name: 'AI & Search' })
   await expect(dialog).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(dialog).toHaveCount(0)
-  await expect(details).toBeFocused()
+  await expect(card).toHaveCount(0)
 })
 
 test('on a phone the dialog is a sheet that fills the screen', async ({ page }) => {

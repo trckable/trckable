@@ -122,7 +122,11 @@ export function Discover({ site, today, fresh, series, onAway }: { site: Site; t
   }
   const modal = () => {
     if (!open) return null
-    const shut = () => setOpen(false)
+    // Seen is done: closing the card puts the side card away with it, so it does not stay behind.
+    const shut = () => {
+      setOpen(false)
+      away()
+    }
     if (id === 'ai') return <AiModal site={site} seen={aiSeen ?? 'visitor'} onClose={shut} onGo={go.ai} />
     return <DiscoverModal id={id} Icon={Icon} tint={KIND[id].tint} text={t} tz={site.timezone} series={series} busy={id === 'weekly' && weekly.busy} onClose={shut} onGo={go[id]} />
   }
