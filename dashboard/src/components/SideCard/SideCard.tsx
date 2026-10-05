@@ -69,14 +69,25 @@ export function SideCard({ id, label, closeLabel, asked, title, onClose, actions
   // Leaving: the exit animation runs, then what was asked for happens.
   const [leaving, setLeaving] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  useEffect(() => () => clearTimeout(timer.current), [])
+  // What a leave still owes: a card cut off mid-animation (a dialog its button opened takes the
+  // screen) still closes, or it would come back once the dialog is gone.
+  const owed = useRef<(() => void) | null>(null)
+  useEffect(
+    () => () => {
+      clearTimeout(timer.current)
+      owed.current?.()
+    },
+    [],
+  )
   const leave = (then: () => void) => {
     if (reducedMotion() || leaving) {
       then()
       return
     }
     setLeaving(true)
+    owed.current = then
     timer.current = setTimeout(() => {
+      owed.current = null
       setLeaving(false)
       then()
     }, LEAVE_MS)
