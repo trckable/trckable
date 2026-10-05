@@ -54,15 +54,6 @@ export const copy = defineCopy('moments', {
     full: { label: 'Full mode', title: 'See everything', body: 'Every card, not only the basics.', go: 'Open Full' },
     search: { label: 'Search Console', title: 'See what people search for', body: 'Google’s numbers, beside yours.', go: 'Connect' },
   },
-  // The dialog behind a guide card: one line on what it is.
-  modal: {
-    chart: 'The days around it',
-    exclude: 'Your own clicks count as visitors. Leave this browser out and every number is someone else.',
-    replay: 'Replay plays the period back as a short story, day by day.',
-    full: 'Full shows every card: pages, sources, countries, devices, goals and more.',
-    weekly: 'One short email a week with your numbers. Turn it off any time.',
-    search: 'Connect Google Search Console to see what people search for, beside your own numbers.',
-  },
   // The card on opening.
   today: {
     label: 'One thing today',

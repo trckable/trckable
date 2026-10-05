@@ -1809,6 +1809,7 @@ export default {
   'moments.modal.full': 'Full toont elke kaart: pagina’s, bronnen, landen, apparaten, doelen en meer.',
   'moments.modal.weekly': 'Eén korte e-mail per week met je cijfers. Altijd uit te zetten.',
   'moments.modal.search': 'Koppel Google Search Console om te zien waarop mensen zoeken, naast je eigen cijfers.',
+  'moments.modal.crawlers': 'Zet de AI-crawlergegevens aan om te zien welke AI-robots je site lezen.',
   'heatmap.card.views': 'weergaven vandaag',
   'heatmap.card.byHour': 'Weergaven van deze pagina per uur',
   'signals.card.latest': 'Je laatste verkoop',

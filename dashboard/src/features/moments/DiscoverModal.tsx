@@ -7,7 +7,7 @@ import { cardModal } from '../../components/CardModal/copy'
 import { periodOf } from '../../components/CardModal/period'
 import { Meaning, Part, Spark } from '../../components/CardModal/parts'
 import type { Point } from '../../lib/api'
-import { copy } from './copy'
+import { modalCopy } from './modalCopy'
 import type { CardId } from './firstWeek'
 
 export interface DiscoverModalProps {
@@ -49,7 +49,7 @@ export default function DiscoverModal({ id, Icon, tint, text, tz, series, busy, 
           <Spark values={values} label={cardModal.visitorsLabel} />
         </Part>
       )}
-      <Meaning>{copy.modal[id]}</Meaning>
+      <Meaning>{modalCopy[id]}</Meaning>
     </CardModal>
   )
 }

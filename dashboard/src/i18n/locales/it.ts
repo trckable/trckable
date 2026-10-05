@@ -1809,6 +1809,7 @@ export default {
   'moments.modal.full': 'Full mostra ogni scheda: pagine, fonti, paesi, dispositivi, obiettivi e altro.',
   'moments.modal.weekly': 'Una breve email a settimana con i tuoi numeri. Puoi disattivarla quando vuoi.',
   'moments.modal.search': 'Collega Google Search Console per vedere cosa cercano le persone, accanto ai tuoi numeri.',
+  'moments.modal.crawlers': 'Attiva i dati dei crawler IA per vedere quali robot IA leggono il tuo sito.',
   'heatmap.card.views': 'visualizzazioni oggi',
   'heatmap.card.byHour': 'Visualizzazioni di questa pagina all’ora',
   'signals.card.latest': 'La tua ultima vendita',

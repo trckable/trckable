@@ -1815,6 +1815,7 @@ export default {
   'moments.modal.full': 'Full muestra todas las tarjetas: páginas, fuentes, países, dispositivos, objetivos y más.',
   'moments.modal.weekly': 'Un correo corto a la semana con tus cifras. Puedes desactivarlo cuando quieras.',
   'moments.modal.search': 'Conecta Google Search Console para ver qué busca la gente, junto a tus cifras.',
+  'moments.modal.crawlers': 'Activa los datos de rastreadores de IA para ver qué robots de IA leen tu sitio.',
   'heatmap.card.views': 'vistas hoy',
   'heatmap.card.byHour': 'Vistas de esta página por hora',
   'signals.card.latest': 'Tu última venta',

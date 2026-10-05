@@ -1810,6 +1810,7 @@ export default {
   'moments.modal.full': 'Full affiche toutes les cartes : pages, sources, pays, appareils, objectifs et plus.',
   'moments.modal.weekly': 'Un court e-mail par semaine avec vos chiffres. Désactivable à tout moment.',
   'moments.modal.search': 'Connectez Google Search Console pour voir ce que les gens recherchent, à côté de vos chiffres.',
+  'moments.modal.crawlers': 'Activez les données des robots IA pour voir quels robots IA lisent votre site.',
   'heatmap.card.views': 'vues aujourd’hui',
   'heatmap.card.byHour': 'Vues de cette page par heure',
   'signals.card.latest': 'Votre dernière vente',

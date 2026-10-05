@@ -34,7 +34,8 @@ describe('canonical snippets', () => {
   it('every script tag in the READMEs is the canonical one', () => {
     for (const f of ['README.md', 'packages/trckable/README.md']) {
       const md = readFileSync(new URL(f, ROOT), 'utf8')
-      const tags = md.match(/<script[\s\S]*?<\/script>/g) ?? []
+      // The install tag carries data-site; other tags (the online widget's) are another snippet.
+      const tags = (md.match(/<script[\s\S]*?<\/script>/g) ?? []).filter((t) => t.includes('data-site'))
       expect(tags.length, f).toBeGreaterThan(0)
       for (const t of tags) expect(t, f).toBe(tag(CANON))
     }

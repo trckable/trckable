@@ -7,7 +7,7 @@ import { cardModal } from '../../components/CardModal/copy'
 import { Meaning, Part } from '../../components/CardModal/parts'
 import type { Point } from '../../lib/api'
 import { todayIn } from '../../lib/dates'
-import { copy } from './copy'
+import { modalCopy } from './modalCopy'
 import { figureOf, seeLabel, whenOf } from './figure'
 import { chipsOf, kindOf } from './kinds'
 import { pinChart } from './pinChart'
@@ -53,7 +53,7 @@ export default function PinModal({ pin, site, series, money, onClose, onSee }: {
         </div>
       )}
       {spec && (
-        <Part title={copy.modal.chart}>
+        <Part title={modalCopy.chart}>
           <Chart spec={spec} />
         </Part>
       )}

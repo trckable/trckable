@@ -1812,6 +1812,7 @@ export default {
   'moments.modal.full': 'Full zeigt jede Karte: Seiten, Quellen, Länder, Geräte, Ziele und mehr.',
   'moments.modal.weekly': 'Eine kurze E-Mail pro Woche mit deinen Zahlen. Jederzeit abschaltbar.',
   'moments.modal.search': 'Verbinde die Google Search Console, um zu sehen, wonach Leute suchen, neben deinen eigenen Zahlen.',
+  'moments.modal.crawlers': 'Schalte die KI-Crawler-Zahlen ein, um zu sehen, welche KI-Roboter deine Seite lesen.',
   'heatmap.card.views': 'Aufrufe heute',
   'heatmap.card.byHour': 'Aufrufe dieser Seite pro Stunde',
   'signals.card.latest': 'Dein letzter Verkauf',
