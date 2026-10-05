@@ -989,11 +989,12 @@ input[type='range']::-moz-range-thumb {
 .pop {
   position: absolute;
   z-index: 20;
-  /* Hairline border, flat surface, a soft fall: the dropdowns stay light. */
-  background: var(--surface);
-  border: 1px solid var(--border);
+  /* One step above the page, a clear edge, a soft fall: a pop-up reads as
+     lifted off the page instead of blending into it. */
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
   border-radius: 12px;
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow);
   animation: rise 0.18s var(--ease) backwards;
 }
 .rise {

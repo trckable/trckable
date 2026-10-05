@@ -40,5 +40,5 @@ export function whenIdle(fn: () => void) {
   else setTimeout(fn, 1500)
 }
 
-/** Props for a button whose menu is a lazyLoad chunk: pointing or focusing fetches it. */
-export const warm = (preload: () => void) => ({ onPointerEnter: preload, onFocus: preload, onPointerDown: preload })
+/** Props for a button whose menu is a lazyLoad chunk: pointing, focusing or touching fetches it. */
+export const warm = (preload: () => void) => ({ onPointerEnter: preload, onFocus: preload, onPointerDown: preload, onTouchStart: preload })
