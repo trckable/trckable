@@ -58,8 +58,8 @@ export interface ViewState {
   cal?: string
   /** Full's funnel: its steps, in order ("fs=page:/pricing"). Absent = a suggested one. */
   funnel?: FunnelStep[]
-  /** Data's two views: the story of the period, or all its numbers. Absent = the story, unless the address already narrows the numbers. */
-  v?: 'story' | 'explore'
+  /** Data's two views: the story of the period, or all its numbers. 'story' or 'explore'; absent = the story, unless the address already narrows the numbers. */
+  v?: string
   /** Explore opened from one of the story's answers: which, so the page can say so and lead back. */
   story?: string
 }
@@ -104,8 +104,8 @@ export function readView(params: URLSearchParams): ViewState {
     live: liveOf(params.get('view')),
     funnel: funnelOf(params.getAll('fs')),
     cal: params.get('cal')?.match(/^(1|\d{4}-\d{2}(-\d{2})?)$/)?.[0],
-    v: (['story', 'explore'] as const).find((x) => x === params.get('v')),
-    story: params.get('story')?.match(/^[a-z]{1,12}$/)?.[0],
+    v: params.get('v') ?? undefined,
+    story: params.get('story') ?? undefined,
   }
 }
 

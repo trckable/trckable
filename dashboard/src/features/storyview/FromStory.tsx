@@ -1,5 +1,5 @@
 // Over Explore when it was opened from the story: where it came from, what it
-// is narrowed to, and the way back. Its own chunk: only an address that says so loads it.
+// is narrowed to, and the way back. It rides with the host chunk.
 import { fmtDay } from '../../lib/dates'
 import { bar, fromTitle } from './barCopy'
 

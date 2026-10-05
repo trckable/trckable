@@ -19,7 +19,6 @@ import { Answers } from './Answers'
 import { Ask } from './Ask'
 import { storyOf } from './rules'
 import { Tiles } from './Tiles'
-import './StoryView.css'
 
 const ProviderCard = lazy(() => import('../overview/ProviderCard').then((m) => ({ default: m.ProviderCard })))
 

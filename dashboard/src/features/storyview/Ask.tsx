@@ -1,5 +1,5 @@
 // What the person came to find out, and whether the story helped. Local for
-// now: nothing is sent anywhere, the answers only go to the console.
+// now: nothing is sent anywhere, the box only thanks the person.
 import { useState } from 'react'
 import { copy } from './copy'
 
@@ -9,11 +9,9 @@ export function Ask() {
   const [voted, setVoted] = useState<'yes' | 'no' | null>(null)
   const send = () => {
     if (!text.trim()) return
-    console.log('story: asked', text.trim())
     setSent(true)
   }
   const vote = (v: 'yes' | 'no') => {
-    console.log('story: useful', v)
     setVoted(v)
   }
   return (

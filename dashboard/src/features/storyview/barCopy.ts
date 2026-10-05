@@ -21,5 +21,5 @@ export const bar = defineCopy('storyview.bar', {
 export const fromTitle = (key: string | undefined): string | null => {
   if (!key) return null
   if (key === 'moment') return bar.fromMoment
-  return bar.q[key as keyof typeof bar.q] ?? null
+  return Object.hasOwn(bar.q, key) ? bar.q[key as keyof typeof bar.q] : null
 }

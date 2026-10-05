@@ -43,7 +43,7 @@ import { useNotes } from '../features/notes/useNotes'
 import { jump } from '../features/notes/jump'
 import { ChartFoot } from '../features/overview/ChartFoot'
 import { Loading } from '../components/loading/Loading'
-import { Cards } from '../features/cards/Cards'
+import { lazyLoad, whenIdle } from '../lib/lazyLoad'
 import type { CardsCtx } from '../features/cards/ctx'
 import { DIM_LABEL } from '../features/overview/dimLabels'
 import { activeChips, filterOps, siblingRows } from '../features/header/filterOps'
@@ -60,14 +60,15 @@ import { useMilestones } from '../features/milestones/useMilestones'
 import { filterFrom } from '../features/journey/filterFrom'
 import { CalendarSlot, CalendarToggle } from '../features/calendar/CalendarSlot'
 import { toggleCopy } from '../features/calendar/toggleCopy'
-import { storyOn } from '../features/storyview/mode'
+import { StorySlot } from '../features/storyview/StorySlot'
 
 // Full mode's extra views live in their own chunk: Core never loads them.
 // The share dialog is its own chunk: nothing of it loads until Share is pressed.
+const Cards = lazyLoad(() => import('../features/cards/Cards').then((m) => ({ default: m.Cards }))) // the two cards under the chart: Explore's numbers, fetched when idle so the switch to Explore finds them here
+whenIdle(Cards.preload)
 const ShareDialog = lazy(() => import('../features/share/ShareDialog'))
 const GaReturn = lazy(() => import('../features/install/GaReturn').then((m) => ({ default: m.GaReturn }))) // only on the way back from Google (?import=ga)
 const Story = lazy(() => import('../features/story/Story')) // Replay as a story: loaded when Replay starts
-const StoryHost = lazy(() => import('../features/storyview/StoryHost')) // Data's Story view, its switch and the way back from Explore: only where Data has numbers
 const Install = lazy(() => import('../features/install/Install')) // new sites only: never in the first load
 const Signals = lazy(() => import('../features/signals/Signals')) // the tab's count, the sale toast and the notices: once the stream has spoken
 const AddGoals = lazy(() => import('./AddGoals').then((m) => ({ default: m.AddGoals })))
@@ -139,9 +140,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   }, [mayBeNew, everTracked, site.id])
   const showInstall = showsInstall({ site, hasData, filtered: view.filters.length > 0, everTracked })
   const waiting = showInstall && stream.visits.length === 0
-  // Data has two views: the story of the period and Explore, all its numbers.
-  const switchOn = hasData && !showInstall && !waiting && !isShared()
-  const storyShown = switchOn && storyOn(view)
   const liveView = liveShown({ wanted: wantsLive(view, site), shared: isShared(), waiting }) // Data on a shared link, the install screen first
   const mods = useMods(site.id)
   const [journey, setJourney] = useState<string | null>(null)
@@ -263,7 +261,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   }
 
   const [askOpen, setAskOpen] = useState(false)
-
   // ---- keyboard: ⌘K opens Ask, F toggles Core/Full, Esc clears scrub ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -524,13 +521,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         <div className="banner">{unconvertedNote(money)}</div>
       )}
 
-      <div className={waiting ? 'sleep view-stage waiting' : 'sleep view-stage'} aria-hidden={waiting || undefined} inert={waiting}>
-      {switchOn && real && (
-        <Suspense fallback={null}>
-          <StoryHost on={storyShown} from={view.story} site={site} query={query} data={real} range={range} filters={view.filters} filterLabel={filterLabel} money={money ? fmtM : undefined} narrow={narrow} onGoal={() => setAddGoals(true)} onClear={clearFilters} />
-        </Suspense>
-      )}
-      {!storyShown && <>
+      <StorySlot view={view} site={site} query={query} data={real} range={range} ready={hasData && !showInstall} waiting={waiting} filterLabel={filterLabel} money={money ? fmtM : undefined} narrow={narrow} onGoal={() => setAddGoals(true)} onClear={clearFilters}>
       {/* One section for the period at a glance: the key numbers across the
           top, the chart under them — they are one story, not two cards. */}
       <section className="card overview" aria-label="Overview">
@@ -646,12 +637,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </Suspense>
       )}
 
-      {hasData && <Cards c={cardsCtx} />}
-      </>}
-
+      {hasData && <Suspense fallback={<Loading height={420} />}><Cards c={cardsCtx} /></Suspense>}
       {cur?.approximate && <Notice kind="approx" />}
-
-      </div>
+      </StorySlot>
       </>}
 
       {journey && mods !== null && shows(mods, 'cards', 'journey') && (

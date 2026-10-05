@@ -3,4 +3,4 @@
 // Explore, so links people saved or shared keep opening what they were.
 import type { ViewState } from '../../lib/url'
 
-export const storyOn = (view: ViewState): boolean => (view.v ?? (view.filters.length > 0 || !!view.day || !!view.cal || view.mode === 'full' ? 'explore' : 'story')) === 'story'
+export const storyOn = (view: ViewState): boolean => (view.v ? view.v === 'story' : !(view.filters.length > 0 || view.day || view.cal || view.mode === 'full'))
