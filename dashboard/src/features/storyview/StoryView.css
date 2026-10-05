@@ -14,6 +14,20 @@
 .sv-slot {
   margin-right: auto;
 }
+/* a small picture beside each name: lines of text for Story, bars for Explore */
+.sv-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sv-switch svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
 .sv-slot .sv-switch {
   margin: 0;
 }
