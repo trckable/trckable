@@ -1,33 +1,21 @@
-// Over Explore when it was opened from the story: where it came from, what it
-// is narrowed to, and the way back. It rides with the host chunk.
-import { fmtDay } from '../../lib/dates'
+// Over Explore when it was opened from the story: one small chip, first in the
+// control row's chips, that names the question it came from and leads back.
+// It rides with the host chunk and lands in the row's slot (ControlRow).
+import { useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 import { bar, fromTitle } from './barCopy'
 
-export default function FromStory({ from, range, filters, onBack, onClear }: { from?: string; range: [string, string]; filters: { key: string; dim: string; value: string }[]; onBack: () => void; onClear?: () => void }) {
+const noop = () => () => {}
+
+export default function FromStory({ from, onBack }: { from?: string; onBack: () => void }) {
+  const slot = useSyncExternalStore(noop, () => document.getElementById('sv-back'), () => null)
   const title = fromTitle(from)
-  if (!title) return null
-  return (
-    <div className="sv-from" role="status">
-      <span>
-        {bar.fromStory}: <b>{title}</b>
-      </span>
-      <span className="chip">
-        {fmtDay(range[0])} {bar.to} {fmtDay(range[1])}
-      </span>
-      {filters.map((f) => (
-        <span key={f.key} className="chip">
-          {f.dim}: <b>{f.value}</b>
-        </span>
-      ))}
-      <span className="sv-grow" />
-      <button type="button" className="sv-link" onClick={onBack}>
-        ← {bar.back}
-      </button>
-      {onClear && (
-        <button type="button" className="sv-link" onClick={onClear}>
-          {bar.clear}
-        </button>
-      )}
-    </div>
+  if (!title || !slot) return null
+  return createPortal(
+    <button type="button" className="chip from-story" title={bar.back} aria-label={`${bar.back}: ${title}`} onClick={onBack}>
+      <span aria-hidden="true">←</span>
+      <b>{title}</b>
+    </button>,
+    slot,
   )
 }
