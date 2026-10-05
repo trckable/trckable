@@ -2046,4 +2046,7 @@ export default {
   'storyview.thanks': 'Danke.',
   'storyview.exploreAll': 'Alle Zahlen erkunden: Quellen, Seiten, Orte, Geräte, Kalender',
   'storyview.loading': 'Deine Zahlen werden gelesen',
+  'storyview.switch.story': 'Geschichte',
+  'storyview.switch.explore': 'Explore',
+  'storyview.switch.label': 'Datenansicht',
 } satisfies Messages

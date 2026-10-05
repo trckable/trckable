@@ -2043,4 +2043,7 @@ export default {
   'storyview.thanks': 'Grazie.',
   'storyview.exploreAll': 'Esplora tutti i numeri: Fonti, Pagine, Luoghi, Dispositivi, Calendario',
   'storyview.loading': 'Sto leggendo i tuoi numeri',
+  'storyview.switch.story': 'Storia',
+  'storyview.switch.explore': 'Explore',
+  'storyview.switch.label': 'Vista dei dati',
 } satisfies Messages

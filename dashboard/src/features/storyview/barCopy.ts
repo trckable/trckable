@@ -17,6 +17,8 @@ export const bar = defineCopy('storyview.bar', {
   },
 })
 
+export const switchWords = defineCopy('storyview.switch', { story: 'Story', explore: 'Explore', label: 'Data view' })
+
 /** The title of the answer (or moment) Explore was opened from; none for an unknown key. */
 export const fromTitle = (key: string | undefined): string | null => {
   if (!key) return null

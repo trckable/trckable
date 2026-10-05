@@ -2043,4 +2043,7 @@ export default {
   'storyview.thanks': 'Bedankt.',
   'storyview.exploreAll': "Bekijk alle cijfers: Bronnen, Pagina's, Locaties, Apparaten, Kalender",
   'storyview.loading': 'Je cijfers worden gelezen',
+  'storyview.switch.story': 'Verhaal',
+  'storyview.switch.explore': 'Explore',
+  'storyview.switch.label': 'Gegevensweergave',
 } satisfies Messages

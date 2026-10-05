@@ -637,9 +637,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </Suspense>
       )}
 
-      {hasData && <Suspense fallback={<Loading height={420} />}><Cards c={cardsCtx} /></Suspense>}
-      {cur?.approximate && <Notice kind="approx" />}
+      {hasData && <Suspense fallback={<div aria-hidden="true" style={{ minHeight: 420 }} />}><Cards c={cardsCtx} /></Suspense>}
       </StorySlot>
+      {cur?.approximate && <Notice kind="approx" />}
       </>}
 
       {journey && mods !== null && shows(mods, 'cards', 'journey') && (

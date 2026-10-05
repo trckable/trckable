@@ -2049,4 +2049,7 @@ export default {
   'storyview.thanks': 'Gracias.',
   'storyview.exploreAll': 'Explora todas las cifras: Fuentes, Páginas, Ubicaciones, Dispositivos, Calendario',
   'storyview.loading': 'Leyendo tus cifras',
+  'storyview.switch.story': 'Historia',
+  'storyview.switch.explore': 'Explore',
+  'storyview.switch.label': 'Vista de datos',
 } satisfies Messages

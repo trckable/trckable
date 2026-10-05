@@ -3,9 +3,7 @@
 // keeps two header rows; without the slot it stays where it is rendered.
 import { useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
-import { defineCopy } from '../../i18n'
-
-const words = defineCopy('storyview.switch', { story: 'Story', explore: 'Explore', label: 'Data view' })
+import { switchWords as words } from './barCopy'
 
 const noop = () => () => {}
 

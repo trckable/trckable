@@ -104,8 +104,8 @@ export function readView(params: URLSearchParams): ViewState {
     live: liveOf(params.get('view')),
     funnel: funnelOf(params.getAll('fs')),
     cal: params.get('cal')?.match(/^(1|\d{4}-\d{2}(-\d{2})?)$/)?.[0],
-    v: params.get('v') ?? undefined,
-    story: params.get('story') ?? undefined,
+    v: params.get('v')?.match(/^(story|explore)$/)?.[0],
+    story: params.get('story')?.match(/^[a-z]{1,12}$/)?.[0],
   }
 }
 
