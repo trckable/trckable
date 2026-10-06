@@ -12,7 +12,7 @@
 # first account. Update: change the tag, then Redeploy.
 services:
   trckable:
-    image: ghcr.io/trckable/trckable:0.6.1
+    image: ghcr.io/trckable/trckable:0.6.2
     environment:
       - SERVICE_URL_TRCKABLE_8080
       - TRCKABLE_BASE_URL=${SERVICE_URL_TRCKABLE}
