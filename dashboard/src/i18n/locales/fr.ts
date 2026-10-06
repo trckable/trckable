@@ -398,6 +398,7 @@ export default {
   'live.entry.live': 'Live',
   'live.entry.data': 'Données',
   'live.entry.switchTitle': (key: string) => `Live montre le site à l’instant ; Données montre la période (${key})`,
+  'live.entry.liveOnline': (n: number) => (n === 1 ? 'En direct, 1 personne en ligne' : `En direct, ${n.toLocaleString()} en ligne`),
   'live.entry.onlineNow': 'En ligne maintenant',
   'live.entry.onlineNote': 'visiteurs dans les 5 dernières min',
   'live.entry.connecting': 'connexion…',

@@ -35,7 +35,6 @@ export function PhoneRow(p: PhoneProps & { value: PickerValue; today: ISODate })
   return (
     <div className="subbar phone-row">
       {!isShared() && <ViewSwitch live={false} />}
-      <div id="sv-slot" className="sv-slot" />
       <button ref={pill} type="button" className="phone-pill" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
         <span className="pill-dot" aria-hidden="true" />
         <b>{periodShort(p.value, p.today)}</b>

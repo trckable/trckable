@@ -2,13 +2,20 @@
 // the site, and a count that rolls to each new number. Clicking it opens
 // Live; a shared page has no Live (and no stream), so there it is just the
 // number. Where the number comes from is its title, not a line under it.
+import { useEffect } from 'react'
 import { entryCopy as copy } from './entryCopy'
+import { liveCount } from './liveLink'
 import { preloadLive } from './liveChunk'
 import { switchView } from './switchView'
 
 const warm = () => void preloadLive().catch(() => undefined)
 
 export function OnlineKpi({ online, note, canOpen }: { online: number | null | undefined; note: string; canOpen: boolean }) {
+  // The Live | Data switch says the same number ("Live · 20").
+  useEffect(() => {
+    liveCount.set(online ?? null)
+    return () => liveCount.set(null)
+  }, [online])
   const body = (
     <>
       <div className="label">
