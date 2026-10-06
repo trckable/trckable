@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.6.1 (6 Oct 2026)
+
 ### Changed
 
 - Milestones count in finer steps (1, 2.5, 5 per power of ten) and the list shows how far the next one is, with a rough number of days at the recent pace; the steps in between are recorded quietly, with no notice, and sites already past them get no flood.
