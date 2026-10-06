@@ -61,7 +61,7 @@ test('is not, any of and a saved segment say the same thing everywhere', async (
   await page.locator('.toolbar-filters + button').click()
   await page.getByLabel('Name').fill('Not pricing, direct')
   await page.getByRole('dialog').getByRole('button', { name: 'Save view' }).click()
-  await expect(page.getByRole('button', { name: /^Not pricing, direct/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Views: Not pricing, direct/ })).toBeVisible()
 
   // The API takes the same words: the filter in the address, and the segment by its id.
   const site = (await (await page.request.get(API + '/api/v1/sites')).json()).sites.find((s: { domain: string }) => s.domain === HISTORY_DOMAIN) as { id: string }
