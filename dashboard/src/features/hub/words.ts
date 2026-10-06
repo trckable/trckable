@@ -3,7 +3,6 @@ import { defineCopy } from '../../i18n'
 
 export const words = defineCopy('featureList', {
   live: { name: 'Live view', line: 'Who is on your site right now' },
-  calendar: { name: 'Calendar', line: 'Your month, day by day' },
   allsites: { name: 'All sites', line: 'Every site on one page' },
   map: { name: 'Map', line: 'Visitors on a world map' },
   ai: { name: 'AI & Search', line: 'Google, AI assistants and crawlers' },
