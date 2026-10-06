@@ -26,7 +26,7 @@ export interface StoryHostProps {
 export default function StoryHost(p: StoryHostProps) {
   return (
     <>
-      <ViewSwitch story={p.on} onPick={(v) => setView({ v, story: undefined })} />
+      <ViewSwitch story={p.on} phone={p.narrow} onPick={(v) => setView({ v, story: undefined })} />
       {!p.on && p.from && (
         <FromStory from={p.from} onBack={() => setView({ v: 'story', story: undefined, filters: [], day: undefined, compare: 'none' })} />
       )}
