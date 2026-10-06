@@ -36,8 +36,7 @@ import { chartTips } from '../features/overview/chartTips'
 import { useChartHold } from '../features/overview/reserve'
 import { LiveSlot } from '../features/live/liveChunk'
 import { useLivePulses } from '../features/live/useLivePulses'
-import { OnlineKpi } from '../features/live/OnlineKpi'
-import { entryCopy } from '../features/live/entryCopy'
+import { useLiveCount } from '../features/live/liveLink'
 import { liveShown } from '../features/live/liveShown'
 import { useNotes } from '../features/notes/useNotes'
 import { jump } from '../features/notes/jump'
@@ -51,6 +50,7 @@ const CreateMenu = lazy(() => import('../features/create/CreateMenu').then((m) =
 import { MoreMenu } from '../components/MoreMenu'
 import { downloadCsv } from '../lib/download'
 import { ControlRow } from '../features/header/ControlRow'
+import { HeaderBand } from '../features/header/HeaderBand'
 import { savedViews } from '../components/panelOpen'
 import { FilterRowHost } from '../features/header/FilterRowHost'
 const SaveViewHost = lazy(() => import('../features/header/SaveViewHost').then((m) => ({ default: m.SaveViewHost }))) // a dialog: only when a view is named
@@ -58,8 +58,6 @@ import { HeaderTools, ShareButton } from '../features/header/HeaderTools'
 import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
 import { useMilestones } from '../features/milestones/useMilestones'
 import { filterFrom } from '../features/journey/filterFrom'
-import { CalendarSlot, CalendarToggle } from '../features/calendar/CalendarSlot'
-import { toggleCopy } from '../features/calendar/toggleCopy'
 import { StorySlot } from '../features/storyview/StorySlot'
 
 // Full mode's extra views live in their own chunk: Core never loads them.
@@ -303,7 +301,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       cto: v.compare === 'custom' ? v.compareCustom?.to : undefined,
       day: undefined,
       bucket,
-      cal: view.cal ? '1' : undefined, // the calendar follows the period's month
     })
   }
 
@@ -381,7 +378,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const { raced, follow, blank } = useRaceNow({ src, dates: series.map((p) => p.t.slice(0, 10)), hourSeries: chartSeries, hours: !!hours, hourAt, idx: scrubIdx, telling, racing, playing })
   if (raced) [k, dayRev] = [raced.kpis, raced.revenue]
   const revenueNow = dayRev ?? money?.revenue
-  const conv = scrubbing ? undefined : money?.conversion
+  const conv = money?.conversion // the period's, also while a day is picked: the tile keeps its place
   const soFarRpv = k?.visitors ? (dayRev ?? 0) / k.visitors : 0
   const rpv = scrubbing || raced ? soFarRpv : money?.revenue_per_visitor
   const replayPoints = hours ? chartSeries.length : series.length
@@ -422,6 +419,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // the tiles, the chart legend and a shared card never disagree with it.
   const vs = 'vs ' + compareLabel(pickerValue.period, compareMode, pickerValue.range)
   const online = onlineNow(stream, data?.online, real?.online)
+  useLiveCount(online) // the Live | Data switch says the same number
 
   // Hover must never change the Sources card's height (see its note below).
   // Following a channel, Sources keeps every channel, the followed one lit.
@@ -483,7 +481,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   return (
     <>
       {!liveView && (firstLoad || loading) && <div className="loadbar" role="status" aria-label="Loading" />/* Live loads no report: it shows its own connection */}
-      <div className="header quiet">
+      <HeaderBand><div className="header quiet">
         {header}
         <HeaderTools
           live={liveView}
@@ -499,10 +497,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         />
         {inHeader && controls}
         {!liveView && !waiting && <Suspense fallback={null}><CreateMenu pages={dims('entry_page')} goals={src?.goals ?? []} modules={mods} onGoal={() => setAddGoals(true)} onNote={() => setNoteFor(view.day ?? today)} onFunnel={(f) => setView({ mode: 'full', funnel: f })} /></Suspense>}
-      </div>
+      </div></HeaderBand>
 
       {!inHeader && controls}
-
       {liveView && (
         <LiveSlot key={site.id} site={site.id} timezone={site.timezone} cookieless={site.cookieless} stream={stream} onVisitor={journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined} />
       )}
@@ -530,14 +527,11 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} blank={blank} site={site} bots={data?.bots}
         pace={live && !isShared() ? extra({ part: 'pace', site: site.id, today, filters: query.filters, test: query.testPayments }) : undefined}
         hint={compareOn && !scrubbing && !raced && !trailData ? visitorsHint({ site: site.id, period: view.period, day: range.to, filters: view.filters }) : undefined}
-        // A shared page has no live stream, so it says where the number comes from instead of waiting to connect forever.
-        online={<OnlineKpi online={online} canOpen={!isShared()} note={stream.connected || isShared() ? entryCopy.onlineNote : entryCopy.connecting} />}
       />
 
       <div className={active ? 'overview-chart replaying' : 'overview-chart'} role="group" aria-label={`${name} over time`}>
-        <ChartHead title={view.cal ? toggleCopy.calendar : name}>
-          {!waiting && <CalendarToggle cal={!!view.cal} onPick={(c) => setView({ cal: c ? '1' : undefined, day: undefined })} />}
-          {!view.cal && (canScrub || canReplayByDay) && (
+        <ChartHead title={name}>
+          {(canScrub || canReplayByDay) && (
             <ReplayButton
               playing={playing}
               byDay={!canScrub}
@@ -554,7 +548,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             />
           )}
         </ChartHead>
-        {view.cal ? <CalendarSlot site={site.id} cal={view.cal} periodEnd={range.to} filters={view.filters} test={view.test} plans={notesOn && !isShared() && !isViewer()} onChanged={loadNotes} /> : <>
         {/* Until a short span's hours, or the notes that may move a new
             site's start, arrive: never one chart first, then a jump. */}
         {firstLoad || (byHour && !hours) ? (
@@ -612,7 +605,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           day={canScrub && scrubbing && view.day ? fmtDay(view.day, { weekday: true }) : undefined} imported={cur?.imported}
           onBack={() => { setStory('off'); setPlaying(false); setHourAt(null); setDayIdx(null) }}
         />
-        </>}
       </div>
       </section>
 
@@ -628,7 +620,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           day={noteFor}
           today={today}
           // The strip only makes sense by day; an hourly view gets the
-          // calendar alone.
+          // date picker alone.
           days={data?.bucket === 'day' ? series.map((pt) => ({ day: pt.t.slice(0, 10), visitors: pt.visitors })) : []}
           notes={notes}
           onClose={() => setNoteFor(null)}

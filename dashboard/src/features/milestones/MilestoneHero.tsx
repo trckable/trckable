@@ -6,7 +6,7 @@ import type { Milestone, MilestoneKind, MilestoneNext } from '../../lib/api'
 import { fmtDay } from '../../lib/dates'
 import { copy } from './copy'
 import { ICON } from './icons'
-import { goalLine, isMoney, leftLine, lineOf, ringPct, say, showsBig } from './words'
+import { goalLine, isMoney, leftLine, lineOf, progressLine, ringPct, say, showsBig } from './words'
 
 function Frame({ kind, label, kicker, children }: { kind: MilestoneKind; label: string; kicker: string; children: ReactNode }) {
   const I = ICON[kind]
@@ -56,6 +56,8 @@ function Almost({ n }: { n: MilestoneNext }) {
       </div>
       <p>
         {leftLine(n)} · {ringPct(n)}%
+        <br />
+        {progressLine(n)}
       </p>
     </Frame>
   )

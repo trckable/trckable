@@ -56,7 +56,6 @@ describe('who may switch a module', () => {
     expect(ownerOnly(by('widgets'))).toBe(true)
     expect(canOpen(by('widgets'), { owner: false, mods: {} })).toBe(false)
     expect(canOpen(by('widgets'), { owner: true, mods: {} })).toBe(true)
-    expect(canOpen(by('calendar'), { owner: false, mods: {} })).toBe(true)
   })
 
   it('a module that is off has nowhere to open yet, and a feature with no place has none', () => {

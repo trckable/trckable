@@ -8,6 +8,12 @@
   --surface-2: #181c22;
   --pop: #181c22; /* a pop-up, one step above the page (light: the plain surface, so text keeps its contrast) */
   --sunken: #0f1216;
+  --band: #11151a; /* the header's bar, solid fallback */
+  --band-glass: rgba(26, 30, 37, 0.6); /* the bar's glass over the page */
+  --band-line: rgba(255, 255, 255, 0.08);
+  --band-hi: rgba(255, 255, 255, 0.07); /* the lit top edge */
+  --band-fill: color-mix(in srgb, var(--text) 6%, transparent); /* a control resting on the band */
+  --band-drop: rgba(0, 0, 0, 0.25);
   --row: #1b2028;
   --border: #242a33;
   --border-2: #353c46;
@@ -65,6 +71,12 @@
     --surface-2: #f3f4f1;
   --pop: #ffffff;
     --sunken: #f6f7f4;
+    --band: #f6f7f3;
+    --band-glass: rgba(255, 255, 255, 0.65);
+    --band-line: rgba(0, 0, 0, 0.06);
+    --band-hi: rgba(255, 255, 255, 0.5);
+    --band-fill: color-mix(in srgb, var(--text) 5%, transparent);
+    --band-drop: rgba(0, 0, 0, 0.08);
     --row: #eef0eb;
     --border: #e3e5e0;
     --border-2: #d2d5cf;
@@ -112,6 +124,12 @@
   --surface-2: #f3f4f1;
   --pop: #ffffff;
   --sunken: #f6f7f4;
+  --band: #f6f7f3;
+  --band-glass: rgba(255, 255, 255, 0.65);
+  --band-line: rgba(0, 0, 0, 0.06);
+  --band-hi: rgba(255, 255, 255, 0.5);
+  --band-fill: color-mix(in srgb, var(--text) 5%, transparent);
+  --band-drop: rgba(0, 0, 0, 0.08);
   --row: #eef0eb;
   --border: #e3e5e0;
   --border-2: #d2d5cf;
@@ -2078,16 +2096,6 @@ body[data-mode] .card.overview {
   animation: none;
   opacity: 0.3;
 }
-button.kpi-live .label::after {
-  content: '→';
-  margin-left: auto;
-  color: var(--text-3);
-  transition: transform 0.2s var(--ease), color 0.2s;
-}
-button.kpi-live:hover .label::after {
-  color: var(--accent);
-  transform: translateX(2px);
-}
 @media (prefers-reduced-motion: reduce) {
   .view-pill {
     transition: none;
@@ -2776,7 +2784,6 @@ button.kpi-live:hover .label::after {
 .view-switch {
   view-transition-name: view-switch;
 }
-.kpi-live .value,
 .live-online {
   view-transition-name: online-count;
 }

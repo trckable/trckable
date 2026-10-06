@@ -10,7 +10,7 @@
 One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy, Polar, Paddle and Dodo.<br>
 Self-host it for free, or let [trckable Cloud](https://cloud.trckable.com) run it for you.
 
-[![Version](https://img.shields.io/badge/version-0.6.0-b8ff3c?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.6.1-b8ff3c?style=flat-square)](CHANGELOG.md)
 [![License: AGPL-3.0](https://img.shields.io/badge/server-AGPL--3.0-0b0d10?style=flat-square)](LICENSE)
 [![Tracker: MIT](https://img.shields.io/badge/tracker-MIT-0b0d10?style=flat-square)](packages/trckable/LICENSE)
 [![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/tracker-2045_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2045 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-64_MB-b8ff3c?style=flat-square" alt="Idle memory: 64 MB"></a><!--/f-->
@@ -284,7 +284,7 @@ Go, embedded DuckDB and SQLite, React with an in-house SVG chart kit. Every even
 
 ## 🗺 Roadmap
 
-- [x] Tracking, dashboard (Live, Core and Full, and a month calendar with plans for the days to come), revenue for five providers, MCP server
+- [x] Tracking, dashboard (Live, Core and Full), revenue for five providers, MCP server
 - [x] Self-hosting tools: alerts (a new site starts with the weekly report, with the week's findings, and "tracking stopped" on, by email to the owner or to the webhook already in use; every email has a link that stops it), encrypted backups (copied to your own bucket, restored straight from it), imports, 2FA, read-only share links (public or password, revenue and notes on or off, an end date, embeddable, your own logo, colour and domain, copyable again, revocable), WCAG 2.1 AA (axe-core on the dashboard's main screens, both themes, three browsers, in CI)
 - [x] npm package [`trckable`](https://www.npmjs.com/package/trckable) with `init` / `doctor` / `mcp`, published from CI with provenance
 - [ ] Live sandbox runs against each payment provider
