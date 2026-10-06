@@ -190,11 +190,7 @@ test('Replay plays the chart on screen: same start, same bucket', async ({ page 
   await expect(page.locator('.overview-chart.replaying')).toBeVisible()
   await expect(svg).toHaveAttribute('aria-label', before!)
   expect(page.url()).not.toMatch(/[?&](day|bucket)=/)
-  // The story: its moments' rail under the chart; Esc stops it.
-  await expect(page.locator('.overview-chart .story')).toBeVisible()
   await page.getByRole('button', { name: 'Pause replay' }).click()
-  await page.keyboard.press('Escape')
-  await expect(page.locator('.overview-chart .story')).toHaveCount(0)
 })
 
 // While Replay plays, the chart is not hoverable: no crosshair, tooltip or dot,
@@ -237,7 +233,7 @@ async function openHistory(page: Page, path = `/${HISTORY_DOMAIN}?view=data`) {
   return chart
 }
 
-// When Replay and its story end, the chart is at rest: no cut line, no dot
+// When Replay ends, the chart is at rest: no cut line, no dot
 // left at the last point, nothing greyed. Hovering brings the crosshair back.
 // By day (a site with days of history) and by the hour (a new site's week).
 for (const [name, path] of [['daily', `/${HISTORY_DOMAIN}`], ['hourly', '/example.com?period=7d']]) {
@@ -245,9 +241,8 @@ test(`after Replay ends the ${name} chart is at rest and hovering still shows th
   const chart = await openHistory(page, path)
   await page.getByRole('button', { name: /^Replay this period/ }).click()
   await expect(chart).toHaveAttribute('data-locked', 'true')
-  // The story's summary card is what a finished replay leaves behind.
-  await expect(page.locator('.overview-chart .story-end')).toBeVisible({ timeout: 30_000 })
-  await expect(chart).not.toHaveAttribute('data-locked', 'true')
+  // The chart is hoverable again once the replay has played to its end.
+  await expect(chart).not.toHaveAttribute('data-locked', 'true', { timeout: 30_000 })
   await atRest(chart)
   const box = (await chart.boundingBox())!
   await page.mouse.move(box.x + box.width * 0.4, box.y + box.height / 2)

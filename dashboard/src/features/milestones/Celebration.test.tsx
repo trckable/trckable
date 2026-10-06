@@ -4,10 +4,10 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Milestone } from '../../lib/api'
 
-let reduced = true
+const reduced = true
 vi.mock('../../lib/motion', () => ({ reducedMotion: () => reduced, useTween: (n: number) => n }))
 
-import { Celebration, SPARKS } from './Celebration'
+import { Celebration } from './Celebration'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -45,28 +45,5 @@ describe('a milestone reached', () => {
     expect(share).toHaveBeenCalledTimes(1)
     act(() => (card?.querySelector('button[aria-label="Dismiss"]') as HTMLButtonElement).click())
     expect(close).toHaveBeenCalledTimes(1)
-  })
-
-  it('has the ghost celebrate once, and not at all with reduced motion', () => {
-    reduced = false
-    act(() => root.render(<Celebration m={m} site="s" onShare={() => {}} onClose={() => {}} />))
-    expect(document.body.querySelector('.ms-party')).not.toBeNull()
-    expect(document.body.querySelector('.ms-party')?.getAttribute('aria-hidden')).toBe('true')
-    act(() => root.unmount())
-    root = createRoot(host)
-    reduced = true
-    act(() => root.render(<Celebration m={m} site="s" onShare={() => {}} onClose={() => {}} />))
-    expect(document.body.querySelector('.ms-party')).toBeNull()
-    expect(document.body.querySelector('.side-card')).not.toBeNull()
-    reduced = false
-  })
-
-  it('keeps its celebration under a second and a half', async () => {
-    const css = (await import('node:fs')).readFileSync('src/features/milestones/Celebration.css', 'utf8')
-    const hop = Number(/animation: ms-hop ([\d.]+)s/.exec(css)?.[1])
-    const spark = (/animation: ms-spark ([\d.]+)s [^;]*?calc\(([\d.]+)s \+ var\(--i\) \* ([\d.]+)s\)/.exec(css) ?? []).slice(1).map(Number)
-    const lastSpark = spark[0] + spark[1] + (SPARKS - 1) * spark[2]
-    expect(hop).toBeLessThanOrEqual(1.5)
-    expect(lastSpark).toBeLessThanOrEqual(1.5)
   })
 })

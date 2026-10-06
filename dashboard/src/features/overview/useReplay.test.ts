@@ -21,10 +21,6 @@ describe('replayPath', () => {
   it('visits every point from the start', () => {
     expect(replayPath(2, 5)).toEqual([2, 3, 4])
   })
-  it('with reduced motion, only the moments from the start, then the end', () => {
-    expect(replayPath(2, 10, [1, 4, 7])).toEqual([2, 4, 7, 9])
-    expect(replayPath(0, 5, [4])).toEqual([0, 4])
-  })
 })
 
 describe('speeds', () => {
@@ -94,14 +90,9 @@ describe('the playhead', () => {
 
 describe('commitAt', () => {
   it('holds back the points in passing, one per interval', () => {
-    expect(commitAt(4.2, 3, undefined, 100, 220)).toBeNull()
-    expect(commitAt(4.2, 3, undefined, 230, 220)).toBe(4)
-    expect(commitAt(3.9, 3, undefined, 999, 220)).toBeNull()
-  })
-  it('never skips or delays a moment', () => {
-    expect(commitAt(6.1, 3, [5, 9], 10, 220)).toBe(5)
-    expect(commitAt(6.1, 5, [5, 9], 10, 220)).toBeNull()
-    expect(commitAt(9, 5, [5, 9], 0, 220)).toBe(9)
+    expect(commitAt(4.2, 3, 100, 220)).toBeNull()
+    expect(commitAt(4.2, 3, 230, 220)).toBe(4)
+    expect(commitAt(3.9, 3, 999, 220)).toBeNull()
   })
 })
 

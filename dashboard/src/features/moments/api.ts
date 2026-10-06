@@ -2,7 +2,26 @@
 // card on opening. Aggregates only, the same as the report.
 import { call, rangeQS, reportURL, type ReportQuery } from '../../lib/api'
 import { addDays, todayIn } from '../../lib/dates'
-import type { Moment } from '../story/moments'
+
+export type MomentKind = 'spike' | 'surge' | 'sale' | 'country' | 'ai' | 'milestone' | 'note'
+
+export interface Moment {
+  t: string
+  kind: MomentKind
+  factor?: number
+  referrer?: string
+  visitors?: number
+  count?: number
+  amount?: number
+  channel?: string
+  country?: string
+  bot?: string
+  step?: string
+  family?: string
+  value?: number
+  currency?: string
+  text?: string
+}
 
 export const momentsApi = {
   /** What happened in the period, bucket by bucket (the server's /moments), by the day or by the hour. Never narrowed by a filter: a moment is the site's own (its figure is the day's or the hour's whole traffic), so the marker, its line and its card say the same number whatever the page is filtered to. */

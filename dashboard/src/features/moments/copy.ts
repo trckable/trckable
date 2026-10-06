@@ -29,7 +29,6 @@ export const copy = defineCopy('moments', {
   filterPage: 'Filter page',
   filterAi: 'Filter AI',
   showing: (what: string) => `Showing ${what}`,
-  clear: 'Clear',
   moments: 'Moments on the chart',
   marker: (day: string, line: string, more: number) => `${day}: ${line}${more ? `, and ${more} more` : ''}. Show it`,
   more: (n: number) => `+${n} more`,
@@ -44,27 +43,12 @@ export const copy = defineCopy('moments', {
   since: (day: string) => `since ${day}`,
   firstSeen: (day: string) => `first seen ${day}`,
   firstAi: 'First AI assistant visit',
+  aiLine: (bot: string) => `First AI assistant visit · ${bot}`,
+  milestoneLine: (what: string) => `Milestone · ${what}`,
   average: (times: string) => `${times} the average`,
   perVisitor: (each: string) => `${each} a visitor`,
-  // The first-week cards (the weekly email's is the first screen's own).
-  discover: {
-    exclude: { label: 'Your visits', title: 'Exclude your own visits?', body: 'Your own clicks count as visitors.', go: 'Exclude this browser' },
-    crawlers: { label: 'AI crawlers', title: 'See which AI robots read you', body: 'An assistant sent a visitor. Now see who else reads.', go: 'Turn on' },
-    replay: { label: 'Replay', title: 'Replay this period', body: 'Your days, played as a story.', go: 'Play week' },
-    full: { label: 'Full mode', title: 'See everything', body: 'Every card, not only the basics.', go: 'Open Full' },
-    search: { label: 'Search Console', title: 'See what people search for', body: 'Google’s numbers, beside yours.', go: 'Connect' },
-  },
-  // The card on opening.
-  today: {
-    label: 'One thing today',
-    sinceVisit: 'Since your last visit',
-    thisWeek: 'This week',
-    next: 'Next',
-    see: 'See it',
-    done: 'Done',
-    of: (at: number, total: number) => `${at} of ${total}`,
-    previous: 'Previous',
-  },
+  // The card a marker opens.
+  today: { see: 'See it' },
 })
 
 /** A pin's name: a spike with no usual to multiply is new traffic. */

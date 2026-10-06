@@ -1,5 +1,5 @@
-// The dashboard keeps today current on its own: a visit shows in Online now
-// and the Visitors tile without a reload — over the live stream, and by
+// The dashboard keeps today current on its own: a visit shows in
+// the Visitors tile without a reload — over the live stream, and by
 // polling when the stream is blocked or held back by a buffering proxy.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
@@ -80,9 +80,7 @@ async function visit(page: Page, name: string) {
 async function seesTheVisit(page: Page, name: string, within: number) {
   await expect(tile(page, 'Visitors')).not.toHaveText('–', { timeout: 15_000 })
   const visitors = await num(page, 'Visitors')
-  const online = await num(page, 'Online now')
   await visit(page, name)
-  await expect.poll(() => num(page, 'Online now'), { timeout: within }).toBeGreaterThan(online)
   await expect.poll(() => num(page, 'Visitors'), { timeout: within }).toBeGreaterThan(visitors)
 }
 

@@ -18,13 +18,10 @@ export function advance(pos: number, dt: number, rate: number, last: number): nu
 }
 
 /** The point to hand to the page (its lists, cards and address) now, or null.
- *  Every point in passing is throttled to one per minMs, but a moment (a stop)
- *  is never skipped or late: it commits the frame the playhead reaches it. */
-export function commitAt(pos: number, committed: number, stops: number[] | undefined, sinceMs: number, minMs: number): number | null {
+ *  Every point in passing is throttled to one per minMs. */
+export function commitAt(pos: number, committed: number, sinceMs: number, minMs: number): number | null {
   const idx = Math.floor(pos + 1e-9)
   if (idx <= committed) return null
-  const stop = stops?.find((s) => s > committed && s <= idx)
-  if (stop !== undefined) return stop
   return sinceMs >= minMs ? idx : null
 }
 
@@ -33,14 +30,12 @@ export function replayStart(first: number, at: number, n: number) {
   return at < first || at >= n - 1 ? first : at
 }
 
-/** The points a replay visits: every one from start, or, with reduced
- *  motion, only the moments (stops) from start on, then the end. */
-export function replayPath(start: number, n: number, stops?: number[]): number[] {
-  if (stops?.length) return [...new Set([start, ...stops.filter((i) => i > start && i < n), n - 1])]
+/** The points a replay visits: every one from start. */
+export function replayPath(start: number, n: number): number[] {
   return Array.from({ length: Math.max(0, n - start) }, (_, k) => start + k)
 }
 
-export type Run = { playing: boolean; secs: number; first: number; n: number; at: number; step: (i: number | null) => void; done: () => void; stops?: number[] }
+export type Run = { playing: boolean; secs: number; first: number; n: number; at: number; step: (i: number | null) => void; done: () => void }
 
 const COMMIT_MS = 220 // how often the page's lists and cards move on a point
 const HOLD_MS = 450 // the line stays complete a moment before the summary
@@ -53,11 +48,10 @@ const HOLD_MS = 450 // the line stays complete a moment before the summary
 export function runClock(live: { current: Run }): () => void {
   const { first, n, at } = live.current
   const start = replayStart(first, at, n)
-  // Reduced motion steps moment to moment, a pause on each, no glide.
+  // Reduced motion steps point to point, a pause on each, no glide.
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    const stops = live.current.stops
-    const path = replayPath(start, n, stops?.length ? stops : undefined)
-    const every = Math.max(stops?.length ? 700 : 120, (live.current.secs * 1000) / path.length)
+    const path = replayPath(start, n)
+    const every = Math.max(120, (live.current.secs * 1000) / path.length)
     let k = 0
     live.current.step(path[0])
     const t = setInterval(() => {
@@ -85,7 +79,7 @@ export function runClock(live: { current: Run }): () => void {
     pos = advance(pos, now - prev, rateOf(first, n, r.secs), n - 1)
     prev = now
     playhead.set(pos - first)
-    const c = commitAt(pos, committed, r.stops, now - lastCommit, COMMIT_MS)
+    const c = commitAt(pos, committed, now - lastCommit, COMMIT_MS)
     if (c !== null) {
       committed = c
       lastCommit = now

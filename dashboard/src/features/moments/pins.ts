@@ -1,11 +1,10 @@
 // What the server found, as pins: one shape for a moment on the chart (the
-// markers) and a finding in the card on opening (one thing today), so the two
-// say the same words. A pin knows how much it matters (score), the day it
+// markers) and a finding, so the two say the same words. A pin knows how much it matters (score), the day it
 // belongs to, and the filter a click applies. Nothing here fetches or draws.
 // Pure: pins.test.ts.
 import type { Filter, Milestone } from '../../lib/api'
 import type { Insight } from '../extras/extrasApi'
-import type { Moment } from '../story/moments'
+import type { Moment } from './api'
 
 export type PinKind = 'spike' | 'surge' | 'sale' | 'referrer' | 'drop' | 'milestone' | 'ai' | 'move' | 'pays'
 

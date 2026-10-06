@@ -8,10 +8,9 @@ import { periodOf } from '../../components/CardModal/period'
 import { Meaning, Part, Spark } from '../../components/CardModal/parts'
 import type { Point } from '../../lib/api'
 import { modalCopy } from './modalCopy'
-import type { CardId } from './firstWeek'
 
 export interface DiscoverModalProps {
-  id: Exclude<CardId, 'ai'>
+  id: Exclude<keyof typeof modalCopy, 'chart'>
   Icon: LucideIcon
   tint: string
   text: { label: string; title: string; go: string }

@@ -9,6 +9,15 @@ section into the release.
 
 ## Unreleased
 
+### Removed
+
+- The Data view's once-a-day side card (the most important thing since your last visit, and the first-week guide cards).
+- The side card that asked about browser notices; notices you turned on, and the switch in Settings, stay.
+- The ghost's hop over the page when a milestone is reached; the milestone card stays.
+- Replay's story rail under the chart and its end card; Replay still plays the period.
+- The Conversion tile no longer shows a dash: it keeps the period's value while a day is picked, and is left out where there is no revenue data.
+- The Online now tile in the key numbers: the Live | Data switch already says the number.
+
 ### Changed
 
 - All sites is calmer: Online now first among four small cards with icons, a shorter chart that starts where tracking started ("Tracking since …"), and up to 8 sites as cards (icon, who is online, sparkline, visitors, bounce, amber at 75% and up) or, above 8, a slim list; a Sort menu beside Search sites; revenue shows only once payments are connected.

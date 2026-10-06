@@ -211,8 +211,6 @@ curl -X POST https://stats.example.com/api/crawl \
 
 ## Where else it shows up
 
-- **Once, when it first happens.** The first AI visitor, or the first AI robot, gets
-  one guide card, at most one a day, and not again once you put it away.
 - **In the weekly report.** One line: "AI assistants sent 128 visitors; crawlers read
   2,340 pages." It leaves out the half that is zero, and the whole line in a quiet week.
 - **In the API.** `GET /api/v1/sites/{site}/report/ai-search`, with the report's own

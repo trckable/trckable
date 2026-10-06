@@ -3,7 +3,7 @@ import { TimeChart } from '../charts/GuardedChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
 import { api, cachedReport, dropReports, showsInstall, siteState, fail, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
 import { compareLabel, diffDays, fmtDay, setWeekStart, todayIn, type Range } from '../lib/dates'
-import { countryName, fmtInt, fmtMoney } from '../lib/format'
+import { countryName, fmtMoney } from '../lib/format'
 import { journeysOn } from '../features/cookieless/labels'
 import { unconvertedNote } from '../lib/money'
 import { channelColor, channelLabel } from '../lib/palette'
@@ -36,8 +36,7 @@ import { chartTips } from '../features/overview/chartTips'
 import { useChartHold } from '../features/overview/reserve'
 import { LiveSlot } from '../features/live/liveChunk'
 import { useLivePulses } from '../features/live/useLivePulses'
-import { OnlineKpi } from '../features/live/OnlineKpi'
-import { entryCopy } from '../features/live/entryCopy'
+import { useLiveCount } from '../features/live/liveLink'
 import { liveShown } from '../features/live/liveShown'
 import { useNotes } from '../features/notes/useNotes'
 import { jump } from '../features/notes/jump'
@@ -68,7 +67,6 @@ const Cards = lazyLoad(() => import('../features/cards/Cards').then((m) => ({ de
 whenIdle(Cards.preload)
 const ShareDialog = lazy(() => import('../features/share/ShareDialog'))
 const GaReturn = lazy(() => import('../features/install/GaReturn').then((m) => ({ default: m.GaReturn }))) // only on the way back from Google (?import=ga)
-const Story = lazy(() => import('../features/story/Story')) // Replay as a story: loaded when Replay starts
 const Install = lazy(() => import('../features/install/Install')) // new sites only: never in the first load
 const Signals = lazy(() => import('../features/signals/Signals')) // the tab's count, the sale toast and the notices: once the stream has spoken
 const AddGoals = lazy(() => import('./AddGoals').then((m) => ({ default: m.AddGoals })))
@@ -241,8 +239,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const pulsing = live && !scrubbing && !isShared()
   const pulses = useLivePulses(stream, pulsing)
   const [playing, setPlaying] = useState(false)
-  const [story, setStory] = useState<'off' | 'on' | 'end'>('off')
-  const [stops, setStops] = useState<number[]>([]) // the story's moments: reduced motion steps through them
+  const [telling, setTelling] = useState(false) // Replay is running: the page races to the playhead
   const [speed, pickSpeed] = useSpeed(playing)
   // By the hour, the point playing is the page's own: a day in the address would redraw the chart by day.
   const [hourAt, setHourAt] = useState<number | null>(null)
@@ -285,7 +282,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   }
   const onPicker = (v: PickerValue) => {
     setPlaying(false)
-    setStory('off')
+    setTelling(false)
     setHourAt(null)
     const preset = v.period !== 'custom'
     // "Now" is the live view: today, by the hour. That hour is Now's, not
@@ -322,10 +319,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // ---- what the numbers show right now: whole period, scrubbed day, or trail ----
   const src = trailData?.current ?? cur
   const day = scrubbing ? src?.days?.find((d) => d.date === view.day) : undefined
-  // While Replay tells the period (features/story), the page races to the
+  // While Replay plays the period, the page races to the
   // playhead: tiles count up, lists overtake (features/overview/useRace).
   // A day picked by hand shows that day alone.
-  const telling = story === 'on'
   const racing = telling && scrubbing
   const raceTo = racing ? scrubIdx : -1
   let k: KPIs | undefined = src?.kpis
@@ -381,29 +377,14 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const { raced, follow, blank } = useRaceNow({ src, dates: series.map((p) => p.t.slice(0, 10)), hourSeries: chartSeries, hours: !!hours, hourAt, idx: scrubIdx, telling, racing, playing })
   if (raced) [k, dayRev] = [raced.kpis, raced.revenue]
   const revenueNow = dayRev ?? money?.revenue
-  const conv = scrubbing ? undefined : money?.conversion
+  const conv = money?.conversion // the period's, also while a day is picked: the tile keeps its place
   const soFarRpv = k?.visitors ? (dayRev ?? 0) / k.visitors : 0
   const rpv = scrubbing || raced ? soFarRpv : money?.revenue_per_visitor
   const replayPoints = hours ? chartSeries.length : series.length
   const settle = useReplayTimer({ playing, secs: replaySeconds(replayPoints, speedOf(speed).secs), first: 0, n: hours ? chartSeries.length : series.length, at: hours ? (hourAt ?? -1) : scrubIdx, step: hours ? setHourAt : setDayIdx, done: () => {
     setPlaying(false)
-    setStory('end')
-  }, stops })
-  const jumpTo = (i: number) => {
-    setPlaying(false)
-    if (hours) setHourAt(i)
-    else setDayIdx(i)
-  }
-  const stopStory = () => {
-    setPlaying(false)
-    setStory('off')
-    setHourAt(null)
-    setDayIdx(null)
-  }
-  const again = () => {
-    setStory('on')
-    setPlaying(true)
-  }
+    setTelling(false)
+  } })
   let chartScrub = scrubbing && !hours ? scrubIdx : null
   if (hours) chartScrub = hourAt
   const prevSeries = compareOn ? (hours ?? data)?.previous?.series : undefined
@@ -422,6 +403,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // the tiles, the chart legend and a shared card never disagree with it.
   const vs = 'vs ' + compareLabel(pickerValue.period, compareMode, pickerValue.range)
   const online = onlineNow(stream, data?.online, real?.online)
+  useLiveCount(online) // the Live | Data switch says the same number
 
   // Hover must never change the Sources card's height (see its note below).
   // Following a channel, Sources keeps every channel, the followed one lit.
@@ -530,8 +512,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} blank={blank} site={site} bots={data?.bots}
         pace={live && !isShared() ? extra({ part: 'pace', site: site.id, today, filters: query.filters, test: query.testPayments }) : undefined}
         hint={compareOn && !scrubbing && !raced && !trailData ? visitorsHint({ site: site.id, period: view.period, day: range.to, filters: view.filters }) : undefined}
-        // A shared page has no live stream, so it says where the number comes from instead of waiting to connect forever.
-        online={<OnlineKpi online={online} canOpen={!isShared()} note={stream.connected || isShared() ? entryCopy.onlineNote : entryCopy.connecting} />}
       />
 
       <div className={active ? 'overview-chart replaying' : 'overview-chart'} role="group" aria-label={`${name} over time`}>
@@ -545,7 +525,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
               speed={speed} points={canScrub ? replayPoints : diffDays(range.from, range.to) + 1}
               onSpeed={pickSpeed}
               onPlay={() => {
-                if (!playing) setStory('on')
+                if (!playing) setTelling(true)
                 if (playing) settle()
                 if (canScrub) return setPlaying((p) => !p)
                 setReplaySoon(true)
@@ -589,13 +569,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             }
           />
         )}
-        {story !== 'off' && (
-          <Suspense fallback={null}>
-            <Story site={site.id} query={query} bucket={hours ? 'hour' : 'day'} labels={chartSeries.map((p) => p.t)} visitors={chartSeries.map((p) => p.visitors)} at={chartScrub} playing={playing} phase={story}
-              money={money ? fmtM : undefined} total={fmtInt(src?.kpis.visitors ?? 0)} source={cur?.dims.channel?.[0]?.value} period={[chartSeries[0]?.t.slice(0, 10) ?? range.from, range.to]}
-              onJump={jumpTo} onStops={setStops} onStop={stopStory} onAgain={again} onShare={() => setSharing(true)} />
-          </Suspense>
-        )}
         {canScrub && (
           <ScrubBar
             n={series.length}
@@ -610,7 +583,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         <ChartFoot
           notes={!showInstall && !isShared() && notesOn && (full || notes.length > 0) ? { count: notes.length, onAdd: isViewer() ? undefined : () => setNoteFor(view.day ?? today), onOpen: () => setNotesOpen(true) } : undefined}
           day={canScrub && scrubbing && view.day ? fmtDay(view.day, { weekday: true }) : undefined} imported={cur?.imported}
-          onBack={() => { setStory('off'); setPlaying(false); setHourAt(null); setDayIdx(null) }}
+          onBack={() => { setTelling(false); setPlaying(false); setHourAt(null); setDayIdx(null) }}
         />
         </>}
       </div>

@@ -8,7 +8,6 @@ const chime = vi.fn<() => void>()
 vi.mock('../../components/Toast', () => ({ toast: (text: string, kind: string) => toast(text, kind) }))
 vi.mock('./chime', () => ({ chime: () => chime() }))
 
-import { NotifyAsk } from './NotifyAsk'
 import { pref, setPref } from './prefs'
 import { useSaleToast } from './useSaleToast'
 import { useTabCount } from './useTabCount'
@@ -100,48 +99,5 @@ describe('a sale', () => {
     draw(<Sales sales={[5, 4, 3, 2, 1].map((i) => sale(i, i * 100))} />)
     expect(toast.mock.calls.map((c) => c[0])).toEqual(['Cha-ching! +$3.00', 'Cha-ching! +$4.00', 'Cha-ching! +$5.00'])
     expect(chime).toHaveBeenCalledTimes(1)
-  })
-})
-
-describe('the question about notices', () => {
-  const sold = { kind: 'sale' as const, ts: 1, amount: 1250, currency: 'USD', exponent: 2 }
-  const ask = vi.fn(() => Promise.resolve('granted' as NotificationPermission))
-  const stub = (permission: NotificationPermission) => vi.stubGlobal('Notification', Object.assign(function Notification() {}, { permission, requestPermission: ask }))
-  beforeEach(() => ask.mockClear())
-
-  it('is a side card after a sale, and never asks the browser until the button is pressed', async () => {
-    stub('default')
-    draw(<NotifyAsk />)
-    expect(document.body.querySelector('.side-card')).toBeNull()
-    draw(<NotifyAsk sale={sold} />)
-    const card = document.body.querySelector('.side-card')
-    expect(card?.textContent).toContain('Get notified?')
-    // The card's button opens the dialog; only the dialog's button asks the browser.
-    act(() => {
-      ;(card?.querySelector('.btn.primary') as HTMLButtonElement).click()
-    })
-    for (let i = 0; i < 40 && !document.body.querySelector('[role="dialog"]'); i++) await act(() => new Promise((r) => setTimeout(r, 25)))
-    const dlg = document.body.querySelector('[role="dialog"]')
-    expect(dlg?.textContent).toContain('Your latest sale')
-    expect(dlg?.textContent).toContain('$12.50')
-    expect(ask).not.toHaveBeenCalled()
-    await act(async () => {
-      ;(dlg?.querySelector('.btn.primary') as HTMLButtonElement).click()
-      await Promise.resolve()
-    })
-    expect(ask).toHaveBeenCalledTimes(1)
-    expect(pref('notify')).toBe(true)
-  })
-  it('leaves a blocked browser alone, and an answered question, and one put away', () => {
-    stub('denied')
-    draw(<NotifyAsk sale={sold} />)
-    expect(document.body.querySelector('.side-card')).toBeNull()
-    stub('granted')
-    draw(<NotifyAsk sale={sold} />)
-    expect(document.body.querySelector('.side-card')).toBeNull()
-    stub('default')
-    localStorage.setItem('trckable:card:notify:*', '1')
-    draw(<NotifyAsk sale={sold} />)
-    expect(document.body.querySelector('.side-card')).toBeNull()
   })
 })

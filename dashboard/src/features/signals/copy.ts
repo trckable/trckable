@@ -1,6 +1,5 @@
 // The words of the live extras: the count in the tab, the sale toast, the
-// browser notices and the card that asks for them. This is what moves to the
-// message files.
+// browser notices and the surge card. This is what moves to the message files.
 import { defineCopy } from '../../i18n'
 
 export const signals = defineCopy('signals', {
@@ -59,14 +58,5 @@ export const signals = defineCopy('signals', {
     // The browser notice: at most one emoji.
     noticeTitle: (online: number, source: string) => `${online} people on your site right now${source ? `, mostly from ${source}` : ''} 🎉`,
     noticeBody: (domain: string) => `${domain} is busier than usual. Worth a look while it is happening.`,
-  },
-  // The side card.
-  card: {
-    label: 'Notices',
-    title: 'Get notified?',
-    body: 'A notice for a first sale from a new source, a spike or tracking stopping. Only while a trckable tab is open.',
-    yes: 'Turn on',
-    close: 'Close',
-    latest: 'Your latest sale',
   },
 })

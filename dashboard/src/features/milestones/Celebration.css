@@ -1,80 +1,3 @@
-/* A milestone's celebration (Celebration.tsx): the ghost's hop and a few
-   sparks, once, in the corner the side card slides into. Gone after 1.4 s; with
-   reduced motion it is not drawn at all. */
-.ms-party {
-  position: fixed;
-  right: 28px;
-  bottom: 96px;
-  z-index: 36;
-  width: 340px;
-  height: 120px;
-  max-width: calc(100vw - 32px);
-  pointer-events: none;
-  --ms-ink: var(--accent);
-}
-.ms-party.money {
-  --ms-ink: var(--money);
-}
-.ms-party .ghost {
-  position: absolute;
-  left: calc(50% - 28px);
-  bottom: 0;
-  animation: ms-hop 1.4s cubic-bezier(0.3, 0.7, 0.3, 1) 1 both;
-}
-.ms-party i {
-  position: absolute;
-  left: 50%;
-  bottom: 30px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--ms-ink);
-  opacity: 0;
-  animation: ms-spark 1s ease-out calc(0.18s + var(--i) * 0.05s) 1 both;
-  --dx: calc((var(--i) - 2.5) * 34px);
-}
-@keyframes ms-hop {
-  0% {
-    transform: translateY(40px) scale(0.9);
-    opacity: 0;
-  }
-  22% {
-    transform: translateY(-34px) scale(1.06);
-    opacity: 1;
-  }
-  44% {
-    transform: translateY(0);
-  }
-  62% {
-    transform: translateY(-16px);
-  }
-  80% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 0;
-  }
-}
-@keyframes ms-spark {
-  0% {
-    transform: translate(0, 0) scale(0.4);
-    opacity: 0;
-  }
-  25% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--dx), -70px) scale(1);
-    opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ms-party {
-    display: none;
-  }
-}
 /* The card the server draws, as the side card's picture. */
 .ms-peek {
   display: block;
@@ -88,13 +11,5 @@
 @media (max-width: 560px) {
   .ms-peek {
     display: none;
-  }
-}
-@media (max-width: 640px) {
-  .ms-party {
-    right: 16px;
-    left: 16px;
-    bottom: 60px;
-    width: auto;
   }
 }

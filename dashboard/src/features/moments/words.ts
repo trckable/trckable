@@ -3,7 +3,6 @@
 // Highlights and Replay already write are used as they are. Pure: words.test.ts.
 import type { Pin } from './pins'
 import { extrasCopy } from '../extras/copy'
-import { copy as story } from '../story/copy'
 import { say as milestone } from '../milestones/words'
 import { fmtDay } from '../../lib/dates'
 import { fmtInt, fmtPct } from '../../lib/format'
@@ -46,10 +45,10 @@ export function say(pin: Pin, money: (minor: number) => string): Said {
       return { title, line: extrasCopy.highlights.drop(name, n.wasRate ?? 0, n.rate ?? 0), big: `${fmtPct(n.wasRate ?? 0)} → ${fmtPct(n.rate ?? 0)}`, facts: [name, copy.visitors(n.visitors ?? 0), pin.day ? copy.since(fmtDay(pin.day)) : ''].filter(Boolean) }
     case 'milestone': {
       const s = milestone({ kind: n.family ?? 'visitors', value: n.value ?? 0, currency: n.currency })
-      return { title, line: story.milestone([s.big, s.label].filter(Boolean).join(' ')), big: s.big || s.label, facts: [s.big ? s.label : '', when(pin.day)].filter(Boolean) }
+      return { title, line: copy.milestoneLine([s.big, s.label].filter(Boolean).join(' ')), big: s.big || s.label, facts: [s.big ? s.label : '', when(pin.day)].filter(Boolean) }
     }
     case 'ai':
-      return { title, line: story.ai(n.name ?? ''), big: n.name ?? '', facts: [copy.firstAi, when(pin.day)].filter(Boolean) }
+      return { title, line: copy.aiLine(n.name ?? ''), big: n.name ?? '', facts: [copy.firstAi, when(pin.day)].filter(Boolean) }
     case 'move':
       return { title, line: extrasCopy.highlights.moved(name, n.change ?? 0, n.visitors ?? 0, n.was ?? 0), big: signed(n.change ?? 0), facts: [name, `${fmtInt(n.was ?? 0)} → ${copy.visitors(n.visitors ?? 0)}`] }
     case 'pays':

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Insight } from '../extras/extrasApi'
-import type { Moment } from '../story/moments'
+import type { Moment } from './api'
 import { byScore, dedupePins, pinsFromInsights, pinsFromMilestones, pinsFromMoments } from './pins'
 
 const spike: Moment = { t: '2026-09-19T00:00', kind: 'spike', factor: 4.2, visitors: 816, referrer: 'news.example' }

@@ -1,4 +1,4 @@
-// What the heatmap overlay and its suggestion ask the server for. Kept out of
+// What the heatmap overlay asks the server for. Kept out of
 // lib/api so the first load does not carry them.
 import { call, rangeQS, type ReportQuery } from '../../lib/api'
 
@@ -50,14 +50,7 @@ export interface HeatMap {
   scroll_views: number
 }
 
-export interface HeatAsk {
-  ask: boolean
-  path?: string
-  views?: number
-}
-
 export const heatApi = {
   map: (site: string, q: ReportQuery, path: string, width: Width | 0, signal?: AbortSignal) =>
     call<HeatMap>('GET', `/sites/${encodeURIComponent(site)}/heat` + rangeQS({ from: q.from, to: q.to }) + '&path=' + encodeURIComponent(path) + (width ? `&width=${width}` : ''), undefined, signal),
-  ask: (site: string, signal?: AbortSignal) => call<HeatAsk>('GET', `/sites/${encodeURIComponent(site)}/heat/ask`, undefined, signal, true),
 }

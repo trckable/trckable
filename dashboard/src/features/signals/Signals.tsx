@@ -1,9 +1,8 @@
 // The live extras of a site's dashboard, in one chunk fetched once the stream
 // has something to say: the count in the tab, the sale toast and chime, the
-// browser notices and the card that offers them. Nothing here draws on the
-// page itself (except the card): the Live layout is untouched.
+// browser notices and the surge card. Nothing here draws on the page itself
+// (except the surge card): the Live layout is untouched.
 import type { Sale, Site, Visit } from '../../lib/api'
-import { NotifyAsk } from './NotifyAsk'
 import SurgeCard from './SurgeCard'
 import { useNotices } from './useNotices'
 import { useSaleToast } from './useSaleToast'
@@ -24,7 +23,6 @@ export default function Signals(p: SignalsProps) {
   useNotices(p)
   return (
     <>
-      <NotifyAsk sale={p.sales[0]} />
       <SurgeCard site={p.site} />
     </>
   )
