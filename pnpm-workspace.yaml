@@ -5,3 +5,5 @@ packages:
   - "dashboard"
 allowBuilds:
   esbuild: false # its install script only re-checks the prebuilt binary; never needed
+overrides:
+  source-map-js: ">=1.2.2" # GHSA-68fv-2mgg-jv7q; reached through vitest > vite > postcss
