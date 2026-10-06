@@ -132,6 +132,10 @@
     padding: 0 11px;
     gap: 6px;
   }
+  /* The online count has no room beside the period pill; Live still says it to a screen reader. */
+  .phone-row .view-switch .vs-count {
+    display: none;
+  }
   .phone-pill {
     height: var(--ph-bar);
     padding: 0 8px 0 11px;
