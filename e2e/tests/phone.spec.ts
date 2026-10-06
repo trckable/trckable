@@ -69,7 +69,7 @@ test('the Data view: header, row, numbers, chart and cards', async ({ page }) =>
 
 test('the Live view', async ({ page }) => {
   await data(page)
-  await page.getByRole('button', { name: 'Live', exact: true }).click()
+  await page.getByRole('button', { name: /^Live/ }).click()
   await expect(page.locator('.live-view')).toBeVisible()
   await clean(page)
 })
