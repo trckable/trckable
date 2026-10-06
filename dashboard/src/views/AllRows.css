@@ -204,3 +204,29 @@
     font-size: 12px;
   }
 }
+
+/* The open-site link (OpenSite.tsx) has its own corner: the card's online
+   badge and the list's last column make room for it, so it covers nothing. On
+   a touch screen it sits beside the row as a 44 px target (AllSites.css). */
+.all-cards .all-card-head {
+  padding-right: 28px;
+}
+.all-slim .all-item > .site-open {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.all-slim .all-line {
+  padding-right: 42px;
+}
+@media (hover: none), (max-width: 640px) {
+  .all-cards .all-card-head,
+  .all-slim .all-line {
+    padding-right: 0;
+  }
+  .all-slim .all-line {
+    padding-right: 14px;
+  }
+  .all-slim .all-item > .site-open {
+    transform: none;
+  }
+}
