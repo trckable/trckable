@@ -37,10 +37,9 @@ export function openWhere(w: Where, site: Site | undefined) {
   else if (w.to === 'ai') {
     if (location.pathname !== home(site)) navigate(home(site))
     openAiSearch(site)
-  } else if (w.to === 'calendar') dashboard(site, { cal: '1' })
-  else if (w.to === 'live') dashboard(site, { live: true })
+  } else if (w.to === 'live') dashboard(site, { live: true })
   else dashboard(site, { mode: 'full' })
 }
 
 /** Whether a place needs a site to go to. */
-export const needsSite = (w: Where): boolean => w.to === 'settings' || w.to === 'ai' || w.to === 'calendar' || w.to === 'live' || w.to === 'full'
+export const needsSite = (w: Where): boolean => w.to === 'settings' || w.to === 'ai' || w.to === 'live' || w.to === 'full'

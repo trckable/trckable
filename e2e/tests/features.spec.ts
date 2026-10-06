@@ -37,7 +37,7 @@ test('opens from the avatar menu, searches, switches a module on, and closes on 
   await page.getByRole('menuitem', { name: /^Features/ }).click()
   const dialog = page.getByRole('dialog', { name: 'Features', exact: true })
   await expect(dialog).toBeVisible()
-  await expect(dialog.locator('.feat')).toHaveCount(45)
+  await expect(dialog.locator('.feat')).toHaveCount(44)
   await page.emulateMedia({ colorScheme: 'dark' })
   await shot(page, 'features-1280-dark')
   await page.emulateMedia({ colorScheme: 'light' })

@@ -54,8 +54,6 @@ export interface ViewState {
    *  is the person's choice of the period's numbers, kept when nothing else
    *  in the address would say so. */
   live?: boolean
-  /** The calendar instead of the chart: "1" follows the period's month, "2026-09" is one month, "2026-09-07" is that day opened. */
-  cal?: string
   /** Full's funnel: its steps, in order ("fs=page:/pricing"). Absent = a suggested one. */
   funnel?: FunnelStep[]
   /** Data's two views: the story of the period, or all its numbers. 'story' or 'explore'; absent = the story, unless the address already narrows the numbers. */
@@ -103,7 +101,6 @@ export function readView(params: URLSearchParams): ViewState {
     attr: params.get('attr') === 'first' ? 'first' : undefined,
     live: liveOf(params.get('view')),
     funnel: funnelOf(params.getAll('fs')),
-    cal: params.get('cal')?.match(/^(1|\d{4}-\d{2}(-\d{2})?)$/)?.[0],
     v: params.get('v')?.match(/^(story|explore)$/)?.[0],
     story: params.get('story')?.match(/^[a-z]{1,12}$/)?.[0],
   }
@@ -128,7 +125,6 @@ export function writeView(v: ViewState): string {
   if (v.attr) p.set('attr', v.attr)
   if (v.day) p.set('day', v.day)
   if (v.test) p.set('payments', 'test')
-  if (v.cal) p.set('cal', v.cal)
   for (const s of v.funnel ?? []) p.append('fs', `${s.kind}:${s.value}`)
   if (v.v) p.set('v', v.v)
   if (v.story) p.set('story', v.story)
