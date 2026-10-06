@@ -63,7 +63,7 @@ describe('the Features pop-up', () => {
     expect(document.querySelectorAll('[role="switch"]')).toHaveLength(0)
     expect(document.querySelector('#feat-heatmaps .tag')?.textContent).toBe('Off')
     expect(document.querySelector('#feat-widgets button')).toBeNull() // an owner's settings are not offered
-    expect(document.querySelector('#feat-calendar button')).not.toBeNull()
+    expect(document.querySelector('#feat-live button')).not.toBeNull()
   })
 
   it('searches by name, line and group', () => {

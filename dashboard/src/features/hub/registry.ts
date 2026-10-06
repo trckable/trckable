@@ -14,7 +14,6 @@ export type Where =
   | { to: 'account'; tab: AccountTab }
   | { to: 'full' }
   | { to: 'ai' }
-  | { to: 'calendar' }
   | { to: 'live' }
   | { to: 'all' }
   | { to: 'press'; key: 'share' | 'filter' | 'replay' | 'user' | 'ask' }
@@ -34,7 +33,6 @@ const full: Where = { to: 'full' }
 
 export const FEATURES: Feature[] = [
   { id: 'live', group: 'traffic', where: { to: 'live' } },
-  { id: 'calendar', group: 'traffic', where: { to: 'calendar' } },
   { id: 'allsites', group: 'traffic', where: { to: 'all' } },
   { id: 'map', group: 'traffic', module: 'map', where: full },
   { id: 'ai', group: 'traffic', where: { to: 'ai' } },
