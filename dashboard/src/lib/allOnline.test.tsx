@@ -30,6 +30,6 @@ describe('who is online over every site', () => {
   it('leaves out a site that could not be read, in both', () => {
     feedOnline([row('a', 4), row('b', 9, { error: 'x' })])
     expect(strip()).toContain('>4<')
-    expect(tile()).toContain(' 4<')
+    expect(tile()).toContain('>4<')
   })
 })

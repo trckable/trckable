@@ -60,12 +60,12 @@ test('no two sites share a colour, and the ones past the palette are Other', asy
 
   // The row's line is the key's colour: a colour belongs to the site, here and there.
   for (const s of named) {
-    const row = page.locator('.all-row', { has: page.locator('.all-name b', { hasText: new RegExp(`^${s.name.replace(/\./g, '\\.')}$`) }) })
+    const row = page.locator('.all-line', { has: page.locator('.all-line-name b', { hasText: new RegExp(`^${s.name.replace(/\./g, '\\.')}$`) }) })
     const stroke = await row.locator('.all-spark path[stroke]').evaluate((p) => getComputedStyle(p).stroke)
     expect(stroke, `${s.name}: its line and its key agree`).toBe(s.color)
     expect(await row.locator('.site-mark').evaluate((m) => getComputedStyle(m).color), `${s.name}: its mark is the same colour`).toBe(s.color)
   }
   // The newest site is past the palette: its row line is the neutral one too.
-  const last = page.locator('.all-row', { has: page.locator('.all-name b', { hasText: `colors8-${tag}.example.org` }) })
+  const last = page.locator('.all-line', { has: page.locator('.all-line-name b', { hasText: `colors8-${tag}.example.org` }) })
   expect(await last.locator('.all-spark path[stroke]').evaluate((p) => getComputedStyle(p).stroke)).toBe(other!.color)
 })
