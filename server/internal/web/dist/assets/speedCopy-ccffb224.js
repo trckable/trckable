@@ -1,0 +1,1 @@
+import{qr as e}from"./core-30bbc8c1.js";var t=e(`overview.speed`,{speed:`Replay speed`,speedNow:e=>`Replay speed: ${e}`,playsIn:e=>`plays in ${e}`,speedKeys:`Slower [  Faster ]`});export{t};
