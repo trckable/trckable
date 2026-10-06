@@ -85,6 +85,29 @@ export function ringPct(n: Pick<MilestoneNext, 'step' | 'now'>): number {
   return Math.min(99, Math.floor((n.now / n.step) * 100))
 }
 
+/** Days to the next step at the recent pace; null when there is no pace or it is over a year. */
+export function daysToGo(n: Pick<MilestoneNext, 'step' | 'now' | 'per_day'>): number | null {
+  const rate = n.per_day ?? 0
+  if (rate <= 0) return null
+  const days = Math.max(1, Math.ceil((n.step - n.now) / rate))
+  return days > 365 ? null : days
+}
+
+/** "12,400 of 25,000 visitors · ~19 days at this pace". */
+export function progressLine(n: MilestoneNext): string {
+  const now = value(n.kind, Math.floor(n.now), n.currency)
+  const step = value(n.kind, n.step, n.currency)
+  const days = daysToGo(n)
+  return days === null ? copy.progress(now, step, copy.label[n.kind]) : copy.progressDays(now, step, copy.label[n.kind], days)
+}
+
+/** The steps between powers of ten (2,500 visitors) are listed with a quiet check, no more. */
+export function isQuietStep(m: Pick<Milestone, 'kind' | 'value'>): boolean {
+  if (m.kind !== 'visitors' && m.kind !== 'pageviews' && m.kind !== 'revenue') return false
+  const l = Math.log10(m.value)
+  return Math.abs(l - Math.round(l)) > 1e-9
+}
+
 /** What is left: "547 to go", or "no sale yet" for revenue at zero. */
 export function leftLine(n: MilestoneNext): string {
   if (n.kind === 'revenue' && n.now <= 0) return copy.noSaleYet
