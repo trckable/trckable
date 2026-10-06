@@ -1,0 +1,1 @@
+import{Jr as e}from"./core-200417f5.js";var t=e(`overview.speed`,{speed:`Replay speed`,speedNow:e=>`Replay speed: ${e}`,playsIn:e=>`plays in ${e}`,speedKeys:`Slower [  Faster ]`});export{t};
