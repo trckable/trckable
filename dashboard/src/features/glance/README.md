@@ -33,6 +33,8 @@ the "Last 30 days" picker and its menu, arrow keys). In Glance the capsule drops
 toggle and the fold: compare lives in each tile's detail panel (its Compare button). Charts keeps
 both. The hero has no period pill.
 
+In Glance the capsule is always open: a fold saved from Charts is ignored (the saved choice is not changed).
+
 An active filter shows as its chip in the row, as today.
 
 ## Hero
@@ -42,5 +44,4 @@ Starts right under the control row: the people number, the verdict and the strip
 ## Open
 
 - Should Charts also get the palette (it would need the report's rows outside Glance)?
-- A capsule folded in Charts stays folded in Glance (its period is then only in the fold's summary).
 - Prototype copy is English only (`copy.ts`).

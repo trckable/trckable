@@ -173,6 +173,16 @@
 
 /* While Glance is the format, the period capsule keeps its steps and picker but
    not the comparison toggle or the fold: compare lives in each tile's panel. */
+/* A fold saved from Charts is ignored here (the saved choice is left alone). */
+body[data-fmt='glance'] .ctl-see.collapsed .ctl-fw {
+  grid-template-columns: 1fr;
+}
+body[data-fmt='glance'] .ctl-see.collapsed .ctl-fi {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  overflow: visible;
+}
 body[data-fmt='glance'] .ctl-see .cmp-root,
 body[data-fmt='glance'] .ctl-see .fold-toggle {
   display: none;
