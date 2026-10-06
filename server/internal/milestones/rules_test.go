@@ -31,7 +31,7 @@ func keys(ms []sqlite.Milestone) map[string]sqlite.Milestone {
 func TestCrossingsFindTheDay(t *testing.T) {
 	h := days("2026-01-01", 30, 40) // 40 a day: 100 on day 3, 1,000 on day 25
 	got := keys(crossings(Visitors, h, func(d Day) float64 { return d.Visitors }, ""))
-	if got["visitors/100"].Day != "2026-01-03" || got["visitors/1000"].Day != "2026-01-25" || len(got) != 2 {
+	if got["visitors/100"].Day != "2026-01-03" || got["visitors/250"].Day != "2026-01-07" || got["visitors/500"].Day != "2026-01-13" || got["visitors/1000"].Day != "2026-01-25" || len(got) != 4 {
 		t.Fatalf("crossings: %+v", got)
 	}
 	pv := keys(crossings(Pageviews, h, func(d Day) float64 { return d.Pageviews }, ""))
@@ -86,7 +86,7 @@ func TestFirstLookBackIsQuiet(t *testing.T) {
 			loud[m.Kind] = m.Step
 		}
 	}
-	want := map[string]string{Visitors: "10000", Pageviews: "1000", RecordDay: h[200].Day, FirstGoal: "1", FirstSale: "1", Revenue: "100"}
+	want := map[string]string{Visitors: "10000", Pageviews: "10000", RecordDay: h[200].Day, FirstGoal: "1", FirstSale: "1", Revenue: "100"}
 	if fmt.Sprint(loud) != fmt.Sprint(want) {
 		t.Fatalf("moments: %v, want %v", loud, want)
 	}
@@ -121,8 +121,8 @@ func TestLaterChecksOnlyAddTheNew(t *testing.T) {
 func TestNextSteps(t *testing.T) {
 	h := days("2026-01-01", 10, 741)
 	h[0].Countries, h[0].Revenue = 12, 80
-	next := NextSteps(h, "USD")
-	want := "[{visitors 10000 7410 } {pageviews 100000 14820 } {countries 25 12 } {revenue 100 80 USD}]"
+	next := NextSteps(h, "USD", "2026-01-11")
+	want := "[{visitors 10000 7410  741} {pageviews 25000 14820  1482} {countries 25 12  1.2} {revenue 100 80 USD 8}]"
 	if fmt.Sprint(next) != want {
 		t.Fatalf("next: %v", next)
 	}
@@ -151,5 +151,65 @@ func TestBigger(t *testing.T) {
 	g := sqlite.Milestone{Kind: FirstGoal, Value: 1, Day: "2026-09-20"}
 	if !Bigger(v, g) || Bigger(g, v) {
 		t.Fatal("visitors should beat a first goal")
+	}
+}
+
+// Only the powers of ten (and the first pageview) get a moment on the
+// counted ladders; every other family celebrates every step.
+func TestCelebrated(t *testing.T) {
+	cases := []struct {
+		kind string
+		v    float64
+		want bool
+	}{
+		{Visitors, 100, true}, {Visitors, 250, false}, {Visitors, 500, false}, {Visitors, 1_000, true},
+		{Visitors, 2_500, false}, {Visitors, 10_000_000, true}, {Visitors, 5_000_000, false},
+		{Pageviews, 1, true}, {Pageviews, 1_000, true}, {Pageviews, 25_000, false},
+		{Revenue, 1_000, true}, {Revenue, 50_000, false}, {Revenue, 1_000_000, true},
+		{Countries, 25, true}, {FirstSale, 1, true}, {RecordDay, 120, true},
+	}
+	for _, c := range cases {
+		if got := Celebrated(c.kind, c.v); got != c.want {
+			t.Errorf("Celebrated(%s, %v) = %v, want %v", c.kind, c.v, got, c.want)
+		}
+	}
+}
+
+// A site that passed in-between steps before they existed gets them stored
+// quietly: nothing new, nothing to notify.
+func TestUpgradeDoesNotFlood(t *testing.T) {
+	h := days("2026-01-01", 100, 100) // 10,000 visitors: 250, 500, 2.5k, 5k all passed
+	checked := h[98].Day
+	for _, m := range Plan(Reached(h, ""), checked) {
+		if m.Kind == RecordDay {
+			continue
+		}
+		if m.Day <= checked && !m.Quiet {
+			t.Errorf("%s/%s from %s would notify after an upgrade", m.Kind, m.Step, m.Day)
+		}
+		if !Celebrated(m.Kind, m.Value) && !m.Quiet {
+			t.Errorf("%s/%s is in between and must be quiet", m.Kind, m.Step)
+		}
+	}
+	// The one crossed on the last day is a round step: still a moment.
+	if k := keys(Plan(Reached(h, ""), checked)); k["visitors/10000"].Quiet {
+		t.Fatalf("a round step crossed after the last check must be loud: %+v", k["visitors/10000"])
+	}
+	// An in-between step crossed after the last check is quiet too.
+	g := days("2026-01-01", 40, 20)
+	g[39].Visitors = 1800 // 780 -> 2,560: crosses 1,000 and 2,500 on the last day
+	k := keys(Plan(Reached(g, ""), g[38].Day))
+	if k["visitors/2500"].Quiet != true || k["visitors/1000"].Quiet != false {
+		t.Fatalf("plan: %+v", k)
+	}
+}
+
+// The first look back gives the moment to the highest celebrated step.
+func TestFirstLookBackPicksARoundStep(t *testing.T) {
+	h := days("2026-01-01", 60, 60) // 3,600 visitors: 2,500 is the top step, 1,000 the top round one
+	for _, m := range Plan(Reached(h, ""), "") {
+		if m.Kind == Visitors && !m.Quiet && m.Step != "1000" {
+			t.Fatalf("moment on %s", m.Step)
+		}
 	}
 }

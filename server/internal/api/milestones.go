@@ -87,7 +87,7 @@ func (a *API) nextSteps(r *http.Request, si sqlite.SiteInfo, money bool) []miles
 	if err != nil {
 		return out
 	}
-	for _, n := range milestones.NextSteps(days, si.Currency) {
+	for _, n := range milestones.NextSteps(days, si.Currency, today) {
 		if milestones.Money(n.Kind) && !money {
 			continue
 		}
