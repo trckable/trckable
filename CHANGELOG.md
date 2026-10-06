@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Fixed
+
+- Translations for Live's busier line and milestone progress.
+
 ## 0.6.2 (6 Oct 2026)
 
 ### Added
