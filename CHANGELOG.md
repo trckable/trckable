@@ -12,6 +12,15 @@ section into the release.
 ### Added
 
 - Story opens with a setup card while a first step is open: install the snippet, verify tracking, set a goal, connect revenue. Steps tick from your real data, one button leads to the next open one, and Later hides it for a week. It replaces the two small step chips in the header.
+
+### Fixed
+
+- Translations for Live's busier line and milestone progress.
+
+## 0.6.2 (6 Oct 2026)
+
+### Added
+
 - Live says when the site is busier than usual ("Busier than usual: 50 vs ~20. Why? →"): the panel names who brings the extra people (a source, the page they land on, a country or campaign), when it started and that it is still going; the usual is the same hour on the last same weekdays, and a site needs a week of history.
 
 ### Removed
