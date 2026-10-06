@@ -11,6 +11,7 @@ section into the release.
 
 ### Changed
 
+- Milestones count in finer steps (1, 2.5, 5 per power of ten) and the list shows how far the next one is, with a rough number of days at the recent pace; the steps in between are recorded quietly, with no notice, and sites already past them get no flood.
 - All sites is calmer: Online now first among four small cards with icons, a shorter chart that starts where tracking started ("Tracking since …"), and up to 8 sites as cards (icon, who is online, sparkline, visitors, bounce, amber at 75% and up) or, above 8, a slim list; a Sort menu beside Search sites; revenue shows only once payments are connected.
 - On All sites the open-site arrow no longer covers the online count or the last column, and Shift + Enter on a row opens the site.
 
