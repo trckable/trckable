@@ -20,6 +20,12 @@ section into the release.
 
 ### Changed
 
+- The header's first row (logo, site, Live | Data, Peek, avatar) is a floating glass bar: as wide as the page's content, rounded, sticky a little below the top, with a soft shadow once you scroll and a solid fallback where blur or transparency is off; the row below sits on the page with more space.
+
+## 0.6.1 (6 Oct 2026)
+
+### Changed
+
 - All sites is calmer: Online now first among four small cards with icons, a shorter chart that starts where tracking started ("Tracking since …"), and up to 8 sites as cards (icon, who is online, sparkline, visitors, bounce, amber at 75% and up) or, above 8, a slim list; a Sort menu beside Search sites; revenue shows only once payments are connected.
 - On All sites the open-site arrow no longer covers the online count or the last column, and Shift + Enter on a row opens the site.
 
