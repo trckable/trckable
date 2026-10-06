@@ -1,7 +1,7 @@
 // The key numbers, one light strip: Visitors, then Revenue, Conversion and
 // Per visitor where there are payments (Pageviews where there are not, with a
-// dimmed Revenue tile before it for an owner), Bounce rate, Session time, and
-// Online now last. Each is a button that puts it on
+// dimmed Revenue tile before it for an owner), Bounce rate and Session time.
+// Each is a button that puts it on
 // the main chart when the chart can draw it here (chartMetric).
 import type { ReactNode } from 'react'
 import type { Bots, KPIs, Money, Site } from '../../lib/api'
@@ -41,8 +41,6 @@ interface Props {
   pace?: ReactNode
   /** What was filtered out of the period: a line in the Visitors tile's tooltip. */
   bots?: Bots
-  /** Online now, last. */
-  online: ReactNode
   /** The site whose Settings → Payments the Revenue tile opens. */
   site: Site
 }
@@ -105,7 +103,6 @@ export function KpiStrip(p: Props) {
       {second()}
       {tile('bounce', copy.bounce, k?.bounce_rate, fmtPct, delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true), { live: (r) => r.kpis.bounce_rate })}
       {tile('session', copy.session, k?.avg_session_s, fmtDuration, delta(k?.avg_session_s ?? 0, pk?.avg_session_s), { live: (r) => r.kpis.avg_session_s })}
-      {p.online}
     </div>
   )
 }
