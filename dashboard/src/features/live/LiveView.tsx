@@ -6,11 +6,13 @@ import './Live.css'
 import { useEffect } from 'react'
 import type { Sale, Visit } from '../../lib/api'
 import { useAnnounce } from './announce'
+import { BusierLine } from './BusierLine'
 import { copy } from './copy'
 import { feedOf, seriesAt } from './model'
 import { NowPanel } from './NowPanel'
 import { OnSitePanel } from './OnSitePanel'
 import { liveCount, liveLink } from './liveLink'
+import { useBusier } from './useBusier'
 import { useLiveNow } from './useLiveNow'
 import { Loading } from '../../components/loading/Loading'
 
@@ -26,6 +28,7 @@ export type LiveStream = {
 export default function LiveView({ site, timezone, stream, onVisitor, cookieless }: { site: string; timezone: string; stream: LiveStream; onVisitor?: (visitor: string) => void; cookieless?: boolean }) {
   const { data, failed, clock, skew } = useLiveNow(site, stream)
   const said = useAnnounce(stream.visits)
+  const busier = useBusier(site)
   // The switch's dot shows whether the connection is up.
   useEffect(() => {
     liveLink.set(stream.connected)
@@ -37,6 +40,7 @@ export default function LiveView({ site, timezone, stream, onVisitor, cookieless
   useEffect(() => liveCount.set(online), [online])
   return (
     <div className="live-view view-stage" role="region" aria-label={copy.region}>
+      <BusierLine busier={busier} timezone={timezone} />
       {data ? (
         <>
           <NowPanel data={data} series={seriesAt(data, stream.visits, clock)} online={online ?? 0} connected={stream.connected} failed={failed} sales={stream.sales} timezone={timezone} />
