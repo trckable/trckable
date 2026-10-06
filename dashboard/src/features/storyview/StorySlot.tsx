@@ -6,10 +6,12 @@ import { Loading } from '../../components/loading/Loading'
 import { isShared } from '../../lib/me'
 import type { Report } from '../../lib/api'
 import type { ViewState } from '../../lib/url'
+import { formatOf, glanceOn } from '../glance/flag'
 import { storyOn } from './mode'
 import { slot } from './slotCopy'
 import type { StoryHostProps } from './StoryHost'
 
+const GlanceHost = lazy(() => import('../glance/GlanceHost')) // the format prototype (features/glance): only loaded behind its flag
 const StoryHost = lazy(() => import('./StoryHost')) // the story, its switch and the way back from Explore: only where Data has numbers
 
 /** What Dashboard hands over; the rest goes on to the host as it is. */
@@ -21,6 +23,9 @@ export type StorySlotProps = Omit<StoryHostProps, 'on' | 'from' | 'data'> & {
   waiting: boolean
   /** The report for the current address is on its way. */
   loading: boolean
+  /** Why the report failed, and how to ask again (Glance shows it in its tiles). */
+  error?: string | null
+  onRetry?: () => void
   children: ReactNode
 }
 
@@ -47,10 +52,13 @@ function useSwitching(key: string, loading: boolean): boolean {
   return on
 }
 
-export function StorySlot({ view, data, ready, waiting, loading, children, ...rest }: StorySlotProps) {
-  const switchOn = ready && !waiting && !isShared()
+export function StorySlot({ view, data, ready, waiting, loading, error, onRetry, children, ...rest }: StorySlotProps) {
+  // Behind the prototype flag the Story/Explore switch gives way to the format toggle; Story stays in code.
+  const proto = glanceOn() && ready && !waiting && !isShared()
+  const glance = proto && formatOf(view) === 'glance'
+  const switchOn = ready && !waiting && !isShared() && !glanceOn()
   const shown = switchOn && storyOn(view)
-  const switching = useSwitching(`${shown}|${view.story ?? ''}`, loading)
+  const switching = useSwitching(`${shown}|${view.story ?? ''}|${glance}`, loading)
   const cls = ['sleep', 'view-stage', waiting && 'waiting', switching ? 'sv-switching' : 'sv-settled'].filter(Boolean).join(' ')
   useEffect(() => {
     if (switching) window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -67,7 +75,12 @@ export function StorySlot({ view, data, ready, waiting, loading, children, ...re
           <StoryHost {...rest} on={shown} from={view.story} data={data} />
         </Suspense>
       )}
-      {!shown && children}
+      {proto && data && (
+        <Suspense fallback={null}>
+          <GlanceHost {...rest} data={data} view={view} format={glance ? 'glance' : 'charts'} loading={loading} error={error} onRetry={onRetry} />
+        </Suspense>
+      )}
+      {!shown && !glance && children}
     </div>
   )
 }

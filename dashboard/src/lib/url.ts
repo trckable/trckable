@@ -62,6 +62,8 @@ export interface ViewState {
   v?: string
   /** Explore opened from one of the story's answers: which, so the page can say so and lead back. */
   story?: string
+  /** Data's format: absent = today's charts; 'glance' = the Glance prototype (features/glance). */
+  fmt?: 'glance'
 }
 
 /** Funnel steps from the address; anything but a page or a goal is dropped. */
@@ -106,6 +108,7 @@ export function readView(params: URLSearchParams): ViewState {
     cal: params.get('cal')?.match(/^(1|\d{4}-\d{2}(-\d{2})?)$/)?.[0],
     v: params.get('v')?.match(/^(story|explore)$/)?.[0],
     story: params.get('story')?.match(/^[a-z]{1,12}$/)?.[0],
+    fmt: params.get('fmt') === 'glance' ? 'glance' : undefined,
   }
 }
 
@@ -132,6 +135,7 @@ export function writeView(v: ViewState): string {
   for (const s of v.funnel ?? []) p.append('fs', `${s.kind}:${s.value}`)
   if (v.v) p.set('v', v.v)
   if (v.story) p.set('story', v.story)
+  if (v.fmt) p.set('fmt', v.fmt)
   // Data says so only when nothing else in the address does: a bare address
   // opens Live on a site with visits.
   if (v.live === false && p.size === 0) p.set('view', 'data')
