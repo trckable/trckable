@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Milestone } from '../../lib/api'
-import { badge, byYear, hasDot, leftLine, lineOf, nearest, newest, nextLine, ringPct, say, tileLabel } from './words'
+import { badge, byYear, hasDot, isQuietStep, leftLine, lineOf, nearest, newest, nextLine, progressLine, ringPct, say, tileLabel } from './words'
 
 const m = (o: Partial<Milestone>): Milestone => ({ kind: 'visitors', step: '1000', value: 1000, day: '2026-09-21', created_at: 0, new: false, shared: false, ...o })
 
@@ -51,5 +51,18 @@ describe('milestone words', () => {
     expect(tileLabel(r, true)).toBe('$1,000 revenue')
     expect(lineOf(r, true)).toContain('$1,000')
     expect(badge(m({ kind: 'first_sale', value: 1 }), true)).toBe('1st')
+  })
+  it('writes the progress line with the days at this pace', () => {
+    expect(progressLine({ kind: 'visitors', step: 25000, now: 12400, per_day: 650 })).toBe('12,400 of 25,000 visitors · ~20 days at this pace')
+    expect(progressLine({ kind: 'visitors', step: 25000, now: 12400, per_day: 0 })).toBe('12,400 of 25,000 visitors')
+    expect(progressLine({ kind: 'visitors', step: 25000, now: 12400 })).toBe('12,400 of 25,000 visitors')
+    expect(progressLine({ kind: 'visitors', step: 25000, now: 12400, per_day: 10 })).toBe('12,400 of 25,000 visitors')
+    expect(progressLine({ kind: 'visitors', step: 25000, now: 24999.5, per_day: 5 })).toBe('24,999 of 25,000 visitors · ~1 day at this pace')
+  })
+  it('marks the steps between powers of ten as quiet', () => {
+    expect(isQuietStep(m({ value: 2500 }))).toBe(true)
+    expect(isQuietStep(m({ value: 10000 }))).toBe(false)
+    expect(isQuietStep(m({ kind: 'pageviews', value: 1 }))).toBe(false)
+    expect(isQuietStep(m({ kind: 'countries', step: '25', value: 25 }))).toBe(false)
   })
 })

@@ -71,7 +71,7 @@ func TestMilestonesFromTheCheck(t *testing.T) {
 	if m := o["moment"].(map[string]any); m["kind"] != "visitors" || m["step"] != "100" || m["day"] != base.Format(time.DateOnly) {
 		t.Fatalf("moment: %v", m)
 	}
-	if n := o["next"].([]any); len(n) == 0 || n[0].(map[string]any)["step"] != 1000.0 {
+	if n := o["next"].([]any); len(n) == 0 || n[0].(map[string]any)["step"] != 250.0 {
 		t.Fatalf("next: %v", o["next"])
 	}
 	// Checking the same day again adds nothing.

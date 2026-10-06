@@ -775,6 +775,8 @@ export interface MilestoneNext {
   step: number
   now: number
   currency?: string
+  /** Recent daily average of the family's number. */
+  per_day?: number
 }
 export interface Milestones {
   enabled: boolean
