@@ -55,4 +55,21 @@ export const copy = defineCopy('live', {
   footer: 'New visits slide in · visitors idle for 5 minutes leave',
   announce: (page: string, source: string) => `New visit: ${page}, from ${source}`,
   announceMany: (n: number) => `${n} new visits`,
+
+  // Busier than usual: one quiet line, and what is behind it.
+  busier: (now: number, usual: number) => `Busier than usual: ${fmtInt(now)} vs ~${fmtInt(Math.round(usual))}.`,
+  quieter: (now: number, usual: number) => `Quieter than usual: ${fmtInt(now)} vs ~${fmtInt(Math.round(usual))}.`,
+  why: 'Why?',
+  whyTitle: 'Why is it busier than usual?',
+  fromSource: (plus: number, source: string) => `+${fmtInt(plus)} from ${source}`,
+  mostly: (page: string) => `mostly ${page}`,
+  onPage: (plus: number, page: string) => `+${fmtInt(plus)} on ${page}`,
+  fromCountry: (plus: number, country: string) => `+${fmtInt(plus)} from ${country}`,
+  inCampaign: (plus: number, campaign: string) => `+${fmtInt(plus)} from the campaign ${campaign}`,
+  restUsual: 'the rest as usual',
+  restElse: (n: number) => `+${fmtInt(n)} from elsewhere`,
+  noOne: 'No single source stands out.',
+  started: (at: string) => `Started ${at}`,
+  startedBefore: (at: string) => `Since before ${at}`,
+  going: 'still going',
 })

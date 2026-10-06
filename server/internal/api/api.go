@@ -91,6 +91,7 @@ type API struct {
 	surges     surge.Book // each site's busy spell, if it has one
 	storyMu    sync.Mutex
 	stories    map[string]storyEntry // how each site's surge went, kept half a minute
+	busier     busierCache           // each site's "busier than usual" answer, kept half a minute
 	refIcons   *refIcons             // the icons of referring sites, fetched and kept here
 	search     *searchState
 	searchOnce sync.Once
@@ -265,6 +266,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/live", a.authed(a.live))
 	handle("GET /api/v1/sites/{site}/now", a.authed(a.liveNow))
 	handle("GET /api/v1/sites/{site}/surge", a.authed(a.surgeNow))
+	handle("GET /api/v1/sites/{site}/busier", a.authed(a.busierNow))
 	handle("GET /api/v1/health", a.authed(a.health))
 	handle("GET /api/v1/keys", a.authed(a.keys))
 	handle("POST /api/v1/keys", a.authed(a.createKey))
