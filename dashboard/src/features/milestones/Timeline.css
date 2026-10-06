@@ -156,6 +156,7 @@
   font-size: 15px;
   font-weight: 600;
 }
+.ms-pace,
 .ms-left,
 .ms-when {
   font-size: 12px;
@@ -307,6 +308,7 @@
   :root .ms-tile b {
     font-size: var(--ph-text);
   }
+  :root .ms-pace,
   :root .ms-left,
   :root .ms-when {
     font-size: var(--ph-small);

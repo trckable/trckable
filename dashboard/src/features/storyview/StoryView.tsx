@@ -17,7 +17,7 @@ import { bar } from './barCopy'
 import { copy } from './copy'
 import { Answers } from './Answers'
 import { Ask } from './Ask'
-import { storyOf } from './rules'
+import { storyOf, takeawayOf } from './rules'
 import { Tiles } from './Tiles'
 
 const ProviderCard = lazy(() => import('../overview/ProviderCard').then((m) => ({ default: m.ProviderCard })))
@@ -61,6 +61,7 @@ export default function StoryView(p: StoryViewProps) {
     () => storyOf({ cur, prev: data.previous, money: p.money, goals: !!p.money || (cur.goals ?? []).length > 0 }),
     [cur, data.previous, p.money],
   )
+  const takeaway = useMemo(() => takeawayOf({ cur, prev: data.previous, money: p.money, goals: false }), [cur, data.previous, p.money])
   const labels = cur.series.map((x) => x.t)
   const labelsKey = labels.join(',')
   const bucket = data.bucket
@@ -94,6 +95,7 @@ export default function StoryView(p: StoryViewProps) {
           <span className="sv-strong">{h.strong}</span>
           {h.post}
         </h1>
+        {takeaway && <p className="sv-take">{takeaway}</p>}
         {h.note && <p className="sv-note">{h.note}</p>}
         {facts.state === 'new' && (
           <ul className="sv-steps">

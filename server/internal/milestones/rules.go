@@ -8,6 +8,7 @@
 package milestones
 
 import (
+	"math"
 	"sort"
 	"strconv"
 	"time"
@@ -27,11 +28,25 @@ const (
 )
 
 // Steps are the thresholds of the counted families.
+// The ladder counts 1, 2.5, 5 per power of ten; only the powers of ten
+// are celebrated (see Celebrated), the steps between are recorded quietly.
 var Steps = map[string][]float64{
-	Visitors:  {100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000},
-	Pageviews: {1, 1_000, 100_000, 1_000_000},
+	Visitors:  {100, 250, 500, 1_000, 2_500, 5_000, 10_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 2_500_000, 5_000_000, 10_000_000},
+	Pageviews: {1, 1_000, 2_500, 5_000, 10_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000},
 	Countries: {10, 25, 50, 100},
-	Revenue:   {100, 1_000, 10_000, 100_000, 1_000_000},
+	Revenue:   {100, 250, 500, 1_000, 2_500, 5_000, 10_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000},
+}
+
+// Celebrated says whether a milestone gets its moment (and the notice).
+// The counted ladders celebrate their powers of ten (100, 1,000, ...) and
+// the first pageview; the steps between are recorded and shown, quietly.
+// Countries, the firsts and record days are always celebrated.
+func Celebrated(kind string, v float64) bool {
+	switch kind {
+	case Visitors, Pageviews, Revenue:
+		return v >= 1 && math.Abs(math.Log10(v)-math.Round(math.Log10(v))) < 1e-9
+	}
+	return true
 }
 
 // Money says whether a family is about revenue: shown only where revenue
@@ -133,14 +148,25 @@ func Reached(days []Day, currency string) [][]sqlite.Milestone {
 // Plan decides what to store. On the first look back (checked == "") every
 // milestone is stored quietly except the highest of each family, and only
 // the current record day: an old site gets at most one moment per family
-// and a full, honest timeline. After that, what was reached after the last
+// and a full, honest timeline. Steps that are not celebrated (Celebrated)
+// are always quiet, so steps added to a ladder later arrive already seen. After that, what was reached after the last
 // day checked is new; anything older that turns up (history that changed)
 // is stored quietly.
 func Plan(families [][]sqlite.Milestone, checked string) []sqlite.Milestone {
 	var out []sqlite.Milestone
 	for _, fam := range families {
+		// The moment of a first look back goes to the highest celebrated one.
+		top := -1
 		for i, m := range fam {
-			last := i == len(fam)-1
+			if Celebrated(m.Kind, m.Value) {
+				top = i
+			}
+		}
+		for i, m := range fam {
+			last := i == top
+			if m.Kind == RecordDay {
+				last = i == len(fam)-1
+			}
 			switch {
 			case checked == "" && m.Kind == RecordDay && !last:
 				continue
@@ -151,6 +177,7 @@ func Plan(families [][]sqlite.Milestone, checked string) []sqlite.Milestone {
 			default:
 				m.Quiet = m.Day <= checked
 			}
+			m.Quiet = m.Quiet || !Celebrated(m.Kind, m.Value)
 			out = append(out, m)
 		}
 	}
@@ -163,27 +190,50 @@ type Next struct {
 	Step     float64 `json:"step"`
 	Now      float64 `json:"now"`
 	Currency string  `json:"currency,omitempty"`
+	// PerDay is the recent daily average (the last 30 days), 0 when none.
+	PerDay float64 `json:"per_day"`
 }
+
+// paceDays is the window the pace is measured over.
+const paceDays = 30
 
 // NextSteps says, for each counted family, the next step and the total so
 // far. A family past its last step has none.
-func NextSteps(days []Day, currency string) []Next {
-	var t Day
+func NextSteps(days []Day, currency, today string) []Next {
+	var t, r Day
+	cutoff := ""
+	if td, err := time.Parse(time.DateOnly, today); err == nil {
+		cutoff = td.AddDate(0, 0, -paceDays).Format(time.DateOnly)
+	}
 	for _, d := range days {
 		t.Visitors += d.Visitors
 		t.Pageviews += d.Pageviews
 		t.Countries += d.Countries
 		t.Revenue += d.Revenue
+		if d.Day >= cutoff {
+			r.Visitors += d.Visitors
+			r.Pageviews += d.Pageviews
+			r.Countries += d.Countries
+			r.Revenue += d.Revenue
+		}
+	}
+	// A young site is averaged over the days it has had, not over 30.
+	span := float64(paceDays)
+	if len(days) > 0 && cutoff != "" {
+		if n := float64(daysBetween(days[0].Day, today)); n < span {
+			span = max(n, 1)
+		}
 	}
 	var out []Next
 	for _, k := range []struct {
 		kind string
 		now  float64
 		cur  string
-	}{{Visitors, t.Visitors, ""}, {Pageviews, t.Pageviews, ""}, {Countries, t.Countries, ""}, {Revenue, t.Revenue, currency}} {
+		rate float64
+	}{{Visitors, t.Visitors, "", r.Visitors}, {Pageviews, t.Pageviews, "", r.Pageviews}, {Countries, t.Countries, "", r.Countries}, {Revenue, t.Revenue, currency, r.Revenue}} {
 		for _, s := range Steps[k.kind] {
 			if k.now < s {
-				out = append(out, Next{Kind: k.kind, Step: s, Now: k.now, Currency: k.cur})
+				out = append(out, Next{Kind: k.kind, Step: s, Now: k.now, Currency: k.cur, PerDay: k.rate / span})
 				break
 			}
 		}
