@@ -78,7 +78,7 @@ test('a dimmed Revenue tile stands in the second place for an owner without paym
     await route.fulfill({ response: res, json: body })
   })
   await page.goto(`${API}/example.com?view=data`)
-  await expect(tiles.locator('.kpi')).toHaveCount(7)
+  await expect(tiles.locator('.kpi')).toHaveCount(6)
   await expect(tiles.locator('.kpi-ico svg')).toHaveCount(6)
   await expect(tiles.getByRole('button', { name: /^Revenue/ })).toHaveClass(/^(?!.*dim)/)
   if (SHOTS) await page.locator('section.overview').screenshot({ path: `${SHOTS}/kpi-revenue-1280-money.png` })
