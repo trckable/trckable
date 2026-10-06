@@ -6,7 +6,7 @@ import type { Site } from '../lib/api'
 import { navigate } from '../lib/url'
 import { openSettings } from '../lib/settings'
 import { SiteMark } from '../components/SiteMark'
-import { OpenSite } from '../features/sites/OpenSite'
+import { OpenSite, openSiteTab } from '../features/sites/OpenSite'
 import { Spark } from './AllSitesSpark'
 import { Bounce, Money, Online } from './AllParts'
 import { copy } from './allSitesCopy'
@@ -17,6 +17,13 @@ type Props = { rows: SiteRow[]; layout: Layout; total: number; start: number; co
 
 /** A site with no visit at all, then or now: nothing to count. */
 const waiting = (r: SiteRow) => !r.visitors && !r.previous_visitors && !r.error
+
+/** Shift + Enter on a row opens the site's own address, as in the switcher. */
+export function openOnShiftEnter(e: Pick<React.KeyboardEvent, 'key' | 'shiftKey' | 'preventDefault'>, domain: string) {
+  if (!e.shiftKey || e.key !== 'Enter' || !domain) return
+  e.preventDefault()
+  openSiteTab(domain)
+}
 
 export function AllRows({ rows, layout, total, start, colorOf, brandOf }: Props) {
   const money = anyPayments(rows)
@@ -41,7 +48,7 @@ export function AllRows({ rows, layout, total, start, colorOf, brandOf }: Props)
           const dv = r.visitors || r.previous_visitors ? delta(r.visitors, r.previous_visitors) : null
           return (
             <div key={r.id} role="listitem" className="all-item">
-              <button type="button" className={'all-card' + (waiting(r) ? ' quiet' : '')} onClick={() => go(r)}>
+              <button type="button" className={'all-card' + (waiting(r) ? ' quiet' : '')} onClick={() => go(r)} onKeyDown={(e) => openOnShiftEnter(e, r.domain)}>
                 <span className="all-card-head">
                   {mark(r)}
                   {name(r)}
@@ -84,7 +91,7 @@ export function AllRows({ rows, layout, total, start, colorOf, brandOf }: Props)
       </div>
       {rows.map((r) => (
         <div key={r.id} role="listitem" className="all-item">
-          <button type="button" className={'all-line' + (waiting(r) ? ' quiet' : '')} onClick={() => go(r)}>
+          <button type="button" className={'all-line' + (waiting(r) ? ' quiet' : '')} onClick={() => go(r)} onKeyDown={(e) => openOnShiftEnter(e, r.domain)}>
             <span className="all-line-name">
               {mark(r)}
               <span>
