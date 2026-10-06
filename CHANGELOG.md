@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- The header's first row (logo, site, Live | Data, Peek, avatar) is a floating glass bar: as wide as the page's content, rounded, sticky a little below the top, with a soft shadow once you scroll and a solid fallback where blur or transparency is off; the row below sits on the page with more space.
+
 ## 0.6.1 (6 Oct 2026)
 
 ### Changed
