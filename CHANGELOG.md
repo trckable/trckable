@@ -11,6 +11,7 @@ section into the release.
 
 ### Changed
 
+- All sites is calmer: Online now first among four small cards with icons, a shorter chart that starts where tracking started ("Tracking since …"), and up to 8 sites as cards (icon, who is online, sparkline, visitors, bounce, amber at 75% and up) or, above 8, a slim list; a Sort menu beside Search sites; revenue shows only once payments are connected.
 - The Live | Data switch says how many are on the site now ("Live · 20"), the same number as the Online now tile.
 - On a phone the Story/Explore switch sits in the page under the Live | Data row, so the period pill keeps its full width and every control in the row stays 44 px.
 - The Data header's controls are one row that never wraps: the Story/Explore switch, a small "← question" chip back to the story (replacing the green bar), the filters in force, then Save view and Views as icons, with the period and Share on the right; filters that do not fit fold into a "+N more" menu.
