@@ -9,11 +9,14 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- Story says the takeaway in one sentence under the headline (change on the period before, what drove it, whether goals followed), puts a small up or down arrow with the percent on each answer, and replaces the boxed feedback bar with one quiet line: Was this useful? Yes, Not really, Tell us what you came for.
+
 ## 0.6.1 (6 Oct 2026)
 
 ### Changed
 
-- Story says the takeaway in one sentence under the headline (change on the period before, what drove it, whether goals followed), puts a small up or down arrow with the percent on each answer, and replaces the boxed feedback bar with one quiet line: Was this useful? Yes, Not really, Tell us what you came for.
 - All sites is calmer: Online now first among four small cards with icons, a shorter chart that starts where tracking started ("Tracking since …"), and up to 8 sites as cards (icon, who is online, sparkline, visitors, bounce, amber at 75% and up) or, above 8, a slim list; a Sort menu beside Search sites; revenue shows only once payments are connected.
 - On All sites the open-site arrow no longer covers the online count or the last column, and Shift + Enter on a row opens the site.
 
