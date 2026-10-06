@@ -10,10 +10,10 @@
 One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy, Polar, Paddle and Dodo.<br>
 Self-host it for free, or let [trckable Cloud](https://cloud.trckable.com) run it for you.
 
-[![Version](https://img.shields.io/badge/version-0.5.8-b8ff3c?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.6.0-b8ff3c?style=flat-square)](CHANGELOG.md)
 [![License: AGPL-3.0](https://img.shields.io/badge/server-AGPL--3.0-0b0d10?style=flat-square)](LICENSE)
 [![Tracker: MIT](https://img.shields.io/badge/tracker-MIT-0b0d10?style=flat-square)](packages/trckable/LICENSE)
-[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/tracker-2045_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2045 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-52_MB-b8ff3c?style=flat-square" alt="Idle memory: 52 MB"></a><!--/f-->
+[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/tracker-2045_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2045 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-64_MB-b8ff3c?style=flat-square" alt="Idle memory: 64 MB"></a><!--/f-->
 
 [Quick start](#-quick-start) · [How it compares](#️-how-it-compares) · [Everything it does](#-everything-it-does) · [Gallery](#-gallery) · [Docs](https://docs.trckable.com/) · [Changelog](CHANGELOG.md)
 
@@ -27,7 +27,7 @@ Self-host it for free, or let [trckable Cloud](https://cloud.trckable.com) run i
 
 <br><br>
 
-<img src=".github/images/readme/numbers.svg" width="880" alt="2 KB browser script. 1 container, no external database. 52 MB of memory when idle. 0 IP addresses stored.">
+<img src=".github/images/readme/numbers.svg" width="880" alt="2 KB browser script. 1 container, no external database. 64 MB of memory when idle. 0 IP addresses stored.">
 
 </div>
 
@@ -108,10 +108,10 @@ The free, self-hostable tools, plus DataFast (paid, hosted only) for script size
   <img src=".github/images/readme/script-size.svg" width="880" alt="Browser script, gzipped, with goals and outbound links: trckable 2,045 bytes, Plausible CE 2,141, Umami 2,333, GoatCounter 3,467, DataFast 5,253 (paid, no self-hosting documented), Rybbit 11,172, Matomo 28,172.">
 </p>
 <p align="center">
-  <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 52 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
+  <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 64 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
 </p>
 
-**Where it is not the right pick:** with pageviews only, Plausible CE's script is smaller (1,283 B against <!--f:tracker_core_bytes-->1,596<!--/f--> B). Session replay and A/B tests are out of scope on purpose: if you need those, use Matomo. Heatmaps are here, as an opt-in module that never records anyone (below).
+**Where it is not the right pick:** with pageviews only, Plausible CE's script is smaller (1,283 B against <!--f:tracker_core_bytes-->1,606<!--/f--> B). Session replay and A/B tests are out of scope on purpose: if you need those, use Matomo. Heatmaps are here, as an opt-in module that never records anyone (below).
 
 ## 🧰 Everything it does
 
@@ -168,7 +168,7 @@ or float it in a corner with one small script (under 1 KB gzipped, separate from
 
 ### Heatmaps, without recording anyone
 
-Off for a new site; Settings → Modules turns it on, and says its size and what it keeps before it does. It is a script of its own, <!--f:module_heat_bytes-->1,430<!--/f--> B gzip (its budget is <!--f:tracker_heat_budget_bytes-->1,536<!--/f--> B, enforced in CI), sent after the base script to the sites that turned it on: the 2 KB script is the same bytes with it off. It adds a heatmap icon to a row of Pages (on hover), which opens that page in a frame that runs nothing (a page of your server frames your own site with every permission taken away, and says so when your site refuses to be framed), with where people clicked laid over it, how far down they read, the clicks that did nothing and the clicks repeated in anger, for phone, tablet and desktop widths. The Pages list also suggests it, once, when a page has 100 views in a day.
+Off for a new site; Settings → Modules turns it on, and says its size and what it keeps before it does. It is a script of its own, <!--f:module_heat_bytes-->1,535<!--/f--> B gzip (its budget is <!--f:tracker_heat_budget_bytes-->1,536<!--/f--> B, enforced in CI), sent after the base script to the sites that turned it on: the 2 KB script is the same bytes with it off. It adds a heatmap icon to a row of Pages (on hover), which opens that page in a frame that runs nothing (a page of your server frames your own site with every permission taken away, and says so when your site refuses to be framed), with where people clicked laid over it, how far down they read, the clicks that did nothing and the clicks repeated in anger, for phone, tablet and desktop widths. The Pages list also suggests it, once, when a page has 100 views in a day.
 
 - **Counted:** per page and window width, the element that was clicked (a short selector made of tag, id and class names, never its text) and the tenth of it that was hit; a click on something that looks clickable where the page then changed nothing (a dead click); three clicks on one element within a second (a rage click); the name of the form field a form was left at, and the fields reached; and how far down the page was read, from the scroll depth the base script already sends. All of it is stored as counters per site, page, width, element and day, kept as long as the site's retention.
 - **Never collected:** a recording of any kind, a visitor or session id, a cookie or anything in the browser's storage, what was typed or any field's value, a password field (not even its name), the mouse's path, a screenshot, or the order in which anyone did anything. A batch is added to the counters and forgotten; nothing in it says who sent it.

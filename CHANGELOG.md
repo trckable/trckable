@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.6.0 (6 Oct 2026)
+
 ### Changed
 
 - The Live | Data switch says how many are on the site now ("Live · 20"), the same number as the Online now tile.
