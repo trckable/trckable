@@ -30,6 +30,15 @@ export interface Tile {
   connect?: boolean
 }
 
+export interface Delta {
+  /** Signed change as a share of one: 0.12 is up 12%. */
+  change: number
+  /** Whole percent, never negative. */
+  pct: number
+  arrow: '↑' | '↓' | '→'
+  tone: 'good' | 'bad' | 'flat'
+}
+
 export interface Answer {
   key: QuestionKey
   question: string
@@ -41,6 +50,8 @@ export interface Answer {
   act?: { label: string; filters: Filter[]; compare?: boolean }
   /** The answer offers to connect a provider or count a goal instead. */
   connect?: boolean
+  /** How the number behind the answer moved against the period before, when it can be told. */
+  delta?: Delta
 }
 
 export interface StoryFacts {
@@ -76,8 +87,69 @@ const rate = (r: Row) => r.bounce_rate ?? 0
 /** How far a number is from its period before, as a share of that period. */
 const change = (cur: number, prev: number) => (prev > 0 ? (cur - prev) / prev : 0)
 
+/** Within this a move reads as flat. */
+const FLAT = 0.02
+/** A source must explain this share of the movement to be named. */
+const DRIVER = 0.5
+/** A move smaller than this is "about the same" in the takeaway. */
+const TAKE_SAME = 0.05
+
+/** The change of a number against the period before, or none when there is no base. */
+export function deltaOf(now: number, before: number | undefined, goodWhen: 'up' | 'down' = 'up'): Delta | null {
+  if (before === undefined || !(before > 0)) return null
+  const c = (now - before) / before
+  const pct = Math.round(Math.abs(c) * 100)
+  if (Math.abs(c) < FLAT || pct === 0) return { change: c, pct: 0, arrow: '→', tone: 'flat' }
+  const up = c > 0
+  return { change: c, pct, arrow: up ? '↑' : '↓', tone: up === (goodWhen === 'up') ? 'good' : 'bad' }
+}
+
 const channels = (r: Result): Row[] => r.dims.channel ?? []
 const named = (v: string) => channelLabel(v)
+
+/** The one sentence under the headline: what changed, why, and whether goals or revenue followed. Empty without an earlier period. */
+export function takeawayOf(i: Input): string {
+  const p = earlier(i)
+  if (!p || !i.prev) return ''
+  const d = deltaOf(i.cur.kpis.visitors, p.visitors)
+  if (!d) return ''
+  if (Math.abs(d.change) < TAKE_SAME) return copy.takeSame
+  const up = d.change > 0
+  const gap = i.cur.kpis.visitors - p.visitors
+  const was = new Map(channels(i.prev).map((r) => [r.value, r.visitors]))
+  const seen = new Set<string>()
+  let driver: { value: string; diff: number } | null = null
+  let moved = 0
+  const count = (value: string, now: number) => {
+    seen.add(value)
+    const diff = now - (was.get(value) ?? 0)
+    moved += Math.abs(diff)
+    if (Math.sign(diff) === Math.sign(gap) && (!driver || Math.abs(diff) > Math.abs(driver.diff))) driver = { value, diff }
+  }
+  for (const r of channels(i.cur)) count(r.value, r.visitors)
+  for (const [value] of was) if (!seen.has(value)) count(value, 0)
+  const top = driver as { value: string; diff: number } | null
+  const src = top && moved > 0 && Math.abs(top.diff) / moved >= DRIVER ? named(top.value) : undefined
+  const head = copy.takeHead(up, d.pct, src)
+  const follow = followed(up, i)
+  return follow ? `${head} ${follow}` : head
+}
+
+function followed(up: boolean, i: Input): string {
+  const goal = (i.cur.goals ?? [])[0]
+  let name: string
+  let g: Delta | null
+  if (goal) {
+    name = goal.value
+    g = deltaOf(goal.visitors, (i.prev?.goals ?? []).find((x) => x.value === goal.value)?.visitors)
+  } else if (i.money && i.cur.money && i.prev?.money) {
+    name = copy.revenue
+    g = deltaOf(i.cur.money.revenue, i.prev.money.revenue)
+  } else return ''
+  if (!g) return ''
+  const same = g.tone !== 'flat' && Math.abs(g.change) >= TAKE_SAME && g.change > 0 === up
+  return copy.takeFollow(name, same)
+}
 
 export function stateOf(i: Input): StoryState {
   const v = i.cur.kpis.visitors
@@ -201,17 +273,19 @@ function did(i: Input): Answer {
   if (!hasPrev(i)) return { key: 'did', question: copy.q.did, line: copy.didEarly(fmtInt(k.visitors)), sub, look: 'plain', act }
   const was = earlier(i)?.visitors ?? 0
   const d = change(k.visitors, was)
-  if (d >= SAME) return { key: 'did', question: copy.q.did, line: copy.didYes(fmtInt(was), fmtInt(k.visitors)), sub, look: 'plain', act }
-  if (d <= -SAME) return { key: 'did', question: copy.q.did, line: copy.didNo(fmtInt(was), fmtInt(k.visitors)), sub, look: 'plain', act }
-  return { key: 'did', question: copy.q.did, line: copy.didSame(fmtInt(was), fmtInt(k.visitors)), sub, look: 'plain', act }
+  const delta = deltaOf(k.visitors, was) ?? undefined
+  if (d >= SAME) return { key: 'did', question: copy.q.did, line: copy.didYes(fmtInt(was), fmtInt(k.visitors)), sub, look: 'plain', act, delta }
+  if (d <= -SAME) return { key: 'did', question: copy.q.did, line: copy.didNo(fmtInt(was), fmtInt(k.visitors)), sub, look: 'plain', act, delta }
+  return { key: 'did', question: copy.q.did, line: copy.didSame(fmtInt(was), fmtInt(k.visitors)), sub, look: 'plain', act, delta }
 }
 
 function page(i: Input): Answer {
   const row = (i.cur.dims.entry_page ?? [])[0]
   const total = i.cur.kpis.visitors
   if (!row || total === 0) return { key: 'page', question: copy.q.page, line: copy.pageNone, sub: copy.pageNoneSub, look: 'quiet' }
+  const before = hasPrev(i) ? (i.prev?.dims.entry_page ?? []).find((x) => x.value === row.value)?.visitors : undefined
   return {
-    key: 'page', question: copy.q.page, look: 'plain',
+    key: 'page', question: copy.q.page, look: 'plain', delta: deltaOf(row.visitors, before) ?? undefined,
     line: copy.pageTitle(row.value, fmtPct(Math.min(1, row.visitors / total))),
     sub: copy.pageSub(fmtInt(row.visitors)),
     act: { label: copy.pageAct, filters: [{ dim: 'entry_page', value: row.value }] },
@@ -222,8 +296,9 @@ function fix(i: Input): Answer {
   const f = leavesFastest(i)
   if (!f) return { key: 'fix', question: copy.q.fix, line: copy.fixNone, sub: copy.fixNoneSub, look: 'quiet' }
   const n = Math.round(f.worst.visitors * rate(f.worst))
+  const was = hasPrev(i) ? channels(i.prev as Result).find((x) => x.value === f.worst.value) : undefined
   return {
-    key: 'fix', question: copy.q.fix, look: 'fix',
+    key: 'fix', question: copy.q.fix, look: 'fix', delta: deltaOf(rate(f.worst), was?.bounce_rate, 'down') ?? undefined,
     line: copy.fixTitle(named(f.worst.value), fmtPct(rate(f.worst))),
     sub: f.best ? copy.fixSub(fmtInt(n), named(f.best.value), fmtPct(rate(f.best))) : copy.fixSubAlone(fmtInt(n)),
     act: { label: copy.fixAct, filters: [{ dim: 'channel', value: f.worst.value }] },
@@ -236,7 +311,7 @@ function pays(i: Input): Answer {
   if (i.money && m && m.revenue > 0 && rows.length > 0) {
     const top = [...rows].sort((a, b) => (b.revenue ?? 0) - (a.revenue ?? 0))[0]
     return {
-      key: 'pays', question: copy.q.pays, look: 'plain',
+      key: 'pays', question: copy.q.pays, look: 'plain', delta: deltaOf(m.revenue, hasPrev(i) ? i.prev?.money?.revenue : undefined) ?? undefined,
       line: copy.paysTitle(named(top.value), fmtPct(Math.min(1, (top.revenue ?? 0) / m.revenue))),
       sub: copy.paysSub(i.money(top.revenue ?? 0), i.money(m.revenue)),
       act: { label: copy.paysAct(named(top.value)), filters: [{ dim: 'channel', value: top.value }] },
@@ -246,6 +321,7 @@ function pays(i: Input): Answer {
   if (goal) {
     return {
       key: 'pays', question: copy.q.pays, look: 'plain', connect: true,
+      delta: deltaOf(goal.visitors, hasPrev(i) ? (i.prev?.goals ?? []).find((x) => x.value === goal.value)?.visitors : undefined) ?? undefined,
       line: copy.paysGoal(goal.value, fmtInt(goal.visitors)),
       sub: copy.paysGoalSub,
       act: { label: copy.paysGoalAct, filters: [{ dim: 'goal', value: goal.value }] },

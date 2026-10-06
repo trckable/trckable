@@ -1,0 +1,1 @@
+import{t as e}from"./Install-10cb8cfa.js";export{e as Install,e as default};
