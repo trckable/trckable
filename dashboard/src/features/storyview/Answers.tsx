@@ -27,7 +27,14 @@ export function Answers({ answers, onConnect, onGoal }: { answers: Answer[]; onC
                 </span>
                 {a.question}
               </div>
-              <b className="sv-a-line">{a.line}</b>
+              <b className="sv-a-line">
+                {a.line}
+                {a.delta && (
+                  <span className={`sv-delta ${a.delta.tone}`} role="img" aria-label={copy.deltaLabel(copy.deltaWord[a.delta.arrow], a.delta.pct)}>
+                    {copy.deltaText(a.delta.arrow, a.delta.pct)}
+                  </span>
+                )}
+              </b>
               <span className="sv-a-sub">{a.sub}</span>
               <div className="sv-act">
                 {a.act && (
