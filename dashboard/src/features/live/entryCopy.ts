@@ -5,6 +5,7 @@ import { defineCopy } from '../../i18n'
 export const entryCopy = defineCopy('live.entry', {
   switchLabel: 'View',
   live: 'Live',
+  liveOnline: (n: number) => (n === 1 ? 'Live, 1 online now' : `Live, ${n.toLocaleString()} online now`),
   data: 'Data',
   switchTitle: (key: string) => `Live shows the site right now; Data shows the period (${key})`,
   onlineNow: 'Online now',

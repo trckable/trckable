@@ -11,6 +11,7 @@ section into the release.
 
 ### Changed
 
+- The Live | Data switch says how many are on the site now ("Live · 20"), the same number as the Online now tile.
 - On a phone the Story/Explore switch sits in the page under the Live | Data row, so the period pill keeps its full width and every control in the row stays 44 px.
 - The Data header's controls are one row that never wraps: the Story/Explore switch, a small "← question" chip back to the story (replacing the green bar), the filters in force, then Save view and Views as icons, with the period and Share on the right; filters that do not fit fold into a "+N more" menu.
 - The Story view's five answers are cards, as on the landing page: an icon and the question, the answer in bold, a short faint line under it and a plain link instead of a heavy button. Clicking a link or switching between Story and Explore dims the page under the loading ghost ("Preparing your numbers…") until the new numbers are in, then the view fades back in, instead of jumping.
