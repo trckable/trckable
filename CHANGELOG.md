@@ -11,6 +11,16 @@ section into the release.
 
 ### Added
 
+- All sites has a Cards | List switch next to Sort; your choice is remembered, and until you pick it stays automatic (cards up to 8 sites, a list above).
+
+### Fixed
+
+- Translations for Live's busier line and milestone progress.
+
+## 0.6.2 (6 Oct 2026)
+
+### Added
+
 - Live says when the site is busier than usual ("Busier than usual: 50 vs ~20. Why? →"): the panel names who brings the extra people (a source, the page they land on, a country or campaign), when it started and that it is still going; the usual is the same hour on the last same weekdays, and a site needs a week of history.
 
 ### Removed
