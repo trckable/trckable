@@ -2059,6 +2059,13 @@ body[data-mode] .card.overview {
 .view-switch button[aria-pressed='true'] {
   color: var(--text);
 }
+/* "Live · 20": how many are on the site now, quieter than the word. */
+.view-switch .vs-count {
+  margin-left: -4px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+}
 .view-switch button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;

@@ -10,7 +10,7 @@ import { copy } from './copy'
 import { feedOf, seriesAt } from './model'
 import { NowPanel } from './NowPanel'
 import { OnSitePanel } from './OnSitePanel'
-import { liveLink } from './liveLink'
+import { liveCount, liveLink } from './liveLink'
 import { useLiveNow } from './useLiveNow'
 import { Loading } from '../../components/loading/Loading'
 
@@ -34,6 +34,7 @@ export default function LiveView({ site, timezone, stream, onVisitor, cookieless
   // The stream's count is the freshest; while it is stuck, the polled one.
   let online = stream.online ?? data?.online ?? null
   if (stream.stale && data) online = data.online
+  useEffect(() => liveCount.set(online), [online])
   return (
     <div className="live-view view-stage" role="region" aria-label={copy.region}>
       {data ? (
