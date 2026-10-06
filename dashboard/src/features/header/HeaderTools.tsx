@@ -8,7 +8,9 @@ import type { Site } from '../../lib/api'
 import { AccountMenu } from '../../components/AccountMenu'
 import { caps, keyFor, useKeymap } from '../../lib/keys'
 import { canAsk, isShared } from '../../lib/me'
+import { searchOpen } from '../glance/flag'
 import { ViewSwitch } from '../live/ViewSwitch'
+import { copy as glanceCopy } from '../glance/copy'
 import { copy } from './copy'
 import { useWide } from './useWide'
 import './Header.css'
@@ -31,12 +33,21 @@ export function HeaderTools(p: Props) {
   // anywhere narrower it stays in the row under the header.
   const wide = useWide()
   const askKey = caps(keyFor('ask')).join('')
+  // While Glance is up its search is the one search button, and Peek is a row inside it.
+  const find = searchOpen.use()
   return (
     <div className="header-tools quiet">
       <div className="spacer" />
       {wide && !shared && !p.waiting && <ViewSwitch live={p.live} />}
       {p.extra}
-      {canAsk() && !p.waiting && (
+      {find && !p.waiting && (
+        <button type="button" className="btn ghost ask" onClick={(e) => find(e.currentTarget)} aria-label={glanceCopy.findLabel} title={glanceCopy.findLabel}>
+          <Search size={17} strokeWidth={1.75} aria-hidden="true" />
+          <span className="ask-label">{glanceCopy.find}</span>
+          <span className="kbd">{askKey}</span>
+        </button>
+      )}
+      {!find && canAsk() && !p.waiting && (
         <button type="button" className="btn ghost ask" onClick={p.onAsk} aria-expanded={p.askOpen} aria-label={copy.ask} title={copy.askTitle(askKey)}>
           <Search size={17} strokeWidth={1.75} aria-hidden="true" />
           <span className="ask-label">{copy.ask}</span>

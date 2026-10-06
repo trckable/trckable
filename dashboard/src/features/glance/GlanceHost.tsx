@@ -9,7 +9,7 @@ import './glance.css'
 export default function GlanceHost({ format, ...p }: GlanceProps & { format: Format; view: ViewState }) {
   const pick = (f: Format) => {
     rememberFormat(f)
-    setView({ fmt: f === 'glance' ? 'glance' : undefined })
+    setView({ fmt: f })
   }
   return (
     <>

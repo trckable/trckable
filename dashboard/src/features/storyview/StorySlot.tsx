@@ -23,6 +23,8 @@ export type StorySlotProps = Omit<StoryHostProps, 'on' | 'from' | 'data'> & {
   waiting: boolean
   /** The report for the current address is on its way. */
   loading: boolean
+  /** Opens Peek, when it can be opened (Glance's search offers it). */
+  onAsk?: () => void
   /** Why the report failed, and how to ask again (Glance shows it in its tiles). */
   error?: string | null
   onRetry?: () => void
@@ -52,12 +54,18 @@ function useSwitching(key: string, loading: boolean): boolean {
   return on
 }
 
-export function StorySlot({ view, data, ready, waiting, loading, error, onRetry, children, ...rest }: StorySlotProps) {
+export function StorySlot({ view, data, ready, waiting, loading, error, onRetry, onAsk, children, ...rest }: StorySlotProps) {
   // Behind the prototype flag the Story/Explore switch gives way to the format toggle; Story stays in code.
   const proto = glanceOn() && ready && !waiting && !isShared()
   const glance = proto && formatOf(view) === 'glance'
   const switchOn = ready && !waiting && !isShared() && !glanceOn()
   const shown = switchOn && storyOn(view)
+  useEffect(() => {
+    if (glance) document.body.dataset.fmt = 'glance'
+    return () => {
+      delete document.body.dataset.fmt
+    }
+  }, [glance])
   const switching = useSwitching(`${shown}|${view.story ?? ''}|${glance}`, loading)
   const cls = ['sleep', 'view-stage', waiting && 'waiting', switching ? 'sv-switching' : 'sv-settled'].filter(Boolean).join(' ')
   useEffect(() => {
@@ -77,7 +85,7 @@ export function StorySlot({ view, data, ready, waiting, loading, error, onRetry,
       )}
       {proto && data && (
         <Suspense fallback={null}>
-          <GlanceHost {...rest} data={data} view={view} format={glance ? 'glance' : 'charts'} loading={loading} error={error} onRetry={onRetry} />
+          <GlanceHost {...rest} data={data} view={view} format={glance ? 'glance' : 'charts'} loading={loading} error={error} onRetry={onRetry} onAsk={onAsk} />
         </Suspense>
       )}
       {!shown && !glance && children}

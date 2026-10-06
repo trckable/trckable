@@ -2,15 +2,8 @@
 // strip of days. Rules and numbers come in ready (model.ts).
 import { PRESETS, fmtDay, fmtRange, type Range } from '../../lib/dates'
 import { fmtInt } from '../../lib/format'
-import { openedFrom, periodMenu } from '../../components/panelOpen'
 import { copy } from './copy'
 import type { GlanceModel } from './model'
-
-const Chevron = () => (
-  <svg width="10" height="10" viewBox="0 0 12 12" aria-hidden="true">
-    <path d="M3 4.5l3 3 3-3" stroke="var(--g-faint)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-  </svg>
-)
 
 interface Props {
   m: GlanceModel
@@ -38,19 +31,6 @@ export function Hero({ m, period, range, today }: Props) {
   return (
     <section className="g-hero" aria-label={copy.section}>
       <div className="g-left">
-        <button
-          type="button"
-          className="g-period"
-          aria-label={`${copy.openPeriod}: ${periodText}`}
-          aria-haspopup="dialog"
-          onClick={(e) => {
-            openedFrom(e.currentTarget)
-            periodMenu.set(true)
-          }}
-        >
-          {periodText}
-          <Chevron />
-        </button>
         <div className="g-num-row">
           <span className="g-num">{fmtInt(m.visitors)}</span>
           <span className="g-unit">{copy.people}</span>

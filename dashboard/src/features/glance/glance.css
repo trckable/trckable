@@ -119,25 +119,27 @@
   outline-offset: 2px;
 }
 
-/* The format toggle: quiet until looked at */
+/* The format toggle: a capsule like the control row's, quiet until looked at */
 .g-fmt {
   display: inline-flex;
+  align-items: center;
   gap: 2px;
+  height: var(--hdr-h, 40px);
   padding: 2px;
-  border-radius: 99px;
-  border: 1px solid transparent;
-  opacity: 0.55;
-  transition: opacity 0.15s, border-color 0.15s;
+  border-radius: 12px;
+  border: 1px solid var(--g-border);
+  background: var(--surface, transparent);
+  opacity: 0.7;
+  transition: opacity 0.15s;
 }
 .g-fmt:hover,
 .g-fmt:focus-within {
   opacity: 1;
-  border-color: var(--g-border);
 }
 .g-fmt button {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+  width: 32px;
+  height: calc(var(--hdr-h, 40px) - 6px);
+  border-radius: 8px;
   border: 0;
   background: transparent;
   color: var(--g-muted);
@@ -151,8 +153,8 @@
   color: var(--g-ink);
 }
 .g-fmt svg {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
@@ -161,9 +163,19 @@
 }
 @media (max-width: 640px) {
   .g-fmt button {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
   }
+  .g-fmt {
+    height: auto;
+  }
+}
+
+/* While Glance is the format, the period capsule keeps its steps and picker but
+   not the comparison toggle or the fold: compare lives in each tile's panel. */
+body[data-fmt='glance'] .ctl-see .cmp-root,
+body[data-fmt='glance'] .ctl-see .fold-toggle {
+  display: none;
 }
 
 /* Layout */
@@ -173,30 +185,6 @@
   gap: 28px;
   min-width: 0;
   padding-top: 8px;
-}
-.g-top {
-  display: flex;
-  justify-content: flex-end;
-}
-.g-find {
-  height: 34px;
-  padding: 0 10px 0 12px;
-  border-radius: 99px;
-  border: 1px solid var(--g-border);
-  background: transparent;
-  color: var(--g-faint);
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
-.g-kbd {
-  font-family: var(--mono);
-  font-size: 11px;
-  padding: 2px 6px;
-  border: 1px solid var(--g-border-strong);
-  border-radius: 99px;
 }
 
 /* Hero */
@@ -212,20 +200,6 @@
   flex-direction: column;
   gap: 10px;
   flex: 1 1 320px;
-}
-.g-period {
-  align-self: flex-start;
-  height: 30px;
-  padding: 0 10px;
-  border-radius: 99px;
-  border: 1px solid var(--g-border);
-  background: transparent;
-  color: var(--g-muted);
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
 }
 .g-num-row {
   display: flex;
@@ -780,16 +754,6 @@ button.g-chip.on {
   }
   .g-tile-value {
     font-size: 22px;
-  }
-  .g-find-label,
-  .g-kbd {
-    display: none;
-  }
-  .g-find {
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    justify-content: center;
   }
   .g-sheet-wrap {
     align-items: flex-end;

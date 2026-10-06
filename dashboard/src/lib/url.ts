@@ -62,8 +62,8 @@ export interface ViewState {
   v?: string
   /** Explore opened from one of the story's answers: which, so the page can say so and lead back. */
   story?: string
-  /** Data's format: absent = today's charts; 'glance' = the Glance prototype (features/glance). */
-  fmt?: 'glance'
+  /** Data's format (features/glance, behind its flag): absent = the viewer's last choice, else Glance. */
+  fmt?: 'glance' | 'charts'
 }
 
 /** Funnel steps from the address; anything but a page or a goal is dropped. */
@@ -108,7 +108,7 @@ export function readView(params: URLSearchParams): ViewState {
     cal: params.get('cal')?.match(/^(1|\d{4}-\d{2}(-\d{2})?)$/)?.[0],
     v: params.get('v')?.match(/^(story|explore)$/)?.[0],
     story: params.get('story')?.match(/^[a-z]{1,12}$/)?.[0],
-    fmt: params.get('fmt') === 'glance' ? 'glance' : undefined,
+    fmt: params.get('fmt') === 'glance' || params.get('fmt') === 'charts' ? (params.get('fmt') as 'glance' | 'charts') : undefined,
   }
 }
 

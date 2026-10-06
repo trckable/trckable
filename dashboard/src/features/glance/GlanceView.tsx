@@ -2,11 +2,10 @@
 // detail panel and ⌘K). One report in, nothing fetched here.
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { caps } from '../../lib/keys'
 import type { Report, ReportQuery, Site } from '../../lib/api'
 import { PRESETS, fmtRange, todayIn, type Range } from '../../lib/dates'
 import type { ViewState } from '../../lib/url'
-import { copy } from './copy'
+import { searchOpen } from './flag'
 import { Hero } from './Hero'
 import { modelOf, type TileData } from './model'
 import { Palette } from './Palette'
@@ -27,6 +26,8 @@ export interface GlanceProps {
   loading: boolean
   error?: string | null
   onRetry?: () => void
+  /** Opens Peek; offered as the first row of the search. */
+  onAsk?: () => void
 }
 
 const isFind = (e: KeyboardEvent) => (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'
@@ -57,6 +58,12 @@ export default function GlanceView(p: GlanceProps) {
     return () => window.removeEventListener('keydown', on, true)
   }, [])
 
+  // The header's one search button opens this palette while Glance is up.
+  useEffect(() => {
+    searchOpen.set((from) => setFind({ opener: from }))
+    return () => searchOpen.set(null)
+  }, [])
+
   const openTile = (t: TileData, el: HTMLElement | null, key?: string) => setOpen({ tile: t, key, opener: el })
   const fromSearch = (pk: Pick) => {
     const t = m.tiles.find((x) => x.key === pk.tile)
@@ -76,13 +83,6 @@ export default function GlanceView(p: GlanceProps) {
   if (settling) return <div className="glance"><GlanceSkeleton /></div>
   return (
     <div className="glance">
-      <div className="g-top">
-        <button type="button" className="g-find" aria-label={copy.findLabel} onClick={(e) => setFind({ opener: e.currentTarget })}>
-          <svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.4" fill="none" /><path d="M9.5 9.5L13 13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>
-          <span className="g-find-label">{copy.find}</span>
-          <span className="g-kbd" aria-hidden="true">{caps('mod+k').join('')}</span>
-        </button>
-      </div>
       <Hero m={m} period={p.view.period} range={p.range} today={today} />
       {m.alert && <AlertBanner alert={m.alert} onOpen={fromAlert} />}
       <Tiles tiles={m.tiles} failed={!!p.error} onOpen={(t, el) => openTile(t, el)} onRetry={p.onRetry} />
@@ -104,7 +104,7 @@ export default function GlanceView(p: GlanceProps) {
             onUnpick={() => setOpen({ ...open, key: undefined })}
           />
         )}
-        {find && <Palette items={items} opener={find.opener} onPick={fromSearch} onClose={() => setFind(null)} />}
+        {find && <Palette items={items} opener={find.opener} onAsk={p.onAsk && (() => { setFind(null); p.onAsk?.() })} onPick={fromSearch} onClose={() => setFind(null)} />}
       </div>, document.body)}
       {connect && (
         <Suspense fallback={null}>

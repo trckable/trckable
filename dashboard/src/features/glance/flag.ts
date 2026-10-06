@@ -2,6 +2,7 @@
 // localStorage.trckableGlance = '1'), Data keeps today's charts as the default
 // and a quiet toggle reaches the Glance format. The choice is remembered per
 // viewer and, when it is Glance, written into the address as ?fmt=glance.
+import { miniStore } from '../../lib/miniStore'
 import type { ViewState } from '../../lib/url'
 
 const FLAG = 'trckableGlance'
@@ -34,10 +35,13 @@ export function glanceOn(): boolean {
 
 export type Format = 'charts' | 'glance'
 
-/** The format on show: the address first, then what this viewer chose last, else the charts. */
+/** The format on show: the address first, then what this viewer chose last, else Glance. */
 export function formatOf(view: Pick<ViewState, 'fmt'>): Format {
   if (view.fmt) return view.fmt
-  return read(FORMAT) === 'glance' ? 'glance' : 'charts'
+  return read(FORMAT) === 'charts' ? 'charts' : 'glance'
 }
+
+/** Set by Glance while it is up: opens its search. The header's one search button shows only while this is set. */
+export const searchOpen = miniStore<((from: HTMLElement | null) => void) | null>(null)
 
 export const rememberFormat = (f: Format) => write(FORMAT, f)

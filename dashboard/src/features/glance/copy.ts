@@ -109,5 +109,7 @@ export const copy = defineCopy('glance', {
   findResults: (n: number) => `${n} results`,
   kinds: { page: 'Page', source: 'Source', country: 'Country', device: 'Device', goal: 'Goal' },
   paletteLabel: 'Search',
+  askPeek: 'Ask Peek',
+  askPeekQ: (q: string) => `Ask Peek: ${q}`,
   visitorsN: (n: string) => `${n} visitors`,
 })
