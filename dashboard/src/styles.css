@@ -2096,16 +2096,6 @@ body[data-mode] .card.overview {
   animation: none;
   opacity: 0.3;
 }
-button.kpi-live .label::after {
-  content: '→';
-  margin-left: auto;
-  color: var(--text-3);
-  transition: transform 0.2s var(--ease), color 0.2s;
-}
-button.kpi-live:hover .label::after {
-  color: var(--accent);
-  transform: translateX(2px);
-}
 @media (prefers-reduced-motion: reduce) {
   .view-pill {
     transition: none;
@@ -2794,7 +2784,6 @@ button.kpi-live:hover .label::after {
 .view-switch {
   view-transition-name: view-switch;
 }
-.kpi-live .value,
 .live-online {
   view-transition-name: online-count;
 }
