@@ -9,8 +9,13 @@ section into the release.
 
 ## Unreleased
 
+### Removed
+
+- The Online now tile in the key numbers: the Live | Data switch already says the number.
+
 ### Changed
 
+- The Conversion tile no longer shows a dash: it keeps the period's value while a day is picked or Replay plays, and is left out only where there is no revenue data.
 - Story says the takeaway in one sentence under the headline (change on the period before, what drove it, whether goals followed), puts a small up or down arrow with the percent on each answer, and replaces the boxed feedback bar with one quiet line: Was this useful? Yes, Not really, Tell us what you came for.
 - The header's first row (logo, site, Live | Data, Peek, avatar) is a floating glass bar: as wide as the page's content, rounded, sticky a little below the top, with a soft shadow once you scroll and a solid fallback where blur or transparency is off; the row below sits on the page with more space.
 

@@ -36,8 +36,7 @@ import { chartTips } from '../features/overview/chartTips'
 import { useChartHold } from '../features/overview/reserve'
 import { LiveSlot } from '../features/live/liveChunk'
 import { useLivePulses } from '../features/live/useLivePulses'
-import { OnlineKpi } from '../features/live/OnlineKpi'
-import { entryCopy } from '../features/live/entryCopy'
+import { useLiveCount } from '../features/live/liveLink'
 import { liveShown } from '../features/live/liveShown'
 import { useNotes } from '../features/notes/useNotes'
 import { jump } from '../features/notes/jump'
@@ -382,7 +381,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const { raced, follow, blank } = useRaceNow({ src, dates: series.map((p) => p.t.slice(0, 10)), hourSeries: chartSeries, hours: !!hours, hourAt, idx: scrubIdx, telling, racing, playing })
   if (raced) [k, dayRev] = [raced.kpis, raced.revenue]
   const revenueNow = dayRev ?? money?.revenue
-  const conv = scrubbing ? undefined : money?.conversion
+  const conv = money?.conversion // the period's, also while a day is picked: the tile keeps its place
   const soFarRpv = k?.visitors ? (dayRev ?? 0) / k.visitors : 0
   const rpv = scrubbing || raced ? soFarRpv : money?.revenue_per_visitor
   const replayPoints = hours ? chartSeries.length : series.length
@@ -423,6 +422,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // the tiles, the chart legend and a shared card never disagree with it.
   const vs = 'vs ' + compareLabel(pickerValue.period, compareMode, pickerValue.range)
   const online = onlineNow(stream, data?.online, real?.online)
+  useLiveCount(online) // the Live | Data switch says the same number
 
   // Hover must never change the Sources card's height (see its note below).
   // Following a channel, Sources keeps every channel, the followed one lit.
@@ -530,8 +530,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} blank={blank} site={site} bots={data?.bots}
         pace={live && !isShared() ? extra({ part: 'pace', site: site.id, today, filters: query.filters, test: query.testPayments }) : undefined}
         hint={compareOn && !scrubbing && !raced && !trailData ? visitorsHint({ site: site.id, period: view.period, day: range.to, filters: view.filters }) : undefined}
-        // A shared page has no live stream, so it says where the number comes from instead of waiting to connect forever.
-        online={<OnlineKpi online={online} canOpen={!isShared()} note={stream.connected || isShared() ? entryCopy.onlineNote : entryCopy.connecting} />}
       />
 
       <div className={active ? 'overview-chart replaying' : 'overview-chart'} role="group" aria-label={`${name} over time`}>
