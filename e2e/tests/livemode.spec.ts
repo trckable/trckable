@@ -1,6 +1,6 @@
 // Live mode: the site right now. A visit from another browser slides into
-// "On the site right now" and moves the numbers, without a reload; the switch,
-// the L key and the Online now tile all lead there; a phone gets the panels
+// "On the site right now" and moves the numbers, without a reload; the switch
+// and the L key lead there; a phone gets the panels
 // stacked with the list scrolling inside.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
@@ -110,11 +110,10 @@ test('Live has no dots of its own: the switch has the one, and it dims while the
   await expect(dot).toHaveCSS('opacity', '0.3')
 })
 
-test('L, the Online now tile and the switch lead to Live and back', async ({ page }) => {
+test('L and the switch lead to Live and back', async ({ page }) => {
   await signIn(page, '/example.com?view=data')
-  const tile = page.locator('button.kpi', { has: page.locator('.label', { hasText: 'Online now' }) })
-  await expect(tile).toBeVisible({ timeout: 15_000 })
-  await tile.click()
+  await expect(page.locator('.range-picker')).toBeVisible({ timeout: 15_000 })
+  await page.getByRole('group', { name: 'View' }).getByRole('button', { name: /^Live/ }).click()
   await expect(page).toHaveURL(/[?&]view=live/)
   await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible()
   await page.keyboard.press('l')
@@ -148,7 +147,7 @@ test('switching both ways: no blank frame, no shift, scroll kept', async ({ page
   await visit(page, 'switch') // a site with data shows the full Data view
   await signIn(page, '/example.com?view=data')
   const view = page.getByRole('group', { name: 'View' })
-  await expect(page.locator('button.kpi', { has: page.locator('.label', { hasText: 'Online now' }) })).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('.range-picker')).toBeVisible({ timeout: 15_000 })
   await page.evaluate(() => {
     const w = window as unknown as { blanks: number }
     w.blanks = 0

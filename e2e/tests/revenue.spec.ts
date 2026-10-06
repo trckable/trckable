@@ -146,8 +146,6 @@ test('every number in the strip can be the chart, each in its own units, and the
     expect(await chart.locator('svg text').filter({ hasText: /^-/ }).count()).toBe(0)
   }
   await shot(page, 'session-1280')
-  // Online now is last, and is not a chart.
-  await expect(page.getByRole('group', { name: 'Key numbers' }).locator('.kpi').last()).toContainText('Online now')
 })
 
 test('a period only partly there before it has no change to show, never a giant percentage', async ({ page }) => {

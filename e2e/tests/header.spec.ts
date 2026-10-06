@@ -284,10 +284,3 @@ test('Replay speeds are durations for this period, remembered, and [ ] change th
   await expect(trigger).toContainText('Normal')
   await page.getByRole('button', { name: 'Pause replay' }).click()
 })
-
-test('Online now pulses while anyone is on, and its count rolls', async ({ page }) => {
-  await open(page)
-  const tile = page.locator('.kpi-online')
-  await expect(tile.locator('.roll')).toBeVisible()
-  await expect(tile).toHaveAttribute('title', /last 5 min|connecting/)
-})

@@ -25,9 +25,9 @@ test('a dimmed Revenue tile stands in the second place for an owner without paym
   await page.goto(`${API}/example.com?view=data`)
   const tiles = page.getByRole('group', { name: 'Key numbers' })
   await expect(tiles.locator('.kpi .value.num').first()).toBeVisible()
-  // Visitors, Revenue, Pageviews, Bounce rate, Session time and Online now.
-  await expect(tiles.locator('.kpi')).toHaveCount(6)
-  // A mark before every name but Online now, which has its live dot.
+  // Visitors, Revenue, Pageviews, Bounce rate, Session time.
+  await expect(tiles.locator('.kpi')).toHaveCount(5)
+  // A mark before every name.
   await expect(tiles.locator('.kpi-ico svg')).toHaveCount(5)
   const tile = tiles.getByRole('button', { name: /^Revenue/ })
   await expect(tile).toBeVisible()
