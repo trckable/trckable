@@ -12,6 +12,8 @@ section into the release.
 ### Changed
 
 - Milestones count in finer steps (1, 2.5, 5 per power of ten) and the list shows how far the next one is, with a rough number of days at the recent pace; the steps in between are recorded quietly, with no notice, and sites already past them get no flood.
+- Story says the takeaway in one sentence under the headline (change on the period before, what drove it, whether goals followed), puts a small up or down arrow with the percent on each answer, and replaces the boxed feedback bar with one quiet line: Was this useful? Yes, Not really, Tell us what you came for.
+- The header's first row (logo, site, Live | Data, Peek, avatar) is a floating glass bar: as wide as the page's content, rounded, sticky a little below the top, with a soft shadow once you scroll and a solid fallback where blur or transparency is off; the row below sits on the page with more space.
 
 ## 0.6.1 (6 Oct 2026)
 

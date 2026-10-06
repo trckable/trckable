@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { KPIs, Result, Row } from '../../lib/api'
-import { biggestLoss, leavesFastest, stateOf, storyOf, tiles, type Input } from './rules'
+import { biggestLoss, deltaOf, leavesFastest, stateOf, storyOf, takeawayOf, tiles, type Input } from './rules'
 
 const kpis = (o: Partial<KPIs> = {}): KPIs => ({ visitors: 1000, sessions: 1100, pageviews: 3000, bounce_rate: 0.4, avg_session_s: 120, views_per_session: 2.7, new_visitor_share: 0.5, ...o })
 const rows = (r: [string, number, number?][]): Row[] => r.map(([value, visitors, bounce_rate]) => ({ value, visitors, bounce_rate }))
@@ -87,5 +87,41 @@ describe('answers', () => {
   })
   it('names the worse numbers in the verdict', () => {
     expect(storyOf({ cur: result({ visitors: 2000, bounce_rate: 0.9 }), prev: result({ visitors: 1000 }), goals: false }).answers[4].line).toBe('Mostly good. Only bounce rate is worse than before.')
+  })
+})
+
+describe('takeaway and deltas', () => {
+  const goal = (n: number): Row[] => [{ value: 'Signup', visitors: n }]
+  it('names the change, the driving source and whether goals followed', () => {
+    const i: Input = {
+      cur: result({ visitors: 1240 }, [['Search', 900], ['Direct', 340]], { goals: goal(30) }),
+      prev: result({ visitors: 1000 }, [['Search', 700], ['Direct', 300]], { goals: goal(20) }),
+      goals: true,
+    }
+    expect(takeawayOf(i)).toBe('Up 24% on the period before, mostly from Search. Signup followed.')
+  })
+  it('names no source that explains under half the move, and says when goals did not follow', () => {
+    const i: Input = {
+      cur: result({ visitors: 1300 }, [['Search', 800], ['Direct', 500]], { goals: goal(10) }),
+      prev: result({ visitors: 1000 }, [['Search', 600], ['Direct', 400]], { goals: goal(20) }),
+      goals: true,
+    }
+    expect(takeawayOf(i)).toBe('Up 30% on the period before, mostly from Search. Signup did not follow.')
+    const mixed: Input = { cur: result({ visitors: 1300 }, [['Search', 700], ['Direct', 600], ['Paid', 0]]), prev: result({ visitors: 1000 }, [['Search', 600], ['Direct', 500], ['Paid', 100]]), goals: false }
+    expect(takeawayOf(mixed)).toBe('Up 30% on the period before.')
+  })
+  it('says about the same within 5% and nothing without a period before', () => {
+    expect(takeawayOf({ cur: result({ visitors: 1030 }), prev: result({ visitors: 1000 }), goals: false })).toBe('About the same as the period before.')
+    expect(takeawayOf({ cur: result({ visitors: 1030 }), goals: false })).toBe('')
+  })
+  it('reads bounce going up as bad and a small move as flat', () => {
+    expect(deltaOf(0.5, 0.4, 'down')).toMatchObject({ arrow: '↑', pct: 25, tone: 'bad' })
+    expect(deltaOf(120, 100)).toMatchObject({ arrow: '↑', tone: 'good' })
+    expect(deltaOf(101, 100)).toMatchObject({ arrow: '→', tone: 'flat' })
+    expect(deltaOf(5, undefined)).toBeNull()
+  })
+  it('puts an arrow on the first answer only when there is a period before', () => {
+    expect(storyOf(grew).answers[0].delta).toMatchObject({ arrow: '↑', pct: 250 })
+    expect(storyOf({ cur: result({ visitors: 500 }), goals: false }).answers[0].delta).toBeUndefined()
   })
 })
