@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Added
+
+- Live says when the site is busier than usual ("Busier than usual: 50 vs ~20. Why? →"): the panel names who brings the extra people (a source, the page they land on, a country or campaign), when it started and that it is still going; the usual is the same hour on the last same weekdays, and a site needs a week of history.
+
 ### Removed
 
 - The Calendar view in Data (the Chart | Calendar switch and the month grid); old `cal=` links open the chart.

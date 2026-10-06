@@ -628,3 +628,62 @@ body[data-mode] .live-head-row h2,
     font-size: var(--ph-small);
   }
 }
+
+/* Busier than usual: one quiet line above the two panels, and a small panel
+   that opens under it and pushes the panels down. */
+.live-busier {
+  grid-column: 1 / -1;
+}
+.live-view:has(.live-busier) {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.live-busier-line {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.live-busier-why {
+  font: inherit;
+  color: var(--text);
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--border-2);
+  text-underline-offset: 3px;
+}
+.live-busier-why:hover {
+  text-decoration-color: var(--text-2);
+}
+.live-busier-why:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.live-busier-panel {
+  margin-top: 8px;
+  padding: 12px 16px;
+}
+.live-busier-panel p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+@media (max-width: 960px) {
+  .live-view:has(.live-busier) {
+    grid-template-rows: none;
+  }
+}
+@media (max-width: 640px) {
+  .live-busier-line {
+    font-size: var(--ph-text);
+  }
+  .live-busier-panel p {
+    font-size: var(--ph-text);
+  }
+}

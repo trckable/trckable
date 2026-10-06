@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -35,6 +36,11 @@ var (
 	daily   = flag.Int("daily", 450, "visitors on an average weekday at the start")
 	pay     = flag.Bool("payments", true, "also seed Stripe payments (through the real webhook inbox)")
 	seed    = flag.Int64("seed", 7, "random seed (same seed, same data)")
+	// The spike is for trying "busier than usual" in Live: demo data only,
+	// this tool is not part of the server.
+	spike     = flag.Bool("spike", os.Getenv("DEMOSEED_SPIKE") == "1", "add a rise: a crowd from facebook.com onto /products/summer over the last 15 minutes (or DEMOSEED_SPIKE=1)")
+	spikeSite = flag.String("site", "", "with -spike-live: the site's id (tkb_…), which the collection address takes")
+	spikeLive = flag.String("spike-live", "", "instead of seeding, keep that crowd arriving for 20 minutes through the server at this URL (e.g. http://localhost:8092)")
 )
 
 type channel struct {
@@ -72,6 +78,10 @@ var (
 func main() {
 	flag.Parse()
 	ctx := context.Background()
+	if *spikeLive != "" {
+		must(keepSpiking(*spikeLive, *domain, *spikeSite))
+		return
+	}
 	must(os.MkdirAll(*dataDir, 0o700))
 	ctl, err := sqlite.Open(ctx, filepath.Join(*dataDir, "trckable.db"))
 	must(err)
@@ -86,7 +96,7 @@ func main() {
 	rng := rand.New(rand.NewSource(*seed)) //nolint:gosec // seeded so demo data is repeatable, not security
 	now := time.Now()
 	start := now.AddDate(0, 0, -*days).Truncate(24 * time.Hour)
-	spike := *days - 13 // a launch post that took off on LinkedIn, two weeks ago
+	spikeDay := *days - 13 // a launch post that took off on LinkedIn, two weeks ago
 	var evs []event.Event
 	var buys []purchase
 	id := uint64(now.UnixNano())
@@ -102,9 +112,9 @@ func main() {
 		}
 		boost := 1.0
 		switch d {
-		case spike:
+		case spikeDay:
 			boost = 2.8
-		case spike + 1:
+		case spikeDay + 1:
 			boost = 1.6
 		}
 		n := int(float64(*daily) * (1 + progress*0.6) * weekly * boost * (0.88 + rng.Float64()*0.24))
@@ -125,11 +135,11 @@ func main() {
 			if _, ok := firstSeen[visitor]; !ok {
 				firstSeen[visitor] = ts.UnixMilli()
 			}
-			ch := pickChannel(rng, progress, d == spike || d == spike+1)
+			ch := pickChannel(rng, progress, d == spikeDay || d == spikeDay+1)
 			ref := ""
 			if len(ch.refs) > 0 {
 				ref = ch.refs[rng.Intn(len(ch.refs))]
-				if ch.name == "Social" && (d == spike || d == spike+1) && rng.Float64() < 0.8 {
+				if ch.name == "Social" && (d == spikeDay || d == spikeDay+1) && rng.Float64() < 0.8 {
 					ref = "www.linkedin.com"
 				}
 			}
@@ -143,7 +153,7 @@ func main() {
 			if rng.Float64() > 0.48 {
 				pvs = 2 + int(rng.ExpFloat64()*1.6)
 			}
-			if d == spike && ch.name == "Social" && rng.Float64() < 0.4 {
+			if d == spikeDay && ch.name == "Social" && rng.Float64() < 0.4 {
 				pvs = 1
 			}
 			path := ch.pages[rng.Intn(len(ch.pages))]
@@ -180,6 +190,9 @@ func main() {
 		}
 	}
 	evs = append(evs, crawls(rng, site, start, now, &id)...)
+	if *spike {
+		evs = append(evs, crowd(rand.New(rand.NewSource(*seed+1)), site, now, &id)...) //nolint:gosec // seeded demo data, not security
+	}
 	sort.SliceStable(evs, func(i, j int) bool { return evs[i].TS < evs[j].TS })
 	for i := range evs { // the WAL is in time order; nothing may be in the future
 		if evs[i].TS > now.UnixMilli() {
@@ -426,4 +439,86 @@ func demoLanguage(country string, visitor uint64) string {
 		return "en"
 	}
 	return own
+}
+
+// crowd is a rise that began 15 minutes ago: people arriving from Facebook on
+// one product page, a few more from Google, the rest as on any day. About 45
+// are online at the end. Visitors are new, so history stays as it was.
+func crowd(rng *rand.Rand, site string, now time.Time, id *uint64) []event.Event {
+	var out []event.Event
+	for k := 14; k >= 0; k-- {
+		n := 2 + (14-k)/2 // a minute's new visitors, growing
+		for range n {
+			ts := now.Add(-time.Duration(k)*time.Minute - time.Duration(rng.Intn(55))*time.Second)
+			out = append(out, crowdVisit(rng, site, ts, id)...)
+		}
+	}
+	return out
+}
+
+func crowdVisit(rng *rand.Rand, site string, ts time.Time, id *uint64) []event.Event {
+	visitor := rng.Uint64()
+	c := countries[weighted(rng, len(countries), func(i int) float64 { return countries[i].w })]
+	dv := devices[weighted(rng, len(devices), func(i int) float64 { return devices[i].w })]
+	e := event.Event{Site: site, Kind: event.KindPageview, TS: ts.UnixMilli(), Visitor: visitor, FirstSeen: ts.UnixMilli(), Hostname: *domain,
+		Country: c.code, City: c.city, Device: dv.dev, OS: dv.os, Browser: dv.br, Language: "en"}
+	e.BrowserVersion, e.Screen = demoBrowser(dv.br, visitor), demoScreen(dv.dev, visitor)
+	switch r := rng.Float64(); {
+	case r < 0.7:
+		e.Path, e.Channel, e.RefHost, e.Country, e.City = "/products/summer", "Social", "l.facebook.com", "US", "New York"
+	case r < 0.85:
+		e.Path, e.Channel, e.RefHost = "/pricing", "Search", "google.com"
+	default:
+		e.Path, e.Channel = pages[zipf(rng, len(pages))], "Direct"
+	}
+	*id++
+	e.EventID, e.Pageview = *id, *id
+	out := []event.Event{e}
+	if rng.Float64() < 0.4 { // a second page, a little later
+		*id++
+		next := event.Event{Site: site, Kind: event.KindPageview, EventID: *id, Pageview: *id, TS: ts.Add(40 * time.Second).UnixMilli(), Visitor: visitor, FirstSeen: e.FirstSeen,
+			Hostname: *domain, Path: "/pricing", Channel: "Direct", Country: e.Country, City: e.City, Device: e.Device, OS: e.OS, Browser: e.Browser, Language: "en"}
+		out = append(out, next)
+	}
+	return out
+}
+
+// keepSpiking sends the same crowd, a minute's worth every minute for 20
+// minutes, through the server's collection address, so the rise is still on
+// when the dashboard is opened. The server must be running with dev traffic
+// allowed from localhost.
+func keepSpiking(base, domain, site string) error {
+	rng := rand.New(rand.NewSource(time.Now().UnixNano())) //nolint:gosec // demo traffic, not security
+	hit := func(url, ref, path string, visitor uint64) error {
+		body, _ := json.Marshal(map[string]any{"s": site, "k": "pv", "u": "https://" + domain + path, "r": ref, "w": 1440, "l": "en",
+			"id": strconv.FormatUint(rng.Uint64()>>12, 36), "pv": strconv.FormatUint(rng.Uint64()>>12, 36), "v": strconv.FormatUint(visitor, 36), "dev": 1})
+		req, err := http.NewRequest(http.MethodPost, url+"/api/e", strings.NewReader(string(body)))
+		if err != nil {
+			return err
+		}
+		req.Header.Set("Content-Type", "text/plain")
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36")
+		req.Header.Set("X-Forwarded-For", fmt.Sprintf("203.0.113.%d", 1+rng.Intn(250)))
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return err
+		}
+		return resp.Body.Close()
+	}
+	for minute := 0; minute < 20; minute++ {
+		for range 9 {
+			ref, path := "https://l.facebook.com/", "/products/summer"
+			switch r := rng.Float64(); {
+			case r >= 0.7 && r < 0.85:
+				ref, path = "https://www.google.com/", "/pricing"
+			case r >= 0.85:
+				ref, path = "", pages[zipf(rng, len(pages))]
+			}
+			if err := hit(base, ref, path, rng.Uint64()); err != nil {
+				return err
+			}
+			time.Sleep(time.Duration(rng.Intn(13000)) * time.Millisecond)
+		}
+	}
+	return nil
 }

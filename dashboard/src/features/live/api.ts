@@ -24,3 +24,28 @@ export interface LiveNow {
 }
 
 export const liveNow = (site: string, signal?: AbortSignal) => call<LiveNow>('GET', `/sites/${encodeURIComponent(site)}/now`, undefined, signal)
+
+/** Who brings more people than usual: a source (by name), an entry page, a country code or a campaign. */
+export interface BusierWhy {
+  dim: 'source' | 'page' | 'country' | 'campaign'
+  value: string
+  now: number
+  usual: number
+  plus: number
+}
+
+/** How the people online compare with the same hour on past days (server/internal/busier). */
+export interface Busier {
+  now: number
+  baseline: boolean // false under a week of history: no usual, no verdict
+  usual: number
+  low: number
+  high: number
+  state: 'busier' | 'quieter' | ''
+  since?: number // unix seconds the rise began; present while busier
+  since_capped?: boolean // ... at or before that, the look back ending there
+  rest: number // extra people the named sources do not explain
+  why: BusierWhy[]
+}
+
+export const liveBusier = (site: string, signal?: AbortSignal) => call<Busier>('GET', `/sites/${encodeURIComponent(site)}/busier`, undefined, signal)
