@@ -14,14 +14,15 @@ function dayLabel(ago: number) {
   return d.toLocaleDateString(tag, { day: 'numeric', month: 'short' })
 }
 
-export function Stacked({ rows, days, colors }: { rows: SiteRow[]; days: number; colors: Map<string, string> }) {
+export function Stacked({ rows, days, colors, start = 0 }: { rows: SiteRow[]; days: number; colors: Map<string, string>; start?: number }) {
   const [at, setAt] = useState<number | null>(null)
-  const n = Math.max(0, ...rows.filter((r) => r.series?.some((v) => v > 0)).map((r) => r.series?.length ?? 0))
+  const total = Math.max(0, ...rows.filter((r) => r.series?.some((v) => v > 0)).map((r) => r.series?.length ?? 0))
+  const n = total - start
   if (!n) return <div className="all-chart-empty faint">{copy.empty}</div>
   const W = 640
   const H = 180
   // Bottom-up: the biggest site sits at the bottom, the smaller ones on top.
-  const order = bandsOf(rows, colors, n)
+  const order = bandsOf(rows.map((r) => ({ ...r, series: r.series?.slice(start) ?? null })), colors, n)
   const sums = Array.from({ length: n }, (_, i) => order.reduce((a, b) => a + b.series[i], 0))
   const max = Math.max(1, ...sums)
   const x = (i: number) => (n > 1 ? (i / (n - 1)) * W : W / 2)
@@ -35,7 +36,7 @@ export function Stacked({ rows, days, colors }: { rows: SiteRow[]; days: number;
     const bottom = lo.map((_, i) => `L${x(n - 1 - i).toFixed(1)} ${y(lo[n - 1 - i]).toFixed(1)}`).join('')
     return { b, d: top + bottom + 'Z', line: top }
   })
-  const step = days / n // days per point: a day, or a week for 12 months
+  const step = days / total // days per point: a day, or a week for 12 months
   const when = (i: number) => dayLabel(Math.round((n - 1 - i) * step))
   const name = (label: string) => label || copy.other
   return (
@@ -60,7 +61,7 @@ export function Stacked({ rows, days, colors }: { rows: SiteRow[]; days: number;
         {at !== null && <line x1={x(at)} x2={x(at)} y1="0" y2={H} stroke="var(--text-3)" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />}
       </svg>
       <div className="all-chart-axis faint">
-        <span>{when(0)}</span>
+        <span>{start > 0 ? copy.since(when(0)) : when(0)}</span>
         <span>{when(n - 1)}</span>
       </div>
       {at !== null && (
