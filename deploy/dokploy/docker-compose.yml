@@ -1,6 +1,6 @@
 services:
   trckable:
-    image: ghcr.io/trckable/trckable:0.5.8
+    image: ghcr.io/trckable/trckable:0.6.0
     restart: unless-stopped
     environment:
       TRCKABLE_BASE_URL: ${TRCKABLE_BASE_URL}
