@@ -251,3 +251,75 @@ html {
     animation: none;
   }
 }
+
+/* ---- The band: the first header row as a floating glass bar -----------------
+   As wide as the page's content, rounded, a thin lit edge on top and a
+   hairline all round, stuck near the top so the page scrolls visibly under
+   it. Only the surface behind is blurred, never the content. Without blur
+   (or with reduced transparency, or more contrast asked for) it is solid. */
+.hdr-band {
+  --band-bg: var(--band);
+  position: sticky;
+  top: 8px;
+  z-index: 30;
+  margin-top: -16px;
+  padding: 4px 10px;
+  border: 1px solid var(--band-line);
+  border-radius: 16px;
+  background: var(--band-bg);
+  box-shadow: inset 0 1px 0 var(--band-hi), 0 8px 32px transparent;
+  transition: box-shadow 0.3s;
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  @media (prefers-reduced-transparency: no-preference) {
+    .hdr-band {
+      --band-bg: var(--band-glass);
+      -webkit-backdrop-filter: blur(22px) saturate(180%);
+      backdrop-filter: blur(22px) saturate(180%);
+    }
+  }
+}
+@media (prefers-contrast: more) {
+  .hdr-band {
+    --band-bg: var(--band);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--border-2);
+  }
+}
+.hdr-band[data-scrolled] {
+  box-shadow: inset 0 1px 0 var(--band-hi), 0 8px 32px var(--band-drop);
+}
+@media (max-width: 720px) {
+  .hdr-band {
+    margin-top: -4px;
+    padding: 2px 6px;
+  }
+}
+/* Breathing space under the bar: the row below sits a full gap away. */
+.hdr-band ~ :is(.subbar, .phone-row) {
+  margin-top: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hdr-band {
+    transition: none;
+  }
+}
+.hdr-band .header.quiet .site-zone,
+.hdr-band .view-switch {
+  border-color: transparent;
+  background: var(--band-fill);
+}
+.hdr-band .header.quiet .site-zone:hover,
+.hdr-band .header.quiet .site-zone:focus-within {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+}
+.hdr-band .header-tools.quiet .btn.ghost:hover,
+.hdr-band .header-tools.quiet .btn.ghost[aria-expanded='true'],
+.hdr-band .site-zone .btn.gear:hover {
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+}
+.hdr-band .header.quiet .site-zone .site-sep {
+  background: color-mix(in srgb, var(--text) 14%, transparent);
+}
