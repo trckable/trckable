@@ -1,16 +1,18 @@
-// All sites' Online now tile: the same number as the switcher's header.
+// All sites' Online now card: the same number as the switcher's header.
 import { useOnlineAll } from '../lib/allOnline'
 import { fmtInt } from '../lib/format'
+import { copy } from './allSitesCopy'
 
 export function OnlineTile() {
   const online = useOnlineAll() ?? 0
   return (
-    <div className="all-tile">
-      <span className="faint">Online now</span>
-      <b className="num">
-        {online > 0 && <span className="pulse" aria-hidden="true" />} {fmtInt(online)}
-      </b>
-      <span className="faint">in the last 5 minutes</span>
+    <div className="all-stat">
+      <span className="all-stat-label">
+        <span className={online > 0 ? 'pulse' : 'pulse off'} aria-hidden="true" />
+        {copy.online}
+      </span>
+      <b className="num">{fmtInt(online)}</b>
+      <span className="faint">{copy.onlineSub}</span>
     </div>
   )
 }

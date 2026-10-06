@@ -1,0 +1,206 @@
+/* The two layouts of All sites' rows (views/AllRows.tsx): cards and a slim list. */
+.all-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (min-width: 1280px) {
+  .all-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .all-cards {
+    grid-template-columns: 1fr;
+  }
+}
+.all-slim {
+  display: grid;
+  gap: 4px;
+}
+.all-card,
+.all-line {
+  display: grid;
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.all-card:hover,
+.all-line:hover {
+  border-color: var(--accent);
+}
+.all-card.quiet,
+.all-line.quiet {
+  border-style: dashed;
+}
+.all-card {
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+}
+.all-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.all-card-head b,
+.all-line-name b {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.all-card-head .all-online {
+  margin-left: auto;
+  flex: none;
+}
+.all-card-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.all-big {
+  display: grid;
+  gap: 2px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.all-big .delta {
+  font-size: 12px;
+  font-weight: 500;
+}
+.all-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--up);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.all-online .pulse {
+  background: var(--up);
+}
+.all-online.none {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.all-bounce {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.all-bounce.warn {
+  color: var(--warn);
+}
+.all-share {
+  display: block;
+  height: 3px;
+  width: 100%;
+  min-width: 48px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.all-share i {
+  display: block;
+  height: 100%;
+  margin-right: auto;
+  opacity: 0.6;
+}
+.all-wait {
+  color: var(--text-3);
+  font-size: 13px;
+}
+.all-wait b {
+  color: var(--accent);
+  font-weight: 600;
+}
+.all-spark {
+  display: block;
+  width: 100%;
+}
+
+/* The slim list: one thin row per site. */
+.all-line {
+  grid-template-columns: minmax(0, 1.6fr) 90px repeat(3, minmax(70px, 0.7fr));
+  align-items: center;
+  gap: 16px;
+  min-height: 44px;
+  padding: 6px 14px;
+  border-radius: 10px;
+}
+.all-slim.money .all-line {
+  grid-template-columns: minmax(0, 1.6fr) 90px repeat(4, minmax(70px, 0.7fr));
+}
+.all-line .n {
+  display: grid;
+  justify-items: end;
+  font-variant-numeric: tabular-nums;
+  font-size: 13.5px;
+}
+.all-line .all-big {
+  font-size: 14px;
+}
+.all-line .all-wait {
+  grid-column: 2 / -1;
+}
+.all-line-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.all-line-name > span:last-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.all-line.all-cols {
+  min-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border: 0;
+  background: none;
+  cursor: default;
+  color: var(--text-3);
+  font-size: 12px;
+}
+.all-line.all-cols:hover {
+  border: 0;
+}
+@media (max-width: 760px) {
+  .all-line,
+  .all-slim.money .all-line {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: var(--ph-hit, 44px);
+  }
+  .all-line > :nth-child(n + 3),
+  .all-line .all-spark,
+  .all-line.all-cols {
+    display: none;
+  }
+  .all-line .all-big {
+    display: grid;
+  }
+}
+@media (max-width: 640px) {
+  :root .all-line .n {
+    font-size: var(--ph-text-2);
+  }
+  :root :is(.all-online.none, .all-wait, .all-bounce, .all-big .delta) {
+    font-size: 12px;
+  }
+}

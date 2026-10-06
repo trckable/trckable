@@ -122,9 +122,9 @@ test('pin, group, reorder by keyboard and drag, saved for the account, same orde
 
       // All sites, in the switcher's order: the pinned site first.
       await page.goto(`${API}/all`)
-      const first = page.locator('.all-list [role=listitem]').first()
+      const first = page.locator('.all-sites [role=listitem]').first()
       await expect(first).toContainText(f.domain, { timeout: 15_000 })
-      await expect(page.getByRole('button', { name: 'Switcher order' })).toHaveAttribute('aria-pressed', 'true')
+      await expect(page.getByRole('combobox', { name: 'Sort sites by' })).toHaveValue('order')
     } finally {
       await cleanUp(page.request)
     }
