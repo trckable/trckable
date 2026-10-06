@@ -3,12 +3,14 @@
 // to one site.
 import type { ReactNode } from 'react'
 import { AccountMenu } from '../../components/AccountMenu'
+import { HeaderBand } from './HeaderBand'
 import { useKeymap } from '../../lib/keys'
 import { isShared } from '../../lib/me'
 
 export function AllBar({ header }: { header: ReactNode }) {
   useKeymap()
   return (
+    <HeaderBand>
     <div className="header quiet">
       {header}
       <div className="header-tools quiet">
@@ -16,5 +18,6 @@ export function AllBar({ header }: { header: ReactNode }) {
         {!isShared() && <AccountMenu />}
       </div>
     </div>
+    </HeaderBand>
   )
 }

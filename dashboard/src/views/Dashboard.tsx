@@ -51,6 +51,7 @@ const CreateMenu = lazy(() => import('../features/create/CreateMenu').then((m) =
 import { MoreMenu } from '../components/MoreMenu'
 import { downloadCsv } from '../lib/download'
 import { ControlRow } from '../features/header/ControlRow'
+import { HeaderBand } from '../features/header/HeaderBand'
 import { savedViews } from '../components/panelOpen'
 import { FilterRowHost } from '../features/header/FilterRowHost'
 const SaveViewHost = lazy(() => import('../features/header/SaveViewHost').then((m) => ({ default: m.SaveViewHost }))) // a dialog: only when a view is named
@@ -483,7 +484,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   return (
     <>
       {!liveView && (firstLoad || loading) && <div className="loadbar" role="status" aria-label="Loading" />/* Live loads no report: it shows its own connection */}
-      <div className="header quiet">
+      <HeaderBand><div className="header quiet">
         {header}
         <HeaderTools
           live={liveView}
@@ -499,10 +500,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         />
         {inHeader && controls}
         {!liveView && !waiting && <Suspense fallback={null}><CreateMenu pages={dims('entry_page')} goals={src?.goals ?? []} modules={mods} onGoal={() => setAddGoals(true)} onNote={() => setNoteFor(view.day ?? today)} onFunnel={(f) => setView({ mode: 'full', funnel: f })} /></Suspense>}
-      </div>
+      </div></HeaderBand>
 
       {!inHeader && controls}
-
       {liveView && (
         <LiveSlot key={site.id} site={site.id} timezone={site.timezone} cookieless={site.cookieless} stream={stream} onVisitor={journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined} />
       )}
