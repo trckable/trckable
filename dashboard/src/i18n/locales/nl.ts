@@ -356,7 +356,9 @@ export default {
   'header.sheet.more': 'Meer',
   'header.sheet.compareRow': 'Vergelijken',
   'header.sheet.filtersRow': 'Filters',
-  'header.sheet.add': 'Toevoegen',
+  'header.sheet.add': '+ Filter toevoegen',
+  'header.sheet.custom': 'Eigen periode',
+  'header.sheet.off': 'Uit',
 
   // create
   'create.dialog.title': 'Nieuwe funnel',
@@ -374,6 +376,8 @@ export default {
   'create.dialog.save': 'Toon de funnel',
 
   // header
+  'header.filterCount': (n: number) => `Filter, ${n} actief`,
+  'header.row.add': 'Filter toevoegen',
   'header.row.active': 'Actieve filters',
   'header.row.is': 'is',
   'header.row.isNot': 'is niet',
@@ -2121,4 +2125,11 @@ export default {
   'storyview.switch.story': 'Verhaal',
   'storyview.switch.explore': 'Explore',
   'storyview.switch.label': 'Story of Explore',
+  'hints.title': 'Wist je dat?',
+  'hints.seen': 'Begrepen',
+  'hints.off': 'Tips uitzetten',
+  'hints.close': 'Tip sluiten',
+  'hints.story': 'Elk antwoord opent het volledige beeld: grafiek, elke rij, export.',
+  'hints.rows': 'Klik op een rij om de hele pagina erop te filteren.',
+  'hints.peek': (key: string) => `Druk op ${key} om Peek alles over je cijfers te vragen.`,
 } satisfies Messages

@@ -81,46 +81,6 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
-.sv-tile {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-  padding: 16px 18px;
-  background: var(--surface);
-  border: 1px solid var(--grid);
-  border-radius: 14px;
-}
-.sv-tile.dim {
-  border-style: dashed;
-}
-.sv-tile-name {
-  font-size: 13px;
-  opacity: 0.7;
-}
-.sv-tile-value {
-  font: 600 26px var(--mono);
-}
-.sv-tile-value.warn,
-.sv-tile-verdict.warn {
-  color: var(--warn);
-}
-.sv-tile-value.off {
-  opacity: 0.5;
-  font-size: 22px;
-}
-.sv-tile-verdict {
-  font-size: 13px;
-  opacity: 0.85;
-}
-.sv-tile-verdict.good {
-  color: var(--up);
-  opacity: 1;
-}
-.sv-tile-verdict.bad {
-  color: var(--down);
-  opacity: 1;
-}
 .sv-link {
   align-self: flex-start;
   padding: 0;
@@ -239,13 +199,7 @@
 }
 .sv-answer {
   grid-column: span 4;
-  display: flex;
-  flex-direction: column;
   gap: 8px;
-  padding: 18px 20px;
-  background: var(--surface);
-  border: 1px solid var(--grid);
-  border-radius: 16px;
   min-width: 0;
 }
 .sv-answer.did {
@@ -254,16 +208,19 @@
 .sv-answer.page {
   grid-column: span 5;
 }
-.sv-answer.fix {
-  border-color: color-mix(in srgb, var(--warn) 40%, var(--grid));
-  background: color-mix(in srgb, var(--warn) 6%, var(--surface));
+/* The open-card look: a hairline and no fill, the way the light header sits. */
+.story-view .kit-card:not(.accent):not(.warn) {
+  border-color: var(--grid);
+  background: none;
+}
+.story-view .kit-card:hover {
+  transform: none;
 }
 .sv-q {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  opacity: 0.75;
 }
 .sv-q-i {
   display: grid;
@@ -275,13 +232,27 @@
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   color: var(--accent);
 }
-.sv-answer.fix .sv-q {
-  color: var(--warn);
-  opacity: 1;
-}
 .sv-answer.fix .sv-q-i {
   background: color-mix(in srgb, var(--warn) 14%, transparent);
   color: var(--warn);
+}
+.sv-answer.fine .kit-word {
+  margin-bottom: 4px;
+}
+.sv-answer.fine.good .kit-word {
+  color: var(--up);
+}
+.sv-answer.fine.warn .kit-word {
+  color: var(--warn);
+}
+.sv-answer.fine.bad .kit-word {
+  color: var(--down);
+}
+.sv-answer.fine .sv-act {
+  justify-content: center;
+}
+.sv-answer.did .sv-a-sub {
+  margin-top: 10px;
 }
 .sv-a-line {
   margin-top: 4px;
@@ -289,9 +260,6 @@
   line-height: 1.3;
   font-weight: 600;
   letter-spacing: -0.01em;
-}
-.sv-answer.did .sv-a-line {
-  font-size: 21px;
 }
 .sv-answer.quiet .sv-a-line {
   opacity: 0.7;
@@ -437,7 +405,6 @@
   }
   .sv-answer {
     grid-column: span 6;
-    padding: 16px 18px;
   }
   .sv-answer.did,
   .sv-answer.page,
@@ -449,14 +416,14 @@
   .sv-answer {
     grid-column: span 12;
   }
+  .sv-answers .sv-link,
+  .sv-ask-btn {
+    min-width: var(--ph-hit, 44px);
+    min-height: var(--ph-hit, 44px);
+    justify-content: center;
+  }
 }
 @media (max-width: 480px) {
-  .sv-tile {
-    padding: 12px 14px;
-  }
-  .sv-tile-value {
-    font-size: 21px;
-  }
   .sv-chart {
     padding: 14px 12px 10px;
   }

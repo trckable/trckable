@@ -67,6 +67,14 @@ test('the Data view: header, row, numbers, chart and cards', async ({ page }) =>
   await clean(page)
 })
 
+test('Story: cards, tiles and answers fit at 390 and 360, with 44 px targets', async ({ page }) => {
+  await page.goto(API + '/example.com?v=story')
+  await expect(page.locator('.sv-tile')).toHaveCount(4)
+  await clean(page)
+  await page.setViewportSize({ width: 360, height: 800 })
+  await clean(page)
+})
+
 test('All sites: nothing wider than the screen, the open arrow inside its card, no ring on a tap', async ({ page }) => {
   await page.goto(API + '/all')
   const card = page.locator('.all-item').first()
@@ -112,7 +120,7 @@ test('the site list is a bottom sheet with rows 48 px tall', async ({ page }) =>
 
 test('the period sheet and the ⋯ menu', async ({ page }) => {
   await data(page)
-  await page.locator('.phone-pill').click()
+  await page.locator('.pr-date').click()
   await expect(page.locator('.sheet-body')).toBeVisible()
   await clean(page)
   await page.getByRole('button', { name: 'Done' }).click()

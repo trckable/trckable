@@ -1,84 +1,29 @@
-// The ⋯ menu used wherever a row has more than one action. It renders into the
-// page body, not inside the row, so a dialog or a scrolling card can never
-// clip it — that is the whole reason this is a component and not a div.
+// The ⋯ menu used wherever a row has more than one action. It is a kit
+// Popover: it renders into the page body (so a dialog or a scrolling card can
+// never clip it), places itself, closes on Escape, a click outside or the page
+// moving, moves between items with the arrows, and is a bottom sheet on a phone.
 import { Ellipsis } from 'lucide-react'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import type { ReactNode } from 'react'
+import { Popover } from '../kit'
+import './sheet.css'
 
-export function Menu({ label, children }: { label: string; children: (close: () => void) => React.ReactNode }) {
-  const [open, setOpen] = useState(false)
-  const [at, setAt] = useState({ top: 0, right: 0 })
-  const btn = useRef<HTMLButtonElement>(null)
-  const pop = useRef<HTMLDivElement>(null)
-  const openedAt = useRef(0)
-
-  useLayoutEffect(() => {
-    if (!open || !btn.current) return
-    const r = btn.current.getBoundingClientRect()
-    // Open downwards unless the bottom of the screen is closer than the menu
-    // is tall; then flip above the button.
-    const below = window.innerHeight - r.bottom
-    const height = pop.current?.offsetHeight ?? 180
-    setAt({ top: below < height + 16 ? Math.max(8, r.top - height - 6) : r.bottom + 6, right: Math.max(8, window.innerWidth - r.right) })
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    const away = (e: MouseEvent) => {
-      const t = e.target as Node
-      if (!btn.current?.contains(t) && !pop.current?.contains(t)) setOpen(false)
-    }
-    // Escape closes the menu alone: caught before the dialog it sits in
-    // hears it and closes too.
-    const esc = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      e.stopPropagation()
-      setOpen(false)
-    }
-    const close = () => setOpen(false)
-    // The page scrolling moves the button, so the list closes rather than
-    // drift. Its own list scrolling is just someone reading it: it used to
-    // close the list under their mouse.
-    // A scroll that was already on its way when the menu opened (a list
-    // still gliding, or the row just brought into view) is not the reader
-    // moving the page: it used to close the menu the moment it opened.
-    openedAt.current = performance.now()
-    const scrolled = (e: Event) => {
-      if (performance.now() - openedAt.current < 250) return
-      if (!pop.current?.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', away)
-    window.addEventListener('keydown', esc, true)
-    window.addEventListener('resize', close)
-    // Any scroll under an open menu moves the button: close rather than drift.
-    window.addEventListener('scroll', scrolled, true)
-    return () => {
-      document.removeEventListener('mousedown', away)
-      window.removeEventListener('keydown', esc, true)
-      window.removeEventListener('resize', close)
-      window.removeEventListener('scroll', scrolled, true)
-    }
-  }, [open])
-
-  // Back on the button before what an item opens takes over, so a dialog gives focus back here.
-  const done = () => {
-    setOpen(false)
-    btn.current?.focus()
-  }
-
+export function Menu({ label, children }: { label: string; children: (close: () => void) => ReactNode }) {
   return (
-    <>
-      <button ref={btn} type="button" className="btn icon ghost" aria-haspopup="menu" aria-expanded={open} aria-label={label} onClick={() => setOpen((o) => !o)}>
-        <Ellipsis size={20} strokeWidth={1.75} aria-hidden="true" />
-      </button>
-      {open &&
-        createPortal(
-          <div ref={pop} className="pop menu floating" role="menu" style={{ top: at.top, right: at.right }}>
-            {/* eslint-disable-next-line react-hooks/refs -- done only touches the button when an item is chosen, never while rendering */}
-            {children(done)}
-          </div>,
-          document.body,
-        )}
-    </>
+    <Popover
+      label={label}
+      className="menu"
+      trigger={(p) => (
+        <button type="button" className="btn icon ghost" {...p} aria-haspopup="menu" aria-label={label}>
+          <Ellipsis size={20} strokeWidth={1.75} aria-hidden="true" />
+        </button>
+      )}
+    >
+      {/* Back on the button before what an item opens takes over, so a dialog gives focus back here. */}
+      {(close) => (
+        <div className="menu-list" role="menu" aria-label={label}>
+          {children(close)}
+        </div>
+      )}
+    </Popover>
   )
 }

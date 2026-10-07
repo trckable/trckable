@@ -17,5 +17,6 @@ export const copy = defineCopy('header', {
   compareMenu: 'Compare with',
   collapse: 'Collapse',
   expand: 'Expand',
+  filterCount: (n: number) => `Filter, ${n} in force`,
   filterNote: (n: number) => `· ${n} filter${n === 1 ? '' : 's'}`,
 })

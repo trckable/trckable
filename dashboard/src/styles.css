@@ -60,7 +60,7 @@
   --mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   /* Every control in the header's row (a phone has its own sizes) is this tall. */
-  --hdr-h: 38px;
+  --hdr-h: 36px;
 }
 
 @media (prefers-color-scheme: light) {
@@ -958,8 +958,7 @@ textarea:focus-visible {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.goal-name small,
-.goal-st {
+.goal-name small {
   color: var(--text-3);
   font-size: 12px;
 }
@@ -969,21 +968,6 @@ textarea:focus-visible {
 .goal-conv b {
   font-size: 14px;
   font-weight: 600;
-}
-.goal-st {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-}
-.goal-st i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-.goal-st.barely i {
-  background: var(--warn);
 }
 .goal-funnel {
   margin-top: 12px;
@@ -1584,6 +1568,10 @@ table.t td {
 .pop.menu button:focus-visible {
   background: var(--sunken);
 }
+.menu-list {
+  display: flex;
+  flex-direction: column;
+}
 .pop.menu svg {
   color: var(--text-2);
   flex: none;
@@ -2012,12 +2000,6 @@ ul.people button:hover {
   order: 2;
 }
 
-/* A popup that lives on the page body, above dialogs and scrolling cards. */
-.pop.menu.floating,
-.pop.picker-pop.floating {
-  position: fixed;
-  z-index: 120;
-}
 .avatar {
   display: grid;
   place-items: center;
@@ -3097,4 +3079,122 @@ body[data-mode] .card.overview {
   align-items: center;
   gap: 5px;
   cursor: default;
+}
+
+/* ---- Open cards (Data and All sites) ---------------------------------------
+   No boxes: hairlines between the number tiles, a hairline under each panel's
+   title row, and room between the panels instead of a frame around them. */
+.app .card.overview,
+.app .card.tc {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.app .card.tc {
+  padding: 0;
+}
+.app .card.tc .tc-tabs,
+.app .card.tc .tc-head {
+  margin-left: 0;
+  margin-right: 0;
+}
+.app .card.overview .kpis {
+  padding: 0;
+  gap: 0;
+  border-top: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+}
+.app .card.overview .kpi {
+  padding: 14px 16px;
+}
+.app .card.overview .kpi + .kpi {
+  border-left: 1px solid var(--grid);
+}
+.app .card.overview .overview-chart {
+  padding-left: 0;
+  padding-right: 0;
+}
+.app .cards2 {
+  gap: 44px;
+}
+.app .all-stats {
+  gap: 0;
+  border-top: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+}
+.app .all-stat {
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.app .all-stat + .all-stat {
+  border-left: 1px solid var(--grid);
+}
+.app .all-tile {
+  padding: 8px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+@media (max-width: 640px) {
+  .app .card.overview .kpi:nth-child(odd) {
+    border-left: 0;
+  }
+  .app .card.overview .kpi {
+    border-bottom: 1px solid var(--grid);
+  }
+}
+
+/* ---- One button language ---------------------------------------------------
+   Live | Data and Story | Explore are plain text tabs: dim, the chosen one in
+   the text colour on a soft fill. No borders; green is only the live dot. */
+.app .view-switch,
+.app .sv-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.app .view-switch .view-pill {
+  display: none;
+}
+.app :is(.view-switch, .sv-switch) button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-2);
+  font: 500 13px var(--font);
+  cursor: pointer;
+}
+.app :is(.view-switch, .sv-switch) button:hover {
+  color: var(--text);
+}
+.app :is(.view-switch, .sv-switch) button:is([aria-pressed='true'], .on) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.app .sv-switch svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+body {
+  overflow-x: clip;
 }

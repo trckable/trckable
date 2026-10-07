@@ -366,7 +366,9 @@ export default {
   'header.sheet.more': 'Mehr',
   'header.sheet.compareRow': 'Vergleichen',
   'header.sheet.filtersRow': 'Filter',
-  'header.sheet.add': 'Hinzufügen',
+  'header.sheet.add': '+ Filter hinzufügen',
+  'header.sheet.custom': 'Eigener Zeitraum',
+  'header.sheet.off': 'Aus',
 
   // create
   'create.dialog.title': 'Neuer Trichter',
@@ -384,6 +386,8 @@ export default {
   'create.dialog.save': 'Trichter anzeigen',
 
   // header
+  'header.filterCount': (n: number) => `Filter, ${n} aktiv`,
+  'header.row.add': 'Filter hinzufügen',
   'header.row.active': 'Aktive Filter',
   'header.row.is': 'ist',
   'header.row.isNot': 'ist nicht',
@@ -2124,4 +2128,11 @@ export default {
   'storyview.switch.story': 'Geschichte',
   'storyview.switch.explore': 'Explore',
   'storyview.switch.label': 'Story oder Explore',
+  'hints.title': 'Wusstest du schon?',
+  'hints.seen': 'Verstanden',
+  'hints.off': 'Hinweise ausschalten',
+  'hints.close': 'Hinweis schließen',
+  'hints.story': 'Jede Antwort öffnet das ganze Bild: Diagramm, jede Zeile, Export.',
+  'hints.rows': 'Klick auf eine Zeile, um die ganze Seite danach zu filtern.',
+  'hints.peek': (key: string) => `Drück ${key}, um Peek alles über deine Zahlen zu fragen.`,
 } satisfies Messages

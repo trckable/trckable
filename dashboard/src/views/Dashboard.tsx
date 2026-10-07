@@ -455,11 +455,11 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // The second row (a shared link on a desktop has it in the header's row); before the first visit there is nothing to switch or date, so it waits.
   const controls = !waiting && (
     <ControlRow
-      live={liveView}
+      live={liveView} site={site}
       phone={narrow}
       value={pickerValue}
       today={today}
-      onChange={onPicker}
+      onChange={onPicker} onClear={clearFilters}
       active={activeChips(view.filters, filterLabel)}
       under={(view.filters.length > 0 || !!rowProps.views?.list.length) && <FilterRowHost {...rowProps} onlyViews={narrow} />}
       filter={!isShared() && <FilterMenu rows={dims} siblings={siblingRows(site.id, query)} labelFor={filterLabel} active={view.filters} onPick={filterOps.pick} onRemove={filterOps.dropValue} onClear={clearFilters} />}

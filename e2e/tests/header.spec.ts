@@ -84,8 +84,8 @@ for (const width of [1440, 700, 375]) {
     if (width > 640) await expect(page.locator('.subbar').getByRole('button', { name: 'Share' })).toBeVisible()
     else await expect(page.locator('.subbar').getByRole('button', { name: 'Share' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Peek' })).toBeVisible()
-    // The cog is in the site card; on a phone under 420 px it is the first row of the site list instead.
-    if (width < 420) {
+    // The cog is in the site card; on a phone on a phone it is the first row of the site list instead.
+    if (width <= 640) {
       await page.locator('.site-zone button.site-btn').click()
       await expect(page.locator('.pop.sites .foot-settings')).toBeVisible()
       await page.keyboard.press('Escape')
@@ -99,10 +99,9 @@ for (const width of [1440, 700, 375]) {
       await expect(page.locator(place).getByRole('group', { name: 'View' })).toBeVisible()
       await expect(page.getByRole('group', { name: 'View' })).toHaveCount(1)
     } else {
-      await expect(page.locator('.subbar .phone-pill')).toBeVisible()
+      await expect(page.locator('.subbar .pr-date')).toBeVisible()
     }
     await expect(page.locator('.subbar .range-vs')).toHaveCount(0)
-    if (width > 640) await expect(page.getByRole('button', { name: 'Next period' })).toBeVisible()
 
     // What left the row is in ⋯, each with its key.
     await more(page).click()

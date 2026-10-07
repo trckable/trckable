@@ -33,6 +33,8 @@ export interface Tile {
   verdict: string
   /** No revenue is counted: the tile offers to connect a provider. */
   connect?: boolean
+  /** How the number moved against the period before, when it can be told. */
+  move?: Delta
 }
 
 export interface Delta {
@@ -53,6 +55,8 @@ export interface Answer {
   look: 'plain' | 'fix' | 'quiet'
   /** The button: switches to Explore with these filters. */
   act?: { label: string; filters: Filter[]; compare?: boolean }
+  /** fine: one word for how the period went. */
+  word?: { text: string; tone: Tone }
   /** The answer offers to connect a provider or count a goal instead. */
   connect?: boolean
   /** How the number behind the answer moved against the period before, when it can be told. */
@@ -254,7 +258,7 @@ export function tiles(i: Input): Tile[] {
   const none = { tone: 'flat' as Tone, verdict: copy.noBefore }
 
   const v = p ? verdictOf(change(k.visitors, p.visitors), fmtInt(p.visitors), copy) : none
-  out.push({ key: 'visitors', label: copy.visitors, value: fmtInt(k.visitors), ...v })
+  out.push({ key: 'visitors', label: copy.visitors, value: fmtInt(k.visitors), ...v, move: deltaOf(k.visitors, p?.visitors) ?? undefined })
 
   let b: Pick<Tile, 'tone' | 'verdict'> = none
   const pts = p ? k.bounce_rate - p.bounce_rate : 0
@@ -262,7 +266,7 @@ export function tiles(i: Input): Tile[] {
   else if (p && pts >= 0.05) b = { tone: 'warn', verdict: copy.bounceWorse(fmtPct(p.bounce_rate)) }
   else if (p && pts <= -0.05) b = { tone: 'good', verdict: copy.bounceBetter(fmtPct(p.bounce_rate)) }
   else if (p) b = { tone: 'flat', verdict: copy.bounceSame(fmtPct(p.bounce_rate)) }
-  out.push({ key: 'bounce', label: copy.bounce, value: fmtPct(k.bounce_rate), ...b })
+  out.push({ key: 'bounce', label: copy.bounce, value: fmtPct(k.bounce_rate), ...b, move: deltaOf(k.bounce_rate, p?.bounce_rate, 'down') ?? undefined })
 
   let s: Pick<Tile, 'tone' | 'verdict'> = none
   if (p && p.avg_session_s > 0) {
@@ -272,7 +276,7 @@ export function tiles(i: Input): Tile[] {
     else if (d <= -0.15) s = { tone: 'warn', verdict: copy.timeShorter(before) }
     else s = { tone: 'flat', verdict: copy.timeSame(before) }
   }
-  out.push({ key: 'session', label: copy.session, value: fmtDuration(k.avg_session_s), ...s })
+  out.push({ key: 'session', label: copy.session, value: fmtDuration(k.avg_session_s), ...s, move: deltaOf(k.avg_session_s, p?.avg_session_s) ?? undefined })
 
   const m = i.cur.money
   if (!i.money || !m) {
@@ -280,7 +284,7 @@ export function tiles(i: Input): Tile[] {
   } else {
     const pm = hasPrev(i) ? i.prev?.money : undefined
     const r = pm && pm.revenue > 0 ? verdictOf(change(m.revenue, pm.revenue), i.money(pm.revenue), copy) : none
-    out.push({ key: 'revenue', label: copy.revenue, value: i.money(m.revenue), ...r })
+    out.push({ key: 'revenue', label: copy.revenue, value: i.money(m.revenue), ...r, move: deltaOf(m.revenue, pm?.revenue) ?? undefined })
   }
   return out
 }
@@ -366,15 +370,16 @@ function pays(i: Input): Answer {
 
 function fine(i: Input): Answer {
   const act = { label: copy.fineAct, filters: [], compare: true }
-  if (!hasPrev(i)) return { key: 'fine', question: copy.q.fine, line: copy.fineEarly, sub: copy.fineEarlySub, look: 'quiet' }
+  if (!hasPrev(i)) return { key: 'fine', question: copy.q.fine, line: copy.fineEarly, sub: copy.fineEarlySub, look: 'quiet', word: { text: copy.wordEarly, tone: 'flat' } }
   const t = tiles(i).filter((x) => x.key !== 'revenue')
   const worse = t.filter((x) => x.tone === 'bad' || x.tone === 'warn').map((x) => x.label.toLowerCase())
   const better = t.some((x) => x.tone === 'good')
   let line = copy.fineSame
-  if (worse.length === 0 && better) line = copy.fineGood
-  if (worse.length > 0 && better) line = copy.fineMixed(worse.join(' and '))
-  if (worse.length > 0 && !better) line = copy.fineBad(worse.join(' and '))
-  return { key: 'fine', question: copy.q.fine, line, sub: copy.fineSub, look: 'plain', act }
+  let word = { text: copy.wordSame, tone: 'flat' as Tone }
+  if (worse.length === 0 && better) [line, word] = [copy.fineGood, { text: copy.wordGood, tone: 'good' }]
+  if (worse.length > 0 && better) [line, word] = [copy.fineMixed(worse.join(' and ')), { text: copy.wordMixed, tone: 'warn' }]
+  if (worse.length > 0 && !better) [line, word] = [copy.fineBad(worse.join(' and ')), { text: copy.wordBad, tone: 'bad' }]
+  return { key: 'fine', question: copy.q.fine, line, sub: copy.fineSub, look: 'plain', act, word }
 }
 
 export function storyOf(i: Input): StoryFacts {
