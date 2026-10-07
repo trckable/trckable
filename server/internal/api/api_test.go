@@ -861,7 +861,7 @@ func TestOverviewSeriesMatchTheCards(t *testing.T) {
 	add := func(at time.Time, visitor uint64) {
 		t.Helper()
 		id++
-		g.event(t, event.Event{EventID: id, Kind: event.KindPageview, TS: at.UnixMilli(), Visitor: visitor, Pageview: id, Path: "/p" + strconv.Itoa(int(id)), Channel: "Direct"})
+		g.event(t, event.Event{EventID: id, Kind: event.KindPageview, TS: at.UnixMilli(), Visitor: visitor, Pageview: id, Path: "/p" + strconv.FormatUint(id, 10), Channel: "Direct"})
 	}
 	// Yesterday: visitor 1 reads two pages, visitor 2 one (a bounce).
 	add(day, 1)
