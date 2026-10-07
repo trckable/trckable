@@ -151,7 +151,7 @@ export default function StoryView(p: StoryViewProps) {
         </div>
       </Card>
 
-      <Answers answers={facts.answers} onConnect={() => setConnect(true)} onGoal={p.onGoal} site={p.site} hints={hints} onAway={away} />
+      <Answers answers={facts.answers} onConnect={() => setConnect(true)} onGoal={p.onGoal} site={p.site} series={{ visitors: cur.series.map((x) => x.visitors), was: data.previous?.series.map((x) => x.visitors), revenue: p.money ? cur.series.map((x) => x.revenue ?? 0) : undefined }} hints={hints} onAway={away} />
       <Ask />
       {connect && (
         <Suspense fallback={null}>
