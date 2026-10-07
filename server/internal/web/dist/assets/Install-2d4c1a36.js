@@ -1,1 +1,0 @@
-import{t as e}from"./Install-b972feaf.js";export{e as Install,e as default};
