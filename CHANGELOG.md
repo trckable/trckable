@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Fixed
+
+- Hints: the did-you-know bubble on Story points at the whole answers row and sits under or over it, so it no longer covers an answer card.
+
 ### Changed
 
 - Dependencies updated to their latest minor and patch releases (the dashboard, the tracker's test tools, the npm package and the lockfile).
