@@ -17,6 +17,7 @@ import { bar } from './barCopy'
 import { copy } from './copy'
 import { Answers } from './Answers'
 import { Ask } from './Ask'
+import { SetupCard } from './SetupCard'
 import { storyOf, takeawayOf } from './rules'
 import { Tiles } from './Tiles'
 
@@ -88,6 +89,7 @@ export default function StoryView(p: StoryViewProps) {
   const h = facts.headline
   return (
     <div className="story-view">
+      <SetupCard site={p.site} goals={(cur.goals ?? []).length > 0} revenue={!!p.money} onGoal={p.onGoal} />
       <section className="sv-head" aria-label={copy.eyebrow(period)}>
         <div className="sv-eyebrow">{copy.eyebrow(period)}</div>
         <h1 className="sv-line">
@@ -97,16 +99,6 @@ export default function StoryView(p: StoryViewProps) {
         </h1>
         {takeaway && <p className="sv-take">{takeaway}</p>}
         {h.note && <p className="sv-note">{h.note}</p>}
-        {facts.state === 'new' && (
-          <ul className="sv-steps">
-            {facts.steps.map((s) => (
-              <li key={s.text} className={s.done ? 'done' : ''}>
-                <span aria-hidden="true" />
-                {s.text}
-              </li>
-            ))}
-          </ul>
-        )}
       </section>
 
       <Tiles tiles={facts.tiles} onConnect={() => setConnect(true)} />
