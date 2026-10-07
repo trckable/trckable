@@ -2,7 +2,7 @@
 // A lazy chunk, loaded when the first one is opened.
 import { FileText } from 'lucide-react'
 import { DialogHead } from '../../components/DialogHead'
-import { Modal } from '../../components/Modal'
+import { Modal } from '../../kit/Modal'
 import type { ReportSchedule } from '../../lib/apiMore'
 import { copy } from './copy'
 import { ReportForm, type Draft } from './ReportForm'

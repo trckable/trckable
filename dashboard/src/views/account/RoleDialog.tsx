@@ -6,7 +6,7 @@ import { Check, Globe, KeyRound, Lock, UserPlus, Eye, type LucideIcon } from 'lu
 import { useEffect, useRef, useState } from 'react'
 import { DialogActions } from '../../components/DialogActions'
 import { DialogHead } from '../../components/DialogHead'
-import { Modal } from '../../components/Modal'
+import { Modal } from '../../kit/Modal'
 import { fail, type Person } from '../../lib/api'
 import { people } from './peopleCopy'
 import './peoplePop.css'

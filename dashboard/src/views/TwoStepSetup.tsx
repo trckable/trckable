@@ -5,7 +5,7 @@ import { fail, refused, wrong, more } from "../lib/apiMore";
 import { DialogActions } from "../components/DialogActions";
 import { DialogHead } from "../components/DialogHead";
 import { Field } from "../components/Field";
-import { Modal } from "../components/Modal";
+import { Modal } from "../kit/Modal";
 import { StepBody } from "../components/StepBody";
 import { Steps } from "../components/Steps";
 import { toast } from "../components/Toast";

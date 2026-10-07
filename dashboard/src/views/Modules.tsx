@@ -4,7 +4,7 @@
 import { Info } from '../components/Info'
 import { DialogActions } from '../components/DialogActions'
 import { DialogHead } from '../components/DialogHead'
-import { Modal } from '../components/Modal'
+import { Modal } from '../kit/Modal'
 import { useEffect, useState } from 'react'
 import { ModuleArt } from '../components/ModuleArt'
 import { api, fail, type ModuleInfo, type ScriptInfo, type Site, more } from '../lib/apiMore'
