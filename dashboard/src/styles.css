@@ -2997,3 +2997,54 @@ body {
 :is(.ms-tile, .prov, .mtile, a.key-tile, .opt-card, .cs-tile, .keys-group, .all-line):hover {
   background-image: var(--hover-veil);
 }
+
+/* ---- Segmented controls: one rounded track, one inset pill ------------------
+   Story | Explore, Live | Data, 7/30/90 days and the other tab groups share it: a neutral glass
+   track with a full hairline, and the chosen segment a lighter pill 3px inside it, as tall as
+   the other segments, its text centred. */
+.app :is(.view-switch, .sv-switch, .seg, .kit-seg) {
+  --track-r: 12px;
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+  height: auto;
+  padding: 3px;
+  border: 1px solid var(--glass-line, var(--border));
+  border-radius: var(--track-r);
+  background: var(--glass-lite, var(--surface));
+  box-shadow: var(--glass-hi, none);
+}
+.app :is(.view-switch, .sv-switch, .seg, .kit-seg) button {
+  height: var(--hdr-h);
+  min-height: 0;
+  padding: 0 12px;
+  border: 0;
+  border-radius: calc(var(--track-r) - 3px);
+  line-height: 1;
+  justify-content: center;
+}
+.app :is(.view-switch, .sv-switch, .seg, .kit-seg) button:is([aria-pressed='true'], .on, [aria-selected='true']) {
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), inset 0 1px 0 color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--text);
+}
+@media (max-width: 1000px) {
+  .app .sv-slot .sv-switch {
+    padding: 3px;
+    border: 1px solid var(--glass-line, var(--border));
+    border-radius: var(--track-r);
+    background: var(--glass-lite, var(--surface));
+  }
+  .app .sv-slot .sv-switch button {
+    height: 44px;
+    border-radius: calc(var(--track-r) - 3px);
+  }
+  .app .sv-slot .sv-switch button.on {
+    background: color-mix(in srgb, var(--text) 10%, transparent);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  }
+}
+.app :is(.sv-switch, .view-switch) ~ .btn.filter,
+.app .ctl-see .btn.filter {
+  align-self: center;
+}

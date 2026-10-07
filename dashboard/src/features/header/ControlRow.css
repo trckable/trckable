@@ -554,7 +554,8 @@
     font-size: 13px;
   }
   .app .pr-tabs .sv-switch svg {
-    display: none;
+    width: 18px;
+    height: 18px;
   }
   .pr-btn {
     position: relative;

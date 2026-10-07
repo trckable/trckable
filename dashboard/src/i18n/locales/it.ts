@@ -958,6 +958,8 @@ export default {
   'kit.grab': 'Trascina verso il basso per chiudere',
   'kit.chart': 'Grafico',
   'kit.noData': 'Nessun dato',
+  'kit.shortBounce': 'Rimbalzo',
+  'kit.shortSession': 'Sessione',
   'allsites.pageviews': 'Pagine viste',
   'allsites.perVisitor': (n: string) => `${n} per visitatore`,
   'allsites.bounce': 'Frequenza di rimbalzo',

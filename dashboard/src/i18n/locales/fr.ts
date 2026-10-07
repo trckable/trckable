@@ -952,6 +952,8 @@ export default {
   'kit.grab': 'Faites glisser vers le bas pour fermer',
   'kit.chart': 'Graphique',
   'kit.noData': 'Aucune donnée',
+  'kit.shortBounce': 'Rebond',
+  'kit.shortSession': 'Session',
   'allsites.pageviews': 'Pages vues',
   'allsites.perVisitor': (n: string) => `${n} par visiteur`,
   'allsites.bounce': 'Taux de rebond',

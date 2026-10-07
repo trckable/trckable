@@ -961,6 +961,8 @@ export default {
   'kit.grab': 'Zum Schließen nach unten ziehen',
   'kit.chart': 'Diagramm',
   'kit.noData': 'Keine Daten',
+  'kit.shortBounce': 'Absprung',
+  'kit.shortSession': 'Sitzung',
   'allsites.pageviews': 'Seitenaufrufe',
   'allsites.perVisitor': (n: string) => `${n} pro Besucher`,
   'allsites.bounce': 'Absprungrate',

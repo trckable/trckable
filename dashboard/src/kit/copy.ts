@@ -16,5 +16,8 @@ export const kitWords = defineCopy('kit', {
   grab: 'Drag down to close',
   chart: 'Chart',
   noData: 'No data',
+  // The short names a phone's stat cards carry.
+  shortBounce: 'Bounce',
+  shortSession: 'Session',
   columnOf: (label: string, pct: number) => `${label}: ${pct}%`,
 })

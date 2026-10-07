@@ -964,6 +964,8 @@ export default {
   'kit.grab': 'Arrastra hacia abajo para cerrar',
   'kit.chart': 'Gráfico',
   'kit.noData': 'Sin datos',
+  'kit.shortBounce': 'Rebote',
+  'kit.shortSession': 'Sesión',
   'allsites.pageviews': 'Páginas vistas',
   'allsites.perVisitor': (n: string) => `${n} por visitante`,
   'allsites.bounce': 'Tasa de rebote',

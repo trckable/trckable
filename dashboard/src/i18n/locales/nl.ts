@@ -951,6 +951,8 @@ export default {
   'kit.grab': 'Sleep omlaag om te sluiten',
   'kit.chart': 'Grafiek',
   'kit.noData': 'Geen gegevens',
+  'kit.shortBounce': 'Bounce',
+  'kit.shortSession': 'Sessie',
   'allsites.pageviews': 'Paginaweergaven',
   'allsites.perVisitor': (n: string) => `${n} per bezoeker`,
   'allsites.bounce': 'Bouncepercentage',

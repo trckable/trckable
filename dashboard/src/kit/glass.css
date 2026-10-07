@@ -22,7 +22,7 @@
   --glass-blur: blur(22px) saturate(160%);
   --glass-blur-pop: blur(24px) saturate(170%);
   --glass-blur-lite: blur(14px) saturate(140%);
-  --amb-1: rgba(59, 93, 18, 0.32);
+  --amb-1: rgba(59, 93, 18, 0.19);
   --amb-2: rgba(22, 54, 90, 0.65);
   --amb-3: rgba(42, 31, 77, 0.65);
 }
@@ -38,7 +38,7 @@
     --glass-shadow: 0 8px 28px rgba(20, 24, 30, 0.08), 0 1px 2px rgba(20, 24, 30, 0.05);
     --glass-shadow-pop: 0 18px 48px rgba(20, 24, 30, 0.18), 0 2px 8px rgba(20, 24, 30, 0.08);
     --glass-sheen: rgba(20, 24, 30, 0.06);
-    --amb-1: rgba(150, 205, 80, 0.15);
+    --amb-1: rgba(150, 205, 80, 0.09);
     --amb-2: rgba(110, 165, 235, 0.28);
     --amb-3: rgba(176, 148, 238, 0.26);
   }
@@ -54,7 +54,7 @@
   --glass-shadow: 0 8px 28px rgba(20, 24, 30, 0.08), 0 1px 2px rgba(20, 24, 30, 0.05);
   --glass-shadow-pop: 0 18px 48px rgba(20, 24, 30, 0.18), 0 2px 8px rgba(20, 24, 30, 0.08);
   --glass-sheen: rgba(20, 24, 30, 0.06);
-  --amb-1: rgba(150, 205, 80, 0.15);
+  --amb-1: rgba(150, 205, 80, 0.09);
   --amb-2: rgba(110, 165, 235, 0.28);
   --amb-3: rgba(176, 148, 238, 0.26);
 }
@@ -71,7 +71,7 @@
     z-index: -1;
     pointer-events: none;
     background:
-      radial-gradient(circle 240px at 110px 70px, var(--amb-1), transparent),
+      radial-gradient(circle 220px at 70px 30px, var(--amb-1), transparent),
       radial-gradient(circle 340px at calc(100% - 130px) 350px, var(--amb-2), transparent),
       radial-gradient(ellipse 400px 310px at calc(30% + 260px) calc(100% - 10px), var(--amb-3), transparent);
   }
@@ -110,7 +110,7 @@
   }
 
   /* Controls: lighter glass. Those that hold a pop-up of their own (the site, the period capsule) are see-through without the blur: a blur would make them the box a fixed pop-up or sheet is placed in. */
-  :root:not([data-glass='off']) :is(.seg, .chip, .ctl-cap, .phone-pill, .kit-seg, .select, .view-switch, .sv-slot .sv-switch, .site-zone) {
+  :root:not([data-glass='off']) :is(.seg, .chip, .ctl-cap, .phone-pill, .kit-seg, .select, .view-switch, .sv-slot .sv-switch) {
     border-color: var(--glass-line);
     background: var(--glass-lite);
     box-shadow: var(--glass-hi);
