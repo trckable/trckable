@@ -1,0 +1,1 @@
+function e(e,t){try{let n=localStorage.getItem(e);return n?JSON.parse(n):t}catch{return t}}function t(e,t){try{localStorage.setItem(e,JSON.stringify(t))}catch{}}var n=e=>`trckable:used:${e}`,r=t=>e(n(t),!1),i=e=>{r(e)||t(n(e),!0)};export{e as n,t as r,i as t};

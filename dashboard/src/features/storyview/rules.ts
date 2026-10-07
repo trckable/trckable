@@ -5,6 +5,11 @@
 import type { Filter, Result, Row } from '../../lib/api'
 import { fmtDuration, fmtInt, fmtPct } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
+import type { AiSeen } from '../aisearch/useAiSeen'
+import type { HeatAsk } from '../heatmap/api'
+import { pick, type Kept } from '../moments/firstWeek'
+import type { Pin } from '../moments/pins'
+import { say } from '../moments/words'
 import { copy } from './copy'
 
 export type Tone = 'good' | 'warn' | 'bad' | 'flat'
@@ -349,4 +354,45 @@ export function storyOf(i: Input): StoryFacts {
     tiles: tiles(i),
     answers: [did(i), page(i), fix(i), pays(i), fine(i)],
   }
+}
+
+/** The most important thing since the last visit, in one line: the first of the ranked findings (today.ts). */
+export function sinceOf(items: readonly Pin[], money: (minor: number) => string): { pin: Pin; line: string } | undefined {
+  const pin = items[0]
+  return pin ? { pin, line: say(pin, money).line } : undefined
+}
+
+export type HintId = 'ai' | 'crawlers' | 'heat'
+
+/** A line beside the answer it belongs to: heatmaps and the AI ones are about the page and the source. */
+export interface Hint {
+  id: HintId
+  answer: QuestionKey
+  ai?: AiSeen
+  path?: string
+  views?: number
+}
+
+export interface HintKnown {
+  /** An AI assistant has sent a visitor, or an AI crawler read the site; undefined while asked. */
+  ai: AiSeen | null | undefined
+  /** An assistant has sent a visitor while the AI crawlers module is off; undefined while asked. */
+  crawlersOff: boolean | undefined
+  /** What the server says about a busy page with heatmaps off; null while asked. */
+  heat: HeatAsk | null
+  /** Only an owner is offered a change. */
+  owner: boolean
+}
+
+/** The hints to show: at most one per answer, none that was put away or acted on, none until what they hang on is known. */
+export function hintsOf(k: HintKnown, kept: Kept, heatDone: boolean, today: string): Hint[] {
+  if (!k.owner) return []
+  const out: Hint[] = []
+  if (k.ai !== undefined && k.crawlersOff !== undefined) {
+    const id = pick({ replayed: false, fullOpened: false, weekly: false, search: false, exclude: false, ai: !!k.ai, crawlers: k.crawlersOff, fresh: false }, kept, today)
+    if (id === 'ai' && k.ai) out.push({ id, answer: 'did', ai: k.ai })
+    if (id === 'crawlers') out.push({ id, answer: 'did' })
+  }
+  if (!heatDone && k.heat?.ask && k.heat.path) out.push({ id: 'heat', answer: 'page', path: k.heat.path, views: k.heat.views ?? 0 })
+  return out
 }

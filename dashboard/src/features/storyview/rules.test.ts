@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { KPIs, Result, Row } from '../../lib/api'
-import { biggestLoss, deltaOf, leavesFastest, stateOf, storyOf, takeawayOf, tiles, type Input } from './rules'
+import { biggestLoss, deltaOf, hintsOf, leavesFastest, sinceOf, stateOf, storyOf, takeawayOf, tiles, type Input } from './rules'
 
 const kpis = (o: Partial<KPIs> = {}): KPIs => ({ visitors: 1000, sessions: 1100, pageviews: 3000, bounce_rate: 0.4, avg_session_s: 120, views_per_session: 2.7, new_visitor_share: 0.5, ...o })
 const rows = (r: [string, number, number?][]): Row[] => r.map(([value, visitors, bounce_rate]) => ({ value, visitors, bounce_rate }))
@@ -123,5 +123,30 @@ describe('takeaway and deltas', () => {
   it('puts an arrow on the first answer only when there is a period before', () => {
     expect(storyOf(grew).answers[0].delta).toMatchObject({ arrow: '↑', pct: 250 })
     expect(storyOf({ cur: result({ visitors: 500 }), goals: false }).answers[0].delta).toBeUndefined()
+  })
+})
+
+describe('since the last visit', () => {
+  it('says nothing without a finding', () => {
+    expect(sinceOf([], () => '')).toBeUndefined()
+  })
+})
+
+describe('hints', () => {
+  const kept: { done: ('ai' | 'crawlers')[] } = { done: [] }
+  const know = { ai: null, crawlersOff: false, heat: null, owner: true }
+  const day = '2026-10-07'
+  it('hangs the AI visitor on the sources answer, until it is put away', () => {
+    expect(hintsOf({ ...know, ai: 'visitor' }, kept, false, day)).toEqual([{ id: 'ai', answer: 'did', ai: 'visitor' }])
+    expect(hintsOf({ ...know, ai: 'visitor', crawlersOff: true }, { done: ['ai'] }, false, day)).toEqual([{ id: 'crawlers', answer: 'did' }])
+    expect(hintsOf({ ...know, ai: 'visitor' }, { done: ['ai'] }, false, day)).toEqual([])
+  })
+  it('hangs the heatmap on the page answer', () => {
+    expect(hintsOf({ ...know, heat: { ask: true, path: '/pricing', views: 412 } }, kept, false, day)).toEqual([{ id: 'heat', answer: 'page', path: '/pricing', views: 412 }])
+    expect(hintsOf({ ...know, heat: { ask: true, path: '/pricing' } }, kept, true, day)).toEqual([])
+  })
+  it('waits for what it hangs on and is for an owner only', () => {
+    expect(hintsOf({ ...know, ai: undefined }, kept, false, day)).toEqual([])
+    expect(hintsOf({ ...know, ai: 'visitor', owner: false }, kept, false, day)).toEqual([])
   })
 })
