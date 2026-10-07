@@ -127,4 +127,14 @@
     -webkit-backdrop-filter: var(--glass-blur-pop);
     backdrop-filter: var(--glass-blur-pop);
   }
+  /* A dialog sits in its own blurred backdrop: a blur of its own would only blur that. */
+  :root:not([data-glass='off']) .modal-back .modal {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  /* Under an open dialog the page is dimmed and blurred by its backdrop: the cards need no blur of their own there. */
+  :root:not([data-glass='off']):has(.modal-back) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .side-card, .sv-setup, .sl-panel) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
