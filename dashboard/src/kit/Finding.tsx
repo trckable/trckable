@@ -4,12 +4,14 @@
 import type { ReactNode } from 'react'
 import { Card } from './Card'
 
-export function Finding({ tag, onOpen, children }: { tag: ReactNode; onOpen?: () => void; children: ReactNode }) {
+/** `foot` sits under the sentence: a line of context, a link. */
+export function Finding({ tag, onOpen, foot, className = '', children }: { tag: ReactNode; onOpen?: () => void; foot?: ReactNode; className?: string; children: ReactNode }) {
   return (
-    <Card variant="accent" className="kit-finding" title={<span className="kit-tagchip">{tag}</span>} onOpen={onOpen}>
+    <Card variant="accent" className={`kit-finding ${className}`} title={<span className="kit-tagchip">{tag}</span>} onOpen={onOpen}>
       <span className="kit-ring r1" aria-hidden="true" />
       <span className="kit-ring r2" aria-hidden="true" />
       <p className="kit-say">{children}</p>
+      {foot}
     </Card>
   )
 }

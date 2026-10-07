@@ -8,9 +8,9 @@ import type { Tone } from './model'
 export type Part = { key: string; label: ReactNode; weight: number; done?: boolean }
 export type Action = { key: string; label: ReactNode; onClick: () => void }
 
-export function Progress({ title, value, pill, parts, actions }: { title: ReactNode; value: ReactNode; pill?: { text: ReactNode; tone?: Tone }; parts?: Part[]; actions?: Action[] }) {
+export function Progress({ title, value, pill, parts, actions, className = '' }: { title: ReactNode; value: ReactNode; pill?: { text: ReactNode; tone?: Tone }; parts?: Part[]; actions?: Action[]; className?: string }) {
   return (
-    <Card title={title} className="kit-progress">
+    <Card title={title} className={`kit-progress ${className}`}>
       <span className="kit-val">
         <b className="num">{value}</b>
         {pill && <Pill tone={pill.tone}>{pill.text}</Pill>}
