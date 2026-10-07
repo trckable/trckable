@@ -68,13 +68,11 @@ for (const width of [1280, 1024, 768, 390]) {
   })
 }
 
-test('the charted tile keeps its lit border without revenue', async ({ page }) => {
+test('the charted tile keeps its underline without revenue', async ({ page }) => {
   const tiles = await open(page, 1280, false)
   const lit = tiles.getByRole('button', { name: /^Visitors/ })
   await expect(lit).toHaveAttribute('aria-pressed', 'true')
-  const other = tiles.locator('.kpi', { hasText: /Bounce rate/ })
-  const edge = (l: typeof lit) => l.evaluate((el) => getComputedStyle(el).borderTopColor)
-  expect(await edge(lit)).not.toBe(await edge(other))
+  expect(await lit.evaluate((el) => getComputedStyle(el, '::after').content)).not.toBe('none')
 })
 
 test('pictures for review', async ({ page }) => {

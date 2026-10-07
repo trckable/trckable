@@ -1,1 +1,0 @@
-import{lr as e}from"./core-8e93ebca.js";import{n as t,r as n}from"./TabCard-6aa9602b.js";var r=r=>{n(r.id,`who`,`ai-search`),e({mode:`full`}),t(`who`,`ai-search`),setTimeout(()=>document.getElementById(`cards`)?.scrollIntoView({block:`center`,behavior:`smooth`}),300)};export{r as t};

@@ -41,8 +41,6 @@ interface Props {
   pace?: ReactNode
   /** What was filtered out of the period: a line in the Visitors tile's tooltip. */
   bots?: Bots
-  /** Each number's days for the chart slot; a number with no series draws none. */
-  series?: Partial<Record<ChartMetric, number[]>>
   /** The site whose Settings → Payments the Revenue tile opens. */
   site: Site
 }
@@ -58,7 +56,6 @@ export function KpiStrip(p: Props) {
       vs={p.vs}
       label={label}
       icon={key}
-      series={p.series?.[key]}
       value={value}
       live={o.live && p.follow(o.live)}
       blank={o.live && p.blank}

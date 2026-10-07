@@ -211,9 +211,11 @@ test('each tile carries its change, readable without colour', async ({ page }) =
   await expect(chip.locator('[aria-hidden]')).toHaveText(/^[\d.]+% (↑|↓)$/)
   // The words a screen reader hears name the comparison too.
   await expect(chip.locator('.sr')).toHaveText(/(up|down) [\d.]+ percent vs /)
-  // The charted tile is told by its border, the others keep the quiet one.
-  const edge = (l: typeof visitors) => l.evaluate((el) => getComputedStyle(el).borderTopColor)
-  expect(await edge(visitors)).not.toBe(await edge(tiles.locator('.kpi', { hasText: /Bounce rate/ })))
+  // The charted tile: a thin underline, no box.
+  const lit = await visitors.evaluate((el) => ({ line: getComputedStyle(el, '::after').content, border: getComputedStyle(el).borderTopWidth, back: getComputedStyle(el).backgroundColor }))
+  expect(lit.line).not.toBe('none')
+  expect(lit.border).toBe('0px')
+  expect(lit.back).toMatch(/rgba\(0, 0, 0, 0\)|transparent/)
 })
 
 test('nothing in the period before: no change chips, not "new" on every tile', async ({ page }) => {
