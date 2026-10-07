@@ -455,7 +455,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // The second row (a shared link on a desktop has it in the header's row); before the first visit there is nothing to switch or date, so it waits.
   const controls = !waiting && (
     <ControlRow
-      live={liveView}
+      live={liveView} site={site}
       phone={narrow}
       value={pickerValue}
       today={today}

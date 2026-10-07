@@ -3098,3 +3098,69 @@ body[data-mode] .card.overview {
   gap: 5px;
   cursor: default;
 }
+
+/* ---- Open cards (Data and All sites) ---------------------------------------
+   No boxes: hairlines between the number tiles, a hairline under each panel's
+   title row, and room between the panels instead of a frame around them. */
+.app .card.overview,
+.app .card.tc {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.app .card.tc {
+  padding: 0;
+}
+.app .card.tc .tc-tabs,
+.app .card.tc .tc-head {
+  margin-left: 0;
+  margin-right: 0;
+}
+.app .card.overview .kpis {
+  padding: 0;
+  gap: 0;
+  border-top: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+}
+.app .card.overview .kpi {
+  padding: 14px 16px;
+}
+.app .card.overview .kpi + .kpi {
+  border-left: 1px solid var(--grid);
+}
+.app .card.overview .overview-chart {
+  padding-left: 0;
+  padding-right: 0;
+}
+.app .cards2 {
+  gap: 44px;
+}
+.app .all-stats {
+  gap: 0;
+  border-top: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+}
+.app .all-stat {
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.app .all-stat + .all-stat {
+  border-left: 1px solid var(--grid);
+}
+.app .all-tile {
+  padding: 8px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+@media (max-width: 640px) {
+  .app .card.overview .kpi:nth-child(odd) {
+    border-left: 0;
+  }
+  .app .card.overview .kpi {
+    border-bottom: 1px solid var(--grid);
+  }
+}
