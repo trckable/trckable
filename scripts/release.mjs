@@ -44,7 +44,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { execFileSync, spawn } from 'node:child_process'
 import { join } from 'node:path'
-import { bump, checksState, cutChangelog, duration, newer, releaseDate, timings, VERSION_PLACES } from './release-lib.mjs'
+import { adminMergeCommand, bump, checksState, cutChangelog, dirtyBeyondFigures, docsVersionMessage, duration, FIGURE_PATHS, mergeBlockedByPolicy, newer, releaseDate, timings, VERSION_PLACES } from './release-lib.mjs'
 import { siteRepo } from './site-repo.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
@@ -80,10 +80,23 @@ const background = (cmd, a, cwd) => new Promise((resolve) => {
   p.on('error', () => resolve(1))
 })
 
+// The docs' generated version files, committed in the site's repo as one commit.
+// Returns true when there was something to commit.
+const DOCS_VERSION_FILES = ['docs/lib/version.ts', 'docs/content/docs/changelog.md', 'docs/content/docs/benchmarks.md', 'ops/facts.json']
+function commitDocsVersion(site, siteGit) {
+  const changed = DOCS_VERSION_FILES.filter((f) => existsSync(join(SITE, f)) && siteGit('status', '--porcelain', '--', f))
+  if (!changed.length) return false
+  site('git', 'add', '--', ...changed)
+  site('git', 'commit', '-q', '-m', docsVersionMessage(V))
+  return true
+}
+
 function prepare() {
   const OLD = readFileSync(join(ROOT, 'VERSION'), 'utf8').trim()
   if (!newer(V, OLD)) throw new Error(`${V} is not newer than ${OLD}`)
-  if (git('status', '--porcelain')) throw new Error('commit or stash your changes first')
+  // The README and its figures are rewritten below: what the site's deploy changed in them is not work to keep.
+  if (dirtyBeyondFigures(git('status', '--porcelain')).length) throw new Error('commit or stash your changes first')
+  run('git', 'checkout', '-q', '--', ...FIGURE_PATHS)
   if (git('branch', '--show-current') !== 'main') throw new Error('release from main')
   // The site's repo takes part (figures, pictures, screenshots): it must be there, and clean.
   const site = (...a) => execFileSync(a[0], a.slice(1), { cwd: SITE, stdio: 'inherit', env: { ...process.env, TRCKABLE_REPO: ROOT } })
@@ -127,6 +140,10 @@ function prepare() {
     notes.push(`- [x] Screenshots: ${retaken} retaken because their inputs changed, ${kept} unchanged and kept`)
     done('screenshots')
   }
+  // The docs' version and changelog follow the new VERSION: committed in the
+  // site's repo now, so its deploy does not meet a dirty tree later.
+  site('node', 'docs/scripts/changelog.mjs')
+  if (commitDocsVersion(site, siteGit)) notes.push(`- [x] The docs version committed in the site's repo (${siteGit('log', '-1', '--format=%h')})`)
   if (siteGit('status', '--porcelain')) {
     site('git', 'add', '-A', 'docs', 'website', 'ops')
     site('git', 'commit', '-q', '-m', `Figures and screenshots for ${V}`)
@@ -167,7 +184,15 @@ function waitForChecks() {
 
 function merge() {
   // No bypass: main's ruleset takes it only with every required check green.
-  run('gh', 'pr', 'merge', `release-${V}`, '--squash', '--delete-branch', '--subject', V)
+  try {
+    execFileSync('gh', ['pr', 'merge', `release-${V}`, '--squash', '--delete-branch', '--subject', V], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'inherit', 'pipe'] })
+  } catch (e) {
+    const text = String(e.stderr ?? '')
+    process.stderr.write(text)
+    if (!mergeBlockedByPolicy(text)) throw e
+    console.error(`\nMain's rules do not allow this merge yet. If you are sure, merge with the rights to bypass:\n\n  ${adminMergeCommand(V)}\n\nThen: pnpm release tag ${V}`)
+    process.exit(1)
+  }
   run('git', 'checkout', '-q', 'main')
   run('git', 'pull', '-q', '--ff-only')
   if (git('branch', '--list', `release-${V}`)) run('git', 'branch', '-q', '-D', `release-${V}`)
@@ -226,6 +251,10 @@ async function tag() {
   if (siteCheck) {
     if ((await siteCheck) !== 0) throw new Error(`${V} is out, but the site's check failed (above): fix it, then pnpm --dir ${SITE} web:ship`)
     done('site check (the rest of it, beyond the workflow)')
+    // The site's build regenerates the docs version: committed, so web:ship accepts the tree.
+    const siteGit = (...a) => sh('git', a, SITE)
+    const site = (...a) => execFileSync(a[0], a.slice(1), { cwd: SITE, stdio: 'inherit' })
+    if (commitDocsVersion(site, siteGit)) console.log(`The docs version committed in the site's repo (${siteGit('log', '-1', '--format=%h')})`)
   }
   const after = join(SITE, 'scripts', 'after-release.sh')
   if (!existsSync(after)) {

@@ -13,6 +13,10 @@ section into the release.
 
 - Live: a row of three cards under the panels, today so far against the same time last week, the pages people are on right now, and where they are from, each opening Data.
 
+### Changed
+
+- Data: Sources shows the channels as a ring with thick bars, Goals gets an icon, a plain name and a status for each goal plus a small visit-to-goal funnel, and Pages, Locations and Devices use the same bars; the rows' small charts are gone.
+
 ## 0.6.3 (7 Oct 2026)
 
 ### Added

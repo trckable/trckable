@@ -1,0 +1,1 @@
+import{t as e}from"./Install-171cb2d2.js";export{e as Install,e as default};
