@@ -11,15 +11,16 @@ import { type Range } from '../../lib/dates'
 import { fmtDay, todayIn } from '../../lib/dates'
 import { setView } from '../../lib/url'
 import { patchFor } from '../moments/apply'
-import { pickMarks, placePins, type Mark } from '../moments/marks'
+import { placePins } from '../moments/marks'
+import { groupSpans, pickSpans, type Span } from '../moments/spans'
 import { useMoments } from '../moments/useMoments'
 import { copy as moments } from '../moments/copy'
-import { say } from '../moments/words'
 import { metricName } from '../overview/chartMetric'
 import { bar } from './barCopy'
 import { copy } from './copy'
 import { Answers } from './Answers'
 import { Ask } from './Ask'
+import { MomentSpans } from './MomentSpans'
 import { SetupCard } from './SetupCard'
 import { sinceOf, storyOf, takeawayOf } from './rules'
 import { Tiles } from './Tiles'
@@ -40,24 +41,8 @@ export interface StoryViewProps {
   onGoal?: () => void
 }
 
-/** The room one numbered marker needs, so days close together never cover each other. */
-const MARK_ROOM = 26
-
-/** Moves markers apart to at least `gap` pixels, keeping their order and the last one where it was. */
-export function spread(xs: number[], gap: number): number[] {
-  const out = [...xs]
-  for (let k = 1; k < out.length; k++) out[k] = Math.max(out[k], out[k - 1] + gap)
-  const end = xs[xs.length - 1]
-  if (out.length && out[out.length - 1] > end) {
-    out[out.length - 1] = end
-    for (let k = out.length - 2; k >= 0; k--) out[k] = Math.min(out[k], out[k + 1] - gap)
-  }
-  return out
-}
-
-/** The most the story marks: three moments, so each can be told. */
+/** The most the story tells: three moments, so each can be told. */
 const MOMENTS = 3
-const TOP = (pins: Mark[]) => pins.slice(0, MOMENTS)
 
 export default function StoryView(p: StoryViewProps) {
   const { data } = p
@@ -73,26 +58,19 @@ export default function StoryView(p: StoryViewProps) {
   const bucket = data.bucket
   const today = todayIn(p.site.timezone)
   const pins = useMoments(p.site.id, p.query, bucket)
-  // The top moments by weight, one a day, then told in the order they happened.
-  const marks = useMemo(() => TOP(pickMarks(placePins(pins ?? [], labels, bucket), (i) => i * 60, undefined, MOMENTS, 0)), [pins, labelsKey, bucket]) // eslint-disable-line react-hooks/exhaustive-deps -- labels are new arrays each render: keyed by content
+  // Moments that belong together are one; the three that matter most, told in the order they happened.
+  const marks = useMemo(() => pickSpans(groupSpans(placePins(pins ?? [], labels, bucket)), MOMENTS), [pins, labelsKey, bucket]) // eslint-disable-line react-hooks/exhaustive-deps -- labels are new arrays each render: keyed by content
   const fmt = p.money ?? (() => '')
   const since = useSince(p.site)
   const told = sinceOf(since.found?.items ?? [], fmt)
   const { hints, away } = useHints(p.site)
-  const open = (m: Mark) => setView({ ...patchFor(m.pin, { filters: [], range: p.range, today, bucket }), v: 'explore', story: 'moment' })
-
-  const layer = (g: { x: (i: number) => number }) => {
-    const at = spread(marks.map((m) => g.x(m.i)), MARK_ROOM)
-    return (
-    <div role="group" aria-label={copy.momentsTitle} style={{ display: 'contents' }}>
-      {marks.map((m, n) => (
-        <button key={m.pin.id} type="button" className={`sv-mark ${m.pin.kind}`} style={{ left: at[n] }} aria-label={copy.openMoment(fmtDay(m.pin.day ?? ''), say(m.pin, fmt).line)} onPointerDown={(e) => e.stopPropagation()} onClick={() => open(m)}>
-          {n + 1}
-        </button>
-      ))}
-    </div>
-    )
-  }
+  // A moment of one day opens that day, as a pin always did; a longer one opens its days.
+  const open = (m: Span) =>
+    m.i0 === m.i1
+      ? setView({ ...patchFor(m.main, { filters: [], range: p.range, today, bucket }), v: 'explore', story: 'moment' })
+      : setView({ ...patchFor(m.main, { filters: [], range: p.range, today, bucket }), period: 'custom', from: m.from, to: m.to, bucket: undefined, day: undefined, live: false, v: 'explore', story: 'moment' })
+  const visitors = cur.series.map((x) => x.visitors)
+  const layer = (g: { x: (i: number) => number; y: (v: number) => number; vals: number[]; w: number }) => <MomentSpans spans={marks} geo={g} site={p.site.id} visitors={visitors} narrow={p.narrow} onOpen={open} />
   const period = `${fmtDay(data.from)} ${bar.to} ${fmtDay(data.to)}`
   const h = facts.headline
   return (
@@ -120,7 +98,7 @@ export default function StoryView(p: StoryViewProps) {
 
       <Tiles tiles={facts.tiles} series={cur.series.map((x) => x.visitors)} revenue={p.money ? cur.series.map((x) => x.revenue ?? 0) : undefined} onConnect={() => setConnect(true)} />
 
-      <Card className="sv-chart" icon={<ChartLine size={15} strokeWidth={1.8} />} title={copy.chartTitle} status={marks.length > 0 ? copy.chartHint : undefined} label={copy.chartTitle}>
+      <Card className="sv-chart" icon={<ChartLine size={15} strokeWidth={1.8} />} title={copy.chartTitle} status={marks.length > 0 ? copy.chartHint(marks.length) : undefined} label={copy.chartTitle}>
         <div className="sv-chart-body">
           <div className="sv-plot" role="img" aria-label={copy.chartLabel}>
             <TimeChart
@@ -135,20 +113,8 @@ export default function StoryView(p: StoryViewProps) {
               layer={marks.length > 0 ? layer : undefined}
             />
           </div>
-          <ol className="sv-moments" aria-label={copy.momentsTitle}>
-            {marks.length === 0 && pins && <li className="faint">{copy.noMoments}</li>}
-            {marks.map((m, n) => (
-              <li key={m.pin.id}>
-                <button type="button" onClick={() => open(m)}>
-                  <span className={`sv-n ${m.pin.kind}`}>{n + 1}</span>
-                  <span>
-                    <b>{fmtDay(m.pin.day ?? '')}</b> · {say(m.pin, fmt).line}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ol>
         </div>
+        {marks.length === 0 && pins && <p className="sv-none faint">{copy.noMoments}</p>}
       </Card>
 
       <Answers answers={facts.answers} onConnect={() => setConnect(true)} onGoal={p.onGoal} site={p.site} series={{ visitors: cur.series.map((x) => x.visitors), was: data.previous?.series.map((x) => x.visitors), revenue: p.money ? cur.series.map((x) => x.revenue ?? 0) : undefined }} hints={hints} onAway={away} />
