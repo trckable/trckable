@@ -11,7 +11,7 @@ import { navigate, readView, setView, useLocation, wantsLive } from '../lib/url'
 import { exportQuery, queryOf, rangeOf, showsChange } from '../lib/dashQuery'
 import { canAsk, isShared, isViewer } from '../lib/me'
 import { useMods } from '../lib/useMods'
-import { Card } from '../kit/Card'
+import { OverviewCard } from '../features/overview/OverviewCard'
 import { isOn, shows } from '../lib/modules'
 import { FilterMenu } from '../components/FilterMenu'
 import { toast } from '../components/Toast'
@@ -521,7 +521,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       <StorySlot view={view} site={site} query={query} data={real} range={range} ready={hasData && !showInstall} waiting={waiting} loading={loading || firstLoad} money={money ? fmtM : undefined} narrow={narrow} onGoal={() => setAddGoals(true)}>
       {/* One section for the period at a glance: the key numbers across the
           top, the chart under them — they are one story, not two cards. */}
-      <Card className="overview" label="Overview">
+      <OverviewCard status={vs}>
       <KpiStrip
         loading={firstLoad} vs={vs} metric={metric} can={canDraw} onPick={pick} expectMoney={hold.revenue}
         k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} blank={blank} site={site} bots={data?.bots}
@@ -606,7 +606,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           onBack={() => { setStory('off'); setPlaying(false); setHourAt(null); setDayIdx(null) }}
         />
       </div>
-      </Card>
+      </OverviewCard>
 
       {notesOpen && notesOn && (
         <Suspense fallback={null}>

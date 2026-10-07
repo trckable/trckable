@@ -1,1 +1,0 @@
-import{t as e}from"./react-e12729a5.js";import{Nr as t}from"./core-93e5d705.js";var n=e();function r({line:e,action:r,onAction:i,icon:a}){return(0,n.jsxs)(`div`,{className:`empty-state`,children:[a??(0,n.jsx)(t,{size:44}),(0,n.jsx)(`p`,{children:e}),r&&i&&(0,n.jsx)(`button`,{type:`button`,className:`btn ghost`,onClick:i,children:r})]})}export{r as t};

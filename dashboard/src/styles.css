@@ -2999,3 +2999,6 @@ body[data-mode] .kit-card.overview {
 body {
   overflow-x: clip;
 }
+.kit-card.overview > .kit-head {
+  padding: 14px 16px 12px;
+}
