@@ -56,9 +56,9 @@ test('before the first visit the key numbers show a dash, then the numbers', asy
   expect(await page.locator('.kpis .kpi').first().innerText()).not.toMatch(/%/)
 })
 
-// The comparison menu: its choices are radios with the one in force checked,
-// No comparison first. Clearing takes the line and the address's compare away
-// at once; a new choice brings it back. By the hour (Now) and by the day.
+// The comparison, set in the period's menu (More): a choice applies at once and
+// pressing it again clears it. Clearing takes the line and the address's compare
+// away at once; a new choice brings it back. By the hour (Now) and by the day.
 for (const period of ['now', '7d']) {
   test(`the comparison sets, clears and sets another (${period})`, async ({ page }) => {
     // Now needs a site with a visit today; the history site has only days behind it.
@@ -66,20 +66,22 @@ for (const period of ['now', '7d']) {
     const chart = page.locator('.overview-chart .chart-wrap')
     await expect(chart.locator('svg[role="img"]')).toBeVisible({ timeout: 15_000 })
     const ghost = chart.locator('svg path[stroke-dasharray="4 4"]')
+    const picker = page.getByRole('dialog', { name: 'Choose a date range' })
+    const compare = picker.getByRole('group', { name: 'Compare' })
     const choose = async (name: string) => {
-      await page.locator('.cmp-btn').click()
-      await page.getByRole('menuitemradio', { name }).click()
+      await page.locator('.ctl-see .btn.range').click()
+      await picker.getByRole('button', { name: 'More' }).click()
+      await compare.getByRole('button', { name }).click()
+      await page.keyboard.press('Escape')
+      await expect(picker).toBeHidden()
     }
     await expect(ghost).toHaveCount(0)
-    await page.locator('.cmp-btn').click()
-    const menu = page.getByRole('menu', { name: 'Compare with' })
-    await expect(menu.getByRole('menuitemradio')).toHaveText(['No comparison', /^Period before/, 'Last year', 'Custom'])
-    await expect(menu.getByRole('menuitemradio', { name: 'No comparison' })).toHaveAttribute('aria-checked', 'true')
-    await page.keyboard.press('Escape')
+    await expect(page.locator('.cmp-btn')).toBeHidden()
     await choose('Period before')
     await expect(ghost).toHaveCount(1)
     expect(page.url()).toContain('compare=previous')
     await page.locator('.cmp-btn').click()
+    const menu = page.getByRole('menu', { name: 'Compare with' })
     await expect(menu.getByRole('menuitemradio', { name: 'Period before' })).toHaveAttribute('aria-checked', 'true')
     await menu.getByRole('menuitemradio', { name: 'No comparison' }).click()
     await expect(ghost).toHaveCount(0)

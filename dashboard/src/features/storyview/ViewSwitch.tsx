@@ -8,7 +8,7 @@ import { switchWords as words } from './barCopy'
 
 const noop = () => () => {}
 
-export function ViewSwitch({ story, phone, onPick }: { story: boolean; phone: boolean; onPick: (v: 'story' | 'explore') => void }) {
+export function ViewSwitch({ story, onPick }: { story: boolean; phone?: boolean; onPick: (v: 'story' | 'explore') => void }) {
   const slot = useSyncExternalStore(noop, () => document.getElementById('sv-slot'), () => null)
   const el = (
     <div className="sv-switch" role="group" aria-label={words.label}>
@@ -22,5 +22,5 @@ export function ViewSwitch({ story, phone, onPick }: { story: boolean; phone: bo
       </button>
     </div>
   )
-  return slot && !phone ? createPortal(el, slot) : el
+  return slot ? createPortal(el, slot) : el
 }

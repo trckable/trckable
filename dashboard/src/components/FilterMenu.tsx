@@ -34,6 +34,7 @@ export function FilterMenu(p: {
         type="button"
         className={chips ? 'btn ghost filter on' : 'btn ghost filter'}
         title={copy.filter}
+        aria-label={copy.filter}
         data-key="filter"
         aria-haspopup="menu"
         aria-expanded={open}

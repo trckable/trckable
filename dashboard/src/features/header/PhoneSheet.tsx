@@ -20,6 +20,9 @@ export interface SheetProps {
   value: PickerValue
   today: ISODate
   onChange: (v: PickerValue) => void
+  /** Which of the two the sheet shows: the period, or the filters in force. */
+  mode: 'date' | 'filters'
+  onClear: () => void
   /** back: focus returns to the pill (not when another panel takes over). */
   onClose: (back?: boolean) => void
 }
@@ -69,6 +72,8 @@ export default function PhoneSheet(p: SheetProps) {
         >
           <span />
         </div>
+        {p.mode === 'date' && (
+        <>
         <div className="sheet-quick" role="group" aria-label={sheetCopy.periods}>
           {QUICK.map((id) => (
             <button key={id} type="button" aria-pressed={p.value.period === id} onClick={() => p.onChange({ ...p.value, period: id, range: (presetById(id) ?? PRESETS[0]).range(p.today) })}>
@@ -80,13 +85,18 @@ export default function PhoneSheet(p: SheetProps) {
           </button>
         </div>
         <button type="button" className="sheet-row" aria-haspopup="dialog" onClick={openPicker}>
-          <span>{sheetCopy.compareRow}</span>
+          <span>{sheetCopy.custom}</span>
           <span className="sheet-val">
-            {p.value.compare !== 'none' && compareWords(p.value)}
             <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
           </span>
         </button>
-        {!isShared() && (
+        <button type="button" className="sheet-row" role="switch" aria-checked={p.value.compare !== 'none'} onClick={() => p.onChange({ ...p.value, compare: p.value.compare === 'none' ? 'previous' : 'none' })}>
+          <span>{sheetCopy.compareRow}</span>
+          <span className="sheet-val">{p.value.compare !== 'none' ? compareWords(p.value) : sheetCopy.off}</span>
+        </button>
+        </>
+        )}
+        {p.mode === 'filters' && !isShared() && (
           <div className="sheet-row sheet-filters">
             <span>{sheetCopy.filtersRow}</span>
             <div className="sheet-chips">
@@ -107,6 +117,11 @@ export default function PhoneSheet(p: SheetProps) {
               <button type="button" className="btn ghost filter" aria-haspopup="menu" onClick={openFilter}>
                 {sheetCopy.add}
               </button>
+              {p.active.length > 0 && (
+                <button type="button" className="btn ghost filter" onClick={() => { p.onClear(); close() }}>
+                  {rowCopy.clear}
+                </button>
+              )}
             </div>
           </div>
         )}

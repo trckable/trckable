@@ -168,6 +168,7 @@ export function DatePicker({ value, today, onChange, short, tz, site, bucket, au
           {calendar}
           <span className="range-label">{label}</span>
           {presetLabel && <span className="range-dates">{fmtRange(value.range, today)}</span>}
+          <ChevronDown size={13} strokeWidth={1.75} className="range-chev" aria-hidden="true" />
           {cmpText && <span className="sr">{cmpText}</span>}
           {value.period === 'now' && <span className="pulse" aria-hidden="true" />}
         </span>

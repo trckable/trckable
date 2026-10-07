@@ -16,6 +16,7 @@ import { siteColors } from './allSitesColors'
 import { EMPTY, flat } from '../features/sites/layout'
 import { useSiteLayout } from '../features/sites/useSiteLayout'
 import { AllBar } from '../features/header/AllBar'
+import { useStuck } from '../features/header/useStuck'
 import { AllRows } from './AllRows'
 import { AllSort } from './AllSort'
 import { AllView } from './AllView'
@@ -66,6 +67,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
   const s = summarize(list ?? [])
   const start = startIndex(list ?? [])
   const connect = list && !anyPayments(list) && !isViewer() && list.length > 0 ? list[0] : null
+  const { sentinel, stuck } = useStuck()
   const shape = layoutOf(sorted?.length ?? 0, new URLSearchParams(location.search).get('layout'), picked)
 
   return (
@@ -115,7 +117,8 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
               <Stacked rows={list} days={days} colors={colors} start={start} />
             </div>
 
-            <div className="all-filters">
+            <div ref={sentinel} className="subbar-sentinel all-sentinel" aria-hidden="true" />
+            <div className="all-filters" data-stuck={stuck || undefined}>
               <div className="seg" role="group" aria-label="Show">
                 {(
                   [

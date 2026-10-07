@@ -11,5 +11,7 @@ export const sheetCopy = defineCopy('header.sheet', {
   more: 'More',
   compareRow: 'Compare',
   filtersRow: 'Filters',
-  add: 'Add',
+  add: '+ Add a filter',
+  custom: 'Custom range',
+  off: 'Off',
 })

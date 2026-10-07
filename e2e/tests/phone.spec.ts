@@ -112,7 +112,7 @@ test('the site list is a bottom sheet with rows 48 px tall', async ({ page }) =>
 
 test('the period sheet and the ⋯ menu', async ({ page }) => {
   await data(page)
-  await page.locator('.phone-pill').click()
+  await page.locator('.pr-date').click()
   await expect(page.locator('.sheet-body')).toBeVisible()
   await clean(page)
   await page.getByRole('button', { name: 'Done' }).click()

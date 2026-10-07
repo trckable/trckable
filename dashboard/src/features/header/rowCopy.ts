@@ -15,6 +15,7 @@ export const rowCopy = defineCopy('header.row', {
   more: (n: number) => `+${n} more`,
   count: (n: number) => `${n} filter${n === 1 ? '' : 's'}`,
   clear: 'Clear all',
+  add: 'Add a filter',
   saveOne: 'Save view',
   saveInMenu: 'Save as segment',
   saveInMenuOne: 'Save this view',
