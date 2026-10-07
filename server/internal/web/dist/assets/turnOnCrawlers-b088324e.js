@@ -1,1 +1,0 @@
-import{X as e,fr as t}from"./core-c8bdf61d.js";import{t as n}from"./apiMore-6fd78716.js";import{t as r}from"./open-be226803.js";function i(i){n.setModule(i.id,`crawlers`,!0).then(()=>{e(),r(i)}).catch(e=>t(e))}export{i as default};

@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { bump, checksState, cutChangelog, duration, newer, releaseDate, timings, versionMismatches } from './release-lib.mjs'
+import { adminMergeCommand, bump, checksState, dirtyBeyondFigures, docsVersionMessage, mergeBlockedByPolicy, cutChangelog, duration, newer, releaseDate, timings, versionMismatches } from './release-lib.mjs'
 
 test('newer compares each part as a number', () => {
   assert.equal(newer('0.10.0', '0.9.9'), true)
@@ -70,4 +70,25 @@ test('checksState waits for every required check and stops at the first failure'
   assert.equal(checksState([{ name: 'cla', bucket: 'pass' }, { name: 'server', bucket: 'pass' }, { name: 'extra', bucket: 'pending' }], req), 'pending')
   assert.equal(checksState([{ name: 'extra', bucket: 'fail' }, { name: 'server', bucket: 'pending' }], req), 'fail')
   assert.equal(checksState([{ name: 'cla', bucket: 'cancel' }], req), 'fail')
+})
+
+test('checksState waits until checks are registered', () => {
+  assert.equal(checksState([], []), 'pending')
+  assert.equal(checksState([], ['ci']), 'pending')
+  assert.equal(checksState([{ name: 'ci', bucket: 'pass' }], ['ci']), 'pass')
+})
+
+test('dirtyBeyondFigures ignores the README and its figure pictures only', () => {
+  const figures = ' M README.md\n M .github/images/readme/hero.svg\n?? .github/images/readme/new.svg\n'
+  assert.deepEqual(dirtyBeyondFigures(figures), [])
+  assert.deepEqual(dirtyBeyondFigures(figures + ' M server/main.go\n'), [' M server/main.go'])
+  assert.deepEqual(dirtyBeyondFigures(' M .github/images/other.png'), [' M .github/images/other.png'])
+  assert.deepEqual(dirtyBeyondFigures(''), [])
+})
+
+test('a merge refused by main\'s rules is recognised and the admin command is exact', () => {
+  assert.equal(mergeBlockedByPolicy('X Pull request is not mergeable: the base branch policy prohibits the merge.'), true)
+  assert.equal(mergeBlockedByPolicy('network down'), false)
+  assert.equal(adminMergeCommand('0.7.0'), 'gh pr merge release-0.7.0 --squash --delete-branch --subject 0.7.0 --admin')
+  assert.equal(docsVersionMessage('0.7.0'), 'docs: version 0.7.0')
 })

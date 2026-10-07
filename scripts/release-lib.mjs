@@ -78,8 +78,36 @@ export function timings(steps) {
  * check that has not even started yet included).
  */
 export function checksState(checks, required) {
+  if (checks.length === 0) return 'pending' // none registered yet: the pull request was only just pushed
   if (checks.some((c) => c.bucket === 'fail' || c.bucket === 'cancel')) return 'fail'
   if (checks.some((c) => c.bucket === 'pending')) return 'pending'
   const done = new Set(checks.filter((c) => c.bucket === 'pass' || c.bucket === 'skipping').map((c) => c.name))
   return required.every((name) => done.has(name)) ? 'pass' : 'pending'
 }
+
+/**
+ * The README and its figure pictures are rewritten by the figures step, so a
+ * change in them (the site's deploy makes one) is not "uncommitted work".
+ * Returns the `git status --porcelain` lines that are.
+ */
+export const FIGURE_PATHS = ['README.md', '.github/images/readme']
+export function dirtyBeyondFigures(porcelain) {
+  return porcelain.split('\n').filter((line) => {
+    if (!line.trim()) return false
+    const path = line.slice(3).replace(/^"|"$/g, '')
+    return !(path === 'README.md' || (path.startsWith('.github/images/readme/') && path.endsWith('.svg')))
+  })
+}
+
+/** True when a failed `gh pr merge` was main's rules refusing it (checks, reviews). */
+export function mergeBlockedByPolicy(text) {
+  return /base branch policy prohibits the merge/i.test(String(text))
+}
+
+/** The one command that merges anyway, for a person with the rights to run it. */
+export function adminMergeCommand(v) {
+  return `gh pr merge release-${v} --squash --delete-branch --subject ${v} --admin`
+}
+
+/** The commit message for the docs version written into the site's repo. */
+export const docsVersionMessage = (v) => `docs: version ${v}`

@@ -6,7 +6,9 @@ import type { ReactNode } from 'react'
 import { useTween } from '../lib/motion'
 import { fmtInt, fmtPct } from '../lib/format'
 import { Loading } from '../components/loading/Loading'
-import { moveOf, shareOf } from './change'
+import { shareOf } from './change'
+import { DeltaPill } from './DeltaPill'
+import { FatBar } from './FatBar'
 import { SPARK_H, SPARK_W, sparkPoints } from './sparkPath'
 import { kitCopy } from './copy'
 
@@ -50,6 +52,8 @@ export function BarList(p: {
   spark?: Record<string, number[]>
   /** A button at the end of every row, shown on hover or focus: a way into something about that row, apart from the row's own click. */
   action?: { icon: ReactNode; label: (key: string) => string; onAct: (key: string) => void }
+  /** Thick rounded bars on a hatched track with the share written inside (the Who card's lists). */
+  fat?: boolean
 }) {
   const measure = (i: BarItem) => (p.byRevenue ? (i.rev ?? 0) : i.value)
   const max = Math.max(1, ...p.items.map(measure))
@@ -57,7 +61,7 @@ export function BarList(p: {
 
   if (p.loading) return <Loading height={164} />
   return (
-    <div className={'bl' + (p.money ? ' has-rev' : '') + (p.fmtSub ? ' wide-sub' : '') + (p.action ? ' has-act' : '')}>
+    <div className={'bl' + (p.money ? ' has-rev' : '') + (p.fmtSub ? ' wide-sub' : '') + (p.action ? ' has-act' : '') + (p.fat ? ' fat' : '')}>
       <div className="bl-cols">
         <span>{p.dimLabel}</span>
         {p.spark && <span className="bl-spark" aria-hidden="true" />}
@@ -88,16 +92,20 @@ export function BarList(p: {
                 {it.color && <span className="dot" style={{ background: it.color }} />}
                 <span className="bl-text">{it.label}</span>
               </span>
-              <span className="bl-line" aria-hidden="true">
-                <i style={{ width: `${(measure(it) / max) * 100}%`, background: it.color ?? p.barColor }} />
-              </span>
+              {p.fat ? (
+                <FatBar width={(measure(it) / max) * 100} color={it.color ?? p.barColor} label={fmtPct(share)} />
+              ) : (
+                <span className="bl-line" aria-hidden="true">
+                  <i style={{ width: `${(measure(it) / max) * 100}%`, background: it.color ?? p.barColor }} />
+                </span>
+              )}
             </span>
             {p.spark && <Spark values={p.spark[it.key]} />}
             <span className="bl-val num">
               <Count value={it.value} fmt={p.fmtValue} />
             </span>
             <span className="bl-tail">
-              <Change now={it.moved?.now ?? it.value} was={it.moved ? it.moved.was : p.prior?.(it.key)} />
+              <DeltaPill now={it.moved?.now ?? it.value} was={it.moved ? it.moved.was : p.prior?.(it.key)} />
               <span className="bl-share num">{fmtPct(share)}</span>
             </span>
             {p.subLabel && <span className="bl-sub num">{it.sub !== undefined ? (p.fmtSub ?? fmtPct)(it.sub) : ''}</span>}
@@ -116,18 +124,6 @@ export function BarList(p: {
         )
       })}
     </div>
-  )
-}
-
-/** ▲ 12% or ▼ 8% against the period before; nothing when there is nothing to compare with. */
-function Change({ now, was }: { now: number; was: number | undefined }) {
-  const m = moveOf(now, was)
-  if (!m) return <span className="bl-chg num" aria-hidden="true" />
-  if (m.dir === 'flat') return <span className="bl-chg num">{kitCopy.flat}</span>
-  return (
-    <span className={`bl-chg num ${m.dir}`} title={`${m.dir === 'down' ? '−' : '+'}${m.pct}%`}>
-      {`${m.dir === 'up' ? kitCopy.up : kitCopy.down} ${m.pct}%`}
-    </span>
   )
 }
 
