@@ -124,6 +124,10 @@ describe('takeaway and deltas', () => {
     expect(takeawayOf(camp)).toContain('most of it from the spring campaign.')
     const ctry = base({ dims: { country: rows([['XK', 120], ['AL', 80]]) } }, { dims: { country: rows([['AL', 100]]) } })
     expect(takeawayOf(ctry)).toContain('most of it from Kosovo.')
+    // google.com under Search only repeats the channel: the next best cause is told instead, or none.
+    const eng = base({ dims: { referrer: rows([['google.com', 200]]), country: rows([['XK', 120], ['AL', 80]]) } }, { dims: { referrer: rows([['google.com', 100]]), country: rows([['AL', 100]]) } })
+    expect(takeawayOf(eng)).toBe('Up 100% on the period before, mostly from Search, most of it from Kosovo.')
+    expect(takeawayOf(base({ dims: { referrer: rows([['google.com', 200]]) } }, { dims: { referrer: rows([['google.com', 100]]) } }))).toBe('Up 100% on the period before, mostly from Search.')
     // The country moved 100, the page 60: the biggest one is told, once.
     const both = base({ dims: { country: rows([['XK', 120], ['AL', 80]]), entry_page: rows([['/a', 80], ['/b', 120]]) } }, { dims: { country: rows([['AL', 100]]), entry_page: rows([['/a', 60], ['/b', 40]]) } })
     expect(takeawayOf(both).match(/most of it/g)).toHaveLength(1)

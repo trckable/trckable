@@ -126,8 +126,17 @@ function driverOf(cur: Result, prev: Result, dim: string, gap: number): { value:
   return top && moved > 0 && Math.abs(top.diff) / moved >= DRIVER ? top : undefined
 }
 
+const ENGINES = /(^|\.)(google|bing|duckduckgo|yahoo|ecosia|baidu|yandex|brave|startpage|qwant)\./
+/** A referrer that only says again which channel it is: google.com under Search, or the channel's own name. */
+function repeats(referrer: string, channel?: string): boolean {
+  if (!channel) return false
+  const host = referrer.toLowerCase().replace(/^www\./, '')
+  if (channel === 'Search' && ENGINES.test(host)) return true
+  return host.split('.')[0] === channel.toLowerCase()
+}
+
 /** The concrete cause, as one short clause: the biggest of a page, a referrer, a campaign or a country that explains half the move. Nothing when none does. */
-export function whyOf(i: Input, gap: number): string {
+export function whyOf(i: Input, gap: number, channel?: string): string {
   if (!i.prev) return ''
   const kinds: [string, (v: string) => string][] = [
     ['entry_page', copy.whyPage],
@@ -138,6 +147,7 @@ export function whyOf(i: Input, gap: number): string {
   let best: { diff: number; say: string } | undefined
   for (const [dim, say] of kinds) {
     const d = driverOf(i.cur, i.prev, dim, gap)
+    if (d && dim === 'referrer' && repeats(d.value, channel)) continue
     if (d && Math.abs(d.diff) >= WHY_MIN && (!best || Math.abs(d.diff) > Math.abs(best.diff))) best = { diff: d.diff, say: say(d.value) }
   }
   return best?.say ?? ''
@@ -154,7 +164,7 @@ export function takeawayOf(i: Input): string {
   const gap = i.cur.kpis.visitors - p.visitors
   const src = driverOf(i.cur, i.prev, 'channel', gap)
   const source = src ? named(src.value) : undefined
-  const head = copy.takeHead(up, d.pct, source, whyOf(i, gap))
+  const head = copy.takeHead(up, d.pct, source, whyOf(i, gap, src?.value))
   const follow = followed(up, i)
   return follow ? `${head} ${follow}` : head
 }
