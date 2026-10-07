@@ -74,6 +74,10 @@ helm install trckable trckable/charts/trckable \
 
 One replica (strategy `Recreate`), a 5 Gi volume claim at `/data` that is kept when the release is uninstalled, a Service, an optional Ingress, probes on `/healthz` and `/readyz`, resource requests, and the Secret: the chart makes one with random values that stay the same across upgrades, or name your own with `--set secret.existingSecret=NAME` (keys `secret` and `setup-token`). Read the setup token with the command the chart prints, then open `/setup`. Every value is in [`values.yaml`](../charts/trckable/values.yaml). To update: `git pull`, check out the new tag, `helm upgrade`.
 
+## Uptime monitoring
+
+Point an external uptime monitor (UptimeRobot, Better Stack, Uptime Kuma) at `GET /healthz/collect`, every 30 seconds is fine. It answers `200` with `{"ok":true,"checks":{...}}` when trckable can take pageviews, and `503` with the same JSON when it cannot; `checks` names each part (`database`, `queue`, `writer`, `tracker`, `disk`) as true or false. It checks that the database accepts a write, that the write-ahead log is taking events and the analytics writer is keeping up, that the tracker script is served and that the data volume has at least 256 MB free. It writes no pageviews and shows no counts or paths, needs no sign-in, and caches its answer for 5 seconds. `/healthz` stays the plain "the process is up" check for container restarts.
+
 ## Checking the templates
 
 `scripts/deploy-check.sh` resolves every compose file, lints and renders the chart, and parses the template files. CI runs it when `deploy/` or `charts/` change.

@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Added
+
+- Monitoring: `GET /healthz/collect` answers 200 when trckable can take pageviews (database writable, log and analytics writer keeping up, tracker served, disk space) and 503 naming the failing part otherwise, for an external uptime monitor.
+
 ### Changed
 
 - Story: "Which page carries you?" and "What needs fixing?" draw their own page's and channel's days in the card's chart, not the whole site's line.
