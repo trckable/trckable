@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { DialogActions } from './DialogActions'
 import { DialogHead } from './DialogHead'
 import { Field } from './Field'
-import { Modal } from './Modal'
+import { Modal } from '../kit/Modal'
 import { saveViewCopy as copy } from './saveViewCopy'
 
 /** Name the view you are looking at. It says what will be kept — the period,

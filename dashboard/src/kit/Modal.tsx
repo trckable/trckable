@@ -5,8 +5,8 @@
 // and the wizard's own heading was clipped out of reach.
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { useGlide } from './glide'
-import { useLockScroll } from './lockScroll'
+import { useGlide } from '../components/glide'
+import { useLockScroll } from '../components/lockScroll'
 import './Modal.css'
 
 // Escape closes the dialog on top, not every open one at once.
@@ -17,6 +17,42 @@ if (typeof document !== 'undefined')
     e.stopPropagation()
     stack[stack.length - 1]()
   })
+
+/** Keys pressed while focus is inside a same-origin frame never reach this page's
+ *  document: hear Escape there too. A frame from another origin cannot be reached
+ *  (the browser keeps its keys), and is skipped. */
+export function hearFrames(box: HTMLElement, onEscape: () => void) {
+  const attached = new Map<Window, (e: globalThis.KeyboardEvent) => void>()
+  const hear = (frame: HTMLIFrameElement) => {
+    try {
+      const win = frame.contentWindow
+      if (!win || !frame.contentDocument || attached.has(win)) return
+      const on = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && onEscape()
+      win.document.addEventListener('keydown', on)
+      attached.set(win, on)
+    } catch {
+      // another origin: nothing to hear
+    }
+  }
+  const all = () =>
+    box.querySelectorAll('iframe').forEach((f) => {
+      hear(f)
+      f.addEventListener('load', () => hear(f))
+    })
+  all()
+  const seen = new MutationObserver(all)
+  seen.observe(box, { childList: true, subtree: true })
+  return () => {
+    seen.disconnect()
+    attached.forEach((on, win) => {
+      try {
+        win.document.removeEventListener('keydown', on)
+      } catch {
+        // the frame is gone
+      }
+    })
+  }
+}
 
 const FOCUSABLE = 'a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])'
 
@@ -95,7 +131,10 @@ export function Modal({
   useEffect(() => {
     const entry = () => latest.current?.()
     stack.push(entry)
+    const top = () => stack[stack.length - 1] === entry && entry()
+    const unhear = box.current ? hearFrames(box.current, top) : undefined
     return () => {
+      unhear?.()
       const at = stack.lastIndexOf(entry)
       if (at !== -1) stack.splice(at, 1)
     }

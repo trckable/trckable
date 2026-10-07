@@ -5,7 +5,7 @@
 import { Search, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { confirm } from '../../components/Confirm'
-import { Modal } from '../../components/Modal'
+import { Modal } from '../../kit/Modal'
 import { toast } from '../../components/toastBus'
 import type { Site } from '../../lib/api'
 import { canChange } from '../../lib/me'

@@ -4,7 +4,7 @@
 import { ChevronRight, X } from 'lucide-react'
 import { useRef, type PointerEvent } from 'react'
 import { compareWords, periodLabel, type PickerValue } from '../../components/DatePicker'
-import { Modal } from '../../components/Modal'
+import { Modal } from '../../kit/Modal'
 import { filterMenu, periodMenu } from '../../components/panelOpen'
 import { truncateMiddle } from '../../lib/visitor'
 import { PRESETS, presetById, type ISODate } from '../../lib/dates'

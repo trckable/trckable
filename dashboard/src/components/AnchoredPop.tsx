@@ -7,7 +7,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type 
 import { createPortal } from 'react-dom'
 import { usePhoneLock } from './lockScroll'
 import { placePop, type PopAt } from './popPlace'
-import { trapTab } from './Modal'
+import { trapTab } from '../kit/Modal'
 import './AnchoredPop.css'
 
 const NAV = '[data-nav]:not(:disabled)'
@@ -30,6 +30,7 @@ export function AnchoredPop({
   label,
   className = '',
   onClose,
+  onPointer,
   children,
 }: {
   anchor: RefObject<HTMLElement | null>
@@ -37,6 +38,8 @@ export function AnchoredPop({
   className?: string
   /** Called on every way out (Escape, a click outside, the page moving). */
   onClose: () => void
+  /** Pointer in and out of the panel, for one opened by hover. */
+  onPointer?: { enter: () => void; leave: () => void }
   /** Given `close`: leave and put focus back on the button. */
   children: (close: () => void) => ReactNode
 }) {
@@ -137,6 +140,8 @@ export function AnchoredPop({
         aria-label={label}
         style={at ? { left: at.left, top: at.top, bottom: at.bottom, maxHeight: Math.min(420, at.room) } : { visibility: sheet ? undefined : 'hidden' }}
         onKeyDown={keys}
+        onMouseEnter={onPointer?.enter}
+        onMouseLeave={onPointer?.leave}
       >
         {children(close)}
       </div>

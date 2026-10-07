@@ -3,7 +3,7 @@
 import { Flag, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { api, type Milestone, type Milestones, type Site } from '../../lib/api'
-import { Modal } from '../../components/Modal'
+import { Modal } from '../../kit/Modal'
 import { copy } from './copy'
 import { Hero } from './MilestoneHero'
 import { DoneTile, NextTile } from './MilestoneTiles'
