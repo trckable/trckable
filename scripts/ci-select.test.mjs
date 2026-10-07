@@ -148,3 +148,12 @@ test('the accuracy suite runs when what it measures changes, and not for a scree
   assert.equal(out('README.md').accuracy, 'false')
   assert.equal(outputs(everything()).accuracy, 'true')
 })
+
+test('the WordPress case (PHP in CI) runs only for the install snippets, the tracker and its own spec', () => {
+  assert.equal(outputs(select(['dashboard/src/views/AllSites.tsx'])).wordpress, 'false')
+  assert.equal(outputs(select(['dashboard/src/features/install/Methods.tsx'])).wordpress, 'true')
+  assert.equal(outputs(select(['tracker/src/index.ts'])).wordpress, 'true')
+  assert.equal(outputs(select(['packages/trckable/src/index.ts'])).wordpress, 'true')
+  assert.equal(outputs(select(['e2e/tests/methods.spec.ts'])).wordpress, 'true')
+  assert.equal(outputs(everything()).wordpress, 'true')
+})

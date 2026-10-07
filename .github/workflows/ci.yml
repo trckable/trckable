@@ -41,6 +41,7 @@ jobs:
       image: ${{ steps.filter.outputs.image }}
       browsers: ${{ steps.filter.outputs.browsers }}
       demo_browsers: ${{ steps.filter.outputs.demo_browsers }}
+      wordpress: ${{ steps.filter.outputs.wordpress }}
     steps:
       - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
@@ -273,6 +274,7 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.63.0-noble
       options: --ipc=host
     env:
+      TRCKABLE_WORDPRESS: ${{ needs.changes.outputs.wordpress }}
       HOME: /root # Firefox will not start when $HOME belongs to another user
     strategy:
       fail-fast: false
@@ -292,6 +294,7 @@ jobs:
       # from the package mirror. The runner's Azure mirror stalls at times, so a
       # short try there falls back to the main Ubuntu archive.
       - name: PHP (the methods spec runs the WordPress snippet through it)
+        if: needs.changes.outputs.wordpress == 'true'
         timeout-minutes: 8
         run: |
           o="-o Acquire::Retries=3 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15"
