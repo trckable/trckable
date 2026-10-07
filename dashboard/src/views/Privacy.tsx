@@ -199,7 +199,6 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
         <Row label="Keep visits for" hint="Older visits are deleted daily. Nothing else is touched.">
           <Picker
             label="Retention"
-            align="right"
             value={String(c.retention_days)}
             onPick={(v) => save({ retention_days: Number(v) }, v === '0' ? 'Visits are kept indefinitely' : `Visits older than ${v} days will be deleted`)}
             items={KEEP}

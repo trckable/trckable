@@ -1568,6 +1568,10 @@ table.t td {
 .pop.menu button:focus-visible {
   background: var(--sunken);
 }
+.menu-list {
+  display: flex;
+  flex-direction: column;
+}
 .pop.menu svg {
   color: var(--text-2);
   flex: none;
@@ -1996,12 +2000,6 @@ ul.people button:hover {
   order: 2;
 }
 
-/* A popup that lives on the page body, above dialogs and scrolling cards. */
-.pop.menu.floating,
-.pop.picker-pop.floating {
-  position: fixed;
-  z-index: 120;
-}
 .avatar {
   display: grid;
   place-items: center;
