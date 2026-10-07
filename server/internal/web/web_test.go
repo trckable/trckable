@@ -363,7 +363,7 @@ func TestMissingAssetIsNotFoundNotThePage(t *testing.T) {
 // The page itself is never cached, and a route is still the page: a site's
 // address has a dot in it.
 func TestPageIsNeverCachedAndRoutesStillAnswerWithIt(t *testing.T) {
-	for _, path := range []string{"/", "/albas.al", "/albas.al?period=ytd"} {
+	for _, path := range []string{"/", "/example.com", "/example.com?period=ytd"} {
 		rec := fetch(t, path, "")
 		if rec.Code != http.StatusOK || !strings.HasPrefix(rec.Header().Get("Content-Type"), "text/html") {
 			t.Errorf("%s: %d %q, want the page", path, rec.Code, rec.Header().Get("Content-Type"))
