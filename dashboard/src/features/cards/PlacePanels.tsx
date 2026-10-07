@@ -31,6 +31,7 @@ export function LocationsPanel({ c }: { c: CardsCtx }) {
         ) : (
           <BarList
             {...listProps(c, dim)}
+            fat
             dimLabel={PLACE_LABEL[dim] ?? 'City'}
             subLabel={c.full && !c.money && !c.scrubbing ? 'Bounce' : undefined}
             onPick={(v) => c.addFilter(dim, v)}
@@ -64,6 +65,7 @@ export function DevicesPanel({ c }: { c: CardsCtx }) {
       render={(dim) => (
         <BarList
           {...listProps(c, dim)}
+          fat
           dimLabel={DIM_LABEL[dim]}
           subLabel={c.full && !c.money && !c.scrubbing ? 'Bounce' : undefined}
           onPick={(v) => c.addFilter(dim, v)}

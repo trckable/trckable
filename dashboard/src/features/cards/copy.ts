@@ -1,5 +1,6 @@
 // The two cards under the chart: their tabs, and the small words on their lists.
 import { defineCopy } from '../../i18n'
+import { fmtInt } from '../../lib/format'
 
 export const cardCopy = defineCopy('cards', {
   who: 'Who came',
@@ -21,6 +22,16 @@ export const cardCopy = defineCopy('cards', {
   trackGoal: '+ Track a goal',
   goal: 'Goal',
   conv: 'Conv.',
+  goalOutbound: 'Outbound click',
+  goalDownload: 'File download',
+  goalForm: 'Form submit',
+  goalVisitors: (n: number) => (n === 1 ? '1 visitor' : `${fmtInt(n)} visitors`),
+  converting: 'converting',
+  barelyUsed: 'barely used',
+  funnelTitle: 'From visit to goal',
+  funnelVisitors: 'Visitors',
+  funnelEngaged: 'Engaged',
+  donutLabel: 'visitors',
   noGoals: 'Count a signup, a click or a page as a goal.',
   perDayChannels: 'Per-day data covers channels only',
   perDayEntry: 'Per-day data covers entry pages only',

@@ -4,6 +4,8 @@
 import { Flame } from 'lucide-react'
 import { lazy, Suspense, useState } from 'react'
 import { BarList } from '../../charts/BarList'
+import { Donut } from '../../charts/Donut'
+import { fmtCompact } from '../../lib/format'
 import type { Row } from '../../lib/api'
 import { shows } from '../../lib/modules'
 import { channelColor, channelLabel } from '../../lib/palette'
@@ -31,7 +33,7 @@ export function SourcesPanel({ c }: { c: CardsCtx }) {
 
 function SourceBars({ c, dim }: { c: CardsCtx; dim: string }) {
   const rows = c.sourceRows(dim).slice(0, c.rows)
-  const { spark, icons } = useRowExtras(c, dim, rows.map((r) => r.value)) ?? {}
+  const { icons } = useRowExtras(c, dim, rows.map((r) => r.value)) ?? {}
   const name = (r: Row) => {
     if (dim === 'channel') return channelLabel(r.value)
     if (!icons || !r.value) return r.value || '(none)'
@@ -42,10 +44,10 @@ function SourceBars({ c, dim }: { c: CardsCtx; dim: string }) {
       </>
     )
   }
-  return (
+  const list = (
     <BarList
       {...listProps(c, dim)}
-      spark={spark}
+      fat
       dimLabel={DIM_LABEL[dim]}
       subLabel={c.full && !c.scrubbing ? convOrBounce(c) : undefined}
       onPick={(v) => c.addFilter(dim, v)}
@@ -63,6 +65,13 @@ function SourceBars({ c, dim }: { c: CardsCtx; dim: string }) {
         dim: c.dimTrail && dim === 'channel' && r.value !== c.trail,
       }))}
     />
+  )
+  if (dim !== 'channel' || c.loading || rows.length === 0) return list
+  return (
+    <div className="src-split">
+      <Donut slices={rows.map((r) => ({ key: r.value, value: r.visitors, color: channelColor(r.value) }))} figure={fmtCompact(c.visitors)} caption={cardCopy.donutLabel} />
+      {list}
+    </div>
   )
 }
 
@@ -96,7 +105,6 @@ export function PagesPanel({ c }: { c: CardsCtx }) {
 
 function PageBars({ c, dim }: { c: CardsCtx; dim: string }) {
   const rows = (c.perDay(dim) ? c.dims(dim) : []).slice(0, c.rows)
-  const { spark } = useRowExtras(c, dim, rows.map((r) => r.value)) ?? {}
   // A heatmap for the page, once the module is on: not on a share link, and not for sections, which are not a page.
   const [heat, setHeat] = useState<string | null>(null)
   const action = shows(c.mods, 'cards', 'heatmaps') && !c.shared && dim !== 'group' ? { icon: <Flame size={14} aria-hidden="true" />, label: (k: string) => cardCopy.heatmap(k || '/'), onAct: setHeat } : undefined
@@ -105,7 +113,7 @@ function PageBars({ c, dim }: { c: CardsCtx; dim: string }) {
       <BarList
         {...listProps(c, dim)}
         action={action}
-        spark={spark}
+        fat
         dimLabel={DIM_LABEL[dim]}
         subLabel={c.full && dim !== 'page' && !c.money && !c.scrubbing ? 'Bounce' : undefined}
         onPick={(v) => c.addFilter(dim, v)}

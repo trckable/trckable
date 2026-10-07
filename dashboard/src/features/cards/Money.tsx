@@ -1,9 +1,9 @@
 // Card 2's first tab, what they did: the goals they reached.
-import { BarList, type BarItem } from '../../charts/BarList'
 import { EmptyState } from '../../components/EmptyState'
+import { Loading } from '../../components/loading/Loading'
 import { cardCopy } from './copy'
 import type { CardsCtx } from './ctx'
-import { priorOf } from './prior'
+import { GoalRows } from './GoalRows'
 
 export function GoalsPanel({ c }: { c: CardsCtx }) {
   // Nothing to list: one line and the button that starts one, not an empty table.
@@ -19,18 +19,7 @@ export function GoalsPanel({ c }: { c: CardsCtx }) {
           {cardCopy.trackGoal}
         </button>
       </div>
-      <BarList
-        dimLabel={cardCopy.goal}
-        subLabel={cardCopy.conv}
-        loading={c.loading}
-        barColor="var(--accent)"
-        whole={c.visitors}
-        prior={priorOf(c.prev, 'goal')}
-        onPick={(v) => c.addFilter('goal', v)}
-        items={(c.scrubbing ? [] : c.goals).slice(0, c.rows).map(
-          (r): BarItem => ({ key: r.value, label: <span className="num">{r.value}</span>, title: r.value, value: r.visitors, sub: c.visitors ? r.visitors / c.visitors : 0 }),
-        )}
-      />
+      {c.loading ? <Loading height={164} /> : <GoalRows c={c} />}
     </>
   )
 }
