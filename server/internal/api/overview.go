@@ -22,11 +22,21 @@ type siteRow struct {
 	Bounce    float64 `json:"bounce_rate"`
 	Previous  int64   `json:"previous_visitors"` // the period before, same length
 	Series    []int64 `json:"series"`
-	Online    int64   `json:"online"`
-	Revenue   *int64  `json:"revenue,omitempty"`
-	Currency  string  `json:"currency"`
-	Exponent  int     `json:"exponent"`
-	Error     string  `json:"error,omitempty"`
+	// The other cards' days, bucket for bucket with Series; bounce is each
+	// bucket's rate and Sessions its weight when sites are added up.
+	PageviewSeries []int64   `json:"pageview_series"`
+	SessionSeries  []int64   `json:"session_series"`
+	BounceSeries   []float64 `json:"bounce_series"`
+	// What the period before had, for the change on each number.
+	PreviousPageviews int64   `json:"previous_pageviews"`
+	PreviousBounce    float64 `json:"previous_bounce_rate"`
+	Online            int64   `json:"online"`
+	// OnlineSeries is Online for each of the last 30 minutes, oldest first.
+	OnlineSeries []int64 `json:"online_series"`
+	Revenue      *int64  `json:"revenue,omitempty"`
+	Currency     string  `json:"currency"`
+	Exponent     int     `json:"exponent"`
+	Error        string  `json:"error,omitempty"`
 }
 
 func (a *API) overview(w http.ResponseWriter, r *http.Request) {
@@ -71,12 +81,14 @@ func (a *API) overview(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		row.Visitors, row.Pageviews, row.Bounce, row.Series, row.Revenue = cur.Visitors, cur.Pageviews, cur.Bounce, cur.Series, cur.Revenue
+		row.PageviewSeries, row.SessionSeries, row.BounceSeries = cur.PageviewSeries, cur.SessionSeries, cur.BounceSeries
 		prev := p
 		prev.From, prev.To, prev.Revenue = from.AddDate(0, 0, -days).UTC(), from.UTC(), false
 		if ps, err := q.SiteSummary(r.Context(), prev); err == nil {
-			row.Previous = ps.Visitors
+			row.Previous, row.PreviousPageviews, row.PreviousBounce = ps.Visitors, ps.Pageviews, ps.Bounce
 		}
 		row.Online, _ = q.Online(r.Context(), si.ID, a.Now())
+		row.OnlineSeries, _ = q.OnlineSeries(r.Context(), si.ID, a.Now())
 		out = append(out, row)
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"days": days, "sites": out})

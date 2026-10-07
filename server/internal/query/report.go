@@ -111,7 +111,11 @@ type Point struct {
 	Visitors  int64  `json:"visitors"`
 	Pageviews int64  `json:"pageviews"`
 	Revenue   int64  `json:"revenue,omitempty"`
-	Imported  bool   `json:"imported,omitempty"` // counts from an imported day (Google Analytics) are in this bucket
+	// Bounce and AvgS are the bucket's bounce rate and mean session length
+	// (seconds), for the Story tiles' charts; absent for a bucket with no sessions.
+	Bounce   float64 `json:"bounce_rate,omitempty"`
+	AvgS     float64 `json:"avg_session_s,omitempty"`
+	Imported bool    `json:"imported,omitempty"` // counts from an imported day (Google Analytics) are in this bucket
 }
 
 // Day is one day's numbers for the scrubber.
@@ -263,7 +267,7 @@ func (q Q) Report(ctx context.Context, p Params) (*Result, error) {
 
 	// Chart series.
 	rows, err := conn.QueryContext(ctx, cte+`
-		SELECT `+bucketOf(p, "lstart")+` AS b, `+distinct+`, sum(pvs)
+		SELECT `+bucketOf(p, "lstart")+` AS b, `+distinct+`, sum(pvs), avg(`+bounce+`), avg(dur)
 		FROM s GROUP BY b ORDER BY b`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("series: %w", err)
@@ -272,10 +276,12 @@ func (q Q) Report(ctx context.Context, p Params) (*Result, error) {
 	for rows.Next() {
 		var pt Point
 		var b time.Time
-		if err := rows.Scan(&b, &pt.Visitors, &pt.Pageviews); err != nil {
+		var br, dur sql.NullFloat64
+		if err := rows.Scan(&b, &pt.Visitors, &pt.Pageviews, &br, &dur); err != nil {
 			rows.Close()
 			return nil, err
 		}
+		pt.Bounce, pt.AvgS = br.Float64, dur.Float64
 		pt.T = b.Format(localLayout)
 		got[pt.T] = pt
 	}
@@ -609,6 +615,59 @@ func (q Q) Online(ctx context.Context, site string, now time.Time) (int64, error
 		`SELECT count(DISTINCT visitor_id) FROM events WHERE site_id = ? AND ts >= ?`,
 		site, now.Add(-5*time.Minute).UTC()).Scan(&n)
 	return n, err
+}
+
+// OnlineMinutes is how many minutes the Online now card draws.
+const OnlineMinutes = 30
+
+// onlineWindow is how far back a visitor still counts as online.
+const onlineWindow = 5
+
+// OnlineSeries is Online, once per minute for the last OnlineMinutes: slot i
+// counts the visitors seen in the five minutes up to (now - (OnlineMinutes-1-i)
+// minutes), so the last slot is Online itself. One grouped read of the
+// visitors' minutes, counted in memory.
+func (q Q) OnlineSeries(ctx context.Context, site string, now time.Time) ([]int64, error) {
+	span := OnlineMinutes + onlineWindow - 1
+	// An event aged a keeps its visitor online at the slots whose minute lies
+	// between ceil(a)-5 and floor(a) minutes back: a bit range per event, one
+	// mask per visitor, then visitors counted per distinct mask so few rows
+	// come back however busy the site is.
+	rows, err := q.DB.QueryContext(ctx, `
+		SELECT mask, count(*) FROM (
+			SELECT visitor_id, bit_or(((CAST(1 AS UBIGINT) << CAST(hi - lo + 1 AS INTEGER)) - 1) << CAST(lo AS INTEGER)) AS mask FROM (
+				SELECT visitor_id, greatest(0, (age + 59999) // 60000 - ?) AS lo, least(?, age // 60000) AS hi FROM (
+					SELECT visitor_id, greatest(0, ? - epoch_ms(ts)) AS age
+					FROM events WHERE site_id = ? AND ts >= ?
+				)
+			) WHERE lo <= hi GROUP BY visitor_id
+		) GROUP BY mask`,
+		onlineWindow, OnlineMinutes-1, now.UnixMilli(), site, now.Add(-time.Duration(span)*time.Minute).UTC())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	masks := map[uint64]int64{}
+	for rows.Next() {
+		var m uint64
+		var n int64
+		if err := rows.Scan(&m, &n); err != nil {
+			return nil, err
+		}
+		masks[m] = n
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	out := make([]int64, OnlineMinutes)
+	for m, n := range masks {
+		for j := 0; j < OnlineMinutes; j++ {
+			if m&(1<<uint(j)) != 0 {
+				out[OnlineMinutes-1-j] += n
+			}
+		}
+	}
+	return out, nil
 }
 
 const localLayout = "2006-01-02T15:04"

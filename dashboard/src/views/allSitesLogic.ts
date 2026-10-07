@@ -1,6 +1,7 @@
 // The rules of the All sites screen, apart from how it looks: where the charts
 // start, how rows sort, what a site's revenue and bounce say, who is online.
 import type { SiteRow } from '../lib/api'
+import { carryOver } from '../lib/carryOver'
 
 /** A bounce rate from here on is high: 3 in 4 leave after one page. */
 export const HIGH_BOUNCE = 0.75
@@ -17,6 +18,21 @@ export function startIndex(rows: SiteRow[]): number {
 
 /** A series from the shared start on, so every chart and sparkline covers the same days. */
 export const fromStart = (values: number[] | null, start: number): number[] => (values ?? []).slice(start)
+
+/** One per-bucket list of every shown site, added up bucket for bucket from the shared start. */
+export function sumSeries(rows: SiteRow[], pick: (r: SiteRow) => number[] | null | undefined, start: number): number[] {
+  const lists = rows.map((r) => fromStart(pick(r) ?? null, start))
+  const n = Math.max(0, ...lists.map((l) => l.length))
+  return Array.from({ length: n }, (_, i) => lists.reduce((a, l) => a + (l[i] ?? 0), 0))
+}
+
+/** The bounce rate of each bucket over all shown sites, each site weighted by its sessions that bucket. */
+export function bounceSeries(rows: SiteRow[], start: number): number[] {
+  const weights = sumSeries(rows, (r) => r.session_series, start)
+  const lists = rows.map((r) => ({ rate: fromStart(r.bounce_series ?? null, start), n: fromStart(r.session_series ?? null, start) }))
+  const rates = weights.map((w, i) => (w ? lists.reduce((a, l) => a + (l.rate[i] ?? 0) * (l.n[i] ?? 0), 0) / w : 0))
+  return carryOver(rates, weights.map((w) => w > 0))
+}
 
 /** The bounce rate is high enough to flag. */
 export const bounceHigh = (rate: number, visitors = 1) => visitors > 0 && rate >= HIGH_BOUNCE
@@ -103,10 +119,13 @@ export function layoutOf(count: number, override?: string | null, picked?: Layou
 export function summarize(list: SiteRow[]) {
   const total = list.reduce((a, r) => a + r.visitors, 0)
   const bounce = total ? list.reduce((a, r) => a + r.bounce_rate * r.visitors, 0) / total : 0
+  const previous = list.reduce((a, r) => a + r.previous_visitors, 0)
   return {
     total,
-    previous: list.reduce((a, r) => a + r.previous_visitors, 0),
+    previous,
     pageviews: list.reduce((a, r) => a + r.pageviews, 0),
+    previousPageviews: list.reduce((a, r) => a + (r.previous_pageviews ?? 0), 0),
+    previousBounce: previous ? list.reduce((a, r) => a + (r.previous_bounce_rate ?? 0) * r.previous_visitors, 0) / previous : 0,
     bounce,
     paying: list.filter(hasPayments),
   }

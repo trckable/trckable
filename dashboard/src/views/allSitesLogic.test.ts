@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { SiteRow } from '../lib/api'
-import { anyPayments, layoutOf, bounceHigh, bounceTenths, fromStart, saveView, savedView, sortBy, startIndex } from './allSitesLogic'
+import { anyPayments, layoutOf, bounceHigh, bounceTenths, fromStart, saveView, savedView, sortBy, startIndex, sumSeries, bounceSeries, summarize } from './allSitesLogic'
 
 const r = (id: string, o: Partial<SiteRow> = {}) => ({ id, domain: id + '.com', name: '', visitors: 0, series: null, online: 0, ...o }) as SiteRow
 
@@ -50,5 +50,24 @@ describe('All sites rules', () => {
     expect(sortBy(rows, 'visitors', new Map()).map((x) => x.id)).toEqual(['a', 'b'])
     expect(sortBy(rows, 'name', new Map()).map((x) => x.id)).toEqual(['a', 'b'])
     expect(sortBy(rows, 'order', new Map([['b', 0], ['a', 1]])).map((x) => x.id)).toEqual(['b', 'a'])
+  })
+
+  it('adds each card\'s days up from the shared start', () => {
+    const rows = [r('a', { pageview_series: [1, 2, 3] }), r('b', { pageview_series: [10, 20, 30] }), r('c', {})]
+    expect(sumSeries(rows, (x) => x.pageview_series, 1)).toEqual([22, 33])
+  })
+
+  it('weights each day\'s bounce rate by the sessions behind it, and holds the last rate over a quiet day', () => {
+    const rows = [
+      r('a', { bounce_series: [1, 0.5, 0], session_series: [1, 2, 0] }),
+      r('b', { bounce_series: [0, 0.5, 0], session_series: [3, 2, 0] }),
+    ]
+    expect(bounceSeries(rows, 0)).toEqual([0.25, 0.5, 0.5])
+  })
+
+  it('weights the earlier bounce rate by the earlier visitors', () => {
+    const s = summarize([r('a', { previous_visitors: 1, previous_bounce_rate: 1, previous_pageviews: 4 }), r('b', { previous_visitors: 3, previous_bounce_rate: 0, previous_pageviews: 6 })])
+    expect(s.previousBounce).toBe(0.25)
+    expect(s.previousPageviews).toBe(10)
   })
 })

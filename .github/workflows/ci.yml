@@ -41,6 +41,7 @@ jobs:
       image: ${{ steps.filter.outputs.image }}
       browsers: ${{ steps.filter.outputs.browsers }}
       demo_browsers: ${{ steps.filter.outputs.demo_browsers }}
+      wordpress: ${{ steps.filter.outputs.wordpress }}
     steps:
       - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
@@ -273,6 +274,7 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.63.0-noble
       options: --ipc=host
     env:
+      TRCKABLE_WORDPRESS: ${{ needs.changes.outputs.wordpress }}
       HOME: /root # Firefox will not start when $HOME belongs to another user
     strategy:
       fail-fast: false
@@ -289,13 +291,25 @@ jobs:
       - run: chmod +x server/bin/trckabled
       - run: pnpm --filter trckable build
       # The WordPress snippet is run by PHP in the methods spec. A few megabytes
-      # from the package mirror, with a limit: a mirror that stalls fails this
-      # step in minutes, not in half an hour.
+      # from the package mirror. The runner's Azure mirror stalls at times, so a
+      # short try there falls back to the main Ubuntu archive.
       - name: PHP (the methods spec runs the WordPress snippet through it)
-        timeout-minutes: 4
+        if: needs.changes.outputs.wordpress == 'true'
+        # A stalled mirror must not hide the other browser results: the
+        # WordPress case then fails on its own (CI must run it through PHP).
+        continue-on-error: true
+        timeout-minutes: 8
         run: |
-          o="-o Acquire::Retries=5 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20"
-          apt-get $o update -qq && apt-get $o install -y -qq --no-install-recommends php-cli > /dev/null
+          o="-o Acquire::Retries=3 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15"
+          get() { apt-get $o update -qq && apt-get $o install -y -qq --no-install-recommends php-cli > /dev/null; }
+          if ! timeout 150 bash -c "$(declare -f get); o='$o'; get"; then
+            echo "::warning::the Azure package mirror stalled; trying the main Ubuntu archive"
+            rm -rf /var/lib/apt/lists/* # what the stalled try half fetched
+            for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
+              [ -f "$f" ] && sed -i 's#http://azure.archive.ubuntu.com#http://archive.ubuntu.com#g' "$f"
+            done
+            get
+          fi
           php -v | head -1
       - name: the image carries the locked Playwright
         run: |

@@ -242,5 +242,9 @@ func TestSiteSummary(t *testing.T) {
 		if s.Revenue != nil {
 			t.Fatal("revenue without payments connected")
 		}
+		// The other cards' days, bucket for bucket with the visitors'.
+		if len(s.PageviewSeries) != 1 || s.PageviewSeries[0] != 6 || len(s.SessionSeries) != 1 || s.SessionSeries[0] != 4 || len(s.BounceSeries) != 1 || s.BounceSeries[0] != 0.5 {
+			t.Fatalf("pageviews %v sessions %v bounce %v, want [6] [4] [0.5]", s.PageviewSeries, s.SessionSeries, s.BounceSeries)
+		}
 	})
 }

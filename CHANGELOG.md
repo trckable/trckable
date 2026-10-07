@@ -11,6 +11,7 @@ section into the release.
 
 ### Changed
 
+- All sites and Story: every stat card draws its days behind the number with the soft fill (Pageviews, Bounce rate, Online now over the last 30 minutes, Story's Bounce rate and Session time), and a number that has a period before it shows its change chip.
 - All sites: the site cards have the same gap between rows as between columns, and the heading line and its controls sit on one centre line.
 - Story: the five answers share one card anatomy (question and a quiet status on the top line, one big number with a chip, the answer as one line, one link, a chart to the bottom edge); the stat cards' statuses are short ("Far above normal") with the full line as the tooltip, and on a phone drop under the name instead of being cut.
 - Cards: the Data page's key numbers are cards on the card kit (icon tile and name, the number with its change chip, a soft chart to the bottom edge; the one on the main chart is told by its border). Live's two panels, the settings and health cards, the account and site cards share the same flat surface, icon tile and hover border.

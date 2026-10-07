@@ -45,6 +45,8 @@ async function open(page: Page, query = '?view=data'): Promise<string> {
   await page.goto(`${BASE}/${domain}${query}`)
   await expect(page.locator('.overview-chart .chart-wrap svg')).toBeVisible({ timeout: 20_000 })
   // A side card (a milestone reached, say) sits over the chart's corner: put it away, so the pointer is on the chart.
+  // It can also slide in later (WebKit is slower to load it), so it is put away whenever it shows up.
+  await page.addLocatorHandler(page.locator('aside.side-card .side-card-x').first(), (x) => x.click())
   for (const x of await page.locator('aside.side-card .side-card-x').all()) await x.click()
   return domain
 }

@@ -55,10 +55,14 @@ const EMBEDDED = /^server\/internal\/web\/(dist|assets)\//
 const ALL = 'all'
 
 /** An empty selection: nothing to run. */
-const none = () => ({ full: false, race: false, server: new Set(), crash: false, e2e: new Set(), demo: false, dashboard: false, tracker: false, image: false, accuracy: false })
+// Where the install snippets live: a change here runs the WordPress case
+// (PHP in CI); other pull requests skip it, and main and releases run it.
+const INSTALL = ['dashboard/src/features/install/', 'dashboard/src/lib/install']
+const wordpressFile = (f) => INSTALL.some((p) => f.startsWith(p)) || f.startsWith('tracker/') || f.startsWith('packages/trckable/') || f === 'e2e/tests/methods.spec.ts'
+const none = () => ({ full: false, race: false, server: new Set(), crash: false, e2e: new Set(), demo: false, dashboard: false, tracker: false, image: false, accuracy: false, wordpress: false })
 
 /** Everything, as on main. */
-export const everything = () => ({ full: true, race: true, server: ALL, crash: true, e2e: ALL, demo: true, dashboard: true, tracker: true, image: true, accuracy: true })
+export const everything = () => ({ full: true, race: true, server: ALL, crash: true, e2e: ALL, demo: true, dashboard: true, tracker: true, image: true, accuracy: true, wordpress: true })
 
 /** The selection for a list of changed files. */
 export function select(files) {
@@ -75,6 +79,7 @@ export function select(files) {
       s.image = true
       if (!f.startsWith('dashboard/src/')) { addE2e(ALL); s.demo = true; continue } // config, dependencies
       s.demo = true // the accessibility pass and the Full charts, on every screen change
+      if (INSTALL.some((p) => f.startsWith(p))) s.wordpress = true // the snippets the WordPress case runs
       addE2e(DASHBOARD.find(([p]) => f.startsWith(p))?.[1] ?? ALL)
       continue
     }
@@ -89,11 +94,12 @@ export function select(files) {
       addE2e(ALL) // the API the dashboard and the tracker talk to
       continue
     }
-    if (f.startsWith('tracker/')) { s.tracker = s.image = true; if (!/\.test\.ts$/.test(f)) { addE2e(ALL); s.accuracy = true } continue }
-    if (f.startsWith('packages/trckable/')) { s.tracker = true; if (!/\.test\.tsx?$/.test(f)) { addE2e(['methods', 'landing']); s.accuracy = true } continue }
+    if (f.startsWith('tracker/')) { s.tracker = s.image = s.wordpress = true; if (!/\.test\.ts$/.test(f)) { addE2e(ALL); s.accuracy = true } continue }
+    if (f.startsWith('packages/trckable/')) { s.tracker = s.wordpress = true; if (!/\.test\.tsx?$/.test(f)) { addE2e(['methods', 'landing']); s.accuracy = true } continue }
     // The accuracy suite: scripted visitors with known truth (e2e/accuracy).
     if (f.startsWith('e2e/accuracy/')) { s.accuracy = true; continue }
     const spec = f.match(/^e2e\/tests\/([\w-]+)\.spec\.ts$/)
+    if (spec && spec[1] === 'methods') s.wordpress = true
     if (spec) { spec[1] === 'a11y' || spec[1] === 'fullcharts' ? (s.demo = true) : addE2e([spec[1]]); continue }
     // The WordPress plugin has its own workflow (wordpress.yml); nothing here runs for it.
     if (f.startsWith('integrations/') || f.startsWith('e2e/wordpress/')) continue
@@ -102,7 +108,9 @@ export function select(files) {
     if (/^(deploy\/(compose\.yml|(coolify|dokploy|railway|umbrel)\/)|charts\/|scripts\/deploy-check\.sh$|\.github\/workflows\/deploy-check\.yml$)/.test(f)) continue
     // The release scripts: the "what changed" job itself runs their tests.
     if (/^scripts\/(release|release-lib|version-check|ci-select)(\.test)?\.mjs$/.test(f)) continue
-    return everything() // not known: all of it
+    // Not known: all of it, except the WordPress case, which a pull request runs
+    // only for the snippets and the tracker (main and releases run it always).
+    return { ...everything(), wordpress: files.some(wordpressFile) }
   }
   // Specs that only run against the demo server belong to that job.
   if (s.e2e !== ALL) { if (s.e2e.delete('fullcharts')) s.demo = true }
@@ -141,7 +149,7 @@ export function outputs(s) {
   const code = s.full || s.server === ALL || s.server.size > 0 || s.e2e === ALL || s.e2e.size > 0 || s.demo || s.dashboard || s.tracker || s.image || s.crash || s.accuracy
   return {
     code: flag(code), full: flag(s.full), server: flag(s.race), race: flag(s.race), server_pkgs: names(s.server),
-    crash: flag(s.crash), e2e: names(s.e2e), demo: flag(s.demo), dashboard: flag(s.dashboard), tracker: flag(s.tracker), image: flag(s.image), accuracy: flag(s.accuracy),
+    crash: flag(s.crash), e2e: names(s.e2e), demo: flag(s.demo), dashboard: flag(s.dashboard), tracker: flag(s.tracker), image: flag(s.image), accuracy: flag(s.accuracy), wordpress: flag(s.wordpress),
     browsers: matrix(browserMatrix(s)), demo_browsers: matrix(demoMatrix(s)),
   }
 }

@@ -14,7 +14,7 @@ test('four site cards share one row at 1440 px', async ({ page }) => {
     expect(made.ok()).toBe(true)
   }
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto(`${API}/all`)
+  await page.goto(`${API}/all?layout=cards`)
   const items = page.locator('.all-cards .all-item')
   await expect(items.nth(3)).toBeVisible({ timeout: 20_000 })
   const tops = await items.evaluateAll((els) => els.slice(0, 4).map((e) => Math.round(e.getBoundingClientRect().top)))

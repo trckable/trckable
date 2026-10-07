@@ -47,6 +47,9 @@ export interface Point {
   visitors: number
   pageviews: number
   revenue?: number
+  /** The bucket's bounce rate (0 to 1) and mean session length in seconds; absent when it had no sessions. */
+  bounce_rate?: number
+  avg_session_s?: number
   imported?: boolean // counts from an imported day (Google Analytics) are in this point
 }
 
@@ -251,8 +254,16 @@ export interface SiteRow {
   pageviews: number
   bounce_rate: number
   previous_visitors: number
+  previous_pageviews?: number
+  previous_bounce_rate?: number
   series: number[] | null
+  /** Per bucket, in step with series: pageviews, sessions (the weight of a bounce rate) and the bounce rate. */
+  pageview_series?: number[] | null
+  session_series?: number[] | null
+  bounce_series?: number[] | null
   online: number
+  /** Online for each of the last 30 minutes, oldest first. */
+  online_series?: number[] | null
   revenue?: number
   currency: string
   exponent: number

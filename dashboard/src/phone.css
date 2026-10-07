@@ -209,11 +209,13 @@
   }
   /* The two cards' tabs: a finger tall, the row scrolling sideways. */
   .kit-tab {
+    min-width: var(--ph-hit);
     min-height: var(--ph-hit);
     padding: 0 12px;
     font-size: var(--ph-text-2);
   }
   .kit-subtabs button {
+    min-width: var(--ph-hit); /* a short label (UTM) is a finger wide too */
     min-height: var(--ph-hit);
     padding: 0 12px;
     font-size: var(--ph-small);
