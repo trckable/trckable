@@ -107,7 +107,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
         {!sorted && !err && <Loading height={320} />}
         {sorted && list && (
           <>
-            <AllSummary s={s} days={days} rows={list} />
+            <AllSummary s={s} days={days} rows={list} start={start} />
             <div className="all-tile all-main">
               <span className="faint">
                 {copy.visitors} · {fmtInt(s.total)}

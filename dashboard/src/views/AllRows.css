@@ -60,12 +60,6 @@
   margin-left: auto;
   flex: none;
 }
-.all-card-foot {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-}
 .all-big {
   display: grid;
   gap: 2px;
@@ -73,10 +67,6 @@
   font-weight: 600;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
-}
-.all-big .delta {
-  font-size: 12px;
-  font-weight: 500;
 }
 .all-online {
   display: inline-flex;
@@ -200,7 +190,7 @@
   :root .all-line .n {
     font-size: var(--ph-text-2);
   }
-  :root :is(.all-online.none, .all-wait, .all-bounce, .all-big .delta) {
+  :root :is(.all-online.none, .all-wait, .all-bounce) {
     font-size: 12px;
   }
 }
@@ -208,7 +198,7 @@
 /* The open-site link (OpenSite.tsx) has its own corner: the card's online
    badge and the list's last column make room for it, so it covers nothing. On
    a touch screen it sits beside the row as a 44 px target (AllSites.css). */
-.all-cards .all-card-head {
+.all-cards :is(.all-card-head, .kit-head) {
   padding-right: 28px;
 }
 .all-slim .all-item > .site-open {
@@ -219,14 +209,21 @@
   padding-right: 42px;
 }
 @media (hover: none), (max-width: 640px) {
-  .all-cards .all-card-head,
-  .all-slim .all-line {
-    padding-right: 0;
+  .all-item > .site-open {
+    top: 0;
+    right: 0;
+    width: 44px;
+    height: 44px;
+    opacity: 1;
   }
-  .all-slim .all-line {
-    padding-right: 14px;
+  .all-cards :is(.all-card-head, .kit-head) {
+    padding-right: 30px;
   }
   .all-slim .all-item > .site-open {
-    transform: none;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .all-slim .all-line {
+    padding-right: 44px;
   }
 }

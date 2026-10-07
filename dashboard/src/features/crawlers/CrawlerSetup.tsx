@@ -1,24 +1,23 @@
-// "Connect crawler data": three steps, from where the site runs to the first
-// robot arriving. Robots run no JavaScript, so the site's own server or CDN
+// "Connect crawler data": a three-step wizard, from where the site runs to the
+// first robot arriving. Robots run no JavaScript, so the site's own server or CDN
 // reports them to /api/crawl, sending only the robot's name, the page and the
 // time. The code carries this site's id, key and server address.
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check } from 'lucide-react'
-import { CodeBlock } from '../../components/Code'
-import { Copyable } from '../../components/Copyable'
 import { DialogActions } from '../../components/DialogActions'
 import { DialogHead } from '../../components/DialogHead'
-import { Modal } from '../../components/Modal'
+import { Modal } from '../../kit/Modal'
+import { Stepper } from '../../components/Stepper'
 import { fail, type Site, more } from '../../lib/apiMore'
 import { addDays, todayIn } from '../../lib/dates'
 import { fmtInt } from '../../lib/format'
-import { Tabs } from '../cards/Tabs'
 import { copy } from './copy'
-import { snippetsFor, type Setup } from './snippets'
+import { CrawlerCode } from './CrawlerCode'
+import type { Setup } from './snippets'
 import './CrawlerSetup.css'
 
 const t = copy.setup
-const KEY_IN_ENV: Setup[] = ['cloudflare', 'vercel']
+const TOTAL = 3
 
 /** Robots reported in the last two days, once something is switched on: it polls while the sheet is open. */
 function useArrived(site: Site, on: boolean): number {
@@ -40,19 +39,43 @@ function useArrived(site: Site, on: boolean): number {
 }
 
 export function CrawlerSetup({ site, on, onChanged, onClose }: { site: Site; on: boolean; onChanged: () => void; onClose: () => void }) {
+  const [step, setStep] = useState(1)
   const [setup, setSetup] = useState<Setup>('cloudflare')
   const [enabled, setEnabled] = useState(on)
   const [busy, setBusy] = useState(false)
   const [turned, setTurned] = useState(false)
   const arrived = useArrived(site, enabled)
   const plan = useMemo(() => ({ host: location.origin, site: site.id, key: site.proxy_key, domain: site.domain }), [site])
+  const top = useRef<HTMLDivElement>(null)
+  const first = useRef(true)
+  // A step that replaces the last one takes the focus with it, so a keyboard
+  // user does not start again from the top of the page.
+  useEffect(() => {
+    if (first.current) {
+      first.current = false
+      return
+    }
+    const h = top.current?.querySelector('h2')
+    h?.setAttribute('tabindex', '-1')
+    h?.focus()
+  }, [step])
+  const pick = (id: Setup) => {
+    setSetup(id)
+    setStep(2)
+  }
+  // The code is in place: switch crawler data on, then wait for the first robot.
   const turnOn = () => {
+    if (enabled) {
+      setStep(3)
+      return
+    }
     setBusy(true)
     more
       .setModule(site.id, 'crawlers', true)
       .then(() => {
         setEnabled(true)
         setTurned(true)
+        setStep(3)
       })
       .catch((e: unknown) => fail(e, turnOn))
       .finally(() => setBusy(false))
@@ -61,54 +84,63 @@ export function CrawlerSetup({ site, on, onChanged, onClose }: { site: Site; on:
     if (turned || arrived > 0) onChanged()
     onClose()
   }
+  const platform = t.options.find((o) => o.id === setup)?.label
   return (
     <Modal label={t.label} className="wide" onClose={close}>
-      <DialogHead heading={t.title} hint={t.hint} help={t.help} />
-      <ol className="cs-steps">
-        <li>
-          <b>{t.steps[0]}</b>
-          <Tabs prefix={'cs-' + site.id} label={t.steps[0]} tabs={[...t.options]} value={setup} onChange={(id) => setSetup(id as Setup)} sub />
-        </li>
-        <li>
-          <b>{t.steps[1]}</b>
-          {snippetsFor(setup, plan).map((s) => (
-            <div key={s.id} className="cs-snippet">
-              <span className="faint cs-caption">{t.captions[s.id]}</span>
-              <CodeBlock lang={s.lang} code={s.code} />
-            </div>
-          ))}
-          {KEY_IN_ENV.includes(setup) && (
-            <div className="cs-key">
-              <span className="faint">{t.keyHint}</span>
-              <Copyable value={site.proxy_key} secret />
-            </div>
-          )}
-        </li>
-        <li>
-          <b>{t.steps[2]}</b>
-          {!enabled && (
-            <button type="button" className="btn primary cs-on" disabled={busy} onClick={turnOn}>
-              {t.on}
-            </button>
-          )}
-          {enabled && (
-            <span className={'cs-status' + (arrived > 0 ? ' done' : '')} role="status">
-              {arrived > 0 ? <Check size={14} strokeWidth={2.25} aria-hidden="true" /> : <span className="btn-spin" aria-hidden="true" />}
-              {arrived > 0 ? t.arrived(fmtInt(arrived)) : t.waiting}
-            </span>
-          )}
-        </li>
-      </ol>
+      <div ref={top} className="cs-top">
+        <Stepper step={step} total={TOTAL} label={t.step(step, TOTAL)} />
+        <DialogHead heading={t.titles[step - 1]} hint={t.leads[step - 1]} help={t.help} />
+      </div>
+      <div className="cs-body" key={step}>
+        {step === 1 && (
+          <div className="cs-tiles" role="group" aria-label={t.titles[0]}>
+            {t.options.map((o) => (
+              <button key={o.id} type="button" className="cs-tile" onClick={() => pick(o.id)}>
+                <b>{o.label}</b>
+                <span className="faint">{o.sub}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {step === 2 && <CrawlerCode setup={setup} plan={plan} />}
+        {step === 3 && (
+          <div className="cs-wait" role="status">
+            {arrived > 0 ? (
+              <span className="cs-ok">
+                <Check size={28} strokeWidth={2.25} aria-hidden="true" />
+              </span>
+            ) : (
+              <span className="cs-ring" aria-hidden="true" />
+            )}
+            <h3>{arrived > 0 ? t.connected : t.waiting}</h3>
+            <p className="faint">{arrived > 0 ? t.arrived(fmtInt(arrived)) : t.waitHint}</p>
+          </div>
+        )}
+      </div>
       <DialogActions
         left={
-          <a className="btn ghost" href="https://docs.trckable.com/reports/ai-search/" target="_blank" rel="noreferrer">
-            {t.docs}
-          </a>
+          step === 1 ? (
+            <a className="btn ghost" href="https://docs.trckable.com/reports/ai-search/" target="_blank" rel="noreferrer">
+              {t.docs}
+            </a>
+          ) : (
+            <button type="button" className="btn ghost" onClick={() => setStep(step - 1)}>
+              {t.back}
+            </button>
+          )
         }
       >
-        <button type="button" className="btn primary big" onClick={close}>
-          {t.done}
-        </button>
+        {step > 1 && <span className="cs-chip">{platform}</span>}
+        {step === 2 && (
+          <button type="button" className="btn primary big" disabled={busy} onClick={turnOn}>
+            {t.next}
+          </button>
+        )}
+        {step === 3 && (
+          <button type="button" className="btn primary big" onClick={close}>
+            {t.done}
+          </button>
+        )}
       </DialogActions>
     </Modal>
   )

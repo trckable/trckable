@@ -4,7 +4,7 @@
 import { X } from 'lucide-react'
 import { useId } from 'react'
 import { Loading } from '../../components/loading/Loading'
-import { Modal } from '../../components/Modal'
+import { Modal } from '../../kit/Modal'
 import type { ReportQuery, Site } from '../../lib/api'
 import { copy } from './copy'
 import { IdentityFacts, IdentityHead } from './IdentityCard'
