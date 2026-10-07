@@ -99,7 +99,7 @@ test('on a phone the cards stack and nothing runs off the side', async ({ page }
   await page.setViewportSize({ width: 390, height: 844 })
   await signIn(page, '/example.com?view=live')
   await expect(page.getByRole('region', { name: 'Live', exact: true }).locator('.live-online')).toBeVisible({ timeout: 15_000 })
-  await visit(page, 'livecards-phone')
+  await visit(page, 'livecards-phone-' + 'long-'.repeat(12))
   const all = cards(page).locator('.lv-card')
   await expect(all.first()).toBeVisible({ timeout: 10_000 })
   const boxes = await all.evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => ({ x: r.x, y: r.y, w: r.width })))
@@ -107,5 +107,7 @@ test('on a phone the cards stack and nothing runs off the side', async ({ page }
     expect(b.w).toBeLessThanOrEqual(390)
     if (i > 0) expect(b.y).toBeGreaterThan(boxes[i - 1].y)
   }
+  const rows = await cards(page).locator('.kit-rowbtn').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right))
+  for (const right of rows) expect(right).toBeLessThanOrEqual(390)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })

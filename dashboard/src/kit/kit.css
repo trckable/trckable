@@ -730,6 +730,12 @@ button.kit-ask:hover {
 .kit-table tr.pick .kit-rowbtn {
   position: static;
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+.kit-table tr.pick td:first-child {
+  width: 100%;
+  max-width: 0;
 }
 .kit-table tr.pick .kit-rowbtn::after {
   content: '';
