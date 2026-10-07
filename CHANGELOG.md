@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Added
+
+- Three short hints, one at a time beside what they are about, at most one a visit: that each Story answer opens the full picture, that a row filters the page, and that Peek is a key press away. Got it puts one away for good, and Turn hints off silences them all; read-only people and shared links see only the first two.
+
 ## 0.6.3 (7 Oct 2026)
 
 ### Added

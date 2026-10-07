@@ -1,0 +1,1 @@
+import{n as e}from"./errors-13a02cad.js";export{e as words};

@@ -2072,4 +2072,11 @@ export default {
   'storyview.switch.story': 'Geschichte',
   'storyview.switch.explore': 'Explore',
   'storyview.switch.label': 'Story oder Explore',
+  'hints.title': 'Wusstest du schon?',
+  'hints.seen': 'Verstanden',
+  'hints.off': 'Hinweise ausschalten',
+  'hints.close': 'Hinweis schließen',
+  'hints.story': 'Jede Antwort öffnet das ganze Bild: Diagramm, jede Zeile, Export.',
+  'hints.rows': 'Klick auf eine Zeile, um die ganze Seite danach zu filtern.',
+  'hints.peek': (key: string) => `Drück ${key}, um Peek alles über deine Zahlen zu fragen.`,
 } satisfies Messages

@@ -2069,4 +2069,11 @@ export default {
   'storyview.switch.story': 'Verhaal',
   'storyview.switch.explore': 'Explore',
   'storyview.switch.label': 'Story of Explore',
+  'hints.title': 'Wist je dat?',
+  'hints.seen': 'Begrepen',
+  'hints.off': 'Tips uitzetten',
+  'hints.close': 'Tip sluiten',
+  'hints.story': 'Elk antwoord opent het volledige beeld: grafiek, elke rij, export.',
+  'hints.rows': 'Klik op een rij om de hele pagina erop te filteren.',
+  'hints.peek': (key: string) => `Druk op ${key} om Peek alles over je cijfers te vragen.`,
 } satisfies Messages

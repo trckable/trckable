@@ -2070,4 +2070,11 @@ export default {
   'storyview.switch.story': 'Histoire',
   'storyview.switch.explore': 'Explore',
   'storyview.switch.label': 'Story ou Explore',
+  'hints.title': 'Le saviez-vous ?',
+  'hints.seen': 'Compris',
+  'hints.off': 'Désactiver les astuces',
+  'hints.close': 'Fermer l’astuce',
+  'hints.story': 'Chaque réponse ouvre l’image complète : graphique, chaque ligne, export.',
+  'hints.rows': 'Cliquez sur une ligne pour filtrer toute la page.',
+  'hints.peek': (key: string) => `Appuyez sur ${key} pour poser à Peek toutes vos questions sur vos chiffres.`,
 } satisfies Messages
