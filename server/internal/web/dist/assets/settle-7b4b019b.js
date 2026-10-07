@@ -1,0 +1,1 @@
+import{i as e}from"./react-e12729a5.js";var t=e(),n=1500;function r(){let[e,r]=(0,t.useState)(!1);return(0,t.useEffect)(()=>{let e=setTimeout(()=>r(!0),n);return()=>clearTimeout(e)},[]),e}export{r as n,n as t};
