@@ -24,6 +24,7 @@ import { SetupCard } from './SetupCard'
 import { sinceOf, storyOf, takeawayOf } from './rules'
 import { Tiles } from './Tiles'
 import { useHints } from './useHints'
+import { useOwnSeries } from './useOwnSeries'
 import { useSince } from './useSince'
 
 const ProviderCard = lazy(() => import('../overview/ProviderCard').then((m) => ({ default: m.ProviderCard })))
@@ -79,6 +80,7 @@ export default function StoryView(p: StoryViewProps) {
   const since = useSince(p.site)
   const told = sinceOf(since.found?.items ?? [], fmt)
   const { hints, away } = useHints(p.site)
+  const own = useOwnSeries(p.site.id, p.query, facts.answers)
   const open = (m: Mark) => setView({ ...patchFor(m.pin, { filters: [], range: p.range, today, bucket }), v: 'explore', story: 'moment' })
 
   const layer = (g: { x: (i: number) => number }) => {
@@ -151,7 +153,7 @@ export default function StoryView(p: StoryViewProps) {
         </div>
       </Card>
 
-      <Answers answers={facts.answers} onConnect={() => setConnect(true)} onGoal={p.onGoal} site={p.site} series={{ visitors: cur.series.map((x) => x.visitors), was: data.previous?.series.map((x) => x.visitors), revenue: p.money ? cur.series.map((x) => x.revenue ?? 0) : undefined }} hints={hints} onAway={away} />
+      <Answers answers={facts.answers} onConnect={() => setConnect(true)} onGoal={p.onGoal} site={p.site} series={{ visitors: cur.series.map((x) => x.visitors), was: data.previous?.series.map((x) => x.visitors), revenue: p.money ? cur.series.map((x) => x.revenue ?? 0) : undefined, own }} hints={hints} onAway={away} />
       <Ask />
       {connect && (
         <Suspense fallback={null}>
