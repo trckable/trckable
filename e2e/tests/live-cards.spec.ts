@@ -51,13 +51,17 @@ async function signIn(page: Page, path = '/example.com') {
 }
 
 /** A new visitor on the test site, from a browser context of its own. */
-async function visit(page: Page, name: string) {
-  const ctx = await page.context().browser()!.newContext()
-  const p = await ctx.newPage()
+async function visit(page: Page, name: string, people = 1) {
   const run = `${name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-  await p.goto(`/r/${run}/index.html`)
-  await p.waitForTimeout(1500) // the pageview leaves
-  await ctx.close()
+  // The other suites keep people on the same site: several people put this
+  // page among the top three.
+  for (let i = 0; i < people; i++) {
+    const ctx = await page.context().browser()!.newContext()
+    const p = await ctx.newPage()
+    await p.goto(`/r/${run}/index.html`)
+    await p.waitForTimeout(1500) // the pageview leaves
+    await ctx.close()
+  }
   return run
 }
 
@@ -68,7 +72,7 @@ test('the cards show today and the page someone is on, and open Data on today', 
   await signIn(page, '/example.com?view=live')
   const live = page.getByRole('region', { name: 'Live', exact: true })
   await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
-  const run = await visit(page, 'livecards')
+  const run = await visit(page, 'livecards', 4)
   const today = cards(page).locator('.lv-card', { hasText: 'Today so far' })
   await expect(today).toBeVisible({ timeout: 10_000 })
   await expect(today.locator('.lv-n')).not.toHaveText('0')
