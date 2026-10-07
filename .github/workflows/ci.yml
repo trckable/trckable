@@ -289,16 +289,20 @@ jobs:
       - run: chmod +x server/bin/trckabled
       - run: pnpm --filter trckable build
       # The WordPress snippet is run by PHP in the methods spec. A few megabytes
-      # from the package mirror, with a limit: a mirror that stalls fails this
-      # step in minutes, not in half an hour.
+      # from the package mirror. The runner's Azure mirror stalls at times, so a
+      # short try there falls back to the main Ubuntu archive.
       - name: PHP (the methods spec runs the WordPress snippet through it)
-        # The spec skips its WordPress case without PHP, so a stalled mirror
-        # costs that one case, not the whole browser job.
-        continue-on-error: true
-        timeout-minutes: 4
+        timeout-minutes: 8
         run: |
-          o="-o Acquire::Retries=5 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20"
-          apt-get $o update -qq && apt-get $o install -y -qq --no-install-recommends php-cli > /dev/null
+          o="-o Acquire::Retries=3 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15"
+          get() { apt-get $o update -qq && apt-get $o install -y -qq --no-install-recommends php-cli > /dev/null; }
+          if ! timeout 150 bash -c "$(declare -f get); o='$o'; get"; then
+            echo "::warning::the Azure package mirror stalled; trying the main Ubuntu archive"
+            for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
+              [ -f "$f" ] && sed -i 's#http://azure.archive.ubuntu.com#http://archive.ubuntu.com#g' "$f"
+            done
+            get
+          fi
           php -v | head -1
       - name: the image carries the locked Playwright
         run: |
