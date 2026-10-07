@@ -11,11 +11,9 @@ section into the release.
 
 ### Added
 
-<<<<<<< HEAD
 - Live: a row of three cards under the panels, today so far against the same time last week, the pages people are on right now, and where they are from, each opening Data.
-=======
+
 - Connect crawler data is a three-step wizard with a progress bar.
->>>>>>> origin/main
 
 ### Changed
 
