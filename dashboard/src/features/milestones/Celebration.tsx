@@ -15,7 +15,7 @@ import { useSettled } from '../../lib/settle'
 import { copy } from './copy'
 import { copyImage, shareApi } from './share'
 import { Rolling } from '../moments/Rolling'
-import { contextLine, say, showsBig, value } from './words'
+import { contextLine, say, value } from './words'
 import './Celebration.css'
 
 export const SPARKS = 6
@@ -40,18 +40,16 @@ interface Props {
   list?: Milestone[]
   site: string
   domain?: string
-  /** This person sees revenue: the picture shows the amount too. */
-  revenue?: boolean
   onShare: () => void
   onClose: () => void
 }
 
-export function Celebration({ m, list = [], site, domain = site, revenue = true, onShare, onClose }: Props) {
+export function Celebration({ m, list = [], site, domain = site, onShare, onClose }: Props) {
   const w = say(m)
   const settled = useSettled()
   const line = contextLine(m, list)
-  // What the picture shows is what Copy image copies; the amount of revenue only to someone who may see it.
-  const pic = (format: 'png' | 'svg') => shareApi.cardURL(site, m, { format, theme: 'dark', amount: m.kind === 'revenue' && showsBig(m, revenue) })
+  // What the picture shows is what Copy image copies, and "Show amount" starts off: the amount of revenue is never in it here.
+  const pic = (format: 'png' | 'svg') => shareApi.cardURL(site, m, { format, theme: 'dark', amount: false })
   // Revenue with its line already says "in revenue": the small word would say it twice.
   const label = m.kind === 'revenue' && line ? null : w.label
   return (

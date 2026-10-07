@@ -88,3 +88,21 @@ test('on a phone the bubble fits the screen and its buttons are 44px', async ({ 
     expect(b.width).toBeGreaterThanOrEqual(44)
   }
 })
+
+test('the bubble never covers an answer card', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'one browser is enough')
+  for (const size of [{ width: 1280, height: 800 }, { width: 390, height: 800 }]) {
+    await page.setViewportSize(size)
+    await page.goto(`${API}/example.com?v=story`)
+    await newVisit(page, `${API}/example.com?v=story`)
+    await look(page, '.sv-answers')
+    await expect(bubble(page)).toBeVisible()
+    const b = (await bubble(page).boundingBox())!
+    const cards = await page.locator('.sv-answer').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().toJSON()))
+    expect(cards.length).toBeGreaterThan(1)
+    for (const c of cards) {
+      const apart = b.x + b.width <= c.x || c.x + c.width <= b.x || b.y + b.height <= c.y || c.y + c.height <= b.y
+      expect(apart, JSON.stringify({ b, c, size })).toBe(true)
+    }
+  }
+})

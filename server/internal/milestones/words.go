@@ -13,24 +13,25 @@ import (
 // words are in its message files (dashboard/src/features/milestones/copy.ts);
 // these are the server's, kept in one place the same way.
 var words = struct {
-	visitors, pageviews, firstPageview, countries, record, revenue, revenueHidden, milestone, firstGoal, firstSale, first string
-	alertTitle, made, pageTitle, reached                                                                                  string
+	visitors, pageviews, firstPageview, countries, record, revenue, revenueHidden, revenueReached, milestone, firstGoal, firstSale, first string
+	alertTitle, made, pageTitle, reached                                                                                                  string
 }{
-	visitors:      "visitors",
-	pageviews:     "pageviews",
-	firstPageview: "pageview",
-	countries:     "countries",
-	record:        "visitors · record day",
-	revenue:       "revenue",
-	revenueHidden: "Revenue",
-	milestone:     "milestone",
-	firstGoal:     "First goal",
-	firstSale:     "First sale",
-	first:         "First",
-	alertTitle:    "Milestone reached",
-	made:          "Made with trckable",
-	pageTitle:     "%s on %s",
-	reached:       "reached on %s",
+	visitors:       "visitors",
+	pageviews:      "pageviews",
+	firstPageview:  "pageview",
+	countries:      "countries",
+	record:         "visitors · record day",
+	revenue:        "revenue",
+	revenueHidden:  "Revenue",
+	revenueReached: "Revenue milestone reached",
+	milestone:      "milestone",
+	firstGoal:      "First goal",
+	firstSale:      "First sale",
+	first:          "First",
+	alertTitle:     "Milestone reached",
+	made:           "Made with trckable",
+	pageTitle:      "%s on %s",
+	reached:        "reached on %s",
 }
 
 // Words is how a milestone reads: the big part and the line under it.

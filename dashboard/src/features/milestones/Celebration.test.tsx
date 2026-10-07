@@ -56,7 +56,7 @@ describe('a milestone reached', () => {
     expect(close).toHaveBeenCalledTimes(1)
   })
 
-  it('asks for the picture with the amount of revenue and says how long after the first sale', () => {
+  it('asks for the picture without the amount of revenue and says how long after the first sale', () => {
     vi.useFakeTimers()
     const rev: Milestone = { kind: 'revenue', step: '1000', value: 1000, currency: 'USD', day: '2026-09-14', created_at: 0, new: true, shared: false }
     const first: Milestone = { kind: 'first_sale', step: '1', value: 1, day: '2026-08-27', created_at: 0, new: false, shared: false }
@@ -65,7 +65,8 @@ describe('a milestone reached', () => {
     const card = document.body.querySelector('.side-card')
     expect(card?.querySelector('.side-num')?.textContent).toBe('$1,000')
     expect(card?.textContent).toContain('in revenue, 18 days after the first sale')
-    expect(card?.querySelector('img')?.getAttribute('src')).toContain('amount=1')
+    // The preview and Copy image follow the toggle's default (off): no amount asked for.
+    expect(card?.querySelector('img')?.getAttribute('src')).not.toContain('amount')
     vi.useRealTimers()
   })
 

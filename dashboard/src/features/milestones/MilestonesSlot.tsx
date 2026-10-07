@@ -15,7 +15,7 @@ export function MilestonesSlot({ ms, site, quiet, revenue }: { ms: MilestonesSta
     <>
       {m && !quiet && (
         <Suspense fallback={null}>
-          <Celebration key={m.kind + m.step} m={m} list={ms.data?.milestones ?? []} site={site.id} domain={site.domain} revenue={revenue} onClose={ms.close} onShare={() => ms.setOpen({ share: m })} />
+          <Celebration key={m.kind + m.step} m={m} list={ms.data?.milestones ?? []} site={site.id} domain={site.domain} onClose={ms.close} onShare={() => ms.setOpen({ share: m })} />
         </Suspense>
       )}
       {ms.open && (

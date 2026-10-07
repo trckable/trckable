@@ -39,6 +39,8 @@ func init() {
 func spotlightRuns(s Spec) []Run {
 	big := 152.0
 	switch n := len([]rune(s.Big)); {
+	case n > 16:
+		big = 62
 	case n > 10:
 		big = 96
 	case n > 7:
