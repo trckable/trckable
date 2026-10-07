@@ -2,13 +2,15 @@
 // features: an icon and the question, the answer in a few words, and one link
 // that opens Explore with the matching filters, so the claim can be checked.
 import { ArrowRight, Coins, FileText, Scale, TrendingUp, Wrench, type LucideIcon } from 'lucide-react'
+import type { Site } from '../../lib/api'
 import { setView } from '../../lib/url'
 import { copy } from './copy'
-import type { Answer } from './rules'
+import { HintLine } from './HintLine'
+import type { Answer, Hint } from './rules'
 
 const ICON: Record<Answer['key'], LucideIcon> = { did: TrendingUp, page: FileText, fix: Wrench, pays: Coins, fine: Scale }
 
-export function Answers({ answers, onConnect, onGoal }: { answers: Answer[]; onConnect: () => void; onGoal?: () => void }) {
+export function Answers({ answers, onConnect, onGoal, site, hints = [], onAway }: { answers: Answer[]; onConnect: () => void; onGoal?: () => void; site: Site; hints?: Hint[]; onAway: (h: Hint) => void }) {
   const go = (a: Answer) => {
     if (!a.act) return
     setView({ v: 'explore', story: a.key, filters: a.act.filters, day: undefined, ...(a.act.compare ? { compare: 'previous' as const } : {}) })
@@ -54,6 +56,9 @@ export function Answers({ answers, onConnect, onGoal }: { answers: Answer[]; onC
                   </button>
                 )}
               </div>
+              {hints.filter((h) => h.answer === a.key).map((h) => (
+                <HintLine key={h.id} site={site} hint={h} onAway={() => onAway(h)} />
+              ))}
             </article>
           )
         })}

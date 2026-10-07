@@ -1,12 +1,12 @@
 // What the Data view says on its own: moments on the chart (at most six, the
 // most important first, each a button with its own shape, a line on hover or
 // focus, a click that applies its filter through the address and opens the
-// card with the numbers and one action); the one thing today (Next, See it,
-// put away for the day); the Revenue tile and the providers card, for an
-// owner only; and a first-week card. What the server finds is given by the
+// card with the numbers and one action); Story's line since the last visit
+// (See it opens it in Explore); and the Revenue tile and the providers card,
+// for an owner only. What the server finds is given by the
 // browser here (its rules are tested in Go); everything else is real.
 //   MOMENTS_SHOTS=/some/folder  also takes the pictures for review.
-import { expect, test, type Locator, type Page } from './fixtures'
+import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -60,13 +60,16 @@ async function open(page: Page, width = 1280, domain = DOMAIN, height = 900) {
   await expect(page.locator('.chart-wrap svg[role="img"]')).toBeVisible({ timeout: 30_000 })
 }
 
-const card = (page: Page, name: string) => page.getByRole('complementary', { name })
-
-/** A card's one button opens its dialog; the dialog's own button shows the moment. */
-async function seeIn(page: Page, from: Locator, name: string | RegExp) {
-  await from.getByRole('button', { name: 'Details' }).click()
-  await page.getByRole('dialog').getByRole('button', { name }).click()
+/** Story, the view Data opens on. */
+async function openStory(page: Page, width = 1280) {
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.setViewportSize({ width, height: 900 })
+  await page.goto(`${API}/${DOMAIN}?v=story`)
+  await expect(page.locator('.sv-line')).toBeVisible({ timeout: 30_000 })
 }
+
+const card = (page: Page, name: string) => page.getByRole('complementary', { name })
 
 /** One picture of the page, both themes, at the width the page is at. */
 async function shoot(page: Page, name: string) {
@@ -201,37 +204,17 @@ test('markers sit on a lane above the plot, one a day, none touching another', a
   }
 })
 
-test('one thing today: the best first, ← → turn to the others, See it shows it and the card leaves, put away it stays away for the day', async ({ page }) => {
+test('Story tells the most important thing since the last visit under its headline; See it opens it in Explore, and no side card comes', async ({ page }) => {
   await given(page)
-  await open(page)
-  const today = card(page, 'One thing today')
-  await expect(today).toBeVisible({ timeout: 20_000 })
-  // Where it is in the deck: dots, with the next card peeking out behind.
-  await expect(today.getByRole('img', { name: '1 of 3' })).toBeVisible()
-  await expect(page.locator('.side-peek')).toHaveCount(2)
-  // The page that lost buyers matters most.
-  await expect(today).toContainText('/pricing')
-  await expect(today.getByRole('button', { name: 'Previous' })).toBeDisabled()
-  await shoot(page, 'one-thing')
-  await today.getByRole('button', { name: 'Next' }).click()
-  await expect(today.getByRole('img', { name: '2 of 3' })).toBeVisible()
-  await today.getByRole('button', { name: 'Previous' }).click()
-  await expect(today.getByRole('img', { name: '1 of 3' })).toBeVisible()
-  // The arrow keys turn it with focus in the card (they are the page's own for the period, otherwise).
-  await today.getByRole('button', { name: 'Next' }).focus()
-  await page.keyboard.press('ArrowRight')
-  await expect(today.getByRole('img', { name: '2 of 3' })).toBeVisible()
-  await page.keyboard.press('ArrowLeft')
-  await expect(today.getByRole('img', { name: '1 of 3' })).toBeVisible()
-  await today.getByRole('button', { name: 'Next' }).click()
-  await seeIn(page, today, /^Show /)
+  await openStory(page)
+  const since = page.locator('.sv-since')
+  await expect(since).toBeVisible({ timeout: 20_000 })
+  await expect(since).toContainText('/pricing') // the page that lost buyers matters most
+  await expect(page.getByRole('complementary')).toHaveCount(0)
+  await shoot(page, 'story-since')
+  await since.getByRole('button', { name: 'See it' }).click()
+  await expect(page).toHaveURL(/v=explore/)
   await expect(page).toHaveURL(/[?&]f=/)
-  await expect(today).toHaveCount(0)
-  // Put away: not back on a reload the same day.
-  await page.reload()
-  await expect(page.locator('.moment-mark').first()).toBeVisible({ timeout: 20_000 })
-  await page.waitForTimeout(500)
-  await expect(today).toHaveCount(0)
 })
 
 /** The findings the server makes, only these. */
@@ -241,85 +224,27 @@ async function only(page: Page, found: { moments?: object[]; insights?: object[]
   await page.route(/\/api\/v1\/sites\/[^/]+\/insights\?/, (r) => r.fulfill({ json: { insights: found.insights ?? [] } }))
 }
 
-/** The marker "See it" lights is lit for a couple of seconds, and a slow machine can be late for that: watch for it
- *  from before the click, so that it counts when it was lit, not only when it is looked at. */
-async function watchLit(page: Page) {
-  await page.evaluate(() => {
-    const w = window as unknown as { __lit: boolean }
-    w.__lit = false
-    const look = () => {
-      if (document.querySelector('.moment-mark.hit')) w.__lit = true
-    }
-    new MutationObserver(look).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] })
-    look()
-  })
-}
-const lit = (page: Page) => expect.poll(() => page.evaluate(() => (window as unknown as { __lit: boolean }).__lit), { timeout: 10_000 }).toBe(true)
-
-const toast = (page: Page) => page.getByRole('status').filter({ hasText: 'Showing' })
-
-// "See it" is never a click that seems to do nothing: whatever the kind, the card leaves, a toast says what
-// is on screen (and clears it), the chart comes into view and the marker lights up.
+// "See it" leads to the moment in Explore, whatever the kind, with its filter in the address.
 for (const kind of [
-  { name: 'a spike', found: () => ({ moments: [{ t: `${day(3)}T00:00`, kind: 'spike', factor: 6, visitors: 900, referrer: 'news.example' }] }), card: 'Traffic spike', button: /^Show /, url: /[?&]f=referrer(:|%3A)news\.example/, said: /Showing news\.example · /, lit: true },
-  { name: 'a new referrer', found: () => ({ insights: [{ kind: 'new_referrer', dim: 'referrer', value: 'google.com', now: 312, since: day(3) }] }), card: 'One thing today', button: 'Filter source', url: /[?&]f=referrer(:|%3A)google\.com/, said: /Showing google\.com · /, lit: true },
-  { name: 'lost buyers', found: () => ({ insights: [{ kind: 'conversion_drop', dim: 'entry_page', value: '/pricing', now: 350, was: 400, rate: 0.031, was_rate: 0.048, change: -0.35, since: day(3) }] }), card: 'One thing today', button: 'Filter page', url: /[?&]f=entry_page(:|%3A)(\/|%2F)pricing/, said: /Showing \/pricing · /, lit: true },
+  { name: 'a new referrer', found: () => ({ insights: [{ kind: 'new_referrer', dim: 'referrer', value: 'google.com', now: 312, since: day(3) }] }), url: /[?&]f=referrer(:|%3A)google\.com/ },
+  { name: 'lost buyers', found: () => ({ insights: [{ kind: 'conversion_drop', dim: 'entry_page', value: '/pricing', now: 350, was: 400, rate: 0.031, was_rate: 0.048, change: -0.35, since: day(3) }] }), url: /[?&]f=entry_page(:|%3A)(\/|%2F)pricing/ },
 ]) {
-  test(`See it on ${kind.name}: the card leaves, the toast says what is shown, the chart is in view`, async ({ page }) => {
+  test(`Story's See it on ${kind.name} opens it in Explore`, async ({ page }) => {
     await only(page, kind.found())
-    await open(page)
-    const today = card(page, 'One thing today').or(card(page, 'Traffic spike'))
-    await expect(today.first()).toBeVisible({ timeout: 20_000 })
-    await watchLit(page)
-    await seeIn(page, today.first(), kind.button)
+    await openStory(page)
+    await expect(page.locator('.sv-since')).toBeVisible({ timeout: 20_000 })
+    await page.locator('.sv-since').getByRole('button', { name: 'See it' }).click()
+    await expect(page).toHaveURL(/v=explore/)
     await expect(page).toHaveURL(kind.url)
-    await expect(today).toHaveCount(0)
-    await expect(toast(page)).toContainText(kind.said)
-    await expect(page.locator('.overview-chart')).toBeInViewport()
-    // The marker is lit for a moment (it has a day on the chart).
-    await lit(page)
-    // Clear takes the filter off again.
-    await toast(page).getByRole('button', { name: 'Clear' }).click()
-    await expect(page).not.toHaveURL(/[?&]f=/)
   })
 }
 
-test('See it with everything already applied still closes the card, says what is shown and lights the marker', async ({ page }) => {
-  await only(page, { insights: [{ kind: 'new_referrer', dim: 'referrer', value: 'linkedin.com', now: 463, since: day(4) }] })
-  await open(page)
-  const card1 = card(page, 'One thing today')
-  await expect(card1).toBeVisible({ timeout: 20_000 })
-  await seeIn(page, card1, 'Filter source')
-  await expect(page).toHaveURL(/[?&]f=referrer(:|%3A)linkedin\.com/)
-  await expect(card1).toHaveCount(0)
-  // The same click again, from a card that is back (a new day): the address is already what it asks for.
-  const url = page.url()
-  await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('trckable:today:')).forEach((k) => localStorage.removeItem(k)))
-  await page.reload()
-  await expect(page).toHaveURL(url)
-  const again = card(page, 'One thing today')
-  await expect(again).toBeVisible({ timeout: 20_000 })
-  await watchLit(page)
-  await seeIn(page, again, 'Filter source')
-  await expect(page).toHaveURL(url)
-  await expect(again).toHaveCount(0)
-  await expect(toast(page)).toContainText('Showing linkedin.com')
-  await expect(page.locator('.overview-chart')).toBeInViewport()
-  await lit(page)
-})
-
-test('with nothing to say, a new site gets one first-week card, and not another that day', async ({ page }) => {
+test('with nothing to say, Story has no line since the last visit and no side card', async ({ page }) => {
   await given(page, 'quiet')
-  await open(page)
-  // On the first day with traffic, the first card is about your own visits.
-  const own = card(page, 'Your visits')
-  await expect(own).toBeVisible({ timeout: 20_000 })
-  await expect(own).toContainText('Exclude your own visits?')
-  await shoot(page, 'first-week')
-  await own.getByRole('button', { name: 'Close' }).click()
-  await page.reload()
-  await expect(page.locator('.chart-wrap svg[role="img"]')).toBeVisible()
+  await openStory(page)
+  await expect(page.locator('.sv-line')).toBeVisible()
   await page.waitForTimeout(3500)
+  await expect(page.locator('.sv-since')).toHaveCount(0)
   await expect(page.getByRole('complementary')).toHaveCount(0)
 })
 

@@ -11,6 +11,7 @@ import { setView } from '../../lib/url'
 import { patchFor } from '../moments/apply'
 import { pickMarks, placePins, type Mark } from '../moments/marks'
 import { useMoments } from '../moments/useMoments'
+import { copy as moments } from '../moments/copy'
 import { say } from '../moments/words'
 import { metricName } from '../overview/chartMetric'
 import { bar } from './barCopy'
@@ -18,8 +19,10 @@ import { copy } from './copy'
 import { Answers } from './Answers'
 import { Ask } from './Ask'
 import { SetupCard } from './SetupCard'
-import { storyOf, takeawayOf } from './rules'
+import { sinceOf, storyOf, takeawayOf } from './rules'
 import { Tiles } from './Tiles'
+import { useHints } from './useHints'
+import { useSince } from './useSince'
 
 const ProviderCard = lazy(() => import('../overview/ProviderCard').then((m) => ({ default: m.ProviderCard })))
 
@@ -71,6 +74,9 @@ export default function StoryView(p: StoryViewProps) {
   // The top moments by weight, one a day, then told in the order they happened.
   const marks = useMemo(() => TOP(pickMarks(placePins(pins ?? [], labels, bucket), (i) => i * 60, undefined, MOMENTS, 0)), [pins, labelsKey, bucket]) // eslint-disable-line react-hooks/exhaustive-deps -- labels are new arrays each render: keyed by content
   const fmt = p.money ?? (() => '')
+  const since = useSince(p.site)
+  const told = sinceOf(since.found?.items ?? [], fmt)
+  const { hints, away } = useHints(p.site)
   const open = (m: Mark) => setView({ ...patchFor(m.pin, { filters: [], range: p.range, today, bucket }), v: 'explore', story: 'moment' })
 
   const layer = (g: { x: (i: number) => number }) => {
@@ -97,6 +103,15 @@ export default function StoryView(p: StoryViewProps) {
           <span className="sv-strong">{h.strong}</span>
           {h.post}
         </h1>
+        {told && (
+          <p className="sv-since">
+            <b>{since.prev ? moments.today.sinceVisit : moments.today.thisWeek}</b>
+            <span>{told.line}</span>
+            <button type="button" className="sv-link" onClick={() => setView({ ...patchFor(told.pin, { filters: [], range: p.range, today, bucket }), v: 'explore', story: 'moment' })}>
+              {moments.today.see}
+            </button>
+          </p>
+        )}
         {takeaway && <p className="sv-take">{takeaway}</p>}
         {h.note && <p className="sv-note">{h.note}</p>}
       </section>
@@ -138,7 +153,7 @@ export default function StoryView(p: StoryViewProps) {
         </div>
       </section>
 
-      <Answers answers={facts.answers} onConnect={() => setConnect(true)} onGoal={p.onGoal} />
+      <Answers answers={facts.answers} onConnect={() => setConnect(true)} onGoal={p.onGoal} site={p.site} hints={hints} onAway={away} />
       <Ask />
       {connect && (
         <Suspense fallback={null}>

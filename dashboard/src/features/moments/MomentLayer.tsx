@@ -5,8 +5,7 @@
 // thing at a time: then it only lights up); a click applies its filter (and its
 // day) through the address and opens the card with the numbers, and the chart
 // tints the day it is about. Each is a button in the page's tab order and has a
-// shape of its own, so none depends on colour. It also brings the card the Data
-// view says on its own (Ambient). In the chart extras' chunk, fetched when the
+// shape of its own, so none depends on colour. In the chart extras' chunk, fetched when the
 // chart is first drawn.
 import { useEffect, useId, useMemo, useState } from 'react'
 import type { Bucket, Point, ReportQuery, Site } from '../../lib/api'
@@ -16,7 +15,6 @@ import { readView, setView } from '../../lib/url'
 import { rangeOf } from '../../lib/dashQuery'
 import { LANE_H } from '../../charts/plot'
 import { patchFor } from './apply'
-import Ambient from './Ambient'
 import { copy } from './copy'
 import { HIT, HIT_MS } from './focus'
 import { iconOf } from './kinds'
@@ -90,7 +88,6 @@ export default function MomentLayer(p: LayerProps) {
   const day = current && placed.find((q) => q.pin.id === current.pins[current.at].id)
   return (
     <>
-      <Ambient site={p.site} series={p.series} />
       {marks.length > 0 && <i className="moment-lane" aria-hidden="true" style={{ left: g.x(0), width: g.w - g.x(0), top: LANE }} />}
       {day && <i className={`moment-day ${day.pin.kind}`} aria-hidden="true" style={{ left: g.x(day.i), width: Math.max(8, g.x(1) - g.x(0)), top: LANE_H, height: g.y(0) - LANE_H }} />}
       <div role="group" aria-label={copy.moments} className="moment-marks">
