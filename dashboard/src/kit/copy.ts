@@ -15,5 +15,6 @@ export const kitWords = defineCopy('kit', {
   pct: (n: number) => `${n}%`,
   grab: 'Drag down to close',
   chart: 'Chart',
+  noData: 'No data',
   columnOf: (label: string, pct: number) => `${label}: ${pct}%`,
 })

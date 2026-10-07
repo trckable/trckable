@@ -18,10 +18,6 @@
   overflow: hidden;
   transition: border-color 0.15s;
 }
-.kit-card:hover,
-.kit-card:focus-within {
-  border-color: var(--accent);
-}
 .kit-card.press {
   width: 100%;
   cursor: pointer;

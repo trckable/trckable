@@ -135,3 +135,34 @@
     margin-bottom: calc(var(--ph-pad, 16px) * -1);
   }
 }
+
+/* No data: a faint wave and a small pill, over the chart's own room */
+.kit-nodata {
+  position: relative;
+  color: color-mix(in srgb, var(--text) 12%, transparent);
+}
+.kit-nodata-pill {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 3px 10px;
+  border: 1px solid var(--glass-line, var(--border));
+  border-radius: 999px;
+  background: var(--glass-lite, var(--row));
+  -webkit-backdrop-filter: var(--glass-blur-lite);
+  backdrop-filter: var(--glass-blur-lite);
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.kit-nodata {
+  display: block;
+  height: 56px;
+}
+.kit-nodata svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

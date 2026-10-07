@@ -45,8 +45,8 @@
 }
 .ie-box.view:hover,
 .ie-box.view:focus-visible {
-  border-color: var(--border-2);
   background: var(--sunken);
+  background-image: var(--hover-veil);
 }
 .ie-box.edit {
   border-color: color-mix(in srgb, var(--accent) 60%, var(--border-2));

@@ -98,73 +98,163 @@
   gap: 10px;
 }
 .sv-chart-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 270px;
-  gap: 22px;
-  align-items: start;
+  min-width: 0;
 }
 .sv-plot {
   position: relative;
   min-width: 0;
 }
-.sv-mark {
+/* A moment: a soft band over the days it lasted, and a small glass label on the chart. Green is up, blue is down. */
+.sv-span {
+  --ink: var(--accent);
+  --band: color-mix(in srgb, var(--accent) 13%, transparent);
+}
+.sv-span.down {
+  --ink: var(--ch-1);
+  --band: color-mix(in srgb, var(--ch-1) 14%, transparent);
+}
+.sv-band {
   position: absolute;
-  z-index: 4;
-  top: 13px;
-  width: 22px;
-  height: 22px;
+  z-index: 1;
   margin: 0;
   padding: 0;
-  transform: translate(-50%, -50%);
-  border: 0;
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--accent-ink);
-  font: 700 11px var(--mono);
-  cursor: pointer;
-}
-.sv-mark.drop {
-  background: var(--warn);
-}
-.sv-moments {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 13px;
-}
-.sv-moments button {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  width: 100%;
-  padding: 6px 8px;
   border: 0;
   border-radius: 8px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
+  background: linear-gradient(180deg, var(--band), color-mix(in srgb, var(--ink) 3%, transparent));
+  pointer-events: none;
+  transition: opacity 0.2s, background 0.2s;
+}
+.sv-span.on .sv-band {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 24%, transparent), color-mix(in srgb, var(--ink) 6%, transparent));
+}
+.sv-span.dim {
+  opacity: 0.35;
+}
+.sv-band:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: -2px;
+}
+.sv-label {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  margin: 0;
+  padding: 0 11px 0 3px;
+  border: 1px solid color-mix(in srgb, var(--ink) 45%, var(--border));
+  border-radius: 999px;
+  background: var(--glass-pop, var(--pop));
+  -webkit-backdrop-filter: var(--glass-blur-lite);
+  backdrop-filter: var(--glass-blur-lite);
+  box-shadow: var(--glass-shadow, var(--shadow-soft));
+  color: var(--text);
+  font: 13px/1 var(--font);
+  white-space: nowrap;
   cursor: pointer;
 }
-.sv-moments button:hover {
-  background: var(--row);
+.sv-label b {
+  font-weight: 600;
 }
-.sv-n {
-  flex: none;
+.sv-label-m {
+  color: var(--text-2);
+}
+.sv-label-ic {
   display: grid;
   place-items: center;
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--ink);
   color: var(--accent-ink);
-  font: 700 11px var(--mono);
 }
-.sv-n.drop {
-  background: var(--warn);
+.sv-span.down .sv-label-ic {
+  color: #0b0d10;
+}
+.sv-label:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+.sv-none {
+  margin: 4px 0 0;
+}
+/* The story card: in the page's top layer (AnchoredPop), so nothing clips it. */
+.pop.anchored.sv-story-pop {
+  width: 300px;
+  min-width: 0;
+  gap: 0;
+  padding: 14px 16px;
+}
+.sv-story-day {
+  color: var(--text-2);
+  font-size: 12px;
+}
+.sv-story-head {
+  margin: 4px 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.sv-story-rows {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 12px;
+}
+.sv-story-rows dt,
+.sv-story-rows dd {
+  margin: 0;
+}
+.sv-story-rows dd {
+  color: var(--text);
+  font-weight: 500;
+  text-align: right;
+}
+.sv-story-path {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sv-story-next {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--glass-line, var(--border));
+  color: var(--text-2);
+  font-size: 12px;
+}
+.sv-story-open {
+  all: unset;
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.sv-story-open:hover {
+  text-decoration: underline;
+}
+.sv-story-open:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+@media (max-width: 640px) {
+  /* A phone's tap lands on the band (44 px wide at least); the label is for the one that matters most. */
+  .sv-band {
+    pointer-events: auto;
+  }
+  .sv-label {
+    pointer-events: none;
+  }
+  .pop.anchored.sv-story-pop {
+    width: auto;
+    padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  }
 }
 .sv-answers {
   display: flex;
@@ -323,7 +413,7 @@
   flex: none;
 }
 .chip.from-story:hover {
-  border-color: var(--accent);
+  background-image: var(--hover-veil);
 }
 .chip.from-story:focus-visible {
   outline: 2px solid var(--accent);
@@ -335,9 +425,6 @@
 @media (max-width: 900px) {
   .sv-tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .sv-chart-body {
-    grid-template-columns: minmax(0, 1fr);
   }
   .sv-answer {
     grid-column: span 6;

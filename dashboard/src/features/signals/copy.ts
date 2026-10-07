@@ -24,6 +24,7 @@ export const signals = defineCopy('signals', {
     label: 'Busy',
     title: 'Whoa, something’s happening',
     onlineNow: 'online now',
+    justNow: 'now',
     chip: (times: string) => `${times} usual`,
     mostly: (source: string) => `Mostly from ${source}`,
     some: (n: number, source: string) => `${n} from ${source}`,

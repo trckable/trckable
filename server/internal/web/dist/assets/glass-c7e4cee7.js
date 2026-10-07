@@ -1,0 +1,2 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/glassHover-8a6a172b.js","assets/glassHover-d14002a7.css"])))=>i.map(i=>d[i]);
+import{t as e}from"./lang-6f1681c3.js";function t(){let t=document.documentElement;try{let e=matchMedia(`(prefers-reduced-transparency: reduce)`),n=()=>e.matches?t.dataset.glass=`off`:delete t.dataset.glass;n(),e.addEventListener?.(`change`,n)}catch{}(window.requestIdleCallback??(e=>setTimeout(e,800)))(()=>void e(()=>import(`./glassHover-8a6a172b.js`).then(e=>e.startHover()),__vite__mapDeps([0,1])))}export{t as startGlass};
