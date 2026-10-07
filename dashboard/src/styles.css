@@ -100,8 +100,8 @@
     --text: #0b0d10;
     --tkb-outline: #0b0d10; /* the logo's ghost keeps an ink edge on a light page */
     --text-2: #4a525e;
-    --text-3: #616874;
-    --text-4: #676d78; /* 4.84:1 on the light sunken surface */
+    --text-3: #58606c;
+    --text-4: #5f6671; /* 4.6:1 on the glass track in the light theme */
     /* 4.87:1 with white on it. The old #4d8a00 was 4.24 — close enough to
        look fine and not close enough to be readable. */
     --accent: #487f00;
@@ -160,8 +160,8 @@
   --text: #0b0d10;
   --tkb-outline: #0b0d10;
   --text-2: #4a525e;
-  --text-3: #616874;
-  --text-4: #676d78;
+  --text-3: #58606c;
+  --text-4: #5f6671; /* 4.6:1 on the glass track in the light theme */
   --accent: #487f00;
   --accent-strong: #3f7000;
   --accent-ink: #ffffff;
