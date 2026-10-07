@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.6.3 (7 Oct 2026)
+
 ### Added
 
 - All sites has a Cards | List switch next to Sort; your choice is remembered, and until you pick it stays automatic (cards up to 8 sites, a list above).

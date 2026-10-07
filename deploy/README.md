@@ -1,6 +1,6 @@
 # Deploy trckable
 
-One container, one volume. Every option below runs the same image, `ghcr.io/trckable/trckable:0.6.2` (x86-64 and arm64), pinned to a release, keeps its data in `/data`, and is healthy when `GET /healthz` answers 200 (`/readyz` also waits for the write-ahead log and the control database; Kubernetes uses both).
+One container, one volume. Every option below runs the same image, `ghcr.io/trckable/trckable:0.6.3` (x86-64 and arm64), pinned to a release, keeps its data in `/data`, and is healthy when `GET /healthz` answers 200 (`/readyz` also waits for the write-ahead log and the control database; Kubernetes uses both).
 
 | Where | Files | Notes |
 |---|---|---|
@@ -34,7 +34,7 @@ docker compose logs trckable   # the setup link
 
 `railway/railway.json` is the service's config as code (healthcheck `/healthz`, draining 30 s, restart on failure). Railway's template editor holds the rest. To publish the template (needs the owner's Railway account):
 
-1. In Railway: **New Project → Empty Project**, then **+ Create → Docker Image** with `ghcr.io/trckable/trckable:0.6.2`.
+1. In Railway: **New Project → Empty Project**, then **+ Create → Docker Image** with `ghcr.io/trckable/trckable:0.6.3`.
 2. Variables: `PORT=8080`, `RAILWAY_RUN_UID=0`, `TRCKABLE_SECRET=${{secret(48)}}`, `TRCKABLE_SETUP_TOKEN=${{secret(32)}}`, `RAILWAY_DEPLOYMENT_DRAINING_SECONDS=30`. The public address (`TRCKABLE_BASE_URL`) is taken from Railway's domain.
 3. **Volumes → Add Volume**, mount path `/data`.
 4. **Settings → Networking → Generate Domain** (port 8080). **Settings → Deploy → Healthcheck Path** `/healthz`, timeout 60. Number of replicas stays 1.
@@ -66,7 +66,7 @@ To submit it: fork [getumbrel/umbrel-apps](https://github.com/getumbrel/umbrel-a
 ## Kubernetes (Helm)
 
 ```bash
-git clone --depth 1 --branch v0.6.2 https://github.com/trckable/trckable.git
+git clone --depth 1 --branch v0.6.3 https://github.com/trckable/trckable.git
 helm install trckable trckable/charts/trckable \
   --set ingress.enabled=true --set ingress.hosts[0].host=stats.example.com \
   --set baseUrl=https://stats.example.com
