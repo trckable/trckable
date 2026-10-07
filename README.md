@@ -10,10 +10,10 @@
 One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy, Polar, Paddle and Dodo.<br>
 Self-host it for free, or let [trckable Cloud](https://cloud.trckable.com) run it for you.
 
-[![Version](https://img.shields.io/badge/version-0.6.3-b8ff3c?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.6.4-b8ff3c?style=flat-square)](CHANGELOG.md)
 [![License: AGPL-3.0](https://img.shields.io/badge/server-AGPL--3.0-0b0d10?style=flat-square)](LICENSE)
 [![Tracker: MIT](https://img.shields.io/badge/tracker-MIT-0b0d10?style=flat-square)](packages/trckable/LICENSE)
-[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/tracker-2045_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2045 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-58_MB-b8ff3c?style=flat-square" alt="Idle memory: 58 MB"></a><!--/f-->
+[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/tracker-2045_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2045 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-57_MB-b8ff3c?style=flat-square" alt="Idle memory: 57 MB"></a><!--/f-->
 
 [Quick start](#-quick-start) · [How it compares](#️-how-it-compares) · [Everything it does](#-everything-it-does) · [Gallery](#-gallery) · [Docs](https://docs.trckable.com/) · [Changelog](CHANGELOG.md)
 
@@ -27,7 +27,7 @@ Self-host it for free, or let [trckable Cloud](https://cloud.trckable.com) run i
 
 <br><br>
 
-<img src=".github/images/readme/numbers.svg" width="880" alt="2 KB browser script. 1 container, no external database. 58 MB of memory when idle. 0 IP addresses stored.">
+<img src=".github/images/readme/numbers.svg" width="880" alt="2 KB browser script. 1 container, no external database. 57 MB of memory when idle. 0 IP addresses stored.">
 
 </div>
 
@@ -108,7 +108,7 @@ The free, self-hostable tools, plus DataFast (paid, hosted only) for script size
   <img src=".github/images/readme/script-size.svg" width="880" alt="Browser script, gzipped, with goals and outbound links: trckable 2,045 bytes, Plausible CE 2,141, Umami 2,333, GoatCounter 3,467, DataFast 5,253 (paid, no self-hosting documented), Rybbit 11,172, Matomo 28,172.">
 </p>
 <p align="center">
-  <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 58 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
+  <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 57 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
 </p>
 
 **Where it is not the right pick:** with pageviews only, Plausible CE's script is smaller (1,283 B against <!--f:tracker_core_bytes-->1,606<!--/f--> B). Session replay and A/B tests are out of scope on purpose: if you need those, use Matomo. Heatmaps are here, as an opt-in module that never records anyone (below).
@@ -185,7 +185,7 @@ A visitor's browser keeps what it could not send, up to 24 hours and 200 events,
 ### Little things you notice
 
 - **Live count in the tab**: "● 8 · trckable" in the browser tab and a dot on its icon while anyone is online. Off with one switch.
-- **Cha-ching**: a coin toast when a sale arrives, over any view, with an optional chime. Browser notices for a first sale from a new source, a surge (twice the usual number of people online, with who sent them), a spike or tracking stopping are opt-in, and asked for only from a button.
+- **Cha-ching**: a coin toast when a sale arrives, over any view, with an optional chime. Browser notices for a first sale from a new source, a surge (busier than usual, with who sent them), a spike or tracking stopping are opt-in, and asked for only from a button.
 - **Sparklines** on the top Sources and Pages, **vs usual** under Visitors ("+18% vs usual", against the same weekday) and **where the month is heading** ("≈ 41k by 31 Oct").
 - **Site icons** beside referrers, fetched by your server once and kept there: your visitors' browsers never ask a third party.
 - **Milestones** celebrate with a short ghost hop and a card ready to share. The cards that come up by themselves (a milestone, the one thing today, a nudge) are one design: what it is, when, its figure counting up, where it came from, a small chart of the moment, and a deck you turn with ← → or a swipe.
