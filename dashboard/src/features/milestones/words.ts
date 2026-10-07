@@ -130,3 +130,26 @@ export function tileLabel(m: Milestone, revenue: boolean): string {
   if (!w.big) return w.label
   return showsBig(m, revenue) ? `${w.big} ${w.label}` : copy.revenueQuiet
 }
+
+const DAY_MS = 86_400_000
+const daysBetween = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / DAY_MS)
+
+/** The one line of context under a reached number, from the milestones already known:
+ *  revenue says how long after the first sale; a family says how much faster than its last
+ *  step (twice as fast or more). Null when nothing true can be said. */
+export function contextLine(m: Pick<Milestone, 'kind' | 'value' | 'day'>, list: Pick<Milestone, 'kind' | 'value' | 'day'>[]): string | null {
+  if (m.kind === 'revenue') {
+    const first = list.find((x) => x.kind === 'first_sale')
+    const days = first ? daysBetween(first.day, m.day) : 0
+    if (days > 0) return copy.ctx.afterFirstSale(days)
+  }
+  if (m.kind === 'first_sale' || m.kind === 'first_goal') return null
+  const earlier = list.filter((x) => x.kind === m.kind && x.value < m.value).sort((a, b) => b.value - a.value)
+  const [prev, before] = earlier
+  if (!prev || !before) return null
+  const now = daysBetween(prev.day, m.day)
+  const then = daysBetween(before.day, prev.day)
+  if (now <= 0 || then <= 0) return null
+  const x = Math.floor(then / now)
+  return x >= 2 ? copy.ctx.faster(x) : null
+}

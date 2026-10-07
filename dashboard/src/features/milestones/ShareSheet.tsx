@@ -4,18 +4,13 @@
 import { Download, Image as ImageIcon, Link2, Link2Off, Mail, Moon, Sun, X } from 'lucide-react'
 import { useState } from 'react'
 import { fail, type Milestone, type Site } from '../../lib/api'
-import { shareApi } from './share'
+import { copyImage, shareApi } from './share'
 import { isViewer } from '../../lib/me'
 import { Modal } from '../../kit/Modal'
 import { Switch } from '../../components/Switch'
 import { toast } from '../../components/Toast'
 import { copy } from './copy'
 import { say } from './words'
-
-async function copyImage(url: string) {
-  const blob = await fetch(url, { credentials: 'same-origin' }).then((r) => r.blob())
-  await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-}
 
 export function ShareSheet({ site, m, onClose, onChanged }: { site: Site; m: Milestone; onClose: () => void; onChanged: () => void }) {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')

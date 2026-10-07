@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- Milestones: the milestone card is one flat card with the number, one line of context, Copy image and Share; the share image says Revenue milestone reached with the growth line when revenue is hidden.
+
 ## 0.6.5 (7 Oct 2026)
 
 ### Fixed
@@ -23,6 +27,8 @@ section into the release.
 - Header: a light header that scrolls away, and one control line that stays at the top (filters on the left, the period on the right, glass with the site's name once the page runs under it); Live | Data and Story | Explore are plain text tabs; the Data and All sites cards lose their boxes for hairlines; on a phone the line holds the tabs, a filter button and a short period that each open a sheet.
 
 - The searchable lists (timezone, currency), the ⋯ menus and the Create menu now open the same way as the other pop-ups: same placement, keys and phone sheet.
+
+- Milestones: one flat card (the number, one line of context such as "18 days after the first sale", the picture, Copy image and Share…) with no coloured edge and no mascot over the buttons; the share image leads with the number in the milestone's colour (revenue says "Revenue milestone reached" with the growth line under it, and shows the amount only with "Show amount" on), with the date and wordmark in the footer, and the picture and Copy image follow the same setting; on a phone it is a full-width bottom sheet.
 
 ## 0.6.4 (7 Oct 2026)
 

@@ -63,6 +63,13 @@ export const copy = defineCopy('milestones', {
   revoked: 'Link revoked',
   download: 'Download PNG',
   copyImage: 'Copy image',
+  kind: 'Milestone',
+  shareMore: 'Share…',
+  // The one line of context under the number.
+  ctx: {
+    afterFirstSale: (n: number) => `in revenue, ${n} ${n === 1 ? 'day' : 'days'} after the first sale`,
+    faster: (x: number) => `${x}× faster than the last one`,
+  },
   imageCopied: 'Image copied',
   email: 'Email to…',
   showAmount: 'Show amount',

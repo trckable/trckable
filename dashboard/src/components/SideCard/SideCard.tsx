@@ -56,13 +56,17 @@ export interface SideCardProps {
   deck?: DeckProps
   /** The ghost in the corner: for a milestone and a first sale only. */
   ghost?: boolean
+  /** One flat card: no line of the card's colour on its edge, and a plain icon. */
+  flat?: boolean
+  /** Something that stands on the card's top edge (the milestone's ghost): it never covers the card. */
+  crown?: ReactNode
 }
 
 /** How long a card takes to leave: its exit animation (SideCard.css, side-out), so what follows waits for it. */
 const LEAVE_MS = 200
 const SWIPE = 40
 
-export function SideCard({ id, label, closeLabel, asked, title, onClose, actions, children, kind, when, chart, deck, ghost }: SideCardProps) {
+export function SideCard({ id, label, closeLabel, asked, title, onClose, actions, children, kind, when, chart, deck, ghost, flat, crown }: SideCardProps) {
   const mine = useSideCard(id, asked)
   const card = useRef<HTMLElement>(null)
   const before = useRef<Element | null>(null)
@@ -159,12 +163,13 @@ export function SideCard({ id, label, closeLabel, asked, title, onClose, actions
   const stacked = !!deck && deck.count > 1
   return createPortal(
     <div className={'side-deck' + (stacked ? ' is-stack' : '')}>
+      {crown}
       {stacked && <i className="side-peek" aria-hidden="true" />}
       {stacked && <i className="side-peek p2" aria-hidden="true" />}
       <aside
         ref={card}
         tabIndex={-1}
-        className={'side-card' + (kind ? ' has-kind' : '') + (leaving ? ' leaving' : '')}
+        className={'side-card' + (kind ? ' has-kind' : '') + (flat ? ' flat' : '') + (leaving ? ' leaving' : '')}
         style={kind?.tint ? ({ '--tint': kind.tint } as CSSProperties) : undefined}
         aria-label={label}
       >

@@ -64,7 +64,7 @@
   animation: side-out 0.2s var(--ease) both;
 }
 /* A thin line of the card's own colour on its left edge. */
-.side-card.has-kind::before {
+.side-card.has-kind:not(.flat)::before {
   content: '';
   position: absolute;
   left: 0;
@@ -74,6 +74,13 @@
   border-radius: 2px;
   background: var(--tint);
   opacity: 0.8;
+}
+.side-card.flat {
+  transition: border-color 0.15s;
+}
+.side-card.flat:hover,
+.side-card.flat:focus-within {
+  border-color: var(--tint);
 }
 @keyframes side-in {
   from {
