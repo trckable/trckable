@@ -19,11 +19,11 @@ describe('Card', () => {
   })
 })
 
-describe('Card stretch and the open look', () => {
+describe('Card stretch', () => {
   it('makes the title the one button that opens it, with the corner only a mark', () => {
-    const h = html(<Card title="Today" variant="open" stretch onOpen={() => {}} openLabel="Today: open">x</Card>)
+    const h = html(<Card title="Today" stretch onOpen={() => {}} openLabel="Today: open">x</Card>)
     expect(h).toContain('kit-stretch')
-    expect(h).toContain('kit-card open stretch')
+    expect(h).toContain('kit-card plain stretch')
     expect(h.match(/<button/g)).toHaveLength(1)
   })
 })
@@ -73,8 +73,8 @@ describe('Area with a second line', () => {
 })
 
 describe('Area', () => {
-  it('is a line and a fill', () => {
-    expect(html(<Area values={[1, 2, 3]} color="red" />).match(/<path/g)).toHaveLength(2)
+  it('is a line, no fill', () => {
+    expect(html(<Area values={[1, 2, 3]} color="red" />).match(/<path/g)).toHaveLength(1)
   })
 })
 
@@ -118,9 +118,14 @@ describe('the smaller cards', () => {
     expect(h).toContain('>45%<')
     expect(h).not.toContain('>5%<')
   })
-  it('Finding is the tag and a sentence', () => {
+  it('a card has the icon tile and the status on its top line', () => {
+    const h = html(<Card title="Visitors" icon={<i />} status="vs last week">x</Card>)
+    expect(h).toContain('kit-tile')
+    expect(h).toContain('>vs last week</span>')
+  })
+  it('Finding is the question and a sentence', () => {
     const h = html(<Finding tag="Finding">Up <b>24%</b></Finding>)
-    expect(h).toContain('kit-tagchip')
+    expect(h).toContain('>Finding<')
     expect(h).toContain('<b>24%</b>')
   })
   it('InsightText shows its sources by name', () => {

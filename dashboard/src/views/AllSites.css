@@ -62,6 +62,7 @@
 }
 .all-chart {
   position: relative;
+  margin-top: 26px;
 }
 .all-chart-svg {
   display: block;
@@ -69,12 +70,39 @@
   height: 160px;
   overflow: visible;
   cursor: crosshair;
+  touch-action: pan-y;
 }
 .all-chart-axis {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 20px;
   margin-top: 6px;
   font-size: 11.5px;
+}
+.all-chart-axis span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.all-chart-axis span:first-child {
+  transform: none;
+}
+.all-chart-axis span:last-child:not(:first-child) {
+  transform: translateX(-100%);
+}
+.all-grid {
+  stroke: var(--grid);
+  stroke-width: 1;
+}
+.all-cursor {
+  stroke: var(--text-3);
+  stroke-dasharray: 3 3;
+}
+.all-chart-y {
+  position: absolute;
+  left: 0;
+  transform: translateY(-110%);
+  font-size: 11px;
+  pointer-events: none;
 }
 .all-chart-empty {
   display: grid;
@@ -124,8 +152,35 @@
 .all-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 16px;
+  gap: 0 12px;
+  margin-top: 8px;
   color: var(--text-2);
+}
+.all-legend button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.all-legend button[aria-pressed='false'] {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+.all-legend button:focus-visible {
+  outline: 2px solid var(--accent);
+  border-radius: 6px;
+}
+@media (max-width: 640px) {
+  .all-legend button {
+    min-height: var(--ph-hit);
+  }
 }
 .all-filters {
   display: flex;
@@ -241,7 +296,7 @@
 }
 .all-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
   gap: 12px;
 }
 .pulse.off {
@@ -290,7 +345,10 @@
 }
 @media (max-width: 640px) {
   .all-stats {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .all-stats > :nth-child(5):last-child {
+    grid-column: 1 / -1;
   }
   :root .all-sort select {
     min-height: var(--ph-hit);

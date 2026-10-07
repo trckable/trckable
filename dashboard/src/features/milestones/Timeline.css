@@ -139,11 +139,16 @@
   gap: 8px;
   padding: 16px 12px;
   text-align: center;
-  border-radius: 16px;
+  border-radius: 14px;
   border: 1px solid var(--border);
-  background: var(--sunken);
+  background: var(--surface);
+  transition: border-color 0.15s;
   animation: ms-up 0.35s var(--ease) both;
   animation-delay: calc(var(--i, 0) * 45ms + 120ms);
+}
+.ms-tile:hover,
+.ms-tile:focus-within {
+  border-color: var(--accent);
 }
 .ms-done {
   width: 150px;
@@ -175,9 +180,9 @@
   place-items: center;
   width: 52px;
   height: 52px;
-  border-radius: 50%;
-  background: var(--accent-soft);
-  color: var(--accent);
+  border-radius: 14px;
+  background: var(--row);
+  color: var(--text-2);
   font: 600 15px var(--mono);
 }
 .ms-done.money .ms-badge {

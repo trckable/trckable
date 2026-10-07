@@ -521,7 +521,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       <StorySlot view={view} site={site} query={query} data={real} range={range} ready={hasData && !showInstall} waiting={waiting} loading={loading || firstLoad} money={money ? fmtM : undefined} narrow={narrow} onGoal={() => setAddGoals(true)}>
       {/* One section for the period at a glance: the key numbers across the
           top, the chart under them — they are one story, not two cards. */}
-      <Card variant="open" className="overview" label="Overview">
+      <Card className="overview" label="Overview">
       <KpiStrip
         loading={firstLoad} vs={vs} metric={metric} can={canDraw} onPick={pick} expectMoney={hold.revenue}
         k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} blank={blank} site={site} bots={data?.bots}

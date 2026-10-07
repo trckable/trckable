@@ -251,11 +251,6 @@
     grid-column: 1;
     grid-row: 1;
   }
-  .bl .bl-line {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    margin-top: 6px;
-  }
   .bl-val {
     grid-column: 2;
     grid-row: 1;

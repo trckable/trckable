@@ -2,7 +2,7 @@
 // Is it good or bad? a verdict, the rest an answer card (What should I fix? in
 // its warn look). Each ends in one link that opens Explore with the matching
 // filters, so the claim can be checked.
-import { ArrowRight, Coins, FileText, Wrench, type LucideIcon } from 'lucide-react'
+import { ArrowRight, Coins, FileText, Gauge, Target, Wrench, type LucideIcon } from 'lucide-react'
 import { Card, Finding, Verdict } from '../../kit'
 import type { Site } from '../../lib/api'
 import { setView } from '../../lib/url'
@@ -10,7 +10,7 @@ import { copy } from './copy'
 import { HintLine } from './HintLine'
 import type { Answer, Hint } from './rules'
 
-const ICON: Partial<Record<Answer['key'], LucideIcon>> = { page: FileText, fix: Wrench, pays: Coins }
+const ICON: Record<Answer['key'], LucideIcon> = { did: Target, fine: Gauge, page: FileText, fix: Wrench, pays: Coins }
 
 interface Props {
   answers: Answer[]
@@ -69,28 +69,19 @@ export function Answers({ answers, onConnect, onGoal, site, hints = [], onAway }
   )
   const card = (a: Answer) => {
     const cls = `sv-answer ${a.key} ${a.look}`
+    const Icon = ICON[a.key]
+    const icon = <Icon size={15} strokeWidth={1.8} />
     if (a.key === 'did')
       return (
-        <Finding key={a.key} className={cls} tag={a.question} foot={foot(a, false)}>
+        <Finding key={a.key} className={cls} icon={icon} tag={a.question} foot={foot(a, false)}>
           {a.line}
           {delta(a)}
         </Finding>
       )
     if (a.key === 'fine' && a.word)
-      return <Verdict key={a.key} className={`${cls} ${a.word.tone}`} title={a.question} word={a.word.text} foot={foot(a, true)} />
-    const Icon = ICON[a.key]
-    const title = (
-      <span className="sv-q">
-        {Icon && (
-          <span className="sv-q-i" aria-hidden="true">
-            <Icon size={15} strokeWidth={1.8} />
-          </span>
-        )}
-        {a.question}
-      </span>
-    )
+      return <Verdict key={a.key} className={`${cls} ${a.word.tone}`} icon={icon} title={a.question} word={a.word.text} foot={foot(a, true)} />
     return (
-      <Card key={a.key} className={cls} variant={a.look === 'fix' ? 'warn' : 'plain'} title={title}>
+      <Card key={a.key} className={cls} icon={icon} tone={a.look === 'fix' ? 'warn' : undefined} title={a.question}>
         {foot(a, true)}
       </Card>
     )

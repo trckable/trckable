@@ -89,8 +89,8 @@ export function BarList(p: {
                 {it.color && <span className="dot" style={{ background: it.color }} />}
                 <span className="bl-text">{it.label}</span>
               </span>
-              <span className="kit-rowbar bl-line" aria-hidden="true">
-                <i style={{ width: `${(measure(it) / max) * 100}%`, background: it.color ?? p.barColor }} />
+              <span className="bl-line" aria-hidden="true">
+                <i style={{ width: `${(measure(it) / max) * 100}%`, '--bar': it.color ?? p.barColor } as React.CSSProperties} />
               </span>
             </span>
             {p.spark && <Spark values={p.spark[it.key]} />}

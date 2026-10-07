@@ -46,7 +46,7 @@ export function Crawlers({ site, query }: { site: Site; query: ReportQuery }) {
 
   if (err) return null
   return (
-    <Card variant="open" className="crawl" label={copy.title}>
+    <Card className="crawl" label={copy.title}>
       <div className="crawl-head">
         <div className="tabs" role="tablist" aria-label={copy.tabs}>
           {KINDS.map((k) => (

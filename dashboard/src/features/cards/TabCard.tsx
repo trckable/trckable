@@ -34,7 +34,7 @@ function read(site: string, card: string): string | null {
 }
 
 /** `want`: a tab the address asks for (a funnel in it), which wins over the remembered one while it is there. */
-export function TabCard({ card, site, label, tabs, want, more }: { card: string; site: string; label: string; tabs: CardTab[]; want?: string; more?: ReactNode }) {
+export function TabCard({ card, site, label, icon, tabs, want, more }: { card: string; site: string; label: string; icon?: ReactNode; tabs: CardTab[]; want?: string; more?: ReactNode }) {
   const prefix = useId().replace(/:/g, '') + card
   const [asked, setAsked] = useState(() => want ?? read(site, card))
   const [wanted, setWanted] = useState(want)
@@ -64,7 +64,7 @@ export function TabCard({ card, site, label, tabs, want, more }: { card: string;
   }, [card, site, ids]) // eslint-disable-line react-hooks/exhaustive-deps -- pick only sets this card's own state
   if (!active) return null
   return (
-    <Card variant="open" className="tc" label={label} data={{ 'data-card': card }}>
+    <Card className="tc" icon={icon} title={label} label={label} data={{ 'data-card': card }}>
       {more ? (
         <div className="kit-tabsrow">
           <Tabs prefix={prefix} label={label} tabs={tabs} value={active.id} onChange={pick} />

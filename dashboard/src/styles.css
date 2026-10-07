@@ -587,6 +587,7 @@ textarea:focus-visible {
 }
 .bl-row {
   position: relative;
+  isolation: isolate;
   min-height: 44px;
   width: 100%;
   padding: 6px 4px;
@@ -602,7 +603,7 @@ textarea:focus-visible {
 }
 .bl-row:hover,
 .bl-row:focus-visible {
-  background: color-mix(in srgb, var(--text) 5%, transparent);
+  background: transparent;
   outline: none;
 }
 .bl > :last-child,
@@ -621,15 +622,23 @@ textarea:focus-visible {
   font-size: 13px;
 }
 .bl .bl-line {
-  margin: 0;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: 6px;
+  pointer-events: none;
 }
 .bl .bl-line i {
-  opacity: 0.85;
-  transition: width 0.12s var(--ease), opacity 0.15s;
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bar, var(--text)) 13%, transparent);
+  transition: width 0.12s var(--ease);
 }
 .bl-row:hover .bl-line i,
 .bl-row:focus-visible .bl-line i {
-  opacity: 1;
+  background: color-mix(in srgb, var(--bar, var(--text)) 20%, transparent);
 }
 .bl-val,
 .bl-sub,
@@ -1884,7 +1893,7 @@ body[data-mode='full'] .app {
 }
 /* The overview sets its own inner spacing (the tiles and the chart each pad
    themselves), so the modes' card padding stays off it. */
-body[data-mode] .kit-card.open.overview {
+body[data-mode] .kit-card.overview {
   padding: 0;
 }
 .switch:disabled {
@@ -2517,7 +2526,7 @@ body[data-mode] .kit-card.open.overview {
 /* ---- Overview: the key numbers and the chart, one section -------------------
    The dialogs' soft light across the top; each number on a quiet tile with its
    own icon; the one being charted is lit. */
-.kit-card.open.overview {
+.kit-card.overview {
   gap: 0;
   padding: 0;
   border-top: 0;
@@ -2914,7 +2923,7 @@ body[data-mode] .kit-card.open.overview {
 .app .kit-card.overview .kpis {
   padding: 0;
   gap: 0;
-  border-top: 1px solid var(--grid);
+  border-top: 0;
   border-bottom: 1px solid var(--grid);
 }
 .app .kit-card.overview .kpi {
@@ -2929,26 +2938,6 @@ body[data-mode] .kit-card.open.overview {
 }
 .app .cards2 {
   gap: 44px;
-}
-.app .all-stats {
-  gap: 0;
-  border-top: 1px solid var(--grid);
-  border-bottom: 1px solid var(--grid);
-}
-.app .all-stat {
-  padding: 14px 16px;
-  border: 0;
-  border-radius: 0;
-  background: none;
-}
-.app .all-stat + .all-stat {
-  border-left: 1px solid var(--grid);
-}
-.app .all-tile {
-  padding: 8px 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
 }
 @media (max-width: 640px) {
   .app .kit-card.overview .kpi:nth-child(odd) {

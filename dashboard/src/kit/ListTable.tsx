@@ -1,6 +1,6 @@
 // A card with a small table: a quiet header row, then one line per row, numbers
 // right-aligned. Put a StatusTag in a cell for a state. With `pick` each row is
-// a button on its first cell (and `bar` draws a thin share bar under it).
+// a button on its first cell (and `bar` fills the row softly from the left to its share).
 import type { ReactNode } from 'react'
 import { Card, type CardProps } from './Card'
 import { clampPct } from './model'
@@ -9,7 +9,7 @@ export type Column<R> = { key: string; head: ReactNode; cell: (row: R) => ReactN
 
 export type RowPick<R> = { onPick: (row: R) => void; label: (row: R) => string; title?: (row: R) => string }
 
-type Props<R> = Pick<CardProps, 'title' | 'aside' | 'onOpen' | 'openLabel' | 'stretch' | 'variant' | 'className'> & {
+type Props<R> = Pick<CardProps, 'icon' | 'status' | 'title' | 'aside' | 'onOpen' | 'openLabel' | 'stretch' | 'variant' | 'className'> & {
   columns: Column<R>[]
   rows: R[]
   rowKey: (row: R) => string
@@ -48,9 +48,7 @@ export function ListTable<R>({ columns, rows, rowKey, bare, pick, bar, ...card }
                     c.cell(r)
                   )}
                   {bar && i === 0 && (
-                    <span className="kit-rowbar" aria-hidden="true">
-                      <i style={{ width: `${clampPct(bar(r))}%` }} />
-                    </span>
+                    <span className="kit-rowfill" aria-hidden="true" style={{ width: `${clampPct(bar(r))}%` }} />
                   )}
                 </td>
               ))}

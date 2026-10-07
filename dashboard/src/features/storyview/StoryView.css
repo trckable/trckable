@@ -95,23 +95,7 @@
   text-decoration: underline;
 }
 .sv-chart {
-  display: flex;
-  flex-direction: column;
   gap: 10px;
-  padding: 18px 22px 14px;
-  background: var(--surface);
-  border: 1px solid var(--grid);
-  border-radius: 16px;
-}
-.sv-chart-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 13px;
-}
-.sv-chart-head b {
-  font-size: 15px;
 }
 .sv-chart-body {
   display: grid;
@@ -208,34 +192,6 @@
 .sv-answer.page {
   grid-column: span 5;
 }
-/* The open-card look: a hairline and no fill, the way the light header sits. */
-.story-view .kit-card:not(.accent):not(.warn) {
-  border-color: var(--grid);
-  background: none;
-}
-.story-view .kit-card:hover {
-  transform: none;
-}
-.sv-q {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-}
-.sv-q-i {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--accent);
-}
-.sv-answer.fix .sv-q-i {
-  background: color-mix(in srgb, var(--warn) 14%, transparent);
-  color: var(--warn);
-}
 .sv-answer.fine .kit-word {
   margin-bottom: 4px;
 }
@@ -297,9 +253,6 @@
 .sv-link:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
-}
-.sv-answer.fix .sv-link {
-  color: var(--warn);
 }
 .sv-take {
   margin: 0;

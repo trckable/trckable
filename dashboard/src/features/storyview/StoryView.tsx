@@ -2,7 +2,9 @@
 // each, the visitors chart with its moments numbered, and the five questions
 // answered, each with a button into Explore. Rules over the report only; its
 // own chunk, loaded when the view is on (Dashboard).
+import { ChartLine } from 'lucide-react'
 import { lazy, Suspense, useMemo, useState } from 'react'
+import { Card } from '../../kit/Card'
 import { TimeChart } from '../../charts/GuardedChart'
 import type { Report, ReportQuery, Site } from '../../lib/api'
 import { type Range } from '../../lib/dates'
@@ -116,13 +118,9 @@ export default function StoryView(p: StoryViewProps) {
         {h.note && <p className="sv-note">{h.note}</p>}
       </section>
 
-      <Tiles tiles={facts.tiles} series={cur.series.map((x) => x.visitors)} onConnect={() => setConnect(true)} />
+      <Tiles tiles={facts.tiles} series={cur.series.map((x) => x.visitors)} revenue={p.money ? cur.series.map((x) => x.revenue ?? 0) : undefined} onConnect={() => setConnect(true)} />
 
-      <section className="sv-chart" aria-label={copy.chartTitle}>
-        <div className="sv-chart-head">
-          <b>{copy.chartTitle}</b>
-          {marks.length > 0 && <span className="faint">{copy.chartHint}</span>}
-        </div>
+      <Card className="sv-chart" icon={<ChartLine size={15} strokeWidth={1.8} />} title={copy.chartTitle} status={marks.length > 0 ? copy.chartHint : undefined} label={copy.chartTitle}>
         <div className="sv-chart-body">
           <div className="sv-plot" role="img" aria-label={copy.chartLabel}>
             <TimeChart
@@ -151,7 +149,7 @@ export default function StoryView(p: StoryViewProps) {
             ))}
           </ol>
         </div>
-      </section>
+      </Card>
 
       <Answers answers={facts.answers} onConnect={() => setConnect(true)} onGoal={p.onGoal} site={p.site} hints={hints} onAway={away} />
       <Ask />

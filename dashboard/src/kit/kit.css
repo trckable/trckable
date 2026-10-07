@@ -47,8 +47,9 @@
 /* Numbers */
 .kit-val {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 10px;
+  gap: 6px 10px;
   margin-top: 10px;
   line-height: 1;
 }
@@ -90,8 +91,7 @@
 /* Metric + area */
 .kit-metric .kit-area {
   display: block;
-  height: 64px;
-  margin: 12px -20px -18px;
+  height: 56px;
 }
 .kit-metric .kit-area svg {
   display: block;
@@ -374,44 +374,14 @@ button.kit-ask:hover {
 }
 
 /* Finding and insight */
-.kit-finding {
-  min-height: 220px;
-}
-.kit-tagchip {
-  padding: 5px 10px;
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-  border-radius: 999px;
-  color: var(--accent);
-  font-size: 12px;
-}
-.kit-ring {
-  position: absolute;
-  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
-  border-radius: 50%;
-  pointer-events: none;
-}
-.kit-ring.r1 {
-  width: 320px;
-  height: 320px;
-  right: -120px;
-  top: -140px;
-}
-.kit-ring.r2 {
-  width: 200px;
-  height: 200px;
-  right: -40px;
-  top: 40px;
-}
 .kit-say {
-  max-width: 24ch;
-  margin: auto 0 0;
-  position: relative;
+  max-width: 30ch;
+  margin: 12px 0 0;
   font-size: 22px;
   line-height: 1.25;
   letter-spacing: -0.01em;
 }
 .kit-say b {
-  color: var(--accent);
   font-weight: 600;
 }
 .kit-text {
@@ -557,8 +527,19 @@ button.kit-ask:hover {
 }
 
 /* Rows that open something: the first cell's button covers the whole row */
-.kit-table tr.pick {
+.kit-table tr {
   position: relative;
+  isolation: isolate;
+}
+.kit-rowfill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  pointer-events: none;
 }
 .kit-table tr.pick td {
   padding: 0;
@@ -614,10 +595,6 @@ button.kit-ask:hover {
 
 /* Phone scale: the least a finger target is */
 @media (max-width: 640px) {
-  .kit-metric .kit-area {
-    margin-inline: calc(var(--ph-pad, 16px) * -1);
-    margin-bottom: calc(var(--ph-pad, 16px) * -1);
-  }
   .kit-seg button {
     min-width: var(--ph-hit);
     min-height: var(--ph-hit);
@@ -749,9 +726,11 @@ button.kit-ask:hover {
   flex-direction: column;
   min-width: 0;
 }
-.kit-panel .kit-card.open {
-  padding-top: 0;
-  border-top: 0;
+.kit-panel .kit-card {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
 }
 .kit-panel .card {
   padding: 0;
@@ -766,4 +745,100 @@ button.kit-ask:hover {
 }
 .kit-panel .kit-head {
   min-height: 26px;
+}
+
+/* The chart slot: runs to the card's bottom and side edges */
+.kit-chart {
+  display: block;
+  margin: 12px -18px -16px;
+}
+@media (max-width: 640px) {
+  .kit-chart {
+    margin-inline: calc(var(--ph-pad, 16px) * -1);
+    margin-bottom: calc(var(--ph-pad, 16px) * -1);
+  }
+}
+
+/* A big number with its name beside it, chips under it, a segmented bar at the edge */
+.kit-val-name {
+  color: var(--text-2);
+  font-size: 15px;
+}
+.kit-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.kit-chip {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--row);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12px;
+}
+button.kit-chip {
+  cursor: pointer;
+}
+button.kit-chip:hover {
+  color: var(--text);
+}
+button.kit-chip:focus-visible {
+  outline: 2px solid var(--accent);
+}
+.kit-chip b {
+  color: var(--text);
+  font-weight: 500;
+}
+@media (max-width: 640px) {
+  button.kit-chip {
+    min-height: var(--ph-hit);
+  }
+}
+.kit-segbar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  margin-top: 4px;
+}
+.kit-segbar i {
+  display: block;
+  min-width: 4px;
+  opacity: 0.7;
+}
+
+/* An empty or connect state: one dashed line with its action, no big button */
+.kit-linkline {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border-2);
+  border-radius: 10px;
+  background: none;
+  color: var(--accent);
+  font: 500 13px var(--font);
+  text-align: left;
+  cursor: pointer;
+}
+.kit-linkline:hover {
+  border-color: var(--accent);
+}
+.kit-linkline:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .kit-linkline {
+    min-height: var(--ph-hit);
+  }
+}
+.tc > .kit-head {
+  margin-bottom: 6px;
 }
