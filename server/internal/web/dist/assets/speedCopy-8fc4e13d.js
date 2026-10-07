@@ -1,1 +1,0 @@
-import{Gr as e}from"./core-58de5bf0.js";var t=e(`overview.speed`,{speed:`Replay speed`,speedNow:e=>`Replay speed: ${e}`,playsIn:e=>`plays in ${e}`,speedKeys:`Slower [  Faster ]`});export{t};
