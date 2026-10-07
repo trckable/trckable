@@ -9,18 +9,30 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- Header: a light header that scrolls away, and one control line that stays at the top (filters on the left, the period on the right, glass with the site's name once the page runs under it); Live | Data and Story | Explore are plain text tabs; the Data and All sites cards lose their boxes for hairlines; on a phone the line holds the tabs, a filter button and a short period that each open a sheet.
+
+- The searchable lists (timezone, currency), the ⋯ menus and the Create menu now open the same way as the other pop-ups: same placement, keys and phone sheet.
+
+## 0.6.4 (7 Oct 2026)
+
 ### Added
 
+- Three short hints, one at a time beside what they are about, at most one a visit: that each Story answer opens the full picture, that a row filters the page, and that Peek is a key press away. Got it puts one away for good, and Turn hints off silences them all; read-only people and shared links see only the first two.
 - Live: a row of three cards under the panels, today so far against the same time last week, the pages people are on right now, and where they are from, each opening Data.
-
 - Connect crawler data is a three-step wizard with a progress bar.
 
 ### Changed
 
 - All sites: the summary cards and each site card are redrawn with a soft area chart of the days behind the number, a pill for the move, and the site's own colour on its card; Milestones shows each next step as a gauge.
 - Story's takeaway now says why when the data shows one: the page, referrer, campaign or country that explains at least half of the move ("most of it from Kosovo").
+
 - Data: Sources shows the channels as a ring with thick bars, Goals gets an icon, a plain name and a status for each goal plus a small visit-to-goal funnel, and Pages, Locations and Devices use the same bars; the rows' small charts are gone.
 - Story: the four key numbers are cards with a pill for the move (Visitors draws its days behind the number, Revenue offers a Connect chip), "Did it work?" is a finding, "Is it good or bad?" is a one-word verdict, and the other answers sit in open, hairline cards.
+- One rule for "busier than usual": Live, the surge card, the busy-moment marker and the Traffic surge alert all use at least one and a half times the usual number of people online and 10 more, so a site sees the same answer everywhere (the surge card used to wait for twice the usual).
+
+- Live: the three cards under the panels are drawn with the shared card kit and the open look (hairlines, no boxes), and Data's goal status is the same small tag as elsewhere.
 
 ## 0.6.3 (7 Oct 2026)
 
@@ -28,7 +40,6 @@ section into the release.
 
 - All sites has a Cards | List switch next to Sort; your choice is remembered, and until you pick it stays automatic (cards up to 8 sites, a list above).
 - Story opens with a setup card while a first step is open: install the snippet, verify tracking, set a goal, connect revenue. Steps tick from your real data, one button leads to the next open one, and Later hides it for a week. It replaces the two small step chips in the header.
-
 
 ### Changed
 
@@ -51,7 +62,6 @@ section into the release.
 - The Calendar view in Data (the Chart | Calendar switch and the month grid); old `cal=` links open the chart.
 - The Online now tile in the key numbers: the Live | Data switch already says the number.
 
-
 ### Changed
 
 - Milestones count in finer steps (1, 2.5, 5 per power of ten) and the list shows how far the next one is, with a rough number of days at the recent pace; the steps in between are recorded quietly, with no notice, and sites already past them get no flood.
@@ -62,14 +72,12 @@ section into the release.
 
 ## 0.6.1 (6 Oct 2026)
 
-
 ### Changed
 
 - All sites is calmer: Online now first among four small cards with icons, a shorter chart that starts where tracking started ("Tracking since …"), and up to 8 sites as cards (icon, who is online, sparkline, visitors, bounce, amber at 75% and up) or, above 8, a slim list; a Sort menu beside Search sites; revenue shows only once payments are connected.
 - On All sites the open-site arrow no longer covers the online count or the last column, and Shift + Enter on a row opens the site.
 
 ## 0.6.0 (6 Oct 2026)
-
 
 ### Changed
 
@@ -142,7 +150,6 @@ section into the release.
 - Settings → Data & privacy → Exclude IP ranges: up to 50 addresses or ranges (`203.0.113.7`, `198.51.100.0/24`, `2001:db8::/32`), for a home or office. A visit from one is dropped before the address is looked up or hashed: it is not counted, not billed, not in any report, and nothing about it is kept. Only your own list is stored, in the site's settings (the store gains one column on upgrade). Behind the npm proxy or another trusted proxy the address is the one it forwards with the site's key. `exclude_ips` is on `GET` and `PUT /api/v1/sites/{site}/config`; a bad entry or a fifty-first is refused with a 400.
 - Heatmaps, without recording anyone: an opt-in module (Settings → Modules, off for a new site; its size and what it keeps are in the dialog before it turns on). A heatmap icon appears on hover over a row of Pages (entry, top and exit), and opens that page in a frame that runs nothing, with where people clicked laid over it as glows, a scroll map that is the depth the base script already sends (nothing new is collected for it), and marks for dead clicks (something that looks clickable, and the page then changed nothing) and rage clicks (three on one element within a second). The width is switchable between phone, tablet and desktop; beside the page are the most clicked elements and the form fields people reached and the one they left a form at. When a page has 100 views in a day and the module is off, one side card suggests it (under the one-card-a-day rule), with a preview on example data and "Turn on", which opens Modules. The frame is a page of this server (`GET /api/v1/sites/{site}/heat-frame?path=…`, for people who can read the site) that frames your own site with `sandbox` set to nothing (no scripts, no forms, no referrer) under a policy of its own: it may frame your domain and its subdomains and be framed by the dashboard only, so the dashboard's own policy still frames this server and nothing else. One GET of your own page, through the guard the install check uses, tells whether it refuses framing (`X-Frame-Options`, or a `frame-ancestors` that leaves this server out); if it does, or cannot be read, or the page is a sign-out or unsubscribe address, the frame says so and loads nothing. The module is a script of its own, `/js/<site id>.js` with the module after the base script, so the base script is the same bytes with it off and the 2 KB budget is untouched; the module has a budget of its own, 1.5 KB gzip, gated in CI (it is 1,430 B). It reports to `POST /api/h` (answers 202 and does nothing while the module is off), is quiet for Do Not Track, Global Privacy Control, excluded paths and addresses and robots, and is not sent while Cookie consent is on, because it cannot read a visitor's answer. `data-heat-sample="0.2"` on the tag reports one page view in five, and `0` none. In a site with hash routes (`data-hash`) a page is its path and its hash. A form is its id or name when that is a plain word, else "form"; a field is its name with the numbers of a list taken out, and one with a run of three digits in it is not named at all; the server takes nothing the script would not send. Days are the site's own days, strict bot filtering applies as it does to events, and one site holds at most 5,000 counters of the 50,000 in memory. Collected: the element clicked (tag, id and class names only, never text) and the tenth of it that was hit; dead and rage clicks; the name of a form field reached and of the one a form was left at. Never: a recording, a visitor or session id, a cookie or browser storage, typed text or any field's value, a password field (not even named), the mouse's path or the order of anything. A batch is added to counters in memory (at most 50,000 at a time) and written once a minute and at shutdown, to a new table `heat_daily` (added on upgrade): one row per site, UTC day, page, window width, element and place in the element, with counts and the sums an average place is worked out from. At most 20,000 rows a site a day (the page's own view count is never dropped), per-address and per-site rate limits, and the rows go with a site's deletion and its retention. `GET /api/v1/sites/{site}/heat?path=/pricing&width=1280&from=…&to=…` reads one page (404 while the module is off) and `GET /api/v1/sites/{site}/heat/ask` says whether a page had 100 views today with the module off. Settings → Modules, and the Pages icon, follow a change at once without a reload. Lazy: the first load did not grow.
 
-
 ### Changed
 
 - The month's pace moved from the chart's head into the Visitors tile, as a quiet "→ ~33k this month" after the change; its tooltip says "On pace for ~33,000 this month". It shows only while the period includes today, and follows the same rules (nothing before three whole days).
@@ -201,7 +208,6 @@ section into the release.
 - `trckabled restore s3:` restores straight from the off-site bucket in `TRCKABLE_BACKUP_S3`: `s3:` alone takes the newest backup, `s3:<name>` a given one. The file is downloaded to a temporary folder and removed after the restore.
 - A share link can be copied again: each row in Settings → Sharing has Copy and Open. The link is kept sealed with the instance key (the one that protects payment provider keys), so a copy of the database alone cannot read it; a password link still needs its password, which is never kept in the clear. A link made before this has no address to copy: its row offers New address, which asks first, because the old address and the sessions opened through it stop working at once. If the instance key is missing or changed, a row falls back to New address and nothing fails. A row can also make a new address for a link that has one (a quiet icon after Open, asking first, at most ten times in ten minutes per site), so a link that got out can be replaced; its name, settings, password and history stay. A link opened at the moment its address was replaced no longer gets a session with the old one. The sealed address is bound to its link. Without `TRCKABLE_SECRET`, the key is the `secret.key` file in the data directory, so a copy of the whole data directory (database and `secret.key`) yields working share URLs: keep backups as private as the instance.
 
-
 ### Changed
 
 - Every key number has a small mark before its name (Visitors, Pageviews, Revenue, Conversion, Per visitor, Bounce rate, Session time; Online now keeps its live dot), and a site with no payment provider connected shows a quiet dollar icon at the strip's bottom right, for an owner (not on a shared link), that opens Settings → Payments. It sits in the free room only: where the tiles wrap, it is hidden. The marks load after the first paint, so the first load does not grow.
@@ -256,7 +262,6 @@ section into the release.
 
 ## 0.5.7 (30 Sep 2026)
 
-
 ### Changed
 
 - Widgets have their own section in a site's settings, next to Sharing: they go on your own pages, so they no longer sit under share links.
@@ -294,7 +299,6 @@ section into the release.
 - Connecting Paddle with one key finds the right Paddle by itself: live and sandbox keys are told apart by the key, an older key without a prefix is tried against live and then the sandbox, and a sandbox connection is tagged Sandbox and kept out of the real numbers. A key pasted with spaces or quotes is cleaned. A failed connect says what is wrong: the key wasn't accepted, which permission is missing, or that Paddle couldn't be reached.
 - Closing a dialog gives focus back to the button that opened it, also when a field in the dialog took focus as it opened.
 
-
 ### Changed
 
 - People is one compact row per person: a stack of site icons with "N of M sites" that opens a searchable list (each tick is saved at once), and a role pill that opens the two roles; every role change asks first, and making someone an owner takes one tick ("I trust them with all of this"). On a phone the row is two lines and the popovers are sheets from the bottom.
@@ -304,7 +308,6 @@ section into the release.
 - On a phone, the Live | Data switch sits in the control row, not only in the sheet.
 
 ## 0.5.4 (29 Sep 2026)
-
 
 ### Changed
 
@@ -316,7 +319,6 @@ section into the release.
 
 ## 0.5.3 (29 Sep 2026)
 
-
 ### Changed
 
 - The chart's cursor is a quiet dashed line in the series colour from the top to the axis, with a date pill under it and a haloed point that eases from bucket to bucket; Live's line chart matches.
@@ -325,7 +327,6 @@ section into the release.
 - The dashboard's first load is 2.4 KB lighter: the milestones moment and the site layout code load when needed.
 
 ## 0.5.2 (29 Sep 2026)
-
 
 ### Changed
 
@@ -339,7 +340,6 @@ section into the release.
 - The Milestones window is a hero for the newest milestone (big badge, the number, one sentence, Share the card and Replay the way there), a progress ring for each next step with what is left, and every milestone reached as a badge tile under its year; the badge pops in, the rings fill and the tiles rise in, all still with reduced motion, and a phone gets a full-screen sheet.
 
 ## 0.5.1 (29 Sep 2026)
-
 
 ### Changed
 
@@ -375,7 +375,6 @@ section into the release.
 - Milestones: the site notices round numbers (lifetime visitors, pageviews, countries and revenue in the site's currency, a record day, the first goal and the first sale), checked once each finished day. One quiet line shows the biggest new one; ⋯ → Milestones keeps the timeline with Replay, Share and the next step of each. Share draws a 1200 × 630 card (dark or light, PNG drawn on the server) and makes a revocable link, `/m/{token}`, whose page carries the card as its preview; money shows its amount only with Show amount on. Closing a moment is per person. Settings → Notes turns them off; the optional Milestone reached alert is off by default. API: `GET/PUT /api/v1/sites/{site}/milestones`, `POST …/milestones/seen`, `GET …/milestones/{kind}/{step}/card`, `POST`/`DELETE …/milestones/{kind}/{step}/share`; MCP: `trckable_milestones`.
 - People shows which sites each viewer may see, on their row: All sites, or a count; click it to choose. Owners set it for their own account through `GET /api/v1/site-access` and `PUT /api/v1/site-access/{id}`.
 
-
 ### Changed
 
 - `/metrics` stays open as before; set `TRCKABLE_METRICS_TOKEN` to require that bearer token.
@@ -398,7 +397,6 @@ section into the release.
 - The Ask panel shows how to connect your own assistant over MCP: the config to paste, a link to the setup docs and a button that creates a read-only key.
 - Modules drive the whole dashboard from one registry: a module that is off takes every way in with it (its cards, Create entries, filters, tabs and settings section), and the server refuses its writes with 404.
 - Notes is a module of its own, on by default: off, the chart's markers, the notes list and adding notes go, and existing notes are kept.
-
 
 ### Changed
 
@@ -428,7 +426,6 @@ section into the release.
 - Replay is a small ▶ in the chart's corner; its speed and the scrubber show on hover or focus. Online now pulses while anyone is on the site and its count rolls to each new number.
 - Settings → General → Reports has "Pages after the #" for hash-routed apps (/#/pricing): on, the part after # counts as its own page (with `data-hash` on the snippet); off, as before, it is dropped.
 - TRADEMARKS.md: the code is open source (AGPL-3.0 and MIT), the name trckable and the logo are not; a fork is welcome under its own name and logo.
-
 
 ### Changed
 

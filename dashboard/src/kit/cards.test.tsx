@@ -19,6 +19,24 @@ describe('Card', () => {
   })
 })
 
+describe('Card stretch and the open look', () => {
+  it('makes the title the one button that opens it, with the corner only a mark', () => {
+    const h = html(<Card title="Today" variant="open" stretch onOpen={() => {}} openLabel="Today: open">x</Card>)
+    expect(h).toContain('kit-stretch')
+    expect(h).toContain('kit-card open stretch')
+    expect(h.match(/<button/g)).toHaveLength(1)
+  })
+})
+
+describe('ListTable rows that open something', () => {
+  it('puts a button on the first cell and a bar under it', () => {
+    const h = html(<ListTable bare title="Pages" rows={[{ k: '/a', n: 2 }]} rowKey={(r) => r.k} columns={[{ key: 'k', head: 'Page', cell: (r) => r.k }, { key: 'n', head: 'N', cell: (r) => r.n, num: true }]} pick={{ onPick: () => {}, label: (r) => `Open ${r.k}` }} bar={(r) => r.n * 10} />)
+    expect(h).toContain('aria-label="Open /a"')
+    expect(h).toContain('width:20%')
+    expect(h).not.toContain('<thead')
+  })
+})
+
 describe('Pill and StatusTag', () => {
   it('carry their tone as a class', () => {
     expect(html(<Pill tone="bad">▼ 3%</Pill>)).toContain('kit-pill bad')
@@ -45,6 +63,12 @@ describe('MetricArea', () => {
   })
   it('draws the area in the colour it is given', () => {
     expect(html(<MetricArea label="A" value="1" series={[1, 2, 3]} color="#3b82f6" />)).toContain('#3b82f6')
+  })
+})
+
+describe('Area with a second line', () => {
+  it('draws the dashed line too', () => {
+    expect(html(<Area values={[1, 2]} was={[2, 3, 4]} slots={24} color="red" />)).toContain('kit-was')
   })
 })
 

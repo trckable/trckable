@@ -54,7 +54,6 @@ export function MethodTabs({ value, onChange }: { value: string; onChange: (id: 
         placeholder={copy.moreSearch}
         value={isCommon(value) ? undefined : value}
         onPick={onChange}
-        align="right"
         items={moreItems()}
         trigger={() => <span className="inst-more">{copy.more}</span>}
       />

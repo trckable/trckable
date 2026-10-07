@@ -424,7 +424,6 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
       <Row label="Timezone" hint="Which day and hour a visit belongs to">
         <Picker
           label="Timezone"
-          align="right"
           placeholder="Search a city or zone…"
           value={site.timezone}
           onPick={(timezone) => save({ timezone })}
@@ -435,7 +434,6 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
       <Row label="Currency" hint="Revenue is converted at the payment date">
         <Picker
           label="Currency"
-          align="right"
           placeholder="Search a currency…"
           value={site.currency}
           onPick={(currency) => save({ currency })}

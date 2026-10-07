@@ -34,23 +34,30 @@ export function HeroNumber({ title, value, pill, sub, onOpen }: { title: ReactNo
   )
 }
 
-export type Split = { key: string; label: ReactNode; share: number; color?: string }
+export type Split = { key: string; label: ReactNode; share: number; color?: string; onPick?: () => void; pickLabel?: string }
 
-export function SplitBlocks({ title, items, onOpen }: { title: ReactNode; items: Split[]; onOpen?: () => void }) {
+export function SplitBlocks({ title, items, onOpen, openLabel, stretch, variant, className, children }: { title: ReactNode; items: Split[]; onOpen?: () => void; openLabel?: string; stretch?: boolean; variant?: 'plain' | 'open'; className?: string; children?: ReactNode }) {
   return (
-    <Card title={title} onOpen={onOpen}>
+    <Card title={title} onOpen={onOpen} openLabel={openLabel} stretch={stretch} variant={variant} className={className}>
       <div className="kit-blocks">
         {items.map((it) => (
           <div key={it.key}>
             <span className="kit-sub">
               <i className="kit-dot" style={{ background: it.color }} />
-              {it.label}
+              {it.onPick ? (
+                <button type="button" className="kit-pick" onClick={it.onPick} aria-label={it.pickLabel}>
+                  {it.label}
+                </button>
+              ) : (
+                it.label
+              )}
             </span>
             <b className="num">{kitWords.pct(Math.round(clampPct(it.share)))}</b>
             <i className="kit-blk" style={{ background: it.color, height: 20 + clampPct(it.share) * 0.5 }} />
           </div>
         ))}
       </div>
+      {children}
     </Card>
   )
 }

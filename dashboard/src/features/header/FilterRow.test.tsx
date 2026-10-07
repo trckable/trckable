@@ -71,18 +71,25 @@ describe('the filter chips', () => {
     expect(button(/^Save view$/)).toBeTruthy()
   })
   it('fold the chips that do not fit into +N more, and list them all there', () => {
-    // A row 300 px wide, each chip 120 px: one chip and the +N chip fit.
+    // A row 300 px wide, each chip 200 px: one chip and the +N chip fit.
     const row = { clientWidth: 300 }
     const sizes = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (this: HTMLElement) {
-      if (this.matches('[data-chip]')) return 120
+      if (this.matches('[data-chip]')) return 200
       return this.matches('.chip.more.icon') ? 36 : 84
     })
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => row.clientWidth)
-    draw([{ dim: 'channel', value: 'Direct' }, { dim: 'country', value: 'DE' }, { dim: 'device', value: 'Mobile' }])
+    draw([{ dim: 'channel', value: 'Direct' }, { dim: 'country', value: 'DE' }])
     expect(chips()).toHaveLength(1)
-    expect(button(/^\+2 more$/)).toBeTruthy()
-    act(() => button(/^\+2 more$/)?.click())
-    expect(host.querySelectorAll('.menu-row')).toHaveLength(3)
+    expect(button(/^\+1 more$/)).toBeTruthy()
+    act(() => button(/^\+1 more$/)?.click())
+    expect(host.querySelectorAll('.menu-row')).toHaveLength(2)
     sizes.mockRestore()
+  })
+  it('three or more filters are one "N filters" chip that lists them', () => {
+    draw([{ dim: 'channel', value: 'Direct' }, { dim: 'country', value: 'DE' }, { dim: 'device', value: 'Mobile' }])
+    expect(chips()).toHaveLength(0)
+    act(() => button(/^3 filters$/)?.click())
+    expect(host.querySelectorAll('.menu-row')).toHaveLength(3)
+    expect(button(/^Add a filter$/)).toBeTruthy()
   })
 })
