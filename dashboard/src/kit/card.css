@@ -179,3 +179,29 @@ button.kit-go::after {
   text-align: right;
   text-overflow: ellipsis;
 }
+
+/* Two stat cards to a row leave no room beside the name: the status drops under it, whole words, never cut */
+@media (max-width: 640px) {
+  .kit-metric:not(.compact) .kit-head {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+  .kit-metric:not(.compact) .kit-head:has(.kit-status) .kit-title {
+    flex: 1 1 auto;
+    max-width: none;
+  }
+  .kit-metric:not(.compact) .kit-head .kit-status {
+    flex: 1 1 100%;
+    overflow: visible;
+    text-align: left;
+    white-space: normal;
+  }
+}
+
+/* A number switched onto the main chart is told by its border */
+.kit-card.press[aria-pressed='true'] {
+  border-color: var(--accent);
+}
+.kit-card.press.money[aria-pressed='true'] {
+  border-color: var(--money);
+}

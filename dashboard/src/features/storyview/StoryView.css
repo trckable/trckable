@@ -535,3 +535,8 @@
 .sv-hint-x:hover {
   background: var(--hover, rgba(127, 127, 127, 0.15));
 }
+@media (max-width: 640px) {
+  .sv-chart .kit-status {
+    display: none;
+  }
+}

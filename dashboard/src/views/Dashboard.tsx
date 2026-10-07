@@ -367,6 +367,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // By the hour, the chart stops at the hour it is now: the rest of today
   // has not happened, and is not a drop to zero.
   const nowHour = hourIn(site.timezone)
+  const kpiSeries = { visitors: series.map((x) => x.visitors), pageviews: series.map((x) => x.pageviews), revenue: money ? series.map((x) => x.revenue ?? 0) : undefined }
   const chartSeries = hours ? hours.current.series.filter((p) => p.t.slice(0, 13) <= nowHour) : series
   // What the chart shows follows the address, when this page can draw it (chartMetric).
   const canDraw = { money: !!money, days: !hours && data?.bucket === 'day' && !!cur?.days }
@@ -519,15 +520,14 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
 
       <StorySlot view={view} site={site} query={query} data={real} range={range} ready={hasData && !showInstall} waiting={waiting} loading={loading || firstLoad} money={money ? fmtM : undefined} narrow={narrow} onGoal={() => setAddGoals(true)}>
-      {/* One section for the period at a glance: the key numbers across the
-          top, the chart under them — they are one story, not two cards. */}
-      <OverviewCard status={vs}>
-      <KpiStrip
+      {/* The period at a glance: one card per key number, the chart in a card under them. */}
+      <KpiStrip series={kpiSeries}
         loading={firstLoad} vs={vs} metric={metric} can={canDraw} onPick={pick} expectMoney={hold.revenue}
         k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} blank={blank} site={site} bots={data?.bots}
         pace={live && !isShared() ? extra({ part: 'pace', site: site.id, today, filters: query.filters, test: query.testPayments }) : undefined}
         hint={compareOn && !scrubbing && !raced && !trailData ? visitorsHint({ site: site.id, period: view.period, day: range.to, filters: view.filters }) : undefined}
       />
+      <OverviewCard status={vs}>
 
       <div className={active ? 'overview-chart replaying' : 'overview-chart'} role="group" aria-label={`${name} over time`}>
         <ChartHead title={name}>

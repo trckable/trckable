@@ -161,3 +161,39 @@ test('a tap on the chart pins its card, and a tap outside lets it go', async ({ 
   await expect(page.locator('.overview-chart .time-tip')).toHaveCount(0)
   await ctx.close()
 })
+
+/** Cards that spill: a card whose content is wider than it is, or any box past the screen's edge (tab rows and the site-list scroller keep their own overflow). */
+function spills() {
+  const scroller = '.seg, .kit-tabs, .kit-subtabs, .kit-tabsrow, [data-scroll]'
+  const name = (e: Element) => (e.getAttribute('aria-label') || String(e.className)).slice(0, 50)
+  // Inside a card: any box past its edge (not a drawing's own marks, which the card clips, nor the replay slider, which is half a knob wider on each side by design).
+  const cards = [...document.querySelectorAll('.kit-card, .card')]
+    .filter((c) => {
+      const edge = c.getBoundingClientRect().right + 1
+      return [...c.querySelectorAll('*')].some((e) => !(e instanceof SVGElement) && !e.matches('input[type=range]') && !e.closest(scroller) && e.getBoundingClientRect().width > 0 && e.getBoundingClientRect().right > edge)
+    })
+    .map((e) => `card ${name(e)}`)
+  const past = [...document.querySelectorAll('main *, #root *')]
+    .filter((e) => {
+      const r = e.getBoundingClientRect()
+      return r.width > 0 && r.right > innerWidth + 0.5 && !e.closest(scroller)
+    })
+    .slice(0, 8)
+    .map((e) => `box ${name(e)}`)
+  return [...cards, ...past]
+}
+
+for (const [name, path, ready] of [
+  ['All sites', '/all', '.all-item'],
+  ['Story', '/example.com?view=data&v=story', '.sv-tile'],
+  ['Data, every card', '/example.com?view=data&v=explore&mode=full', '.kit-tabs'],
+  ['Live', '/example.com?view=live', '.live-view'],
+] as const) {
+  test(`${name}: no card is wider than it is, nothing passes the screen's edge (390 and 360)`, async ({ page }) => {
+    await page.goto(API + path)
+    await expect(page.locator(ready).first()).toBeVisible({ timeout: 20_000 })
+    expect(await page.evaluate(spills)).toEqual([])
+    await page.setViewportSize({ width: 360, height: 800 })
+    expect(await page.evaluate(spills)).toEqual([])
+  })
+}

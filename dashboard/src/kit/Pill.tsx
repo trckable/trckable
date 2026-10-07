@@ -2,7 +2,7 @@
 // quiet word. StatusTag is the same chip, smaller, for a table row.
 import type { ReactNode } from 'react'
 import type { Tone } from './model'
-import './kit.css'
+import './base.css'
 
 export function Pill({ tone = 'neutral', title, children }: { tone?: Tone; title?: string; children: ReactNode }) {
   return (

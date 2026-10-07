@@ -11,6 +11,9 @@ section into the release.
 
 ### Changed
 
+- Story: the five answers share one card anatomy (question and a quiet status on the top line, one big number with a chip, the answer as one line, one link, a chart to the bottom edge); the stat cards' statuses are short ("Far above normal") with the full line as the tooltip, and on a phone drop under the name instead of being cut.
+- Cards: the Data page's key numbers are cards on the card kit (icon tile and name, the number with its change chip, a soft chart to the bottom edge; the one on the main chart is told by its border). Live's two panels, the settings and health cards, the account and site cards share the same flat surface, icon tile and hover border.
+- Phone: stat cards on All sites and Story no longer cut their status or the Online now badge; the All sites period choice uses the full width.
 - Milestones: the milestone card is one flat card with the number, one line of context, Copy image and Share; the share image says Revenue milestone reached with the growth line when revenue is hidden.
 
 ## 0.6.5 (7 Oct 2026)

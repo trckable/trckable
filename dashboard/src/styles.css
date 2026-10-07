@@ -314,21 +314,32 @@ h2 {
     padding: 0 10px;
   }
 }
+/* The same flat surface as the kit's cards: a thin border that lights on hover or focus */
 .card {
   background: var(--surface);
-  border: 1px solid var(--grid);
-  border-radius: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-width: 0;
+  transition: border-color 0.15s;
+}
+.card:hover,
+.card:focus-within {
+  border-color: var(--accent);
 }
 .card-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
+}
+.card-head h2 {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-3);
 }
 /* With a fold button the title still comes first; everything else goes right. */
 .card-head .fold + h2 {
@@ -1490,17 +1501,14 @@ table.t td {
 .icon-tile {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   flex: none;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 6%, var(--surface-2)), var(--surface-2));
+  border-radius: 8px;
+  background: var(--row);
   color: var(--text-2);
 }
 .icon-tile.accent {
-  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
-  background: var(--accent-soft);
   color: var(--accent);
 }
 @media (max-width: 640px) {
@@ -2770,26 +2778,7 @@ body[data-mode] .kit-card.overview {
   background: transparent;
 }
 
-/* Cards you can click lift a little under the pointer. */
-.site-card,
-.person,
-.wg-row,
-.htile {
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s;
-}
-.site-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgb(0 0 0 / 0.28);
-}
-.person:hover,
-.wg-row:hover {
-  box-shadow: 0 6px 18px rgb(0 0 0 / 0.22);
-}
-@media (prefers-reduced-motion: reduce) {
-  .site-card:hover {
-    transform: none;
-  }
-}
+/* Flat, like the kit's cards: no lift, no shadow; the border lights on hover. */
 
 /* ---- Live ↔ Data ---------------------------------------------------------
    One app changing its mind, not two pages swapping (lib/viewTransition.ts).
@@ -2917,35 +2906,12 @@ body[data-mode] .kit-card.overview {
   cursor: default;
 }
 
-/* ---- Open cards (Data and All sites) ---------------------------------------
-   No boxes: hairlines between the number tiles, a hairline under each panel's
-   title row, and room between the panels instead of a frame around them. */
-.app .kit-card.overview .kpis {
-  padding: 0;
-  gap: 0;
-  border-top: 0;
-  border-bottom: 1px solid var(--grid);
-}
-.app .kit-card.overview .kpi {
-  padding: 14px 16px;
-}
-.app .kit-card.overview .kpi + .kpi {
-  border-left: 1px solid var(--grid);
-}
 .app .kit-card.overview .overview-chart {
   padding-left: 0;
   padding-right: 0;
 }
 .app .cards2 {
   gap: 44px;
-}
-@media (max-width: 640px) {
-  .app .kit-card.overview .kpi:nth-child(odd) {
-    border-left: 0;
-  }
-  .app .kit-card.overview .kpi {
-    border-bottom: 1px solid var(--grid);
-  }
 }
 
 /* ---- One button language ---------------------------------------------------

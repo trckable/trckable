@@ -2,46 +2,20 @@
    Light as type: no cards, icons or lines in the tiles; Online now pulses, and
    Replay is a small ▶ whose controls show on hover or focus. Loaded after
    styles.css; more specific where it overrides it. */
-/* The key numbers: one light strip, no boxes. A name, a number, a change. The
-   tracks are the ones seven tiles make (with payments), so a tile is as wide
-   with five: auto-fill keeps the empty ones, and the room sits on the right. */
+/* The key numbers: one kit card each (icon tile and name, the number with its change chip, a chart to the bottom edge). The tracks are the ones seven cards make, so a card is as wide with five: the room sits on the right. */
 .kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(max(118px, calc(100% / 7 - 1px)), 1fr));
-  gap: 4px 0;
-  padding: 10px 12px 0;
-  border-bottom: 1px solid var(--grid);
+  grid-template-columns: repeat(auto-fill, minmax(max(150px, calc((100% - 72px) / 7)), 1fr));
+  gap: 12px;
 }
-.kpi {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+.kpis .kit-card {
   min-width: 0;
-  margin: 0;
-  padding: 8px 12px 12px;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  container-type: inline-size;
 }
-button.kpi {
-  cursor: pointer;
-}
-.kpi .kpi-name,
-.kpi .label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  max-width: 100%;
+.kpi .kpi-name {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12.5px;
-  color: var(--text-3);
 }
 /* The mark's room is kept before it arrives (KpiMarks, a chunk of its own). */
 .kpi-ico {
@@ -50,43 +24,20 @@ button.kpi {
   width: 14px;
   height: 14px;
 }
-button.kpi:hover .kpi-name,
-button.kpi[aria-pressed='true'] .kpi-name {
-  color: var(--text);
-}
-.kpi .value {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: clamp(18px, 15cqi, 28px);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
+.kpi .kit-val {
+  min-height: 30px;
 }
 .kpi .value.skeleton {
   width: 62%;
   height: 26px;
-  /* As tall as the number that replaces it (its line is 1.25 of its size). */
-  margin: calc((1.25em - 26px) / 2) 0;
   border-radius: 7px;
 }
-/* The change: small, under the number, the arrow and its figure coloured and nothing else. */
-.kpi-delta {
+.kpi-delta:not(.kit-pill) {
+  display: block;
   min-height: 16px;
-  font-size: 12px;
-  line-height: 16px;
-  white-space: nowrap;
-  color: var(--text-2);
 }
-.kpi-delta.tone-up {
-  color: var(--up);
-}
-.kpi-delta.tone-down {
-  color: var(--down);
-}
-.kpi-delta.tone-flat {
-  color: var(--text-3);
+.kpi-sub {
+  flex-wrap: wrap;
 }
 /* The chip after the change (vs usual, the month's pace): on the change's own line, so the strip is as tall with it as without. A tile too narrow for both leaves it out. */
 .kpi-chip {
@@ -106,36 +57,10 @@ button.kpi[aria-pressed='true'] .kpi-name {
     display: none;
   }
 }
-/* The charted one is underlined, gold when it is money. */
-.kpi[aria-pressed='true']::after {
-  content: '';
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 0;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--accent);
-}
-.kpi.money[aria-pressed='true']::after {
-  background: var(--money);
-}
-button.kpi:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-  border-radius: 6px;
-}
 @media (max-width: 640px) {
   .kpis {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    padding: 6px 4px 0;
-  }
-  .kpi {
-    padding: 8px 8px 10px;
-  }
-  .kpi[aria-pressed='true']::after {
-    left: 8px;
-    right: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ph-gap, 12px);
   }
 }
 

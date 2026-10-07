@@ -6,6 +6,9 @@
 import type { ComponentProps, ReactNode } from 'react'
 import type { Delta } from '../../lib/format'
 import { useTween } from '../../lib/motion'
+import { Area } from '../../kit/Area'
+import { Card } from '../../kit/Card'
+import { toneColor, type Tone } from '../../kit/model'
 import { KpiMark } from './kpiMark'
 import { usePlayhead } from './playhead'
 import { copy } from './copy'
@@ -34,6 +37,8 @@ interface Props {
   tip?: string
   /** Which mark stands before the name (KpiMarks). */
   icon?: ComponentProps<typeof KpiMark>['k']
+  /** The chart slot: the number's days, drawn as a soft line to the card's bottom edge. */
+  series?: number[]
 }
 
 /** A number changes in a blink, not a count-up: switching period or number is instant. */
@@ -47,40 +52,63 @@ export function KpiTile(p: Props) {
   const v = p.live ? p.live(pos) : tweened
   const none = !!p.blank?.(pos)
   const cls = 'kpi' + (p.money ? ' money' : '')
-  const body = (
-    <>
+  const shown = !p.loading && !none
+  const tone = toneOfDelta(p.d)
+  const drawn = p.series && p.series.length > 1 && !p.loading
+  const props = {
+    className: cls,
+    icon: p.icon ? <KpiMark k={p.icon} /> : undefined,
+    title: (
       <span className="label kpi-name" title={tipped(p.label, p.tip)}>
-        {p.icon && <KpiMark k={p.icon} />}
         {p.label}
       </span>
-      {/* The skeleton is decorative: the loading bar at the top of the page
-          is the one thing that announces loading, and it says it once. */}
-      {p.loading ? <span className="value skeleton" aria-hidden="true" /> : <span className="value num">{p.value === undefined || none ? '–' : p.fmt(v)}</span>}
-      {p.d && !p.loading && !none && <Change d={p.d} vs={p.vs} hint={p.hint} pace={p.pace} />}
-      {!p.d && !p.loading && !none && p.pace && <span className="kpi-pace-row">{p.pace}</span>}
+    ),
+    chart: drawn ? <Area values={p.series as number[]} color={p.money ? 'var(--money)' : toneColor(tone)} /> : undefined,
+  }
+  const body = (
+    <>
+      <span className="kit-val">
+        {/* The skeleton is decorative: the loading bar at the top of the page
+            is the one thing that announces loading, and it says it once. */}
+        {p.loading ? <span className="value skeleton" aria-hidden="true" /> : <b className="value num">{p.value === undefined || none ? '–' : p.fmt(v)}</b>}
+        {p.d && shown && <Change d={p.d} vs={p.vs} />}
+      </span>
+      {shown && (p.hint || p.pace) && (
+        <span className="kit-sub kpi-sub">
+          {p.hint}
+          {p.pace}
+        </span>
+      )}
       {/* The change's line is kept while loading, and while a dash stands for nothing yet: the strip is as tall as it will be. */}
       {(p.loading || (none && p.d)) && <span className="kpi-delta" aria-hidden="true" />}
     </>
   )
-  if (!p.onClick) return <div className={cls}>{body}</div>
+  if (!p.onClick)
+    return (
+      <Card {...props}>
+        {body}
+      </Card>
+    )
   return (
-    <button type="button" className={cls} aria-pressed={p.pressed} onClick={p.onClick} title={tipped(copy.chartTile(p.label), p.tip)}>
+    <Card {...props} press={p.onClick} pressed={!!p.pressed} tooltip={tipped(copy.chartTile(p.label), p.tip)}>
       {body}
-    </button>
+    </Card>
   )
 }
+
+const TONE: Record<Delta['tone'], Tone> = { up: 'good', down: 'bad', flat: 'neutral' }
+const toneOfDelta = (d: Delta | null): Tone => (d ? TONE[d.tone] : 'neutral')
 
 /** A tooltip with its extra line under it, when there is one. */
 const tipped = (title: string, tip?: string) => (tip ? `${title}\n${tip}` : title)
 
-function Change({ d, vs, hint, pace }: { d: Delta; vs: string; hint?: ReactNode; pace?: ReactNode }) {
+function Change({ d, vs }: { d: Delta; vs: string }) {
   const label = copy.change(d.label, vs)
+  const tone = toneOfDelta(d)
   return (
-    <span className={`kpi-delta num tone-${d.tone}`} title={label}>
+    <span className={`kpi-delta kit-pill num ${tone}`} title={label}>
       <span aria-hidden="true">{d.short}</span>
       <span className="sr">{label}</span>
-      {hint}
-      {pace}
     </span>
   )
 }

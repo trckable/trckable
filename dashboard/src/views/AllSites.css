@@ -250,6 +250,14 @@
     height: var(--ph-hit);
     font-size: var(--ph-text-2);
   }
+  /* The head's two halves stack, each the full width, so the period group is not squeezed to a corner. */
+  :root .all-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  :root .all-actions {
+    width: 100%;
+  }
   :root .all-link {
     min-height: var(--ph-hit);
     font-size: var(--ph-text-2);
