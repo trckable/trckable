@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Added
+
+- Monitoring: `GET /healthz/collect` answers 200 when trckable can take pageviews (database writable, log and analytics writer keeping up, tracker served, disk space) and 503 naming the failing part otherwise, for an external uptime monitor.
+
 ### Changed
 
 - All sites: the site cards have the same gap between rows as between columns, and the heading line and its controls sit on one centre line.
