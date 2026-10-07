@@ -295,6 +295,9 @@ jobs:
       # short try there falls back to the main Ubuntu archive.
       - name: PHP (the methods spec runs the WordPress snippet through it)
         if: needs.changes.outputs.wordpress == 'true'
+        # A stalled mirror must not hide the other browser results: the
+        # WordPress case then fails on its own (CI must run it through PHP).
+        continue-on-error: true
         timeout-minutes: 8
         run: |
           o="-o Acquire::Retries=3 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15"
