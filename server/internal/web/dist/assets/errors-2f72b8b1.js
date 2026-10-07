@@ -1,1 +1,0 @@
-import{n as e}from"./errors-1ee0a8c3.js";export{e as words};
