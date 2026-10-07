@@ -10,7 +10,7 @@
 // scripts/gzip-size.mjs).
 import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import pako from 'pako'
+import * as pako from 'pako'
 
 const dir = new URL('../../server/internal/web/dist/', import.meta.url).pathname
 const TEXT = /\.(?:js|css|html|svg|json)$/

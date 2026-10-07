@@ -1,1 +1,0 @@
-import{i as e}from"./lang-7e090cf7.js";function t(t){let n=Math.round(t*10)/10;return(n<10?n:Math.round(t)).toLocaleString(e??`en-US`,{useGrouping:!1})+`×`}export{t};
