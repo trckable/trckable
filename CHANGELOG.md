@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.6.5 (7 Oct 2026)
+
 ### Fixed
 
 - Hints: the did-you-know bubble on Story points at the whole answers row and sits under or over it, so it no longer covers an answer card.
