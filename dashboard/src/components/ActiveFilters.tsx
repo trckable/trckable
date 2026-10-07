@@ -3,7 +3,7 @@
 // pressed. The row is one line, so the chips that do not fit fold into "+N
 // more", a dropdown that lists every one with its own ×, and holds Clear all
 // and Save. After them comes Save view, as an icon.
-import { Bookmark, BookmarkPlus, X } from 'lucide-react'
+import { Bookmark, BookmarkPlus, ChevronDown, Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { rowCopy as t } from '../features/header/rowCopy'
 import { usePhoneLock } from './lockScroll'
@@ -11,12 +11,15 @@ import './ActiveFilters.css'
 import './MenuPop.css'
 import { useChipFit } from './useChipFit'
 import { truncateMiddle } from '../lib/visitor'
+import { filterMenu } from './panelOpen'
 
 /** One chip as a person reads it; `raw` is what goes back on remove and flip. */
 export type Shown<T> = { key: string; dim: string; op: string; not: boolean; value: string; dot?: string; raw: T }
 
 // A phone keeps none in sight: one pill says how many and opens the list. Any
 // wider screen counts what fits (useChipFit).
+/** Past two filters the chips give way to one "N filters" chip that lists them. */
+const MANY = 2
 const phoneQuery = '(max-width: 640px)'
 function usePhone() {
   const [phone, setPhone] = useState(() => window.matchMedia(phoneQuery).matches)
@@ -42,7 +45,7 @@ interface Props<T> {
 export function ActiveFilters<T>({ filters, onRemove, onFlip, onClear, onSave, compound }: Props<T>) {
   const [open, setOpen] = useState(false)
   const phone = usePhone()
-  const { box, n: IN_SIGHT } = useChipFit(filters.map((f) => f.key + f.op + f.value).join('\u0000'), filters.length, phone)
+  const { box, n: IN_SIGHT } = useChipFit(filters.map((f) => f.key + f.op + f.value).join('\u0000'), filters.length, phone || filters.length > MANY)
   const root = useRef<HTMLDivElement>(null)
   usePhoneLock(open)
   useEffect(() => {
@@ -83,6 +86,7 @@ export function ActiveFilters<T>({ filters, onRemove, onFlip, onClear, onSave, c
         <div ref={root} className="filters-more" data-more>
           <button type="button" className={'chip more' + (open ? ' on' : '')} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
             {IN_SIGHT ? t.more(rest) : t.count(filters.length)}
+            <ChevronDown size={13} strokeWidth={1.75} aria-hidden="true" />
           </button>
           {open && (
             <div className="pop menu-pop filters-pop" role="menu">
@@ -110,6 +114,10 @@ export function ActiveFilters<T>({ filters, onRemove, onFlip, onClear, onSave, c
                   </div>
                 ))}
               </div>
+              <button type="button" className="menu-add" onClick={() => { setOpen(false); filterMenu.set(true) }}>
+                <Plus size={14} strokeWidth={1.75} aria-hidden="true" />
+                {t.add}
+              </button>
               <div className="menu-foot split">
                 <button type="button" className="menu-clear" onClick={() => { onClear(); setOpen(false) }}>
                   <X size={14} strokeWidth={1.75} aria-hidden="true" />

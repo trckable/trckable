@@ -22,7 +22,7 @@ export interface PhoneProps extends Pick<SheetProps, 'active' | 'value' | 'today
   period: ReactNode
 }
 
-export function PhoneRow(p: PhoneProps & { value: PickerValue; today: ISODate }) {
+export function PhoneRow(p: PhoneProps & { value: PickerValue; today: ISODate; stuck?: boolean }) {
   const [open, setOpen] = useState(false)
   const pill = useRef<HTMLButtonElement>(null)
   // Focus goes back to the pill; when another panel takes over (back false) it returns there.
@@ -33,7 +33,7 @@ export function PhoneRow(p: PhoneProps & { value: PickerValue; today: ISODate })
   }
   const n = p.active.length
   return (
-    <div className="subbar phone-row">
+    <div className="subbar phone-row" data-stuck={p.stuck || undefined}>
       {!isShared() && <ViewSwitch live={false} />}
       <button ref={pill} type="button" className="phone-pill" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
         <span className="pill-dot" aria-hidden="true" />
