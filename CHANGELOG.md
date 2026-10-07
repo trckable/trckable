@@ -11,6 +11,7 @@ section into the release.
 
 ### Added
 
+- All sites has a Cards | List switch next to Sort; your choice is remembered, and until you pick it stays automatic (cards up to 8 sites, a list above).
 - Story opens with a setup card while a first step is open: install the snippet, verify tracking, set a goal, connect revenue. Steps tick from your real data, one button leads to the next open one, and Later hides it for a week. It replaces the two small step chips in the header.
 
 ### Fixed
