@@ -7,7 +7,7 @@ import { clock, parts, shown } from './busier'
 // 14:32 in Tirana (UTC+2 in October)
 const SINCE = Date.UTC(2026, 9, 6, 12, 32, 0) / 1000
 const base: Busier = { now: 50, baseline: true, usual: 20, low: 17, high: 24, state: 'busier', since: SINCE, rest: 1, why: [] }
-const albas: Busier = {
+const jump: Busier = {
   ...base,
   why: [
     { dim: 'source', value: 'Facebook', now: 25, usual: 3, plus: 22 },
@@ -30,10 +30,10 @@ describe('when the line shows', () => {
 
 describe('the panel', () => {
   it('tells the sources, the page, the start and that it goes on', () => {
-    expect(parts(albas, 'Europe/Tirane').join(' · ')).toBe('+22 from Facebook → mostly /products/summer · +6 from Google · the rest as usual · Started 14:32 · still going')
+    expect(parts(jump, 'Europe/Tirane').join(' · ')).toBe('+22 from Facebook → mostly /products/summer · +6 from Google · the rest as usual · Started 14:32 · still going')
   })
   it('says what is left when the named sources do not explain most of it', () => {
-    expect(parts({ ...albas, rest: 12 }, 'UTC')).toContain('+12 from elsewhere')
+    expect(parts({ ...jump, rest: 12 }, 'UTC')).toContain('+12 from elsewhere')
   })
   it('names a country and a campaign, and a page when no source stands out', () => {
     const b: Busier = { ...base, rest: 0, why: [{ dim: 'page', value: '/', now: 30, usual: 5, plus: 25 }, { dim: 'country', value: 'DE', now: 20, usual: 2, plus: 18 }, { dim: 'campaign', value: 'sep', now: 9, usual: 0, plus: 9 }] }
@@ -52,7 +52,7 @@ describe('the panel', () => {
 
 describe('the line', () => {
   it('is one sentence with a Why? button', () => {
-    const html = renderToStaticMarkup(<BusierLine busier={albas} timezone="UTC" />)
+    const html = renderToStaticMarkup(<BusierLine busier={jump} timezone="UTC" />)
     expect(html).toContain('Busier than usual: 50 vs ~20.')
     expect(html).toContain('Why?')
     expect(html).toContain('aria-expanded="false"')

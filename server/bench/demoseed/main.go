@@ -492,7 +492,7 @@ func keepSpiking(base, domain, site string) error {
 	hit := func(url, ref, path string, visitor uint64) error {
 		body, _ := json.Marshal(map[string]any{"s": site, "k": "pv", "u": "https://" + domain + path, "r": ref, "w": 1440, "l": "en",
 			"id": strconv.FormatUint(rng.Uint64()>>12, 36), "pv": strconv.FormatUint(rng.Uint64()>>12, 36), "v": strconv.FormatUint(visitor, 36), "dev": 1})
-		req, err := http.NewRequest(http.MethodPost, url+"/api/e", strings.NewReader(string(body)))
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url+"/api/e", strings.NewReader(string(body)))
 		if err != nil {
 			return err
 		}

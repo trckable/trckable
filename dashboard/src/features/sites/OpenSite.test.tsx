@@ -5,7 +5,7 @@ import type { Site } from '../../lib/api'
 import { OpenSite } from './OpenSite'
 import { SiteItem } from './SiteItem'
 
-const site = (o: Partial<Site> = {}): Site => ({ id: 's1', domain: 'albas.al', name: 'Albas', timezone: 'UTC', currency: 'USD', proxy_key: '', ...o })
+const site = (o: Partial<Site> = {}): Site => ({ id: 's1', domain: 'example.com', name: 'Example', timezone: 'UTC', currency: 'USD', proxy_key: '', ...o })
 
 // SiteItem and OpenSite hold no state, so they can be called as plain functions
 // and their element trees walked for handlers.
@@ -26,11 +26,11 @@ describe('the open-site link on a row', () => {
   const tree = () => SiteItem({ site: site(), place: { kind: 'rest' }, on: false, arrange: null, onPick: pick })
 
   it('links to the site in a new tab, with the domain in its tooltip', () => {
-    const html = renderToStaticMarkup(<OpenSite domain="albas.al" />)
-    expect(html).toContain('href="https://albas.al"')
+    const html = renderToStaticMarkup(<OpenSite domain="example.com" />)
+    expect(html).toContain('href="https://example.com"')
     expect(html).toContain('target="_blank"')
     expect(html).toContain('rel="noopener noreferrer"')
-    expect(html).toContain('title="Open albas.al"')
+    expect(html).toContain('title="Open example.com"')
   })
 
   it('is left out for a site without a domain', () => {
@@ -41,7 +41,7 @@ describe('the open-site link on a row', () => {
   it('is clicked without switching the site', () => {
     const link = find(tree(), (e) => e.type === OpenSite)
     expect(link).toBeDefined()
-    const el = (OpenSite as (p: { domain: string }) => ReactElement<{ onClick: (e: unknown) => void }>)({ domain: 'albas.al' })
+    const el = (OpenSite as (p: { domain: string }) => ReactElement<{ onClick: (e: unknown) => void }>)({ domain: 'example.com' })
     const stop = vi.fn()
     el.props.onClick({ stopPropagation: stop })
     expect(stop).toHaveBeenCalled()
@@ -55,7 +55,7 @@ describe('the open-site link on a row', () => {
     const onKeyDown = btn?.props.onKeyDown as (e: unknown) => void
     const preventDefault = vi.fn()
     onKeyDown({ key: 'Enter', shiftKey: true, altKey: false, preventDefault })
-    expect(open).toHaveBeenCalledWith('https://albas.al', '_blank', 'noopener,noreferrer')
+    expect(open).toHaveBeenCalledWith('https://example.com', '_blank', 'noopener,noreferrer')
     expect(preventDefault).toHaveBeenCalled()
     open.mockClear()
     onKeyDown({ key: 'Enter', shiftKey: false, altKey: false, preventDefault })
