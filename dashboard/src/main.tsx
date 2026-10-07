@@ -32,7 +32,7 @@ import { ConfirmHost } from "./components/Confirm";
 import { ShortcutsHost } from "./components/ShortcutsHost";
 // A shared link is its own entry point: no setup, no sign-in, one site.
 const SharedSite = lazy(() => import("./views/SharedSite"));
-import { Toasts } from "./components/Toast"; import { Boundary } from "./components/Boundary"; import "./lib/pwa";
+import { Toasts } from "./components/Toast"; import { Hints } from "./features/hints/HintsDoor"; import { Boundary } from "./components/Boundary"; import "./lib/pwa";
 import "./phone.css"; // last: what it sets on a phone wins over the styles imported before it
 
 try {
@@ -218,7 +218,7 @@ function App() {
       )}
       <ShortcutsHost />
       <ConfirmHost />
-      <Toasts />
+      <Toasts /><Hints />
       {accountTab && (
         <Suspense fallback={null}>
         <AccountDialog

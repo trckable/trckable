@@ -1,0 +1,78 @@
+/* A hint bubble (Hint.tsx): beside its target, over the page, under menus and toasts. */
+.hint {
+  position: fixed;
+  z-index: 90;
+  box-sizing: border-box;
+  padding: 12px 14px 8px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 40%, var(--border-2));
+  background: var(--pop);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  animation: hintin 0.2s var(--ease) both;
+}
+.hint-title {
+  display: block;
+  padding-right: 40px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-2);
+}
+.hint-text {
+  margin: 4px 0 6px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.hint-x {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.hint-x:hover {
+  color: var(--text);
+}
+.hint-act {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.hint .hint-ok {
+  min-height: 44px;
+}
+.hint-off {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-3);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.hint-off:hover {
+  color: var(--text);
+}
+@keyframes hintin {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hint {
+    animation: none;
+  }
+}
