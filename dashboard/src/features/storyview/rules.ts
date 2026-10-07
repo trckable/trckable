@@ -59,8 +59,6 @@ export interface StoryFacts {
   headline: Headline
   tiles: Tile[]
   answers: Answer[]
-  /** The checklist of a new site: what is done and what is not. */
-  steps: { text: string; done: boolean }[]
 }
 
 export interface Input {
@@ -350,9 +348,5 @@ export function storyOf(i: Input): StoryFacts {
     headline: headline(i, state),
     tiles: tiles(i),
     answers: [did(i), page(i), fix(i), pays(i), fine(i)],
-    steps: [
-      { text: copy.trackerOn, done: true },
-      { text: i.goals ? copy.goalOn : copy.goalOff, done: i.goals },
-    ],
   }
 }
