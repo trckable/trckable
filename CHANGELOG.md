@@ -37,6 +37,8 @@ section into the release.
 
 - Translations for Live's busier line and milestone progress.
 
+- All sites on a phone: a site card spans the full width with its open arrow inside it, the filter row scrolls inside itself instead of widening the page, and the Sort control no longer shows a ring after a tap.
+
 ## 0.6.2 (6 Oct 2026)
 
 ### Added

@@ -209,14 +209,21 @@
   padding-right: 42px;
 }
 @media (hover: none), (max-width: 640px) {
-  .all-cards :is(.all-card-head, .kit-head),
-  .all-slim .all-line {
-    padding-right: 0;
+  .all-item > .site-open {
+    top: 0;
+    right: 0;
+    width: 44px;
+    height: 44px;
+    opacity: 1;
   }
-  .all-slim .all-line {
-    padding-right: 14px;
+  .all-cards :is(.all-card-head, .kit-head) {
+    padding-right: 30px;
   }
   .all-slim .all-item > .site-open {
-    transform: none;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .all-slim .all-line {
+    padding-right: 44px;
   }
 }
