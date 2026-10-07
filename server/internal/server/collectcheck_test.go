@@ -63,7 +63,7 @@ func TestHealthCollectFailures(t *testing.T) {
 		s := newTestServer(t, config.Config{})
 		writerUp(t, 0, true)
 		old := queueState
-		queueState = func(*Server) (error, int, int) { return errTest, 0, 10 }
+		queueState = func(*Server) (int, int, error) { return 0, 10, errTest }
 		t.Cleanup(func() { queueState = old })
 		code, h, body := collectGet(t, s)
 		if code != http.StatusServiceUnavailable || h.Checks["queue"] {

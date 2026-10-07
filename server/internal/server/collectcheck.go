@@ -29,9 +29,9 @@ var freeBytes = func(dir string) (int64, error) {
 }
 
 // queueState is the log's sticky error and its queue fill; a variable for tests.
-var queueState = func(s *Server) (err error, waiting, capacity int) {
+var queueState = func(s *Server) (waiting, capacity int, err error) {
 	waiting, capacity = s.log.Pending()
-	return s.log.Err(), waiting, capacity
+	return waiting, capacity, s.log.Err()
 }
 
 // writerApplied is how far the analytics writer has got, and whether it runs
@@ -97,7 +97,7 @@ func (s *Server) collectChecks(ctx context.Context) collectHealth {
 
 	// The log takes events (no sticky error, queue not full) and the writer
 	// that turns them into stats is running and not far behind.
-	err, waiting, capacity := queueState(s)
+	waiting, capacity, err := queueState(s)
 	ck["queue"] = err == nil && waiting < capacity
 	ck["writer"] = false
 	if applied, running := writerApplied(s); running && s.writerErr.Load() == nil {
