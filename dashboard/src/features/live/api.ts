@@ -21,6 +21,16 @@ export interface LiveNow {
   more?: number // online people the list left out (it holds at most 50)
   // Today's revenue, only while the revenue module is on and payments flow.
   revenue?: { amount: number; currency: string; exponent: number }
+  // The site's day so far against the same time a week ago; absent when the server cannot tell.
+  today?: NowToday
+}
+
+export interface NowToday {
+  visitors: number
+  before: number // last week's visitors by this time of day
+  compare: boolean // false when last week's day had no visit: no percentage
+  hours: number[] // running visitors by hour, midnight to the hour now
+  last: number[] // the same for last week's whole day (24)
 }
 
 export const liveNow = (site: string, signal?: AbortSignal) => call<LiveNow>('GET', `/sites/${encodeURIComponent(site)}/now`, undefined, signal)
