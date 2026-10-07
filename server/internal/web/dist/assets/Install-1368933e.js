@@ -1,0 +1,1 @@
+import{t as e}from"./Install-3367c071.js";export{e as Install,e as default};
