@@ -105,7 +105,6 @@ export function SearchSettings({ site }: { site: Site }) {
               {!propsErr && props && props.length > 0 && (
                 <Picker
                   label="Property"
-                  align="right"
                   placeholder="Search properties…"
                   value={conn.property || undefined}
                   onPick={(property) => {

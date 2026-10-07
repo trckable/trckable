@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- The searchable lists (timezone, currency), the ⋯ menus and the Create menu now open the same way as the other pop-ups: same placement, keys and phone sheet.
+
 ## 0.6.4 (7 Oct 2026)
 
 ### Added

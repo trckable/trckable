@@ -6,10 +6,10 @@
     "src/views/Account.tsx": 355,
     "src/views/Dashboard.tsx": 662,
     "src/views/Health.tsx": 275,
-    "src/views/Payments.tsx": 671,
-    "src/views/Privacy.tsx": 739,
-    "src/views/Search.tsx": 356,
-    "src/views/Settings.tsx": 592,
+    "src/views/Payments.tsx": 670,
+    "src/views/Privacy.tsx": 738,
+    "src/views/Search.tsx": 355,
+    "src/views/Settings.tsx": 590,
     "src/views/Sites.tsx": 402,
     "src/views/TwoStepSetup.tsx": 255
   }

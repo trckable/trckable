@@ -6,11 +6,6 @@
 .create-btn {
   gap: 6px;
 }
-.pop.menu.create-menu {
-  top: 48px;
-  right: 0;
-  min-width: 250px;
-}
 .create-menu [role='menuitem'][disabled] {
   opacity: 0.6;
   cursor: not-allowed;

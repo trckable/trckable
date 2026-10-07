@@ -73,9 +73,9 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
     // which live at the end of the page.
     const away = (e: MouseEvent) => {
       const t = e.target as Element
-      if (!t.closest?.('.site-pick, .floating, .modal-back')) onClose()
+      if (!t.closest?.('.site-pick, .anchored, .modal-back')) onClose()
     }
-    const key = (e: KeyboardEvent) => e.key === 'Escape' && !document.querySelector('.modal-back, .floating') && onClose()
+    const key = (e: KeyboardEvent) => e.key === 'Escape' && !document.querySelector('.modal-back, .anchored') && onClose()
     document.addEventListener('mousedown', away)
     document.addEventListener('keydown', key)
     // Search takes the typing; without one the site you are on takes the keys.

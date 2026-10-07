@@ -12,19 +12,10 @@
 }
 
 .picker-pop {
-  top: 44px;
-  left: 0;
   min-width: 260px;
   max-width: min(360px, calc(100vw - 24px));
   padding: 8px;
-  display: flex;
-  flex-direction: column;
   gap: 6px;
-}
-
-.picker-pop.right {
-  left: auto;
-  right: 0;
 }
 
 .picker-pop .menu-search {
@@ -78,12 +69,6 @@
   font-size: 11.5px;
 }
 
-.pop.picker-pop.floating {
-  top: auto;
-  left: auto;
-  right: auto;
-}
-
 /* The 12 px floor on a phone: every text rule of this file under 12 px on a
    desktop is raised to 12 (the phone scale, phone.css). */
 @media (max-width: 640px) {
@@ -95,7 +80,7 @@
   }
 }
 
-/* The phone scale (phone.css): rows 48 px tall; the list itself is a sheet (sheet.css). */
+/* The phone scale (phone.css): rows 48 px tall (sheet.css). */
 @media (max-width: 640px) {
   :root .picker-list {
     max-height: 56dvh;

@@ -69,7 +69,6 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
           Revenue in
           <Picker
             label="Currency"
-            align="right"
             placeholder="Search a currency…"
             value={site.currency}
             onPick={(currency) =>
