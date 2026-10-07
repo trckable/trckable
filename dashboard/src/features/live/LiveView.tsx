@@ -11,6 +11,7 @@ import { copy } from './copy'
 import { feedOf, seriesAt } from './model'
 import { NowPanel } from './NowPanel'
 import { OnSitePanel } from './OnSitePanel'
+import { LiveCards } from './LiveCards'
 import { liveCount, liveLink } from './liveLink'
 import { useBusier } from './useBusier'
 import { useLiveNow } from './useLiveNow'
@@ -38,21 +39,25 @@ export default function LiveView({ site, timezone, stream, onVisitor, cookieless
   let online = stream.online ?? data?.online ?? null
   if (stream.stale && data) online = data.online
   useEffect(() => liveCount.set(online), [online])
+  const rows = data ? feedOf(data.recent, stream.visits, data.at, clock) : []
   return (
-    <div className="live-view view-stage" role="region" aria-label={copy.region}>
-      <BusierLine busier={busier} timezone={timezone} />
-      {data ? (
-        <>
-          <NowPanel data={data} series={seriesAt(data, stream.visits, clock)} online={online ?? 0} connected={stream.connected} failed={failed} sales={stream.sales} timezone={timezone} />
-          <OnSitePanel rows={feedOf(data.recent, stream.visits, data.at, clock)} online={online} clock={clock} skew={skew} onVisitor={onVisitor} cookieless={cookieless} />
-        </>
-      ) : (
-        <LiveLoading failed={failed} />
-      )}
-      <p className="sr" aria-live="polite" aria-atomic="true">
-        {said}
-      </p>
-    </div>
+    <>
+      <div className="live-view view-stage" role="region" aria-label={copy.region}>
+        <BusierLine busier={busier} timezone={timezone} />
+        {data ? (
+          <>
+            <NowPanel data={data} series={seriesAt(data, stream.visits, clock)} online={online ?? 0} connected={stream.connected} failed={failed} sales={stream.sales} timezone={timezone} />
+            <OnSitePanel rows={rows} online={online} clock={clock} skew={skew} onVisitor={onVisitor} cookieless={cookieless} />
+          </>
+        ) : (
+          <LiveLoading failed={failed} />
+        )}
+        <p className="sr" aria-live="polite" aria-atomic="true">
+          {said}
+        </p>
+      </div>
+      {data && <LiveCards data={data} rows={rows} />}
+    </>
   )
 }
 

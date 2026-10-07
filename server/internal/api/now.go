@@ -21,6 +21,9 @@ const nowTTL = 2 * time.Second
 // nowAnswer is what GET /api/v1/sites/{site}/now sends.
 type nowAnswer struct {
 	*query.Now
+	// Today is today so far in the site's time zone against last week's same
+	// time, for Live's first card; absent when the zone cannot be read.
+	Today *query.NowToday `json:"today,omitempty"`
 	// Revenue is today's revenue in the site's currency, exactly the Data
 	// view's Revenue tile for Today. Absent while the revenue module is off
 	// or no payment provider is connected.
@@ -101,11 +104,29 @@ func (a *API) liveNow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res := &nowAnswer{Now: n}
+	res.Today = a.todayNow(r, q, site, now)
 	if withMoney {
 		res.Revenue = a.revenueToday(r, q, site)
 	}
 	a.nowCache.put(key, now, ver, res)
 	writeJSON(w, http.StatusOK, res)
+}
+
+// todayNow is the site's day so far; a site whose zone is unreadable simply has no card.
+func (a *API) todayNow(r *http.Request, q *query.Q, site string, now time.Time) *query.NowToday {
+	si, err := a.Ctl.SiteInfo(r.Context(), site)
+	if err != nil {
+		return nil
+	}
+	loc, err := time.LoadLocation(si.Timezone)
+	if err != nil {
+		return nil
+	}
+	t, err := q.LiveToday(r.Context(), site, now, loc)
+	if err != nil {
+		return nil
+	}
+	return t
 }
 
 // revenueToday is the Data view's Revenue for Today: the same report, asked
