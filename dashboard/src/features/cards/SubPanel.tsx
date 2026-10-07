@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import type { CardsCtx } from './ctx'
 import { priorOf } from './prior'
-import { Tabs, type TabItem } from './Tabs'
+import { Tabs, type TabItem } from '../../kit/Tabs'
 
 /** The small tabs of one list, and the list of the one picked. */
 export function SubPanel({ id, label, tabs, c, render }: { id: string; label: string; tabs: TabItem[]; c: CardsCtx; render: (dim: string) => React.ReactNode }) {

@@ -7,7 +7,7 @@ import { Pill } from './Pill'
 import type { Tone } from './model'
 
 /** `foot` sits under the word: a sentence of context. */
-export function Verdict({ title, word, pill, ask, onAsk, foot, className = '' }: { title?: ReactNode; word: ReactNode; pill?: { text: ReactNode; tone?: Tone }; ask?: ReactNode; onAsk?: () => void; foot?: ReactNode; className?: string }) {
+export function Verdict({ icon, tone, title, word, pill, ask, onAsk, foot, className = '' }: { icon?: ReactNode; tone?: 'good' | 'warn' | 'bad'; title?: ReactNode; word: ReactNode; pill?: { text: ReactNode; tone?: Tone }; ask?: ReactNode; onAsk?: () => void; foot?: ReactNode; className?: string }) {
   const line = ask && (
     <>
       <span className="kit-ask-i" aria-hidden="true">
@@ -17,7 +17,7 @@ export function Verdict({ title, word, pill, ask, onAsk, foot, className = '' }:
     </>
   )
   return (
-    <Card title={title} aside={pill && <Pill tone={pill.tone ?? 'good'}>{pill.text}</Pill>} className={`kit-verdict ${className}`}>
+    <Card icon={icon} tone={tone} title={title} aside={pill && <Pill tone={pill.tone ?? 'good'}>{pill.text}</Pill>} className={`kit-verdict ${className}`}>
       <b className="kit-word">{word}</b>
       {foot}
       {line &&

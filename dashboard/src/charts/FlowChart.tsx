@@ -81,7 +81,9 @@ export function FlowChart(p: {
   }
   return (
     <div ref={ref} className="kit-chart kit-flow">
-      <div className="kit-flow-box">
+      {/* It scrolls sideways, so a keyboard has to be able to reach it (WCAG scrollable regions). */}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+      <div className="kit-flow-box" tabIndex={0} role="group" aria-label={p.label}>
         <div className="kit-flow-in" style={{ width: w }}>
           <svg width={w} height={h} role="img" aria-label={p.label} className="kit-svg" onPointerLeave={() => { setHot(null); setTip(null) }}>
             <defs>

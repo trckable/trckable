@@ -2,7 +2,6 @@
 // reached it, and how well it converts. Under them, when the report knows how
 // many visitors stayed past a bounce, the road from a visit to the first goal.
 import { Download, SquareArrowOutUpRight, SquareCheckBig, TextCursorInput, type LucideIcon } from 'lucide-react'
-import { FatBar } from '../../charts/FatBar'
 import { StatusTag } from '../../kit'
 import { fmtCompact, fmtInt, fmtPct } from '../../lib/format'
 import { cardCopy } from './copy'
@@ -58,7 +57,9 @@ export function GoalRows({ c }: { c: CardsCtx }) {
           {steps.map((s) => (
             <div key={s.key} className="goal-step">
               <span className="goal-step-name">{STEP[s.key](nameOf(top.value))}</span>
-              <FatBar width={s.width} thin />
+              <span className="kit-rowbar" aria-hidden="true">
+                <i style={{ width: `${s.width}%` }} />
+              </span>
               <span className="num">{fmtCompact(s.value)}</span>
             </div>
           ))}

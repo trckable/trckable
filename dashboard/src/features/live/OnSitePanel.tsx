@@ -1,6 +1,7 @@
 // "On the site right now": one row per person, newest first. New visits
 // slide in at the top with a soft glow; someone idle for five minutes fades
 // and leaves. The count in the sticky header rolls to its new value.
+import { Users } from 'lucide-react'
 import { copy } from './copy'
 import { FeedRow } from './FeedRow'
 import { moreOf, type Row } from './model'
@@ -27,6 +28,9 @@ export function OnSitePanel(p: { rows: Row[]; online: number | null; clock: numb
   return (
     <section className="card live-panel live-onsite" aria-labelledby="live-onsite-title">
       <div className="live-head-row">
+        <span className="kit-tile" aria-hidden="true">
+          <Users size={15} strokeWidth={1.8} />
+        </span>
         <h2 id="live-onsite-title">{copy.onSite}</h2>
         {p.online !== null && <Count n={p.online} />}
       </div>

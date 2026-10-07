@@ -24,7 +24,7 @@ export function StatTrio({ items }: { items: { key: string; label: ReactNode; va
 
 export function HeroNumber({ title, value, pill, sub, onOpen }: { title: ReactNode; value: ReactNode; pill?: { text: ReactNode; tone?: Tone }; sub?: ReactNode; onOpen?: () => void }) {
   return (
-    <Card title={title} onOpen={onOpen} variant="hero">
+    <Card title={title} onOpen={onOpen} variant="plain">
       <span className="kit-hero-num">
         <b className="num">{value}</b>
         {pill && <Pill tone={pill.tone ?? 'good'}>{pill.text}</Pill>}
@@ -36,7 +36,7 @@ export function HeroNumber({ title, value, pill, sub, onOpen }: { title: ReactNo
 
 export type Split = { key: string; label: ReactNode; share: number; color?: string; onPick?: () => void; pickLabel?: string }
 
-export function SplitBlocks({ title, items, onOpen, openLabel, stretch, variant, className, children }: { title: ReactNode; items: Split[]; onOpen?: () => void; openLabel?: string; stretch?: boolean; variant?: 'plain' | 'open'; className?: string; children?: ReactNode }) {
+export function SplitBlocks({ title, items, onOpen, openLabel, stretch, variant, className, children }: { title: ReactNode; items: Split[]; onOpen?: () => void; openLabel?: string; stretch?: boolean; variant?: 'plain'; className?: string; children?: ReactNode }) {
   return (
     <Card title={title} onOpen={onOpen} openLabel={openLabel} stretch={stretch} variant={variant} className={className}>
       <div className="kit-blocks">

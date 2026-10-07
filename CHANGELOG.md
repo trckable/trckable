@@ -11,6 +11,10 @@ section into the release.
 
 ### Changed
 
+- All sites: the site cards have the same gap between rows as between columns, and the heading line and its controls sit on one centre line.
+- Story: the five answers share one card anatomy (question and a quiet status on the top line, one big number with a chip, the answer as one line, one link, a chart to the bottom edge); the stat cards' statuses are short ("Far above normal") with the full line as the tooltip, and on a phone drop under the name instead of being cut.
+- Cards: the Data page's key numbers are cards on the card kit (icon tile and name, the number with its change chip, a soft chart to the bottom edge; the one on the main chart is told by its border). Live's two panels, the settings and health cards, the account and site cards share the same flat surface, icon tile and hover border.
+- Phone: stat cards on All sites and Story no longer cut their status or the Online now badge; the All sites period choice uses the full width.
 - Milestones: the milestone card is one flat card with the number, one line of context, Copy image and Share; the share image says Revenue milestone reached with the growth line when revenue is hidden.
 
 ## 0.6.5 (7 Oct 2026)
@@ -20,6 +24,8 @@ section into the release.
 - Hints: the did-you-know bubble on Story points at the whole answers row and sits under or over it, so it no longer covers an answer card.
 
 ### Changed
+
+- Cards: every card shares one anatomy on the card kit: an icon tile and name, a quiet status and the open arrow on the top line, one number with a change chip, a chart to the card's bottom edge; flat, with a thin border that lights on hover. All sites (stats, one line per site with a tap-to-hide key, four site cards to a row on wide screens), Live, Story, Data (tabs, ranked lists with soft bars, Goals, crawlers) and Milestones use it.
 
 - Alert emails (busier than usual, milestones, tracking stopped, test) are designed: the number, a few rows, one button and a footer with Stop these alerts and Alert settings, with the plain text kept beside it and light and dark colours; a surge email is titled "<site> is having a moment".
 - Dependencies updated to their latest minor and patch releases (the dashboard, the tracker's test tools, the npm package and the lockfile).

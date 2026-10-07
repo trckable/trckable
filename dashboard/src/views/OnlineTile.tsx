@@ -1,4 +1,5 @@
 // All sites' Online now card: the same number as the switcher's header.
+import { Radio } from 'lucide-react'
 import { MetricArea } from '../kit/MetricArea'
 import { useOnlineAll } from '../lib/allOnline'
 import { fmtInt } from '../lib/format'
@@ -12,5 +13,5 @@ export function OnlineTile() {
       {copy.live}
     </span>
   )
-  return <MetricArea label={copy.online} aside={live} value={fmtInt(online)} sub={copy.onlineSub} />
+  return <MetricArea icon={<Radio size={15} strokeWidth={1.8} />} label={copy.online} aside={live} value={fmtInt(online)} status={copy.onlineSub} />
 }

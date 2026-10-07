@@ -1,17 +1,33 @@
 /* The two layouts of All sites' rows (views/AllRows.tsx): cards and a slim list. */
 .all-cards {
+  container-type: inline-size;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
-@media (min-width: 1280px) {
+@media (min-width: 600px) {
+  .all-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 900px) {
   .all-cards {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-@media (max-width: 640px) {
+@media (min-width: 1200px) {
   .all-cards {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  /* Four across: tighter padding and a smaller number, so nothing is cut but a long name */
+  .all-cards .kit-card {
+    padding: 12px 14px;
+  }
+  .all-cards .kit-val b {
+    font-size: 24px;
+  }
+  .all-cards .kit-head {
+    gap: 8px;
   }
 }
 .all-slim {
@@ -247,7 +263,4 @@
 .app .all-card:hover,
 .app .all-line:hover {
   border-top-color: var(--accent);
-}
-.app .all-cards {
-  gap: 0 40px;
 }

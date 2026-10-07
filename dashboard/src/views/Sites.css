@@ -85,7 +85,12 @@
   padding: 14px 16px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: var(--surface-2);
+  background: var(--surface);
+  transition: border-color 0.15s;
+}
+.site-card:hover,
+.site-card:focus-within {
+  border-color: var(--accent);
 }
 .site-card.stopped {
   border-color: color-mix(in srgb, var(--down) 35%, var(--border));

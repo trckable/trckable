@@ -71,7 +71,7 @@ export default function People({ site, onPick }: { site: Site; onPick: (visitor:
   if (site.cookieless) return <CookielessOff title={deepCopy.people.title} />
   return (
     <div className="pp-panel">
-      <div className="tc-tools">{online !== null && <span className="pp-online num">{deepCopy.people.online(online)}</span>}</div>
+      <div className="kit-tools">{online !== null && <span className="pp-online num">{deepCopy.people.online(online)}</span>}</div>
       {!people && <Loading height={140} />}
       {people && people.length === 0 && <span className="faint">{deepCopy.people.none}</span>}
       {people && people.length > 0 && (

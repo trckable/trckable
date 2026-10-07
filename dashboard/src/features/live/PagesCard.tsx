@@ -10,21 +10,17 @@ export function PagesCard({ pages }: { pages: Count[] }) {
   const top = pages[0]?.n ?? 1
   return (
     <ListTable
-      variant="open"
       stretch
       className="lv-card"
-      title={
-        <>
-          <FileText size={15} strokeWidth={1.8} aria-hidden="true" /> {t.pagesTitle}
-        </>
-      }
+      icon={<FileText size={15} strokeWidth={1.8} />}
+      title={t.pagesTitle}
       openLabel={t.open(t.pagesTitle)}
       onOpen={() => void openExplore()}
       bare
       rows={pages}
       rowKey={(p) => p.key}
       columns={[
-        { key: 'page', head: t.pagesTitle, cell: (p) => <span className="num kit-clip">{truncateMiddle(p.key, 34)}</span> },
+        { key: 'page', head: t.pagesTitle, cell: (p) => <span className="kit-clip">{truncateMiddle(p.key, 34)}</span> },
         { key: 'n', head: '', cell: (p) => p.n, num: true },
       ]}
       pick={{ onPick: (p) => void openFiltered('page', p.key), label: (p) => t.openPage(p.key, p.n), title: (p) => p.key }}

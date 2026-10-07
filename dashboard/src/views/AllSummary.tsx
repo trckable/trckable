@@ -1,6 +1,7 @@
 // The summary cards at the top of All sites: a quiet label, the number, a pill
 // for the move, and a soft area of the days behind it where there is one.
 // Revenue is a card only when a shown site has payments connected.
+import { Eye, LogOut, Users, Wallet } from 'lucide-react'
 import { delta, fmtInt, fmtMoney, fmtPct } from '../lib/format'
 import type { SiteRow } from '../lib/api'
 import { MetricArea } from '../kit/MetricArea'
@@ -28,16 +29,17 @@ export function AllSummary({ s, days, rows, start }: { s: ReturnType<typeof summ
   return (
     <div className="all-stats">
       <OnlineTile />
-      <MetricArea label={copy.visitors} value={fmtInt(s.total)} pill={d && { text: d.text, tone: TONE[d.tone] ?? 'neutral' }} sub={d && copy.vsDays(days)} series={dailyTotal(rows, start)} tone={d ? TONE[d.tone] : 'neutral'} />
-      <MetricArea label={copy.pageviews} value={fmtInt(s.pageviews)} sub={copy.perVisitor(s.total ? (s.pageviews / s.total).toFixed(1) : '0')} />
+      <MetricArea icon={<Users size={15} strokeWidth={1.8} />} label={copy.visitors} value={fmtInt(s.total)} pill={d && { text: d.text, tone: TONE[d.tone] ?? 'neutral' }} status={d && copy.vsDays(days)} series={dailyTotal(rows, start)} tone={d ? TONE[d.tone] : 'neutral'} />
+      <MetricArea icon={<Eye size={15} strokeWidth={1.8} />} label={copy.pageviews} value={fmtInt(s.pageviews)} status={copy.perVisitor(s.total ? (s.pageviews / s.total).toFixed(1) : '0')} />
       <MetricArea
+        icon={<LogOut size={15} strokeWidth={1.8} />}
+        iconTone={high ? 'bad' : undefined}
         label={copy.bounce}
         value={s.total ? fmtPct(s.bounce) : '–'}
         pill={high ? { text: copy.high, tone: 'bad' } : null}
-        sub={high ? copy.highBounce(bounceTenths(s.bounce)) : copy.acrossSites}
-        className={high ? 'warn' : ''}
+        status={high ? copy.highBounce(bounceTenths(s.bounce)) : copy.acrossSites}
       />
-      {rows.length > 0 && s.paying.length > 0 && <MetricArea label={copy.revenue} value={<span style={{ color: 'var(--money)' }}>{money}</span>} sub={copy.fromSites(s.paying.length)} />}
+      {rows.length > 0 && s.paying.length > 0 && <MetricArea icon={<Wallet size={15} strokeWidth={1.8} />} label={copy.revenue} value={<span style={{ color: 'var(--money)' }}>{money}</span>} status={copy.fromSites(s.paying.length)} />}
     </div>
   )
 }

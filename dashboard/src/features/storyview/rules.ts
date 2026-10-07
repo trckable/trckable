@@ -61,6 +61,12 @@ export interface Answer {
   connect?: boolean
   /** How the number behind the answer moved against the period before, when it can be told. */
   delta?: Delta
+  /** The one big number (or word) on the card. */
+  big: string
+  /** The quiet words on the top line, right. */
+  status: string
+  /** A small chip when there is no move to show (an amount). */
+  chip?: string
 }
 
 export interface StoryFacts {
@@ -242,6 +248,11 @@ export function headline(i: Input, state: StoryState): Headline {
   return { pre: '', strong: who, post: copy.came + more + from + (worst ? copy.but(worst) : '') + '.' }
 }
 
+/** A status that fits the top line: the numbers in brackets go (the full line stays as the tooltip). */
+export function brief(verdict: string): string {
+  return verdict.replace(/ \(.*\)$/, '').replace('your normal', 'normal').replace('read one page and go', 'leave').replace('No earlier period to compare with yet', copy.noBeforeShort)
+}
+
 /** One tile's words: how far a number is from its period before. */
 function verdictOf(d: number, before: string, say: { farAbove: (b: string) => string; above: (b: string) => string; inside: (b: string) => string; below: (b: string) => string; farBelow: (b: string) => string }) {
   if (d >= FAR) return { tone: 'good' as Tone, verdict: say.farAbove(before) }
@@ -307,32 +318,34 @@ function did(i: Input): Answer {
   const top = channels(i.cur)[0]
   const share = top && k.visitors > 0 ? fmtPct(top.visitors / k.visitors) : ''
   const act = top ? { label: copy.didAct(named(top.value)), filters: [{ dim: 'channel', value: top.value }] } : undefined
+  const big = fmtInt(k.visitors)
   const sub = top ? copy.didSub(fmtInt(top.visitors), share, named(top.value)) : ''
-  if (!hasPrev(i)) return { key: 'did', question: copy.q.did, line: copy.didEarly(fmtInt(k.visitors)), sub, look: 'plain', act }
+  if (!hasPrev(i)) return { key: 'did', question: copy.q.did, line: copy.didEarly(fmtInt(k.visitors)), sub, look: 'plain', act, big, status: copy.statusSoFar }
   const was = earlier(i)?.visitors ?? 0
   const d = change(k.visitors, was)
   const delta = deltaOf(k.visitors, was) ?? undefined
-  if (d >= SAME) return { key: 'did', question: copy.q.did, line: copy.didYes(fmtInt(was), fmtInt(k.visitors)), sub, look: 'plain', act, delta }
-  if (d <= -SAME) return { key: 'did', question: copy.q.did, line: copy.didNo(fmtInt(was), fmtInt(k.visitors)), sub, look: 'plain', act, delta }
-  return { key: 'did', question: copy.q.did, line: copy.didSame(fmtInt(was), fmtInt(k.visitors)), sub, look: 'plain', act, delta }
+  if (d >= SAME) return { key: 'did', question: copy.q.did, line: copy.didYes(fmtInt(was), fmtInt(k.visitors)), sub, look: 'plain', act, delta, big, status: copy.statusBefore }
+  if (d <= -SAME) return { key: 'did', question: copy.q.did, line: copy.didNo(fmtInt(was), fmtInt(k.visitors)), sub, look: 'plain', act, delta, big, status: copy.statusBefore }
+  return { key: 'did', question: copy.q.did, line: copy.didSame(fmtInt(was), fmtInt(k.visitors)), sub, look: 'plain', act, delta, big, status: copy.statusBefore }
 }
 
 function page(i: Input): Answer {
   const row = (i.cur.dims.entry_page ?? [])[0]
   const total = i.cur.kpis.visitors
-  if (!row || total === 0) return { key: 'page', question: copy.q.page, line: copy.pageNone, sub: copy.pageNoneSub, look: 'quiet' }
+  if (!row || total === 0) return { key: 'page', question: copy.q.page, line: copy.pageNone, sub: copy.pageNoneSub, look: 'quiet', big: copy.none, status: copy.statusPage }
   const before = hasPrev(i) ? (i.prev?.dims.entry_page ?? []).find((x) => x.value === row.value)?.visitors : undefined
   return {
     key: 'page', question: copy.q.page, look: 'plain', delta: deltaOf(row.visitors, before) ?? undefined,
     line: copy.pageTitle(row.value, fmtPct(Math.min(1, row.visitors / total))),
     sub: copy.pageSub(fmtInt(row.visitors)),
     act: { label: copy.pageAct, filters: [{ dim: 'entry_page', value: row.value }] },
+    big: fmtPct(Math.min(1, row.visitors / total)), status: copy.statusPage,
   }
 }
 
 function fix(i: Input): Answer {
   const f = leavesFastest(i)
-  if (!f) return { key: 'fix', question: copy.q.fix, line: copy.fixNone, sub: copy.fixNoneSub, look: 'quiet' }
+  if (!f) return { key: 'fix', question: copy.q.fix, line: copy.fixNone, sub: copy.fixNoneSub, look: 'quiet', big: copy.noIssues, status: copy.statusBounce }
   const n = Math.round(f.worst.visitors * rate(f.worst))
   const was = hasPrev(i) ? channels(i.prev as Result).find((x) => x.value === f.worst.value) : undefined
   return {
@@ -340,6 +353,7 @@ function fix(i: Input): Answer {
     line: copy.fixTitle(named(f.worst.value), fmtPct(rate(f.worst))),
     sub: f.best ? copy.fixSub(fmtInt(n), named(f.best.value), fmtPct(rate(f.best))) : copy.fixSubAlone(fmtInt(n)),
     act: { label: copy.fixAct, filters: [{ dim: 'channel', value: f.worst.value }] },
+    big: fmtPct(rate(f.worst)), status: copy.statusBounce,
   }
 }
 
@@ -353,6 +367,7 @@ function pays(i: Input): Answer {
       line: copy.paysTitle(named(top.value), fmtPct(Math.min(1, (top.revenue ?? 0) / m.revenue))),
       sub: copy.paysSub(i.money(top.revenue ?? 0), i.money(m.revenue)),
       act: { label: copy.paysAct(named(top.value)), filters: [{ dim: 'channel', value: top.value }] },
+      big: fmtPct(Math.min(1, (top.revenue ?? 0) / m.revenue)), chip: i.money(top.revenue ?? 0), status: copy.statusRevenue,
     }
   }
   const goal = (i.cur.goals ?? [])[0]
@@ -363,14 +378,15 @@ function pays(i: Input): Answer {
       line: copy.paysGoal(goal.value, fmtInt(goal.visitors)),
       sub: copy.paysGoalSub,
       act: { label: copy.paysGoalAct, filters: [{ dim: 'goal', value: goal.value }] },
+      big: fmtInt(goal.visitors), status: copy.statusGoal,
     }
   }
-  return { key: 'pays', question: copy.q.pays, line: copy.paysNone, sub: copy.paysNoneSub, look: 'quiet', connect: true }
+  return { key: 'pays', question: copy.q.pays, line: copy.paysNone, sub: copy.paysNoneSub, look: 'quiet', connect: true, big: copy.none, status: copy.statusRevenue }
 }
 
 function fine(i: Input): Answer {
   const act = { label: copy.fineAct, filters: [], compare: true }
-  if (!hasPrev(i)) return { key: 'fine', question: copy.q.fine, line: copy.fineEarly, sub: copy.fineEarlySub, look: 'quiet', word: { text: copy.wordEarly, tone: 'flat' } }
+  if (!hasPrev(i)) return { key: 'fine', question: copy.q.fine, line: copy.fineEarly, sub: copy.fineEarlySub, look: 'quiet', word: { text: copy.wordEarly, tone: 'flat' }, big: copy.wordEarly, status: copy.statusSoFar }
   const t = tiles(i).filter((x) => x.key !== 'revenue')
   const worse = t.filter((x) => x.tone === 'bad' || x.tone === 'warn').map((x) => x.label.toLowerCase())
   const better = t.some((x) => x.tone === 'good')
@@ -379,7 +395,7 @@ function fine(i: Input): Answer {
   if (worse.length === 0 && better) [line, word] = [copy.fineGood, { text: copy.wordGood, tone: 'good' }]
   if (worse.length > 0 && better) [line, word] = [copy.fineMixed(worse.join(' and ')), { text: copy.wordMixed, tone: 'warn' }]
   if (worse.length > 0 && !better) [line, word] = [copy.fineBad(worse.join(' and ')), { text: copy.wordBad, tone: 'bad' }]
-  return { key: 'fine', question: copy.q.fine, line, sub: copy.fineSub, look: 'plain', act, word }
+  return { key: 'fine', question: copy.q.fine, line, sub: copy.fineSub, look: 'plain', act, word, big: word.text, status: copy.statusBefore, delta: deltaOf(i.cur.kpis.visitors, earlier(i)?.visitors) ?? undefined }
 }
 
 export function storyOf(i: Input): StoryFacts {

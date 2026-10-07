@@ -208,12 +208,12 @@
     font-size: 12px;
   }
   /* The two cards' tabs: a finger tall, the row scrolling sideways. */
-  .tc-tab {
+  .kit-tab {
     min-height: var(--ph-hit);
     padding: 0 12px;
     font-size: var(--ph-text-2);
   }
-  .tc-sub button {
+  .kit-subtabs button {
     min-height: var(--ph-hit);
     padding: 0 12px;
     font-size: var(--ph-small);
@@ -233,7 +233,7 @@
     grid-template-columns: minmax(0, 1fr) 64px 72px;
   }
   .bl-cols {
-    padding: 0 10px 2px;
+    padding: 6px 10px;
   }
   .bl.has-act .bl-cols {
     padding-right: 36px;
@@ -244,21 +244,12 @@
     padding: 6px 10px;
     font-size: var(--ph-text-2);
   }
-  .bl-main,
-  .bl.fat .bl-main {
+  .bl-main {
     display: contents;
   }
   .bl-name {
     grid-column: 1;
     grid-row: 1;
-  }
-  .bl-line {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    margin-top: 6px;
-  }
-  .bl.fat .bl-line {
-    margin-top: 8px;
   }
   .bl-val {
     grid-column: 2;
@@ -296,21 +287,8 @@
   }
 
   /* ---- The key numbers ------------------------------------------------------- */
-  .kpis {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding: 6px 4px 0;
-  }
-  .kpi {
-    padding: 8px 10px 10px;
-  }
   .kpi .kpi-name,
   .kpi .label {
-    font-size: var(--ph-small);
-  }
-  .kpi .value {
-    font-size: clamp(20px, 16cqi, 30px);
-  }
-  .kpi-delta {
     font-size: var(--ph-small);
   }
 

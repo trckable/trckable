@@ -1,0 +1,207 @@
+/* The card kit's styles (kit/*.tsx). Colours come from the page's own tokens, so
+   both themes follow; a finger target is --ph-hit (44 px) on a phone.
+   Every card has one anatomy: a top line (icon tile and name left, a quiet
+   status right, the corner arrow), one number with a chip, a chart to the
+   bottom edge. Flat, a thin border that lights only on hover or focus. */
+.kit-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.kit-card:hover,
+.kit-card:focus-within {
+  border-color: var(--accent);
+}
+.kit-card.press {
+  width: 100%;
+  cursor: pointer;
+}
+.kit-card.press:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* A card that needs a look is told by its border, never by a fill */
+.kit-card.accent {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+.kit-card.warn {
+  border-color: color-mix(in srgb, var(--warn) 45%, var(--border));
+}
+.kit-card.dashed {
+  border-style: dashed;
+}
+.kit-tile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--row);
+  color: var(--text-2);
+}
+.kit-tile.good {
+  color: var(--up);
+}
+.kit-tile.warn {
+  color: var(--warn);
+}
+.kit-tile.bad {
+  color: var(--down);
+}
+.kit-status {
+  flex: 0 1 auto;
+  color: var(--text-4);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.kit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--text-3);
+  font-size: 13px;
+  position: relative;
+}
+.kit-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  font-weight: 500;
+}
+.kit-title b {
+  color: var(--text);
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kit-go {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border-2);
+  border-radius: 50%;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+button.kit-go::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+}
+.kit-go:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+
+/* The title as the card's button, stretched over the whole card; rows sit above it */
+.kit-card.stretch .kit-head {
+  position: static;
+}
+.kit-stretch {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.kit-stretch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.kit-stretch:focus-visible::after {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.kit-pick,
+.kit-rowbtn {
+  all: unset;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.kit-pick:focus-visible,
+.kit-rowbtn:focus-visible {
+  outline: 2px solid var(--accent);
+}
+.kit-pick:hover {
+  color: var(--text);
+}
+
+
+/* Phone scale */
+@media (max-width: 640px) {
+  .kit-card {
+    padding: var(--ph-pad, 16px);
+  }
+}
+.kit-title {
+  overflow: hidden;
+  white-space: nowrap;
+}
+/* With a status the name keeps its room and the status takes what is left, cut with an ellipsis */
+.kit-head:has(.kit-status) .kit-title {
+  flex: 0 0 auto;
+  max-width: 62%;
+}
+.kit-status {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+}
+
+/* Two stat cards to a row leave no room beside the name: the status drops under it, whole words, never cut */
+@media (max-width: 640px) {
+  .kit-metric:not(.compact) .kit-head {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+  .kit-metric:not(.compact) .kit-head:has(.kit-status) .kit-title {
+    flex: 1 1 auto;
+    max-width: none;
+  }
+  .kit-metric:not(.compact) .kit-head .kit-status {
+    flex: 1 1 100%;
+    overflow: visible;
+    text-align: left;
+    white-space: normal;
+  }
+}
+
+/* A number switched onto the main chart is told by its border */
+.kit-card.press[aria-pressed='true'] {
+  border-color: var(--accent);
+}
+.kit-card.press.money[aria-pressed='true'] {
+  border-color: var(--money);
+}

@@ -9,7 +9,7 @@ import { channelColor, channelLabel } from '../../lib/palette'
 import { DIM_LABEL } from '../overview/dimLabels'
 import { cardCopy } from './copy'
 import type { CardsCtx } from './ctx'
-import { Tabs } from './Tabs'
+import { Tabs } from '../../kit/Tabs'
 import { laterCopy } from './copyLater'
 
 const DIMS = ['channel', 'referrer', 'campaign', 'entry_page']
@@ -21,7 +21,7 @@ export default function EarnersPanel({ c }: { c: CardsCtx }) {
   const before = new Map((c.prev?.revenue_dims?.[asked] ?? []).map((r) => [r.value, r.revenue]))
   return (
     <>
-      <div className="tc-tools">
+      <div className="kit-tools">
         <div className="seg small" role="group" aria-label={laterCopy.credit}>
           <button type="button" aria-pressed={!c.attrFirst} onClick={() => c.onAttr(false)}>
             {laterCopy.closedIt}

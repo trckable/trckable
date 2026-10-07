@@ -1,6 +1,7 @@
 // The left panel: how many are here now, how many came in the last half
 // hour, the minute-by-minute line, where they came from and, with the
 // revenue module on, today's money.
+import { Radio } from 'lucide-react'
 import type { Sale } from '../../lib/api'
 import { delta, fmtInt } from '../../lib/format'
 import { useTween } from '../../lib/motion'
@@ -28,6 +29,9 @@ export function NowPanel(p: { data: LiveNow; series: number[]; online: number; c
   return (
     <section className="card live-panel live-now" aria-label={copy.regionNow}>
       <div className="live-head-row">
+        <span className="kit-tile" aria-hidden="true">
+          <Radio size={15} strokeWidth={1.8} />
+        </span>
         <h2>{copy.title}</h2>
         <Status connected={p.connected} failed={p.failed} />
       </div>

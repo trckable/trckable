@@ -2,7 +2,7 @@
 // against returning: one tab with two small ones (they were two tabs, and the
 // second was a thin chart of the same days).
 import { useId, useState } from 'react'
-import { Tabs } from '../cards/Tabs'
+import { Tabs } from '../../kit/Tabs'
 import { deepCopy } from '../cards/deepCopy'
 import type { Bucket } from '../../lib/api'
 import { SourcesCard } from './cards/SourcesCard'

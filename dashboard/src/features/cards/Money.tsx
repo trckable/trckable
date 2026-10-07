@@ -14,7 +14,7 @@ export function GoalsPanel({ c }: { c: CardsCtx }) {
   }
   return (
     <>
-      <div className="tc-tools">
+      <div className="kit-tools">
         <button type="button" className="btn ghost" onClick={c.onTrackGoal}>
           {cardCopy.trackGoal}
         </button>

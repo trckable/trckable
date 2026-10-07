@@ -15,7 +15,7 @@ import type { CardsCtx } from './ctx'
 import { RefMark } from './refIcons'
 import { useRowExtras } from './useRowExtras'
 import { listProps, SubPanel } from './SubPanel'
-import type { TabItem } from './Tabs'
+import type { TabItem } from '../../kit/Tabs'
 
 const HeatOverlay = lazy(() => import('../heatmap/HeatOverlay'))
 const ScrollDepth = lazy(() => import('../../views/ScrollDepth').then((m) => ({ default: m.ScrollDepth })))
@@ -47,7 +47,6 @@ function SourceBars({ c, dim }: { c: CardsCtx; dim: string }) {
   const list = (
     <BarList
       {...listProps(c, dim)}
-      fat
       dimLabel={DIM_LABEL[dim]}
       subLabel={c.full && !c.scrubbing ? convOrBounce(c) : undefined}
       onPick={(v) => c.addFilter(dim, v)}
@@ -113,7 +112,6 @@ function PageBars({ c, dim }: { c: CardsCtx; dim: string }) {
       <BarList
         {...listProps(c, dim)}
         action={action}
-        fat
         dimLabel={DIM_LABEL[dim]}
         subLabel={c.full && dim !== 'page' && !c.money && !c.scrubbing ? 'Bounce' : undefined}
         onPick={(v) => c.addFilter(dim, v)}

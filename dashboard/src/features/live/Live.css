@@ -22,42 +22,27 @@ body[data-mode] .card.live-panel,
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 22px;
-  border-bottom: 1px solid var(--grid);
+  padding: 16px 22px 0;
 }
 body[data-mode] .live-head-row h2,
 .live-head-row h2 {
   margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  color: var(--text-3);
+  font-size: 13px;
+  font-weight: 500;
 }
 /* The Live card's title leads with the switch's dot: lime and pulsing while the
    feed is connected, grey and still when it is not (and still, lime, for a
    person who asked for less motion). */
-.live-now .live-head-row h2 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.live-now .live-head-row .kit-tile {
+  color: var(--text-3);
 }
-.live-now .live-head-row h2::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--text-3);
-}
-.live-now .live-head-row:has(.live-calm) h2::before {
-  background: var(--accent);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .live-now .live-head-row:has(.live-calm) h2::before {
-    animation: pulse 2s ease-out infinite;
-  }
+.live-now .live-head-row:has(.live-calm) .kit-tile {
+  color: var(--accent);
 }
 .live-meta {
   margin-left: auto;
-  font-family: var(--mono);
+  color: var(--text-4);
   font-size: 12px;
   text-align: right;
 }
