@@ -21,7 +21,7 @@
   --text: #f5f7fa;
   --text-2: #a7b0bd;
   --text-3: #8a93a1;
-  --text-4: #737b87; /* the footer line: 4.55:1 on the dark page */
+  --text-4: #838b97; /* 4.97:1 on the dark card */
   --accent: #b8ff3c;
   /* The accent on a tinted chip, at 11px: the plain accent is 4.18:1 there in
      the light theme, and AA wants 4.5. */
@@ -85,7 +85,7 @@
     --tkb-outline: #0b0d10; /* the logo's ghost keeps an ink edge on a light page */
     --text-2: #4a525e;
     --text-3: #616874;
-    --text-4: #6d737e; /* 4.56:1 on the light page */
+    --text-4: #676d78; /* 4.84:1 on the light sunken surface */
     /* 4.87:1 with white on it. The old #4d8a00 was 4.24 — close enough to
        look fine and not close enough to be readable. */
     --accent: #487f00;
@@ -138,7 +138,7 @@
   --tkb-outline: #0b0d10;
   --text-2: #4a525e;
   --text-3: #616874;
-  --text-4: #6d737e;
+  --text-4: #676d78;
   --accent: #487f00;
   --accent-strong: #3f7000;
   --accent-ink: #ffffff;
@@ -1901,7 +1901,7 @@ body[data-mode='full'] .app {
 }
 /* The overview sets its own inner spacing (the tiles and the chart each pad
    themselves), so the modes' card padding stays off it. */
-body[data-mode] .kit-card.overview {
+body[data-mode] .card.overview {
   padding: 0;
 }
 .switch:disabled {
@@ -2534,10 +2534,13 @@ body[data-mode] .kit-card.overview {
 /* ---- Overview: the key numbers and the chart, one section -------------------
    The dialogs' soft light across the top; each number on a quiet tile with its
    own icon; the one being charted is lit. */
-.kit-card.overview {
+.card.overview {
   gap: 0;
   padding: 0;
-  border-top: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(700px 240px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--surface);
 }
 @media (max-width: 640px) {
   .overview-chart {
@@ -2906,12 +2909,38 @@ body[data-mode] .kit-card.overview {
   cursor: default;
 }
 
-.app .kit-card.overview .overview-chart {
+.app .card.overview {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.app .card.overview .kpis {
+  padding: 0;
+  gap: 0;
+  border-top: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+}
+.app .card.overview .kpi {
+  padding: 14px 16px;
+}
+.app .card.overview .kpi + .kpi {
+  border-left: 1px solid var(--grid);
+}
+.app .card.overview .overview-chart {
   padding-left: 0;
   padding-right: 0;
 }
 .app .cards2 {
   gap: 44px;
+}
+@media (max-width: 640px) {
+  .app .card.overview .kpi:nth-child(odd) {
+    border-left: 0;
+  }
+  .app .card.overview .kpi {
+    border-bottom: 1px solid var(--grid);
+  }
 }
 
 /* ---- One button language ---------------------------------------------------
@@ -2964,7 +2993,4 @@ body[data-mode] .kit-card.overview {
 }
 body {
   overflow-x: clip;
-}
-.kit-card.overview > .kit-head {
-  padding: 14px 16px 12px;
 }

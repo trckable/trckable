@@ -192,8 +192,9 @@ for (const [name, path, ready] of [
   test(`${name}: no card is wider than it is, nothing passes the screen's edge (390 and 360)`, async ({ page }) => {
     await page.goto(API + path)
     await expect(page.locator(ready).first()).toBeVisible({ timeout: 20_000 })
-    expect(await page.evaluate(spills)).toEqual([])
+    // The charts measure themselves and redraw a moment after they appear and after a resize.
+    await expect.poll(() => page.evaluate(spills)).toEqual([])
     await page.setViewportSize({ width: 360, height: 800 })
-    expect(await page.evaluate(spills)).toEqual([])
+    await expect.poll(() => page.evaluate(spills)).toEqual([])
   })
 }

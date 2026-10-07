@@ -81,7 +81,7 @@ export function FlowChart(p: {
   }
   return (
     <div ref={ref} className="kit-chart kit-flow">
-      <div className="kit-flow-box">
+      <div className="kit-flow-box" tabIndex={0} role="group" aria-label={p.label}>
         <div className="kit-flow-in" style={{ width: w }}>
           <svg width={w} height={h} role="img" aria-label={p.label} className="kit-svg" onPointerLeave={() => { setHot(null); setTip(null) }}>
             <defs>

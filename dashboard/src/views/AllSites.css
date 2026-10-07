@@ -86,7 +86,8 @@
 .all-chart-axis span:first-child {
   transform: none;
 }
-.all-chart-axis span:last-child:not(:first-child) {
+.all-chart-axis span:last-child:not(:first-child),
+.all-chart-axis span:only-child {
   transform: translateX(-100%);
 }
 .all-grid {
@@ -227,7 +228,8 @@
    desktop is raised to 12 (the phone scale, phone.css). */
 @media (max-width: 640px) {
   :root :is(
-    .all-chart-axis
+    .all-chart-axis,
+    .all-chart-y
   ) {
     font-size: 12px;
   }
