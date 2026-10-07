@@ -188,8 +188,8 @@ test('the keys work in the list: ↑/↓ move, a number opens that site, and the
   await expect(rows.nth(1)).toBeFocused()
   await page.keyboard.press('ArrowUp')
   await expect(rows.first()).toBeFocused()
-  // Compact rows: 34 px on a desktop.
-  expect(await rows.first().evaluate((e: HTMLElement) => e.offsetHeight)).toBe(34)
+  // Compact rows: 32 px on a desktop.
+  expect(await rows.first().evaluate((e: HTMLElement) => e.offsetHeight)).toBe(32)
   const second = await rows.nth(1).getAttribute('title')
   await page.keyboard.press('2')
   await expect(page).toHaveURL(new RegExp('/' + encodeURIComponent(second!).replace(/\./g, '\\.')))

@@ -3068,8 +3068,11 @@ body {
   text-transform: none;
 }
 /* The chosen row: a check at the left, no coloured edge. */
-:root .pop.sites .site {
-  padding-left: 26px;
+:root .pop.sites.pop .site {
+  padding-left: 28px;
+}
+:root .pop.sites .site .tick {
+  display: none;
 }
 :root .pop.sites .site.on::before {
   content: '';
@@ -3126,7 +3129,7 @@ body {
     border-radius: 12px;
   }
   :root .pop.sites .site.on::before {
-    left: 11px;
+    left: 12px;
   }
   /* The grab handle: one on every sheet. */
   :root .pop:is(.anchored, .menu.more-menu, .menu-pop, .sites, .lpop, .range-pop)::before {
