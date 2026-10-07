@@ -17,6 +17,7 @@ FROM --platform=$BUILDPLATFORM node:22-trixie-slim AS web
 WORKDIR /src
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY scripts/gzip-size.mjs ./scripts/gzip-size.mjs
 COPY dashboard/ ./dashboard/
 COPY tracker/ ./tracker/
 COPY e2e/package.json ./e2e/package.json
