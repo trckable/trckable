@@ -44,12 +44,13 @@ export function PhoneRow(p: PhoneProps & { value: PickerValue; today: ISODate; s
   // The tabs scroll inside their own box: keep the chosen one in sight.
   const tabs = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    const t = window.setTimeout(() => {
+    const fit = () => {
       const box = tabs.current
       const on = box?.querySelector<HTMLElement>('.sv-switch .on')
       if (box && on) box.scrollLeft = Math.max(0, on.offsetLeft + on.offsetWidth - box.clientWidth)
-    }, 250)
-    return () => window.clearTimeout(t)
+    }
+    const ids = [200, 600, 1400].map((ms) => window.setTimeout(fit, ms))
+    return () => ids.forEach((id) => window.clearTimeout(id))
   }, [])
   const n = p.active.length
   return (

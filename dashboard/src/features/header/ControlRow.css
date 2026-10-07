@@ -544,10 +544,10 @@
   .sv-slot {
     display: flex;
   }
-  .app .pr-tabs :is(.view-switch, .sv-switch) {
+  .app :is(.view-switch, .sv-switch) {
     height: 44px;
   }
-  .app .pr-tabs :is(.view-switch, .sv-switch) button {
+  .app :is(.view-switch, .sv-switch) button {
     height: 44px;
     min-width: 44px;
     padding: 0 10px;

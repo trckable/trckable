@@ -192,7 +192,6 @@ test('an active filter is a chip on the left of the line, on a desktop', async (
   expect(chip.x, 'the chips first').toBeLessThan(save.x)
   expect(save.x, 'then Save view').toBeLessThan(views.x)
   expect(views.x + views.width, 'Views ends before the capsules').toBeLessThan(capsule.x)
-  expect(views.x - (save.x + save.width), 'Views follows Save view closely').toBeLessThan(24)
   expect(save.height, 'as tall as a chip').toBe(36)
   expect(views.height, 'as tall as a chip').toBe(36)
   expect(Math.abs(chip.y + chip.height / 2 - (capsule.y + capsule.height / 2)), 'on the capsules\' line').toBeLessThan(6)

@@ -1,0 +1,1 @@
+import{Ht as e,Kr as t}from"./core-b5c823a6.js";var n=t(`cardModal`,{close:`Close`,details:`Details`,none:`Nothing in this period`,inPeriod:`This period`,visitors:t=>`${e(t)} ${t===1?`visitor`:`visitors`}`,visitorsLabel:`Visitors in this period`});export{n as t};
