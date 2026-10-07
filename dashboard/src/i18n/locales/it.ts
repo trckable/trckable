@@ -363,7 +363,9 @@ export default {
   'header.sheet.more': 'Altro',
   'header.sheet.compareRow': 'Confronta',
   'header.sheet.filtersRow': 'Filtri',
-  'header.sheet.add': 'Aggiungi',
+  'header.sheet.add': '+ Aggiungi un filtro',
+  'header.sheet.custom': 'Intervallo personalizzato',
+  'header.sheet.off': 'Disattivato',
 
   // create
   'create.dialog.title': 'Nuovo funnel',
@@ -381,6 +383,8 @@ export default {
   'create.dialog.save': 'Mostra il funnel',
 
   // header
+  'header.filterCount': (n: number) => `Filtro, ${n} attivo/i`,
+  'header.row.add': 'Aggiungi un filtro',
   'header.row.active': 'Filtri attivi',
   'header.row.is': 'è',
   'header.row.isNot': 'non è',

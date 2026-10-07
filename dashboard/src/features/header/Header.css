@@ -252,88 +252,66 @@ html {
   }
 }
 
-/* ---- The band: the first header row as a floating glass bar -----------------
-   As wide as the page's content, rounded, a thin lit edge on top and a
-   hairline all round, stuck near the top so the page scrolls visibly under
-   it. Only the surface behind is blurred, never the content. Without blur
-   (or with reduced transparency, or more contrast asked for) it is solid. */
+/* ---- The header at rest: plain, and it scrolls away ------------------------
+   No box, border or glass: the logo, the site as breadcrumb text ("site ⌄",
+   a soft fill on hover only) and the account's own controls. Only the control
+   line under it stays (ControlRow.css). */
 .hdr-band {
-  --band-bg: var(--band);
-  position: sticky;
-  top: 8px;
-  z-index: 30;
-  margin-top: -16px;
-  padding: 4px 10px;
-  border: 1px solid var(--band-line);
-  border-radius: 16px;
-  box-shadow: inset 0 1px 0 var(--band-hi), 0 8px 32px transparent;
-  transition: box-shadow 0.2s;
-}
-/* The glass is a layer of its own: a backdrop-filter on the bar itself would
-   become the containing block of the site list's sheet (position: fixed). */
-.hdr-band::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: var(--band-bg);
-  pointer-events: none;
-}
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  @media (prefers-reduced-transparency: no-preference) {
-    .hdr-band {
-      --band-bg: var(--band-glass);
-    }
-    .hdr-band::before {
-      -webkit-backdrop-filter: blur(22px) saturate(180%);
-      backdrop-filter: blur(22px) saturate(180%);
-    }
-  }
-}
-@media (prefers-contrast: more) {
-  .hdr-band {
-    --band-bg: var(--band);
-    border-color: var(--border-2);
-  }
-  .hdr-band::before {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-}
-.hdr-band[data-scrolled] {
-  box-shadow: inset 0 1px 0 var(--band-hi), 0 8px 32px var(--band-drop);
-}
-@media (max-width: 720px) {
-  .hdr-band {
-    margin-top: -4px;
-    padding: 2px 6px;
-  }
-}
-/* Breathing space under the bar: the row below sits a full gap away. */
-.hdr-band ~ :is(.subbar, .phone-row) {
-  margin-top: 0;
-}
-@media (prefers-reduced-motion: reduce) {
-  .hdr-band {
-    transition: none;
-  }
+  position: relative;
+  margin-top: -8px;
+  padding: 0;
 }
 .hdr-band .header.quiet .site-zone,
-.hdr-band .view-switch {
-  border-color: transparent;
-  background: var(--band-fill);
-}
 .hdr-band .header.quiet .site-zone:hover,
 .hdr-band .header.quiet .site-zone:focus-within {
   border-color: transparent;
-  background: color-mix(in srgb, var(--text) 9%, transparent);
-}
-.hdr-band .header-tools.quiet .btn.ghost:hover,
-.hdr-band .header-tools.quiet .btn.ghost[aria-expanded='true'],
-.hdr-band .site-zone .btn.gear:hover {
-  background: color-mix(in srgb, var(--text) 9%, transparent);
+  background: transparent;
 }
 .hdr-band .header.quiet .site-zone .site-sep {
-  background: color-mix(in srgb, var(--text) 14%, transparent);
+  display: none;
+}
+.hdr-band .header.quiet .site-zone .btn.site-btn,
+.hdr-band .header.quiet .site-zone .btn.gear {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-2);
+}
+.hdr-band .header.quiet .site-zone .btn.site-btn .name {
+  color: var(--text);
+  font-weight: 500;
+}
+.hdr-band .header.quiet .site-zone .btn.site-btn:hover,
+.hdr-band .header.quiet .site-zone .btn.site-btn[aria-expanded='true'],
+.hdr-band .site-zone .btn.gear:hover,
+.hdr-band .header-tools.quiet .btn.ghost:hover,
+.hdr-band .header-tools.quiet .btn.ghost[aria-expanded='true'] {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+/* Ask, the bell and the avatar: no outline of their own. */
+.hdr-band .header-tools.quiet .btn,
+.hdr-band .header-tools.quiet .btn.account-btn {
+  border: 0;
+  box-shadow: none;
+  outline-color: transparent;
+}
+.hdr-band .header-tools.quiet .btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.hdr-band .account-btn .avatar {
+  box-shadow: none;
+  border: 0;
+}
+.hdr-band .view-switch {
+  border-color: transparent;
+  background: transparent;
+}
+
+/* Peek: its key is dim text, not a box. */
+.hdr-band .header-tools.quiet .btn.ask .kbd {
+  border: 0;
+  padding: 0;
+  font-size: 12px;
+  color: var(--text-3);
 }

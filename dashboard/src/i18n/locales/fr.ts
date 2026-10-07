@@ -357,7 +357,9 @@ export default {
   'header.sheet.more': 'Plus',
   'header.sheet.compareRow': 'Comparer',
   'header.sheet.filtersRow': 'Filtres',
-  'header.sheet.add': 'Ajouter',
+  'header.sheet.add': '+ Ajouter un filtre',
+  'header.sheet.custom': 'Période personnalisée',
+  'header.sheet.off': 'Désactivé',
 
   // create
   'create.dialog.title': 'Nouvel entonnoir',
@@ -375,6 +377,8 @@ export default {
   'create.dialog.save': 'Afficher l’entonnoir',
 
   // header
+  'header.filterCount': (n: number) => `Filtre, ${n} actif(s)`,
+  'header.row.add': 'Ajouter un filtre',
   'header.row.active': 'Filtres actifs',
   'header.row.is': 'est',
   'header.row.isNot': 'n’est pas',

@@ -369,7 +369,9 @@ export default {
   'header.sheet.more': 'Más',
   'header.sheet.compareRow': 'Comparar',
   'header.sheet.filtersRow': 'Filtros',
-  'header.sheet.add': 'Añadir',
+  'header.sheet.add': '+ Añadir un filtro',
+  'header.sheet.custom': 'Rango personalizado',
+  'header.sheet.off': 'Desactivado',
 
   // create
   'create.dialog.title': 'Nuevo embudo',
@@ -387,6 +389,8 @@ export default {
   'create.dialog.save': 'Mostrar el embudo',
 
   // header
+  'header.filterCount': (n: number) => `Filtro, ${n} activo(s)`,
+  'header.row.add': 'Añadir un filtro',
   'header.row.active': 'Filtros activos',
   'header.row.is': 'es',
   'header.row.isNot': 'no es',

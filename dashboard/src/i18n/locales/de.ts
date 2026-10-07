@@ -366,7 +366,9 @@ export default {
   'header.sheet.more': 'Mehr',
   'header.sheet.compareRow': 'Vergleichen',
   'header.sheet.filtersRow': 'Filter',
-  'header.sheet.add': 'Hinzufügen',
+  'header.sheet.add': '+ Filter hinzufügen',
+  'header.sheet.custom': 'Eigener Zeitraum',
+  'header.sheet.off': 'Aus',
 
   // create
   'create.dialog.title': 'Neuer Trichter',
@@ -384,6 +386,8 @@ export default {
   'create.dialog.save': 'Trichter anzeigen',
 
   // header
+  'header.filterCount': (n: number) => `Filter, ${n} aktiv`,
+  'header.row.add': 'Filter hinzufügen',
   'header.row.active': 'Aktive Filter',
   'header.row.is': 'ist',
   'header.row.isNot': 'ist nicht',
