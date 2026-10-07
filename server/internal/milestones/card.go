@@ -16,5 +16,9 @@ func Card(m sqlite.Milestone, domain, theme string, showAmount bool) cards.Spec 
 	if Money(m.Kind) {
 		s.Accent = th.Money
 	}
+	// "$1,000" over "revenue milestone": the number leads, the words say what it is.
+	if m.Kind == Revenue && showAmount {
+		s.Label += " " + words.milestone
+	}
 	return s
 }

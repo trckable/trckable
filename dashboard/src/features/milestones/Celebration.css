@@ -1,14 +1,12 @@
 /* A milestone's celebration (Celebration.tsx): the ghost's hop and a few
-   sparks, once, in the corner the side card slides into. Gone after 1.4 s; with
-   reduced motion it is not drawn at all. */
+   sparks, once, standing on the side card's top edge (never over the card or its
+   buttons). Gone after 1.4 s; with reduced motion it is not drawn at all. */
 .ms-party {
-  position: fixed;
-  right: 28px;
-  bottom: 96px;
-  z-index: 36;
-  width: 340px;
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
   height: 120px;
-  max-width: calc(100vw - 32px);
   pointer-events: none;
   --ms-ink: var(--accent);
 }
@@ -85,16 +83,41 @@
   border: 1px solid var(--border);
   background: var(--sunken);
 }
-@media (max-width: 560px) {
-  .ms-peek {
-    display: none;
-  }
+/* One card: the figure in the milestone's colour, one quiet line, the picture, two quiet buttons. */
+.side-card.flat .side-num {
+  margin-top: 2px;
+  color: var(--tint);
+  font-size: 30px;
+  font-weight: 650;
 }
-@media (max-width: 640px) {
-  .ms-party {
-    right: 16px;
-    left: 16px;
-    bottom: 60px;
-    width: auto;
+.side-card.flat .side-card-title {
+  padding-right: 0;
+}
+.ms-context {
+  margin: -6px 0 2px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.side-card.flat .side-card-actions {
+  gap: 8px;
+  margin-top: 4px;
+}
+.side-card.flat .side-card-actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+.side-card.flat .side-card-actions .btn.ms-share {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+  font-weight: 600;
+}
+@media (max-width: 560px) {
+  .side-card.flat .side-card-actions .btn {
+    min-height: 44px;
+  }
+  .side-card.flat {
+    padding-right: 16px;
+    padding-left: 16px;
   }
 }

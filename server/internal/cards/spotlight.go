@@ -24,14 +24,14 @@ func Mark(s Spec) Run {
 	return Run{X: padRight, Y: footY, Px: 32, End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able", Ink: s.Theme.Muted}}}
 }
 
-// The spotlight: one big number and what it is, the ghost beside it, a faint
-// line rising behind. Words: Domain on top, Big, Label, Foot.
+// The spotlight: one big number in the card's colour and what it is, small
+// under it, the ghost as a small mark in the corner, a faint line rising behind. Words: Domain on top, Big, Label, Foot.
 func init() {
 	shapes := template.Must(template.New("spotlight").Funcs(template.FuncMap{
 		"ghost": func(f Frame, x, y, k float64) map[string]any { return map[string]any{"F": f, "X": x, "Y": y, "K": k} },
 	}).Parse(`<rect width="1200" height="630" fill="{{.BG}}"/>` +
-		`<path d="M88 488l200-44 150 28 200-64 150 22 324-112" fill="none" stroke="{{.Ink}}" stroke-opacity="0.16" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>` +
-		`{{template "ghost" ghost . 988 80 1.9}}`))
+		`<path d="M88 500l160-34 120 18 140-50 120 12 160-84 324-92" fill="none" stroke="{{.Ink}}" stroke-opacity="0.34" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` +
+		`{{template "ghost" ghost . 1032 72 1.1}}`))
 	template.Must(shapes.New("ghost").Parse(Ghost))
 	Templates["spotlight"] = Template{Shapes: shapes, Runs: spotlightRuns}
 }
@@ -51,7 +51,7 @@ func spotlightRuns(s Spec) []Run {
 		Mark(s),
 	}
 	if s.Label != "" {
-		runs = append(runs, Run{X: padLeft, Y: 380, Px: 40, Spans: []Span{{Text: s.Label, Ink: s.Theme.FG}}})
+		runs = append(runs, Run{X: padLeft, Y: 372, Px: 34, Spans: []Span{{Text: s.Label, Ink: s.Theme.Muted}}})
 	}
 	return runs
 }
