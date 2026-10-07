@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:server/internal/web/dist/assets/text-cursor-input-b685e002.js
-import{Gn as e}from"./core-259d424e.js";var t={name:`text-cursor-input`,size:24,node:[[`path`,{d:`M12 20h-1a2 2 0 0 1-2-2 2 2 0 0 1-2 2H6`,key:`1528k5`}],[`path`,{d:`M13 8h7a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-7`,key:`13ksps`}],[`path`,{d:`M5 16H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h1`,key:`1n9rhb`}],[`path`,{d:`M6 4h1a2 2 0 0 1 2 2 2 2 0 0 1 2-2h1`,key:`1mj8rg`}],[`path`,{d:`M9 6v12`,key:`velyjx`}]]};t.node;var n=e(t);export{n as t};
-========
-import{Hn as e}from"./core-95948b11.js";var t={name:`text-cursor-input`,size:24,node:[[`path`,{d:`M12 20h-1a2 2 0 0 1-2-2 2 2 0 0 1-2 2H6`,key:`1528k5`}],[`path`,{d:`M13 8h7a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-7`,key:`13ksps`}],[`path`,{d:`M5 16H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h1`,key:`1n9rhb`}],[`path`,{d:`M6 4h1a2 2 0 0 1 2 2 2 2 0 0 1 2-2h1`,key:`1mj8rg`}],[`path`,{d:`M9 6v12`,key:`velyjx`}]]};t.node;var n=e(t);export{n as t};
->>>>>>>> origin/data-on-kit:server/internal/web/dist/assets/text-cursor-input-72799564.js

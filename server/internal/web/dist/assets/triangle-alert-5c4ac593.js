@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:server/internal/web/dist/assets/triangle-alert-5c4ac593.js
-import{Gn as e}from"./core-259d424e.js";var t={name:`triangle-alert`,size:24,node:[[`path`,{d:`m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3`,key:`wmoenq`}],[`path`,{d:`M12 9v4`,key:`juzpu7`}],[`path`,{d:`M12 17h.01`,key:`p32p05`}]],aliases:[`alert-triangle`]};t.node;var n=e(t);export{n as t};
-========
-import{Hn as e}from"./core-95948b11.js";var t={name:`triangle-alert`,size:24,node:[[`path`,{d:`m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3`,key:`wmoenq`}],[`path`,{d:`M12 9v4`,key:`juzpu7`}],[`path`,{d:`M12 17h.01`,key:`p32p05`}]],aliases:[`alert-triangle`]};t.node;var n=e(t);export{n as t};
->>>>>>>> origin/data-on-kit:server/internal/web/dist/assets/triangle-alert-6fc02d89.js

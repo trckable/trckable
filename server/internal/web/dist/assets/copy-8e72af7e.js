@@ -1,0 +1,3 @@
+import{ri as e}from"./core-d7b9ab25.js";var t=e(`exclude`,{leave:`Exclude this browser`,again:`Count this browser again`,ips:{label:`Exclude IP ranges`,hint:`Up to 50. Never counted, never stored`,placeholder:`203.0.113.7
+198.51.100.0/24
+2001:db8::/32`,bad:e=>`${e} is not an IP address or a range like 203.0.113.0/24`,many:`Up to 50 addresses`,saved:e=>`${e} ${e===1?`address`:`addresses`} excluded`,cleared:`No addresses are excluded now`}});export{t};

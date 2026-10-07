@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:server/internal/web/dist/assets/users-cf045b02.js
-import{Gn as e}from"./core-259d424e.js";var t={name:`users`,size:24,node:[[`path`,{d:`M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2`,key:`1yyitq`}],[`path`,{d:`M16 3.128a4 4 0 0 1 0 7.744`,key:`16gr8j`}],[`path`,{d:`M22 21v-2a4 4 0 0 0-3-3.87`,key:`kshegd`}],[`circle`,{cx:`9`,cy:`7`,r:`4`,key:`nufk8`}]]};t.node;var n=e(t);export{n as t};
-========
-import{Hn as e}from"./core-95948b11.js";var t={name:`users`,size:24,node:[[`path`,{d:`M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2`,key:`1yyitq`}],[`path`,{d:`M16 3.128a4 4 0 0 1 0 7.744`,key:`16gr8j`}],[`path`,{d:`M22 21v-2a4 4 0 0 0-3-3.87`,key:`kshegd`}],[`circle`,{cx:`9`,cy:`7`,r:`4`,key:`nufk8`}]]};t.node;var n=e(t);export{n as t};
->>>>>>>> origin/data-on-kit:server/internal/web/dist/assets/users-61a7469e.js

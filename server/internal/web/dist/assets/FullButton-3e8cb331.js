@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:server/internal/web/dist/assets/FullButton-29efdd67.js
-import{t as e}from"./react-e12729a5.js";import{Lr as t,Vr as n}from"./core-259d424e.js";import{t as r}from"./maximize-2-87b5cd42.js";import{t as i}from"./copyLater-818e2f4f.js";var a=e();function o({onFull:e}){return(0,a.jsxs)(`button`,{type:`button`,className:`tc-full`,"data-tip":i.fullTip,"aria-label":i.fullLabel,onClick:e,children:[(0,a.jsx)(r,{size:13,strokeWidth:1.75,"aria-hidden":`true`}),i.full,(0,a.jsx)(`span`,{className:`kbd`,children:t(n(`mode`)).join(``)})]})}export{o as default};
-========
-import{t as e}from"./react-e12729a5.js";import{Pr as t,Rr as n}from"./core-95948b11.js";import{t as r}from"./maximize-2-71db9bf0.js";import{t as i}from"./copyLater-dd10b61f.js";var a=e();function o({onFull:e}){return(0,a.jsxs)(`button`,{type:`button`,className:`tc-full`,"data-tip":i.fullTip,"aria-label":i.fullLabel,onClick:e,children:[(0,a.jsx)(r,{size:13,strokeWidth:1.75,"aria-hidden":`true`}),i.full,(0,a.jsx)(`span`,{className:`kbd`,children:t(n(`mode`)).join(``)})]})}export{o as default};
->>>>>>>> origin/data-on-kit:server/internal/web/dist/assets/FullButton-3e8cb331.js

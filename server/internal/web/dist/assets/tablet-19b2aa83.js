@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:server/internal/web/dist/assets/tablet-19b2aa83.js
-import{Gn as e}from"./core-259d424e.js";var t={name:`monitor`,size:24,node:[[`rect`,{width:`20`,height:`14`,x:`2`,y:`3`,rx:`2`,key:`48i651`}],[`line`,{x1:`8`,x2:`16`,y1:`21`,y2:`21`,key:`1svkeh`}],[`line`,{x1:`12`,x2:`12`,y1:`17`,y2:`21`,key:`vw1qmm`}]]};t.node;var n=e(t),r={name:`tablet`,size:24,node:[[`rect`,{width:`16`,height:`20`,x:`4`,y:`2`,rx:`2`,ry:`2`,key:`76otgf`}],[`line`,{x1:`12`,x2:`12.01`,y1:`18`,y2:`18`,key:`1dp563`}]]};r.node;var i=e(r);export{n,i as t};
-========
-import{Hn as e}from"./core-95948b11.js";var t={name:`monitor`,size:24,node:[[`rect`,{width:`20`,height:`14`,x:`2`,y:`3`,rx:`2`,key:`48i651`}],[`line`,{x1:`8`,x2:`16`,y1:`21`,y2:`21`,key:`1svkeh`}],[`line`,{x1:`12`,x2:`12`,y1:`17`,y2:`21`,key:`vw1qmm`}]]};t.node;var n=e(t),r={name:`tablet`,size:24,node:[[`rect`,{width:`16`,height:`20`,x:`4`,y:`2`,rx:`2`,ry:`2`,key:`76otgf`}],[`line`,{x1:`12`,x2:`12.01`,y1:`18`,y2:`18`,key:`1dp563`}]]};r.node;var i=e(r);export{n,i as t};
->>>>>>>> origin/data-on-kit:server/internal/web/dist/assets/tablet-200e8a33.js

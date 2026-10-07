@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:server/internal/web/dist/assets/Select-c8ded18c.js
-import{t as e}from"./react-e12729a5.js";import{Un as t}from"./core-259d424e.js";var n=e(),r=(e,t)=>e.currentTarget.closest(`label`)?.toggleAttribute(`data-mouse`,t);function i({mark:e,className:i,children:a,...o}){return(0,n.jsxs)(`label`,{className:i?`select `+i:`select`,children:[e,(0,n.jsx)(`select`,{...o,onMouseDown:e=>r(e,!0),onKeyDown:e=>r(e,!1),onBlur:e=>r(e,!1),children:a}),(0,n.jsx)(t,{size:14,strokeWidth:1.75,"aria-hidden":`true`})]})}export{i as t};
-========
-import{t as e}from"./react-e12729a5.js";import{Bn as t}from"./core-95948b11.js";var n=e(),r=(e,t)=>e.currentTarget.closest(`label`)?.toggleAttribute(`data-mouse`,t);function i({mark:e,className:i,children:a,...o}){return(0,n.jsxs)(`label`,{className:i?`select `+i:`select`,children:[e,(0,n.jsx)(`select`,{...o,onMouseDown:e=>r(e,!0),onKeyDown:e=>r(e,!1),onBlur:e=>r(e,!1),children:a}),(0,n.jsx)(t,{size:14,strokeWidth:1.75,"aria-hidden":`true`})]})}export{i as t};
->>>>>>>> origin/data-on-kit:server/internal/web/dist/assets/Select-710c94fa.js

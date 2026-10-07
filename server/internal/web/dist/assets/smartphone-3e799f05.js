@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:server/internal/web/dist/assets/smartphone-3e799f05.js
-import{Gn as e}from"./core-259d424e.js";var t={name:`smartphone`,size:24,node:[[`rect`,{width:`14`,height:`20`,x:`5`,y:`2`,rx:`2`,ry:`2`,key:`1yt0o3`}],[`path`,{d:`M12 18h.01`,key:`mhygvu`}]]};t.node;var n=e(t);export{n as t};
-========
-import{Hn as e}from"./core-95948b11.js";var t={name:`smartphone`,size:24,node:[[`rect`,{width:`14`,height:`20`,x:`5`,y:`2`,rx:`2`,ry:`2`,key:`1yt0o3`}],[`path`,{d:`M12 18h.01`,key:`mhygvu`}]]};t.node;var n=e(t);export{n as t};
->>>>>>>> origin/data-on-kit:server/internal/web/dist/assets/smartphone-b69ff37a.js
