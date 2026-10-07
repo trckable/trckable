@@ -72,7 +72,16 @@ export function AnchoredPop({
     const el = box.current
     if (!el || !placed) return
     const first = el.querySelector<HTMLElement>('[data-autofocus]') ?? el.querySelector<HTMLElement>(NAV)
-    first?.focus({ preventScroll: true })
+    // A panel that arrives with its lazy chunk can still be hidden at this moment, and a hidden
+    // element takes no focus: try again on the next frames.
+    let frame = 0
+    let tries = 0
+    const take = () => {
+      first?.focus({ preventScroll: true })
+      if (first && document.activeElement !== first && tries++ < 10) frame = requestAnimationFrame(take)
+    }
+    take()
+    return () => cancelAnimationFrame(frame)
   }, [placed])
 
   useEffect(() => {

@@ -1,1 +1,0 @@
-import{st as e,wr as t}from"./core-bb972172.js";import{t as n}from"./apiMore-cc4dfa64.js";import{t as r}from"./open-da534189.js";function i(i){n.setModule(i.id,`crawlers`,!0).then(()=>{e(),r(i)}).catch(e=>t(e))}export{i as default};
