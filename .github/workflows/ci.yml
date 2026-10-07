@@ -301,6 +301,7 @@ jobs:
           get() { apt-get $o update -qq && apt-get $o install -y -qq --no-install-recommends php-cli > /dev/null; }
           if ! timeout 150 bash -c "$(declare -f get); o='$o'; get"; then
             echo "::warning::the Azure package mirror stalled; trying the main Ubuntu archive"
+            rm -rf /var/lib/apt/lists/* # what the stalled try half fetched
             for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
               [ -f "$f" ] && sed -i 's#http://azure.archive.ubuntu.com#http://archive.ubuntu.com#g' "$f"
             done
