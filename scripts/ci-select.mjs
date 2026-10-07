@@ -58,6 +58,7 @@ const ALL = 'all'
 // Where the install snippets live: a change here runs the WordPress case
 // (PHP in CI); other pull requests skip it, and main and releases run it.
 const INSTALL = ['dashboard/src/features/install/', 'dashboard/src/lib/install']
+const wordpressFile = (f) => INSTALL.some((p) => f.startsWith(p)) || f.startsWith('tracker/') || f.startsWith('packages/trckable/') || f === 'e2e/tests/methods.spec.ts'
 const none = () => ({ full: false, race: false, server: new Set(), crash: false, e2e: new Set(), demo: false, dashboard: false, tracker: false, image: false, accuracy: false, wordpress: false })
 
 /** Everything, as on main. */
@@ -107,7 +108,9 @@ export function select(files) {
     if (/^(deploy\/(compose\.yml|(coolify|dokploy|railway|umbrel)\/)|charts\/|scripts\/deploy-check\.sh$|\.github\/workflows\/deploy-check\.yml$)/.test(f)) continue
     // The release scripts: the "what changed" job itself runs their tests.
     if (/^scripts\/(release|release-lib|version-check|ci-select)(\.test)?\.mjs$/.test(f)) continue
-    return everything() // not known: all of it
+    // Not known: all of it, except the WordPress case, which a pull request runs
+    // only for the snippets and the tracker (main and releases run it always).
+    return { ...everything(), wordpress: files.some(wordpressFile) }
   }
   // Specs that only run against the demo server belong to that job.
   if (s.e2e !== ALL) { if (s.e2e.delete('fullcharts')) s.demo = true }

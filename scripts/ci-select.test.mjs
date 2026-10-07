@@ -156,4 +156,7 @@ test('the WordPress case (PHP in CI) runs only for the install snippets, the tra
   assert.equal(outputs(select(['packages/trckable/src/index.ts'])).wordpress, 'true')
   assert.equal(outputs(select(['e2e/tests/methods.spec.ts'])).wordpress, 'true')
   assert.equal(outputs(everything()).wordpress, 'true')
+  assert.equal(outputs(select(['.github/workflows/ci.yml'])).wordpress, 'false')
+  assert.equal(outputs(select(['.github/workflows/ci.yml', 'tracker/src/index.ts'])).wordpress, 'true')
+  assert.equal(outputs(select(['.github/workflows/ci.yml'])).full, 'true')
 })
