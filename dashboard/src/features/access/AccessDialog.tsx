@@ -3,7 +3,7 @@
 import { useState, type SyntheticEvent } from 'react'
 import { DialogActions } from '../../components/DialogActions'
 import { DialogHead } from '../../components/DialogHead'
-import { Modal } from '../../components/Modal'
+import { Modal } from '../../kit/Modal'
 import { Switch } from '../../components/Switch'
 import { fail, type SiteAccessList } from '../../lib/api'
 import { copy } from './copy'

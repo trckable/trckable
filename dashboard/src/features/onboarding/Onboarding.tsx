@@ -19,7 +19,7 @@ import { cleanDomain, dotOf, finishPath, type Step } from './model'
 import { Preview } from './Preview'
 import { SiteStep } from './SiteStep'
 import './onboarding.css'
-import '../../components/Modal.css'
+import '../../kit/Modal.css'
 
 // Nothing to refresh: the first run only watches for visits.
 const noRefetch = () => {}

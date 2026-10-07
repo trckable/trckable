@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 import { Calendar, ChartSpline, Compass, Gauge, Keyboard, LayoutDashboard, MousePointer2, MoveHorizontal, RotateCcw, Rows3, X } from 'lucide-react'
 import { useConfirm } from '../components/Confirm'
-import { Modal } from '../components/Modal'
+import { Modal } from '../kit/Modal'
 import { toast } from '../components/Toast'
 import { fail, more } from '../lib/apiMore'
 import { canAsk } from '../lib/me'

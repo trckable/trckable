@@ -4,7 +4,7 @@
 // honest sentence about what is and is not visible, and the actions. A full-height
 // sheet on a phone. Everything in it was counted; nothing says why.
 import { Bell, X, TrendingUp } from 'lucide-react'
-import { Modal } from '../../components/Modal'
+import { Modal } from '../../kit/Modal'
 import { countryName, fmtInt, flag } from '../../lib/format'
 import { RefMark } from '../cards/refIcons'
 import { useHostIcon } from './useHostIcon'

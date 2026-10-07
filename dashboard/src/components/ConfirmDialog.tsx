@@ -6,7 +6,7 @@ import { toast } from './Toast'
 import { DialogActions } from './DialogActions'
 import { DialogHead } from './DialogHead'
 import { Field } from './Field'
-import { Modal } from './Modal'
+import { Modal } from '../kit/Modal'
 import { fail, refused, wrong } from '../lib/api'
 import './ConfirmDialog.css'
 

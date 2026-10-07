@@ -2,7 +2,7 @@
 // they happen to be looking at. It opens over whatever is on screen, so the
 // Settings page can stay about one site.
 import { BellRing, Camera, Eye, EyeOff, ImageUp, LockKeyhole, LogOut, ShieldCheck, Trash2 } from 'lucide-react'
-import { Modal } from '../components/Modal'
+import { Modal } from '../kit/Modal'
 import { Window } from '../components/Window'
 import { PersonAvatar } from '../components/PersonAvatar'
 import { checksHere, setChecksHere } from '../lib/update'

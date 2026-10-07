@@ -5,7 +5,7 @@
 // a lazy chunk, so none of it is in the first load.
 import { X } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
-import { Modal } from '../Modal'
+import { Modal } from '../../kit/Modal'
 import type { SideKind, SideWhen } from '../SideCard/SideCard'
 import { cardModal } from './copy'
 import './CardModal.css'

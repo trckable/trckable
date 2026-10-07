@@ -4,7 +4,7 @@
 import { Printer } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { DialogHead } from '../../components/DialogHead'
-import { Modal } from '../../components/Modal'
+import { Modal } from '../../kit/Modal'
 import { Loading } from '../../components/loading/Loading'
 import { tag } from '../../i18n'
 import { api, more, type Site } from '../../lib/apiMore'

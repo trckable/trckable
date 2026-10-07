@@ -4,7 +4,7 @@ import { Check, Copy, KeyRound } from 'lucide-react'
 import { useState } from 'react'
 import { DialogActions } from '../../components/DialogActions'
 import { DialogHead } from '../../components/DialogHead'
-import { Modal } from '../../components/Modal'
+import { Modal } from '../../kit/Modal'
 import { people } from './peopleCopy'
 
 export function OneTimePassword({ email, password, reset, onClose }: { email: string; password: string; reset?: boolean; onClose: () => void }) {

@@ -172,9 +172,7 @@
    desktop is raised to 12 (the phone scale, phone.css). */
 @media (max-width: 640px) {
   :root :is(
-    .all-chart-axis,
-    .all-big .delta,
-    .all-stat .faint
+    .all-chart-axis
   ) {
     font-size: 12px;
   }
@@ -245,35 +243,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
-}
-.all-stat {
-  display: grid;
-  align-content: start;
-  gap: 2px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-}
-.all-stat-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-3);
-  font-size: 12.5px;
-}
-.all-stat b {
-  font-size: 22px;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-.all-stat .faint {
-  font-size: 12px;
-}
-.all-stat.warn b,
-.all-stat.warn .all-stat-label,
-.all-stat.warn .faint {
-  color: var(--warn);
 }
 .pulse.off {
   animation: none;

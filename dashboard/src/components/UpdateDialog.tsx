@@ -6,7 +6,7 @@ import { CodeBlock } from './Code'
 import { DialogActions } from './DialogActions'
 import { DialogHead } from './DialogHead'
 import { Info } from './Info'
-import { Modal } from './Modal'
+import { Modal } from '../kit/Modal'
 import './UpdateDialog.css'
 
 /** The release notes as short plain lines: headings and bullets, no markup. */

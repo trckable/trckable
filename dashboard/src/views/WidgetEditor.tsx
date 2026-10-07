@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { DialogActions } from '../components/DialogActions'
 import { DialogHead } from '../components/DialogHead'
-import { Modal } from '../components/Modal'
+import { Modal } from '../kit/Modal'
 import { toast } from '../components/Toast'
 import { fail, type Site, type Widget, type WidgetLook, more } from '../lib/apiMore'
 import { TEXT, placeOf, type Place } from './widgetKinds'

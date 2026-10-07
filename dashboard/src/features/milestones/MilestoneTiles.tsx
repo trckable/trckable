@@ -1,26 +1,18 @@
-// The tiles under the hero: a progress ring for each next step, a badge for
+// The tiles under the hero: a gauge for each next step, a badge for
 // each one reached.
 import { Check, Play } from 'lucide-react'
 import type { Milestone, MilestoneNext } from '../../lib/api'
 import { fmtDay } from '../../lib/dates'
+import { Gauge } from '../../kit/Gauge'
 import { copy } from './copy'
 import { ICON } from './icons'
 import { badge, goalLine, isMoney, isQuietStep, leftLine, progressLine, ringPct, tileLabel } from './words'
-
-const R = 34
-const C = 2 * Math.PI * R
 
 export function NextTile({ n, i }: { n: MilestoneNext; i: number }) {
   const pct = ringPct(n)
   return (
     <li className="ms-tile ms-next" style={{ '--i': i } as React.CSSProperties}>
-      <svg width="84" height="84" viewBox="0 0 84 84" role="img" aria-label={`${pct}%`}>
-        <circle cx="42" cy="42" r={R} className="ms-ring-bg" />
-        <circle cx="42" cy="42" r={R} className="ms-ring" strokeDasharray={`${((C * pct) / 100).toFixed(1)} ${C.toFixed(1)}`} style={{ '--c': C.toFixed(1) } as React.CSSProperties} transform="rotate(-90 42 42)" />
-        <text x="42" y="47" textAnchor="middle" className="ms-ring-n">
-          {pct}%
-        </text>
-      </svg>
+      <Gauge pct={pct} />
       <b>{goalLine(n)}</b>
       <span className="ms-left">{leftLine(n)}</span>
       <span className="ms-pace">{progressLine(n)}</span>
