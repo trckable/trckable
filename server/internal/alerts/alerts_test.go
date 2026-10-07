@@ -131,12 +131,14 @@ func TestAlertsByEmail(t *testing.T) {
 		t.Fatal(err)
 	}
 	msg := <-got
-	for _, want := range []string{"To: <me@example.com>", "Subject: Your week  Bcc: victim@example.com · demo.trckable.com", "4,512 visitors\r\nup 13%"} {
-		if !strings.Contains(msg, want) {
-			t.Errorf("missing %q in:\n%s", want, msg)
-		}
+	subject, text, page, hdr := parts(t, msg)
+	if !strings.Contains(msg, "To: <me@example.com>") || subject != "Your week  Bcc: victim@example.com · demo.trckable.com" {
+		t.Errorf("to/subject %q in:\n%s", subject, msg)
 	}
-	if strings.Contains(msg, "\r\nBcc:") {
+	if !strings.Contains(text, "4,512 visitors\r\nup 13%") || !strings.Contains(page, "4,512 visitors<br>up 13%") {
+		t.Errorf("text %q html %q", text, page)
+	}
+	if len(hdr["Bcc"]) != 0 || strings.Contains(msg, "\r\nBcc:") {
 		t.Fatal("a title added a header")
 	}
 	if _, err := ParseMailer("https://mail.example.com", "a@b.c"); err == nil {

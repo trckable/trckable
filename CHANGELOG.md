@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- Milestones: the milestone card is one flat card with the number, one line of context, Copy image and Share; the share image says Revenue milestone reached with the growth line when revenue is hidden.
+
 ## 0.6.5 (7 Oct 2026)
 
 ### Fixed
@@ -19,11 +23,14 @@ section into the release.
 
 - Cards: every card shares one anatomy on the card kit: an icon tile and name, a quiet status and the open arrow on the top line, one number with a change chip, a chart to the card's bottom edge; flat, with a thin border that lights on hover. All sites (stats, one line per site with a tap-to-hide key, four site cards to a row on wide screens), Live, Story, Data (tabs, ranked lists with soft bars, Goals, crawlers) and Milestones use it.
 
+- Alert emails (busier than usual, milestones, tracking stopped, test) are designed: the number, a few rows, one button and a footer with Stop these alerts and Alert settings, with the plain text kept beside it and light and dark colours; a surge email is titled "<site> is having a moment".
 - Dependencies updated to their latest minor and patch releases (the dashboard, the tracker's test tools, the npm package and the lockfile).
 
 - Header: a light header that scrolls away, and one control line that stays at the top (filters on the left, the period on the right, glass with the site's name once the page runs under it); Live | Data and Story | Explore are plain text tabs; the Data and All sites cards lose their boxes for hairlines; on a phone the line holds the tabs, a filter button and a short period that each open a sheet.
 
 - The searchable lists (timezone, currency), the ⋯ menus and the Create menu now open the same way as the other pop-ups: same placement, keys and phone sheet.
+
+- Milestones: one flat card (the number, one line of context such as "18 days after the first sale", the picture, Copy image and Share…) with no coloured edge and no mascot over the buttons; the share image leads with the number in the milestone's colour (revenue says "Revenue milestone reached" with the growth line under it, and shows the amount only with "Show amount" on), with the date and wordmark in the footer, and the picture and Copy image follow the same setting; on a phone it is a full-width bottom sheet.
 
 ## 0.6.4 (7 Oct 2026)
 

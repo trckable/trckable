@@ -164,13 +164,14 @@ func (a *API) milestoneCard(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusNotFound, "site not found")
 		return
 	}
+	list, _, _ := a.visibleMilestones(r, r.PathValue("site"))
 	q := r.URL.Query()
-	a.serveCard(w, m, si.Domain, q.Get("theme"), q.Get("amount") == "1", q.Get("format") == "svg", "private, no-store")
+	a.serveCard(w, m, milestones.Context(m, list), si.Domain, q.Get("theme"), q.Get("amount") == "1", q.Get("format") == "svg", "private, no-store")
 }
 
 // serveCard draws a card, from the cache when it was drawn before.
-func (a *API) serveCard(w http.ResponseWriter, m sqlite.Milestone, domain, theme string, amount, svg bool, cache string) {
-	c := milestones.Card(m, domain, theme, amount)
+func (a *API) serveCard(w http.ResponseWriter, m sqlite.Milestone, context, domain, theme string, amount, svg bool, cache string) {
+	c := milestones.Card(m, context, domain, theme, amount)
 	if svg {
 		b, err := c.SVG()
 		if err != nil {
