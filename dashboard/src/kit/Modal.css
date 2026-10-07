@@ -181,7 +181,8 @@
     font-size: var(--ph-text-2);
   }
   :root .seg button,
-  :root .seg.small button {
+  :root .seg.small button,
+  :root .kit-seg button {
     min-width: var(--ph-hit);
     height: var(--ph-hit);
     font-size: var(--ph-text-2);
