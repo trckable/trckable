@@ -67,6 +67,30 @@ test('the Data view: header, row, numbers, chart and cards', async ({ page }) =>
   await clean(page)
 })
 
+test('All sites: nothing wider than the screen, the open arrow inside its card, no ring on a tap', async ({ page }) => {
+  await page.goto(API + '/all')
+  const card = page.locator('.all-item').first()
+  await expect(card).toBeVisible({ timeout: 20_000 })
+  const wide = await page.evaluate(() =>
+    [...document.querySelectorAll('main *')]
+      .filter((e) => {
+        const r = e.getBoundingClientRect()
+        // A scroller keeps its own overflow: only boxes outside every scroller count.
+        return r.width > 0 && r.right > innerWidth + 0.5 && !e.closest('.seg')
+      })
+      .map((e) => String(e.className) || e.tagName),
+  )
+  expect(wide, 'elements wider than the screen').toEqual([])
+  const outer = (await card.boundingBox())!
+  const arrow = (await card.locator('.site-open').boundingBox())!
+  expect(outer.width).toBeGreaterThanOrEqual(390 - 40)
+  expect(arrow.x).toBeGreaterThanOrEqual(outer.x)
+  expect(arrow.x + arrow.width).toBeLessThanOrEqual(outer.x + outer.width + 0.5)
+  expect(arrow.y).toBeGreaterThanOrEqual(outer.y)
+  await page.locator('.all-sort select').focus()
+  await clean(page)
+})
+
 test('the Live view', async ({ page }) => {
   await data(page)
   await page.getByRole('button', { name: /^Live/ }).click()

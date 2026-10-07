@@ -51,19 +51,6 @@
 .all-item:has(:focus-visible) > .site-open {
   opacity: 1;
 }
-@media (hover: none), (max-width: 640px) {
-  .all-item {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 6px;
-  }
-  .all-item > .site-open {
-    position: static;
-    width: 44px;
-    height: 44px;
-    opacity: 1;
-  }
-}
 .all-actions {
   display: flex;
   flex-wrap: wrap;
@@ -210,6 +197,22 @@
     height: var(--ph-hit);
     font-size: var(--ph-text-2);
   }
+  :root .all-link {
+    min-height: var(--ph-hit);
+    font-size: var(--ph-text-2);
+  }
+  /* Four choices do not fit 390 px: the group scrolls inside itself. */
+  :root :is(.all-filters, .all-actions) .seg {
+    /* Width 0 and a floor of 100%: the page measures it as nothing, the row gives it the full width. */
+    width: 0;
+    min-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  :root :is(.all-filters, .all-actions) .seg button {
+    flex: none;
+    white-space: nowrap;
+  }
 }
 
 .all-main {
@@ -303,10 +306,18 @@
   right: 0;
   pointer-events: none;
 }
-.all-sort:focus-within {
+.all-sort select:focus-visible {
+  outline: none;
+}
+.all-sort:has(select:focus-visible) {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 6px;
+}
+@media (pointer: coarse) {
+  .all-sort:has(select:focus-visible) {
+    outline: none;
+  }
 }
 @media (max-width: 640px) {
   .all-stats {
