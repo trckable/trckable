@@ -264,6 +264,3 @@
 .app .all-line:hover {
   border-top-color: var(--accent);
 }
-.app .all-cards {
-  gap: 0 40px;
-}
