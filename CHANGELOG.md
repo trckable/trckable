@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- Milestones: the milestone card is one flat card with the number, one line of context, Copy image and Share; the share image says Revenue milestone reached with the growth line when revenue is hidden.
+
 ## 0.6.5 (7 Oct 2026)
 
 ### Fixed
