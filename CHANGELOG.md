@@ -12,6 +12,7 @@ section into the release.
 ### Changed
 
 - Data: Sources shows the channels as a ring with thick bars, Goals gets an icon, a plain name and a status for each goal plus a small visit-to-goal funnel, and Pages, Locations and Devices use the same bars; the rows' small charts are gone.
+- All sites: the summary cards and each site card are redrawn with a soft area chart of the days behind the number, a pill for the move, and the site's own colour on its card; Milestones shows each next step as a gauge.
 
 ## 0.6.3 (7 Oct 2026)
 

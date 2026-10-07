@@ -74,6 +74,7 @@
   font-weight: 500;
 }
 .kit-title b {
+  color: var(--text);
   overflow: hidden;
   min-width: 0;
   text-overflow: ellipsis;
