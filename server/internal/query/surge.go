@@ -17,14 +17,6 @@ const SurgeWeeks = 4
 // people are usually on the site: the same five minutes Online counts.
 const surgeBucket = 5 * time.Minute
 
-// SurgeUsual is the median, over the last SurgeWeeks weeks, of how many were
-// online in this hour of this weekday (the mean of that hour's five-minute
-// slices). Weeks begun before the site's first visit are left out; weeks says
-// how many counted.
-func (q Q) SurgeUsual(ctx context.Context, site string, now time.Time, loc *time.Location) (usual float64, weeks int, err error) {
-	return q.surgeUsual(ctx, site, now, loc, ``, nil)
-}
-
 // SurgeUsualFrom is the same for the people sent by these referring hosts.
 func (q Q) SurgeUsualFrom(ctx context.Context, site string, now time.Time, loc *time.Location, hosts []string) (float64, error) {
 	if len(hosts) == 0 {

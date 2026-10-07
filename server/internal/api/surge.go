@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
+	"github.com/trckable/trckable/server/internal/busier"
 	"github.com/trckable/trckable/server/internal/moments"
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/surge"
 )
 
-// A site far busier than usual right now (internal/surge): the dashboard asks
+// A site far busier than usual right now (internal/surge, judged by internal/busier): the dashboard asks
 // about it every minute while it is open, and the server's alert loop asks
 // for the sites nobody has open. Whoever sees one begin records it (as a
 // moment on the chart) and tells OnSurge, once: the book of surges is shared.
@@ -76,10 +77,10 @@ func (a *API) CheckSurge(ctx context.Context, site string) *surge.Surge {
 	if loc == nil {
 		loc = time.UTC
 	}
-	// Under the floor there is nothing to compare, unless a surge is on and
-	// may be ending: the usual is only worked out when it could matter.
-	if online >= surge.MinOnline || a.surges.Active(site) {
-		if read.Usual, read.Weeks, err = q.SurgeUsual(ctx, site, now, loc); err != nil {
+	// Under Plus people nothing can be busier than usual, unless a surge is on
+	// and may be ending: the usual is only worked out when it could matter.
+	if online >= busier.Plus || a.surges.Active(site) {
+		if read.Usual, read.Busy, err = a.busierUsual(ctx, q, site, now, loc, online); err != nil {
 			return nil
 		}
 	}
@@ -182,7 +183,7 @@ func (a *API) surgeStory(ctx context.Context, site string, s surge.Surge) *surge
 		return nil
 	}
 	seen := seenOf(who)
-	story := surge.BuildStory(series, now, s.Usual, seen)
+	story := surge.BuildStory(series, now, func(n int64) bool { return busier.Judge(n, s.Usual, s.Usual > 0) == busier.Busier }, seen)
 	a.storyMu.Lock()
 	if a.stories == nil {
 		a.stories = map[string]storyEntry{}

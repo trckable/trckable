@@ -108,11 +108,9 @@ func (a *API) busierRead(ctx context.Context, q *query.Q, site string, now time.
 	if len(hours) == 0 {
 		return out, nil
 	}
-	samples := make([]float64, len(hours))
-	for i, h := range hours {
-		if samples[i], err = q.BusierHour(ctx, site, h); err != nil {
-			return nil, err
-		}
+	samples, err := a.busierSamples(ctx, q, site, hours)
+	if err != nil {
+		return nil, err
 	}
 	out.Baseline, out.Basis = true, string(basis)
 	out.Usual, out.Low, out.High = busier.Spread(samples)
@@ -125,6 +123,37 @@ func (a *API) busierRead(ctx context.Context, q *query.Q, site string, now time.
 	round := func(f float64) float64 { return math.Round(f*10) / 10 }
 	out.Usual, out.Low, out.High = round(out.Usual), round(out.Low), round(out.High)
 	return out, nil
+}
+
+func (a *API) busierSamples(ctx context.Context, q *query.Q, site string, hours []time.Time) ([]float64, error) {
+	samples := make([]float64, len(hours))
+	for i, h := range hours {
+		var err error
+		if samples[i], err = q.BusierHour(ctx, site, h); err != nil {
+			return nil, err
+		}
+	}
+	return samples, nil
+}
+
+// busierUsual is the usual for this hour and whether online is busier than
+// it: the one rule surge alerts and Live share. A site with no usual yet is
+// never busier.
+func (a *API) busierUsual(ctx context.Context, q *query.Q, site string, now time.Time, loc *time.Location, online int64) (float64, bool, error) {
+	first, err := q.BusierFirst(ctx, site)
+	if err != nil {
+		return 0, false, err
+	}
+	hours, _ := busier.Hours(now, first, loc)
+	if len(hours) == 0 {
+		return 0, false, nil
+	}
+	samples, err := a.busierSamples(ctx, q, site, hours)
+	if err != nil {
+		return 0, false, err
+	}
+	usual := busier.Median(samples)
+	return usual, busier.Judge(online, usual, true) == busier.Busier, nil
 }
 
 // busierWhy fills in who brings the extra people and when the rise began.

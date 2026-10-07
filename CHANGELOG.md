@@ -20,6 +20,7 @@ section into the release.
 - All sites: the summary cards and each site card are redrawn with a soft area chart of the days behind the number, a pill for the move, and the site's own colour on its card; Milestones shows each next step as a gauge.
 - Story's takeaway now says why when the data shows one: the page, referrer, campaign or country that explains at least half of the move ("most of it from Kosovo").
 - Data: Sources shows the channels as a ring with thick bars, Goals gets an icon, a plain name and a status for each goal plus a small visit-to-goal funnel, and Pages, Locations and Devices use the same bars; the rows' small charts are gone.
+- One rule for "busier than usual": Live, the surge card, the busy-moment marker and the Traffic surge alert all use at least one and a half times the usual number of people online and 10 more, so a site sees the same answer everywhere (the surge card used to wait for twice the usual).
 
 ## 0.6.3 (7 Oct 2026)
 

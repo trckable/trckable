@@ -5,11 +5,14 @@ import (
 	"time"
 )
 
+// busy20 is the rule for a usual of 20 people.
+func busy20(n int64) bool { return float64(n) >= 30 }
+
 func TestStoryTellsWhenItBeganItsPeakAndNow(t *testing.T) {
 	now := time.Date(2026, 10, 6, 19, 0, 0, 0, time.UTC)
 	// Twelve slices of five minutes: 18:00 to 19:00. Usual 20: it climbs from the 18:40 slice.
 	series := []int64{18, 22, 19, 21, 20, 23, 19, 22, 40, 53, 49, 31}
-	s := BuildStory(series, now, 20, Seen{
+	s := BuildStory(series, now, busy20, Seen{
 		Devices: []Count{{"mobile", 30}, {"desktop", 10}, {"", 5}}, Countries: []Count{{"AL", 20}, {"US", 8}, {"DE", 3}, {"FR", 1}},
 		Hosts: []Count{{"l.facebook.com", 20}, {"m.facebook.com", 14}, {"google.com", 6}}, Pages: []Count{{"/blog/launch-post", 30}, {"/", 12}},
 	})
@@ -38,11 +41,11 @@ func TestStoryTellsWhenItBeganItsPeakAndNow(t *testing.T) {
 func TestStoryStartIsOnlyToldWhenItIsKnown(t *testing.T) {
 	now := time.Date(2026, 10, 6, 19, 0, 0, 0, time.UTC)
 	busy := []int64{40, 41, 42, 40, 41, 42, 40, 41, 42, 40, 41, 42}
-	if s := BuildStory(busy, now, 20, Seen{}); s.Start != 0 {
+	if s := BuildStory(busy, now, busy20, Seen{}); s.Start != 0 {
 		t.Errorf("busy all hour: %d", s.Start)
 	}
 	over := []int64{20, 20, 20, 20, 20, 20, 20, 20, 50, 50, 30, 20}
-	if s := BuildStory(over, now, 20, Seen{}); s.Start != 0 {
+	if s := BuildStory(over, now, busy20, Seen{}); s.Start != 0 {
 		t.Errorf("already over: %d", s.Start)
 	}
 }

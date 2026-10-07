@@ -1,5 +1,6 @@
-// Package surge finds a site getting far busier than it usually is, right
-// now, and says why in numbers. It works on aggregates only: how many are
+// Package surge follows a site's busy spells and says why in numbers. What
+// counts as busier than usual is decided by internal/busier alone; the caller
+// passes its verdict in each Reading. It works on aggregates only: how many are
 // online, and what they have in common (a source, a page, a country).
 package surge
 
@@ -9,16 +10,8 @@ import (
 )
 
 const (
-	// Times is how many times the usual a site must be at to count as surging.
-	Times = 2.0
-	// EndTimes is where a surge is over: back under this many times the usual.
-	EndTimes = 1.5
-	// MinOnline is the fewest people that can be a surge, so 2 becoming 4 is not one.
-	MinOnline = 10
 	// Cooldown is the least between two surges starting on one site.
 	Cooldown = 3 * time.Hour
-	// MinWeeks is how many past weeks the usual needs, so a new site has none.
-	MinWeeks = 2
 	// Fresh is how long a reading is reused: asking again sooner changes nothing.
 	Fresh = 30 * time.Second
 )
@@ -61,20 +54,11 @@ func Ratio(online int64, usual float64) float64 {
 	return float64(online) / usual
 }
 
-// Starts says whether this reading is a surge: at least Times the usual and
-// at least MinOnline people, on a site with enough history to have a usual.
-func Starts(online int64, usual float64, weeks int) bool {
-	return weeks >= MinWeeks && online >= MinOnline && Ratio(online, usual) >= Times
-}
-
-// Holds says whether a surge goes on: still at least EndTimes the usual.
-func Holds(online int64, usual float64) bool { return Ratio(online, usual) >= EndTimes }
-
 // Reading is one look at a site.
 type Reading struct {
 	Online int64
 	Usual  float64
-	Weeks  int
+	Busy   bool // busier than usual, by internal/busier's rule
 }
 
 // Act is what a reading did to a site's surge.
@@ -174,7 +158,7 @@ func (b *Book) Step(site string, now time.Time, r Reading) (Act, *Surge) {
 	t := b.of(site)
 	t.checked = now
 	if t.cur != nil {
-		if Holds(r.Online, r.Usual) {
+		if r.Busy {
 			if r.Online > t.cur.Online {
 				t.cur.Online = r.Online
 			}
@@ -185,7 +169,7 @@ func (b *Book) Step(site string, now time.Time, r Reading) (Act, *Surge) {
 		t.cur = nil
 		return End, done
 	}
-	if !Starts(r.Online, r.Usual, r.Weeks) || now.Sub(t.last) < Cooldown {
+	if !r.Busy || now.Sub(t.last) < Cooldown {
 		return None, nil
 	}
 	t.last = now
