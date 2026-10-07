@@ -15,6 +15,8 @@ section into the release.
 
 ### Changed
 
+- Dependencies updated to their latest minor and patch releases (the dashboard, the tracker's test tools, the npm package and the lockfile).
+
 - Header: a light header that scrolls away, and one control line that stays at the top (filters on the left, the period on the right, glass with the site's name once the page runs under it); Live | Data and Story | Explore are plain text tabs; the Data and All sites cards lose their boxes for hairlines; on a phone the line holds the tabs, a filter button and a short period that each open a sheet.
 
 - The searchable lists (timezone, currency), the ⋯ menus and the Create menu now open the same way as the other pop-ups: same placement, keys and phone sheet.
