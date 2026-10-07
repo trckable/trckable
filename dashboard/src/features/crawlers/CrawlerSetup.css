@@ -1,35 +1,71 @@
-/* The "Connect crawler data" sheet: it loads with the sheet. */
-.cs-steps {
+/* The "Connect crawler data" wizard: it loads with the sheet. */
+.cs-top {
   display: grid;
-  gap: 18px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  counter-reset: cs;
+  gap: 16px;
 }
-.cs-steps > li {
+.cs-body {
+  min-width: 0;
+  min-height: 230px;
+  margin: 18px 0 8px;
+  animation: cs-in 0.25s ease;
+}
+@keyframes cs-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+}
+.cs-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.cs-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--sunken);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.cs-tile:hover {
+  border-color: var(--border-2);
+  background: var(--surface-2);
+}
+.cs-tile .faint {
+  font-size: 12px;
+}
+.cs-code {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.cs-fold {
+  position: relative;
   display: grid;
   gap: 8px;
   min-width: 0;
-  padding-left: 34px;
-  position: relative;
-  counter-increment: cs;
+  max-height: 150px;
+  overflow: hidden;
 }
-.cs-steps > li::before {
-  content: counter(cs);
+.cs-fold:not(.open)::after {
+  content: '';
   position: absolute;
-  left: 0;
-  top: -2px;
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 600;
+  inset: auto 0 0;
+  height: 56px;
+  background: linear-gradient(transparent, var(--surface));
+  pointer-events: none;
+}
+.cs-fold.open {
+  max-height: none;
 }
 .cs-snippet {
   display: grid;
@@ -39,20 +75,89 @@
 .cs-caption {
   font-size: 12px;
 }
+.cs-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.cs-row .btn,
+.cs-key .btn {
+  min-height: 44px;
+}
+.cs-link {
+  min-height: 44px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.cs-link:hover {
+  color: var(--text);
+}
 .cs-key {
   display: grid;
-  gap: 4px;
-}
-.cs-on {
-  justify-self: start;
-}
-.cs-status {
-  display: inline-flex;
-  align-items: center;
+  justify-items: start;
   gap: 8px;
-  color: var(--text-2);
+  padding: 14px 16px;
+  border: 1px dashed var(--border-2);
+  border-radius: 12px;
   font-size: 13px;
 }
-.cs-status.done {
+.cs-wait {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 26px 0 10px;
+  text-align: center;
+}
+.cs-wait h3 {
+  margin: 16px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.cs-wait p {
+  max-width: 340px;
+  margin: 0;
+  font-size: 13px;
+}
+.cs-ring,
+.cs-ok {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+}
+.cs-ring {
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  animation: cs-spin 1s linear infinite;
+}
+.cs-ok {
+  background: color-mix(in srgb, var(--up) 16%, transparent);
   color: var(--up);
+}
+@keyframes cs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.cs-chip {
+  margin-right: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-2);
+  font-size: 12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-body,
+  .cs-ring {
+    animation: none;
+  }
 }
