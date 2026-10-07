@@ -17,6 +17,7 @@ section into the release.
 
 ### Changed
 
+- All sites: the summary cards and each site card are redrawn with a soft area chart of the days behind the number, a pill for the move, and the site's own colour on its card; Milestones shows each next step as a gauge.
 - Story's takeaway now says why when the data shows one: the page, referrer, campaign or country that explains at least half of the move ("most of it from Kosovo").
 
 - Header: a light header that scrolls away, and one control line that stays at the top (filters on the left, the period on the right, glass with the site's name once the page runs under it); Live | Data and Story | Explore are plain text tabs; the Data and All sites cards lose their boxes for hairlines; on a phone the line holds the tabs, a filter button and a short period that each open a sheet.

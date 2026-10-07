@@ -5,7 +5,7 @@
 // them scroll sideways.
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from 'react'
-import { Modal } from './Modal'
+import { Modal } from '../kit/Modal'
 import './Window.css'
 
 export interface WindowTab {

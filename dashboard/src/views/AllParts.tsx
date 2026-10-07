@@ -20,16 +20,15 @@ export function Online({ r }: { r: SiteRow }) {
 }
 
 /** The bounce rate; from 75% on amber, with a warning mark and the words for a screen reader. */
-export function Bounce({ rate, visitors, short }: { rate: number; visitors: number; short?: boolean }) {
+export function Bounce({ rate, visitors }: { rate: number; visitors: number }) {
   if (!visitors) return <span className="faint">–</span>
   const text = fmtPct(rate)
-  const shown = short ? copy.bounceShort(text) : text
-  if (!bounceHigh(rate, visitors)) return <span className="all-bounce">{shown}</span>
+  if (!bounceHigh(rate, visitors)) return <span className="all-bounce">{text}</span>
   const words = copy.highBounce(bounceTenths(rate))
   return (
     <span className="all-bounce warn" title={words} aria-label={copy.bounceHigh(text, words)}>
       <TriangleAlert size={13} aria-hidden="true" />
-      {shown}
+      {text}
     </span>
   )
 }
@@ -38,4 +37,21 @@ export function Bounce({ rate, visitors, short }: { rate: number; visitors: numb
 export function Money({ r }: { r: SiteRow }) {
   if (!hasPayments(r)) return <span className="faint">{copy.notConnected}</span>
   return <span style={{ color: r.revenue ? 'var(--money)' : 'var(--text-3)' }}>{fmtMoney(r.revenue ?? 0, r.currency, r.exponent)}</span>
+}
+
+/** A site card's bounce chip: "bounce 17%", red with a warning mark and words from 75% on. */
+export function bouncePill(rate: number, visitors: number) {
+  if (!visitors) return null
+  const text = fmtPct(rate)
+  if (!bounceHigh(rate, visitors)) return { text: copy.bounceShort(text), tone: 'neutral' as const }
+  const words = copy.highBounce(bounceTenths(rate))
+  return {
+    text: (
+      <span aria-label={copy.bounceHigh(text, words)}>
+        <TriangleAlert size={11} aria-hidden="true" /> {copy.bounceShort(text)}
+      </span>
+    ),
+    tone: 'bad' as const,
+    title: words,
+  }
 }
