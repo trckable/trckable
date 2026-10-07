@@ -55,7 +55,7 @@ func surgeOf(t *testing.T, g *rig, c *http.Client) map[string]any {
 	return s
 }
 
-// A crowd of 14 against a usual of 5: it is a surge, it says who sent most of
+// A crowd of 16 against a usual of 5: it is a surge, it says who sent most of
 // them (Facebook, with how many that source usually has), the page and the
 // jump, it is recorded as a moment, and it is told to the alert hook once.
 func TestSurgeIsFoundAndExplained(t *testing.T) {
@@ -66,14 +66,14 @@ func TestSurgeIsFoundAndExplained(t *testing.T) {
 	g.api.OnSurge = func(surge.Surge) { told.Add(1) }
 	id := g.usualWeeks(t, 5)
 	now := g.advance(0)
-	id = g.crowd(t, id, 14, 10, now)
+	id = g.crowd(t, id, 16, 10, now)
 	g.waitApplied(t, id)
 
 	s := surgeOf(t, g, c)
 	if s == nil {
-		t.Fatal("no surge for 14 online against a usual of 5")
+		t.Fatal("no surge for 16 online against a usual of 5")
 	}
-	if s["online"] != float64(14) || s["usual"] != float64(5) || s["times"] != 2.8 {
+	if s["online"] != float64(16) || s["usual"] != float64(5) || s["times"] != 3.2 {
 		t.Fatalf("numbers: %v", s)
 	}
 	why, _ := s["why"].(map[string]any)
@@ -97,7 +97,7 @@ func TestSurgeIsFoundAndExplained(t *testing.T) {
 	// How it went: twelve slices of the last hour, the crowd all in the last one.
 	story, _ := s["story"].(map[string]any)
 	series, _ := story["series"].([]any)
-	if len(series) != 12 || story["now"] != float64(14) || story["peak"] != float64(14) {
+	if len(series) != 12 || story["now"] != float64(16) || story["peak"] != float64(16) {
 		t.Fatalf("story: %v", story)
 	}
 	if want := float64(now.Add(-5 * time.Minute).Unix()); story["start"] != want {
@@ -123,12 +123,12 @@ func TestSurgeIsFoundAndExplained(t *testing.T) {
 	if code != http.StatusOK || !strings.Contains(body, `"kind":"surge"`) || !strings.Contains(body, `"text":"Facebook"`) || !strings.Contains(body, `"referrer":"l.facebook.com"`) || !strings.Contains(body, `"t":"2026-09-22T12:00"`) {
 		t.Fatalf("moments: %d %s", code, body)
 	}
-	if latest, _ := g.ctl.LatestSurge(context.Background(), g.site); latest == nil || latest.Online != 14 || latest.Why.Source != "Facebook" {
+	if latest, _ := g.ctl.LatestSurge(context.Background(), g.site); latest == nil || latest.Online != 16 || latest.Why.Source != "Facebook" {
 		t.Fatalf("kept: %+v", latest)
 	}
 }
 
-// The small-site guard: 2 becoming 4, or 9 against nothing, is not a surge;
+// The small-site guard: 2 becoming 4, or 9 against one, is not a surge;
 // and a site with no history has no usual to be above.
 func TestSmallSitesAndNewSitesDoNotSurge(t *testing.T) {
 	g := newRig(t)
@@ -139,7 +139,7 @@ func TestSmallSitesAndNewSitesDoNotSurge(t *testing.T) {
 	id = g.crowd(t, id, 9, 9, now)
 	g.waitApplied(t, id)
 	if s := surgeOf(t, g, c); s != nil {
-		t.Fatalf("nine people is under the floor: %v", s)
+		t.Fatalf("nine people against one is not busier: %v", s)
 	}
 
 	h := newRig(t)
@@ -152,14 +152,14 @@ func TestSmallSitesAndNewSitesDoNotSurge(t *testing.T) {
 	}
 }
 
-// It ends when it is back under one and a half times the usual, and a second
+// It ends when it is no longer busier than usual, and a second
 // crowd within three hours is not another surge.
 func TestSurgeEndsAndDoesNotRepeatWithinThreeHours(t *testing.T) {
 	g := newRig(t)
 	c := client()
 	g.setup(t, c)
 	id := g.usualWeeks(t, 5)
-	id = g.crowd(t, id, 14, 10, g.advance(0))
+	id = g.crowd(t, id, 16, 10, g.advance(0))
 	g.waitApplied(t, id)
 	if surgeOf(t, g, c) == nil {
 		t.Fatal("no surge")
@@ -174,7 +174,7 @@ func TestSurgeEndsAndDoesNotRepeatWithinThreeHours(t *testing.T) {
 	}
 	// Another crowd, 20 minutes after the first began: inside the cooldown.
 	now := g.advance(0)
-	for v := 0; v < 14; v++ {
+	for v := 0; v < 16; v++ {
 		id++
 		g.event(t, event.Event{Kind: event.KindPageview, EventID: id, TS: now.Add(-time.Duration(20+v) * time.Second).UnixMilli(), Visitor: uint64(9000 + v), Pageview: id, Path: "/", Channel: "Direct"})
 	}

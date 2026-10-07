@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- One rule for "busier than usual": Live, the surge card, the busy-moment marker and the Traffic surge alert all use at least one and a half times the usual number of people online and 10 more, so a site sees the same answer everywhere (the surge card used to wait for twice the usual).
+
 ## 0.6.3 (7 Oct 2026)
 
 ### Added
