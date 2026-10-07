@@ -76,11 +76,11 @@
   font: 600 12px/1 var(--mono);
 }
 .lv-pill.up {
-  background: color-mix(in srgb, var(--up) 14%, transparent);
+  background: color-mix(in srgb, var(--up) 8%, transparent);
   color: var(--up);
 }
 .lv-pill.down {
-  background: color-mix(in srgb, var(--down) 14%, transparent);
+  background: color-mix(in srgb, var(--down) 8%, transparent);
   color: var(--down);
 }
 .lv-pill.flat {

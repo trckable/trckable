@@ -1,0 +1,1 @@
+import{Zt as e,ni as t}from"./core-bb972172.js";var n=t(`cardModal`,{close:`Close`,details:`Details`,none:`Nothing in this period`,inPeriod:`This period`,visitors:t=>`${e(t)} ${t===1?`visitor`:`visitors`}`,visitorsLabel:`Visitors in this period`});export{n as t};

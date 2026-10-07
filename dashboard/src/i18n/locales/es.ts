@@ -2127,4 +2127,11 @@ export default {
   'storyview.switch.story': 'Historia',
   'storyview.switch.explore': 'Explore',
   'storyview.switch.label': 'Story o Explore',
+  'hints.title': '¿Sabías que…?',
+  'hints.seen': 'Entendido',
+  'hints.off': 'Desactivar los consejos',
+  'hints.close': 'Cerrar el consejo',
+  'hints.story': 'Cada respuesta abre la imagen completa: gráfico, todas las filas, exportación.',
+  'hints.rows': 'Haz clic en una fila para filtrar toda la página.',
+  'hints.peek': (key: string) => `Pulsa ${key} para preguntarle a Peek lo que quieras sobre tus cifras.`,
 } satisfies Messages

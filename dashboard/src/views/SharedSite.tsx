@@ -3,6 +3,7 @@
 // signing in normally ever downloads it.
 import { useState } from 'react'
 import { Dashboard } from './Dashboard'
+import { Hints } from '../features/hints/HintsDoor'
 import { EmbedHeader, ShareHeader, SharePassword, ShareShell, useShare } from './Share'
 import { isEmbed } from '../lib/earlyStart'
 import { accentVars } from './shareAccent'
@@ -30,6 +31,7 @@ export default function SharedSite() {
     return (
       <div className={isEmbed() ? 'app shared embed' : 'app shared'} style={accentVars(info.accent)}>
         <Dashboard key={info.domain} site={asSite(info)} sites={[]} header={isEmbed() ? <EmbedHeader info={info} /> : <ShareHeader info={info} />} />
+        {!isEmbed() && <Hints />}
       </div>
     )
   if (s.state === 'password') return <SharePassword onOpen={setOpened} error={s.error} hideBrand={s.hideBrand} />
