@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Added
+
+- Connect crawler data is a three-step wizard with a progress bar.
+
 ## 0.6.3 (7 Oct 2026)
 
 ### Added
