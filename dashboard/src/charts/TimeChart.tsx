@@ -166,7 +166,7 @@ export function TimeChart(p: TimeChartProps) {
       onPointerMove={(e) => {
         if (!n || p.locked) return
         // On a note's flag its own tooltip speaks; the day's would cover it.
-        if ((e.target as Element).closest?.('.note-mark, .moment-mark')) return setHover(null)
+        if ((e.target as Element).closest?.('.note-mark, .moment-mark, .sv-span')) return setHover(null)
         const i = indexAt(e.currentTarget, e.clientX)
         if (drag && p.onScrub) {
           p.onScrub(i)

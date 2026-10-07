@@ -82,6 +82,7 @@ test('a card opened near the bottom of the screen is flipped, never clipped', as
   // Scroll so the chart's label stands near the bottom edge of the screen.
   await label.evaluate((el) => el.scrollIntoView({ block: 'end' }))
   await page.evaluate(() => window.scrollBy(0, -20))
+  await page.waitForTimeout(500) // a scroll under an open card closes it: let this one end first
   await label.click()
   const pop = page.getByRole('dialog', { name: 'Google found you' })
   await expect(pop).toBeVisible()
