@@ -16,13 +16,13 @@ describe('the cards under Live', () => {
   })
   it('show all three when there is something for each', () => {
     const html = renderToStaticMarkup(<LiveCards data={data({ today })} rows={[row()]} />)
-    expect(html.match(/class="card lv-card"/g)).toHaveLength(3)
+    expect(html.match(/class="kit-card[^"]*lv-card"/g)).toHaveLength(3)
     expect(html).toContain('▲ 25%')
     expect(html).toContain('/a')
   })
   it('leave out a card with nothing to say', () => {
     const html = renderToStaticMarkup(<LiveCards data={data()} rows={[row({ country: undefined })]} />)
-    expect(html.match(/class="card lv-card"/g)).toHaveLength(1)
+    expect(html.match(/class="kit-card[^"]*lv-card"/g)).toHaveLength(1)
     expect(html).toContain('Top pages right now')
   })
 })

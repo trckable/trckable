@@ -958,8 +958,7 @@ textarea:focus-visible {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.goal-name small,
-.goal-st {
+.goal-name small {
   color: var(--text-3);
   font-size: 12px;
 }
@@ -969,21 +968,6 @@ textarea:focus-visible {
 .goal-conv b {
   font-size: 14px;
   font-weight: 600;
-}
-.goal-st {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-}
-.goal-st i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-.goal-st.barely i {
-  background: var(--warn);
 }
 .goal-funnel {
   margin-top: 12px;

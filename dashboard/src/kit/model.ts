@@ -30,13 +30,17 @@ export function deltaOf(now: number, was: number | undefined, up: string, down: 
   return { text: `${m.dir === 'up' ? up : down} ${m.pct}%`, tone: toneOf(m, lowerIsBetter) }
 }
 
+/** The scale a line is drawn on: its own top and bottom unless given, and `slots` points wide (more than it has when it stops short of the edge). */
+export type AreaScale = { min?: number; max?: number; slots?: number }
+
 /** A line through `values` and the same line closed down to the floor, for a soft area. */
-export function areaPaths(values: number[], w: number, h: number, pad = 4) {
+export function areaPaths(values: number[], w: number, h: number, pad = 4, scale: AreaScale = {}) {
   if (values.length === 0) return { line: '', area: '' }
-  const max = Math.max(...values)
-  const min = Math.min(...values)
+  const max = scale.max ?? Math.max(...values)
+  const min = scale.min ?? Math.min(...values)
   const span = max - min || 1
-  const x = (i: number) => (values.length > 1 ? (i / (values.length - 1)) * w : w / 2)
+  const steps = Math.max((scale.slots ?? values.length) - 1, 1)
+  const x = (i: number) => (values.length > 1 || scale.slots ? (i / steps) * w : w / 2)
   const y = (v: number) => (max === min ? h / 2 : h - pad - ((v - min) / span) * (h - pad * 2))
   const pts = values.map((v, i) => [x(i), y(v)])
   const line = smooth(pts)

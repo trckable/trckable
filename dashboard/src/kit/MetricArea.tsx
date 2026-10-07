@@ -17,31 +17,36 @@ export type MetricAreaProps = {
   pill?: { text: ReactNode; tone?: Tone; title?: string } | null
   sub?: ReactNode
   series?: number[] | null
+  /** A second dashed line on the same scale, and how many points wide the chart is. */
+  was?: number[]
+  slots?: number
   tone?: Tone
   /** Draws the area in this colour, whatever the tone. */
   color?: string
   compact?: boolean
   onOpen?: () => void
   openLabel?: string
+  stretch?: boolean
+  variant?: 'plain' | 'open'
   press?: () => void
   onKeyDown?: KeyboardEventHandler<HTMLButtonElement>
   className?: string
 }
 
-export function MetricArea({ label, head, aside, value, pill, sub, series, tone = 'good', color, compact, onOpen, openLabel, press, onKeyDown, className = '' }: MetricAreaProps) {
+export function MetricArea({ label, head, aside, value, pill, sub, series, was, slots, tone = 'good', color, compact, onOpen, openLabel, stretch, variant, press, onKeyDown, className = '' }: MetricAreaProps) {
   const pillEl = pill && (
     <Pill tone={pill.tone ?? tone} title={pill.title}>
       {pill.text}
     </Pill>
   )
   return (
-    <Card title={head ?? label} aside={aside} onOpen={onOpen} openLabel={openLabel} press={press} onKeyDown={onKeyDown} className={`kit-metric ${compact ? 'compact' : ''} ${className}`}>
+    <Card title={head ?? label} aside={aside} onOpen={onOpen} openLabel={openLabel} stretch={stretch} variant={variant} press={press} onKeyDown={onKeyDown} className={`kit-metric ${compact ? 'compact' : ''} ${className}`}>
       <span className="kit-val">
         <b className="num">{value}</b>
         {pillEl}
       </span>
       {sub && <span className="kit-sub">{sub}</span>}
-      {series && series.length > 1 && <Area values={series} color={color ?? toneColor(tone)} />}
+      {series && series.length > 1 && <Area values={series} was={was} slots={slots} color={color ?? toneColor(tone)} />}
     </Card>
   )
 }
