@@ -44,6 +44,8 @@ async function open(page: Page, query = '?view=data'): Promise<string> {
   const domain = await page.evaluate(async () => (await (await fetch('/api/v1/sites')).json()).sites[0].domain as string)
   await page.goto(`${BASE}/${domain}${query}`)
   await expect(page.locator('.overview-chart .chart-wrap svg')).toBeVisible({ timeout: 20_000 })
+  // A side card (a milestone reached, say) sits over the chart's corner: put it away, so the pointer is on the chart.
+  for (const x of await page.locator('aside.side-card .side-card-x').all()) await x.click()
   return domain
 }
 
