@@ -59,6 +59,15 @@ describe('tiles', () => {
     expect(t.connect).toBe(true)
     expect(t.value).toBe('not counted')
   })
+  it('tells the move as a delta, a lower bounce rate being the good one', () => {
+    expect(tiles(grew)[0].move?.arrow).toBe('↑')
+    const t = tiles({ cur: result({ bounce_rate: 0.4 }), prev: result({ bounce_rate: 0.6 }), goals: false })[1]
+    expect(t.move).toMatchObject({ arrow: '↓', tone: 'good' })
+  })
+  it('says one word for how the period went', () => {
+    expect(storyOf({ cur: result({}), goals: false }).answers[4].word?.text).toBe('Too early')
+    expect(storyOf({ cur: result({ visitors: 5000 }), prev: result({}), goals: false }).answers[4].word?.tone).toBe('good')
+  })
   it('compares with nothing when there is no period before', () => {
     expect(tiles({ cur: result({}), goals: false })[0].verdict).toBe('No earlier period to compare with yet')
   })

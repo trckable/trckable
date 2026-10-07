@@ -6,7 +6,8 @@ import { kitWords } from './copy'
 import { Pill } from './Pill'
 import type { Tone } from './model'
 
-export function Verdict({ title, word, pill, ask, onAsk }: { title?: ReactNode; word: ReactNode; pill?: { text: ReactNode; tone?: Tone }; ask?: ReactNode; onAsk?: () => void }) {
+/** `foot` sits under the word: a sentence of context. */
+export function Verdict({ title, word, pill, ask, onAsk, foot, className = '' }: { title?: ReactNode; word: ReactNode; pill?: { text: ReactNode; tone?: Tone }; ask?: ReactNode; onAsk?: () => void; foot?: ReactNode; className?: string }) {
   const line = ask && (
     <>
       <span className="kit-ask-i" aria-hidden="true">
@@ -16,8 +17,9 @@ export function Verdict({ title, word, pill, ask, onAsk }: { title?: ReactNode; 
     </>
   )
   return (
-    <Card title={title} aside={pill && <Pill tone={pill.tone ?? 'good'}>{pill.text}</Pill>} className="kit-verdict">
+    <Card title={title} aside={pill && <Pill tone={pill.tone ?? 'good'}>{pill.text}</Pill>} className={`kit-verdict ${className}`}>
       <b className="kit-word">{word}</b>
+      {foot}
       {line &&
         (onAsk ? (
           <button type="button" className="kit-ask" onClick={onAsk}>

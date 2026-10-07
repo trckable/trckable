@@ -12,6 +12,7 @@ export { Progress, type Action, type Part } from './Progress'
 export { Segmented } from './Segmented'
 export { TrendChart, type TrendProps } from './TrendChart'
 export { Verdict } from './Verdict'
+export { kitWords } from './copy'
 export { deltaOf, toneOf, type Tone } from './model'
 // Overlays
 export { Modal } from './Modal'

@@ -116,7 +116,7 @@ export default function StoryView(p: StoryViewProps) {
         {h.note && <p className="sv-note">{h.note}</p>}
       </section>
 
-      <Tiles tiles={facts.tiles} onConnect={() => setConnect(true)} />
+      <Tiles tiles={facts.tiles} series={cur.series.map((x) => x.visitors)} onConnect={() => setConnect(true)} />
 
       <section className="sv-chart" aria-label={copy.chartTitle}>
         <div className="sv-chart-head">
