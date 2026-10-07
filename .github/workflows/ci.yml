@@ -292,6 +292,9 @@ jobs:
       # from the package mirror, with a limit: a mirror that stalls fails this
       # step in minutes, not in half an hour.
       - name: PHP (the methods spec runs the WordPress snippet through it)
+        # The spec skips its WordPress case without PHP, so a stalled mirror
+        # costs that one case, not the whole browser job.
+        continue-on-error: true
         timeout-minutes: 4
         run: |
           o="-o Acquire::Retries=5 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20"
