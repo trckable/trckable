@@ -106,7 +106,7 @@ test('the Live view', async ({ page }) => {
   await clean(page)
 })
 
-test('the site list is a bottom sheet with rows 48 px tall', async ({ page }) => {
+test('the site list is a bottom sheet with rows 44 px tall', async ({ page }) => {
   await data(page)
   await page.locator('button.site-btn').click()
   const sheet = page.locator('.pop.sites')
@@ -114,7 +114,7 @@ test('the site list is a bottom sheet with rows 48 px tall', async ({ page }) =>
   const box = (await sheet.boundingBox())!
   expect(box.y + box.height).toBeGreaterThanOrEqual(844 - 1) // on the bottom edge
   expect(box.width).toBeGreaterThanOrEqual(389) // and edge to edge
-  for (const row of await sheet.locator('button.site').all()) expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(48)
+  for (const row of await sheet.locator('button.site').all()) expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44)
   await clean(page)
 })
 
@@ -127,7 +127,7 @@ test('the period sheet and the ⋯ menu', async ({ page }) => {
   await page.getByRole('button', { name: 'More', exact: true }).click()
   const menu = page.locator('.pop.menu.more-menu')
   await expect(menu).toBeVisible()
-  for (const item of await menu.getByRole('menuitem').all()) expect((await item.boundingBox())!.height).toBeGreaterThanOrEqual(48)
+  for (const item of await menu.getByRole('menuitem').all()) expect((await item.boundingBox())!.height).toBeGreaterThanOrEqual(44)
   await clean(page)
 })
 

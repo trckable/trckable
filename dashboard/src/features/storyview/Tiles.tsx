@@ -22,8 +22,7 @@ function nameOf(t: Tile) {
 const KIT: Record<Tone, KitTone> = { good: 'good', warn: 'warn', bad: 'bad', flat: 'neutral' }
 
 function pillOf(t: Tile) {
-  if (!t.move) return null
-  if (t.move.arrow === '→') return { text: kitWords.flat, tone: 'neutral' as const }
+  if (!t.move || t.move.arrow === '→') return null
   return { text: `${t.move.arrow === '↑' ? kitWords.up : kitWords.down} ${t.move.pct}%`, tone: KIT[t.move.tone] }
 }
 
