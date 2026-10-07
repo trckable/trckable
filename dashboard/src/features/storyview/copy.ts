@@ -25,7 +25,12 @@ export const copy = defineCopy('storyview', {
   newNote: 'In about a week trckable knows your normal and starts telling you what changed.',
   // The takeaway and the arrows.
   takeSame: 'About the same as the period before.',
-  takeHead: (up: boolean, pct: number, source?: string) => `${up ? 'Up' : 'Down'} ${pct}% on the period before${source ? `, mostly from ${source}` : ''}.`,
+  takeHead: (up: boolean, pct: number, source?: string, why?: string) => `${up ? 'Up' : 'Down'} ${pct}% on the period before${source ? `, mostly from ${source}` : ''}${why ?? ''}.`,
+  // The one clause that says why, tacked on after the source.
+  whyPage: (page: string) => `, most of it on ${page}`,
+  whyReferrer: (name: string) => `, most of it from ${name}`,
+  whyCampaign: (name: string) => `, most of it from the ${name} campaign`,
+  whyCountry: (name: string) => `, most of it from ${name}`,
   takeFollow: (name: string, same: boolean) => (same ? `${name} followed.` : `${name} did not follow.`),
   deltaText: (arrow: string, pct: number) => `${arrow} ${pct}%`,
   deltaWord: { '↑': 'Up', '↓': 'Down', '→': 'Unchanged' },
