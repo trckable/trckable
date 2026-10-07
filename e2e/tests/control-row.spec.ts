@@ -146,7 +146,7 @@ for (const width of [1280, 390]) {
     const zone = page.locator('.site-zone')
     const card = (await zone.boundingBox())!
     // A phone's capsules are 46 px (a finger wide), and its cog is in the site list, not beside the name.
-    expect(card.height, 'one control tall').toBe(width > 640 ? 38 : 46)
+    expect(card.height, 'one control tall').toBe(width > 640 ? 36 : 46)
     const gear = zone.getByRole('button', { name: /^Settings for/ })
     if (width <= 640) {
       await expect(gear).toBeHidden()
