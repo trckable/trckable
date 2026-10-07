@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { type CrawlerReport, type ReportQuery, type Site, more } from '../../lib/apiMore'
 import { fmtInt } from '../../lib/format'
 import { Loading } from '../../components/loading/Loading'
+import { Card } from '../../kit'
 import { CrawlerChart } from './CrawlerChart'
 import { CrawlerList } from './CrawlerList'
 import { CrawlerReads } from './CrawlerReads'
@@ -45,9 +46,8 @@ export function Crawlers({ site, query }: { site: Site; query: ReportQuery }) {
 
   if (err) return null
   return (
-    <div className="card">
-      <div className="card-head crawl-head">
-        <h2>{copy.title}</h2>
+    <Card className="crawl" label={copy.title}>
+      <div className="crawl-head">
         <div className="tabs" role="tablist" aria-label={copy.tabs}>
           {KINDS.map((k) => (
             <button key={k.id} type="button" role="tab" aria-selected={kind === k.id} onClick={() => setKind(k.id)}>
@@ -75,6 +75,6 @@ export function Crawlers({ site, query }: { site: Site; query: ReportQuery }) {
       )}
 
       {help && <CrawlerSetup site={site} on onChanged={() => undefined} onClose={() => setHelp(false)} />}
-    </div>
+    </Card>
   )
 }

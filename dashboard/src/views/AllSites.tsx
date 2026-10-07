@@ -6,12 +6,11 @@ import { useMemo, useState } from 'react'
 import { openAddSite } from '../lib/account'
 import { type Site, type SiteRow } from '../lib/api'
 import { useOverview } from './useOverview'
-import { fmtInt } from '../lib/format'
 import { isViewer } from '../lib/me'
 import './AllSites.css'
 import { openSettings } from '../lib/settings'
 import { Loading } from '../components/loading/Loading'
-import { Stacked } from './AllSitesChart'
+import { SiteLines } from './AllSitesChart'
 import { siteColors } from './allSitesColors'
 import { EMPTY, flat } from '../features/sites/layout'
 import { useSiteLayout } from '../features/sites/useSiteLayout'
@@ -110,12 +109,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
         {sorted && list && (
           <>
             <AllSummary s={s} days={days} rows={list} start={start} />
-            <div className="all-tile all-main">
-              <span className="faint">
-                {copy.visitors} · {fmtInt(s.total)}
-              </span>
-              <Stacked rows={list} days={days} colors={colors} start={start} />
-            </div>
+            <SiteLines rows={list} days={days} colors={colors} total={s.total} start={start} />
 
             <div ref={sentinel} className="subbar-sentinel all-sentinel" aria-hidden="true" />
             <div className="all-filters" data-stuck={stuck || undefined}>

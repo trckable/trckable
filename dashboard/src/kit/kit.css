@@ -1,217 +1,5 @@
-/* The card kit's styles (kit/*.tsx). Colours come from the page's own tokens, so
-   both themes follow; a finger target is --ph-hit (44 px) on a phone. */
-.kit-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  padding: 18px 20px;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  background: linear-gradient(180deg, var(--surface), var(--sunken));
-  color: var(--text);
-  font: inherit;
-  text-align: left;
-  overflow: hidden;
-  transition:
-    border-color 0.2s,
-    transform 0.2s;
-}
-.kit-card:hover {
-  border-color: var(--border-2);
-  transform: translateY(-1px);
-}
-.kit-card.press {
-  width: 100%;
-  cursor: pointer;
-}
-.kit-card.press:hover {
-  border-color: var(--accent);
-}
-.kit-card.press:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-.kit-card.accent {
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
-  background:
-    radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 55%),
-    color-mix(in srgb, var(--accent) 6%, var(--surface));
-}
-.kit-card.warn {
-  border-color: color-mix(in srgb, var(--warn) 35%, var(--border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--warn) 8%, var(--surface)), var(--sunken));
-}
-.kit-card.hero {
-  background:
-    radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 55%),
-    radial-gradient(90% 90% at 100% 100%, color-mix(in srgb, var(--ch-1) 16%, transparent), transparent 60%),
-    var(--sunken);
-}
-@media (prefers-reduced-motion: reduce) {
-  .kit-card {
-    transition: none;
-  }
-  .kit-card:hover {
-    transform: none;
-  }
-}
-.kit-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  color: var(--text-3);
-  font-size: 13px;
-  position: relative;
-}
-.kit-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-  font-weight: 500;
-}
-.kit-title b {
-  color: var(--text);
-  overflow: hidden;
-  min-width: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.kit-go {
-  position: relative;
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid var(--border-2);
-  border-radius: 50%;
-  background: none;
-  color: var(--text);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-button.kit-go::after {
-  content: '';
-  position: absolute;
-  inset: -7px;
-}
-.kit-go:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* The chips */
-.kit-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 8px;
-  border-radius: 999px;
-  background: var(--row);
-  color: var(--text-3);
-  font: 600 12px/1 var(--mono);
-  white-space: nowrap;
-}
-.kit-pill.good {
-  background: color-mix(in srgb, var(--up) 15%, transparent);
-  color: var(--up);
-}
-.kit-pill.bad {
-  background: color-mix(in srgb, var(--down) 15%, transparent);
-  color: var(--down);
-}
-.kit-pill.warn {
-  background: color-mix(in srgb, var(--warn) 15%, transparent);
-  color: var(--warn);
-}
-.kit-tag {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: var(--row);
-  color: var(--text-3);
-  font-size: 12px;
-}
-.kit-tag.good {
-  background: color-mix(in srgb, var(--up) 15%, transparent);
-  color: var(--up);
-}
-.kit-tag.bad {
-  background: color-mix(in srgb, var(--down) 15%, transparent);
-  color: var(--down);
-}
-.kit-tag.warn {
-  background: color-mix(in srgb, var(--warn) 15%, transparent);
-  color: var(--warn);
-}
-
-/* Numbers */
-.kit-val {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin-top: 10px;
-  line-height: 1;
-}
-.kit-val b {
-  font-size: 30px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-.kit-val small {
-  color: var(--text-4);
-  font-size: 18px;
-}
-.kit-val.small b {
-  font-size: 20px;
-}
-.kit-val.small {
-  flex-wrap: wrap;
-  align-items: center;
-}
-.kit-sub {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  color: var(--text-3);
-  font-size: 12px;
-}
-.kit-sub.mid {
-  justify-content: center;
-}
-.kit-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--text-3);
-}
-
-/* Metric + area */
-.kit-metric .kit-area {
-  display: block;
-  height: 64px;
-  margin: 12px -20px -18px;
-}
-.kit-metric .kit-area svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-.kit-metric.compact .kit-val {
-  justify-content: space-between;
-  align-items: flex-end;
-}
-.kit-metric.compact .kit-val b {
-  font-size: 28px;
-}
-
+/* The rest of the card kit's styles; the card shell itself is card.css. */
+@import './base.css';
 /* Segmented */
 .kit-seg {
   display: inline-flex;
@@ -480,44 +268,14 @@ button.kit-ask:hover {
 }
 
 /* Finding and insight */
-.kit-finding {
-  min-height: 220px;
-}
-.kit-tagchip {
-  padding: 5px 10px;
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-  border-radius: 999px;
-  color: var(--accent);
-  font-size: 12px;
-}
-.kit-ring {
-  position: absolute;
-  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
-  border-radius: 50%;
-  pointer-events: none;
-}
-.kit-ring.r1 {
-  width: 320px;
-  height: 320px;
-  right: -120px;
-  top: -140px;
-}
-.kit-ring.r2 {
-  width: 200px;
-  height: 200px;
-  right: -40px;
-  top: 40px;
-}
 .kit-say {
-  max-width: 24ch;
-  margin: auto 0 0;
-  position: relative;
+  max-width: 30ch;
+  margin: 12px 0 0;
   font-size: 22px;
   line-height: 1.25;
   letter-spacing: -0.01em;
 }
 .kit-say b {
-  color: var(--accent);
   font-weight: 600;
 }
 .kit-text {
@@ -647,70 +405,6 @@ button.kit-ask:hover {
   }
 }
 
-/* The open card: no box, a hairline over it (Data and All sites look like this) */
-.kit-card.open {
-  padding: 14px 0 0;
-  border: 0;
-  border-top: 1px solid var(--grid);
-  border-radius: 0;
-  background: none;
-  overflow: visible;
-}
-.kit-card.open:hover {
-  transform: none;
-}
-.kit-card.open .kit-area {
-  margin-inline: 0;
-  margin-bottom: 0;
-}
-
-/* The title as the card's button, stretched over the whole card; rows sit above it */
-.kit-card.stretch .kit-head {
-  position: static;
-}
-.kit-stretch {
-  all: unset;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-.kit-stretch::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-}
-.kit-stretch:focus-visible::after {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-.kit-pick,
-.kit-rowbtn {
-  all: unset;
-  position: relative;
-  z-index: 1;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-.kit-pick:focus-visible,
-.kit-rowbtn:focus-visible {
-  outline: 2px solid var(--accent);
-}
-.kit-pick:hover {
-  color: var(--text);
-}
-
-/* A dashed second line and its key (the same time last week) */
-.kit-was {
-  stroke: var(--text-3);
-  stroke-width: 1.2;
-  stroke-dasharray: 3 4;
-}
 .kit-key {
   display: inline-block;
   width: 14px;
@@ -721,8 +415,19 @@ button.kit-ask:hover {
 }
 
 /* Rows that open something: the first cell's button covers the whole row */
-.kit-table tr.pick {
+.kit-table tr {
   position: relative;
+  isolation: isolate;
+}
+.kit-rowfill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  pointer-events: none;
 }
 .kit-table tr.pick td {
   padding: 0;
@@ -766,25 +471,9 @@ button.kit-ask:hover {
   background: var(--accent);
 }
 
-/* Light page: the tint under a pill is lighter so its text stays readable */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) :is(.kit-pill, .kit-tag):is(.good, .bad, .warn) {
-    background: color-mix(in srgb, currentColor 8%, transparent);
-  }
-}
-:root[data-theme='light'] :is(.kit-pill, .kit-tag):is(.good, .bad, .warn) {
-  background: color-mix(in srgb, currentColor 8%, transparent);
-}
 
 /* Phone scale: the least a finger target is */
 @media (max-width: 640px) {
-  .kit-card {
-    padding: var(--ph-pad, 16px);
-  }
-  .kit-metric .kit-area {
-    margin-inline: calc(var(--ph-pad, 16px) * -1);
-    margin-bottom: calc(var(--ph-pad, 16px) * -1);
-  }
   .kit-seg button {
     min-width: var(--ph-hit);
     min-height: var(--ph-hit);
@@ -820,4 +509,203 @@ button.kit-ask:hover {
 .kit-devs b {
   color: var(--text);
   font-weight: 500;
+}
+
+/* Tabs: one thin underline on the one picked; a row wider than its card scrolls sideways */
+.kit-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.kit-tabs::-webkit-scrollbar,
+.kit-subtabs::-webkit-scrollbar {
+  display: none;
+}
+.kit-tabsrow {
+  display: flex;
+  margin-bottom: 12px;
+}
+.kit-tabsrow .kit-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+.kit-tabsmore {
+  display: flex;
+  align-items: center;
+  padding-left: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.kit-tab {
+  flex: none;
+  margin-bottom: -1px;
+  padding: 11px 12px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-3);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.kit-tab:hover {
+  color: var(--text);
+}
+.kit-tab[aria-selected='true'] {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+  font-weight: 600;
+}
+.kit-tab:focus-visible,
+.kit-subtabs button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+/* A list's own small tabs: a pill on the one picked */
+.kit-subtabs {
+  display: flex;
+  gap: 2px;
+  margin: 0 0 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.kit-subtabs button {
+  flex: none;
+  padding: 4px 9px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-3);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.kit-subtabs button[aria-selected='true'] {
+  background: var(--row);
+  color: var(--text);
+}
+.kit-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.kit-tools:empty {
+  display: none;
+}
+/* What a tab holds. A card or a chart that arrives inside it is not a card of its own. */
+.kit-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.kit-panel .kit-card {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.kit-panel .card {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.kit-panel .card-head > h2,
+.kit-panel .kit-head > h2,
+.kit-panel .kit-question,
+.kit-panel .kit-foot {
+  display: none;
+}
+.kit-panel .kit-head {
+  min-height: 26px;
+}
+
+/* A big number with its name beside it, chips under it, a segmented bar at the edge */
+.kit-val-name {
+  color: var(--text-2);
+  font-size: 15px;
+}
+.kit-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.kit-chip {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--row);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12px;
+}
+button.kit-chip {
+  cursor: pointer;
+}
+button.kit-chip:hover {
+  color: var(--text);
+}
+button.kit-chip:focus-visible {
+  outline: 2px solid var(--accent);
+}
+.kit-chip b {
+  color: var(--text);
+  font-weight: 500;
+}
+@media (max-width: 640px) {
+  button.kit-chip {
+    min-height: var(--ph-hit);
+  }
+}
+.kit-segbar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  margin-top: 4px;
+}
+.kit-segbar i {
+  display: block;
+  min-width: 4px;
+  opacity: 0.7;
+}
+
+/* An empty or connect state: one dashed line with its action, no big button */
+.kit-linkline {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border-2);
+  border-radius: 10px;
+  background: none;
+  color: var(--accent);
+  font: 500 13px var(--font);
+  text-align: left;
+  cursor: pointer;
+}
+.kit-linkline:hover {
+  border-color: var(--accent);
+}
+.kit-linkline:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .kit-linkline {
+    min-height: var(--ph-hit);
+  }
+}
+.tc > .kit-head {
+  margin-bottom: 6px;
 }

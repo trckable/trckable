@@ -111,10 +111,13 @@
   gap: 18px;
   padding: 18px;
   border: 1px solid var(--border);
-  border-radius: 16px;
-  background:
-    radial-gradient(420px 160px at 0% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
-    var(--surface-2);
+  border-radius: 14px;
+  background: var(--surface);
+  transition: border-color 0.15s;
+}
+.me-card:hover,
+.me-card:focus-within {
+  border-color: var(--accent);
 }
 .me-photo {
   position: relative;

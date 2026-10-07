@@ -3,6 +3,7 @@
 // how long that lasts, whether backups are being made, and whether payments
 // are arriving.
 import { Activity, ArchiveRestore, CircleCheck, CloudUpload, Cpu, CreditCard, HardDrive, Inbox, RefreshCcw, TriangleAlert, Webhook } from 'lucide-react'
+import { Card } from '../kit'
 import { type Health as H } from '../lib/api'
 import { useHealth } from './useHealth'
 import { fmtInt } from '../lib/format'
@@ -104,15 +105,14 @@ function Pill({ tone, children }: { tone: Tone; children: React.ReactNode }) {
 }
 
 function Tile({ icon: Icon, label, value, sub, tone }: { icon: typeof Cpu; label: string; value: string; sub: string; tone?: Tone }) {
+  const kit = tone === 'warn' || tone === 'bad' ? tone : undefined
   return (
-    <div className={'htile' + (tone && tone !== 'ok' ? ' ' + tone : '')}>
-      <span className="htile-head">
-        <Icon size={15} strokeWidth={1.75} aria-hidden="true" />
-        {label}
+    <Card className="htile" icon={<Icon size={15} strokeWidth={1.8} />} tone={kit} title={label}>
+      <span className="kit-val">
+        <b className="num">{value}</b>
       </span>
-      <b className="num">{value}</b>
-      <span className="faint">{sub}</span>
-    </div>
+      <span className="kit-sub">{sub}</span>
+    </Card>
   )
 }
 

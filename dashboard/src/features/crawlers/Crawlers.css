@@ -60,7 +60,10 @@
 }
 
 .crawl-head {
+  display: flex;
+  align-items: center;
   flex-wrap: wrap;
+  gap: 8px;
 }
 
 .crawl-count {
@@ -167,4 +170,14 @@
   ) {
     font-size: 12px;
   }
+}
+
+@media (max-width: 640px) {
+  .crawl-list button {
+    min-height: var(--ph-hit);
+  }
+}
+
+.crawl {
+  gap: 10px;
 }

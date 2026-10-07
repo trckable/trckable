@@ -15,14 +15,11 @@ export function TodayCard({ today }: { today: NowToday }) {
   const mark = m && { up: t.up, down: t.down, flat: t.flat }[m.dir]
   return (
     <MetricArea
-      variant="open"
       stretch
       className="lv-card"
-      label={
-        <>
-          <CalendarDays size={15} strokeWidth={1.8} aria-hidden="true" /> {t.todayTitle}
-        </>
-      }
+      icon={<CalendarDays size={15} strokeWidth={1.8} />}
+      label={t.todayTitle}
+      status={m && m.dir !== 'flat' ? t.vsLastWeek : t.today}
       openLabel={t.open(t.todayTitle)}
       onOpen={() => void openToday()}
       value={fmtInt(today.visitors)}
@@ -31,12 +28,7 @@ export function TodayCard({ today }: { today: NowToday }) {
       was={today.last}
       slots={24}
       color="var(--accent)"
-      sub={
-        <span className="faint" role="img" aria-label={t.chart(today.visitors, today.before)}>
-          <span className="kit-key" aria-hidden="true" /> {t.today} · <span className="kit-key was" aria-hidden="true" /> {t.lastWeek}
-          {today.compare && ` · ${t.vsLastWeek}`}
-        </span>
-      }
+      sub={<span className="sr" role="img" aria-label={t.chart(today.visitors, today.before)} />}
     />
   )
 }

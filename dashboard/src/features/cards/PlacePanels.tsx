@@ -9,7 +9,7 @@ import { DIM_LABEL, PLACE_LABEL } from '../overview/dimLabels'
 import { cardCopy } from './copy'
 import type { CardsCtx } from './ctx'
 import { listProps, SubPanel } from './SubPanel'
-import type { TabItem } from './Tabs'
+import type { TabItem } from '../../kit/Tabs'
 import { laterCopy } from './copyLater'
 import { placeLabel, placeTitle } from './placeLabels'
 
@@ -31,7 +31,6 @@ export function LocationsPanel({ c }: { c: CardsCtx }) {
         ) : (
           <BarList
             {...listProps(c, dim)}
-            fat
             dimLabel={PLACE_LABEL[dim] ?? 'City'}
             subLabel={c.full && !c.money && !c.scrubbing ? 'Bounce' : undefined}
             onPick={(v) => c.addFilter(dim, v)}
@@ -65,7 +64,6 @@ export function DevicesPanel({ c }: { c: CardsCtx }) {
       render={(dim) => (
         <BarList
           {...listProps(c, dim)}
-          fat
           dimLabel={DIM_LABEL[dim]}
           subLabel={c.full && !c.money && !c.scrubbing ? 'Bounce' : undefined}
           onPick={(v) => c.addFilter(dim, v)}
