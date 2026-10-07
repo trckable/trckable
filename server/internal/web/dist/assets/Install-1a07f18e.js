@@ -1,0 +1,1 @@
+import{t as e}from"./Install-d4d08613.js";export{e as Install,e as default};

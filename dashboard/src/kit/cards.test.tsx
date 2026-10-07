@@ -73,8 +73,8 @@ describe('Area with a second line', () => {
 })
 
 describe('Area', () => {
-  it('is a line, no fill', () => {
-    expect(html(<Area values={[1, 2, 3]} color="red" />).match(/<path/g)).toHaveLength(1)
+  it('is a line and a fading fill', () => {
+    expect(html(<Area values={[1, 2, 3]} color="red" />).match(/<path/g)).toHaveLength(2)
   })
 })
 
