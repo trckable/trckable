@@ -1,7 +1,7 @@
 {
   "name": "@trckable/tracker",
   "private": true,
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "trckable tracker core \u2014 the ~2 KB script behind /js/t.js and the trckable npm package",
   "license": "MIT",
   "type": "module",
@@ -17,7 +17,7 @@
   "devDependencies": {
     "esbuild": "^0.28.2",
     "happy-dom": "^20.14.5",
-    "typescript": "^7.0.2",
-    "vitest": "^5.0.2"
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.3"
   }
 }

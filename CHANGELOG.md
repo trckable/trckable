@@ -9,9 +9,17 @@ section into the release.
 
 ## Unreleased
 
+## 0.6.5 (7 Oct 2026)
+
+### Fixed
+
+- Hints: the did-you-know bubble on Story points at the whole answers row and sits under or over it, so it no longer covers an answer card.
+
 ### Changed
 
-- Data: the chart card, Who came and What they did cards, their tabs, the ranked lists (thin kit bars, 44 px rows), the Goals rows and the crawler card now sit on the shared card kit, like All sites, Live and Story.
+- Cards: every card shares one anatomy on the card kit: an icon tile and name, a quiet status and the open arrow on the top line, one number with a change chip, a chart to the card's bottom edge; flat, with a thin border that lights on hover. All sites (stats, one line per site with a tap-to-hide key, four site cards to a row on wide screens), Live, Story, Data (tabs, ranked lists with soft bars, Goals, crawlers) and Milestones use it.
+
+- Dependencies updated to their latest minor and patch releases (the dashboard, the tracker's test tools, the npm package and the lockfile).
 
 - Header: a light header that scrolls away, and one control line that stays at the top (filters on the left, the period on the right, glass with the site's name once the page runs under it); Live | Data and Story | Explore are plain text tabs; the Data and All sites cards lose their boxes for hairlines; on a phone the line holds the tabs, a filter button and a short period that each open a sheet.
 

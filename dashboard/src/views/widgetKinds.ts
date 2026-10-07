@@ -138,7 +138,7 @@ export const size = (look: WidgetLook) => {
     if (!has('card')) return { w: has('spark') ? 230 : 180, h: 44 }
     return { w: 280, h: 214 + brand + LIST * ['pages', 'countries'].filter(has).length }
   }
-  let h = 0
+  let h: number
   if (look.kind === 'live') h = 106 + (has('bars') ? 100 : 0) + LIST * ['countries', 'channels', 'pages'].filter(has).length
   else if (look.kind === 'revenue') h = 106 + (has('channels') ? LIST : 0)
   else if (look.kind === 'privacy') h = 300
