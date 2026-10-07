@@ -23,6 +23,7 @@ import { Ask } from './Ask'
 import { SetupCard } from './SetupCard'
 import { sinceOf, storyOf, takeawayOf } from './rules'
 import { Tiles } from './Tiles'
+import { tileSeries } from './tileSeries'
 import { useHints } from './useHints'
 import { useSince } from './useSince'
 
@@ -118,7 +119,7 @@ export default function StoryView(p: StoryViewProps) {
         {h.note && <p className="sv-note">{h.note}</p>}
       </section>
 
-      <Tiles tiles={facts.tiles} series={cur.series.map((x) => x.visitors)} revenue={p.money ? cur.series.map((x) => x.revenue ?? 0) : undefined} onConnect={() => setConnect(true)} />
+      <Tiles tiles={facts.tiles} series={tileSeries(cur.series, !!p.money)} onConnect={() => setConnect(true)} />
 
       <Card className="sv-chart" icon={<ChartLine size={15} strokeWidth={1.8} />} title={copy.chartTitle} status={marks.length > 0 ? copy.chartHint : undefined} label={copy.chartTitle}>
         <div className="sv-chart-body">

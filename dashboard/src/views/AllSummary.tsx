@@ -2,24 +2,22 @@
 // for the move, and a soft area of the days behind it where there is one.
 // Revenue is a card only when a shown site has payments connected.
 import { Eye, LogOut, Users, Wallet } from 'lucide-react'
-import { delta, fmtInt, fmtMoney, fmtPct } from '../lib/format'
+import { delta, fmtInt, fmtMoney, fmtPct, type Delta } from '../lib/format'
 import type { SiteRow } from '../lib/api'
 import { MetricArea } from '../kit/MetricArea'
 import type { Tone } from '../kit/model'
 import { OnlineTile } from './OnlineTile'
 import { copy } from './allSitesCopy'
-import { bounceHigh, bounceTenths, fromStart, type summarize } from './allSitesLogic'
+import { bounceHigh, bounceSeries, bounceTenths, sumSeries, type summarize } from './allSitesLogic'
 
 const TONE: Record<string, Tone> = { up: 'good', down: 'bad', flat: 'neutral' }
 
-/** Every shown site's visitors per day, added up from the shared start. */
-export function dailyTotal(rows: SiteRow[], start: number): number[] {
-  const days = Math.max(0, ...rows.map((r) => fromStart(r.series, start).length))
-  return Array.from({ length: days }, (_, i) => rows.reduce((a, r) => a + (fromStart(r.series, start)[i] ?? 0), 0))
-}
+const chip = (d: Delta | null, days: number) => d && { text: d.text, tone: TONE[d.tone] ?? 'neutral', title: copy.vsDays(days) }
 
 export function AllSummary({ s, days, rows, start }: { s: ReturnType<typeof summarize>; days: number; rows: SiteRow[]; start: number }) {
   const d = s.total || s.previous ? delta(s.total, s.previous) : null
+  const views = s.pageviews || s.previousPageviews ? delta(s.pageviews, s.previousPageviews) : null
+  const bounced = s.total && s.previousBounce ? delta(s.bounce, s.previousBounce, true) : null
   const currencies = new Set(s.paying.map((r) => r.currency))
   const money =
     s.paying.length && currencies.size === 1
@@ -29,14 +27,16 @@ export function AllSummary({ s, days, rows, start }: { s: ReturnType<typeof summ
   return (
     <div className="all-stats">
       <OnlineTile />
-      <MetricArea icon={<Users size={15} strokeWidth={1.8} />} label={copy.visitors} value={fmtInt(s.total)} pill={d && { text: d.text, tone: TONE[d.tone] ?? 'neutral' }} status={d && copy.vsDays(days)} series={dailyTotal(rows, start)} tone={d ? TONE[d.tone] : 'neutral'} />
-      <MetricArea icon={<Eye size={15} strokeWidth={1.8} />} label={copy.pageviews} value={fmtInt(s.pageviews)} status={copy.perVisitor(s.total ? (s.pageviews / s.total).toFixed(1) : '0')} />
+      <MetricArea icon={<Users size={15} strokeWidth={1.8} />} label={copy.visitors} value={fmtInt(s.total)} pill={chip(d, days)} status={d && copy.vsDays(days)} series={sumSeries(rows, (r) => r.series, start)} tone={d ? TONE[d.tone] : 'neutral'} />
+      <MetricArea icon={<Eye size={15} strokeWidth={1.8} />} label={copy.pageviews} value={fmtInt(s.pageviews)} pill={chip(views, days)} status={copy.perVisitor(s.total ? (s.pageviews / s.total).toFixed(1) : '0')} series={sumSeries(rows, (r) => r.pageview_series, start)} tone={views ? TONE[views.tone] : 'neutral'} />
       <MetricArea
         icon={<LogOut size={15} strokeWidth={1.8} />}
         iconTone={high ? 'bad' : undefined}
         label={copy.bounce}
         value={s.total ? fmtPct(s.bounce) : '–'}
-        pill={high ? { text: copy.high, tone: 'bad' } : null}
+        pill={chip(bounced, days)}
+        series={bounceSeries(rows, start)}
+        tone={bounced ? TONE[bounced.tone] : 'neutral'}
         status={high ? copy.highBounce(bounceTenths(s.bounce)) : copy.acrossSites}
       />
       {rows.length > 0 && s.paying.length > 0 && <MetricArea icon={<Wallet size={15} strokeWidth={1.8} />} label={copy.revenue} value={<span style={{ color: 'var(--money)' }}>{money}</span>} status={copy.fromSites(s.paying.length)} />}
