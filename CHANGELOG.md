@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Fixed
+
+- Hints: the did-you-know bubble on Story points at the whole answers row and sits under or over it, so it no longer covers an answer card.
+
 ### Changed
 
 - Header: a light header that scrolls away, and one control line that stays at the top (filters on the left, the period on the right, glass with the site's name once the page runs under it); Live | Data and Story | Explore are plain text tabs; the Data and All sites cards lose their boxes for hairlines; on a phone the line holds the tabs, a filter button and a short period that each open a sheet.

@@ -10,9 +10,9 @@ import { copy } from './copy'
 import { nextHint, type HintId } from './rules'
 import { keep, kept, type Kept, markShown, shownThisVisit } from './store'
 
-/** Where each hint points. The answers are Story's; the rows are Explore's lists; Peek is the header's button. */
+/** Where each hint points. The answers row is Story's (the whole row, so the bubble never lands on a neighbour card); the rows are Explore's lists; Peek is the header's button. */
 const ANCHOR: Record<HintId, string> = {
-  story: '.sv-answers .sv-answer',
+  story: '.sv-answers',
   rows: '#cards .bl-row',
   peek: '.header button.ask',
 }
