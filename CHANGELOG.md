@@ -11,8 +11,8 @@ section into the release.
 
 ### Added
 
+- Three short hints, one at a time beside what they are about, at most one a visit: that each Story answer opens the full picture, that a row filters the page, and that Peek is a key press away. Got it puts one away for good, and Turn hints off silences them all; read-only people and shared links see only the first two.
 - Live: a row of three cards under the panels, today so far against the same time last week, the pages people are on right now, and where they are from, each opening Data.
-
 - Connect crawler data is a three-step wizard with a progress bar.
 
 ### Changed
