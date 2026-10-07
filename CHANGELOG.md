@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- All sites and Story: every stat card draws its days behind the number with the soft fill (Pageviews, Bounce rate, Online now over the last 30 minutes, Story's Bounce rate and Session time), and a number that has a period before it shows its change chip.
+
 ## 0.6.5 (7 Oct 2026)
 
 ### Fixed
