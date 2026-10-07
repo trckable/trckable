@@ -33,14 +33,14 @@ export function CreateMenu(p: CreateMenuProps) {
   // Where focus was when the menu opened (the ⋯ button, usually): it goes
   // back there when the menu closes without a choice.
   const back = useRef<HTMLElement | null>(null)
-  // The ⋯ button the picker hangs from, wherever the picker was asked for.
-  const [anchor, setAnchor] = useState<HTMLElement | null>(null)
+  // The ⋯ button the list hangs from, wherever it was asked for (the button's own box when the page has none).
+  const anchor = useRef<HTMLElement | null>(null)
   const items = createItems(p.modules)
   const allowed = !isViewer() && !isShared() && items.length > 0
   const show = useCallback(() => {
     const dots = document.querySelector<HTMLElement>('.more-btn')
     back.current = dots ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
-    setAnchor(dots)
+    anchor.current = dots ?? root.current
     setOpen(true)
   }, [])
 
@@ -72,33 +72,10 @@ export function CreateMenu(p: CreateMenuProps) {
   }, [allowed, show])
 
   useEffect(() => {
-    if (!open) return
-    const away = (e: MouseEvent) => {
-      if (!root.current?.contains(e.target as Node) && !(e.target as Element).closest?.('.create-menu')) setOpen(false)
-    }
-    const esc = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      setOpen(false)
-      back.current?.focus()
-    }
-    // The picker hangs from a button: if the page moves under it, it goes.
-    const close = () => setOpen(false)
-    document.addEventListener('mousedown', away)
-    document.addEventListener('keydown', esc)
-    window.addEventListener('resize', close)
-    return () => {
-      document.removeEventListener('mousedown', away)
-      document.removeEventListener('keydown', esc)
-      window.removeEventListener('resize', close)
-    }
-  }, [open])
-
-  useEffect(() => {
     if (allowed) whenIdle(CreatePop.preload)
   }, [allowed])
 
   if (!allowed) return null
-  // CreatePop gives its first choice focus as it mounts.
   return (
     <div ref={root} className="create">
       {open && (
