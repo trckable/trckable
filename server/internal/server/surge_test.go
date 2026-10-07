@@ -20,7 +20,7 @@ var facebookSurge = surge.Surge{
 // many times the usual, who sent most of them, the page, and a link into the
 // dashboard filtered to that source.
 func TestSurgeEmailWords(t *testing.T) {
-	ev := surgeEvent(facebookSurge, "shop.example.com", "https://stats.example.com/shop.example.com?f=referrer%3Al.facebook.com", time.Now())
+	ev := surgeEvent(facebookSurge, "shop.example.com", "https://stats.example.com/shop.example.com?f=referrer%3Al.facebook.com", time.Now(), time.UTC)
 	if ev.Title != "Your site is having a moment" || ev.Kind != "surge" {
 		t.Fatalf("title %q kind %q", ev.Title, ev.Kind)
 	}
@@ -46,7 +46,7 @@ func TestSurgeEmailWords(t *testing.T) {
 // site with no public address sends no link.
 func TestSurgeEmailWithoutReasons(t *testing.T) {
 	s := surge.Surge{Online: 12, Usual: 4}
-	msg := surgeEvent(s, "x.com", "", time.Now()).Message
+	msg := surgeEvent(s, "x.com", "", time.Now(), time.UTC).Message
 	if msg != "Right now 12 people are on x.com, about 3× usual for this time. Worth a look while it is happening." {
 		t.Fatalf("%q", msg)
 	}
@@ -106,5 +106,25 @@ func TestWeeklyTellsTheBusiestMoment(t *testing.T) {
 	}
 	if _, msg, _ = weeklyText("x.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", ""); strings.Contains(msg, "Busiest") {
 		t.Fatalf("no surge, no line:\n%s", msg)
+	}
+}
+
+// The designed email: the number, the ratio, the rows with a long page cut
+// from the start, the button and the footer; every name escaped.
+func TestSurgeEmailCard(t *testing.T) {
+	sg := facebookSurge
+	sg.Why.Page = "/blog/" + strings.Repeat("kualifikimi-", 5) + "<script>alert(1)</script>"
+	ev := surgeEvent(sg, "shop.example.com", "https://stats.example.com/shop.example.com", time.Now(), time.UTC)
+	if ev.Subject != "shop.example.com is having a moment" || ev.Card == nil {
+		t.Fatalf("subject %q card %v", ev.Subject, ev.Card)
+	}
+	h := ev.Card.HTML("https://stats.example.com/u/a.sig", "https://stats.example.com/settings?site=tkb_x&tab=alerts")
+	for _, want := range []string{"53 people", "2.7×", "what&#39;s usual at this time", "From Facebook", "34 (usually 2)", "…", "&lt;/script&gt;", "6:45 PM", "Open Live →", "Stop these alerts", "Alert settings"} {
+		if !strings.Contains(h, want) {
+			t.Errorf("missing %q", want)
+		}
+	}
+	if strings.Contains(h, "<script>") || strings.Contains(h, "/blog/kualifikimi-kualifikimi") {
+		t.Error("unescaped or not shortened")
 	}
 }
