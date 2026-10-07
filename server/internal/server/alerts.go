@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"strings"
 	"time"
 
@@ -63,6 +64,7 @@ func (s *Server) checkAlerts(ctx context.Context) error {
 			continue
 		}
 		ev.Unsubscribe = s.stopLink(a.ID)
+		ev.Settings = s.settingsLink(a.SiteID)
 		if err := alerts.Send(ctx, a.Target, ev); err != nil {
 			slog.Warn("alert not delivered", "kind", a.Kind, "err", err)
 			continue
@@ -80,6 +82,15 @@ func (s *Server) stopLink(alertID string) string {
 		return ""
 	}
 	return strings.TrimSuffix(s.cfg.BaseURL, "/") + "/u/" + alerts.UnsubscribeToken(s.box.Derive(alerts.KeyLabel), alertID)
+}
+
+// settingsLink is where an email sends the person to change a site's alerts
+// (the dashboard opens the dialog from it); empty without a public address.
+func (s *Server) settingsLink(site string) string {
+	if s.cfg.BaseURL == "" {
+		return ""
+	}
+	return strings.TrimSuffix(s.cfg.BaseURL, "/") + "/settings?" + url.Values{"site": {site}, "tab": {"alerts"}}.Encode()
 }
 
 // evaluate decides whether one alert should fire right now.

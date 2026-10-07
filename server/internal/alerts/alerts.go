@@ -44,8 +44,15 @@ type Event struct {
 	// stays as its twin); it is given the stop link, which is known only at
 	// the moment of sending. Inline are the files it shows. Chat tools get
 	// neither.
-	HTML   func(unsubscribe string) string `json:"-"`
-	Inline []Attachment                    `json:"-"`
+	HTML func(unsubscribe string) string `json:"-"`
+	// Card dresses an email that has no HTML of its own (without one, the title
+	// and message are the card); Subject replaces the email's subject line;
+	// Settings is where the person changes the alert, shown beside the stop
+	// link. Chat tools get none of them.
+	Card     *Card        `json:"-"`
+	Subject  string       `json:"-"`
+	Settings string       `json:"-"`
+	Inline   []Attachment `json:"-"`
 }
 
 // ErrUnsafeTarget is returned for a destination trckable will not call.

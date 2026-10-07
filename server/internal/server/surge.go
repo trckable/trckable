@@ -51,13 +51,18 @@ func (s *Server) tellSurge(sg surge.Surge) {
 		return
 	}
 	now := time.Now()
+	loc, err := time.LoadLocation(info.Timezone)
+	if err != nil {
+		loc = time.UTC
+	}
 	for _, a := range list {
 		if !surgeDue(a, sg.Site, now) {
 			continue
 		}
-		ev := surgeEvent(sg, info.Domain, s.surgeLink(info.Domain, sg), now)
+		ev := surgeEvent(sg, info.Domain, s.surgeLink(info.Domain, sg), now, loc)
 		ev.Site = sg.Site
 		ev.Unsubscribe = s.stopLink(a.ID)
+		ev.Settings = s.settingsLink(sg.Site)
 		if err := alerts.Send(ctx, a.Target, ev); err != nil {
 			slog.Warn("alert not delivered", "kind", a.Kind, "err", err)
 			continue
@@ -74,8 +79,10 @@ func surgeDue(a sqlite.Alert, site string, now time.Time) bool {
 }
 
 // surgeEvent words one surge for a webhook or an email.
-func surgeEvent(sg surge.Surge, domain, link string, now time.Time) alerts.Event {
-	ev := alerts.Event{Kind: "surge", Domain: domain, At: now, Title: surge.Subject, Message: surge.Body(sg, domain, link)}
+func surgeEvent(sg surge.Surge, domain, link string, now time.Time, loc *time.Location) alerts.Event {
+	ev := alerts.Event{Kind: "surge", Domain: domain, At: now, Title: surge.Subject, Message: surge.Body(sg, domain, link), Subject: surge.MailSubject(domain)}
+	eyebrow, big, ratio, vs, note, rows := surge.MailLines(sg, loc)
+	ev.Card = &alerts.Card{Eyebrow: eyebrow, Live: true, Big: big, Strong: ratio, Sub: vs, Rows: rows, CTA: surge.Open, Link: link, Note: note}
 	ev.Data = map[string]any{"online": sg.Online, "usual": sg.Usual, "source": sg.Why.Source, "page": sg.Why.Page}
 	return ev
 }

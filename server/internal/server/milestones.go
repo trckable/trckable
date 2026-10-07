@@ -64,6 +64,8 @@ func (s *Server) tellMilestones(ctx context.Context, site string, fresh []sqlite
 			title, msg := milestones.AlertLine(milestones.Say(m, false), info.Domain)
 			ev := alerts.Event{Kind: "milestone", Site: site, Domain: info.Domain, At: now, Title: title, Message: msg,
 				Data: map[string]any{"milestone": m.Kind, "step": m.Step, "reached_on": m.Day}}
+			ev.Unsubscribe = s.stopLink(a.ID)
+			ev.Settings = s.settingsLink(site)
 			if err := alerts.Send(ctx, a.Target, ev); err != nil {
 				slog.Warn("alert not delivered", "kind", a.Kind, "err", err)
 				continue

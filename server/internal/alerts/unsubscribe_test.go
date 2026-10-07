@@ -59,7 +59,7 @@ func TestEmailCarriesTheStopLink(t *testing.T) {
 	if err := Send(context.Background(), "mailto:me@example.com", e); err != nil {
 		t.Fatal(err)
 	}
-	if msg := <-got2; strings.Contains(msg, "List-Unsubscribe") || !strings.Contains(msg, "Settings → Alerts") {
+	if msg := <-got2; strings.Contains(msg, "List-Unsubscribe") || !strings.Contains(msg, "Settings =E2=86=92 Alerts") {
 		t.Errorf("no link, no header:\n%s", msg)
 	}
 }

@@ -73,3 +73,39 @@ func Busiest(s Surge, at time.Time) string {
 	}
 	return line + "."
 }
+
+// The words of the designed email, next to the plain text above.
+const (
+	mailEyebrow = "Right now"
+	mailVs      = "what's usual at this time"
+	mailNote    = "You get this when a site is busier than usual."
+
+	// Open is the email's one button.
+	Open = "Open Live →"
+)
+
+// MailSubject is the email's subject: "shop.example.com is having a moment".
+func MailSubject(domain string) string { return domain + " is having a moment" }
+
+// MailLines are the parts of the designed email: the small line, the number,
+// the ratio with its words, what the footer says, and the rows under them.
+func MailLines(s Surge, loc *time.Location) (eyebrow, big, ratio, vs, note string, rows [][2]string) {
+	if loc == nil {
+		loc = time.UTC
+	}
+	if s.Why.Source != "" {
+		label := "From " + s.Why.Source
+		if s.Why.SourceDim == "channel" && s.Why.Source == "Direct" {
+			label = "Straight to the site"
+		}
+		rows = append(rows, [2]string{label, fmt.Sprintf("%d (usually %d)", s.Why.SourceN, int64(math.Round(s.Why.SourceUsual)))})
+	}
+	if s.Why.Page != "" {
+		rows = append(rows, [2]string{"Top page", s.Why.Page})
+	}
+	if s.Why.Campaign != "" {
+		rows = append(rows, [2]string{"Campaign", s.Why.Campaign})
+	}
+	rows = append(rows, [2]string{"Since", time.Unix(s.Started, 0).In(loc).Format("3:04 PM")})
+	return mailEyebrow, people(s.Online), moments.Times(s.Factor()), mailVs, mailNote, rows
+}
