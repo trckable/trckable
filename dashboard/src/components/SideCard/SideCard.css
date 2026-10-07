@@ -45,8 +45,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 14px;
+  padding: 14px 14px var(--pb);
   border: 1px solid var(--raised-line);
+  --pb: 14px;
   border-radius: 14px;
   background: var(--raised);
   color: var(--text);
@@ -62,25 +63,6 @@
 }
 .side-card.leaving {
   animation: side-out 0.2s var(--ease) both;
-}
-/* A thin line of the card's own colour on its left edge. */
-.side-card.has-kind:not(.flat)::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 14px;
-  bottom: 14px;
-  width: 2px;
-  border-radius: 2px;
-  background: var(--tint);
-  opacity: 0.8;
-}
-.side-card.flat {
-  transition: border-color 0.15s;
-}
-.side-card.flat:hover,
-.side-card.flat:focus-within {
-  border-color: var(--tint);
 }
 @keyframes side-in {
   from {
@@ -129,13 +111,17 @@
 .side-card.has-kind .side-card-title {
   padding-right: 0;
 }
+/* The ghost stands on the card's top edge, never inside it. */
 .side-ghost {
   position: absolute;
-  right: -10px;
-  bottom: -12px;
+  right: 28px;
+  bottom: 100%;
+  z-index: 2;
+  margin-bottom: -4px;
   pointer-events: none;
-  transform: rotate(-12deg);
-  opacity: 0.9;
+}
+.side-grab {
+  display: none;
 }
 .side-card-x {
   position: absolute;
@@ -213,14 +199,15 @@
     width: auto;
   }
   .side-card {
-    padding: 22px 14px calc(16px + env(safe-area-inset-bottom, 0px));
+    --pb: calc(16px + env(safe-area-inset-bottom, 0px));
+    padding: 22px 14px var(--pb);
     border-width: 1px 0 0;
     border-radius: 16px 16px 0 0;
     box-shadow: var(--raised-shadow), 0 -10px 30px rgba(0, 0, 0, 0.35);
   }
   /* The grab handle. */
-  .side-card::after {
-    content: '';
+  .side-grab {
+    display: block;
     position: absolute;
     top: 8px;
     left: 50%;
@@ -229,9 +216,6 @@
     margin-left: -18px;
     border-radius: 2px;
     background: var(--border-2);
-  }
-  .side-card.has-kind::before {
-    display: none;
   }
   .side-peek {
     display: none;
@@ -256,13 +240,6 @@
     width: 44px;
   }
 }
-/* Where the browser can blur what is behind it, the card is a hair see-through. */
-@supports (backdrop-filter: blur(1px)) {
-  .side-card {
-    background: color-mix(in srgb, var(--raised) 94%, transparent);
-    backdrop-filter: blur(14px) saturate(1.2);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .side-card,
   .side-card.leaving {
@@ -277,14 +254,13 @@
    the area fades in and the dot pops. Reduced motion: drawn at once. */
 .side-chart {
   display: block;
-  width: 100%;
+  width: calc(100% + 28px);
   height: 56px;
   box-sizing: border-box;
-  margin: 2px 0 0;
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: var(--raised-well);
-  overflow: visible;
+  margin: 2px -14px calc(var(--pb) * -1);
+  padding: 0;
+  background: none;
+  overflow: hidden;
   color: var(--tint);
 }
 .side-chart .base {
@@ -304,7 +280,7 @@
 }
 .side-chart .pt {
   fill: var(--tint);
-  stroke: var(--raised-well);
+  stroke: var(--raised);
   stroke-width: 2;
 }
 .side-chart .bar {
@@ -401,4 +377,36 @@
 .side-facts {
   margin: 0;
   font-size: 12.5px;
+}
+
+/* Buttons are quiet: the main one is the page's own ink, never the accent. */
+.side-card .btn.primary {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+/* One anatomy for every card: the figure in the card's colour, one quiet line, two quiet buttons, the chart to the bottom edge. */
+.side-card .side-num {
+  margin-top: 2px;
+  color: var(--tint);
+  font-size: 30px;
+  font-weight: 650;
+}
+.side-card .side-card-title {
+  padding-right: 0;
+}
+.side-card-actions {
+  position: relative;
+  margin-top: 4px;
+}
+.side-card-actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+@media (max-width: 560px) {
+  .side-card-actions .btn {
+    min-height: 44px;
+  }
 }

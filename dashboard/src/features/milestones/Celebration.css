@@ -83,16 +83,6 @@
   border: 1px solid var(--border);
   background: var(--sunken);
 }
-/* One card: the figure in the milestone's colour, one quiet line, the picture, two quiet buttons. */
-.side-card.flat .side-num {
-  margin-top: 2px;
-  color: var(--tint);
-  font-size: 30px;
-  font-weight: 650;
-}
-.side-card.flat .side-card-title {
-  padding-right: 0;
-}
 .ms-context {
   align-self: flex-start;
   max-width: 100%;
@@ -115,30 +105,4 @@
   color: var(--tint);
   opacity: 0.22;
   pointer-events: none;
-}
-.side-card.flat .side-card-actions {
-  position: relative;
-}
-.side-card.flat .side-card-actions {
-  gap: 8px;
-  margin-top: 4px;
-}
-.side-card.flat .side-card-actions .btn {
-  flex: 1;
-  justify-content: center;
-}
-.side-card.flat .side-card-actions .btn.ms-share {
-  background: var(--text);
-  border-color: var(--text);
-  color: var(--bg);
-  font-weight: 600;
-}
-@media (max-width: 560px) {
-  .side-card.flat .side-card-actions .btn {
-    min-height: 44px;
-  }
-  .side-card.flat {
-    padding-right: 16px;
-    padding-left: 16px;
-  }
 }
