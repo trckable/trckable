@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Added
+
+- Live: a row of three cards under the panels, today so far against the same time last week, the pages people are on right now, and where they are from, each opening Data.
+
 ## 0.6.3 (7 Oct 2026)
 
 ### Added

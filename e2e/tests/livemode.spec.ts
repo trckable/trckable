@@ -75,8 +75,8 @@ test('a visit slides in and the numbers move, without a reload', async ({ page }
   await expect(page.getByRole('button', { name: 'More', exact: true })).toHaveCount(0)
   // Live loads no report, so the report's loading bar never runs over it.
   await expect(page.locator('.loadbar')).toHaveCount(0)
-  // One screen: the page itself does not scroll.
-  expect(await page.evaluate(() => document.documentElement.scrollHeight - innerHeight)).toBeLessThanOrEqual(0)
+  // One screen: the two panels fit it; the cards, when there are any, come below.
+  expect(await page.locator('.live-view').evaluate((el) => el.getBoundingClientRect().bottom - innerHeight)).toBeLessThanOrEqual(0)
 
   let reloads = 0
   page.on('framenavigated', (f) => f === page.mainFrame() && reloads++)
