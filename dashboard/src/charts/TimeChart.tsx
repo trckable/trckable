@@ -19,7 +19,7 @@ import { ColumnsLayer, NoteMarkers, Pulses, RevenueLayer, TimeTip, preloadMoney 
 import { SPLIT_GAP, SPLIT_H, columnWidth, isDense, moneyScale } from './moneyPlot'
 import { NoteAdd } from './NoteAdd'
 import { PeakLabel } from './PeakLabel'
-import { PAD_L, PAD_T, AXIS_H, CHART_H, CHART_MS, LANE_H, pad, tipLeft, zeros } from './plot'
+import { NoData } from '../kit/NoData'; import { PAD_L, PAD_T, AXIS_H, CHART_H, CHART_MS, LANE_H, pad, tipLeft, zeros } from './plot'
 import { TimeDefs } from './TimeDefs'
 import { XLabels, YTicks } from './TimeGrid'
 import { CursorMark, CursorPill } from './Cursor'
@@ -256,7 +256,7 @@ export function TimeChart(p: TimeChartProps) {
       {hover != null && n > 0 && p.onAddNote && <NoteAdd x={x(hover)} day={p.labels[hover].slice(0, 10)} label={bucketLabel(p.labels[hover], p.bucket, true)} onAdd={p.onAddNote} />}
       {/* Live pulse: things arriving now, rising from the last point: decoration on numbers that are already right. */}
       <Pulses pulses={p.pulses} n={n} x={x} y={y} vals={vals} />
-      {p.layer?.({ x, y, vals, w })}
+      {p.layer?.({ x, y, vals, w })}{n > 0 && !p.story && !p.overlay && p.values.every((v) => v === 0) && <span className="chart-nodata" style={{ left: PAD_L, top, height: plotH }}><NoData /></span>}
       {/* The bucket's date and time, pinned under the axis at the cursor. */}
       {hover != null && n > 0 && <CursorPill x={x(hover)} w={w} text={bucketLabel(p.labels[hover], p.bucket, true)} />}
     </div>

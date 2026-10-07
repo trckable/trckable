@@ -194,6 +194,8 @@ for (const [name, path, ready] of [
     await expect(page.locator(ready).first()).toBeVisible({ timeout: 20_000 })
     expect(await page.evaluate(spills)).toEqual([])
     await page.setViewportSize({ width: 360, height: 800 })
+    // The charts measure themselves with a resize observer: read the page once it has had its frames.
+    await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(done, 150)))))
     expect(await page.evaluate(spills)).toEqual([])
   })
 }

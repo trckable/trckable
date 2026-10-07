@@ -20,8 +20,8 @@
   --grid: #1d2229;
   --text: #f5f7fa;
   --text-2: #a7b0bd;
-  --text-3: #8a93a1;
-  --text-4: #737b87; /* the footer line: 4.55:1 on the dark page */
+  --text-3: #9aa3b0; /* 5.2:1 on the lightest the glass gets over a colour field */
+  --text-4: #8f98a5; /* the footer line and the quiet words on glass: 4.6:1 on the lightest of it */
   --accent: #b8ff3c;
   /* The accent on a tinted chip, at 11px: the plain accent is 4.18:1 there in
      the light theme, and AA wants 4.5. */
