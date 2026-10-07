@@ -1,0 +1,1 @@
+import{Bt as e,Wr as t}from"./core-9afca133.js";var n=t(`cardModal`,{close:`Close`,details:`Details`,none:`Nothing in this period`,inPeriod:`This period`,visitors:t=>`${e(t)} ${t===1?`visitor`:`visitors`}`,visitorsLabel:`Visitors in this period`});export{n as t};
