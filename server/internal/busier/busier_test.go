@@ -14,7 +14,7 @@ func TestJudge(t *testing.T) {
 		baseline bool
 		want     State
 	}{
-		{"the albas.al jump", 50, 20, true, Busier},
+		{"a sudden jump", 50, 20, true, Busier},
 		{"exactly at times and plus", 30, 20, true, Busier},
 		{"one under", 29, 20, true, Normal},
 		{"small site: plus rules, not times", 12, 4, true, Normal},
