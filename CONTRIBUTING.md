@@ -12,7 +12,7 @@ You need Go 1.27, Node 22 and pnpm 12.
 pnpm install
 git config core.hooksPath .githooks    # runs the quick checks before a push
 
-cd dashboard && pnpm build && cd ..     # the dashboard is embedded in the server
+cd dashboard && pnpm build && cd ..     # the dashboard is embedded in the server (not committed: build it)
 cd tracker && pnpm build && cd ..       # so is the tracker
 cd server && go run ./cmd/trckabled serve
 ```
@@ -66,8 +66,9 @@ pnpm check      # what CI runs, on any branch: Go, tracker, dashboard, npm packa
   what the numbers should be. One scenario, one browser:
   `cd e2e && npx playwright test -c accuracy/playwright.config.ts --project=chromium -g "three pages"`
   (after `pnpm --filter trckable build` and a server build in `server/bin`).
-- The dashboard and tracker builds are committed (`server/internal/web/`), so
-  commit them together with the source change.
+- The tracker build (`server/internal/web/assets/`) is committed, so commit it
+  together with the source change. The dashboard build is not: it is ignored by
+  git, and CI and the Docker image build it.
 - Every visible string is plain English and short. Every feature works when
   you host trckable yourself: nothing is held back.
 - New behaviour comes with a test, and a line in CHANGELOG.md under

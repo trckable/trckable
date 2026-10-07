@@ -25,7 +25,9 @@ import (
 //go:embed assets/t.js assets/t-*.js assets/heat.js assets/sizes.json assets/online.js
 var assets embed.FS
 
-// dist is the built dashboard (dashboard/ → vite build → internal/web/dist).
+// dist is the built dashboard (dashboard/ → vite build → internal/web/dist),
+// which is not committed: only dist/.keep is, so a checkout without a build
+// still compiles and answers 503.
 //
 //go:embed all:dist
 var dist embed.FS
@@ -466,6 +468,10 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 				http.Error(w, "not found", http.StatusNotFound)
 				return
 			}
+		}
+		if len(index) == 0 {
+			http.Error(w, "dashboard not built: run pnpm --filter @trckable/dashboard build", http.StatusServiceUnavailable)
+			return
 		}
 		h := w.Header()
 		h.Set("Content-Type", "text/html; charset=utf-8")

@@ -88,11 +88,12 @@ if [ "$MODE" != --quick ]; then
     cd e2e && TRCKABLE_A11Y_URL=http://127.0.0.1:8799 npx playwright test a11y fullcharts --reporter=line )
 fi
 
-# The dashboard and the tracker are embedded in the server from committed
-# build output: a build that changed them must be committed first.
+# The tracker script is embedded in the server from committed build output
+# (the dashboard build is not committed): a build that changed it must be
+# committed first.
 step "build output committed"
-if ! git diff --quiet -- server/internal/web; then
-  git status --short -- server/internal/web
+if ! git diff --quiet -- server/internal/web/assets; then
+  git status --short -- server/internal/web/assets
   fail "the builds above changed committed files: commit them, then ship again"
 fi
 [ -z "$(git status --porcelain)" ] || { git status --short; fail "uncommitted changes: commit or stash them first"; }

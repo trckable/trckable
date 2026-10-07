@@ -1,1 +1,0 @@
-import{t as e}from"./react-e12729a5.js";var t=e();function n({host:e,icon:n}){return n?(0,t.jsx)(`img`,{className:`ref-mark`,src:`/api/v1/referrer-icons/${encodeURIComponent(e)}`,width:16,height:16,alt:``,loading:`lazy`}):(0,t.jsx)(`span`,{className:`ref-mark ref-initial`,"aria-hidden":`true`,children:e.replace(/^www\./,``).charAt(0).toUpperCase()})}export{n as t};
