@@ -3164,3 +3164,55 @@ body[data-mode] .card.overview {
     border-bottom: 1px solid var(--grid);
   }
 }
+
+/* ---- One button language ---------------------------------------------------
+   Live | Data and Story | Explore are plain text tabs: dim, the chosen one in
+   the text colour on a soft fill. No borders; green is only the live dot. */
+.app .view-switch,
+.app .sv-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.app .view-switch .view-pill {
+  display: none;
+}
+.app :is(.view-switch, .sv-switch) button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-2);
+  font: 500 13px var(--font);
+  cursor: pointer;
+}
+.app :is(.view-switch, .sv-switch) button:hover {
+  color: var(--text);
+}
+.app :is(.view-switch, .sv-switch) button:is([aria-pressed='true'], .on) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.app .sv-switch svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+body {
+  overflow-x: clip;
+}

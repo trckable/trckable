@@ -418,7 +418,7 @@
 /* On all but the widest phones the cog does not fit beside the site's name
    (which keeps at least twelve letters before it is cut): it moves into the
    site list, as its first row. */
-@media (max-width: 419px) {
+@media (max-width: 640px) {
   .header.quiet .site-zone .btn.gear,
   .header.quiet .site-zone .site-sep {
     display: none;

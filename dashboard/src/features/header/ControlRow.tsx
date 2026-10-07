@@ -47,14 +47,17 @@ export function ControlRow(p: Props) {
       <div ref={sentinel} className="subbar-sentinel" aria-hidden="true" />
       <div className="subbar" data-stuck={stuck || undefined}>
         {!isShared() && !wide && <ViewSwitch live={p.live} />}
+        {!p.live && p.site && !isShared() && (
+          <>
+            <span className="ctl-site">
+              <SiteMark site={p.site} size={16} />
+              <b>{p.site.name || p.site.domain}</b>
+            </span>
+            <span className="ctl-site-sep" aria-hidden="true" />
+          </>
+        )}
         {!p.live && <div id="sv-slot" className="sv-slot" />}
         {!p.live && <div id="sv-back" className="sv-back" />}
-        {!p.live && p.site && !isShared() && (
-          <span className="ctl-site">
-            <SiteMark site={p.site} size={16} />
-            <b>{p.site.name || p.site.domain}</b>
-          </span>
-        )}
         {!p.live && (
           <>
             <div className="ctl-inline">

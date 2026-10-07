@@ -307,3 +307,11 @@ html {
   border-color: transparent;
   background: transparent;
 }
+
+/* Peek: its key is dim text, not a box. */
+.hdr-band .header-tools.quiet .btn.ask .kbd {
+  border: 0;
+  padding: 0;
+  font-size: 12px;
+  color: var(--text-3);
+}

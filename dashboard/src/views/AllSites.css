@@ -365,18 +365,24 @@
   position: sticky;
   top: 0;
   z-index: 25;
-  min-height: 52px;
+  min-height: 56px;
   margin: 0 -32px;
   padding: 0 32px;
-  border-bottom: 1px solid transparent;
-  transition: background 0.2s, border-color 0.2s;
 }
-.all-filters[data-stuck] {
+.all-filters::before {
+  content: '';
+  position: absolute;
+  inset: 0 calc(50% - 50vw);
+  z-index: -1;
+  border-bottom: 1px solid transparent;
+  pointer-events: none;
+}
+.all-filters[data-stuck]::before {
   background: color-mix(in srgb, var(--bg) 74%, transparent);
   border-bottom-color: var(--border);
 }
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .all-filters[data-stuck] {
+  .all-filters[data-stuck]::before {
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
   }

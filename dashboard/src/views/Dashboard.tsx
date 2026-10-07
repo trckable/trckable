@@ -459,7 +459,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       phone={narrow}
       value={pickerValue}
       today={today}
-      onChange={onPicker}
+      onChange={onPicker} onClear={clearFilters}
       active={activeChips(view.filters, filterLabel)}
       under={(view.filters.length > 0 || !!rowProps.views?.list.length) && <FilterRowHost {...rowProps} onlyViews={narrow} />}
       filter={!isShared() && <FilterMenu rows={dims} siblings={siblingRows(site.id, query)} labelFor={filterLabel} active={view.filters} onPick={filterOps.pick} onRemove={filterOps.dropValue} onClear={clearFilters} />}

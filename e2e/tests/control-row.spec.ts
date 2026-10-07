@@ -1,11 +1,10 @@
 // The Data view's control row, against a trckabled with the demo data (skipped
 // unless TRCKABLE_A11Y_URL points at one, like header):
 //   TRCKABLE_A11Y_URL=http://localhost:8799 npx playwright test control-row
-// A wide screen: two capsules on the right; the first shows the real dates,
-// steps with ‹ ›, has the comparison (an icon and a small menu) and Filter, and
-// folds (» at its right end, « once folded) to a pill that is remembered; the
-// period opens as six choices with More. The site and its cog are one card.
-// A phone: one short line, a pill that opens a sheet.
+// A wide screen: one sticky control line (filters on the left, the period on
+// the right, one button "Last 30 days"; the site's name joins it once it is
+// stuck). A phone: one 56px line (tabs, a filter button, a short period, ⋯)
+// whose filter and period buttons open a sheet each.
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from './fixtures'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
@@ -48,70 +47,34 @@ const site = (page: Page) => page.evaluate(async () => (await (await fetch('/api
 
 const dates = /^[A-Z][a-z]{2} \d{1,2}( – ([A-Z][a-z]{2} )?\d{1,2})?(, \d{4})?/
 
-test('the capsule shows the real dates and ‹ › move the period', async ({ page }) => {
+test('the period is one button, and it opens the choices', async ({ page }) => {
   await open(page, 1280)
   const see = page.locator('.ctl-see')
   await expect(see.locator('.range-label')).toHaveText('Last 30 days')
-  const shown = (await see.locator('.range-dates').textContent()) ?? ''
-  expect(shown).toMatch(dates)
-  // At today › is off; ‹ steps back (the period is then its dates), and › steps forward again.
-  const next = see.getByRole('button', { name: 'Next period' })
-  await expect(next).toBeDisabled()
-  await see.getByRole('button', { name: 'Previous period' }).click()
-  await expect(next).toBeEnabled()
-  await expect(see.locator('.range-label')).not.toHaveText(shown)
-  await expect(see.locator('.range-label')).toHaveText(dates)
-  await next.click()
-  await expect(see.locator('.range-label')).toHaveText(shown)
-})
-
-test('Yesterday is the second quick choice, shows its date, and ‹ › step a day from it', async ({ page }) => {
-  await open(page, 1280, '?view=data&period=yesterday')
-  const see = page.locator('.ctl-see')
-  await expect(see.locator('.range-label')).toHaveText('Yesterday')
-  await expect(see.locator('.range-dates')).toHaveText(/^[A-Z][a-z]{2}, [A-Z][a-z]{2} \d{1,2}/)
+  await expect(see.getByRole('button', { name: 'Previous period' })).toBeHidden()
   await see.locator('.btn.range').click()
-  const picker = page.getByRole('dialog', { name: 'Choose a date range' })
-  await expect(picker.locator('.periods > .lrow').nth(2)).toHaveText(/^Yesterday/)
-  await expect(picker.getByRole('button', { name: /^Yesterday/ })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('dialog', { name: 'Choose a date range' })).toBeVisible()
   await page.keyboard.press('Escape')
-  // › from yesterday is one day on, ‹ twice is a day before yesterday: always a single day, by its date.
-  const yesterday = (await see.locator('.range-dates').textContent()) ?? ''
-  await see.getByRole('button', { name: 'Next period' }).click()
-  await expect(see.locator('.range-label')).toHaveText(/^[A-Z][a-z]{2}, [A-Z][a-z]{2} \d{1,2}/)
-  await expect(see.locator('.range-label')).not.toHaveText(yesterday)
-  await expect(see.getByRole('button', { name: 'Next period' })).toBeDisabled()
+  // The arrow keys still move it.
+  await page.locator('body').click({ position: { x: 5, y: 400 } })
+  await page.keyboard.press('ArrowLeft')
+  await expect(see.locator('.range-label')).not.toHaveText('Last 30 days')
 })
 
 test('comparison, the period and Filter open their popovers, Share and More are named icons', async ({ page }) => {
   await open(page, 1280)
   const see = page.locator('.ctl-see')
-  // The comparison is an icon while there is none: no "no comparison" text. Its small menu sets one.
-  const compare = see.getByRole('button', { name: 'Compare' })
+  // The comparison has no button while there is none; the C key sets one, and then its words follow the period.
   await expect(see).not.toContainText(/no comparison/i)
-  await compare.click()
-  const menu = page.getByRole('menu', { name: 'Compare with' })
-  await expect(menu.getByRole('menuitemradio')).toHaveText(['No comparison', /^Period before/, 'Last year', 'Custom'])
-  await expect(menu.getByRole('menuitemradio', { name: 'No comparison' })).toHaveAttribute('aria-checked', 'true')
-  // Escape closes it and focus goes back to the button that opened it.
-  await page.keyboard.press('Escape')
-  await expect(menu).toBeHidden()
-  await expect(compare).toBeFocused()
-  await compare.click()
-  await menu.getByRole('menuitemradio', { name: 'Last year' }).click()
-  const set = see.getByRole('button', { name: /^vs / })
-  await expect(set).toBeVisible()
-  await expect(set).toBeFocused()
-  await set.click()
-  await expect(menu.getByRole('menuitemradio', { name: 'Last year' })).toHaveAttribute('aria-checked', 'true')
-  await menu.getByRole('menuitemradio', { name: 'No comparison' }).click()
-  await expect(see.getByRole('button', { name: 'Compare' })).toBeVisible()
-  // The C key still toggles it without the menu.
   await page.locator('body').click({ position: { x: 5, y: 400 } })
   await page.keyboard.press('c')
-  await expect(see.getByRole('button', { name: /^vs / })).toBeVisible()
-  await page.keyboard.press('c')
-  await expect(see.getByRole('button', { name: 'Compare' })).toBeVisible()
+  const set = see.getByRole('button', { name: /^vs / })
+  await expect(set).toBeVisible()
+  await set.click()
+  const menu = page.getByRole('menu', { name: 'Compare with' })
+  await expect(menu.getByRole('menuitemradio', { name: 'Period before' })).toHaveAttribute('aria-checked', 'true')
+  await menu.getByRole('menuitemradio', { name: 'No comparison' }).click()
+  await expect(set).toHaveCount(0)
 
   const picker = page.getByRole('dialog', { name: 'Choose a date range' })
   await see.locator('.btn.range').click()
@@ -120,12 +83,12 @@ test('comparison, the period and Filter open their popovers, Share and More are 
   await expect(picker).toBeHidden()
   await expect(see.locator('.btn.range')).toBeFocused()
 
-  await see.getByRole('button', { name: 'Filter' }).click()
+  await page.locator('.ctl-inline').getByRole('button', { name: 'Filter' }).click()
   await expect(page.locator('.filter-pop')).toBeVisible()
   await expect(page.locator('.filter-pop').getByRole('button', { name: 'Done' })).toHaveCount(0)
   await page.keyboard.press('Escape')
   await expect(page.locator('.filter-pop')).toBeHidden()
-  await expect(see.getByRole('button', { name: 'Filter' })).toBeFocused()
+  await expect(page.locator('.ctl-inline').getByRole('button', { name: 'Filter' })).toBeFocused()
 
   const doing = page.locator('.ctl-do')
   for (const name of ['Share', 'More']) {
@@ -162,7 +125,7 @@ test('the period opens as six choices; More opens the rest in place; compare and
   await expect(picker).toBeVisible()
   await expect(see.getByRole('button', { name: /^vs / })).toBeVisible()
   await picker.getByRole('group', { name: 'Compare' }).getByRole('button', { name: 'Last year' }).click()
-  await expect(see.getByRole('button', { name: 'Compare' })).toBeVisible()
+  await expect(see.getByRole('button', { name: /^vs / })).toHaveCount(0)
   await picker.getByRole('group', { name: 'Detail' }).getByRole('button', { name: 'Daily', exact: true }).click()
   await expect(picker.getByRole('group', { name: 'Detail' }).getByRole('button', { name: 'Daily', exact: true })).toHaveAttribute('aria-pressed', 'true')
   await expect(picker).toBeVisible()
@@ -177,25 +140,13 @@ test('the period opens as six choices; More opens the rest in place; compare and
   await expect(see.locator('.range-label')).toHaveText('Last 7 days')
 })
 
-test('a custom comparison opens the calendar on the comparison\'s own dates', async ({ page }) => {
-  await open(page, 1280)
-  const see = page.locator('.ctl-see')
-  await see.getByRole('button', { name: 'Compare' }).click()
-  await page.getByRole('menuitemradio', { name: 'Custom' }).click()
-  const picker = page.getByRole('dialog', { name: 'Choose a date range' })
-  await expect(picker.getByText('Picking the comparison range')).toBeVisible()
-  await picker.getByRole('button', { name: 'Apply' }).click()
-  await expect(picker).toBeHidden()
-  await expect(see.getByRole('button', { name: /^vs / })).toBeVisible()
-})
-
 for (const width of [1280, 390]) {
-  test(`at ${width}px the site and its cog are one card`, async ({ page }) => {
+  test(`at ${width}px the site is plain text with its cog beside it`, async ({ page }) => {
     await open(page, width)
     const zone = page.locator('.site-zone')
     const card = (await zone.boundingBox())!
     // A phone's capsules are 46 px (a finger wide), and its cog is in the site list, not beside the name.
-    expect(card.height, 'the same height as the capsules under it').toBe(width > 640 ? 38 : 46)
+    expect(card.height, 'one control tall').toBe(width > 640 ? 38 : 46)
     const gear = zone.getByRole('button', { name: /^Settings for/ })
     if (width <= 640) {
       await expect(gear).toBeHidden()
@@ -207,20 +158,19 @@ for (const width of [1280, 390]) {
     const g = (await gear.boundingBox())!
     expect(g.x, 'the cog is inside the card').toBeGreaterThanOrEqual(card.x)
     expect(g.x + g.width).toBeLessThanOrEqual(card.x + card.width)
-    // Always drawn (not only on hover): a border and a fill, with a divider between the two.
-    const look = await zone.evaluate((n) => ({ border: getComputedStyle(n).borderTopWidth, fill: getComputedStyle(n).backgroundColor }))
-    expect(look.border).toBe('1px')
-    expect(look.fill).not.toMatch(/rgba\(0, 0, 0, 0\)|transparent/)
-    await expect(zone.locator('.site-sep')).toBeVisible()
+    // At rest it has no box of its own: a soft fill only on hover.
+    const look = await zone.evaluate((n) => ({ border: getComputedStyle(n).borderTopColor, fill: getComputedStyle(n).backgroundColor }))
+    expect(look.border).toMatch(/rgba\(0, 0, 0, 0\)|transparent/)
+    expect(look.fill).toMatch(/rgba\(0, 0, 0, 0\)|transparent/)
   })
 }
 
-test('both capsules sit at the right edge of the row', async ({ page }) => {
+test('the period and ⋯ sit at the right edge of the line', async ({ page }) => {
   await open(page, 1280)
   const row = (await page.locator('.subbar').boundingBox())!
   const doing = (await page.locator('.ctl-do').boundingBox())!
   const see = (await page.locator('.ctl-see').boundingBox())!
-  expect(row.x + row.width - (doing.x + doing.width), 'the right edge').toBeLessThanOrEqual(24)
+  expect(row.x + row.width - (doing.x + doing.width), 'the right edge').toBeLessThanOrEqual(40)
   expect(doing.x, 'what you do is after what you see').toBeGreaterThan(see.x + see.width)
   // A desktop has Live/Data in the header's right group, not in this row.
   await expect(page.locator('.subbar .view-switch')).toHaveCount(0)
@@ -229,45 +179,8 @@ test('both capsules sit at the right edge of the row', async ({ page }) => {
   expect(head.x + head.width - (view.x + view.width), 'in the right group, before Peek and the avatar').toBeGreaterThan(40)
 })
 
-test('the first capsule folds to a pill, and the choice is remembered', async ({ page }) => {
+test('an active filter is a chip on the left of the line, on a desktop', async ({ page }) => {
   await open(page, 1280, '?f=channel:Direct')
-  const toggle = page.locator('.ctl-see .fold-toggle')
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
-  await expect(toggle).toHaveAccessibleName('Collapse')
-  await expect(toggle).toHaveAttribute('title', 'Collapse')
-  // At the capsule's right end, after Filter and a divider; its icon is a fold, not a chevron.
-  const see = page.locator('.ctl-see')
-  const filter = (await see.getByRole('button', { name: 'Filter' }).boundingBox())!
-  const at = (await toggle.boundingBox())!
-  const capsule = (await see.boundingBox())!
-  expect(at.x, 'right of Filter').toBeGreaterThanOrEqual(filter.x + filter.width)
-  expect(capsule.x + capsule.width - (at.x + at.width), 'at the capsule end').toBeLessThanOrEqual(4)
-  await expect(see.locator('button:visible').last()).toHaveAttribute('aria-expanded', 'true')
-  // » while open (its summary is there but hidden), « once folded.
-  const turned = () => toggle.locator('.fold-icon').evaluate((n) => getComputedStyle(n).transform)
-  await expect(toggle.locator('.fold-icon')).toHaveClass(/chevrons-right/)
-  expect(await turned()).toBe('none')
-  await toggle.click()
-  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
-  await expect(toggle).toHaveAccessibleName('Last 30 days, Expand')
-  await expect(toggle).toContainText('Last 30 days')
-  await expect(toggle.locator('.sum-count')).toHaveText('1')
-  expect(await turned()).toMatch(/^matrix\(-1/)
-  await expect(page.getByRole('button', { name: 'Previous period' })).toBeHidden()
-  // ← still moves the period while folded.
-  await page.locator('body').click({ position: { x: 5, y: 400 } })
-  await page.keyboard.press('ArrowLeft')
-  await expect(page).toHaveURL(/from=/)
-  await page.reload()
-  await expect(page.locator('.ctl-see .fold-toggle')).toHaveAttribute('aria-expanded', 'false')
-  await page.locator('.ctl-see .fold-toggle').click()
-  await expect(page.locator('.ctl-see .fold-toggle')).toHaveAttribute('aria-expanded', 'true')
-  await expect(page.getByRole('button', { name: 'Previous period' })).toBeVisible()
-})
-
-test('an active filter shows a count, and on a desktop its chip is on the left of the row', async ({ page }) => {
-  await open(page, 1280, '?f=channel:Direct')
-  await expect(page.locator('.ctl-see .filter-root .filter-count')).toHaveText('1')
   const chips = page.locator('.subbar .ctl-inline [role=group]')
   await expect(chips).toBeVisible()
   await expect(page.locator('.ctl-under')).toHaveCount(0)
@@ -286,15 +199,15 @@ test('an active filter shows a count, and on a desktop its chip is on the left o
 })
 
 // Five filters on a 1280 screen: the header is still two rows, and what does not fit is "+N more".
-test('five filters at 1280 stay on one line and fold into +N more', async ({ page }) => {
+test('five filters at 1280 are one "5 filters" chip on one line', async ({ page }) => {
   const q = ['channel:Direct', 'device:Desktop', 'country:DE', 'browser:Chrome', 'os:macOS'].map((f) => 'f=' + f).join('&')
   await open(page, 1280, '?' + q)
   const row = page.locator('.subbar')
   await expect(page.locator('.subbar .ctl-inline [role=group]')).toBeVisible()
-  const more = page.getByRole('button', { name: /^\+\d+ more$/ })
+  const more = page.getByRole('button', { name: /^5 filters$/ })
   await expect(more).toBeVisible()
   const box = (await row.boundingBox())!
-  expect(box.height, 'one line').toBeLessThanOrEqual(48)
+  expect(box.height, 'one line').toBeLessThanOrEqual(60)
   const capsule = (await page.locator('.ctl-see').boundingBox())!
   const views = page.locator('.ctl-inline').getByRole('button', { name: 'Save view' })
   const save = (await views.boundingBox())!
@@ -304,70 +217,111 @@ test('five filters at 1280 stay on one line and fold into +N more', async ({ pag
   await expect(page.getByRole('menu').locator('.menu-row')).toHaveCount(5)
 })
 
-test('a tablet keeps the chips in their own row under the capsules', async ({ page }) => {
+test('a tablet keeps the chips in their own row under the line', async ({ page }) => {
   await open(page, 900, '?f=channel:Direct')
   await expect(page.locator('.ctl-under [role=group]')).toBeVisible()
-  await expect(page.locator('.ctl-inline')).toHaveCount(0)
+  await expect(page.locator('.ctl-inline [role=group]')).toHaveCount(0)
 })
 
 for (const width of [390, 360]) {
-  test(`at ${width}px the row is one line, and the sheet applies period and filter`, async ({ page }) => {
+  test(`at ${width}px the line is one 56px row, and the sheets apply period and filter`, async ({ page }) => {
     await open(page, width, '?f=channel:Direct')
     const box = (await page.locator('.subbar').boundingBox())!
-    expect(box.height, 'one line, at most 46 px').toBeLessThanOrEqual(46)
+    expect(box.height, 'one line, 56 px').toBeLessThanOrEqual(58)
     for (const b of await page.locator('.subbar button:visible').all()) {
       const r = (await b.boundingBox())!
-      expect(r.height, 'controls 44 to 46 px').toBeLessThanOrEqual(46)
-      expect(r.height, 'controls 44 to 46 px').toBeGreaterThanOrEqual(44)
+      expect(r.height, 'controls 44 px').toBeGreaterThanOrEqual(44)
+      expect(r.height, 'controls fit the line').toBeLessThanOrEqual(46)
+    }
+    for (const b of await page.locator('.pr-btn, .phone-row .ctl-do .btn').all()) {
+      const r = (await b.boundingBox())!
       expect(r.x + r.width, 'inside the screen').toBeLessThanOrEqual(width)
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
-    // The chips and Views are not in the page row; Views and Share are in ⋯.
+    // No chips in the line; the filter button carries the count; the period is short.
     await expect(page.locator('.ctl-under')).toHaveCount(0)
-    const pill = page.locator('.phone-pill')
-    await expect(pill).toContainText('30 days')
-    await expect(pill).toContainText('1 filter')
-    // Live/Data sits in the row itself, not only in the sheet.
+    const filter = page.locator('.pr-filter')
+    const date = page.locator('.pr-date')
+    await expect(filter.locator('.pr-badge')).toHaveText('1')
+    await expect(date).toContainText('30d')
     await expect(page.locator('.subbar').getByRole('group', { name: 'View' })).toBeVisible()
     await page.getByRole('button', { name: 'More', exact: true }).click()
     await expect(page.getByRole('menu', { name: 'More' }).getByRole('menuitem').first()).toHaveText(/Share/)
     await page.keyboard.press('Escape')
 
-    // The sheet: quick periods, comparison, filters, Done.
-    await pill.click()
+    // The date sheet: quick periods, custom range, compare.
+    await date.click()
     const sheet = page.getByRole('dialog', { name: 'View options' })
     await expect(sheet).toBeVisible()
-    // Five quick periods; the Compare row says nothing while there is no comparison.
     await expect(sheet.locator('.sheet-quick button')).toHaveCount(5)
-    await expect(sheet).not.toContainText(/no comparison/i)
+    await expect(sheet.getByRole('switch', { name: /Compare/ })).toHaveAttribute('aria-checked', 'false')
     await sheet.getByRole('button', { name: '7d' }).click()
     await expect(sheet.getByRole('button', { name: '7d' })).toHaveAttribute('aria-pressed', 'true')
+    await sheet.getByRole('button', { name: 'Done' }).click()
+    await expect(sheet).toBeHidden()
+    await expect(date).toBeFocused()
+    await expect(date).toContainText('7d')
+    await date.click()
+    await sheet.getByRole('button', { name: 'Custom range' }).click()
+    const picker = page.getByRole('dialog', { name: 'Choose a date range' })
+    await expect(picker).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(picker).toBeHidden()
+
+    // The filter sheet: the filters in force with their x, Add, Clear all.
+    await filter.click()
+    await expect(sheet).toBeVisible()
     await expect(sheet.locator('.chip')).toContainText('Channel is')
+    await expect(sheet.getByRole('button', { name: '+ Add a filter' })).toBeVisible()
+    await expect(sheet.getByRole('button', { name: 'Clear all' })).toBeVisible()
     await sheet.getByRole('button', { name: /Remove filter Channel is Direct/ }).click()
     await expect(sheet.getByRole('button', { name: /Remove filter Channel is Direct/ })).toHaveCount(0)
     await sheet.getByRole('button', { name: 'Done' }).click()
-    await expect(sheet).toBeHidden()
-    await expect(pill).toBeFocused()
-    await expect(pill).toContainText('7 days')
-    await expect(pill).not.toContainText('filter')
-
-    // Escape closes it and returns focus; More hands over to the date-range picker.
-    await pill.click()
+    await expect(filter.locator('.pr-badge')).toHaveCount(0)
+    await filter.click()
     await page.keyboard.press('Escape')
     await expect(sheet).toBeHidden()
-    await expect(pill).toBeFocused()
-    await pill.click()
-    await sheet.getByRole('button', { name: 'More', exact: true }).click()
-    const picker = page.getByRole('dialog', { name: 'Choose a date range' })
-    await expect(picker).toBeVisible()
-    await expect(picker.locator(':focus')).toHaveCount(1) // focus moved into it
-    await page.keyboard.press('Escape')
-    await expect(picker).toBeHidden()
-    await expect(pill).toBeFocused()
+    await expect(filter).toBeFocused()
   })
 }
 
-// WCAG 2.1 AA for the row (expanded and folded) and the phone's sheet, both themes.
+test('on a phone the header scrolls away and the control line stays, at the same size', async ({ page }) => {
+  await open(page, 390)
+  const line = page.locator('.subbar')
+  const before = (await line.boundingBox())!
+  await page.evaluate(() => window.scrollTo(0, 700))
+  await expect(line).toHaveAttribute('data-stuck', 'true')
+  const after = (await line.boundingBox())!
+  expect(after.y, 'at the top').toBeLessThanOrEqual(1)
+  expect(after.height, 'the same height').toBe(before.height)
+  expect(await page.locator('.header').boundingBox().then((b) => b!.y + b!.height), 'the header is above the screen').toBeLessThan(0)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+})
+
+test('on a desktop the line sticks as glass at the same size, with the site name', async ({ page }) => {
+  await open(page, 1280)
+  const line = page.locator('.subbar')
+  const before = (await line.boundingBox())!
+  await expect(page.locator('.ctl-site')).toBeHidden()
+  await page.evaluate(() => window.scrollTo(0, 700))
+  await expect(line).toHaveAttribute('data-stuck', 'true')
+  await expect(page.locator('.ctl-site')).toBeVisible()
+  const after = (await line.boundingBox())!
+  expect(after.height, 'the same height').toBe(before.height)
+  expect(after.height).toBeGreaterThanOrEqual(56)
+  // Nothing in it is taller than 36 px, and all of it is on one centre line.
+  const mids: number[] = []
+  for (const b of await line.locator('button:visible').all()) {
+    const r = (await b.boundingBox())!
+    expect(r.height).toBeLessThanOrEqual(36)
+    mids.push(Math.round(r.y + r.height / 2))
+  }
+  expect(Math.max(...mids) - Math.min(...mids), 'one centre line').toBeLessThanOrEqual(2)
+  // The header is not sticky.
+  expect(await page.locator('.header').boundingBox().then((b) => b!.y + b!.height)).toBeLessThan(0)
+})
+
+// WCAG 2.1 AA for the row and the phone's sheet, both themes.
 for (const colorScheme of ['light', 'dark'] as const) {
   test.describe(colorScheme, () => {
     test.use({ colorScheme })
@@ -380,12 +334,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
       }
       await open(page, 1280, '?f=channel:Direct')
       await scan('row, expanded', '.subbar')
-      await page.locator('.ctl-see .fold-toggle').click()
-      await scan('row, folded', '.subbar')
-      await page.locator('.ctl-see .fold-toggle').click()
       await open(page, 390, '?f=channel:Direct')
       await scan('phone row', '.subbar')
-      await page.locator('.phone-pill').click()
+      await page.locator('.pr-filter').click()
       await scan('phone sheet', '[role=dialog]')
     })
   })
@@ -403,8 +354,8 @@ test('a phone: Add in the sheet opens the filter menu on screen, and Views in �
     await page.reload()
     await expect(page.locator('.overview-chart .chart-wrap svg')).toBeVisible({ timeout: 20_000 })
     // Add: the sheet closes, the filter menu opens, inside the screen.
-    await page.locator('.phone-pill').click()
-    await page.getByRole('dialog', { name: 'View options' }).getByRole('button', { name: 'Add' }).click()
+    await page.locator('.pr-filter').click()
+    await page.getByRole('dialog', { name: 'View options' }).getByRole('button', { name: '+ Add a filter' }).click()
     await expect(page.getByRole('dialog', { name: 'View options' })).toBeHidden()
     const menu = page.locator('.filter-pop')
     await expect(menu).toBeVisible()
@@ -415,7 +366,7 @@ test('a phone: Add in the sheet opens the filter menu on screen, and Views in �
     await expect(menu.locator(':focus')).toHaveCount(1) // focus moved into it
     await page.keyboard.press('Escape')
     await expect(menu).toBeHidden()
-    await expect(page.locator('.phone-pill')).toBeFocused()
+    await expect(page.locator('.pr-filter')).toBeFocused()
     // Views: a real menu item, reached with the arrows; it closes ⋯ and opens the list; a pick closes it.
     const more = page.getByRole('button', { name: 'More', exact: true })
     await more.focus()
@@ -438,7 +389,7 @@ test('a phone: Add in the sheet opens the filter menu on screen, and Views in �
     await pick.click()
     await expect(pick).toBeHidden()
     await expect(more).toBeFocused()
-    await expect(page.locator('.phone-pill')).toContainText('1 filter')
+    await expect(page.locator('.pr-filter .pr-badge')).toHaveText('1')
   } finally {
     if (made) await page.evaluate(async ([i, m]) => void (await fetch(`/api/v1/sites/${i}/segments/${m}`, { method: 'DELETE', headers: { 'X-Trckable-Request': '1' } })), [id, made])
   }

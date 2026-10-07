@@ -18,6 +18,9 @@ section into the release.
 ### Changed
 
 - Story's takeaway now says why when the data shows one: the page, referrer, campaign or country that explains at least half of the move ("most of it from Kosovo").
+
+- Header: a light header that scrolls away, and one control line that stays at the top (filters on the left, the period on the right, glass with the site's name once the page runs under it); Live | Data and Story | Explore are plain text tabs; the Data and All sites cards lose their boxes for hairlines; on a phone the line holds the tabs, a filter button and a short period that each open a sheet.
+
 - Data: Sources shows the channels as a ring with thick bars, Goals gets an icon, a plain name and a status for each goal plus a small visit-to-goal funnel, and Pages, Locations and Devices use the same bars; the rows' small charts are gone.
 
 ## 0.6.3 (7 Oct 2026)

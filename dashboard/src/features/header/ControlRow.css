@@ -274,24 +274,34 @@
   position: sticky;
   top: 0;
   z-index: 25;
-  min-height: 52px;
+  min-height: 56px;
   margin: 0 -32px;
   padding: 0 32px;
-  border-bottom: 1px solid transparent;
-  transition: background 0.2s, border-color 0.2s;
 }
 .header > .subbar {
   position: static;
   margin: 0;
   padding: 0;
 }
-.subbar[data-stuck] {
+.subbar::before {
+  content: '';
+  position: absolute;
+  inset: 0 calc(50% - 50vw);
+  z-index: -1;
+  border-bottom: 1px solid transparent;
+  pointer-events: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+.header > .subbar::before {
+  display: none;
+}
+.subbar[data-stuck]::before {
   background: color-mix(in srgb, var(--bg) 74%, transparent);
   border-bottom-color: var(--border);
 }
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
   @media (prefers-reduced-transparency: no-preference) {
-    .subbar[data-stuck] {
+    .subbar[data-stuck]::before {
       -webkit-backdrop-filter: blur(14px);
       backdrop-filter: blur(14px);
     }
@@ -439,5 +449,153 @@
   .ctl-cap .btn,
   .phone-row .ctl-cap {
     min-height: 44px;
+  }
+}
+
+/* One baseline: everything in the line is centred, 8px apart, 36px at most. */
+.subbar {
+  gap: 8px;
+}
+.ctl-cap {
+  gap: 8px;
+}
+.ctl-cap .btn,
+.ctl-cap .btn.range,
+.ctl-cap .btn.cmp-btn.on,
+.ctl-cap .filter-root .btn.filter,
+.ctl-inline .filter-root .btn.filter,
+.ctl-inline .chip,
+.ctl-inline .chip.more {
+  height: 36px;
+  max-height: 36px;
+  font-size: 13px;
+}
+.ctl-cap .btn.icon {
+  width: 36px;
+}
+.ctl-inline {
+  gap: 8px;
+}
+.ctl-inline .toolbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ctl-site {
+  height: 36px;
+  margin-right: 0;
+  font-size: 13px;
+}
+.ctl-site-sep {
+  display: none;
+  flex: none;
+  width: 1px;
+  height: 16px;
+  background: var(--border-2);
+}
+.subbar[data-stuck] .ctl-site-sep {
+  display: block;
+}
+/* "+ Filter": dim text with a plus, a soft fill on hover. */
+.ctl-cap .filter-root .btn.filter,
+.ctl-inline .filter-root .btn.filter {
+  border: 0;
+  background: transparent;
+  color: var(--text-3);
+  padding: 0 12px;
+}
+.filter-root .btn.filter:hover {
+  border: 0;
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+.app .subbar,
+.app .subbar.phone-row {
+  min-height: 56px;
+}
+
+/* ---- The phone's control line ---------------------------------------------
+   One line, 56px: the tabs scroll inside their own box, never the page; the
+   filter button, the short period and ⋯ keep 44px targets. */
+@media (max-width: 640px) {
+  .app {
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+  .phone-row {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .pr-tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .pr-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .pr-tabs > *,
+  .pr-tabs .sv-slot {
+    flex: none;
+  }
+  .sv-slot {
+    display: flex;
+  }
+  .app .pr-tabs :is(.view-switch, .sv-switch) {
+    height: 44px;
+  }
+  .app .pr-tabs :is(.view-switch, .sv-switch) button {
+    height: 44px;
+    min-width: 44px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+  .app .pr-tabs .sv-switch svg {
+    display: none;
+  }
+  .pr-btn {
+    position: relative;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 6px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-2);
+    font: 500 13px var(--font);
+    cursor: pointer;
+  }
+  .pr-btn b {
+    font-weight: 500;
+    color: var(--text);
+  }
+  .pr-btn[aria-expanded='true'] {
+    background: color-mix(in srgb, var(--text) 7%, transparent);
+  }
+  .pr-badge {
+    position: absolute;
+    top: 6px;
+    right: 3px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #0b0d10;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+  }
+  .phone-row .ctl-cap.ctl-do {
+    flex: none;
   }
 }
