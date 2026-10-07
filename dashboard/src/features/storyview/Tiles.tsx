@@ -5,19 +5,19 @@ import { Clock, LogOut, Users, Wallet, type LucideIcon } from 'lucide-react'
 import { Card, kitWords, MetricArea, type Tone as KitTone } from '../../kit'
 import { copy } from './copy'
 import type { Tile, Tone } from './rules'
+import type { TileSeries } from './tileSeries'
 
 const ICON: Record<Tile['key'], LucideIcon> = { visitors: Users, bounce: LogOut, session: Clock, revenue: Wallet }
-
-const SERIES = (key: Tile['key'], visitors: number[], revenue?: number[]) => ({ visitors, revenue, bounce: null, session: null })[key]
 
 const KIT: Record<Tone, KitTone> = { good: 'good', warn: 'warn', bad: 'bad', flat: 'neutral' }
 
 function pillOf(t: Tile) {
-  if (!t.move || t.move.arrow === '→') return null
+  if (!t.move) return null
+  if (t.move.arrow === '→') return { text: kitWords.flat, tone: 'neutral' as const }
   return { text: `${t.move.arrow === '↑' ? kitWords.up : kitWords.down} ${t.move.pct}%`, tone: KIT[t.move.tone] }
 }
 
-export function Tiles({ tiles, series, revenue, onConnect }: { tiles: Tile[]; series: number[]; revenue?: number[]; onConnect: () => void }) {
+export function Tiles({ tiles, series, onConnect }: { tiles: Tile[]; series: TileSeries; onConnect: () => void }) {
   return (
     <section className="sv-tiles" aria-label={copy.tilesLabel}>
       {tiles.map((t) => {
@@ -30,7 +30,7 @@ export function Tiles({ tiles, series, revenue, onConnect }: { tiles: Tile[]; se
             </button>
           </Card>
         ) : (
-          <MetricArea key={t.key} className="sv-tile" icon={icon} label={t.label} value={t.value} pill={pillOf(t)} status={t.verdict} tone={KIT[t.tone]} series={SERIES(t.key, series, revenue)} />
+          <MetricArea key={t.key} className="sv-tile" icon={icon} label={t.label} value={t.value} pill={pillOf(t)} status={t.verdict} tone={KIT[t.tone]} series={series[t.key]} />
         )
       })}
     </section>
