@@ -72,9 +72,30 @@ export const CARDS_MAX = 8
 
 export type Layout = 'cards' | 'list'
 
-/** By site count; ?layout=cards or ?layout=list overrides it (to look at both). */
-export function layoutOf(count: number, override?: string | null): Layout {
+const VIEW_KEY = 'tkb_all_view'
+
+/** The viewer's picked view, or null (automatic) until one is picked. */
+export function savedView(): Layout | null {
+  try {
+    const v = localStorage.getItem(VIEW_KEY)
+    return v === 'cards' || v === 'list' ? v : null
+  } catch {
+    return null
+  }
+}
+
+export function saveView(v: Layout) {
+  try {
+    localStorage.setItem(VIEW_KEY, v)
+  } catch {
+    // not remembered; it still applies now
+  }
+}
+
+/** ?layout=cards or ?layout=list wins (to look at both), then the viewer's pick, then by site count. */
+export function layoutOf(count: number, override?: string | null, picked?: Layout | null): Layout {
   if (override === 'cards' || override === 'list') return override
+  if (picked) return picked
   return count <= CARDS_MAX ? 'cards' : 'list'
 }
 

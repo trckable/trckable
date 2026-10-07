@@ -18,9 +18,10 @@ import { useSiteLayout } from '../features/sites/useSiteLayout'
 import { AllBar } from '../features/header/AllBar'
 import { AllRows } from './AllRows'
 import { AllSort } from './AllSort'
+import { AllView } from './AllView'
 import { AllSummary } from './AllSummary'
 import { copy } from './allSitesCopy'
-import { anyPayments, layoutOf, type OrderKey, saveOrder, savedOrder, sortBy, startIndex, summarize } from './allSitesLogic'
+import { anyPayments, layoutOf, type OrderKey, saveOrder, savedOrder, saveView, savedView, sortBy, startIndex, summarize } from './allSitesLogic'
 
 const PERIODS = [{ days: 7, label: '7 days' }, { days: 30, label: '30 days' }, { days: 90, label: '90 days' }, { days: 365, label: '12 months' }]
 
@@ -48,6 +49,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
   // A site's colour is its place in the account's list, not its place on this page.
   const colors = siteColors(sites)
   const colorOf = (id: string) => colors.get(id) ?? 'var(--text-3)'
+  const [picked, setPicked] = useState(savedView)
   const [q, setQ] = useState('')
   const [show, setShow] = useState<Show>('all')
 
@@ -64,7 +66,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
   const s = summarize(list ?? [])
   const start = startIndex(list ?? [])
   const connect = list && !anyPayments(list) && !isViewer() && list.length > 0 ? list[0] : null
-  const shape = layoutOf(sorted?.length ?? 0, new URLSearchParams(location.search).get('layout'))
+  const shape = layoutOf(sorted?.length ?? 0, new URLSearchParams(location.search).get('layout'), picked)
 
   return (
     <>
@@ -130,6 +132,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
               </div>
               <input className="all-search" type="search" placeholder="Search sites" aria-label="Search sites" value={q} onChange={(e) => setQ(e.target.value)} />
               <AllSort value={order} onChange={pick} />
+              <AllView value={shape} onChange={(v) => { setPicked(v); saveView(v) }} />
             </div>
 
             {sorted.length === 0 ? <p className="empty">No site matches.</p> : <AllRows rows={sorted} layout={shape} total={s.total} start={start} colorOf={colorOf} brandOf={brandOf} />}

@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { SiteRow } from '../lib/api'
-import { anyPayments, layoutOf, bounceHigh, bounceTenths, fromStart, sortBy, startIndex } from './allSitesLogic'
+import { anyPayments, layoutOf, bounceHigh, bounceTenths, fromStart, saveView, savedView, sortBy, startIndex } from './allSitesLogic'
 
 const r = (id: string, o: Partial<SiteRow> = {}) => ({ id, domain: id + '.com', name: '', visitors: 0, series: null, online: 0, ...o }) as SiteRow
 
@@ -28,6 +28,22 @@ describe('All sites rules', () => {
     expect(layoutOf(9)).toBe('list')
     expect(layoutOf(3, 'list')).toBe('list')
     expect(layoutOf(12, 'x')).toBe('list')
+  })
+  it('keeps the viewers pick over the count, and the URL over the pick', () => {
+    expect(layoutOf(3, null, 'list')).toBe('list')
+    expect(layoutOf(20, null, 'cards')).toBe('cards')
+    expect(layoutOf(20, 'list', 'cards')).toBe('list')
+    expect(layoutOf(20, null, null)).toBe('list')
+  })
+  it('remembers the picked view and is automatic until then', () => {
+    const store = new Map<string, string>()
+    vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => store.set(k, v) })
+    expect(savedView()).toBeNull()
+    saveView('list')
+    expect(savedView()).toBe('list')
+    store.set('tkb_all_view', 'x')
+    expect(savedView()).toBeNull()
+    vi.unstubAllGlobals()
   })
   it('sorts by visitors and name', () => {
     const rows = [r('b', { visitors: 1 }), r('a', { visitors: 9 })]
