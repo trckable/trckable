@@ -110,6 +110,34 @@ describe('takeaway and deltas', () => {
     const mixed: Input = { cur: result({ visitors: 1300 }, [['Search', 700], ['Direct', 600], ['Paid', 0]]), prev: result({ visitors: 1000 }, [['Search', 600], ['Direct', 500], ['Paid', 100]]), goals: false }
     expect(takeawayOf(mixed)).toBe('Up 30% on the period before.')
   })
+  it('adds the one cause that explains half the move: a page, a referrer, a campaign or a country', () => {
+    const base = (cur: Partial<Result>, prev: Partial<Result> = {}): Input => ({
+      cur: result({ visitors: 200 }, [['Search', 200]], { dims: { channel: rows([['Search', 200]]), ...cur.dims } }),
+      prev: result({ visitors: 100 }, [['Search', 100]], { dims: { channel: rows([['Search', 100]]), ...prev.dims } }),
+      goals: false,
+    })
+    const page = base({ dims: { entry_page: rows([['/news', 160], ['/', 40]]) } }, { dims: { entry_page: rows([['/news', 20], ['/', 80]]) } })
+    expect(takeawayOf(page)).toBe('Up 100% on the period before, mostly from Search, most of it on /news.')
+    const ref = base({ dims: { referrer: rows([['facebook.com', 90], ['', 110]]) } }, { dims: { referrer: rows([['', 100]]) } })
+    expect(takeawayOf(ref)).toBe('Up 100% on the period before, mostly from Search, most of it from facebook.com.')
+    const camp = base({ dims: { campaign: rows([['spring', 80], ['', 120]]) } }, { dims: { campaign: rows([['', 100]]) } })
+    expect(takeawayOf(camp)).toContain('most of it from the spring campaign.')
+    const ctry = base({ dims: { country: rows([['XK', 120], ['AL', 80]]) } }, { dims: { country: rows([['AL', 100]]) } })
+    expect(takeawayOf(ctry)).toContain('most of it from Kosovo.')
+    // google.com under Search only repeats the channel: the next best cause is told instead, or none.
+    const eng = base({ dims: { referrer: rows([['google.com', 200]]), country: rows([['XK', 120], ['AL', 80]]) } }, { dims: { referrer: rows([['google.com', 100]]), country: rows([['AL', 100]]) } })
+    expect(takeawayOf(eng)).toBe('Up 100% on the period before, mostly from Search, most of it from Kosovo.')
+    expect(takeawayOf(base({ dims: { referrer: rows([['google.com', 200]]) } }, { dims: { referrer: rows([['google.com', 100]]) } }))).toBe('Up 100% on the period before, mostly from Search.')
+    // The country moved 100, the page 60: the biggest one is told, once.
+    const both = base({ dims: { country: rows([['XK', 120], ['AL', 80]]), entry_page: rows([['/a', 80], ['/b', 120]]) } }, { dims: { country: rows([['AL', 100]]), entry_page: rows([['/a', 60], ['/b', 40]]) } })
+    expect(takeawayOf(both).match(/most of it/g)).toHaveLength(1)
+  })
+  it('adds no cause when nothing explains half the move or the move is tiny', () => {
+    const spread = { cur: result({ visitors: 200 }, [['Search', 200]], { dims: { channel: rows([['Search', 200]]), entry_page: rows([['/a', 50], ['/b', 50], ['/c', 50], ['/d', 50]]) } }), prev: result({ visitors: 100 }, [['Search', 100]], { dims: { channel: rows([['Search', 100]]), entry_page: rows([['/a', 25], ['/b', 25], ['/c', 25], ['/d', 25]]) } }), goals: false }
+    expect(takeawayOf(spread)).toBe('Up 100% on the period before, mostly from Search.')
+    const tiny = { cur: result({ visitors: 10 }, [['Search', 10]], { dims: { channel: rows([['Search', 10]]), entry_page: rows([['/a', 10]]) } }), prev: result({ visitors: 6 }, [['Search', 6]], { dims: { channel: rows([['Search', 6]]), entry_page: rows([['/a', 6]]) } }), goals: false }
+    expect(takeawayOf(tiny)).toBe('Up 67% on the period before, mostly from Search.')
+  })
   it('says about the same within 5% and nothing without a period before', () => {
     expect(takeawayOf({ cur: result({ visitors: 1030 }), prev: result({ visitors: 1000 }), goals: false })).toBe('About the same as the period before.')
     expect(takeawayOf({ cur: result({ visitors: 1030 }), goals: false })).toBe('')

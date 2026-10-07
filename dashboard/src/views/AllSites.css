@@ -51,19 +51,6 @@
 .all-item:has(:focus-visible) > .site-open {
   opacity: 1;
 }
-@media (hover: none), (max-width: 640px) {
-  .all-item {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 6px;
-  }
-  .all-item > .site-open {
-    position: static;
-    width: 44px;
-    height: 44px;
-    opacity: 1;
-  }
-}
 .all-actions {
   display: flex;
   flex-wrap: wrap;
@@ -185,9 +172,7 @@
    desktop is raised to 12 (the phone scale, phone.css). */
 @media (max-width: 640px) {
   :root :is(
-    .all-chart-axis,
-    .all-big .delta,
-    .all-stat .faint
+    .all-chart-axis
   ) {
     font-size: 12px;
   }
@@ -209,6 +194,22 @@
     min-width: var(--ph-hit);
     height: var(--ph-hit);
     font-size: var(--ph-text-2);
+  }
+  :root .all-link {
+    min-height: var(--ph-hit);
+    font-size: var(--ph-text-2);
+  }
+  /* Four choices do not fit 390 px: the group scrolls inside itself. */
+  :root :is(.all-filters, .all-actions) .seg {
+    /* Width 0 and a floor of 100%: the page measures it as nothing, the row gives it the full width. */
+    width: 0;
+    min-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  :root :is(.all-filters, .all-actions) .seg button {
+    flex: none;
+    white-space: nowrap;
   }
 }
 
@@ -243,35 +244,6 @@
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
 }
-.all-stat {
-  display: grid;
-  align-content: start;
-  gap: 2px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-}
-.all-stat-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-3);
-  font-size: 12.5px;
-}
-.all-stat b {
-  font-size: 22px;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-.all-stat .faint {
-  font-size: 12px;
-}
-.all-stat.warn b,
-.all-stat.warn .all-stat-label,
-.all-stat.warn .faint {
-  color: var(--warn);
-}
 .pulse.off {
   animation: none;
   background: var(--text-3);
@@ -303,10 +275,18 @@
   right: 0;
   pointer-events: none;
 }
-.all-sort:focus-within {
+.all-sort select:focus-visible {
+  outline: none;
+}
+.all-sort:has(select:focus-visible) {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 6px;
+}
+@media (pointer: coarse) {
+  .all-sort:has(select:focus-visible) {
+    outline: none;
+  }
 }
 @media (max-width: 640px) {
   .all-stats {

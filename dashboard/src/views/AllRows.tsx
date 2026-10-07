@@ -1,6 +1,6 @@
 // The sites of All sites, in one of two layouts: cards for a few sites, a
 // slim list for many. Either way the whole row is the link to the site.
-import { delta, fmtInt } from '../lib/format'
+import { fmtInt } from '../lib/format'
 import type { SiteRow } from '../lib/api'
 import type { Site } from '../lib/api'
 import { navigate } from '../lib/url'
@@ -8,7 +8,8 @@ import { openSettings } from '../lib/settings'
 import { SiteMark } from '../components/SiteMark'
 import { OpenSite, openSiteTab } from '../features/sites/OpenSite'
 import { Spark } from './AllSitesSpark'
-import { Bounce, Money, Online } from './AllParts'
+import { MetricArea } from '../kit/MetricArea'
+import { Bounce, bouncePill, Money, Online } from './AllParts'
 import { copy } from './allSitesCopy'
 import { anyPayments, fromStart, type Layout } from './allSitesLogic'
 import './AllRows.css'
@@ -45,33 +46,37 @@ export function AllRows({ rows, layout, total, start, colorOf, brandOf }: Props)
     return (
       <div className="all-cards" role="list">
         {rows.map((r) => {
-          const dv = r.visitors || r.previous_visitors ? delta(r.visitors, r.previous_visitors) : null
           return (
             <div key={r.id} role="listitem" className="all-item">
-              <button type="button" className={'all-card' + (waiting(r) ? ' quiet' : '')} onClick={() => go(r)} onKeyDown={(e) => openOnShiftEnter(e, r.domain)}>
-                <span className="all-card-head">
-                  {mark(r)}
-                  {name(r)}
-                  <Online r={r} />
-                </span>
-                {waiting(r) ? (
+              {waiting(r) ? (
+                <button type="button" className="all-card quiet" onClick={() => go(r)} onKeyDown={(e) => openOnShiftEnter(e, r.domain)}>
+                  <span className="all-card-head">
+                    {mark(r)}
+                    {name(r)}
+                    <Online r={r} />
+                  </span>
                   <span className="all-wait">
                     {copy.waiting} · <b>{copy.install}</b>
                   </span>
-                ) : (
-                  <>
-                    {spark(r, 44)}
-                    <span className="all-card-foot">
-                      <span className="all-big">
-                        {fmtInt(r.visitors)}
-                        {dv && <span className={'delta tone-' + dv.tone}>{dv.text}</span>}
-                        {share(r)}
-                      </span>
-                      <Bounce rate={r.bounce_rate} visitors={r.visitors} short />
-                    </span>
-                  </>
-                )}
-              </button>
+                </button>
+              ) : (
+                <MetricArea
+                  compact
+                  head={
+                    <>
+                      {mark(r)}
+                      {name(r)}
+                    </>
+                  }
+                  aside={<Online r={r} />}
+                  value={fmtInt(r.visitors)}
+                  pill={bouncePill(r.bounce_rate, r.visitors)}
+                  series={fromStart(r.series, start)}
+                  color={colorOf(r.id)}
+                  press={() => go(r)}
+                  onKeyDown={(e) => openOnShiftEnter(e, r.domain)}
+                />
+              )}
               <OpenSite domain={r.domain} />
             </div>
           )

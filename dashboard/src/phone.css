@@ -244,7 +244,8 @@
     padding: 6px 10px;
     font-size: var(--ph-text-2);
   }
-  .bl-main {
+  .bl-main,
+  .bl.fat .bl-main {
     display: contents;
   }
   .bl-name {
@@ -255,6 +256,9 @@
     grid-column: 1 / -1;
     grid-row: 2;
     margin-top: 6px;
+  }
+  .bl.fat .bl-line {
+    margin-top: 8px;
   }
   .bl-val {
     grid-column: 2;

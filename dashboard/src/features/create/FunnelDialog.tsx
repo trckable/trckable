@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { DialogActions } from '../../components/DialogActions'
 import { DialogHead } from '../../components/DialogHead'
-import { Modal } from '../../components/Modal'
+import { Modal } from '../../kit/Modal'
 import { Picker } from '../../components/Picker'
 import type { FunnelStep, Row } from '../../lib/api'
 import { dialogCopy as copy } from './dialogCopy'

@@ -5,7 +5,7 @@
 // seeing what you are about to explain. Days outside the period come from the
 // same calendar the date picker uses, not the browser's own.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Modal } from './Modal'
+import { Modal } from '../kit/Modal'
 import { DialogActions } from './DialogActions'
 import { DialogHead } from './DialogHead'
 import { Chevron } from './DatePicker'

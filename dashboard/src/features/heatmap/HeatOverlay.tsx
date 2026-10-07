@@ -4,7 +4,7 @@
 // first one is opened. `demo` draws an example with nothing recorded, for the
 // card that suggests the module.
 import { useEffect, useMemo, useState } from 'react'
-import { Modal } from '../../components/Modal'
+import { Modal } from '../../kit/Modal'
 import { words } from '../../lib/errors'
 import { type ReportQuery, type Site } from '../../lib/api'
 import { heatApi, type HeatMap, type Width } from './api'
