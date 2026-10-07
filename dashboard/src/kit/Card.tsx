@@ -5,7 +5,7 @@ import type { CSSProperties, KeyboardEventHandler, ReactNode } from 'react'
 import { kitWords } from './copy'
 import './kit.css'
 
-type Variant = 'plain' | 'accent' | 'warn' | 'hero'
+type Variant = 'plain' | 'accent' | 'warn' | 'hero' | 'open'
 
 export type CardProps = {
   title?: ReactNode
@@ -16,6 +16,8 @@ export type CardProps = {
   variant?: Variant
   /** The whole card is one button. */
   press?: () => void
+  /** The title is the button that opens the card, stretched over all of it; rows inside sit above it. */
+  stretch?: boolean
   onKeyDown?: KeyboardEventHandler<HTMLButtonElement>
   className?: string
   style?: CSSProperties
@@ -38,13 +40,22 @@ function Corner({ onOpen, openLabel, mark }: { onOpen?: () => void; openLabel?: 
   )
 }
 
-export function Card({ title, aside, onOpen, openLabel, variant = 'plain', press, onKeyDown, className = '', style, label, children }: CardProps) {
-  const cls = `kit-card ${variant}${press ? ' press' : ''} ${className}`.trim()
+export function Card({ title, aside, onOpen, openLabel, variant = 'plain', press, stretch, onKeyDown, className = '', style, label, children }: CardProps) {
+  const stretched = !!stretch && !!onOpen && !press
+  const cls = `kit-card ${variant}${press ? ' press' : ''}${stretched ? ' stretch' : ''} ${className}`.trim()
   const head = (title !== undefined || aside || onOpen) && (
     <span className="kit-head">
-      <span className="kit-title">{title}</span>
+      <span className="kit-title">
+        {stretched ? (
+          <button type="button" className="kit-stretch" aria-label={openLabel ?? kitWords.open} onClick={onOpen}>
+            {title}
+          </button>
+        ) : (
+          title
+        )}
+      </span>
       {aside}
-      <Corner onOpen={onOpen} openLabel={openLabel} mark={!!press && !!onOpen} />
+      <Corner onOpen={onOpen} openLabel={openLabel} mark={(!!press || stretched) && !!onOpen} />
     </span>
   )
   if (press)

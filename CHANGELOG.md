@@ -24,6 +24,8 @@ section into the release.
 
 - Data: Sources shows the channels as a ring with thick bars, Goals gets an icon, a plain name and a status for each goal plus a small visit-to-goal funnel, and Pages, Locations and Devices use the same bars; the rows' small charts are gone.
 
+- Live: the three cards under the panels are drawn with the shared card kit and the open look (hairlines, no boxes), and Data's goal status is the same small tag as elsewhere.
+
 ## 0.6.3 (7 Oct 2026)
 
 ### Added

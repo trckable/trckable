@@ -75,7 +75,7 @@ test('the cards show today and the page someone is on, and open Data on today', 
   const run = await visit(page, 'livecards', 4)
   const today = cards(page).locator('.lv-card', { hasText: 'Today so far' })
   await expect(today).toBeVisible({ timeout: 10_000 })
-  await expect(today.locator('.lv-n')).not.toHaveText('0')
+  await expect(today.locator('.kit-val b')).not.toHaveText('0')
   const pages = cards(page).locator('.lv-card', { hasText: 'Top pages right now' })
   const row = pages.getByRole('button', { name: new RegExp(run) })
   await expect(row).toBeVisible({ timeout: 10_000 })
