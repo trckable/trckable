@@ -11,6 +11,7 @@ section into the release.
 
 ### Changed
 
+- Story: "Which page carries you?" and "What needs fixing?" draw their own page's and channel's days in the card's chart, not the whole site's line.
 - All sites and Story: every stat card draws its days behind the number with the soft fill (Pageviews, Bounce rate, Online now over the last 30 minutes, Story's Bounce rate and Session time), and a number that has a period before it shows its change chip.
 - All sites: the site cards have the same gap between rows as between columns, and the heading line and its controls sit on one centre line.
 - Story: the five answers share one card anatomy (question and a quiet status on the top line, one big number with a chip, the answer as one line, one link, a chart to the bottom edge); the stat cards' statuses are short ("Far above normal") with the full line as the tooltip, and on a phone drop under the name instead of being cut.

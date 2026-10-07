@@ -1,6 +1,7 @@
 // "Your five questions, answered", on the card kit with one anatomy (the same as
 // a site card): the question and a quiet status on the top line, one big number
 // with one chip, the answer as a line, one link, and a chart to the bottom edge.
+// The page and the fix draw their own page's or channel's days; the rest draw the site's.
 // The link opens Explore with the matching filters, so the claim can be checked.
 import { ArrowRight, Coins, FileText, Gauge, Target, Wrench, type LucideIcon } from 'lucide-react'
 import { Area, Card, Pill, type Tone as KitTone } from '../../kit'
@@ -27,7 +28,7 @@ interface Props {
   onGoal?: () => void
   site: Site
   /** The lines the cards draw: visitors, the period before's visitors, and revenue when it is counted. */
-  series: { visitors: number[]; was?: number[]; revenue?: number[] }
+  series: { visitors: number[]; was?: number[]; revenue?: number[]; own?: Partial<Record<Answer['key'], number[]>> }
   hints?: Hint[]
   onAway: (h: Hint) => void
 }
@@ -71,7 +72,10 @@ export function Answers({ answers, onConnect, onGoal, site, series, hints = [], 
   const card = (a: Answer) => {
     const Icon = ICON[a.key]
     const tone = toneOfAnswer(a)
+    const own = series.own?.[a.key]
+    const flat = series.visitors.map(() => 0)
     const lines = a.key === 'pays' && series.revenue && a.chip ? series.revenue : series.visitors
+    const drawn = a.key === 'page' || a.key === 'fix' ? (own ?? flat) : lines
     const was = a.key === 'fine' ? series.was : undefined
     return (
       <Card
@@ -82,7 +86,7 @@ export function Answers({ answers, onConnect, onGoal, site, series, hints = [], 
         tone={a.key === 'fix' && a.look === 'fix' ? 'warn' : undefined}
         title={a.question}
         status={a.status}
-        chart={lines.length > 1 ? <Area values={lines} was={was} color={toneColor(tone)} /> : undefined}
+        chart={drawn.length > 1 ? <Area values={drawn} was={was} color={toneColor(tone)} /> : undefined}
       >
         <span className="kit-val">
           <b className="num sv-big">{a.big}</b>

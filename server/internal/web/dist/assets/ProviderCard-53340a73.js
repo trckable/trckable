@@ -1,0 +1,1 @@
+import{t as e}from"./ProviderCard-44f34803.js";export{e as ProviderCard};
