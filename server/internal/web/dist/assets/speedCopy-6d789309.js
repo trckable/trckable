@@ -1,0 +1,1 @@
+import{oi as e}from"./core-9b1cb3aa.js";var t=e(`overview.speed`,{speed:`Replay speed`,speedNow:e=>`Replay speed: ${e}`,playsIn:e=>`plays in ${e}`,speedKeys:`Slower [  Faster ]`});export{t};

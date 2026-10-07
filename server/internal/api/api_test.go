@@ -849,6 +849,105 @@ func TestOverviewListsEverySite(t *testing.T) {
 	}
 }
 
+// Every card on All sites gets its days from the overview: pageviews, bounce
+// (with the sessions that weight it) and online per minute, bucket for bucket
+// with the visitors' series, each adding up to the number on its card.
+func TestOverviewSeriesMatchTheCards(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	day := g.now.Add(-30 * time.Hour) // yesterday, whatever the time of day
+	id := uint64(0)
+	add := func(at time.Time, visitor uint64) {
+		t.Helper()
+		id++
+		g.event(t, event.Event{EventID: id, Kind: event.KindPageview, TS: at.UnixMilli(), Visitor: visitor, Pageview: id, Path: "/p" + strconv.FormatUint(id, 10), Channel: "Direct"})
+	}
+	// Yesterday: visitor 1 reads two pages, visitor 2 one (a bounce).
+	add(day, 1)
+	add(day.Add(time.Minute), 1)
+	add(day, 2)
+	// Just now: visitor 3 at 2 minutes back and 12 back, visitor 4 at 20 back.
+	times := map[uint64][]time.Time{
+		3: {g.now.Add(-2 * time.Minute), g.now.Add(-12 * time.Minute)},
+		4: {g.now.Add(-20*time.Minute - 30*time.Second)},
+	}
+	for v, ts := range times {
+		for _, at := range ts {
+			add(at, v)
+		}
+	}
+	g.waitApplied(t, id)
+
+	code, out := do(t, c, "GET", g.srv.URL+"/api/v1/overview?days=7", "")
+	if code != 200 {
+		t.Fatalf("overview: %d %v", code, out)
+	}
+	row := out["sites"].([]any)[0].(map[string]any)
+	floats := func(key string) []float64 {
+		t.Helper()
+		list, _ := row[key].([]any)
+		got := make([]float64, len(list))
+		for i, v := range list {
+			got[i], _ = v.(float64)
+		}
+		return got
+	}
+	sum := func(v []float64) (n float64) {
+		for _, x := range v {
+			n += x
+		}
+		return n
+	}
+	visitors, views, sessions, bounce := floats("series"), floats("pageview_series"), floats("session_series"), floats("bounce_series")
+	for key, got := range map[string][]float64{"pageview_series": views, "session_series": sessions, "bounce_series": bounce} {
+		if len(got) != len(visitors) || len(got) != 7 {
+			t.Fatalf("%s has %d buckets, visitors has %d, want 7", key, len(got), len(visitors))
+		}
+	}
+	if sum(views) != row["pageviews"].(float64) {
+		t.Errorf("pageview_series adds to %v, the card says %v", sum(views), row["pageviews"])
+	}
+	// The bounce rate over the period is its buckets weighted by their sessions.
+	var weighted float64
+	for i := range bounce {
+		weighted += bounce[i] * sessions[i]
+	}
+	if got, want := weighted/sum(sessions), row["bounce_rate"].(float64); got < want-1e-9 || got > want+1e-9 {
+		t.Errorf("bounce_series weighted by session_series = %v, the card says %v", got, want)
+	}
+	// Yesterday's bucket holds visitor 1 (two pages, no bounce) and 2 (a bounce).
+	for i, n := range views {
+		if n == 3 && (sessions[i] != 2 || bounce[i] != 0.5) {
+			t.Errorf("yesterday: sessions %v bounce %v, want 2 and 0.5", sessions[i], bounce[i])
+		}
+	}
+
+	// Online, counted by hand: at each minute, who was seen in the 5 before it.
+	online := floats("online_series")
+	if len(online) != 30 {
+		t.Fatalf("online_series has %d slots, want 30", len(online))
+	}
+	for slot := range online {
+		end := g.now.Add(-time.Duration(29-slot) * time.Minute)
+		want := 0.0
+		for _, ts := range times {
+			for _, at := range ts {
+				if !at.After(end) && !at.Before(end.Add(-5*time.Minute)) {
+					want++
+					break
+				}
+			}
+		}
+		if online[slot] != want {
+			t.Errorf("online at %d minutes back = %v, want %v", 29-slot, online[slot], want)
+		}
+	}
+	if online[29] != row["online"].(float64) {
+		t.Errorf("last online slot %v, the card's number %v", online[29], row["online"])
+	}
+}
+
 // signInFirst signs a new person in with the one-time password they were
 // given and chooses their own, as the first sign-in asks.
 func signInFirst(t *testing.T, g *rig, email, oneTime string) *http.Client {

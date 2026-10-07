@@ -147,6 +147,25 @@ func testKPIs(t *testing.T, q Q) {
 	}
 }
 
+// The Story tiles draw each bucket's bounce rate and mean session length.
+func TestReportSeriesCarryBounceAndSessionLength(t *testing.T) {
+	both(t, func(t *testing.T, q Q) {
+		p := sep10
+		p.To = time.Date(2026, 9, 12, 0, 0, 0, 0, time.UTC) // Sep 11 has D's one bounce
+		r, err := q.Report(context.Background(), p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(r.Series) != 2 {
+			t.Fatalf("series has %d buckets, want 2", len(r.Series))
+		}
+		eq(t, "Sep 10 bounce", r.Series[0].Bounce, 0.5)
+		eq(t, "Sep 10 session", r.Series[0].AvgS, 60.0)
+		eq(t, "Sep 11 bounce", r.Series[1].Bounce, 1.0)
+		eq(t, "Sep 11 session", r.Series[1].AvgS, 0.0)
+	})
+}
+
 func TestSourcesComeFromTheEntryPageview(t *testing.T) { both(t, testSources) }
 
 func testSources(t *testing.T, q Q) {

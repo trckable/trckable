@@ -198,6 +198,8 @@ const HEAD_METHODS = METHODS.filter((m) => tagOnly(m, ctxFor()) || HEADS[m.id] |
 
 for (const m of HEAD_METHODS) {
   test(`${m.name}: the snippet's pageview arrives`, async ({ browser, request, browserName }) => {
+    // CI runs the WordPress case when the snippets or the tracker change, and on main and releases.
+    test.skip(m.id === 'wordpress' && process.env.TRCKABLE_WORDPRESS === 'false', 'the install snippets did not change')
     if (m.id === 'wordpress' && !hasPhp()) {
       expect(process.env.CI, 'CI must run WordPress through PHP').toBeFalsy()
       test.skip(true, 'php is not installed here (CI has it)')
