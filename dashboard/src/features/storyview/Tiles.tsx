@@ -4,7 +4,7 @@
 import { Clock, LogOut, Users, Wallet, type LucideIcon } from 'lucide-react'
 import { Card, kitWords, MetricArea, type Tone as KitTone } from '../../kit'
 import { copy } from './copy'
-import type { Tile, Tone } from './rules'
+import { brief, type Tile, type Tone } from './rules'
 import type { TileSeries } from './tileSeries'
 
 const ICON: Record<Tile['key'], LucideIcon> = { visitors: Users, bounce: LogOut, session: Clock, revenue: Wallet }
@@ -30,7 +30,7 @@ export function Tiles({ tiles, series, onConnect }: { tiles: Tile[]; series: Til
             </button>
           </Card>
         ) : (
-          <MetricArea key={t.key} className="sv-tile" icon={icon} label={t.label} value={t.value} pill={pillOf(t)} status={t.verdict} tone={KIT[t.tone]} series={series[t.key]} />
+          <MetricArea key={t.key} className="sv-tile" icon={icon} label={t.label} value={t.value} pill={pillOf(t)} status={<span title={t.verdict}>{brief(t.verdict)}</span>} tone={KIT[t.tone]} series={series[t.key]} />
         )
       })}
     </section>

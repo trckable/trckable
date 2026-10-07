@@ -55,10 +55,12 @@ export function Hint({
     if (!el) return
     const t = target.getBoundingClientRect()
     const view = { w: window.innerWidth, h: window.innerHeight }
-    const next = placeHint(t, el.offsetHeight, view)
+    // The box's true height (offsetHeight rounds it, and a half pixel short leaves no room over the target).
+    const h = el.getBoundingClientRect().height
+    const next = placeHint(t, h, view)
     // No free room under or over the target (a tall stack of cards on a phone): scroll up just enough to make room over it, once.
-    const over = next && next.top < t.bottom && next.top + el.offsetHeight > t.top && next.left < t.right && next.left + next.width > t.left
-    const need = el.offsetHeight + GAP + EDGE - t.top
+    const over = next && next.top < t.bottom && next.top + h > t.top && next.left < t.right && next.left + next.width > t.left
+    const need = h + GAP + EDGE - t.top
     if (over && need > 0 && window.scrollY > 0 && !scrolled.current) {
       scrolled.current = true
       window.scrollBy(0, -Math.min(need, window.scrollY))

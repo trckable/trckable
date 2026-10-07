@@ -287,21 +287,8 @@
   }
 
   /* ---- The key numbers ------------------------------------------------------- */
-  .kpis {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding: 6px 4px 0;
-  }
-  .kpi {
-    padding: 8px 10px 10px;
-  }
   .kpi .kpi-name,
   .kpi .label {
-    font-size: var(--ph-small);
-  }
-  .kpi .value {
-    font-size: clamp(20px, 16cqi, 30px);
-  }
-  .kpi-delta {
     font-size: var(--ph-small);
   }
 

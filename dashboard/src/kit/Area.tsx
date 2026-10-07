@@ -3,7 +3,7 @@
 // second, dashed line on the same scale (the same time a week ago).
 import { useId } from 'react'
 import { areaPaths } from './model'
-import './kit.css'
+import './base.css'
 
 const W = 300
 const H = 64

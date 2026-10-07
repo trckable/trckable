@@ -80,19 +80,26 @@ test('a shared link: its capsules are the same height', async ({ page, browser }
   await reader.close()
 })
 
-test('the Live card leads with the dot: pulsing, or still for reduced motion', async ({ page }) => {
+test('the Live card leads with its icon tile, in the accent while the feed is connected', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/example.com?view=live`)
   await expect(page.locator('.live-now .live-calm')).toBeVisible({ timeout: 20_000 })
   await page.emulateMedia({ colorScheme: SCHEME, reducedMotion: 'no-preference' })
   await page.waitForTimeout(300)
   await shot(page, 'live') // before the checks, so a failing run still has its picture
-  const dot = () => page.locator('.live-now .live-head-row h2').evaluate((el) => {
-    const s = getComputedStyle(el, '::before')
-    return { w: s.width, h: s.height, radius: s.borderTopLeftRadius, bg: s.backgroundColor, animation: s.animationName }
+  const tile = () => page.locator('.live-now .live-head-row .kit-tile').evaluate((el) => {
+    const s = getComputedStyle(el)
+    return { w: s.width, h: s.height, color: s.color }
   })
-  const ping = await page.locator('.view-switch .pulse').evaluate((el) => getComputedStyle(el).backgroundColor)
-  expect(await dot()).toEqual({ w: '8px', h: '8px', radius: '50%', bg: ping, animation: 'pulse' })
+  const accent = await page.evaluate(() => {
+    const probe = document.createElement('span')
+    probe.style.color = 'var(--accent)'
+    document.body.append(probe)
+    const c = getComputedStyle(probe).color
+    probe.remove()
+    return c
+  })
+  expect(await tile()).toEqual({ w: '28px', h: '28px', color: accent })
   await page.emulateMedia({ colorScheme: SCHEME, reducedMotion: 'reduce' })
-  expect(await dot()).toEqual({ w: '8px', h: '8px', radius: '50%', bg: ping, animation: 'none' })
+  expect(await tile()).toEqual({ w: '28px', h: '28px', color: accent })
 })

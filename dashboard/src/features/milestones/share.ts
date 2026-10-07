@@ -1,6 +1,12 @@
 // The calls only the share sheet and Settings make, kept out of the first load.
 import { call, type Milestone } from '../../lib/api'
 
+/** The card as a PNG on the clipboard. */
+export async function copyImage(url: string) {
+  const blob = await fetch(url, { credentials: 'same-origin' }).then((r) => r.blob())
+  await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+}
+
 const path = (site: string, m: Pick<Milestone, 'kind' | 'step'>) => `/sites/${encodeURIComponent(site)}/milestones/${encodeURIComponent(m.kind)}/${encodeURIComponent(m.step)}`
 
 export const shareApi = {

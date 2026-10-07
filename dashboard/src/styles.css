@@ -21,7 +21,7 @@
   --text: #f5f7fa;
   --text-2: #a7b0bd;
   --text-3: #8a93a1;
-  --text-4: #737b87; /* the footer line: 4.55:1 on the dark page */
+  --text-4: #838b97; /* 4.97:1 on the dark card */
   --accent: #b8ff3c;
   /* The accent on a tinted chip, at 11px: the plain accent is 4.18:1 there in
      the light theme, and AA wants 4.5. */
@@ -85,7 +85,7 @@
     --tkb-outline: #0b0d10; /* the logo's ghost keeps an ink edge on a light page */
     --text-2: #4a525e;
     --text-3: #616874;
-    --text-4: #6d737e; /* 4.56:1 on the light page */
+    --text-4: #676d78; /* 4.84:1 on the light sunken surface */
     /* 4.87:1 with white on it. The old #4d8a00 was 4.24 — close enough to
        look fine and not close enough to be readable. */
     --accent: #487f00;
@@ -138,7 +138,7 @@
   --tkb-outline: #0b0d10;
   --text-2: #4a525e;
   --text-3: #616874;
-  --text-4: #6d737e;
+  --text-4: #676d78;
   --accent: #487f00;
   --accent-strong: #3f7000;
   --accent-ink: #ffffff;
@@ -314,21 +314,32 @@ h2 {
     padding: 0 10px;
   }
 }
+/* The same flat surface as the kit's cards: a thin border that lights on hover or focus */
 .card {
   background: var(--surface);
-  border: 1px solid var(--grid);
-  border-radius: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-width: 0;
+  transition: border-color 0.15s;
+}
+.card:hover,
+.card:focus-within {
+  border-color: var(--accent);
 }
 .card-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
+}
+.card-head h2 {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-3);
 }
 /* With a fold button the title still comes first; everything else goes right. */
 .card-head .fold + h2 {
@@ -1490,17 +1501,14 @@ table.t td {
 .icon-tile {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   flex: none;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 6%, var(--surface-2)), var(--surface-2));
+  border-radius: 8px;
+  background: var(--row);
   color: var(--text-2);
 }
 .icon-tile.accent {
-  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
-  background: var(--accent-soft);
   color: var(--accent);
 }
 @media (max-width: 640px) {
@@ -1893,7 +1901,7 @@ body[data-mode='full'] .app {
 }
 /* The overview sets its own inner spacing (the tiles and the chart each pad
    themselves), so the modes' card padding stays off it. */
-body[data-mode] .kit-card.overview {
+body[data-mode] .card.overview {
   padding: 0;
 }
 .switch:disabled {
@@ -2526,10 +2534,13 @@ body[data-mode] .kit-card.overview {
 /* ---- Overview: the key numbers and the chart, one section -------------------
    The dialogs' soft light across the top; each number on a quiet tile with its
    own icon; the one being charted is lit. */
-.kit-card.overview {
+.card.overview {
   gap: 0;
   padding: 0;
-  border-top: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(700px 240px at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--surface);
 }
 @media (max-width: 640px) {
   .overview-chart {
@@ -2770,26 +2781,7 @@ body[data-mode] .kit-card.overview {
   background: transparent;
 }
 
-/* Cards you can click lift a little under the pointer. */
-.site-card,
-.person,
-.wg-row,
-.htile {
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s;
-}
-.site-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgb(0 0 0 / 0.28);
-}
-.person:hover,
-.wg-row:hover {
-  box-shadow: 0 6px 18px rgb(0 0 0 / 0.22);
-}
-@media (prefers-reduced-motion: reduce) {
-  .site-card:hover {
-    transform: none;
-  }
-}
+/* Flat, like the kit's cards: no lift, no shadow; the border lights on hover. */
 
 /* ---- Live ↔ Data ---------------------------------------------------------
    One app changing its mind, not two pages swapping (lib/viewTransition.ts).
@@ -2917,22 +2909,25 @@ body[data-mode] .kit-card.overview {
   cursor: default;
 }
 
-/* ---- Open cards (Data and All sites) ---------------------------------------
-   No boxes: hairlines between the number tiles, a hairline under each panel's
-   title row, and room between the panels instead of a frame around them. */
-.app .kit-card.overview .kpis {
+.app .card.overview {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.app .card.overview .kpis {
   padding: 0;
   gap: 0;
-  border-top: 0;
+  border-top: 1px solid var(--grid);
   border-bottom: 1px solid var(--grid);
 }
-.app .kit-card.overview .kpi {
+.app .card.overview .kpi {
   padding: 14px 16px;
 }
-.app .kit-card.overview .kpi + .kpi {
+.app .card.overview .kpi + .kpi {
   border-left: 1px solid var(--grid);
 }
-.app .kit-card.overview .overview-chart {
+.app .card.overview .overview-chart {
   padding-left: 0;
   padding-right: 0;
 }
@@ -2940,10 +2935,10 @@ body[data-mode] .kit-card.overview {
   gap: 44px;
 }
 @media (max-width: 640px) {
-  .app .kit-card.overview .kpi:nth-child(odd) {
+  .app .card.overview .kpi:nth-child(odd) {
     border-left: 0;
   }
-  .app .kit-card.overview .kpi {
+  .app .card.overview .kpi {
     border-bottom: 1px solid var(--grid);
   }
 }
@@ -2998,7 +2993,4 @@ body[data-mode] .kit-card.overview {
 }
 body {
   overflow-x: clip;
-}
-.kit-card.overview > .kit-head {
-  padding: 14px 16px 12px;
 }

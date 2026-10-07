@@ -27,6 +27,10 @@ export type CardProps = {
   variant?: Variant
   /** The whole card is one button. */
   press?: () => void
+  /** With `press`: the card is the one switched on (a number on the main chart). */
+  pressed?: boolean
+  /** The card's tooltip. */
+  tooltip?: string
   /** The title is the button that opens the card, stretched over all of it; rows inside sit above it. */
   stretch?: boolean
   onKeyDown?: KeyboardEventHandler<HTMLButtonElement>
@@ -59,7 +63,7 @@ function Corner({ onOpen, openLabel, mark, href }: { onOpen?: () => void; openLa
   )
 }
 
-export function Card({ icon, tone, status, href, chart, title, aside, onOpen, openLabel, variant = 'plain', press, stretch, onKeyDown, className = '', style, label, data, children }: CardProps) {
+export function Card({ icon, tone, status, href, chart, title, aside, onOpen, openLabel, variant = 'plain', press, pressed, tooltip, stretch, onKeyDown, className = '', style, label, data, children }: CardProps) {
   const stretched = !!stretch && !!onOpen && !press
   const cls = `kit-card ${variant}${press ? ' press' : ''}${stretched ? ' stretch' : ''} ${className}`.trim()
   const head = (title !== undefined || aside || status || onOpen || href) && (
@@ -89,14 +93,14 @@ export function Card({ icon, tone, status, href, chart, title, aside, onOpen, op
   )
   if (press)
     return (
-      <button type="button" className={cls} style={style} aria-label={label} onClick={press} onKeyDown={onKeyDown}>
+      <button type="button" className={cls} style={style} aria-label={label} aria-pressed={pressed} title={tooltip} onClick={press} onKeyDown={onKeyDown}>
         {head}
         {children}
         {chart && <span className="kit-chart">{chart}</span>}
       </button>
     )
   return (
-    <section className={cls} style={style} aria-label={label} {...data}>
+    <section className={cls} style={style} aria-label={label} title={tooltip} {...data}>
       {head}
       {children}
       {chart && <div className="kit-chart">{chart}</div>}
