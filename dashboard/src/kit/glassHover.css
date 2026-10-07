@@ -1,20 +1,20 @@
-/* The glass cards' light: it loads after the first paint, with glassHover.ts. */
+/* The glass cards' light: a soft highlight that glides under the pointer, inside the card, over its glass and under its words. No border, no lift. It loads after the first paint, with glassHover.ts. */
+@property --mx {
+  syntax: '<length-percentage>';
+  inherits: true;
+  initial-value: 50%;
+}
+@property --my {
+  syntax: '<length-percentage>';
+  inherits: true;
+  initial-value: 0%;
+}
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  /* The sheen and the rim: a soft light under the pointer, and the border brighter toward it. Only a card's own pseudo-elements; no movement, no lift. */
-  :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card)::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    padding: 1px;
-    border-radius: inherit;
-    pointer-events: none;
-    background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%), var(--glass-line-hot), transparent 65%);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-    opacity: 0;
-    transition: opacity 0.2s;
+  :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card) {
+    transition:
+      box-shadow 0.2s,
+      --mx 0.2s ease-out,
+      --my 0.2s ease-out;
   }
   :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card)::after {
     content: '';
@@ -23,16 +23,14 @@
     z-index: -1;
     border-radius: inherit;
     pointer-events: none;
-    background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 0%), var(--glass-sheen), transparent 70%);
+    background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%), var(--glass-sheen), transparent 70%);
     opacity: 0;
     transition: opacity 0.2s;
   }
-  :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card):is(.glass-lit, :focus-within)::before,
   :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card):is(.glass-lit, :focus-within)::after {
     opacity: 1;
   }
   @media (hover: hover) {
-    :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card):hover::before,
     :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card):hover::after {
       opacity: 1;
     }
@@ -40,18 +38,11 @@
       box-shadow: var(--glass-hi-hot), var(--glass-shadow);
     }
   }
-  /* The old hover and focus lines give way to the rim; a card that is told by its border keeps it. */
-  :root:not([data-glass='off']) :is(.kit-card:not(.accent, .warn, [aria-pressed='true']), .card, .me-card, .site-card, .all-card, .all-tile):is(:hover, :focus-within) {
-    border-color: var(--glass-line);
-  }
-  /* Only the line is not for motion: static, and brighter. */
+  /* Reduced motion: the light does not move; the glass is a touch lighter under the pointer. */
   @media (prefers-reduced-motion: reduce) {
-    :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card)::before {
-      background: var(--glass-line-hot);
-      transition: none;
-    }
     :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card)::after {
-      display: none;
+      background: color-mix(in srgb, var(--glass-sheen) 30%, transparent);
+      transition: none;
     }
   }
 }

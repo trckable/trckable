@@ -399,7 +399,7 @@
 }
 .filter-root .btn.filter:hover {
   color: var(--text);
-  border-color: var(--text-3);
+  background-image: var(--hover-veil);
 }
 .ctl-inline .filter-root {
   flex: none;

@@ -61,6 +61,8 @@
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   /* Every control in the header's row (a phone has its own sizes) is this tall. */
   --hdr-h: 36px;
+  /* A small control under the pointer: a touch lighter, its border unchanged. */
+  --hover-veil: linear-gradient(color-mix(in srgb, var(--text) 6%, transparent), color-mix(in srgb, var(--text) 6%, transparent));
 }
 
 @media (prefers-color-scheme: light) {
@@ -326,10 +328,6 @@ h2 {
   min-width: 0;
   transition: border-color 0.15s;
 }
-.card:hover,
-.card:focus-within {
-  border-color: var(--accent);
-}
 .card-head {
   display: flex;
   align-items: center;
@@ -370,7 +368,7 @@ h2 {
   transition: border-color 0.15s, background 0.15s;
 }
 .btn:hover {
-  border-color: var(--border-2);
+  background-image: var(--hover-veil);
 }
 .btn:disabled {
   opacity: 0.5;
@@ -1288,8 +1286,8 @@ table.t td {
 }
 .modal-close:hover {
   color: var(--text);
-  border-color: var(--border-2);
   transform: rotate(90deg);
+  background-image: var(--hover-veil);
 }
 .modal-badge.danger {
   background: color-mix(in srgb, var(--down) 14%, transparent);
@@ -1955,8 +1953,8 @@ body[data-mode] .card.overview {
 }
 .note-chip:hover {
   color: var(--text);
-  border-color: color-mix(in srgb, var(--money) 45%, var(--border));
   background: color-mix(in srgb, var(--money) 7%, transparent);
+  background-image: var(--hover-veil);
 }
 .note-chip:focus-visible {
   outline: 2px solid var(--accent);
@@ -2161,7 +2159,7 @@ body[data-mode] .card.overview {
   background: var(--surface-2);
 }
 .site-zone:focus-within {
-  border-color: var(--border-2);
+  background-image: var(--hover-veil);
 }
 
 /* ---- The Filter menu -------------------------------------------------------
@@ -2260,7 +2258,7 @@ body[data-mode] .card.overview {
 .chip.more:hover,
 .chip.more.on {
   color: var(--text);
-  border-color: var(--border-2);
+  background-image: var(--hover-veil);
 }
 
 /* Saved views: one dropdown in the toolbar, in the menu look above. The name
@@ -2993,4 +2991,9 @@ body[data-mode] .card.overview {
 }
 body {
   overflow-x: clip;
+}
+
+/* Tiles and rows that used to light their border under the pointer: a touch lighter now, the border unchanged. */
+:is(.ms-tile, .prov, .mtile, a.key-tile, .opt-card, .cs-tile, .keys-group, .all-line):hover {
+  background-image: var(--hover-veil);
 }

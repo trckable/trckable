@@ -413,7 +413,7 @@
   flex: none;
 }
 .chip.from-story:hover {
-  border-color: var(--accent);
+  background-image: var(--hover-veil);
 }
 .chip.from-story:focus-visible {
   outline: 2px solid var(--accent);
