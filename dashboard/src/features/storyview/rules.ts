@@ -3,8 +3,13 @@
 // from nothing else. "Normal" is the period before, until the site has a
 // normal of its own. Pure: rules.test.ts.
 import type { Filter, Result, Row } from '../../lib/api'
-import { fmtDuration, fmtInt, fmtPct } from '../../lib/format'
+import { countryName, fmtDuration, fmtInt, fmtPct } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
+import type { AiSeen } from '../aisearch/useAiSeen'
+import type { HeatAsk } from '../heatmap/api'
+import { pick, type Kept } from '../moments/firstWeek'
+import type { Pin } from '../moments/pins'
+import { say } from '../moments/words'
 import { copy } from './copy'
 
 export type Tone = 'good' | 'warn' | 'bad' | 'flat'
@@ -91,6 +96,8 @@ const FLAT = 0.02
 const DRIVER = 0.5
 /** A move smaller than this is "about the same" in the takeaway. */
 const TAKE_SAME = 0.05
+/** The fewest extra (or missing) visitors a page, referrer, campaign or country must account for to be named as the why. */
+const WHY_MIN = 5
 
 /** The change of a number against the period before, or none when there is no base. */
 export function deltaOf(now: number, before: number | undefined, goodWhen: 'up' | 'down' = 'up'): Delta | null {
@@ -105,6 +112,47 @@ export function deltaOf(now: number, before: number | undefined, goodWhen: 'up' 
 const channels = (r: Result): Row[] => r.dims.channel ?? []
 const named = (v: string) => channelLabel(v)
 
+/** The one value of a dimension that moved the same way as the total and explains at least half of that dimension's movement. */
+function driverOf(cur: Result, prev: Result, dim: string, gap: number): { value: string; diff: number } | undefined {
+  const was = new Map((prev.dims[dim] ?? []).map((r) => [r.value, r.visitors]))
+  const now = new Map((cur.dims[dim] ?? []).map((r) => [r.value, r.visitors]))
+  let top: { value: string; diff: number } | undefined
+  let moved = 0
+  for (const value of new Set([...now.keys(), ...was.keys()])) {
+    const diff = (now.get(value) ?? 0) - (was.get(value) ?? 0)
+    moved += Math.abs(diff)
+    if (value && Math.sign(diff) === Math.sign(gap) && (!top || Math.abs(diff) > Math.abs(top.diff))) top = { value, diff }
+  }
+  return top && moved > 0 && Math.abs(top.diff) / moved >= DRIVER ? top : undefined
+}
+
+const ENGINES = /(^|\.)(google|bing|duckduckgo|yahoo|ecosia|baidu|yandex|brave|startpage|qwant)\./
+/** A referrer that only says again which channel it is: google.com under Search, or the channel's own name. */
+function repeats(referrer: string, channel?: string): boolean {
+  if (!channel) return false
+  const host = referrer.toLowerCase().replace(/^www\./, '')
+  if (channel === 'Search' && ENGINES.test(host)) return true
+  return host.split('.')[0] === channel.toLowerCase()
+}
+
+/** The concrete cause, as one short clause: the biggest of a page, a referrer, a campaign or a country that explains half the move. Nothing when none does. */
+export function whyOf(i: Input, gap: number, channel?: string): string {
+  if (!i.prev) return ''
+  const kinds: [string, (v: string) => string][] = [
+    ['entry_page', copy.whyPage],
+    ['referrer', copy.whyReferrer],
+    ['campaign', copy.whyCampaign],
+    ['country', (v) => copy.whyCountry(countryName(v))],
+  ]
+  let best: { diff: number; say: string } | undefined
+  for (const [dim, say] of kinds) {
+    const d = driverOf(i.cur, i.prev, dim, gap)
+    if (d && dim === 'referrer' && repeats(d.value, channel)) continue
+    if (d && Math.abs(d.diff) >= WHY_MIN && (!best || Math.abs(d.diff) > Math.abs(best.diff))) best = { diff: d.diff, say: say(d.value) }
+  }
+  return best?.say ?? ''
+}
+
 /** The one sentence under the headline: what changed, why, and whether goals or revenue followed. Empty without an earlier period. */
 export function takeawayOf(i: Input): string {
   const p = earlier(i)
@@ -114,21 +162,9 @@ export function takeawayOf(i: Input): string {
   if (Math.abs(d.change) < TAKE_SAME) return copy.takeSame
   const up = d.change > 0
   const gap = i.cur.kpis.visitors - p.visitors
-  const was = new Map(channels(i.prev).map((r) => [r.value, r.visitors]))
-  const seen = new Set<string>()
-  let driver: { value: string; diff: number } | null = null
-  let moved = 0
-  const count = (value: string, now: number) => {
-    seen.add(value)
-    const diff = now - (was.get(value) ?? 0)
-    moved += Math.abs(diff)
-    if (Math.sign(diff) === Math.sign(gap) && (!driver || Math.abs(diff) > Math.abs(driver.diff))) driver = { value, diff }
-  }
-  for (const r of channels(i.cur)) count(r.value, r.visitors)
-  for (const [value] of was) if (!seen.has(value)) count(value, 0)
-  const top = driver as { value: string; diff: number } | null
-  const src = top && moved > 0 && Math.abs(top.diff) / moved >= DRIVER ? named(top.value) : undefined
-  const head = copy.takeHead(up, d.pct, src)
+  const src = driverOf(i.cur, i.prev, 'channel', gap)
+  const source = src ? named(src.value) : undefined
+  const head = copy.takeHead(up, d.pct, source, whyOf(i, gap, src?.value))
   const follow = followed(up, i)
   return follow ? `${head} ${follow}` : head
 }
@@ -349,4 +385,45 @@ export function storyOf(i: Input): StoryFacts {
     tiles: tiles(i),
     answers: [did(i), page(i), fix(i), pays(i), fine(i)],
   }
+}
+
+/** The most important thing since the last visit, in one line: the first of the ranked findings (today.ts). */
+export function sinceOf(items: readonly Pin[], money: (minor: number) => string): { pin: Pin; line: string } | undefined {
+  const pin = items[0]
+  return pin ? { pin, line: say(pin, money).line } : undefined
+}
+
+export type HintId = 'ai' | 'crawlers' | 'heat'
+
+/** A line beside the answer it belongs to: heatmaps and the AI ones are about the page and the source. */
+export interface Hint {
+  id: HintId
+  answer: QuestionKey
+  ai?: AiSeen
+  path?: string
+  views?: number
+}
+
+export interface HintKnown {
+  /** An AI assistant has sent a visitor, or an AI crawler read the site; undefined while asked. */
+  ai: AiSeen | null | undefined
+  /** An assistant has sent a visitor while the AI crawlers module is off; undefined while asked. */
+  crawlersOff: boolean | undefined
+  /** What the server says about a busy page with heatmaps off; null while asked. */
+  heat: HeatAsk | null
+  /** Only an owner is offered a change. */
+  owner: boolean
+}
+
+/** The hints to show: at most one per answer, none that was put away or acted on, none until what they hang on is known. */
+export function hintsOf(k: HintKnown, kept: Kept, heatDone: boolean, today: string): Hint[] {
+  if (!k.owner) return []
+  const out: Hint[] = []
+  if (k.ai !== undefined && k.crawlersOff !== undefined) {
+    const id = pick({ replayed: false, fullOpened: false, weekly: false, search: false, exclude: false, ai: !!k.ai, crawlers: k.crawlersOff, fresh: false }, kept, today)
+    if (id === 'ai' && k.ai) out.push({ id, answer: 'did', ai: k.ai })
+    if (id === 'crawlers') out.push({ id, answer: 'did' })
+  }
+  if (!heatDone && k.heat?.ask && k.heat.path) out.push({ id: 'heat', answer: 'page', path: k.heat.path, views: k.heat.views ?? 0 })
+  return out
 }

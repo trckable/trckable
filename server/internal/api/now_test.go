@@ -308,3 +308,46 @@ func TestLiveNowCapSaysHowManyMore(t *testing.T) {
 		t.Fatalf("online %v rows %d more %v", out["online"], rows, out["more"])
 	}
 }
+
+// Today so far counts the site's day from midnight, and sets it against the
+// same weekday a week ago up to the same time of day.
+func TestLiveNowTodaySoFar(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	now := g.advance(time.Minute)
+	day := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	week := 7 * 24 * time.Hour
+	early := day.Add(30 * time.Second).UnixMilli()
+	nowMs := now.UnixMilli()
+	evs := []event.Event{
+		// Today: visitor 1 twice (one visitor), visitor 2 just now.
+		{Kind: event.KindPageview, EventID: 1, TS: early, Visitor: 1, Pageview: 1, Path: "/"},
+		{Kind: event.KindPageview, EventID: 2, TS: nowMs - 5_000, Visitor: 1, Pageview: 2, Path: "/a"},
+		{Kind: event.KindPageview, EventID: 3, TS: nowMs - 1_000, Visitor: 2, Pageview: 3, Path: "/a"},
+		// Last week: 3 visitors by the same time, 1 more after it.
+		{Kind: event.KindPageview, EventID: 4, TS: early - week.Milliseconds(), Visitor: 11, Pageview: 4, Path: "/"},
+		{Kind: event.KindPageview, EventID: 5, TS: early - week.Milliseconds() + 1_000, Visitor: 12, Pageview: 5, Path: "/"},
+		{Kind: event.KindPageview, EventID: 6, TS: nowMs - week.Milliseconds() - 1_000, Visitor: 13, Pageview: 6, Path: "/"},
+		{Kind: event.KindPageview, EventID: 7, TS: day.Add(-week).Add(23*time.Hour + 59*time.Minute).UnixMilli(), Visitor: 14, Pageview: 7, Path: "/"},
+	}
+	for _, e := range evs {
+		g.event(t, e)
+	}
+	g.waitApplied(t, 7)
+	code, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/now", "")
+	if code != 200 {
+		t.Fatalf("now: %d %v", code, out)
+	}
+	today, _ := out["today"].(map[string]any)
+	if today == nil {
+		t.Fatalf("no today: %v", out)
+	}
+	if today["visitors"] != float64(2) || today["before"] != float64(3) || today["compare"] != true {
+		t.Fatalf("today: %v", today)
+	}
+	hours, last := today["hours"].([]any), today["last"].([]any)
+	if len(hours) != now.Hour()+1 || hours[len(hours)-1] != float64(2) || len(last) != 24 || last[23] != float64(4) {
+		t.Fatalf("hours %v, last %v", hours, last)
+	}
+}

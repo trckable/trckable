@@ -1,6 +1,5 @@
-// The side cards' dialogs: a card's one button opens a dialog that tells the moment in detail, and
-// closing it (its Close, or Escape) puts the side card away with it, for the day. What the server finds is
-// given by the browser here (its rules are tested in Go); the card, the dialog and its focus are real.
+// The lines beside Story's answers (an AI visitor, heatmaps): one button to act, Close to put away for
+// good. What the server finds is given by the browser here (its rules are tested in Go); the rest is real.
 //   CARD_MODAL_SHOTS=/some/folder  also takes the pictures for review.
 import { expect, test, type Page } from './fixtures'
 import { mkdirSync } from 'node:fs'
@@ -28,7 +27,7 @@ const assistants = {
   ],
 }
 
-/** Nothing for the card on opening to say, an AI visitor already seen, and the exclude-your-visits card already put away: the AI & Search card is the day's. */
+/** Nothing since the last visit; an AI visitor seen or not. */
 async function given(page: Page, ai: boolean) {
   await page.route(/\/api\/v1\/sites\/[^/]+\/moments\?/, (r) => r.fulfill({ json: { bucket: 'day', moments: [] } }))
   await page.route(/\/api\/v1\/sites\/[^/]+\/insights\?/, (r) => r.fulfill({ json: { insights: [] } }))
@@ -54,12 +53,12 @@ async function open(page: Page, width = 1280, done = ['exclude']) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width, height: 900 })
-  await page.goto(`${API}/${DOMAIN}?view=data`)
+  await page.goto(`${API}/${DOMAIN}?v=story`)
   const id = await page.evaluate(async () => ((await (await fetch('/api/v1/sites')).json()) as { sites: { id: string; domain: string }[] }).sites.find((s) => s.domain === 'example.com')?.id ?? '')
   // The first-day card about your own visits is put away (unless a test asks for it), and no other card is.
   await page.evaluate(([site, put]) => localStorage.setItem(`trckable:disc:${site}`, JSON.stringify({ done: put })), [id, done])
   await page.reload()
-  await expect(page.locator('.chart-wrap svg[role="img"]')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('.sv-line')).toBeVisible({ timeout: 30_000 })
 }
 
 async function shoot(page: Page, name: string) {
@@ -73,72 +72,40 @@ async function shoot(page: Page, name: string) {
   }
 }
 
-test('the AI & Search card opens its dialog; closing it (Close or Escape) puts the side card away too', async ({ page }) => {
+test('an AI visitor is a line beside the sources answer; its button opens AI & Search, and it does not come back', async ({ page }) => {
   await given(page, true)
   await open(page)
-  const card = page.getByRole('complementary', { name: 'AI & Search' })
-  await expect(card).toBeVisible({ timeout: 20_000 })
-  const details = card.getByRole('button', { name: 'Details' })
-  await details.click()
-  const dialog = page.getByRole('dialog', { name: 'AI & Search' })
-  await expect(dialog).toBeVisible()
-  // Who sent them, with counts; the pages they landed on; the days.
-  await expect(dialog.getByRole('list', { name: 'AI assistants' })).toContainText('ChatGPT')
-  await expect(dialog.getByRole('list', { name: 'AI assistants' })).toContainText('12')
-  await expect(dialog.getByRole('list', { name: 'Landed on' })).toContainText('/blog/self-hosting')
-  await expect(dialog.getByRole('img', { name: 'AI visitors for each day of the period' })).toBeVisible()
-  await expect(dialog.getByRole('button', { name: 'See all in AI & Search' })).toBeVisible()
-  await shoot(page, 'ai-search-modal')
-  await dialog.getByRole('button', { name: 'Close' }).first().click()
-  await expect(dialog).toHaveCount(0)
-  await expect(card).toHaveCount(0)
+  const hint = page.locator('.sv-answer.did .sv-hint')
+  await expect(hint).toContainText('An AI assistant sent a visitor', { timeout: 20_000 })
+  await expect(page.getByRole('complementary')).toHaveCount(0)
+  await shoot(page, 'ai-hint')
+  await hint.getByRole('button', { name: 'Open AI & Search' }).click()
+  await expect(page).toHaveURL(/mode=full/)
+  await page.goto(`${API}/${DOMAIN}?v=story`)
+  await expect(page.locator('.sv-line')).toBeVisible()
+  await page.waitForTimeout(2000)
+  await expect(page.locator('.sv-hint', { hasText: 'An AI assistant sent a visitor' })).toHaveCount(0)
 })
 
-test('Escape closes the AI & Search dialog and the side card with it', async ({ page }) => {
+test('Close puts the line away for good', async ({ page }) => {
   await given(page, true)
   await open(page)
-  const card = page.getByRole('complementary', { name: 'AI & Search' })
-  await expect(card).toBeVisible({ timeout: 20_000 })
-  await card.getByRole('button', { name: 'Details' }).click()
-  const dialog = page.getByRole('dialog', { name: 'AI & Search' })
-  await expect(dialog).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(dialog).toHaveCount(0)
-  await expect(card).toHaveCount(0)
+  const hint = page.locator('.sv-answer.did .sv-hint')
+  await expect(hint).toBeVisible({ timeout: 20_000 })
+  await hint.getByRole('button', { name: 'Close' }).click()
+  // The next one (turning AI crawlers on) may take its place; this one does not come back.
+  const ai = page.locator('.sv-hint', { hasText: 'An AI assistant sent a visitor' })
+  await expect(ai).toHaveCount(0)
+  await page.reload()
+  await expect(page.locator('.sv-line')).toBeVisible()
+  await page.waitForTimeout(2000)
+  await expect(ai).toHaveCount(0)
 })
 
-test('on a phone the dialog is a sheet that fills the screen', async ({ page }) => {
-  await given(page, true)
-  await open(page, 390)
-  const card = page.getByRole('complementary', { name: 'AI & Search' })
-  await expect(card).toBeVisible({ timeout: 20_000 })
-  await card.getByRole('button', { name: 'Details' }).click()
-  const dialog = page.getByRole('dialog', { name: 'AI & Search' })
-  await expect(dialog).toBeVisible()
-  const box = await dialog.boundingBox()
-  expect(box?.width).toBeGreaterThanOrEqual(389)
-  expect(box?.height).toBeGreaterThanOrEqual((await page.evaluate(() => window.innerHeight)) - 1)
-  await shoot(page, 'ai-search-modal')
-})
-
-test('pictures: two other cards', async ({ page }) => {
-  test.skip(!SHOTS, 'set CARD_MODAL_SHOTS to a folder')
+test('without an AI visitor there is no line', async ({ page }) => {
   await given(page, false)
-  // The guide card about your own visits.
-  await open(page, 1280, [])
-  const own = page.getByRole('complementary', { name: 'Your visits' })
-  await expect(own).toBeVisible({ timeout: 20_000 })
-  await own.getByRole('button', { name: 'Details' }).click()
-  await expect(page.getByRole('dialog', { name: 'Your visits' })).toBeVisible()
-  await shoot(page, 'own-visits-modal')
-  // The card on opening: a new referrer.
-  await page.unroute(/\/api\/v1\/sites\/[^/]+\/insights\?/)
-  const since = new Date(Date.now() - 3 * 86400_000).toISOString().slice(0, 10)
-  await page.route(/\/api\/v1\/sites\/[^/]+\/insights\?/, (r) => r.fulfill({ json: { insights: [{ kind: 'new_referrer', dim: 'referrer', value: 'news.example', now: 312, since }] } }))
-  await open(page)
-  const one = page.getByRole('complementary', { name: 'One thing today' })
-  await expect(one).toBeVisible({ timeout: 20_000 })
-  await one.getByRole('button', { name: 'Details' }).click()
-  await expect(page.getByRole('dialog')).toBeVisible()
-  await shoot(page, 'one-thing-modal')
+  await open(page, 390)
+  await expect(page.locator('.sv-line')).toBeVisible({ timeout: 20_000 })
+  await page.waitForTimeout(2000)
+  await expect(page.locator('.sv-hint')).toHaveCount(0)
 })
