@@ -1,1 +1,0 @@
-import{i as e,t}from"./react-e12729a5.js";var n=e(),r=t(),i=(0,n.createContext)(``);function a({id:e,on:t,label:a,disabled:o,onChange:s}){let c=(0,n.useContext)(i);return(0,r.jsx)(`button`,{id:e,type:`button`,role:`switch`,"aria-checked":t,"aria-label":a||c||void 0,disabled:o,className:t?`switch on`:`switch`,onClick:s,children:(0,r.jsx)(`span`,{})})}export{a as n,i as t};
