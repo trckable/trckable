@@ -9,12 +9,15 @@ section into the release.
 
 ## Unreleased
 
+## 0.6.5 (7 Oct 2026)
+
 ### Fixed
 
 - Hints: the did-you-know bubble on Story points at the whole answers row and sits under or over it, so it no longer covers an answer card.
 
 ### Changed
 
+- Alert emails (busier than usual, milestones, tracking stopped, test) are designed: the number, a few rows, one button and a footer with Stop these alerts and Alert settings, with the plain text kept beside it and light and dark colours; a surge email is titled "<site> is having a moment".
 - Dependencies updated to their latest minor and patch releases (the dashboard, the tracker's test tools, the npm package and the lockfile).
 
 - Header: a light header that scrolls away, and one control line that stays at the top (filters on the left, the period on the right, glass with the site's name once the page runs under it); Live | Data and Story | Explore are plain text tabs; the Data and All sites cards lose their boxes for hairlines; on a phone the line holds the tabs, a filter button and a short period that each open a sheet.

@@ -86,38 +86,37 @@ func mailAddress(target string) (string, bool) {
 // header strips line breaks, so a site name or title can never add a header.
 func header(s string) string { return strings.NewReplacer("\r", " ", "\n", " ").Replace(s) }
 
-// message is the email as text and headers, the same whichever way it goes.
-// A message with an unsubscribe link carries it in the headers mail clients
-// read (one click, RFC 8058) and in the last lines, where people look.
-func (m *Mailer) message(to string, e Event) (subject, body string, headers [][2]string) {
-	subject = header(e.Title)
-	if e.Domain != "" {
-		subject += " · " + header(e.Domain)
+// message is the email's subject and plain text, the twin of its HTML. A
+// message with an unsubscribe link carries it in the last lines, where people
+// look; the headers mail clients read (RFC 8058) are added with the report.
+func (m *Mailer) message(to string, e Event) (subject, body string) {
+	subject = header(e.Subject)
+	if subject == "" {
+		subject = header(e.Title)
+		if e.Domain != "" {
+			subject += " · " + header(e.Domain)
+		}
 	}
-	headers = [][2]string{{"Auto-Submitted", "auto-generated"}}
 	foot := "Sent by trckable. Change or stop it under Settings → Alerts."
 	if u := header(e.Unsubscribe); u != "" {
-		headers = append(headers, [2]string{"List-Unsubscribe", "<" + u + ">"}, [2]string{"List-Unsubscribe-Post", "List-Unsubscribe=One-Click"})
 		foot = "Stop this email: " + u
 	}
-	return subject, e.Message + "\n\n-- \n" + foot, headers
+	return subject, e.Message + "\n\n-- \n" + foot
 }
 
 func (m *Mailer) send(ctx context.Context, to string, e Event) error {
-	subject, body, headers := m.message(to, e)
+	subject, body := m.message(to, e)
+	var page string
 	if e.HTML != nil {
-		return m.sendReport(ctx, to, Report{FromName: "trckable", Subject: subject, Text: body, HTML: e.HTML(e.Unsubscribe), Unsubscribe: e.Unsubscribe, Attachments: e.Inline, At: e.At})
+		page = e.HTML(e.Unsubscribe)
+	} else {
+		c := cardFor(e)
+		if e.Card != nil {
+			c = *e.Card
+		}
+		page = c.HTML(e.Unsubscribe, e.Settings)
 	}
-	if m.resend != nil {
-		return m.resend.send(ctx, m.from, to, subject, body, headers)
-	}
-	var extra strings.Builder
-	for _, h := range headers {
-		extra.WriteString(h[0] + ": " + h[1] + "\r\n")
-	}
-	raw := fmt.Sprintf("From: trckable <%s>\r\nTo: <%s>\r\nSubject: %s\r\nDate: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: 8bit\r\n%s\r\n%s\r\n",
-		m.from, to, subject, e.At.Format(time.RFC1123Z), extra.String(), strings.ReplaceAll(body, "\n", "\r\n"))
-	return m.deliver(ctx, to, []byte(raw))
+	return m.sendReport(ctx, to, Report{FromName: "trckable", Subject: subject, Text: body, HTML: page, Unsubscribe: e.Unsubscribe, Attachments: e.Inline, At: e.At})
 }
 
 // deliver hands one finished message (headers and body, CRLF line ends) to the
