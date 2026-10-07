@@ -31,6 +31,8 @@ section into the release.
 - Data: Sources shows the channels as a ring with thick bars, Goals gets an icon, a plain name and a status for each goal plus a small visit-to-goal funnel, and Pages, Locations and Devices use the same bars; the rows' small charts are gone.
 - One rule for "busier than usual": Live, the surge card, the busy-moment marker and the Traffic surge alert all use at least one and a half times the usual number of people online and 10 more, so a site sees the same answer everywhere (the surge card used to wait for twice the usual).
 
+- Live: the three cards under the panels are drawn with the shared card kit and the open look (hairlines, no boxes), and Data's goal status is the same small tag as elsewhere.
+
 ## 0.6.3 (7 Oct 2026)
 
 ### Added

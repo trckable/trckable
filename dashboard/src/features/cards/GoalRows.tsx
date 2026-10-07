@@ -3,6 +3,7 @@
 // many visitors stayed past a bounce, the road from a visit to the first goal.
 import { Download, SquareArrowOutUpRight, SquareCheckBig, TextCursorInput, type LucideIcon } from 'lucide-react'
 import { FatBar } from '../../charts/FatBar'
+import { StatusTag } from '../../kit'
 import { fmtCompact, fmtInt, fmtPct } from '../../lib/format'
 import { cardCopy } from './copy'
 import type { CardsCtx } from './ctx'
@@ -46,10 +47,7 @@ export function GoalRows({ c }: { c: CardsCtx }) {
             </span>
             <span className="goal-conv">
               <b className="num">{fmtPct(conv)}</b>
-              <span className={`goal-st ${status}`}>
-                <i aria-hidden="true" />
-                {status === 'converting' ? cardCopy.converting : cardCopy.barelyUsed}
-              </span>
+              <StatusTag tone={status === 'converting' ? 'good' : 'warn'}>{status === 'converting' ? cardCopy.converting : cardCopy.barelyUsed}</StatusTag>
             </span>
           </button>
         )

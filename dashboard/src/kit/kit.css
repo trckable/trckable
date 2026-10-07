@@ -647,6 +647,135 @@ button.kit-ask:hover {
   }
 }
 
+/* The open card: no box, a hairline over it (Data and All sites look like this) */
+.kit-card.open {
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--grid);
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+}
+.kit-card.open:hover {
+  transform: none;
+}
+.kit-card.open .kit-area {
+  margin-inline: 0;
+  margin-bottom: 0;
+}
+
+/* The title as the card's button, stretched over the whole card; rows sit above it */
+.kit-card.stretch .kit-head {
+  position: static;
+}
+.kit-stretch {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.kit-stretch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.kit-stretch:focus-visible::after {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.kit-pick,
+.kit-rowbtn {
+  all: unset;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.kit-pick:focus-visible,
+.kit-rowbtn:focus-visible {
+  outline: 2px solid var(--accent);
+}
+.kit-pick:hover {
+  color: var(--text);
+}
+
+/* A dashed second line and its key (the same time last week) */
+.kit-was {
+  stroke: var(--text-3);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 4;
+}
+.kit-key {
+  display: inline-block;
+  width: 14px;
+  border-top: 2px solid var(--accent);
+}
+.kit-key.was {
+  border-top: 1.5px dashed var(--text-3);
+}
+
+/* Rows that open something: the first cell's button covers the whole row */
+.kit-table tr.pick {
+  position: relative;
+}
+.kit-table tr.pick td {
+  padding: 0;
+}
+.kit-table tr.pick .kit-rowbtn {
+  position: static;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+.kit-table tr.pick td:first-child {
+  width: 100%;
+  max-width: 0;
+}
+.kit-table tr.pick .kit-rowbtn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.kit-table tr.pick:hover {
+  background: color-mix(in srgb, var(--text) 5%, transparent);
+}
+.kit-table tr.pick td.n {
+  padding-right: 6px;
+  vertical-align: top;
+  padding-top: 13px;
+  color: var(--text-3);
+}
+.kit-rowbar {
+  display: block;
+  height: 4px;
+  margin: -8px 0 8px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--row);
+}
+.kit-rowbar i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+}
+
+/* Light page: the tint under a pill is lighter so its text stays readable */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) :is(.kit-pill, .kit-tag):is(.good, .bad, .warn) {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+  }
+}
+:root[data-theme='light'] :is(.kit-pill, .kit-tag):is(.good, .bad, .warn) {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
 /* Phone scale: the least a finger target is */
 @media (max-width: 640px) {
   .kit-card {
@@ -671,4 +800,24 @@ button.kit-ask:hover {
   .kit-hero-num b {
     font-size: 48px;
   }
+}
+
+/* Small helpers the cards share */
+.kit-clip {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kit-devs {
+  gap: 16px;
+  margin-top: 12px;
+}
+.kit-devs span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.kit-devs b {
+  color: var(--text);
+  font-weight: 500;
 }
