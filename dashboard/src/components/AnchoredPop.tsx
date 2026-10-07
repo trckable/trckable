@@ -10,7 +10,7 @@ import { placePop, type PopAt } from './popPlace'
 import { trapTab } from '../kit/Modal'
 import './AnchoredPop.css'
 
-const NAV = '[data-nav]:not(:disabled)'
+const NAV = '[data-nav]:not(:disabled), [role^=menuitem]:not(:disabled)'
 const phone = () => window.matchMedia('(max-width: 640px)').matches
 
 /** Scrolls the list that holds `item` (inside `box`) just enough to show it. */

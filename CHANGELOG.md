@@ -17,6 +17,8 @@ section into the release.
 
 ### Changed
 
+- The searchable lists (timezone, currency), the ⋯ menus and the Create menu now open the same way as the other pop-ups: same placement, keys and phone sheet.
+
 - All sites: the summary cards and each site card are redrawn with a soft area chart of the days behind the number, a pill for the move, and the site's own colour on its card; Milestones shows each next step as a gauge.
 - Story's takeaway now says why when the data shows one: the page, referrer, campaign or country that explains at least half of the move ("most of it from Kosovo").
 - Data: Sources shows the channels as a ring with thick bars, Goals gets an icon, a plain name and a status for each goal plus a small visit-to-goal funnel, and Pages, Locations and Devices use the same bars; the rows' small charts are gone.
