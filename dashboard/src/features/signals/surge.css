@@ -7,7 +7,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-right: 52px;
 }
 .sg-count {
   font-family: var(--mono);
@@ -27,8 +26,8 @@
 .sg-chip {
   padding: 2px 8px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
-  color: var(--accent-text, var(--accent));
+  background: color-mix(in srgb, var(--up) 15%, transparent);
+  color: var(--up);
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
@@ -36,14 +35,6 @@
 .sg-unit {
   color: var(--text-3);
   font-size: 12px;
-}
-.sg-ghost {
-  position: absolute;
-  right: -4px;
-  top: 50%;
-  margin-top: -22px;
-  pointer-events: none;
-  transform-origin: 50% 100%;
 }
 .sg-source {
   display: flex;
@@ -62,18 +53,19 @@
   .side-card:has(.sg-hero) {
     animation: side-in 0.5s var(--spring, cubic-bezier(0.34, 1.4, 0.5, 1)) both, sg-glow 1.8s ease-out 0.4s 2;
   }
-  .sg-ghost {
+  .side-deck:has(.sg-hero) .side-ghost {
+    transform-origin: 50% 100%;
     animation: sg-hop 0.9s cubic-bezier(0.3, 0.7, 0.4, 1) 0.7s 3;
   }
 }
 @keyframes sg-glow {
   0%,
   100% {
-    box-shadow: var(--raised-shadow);
+    box-shadow: var(--glass-shadow-pop, var(--raised-shadow));
   }
   45% {
     box-shadow:
-      var(--raised-shadow),
+      var(--glass-shadow-pop, var(--raised-shadow)),
       0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent),
       0 0 36px color-mix(in srgb, var(--accent) 38%, transparent);
   }
@@ -97,13 +89,12 @@
 /* The card's small hour. */
 .sg-spark {
   display: block;
-  width: 100%;
+  width: calc(100% + 28px);
   height: 56px;
   box-sizing: border-box;
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: var(--raised-well);
-  overflow: visible;
+  margin: 2px -14px calc(var(--pb, 14px) * -1);
+  padding: 0;
+  overflow: hidden;
 }
 .sg-spark .usual {
   stroke: var(--text-4, var(--text-3));

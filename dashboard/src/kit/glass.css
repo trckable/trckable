@@ -1,0 +1,130 @@
+/* The glass: one set of tokens, used by every raised surface of the dashboard.
+   A surface is a see-through gradient with a blur behind it, a thin light line
+   all round, a lit edge on top and a soft shadow, over very dark colour fields
+   fixed to the page. Three strengths: a card (--glass), a pop-up that sits over
+   cards (--glass-pop: a little more opaque and blurred, so its text stays
+   readable over whatever is behind it) and a control (--glass-lite).
+   Where the browser cannot blur, or the person asked for less transparency
+   (`data-glass="off"` on the page, set from main.tsx), none of it applies and
+   the flat surfaces of styles.css stay. Text colours are checked against the
+   lightest the glass gets (the axe pass runs in both themes). */
+:root {
+  --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03)), rgba(10, 12, 15, 0.5);
+  --glass-pop: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03)), rgba(20, 24, 30, 0.9);
+  --glass-lite: rgba(255, 255, 255, 0.04);
+  --glass-line: rgba(255, 255, 255, 0.1);
+  --glass-line-hot: rgba(255, 255, 255, 0.62);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --glass-hi-hot: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --glass-shadow-pop: 0 18px 48px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --glass-sheen: rgba(255, 255, 255, 0.25);
+  --glass-blur: blur(22px) saturate(160%);
+  --glass-blur-pop: blur(24px) saturate(170%);
+  --glass-blur-lite: blur(14px) saturate(140%);
+  --amb-1: rgba(59, 93, 18, 0.19);
+  --amb-2: rgba(22, 54, 90, 0.65);
+  --amb-3: rgba(42, 31, 77, 0.65);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.64));
+    --glass-pop: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.92)), rgba(255, 255, 255, 0.92);
+    --glass-lite: rgba(255, 255, 255, 0.55);
+    --glass-line: rgba(20, 24, 30, 0.1);
+    --glass-line-hot: rgba(20, 24, 30, 0.42);
+    --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    --glass-hi-hot: inset 0 1px 0 #ffffff;
+    --glass-shadow: 0 8px 28px rgba(20, 24, 30, 0.08), 0 1px 2px rgba(20, 24, 30, 0.05);
+    --glass-shadow-pop: 0 18px 48px rgba(20, 24, 30, 0.18), 0 2px 8px rgba(20, 24, 30, 0.08);
+    --glass-sheen: rgba(20, 24, 30, 0.06);
+    --amb-1: rgba(150, 205, 80, 0.09);
+    --amb-2: rgba(110, 165, 235, 0.28);
+    --amb-3: rgba(176, 148, 238, 0.26);
+  }
+}
+:root[data-theme='light'] {
+  --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.64));
+  --glass-pop: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.92)), rgba(255, 255, 255, 0.92);
+  --glass-lite: rgba(255, 255, 255, 0.55);
+  --glass-line: rgba(20, 24, 30, 0.1);
+  --glass-line-hot: rgba(20, 24, 30, 0.42);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --glass-hi-hot: inset 0 1px 0 #ffffff;
+  --glass-shadow: 0 8px 28px rgba(20, 24, 30, 0.08), 0 1px 2px rgba(20, 24, 30, 0.05);
+  --glass-shadow-pop: 0 18px 48px rgba(20, 24, 30, 0.18), 0 2px 8px rgba(20, 24, 30, 0.08);
+  --glass-sheen: rgba(20, 24, 30, 0.06);
+  --amb-1: rgba(150, 205, 80, 0.09);
+  --amb-2: rgba(110, 165, 235, 0.28);
+  --amb-3: rgba(176, 148, 238, 0.26);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  /* The light behind the glass: soft colour fields fixed to the page. */
+  :root:not([data-glass='off']) body {
+    background: transparent;
+  }
+  :root:not([data-glass='off']) body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(circle 220px at 70px 30px, var(--amb-1), transparent),
+      radial-gradient(circle 340px at calc(100% - 130px) 350px, var(--amb-2), transparent),
+      radial-gradient(ellipse 400px 310px at calc(30% + 260px) calc(100% - 10px), var(--amb-3), transparent);
+  }
+
+  /* Cards: the kit's, the Live panels, the account, site and sign-in cards. */
+  :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .ms-moment, .sv-setup, .sl-panel, .ob-preview, .empty-state.boxed, .side-peek) {
+    --border: var(--glass-line);
+    position: relative;
+    isolation: isolate;
+    border-radius: 18px;
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-hi), var(--glass-shadow);
+  }
+  :root:not([data-glass='off']) :is(.ms-moment, .all-tile.compact) {
+    border-radius: 14px;
+  }
+  /* Pop-ups over the page and over cards: menus, dialogs, sheets, toasts, tooltips, the side card. A little more opaque and more blurred. */
+  :root:not([data-glass='off']) :is(.pop, .picker-pop, .modal, .toast, .hint, .side-card, .tip, .kit-tip, .chart-tip, .cursor-pill, .moment-tip, .note-tip, .story-pop, .note-cal) {
+    border-color: var(--glass-line);
+    background: var(--glass-pop);
+    -webkit-backdrop-filter: var(--glass-blur-pop);
+    backdrop-filter: var(--glass-blur-pop);
+    box-shadow: var(--glass-hi), var(--glass-shadow-pop);
+  }
+  :root:not([data-glass='off']) .side-card {
+    isolation: isolate;
+  }
+  :root:not([data-glass='off']) .modal {
+    border-radius: 20px;
+  }
+  /* A dialog's title bar and sticky heads are part of the same glass: no flat fill over it. */
+  :root:not([data-glass='off']) :is(.window-head, .feat-top, .live-onsite .live-head-row) {
+    background: transparent;
+  }
+
+  /* Controls: lighter glass. Those that hold a pop-up of their own (the site, the period capsule) are see-through without the blur: a blur would make them the box a fixed pop-up or sheet is placed in. */
+  :root:not([data-glass='off']) :is(.seg, .chip, .ctl-cap, .phone-pill, .kit-seg, .select, .view-switch, .sv-slot .sv-switch) {
+    border-color: var(--glass-line);
+    background: var(--glass-lite);
+    box-shadow: var(--glass-hi);
+  }
+  :root:not([data-glass='off']) :is(.seg, .chip, .phone-pill, .kit-seg, .view-switch, .sv-slot .sv-switch) {
+    -webkit-backdrop-filter: var(--glass-blur-lite);
+    backdrop-filter: var(--glass-blur-lite);
+  }
+
+  /* The stuck bar of the header: the page's glass over what scrolls under it. */
+  :root:not([data-glass='off']) :is(.subbar[data-stuck], .all-filters[data-stuck])::before {
+    background: var(--glass-pop);
+    border-bottom-color: var(--glass-line);
+    -webkit-backdrop-filter: var(--glass-blur-pop);
+    backdrop-filter: var(--glass-blur-pop);
+  }
+}

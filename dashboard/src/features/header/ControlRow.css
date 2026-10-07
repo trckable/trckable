@@ -399,7 +399,7 @@
 }
 .filter-root .btn.filter:hover {
   color: var(--text);
-  border-color: var(--text-3);
+  background-image: var(--hover-veil);
 }
 .ctl-inline .filter-root {
   flex: none;
@@ -554,7 +554,8 @@
     font-size: 13px;
   }
   .app .pr-tabs .sv-switch svg {
-    display: none;
+    width: 18px;
+    height: 18px;
   }
   .pr-btn {
     position: relative;

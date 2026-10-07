@@ -1,0 +1,1 @@
+import{t as e}from"./Install-bd37c211.js";export{e as Install,e as default};
