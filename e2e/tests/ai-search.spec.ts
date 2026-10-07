@@ -87,6 +87,37 @@ test('Connect crawler data: three steps, the code carries the site, and nothing 
   await expect(sheet).toHaveCount(0)
 })
 
+test('Connect crawler data on a phone: the footer fits, nothing scrolls sideways, buttons are 44px', async ({ page }) => {
+  await open(page, 390)
+  await page.setViewportSize({ width: 390, height: 844 })
+  for (const scheme of ['dark', 'light']) {
+    await page.evaluate((s) => document.documentElement.setAttribute('data-theme', s), scheme)
+    await page.locator('[data-card=who]').getByRole('tab', { name: 'Crawlers', exact: true }).click()
+    await page.getByRole('button', { name: 'How to feed this' }).click()
+    const sheet = page.getByRole('dialog')
+    await sheet.getByRole('button', { name: /Cloudflare/ }).click()
+    for (const step of [2, 3]) {
+      if (step === 3) await sheet.getByRole('button', { name: 'I’ve added it' }).click()
+      await expect(sheet.getByText(`Step ${step} of 3`)).toBeVisible()
+      const boxes = await sheet.locator('.dialog-actions').locator('> *').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().toJSON()))
+      for (const b of boxes) expect(b.height, `${scheme} step ${step}`).toBeGreaterThanOrEqual(24)
+      for (const b of await sheet.locator('.dialog-actions > .btn').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) expect(b).toBeGreaterThanOrEqual(44)
+      for (let i = 0; i < boxes.length; i++)
+        for (let j = i + 1; j < boxes.length; j++) {
+          const a = boxes[i]
+          const c = boxes[j]
+          const apart = a.right <= c.left + 0.5 || c.right <= a.left + 0.5 || a.bottom <= c.top + 0.5 || c.bottom <= a.top + 0.5
+          expect(apart, `${scheme} step ${step}: footer items ${i} and ${j} overlap`).toBe(true)
+        }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+      expect(await sheet.evaluate((d) => d.scrollWidth <= d.clientWidth)).toBe(true)
+      for (const h of await sheet.locator('.cs-body .btn, .cs-body .cs-link').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) expect(h).toBeGreaterThanOrEqual(44)
+    }
+    await page.keyboard.press('Escape')
+    await expect(sheet).toHaveCount(0)
+  }
+})
+
 test('pictures: dark and light at 1280, and 390', async ({ page }) => {
   test.skip(!SHOTS, 'set TRCKABLE_SHOTS to a folder')
   for (const [scheme, width] of [['dark', 1280], ['light', 1280], ['dark', 390]] as const) {
