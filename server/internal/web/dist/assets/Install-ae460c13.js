@@ -1,0 +1,1 @@
+import{t as e}from"./Install-a2aff045.js";export{e as Install,e as default};
