@@ -83,6 +83,9 @@ export function Celebration({ m, list = [], site, domain = site, revenue = true,
         </>
       }
     >
+      <svg className="ms-line" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+        <polyline fill="none" stroke="currentColor" strokeWidth="1.6" vectorEffect="non-scaling-stroke" points="0,26 18,22 32,24 48,17 62,19 80,11 100,4" />
+      </svg>
       {line && <p className="ms-context">{line}</p>}
       {/* The picture is asked for once the page has had its moment; its room is kept. */}
       <img className="ms-peek" src={settled ? pic('svg') : undefined} width={1200} height={630} alt={copy.card} />
