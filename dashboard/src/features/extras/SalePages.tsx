@@ -26,7 +26,7 @@ export default function SalePages({ site, query, money, rows, onPick }: { site: 
   if (here && !here.list) return <p className="faint sp-note">{extrasCopy.sells.failed}</p>
   return (
     <>
-      <div className="tc-tools">
+      <div className="kit-tools">
         <Info text={extrasCopy.sells.note} align="right" />
       </div>
       <BarList

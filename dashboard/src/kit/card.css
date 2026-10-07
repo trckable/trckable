@@ -1,0 +1,173 @@
+/* The card kit's styles (kit/*.tsx). Colours come from the page's own tokens, so
+   both themes follow; a finger target is --ph-hit (44 px) on a phone. */
+.kit-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: linear-gradient(180deg, var(--surface), var(--sunken));
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  transition:
+    border-color 0.2s,
+    transform 0.2s;
+}
+.kit-card:hover {
+  border-color: var(--border-2);
+  transform: translateY(-1px);
+}
+.kit-card.press {
+  width: 100%;
+  cursor: pointer;
+}
+.kit-card.press:hover {
+  border-color: var(--accent);
+}
+.kit-card.press:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.kit-card.accent {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  background:
+    radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 55%),
+    color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+.kit-card.warn {
+  border-color: color-mix(in srgb, var(--warn) 35%, var(--border));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--warn) 8%, var(--surface)), var(--sunken));
+}
+.kit-card.hero {
+  background:
+    radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 55%),
+    radial-gradient(90% 90% at 100% 100%, color-mix(in srgb, var(--ch-1) 16%, transparent), transparent 60%),
+    var(--sunken);
+}
+@media (prefers-reduced-motion: reduce) {
+  .kit-card {
+    transition: none;
+  }
+  .kit-card:hover {
+    transform: none;
+  }
+}
+.kit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--text-3);
+  font-size: 13px;
+  position: relative;
+}
+.kit-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  font-weight: 500;
+}
+.kit-title b {
+  color: var(--text);
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kit-go {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border-2);
+  border-radius: 50%;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+button.kit-go::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+}
+.kit-go:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+
+/* The open card: no box, a hairline over it (Data and All sites look like this) */
+.kit-card.open {
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--grid);
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+}
+.kit-card.open:hover {
+  transform: none;
+}
+.kit-card.open .kit-area {
+  margin-inline: 0;
+  margin-bottom: 0;
+}
+
+/* The title as the card's button, stretched over the whole card; rows sit above it */
+.kit-card.stretch .kit-head {
+  position: static;
+}
+.kit-stretch {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.kit-stretch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.kit-stretch:focus-visible::after {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.kit-pick,
+.kit-rowbtn {
+  all: unset;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.kit-pick:focus-visible,
+.kit-rowbtn:focus-visible {
+  outline: 2px solid var(--accent);
+}
+.kit-pick:hover {
+  color: var(--text);
+}
+
+
+/* Phone scale */
+@media (max-width: 640px) {
+  .kit-card {
+    padding: var(--ph-pad, 16px);
+  }
+}

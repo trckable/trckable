@@ -3,7 +3,7 @@
 // card is the target (a site card); the corner is then only a mark.
 import type { CSSProperties, KeyboardEventHandler, ReactNode } from 'react'
 import { kitWords } from './copy'
-import './kit.css'
+import './card.css'
 
 type Variant = 'plain' | 'accent' | 'warn' | 'hero' | 'open'
 
@@ -22,6 +22,8 @@ export type CardProps = {
   className?: string
   style?: CSSProperties
   label?: string
+  /** data-* hooks on the card (a spec or a stylesheet finds the card by them). */
+  data?: Record<`data-${string}`, string>
   children?: ReactNode
 }
 
@@ -40,7 +42,7 @@ function Corner({ onOpen, openLabel, mark }: { onOpen?: () => void; openLabel?: 
   )
 }
 
-export function Card({ title, aside, onOpen, openLabel, variant = 'plain', press, stretch, onKeyDown, className = '', style, label, children }: CardProps) {
+export function Card({ title, aside, onOpen, openLabel, variant = 'plain', press, stretch, onKeyDown, className = '', style, label, data, children }: CardProps) {
   const stretched = !!stretch && !!onOpen && !press
   const cls = `kit-card ${variant}${press ? ' press' : ''}${stretched ? ' stretch' : ''} ${className}`.trim()
   const head = (title !== undefined || aside || onOpen) && (
@@ -66,7 +68,7 @@ export function Card({ title, aside, onOpen, openLabel, variant = 'plain', press
       </button>
     )
   return (
-    <section className={cls} style={style} aria-label={label}>
+    <section className={cls} style={style} aria-label={label} {...data}>
       {head}
       {children}
     </section>

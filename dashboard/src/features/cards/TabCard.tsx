@@ -2,7 +2,8 @@
 // content below. The tab a person chose is remembered for this site and card,
 // in this browser.
 import { useEffect, useId, useState, type ReactNode } from 'react'
-import { panelId, tabId, Tabs, type TabItem } from './Tabs'
+import { Card } from '../../kit/Card'
+import { panelId, tabId, Tabs, type TabItem } from '../../kit/Tabs'
 
 export interface CardTab extends TabItem {
   render: () => ReactNode
@@ -63,18 +64,18 @@ export function TabCard({ card, site, label, tabs, want, more }: { card: string;
   }, [card, site, ids]) // eslint-disable-line react-hooks/exhaustive-deps -- pick only sets this card's own state
   if (!active) return null
   return (
-    <section className="card tc" aria-label={label} data-card={card}>
+    <Card variant="open" className="tc" label={label} data={{ 'data-card': card }}>
       {more ? (
-        <div className="tc-head">
+        <div className="kit-tabsrow">
           <Tabs prefix={prefix} label={label} tabs={tabs} value={active.id} onChange={pick} />
-          <div className="tc-more">{more}</div>
+          <div className="kit-tabsmore">{more}</div>
         </div>
       ) : (
         <Tabs prefix={prefix} label={label} tabs={tabs} value={active.id} onChange={pick} />
       )}
-      <div className="tc-body" role="tabpanel" id={panelId(prefix)} aria-labelledby={tabId(prefix, active.id)}>
+      <div className="kit-panel" role="tabpanel" id={panelId(prefix)} aria-labelledby={tabId(prefix, active.id)}>
         {active.render()}
       </div>
-    </section>
+    </Card>
   )
 }

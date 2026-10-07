@@ -11,6 +11,7 @@ import { navigate, readView, setView, useLocation, wantsLive } from '../lib/url'
 import { exportQuery, queryOf, rangeOf, showsChange } from '../lib/dashQuery'
 import { canAsk, isShared, isViewer } from '../lib/me'
 import { useMods } from '../lib/useMods'
+import { Card } from '../kit/Card'
 import { isOn, shows } from '../lib/modules'
 import { FilterMenu } from '../components/FilterMenu'
 import { toast } from '../components/Toast'
@@ -59,7 +60,6 @@ import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
 import { useMilestones } from '../features/milestones/useMilestones'
 import { filterFrom } from '../features/journey/filterFrom'
 import { StorySlot } from '../features/storyview/StorySlot'
-
 // Full mode's extra views live in their own chunk: Core never loads them.
 // The share dialog is its own chunk: nothing of it loads until Share is pressed.
 const Cards = lazyLoad(() => import('../features/cards/Cards').then((m) => ({ default: m.Cards }))) // the two cards under the chart: Explore's numbers, fetched when idle so the switch to Explore finds them here
@@ -521,7 +521,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       <StorySlot view={view} site={site} query={query} data={real} range={range} ready={hasData && !showInstall} waiting={waiting} loading={loading || firstLoad} money={money ? fmtM : undefined} narrow={narrow} onGoal={() => setAddGoals(true)}>
       {/* One section for the period at a glance: the key numbers across the
           top, the chart under them — they are one story, not two cards. */}
-      <section className="card overview" aria-label="Overview">
+      <Card variant="open" className="overview" label="Overview">
       <KpiStrip
         loading={firstLoad} vs={vs} metric={metric} can={canDraw} onPick={pick} expectMoney={hold.revenue}
         k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} blank={blank} site={site} bots={data?.bots}
@@ -606,7 +606,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           onBack={() => { setStory('off'); setPlaying(false); setHourAt(null); setDayIdx(null) }}
         />
       </div>
-      </section>
+      </Card>
 
       {notesOpen && notesOn && (
         <Suspense fallback={null}>
