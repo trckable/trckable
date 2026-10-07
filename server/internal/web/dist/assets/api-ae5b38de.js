@@ -1,0 +1,1 @@
+import{or as e}from"./core-a2b9a440.js";var t=`Cookieless mode counts visitors by a daily hash: nobody is recognised the next day, so there is no new vs returning and no journey to follow.`,n=(t,n)=>e(`GET`,`/sites/${encodeURIComponent(t)}/now`,void 0,n),r=(t,n)=>e(`GET`,`/sites/${encodeURIComponent(t)}/busier`,void 0,n);export{n,t as r,r as t};
