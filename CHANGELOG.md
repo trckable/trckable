@@ -16,6 +16,10 @@ section into the release.
 - All sites has a Cards | List switch next to Sort; your choice is remembered, and until you pick it stays automatic (cards up to 8 sites, a list above).
 - Story opens with a setup card while a first step is open: install the snippet, verify tracking, set a goal, connect revenue. Steps tick from your real data, one button leads to the next open one, and Later hides it for a week. It replaces the two small step chips in the header.
 
+### Changed
+
+- Connect crawler data is a three-step wizard (pick where your site runs, copy the code and key, wait for the first robot) with a progress bar, instead of one long sheet.
+
 ### Fixed
 
 - Translations for Live's busier line and milestone progress.
