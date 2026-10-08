@@ -6,6 +6,8 @@ export const people = defineCopy('account.people', {
   add: 'Add someone',
   adding: 'Adding…',
   addGo: 'Add',
+  emailBad: 'Enter their email, like them@company.com.',
+  failed: 'Couldn’t add them. Try again in a moment.',
   cancel: 'Cancel',
   emailLabel: 'Email',
   emailPlaceholder: 'them@company.com',

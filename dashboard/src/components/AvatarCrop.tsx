@@ -6,6 +6,7 @@ import { Check, Crosshair, ImageUp, ZoomIn, ZoomOut } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
 import { DialogActions } from './DialogActions'
 import { DialogHead } from './DialogHead'
+import { FieldError } from '../kit/FieldError'
 import { Modal } from '../kit/Modal'
 import { copy } from './crop/copy'
 import { drawRect, OUT, placed, VIEW } from './crop/math'
@@ -164,11 +165,7 @@ export default function AvatarCrop({
       <span className="sr" role="status">
         {crop.centred > 0 && copy.centered}
       </span>
-      {err && (
-        <p className="confirm-err" role="alert">
-          {err}
-        </p>
-      )}
+      <FieldError id="crop-err" error={err} />
       <DialogActions
         left={
           <button type="button" className="btn ghost" onClick={onCancel} disabled={busy || saved}>

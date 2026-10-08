@@ -74,7 +74,7 @@ test('make a link in the card, copy it, revoke it', async ({ page, context, brow
   // A bad site address is named before anything is sent.
   await card.getByRole('switch', { name: 'Embed on sites' }).click()
   await card.getByLabel('Site addresses').fill('example.org/path')
-  await expect(card.getByRole('alert')).toContainText('not a site address')
+  await expect(card.locator('.field-err-msg')).toContainText('isn’t a site address')
   await expect(create).toBeDisabled()
   await card.getByLabel('Site addresses').fill('https://example.org')
   await expect(create).toBeEnabled()

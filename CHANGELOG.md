@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- Form errors say what to do, with an example, in one place: left-aligned under the field with a small icon, the field's border and focus ring turn red, screen readers hear it, and it clears as soon as the value is valid. Applies to add site, sign-in and setup, passwords, share links, goals, API keys, people, revenue connect and settings fields.
 ### Fixed
 
 - A milestone's card no longer covers the dashboard: it is a small card without the picture (Copy image and Share… still have it), comes up four seconds after the page, and puts itself away after 12 seconds unless the pointer or the keyboard is on it.
@@ -16,6 +17,17 @@ section into the release.
 - Menu rows are one style: 32 px (44 px on a phone), 12 px padding, a 16 px icon column, an 8 px corner; the chosen period has its check at the left like the chosen site, and the period's list hangs from the period button's right edge instead of running past the screen.
 - Full mode no longer moves the Story/Explore and period row up by 8 px.
 - Phone: Live | Data is not cut off at the left edge and Story, Explore, Filter, the period and ⋯ fit one 390 px line; Filter is a funnel (no longer a twin of Story's lines) and Story and Explore have a tooltip.
+- The bars in the ranked lists (pages, channels, countries, devices) sit inside the card with the same inset as the column heads, and their corners are tighter.
+### Changed
+
+- Install methods (Add a site, onboarding): the tabs and More… are one segmented row of one height; tabs that do not fit scroll with a fade at the edge, and a method picked from More… scrolls into view instead of peeking out half cut off. In the More… search there is one focus border, and a chosen result shows its full name with the keywords cut instead.
+- Segmented controls (Live | Data, the view toggles, the period tabs): the same 3 px inset all round the chosen pill, the pill's corner follows the track's, a quieter outer line and a soft fill, and the same height as the buttons beside them.
+- The did-you-know bubble stays clear of the control row, and Got it and Turn hints off sit on one line.
+- "Was this useful?" is a small glass card at the bottom right (a card above the foot on a phone) that comes once after a while of reading, with proper buttons and a close; once answered or closed it stays away.
+- Glass: controls (segmented tracks and their chosen pill, chips) have one even quiet border with no brighter top line; cards have an even edge that follows the rounded corners all the way round, with at most a very faint lift at the top, instead of a straight line cut off at the curves.
+- The colour glows behind the page are about half as strong, in both themes.
+### Fixed
+
 - The bars in the ranked lists (pages, channels, countries, devices) sit inside the card with the same inset as the column heads, and their corners are tighter.
 ### Changed
 
@@ -37,15 +49,6 @@ section into the release.
 - The Data chart keeps 28 px (was 18) between the visitors plot and the revenue plot under it, so their axis labels no longer touch; Story's moment labels have 10 px more room above the plot, clear of the line's peak label and the top axis label.
 - Story: the sentence under the headline no longer repeats the headline's percentage ("Mostly from Search. Signup followed.") and starts every sentence with a capital.
 - The footer's logo and wordmark are in the quiet AA grey (no longer faded with opacity) until pointed at, so they pass the colour contrast check.
-
-### Changed
-
-- Install methods (Add a site, onboarding): the tabs and More… are one segmented row of one height; tabs that do not fit scroll with a fade at the edge, and a method picked from More… scrolls into view instead of peeking out half cut off. In the More… search there is one focus border, and a chosen result shows its full name with the keywords cut instead.
-- Segmented controls (Live | Data, the view toggles, the period tabs): the same 3 px inset all round the chosen pill, the pill's corner follows the track's, a quieter outer line and a soft fill, and the same height as the buttons beside them.
-- The did-you-know bubble stays clear of the control row, and Got it and Turn hints off sit on one line.
-- "Was this useful?" is a small glass card at the bottom right (a card above the foot on a phone) that comes once after a while of reading, with proper buttons and a close; once answered or closed it stays away.
-- Glass: controls (segmented tracks and their chosen pill, chips) have one even quiet border with no brighter top line; cards have an even edge that follows the rounded corners all the way round, with at most a very faint lift at the top, instead of a straight line cut off at the curves.
-- The colour glows behind the page are about half as strong, in both themes.
 
 ## 0.7.0 (8 Oct 2026)
 
