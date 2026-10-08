@@ -9,7 +9,6 @@ section into the release.
 
 ## Unreleased
 
-<<<<<<< HEAD
 ### Fixed
 
 - The bars in the ranked lists (pages, channels, countries, devices) sit inside the card with the same inset as the column heads, and their corners are tighter.
@@ -33,7 +32,7 @@ section into the release.
 - The Data chart keeps 28 px (was 18) between the visitors plot and the revenue plot under it, so their axis labels no longer touch; Story's moment labels have 10 px more room above the plot, clear of the line's peak label and the top axis label.
 - Story: the sentence under the headline no longer repeats the headline's percentage ("Mostly from Search. Signup followed.") and starts every sentence with a capital.
 - The footer's logo and wordmark are in the quiet AA grey (no longer faded with opacity) until pointed at, so they pass the colour contrast check.
-=======
+
 ### Changed
 
 - Install methods (Add a site, onboarding): the tabs and More… are one segmented row of one height; tabs that do not fit scroll with a fade at the edge, and a method picked from More… scrolls into view instead of peeking out half cut off. In the More… search there is one focus border, and a chosen result shows its full name with the keywords cut instead.
@@ -42,7 +41,6 @@ section into the release.
 - "Was this useful?" is a small glass card at the bottom right (a card above the foot on a phone) that comes once after a while of reading, with proper buttons and a close; once answered or closed it stays away.
 - Glass: controls (segmented tracks and their chosen pill, chips) have one even quiet border with no brighter top line; cards have an even edge that follows the rounded corners all the way round, with at most a very faint lift at the top, instead of a straight line cut off at the curves.
 - The colour glows behind the page are about half as strong, in both themes.
->>>>>>> origin/polish-batch-2
 
 ## 0.7.0 (8 Oct 2026)
 
