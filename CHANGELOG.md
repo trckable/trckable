@@ -16,6 +16,8 @@ section into the release.
 
 - The main card on a site's dashboard keeps one inner padding on every side (22 px, 16 px on a phone): the key numbers, the chart's heading, axis labels and plot, and the note buttons no longer hug the card's edges, and the chosen number's underline lines up with its text.
 - All sites: the filter, search, sort and layout controls share one height, the list lines run edge to edge with them, and each column title sits over its numbers.
+- First run, step 2: "+ Add another site" adds more sites while waiting (the same domain rules as Add a site; a plan's site limit shows its message under the field). Each site gets a chip with a waiting or receiving dot and its own snippet, and the first visit on any of them moves on. "Skip for now — open my dashboard" opens All sites and is remembered, so the first run does not come back. The script tag tab hints at `data-dev` for testing on localhost.
+- First run: after "Someone's here." Continue opens Live straight away; the second "You're live." screen is gone.
 - The dashboard's first-load size limit is 132 KB (was 130 KB) while the launch fixes land.
 - The soft light on a glass card under the pointer no longer follows it: it sits in the card's top right corner and is a little weaker (70%).
 

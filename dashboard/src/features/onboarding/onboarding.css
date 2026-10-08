@@ -236,3 +236,90 @@ body:has(.ob.gated) .side-deck {
     font-size: 12px;
   }
 }
+
+/* Step 2 with more than one site: a chip per site, a dot for waiting or receiving. */
+.ob-sites {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 auto;
+  max-width: 640px;
+}
+.ob-site {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--border-2);
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.ob-site.on {
+  border-color: var(--text);
+  color: var(--text);
+}
+.ob-site-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ob-sdot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--muted);
+}
+.ob-sdot.got {
+  border-color: var(--up);
+  background: var(--up);
+}
+.ob-after {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(640px, 100%);
+  margin: 0 auto;
+}
+.ob-more-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+.ob-more-form .input {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.ob-more-problem {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--down);
+  font-size: 13px;
+  text-align: center;
+}
+.ob-skip-link {
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  color: var(--faint);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.ob-skip-link:hover {
+  color: var(--text);
+}
