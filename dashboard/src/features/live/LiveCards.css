@@ -33,3 +33,10 @@
     margin: -13px 0;
   }
 }
+/* The rows sit above the card's stretched title button. */
+.lv-pages {
+  margin-top: 12px;
+}
+.lv-pages .bl-row {
+  z-index: 1;
+}
