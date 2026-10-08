@@ -48,8 +48,6 @@ export default defineConfig({
     // The dashboard registers a worker (app-install.spec.ts turns it back on). One that
     // answers a page's requests hides them from page.route(), which the other specs rely on.
     serviceWorkers: 'block',
-    // Charts draw in and figures count up on first sight; a test measures the page at rest.
-    reducedMotion: 'reduce',
     actionTimeout: process.env.CI ? 20_000 : undefined,
     navigationTimeout: process.env.CI ? 30_000 : undefined,
   },

@@ -2,7 +2,8 @@
 // No motion library; honours prefers-reduced-motion.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
-const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+// The e2e suite sets data-motion=off on the page: it is read at rest.
+const reduced = () => (typeof document !== 'undefined' && document.documentElement.dataset.motion === 'off') || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches)
 export { reduced as reducedMotion }
 /** The class that draws a chart in, once: decided when the chart first appears (none with reduced motion or in a hidden tab). */
 export function useDraw(): string {
