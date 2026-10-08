@@ -118,7 +118,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // seen: a quiet site's new visit shows up too.
   const refreshLater = useRef<number | undefined>(undefined)
   const refreshRef = useRef(refresh)
-  refreshRef.current = refresh
+  useEffect(() => { refreshRef.current = refresh })
   useEffect(() => () => window.clearTimeout(refreshLater.current), [])
   const stream = useLive(isShared() ? '' : site.id, () => {
     if (!live) return
