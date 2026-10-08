@@ -24,8 +24,3 @@
   height: 6px;
   accent-color: var(--accent);
 }
-.ga-error {
-  margin: 0;
-  color: var(--down);
-  font-size: 13px;
-}

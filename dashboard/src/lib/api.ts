@@ -459,7 +459,7 @@ export const messageOf = (e: unknown): string => (e instanceof Error ? e.message
 
 /** A refusal of what was typed (a wrong password or code), not a failure of the server: the field says so, in these words. */
 export const refused = (e: unknown): boolean => e instanceof APIError && [400, 401, 403, 422].includes(e.status)
-export const wrong = "That isn't right · Try again"
+export const wrong = "That isn’t right. Check it and try again."
 
 /** The error body the server sends with a failed request. */
 type Failure = { error?: string; needs_code?: boolean; code?: string; hide_brand?: boolean }

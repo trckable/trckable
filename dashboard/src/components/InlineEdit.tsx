@@ -6,7 +6,9 @@
 // shows in the box for a moment; a failure keeps the field open and says so
 // in a toast.
 import { Check, Pencil, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { FieldError, fieldProps } from '../kit/FieldError'
+import { fieldCopy } from '../kit/fieldCopy'
 import { fail } from './toastBus'
 import './InlineEdit.css'
 
@@ -44,6 +46,7 @@ export function InlineEdit({
   const [err, setErr] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
   const input = useRef<HTMLInputElement>(null)
+  const errId = useId()
   // Closed, the draft follows the value.
   if (!editing && draft !== value) setDraft(value)
   useEffect(() => {
@@ -70,7 +73,7 @@ export function InlineEdit({
       return
     }
     if (required && !next) {
-      setErr(`${label} cannot be empty`)
+      setErr(fieldCopy.empty)
       return
     }
     setBusy(true)
@@ -95,10 +98,13 @@ export function InlineEdit({
             value={draft}
             placeholder={placeholder}
             aria-label={label}
-            aria-invalid={!!err}
+            {...fieldProps(errId, err)}
             maxLength={maxLength}
             readOnly={busy}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              setDraft(e.target.value)
+              setErr(null)
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
@@ -131,11 +137,7 @@ export function InlineEdit({
           )}
         </button>
       )}
-      {err && (
-        <span className="ie-err" role="alert">
-          {err}
-        </span>
-      )}
+      <FieldError id={errId} error={err} className="ie-err" />
     </span>
   )
 }

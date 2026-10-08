@@ -7,6 +7,7 @@ export const keys = defineCopy('account.keys', {
   count: (used: number, max: number) => `${used} / ${max}`,
   create: 'Create key',
   creating: 'Creating…',
+  failed: 'Couldn’t create the key. Try again in a moment.',
   cancel: 'Cancel',
   nameLabel: 'Key name',
   namePlaceholder: 'Claude on my laptop',

@@ -44,7 +44,7 @@ export default function ConfirmDialog({ req, done }: { req: Req; done: (v: strin
         {req.body && <p className="muted confirm-lead">{req.body}</p>}
         {req.field && (
           <Field label={req.field.label} error={err}>
-            {(f) => <input {...f} className="input" type={req.field?.type ?? 'text'} autoComplete={req.field?.autoComplete} autoFocus value={value} onChange={(e) => setValue(e.target.value)} />}
+            {(f) => <input {...f} className="input" type={req.field?.type ?? 'text'} autoComplete={req.field?.autoComplete} autoFocus value={value} onChange={(e) => { setValue(e.target.value); setErr(null) }} />}
           </Field>
         )}
         <DialogActions
