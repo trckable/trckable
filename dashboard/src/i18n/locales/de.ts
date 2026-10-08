@@ -755,6 +755,7 @@ export default {
   'error.slow': 'Zu viele Versuche · Warte einen Moment',
   'error.busy': 'Server ausgelastet · Versuche es erneut',
   'error.code.not_found': 'Nicht gefunden',
+  'error.code.report_memory': 'Zu viele Daten für den Server auf einmal · Wähle einen kürzeren Zeitraum oder füge einen Filter hinzu',
 
   // dates
   'dates.period.now': 'Jetzt',
@@ -2220,8 +2221,5 @@ export default {
   'onboarding.more.sites': 'Deine Websites',
   'onboarding.more.waiting': 'wartet',
   'onboarding.more.receiving': 'empfängt',
-  'onboarding.more.added': 'Diese Website ist schon da.',
-  'onboarding.more.invalid': 'Das sieht nicht nach einer Domain aus.',
-  'onboarding.more.space': 'Eine Domain hat keine Leerzeichen.',
   'onboarding.skipDash': 'Vorerst überspringen — mein Dashboard öffnen',
 } satisfies Messages

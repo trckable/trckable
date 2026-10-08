@@ -758,6 +758,7 @@ export default {
   'error.slow': 'Demasiados intentos · Espera un momento',
   'error.busy': 'Servidor ocupado · Inténtalo de nuevo',
   'error.code.not_found': 'No encontrado',
+  'error.code.report_memory': 'Demasiados datos para el servidor de una vez · Elige un periodo más corto o añade un filtro',
 
   // dates
   'dates.period.now': 'Ahora',
@@ -2223,8 +2224,5 @@ export default {
   'onboarding.more.sites': 'Tus sitios',
   'onboarding.more.waiting': 'esperando',
   'onboarding.more.receiving': 'recibiendo',
-  'onboarding.more.added': 'Ese sitio ya está aquí.',
-  'onboarding.more.invalid': 'Eso no parece un dominio.',
-  'onboarding.more.space': 'Un dominio no tiene espacios.',
   'onboarding.skipDash': 'Omitir por ahora — abrir mi panel',
 } satisfies Messages
