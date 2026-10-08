@@ -752,6 +752,7 @@ export default {
   'error.slow': 'Troppi tentativi · Attendi un momento',
   'error.busy': 'Server occupato · Riprova',
   'error.code.not_found': 'Non trovato',
+  'error.code.report_memory': 'Troppi dati per il server in una volta · Scegli un periodo più breve o aggiungi un filtro',
 
   // dates
   'dates.period.now': 'Ora',

@@ -746,6 +746,7 @@ export default {
   'error.slow': 'Trop d’essais · Patientez un instant',
   'error.busy': 'Serveur occupé · Réessayez',
   'error.code.not_found': 'Introuvable',
+  'error.code.report_memory': 'Trop de données pour le serveur en une fois · Choisissez une période plus courte ou ajoutez un filtre',
 
   // dates
   'dates.period.now': 'Maintenant',

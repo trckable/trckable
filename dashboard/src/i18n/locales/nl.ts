@@ -745,6 +745,7 @@ export default {
   'error.slow': 'Te veel pogingen · Wacht even',
   'error.busy': 'Server druk · Probeer het opnieuw',
   'error.code.not_found': 'Niet gevonden',
+  'error.code.report_memory': 'Te veel gegevens voor de server in één keer · Kies een kortere periode of voeg een filter toe',
 
   // dates
   'dates.period.now': 'Nu',

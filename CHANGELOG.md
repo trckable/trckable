@@ -14,6 +14,7 @@ section into the release.
 - Form errors say what to do, with an example, in one place: left-aligned under the field with a small icon, the field's border and focus ring turn red, screen readers hear it, and it clears as soon as the value is valid. Applies to add site, sign-in and setup, passwords, share links, goals, API keys, people, revenue connect and settings fields.
 ### Fixed
 
+- A big site's report no longer fails with "Out of Memory" on the first load after a start: the breakdowns are computed two at a time instead of all sixteen at once, the database's default memory limit is a quarter of the available memory (at least 512 MB, up from 256 MB), a report that still runs out of memory is tried once more, and if it fails again the dashboard says to pick a shorter period or add a filter. `TRCKABLE_DUCKDB_MEMORY` still overrides the default.
 - A milestone's card no longer covers the dashboard: it is a small card without the picture (Copy image and Share… still have it), comes up four seconds after the page, and puts itself away after 12 seconds unless the pointer or the keyboard is on it.
 - The menus (site switcher, period, ⋯, Filter) are nearly solid with a stronger blur, so the page's text never reads through a row; the switcher's key hints are larger and clearer.
 - Menu rows are one style: 32 px (44 px on a phone), 12 px padding, a 16 px icon column, an 8 px corner; the chosen period has its check at the left like the chosen site, and the period's list hangs from the period button's right edge instead of running past the screen.
