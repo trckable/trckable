@@ -47,7 +47,8 @@ async function open(page: Page, query = '?view=data'): Promise<string> {
   // A side card (a milestone reached, say) sits over the chart's corner: put it away, so the pointer is on the chart.
   // It can also slide in later (WebKit is slower to load it), so it is put away whenever it shows up.
   await page.addLocatorHandler(page.locator('aside.side-card .side-card-x').first(), (x) => x.click())
-  for (const x of await page.locator('aside.side-card .side-card-x').all()) await x.click()
+  // The handler can put the card away between the listing and the click: a card already gone is fine.
+  for (const x of await page.locator('aside.side-card .side-card-x').all()) await x.click({ timeout: 2000 }).catch(() => {})
   return domain
 }
 
