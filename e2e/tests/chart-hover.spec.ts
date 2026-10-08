@@ -231,9 +231,12 @@ const atRest = async (chart: Locator) => {
 async function openHistory(page: Page, path = `/${HISTORY_DOMAIN}?view=data`) {
   await page.addInitScript(() => localStorage.setItem('tkb_replay_speed', 'rapid'))
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  // A side card (a milestone reached) can sit over the chart's corner, and slides in late in WebKit: put it away whenever it shows up.
+  await page.addLocatorHandler(page.locator('aside.side-card .side-card-x').first(), (x) => x.click())
   await page.goto(API + path)
   const chart = page.locator('.overview-chart .chart-wrap')
   await expect(chart.locator('svg[role="img"]')).toBeVisible({ timeout: 15_000 })
+  for (const x of await page.locator('aside.side-card .side-card-x').all()) await x.click({ timeout: 2000 }).catch(() => {})
   return chart
 }
 
