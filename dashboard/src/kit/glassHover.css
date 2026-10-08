@@ -1,0 +1,42 @@
+/* The glass cards' light: a soft highlight that glides under the pointer, inside the card, over its glass and under its words. No border, no lift. It loads after the first paint, with glassHover.ts. */
+@property --mx {
+  syntax: '<length-percentage>';
+  inherits: true;
+  initial-value: 50%;
+}
+@property --my {
+  syntax: '<length-percentage>';
+  inherits: true;
+  initial-value: 0%;
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%), var(--glass-sheen), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card):is(.glass-lit, :focus-within)::after {
+    opacity: 1;
+  }
+  @media (hover: hover) {
+    :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card):hover::after {
+      opacity: 1;
+    }
+    :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card):hover {
+      --glass-edge-c: var(--glass-edge-hot-c);
+    }
+  }
+  /* Reduced motion: the light does not move; the glass is a touch lighter under the pointer. */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card)::after {
+      background: color-mix(in srgb, var(--glass-sheen) 30%, transparent);
+      transition: none;
+    }
+  }
+}

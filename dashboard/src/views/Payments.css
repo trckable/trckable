@@ -23,7 +23,6 @@
 }
 .prov:hover,
 .prov:focus-visible {
-  border-color: var(--money);
   transform: translateY(-1px);
 }
 .prov .faint {
@@ -297,7 +296,6 @@
 .prov:hover,
 .mtile:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgb(0 0 0 / 0.28);
 }
 @media (prefers-reduced-motion: reduce) {
   .prov:hover,
