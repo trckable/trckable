@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - Charts draw in when they first appear: lines run left to right (about 0.7 s, a little later for each series), fills fade in behind them, the sparklines on the stat cards do the same a bit quicker, and the big numbers count up from 0. Live updates and period changes just update; nothing moves with reduced motion. Applies to All sites, the site dashboard, Story and the full charts.
+- The background glows are about a third softer, same colours, so the numbers and charts stand out more.
 - Form errors say what to do, with an example, in one place: left-aligned under the field with a small icon, the field's border and focus ring turn red, screen readers hear it, and it clears as soon as the value is valid. Applies to add site, sign-in and setup, passwords, share links, goals, API keys, people, revenue connect and settings fields.
 ### Fixed
 
