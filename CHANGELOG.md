@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- Live: the Online now and last-30-minutes numbers roll digit by digit to the new value, with a brief tint (green up, muted down) and a fading change line; reduced motion swaps them at once.
+
 ## 0.7.0 (8 Oct 2026)
 
 ### Added

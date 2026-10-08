@@ -672,3 +672,14 @@ body[data-mode] .live-head-row h2,
     font-size: var(--ph-text);
   }
 }
+
+/* The change line fades in when its text changes. */
+.live-delta {
+  animation: live-delta-in 400ms ease-out both;
+}
+@keyframes live-delta-in {
+  from { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-delta { animation: none; }
+}
