@@ -435,7 +435,12 @@ func (a *API) shareReport(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	a.reportFor(w, r, sh.SiteID, sh.Revenue)
+	if !a.loginRate.reserve(a.Now(), limit{"share-report:" + sh.ID + "|" + a.ip(r), a.ipMax(r, shareReportRate), time.Minute}) {
+		w.Header().Set("Retry-After", "10")
+		fail(w, http.StatusTooManyRequests, "too many requests: wait a moment")
+		return
+	}
+	a.reportFor(w, r, sh.SiteID, sh.Revenue, true)
 }
 
 // shareHeader carries an embedded page's session, since the cookie cannot.
