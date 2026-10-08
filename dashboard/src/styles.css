@@ -2679,11 +2679,6 @@ body[data-mode] .card.overview {
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
-.confirm-err {
-  margin: 4px 0 0;
-  color: var(--down);
-  font-size: 13px;
-}
 
 /* A site's mark: its icon, or its letter on its colour (components/SiteMark). */
 .site-mark {

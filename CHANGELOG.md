@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- Form errors say what to do, with an example, in one place: left-aligned under the field with a small icon, the field's border and focus ring turn red, screen readers hear it, and it clears as soon as the value is valid. Applies to add site, sign-in and setup, passwords, share links, goals, API keys, people, revenue connect and settings fields.
 - The dashboard's first-load size limit is 132 KB (was 130 KB) while the launch fixes land.
 - The soft light on a glass card under the pointer no longer follows it: it sits in the card's top right corner and is a little weaker (70%).
 

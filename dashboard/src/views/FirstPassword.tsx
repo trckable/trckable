@@ -1,6 +1,9 @@
 // The first sign-in with a password someone else chose.
 import { Suspense, lazy, useState, type SubmitEvent } from 'react'
-import { messageOf, more } from '../lib/apiMore'
+import { FieldError, fieldProps } from '../kit/FieldError'
+import { more } from '../lib/apiMore'
+import { formWords } from '../lib/formWords'
+import { authCopy } from './authCopy'
 import { Shell } from './AuthShell'
 import './Auth.css'
 
@@ -19,7 +22,7 @@ export function FirstPassword({ email, onDone }: { email?: string; onDone: () =>
   const submit = (e: SubmitEvent) => {
     e.preventDefault()
     if (password !== again) {
-      setError('The two new passwords are not the same.')
+      setError(authCopy.mismatch)
       return
     }
     setBusy(true)
@@ -34,7 +37,7 @@ export function FirstPassword({ email, onDone }: { email?: string; onDone: () =>
           .then((t) => (t.enabled ? onDone() : setStage('second')))
           .catch(() => setStage('second')),
       )
-      .catch((err: unknown) => setError(messageOf(err)))
+      .catch((err: unknown) => setError(formWords(err, { 401: authCopy.login })))
       .finally(() => setBusy(false))
   }
   if (stage === 'setup')
@@ -65,24 +68,20 @@ export function FirstPassword({ email, onDone }: { email?: string; onDone: () =>
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <label className="field">
           The one-time password
-          <input className="input" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} autoFocus />
+          <input className="input" type="password" autoComplete="current-password" value={current} onChange={(e) => { setCurrent(e.target.value); setError(null) }} autoFocus />
         </label>
         <label className="field">
           Your new password
-          <input className="input" type="password" autoComplete="new-password" minLength={12} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input className="input" type="password" autoComplete="new-password" minLength={12} value={password} onChange={(e) => { setPassword(e.target.value); setError(null) }} />
         </label>
         <label className="field">
           The same again
-          <input className="input" type="password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} />
+          <input className="input" type="password" autoComplete="new-password" value={again} onChange={(e) => { setAgain(e.target.value); setError(null) }} {...fieldProps('fp-err', error)} />
+          <FieldError id="fp-err" error={error} />
         </label>
         <span className="faint" style={{ fontSize: 12.5 }}>
           At least 12 characters. A few unrelated words make a strong one that is easy to remember.
         </span>
-        {error && (
-          <p role="alert" style={{ margin: 0, color: 'var(--down)', fontSize: 13 }}>
-            {error}
-          </p>
-        )}
         <button type="submit" className="btn primary big" disabled={busy || !current || password.length < 12 || !again}>
           {busy ? 'Saving…' : 'Save my password'}
         </button>

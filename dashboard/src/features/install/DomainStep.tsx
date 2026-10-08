@@ -6,10 +6,18 @@ import { useState } from 'react'
 import { SiteMark } from '../../components/SiteMark'
 import { wizard as t } from './copy'
 import { type DomainCheck } from './domain'
+import { domainWords } from './domainWords'
 
 export type Verdict = DomainCheck | 'added'
 
-function Status({ verdict, clean, shown }: { verdict: Verdict; clean: string; shown: boolean }) {
+function Status({ verdict, clean, shown, refusal }: { verdict: Verdict; clean: string; shown: boolean; refusal: string }) {
+  if (refusal)
+    return (
+      <span className="wiz-status bad" id="wiz-status">
+        <AlertCircle size={14} strokeWidth={2} aria-hidden="true" />
+        {refusal}
+      </span>
+    )
   if (verdict === 'ok')
     return (
       <span className="wiz-status ok" id="wiz-status">
@@ -21,16 +29,16 @@ function Status({ verdict, clean, shown }: { verdict: Verdict; clean: string; sh
     )
   if (verdict === 'added' && shown)
     return (
-      <span className="wiz-status warn" id="wiz-status" role="status">
+      <span className="wiz-status warn" id="wiz-status">
         <Info size={14} strokeWidth={2} aria-hidden="true" />
-        {t.added}
+        {domainWords(verdict, clean)}
       </span>
     )
   if ((verdict === 'space' || verdict === 'invalid') && shown)
     return (
-      <span className="wiz-status bad" id="wiz-status" role="alert">
+      <span className="wiz-status bad" id="wiz-status">
         <AlertCircle size={14} strokeWidth={2} aria-hidden="true" />
-        {verdict === 'space' ? t.space : t.invalid}
+        {domainWords(verdict, clean)}
       </span>
     )
   return (
@@ -40,7 +48,7 @@ function Status({ verdict, clean, shown }: { verdict: Verdict; clean: string; sh
   )
 }
 
-export function DomainStep(p: { domain: string; setDomain: (d: string) => void; clean: string; verdict: Verdict; locked: boolean; onSubmit: () => void }) {
+export function DomainStep(p: { domain: string; setDomain: (d: string) => void; clean: string; verdict: Verdict; refusal: string; locked: boolean; onSubmit: () => void }) {
   const [left, setLeft] = useState(false)
   const [tried, setTried] = useState(false)
   const shown = left || tried
@@ -54,7 +62,7 @@ export function DomainStep(p: { domain: string; setDomain: (d: string) => void; 
         if (p.verdict === 'ok' || p.locked) p.onSubmit()
       }}
     >
-      <label className={'wiz-field' + (shown && p.verdict !== 'ok' && p.verdict !== 'empty' && !p.locked ? ' bad' : '')}>
+      <label className={'wiz-field' + ((shown && p.verdict !== 'ok' && p.verdict !== 'empty' && !p.locked) || p.refusal ? ' bad' : '')}>
         {!p.domain.includes('//') && (
           <span className="wiz-prefix" aria-hidden="true">
             {t.prefix}
@@ -68,7 +76,7 @@ export function DomainStep(p: { domain: string; setDomain: (d: string) => void; 
           placeholder={t.placeholder}
           aria-label={t.domain}
           aria-describedby="wiz-status"
-          aria-invalid={shown && p.verdict !== 'ok' && p.verdict !== 'empty'}
+          aria-invalid={(shown && p.verdict !== 'ok' && p.verdict !== 'empty') || !!p.refusal}
           readOnly={p.locked}
           autoFocus
           required
@@ -79,7 +87,11 @@ export function DomainStep(p: { domain: string; setDomain: (d: string) => void; 
         />
         <SiteMark site={{ domain: p.clean || p.domain || '?' }} size={28} />
       </label>
-      {!p.locked && <Status verdict={p.verdict} clean={p.clean} shown={shown} />}
+      {!p.locked && (
+        <div aria-live="polite">
+          <Status verdict={p.verdict} clean={p.clean} shown={shown} refusal={p.refusal} />
+        </div>
+      )}
     </form>
   )
 }
