@@ -8,5 +8,5 @@ export function minuteView(ago: number, tz: string, now = new Date()): Partial<V
   const day = todayIn(tz, new Date(now.getTime() - ago * 60_000))
   const base = { live: false, day: undefined, bucket: 'hour' as const }
   if (day === todayIn(tz, now)) return { ...base, period: 'now', from: undefined, to: undefined }
-  return { ...base, period: 'custom', from: day, to: day }
+  return { ...base, period: 'custom', from: day, to: day, compare: 'none' as const }
 }
