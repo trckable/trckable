@@ -42,10 +42,13 @@ type Params struct {
 	// SundayWeeks starts weekly buckets on Sunday, as the site's "Week starts
 	// on" setting says; otherwise weeks start on Monday (ISO).
 	SundayWeeks bool
-	Limit       int    // rows per breakdown (default 10)
-	Daily       bool   // include per-day breakdowns (scrubber / replay)
-	Currency    string // site currency for revenue (ISO 4217)
-	Test        bool   // count test/sandbox payments instead of live ones
+	Limit       int // rows per breakdown (default 10)
+	// Export lifts the ceiling on Limit from 100 to ExportMaxRows, for the CSV
+	// export, which wants the long tail.
+	Export   bool
+	Daily    bool   // include per-day breakdowns (scrubber / replay)
+	Currency string // site currency for revenue (ISO 4217)
+	Test     bool   // count test/sandbox payments instead of live ones
 	// Revenue includes attributed revenue in the report. It follows the site's
 	// revenue module: with the module off no payment is read or attributed, so
 	// the report costs nothing extra and shows no money anywhere.
@@ -208,6 +211,32 @@ func ValidDim(d string) bool {
 
 const bounce = "CASE WHEN pvs <= 1 AND goals = 0 THEN 1.0 ELSE 0.0 END"
 
+// ExportMaxRows is the most rows per breakdown an export may ask for.
+const ExportMaxRows = 1000
+
+func maxRows(export bool) int {
+	if export {
+		return ExportMaxRows
+	}
+	return 100
+}
+
+// concurrentReports is how many reports read the store at the same time.
+const concurrentReports = 4
+
+var reportSlots = make(chan struct{}, concurrentReports)
+
+func acquireReport(ctx context.Context) error {
+	select {
+	case reportSlots <- struct{}{}:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func releaseReport() { <-reportSlots }
+
 // Report runs a full report.
 func (q Q) Report(ctx context.Context, p Params) (*Result, error) {
 	if p.TZ == "" {
@@ -218,12 +247,19 @@ func (q Q) Report(ctx context.Context, p Params) (*Result, error) {
 	default:
 		p.Bucket = "day"
 	}
-	if p.Limit <= 0 || p.Limit > 100 {
+	if p.Limit <= 0 || p.Limit > maxRows(p.Export) {
 		p.Limit = 10
 	}
 	if _, err := time.LoadLocation(p.TZ); err != nil {
 		return nil, fmt.Errorf("bad timezone %q", p.TZ)
 	}
+	// Only a few reports read at once: a burst of them (a launch) queues here
+	// instead of fighting over memory and cores, and a caller whose time runs
+	// out while waiting gives up with its context's error.
+	if err := acquireReport(ctx); err != nil {
+		return nil, err
+	}
+	defer releaseReport()
 	conn, err := q.DB.Conn(ctx)
 	if err != nil {
 		return nil, err
