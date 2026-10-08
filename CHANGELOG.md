@@ -15,6 +15,7 @@ section into the release.
 ### Changed
 
 - The main card on a site's dashboard keeps one inner padding on every side (22 px, 16 px on a phone): the key numbers, the chart's heading, axis labels and plot, and the note buttons no longer hug the card's edges, and the chosen number's underline lines up with its text.
+- All sites: the filter, search, sort and layout controls share one height, the list lines run edge to edge with them, and each column title sits over its numbers.
 - The dashboard's first-load size limit is 132 KB (was 130 KB) while the launch fixes land.
 - The soft light on a glass card under the pointer no longer follows it: it sits in the card's top right corner and is a little weaker (70%).
 

@@ -63,6 +63,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
     setOrder(k)
     saveOrder(k)
   }
+  const count = (k: Show) => rows?.filter(is[k]).length ?? 0
   const s = summarize(list ?? [])
   const start = startIndex(list ?? [])
   const connect = list && !anyPayments(list) && !isViewer() && list.length > 0 ? list[0] : null
@@ -123,7 +124,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
                   ] as [Show, string][]
                 ).map(([k, label]) => (
                   <button key={k} type="button" aria-pressed={show === k} className={show === k ? 'on' : undefined} onClick={() => setShow(k)}>
-                    {label} <span className="faint">{rows?.filter(is[k]).length}</span>
+                    {label} <span className={'faint' + (count(k) ? '' : ' zero')}>{count(k)}</span>
                   </button>
                 ))}
               </div>
