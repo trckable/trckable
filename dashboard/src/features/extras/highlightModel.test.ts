@@ -25,6 +25,14 @@ describe('highlights', () => {
     expect(rows.map((r) => [r.dim, r.value])).toEqual([['channel', 'AI'], ['channel', 'Social'], ['channel', 'Email'], ['entry_page', '/pricing'], ['referrer', 'news.example']])
   })
 
+  it('leaves out the percentage when the earlier figure is tiny, and caps a huge one', () => {
+    const list: Insight[] = [
+      { kind: 'source_move', dim: 'channel', value: 'Direct', now: 1414, was: 1, change: 1413 },
+      { kind: 'source_move', dim: 'channel', value: 'Search', now: 1000, was: 50, change: 19 },
+    ]
+    expect(highlightRows(list, usd).map((r) => r.text)).toEqual(['Direct up · 1 → 1,414 visitors', 'Search up more than 10x · 50 → 1,000 visitors'])
+  })
+
   it('is empty when the server found nothing', () => {
     expect(highlightRows([], usd)).toEqual([])
   })

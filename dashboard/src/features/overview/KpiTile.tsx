@@ -3,7 +3,7 @@
 // the arrow and the number only. Nothing at all when there is nothing to
 // compare with. The charted one is underlined, and a number that can be
 // charted is a button.
-import type { ComponentProps, ReactNode } from 'react'
+import { useEffect, useId, useState, type ComponentProps, type ReactNode } from 'react'
 import type { Delta } from '../../lib/format'
 import { useCountUp } from '../../lib/motion'
 import { KpiMark } from './kpiMark'
@@ -30,7 +30,7 @@ interface Props {
   hint?: ReactNode
   /** The month's pace, quiet after the change (or on a line of its own when there is no change): the Visitors tile's. */
   pace?: ReactNode
-  /** A line more for the tile's tooltip: what the number leaves out (Visitors: the bots filtered). */
+  /** What the number is, in a tooltip that opens on hover, focus or a tap (Visitors adds what it leaves out: the bots filtered). */
   tip?: string
   /** Which mark stands before the name (KpiMarks). */
   icon?: ComponentProps<typeof KpiMark>['k']
@@ -47,11 +47,35 @@ export function KpiTile(p: Props) {
   const v = p.live ? p.live(pos) : tweened
   const none = !!p.blank?.(pos)
   const cls = 'kpi' + (p.money ? ' money' : '')
+  const [open, setOpen] = useState(false)
+  const id = useId()
+  useEffect(() => {
+    if (!open) return
+    const away = (e: Event) => !(e.target as Element | null)?.closest?.('.kpi.tipping') && setOpen(false)
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('pointerdown', away)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('pointerdown', away)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [open])
+  const words = p.tip ? tipLines(p.tip, p.d, p.vs) : ''
+  const name = (
+    <>
+      {p.icon && <KpiMark k={p.icon} />}
+      {p.label}
+    </>
+  )
   const body = (
     <>
-      <span className="label kpi-name" title={tipped(p.label, p.tip)}>
-        {p.icon && <KpiMark k={p.icon} />}
-        {p.label}
+      {/* A tile that is not a button gets its tooltip from its name: a real button, so a tap or Enter opens it. */}
+      <span className="label kpi-name">
+        {p.onClick || !p.tip ? name : (
+          <button type="button" className="tip-text" aria-describedby={open ? id : undefined} onClick={() => setOpen(true)}>
+            {name}
+          </button>
+        )}
       </span>
       {/* The skeleton is decorative: the loading bar at the top of the page
           is the one thing that announces loading, and it says it once. */}
@@ -62,16 +86,42 @@ export function KpiTile(p: Props) {
       {(p.loading || (none && p.d)) && <span className="kpi-delta" aria-hidden="true" />}
     </>
   )
-  if (!p.onClick) return <div className={cls}>{body}</div>
+  const tip = open && words ? (
+    <span className="tip kpi-tip" id={id} role="tooltip">
+      {words}
+    </span>
+  ) : null
+  if (!p.onClick)
+    return (
+      <div className={cls + (p.tip ? ' tipping' : '')} onMouseEnter={() => setOpen(!!p.tip)} onMouseLeave={() => setOpen(false)}>
+        {body}
+        {tip}
+      </div>
+    )
   return (
-    <button type="button" className={cls} aria-pressed={p.pressed} onClick={p.onClick} title={tipped(copy.chartTile(p.label), p.tip)}>
+    <button
+      type="button"
+      className={cls + (p.tip ? ' tipping' : '')}
+      aria-pressed={p.pressed}
+      aria-describedby={open ? id : undefined}
+      onClick={() => {
+        setOpen(true)
+        p.onClick?.()
+      }}
+      onMouseEnter={() => setOpen(!!p.tip)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(!!p.tip)}
+      onBlur={() => setOpen(false)}
+      title={p.tip ? undefined : copy.chartTile(p.label)}
+    >
       {body}
+      {tip}
     </button>
   )
 }
 
-/** A tooltip with its extra line under it, when there is one. */
-const tipped = (title: string, tip?: string) => (tip ? `${title}\n${tip}` : title)
+/** What the tooltip says: the definition, and for a number where lower is better, which way the move went. */
+const tipLines = (tip: string, d: Delta | null, vs: string) => (d?.verdict ? `${tip} ${copy.moved(d.label, vs, d.verdict === 'worse' ? copy.worse : copy.better)}` : tip)
 
 function Change({ d, vs, hint, pace }: { d: Delta; vs: string; hint?: ReactNode; pace?: ReactNode }) {
   const label = copy.change(d.label, vs)

@@ -43,6 +43,13 @@ section into the release.
 ### Changed
 
 - Live: the Online now and last-30-minutes numbers roll digit by digit to the new value, with a brief tint (green up, muted down) and a fading change line; reduced motion swaps them at once.
+- Thin data is told plainly: below 20 visits Bounce rate and Session time show a dash and "Too few visits yet" (Story and Explore), "What needs fixing?" says "Not enough visits yet", and "1 visitor so far" is singular.
+- One rule for a change against the period before, everywhere (Explore tiles, Story, Highlights, Moments): an earlier period with fewer than 20 visitors shows no percentage, a rise over ten times reads "more than 10x" instead of "141300%", and Explore says under the strip why no change is shown.
+- Explore's key numbers explain themselves in a tooltip that opens on hover, focus or a tap (visitors, revenue, paid conversion, per visitor, pageviews, bounce rate, session time); Bounce rate's says whether the move is better or worse. "Conversion" is "Paid conversion".
+- Story's "Normal" verdicts explain what normal is when tapped; a Story answer whose big number is a share labels its change ("visits up 10x+"); the AI hint strip has its own padded row; "What needs fixing?" with nothing to fix no longer draws an empty chart.
+- Sources and Devices say that shares can add up to more than 100% (a visitor can be in more than one row); the Pages tabs are "Landing pages" and "Most viewed"; Goals has an "of visitors" column head instead of "converting" on every row, and the funnel's "Engaged" is "Read past the first page"; Sources that pay read "Last visit" / "First visit", Customers, Revenue per visitor, Revenue.
+- Moments on the chart say "Moment: ... , date" and, once, that chips mark moments worth a look; the weekday and hour chart says its timezone and how to read a square; Live's "Today so far" says "vs the same time last week".
+- The WordPress and Next.js lines in the install step read as complete sentences and match the code shown.
 - The dashboard's first-load size limit is 132 KB (was 130 KB) while the launch fixes land.
 - The soft light on a glass card under the pointer no longer follows it: it sits in the card's top right corner and is a little weaker (70%).
 - Phone: the key numbers on the Data view have no icon before their names and the names wrap instead of being cut ("Bounce rate", "Session time"), all left-aligned; the number in a Story or All sites stat card shrinks to fit its card, so "$12,839" and its 105% chip stay inside it; Peek's connection snippet wraps instead of running off the screen.

@@ -3,6 +3,7 @@
 // Highlights and Replay already write are used as they are. Pure: words.test.ts.
 import type { Pin } from './pins'
 import { extrasCopy } from '../extras/copy'
+import { changeShown } from '../extras/highlightModel'
 import { copy as story } from '../story/copy'
 import { say as milestone } from '../milestones/words'
 import { fmtDay } from '../../lib/dates'
@@ -52,8 +53,11 @@ export function say(pin: Pin, money: (minor: number) => string): Said {
     }
     case 'ai':
       return { title, line: story.ai(n.name ?? ''), big: n.name ?? '', facts: [copy.firstAi, when(pin.day)].filter(Boolean) }
-    case 'move':
-      return { title, line: extrasCopy.highlights.moved(name, n.change ?? 0, n.visitors ?? 0, n.was ?? 0), big: signed(n.change ?? 0), facts: [name, `${fmtInt(n.was ?? 0)} → ${copy.visitors(n.visitors ?? 0)}`] }
+    case 'move': {
+      const by = changeShown(n.visitors ?? 0, n.was ?? 0)
+      const big = { percent: signed(n.change ?? 0), capped: '10x+', bare: fmtInt(n.visitors ?? 0) }[by]
+      return { title, line: extrasCopy.highlights.moved(name, n.change ?? 0, n.visitors ?? 0, n.was ?? 0, by), big, facts: [name, `${fmtInt(n.was ?? 0)} → ${copy.visitors(n.visitors ?? 0)}`] }
+    }
     case 'pays':
       return { title, line: extrasCopy.highlights.pays(name, money(Math.round(n.perVisitor ?? 0)), n.times ?? 0), big: copy.perVisitor(money(Math.round(n.perVisitor ?? 0))), facts: [name, copy.average(times(n.times ?? 0))] }
   }

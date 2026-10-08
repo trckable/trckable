@@ -3,7 +3,7 @@
 // no revenue counted the fourth is a progress card with a Connect chip.
 import { Clock, LogOut, Users, Wallet, type LucideIcon } from 'lucide-react'
 import { ShortName } from '../../kit/ShortName'
-import { Card, kitWords, MetricArea, type Tone as KitTone } from '../../kit'
+import { Card, kitWords, MetricArea, TipText, type Tone as KitTone } from '../../kit'
 import { copy } from './copy'
 import { brief, type Tile, type Tone } from './rules'
 import type { TileSeries } from './tileSeries'
@@ -24,7 +24,14 @@ const KIT: Record<Tone, KitTone> = { good: 'good', warn: 'warn', bad: 'bad', fla
 function pillOf(t: Tile) {
   if (!t.move) return null
   if (t.move.arrow === '→') return { text: kitWords.flat, tone: 'neutral' as const }
-  return { text: `${t.move.arrow === '↑' ? kitWords.up : kitWords.down} ${t.move.pct}%`, tone: KIT[t.move.tone] }
+  return { text: `${t.move.arrow === '↑' ? kitWords.up : kitWords.down} ${t.move.capped ? copy.tenTimesShort : `${t.move.pct}%`}`, tone: KIT[t.move.tone] }
+}
+
+/** The verdict on a tile's top line; with a real comparison behind it, a tap says what "normal" is. */
+function Status({ t }: { t: Tile }) {
+  const text = brief(t.verdict)
+  if (t.verdict === copy.noBefore || t.verdict === copy.tooFew) return <span title={t.verdict}>{text}</span>
+  return <TipText text={text} tip={`${t.verdict}. ${copy.normalTip}`} align="right" />
 }
 
 export function Tiles({ tiles, series, onConnect }: { tiles: Tile[]; series: TileSeries; onConnect: () => void }) {
@@ -40,7 +47,7 @@ export function Tiles({ tiles, series, onConnect }: { tiles: Tile[]; series: Til
             </button>
           </Card>
         ) : (
-          <MetricArea key={t.key} className="sv-tile" icon={icon} label={nameOf(t)} value={t.value} pill={pillOf(t)} status={<span title={t.verdict}>{brief(t.verdict)}</span>} tone={KIT[t.tone]} color={COLOR[t.key]} series={series[t.key]} />
+          <MetricArea key={t.key} className="sv-tile" icon={icon} label={nameOf(t)} value={t.value} pill={pillOf(t)} status={<Status t={t} />} tone={KIT[t.tone]} color={COLOR[t.key]} series={series[t.key]} />
         )
       })}
     </section>

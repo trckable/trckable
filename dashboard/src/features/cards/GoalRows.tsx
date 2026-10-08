@@ -2,11 +2,10 @@
 // reached it, and how well it converts. Under them, when the report knows how
 // many visitors stayed past a bounce, the road from a visit to the first goal.
 import { Download, SquareArrowOutUpRight, SquareCheckBig, TextCursorInput, type LucideIcon } from 'lucide-react'
-import { StatusTag } from '../../kit'
 import { fmtCompact, fmtInt, fmtPct } from '../../lib/format'
 import { cardCopy } from './copy'
 import type { CardsCtx } from './ctx'
-import { engagedOf, goalFunnel, goalKind, goalStatus, type FunnelStep, type GoalKind } from './goalModel'
+import { engagedOf, goalFunnel, goalKind, type FunnelStep, type GoalKind } from './goalModel'
 
 const ICON: Record<GoalKind, LucideIcon> = { outbound: SquareArrowOutUpRight, download: Download, form: TextCursorInput, custom: SquareCheckBig }
 
@@ -31,10 +30,15 @@ export function GoalRows({ c }: { c: CardsCtx }) {
   const steps = top ? goalFunnel(c.visitors, engagedOf(c.visitors, c.cur?.kpis.bounce_rate), top.visitors) : null
   return (
     <div className="goals">
+      {rows.length > 0 && (
+        <div className="goals-head" aria-hidden="true">
+          <span>{cardCopy.goal}</span>
+          <span>{cardCopy.ofVisitors}</span>
+        </div>
+      )}
       {rows.map((r) => {
         const Icon = ICON[goalKind(r.value)]
         const conv = c.visitors ? r.visitors / c.visitors : 0
-        const status = goalStatus(conv)
         return (
           <button key={r.value} type="button" className="goal" title={r.value} aria-label={`${r.value}: ${fmtInt(r.visitors)}. Filter by this`} onClick={() => c.addFilter('goal', r.value)}>
             <span className="goal-ic" aria-hidden="true">
@@ -46,7 +50,6 @@ export function GoalRows({ c }: { c: CardsCtx }) {
             </span>
             <span className="goal-conv">
               <b className="num">{fmtPct(conv)}</b>
-              <StatusTag tone={status === 'converting' ? 'good' : 'warn'}>{status === 'converting' ? cardCopy.converting : cardCopy.barelyUsed}</StatusTag>
             </span>
           </button>
         )

@@ -18,7 +18,7 @@ export const HISTORY_DOMAIN = 'history.example'
 const HISTORY = join(DATA, 'history.ndjson')
 if (!existsSync(HISTORY)) {
   const noon = Math.floor(Date.now() / 86_400_000) * 86_400_000 + 12 * 3_600_000 // today, 12:00 UTC
-  const perDay = [6, 4, 7, 3] // visitors 1, 2, 3 and 4 days ago
+  const perDay = [22, 10, 12, 3] // visitors 1, 2, 3 and 4 days ago: enough before a period for a change to be told
   const rows = perDay.flatMap((n, d) =>
     Array.from({ length: n }, (_, i) => JSON.stringify({ ts: new Date(noon - (d + 1) * 86_400_000 + i * 60_000).toISOString(), path: i % 2 ? '/pricing' : '/', visitor: `history-${d}-${i}` })),
   )

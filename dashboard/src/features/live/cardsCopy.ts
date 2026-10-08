@@ -4,7 +4,7 @@ import { defineCopy } from '../../i18n'
 
 export const cardsCopy = defineCopy('live.cards', {
   todayTitle: 'Today so far',
-  vsLastWeek: 'vs this time last week',
+  vsLastWeek: 'vs the same time last week',
   today: 'today',
   lastWeek: 'last week',
   chart: (now: number, then: number) => `Visitors today, ${fmtInt(now)} so far, against last week: ${fmtInt(then)} by the same time`,
