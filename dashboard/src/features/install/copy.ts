@@ -101,6 +101,7 @@ export const waitCard = defineCopy('install.wait', {
   prompt: 'Copy a prompt for your AI editor',
   promptCopied: 'Prompt copied',
   foot: 'Your dashboard opens here by itself the moment a visit arrives.',
+  dev: ['Testing on localhost? Add', 'data-dev', 'to the script tag.'] as const,
 })
 
 /** The add-site wizard: Your site → Install → Revenue (optional). */

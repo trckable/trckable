@@ -10,8 +10,29 @@ section into the release.
 ## Unreleased
 
 - Form errors say what to do, with an example, in one place: left-aligned under the field with a small icon, the field's border and focus ring turn red, screen readers hear it, and it clears as soon as the value is valid. Applies to add site, sign-in and setup, passwords, share links, goals, API keys, people, revenue connect and settings fields.
+### Fixed
+
+- The bars in the ranked lists (pages, channels, countries, devices) sit inside the card with the same inset as the column heads, and their corners are tighter.
+### Changed
+
+- The main card on a site's dashboard keeps one inner padding on every side (22 px, 16 px on a phone): the key numbers, the chart's heading, axis labels and plot, and the note buttons no longer hug the card's edges, and the chosen number's underline lines up with its text.
+- All sites: the filter, search, sort and layout controls share one height, the list lines run edge to edge with them, and each column title sits over its numbers.
+- First run, step 2: "+ Add another site" adds more sites while waiting (the same domain rules as Add a site; a plan's site limit shows its message under the field). Each site gets a chip with a waiting or receiving dot and its own snippet, and the first visit on any of them moves on. "Skip for now — open my dashboard" opens All sites and is remembered, so the first run does not come back. The script tag tab hints at `data-dev` for testing on localhost.
+- First run: after "Someone's here." Continue opens Live straight away; the second "You're live." screen is gone.
+### Changed
+
+- Site switcher: no hover tooltip over a row and no number badge (the 1-9 keys still open a site); the drag handle sits inside the row at the check's column; the number, the open arrow and the ⋯ have fixed right-hand slots so nothing jumps or overlaps on hover; the top line reads "27 live  413 today" on one baseline. Rows are 32 px (44 px on a phone).
+### Changed
+
+- Live: the Online now and last-30-minutes numbers roll digit by digit to the new value, with a brief tint (green up, muted down) and a fading change line; reduced motion swaps them at once.
 - The dashboard's first-load size limit is 132 KB (was 130 KB) while the launch fixes land.
 - The soft light on a glass card under the pointer no longer follows it: it sits in the card's top right corner and is a little weaker (70%).
+- Phone: the key numbers on the Data view have no icon before their names and the names wrap instead of being cut ("Bounce rate", "Session time"), all left-aligned; the number in a Story or All sites stat card shrinks to fit its card, so "$12,839" and its 105% chip stay inside it; Peek's connection snippet wraps instead of running off the screen.
+- The rows of tabs in "Who came" and "What they did" fade on the side that has more tabs and keep the open tab in view, so "Time to convert" no longer looks cut off.
+- Live: the cards under the two panels fill the row when there are one or two of them (no lone half-width card), with the same 16 px between every card; "Online now" and "Visitors, last 30 min" share one top line; an empty "On the site right now" puts its line in the middle of the card.
+- The Data chart keeps 28 px (was 18) between the visitors plot and the revenue plot under it, so their axis labels no longer touch; Story's moment labels have 10 px more room above the plot, clear of the line's peak label and the top axis label.
+- Story: the sentence under the headline no longer repeats the headline's percentage ("Mostly from Search. Signup followed.") and starts every sentence with a capital.
+- The footer's logo and wordmark are in the quiet AA grey (no longer faded with opacity) until pointed at, so they pass the colour contrast check.
 
 ## 0.7.0 (8 Oct 2026)
 
@@ -23,7 +44,7 @@ section into the release.
 
 - Contributors build the dashboard (`pnpm --filter @trckable/dashboard build`) before running the server from source; the build is no longer committed. Without it the server answers 503 with that command.
 - Story: "Which page carries you?" and "What needs fixing?" draw their own page's and channel's days in the card's chart, not the whole site's line.
-- Menus (sites, account, ⋯, Filter, the period, replay speed) are one quiet frosted pane: about 78% opaque with a blur, a lit top edge and a soft shadow, 32 px rows with thin dividers, small grey section labels and a check at the left of the chosen row; under the pointer a row lightens like glass and a soft light follows it, never a coloured border. On a phone the same pane is a bottom sheet with a grab handle and 44 px rows.
+- Menus (sites, account, ⋯, Filter, the period, replay speed) are one quiet frosted pane: about 78% opaque with a blur, a lit top edge and a soft shadow, 32 px rows with thin dividers, small grey section labels and a check at the left of the chosen row; under the pointer a row lightens like glass, never a coloured border. On a phone the same pane is a bottom sheet with a grab handle and 44 px rows.
 - The dashboard is glass: every card, the header bar when it sticks, menus and pop-ups, dialogs and sheets, toasts, tooltips and the side cards are see-through with a blur behind them, a thin light line, a lit top edge and a soft shadow, over very dark (light theme: very pale) colour fields fixed to the page. Pop-ups over cards are more opaque than the cards so their text never competes with what is behind them; controls and chips are lighter glass. Under the pointer a card catches a soft light that glides across its glass (a brief sheen on a touch, a static lighter glass with reduced motion); nothing lights a border or lifts any more, and small controls and tiles just lighten a touch. Where the browser cannot blur, or Reduce transparency is on, the flat surfaces stay. The quiet text colours in the dark theme are a little lighter so they stay AA on glass. One set of glass tokens lives in the card kit.
 - Story: moments that belong together (the same kind and cause on days that follow each other) are one moment, a soft band over its days with a small glass label that names it in plain words ("Google found you", "Sep 27-29 · +7,800 visitors"); the list beside the chart and the numbered circles are gone and the chart has the whole card. A click, tap or Enter on a label opens a story card in the page's top layer (the days, visitors against a normal stretch, the share of its main source, where most landed, what came after, "Open these days"), flipped to stay on screen; Esc closes it. On a phone the most important moment has the label and every moment is a band to tap.
 - Side cards (a surge, a first visit or sale, tracking stopped, a milestone) share one anatomy on glass: icon tile, kind and time, one big number with a chip, one context line, quiet buttons (the main one in the page's ink, never the accent) and a soft chart to the bottom edge; the ghost stands on the card's top edge; a bottom sheet on a phone.

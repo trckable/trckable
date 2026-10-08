@@ -5,7 +5,7 @@ export const PAD_T = 8
 export const AXIS_H = 26
 export const CHART_H = 220
 /** The lane above the plot that the moments' markers sit on. */
-export const LANE_H = 26
+export const LANE_H = 36
 /** How long the lines and columns take to settle on a new period or number: a blink, not a show. */
 export const CHART_MS = 120
 

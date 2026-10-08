@@ -38,7 +38,7 @@ function refocus(id: string) {
   requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-site="${CSS.escape(id)}"] .site`)?.focus())
 }
 
-export function SiteItem({ site, place, on, arrange, today, key1, density = 'compact', onPick }: { site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; key1?: number; density?: Density; onPick: () => void }) {
+export function SiteItem({ site, place, on, arrange, today, density = 'compact', onPick }: { site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; density?: Density; onPick: () => void }) {
   const name = site.name || site.domain
   const a = arrange
   const moveStep = (dir: -1 | 1) => {
@@ -59,7 +59,6 @@ export function SiteItem({ site, place, on, arrange, today, key1, density = 'com
         data-stop
         aria-current={on ? 'page' : undefined}
         className={on ? 'site on' : 'site'}
-        title={site.domain}
         onClick={onPick}
         onPointerEnter={on ? undefined : () => prefetchSite(site)}
         onFocus={on ? undefined : () => prefetchSite(site)}
@@ -83,7 +82,6 @@ export function SiteItem({ site, place, on, arrange, today, key1, density = 'com
         </span>
         <span className="right">
           <Tail s={site} today={today} />
-          {key1 && <kbd className="site-key" aria-hidden="true">{key1}</kbd>}
         </span>
         <span className="tick" aria-hidden="true">{on && <Check size={14} strokeWidth={2.25} />}</span>
       </button>
