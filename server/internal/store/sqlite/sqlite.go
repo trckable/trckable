@@ -790,7 +790,7 @@ var ErrExists = errors.New("site already exists")
 func (s *Store) CreateSite(ctx context.Context, account, domain, name string) (string, error) {
 	domain = normalizeDomain(domain)
 	if domain == "" || strings.ContainsAny(domain, " /") {
-		return "", errors.New("invalid domain")
+		return "", errors.New("use a domain like example.com")
 	}
 	if name == "" {
 		name = domain
