@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Live numbers show a new visit within about 2 seconds again: under load a live report is reused for at most 2 seconds, and the dashboard checks once more 2.5 seconds after a visit.
+
 ## 0.7.1 (8 Oct 2026)
 
 - Reports hold up under a rush of visitors: at most four read the analytics store at once, the same report asked for by many people at once is read once, a report that takes more than 25 seconds is stopped with a clear "try again" message, a live report is kept for a few seconds even on a busy site, the all-sites view reads sites a few at a time, a public share link is rate limited and limited to two years, and the CSV export carries up to 1,000 rows per breakdown again (it was cut to 10).
