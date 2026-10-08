@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.7.1 (8 Oct 2026)
+
 - Reports hold up under a rush of visitors: at most four read the analytics store at once, the same report asked for by many people at once is read once, a report that takes more than 25 seconds is stopped with a clear "try again" message, a live report is kept for a few seconds even on a busy site, the all-sites view reads sites a few at a time, a public share link is rate limited and limited to two years, and the CSV export carries up to 1,000 rows per breakdown again (it was cut to 10).
 - Closing the period menu (or any dialog) in Safari no longer moves the page: it comes back to the same place, with the control line still stuck.
 - Charts draw in when they first appear: lines run left to right (about 0.7 s, a little later for each series), fills fade in behind them, the sparklines on the stat cards do the same a bit quicker, and the big numbers count up from 0. Live updates and period changes just update; nothing moves with reduced motion. Applies to All sites, the site dashboard, Story and the full charts.
