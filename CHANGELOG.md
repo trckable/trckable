@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Scroll depth at the top of a page is 0% again (it counted as 100%), Android phones from Cubot and the Baidu app are no longer counted as bots, a link tagged ?ref=producthunt (or another social name) lands in the same Social channel and source row as a visit from that site, only Google search counts as Search (accounts., docs., sites. and other Google services are Referral), and compare to the previous period keeps its whole days across a clock change.
+- Goal names with spaces, dots or slashes are no longer refused: "Sign up" is recorded as "sign-up" and "signup.done" as "signup-done".
 - Live numbers show a new visit within about 2 seconds again: under load a live report is reused for at most 2 seconds, and the dashboard checks once more 2.5 seconds after a visit.
 
 ## 0.7.1 (8 Oct 2026)

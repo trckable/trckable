@@ -43,3 +43,28 @@ func TestPageviewCarriesVersionAndWidth(t *testing.T) {
 		t.Fatalf("event: browser %q version %q screen %d", e.Browser, e.BrowserVersion, e.Screen)
 	}
 }
+
+func TestParseUABotFalsePositives(t *testing.T) {
+	cases := []struct {
+		name, ua string
+		bot      bool
+	}{
+		{"cubot phone", "Mozilla/5.0 (Linux; Android 12; CUBOT_X70) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36", false},
+		{"cubot with space", "Mozilla/5.0 (Linux; Android 11; CUBOT KingKong 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36", false},
+		{"baidu app", "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36 T7/13.52 baiduboxapp/13.52.0.10 (Baidu; P1 13)", false},
+		{"baiduspider", "Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)", true},
+		{"baidu without spider", "Baidu-Transcoder/1.0", true},
+		{"googlebot", "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)", true},
+		{"bingbot", "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)", true},
+		{"ahrefsbot", "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)", true},
+		{"cubot named bot", "Mozilla/5.0 (compatible; CUBOT_X70; MyBot/1.0)", true},
+		{"chrome desktop", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := parseUA(c.ua, 0).Bot; got != c.bot {
+				t.Fatalf("parseUA(%q).Bot = %v, want %v", c.ua, got, c.bot)
+			}
+		})
+	}
+}
