@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- The soft light that follows the pointer over a glass card is a little weaker (70% of what it was).
+
 ## 0.7.0 (8 Oct 2026)
 
 ### Added
