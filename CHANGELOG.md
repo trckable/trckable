@@ -18,6 +18,9 @@ section into the release.
 - All sites: the filter, search, sort and layout controls share one height, the list lines run edge to edge with them, and each column title sits over its numbers.
 - First run, step 2: "+ Add another site" adds more sites while waiting (the same domain rules as Add a site; a plan's site limit shows its message under the field). Each site gets a chip with a waiting or receiving dot and its own snippet, and the first visit on any of them moves on. "Skip for now — open my dashboard" opens All sites and is remembered, so the first run does not come back. The script tag tab hints at `data-dev` for testing on localhost.
 - First run: after "Someone's here." Continue opens Live straight away; the second "You're live." screen is gone.
+### Changed
+
+- Site switcher: no hover tooltip over a row and no number badge (the 1-9 keys still open a site); the drag handle sits inside the row at the check's column; the number, the open arrow and the ⋯ have fixed right-hand slots so nothing jumps or overlaps on hover; the top line reads "27 live  413 today" on one baseline. Rows are 32 px (44 px on a phone).
 - The dashboard's first-load size limit is 132 KB (was 130 KB) while the launch fixes land.
 - The soft light on a glass card under the pointer no longer follows it: it sits in the card's top right corner and is a little weaker (70%).
 
