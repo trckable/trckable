@@ -76,6 +76,13 @@ var featureCode = []struct{ feature, code string }{
 // VariantName is variantFor, for callers that only need the name.
 func VariantName(features []string) string { return variantFor(features) }
 
+// TrackerEmbedded reports whether the tracker script is part of the binary
+// and not empty.
+func TrackerEmbedded() bool {
+	b, err := assets.ReadFile("assets/t.js")
+	return err == nil && len(b) > 0
+}
+
 // variantFor names the script variant for a set of features ("core", "g",
 // "gc", "goc"…).
 func variantFor(features []string) string {

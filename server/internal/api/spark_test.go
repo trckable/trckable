@@ -24,6 +24,12 @@ func TestSparksAndUsualRoutes(t *testing.T) {
 	if code != http.StatusOK || !strings.Contains(body, `"a.com":[0,0,`) || strings.Count(body, "0,") < 58 {
 		t.Fatalf("sparks: %d %s", code, body)
 	}
+	// The Story's page and fix answers read a page's and a channel's own days.
+	for _, dim := range []string{"entry_page&v=/pricing", "channel&v=Search"} {
+		if code, _, body := get(t, owner, base+"/sparks?dim="+dim+"&from="+day(29)+"&to="+day(0)); code != http.StatusOK || !strings.Contains(body, `":[0,0,`) {
+			t.Fatalf("sparks for %s: %d %s", dim, code, body)
+		}
+	}
 	for name, bad := range map[string]string{
 		"an unknown column": "?dim=password&v=x&from=" + day(29) + "&to=" + day(0),
 		"no rows":           "?dim=referrer&from=" + day(29) + "&to=" + day(0),

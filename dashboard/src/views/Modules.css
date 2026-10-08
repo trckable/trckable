@@ -42,8 +42,8 @@
 }
 .mart-btn:hover .mart,
 .mart-btn:focus-visible .mart {
-  border-color: var(--border-2);
   transform: translateY(-1px);
+  background-image: var(--hover-veil);
 }
 /* In a dialog the band is the tile: as wide as the words under it, so the
    whole thing reads as one column instead of a picture floating above a

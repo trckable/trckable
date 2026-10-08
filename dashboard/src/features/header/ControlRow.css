@@ -209,54 +209,15 @@
   min-height: 40px;
   margin-top: -6px;
 }
-.phone-pill {
-  /* Never narrower than what it says: the row's other parts leave it room. */
-  flex: 1 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 12px;
-  border: 1px solid var(--border-2);
-  border-radius: 12px;
-  background: var(--surface);
-  color: var(--text);
-  font: 400 14px var(--font);
-  cursor: pointer;
-}
 .phone-row .filter-root > .btn,
 .phone-row .views-btn {
   display: none;
-}
-.phone-pill b {
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .phone-row .view-switch {
   flex: none;
 }
 .phone-row .view-switch button {
   padding: 0 11px;
-}
-.phone-pill > * {
-  white-space: nowrap;
-}
-.phone-pill svg {
-  margin-left: auto;
-  color: var(--text-3);
-}
-.phone-pill .pill-note {
-  color: var(--text-2);
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.pill-dot {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--text-3);
 }
 .phone-row .ctl-cap {
   height: 40px;
@@ -399,7 +360,7 @@
 }
 .filter-root .btn.filter:hover {
   color: var(--text);
-  border-color: var(--text-3);
+  background-image: var(--hover-veil);
 }
 .ctl-inline .filter-root {
   flex: none;
@@ -554,7 +515,8 @@
     font-size: 13px;
   }
   .app .pr-tabs .sv-switch svg {
-    display: none;
+    width: 18px;
+    height: 18px;
   }
   .pr-btn {
     position: relative;

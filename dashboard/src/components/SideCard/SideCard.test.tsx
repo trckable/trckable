@@ -157,9 +157,11 @@ describe('the side card', () => {
       expect(when?.textContent).toBe('yesterday')
       expect(when?.getAttribute('title')).toBe('Sat, Sep 28')
       expect(when?.getAttribute('aria-label')).toBe('yesterday, Sat, Sep 28')
-      expect(el.querySelector('.side-ghost')).toBeNull()
+      expect(document.querySelector('.side-ghost')).toBeNull()
       draw(rich({ ghost: true }))
-      expect(cards()[0].querySelector('.side-ghost')).not.toBeNull()
+      // The ghost stands on the card's top edge (in the deck), never inside the card.
+      expect(document.querySelector('.side-deck > .side-ghost')).not.toBeNull()
+      expect(cards()[0].querySelector('.side-ghost')).toBeNull()
     })
 
     it('a deck shows dots, the cards behind it and ← → buttons; one alone shows none', () => {

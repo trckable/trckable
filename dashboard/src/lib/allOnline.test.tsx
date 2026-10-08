@@ -13,6 +13,16 @@ const tile = () => renderToStaticMarkup(<OnlineTile />)
 describe('who is online over every site', () => {
   beforeEach(resetOnline)
 
+  it('adds every site\'s last 30 minutes up, minute for minute, and draws them in the tile', () => {
+    feedOnline([row('a', 2, { online_series: [0, 1, 2] }), row('b', 1, { online_series: [1, 1, 1] }), row('c', 9, { error: 'x', online_series: [9, 9, 9] })])
+    expect(tile()).toContain('kit-area')
+  })
+
+  it('draws no chart before any minutes are read', () => {
+    feedOnline([row('a', 2)])
+    expect(tile()).not.toContain('kit-area')
+  })
+
   it('is one number in the switcher header and the All sites tile', () => {
     feedOnline([row('a', 20), row('b', 6)])
     expect(strip()).toContain('>26<')

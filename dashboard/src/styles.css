@@ -7,6 +7,13 @@
   --surface: #12151a;
   --surface-2: #181c22;
   --pop: #181c22; /* a pop-up, one step above the page (light: the plain surface, so text keeps its contrast) */
+  --pane: rgba(22, 25, 31, 0.78); /* the menus' frosted pane */
+  --pane-hair: rgba(255, 255, 255, 0.07);
+  --pane-top: rgba(255, 255, 255, 0.14);
+  --pane-row: rgba(255, 255, 255, 0.07);
+  --pane-sep: rgba(255, 255, 255, 0.06);
+  --pane-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+  --pane-sheen: rgba(255, 255, 255, 0.1);
   --sunken: #0f1216;
   --band: #11151a; /* the header's bar, solid fallback */
   --band-glass: rgba(26, 30, 37, 0.6); /* the bar's glass over the page */
@@ -20,8 +27,8 @@
   --grid: #1d2229;
   --text: #f5f7fa;
   --text-2: #a7b0bd;
-  --text-3: #8a93a1;
-  --text-4: #838b97; /* 4.97:1 on the dark card */
+  --text-3: #9aa3b0; /* 5.2:1 on the lightest the glass gets over a colour field */
+  --text-4: #8f98a5; /* the footer line and the quiet words on glass: 4.6:1 on the lightest of it */
   --accent: #b8ff3c;
   /* The accent on a tinted chip, at 11px: the plain accent is 4.18:1 there in
      the light theme, and AA wants 4.5. */
@@ -61,6 +68,8 @@
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   /* Every control in the header's row (a phone has its own sizes) is this tall. */
   --hdr-h: 36px;
+  /* A small control under the pointer: a touch lighter, its border unchanged. */
+  --hover-veil: linear-gradient(color-mix(in srgb, var(--text) 6%, transparent), color-mix(in srgb, var(--text) 6%, transparent));
 }
 
 @media (prefers-color-scheme: light) {
@@ -70,6 +79,13 @@
     --surface: #ffffff;
     --surface-2: #f3f4f1;
   --pop: #ffffff;
+  --pane: rgba(255, 255, 255, 0.78);
+  --pane-hair: rgba(15, 20, 30, 0.08);
+  --pane-top: rgba(255, 255, 255, 0.95);
+  --pane-row: rgba(15, 20, 30, 0.06);
+  --pane-sep: rgba(15, 20, 30, 0.07);
+  --pane-shadow: 0 24px 60px rgba(30, 40, 60, 0.18), 0 2px 8px rgba(30, 40, 60, 0.08);
+  --pane-sheen: rgba(255, 255, 255, 0.9);
     --sunken: #f6f7f4;
     --band: #f6f7f3;
     --band-glass: rgba(255, 255, 255, 0.65);
@@ -84,8 +100,8 @@
     --text: #0b0d10;
     --tkb-outline: #0b0d10; /* the logo's ghost keeps an ink edge on a light page */
     --text-2: #4a525e;
-    --text-3: #616874;
-    --text-4: #676d78; /* 4.84:1 on the light sunken surface */
+    --text-3: #58606c;
+    --text-4: #5f6671; /* 4.6:1 on the glass track in the light theme */
     /* 4.87:1 with white on it. The old #4d8a00 was 4.24 — close enough to
        look fine and not close enough to be readable. */
     --accent: #487f00;
@@ -123,6 +139,13 @@
   --surface: #ffffff;
   --surface-2: #f3f4f1;
   --pop: #ffffff;
+  --pane: rgba(255, 255, 255, 0.78);
+  --pane-hair: rgba(15, 20, 30, 0.08);
+  --pane-top: rgba(255, 255, 255, 0.95);
+  --pane-row: rgba(15, 20, 30, 0.06);
+  --pane-sep: rgba(15, 20, 30, 0.07);
+  --pane-shadow: 0 24px 60px rgba(30, 40, 60, 0.18), 0 2px 8px rgba(30, 40, 60, 0.08);
+  --pane-sheen: rgba(255, 255, 255, 0.9);
   --sunken: #f6f7f4;
   --band: #f6f7f3;
   --band-glass: rgba(255, 255, 255, 0.65);
@@ -137,8 +160,8 @@
   --text: #0b0d10;
   --tkb-outline: #0b0d10;
   --text-2: #4a525e;
-  --text-3: #616874;
-  --text-4: #676d78;
+  --text-3: #58606c;
+  --text-4: #5f6671; /* 4.6:1 on the glass track in the light theme */
   --accent: #487f00;
   --accent-strong: #3f7000;
   --accent-ink: #ffffff;
@@ -326,10 +349,6 @@ h2 {
   min-width: 0;
   transition: border-color 0.15s;
 }
-.card:hover,
-.card:focus-within {
-  border-color: var(--accent);
-}
 .card-head {
   display: flex;
   align-items: center;
@@ -370,7 +389,7 @@ h2 {
   transition: border-color 0.15s, background 0.15s;
 }
 .btn:hover {
-  border-color: var(--border-2);
+  background-image: var(--hover-veil);
 }
 .btn:disabled {
   opacity: 0.5;
@@ -1288,8 +1307,8 @@ table.t td {
 }
 .modal-close:hover {
   color: var(--text);
-  border-color: var(--border-2);
   transform: rotate(90deg);
+  background-image: var(--hover-veil);
 }
 .modal-badge.danger {
   background: color-mix(in srgb, var(--down) 14%, transparent);
@@ -1955,8 +1974,8 @@ body[data-mode] .card.overview {
 }
 .note-chip:hover {
   color: var(--text);
-  border-color: color-mix(in srgb, var(--money) 45%, var(--border));
   background: color-mix(in srgb, var(--money) 7%, transparent);
+  background-image: var(--hover-veil);
 }
 .note-chip:focus-visible {
   outline: 2px solid var(--accent);
@@ -2161,7 +2180,7 @@ body[data-mode] .card.overview {
   background: var(--surface-2);
 }
 .site-zone:focus-within {
-  border-color: var(--border-2);
+  background-image: var(--hover-veil);
 }
 
 /* ---- The Filter menu -------------------------------------------------------
@@ -2260,7 +2279,7 @@ body[data-mode] .card.overview {
 .chip.more:hover,
 .chip.more.on {
   color: var(--text);
-  border-color: var(--border-2);
+  background-image: var(--hover-veil);
 }
 
 /* Saved views: one dropdown in the toolbar, in the menu look above. The name
@@ -2993,4 +3012,190 @@ body[data-mode] .card.overview {
 }
 body {
   overflow-x: clip;
+}
+
+/* ---- Menus: one quiet frosted pane --------------------------------------------
+   Every menu and picker (sites, account, ⋯, Filter, the period, replay speed) is
+   one pane: about 78% opaque with a blur behind it, a hairline lit top edge and a
+   soft shadow. Rows are 32 px with thin dividers; hover is a faint lift of the
+   glass (never a coloured border), the keyboard ring stays. On a phone the same
+   pane is a bottom sheet with a grab handle and 44 px rows. Placed last and
+   spelled with :root so it holds over the lazy menu sheets. */
+:root .pop:is(.anchored, .menu, .menu-pop, .sites, .lpop, .range-pop, .sheet) {
+  background: var(--pane);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(16px) saturate(170%);
+  border: 1px solid var(--pane-hair);
+  border-radius: 12px;
+  box-shadow: var(--pane-shadow), inset 0 1px 0 var(--pane-top);
+}
+:root .pop:is(.anchored, .menu, .menu-pop, .sites, .lpop) {
+  padding: 5px;
+  gap: 1px;
+}
+/* The rows. */
+:root .pop:is(.anchored, .menu, .menu-pop, .sites, .lpop) :is(.site, .menu-row, .lrow, .pop-row, .pop-role, button[role^='menuitem'], .pop.menu button) {
+  position: relative;
+  min-height: 32px;
+  height: auto;
+  padding-block: 0;
+  border-radius: 7px;
+  font-size: 13px;
+}
+:root .pop.lpop .lrow,
+:root .pop.sites .site {
+  height: 32px;
+}
+:root .pop:is(.anchored, .menu, .menu-pop, .sites, .lpop) :is(.site, .menu-row, .lrow, .pop-row, .pop-role, .pop.menu button):is(:hover, :focus-visible) {
+  background: radial-gradient(120px 60px at var(--x, 50%) var(--y, 50%), var(--pane-sheen), transparent 70%), var(--pane-row);
+  color: var(--text);
+}
+:root .pop :is(.site, .menu-row, .lrow, .pop-row, .pop.menu button):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+:root .pop.menu button + button,
+:root .menu-group + .menu-group,
+:root .sites-strip,
+:root .menu-foot {
+  border-color: var(--pane-sep);
+}
+:root .menu-group-head {
+  margin: 6px 9px 3px;
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+/* The chosen row: a check at the left, no coloured edge. */
+:root .pop.sites.pop .site {
+  padding-left: 28px;
+}
+:root .pop.sites .site .tick {
+  display: none;
+}
+:root .pop.sites .site.on::before {
+  content: '';
+  top: 50%;
+  bottom: auto;
+  left: 9px;
+  width: 5px;
+  height: 9px;
+  margin-top: -6px;
+  border: solid var(--text);
+  border-width: 0 1.5px 1.5px 0;
+  border-radius: 0;
+  background: none;
+  transform: rotate(40deg) scale(0.9);
+}
+:root .pop.sites .all-chip.on {
+  border-color: var(--pane-hair);
+  color: var(--text);
+  background: var(--pane-row);
+}
+:root .pop.sites .all-chip:hover,
+:root .pop.sites .all-chip:focus-visible {
+  border-color: var(--pane-hair);
+}
+:root .pop:is(.menu-pop, .sites) .menu-search {
+  border-color: var(--pane-hair);
+  background: var(--pane-row);
+}
+:root .pop:is(.menu-pop, .sites) .menu-search:focus-within {
+  border-color: var(--pane-hair);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+:root .pop.sheet .pop-actions {
+  background: transparent;
+  border-color: var(--pane-sep);
+}
+@media (max-width: 640px) {
+  :root .pop:is(.anchored, .menu.more-menu, .menu-pop, .sites, .lpop, .range-pop:not(.small)),
+  :root .pop.sheet.range-pop {
+    border: 1px solid var(--pane-hair);
+    border-bottom: 0;
+    border-radius: 20px 20px 0 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 6px 8px max(14px, env(safe-area-inset-bottom));
+  }
+  :root .pop:is(.anchored, .menu.more-menu, .menu-pop, .sites, .lpop) :is(.site, .menu-row, .lrow, .pop-row, .pop-role, button[role^='menuitem'], .pop.menu button),
+  :root .pop.lpop .lrow,
+  :root .pop.sites .site {
+    min-height: 44px;
+    height: auto;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+  :root .pop.sites .site.on::before {
+    left: 12px;
+  }
+  /* The grab handle: one on every sheet. */
+  :root .pop:is(.anchored, .menu.more-menu, .menu-pop, .sites, .lpop, .range-pop)::before {
+    content: '';
+    display: block;
+    flex: none;
+    width: 36px;
+    height: 4px;
+    margin: 4px auto 8px;
+    border-radius: 2px;
+    background: var(--text-3);
+    opacity: 0.5;
+  }
+}
+
+/* Tiles and rows that used to light their border under the pointer: a touch lighter now, the border unchanged. */
+:is(.ms-tile, .prov, .mtile, a.key-tile, .opt-card, .cs-tile, .keys-group, .all-line):hover {
+  background-image: var(--hover-veil);
+}
+
+/* ---- Segmented controls: one rounded track, one inset pill ------------------
+   Story | Explore, Live | Data, 7/30/90 days and the other tab groups share it: a neutral glass
+   track with a full hairline, and the chosen segment a lighter pill 3px inside it, as tall as
+   the other segments, its text centred. */
+.app :is(.view-switch, .sv-switch, .seg, .kit-seg) {
+  --track-r: 12px;
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+  height: auto;
+  padding: 3px;
+  border: 1px solid var(--glass-line, var(--border));
+  border-radius: var(--track-r);
+  background: linear-gradient(var(--glass-edge-c, transparent), var(--glass-edge-c, transparent)) top / 100% 1px no-repeat, var(--glass-lite, var(--surface));
+}
+.app :is(.view-switch, .sv-switch, .seg, .kit-seg) button {
+  height: var(--hdr-h);
+  min-height: 0;
+  padding: 0 12px;
+  border: 0;
+  border-radius: calc(var(--track-r) - 3px);
+  line-height: 1;
+  justify-content: center;
+}
+.app :is(.view-switch, .sv-switch, .seg, .kit-seg) button:is([aria-pressed='true'], .on, [aria-selected='true']) {
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), inset 0 1px 0 color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--text);
+}
+@media (max-width: 1000px) {
+  .app .sv-slot .sv-switch {
+    padding: 3px;
+    border: 1px solid var(--glass-line, var(--border));
+    border-radius: var(--track-r);
+    background: var(--glass-lite, var(--surface));
+  }
+  .app .sv-slot .sv-switch button {
+    height: 44px;
+    border-radius: calc(var(--track-r) - 3px);
+  }
+  .app .sv-slot .sv-switch button.on {
+    background: color-mix(in srgb, var(--text) 10%, transparent);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  }
+}
+.app :is(.sv-switch, .view-switch) ~ .btn.filter,
+.app .ctl-see .btn.filter {
+  align-self: center;
 }

@@ -201,8 +201,8 @@ button.jr-chip {
 }
 button.jr-chip:hover,
 button.jr-chip:focus-visible {
-  border-color: var(--accent);
   background: var(--accent-soft);
+  background-image: var(--hover-veil);
 }
 
 /* Visits. */

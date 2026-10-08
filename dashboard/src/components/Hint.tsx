@@ -63,7 +63,7 @@ export function Hint({
     const need = h + GAP + EDGE - t.top
     if (over && need > 0 && window.scrollY > 0 && !scrolled.current) {
       scrolled.current = true
-      window.scrollBy(0, -Math.min(need, window.scrollY))
+      window.scrollBy(0, -Math.min(Math.ceil(need) + 1, window.scrollY))
       return
     }
     // Only a new place is a new state: this runs after every render.
