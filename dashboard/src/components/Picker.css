@@ -58,15 +58,27 @@
 }
 
 .picker-row .name {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* The name shows in full; what is left of the row is the keywords', cut with an ellipsis. */
 .picker-row .faint {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
   font-size: 11.5px;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.picker-row > svg {
+  flex: none;
+  margin-left: auto;
 }
 
 /* The 12 px floor on a phone: every text rule of this file under 12 px on a
