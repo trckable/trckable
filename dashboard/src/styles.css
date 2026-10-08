@@ -663,12 +663,13 @@ textarea:focus-visible {
   display: block;
   height: 100%;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--bar, var(--text)) 13%, transparent);
+  background: color-mix(in srgb, var(--bar, var(--text)) 5%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--bar, var(--text)) 45%, transparent);
   transition: width 0.12s var(--ease);
 }
 .bl-row:hover .bl-line i,
 .bl-row:focus-visible .bl-line i {
-  background: color-mix(in srgb, var(--bar, var(--text)) 20%, transparent);
+  background: color-mix(in srgb, var(--bar, var(--text)) 9%, transparent);
 }
 .bl-val,
 .bl-sub,
