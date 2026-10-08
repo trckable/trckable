@@ -181,7 +181,7 @@ export function takeawayOf(i: Input): string {
   const gap = i.cur.kpis.visitors - p.visitors
   const src = driverOf(i.cur, i.prev, 'channel', gap)
   const source = src ? named(src.value) : undefined
-  const head = copy.takeHead(up, d.capped ? copy.tenTimes : `${d.pct}%`, source, whyOf(i, gap, src?.value))
+  const head = copy.takeHead(up, source, whyOf(i, gap, src?.value))
   const follow = followed(up, i)
   return follow ? `${head} ${follow}` : head
 }

@@ -137,6 +137,18 @@ button.kpi:focus-visible {
     left: 8px;
     right: 8px;
   }
+  /* Three tiles share the width: the names have no icon in front and wrap to a second line instead of being cut, all left-aligned. */
+  .kpi .kpi-ico {
+    display: none;
+  }
+  .kpi .kpi-name,
+  .kpi .label {
+    display: block;
+    overflow: visible;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.25;
+  }
 }
 
 .pulse.off {

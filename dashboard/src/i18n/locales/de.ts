@@ -2143,7 +2143,7 @@ export default {
   'storyview.askPlaceholder': 'z. B. Hat mein Newsletter gewirkt?',
   'storyview.askSend': 'Senden',
   'storyview.takeSame': 'Etwa wie im Zeitraum davor.',
-  'storyview.takeHead': (up: boolean, by: string, source?: string, why?: string) => `${up ? 'Plus' : 'Minus'} ${by} gegenüber dem Zeitraum davor${source ? `, vor allem von ${source}` : ''}${why ?? ''}.`,
+  'storyview.takeHead': (up: boolean, source?: string, why?: string) => (source ? `Vor allem von ${source}${why ?? ''}.` : `${up ? 'Plus' : 'Minus'} gegenüber dem Zeitraum davor.`),
   'storyview.whyPage': (page: string) => `, das meiste auf ${page}`,
   'storyview.whyReferrer': (name: string) => `, das meiste von ${name}`,
   'storyview.whyCampaign': (name: string) => `, das meiste von der Kampagne ${name}`,

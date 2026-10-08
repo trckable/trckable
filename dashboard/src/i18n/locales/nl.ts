@@ -2140,7 +2140,7 @@ export default {
   'storyview.askPlaceholder': 'bijv. werkte mijn nieuwsbrief?',
   'storyview.askSend': 'Verstuur',
   'storyview.takeSame': 'Ongeveer als de periode ervoor.',
-  'storyview.takeHead': (up: boolean, by: string, source?: string, why?: string) => `${up ? 'Omhoog' : 'Omlaag'} ${by} op de periode ervoor${source ? `, vooral door ${source}` : ''}${why ?? ''}.`,
+  'storyview.takeHead': (up: boolean, source?: string, why?: string) => (source ? `Vooral door ${source}${why ?? ''}.` : `${up ? 'Omhoog' : 'Omlaag'} op de periode ervoor.`),
   'storyview.whyPage': (page: string) => `, het meeste op ${page}`,
   'storyview.whyReferrer': (name: string) => `, het meeste via ${name}`,
   'storyview.whyCampaign': (name: string) => `, het meeste via de campagne ${name}`,

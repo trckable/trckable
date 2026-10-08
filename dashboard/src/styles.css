@@ -605,7 +605,7 @@ textarea:focus-visible {
   gap: 8px;
 }
 .bl-cols {
-  padding: 6px 4px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--border);
   color: var(--text-4);
   font-size: 12px;
@@ -620,7 +620,7 @@ textarea:focus-visible {
   isolation: isolate;
   min-height: 44px;
   width: 100%;
-  padding: 6px 4px;
+  padding: 6px 10px;
   border: 0;
   border-bottom: 1px solid var(--grid);
   border-radius: 0;
@@ -656,19 +656,20 @@ textarea:focus-visible {
   inset: 0;
   z-index: -1;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: 4px;
   pointer-events: none;
 }
 .bl .bl-line i {
   display: block;
   height: 100%;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--bar, var(--text)) 13%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--bar, var(--text)) 5%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--bar, var(--text)) 45%, transparent);
   transition: width 0.12s var(--ease);
 }
 .bl-row:hover .bl-line i,
 .bl-row:focus-visible .bl-line i {
-  background: color-mix(in srgb, var(--bar, var(--text)) 20%, transparent);
+  background: color-mix(in srgb, var(--bar, var(--text)) 9%, transparent);
 }
 .bl-val,
 .bl-sub,
@@ -905,7 +906,7 @@ textarea:focus-visible {
   width: auto;
 }
 .bl.has-act .bl-cols {
-  padding-right: 30px;
+  padding-right: 36px;
 }
 .bl-act {
   flex: none;
@@ -2510,16 +2511,20 @@ body[data-mode] .card.overview {
   color: var(--text);
   text-decoration: none;
 }
-/* The footer stays out of the way: the logo grey and faint until pointed at
-   (a logotype is exempt from text contrast; the links keep their readable grey). */
+/* The footer stays out of the way: the logo in the quiet greys (AA, so the
+   wordmark passes contrast too) until pointed at, then in full colour. */
 .app-footer .tkb-logo {
-  opacity: 0.45;
+  --tkb-ink: var(--text-4);
+  --tkb-muted: var(--text-4);
+  color: var(--text-4);
   filter: grayscale(1);
-  transition: opacity 0.2s var(--ease), filter 0.2s var(--ease);
+  transition: color 0.2s var(--ease), filter 0.2s var(--ease);
 }
 .app-footer:hover .tkb-logo,
 .app-footer .tkb-logo:focus-visible {
-  opacity: 1;
+  --tkb-ink: var(--text);
+  --tkb-muted: var(--text-2);
+  color: var(--text);
   filter: none;
 }
 .app-footer-links {
@@ -2934,8 +2939,13 @@ body[data-mode] .card.overview {
   border-radius: 0;
   box-shadow: none;
 }
+.app .card.overview {
+  --card-pad: 22px;
+}
 .app .card.overview .kpis {
-  padding: 0;
+  /* The tiles carry 16px each side; the strip adds what brings the first
+     tile's text, the chart and the note buttons to one inner edge. */
+  padding: 0 calc(var(--card-pad) - 16px);
   gap: 0;
   border-top: 1px solid var(--grid);
   border-bottom: 1px solid var(--grid);
@@ -2947,13 +2957,20 @@ body[data-mode] .card.overview {
   border-left: 1px solid var(--grid);
 }
 .app .card.overview .overview-chart {
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: var(--card-pad);
+  padding-right: var(--card-pad);
+}
+.app .card.overview .kpi[aria-pressed='true']::after {
+  left: 16px;
+  right: 16px;
 }
 .app .cards2 {
   gap: 44px;
 }
 @media (max-width: 640px) {
+  .app .card.overview {
+    --card-pad: 16px;
+  }
   .app .card.overview .kpi:nth-child(odd) {
     border-left: 0;
   }

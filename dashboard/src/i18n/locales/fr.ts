@@ -2141,7 +2141,7 @@ export default {
   'storyview.askPlaceholder': 'p. ex. ma newsletter a-t-elle marché ?',
   'storyview.askSend': 'Envoyer',
   'storyview.takeSame': 'À peu près comme la période précédente.',
-  'storyview.takeHead': (up: boolean, by: string, source?: string, why?: string) => `${up ? 'En hausse' : 'En baisse'} de ${by} sur la période précédente${source ? `, surtout grâce à ${source}` : ''}${why ?? ''}.`,
+  'storyview.takeHead': (up: boolean, source?: string, why?: string) => (source ? `Surtout grâce à ${source}${why ?? ''}.` : `${up ? 'En hausse' : 'En baisse'} sur la période précédente.`),
   'storyview.whyPage': (page: string) => `, la plupart sur ${page}`,
   'storyview.whyReferrer': (name: string) => `, la plupart depuis ${name}`,
   'storyview.whyCampaign': (name: string) => `, la plupart via la campagne ${name}`,

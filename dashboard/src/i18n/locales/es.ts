@@ -2146,7 +2146,7 @@ export default {
   'storyview.askPlaceholder': 'p. ej. ¿funcionó mi boletín?',
   'storyview.askSend': 'Enviar',
   'storyview.takeSame': 'Más o menos igual que el periodo anterior.',
-  'storyview.takeHead': (up: boolean, by: string, source?: string, why?: string) => `${up ? 'Sube' : 'Baja'} ${by} sobre el periodo anterior${source ? `, sobre todo por ${source}` : ''}${why ?? ''}.`,
+  'storyview.takeHead': (up: boolean, source?: string, why?: string) => (source ? `Sobre todo por ${source}${why ?? ''}.` : `${up ? 'Sube' : 'Baja'} sobre el periodo anterior.`),
   'storyview.whyPage': (page: string) => `, la mayoría en ${page}`,
   'storyview.whyReferrer': (name: string) => `, la mayoría desde ${name}`,
   'storyview.whyCampaign': (name: string) => `, la mayoría de la campaña ${name}`,
