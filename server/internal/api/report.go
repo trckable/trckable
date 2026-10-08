@@ -177,7 +177,7 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 	cur, err := a.cachedReport(r, q, params)
 	wg.Wait()
 	if err != nil {
-		fail(w, http.StatusBadRequest, err.Error())
+		failReport(w, err)
 		return
 	}
 	out := map[string]any{
@@ -187,7 +187,7 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 	}
 	if prev != nil {
 		if prErr != nil {
-			fail(w, http.StatusBadRequest, prErr.Error())
+			failReport(w, prErr)
 			return
 		}
 		out["previous"] = pr
