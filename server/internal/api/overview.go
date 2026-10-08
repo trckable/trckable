@@ -6,6 +6,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"sync"
@@ -81,7 +82,7 @@ func (a *API) overview(w http.ResponseWriter, r *http.Request) {
 			case slots <- struct{}{}:
 				defer func() { <-slots }()
 			case <-ctx.Done():
-				out[i] = siteRow{ID: si.ID, Domain: si.Domain, Name: si.Name, Currency: si.Currency, Exponent: fx.Exponent(si.Currency), Error: "took too long to load"}
+				out[i] = siteRow{ID: si.ID, Domain: si.Domain, Name: si.Name, Currency: si.Currency, Exponent: fx.Exponent(si.Currency), Error: overviewSlow}
 				return
 			}
 			out[i] = a.overviewRow(ctx, r, q, si, days, bucket)
@@ -90,6 +91,9 @@ func (a *API) overview(w http.ResponseWriter, r *http.Request) {
 	wg.Wait()
 	writeJSON(w, http.StatusOK, map[string]any{"days": days, "sites": out})
 }
+
+// overviewSlow is what a site's row says when its numbers did not arrive in time.
+const overviewSlow = "took too long to load"
 
 // overviewReads is how many sites the all-sites view reads at once.
 const overviewReads = 3
@@ -109,6 +113,9 @@ func (a *API) overviewRow(ctx context.Context, r *http.Request, q *query.Q, si s
 	cur, err := q.SiteSummary(ctx, p)
 	if err != nil {
 		row.Error = err.Error()
+		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+			row.Error = overviewSlow
+		}
 		return row
 	}
 	row.Visitors, row.Pageviews, row.Bounce, row.Series, row.Revenue = cur.Visitors, cur.Pageviews, cur.Bounce, cur.Series, cur.Revenue

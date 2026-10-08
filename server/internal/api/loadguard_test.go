@@ -16,7 +16,7 @@ func TestReportThatRanOutOfTimeIsAnUnavailableNotABadQuestion(t *testing.T) {
 	for _, err := range []error{context.DeadlineExceeded, context.Canceled} {
 		w := httptest.NewRecorder()
 		reportFail(w, err)
-		if w.Code != http.StatusServiceUnavailable || w.Header().Get("Retry-After") == "" {
+		if w.Code != http.StatusGatewayTimeout || w.Header().Get("Retry-After") == "" {
 			t.Errorf("%v: %d %v", err, w.Code, w.Header())
 		}
 	}

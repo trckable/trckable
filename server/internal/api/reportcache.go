@@ -191,12 +191,12 @@ func (a *API) PurgeAll() {
 }
 
 // reportFail answers a failed report read: a read that ran out of time is the
-// server being busy (the dashboard says it could not load the report and
-// offers a retry), anything else is a bad question.
+// server being busy (504: the dashboard says it is busy and offers a retry;
+// a 503 would read as the store warming up), anything else is a bad question.
 func reportFail(w http.ResponseWriter, err error) {
 	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
 		w.Header().Set("Retry-After", "5")
-		fail(w, http.StatusServiceUnavailable, "the report took too long to load: try again, or pick a shorter range")
+		fail(w, http.StatusGatewayTimeout, "the report took too long to load: try again, or pick a shorter range")
 		return
 	}
 	fail(w, http.StatusBadRequest, err.Error())

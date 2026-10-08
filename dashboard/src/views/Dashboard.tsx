@@ -113,10 +113,22 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // timer); a new visit on the stream reloads the report past its cache.
   // The chart's hourly report (a short span, below) refreshes with it.
   const refreshHours = useRef<(skipCache: boolean) => void>(undefined)
+  // The server may answer a live report up to 5 s behind a busy site's
+  // commits, so one more refresh follows a few seconds after the last visit
+  // seen: a quiet site's new visit shows up too.
+  const refreshLater = useRef<number | undefined>(undefined)
+  const refreshRef = useRef(refresh)
+  refreshRef.current = refresh
+  useEffect(() => () => window.clearTimeout(refreshLater.current), [])
   const stream = useLive(isShared() ? '' : site.id, () => {
     if (!live) return
     refresh(true)
     refreshHours.current?.(true)
+    window.clearTimeout(refreshLater.current)
+    refreshLater.current = window.setTimeout(() => {
+      refreshRef.current(true)
+      refreshHours.current?.(true)
+    }, 6000)
   })
 
   // ---- a site with nothing in it yet ----
