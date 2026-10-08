@@ -8,7 +8,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } 
 import type { Annotation, Bucket } from '../lib/api'
 import { markersFor } from '../features/notes/markers'
 import { fmtCompact, fmtInt } from '../lib/format'
-import { useTween } from '../lib/motion'
+import { useDraw, useTween } from '../lib/motion'; import '../kit/draw.css'
 import { timeCopy } from './copy'
 import { smooth } from './smooth'
 import { bucketLabel, everyNth, fractionScale, peakIndex, threeScale } from './timeScale'
@@ -86,7 +86,7 @@ export function TimeChart(p: TimeChartProps) {
   const [w, setW] = useState(900)
   const [hover, setHover] = usePicked(Math.min(p.values.length, p.labels.length), p.locked)
   const [drag, setDrag] = useState(false)
-  const money = p.tone === 'money'
+  const money = p.tone === 'money'; const draw = useDraw()
   const tone = money ? 'var(--money)' : 'var(--accent)'
   const split = money ? undefined : p.revenue
   const STRIP = split ? SPLIT_H : 0
@@ -217,8 +217,8 @@ export function TimeChart(p: TimeChartProps) {
             <ColumnsLayer {...cols} id={gradId} values={vals} ghost={p.ghost ? ghost : undefined} hover={hover} partialLast={p.partialLast} />
           ) : (
             <>
-              <path d={area(vals)} fill={`url(#${gradId})`} />
-              <path className={money ? 'chart-line money' : 'chart-line'} d={line(p.partialLast && n > 2 ? vals.slice(0, -1) : vals)} fill="none" stroke={tone} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+              <path className={draw && 'draw-fill'} d={area(vals)} fill={`url(#${gradId})`} />
+              <path pathLength="1" className={`${money ? 'chart-line money' : 'chart-line'} ${draw}`} d={line(p.partialLast && n > 2 ? vals.slice(0, -1) : vals)} fill="none" stroke={tone} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
               {p.partialLast && n > 2 && (
                 <path d={`M${x(n - 2).toFixed(1)} ${y(vals[n - 2]).toFixed(1)}L${x(n - 1).toFixed(1)} ${y(vals[n - 1]).toFixed(1)}`} fill="none" stroke={tone} strokeWidth="2" strokeDasharray="0.1 5.5" strokeLinecap="round" />
               )}
