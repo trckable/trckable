@@ -7,6 +7,7 @@
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { AnchoredPop } from '../../components/AnchoredPop'
+import { LANE_H } from '../../charts/plot'
 import type { Span } from '../moments/spans'
 import { copy } from '../moments/copy'
 import { headline, spanLine } from '../moments/words'
@@ -20,8 +21,8 @@ export interface Geo {
   w: number
 }
 
-/** The lane above the plot the labels stand in (charts/plot.ts LANE_H). */
-const LANE = 26
+/** The lane above the plot the labels stand in. */
+const LANE = LANE_H
 
 interface Props {
   spans: Span[]

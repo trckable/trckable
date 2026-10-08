@@ -11,6 +11,12 @@ section into the release.
 
 - The dashboard's first-load size limit is 132 KB (was 130 KB) while the launch fixes land.
 - The soft light on a glass card under the pointer no longer follows it: it sits in the card's top right corner and is a little weaker (70%).
+- Phone: the key numbers on the Data view have no icon before their names and the names wrap instead of being cut ("Bounce rate", "Session time"), all left-aligned; the number in a Story or All sites stat card shrinks to fit its card, so "$12,839" and its 105% chip stay inside it; Peek's connection snippet wraps instead of running off the screen.
+- The rows of tabs in "Who came" and "What they did" fade on the side that has more tabs and keep the open tab in view, so "Time to convert" no longer looks cut off.
+- Live: the cards under the two panels fill the row when there are one or two of them (no lone half-width card), with the same 16 px between every card; "Online now" and "Visitors, last 30 min" share one top line; an empty "On the site right now" puts its line in the middle of the card.
+- The Data chart keeps 28 px (was 18) between the visitors plot and the revenue plot under it, so their axis labels no longer touch; Story's moment labels have 10 px more room above the plot, clear of the line's peak label and the top axis label.
+- Story: the sentence under the headline no longer repeats the headline's percentage ("Mostly from Search. Signup followed.") and starts every sentence with a capital.
+- The footer's logo and wordmark are in the quiet AA grey (no longer faded with opacity) until pointed at, so they pass the colour contrast check.
 
 ## 0.7.0 (8 Oct 2026)
 

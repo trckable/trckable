@@ -2510,16 +2510,20 @@ body[data-mode] .card.overview {
   color: var(--text);
   text-decoration: none;
 }
-/* The footer stays out of the way: the logo grey and faint until pointed at
-   (a logotype is exempt from text contrast; the links keep their readable grey). */
+/* The footer stays out of the way: the logo in the quiet greys (AA, so the
+   wordmark passes contrast too) until pointed at, then in full colour. */
 .app-footer .tkb-logo {
-  opacity: 0.45;
+  --tkb-ink: var(--text-4);
+  --tkb-muted: var(--text-4);
+  color: var(--text-4);
   filter: grayscale(1);
-  transition: opacity 0.2s var(--ease), filter 0.2s var(--ease);
+  transition: color 0.2s var(--ease), filter 0.2s var(--ease);
 }
 .app-footer:hover .tkb-logo,
 .app-footer .tkb-logo:focus-visible {
-  opacity: 1;
+  --tkb-ink: var(--text);
+  --tkb-muted: var(--text-2);
+  color: var(--text);
   filter: none;
 }
 .app-footer-links {
