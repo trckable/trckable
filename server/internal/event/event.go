@@ -7,6 +7,7 @@ package event
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 )
 
@@ -96,3 +97,28 @@ func (e *Event) Marshal() ([]byte, error) { return json.Marshal(e) }
 
 // Unmarshal decodes a WAL payload.
 func Unmarshal(b []byte, e *Event) error { return json.Unmarshal(b, e) }
+
+// NormGoal turns a goal name into its stored form: lowercase letters, digits,
+// _ and : kept, every other run of characters (spaces, dots, slashes, dashes)
+// becomes one "-", with none at the ends. "Sign up" is "sign-up" and
+// "signup.done" is "signup-done". Empty when nothing is left or the result
+// passes 64 characters.
+func NormGoal(s string) string {
+	var b strings.Builder
+	dash := false
+	for _, c := range strings.ToLower(s) {
+		if (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == ':' {
+			if dash && b.Len() > 0 {
+				b.WriteByte('-')
+			}
+			dash = false
+			b.WriteRune(c)
+		} else {
+			dash = true
+		}
+	}
+	if b.Len() > 64 {
+		return ""
+	}
+	return b.String()
+}

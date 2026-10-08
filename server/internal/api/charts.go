@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 	"strings"
+
+	"github.com/trckable/trckable/server/internal/event"
 )
 
 // charts is Full mode's chart grid: sources over time, new vs returning,
@@ -23,6 +25,9 @@ func (a *API) charts(w http.ResponseWriter, r *http.Request) {
 	if len(goal) > 200 {
 		fail(w, http.StatusBadRequest, "goal name too long")
 		return
+	}
+	if n := event.NormGoal(goal); n != "" {
+		goal = n
 	}
 	c, err := q.ChartsFor(r.Context(), ask.Params, goal)
 	if err != nil {

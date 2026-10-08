@@ -122,7 +122,7 @@ func TestRejections(t *testing.T) {
 		"foreign hostname": `{"s":"tkb_test","k":"pv","u":"https://evil.com/"}`,
 		"localhost":        `{"s":"tkb_test","k":"pv","u":"http://localhost:3000/"}`,
 		"bad kind":         `{"s":"tkb_test","k":"zz","u":"https://site.com/"}`,
-		"bad goal name":    `{"s":"tkb_test","k":"g","n":"DROP TABLE","u":"https://site.com/"}`,
+		"bad goal name":    `{"s":"tkb_test","k":"g","n":"!!!","u":"https://site.com/"}`,
 		"not json":         `hello`,
 		"missing url":      `{"s":"tkb_test","k":"pv"}`,
 	}

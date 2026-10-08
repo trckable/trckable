@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"math"
 	"net/http"
 	"sort"
 	"strings"
@@ -106,7 +107,7 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 	switch v.Get("compare") {
 	case "previous":
 		p := params
-		p.From, p.To = params.From.Add(-to.Sub(from)), params.From
+		p.From, p.To = previousStart(from, to, loc).UTC(), params.From
 		p.Daily = false
 		prev = &p
 	case "year":
@@ -236,6 +237,16 @@ func dateRange(fromS, toS string, today time.Time) (time.Time, time.Time, error)
 		return from, to, fmt.Errorf("range longer than 20 years")
 	}
 	return from, to.AddDate(0, 0, 1), nil
+}
+
+// previousStart is where the period just before from..to begins: the same
+// number of calendar days back, counted in the site's time zone. Subtracting
+// a duration would land an hour off across a clock change, in the middle of
+// the night before the period instead of at its midnight.
+func previousStart(from, to time.Time, loc *time.Location) time.Time {
+	days := int(math.Round(to.Sub(from).Hours() / 24))
+	f := from.In(loc)
+	return time.Date(f.Year(), f.Month(), f.Day()-days, 0, 0, 0, 0, loc)
 }
 
 func startOfDay(t time.Time, loc *time.Location) time.Time {

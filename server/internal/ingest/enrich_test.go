@@ -25,7 +25,13 @@ func TestClassify(t *testing.T) {
 		{"cpc is paid", "https://site.com/?utm_medium=cpc&utm_source=google", "", ChannelPaid},
 		{"fbclid is paid", "https://site.com/?fbclid=x", "https://l.facebook.com/", ChannelPaid},
 		{"other site", "https://site.com/", "https://someblog.dev/post", ChannelReferral},
-		{"ref param", "https://site.com/?ref=producthunt", "", ChannelReferral},
+		{"ref producthunt is social", "https://site.com/?ref=producthunt", "", ChannelSocial},
+		{"utm_source producthunt is social", "https://site.com/?utm_source=producthunt", "", ChannelSocial},
+		{"ref unknown name is referral", "https://site.com/?ref=friend", "", ChannelReferral},
+		{"google accounts is referral", "https://site.com/", "https://accounts.google.com/signin", ChannelReferral},
+		{"google docs is referral", "https://site.com/", "https://docs.google.com/document/d/1", ChannelReferral},
+		{"google sites is referral", "https://site.com/", "https://sites.google.com/view/x", ChannelReferral},
+		{"google bare host", "https://site.com/", "https://google.com/", ChannelSearch},
 		{"self referral is direct", "https://site.com/b", "https://site.com/a", ChannelDirect},
 		{"own subdomain is direct", "https://app.site.com/", "https://site.com/", ChannelDirect},
 		{"stripe checkout return is direct", "https://site.com/thanks", "https://checkout.stripe.com/c/pay/x", ChannelDirect},
@@ -111,5 +117,20 @@ func TestHashModeDropsWhatIsNotARoute(t *testing.T) {
 	// Off: the fragment never reaches the path at all.
 	if p, _ := parsePageURL("https://site.com/app#/x?token=abc", false); p.Path != "/app" {
 		t.Fatalf("hash mode off: %q", p.Path)
+	}
+}
+
+func TestSocialTagSharesTheReferrerRow(t *testing.T) {
+	tagged, _ := parsePageURL("https://site.com/?ref=producthunt", false)
+	if got := socialRefHost(tagged); got != "producthunt.com" {
+		t.Fatalf("ref=producthunt host = %q", got)
+	}
+	host, _ := parseReferrer("https://www.producthunt.com/posts/x", "site.com")
+	if host != "producthunt.com" {
+		t.Fatalf("referrer host = %q", host)
+	}
+	other, _ := parsePageURL("https://site.com/?ref=friend", false)
+	if got := socialRefHost(other); got != "" {
+		t.Fatalf("unknown ref host = %q", got)
 	}
 }
