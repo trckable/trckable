@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- The main card on a site's dashboard keeps one inner padding on every side (22 px, 16 px on a phone): the key numbers, the chart's heading, axis labels and plot, and the note buttons no longer hug the card's edges, and the chosen number's underline lines up with its text.
+
 ## 0.7.0 (8 Oct 2026)
 
 ### Added
