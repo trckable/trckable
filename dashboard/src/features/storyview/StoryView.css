@@ -139,6 +139,15 @@
 @keyframes sv-bar-in {
   from { transform: scaleX(0); opacity: 0; }
 }
+@media (prefers-reduced-motion: reduce) {
+  .sv-ring-arc,
+  .sv-bar i {
+    animation: none;
+  }
+}
+html[data-motion='off'] :is(.sv-ring-arc, .sv-bar i) {
+  animation: none;
+}
 .sv-src-note {
   margin: 0;
   font-size: 14px;
