@@ -3,6 +3,7 @@
 // worth explaining. The input comes in as a function so it gets the ids that
 // tie the label, the hint and the error to it.
 import { useId, type ReactNode } from 'react'
+import { FieldError } from '../kit/FieldError'
 import { Info } from './Info'
 import './Field.css'
 
@@ -23,11 +24,7 @@ export function Field({ label, help, error, plain, children }: { label: string; 
         {help && <Info text={help} />}
       </span>
       {children({ id, 'aria-describedby': error ? errId : undefined, 'aria-invalid': error ? true : undefined })}
-      {error && (
-        <span id={errId} className="dlg-field-err" role="alert">
-          {error}
-        </span>
-      )}
+      <FieldError id={errId} error={error} />
     </div>
   )
 }

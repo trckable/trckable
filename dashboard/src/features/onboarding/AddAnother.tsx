@@ -1,15 +1,12 @@
 import { useState } from 'react'
 import { type Site } from '../../lib/api'
-import { friendly } from '../../lib/errors'
+import { FieldError, fieldProps } from '../../kit/FieldError'
+import { formWords } from '../../lib/formWords'
 import { more } from '../../lib/apiMore'
-import { checkDomain, cleanDomain, isAdded, type DomainCheck } from '../install/domain'
+import { wizard } from '../install/copy'
+import { checkDomain, cleanDomain, isAdded } from '../install/domain'
+import { domainWords } from '../install/domainWords'
 import { copy } from './copy'
-
-function complaint(verdict: DomainCheck, added: boolean): string {
-  if (verdict === 'space') return copy.more.space
-  if (verdict !== 'ok') return copy.more.invalid
-  return added ? copy.more.added : ''
-}
 
 /** "+ Add another site" under the install card: the same domain rules as Add a
  *  site, the site created on Add. The server's refusal (a plan's site limit)
@@ -31,7 +28,8 @@ export function AddAnother({ sites, onAdded }: { sites: Site[]; onAdded: (s: Sit
   const submit = () => {
     const clean = cleanDomain(value)
     const verdict = checkDomain(clean, value)
-    const bad = complaint(verdict, isAdded(clean, sites.map((s) => s.domain)))
+    const added = verdict === 'ok' && isAdded(clean, sites.map((s) => s.domain))
+    const bad = domainWords(added ? 'added' : verdict, clean)
     if (bad) {
       setProblem(bad)
       return
@@ -47,7 +45,7 @@ export function AddAnother({ sites, onAdded }: { sites: Site[]; onAdded: (s: Sit
         setOpen(false)
         onAdded(s)
       })
-      .catch((e: unknown) => setProblem(friendly(e)?.text ?? ''))
+      .catch((e: unknown) => setProblem(formWords(e, { 500: wizard.failed, 502: wizard.failed, 503: wizard.failed, 504: wizard.failed })))
       .finally(() => setBusy(false))
   }
 
@@ -73,8 +71,7 @@ export function AddAnother({ sites, onAdded }: { sites: Site[]; onAdded: (s: Sit
           }
         }}
         aria-label={t.label}
-        aria-invalid={!!problem}
-        aria-describedby={problem ? 'ob-more-problem' : undefined}
+        {...fieldProps('ob-more-problem', problem)}
         placeholder={t.placeholder}
         autoFocus
         spellCheck={false}
@@ -88,11 +85,7 @@ export function AddAnother({ sites, onAdded }: { sites: Site[]; onAdded: (s: Sit
       <button type="button" className="btn ghost" onClick={() => setOpen(false)}>
         {t.cancel}
       </button>
-      {problem && (
-        <p className="ob-more-problem" id="ob-more-problem" role="alert">
-          {problem}
-        </p>
-      )}
+      <FieldError id="ob-more-problem" error={problem} className="ob-more-problem" />
     </form>
   )
 }

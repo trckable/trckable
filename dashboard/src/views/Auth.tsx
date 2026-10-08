@@ -1,8 +1,11 @@
 // First-run setup (guarded by the one-time token from the server log, passed
 // in the URL fragment so it never reaches access logs) and sign-in.
 import { useEffect, useState, type SubmitEvent } from 'react'
-import { api, APIError, messageOf, type Site, more } from '../lib/apiMore'
+import { FieldError, fieldProps } from '../kit/FieldError'
+import { api, APIError, type Site, more } from '../lib/apiMore'
 import { browserZone } from '../lib/dates'
+import { formWords } from '../lib/formWords'
+import { authCopy } from './authCopy'
 import { Shell } from './AuthShell'
 import { SignInWith } from './SignInWith'
 import { SsoCode, wantsCode } from './SsoCode'
@@ -43,7 +46,7 @@ export function Setup({ onDone }: { onDone: (site: Site | null) => void }) {
         const site = r.site ? await more.updateSite(r.site.id, { timezone: browserZone() }).catch(() => r.site) : null
         onDone(site)
       })
-      .catch((e: unknown) => setError(messageOf(e)))
+      .catch((e: unknown) => setError(formWords(e, { 401: authCopy.token })))
       .finally(() => setBusy(false))
   }
 
@@ -53,7 +56,7 @@ export function Setup({ onDone }: { onDone: (site: Site | null) => void }) {
         {!fromHash && (
           <label className="field">
             Setup token
-            <input className="input num" value={token} onChange={(e) => setToken(e.target.value)} required autoComplete="off" placeholder="tkb_setup_…" />
+            <input className="input num" value={token} onChange={(e) => setToken(e.target.value)} required autoComplete="off" {...fieldProps('auth-err', error === authCopy.token ? error : null)} placeholder="tkb_setup_…" />
             <span className="faint" style={{ fontSize: 12 }}>
               Printed in the server log on first start, or set as TRCKABLE_SETUP_TOKEN.
             </span>
@@ -77,11 +80,7 @@ export function Setup({ onDone }: { onDone: (site: Site | null) => void }) {
             Optional. You can add more sites later.
           </span>
         </label>
-        {error && (
-          <div role="alert" style={{ color: 'var(--down)', fontSize: 13 }}>
-            {error}
-          </div>
-        )}
+        <FieldError id="auth-err" error={error} />
         <button className="btn primary" type="submit" disabled={busy} style={{ height: 44, justifyContent: 'center' }}>
           {busy ? 'Creating…' : 'Create account'}
         </button>
@@ -110,9 +109,9 @@ export function Login({ onDone }: { onDone: () => void }) {
       .catch((err: unknown) => {
         if (err instanceof APIError && err.needsCode) {
           setStep('code')
-          setError(code ? err.message : null) // arriving here is not an error; a wrong code is
+          setError(code ? authCopy.code : null) // arriving here is not an error; a wrong code is
           setCode('')
-        } else setError(messageOf(err))
+        } else setError(formWords(err, { 401: authCopy.login }))
       })
       .finally(() => setBusy(false))
   }
@@ -128,11 +127,11 @@ export function Login({ onDone }: { onDone: () => void }) {
           <>
             <label className="field">
               Email
-              <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="username" autoFocus />
+              <input className="input" type="email" value={email} onChange={(e) => { setEmail(e.target.value); setError(null) }} required autoComplete="username" autoFocus {...fieldProps('auth-err', error)} />
             </label>
             <label className="field">
               Password
-              <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+              <input className="input" type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(null) }} required autoComplete="current-password" {...fieldProps('auth-err', error)} />
             </label>
           </>
         ) : (
@@ -142,7 +141,11 @@ export function Login({ onDone }: { onDone: () => void }) {
               <input
                 className="input num"
                 value={code}
-                onChange={(e) => setCode(e.target.value)}
+                onChange={(e) => {
+                  setCode(e.target.value)
+                  setError(null)
+                }}
+                {...fieldProps('auth-err', error)}
                 required
                 autoFocus
                 inputMode={recovery ? 'text' : 'numeric'}
@@ -168,11 +171,7 @@ export function Login({ onDone }: { onDone: () => void }) {
             </span>
           </>
         )}
-        {error && (
-          <div role="alert" style={{ color: 'var(--down)', fontSize: 13 }}>
-            {error}
-          </div>
-        )}
+        <FieldError id="auth-err" error={error} />
         <button className="btn primary" type="submit" disabled={busy || !ready} style={{ height: 44, justifyContent: 'center' }}>
           {label}
         </button>

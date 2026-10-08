@@ -31,7 +31,7 @@ const (
 // MinPasswordLen is enforced at setup and password change.
 const MinPasswordLen = 10
 
-var ErrWeakPassword = fmt.Errorf("password must be at least %d characters", MinPasswordLen)
+var ErrWeakPassword = fmt.Errorf("use at least %d characters; a few unrelated words work well", MinPasswordLen)
 
 // HashPassword returns a self-describing argon2id hash. For commands; the
 // server uses HashPasswordCtx, which gives up when the queue is too long.
@@ -163,9 +163,9 @@ func Equal(a, b string) bool {
 var (
 	ErrNotFound   = errors.New("not found")
 	ErrExists     = errors.New("already exists")
-	ErrBadLogin   = errors.New("wrong email or password")
+	ErrBadLogin   = errors.New("wrong email or password; check them and try again")
 	ErrSetupDone  = errors.New("setup already completed")
-	ErrSetupToken = errors.New("invalid setup token")
+	ErrSetupToken = errors.New("that setup token isn’t right; copy it again from the server log")
 )
 
 // HoldHashSlots takes every hashing slot until release is called, so tests

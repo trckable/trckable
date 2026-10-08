@@ -304,10 +304,9 @@ body:has(.ob.gated) .side-deck {
 }
 .ob-more-problem {
   flex-basis: 100%;
-  margin: 0;
-  color: var(--down);
-  font-size: 13px;
-  text-align: center;
+}
+.ob-more-problem:empty {
+  display: none;
 }
 .ob-skip-link {
   padding: 4px 6px;

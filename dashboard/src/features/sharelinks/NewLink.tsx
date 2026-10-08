@@ -3,6 +3,7 @@
 import { Globe, Link2, Lock } from 'lucide-react'
 import { useState } from 'react'
 import { fail, type Site, more } from '../../lib/apiMore'
+import { FieldError, fieldProps } from '../../kit/FieldError'
 import { copy } from './copy'
 import { EMPTY, linkBody, problem, type Access, type Draft } from './logic'
 import { Options } from './Options'
@@ -24,9 +25,11 @@ export function NewLink({ site, onClose, onMade }: { site: Site; onClose: () => 
   const [draft, setDraft] = useState<Draft>(EMPTY)
   const [lockShown, setLockShown] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [leftPassword, setLeftPassword] = useState(false)
   const numbers = usePreviewNumbers(site)
   const set = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }))
   const blocked = problem(draft)
+  const needPassword = leftPassword && blocked?.field === 'password' ? blocked.text : null
 
   const create = () => {
     if (blocked || busy) return
@@ -60,7 +63,19 @@ export function NewLink({ site, onClose, onMade }: { site: Site; onClose: () => 
           ))}
         </div>
         {draft.access === 'password' && (
-          <input className="input" type="password" aria-label={copy.password} autoComplete="new-password" value={draft.password} onChange={(e) => set({ password: e.target.value })} />
+          <div>
+            <input
+              className="input"
+              type="password"
+              aria-label={copy.password}
+              autoComplete="new-password"
+              value={draft.password}
+              onChange={(e) => set({ password: e.target.value })}
+              onBlur={() => setLeftPassword(true)}
+              {...fieldProps('sl-password-err', needPassword)}
+            />
+            <FieldError id="sl-password-err" error={needPassword} />
+          </div>
         )}
         <Options draft={draft} set={set} />
         <div className="sl-actions">

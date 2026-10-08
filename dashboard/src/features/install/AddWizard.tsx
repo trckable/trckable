@@ -9,7 +9,8 @@ import { Name } from '../../components/Logo'
 import { Modal } from '../../kit/Modal'
 import { StepBody } from '../../components/StepBody'
 import { Steps } from '../../components/Steps'
-import { fail, type Site, more } from '../../lib/apiMore'
+import { type Site, more } from '../../lib/apiMore'
+import { formWords } from '../../lib/formWords'
 import { openSettings } from '../../lib/settings'
 import { navigate } from '../../lib/url'
 import { useLive } from '../../lib/useLive'
@@ -33,6 +34,7 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
   const [domain, setDomain] = useState('')
   const [site, setSite] = useState<Site | null>(null)
   const [busy, setBusy] = useState(false)
+  const [refusal, setRefusal] = useState('')
   const stream = useLive(site?.id ?? null, noRefetch)
   const live = stream.visits.length > 0
 
@@ -47,6 +49,7 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
       return
     }
     setBusy(true)
+    setRefusal('')
     const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
     more
       .createSite(clean)
@@ -56,7 +59,7 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
         onSites()
         setStep(2)
       })
-      .catch((e: unknown) => fail(e, create))
+      .catch((e: unknown) => setRefusal(formWords(e, { 500: t.failed, 502: t.failed, 503: t.failed, 504: t.failed })))
       .finally(() => setBusy(false))
   }
   const open = () => {
@@ -76,7 +79,7 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
       <Steps labels={t.steps} at={step - 1} done={live && step === 2 ? 1 : undefined} onGo={(i) => setStep(i + 1)} />
 
       <StepBody step={step} className="wiz-step" fit>
-        {step === 1 && <DomainStep domain={site ? site.domain : domain} setDomain={setDomain} clean={clean} verdict={verdict} locked={site !== null} onSubmit={create} />}
+        {step === 1 && <DomainStep domain={site ? site.domain : domain} setDomain={(d) => { setDomain(d); setRefusal('') }} refusal={refusal} clean={clean} verdict={verdict} locked={site !== null} onSubmit={create} />}
         {step === 2 && site && <Install site={site} visits={stream.visits} variant="wizard" />}
         {step === 3 && <p className="muted wiz-revenue">{t.revenueBody}</p>}
       </StepBody>

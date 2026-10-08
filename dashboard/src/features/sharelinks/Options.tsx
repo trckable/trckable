@@ -3,6 +3,7 @@
 import { Calendar, CircleDollarSign, Clock, Code, StickyNote } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Switch } from '../../components/Switch'
+import { FieldError, fieldProps } from '../../kit/FieldError'
 import { copy } from './copy'
 import { MAX_DAYS, daysUntil, endDate, originsError, parseOrigins, type Draft, type Expiry } from './logic'
 
@@ -30,23 +31,26 @@ const CHOICES: { id: Expiry; label: string }[] = [
 ]
 
 function Expires({ draft, set }: { draft: Draft; set: Patch }) {
-  const bad = draft.expiry === 'date' && daysUntil(draft.date) === null
+  const bad = draft.expiry === 'date' && draft.date !== '' && daysUntil(draft.date) === null
   return (
     <Opt
       icon={<Clock size={15} strokeWidth={1.75} />}
       label={copy.expires}
       below={
         draft.expiry === 'date' && (
+          <>
           <input
             className="input sl-date"
             type="date"
             aria-label={copy.date}
-            aria-invalid={bad}
+            {...fieldProps('sl-date-err', bad ? copy.dateBad : null)}
             min={iso(endDate(1))}
             max={iso(endDate(MAX_DAYS))}
             value={draft.date}
             onChange={(e) => set({ date: e.target.value })}
           />
+          <FieldError id="sl-date-err" error={bad ? copy.dateBad : null} />
+          </>
         )
       }
     >
@@ -84,18 +88,14 @@ export function Options({ draft, set }: { draft: Draft; set: Patch }) {
               <input
                 className="input mono"
                 aria-label={copy.embedField}
-                aria-invalid={!!err}
+                {...fieldProps('sl-embed-err', err)}
                 placeholder={copy.embedPlaceholder}
                 autoComplete="off"
                 spellCheck={false}
                 value={draft.sites}
                 onChange={(e) => set({ sites: e.target.value })}
               />
-              {err && (
-                <span role="alert" className="sl-err">
-                  {err}
-                </span>
-              )}
+              <FieldError id="sl-embed-err" error={err} />
             </>
           )
         }

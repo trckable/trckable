@@ -178,15 +178,6 @@ kbd.cap.wait {
 .keys-list li.rec {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
-.keys-why {
-  margin: -6px 0 0;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--down) 12%, transparent);
-  color: var(--text);
-  font-size: 12.5px;
-  animation: rise 0.18s var(--ease) backwards;
-}
 @keyframes cap-wait {
   50% {
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent);

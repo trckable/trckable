@@ -2,6 +2,7 @@
 // has set up (Settings of the server, not of the person), each a plain link:
 // the browser goes to the provider and comes back signed in.
 import { useEffect, useState } from 'react'
+import { FieldError } from '../kit/FieldError'
 import { api } from '../lib/api'
 import { ssoCopy } from './ssoCopy'
 
@@ -42,11 +43,7 @@ export function SignInWith() {
   }, [error])
   return (
     <>
-      {error && (
-        <div role="alert" style={{ color: 'var(--down)', fontSize: 13 }}>
-          {error}
-        </div>
-      )}
+      <FieldError id="sso-error" error={error} />
       <SsoButtons providers={providers} />
     </>
   )

@@ -110,7 +110,7 @@ test('Track a goal: labelled fields, an error under the field, the goal as a row
   await name.fill(tag)
   await path.fill('/docs')
   await dialog.getByRole('button', { name: 'Add goal' }).click()
-  const err = dialog.getByRole('alert').filter({ hasText: 'already a goal' })
+  const err = dialog.locator('.field-err-msg').filter({ hasText: 'already have a goal' })
   await expect(err).toBeVisible()
   await expect(name).toHaveAttribute('aria-invalid', 'true')
   expect((await err.boundingBox())!.y).toBeGreaterThan((await name.boundingBox())!.y)

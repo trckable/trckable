@@ -3,6 +3,7 @@
 // is the one enforcing that, not this file.
 import { useEffect, useState, type SubmitEvent } from 'react'
 import { APIError, api, setShareMode, setShareSession, fail, refused, wrong, type ShareInfo } from '../lib/api'
+import { FieldError, fieldProps } from '../kit/FieldError'
 import { words } from '../lib/errors'
 import { isEmbed, openShare, shareToken } from '../lib/earlyStart'
 import { setShared } from '../lib/me'
@@ -66,13 +67,9 @@ export function SharePassword({ onOpen, error, hideBrand }: { onOpen: (info: Sha
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <label className="field">
           Password
-          <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoFocus autoComplete="off" />
+          <input className="input" type="password" value={password} onChange={(e) => { setPassword(e.target.value); setErr(null) }} {...fieldProps('share-err', err)} required autoFocus autoComplete="off" />
         </label>
-        {err && (
-          <div role="alert" style={{ color: 'var(--down)', fontSize: 13 }}>
-            {err}
-          </div>
-        )}
+        <FieldError id="share-err" error={err} />
         <button className="btn primary" type="submit" disabled={busy || !password} style={{ height: 44, justifyContent: 'center' }}>
           {busy ? 'Opening…' : 'Open'}
         </button>

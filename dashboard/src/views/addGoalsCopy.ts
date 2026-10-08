@@ -23,7 +23,7 @@ export const copy = defineCopy('goals', {
   page: 'Page',
   pagePlaceholder: '/pricing',
   pageHelp: 'Counted from the pageviews already recorded, so the past shows too. End a path with * for everything under it, like /blog/*.',
-  exists: 'There is already a goal with that name',
+  exists: 'You already have a goal with that name. Pick a different one.',
   added: 'Page goals',
   add: 'Add goal',
   done: 'Done',

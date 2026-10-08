@@ -5,6 +5,7 @@
 import { Check, CircleCheck, ExternalLink, FileCheck2, FileUp, LockKeyhole, Search as SearchIcon, TriangleAlert } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { fail, type SearchConnection, type SearchProperty, type Site, more } from '../lib/apiMore'
+import { FieldError } from '../kit/FieldError'
 import { words } from '../lib/errors'
 import { useSearchProperties } from './useSearchProperties'
 import { Row } from '../components/Row'
@@ -329,11 +330,7 @@ function Connect({ site, replacing, onDone, onCancel }: { site: Site; replacing:
         </li>
       </ol>
 
-      {parsed.error && (
-        <p className="confirm-err" role="alert">
-          {parsed.error}
-        </p>
-      )}
+      <FieldError id="gsc-err" error={parsed.error} />
 
       <div className="gsc-foot">
         <span className="faint">

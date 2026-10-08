@@ -72,7 +72,7 @@ test('exclude my visits: the menu opens the site with the flag, and the IP list 
   await field.scrollIntoViewIfNeeded()
   await field.fill('203.0.113.7\nnot-an-address')
   await field.blur()
-  await expect(page.getByText('not-an-address is not an IP address')).toBeVisible()
+  await expect(page.getByText('“not-an-address” isn’t an IP address')).toBeVisible()
   const cfg = () => page.request.get(`${API}/api/v1/sites/${site}/config`).then((r) => r.json() as Promise<{ exclude_ips: string[] | null }>)
   expect((await cfg()).exclude_ips ?? []).toEqual([])
 

@@ -100,10 +100,10 @@ test('another site: a chip each, the first visit on the second moves on, then Li
   const field = run.getByLabel('Another site')
   await field.fill('not a domain')
   await field.press('Enter')
-  await expect(run.getByRole('alert')).toContainText('no spaces')
+  await expect(run.locator('.field-err-msg')).toContainText('no spaces')
   await field.fill(one)
   await field.press('Enter')
-  await expect(run.getByRole('alert')).toContainText('already here')
+  await expect(run.locator('.field-err-msg')).toContainText('already have')
   await field.fill(`https://www.${two}/x`)
   await field.press('Enter')
 

@@ -64,13 +64,14 @@ describe('Field', () => {
     expect(id).toBeTruthy()
     expect(html).toContain(`id="${id}"`)
     expect(html).toContain('aria-invalid="true"')
-    expect(html).toMatch(/role="alert">Taken</)
+    expect(html).toContain('aria-live="polite"')
+    expect(html).toMatch(new RegExp(`<p id="${id}-err"[^>]*>.*Taken`))
     expect(html).toContain(`aria-describedby="${id}-err"`)
   })
 
   it('has no error line when there is none', () => {
     const html = renderToStaticMarkup(<Field label="Name">{(f) => <input {...f} />}</Field>)
-    expect(html).not.toContain('role="alert"')
+    expect(html).not.toContain('field-err-msg')
     expect(html).not.toContain('aria-invalid')
   })
 })

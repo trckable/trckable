@@ -158,9 +158,6 @@
 }
 .ie-err {
   padding-left: calc(var(--ie-pad) + 1px);
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--down);
 }
 @media (prefers-reduced-motion: reduce) {
   .ie-saved {

@@ -1,6 +1,8 @@
 // The calendar's month grid and its typed date field (DateRangeCalendar).
 // The note dialog uses the month too.
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
+import { FieldError, fieldProps } from '../kit/FieldError'
+import { fieldCopy } from '../kit/fieldCopy'
 import { fmtDay, monthGrid, monthLong, parseLoose, weekStartsOn, type ISODate, type Range } from '../lib/dates'
 import './DateRangePopover.css'
 
@@ -90,6 +92,7 @@ export function Month(p: {
 export function DateField({ label, value, today, onCommit }: { label: string; value: ISODate; today: ISODate; onCommit: (d: ISODate) => void }) {
   const [text, setText] = useState(value)
   const [bad, setBad] = useState(false)
+  const errId = useId()
   // A new value from outside (a click in the calendar) replaces what was typed.
   const [shownValue, setShownValue] = useState(value)
   if (shownValue !== value) {
@@ -108,13 +111,17 @@ export function DateField({ label, value, today, onCommit }: { label: string; va
       <input
         className="input num"
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value)
+          setBad(false)
+        }}
         onBlur={commit}
         onKeyDown={(e) => e.key === 'Enter' && commit()}
-        aria-invalid={bad}
-        style={{ height: 38, borderColor: bad ? 'var(--down)' : undefined }}
+        {...fieldProps(errId, bad ? fieldCopy.date : null)}
+        style={{ height: 38 }}
         placeholder="YYYY-MM-DD"
       />
+      <FieldError id={errId} error={bad ? fieldCopy.date : null} />
     </label>
   )
 }

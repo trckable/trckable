@@ -113,6 +113,6 @@ test('the list shows them in a group of their own, and a key an action has is re
   // Record Switch site as "c": Compare has it.
   await list.getByRole('button', { name: /^Switch site: S\./ }).click()
   await page.keyboard.press('c')
-  await expect(list.getByRole('alert')).toContainText('already means “Compare”')
+  await expect(list.locator('.field-err-msg')).toContainText('already means “Compare”')
   await page.keyboard.press('Escape')
 })

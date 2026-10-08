@@ -8,6 +8,7 @@ import { Modal } from '../kit/Modal'
 import { toast } from '../components/Toast'
 import { fail, more } from '../lib/apiMore'
 import { canAsk } from '../lib/me'
+import { FieldError } from '../kit/FieldError'
 import { caps, comboOf, customKeys, keyFor, loadKeymap, useKeymap } from '../lib/keys'
 import { ACTIONS, takenBy, type Group } from '../lib/shortcutList'
 import './Shortcuts.css'
@@ -69,7 +70,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
       if (!combo) return // a modifier on its own: wait for the key
       const other = takenBy(combo, rec)
       if (other) {
-        setWhy(`${caps(combo).join(' ')} already means “${other.label}”.`)
+        setWhy(`${caps(combo).join(' ')} already means “${other.label}”. Press a different key.`)
         return
       }
       const action = ACTIONS.find((a) => a.id === rec)
@@ -127,11 +128,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </div>
-      {why && (
-        <p className="keys-why" role="alert">
-          {why}
-        </p>
-      )}
+      <FieldError id="keys-why" error={why} />
       <div className="keys-grid">
         {GROUPS.map((g) => {
           const items = g.id === 'mouse' ? [] : ACTIONS.filter((a) => a.group === g.id && (a.id !== 'ask' || canAsk()))

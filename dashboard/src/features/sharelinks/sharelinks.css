@@ -17,10 +17,6 @@
   color: #0b0d10;
   font-weight: 600;
 }
-.sl-err {
-  color: var(--down);
-  font-size: 13px;
-}
 .sl-actions {
   display: flex;
   justify-content: flex-end;
@@ -106,9 +102,6 @@
 .sl-date {
   max-width: 200px;
   align-self: flex-end;
-}
-.sl-card input[aria-invalid='true'] {
-  border-color: var(--down);
 }
 
 /* ---- the thumbnail ---- */

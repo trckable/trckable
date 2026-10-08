@@ -238,8 +238,8 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
         aria-busy={busy}
       >
         <DialogHead icon={LockKeyhole} heading="Change your password" hint="Your other devices are signed out." />
-        <Field label="Current password">
-          {(f) => <input {...f} className="input" type="password" autoFocus autoComplete="current-password" value={cur} onChange={(e) => setCur(e.target.value)} />}
+        <Field label="Current password" error={err}>
+          {(f) => <input {...f} className="input" type="password" autoFocus autoComplete="current-password" value={cur} onChange={(e) => { setCur(e.target.value); setErr(null) }} />}
         </Field>
         <Field label="New password">
           {(f) => (
@@ -259,11 +259,6 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
             {meterText(same, ok, next.length, MIN)}
           </span>
         </div>
-        {err && (
-          <p className="confirm-err" role="alert">
-            {err}
-          </p>
-        )}
         <DialogActions
           left={
             <button type="button" className="btn ghost" onClick={onClose} disabled={busy}>
