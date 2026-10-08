@@ -60,7 +60,7 @@ describe('noChangeWhy', () => {
 describe('noChangeLine', () => {
   const before = (visitors: number) => ({ kpis: { visitors, sessions: visitors }, series: [] }) as unknown as Result
   it('says so when the period before had no visitors at all, never nothing', () => {
-    expect(noChangeLine(true, before(0), 'day')).toMatch(/only 0 visitors/)
+    expect(noChangeLine(true, before(0), 'day')).toBe('No change shown: there were no visits in the period before.')
   })
   it('says nothing when no comparison is on, or when it can be told', () => {
     expect(noChangeLine(false, before(0), 'day')).toBe('')
