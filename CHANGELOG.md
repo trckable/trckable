@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.7.3 (8 Oct 2026)
+
 - Explore and Story compare a preset period with the one before again, without asking: the change figures show for Yesterday, 7 days and the rest. The Compare button is back on the control line on desktop ("No comparison" in its menu, or compare=none in the address, turns it off), and when the period before has no visitors at all the page says so under the key numbers instead of showing nothing.
 
 - Explore: Bounce rate and Session time put their icon and name on one row like the other key numbers, so all the figures sit on the same line at every width.
