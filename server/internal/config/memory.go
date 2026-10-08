@@ -30,7 +30,7 @@ func duckMemoryFor(avail int64) string {
 // 0 when neither can be read.
 func availableMemory() int64 {
 	for _, f := range []string{"/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory/memory.limit_in_bytes"} {
-		if b, err := os.ReadFile(f); err == nil {
+		if b, err := os.ReadFile(f); err == nil { // #nosec G304 -- fixed cgroup paths
 			// "max" (no limit) or a huge number means unlimited.
 			if n, err := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64); err == nil && n > 0 && n < 1<<50 {
 				return n
