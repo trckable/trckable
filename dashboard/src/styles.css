@@ -2938,8 +2938,13 @@ body[data-mode] .card.overview {
   border-radius: 0;
   box-shadow: none;
 }
+.app .card.overview {
+  --card-pad: 22px;
+}
 .app .card.overview .kpis {
-  padding: 0;
+  /* The tiles carry 16px each side; the strip adds what brings the first
+     tile's text, the chart and the note buttons to one inner edge. */
+  padding: 0 calc(var(--card-pad) - 16px);
   gap: 0;
   border-top: 1px solid var(--grid);
   border-bottom: 1px solid var(--grid);
@@ -2951,13 +2956,20 @@ body[data-mode] .card.overview {
   border-left: 1px solid var(--grid);
 }
 .app .card.overview .overview-chart {
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: var(--card-pad);
+  padding-right: var(--card-pad);
+}
+.app .card.overview .kpi[aria-pressed='true']::after {
+  left: 16px;
+  right: 16px;
 }
 .app .cards2 {
   gap: 44px;
 }
 @media (max-width: 640px) {
+  .app .card.overview {
+    --card-pad: 16px;
+  }
   .app .card.overview .kpi:nth-child(odd) {
     border-left: 0;
   }
