@@ -38,21 +38,40 @@
    a ragged second line; More… stays put at the end. */
 .inst-tabs-row {
   display: flex;
-  align-items: stretch;
-  gap: 8px;
-  min-width: 0;
-}
-.inst-tabs {
-  display: flex;
-  flex: 1;
+  align-items: center;
   gap: 4px;
   min-width: 0;
   padding: 4px;
-  overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--sunken);
+}
+.inst-tabs {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
   scrollbar-width: none;
+}
+.inst-tabs::-webkit-scrollbar {
+  display: none;
+}
+/* Tabs that do not fit scroll, fading out at the edge that has more, never cut off mid-word. */
+.inst-tabs[data-more='end'] {
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+}
+.inst-tabs[data-more='start'] {
+  -webkit-mask-image: linear-gradient(270deg, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(270deg, #000 calc(100% - 28px), transparent);
+}
+.inst-tabs[data-more='both'] {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+}
+.inst-tabs[data-n='5'] .inst-tab svg {
+  display: none; /* five tabs and More… fit a dialog without the pictures */
 }
 .inst-tab {
   display: inline-flex;
@@ -72,6 +91,7 @@
   cursor: pointer;
 }
 .inst-tab svg {
+  flex: none;
   width: 16px;
   height: 16px;
 }
@@ -86,12 +106,23 @@
 }
 .inst-tab:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline-offset: -2px;
+}
+/* More… is the last segment of the same control: the same height and corner as a tab. */
+.inst-tabs-row > .picker {
+  flex: none;
 }
 .inst-tabs-row > .picker > .btn.picker-btn {
-  height: 100%;
-  min-height: 46px;
-  border-radius: 12px;
+  height: 36px;
+  padding: 0 12px;
+  border-color: transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-2);
+}
+.inst-tabs-row > .picker > .btn.picker-btn:hover,
+.inst-tabs-row > .picker > .btn.picker-btn[aria-expanded='true'] {
+  color: var(--text);
 }
 .inst-more {
   font-size: 13px;
@@ -409,12 +440,12 @@
   justify-content: center;
   align-items: center;
   gap: 4px;
-}
-.wait-card .inst-tabs {
-  flex: 0 1 auto;
   padding: 0;
   border: 0;
   background: none;
+}
+.wait-card .inst-tabs {
+  flex: 0 1 auto;
 }
 .wait-card .inst-tab {
   flex: none;
@@ -491,6 +522,9 @@
 @media (max-width: 640px) {
   :root .inst-tab {
     min-height: var(--ph-hit);
+  }
+  :root .inst-tabs-row > .picker > .btn.picker-btn {
+    height: var(--ph-hit);
   }
   :root :is(.inst-docs, .linkish) {
     display: inline-flex;

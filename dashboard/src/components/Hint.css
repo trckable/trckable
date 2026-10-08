@@ -43,15 +43,20 @@
 }
 .hint-act {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 4px 12px;
+  margin-top: 4px;
+}
+.hint .hint-ok {
+  flex: none;
 }
 .hint .hint-ok {
   min-height: 44px;
 }
 .hint-off {
+  display: inline-flex;
+  align-items: center;
   min-height: 44px;
   padding: 0 4px;
   border: 0;

@@ -24,9 +24,9 @@
   --glass-blur: none;
   --glass-blur-pop: blur(16px) saturate(170%);
   --glass-blur-lite: none;
-  --amb-1: rgba(59, 93, 18, 0.19);
-  --amb-2: rgba(22, 54, 90, 0.65);
-  --amb-3: rgba(42, 31, 77, 0.65);
+  --amb-1: rgba(59, 93, 18, 0.1);
+  --amb-2: rgba(22, 54, 90, 0.32);
+  --amb-3: rgba(42, 31, 77, 0.32);
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme='dark']) {
@@ -42,9 +42,9 @@
     --glass-shadow: 0 2px 8px rgba(20, 24, 30, 0.08);
     --glass-shadow-pop: 0 18px 48px rgba(20, 24, 30, 0.18), 0 2px 8px rgba(20, 24, 30, 0.08);
     --glass-sheen: rgba(20, 24, 30, 0.06);
-    --amb-1: rgba(150, 205, 80, 0.09);
-    --amb-2: rgba(110, 165, 235, 0.28);
-    --amb-3: rgba(176, 148, 238, 0.26);
+    --amb-1: rgba(150, 205, 80, 0.045);
+    --amb-2: rgba(110, 165, 235, 0.14);
+    --amb-3: rgba(176, 148, 238, 0.13);
   }
 }
 :root[data-theme='light'] {
@@ -60,9 +60,9 @@
   --glass-shadow: 0 2px 8px rgba(20, 24, 30, 0.08);
   --glass-shadow-pop: 0 18px 48px rgba(20, 24, 30, 0.18), 0 2px 8px rgba(20, 24, 30, 0.08);
   --glass-sheen: rgba(20, 24, 30, 0.06);
-  --amb-1: rgba(150, 205, 80, 0.09);
-  --amb-2: rgba(110, 165, 235, 0.28);
-  --amb-3: rgba(176, 148, 238, 0.26);
+  --amb-1: rgba(150, 205, 80, 0.045);
+  --amb-2: rgba(110, 165, 235, 0.14);
+  --amb-3: rgba(176, 148, 238, 0.13);
 }
 
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
@@ -88,8 +88,24 @@
     position: relative;
     isolation: isolate;
     border-radius: 18px;
-    background: linear-gradient(var(--glass-edge-c), var(--glass-edge-c)) top / 100% 1px no-repeat, var(--glass-bg);
+    background: var(--glass-bg);
     box-shadow: none;
+  }
+  /* A very faint lift: a 1px ring that fades out below the top, cut out of a box with the card's own corners, so it follows every curve (a straight line cut at the corners looks broken). A mask, not a shadow: no repaint per card. */
+  :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .ms-moment, .sv-setup, .sl-panel, .ob-preview, .empty-state.boxed, .side-peek)::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    box-sizing: border-box;
+    padding: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--glass-edge-c) 40%, transparent), transparent 40px);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
   }
   :root:not([data-glass='off']) :is(.ms-moment, .all-tile.compact) {
     border-radius: 14px;
@@ -116,8 +132,12 @@
   /* Controls: lighter glass. Those that hold a pop-up of their own (the site, the period capsule) are see-through without the blur: a blur would make them the box a fixed pop-up or sheet is placed in. */
   :root:not([data-glass='off']) :is(.seg, .chip, .ctl-cap, .phone-pill, .kit-seg, .select, .view-switch, .sv-slot .sv-switch) {
     border-color: var(--glass-line);
-    background: linear-gradient(var(--glass-edge-c), var(--glass-edge-c)) top / 100% 1px no-repeat, var(--glass-lite);
+    background: var(--glass-lite);
     box-shadow: none;
+  }
+  /* Segmented tracks: a quieter hairline than the other controls. */
+  :root:not([data-glass='off']) :is(.seg, .kit-seg, .view-switch, .sv-slot .sv-switch) {
+    border-color: color-mix(in srgb, var(--glass-line) 55%, transparent);
   }
 
   /* The stuck bar of the header: the page's glass over what scrolls under it. */

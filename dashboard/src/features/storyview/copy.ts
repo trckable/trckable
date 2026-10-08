@@ -129,6 +129,7 @@ export const copy = defineCopy('storyview', {
   askLabel: 'What did you open trckable to find out today?',
   askPlaceholder: 'e.g. did my newsletter work?',
   askSend: 'Send',
+  askClose: 'Close',
   thanks: 'Thanks.',
   exploreAll: 'Explore all the numbers: Sources, Pages, Locations, Devices, Calendar',
   loading: 'Reading your numbers',

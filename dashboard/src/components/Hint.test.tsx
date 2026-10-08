@@ -22,5 +22,9 @@ describe('placeHint', () => {
     const at = placeHint(box(16, 100, 340, 120), 140, { w: 390, h: 800 })
     expect(at).toMatchObject({ left: 8, width: 374, top: 230 })
   })
+  it('keeps under the control row when it has to go over the target', () => {
+    const at = placeHint(box(16, 560, 340, 200), 300, { w: 390, h: 800, top: 120 })
+    expect(at?.top).toBeGreaterThanOrEqual(128)
+  })
   it('hides while the target is off screen', () => expect(placeHint(box(0, 900, 100, 50), 100, view)).toBeNull())
 })

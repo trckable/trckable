@@ -20,16 +20,28 @@ interface At {
 }
 
 /** Where the bubble goes for a target's box: beside it, else under it, else over it. */
-export function placeHint(t: { top: number; bottom: number; left: number; right: number }, h: number, view: { w: number; h: number }): At | null {
+export function placeHint(t: { top: number; bottom: number; left: number; right: number }, h: number, view: { w: number; h: number; top?: number }): At | null {
   if (t.bottom < 0 || t.top > view.h || t.right < 0 || t.left > view.w) return null
   const phone = view.w <= 640
   const width = phone ? view.w - 2 * EDGE : Math.min(WIDTH, view.w - 2 * EDGE)
-  const clampTop = (y: number) => Math.max(EDGE, Math.min(y, view.h - h - EDGE))
+  // The control row (when it is on screen) is never covered: the bubble starts under it.
+  const lo = Math.max(EDGE, (view.top ?? 0) + EDGE)
+  const clampTop = (y: number) => Math.max(lo, Math.min(y, view.h - h - EDGE))
   if (!phone && view.w - t.right - GAP - EDGE >= width) return { left: t.right + GAP, top: clampTop(t.top), width }
   const left = phone ? EDGE : Math.max(EDGE, Math.min(t.left, view.w - width - EDGE))
   if (view.h - t.bottom - GAP - EDGE >= h) return { left, top: t.bottom + GAP, width }
-  if (t.top - GAP - EDGE >= h) return { left, top: t.top - GAP - h, width }
+  if (t.top - GAP - lo >= h) return { left, top: t.top - GAP - h, width }
   return { left, top: clampTop(t.bottom + GAP), width }
+}
+
+/** Where the page's control row (Live/Data, view toggles, filter, period) ends, while it is on screen: the bubble keeps clear of it. */
+function controlsBottom(): number {
+  let low = 0
+  for (const el of document.querySelectorAll<HTMLElement>('.subbar')) {
+    const r = el.getBoundingClientRect()
+    if (r.height > 0 && r.bottom > low) low = r.bottom
+  }
+  return low
 }
 
 export function Hint({
@@ -54,13 +66,13 @@ export function Hint({
     const el = box.current
     if (!el) return
     const t = target.getBoundingClientRect()
-    const view = { w: window.innerWidth, h: window.innerHeight }
+    const view = { w: window.innerWidth, h: window.innerHeight, top: controlsBottom() }
     // The box's true height (offsetHeight rounds it, and a half pixel short leaves no room over the target).
     const h = el.getBoundingClientRect().height
     const next = placeHint(t, h, view)
     // No free room under or over the target (a tall stack of cards on a phone): scroll up just enough to make room over it, once.
     const over = next && next.top < t.bottom && next.top + h > t.top && next.left < t.right && next.left + next.width > t.left
-    const need = h + GAP + EDGE - t.top
+    const need = h + GAP + Math.max(EDGE, view.top + EDGE) - t.top
     if (over && need > 0 && window.scrollY > 0 && !scrolled.current) {
       scrolled.current = true
       window.scrollBy(0, -Math.min(Math.ceil(need) + 1, window.scrollY))
