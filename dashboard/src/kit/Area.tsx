@@ -2,9 +2,11 @@
 // for the number above it, which carries the same story in words. With `was` a
 // second, dashed line on the same scale (the same time a week ago).
 import { useId } from 'react'
+import { useDraw } from '../lib/motion'
 import { areaPaths } from './model'
 import { isEmpty, NoData } from './NoData'
 import './base.css'
+import './draw.css'
 
 const W = 300
 const H = 64
@@ -13,11 +15,12 @@ export function Area({ values, color, was, slots }: { values: number[]; color: s
     const both = was && was.length > 1 ? [...values, ...was] : values
   const scale = { min: was ? 0 : undefined, max: was ? Math.max(...both, 1) : undefined, slots }
   const id = useId()
+  const draw = useDraw()
   if (isEmpty(values)) return <NoData />
   const { line, area } = areaPaths(values, W, H, 4, scale)
   const before = was && was.length > 1 ? areaPaths(was, W, H, 4, scale).line : ''
   return (
-    <span className="kit-area" aria-hidden="true">
+    <span className={`kit-area ${draw && 'draw-spark'}`} aria-hidden="true">
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
         <defs>
           <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
@@ -25,9 +28,9 @@ export function Area({ values, color, was, slots }: { values: number[]; color: s
             <stop offset="1" stopColor={color} stopOpacity="0" />
           </linearGradient>
         </defs>
-        <path d={area} fill={`url(#${id})`} />
-        {before && <path className="kit-was" d={before} fill="none" vectorEffect="non-scaling-stroke" />}
-        <path d={line} fill="none" stroke={color} strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        <path className={draw && 'draw-fill'} d={area} fill={`url(#${id})`} />
+        {before && <path className={`kit-was ${draw && 'draw-fill'}`} d={before} fill="none" vectorEffect="non-scaling-stroke" />}
+        <path className={draw} pathLength="1" d={line} fill="none" stroke={color} strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
       </svg>
     </span>
   )

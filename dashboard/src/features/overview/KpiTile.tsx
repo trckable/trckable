@@ -5,7 +5,7 @@
 // charted is a button.
 import { useEffect, useId, useState, type ComponentProps, type ReactNode } from 'react'
 import type { Delta } from '../../lib/format'
-import { useTween } from '../../lib/motion'
+import { useCountUp } from '../../lib/motion'
 import { KpiMark } from './kpiMark'
 import { usePlayhead } from './playhead'
 import { copy } from './copy'
@@ -36,14 +36,14 @@ interface Props {
   icon?: ComponentProps<typeof KpiMark>['k']
 }
 
-/** A number changes in a blink, not a count-up: switching period or number is instant. */
+/** After its first count-up a number changes in a blink: switching period or number is instant. */
 const SETTLE_MS = 120
 
 export function KpiTile(p: Props) {
   // While it plays the number follows the playhead itself, frame by frame,
   // with no tween of its own to restart at every point.
   const pos = usePlayhead(!!p.live)
-  const tweened = useTween(p.value ?? 0, p.live ? 0 : SETTLE_MS)
+  const tweened = useCountUp(p.value, p.live ? 0 : SETTLE_MS).v
   const v = p.live ? p.live(pos) : tweened
   const none = !!p.blank?.(pos)
   const cls = 'kpi' + (p.money ? ' money' : '')

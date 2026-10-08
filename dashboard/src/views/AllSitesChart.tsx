@@ -6,10 +6,12 @@ import { ChartLine } from 'lucide-react'
 import { useState } from 'react'
 import type { SiteRow } from '../lib/api'
 import { fmtInt } from '../lib/format'
+import { useDraw } from '../lib/motion'
 import { Card } from '../kit/Card'
 import { bandsOf } from './allSitesColors'
 import { copy } from './allSitesCopy'
 import { tag } from '../i18n'
+import '../kit/draw.css'
 
 /** The day so many days before today, as "Sep 25". */
 function dayLabel(ago: number) {
@@ -32,6 +34,7 @@ export function weekTicks(n: number, step: number): number[] {
 export function SiteLines({ rows, days, colors, total, start = 0 }: { rows: SiteRow[]; days: number; colors: Map<string, string>; total: number; start?: number }) {
   const [at, setAt] = useState<number | null>(null)
   const [hidden, setHidden] = useState<Set<string>>(new Set())
+  const draw = useDraw()
   const points = Math.max(0, ...rows.filter((r) => r.series?.some((v) => v > 0)).map((r) => r.series?.length ?? 0))
   const n = points - start
   const title = copy.visitors
@@ -62,8 +65,8 @@ export function SiteLines({ rows, days, colors, total, start = 0 }: { rows: Site
           {[max, max / 2].map((v) => (
             <line key={v} x1="0" x2={W} y1={y(v)} y2={y(v)} className="all-grid" vectorEffect="non-scaling-stroke" />
           ))}
-          {shown.map((b) => (
-            <path key={b.key} d={b.series.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join('')} fill="none" stroke={b.color} strokeWidth="1.8" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          {shown.map((b, k) => (
+            <path key={b.key} className={draw} pathLength="1" style={{ '--i': k } as React.CSSProperties} d={b.series.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join('')} fill="none" stroke={b.color} strokeWidth="1.8" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           ))}
           {at !== null && <line x1={x(at)} x2={x(at)} y1="0" y2={H} className="all-cursor" vectorEffect="non-scaling-stroke" />}
         </svg>

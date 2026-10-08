@@ -24,6 +24,12 @@ function onExplore(address: string): string {
 function onPage(page: Page): Page {
   const goto = page.goto.bind(page)
   page.goto = (url, options) => goto(onExplore(url), options)
+  // Charts draw in and figures count up on first sight: a test measures the page at rest.
+  void page.addInitScript(() => {
+    const off = () => document.documentElement.setAttribute('data-motion', 'off')
+    if (document.documentElement) off()
+    else document.addEventListener('DOMContentLoaded', off)
+  })
   return page
 }
 
