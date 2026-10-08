@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.7.0 (8 Oct 2026)
+
 ### Added
 
 - Monitoring: `GET /healthz/collect` answers 200 when trckable can take pageviews (database writable, log and analytics writer keeping up, tracker served, disk space) and 503 naming the failing part otherwise, for an external uptime monitor.
