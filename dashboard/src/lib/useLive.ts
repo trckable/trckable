@@ -13,7 +13,8 @@ export function useLive(site: string | null, refetch: () => void, keep = 30) {
   useEffect(() => {
     again.current = refetch
   })
-  const [online, setOnline] = useState<number | null>(null)
+  // The server's count and when it arrived: a polled count older than it must not replace it.
+  const [count, setCount] = useState<{ n: number | null; at: number }>({ n: null, at: 0 })
   const [visits, setVisits] = useState<(Visit & { id: number })[]>([])
   const [sales, setSales] = useState<(Sale & { id: number })[]>([])
   const [connected, setConnected] = useState(false)
@@ -29,7 +30,7 @@ export function useLive(site: string | null, refetch: () => void, keep = 30) {
     void import('./liveStream').then((m) => {
       if (gone) return
       stop = m.connect(site, {
-        online: setOnline,
+        online: (n) => setCount({ n, at: Date.now() }),
         visit: (v) => {
           setVisits((vs) => [{ ...v, id: ++id }, ...vs].slice(0, keep))
         },
@@ -47,5 +48,5 @@ export function useLive(site: string | null, refetch: () => void, keep = 30) {
   }, [site, keep])
 
   // Not delivering, for a site that has a stream: the report is polled.
-  return { online, visits, sales, connected, stale: !!site && !connected }
+  return { online: count.n, at: count.at, visits, sales, connected, stale: !!site && !connected }
 }
