@@ -257,7 +257,8 @@
 @media (max-width: 640px) {
   :root :is(
     .all-chart-axis,
-    .all-chart-y
+    .all-chart-y,
+    .all-filters .seg button .faint
   ) {
     font-size: 12px;
   }
@@ -402,16 +403,21 @@
   :root .all-sort select {
     font-size: var(--ph-text-2);
   }
-  /* Finger-high: the border is the only frame, the buttons fill the rest. */
-  :root :is(.all-filters .seg, .all-view) {
+  /* Finger-high: the frame is a ring drawn outside the box, so the buttons and the select fill all 44 px. */
+  :root :is(.all-filters .seg, .all-view, .all-sort) {
     padding: 0;
+    border: 0;
+    box-shadow: 0 0 0 1px var(--border);
+  }
+  :root .all-sort {
+    padding: 0 10px;
   }
   :root .all-filters .seg button,
   :root .all-view button {
-    height: calc(var(--ctl-h) - 2px);
+    height: var(--ctl-h);
   }
   :root .all-view button {
-    width: calc(var(--ctl-h) - 2px);
+    width: var(--ctl-h);
   }
 }
 .all-view {
