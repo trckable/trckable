@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- The Story's top section no longer leaves its right half empty on a wide screen: an "At a glance" card shows the period's visitors as a chart with the period before as a dashed line behind it, and the top source, top country and busiest day beside their share.
+
 ## 0.7.2 (8 Oct 2026)
 
 - The busy-moment dialog opened from a notification now shows the whole story (the last hour as a chart, the beats, and the sources, page, countries and devices) instead of only the number: it loads the story while it opens, and says so when the moment is over.
