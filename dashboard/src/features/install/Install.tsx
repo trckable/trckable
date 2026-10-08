@@ -4,7 +4,7 @@
 // "I've installed it", and watch the check and then the first visit arrive.
 // Loaded on demand: only new sites and the wizard ever show it.
 import { ArrowRight } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { Site, Visit } from '../../lib/api'
 import type { Ctx } from '../../lib/install'
 import { AiCard } from './AiCard'
@@ -32,7 +32,7 @@ function Head({ site, variant }: { site: Site; variant: Variant }) {
   return <h2 className="inst-title-small">{copy.titleSettings(site.domain)}</h2>
 }
 
-export function Install({ site, visits, variant = 'card', setup }: { site: Site; visits: Visit[]; variant?: Variant; setup?: boolean }) {
+export function Install({ site, visits, variant = 'card', setup, after }: { site: Site; visits: Visit[]; variant?: Variant; setup?: boolean; after?: ReactNode }) {
   const [pick, setPick] = useState(firstMethod)
   const [started, setStarted] = useState(false)
   const cookieless = useCookieless(site.id)
@@ -42,7 +42,7 @@ export function Install({ site, visits, variant = 'card', setup }: { site: Site;
   // A viewer still sees the recipe, with the key named rather than spelled out.
   const ctx: Ctx = { host: location.origin, site: site.id, domain: site.domain, proxyKey: site.proxy_key || 'your-proxy-key', cookieless: cookieless.on === true }
   const method = methodOf(pick)
-  if (variant === 'card') return <WaitingCard site={site} visits={visits} ctx={ctx} pick={pick} onPick={setPick} setup={setup} />
+  if (variant === 'card') return <WaitingCard site={site} visits={visits} ctx={ctx} pick={pick} onPick={setPick} setup={setup} after={after} />
   const start = () => {
     setStarted(true)
     check.start()

@@ -190,13 +190,41 @@
   align-items: center;
   gap: 10px;
 }
+.all-filters {
+  --ctl-h: 36px;
+}
+/* One height for every control of the row: the segment, the search, the sort and the layout toggles. */
+.all-filters .seg {
+  box-sizing: border-box;
+  height: var(--ctl-h);
+  padding: 2px;
+  border-radius: 10px;
+  align-items: center;
+}
+.all-filters .seg button {
+  height: calc(var(--ctl-h) - 6px);
+  padding: 0 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
 .all-filters .seg button .faint {
-  margin-left: 4px;
+  margin-left: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+}
+.all-filters .seg button .faint.zero {
+  opacity: 0.55;
+}
+.all-filters .seg button[aria-pressed='true'] .faint {
+  color: var(--text-2);
 }
 .all-search {
+  box-sizing: border-box;
   width: min(260px, 100%);
-  padding: 8px 12px;
+  height: var(--ctl-h);
+  padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
@@ -229,7 +257,8 @@
 @media (max-width: 640px) {
   :root :is(
     .all-chart-axis,
-    .all-chart-y
+    .all-chart-y,
+    .all-filters .seg button .faint
   ) {
     font-size: 12px;
   }
@@ -319,16 +348,24 @@
 }
 .all-sort {
   position: relative;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  height: var(--ctl-h);
   margin-left: auto;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
   color: var(--text-3);
   font-size: 13px;
 }
 .all-sort select {
   appearance: none;
-  padding: 6px 20px 6px 0;
+  field-sizing: content;
+  height: 100%;
+  padding: 0 18px 0 0;
   border: 0;
   background: none;
   color: var(--text-2);
@@ -337,7 +374,7 @@
 }
 .all-sort svg {
   position: absolute;
-  right: 0;
+  right: 10px;
   pointer-events: none;
 }
 .all-sort select:focus-visible {
@@ -346,7 +383,7 @@
 .all-sort:has(select:focus-visible) {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 10px;
 }
 @media (pointer: coarse) {
   .all-sort:has(select:focus-visible) {
@@ -360,21 +397,45 @@
   .all-stats > :nth-child(5):last-child {
     grid-column: 1 / -1;
   }
+  :root .all-filters {
+    --ctl-h: var(--ph-hit);
+  }
   :root .all-sort select {
-    min-height: var(--ph-hit);
     font-size: var(--ph-text-2);
+  }
+  /* Finger-high: the frame is a ring drawn outside the box, so the buttons and the select fill all 44 px. */
+  :root :is(.all-filters .seg, .all-view, .all-sort) {
+    padding: 0;
+    border: 0;
+    box-shadow: 0 0 0 1px var(--border);
+  }
+  :root .all-sort {
+    padding: 0 10px;
+  }
+  :root .all-filters .seg button,
+  :root .all-view button {
+    height: var(--ctl-h);
+  }
+  :root .all-view button {
+    width: var(--ctl-h);
   }
 }
 .all-view {
+  box-sizing: border-box;
   display: inline-flex;
-  margin-left: 8px;
+  align-items: center;
+  height: var(--ctl-h);
+  padding: 2px;
   gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
 }
 .all-view button {
   display: inline-grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: calc(var(--ctl-h) - 6px);
+  height: calc(var(--ctl-h) - 6px);
   border: 0;
   border-radius: 8px;
   background: none;
@@ -385,7 +446,7 @@
   color: var(--text);
 }
 .all-view button[aria-pressed='true'] {
-  background: var(--surface-2, rgba(128, 128, 128, 0.15));
+  background: var(--border);
   color: var(--text);
 }
 .all-view button:focus-visible {

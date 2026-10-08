@@ -9,11 +9,29 @@ section into the release.
 
 ## Unreleased
 
+### Fixed
+
+- The bars in the ranked lists (pages, channels, countries, devices) sit inside the card with the same inset as the column heads, and their corners are tighter.
 ### Changed
 
 - The main card on a site's dashboard keeps one inner padding on every side (22 px, 16 px on a phone): the key numbers, the chart's heading, axis labels and plot, and the note buttons no longer hug the card's edges, and the chosen number's underline lines up with its text.
+- All sites: the filter, search, sort and layout controls share one height, the list lines run edge to edge with them, and each column title sits over its numbers.
+- First run, step 2: "+ Add another site" adds more sites while waiting (the same domain rules as Add a site; a plan's site limit shows its message under the field). Each site gets a chip with a waiting or receiving dot and its own snippet, and the first visit on any of them moves on. "Skip for now — open my dashboard" opens All sites and is remembered, so the first run does not come back. The script tag tab hints at `data-dev` for testing on localhost.
+- First run: after "Someone's here." Continue opens Live straight away; the second "You're live." screen is gone.
+### Changed
+
+- Site switcher: no hover tooltip over a row and no number badge (the 1-9 keys still open a site); the drag handle sits inside the row at the check's column; the number, the open arrow and the ⋯ have fixed right-hand slots so nothing jumps or overlaps on hover; the top line reads "27 live  413 today" on one baseline. Rows are 32 px (44 px on a phone).
+### Changed
+
+- Live: the Online now and last-30-minutes numbers roll digit by digit to the new value, with a brief tint (green up, muted down) and a fading change line; reduced motion swaps them at once.
 - The dashboard's first-load size limit is 132 KB (was 130 KB) while the launch fixes land.
 - The soft light on a glass card under the pointer no longer follows it: it sits in the card's top right corner and is a little weaker (70%).
+- Phone: the key numbers on the Data view have no icon before their names and the names wrap instead of being cut ("Bounce rate", "Session time"), all left-aligned; the number in a Story or All sites stat card shrinks to fit its card, so "$12,839" and its 105% chip stay inside it; Peek's connection snippet wraps instead of running off the screen.
+- The rows of tabs in "Who came" and "What they did" fade on the side that has more tabs and keep the open tab in view, so "Time to convert" no longer looks cut off.
+- Live: the cards under the two panels fill the row when there are one or two of them (no lone half-width card), with the same 16 px between every card; "Online now" and "Visitors, last 30 min" share one top line; an empty "On the site right now" puts its line in the middle of the card.
+- The Data chart keeps 28 px (was 18) between the visitors plot and the revenue plot under it, so their axis labels no longer touch; Story's moment labels have 10 px more room above the plot, clear of the line's peak label and the top axis label.
+- Story: the sentence under the headline no longer repeats the headline's percentage ("Mostly from Search. Signup followed.") and starts every sentence with a capital.
+- The footer's logo and wordmark are in the quiet AA grey (no longer faded with opacity) until pointed at, so they pass the colour contrast check.
 
 ## 0.7.0 (8 Oct 2026)
 
