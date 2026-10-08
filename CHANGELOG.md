@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The background glows are about a third softer, same colours, so the numbers and charts stand out more.
 - Form errors say what to do, with an example, in one place: left-aligned under the field with a small icon, the field's border and focus ring turn red, screen readers hear it, and it clears as soon as the value is valid. Applies to add site, sign-in and setup, passwords, share links, goals, API keys, people, revenue connect and settings fields.
 ### Fixed
 
