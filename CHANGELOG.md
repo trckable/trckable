@@ -9,7 +9,7 @@ section into the release.
 
 ## Unreleased
 
-- The Story's top section no longer leaves its right half empty on a wide screen: an "At a glance" card shows the period's visitors as a chart with the period before as a dashed line behind it, and the top source, top country and busiest day beside their share.
+- The Story's top section no longer leaves its right half empty on a wide screen: it now shows where the visitors came from as a large ring with the biggest sources in big numbers, and the top three countries beneath (on a phone, a single bar).
 
 ## 0.7.2 (8 Oct 2026)
 

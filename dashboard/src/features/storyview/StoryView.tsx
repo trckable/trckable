@@ -19,8 +19,8 @@ import { metricName } from '../overview/chartMetric'
 import { bar } from './barCopy'
 import { copy } from './copy'
 import { Answers } from './Answers'
-import { Glance } from './Glance'
-import { glanceOf } from './glanceFacts'
+import { Sources } from './Sources'
+import { sourcesOf } from './sourcesOf'
 import { Ask } from './Ask'
 import { MomentSpans } from './MomentSpans'
 import { SetupCard } from './SetupCard'
@@ -78,11 +78,11 @@ export default function StoryView(p: StoryViewProps) {
   const layer = (g: { x: (i: number) => number; y: (v: number) => number; vals: number[]; w: number }) => <MomentSpans spans={marks} geo={g} site={p.site.id} visitors={visitors} narrow={p.narrow} onOpen={open} />
   const period = `${fmtDay(data.from)} ${bar.to} ${fmtDay(data.to)}`
   const h = facts.headline
-  const glance = useMemo(() => glanceOf(cur, data.previous), [cur, data.previous])
+  const sources = useMemo(() => sourcesOf(cur), [cur])
   return (
     <div className="story-view">
       <SetupCard site={p.site} goals={(cur.goals ?? []).length > 0} revenue={!!p.money} onGoal={p.onGoal} />
-      <div className={glance ? 'sv-hero two' : 'sv-hero'}>
+      <div className={sources ? 'sv-hero two' : 'sv-hero'}>
         <section className="sv-head" aria-label={copy.eyebrow(period)}>
           <div className="sv-eyebrow">{copy.eyebrow(period)}</div>
           <h1 className="sv-line">
@@ -102,7 +102,7 @@ export default function StoryView(p: StoryViewProps) {
           {takeaway && <p className="sv-take">{takeaway}</p>}
           {h.note && <p className="sv-note">{h.note}</p>}
         </section>
-        {glance && <Glance g={glance} />}
+        {sources && <Sources s={sources} />}
       </div>
 
       <Tiles tiles={facts.tiles} series={tileSeries(cur.series, !!p.money)} onConnect={() => setConnect(true)} />
