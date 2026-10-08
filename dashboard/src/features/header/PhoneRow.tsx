@@ -3,7 +3,7 @@
 // fit), a filter button with a count, the period as a short button ("30d"), and
 // one ⋯ (which holds Share and the saved views). The filters and the period
 // open a bottom sheet each.
-import { ChevronDown, ListFilter } from 'lucide-react'
+import { ChevronDown, Funnel } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { focusOpener, openedFrom } from '../../components/panelOpen'
 import { periodShort, type PickerValue } from '../../components/DatePicker'
@@ -60,8 +60,8 @@ export function PhoneRow(p: PhoneProps & { value: PickerValue; today: ISODate; s
         <div id="sv-slot" className="sv-slot" />
       </div>
       {!isShared() && (
-        <button type="button" className="pr-btn pr-filter" aria-haspopup="dialog" aria-expanded={open === 'filters'} aria-label={n ? copy.filterCount(n) : copy.filter} onClick={show('filters')}>
-          <ListFilter size={18} strokeWidth={1.75} aria-hidden="true" />
+        <button type="button" className="pr-btn pr-filter" aria-haspopup="dialog" aria-expanded={open === 'filters'} aria-label={n ? copy.filterCount(n) : copy.filter} title={copy.filter} onClick={show('filters')}>
+          <Funnel size={18} strokeWidth={1.75} aria-hidden="true" />
           {n > 0 && <span className="pr-badge">{n}</span>}
         </button>
       )}

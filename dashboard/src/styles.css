@@ -1919,6 +1919,12 @@ pre.code.words {
 body[data-mode='full'] .app {
   gap: 12px;
 }
+/* The control row sits at the same place in both modes: Full's gap is 4 px tighter, twice (the row's sentinel is a flex item too), which its pull makes up. */
+@media (min-width: 721px) {
+  body[data-mode='full'] .app > .subbar {
+    margin-top: 0;
+  }
+}
 /* The overview sets its own inner spacing (the tiles and the chart each pad
    themselves), so the modes' card padding stays off it. */
 body[data-mode] .card.overview {
@@ -3054,8 +3060,19 @@ body {
   min-height: 32px;
   height: auto;
   padding-block: 0;
-  border-radius: 7px;
+  border-radius: 8px;
   font-size: 13px;
+}
+/* One padding and one gap (the site switcher's rows keep their own: a check, a mark, a tail). */
+:root .pop:is(.anchored, .menu, .menu-pop, .lpop) :where(.menu-row, .lrow, .pop-row, .pop-role, button[role^='menuitem'], .pop.menu button) {
+  padding-inline: 12px;
+  gap: 10px;
+}
+/* The icon column: every menu's icon is 16 px at the row's left padding. */
+:root .pop:is(.menu, .lpop) :is(.lrow, button[role^='menuitem'], .pop.menu button) > svg:first-child {
+  width: 16px;
+  height: 16px;
+  flex: none;
 }
 :root .pop.lpop .lrow,
 :root .pop.sites .site {
@@ -3082,7 +3099,16 @@ body {
   letter-spacing: 0;
   text-transform: none;
 }
-/* The chosen row: a check at the left, no coloured edge. */
+/* The chosen row: a check at the left, no coloured edge (the period's list and the site switcher alike). */
+:root .pop.range-pop.small .lrow {
+  padding-left: 28px;
+}
+:root .pop.range-pop.small .lrow > .ok.lead {
+  position: absolute;
+  top: 50%;
+  left: 9px;
+  margin-top: -7px;
+}
 :root .pop.sites.pop .site {
   padding-left: 28px;
 }

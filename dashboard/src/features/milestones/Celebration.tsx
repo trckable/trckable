@@ -1,17 +1,17 @@
 // A milestone, reached: the ghost does a short celebration standing on the
 // card's top edge (under 1.5 s, nothing at all with reduced motion) and a flat
 // side card says what was reached: the number, one line of context, the card
-// the server draws for sharing, Copy image and Share….
+// the server draws for sharing is not drawn here (Copy image and Share… have it): the card stays small, and
+// puts itself away after a while unless the pointer or the keyboard is on it.
 // One chunk of its own, fetched after the milestones arrive.
 import { Flag } from 'lucide-react'
-import { useState } from 'react'
-import { SideCard } from '../../components/SideCard/SideCard'
+import { useEffect, useRef, useState } from 'react'
+import { SideCard, useCardClose } from '../../components/SideCard/SideCard'
 import { Ghost } from '../../components/Logo'
 import { toast } from '../../components/Toast'
 import { fail, type Milestone } from '../../lib/api'
 import { fmtDay } from '../../lib/dates'
 import { reducedMotion } from '../../lib/motion'
-import { useSettled } from '../../lib/settle'
 import { copy } from './copy'
 import { copyImage, shareApi } from './share'
 import { Rolling } from '../moments/Rolling'
@@ -19,6 +19,42 @@ import { contextLine, say, value } from './words'
 import './Celebration.css'
 
 export const SPARKS = 6
+/** How long the card stays up on its own. */
+export const STAY_MS = 12_000
+
+/** Puts the card away after STAY_MS, a clock that stops while the pointer or the focus is on it. */
+function AutoLeave() {
+  const leave = useCardClose()
+  const go = useRef(leave)
+  useEffect(() => {
+    go.current = leave
+  })
+  const [mark, setMark] = useState<HTMLElement | null>(null)
+  useEffect(() => {
+    const card = mark?.closest('.side-card')
+    if (!card) return
+    let t: ReturnType<typeof setTimeout> | undefined
+    const start = () => {
+      clearTimeout(t)
+      t = setTimeout(() => go.current(), STAY_MS)
+    }
+    const stop = () => clearTimeout(t)
+    const out = () => !card.matches(':hover, :focus-within') && start()
+    card.addEventListener('pointerenter', stop)
+    card.addEventListener('pointerleave', out)
+    card.addEventListener('focusin', stop)
+    card.addEventListener('focusout', out)
+    start()
+    return () => {
+      stop()
+      card.removeEventListener('pointerenter', stop)
+      card.removeEventListener('pointerleave', out)
+      card.removeEventListener('focusin', stop)
+      card.removeEventListener('focusout', out)
+    }
+  }, [mark])
+  return <span ref={setMark} hidden />
+}
 
 /** The ghost hops up on the card's top edge, with a few sparks. Drawn once, then gone. */
 function Party({ money }: { money: boolean }) {
@@ -46,7 +82,6 @@ interface Props {
 
 export function Celebration({ m, list = [], site, domain = site, onShare, onClose }: Props) {
   const w = say(m)
-  const settled = useSettled()
   const line = contextLine(m, list)
   // What the picture shows is what Copy image copies, and "Show amount" starts off: the amount of revenue is never in it here.
   const pic = (format: 'png' | 'svg') => shareApi.cardURL(site, m, { format, theme: 'dark', amount: false })
@@ -69,6 +104,7 @@ export function Celebration({ m, list = [], site, domain = site, onShare, onClos
       onClose={onClose}
       actions={
         <>
+          <AutoLeave />
           {typeof ClipboardItem !== 'undefined' && (
             <button type="button" className="btn" onClick={() => copyImage(pic('png')).then(() => toast(copy.imageCopied), (e: unknown) => fail(e))}>
               {copy.copyImage}
@@ -80,12 +116,7 @@ export function Celebration({ m, list = [], site, domain = site, onShare, onClos
         </>
       }
     >
-      <svg className="ms-line" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
-        <polyline fill="none" stroke="currentColor" strokeWidth="1.6" vectorEffect="non-scaling-stroke" points="0,26 18,22 32,24 48,17 62,19 80,11 100,4" />
-      </svg>
       {line && <p className="ms-context">{line}</p>}
-      {/* The picture is asked for once the page has had its moment; its room is kept. */}
-      <img className="ms-peek" src={settled ? pic('svg') : undefined} width={1200} height={630} alt={copy.card} />
     </SideCard>
   )
 }

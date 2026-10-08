@@ -7,7 +7,7 @@ import type { Milestone } from '../../lib/api'
 let reduced = true
 vi.mock('../../lib/motion', () => ({ reducedMotion: () => reduced, useTween: (n: number) => n }))
 
-import { Celebration, SPARKS } from './Celebration'
+import { Celebration, SPARKS, STAY_MS } from './Celebration'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -31,7 +31,7 @@ afterEach(() => {
 })
 
 describe('a milestone reached', () => {
-  it('is one flat card with the number, a line of context, the card to share, Copy image and Share…', () => {
+  it('is one small flat card with the number, a line of context, Copy image and Share…', () => {
     const share = vi.fn()
     const close = vi.fn()
     vi.useFakeTimers()
@@ -44,10 +44,8 @@ describe('a milestone reached', () => {
     expect(card?.classList.contains('flat')).toBe(true) // no coloured line on its edge
     expect(card?.querySelector('.side-ghost')).toBeNull() // no mascot on the card
     expect([...(card?.querySelectorAll('.side-card-actions .btn') ?? [])].map((b) => b.textContent)).toEqual(['Copy image', 'Share…'])
-    // The picture is asked for once the page has had its moment (the first load asks for nothing it does not need).
-    expect(card?.querySelector('img')?.getAttribute('src')).toBeNull()
-    act(() => void vi.advanceTimersByTime(1600))
-    expect(card?.querySelector('img')?.getAttribute('src')).toBe('/api/v1/sites/tkb_x/milestones/visitors/10000/card?format=svg&theme=dark')
+    // Small: no picture on the card (Copy image and Share… have it).
+    expect(card?.querySelector('img')).toBeNull()
     expect(card?.querySelector('.side-num')?.textContent).toContain('10,000') // the number leads; the picture is the server's, drawn from the same milestone
     vi.useRealTimers()
     act(() => (card?.querySelector('.btn.ms-share') as HTMLButtonElement).click())
@@ -56,7 +54,7 @@ describe('a milestone reached', () => {
     expect(close).toHaveBeenCalledTimes(1)
   })
 
-  it('asks for the picture without the amount of revenue and says how long after the first sale', () => {
+  it('says how long after the first sale', () => {
     vi.useFakeTimers()
     const rev: Milestone = { kind: 'revenue', step: '1000', value: 1000, currency: 'USD', day: '2026-09-14', created_at: 0, new: true, shared: false }
     const first: Milestone = { kind: 'first_sale', step: '1', value: 1, day: '2026-08-27', created_at: 0, new: false, shared: false }
@@ -65,9 +63,20 @@ describe('a milestone reached', () => {
     const card = document.body.querySelector('.side-card')
     expect(card?.querySelector('.side-num')?.textContent).toBe('$1,000')
     expect(card?.textContent).toContain('in revenue, 18 days after the first sale')
-    // The preview and Copy image follow the toggle's default (off): no amount asked for.
-    expect(card?.querySelector('img')?.getAttribute('src')).not.toContain('amount')
     vi.useRealTimers()
+  })
+
+  it('puts itself away after a while, as the close button does', () => {
+    vi.useFakeTimers()
+    reduced = true
+    const close = vi.fn()
+    act(() => root.render(<Celebration m={m} site="s" onShare={() => {}} onClose={close} />))
+    act(() => void vi.advanceTimersByTime(STAY_MS - 100))
+    expect(close).not.toHaveBeenCalled()
+    act(() => void vi.advanceTimersByTime(200))
+    expect(close).toHaveBeenCalledTimes(1)
+    vi.useRealTimers()
+    reduced = false
   })
 
   it('has the ghost celebrate once, and not at all with reduced motion', () => {
