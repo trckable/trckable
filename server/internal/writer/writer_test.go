@@ -715,7 +715,7 @@ func TestCommitFailingLateThreeTimesAppliesOnce(t *testing.T) {
 	add := func(visitor uint64, n int) {
 		for i := 0; i < n; i++ {
 			id++
-			e.append(t, pv("s1", visitor, id, base+int64(id)*100))
+			e.append(t, pv("s1", visitor, id, base+int64(id)*100)) // #nosec G115 -- small test ids
 		}
 	}
 	add(1, 3)

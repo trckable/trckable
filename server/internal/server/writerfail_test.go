@@ -34,7 +34,7 @@ func TestReadyzFailsWhileWriterCannotCommit(t *testing.T) {
 func TestGuardedGoroutineExitsOnPanic(t *testing.T) {
 	s := newTestServer(t, config.Config{})
 	var code atomic.Int32
-	s.exit = func(c int) { code.Store(int32(c)) }
+	s.exit = func(c int) { code.Store(int32(c)) } // #nosec G115 -- small exit codes
 	s.goGuarded("test", func() { panic("boom") })
 	deadline := time.Now().Add(5 * time.Second)
 	for code.Load() == 0 && time.Now().Before(deadline) {
