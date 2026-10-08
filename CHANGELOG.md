@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Story: the headline uses the full width of the page instead of the left half, and is set a little larger on wide screens.
+
 ## 0.7.2 (8 Oct 2026)
 
 - The busy-moment dialog opened from a notification now shows the whole story (the last hour as a chart, the beats, and the sources, page, countries and devices) instead of only the number: it loads the story while it opens, and says so when the moment is over.
