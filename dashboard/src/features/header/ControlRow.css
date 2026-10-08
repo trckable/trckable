@@ -133,10 +133,10 @@
   top: calc(100% + 6px);
   right: 0;
 }
-/* The list opens under the arrow; the calendar, which is wider, from the right edge. */
+/* The list and the calendar both hang from the trigger's right edge, so neither runs past the screen. */
 .ctl-cap .range-pop.small {
-  left: 0;
-  right: auto;
+  left: auto;
+  right: 0;
 }
 
 /* The way back to the story sits right after the switch; it takes no room of
@@ -482,9 +482,13 @@
   .app {
     padding-top: max(12px, env(safe-area-inset-top));
   }
-  .phone-row {
+  .app .subbar.phone-row {
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 4px;
+  }
+  /* Tighter, so Live | Data and both icons fit a 390 px phone without scrolling (narrower ones scroll). */
+  .phone-row .pr-tabs .view-switch button {
+    padding: 0 8px;
   }
   .pr-tabs {
     display: flex;
@@ -494,6 +498,10 @@
     min-width: 0;
     overflow-x: auto;
     scrollbar-width: none;
+    /* The scrolling box reaches the screen's edge and keeps the gutter inside it: a tab scrolled a little is never cut off at the gutter. */
+    margin-left: -16px;
+    padding-left: 16px;
+    scroll-padding-left: 16px;
   }
   .pr-tabs::-webkit-scrollbar {
     display: none;
@@ -527,7 +535,7 @@
     gap: 4px;
     min-width: 44px;
     height: 44px;
-    padding: 0 6px;
+    padding: 0 4px;
     border: 0;
     border-radius: 10px;
     background: transparent;
