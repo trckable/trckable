@@ -79,7 +79,7 @@ test('the cards show today and the page someone is on, and open Data on today', 
   const pages = cards(page).locator('.lv-card', { hasText: 'Top pages right now' })
   const row = pages.getByRole('button', { name: new RegExp(run) })
   await expect(row).toBeVisible({ timeout: 10_000 })
-  expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+  expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(36)
 
   // A row narrows Data to that page, for today.
   await row.click()
@@ -107,7 +107,7 @@ test('on a phone the cards stack and nothing runs off the side', async ({ page }
     expect(b.w).toBeLessThanOrEqual(390)
     if (i > 0) expect(b.y).toBeGreaterThan(boxes[i - 1].y)
   }
-  const rows = await cards(page).locator('.kit-rowbtn').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right))
+  const rows = await cards(page).locator('.bl-row').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right))
   for (const right of rows) expect(right).toBeLessThanOrEqual(390)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })

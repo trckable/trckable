@@ -246,8 +246,17 @@
     padding: 6px 10px;
     font-size: var(--ph-text-2);
   }
+  .bl-lead,
   .bl-main {
     display: contents;
+  }
+  .bl-cols .bl-main {
+    display: block;
+    grid-column: 1;
+  }
+  /* No lead group here: the track ends at the row's inner edge, where the numbers end. */
+  .bl .bl-line {
+    inset: 0 10px 0 0;
   }
   .bl-name {
     grid-column: 1;

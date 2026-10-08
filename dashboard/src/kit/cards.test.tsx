@@ -29,10 +29,9 @@ describe('Card stretch', () => {
 })
 
 describe('ListTable rows that open something', () => {
-  it('puts a button on the first cell and a bar under it', () => {
-    const h = html(<ListTable bare title="Pages" rows={[{ k: '/a', n: 2 }]} rowKey={(r) => r.k} columns={[{ key: 'k', head: 'Page', cell: (r) => r.k }, { key: 'n', head: 'N', cell: (r) => r.n, num: true }]} pick={{ onPick: () => {}, label: (r) => `Open ${r.k}` }} bar={(r) => r.n * 10} />)
+  it('puts a button on the first cell', () => {
+    const h = html(<ListTable bare title="Pages" rows={[{ k: '/a', n: 2 }]} rowKey={(r) => r.k} columns={[{ key: 'k', head: 'Page', cell: (r) => r.k }, { key: 'n', head: 'N', cell: (r) => r.n, num: true }]} pick={{ onPick: () => {}, label: (r) => `Open ${r.k}` }} />)
     expect(h).toContain('aria-label="Open /a"')
-    expect(h).toContain('width:20%')
     expect(h).not.toContain('<thead')
   })
 })

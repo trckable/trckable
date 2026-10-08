@@ -419,16 +419,6 @@ button.kit-ask:hover {
   position: relative;
   isolation: isolate;
 }
-.kit-rowfill {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  z-index: -1;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  pointer-events: none;
-}
 .kit-table tr.pick td {
   padding: 0;
 }
