@@ -15,6 +15,17 @@ section into the release.
 - The bars in the ranked lists (pages, channels, countries, devices) sit inside the card with the same inset as the column heads, and their corners are tighter.
 ### Changed
 
+- Install methods (Add a site, onboarding): the tabs and More… are one segmented row of one height; tabs that do not fit scroll with a fade at the edge, and a method picked from More… scrolls into view instead of peeking out half cut off. In the More… search there is one focus border, and a chosen result shows its full name with the keywords cut instead.
+- Segmented controls (Live | Data, the view toggles, the period tabs): the same 3 px inset all round the chosen pill, the pill's corner follows the track's, a quieter outer line and a soft fill, and the same height as the buttons beside them.
+- The did-you-know bubble stays clear of the control row, and Got it and Turn hints off sit on one line.
+- "Was this useful?" is a small glass card at the bottom right (a card above the foot on a phone) that comes once after a while of reading, with proper buttons and a close; once answered or closed it stays away.
+- Glass: controls (segmented tracks and their chosen pill, chips) have one even quiet border with no brighter top line; cards have an even edge that follows the rounded corners all the way round, with at most a very faint lift at the top, instead of a straight line cut off at the curves.
+- The colour glows behind the page are about half as strong, in both themes.
+### Fixed
+
+- The bars in the ranked lists (pages, channels, countries, devices) sit inside the card with the same inset as the column heads, and their corners are tighter.
+### Changed
+
 - The main card on a site's dashboard keeps one inner padding on every side (22 px, 16 px on a phone): the key numbers, the chart's heading, axis labels and plot, and the note buttons no longer hug the card's edges, and the chosen number's underline lines up with its text.
 - All sites: the filter, search, sort and layout controls share one height, the list lines run edge to edge with them, and each column title sits over its numbers.
 - First run, step 2: "+ Add another site" adds more sites while waiting (the same domain rules as Add a site; a plan's site limit shows its message under the field). Each site gets a chip with a waiting or receiving dot and its own snippet, and the first visit on any of them moves on. "Skip for now — open my dashboard" opens All sites and is remembered, so the first run does not come back. The script tag tab hints at `data-dev` for testing on localhost.

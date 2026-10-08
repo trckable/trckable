@@ -2153,6 +2153,7 @@ export default {
   'storyview.askLabel': 'Cosa volevi scoprire oggi aprendo trckable?',
   'storyview.askPlaceholder': 'es. la mia newsletter ha funzionato?',
   'storyview.askSend': 'Invia',
+  'storyview.askClose': 'Chiudi',
   'storyview.takeSame': 'Più o meno come il periodo precedente.',
   'storyview.takeHead': (up: boolean, pct: number, source?: string, why?: string) => `${up ? 'In aumento' : 'In calo'} del ${pct} % sul periodo precedente${source ? `, soprattutto da ${source}` : ''}${why ?? ''}.`,
   'storyview.whyPage': (page: string) => `, quasi tutto su ${page}`,

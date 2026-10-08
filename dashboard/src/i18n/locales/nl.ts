@@ -2153,6 +2153,7 @@ export default {
   'storyview.askLabel': 'Wat wilde je vandaag met trckable te weten komen?',
   'storyview.askPlaceholder': 'bijv. werkte mijn nieuwsbrief?',
   'storyview.askSend': 'Verstuur',
+  'storyview.askClose': 'Sluiten',
   'storyview.takeSame': 'Ongeveer als de periode ervoor.',
   'storyview.takeHead': (up: boolean, pct: number, source?: string, why?: string) => `${up ? 'Omhoog' : 'Omlaag'} ${pct}% op de periode ervoor${source ? `, vooral door ${source}` : ''}${why ?? ''}.`,
   'storyview.whyPage': (page: string) => `, het meeste op ${page}`,
