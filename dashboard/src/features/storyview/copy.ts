@@ -76,9 +76,6 @@ export const copy = defineCopy('storyview', {
   chartHint: (n: number) => `${n} ${n === 1 ? 'moment' : 'moments'} · tap one to open it`,
   chartLabel: 'Visitors over the period, with the moments marked',
   before: 'the period before',
-  srcLabel: 'Where your visitors came from',
-  srcCountries: 'Top countries',
-  srcOnly: (name: string) => `Every visitor came from ${name}.`,
   noMoments: 'Nothing unusual to mark in this period.',
   // The five questions.
   statusBefore: 'vs before',

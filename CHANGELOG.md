@@ -9,7 +9,7 @@ section into the release.
 
 ## Unreleased
 
-- The Story's top section no longer leaves its right half empty on a wide screen: it now shows where the visitors came from as a large ring with the biggest sources in big numbers, and the top three countries beneath (on a phone, a single bar).
+- Story: the headline uses the full width of the page instead of the left half, and is set a little larger on wide screens.
 
 ## 0.7.2 (8 Oct 2026)
 
