@@ -498,3 +498,8 @@
     min-height: var(--ph-hit);
   }
 }
+
+.wait-dev {
+  margin: -8px 0 0;
+  font-size: 13px;
+}

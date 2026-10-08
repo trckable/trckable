@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- First run, step 2: "+ Add another site" adds more sites while waiting (the same domain rules as Add a site; a plan's site limit shows its message under the field). Each site gets a chip with a waiting or receiving dot and its own snippet, and the first visit on any of them moves on. "Skip for now — open my dashboard" opens All sites and is remembered, so the first run does not come back. The script tag tab hints at `data-dev` for testing on localhost.
+- First run: after "Someone's here." Continue opens Live straight away; the second "You're live." screen is gone.
 - The soft light on a glass card under the pointer no longer follows it: it sits in the card's top right corner and is a little weaker (70%).
 
 ## 0.7.0 (8 Oct 2026)
