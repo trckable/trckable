@@ -21,6 +21,7 @@ section into the release.
 - Full mode no longer moves the Story/Explore and period row up by 8 px.
 - Phone: Live | Data is not cut off at the left edge and Story, Explore, Filter, the period and ⋯ fit one 390 px line; Filter is a funnel (no longer a twin of Story's lines) and Story and Explore have a tooltip.
 - The bars in the ranked lists (pages, channels, countries, devices) sit inside the card with the same inset as the column heads, and their corners are tighter.
+- The sticky control line keeps working while you are scrolled down: opening the period (or any dialog) no longer carries the line off the screen, so Story, Explore, Filter, the period, Share and ⋯ all act from it. It is also a little more opaque, so chart labels no longer show through it.
 ### Changed
 
 - Install methods (Add a site, onboarding): the tabs and More… are one segmented row of one height; tabs that do not fit scroll with a fade at the edge, and a method picked from More… scrolls into view instead of peeking out half cut off. In the More… search there is one focus border, and a chosen result shows its full name with the keywords cut instead.
