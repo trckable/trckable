@@ -40,7 +40,8 @@ export function useLiveNow(site: string, stream: Stream) {
         if (c.signal.aborted) return
         const now = Date.now()
         setLocal(now)
-        setAnswer({ data: d, got: now })
+        // An answer older than the one shown (a slow read landing late) is dropped.
+        setAnswer((was) => (was && d.at < was.data.at ? was : { data: d, got: now }))
         setFailures(0)
       })
       .catch(() => {
@@ -107,5 +108,5 @@ export function useLiveNow(site: string, stream: Stream) {
   // How far the server's clock is from this browser's: lets a panel tick
   // faster than TICK_MS on its own (the live list's "5s" chips).
   const skew = answer ? answer.data.at - answer.got : 0
-  return { data: answer?.data ?? null, failed: failures > 0, clock, skew }
+  return { data: answer?.data ?? null, got: answer?.got ?? 0, failed: failures > 0, clock, skew }
 }

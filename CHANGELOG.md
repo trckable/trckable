@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - Live numbers show a new visit within about 2 seconds again: under load a live report is reused for at most 2 seconds, and the dashboard checks once more 2.5 seconds after a visit.
+- Live view: "Online now" no longer jumps up by one for a second and back. The count is the server's own, and an older polled count or answer never replaces a newer one.
 
 ## 0.7.1 (8 Oct 2026)
 

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { debounce, OnlineCount, onlineNow, watchdog } from './live'
+import { debounce, onlineNow, watchdog } from './live'
 import { connect, type LiveHandlers } from './liveStream'
 
 // The tests run without a browser: a stand-in EventSource the test drives,
@@ -84,39 +84,20 @@ describe('debounce', () => {
   })
 })
 
-describe('online count', () => {
-  it('adds new visitors to the server count until the next count', () => {
-    const c = new OnlineCount()
-    expect(c.value).toBeNull()
-    c.count(2)
-    c.visit('a', 1000)
-    expect(c.value).toBe(3)
-    c.visit('a', 2000) // the same visitor again
-    expect(c.value).toBe(3)
-    c.count(3) // the server has counted it
-    expect(c.value).toBe(3)
-    c.visit('a', 60_000) // still online: not a new one
-    expect(c.value).toBe(3)
-    c.visit('a', 400_000) // back after more than 5 minutes
-    expect(c.value).toBe(4)
-  })
-
-  it('counts before the first count arrives', () => {
-    const c = new OnlineCount()
-    c.visit('a', 0)
-    expect(c.value).toBe(1)
-  })
-})
-
 describe('live stream', () => {
-  it('shows the count, bumps it on a visit and refetches once visits settle', () => {
+  it('shows the server count only: a visit never moves it, the next count does', () => {
     const on = handlers()
     const stop = connect('s1', on)
     last().send('online', { online: 1 })
     expect(on.online).toHaveBeenLastCalledWith(1)
     expect(on.up).toHaveBeenLastCalledWith(true)
     last().send('visit', { kind: 'pageview', ts: 0, visitor: 'x' })
-    expect(on.online).toHaveBeenLastCalledWith(2)
+    // 'x' may already be among the 1 online: no guess until the server counts
+    expect(on.online).toHaveBeenCalledTimes(1)
+    expect(on.online).toHaveBeenLastCalledWith(1)
+    last().send('online', { online: 1 })
+    expect(on.online).toHaveBeenCalledTimes(2)
+    expect(on.online).toHaveBeenLastCalledWith(1)
     expect(on.visit).toHaveBeenCalledOnce()
     expect(on.refetch).not.toHaveBeenCalled()
     vi.advanceTimersByTime(1000)
@@ -180,5 +161,11 @@ describe('onlineNow', () => {
     expect(onlineNow({ online: null, stale: false }, 1, 5)).toBe(1)
     expect(onlineNow({ online: 3, stale: true }, 1, 5)).toBe(5)
     expect(onlineNow({ online: 3, stale: true }, 1, undefined)).toBe(3)
+  })
+
+  it('never lets an older polled count replace a newer stream count', () => {
+    // the stream said 18 at 5000 and blipped; the poll was read at 4000
+    expect(onlineNow({ online: 18, stale: true, at: 5000 }, 19, 19, 4000)).toBe(18)
+    expect(onlineNow({ online: 18, stale: true, at: 5000 }, 19, 19, 6000)).toBe(19)
   })
 })
