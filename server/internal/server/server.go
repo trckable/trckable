@@ -550,7 +550,7 @@ func (s *Server) startAnalytics(ctx context.Context) {
 		s.api.Touched(site, lo, hi) // closed ranges the commit can reach stop being served from the report cache
 	}
 	s.writer.Store(w)
-	go s.flushBotsEvery(ctx)
+	s.goGuarded("flush bots", func() { s.flushBotsEvery(ctx) })
 	slog.Info("analytics store ready")
 	if err := w.Run(ctx); err != nil {
 		slog.Error("writer stopped", "err", err)
@@ -593,7 +593,9 @@ type readiness struct {
 }
 
 // readyz is healthy as soon as events can be accepted durably (SQLite + WAL);
-// the analytics store warming up is reported but does not fail readiness.
+// the analytics store warming up, or the writer failing, is reported as
+// "degraded" (still 200) and does not fail readiness: probes use this to
+// route ingest, and events stay durable in the WAL meanwhile.
 func (s *Server) readyz(w http.ResponseWriter, r *http.Request) {
 	committed, _ := s.log.Committed()
 	rd := readiness{Status: "ok", Version: Version, WALCommitted: committed, WALBytes: s.log.SizeBytes()}
@@ -615,7 +617,7 @@ func (s *Server) readyz(w http.ResponseWriter, r *http.Request) {
 		rd.Status, rd.Error, code = "unavailable", "the control database is not answering", http.StatusServiceUnavailable
 		s.readyzLog(rd.Error, err)
 	} else if err := writerFailing(s); err != nil {
-		rd.Status, rd.Error, code = "unavailable", "the analytics writer cannot store events", http.StatusServiceUnavailable
+		rd.Status, rd.Error = "degraded", "the analytics writer cannot store events: "+err.Error() // still 200: events are durable in the WAL, and a probe that cut ingest would lose them
 		s.readyzLog(rd.Error, err)
 	} else if v := s.writerErr.Load(); v != nil {
 		rd.Status, rd.Error = "degraded", "the analytics writer reported an error" // events still durable in the WAL

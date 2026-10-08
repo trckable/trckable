@@ -78,6 +78,8 @@ type Writer struct {
 	failing atomic.Pointer[commitFailure] // set while a batch cannot be committed
 	// inject, if set, makes a commit fail before it touches anything (tests only).
 	inject func() error
+	// injectLate fails a commit inside its transaction, after the work is done.
+	injectLate func() error
 
 	applied atomic.Uint64 // hwm, readable from other goroutines (health, pruning)
 	ready   atomic.Bool   // sessions restored; snapshots are complete
@@ -202,30 +204,21 @@ type maintenance struct {
 }
 
 func (w *Writer) Run(ctx context.Context) error {
-	hwm, err := w.store.HWM(ctx)
+	rd, conn, err := w.open(ctx)
 	if err != nil {
-		return fmt.Errorf("read hwm: %w", err)
-	}
-	w.applied.Store(hwm)
-
-	rd, err := w.log.NewReader(hwm + 1)
-	if err != nil {
-		return err
+		// Start-up fails the way a commit does (a locked file, a full disk):
+		// try again with the same backoff before giving up, so a restart
+		// loop is minutes apart, not instant.
+		err = w.retry(ctx, "start", err, func() (err error) {
+			rd, conn, err = w.open(ctx)
+			return err
+		})
+		if err != nil {
+			return err
+		}
 	}
 	defer rd.Close()
-
-	if first, _ := rd.TryRead(1); len(first) > 0 {
-		w.pending = first
-	}
-	conn, err := w.store.DB.Conn(context.Background())
-	if err != nil {
-		return err
-	}
 	defer conn.Close()
-
-	if err := w.restore(ctx, conn); err != nil {
-		return fmt.Errorf("restore state: %w", err)
-	}
 	w.ready.Store(true)
 
 	for {
@@ -260,22 +253,49 @@ func (w *Writer) Run(ctx context.Context) error {
 	}
 }
 
-// commitRetry commits batch, and when that fails keeps trying with backoff.
-// A failed attempt may already have moved the in-memory state (sessions,
-// dedupe ids) past what the database holds, so before each retry that state
-// is rebuilt from the database, exactly as at boot: the batch then applies
-// once, whatever the failed attempt did. Cancelling ctx ends the wait; the
-// batch stays in the WAL and the next start replays it.
-func (w *Writer) commitRetry(ctx context.Context, conn *sql.Conn, batch []wal.Record) error {
-	err := w.commit(context.Background(), conn, batch)
-	if err == nil {
-		return nil
+// open reads the high-water mark, starts the WAL reader and the writer's
+// connection, and restores the sessions. Whatever it opened is closed again
+// if it fails.
+func (w *Writer) open(ctx context.Context) (*wal.Reader, *sql.Conn, error) {
+	hwm, err := w.store.HWM(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("read hwm: %w", err)
 	}
+	w.applied.Store(hwm)
+	rd, err := w.log.NewReader(hwm + 1)
+	if err != nil {
+		return nil, nil, err
+	}
+	w.pending = nil
+	if first, _ := rd.TryRead(1); len(first) > 0 {
+		w.pending = first
+	}
+	conn, err := w.store.DB.Conn(context.Background())
+	if err != nil {
+		rd.Close()
+		return nil, nil, err
+	}
+	w.sess.reset()
+	w.dd = newDedupe(dedupePeriod.Milliseconds(), dedupeGens, dedupeMaxIDs)
+	if err := w.restore(ctx, conn); err != nil {
+		conn.Close()
+		rd.Close()
+		return nil, nil, fmt.Errorf("restore state: %w", err)
+	}
+	return rd, conn, nil
+}
+
+// retry runs attempt again, with backoff, until it works, ctx ends, or it has
+// failed for GiveUpAfter; then OnGiveUp is called and the error returned.
+// first is the error that started the streak. The writer counts as failing
+// (readyz, health alert) from the first error until an attempt works.
+func (w *Writer) retry(ctx context.Context, what string, first error, attempt func() error) error {
+	err := first
 	started := w.now()
 	delay := w.opts.RetryMin
-	for attempt := 1; ; attempt++ {
+	for n := 1; ; n++ {
 		w.failing.Store(&commitFailure{err: err, since: started})
-		slog.Error("writer: commit failed, will retry", "err", err, "attempt", attempt, "retry_in", delay, "failing_for", w.now().Sub(started).Round(time.Second))
+		slog.Error("writer: "+what+" failed, will retry", "err", err, "attempt", n, "retry_in", delay, "failing_for", w.now().Sub(started).Round(time.Second))
 		if w.now().Sub(started) >= w.opts.GiveUpAfter {
 			slog.Error("writer: giving up; events stay in the WAL and replay on the next start", "err", err, "failing_for", w.now().Sub(started).Round(time.Second))
 			if w.opts.OnGiveUp != nil {
@@ -289,26 +309,63 @@ func (w *Writer) commitRetry(ctx context.Context, conn *sql.Conn, batch []wal.Re
 		case <-time.After(delay/2 + rand.N(delay/2+1)): //nolint:gosec // jitter, not security
 		}
 		delay = min(delay*2, w.opts.RetryMax)
-		_, _ = conn.ExecContext(context.Background(), "ROLLBACK") // nothing open is fine
-		if err = w.rebuild(conn, batch); err == nil {
-			err = w.commit(context.Background(), conn, batch)
-		}
-		if err == nil {
+		if err = attempt(); err == nil {
 			w.failing.Store(nil)
-			slog.Info("writer: commit works again", "after", attempt)
+			slog.Info("writer: works again", "what", what, "attempts", n)
 			return nil
 		}
 	}
 }
 
+// commitRetry commits batch, and when that fails keeps trying with backoff.
+// A failed attempt may already have moved the in-memory state (sessions,
+// dedupe ids) past what the database holds, so before each retry that state
+// is rebuilt from the database, exactly as at boot: the batch then applies
+// once, whatever the failed attempt did. Cancelling ctx ends the wait; the
+// batch stays in the WAL and the next start replays it.
+func (w *Writer) commitRetry(ctx context.Context, conn *sql.Conn, batch []wal.Record) error {
+	err := w.commit(context.Background(), conn, batch)
+	if err == nil {
+		return nil
+	}
+	return w.retry(ctx, "commit", err, func() error {
+		_, _ = conn.ExecContext(context.Background(), "ROLLBACK") // nothing open is fine
+		done, err := w.rebuild(conn, batch)
+		if err != nil || done {
+			return err
+		}
+		return w.commit(context.Background(), conn, batch)
+	})
+}
+
 // rebuild drops the in-memory sessions and dedupe ids and loads them again
 // from the database, so a batch that failed halfway can be applied afresh.
-func (w *Writer) rebuild(conn *sql.Conn, batch []wal.Record) error {
+// done is true when the failed COMMIT had in fact persisted the batch.
+func (w *Writer) rebuild(conn *sql.Conn, batch []wal.Record) (done bool, err error) {
+	if len(batch) > 0 {
+		hwm, err := w.store.HWM(context.Background())
+		if err != nil {
+			return false, err
+		}
+		done = hwm >= batch[len(batch)-1].Seq
+	}
+	// Not ready while the state is empty: a report must not show zero live
+	// visits for the moment it takes to load them.
+	wasReady := w.ready.Swap(false)
+	defer func() { w.ready.Store(wasReady) }()
 	w.sess.reset()
 	w.dd = newDedupe(dedupePeriod.Milliseconds(), dedupeGens, dedupeMaxIDs)
-	w.pending = batch // "idle" is measured from the first record still to apply
-	defer func() { w.pending = nil }()
-	return w.restore(context.Background(), conn)
+	if !done {
+		w.pending = batch // "idle" is measured from the first record still to apply
+		defer func() { w.pending = nil }()
+	}
+	if err := w.restore(context.Background(), conn); err != nil {
+		return false, err
+	}
+	if done {
+		w.applied.Store(batch[len(batch)-1].Seq)
+	}
+	return done, nil
 }
 
 // collect returns the next batch; an empty batch with a nil error means the
@@ -573,6 +630,9 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 	})
 	if err == nil {
 		err = w.countCrawls(ctx, conn, crawls)
+	}
+	if err == nil && w.injectLate != nil {
+		err = w.injectLate()
 	}
 	if err == nil {
 		if len(batch) > 0 {

@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -10,7 +11,7 @@ import (
 	"github.com/trckable/trckable/server/internal/config"
 )
 
-// While the writer cannot commit, /readyz says 503 and the health alert names it.
+// While the writer cannot commit,  and the health alert names it.
 func TestReadyzFailsWhileWriterCannotCommit(t *testing.T) {
 	s := newTestServer(t, config.Config{})
 	if code, _ := get(s, "/readyz", ""); code != http.StatusOK {
@@ -19,8 +20,10 @@ func TestReadyzFailsWhileWriterCannotCommit(t *testing.T) {
 	old := writerFailing
 	writerFailing = func(*Server) error { return errors.New("disk I/O") }
 	t.Cleanup(func() { writerFailing = old })
-	if code, body := get(s, "/readyz", ""); code != http.StatusServiceUnavailable {
+	if code, body := get(s, "/readyz", ""); code != http.StatusOK {
 		t.Fatalf("failing writer: %d %s", code, body)
+	} else if !strings.Contains(body, "degraded") || !strings.Contains(body, "disk I/O") {
+		t.Fatalf("failing writer not named: %s", body)
 	}
 	if s.problems()[problemWriter] == "" {
 		t.Fatal("writer failure is not a health problem")
