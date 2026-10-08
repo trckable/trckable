@@ -11,11 +11,14 @@ section into the release.
 
 ## 0.7.1 (8 Oct 2026)
 
+- Reports hold up under a rush of visitors: at most four read the analytics store at once, the same report asked for by many people at once is read once, a report that takes more than 25 seconds is stopped with a clear "try again" message, a live report is kept for a few seconds even on a busy site, the all-sites view reads sites a few at a time, a public share link is rate limited and limited to two years, and the CSV export carries up to 1,000 rows per breakdown again (it was cut to 10).
 - Charts draw in when they first appear: lines run left to right (about 0.7 s, a little later for each series), fills fade in behind them, the sparklines on the stat cards do the same a bit quicker, and the big numbers count up from 0. Live updates and period changes just update; nothing moves with reduced motion. Applies to All sites, the site dashboard, Story and the full charts.
+- The busy-site card is a quick look: the number and the chart open the full view of the moment, next to See it in Data, and other parts of the app can open it by its id. The line on the chart is faint before the climb and lime from where it began.
 - The background glows are about a third softer, same colours, so the numbers and charts stand out more.
 - Form errors say what to do, with an example, in one place: left-aligned under the field with a small icon, the field's border and focus ring turn red, screen readers hear it, and it clears as soon as the value is valid. Applies to add site, sign-in and setup, passwords, share links, goals, API keys, people, revenue connect and settings fields.
 ### Fixed
 
+- A failed write to the analytics store no longer freezes the dashboards: the writer retries the batch with backoff (events are applied once), /readyz answers 503 and Settings → Health alerts while it fails, and after about five minutes the server exits so the next start replays the write-ahead log. A panic in a background task now logs its stack and exits instead of leaving the server half alive.
 - A big site's report no longer fails with "Out of Memory" on the first load after a start: the breakdowns are computed two at a time instead of all sixteen at once, the database's default memory limit is a quarter of the available memory (at least 512 MB, up from 256 MB), a report that still runs out of memory is tried once more, and if it fails again the dashboard says to pick a shorter period or add a filter. `TRCKABLE_DUCKDB_MEMORY` still overrides the default.
 - The ranked lists (pages, channels, countries, devices) have a small gap between rows so each bar is its own piece, and a bar ends where the number columns end instead of running to the card's edge.
 - A milestone's card no longer covers the dashboard: it is a small card without the picture (Copy image and Share… still have it), comes up four seconds after the page, and puts itself away after 12 seconds unless the pointer or the keyboard is on it.

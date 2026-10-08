@@ -42,7 +42,7 @@ func (a *API) moments(w http.ResponseWriter, r *http.Request) {
 	p.Daily, p.Deep, p.Sales = false, false, p.Revenue
 	res, err := a.cachedReport(r, q, p)
 	if err != nil {
-		fail(w, http.StatusBadRequest, err.Error())
+		reportFail(w, err)
 		return
 	}
 	out := a.spikesOf(r, q, p, ask.Loc, ask.Live)

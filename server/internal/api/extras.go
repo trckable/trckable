@@ -38,12 +38,12 @@ func (a *API) insights(w http.ResponseWriter, r *http.Request) {
 	prev.NewReferrers = 0
 	now, err := a.cachedReport(r, q, cur)
 	if err != nil {
-		fail(w, http.StatusBadRequest, err.Error())
+		reportFail(w, err)
 		return
 	}
 	was, err := a.cachedReport(r, q, prev)
 	if err != nil {
-		fail(w, http.StatusBadRequest, err.Error())
+		reportFail(w, err)
 		return
 	}
 	in := insights.Input{
@@ -210,7 +210,7 @@ func (a *API) markers(w http.ResponseWriter, r *http.Request) {
 	p.Bucket, p.Daily, p.Deep, p.Sales = bucket, false, false, p.Revenue
 	res, err := a.cachedReport(r, q, p)
 	if err != nil {
-		fail(w, http.StatusBadRequest, err.Error())
+		reportFail(w, err)
 		return
 	}
 	out := map[string]any{"bucket": bucket, "markers": markersOf(a.spikesOf(r, q, p, ask.Loc, ask.Live), burstsOf(res))}
@@ -243,7 +243,7 @@ func (a *API) pagesSell(w http.ResponseWriter, r *http.Request) {
 	p.Daily, p.Deep, p.Sales, p.SalePages = false, false, false, true
 	res, err := a.cachedReport(r, q, p)
 	if err != nil {
-		fail(w, http.StatusBadRequest, err.Error())
+		reportFail(w, err)
 		return
 	}
 	out := map[string]any{"pages": res.SalePages}
@@ -283,7 +283,7 @@ func (a *API) buyers(w http.ResponseWriter, r *http.Request) {
 	p.Daily, p.Deep, p.Sales, p.Buyers = false, false, false, n
 	res, err := a.cachedReport(r, q, p)
 	if err != nil {
-		fail(w, http.StatusBadRequest, err.Error())
+		reportFail(w, err)
 		return
 	}
 	out := map[string]any{"buyers": res.Buyers}
