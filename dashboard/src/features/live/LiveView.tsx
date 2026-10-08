@@ -5,6 +5,7 @@
 import './Live.css'
 import { useEffect } from 'react'
 import type { Sale, Visit } from '../../lib/api'
+import { onlineNow } from '../../lib/live'
 import { useAnnounce } from './announce'
 import { BusierLine } from './BusierLine'
 import { copy } from './copy'
@@ -19,6 +20,7 @@ import { Loading } from '../../components/loading/Loading'
 
 export type LiveStream = {
   online: number | null
+  at?: number
   visits: (Visit & { id: number })[]
   sales: (Sale & { id: number })[]
   connected: boolean
@@ -27,7 +29,7 @@ export type LiveStream = {
 
 /** In cookieless mode a visit opens no journey, and the list says so. */
 export default function LiveView({ site, timezone, stream, onVisitor, cookieless }: { site: string; timezone: string; stream: LiveStream; onVisitor?: (visitor: string) => void; cookieless?: boolean }) {
-  const { data, failed, clock, skew } = useLiveNow(site, stream)
+  const { data, got, failed, clock, skew } = useLiveNow(site, stream)
   const said = useAnnounce(stream.visits)
   const busier = useBusier(site)
   // The switch's dot shows whether the connection is up.
@@ -35,9 +37,8 @@ export default function LiveView({ site, timezone, stream, onVisitor, cookieless
     liveLink.set(stream.connected)
     return () => liveLink.set(true)
   }, [stream.connected])
-  // The stream's count is the freshest; while it is stuck, the polled one.
-  let online = stream.online ?? data?.online ?? null
-  if (stream.stale && data) online = data.online
+  // The stream's count is the freshest; while it is stuck, the polled one if newer.
+  const online = onlineNow(stream, data?.online, data?.online, got) ?? null
   useEffect(() => liveCount.set(online), [online])
   const rows = data ? feedOf(data.recent, stream.visits, data.at, clock) : []
   return (

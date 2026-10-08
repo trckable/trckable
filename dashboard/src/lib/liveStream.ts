@@ -1,7 +1,7 @@
 // The live stream itself, loaded after the first paint: the dashboard's
 // first load has no room for it, and nothing live is on screen before data.
 import type { Sale, Visit } from './api'
-import { debounce, OnlineCount, watchdog } from './live'
+import { debounce, watchdog } from './live'
 
 // The server sends a ping every 10 s. Nothing for this long means the stream
 // is stuck (a proxy holding it back, a phone waking up): open it again, and
@@ -29,9 +29,7 @@ export type LiveHandlers = {
 export function connect(site: string, on: LiveHandlers): () => void {
   let es: EventSource | null = null
   let retry: ReturnType<typeof setTimeout> | undefined
-  let n = 0
   let poll: ReturnType<typeof setInterval> | undefined
-  const count = new OnlineCount()
   const settle = debounce(on.refetch, SETTLE_MS, MAX_WAIT_MS)
   let state: boolean | null = null // not known until the stream speaks or fails
   const up = (ok: boolean) => {
@@ -66,14 +64,11 @@ export function connect(site: string, on: LiveHandlers): () => void {
     }
     s.addEventListener('online', (e: MessageEvent<string>) => {
       heard()
-      count.count((JSON.parse(e.data) as { online: number }).online)
-      on.online(count.value)
+      on.online((JSON.parse(e.data) as { online: number }).online)
     })
     s.addEventListener('visit', (e: MessageEvent<string>) => {
       heard()
       const v = JSON.parse(e.data) as Visit
-      count.visit(v.visitor || 'visit ' + String(++n), Date.now())
-      on.online(count.value)
       on.visit(v)
       settle.call()
     })
