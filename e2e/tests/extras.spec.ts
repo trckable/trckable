@@ -118,7 +118,7 @@ test('Full: Sources that pay, Pages that sell and Latest buyers, and never an em
   const what = page.locator('[data-card=what]')
   await expect(what.getByRole('tab', { name: 'Sources that pay' })).toBeVisible({ timeout: 20_000 })
   await what.getByRole('tab', { name: 'Sources that pay' }).click()
-  await expect(what.locator('.bl-cols')).toContainText('Per visitor')
+  await expect(what.locator('.bl-cols')).toContainText('Revenue per visitor')
   await expect(what.locator('.bl-row').first()).toContainText('$')
   await expect(what.getByRole('group', { name: 'Which visit gets the credit' })).toBeVisible() // first or last touch, as a small switch
   await what.getByRole('tab', { name: 'Pages that sell' }).click()

@@ -132,7 +132,7 @@ test('every number in the strip can be the chart, each in its own units, and the
   const chart = await open(page, 1280)
   const labels = chart.locator('svg text.num')
   for (const [name, id, unit] of [
-    ['Conversion', 'conversion', /%$/],
+    ['Paid conversion', 'conversion', /%$/],
     ['Per visitor', 'per-visitor', /^\$/],
     ['Bounce rate', 'bounce', /%$/],
     ['Session time', 'session', /^\d+m|s$/],

@@ -4,7 +4,8 @@
 // Each is a button that puts it on
 // the main chart when the chart can draw it here (chartMetric).
 import type { ReactNode } from 'react'
-import type { Bots, KPIs, Money, Site } from '../../lib/api'
+import type { Bots, Bucket, KPIs, Money, Result, Site } from '../../lib/api'
+import { noChangeLine } from './firstVisit'
 import { delta, fmtDuration, fmtInt, fmtMoney, fmtPct, fmtRatio, type Delta } from '../../lib/format'
 import { canChart, type Can, type ChartMetric } from './chartMetric'
 import { botsLine } from './botsLine'
@@ -41,6 +42,11 @@ interface Props {
   pace?: ReactNode
   /** What was filtered out of the period: a line in the Visitors tile's tooltip. */
   bots?: Bots
+  /** The whole period has too few visits for a rate or an average (lib/thin): Bounce rate and Session time show a dash. */
+  thin?: boolean
+  /** The period before, when a comparison is asked for and nothing narrows the page: if it cannot carry a change, the strip says why under it. */
+  before?: Result
+  bucket?: Bucket
   /** The site whose Settings → Payments the Revenue tile opens. */
   site: Site
 }
@@ -77,9 +83,9 @@ export function KpiStrip(p: Props) {
     if (money)
       return (
         <>
-          {tile('revenue', copy.revenue, p.revenue, (n) => fmtMoney(n, money.currency, money.exponent), pm ? delta(money.revenue, pm.revenue) : null, { live: (r) => r.revenue, money: true })}
-          {tile('conversion', copy.conversion, p.conv, rate, pm && p.conv !== undefined ? delta(p.conv, pm.conversion) : null)}
-          {tile('per-visitor', copy.perVisitorTile, p.rpv, cents, pm && p.rpv !== undefined ? delta(p.rpv, pm.revenue_per_visitor) : null, { live: (r) => (r.kpis.visitors ? r.revenue / r.kpis.visitors : 0), money: true })}
+          {tile('revenue', copy.revenue, p.revenue, (n) => fmtMoney(n, money.currency, money.exponent), pm ? delta(money.revenue, pm.revenue) : null, { live: (r) => r.revenue, money: true, tip: copy.tips.revenue })}
+          {tile('conversion', copy.conversion, p.conv, rate, pm && p.conv !== undefined ? delta(p.conv, pm.conversion) : null, { tip: copy.tips.conversion })}
+          {tile('per-visitor', copy.perVisitorTile, p.rpv, cents, pm && p.rpv !== undefined ? delta(p.rpv, pm.revenue_per_visitor) : null, { live: (r) => (r.kpis.visitors ? r.revenue / r.kpis.visitors : 0), money: true, tip: copy.tips.perVisitor })}
         </>
       )
     if (p.loading && p.expectMoney)
@@ -93,16 +99,22 @@ export function KpiStrip(p: Props) {
     return (
       <>
         {canChange() && <KpiMark k="revenue" tile={p.site} />}
-        {tile('pageviews', copy.pageviews, k?.pageviews, fmtInt, delta(k?.pageviews ?? 0, pk?.pageviews), { live: (r) => r.kpis.pageviews })}
+        {tile('pageviews', copy.pageviews, k?.pageviews, fmtInt, delta(k?.pageviews ?? 0, pk?.pageviews), { live: (r) => r.kpis.pageviews, tip: copy.tips.pageviews })}
       </>
     )
   }
+  // Rates and averages of a handful of visits say nothing: a dash, not 100% or 0s.
+  const few = !!p.thin
+  const note = noChangeLine(!!p.before, p.before, p.bucket ?? 'day')
   return (
-    <div role="group" aria-label={copy.keyNumbers} className="kpis">
-      {tile('visitors', copy.visitors, k?.visitors, fmtInt, delta(k?.visitors ?? 0, pk?.visitors), { live: (r) => r.kpis.visitors, hint: p.hint, pace: p.pace, tip: botsLine(p.bots) })}
-      {second()}
-      {tile('bounce', copy.bounce, k?.bounce_rate, fmtPct, delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true), { live: (r) => r.kpis.bounce_rate })}
-      {tile('session', copy.session, k?.avg_session_s, fmtDuration, delta(k?.avg_session_s ?? 0, pk?.avg_session_s), { live: (r) => r.kpis.avg_session_s })}
-    </div>
+    <>
+      <div role="group" aria-label={copy.keyNumbers} className="kpis">
+        {tile('visitors', copy.visitors, k?.visitors, fmtInt, delta(k?.visitors ?? 0, pk?.visitors), { live: (r) => r.kpis.visitors, hint: p.hint, pace: p.pace, tip: [copy.tips.visitors, botsLine(p.bots)].filter(Boolean).join(' ') })}
+        {second()}
+        {tile('bounce', copy.bounce, few ? undefined : k?.bounce_rate, fmtPct, few ? null : delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true), { live: (r) => r.kpis.bounce_rate, tip: few ? `${copy.tips.bounce} ${copy.tips.tooFew}.` : copy.tips.bounce })}
+        {tile('session', copy.session, few ? undefined : k?.avg_session_s, fmtDuration, few ? null : delta(k?.avg_session_s ?? 0, pk?.avg_session_s), { live: (r) => r.kpis.avg_session_s, tip: few ? `${copy.tips.session} ${copy.tips.tooFew}.` : copy.tips.session })}
+      </div>
+      {note && <p className="kpis-note">{note}</p>}
+    </>
   )
 }

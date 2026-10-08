@@ -30,7 +30,7 @@ import { ReplayButton, ScrubBar } from '../features/overview/Replay'
 import { useReplayTimer, useSpeed } from '../features/overview/useReplay'
 import { useRaceNow, useRaceRows } from '../features/overview/useRace'
 import { RACE_DIMS, replaySeconds, speedOf } from '../features/overview/replayTime'
-import { hourIn, hourlySpan, previousWhole } from '../features/overview/firstVisit'
+import { hourIn, hourlySpan, canCompare, thinPeriod } from '../features/overview/firstVisit'
 import { chartMetric, ghostValues, metricName, metricProps, metricValues, type ChartMetric } from '../features/overview/chartMetric'
 import { chartTips } from '../features/overview/chartTips'
 import { useChartHold } from '../features/overview/reserve'
@@ -329,7 +329,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   if (scrubbing) k = day?.kpis ?? zeroKPIs
   // Nothing at all before: no change to show, not "new" on every tile.
   const before = data?.previous
-  const hasPrev = compareOn && !scrubbing && !trailData && (before?.kpis.sessions ?? 0) > 0 && previousWhole(before?.series.map((p) => p.visitors) ?? [], data?.bucket ?? 'day')
+  const hasPrev = compareOn && !scrubbing && !trailData && canCompare(before, data?.bucket ?? 'day')
   const pk = hasPrev ? data?.previous?.kpis : undefined
   const race = useRaceRows(src, raceTo)
   const soFar = racing ? 'So far' : undefined
@@ -524,7 +524,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       <section className="card overview" aria-label="Overview">
       <KpiStrip
         loading={firstLoad} vs={vs} metric={metric} can={canDraw} onPick={pick} expectMoney={hold.revenue}
-        k={k} pk={pk} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} blank={blank} site={site} bots={data?.bots}
+        k={k} pk={pk} thin={thinPeriod(src?.kpis, scrubbing || !!trailData)} before={compareOn && !scrubbing && !trailData ? before : undefined} bucket={data?.bucket} money={money} pm={pm} revenue={revenueNow} conv={conv} rpv={rpv} follow={follow} blank={blank} site={site} bots={data?.bots}
         pace={live && !isShared() ? extra({ part: 'pace', site: site.id, today, filters: query.filters, test: query.testPayments }) : undefined}
         hint={compareOn && !scrubbing && !raced && !trailData ? visitorsHint({ site: site.id, period: view.period, day: range.to, filters: view.filters }) : undefined}
       />

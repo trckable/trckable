@@ -3254,3 +3254,19 @@ body {
 .app .ctl-see .btn.filter {
   align-self: center;
 }
+
+/* The line under a list whose shares can add up to more than all: quiet, small. */
+.list-foot {
+  margin: 8px 0 0;
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.4;
+}
+/* The goals list's column heads: the second says what the percentage is of. */
+.goals-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 4px 6px;
+  color: var(--text-3);
+  font-size: 12px;
+}
