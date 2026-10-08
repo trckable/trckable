@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The busy-moment dialog opened from a notification now shows the whole story (the last hour as a chart, the beats, and the sources, page, countries and devices) instead of only the number: it loads the story while it opens, and says so when the moment is over.
 - Scroll depth at the top of a page is 0% again (it counted as 100%), Android phones from Cubot and the Baidu app are no longer counted as bots, a link tagged ?ref=producthunt (or another social name) lands in the same Social channel and source row as a visit from that site, only Google search counts as Search (accounts., docs., sites. and other Google services are Referral), and compare to the previous period keeps its whole days across a clock change.
 - Goal names with spaces, dots or slashes are no longer refused: "Sign up" is recorded as "sign-up" and "signup.done" as "signup-done".
 - Every list with a bar behind its rows now follows the same rule: a 4px gap between rows, 4px corners, and the bar ends exactly where the visitors number ends (the Countries, Cities and Pages lists no longer let it run past the numbers; the pages on Live no longer touch each other).
