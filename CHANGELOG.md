@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Every list with a bar behind its rows now follows the same rule: a 4px gap between rows, 4px corners, and the bar ends exactly where the visitors number ends (the Countries, Cities and Pages lists no longer let it run past the numbers; the pages on Live no longer touch each other).
+
 ## 0.7.1 (8 Oct 2026)
 
 - Reports hold up under a rush of visitors: at most four read the analytics store at once, the same report asked for by many people at once is read once, a report that takes more than 25 seconds is stopped with a clear "try again" message, a live report is kept for a few seconds even on a busy site, the all-sites view reads sites a few at a time, a public share link is rate limited and limited to two years, and the CSV export carries up to 1,000 rows per breakdown again (it was cut to 10).
@@ -22,7 +24,6 @@ section into the release.
 - A failed write to the analytics store no longer freezes the dashboards: the writer retries the batch with backoff (events are applied once), /readyz answers 503 and Settings → Health alerts while it fails, and after about five minutes the server exits so the next start replays the write-ahead log. A panic in a background task now logs its stack and exits instead of leaving the server half alive.
 - A big site's report no longer fails with "Out of Memory" on the first load after a start: the breakdowns are computed two at a time instead of all sixteen at once, the database's default memory limit is a quarter of the available memory (at least 512 MB, up from 256 MB), a report that still runs out of memory is tried once more, and if it fails again the dashboard says to pick a shorter period or add a filter. `TRCKABLE_DUCKDB_MEMORY` still overrides the default.
 - The ranked lists (pages, channels, countries, devices) have a small gap between rows so each bar is its own piece, and a bar ends where the number columns end instead of running to the card's edge.
-- Every list with a bar behind its rows now follows the same rule: a 4px gap between rows, 4px corners, and the bar ends exactly where the visitors number ends (the Countries, Cities and Pages lists no longer let it run past the numbers; the pages on Live no longer touch each other).
 - A milestone's card no longer covers the dashboard: it is a small card without the picture (Copy image and Share… still have it), comes up four seconds after the page, and puts itself away after 12 seconds unless the pointer or the keyboard is on it.
 - The menus (site switcher, period, ⋯, Filter) are nearly solid with a stronger blur, so the page's text never reads through a row; the switcher's key hints are larger and clearer.
 - Menu rows are one style: 32 px (44 px on a phone), 12 px padding, a 16 px icon column, an 8 px corner; the chosen period has its check at the left like the chosen site, and the period's list hangs from the period button's right edge instead of running past the screen.
