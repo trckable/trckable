@@ -14,10 +14,12 @@ export function useLockScroll(active = true) {
     if (depth === 0) {
       // The page scrolls on <html>, so that is what has to stop; <body> gets
       // the scrollbar's width back as padding so nothing shifts sideways.
+      // <body> itself stays as it is: hidden too, it would become a box of its
+      // own that the sticky control line is stuck inside, and the line would
+      // scroll away with the page the moment a dialog opens.
       const gap = window.innerWidth - html.clientWidth
       body.dataset.prevPad = body.style.paddingRight
       html.style.overflow = 'hidden'
-      body.style.overflow = 'hidden'
       if (gap > 0) body.style.paddingRight = `${gap}px`
     }
     depth++
@@ -25,7 +27,6 @@ export function useLockScroll(active = true) {
       depth = Math.max(0, depth - 1)
       if (depth === 0) {
         html.style.overflow = ''
-        body.style.overflow = ''
         body.style.paddingRight = body.dataset.prevPad ?? ''
         delete body.dataset.prevPad
       }
