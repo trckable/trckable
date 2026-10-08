@@ -3,7 +3,7 @@
 // Rules:
 //   - Exactly one writer, on a dedicated connection (see Writer()).
 //   - Append-only event tables with no PK/UNIQUE constraints.
-//   - Lightweight defaults: 2 threads, 256 MB memory cap, temp files on the data volume.
+//   - Lightweight defaults: 2 threads, 512 MB memory cap, temp files on the data volume.
 package duck
 
 import (
@@ -23,7 +23,7 @@ import (
 // Options configure resource usage.
 type Options struct {
 	Threads     int    // default 2
-	MemoryLimit string // default "256MB"
+	MemoryLimit string // default "512MB"
 	// NoUpgrade refuses to migrate a store that already holds a schema: the
 	// server upgrades before it opens the store for the writer, with a copy
 	// kept first, and never lets this open do it without one.
@@ -69,7 +69,7 @@ func OpenUnmigrated(path string, opts Options) (*Store, error) {
 		opts.Threads = 2
 	}
 	if opts.MemoryLimit == "" {
-		opts.MemoryLimit = "256MB"
+		opts.MemoryLimit = "512MB"
 	}
 	tmp := filepath.Join(filepath.Dir(path), "duckdb_tmp")
 	// Settings of the whole database go in once, as it opens. temp_directory

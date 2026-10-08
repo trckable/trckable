@@ -18,7 +18,7 @@ type Config struct {
 	DataDir      string   // TRCKABLE_DATA_DIR (default /data in the container, ./data otherwise)
 	Addr         string   // TRCKABLE_ADDR, or ":"+PORT (Railway), default ":8080"
 	DuckThreads  int      // TRCKABLE_DUCKDB_THREADS (default 2)
-	DuckMemory   string   // TRCKABLE_DUCKDB_MEMORY (default "256MB")
+	DuckMemory   string   // TRCKABLE_DUCKDB_MEMORY (default: a quarter of the memory, at least 512MB)
 	TrustProxy   string   // TRCKABLE_TRUST_PROXY: "auto" | "none" | "xff" | "header:<Name>"
 	LogLevel     string   // TRCKABLE_LOG_LEVEL: debug | info | warn | error
 	WALNoSync    bool     // TRCKABLE_UNSAFE_NO_FSYNC=1 — benchmarks only, never production
@@ -82,7 +82,7 @@ func Load() Config {
 		DataDir:      env("TRCKABLE_DATA_DIR", defaultDataDir()),
 		Addr:         env("TRCKABLE_ADDR", ""),
 		DuckThreads:  envInt("TRCKABLE_DUCKDB_THREADS", 2),
-		DuckMemory:   env("TRCKABLE_DUCKDB_MEMORY", "256MB"),
+		DuckMemory:   env("TRCKABLE_DUCKDB_MEMORY", defaultDuckMemory()),
 		TrustProxy:   env("TRCKABLE_TRUST_PROXY", "auto"),
 		LogLevel:     strings.ToLower(env("TRCKABLE_LOG_LEVEL", "info")),
 		WALNoSync:    os.Getenv("TRCKABLE_UNSAFE_NO_FSYNC") == "1",

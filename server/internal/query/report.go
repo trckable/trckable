@@ -210,6 +210,20 @@ const bounce = "CASE WHEN pvs <= 1 AND goals = 0 THEN 1.0 ELSE 0.0 END"
 
 // Report runs a full report.
 func (q Q) Report(ctx context.Context, p Params) (*Result, error) {
+	res, err := q.report(ctx, p)
+	if err != nil && isOutOfMemory(err) {
+		// Another query may have held the memory a moment ago.
+		res, err = q.report(ctx, p)
+	}
+	return res, err
+}
+
+// isOutOfMemory reports whether DuckDB gave up for want of memory.
+func isOutOfMemory(err error) bool {
+	return strings.Contains(err.Error(), "Out of Memory")
+}
+
+func (q Q) report(ctx context.Context, p Params) (*Result, error) {
 	if p.TZ == "" {
 		p.TZ = "UTC"
 	}
@@ -436,9 +450,24 @@ func gidFor(dims []string) map[int64]string {
 	return out
 }
 
-// groupedBreakdowns computes every DefaultDims breakdown with GROUPING SETS,
-// keeping the top `limit` rows of each.
+// breakdownChunk is how many breakdowns one grouped scan computes. Every
+// grouping set holds a hash table with a distinct-visitor set per value, so
+// all sixteen at once need memory in proportion to the traffic; a few at a
+// time fit a small memory limit on a big site, for a few more scans.
+const breakdownChunk = 2
+
+// groupedBreakdowns computes every breakdown with GROUPING SETS, a few
+// dimensions per scan, keeping the top `limit` rows of each.
 func groupedBreakdowns(ctx context.Context, conn *sql.Conn, cte string, args []any, limit int, distinct string, dims []string, out map[string][]Row) error {
+	for i := 0; i < len(dims); i += breakdownChunk {
+		if err := groupedChunk(ctx, conn, cte, args, limit, distinct, dims[i:min(i+breakdownChunk, len(dims))], out); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func groupedChunk(ctx context.Context, conn *sql.Conn, cte string, args []any, limit int, distinct string, dims []string, out map[string][]Row) error {
 	cols := make([]string, len(dims))
 	sets := make([]string, len(dims))
 	gcols := make([]string, len(dims))

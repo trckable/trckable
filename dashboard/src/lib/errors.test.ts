@@ -19,6 +19,11 @@ describe('friendly', () => {
     expect(words(new APIError(503, 'x'))).toBe('Server busy · Try again')
   })
 
+  it('says what to try when a report is too big for the server', () => {
+    const e = Object.assign(new APIError(400, 'x'), { code: 'report_memory' })
+    expect(words(e)).toContain('shorter period')
+  })
+
   it('is a warning for a busy server and an error for a refusal', () => {
     expect(friendly(new APIError(429, 'x'))?.kind).toBe('warning')
     expect(friendly(new APIError(500, 'x'))?.kind).toBe('warning')

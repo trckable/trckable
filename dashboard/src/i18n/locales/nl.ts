@@ -745,6 +745,7 @@ export default {
   'error.slow': 'Te veel pogingen · Wacht even',
   'error.busy': 'Server druk · Probeer het opnieuw',
   'error.code.not_found': 'Niet gevonden',
+  'error.code.report_memory': 'Te veel gegevens voor de server in één keer · Kies een kortere periode of voeg een filter toe',
 
   // dates
   'dates.period.now': 'Nu',
@@ -2217,8 +2218,5 @@ export default {
   'onboarding.more.sites': 'Je sites',
   'onboarding.more.waiting': 'wacht',
   'onboarding.more.receiving': 'ontvangt',
-  'onboarding.more.added': 'Die site staat er al.',
-  'onboarding.more.invalid': 'Dat lijkt geen domein.',
-  'onboarding.more.space': 'Een domein heeft geen spaties.',
   'onboarding.skipDash': 'Nu overslaan — mijn dashboard openen',
 } satisfies Messages

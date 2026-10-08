@@ -746,6 +746,7 @@ export default {
   'error.slow': 'Trop d’essais · Patientez un instant',
   'error.busy': 'Serveur occupé · Réessayez',
   'error.code.not_found': 'Introuvable',
+  'error.code.report_memory': 'Trop de données pour le serveur en une fois · Choisissez une période plus courte ou ajoutez un filtre',
 
   // dates
   'dates.period.now': 'Maintenant',
@@ -2218,8 +2219,5 @@ export default {
   'onboarding.more.sites': 'Vos sites',
   'onboarding.more.waiting': 'en attente',
   'onboarding.more.receiving': 'reçoit',
-  'onboarding.more.added': 'Ce site est déjà là.',
-  'onboarding.more.invalid': 'Cela ne ressemble pas à un domaine.',
-  'onboarding.more.space': 'Un domaine ne contient pas d’espaces.',
   'onboarding.skipDash': 'Passer pour l’instant — ouvrir mon tableau de bord',
 } satisfies Messages

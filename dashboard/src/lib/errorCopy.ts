@@ -18,4 +18,5 @@ export const errorCopy = defineCopy('error', {
 /** Words for a code the server sends, by code; more can be taught with answerCode (components/toastBus.ts). */
 export const codeCopy: Record<string, string> = defineCopy('error.code', {
   not_found: 'Not found',
+  report_memory: 'Too much data for the server to report on at once · Pick a shorter period or add a filter',
 })
