@@ -16,13 +16,8 @@
   position: relative;
   display: inline-flex;
 }
-.dlg-field .input[aria-invalid='true'] {
-  border-color: color-mix(in srgb, var(--down) 55%, transparent);
-}
-.dlg-field-err {
-  color: var(--down);
-  font-size: 12.5px;
-  line-height: 1.4;
+.dlg-field .field-err:not(:empty) {
+  margin-top: -2px; /* the field's own 8px gap plus this is the 6px */
 }
 
 /* A picker in a field fills the field like an input does. */

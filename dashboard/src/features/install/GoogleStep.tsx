@@ -3,6 +3,7 @@
 // the dialog is the command line's, as it always was.
 import { LogIn, Play, Unplug } from 'lucide-react'
 import { useState } from 'react'
+import { FieldError } from '../../kit/FieldError'
 import { first } from './firstCopy'
 import { gaStartUrl, useGaImport } from './gaImport'
 import './googleStep.css'
@@ -22,11 +23,7 @@ export function GoogleStep({ site }: { site: string }) {
   const message = code ? known : ''
   return (
     <div className="ga-step">
-      {message && (
-        <p className="ga-error" role="alert">
-          {message}
-        </p>
-      )}
+      <FieldError id="ga-err" error={message} />
       {job && job.status !== 'stopped' && (
         <div className="ga-progress">
           <progress max={Math.max(job.total, 1)} value={job.done} aria-label={t.done} />

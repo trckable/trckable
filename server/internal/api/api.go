@@ -963,7 +963,7 @@ func (a *API) createSite(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := a.Ctl.CreateSite(r.Context(), principalOf(r).account, in.Domain, "")
 	if errors.Is(err, sqlite.ErrExists) {
-		fail(w, http.StatusConflict, "that site already exists")
+		fail(w, http.StatusConflict, "you already have that site")
 		return
 	}
 	if err != nil {

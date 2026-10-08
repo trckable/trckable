@@ -270,6 +270,12 @@ button.sites-btn:hover {
   flex-wrap: wrap;
   border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
 }
+.add-row .field-err {
+  flex-basis: 100%;
+}
+.add-row .field-err:empty {
+  display: none;
+}
 .add-row .input {
   flex: 1;
   min-width: 160px;

@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+- Form errors say what to do, with an example, in one place: left-aligned under the field with a small icon, the field's border and focus ring turn red, screen readers hear it, and it clears as soon as the value is valid. Applies to add site, sign-in and setup, passwords, share links, goals, API keys, people, revenue connect and settings fields.
+### Fixed
+
+- The bars in the ranked lists (pages, channels, countries, devices) sit inside the card with the same inset as the column heads, and their corners are tighter.
 ### Changed
 
 - Install methods (Add a site, onboarding): the tabs and More… are one segmented row of one height; tabs that do not fit scroll with a fade at the edge, and a method picked from More… scrolls into view instead of peeking out half cut off. In the More… search there is one focus border, and a chosen result shows its full name with the keywords cut instead.
