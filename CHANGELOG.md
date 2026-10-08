@@ -12,6 +12,8 @@ section into the release.
 ### Changed
 
 - Site switcher: no hover tooltip over a row and no number badge (the 1-9 keys still open a site); the drag handle sits inside the row at the check's column; the number, the open arrow and the ⋯ have fixed right-hand slots so nothing jumps or overlaps on hover; the top line reads "27 live  413 today" on one baseline. Rows are 32 px (44 px on a phone).
+- The dashboard's first-load size limit is 132 KB (was 130 KB) while the launch fixes land.
+- The soft light on a glass card under the pointer no longer follows it: it sits in the card's top right corner and is a little weaker (70%).
 
 ## 0.7.0 (8 Oct 2026)
 
