@@ -1,6 +1,6 @@
 // A small card that slides in from the side, for a nudge or a finding: what it
 // is (an icon with its own tint, and when it happened), its title or figure, a
-// body, a small chart of the moment, and its actions. It floats above the page
+// body, its actions, and a small chart of the moment running to the bottom edge. It floats above the page
 // (bottom right above the Peek button; a bottom sheet with a grab handle on a
 // phone), so it never moves the layout. One at a time (useSideCard). A card that
 // holds several things (a deck) shows where it is as dots, with the next card
@@ -56,8 +56,6 @@ export interface SideCardProps {
   deck?: DeckProps
   /** The ghost in the corner: for a milestone and a first sale only. */
   ghost?: boolean
-  /** One flat card: no line of the card's colour on its edge, and a plain icon. */
-  flat?: boolean
   /** Something that stands on the card's top edge (the milestone's ghost): it never covers the card. */
   crown?: ReactNode
 }
@@ -66,7 +64,7 @@ export interface SideCardProps {
 const LEAVE_MS = 200
 const SWIPE = 40
 
-export function SideCard({ id, label, closeLabel, asked, title, onClose, actions, children, kind, when, chart, deck, ghost, flat, crown }: SideCardProps) {
+export function SideCard({ id, label, closeLabel, asked, title, onClose, actions, children, kind, when, chart, deck, ghost, crown }: SideCardProps) {
   const mine = useSideCard(id, asked)
   const card = useRef<HTMLElement>(null)
   const before = useRef<Element | null>(null)
@@ -164,20 +162,21 @@ export function SideCard({ id, label, closeLabel, asked, title, onClose, actions
   return createPortal(
     <div className={'side-deck' + (stacked ? ' is-stack' : '')}>
       {crown}
+      {ghost && (
+        <span className="side-ghost" aria-hidden="true">
+          <Ghost size={56} />
+        </span>
+      )}
       {stacked && <i className="side-peek" aria-hidden="true" />}
       {stacked && <i className="side-peek p2" aria-hidden="true" />}
       <aside
         ref={card}
         tabIndex={-1}
-        className={'side-card' + (kind ? ' has-kind' : '') + (flat ? ' flat' : '') + (leaving ? ' leaving' : '')}
+        className={'side-card flat' + (kind ? ' has-kind' : '') + (leaving ? ' leaving' : '')}
         style={kind?.tint ? ({ '--tint': kind.tint } as CSSProperties) : undefined}
         aria-label={label}
       >
-        {ghost && (
-          <span className="side-ghost" aria-hidden="true">
-            <Ghost size={56} />
-          </span>
-        )}
+        <span className="side-grab" aria-hidden="true" />
         <button type="button" className="side-card-x" aria-label={closeLabel} onClick={close}>
           <X size={15} strokeWidth={2} aria-hidden="true" />
         </button>
@@ -196,11 +195,11 @@ export function SideCard({ id, label, closeLabel, asked, title, onClose, actions
         )}
         <b className="side-card-title">{title}</b>
         {children}
-        {chart}
         <div className="side-card-actions">
           {deck && <Deck {...deck} onPrev={() => turn(-1)} onNext={() => turn(1)} />}
           <Leaving.Provider value={close}>{actions}</Leaving.Provider>
         </div>
+        {chart}
       </aside>
     </div>,
     document.body,

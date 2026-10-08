@@ -3,6 +3,7 @@
 // second, dashed line on the same scale (the same time a week ago).
 import { useId } from 'react'
 import { areaPaths } from './model'
+import { isEmpty, NoData } from './NoData'
 import './base.css'
 
 const W = 300
@@ -12,6 +13,7 @@ export function Area({ values, color, was, slots }: { values: number[]; color: s
     const both = was && was.length > 1 ? [...values, ...was] : values
   const scale = { min: was ? 0 : undefined, max: was ? Math.max(...both, 1) : undefined, slots }
   const id = useId()
+  if (isEmpty(values)) return <NoData />
   const { line, area } = areaPaths(values, W, H, 4, scale)
   const before = was && was.length > 1 ? areaPaths(was, W, H, 4, scale).line : ''
   return (

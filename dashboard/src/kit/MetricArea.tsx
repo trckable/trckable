@@ -4,6 +4,7 @@
 import type { KeyboardEventHandler, ReactNode } from 'react'
 import { Area } from './Area'
 import { Card } from './Card'
+import { NoData } from './NoData'
 import { Pill } from './Pill'
 import { toneColor, type Tone } from './model'
 
@@ -45,8 +46,10 @@ export function MetricArea({ icon, iconTone, status, label, head, aside, value, 
       {pill.text}
     </Pill>
   )
+  const chart = series?.length === 0 ? <NoData /> : undefined
+  const area = series && series.length > 1 ? <Area values={series} was={was} slots={slots} color={color ?? toneColor(tone)} /> : undefined
   return (
-    <Card icon={icon} tone={iconTone} status={status} chart={series && series.length > 1 ? <Area values={series} was={was} slots={slots} color={color ?? toneColor(tone)} /> : undefined} title={head ?? label} aside={aside} onOpen={onOpen} openLabel={openLabel} stretch={stretch} variant={variant} press={press} onKeyDown={onKeyDown} className={`kit-metric ${compact ? 'compact' : ''} ${className}`}>
+    <Card icon={icon} tone={iconTone} status={status} chart={chart ?? area} title={head ?? label} aside={aside} onOpen={onOpen} openLabel={openLabel} stretch={stretch} variant={variant} press={press} onKeyDown={onKeyDown} className={`kit-metric ${compact ? 'compact' : ''} ${className}`}>
       <span className="kit-val">
         <b className="num">{value}</b>
         {pillEl}

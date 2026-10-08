@@ -59,7 +59,6 @@ export function Celebration({ m, list = [], site, domain = site, onShare, onClos
       closeLabel={copy.dismiss}
       kind={{ icon: <Flag size={14} strokeWidth={2} />, label: `${copy.kind} · ${domain}`, tint: w.money ? 'var(--money)' : 'var(--accent)' }}
       when={{ text: copy.today, title: fmtDay(m.day, { weekday: true }) }}
-      flat
       crown={<Party money={w.money} />}
       title={
         <span className="side-num num">

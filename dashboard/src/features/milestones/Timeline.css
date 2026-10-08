@@ -146,10 +146,6 @@
   animation: ms-up 0.35s var(--ease) both;
   animation-delay: calc(var(--i, 0) * 45ms + 120ms);
 }
-.ms-tile:hover,
-.ms-tile:focus-within {
-  border-color: var(--accent);
-}
 .ms-done {
   width: 150px;
 }

@@ -51,6 +51,6 @@
 }
 .fn-panel .funnel-steps .picker-btn:hover,
 .fn-panel .funnel-steps .picker-btn:focus-visible {
-  border-color: var(--border-2);
   color: var(--text);
+  background-image: var(--hover-veil);
 }

@@ -155,9 +155,9 @@
   font-weight: 600;
 }
 .inst-code-one .code-bar button:hover {
-  border-color: var(--accent-strong);
   background: var(--accent-strong);
   color: var(--accent-ink);
+  background-image: var(--hover-veil);
 }
 .inst-docs {
   display: inline-flex;

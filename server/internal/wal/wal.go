@@ -383,6 +383,10 @@ func (l *Log) Committed() (uint64, <-chan struct{}) {
 	return l.committed, l.notify
 }
 
+// Pending reports how many appends wait to be committed and how many the
+// queue holds at most.
+func (l *Log) Pending() (waiting, capacity int) { return len(l.reqs), cap(l.reqs) }
+
 // Err reports a sticky write error (e.g. disk full). While set, appends fail
 // and readiness should report unhealthy.
 func (l *Log) Err() error {

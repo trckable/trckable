@@ -4,6 +4,8 @@
 import { Eye, LogOut, Users, Wallet } from 'lucide-react'
 import { delta, fmtInt, fmtMoney, fmtPct, type Delta } from '../lib/format'
 import type { SiteRow } from '../lib/api'
+import { ShortName } from '../kit/ShortName'
+import { kitWords } from '../kit/copy'
 import { MetricArea } from '../kit/MetricArea'
 import type { Tone } from '../kit/model'
 import { OnlineTile } from './OnlineTile'
@@ -32,7 +34,7 @@ export function AllSummary({ s, days, rows, start }: { s: ReturnType<typeof summ
       <MetricArea
         icon={<LogOut size={15} strokeWidth={1.8} />}
         iconTone={high ? 'bad' : undefined}
-        label={copy.bounce}
+        label={<ShortName full={copy.bounce} short={kitWords.shortBounce} />}
         value={s.total ? fmtPct(s.bounce) : '–'}
         pill={chip(bounced, days)}
         series={bounceSeries(rows, start)}

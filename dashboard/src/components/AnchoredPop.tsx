@@ -103,8 +103,11 @@ export function AnchoredPop({
     }
     // A scroll under an open popover moves its button: close rather than drift.
     // One already under way when it opened is not the reader moving the page.
+    // The page's own scroll counts once it has moved a little: a clamp when the page gets shorter, or a late event for a scroll that came before the popover, is not the reader.
+    const y0 = window.scrollY
     const scrolled = (e: Event) => {
       if (performance.now() - openedAt.current < 250) return
+      if (e.target === document && Math.abs(window.scrollY - y0) < 40) return
       if (!box.current?.contains(e.target as Node)) onClose()
     }
     document.addEventListener('mousedown', away)

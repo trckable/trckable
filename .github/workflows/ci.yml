@@ -301,14 +301,13 @@ jobs:
         timeout-minutes: 8
         run: |
           o="-o Acquire::Retries=3 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15"
-          get() { apt-get $o update -qq && apt-get $o install -y -qq --no-install-recommends php-cli > /dev/null; }
-          if ! timeout 150 bash -c "$(declare -f get); o='$o'; get"; then
+          if ! timeout 150 sh -c "apt-get $o update -qq && apt-get $o install -y -qq --no-install-recommends php-cli >/dev/null"; then
             echo "::warning::the Azure package mirror stalled; trying the main Ubuntu archive"
             rm -rf /var/lib/apt/lists/* # what the stalled try half fetched
             for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
               [ -f "$f" ] && sed -i 's#http://azure.archive.ubuntu.com#http://archive.ubuntu.com#g' "$f"
             done
-            get
+            apt-get $o update -qq && apt-get $o install -y -qq --no-install-recommends php-cli > /dev/null
           fi
           php -v | head -1
       - name: the image carries the locked Playwright
@@ -534,7 +533,7 @@ jobs:
         name: boots, accepts an event, idle memory ≤ 64 MB, stops cleanly
         run: |
           docker run -d --name tkb -p 8080:8080 trckable:ci
-          for i in $(seq 1 50); do curl -sf localhost:8080/readyz && break; sleep 0.2; done
+          for i in $(seq 1 50); do curl -sf localhost:8080/readyz | grep -q "\"analytics_ready\":true" && break; sleep 0.2; done
           site=$(docker exec tkb trckabled site add example.com)
           code=$(curl -s -o /dev/null -w '%{http_code}' -X POST localhost:8080/api/e \
             -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36' \

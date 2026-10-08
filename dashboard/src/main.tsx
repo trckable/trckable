@@ -34,7 +34,7 @@ import { ShortcutsHost } from "./components/ShortcutsHost";
 const SharedSite = lazy(() => import("./views/SharedSite"));
 import { Toasts } from "./components/Toast"; import { Hints } from "./features/hints/HintsDoor"; import { Boundary } from "./components/Boundary"; import "./lib/pwa";
 import "./phone.css"; // last: what it sets on a phone wins over the styles imported before it
-
+void import("./kit/glass").then((m) => m.startGlass()); // the glass: its own small chunk, asked for at once, so the first load keeps its weight
 try {
   applyTheme(localStorage.getItem("trckable:theme") ?? "system");
 } catch {

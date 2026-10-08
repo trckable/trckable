@@ -147,6 +147,8 @@ export function useReorder(sites: Site[], layout: SiteLayout, sections: Section[
       if (k.key !== 'Escape') return
       k.stopPropagation() // the switcher stays open; the row goes back
       finish(false)
+      // The button is still down: the click that follows its release is not a pick either.
+      document.addEventListener('click', (e) => e.stopPropagation(), { capture: true, once: true })
     }
     document.addEventListener('pointermove', move)
     document.addEventListener('pointerup', up)

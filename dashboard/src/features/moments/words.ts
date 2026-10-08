@@ -10,6 +10,8 @@ import { fmtInt, fmtPct } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import { times } from '../../lib/times'
 import { copy, titleOf } from './copy'
+import { extraOf, type Span } from './spans'
+import { periodOf } from '../story/moments'
 
 export interface Said {
   title: string
@@ -55,4 +57,39 @@ export function say(pin: Pin, money: (minor: number) => string): Said {
     case 'pays':
       return { title, line: extrasCopy.highlights.pays(name, money(Math.round(n.perVisitor ?? 0)), n.times ?? 0), big: copy.perVisitor(money(Math.round(n.perVisitor ?? 0))), facts: [name, copy.average(times(n.times ?? 0))] }
   }
+}
+
+/** A source's name as a person says it: "google.com" and "www.google.com" are "Google". */
+export function hostLabel(host: string): string {
+  const first = host.replace(/^www\./, '').split('.')[0] ?? host
+  return first.charAt(0).toUpperCase() + first.slice(1)
+}
+
+/** What a moment on the chart is called, in plain words: from its kind and its cause. */
+export function headline(s: Span): string {
+  const m = s.main
+  const who = m.n.referrer ?? (m.kind === 'referrer' ? m.n.name : undefined)
+  if (s.dir === 'down') return m.kind === 'drop' ? copy.span.fewer : copy.span.quiet
+  switch (m.kind) {
+    case 'spike':
+    case 'surge':
+      return who ? copy.span.found(hostLabel(who)) : copy.span.busy
+    case 'sale':
+      return copy.span.sales
+    case 'milestone':
+      return copy.span.milestone
+    case 'ai':
+      return copy.span.ai
+    case 'referrer':
+      return who ? copy.span.fresh(hostLabel(who)) : copy.span.busy
+    default:
+      return copy.span.busy
+  }
+}
+
+/** The days and, where the moment is about visitors, what they added: "Sep 27–29 · +7,800 visitors". */
+export function spanLine(s: Span): string {
+  const extra = extraOf(s)
+  const days = periodOf([s.from, s.to])
+  return extra ? `${days} · ${copy.span.more(fmtInt(extra))}` : days
 }

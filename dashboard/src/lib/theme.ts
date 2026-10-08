@@ -1,6 +1,7 @@
 // The theme is chosen before anything renders, so it lives on its own and
 // costs a few bytes in the first load.
 import { useEffect, useState } from 'react'
+import './paneSheen'
 
 export type Theme = 'system' | 'dark' | 'light'
 

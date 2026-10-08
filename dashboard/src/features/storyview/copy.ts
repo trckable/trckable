@@ -61,12 +61,10 @@ export const copy = defineCopy('storyview', {
   timeSame: (before: string) => `Inside your normal (${before} before)`,
   // The chart and its moments.
   chartTitle: 'What happened, day by day',
-  chartHint: 'Click a number to open that moment',
+  chartHint: (n: number) => `${n} ${n === 1 ? 'moment' : 'moments'} · tap one to open it`,
   chartLabel: 'Visitors over the period, with the moments marked',
   before: 'the period before',
   noMoments: 'Nothing unusual to mark in this period.',
-  momentsTitle: 'Moments',
-  openMoment: (when: string, what: string) => `${when}: ${what}. Open it in Explore`,
   // The five questions.
   statusBefore: 'vs before',
   statusSoFar: 'so far',

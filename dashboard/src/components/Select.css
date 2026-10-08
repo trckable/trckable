@@ -12,7 +12,7 @@
   transition: border-color 0.15s;
 }
 .select:hover {
-  border-color: var(--border-2);
+  background-image: var(--hover-veil);
 }
 .select select {
   appearance: none;

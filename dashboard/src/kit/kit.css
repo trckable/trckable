@@ -252,7 +252,7 @@ button.kit-ask {
   cursor: pointer;
 }
 button.kit-ask:hover {
-  border-color: var(--accent);
+  background-image: var(--hover-veil);
 }
 .kit-ask-i {
   display: grid;
@@ -349,7 +349,7 @@ button.kit-ask:hover {
   cursor: pointer;
 }
 .kit-act:hover {
-  border-color: var(--accent);
+  background-image: var(--hover-veil);
 }
 
 /* List */
@@ -695,7 +695,7 @@ button.kit-chip:focus-visible {
   cursor: pointer;
 }
 .kit-linkline:hover {
-  border-color: var(--accent);
+  background-image: var(--hover-veil);
 }
 .kit-linkline:focus-visible {
   outline: 2px solid var(--accent);

@@ -169,3 +169,14 @@
   fill: var(--text-2);
   pointer-events: none;
 }
+
+/* An empty chart: the placeholder wave and its pill over the plot, under the cursor and the markers. */
+.chart-nodata {
+  position: absolute;
+  right: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.chart-nodata .kit-nodata {
+  height: 100%;
+}

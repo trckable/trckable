@@ -48,9 +48,6 @@
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 70%, transparent), transparent 60%), var(--sunken);
   transition: border-color 0.2s ease;
 }
-.keys-group:hover {
-  border-color: var(--border-2);
-}
 .keys-group header {
   display: flex;
   align-items: center;
@@ -162,7 +159,7 @@ kbd.cap.small {
   cursor: default;
 }
 button.keys-caps:hover kbd.cap {
-  border-color: var(--text-3);
+  background-image: var(--hover-veil);
 }
 button.keys-caps:focus-visible {
   outline: 2px solid var(--accent);
@@ -293,7 +290,7 @@ kbd.cap.down {
 }
 .pill-btn:hover {
   color: var(--text);
-  border-color: var(--border-2);
+  background-image: var(--hover-veil);
 }
 .pill-btn:hover svg {
   transform: rotate(-120deg);

@@ -142,8 +142,8 @@
   transition: border-color 0.15s, background 0.15s;
 }
 button.sites-btn:hover {
-  border-color: var(--border-2);
   background: var(--sunken);
+  background-image: var(--hover-veil);
 }
 .sites-btn.plain {
   border-color: transparent;
@@ -197,7 +197,7 @@ button.sites-btn:hover {
   color: var(--accent-strong, var(--accent));
 }
 .role-pill:hover:not(:disabled) {
-  border-color: var(--text-3);
+  background-image: var(--hover-veil);
 }
 .role-pill:disabled {
   cursor: not-allowed;
@@ -299,9 +299,6 @@ button.sites-btn:hover {
 .key-tile svg:last-child {
   margin-left: auto;
   color: var(--text-3);
-}
-a.key-tile:hover {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
 }
 .key-empty {
   display: grid;

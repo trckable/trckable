@@ -88,10 +88,6 @@
   background: var(--surface);
   transition: border-color 0.15s;
 }
-.site-card:hover,
-.site-card:focus-within {
-  border-color: var(--accent);
-}
 .site-card.stopped {
   border-color: color-mix(in srgb, var(--down) 35%, var(--border));
 }
@@ -169,9 +165,9 @@
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 .site-add:hover {
-  border-color: color-mix(in srgb, var(--accent) 60%, var(--border-2));
   color: var(--text);
   background: color-mix(in srgb, var(--accent) 4%, transparent);
+  background-image: var(--hover-veil);
 }
 @media (max-width: 640px) {
   .site-card {

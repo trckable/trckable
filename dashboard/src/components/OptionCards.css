@@ -20,7 +20,6 @@
   transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 .opt-card:hover {
-  border-color: var(--border-2);
   color: var(--text);
 }
 .opt-card[aria-checked='true'] {

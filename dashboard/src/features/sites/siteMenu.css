@@ -41,7 +41,7 @@
 .all-chip:hover,
 .all-chip:focus-visible {
   color: var(--text);
-  border-color: var(--border-2);
+  background-image: var(--hover-veil);
 }
 .all-chip.on {
   color: var(--accent);

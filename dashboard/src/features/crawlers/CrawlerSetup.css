@@ -37,7 +37,6 @@
   transition: border-color 0.15s, background 0.15s;
 }
 .cs-tile:hover {
-  border-color: var(--border-2);
   background: var(--surface-2);
 }
 .cs-tile .faint {

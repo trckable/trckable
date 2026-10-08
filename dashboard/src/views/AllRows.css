@@ -46,10 +46,6 @@
   cursor: pointer;
   transition: border-color 0.15s;
 }
-.all-card:hover,
-.all-line:hover {
-  border-color: var(--accent);
-}
 .all-card.quiet,
 .all-line.quiet {
   border-style: dashed;
@@ -259,8 +255,4 @@
 .app .all-line.quiet {
   border-top-style: solid;
   opacity: 0.8;
-}
-.app .all-card:hover,
-.app .all-line:hover {
-  border-top-color: var(--accent);
 }

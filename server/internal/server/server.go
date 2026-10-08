@@ -78,6 +78,7 @@ type Server struct {
 	started   time.Time
 	// readyzLogged is when /readyz last logged a failure (unix nanoseconds).
 	readyzLogged atomic.Int64
+	collectCache collectCache
 	// remote is the bucket backups are copied to (TRCKABLE_BACKUP_S3), and
 	// offsite how the last copy went.
 	remote  *backup.Remote
@@ -321,6 +322,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	mux.Handle("/", web.DashboardFramed(a.FrameAncestors))
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
 	mux.HandleFunc("GET /readyz", s.readyz)
+	mux.HandleFunc("GET /healthz/collect", s.healthCollect)
 	mux.HandleFunc("GET /metrics", s.metrics)
 	mux.HandleFunc("GET /_trckable/whoami", s.whoami)
 	s.http = &http.Server{

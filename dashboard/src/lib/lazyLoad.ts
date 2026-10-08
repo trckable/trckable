@@ -33,11 +33,12 @@ export function lazyLoad<T extends ComponentType<any>>(load: () => Promise<{ def
   return Object.assign(Loaded, { preload })
 }
 
-/** Runs `fn` once the browser has nothing better to do. */
+/** Runs `fn` once the page has loaded (a chunk fetched earlier would hold the load event back) and the browser has nothing better to do. */
 export function whenIdle(fn: () => void) {
-  if (typeof window === 'undefined') return
-  if ('requestIdleCallback' in window) window.requestIdleCallback(() => fn(), { timeout: 3000 })
-  else setTimeout(fn, 1500)
+  if (typeof document === 'undefined') return
+  const idle = () => ('requestIdleCallback' in window ? window.requestIdleCallback(() => fn(), { timeout: 3000 }) : setTimeout(fn, 1500))
+  if (document.readyState === 'complete') idle()
+  else window.addEventListener('load', idle, { once: true })
 }
 
 /** Props for a button whose menu is a lazyLoad chunk: pointing, focusing or touching fetches it. */

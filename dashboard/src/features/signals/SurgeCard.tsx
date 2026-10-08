@@ -9,7 +9,6 @@
 import { TrendingUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { SideCard } from '../../components/SideCard/SideCard'
-import { Ghost } from '../../components/Logo'
 import { fmtInt } from '../../lib/format'
 import { useSeen, wasSeen, markSeen } from '../install/seen'
 import { Rolling } from '../moments/Rolling'
@@ -55,6 +54,8 @@ function Card({ surge, tz }: { surge: Surge; tz: string }) {
         label={t.label}
         closeLabel={t.close}
         kind={{ icon: <TrendingUp size={14} strokeWidth={2} />, label: t.label, tint: 'var(--accent)' }}
+        when={{ text: t.justNow, title: t.justNow }}
+        ghost
         title={t.title}
         onClose={putAway}
         chart={<SurgeSpark surge={surge} />}
@@ -67,9 +68,6 @@ function Card({ surge, tz }: { surge: Surge; tz: string }) {
           <span className="sg-meta">
             <span className="sg-chip">{surgeChip(surge)}</span>
             <span className="sg-unit">{t.onlineNow}</span>
-          </span>
-          <span className="sg-ghost" aria-hidden="true">
-            <Ghost size={44} />
           </span>
         </div>
         {sourceLine(surge) && <SourceLine surge={surge} />}

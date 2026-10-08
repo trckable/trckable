@@ -148,7 +148,7 @@
 }
 .header.quiet .site-zone:hover,
 .header.quiet .site-zone:focus-within {
-  border-color: var(--border-2);
+  background-image: var(--hover-veil);
 }
 .header.quiet .site-zone .btn.site-btn {
   height: calc(var(--hdr-h) - 4px);

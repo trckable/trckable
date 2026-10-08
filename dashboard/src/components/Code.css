@@ -31,7 +31,7 @@
 
 .code-bar button:hover {
   color: var(--text);
-  border-color: var(--border-2);
+  background-image: var(--hover-veil);
 }
 
 .c-comment {

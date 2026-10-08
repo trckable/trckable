@@ -111,7 +111,7 @@
   padding: 8px 12px 0;
 }
 .note-day-label:hover {
-  border-color: var(--border-2);
+  background-image: var(--hover-veil);
 }
 .note-day-label[aria-expanded='true'] {
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);

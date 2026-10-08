@@ -44,7 +44,7 @@
   transition: border-color 0.18s var(--ease), background 0.18s var(--ease);
 }
 .role-opt:hover {
-  border-color: var(--border-2);
+  background-image: var(--hover-veil);
 }
 .role-opt[aria-selected='true'] {
   border-color: var(--accent);
@@ -114,10 +114,6 @@
   border-radius: 14px;
   background: var(--surface);
   transition: border-color 0.15s;
-}
-.me-card:hover,
-.me-card:focus-within {
-  border-color: var(--accent);
 }
 .me-photo {
   position: relative;
