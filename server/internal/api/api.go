@@ -21,6 +21,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"golang.org/x/sync/singleflight"
+
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/ga"
 	"github.com/trckable/trckable/server/internal/query"
@@ -36,7 +38,8 @@ const sessionCookie = "trckable_session"
 
 // API serves /api/v1.
 type API struct {
-	widgetCache widgetCache // each site's widget numbers, for a minute
+	widgetCache widgetCache        // each site's widget numbers, for a minute
+	flights     singleflight.Group // reads in progress, so identical requests share one
 	Ctl         *sqlite.Store
 	Query       func() *query.Q // nil while the analytics store warms up
 	Hub         *realtime.Hub

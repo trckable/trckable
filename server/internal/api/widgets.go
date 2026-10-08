@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
@@ -320,28 +321,19 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 		key := fmt.Sprintf("%s|%s|%v", si.ID, wd.Kind, ask)
 		nums, ok := a.widgetCache.get(key, now)
 		if !ok {
-			if wd.Kind == "revenue" {
-				t := now.In(loc)
-				month := time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, loc)
-				res, err := q().Report(r.Context(), query.Params{Site: si.ID, From: month.UTC(), To: now.UTC(), TZ: loc.String(), Bucket: "day", Limit: 3, Currency: si.Currency, Revenue: true})
-				if err != nil {
-					http.Error(w, "the numbers could not be read", http.StatusInternalServerError)
-					return
-				}
-				if res.Money != nil {
-					v := res.Money.Revenue
-					nums.Revenue = &v
-				}
-				nums.RevChannels = res.RevenueDims["channel"]
-			} else {
-				n, err := q().Widget(r.Context(), si.ID, now, ask)
-				if err != nil {
-					http.Error(w, "the numbers could not be read", http.StatusInternalServerError)
-					return
-				}
-				nums.WidgetNumbers = n
+			// One read serves every request for the same widget that arrives
+			// while it runs; it outlives the first request, up to the timeout.
+			base := context.WithoutCancel(r.Context())
+			v, err, _ := a.flights.Do("widget|"+key, func() (any, error) {
+				ctx, cancel := context.WithTimeout(base, reportTimeout)
+				defer cancel()
+				return a.readWidget(ctx, q(), wd, si, ask, now, loc, key)
+			})
+			if err != nil {
+				http.Error(w, "the numbers could not be read", http.StatusInternalServerError)
+				return
 			}
-			a.widgetCache.putFor(key, nums, now, widgetFresh(wd.Kind))
+			nums = v.(widgetNumbers)
 		}
 		fill(&view, wd, si, nums, now, loc, words)
 		if wd.Kind == "online" {
@@ -638,3 +630,29 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 {{else}}<div class="card pill on"><span class="dot"></span><span>{{.Count}} {{.L.online}}</span>{{if .Bars}}<span class="spark" aria-hidden="true">{{range .Bars}}<i><s{{if eq .H 0}} class="z"{{end}} style="height:{{.H}}%"></s></i>{{end}}</span>{{end}}{{if .Brand}}<a class="gh" href="https://trckable.com" target="_blank" rel="noopener" title="{{.L.brand}} trckable" aria-label="{{.L.brand}} trckable">{{.Ghost}}</a>{{end}}</div>{{end}}
 {{else}}<div class="card pill"><div class="row"><span class="dot"></span>{{.L.counter}}</div>{{if .Brand}}{{template "by" .}}{{end}}</div>{{end}}
 <script>@SCRIPT@</script></body></html>{{define "by"}}<a class="by" href="https://trckable.com" target="_blank" rel="noopener">{{.Ghost}}<span>{{.L.brand}} <b>trck</b><i>able</i></span></a>{{end}}`, "@SCRIPT@", web.WidgetPageScript, 1)))
+
+// readWidget reads the numbers a widget shows and keeps them for a while.
+func (a *API) readWidget(ctx context.Context, q *query.Q, wd sqlite.Widget, si sqlite.SiteInfo, ask query.WidgetAsk, now time.Time, loc *time.Location, key string) (widgetNumbers, error) {
+	var nums widgetNumbers
+	if wd.Kind == "revenue" {
+		t := now.In(loc)
+		month := time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, loc)
+		res, err := q.Report(ctx, query.Params{Site: si.ID, From: month.UTC(), To: now.UTC(), TZ: loc.String(), Bucket: "day", Limit: 3, Currency: si.Currency, Revenue: true})
+		if err != nil {
+			return nums, err
+		}
+		if res.Money != nil {
+			v := res.Money.Revenue
+			nums.Revenue = &v
+		}
+		nums.RevChannels = res.RevenueDims["channel"]
+	} else {
+		n, err := q.Widget(ctx, si.ID, now, ask)
+		if err != nil {
+			return nums, err
+		}
+		nums.WidgetNumbers = n
+	}
+	a.widgetCache.putFor(key, nums, now, widgetFresh(wd.Kind))
+	return nums, nil
+}
