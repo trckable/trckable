@@ -3,8 +3,10 @@ package writer
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -78,7 +80,7 @@ func pv(site string, visitor, id uint64, ts int64) event.Event {
 func TestExactlyOnceAcrossRestartsWithRetries(t *testing.T) {
 	dir := t.TempDir()
 	e := newEnv(t, dir)
-	base := time.Now().Add(-time.Hour).UnixMilli()
+	base := time.Now().Add(-3 * time.Hour).UnixMilli()
 
 	// 1,000 unique events plus 200 retries of already-sent ids.
 	for i := uint64(1); i <= 1000; i++ {
@@ -611,5 +613,160 @@ func TestVersionAndScreenSurviveRestart(t *testing.T) {
 	}
 	if version != "Chrome 130" || screen != 390 {
 		t.Fatalf("session: %q at %d px, want Chrome 130 at the entry's 390", version, screen)
+	}
+}
+
+// A commit that fails a few times is retried; every event is stored once and
+// the sessions are not counted twice.
+func TestCommitRetriesAndAppliesOnce(t *testing.T) {
+	e := newEnv(t, t.TempDir())
+	defer e.close()
+	base := time.Now().Add(-3 * time.Hour).UnixMilli()
+	for i := uint64(1); i <= 5; i++ {
+		e.append(t, pv("s1", 7, i, base+int64(i)*1000))
+	}
+	w := New(e.log, e.store, Options{FlushEvery: 20 * time.Millisecond, RetryMin: time.Millisecond, RetryMax: 5 * time.Millisecond})
+	var calls int
+	w.inject = func() error {
+		if !w.Ready() { // start-up must work; only batches fail
+			return nil
+		}
+		calls++
+		if calls <= 4 {
+			return errors.New("injected")
+		}
+		return nil
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- w.Run(ctx) }()
+	deadline := time.Now().Add(10 * time.Second)
+	for w.Applied() < 5 {
+		if time.Now().After(deadline) {
+			t.Fatalf("stuck at %d after %d commit calls", w.Applied(), calls)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	cancel()
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	if n := e.count(t, `SELECT count(*) FROM events`); n != 5 {
+		t.Fatalf("events stored: %d, want 5", n)
+	}
+	if n := e.count(t, `SELECT sum(pvs) FROM sessions`); n != 5 {
+		t.Fatalf("pageviews in sessions: %d, want 5", n)
+	}
+	if w.Failing() != nil {
+		t.Fatal("still marked failing after success")
+	}
+}
+
+// A commit that never works: the writer is marked failing, then gives up and
+// calls the exit hook.
+func TestCommitGivesUp(t *testing.T) {
+	e := newEnv(t, t.TempDir())
+	defer e.close()
+	e.append(t, pv("s1", 7, 1, time.Now().UnixMilli()))
+	var gaveUp atomic.Pointer[error]
+	w := New(e.log, e.store, Options{
+		FlushEvery: 20 * time.Millisecond, RetryMin: time.Millisecond, RetryMax: 5 * time.Millisecond,
+		GiveUpAfter: 50 * time.Millisecond,
+		OnGiveUp:    func(err error) { gaveUp.Store(&err) },
+	})
+	// The first batch is taken at start-up, so restore must succeed: only
+	// batches fail.
+	var armed atomic.Bool
+	w.inject = func() error {
+		if armed.Load() {
+			return errors.New("injected")
+		}
+		return nil
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- w.Run(ctx) }()
+	for !w.Ready() {
+		time.Sleep(time.Millisecond)
+	}
+	armed.Store(true)
+	select {
+	case err := <-done:
+		if err == nil || gaveUp.Load() == nil {
+			t.Fatalf("Run returned %v, give-up called: %v", err, gaveUp.Load() != nil)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("writer never gave up")
+	}
+	if w.Failing() == nil {
+		t.Fatal("not marked failing")
+	}
+}
+
+// A commit that fails inside its transaction, after sessions and dedupe ids
+// were already moved, three times in a row, with a resend queued behind: the
+// events are stored once and no visitor's visit is split.
+func TestCommitFailingLateThreeTimesAppliesOnce(t *testing.T) {
+	e := newEnv(t, t.TempDir())
+	defer e.close()
+	base := time.Now().Add(-time.Minute).UnixMilli()
+	var id uint64
+	add := func(visitor uint64, n int) {
+		for i := 0; i < n; i++ {
+			id++
+			e.append(t, pv("s1", visitor, id, base+int64(id)*100)) // #nosec G115 -- small test ids
+		}
+	}
+	add(1, 3)
+	add(2, 2)
+	add(3, 2)
+	add(4, 2)
+	e.append(t, pv("s1", 1, 1, base+100)) // a resend of the first event
+	w := New(e.log, e.store, Options{FlushEvery: 20 * time.Millisecond, RetryMin: time.Millisecond, RetryMax: 5 * time.Millisecond})
+	var fails int
+	w.injectLate = func() error {
+		if !w.Ready() && fails == 0 {
+			return nil
+		}
+		fails++
+		if fails <= 3 {
+			return errors.New("injected")
+		}
+		return nil
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- w.Run(ctx) }()
+	deadline := time.Now().Add(10 * time.Second)
+	for w.Applied() < 10 {
+		if time.Now().After(deadline) {
+			t.Fatalf("stuck at %d", w.Applied())
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	open, ok := w.OpenSessions("s1")
+	cancel()
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	if fails < 3 {
+		t.Fatalf("only %d failures injected", fails)
+	}
+	if n := e.count(t, `SELECT count(*) FROM events`); n != 9 {
+		t.Fatalf("events: %d, want 9", n)
+	}
+	if n := e.count(t, `SELECT count(DISTINCT session_id) FROM events`); n != 4 {
+		t.Fatalf("sessions in events: %d, want 4", n)
+	}
+	if !ok || len(open) != 4 {
+		t.Fatalf("open sessions: %d (ok %v), want 4: a visit was split", len(open), ok)
+	}
+	pvs := 0
+	for _, s := range open {
+		pvs += int(s.Pageviews)
+	}
+	if pvs != 9 {
+		t.Fatalf("open pageviews: %d, want 9", pvs)
 	}
 }

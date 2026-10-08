@@ -209,6 +209,13 @@ func (z *sessionizer) assign(e *event.Event, wall int64) (id uint64, closed *Ses
 	return s.ID, closed, s.Start, s.Start
 }
 
+// reset forgets every open session.
+func (z *sessionizer) reset() {
+	z.mu.Lock()
+	defer z.mu.Unlock()
+	z.open = make(map[visitorKey]*Session)
+}
+
 // restore seeds an open session recovered from the database at boot.
 func (z *sessionizer) restore(s *Session) {
 	z.mu.Lock()
