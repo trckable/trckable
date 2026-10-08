@@ -9,7 +9,7 @@ section into the release.
 
 ## Unreleased
 
-- The soft light that follows the pointer over a glass card is a little weaker (70% of what it was).
+- The soft light on a glass card under the pointer no longer follows it: it sits in the card's top right corner and is a little weaker (70%).
 
 ## 0.7.0 (8 Oct 2026)
 
