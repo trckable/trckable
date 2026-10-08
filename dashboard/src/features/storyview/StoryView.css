@@ -57,11 +57,12 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 980px;
+  max-width: none;
 }
 .sv-line {
   margin: 0;
-  font-size: clamp(24px, 3.4vw, 40px);
+  font-size: clamp(24px, 3.4vw, 64px);
+  max-width: 40ch;
   line-height: 1.14;
   font-weight: 600;
   letter-spacing: -0.025em;
