@@ -19,9 +19,9 @@
   --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   --glass-shadow-pop: 0 18px 48px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
   --glass-sheen: rgba(255, 255, 255, 0.25);
-  --glass-blur: blur(22px) saturate(160%);
-  --glass-blur-pop: blur(24px) saturate(170%);
-  --glass-blur-lite: blur(14px) saturate(140%);
+  --glass-blur: none;
+  --glass-blur-pop: blur(16px) saturate(170%);
+  --glass-blur-lite: none;
   --amb-1: rgba(59, 93, 18, 0.19);
   --amb-2: rgba(22, 54, 90, 0.65);
   --amb-3: rgba(42, 31, 77, 0.65);
@@ -70,6 +70,7 @@
     inset: 0;
     z-index: -1;
     pointer-events: none;
+    will-change: transform;
     background:
       radial-gradient(circle 220px at 70px 30px, var(--amb-1), transparent),
       radial-gradient(circle 340px at calc(100% - 130px) 350px, var(--amb-2), transparent),
@@ -83,8 +84,6 @@
     isolation: isolate;
     border-radius: 18px;
     background: var(--glass-bg);
-    -webkit-backdrop-filter: var(--glass-blur);
-    backdrop-filter: var(--glass-blur);
     box-shadow: var(--glass-hi), var(--glass-shadow);
   }
   :root:not([data-glass='off']) :is(.ms-moment, .all-tile.compact) {
@@ -115,10 +114,6 @@
     background: var(--glass-lite);
     box-shadow: var(--glass-hi);
   }
-  :root:not([data-glass='off']) :is(.seg, .chip, .phone-pill, .kit-seg, .view-switch, .sv-slot .sv-switch) {
-    -webkit-backdrop-filter: var(--glass-blur-lite);
-    backdrop-filter: var(--glass-blur-lite);
-  }
 
   /* The stuck bar of the header: the page's glass over what scrolls under it. */
   :root:not([data-glass='off']) :is(.subbar[data-stuck], .all-filters[data-stuck])::before {
@@ -127,13 +122,8 @@
     -webkit-backdrop-filter: var(--glass-blur-pop);
     backdrop-filter: var(--glass-blur-pop);
   }
-  /* A dialog sits in its own blurred backdrop: a blur of its own would only blur that. */
-  :root:not([data-glass='off']) .modal-back .modal {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-  /* Under an open dialog the page is dimmed and blurred by its backdrop: the cards need no blur of their own there. */
-  :root:not([data-glass='off']):has(.modal-back) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .side-card, .sv-setup, .sl-panel) {
+  /* Cards are fake glass: the fill, a hairline lit edge and a shadow, no blur (over the soft colour fields a blur would show the same thing and cost every frame). Only small top-layer surfaces blur, and a dialog sits in its own blurred backdrop. */
+  :root:not([data-glass='off']) :is(.modal, .side-card) {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }

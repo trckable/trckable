@@ -150,8 +150,6 @@
   border: 1px solid var(--glass-line, var(--border));
   border-radius: 999px;
   background: var(--glass-lite, var(--row));
-  -webkit-backdrop-filter: var(--glass-blur-lite);
-  backdrop-filter: var(--glass-blur-lite);
   color: var(--text-3);
   font-size: 12px;
   line-height: 1.3;
