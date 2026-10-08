@@ -15,7 +15,7 @@ export const periodsCopy = defineCopy('range.periods', {
 
 // The six periods people pick most, then the rest under More (two columns,
 // read across).
-export const PERIODS_FIRST = ['now', 'today', 'yesterday', '7d', '30d', '90d']
+export { PERIODS_FIRST } from './periodIds'
 export const PERIODS_MORE = ['12mo', 'wtd', 'mtd', 'lastmonth', 'ytd']
 
 export const BUCKET_LABEL: Record<Bucket, string> = defineCopy('range.bucket', { hour: 'Hourly', day: 'Daily', week: 'Weekly', month: 'Monthly' })

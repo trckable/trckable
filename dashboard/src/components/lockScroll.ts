@@ -5,6 +5,7 @@
 import { useEffect } from 'react'
 
 let depth = 0
+let savedY = 0
 
 export function useLockScroll(active = true) {
   useEffect(() => {
@@ -18,6 +19,7 @@ export function useLockScroll(active = true) {
       // own that the sticky control line is stuck inside, and the line would
       // scroll away with the page the moment a dialog opens.
       const gap = window.innerWidth - html.clientWidth
+      savedY = window.scrollY
       body.dataset.prevPad = body.style.paddingRight
       html.style.overflow = 'hidden'
       if (gap > 0) body.style.paddingRight = `${gap}px`
@@ -29,6 +31,8 @@ export function useLockScroll(active = true) {
         html.style.overflow = ''
         body.style.paddingRight = body.dataset.prevPad ?? ''
         delete body.dataset.prevPad
+        // Safari moves the page when the scrollbar's width goes back; put it where it was.
+        if (window.scrollY !== savedY) window.scrollTo(0, savedY)
       }
     }
   }, [active])

@@ -3,7 +3,8 @@
 import { useId, useMemo, useState } from 'react'
 import { FieldError, fieldProps } from '../kit/FieldError'
 import { fieldCopy } from '../kit/fieldCopy'
-import { fmtDay, monthGrid, monthLong, parseLoose, weekStartsOn, type ISODate, type Range } from '../lib/dates'
+import { fmtDay, monthLong, weekStartsOn, type ISODate, type Range } from '../lib/dates'
+import { monthGrid, parseLoose } from '../lib/calendarDates'
 import './DateRangePopover.css'
 
 export function Month(p: {
