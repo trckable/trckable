@@ -79,6 +79,12 @@ function liveOf(v: string | null): boolean | undefined {
   return undefined
 }
 
+/** A preset period compares with the one before unless the address says otherwise (compare=none); a custom range compares with nothing until asked. */
+function compareOf(v: string | null, period: string): CompareMode {
+  if (v === 'previous' || v === 'year' || v === 'custom' || v === 'none') return v
+  return period === 'custom' ? 'none' : 'previous'
+}
+
 export function readView(params: URLSearchParams): ViewState {
   const from = params.get('from') ?? undefined
   const to = params.get('to') ?? undefined
@@ -87,7 +93,7 @@ export function readView(params: URLSearchParams): ViewState {
     period: from && to ? 'custom' : (params.get('period') ?? '30d'),
     from,
     to,
-    compare: cmp === 'previous' || cmp === 'year' || cmp === 'custom' ? cmp : 'none',
+    compare: compareOf(cmp, from && to ? 'custom' : (params.get('period') ?? '30d')),
     cfrom: params.get('cfrom') ?? undefined,
     cto: params.get('cto') ?? undefined,
     filters: params.getAll('f').flatMap((f) => parseFilterParam(f) ?? []),
@@ -113,7 +119,8 @@ export function writeView(v: ViewState): string {
     p.set('from', v.from)
     p.set('to', v.to)
   } else if (v.period !== '30d') p.set('period', v.period)
-  if (v.compare !== 'none') p.set('compare', v.compare)
+  // Only what differs from the default is written: "none" on a preset period, anything but "none" on a custom range.
+  if (v.compare !== compareOf(null, v.from && v.to ? 'custom' : v.period)) p.set('compare', v.compare)
   if (v.compare === 'custom' && v.cfrom && v.cto) {
     p.set('cfrom', v.cfrom)
     p.set('cto', v.cto)

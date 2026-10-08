@@ -64,10 +64,7 @@ test('the period is one button, and it opens the choices', async ({ page }) => {
 test('comparison, the period and Filter open their popovers, Share and More are named icons', async ({ page }) => {
   await open(page, 1280)
   const see = page.locator('.ctl-see')
-  // The comparison has no button while there is none; the C key sets one, and then its words follow the period.
-  await expect(see).not.toContainText(/no comparison/i)
-  await page.locator('body').click({ position: { x: 5, y: 400 } })
-  await page.keyboard.press('c')
+  // A preset period compares with the one before: its words follow the period. "No comparison" leaves a quiet Compare button, and the C key sets one again.
   const set = see.getByRole('button', { name: /^vs / })
   await expect(set).toBeVisible()
   await set.click()
@@ -75,6 +72,10 @@ test('comparison, the period and Filter open their popovers, Share and More are 
   await expect(menu.getByRole('menuitemradio', { name: 'Period before' })).toHaveAttribute('aria-checked', 'true')
   await menu.getByRole('menuitemradio', { name: 'No comparison' }).click()
   await expect(set).toHaveCount(0)
+  await expect(see.getByRole('button', { name: 'Compare', exact: true })).toBeVisible()
+  await page.locator('body').click({ position: { x: 5, y: 400 } })
+  await page.keyboard.press('c')
+  await expect(set).toBeVisible()
 
   const picker = page.getByRole('dialog', { name: 'Choose a date range' })
   await see.locator('.btn.range').click()
@@ -253,7 +254,7 @@ for (const width of [390, 360]) {
     const sheet = page.getByRole('dialog', { name: 'View options' })
     await expect(sheet).toBeVisible()
     await expect(sheet.locator('.sheet-quick button')).toHaveCount(5)
-    await expect(sheet.getByRole('switch', { name: /Compare/ })).toHaveAttribute('aria-checked', 'false')
+    await expect(sheet.getByRole('switch', { name: /Compare/ })).toHaveAttribute('aria-checked', 'true')
     await sheet.getByRole('button', { name: '7d' }).click()
     await expect(sheet.getByRole('button', { name: '7d' })).toHaveAttribute('aria-pressed', 'true')
     await sheet.getByRole('button', { name: 'Done' }).click()

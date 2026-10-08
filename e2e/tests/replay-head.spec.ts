@@ -57,12 +57,12 @@ test('before the first visit the key numbers show a dash, then the numbers', asy
 })
 
 // The comparison, set in the period's menu (More): a choice applies at once and
-// pressing it again clears it. Clearing takes the line and the address's compare
-// away at once; a new choice brings it back. By the hour (Now) and by the day.
+// pressing it again clears it. Clearing takes the line away at once (the address
+// says compare=none); a new choice brings it back. By the hour (Now) and by the day.
 for (const period of ['now', '7d']) {
   test(`the comparison sets, clears and sets another (${period})`, async ({ page }) => {
     // Now needs a site with a visit today; the history site has only days behind it.
-    await page.goto(`${API}/${period === 'now' ? 'example.com' : HISTORY_DOMAIN}?view=data&period=${period}`)
+    await page.goto(`${API}/${period === 'now' ? 'example.com' : HISTORY_DOMAIN}?view=data&period=${period}&compare=none`)
     const chart = page.locator('.overview-chart .chart-wrap')
     await expect(chart.locator('svg[role="img"]')).toBeVisible({ timeout: 15_000 })
     const ghost = chart.locator('svg path[stroke-dasharray="4 4"]')
@@ -76,16 +76,16 @@ for (const period of ['now', '7d']) {
       await expect(picker).toBeHidden()
     }
     await expect(ghost).toHaveCount(0)
-    await expect(page.locator('.cmp-btn')).toBeHidden()
+    await expect(page.locator('.cmp-btn')).not.toContainText(/vs|year/i)
     await choose('Period before')
     await expect(ghost).toHaveCount(1)
-    expect(page.url()).toContain('compare=previous')
+    expect(page.url()).not.toContain('compare=')
     await page.locator('.cmp-btn').click()
     const menu = page.getByRole('menu', { name: 'Compare with' })
     await expect(menu.getByRole('menuitemradio', { name: 'Period before' })).toHaveAttribute('aria-checked', 'true')
     await menu.getByRole('menuitemradio', { name: 'No comparison' }).click()
     await expect(ghost).toHaveCount(0)
-    expect(page.url()).not.toContain('compare=')
+    expect(page.url()).toContain('compare=none')
     await choose('Last year')
     await expect(ghost).toHaveCount(1)
     expect(page.url()).toContain('compare=year')

@@ -35,6 +35,7 @@ export const copy = defineCopy('overview', {
   worse: 'worse',
   better: 'better',
   noChangeDays: (n: number) => `No change shown: the period before had only ${n} ${n === 1 ? 'day' : 'days'} of data.`,
+  noChangeNone: 'No change shown: there were no visits in the period before.',
   noChangeFew: (n: number) => `No change shown: the period before had only ${n} ${n === 1 ? 'visitor' : 'visitors'}.`,
   botsFiltered: (n: string) => `${n} bots and AI crawlers filtered`,
   botFiltered: '1 bot or AI crawler filtered',

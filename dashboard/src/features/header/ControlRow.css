@@ -309,9 +309,15 @@
 }
 .ctl-cap .btn.step,
 .ctl-cap .range-icon,
-.ctl-cap .range-dates,
-.ctl-cap .btn.cmp-btn:not(.on) {
+.ctl-cap .range-dates {
   display: none;
+}
+/* No comparison: the icon stays, a quiet switch to turn it on. */
+.ctl-cap .btn.cmp-btn:not(.on) {
+  color: var(--text-3);
+}
+.ctl-cap .btn.cmp-btn:not(.on):hover {
+  color: var(--text);
 }
 .ctl-cap .btn.range {
   padding: 0 10px;

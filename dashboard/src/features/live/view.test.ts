@@ -27,7 +27,7 @@ describe('Live in the address bar', () => {
     expect(wantsLive(at('view=data'), visited)).toBe(false)
     expect(wantsLive(at('view=live'), visited)).toBe(true)
     // What only Data has: a link made before, or a saved view, stays Data.
-    for (const q of ['period=7d', 'mode=full', 'f=channel%3ASearch', 'compare=previous', 'day=2026-09-01', 'metric=revenue']) expect(wantsLive(at(q), visited), q).toBe(false)
+    for (const q of ['period=7d', 'mode=full', 'f=channel%3ASearch', 'compare=none', 'compare=year', 'day=2026-09-01', 'metric=revenue']) expect(wantsLive(at(q), visited), q).toBe(false)
     // No visit yet: the install screen first, in Data.
     expect(wantsLive(at(''), { last_event_at: 0 })).toBe(false)
     expect(wantsLive(at(''), {})).toBe(false)

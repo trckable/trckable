@@ -47,7 +47,7 @@ test('the usual chip is only where the change is: today with a comparison, never
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=data&period=today&compare=previous`)
   await expect(page.locator('.kpi .value.num').first()).toBeVisible({ timeout: 15_000 })
   await expect(page.locator('.kpi-chip')).toHaveText('+18% vs usual', { timeout: 15_000 })
-  await page.goto(`${API}/${HISTORY_DOMAIN}?view=data&period=today`)
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=data&period=today&compare=none`)
   await expect(page.locator('.kpi .value.num').first()).toBeVisible({ timeout: 15_000 })
   await page.waitForTimeout(2500)
   await expect(page.locator('.kpi-chip')).toHaveCount(0)
