@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Explore: Bounce rate and Session time put their icon and name on one row like the other key numbers, so all the figures sit on the same line at every width.
+
 ## 0.7.2 (8 Oct 2026)
 
 - The busy-moment dialog opened from a notification now shows the whole story (the last hour as a chart, the beats, and the sources, page, countries and devices) instead of only the number: it loads the story while it opens, and says so when the moment is over.
