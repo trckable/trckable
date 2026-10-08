@@ -597,6 +597,9 @@ textarea:focus-visible {
 .bl {
   /* A narrow card drops its secondary column before it cuts the names. */
   container-type: inline-size;
+  /* Rows are separate pieces: a gap between them, not a hairline. */
+  display: grid;
+  gap: 4px;
 }
 .bl-cols,
 .bl-row {
@@ -618,12 +621,11 @@ textarea:focus-visible {
 .bl-row {
   position: relative;
   isolation: isolate;
-  min-height: 44px;
+  min-height: 36px;
   width: 100%;
   padding: 6px 10px;
   border: 0;
-  border-bottom: 1px solid var(--grid);
-  border-radius: 0;
+  border-radius: 4px;
   background: transparent;
   color: var(--text);
   font-size: 13px;
@@ -635,10 +637,6 @@ textarea:focus-visible {
 .bl-row:focus-visible {
   background: transparent;
   outline: none;
-}
-.bl > :last-child,
-.bl > :last-child .bl-row {
-  border-bottom: 0;
 }
 .bl-main {
   display: grid;
@@ -653,7 +651,8 @@ textarea:focus-visible {
 }
 .bl .bl-line {
   position: absolute;
-  inset: 0;
+  /* The track ends where the number columns end (the row's inner edge), like the heads. */
+  inset: 0 10px 0 0;
   z-index: -1;
   overflow: hidden;
   border-radius: 4px;
