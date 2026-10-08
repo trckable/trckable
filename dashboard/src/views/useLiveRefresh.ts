@@ -2,7 +2,7 @@ import { useEffect, useRef, type RefObject } from 'react'
 import { useLive } from '../lib/useLive'
 
 // A new visit on the stream reloads the report past its cache, with the
-// chart's hourly report. The server may answer a live report up to 5 s behind
+// chart's hourly report. The server may answer a live report up to 2 s behind
 // a busy site's commits, so one more refresh follows a few seconds after the
 // last visit seen: a quiet site's new visit shows up too.
 export function useLiveRefresh(
@@ -23,6 +23,6 @@ export function useLiveRefresh(
     later.current = window.setTimeout(() => {
       refreshRef.current(true)
       refreshHours.current?.(true)
-    }, 6000)
+    }, 2500)
   })
 }
