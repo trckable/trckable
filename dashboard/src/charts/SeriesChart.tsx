@@ -1,6 +1,8 @@
 // Series over time on one axis: stacked areas (parts of a whole: where visits
 // came from) or plain lines (things compared: new vs returning). Hovering or
 // arrowing to a bucket shows every series' value there.
+import { useDraw } from '../lib/motion'
+import '../kit/draw.css'
 import { anchorOf, stack, stackPeak, niceScale, tickIndexes } from './scale'
 import { Tip } from './Tip'
 import { useHover } from './useHover'
@@ -27,6 +29,7 @@ export function SeriesChart(p: {
   tipTitle: (i: number) => string
 }) {
   const { ref, w } = useWidth<HTMLDivElement>()
+  const draw = useDraw()
   const h = p.height ?? 190
   const n = p.labels.length
   const pw = Math.max(1, w - PAD_L - PAD_R)
@@ -64,9 +67,9 @@ export function SeriesChart(p: {
         ))}
         {p.series.map((s, k) =>
           p.stacked ? (
-            <path key={s.label} d={area(layers[k].y0, layers[k].y1)} fill={s.color} fillOpacity={0.85} stroke="var(--surface)" strokeWidth={0.75} />
+            <path key={s.label} className={draw && 'draw-fill'} style={{ '--i': k } as React.CSSProperties} d={area(layers[k].y0, layers[k].y1)} fill={s.color} fillOpacity={0.85} stroke="var(--surface)" strokeWidth={0.75} />
           ) : (
-            <path key={s.label} d={path(s.values)} fill="none" stroke={s.color} strokeWidth={2} strokeLinejoin="round" />
+            <path key={s.label} className={draw} pathLength="1" style={{ '--i': k } as React.CSSProperties} d={path(s.values)} fill="none" stroke={s.color} strokeWidth={2} strokeLinejoin="round" />
           ),
         )}
         {tickIndexes(n).map((i) => (

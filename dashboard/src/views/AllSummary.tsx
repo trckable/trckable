@@ -6,6 +6,7 @@ import { delta, fmtInt, fmtMoney, fmtPct, type Delta } from '../lib/format'
 import type { SiteRow } from '../lib/api'
 import { ShortName } from '../kit/ShortName'
 import { kitWords } from '../kit/copy'
+import { CountUp } from '../kit/CountUp'
 import { MetricArea } from '../kit/MetricArea'
 import type { Tone } from '../kit/model'
 import { OnlineTile } from './OnlineTile'
@@ -29,13 +30,13 @@ export function AllSummary({ s, days, rows, start }: { s: ReturnType<typeof summ
   return (
     <div className="all-stats">
       <OnlineTile />
-      <MetricArea icon={<Users size={15} strokeWidth={1.8} />} label={copy.visitors} value={fmtInt(s.total)} pill={chip(d, days)} status={d && copy.vsDays(days)} series={sumSeries(rows, (r) => r.series, start)} tone={d ? TONE[d.tone] : 'neutral'} />
-      <MetricArea icon={<Eye size={15} strokeWidth={1.8} />} label={copy.pageviews} value={fmtInt(s.pageviews)} pill={chip(views, days)} status={copy.perVisitor(s.total ? (s.pageviews / s.total).toFixed(1) : '0')} series={sumSeries(rows, (r) => r.pageview_series, start)} tone={views ? TONE[views.tone] : 'neutral'} />
+      <MetricArea icon={<Users size={15} strokeWidth={1.8} />} label={copy.visitors} value={<CountUp value={s.total} format={fmtInt} />} pill={chip(d, days)} status={d && copy.vsDays(days)} series={sumSeries(rows, (r) => r.series, start)} tone={d ? TONE[d.tone] : 'neutral'} />
+      <MetricArea icon={<Eye size={15} strokeWidth={1.8} />} label={copy.pageviews} value={<CountUp value={s.pageviews} format={fmtInt} />} pill={chip(views, days)} status={copy.perVisitor(s.total ? (s.pageviews / s.total).toFixed(1) : '0')} series={sumSeries(rows, (r) => r.pageview_series, start)} tone={views ? TONE[views.tone] : 'neutral'} />
       <MetricArea
         icon={<LogOut size={15} strokeWidth={1.8} />}
         iconTone={high ? 'bad' : undefined}
         label={<ShortName full={copy.bounce} short={kitWords.shortBounce} />}
-        value={s.total ? fmtPct(s.bounce) : '–'}
+        value={s.total ? <CountUp value={s.bounce} format={fmtPct} whole={false} /> : '–'}
         pill={chip(bounced, days)}
         series={bounceSeries(rows, start)}
         tone={bounced ? TONE[bounced.tone] : 'neutral'}

@@ -1,0 +1,28 @@
+/* Charts drawing in once, when they first appear: lines left to right (the
+   path is 1 long: pathLength="1"), fills fading in behind. Opacity and
+   dash offset only; --i staggers series, --card staggers cards. */
+.draw {
+  animation: draw-line var(--draw-ms, 700ms) cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--card, 0) * 80ms + var(--i, 0) * 70ms) backwards;
+}
+.draw-fill {
+  animation: draw-fill var(--draw-ms, 700ms) ease-out calc(var(--card, 0) * 80ms + var(--i, 0) * 70ms + 120ms) backwards;
+}
+.draw-spark {
+  --draw-ms: 500ms;
+}
+@keyframes draw-line {
+  from { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  to { stroke-dasharray: 1; stroke-dashoffset: 0; }
+}
+@keyframes draw-fill {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+:is(.all-stats, .sv-tiles) > :nth-child(2) { --card: 1; }
+:is(.all-stats, .sv-tiles) > :nth-child(3) { --card: 2; }
+:is(.all-stats, .sv-tiles) > :nth-child(4) { --card: 3; }
+:is(.all-stats, .sv-tiles) > :nth-child(5) { --card: 4; }
+@media (prefers-reduced-motion: reduce) {
+  .draw, .draw-fill { animation: none; }
+}
+html[data-motion='off'] :is(.draw, .draw-fill) { animation: none; }

@@ -1,9 +1,33 @@
 // A 30-line animation engine: tween numbers and number arrays with rAF.
 // No motion library; honours prefers-reduced-motion.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 export { reduced as reducedMotion }
+/** The class that draws a chart in, once: decided when the chart first appears (none with reduced motion or in a hidden tab). */
+export function useDraw(): string {
+  const [on] = useState(() => !reduced() && typeof document !== 'undefined' && !document.hidden)
+  return on ? 'draw' : ''
+}
+
+export const INTRO_MS = 600
+
+/** A figure's first arrival counts up from 0; after that it settles in `settleMs`. `intro` says the count-up is still running. */
+export function useCountUp(value: number | undefined, settleMs: number): { v: number; intro: boolean } {
+  const [intro, setIntro] = useState(!reduced() && settleMs > 0)
+  const [armed, setArmed] = useState(false)
+  const has = value !== undefined
+  // Starts at 0 and, before the first paint, aims at the figure: that is the count-up.
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- arming once on mount is the point: the count-up starts from 0
+  useLayoutEffect(() => setArmed(true), [])
+  useEffect(() => {
+    if (!has) return
+    const t = setTimeout(() => setIntro(false), INTRO_MS + 80)
+    return () => clearTimeout(t)
+  }, [has])
+  return { v: useTween(intro && !armed ? 0 : (value ?? 0), intro ? INTRO_MS : settleMs), intro }
+}
+
 const ease = (p: number) => 1 - Math.pow(1 - p, 3)
 
 type Tweenable = number | number[]
@@ -33,7 +57,7 @@ export function useTween<T extends Tweenable>(target: T, ms = 520): T {
     }
     const start = performance.now()
     const step = (now: number) => {
-      const p = Math.min(1, (now - start) / ms)
+      const p = Math.max(0, Math.min(1, (now - start) / ms)) // the frame's timestamp can precede `start`
       cur.current = lerp(from.current, target, ease(p))
       setValue(cur.current)
       if (p < 1) raf.current = requestAnimationFrame(step)
