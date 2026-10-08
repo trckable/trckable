@@ -34,34 +34,19 @@ export function debounce(fn: () => void, ms: number, max: number) {
 }
 
 /**
- * Online now: the server's count, plus the visitors the stream has shown
- * since that count who were not seen in the five minutes before it. The
- * server recounts right after a visit, so the bump lasts a moment.
+ * Online now: the stream's count, or the polled report's while the stream is
+ * stuck. The stream's count is the server's own, never a guess from visits
+ * (a visit from someone already counted would show one too many until the
+ * next count). While stuck, the polled count only wins when it was read
+ * after the stream's last count: an older one must not replace a newer one.
  */
-export class OnlineCount {
-  server: number | null = null
-  private seen = new Map<string, number>()
-  private fresh = new Set<string>()
-
-  count(n: number) {
-    this.server = n
-    this.fresh.clear()
-  }
-
-  visit(visitor: string, at: number) {
-    const last = this.seen.get(visitor)
-    this.seen.set(visitor, at)
-    if (last === undefined || at - last > 300_000) this.fresh.add(visitor)
-  }
-
-  get value(): number | null {
-    if (this.server === null && !this.fresh.size) return null
-    return (this.server ?? 0) + this.fresh.size
-  }
-}
-
-/** Online now: the stream's count, or the polled report's while the stream is stuck. */
-export function onlineNow(stream: { online: number | null; stale: boolean }, shown?: number, polled?: number) {
-  if (stream.stale && polled !== undefined) return polled
+export function onlineNow(
+  stream: { online: number | null; stale: boolean; at?: number },
+  shown?: number,
+  polled?: number,
+  polledAt?: number,
+) {
+  const newer = stream.online === null || polledAt === undefined || stream.at === undefined || polledAt >= stream.at
+  if (stream.stale && polled !== undefined && newer) return polled
   return stream.online ?? shown
 }
