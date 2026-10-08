@@ -2236,6 +2236,9 @@ body[data-mode] .card.overview {
 .menu-search:focus-within {
   border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
 }
+.menu-search input:focus-visible {
+  box-shadow: none; /* the box around it shows the focus */
+}
 .menu-search input {
   flex: 1;
   min-width: 0;
@@ -3156,43 +3159,57 @@ body {
    the other segments, its text centred. */
 .app :is(.view-switch, .sv-switch, .seg, .kit-seg) {
   --track-r: 12px;
+  --track-in: 3px; /* the same gap all round the chosen pill */
   display: inline-flex;
   align-items: stretch;
   gap: 2px;
   height: auto;
-  padding: 3px;
-  border: 1px solid var(--glass-line, var(--border));
+  padding: var(--track-in);
+  border: 1px solid color-mix(in srgb, var(--glass-line, var(--border)) 55%, transparent);
   border-radius: var(--track-r);
-  background: linear-gradient(var(--glass-edge-c, transparent), var(--glass-edge-c, transparent)) top / 100% 1px no-repeat, var(--glass-lite, var(--surface));
+  background: var(--glass-lite, var(--surface));
 }
+/* A button is as tall as its neighbours (⋯, the period): track = button + 2 x inset + hairlines = --hdr-h. */
 .app :is(.view-switch, .sv-switch, .seg, .kit-seg) button {
-  height: var(--hdr-h);
+  display: inline-flex;
+  align-items: center;
+  height: calc(var(--hdr-h) - 2 * var(--track-in) - 2px);
   min-height: 0;
   padding: 0 12px;
   border: 0;
-  border-radius: calc(var(--track-r) - 3px);
+  border-radius: calc(var(--track-r) - var(--track-in) - 1px);
   line-height: 1;
   justify-content: center;
 }
 .app :is(.view-switch, .sv-switch, .seg, .kit-seg) button:is([aria-pressed='true'], .on, [aria-selected='true']) {
-  background: color-mix(in srgb, var(--text) 10%, transparent);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), inset 0 1px 0 color-mix(in srgb, var(--text) 8%, transparent);
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+  box-shadow: none;
   color: var(--text);
 }
 @media (max-width: 1000px) {
   .app .sv-slot .sv-switch {
-    padding: 3px;
-    border: 1px solid var(--glass-line, var(--border));
-    border-radius: var(--track-r);
     background: var(--glass-lite, var(--surface));
   }
   .app .sv-slot .sv-switch button {
     height: 44px;
-    border-radius: calc(var(--track-r) - 3px);
+    border-radius: calc(var(--track-r) - var(--track-in) - 1px);
   }
   .app .sv-slot .sv-switch button.on {
-    background: color-mix(in srgb, var(--text) 10%, transparent);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+    background: color-mix(in srgb, var(--text) 12%, transparent);
+    box-shadow: none;
+  }
+}
+/* A phone's track is the 44 px of its buttons exactly (a finger target, as tall as the buttons beside it): the chosen pill fills it, no inset to spill over the edge. */
+@media (max-width: 640px) {
+  :root .app :is(.view-switch, .sv-switch, .seg, .kit-seg) {
+    --track-in: 0px;
+    box-sizing: border-box;
+    overflow: hidden;
+    border-color: transparent;
+  }
+  :root .app :is(.view-switch, .sv-switch, .seg, .kit-seg) button,
+  :root .app :is(.view-switch, .sv-switch) {
+    height: 44px;
   }
 }
 .app :is(.sv-switch, .view-switch) ~ .btn.filter,
