@@ -31,6 +31,8 @@ export function BarList(p: {
   /** What a row's number was in the period before (undefined: not there). */
   prior?: (key: string) => number | undefined
   dimLabel: string
+  /** No column heads and no change/share column: a short list inside a card. */
+  bare?: boolean
   valueLabel?: string
   /** How the value column reads; counts by default. */
   fmtValue?: (n: number) => string
@@ -59,14 +61,18 @@ export function BarList(p: {
   if (p.loading) return <Loading height={164} />
   return (
     <div className={'bl' + (p.money ? ' has-rev' : '') + (p.fmtSub ? ' wide-sub' : '') + (p.action ? ' has-act' : '')}>
-      <div className="bl-cols">
-        <span>{p.dimLabel}</span>
-        {p.spark && <span className="bl-spark" aria-hidden="true" />}
-        <span className="bl-val">{p.valueLabel ?? kitCopy.visitors}</span>
-        <span className="bl-tail" />
-        {p.subLabel && <span className="bl-sub">{p.subLabel}</span>}
-        {p.money && <span className="bl-rev">{kitCopy.revenue}</span>}
-      </div>
+      {!p.bare && (
+        <div className="bl-cols">
+          <span className="bl-lead">
+            <span className="bl-main">{p.dimLabel}</span>
+            {p.spark && <span className="bl-spark" aria-hidden="true" />}
+            <span className="bl-val">{p.valueLabel ?? kitCopy.visitors}</span>
+          </span>
+          <span className="bl-tail" />
+          {p.subLabel && <span className="bl-sub">{p.subLabel}</span>}
+          {p.money && <span className="bl-rev">{kitCopy.revenue}</span>}
+        </div>
+      )}
       {p.items.length === 0 && (p.emptyState ?? <div className="empty">{p.emptyText ?? 'Nothing here yet… peekaboo.'}</div>)}
       {p.items.map((it) => {
         const share = shareOf(it.value, whole)
@@ -84,23 +90,27 @@ export function BarList(p: {
             onFocus={() => p.onHover?.(it.key)}
             onBlur={() => p.onHover?.(null)}
           >
-            <span className="bl-main">
-              <span className="bl-name">
-                {it.color && <span className="dot" style={{ background: it.color }} />}
-                <span className="bl-text">{it.label}</span>
+            <span className="bl-lead">
+              <span className="bl-main">
+                <span className="bl-name">
+                  {it.color && <span className="dot" style={{ background: it.color }} />}
+                  <span className="bl-text">{it.label}</span>
+                </span>
+                <span className="bl-line" aria-hidden="true">
+                  <i style={{ width: `${(measure(it) / max) * 100}%`, '--bar': it.color ?? p.barColor } as React.CSSProperties} />
+                </span>
               </span>
-              <span className="bl-line" aria-hidden="true">
-                <i style={{ width: `${(measure(it) / max) * 100}%`, '--bar': it.color ?? p.barColor } as React.CSSProperties} />
+              {p.spark && <Spark values={p.spark[it.key]} />}
+              <span className="bl-val num">
+                <Count value={it.value} fmt={p.fmtValue} />
               </span>
             </span>
-            {p.spark && <Spark values={p.spark[it.key]} />}
-            <span className="bl-val num">
-              <Count value={it.value} fmt={p.fmtValue} />
-            </span>
-            <span className="bl-tail">
-              <DeltaPill now={it.moved?.now ?? it.value} was={it.moved ? it.moved.was : p.prior?.(it.key)} />
-              <span className="bl-share num">{fmtPct(share)}</span>
-            </span>
+            {!p.bare && (
+              <span className="bl-tail">
+                <DeltaPill now={it.moved?.now ?? it.value} was={it.moved ? it.moved.was : p.prior?.(it.key)} />
+                <span className="bl-share num">{fmtPct(share)}</span>
+              </span>
+            )}
             {p.subLabel && <span className="bl-sub num">{it.sub !== undefined ? (p.fmtSub ?? fmtPct)(it.sub) : ''}</span>}
             {p.money && <span className={it.rev ? 'bl-rev num' : 'bl-rev num none'}>{it.rev ? p.money(it.rev) : '–'}</span>}
           </button>

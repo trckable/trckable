@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- Every list with a bar behind its rows now follows the same rule: a 4px gap between rows, 4px corners, and the bar ends exactly where the visitors number ends (the Countries, Cities and Pages lists no longer let it run past the numbers; the pages on Live no longer touch each other).
 - Live numbers show a new visit within about 2 seconds again: under load a live report is reused for at most 2 seconds, and the dashboard checks once more 2.5 seconds after a visit.
 - Live view: "Online now" no longer jumps up by one for a second and back. The count is the server's own, and an older polled count or answer never replaces a newer one.
 
