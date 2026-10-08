@@ -524,6 +524,16 @@ button.kit-ask:hover {
 .kit-subtabs::-webkit-scrollbar {
   display: none;
 }
+/* The side with more tabs fades out, so a cut-off name reads as "scroll", not as a cropped label. */
+:is(.kit-tabs, .kit-subtabs).more-right {
+  mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+}
+:is(.kit-tabs, .kit-subtabs).more-left {
+  mask-image: linear-gradient(90deg, transparent, #000 36px);
+}
+:is(.kit-tabs, .kit-subtabs).more-left.more-right {
+  mask-image: linear-gradient(90deg, transparent, #000 36px, #000 calc(100% - 36px), transparent);
+}
 .kit-tabsrow {
   display: flex;
   margin-bottom: 12px;

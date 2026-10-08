@@ -2,21 +2,15 @@
 // hour, the minute-by-minute line, where they came from and, with the
 // revenue module on, today's money.
 import { Radio } from 'lucide-react'
+import { RollingNumber } from '../../kit/RollingNumber'
 import type { Sale } from '../../lib/api'
 import { delta, fmtInt } from '../../lib/format'
-import { useTween } from '../../lib/motion'
 import type { LiveNow } from './api'
 import { copy } from './copy'
 import { LiveLine } from './LiveLine'
 import { RevenueToday } from './RevenueToday'
 import { SourcesBar } from './SourcesBar'
 import { openMinute } from './switchView'
-
-/** A number that rolls to its new value (reduced motion: it just changes). */
-function Rolling({ value, className }: { value: number; className: string }) {
-  const v = useTween(value, 600)
-  return <span className={className}>{fmtInt(v)}</span>
-}
 
 function Status({ connected, failed }: { connected: boolean; failed: boolean }) {
   if (failed) return <span className="live-meta live-warn">{copy.failed}</span>
@@ -38,13 +32,13 @@ export function NowPanel(p: { data: LiveNow; series: number[]; online: number; c
       <div className="live-figures">
         <div className="live-figure">
           <span className="live-label">{copy.onlineNow}</span>
-          <Rolling className="live-online num" value={p.online} />
+          <RollingNumber className="live-online num" value={p.online} format={fmtInt} />
         </div>
         <div className="live-figure">
           <span className="live-label">{copy.visitors30}</span>
-          <Rolling className="live-visitors num" value={p.data.visitors} />
+          <RollingNumber className="live-visitors num" value={p.data.visitors} format={fmtInt} />
           {d && (
-            <span className={`live-delta num tone-${d.tone}`} aria-label={`${d.label} ${copy.vsBefore}`}>
+            <span key={d.text} className={`live-delta num tone-${d.tone}`} aria-label={`${d.label} ${copy.vsBefore}`}>
               {d.text} {copy.vsBefore}
             </span>
           )}

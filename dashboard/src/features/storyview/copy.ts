@@ -25,13 +25,17 @@ export const copy = defineCopy('storyview', {
   newNote: 'In about a week trckable knows your normal and starts telling you what changed.',
   // The takeaway and the arrows.
   takeSame: 'About the same as the period before.',
-  takeHead: (up: boolean, pct: number, source?: string, why?: string) => `${up ? 'Up' : 'Down'} ${pct}% on the period before${source ? `, mostly from ${source}` : ''}${why ?? ''}.`,
+  // The headline already says by how much, so this sentence names the source (or just the direction) and never repeats the percent.
+  takeHead: (up: boolean, source?: string, why?: string) => (source ? `Mostly from ${source}${why ?? ''}.` : `${up ? 'Up' : 'Down'} on the period before.`),
   // The one clause that says why, tacked on after the source.
   whyPage: (page: string) => `, most of it on ${page}`,
   whyReferrer: (name: string) => `, most of it from ${name}`,
   whyCampaign: (name: string) => `, most of it from the ${name} campaign`,
   whyCountry: (name: string) => `, most of it from ${name}`,
-  takeFollow: (name: string, same: boolean) => (same ? `${name} followed.` : `${name} did not follow.`),
+  takeFollow: (name: string, same: boolean) => {
+    const n = name.charAt(0).toUpperCase() + name.slice(1)
+    return same ? `${n} followed.` : `${n} did not follow.`
+  },
   deltaText: (arrow: string, pct: number) => `${arrow} ${pct}%`,
   deltaWord: { '↑': 'Up', '↓': 'Down', '→': 'Unchanged' },
   deltaLabel: (word: string, pct: number) => `${word} ${pct}% on the period before`,

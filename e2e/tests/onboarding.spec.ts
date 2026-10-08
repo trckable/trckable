@@ -1,7 +1,7 @@
 // The first run, end to end: a person with no site signs in, types a domain
 // (it appears in the preview as they type), gets the install card, and the
 // moment a real pageview lands on that site the flow says "Someone's here",
-// then "You're live" opens Live mode showing that visit. Keyboard only.
+// then Continue opens Live mode showing that visit. Keyboard only.
 //
 // It needs a server with no site at all, so it starts one of its own (the
 // shared one is provisioned with example.com), on a fresh data directory.
@@ -161,10 +161,7 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   // Closing it leaves the focus on the page: move on from the heading.
   await run.getByRole('heading', { name: 'Someone’s here.' }).focus()
 
-  // Enter, Enter: "You're live", then Live mode, where the visit is.
-  await page.keyboard.press('Enter')
-  await expect(run.getByRole('heading', { name: 'You’re live.' })).toBeVisible()
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/onboarding-4-live-${browserName}.png` })
+  // Enter: straight to Live mode, where the visit is (no second screen).
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(new RegExp(`/${domain.replace(/\./g, '\\.')}\\?view=live`))
   await expect(run).toBeHidden()
