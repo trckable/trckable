@@ -10,6 +10,8 @@ node_modules/
 *.test
 *.out
 # tracker / package / e2e build output (t.js for the server embed IS committed)
+/server/internal/web/dist/*
+!/server/internal/web/dist/.keep
 /tracker/dist/
 /packages/*/dist/
 /e2e/test-results/

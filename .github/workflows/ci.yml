@@ -66,6 +66,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile --filter @trckable/dashboard...
+      - run: pnpm --filter @trckable/dashboard build
       - uses: actions/setup-go@v7
         with: { go-version: "1.27", cache-dependency-path: server/go.sum }
       - run: cd server && go build -trimpath -ldflags="-s -w" -o bin/trckabled ./cmd/trckabled
@@ -249,11 +254,6 @@ jobs:
         run: pnpm audit --prod --audit-level high
       - if: needs.changes.outputs.dashboard == 'true'
         run: pnpm --filter @trckable/dashboard build
-      - if: needs.changes.outputs.dashboard == 'true'
-        name: the embedded dashboard matches the source
-        run: |
-          # status, not diff: a build missing from git (untracked after building) counts too
-          test -z "$(git status --porcelain -- server/internal/web/dist)" || (git status --short -- server/internal/web/dist && echo "run: pnpm --filter @trckable/dashboard build" && exit 1)
       - if: needs.changes.outputs.dashboard == 'true'
         name: publish the measured numbers (facts)
         run: node scripts/facts.mjs dashboard > facts-dashboard.json && cat facts-dashboard.json

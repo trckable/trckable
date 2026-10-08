@@ -1,1 +1,0 @@
-import{t as e}from"./react-e12729a5.js";import{t}from"./Tooltip-3cf75965.js";var n=e();function r({text:e,align:r=`left`,children:i}){return(0,n.jsx)(t,{text:e,align:r,children:t=>(0,n.jsx)(`button`,{type:`button`,className:i?`info-badge`:`info-dot`,"aria-label":i?e:`More about this`,...t,children:i??`i`})})}export{r as t};

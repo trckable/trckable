@@ -12,11 +12,25 @@
 # `chown -R 65532:65532` once (the server says so when it cannot write), and
 # Railway, which mounts its volume as root, needs RAILWAY_RUN_UID=0 on the service.
 
+# The dashboard is built here, not committed: node runs on the build host.
+FROM --platform=$BUILDPLATFORM node:22-trixie-slim AS web
+WORKDIR /src
+RUN corepack enable
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY scripts/gzip-size.mjs ./scripts/gzip-size.mjs
+COPY dashboard/ ./dashboard/
+COPY tracker/ ./tracker/
+COPY e2e/package.json ./e2e/package.json
+COPY packages/ ./packages/
+RUN pnpm install --frozen-lockfile --filter @trckable/dashboard...
+RUN pnpm --filter @trckable/dashboard build
+
 FROM golang:1.27-trixie AS build
 WORKDIR /src
 COPY server/go.mod server/go.sum ./server/
 RUN cd server && go mod download
 COPY server/ ./server/
+COPY --from=web /src/server/internal/web/dist/ ./server/internal/web/dist/
 COPY VERSION ./
 ARG VERSION=
 RUN V=${VERSION:-$(cat VERSION)} && cd server && CGO_ENABLED=1 go build -trimpath -tags netgo,osusergo \
