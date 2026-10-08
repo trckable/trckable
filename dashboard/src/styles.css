@@ -605,7 +605,7 @@ textarea:focus-visible {
   gap: 8px;
 }
 .bl-cols {
-  padding: 6px 4px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--border);
   color: var(--text-4);
   font-size: 12px;
@@ -620,7 +620,7 @@ textarea:focus-visible {
   isolation: isolate;
   min-height: 44px;
   width: 100%;
-  padding: 6px 4px;
+  padding: 6px 10px;
   border: 0;
   border-bottom: 1px solid var(--grid);
   border-radius: 0;
@@ -656,13 +656,13 @@ textarea:focus-visible {
   inset: 0;
   z-index: -1;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: 4px;
   pointer-events: none;
 }
 .bl .bl-line i {
   display: block;
   height: 100%;
-  border-radius: 6px;
+  border-radius: 4px;
   background: color-mix(in srgb, var(--bar, var(--text)) 13%, transparent);
   transition: width 0.12s var(--ease);
 }
@@ -905,7 +905,7 @@ textarea:focus-visible {
   width: auto;
 }
 .bl.has-act .bl-cols {
-  padding-right: 30px;
+  padding-right: 36px;
 }
 .bl-act {
   flex: none;
