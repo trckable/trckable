@@ -153,6 +153,7 @@ func TestHeatmapsFollowTheBaseScript(t *testing.T) {
 }
 
 func TestOnlyEmbeddableLinksCanBeFramed(t *testing.T) {
+	requireBuilt(t)
 	h := DashboardFramed(func(r *http.Request) string {
 		if r.URL.Path == "/s/embeddable" {
 			return "https://example.com"
@@ -175,6 +176,7 @@ func TestOnlyEmbeddableLinksCanBeFramed(t *testing.T) {
 // The dashboard frames only pages of its own origin; another site's page
 // never loads inside it.
 func TestDashboardFramesOnlyItsOwnOrigin(t *testing.T) {
+	requireBuilt(t)
 	h := DashboardFramed(func(*http.Request) string { return "" })
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, httptest.NewRequest("GET", "/", nil))
@@ -238,12 +240,13 @@ func firstAsset(t *testing.T) string {
 	sub, _ := fs.Sub(dist, "dist")
 	names, _ := fs.Glob(sub, "assets/*.js.gz")
 	if len(names) == 0 {
-		t.Fatal("no built script is stored as gzip: run `pnpm --filter @trckable/dashboard build`")
+		t.Skip("dashboard not built: run `pnpm --filter @trckable/dashboard build`")
 	}
 	return "/" + strings.TrimSuffix(names[0], ".gz")
 }
 
 func TestDashboardStoresOneCopy(t *testing.T) {
+	requireBuilt(t)
 	sub, _ := fs.Sub(dist, "dist")
 	for _, n := range []string{strings.TrimPrefix(firstAsset(t), "/")} { // index.html is under 1 KB: it stays plain
 		if _, err := fs.Stat(sub, n); err == nil {
@@ -330,6 +333,7 @@ func TestDashboardRefusesGzipAndRangesArePlain(t *testing.T) {
 // A shared page's address holds its token, so nothing leaves it as a Referer;
 // every other page keeps the address inside this origin.
 func TestSharedPagesSendNoReferer(t *testing.T) {
+	requireBuilt(t)
 	h := Dashboard()
 	for path, want := range map[string]string{"/s/sometoken": "no-referrer", "/s": "no-referrer", "/": "same-origin", "/settings": "same-origin"} {
 		w := httptest.NewRecorder()
@@ -363,6 +367,7 @@ func TestMissingAssetIsNotFoundNotThePage(t *testing.T) {
 // The page itself is never cached, and a route is still the page: a site's
 // address has a dot in it.
 func TestPageIsNeverCachedAndRoutesStillAnswerWithIt(t *testing.T) {
+	requireBuilt(t)
 	for _, path := range []string{"/", "/example.com", "/example.com?period=ytd"} {
 		rec := fetch(t, path, "")
 		if rec.Code != http.StatusOK || !strings.HasPrefix(rec.Header().Get("Content-Type"), "text/html") {
@@ -382,6 +387,7 @@ func TestPageIsNeverCachedAndRoutesStillAnswerWithIt(t *testing.T) {
 // arrive as one: its own type, allowed to control "/", never kept, and with the
 // page's hash in it instead of the placeholder (a deploy is a new worker).
 func TestServiceWorkerIsServedAsAWorker(t *testing.T) {
+	requireBuilt(t)
 	rec := fetch(t, "/sw.js", "gzip")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("/sw.js: status %d, want 200", rec.Code)
@@ -406,6 +412,7 @@ func TestServiceWorkerIsServedAsAWorker(t *testing.T) {
 
 // The version follows the page: another page, another worker.
 func TestServiceWorkerVersionFollowsThePage(t *testing.T) {
+	requireBuilt(t)
 	sub, _ := fs.Sub(dist, "dist")
 	a := serviceWorker(sub, []byte("one"))
 	b := serviceWorker(sub, []byte("two"))
@@ -418,6 +425,7 @@ func TestServiceWorkerVersionFollowsThePage(t *testing.T) {
 }
 
 func TestManifestHasItsOwnType(t *testing.T) {
+	requireBuilt(t)
 	rec := fetch(t, "/manifest.webmanifest", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d, want 200", rec.Code)
@@ -526,5 +534,28 @@ func TestWidgetPageScript(t *testing.T) {
 	}
 	if !strings.Contains(WidgetPageScript, "postMessage({type:'trckable:h',id:") || strings.Contains(WidgetPageScript, "fetch") || strings.Contains(WidgetPageScript, "cookie") {
 		t.Fatal("the page script only posts its height")
+	}
+}
+
+// requireBuilt skips a test that needs the dashboard build, which a fresh
+// checkout does not have.
+func requireBuilt(t *testing.T) {
+	t.Helper()
+	sub, _ := fs.Sub(dist, "dist")
+	if _, ok := storedPlain(sub, "index.html"); !ok {
+		t.Skip("dashboard not built: run `pnpm --filter @trckable/dashboard build`")
+	}
+}
+
+// A checkout that has not built the dashboard answers 503 with the command.
+func TestDashboardNotBuilt(t *testing.T) {
+	sub, _ := fs.Sub(dist, "dist")
+	if _, ok := storedPlain(sub, "index.html"); ok {
+		t.Skip("dashboard is built")
+	}
+	rec := httptest.NewRecorder()
+	DashboardFramed(nil).ServeHTTP(rec, httptest.NewRequest("GET", "/", nil))
+	if rec.Code != http.StatusServiceUnavailable || !strings.Contains(rec.Body.String(), "pnpm --filter @trckable/dashboard build") {
+		t.Errorf("got %d %q", rec.Code, rec.Body.String())
 	}
 }

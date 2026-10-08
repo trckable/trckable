@@ -51,7 +51,7 @@ const WEBKIT_SHARDS = 3 // the whole browser suite on WebKit
 const WEBKIT_DEMO_SHARDS = 2 // the accessibility pass and the Full charts on WebKit
 
 const PROSE = /(\.md$|^(docs|\.github)\/.*\.(png|jpe?g|gif|svg|webp)$)/
-const EMBEDDED = /^server\/internal\/web\/(dist|assets)\//
+const EMBEDDED = /^server\/internal\/web\/(assets)\//
 const ALL = 'all'
 
 /** An empty selection: nothing to run. */
@@ -71,7 +71,7 @@ export function select(files) {
   const addServer = (dir) => { if (s.server !== ALL) dir === ALL ? (s.server = ALL) : s.server.add(dir) }
   for (const f of files) {
     if (PROSE.test(f)) continue
-    // Built output, committed next to its source: its source's rule decides.
+    // Tracker build output, committed next to its source: its source's rule decides.
     if (EMBEDDED.test(f)) { s.image = true; continue }
     if (f.startsWith('dashboard/')) {
       s.dashboard = true

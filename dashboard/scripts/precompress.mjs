@@ -31,5 +31,8 @@ for (const f of readdirSync(dir, { recursive: true })) {
   raw += body.length
   gz += g.length
 }
+// vite empties the folder, and git needs .keep there so the Go embed has a file
+// in a checkout that has not built the dashboard.
+writeFileSync(join(dir, '.keep'), '')
 const kb = (n) => (n / 1024).toFixed(0)
 console.log(`stored ${files} files as gzip: ${kb(raw)} KB plain, ${kb(gz)} KB`)

@@ -1,1 +1,0 @@
-function e(e){if(!e||!/^#[0-9a-f]{6}$/i.test(e))return;let[t,n,r]=[1,3,5].map(t=>parseInt(e.slice(t,t+2),16)/255);return{"--accent":e,"--accent-strong":e,"--accent-ink":.2126*t+.7152*n+.0722*r>.5?`#0b0d10`:`#ffffff`,"--accent-soft":`color-mix(in srgb, ${e} 14%, transparent)`}}export{e as t};

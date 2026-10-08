@@ -1,1 +1,0 @@
-import{t as e}from"./react-e12729a5.js";var t=e();function n({left:e,children:n}){return(0,t.jsxs)(`div`,{className:`dialog-actions`,children:[e,n]})}export{n as t};

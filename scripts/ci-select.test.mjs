@@ -19,7 +19,7 @@ test('the WordPress plugin runs nothing here: it has its own workflow', () => {
 })
 
 test('a dashboard feature runs its specs, the accessibility pass and the dashboard job', () => {
-  const o = out('dashboard/src/features/journey/Journey.tsx', 'server/internal/web/dist/assets/index.js')
+  const o = out('dashboard/src/features/journey/Journey.tsx')
   assert.equal(o.e2e, 'journey')
   assert.equal(o.demo, 'true')
   assert.equal(o.dashboard, 'true')

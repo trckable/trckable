@@ -51,7 +51,7 @@ docker run -d --name trckable -p 8080:8080 -v trckable-data:/data ghcr.io/trckab
 docker logs trckable   # a one-time setup link: open it, create your account, add your site
 ```
 
-The image is for x86-64 and arm64; pin a [release](https://github.com/trckable/trckable/releases) with its tag, `ghcr.io/trckable/trckable:<version>`. You can also build it yourself: `docker build -t trckable -f deploy/Dockerfile https://github.com/trckable/trckable.git`.
+The image is for x86-64 and arm64; pin a [release](https://github.com/trckable/trckable/releases) with its tag, `ghcr.io/trckable/trckable:<version>`. You can also build it yourself: `docker build -t trckable -f deploy/Dockerfile https://github.com/trckable/trckable.git`. The image and the release binaries are the supported way to run it; `go install` builds a server without the dashboard, which answers 503 until the dashboard is built (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 
 The container runs as an unprivileged user (65532), not root. A new Docker volume just works: it takes `/data`'s owner from the image. Two cases need one step. A volume an older image filled as root, or a bind-mounted folder Docker created as root, needs its owner changed once: `docker run --rm -v trckable-data:/data busybox chown -R 65532:65532 /data` (for a bind mount, `chown -R 65532:65532` on that folder). On Railway, which mounts the volume as root, set `RAILWAY_RUN_UID=0` on the service. If the data folder is not writable, trckable says so at start and prints the fix for your case. Behind a reverse proxy (Caddy, nginx, Traefik) also set `TRCKABLE_TRUST_PROXY=xff`, or `header:X-Real-IP`, so the sign-in limits and the country lookup see each visitor and not the proxy; `npx trckable doctor` checks it.
 
