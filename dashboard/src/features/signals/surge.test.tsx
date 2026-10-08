@@ -10,6 +10,7 @@ vi.mock('../../components/Toast', () => ({ toast: vi.fn() }))
 import { dropReports } from '../../lib/api'
 import { openSurgeStory } from './openStory'
 import SurgeCard from './SurgeCard'
+import SurgeModal from './SurgeModal'
 import { beats, clock, deviceShare, honestLine, peakSlice, sourceHost, sourceLine, startSlice, surgeChip, surgeFilter, surgeNotice, type Story, type Surge } from './surge'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -145,7 +146,10 @@ describe('the surge card', () => {
     expect(document.body.querySelector('[role="dialog"]')).toBeNull()
     act(() => openSurgeStory('surge_1'))
     for (let i = 0; i < 40 && !document.body.querySelector('[role="dialog"]'); i++) await act(() => new Promise((r) => setTimeout(r, 25)))
-    expect(document.body.querySelector('[role="dialog"]')).not.toBeNull()
+    const dlg = document.body.querySelector('[role="dialog"]')
+    expect(dlg?.querySelector('svg[role="img"]')).not.toBeNull()
+    expect(dlg?.querySelectorAll('.sgm-beats li').length).toBe(3)
+    expect(dlg?.querySelectorAll('.sgm-tile').length).toBe(4)
   })
 
   it('More opens the story as a dialog with the beats, the tiles and the honest line, and Escape closes it', async () => {
@@ -188,5 +192,40 @@ describe('the surge card', () => {
     answer(surge)
     await draw()
     expect(card()).toBeNull()
+  })
+})
+
+describe('the story told by a notice (no story of its own)', () => {
+  const told: Surge = { id: 'ntf_1', started: surge.started + 60, online: 53, usual: 20, times: 2.7, why: { source: 'Facebook', source_dim: 'referrer', source_n: 34, source_usual: 0, before: 0, minutes: 0 } }
+  const open = async (site = 'tkb_x') => {
+    await act(() => {
+      root.render(<SurgeModal surge={told} site={site} tz="UTC" onClose={() => {}} onSee={() => {}} />)
+      return Promise.resolve()
+    })
+    await act(() => new Promise((r) => setTimeout(r, 40)))
+  }
+  const dialog = () => document.body.querySelector('[role="dialog"]')
+
+  it('loads the story of the surge that is on and shows the chart, the beats and the tiles', async () => {
+    answer(surge)
+    await open()
+    expect(dialog()?.querySelector('svg[role="img"]')).not.toBeNull()
+    expect(dialog()?.querySelectorAll('.sgm-beats li').length).toBe(3)
+    expect(dialog()?.querySelectorAll('.sgm-tile').length).toBe(4)
+    expect(dialog()?.textContent).toContain('20 → 53 in 15 min')
+  })
+
+  it('says so when the busy moment is over, and keeps what it was told', async () => {
+    answer(null)
+    await open()
+    expect(dialog()?.textContent).toContain('This busy moment is over')
+    expect(dialog()?.querySelector('svg[role="img"]')).toBeNull()
+    expect(dialog()?.textContent).toContain('53')
+  })
+
+  it('shows a short loading line while it asks', async () => {
+    vi.stubGlobal('fetch', () => new Promise(() => {}))
+    await open()
+    expect(dialog()?.textContent).toContain('Loading the last hour')
   })
 })

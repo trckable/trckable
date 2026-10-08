@@ -12,12 +12,15 @@ import { Rolling } from '../moments/Rolling'
 import { signals } from './copy'
 import { beats, deviceShare, honestLine, surgeChip, type Story, type Surge } from './surge'
 import { SurgeChart } from './SurgeChart'
+import { useFullSurge } from './useFullSurge'
 import { useSurgeActions } from './useSurgeActions'
 import './surge.css'
 
 const t = signals.surge
 
-export default function SurgeModal({ surge, tz, onClose, onSee }: { surge: Surge; tz: string; onClose: () => void; onSee: () => void }) {
+/** site: the site's id, so a surge that arrives without its story (told by a notice) gets the story fetched. */
+export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: { surge: Surge; site?: string; tz: string; onClose: () => void; onSee: () => void }) {
+  const { surge, state } = useFullSurge(given, site)
   const { see, canAsk, notify } = useSurgeActions(surge, () => {
     onSee()
     onClose()
@@ -41,6 +44,12 @@ export default function SurgeModal({ surge, tz, onClose, onSee }: { surge: Surge
           {w.before < surge.online && w.minutes > 0 && <span className="sgm-jump">{t.jump(w.before, surge.online, w.minutes)}</span>}
         </span>
       </header>
+      {state === 'loading' && (
+        <p className="sgm-wait muted" role="status">
+          {t.loading}
+        </p>
+      )}
+      {state === 'over' && <p className="sgm-wait muted">{t.over}</p>}
       <SurgeChart surge={surge} tz={tz} />
       <ol className="sgm-beats">
         {beats(surge, tz).map((b) => (
