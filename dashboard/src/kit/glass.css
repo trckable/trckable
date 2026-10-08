@@ -11,6 +11,8 @@
 :root {
   --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03)), rgba(10, 12, 15, 0.5);
   --glass-pop: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03)), rgba(20, 24, 30, 0.9);
+  --glass-menu: rgba(18, 21, 27, 0.97); /* a menu: text behind it never reads through */
+  --glass-blur-menu: blur(28px) saturate(170%);
   --glass-lite: rgba(255, 255, 255, 0.04);
   --glass-line: rgba(255, 255, 255, 0.1);
   --glass-line-hot: rgba(255, 255, 255, 0.62);
@@ -32,6 +34,7 @@
   :root:not([data-theme='dark']) {
     --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.64));
     --glass-pop: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.92)), rgba(255, 255, 255, 0.92);
+    --glass-menu: rgba(255, 255, 255, 0.98);
     --glass-lite: rgba(255, 255, 255, 0.55);
     --glass-line: rgba(20, 24, 30, 0.1);
     --glass-line-hot: rgba(20, 24, 30, 0.42);
@@ -50,6 +53,7 @@
 :root[data-theme='light'] {
   --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.64));
   --glass-pop: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.92)), rgba(255, 255, 255, 0.92);
+  --glass-menu: rgba(255, 255, 255, 0.98);
   --glass-lite: rgba(255, 255, 255, 0.55);
   --glass-line: rgba(20, 24, 30, 0.1);
   --glass-line-hot: rgba(20, 24, 30, 0.42);
@@ -117,6 +121,12 @@
     -webkit-backdrop-filter: var(--glass-blur-pop);
     backdrop-filter: var(--glass-blur-pop);
     box-shadow: var(--glass-hi), var(--glass-shadow-pop);
+  }
+  /* The menus (sites, period, ⋯, Filter) are nearly solid with a stronger blur: the page's text never reads through a row. */
+  :root:not([data-glass='off']) .pop:is(.menu, .menu-pop, .sites, .lpop, .range-pop, .anchored) {
+    background: var(--glass-menu);
+    -webkit-backdrop-filter: var(--glass-blur-menu);
+    backdrop-filter: var(--glass-blur-menu);
   }
   :root:not([data-glass='off']) .side-card {
     isolation: isolate;

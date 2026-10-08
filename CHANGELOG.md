@@ -11,6 +11,11 @@ section into the release.
 
 ### Fixed
 
+- A milestone's card no longer covers the dashboard: it is a small card without the picture (Copy image and Share… still have it), comes up four seconds after the page, and puts itself away after 12 seconds unless the pointer or the keyboard is on it.
+- The menus (site switcher, period, ⋯, Filter) are nearly solid with a stronger blur, so the page's text never reads through a row; the switcher's key hints are larger and clearer.
+- Menu rows are one style: 32 px (44 px on a phone), 12 px padding, a 16 px icon column, an 8 px corner; the chosen period has its check at the left like the chosen site, and the period's list hangs from the period button's right edge instead of running past the screen.
+- Full mode no longer moves the Story/Explore and period row up by 8 px.
+- Phone: Live | Data is not cut off at the left edge and Story, Explore, Filter, the period and ⋯ fit one 390 px line; Filter is a funnel (no longer a twin of Story's lines) and Story and Explore have a tooltip.
 - The bars in the ranked lists (pages, channels, countries, devices) sit inside the card with the same inset as the column heads, and their corners are tighter.
 ### Changed
 

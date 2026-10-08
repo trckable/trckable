@@ -28,10 +28,10 @@ const byId = (ids: string[]) => ids.flatMap((id) => PRESETS.filter((p) => p.id =
 function Row({ p, on, onPick }: { p: Preset; on: boolean; onPick: () => void }) {
   return (
     <button type="button" className={on ? 'lrow on' : 'lrow'} aria-pressed={on} data-initial={on || undefined} onClick={onPick}>
+      {on && <Check size={14} strokeWidth={2.25} className="ok lead" aria-hidden="true" />}
       <span>{p.label}</span>
       {p.id === 'now' && <span className="pulse" aria-hidden="true" />}
       <span className="end" aria-hidden="true">
-        {on && <Check size={14} strokeWidth={2.25} className="ok" />}
         {!on && p.key && <span className="k">{caps(keyFor('period.' + p.id)).join('')}</span>}
       </span>
     </button>
