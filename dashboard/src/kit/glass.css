@@ -70,7 +70,6 @@
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    will-change: transform;
     background:
       radial-gradient(circle 220px at 70px 30px, var(--amb-1), transparent),
       radial-gradient(circle 340px at calc(100% - 130px) 350px, var(--amb-2), transparent),
