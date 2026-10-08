@@ -2221,8 +2221,5 @@ export default {
   'onboarding.more.sites': 'Deine Websites',
   'onboarding.more.waiting': 'wartet',
   'onboarding.more.receiving': 'empfängt',
-  'onboarding.more.added': 'Diese Website ist schon da.',
-  'onboarding.more.invalid': 'Das sieht nicht nach einer Domain aus.',
-  'onboarding.more.space': 'Eine Domain hat keine Leerzeichen.',
   'onboarding.skipDash': 'Vorerst überspringen — mein Dashboard öffnen',
 } satisfies Messages

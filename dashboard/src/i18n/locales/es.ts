@@ -2224,8 +2224,5 @@ export default {
   'onboarding.more.sites': 'Tus sitios',
   'onboarding.more.waiting': 'esperando',
   'onboarding.more.receiving': 'recibiendo',
-  'onboarding.more.added': 'Ese sitio ya está aquí.',
-  'onboarding.more.invalid': 'Eso no parece un dominio.',
-  'onboarding.more.space': 'Un dominio no tiene espacios.',
   'onboarding.skipDash': 'Omitir por ahora — abrir mi panel',
 } satisfies Messages

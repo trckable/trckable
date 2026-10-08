@@ -2218,8 +2218,5 @@ export default {
   'onboarding.more.sites': 'I tuoi siti',
   'onboarding.more.waiting': 'in attesa',
   'onboarding.more.receiving': 'riceve',
-  'onboarding.more.added': 'Quel sito è già qui.',
-  'onboarding.more.invalid': 'Non sembra un dominio.',
-  'onboarding.more.space': 'Un dominio non ha spazi.',
   'onboarding.skipDash': 'Salta per ora — apri la mia dashboard',
 } satisfies Messages

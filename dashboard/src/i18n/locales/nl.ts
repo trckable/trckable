@@ -2218,8 +2218,5 @@ export default {
   'onboarding.more.sites': 'Je sites',
   'onboarding.more.waiting': 'wacht',
   'onboarding.more.receiving': 'ontvangt',
-  'onboarding.more.added': 'Die site staat er al.',
-  'onboarding.more.invalid': 'Dat lijkt geen domein.',
-  'onboarding.more.space': 'Een domein heeft geen spaties.',
   'onboarding.skipDash': 'Nu overslaan — mijn dashboard openen',
 } satisfies Messages
