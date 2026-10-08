@@ -32,6 +32,9 @@ func TestLiveReportCacheFollowsCommits(t *testing.T) {
 	}
 	g.event(t, event.Event{Kind: event.KindPageview, EventID: 2, TS: g.now.UnixMilli(), Visitor: 2, Path: "/"})
 	g.waitApplied(t, 2)
+	// A busy site commits every second; a live report waits out liveFloor
+	// before it follows them, then follows the next commit at once.
+	g.clock.Add((liveFloor + time.Second).Milliseconds())
 	if n := visitors(); n != 2 {
 		t.Fatalf("visitors %v after a new visit, want 2: the cache held the old report", n)
 	}

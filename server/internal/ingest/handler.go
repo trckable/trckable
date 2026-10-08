@@ -127,6 +127,7 @@ type Handler struct {
 	// (heat.go). Written out with the bot counts.
 	Heats                      HeatCounts
 	heatOnce                   sync.Once
+	appendWarned               atomic.Int64 // unix ns of the last append warning
 	heatLimitIP, heatLimitSite *limiter
 
 	limitOnce sync.Once
@@ -247,7 +248,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if _, err := h.Log.Append(ctx, b); err != nil {
 		// WAL unavailable (shutting down, disk full): 503 makes the tracker
 		// keep the event in its queue and retry.
-		slog.Warn("ingest: wal append failed", "err", err)
+		h.warnAppend(err)
 		w.Header().Set("Retry-After", "5")
 		w.WriteHeader(http.StatusServiceUnavailable)
 		return
@@ -257,6 +258,17 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, cookie)
 	}
 	w.WriteHeader(http.StatusAccepted)
+}
+
+// warnAppend logs a failed append at most once every 10 seconds: a full disk
+// fails every request, and a line for each would bury the log.
+func (h *Handler) warnAppend(err error) {
+	now := h.Now().UnixNano()
+	last := h.appendWarned.Load()
+	if now-last < int64(10*time.Second) || !h.appendWarned.CompareAndSwap(last, now) {
+		return
+	}
+	slog.Warn("ingest: wal append failed", "err", err)
 }
 
 func (h *Handler) reject(w http.ResponseWriter, code int, err error) {
