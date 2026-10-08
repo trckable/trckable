@@ -19,6 +19,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"slices"
 	"sort"
 	"strings"
@@ -73,6 +74,10 @@ type Server struct {
 	duck      atomic.Pointer[duck.Store]
 	writer    atomic.Pointer[writer.Writer]
 	writerErr atomic.Value // error
+	// exit ends the process with a non-zero status (os.Exit; tests replace it).
+	// Used when the writer cannot recover or a background goroutine panics:
+	// a restart replays the WAL from the last committed mark.
+	exit      func(code int)
 	stopWrite context.CancelFunc
 	writerWG  sync.WaitGroup
 	started   time.Time
@@ -450,17 +455,17 @@ func (s *Server) Run(ctx context.Context) error {
 	wctx, stop := context.WithCancel(context.Background())
 	s.stopWrite = stop
 	s.writerWG.Add(1)
-	go s.startAnalytics(wctx)
+	s.goGuarded("writer", func() { s.startAnalytics(wctx) })
 	s.bg.Store(&wctx)
-	go s.geo.Run(wctx) // keeps the geo database present and fresh
-	go s.revenue.Run(wctx)
-	go s.runRetention(wctx)    // each site's own "keep for N days"
-	go s.runBackups(wctx)      // one encrypted copy a day, kept on the volume
-	go s.runLoginResets(wctx)  // sign-in limits cleared when an owner resets a password
-	go s.runAlerts(wctx)       // the four things worth being told about
-	go s.runHealthAlerts(wctx) // the installation's own problems, sent as they start and clear
-	go s.runChecks(wctx)       // each site's snippet, looked for once a day
-	go s.runLogRetry(wctx)     // events again once a full disk has room
+	s.goGuarded("geo", func() { s.geo.Run(wctx) }) // keeps the geo database present and fresh
+	s.goGuarded("revenue", func() { s.revenue.Run(wctx) })
+	s.goGuarded("retention", func() { s.runRetention(wctx) })        // each site's own "keep for N days"
+	s.goGuarded("backups", func() { s.runBackups(wctx) })            // one encrypted copy a day, kept on the volume
+	s.goGuarded("login resets", func() { s.runLoginResets(wctx) })   // sign-in limits cleared when an owner resets a password
+	s.goGuarded("alerts", func() { s.runAlerts(wctx) })              // the four things worth being told about
+	s.goGuarded("health alerts", func() { s.runHealthAlerts(wctx) }) // the installation's own problems, sent as they start and clear
+	s.goGuarded("checks", func() { s.runChecks(wctx) })              // each site's snippet, looked for once a day
+	s.goGuarded("log retry", func() { s.runLogRetry(wctx) })         // events again once a full disk has room
 
 	select {
 	case <-ctx.Done():
@@ -468,6 +473,29 @@ func (s *Server) Run(ctx context.Context) error {
 		return errors.Join(err, s.shutdown())
 	}
 	return s.shutdown()
+}
+
+// goGuarded runs fn in a goroutine. A panic is logged with its stack and the
+// process exits non-zero: dying silently mid-state would leave the server
+// answering while a part of it is gone.
+func (s *Server) goGuarded(name string, fn func()) {
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.Error("background goroutine panicked; exiting", "name", name, "panic", r, "stack", string(debug.Stack()))
+				s.exitNow(1)
+			}
+		}()
+		fn()
+	}()
+}
+
+func (s *Server) exitNow(code int) {
+	if s.exit != nil {
+		s.exit(code)
+		return
+	}
+	os.Exit(code)
 }
 
 // startAnalytics opens DuckDB (retrying while a previous instance still holds
@@ -510,7 +538,12 @@ func (s *Server) startAnalytics(ctx context.Context) {
 		slog.Warn("could not record the analytics store's schema", "err", err)
 	}
 	s.backfillSeen(ctx, store)
-	w := writer.New(s.log, store, writer.Options{CloseAfter: s.cfg.SessionCloseAfter, IdleClose: idleClose(s.cfg), Sites: s.ctl.ExistingSites, SiteZone: s.ctl.SiteZone})
+	w := writer.New(s.log, store, writer.Options{CloseAfter: s.cfg.SessionCloseAfter, IdleClose: idleClose(s.cfg), Sites: s.ctl.ExistingSites, SiteZone: s.ctl.SiteZone,
+		OnGiveUp: func(err error) {
+			s.writerErr.Store(err)
+			slog.Error("the analytics writer cannot commit; exiting so the next start replays the WAL", "err", err)
+			s.exitNow(1)
+		}})
 	w.OnCommit = s.hub.Publish
 	w.OnTouch = func(site string, lo, hi int64) {
 		s.hub.Bump(site)            // a commit that only wrote out idle visits still moves the live reports' version
@@ -522,6 +555,9 @@ func (s *Server) startAnalytics(ctx context.Context) {
 	if err := w.Run(ctx); err != nil {
 		slog.Error("writer stopped", "err", err)
 		s.writerErr.Store(err)
+		if ctx.Err() == nil {
+			s.exitNow(1) // not a shutdown: nothing else restarts the writer
+		}
 	}
 }
 
@@ -578,6 +614,9 @@ func (s *Server) readyz(w http.ResponseWriter, r *http.Request) {
 	} else if err := s.ctl.Ping(r.Context()); err != nil {
 		rd.Status, rd.Error, code = "unavailable", "the control database is not answering", http.StatusServiceUnavailable
 		s.readyzLog(rd.Error, err)
+	} else if err := writerFailing(s); err != nil {
+		rd.Status, rd.Error, code = "unavailable", "the analytics writer cannot store events", http.StatusServiceUnavailable
+		s.readyzLog(rd.Error, err)
 	} else if v := s.writerErr.Load(); v != nil {
 		rd.Status, rd.Error = "degraded", "the analytics writer reported an error" // events still durable in the WAL
 		s.readyzLog(rd.Error, v.(error))
@@ -585,6 +624,14 @@ func (s *Server) readyz(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	_ = json.NewEncoder(w).Encode(rd)
+}
+
+// writerFailing is why the writer cannot commit right now, or nil.
+var writerFailing = func(s *Server) error {
+	if wr := s.writer.Load(); wr != nil {
+		return wr.Failing()
+	}
+	return nil
 }
 
 // readyzLog logs why /readyz is not healthy, at most once a minute.

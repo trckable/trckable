@@ -20,9 +20,10 @@ const (
 	problemOffsite = "offsite" // the last copy to the bucket failed
 	problemIngest  = "ingest"  // the write-ahead log refuses events
 	problemKey     = "key"     // the instance key is not the one the data was sealed with
+	problemWriter  = "writer"  // events wait in the write-ahead log: the analytics store refuses them
 )
 
-var problemOrder = []string{problemBackup, problemOffsite, problemIngest, problemKey}
+var problemOrder = []string{problemBackup, problemOffsite, problemIngest, problemWriter, problemKey}
 
 // healthEvery is how often the problems are looked at. It reads what the
 // server already holds in memory and a file on disk, so it costs nothing;
@@ -74,6 +75,9 @@ func (s *Server) problems() map[string]string {
 		if err := s.log.Err(); err != nil {
 			out[problemIngest] = err.Error()
 		}
+	}
+	if err := writerFailing(s); err != nil {
+		out[problemWriter] = err.Error()
 	}
 	if s.revenue != nil && s.revenue.KeyMismatch() {
 		out[problemKey] = "TRCKABLE_SECRET does not match the key this data was encrypted with"
@@ -208,6 +212,12 @@ func healthEvent(problem, detail string, started bool, at time.Time) alerts.Even
 			ev.Title, ev.Message = "Events are refused", "The write-ahead log refuses new events: "+detail+". Trackers keep what they could not send and try again."
 		} else {
 			ev.Title, ev.Message = "Events are accepted again", "The write-ahead log takes events again."
+		}
+	case problemWriter:
+		if started {
+			ev.Title, ev.Message = "Events are not reaching the reports", "The analytics store refuses writes: "+detail+". Events are safe in the write-ahead log and are applied once it works again; the server restarts itself if it keeps failing."
+		} else {
+			ev.Title, ev.Message = "Reports are catching up", "The analytics store takes writes again."
 		}
 	case problemKey:
 		if started {

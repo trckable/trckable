@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"math/rand/v2"
 	"strconv"
 	"strings"
 	"sync"
@@ -46,6 +47,13 @@ type Options struct {
 	// SiteZone is a site's time zone (an IANA name): crawler counters are
 	// kept per day as the site names its days. Nil or unknown: UTC.
 	SiteZone func(ctx context.Context, site string) string
+	// A batch that fails to commit is tried again after RetryMin, doubling
+	// (with jitter) up to RetryMax (defaults 250ms and 30s). After GiveUpAfter
+	// of failing in a row (default 5m) the writer calls OnGiveUp and returns
+	// the error: the process is expected to exit, and a restart replays the
+	// WAL from the last committed mark.
+	RetryMin, RetryMax, GiveUpAfter time.Duration
+	OnGiveUp                        func(err error)
 }
 
 // Writer applies WAL records to DuckDB.
@@ -66,6 +74,10 @@ type Writer struct {
 	wake   context.CancelFunc
 	// parking, if set, runs just before the idle wait is armed (tests only).
 	parking func()
+
+	failing atomic.Pointer[commitFailure] // set while a batch cannot be committed
+	// inject, if set, makes a commit fail before it touches anything (tests only).
+	inject func() error
 
 	applied atomic.Uint64 // hwm, readable from other goroutines (health, pruning)
 	ready   atomic.Bool   // sessions restored; snapshots are complete
@@ -92,6 +104,15 @@ func New(log *wal.Log, store *duck.Store, opts Options) *Writer {
 	if opts.IdleClose <= 0 {
 		opts.IdleClose = time.Minute
 	}
+	if opts.RetryMin <= 0 {
+		opts.RetryMin = 250 * time.Millisecond
+	}
+	if opts.RetryMax <= 0 {
+		opts.RetryMax = 30 * time.Second
+	}
+	if opts.GiveUpAfter <= 0 {
+		opts.GiveUpAfter = 5 * time.Minute
+	}
 	now := opts.Now
 	if now == nil {
 		now = time.Now
@@ -112,6 +133,20 @@ func (w *Writer) Applied() uint64 { return w.applied.Load() }
 
 // Ready reports whether the writer has restored its state after boot.
 func (w *Writer) Ready() bool { return w.ready.Load() }
+
+type commitFailure struct {
+	err   error
+	since time.Time
+}
+
+// Failing returns the error of the batch that cannot be committed right now,
+// or nil. The events stay in the WAL meanwhile.
+func (w *Writer) Failing() error {
+	if f := w.failing.Load(); f != nil {
+		return f.err
+	}
+	return nil
+}
 
 // OpenSessions returns a copy of the site's sessions not yet written to the
 // sessions table (so reports include live visits). ok is false until the
@@ -207,12 +242,12 @@ func (w *Writer) Run(ctx context.Context) error {
 		batch, err := w.collect(ctx, rd)
 		if len(batch) > 0 {
 			// Never abandon a batch that is already out of the WAL reader.
-			if cerr := w.commit(context.Background(), conn, batch); cerr != nil {
+			if cerr := w.commitRetry(ctx, conn, batch); cerr != nil {
 				return cerr
 			}
 		} else if err == nil {
 			// Quiet: close idle sessions so they reach the sessions table.
-			if cerr := w.commit(context.Background(), conn, nil); cerr != nil {
+			if cerr := w.commitRetry(ctx, conn, nil); cerr != nil {
 				return cerr
 			}
 		}
@@ -223,6 +258,57 @@ func (w *Writer) Run(ctx context.Context) error {
 			return err
 		}
 	}
+}
+
+// commitRetry commits batch, and when that fails keeps trying with backoff.
+// A failed attempt may already have moved the in-memory state (sessions,
+// dedupe ids) past what the database holds, so before each retry that state
+// is rebuilt from the database, exactly as at boot: the batch then applies
+// once, whatever the failed attempt did. Cancelling ctx ends the wait; the
+// batch stays in the WAL and the next start replays it.
+func (w *Writer) commitRetry(ctx context.Context, conn *sql.Conn, batch []wal.Record) error {
+	err := w.commit(context.Background(), conn, batch)
+	if err == nil {
+		return nil
+	}
+	started := w.now()
+	delay := w.opts.RetryMin
+	for attempt := 1; ; attempt++ {
+		w.failing.Store(&commitFailure{err: err, since: started})
+		slog.Error("writer: commit failed, will retry", "err", err, "attempt", attempt, "retry_in", delay, "failing_for", w.now().Sub(started).Round(time.Second))
+		if w.now().Sub(started) >= w.opts.GiveUpAfter {
+			slog.Error("writer: giving up; events stay in the WAL and replay on the next start", "err", err, "failing_for", w.now().Sub(started).Round(time.Second))
+			if w.opts.OnGiveUp != nil {
+				w.opts.OnGiveUp(err)
+			}
+			return err
+		}
+		select {
+		case <-ctx.Done():
+			return err
+		case <-time.After(delay/2 + rand.N(delay/2+1)): //nolint:gosec // jitter, not security
+		}
+		delay = min(delay*2, w.opts.RetryMax)
+		_, _ = conn.ExecContext(context.Background(), "ROLLBACK") // nothing open is fine
+		if err = w.rebuild(conn, batch); err == nil {
+			err = w.commit(context.Background(), conn, batch)
+		}
+		if err == nil {
+			w.failing.Store(nil)
+			slog.Info("writer: commit works again", "after", attempt)
+			return nil
+		}
+	}
+}
+
+// rebuild drops the in-memory sessions and dedupe ids and loads them again
+// from the database, so a batch that failed halfway can be applied afresh.
+func (w *Writer) rebuild(conn *sql.Conn, batch []wal.Record) error {
+	w.sess.reset()
+	w.dd = newDedupe(dedupePeriod.Milliseconds(), dedupeGens, dedupeMaxIDs)
+	w.pending = batch // "idle" is measured from the first record still to apply
+	defer func() { w.pending = nil }()
+	return w.restore(context.Background(), conn)
 }
 
 // collect returns the next batch; an empty batch with a nil error means the
@@ -387,6 +473,11 @@ func (w *Writer) commit(ctx context.Context, conn *sql.Conn, batch []wal.Record)
 
 // commitAt commits batch and closes sessions idle relative to closeAt (ms).
 func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Record, closeAt int64) error {
+	if w.inject != nil {
+		if err := w.inject(); err != nil {
+			return fmt.Errorf("writer commit: %w", err)
+		}
+	}
 	rows := make([]row, 0, len(batch))
 	var closed []*Session
 	nowMs := w.now().UnixMilli()

@@ -14,6 +14,7 @@ section into the release.
 - Form errors say what to do, with an example, in one place: left-aligned under the field with a small icon, the field's border and focus ring turn red, screen readers hear it, and it clears as soon as the value is valid. Applies to add site, sign-in and setup, passwords, share links, goals, API keys, people, revenue connect and settings fields.
 ### Fixed
 
+- A failed write to the analytics store no longer freezes the dashboards: the writer retries the batch with backoff (events are applied once), /readyz answers 503 and Settings → Health alerts while it fails, and after about five minutes the server exits so the next start replays the write-ahead log. A panic in a background task now logs its stack and exits instead of leaving the server half alive.
 - The ranked lists (pages, channels, countries, devices) have a small gap between rows so each bar is its own piece, and a bar ends where the number columns end instead of running to the card's edge.
 - A milestone's card no longer covers the dashboard: it is a small card without the picture (Copy image and Share… still have it), comes up four seconds after the page, and puts itself away after 12 seconds unless the pointer or the keyboard is on it.
 - The menus (site switcher, period, ⋯, Filter) are nearly solid with a stronger blur, so the page's text never reads through a row; the switcher's key hints are larger and clearer.
