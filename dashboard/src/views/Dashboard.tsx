@@ -1,3 +1,4 @@
+import { useLiveRefresh } from './useLiveRefresh'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { TimeChart } from '../charts/GuardedChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
@@ -14,7 +15,7 @@ import { useMods } from '../lib/useMods'
 import { isOn, shows } from '../lib/modules'
 import { FilterMenu } from '../components/FilterMenu'
 import { toast } from '../components/Toast'
-import { useLive, onlineNow } from '../lib/useLive'
+import { onlineNow } from '../lib/useLive'
 import { useNarrow } from '../lib/useNarrow'
 import { useReport } from '../lib/useReport'
 import { useSample } from '../lib/useSample'
@@ -113,11 +114,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // timer); a new visit on the stream reloads the report past its cache.
   // The chart's hourly report (a short span, below) refreshes with it.
   const refreshHours = useRef<(skipCache: boolean) => void>(undefined)
-  const stream = useLive(isShared() ? '' : site.id, () => {
-    if (!live) return
-    refresh(true)
-    refreshHours.current?.(true)
-  })
+  const stream = useLiveRefresh(isShared() ? '' : site.id, live, refresh, refreshHours)
 
   // ---- a site with nothing in it yet ----
   // Until the first visit arrives we show a sample dashboard, lightly out of

@@ -35,6 +35,10 @@ func (q Q) SiteSummary(ctx context.Context, p Params) (*Summary, error) {
 		p.Bucket = "day"
 	}
 	p.Filters = nil
+	if err := acquireReport(ctx); err != nil {
+		return nil, err
+	}
+	defer releaseReport()
 	conn, err := q.conn(ctx, p.Site)
 	if err != nil {
 		return nil, err

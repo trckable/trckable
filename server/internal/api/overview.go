@@ -5,12 +5,16 @@ package api
 // row says what that site's own dashboard would say.
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/fx"
 	"github.com/trckable/trckable/server/internal/query"
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
 type siteRow struct {
@@ -62,34 +66,66 @@ func (a *API) overview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sites = visible(principalOf(r), sites)
-	out := make([]siteRow, 0, len(sites))
-	for _, si := range sites {
-		row := siteRow{ID: si.ID, Domain: si.Domain, Name: si.Name, Currency: si.Currency, Exponent: fx.Exponent(si.Currency)}
-		loc, err := time.LoadLocation(si.Timezone)
-		if err != nil {
-			loc = time.UTC
-		}
-		now := a.Now().In(loc)
-		to := startOfDay(now, loc).AddDate(0, 0, 1)
-		from := to.AddDate(0, 0, -days)
-		p := query.Params{Site: si.ID, From: from.UTC(), To: to.UTC(), TZ: loc.String(), Bucket: bucket, Currency: si.Currency,
-			Revenue: a.moduleOn(r, si.ID, "revenue"), SundayWeeks: sundayWeeks(r.Context(), a, si.ID)}
-		cur, err := q.SiteSummary(r.Context(), p)
-		if err != nil {
-			row.Error = err.Error()
-			out = append(out, row)
-			continue
-		}
-		row.Visitors, row.Pageviews, row.Bounce, row.Series, row.Revenue = cur.Visitors, cur.Pageviews, cur.Bounce, cur.Series, cur.Revenue
-		row.PageviewSeries, row.SessionSeries, row.BounceSeries = cur.PageviewSeries, cur.SessionSeries, cur.BounceSeries
-		prev := p
-		prev.From, prev.To, prev.Revenue = from.AddDate(0, 0, -days).UTC(), from.UTC(), false
-		if ps, err := q.SiteSummary(r.Context(), prev); err == nil {
-			row.Previous, row.PreviousPageviews, row.PreviousBounce = ps.Visitors, ps.Pageviews, ps.Bounce
-		}
-		row.Online, _ = q.Online(r.Context(), si.ID, a.Now())
-		row.OnlineSeries, _ = q.OnlineSeries(r.Context(), si.ID, a.Now())
-		out = append(out, row)
+	// Sites are read side by side, a few at a time, and the whole view ends
+	// at the report timeout: a site that is not read by then shows its error
+	// instead of holding the page.
+	ctx, cancel := context.WithTimeout(r.Context(), reportTimeout)
+	defer cancel()
+	out := make([]siteRow, len(sites))
+	var wg sync.WaitGroup
+	slots := make(chan struct{}, overviewReads)
+	for i, si := range sites {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			select {
+			case slots <- struct{}{}:
+				defer func() { <-slots }()
+			case <-ctx.Done():
+				out[i] = siteRow{ID: si.ID, Domain: si.Domain, Name: si.Name, Currency: si.Currency, Exponent: fx.Exponent(si.Currency), Error: overviewSlow}
+				return
+			}
+			out[i] = a.overviewRow(ctx, r, q, si, days, bucket)
+		}()
 	}
+	wg.Wait()
 	writeJSON(w, http.StatusOK, map[string]any{"days": days, "sites": out})
+}
+
+// overviewSlow is what a site's row says when its numbers did not arrive in time.
+const overviewSlow = "took too long to load"
+
+// overviewReads is how many sites the all-sites view reads at once.
+const overviewReads = 3
+
+// overviewRow reads one site's period, in its own timezone and currency.
+func (a *API) overviewRow(ctx context.Context, r *http.Request, q *query.Q, si sqlite.SiteRow, days int, bucket string) siteRow {
+	row := siteRow{ID: si.ID, Domain: si.Domain, Name: si.Name, Currency: si.Currency, Exponent: fx.Exponent(si.Currency)}
+	loc, err := time.LoadLocation(si.Timezone)
+	if err != nil {
+		loc = time.UTC
+	}
+	now := a.Now().In(loc)
+	to := startOfDay(now, loc).AddDate(0, 0, 1)
+	from := to.AddDate(0, 0, -days)
+	p := query.Params{Site: si.ID, From: from.UTC(), To: to.UTC(), TZ: loc.String(), Bucket: bucket, Currency: si.Currency,
+		Revenue: a.moduleOn(r, si.ID, "revenue"), SundayWeeks: sundayWeeks(ctx, a, si.ID)}
+	cur, err := q.SiteSummary(ctx, p)
+	if err != nil {
+		row.Error = err.Error()
+		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+			row.Error = overviewSlow
+		}
+		return row
+	}
+	row.Visitors, row.Pageviews, row.Bounce, row.Series, row.Revenue = cur.Visitors, cur.Pageviews, cur.Bounce, cur.Series, cur.Revenue
+	row.PageviewSeries, row.SessionSeries, row.BounceSeries = cur.PageviewSeries, cur.SessionSeries, cur.BounceSeries
+	prev := p
+	prev.From, prev.To, prev.Revenue = from.AddDate(0, 0, -days).UTC(), from.UTC(), false
+	if ps, err := q.SiteSummary(ctx, prev); err == nil {
+		row.Previous, row.PreviousPageviews, row.PreviousBounce = ps.Visitors, ps.Pageviews, ps.Bounce
+	}
+	row.Online, _ = q.Online(ctx, si.ID, a.Now())
+	row.OnlineSeries, _ = q.OnlineSeries(ctx, si.ID, a.Now())
+	return row
 }

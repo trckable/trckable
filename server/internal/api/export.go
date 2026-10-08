@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"net/http"
@@ -60,12 +61,15 @@ func (a *API) export(w http.ResponseWriter, r *http.Request) {
 	}
 	p := ask.Params
 	p.Limit = exportRows
+	p.Export = true
 	p.Daily = false // the series is already in the file, day by day
 	p.Deep = true   // an export is the whole thing, not Core's subset
 
-	res, err := q.Report(r.Context(), p)
+	ctx, cancel := context.WithTimeout(r.Context(), reportTimeout)
+	defer cancel()
+	res, err := q.Report(ctx, p)
 	if err != nil {
-		fail(w, http.StatusBadRequest, err.Error())
+		reportFail(w, err)
 		return
 	}
 
@@ -135,7 +139,7 @@ func (a *API) export(w http.ResponseWriter, r *http.Request) {
 		pp := *ask.Prev
 		pp.Limit = 1
 		pp.Daily = false
-		pr, err := q.Report(r.Context(), pp)
+		pr, err := q.Report(ctx, pp)
 		if err == nil {
 			prev := query.Row{Visitors: pr.KPIs.Visitors, Sessions: pr.KPIs.Sessions, Pageviews: pr.KPIs.Pageviews, Bounce: pr.KPIs.BounceRate}
 			if money {

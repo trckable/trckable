@@ -1,7 +1,10 @@
 package api
 
 import (
+	"context"
+	"errors"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -27,8 +30,15 @@ import (
 // top rows of people counted the same way; neither can be added up from
 // days, so a merge would not be the same numbers.
 const (
-	liveTTL   = 10 * time.Second
-	closedTTL = 6 * time.Hour
+	liveTTL = 10 * time.Second
+	// A live entry whose site has committed since is still served this long:
+	// a busy site commits about once a second, and dropping the entry each
+	// time would make every request a miss, the opposite of a cache.
+	liveFloor = 5 * time.Second
+	// A report that runs longer is cancelled, so it ends before the server
+	// stops waiting to write the answer (WriteTimeout, 30s).
+	reportTimeout = 25 * time.Second
+	closedTTL     = 6 * time.Hour
 	// A sale looks back this far for the visit that earned it (query.AttributionWindow),
 	// and a visit counts up to a minute after the sale it is credited with.
 	// A renewal is credited to the visit that started its subscription, which
@@ -59,6 +69,7 @@ type cacheEntry struct {
 	// sale is committed, so the dashboard never waits out the TTL for it.
 	ver  uint64
 	live bool
+	made time.Time
 	// The span of time the report covers, unix ms: [from, to).
 	from, to int64
 }
@@ -179,9 +190,22 @@ func (a *API) PurgeAll() {
 	a.cache.purgeAll()
 }
 
+// reportFail answers a failed report read: a read that ran out of time is the
+// server being busy (504: the dashboard says it is busy and offers a retry;
+// a 503 would read as the store warming up), anything else goes to failReport (out of memory, or a bad question).
+func reportFail(w http.ResponseWriter, err error) {
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		w.Header().Set("Retry-After", "5")
+		fail(w, http.StatusGatewayTimeout, "the report took too long to load: try again, or pick a shorter range")
+		return
+	}
+	failReport(w, err)
+}
+
 // cachedReport reads a report, from the cache when one that is still good is
 // there. A range that ends after now includes the day still going: that is
-// the live kind.
+// the live kind. Requests for the same report that arrive while it is being
+// read wait for that one read instead of starting their own.
 func (a *API) cachedReport(r *http.Request, q *query.Q, p query.Params) (*query.Result, error) {
 	key := cacheKey(p)
 	now := a.Now()
@@ -190,16 +214,38 @@ func (a *API) cachedReport(r *http.Request, q *query.Q, p query.Params) (*query.
 	if a.Hub != nil {
 		ver = a.Hub.Version(p.Site) // read before the query: a commit during it makes this entry stale
 	}
-	from, to := p.From.UnixMilli(), p.To.UnixMilli()
 	a.cache.mu.Lock()
-	if e, ok := a.cache.m[key]; ok && now.Before(e.exp) && (!e.live || e.ver == ver) {
+	if e, ok := a.cache.m[key]; ok && now.Before(e.exp) && (!e.live || e.ver == ver || now.Sub(e.made) < liveFloor) {
 		a.cache.mu.Unlock()
 		return e.res, nil
 	}
+	a.cache.mu.Unlock()
+	// The read belongs to everyone waiting on it, so it outlives the request
+	// that started it (but not the timeout).
+	base := context.WithoutCancel(r.Context())
+	ch := a.flights.DoChan(key+"|"+strconv.FormatUint(ver, 10), func() (any, error) {
+		ctx, cancel := context.WithTimeout(base, reportTimeout)
+		defer cancel()
+		return a.readReport(ctx, q, p, key, now, live, ver)
+	})
+	select {
+	case res := <-ch:
+		if res.Err != nil {
+			return nil, res.Err
+		}
+		return res.Val.(*query.Result), nil
+	case <-r.Context().Done():
+		return nil, r.Context().Err()
+	}
+}
+
+func (a *API) readReport(ctx context.Context, q *query.Q, p query.Params, key string, now time.Time, live bool, ver uint64) (*query.Result, error) {
+	from, to := p.From.UnixMilli(), p.To.UnixMilli()
+	a.cache.mu.Lock()
 	sc := a.cache.site(p.Site)
 	seq, purges, epoch := sc.seq, sc.purges, a.cache.epoch
 	a.cache.mu.Unlock()
-	res, err := q.Report(r.Context(), p)
+	res, err := q.Report(ctx, p)
 	if err != nil {
 		return nil, err
 	}
@@ -222,6 +268,6 @@ func (a *API) cachedReport(r *http.Request, q *query.Q, p query.Params) (*query.
 			}
 		}
 	}
-	a.cache.m[key] = cacheEntry{res: res, exp: now.Add(ttl), site: p.Site, ver: ver, live: live, from: from, to: to}
+	a.cache.m[key] = cacheEntry{res: res, exp: now.Add(ttl), site: p.Site, ver: ver, live: live, made: now, from: from, to: to}
 	return res, nil
 }

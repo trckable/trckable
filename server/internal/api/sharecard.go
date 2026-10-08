@@ -114,7 +114,7 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 	}
 	res, err := a.cachedReport(ask, q, params)
 	if err != nil {
-		fail(w, http.StatusBadRequest, err.Error())
+		reportFail(w, err)
 		return cardNumbers{}, false
 	}
 	return cardWordsOf(res, si.Domain, p, metric), true

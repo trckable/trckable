@@ -302,6 +302,9 @@ func TestReportCacheNeverDiffersFromAFreshRead(t *testing.T) {
 	}
 	for _, s := range steps {
 		s.do()
+		// A live report may be a few seconds behind its site's commits (liveFloor):
+		// let that pass, so what is compared is what the cache holds for good.
+		o.g.clock.Add((liveFloor + time.Second).Milliseconds())
 		o.same(qs, s.name)
 		// Ask them all again, so the cache is full for the next change, and a few new ones.
 		o.warm(qs)
