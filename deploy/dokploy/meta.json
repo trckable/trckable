@@ -1,7 +1,7 @@
 {
   "id": "trckable",
   "name": "trckable",
-  "version": "0.6.5",
+  "version": "0.7.0",
   "description": "Tiny self-hosted web analytics that shows which traffic pays: one container, free and open source.",
   "logo": "trckable.svg",
   "links": {
