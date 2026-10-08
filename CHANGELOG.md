@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+### Changed
+
+- Site switcher: no hover tooltip over a row and no number badge (the 1-9 keys still open a site); the drag handle sits inside the row at the check's column; the number, the open arrow and the ⋯ have fixed right-hand slots so nothing jumps or overlaps on hover; the top line reads "27 live  413 today" on one baseline. Rows are 32 px (44 px on a phone).
+
 ## 0.7.0 (8 Oct 2026)
 
 ### Added
