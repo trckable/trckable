@@ -34,7 +34,7 @@ const (
 	// A live entry whose site has committed since is still served this long:
 	// a busy site commits about once a second, and dropping the entry each
 	// time would make every request a miss, the opposite of a cache.
-	liveFloor = 5 * time.Second
+	liveFloor = 2 * time.Second
 	// A report that runs longer is cancelled, so it ends before the server
 	// stops waiting to write the answer (WriteTimeout, 30s).
 	reportTimeout = 25 * time.Second
