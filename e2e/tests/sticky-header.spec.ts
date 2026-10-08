@@ -52,3 +52,16 @@ test('Story and Explore switch from the stuck line, and the line is still there'
   await expect(page).toHaveURL(/v=story/)
   await expect(page.locator('.subbar')).toBeVisible()
 })
+
+test('closing the period puts the page back where it was', async ({ page }) => {
+  await stuck(page, 'explore')
+  await page.evaluate(() => window.scrollTo(0, 100_000))
+  const y = await page.evaluate(() => window.scrollY)
+  await page.locator('.subbar .btn.range').click()
+  const dialog = page.getByRole('dialog', { name: 'Choose a date range' })
+  await expect(dialog).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  expect(await page.evaluate(() => window.scrollY)).toBe(y)
+  expect(await barTop(page)).toBe(0)
+})
