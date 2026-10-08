@@ -45,6 +45,32 @@ describe('headline', () => {
   })
 })
 
+describe('thin data', () => {
+  const few = { cur: result({ visitors: 1, sessions: 1, bounce_rate: 1, avg_session_s: 0 }), goals: false }
+  it('shows a dash and no verdict for rates and averages of a handful of visits', () => {
+    const t = tiles(few)
+    expect(t.find((x) => x.key === 'bounce')).toMatchObject({ value: '–', verdict: 'Too few visits yet', tone: 'flat' })
+    expect(t.find((x) => x.key === 'session')).toMatchObject({ value: '–', verdict: 'Too few visits yet' })
+    expect(t.find((x) => x.key === 'visitors')?.move).toBeUndefined()
+  })
+  it('says the fix answer is not ready, and counts one visitor in the singular', () => {
+    const a = storyOf(few).answers
+    expect(a.find((x) => x.key === 'fix')).toMatchObject({ line: 'Not enough visits yet.', big: '–' })
+    expect(a.find((x) => x.key === 'did')?.line).toContain('1 visitor so far')
+  })
+  it('caps a change over ten times the earlier figure', () => {
+    expect(deltaOf(1500, 100)).toMatchObject({ capped: true, arrow: '↑' })
+    expect(deltaOf(900, 100)?.capped).toBeUndefined()
+    const i: Input = { cur: result({ visitors: 5000 }, [['Search', 5000]]), prev: result({ visitors: 100 }), goals: false }
+    expect(takeawayOf(i)).toContain('Up more than 10x on the period before')
+  })
+  it('measures no change against an earlier period of fewer than 20 visitors', () => {
+    const i: Input = { cur: result({ visitors: 500 }), prev: result({ visitors: 8, sessions: 8 }), goals: false }
+    expect(tiles(i)[0].move).toBeUndefined()
+    expect(tiles(i)[0].verdict).toBe('No earlier period to compare with yet')
+  })
+})
+
 describe('tiles', () => {
   it('judges the visitors against the period before', () => {
     expect(tiles(grew)[0].verdict).toBe('Far above your normal (4,000 before)')
@@ -145,7 +171,8 @@ describe('takeaway and deltas', () => {
     const spread = { cur: result({ visitors: 200 }, [['Search', 200]], { dims: { channel: rows([['Search', 200]]), entry_page: rows([['/a', 50], ['/b', 50], ['/c', 50], ['/d', 50]]) } }), prev: result({ visitors: 100 }, [['Search', 100]], { dims: { channel: rows([['Search', 100]]), entry_page: rows([['/a', 25], ['/b', 25], ['/c', 25], ['/d', 25]]) } }), goals: false }
     expect(takeawayOf(spread)).toBe('Up 100% on the period before, mostly from Search.')
     const tiny = { cur: result({ visitors: 10 }, [['Search', 10]], { dims: { channel: rows([['Search', 10]]), entry_page: rows([['/a', 10]]) } }), prev: result({ visitors: 6 }, [['Search', 6]], { dims: { channel: rows([['Search', 6]]), entry_page: rows([['/a', 6]]) } }), goals: false }
-    expect(takeawayOf(tiny)).toBe('Up 67% on the period before, mostly from Search.')
+    // Six visitors before is no base for a percentage (lib/thin): nothing is said.
+    expect(takeawayOf(tiny)).toBe('')
   })
   it('says about the same within 5% and nothing without a period before', () => {
     expect(takeawayOf({ cur: result({ visitors: 1030 }), prev: result({ visitors: 1000 }), goals: false })).toBe('About the same as the period before.')

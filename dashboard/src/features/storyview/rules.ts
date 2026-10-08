@@ -5,6 +5,7 @@
 import type { Filter, Result, Row } from '../../lib/api'
 import { countryName, fmtDuration, fmtInt, fmtPct } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
+import { baseEnough, overCap, tooFew } from '../../lib/thin'
 import type { AiSeen } from '../aisearch/useAiSeen'
 import type { HeatAsk } from '../heatmap/api'
 import { pick, type Kept } from '../moments/firstWeek'
@@ -42,6 +43,8 @@ export interface Delta {
   change: number
   /** Whole percent, never negative. */
   pct: number
+  /** More than ten times the earlier figure: shown as "10x+", never as the huge percentage. */
+  capped?: boolean
   arrow: '↑' | '↓' | '→'
   tone: 'good' | 'bad' | 'flat'
 }
@@ -61,6 +64,8 @@ export interface Answer {
   connect?: boolean
   /** How the number behind the answer moved against the period before, when it can be told. */
   delta?: Delta
+  /** What the move is of, when the big number is something else (a share): "visits". */
+  deltaWhat?: string
   /** The one big number (or word) on the card. */
   big: string
   /** The quiet words on the top line, right. */
@@ -92,7 +97,8 @@ const SAME = 0.1
 /** A change this big is far from it. */
 const FAR = 1
 
-const hasPrev = (i: Input) => !!i.prev && i.prev.kpis.sessions > 0
+/** An earlier period with too few visitors is no base for a change (lib/thin). */
+const hasPrev = (i: Input) => !!i.prev && baseEnough(i.prev.kpis.visitors)
 /** The period before's numbers, when there was one with visits. */
 const earlier = (i: Input) => (hasPrev(i) ? i.prev?.kpis : undefined)
 const rate = (r: Row) => r.bounce_rate ?? 0
@@ -116,7 +122,8 @@ export function deltaOf(now: number, before: number | undefined, goodWhen: 'up' 
   const pct = Math.round(Math.abs(c) * 100)
   if (Math.abs(c) < FLAT || pct === 0) return { change: c, pct: 0, arrow: '→', tone: 'flat' }
   const up = c > 0
-  return { change: c, pct, arrow: up ? '↑' : '↓', tone: up === (goodWhen === 'up') ? 'good' : 'bad' }
+  const capped = up && overCap(now, before)
+  return { change: c, pct, ...(capped ? { capped } : {}), arrow: up ? '↑' : '↓', tone: up === (goodWhen === 'up') ? 'good' : 'bad' }
 }
 
 const channels = (r: Result): Row[] => r.dims.channel ?? []
@@ -174,7 +181,7 @@ export function takeawayOf(i: Input): string {
   const gap = i.cur.kpis.visitors - p.visitors
   const src = driverOf(i.cur, i.prev, 'channel', gap)
   const source = src ? named(src.value) : undefined
-  const head = copy.takeHead(up, d.pct, source, whyOf(i, gap, src?.value))
+  const head = copy.takeHead(up, d.capped ? copy.tenTimes : `${d.pct}%`, source, whyOf(i, gap, src?.value))
   const follow = followed(up, i)
   return follow ? `${head} ${follow}` : head
 }
@@ -267,27 +274,31 @@ export function tiles(i: Input): Tile[] {
   const p = earlier(i)
   const out: Tile[] = []
   const none = { tone: 'flat' as Tone, verdict: copy.noBefore }
+  const few = tooFew(k.sessions)
+  const thin = { tone: 'flat' as Tone, verdict: copy.tooFew }
 
-  const v = p ? verdictOf(change(k.visitors, p.visitors), fmtInt(p.visitors), copy) : none
-  out.push({ key: 'visitors', label: copy.visitors, value: fmtInt(k.visitors), ...v, move: deltaOf(k.visitors, p?.visitors) ?? undefined })
+  let v: Pick<Tile, 'tone' | 'verdict'> = few ? thin : none
+  if (!few && p) v = verdictOf(change(k.visitors, p.visitors), fmtInt(p.visitors), copy)
+  out.push({ key: 'visitors', label: copy.visitors, value: fmtInt(k.visitors), ...v, move: few ? undefined : (deltaOf(k.visitors, p?.visitors) ?? undefined) })
 
-  let b: Pick<Tile, 'tone' | 'verdict'> = none
+  let b: Pick<Tile, 'tone' | 'verdict'> = few ? thin : none
   const pts = p ? k.bounce_rate - p.bounce_rate : 0
-  if (k.bounce_rate >= 0.7) b = { tone: 'warn', verdict: copy.bounceHigh(Math.round(k.bounce_rate * 10)) }
+  if (few) b = thin
+  else if (k.bounce_rate >= 0.7) b = { tone: 'warn', verdict: copy.bounceHigh(Math.round(k.bounce_rate * 10)) }
   else if (p && pts >= 0.05) b = { tone: 'warn', verdict: copy.bounceWorse(fmtPct(p.bounce_rate)) }
   else if (p && pts <= -0.05) b = { tone: 'good', verdict: copy.bounceBetter(fmtPct(p.bounce_rate)) }
   else if (p) b = { tone: 'flat', verdict: copy.bounceSame(fmtPct(p.bounce_rate)) }
-  out.push({ key: 'bounce', label: copy.bounce, value: fmtPct(k.bounce_rate), ...b, move: deltaOf(k.bounce_rate, p?.bounce_rate, 'down') ?? undefined })
+  out.push({ key: 'bounce', label: copy.bounce, value: few ? copy.dash : fmtPct(k.bounce_rate), ...b, move: few ? undefined : (deltaOf(k.bounce_rate, p?.bounce_rate, 'down') ?? undefined) })
 
-  let s: Pick<Tile, 'tone' | 'verdict'> = none
-  if (p && p.avg_session_s > 0) {
+  let s: Pick<Tile, 'tone' | 'verdict'> = few ? thin : none
+  if (!few && p && p.avg_session_s > 0) {
     const d = change(k.avg_session_s, p.avg_session_s)
     const before = fmtDuration(p.avg_session_s)
     if (d >= 0.15) s = { tone: 'good', verdict: copy.timeLonger(before) }
     else if (d <= -0.15) s = { tone: 'warn', verdict: copy.timeShorter(before) }
     else s = { tone: 'flat', verdict: copy.timeSame(before) }
   }
-  out.push({ key: 'session', label: copy.session, value: fmtDuration(k.avg_session_s), ...s, move: deltaOf(k.avg_session_s, p?.avg_session_s) ?? undefined })
+  out.push({ key: 'session', label: copy.session, value: few ? copy.dash : fmtDuration(k.avg_session_s), ...s, move: few ? undefined : (deltaOf(k.avg_session_s, p?.avg_session_s) ?? undefined) })
 
   const m = i.cur.money
   if (!i.money || !m) {
@@ -320,7 +331,7 @@ function did(i: Input): Answer {
   const act = top ? { label: copy.didAct(named(top.value)), filters: [{ dim: 'channel', value: top.value }] } : undefined
   const big = fmtInt(k.visitors)
   const sub = top ? copy.didSub(fmtInt(top.visitors), share, named(top.value)) : ''
-  if (!hasPrev(i)) return { key: 'did', question: copy.q.did, line: copy.didEarly(fmtInt(k.visitors)), sub, look: 'plain', act, big, status: copy.statusSoFar }
+  if (!hasPrev(i)) return { key: 'did', question: copy.q.did, line: copy.didEarly(copy.visitorsN(k.visitors)), sub, look: 'plain', act, big, status: copy.statusSoFar }
   const was = earlier(i)?.visitors ?? 0
   const d = change(k.visitors, was)
   const delta = deltaOf(k.visitors, was) ?? undefined
@@ -335,7 +346,7 @@ function page(i: Input): Answer {
   if (!row || total === 0) return { key: 'page', question: copy.q.page, line: copy.pageNone, sub: copy.pageNoneSub, look: 'quiet', big: copy.none, status: copy.statusPage }
   const before = hasPrev(i) ? (i.prev?.dims.entry_page ?? []).find((x) => x.value === row.value)?.visitors : undefined
   return {
-    key: 'page', question: copy.q.page, look: 'plain', delta: deltaOf(row.visitors, before) ?? undefined,
+    key: 'page', question: copy.q.page, look: 'plain', delta: deltaOf(row.visitors, before) ?? undefined, deltaWhat: copy.whatVisits,
     line: copy.pageTitle(row.value, fmtPct(Math.min(1, row.visitors / total))),
     sub: copy.pageSub(fmtInt(row.visitors)),
     act: { label: copy.pageAct, filters: [{ dim: 'entry_page', value: row.value }] },
@@ -344,6 +355,7 @@ function page(i: Input): Answer {
 }
 
 function fix(i: Input): Answer {
+  if (tooFew(i.cur.kpis.sessions)) return { key: 'fix', question: copy.q.fix, line: copy.fixFew, sub: copy.fixFewSub, look: 'quiet', big: copy.dash, status: copy.statusBounce }
   const f = leavesFastest(i)
   if (!f) return { key: 'fix', question: copy.q.fix, line: copy.fixNone, sub: copy.fixNoneSub, look: 'quiet', big: copy.noIssues, status: copy.statusBounce }
   const n = Math.round(f.worst.visitors * rate(f.worst))
@@ -363,7 +375,7 @@ function pays(i: Input): Answer {
   if (i.money && m && m.revenue > 0 && rows.length > 0) {
     const top = [...rows].sort((a, b) => (b.revenue ?? 0) - (a.revenue ?? 0))[0]
     return {
-      key: 'pays', question: copy.q.pays, look: 'plain', delta: deltaOf(m.revenue, hasPrev(i) ? i.prev?.money?.revenue : undefined) ?? undefined,
+      key: 'pays', question: copy.q.pays, look: 'plain', delta: deltaOf(m.revenue, hasPrev(i) ? i.prev?.money?.revenue : undefined) ?? undefined, deltaWhat: copy.whatRevenue,
       line: copy.paysTitle(named(top.value), fmtPct(Math.min(1, (top.revenue ?? 0) / m.revenue))),
       sub: copy.paysSub(i.money(top.revenue ?? 0), i.money(m.revenue)),
       act: { label: copy.paysAct(named(top.value)), filters: [{ dim: 'channel', value: top.value }] },

@@ -1,10 +1,11 @@
 import { defineCopy, intl, tag } from '../i18n'
+import { overCap } from './thin'
 
 // Numbers, money and names follow the language: English keeps the US form it always had.
 const loc = tag ?? 'en-US'
 const nf = new Intl.NumberFormat(loc)
 const compact = new Intl.NumberFormat(loc, { notation: 'compact', maximumFractionDigits: 1 })
-const words = defineCopy('format', { change: (up: boolean, pct: string) => `${up ? 'up' : 'down'} ${pct} percent` })
+const words = defineCopy('format', { change: (up: boolean, pct: string) => `${up ? 'up' : 'down'} ${pct} percent`, capped: 'up more than 10 times' })
 
 /** A number with a fixed count of decimals, in the language's own separators. */
 export const fmtFixed = (x: number, digits: number) => (intl.fixed ? intl.fixed(x, digits) : x.toFixed(digits))
@@ -33,6 +34,8 @@ export interface Delta {
   short: string
   tone: 'up' | 'down' | 'flat'
   label: string
+  /** For a number where lower is better: whether this move is the better or the worse one. */
+  verdict?: 'better' | 'worse'
 }
 
 /**
@@ -48,12 +51,15 @@ export function delta(cur: number, prev: number | undefined, invert = false): De
   const pct = Math.abs(d * 100)
   const num = fmtFixed(pct, pct >= 10 || pct === 0 ? 0 : 1)
   const dir = good ? 'up' : 'down'
+  // More than ten times the earlier figure is "10x+", never the huge percentage (lib/thin).
+  const capped = d > 0 && overCap(cur, prev)
   return {
     // Arrow and sign both, so it reads without the colour.
-    text: (d >= 0 ? '↑ +' : '↓ −') + num + '%',
-    short: `${num}% ${d >= 0 ? '↑' : '↓'}`,
+    text: capped ? '↑ 10x+' : (d >= 0 ? '↑ +' : '↓ −') + num + '%',
+    short: capped ? '10x+ ↑' : `${num}% ${d >= 0 ? '↑' : '↓'}`,
     tone: flat ? 'flat' : dir,
-    label: words.change(d >= 0, fmtFixed(pct, 1)),
+    label: capped ? words.capped : words.change(d >= 0, fmtFixed(pct, 1)),
+    ...(invert && !flat ? { verdict: good ? ('better' as const) : ('worse' as const) } : {}),
   }
 }
 

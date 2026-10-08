@@ -53,6 +53,7 @@ export const copy = defineCopy('full', {
     title: 'Weekday × hour',
     question: 'When your visitors are here',
     label: (tz: string) => `Visits by weekday and hour, in ${tz}`,
+    caption: (tz: string) => `Visitors by weekday and hour, in ${tz}. Hover or tap a square for the count.`,
     days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     hour: (h: number) => String(h).padStart(2, '0'),
     tip: (day: string, h: number, n: number) => `${day} ${String(h).padStart(2, '0')}:00 · ${plural(n, 'visit', 'visits')}`,

@@ -34,6 +34,7 @@ export function RhythmCard({ site, query, timezone }: { site: string; query: Rep
       loading={!h}
       empty={!!h && h.total === 0}
       table={h ? rhythmModel(h).table : { caption: '', columns: [], rows: [] }}
+      foot={<p className="list-foot">{copy.rhythm.caption(timezone)}</p>}
       headKey={<HeatKey color="var(--accent)" fewer={copy.rhythm.fewer} more={copy.rhythm.more} />}
     >
       {h && (

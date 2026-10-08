@@ -85,6 +85,8 @@ export default function MomentLayer(p: LayerProps) {
   }
   // One thing at a time: with a card open, a marker is only lit by the pointer, never explained.
   const tip = tipOf(marks, shown, !!current)
+  // The first marker also says what the markers are.
+  const teaching = !!tip && tip.i === marks[0]?.i
   const day = current && placed.find((q) => q.pin.id === current.pins[current.at].id)
   return (
     <>
@@ -135,8 +137,9 @@ export default function MomentLayer(p: LayerProps) {
       )}
       {tip && (
         <div id={id} role="tooltip" className="moment-tip" style={{ left: Math.max(4, Math.min(tip.at - TIP_W / 2, g.w - TIP_W - 4)), top: LANE + 20, maxWidth: TIP_W }}>
-          {say(tip.pin, fmt).line}
+          {copy.tipLead(say(tip.pin, fmt).line, fmtDay(tip.pin.day ?? ''))}
           {tip.more.length > 0 && <span className="faint"> · {copy.more(tip.more.length)}</span>}
+          {teaching && <span className="faint"> · {copy.chipsMark}</span>}
         </div>
       )}
     </>

@@ -33,3 +33,16 @@ export function Tooltip({ text, align = 'left', children }: { text: string; alig
     </span>
   )
 }
+
+/** A few words that explain themselves: the text as a quiet button with the tooltip under it (hover, focus or tap). */
+export function TipText({ text, tip, align = 'left', className = '' }: { text: ReactNode; tip: string; align?: 'left' | 'right'; className?: string }) {
+  return (
+    <Tooltip text={tip} align={align}>
+      {(p) => (
+        <button type="button" className={`tip-text ${className}`} {...p}>
+          {text}
+        </button>
+      )}
+    </Tooltip>
+  )
+}
