@@ -410,12 +410,16 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 		e.Channel = classify(u, e.RefHost, e.RefURL)
 		e.UTMSource, e.UTMMedium, e.UTMCampaign, e.UTMTerm, e.UTMContent =
 			u.UTMSource, u.UTMMedium, u.UTMCampaign, u.UTMTerm, u.UTMCont
-		if e.RefHost == "" && u.Ref != "" {
-			e.RefHost = strings.ToLower(u.Ref)
+		if e.RefHost == "" {
+			if h := socialRefHost(u); h != "" {
+				e.RefHost = h
+			} else if u.Ref != "" {
+				e.RefHost = strings.ToLower(u.Ref)
+			}
 		}
 	case "g":
 		e.Kind = event.KindGoal
-		e.Goal = normGoal(p.Goal)
+		e.Goal = event.NormGoal(p.Goal)
 		if e.Goal == "" {
 			return nil, "", nil, errBadPayload
 		}
@@ -552,8 +556,8 @@ func normLang(s string) string {
 	return strings.ToLower(s)
 }
 
-// Goal names: lowercase letters, digits, _ - : and at most 64 chars.
-func normGoal(s string) string {
+// Property keys: lowercase letters, digits, _ - : and at most 64 chars.
+func normKey(s string) string {
 	s = strings.ToLower(strings.TrimSpace(s))
 	if s == "" || len(s) > 64 {
 		return ""
@@ -575,7 +579,7 @@ func cleanProps(in map[string]string) map[string]string {
 		if len(out) == maxProps {
 			break
 		}
-		k = normGoal(strings.ReplaceAll(k, "-", "_"))
+		k = normKey(strings.ReplaceAll(k, "-", "_"))
 		if k == "" {
 			continue
 		}

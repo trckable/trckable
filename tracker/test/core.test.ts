@@ -251,6 +251,30 @@ describe('engagement', () => {
   })
 })
 
+describe('scroll depth', () => {
+  const scrolled = async (y: number, height: number) => {
+    vi.spyOn(Date, 'now').mockReturnValue(1_000_000)
+    tracker()
+    Object.defineProperty(win.document.documentElement, 'scrollHeight', { value: height, configurable: true })
+    ;(globalThis as any).scrollY = y
+    win.dispatchEvent(new win.Event('scroll'))
+    ;(Date.now as any).mockReturnValue(1_005_000)
+    Object.defineProperty(win.document, 'hidden', { value: true, configurable: true })
+    win.document.dispatchEvent(new win.Event('visibilitychange'))
+    await flush()
+    return byKind('e')[0].sc
+  }
+  it('is 0 at the top of a scrollable page', async () => {
+    expect(await scrolled(0, 3000)).toBe(0)
+  })
+  it('is the share scrolled partway down', async () => {
+    expect(await scrolled(1050, 3000)).toBe(50)
+  })
+  it('is 100 on a page that does not scroll', async () => {
+    expect(await scrolled(0, 900)).toBe(100)
+  })
+})
+
 describe('delivery (write-ahead queue)', () => {
   afterEach(() => vi.useRealTimers())
   const HOUR = 3_600_000

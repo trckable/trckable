@@ -12,6 +12,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/auth"
+	"github.com/trckable/trckable/server/internal/event"
 	"github.com/trckable/trckable/server/internal/modules"
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
@@ -127,6 +128,9 @@ func (a *API) goalProps(w http.ResponseWriter, r *http.Request) {
 	q, p, ok := a.params(w, r)
 	if !ok {
 		return
+	}
+	if n := event.NormGoal(goal); n != "" {
+		goal = n
 	}
 	rows, err := q.GoalProps(r.Context(), p, goal)
 	if err != nil {

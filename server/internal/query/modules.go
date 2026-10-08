@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/trckable/trckable/server/internal/event"
 )
 
 // Full-mode modules. Each is its own request, so Core never pays for them:
@@ -115,7 +117,11 @@ func (q Q) Funnel(ctx context.Context, p Params, steps []Step) ([]FunnelStep, er
 			fmt.Fprintf(&b, ", %s AS (SELECT e.visitor_id, min(e.ts) AS t, any_value(p.t) AS prev FROM ev e JOIN f%d p ON p.visitor_id = e.visitor_id AND e.ts >= p.t WHERE %s GROUP BY 1)",
 				name, i-1, match)
 		}
-		args = append(args, st.Value)
+		v := st.Value
+		if st.Kind == "goal" {
+			v = event.NormGoal(v)
+		}
+		args = append(args, v)
 	}
 	parts := make([]string, len(steps))
 	for i := range steps {

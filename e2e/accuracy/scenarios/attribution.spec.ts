@@ -46,11 +46,11 @@ test('every visit keeps the source it arrived with, through pages and routes', a
       sessions: 7,
       pageviews: 15, // two pages each, and the route on the first visit
       bounce: 0,
-      channels: { Email: 1, Search: 1, Social: 1, Referral: 2, Paid: 1, Direct: 1 },
+      channels: { Email: 1, Search: 1, Social: 2, Referral: 1, Paid: 1, Direct: 1 },
       sources: { news: 1 },
       mediums: { email: 1 },
       campaigns: { oct: 1 },
-      referrers: { 'google.com': 2, 'news.ycombinator.com': 1, 'some-blog.example': 1, producthunt: 1 },
+      referrers: { 'google.com': 2, 'news.ycombinator.com': 1, 'some-blog.example': 1, 'producthunt.com': 1 },
       entries: { '/a': 7 },
     },
     { prefix: s.prefix },

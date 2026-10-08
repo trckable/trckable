@@ -470,7 +470,7 @@ export function start(c: Config): Tracker {
     'scroll',
     () => {
       const h = d.documentElement.scrollHeight - innerHeight
-      const pct = Math.min(100, Math.round((scrollY / h) * 100)) || 100
+      const pct = h > 0 ? Math.min(100, Math.round((scrollY / h) * 100)) : 100
       if (pct > scroll) scroll = pct
     },
   )

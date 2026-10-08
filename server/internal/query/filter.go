@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/trckable/trckable/server/internal/event"
 )
 
 // The two things a filter can say about a dimension.
@@ -192,6 +194,9 @@ func (g group) goalWhere(p Params, evFrom, evTo time.Time) (string, []any, error
 	for _, v := range g.values {
 		pg, ok := pageGoal(p.PageGoals, v)
 		if !ok {
+			if n := event.NormGoal(v); n != "" {
+				v = n
+			}
 			custom = append(custom, v)
 			continue
 		}

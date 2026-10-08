@@ -33,7 +33,7 @@ var aiHosts = []string{
 }
 
 var searchHosts = []string{
-	"google.", "bing.com", "duckduckgo.com", "search.yahoo.", "yahoo.com", "ecosia.org", "baidu.com",
+	"bing.com", "duckduckgo.com", "search.yahoo.", "yahoo.com", "ecosia.org", "baidu.com",
 	"yandex.", "search.brave.com", "startpage.com", "qwant.com", "naver.com", "seznam.cz", "kagi.com",
 }
 
@@ -141,15 +141,22 @@ func classify(p parsedURL, refHost, refURL string) string {
 		return ChannelEmail
 	case matchHost(refHost, aiHosts) || matchURL(refURL, aiHosts) || isAISource(src):
 		return ChannelAI
-	case matchHost(refHost, searchHosts), med == "organic":
+	case isGoogleSearch(refHost), matchHost(refHost, searchHosts), med == "organic":
 		return ChannelSearch
-	case matchHost(refHost, socialHosts), med == "social", isSocialSource(src):
+	case matchHost(refHost, socialHosts), med == "social", isSocialSource(src), isSocialSource(strings.ToLower(p.Ref)):
 		return ChannelSocial
 	case refHost != "", p.UTMSource != "", p.Ref != "":
 		return ChannelReferral
 	default:
 		return ChannelDirect
 	}
+}
+
+// isGoogleSearch is Google's search itself: google.com, google.de and the
+// like (www. is already dropped), not accounts., docs., sites. or any other
+// Google service, which are ordinary referrals.
+func isGoogleSearch(host string) bool {
+	return strings.HasPrefix(host, "google.") || strings.HasPrefix(host, "encrypted.google.")
 }
 
 func isAISource(src string) bool {
@@ -160,13 +167,30 @@ func isAISource(src string) bool {
 	return false
 }
 
+// socialSources are the names a campaign link uses for a social site, with the
+// host a visit from that site carries as its referrer. A link tagged
+// ?ref=producthunt is then the same source row as a click from producthunt.com.
+var socialSources = map[string]string{
+	"twitter": "twitter.com", "x": "x.com", "facebook": "facebook.com", "fb": "fb.com",
+	"instagram": "instagram.com", "ig": "instagram.com", "linkedin": "linkedin.com",
+	"reddit": "reddit.com", "youtube": "youtube.com", "tiktok": "tiktok.com",
+	"threads": "threads.net", "bluesky": "bsky.app", "mastodon": "mastodon.social",
+	"hackernews": "news.ycombinator.com", "hn": "news.ycombinator.com",
+	"producthunt": "producthunt.com",
+}
+
 func isSocialSource(src string) bool {
-	switch src {
-	case "twitter", "x", "facebook", "fb", "instagram", "ig", "linkedin", "reddit", "youtube", "tiktok",
-		"threads", "bluesky", "mastodon", "hackernews", "hn", "producthunt":
-		return true
+	_, ok := socialSources[src]
+	return ok
+}
+
+// socialRefHost is the referrer host a ref or utm_source tag stands for, empty
+// when it names no social site.
+func socialRefHost(u parsedURL) string {
+	if h := socialSources[strings.ToLower(u.Ref)]; h != "" {
+		return h
 	}
-	return false
+	return socialSources[strings.ToLower(u.UTMSource)]
 }
 
 // matchHost: entries ending in "." match any TLD (google. → google.de);

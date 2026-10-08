@@ -11,6 +11,12 @@ import (
 // separately (later module), never as visitors.
 var botRE = regexp.MustCompile(`(?i)(bot|crawl|spider|slurp|scrap|headless|phantom|lighthouse|pagespeed|pingdom|uptime|monitor|statuscake|curl|wget|python-requests|python-urllib|aiohttp|httpx|go-http-client|axios|node-fetch|undici|java/|okhttp|libwww|facebookexternalhit|embedly|preview|validator|feedfetcher|mediapartners|chatgpt-user|gptbot|claude-web|anthropic|perplexity|bytespider|petalbot|yandex|baidu|semrush|ahrefs|mj12|dotbot|dataforseo)`)
 
+// notBotRE is what contains a bot word but names a person's own device or app:
+// CUBOT phones ("CUBOT_X"), and the Baidu app and browser on a phone. They are
+// cut out before botRE looks, so the real crawlers (Baiduspider, anything with
+// "bot" as a word of its own) still match.
+var notBotRE = regexp.MustCompile(`(?i)(cubot|baidu(boxapp|browser)\S*|\(baidu;)`)
+
 type uaInfo struct {
 	Browser, OS, Device string
 	// Version is the browser and its major version ("Chrome 129"), empty when
@@ -51,7 +57,7 @@ func parseUA(s string, screenWidth int) uaInfo {
 	if s == "" {
 		return uaInfo{Bot: true, BotKind: BotOther} // real browsers always send a user agent
 	}
-	if botRE.MatchString(s) {
+	if botRE.MatchString(notBotRE.ReplaceAllString(s, "")) {
 		return uaInfo{Bot: true, BotKind: botKind(s)}
 	}
 	ua := useragent.Parse(s)
