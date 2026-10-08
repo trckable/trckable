@@ -4,6 +4,14 @@
 /* ---- the card ---- */
 .side-card:has(.sg-hero) .sg-hero {
   position: relative;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -108,6 +116,12 @@
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+.sg-spark .pre {
+  fill: none;
+  stroke: var(--text-4, var(--text-3));
+  stroke-width: 1.4;
+  opacity: 0.6;
 }
 .sg-spark .ar {
   fill: color-mix(in srgb, var(--accent) 18%, transparent);

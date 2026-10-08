@@ -7,6 +7,8 @@ const setView = vi.fn<(patch: unknown) => void>()
 vi.mock('../../lib/url', () => ({ setView: (p: unknown) => setView(p) }))
 vi.mock('../../components/Toast', () => ({ toast: vi.fn() }))
 
+import { dropReports } from '../../lib/api'
+import { openSurgeStory } from './openStory'
 import SurgeCard from './SurgeCard'
 import { beats, clock, deviceShare, honestLine, peakSlice, sourceHost, sourceLine, startSlice, surgeChip, surgeFilter, surgeNotice, type Story, type Surge } from './surge'
 
@@ -84,8 +86,11 @@ describe('the story', () => {
 
 let root: Root
 let host: HTMLDivElement
-const answer = (s: Surge | null) =>
-  vi.stubGlobal('fetch', () => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ surge: s }) }))
+const answer = (s: Surge | null, report?: unknown) =>
+  vi.stubGlobal('fetch', (url: string) => {
+    if (url.includes('/report')) return report ? Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(report) }) : Promise.resolve({ ok: false, status: 500, json: () => Promise.resolve({}) })
+    return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ surge: s }) })
+  })
 const draw = async () => {
   await act(() => {
     root.render(<SurgeCard site={{ id: 'tkb_x', domain: 'a.com', timezone: 'UTC' }} first={0} />)
@@ -98,6 +103,7 @@ const card = () => document.body.querySelector('.side-card')
 
 beforeEach(() => {
   localStorage.clear()
+  dropReports()
   setView.mockClear()
   vi.stubGlobal('Notification', Object.assign(function Notification() {}, { permission: 'default', requestPermission: () => Promise.resolve('granted') }))
   host = document.createElement('div')
@@ -117,15 +123,29 @@ describe('the surge card', () => {
     expect(card()).toBeNull()
   })
 
-  it('is a number, a chip, one line and one button: no paragraphs', async () => {
+  it('is a number, a chip, one line, a sneak peek and two buttons', async () => {
     answer(surge)
     await draw()
     expect(card()?.querySelector('.sg-count')?.textContent).toBe('53')
     expect(card()?.querySelector('.sg-chip')?.textContent).toBe('2.7× usual')
     expect(card()?.querySelector('.sg-source span:last-child')?.textContent).toBe('Mostly from Facebook')
     expect(card()?.querySelector('svg.sg-spark')).not.toBeNull()
-    expect([...(card()?.querySelectorAll('.side-card-actions button') ?? [])].map((b) => b.textContent)).toEqual(['More'])
-    expect(card()?.querySelectorAll('p').length).toBe(1)
+    expect([...(card()?.querySelectorAll('.side-card-actions button') ?? [])].map((b) => b.textContent)).toEqual(['More', 'See it in Data'])
+  })
+
+  it('the number opens the same dialog as More, and so does openSurgeStory(id) from outside', async () => {
+    answer(surge)
+    await draw()
+    act(() => card()?.querySelector<HTMLButtonElement>('.sg-hero')?.click())
+    for (let i = 0; i < 40 && !document.body.querySelector('[role="dialog"]'); i++) await act(() => new Promise((r) => setTimeout(r, 25)))
+    expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('20 → 53 in 15 min')
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    })
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull()
+    act(() => openSurgeStory('surge_1'))
+    for (let i = 0; i < 40 && !document.body.querySelector('[role="dialog"]'); i++) await act(() => new Promise((r) => setTimeout(r, 25)))
+    expect(document.body.querySelector('[role="dialog"]')).not.toBeNull()
   })
 
   it('More opens the story as a dialog with the beats, the tiles and the honest line, and Escape closes it', async () => {
@@ -152,16 +172,10 @@ describe('the surge card', () => {
     expect(document.body.querySelector('[role="dialog"]')).toBeNull()
   })
 
-  it('the card has one button, More; See it in Data, in the story, opens today in Data filtered to the source, and the card is put away for good', async () => {
+  it('See it in Data, on the card and in the story, opens today in Data filtered to the source, and the card is put away for good', async () => {
     answer(surge)
     await draw()
-    const buttons = [...document.body.querySelectorAll<HTMLButtonElement>('.side-card .side-card-actions button')]
-    expect(buttons.map((b) => b.textContent)).toEqual(['More'])
-    act(() => {
-      buttons[0].click()
-    })
-    for (let i = 0; i < 40 && !document.body.querySelector('[role="dialog"]'); i++) await act(() => new Promise((r) => setTimeout(r, 25)))
-    const see = [...document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find((b) => b.textContent === 'See it in Data')
+    const see = [...document.body.querySelectorAll<HTMLButtonElement>('.side-card .side-card-actions button')].find((b) => b.textContent === 'See it in Data')
     act(() => {
       see?.click()
     })
