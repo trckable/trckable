@@ -23,7 +23,7 @@ type Props<R> = Pick<CardProps, 'icon' | 'status' | 'title' | 'aside' | 'onOpen'
 export function ListTable<R>({ columns, rows, rowKey, bare, pick, bar, ...card }: Props<R>) {
   return (
     <Card {...card}>
-      <table className="kit-table">
+      <table className={bar ? 'kit-table barred' : 'kit-table'}>
         {!bare && (
           <thead>
             <tr>
@@ -48,7 +48,9 @@ export function ListTable<R>({ columns, rows, rowKey, bare, pick, bar, ...card }
                     c.cell(r)
                   )}
                   {bar && i === 0 && (
-                    <span className="kit-rowfill" aria-hidden="true" style={{ width: `${clampPct(bar(r))}%` }} />
+                    <span className="kit-rowtrack" aria-hidden="true">
+                      <span className="kit-rowfill" style={{ width: `${clampPct(bar(r))}%` }} />
+                    </span>
                   )}
                 </td>
               ))}

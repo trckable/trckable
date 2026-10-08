@@ -613,7 +613,7 @@ textarea:focus-visible {
   color: var(--text-4);
   font-size: 12px;
 }
-.bl-cols > span:first-child,
+.bl-lead,
 .bl-main {
   flex: 1;
   min-width: 0;
@@ -638,6 +638,20 @@ textarea:focus-visible {
   background: transparent;
   outline: none;
 }
+/* Name, trend and visitors: the bar's track is exactly this group. */
+.bl-lead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  align-self: stretch;
+  margin: -6px 0 -6px -10px;
+  padding: 6px 0 6px 10px;
+}
+.bl-cols .bl-lead {
+  margin: 0;
+  padding: 0;
+}
 .bl-main {
   display: grid;
   gap: 6px;
@@ -651,8 +665,8 @@ textarea:focus-visible {
 }
 .bl .bl-line {
   position: absolute;
-  /* The track ends where the number columns end (the row's inner edge), like the heads. */
-  inset: 0 10px 0 0;
+  /* The track ends where the visitors number ends, like its head. */
+  inset: 0;
   z-index: -1;
   overflow: hidden;
   border-radius: 4px;

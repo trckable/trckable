@@ -419,18 +419,46 @@ button.kit-ask:hover {
   position: relative;
   isolation: isolate;
 }
-.kit-rowfill {
+/* The bar's track ends where the number column ends (its inner edge). */
+.kit-rowtrack {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
+  inset: 0 6px 0 0;
   z-index: -1;
-  border-radius: 6px;
+  pointer-events: none;
+}
+.kit-rowfill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   pointer-events: none;
 }
 .kit-table tr.pick td {
   padding: 0;
+}
+/* Barred rows are separate pieces: a 4px gap, 4px corners, no hairlines. */
+.kit-table.barred {
+  border-collapse: separate;
+  border-spacing: 0 4px;
+}
+.kit-table.barred td {
+  border-bottom: 0;
+  font-variant-numeric: tabular-nums;
+}
+.kit-table.barred th.n {
+  padding-right: 6px;
+}
+.kit-table.barred tr.pick:hover {
+  background: transparent;
+}
+.kit-table.barred tr.pick:hover td {
+  background: color-mix(in srgb, var(--text) 5%, transparent);
+}
+.kit-table.barred tr.pick:hover td:first-child {
+  border-radius: 4px 0 0 4px;
+}
+.kit-table.barred tr.pick:hover td:last-child {
+  border-radius: 0 4px 4px 0;
 }
 .kit-table tr.pick .kit-rowbtn {
   position: static;
