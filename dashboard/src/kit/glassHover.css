@@ -10,12 +10,6 @@
   initial-value: 0%;
 }
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card) {
-    transition:
-      box-shadow 0.2s,
-      --mx 0.2s ease-out,
-      --my 0.2s ease-out;
-  }
   :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card)::after {
     content: '';
     position: absolute;
@@ -35,7 +29,7 @@
       opacity: 1;
     }
     :root:not([data-glass='off']) :is(.kit-card, .card, .me-card, .site-card, .all-card, .all-tile, .sv-setup, .sl-panel, .side-card):hover {
-      box-shadow: var(--glass-hi-hot), var(--glass-shadow);
+      --glass-edge-c: var(--glass-edge-hot-c);
     }
   }
   /* Reduced motion: the light does not move; the glass is a touch lighter under the pointer. */

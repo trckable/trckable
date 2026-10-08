@@ -3163,8 +3163,7 @@ body {
   padding: 3px;
   border: 1px solid var(--glass-line, var(--border));
   border-radius: var(--track-r);
-  background: var(--glass-lite, var(--surface));
-  box-shadow: var(--glass-hi, none);
+  background: linear-gradient(var(--glass-edge-c, transparent), var(--glass-edge-c, transparent)) top / 100% 1px no-repeat, var(--glass-lite, var(--surface));
 }
 .app :is(.view-switch, .sv-switch, .seg, .kit-seg) button {
   height: var(--hdr-h);
