@@ -752,6 +752,7 @@ export default {
   'error.slow': 'Troppi tentativi · Attendi un momento',
   'error.busy': 'Server occupato · Riprova',
   'error.code.not_found': 'Non trovato',
+  'error.code.report_memory': 'Troppi dati per il server in una volta · Scegli un periodo più breve o aggiungi un filtro',
 
   // dates
   'dates.period.now': 'Ora',
@@ -2217,8 +2218,5 @@ export default {
   'onboarding.more.sites': 'I tuoi siti',
   'onboarding.more.waiting': 'in attesa',
   'onboarding.more.receiving': 'riceve',
-  'onboarding.more.added': 'Quel sito è già qui.',
-  'onboarding.more.invalid': 'Non sembra un dominio.',
-  'onboarding.more.space': 'Un dominio non ha spazi.',
   'onboarding.skipDash': 'Salta per ora — apri la mia dashboard',
 } satisfies Messages

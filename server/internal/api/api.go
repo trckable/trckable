@@ -320,6 +320,9 @@ func (a *API) Routes(mux *http.ServeMux) {
 
 type apiError struct {
 	Error string `json:"error"`
+	// Code is a short word the dashboard turns into its own line; empty for
+	// most answers.
+	Code string `json:"code,omitempty"`
 }
 
 func writeJSON(w http.ResponseWriter, code int, v any) {
@@ -347,7 +350,19 @@ func fail(w http.ResponseWriter, code int, msg string) {
 		slog.Error("request failed", "status", code, "err", msg)
 		msg = internalError
 	}
-	writeJSON(w, code, apiError{msg})
+	writeJSON(w, code, apiError{Error: msg})
+}
+
+// failReport answers a report that could not be built. A report too big for
+// the database's memory says so with a code, so the dashboard can tell what to
+// try; anything else keeps its text.
+func failReport(w http.ResponseWriter, err error) {
+	if strings.Contains(err.Error(), "Out of Memory") {
+		slog.Warn("report out of memory", "err", err)
+		writeJSON(w, http.StatusBadRequest, apiError{Error: "report too big for the server's memory", Code: "report_memory"})
+		return
+	}
+	fail(w, http.StatusBadRequest, err.Error())
 }
 
 // internalError is all a client is told about a 500; the detail is logged.
