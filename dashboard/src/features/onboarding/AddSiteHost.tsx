@@ -18,7 +18,7 @@ export function AddSiteHost({ open, required = false, onPassed, sites, onSites }
     <Suspense fallback={null}>
       {firstRun ? <Onboarding
           required={required}
-          resume={required ? sites[0] : undefined}
+          resume={required ? sites : undefined}
           onClose={() => {
             closeAddSite()
             if (required) onPassed?.()

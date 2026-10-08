@@ -66,7 +66,7 @@ body[data-mode] .live-head-row h2,
 }
 .live-figures {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start; /* both labels share one top line, and both numbers start under it */
   flex-wrap: wrap;
   gap: 12px 40px;
   padding: 20px 22px 0;
@@ -226,6 +226,16 @@ body[data-mode] .live-head-row h2,
   top: 0;
   z-index: 2;
   background: var(--surface);
+}
+/* Nobody on the site: the one line sits in the middle of the card, not stuck to its top. */
+.live-feed:has(> .empty:only-child) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.live-feed > .empty:only-child {
+  padding: 24px 22px;
+  text-align: center;
 }
 .live-feed {
   flex: 1;
@@ -671,4 +681,15 @@ body[data-mode] .live-head-row h2,
   .live-busier-panel p {
     font-size: var(--ph-text);
   }
+}
+
+/* The change line fades in when its text changes. */
+.live-delta {
+  animation: live-delta-in 400ms ease-out both;
+}
+@keyframes live-delta-in {
+  from { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-delta { animation: none; }
 }

@@ -12,9 +12,10 @@ export function LiveCards({ data, rows }: { data: LiveNow; rows: Row[] }) {
   const today = data.today && data.today.visitors > 0 ? data.today : null
   const pages = topPages(rows)
   const places = placesOf(rows)
-  if (!today && pages.length === 0 && !places) return null
+  const count = [today, pages.length > 0, places].filter(Boolean).length
+  if (count === 0) return null
   return (
-    <div className="lv-cards">
+    <div className={`lv-cards n${count}`}>
       {today && <TodayCard today={today} />}
       {pages.length > 0 && <PagesCard pages={pages} />}
       {places && <CountryCard places={places} />}

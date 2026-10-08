@@ -118,8 +118,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
       }
   const density = densityOf(sites.length)
   const item = (s: Site, place: Place) => {
-    const n = shown.indexOf(s) + 1
-    return <SiteItem key={s.id} site={s} place={place} density={density} on={s.id === current?.id} arrange={found ? null : arrange} today={numbers?.get(s.id)?.visitors} key1={n > 0 && n <= 9 ? n : undefined} onPick={() => pick(s)} />
+    return <SiteItem key={s.id} site={s} place={place} density={density} on={s.id === current?.id} arrange={found ? null : arrange} today={numbers?.get(s.id)?.visitors} onPick={() => pick(s)} />
   }
   const onKeys = (e: KeyboardEvent) => {
     const box = root.current

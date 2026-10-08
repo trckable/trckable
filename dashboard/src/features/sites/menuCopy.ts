@@ -24,6 +24,7 @@ export const copy = defineCopy('sites.menu', {
   todayAll: 'Visitors today, all sites',
   onlineAll: 'Online now, all sites',
   todayShort: 'today',
+  liveShort: 'live',
 
   // The keys, said once at the foot (desktop only): move, open, close.
   keyMove: ['↑', '↓'],

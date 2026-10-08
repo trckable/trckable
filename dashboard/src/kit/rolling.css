@@ -1,0 +1,56 @@
+/* RollingNumber: transforms and a colour fade only, no layout work. */
+.rn {
+  display: inline-block;
+  position: relative;
+  white-space: pre;
+  font-variant-numeric: tabular-nums;
+}
+.rn-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.rn-digits {
+  display: inline-flex;
+}
+.rn-g {
+  display: block;
+  height: 1em;
+  line-height: 1;
+}
+.rn-slot {
+  display: inline-block;
+  height: 1em;
+  overflow: clip;
+  overflow-clip-margin: 0.08em;
+}
+.rn-col {
+  display: block;
+  animation: rn-roll 400ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.rn-col-down {
+  animation-name: rn-roll-back;
+}
+@keyframes rn-roll {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+@keyframes rn-roll-back {
+  from { transform: translateY(-50%); }
+  to { transform: translateY(0); }
+}
+.rn-up { animation: rn-tint-up 900ms ease-out both; }
+.rn-down { animation: rn-tint-down 900ms ease-out both; }
+@keyframes rn-tint-up {
+  from { color: var(--up); }
+}
+@keyframes rn-tint-down {
+  from { color: var(--text-3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rn-col, .rn-up, .rn-down { animation: none; }
+  .rn-col-up { transform: translateY(-50%); }
+}

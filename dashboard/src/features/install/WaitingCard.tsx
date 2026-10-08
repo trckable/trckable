@@ -3,7 +3,7 @@
 // site" and a prompt for an AI editor. The first visit swaps it for the real
 // dashboard (the live stream brings it), so this never needs a refresh.
 import { Check } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Ghost } from '../../components/Logo'
 import type { Site, Visit } from '../../lib/api'
 import type { Ctx } from '../../lib/install'
@@ -24,8 +24,9 @@ function Sub({ id, where, domain }: { id: string; where: string; domain: string 
   )
 }
 
-/** setup: inside the first run, which shows these actions on its own next screen. */
-export function WaitingCard({ site, visits, ctx, pick, onPick, setup }: { site: Site; visits: Visit[]; ctx: Ctx; pick: string; onPick: (id: string) => void; setup?: boolean }) {
+/** setup: inside the first run, which shows these actions on its own next screen
+ *  (and a hint for testing on localhost); after: more under the actions. */
+export function WaitingCard({ site, visits, ctx, pick, onPick, setup, after }: { site: Site; visits: Visit[]; ctx: Ctx; pick: string; onPick: (id: string) => void; setup?: boolean; after?: ReactNode }) {
   const [started, setStarted] = useState(false)
   const [copied, setCopied] = useState(false)
   const first = visits[0]
@@ -49,6 +50,11 @@ export function WaitingCard({ site, visits, ctx, pick, onPick, setup }: { site: 
       </div>
       <MethodTabs value={method.id} onChange={onPick} />
       <MethodPanel method={method} ctx={ctx} />
+      {setup && method.id === 'script' && (
+        <p className="faint wait-dev">
+          {t.dev[0]} <code>{t.dev[1]}</code> {t.dev[2]}
+        </p>
+      )}
       <div className="wait-actions">
         <button
           type="button"
@@ -66,6 +72,7 @@ export function WaitingCard({ site, visits, ctx, pick, onPick, setup }: { site: 
         </button>
       </div>
       {started && <CheckPanel state={check.state} domain={site.domain} first={first} onAgain={check.start} />}
+      {after}
       {!setup && <FirstCards site={site} />}
       <p className="faint wait-foot">{t.foot}</p>
     </section>

@@ -19,7 +19,7 @@ export function AllStrip({ on, numbers, onPick }: { on: boolean; numbers: Map<st
         <span className="strip-sum">
           <span title={copy.onlineAll}>
             <i className={online ? 'live-dot on' : 'live-dot'} aria-hidden="true" />
-            {fmtCompact(online ?? 0)}
+            {fmtCompact(online ?? 0)} <i>{copy.liveShort}</i>
           </span>
           <span title={copy.todayAll}>
             {fmtCompact(sum.visitors)} <i>{copy.todayShort}</i>

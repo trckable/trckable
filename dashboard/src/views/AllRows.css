@@ -179,6 +179,11 @@
   cursor: default;
   color: var(--text-3);
   font-size: 12px;
+  font-weight: 500;
+}
+/* The Site heading starts where the name does, after the 24 px mark and its gap. */
+.all-line.all-cols > :first-child {
+  padding-left: 34px;
 }
 .all-line.all-cols:hover {
   border: 0;
@@ -255,4 +260,21 @@
 .app .all-line.quiet {
   border-top-style: solid;
   opacity: 0.8;
+}
+
+/* The list's rules and text share the control row's edges: no side padding on a row, and the header
+   gets a quiet pair of rules like every other table header. */
+.app .all-slim .all-line {
+  padding-left: 0;
+}
+.app .all-slim .all-line.all-cols {
+  min-height: 32px;
+  border-top: 0;
+  border-bottom: 1px solid var(--border);
+}
+.app .all-slim .all-line.all-cols > :first-child {
+  padding-left: 34px;
+}
+.app .all-slim .all-cols + .all-item .all-line {
+  border-top: 0;
 }

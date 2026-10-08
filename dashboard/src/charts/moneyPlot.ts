@@ -5,7 +5,7 @@
 import { threeScale } from './timeScale'
 
 /** The revenue plot under the visitors plot: the gap between them and its own height. */
-export const SPLIT_GAP = 18
+export const SPLIT_GAP = 28
 export const SPLIT_PLOT = 96
 export const SPLIT_H = SPLIT_GAP + SPLIT_PLOT
 

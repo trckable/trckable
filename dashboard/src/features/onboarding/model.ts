@@ -2,13 +2,12 @@
 // tested on their own (model.test.ts).
 import type { Visit } from '../../lib/api'
 
-export type Step = 'site' | 'install' | 'here' | 'done'
+export type Step = 'site' | 'install' | 'here'
 
-/** The three dots: the last two screens share the third. */
+/** The three dots, one per step. */
 export const STEPS: Step[] = ['site', 'install', 'here']
 
 export function dotOf(step: Step): number {
-  if (step === 'done') return 2
   return STEPS.indexOf(step)
 }
 
@@ -33,4 +32,9 @@ export function tally(visits: Visit[]): { visitors: number; pageviews: number } 
 export function finishPath(domain: string, live: boolean): string {
   const base = '/' + encodeURIComponent(domain)
   return live ? base + '?view=live' : base
+}
+
+/** The first site, in the order they were added, that has had a visit; null while all wait. */
+export function firstVisited(ids: string[], seen: Record<string, Visit[] | undefined>): string | null {
+  return ids.find((id) => (seen[id]?.length ?? 0) > 0) ?? null
 }

@@ -23,7 +23,7 @@ export function Setup({ onClose }: { onClose: () => void }) {
           {copy.docsLink}
         </a>
       </p>
-      <CodeBlock code={config(location.origin)} />
+      <CodeBlock code={config(location.origin)} wrap />
       <p className="faint">{copy.note}</p>
       <button
         type="button"

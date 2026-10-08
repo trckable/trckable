@@ -204,8 +204,12 @@
     gap: 6px;
     margin-top: 6px;
   }
+  /* The card's own width sets the number's size (about 21 px on a 390 px phone), so a long one ($12,839 with a 105% chip) keeps its chip inside the card. */
+  :is(.sv-tiles, .all-stats) .kit-metric:not(.compact) {
+    container-type: inline-size;
+  }
   :is(.sv-tiles, .all-stats) .kit-metric .kit-val b {
-    font-size: 26px;
+    font-size: clamp(20px, 14cqi, 26px);
     white-space: nowrap;
   }
   :is(.sv-tiles, .all-stats) .kit-metric .kit-pill {

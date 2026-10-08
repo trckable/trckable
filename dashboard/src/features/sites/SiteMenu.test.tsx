@@ -43,9 +43,8 @@ describe('the switcher list', () => {
     expect(await menu(9)).toContain('width:calc(18px * var(--ph-mark, 1))')
   })
 
-  it('numbers the first nine sites for the 1–9 keys and marks the one you are on', async () => {
+  it('marks the one you are on', async () => {
     const html = await menu(10)
-    expect(html.match(/class="site-key"/g)).toHaveLength(9)
     expect(html.match(/aria-current="page"/g)).toHaveLength(1)
     expect(html).toContain('class="site on"')
   })
@@ -108,7 +107,7 @@ describe('the All sites chip', () => {
     const by = new Map([['a', { visitors: 12 }], ['b', { visitors: 30 }]])
     const full = renderToStaticMarkup(<AllStrip on={false} numbers={by} onPick={noop} />)
     expect(full).toContain('strip-sum')
-    expect(full).toContain('>3<')
+    expect(full).toContain('3 <i>live</i>')
     expect(full).toContain('42')
   })
 })
