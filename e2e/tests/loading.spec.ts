@@ -15,16 +15,19 @@ async function holdBoot(page: Page) {
   return release
 }
 
-test('the first paint is the ghost, announced as a status', async ({ page }) => {
-  const release = await holdBoot(page)
-  await page.goto(API + '/', { waitUntil: 'commit' })
-  const status = page.getByRole('status', { name: /loading/i })
-  await expect(status).toBeVisible()
-  await expect(status).toHaveAttribute('aria-busy', 'true')
-  await expect(status.locator('.ld-boo')).toHaveCount(1)
-  const name = await status.locator('.ld-boo').evaluate((el) => getComputedStyle(el).animationName)
-  expect(name).toMatch(/\bld-/) // the ghost moves (its motion: loading/Loading.css)
-  release()
+test.describe('motion allowed', () => {
+  test.use({ reducedMotion: 'no-preference' })
+  test('the first paint is the ghost, announced as a status', async ({ page }) => {
+    const release = await holdBoot(page)
+    await page.goto(API + '/', { waitUntil: 'commit' })
+    const status = page.getByRole('status', { name: /loading/i })
+    await expect(status).toBeVisible()
+    await expect(status).toHaveAttribute('aria-busy', 'true')
+    await expect(status.locator('.ld-boo')).toHaveCount(1)
+    const name = await status.locator('.ld-boo').evaluate((el) => getComputedStyle(el).animationName)
+    expect(name).toMatch(/\bld-/) // the ghost moves (its motion: loading/Loading.css)
+    release()
+  })
 })
 
 test('reduced motion: the ghost holds still', async ({ page }) => {
