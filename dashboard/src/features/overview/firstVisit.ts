@@ -55,6 +55,8 @@ export function noChangeWhy(visitors: number, values: number[], bucket: 'hour' |
 
 /** Why no change is told against the period before, from the report itself, as the line the page says; empty when it can carry one, or when `on` is false (a picked day, a followed channel, no comparison asked). */
 export function noChangeLine(on: boolean, before: Result | undefined, bucket: 'hour' | 'day' | 'week' | 'month'): string {
+  // Nothing at all before: said too, so a comparison that is on never shows silently nothing.
+  if (on && before && before.kpis.visitors <= 0) return copy.noChangeFew(0)
   const why = on && before ? noChangeWhy(before.kpis.visitors, before.series.map((p) => p.visitors), bucket) : null
   if (!why) return ''
   return why.why === 'days' ? copy.noChangeDays(why.n) : copy.noChangeFew(why.n)

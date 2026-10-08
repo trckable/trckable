@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { hourIn, hourlySpan, noChangeWhy, previousWhole } from './firstVisit'
+import type { Result } from '../../lib/api'
+import { hourIn, hourlySpan, noChangeLine, noChangeWhy, previousWhole } from './firstVisit'
 
 describe('hourlySpan', () => {
   it('is three days or fewer', () => {
@@ -53,5 +54,16 @@ describe('noChangeWhy', () => {
   })
   it('says how few visitors a whole earlier period had', () => {
     expect(noChangeWhy(8, full, 'day')).toEqual({ why: 'few', n: 8 })
+  })
+})
+
+describe('noChangeLine', () => {
+  const before = (visitors: number) => ({ kpis: { visitors, sessions: visitors }, series: [] }) as unknown as Result
+  it('says so when the period before had no visitors at all, never nothing', () => {
+    expect(noChangeLine(true, before(0), 'day')).toMatch(/only 0 visitors/)
+  })
+  it('says nothing when no comparison is on, or when it can be told', () => {
+    expect(noChangeLine(false, before(0), 'day')).toBe('')
+    expect(noChangeLine(true, undefined, 'day')).toBe('')
   })
 })
