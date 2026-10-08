@@ -89,7 +89,7 @@ export const METHODS: Method[] = [
     id: 'next',
     name: 'Next.js',
     group: 'Frameworks',
-    where: 'app/layout.tsx, plus one route so events go through your own domain.',
+    where: 'Edit app/layout.tsx and add one route, so events go through your own domain.',
     code: joinSteps(nextSteps),
     steps: nextSteps,
     bundled: true,
@@ -214,12 +214,12 @@ scripts: [${tagObject(c)}],`,
     id: 'wordpress',
     name: 'WordPress',
     group: 'CMS & shops',
-    where: 'Appearance → Theme File Editor → header.php, or a header-scripts plugin (WPCode, Insert Headers and Footers).',
+    where: "Easiest: a header-scripts plugin (WPCode, Insert Headers and Footers). Or paste this into your child theme's functions.php.",
     code: (c) => `<?php // functions.php of your child theme
 add_action('wp_head', function () { ?>
   ${tag(c, '  ')}
 <?php });`,
-    note: 'A plugin is safer than editing the theme: a theme update overwrites header.php.',
+    note: 'A plugin or a child theme is safer than editing the theme itself: a theme update overwrites its files.',
     keywords: 'wp woocommerce plugin',
   },
   {

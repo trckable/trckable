@@ -73,6 +73,7 @@ export function DevicesPanel({ c }: { c: CardsCtx }) {
           items={(c.perDay(dim) ? c.dims(dim) : []).slice(0, c.rows).map((r) => ({ key: r.value, label: r.value || 'Unknown', value: r.visitors, sub: r.bounce_rate, rev: r.revenue }))}
         />
       )}
+      foot={cardCopy.sharesFoot}
     />
   )
 }

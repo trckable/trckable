@@ -28,7 +28,7 @@ export function SourcesPanel({ c }: { c: CardsCtx }) {
     { id: 'referrer', label: cardCopy.referrers },
     { id: 'campaign', label: cardCopy.campaigns },
   ]
-  return <SubPanel id="src" label={cardCopy.sources} tabs={tabs} c={c} render={(dim) => <SourceBars c={c} dim={dim} />} />
+  return <SubPanel id="src" label={cardCopy.sources} tabs={tabs} c={c} render={(dim) => <SourceBars c={c} dim={dim} />} foot={cardCopy.sharesFoot} />
 }
 
 function SourceBars({ c, dim }: { c: CardsCtx; dim: string }) {

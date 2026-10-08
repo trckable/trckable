@@ -31,3 +31,17 @@
     min-width: 150px;
   }
 }
+/* Words with a tooltip behind them (TipText): they look like the words around them, with a faint dotted line to say so. */
+.tip-text {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: help;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--text-3);
+  text-underline-offset: 3px;
+}

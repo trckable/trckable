@@ -42,8 +42,8 @@ export function Answers({ answers, onConnect, onGoal, site, series, hints = [], 
     if (a.delta)
       return (
         <Pill tone={KIT[a.delta.tone]}>
-          <span role="img" aria-label={copy.deltaLabel(copy.deltaWord[a.delta.arrow], a.delta.pct)}>
-            {copy.deltaText(a.delta.arrow, a.delta.pct)}
+          <span role="img" aria-label={copy.deltaLabel(copy.deltaWord[a.delta.arrow], a.delta.capped ? copy.tenTimes : `${a.delta.pct}%`, a.deltaWhat ?? '')}>
+            {copy.deltaText(a.delta.arrow, a.delta.capped ? copy.tenTimesShort : `${a.delta.pct}%`, a.deltaWhat ?? '')}
           </span>
         </Pill>
       )
@@ -86,7 +86,7 @@ export function Answers({ answers, onConnect, onGoal, site, series, hints = [], 
         tone={a.key === 'fix' && a.look === 'fix' ? 'warn' : undefined}
         title={a.question}
         status={a.status}
-        chart={drawn.length > 1 ? <Area values={drawn} was={was} color={toneColor(tone)} /> : undefined}
+        chart={drawn.length > 1 && !(a.key === 'fix' && a.look === 'quiet') ? <Area values={drawn} was={was} color={toneColor(tone)} /> : undefined}
       >
         <span className="kit-val">
           <b className="num sv-big">{a.big}</b>

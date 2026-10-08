@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hourIn, hourlySpan, previousWhole } from './firstVisit'
+import { hourIn, hourlySpan, noChangeWhy, previousWhole } from './firstVisit'
 
 describe('hourlySpan', () => {
   it('is three days or fewer', () => {
@@ -39,5 +39,19 @@ describe('previousWhole', () => {
   it('asks the weeks and months of the same', () => {
     expect(previousWhole([0, 0, 0, 5, 9, 7, 8, 9, 3, 4, 5, 6], 'week')).toBe(false)
     expect(previousWhole([0, 5, 9, 7, 8, 9, 3, 4, 5, 6, 3, 3], 'week')).toBe(true)
+  })
+})
+
+describe('noChangeWhy', () => {
+  const full = Array.from({ length: 30 }, () => 5)
+  it('is nothing when the period before is whole and big enough, or had no visits', () => {
+    expect(noChangeWhy(150, full, 'day')).toBeNull()
+    expect(noChangeWhy(0, full.map(() => 0), 'day')).toBeNull()
+  })
+  it('says how many days of data a short earlier period had', () => {
+    expect(noChangeWhy(40, [...Array.from({ length: 22 }, () => 0), ...Array.from({ length: 8 }, () => 5)], 'day')).toEqual({ why: 'days', n: 8 })
+  })
+  it('says how few visitors a whole earlier period had', () => {
+    expect(noChangeWhy(8, full, 'day')).toEqual({ why: 'few', n: 8 })
   })
 })

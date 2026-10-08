@@ -30,17 +30,17 @@ describe('dayDetail', () => {
   const sold = day({ revenue: 19_800, payments: 4, new: 14_900, renewal: 4_900 })
   it('follows the visits with the money, by default', () => {
     const d = dayDetail(sold, { site, money, metric: 'visitors' })
-    expect(labels(d)).toEqual(['Pageviews', 'Revenue / visitor', 'Conversion', 'Bounce rate', 'Session time'])
+    expect(labels(d)).toEqual(['Pageviews', 'Revenue / visitor', 'Paid conversion', 'Bounce rate', 'Session time'])
     expect(d.rows.find((r) => r.label === 'Revenue / visitor')?.value).toBe('$0.99')
-    expect(d.rows.find((r) => r.label === 'Conversion')?.value).toBe('2.00%')
+    expect(d.rows.find((r) => r.label === 'Paid conversion')?.value).toBe('2.00%')
     expect(d.splits.map((s) => s.aLabel)).toEqual(['new'])
   })
   it('leads with the money, and gives the visitors a line, when revenue is the chart', () => {
-    expect(labels(dayDetail(sold, { site, money, metric: 'revenue' })).slice(0, 4)).toEqual(['Visitors', 'Revenue / visitor', 'Conversion', 'Pageviews'])
+    expect(labels(dayDetail(sold, { site, money, metric: 'revenue' })).slice(0, 4)).toEqual(['Visitors', 'Revenue / visitor', 'Paid conversion', 'Pageviews'])
   })
   it('leaves out the row its own headline already says', () => {
     expect(labels(dayDetail(sold, { site, money, metric: 'bounce' }))).not.toContain('Bounce rate')
-    expect(labels(dayDetail(sold, { site, money, metric: 'conversion' }))).not.toContain('Conversion')
+    expect(labels(dayDetail(sold, { site, money, metric: 'conversion' }))).not.toContain('Paid conversion')
     expect(labels(dayDetail(sold, { site, money, metric: 'per-visitor' }))).not.toContain('Revenue / visitor')
     expect(labels(dayDetail(sold, { site, money, metric: 'session' }))[0]).toBe('Visitors')
   })

@@ -3,6 +3,7 @@
 // Pure: highlightModel.test.ts.
 import type { Insight } from './extrasApi'
 import { channelLabel } from '../../lib/palette'
+import { baseEnough, overCap } from '../../lib/thin'
 import { extrasCopy } from './copy'
 
 export type Tone = 'up' | 'down' | 'money' | 'warn' | 'new'
@@ -18,6 +19,12 @@ export interface HighlightRow {
 
 const sourceName = (dim: string, value: string) => (dim === 'channel' ? channelLabel(value) : value || '/')
 
+/** How a source's move is told: a percentage, "more than 10x", or only the two figures when the earlier one is too small to carry a percentage. */
+export function changeShown(now: number, was: number): 'percent' | 'capped' | 'bare' {
+  if (!baseEnough(was)) return 'bare'
+  return overCap(now, was) ? 'capped' : 'percent'
+}
+
 export function highlightRows(list: Insight[], money: (minor: number) => string): HighlightRow[] {
   const c = extrasCopy.highlights
   return list.map((i): HighlightRow => {
@@ -25,7 +32,7 @@ export function highlightRows(list: Insight[], money: (minor: number) => string)
     const name = sourceName(i.dim, i.value)
     switch (i.kind) {
       case 'source_move':
-        return { ...base, tone: (i.change ?? 0) >= 0 ? 'up' : 'down', text: c.moved(name, i.change ?? 0, i.now, i.was ?? 0) }
+        return { ...base, tone: (i.change ?? 0) >= 0 ? 'up' : 'down', text: c.moved(name, i.change ?? 0, i.now, i.was ?? 0, changeShown(i.now, i.was ?? 0)) }
       case 'top_revenue':
         return { ...base, tone: 'money', text: c.pays(name, money(Math.round(i.per_visitor ?? 0)), i.times ?? 0) }
       case 'conversion_drop':

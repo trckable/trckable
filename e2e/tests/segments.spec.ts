@@ -33,26 +33,26 @@ test('is not, any of and a saved segment say the same thing everywhere', async (
   const all = await visitors(page)
 
   // One value, then a second of the same dimension: any of.
-  await pick(page, 'Entry page', /^\/pricing/)
+  await pick(page, 'Landing page', /^\/pricing/)
   await expect(chip(page)).toHaveCount(1)
   await expect(chip(page).locator('b')).toHaveText('/pricing')
   await expect.poll(() => visitors(page)).toBeLessThan(all)
   const pricing = await visitors(page)
-  await pick(page, 'Entry page', /^\/ /)
+  await pick(page, 'Landing page', /^\/ /)
   await expect(chip(page)).toHaveCount(1)
   await expect(chip(page).locator('b')).toHaveText('/pricing or /')
   await expect.poll(() => visitors(page)).toBe(all)
   await expect(page).toHaveURL(/f=entry_page%3A%2Fpricing&f=entry_page%3A%2F(&|$)/)
 
   // The chip's "is" is a switch.
-  await page.getByRole('button', { name: 'Entry page is: change to is not' }).click()
-  await expect(page.getByRole('button', { name: 'Entry page is not: change to is' })).toBeVisible()
+  await page.getByRole('button', { name: 'Landing page is: change to is not' }).click()
+  await expect(page.getByRole('button', { name: 'Landing page is not: change to is' })).toBeVisible()
   await expect(page).toHaveURL(/f=entry_page%21%3A%2Fpricing&f=entry_page%21%3A%2F(&|$)/)
 
   // Back to one value, "is not": the visitors that did not enter on /pricing.
   await page.goto(API + base + '&f=entry_page%21%3A%2Fpricing')
   await expect(chip(page).locator('b')).toHaveText('/pricing')
-  await expect(page.getByRole('button', { name: 'Entry page is not: change to is' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Landing page is not: change to is' })).toBeVisible()
   await expect.poll(() => visitors(page)).toBe(all - pricing)
 
   // A second filter: keep them with the bookmark icon.

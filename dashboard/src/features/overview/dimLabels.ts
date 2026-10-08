@@ -3,7 +3,7 @@ export const DIM_LABEL: Record<string, string> = {
   channel: 'Channel',
   referrer: 'Referrer',
   campaign: 'Campaign',
-  entry_page: 'Entry page',
+  entry_page: 'Landing page',
   exit_page: 'Exit page',
   page: 'Page',
   group: 'Section',

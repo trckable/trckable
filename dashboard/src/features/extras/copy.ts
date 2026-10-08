@@ -23,8 +23,12 @@ export const extrasCopy = defineCopy('extras', {
   highlights: {
     tab: 'Highlights',
     label: 'What changed, against the period before',
-    moved: (name: string, change: number, now: number, was: number) =>
-      `${name} ${change >= 0 ? 'up' : 'down'} ${fmtPct(Math.abs(change))} · ${fmtInt(was)} → ${fmtInt(now)} visitors`,
+    // `by`: the percentage only where the earlier figure can carry one (lib/thin): a handful before is just "up", ten times over is "more than 10x".
+    moved: (name: string, change: number, now: number, was: number, by: 'percent' | 'capped' | 'bare') => {
+      const dir = change >= 0 ? 'up' : 'down'
+      const how = { percent: ` ${fmtPct(Math.abs(change))}`, capped: ' more than 10x', bare: '' }[by]
+      return `${name} ${dir}${how} · ${fmtInt(was)} → ${fmtInt(now)} visitors`
+    },
     pays: (name: string, each: string, multiple: number) => `${name} earns ${each} a visitor, ${times(multiple)} the average`,
     drop: (page: string, was: number, now: number) => `${page} converts ${fmtPct(now)}, was ${fmtPct(was)}`,
     fresh: (referrer: string, visitors: number) => `New referrer: ${referrer} sent ${plural(visitors, 'visitor', 'visitors')}`,

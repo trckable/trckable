@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { delta, fmtMoney, fmtMoneyAxis } from './format'
 
+describe('delta, where it says nothing or too much', () => {
+  it('caps a change over ten times as "10x+"', () => {
+    expect(delta(1500, 100)).toMatchObject({ short: '10x+ ↑', text: '↑ 10x+', label: 'up more than 10 times' })
+    expect(delta(900, 100)?.short).toBe('800% ↑')
+  })
+  it('names the better or worse move where lower is better', () => {
+    expect(delta(0.42, 0.4, true)?.verdict).toBe('worse')
+    expect(delta(0.38, 0.4, true)?.verdict).toBe('better')
+    expect(delta(0.4, 0.4, true)?.verdict).toBeUndefined()
+    expect(delta(110, 100)?.verdict).toBeUndefined()
+  })
+})
+
 describe('delta', () => {
   it('has an arrow and a sign, so it reads without colour', () => {
     expect(delta(128, 100)).toEqual({ text: '↑ +28%', short: '28% ↑', tone: 'up', label: 'up 28.0 percent' })

@@ -464,6 +464,13 @@
   }
 }
 @media (max-width: 640px) {
+  .sv-hint {
+    min-height: var(--ph-hit, 44px);
+  }
+  .sv-hint-x {
+    width: var(--ph-hit, 44px);
+    height: var(--ph-hit, 44px);
+  }
   .sv-answer {
     grid-column: span 12;
   }
@@ -650,7 +657,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 10px;
-  margin-top: 10px;
+  margin: 10px 0 12px;
   padding-top: 10px;
   border-top: 1px dashed var(--line);
   font-size: 13px;

@@ -33,6 +33,8 @@ export const copy = defineCopy('moments', {
   moments: 'Moments on the chart',
   marker: (day: string, line: string, more: number) => `${day}: ${line}${more ? `, and ${more} more` : ''}. Show it`,
   more: (n: number) => `+${n} more`,
+  tipLead: (line: string, day: string) => `Moment: ${line}, ${day}`,
+  chipsMark: 'Chips mark moments worth a look',
   milestones: (n: number) => `${n} milestones`,
   close: 'Close',
   share: 'Share',

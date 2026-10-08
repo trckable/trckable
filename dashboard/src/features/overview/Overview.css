@@ -290,3 +290,20 @@ button.kpi:focus-visible {
 .note-bar .scrub-day {
   margin-left: auto;
 }
+/* Why no change is shown under the strip: quiet, one line. */
+.kpis-note {
+  margin: 0;
+  padding: 8px 16px 0;
+  color: var(--text-3);
+  font-size: 12px;
+}
+/* The tile's tooltip opens inside the tile, under its name, on hover, focus or tap. */
+.kpi .tip.kpi-tip {
+  top: calc(100% - 6px);
+  left: 8px;
+  max-width: min(260px, 70vw);
+}
+.kpi:last-child .tip.kpi-tip {
+  left: auto;
+  right: 8px;
+}

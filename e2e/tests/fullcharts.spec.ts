@@ -241,12 +241,15 @@ test('Create: A opens the menu, and a funnel lands in the address', async ({ pag
 
   // A funnel: two steps, and Full opens on it with the steps in the URL.
   await openCreate()
+  await expect(menu).toBeVisible()
   const funnelItem = menu.getByRole('menuitem', { name: /Funnel/ })
   test.skip((await funnelItem.count()) === 0, 'the demo site has Funnels off')
   await funnelItem.click()
   const dialog = page.getByRole('dialog', { name: 'New funnel' })
   for (let i = 0; i < 2; i++) {
     await dialog.getByText('+ Add step').click()
+    await expect(page.getByRole('option').first()).toBeVisible()
+    await expect(page.getByRole('searchbox')).toBeFocused()
     await page.keyboard.press('Enter')
   }
   await dialog.getByRole('button', { name: 'Show the funnel' }).click()
