@@ -71,6 +71,16 @@ export function CreateMenu(p: CreateMenuProps) {
     return () => window.removeEventListener('keydown', onKey)
   }, [allowed, show])
 
+  // The list hangs from the ⋯ button but is not its menu: a press on ⋯ closes
+  // it, so the ⋯ menu never opens on top of it.
+  useEffect(() => {
+    const btn = open ? anchor.current : null
+    if (!btn || btn === root.current) return
+    const close = () => setOpen(false)
+    btn.addEventListener('mousedown', close)
+    return () => btn.removeEventListener('mousedown', close)
+  }, [open])
+
   useEffect(() => {
     if (allowed) whenIdle(CreatePop.preload)
   }, [allowed])
