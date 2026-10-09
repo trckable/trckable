@@ -29,7 +29,7 @@ export function AllSummary({ s, days, rows, start }: { s: ReturnType<typeof summ
   const high = bounceHigh(s.bounce, s.total)
   return (
     <div className="all-stats">
-      <OnlineTile />
+      <OnlineTile count={s.online} />
       <MetricArea icon={<Users size={15} strokeWidth={1.8} />} label={copy.visitors} value={<CountUp value={s.total} format={fmtInt} />} pill={chip(d, days)} status={d && copy.vsDays(days)} series={sumSeries(rows, (r) => r.series, start)} tone={d ? TONE[d.tone] : 'neutral'} />
       <MetricArea icon={<Eye size={15} strokeWidth={1.8} />} label={copy.pageviews} value={<CountUp value={s.pageviews} format={fmtInt} />} pill={chip(views, days)} status={copy.perVisitor(s.total ? (s.pageviews / s.total).toFixed(1) : '0')} series={sumSeries(rows, (r) => r.pageview_series, start)} tone={views ? TONE[views.tone] : 'neutral'} />
       <MetricArea
