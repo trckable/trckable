@@ -1,4 +1,5 @@
-// All sites' Online now card: the same number as the switcher's header.
+// All sites' Online now card: the sum of the online counts the rows show (the
+// same read), or, with no rows given, the switcher header's number.
 import { Radio } from 'lucide-react'
 import { CountUp } from '../kit/CountUp'
 import { MetricArea } from '../kit/MetricArea'
@@ -6,8 +7,9 @@ import { useOnlineAll, useOnlineMinutes } from '../lib/allOnline'
 import { fmtInt } from '../lib/format'
 import { copy } from './allSitesCopy'
 
-export function OnlineTile() {
-  const online = useOnlineAll() ?? 0
+export function OnlineTile({ count }: { count?: number }) {
+  const all = useOnlineAll() ?? 0
+  const online = count ?? all
   const minutes = useOnlineMinutes()
   const live = (
     <span className={online > 0 ? 'all-online' : 'all-online none'}>

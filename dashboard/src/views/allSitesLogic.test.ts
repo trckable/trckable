@@ -70,4 +70,11 @@ describe('All sites rules', () => {
     expect(s.previousBounce).toBe(0.25)
     expect(s.previousPageviews).toBe(10)
   })
+
+  it('adds the pageviews and who is online of the shown sites up, so the cards equal the rows', () => {
+    const rows = [r('a', { pageviews: 7, online: 11 }), r('b', { pageviews: 5, online: 7 }), r('c', { pageviews: 1, online: 9, error: 'x' })]
+    const s = summarize(rows)
+    expect(s.pageviews).toBe(rows.reduce((n, x) => n + x.pageviews, 0))
+    expect(s.online).toBe(18)
+  })
 })
