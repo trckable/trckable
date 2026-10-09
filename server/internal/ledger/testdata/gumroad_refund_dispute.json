@@ -1,0 +1,20 @@
+{
+  "provider": "gumroad",
+  "note": "Gumroad pings (shaped after Gumroad's Purchase::PingNotification payload, JSON form; the form-encoded form is tested in the payments package). A one-time sale attributed through url_params, later refunded in full (refund ping, and a retried sale ping already carrying refunded); a subscription whose renewal is charged back (dispute) and then won (dispute_won): the later state wins in any arrival order. The seller's own test purchase never counts.",
+  "events": [
+    {"seller_id":"sel1","product_id":"pr1","product_name":"Guide","email":"a@b.co","price":4900,"gumroad_fee":590,"currency":"usd","quantity":1,"order_number":1001,"sale_id":"gs_1","sale_timestamp":"2026-09-01T09:00:00Z","url_params":{"trckable_vid":"gum42.q"},"refunded":false,"disputed":false,"dispute_won":false},
+    {"seller_id":"sel1","product_id":"pr1","product_name":"Guide","email":"a@b.co","price":4900,"currency":"usd","sale_id":"gs_1","sale_timestamp":"2026-09-01T09:00:00Z","url_params":{"trckable_vid":"gum42.q"},"refunded":true,"disputed":false,"dispute_won":false},
+    {"resource_name":"refund","seller_id":"sel1","product_id":"pr1","email":"a@b.co","price":"4900","currency":"usd","sale_id":"gs_1","sale_timestamp":"2026-09-01T09:00:00Z","url_params":{"trckable_vid":"gum42.q"},"refunded":true,"disputed":false,"dispute_won":false},
+    {"seller_id":"sel1","product_id":"pr2","product_name":"Club","email":"c@d.co","price":1900,"currency":"usd","sale_id":"gs_2","sale_timestamp":"2026-09-02T09:00:00Z","subscription_id":"gsub_1","purchaser_id":"gp_1","recurrence":"monthly","url_params":{"trckable_vid":"gum42.q"},"refunded":false,"disputed":false,"dispute_won":false},
+    {"seller_id":"sel1","product_id":"pr2","product_name":"Club","email":"c@d.co","price":1900,"currency":"usd","sale_id":"gs_3","sale_timestamp":"2026-10-02T09:00:00Z","subscription_id":"gsub_1","purchaser_id":"gp_1","recurrence":"monthly","is_recurring_charge":true,"refunded":false,"disputed":false,"dispute_won":false},
+    {"resource_name":"dispute","seller_id":"sel1","product_id":"pr2","email":"c@d.co","price":1900,"currency":"usd","sale_id":"gs_3","sale_timestamp":"2026-10-02T09:00:00Z","subscription_id":"gsub_1","purchaser_id":"gp_1","is_recurring_charge":true,"refunded":false,"disputed":true,"dispute_won":false},
+    {"resource_name":"dispute_won","seller_id":"sel1","product_id":"pr2","email":"c@d.co","price":1900,"currency":"usd","sale_id":"gs_3","sale_timestamp":"2026-10-02T09:00:00Z","subscription_id":"gsub_1","purchaser_id":"gp_1","is_recurring_charge":true,"refunded":false,"disputed":true,"dispute_won":true},
+    {"seller_id":"sel1","product_id":"pr1","email":"seller@b.co","price":4900,"currency":"usd","sale_id":"gs_test","sale_timestamp":"2026-09-03T09:00:00Z","test":true}
+  ],
+  "currency": "USD",
+  "expect": [
+    {"id":"gs_1","amount":4900,"refunded":4900,"visitor":"gum42","kind":"one_time"},
+    {"id":"gs_2","amount":1900,"refunded":0,"visitor":"gum42","kind":"subscription"},
+    {"id":"gs_3","amount":1900,"refunded":0,"visitor":"gum42","kind":"renewal"}
+  ]
+}

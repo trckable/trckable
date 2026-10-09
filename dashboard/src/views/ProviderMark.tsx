@@ -16,6 +16,10 @@ const MARKS: Record<string, { tint: string; d: string }> = {
   paddle: { tint: '#ffd400', d: 'M12 3c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6Zm0 12v6' },
   // Dodo: a bird, in three strokes.
   dodo: { tint: '#f97316', d: 'M7 17c0-4 2.5-7 6-7 1.7 0 3 .8 3.7 1.8M16.7 11.8 20 9m-9 8h5M8 10.5h.01' },
+  // Gumroad: a road, the brand's pink.
+  gumroad: { tint: '#ff90e8', d: 'M5 16c2-6 5-9 14-9M5 16c3 1 8 1 11-1' },
+  // PayPal: two stacked P strokes.
+  paypal: { tint: '#003087', d: 'M8 20 10 6h5a3 3 0 0 1 0 6h-4M6 20l1.5-9' },
   // Anything else, connected by webhook.
   custom: { tint: '#9ca3af', d: 'M4 12h4l2-5 4 10 2-5h4' },
 }

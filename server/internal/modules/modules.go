@@ -101,7 +101,7 @@ var All = []Module{
 			"Outbound clicks and downloads stop being recorded",
 			"Recorded ones stay in your reports",
 		}},
-	{ID: "revenue", Name: "Revenue", Summary: "Stripe, Lemon Squeezy, Polar, Paddle and Dodo: which traffic pays.",
+	{ID: "revenue", Name: "Revenue", Summary: "Stripe, Lemon Squeezy, Polar, Paddle, Dodo, Gumroad and PayPal: which traffic pays.",
 		Tracker: TrackCheckout, Collects: true, Gap: "Revenue is hidden and checkout links lose the visitor id. Payments keep arriving, so nothing is lost.",
 		Server: "webhook inbox, payment ledger, reconciliation every 6 h, exchange rates",
 		Gives: []string{

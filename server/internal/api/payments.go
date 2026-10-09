@@ -30,7 +30,9 @@ var providers = []providerInfo{
 	{"polar", "Polar", "An organization access token with webhooks:write, orders:read and refunds:read.", "https://polar.sh/dashboard", payments.PolarEvents, true},
 	{"paddle", "Paddle", "An API key with notification_setting.write, transaction.read and adjustment.read. Live (pdl_live_…) and sandbox (pdl_sdbx_…) keys are told apart by the key.", "https://vendors.paddle.com/authentication-v2", payments.PaddleEvents, true},
 	{"dodo", "Dodo Payments", "An API key from Developer → API keys (test and live keys are separate).", "https://app.dodopayments.com", payments.DodoEvents, true},
-	{"custom", "Anything else", "No key: trckable makes a signing secret, and your own code sends each sale to the URL below. Gumroad, Chargebee, Creem, a bank transfer you record by hand — anything that can make an HTTP request.", "", payments.CustomEvents, false},
+	{"gumroad", "Gumroad", "An access token from Settings → Advanced → Applications (it needs the view_sales scope). Without one, set the ping URL by hand: sales arrive, refunds and disputes need the token.", "https://gumroad.com/settings/advanced", payments.GumroadEvents, false},
+	{"paypal", "PayPal", "No key: create a webhook in the PayPal developer dashboard with the URL below, then paste its webhook ID. Sandbox and live webhooks are separate.", "https://developer.paypal.com/dashboard/applications", payments.PayPalEvents, true},
+	{"custom", "Anything else", "No key: trckable makes a signing secret, and your own code sends each sale to the URL below. Chargebee, Creem, a bank transfer you record by hand — anything that can make an HTTP request.", "", payments.CustomEvents, false},
 }
 
 func (a *API) revenueOn(w http.ResponseWriter) bool {
