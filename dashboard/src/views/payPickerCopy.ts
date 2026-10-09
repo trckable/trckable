@@ -9,4 +9,6 @@ export const payPickerCopy = defineCopy('payments.picker', {
   none: 'No provider matches.',
   custom: 'Not listed? Use the custom connection.',
   connect: 'Connect',
+  viaWebhook: 'via webhook',
+  hint: (count: string) => `Search ${count} checkouts, or connect anything by webhook`,
 })

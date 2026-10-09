@@ -3,7 +3,7 @@
 import { ArrowRight, Search } from 'lucide-react'
 import { useState } from 'react'
 import type { Provider } from '../lib/api'
-import { findProviders, MOST_USED, PAY_PROVIDERS } from '../lib/payProviders'
+import { findProviders, MOST_USED, PAY_PROVIDERS, searchableCount, WEBHOOK_PROVIDERS } from '../lib/payProviders'
 import { payPickerCopy as t } from './payPickerCopy'
 import { ProviderMark } from './ProviderMark'
 
@@ -14,7 +14,8 @@ export function PayPicker({ available, onPick }: { available: Provider[]; onPick
     const p = available.find((x) => x.id === id)
     if (p) onPick(p)
   }
-  const { hits, wallets } = findProviders(q, PAY_PROVIDERS.filter((p) => available.some((a) => a.id === p.id)))
+  const canWebhook = available.some((a) => a.id === 'custom')
+  const { hits, wallets } = findProviders(q, [...PAY_PROVIDERS.filter((p) => available.some((a) => a.id === p.id)), ...(canWebhook ? WEBHOOK_PROVIDERS : [])])
   const searching = q.trim() !== ''
   const tiles = MOST_USED.filter((id) => available.some((a) => a.id === id))
   const nameOf = (id: string) => available.find((a) => a.id === id)?.name ?? id
@@ -24,7 +25,7 @@ export function PayPicker({ available, onPick }: { available: Provider[]; onPick
       setOn((n) => Math.max(0, Math.min(n + (e.key === 'ArrowDown' ? 1 : -1), hits.length - 1)))
     } else if (e.key === 'Enter' && searching && hits[on]) {
       e.preventDefault()
-      open(hits[on].id)
+      open(hits[on].viaWebhook ? 'custom' : hits[on].id)
     }
   }
   return (
@@ -57,6 +58,7 @@ export function PayPicker({ available, onPick }: { available: Provider[]; onPick
               </button>
             ))}
           </div>
+          {canWebhook && <p className="faint pay-pick-note">{t.hint(searchableCount())}</p>}
         </>
       )}
       {searching && (
@@ -66,9 +68,10 @@ export function PayPicker({ available, onPick }: { available: Provider[]; onPick
           <ul className="pay-pick-list">
             {hits.map((p, i) => (
               <li key={p.id}>
-                <button type="button" className="pay-pick-row" data-on={i === on ? '1' : undefined} onMouseEnter={() => setOn(i)} onClick={() => open(p.id)}>
+                <button type="button" className="pay-pick-row" data-on={i === on ? '1' : undefined} onMouseEnter={() => setOn(i)} onClick={() => open(p.viaWebhook ? 'custom' : p.id)}>
                   <ProviderMark id={p.id} />
-                  <b>{nameOf(p.id)}</b>
+                  <b>{p.viaWebhook ? p.name : nameOf(p.id)}</b>
+                  {p.viaWebhook && <span className="tag quiet">{t.viaWebhook}</span>}
                 </button>
               </li>
             ))}

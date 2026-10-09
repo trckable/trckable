@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Payments: the provider search matches the start of a word ("s" finds Stripe, Shopify, Square, not every provider with an s inside), and 26 more checkouts such as Shopify, WooCommerce, PayPal and Gumroad are found by search and connect through the custom webhook.
+
 ## 0.7.4 (9 Oct 2026)
 
 - Goals: the "Your server" example in Track a goal now sends a goal the server keeps (it sent the wrong fields and no user agent), and the dialog and the empty Goals card say that a goal shows up after its first click or event.
