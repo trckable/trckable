@@ -6,7 +6,7 @@
     "src/views/Account.tsx": 350,
     "src/views/Dashboard.tsx": 659,
     "src/views/Health.tsx": 275,
-    "src/views/Payments.tsx": 540,
+    "src/views/Payments.tsx": 358,
     "src/views/Privacy.tsx": 738,
     "src/views/Search.tsx": 352,
     "src/views/Settings.tsx": 590,
