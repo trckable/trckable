@@ -31,6 +31,9 @@ func FuzzParse(f *testing.F) {
 	}
 	f.Add([]byte(`{"data":{"object":null}}`))
 	f.Add([]byte(`{"type":"order.paid","data":[]}`))
+	f.Add([]byte("sale_id=gs_1&price=4900&currency=usd&url_params%5Btrckable_vid%5D=abc.d&refunded=true"))
+	f.Add([]byte(`{"event_type":"PAYMENT.CAPTURE.COMPLETED","resource":{"id":"C","status":"COMPLETED","amount":{"currency_code":"USD","value":"1e3"}}}`))
+	f.Add([]byte(`{"event_type":"PAYMENT.SALE.REFUNDED","resource":{"amount":{"total":"-1","currency":"JPY"},"links":null}}`))
 	f.Fuzz(func(t *testing.T, body []byte) {
 		for name, p := range Registry {
 			ev, err := p.Parse(body)

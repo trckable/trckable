@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { keyPicksMode, modeTag } from './payments'
 
 describe('modeTag', () => {
-  it('calls the test environment of Paddle and Polar a sandbox', () => {
+  it('calls the test environment of Paddle, Polar and PayPal a sandbox', () => {
+    expect(modeTag('paypal')).toBe('Sandbox')
     expect(modeTag('paddle')).toBe('Sandbox')
     expect(modeTag('polar')).toBe('Sandbox')
   })

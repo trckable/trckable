@@ -507,3 +507,70 @@ func TestDodoRemote(t *testing.T) {
 		t.Fatalf("synced: %d payments with tax, %d refunds, %d lost disputes", tax, refunds, lost)
 	}
 }
+
+// ---- Gumroad ----
+
+// https://github.com/antiwork/gumroad (Api::V2::ResourceSubscriptionsController):
+// PUT /v2/resource_subscriptions creates, DELETE /v2/resource_subscriptions/:id removes.
+func TestGumroadRemote(t *testing.T) {
+	n := 0
+	var posted []string
+	f := newFake(t, func(w http.ResponseWriter, r *http.Request, body []byte) {
+		switch {
+		case r.Method == "PUT" && r.URL.Path == "/resource_subscriptions":
+			if r.Header.Get("Authorization") != "Bearer gum_token" {
+				jsonAnswer(w, 401, `{"success":false,"message":"unauthorized"}`)
+				return
+			}
+			n++
+			posted = append(posted, string(body))
+			jsonAnswer(w, 200, fmt.Sprintf(`{"success":true,"resource_subscription":{"id":"rs_%d","resource_name":"sale","post_url":"x"}}`, n))
+		case r.Method == "DELETE":
+			jsonAnswer(w, 200, `{"success":true}`)
+		default:
+			w.WriteHeader(404)
+		}
+	})
+	api := &GumroadAPI{BaseURL: f.srv.URL}
+	ctx := context.Background()
+	s, err := api.Setup(ctx, "gum_token", false, "https://stats.example/webhooks/gumroad/pc_1")
+	if err != nil || s.RemoteID != "rs_1,rs_2,rs_3,rs_4" || len(s.Secret) < 20 {
+		t.Fatalf("setup: %+v %v", s, err)
+	}
+	for i, res := range GumroadEvents {
+		if !strings.Contains(posted[i], "resource_name="+res) || !strings.Contains(posted[i], "token%3D"+s.Secret) {
+			t.Fatalf("subscription %d: %s", i, posted[i])
+		}
+	}
+	if err := api.Teardown(ctx, "gum_token", false, s); err != nil || f.called("DELETE /resource_subscriptions/rs_") != 4 {
+		t.Fatalf("teardown: %v, %v", err, f.calls)
+	}
+	if raws, err := api.Sync(ctx, "gum_token", false, s, time.Now()); err != nil || raws != nil {
+		t.Fatalf("sync: %v %v", raws, err)
+	}
+	// A refused token creates nothing and says so.
+	if _, err := api.Setup(ctx, "wrong", false, "https://stats.example/webhooks/gumroad/pc_1"); err == nil {
+		t.Fatal("a refused token connected")
+	}
+}
+
+func TestGumroadSetupFailingHalfwayRemovesWhatItMade(t *testing.T) {
+	n := 0
+	f := newFake(t, func(w http.ResponseWriter, r *http.Request, body []byte) {
+		if r.Method == "DELETE" {
+			jsonAnswer(w, 200, `{"success":true}`)
+			return
+		}
+		n++
+		if n == 3 {
+			jsonAnswer(w, 200, `{"success":false,"message":"Invalid post URL"}`)
+			return
+		}
+		jsonAnswer(w, 200, fmt.Sprintf(`{"success":true,"resource_subscription":{"id":"rs_%d"}}`, n))
+	})
+	api := &GumroadAPI{BaseURL: f.srv.URL}
+	_, err := api.Setup(context.Background(), "gum_token", false, "https://stats.example/webhooks/gumroad/pc_1")
+	if err == nil || !strings.Contains(err.Error(), "Invalid post URL") || f.called("DELETE /resource_subscriptions/rs_") != 2 {
+		t.Fatalf("%v %v", err, f.calls)
+	}
+}

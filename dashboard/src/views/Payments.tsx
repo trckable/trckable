@@ -330,6 +330,32 @@ await fetch('${url}', {
 })`
 }
 
+const GUMROAD = {
+  show: 'Show the ping URL',
+  back: 'Back',
+  next: 'Next',
+  refunds: (events: string[]) =>
+    `A Ping URL reports sales only. To count refunds and disputes too, remove this and connect Gumroad with an access token (Settings → Advanced → Applications, scope view_sales): trckable then subscribes to ${events.join(', ')} itself.`,
+}
+
+const STEPS: Record<string, string[]> = {
+  custom: ['Where to send', 'How to sign', 'First sale'],
+  gumroad: ['Ping URL', 'Refunds', 'First sale'],
+}
+
+function stepNames(provider: string) {
+  return STEPS[provider] ?? ['Endpoint', 'Events', 'Secret']
+}
+
+const INTRO: Record<string, string> = {
+  custom: 'Post every sale to this URL, from your server.',
+  gumroad: 'In Gumroad, open Settings → Advanced and paste this as the Ping URL. It holds a secret: keep it private.',
+}
+
+function introFor(provider: string, name = '') {
+  return INTRO[provider] ?? `In ${name}, add a webhook endpoint with this URL.`
+}
+
 /** The manual webhook, one step at a time instead of three stacked boxes. */
 function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnection; provider?: Provider; onClose: () => void }) {
   const [step, setStep] = useState(1)
@@ -338,7 +364,11 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
   const [done, setDone] = useState(c.has_secret)
   const ls = c.provider === 'lemonsqueezy'
   const own = c.provider === 'custom' // our own format: there is no provider to configure
-  const steps = own ? ['Where to send', 'How to sign', 'First sale'] : ['Endpoint', 'Events', 'Secret']
+  const gr = c.provider === 'gumroad' // unsigned pings: the secret rides in the URL
+  const pp = c.provider === 'paypal' // the secret is the webhook ID PayPal shows
+  const waiting = own || gr // nothing to paste back: the connection waits for a sale
+  const steps = stepNames(c.provider)
+  const intro = introFor(c.provider, provider?.name)
 
   return (
     <Modal label={`${provider?.name} webhook`} className="wizard" onClose={onClose}>
@@ -352,21 +382,44 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
         {step === 1 && (
           <>
             <p className="muted" style={{ margin: 0 }}>
-              {own ? 'Post every sale to this URL, from your server.' : `In ${provider?.name}, add a webhook endpoint with this URL.`}
+              {intro}
             </p>
-            <CodeBlock code={c.webhook_url} lang="url" />
+            {gr && !shown ? (
+              <button type="button" className="btn" onClick={() => more.paymentSecret(site.id, c.id).then((r) => setShown(r.secret))}>
+                {GUMROAD.show}
+              </button>
+            ) : (
+              <CodeBlock code={gr ? `${c.webhook_url}?token=${shown}` : c.webhook_url} lang="url" />
+            )}
             <div className="wiz-actions">
               <button type="button" className="btn ghost" onClick={onClose}>
                 Later
               </button>
-              <button type="button" className="btn primary big" onClick={() => setStep(2)}>
+              <button type="button" className="btn primary big" disabled={gr && !shown} onClick={() => setStep(2)}>
                 {own ? 'Next' : 'Added it'}
               </button>
             </div>
           </>
         )}
 
+        {step === 2 && gr && (
+          <>
+            <p className="muted" style={{ margin: 0 }}>
+              {GUMROAD.refunds(provider?.events ?? [])}
+            </p>
+            <div className="wiz-actions">
+              <button type="button" className="btn ghost" onClick={() => setStep(1)}>
+                Back
+              </button>
+              <button type="button" className="btn primary big" onClick={() => setStep(3)}>
+                Next
+              </button>
+            </div>
+          </>
+        )}
+
         {step === 2 &&
+          !gr &&
           (own ? (
             <>
               <p className="muted" style={{ margin: 0 }}>
@@ -411,21 +464,21 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
           <>
             {/* A generated secret means nothing is left to paste, so this
                 provider is waiting on a sale rather than on setup. */}
-            {own && (
+            {waiting && (
               <div className="wiz-done">
                 <Ghost size={40} peek />
                 <b>Waiting for your first sale.</b>
                 <span className="muted">Send one and it appears within a minute. The same id twice is one sale.</span>
               </div>
             )}
-            {!own && done && (
+            {!waiting && done && (
               <div className="wiz-done">
                 <Check size={34} strokeWidth={2} aria-hidden="true" />
                 <b>Connected.</b>
                 <span className="muted">Payments will appear as they happen.</span>
               </div>
             )}
-            {!own && !done && ls && (
+            {!waiting && !done && ls && (
               <>
                 <p className="muted" style={{ margin: 0 }}>
                   Lemon Squeezy asks you for a signing secret. Use this one.
@@ -440,7 +493,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
                 )}
               </>
             )}
-            {!own && !done && !ls && (
+            {!waiting && !done && !ls && (
               <form
                 style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
                 onSubmit={(e) => {
@@ -455,10 +508,10 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
                 }}
               >
                 <p className="muted" style={{ margin: 0 }}>
-                  Paste the signing secret {provider?.name} shows for that endpoint.
+                  {pp ? 'Paste the Webhook ID PayPal shows for that webhook.' : `Paste the signing secret ${provider?.name} shows for that endpoint.`}
                 </p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <input className="input num" style={{ flex: 1, minWidth: 200, height: 48 }} value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="whsec_…" autoComplete="off" autoFocus />
+                  <input className="input num" style={{ flex: 1, minWidth: 200, height: 48 }} value={secret} onChange={(e) => setSecret(e.target.value)} placeholder={pp ? 'Webhook ID' : 'whsec_…'} autoComplete="off" autoFocus />
                   <button type="submit" className="btn primary big" disabled={!secret}>
                     Save
                   </button>
