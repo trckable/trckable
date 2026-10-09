@@ -10,7 +10,7 @@
 # and TRCKABLE_BASE_URL to the address people reach it at.
 services:
   trckable:
-    image: ghcr.io/trckable/trckable:0.7.5
+    image: ghcr.io/trckable/trckable:0.7.6
     build:
       context: ..
       dockerfile: deploy/Dockerfile
