@@ -33,6 +33,17 @@ Self-host it for free, or let [trckable Cloud](https://cloud.trckable.com) run i
 
 > **Early preview.** Tracking, the dashboard, revenue for all five providers, Full mode, the MCP server and the self-hosting tools are built and tested. Still to come: live sandbox runs against each payment provider, the in-app assistant, and v1.0.
 
+## 👻 At a glance
+
+<p align="center">
+  <img src=".github/images/launch/ph-2.webp" width="49%" alt="Tired of “upgrade to unlock”? Everything is free: revenue by source, funnels and journeys, the AI assistant, share links and heatmaps, self-hosted or on Cloud">
+  <img src=".github/images/launch/ph-3.webp" width="49%" alt="Ask your AI about your traffic: the built-in MCP server lets Claude, Cursor or ChatGPT answer from your own numbers">
+</p>
+<p align="center">
+  <img src=".github/images/launch/ph-4.webp" width="49%" alt="One command and you are live: docker run on your server, or npx trckable init in your app, with a 2 KB script">
+  <img src=".github/images/launch/ph-6.webp" width="49%" alt="Your server or ours, same product: self-host free with every feature, or let Cloud run it">
+</p>
+
 ## 🧭 Two ways to use it
 
 | | Self-host | trckable Cloud |
