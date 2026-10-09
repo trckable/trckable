@@ -70,7 +70,7 @@ func TestGumroadRefundDisputeAndOrdering(t *testing.T) {
 		t.Fatalf("disputes %+v %+v", lost.Disputes, won.Disputes)
 	}
 	// Every state follows the one before it in time, whatever order they arrive in.
-	if !(sale.At < refund.At && refund.At < lost.At && lost.At < won.At) {
+	if sale.At >= refund.At || refund.At >= lost.At || lost.At >= won.At {
 		t.Fatalf("times %d %d %d %d", sale.At, refund.At, lost.At, won.At)
 	}
 	// A retry is the same event key: stored once.

@@ -41,7 +41,7 @@ var GumroadEvents = []string{"sale", "refund", "dispute", "dispute_won"}
 // PingTokenHeader is where the webhook handler puts the URL's token for
 // Verify. It is set by the handler for every request (a value sent by the
 // caller is dropped first), never read from the wire.
-const PingTokenHeader = "X-Trckable-Ping-Token"
+const PingTokenHeader = "X-Trckable-Ping-Token" //nolint:gosec // a header name, not a credential
 
 func (gumroad) Verify(h http.Header, _ []byte, secret string, _ time.Time) error {
 	got := h.Get(PingTokenHeader)

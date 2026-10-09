@@ -330,6 +330,14 @@ await fetch('${url}', {
 })`
 }
 
+const GUMROAD = {
+  show: 'Show the ping URL',
+  back: 'Back',
+  next: 'Next',
+  refunds: (events: string[]) =>
+    `A Ping URL reports sales only. To count refunds and disputes too, remove this and connect Gumroad with an access token (Settings → Advanced → Applications, scope view_sales): trckable then subscribes to ${events.join(', ')} itself.`,
+}
+
 const STEPS: Record<string, string[]> = {
   custom: ['Where to send', 'How to sign', 'First sale'],
   gumroad: ['Ping URL', 'Refunds', 'First sale'],
@@ -378,7 +386,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
             </p>
             {gr && !shown ? (
               <button type="button" className="btn" onClick={() => more.paymentSecret(site.id, c.id).then((r) => setShown(r.secret))}>
-                Show the ping URL
+                {GUMROAD.show}
               </button>
             ) : (
               <CodeBlock code={gr ? `${c.webhook_url}?token=${shown}` : c.webhook_url} lang="url" />
@@ -397,7 +405,7 @@ function ManualSetup({ site, c, provider, onClose }: { site: Site; c: PayConnect
         {step === 2 && gr && (
           <>
             <p className="muted" style={{ margin: 0 }}>
-              A Ping URL reports sales only. To count refunds and disputes too, remove this and connect Gumroad with an access token (Settings → Advanced → Applications, scope view_sales): trckable then subscribes to {(provider?.events ?? []).join(', ')} itself.
+              {GUMROAD.refunds(provider?.events ?? [])}
             </p>
             <div className="wiz-actions">
               <button type="button" className="btn ghost" onClick={() => setStep(1)}>
