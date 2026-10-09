@@ -303,3 +303,54 @@
     transform: none;
   }
 }
+
+/* The provider picker: search, most used tiles, matches, custom line. */
+.pay-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pay-pick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pay-pick-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--sunken);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.pay-pick-row[data-on='1'],
+.pay-pick-row:focus-visible {
+  border-color: var(--accent);
+}
+.pay-pick-note {
+  margin: 0;
+  font-size: 12.5px;
+}
+.pay-pick-custom {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.pay-pick-custom:hover,
+.pay-pick-custom:focus-visible {
+  text-decoration: underline;
+}
