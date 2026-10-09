@@ -1,7 +1,7 @@
 // Settings → Payments. Connecting a provider is three taps: pick it, paste the
 // key, done. Everything wordy (manual webhooks, checkout snippets) lives behind
 // its own button, so the page itself stays short.
-import { ArrowRight, Banknote, Check, Info, Link2, TriangleAlert } from 'lucide-react'
+import { Banknote, Check, Info, Link2, TriangleAlert } from 'lucide-react'
 import { Menu } from '../components/Menu'
 import { DialogActions } from '../components/DialogActions'
 import { DialogHead } from '../components/DialogHead'
@@ -21,6 +21,7 @@ import { isViewer } from '../lib/me'
 import { settle, toast } from '../components/Toast'
 import { useConnectFirst } from './useConnectFirst'
 import { Connect } from './PaymentsConnect'
+import { PayPicker } from './PayPicker'
 import { ProviderMark } from './ProviderMark'
 import './Payments.css'
 
@@ -142,17 +143,7 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
       {available.length > 0 && (
         <div className="pay-group">
           <span className="pay-group-head">{connected.length ? 'Add another' : 'Connect a provider'}</span>
-          <div className="prov-grid">
-            {available.map((p) => (
-              <button key={p.id} type="button" className="prov" onClick={() => setAdding(p)}>
-                <ProviderMark id={p.id} />
-                <b>{p.name}</b>
-                <span className="faint">
-                  Connect <ArrowRight size={12} strokeWidth={2} aria-hidden="true" />
-                </span>
-              </button>
-            ))}
-          </div>
+          <PayPicker available={available} onPick={setAdding} />
         </div>
       )}
 
