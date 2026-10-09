@@ -15,8 +15,11 @@ import (
 	"hash/crc32"
 	"math/big"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -35,7 +38,15 @@ type ppSigner struct {
 	now  time.Time
 }
 
-func newSigner(t *testing.T) *ppSigner {
+func resetPayPalCerts() {
+	payPalCerts.Lock()
+	payPalCerts.m = map[string]*certEntry{}
+	payPalCerts.Unlock()
+}
+
+func newSigner(t *testing.T) *ppSigner { return newSignerFor(t, payPalCertName) }
+
+func newSignerFor(t *testing.T, name string) *ppSigner {
 	t.Helper()
 	now := time.Date(2026, 10, 1, 12, 0, 0, 0, time.UTC)
 	caKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -53,7 +64,7 @@ func newSigner(t *testing.T) *ppSigner {
 	if err != nil {
 		t.Fatal(err)
 	}
-	leafTpl := &x509.Certificate{SerialNumber: big.NewInt(2), Subject: pkix.Name{CommonName: "api.sandbox.paypal.com"}, NotBefore: now.AddDate(0, -1, 0), NotAfter: now.AddDate(1, 0, 0),
+	leafTpl := &x509.Certificate{SerialNumber: big.NewInt(2), Subject: pkix.Name{CommonName: name}, DNSNames: []string{name}, NotBefore: now.AddDate(0, -1, 0), NotAfter: now.AddDate(1, 0, 0),
 		KeyUsage: x509.KeyUsageDigitalSignature}
 	leafDER, err := x509.CreateCertificate(rand.Reader, leafTpl, ca, &key.PublicKey, caKey)
 	if err != nil {
@@ -70,9 +81,7 @@ func newSigner(t *testing.T) *ppSigner {
 func (s *ppSigner) install(t *testing.T) *int {
 	t.Helper()
 	oldRoots, oldFetch := PayPalRoots, PayPalCertFetch
-	payPalCerts.Lock()
-	payPalCerts.m = map[string][]*x509.Certificate{}
-	payPalCerts.Unlock()
+	resetPayPalCerts()
 	downloads := 0
 	PayPalRoots = s.root
 	PayPalCertFetch = func(u string) ([]byte, error) {
@@ -169,9 +178,7 @@ func TestPayPalRefusesWhatIsNotGenuine(t *testing.T) {
 	// A certificate that does not chain to PayPal's root is refused even
 	// when the signature itself is perfect.
 	PayPalRoots = other.root
-	payPalCerts.Lock()
-	payPalCerts.m = map[string][]*x509.Certificate{}
-	payPalCerts.Unlock()
+	resetPayPalCerts()
 	if err := p.Verify(s.headers(ppBody), ppBody, testHookID, s.now); !errors.Is(err, ErrSignature) {
 		t.Errorf("untrusted root: %v", err)
 	}
@@ -268,5 +275,84 @@ func TestPayPalSubscriptionSaleCarriesTax(t *testing.T) {
 	p := ev.Payments[0]
 	if p.Gross != 2380 || p.Tax == nil || *p.Tax != 380 || p.SubscriptionID != "I-X" || p.Kind != KindSubscription {
 		t.Fatalf("%+v", p)
+	}
+}
+
+// A certificate that chains to a trusted root but was issued to another
+// name is not PayPal's.
+func TestPayPalRefusesACertificateForAnotherName(t *testing.T) {
+	s := newSignerFor(t, "shop.example.com")
+	s.install(t)
+	if err := (paypal{}).Verify(s.headers(ppBody), ppBody, testHookID, s.now); !errors.Is(err, ErrSignature) {
+		t.Fatalf("%v", err)
+	}
+}
+
+func TestPayPalCertificateDownloadFollowsNoRedirect(t *testing.T) {
+	var elsewhere atomic.Int32
+	other := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { elsewhere.Add(1) }))
+	defer other.Close()
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, other.URL+"/cert", http.StatusFound)
+	}))
+	defer srv.Close()
+	old := HTTPClient
+	HTTPClient = srv.Client()
+	t.Cleanup(func() { HTTPClient = old })
+	if _, err := PayPalCertFetch(srv.URL + "/v1/notifications/certs/x"); err == nil || elsewhere.Load() != 0 {
+		t.Fatalf("redirect followed: err %v, %d hits", err, elsewhere.Load())
+	}
+}
+
+func TestPayPalSlowOrFailedDownloadBlocksNobodyElse(t *testing.T) {
+	s := newSigner(t)
+	s.install(t)
+	const slowURL = "https://api.paypal.com/v1/notifications/certs/CERT-slow"
+	release, started := make(chan struct{}), make(chan struct{})
+	var slowCalls, badCalls atomic.Int32
+	PayPalCertFetch = func(u string) ([]byte, error) {
+		switch u {
+		case slowURL:
+			slowCalls.Add(1)
+			close(started)
+			<-release
+			return nil, errors.New("slow and broken")
+		case testCertURL:
+			return s.pem, nil
+		}
+		badCalls.Add(1)
+		return nil, errors.New("down")
+	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		h := s.headers(ppBody)
+		h.Set("PAYPAL-CERT-URL", slowURL)
+		_ = (paypal{}).Verify(h, ppBody, testHookID, s.now)
+	}()
+	<-started
+	done := make(chan error, 1)
+	go func() { done <- (paypal{}).Verify(s.headers(ppBody), ppBody, testHookID, s.now) }()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("other connection: %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("a slow download blocked another verification")
+	}
+	close(release)
+	wg.Wait()
+	// A failed address is remembered for a moment: no download per delivery.
+	h := s.headers(ppBody)
+	h.Set("PAYPAL-CERT-URL", "https://api.paypal.com/v1/notifications/certs/CERT-bad")
+	for i := 0; i < 3; i++ {
+		if err := (paypal{}).Verify(h, ppBody, testHookID, s.now); !errors.Is(err, ErrSignature) {
+			t.Fatal(err)
+		}
+	}
+	if badCalls.Load() != 1 || slowCalls.Load() != 1 {
+		t.Fatalf("downloads: bad %d slow %d", badCalls.Load(), slowCalls.Load())
 	}
 }

@@ -1,0 +1,14 @@
+{
+  "provider": "paypal",
+  "note": "A $10 chargeback on a $49 capture reaches trckable twice: as a dispute resolved in the buyer's favour and as PAYMENT.CAPTURE.REVERSED. The money comes off once, in any order.",
+  "events": [
+    {"id":"WH-c","create_time":"2026-09-01T09:00:05.000Z","event_type":"PAYMENT.CAPTURE.COMPLETED","resource":{"id":"CAP-7","status":"COMPLETED","amount":{"currency_code":"USD","value":"49.00"},"custom_id":"trckable_pay77_q","create_time":"2026-09-01T09:00:00Z"}},
+    {"id":"WH-d1","create_time":"2026-09-10T09:00:00.000Z","event_type":"CUSTOMER.DISPUTE.CREATED","resource":{"dispute_id":"PP-D-7","status":"OPEN","disputed_transactions":[{"seller_transaction_id":"CAP-7","gross_amount":{"currency_code":"USD","value":"10.00"}}]}},
+    {"id":"WH-d2","create_time":"2026-09-20T09:00:00.000Z","event_type":"CUSTOMER.DISPUTE.RESOLVED","resource":{"dispute_id":"PP-D-7","status":"RESOLVED","dispute_outcome":{"outcome_code":"RESOLVED_BUYER_FAVOUR"},"disputed_transactions":[{"seller_transaction_id":"CAP-7","gross_amount":{"currency_code":"USD","value":"10.00"}}]}},
+    {"id":"WH-rev","create_time":"2026-09-20T09:00:00.000Z","event_type":"PAYMENT.CAPTURE.REVERSED","resource":{"id":"REV-7","amount":{"currency_code":"USD","value":"10.00"},"links":[{"href":"https://api.paypal.com/v2/payments/captures/CAP-7","rel":"up"}]}}
+  ],
+  "currency": "USD",
+  "expect": [
+    {"id":"CAP-7","amount":4900,"refunded":1000,"visitor":"pay77","kind":"one_time"}
+  ]
+}

@@ -1,6 +1,7 @@
 package payments
 
 import (
+	"cmp"
 	"context"
 	"crypto"
 	"crypto/rsa"
@@ -76,7 +77,9 @@ var PayPalCertFetch = func(u string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, err := HTTPClient.Do(req)
+	// A redirect would leave PayPal's own hosts, which the URL check exists to prevent.
+	client := &http.Client{Transport: HTTPClient.Transport, Timeout: HTTPClient.Timeout, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -87,17 +90,55 @@ var PayPalCertFetch = func(u string) ([]byte, error) {
 	return io.ReadAll(io.LimitReader(res.Body, 64<<10))
 }
 
+// payPalCertName is the name PayPal's signing certificate is issued to.
+const payPalCertName = "messageverificationcerts.paypal.com"
+
+// payPalBadFor is how long a failed download is remembered, so a broken
+// certificate address cannot make every delivery wait on a download.
+const payPalBadFor = 30 * time.Second
+
+type certEntry struct {
+	done  chan struct{}
+	chain []*x509.Certificate
+	err   error
+	at    time.Time
+}
+
 var payPalCerts = struct {
 	sync.Mutex
-	m map[string][]*x509.Certificate
-}{m: map[string][]*x509.Certificate{}}
+	m map[string]*certEntry
+}{m: map[string]*certEntry{}}
 
+// payPalChain returns the certificate chain at u. The download happens
+// outside the lock, once per address at a time; other addresses never wait.
 func payPalChain(u string) ([]*x509.Certificate, error) {
 	payPalCerts.Lock()
-	defer payPalCerts.Unlock()
-	if c, ok := payPalCerts.m[u]; ok {
-		return c, nil
+	if e, ok := payPalCerts.m[u]; ok {
+		payPalCerts.Unlock()
+		<-e.done
+		if e.err == nil || time.Since(e.at) < payPalBadFor {
+			return e.chain, e.err
+		}
+		payPalCerts.Lock()
+		if payPalCerts.m[u] == e {
+			delete(payPalCerts.m, u)
+		}
+		payPalCerts.Unlock()
+		return payPalChain(u)
 	}
+	if len(payPalCerts.m) >= 16 { // a handful exist; never grow without bound
+		payPalCerts.m = map[string]*certEntry{}
+	}
+	e := &certEntry{done: make(chan struct{})}
+	payPalCerts.m[u] = e
+	payPalCerts.Unlock()
+	e.chain, e.err = downloadChain(u)
+	e.at = time.Now()
+	close(e.done)
+	return e.chain, e.err
+}
+
+func downloadChain(u string) ([]*x509.Certificate, error) {
 	raw, err := PayPalCertFetch(u)
 	if err != nil {
 		return nil, err
@@ -121,10 +162,6 @@ func payPalChain(u string) ([]*x509.Certificate, error) {
 	if len(chain) == 0 {
 		return nil, errors.New("no certificate in the download")
 	}
-	if len(payPalCerts.m) >= 16 { // a handful exist; never grow without bound
-		payPalCerts.m = map[string][]*x509.Certificate{}
-	}
-	payPalCerts.m[u] = chain
 	return chain, nil
 }
 
@@ -170,7 +207,7 @@ func (paypal) Verify(h http.Header, body []byte, secret string, now time.Time) e
 	for _, c := range chain[1:] {
 		inter.AddCert(c)
 	}
-	if _, err := chain[0].Verify(x509.VerifyOptions{Roots: PayPalRoots, Intermediates: inter, CurrentTime: now, KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageAny}}); err != nil {
+	if _, err := chain[0].Verify(x509.VerifyOptions{DNSName: payPalCertName, Roots: PayPalRoots, Intermediates: inter, CurrentTime: now, KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageAny}}); err != nil {
 		return ErrSignature
 	}
 	pub, ok := chain[0].PublicKey.(*rsa.PublicKey)
@@ -213,7 +250,7 @@ type payPalMoney struct {
 }
 
 func (m payPalMoney) minor() (int64, string, bool) {
-	cur, v := strings.ToUpper(m.CurrencyCode+m.Currency), m.Value+m.Total
+	cur, v := strings.ToUpper(cmp.Or(m.CurrencyCode, m.Currency)), cmp.Or(m.Value, m.Total)
 	if !isCurrency(cur) {
 		return 0, "", false
 	}
@@ -374,7 +411,7 @@ func (paypal) Parse(body []byte) (Event, error) {
 		if !ok || n <= 0 || pay == "" {
 			return ev, nil
 		}
-		ev.Disputes = append(ev.Disputes, Dispute{ID: "rev:" + pay, PaymentID: pay, Amount: n, Currency: cur, Status: DisputeLost, At: ev.At})
+		ev.Disputes = append(ev.Disputes, Dispute{ID: "dsp:" + pay, PaymentID: pay, Amount: n, Currency: cur, Status: DisputeLost, At: ev.At})
 
 	case "CUSTOMER.DISPUTE.CREATED", "CUSTOMER.DISPUTE.UPDATED", "CUSTOMER.DISPUTE.RESOLVED":
 		var d struct {
@@ -400,16 +437,14 @@ func (paypal) Parse(body []byte) (Event, error) {
 				st = DisputeWon
 			}
 		}
-		for i, t := range d.Transactions {
+		for _, t := range d.Transactions {
 			n, cur, ok := t.Gross.minor()
 			if !ok || n <= 0 || t.ID == "" || d.DisputeID == "" {
 				continue
 			}
-			id := d.DisputeID
-			if i > 0 {
-				id += ":" + t.ID
-			}
-			ev.Disputes = append(ev.Disputes, Dispute{ID: id, PaymentID: t.ID, Amount: n, Currency: cur, Status: st, At: ev.At})
+			// Keyed on the payment, like a reversal of the same capture: a
+			// chargeback PayPal reports twice takes the money off once.
+			ev.Disputes = append(ev.Disputes, Dispute{ID: "dsp:" + t.ID, PaymentID: t.ID, Amount: n, Currency: cur, Status: st, At: ev.At})
 		}
 	}
 	return ev, nil
