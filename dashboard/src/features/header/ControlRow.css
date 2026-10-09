@@ -77,6 +77,7 @@
 .cmp-root {
   position: relative;
   display: flex;
+  margin-left: 4px; /* 2px picker gap + 4px = the 6px between capsules */
 }
 .ctl-cap .btn.cmp-btn {
   width: 32px;
@@ -86,7 +87,7 @@
 }
 .ctl-cap .btn.cmp-btn.on {
   width: auto;
-  padding: 0 8px 0 9px;
+  padding: 0 8px 0 12px;
   color: var(--text);
   animation: ctl-grow-w 0.28s var(--ease) both;
 }
