@@ -67,6 +67,7 @@ var Remotes = map[string]Remote{
 	"polar":        &PolarAPI{},
 	"paddle":       &PaddleAPI{},
 	"dodo":         &DodoAPI{},
+	"gumroad":      &GumroadAPI{},
 }
 
 // HTTPClient is used for every provider call.
@@ -910,4 +911,75 @@ func (a *DodoAPI) Sync(ctx context.Context, key string, test bool, _ Setup, sinc
 		}
 	}
 	return out, nil
+}
+
+// ---------------------------------------------------------------- Gumroad
+
+// GumroadAPI talks to api.gumroad.com. Its "webhooks" are resource
+// subscriptions: one per kind of ping, each with the ping URL (and the secret
+// token in it) as its post_url. The access token needs the view_sales scope.
+// Gumroad has no payment listing worth replaying, so there is no
+// reconciliation: pings are retried by Gumroad and deduplicated here.
+type GumroadAPI struct{ BaseURL string }
+
+func (a *GumroadAPI) base() string {
+	if a.BaseURL != "" {
+		return a.BaseURL
+	}
+	return "https://api.gumroad.com/v2"
+}
+
+type gumroadSub struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+	Sub     struct {
+		ID string `json:"id"`
+	} `json:"resource_subscription"`
+}
+
+func (a *GumroadAPI) Setup(ctx context.Context, key string, _ bool, hookURL string) (Setup, error) {
+	secret := randomSecret()
+	post := hookURL + "?token=" + secret
+	var ids []string
+	for _, res := range GumroadEvents {
+		f := url.Values{"resource_name": {res}, "post_url": {post}}
+		var out gumroadSub
+		h := bearer(key)
+		h["Content-Type"] = "application/x-www-form-urlencoded"
+		// One attempt: a repeated PUT would subscribe twice.
+		err := callN(ctx, 1, "PUT", a.base()+"/resource_subscriptions", h, strings.NewReader(f.Encode()), &out)
+		if err == nil && (!out.Success || out.Sub.ID == "") {
+			msg := out.Message
+			if msg == "" {
+				msg = "Gumroad did not create the subscription"
+			}
+			err = errors.New(msg)
+		}
+		if err != nil {
+			// Half a setup is worse than none: remove what was created.
+			if terr := a.Teardown(ctx, key, false, Setup{RemoteID: strings.Join(ids, ",")}); terr != nil {
+				slog.Warn("payments: couldn't remove the subscriptions of a failed setup (delete them with the Gumroad API)", "provider", "gumroad", "err", terr)
+			}
+			return Setup{}, err
+		}
+		ids = append(ids, out.Sub.ID)
+	}
+	return Setup{RemoteID: strings.Join(ids, ","), Secret: secret, Label: "Gumroad"}, nil
+}
+
+func (a *GumroadAPI) Teardown(ctx context.Context, key string, _ bool, s Setup) error {
+	var first error
+	for _, id := range strings.Split(s.RemoteID, ",") {
+		if id == "" {
+			continue
+		}
+		if err := call(ctx, "DELETE", a.base()+"/resource_subscriptions/"+url.PathEscape(id), bearer(key), nil, nil); err != nil && first == nil {
+			first = err
+		}
+	}
+	return first
+}
+
+func (a *GumroadAPI) Sync(context.Context, string, bool, Setup, time.Time) ([]Raw, error) {
+	return nil, nil
 }

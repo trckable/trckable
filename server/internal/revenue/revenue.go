@@ -239,10 +239,11 @@ func (s *Service) Connect(ctx context.Context, r ConnectRequest) (Connection, er
 			drop()
 			return Connection{}, fmt.Errorf("couldn't create the webhook: %s created it without a signing secret; try again, or paste the secret yourself", providerTitle(r.Provider))
 		}
-	case (r.Provider == "lemonsqueezy" || r.Provider == "custom") && r.Secret == "":
+	case (r.Provider == "lemonsqueezy" || r.Provider == "custom" || r.Provider == "gumroad") && r.Secret == "":
 		// Both ends have to agree on a secret and neither provider hands one
 		// out: trckable makes it, and the owner pastes it into Lemon Squeezy,
-		// or into the code that will send the webhook.
+		// into the ping URL in Gumroad, or into the code that will send the
+		// webhook.
 		r.Secret = auth.Token("whsec_", 20)
 		fallthrough
 	default:
@@ -442,7 +443,14 @@ func (s *Service) Webhook(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "read error", http.StatusBadRequest)
 		return
 	}
-	if err := p.Verify(r.Header, body, c.secret, s.Now()); err != nil {
+	// Gumroad pings are unsigned: the URL's token is handed to Verify in a
+	// header of ours, after dropping any the sender made up.
+	hdr := r.Header.Clone()
+	hdr.Del(payments.PingTokenHeader)
+	if t := r.URL.Query().Get("token"); t != "" {
+		hdr.Set(payments.PingTokenHeader, t)
+	}
+	if err := p.Verify(hdr, body, c.secret, s.Now()); err != nil {
 		// Forged webhooks cost a signature check each: after a burst from one
 		// connection, stop answering for a while.
 		if n := s.bad.hit(id, s.Now()); n > badSigBurst {
@@ -975,7 +983,7 @@ func isLocal(host string) bool {
 }
 
 func providerTitle(p string) string {
-	return map[string]string{"stripe": "Stripe", "lemonsqueezy": "Lemon Squeezy", "polar": "Polar", "paddle": "Paddle", "dodo": "Dodo Payments"}[p]
+	return map[string]string{"stripe": "Stripe", "lemonsqueezy": "Lemon Squeezy", "polar": "Polar", "paddle": "Paddle", "dodo": "Dodo Payments", "gumroad": "Gumroad", "paypal": "PayPal"}[p]
 }
 
 // StartOver is the way out when the instance key is lost: the provider keys

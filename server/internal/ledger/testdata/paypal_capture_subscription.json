@@ -1,0 +1,20 @@
+{
+  "provider": "paypal",
+  "note": "PayPal webhooks (shaped after PayPal's documented PAYMENT.CAPTURE, PAYMENT.SALE, BILLING.SUBSCRIPTION and CUSTOMER.DISPUTE events). A Checkout capture attributed through custom_id, partly refunded (refund resource links up to the capture); a subscription whose activation carries the visitor, its first payment lost in a dispute resolved in the buyer's favour and its renewal refunded in full. Amounts are decimal strings.",
+  "events": [
+    {"id":"WH-cap1","event_version":"1.0","create_time":"2026-09-01T09:00:05.000Z","resource_type":"capture","event_type":"PAYMENT.CAPTURE.COMPLETED","summary":"Payment completed for $ 49.00 USD","resource":{"id":"CAP-1","status":"COMPLETED","amount":{"currency_code":"USD","value":"49.00"},"custom_id":"trckable_pay42_q","invoice_id":"INV-1","final_capture":true,"create_time":"2026-09-01T09:00:00Z","supplementary_data":{"related_ids":{"order_id":"ORD-1"}},"links":[{"href":"https://api.paypal.com/v2/payments/captures/CAP-1","rel":"self","method":"GET"}]}},
+    {"id":"WH-ref1","event_version":"1.0","create_time":"2026-09-04T10:00:05.000Z","resource_type":"refund","event_type":"PAYMENT.CAPTURE.REFUNDED","resource":{"id":"REF-1","status":"COMPLETED","amount":{"currency_code":"USD","value":"10.00"},"create_time":"2026-09-04T10:00:00Z","links":[{"href":"https://api.paypal.com/v2/payments/refunds/REF-1","rel":"self","method":"GET"},{"href":"https://api.paypal.com/v2/payments/captures/CAP-1","rel":"up","method":"GET"}]}},
+    {"id":"WH-sub1","event_version":"1.0","create_time":"2026-09-02T08:59:00.000Z","resource_type":"subscription","event_type":"BILLING.SUBSCRIPTION.ACTIVATED","resource":{"id":"I-SUB1","status":"ACTIVE","custom_id":"trckable_pay42_q","subscriber":{"payer_id":"PAYER1","email_address":"x@y.co"}}},
+    {"id":"WH-sale1","event_version":"1.0","create_time":"2026-09-02T09:00:05.000Z","resource_type":"sale","event_type":"PAYMENT.SALE.COMPLETED","resource":{"id":"SALE-1","state":"completed","amount":{"total":"19.00","currency":"USD","details":{"subtotal":"19.00"}},"payment_mode":"INSTANT_TRANSFER","billing_agreement_id":"I-SUB1","create_time":"2026-09-02T09:00:00Z"}},
+    {"id":"WH-sale2","event_version":"1.0","create_time":"2026-10-02T09:00:05.000Z","resource_type":"sale","event_type":"PAYMENT.SALE.COMPLETED","resource":{"id":"SALE-2","state":"completed","amount":{"total":"19.00","currency":"USD","details":{"subtotal":"19.00"}},"billing_agreement_id":"I-SUB1","create_time":"2026-10-02T09:00:00Z"}},
+    {"id":"WH-sref2","event_version":"1.0","create_time":"2026-10-05T09:00:05.000Z","resource_type":"refund","event_type":"PAYMENT.SALE.REFUNDED","resource":{"id":"SREF-2","state":"completed","amount":{"total":"19.00","currency":"USD"},"sale_id":"SALE-2","parent_payment":"PAY-2","create_time":"2026-10-05T09:00:00Z"}},
+    {"id":"WH-dsp1","event_version":"1.0","create_time":"2026-09-10T09:00:00.000Z","resource_type":"dispute","event_type":"CUSTOMER.DISPUTE.CREATED","resource":{"dispute_id":"PP-D-1","status":"WAITING_FOR_SELLER_RESPONSE","disputed_transactions":[{"seller_transaction_id":"SALE-1","gross_amount":{"currency_code":"USD","value":"19.00"}}]}},
+    {"id":"WH-dsp2","event_version":"1.0","create_time":"2026-09-20T09:00:00.000Z","resource_type":"dispute","event_type":"CUSTOMER.DISPUTE.RESOLVED","resource":{"dispute_id":"PP-D-1","status":"RESOLVED","dispute_outcome":{"outcome_code":"RESOLVED_BUYER_FAVOUR"},"disputed_transactions":[{"seller_transaction_id":"SALE-1","gross_amount":{"currency_code":"USD","value":"19.00"}}]}}
+  ],
+  "currency": "USD",
+  "expect": [
+    {"id":"CAP-1","amount":4900,"refunded":1000,"visitor":"pay42","kind":"one_time"},
+    {"id":"SALE-1","amount":1900,"refunded":1900,"visitor":"pay42","kind":"subscription"},
+    {"id":"SALE-2","amount":1900,"refunded":1900,"visitor":"pay42","kind":"renewal"}
+  ]
+}

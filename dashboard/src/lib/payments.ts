@@ -24,7 +24,7 @@ export function statusOf(c: PayConnection) {
 }
 
 /** Providers whose test environment is called a sandbox. */
-const SANDBOX_NAMED = new Set(['polar', 'paddle'])
+const SANDBOX_NAMED = new Set(['polar', 'paddle', 'paypal'])
 
 /** What a provider calls its test environment. */
 export function testModeName(provider: string) {
