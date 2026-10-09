@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.7.6 (9 Oct 2026)
+
 - The create list (Goal, Funnel, Note) closes when you press ⋯, so the ⋯ menu never opens on top of it.
 - The comparison pill ("vs the 7 days before") no longer touches the period button: there is a gap between them and the words have room at the left.
 
