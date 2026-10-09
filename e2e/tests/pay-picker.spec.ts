@@ -40,12 +40,18 @@ test('the picker shows the most used providers, finds the rest, and opens the pr
   for (const n of ['Stripe', 'Paddle', 'Lemon Squeezy', 'Polar']) await expect(pay.getByRole('button', { name: new RegExp(`^${n}`) })).toBeVisible()
   await expect(pay.getByRole('button', { name: /^Dodo/ })).toHaveCount(0)
   await expect(pay.getByRole('button', { name: 'Not listed? Use the custom connection.' })).toBeVisible()
+  await expect(pay.getByText('Search 30+ checkouts, or connect anything by webhook')).toBeVisible()
   await shoot(page, 'tiles')
 
   await search.fill('pay')
   const results = pay.locator('.pay-pick-list')
-  await expect(results.getByRole('button', { name: 'Paddle' })).toBeVisible()
-  await expect(results.getByRole('button', { name: /PayPal/ })).toHaveCount(0)
+  await expect(results.getByRole('button', { name: /^PayPal/ })).toBeVisible()
+  await expect(results.getByRole('button', { name: /^Dodo Payments/ })).toBeVisible()
+  await expect(results.getByRole('button', { name: /^Paddle/ })).toHaveCount(0)
+  await expect(results.getByText('via webhook').first()).toBeVisible()
+  await search.fill('s')
+  await expect(results.getByRole('button', { name: /^Stripe/ })).toBeVisible()
+  await expect(results.getByRole('button', { name: /^Polar/ })).toHaveCount(0)
   await shoot(page, 'results')
 
   await search.fill('apple pay')
@@ -59,6 +65,14 @@ test('the picker shows the most used providers, finds the rest, and opens the pr
   await search.fill('padd')
   await search.press('Enter')
   await expect(page.getByRole('dialog', { name: 'Connect Paddle' })).toBeVisible()
+})
+
+test('a provider found via webhook opens the custom connection', async ({ page, context }) => {
+  test.skip(test.info().project.name !== 'chromium', 'one browser is enough: plain markup')
+  const search = await open(page, context)
+  await search.fill('shop')
+  await page.locator('#payments').getByRole('button', { name: /^Shopify/ }).click()
+  await expect(page.getByRole('dialog', { name: 'Connect anything' })).toBeVisible()
 })
 
 test('the custom line opens the custom connection', async ({ page, context }) => {

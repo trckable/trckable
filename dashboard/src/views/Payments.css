@@ -332,6 +332,9 @@
   text-align: left;
   cursor: pointer;
 }
+.pay-pick-row .tag {
+  margin-left: auto;
+}
 .pay-pick-row[data-on='1'],
 .pay-pick-row:focus-visible {
   border-color: var(--accent);
