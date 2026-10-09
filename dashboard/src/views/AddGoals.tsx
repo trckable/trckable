@@ -41,6 +41,7 @@ export function AddGoals({ site, pages, onClose, onChanged }: { site: Site; page
         <>
           <CodeBlock code={code[route]} />
           <span className="faint goal-hint">{copy.hints[route]}</span>
+          <span className="faint goal-hint">{copy.appears[route]}</span>
           <DialogActions>
             <button type="button" className="btn primary big" onClick={onClose}>
               {copy.done}

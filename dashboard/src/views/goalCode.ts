@@ -13,7 +13,8 @@ import { track } from 'trckable'
 track('signup', { plan: 'pro' })`,
   api: `curl -X POST ${host}/api/e \\
   -H 'content-type: application/json' \\
-  -d '{"s":"${site.id}","u":"https://${site.domain}/welcome",
-       "e":"goal","n":"signup","p":{"plan":"pro"},
-       "id":"<visitor id from the cookie>","pv":"<pageview id>"}'`,
+  -H 'user-agent: <the visitor's user agent>' \\
+  -d '{"s":"${site.id}","k":"g","u":"https://${site.domain}/welcome",
+       "n":"signup","p":{"plan":"pro"},
+       "v":"<visitor id from the trckable_vid cookie>"}'`,
 })
