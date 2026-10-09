@@ -20,5 +20,9 @@ describe('the code Track a goal shows', () => {
     expect(api).toContain('https://stats.example.com/api/e')
     expect(api).toContain('"s":"tkb_a1b2c3d4"')
     expect(api).toContain('https://example.com/welcome')
+    // The ingest address reads k (g for a goal), n, p and v; a browser-like user agent keeps it from being dropped as a bot.
+    expect(api).toContain('"k":"g"')
+    expect(api).toContain('"v":')
+    expect(api).toContain("-H 'user-agent:")
   })
 })
