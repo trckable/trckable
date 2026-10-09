@@ -1,0 +1,53 @@
+# Checks every 5 minutes that the public sites answer. When one fails twice in
+# a row, it opens an issue (GitHub emails the maintainers); when all answer
+# again, it closes it.
+name: uptime
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check sites
+        id: check
+        run: |
+          down=""
+          for url in https://trckable.com https://docs.trckable.com https://cloud.trckable.com; do
+            ok=""
+            for try in 1 2; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$url" || echo 000)
+              if [ "$code" -ge 200 ] && [ "$code" -lt 400 ]; then ok=1; break; fi
+              sleep 20
+            done
+            [ -n "$ok" ] || down="$down $url ($code)"
+          done
+          echo "down=$down" >> "$GITHUB_OUTPUT"
+      - name: Open or close the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          DOWN: ${{ steps.check.outputs.down }}
+        run: |
+          open=$(gh issue list --label uptime --state open --json number --jq '.[0].number')
+          if [ -n "$DOWN" ]; then
+            if [ -z "$open" ]; then
+              gh label create uptime --color d73a4a --force >/dev/null
+              gh issue create --label uptime --title "Down:$DOWN" --body "Not answering since $(date -u '+%F %H:%M') UTC:$DOWN"
+            fi
+            exit 1
+          elif [ -n "$open" ]; then
+            gh issue close "$open" --comment "All sites answer again ($(date -u '+%F %H:%M') UTC)."
+          fi
