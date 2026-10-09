@@ -18,6 +18,11 @@ export const copy = defineCopy('goals', {
     js: 'Call it when the action succeeded, not on the click.',
     api: 'Send the visitor id from the trckable_vid cookie.',
   },
+  appears: {
+    html: 'It shows up in Goals after the first click. Nothing to save.',
+    js: 'It shows up in Goals after the first event. Nothing to save.',
+    api: 'It shows up in Goals after the first event. Nothing to save.',
+  },
   name: 'Goal name',
   namePlaceholder: 'Saw pricing',
   page: 'Page',

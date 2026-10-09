@@ -32,7 +32,7 @@ export const cardCopy = defineCopy('cards', {
   funnelEngaged: 'Read past the first page',
   donutLabel: 'visitors',
   sharesFoot: 'Shares are of all visitors; someone can appear in more than one row.',
-  noGoals: 'Count a signup, a click or a page as a goal.',
+  noGoals: 'Goals appear here after the first visit, click or event.',
   perDayChannels: 'Per-day data covers channels only',
   perDayEntry: 'Per-day data covers entry pages only',
   loading: 'Loading',

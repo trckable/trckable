@@ -122,6 +122,12 @@ createServer(async (req, res) => {
   </main></body></html>`)
       return
     }
+    // A page with the tracker and whatever body the test asks for in ?b= (goals-funnels.spec.ts):
+    // /g/<run>/<name>. A page the browser really loads, so it is on the same footing as a customer's.
+    if (url.pathname.startsWith('/g/')) {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(`<!doctype html><html><head><meta charset="utf-8"><title>Test</title>${scripts.r}</head><body>${url.searchParams.get('b') ?? ''}</body></html>`)
+      return
+    }
     const m = url.pathname.match(/^\/([rp])\/[\w-]+\/(.*)$/)
     if (m) {
       const [, mode, rest] = m
