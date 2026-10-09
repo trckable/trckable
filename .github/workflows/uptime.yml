@@ -23,16 +23,19 @@ jobs:
     steps:
       - name: Check sites
         id: check
+        env:
+          EXTRA: ${{ vars.UPTIME_EXTRA_URLS }} # more URLs, space-separated, kept out of the repo
         run: |
           down=""
-          for url in https://trckable.com https://docs.trckable.com https://cloud.trckable.com; do
+          for url in https://trckable.com https://docs.trckable.com https://cloud.trckable.com $EXTRA; do
             ok=""
+            name="$url"; case " $EXTRA " in *" $url "*) name="a private URL" ;; esac # issues are public
             for try in 1 2; do
               code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$url" || echo 000)
               if [ "$code" -ge 200 ] && [ "$code" -lt 400 ]; then ok=1; break; fi
               sleep 20
             done
-            [ -n "$ok" ] || down="$down $url ($code)"
+            [ -n "$ok" ] || down="$down $name ($code)"
           done
           echo "down=$down" >> "$GITHUB_OUTPUT"
       - name: Open or close the issue
