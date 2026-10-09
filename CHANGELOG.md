@@ -11,6 +11,7 @@ section into the release.
 
 - Goals: the "Your server" example in Track a goal now sends a goal the server keeps (it sent the wrong fields and no user agent), and the dialog and the empty Goals card say that a goal shows up after its first click or event.
 - Settings → Payments: connecting a provider starts with a search box and the most used providers (Stripe, Paddle, Lemon Squeezy, Polar), shows matches as you type (also by "Apple Pay" or "card"), and ends with a line to the custom connection, so the list stays short as providers are added.
+- All sites: Online now and the rows come from one live read, refreshed every 15 s.
 
 ## 0.7.3 (8 Oct 2026)
 
