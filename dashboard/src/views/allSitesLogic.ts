@@ -124,6 +124,7 @@ export function summarize(list: SiteRow[]) {
     total,
     previous,
     pageviews: list.reduce((a, r) => a + r.pageviews, 0),
+    online: list.reduce((a, r) => a + onlineOf(r), 0),
     previousPageviews: list.reduce((a, r) => a + (r.previous_pageviews ?? 0), 0),
     previousBounce: previous ? list.reduce((a, r) => a + (r.previous_bounce_rate ?? 0) * r.previous_visitors, 0) / previous : 0,
     bounce,

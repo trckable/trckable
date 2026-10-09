@@ -10,6 +10,7 @@ const POLL_MS = 15_000
 const store = miniStore<number | null>(null)
 const days = miniStore<number[] | null>(null)
 let users = 0
+let held = 0
 let timer: ReturnType<typeof setInterval> | undefined
 let ctl: AbortController | undefined
 
@@ -27,7 +28,7 @@ function sumMinutes(rows: SiteRow[]): number[] | null {
 }
 
 function read() {
-  if (document.visibilityState !== 'visible') return
+  if (held > 0 || document.visibilityState !== 'visible') return
   ctl?.abort()
   const c = new AbortController()
   ctl = c
@@ -35,6 +36,19 @@ function read() {
     .overview(1, c.signal)
     .then((r) => !c.signal.aborted && feedOnline(r.sites))
     .catch(() => {}) // the number stays as it was until the next read
+}
+
+/**
+ * A page that reads the overview itself and feeds every response in (All sites)
+ * owns the number: the poll here stands down while it is held, so the card and
+ * the rows can only come from the same read. Returns the release.
+ */
+export function holdOnline(): () => void {
+  held++
+  ctl?.abort()
+  return () => {
+    held--
+  }
 }
 
 /** The total online now, null until it is read. Keeps it fresh while used. */
