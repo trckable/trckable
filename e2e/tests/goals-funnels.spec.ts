@@ -35,6 +35,9 @@ async function dashboard(page: Page, query = 'view=data') {
   await expect(page.locator('[data-card=what]')).toBeVisible({ timeout: 15_000 })
 }
 
+/** The Data view narrowed to one page of the test site. The Goals card lists five rows, and the shared site holds the goals of every run and browser, so a goal is looked for among the visits to its own page. */
+const onPage = (path: string) => `view=data&f=${encodeURIComponent(`page:${path}`)}`
+
 const goalRow = (page: Page, name: string) => page.locator('[data-card=what] .goal', { has: page.locator('b', { hasText: new RegExp(`^${name}$`) }) })
 
 /** Reloads until the Goals card lists the goal with this many visitors: the writer flushes about once a second. */
@@ -72,12 +75,13 @@ test('1. a page-visit goal made in Track a goal counts the visit', async ({ page
 test('2. a button with data-trckable-goal counts on its first click, with no goal made in the dialog', async ({ page }) => {
   const run = runId(page, 'button')
   const goal = `Start free ${run}`
-  await open(page, `/g/${run}/home`, `<h1>Home</h1><button id="go" data-trckable-goal="${goal}">Start free</button>`)
+  const path = `/g/${run}/home`
+  await open(page, path, `<h1>Home</h1><button id="go" data-trckable-goal="${goal}">Start free</button>`)
   await page.waitForTimeout(500)
   await page.locator('#go').click()
   await page.waitForTimeout(1500)
 
-  await dashboard(page)
+  await dashboard(page, onPage(path))
   await expectGoal(page, key(goal), 1)
 })
 
@@ -90,7 +94,7 @@ test('3. a button goal with a property shows the property in the visitor journey
   await page.locator('#go').click()
   await page.waitForTimeout(1500)
 
-  await dashboard(page)
+  await dashboard(page, onPage(path))
   await expectGoal(page, key(goal), 1)
   // The properties are read on the visitor's journey: open it from Live.
   await page.goto(`${API}/example.com?view=live`)
@@ -110,12 +114,13 @@ test('3. a button goal with a property shows the property in the visitor journey
 test('4. a goal called from code, trckable("goal", name), counts', async ({ page }) => {
   const run = runId(page, 'code')
   const goal = `Signup ${run}`
-  await open(page, `/g/${run}/join`, '<h1>Join</h1><button id="go">Join</button>')
+  const path = `/g/${run}/join`
+  await open(page, path, '<h1>Join</h1><button id="go">Join</button>')
   await page.waitForTimeout(500)
   await page.evaluate((g) => (window as unknown as { trckable: (c: string, n: string, p: object) => void }).trckable('goal', g, { plan: 'pro' }), goal)
   await page.waitForTimeout(1500)
 
-  await dashboard(page)
+  await dashboard(page, onPage(path))
   await expectGoal(page, key(goal), 1)
 })
 
@@ -154,8 +159,9 @@ test('6. a funnel of a page, a button goal and a code goal shows each step', asy
   await page.evaluate((g) => (window as unknown as { trckable: (c: string, n: string) => void }).trckable('goal', g), done)
   await page.waitForTimeout(1500)
 
-  await dashboard(page)
+  await dashboard(page, onPage(path))
   await expectGoal(page, key(done), 1)
+  await dashboard(page)
   await page.keyboard.press('a')
   await page.getByRole('menu', { name: 'Create something' }).getByRole('menuitem', { name: /Funnel/ }).click()
   const dialog = page.getByRole('dialog', { name: 'New funnel' })

@@ -123,7 +123,8 @@ test('the period sheet and the ⋯ menu', async ({ page }) => {
   await page.locator('.pr-date').click()
   await expect(page.locator('.sheet-body')).toBeVisible()
   await clean(page)
-  await page.getByRole('button', { name: 'Done' }).click()
+  // The sheet's own Done: the "One thing today" card under it has one too once the site has a goal.
+  await page.locator('.sheet-body').getByRole('button', { name: 'Done' }).click()
   await page.getByRole('button', { name: 'More', exact: true }).click()
   const menu = page.locator('.pop.menu.more-menu')
   await expect(menu).toBeVisible()
