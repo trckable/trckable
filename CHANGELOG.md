@@ -12,6 +12,8 @@ section into the release.
 - Serve the script and visits from your own domain: the server also answers on `/s/x.js`, `/s/e` and `/s/h`, and the npm package adds `withTrckable` (Next.js) and `nodeHandler` (Express, node:http) for a first-party proxy. Existing paths are unchanged.
 - A busy moment opened from a notification is one solid card, 560 px at most, and one that has ended still shows its chart (half an hour either side, from the stored counts) with the time it ended.
 - See it in Data on a busy moment opens Data on that moment: its hours, by the hour, against the same days a week earlier, with a band on the chart, a line saying what it was, an "Only <source>" chip and Back to today. All in the address, so the link can be shared.
+- A site with no visits explains itself: the switcher says "down · 12m" or "quiet · 6h", and the dashboard shows a card with the time of the last visit, a chart of the last day, and checks run from outside (page answers, script tag found, script loads), each with what to do. When visits return, a one-line note says how long the gap was.
+- The server now remembers when a site first stopped answering, and the card says "down since 14:20". "Mute alerts for 24 h" on that card snoozes all of the site's alerts (stopped, spike, customer, surge, milestone) for a day; Undo lifts it.
 
 ## 0.7.6 (9 Oct 2026)
 

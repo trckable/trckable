@@ -296,6 +296,8 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("PUT /api/v1/sites/{site}/alerts", a.authed(a.saveAlert))
 	handle("POST /api/v1/sites/{site}/alerts/test", a.authed(a.testAlert))
 	handle("POST /api/v1/sites/{site}/alerts/weekly/send", a.authed(a.sendWeeklyNow))
+	handle("POST /api/v1/sites/{site}/alerts/mute", a.authed(a.muteAlerts))
+	handle("DELETE /api/v1/sites/{site}/alerts/mute", a.authed(a.unmuteAlerts))
 	handle("DELETE /api/v1/sites/{site}/alerts/{id}", a.authed(a.deleteAlert))
 	handle("GET /api/v1/sites/{site}/segments", a.authed(a.segments))
 	handle("POST /api/v1/sites/{site}/segments", a.authed(a.saveSegment))
@@ -945,7 +947,7 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 			week, cookieless = c.WeekStart, c.ConsentFree
 		}
 		out = append(out, sqlite.SiteInfo{ID: s.ID, Domain: s.Domain, Name: s.Name, Timezone: s.Timezone, Currency: s.Currency, ProxyKey: a.proxyKeyFor(r, s.ProxyKey), LastEventAt: s.LastEventAt, CreatedAt: s.CreatedAt,
-			Color: b.Color, IconURL: iconURL(s.ID, b), WeekStart: week, Cookieless: cookieless})
+			Color: b.Color, IconURL: iconURL(s.ID, b), WeekStart: week, Cookieless: cookieless, AlertsMutedUntil: a.mutedUntil(r, s.ID)})
 		if c, ok := checks[s.ID]; ok {
 			out[len(out)-1].Check = &c
 		}

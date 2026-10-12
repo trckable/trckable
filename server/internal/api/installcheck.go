@@ -33,6 +33,13 @@ type installCheck struct {
 	// Scripts is how many of the page's scripts were read.
 	Scripts int    `json:"scripts"`
 	Error   string `json:"error,omitempty"`
+	// Ms is how long the homepage took to answer.
+	Ms int `json:"ms,omitempty"`
+	// Script is the tag's script, when the page has one for this site;
+	// ScriptStatus is what it answered (0: it could not be loaded). Only the
+	// on-demand check loads it.
+	Script       string `json:"script,omitempty"`
+	ScriptStatus int    `json:"script_status,omitempty"`
 }
 
 // checkClient is the guarded client checks use; tests swap it so they never
@@ -40,10 +47,12 @@ type installCheck struct {
 var checkClient = func() *http.Client { return alerts.SafeClient(8 * time.Second) }
 
 const (
-	maxScripts    = 20
-	maxPageBytes  = 2 << 20
-	checkDeadline = 15 * time.Second
+	maxScripts   = 20
+	maxPageBytes = 2 << 20
 )
+
+// checkDeadline bounds one whole check; tests shorten it.
+var checkDeadline = 15 * time.Second
 
 // anySiteID is a site id: "tkb_" and letters or digits (NewSiteID writes 12).
 // An API key (tkb_live_…) does not match: "live" runs on into an underscore.
@@ -65,6 +74,24 @@ func snippetIn(page, siteID string) string {
 }
 
 var scriptSrc = regexp.MustCompile(`(?is)<script\b[^>]*?\bsrc\s*=\s*["']([^"']+)["']`)
+
+var scriptTag = regexp.MustCompile(`(?is)<script\b[^>]*>`)
+
+// snippetScript is the src of the script tag that carries this site's id, as
+// an absolute URL; empty when the id sits in an inline script.
+func snippetScript(page, siteID string, base *url.URL) string {
+	for _, tag := range scriptTag.FindAllString(page, -1) {
+		if !strings.Contains(tag, siteID) {
+			continue
+		}
+		if m := scriptSrc.FindStringSubmatch(tag); m != nil {
+			if u, err := base.Parse(strings.TrimSpace(m[1])); err == nil && (u.Scheme == "https" || u.Scheme == "http") {
+				return u.String()
+			}
+		}
+	}
+	return ""
+}
 
 // scriptURLs lists the scripts a page loads, as absolute http(s) URLs: the
 // site's own first (that is where a bundle lives), at most maxScripts.
@@ -119,7 +146,27 @@ func (a *API) checkInstall(w http.ResponseWriter, r *http.Request) {
 	}
 	out := verifySite(r.Context(), si.ID, si.Domain)
 	a.remember(r.Context(), si.ID, out)
+	out.ScriptStatus = scriptStatus(r.Context(), out)
 	writeJSON(w, http.StatusOK, out)
+}
+
+// scriptStatus loads the tag's script and says what it answered; 0 when there
+// is none to load or it could not be reached. A script the check already read
+// to find the id answered 200.
+func scriptStatus(parent context.Context, c installCheck) int {
+	if c.Script == "" {
+		return 0
+	}
+	if c.Found == "site" && c.Via != "page" {
+		return http.StatusOK
+	}
+	ctx, cancel := context.WithTimeout(parent, 8*time.Second)
+	defer cancel()
+	_, _, st, err := fetchText(ctx, checkClient(), c.Script)
+	if err != nil {
+		return 0
+	}
+	return st
 }
 
 // remember keeps a check's outcome, so the site picker and the dashboard can
@@ -202,7 +249,9 @@ func verifySite(parent context.Context, siteID, domain string) installCheck {
 	home := "https://" + domain + "/"
 	out := installCheck{URL: home}
 
+	began := time.Now()
 	page, final, status, err := fetchText(ctx, client, home)
+	out.Ms = int(time.Since(began).Milliseconds())
 	if err != nil {
 		out.Error = domain + " could not be reached over https"
 		return out
@@ -215,6 +264,7 @@ func verifySite(parent context.Context, siteID, domain string) installCheck {
 	out.Found = snippetIn(page, siteID)
 	if out.Found == "site" {
 		out.Via = "page"
+		out.Script = snippetScript(page, siteID, final)
 		return out
 	}
 
@@ -248,7 +298,7 @@ func verifySite(parent context.Context, siteID, domain string) installCheck {
 			switch snippetIn(body, siteID) {
 			case "site":
 				if out.Found != "site" {
-					out.Found, out.Via = "site", u
+					out.Found, out.Via, out.Script = "site", u, u
 					cancel() // found: the rest need not be read
 				}
 			case "other":

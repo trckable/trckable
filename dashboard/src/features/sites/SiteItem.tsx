@@ -3,7 +3,7 @@
 // Alt + ↑/↓, Shift + Enter to open the site itself, and a ⋯ menu with every move, so a phone and a keyboard can do
 // what a mouse does.
 import { Check, GripVertical } from 'lucide-react'
-import { stoppedWhy, type Site } from '../../lib/api'
+import type { Site } from '../../lib/api'
 import { Menu } from '../../components/Menu'
 import { SiteMark } from '../../components/SiteMark'
 import { confirmWith } from '../../components/Confirm'
@@ -12,6 +12,7 @@ import { copy } from './menuCopy'
 import { copy as first } from './copy'
 import { addGroup, moveTo, pin, placeKey, step, unpin, type Place } from './layout'
 import { dotState, StateDot } from './StateDot'
+import { silence } from '../sitestatus/time'
 import type { Arrange } from './SiteMenu'
 import { MARK, type Density } from './density'
 import { prefetchSite } from '../../lib/dashQuery'
@@ -19,7 +20,7 @@ import { OpenSite, openSiteTab } from './OpenSite'
 import './SiteItem.css'
 
 /**
- * What stands where the number would: "setup" or "stopped" when the dot alone
+ * What stands where the number would: "setup", "down · 12m" or "quiet · 6h" when the dot alone
  * can't say it, else today's visitors (nothing until they are loaded).
  */
 function Tail({ s, today }: { s: Site; today?: number }) {
@@ -27,7 +28,10 @@ function Tail({ s, today }: { s: Site; today?: number }) {
     case 'new':
       return <span className="tail faint" title={first.dot.new}>{copy.setup}</span>
     case 'stopped':
-      return <span className="tail stopped-note" title={stoppedWhy(s)}>{copy.stopped}</span>
+    case 'quiet': {
+      const down = dotState(s) === 'stopped'
+      return <span className={down ? 'tail stopped-note' : 'tail quiet-note'} title={first.dot[dotState(s)]}>{down ? copy.downFor(silence(s)) : copy.quietFor(silence(s))}</span>
+    }
     default:
       return today === undefined ? null : <span className={today ? 'tail' : 'tail faint'} title={copy.today(fmtInt(today))}>{fmtCompact(today)}</span>
   }

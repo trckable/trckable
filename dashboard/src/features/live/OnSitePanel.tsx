@@ -2,6 +2,7 @@
 // slide in at the top with a soft glow; someone idle for five minutes fades
 // and leaves. The count in the sticky header rolls to its new value.
 import { Users } from 'lucide-react'
+import { when } from '../sitestatus/time'
 import { copy } from './copy'
 import { FeedRow } from './FeedRow'
 import { moreOf, type Row } from './model'
@@ -21,7 +22,7 @@ function Count({ n }: { n: number }) {
   )
 }
 
-export function OnSitePanel(p: { rows: Row[]; online: number | null; clock: number; skew?: number; onVisitor?: (visitor: string) => void; cookieless?: boolean }) {
+export function OnSitePanel(p: { rows: Row[]; online: number | null; clock: number; skew?: number; onVisitor?: (visitor: string) => void; cookieless?: boolean; quiet?: number }) {
   const rows = useLeaving(p.rows)
   const more = moreOf(p.online, rows.length)
   const clock = useTicking(p.clock, p.skew ?? 0)
@@ -35,7 +36,7 @@ export function OnSitePanel(p: { rows: Row[]; online: number | null; clock: numb
         {p.online !== null && <Count n={p.online} />}
       </div>
       <ol className="live-feed">
-        {rows.length === 0 && <li className="empty">{copy.empty}</li>}
+        {rows.length === 0 && <li className="empty">{p.quiet ? copy.waitingSince(when(p.quiet)) : copy.empty}</li>}
         {rows.map((v) => (
           <FeedRow key={v.key} v={v} clock={clock} leaving={v.leaving} onVisitor={p.onVisitor} />
         ))}

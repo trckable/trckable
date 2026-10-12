@@ -44,10 +44,13 @@ func (s *Store) Alerts(ctx context.Context, site string) ([]Alert, error) {
 	return scanAlerts(rows)
 }
 
-// LiveAlerts lists every enabled alert across sites (for the checker).
+// LiveAlerts lists every enabled alert across sites (for the checker), except
+// those of a site whose alerts are snoozed right now: every sender reads this,
+// so a snooze silences them all.
 func (s *Store) LiveAlerts(ctx context.Context) ([]Alert, error) {
 	rows, err := s.DB.QueryContext(ctx,
-		`SELECT id, site_id, kind, enabled, target, threshold, last_fired, created_at FROM alerts WHERE enabled = 1`)
+		`SELECT id, site_id, kind, enabled, target, threshold, last_fired, created_at FROM alerts
+		WHERE enabled = 1 AND site_id NOT IN (SELECT id FROM sites WHERE alerts_muted_until > ?)`, time.Now().Unix())
 	if err != nil {
 		return nil, err
 	}

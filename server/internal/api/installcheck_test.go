@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -12,6 +13,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
 type roundTrip func(*http.Request) (*http.Response, error)
@@ -218,5 +221,100 @@ func TestCheckOnDemandFindsTheSnippetAndIsLimited(t *testing.T) {
 	}
 	if n := reads.Load(); n != 10 {
 		t.Fatalf("the site was read %d times, want 10: a refused check reads nothing", n)
+	}
+}
+
+func TestCheckRefusesPrivateAddresses(t *testing.T) {
+	for _, d := range []string{"127.0.0.1", "localhost", "10.0.0.5", "[::1]"} {
+		out := verifySite(context.Background(), "tkb_abcdef123456", d)
+		if out.Error == "" || out.Found != "" || out.Status != 0 {
+			t.Fatalf("%s: a private address must not be read: %+v", d, out)
+		}
+	}
+}
+
+func TestCheckGivesUpAtTheDeadline(t *testing.T) {
+	was, wasDeadline := checkClient, checkDeadline
+	defer func() { checkClient, checkDeadline = was, wasDeadline }()
+	checkDeadline = 80 * time.Millisecond
+	checkClient = func() *http.Client {
+		return &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+			<-r.Context().Done()
+			return nil, r.Context().Err()
+		})}
+	}
+	began := time.Now()
+	out := verifySite(context.Background(), "tkb_abcdef123456", "slow.example")
+	if out.Error == "" || time.Since(began) > 2*time.Second {
+		t.Fatalf("a site that never answers: %+v after %v", out, time.Since(began))
+	}
+}
+
+func TestCheckSaysHowTheScriptAnswered(t *testing.T) {
+	const id = "tkb_abcdef123456"
+	for _, status := range []int{http.StatusOK, http.StatusNotFound} {
+		was := checkClient
+		checkClient = func() *http.Client {
+			return &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+				body, code := "", status
+				if r.URL.Path == "/" {
+					body, code = `<script defer data-site="`+id+`" src="/js/t.js"></script>`, 200
+				}
+				return &http.Response{StatusCode: code, Body: io.NopCloser(strings.NewReader(body)), Request: r, Header: http.Header{}}, nil
+			})}
+		}
+		out := verifySite(context.Background(), id, "site.example")
+		if out.Found != "site" || out.Via != "page" || out.Script != "https://site.example/js/t.js" || out.Ms < 0 {
+			t.Fatalf("the page carries the tag: %+v", out)
+		}
+		if got := scriptStatus(context.Background(), out); got != status {
+			t.Fatalf("the script answered %d, check said %d", status, got)
+		}
+		checkClient = was
+	}
+	if got := scriptStatus(context.Background(), installCheck{}); got != 0 {
+		t.Fatalf("no script to load: %d", got)
+	}
+}
+
+func TestMutingAlertsNeedsWriteAndShowsOnTheSite(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	ctx := context.Background()
+	if _, err := g.ctl.AddUser(ctx, sqlite.DefaultAccount, "viewer@site.com", "correct horse battery V", sqlite.RoleViewer); err != nil {
+		t.Fatal(err)
+	}
+	viewer := client()
+	if code, _ := do(t, viewer, "POST", g.srv.URL+"/api/v1/login", `{"email":"viewer@site.com","password":"correct horse battery V"}`); code != http.StatusOK {
+		t.Fatal("viewer signs in")
+	}
+	mute := g.srv.URL + "/api/v1/sites/" + g.site + "/alerts/mute"
+	if code, _ := do(t, viewer, "POST", mute, "", csrf, "1"); code != http.StatusForbidden {
+		t.Fatalf("a viewer mutes: %d", code)
+	}
+	code, out := do(t, owner, "POST", mute, "", csrf, "1")
+	until, _ := out["alerts_muted_until"].(float64)
+	if code != http.StatusOK || int64(until) != g.now.Add(24*time.Hour).Unix() {
+		t.Fatalf("the owner mutes for a day: %d %v", code, out)
+	}
+	_, list := do(t, owner, "GET", g.srv.URL+"/api/v1/sites", "")
+	if got := list["sites"].([]any)[0].(map[string]any)["alerts_muted_until"]; got != until {
+		t.Fatalf("the site says until when: %v", got)
+	}
+	g.advance(25 * time.Hour)
+	_, list = do(t, owner, "GET", g.srv.URL+"/api/v1/sites", "")
+	if _, still := list["sites"].([]any)[0].(map[string]any)["alerts_muted_until"]; still {
+		t.Fatal("after a day the snooze is over")
+	}
+	if code, _ := do(t, owner, "POST", mute, "", csrf, "1"); code != http.StatusOK {
+		t.Fatal("mute again")
+	}
+	if code, _ := do(t, owner, "DELETE", mute, "", csrf, "1"); code != http.StatusNoContent {
+		t.Fatalf("undo: %d", code)
+	}
+	_, list = do(t, owner, "GET", g.srv.URL+"/api/v1/sites", "")
+	if _, still := list["sites"].([]any)[0].(map[string]any)["alerts_muted_until"]; still {
+		t.Fatal("undone")
 	}
 }

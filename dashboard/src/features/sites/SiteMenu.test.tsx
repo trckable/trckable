@@ -82,13 +82,20 @@ describe('a site row', () => {
     expect(row(site(1))).not.toContain('tail')
   })
 
-  it('says setup or stopped in the number’s place', () => {
+  it('says setup, down or quiet in the number’s place', () => {
     const fresh = row(site(1, { last_event_at: undefined }), 0)
     expect(fresh).toContain('setup')
     expect(fresh).not.toContain('>0<')
-    const stopped = row(site(2, { last_event_at: NOW - 3 * 86400, check: { at: NOW - 3600, found: 'none' } }), 5)
-    expect(stopped).toContain('stopped')
-    expect(stopped).not.toContain('>5<')
+    const down = row(site(2, { last_event_at: NOW - 12 * 60, check: undefined }), 5)
+    expect(down).not.toContain('down')
+    const gone = row(site(2, { last_event_at: NOW - 3 * 86400, check: { at: NOW - 3600, error: 'site2.example could not be reached over https' } }), 5)
+    expect(gone).toContain('down · 3d')
+    expect(gone).toContain('stopped-note')
+    expect(gone).not.toContain('>5<')
+    const quiet = row(site(3, { last_event_at: NOW - 7 * 3600, check: { at: NOW - 3600, found: 'none' } }), 5)
+    expect(quiet).toContain('quiet · 7h')
+    expect(quiet).toContain('quiet-note')
+    expect(row(site(4, { last_event_at: NOW - 3600 }), 5)).toContain('>5<')
   })
 
   it('has the check on the site you are on', () => {

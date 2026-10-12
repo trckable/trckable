@@ -6,6 +6,7 @@ import { act, call, raw, rangeQS } from './api'
 
 // Lazy screens import everything API-shaped from here: the names of lib/api, and `more`.
 export * from './api'
+export { siteState, type SiteState } from '../features/sitestatus/status'
 import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, WebVitals, Widget, WidgetLook } from './api'
 
 /** A robot on one errand, and how often it came. */
@@ -111,6 +112,8 @@ export const more = {
   setSiteConfig: (site: string, c: SiteConfig) => call<SiteConfig>('PUT', `/sites/${site}/config`, c),
   alerts: (site: string) => call<{ alerts: Alert[]; kinds: string[]; mail?: boolean }>('GET', `/sites/${site}/alerts`),
   saveAlert: (site: string, a: Partial<Alert>) => call<Alert>('PUT', `/sites/${site}/alerts`, a),
+  muteAlerts: (site: string) => call<{ alerts_muted_until: number }>('POST', `/sites/${site}/alerts/mute`),
+  unmuteAlerts: (site: string) => act('DELETE', `/sites/${site}/alerts/mute`),
   testAlert: (site: string, target: string) => act('POST', `/sites/${site}/alerts/test`, { target }),
   saveSegment: (site: string, name: string, query: string) => call<Segment>('POST', `/sites/${site}/segments`, { name, query }),
   addAnnotation: (site: string, day: string, text: string) => call<Annotation>('POST', `/sites/${site}/annotations`, { day, text }),
