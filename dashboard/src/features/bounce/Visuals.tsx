@@ -5,7 +5,7 @@ import { Monitor, Smartphone } from 'lucide-react'
 import { fmtFixed, fmtPct } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import type { BounceCause } from '../../lib/apiMore'
-import { Glyph } from './Glyph'
+import { SourceMark } from '../../components/visitor/SourceMark'
 import { copy } from './b'
 
 /** Google's limits for the main content: good up to 2.5 s, poor past 4 s. */
@@ -68,7 +68,7 @@ export function Handset({ c }: { c: BounceCause }) {
   return (
     <div className="bg-vis">
       <div className={phone ? 'bg-device phone' : 'bg-device desk'} aria-hidden="true">
-        <Glyph channel={c.source ?? ''} size={30} />
+        <SourceMark channel={c.source ?? ''} size={30} />
         <Frame size={18} strokeWidth={1.6} />
       </div>
       <p className="bg-cap">{copy.fromOn(channelLabel(c.source ?? ''), c.device ?? '')}</p>

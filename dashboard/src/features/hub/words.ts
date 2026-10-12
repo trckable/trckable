@@ -22,7 +22,7 @@ export const words = defineCopy('featureList', {
   replay: { name: 'Replay', line: 'Your period, played as a story' },
   segments: { name: 'Segments', line: 'Filters you save and reuse' },
   surge: { name: 'Surge alerts', line: 'A message when traffic jumps' },
-  bounce: { name: 'Bounce guide', line: 'Why visitors leave, and what to try' },
+  bounce: { name: 'Bounce guide', line: 'Why visitors leave, and what to try. In All sites and the Story' },
   revenue: { name: 'Revenue', line: 'Which traffic pays' },
   sales: { name: 'Sale notices', line: 'A chime and a notice per sale' },
   sharelinks: { name: 'Share links', line: 'Read-only, with a password if you like' },

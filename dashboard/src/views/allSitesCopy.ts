@@ -24,7 +24,7 @@ export const copy = defineCopy('allsites', {
   onlineNow: (n: string) => `${n} online now`,
   noOne: 'No one online',
   bounceShort: (p: string) => `bounce ${p}`,
-  seeWhy: (site: string) => `Why visitors leave ${site}`,
+  seeWhy: (site: string) => `See why visitors leave ${site}`,
   bounceHigh: (p: string, words: string) => `Bounce rate ${p}, ${words}`,
   highBounce: (tenths: number) => `high: ${tenths} in 10 leave after one page`,
   unread: 'could not be read',
