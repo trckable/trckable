@@ -254,9 +254,9 @@
     display: block;
     grid-column: 1;
   }
-  /* No lead group here: the track ends at the row's inner edge, where the numbers end. */
+  /* No lead group here: the track runs to the row's edge and the numbers keep the row's inner padding. */
   .bl .bl-line {
-    inset: 0 10px 0 0;
+    inset: 0;
   }
   .bl-name {
     grid-column: 1;
