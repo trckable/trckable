@@ -2,6 +2,7 @@
 // first load has no room for it, and nothing live is on screen before data.
 import type { Sale, Visit } from './api'
 import { debounce, watchdog } from './live'
+import { visibleInterval } from './visibleInterval'
 
 // The server sends a ping every 10 s. Nothing for this long means the stream
 // is stuck (a proxy holding it back, a phone waking up): open it again, and
@@ -29,17 +30,18 @@ export type LiveHandlers = {
 export function connect(site: string, on: LiveHandlers): () => void {
   let es: EventSource | null = null
   let retry: ReturnType<typeof setTimeout> | undefined
-  let poll: ReturnType<typeof setInterval> | undefined
+  let poll: (() => void) | undefined
   const settle = debounce(on.refetch, SETTLE_MS, MAX_WAIT_MS)
   let state: boolean | null = null // not known until the stream speaks or fails
   const up = (ok: boolean) => {
     if (ok === state) return
     state = ok
     on.up(ok)
-    clearInterval(poll)
+    poll?.()
+    poll = undefined
     if (ok) return
     on.refetch() // what the stream may have missed
-    poll = setInterval(() => document.visibilityState === 'visible' && on.refetch(), POLL_MS)
+    poll = visibleInterval(on.refetch, POLL_MS, false) // the wake below reads on return
   }
   const dog = watchdog(SILENT_MS, () => {
     up(false)
@@ -93,7 +95,7 @@ export function connect(site: string, on: LiveHandlers): () => void {
     window.removeEventListener('online', open)
     dog.stop()
     settle.cancel()
-    clearInterval(poll)
+    poll?.()
     clearTimeout(retry)
     es?.close()
   }

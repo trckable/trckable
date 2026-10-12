@@ -709,23 +709,44 @@ describe('a tab that comes back, and a page that stays open', () => {
     expect(byKind('pv')).toHaveLength(1)
   })
 
-  it('says it is still here every minute, only while the page is shown', async () => {
+  let seen = 0
+
+  it('says it is still here every 3 minutes, only while the page is shown', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'Date'] })
     tracker()
     await vi.advanceTimersByTimeAsync(0)
     const pv = byKind('pv')[0].pv
-    await vi.advanceTimersByTimeAsync(3 * MIN)
+    await vi.advanceTimersByTimeAsync(7 * MIN)
     const pings = byKind('e')
-    expect(pings).toHaveLength(3)
     expect(pings.every((e) => e.pv === pv)).toBe(true)
-    expect(pings.map((e) => e.en)).toEqual([MIN, 2 * MIN, 3 * MIN])
+    expect(pings.map((e) => e.en)).toEqual([MIN, 4 * MIN, 7 * MIN])
     hidden(true)
     const afterHide = byKind('e').length // the report sent on hiding
-    await vi.advanceTimersByTimeAsync(5 * MIN)
+    await vi.advanceTimersByTimeAsync(10 * MIN)
     expect(byKind('e')).toHaveLength(afterHide)
-    hidden(false)
+    hidden(false) // back on screen: the next minute reports
     await vi.advanceTimersByTimeAsync(MIN)
     expect(byKind('e')).toHaveLength(afterHide + 1)
     expect(byKind('pv')).toHaveLength(1) // never a view of its own
+  })
+
+  it('never leaves a shown visitor out of the live window, hidden or not in between', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'Date'] })
+    tracker()
+    await vi.advanceTimersByTimeAsync(0)
+    let at = Date.now()
+    let seen = 0
+    let worst = 0
+    let away = false
+    for (let s = 1; s <= 7200; s += 10) {
+      await vi.advanceTimersByTimeAsync(10_000)
+      if (s % 470 < 10) hidden((away = true)) // away now and then, for 1 to 2 minutes
+      if (s % 470 > 100 && s % 470 < 110) hidden((away = false))
+      const n = byKind('e').length + byKind('pv').length
+      if (n != seen) at = Date.now()
+      seen = n
+      if (!away) worst = Math.max(worst, Date.now() - at)
+    }
+    expect(worst).toBeLessThan(5 * MIN) // the server's live window
   })
 })

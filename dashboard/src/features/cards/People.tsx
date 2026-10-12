@@ -6,6 +6,7 @@ import { Loading } from '../../components/loading/Loading'
 import { CookielessOff } from '../cookieless/Off'
 import { call, type Site } from '../../lib/api'
 import { countryName, flag } from '../../lib/format'
+import { visibleInterval } from '../../lib/visibleInterval'
 import { channelColor, channelLabel } from '../../lib/palette'
 import { liveNow } from '../live/api'
 import { deepCopy } from './deepCopy'
@@ -62,10 +63,10 @@ export default function People({ site, onPick }: { site: Site; onPick: (visitor:
         .catch(() => undefined)
     }
     read()
-    const t = setInterval(read, 30_000)
+    const stop = visibleInterval(read, 30_000)
     return () => {
       live = false
-      clearInterval(t)
+      stop()
     }
   }, [site.id])
   if (site.cookieless) return <CookielessOff title={deepCopy.people.title} />

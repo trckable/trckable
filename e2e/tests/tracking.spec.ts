@@ -198,7 +198,7 @@ test('an open page says it is still here, and a tab brought back after 30 minute
   await page.goto(`${prefix}next.html`)
   await settled(request, prefix, (e) => count(e, 'pageview') === 1)
 
-  await page.clock.runFor(61_000)
+  await page.clock.runFor(4 * 60_000 + 1000)
   let evs = await settled(request, prefix, (e) => count(e, 'engagement') >= 1)
   expect(count(evs, 'pageview')).toBe(1) // the ping is never a view
 

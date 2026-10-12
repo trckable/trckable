@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { feedOnline, holdOnline } from '../lib/allOnline'
 import { type SiteRow, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
+import { visibleInterval } from '../lib/visibleInterval'
 
 export const OVERVIEW_POLL_MS = 15_000
 
@@ -27,15 +28,13 @@ export function useOverview(days: number) {
         // A later read that fails keeps the numbers on screen until the next one.
         .catch((e: unknown) => first && !mine.signal.aborted && setErr(words(e)))
     }
-    const again = () => document.visibilityState === 'visible' && read(false)
+    const again = () => read(false)
     const release = holdOnline()
     read(true)
-    const timer = setInterval(again, OVERVIEW_POLL_MS)
-    document.addEventListener('visibilitychange', again)
+    const stop = visibleInterval(again, OVERVIEW_POLL_MS)
     return () => {
       ac.abort()
-      clearInterval(timer)
-      document.removeEventListener('visibilitychange', again)
+      stop()
       release()
     }
   }, [days])

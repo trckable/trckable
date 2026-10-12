@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useVisibleInterval } from './visibleInterval'
 import { APIError, cachedReport, peekReport, type Report, type ReportQuery } from './api'
 
 /** Fetches a report, keeping the last one on screen while the next loads. A
@@ -64,11 +65,7 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { li
   }, [key, tick])
 
   // Ranges that include today refresh every 30 s (the live stream covers the rest).
-  useEffect(() => {
-    if (!opts.live) return
-    const t = setInterval(() => document.visibilityState === 'visible' && setTick((n) => n + 1), 30_000)
-    return () => clearInterval(t)
-  }, [opts.live])
+  useVisibleInterval(() => setTick((n) => n + 1), 30_000, !!opts.live)
 
   return { data, error, warming, loading, stale: loading && lastKey !== key, refresh: (skipCache = false) => {
     fresh.current = skipCache

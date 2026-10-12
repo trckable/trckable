@@ -467,20 +467,24 @@ export function start(c: Config): Tracker {
   // A tab brought back after over 30 minutes is a new visit by the server's
   // rule, so it counts a new page view; a shorter break just goes on.
   let away!: number
+  // While the page is open and shown, a "still here" every 3 minutes keeps
+  // the visitor in the live count (the server counts the last 5): the
+  // engagement report again, without the Web Vitals (the server keeps the
+  // largest time per page view; a vitals sample must not be counted again).
+  // Back on screen, the next minute reports.
+  let tick = 0 // minutes shown since the last report
   d.addEventListener('visibilitychange', () =>
-    d.hidden ? (flushEngagement(), (away = now())) : (run(), now() - away > 18e5 ? ((last = ''), page()) : (visible = now())),
+    d.hidden
+      ? (flushEngagement(), (away = now()))
+      : (run(), (tick = 0), now() - away > 18e5 ? ((last = ''), page()) : (visible = now())),
   )
-  // While the page is open and shown, a minute-by-minute "still here" keeps the
-  // visitor in the live count: the engagement report again, without the Web
-  // Vitals (the server keeps the largest time per page view; a vitals sample
-  // must not be counted every minute).
-  setInterval(() => d.hidden || flushEngagement(1), 6e4)
+  setInterval(() => d.hidden || tick++ % 3 || flushEngagement(1), 6e4)
   w.addEventListener('pagehide', flushEngagement)
   w.addEventListener(
     'scroll',
     () => {
       const h = d.documentElement.scrollHeight - innerHeight
-      const pct = h > 0 ? Math.min(100, Math.round((scrollY / h) * 100)) : 100
+      const pct = h > 0 ? Math.min(100, (((scrollY / h) * 100) + 0.5) | 0) : 100
       if (pct > scroll) scroll = pct
     },
   )

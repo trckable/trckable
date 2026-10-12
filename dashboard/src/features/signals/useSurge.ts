@@ -2,6 +2,7 @@
 // far busier than usual. The server looks again at most every half minute, and
 // finds the surge itself: this only reads it.
 import { useEffect, useState } from 'react'
+import { visibleInterval } from '../../lib/visibleInterval'
 import { surgeApi, type Surge } from './surge'
 
 const MINUTE = 60_000
@@ -20,13 +21,11 @@ export function useSurge(site: string, first = FIRST_LOOK_MS): Surge | null {
         .catch(() => {})
     }
     const soon = setTimeout(ask, first)
-    const timer = setInterval(ask, MINUTE)
-    document.addEventListener('visibilitychange', ask)
+    const stop = visibleInterval(ask, MINUTE)
     return () => {
       ctl.abort()
       clearTimeout(soon)
-      clearInterval(timer)
-      document.removeEventListener('visibilitychange', ask)
+      stop()
     }
   }, [site, first])
   return got?.site === site ? got.surge : null
