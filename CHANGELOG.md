@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.7.9 (12 Oct 2026)
+
 - Bounce guide: when visitors leave after one page clearly more than usual, the amber bounce chip on a site in All sites and a new card in the Story ("8 in 10 leave after one page (usual ~5 in 10)" with "See why") open a four-step walkthrough: what happened (the rate, a daily line against the usual band, the day it started), where they leave (the pages, sources on a device and slow loads, this period against the usual), why (a picture for each cause), and a short list to try with buttons ("Open the page like they do", "See this page in Data", "See speed details") and ticks that stay in your browser. Arrow keys move between the steps. When fewer leave than usual the Story says so. It is listed in Features. API: `GET /api/v1/sites/{site}/report/bounce-guide` (`from`/`to`, or `days`) also returns the daily rate (`days`).
 - Site switcher: a site that needs attention says why in a line under its name ("Not reachable · 2d"), and the keys hint stays on screen.
 - In every ranked list (pages, sources, countries and the rest) the count no longer touches the right edge of its row: it has the same inner gap there as the name has on the left, on desktop and on a phone.
