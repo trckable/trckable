@@ -646,11 +646,11 @@ textarea:focus-visible {
   position: relative;
   align-self: stretch;
   margin: -6px 0 -6px -10px;
-  padding: 6px 0 6px 10px;
+  padding: 6px 10px 6px 10px;
 }
 .bl-cols .bl-lead {
   margin: 0;
-  padding: 0;
+  padding: 0 10px 0 0;
 }
 .bl-main {
   display: grid;
@@ -665,7 +665,7 @@ textarea:focus-visible {
 }
 .bl .bl-line {
   position: absolute;
-  /* The track ends where the visitors number ends, like its head. */
+  /* The track ends one inner gap past the visitors number, the gap the name has on the left. */
   inset: 0;
   z-index: -1;
   overflow: hidden;
