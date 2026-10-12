@@ -1,7 +1,8 @@
 // How many requests an open page makes: the tracker's "still here" and the
 // dashboard's refreshes, counted over a simulated half hour with a fake clock.
 // The numbers are printed (and kept as annotations); the asserts are the limits
-// that must hold: a hidden tab asks for next to nothing, an untouched one stops.
+// that must hold: a hidden tab asks for nothing, a shown one says "still here"
+// every 3 minutes.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
@@ -43,24 +44,11 @@ test.describe('the tracker', () => {
     return sent
   }
 
-  test('a page left shown, untouched: 10 minutes, then 20 more', async ({ page }) => {
+  test('a page left shown for 30 minutes: one report every 3 minutes', async ({ page }) => {
     const sent = await open(page, 'req-shown')
-    await run(page, 10)
-    const first = sent.length
-    await run(page, 20)
-    report('tracker, shown and untouched', { page_view: 1, after_10_min: first, after_30_min: sent.length })
-    expect(sent.length).toBeLessThanOrEqual(9) // the view and at most 8 reports of 4 minutes
-  })
-
-  test('a page left shown and used: reports go on, one every 4 minutes', async ({ page }) => {
-    const sent = await open(page, 'req-used')
-    for (let i = 0; i < 6; i++) {
-      await run(page, 5)
-      await page.mouse.click(5, 5)
-    }
-    report('tracker, shown and used', { after_30_min: sent.length })
-    expect(sent.length).toBeGreaterThanOrEqual(7)
-    expect(sent.length).toBeLessThanOrEqual(12)
+    await run(page, 30)
+    report('tracker, shown 30 min', { after_30_min: sent.length })
+    expect(sent.length).toBe(11) // the view, then minutes 1, 4, 7 … 28 (was 31: one a minute)
   })
 
   test('a page in a hidden tab for 30 minutes', async ({ page }) => {
