@@ -372,12 +372,12 @@ export function start(c: Config): Tracker {
     })
   }
 
-  const flushEngagement = () => {
+  const flushEngagement = (ping?: number) => {
     if (visible) {
       engaged += now() - visible
       visible = shown()
     }
-    if (pv && engaged > 0) send(__VITALS__ ? { k: 'e', pv, en: engaged, sc: scroll, ...cwv } : { k: 'e', pv, en: engaged, sc: scroll })
+    if (pv && engaged > 0) send(__VITALS__ && ping != 1 ? { k: 'e', pv, en: engaged, sc: scroll, ...cwv } : { k: 'e', pv, en: engaged, sc: scroll })
   }
 
   const page = () => {
@@ -464,7 +464,17 @@ export function start(c: Config): Tracker {
     )
 
   // Engagement: only visible time counts.
-  d.addEventListener('visibilitychange', () => (d.hidden ? flushEngagement() : (run(), (visible = now()))))
+  // A tab brought back after over 30 minutes is a new visit by the server's
+  // rule, so it counts a new page view; a shorter break just goes on.
+  let away!: number
+  d.addEventListener('visibilitychange', () =>
+    d.hidden ? (flushEngagement(), (away = now())) : (run(), now() - away > 18e5 ? ((last = ''), page()) : (visible = now())),
+  )
+  // While the page is open and shown, a minute-by-minute "still here" keeps the
+  // visitor in the live count: the engagement report again, without the Web
+  // Vitals (the server keeps the largest time per page view; a vitals sample
+  // must not be counted every minute).
+  setInterval(() => d.hidden || flushEngagement(1), 6e4)
   w.addEventListener('pagehide', flushEngagement)
   w.addEventListener(
     'scroll',
@@ -487,12 +497,7 @@ export function start(c: Config): Tracker {
   w.addEventListener('popstate', page)
   if (c.hash) w.addEventListener('hashchange', page)
   // Back/forward cache restores are real page views.
-  w.addEventListener('pageshow', (e: PageTransitionEvent) => {
-    if (e.persisted) {
-      last = ''
-      page()
-    }
-  })
+  w.addEventListener('pageshow', (e: PageTransitionEvent) => e.persisted && ((last = ''), page()))
 
   // Retry what an earlier page could not deliver. Older than a day is dropped:
   // the server would refuse it (it dates events up to 25 hours back).
@@ -506,10 +511,8 @@ export function start(c: Config): Tracker {
 
   return (w.__trk = ((cmd: string, a?: any, b?: Props) => {
     if (__GOALS__ && (cmd == 'goal' || cmd == 'track')) goal(a, b)
-    else if (cmd == 'pageview') {
-      last = ''
-      page()
-    } else if (cmd == 'consent') {
+    else if (cmd == 'pageview') (last = ''), page()
+    else if (cmd == 'consent') {
       // The site's own answer from its own banner: yes, or a final no.
       if (__CONSENT__ || __BANNER__) grant(a, 1)
       else {

@@ -287,6 +287,42 @@ func TestLiveNowListsEveryoneOnline(t *testing.T) {
 	}
 }
 
+// A page left open sends an engagement report each minute (the tracker's
+// "still here"): the visitor stays online, and it adds no page view, no
+// visit and no second visitor.
+func TestLiveNowStillHereKeepsOnlineWithoutViews(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	now := g.advance(time.Second)
+	ms := now.UnixMilli()
+	min := int64(60_000)
+	g.event(t, event.Event{Kind: event.KindPageview, EventID: 1, TS: ms - 20*min, Visitor: 1, Pageview: 1, Path: "/open"})
+	g.waitApplied(t, 1)
+	_, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/now", "")
+	if out["online"] != float64(0) {
+		t.Fatalf("online %v before any ping", out["online"])
+	}
+	for i := int64(0); i < 3; i++ {
+		g.event(t, event.Event{Kind: event.KindEngagement, EventID: uint64(2 + i), TS: ms - (2-i)*min, Visitor: 1, Pageview: 1, Path: "/open", EngagedMs: uint32(18+i) * 60_000})
+	}
+	g.waitApplied(t, 4)
+	code, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/now", "")
+	if code != 200 {
+		t.Fatalf("now: %d %v", code, out)
+	}
+	if out["online"] != float64(1) || out["visitors"] != float64(1) {
+		t.Fatalf("online %v, visitors %v", out["online"], out["visitors"])
+	}
+	var views float64
+	for _, m := range out["minutes"].([]any) {
+		views += m.(float64)
+	}
+	if views != 1 {
+		t.Fatalf("page views %v after the pings, want 1", views)
+	}
+}
+
 // Past NowRows the list stops and says how many it left out, so the count on
 // the tile is always the list plus more.
 func TestLiveNowCapSaysHowManyMore(t *testing.T) {

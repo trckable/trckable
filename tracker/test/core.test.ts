@@ -681,3 +681,51 @@ describe('privacy and modes', () => {
     expect(byKind('pv')[0].dev).toBe(1)
   })
 })
+
+describe('a tab that comes back, and a page that stays open', () => {
+  const MIN = 6e4
+
+  it('counts a new page view for a tab hidden over 30 minutes', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'Date'] })
+    tracker()
+    await vi.advanceTimersByTimeAsync(0)
+    hidden(true)
+    await vi.advanceTimersByTimeAsync(31 * MIN)
+    hidden(false)
+    await vi.advanceTimersByTimeAsync(0)
+    const pvs = byKind('pv')
+    expect(pvs).toHaveLength(2)
+    expect(pvs[1].pv).not.toBe(pvs[0].pv)
+  })
+
+  it('does not count one for a tab hidden 5 minutes', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'Date'] })
+    tracker()
+    await vi.advanceTimersByTimeAsync(0)
+    hidden(true)
+    await vi.advanceTimersByTimeAsync(5 * MIN)
+    hidden(false)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(byKind('pv')).toHaveLength(1)
+  })
+
+  it('says it is still here every minute, only while the page is shown', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'Date'] })
+    tracker()
+    await vi.advanceTimersByTimeAsync(0)
+    const pv = byKind('pv')[0].pv
+    await vi.advanceTimersByTimeAsync(3 * MIN)
+    const pings = byKind('e')
+    expect(pings).toHaveLength(3)
+    expect(pings.every((e) => e.pv === pv)).toBe(true)
+    expect(pings.map((e) => e.en)).toEqual([MIN, 2 * MIN, 3 * MIN])
+    hidden(true)
+    const afterHide = byKind('e').length // the report sent on hiding
+    await vi.advanceTimersByTimeAsync(5 * MIN)
+    expect(byKind('e')).toHaveLength(afterHide)
+    hidden(false)
+    await vi.advanceTimersByTimeAsync(MIN)
+    expect(byKind('e')).toHaveLength(afterHide + 1)
+    expect(byKind('pv')).toHaveLength(1) // never a view of its own
+  })
+})
