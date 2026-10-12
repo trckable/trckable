@@ -1019,6 +1019,8 @@ export default {
   'sites.menu.emptyGroup': 'Zieh eine Website hierher oder nutze das ⋯-Menü einer Website.',
   'sites.menu.setup': 'Einrichtung',
   'sites.menu.downTip': (span: string) => `Seit ${span} nicht erreichbar. Öffne die Website, um zu sehen, was los ist.`,
+  'sites.menu.downLine': (span: string) => `Nicht erreichbar · ${span}`,
+  'sites.menu.quietLine': (span: string) => `Ruhig · ${span}`,
   'sites.menu.quietTip': (span: string) => `Seit ${span} keine Besuche. An der Seite sieht nichts falsch aus.`,
   'sites.menu.today': (n: string) => `${n} heute`,
   'sites.menu.todayAll': 'Besucher heute, alle Websites',

@@ -194,3 +194,39 @@ test('the keys work in the list: ↑/↓ move, a number opens that site, and the
   await page.keyboard.press('2')
   await expect(page).toHaveURL(new RegExp('/' + encodeURIComponent(second!).replace(/\./g, '\\.')))
 })
+
+for (const [name, width, height, scheme] of [['desktop', 1440, 900, 'light'], ['desktop-dark', 1440, 900, 'dark'], ['phone', 390, 844, 'dark']] as const) {
+  test(`a site with a state says it in a line under its name, and the keys hint stays on screen (${name})`, async ({ page, browserName }) => {
+    await page.setViewportSize({ width, height })
+    await page.emulateMedia({ colorScheme: scheme })
+    await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+    // The first site stopped answering two days ago.
+    await page.route(/\/api\/v1\/sites(\?.*)?$/, async (route) => {
+      const res = await route.fetch()
+      const body = (await res.json()) as { sites: { last_event_at?: number; check?: unknown }[] }
+      const at = Math.floor(Date.now() / 1000)
+      if (body.sites[0]) {
+        body.sites[0].last_event_at = at - 2 * 86400 - 600
+        body.sites[0].check = { at, error: 'unreachable' }
+      }
+      await route.fulfill({ response: res, json: body })
+    })
+    await page.goto(`${API}/example.com`)
+    const menu = await open(page)
+    const line = menu.locator('.state-line').first()
+    await expect(line).toHaveText('Not reachable · 2d')
+    await expect(menu.locator('.state-icon').first()).toHaveAttribute('aria-label', /Not reachable for 2d/)
+    await menu.locator('.state-icon').first().hover()
+    await expect(page.locator('.tip')).toHaveCount(0)
+    if (width > 640) {
+      await menu.locator('.foot-keys').hover()
+      const tip = page.getByRole('tooltip')
+      await expect(tip).toContainText('Alt + ↑ / ↓ moves the focused site. Drag to reorder.')
+      const box = (await tip.boundingBox())!
+      expect(box.x).toBeGreaterThanOrEqual(8)
+      expect(box.x + box.width).toBeLessThanOrEqual(width - 8)
+      expect(box.y).toBeGreaterThanOrEqual(0)
+    }
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/switcher-state-${name}-${browserName}.png` })
+  })
+}

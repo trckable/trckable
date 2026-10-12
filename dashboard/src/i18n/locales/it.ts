@@ -1016,6 +1016,8 @@ export default {
   'sites.menu.emptyGroup': 'Trascina qui un sito, o usa il menu ⋯ di un sito.',
   'sites.menu.setup': 'da configurare',
   'sites.menu.downTip': (span: string) => `Non raggiungibile da ${span}. Apri il sito per vedere cosa non va.`,
+  'sites.menu.downLine': (span: string) => `Non raggiungibile · ${span}`,
+  'sites.menu.quietLine': (span: string) => `Quieto · ${span}`,
   'sites.menu.quietTip': (span: string) => `Nessuna visita da ${span}. La pagina non sembra avere problemi.`,
   'sites.menu.today': (n: string) => `${n} oggi`,
   'sites.menu.todayAll': 'Visitatori oggi, tutti i siti',

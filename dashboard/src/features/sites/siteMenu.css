@@ -686,3 +686,33 @@
     opacity: 1;
   }
 }
+
+/* A site with a state says it in a second line under its name; the row grows for it only. */
+.site .name small {
+  display: block;
+  overflow: hidden;
+  font-size: 11.5px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.site .name small.stopped {
+  color: var(--down);
+}
+.site .name small.quiet {
+  color: var(--warn);
+}
+:root .pop.sites .site.stated {
+  height: auto;
+  min-height: 30px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+/* The keys' hint opens upward and to the left of the foot, so it stays inside the popup and the screen. */
+.sites-foot .tip {
+  top: auto;
+  bottom: calc(100% + 6px);
+  right: 0;
+  left: auto;
+  max-width: min(260px, calc(100vw - 32px));
+}

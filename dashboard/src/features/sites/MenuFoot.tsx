@@ -1,10 +1,27 @@
 // The switcher's foot: Add a site as a quiet row, and on a desktop the keys
 // that work in the list.
 import { Plus, Settings } from 'lucide-react'
+import { Tooltip } from '../../kit/Tooltip'
 import { copy } from './menuCopy'
 
 /** settings: the current site's settings, here on a narrow phone where the header has no room for the cog. */
-export function MenuFoot({ canAdd, onAdd, settings }: { canAdd: boolean; onAdd: () => void; settings?: { label: string; open: () => void } }) {
+function Keys() {
+  return (
+    <span className="foot-keys" aria-hidden="true">
+      <span>
+        {copy.keyMove.map((k) => (
+          <kbd key={k}>{k}</kbd>
+        ))}
+      </span>
+      <kbd>{copy.keyOpen}</kbd>
+      <kbd title={copy.openSiteKey}>{copy.keyOpenSite}</kbd>
+      <kbd>{copy.keyClose}</kbd>
+    </span>
+  )
+}
+
+/** hint: the arrange keys, said in a tooltip that opens upward over the foot (the list clips it, the screen's edge must not). */
+export function MenuFoot({ hint, canAdd, onAdd, settings }: { hint?: string; canAdd: boolean; onAdd: () => void; settings?: { label: string; open: () => void } }) {
   return (
     <div className="sites-foot">
       {settings && (
@@ -19,16 +36,7 @@ export function MenuFoot({ canAdd, onAdd, settings }: { canAdd: boolean; onAdd: 
           {copy.add}
         </button>
       )}
-      <span className="foot-keys" aria-hidden="true">
-        <span>
-          {copy.keyMove.map((k) => (
-            <kbd key={k}>{k}</kbd>
-          ))}
-        </span>
-        <kbd>{copy.keyOpen}</kbd>
-        <kbd title={copy.openSiteKey}>{copy.keyOpenSite}</kbd>
-        <kbd>{copy.keyClose}</kbd>
-      </span>
+      {hint ? <Tooltip text={hint} align="right">{() => <Keys />}</Tooltip> : <Keys />}
     </div>
   )
 }
