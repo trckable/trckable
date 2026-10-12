@@ -14,6 +14,7 @@ section into the release.
 - A tab you come back to after more than 30 minutes counts as a new visit, and a page left open and in view keeps you in the Live and Online counts: the script sends a small "still here" every minute, which adds no views or visits. The script grows by 34 bytes (about 2.04 KB).
 - Goals show their name as it was written: "Start free" stays "Start free" on the Goals card, in funnels, journeys, Live, exports and the reports by email, and names with letters like ë, ü or Cyrillic keep them instead of losing them. Goals are still counted under the same lowercase key, so nothing already counted moves. The API adds a `label` next to `value` on goal rows.
 - Cards: the Customers and Revenue columns keep their heads on one line, "Per visitor" is the short head of revenue per visitor (the full words on hover), and an empty card's button is a normal button with a shorter line.
+- Settings: the timezone list always offers UTC (Chrome, Firefox and Safari leave it out), so a site moved to another zone can be moved back.
 
 ## 0.7.7 (12 Oct 2026)
 

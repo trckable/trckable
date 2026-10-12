@@ -1,10 +1,14 @@
 // The two lists every place that edits a site needs, kept out of any one view
 // so the Sites list and the Settings page cannot drift apart.
 
-/** Every timezone the browser knows, or UTC where it knows none. */
+/** The list a browser gives has no UTC in it (Chrome, Firefox and Safari leave it out), and UTC is where every
+ *  new site starts: without it first in the list, a site moved to another zone could never be moved back. */
+export const withUtc = (list: string[]): string[] => (list.includes('UTC') ? list : ['UTC', ...list])
+
+/** Every timezone the browser knows, UTC included, or UTC alone where it knows none. */
 export const zones: string[] = (() => {
   try {
-    return (Intl as unknown as { supportedValuesOf(k: string): string[] }).supportedValuesOf('timeZone')
+    return withUtc((Intl as unknown as { supportedValuesOf(k: string): string[] }).supportedValuesOf('timeZone'))
   } catch {
     return ['UTC']
   }
