@@ -271,7 +271,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     container:
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
       options: --ipc=host
     env:
       TRCKABLE_WORDPRESS: ${{ needs.changes.outputs.wordpress }}
@@ -343,7 +343,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     container:
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
       options: --ipc=host
     env:
       HOME: /root # Firefox will not start when $HOME belongs to another user
@@ -397,7 +397,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     container:
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
       options: --ipc=host
     env:
       HOME: /root # Firefox will not start when $HOME belongs to another user
