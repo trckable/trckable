@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - The "Busier than usual" line in Live is one short line ("+15 from Facebook · +8 from Albania · since 16:45 · still going", no page) and the line and "Why?" open the same busy-moment card as the notification. The old wide box with the long sentence is gone. Also: the five translated languages have "Revenue per visitor" again.
+- The period and the words of its comparison ("vs the 30 days before") in the header now sit a full toolbar gap apart instead of almost touching.
 - A busy moment no longer wraps a long landing page into its sentence: the page sits on its own row as a chip with the middle cut (full path on hover, tap on it to filter Data to that page), in the story and on the line over Data, where "Only <source>" and "Back to today" are now two regular buttons side by side.
 - The site switcher shows a quiet site as a small moon and a down site as a red alert icon instead of "quiet · 19h" and "down · 12m" text; hover, focus or tap the icon to read how long and what it means.
 - A tab you come back to after more than 30 minutes counts as a new visit, and a page left open and in view keeps you in the Live and Online counts: the script sends a small "still here" every minute, which adds no views or visits. The script grows by 34 bytes (about 2.04 KB).
