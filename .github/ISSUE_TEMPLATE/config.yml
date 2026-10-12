@@ -6,3 +6,6 @@ contact_links:
   - name: Documentation
     url: https://docs.trckable.com/
     about: How to install, configure and use trckable.
+  - name: Ask a question or share an idea
+    url: https://github.com/trckable/trckable/discussions
+    about: Questions, ideas and "how do I...?" belong in Discussions, not in issues.
