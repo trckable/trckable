@@ -8,10 +8,11 @@ vi.mock('../../lib/url', () => ({ setView: (p: unknown) => setView(p) }))
 vi.mock('../../components/Toast', () => ({ toast: vi.fn() }))
 
 import { dropReports } from '../../lib/api'
+import { addDays } from '../../lib/dates'
 import { openSurgeStory } from './openStory'
 import SurgeCard from './SurgeCard'
 import SurgeModal from './SurgeModal'
-import { beats, clock, deviceShare, honestLine, peakSlice, sourceHost, sourceLine, startSlice, surgeChip, surgeFilter, surgeNotice, type Story, type Surge } from './surge'
+import { bannerLine, beats, clock, localHour, seeInData, deviceShare, honestLine, peakSlice, sourceHost, sourceLine, startSlice, surgeChip, surgeFilter, surgeNotice, type Story, type Surge } from './surge'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -117,6 +118,23 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+describe('Data landed on the moment', () => {
+  const over: Surge = { ...surge, ended: surge.started + 25 * 60 }
+  const now = new Date((surge.started + 3600) * 1000)
+  it('opens the days around it by the hour, against the same days a week earlier, with no filter', () => {
+    const day = localHour(surge.started, 'UTC').day
+    expect(seeInData(over, 'UTC', now)).toEqual({ live: false, period: 'custom', from: day, to: day, bucket: 'hour', compare: 'custom', cfrom: addDays(day, -7), cto: addDays(day, -7), filters: [], day: undefined, v: 'explore', story: undefined, surge: surge.started })
+  })
+  it('runs to now while the moment lasts', () => {
+    const live = seeInData(surge, 'UTC', new Date((surge.started + 40 * 3600) * 1000))
+    expect(live.to).toBe(localHour(surge.started + 40 * 3600, 'UTC').day)
+  })
+  it('says when, how busy and who sent them, in one line', () => {
+    expect(bannerLine(over, 'UTC')).toBe(`Busy moment ${clock(over.started, 'UTC')}–${clock(over.started + 25 * 60, 'UTC')} · 53 at peak · from Facebook → /blog/launch-post`)
+    expect(bannerLine(surge, 'UTC')).toContain(`since ${clock(surge.started, 'UTC')}`)
+  })
+})
+
 describe('the surge card', () => {
   it('is not there when no surge is on', async () => {
     answer(null)
@@ -183,7 +201,7 @@ describe('the surge card', () => {
     act(() => {
       see?.click()
     })
-    expect(setView).toHaveBeenCalledWith({ live: false, period: 'today', from: undefined, to: undefined, filters: [{ dim: 'referrer', value: 'l.facebook.com' }], day: undefined })
+    expect(setView).toHaveBeenCalledWith(expect.objectContaining({ live: false, period: 'custom', bucket: 'hour', compare: 'custom', filters: [], v: 'explore', surge: surge.started }))
     expect(localStorage.getItem('trckable:card:surge:surge_1')).toBe('1')
   })
 
@@ -215,17 +233,77 @@ describe('the story told by a notice (no story of its own)', () => {
     expect(dialog()?.textContent).toContain('20 → 53 in 15 min')
   })
 
-  it('says so when the busy moment is over, and keeps what it was told', async () => {
-    answer(null)
+  const endedAt = told.started + 20 * 60
+  const stored: Surge = {
+    ...surge,
+    ended: endedAt,
+    story: { ...story, at: endedAt + 30 * 60, series: [3, 4, 3, 5, 4, 6, 31, 53, 49, 40, 22, 9, 5, 4, 3, 3], start: told.started - 60, peak_at: told.started + 5 * 60, now: 3, sources: undefined, pages: undefined, countries: undefined, devices: undefined },
+  }
+  const asked = (live: Surge | null, past: Surge | null) =>
+    vi.stubGlobal('fetch', (url: string) => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ surge: url.includes('/surges/near') ? past : live }) }))
+
+  it('draws an ended busy moment from its own window, the start marked, with the time it ended', async () => {
+    asked(null, stored)
     await open()
-    expect(dialog()?.textContent).toContain('This busy moment is over')
+    expect(dialog()?.querySelector('svg[role="img"]')).not.toBeNull()
+    expect(dialog()?.querySelector('svg .mark')).not.toBeNull()
+    expect(dialog()?.querySelector('svg[role="img"]')?.getAttribute('aria-label')).toContain('People online from')
+    expect(dialog()?.querySelector('.sgm-ended')?.textContent).toMatch(/^Ended \d\d:\d\d$/)
+    expect([...(dialog()?.querySelectorAll('.sgm-beats li') ?? [])].map((li) => li.textContent)).not.toContain('now 3')
+    expect(dialog()?.textContent).toContain('The exact post isn’t visible.')
+    expect(dialog()?.textContent).not.toContain('no longer shown')
+  })
+
+  it('keeps what it was told when the moment cannot be read at all, with no chart and no apology', async () => {
+    asked(null, null)
+    await open()
     expect(dialog()?.querySelector('svg[role="img"]')).toBeNull()
     expect(dialog()?.textContent).toContain('53')
+    expect(dialog()?.textContent).not.toContain('no longer shown')
   })
 
   it('shows a short loading line while it asks', async () => {
     vi.stubGlobal('fetch', () => new Promise(() => {}))
     await open()
     expect(dialog()?.textContent).toContain('Loading the last hour')
+  })
+})
+
+describe('the line and the band on Data', () => {
+  const over: Surge = { ...surge, ended: surge.started + 25 * 60 }
+  const asked = () => vi.stubGlobal('fetch', () => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ surge: over }) }))
+
+  it('the line names the moment, offers only its source and leads back to today', async () => {
+    asked()
+    const { default: SurgeBanner } = await import('./SurgeBanner')
+    await act(() => {
+      root.render(<SurgeBanner site="tkb_b" tz="UTC" started={over.started} filters={[]} />)
+      return Promise.resolve()
+    })
+    await act(() => new Promise((r) => setTimeout(r, 40)))
+    expect(host.textContent).toContain('Busy moment')
+    expect(host.textContent).toContain('53 at peak · from Facebook → /blog/launch-post')
+    const [only, back] = [...host.querySelectorAll('button')]
+    expect(only.textContent).toBe('Only Facebook')
+    act(() => only.click())
+    expect(setView).toHaveBeenCalledWith({ filters: [{ dim: 'referrer', value: 'l.facebook.com' }] })
+    act(() => back.click())
+    expect(setView).toHaveBeenCalledWith(expect.objectContaining({ period: 'today', surge: undefined, filters: [] }))
+  })
+
+  it('the band covers the hours from its start to its end, with its name', async () => {
+    asked()
+    const { SurgeBand } = await import('./SurgeBand')
+    const hour = localHour(over.started, 'UTC').hour
+    const labels = [-2, -1, 0, 1, 2].map((d) => `${hour.slice(0, 11)}${String(Number(hour.slice(11, 13)) + d).padStart(2, '0')}:00`)
+    const g = { x: (i: number) => 40 + i * 50, y: () => 200, vals: [], w: 400 }
+    await act(() => {
+      root.render(<SurgeBand site="tkb_c" tz="UTC" started={over.started} g={g} labels={labels} />)
+      return Promise.resolve()
+    })
+    await act(() => new Promise((r) => setTimeout(r, 40)))
+    const band = host.querySelector<HTMLElement>('.surge-band')
+    expect(band?.textContent).toBe('Busy moment · 2.7× usual')
+    expect(band?.style.left).toBe('115px')
   })
 })

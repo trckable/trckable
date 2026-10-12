@@ -1,0 +1,28 @@
+/* The busy moment on the hourly chart (SurgeBand): a soft band in the accent, its name at the top. */
+.surge-band {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 13%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+  pointer-events: none;
+}
+.surge-band b {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  white-space: nowrap;
+  color: var(--text-2);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.surge-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.surge-banner .chip {
+  margin-left: auto;
+}

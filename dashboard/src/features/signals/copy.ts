@@ -37,9 +37,10 @@ export const signals = defineCopy('signals', {
     // The story.
     modalLabel: 'The busy moment',
     loading: 'Loading the last hour…',
-    over: 'This busy moment is over, so its last hour is no longer shown.',
+    ended: (at: string) => `Ended ${at}`,
     jump: (before: number, online: number, minutes: number) => `${before} → ${online} in ${minutes} min`,
     chartLabel: (start: string, peak: number) => `People online in the last hour${start ? `, climbing from ${start}` : ''}, peaking at ${peak}`,
+    windowLabel: (from: string, to: string, start: string, peak: number) => `People online from ${from} to ${to}${start ? `, climbing from ${start}` : ''}, peaking at ${peak}`,
     hourAgo: '1 h ago',
     nowEdge: 'now',
     startMark: (at: string) => `Start ${at}`,
@@ -60,6 +61,15 @@ export const signals = defineCopy('signals', {
     startedFrom: (source: string, page: string) => `Looks like a link on ${source}${page ? `, landing on ${page},` : ''} started sending people. The exact post isn’t visible.`,
     startedNoSource: 'The climb began without a referring site we can see.',
     // The browser notice: at most one emoji.
+    // Data, landed on the moment: the band on the chart and the line over the numbers.
+    bandLabel: (times: string) => `Busy moment · ${times} usual`,
+    spanBetween: (from: string, to: string) => `${from}–${to}`,
+    spanSince: (from: string) => `since ${from}`,
+    bannerHead: (span: string) => `Busy moment ${span}`,
+    atPeak: (n: number) => `${n} at peak`,
+    fromSource: (source: string, page: string) => `from ${source}${page ? ` → ${page}` : ''}`,
+    only: (source: string) => `Only ${source}`,
+    backToday: 'Back to today',
     noticeTitle: (online: number, source: string) => `${online} people on your site right now${source ? `, mostly from ${source}` : ''} 🎉`,
     noticeBody: (domain: string) => `${domain} is busier than usual. Worth a look while it is happening.`,
   },

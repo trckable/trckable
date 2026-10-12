@@ -46,7 +46,7 @@ function useNotice(surge: Surge | null, domain: string) {
 
 function Card({ surge, tz }: { surge: Surge; tz: string }) {
   const [gone, putAway] = useSeen('surge', surge.id)
-  const { see } = useSurgeActions(surge, putAway)
+  const { see } = useSurgeActions(surge, tz, putAway)
   const [story, setStory] = useState(false)
   useEffect(() => onOpenSurgeStory(surge.id, () => setStory(true)), [surge.id])
   return (

@@ -267,6 +267,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/live", a.authed(a.live))
 	handle("GET /api/v1/sites/{site}/now", a.authed(a.liveNow))
 	handle("GET /api/v1/sites/{site}/surge", a.authed(a.surgeNow))
+	handle("GET /api/v1/sites/{site}/surges/near", a.authed(a.surgeNear))
 	handle("GET /api/v1/sites/{site}/busier", a.authed(a.busierNow))
 	handle("GET /api/v1/health", a.authed(a.health))
 	handle("GET /api/v1/keys", a.authed(a.keys))

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -171,6 +172,18 @@ func TestSurgeEndsAndDoesNotRepeatWithinThreeHours(t *testing.T) {
 	}
 	if latest, _ := g.ctl.LatestSurge(context.Background(), g.site); latest == nil || latest.Ended == 0 {
 		t.Fatalf("the end is kept: %+v", latest)
+	}
+	// The moment is still there once it is over, with its own window drawn from the stored events.
+	latest, _ := g.ctl.LatestSurge(context.Background(), g.site)
+	code, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/surges/near?t="+strconv.FormatInt(latest.Started+60, 10), "")
+	one, _ := out["surge"].(map[string]any)
+	story, _ := one["story"].(map[string]any)
+	series, _ := story["series"].([]any)
+	if code != http.StatusOK || one["id"] != latest.ID || one["ended"] == float64(0) || len(series) < 6 || story["peak"] != float64(16) || story["start"] != float64(latest.Started) {
+		t.Fatalf("an ended moment: %d %v", code, out)
+	}
+	if code, _ := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/surges/near?t=5", ""); code != http.StatusNotFound {
+		t.Fatalf("an unknown moment: %d", code)
 	}
 	// Another crowd, 20 minutes after the first began: inside the cooldown.
 	now := g.advance(0)

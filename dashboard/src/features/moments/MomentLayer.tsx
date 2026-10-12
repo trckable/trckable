@@ -12,6 +12,7 @@ import type { Bucket, Point, ReportQuery, Site } from '../../lib/api'
 import { fmtDay, todayIn } from '../../lib/dates'
 import { sameFilter } from '../../lib/filterSet'
 import { readView, setView } from '../../lib/url'
+import { SurgeBand } from '../signals/SurgeBand'
 import { rangeOf } from '../../lib/dashQuery'
 import { LANE_H } from '../../charts/plot'
 import { patchFor } from './apply'
@@ -88,8 +89,10 @@ export default function MomentLayer(p: LayerProps) {
   // The first marker also says what the markers are.
   const teaching = !!tip && tip.i === marks[0]?.i
   const day = current && placed.find((q) => q.pin.id === current.pins[current.at].id)
+  const surge = readView(new URLSearchParams(location.search)).surge
   return (
     <>
+      {surge && <SurgeBand site={p.site.id} tz={p.site.timezone} started={surge} g={g} labels={p.labels} />}
       {marks.length > 0 && <i className="moment-lane" aria-hidden="true" style={{ left: g.x(0), width: g.w - g.x(0), top: LANE }} />}
       {day && <i className={`moment-day ${day.pin.kind}`} aria-hidden="true" style={{ left: g.x(day.i), width: Math.max(8, g.x(1) - g.x(0)), top: LANE_H, height: g.y(0) - LANE_H }} />}
       <div role="group" aria-label={copy.moments} className="moment-marks">

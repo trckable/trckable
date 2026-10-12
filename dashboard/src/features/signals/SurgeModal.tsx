@@ -10,7 +10,7 @@ import { RefMark } from '../cards/refIcons'
 import { useHostIcon } from './useHostIcon'
 import { Rolling } from '../moments/Rolling'
 import { signals } from './copy'
-import { beats, deviceShare, honestLine, surgeChip, type Story, type Surge } from './surge'
+import { beats, clock, deviceShare, honestLine, surgeChip, type Story, type Surge } from './surge'
 import { SurgeChart } from './SurgeChart'
 import { useFullSurge } from './useFullSurge'
 import { useSurgeActions } from './useSurgeActions'
@@ -21,7 +21,7 @@ const t = signals.surge
 /** site: the site's id, so a surge that arrives without its story (told by a notice) gets the story fetched. */
 export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: { surge: Surge; site?: string; tz: string; onClose: () => void; onSee: () => void }) {
   const { surge, state } = useFullSurge(given, site)
-  const { see, canAsk, notify } = useSurgeActions(surge, () => {
+  const { see, canAsk, notify } = useSurgeActions(surge, tz, () => {
     onSee()
     onClose()
   })
@@ -41,6 +41,7 @@ export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: {
         </b>
         <span className="sgm-meta">
           <span className="sg-chip">{surgeChip(surge)}</span>
+          {surge.ended ? <span className="sgm-ended muted">{t.ended(clock(surge.ended, tz))}</span> : null}
           {w.before < surge.online && w.minutes > 0 && <span className="sgm-jump">{t.jump(w.before, surge.online, w.minutes)}</span>}
         </span>
       </header>
@@ -49,7 +50,8 @@ export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: {
           {t.loading}
         </p>
       )}
-      {state === 'over' && <p className="sgm-wait muted">{t.over}</p>}
+      <p className="sgm-honest muted">{honestLine(surge)}</p>
+      {w.campaign && <p className="sgm-camp muted">{t.campaign(w.campaign)}</p>}
       <SurgeChart surge={surge} tz={tz} />
       <ol className="sgm-beats">
         {beats(surge, tz).map((b) => (
@@ -59,8 +61,6 @@ export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: {
         ))}
       </ol>
       {st && <Tiles surge={surge} story={st} />}
-      <p className="sgm-honest muted">{honestLine(surge)}</p>
-      {w.campaign && <p className="sgm-camp muted">{t.campaign(w.campaign)}</p>}
       <div className="sgm-actions">
         {canAsk && (
           <button type="button" className="btn ghost" onClick={notify}>

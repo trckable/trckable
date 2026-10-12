@@ -21,7 +21,7 @@ import { useReport } from '../lib/useReport'
 import { useSample } from '../lib/useSample'
 import { AskPanel } from './AskLazy'
 import { pressed, useKeymap } from '../lib/keys'
-import { Notice, StoppedNotice } from './DashboardParts'
+import { Notice, StoppedNotice, SurgeNote } from './DashboardParts'
 import { extra } from '../features/extras/slots'
 import { momentLayer } from '../features/moments/slots'
 import { KpiStrip } from '../features/overview/KpiStrip'
@@ -509,7 +509,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {!isShared() && location.search.includes('import=ga') && <Suspense fallback={null}><GaReturn site={site} /></Suspense>}
       <MilestonesSlot ms={ms} site={site} quiet={showInstall} revenue={mods === null || shows(mods, 'cards', 'revenue')} />
       {!showInstall && !isShared() && siteState(site) === 'stopped' && <StoppedNotice site={site} />}
-
+      {view.surge && <SurgeNote site={site.id} tz={site.timezone} started={view.surge} filters={view.filters} />}
       {view.test && <Notice kind="test" onAct={() => setView({ test: false })} />}
       {money && money.unconverted > 0 && (
         <div className="banner">{unconvertedNote(money)}</div>

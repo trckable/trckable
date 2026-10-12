@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
@@ -192,3 +193,57 @@ func (a *API) surgeStory(ctx context.Context, site string, s surge.Surge) *surge
 	a.storyMu.Unlock()
 	return &story
 }
+
+// surgeWindow is how much of the stored events a past busy moment shows on
+// each side: half an hour before it began and half an hour after it ended.
+const surgeWindow = 30 * time.Minute
+
+// surgeSame is how far apart (seconds) two accounts of one busy moment may say it began.
+const surgeSame = 15 * 60
+
+// surgeNear is GET /api/v1/sites/{site}/surges/near?t=<unix>: the busy moment
+// that began at t (a notice names it by when it began), over or not, with its
+// chart drawn from the stored events around it.
+func (a *API) surgeNear(w http.ResponseWriter, r *http.Request) {
+	site := r.PathValue("site")
+	q := a.Query()
+	if q == nil {
+		w.Header().Set("Retry-After", "2")
+		fail(w, http.StatusServiceUnavailable, "analytics store warming up")
+		return
+	}
+	at, err := strconv.ParseInt(r.URL.Query().Get("t"), 10, 64)
+	if err != nil {
+		fail(w, http.StatusBadRequest, "t must be unix seconds")
+		return
+	}
+	s, err := a.Ctl.SurgeNear(r.Context(), site, at, surgeSame)
+	if err != nil {
+		fail(w, http.StatusInternalServerError, "could not read the busy moment")
+		return
+	}
+	if s == nil {
+		fail(w, http.StatusNotFound, "no such busy moment")
+		return
+	}
+	out := surgeAnswer{Surge: &surgeOut{Surge: *s, Times: moments.Round(s.Factor())}}
+	now := a.Now()
+	from := time.Unix(s.Started, 0).Add(-surgeWindow)
+	to := now
+	if s.Ended > 0 {
+		to = time.Unix(s.Ended, 0).Add(surgeWindow)
+		if to.After(now) {
+			to = now
+		}
+	}
+	// Whole slices, ending on a slice edge from the start of the window.
+	to = from.Add(to.Sub(from) / surgeBucket * surgeBucket)
+	if series, err := q.SurgeSeriesBetween(r.Context(), site, from, to); err == nil && len(series) > 1 {
+		st := surge.BuildPastStory(series, to, s.Started)
+		out.Surge.Story = &st
+	}
+	w.Header().Set("Cache-Control", "private, no-store")
+	writeJSON(w, http.StatusOK, out)
+}
+
+const surgeBucket = 5 * time.Minute

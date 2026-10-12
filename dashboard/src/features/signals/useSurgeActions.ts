@@ -1,16 +1,14 @@
-// What the surge card and its story can do: open today in Data filtered to the
-// source, and ask for browser notices (from a click only, never by itself).
+// What the surge card and its story can do: open Data on the moment, and ask for browser notices (from a click only, never by itself).
 import { toast } from '../../components/Toast'
 import { setView } from '../../lib/url'
 import { signals } from './copy'
 import { askPermission, canNotify } from './notify'
 import { pref, setPref } from './prefs'
-import { surgeFilter, type Surge } from './surge'
+import { seeInData, type Surge } from './surge'
 
-export function useSurgeActions(surge: Surge, done: () => void) {
-  const filter = surgeFilter(surge)
+export function useSurgeActions(surge: Surge, tz: string, done: () => void) {
   const see = () => {
-    setView({ live: false, period: 'today', from: undefined, to: undefined, filters: filter ? [filter] : [], day: undefined })
+    setView(seeInData(surge, tz))
     done()
   }
   /** Offered to someone who has not decided, in a browser that can. */

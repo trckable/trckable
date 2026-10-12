@@ -43,6 +43,12 @@ func TestSurgesAreKeptAndTheBusiestFound(t *testing.T) {
 	if best, _ := st.BusiestSurge(ctx, site, 0, 2000); best == nil || best.ID != "s1" {
 		t.Fatalf("busiest of the first week %+v", best)
 	}
+	if near, _ := st.SurgeNear(ctx, site, 5100, 900); near == nil || near.ID != "s2" {
+		t.Fatalf("near %+v", near)
+	}
+	if far, _ := st.SurgeNear(ctx, site, 3000, 900); far != nil {
+		t.Fatalf("nothing began near 3000: %+v", far)
+	}
 	// Another site's id cannot overwrite it.
 	other, _ := st.CreateSite(ctx, DefaultAccount, "b.com", "")
 	steal := second
