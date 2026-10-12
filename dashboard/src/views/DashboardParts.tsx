@@ -7,6 +7,7 @@ import { lazyLoad } from '../lib/lazyLoad'
 
 const Stopped = lazyLoad(() => import('../components/StoppedNotice').then((m) => ({ default: m.StoppedNotice })))
 const Note = lazyLoad(() => import('./Notices'))
+const SurgeLine = lazyLoad(() => import('../features/signals/SurgeBanner'))
 
 export function StoppedNotice(p: ComponentProps<typeof Stopped>) {
   return (
@@ -22,6 +23,15 @@ export function Notice(p: ComponentProps<typeof Note>) {
   return (
     <Suspense fallback={null}>
       <Note {...p} />
+    </Suspense>
+  )
+}
+
+/** The line over Data when it was opened on a busy moment (its chunk is fetched only then). */
+export function SurgeNote(p: ComponentProps<typeof SurgeLine>) {
+  return (
+    <Suspense fallback={null}>
+      <SurgeLine {...p} />
     </Suspense>
   )
 }

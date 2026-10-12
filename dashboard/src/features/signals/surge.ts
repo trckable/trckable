@@ -3,6 +3,8 @@
 // parts here so surge.test.ts reads them; the card draws them (SurgeCard.tsx).
 import type { Filter } from '../../lib/api'
 import { call } from '../../lib/api'
+import { addDays, todayIn, type ISODate } from '../../lib/dates'
+import type { ViewState } from '../../lib/url'
 import { times } from '../../lib/times'
 import { signals } from './copy'
 
@@ -137,4 +139,41 @@ export function deviceShare(st: Story): { phone: number; computer: number } | nu
   if (known < 5) return null
   const phone = Math.round(((st.mobile ?? 0) * 100) / known)
   return { phone, computer: 100 - phone }
+}
+
+const HALF_HOUR = 30 * 60
+
+/** The site's own day and hour of a moment, as the hourly chart names its buckets: "2026-09-22" and "2026-09-22T12:00". */
+export function localHour(unix: number, tz: string): { day: ISODate; hour: string } {
+  let parts: Record<string, string>
+  try {
+    parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).formatToParts(unix * 1000).map((p) => [p.type, p.value]))
+  } catch {
+    return localHour(unix, 'UTC')
+  }
+  const day = `${parts.year}-${parts.month}-${parts.day}`
+  return { day, hour: `${day}T${parts.hour}:00` }
+}
+
+/**
+ * What "See it in Data" does to the address: the day or days around the moment (half an hour before
+ * it began to half an hour after it ended, or now while it lasts), by the hour, against the same days
+ * a week earlier (the usual is the same hour of the same weekday), opened on the numbers. No filter is
+ * applied: the other traffic stays in view, and the page offers the source as a chip.
+ */
+export function seeInData(s: Surge, tz: string, now = new Date()): Partial<ViewState> {
+  const today = todayIn(tz, now)
+  const from = localHour(s.started - HALF_HOUR, tz).day
+  const end = s.ended ? Math.min(s.ended + HALF_HOUR, Math.floor(now.getTime() / 1000)) : Math.floor(now.getTime() / 1000)
+  const to = localHour(end, tz).day
+  const last = to > today ? today : to
+  return { live: false, period: 'custom', from, to: last, bucket: 'hour', compare: 'custom', cfrom: addDays(from, -7), cto: addDays(last, -7), filters: [], day: undefined, v: 'explore', story: undefined, surge: s.started }
+}
+
+/** The line over the numbers: when it was, how busy, who sent them and where they landed. */
+export function bannerLine(s: Surge, tz: string): string {
+  const from = clock(s.started, tz)
+  const span = s.ended ? t.spanBetween(from, clock(s.ended, tz)) : t.spanSince(from)
+  const w = s.why
+  return [t.bannerHead(span), t.atPeak(s.online), w.source ? t.fromSource(w.source, w.page ?? '') : ''].filter(Boolean).join(' · ')
 }

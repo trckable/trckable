@@ -21,7 +21,7 @@ const t = signals.surge
 /** site: the site's id, so a surge that arrives without its story (told by a notice) gets the story fetched. */
 export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: { surge: Surge; site?: string; tz: string; onClose: () => void; onSee: () => void }) {
   const { surge, state } = useFullSurge(given, site)
-  const { see, canAsk, notify } = useSurgeActions(surge, () => {
+  const { see, canAsk, notify } = useSurgeActions(surge, tz, () => {
     onSee()
     onClose()
   })
