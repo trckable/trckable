@@ -17,8 +17,8 @@ export const copy = defineCopy('sites.menu', {
 
   // A site's state, where its number would be, when the dot alone can't say it.
   setup: 'setup',
-  downFor: (span: string) => `down · ${span}`,
-  quietFor: (span: string) => `quiet · ${span}`,
+  downTip: (span: string) => `Not reachable for ${span}. Open the site to see what’s wrong.`,
+  quietTip: (span: string) => `No visits for ${span}. Nothing looks wrong with the page.`,
 
   // The numbers: today's visitors per site, and both totals beside All sites.
   today: (n: string) => `${n} today`,

@@ -38,7 +38,11 @@ test('a stopped site keeps its mark in the switcher', async ({ page, browserName
   await page.goto(`${API}/example.com`)
   await page.locator('.site-pick .site-btn').click()
   const row = page.locator(`[data-site="${site.id}"]`)
-  await expect(row.locator('.stopped-note')).toBeVisible()
+  const icon = row.locator('.state-icon.down')
+  await expect(icon).toBeVisible()
+  await icon.hover()
+  await expect(page.getByRole('tooltip')).toHaveText('Not reachable for 3d. Open the site to see what’s wrong.')
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/state-icon-down-${browserName}.png` })
   const mark = row.locator('.site-mark')
   const dot = row.locator('.state-dot.stopped')
   await expect(mark).toBeVisible()
@@ -50,6 +54,35 @@ test('a stopped site keeps its mark in the switcher', async ({ page, browserName
   expect(d.width).toBeLessThan(14)
   expect(d.height).toBeLessThan(14)
   expect(d.width * d.height).toBeLessThan((m.width * m.height) / 3)
+})
+
+test('a quiet site shows a moon with its explanation', async ({ page, browserName }) => {
+  const site = await newSite(page, `quiet-${browserName}`)
+  const gone = await newSite(page, `gone-${browserName}`)
+  const now = Math.floor(Date.now() / 1000)
+  await page.route('**/api/v1/sites', async (r) => {
+    if (r.request().method() !== 'GET') return r.continue()
+    const res = await r.fetch()
+    const body = (await res.json()) as { sites: Record<string, unknown>[] }
+    for (const s of body.sites) {
+      if (s.id === site.id) Object.assign(s, { last_event_at: now - 19 * 3600, check: { at: now - 3600, found: 'none' } })
+      if (s.id === gone.id) Object.assign(s, { last_event_at: now - 3 * DAY, check: { at: now - DAY, error: 'timeout', down_since: now - 2 * DAY } })
+    }
+    await r.fulfill({ response: res, json: body })
+  })
+  if (SHOTS) {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.emulateMedia({ colorScheme: 'dark' })
+  }
+  await page.goto(`${API}/example.com`)
+  await page.locator('.site-pick .site-btn').click()
+  const row = page.locator(`[data-site="${site.id}"]`)
+  await expect(row).not.toContainText('quiet ·')
+  const icon = row.locator('.state-icon.quiet')
+  await icon.hover()
+  await expect(page.getByRole('tooltip')).toHaveText('No visits for 19h. Nothing looks wrong with the page.')
+  if (SHOTS) await page.waitForTimeout(400)
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/state-icon-quiet-${browserName}.png` })
 })
 
 for (const size of [
