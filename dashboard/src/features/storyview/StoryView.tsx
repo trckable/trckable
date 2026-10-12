@@ -19,6 +19,7 @@ import { metricName } from '../overview/chartMetric'
 import { bar } from './barCopy'
 import { copy } from './copy'
 import { Answers } from './Answers'
+import { BounceCard } from './BounceCard'
 import { Ask } from './Ask'
 import { MomentSpans } from './MomentSpans'
 import { SetupCard } from './SetupCard'
@@ -100,6 +101,8 @@ export default function StoryView(p: StoryViewProps) {
       </section>
 
       <Tiles tiles={facts.tiles} series={tileSeries(cur.series, !!p.money)} onConnect={() => setConnect(true)} />
+
+      {cur.kpis.sessions > 0 && <BounceCard site={p.site} query={p.query} />}
 
       <Card className="sv-chart" icon={<ChartLine size={15} strokeWidth={1.8} />} title={copy.chartTitle} status={marks.length > 0 ? copy.chartHint(marks.length) : undefined} label={copy.chartTitle}>
         <div className="sv-chart-body">

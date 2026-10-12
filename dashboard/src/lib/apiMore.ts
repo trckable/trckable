@@ -9,6 +9,32 @@ export * from './api'
 export { siteState, type SiteState } from '../features/sitestatus/status'
 import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, WebVitals, Widget, WidgetLook } from './api'
 
+/** One row that explains why more visitors leave after one page. */
+export interface BounceCause {
+  kind: 'page' | 'source_device' | 'speed'
+  /** The page path, or "Search · Mobile". */
+  label: string
+  source?: string
+  device?: string
+  rate: number
+  share_of_visits: number
+  /** Its own rate over the usual weeks; null when it had too few visits then. */
+  was: number | null
+  /** speed: the page's 75th percentile LCP, ms. */
+  lcp_ms?: number
+}
+
+/** Whether visitors leave after one page more (or less) than usual, and what explains it. */
+export interface BounceGuide {
+  direction: 'high' | 'low' | 'normal'
+  rate: number
+  usual: number
+  sessions: number
+  /** First day (site zone) the daily rate left the usual. */
+  since?: string
+  causes: BounceCause[]
+}
+
 /** A robot on one errand, and how often it came. */
 export interface AiBot {
   name: string

@@ -7,7 +7,7 @@ const row = (o: Partial<SiteRow> = {}): SiteRow =>
   ({ id: 's1', domain: 'example.com', name: 'Example', timezone: 'UTC', currency: 'USD', visitors: 10, previous_visitors: 8, pageviews: 30, bounce_rate: 0.4, online: 0, series: [1, 2, 3], ...o }) as SiteRow
 
 const html = (layout: 'cards' | 'list', rows: SiteRow[]) =>
-  renderToStaticMarkup(<AllRows rows={rows} layout={layout} total={20} start={0} colorOf={() => '#000'} brandOf={(_, domain) => ({ domain })} />)
+  renderToStaticMarkup(<AllRows rows={rows} layout={layout} days={30} total={20} start={0} colorOf={() => '#000'} brandOf={(_, domain) => ({ domain })} />)
 
 describe('the open-site link on All sites', () => {
   afterEach(() => vi.unstubAllGlobals())

@@ -1,0 +1,56 @@
+/* The bounce guide (BounceGuideModal.tsx). Shares the busy-moment card's shell (surge.css). */
+.bounce-modal .bg-rate {
+  font-family: var(--mono);
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.bounce-modal .bg-leave {
+  color: var(--text-2);
+  font-size: 14px;
+}
+.bounce-modal .bg-since {
+  background: color-mix(in srgb, var(--down, var(--warn)) 15%, transparent);
+  color: var(--down, var(--warn));
+}
+.bounce-modal .bg-note {
+  margin: 0;
+  font-size: 14px;
+}
+.bounce-modal .bg-causes,
+.bounce-modal .bg-try ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bounce-modal .bg-cause {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.bounce-modal .bg-lead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 14px;
+}
+.bounce-modal .bg-stat {
+  font-size: 12.5px;
+}
+.bounce-modal .bg-try h3 {
+  margin: 0 0 6px;
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.bounce-modal .bg-try li {
+  font-size: 14px;
+}

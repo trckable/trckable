@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Bounce guide: when visitors leave after one page clearly more than usual, the amber bounce chip on a site in All sites and a new card in the Story ("8 in 10 leave after one page (usual ~5 in 10)" with "See why") open a card with the rate, the day it started, the pages, sources on a device and slow loads that explain it, and at most two things to try. "See this page" opens Data on that page. When fewer leave than usual the Story says so. It is listed in Features. API: `GET /api/v1/sites/{site}/report/bounce-guide` (`from`/`to`, or `days`).
+
 ## 0.7.8 (12 Oct 2026)
 
 - The "Busier than usual" line in Live is one short line ("+15 from Facebook · +8 from Albania · since 16:45 · still going", no page) and the line and "Why?" open the same busy-moment card as the notification. The old wide box with the long sentence is gone. Also: the five translated languages have "Revenue per visitor" again.

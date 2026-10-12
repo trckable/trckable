@@ -647,3 +647,43 @@ func (a *API) today(r *http.Request, site string) string {
 	}
 	return a.Now().In(loc).Format("2006-01-02")
 }
+
+// bounceGuide says whether visitors leave after one page more than usual, and
+// what explains it: pages, sources on a device, slow loads. Not a module: the
+// speed part only appears when the vitals module has data.
+func (a *API) bounceGuide(w http.ResponseWriter, r *http.Request) {
+	a.lastDays(r)
+	q, p, ok := a.params(w, r)
+	if !ok {
+		return
+	}
+	g, err := q.BounceGuide(r.Context(), p, a.moduleOn(r, p.Site, "vitals"))
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.Header().Set("Cache-Control", "private, no-store")
+	writeJSON(w, http.StatusOK, g)
+}
+
+// lastDays turns days=N (the All sites periods: the last N days, today
+// included, in the site's zone) into the from and to the other reports take.
+func (a *API) lastDays(r *http.Request) {
+	v := r.URL.Query()
+	n, _ := strconv.Atoi(v.Get("days"))
+	if n < 1 || n > 366 || v.Get("from") != "" {
+		return
+	}
+	tz := v.Get("tz")
+	if si, err := a.Ctl.SiteInfo(r.Context(), r.PathValue("site")); err == nil && tz == "" {
+		tz = si.Timezone
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return
+	}
+	today := a.Now().In(loc)
+	v.Set("to", today.Format("2006-01-02"))
+	v.Set("from", today.AddDate(0, 0, 1-n).Format("2006-01-02"))
+	r.URL.RawQuery = v.Encode()
+}

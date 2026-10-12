@@ -282,6 +282,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/report/ai-search", a.authed(a.aiSearch))
 	handle("GET /api/v1/sites/{site}/report/ai-seen", a.authed(a.aiSeen))
 	handle("GET /api/v1/sites/{site}/report/vitals", a.authed(a.vitals))
+	handle("GET /api/v1/sites/{site}/report/bounce-guide", a.authed(a.bounceGuide))
 	handle("GET /api/v1/sites/{site}/report/retention", a.authed(a.retention))
 	handle("GET /api/v1/sites/{site}/report/scroll", a.authed(a.scroll))
 	handle("GET /api/v1/sites/{site}/heat", a.authed(a.gated("GET /api/v1/sites/{site}/heat", a.heat)))

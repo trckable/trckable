@@ -53,6 +53,7 @@ export const FEATURES: Feature[] = [
   { id: 'replay', group: 'insights', where: { to: 'press', key: 'replay' } },
   { id: 'segments', group: 'insights', where: { to: 'press', key: 'filter' } },
   { id: 'surge', group: 'insights', where: settings('alerts') },
+  { id: 'bounce', group: 'insights', where: { to: 'all' } },
 
   { id: 'revenue', group: 'revenue', module: 'revenue', where: settings('payments') },
   { id: 'sales', group: 'revenue', where: account('profile') },
