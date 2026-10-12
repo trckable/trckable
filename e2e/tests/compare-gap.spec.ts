@@ -19,6 +19,7 @@ for (const width of [1440, 1280, 800]) {
     await expect(period).toBeVisible({ timeout: 15_000 })
     await expect(compare).toBeVisible()
     await page.evaluate(() => document.fonts.ready)
+    await compare.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished))) // the pill grows in
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/compare-gap-${width}-${SCHEME}.png`, clip: { x: 0, y: 0, width, height: 150 } })
     const a = (await period.boundingBox())!
     const b = (await compare.boundingBox())!
@@ -26,6 +27,18 @@ for (const width of [1440, 1280, 800]) {
     expect(toolbar).toBeGreaterThan(0)
     // Layout boxes are fractional (Firefox gives 7.9999 for 8px): allow a hundredth of a pixel, no more.
     expect(b.x - (a.x + a.width)).toBeGreaterThanOrEqual(toolbar - 0.01)
+    // The comparison is the quieter control: no fill, a hairline border, the same height and radius.
+    const look = (loc: typeof period) =>
+      loc.evaluate((el) => {
+        const c = getComputedStyle(el)
+        return { bg: c.backgroundColor, border: c.borderTopWidth, radius: c.borderTopLeftRadius }
+      })
+    const [pl, cl] = [await look(period), await look(compare)]
+    expect(cl.bg).toBe('rgba(0, 0, 0, 0)')
+    expect(cl.border).toBe('1px')
+    expect(pl.border).toBe('0px')
+    expect(cl.radius).toBe(pl.radius)
+    expect(b.height).toBe(a.height)
   })
 }
 

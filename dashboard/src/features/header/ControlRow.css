@@ -87,7 +87,6 @@
 .ctl-cap .btn.cmp-btn.on {
   width: auto;
   padding: 0 8px 0 12px;
-  color: var(--text);
   animation: ctl-grow-w 0.28s var(--ease) both;
 }
 .cmp-btn.on .cmp-icon {
@@ -330,11 +329,15 @@
 }
 .ctl-cap .btn.cmp-btn.on {
   color: var(--text-3);
-  padding: 0 8px 0 0;
+  padding: 0 12px;
+  border: 1px solid var(--border); /* secondary: no fill (the base is transparent), a hairline */
 }
-.ctl-cap .btn.cmp-btn.on .cmp-icon,
-.ctl-cap .btn.cmp-btn.on .cmp-chev {
-  display: none;
+/* Wide: just the words. Tablet: just the icon (the rule above gives the words way). */
+@media (min-width: 961px) {
+  .ctl-cap .btn.cmp-btn.on .cmp-icon,
+  .ctl-cap .btn.cmp-btn.on .cmp-chev {
+    display: none;
+  }
 }
 /* Filters: nothing in force is a dashed "+ Filter"; chips carry their own x. */
 .ctl-cap .filter-root .btn.filter,
