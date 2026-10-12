@@ -11,7 +11,7 @@ export function EmptyState({ line, action, onAction, icon }: { line: string; act
       {icon ?? <Ghost size={44} />}
       <p>{line}</p>
       {action && onAction && (
-        <button type="button" className="btn ghost" onClick={onAction}>
+        <button type="button" className="btn" onClick={onAction}>
           {action}
         </button>
       )}

@@ -23,8 +23,9 @@ export const laterCopy = defineCopy('cards.later', {
   foundThem: 'First visit',
   page: 'Page',
   customers: 'Customers',
-  perVisitor: 'Revenue per visitor',
+  perVisitor: 'Per visitor',
+  perVisitorFull: 'Revenue per visitor',
   wholePeriod: 'Whole-period view only',
-  noRevenue: 'No sale has been credited to a source yet. Pass trckable_vid to your checkout.',
-  noRevenueAction: 'Payments settings',
+  noRevenue: 'No sales linked to a source yet.',
+  noRevenueAction: 'Connect payments',
 })

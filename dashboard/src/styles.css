@@ -710,6 +710,7 @@ textarea:focus-visible {
 .bl-cols .bl-rev {
   font-family: inherit;
   font-size: 11px;
+  white-space: nowrap; /* a head is one line, whatever the column */
 }
 .bl-rev.none {
   color: var(--text-3);

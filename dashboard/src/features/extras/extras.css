@@ -105,3 +105,8 @@
 .bl.wide-sub .bl-cols .bl-sub {
   width: 64px;
 }
+
+/* "Customers" is a word, not a count: its column is as wide as the word. */
+.bl.wide-val .bl-val {
+  width: 62px;
+}

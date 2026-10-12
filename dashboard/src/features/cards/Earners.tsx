@@ -35,7 +35,9 @@ export default function EarnersPanel({ c }: { c: CardsCtx }) {
       <BarList
         dimLabel={DIM_LABEL[asked]}
         valueLabel={laterCopy.customers}
+        wideVal
         subLabel={laterCopy.perVisitor}
+        subTitle={laterCopy.perVisitorFull}
         fmtSub={c.fmtMoney}
         loading={c.loading}
         byRevenue

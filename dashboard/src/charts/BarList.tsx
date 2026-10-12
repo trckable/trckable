@@ -34,9 +34,13 @@ export function BarList(p: {
   /** No column heads and no change/share column: a short list inside a card. */
   bare?: boolean
   valueLabel?: string
+  /** The value head is a word (Customers), wider than a count: its column makes room. */
+  wideVal?: boolean
   /** How the value column reads; counts by default. */
   fmtValue?: (n: number) => string
   subLabel?: string
+  /** The full words of a shortened sub head, shown on hover and read aloud. */
+  subTitle?: string
   /** How the sub column reads; a share by default. */
   fmtSub?: (n: number) => string
   loading?: boolean
@@ -60,7 +64,7 @@ export function BarList(p: {
 
   if (p.loading) return <Loading height={164} />
   return (
-    <div className={'bl' + (p.money ? ' has-rev' : '') + (p.fmtSub ? ' wide-sub' : '') + (p.action ? ' has-act' : '')}>
+    <div className={'bl' + (p.money ? ' has-rev' : '') + (p.fmtSub ? ' wide-sub' : '') + (p.wideVal ? ' wide-val' : '') + (p.action ? ' has-act' : '')}>
       {!p.bare && (
         <div className="bl-cols">
           <span className="bl-lead">
@@ -69,7 +73,7 @@ export function BarList(p: {
             <span className="bl-val">{p.valueLabel ?? kitCopy.visitors}</span>
           </span>
           <span className="bl-tail" />
-          {p.subLabel && <span className="bl-sub">{p.subLabel}</span>}
+          {p.subLabel && <span className="bl-sub" title={p.subTitle} aria-label={p.subTitle}>{p.subLabel}</span>}
           {p.money && <span className="bl-rev">{kitCopy.revenue}</span>}
         </div>
       )}
