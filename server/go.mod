@@ -5,6 +5,7 @@ go 1.27.1
 require (
 	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/duckdb/duckdb-go/v2 v2.10506.0
+	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/mileusna/useragent v1.3.5
 	github.com/oschwald/maxminddb-golang/v2 v2.7.0
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c
@@ -12,7 +13,7 @@ require (
 	golang.org/x/crypto v0.57.0
 	golang.org/x/image v0.46.0
 	golang.org/x/oauth2 v0.37.0
-	golang.org/x/sync v0.23.0
+	golang.org/x/sync v0.24.0
 	modernc.org/sqlite v1.60.1
 )
 
@@ -25,7 +26,6 @@ require (
 	github.com/duckdb/duckdb-go-bindings/lib/linux-arm64 v0.10506.0 // indirect
 	github.com/duckdb/duckdb-go-bindings/lib/windows-amd64 v0.10506.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
 	github.com/google/flatbuffers v25.12.19+incompatible // indirect
