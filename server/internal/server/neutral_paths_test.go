@@ -21,6 +21,22 @@ func TestNeutralPathsServeTheSameThings(t *testing.T) {
 		t.Fatalf("/s/x.js: %d, differs from /js/t.js", neutral.Code)
 	}
 
+	// /js/x.js is not a script: it is what it always was.
+	x := httptest.NewRecorder()
+	s.http.Handler.ServeHTTP(x, httptest.NewRequest(http.MethodGet, "/js/x.js", nil))
+	if x.Code != http.StatusNotFound {
+		t.Errorf("/js/x.js: %d, want 404", x.Code)
+	}
+
+	// Heatmap reports have the same neutral path as /api/h: same handler, same answer.
+	for _, path := range []string{"/api/h", "/s/h"} {
+		w := httptest.NewRecorder()
+		s.http.Handler.ServeHTTP(w, httptest.NewRequest(http.MethodPost, path, strings.NewReader(`{}`)))
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("POST %s with nothing in it: %d, want the handler's 400", path, w.Code)
+		}
+	}
+
 	for _, path := range []string{"/api/e", "/s/e"} {
 		w := httptest.NewRecorder()
 		s.http.Handler.ServeHTTP(w, httptest.NewRequest(http.MethodPost, path, strings.NewReader(`{"s":"tkb_nosuch","k":"pv","u":"https://site.com/"}`)))

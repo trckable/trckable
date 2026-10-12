@@ -233,7 +233,6 @@ func prelude(o ScriptOpts) string {
 // Tracker serves the browser script:
 //
 //	/js/t.js          every feature (the classic snippet with data-site)
-//	/s/x.js           the same file under a neutral name, for a first-party proxy
 //	/js/<site id>.js  only what that site's modules turn on
 //
 // Caching is one hour with a day of stale-while-revalidate, so turning a
@@ -243,7 +242,7 @@ func Tracker(features SiteFeatures, opts SiteScript) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s := all
 		pre := ""
-		if name := strings.TrimSuffix(path.Base(r.URL.Path), ".js"); name != "t" && name != "x" && features != nil {
+		if name := strings.TrimSuffix(path.Base(r.URL.Path), ".js"); name != "t" && features != nil {
 			if !strings.HasPrefix(name, "tkb_") {
 				http.NotFound(w, r)
 				return

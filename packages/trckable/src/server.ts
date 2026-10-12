@@ -12,7 +12,11 @@ export interface ProxyOptions {
    * every visitor would arrive from the proxy's own address.
    */
   proxyKey?: string
+  /** What the proxy carries: visits (default, your /s/e) or heatmap reports (your /s/h). */
+  target?: 'events' | 'heat'
 }
+
+const UPSTREAM = { events: '/api/e', heat: '/api/h' } as const
 
 const env = (k: string): string | undefined =>
   typeof process !== 'undefined' ? process.env?.[k] : undefined
@@ -62,7 +66,7 @@ export function proxy(options: ProxyOptions = {}): (req: Request) => Promise<Res
 
     let res: Response
     try {
-      res = await fetch(host + '/api/e', { method: 'POST', headers, body: await req.text() })
+      res = await fetch(host + UPSTREAM[options.target ?? 'events'], { method: 'POST', headers, body: await req.text() })
     } catch {
       // trckable unreachable (e.g. redeploying): 503 makes the tracker retry later.
       return new Response(null, { status: 503, headers: { 'retry-after': '5' } })
@@ -107,10 +111,16 @@ export function scriptProxy(options: Pick<ProxyOptions, 'host'> = {}): (req: Req
   }
 }
 
+/** Headers a visitor can send to name an address, and that nodeHandler therefore never trusts. */
+const ADDRESS_HEADERS = ['x-real-ip', 'x-forwarded-for', 'forwarded', 'cf-connecting-ip', 'true-client-ip', 'x-nf-client-connection-ip', 'fly-client-ip', 'x-trckable-client-ip']
+
 /** The parts of Node's request and response that nodeHandler uses, so no Node types are needed. */
 interface NodeRequest extends AsyncIterable<Uint8Array | string> {
   method?: string
   url?: string
+  /** Express's address for the visitor; it follows the app's "trust proxy" setting. */
+  ip?: string
+  socket?: { remoteAddress?: string }
   headers: Record<string, string | string[] | undefined>
 }
 interface NodeResponse {
@@ -120,7 +130,12 @@ interface NodeResponse {
 }
 
 /**
- * Lets Express, Connect or a plain node:http server use the handlers above:
+ * Lets Express, Connect or a plain node:http server use the handlers above.
+ *
+ * The visitor's address is never read from a header the visitor could have
+ * sent: it is Express's req.ip (set "trust proxy" if you are behind one) or
+ * the connection's own address, and it reaches the proxy as x-real-ip. Every
+ * header that names an address is removed first.
  *
  *   app.post('/s/e', nodeHandler(proxy()))
  *   app.get('/s/x.js', nodeHandler(scriptProxy()))
@@ -132,6 +147,9 @@ export function nodeHandler(handle: (req: Request) => Promise<Response>): (req: 
       if (Array.isArray(v)) v.forEach((x) => headers.append(k, x))
       else if (v !== undefined) headers.set(k, v)
     }
+    for (const h of ADDRESS_HEADERS) headers.delete(h)
+    const peer = req.ip ?? req.socket?.remoteAddress
+    if (peer) headers.set('x-real-ip', peer)
     const method = req.method ?? 'GET'
     let body: ArrayBuffer | undefined
     if (method !== 'GET' && method !== 'HEAD') {

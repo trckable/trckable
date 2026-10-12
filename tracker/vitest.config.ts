@@ -22,7 +22,7 @@ export default defineConfig({
       },
       {
         // The heatmaps module is a script of its own: it has no feature flags.
-        test: { name: 'heatmaps', include: ['test/heatmap.test.ts'] },
+        test: { name: 'heatmaps', include: ['test/heatmap.test.ts', 'test/heatscript.test.ts'] },
       },
     ],
   },

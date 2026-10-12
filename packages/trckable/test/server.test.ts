@@ -245,3 +245,56 @@ describe('nodeHandler', () => {
     expect(res.headers['set-cookie']).toBeUndefined()
   })
 })
+
+describe('nodeHandler and the visitor address', () => {
+  const spoofed = {
+    'x-real-ip': '6.6.6.6',
+    'x-forwarded-for': '6.6.6.6',
+    forwarded: 'for=6.6.6.6',
+    'cf-connecting-ip': '6.6.6.6',
+    'true-client-ip': '6.6.6.6',
+    'x-nf-client-connection-ip': '6.6.6.6',
+    'fly-client-ip': '6.6.6.6',
+    'x-trckable-client-ip': '6.6.6.6',
+  }
+  const run = async (req: Record<string, unknown>) => {
+    let seen: Headers | undefined
+    await nodeHandler(async (r) => ((seen = r.headers), new Response(null, { status: 204 })))(
+      { method: 'POST', url: '/s/e', headers: { host: 'site.com', ...spoofed }, async *[Symbol.asyncIterator]() {}, ...req } as any,
+      { setHeader() {}, end() {}, statusCode: 0 } as any,
+    )
+    return seen!
+  }
+
+  it('ignores every address header the visitor sent and uses the connection', async () => {
+    const h = await run({ socket: { remoteAddress: '203.0.113.9' } })
+    expect(h.get('x-real-ip')).toBe('203.0.113.9')
+    for (const name of Object.keys(spoofed).filter((n) => n !== 'x-real-ip')) expect(h.get(name)).toBeNull()
+  })
+
+  it('prefers the address Express worked out, which follows its trust proxy setting', async () => {
+    expect((await run({ ip: '198.51.100.4', socket: { remoteAddress: '10.0.0.1' } })).get('x-real-ip')).toBe('198.51.100.4')
+  })
+
+  it('names no address when there is none, rather than the visitor\'s claim', async () => {
+    const h = await run({})
+    expect(h.get('x-real-ip')).toBeNull()
+  })
+
+  it('forwards only the address it chose through proxy()', async () => {
+    const upstream = vi.fn(async () => new Response(null, { status: 202 }))
+    globalThis.fetch = upstream as any
+    const p = proxy({ host: 'https://stats.site.com', proxyKey: 'tkb_px_k' })
+    await nodeHandler(p)({ method: 'POST', url: '/s/e', headers: { host: 'site.com', 'cf-connecting-ip': '6.6.6.6' }, socket: { remoteAddress: '203.0.113.9' }, async *[Symbol.asyncIterator]() { yield '{}' } } as any, { setHeader() {}, end() {}, statusCode: 0 } as any)
+    expect((upstream.mock.calls[0] as any)[1].headers['x-trckable-client-ip']).toBe('203.0.113.9')
+  })
+})
+
+describe('proxy target', () => {
+  it('sends heatmap reports to /api/h', async () => {
+    const upstream = vi.fn(async () => new Response(null, { status: 202 }))
+    globalThis.fetch = upstream as any
+    await proxy({ host: 'https://stats.site.com', proxyKey: 'tkb_px_k', target: 'heat' })(incoming())
+    expect((upstream.mock.calls[0] as any)[0]).toBe('https://stats.site.com/api/h')
+  })
+})

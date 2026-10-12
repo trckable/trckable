@@ -15,6 +15,8 @@
 //
 //   // app/s/e/route.ts
 //   export { POST } from 'trckable/next'
+//   // app/s/h/route.ts (heatmaps)
+//   export { heatPost as POST } from 'trckable/next'
 //
 //   <Script src="/s/x.js" data-site="tkb_…" data-api="/s/e" defer />
 //
@@ -29,8 +31,11 @@ export { proxy as createProxy, scriptProxy, getIds, clientIP, checkoutFields, ch
 export type { ProxyOptions, TrckableIds, CheckoutProvider } from './server'
 export type { AnalyticsProps } from './react'
 
-/** Ready-made route handler for app/api/e/route.ts, configured from env. */
+/** Ready-made route handler for app/api/e/route.ts (or app/s/e/route.ts), configured from env. */
 export const POST = proxy()
+
+/** The same for heatmap reports: app/s/h/route.ts, `export { heatPost as POST } from 'trckable/next'`. */
+export const heatPost = proxy({ target: 'heat' })
 
 type Rewrite = { source: string; destination: string }
 type Rewrites = Rewrite[] | { beforeFiles?: Rewrite[]; afterFiles?: Rewrite[]; fallback?: Rewrite[] }
