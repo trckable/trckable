@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { Busier } from './api'
 import { BusierLine } from './BusierLine'
-import { clock, parts, shown } from './busier'
+import { asSurge, clock, parts, shown } from './busier'
 
 // 14:32 in Tirana (UTC+2 in October)
 const SINCE = Date.UTC(2026, 9, 6, 12, 32, 0) / 1000
@@ -28,37 +28,42 @@ describe('when the line shows', () => {
   })
 })
 
-describe('the panel', () => {
-  it('tells the sources, the page, the start and that it goes on', () => {
-    expect(parts(jump, 'Europe/Tirane').join(' · ')).toBe('+22 from Facebook → mostly /products/summer · +6 from Google · the rest as usual · Started 14:32 · still going')
+describe('the short line', () => {
+  it('tells the biggest senders, the start and that it goes on, never a page', () => {
+    expect(parts(jump, 'Europe/Tirane').join(' · ')).toBe('+22 from Facebook · +6 from Google · since 14:32 · still going')
+    expect(parts(jump, 'UTC').join(' ')).not.toContain('/products')
   })
-  it('says what is left when the named sources do not explain most of it', () => {
-    expect(parts({ ...jump, rest: 12 }, 'UTC')).toContain('+12 from elsewhere')
-  })
-  it('names a country and a campaign, and a page when no source stands out', () => {
-    const b: Busier = { ...base, rest: 0, why: [{ dim: 'page', value: '/', now: 30, usual: 5, plus: 25 }, { dim: 'country', value: 'DE', now: 20, usual: 2, plus: 18 }, { dim: 'campaign', value: 'sep', now: 9, usual: 0, plus: 9 }] }
-    expect(parts(b, 'UTC').slice(0, 3)).toEqual(['+25 on /', '+18 from Germany', '+9 from the campaign sep'])
+  it('keeps two senders at most, a country after the sources', () => {
+    const b: Busier = { ...jump, why: [...jump.why, { dim: 'country', value: 'DE', now: 20, usual: 2, plus: 18 }] }
+    expect(parts(b, 'UTC').slice(0, 2)).toEqual(['+22 from Facebook', '+6 from Google'])
+    expect(parts({ ...base, why: [{ dim: 'country', value: 'DE', now: 20, usual: 2, plus: 18 }, { dim: 'campaign', value: 'sep', now: 9, usual: 0, plus: 9 }] }, 'UTC').slice(0, 2)).toEqual(['+18 from Germany', '+9 from the campaign sep'])
   })
   it('says so when nothing stands out, and when it began before the look back', () => {
     const p = parts({ ...base, since_capped: true }, 'UTC')
     expect(p[0]).toBe('No single source stands out.')
-    expect(p).toContain('Since before 12:32')
+    expect(p).toContain('since before 12:32')
   })
   it('writes the time in the site’s zone', () => {
     expect(clock(SINCE, 'Europe/Tirane')).toBe('14:32')
     expect(clock(SINCE, 'Not/AZone')).toBe('12:32')
   })
+  it('hands the busy-moment card the numbers and the page it lands on', () => {
+    const s = asSurge(jump)
+    expect(s).toMatchObject({ online: 50, usual: 20, started: SINCE, why: { source: 'Facebook', page: '/products/summer' } })
+  })
 })
 
 describe('the line', () => {
-  it('is one sentence with a Why? button', () => {
-    const html = renderToStaticMarkup(<BusierLine busier={jump} timezone="UTC" />)
+  it('is one short line with a Why? button, and no card until asked', () => {
+    const html = renderToStaticMarkup(<BusierLine busier={jump} site="s1" timezone="UTC" />)
     expect(html).toContain('Busier than usual: 50 vs ~20.')
     expect(html).toContain('Why?')
-    expect(html).toContain('aria-expanded="false"')
+    expect(html).toContain('+22 from Facebook · +6 from Google · since 12:32 · still going')
+    expect(html).not.toContain('/products')
+    expect(html).not.toContain('mostly')
   })
   it('is not there in a normal hour', () => {
-    expect(renderToStaticMarkup(<BusierLine busier={{ ...base, state: '' }} timezone="UTC" />)).toBe('')
-    expect(renderToStaticMarkup(<BusierLine busier={null} timezone="UTC" />)).toBe('')
+    expect(renderToStaticMarkup(<BusierLine busier={{ ...base, state: '' }} site="s1" timezone="UTC" />)).toBe('')
+    expect(renderToStaticMarkup(<BusierLine busier={null} site="s1" timezone="UTC" />)).toBe('')
   })
 })

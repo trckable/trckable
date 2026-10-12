@@ -1,45 +1,36 @@
 // One quiet line at the top of Live when the site has more people on it than
-// it usually has right now, and a small panel behind "Why?" that says where
-// they come from. Nothing shows while it is a normal hour.
-import { useEffect, useId, useRef, useState } from 'react'
+// it usually has right now, a short line of who they are, and "Why?". The line
+// and the button open the busy-moment card, the same one the notification opens.
+// Nothing shows while it is a normal hour.
+import { useState } from 'react'
+import { lazyLoad } from '../../lib/lazyLoad'
 import type { Busier } from './api'
-import { parts, shown } from './busier'
+import { asSurge, parts, shown } from './busier'
 import { copy } from './copy'
 
-export function BusierLine({ busier, timezone }: { busier: Busier | null; timezone: string }) {
+const SurgeModal = lazyLoad(() => import('../signals/SurgeModal'))
+
+export function BusierLine({ busier, site, timezone }: { busier: Busier | null; site: string; timezone: string }) {
   const [open, setOpen] = useState(false)
-  const box = useRef<HTMLDivElement>(null)
-  const id = useId()
   const state = shown(busier)
-  // Escape or a click elsewhere closes it.
-  useEffect(() => {
-    if (!open) return
-    const key = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
-    const away = (e: MouseEvent) => box.current && !box.current.contains(e.target as Node) && setOpen(false)
-    document.addEventListener('keydown', key)
-    document.addEventListener('mousedown', away)
-    return () => {
-      document.removeEventListener('keydown', key)
-      document.removeEventListener('mousedown', away)
-    }
-  }, [open])
   if (!busier || !state) return null
   const line = state === 'busier' ? copy.busier(busier.now, busier.usual) : copy.quieter(busier.now, busier.usual)
   return (
-    <div className="live-busier" ref={box}>
+    <div className="live-busier">
       <p className="live-busier-line" role="status">
-        <span>{line}</span>
+        <span className="live-busier-head">{line}</span>
         {state === 'busier' && (
-          <button type="button" className="live-busier-why" aria-expanded={open} aria-controls={id} onClick={() => setOpen((o) => !o)}>
-            {copy.why} <span aria-hidden="true">→</span>
-          </button>
+          <>
+            <button type="button" className="live-busier-why" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+              {copy.why} <span aria-hidden="true">→</span>
+            </button>
+            <button type="button" className="live-busier-parts" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+              {parts(busier, timezone).join(' · ')}
+            </button>
+          </>
         )}
       </p>
-      {open && state === 'busier' && (
-        <div className="live-busier-panel card" id={id} role="region" aria-label={copy.whyTitle}>
-          <p>{parts(busier, timezone).join(' · ')}</p>
-        </div>
-      )}
+      {open && state === 'busier' && <SurgeModal surge={asSurge(busier)} site={site} tz={timezone} onClose={() => setOpen(false)} onSee={() => setOpen(false)} />}
     </div>
   )
 }
