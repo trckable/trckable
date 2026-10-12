@@ -4,9 +4,15 @@ import { answerCode, fail, hostIsUp } from '../components/toastBus'
 import { friendly, words } from './errors'
 
 describe('friendly', () => {
-  it('never shows the server own text', () => {
-    const f = friendly(new APIError(400, 'UNIQUE constraint failed: sites.domain'))
-    expect(f?.text).toBe('Something went wrong')
+  it('shows the sentence the server sent with a refusal of what was asked', () => {
+    expect(friendly(new APIError(400, 'excluded paths start with /, like /admin/*'))?.text).toBe('Excluded paths start with /, like /admin/*')
+    expect(friendly(new APIError(409, 'that name is taken'))?.text).toBe('That name is taken')
+  })
+
+  it('keeps its own words for a server fault, a missing page and no message', () => {
+    expect(friendly(new APIError(500, 'internal error: the details are in the server log'))?.text).toBe('Something went wrong')
+    expect(friendly(new APIError(404, 'site not found'))?.text).toBe('Not found')
+    expect(friendly(new APIError(400, ''))?.text).toBe('Something went wrong')
   })
 
   it('says what kind of failure it was', () => {
@@ -41,7 +47,7 @@ describe('friendly', () => {
     expect(f?.text).toBe('Limit reached')
     expect(f?.kind).toBe('warning')
     expect(f?.action?.label).toBe('See limits')
-    expect(friendly(Object.assign(new APIError(409, 'x'), { code: 'other' }))?.text).toBe('Something went wrong')
+    expect(friendly(Object.assign(new APIError(500, 'x'), { code: 'other' }))?.text).toBe('Something went wrong')
   })
 })
 

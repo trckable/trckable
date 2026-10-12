@@ -20,13 +20,16 @@ function byStatus(status: number): string {
   return t.unknown
 }
 
+const declined = (e: APIError) => [400, 409, 422].includes(e.status) && e.message.trim() !== '' && e.message !== 'Bad Request'
+const sentence = (m: string) => m.trim().charAt(0).toUpperCase() + m.trim().slice(1)
+
 /** The words for whatever was thrown; null for a request that was cancelled on purpose. */
 export function friendly(e: unknown): Friendly | null {
   if (aborted(e)) return null
   if (!(e instanceof APIError)) return { text: e instanceof TypeError ? t.offline : t.unknown, kind: 'error' }
   const own = answerOf(e.code)
   if (own) return { kind: 'error', ...own }
-  const text = codeCopy[e.code] ?? byStatus(e.status)
+  const text = codeCopy[e.code] ?? (declined(e) ? sentence(e.message) : byStatus(e.status))
   return { text, kind: e.status === 429 || e.status >= 500 ? 'warning' : 'error' }
 }
 

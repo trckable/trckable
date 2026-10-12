@@ -137,7 +137,7 @@ test('5. a goal sent from a server, as the Your server tab writes it, counts', a
   const data = JSON.parse(/-d '([\s\S]*?)'\s*$/.exec(code.replace(/\\\n/g, ' '))![1].replace(/<[^>]*>/g, `${Date.now().toString(36)}.${Math.floor(Date.now() / 1000).toString(36)}`))
   data.n = goal
   expect(data.s).toBe(siteId)
-  const res = await request.post(url, { headers: { 'user-agent': CHROME, ...headers }, data })
+  const res = await request.post(url, { headers: { ...headers, 'user-agent': CHROME }, data })
   expect(res.status()).toBe(202)
 
   await page.keyboard.press('Escape')
