@@ -23,6 +23,18 @@
   align-items: center;
   gap: 8px 12px;
 }
-.surge-banner .chip {
+/* The line on its own row (the path chip may wrap under it), the two buttons below it, to the right. */
+.surge-banner-line {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.surge-banner-line .info {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+}
+.surge-banner-actions {
+  display: flex;
+  gap: 8px;
   margin-left: auto;
 }

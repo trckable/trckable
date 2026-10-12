@@ -32,9 +32,9 @@ test.beforeAll(async ({ browser }) => {
   await ctx.close()
 })
 
-async function open(page: Page, view: 'live' | 'data', width = 1280) {
+async function open(page: Page, view: 'live' | 'data', width = 1280, moment = surge) {
   await withoutPayments(page)
-  await page.route(/\/api\/v1\/sites\/[^/]+\/surge$/, (r) => r.fulfill({ json: { surge } }))
+  await page.route(/\/api\/v1\/sites\/[^/]+\/surge$/, (r) => r.fulfill({ json: { surge: moment } }))
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width, height: 900 })
@@ -164,4 +164,26 @@ test('See it in Data lands on the moment: the window, a band on the chart, and a
   await line.getByRole('button', { name: 'Back to today' }).click()
   await expect(page).not.toHaveURL(/[?&]sg=/)
   await expect(page.locator('.surge-band')).toHaveCount(0)
+})
+
+const longPage = `/news/raimonda-sino-plani-individual-i-zhvp-se-2026-${'x'.repeat(60)}-2024`
+const longMoment = { ...surge, ended: now + 600, why: { ...surge.why, page: longPage } }
+
+test('a long landing path stays out of the sentence: a chip with the middle cut, in the story and on the line over Data', async ({ page }) => {
+  await page.route(/\/api\/v1\/sites\/[^/]+\/surges\/near/, (r) => r.fulfill({ json: { surge: longMoment } }))
+  await open(page, 'live', 1440, longMoment)
+  await expect(card(page)).toBeVisible({ timeout: 30_000 })
+  await card(page).getByRole('button', { name: 'More' }).click()
+  await expect(story(page).locator('.sgm-honest')).not.toContainText('/news')
+  const chip = story(page).getByRole('button', { name: longPage })
+  await expect(chip).toContainText('…')
+  await shoot(page, 'busy-path-story')
+  await story(page).getByRole('button', { name: 'See it in Data' }).click()
+  const line = page.locator('.surge-banner')
+  await expect(line.getByRole('button', { name: longPage })).toContainText('…')
+  await expect(line.getByRole('button', { name: 'Only Facebook' })).toBeVisible()
+  await shoot(page, 'busy-path-data')
+  await page.setViewportSize({ width: 390, height: 900 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await shoot(page, 'busy-path-data')
 })

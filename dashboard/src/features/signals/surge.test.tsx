@@ -12,7 +12,7 @@ import { addDays } from '../../lib/dates'
 import { openSurgeStory } from './openStory'
 import SurgeCard from './SurgeCard'
 import SurgeModal from './SurgeModal'
-import { bannerLine, beats, clock, localHour, seeInData, deviceShare, honestLine, peakSlice, sourceHost, sourceLine, startSlice, surgeChip, surgeFilter, surgeNotice, type Story, type Surge } from './surge'
+import { bannerLine, beats, clock, localHour, seeInData, deviceShare, honestLine, midTruncate, peakSlice, sourceHost, sourceLine, startSlice, surgeChip, surgeFilter, surgeNotice, type Story, type Surge } from './surge'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -72,7 +72,7 @@ describe('the story', () => {
     expect(beats({ ...surge, story: { ...story, start: undefined } }, 'UTC')[0].text).toBe('Busy for more than an hour')
   })
   it('says what it only looks like, and never claims the exact post', () => {
-    expect(honestLine(surge)).toBe('Looks like a link on Facebook, landing on /blog/launch-post, started sending people. The exact post isn’t visible.')
+    expect(honestLine(surge)).toBe('Looks like a link on Facebook started sending people. The exact post isn’t visible.')
     expect(honestLine({ ...surge, why: { source_usual: 0, before: 0, minutes: 15 } })).toBe('The climb began without a referring site we can see.')
   })
   it('splits phones and computers only with five people whose device is known', () => {
@@ -130,7 +130,7 @@ describe('Data landed on the moment', () => {
     expect(live.to).toBe(localHour(surge.started + 40 * 3600, 'UTC').day)
   })
   it('says when, how busy and who sent them, in one line', () => {
-    expect(bannerLine(over, 'UTC')).toBe(`Busy moment ${clock(over.started, 'UTC')}–${clock(over.started + 25 * 60, 'UTC')} · 53 at peak · from Facebook → /blog/launch-post`)
+    expect(bannerLine(over, 'UTC')).toBe(`Busy moment ${clock(over.started, 'UTC')}–${clock(over.started + 25 * 60, 'UTC')} · 53 at peak · from Facebook`)
     expect(bannerLine(surge, 'UTC')).toContain(`since ${clock(surge.started, 'UTC')}`)
   })
 })
@@ -233,6 +233,20 @@ describe('the story told by a notice (no story of its own)', () => {
     expect(dialog()?.textContent).toContain('20 → 53 in 15 min')
   })
 
+  it('keeps a long landing path out of the sentence and in a middle-truncated chip', async () => {
+    const page = '/news/' + 'raimonda-sino-plani-individual-i-zhvp-se-2026-'.repeat(2) + 'x'.repeat(20) + '-2024'
+    expect(page.length).toBeGreaterThanOrEqual(120)
+    answer({ ...surge, why: { ...surge.why, page } })
+    await open()
+    expect(dialog()?.querySelector('.sgm-honest')?.textContent).not.toContain('/news')
+    const chip = dialog()?.querySelector<HTMLElement>('.sgm-path')
+    expect(chip?.getAttribute('aria-label')).toBe(page)
+    expect(chip?.textContent).toBe(midTruncate(page))
+    expect(chip?.textContent).toMatch(/^\/news\/.*….*-2024$/)
+    expect((chip?.textContent ?? '').length).toBeLessThanOrEqual(34)
+    expect(midTruncate('/blog/launch-post')).toBe('/blog/launch-post')
+  })
+
   const endedAt = told.started + 20 * 60
   const stored: Surge = {
     ...surge,
@@ -283,7 +297,8 @@ describe('the line and the band on Data', () => {
     await act(() => new Promise((r) => setTimeout(r, 40)))
     expect(host.textContent).toContain('Busy moment')
     expect(host.textContent).toContain('53 at peak · from Facebook → /blog/launch-post')
-    const [only, back] = [...host.querySelectorAll('button')]
+    const [, only, back] = [...host.querySelectorAll('button')]
+    expect(host.querySelector('.sgm-path')?.getAttribute('aria-label')).toBe('/blog/launch-post')
     expect(only.textContent).toBe('Only Facebook')
     act(() => only.click())
     expect(setView).toHaveBeenCalledWith({ filters: [{ dim: 'referrer', value: 'l.facebook.com' }] })
