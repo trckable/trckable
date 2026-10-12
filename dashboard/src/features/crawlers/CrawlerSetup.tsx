@@ -11,6 +11,7 @@ import { Stepper } from '../../components/Stepper'
 import { fail, type Site, more } from '../../lib/apiMore'
 import { addDays, todayIn } from '../../lib/dates'
 import { fmtInt } from '../../lib/format'
+import { visibleInterval } from '../../lib/visibleInterval'
 import { copy } from './copy'
 import { CrawlerCode } from './CrawlerCode'
 import type { Setup } from './snippets'
@@ -32,8 +33,7 @@ function useArrived(site: Site, on: boolean): number {
         .catch(() => undefined)
     }
     ask()
-    const id = setInterval(ask, 6000)
-    return () => clearInterval(id)
+    return visibleInterval(ask, 6000)
   }, [site.id, site.timezone, on, n])
   return n
 }

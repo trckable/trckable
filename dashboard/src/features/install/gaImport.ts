@@ -2,6 +2,7 @@
 // about it, and what the dialog can ask. Never a token: the browser never has one.
 import { useCallback, useEffect, useState } from 'react'
 import { APIError, call } from '../../lib/api'
+import { visibleInterval } from '../../lib/visibleInterval'
 
 export interface GaJob {
   status: 'running' | 'done' | 'paused' | 'denied' | 'stopped'
@@ -55,8 +56,7 @@ export function useGaImport(site: string) {
   const running = status?.job?.status === 'running'
   useEffect(() => {
     if (!running) return
-    const id = setInterval(() => void load(), 1500)
-    return () => clearInterval(id)
+    return visibleInterval(() => void load(), 1500)
   }, [running, load])
   const start = (property: string, resume = false) => {
     setError('')

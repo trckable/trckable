@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { type Health as H, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
+import { visibleInterval } from '../lib/visibleInterval'
 
 export function useHealth() {
   const [h, setH] = useState<H | null>(null)
@@ -19,8 +20,7 @@ export function useHealth() {
         .catch((e: unknown) => setErr(words(e)))
     }
     load()
-    const t = setInterval(load, 15_000)
-    return () => clearInterval(t)
+    return visibleInterval(load, 15_000)
   }, [])
   return { h, at, err }
 }

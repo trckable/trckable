@@ -4,6 +4,7 @@
 import { useEffect } from 'react'
 import { type SiteRow, more } from './apiMore'
 import { miniStore } from './miniStore'
+import { visibleInterval } from './visibleInterval'
 
 const POLL_MS = 15_000
 
@@ -11,7 +12,7 @@ const store = miniStore<number | null>(null)
 const days = miniStore<number[] | null>(null)
 let users = 0
 let held = 0
-let timer: ReturnType<typeof setInterval> | undefined
+let stopPoll: (() => void) | undefined
 let ctl: AbortController | undefined
 
 /** Takes the online counts of an overview's rows; a row that could not be read has none. */
@@ -28,7 +29,7 @@ function sumMinutes(rows: SiteRow[]): number[] | null {
 }
 
 function read() {
-  if (held > 0 || document.visibilityState !== 'visible') return
+  if (held > 0) return
   ctl?.abort()
   const c = new AbortController()
   ctl = c
@@ -55,14 +56,12 @@ export function holdOnline(): () => void {
 export function useOnlineAll(): number | null {
   useEffect(() => {
     if (users++ === 0) {
-      timer = setInterval(read, POLL_MS)
-      document.addEventListener('visibilitychange', read)
+      stopPoll = visibleInterval(read, POLL_MS)
     }
     return () => {
       if (--users > 0) return
-      clearInterval(timer)
+      stopPoll?.()
       ctl?.abort()
-      document.removeEventListener('visibilitychange', read)
     }
   }, [])
   return store.use()

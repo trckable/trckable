@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Sale, Visit } from '../../lib/api'
 import { debounce } from '../../lib/live'
+import { useVisibleInterval } from '../../lib/visibleInterval'
 import { liveNow, type LiveNow } from './api'
 import { MINUTE } from './model'
 
@@ -88,16 +89,12 @@ export function useLiveNow(site: string, stream: Stream) {
   useEffect(() => {
     if (at === undefined) return
     const next = MINUTE - (at % MINUTE) + 250
-    const t = setTimeout(load, next)
+    const t = setTimeout(() => document.visibilityState === 'visible' && load(), next) // a hidden tab reads on return
     return () => clearTimeout(t)
   }, [at, load])
 
   // While the stream is stuck, poll.
-  useEffect(() => {
-    if (!stream.stale) return
-    const t = setInterval(() => document.visibilityState === 'visible' && load(), POLL_MS)
-    return () => clearInterval(t)
-  }, [stream.stale, load])
+  useVisibleInterval(load, POLL_MS, stream.stale, false) // the wake above reads on return
 
   useEffect(() => {
     const t = setInterval(() => setLocal(Date.now()), TICK_MS)

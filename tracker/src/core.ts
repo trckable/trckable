@@ -467,20 +467,29 @@ export function start(c: Config): Tracker {
   // A tab brought back after over 30 minutes is a new visit by the server's
   // rule, so it counts a new page view; a shorter break just goes on.
   let away!: number
+  let quiet = 0 // 4-minute ticks since the page was last used
   d.addEventListener('visibilitychange', () =>
-    d.hidden ? (flushEngagement(), (away = now())) : (run(), now() - away > 18e5 ? ((last = ''), page()) : (visible = now())),
+    d.hidden
+      ? (flushEngagement(), (away = now()))
+      : (run(), now() - away > 18e5 ? ((last = ''), page()) : ((visible = now()), now() - away > 24e4 && flushEngagement(1))),
   )
-  // While the page is open and shown, a minute-by-minute "still here" keeps the
-  // visitor in the live count: the engagement report again, without the Web
-  // Vitals (the server keeps the largest time per page view; a vitals sample
-  // must not be counted every minute).
-  setInterval(() => d.hidden || flushEngagement(1), 6e4)
+  // While the page is open, shown and used, a "still here" every 4 minutes
+  // keeps the visitor in the live count (the server counts the last 5): the
+  // engagement report again, without the Web Vitals (the server keeps the
+  // largest time per page view; a vitals sample must not be counted again).
+  // A page nobody has touched for 30 minutes stops, and the first touch after
+  // that reports at once.
+  setInterval(() => d.hidden || (quiet++ < 8 && flushEngagement(1)), 24e4)
+  const used = () => (quiet > 8 && flushEngagement(1), (quiet = 0))
+  w.addEventListener('pointerdown', used)
+  w.addEventListener('keydown', used)
   w.addEventListener('pagehide', flushEngagement)
   w.addEventListener(
     'scroll',
     () => {
+      used()
       const h = d.documentElement.scrollHeight - innerHeight
-      const pct = h > 0 ? Math.min(100, Math.round((scrollY / h) * 100)) : 100
+      const pct = h > 0 ? Math.min(100, (((scrollY / h) * 100) + 0.5) | 0) : 100
       if (pct > scroll) scroll = pct
     },
   )

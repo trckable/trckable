@@ -15,6 +15,7 @@ section into the release.
 - Site switcher: a site that needs attention says why in a line under its name ("Not reachable · 2d"), and the keys hint stays on screen.
 - In every ranked list (pages, sources, countries and the rest) the count no longer touches the right edge of its row: it has the same inner gap there as the name has on the left, on desktop and on a phone.
 - Dashboard: the comparison next to the date is an outlined control without a fill, so it no longer looks stuck to the date button.
+- Far fewer requests from an open page. The tracker's "still here" report goes every 4 minutes instead of every minute (the live count still covers the last 5), only while the tab is shown, and stops after 30 minutes without a click, key or scroll until the next one. The dashboard no longer refreshes anything in a hidden tab, and reads once when the tab is shown again; how often it refreshes while shown is unchanged.
 
 ## 0.7.8 (12 Oct 2026)
 

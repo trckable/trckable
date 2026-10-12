@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react'
 import { call, rangeQS, type Filter } from '../../lib/api'
 import { SETTLE_MS } from '../../lib/settle'
+import { visibleInterval } from '../../lib/visibleInterval'
 import { usualChip, type Usual } from './hint'
 
 export interface HintProps {
@@ -30,10 +31,10 @@ function useUsual(p: HintProps): Usual | null {
         .catch(() => {})
     // After the page has had its moment, then once a minute.
     const first = setTimeout(() => void ask(), SETTLE_MS)
-    const t = setInterval(() => document.visibilityState === 'visible' && void ask(), AGAIN_MS)
+    const stop = visibleInterval(() => void ask(), AGAIN_MS, false)
     return () => {
       clearTimeout(first)
-      clearInterval(t)
+      stop()
     }
   }, [key, p.site, p.day, p.filters])
   return got && got.key === key ? got.usual : null

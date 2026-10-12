@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { visibleInterval } from '../../lib/visibleInterval'
 import { liveBusier, type Busier } from './api'
 
 // Asked about once a minute while Live is open (the server keeps an answer
@@ -19,12 +20,9 @@ export function useBusier(site: string): Busier | null {
         .catch(() => undefined)
     }
     load()
-    const timer = window.setInterval(load, POLL_MS)
-    const wake = () => document.visibilityState === 'visible' && load()
-    document.addEventListener('visibilitychange', wake)
+    const stop = visibleInterval(load, POLL_MS)
     return () => {
-      window.clearInterval(timer)
-      document.removeEventListener('visibilitychange', wake)
+      stop()
       ctl?.abort()
     }
   }, [site])

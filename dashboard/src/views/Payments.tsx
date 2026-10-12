@@ -9,6 +9,7 @@ import { Modal } from '../kit/Modal'
 import { useEffect, useState } from 'react'
 import { fail, type PayConnection, type Provider, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
+import { visibleInterval } from '../lib/visibleInterval'
 import { navigate } from '../lib/url'
 import { modeTag, statusOf } from '../lib/payments'
 import { CodeBlock } from '../components/Code'
@@ -41,8 +42,7 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
   }
   useEffect(() => {
     load()
-    const t = setInterval(load, 10_000) // "waiting for the first webhook" turns green by itself
-    return () => clearInterval(t)
+    return visibleInterval(load, 10_000) // "waiting for the first webhook" turns green by itself
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load is a new function each render but reads only site.id, which is listed
   }, [site.id])
 
