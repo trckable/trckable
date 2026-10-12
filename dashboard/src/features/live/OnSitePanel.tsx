@@ -2,7 +2,7 @@
 // slide in at the top with a soft glow; someone idle for five minutes fades
 // and leaves. The count in the sticky header rolls to its new value.
 import { Users } from 'lucide-react'
-import { when } from '../sitestatus/status'
+import { when } from '../sitestatus/time'
 import { copy } from './copy'
 import { FeedRow } from './FeedRow'
 import { moreOf, type Row } from './model'

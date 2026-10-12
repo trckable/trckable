@@ -4,8 +4,9 @@
 // no visits for the signals threshold, and nothing known to be wrong with the
 // page. Nothing here knows about the browser.
 import type { Site } from '../../lib/api'
-import { tag } from '../../i18n'
-import { STOPPED_HOURS } from '../signals/detect'
+
+/** Hours without a visit before tracking counts as stopped, as the alert of the same name says by default. */
+export const STOPPED_HOURS = 6
 
 export type Status = 'new' | 'ok' | 'quiet' | 'down'
 
@@ -15,26 +16,6 @@ export function statusOf(s: Site, now = Date.now()): Status {
   if (now / 1000 - last < STOPPED_HOURS * 3600) return 'ok'
   const c = s.check
   return c && c.at > last && c.error ? 'down' : 'quiet'
-}
-
-/** Seconds as the shortest honest span: 12m, 6h, 3d. */
-export function span(secs: number): string {
-  const s = Math.max(0, secs)
-  if (s < 3600) return `${Math.max(1, Math.round(s / 60))}m`
-  if (s < 86400) return `${Math.floor(s / 3600)}h`
-  return `${Math.floor(s / 86400)}d`
-}
-
-/** How long since the last visit, short; empty before the first. */
-export function silence(s: Site, now = Date.now()): string {
-  return s.last_event_at ? span(now / 1000 - s.last_event_at) : ''
-}
-
-/** A moment as people say it: the time today, else the day and time. */
-export function when(unix: number): string {
-  const d = new Date(unix * 1000)
-  const today = d.toDateString() === new Date().toDateString()
-  return d.toLocaleString(tag, today ? { hour: '2-digit', minute: '2-digit' } : { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
 export type SiteState = 'live' | 'quiet' | 'stopped' | 'new'

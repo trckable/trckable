@@ -29,8 +29,7 @@ export class Usual {
   }
 }
 
-/** Hours without a visit before tracking counts as stopped, as the alert of the same name says by default. */
-export const STOPPED_HOURS = 6
+import { STOPPED_HOURS } from '../sitestatus/status'
 
 /** Whole hours of silence once it passes the line, else 0. `last` and `now` are in ms. */
 export function silentHours(last: number | undefined, now: number): number {

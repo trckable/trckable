@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Site } from '../../lib/api'
-import { silence, span, statusOf } from './status'
+import { statusOf } from './status'
+import { silence, span } from './time'
 
 const NOW = 1_800_000_000_000
 const sec = NOW / 1000
