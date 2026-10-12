@@ -2,7 +2,7 @@
 // to open it, and (for anyone who may arrange) a row to drag (useReorder),
 // Alt + ↑/↓, Shift + Enter to open the site itself, and a ⋯ menu with every move, so a phone and a keyboard can do
 // what a mouse does.
-import { Check, GripVertical } from 'lucide-react'
+import { Check, CircleAlert, GripVertical, Moon } from 'lucide-react'
 import type { Site } from '../../lib/api'
 import { Menu } from '../../components/Menu'
 import { SiteMark } from '../../components/SiteMark'
@@ -12,6 +12,7 @@ import { copy } from './menuCopy'
 import { copy as first } from './copy'
 import { addGroup, moveTo, pin, placeKey, step, unpin, type Place } from './layout'
 import { dotState, StateDot } from './StateDot'
+import { Tooltip } from '../../kit/Tooltip'
 import { silence } from '../sitestatus/time'
 import type { Arrange } from './SiteMenu'
 import { MARK, type Density } from './density'
@@ -20,7 +21,7 @@ import { OpenSite, openSiteTab } from './OpenSite'
 import './SiteItem.css'
 
 /**
- * What stands where the number would: "setup", "down · 12m" or "quiet · 6h" when the dot alone
+ * What stands where the number would: "setup", a moon (quiet) or an alert (down) when the dot alone
  * can't say it, else today's visitors (nothing until they are loaded).
  */
 function Tail({ s, today }: { s: Site; today?: number }) {
@@ -30,7 +31,17 @@ function Tail({ s, today }: { s: Site; today?: number }) {
     case 'stopped':
     case 'quiet': {
       const down = dotState(s) === 'stopped'
-      return <span className={down ? 'tail stopped-note' : 'tail quiet-note'} title={first.dot[dotState(s)]}>{down ? copy.downFor(silence(s)) : copy.quietFor(silence(s))}</span>
+      const tip = down ? copy.downTip(silence(s)) : copy.quietTip(silence(s))
+      const Icon = down ? CircleAlert : Moon
+      return (
+        <Tooltip text={tip}>
+          {(p) => (
+            <span {...p} role="button" tabIndex={0} aria-label={tip} className={down ? 'tail state-icon down' : 'tail state-icon quiet'} onClick={(e) => { e.stopPropagation(); p.onClick() }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); p.onClick() } }}>
+              <Icon size={16} strokeWidth={2} aria-hidden="true" />
+            </span>
+          )}
+        </Tooltip>
+      )
     }
     default:
       return today === undefined ? null : <span className={today ? 'tail' : 'tail faint'} title={copy.today(fmtInt(today))}>{fmtCompact(today)}</span>

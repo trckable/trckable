@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The site switcher shows a quiet site as a small moon and a down site as a red alert icon instead of "quiet · 19h" and "down · 12m" text; hover, focus or tap the icon to read how long and what it means.
 - Goals show their name as it was written: "Start free" stays "Start free" on the Goals card, in funnels, journeys, Live, exports and the reports by email, and names with letters like ë, ü or Cyrillic keep them instead of losing them. Goals are still counted under the same lowercase key, so nothing already counted moves. The API adds a `label` next to `value` on goal rows.
 
 ## 0.7.7 (12 Oct 2026)
