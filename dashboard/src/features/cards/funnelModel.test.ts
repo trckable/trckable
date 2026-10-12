@@ -4,6 +4,11 @@ import { funnelOf } from './funnelModel'
 const step = (value: string, visitors: number, rate: number, dropped: number, median_s = 0) => ({ kind: 'page' as const, value, visitors, rate, of_total: 0, median_s, dropped })
 
 describe('the funnel', () => {
+  it('names a goal step as it was written', () => {
+    const f = funnelOf([step('/', 10, 1, 4), { ...step('start-free', 6, 0.6, 0), kind: 'goal' as const, label: 'Start free' }])
+    expect(f?.steps.map((s) => s.value)).toEqual(['/', 'Start free'])
+  })
+
   it('is no funnel with fewer than two steps', () => {
     expect(funnelOf([])).toBeNull()
     expect(funnelOf([step('/', 10, 1, 0)])).toBeNull()

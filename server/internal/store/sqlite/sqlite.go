@@ -35,6 +35,10 @@ type Store struct {
 	sites      map[string]ingest.Site
 	reloadMu   sync.Mutex
 	lastReload time.Time
+
+	// goalLabels is what was last written per site and goal key, so ingest
+	// only writes when a name changes (goallabels.go).
+	goalLabels sync.Map
 }
 
 // siteReloadEvery bounds how often a cache miss may hit the database, so
@@ -659,6 +663,14 @@ var migrations = []string{
 	// until a time (unix seconds; 0 or past: not snoozed).
 	`ALTER TABLE site_check ADD COLUMN down_since INTEGER NOT NULL DEFAULT 0;
 	ALTER TABLE sites ADD COLUMN alerts_muted_until INTEGER NOT NULL DEFAULT 0;`,
+	// 54: a goal's name as it was written ("Start free"), next to the key it
+	// is counted under ("start-free"). The key stays the identity.
+	`CREATE TABLE IF NOT EXISTS goal_labels (
+		site_id TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		goal    TEXT NOT NULL,
+		label   TEXT NOT NULL,
+		PRIMARY KEY (site_id, goal)
+	) WITHOUT ROWID;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

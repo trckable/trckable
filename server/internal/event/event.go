@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 )
 
 // MaxAge is the oldest an event may claim to be when it arrives. The tracker
@@ -98,16 +100,16 @@ func (e *Event) Marshal() ([]byte, error) { return json.Marshal(e) }
 // Unmarshal decodes a WAL payload.
 func Unmarshal(b []byte, e *Event) error { return json.Unmarshal(b, e) }
 
-// NormGoal turns a goal name into its stored form: lowercase letters, digits,
-// _ and : kept, every other run of characters (spaces, dots, slashes, dashes)
-// becomes one "-", with none at the ends. "Sign up" is "sign-up" and
-// "signup.done" is "signup-done". Empty when nothing is left or the result
-// passes 64 characters.
+// NormGoal turns a goal name into its stored form: lowercase letters and
+// digits of any script, _ and : kept, every other run of characters (spaces,
+// dots, slashes, dashes) becomes one "-", with none at the ends. "Sign up" is
+// "sign-up", "signup.done" is "signup-done" and "Të lumtur" is "të-lumtur".
+// Empty when nothing is left or the result passes 64 characters.
 func NormGoal(s string) string {
 	var b strings.Builder
 	dash := false
 	for _, c := range strings.ToLower(s) {
-		if (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == ':' {
+		if unicode.IsLetter(c) || unicode.IsDigit(c) || c == '_' || c == ':' {
 			if dash && b.Len() > 0 {
 				b.WriteByte('-')
 			}
@@ -117,8 +119,39 @@ func NormGoal(s string) string {
 			dash = true
 		}
 	}
-	if b.Len() > 64 {
+	if utf8.RuneCountInString(b.String()) > 64 {
 		return ""
 	}
 	return b.String()
+}
+
+// MaxGoalLabel is the longest goal label kept, in characters.
+const MaxGoalLabel = 64
+
+// GoalLabel is a goal's name as it was written: trimmed, control characters
+// dropped, runs of white space made one space, at most MaxGoalLabel characters.
+func GoalLabel(s string) string {
+	var b strings.Builder
+	space := false
+	n := 0
+	for _, c := range strings.TrimSpace(s) {
+		if unicode.IsSpace(c) {
+			space = true
+			continue
+		}
+		if unicode.IsControl(c) {
+			continue
+		}
+		if space && b.Len() > 0 {
+			b.WriteByte(' ')
+			n++
+		}
+		space = false
+		if n >= MaxGoalLabel {
+			break
+		}
+		b.WriteRune(c)
+		n++
+	}
+	return strings.TrimSpace(b.String())
 }

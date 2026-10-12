@@ -79,7 +79,8 @@ type FlowLink struct {
 // ConvStep is one step of visit → goal → sale, each counted among the
 // visitors of the step before, in order.
 type ConvStep struct {
-	Kind     string  `json:"kind"` // "visit" | "goal" | "sale"
+	Kind     string  `json:"kind"`            // "visit" | "goal" | "sale"
+	Label    string  `json:"label,omitempty"` // a goal's name as written
 	Value    string  `json:"value,omitempty"`
 	Visitors int64   `json:"visitors"`
 	Rate     float64 `json:"rate"` // share of the step before (1 for the first)

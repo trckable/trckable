@@ -208,10 +208,12 @@ func (s *Server) reportData(ctx context.Context, q *query.Q, sc sqlite.ReportSch
 	set, _ := modules.Store{DB: s.ctl.DB}.Of(ctx, sc.SiteID)
 	params := query.Params{Site: sc.SiteID, From: p.from.UTC(), To: p.to.UTC(), TZ: loc.String(), Bucket: "day", Limit: 10,
 		Currency: info.Currency, Revenue: set.Has("revenue"), Goals: set.Has("goals")}
+	names, _ := s.ctl.GoalLabels(ctx, sc.SiteID)
 	cur, err := q.Report(ctx, params)
 	if err != nil {
 		return reports.Data{}, err
 	}
+	cur = query.GoalNames(names).Report(cur, nil)
 	params.From, params.To = p.prevFrom.UTC(), p.prevTo.UTC()
 	prev, err := q.Report(ctx, params)
 	if err != nil {

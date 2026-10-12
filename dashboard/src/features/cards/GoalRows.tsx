@@ -16,7 +16,7 @@ const KNOWN: Record<string, () => string> = {
 }
 
 /** The name in words for the goals the tracker counts itself; a goal someone named reads as typed. */
-const nameOf = (value: string) => KNOWN[goalKind(value)]?.() ?? value
+const nameOf = (value: string, label?: string) => KNOWN[goalKind(value)]?.() ?? (label || value)
 
 const STEP: Record<FunnelStep['key'], (goal: string) => string> = {
   visitors: () => cardCopy.funnelVisitors,
@@ -40,12 +40,12 @@ export function GoalRows({ c }: { c: CardsCtx }) {
         const Icon = ICON[goalKind(r.value)]
         const conv = c.visitors ? r.visitors / c.visitors : 0
         return (
-          <button key={r.value} type="button" className="goal" title={r.value} aria-label={`${r.value}: ${fmtInt(r.visitors)}. Filter by this`} onClick={() => c.addFilter('goal', r.value)}>
+          <button key={r.value} type="button" className="goal" title={nameOf(r.value, r.label)} aria-label={`${nameOf(r.value, r.label)}: ${fmtInt(r.visitors)}. Filter by this`} onClick={() => c.addFilter('goal', r.value)}>
             <span className="goal-ic" aria-hidden="true">
               <Icon size={16} />
             </span>
             <span className="goal-name">
-              <b>{nameOf(r.value)}</b>
+              <b>{nameOf(r.value, r.label)}</b>
               <small>{cardCopy.goalVisitors(r.visitors)}</small>
             </span>
             <span className="goal-conv">
@@ -59,7 +59,7 @@ export function GoalRows({ c }: { c: CardsCtx }) {
           <div className="goal-funnel-title">{cardCopy.funnelTitle}</div>
           {steps.map((s) => (
             <div key={s.key} className="goal-step">
-              <span className="goal-step-name">{STEP[s.key](nameOf(top.value))}</span>
+              <span className="goal-step-name">{STEP[s.key](nameOf(top.value, top.label))}</span>
               <span className="kit-rowbar" aria-hidden="true">
                 <i style={{ width: `${s.width}%` }} />
               </span>

@@ -23,6 +23,11 @@ describe('nodesOf', () => {
     expect(nodes.map((n) => n.exit)).toEqual([false, false, true])
   })
 
+  it('shows a goal as it was written', () => {
+    const v = visit(0, 5, [pv(0, '/a'), { at: at(1), kind: 'goal', goal: 'start-free', label: 'Start free' }])
+    expect(nodesOf(v, [], 'v').find((n) => n.kind === 'goal')).toMatchObject({ goal: 'Start free' })
+  })
+
   it('does not fold the same path across a goal', () => {
     const v = visit(0, 5, [pv(0, '/a'), { at: at(1), kind: 'goal', goal: 'Signup' }, pv(2, '/a')])
     expect(nodesOf(v, [], 'v').map((n) => n.kind)).toEqual(['page', 'goal', 'page'])

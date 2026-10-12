@@ -26,6 +26,10 @@ describe('telling a screen reader about new visits', () => {
     t.stop()
   })
 
+  it('names a goal as it was written', () => {
+    expect(sentence([{ kind: 'goal', ts: 1, goal: 'start-free', label: 'Start free', channel: 'AI' }])).toBe('New visit: Goal: Start free, from AI assistants')
+  })
+
   it('names a goal and a direct visit plainly', () => {
     expect(sentence([{ kind: 'goal', ts: 1, goal: 'signup', channel: 'AI' }])).toBe('New visit: Goal: signup, from AI assistants')
     expect(sentence([{ kind: 'pageview', ts: 1 }])).toBe('New visit: /, from Direct')

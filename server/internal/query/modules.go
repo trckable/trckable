@@ -66,6 +66,7 @@ type Step struct {
 // FunnelStep is one step's result.
 type FunnelStep struct {
 	Step
+	Label    string  `json:"label,omitempty"` // a goal step's name as written
 	Visitors int64   `json:"visitors"`
 	Rate     float64 `json:"rate"`     // share of the step before
 	Total    float64 `json:"of_total"` // share of step 1
@@ -238,6 +239,7 @@ type JourneyEvent struct {
 	Kind     string    `json:"kind"` // pageview | goal
 	Path     string    `json:"path,omitempty"`
 	Goal     string    `json:"goal,omitempty"`
+	Label    string    `json:"label,omitempty"` // the goal's name as written
 	Props    string    `json:"props,omitempty"`
 	EngagedS float64   `json:"engaged_s,omitempty"`
 }

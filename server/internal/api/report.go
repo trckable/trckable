@@ -184,6 +184,9 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 		reportFail(w, err)
 		return
 	}
+	names := a.goalNames(r.Context(), siteID)
+	cur = names.Report(cur, params.PageGoals)
+	pr = names.Report(pr, params.PageGoals)
 	out := map[string]any{
 		"site": siteID, "timezone": tzName, "bucket": bucket, "attribution": params.Attribution,
 		"from": from.Format("2006-01-02"), "to": to.AddDate(0, 0, -1).Format("2006-01-02"),

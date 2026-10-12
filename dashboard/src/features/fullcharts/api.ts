@@ -25,6 +25,7 @@ export interface FlowLink {
 
 export interface ConvStep {
   kind: 'visit' | 'goal' | 'sale'
+  label?: string
   value?: string
   visitors: number
   rate: number

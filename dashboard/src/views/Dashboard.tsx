@@ -77,10 +77,10 @@ const NoteDialog = lazy(() => import('../components/NoteDialog').then((m) => ({ 
 // chunk, loaded when shown.
 const JourneyDialog = lazy(() => import('../features/journey/JourneyDialog').then((m) => ({ default: m.JourneyDialog })))
 
-/** A filter's value as people read it: a channel's or a country's name. */
-function filterLabel(dim: string, v: string) {
+/** A filter's value as people read it: a channel's or a country's name, a goal as it was written. */
+function filterLabel(dim: string, v: string, goals?: Row[] | null) {
   if (dim === 'channel') return channelLabel(v)
-  return dim === 'country' ? countryName(v) : v
+  return dim === 'country' ? countryName(v) : (dim === 'goal' && goals?.find((g) => g.value === v)?.label) || v
 }
 
 export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; header: React.ReactNode }) {
@@ -436,7 +436,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
   const clearFilters = () => setView({ filters: [] })
   const rowProps = {
-    filters: view.filters, dimLabel: (dim: string) => DIM_LABEL[dim] ?? dim, valueLabel: filterLabel, onRemove: filterOps.dropSet, onFlip: filterOps.flip, onClear: clearFilters, onSave: saveView,
+    filters: view.filters, dimLabel: (dim: string) => DIM_LABEL[dim] ?? dim, valueLabel: (dim: string, v: string) => filterLabel(dim, v, src?.goals), onRemove: filterOps.dropSet, onFlip: filterOps.flip, onClear: clearFilters, onSave: saveView,
     views: isShared() ? undefined : { list: segments, current, onOpen: openView, onRename: renameView, onDelete: removeView },
   }
 
@@ -457,9 +457,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       value={pickerValue}
       today={today}
       onChange={onPicker} onClear={clearFilters}
-      active={activeChips(view.filters, filterLabel)}
+      active={activeChips(view.filters, (dim, v) => filterLabel(dim, v, src?.goals))}
       under={(view.filters.length > 0 || !!rowProps.views?.list.length) && <FilterRowHost {...rowProps} onlyViews={narrow} />}
-      filter={!isShared() && <FilterMenu rows={dims} siblings={siblingRows(site.id, query)} labelFor={filterLabel} active={view.filters} onPick={filterOps.pick} onRemove={filterOps.dropValue} onClear={clearFilters} />}
+      filter={!isShared() && <FilterMenu rows={dims} siblings={siblingRows(site.id, query)} labelFor={(dim, v) => filterLabel(dim, v, src?.goals)} active={view.filters} onPick={filterOps.pick} onRemove={filterOps.dropValue} onClear={clearFilters} />}
       period={<DatePicker value={pickerValue} today={today} onChange={onPicker} short={narrow} tz={site.timezone} site={site.id} bucket={view.bucket} autoBucket={data?.bucket} onBucket={(b) => setView({ bucket: b })} />}
       share={!isShared() && !narrow && <ShareButton onShare={() => setSharing(true)} />}
       more={

@@ -16,6 +16,8 @@ export interface KPIs {
 
 export interface Row {
   value: string
+  /** A goal's name as it was written; the value is its key. */
+  label?: string
   visitors: number
   sessions?: number
   pageviews?: number
@@ -166,6 +168,7 @@ export interface Visit {
   visitor?: string // pseudonymous id, for opening a journey
   path?: string
   goal?: string
+  label?: string // the goal's name as written
   channel?: string
   referrer?: string
   country?: string
@@ -539,6 +542,7 @@ export interface FunnelStep {
 }
 
 export interface FunnelResult extends FunnelStep {
+  label?: string // a goal step's name as written
   visitors: number
   rate: number
   of_total: number
@@ -559,7 +563,7 @@ export interface JourneyVisit {
   pageviews: number
   engaged_s: number
   /** null when the visit holds no pageview or goal. */
-  events: { at: string; kind: string; path?: string; goal?: string; props?: string; engaged_s?: number }[] | null
+  events: { at: string; kind: string; path?: string; goal?: string; label?: string; props?: string; engaged_s?: number }[] | null
 }
 
 export interface JourneyResult {

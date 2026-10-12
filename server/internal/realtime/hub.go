@@ -16,6 +16,7 @@ type Live struct {
 	TS      int64  `json:"ts"`
 	Path    string `json:"path,omitempty"`
 	Goal    string `json:"goal,omitempty"`
+	Label   string `json:"label,omitempty"` // the goal's name as written, when it differs from the key
 	Channel string `json:"channel,omitempty"`
 	Ref     string `json:"referrer,omitempty"`
 	Country string `json:"country,omitempty"`
@@ -35,6 +36,9 @@ type Live struct {
 
 // Hub routes events to per-site subscribers.
 type Hub struct {
+	// Label names a goal as it was written; nil shows the key.
+	Label func(site, goal string) string
+
 	mu   sync.RWMutex
 	subs map[string]map[chan Live]struct{}
 	// ver counts each site's commits, so a cached report for a range that
@@ -101,6 +105,11 @@ func (h *Hub) Publish(evs []event.Event) {
 		l := Live{TS: e.TS, Visitor: strconv.FormatUint(e.Visitor, 36), Path: e.Path, Channel: e.Channel, Ref: e.RefHost, Country: e.Country, City: e.City, Device: e.Device, Browser: e.Browser}
 		if e.Kind == event.KindGoal {
 			l.Kind, l.Goal = "goal", e.Goal
+			if h.Label != nil {
+				if n := h.Label(e.Site, e.Goal); n != e.Goal {
+					l.Label = n
+				}
+			}
 		} else {
 			l.Kind = "pageview"
 		}
