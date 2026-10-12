@@ -111,7 +111,7 @@ test('the busy line in Live is short and opens the same busy-moment card', async
     ],
   }
   await page.route(/\/api\/v1\/sites\/[^/]+\/busier$/, (r) => r.fulfill({ json: busier }))
-  await open(page, 'live')
+  await open(page, 'live', 1440)
   const line = page.locator('.live-busier-line')
   await expect(line).toContainText('Busier than usual: 53 vs ~20.', { timeout: 30_000 })
   const parts = line.locator('.live-busier-parts')
@@ -128,6 +128,10 @@ test('the busy line in Live is short and opens the same busy-moment card', async
   await expect(story(page)).toHaveCount(0)
   await line.getByRole('button', { name: /Why/ }).click()
   await expect(story(page)).toBeVisible()
+  await page.keyboard.press('Escape')
+  await page.setViewportSize({ width: 390, height: 900 })
+  await expect(line).toBeVisible()
+  await shoot(page, 'busy-line')
 })
 
 test('on a phone the story is a sheet that fills the screen; See it in Data lands on the moment', async ({ page }) => {
