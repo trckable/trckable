@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Serve the script and visits from your own domain: the server also answers on `/s/x.js`, `/s/e` and `/s/h`, and the npm package adds `withTrckable` (Next.js) and `nodeHandler` (Express, node:http) for a first-party proxy. Existing paths are unchanged.
+
 ## 0.7.6 (9 Oct 2026)
 
 - The create list (Goal, Funnel, Note) closes when you press ⋯, so the ⋯ menu never opens on top of it.
