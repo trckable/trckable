@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.7.8 (12 Oct 2026)
+
 - The "Busier than usual" line in Live is one short line ("+15 from Facebook · +8 from Albania · since 16:45 · still going", no page) and the line and "Why?" open the same busy-moment card as the notification. The old wide box with the long sentence is gone. Also: the five translated languages have "Revenue per visitor" again.
 - The period and the words of its comparison ("vs the 30 days before") in the header now sit a full toolbar gap apart instead of almost touching.
 - A busy moment no longer wraps a long landing page into its sentence: the page sits on its own row as a chip with the middle cut (full path on hover, tap on it to filter Data to that page), in the story and on the line over Data, where "Only <source>" and "Back to today" are now two regular buttons side by side.
