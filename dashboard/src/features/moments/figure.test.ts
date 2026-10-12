@@ -36,6 +36,10 @@ describe('a pin as a card tells it', () => {
     expect(whenOf(pin({ day: '2026-10-01' }), '2026-10-02')?.text).toBe('yesterday')
     expect(whenOf(pin({ day: '2026-09-27' }), '2026-10-02')).toEqual({ text: '5 days ago', title: 'Sun, Sep 27' })
     expect(whenOf(pin({}), '2026-10-02')).toBeUndefined()
+    // A surge placed by the hour says the hour; one on a day bucket has none to say.
+    expect(whenOf(pin({ kind: 'surge', day: '2026-10-02', at: '2026-10-02T16:00' }), '2026-10-02')?.text).toBe('today 16:00')
+    expect(whenOf(pin({ kind: 'surge', day: '2026-10-01', at: '2026-10-01T16:00' }), '2026-10-02')?.text).toBe('yesterday 16:00')
+    expect(whenOf(pin({ kind: 'surge', day: '2026-10-02', at: '2026-10-02T00:00' }), '2026-10-02')?.text).toBe('today')
   })
 
   it('labels the action in two or three words: the day it shows, or what it filters', () => {

@@ -50,14 +50,27 @@ export function figureOf(pin: Pin, money: (minor: number) => string): Figure {
   }
 }
 
+function agoWords(ago: number): string {
+  if (ago <= 0) return copy.ago.today
+  if (ago === 1) return copy.ago.yesterday
+  return copy.ago.days(ago)
+}
+
+/** The hour of a surge or a spike ("16:00"), when the server placed it by the hour; a day bucket has no hour to give (it ends in 00:00). */
+function timeOf(pin: Pin): string {
+  if (pin.kind !== 'surge' && pin.kind !== 'spike') return ''
+  const t = pin.at?.slice(11, 16) ?? ''
+  return t && t !== '00:00' ? t : ''
+}
+
 /** When it happened, in words and as a date for a tooltip: "yesterday", "Sat, Sep 28". Nothing for a finding about the whole period. */
 export function whenOf(pin: Pin, today: ISODate): { text: string; title: string } | undefined {
   if (!pin.day) return undefined
   const ago = diffDays(pin.day, today)
   const title = fmtDay(pin.day, { weekday: true })
-  if (ago <= 0) return { text: copy.ago.today, title }
-  if (ago === 1) return { text: copy.ago.yesterday, title }
-  return { text: copy.ago.days(ago), title }
+  const at = timeOf(pin)
+  const words = agoWords(ago)
+  return { text: at ? `${words} ${at}` : words, title }
 }
 
 /** The action's two words: the day it shows, or what it filters. */

@@ -186,6 +186,11 @@
   border-top: 1px solid var(--border);
   list-style: none;
 }
+.why-label {
+  padding: 2px 4px;
+  color: var(--text-3);
+  font-size: 11.5px;
+}
 .why-more button {
   width: 100%;
   padding: 6px 4px;
@@ -225,15 +230,15 @@
 .why-more .why-all {
   color: var(--accent);
 }
-/* A cluster's card is never taller than 60% of the screen: the list scrolls inside it, the figure and the action stay. */
-.side-card:has(> .why-more) {
+/* A cluster's card is never taller than 60% of the screen: the list scrolls inside the body, the header and the footer stay. */
+.side-card:has(.why-more) {
   max-height: 60vh;
   max-height: 60dvh;
 }
-.side-card:has(> .why-more) > * {
+.side-card:has(.why-more) > * {
   flex: none;
 }
-.side-card:has(> .why-more) > .why-more {
+.side-card:has(.why-more) > .side-body {
   flex: 0 1 auto;
   min-height: 0;
   overflow-y: auto;
@@ -241,7 +246,7 @@
 }
 /* A cluster's card is the short one: its small chart goes where the screen is not tall. */
 @media (max-height: 780px) {
-  .side-card:has(> .why-more) .side-chart {
+  .side-card:has(.why-more) .side-chart {
     display: none;
   }
 }

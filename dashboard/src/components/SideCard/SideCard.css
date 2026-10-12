@@ -44,10 +44,8 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px 14px var(--pb);
+  padding: 0;
   border: 1px solid var(--raised-line);
-  --pb: 14px;
   border-radius: 14px;
   background: var(--raised);
   color: var(--text);
@@ -76,14 +74,31 @@
     transform: translateX(-24px) rotate(-1.5deg);
   }
 }
+/* The header: what it is, when, the close; a hairline under it. */
 .side-kind {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-right: 24px;
+  padding: 8px 8px 8px 14px;
+  border-bottom: 1px solid var(--raised-line);
   color: var(--text-2);
   font-size: 12px;
   font-weight: 500;
+}
+.side-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.side-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 14px 14px;
 }
 .side-ic {
   display: grid;
@@ -98,18 +113,16 @@
 .side-when {
   margin-left: auto;
   color: var(--text-3);
+  font-weight: 400;
+  white-space: nowrap;
 }
 .side-when:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 .side-card-title {
-  padding-right: 24px;
   font-weight: 600;
   overflow-wrap: anywhere;
-}
-.side-card.has-kind .side-card-title {
-  padding-right: 0;
 }
 /* The ghost stands on the card's top edge, never inside it. */
 .side-ghost {
@@ -124,11 +137,8 @@
   display: none;
 }
 .side-card-x {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 2;
   display: grid;
+  flex: none;
   place-items: center;
   width: 28px;
   height: 28px;
@@ -146,12 +156,14 @@
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
+/* The footer: a hairline, then the actions, right-aligned. */
 .side-card-actions {
   display: flex;
   align-items: center;
   gap: 8px;
   justify-content: flex-end;
-  margin-top: 2px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--raised-line);
 }
 .side-dots {
   display: flex;
@@ -199,8 +211,7 @@
     width: auto;
   }
   .side-card {
-    --pb: calc(16px + env(safe-area-inset-bottom, 0px));
-    padding: 22px 14px var(--pb);
+    padding-top: 18px;
     border-width: 1px 0 0;
     border-radius: 16px 16px 0 0;
     box-shadow: var(--raised-shadow), 0 -10px 30px rgba(0, 0, 0, 0.35);
@@ -225,13 +236,15 @@
   }
   /* Targets a finger can hit: 44 px, like every other control on a phone. */
   .side-card-x {
-    top: 6px;
-    right: 6px;
     width: 44px;
     height: 44px;
+    margin: -8px 0;
   }
-  .side-kind {
-    padding-right: 44px;
+  .side-card-actions {
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+  .side-card-actions .btn:not(.icon) {
+    flex: 1;
   }
   .side-card-actions .btn {
     height: 44px;
@@ -257,7 +270,7 @@
   width: calc(100% + 28px);
   height: 56px;
   box-sizing: border-box;
-  margin: 2px -14px calc(var(--pb) * -1);
+  margin: 2px -14px -14px;
   padding: 0;
   background: none;
   overflow: hidden;
@@ -343,8 +356,8 @@
   font-size: 12.5px;
 }
 .side-mult {
-  font: 700 12.5px var(--mono);
   color: var(--tint);
+  font-weight: 600;
 }
 .side-chip {
   display: inline-flex;
@@ -387,22 +400,17 @@
   font-weight: 600;
 }
 
-/* One anatomy for every card: the figure in the card's colour, one quiet line, two quiet buttons, the chart to the bottom edge. */
+/* One anatomy for every card: header, the figure in the card's colour with one quiet line under it, the chart edge to edge, then the footer's two buttons. */
 .side-card .side-num {
   margin-top: 2px;
   color: var(--tint);
   font-size: 30px;
   font-weight: 650;
 }
-.side-card .side-card-title {
-  padding-right: 0;
-}
 .side-card-actions {
   position: relative;
-  margin-top: 4px;
 }
 .side-card-actions .btn {
-  flex: 1;
   justify-content: center;
 }
 @media (max-width: 560px) {
