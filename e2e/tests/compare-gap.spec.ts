@@ -24,7 +24,8 @@ for (const width of [1440, 1280, 800]) {
     const b = (await compare.boundingBox())!
     const toolbar = await page.locator('.subbar').evaluate((el) => parseFloat(getComputedStyle(el).columnGap))
     expect(toolbar).toBeGreaterThan(0)
-    expect(b.x - (a.x + a.width)).toBeGreaterThanOrEqual(toolbar)
+    // Layout boxes are fractional (Firefox gives 7.9999 for 8px): allow a hundredth of a pixel, no more.
+    expect(b.x - (a.x + a.width)).toBeGreaterThanOrEqual(toolbar - 0.01)
   })
 }
 
