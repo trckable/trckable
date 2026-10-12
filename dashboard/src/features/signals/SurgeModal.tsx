@@ -11,6 +11,7 @@ import { useHostIcon } from './useHostIcon'
 import { Rolling } from '../moments/Rolling'
 import { signals } from './copy'
 import { beats, clock, deviceShare, honestLine, surgeChip, type Story, type Surge } from './surge'
+import { PathChip } from './PathChip'
 import { SurgeChart } from './SurgeChart'
 import { useFullSurge } from './useFullSurge'
 import { useSurgeActions } from './useSurgeActions'
@@ -21,7 +22,7 @@ const t = signals.surge
 /** site: the site's id, so a surge that arrives without its story (told by a notice) gets the story fetched. */
 export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: { surge: Surge; site?: string; tz: string; onClose: () => void; onSee: () => void }) {
   const { surge, state } = useFullSurge(given, site)
-  const { see, canAsk, notify } = useSurgeActions(surge, tz, () => {
+  const { see, seePage, canAsk, notify } = useSurgeActions(surge, tz, () => {
     onSee()
     onClose()
   })
@@ -51,6 +52,12 @@ export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: {
         </p>
       )}
       <p className="sgm-honest muted">{honestLine(surge)}</p>
+      {w.source && w.source_dim === 'referrer' && w.page && (
+        <p className="sgm-landing">
+          <span className="muted">{t.landingOn}</span>
+          <PathChip page={w.page} onPick={() => seePage(w.page ?? '')} />
+        </p>
+      )}
       {w.campaign && <p className="sgm-camp muted">{t.campaign(w.campaign)}</p>}
       <SurgeChart surge={surge} tz={tz} />
       <ol className="sgm-beats">

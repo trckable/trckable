@@ -58,7 +58,8 @@ export const signals = defineCopy('signals', {
     usually: (n: number) => (n >= 1 ? `usually about ${n}` : 'usually next to none'),
     campaign: (name: string) => `Campaign ${name}`,
     // What only a person could know is "looks like", and the exact post is never claimed.
-    startedFrom: (source: string, page: string) => `Looks like a link on ${source}${page ? `, landing on ${page},` : ''} started sending people. The exact post isn’t visible.`,
+    startedFrom: (source: string) => `Looks like a link on ${source} started sending people. The exact post isn’t visible.`,
+    landingOn: 'Landing on',
     startedNoSource: 'The climb began without a referring site we can see.',
     // The browser notice: at most one emoji.
     // Data, landed on the moment: the band on the chart and the line over the numbers.
@@ -67,7 +68,7 @@ export const signals = defineCopy('signals', {
     spanSince: (from: string) => `since ${from}`,
     bannerHead: (span: string) => `Busy moment ${span}`,
     atPeak: (n: number) => `${n} at peak`,
-    fromSource: (source: string, page: string) => `from ${source}${page ? ` → ${page}` : ''}`,
+    fromSource: (source: string) => `from ${source}`,
     only: (source: string) => `Only ${source}`,
     backToday: 'Back to today',
     noticeTitle: (online: number, source: string) => `${online} people on your site right now${source ? `, mostly from ${source}` : ''} 🎉`,

@@ -129,8 +129,15 @@ export function beats(s: Surge, tz: string): Beat[] {
 /** The honest sentence: "looks like", never a cause, and the exact post is not claimed. */
 export function honestLine(s: Surge): string {
   const w = s.why
-  if (w.source && w.source_dim === 'referrer') return t.startedFrom(w.source, w.page ?? '')
+  if (w.source && w.source_dim === 'referrer') return t.startedFrom(w.source)
   return t.startedNoSource
+}
+
+/** A path that fits one line whole; a longer one keeps its start and its tail with an ellipsis between: "/news/raimonda-sino-plani…-2024". */
+export function midTruncate(path: string, max = 34): string {
+  if (path.length <= max) return path
+  const head = Math.ceil((max - 1) * 0.6)
+  return `${path.slice(0, head)}…${path.slice(path.length - (max - 1 - head))}`
 }
 
 /** Phones against computers, as whole percents of the people whose device is known; null under five of them. */
@@ -170,10 +177,13 @@ export function seeInData(s: Surge, tz: string, now = new Date()): Partial<ViewS
   return { live: false, period: 'custom', from, to: last, bucket: 'hour', compare: 'custom', cfrom: addDays(from, -7), cto: addDays(last, -7), filters: [], day: undefined, v: 'explore', story: undefined, surge: s.started }
 }
 
+/** What "See it in Data" does from the landing page chip: the same moment, filtered to that page. */
+export const seePageInData = (s: Surge, tz: string, page: string, now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), filters: [{ dim: 'page', value: page }] })
+
 /** The line over the numbers: when it was, how busy, who sent them and where they landed. */
 export function bannerLine(s: Surge, tz: string): string {
   const from = clock(s.started, tz)
   const span = s.ended ? t.spanBetween(from, clock(s.ended, tz)) : t.spanSince(from)
   const w = s.why
-  return [t.bannerHead(span), t.atPeak(s.online), w.source ? t.fromSource(w.source, w.page ?? '') : ''].filter(Boolean).join(' · ')
+  return [t.bannerHead(span), t.atPeak(s.online), w.source ? t.fromSource(w.source) : ''].filter(Boolean).join(' · ')
 }

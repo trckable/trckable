@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- A busy moment no longer wraps a long landing page into its sentence: the page sits on its own row as a chip with the middle cut (full path on hover, tap on it to filter Data to that page), in the story and on the line over Data, where "Only <source>" and "Back to today" are now two regular buttons side by side.
 - The site switcher shows a quiet site as a small moon and a down site as a red alert icon instead of "quiet · 19h" and "down · 12m" text; hover, focus or tap the icon to read how long and what it means.
 - A tab you come back to after more than 30 minutes counts as a new visit, and a page left open and in view keeps you in the Live and Online counts: the script sends a small "still here" every minute, which adds no views or visits. The script grows by 34 bytes (about 2.04 KB).
 - Goals show their name as it was written: "Start free" stays "Start free" on the Goals card, in funnels, journeys, Live, exports and the reports by email, and names with letters like ë, ü or Cyrillic keep them instead of losing them. Goals are still counted under the same lowercase key, so nothing already counted moves. The API adds a `label` next to `value` on goal rows.
