@@ -151,8 +151,10 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/api/e", s.ingest)
+	mux.Handle("/s/e", s.ingest)                 // the neutral path a first-party proxy forwards visits to
 	mux.HandleFunc("/api/crawl", s.ingest.Crawl) // robots, reported by the site's own server
 	mux.HandleFunc("/api/h", s.ingest.Heat)      // clicks and form fields, from the heatmaps script
+	mux.HandleFunc("/s/h", s.ingest.Heat)        // the neutral path for the heatmaps reports
 	feat := func(site string) []string {
 		set, err := (modules.Store{DB: ctl.DB}).Of(ctx, site)
 		if err != nil {
@@ -203,6 +205,12 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	tracker := web.Tracker(feat, opts)
 	online := web.OnlineScript(func(ctx context.Context, id string) (web.OnlineLook, bool) { return s.api.OnlineLook(ctx, id) })
 	loader := web.WidgetLoader()
+	// The neutral name of /js/t.js, for a first-party proxy. /js/x.js stays what it was: not found.
+	mux.HandleFunc("GET /s/x.js", func(w http.ResponseWriter, r *http.Request) {
+		plain := r.Clone(r.Context())
+		plain.URL.Path = "/js/t.js"
+		tracker.ServeHTTP(w, plain)
+	})
 	mux.HandleFunc("GET /js/{file}", func(w http.ResponseWriter, r *http.Request) {
 		if r.PathValue("file") == web.WidgetLoaderFile {
 			loader.ServeHTTP(w, r)

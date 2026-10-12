@@ -539,3 +539,55 @@ func TestEventKeptForHoursIsMarkedLate(t *testing.T) {
 		t.Fatal("an event kept for two hours is late")
 	}
 }
+
+// The forwarded address names no one without the proxy key, with a wrong one
+// or with none at all.
+func TestForwardedIPNeedsTheKey(t *testing.T) {
+	for _, key := range []string{"", "tkb_px_guess"} {
+		h, _ := newHandler(t)
+		used := geoSpy(h)
+		req := httptest.NewRequest(http.MethodPost, "/s/e", strings.NewReader(`{"s":"tkb_test","k":"pv","u":"https://site.com/"}`))
+		req.Header.Set("User-Agent", chromeUA)
+		if key != "" {
+			req.Header.Set("X-Trckable-Proxy-Key", key)
+		}
+		req.Header.Set("X-Trckable-Client-IP", "80.78.64.1")
+		req.RemoteAddr = "10.0.0.5:4444"
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		if w.Code != http.StatusAccepted || *used != "10.0.0.5" {
+			t.Fatalf("key %q: status %d, geo used %q", key, w.Code, *used)
+		}
+	}
+}
+
+// BenchmarkIngest compares a plain visit with one through a proxy.
+func BenchmarkIngest(b *testing.B) {
+	for _, tc := range []struct {
+		name string
+		hdr  map[string]string
+	}{
+		{"direct", nil},
+		{"proxied", map[string]string{"X-Trckable-Proxy-Key": "tkb_px_secret", "X-Trckable-Client-IP": "80.78.64.1"}},
+	} {
+		b.Run(tc.name, func(b *testing.B) {
+			l, err := wal.Open(b.TempDir(), wal.Options{NoSync: true})
+			if err != nil {
+				b.Fatal(err)
+			}
+			defer l.Close()
+			h := &Handler{Log: l, Sites: fakeSites{"tkb_test": {ID: "tkb_test", Domain: "site.com", ProxyKey: "tkb_px_secret"}}, Salts: NewSalts(nil), ClientIP: RemoteIP,
+				Now: func() time.Time { return time.Date(2026, 9, 22, 12, 0, 0, 0, time.UTC) }}
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				req := httptest.NewRequest(http.MethodPost, "/api/e", strings.NewReader(fmt.Sprintf(`{"s":"tkb_test","k":"pv","u":"https://site.com/","v":"%d"}`, i%50000)))
+				req.Header.Set("User-Agent", chromeUA)
+				for k, v := range tc.hdr {
+					req.Header.Set(k, v)
+				}
+				req.RemoteAddr = "10.0.0.5:4444"
+				h.ServeHTTP(httptest.NewRecorder(), req)
+			}
+		})
+	}
+}

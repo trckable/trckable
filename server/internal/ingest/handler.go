@@ -334,7 +334,9 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 
 	// A same-origin proxy proves itself with the site's secret; only then do
 	// we trust the visitor IP it forwards and set the cookie server-side.
-	proxied := site.ProxyKey != "" && auth.Equal(r.Header.Get(proxyKeyHeader), site.ProxyKey)
+	// The check runs only when the header is present, so a plain visit pays nothing.
+	pk := r.Header.Get(proxyKeyHeader)
+	proxied := pk != "" && site.ProxyKey != "" && auth.Equal(pk, site.ProxyKey)
 	ip := h.ClientIP(r)
 	if proxied {
 		// Our own header first; X-Real-IP too, because that is what a stock

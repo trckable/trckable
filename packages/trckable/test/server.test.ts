@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { clientIP, getIds, proxy, checkoutFields, checkoutUrl, reportCrawler } from '../src/server'
+import { clientIP, getIds, proxy, scriptProxy, nodeHandler, checkoutFields, checkoutUrl, reportCrawler } from '../src/server'
 
 afterEach(() => vi.restoreAllMocks())
 
@@ -164,5 +164,137 @@ describe('reportCrawler', () => {
     } finally {
       globalThis.fetch = original
     }
+  })
+})
+
+describe('scriptProxy', () => {
+  const get = (method = 'GET') => new Request('https://site.com/s/x.js', { method })
+
+  it('serves the script from your server with a cache header', async () => {
+    const upstream = vi.fn(async () => new Response('(()=>{})()', { status: 200, headers: { 'content-type': 'text/plain' } }))
+    globalThis.fetch = upstream as any
+    const res = await scriptProxy({ host: 'https://stats.site.com/' })(get())
+    expect((upstream.mock.calls[0] as any)[0]).toBe('https://stats.site.com/js/t.js')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('javascript')
+    expect(res.headers.get('cache-control')).toContain('max-age=3600')
+    expect(await res.text()).toBe('(()=>{})()')
+  })
+
+  it('answers HEAD without a body, refuses other methods, and needs a host', async () => {
+    globalThis.fetch = vi.fn(async () => new Response('x')) as any
+    expect((await scriptProxy({ host: 'https://h.com' })(get('HEAD'))).body).toBeNull()
+    expect((await scriptProxy({ host: 'https://h.com' })(get('POST'))).status).toBe(405)
+    delete process.env.TRCKABLE_HOST
+    expect((await scriptProxy()(get())).status).toBe(500)
+  })
+
+  it('answers 502 when your server is away or answers badly', async () => {
+    globalThis.fetch = vi.fn(async () => { throw new Error('down') }) as any
+    expect((await scriptProxy({ host: 'https://h.com' })(get())).status).toBe(502)
+    globalThis.fetch = vi.fn(async () => new Response('no', { status: 500 })) as any
+    expect((await scriptProxy({ host: 'https://h.com' })(get())).status).toBe(502)
+  })
+})
+
+describe('nodeHandler', () => {
+  function fake(method: string, url: string, chunks: (string | Uint8Array)[], headers: Record<string, string | string[]> = {}) {
+    return {
+      method,
+      url,
+      headers: { host: 'site.com', ...headers },
+      async *[Symbol.asyncIterator]() {
+        for (const c of chunks) yield c
+      },
+    }
+  }
+  function sink() {
+    const out = { statusCode: 0, headers: {} as Record<string, unknown>, body: new Uint8Array(), setHeader(k: string, v: unknown) { this.headers[k] = v }, end(b?: Uint8Array) { this.body = b ?? new Uint8Array() } }
+    return out
+  }
+
+  it('turns a node request into a Request and writes the answer back, cookies included', async () => {
+    let seen: Request | undefined
+    let text = ''
+    const handler = nodeHandler(async (req) => {
+      seen = req
+      text = await req.text()
+      const res = new Response('hi', { status: 202, headers: { 'x-a': '1' } })
+      res.headers.append('set-cookie', 'a=1')
+      res.headers.append('set-cookie', 'b=2')
+      return res
+    })
+    const res = sink()
+    await handler(fake('POST', '/s/e', ['{"a":', new TextEncoder().encode('1}')], { 'x-multi': ['p', 'q'] }) as any, res as any)
+    expect(seen?.url).toBe('http://site.com/s/e')
+    expect(seen?.headers.get('x-multi')).toBe('p, q')
+    expect(text).toBe('{"a":1}')
+    expect(res.statusCode).toBe(202)
+    expect(res.headers['x-a']).toBe('1')
+    expect(res.headers['set-cookie']).toEqual(['a=1', 'b=2'])
+    expect(new TextDecoder().decode(res.body)).toBe('hi')
+  })
+
+  it('sends no body with GET and defaults the method and host', async () => {
+    let seen: Request | undefined
+    const res = sink()
+    await nodeHandler(async (req) => ((seen = req), new Response(null, { status: 204 })))({ headers: {}, async *[Symbol.asyncIterator]() {} } as any, res as any)
+    expect(seen?.method).toBe('GET')
+    expect(seen?.url).toBe('http://localhost/')
+    expect(res.statusCode).toBe(204)
+    expect(res.headers['set-cookie']).toBeUndefined()
+  })
+})
+
+describe('nodeHandler and the visitor address', () => {
+  const spoofed = {
+    'x-real-ip': '6.6.6.6',
+    'x-forwarded-for': '6.6.6.6',
+    forwarded: 'for=6.6.6.6',
+    'cf-connecting-ip': '6.6.6.6',
+    'true-client-ip': '6.6.6.6',
+    'x-nf-client-connection-ip': '6.6.6.6',
+    'fly-client-ip': '6.6.6.6',
+    'x-trckable-client-ip': '6.6.6.6',
+  }
+  const run = async (req: Record<string, unknown>) => {
+    let seen: Headers | undefined
+    await nodeHandler(async (r) => ((seen = r.headers), new Response(null, { status: 204 })))(
+      { method: 'POST', url: '/s/e', headers: { host: 'site.com', ...spoofed }, async *[Symbol.asyncIterator]() {}, ...req } as any,
+      { setHeader() {}, end() {}, statusCode: 0 } as any,
+    )
+    return seen!
+  }
+
+  it('ignores every address header the visitor sent and uses the connection', async () => {
+    const h = await run({ socket: { remoteAddress: '203.0.113.9' } })
+    expect(h.get('x-real-ip')).toBe('203.0.113.9')
+    for (const name of Object.keys(spoofed).filter((n) => n !== 'x-real-ip')) expect(h.get(name)).toBeNull()
+  })
+
+  it('prefers the address Express worked out, which follows its trust proxy setting', async () => {
+    expect((await run({ ip: '198.51.100.4', socket: { remoteAddress: '10.0.0.1' } })).get('x-real-ip')).toBe('198.51.100.4')
+  })
+
+  it('names no address when there is none, rather than the visitor\'s claim', async () => {
+    const h = await run({})
+    expect(h.get('x-real-ip')).toBeNull()
+  })
+
+  it('forwards only the address it chose through proxy()', async () => {
+    const upstream = vi.fn(async () => new Response(null, { status: 202 }))
+    globalThis.fetch = upstream as any
+    const p = proxy({ host: 'https://stats.site.com', proxyKey: 'tkb_px_k' })
+    await nodeHandler(p)({ method: 'POST', url: '/s/e', headers: { host: 'site.com', 'cf-connecting-ip': '6.6.6.6' }, socket: { remoteAddress: '203.0.113.9' }, async *[Symbol.asyncIterator]() { yield '{}' } } as any, { setHeader() {}, end() {}, statusCode: 0 } as any)
+    expect((upstream.mock.calls[0] as any)[1].headers['x-trckable-client-ip']).toBe('203.0.113.9')
+  })
+})
+
+describe('proxy target', () => {
+  it('sends heatmap reports to /api/h', async () => {
+    const upstream = vi.fn(async () => new Response(null, { status: 202 }))
+    globalThis.fetch = upstream as any
+    await proxy({ host: 'https://stats.site.com', proxyKey: 'tkb_px_k', target: 'heat' })(incoming())
+    expect((upstream.mock.calls[0] as any)[0]).toBe('https://stats.site.com/api/h')
   })
 })
