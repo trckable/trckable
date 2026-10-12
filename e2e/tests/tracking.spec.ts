@@ -190,3 +190,32 @@ test('checkout links carry the visitor id, so the sale can be attributed', async
   expect(ref).toMatch(/^trckable_[0-9a-z]+_[0-9a-z]+$/)
   expect(ref.split('_')[1]).toBe(evs[0].visitor)
 })
+
+test('an open page says it is still here, and a tab brought back after 30 minutes is a new view', async ({ page, request }) => {
+  const run = runId(page, 'stillhere')
+  const prefix = `/r/${run}/`
+  await page.clock.install()
+  await page.goto(`${prefix}next.html`)
+  await settled(request, prefix, (e) => count(e, 'pageview') === 1)
+
+  await page.clock.runFor(61_000)
+  let evs = await settled(request, prefix, (e) => count(e, 'engagement') >= 1)
+  expect(count(evs, 'pageview')).toBe(1) // the ping is never a view
+
+  const show = (hidden: boolean) =>
+    page.evaluate((h) => {
+      Object.defineProperty(document, 'hidden', { value: h, configurable: true })
+      document.dispatchEvent(new Event('visibilitychange'))
+    }, hidden)
+  await show(true)
+  await page.clock.runFor(5 * 60_000)
+  await show(false)
+  evs = await settled(request, prefix, (e) => count(e, 'pageview') === 1)
+  expect(count(evs, 'pageview')).toBe(1) // a short break goes on
+
+  await show(true)
+  await page.clock.runFor(31 * 60_000)
+  await show(false)
+  evs = await settled(request, prefix, (e) => count(e, 'pageview') === 2)
+  expect(count(evs, 'pageview')).toBe(2)
+})
