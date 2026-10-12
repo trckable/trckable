@@ -654,6 +654,11 @@ var migrations = []string{
 		FROM alerts WHERE enabled = 1 AND target != ''
 	)
 	WHERE rn = 1 AND site_id NOT IN (SELECT site_id FROM alerts WHERE kind = 'surge');`,
+	// 53: when a site's answer first failed (check.go: kept while it keeps
+	// failing, cleared by the next good look), and a site's alerts snoozed
+	// until a time (unix seconds; 0 or past: not snoozed).
+	`ALTER TABLE site_check ADD COLUMN down_since INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE sites ADD COLUMN alerts_muted_until INTEGER NOT NULL DEFAULT 0;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

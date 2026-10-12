@@ -289,6 +289,9 @@ type SiteInfo struct {
 	Cookieless bool `json:"cookieless,omitempty"`
 	// Check is the last look this server took for the site's snippet.
 	Check *SiteCheck `json:"check,omitempty"`
+	// AlertsMutedUntil is when the site's snooze of its alerts ends (unix
+	// seconds); absent when they are not snoozed.
+	AlertsMutedUntil int64 `json:"alerts_muted_until,omitempty"`
 }
 
 // SiteInfo returns one site.

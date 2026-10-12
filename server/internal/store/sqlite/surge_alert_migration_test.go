@@ -38,7 +38,7 @@ func TestSurgeAlertBackfill(t *testing.T) {
 	if _, err := s.DB.ExecContext(ctx, `DELETE FROM alerts WHERE kind = 'surge' AND site_id != ?; PRAGMA user_version = 51`, chose); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.MigrateTo(ctx, len(migrations)); err != nil {
+	if err := s.MigrateTo(ctx, 52); err != nil {
 		t.Fatal(err)
 	}
 	surge := func(site string) *Alert {
@@ -66,7 +66,7 @@ func TestSurgeAlertBackfill(t *testing.T) {
 	if _, err := s.DB.ExecContext(ctx, `PRAGMA user_version = 51`); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.MigrateTo(ctx, len(migrations)); err != nil {
+	if err := s.MigrateTo(ctx, 52); err != nil {
 		t.Fatal(err)
 	}
 	if list, _ := s.Alerts(ctx, on); len(list) != 3 {

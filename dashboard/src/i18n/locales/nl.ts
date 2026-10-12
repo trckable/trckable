@@ -2274,4 +2274,8 @@ export default {
   'sitestatus.noPage': 'Geen pagina vastgelegd',
   'sitestatus.answered': (status: number, ms: number) => `${status} · ${ms} ms`,
   'sitestatus.tileChecks': 'Wat we hebben gecontroleerd',
+  'sitestatus.downSince': (when: string) => `Je site is offline sinds ${when}`,
+  'sitestatus.mute': 'Meldingen 24 u dempen',
+  'sitestatus.muted': (when: string) => `Gedempt tot ${when}`,
+  'sitestatus.undo': 'Ongedaan maken',
 } satisfies Messages

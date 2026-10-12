@@ -2274,4 +2274,8 @@ export default {
   'sitestatus.noPage': 'Nessuna pagina registrata',
   'sitestatus.answered': (status: number, ms: number) => `${status} · ${ms} ms`,
   'sitestatus.tileChecks': 'Cosa abbiamo controllato',
+  'sitestatus.downSince': (when: string) => `Il tuo sito non risponde dalle ${when}`,
+  'sitestatus.mute': 'Silenzia gli avvisi per 24 h',
+  'sitestatus.muted': (when: string) => `Silenziati fino alle ${when}`,
+  'sitestatus.undo': 'Annulla',
 } satisfies Messages

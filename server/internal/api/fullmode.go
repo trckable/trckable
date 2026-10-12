@@ -498,6 +498,43 @@ func (a *API) saveAlert(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, saved)
 }
 
+// muteFor is how long "mute alerts" snoozes them.
+const muteFor = 24 * time.Hour
+
+// mutedUntil is when a site's snooze ends, or 0 when it is over or never was.
+func (a *API) mutedUntil(r *http.Request, site string) int64 {
+	if until := a.Ctl.MutedUntil(r.Context(), site); until > a.Now().Unix() {
+		return until
+	}
+	return 0
+}
+
+// muteAlerts snoozes every alert of a site for a day: nothing is sent, nothing
+// is deleted, and it lifts by itself.
+func (a *API) muteAlerts(w http.ResponseWriter, r *http.Request) {
+	if !a.siteExists(w, r) {
+		return
+	}
+	until := a.Now().Add(muteFor).Unix()
+	if err := a.Ctl.MuteAlerts(r.Context(), r.PathValue("site"), until); err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"alerts_muted_until": until})
+}
+
+// unmuteAlerts lifts the snooze at once.
+func (a *API) unmuteAlerts(w http.ResponseWriter, r *http.Request) {
+	if !a.siteExists(w, r) {
+		return
+	}
+	if err := a.Ctl.MuteAlerts(r.Context(), r.PathValue("site"), 0); err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (a *API) deleteAlert(w http.ResponseWriter, r *http.Request) {
 	if !a.siteExists(w, r) {
 		return

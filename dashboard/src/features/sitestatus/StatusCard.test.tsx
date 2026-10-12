@@ -31,6 +31,12 @@ describe('the card of a site that stopped', () => {
     expect(html).toContain('href="https://a.example"')
   })
 
+  it('says since when the site is down, once the server knows', () => {
+    const html = renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 8 * 3600, check: { at: NOW - 60, error: 'x', down_since: NOW - 5 * 3600 } })} />)
+    expect(html).toContain('Your site is down since')
+    expect(html).not.toContain('No visits since')
+  })
+
   it('says no visits since, and for how long, when the page answers', () => {
     const html = renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 8 * 3600 })} />)
     expect(html).toContain('Tracking stopped')

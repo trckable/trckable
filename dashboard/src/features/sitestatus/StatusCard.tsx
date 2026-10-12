@@ -10,6 +10,7 @@ import { copy } from './copy'
 import { causeOf, rowsOf } from './rows'
 import { GapChart } from './GapChart'
 import { slotOf, useRecent } from './useRecent'
+import { useMute } from './useMute'
 import { firstAfter, fresh, readGap, writeGap } from './recovery'
 import { silence, statusOf, when } from './status'
 import { useChecks } from './useChecks'
@@ -19,6 +20,8 @@ import './StatusCard.css'
 function Gone({ site, last, down }: { site: Site; last: number; down: boolean }) {
   const { state, again } = useChecks(site.id)
   const recent = useRecent(site.id)
+  const mute = useMute(site, !isViewer())
+  const downSince = down ? site.check?.down_since : undefined
   useEffect(() => {
     const prev = readGap(site.id)
     if (!prev || prev.since !== last) writeGap(site.id, { since: last })
@@ -34,7 +37,7 @@ function Gone({ site, last, down }: { site: Site; last: number; down: boolean })
         <b className="sgm-count">{silence(site)}</b>
         <span className="sgm-meta">
           <span className="sg-chip">{down ? copy.chipDown : copy.chipQuiet}</span>
-          <span className="sgm-jump">{copy.sinceVisit(when(last))}</span>
+          <span className="sgm-jump">{downSince ? copy.downSince(when(downSince)) : copy.sinceVisit(when(last))}</span>
         </span>
       </header>
       <p className="sgm-honest muted">{causeOf(rows, down)}</p>
@@ -77,6 +80,15 @@ function Gone({ site, last, down }: { site: Site; last: number; down: boolean })
         </section>
       </div>
       <div className="sgm-actions">
+        {mute.have && (mute.on ? (
+          <span className="status-muted">
+            {copy.muted(when(mute.until))} · <button type="button" className="linkish" onClick={() => void mute.undo()}>{copy.undo}</button>
+          </span>
+        ) : (
+          <button type="button" className="btn ghost" onClick={() => void mute.mute()}>
+            {copy.mute}
+          </button>
+        ))}
         <a className="btn ghost" href={`https://${site.domain}`} target="_blank" rel="noopener noreferrer">
           {copy.open}
         </a>

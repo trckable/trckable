@@ -115,7 +115,9 @@ export interface Site {
    *  returning and no journeys (features/cookieless). */
   cookieless?: boolean
   /** The last time the server looked for the snippet from the outside. */
-  check?: { at: number; found?: 'site' | 'other' | 'nosite' | 'none'; via?: string; error?: string }
+  check?: { at: number; found?: 'site' | 'other' | 'nosite' | 'none'; via?: string; error?: string; down_since?: number }
+  /** Unix seconds until which the site's alerts are snoozed; absent when they are not. */
+  alerts_muted_until?: number
 }
 
 /** Whether the dashboard shows the install card over sample numbers. A site

@@ -2277,4 +2277,8 @@ export default {
   'sitestatus.noPage': 'Keine Seite erfasst',
   'sitestatus.answered': (status: number, ms: number) => `${status} · ${ms} ms`,
   'sitestatus.tileChecks': 'Was wir geprüft haben',
+  'sitestatus.downSince': (when: string) => `Deine Website ist offline seit ${when}`,
+  'sitestatus.mute': 'Alarme 24 h stumm schalten',
+  'sitestatus.muted': (when: string) => `Stumm bis ${when}`,
+  'sitestatus.undo': 'Rückgängig',
 } satisfies Messages

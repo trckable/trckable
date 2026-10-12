@@ -2275,4 +2275,8 @@ export default {
   'sitestatus.noPage': 'Aucune page enregistrée',
   'sitestatus.answered': (status: number, ms: number) => `${status} · ${ms} ms`,
   'sitestatus.tileChecks': 'Ce que nous avons vérifié',
+  'sitestatus.downSince': (when: string) => `Votre site est hors ligne depuis ${when}`,
+  'sitestatus.mute': 'Couper les alertes pendant 24 h',
+  'sitestatus.muted': (when: string) => `En sourdine jusqu’à ${when}`,
+  'sitestatus.undo': 'Annuler',
 } satisfies Messages

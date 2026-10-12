@@ -103,3 +103,9 @@
     font-size: 44px;
   }
 }
+
+.status-muted {
+  align-self: center;
+  margin-right: auto;
+  font-size: 13px;
+}

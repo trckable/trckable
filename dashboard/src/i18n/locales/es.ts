@@ -2280,4 +2280,8 @@ export default {
   'sitestatus.noPage': 'Ninguna página registrada',
   'sitestatus.answered': (status: number, ms: number) => `${status} · ${ms} ms`,
   'sitestatus.tileChecks': 'Qué hemos comprobado',
+  'sitestatus.downSince': (when: string) => `Tu sitio está caído desde ${when}`,
+  'sitestatus.mute': 'Silenciar alertas 24 h',
+  'sitestatus.muted': (when: string) => `Silenciadas hasta ${when}`,
+  'sitestatus.undo': 'Deshacer',
 } satisfies Messages

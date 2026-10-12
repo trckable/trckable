@@ -15,7 +15,7 @@ export function GapChart({ slices, last, at }: { slices: number[]; last: string;
   const y = (v: number) => H - PAD.b - (v / top) * (H - PAD.t - PAD.b)
   const line = slices.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ')
   const area = `${line} L${x(n - 1).toFixed(1)} ${H - PAD.b} L${x(0).toFixed(1)} ${H - PAD.b} Z`
-  const edge = at > n * 0.7
+  const edge = at > n * 0.4
   return (
     <figure className="sgm-chart gap-chart">
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={copy.chartLabel(last)} preserveAspectRatio="none">

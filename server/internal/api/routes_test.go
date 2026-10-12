@@ -166,6 +166,8 @@ var routeRules = map[string]string{
 	"PUT /api/v1/sites/{site}/alerts":                            "write",
 	"POST /api/v1/sites/{site}/alerts/test":                      "write",
 	"POST /api/v1/sites/{site}/alerts/weekly/send":               "write",
+	"POST /api/v1/sites/{site}/alerts/mute":                      "write",
+	"DELETE /api/v1/sites/{site}/alerts/mute":                    "write",
 	"DELETE /api/v1/sites/{site}/alerts/{id}":                    "write",
 	"GET /api/v1/sites/{site}/segments":                          "read",
 	"POST /api/v1/sites/{site}/segments":                         "write",

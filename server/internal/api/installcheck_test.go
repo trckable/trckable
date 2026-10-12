@@ -13,6 +13,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
 type roundTrip func(*http.Request) (*http.Response, error)
@@ -272,5 +274,47 @@ func TestCheckSaysHowTheScriptAnswered(t *testing.T) {
 	}
 	if got := scriptStatus(context.Background(), installCheck{}); got != 0 {
 		t.Fatalf("no script to load: %d", got)
+	}
+}
+
+func TestMutingAlertsNeedsWriteAndShowsOnTheSite(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	ctx := context.Background()
+	if _, err := g.ctl.AddUser(ctx, sqlite.DefaultAccount, "viewer@site.com", "correct horse battery V", sqlite.RoleViewer); err != nil {
+		t.Fatal(err)
+	}
+	viewer := client()
+	if code, _ := do(t, viewer, "POST", g.srv.URL+"/api/v1/login", `{"email":"viewer@site.com","password":"correct horse battery V"}`); code != http.StatusOK {
+		t.Fatal("viewer signs in")
+	}
+	mute := g.srv.URL + "/api/v1/sites/" + g.site + "/alerts/mute"
+	if code, _ := do(t, viewer, "POST", mute, "", csrf, "1"); code != http.StatusForbidden {
+		t.Fatalf("a viewer mutes: %d", code)
+	}
+	code, out := do(t, owner, "POST", mute, "", csrf, "1")
+	until, _ := out["alerts_muted_until"].(float64)
+	if code != http.StatusOK || int64(until) != g.now.Add(24*time.Hour).Unix() {
+		t.Fatalf("the owner mutes for a day: %d %v", code, out)
+	}
+	_, list := do(t, owner, "GET", g.srv.URL+"/api/v1/sites", "")
+	if got := list["sites"].([]any)[0].(map[string]any)["alerts_muted_until"]; got != until {
+		t.Fatalf("the site says until when: %v", got)
+	}
+	g.advance(25 * time.Hour)
+	_, list = do(t, owner, "GET", g.srv.URL+"/api/v1/sites", "")
+	if _, still := list["sites"].([]any)[0].(map[string]any)["alerts_muted_until"]; still {
+		t.Fatal("after a day the snooze is over")
+	}
+	if code, _ := do(t, owner, "POST", mute, "", csrf, "1"); code != http.StatusOK {
+		t.Fatal("mute again")
+	}
+	if code, _ := do(t, owner, "DELETE", mute, "", csrf, "1"); code != http.StatusNoContent {
+		t.Fatalf("undo: %d", code)
+	}
+	_, list = do(t, owner, "GET", g.srv.URL+"/api/v1/sites", "")
+	if _, still := list["sites"].([]any)[0].(map[string]any)["alerts_muted_until"]; still {
+		t.Fatal("undone")
 	}
 }

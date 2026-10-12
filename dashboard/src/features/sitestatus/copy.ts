@@ -6,6 +6,7 @@ export const copy = defineCopy('sitestatus', {
   label: 'Site status',
   chipDown: 'Down',
   chipQuiet: 'Tracking stopped',
+  downSince: (when: string) => `Your site is down since ${when}`,
   sinceVisit: (when: string) => `No visits since ${when}`,
   causeDown: 'The site did not answer when trckable looked. Everything recorded before is kept.',
   causeFine: 'The page, the tag and the script all look right. There have simply been no visits.',
@@ -31,6 +32,9 @@ export const copy = defineCopy('sitestatus', {
   scriptOk: (status: number) => `The script answered ${status}.`,
   scriptBad: (url: string, status: number) => (status ? `${url} answered ${status}. Visitors’ browsers get nothing from it.` : `${url} could not be loaded.`),
 
+  mute: 'Mute alerts for 24 h',
+  muted: (when: string) => `Muted until ${when}`,
+  undo: 'Undo',
   again: 'Check again',
   open: 'Open site',
   guide: 'Install guide',
