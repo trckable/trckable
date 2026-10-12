@@ -46,7 +46,7 @@ export default function LiveView({ site, timezone, stream, onVisitor, cookieless
   return (
     <>
       <div className="live-view view-stage" role="region" aria-label={copy.region}>
-        <BusierLine busier={busier} timezone={timezone} />
+        <BusierLine busier={busier} site={site} timezone={timezone} />
         {data ? (
           <>
             <NowPanel data={data} series={seriesAt(data, stream.visits, clock)} online={online ?? 0} connected={stream.connected} failed={failed} sales={stream.sales} timezone={timezone} />
