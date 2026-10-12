@@ -1,7 +1,75 @@
-/* The bounce guide (BounceGuideModal.tsx). Shares the busy-moment card's shell (surge.css). */
+/* The bounce guide's walkthrough (BounceGuideModal.tsx). Shares the busy-moment card's shell (surge.css). */
+.modal.surge-modal.bounce-modal {
+  width: min(720px, 100%);
+  overflow-y: auto;
+}
+.bounce-modal .bg-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 36px;
+  font-size: 12.5px;
+}
+.bounce-modal .bg-dot {
+  width: 22px;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.bounce-modal .bg-dot[aria-current='step'] {
+  background: var(--accent);
+}
+.bounce-modal .bg-dots .muted {
+  margin-left: 4px;
+}
+.bounce-modal .bg-title {
+  margin: 0;
+  font-size: 20px;
+}
+.bounce-modal .bg-stage {
+  min-height: 400px;
+}
+.bounce-modal .bg-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.bounce-modal .bg-nav .btn:disabled {
+  opacity: 0.4;
+}
+.bounce-modal .bg-note {
+  margin: 0;
+  font-size: 14px;
+}
+.bounce-modal .bg-step {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bounce-modal .bg-stage {
+    animation: fade-in 0.2s ease-out both;
+  }
+}
+
+/* ---- step 1 ---- */
+.bounce-modal .bg-what {
+  display: grid;
+  gap: 18px;
+}
+.bounce-modal .bg-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+}
 .bounce-modal .bg-rate {
   font-family: var(--mono);
-  font-size: 56px;
+  font-size: 64px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -11,26 +79,74 @@
   color: var(--text-2);
   font-size: 14px;
 }
-.bounce-modal .bg-since {
-  background: color-mix(in srgb, var(--down, var(--warn)) 15%, transparent);
-  color: var(--down, var(--warn));
+.bounce-modal .bg-chart {
+  position: relative;
+  height: 190px;
+  margin: 18px 0 8px;
+  border-radius: 12px;
+  background: var(--raised-well, var(--surface-2));
+  border: 1px solid var(--raised-line, var(--border));
 }
-.bounce-modal .bg-note {
-  margin: 0;
-  font-size: 14px;
+.bounce-modal .bg-chart svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 11px;
 }
-.bounce-modal .bg-causes,
-.bounce-modal .bg-try ul {
+.bounce-modal .bg-chart .band {
+  fill: color-mix(in srgb, var(--text-3) 18%, transparent);
+}
+.bounce-modal .bg-chart .mark {
+  stroke: var(--down);
+  stroke-dasharray: 3 3;
+  stroke-width: 1.2;
+}
+.bounce-modal .bg-chart .ln {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.bounce-modal .bg-band-label,
+.bounce-modal .bg-mark-label {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.bounce-modal .bg-band-label {
+  left: 10px;
+  color: var(--text-2);
+  transform: translateY(6px);
+}
+.bounce-modal .bg-mark-label {
+  top: -20px;
+  color: var(--down);
+  transform: translateX(-50%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bounce-modal .bg-chart .ln {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: sgm-draw 1.1s ease-out 0.15s forwards;
+  }
+}
+
+/* ---- step 2 ---- */
+.bounce-modal .bg-causes {
   display: grid;
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: 14px;
 }
 .bounce-modal .bg-cause {
   display: grid;
-  gap: 2px;
-  min-width: 0;
+  grid-template-columns: 1fr auto;
+  gap: 8px 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--raised-line, var(--border));
+  border-radius: 12px;
+  background: var(--raised-well, var(--surface-2));
 }
 .bounce-modal .bg-lead {
   display: flex;
@@ -40,17 +156,290 @@
   min-width: 0;
   font-size: 14px;
 }
-.bounce-modal .bg-stat {
+.bounce-modal .bg-bar {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: 84px 1fr 44px;
+  align-items: center;
+  gap: 10px;
   font-size: 12.5px;
 }
-.bounce-modal .bg-try h3 {
-  margin: 0 0 6px;
-  color: var(--text-2);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.bounce-modal .bg-bar b {
+  font-family: var(--mono);
+  text-align: right;
 }
-.bounce-modal .bg-try li {
+.bounce-modal .bg-track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--text-3) 16%, transparent);
+}
+.bounce-modal .bg-track i {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+}
+.bounce-modal .bg-track i.now {
+  background: var(--down);
+}
+.bounce-modal .bg-track i.was {
+  background: var(--text-3);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bounce-modal .bg-cause {
+    animation: fade-in 0.35s ease-out calc(var(--i, 0) * 0.12s) both;
+  }
+  .bounce-modal .bg-track i {
+    transform-origin: left;
+    animation: bg-grow 0.6s ease-out calc(var(--i, 0) * 0.12s + 0.1s) both;
+  }
+}
+@keyframes bg-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* ---- step 3 ---- */
+.bounce-modal .bg-why {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+.bounce-modal .bg-sub {
+  display: grid;
+  align-content: start;
+  padding: 14px;
+  border: 1px solid var(--raised-line, var(--border));
+  border-radius: 12px;
+  background: var(--raised-well, var(--surface-2));
+}
+.bounce-modal .bg-vis {
+  display: grid;
+  gap: 12px;
+}
+.bounce-modal .bg-cap {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13.5px;
+}
+.bounce-modal .bg-frame {
+  overflow: hidden;
+  border: 1.5px solid var(--text-3);
+  border-radius: 10px;
+}
+.bounce-modal .bg-bar-top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.bounce-modal .bg-bar-top i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-4);
+}
+.bounce-modal .bg-addr {
+  flex: 1;
+  min-width: 0;
+  margin-left: 6px;
+  padding: 2px 8px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text-3) 16%, transparent);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bounce-modal .bg-body {
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+}
+.bounce-modal .bg-body b {
+  height: 30px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text-3) 24%, transparent);
+}
+.bounce-modal .bg-body u,
+.bounce-modal .bg-end i,
+.bounce-modal .bg-end u,
+.bounce-modal .bg-end em {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--text-3) 24%, transparent);
+  text-decoration: none;
+}
+.bounce-modal .short {
+  width: 60%;
+}
+.bounce-modal .bg-fold {
+  display: flex;
+  align-items: center;
+  margin: 2px -10px;
+  border-top: 2px dashed var(--down);
+}
+.bounce-modal .bg-fold span {
+  width: 100%;
+}
+.bounce-modal .bg-gauge {
+  position: relative;
+  display: flex;
+  height: 14px;
+  margin-top: 26px;
+  border-radius: 7px;
+  background: var(--border);
+}
+.bounce-modal .bg-gauge .zone {
+  height: 100%;
+}
+.bounce-modal .bg-gauge .zone:first-child {
+  border-radius: 7px 0 0 7px;
+}
+.bounce-modal .bg-gauge .zone:nth-child(3) {
+  border-radius: 0 7px 7px 0;
+}
+.bounce-modal .zone.good {
+  background: var(--up);
+}
+.bounce-modal .zone.slow {
+  background: var(--warn);
+}
+.bounce-modal .zone.poor {
+  background: var(--down);
+}
+.bounce-modal .needle {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--text);
+  transform: translateX(-50%);
+}
+.bounce-modal .needle b {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-bottom: 2px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.bounce-modal .bg-zones {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+.bounce-modal .bg-device {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 auto;
+  border: 2px solid var(--text-3);
+  color: var(--text-2);
+}
+.bounce-modal .bg-device.phone {
+  flex-direction: column;
+  width: 76px;
+  height: 128px;
+  border-radius: 16px;
+}
+.bounce-modal .bg-device.desk {
+  width: 150px;
+  height: 100px;
+  border-radius: 8px;
+}
+
+/* ---- step 4 ---- */
+.bounce-modal .bg-fixes {
+  display: grid;
+  gap: 10px;
+}
+.bounce-modal .bg-fix {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--raised-line, var(--border));
+  border-radius: 12px;
+  background: var(--raised-well, var(--surface-2));
   font-size: 14px;
+}
+.bounce-modal .bg-fix-line {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.bounce-modal .bg-fix-line small {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+}
+.bounce-modal .bg-ends {
+  display: flex;
+  grid-column: 3 / -1;
+  gap: 12px;
+}
+.bounce-modal .bg-end {
+  display: grid;
+  flex: 1;
+  gap: 5px;
+  max-width: 150px;
+  padding: 8px;
+  border: 1.5px solid var(--text-3);
+  border-radius: 8px;
+}
+.bounce-modal .bg-end small {
+  color: var(--text-3);
+  font-size: 11px;
+}
+.bounce-modal .bg-end em {
+  height: 14px;
+  background: none;
+  border-top: 1px dashed var(--text-3);
+}
+.bounce-modal .bg-end u {
+  width: 70%;
+  background: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+@media (max-width: 640px) {
+  .modal.surge-modal.bounce-modal {
+    max-height: 100dvh;
+    min-height: 100dvh;
+    align-content: start;
+  }
+  .bounce-modal .bg-stage {
+    min-height: 0;
+  }
+  .bounce-modal .bg-nav {
+    margin-top: auto;
+  }
+  .bounce-modal .bg-rate {
+    font-size: 52px;
+  }
+  .bounce-modal .bg-fix {
+    grid-template-columns: auto auto 1fr;
+  }
+  .bounce-modal .bg-fix .btn {
+    grid-column: 3;
+    justify-self: start;
+  }
+  .bounce-modal .bg-ends {
+    grid-column: 1 / -1;
+  }
+}
+.bounce-modal .bg-pill {
+  align-self: start;
+  background: color-mix(in srgb, var(--text-3) 16%, transparent);
+  color: var(--text-2);
 }

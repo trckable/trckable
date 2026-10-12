@@ -1,4 +1,4 @@
-// Every word of the bounce guide: the popup, the story card, the Sites list button.
+// Every word of the bounce guide: the walkthrough, the story card, the Sites list button.
 import { defineCopy } from '../../i18n'
 
 export const copy = defineCopy('bounce', {
@@ -14,17 +14,34 @@ export const copy = defineCopy('bounce', {
   normal: (usual: string) => `Nothing unusual. About as many leave after one page as usual (~${usual}).`,
   low: 'Fewer leave after one page than usual. Nothing to fix.',
   spread: 'No single page or source stands out. It is spread over many.',
-  leaveHere: (rate: string) => `${rate} leave here`,
-  leaveHereWas: (rate: string, was: string) => `${rate} leave here (usually ${was})`,
   ofVisits: (share: string) => `${share} of visits`,
-  pageLead: 'Mostly people who land on',
-  sourceLead: (source: string, device: string) => `Mostly people from ${source} on ${device}`,
-  speedLead: (secs: string) => `The same page takes ${secs} s to show its main content`,
-  tryTitle: 'What to try',
-  tries: {
-    page: 'End the page with links to related pages, so the next step is clear.',
-    source_device: 'Open the page the way these visitors do. Check it fits their screen and matches what the link promised.',
-    speed: 'Make it faster on phones. Start with the images.',
+  steps: 'Steps',
+  stepOf: (n: number, total: number) => `${n} of ${total}`,
+  back: 'Back',
+  next: 'Next',
+  done: 'Done',
+  titles: ['What happened', 'Where they leave', 'Why', 'Fix it'],
+  chartLabel: 'Share of visits that leave after one page, by day',
+  usualBand: (usual: string) => `usual ~${usual}`,
+  now: 'This period',
+  usually: 'Usual',
+  landingOn: 'Landing on',
+  slowOn: 'Slow to load:',
+  sourceOn: (source: string, device: string) => `${source} on ${device}`,
+  noClick: (rate: string) => `${rate} leave without clicking`,
+  fromOn: (source: string, device: string) => `Visitors from ${source} on ${device}`,
+  zones: { good: 'Good', slow: 'Slow', poor: 'Poor' },
+  secs: (n: string) => `${n} s`,
+  showsAfter: (secs: string) => `Main content shows after ${secs}\u00a0s`,
+  fix: {
+    open: 'Open the page like they do',
+    phone: 'Make the window narrow, like a phone',
+    see: 'See this page in Data',
+    links: 'Link to the next step at the end of the page',
+    speed: 'Make it load faster',
+    withoutLinks: 'Without links',
+    withLinks: 'With links',
   },
-  seePage: 'See this page',
+  go: { open: 'Open', see: 'See this page', speed: 'See speed details' },
+  tick: (line: string) => `Tried: ${line}`,
 })

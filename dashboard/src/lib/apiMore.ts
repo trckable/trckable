@@ -24,6 +24,13 @@ export interface BounceCause {
   lcp_ms?: number
 }
 
+/** One day's share of visits that left after one page, and how many visits it rests on. */
+export interface BounceDay {
+  day: string
+  rate: number
+  sessions: number
+}
+
 /** Whether visitors leave after one page more (or less) than usual, and what explains it. */
 export interface BounceGuide {
   direction: 'high' | 'low' | 'normal'
@@ -32,6 +39,8 @@ export interface BounceGuide {
   sessions: number
   /** First day (site zone) the daily rate left the usual. */
   since?: string
+  /** The daily rate over the usual weeks and the period, oldest first; empty when nothing is judged. */
+  days: BounceDay[]
   causes: BounceCause[]
 }
 

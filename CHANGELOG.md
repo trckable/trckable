@@ -9,7 +9,7 @@ section into the release.
 
 ## Unreleased
 
-- Bounce guide: when visitors leave after one page clearly more than usual, the amber bounce chip on a site in All sites and a new card in the Story ("8 in 10 leave after one page (usual ~5 in 10)" with "See why") open a card with the rate, the day it started, the pages, sources on a device and slow loads that explain it, and at most two things to try. "See this page" opens Data on that page. When fewer leave than usual the Story says so. It is listed in Features. API: `GET /api/v1/sites/{site}/report/bounce-guide` (`from`/`to`, or `days`).
+- Bounce guide: when visitors leave after one page clearly more than usual, the amber bounce chip on a site in All sites and a new card in the Story ("8 in 10 leave after one page (usual ~5 in 10)" with "See why") open a four-step walkthrough: what happened (the rate, a daily line against the usual band, the day it started), where they leave (the pages, sources on a device and slow loads, this period against the usual), why (a picture for each cause), and a short list to try with buttons ("Open the page like they do", "See this page in Data", "See speed details") and ticks that stay in your browser. Arrow keys move between the steps. When fewer leave than usual the Story says so. It is listed in Features. API: `GET /api/v1/sites/{site}/report/bounce-guide` (`from`/`to`, or `days`) also returns the daily rate (`days`).
 
 ## 0.7.8 (12 Oct 2026)
 

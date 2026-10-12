@@ -40,6 +40,13 @@ type BounceCause struct {
 	LCP    int64    `json:"lcp_ms,omitempty"` // speed: the page's 75th percentile LCP
 }
 
+// BounceDay is one day's rate and how many visits it rests on.
+type BounceDay struct {
+	Day      string  `json:"day"`
+	Rate     float64 `json:"rate"`
+	Sessions int64   `json:"sessions"`
+}
+
 // BounceGuide is the answer.
 type BounceGuide struct {
 	Direction string        `json:"direction"` // high | low | normal
@@ -47,6 +54,7 @@ type BounceGuide struct {
 	Usual     float64       `json:"usual"`
 	Sessions  int64         `json:"sessions"`
 	Since     string        `json:"since,omitempty"` // first day (site zone) the daily rate left the usual
+	Days      []BounceDay   `json:"days"`            // the daily rate over the usual weeks and the period, oldest first; empty when nothing is judged
 	Causes    []BounceCause `json:"causes"`
 }
 
@@ -64,13 +72,13 @@ func (q Q) BounceGuide(ctx context.Context, p Params, vitals bool) (*BounceGuide
 	}
 	loc, _ := time.LoadLocation(tz)
 	p.TZ = tz
-	out := &BounceGuide{Direction: "normal", Causes: []BounceCause{}}
+	out := &BounceGuide{Direction: "normal", Causes: []BounceCause{}, Days: []BounceDay{}}
 	prior := p
 	prior.From, prior.To = p.From.In(loc).AddDate(0, 0, -7*BounceWeeks).UTC(), p.From
 
 	var cur, usual map[string]bounceGroup
 	var curPages, curSD, usualPages, usualSD map[[2]string]bounceGroup
-	var days []bounceDay
+	var days []BounceDay
 	err = func() error {
 		conn, err := q.DB.Conn(ctx)
 		if err != nil {
@@ -97,7 +105,9 @@ func (q Q) BounceGuide(ctx context.Context, p Params, vitals bool) (*BounceGuide
 		if gap < 0 {
 			out.Direction = "low"
 		}
-		if days, err = bounceDays(ctx, conn, p); err != nil {
+		both := p
+		both.From = prior.From
+		if days, err = bounceDays(ctx, conn, both); err != nil {
 			return err
 		}
 		if out.Direction == "low" {
@@ -122,7 +132,8 @@ func (q Q) BounceGuide(ctx context.Context, p Params, vitals bool) (*BounceGuide
 	if out.Direction == "normal" {
 		return out, nil
 	}
-	out.Since = bounceSince(days, out.Usual, out.Direction)
+	out.Days = days
+	out.Since = bounceSince(days, p.From.In(loc).Format("2006-01-02"), out.Usual, out.Direction)
 	if out.Direction == "low" {
 		return out, nil
 	}
@@ -247,13 +258,7 @@ func bounceGroups(ctx context.Context, conn *sql.Conn, p Params, e1, e2 string) 
 	return out, rows.Err()
 }
 
-type bounceDay struct {
-	day  string
-	n    int64
-	rate float64
-}
-
-func bounceDays(ctx context.Context, conn *sql.Conn, p Params) ([]bounceDay, error) {
+func bounceDays(ctx context.Context, conn *sql.Conn, p Params) ([]BounceDay, error) {
 	cte, args, err := sessionsCTE(p)
 	if err != nil {
 		return nil, err
@@ -263,28 +268,29 @@ func bounceDays(ctx context.Context, conn *sql.Conn, p Params) ([]bounceDay, err
 		return nil, err
 	}
 	defer rows.Close()
-	var out []bounceDay
+	var out []BounceDay
 	for rows.Next() {
 		var d time.Time
-		var r bounceDay
-		if err := rows.Scan(&d, &r.n, &r.rate); err != nil {
+		var r BounceDay
+		if err := rows.Scan(&d, &r.Sessions, &r.Rate); err != nil {
 			return nil, err
 		}
-		r.day = d.Format("2006-01-02")
+		r.Day = d.Format("2006-01-02")
 		out = append(out, r)
 	}
 	return out, rows.Err()
 }
 
-// bounceSince is the first day with enough visits whose rate was clearly past
-// the usual, in the direction the period went. Empty when no single day was.
-func bounceSince(days []bounceDay, usual float64, dir string) string {
+// bounceSince is the first day of the period (from, as YYYY-MM-DD) with enough
+// visits whose rate was clearly past the usual, in the direction the period
+// went. Empty when no single day was.
+func bounceSince(days []BounceDay, from string, usual float64, dir string) string {
 	for _, d := range days {
-		if d.n < 10 {
+		if d.Day < from || d.Sessions < 10 {
 			continue
 		}
-		if dir == "high" && d.rate >= usual+bounceNormal || dir == "low" && d.rate <= usual-bounceNormal {
-			return d.day
+		if dir == "high" && d.Rate >= usual+bounceNormal || dir == "low" && d.Rate <= usual-bounceNormal {
+			return d.Day
 		}
 	}
 	return ""

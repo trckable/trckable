@@ -1,4 +1,4 @@
-// The bounce guide: the amber bounce chip on All sites opens the card (causes, what to try), the
+// The bounce guide: the amber bounce chip on All sites opens the walkthrough (what happened, where, why, fixes), the
 // Story shows its note when visitors leave more than usual, and the Features list has it. A site's
 // one visit leaves after one page, so the chip is real; the server's judgement is tested in Go and
 // given here. BOUNCE_SHOTS=<dir> also takes the pictures.
@@ -17,6 +17,7 @@ const guide = {
   usual: 0.5,
   sessions: 420,
   since: '2026-09-20',
+  days: ['2026-09-01', '2026-09-08', '2026-09-15', '2026-09-18', '2026-09-20', '2026-09-22', '2026-09-24'].map((day, i) => ({ day, rate: [0.5, 0.52, 0.48, 0.55, 0.85, 0.82, 0.8][i], sessions: 60 })),
   causes: [
     { kind: 'page', label: '/blog/launch-post', rate: 0.93, share_of_visits: 0.42, was: 0.55 },
     { kind: 'source_device', label: 'Social · Mobile', source: 'Social', device: 'Mobile', rate: 0.91, share_of_visits: 0.3, was: null },
@@ -64,20 +65,56 @@ async function shoot(page: Page, name: string, schemes: ('dark' | 'light')[]) {
 
 const dialog = (page: Page) => page.getByRole('dialog', { name: 'Why visitors leave' })
 
-test('the chip on All sites opens the guide: causes, what to try, and See this page', async ({ page }) => {
+async function walk(page: Page) {
+  const d = dialog(page)
+  await expect(d.locator('.bg-title')).toHaveText('What happened')
+  await expect(d.locator('.bg-rate')).toHaveText('80%')
+  await expect(d).toContainText('leave after one page · usual ~50%')
+  await expect(d.locator('.bg-chart .ln')).toBeVisible()
+  await expect(d).toContainText('since Sep 20')
+  await shoot(page, 'step1', ['dark', 'light'])
+  await d.getByRole('button', { name: 'Next' }).click()
+  await expect(d.locator('.bg-title')).toHaveText('Where they leave')
+  await expect(d.locator('.bg-cause')).toHaveCount(3)
+  await expect(d).toContainText('Social on Mobile')
+  await shoot(page, 'step2', ['dark'])
+  await page.keyboard.press('ArrowRight')
+  await expect(d.locator('.bg-title')).toHaveText('Why')
+  await expect(d.locator('.bg-frame')).toBeVisible()
+  await expect(d.locator('.bg-gauge')).toBeVisible()
+  await expect(d.locator('.bg-device.phone')).toBeVisible()
+  await shoot(page, 'step3', ['dark'])
+  await d.getByRole('button', { name: 'Next' }).click()
+  await expect(d.locator('.bg-title')).toHaveText('Fix it')
+  await expect(d.locator('.bg-fix')).toHaveCount(4)
+  await d.getByRole('checkbox', { name: /Open the page like they do/ }).check()
+  await shoot(page, 'step4', ['dark', 'light'])
+  await page.keyboard.press('ArrowLeft')
+  await expect(d.locator('.bg-title')).toHaveText('Why')
+  await d.getByRole('button', { name: 'Back' }).click()
+  await d.getByRole('button', { name: 'Back' }).click()
+  await expect(d.locator('.bg-title')).toHaveText('What happened')
+  await d.getByRole('button', { name: 'Next' }).click()
+  await d.getByRole('button', { name: 'Next' }).click()
+  await d.getByRole('button', { name: 'Next' }).click()
+}
+
+test('the chip on All sites opens the walkthrough: four steps, the ticks stay, and See this page', async ({ page }) => {
   await open(page, '/all?layout=cards')
   const item = page.locator('.all-item', { hasText: domain })
   await expect(item).toBeVisible({ timeout: 30_000 })
   await item.locator('[data-bounce-guide]').click()
+  await expect(dialog(page)).toBeVisible()
+  await walk(page)
   const d = dialog(page)
-  await expect(d).toBeVisible()
-  await expect(d.locator('.bg-rate')).toHaveText('80%')
-  await expect(d).toContainText('leave after one page · usual ~50%')
-  await expect(d).toContainText('Mostly people from Social on Mobile')
-  await expect(d.locator('.bg-try li')).toHaveCount(2)
-  await shoot(page, 'popup', ['dark', 'light'])
-  await d.getByRole('button', { name: 'See this page' }).click()
-  await expect(page).toHaveURL(/filter|f=|page/)
+  await expect(d.getByRole('checkbox', { name: /Open the page like they do/ })).toBeChecked()
+  await page.evaluate(() => {
+    const opened: unknown[] = ((window as unknown as { opened: unknown[] }).opened = [])
+    window.open = (url) => (opened.push(String(url)), null)
+  })
+  await d.getByRole('button', { name: 'Open', exact: true }).click()
+  expect(await page.evaluate(() => (window as unknown as { opened: string[] }).opened)).toEqual([`https://${domain}/blog/launch-post`])
+  await d.getByRole('button', { name: 'See this page', exact: true }).click()
   await expect(page).toHaveURL(/launch-post/)
 })
 
@@ -108,9 +145,18 @@ test('on a phone', async ({ page }) => {
   const item = page.locator('.all-item', { hasText: domain })
   await expect(item).toBeVisible({ timeout: 30_000 })
   await item.locator('[data-bounce-guide]').click()
-  await expect(dialog(page)).toBeVisible()
-  await shoot(page, 'popup', ['light'])
-  await page.keyboard.press('Escape')
+  const d = dialog(page)
+  await expect(d).toBeVisible()
+  const wide = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)
+  expect(wide).toBe(false)
+  for (const [i, name] of ['step1', 'step2', 'step3', 'step4'].entries()) {
+    await expect(d).toContainText(`${i + 1} of 4`)
+    expect(await d.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+    await shoot(page, name, ['dark'])
+    if (i < 3) await d.getByRole('button', { name: 'Next' }).click()
+  }
+  await d.getByRole('button', { name: 'Done' }).click()
+  await expect(d).toBeHidden()
   await page.goto(`${API}/${domain}?view=data&v=story`)
   await expect(page.locator('.sv-bounce')).toBeVisible({ timeout: 30_000 })
   await shoot(page, 'story-card', ['light'])

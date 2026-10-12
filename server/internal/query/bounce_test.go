@@ -87,6 +87,19 @@ func TestBounceGuideHigh(t *testing.T) {
 	}
 	eq(t, "usual", g.Usual, 0.5)
 	eq(t, "since", g.Since, "2026-09-20")
+	// The daily series runs over the usual weeks and the period, oldest first.
+	var seen []string
+	for _, d := range g.Days {
+		seen = append(seen, d.Day)
+	}
+	if fmt.Sprint(seen) != "[2026-09-01 2026-09-02 2026-09-03 2026-09-16 2026-09-18 2026-09-20]" {
+		t.Fatalf("days %v", seen)
+	}
+	eq(t, "usual day", g.Days[0].Rate, 0.5)
+	eq(t, "promo day", g.Days[5].Rate, float64(81)/85)
+	if g.Days[5].Sessions != 85 {
+		t.Fatalf("sessions %d", g.Days[5].Sessions)
+	}
 	kinds := map[string]string{}
 	for _, c := range g.Causes {
 		kinds[c.Kind] = c.Label
@@ -131,7 +144,7 @@ func TestBounceGuideNormal(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if g.Direction != "normal" || len(g.Causes) != 0 || g.Since != "" {
+	if g.Direction != "normal" || len(g.Causes) != 0 || g.Since != "" || len(g.Days) != 0 {
 		t.Fatalf("%+v", g)
 	}
 }
