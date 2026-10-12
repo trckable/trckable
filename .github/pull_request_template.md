@@ -6,6 +6,7 @@
 
 ## Checklist
 
+- [ ] Linked issue with a go-ahead
 - [ ] `pnpm check` passes on this branch
 - [ ] New behaviour has a test
 - [ ] A line in `CHANGELOG.md` under "Unreleased"

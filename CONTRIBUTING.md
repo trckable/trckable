@@ -1,10 +1,8 @@
 # Contributing
 
-Thank you for helping. Bug reports, fixes, translations and small improvements
-are all welcome; for anything larger, open an issue first so we can agree on
-the approach before you spend time on it. Looking for a place to start? Issues
-labelled [good first issue](https://github.com/trckable/trckable/labels/good%20first%20issue)
-are small and self-contained.
+Thank you for helping. Right now we take bug reports and ideas (Issues,
+Discussions). Code changes: open an issue first and wait for a go-ahead;
+unannounced pull requests may be closed.
 
 Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
 
@@ -69,6 +67,7 @@ it before opening a pull request: CI does, and tells you what failed.
 
 ## Rules for a pull request
 
+- **A linked issue with a go-ahead.** Open an issue first and wait for a maintainer to agree before you write code.
 - **One change per pull request.** A fix and a clean-up are two pull requests.
 - **Behaviour changes come with a test.** A bug fix gets a test that fails
   without the fix.
