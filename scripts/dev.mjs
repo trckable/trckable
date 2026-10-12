@@ -8,7 +8,7 @@
 // serves the build of the dashboard made at start-up; restart to refresh it.
 // Delete ./data for a clean instance.
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -33,6 +33,7 @@ run('pnpm', ['build'], 'tracker')
 if (!existsSync(join(root, 'server/internal/web/dist/index.html'))) {
   console.log('Building the dashboard (first run)...')
   run('pnpm', ['exec', 'vite', 'build'], 'dashboard')
+  writeFileSync(join(root, 'server/internal/web/dist/.keep'), '') // the build empties the folder; .keep is tracked
 }
 
 const children = [

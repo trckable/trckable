@@ -1,63 +1,94 @@
 # Contributing
 
-Thank you for helping. Bug reports, fixes and small improvements are all
-welcome; for anything larger, open an issue first so we can agree on the
-approach before you spend time on it.
+Thank you for helping. Bug reports, fixes, translations and small improvements
+are all welcome; for anything larger, open an issue first so we can agree on
+the approach before you spend time on it. Looking for a place to start? Issues
+labelled [good first issue](https://github.com/trckable/trckable/labels/good%20first%20issue)
+are small and self-contained.
 
-## Build and run
+Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
 
-You need Go 1.27, Node 22 and pnpm 12.
+## Your first contribution
+
+You need **Go 1.27**, **Node 22 or newer** and **pnpm 12** (`corepack enable`
+gives you the right pnpm). No database, no accounts, no `.env` file. Prefer not
+to install anything? Open the repository in a dev container (GitHub Codespaces
+or VS Code): `.devcontainer/` has all three, and runs `pnpm install` for you.
 
 ```bash
+git clone https://github.com/<you>/trckable.git     # your fork
+cd trckable
 pnpm install
-git config core.hooksPath .githooks    # runs the quick checks before a push
-
-cd dashboard && pnpm build && cd ..     # the dashboard is embedded in the server (not committed: build it)
-cd tracker && pnpm build && cd ..       # so is the tracker
-cd server && go run ./cmd/trckabled serve
+pnpm dev
 ```
 
-The server prints a one-time setup link on first start. `go run
-./bench/demoseed` fills an instance with realistic demo traffic.
+`pnpm dev` builds the tracker and the dashboard, starts the server with its
+data in `./data` (delete that folder for a clean instance) and the dashboard's
+live-reload server beside it. The first start takes a minute; later ones a few
+seconds.
 
-## How changes land
+1. Open the **setup link** the server prints (`http://localhost:8080/setup#token=...`)
+   and create your account.
+2. Open **http://localhost:5173** to work on the dashboard: your edits show
+   as you save. The server itself is on **http://localhost:8080** (Go changes
+   need a restart of `pnpm dev`).
+3. Run the tests for what you touched (next section).
+4. Commit on a branch, push it to your fork and open a pull request. The
+   template lists what a reviewer looks for.
 
-Four stages, one command each.
+`go run ./bench/demoseed` (in `server/`) fills an instance with realistic demo
+traffic.
 
-| Stage | Command | What it does |
+### Run the tests for what you touched
+
+| You changed | Run |
+| --- | --- |
+| `server/` | `cd server && go test ./internal/<package>/...` (all: `go test ./...`) |
+| `dashboard/` | `cd dashboard && pnpm test` and `pnpm lint` (one area: `pnpm test src/i18n`) |
+| `tracker/` | `cd tracker && pnpm test` and `pnpm size` (the size budget) |
+| `packages/trckable/` | `cd packages/trckable && pnpm test` |
+| a user flow | `cd server && go build -o bin/trckabled ./cmd/trckabled`, then `cd e2e && npx playwright test --project=chromium tests/<name>.spec.ts` (the dashboard and tracker built first, as `pnpm dev` does) |
+
+`pnpm check` at the root runs everything CI runs (a few minutes; it needs the
+browsers: `cd e2e && npx playwright install chromium`). You do not have to run
+it before opening a pull request: CI does, and tells you what failed.
+
+## Where things live
+
+| Folder | What it is | Its tests |
 | --- | --- | --- |
-| 1. Work | `pnpm work <topic>` | A fresh branch from the latest `main`. One topic per branch, never a branch on top of an unmerged one |
-| 2. Land | `pnpm ship` | The full gate (below), then push and open the pull request (or update it). Once every check is green it is squash-merged, and the branch is deleted |
-| 3. Prepare a release | `pnpm release X.Y.Z` | Every version bumped, the Unreleased notes dated, CI's figures and the screenshots whose inputs changed brought up to date, and the release pull request; the checks on that pull request are the gate |
-| 3–4 in one | `pnpm release X.Y.Z --ship` | Prepare, wait for every check, merge, tag, wait for the release workflow, check GitHub, npm and the image; the time of each step at the end |
-| 4. Publish | `pnpm release tag X.Y.Z` | After that pull request is merged: tags `main`, waits for the release workflow, then checks the GitHub release, npm and the Docker image |
+| `server/` | The Go server (`cmd/trckabled`): ingest, the stores, reports, the API, sign-in, payments. The packages are in `server/internal/` | `*_test.go` next to the code |
+| `dashboard/` | The React dashboard. `src/features/` one folder per feature, `src/views/` the pages, `src/i18n/` the languages. Embedded into the server on build | `*.test.ts(x)` next to the code (Vitest) |
+| `tracker/` | The 2 KB browser script. Built variants land in `server/internal/web/assets/` (committed) | `tracker/test/` (Vitest) |
+| `packages/trckable/` | The `trckable` npm package (MIT) | its own `test/` |
+| `e2e/` | Playwright: `tests/` for the dashboard flows, `accuracy/` for scripted visitors whose true numbers are known | the folder itself |
+| `deploy/`, `charts/` | The Dockerfile, compose file, Helm chart and one-click templates | `scripts/deploy-check.sh` |
+| `integrations/` | The WordPress plugin | `e2e/wordpress/` |
+| `docs/`, `examples/` | Guides that live in the repository, and small embed examples | none |
+| `scripts/` | The tooling behind `pnpm dev`, `check`, `ship` and `release` | `*.test.mjs` next to them |
 
-`pnpm status` shows where everything stands: open pull requests and their
-checks, what is waiting to be released, and the version on GitHub, npm, the
-image and trckable.com. `pnpm tidy` deletes local branches whose pull request
-is merged (`pnpm work` runs it too).
+## Rules for a pull request
 
-The rules on `main`:
-
-- Six checks are required on `main`: server, tracker and npm package,
-  dashboard, browsers, image, and the CLA. The changelog line is checked too.
-- A pull request from anyone else needs the maintainer's review (CODEOWNERS).
-  The maintainer's own are merged with admin rights once every check is green.
-- Every change people will notice carries its own line in CHANGELOG.md under
-  "Unreleased", in the same pull request (`scripts/changelog-check.mjs`, run by
-  `pnpm ship` and by CI). A change nobody notices is marked with the
-  `no-changelog` label, or `[no-changelog]` in a commit message.
-
-## Before you open a pull request
-
-```bash
-pnpm check      # what CI runs, on any branch: Go, tracker, dashboard, npm package,
-                # the linters, a backup round trip, the crash tests and the browser
-                # suites (CI alone also checks the Docker image and runs
-                # govulncheck and pnpm audit)
-```
-
-- Keep the tracker inside its size budget: the build fails if it grows past it.
+- **One change per pull request.** A fix and a clean-up are two pull requests.
+- **Behaviour changes come with a test.** A bug fix gets a test that fails
+  without the fix.
+- **A changelog line.** Anything people will notice gets one line in
+  `CHANGELOG.md` under "Unreleased", in the same pull request. A change nobody
+  notices (tests, internal clean-ups, CI) is marked with the `no-changelog` label
+  (or `[no-changelog]` in a commit message); ask in the pull request if unsure.
+- **Commit subjects** are imperative, at most 72 characters, and start with the
+  area, as the log does: `Dashboard: space between the period button and the
+  comparison pill`, `Payments: search matches word starts`, `Tracker: ...`.
+  The pull request title is the same line.
+- **Sign the CLA once.** On your first pull request a bot comments; comment
+  `I have read the CLA Document and I hereby sign the CLA` ([CLA.md](CLA.md)).
+- **Stay inside the size budgets.** The tracker build fails past 2 KB gzip
+  (`pnpm size` in `tracker/`), and the dashboard's first load has a budget too.
+- **Every visible string is plain English and short**, and every feature works
+  when you host trckable yourself: nothing is held back.
+- **The tracker build is committed** (`server/internal/web/assets/`): commit it
+  together with the source change. The dashboard build is not; it is ignored by
+  git.
 - A change to the tracker, the npm package or the server's ingest, sessions or
   reports runs the accuracy suite in CI (`e2e/accuracy`): scripted visitors
   whose true numbers are known beforehand, in Chromium, Firefox and WebKit,
@@ -66,13 +97,15 @@ pnpm check      # what CI runs, on any branch: Go, tracker, dashboard, npm packa
   what the numbers should be. One scenario, one browser:
   `cd e2e && npx playwright test -c accuracy/playwright.config.ts --project=chromium -g "three pages"`
   (after `pnpm --filter trckable build` and a server build in `server/bin`).
-- The tracker build (`server/internal/web/assets/`) is committed, so commit it
-  together with the source change. The dashboard build is not: it is ignored by
-  git, and CI and the Docker image build it.
-- Every visible string is plain English and short. Every feature works when
-  you host trckable yourself: nothing is held back.
-- New behaviour comes with a test, and a line in CHANGELOG.md under
-  "Unreleased".
+
+## What to expect
+
+We aim to reply to a new issue or pull request within three working days. A
+pull request from anyone else needs the maintainer's review (CODEOWNERS), and
+is squash-merged once every check is green. Questions, ideas and "how do I...?"
+go to [GitHub Discussions](https://github.com/trckable/trckable/discussions),
+not to issues. Security problems are reported privately, as [SECURITY.md](SECURITY.md)
+describes.
 
 ## Code standards
 
@@ -151,6 +184,24 @@ component), formatted with `fmtInt`, `fmtMoney` and the other helpers in
 `lib/format.ts` (never `toFixed` or `toLocaleString` without the language), and
 use `fmtDay` for days. Where text is joined from pieces, make it one function so
 a language can order the pieces its own way.
+
+## Maintainers
+
+Four stages, one command each. `pnpm status` shows open pull requests, their
+checks, what is waiting to be released and the version everywhere; `pnpm tidy`
+deletes local branches whose pull request is merged.
+
+| Stage | Command | What it does |
+| --- | --- | --- |
+| 1. Work | `pnpm work <topic>` | A fresh branch from the latest `main`. One topic per branch |
+| 2. Land | `pnpm ship` | `pnpm check`, then push and open the pull request; once every check is green it is squash-merged |
+| 3. Prepare | `pnpm release X.Y.Z` | Versions bumped, Unreleased notes dated, figures and screenshots refreshed, release pull request opened (`--ship` carries on through merge and publish) |
+| 4. Publish | `pnpm release tag X.Y.Z` | After that pull request is merged: tags `main`, waits for the release workflow, checks GitHub, npm and the image |
+
+Six checks are required on `main`: server, tracker and npm package, dashboard,
+browsers, image, and the CLA; the changelog line is checked too. Run
+`git config core.hooksPath .githooks` once per clone to run the quick checks
+before a push to `main`.
 
 ## Licensing of contributions
 

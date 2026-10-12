@@ -1,0 +1,16 @@
+{
+  "name": "trckable",
+  "image": "mcr.microsoft.com/devcontainers/go:2-1.27-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" }
+  },
+  "postCreateCommand": "corepack enable && pnpm install",
+  "forwardPorts": [8080, 5173],
+  "portsAttributes": {
+    "8080": { "label": "trckable server" },
+    "5173": { "label": "dashboard (live reload)" }
+  },
+  "customizations": {
+    "vscode": { "extensions": ["golang.go", "dbaeumer.vscode-eslint"] }
+  }
+}
