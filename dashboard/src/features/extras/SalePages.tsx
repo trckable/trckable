@@ -32,6 +32,7 @@ export default function SalePages({ site, query, money, rows, onPick }: { site: 
       <BarList
         dimLabel={extrasCopy.sells.page}
         valueLabel={laterCopy.customers}
+        wideVal
         loading={!here}
         byRevenue
         money={money}
