@@ -17,6 +17,11 @@ var botRE = regexp.MustCompile(`(?i)(bot|crawl|spider|slurp|scrap|headless|phant
 // "bot" as a word of its own) still match.
 var notBotRE = regexp.MustCompile(`(?i)(cubot|baidu(boxapp|browser)\S*|\(baidu;)`)
 
+// browserRE is what a real browser's user agent carries: its own name or its
+// engine's. The parser names almost any string a browser ("random", "Dalvik",
+// "my-app/1.0"), so a name is believed only when one of these is there.
+var browserRE = regexp.MustCompile(`(?i)(chrome|chromium|crios|firefox|fxios|safari|applewebkit|gecko/\d|trident/|msie |opera|opr/|edg(e|a|ios)?/|samsungbrowser|ucbrowser|vivaldi|duckduckgo|yabrowser|silk/)`)
+
 type uaInfo struct {
 	Browser, OS, Device string
 	// Version is the browser and its major version ("Chrome 129"), empty when
@@ -64,7 +69,10 @@ func parseUA(s string, screenWidth int) uaInfo {
 	if ua.Bot {
 		return uaInfo{Bot: true, BotKind: botKind(s)}
 	}
-	info := uaInfo{Browser: ua.Name, OS: ua.OS, Version: browserVersion(ua.Name, ua.VersionNo.Major)}
+	info := uaInfo{OS: ua.OS}
+	if browserRE.MatchString(s) {
+		info.Browser, info.Version = ua.Name, browserVersion(ua.Name, ua.VersionNo.Major)
+	}
 	switch {
 	case ua.Tablet:
 		info.Device = "Tablet"

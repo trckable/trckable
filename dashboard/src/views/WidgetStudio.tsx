@@ -51,16 +51,16 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
           {hasShow && (
             <WidgetSection summary={SECTION.show} {...group('show')}>
               {look.kind === 'online' && (
-                <label className="wg-opt">
-                  <span>{TEXT.mode}</span>
-                  <span className="seg" role="group" aria-label="Mode">
+                <div className="wg-opt">
+                  <span aria-hidden="true">{TEXT.mode}</span>
+                  <span className="seg" role="group" aria-label={TEXT.mode}>
                     {MODES.map((m) => (
                       <button key={m.id} type="button" aria-pressed={modeOf(look.shows) === m.id} onClick={() => set({ shows: withPlace(m.shows, placeOf(look.shows)) })}>
                         {m.label}
                       </button>
                     ))}
                   </span>
-                </label>
+                </div>
               )}
               {parts.length > 0 && (
                 <div className="wg-parts">
@@ -104,28 +104,28 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
                 ))}
               </span>
             </div>
-            <label className="wg-opt">
-              <span>{TEXT.corners}</span>
-              <span className="seg" role="group" aria-label="Corners">
+            <div className="wg-opt">
+              <span aria-hidden="true">{TEXT.corners}</span>
+              <span className="seg" role="group" aria-label={TEXT.corners}>
                 {RADII.map((r) => (
                   <button key={r.id} type="button" aria-pressed={look.radius === r.id} onClick={() => set({ radius: r.id })}>
                     {r.label}
                   </button>
                 ))}
               </span>
-            </label>
+            </div>
           </WidgetSection>
           <WidgetSection summary={placeSummary(place)} {...group('placement')}>
-            <label className="wg-opt">
-              <span>{TEXT.placement}</span>
-              <span className="seg wg-place" role="group" aria-label="Placement" title={PLACES.find((p) => p.id === place)?.label}>
+            <div className="wg-opt">
+              <span aria-hidden="true">{TEXT.placement}</span>
+              <span className="seg wg-place" role="group" aria-label={TEXT.placement} title={PLACES.find((p) => p.id === place)?.label}>
                 {PLACES.map((p) => (
                   <button key={p.id} type="button" aria-pressed={place === p.id} onClick={() => setPlace(p.id)}>
                     {PLACE_SHORT[p.id]}
                   </button>
                 ))}
               </span>
-            </label>
+            </div>
           </WidgetSection>
           <WidgetSection summary={languageSummary(look)} {...group('language')}>
             <div className="wg-opt">

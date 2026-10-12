@@ -68,3 +68,26 @@ func TestParseUABotFalsePositives(t *testing.T) {
 		})
 	}
 }
+
+func TestParseUABrowserToken(t *testing.T) {
+	for _, tc := range []struct{ ua, browser string }{
+		{"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36", "Chrome"},
+		{"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0", "Firefox"},
+		{"Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1", "Safari"},
+		{"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0", "Edge"},
+		{"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 OPR/113.0.0.0", "Opera"},
+		{"Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/25.0 Chrome/121.0.0.0 Mobile Safari/537.36", "Samsung Browser"},
+		{"", ""},
+		{"random", ""},
+		{"Mozilla/5.0", ""},
+		{"my-app/1.0", ""},
+		{"Dalvik/2.1.0 (Linux; U; Android 13; Pixel 7 Build/TQ3A)", ""},
+		{"curl/8.4.0", ""},
+		{"python-requests/2.31.0", ""},
+		{"Go-http-client/1.1", ""},
+	} {
+		if got := parseUA(tc.ua, 0).Browser; got != tc.browser {
+			t.Errorf("parseUA(%q).Browser = %q, want %q", tc.ua, got, tc.browser)
+		}
+	}
+}
