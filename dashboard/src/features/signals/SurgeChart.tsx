@@ -22,11 +22,15 @@ export function SurgeChart({ surge, tz }: { surge: Surge; tz: string }) {
   const start = startSlice(st)
   const peak = peakSlice(st)
   const startText = st.start ? clock(st.start, tz) : ''
+  // A moment that is over shows its own window, with its times; a live one the last hour.
+  const windowFrom = clock(st.at - n * st.step * 60, tz)
+  const windowTo = clock(st.at, tz)
+  const label = surge.ended ? t.windowLabel(windowFrom, windowTo, startText, st.peak) : t.chartLabel(startText, st.peak)
   // A label that would run off the right edge sits to the left of its mark.
   const anchor = (i: number) => (x(i) > W - 70 ? 'end' : 'start')
   return (
     <figure className="sgm-chart">
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t.chartLabel(startText, st.peak)} preserveAspectRatio="none">
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label} preserveAspectRatio="none">
         <line className="usual" x1={PAD.l} x2={W - PAD.r} y1={y(surge.usual)} y2={y(surge.usual)} />
         <path className="ar" d={area} />
         <path className="ln" pathLength="1" d={line} vectorEffect="non-scaling-stroke" />
@@ -44,8 +48,8 @@ export function SurgeChart({ surge, tz }: { surge: Surge; tz: string }) {
         </text>
       </svg>
       <figcaption>
-        <span>{t.hourAgo}</span>
-        <span>{t.nowEdge}</span>
+        <span>{surge.ended ? windowFrom : t.hourAgo}</span>
+        <span>{surge.ended ? windowTo : t.nowEdge}</span>
       </figcaption>
     </figure>
   )

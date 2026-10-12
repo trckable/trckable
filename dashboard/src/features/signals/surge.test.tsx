@@ -215,12 +215,33 @@ describe('the story told by a notice (no story of its own)', () => {
     expect(dialog()?.textContent).toContain('20 → 53 in 15 min')
   })
 
-  it('says so when the busy moment is over, and keeps what it was told', async () => {
-    answer(null)
+  const endedAt = told.started + 20 * 60
+  const stored: Surge = {
+    ...surge,
+    ended: endedAt,
+    story: { ...story, at: endedAt + 30 * 60, series: [3, 4, 3, 5, 4, 6, 31, 53, 49, 40, 22, 9, 5, 4, 3, 3], start: told.started - 60, peak_at: told.started + 5 * 60, now: 3, sources: undefined, pages: undefined, countries: undefined, devices: undefined },
+  }
+  const asked = (live: Surge | null, past: Surge | null) =>
+    vi.stubGlobal('fetch', (url: string) => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ surge: url.includes('/surges/near') ? past : live }) }))
+
+  it('draws an ended busy moment from its own window, the start marked, with the time it ended', async () => {
+    asked(null, stored)
     await open()
-    expect(dialog()?.textContent).toContain('This busy moment is over')
+    expect(dialog()?.querySelector('svg[role="img"]')).not.toBeNull()
+    expect(dialog()?.querySelector('svg .mark')).not.toBeNull()
+    expect(dialog()?.querySelector('svg[role="img"]')?.getAttribute('aria-label')).toContain('People online from')
+    expect(dialog()?.querySelector('.sgm-ended')?.textContent).toMatch(/^Ended \d\d:\d\d$/)
+    expect([...(dialog()?.querySelectorAll('.sgm-beats li') ?? [])].map((li) => li.textContent)).not.toContain('now 3')
+    expect(dialog()?.textContent).toContain('The exact post isn’t visible.')
+    expect(dialog()?.textContent).not.toContain('no longer shown')
+  })
+
+  it('keeps what it was told when the moment cannot be read at all, with no chart and no apology', async () => {
+    asked(null, null)
+    await open()
     expect(dialog()?.querySelector('svg[role="img"]')).toBeNull()
     expect(dialog()?.textContent).toContain('53')
+    expect(dialog()?.textContent).not.toContain('no longer shown')
   })
 
   it('shows a short loading line while it asks', async () => {

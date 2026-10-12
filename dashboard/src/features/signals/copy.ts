@@ -37,9 +37,10 @@ export const signals = defineCopy('signals', {
     // The story.
     modalLabel: 'The busy moment',
     loading: 'Loading the last hour…',
-    over: 'This busy moment is over, so its last hour is no longer shown.',
+    ended: (at: string) => `Ended ${at}`,
     jump: (before: number, online: number, minutes: number) => `${before} → ${online} in ${minutes} min`,
     chartLabel: (start: string, peak: number) => `People online in the last hour${start ? `, climbing from ${start}` : ''}, peaking at ${peak}`,
+    windowLabel: (from: string, to: string, start: string, peak: number) => `People online from ${from} to ${to}${start ? `, climbing from ${start}` : ''}, peaking at ${peak}`,
     hourAgo: '1 h ago',
     nowEdge: 'now',
     startMark: (at: string) => `Start ${at}`,

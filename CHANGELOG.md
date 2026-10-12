@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - Serve the script and visits from your own domain: the server also answers on `/s/x.js`, `/s/e` and `/s/h`, and the npm package adds `withTrckable` (Next.js) and `nodeHandler` (Express, node:http) for a first-party proxy. Existing paths are unchanged.
+- A busy moment opened from a notification is one solid card, 560 px at most, and one that has ended still shows its chart (half an hour either side, from the stored counts) with the time it ended.
 
 ## 0.7.6 (9 Oct 2026)
 

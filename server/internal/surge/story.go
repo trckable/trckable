@@ -114,3 +114,20 @@ func sources(seen Seen) []Tally {
 	}
 	return out
 }
+
+// BuildPastStory is the story of a moment that is over (or going on) from its
+// own window: the slices end at `end`, `started` is where the climb began and
+// the peak is the busiest slice. Who was there is not kept, so no tiles.
+func BuildPastStory(series []int64, end time.Time, started int64) Story {
+	s := Story{Series: series, Step: 5, At: end.Unix(), Start: started}
+	slice := 5 * time.Minute
+	for i, n := range series {
+		if n > s.Peak || (n == s.Peak && s.PeakAt == 0) {
+			s.Peak, s.PeakAt = n, end.Add(-time.Duration(len(series)-i)*slice).Unix()
+		}
+	}
+	if len(series) > 0 {
+		s.Now = series[len(series)-1]
+	}
+	return s
+}

@@ -119,3 +119,27 @@ test('on a phone the story is a sheet that fills the screen; See it in Data filt
   await page.waitForTimeout(1500)
   await expect(card(page)).toHaveCount(0)
 })
+
+test('opened from a notification the story is one opaque card, at most 600px wide', async ({ page }) => {
+  await open(page, 'live', 1440)
+  await expect(card(page)).toBeVisible({ timeout: 30_000 })
+  await card(page).getByRole('button', { name: 'Close' }).click()
+  await expect(card(page)).toHaveCount(0)
+  // What the notification list does: asks for the surge's story by its id.
+  await page.evaluate((id) => window.dispatchEvent(new CustomEvent('trckable:surge-story', { detail: id })), surge.id)
+  await expect(story(page)).toBeVisible()
+  const look = await story(page).evaluate((el) => {
+    const c = getComputedStyle(el)
+    const probe = document.createElement('i')
+    probe.style.color = c.backgroundColor
+    document.body.append(probe)
+    const [r, g, b, a = '1'] = getComputedStyle(probe).color.match(/[\d.]+/g)!
+    probe.remove()
+    return { alpha: Number(a), solid: !c.backgroundImage.includes('url('), rgb: [r, g, b] }
+  })
+  expect(look.alpha).toBe(1)
+  const box = await story(page).boundingBox()
+  expect(box!.width).toBeLessThanOrEqual(600)
+  await expect(story(page).getByRole('img', { name: /People online in the last hour/ })).toBeVisible()
+  await shoot(page, 'surge-notification')
+})

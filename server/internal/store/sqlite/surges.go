@@ -54,6 +54,20 @@ func (s *Store) LatestSurge(ctx context.Context, site string) (*surge.Surge, err
 	return &x, nil
 }
 
+// SurgeNear is the surge of the site that began closest to `at` (unix seconds),
+// within `within` seconds of it, or nil when there was none. A notice names a
+// busy moment by when it began, not by the id the book keeps it under.
+func (s *Store) SurgeNear(ctx context.Context, site string, at, within int64) (*surge.Surge, error) {
+	x, err := scanSurge(s.DB.QueryRowContext(ctx, `SELECT `+surgeCols+` FROM surges WHERE site_id = ? AND started_at BETWEEN ? AND ? ORDER BY abs(started_at - ?) LIMIT 1`, site, at-within, at+within, at))
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &x, nil
+}
+
 // SurgesBetween lists the surges that began in [from, to) (unix seconds), earliest first.
 func (s *Store) SurgesBetween(ctx context.Context, site string, from, to int64) ([]surge.Surge, error) {
 	rows, err := s.DB.QueryContext(ctx, `SELECT `+surgeCols+` FROM surges WHERE site_id = ? AND started_at >= ? AND started_at < ? ORDER BY started_at`, site, from, to)

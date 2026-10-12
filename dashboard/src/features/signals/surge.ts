@@ -9,6 +9,8 @@ import { signals } from './copy'
 export interface Surge {
   id: string
   started: number
+  /** Unix seconds the busy moment ended; 0 or absent while it lasts. */
+  ended?: number
   online: number
   usual: number
   times: number
@@ -48,6 +50,8 @@ export interface Story {
 
 export const surgeApi = {
   now: (site: string, signal?: AbortSignal) => call<{ surge: Surge | null }>('GET', `/sites/${site}/surge`, undefined, signal, true).then((r) => r.surge),
+  /** A busy moment that began at `started`, over or not, with a chart of its own window drawn from the stored counts. */
+  near: (site: string, started: number, signal?: AbortSignal) => call<{ surge: Surge | null }>('GET', `/sites/${site}/surges/near?t=${started}`, undefined, signal, true).then((r) => r.surge),
 }
 
 const t = signals.surge
@@ -115,7 +119,8 @@ export function beats(s: Surge, tz: string): Beat[] {
   const from = s.why.source ?? ''
   const out: Beat[] = [{ key: 'start', text: st.start ? t.beatStart(clock(st.start, tz), from) : t.beatLonger }]
   out.push({ key: 'peak', text: t.beatPeak(clock(st.peak_at, tz), st.peak) })
-  out.push({ key: 'now', text: t.beatNow(st.now) })
+  // A moment that is over has no "now": its chart ends where its window does.
+  if (!s.ended) out.push({ key: 'now', text: t.beatNow(st.now) })
   return out
 }
 

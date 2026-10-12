@@ -186,3 +186,32 @@ func (q Q) SurgeSeries(ctx context.Context, site string, now time.Time) ([]int64
 	}
 	return out, rows.Err()
 }
+
+// SurgeSeriesBetween is how many people were active in each five-minute slice
+// from `from` to `to` (stored events, so it works for a moment long past),
+// oldest first. The window is cut to whole slices ending at `to`.
+func (q Q) SurgeSeriesBetween(ctx context.Context, site string, from, to time.Time) ([]int64, error) {
+	to = to.UTC()
+	n := int(to.Sub(from.UTC()) / surgeBucket)
+	if n < 1 {
+		return nil, nil
+	}
+	start := to.Add(-time.Duration(n) * surgeBucket)
+	rows, err := q.DB.QueryContext(ctx, `SELECT (epoch_ms(ts) - ?) // 300000 AS b, count(DISTINCT visitor_id) FROM events
+		WHERE site_id = ? AND ts > ? AND ts <= ? GROUP BY b`, start.UnixMilli(), site, start, to)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := make([]int64, n)
+	for rows.Next() {
+		var b, c int64
+		if err := rows.Scan(&b, &c); err != nil {
+			return nil, err
+		}
+		if b >= 0 && b < int64(n) {
+			out[b] = c
+		}
+	}
+	return out, rows.Err()
+}
