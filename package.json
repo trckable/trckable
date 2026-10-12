@@ -8,6 +8,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "dev": "node scripts/dev.mjs",
     "work": "scripts/work.sh",
     "ship": "scripts/ship.sh",
     "check": "scripts/ship.sh --check",
