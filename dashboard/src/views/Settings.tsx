@@ -368,7 +368,7 @@ function DangerZone({ site, onSites }: { site: Site; onSites: () => void }) {
   )
 }
 
-const STATE_TEXT: Record<SiteState, string> = { live: 'Receiving visits', quiet: 'No visits in the last day', stopped: 'Stopped', new: 'Not installed yet' }
+const STATE_TEXT: Record<SiteState, string> = { live: 'Receiving visits', quiet: 'No visits for hours', stopped: 'Down', new: 'Not installed yet' }
 
 function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
   const [name, setName] = useState(site.name)

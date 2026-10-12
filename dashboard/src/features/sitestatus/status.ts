@@ -36,3 +36,12 @@ export function when(unix: number): string {
   const today = d.toDateString() === new Date().toDateString()
   return d.toLocaleString(tag, today ? { hour: '2-digit', minute: '2-digit' } : { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
+
+export type SiteState = 'live' | 'quiet' | 'stopped' | 'new'
+
+const STATE = { new: 'new', down: 'stopped', quiet: 'quiet', ok: 'live' } as const
+
+/** The status under the names the dots, pills and settings use: live, quiet (no visits, nothing known wrong), stopped (down), new. */
+export function siteState(s: Site, now = Date.now()): SiteState {
+  return STATE[statusOf(s, now)]
+}

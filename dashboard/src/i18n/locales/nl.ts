@@ -1630,6 +1630,8 @@ export default {
   'payments.picker.none': 'Geen aanbieder gevonden.',
   'payments.picker.custom': 'Niet in de lijst? Gebruik de eigen koppeling.',
   'payments.picker.connect': 'Verbinden',
+  'payments.picker.viaWebhook': 'via webhook',
+  'payments.picker.hint': (count: string) => `Doorzoek ${count} checkouts, of koppel alles via een webhook`,
   'auth.mismatch': 'De twee wachtwoorden komen niet overeen. Typ in beide hetzelfde.',
   'auth.token': 'Dat installatietoken klopt niet. Kopieer het opnieuw uit het serverlog.',
   'auth.code': 'Die code klopt niet. Gebruik de huidige uit je app, of een herstelcode.',

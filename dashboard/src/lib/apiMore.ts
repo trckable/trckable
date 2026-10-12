@@ -6,6 +6,7 @@ import { act, call, raw, rangeQS } from './api'
 
 // Lazy screens import everything API-shaped from here: the names of lib/api, and `more`.
 export * from './api'
+export { siteState, type SiteState } from '../features/sitestatus/status'
 import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, WebVitals, Widget, WidgetLook } from './api'
 
 /** A robot on one errand, and how often it came. */

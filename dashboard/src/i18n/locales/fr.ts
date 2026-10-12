@@ -1631,6 +1631,8 @@ export default {
   'payments.picker.none': 'Aucun prestataire ne correspond.',
   'payments.picker.custom': 'Pas dans la liste ? Utilisez la connexion personnalisée.',
   'payments.picker.connect': 'Connecter',
+  'payments.picker.viaWebhook': 'via webhook',
+  'payments.picker.hint': (count: string) => `Cherchez parmi ${count} paiements, ou connectez n’importe quoi par webhook`,
   'auth.mismatch': 'Les deux mots de passe ne correspondent pas. Saisissez le même dans les deux.',
   'auth.token': 'Ce jeton d’installation n’est pas bon. Copiez-le de nouveau depuis le journal du serveur.',
   'auth.code': 'Ce code n’est pas bon. Utilisez le code actuel de votre appli, ou un code de secours.',

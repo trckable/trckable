@@ -1633,6 +1633,8 @@ export default {
   'payments.picker.none': 'Kein Anbieter passt.',
   'payments.picker.custom': 'Nicht dabei? Nutze die eigene Verbindung.',
   'payments.picker.connect': 'Verbinden',
+  'payments.picker.viaWebhook': 'via Webhook',
+  'payments.picker.hint': (count: string) => `${count} Checkouts durchsuchen, oder alles per Webhook verbinden`,
   'auth.mismatch': 'Die beiden Passwörter stimmen nicht überein. Gib in beide dasselbe ein.',
   'auth.token': 'Das Einrichtungstoken stimmt nicht. Kopiere es noch einmal aus dem Serverprotokoll.',
   'auth.code': 'Der Code stimmt nicht. Nimm den aktuellen aus deiner App oder einen Wiederherstellungscode.',

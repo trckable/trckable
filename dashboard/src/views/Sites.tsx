@@ -73,7 +73,7 @@ function lastVisit(unix: number): string {
   return d === 1 ? 'yesterday' : `${d} days ago`
 }
 
-const PILL: Record<SiteState, string> = { live: 'Live', stopped: 'Stopped', quiet: 'Quiet today', new: 'Not installed' }
+const PILL: Record<SiteState, string> = { live: 'Live', stopped: 'Down', quiet: 'Quiet', new: 'Not installed' }
 
 function SiteRow({ site, onSites, onDelete }: { site: Site; onSites: () => void; onDelete: () => void }) {
   const [editing, setEditing] = useState(false)

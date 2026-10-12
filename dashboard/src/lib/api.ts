@@ -118,20 +118,6 @@ export interface Site {
   check?: { at: number; found?: 'site' | 'other' | 'nosite' | 'none'; via?: string; error?: string }
 }
 
-export type SiteState = 'live' | 'quiet' | 'stopped' | 'new'
-
-/** live = seen in the last day · quiet = seen, but not lately, and nothing
- *  known to be wrong · stopped = not seen lately, and the snippet was not
- *  found (or the site did not answer) when the server last looked, after the
- *  last visit · new = never seen. */
-export function siteState(s: Site): SiteState {
-  if (!s.last_event_at) return 'new'
-  if (Date.now() / 1000 - s.last_event_at < 86400) return 'live'
-  const c = s.check
-  if (c && c.at > s.last_event_at && c.found !== 'site') return 'stopped'
-  return 'quiet'
-}
-
 /** Whether the dashboard shows the install card over sample numbers. A site
     that never had a visit (the sites list says so at once) shows it from the
     first frame, so a refresh never flashes an empty dashboard first; the events
