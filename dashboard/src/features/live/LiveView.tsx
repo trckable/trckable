@@ -12,6 +12,8 @@ import { copy } from './copy'
 import { feedOf, seriesAt } from './model'
 import { NowPanel } from './NowPanel'
 import { OnSitePanel } from './OnSitePanel'
+import { statusOf } from '../sitestatus/status'
+import type { Site } from '../../lib/api'
 import { LiveCards } from './LiveCards'
 import { liveCount, liveLink } from './liveLink'
 import { useBusier } from './useBusier'
@@ -28,7 +30,7 @@ export type LiveStream = {
 }
 
 /** In cookieless mode a visit opens no journey, and the list says so. */
-export default function LiveView({ site, timezone, stream, onVisitor, cookieless }: { site: string; timezone: string; stream: LiveStream; onVisitor?: (visitor: string) => void; cookieless?: boolean }) {
+export default function LiveView({ site, timezone, stream, onVisitor, cookieless, whole }: { site: string; timezone: string; stream: LiveStream; onVisitor?: (visitor: string) => void; cookieless?: boolean; whole?: Site }) {
   const { data, got, failed, clock, skew } = useLiveNow(site, stream)
   const said = useAnnounce(stream.visits)
   const busier = useBusier(site)
@@ -48,7 +50,7 @@ export default function LiveView({ site, timezone, stream, onVisitor, cookieless
         {data ? (
           <>
             <NowPanel data={data} series={seriesAt(data, stream.visits, clock)} online={online ?? 0} connected={stream.connected} failed={failed} sales={stream.sales} timezone={timezone} />
-            <OnSitePanel rows={rows} online={online} clock={clock} skew={skew} onVisitor={onVisitor} cookieless={cookieless} />
+            <OnSitePanel rows={rows} online={online} clock={clock} skew={skew} onVisitor={onVisitor} cookieless={cookieless} quiet={whole && statusOf(whole) !== 'ok' ? whole.last_event_at : undefined} />
           </>
         ) : (
           <LiveLoading failed={failed} />

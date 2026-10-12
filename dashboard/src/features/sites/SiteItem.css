@@ -2,3 +2,7 @@
 .site .tail.stopped-note {
   color: var(--down);
 }
+
+.site .tail.quiet-note {
+  color: var(--warn);
+}

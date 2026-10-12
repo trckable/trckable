@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -218,5 +219,58 @@ func TestCheckOnDemandFindsTheSnippetAndIsLimited(t *testing.T) {
 	}
 	if n := reads.Load(); n != 10 {
 		t.Fatalf("the site was read %d times, want 10: a refused check reads nothing", n)
+	}
+}
+
+func TestCheckRefusesPrivateAddresses(t *testing.T) {
+	for _, d := range []string{"127.0.0.1", "localhost", "10.0.0.5", "[::1]"} {
+		out := verifySite(context.Background(), "tkb_abcdef123456", d)
+		if out.Error == "" || out.Found != "" || out.Status != 0 {
+			t.Fatalf("%s: a private address must not be read: %+v", d, out)
+		}
+	}
+}
+
+func TestCheckGivesUpAtTheDeadline(t *testing.T) {
+	was, wasDeadline := checkClient, checkDeadline
+	defer func() { checkClient, checkDeadline = was, wasDeadline }()
+	checkDeadline = 80 * time.Millisecond
+	checkClient = func() *http.Client {
+		return &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+			<-r.Context().Done()
+			return nil, r.Context().Err()
+		})}
+	}
+	began := time.Now()
+	out := verifySite(context.Background(), "tkb_abcdef123456", "slow.example")
+	if out.Error == "" || time.Since(began) > 2*time.Second {
+		t.Fatalf("a site that never answers: %+v after %v", out, time.Since(began))
+	}
+}
+
+func TestCheckSaysHowTheScriptAnswered(t *testing.T) {
+	const id = "tkb_abcdef123456"
+	for _, status := range []int{http.StatusOK, http.StatusNotFound} {
+		was := checkClient
+		checkClient = func() *http.Client {
+			return &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+				body, code := "", status
+				if r.URL.Path == "/" {
+					body, code = `<script defer data-site="`+id+`" src="/js/t.js"></script>`, 200
+				}
+				return &http.Response{StatusCode: code, Body: io.NopCloser(strings.NewReader(body)), Request: r, Header: http.Header{}}, nil
+			})}
+		}
+		out := verifySite(context.Background(), id, "site.example")
+		if out.Found != "site" || out.Via != "page" || out.Script != "https://site.example/js/t.js" || out.Ms < 0 {
+			t.Fatalf("the page carries the tag: %+v", out)
+		}
+		if got := scriptStatus(context.Background(), out); got != status {
+			t.Fatalf("the script answered %d, check said %d", status, got)
+		}
+		checkClient = was
+	}
+	if got := scriptStatus(context.Background(), installCheck{}); got != 0 {
+		t.Fatalf("no script to load: %d", got)
 	}
 }

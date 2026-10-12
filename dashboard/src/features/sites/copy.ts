@@ -10,8 +10,8 @@ export const copy = defineCopy('sites', {
   dot: {
     now: 'Visitors right now: a visit in the last 5 minutes',
     live: 'Receiving visits',
-    quiet: 'No visits in the last day',
-    stopped: 'Stopped: no visits, and the snippet was not found',
+    quiet: 'No visits for hours',
+    stopped: 'Down: the site did not answer when trckable last looked',
     new: 'Not installed yet',
   },
 })

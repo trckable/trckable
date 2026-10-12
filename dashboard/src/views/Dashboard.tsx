@@ -2,7 +2,7 @@ import { useLiveRefresh } from './useLiveRefresh'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { TimeChart } from '../charts/GuardedChart'
 import { DatePicker, type PickerValue } from '../components/DatePicker'
-import { api, cachedReport, dropReports, showsInstall, siteState, fail, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
+import { api, cachedReport, dropReports, showsInstall, fail, type Segment as SavedView, type KPIs, type ReportQuery, type Row, type Site } from '../lib/api'
 import { compareLabel, diffDays, fmtDay, setWeekStart, todayIn, type Range } from '../lib/dates'
 import { countryName, fmtInt, fmtMoney } from '../lib/format'
 import { journeysOn } from '../features/cookieless/labels'
@@ -21,7 +21,7 @@ import { useReport } from '../lib/useReport'
 import { useSample } from '../lib/useSample'
 import { AskPanel } from './AskLazy'
 import { pressed, useKeymap } from '../lib/keys'
-import { Notice, StoppedNotice, SurgeNote } from './DashboardParts'
+import { Notice, StatusCard, SurgeNote } from './DashboardParts'
 import { extra } from '../features/extras/slots'
 import { momentLayer } from '../features/moments/slots'
 import { KpiStrip } from '../features/overview/KpiStrip'
@@ -498,7 +498,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
 
       {!inHeader && controls}
       {liveView && (
-        <LiveSlot key={site.id} site={site.id} timezone={site.timezone} cookieless={site.cookieless} stream={stream} onVisitor={journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined} />
+        <LiveSlot key={site.id} site={site.id} timezone={site.timezone} cookieless={site.cookieless} whole={site} stream={stream} onVisitor={journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined} />
       )}
       {!liveView && <>
       {sharing && <Suspense fallback={null}><ShareDialog site={site} sites={sites} onClose={() => setSharing(false)} /></Suspense>}
@@ -508,7 +508,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {showInstall && <Suspense fallback={null}><Install site={site} visits={stream.visits} /></Suspense>}
       {!isShared() && location.search.includes('import=ga') && <Suspense fallback={null}><GaReturn site={site} /></Suspense>}
       <MilestonesSlot ms={ms} site={site} quiet={showInstall} revenue={mods === null || shows(mods, 'cards', 'revenue')} />
-      {!showInstall && !isShared() && siteState(site) === 'stopped' && <StoppedNotice site={site} />}
+      {!showInstall && !isShared() && <StatusCard site={site} />}
       {view.surge && <SurgeNote site={site.id} tz={site.timezone} started={view.surge} filters={view.filters} />}
       {view.test && <Notice kind="test" onAct={() => setView({ test: false })} />}
       {money && money.unconverted > 0 && (

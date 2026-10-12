@@ -17,7 +17,8 @@ export const copy = defineCopy('sites.menu', {
 
   // A site's state, where its number would be, when the dot alone can't say it.
   setup: 'setup',
-  stopped: 'stopped',
+  downFor: (span: string) => `down · ${span}`,
+  quietFor: (span: string) => `quiet · ${span}`,
 
   // The numbers: today's visitors per site, and both totals beside All sites.
   today: (n: string) => `${n} today`,

@@ -1,0 +1,105 @@
+/* StatusCard's styles on top of the surge story's (signals/surge.css): they load with its chunk. */
+.status-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px 18px;
+  color: var(--text-2);
+}
+.status-card.down {
+  --tone: var(--down);
+}
+.status-card.quiet {
+  --tone: var(--warn);
+}
+.status-card .sgm-hero {
+  padding-right: 0;
+}
+.status-card .sgm-badge {
+  background: color-mix(in srgb, var(--tone) 16%, transparent);
+  color: var(--tone);
+}
+.status-card .sg-chip {
+  background: color-mix(in srgb, var(--tone) 15%, transparent);
+  color: var(--tone);
+}
+.status-card .sgm-chart .ln {
+  stroke: var(--tone);
+}
+.status-card .sgm-chart .ar {
+  fill: color-mix(in srgb, var(--tone) 14%, transparent);
+}
+.gap-chart {
+  position: relative;
+}
+.gap-chart .mark-line {
+  stroke: var(--text-3);
+  stroke-dasharray: 3 3;
+  stroke-width: 1;
+}
+.gap-mark {
+  position: absolute;
+  top: 8px;
+  padding-left: 6px;
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.gap-mark.end {
+  padding: 0 6px 0 0;
+  transform: translateX(-100%);
+}
+.status-card .sgm-chart svg {
+  height: 120px;
+}
+.status-card .sgm-tiles {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.status-checks ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.status-checks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.status-checks li svg {
+  flex: none;
+  margin-top: 2px;
+}
+.status-checks li.ok svg {
+  color: var(--up);
+}
+.status-checks li.bad svg {
+  color: var(--down);
+}
+.status-checks li b {
+  color: var(--text);
+  font-weight: 600;
+}
+.status-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.status-back svg {
+  color: var(--up);
+}
+@media (max-width: 760px) {
+  .status-card .sgm-tiles {
+    grid-template-columns: 1fr;
+  }
+  .status-card .sgm-count {
+    font-size: 44px;
+  }
+}

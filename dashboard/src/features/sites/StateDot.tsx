@@ -1,18 +1,22 @@
 // A site's state as a dot beside its mark. Pulsing green: a visit in the last
 // five minutes (the server records the latest visit at most a minute late);
-// green: visits today; amber: gone quiet; red: stopped; hollow: never seen.
+// green: visits lately; amber: no visits for hours and the page answers;
+// red: the site is down; hollow: never seen (features/sitestatus/status.ts).
 // It reads the sites list the dashboard already has: no query of its own.
-import { siteState, type Site, type SiteState } from '../../lib/api'
+import type { Site } from '../../lib/api'
+import { statusOf } from '../sitestatus/status'
 import { copy } from './copy'
 
-export type DotState = SiteState | 'now'
+export type DotState = 'now' | 'live' | 'quiet' | 'stopped' | 'new'
 
 /** Within this long of the last visit, the site counts as visited right now. */
 const NOW_S = 300
 
+const DOT = { new: 'new', down: 'stopped', quiet: 'quiet', ok: 'live' } as const
+
 export function dotState(s: Site, now = Date.now()): DotState {
   if (s.last_event_at && now / 1000 - s.last_event_at < NOW_S) return 'now'
-  return siteState(s)
+  return DOT[statusOf(s, now)]
 }
 
 export function StateDot({ site }: { site: Site }) {

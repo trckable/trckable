@@ -1,18 +1,18 @@
 // Dashboard parts that are not on every first screen, each its own chunk.
-// The notice for a site that stopped is fetched the moment it is drawn, while
+// The card for a site that stopped is fetched the moment it is drawn, while
 // the numbers under it are still on their way.
 // (The filter chips are in the header's second row, its own chunk.)
 import { Suspense, type ComponentProps } from 'react'
 import { lazyLoad } from '../lib/lazyLoad'
 
-const Stopped = lazyLoad(() => import('../components/StoppedNotice').then((m) => ({ default: m.StoppedNotice })))
+const Status = lazyLoad(() => import('../features/sitestatus/StatusCard').then((m) => ({ default: m.StatusCard })))
 const Note = lazyLoad(() => import('./Notices'))
 const SurgeLine = lazyLoad(() => import('../features/signals/SurgeBanner'))
 
-export function StoppedNotice(p: ComponentProps<typeof Stopped>) {
+export function StatusCard(p: ComponentProps<typeof Status>) {
   return (
     <Suspense fallback={null}>
-      <Stopped {...p} />
+      <Status {...p} />
     </Suspense>
   )
 }

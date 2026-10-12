@@ -762,6 +762,11 @@ export interface InstallCheck {
   /** How many of the page's scripts were read. */
   scripts: number
   error?: string
+  /** How long the homepage took to answer, in ms. */
+  ms?: number
+  /** The tag's script, and what it answered (absent: it could not be loaded). */
+  script?: string
+  script_status?: number
 }
 
 /** A moment the data shows: a visitor step, the best day, a first. */

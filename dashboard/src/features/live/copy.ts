@@ -37,6 +37,7 @@ export const copy = defineCopy('live', {
   more: (n: number) => `and ${fmtInt(n)} more`,
   stillHere: 'Still on the site',
   empty: 'Nobody on the site right now. New visits appear here as they happen.',
+  waitingSince: (when: string) => `Waiting for the first visit since ${when}`,
   goal: (name: string) => `Goal: ${name}`,
   ago: (ms: number) => {
     const s = Math.max(0, Math.round(ms / 1000))
