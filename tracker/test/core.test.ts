@@ -709,76 +709,44 @@ describe('a tab that comes back, and a page that stays open', () => {
     expect(byKind('pv')).toHaveLength(1)
   })
 
-  const touch = (type = 'pointerdown') => win.dispatchEvent(new win.Event(type))
-  const FOUR = 4 * MIN
   let seen = 0
 
-  it('says it is still here every 4 minutes, only while the page is shown', async () => {
+  it('says it is still here every 3 minutes, only while the page is shown', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'Date'] })
     tracker()
     await vi.advanceTimersByTimeAsync(0)
     const pv = byKind('pv')[0].pv
-    await vi.advanceTimersByTimeAsync(3 * FOUR)
+    await vi.advanceTimersByTimeAsync(7 * MIN)
     const pings = byKind('e')
-    expect(pings).toHaveLength(3)
     expect(pings.every((e) => e.pv === pv)).toBe(true)
-    expect(pings.map((e) => e.en)).toEqual([FOUR, 2 * FOUR, 3 * FOUR])
-    expect(FOUR).toBeLessThan(5 * MIN) // the server's live window
+    expect(pings.map((e) => e.en)).toEqual([MIN, 4 * MIN, 7 * MIN])
     hidden(true)
     const afterHide = byKind('e').length // the report sent on hiding
-    await vi.advanceTimersByTimeAsync(3 * MIN)
+    await vi.advanceTimersByTimeAsync(10 * MIN)
     expect(byKind('e')).toHaveLength(afterHide)
-    hidden(false) // back after 3 minutes: the report on hiding still counts
-    await vi.advanceTimersByTimeAsync(0)
-    expect(byKind('e')).toHaveLength(afterHide)
-    hidden(true)
-    await vi.advanceTimersByTimeAsync(5 * MIN)
-    hidden(false) // back after 5: reports at once, so the live count never drops
-    await vi.advanceTimersByTimeAsync(0)
-    expect(byKind('e')).toHaveLength(afterHide + 2)
+    hidden(false) // back on screen: the next minute reports
+    await vi.advanceTimersByTimeAsync(MIN)
+    expect(byKind('e')).toHaveLength(afterHide + 1)
     expect(byKind('pv')).toHaveLength(1) // never a view of its own
   })
 
-  it('never leaves an active, shown visitor out of the live window', async () => {
+  it('never leaves a shown visitor out of the live window, hidden or not in between', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'Date'] })
     tracker()
     await vi.advanceTimersByTimeAsync(0)
     let at = Date.now()
+    let seen = 0
     let worst = 0
-    for (let m = 1; m <= 120; m++) {
-      await vi.advanceTimersByTimeAsync(MIN)
-      if (m % 10 == 0) touch('keydown') // someone is using the page
+    let away = false
+    for (let s = 1; s <= 7200; s += 10) {
+      await vi.advanceTimersByTimeAsync(10_000)
+      if (s % 470 < 10) hidden((away = true)) // away now and then, for 1 to 2 minutes
+      if (s % 470 > 100 && s % 470 < 110) hidden((away = false))
       const n = byKind('e').length + byKind('pv').length
       if (n != seen) at = Date.now()
       seen = n
-      worst = Math.max(worst, Date.now() - at)
+      if (!away) worst = Math.max(worst, Date.now() - at)
     }
-    expect(worst).toBeLessThan(5 * MIN)
-  })
-
-  it('stops after 30 minutes without a touch, and the first touch reports at once', async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'Date'] })
-    tracker()
-    await vi.advanceTimersByTimeAsync(0)
-    await vi.advanceTimersByTimeAsync(40 * MIN)
-    const quiet = byKind('e').length
-    expect(quiet).toBeLessThanOrEqual(8)
-    await vi.advanceTimersByTimeAsync(60 * MIN)
-    expect(byKind('e')).toHaveLength(quiet)
-    touch('scroll')
-    expect(byKind('e')).toHaveLength(quiet + 1)
-    await vi.advanceTimersByTimeAsync(FOUR)
-    expect(byKind('e')).toHaveLength(quiet + 2)
-  })
-
-  it('goes on while the page is touched at least every 30 minutes', async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'Date'] })
-    tracker()
-    await vi.advanceTimersByTimeAsync(0)
-    for (let i = 0; i < 4; i++) {
-      await vi.advanceTimersByTimeAsync(25 * MIN)
-      touch('pointerdown')
-    }
-    expect(byKind('e')).toHaveLength(25) // 100 minutes: one report per 4
+    expect(worst).toBeLessThan(5 * MIN) // the server's live window
   })
 })

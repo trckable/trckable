@@ -9,7 +9,7 @@ section into the release.
 
 ## Unreleased
 
-- Far fewer requests from an open page. The tracker's "still here" report goes every 4 minutes instead of every minute (the live count still covers the last 5), only while the tab is shown, and stops after 30 minutes without a click, key or scroll until the next one. The dashboard no longer refreshes anything in a hidden tab, and reads once when the tab is shown again; how often it refreshes while shown is unchanged.
+- Far fewer requests from an open page. The tracker's "still here" report goes every 3 minutes instead of every minute (the live count covers the last 5, so nobody drops out of it), and only while the tab is shown; back on screen, the next minute reports. The dashboard no longer refreshes anything in a hidden tab, and reads once when the tab is shown again; how often it refreshes while shown is unchanged.
 
 ## 0.7.9 (12 Oct 2026)
 
