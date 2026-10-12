@@ -103,6 +103,13 @@ func (a *API) liveNow(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	if names := a.goalNames(r.Context(), site); len(names) > 0 {
+		for i := range n.Recent {
+			if n.Recent[i].Kind == "goal" {
+				n.Recent[i].Label = names[n.Recent[i].Goal]
+			}
+		}
+	}
 	res := &nowAnswer{Now: n}
 	res.Today = a.todayNow(r, q, site, now)
 	if withMoney {

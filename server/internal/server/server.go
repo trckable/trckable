@@ -137,6 +137,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		Sites:    ctl,
 		Salts:    ingest.NewSalts(ctl),
 		Seen:     ctl,
+		Labels:   ctl,
 		ClientIP: ipResolver(cfg),
 		Now:      time.Now,
 		Geo: func(ip string) (string, string, string) {
@@ -223,6 +224,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		tracker.ServeHTTP(w, r)
 	})
 	s.hub = realtime.New()
+	s.hub.Label = ctl.GoalLabel
 	box, err := secrets.Load(cfg.DataDir, cfg.Secret)
 	s.box = box
 	if err != nil {

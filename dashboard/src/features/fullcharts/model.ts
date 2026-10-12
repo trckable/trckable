@@ -56,7 +56,7 @@ export function visitorsModel(c: Charts, bucket: Bucket): { series: Series[]; ta
 const stepLabel = (s: ConvStep) => {
   if (s.kind === 'visit') return copy.funnel.visit
   if (s.kind === 'sale') return copy.funnel.sale
-  return copy.funnel.goal(s.value ?? '')
+  return copy.funnel.goal(s.label || (s.value ?? ''))
 }
 
 export function funnelModel(steps: ConvStep[]): { rows: FunnelRow[]; table: TableData } {

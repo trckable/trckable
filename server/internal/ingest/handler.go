@@ -89,6 +89,12 @@ type Seen interface {
 	SeenSite(ctx context.Context, site string, at int64)
 }
 
+// GoalLabels keeps the name a goal was sent with, next to its key. Optional:
+// without it goals show their key.
+type GoalLabels interface {
+	NoteGoalLabel(ctx context.Context, site, goal, label string)
+}
+
 // Sites resolves site ids (cached in memory by the caller).
 type Sites interface {
 	Site(id string) (Site, bool)
@@ -115,6 +121,8 @@ type Handler struct {
 	Now     func() time.Time
 	Stats   Stats
 	Seen    Seen // optional: records that a site is alive
+	// Labels keeps goal names as written; optional.
+	Labels GoalLabels
 	// Module reports whether a site has a module on; nil means every module
 	// is on. Only endpoints that exist for one module ask (the crawler one).
 	Module func(site, id string) bool
@@ -254,6 +262,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.Stats.Accepted.Add(1)
+	if ev.Kind == event.KindGoal && h.Labels != nil {
+		h.Labels.NoteGoalLabel(ctx, ev.Site, ev.Goal, event.GoalLabel(p.Goal))
+	}
 	if cookie != nil {
 		http.SetCookie(w, cookie)
 	}

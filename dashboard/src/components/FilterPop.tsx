@@ -88,7 +88,7 @@ export default function FilterPop({
   const needle = q.trim().toLowerCase()
   const valuesOf = (d: string) =>
     (wider[d] ?? rows(d))
-      .map((r) => ({ dim: d, value: r.value, label: labelFor(d, r.value), visitors: r.visitors }))
+      .map((r) => ({ dim: d, value: r.value, label: (d === 'goal' && r.label) || labelFor(d, r.value), visitors: r.visitors }))
       .filter((v) => !needle || v.label.toLowerCase().includes(needle) || v.value.toLowerCase().includes(needle))
 
   // One dimension picked: its values. Nothing picked but a search typed: the

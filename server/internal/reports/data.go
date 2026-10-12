@@ -105,7 +105,7 @@ func (d Data) rows(rs []query.Row, n int) []Row {
 		if len(out) == n {
 			break
 		}
-		name := r.Value
+		name := r.Name()
 		if name == "AI" {
 			name = d.words().AI
 		}

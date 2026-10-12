@@ -27,7 +27,7 @@ export function funnelOf(res: FunnelResult[]): Funnel | null {
   if (res.length < 2) return null
   const top = Math.max(1, res[0].visitors)
   const steps = res.map((s, i): Step => ({
-    value: s.value,
+    value: s.label || s.value,
     visitors: s.visitors,
     bar: Math.max(0, Math.min(1, s.visitors / top)),
     rate: Math.max(0, Math.min(1, s.rate)),

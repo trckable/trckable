@@ -171,8 +171,8 @@ func (a *API) export(w http.ResponseWriter, r *http.Request) {
 			row(d.label, rw.Value, rw)
 		}
 	}
-	for _, rw := range res.Goals {
-		row("goal", rw.Value, rw)
+	for _, rw := range a.goalNames(ctx, siteID).Goals(res.Goals, p.PageGoals) {
+		row("goal", rw.Name(), rw)
 	}
 }
 

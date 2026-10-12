@@ -12,16 +12,21 @@ import './Create.css'
 
 const MAX_STEPS = 8
 
+/** A step as picked: its key, and the name to show for it (a goal as it was written). */
+type Picked = FunnelStep & { name: string }
+
 export function FunnelDialog({ pages, goals, onClose, onSave }: { pages: Row[]; goals: Row[]; onClose: () => void; onSave: (steps: FunnelStep[]) => void }) {
-  const [steps, setSteps] = useState<FunnelStep[]>([])
+  const [steps, setSteps] = useState<Picked[]>([])
   const items = [
     ...pages.slice(0, 20).map((p) => ({ id: 'page:' + p.value, label: p.value, group: copy.pages })),
-    ...goals.slice(0, 20).map((g) => ({ id: 'goal:' + g.value, label: g.value, group: copy.goals })),
+    ...goals.slice(0, 20).map((g) => ({ id: 'goal:' + g.value, label: g.label || g.value, group: copy.goals })),
   ]
   const add = (id: string) => {
     const i = id.indexOf(':')
     const kind = id.slice(0, i) === 'goal' ? 'goal' : 'page'
-    setSteps([...steps, { kind, value: id.slice(i + 1) }])
+    const value = id.slice(i + 1)
+    const name = kind === 'goal' ? (goals.find((g) => g.value === value)?.label ?? value) : value
+    setSteps([...steps, { kind, value, name }])
   }
   return (
     <Modal label={copy.title} onClose={onClose}>
@@ -29,7 +34,7 @@ export function FunnelDialog({ pages, goals, onClose, onSave }: { pages: Row[]; 
         className="modal-form"
         onSubmit={(e) => {
           e.preventDefault()
-          if (steps.length >= 2) onSave(steps)
+          if (steps.length >= 2) onSave(steps.map(({ kind, value }) => ({ kind, value })))
         }}
       >
         <DialogHead heading={copy.title} hint={copy.hint} help={copy.help} />
@@ -37,8 +42,8 @@ export function FunnelDialog({ pages, goals, onClose, onSave }: { pages: Row[]; 
           {steps.map((s, i) => (
             <li key={i} className="chip">
               <span className="faint">{i + 1}</span>
-              {s.value}
-              <button type="button" aria-label={copy.remove(s.value)} onClick={() => setSteps(steps.filter((_, j) => j !== i))}>
+              {s.name}
+              <button type="button" aria-label={copy.remove(s.name)} onClick={() => setSteps(steps.filter((_, j) => j !== i))}>
                 ×
               </button>
             </li>

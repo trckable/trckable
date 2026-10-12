@@ -64,6 +64,7 @@ type NowVisit struct {
 	Last    int64  `json:"last"` // unix ms of their latest event of any kind
 	Path    string `json:"path,omitempty"`
 	Goal    string `json:"goal,omitempty"`
+	Label   string `json:"label,omitempty"` // the goal's name as written
 	Channel string `json:"channel,omitempty"`
 	Ref     string `json:"referrer,omitempty"`
 	Country string `json:"country,omitempty"`

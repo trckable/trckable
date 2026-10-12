@@ -96,7 +96,9 @@ type KPIs struct {
 
 // Row is one breakdown line.
 type Row struct {
-	Value     string  `json:"value"`
+	Value string `json:"value"`
+	// Label is a goal's name as it was written, next to its key in Value.
+	Label     string  `json:"label,omitempty"`
 	Visitors  int64   `json:"visitors"`
 	Sessions  int64   `json:"sessions,omitempty"`
 	Pageviews int64   `json:"pageviews,omitempty"`

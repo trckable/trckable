@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Goals show their name as it was written: "Start free" stays "Start free" on the Goals card, in funnels, journeys, Live, exports and the reports by email, and names with letters like ë, ü or Cyrillic keep them instead of losing them. Goals are still counted under the same lowercase key, so nothing already counted moves. The API adds a `label` next to `value` on goal rows.
+
 ## 0.7.7 (12 Oct 2026)
 
 - Serve the script and visits from your own domain: the server also answers on `/s/x.js`, `/s/e` and `/s/h`, and the npm package adds `withTrckable` (Next.js) and `nodeHandler` (Express, node:http) for a first-party proxy. Existing paths are unchanged.

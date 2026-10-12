@@ -34,5 +34,11 @@ func (a *API) charts(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	names := a.goalNames(r.Context(), ask.Params.Site)
+	for i := range c.Conversion {
+		if c.Conversion[i].Kind == "goal" {
+			c.Conversion[i].Label = names[c.Conversion[i].Value]
+		}
+	}
 	writeJSON(w, http.StatusOK, c)
 }

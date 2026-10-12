@@ -113,7 +113,7 @@ func (a *API) funnel(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"steps": steps})
+	writeJSON(w, http.StatusOK, map[string]any{"steps": a.goalNames(r.Context(), p.Site).Funnel(steps)})
 }
 
 func (a *API) goalProps(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +137,7 @@ func (a *API) goalProps(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"goal": goal, "properties": rows})
+	writeJSON(w, http.StatusOK, map[string]any{"goal": goal, "label": a.goalNames(r.Context(), p.Site)[goal], "properties": rows})
 }
 
 func (a *API) journey(w http.ResponseWriter, r *http.Request) {
@@ -160,6 +160,7 @@ func (a *API) journey(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	a.goalNames(r.Context(), p.Site).Journey(j)
 	out := map[string]any{"journey": j}
 	// What this visitor paid, when the revenue module is on.
 	if a.Revenue != nil && a.modulesOf(r, p.Site).Has("revenue") {

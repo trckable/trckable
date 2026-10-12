@@ -1,8 +1,8 @@
 // Goals and funnels, end to end: each way of counting a goal is sent the way a
 // real visitor or server sends it (the real tracker in a browser, a POST to the
 // ingest address) and then read where a person reads it, in the dashboard.
-// Goal names are stored lowercase with dashes ("Start free" is "start-free"),
-// and the Goals card shows them that way.
+// A goal is counted under a lowercase key ("Start free" is "start-free") and
+// shown as it was written.
 import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
@@ -17,9 +17,6 @@ test.beforeAll(async ({ request }) => {
   siteId = (await (await request.get('/_site')).json()).site
   cookie = await session('goals-funnels')
 })
-
-/** How the server stores a goal name: lowercase, every other run of characters one dash. */
-const key = (g: string) => g.toLowerCase().replace(/[^a-z0-9_:]+/g, '-')
 
 const runId = (page: Page, name: string) => `${name}-${page.context().browser()!.browserType().name()}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
@@ -82,7 +79,7 @@ test('2. a button with data-trckable-goal counts on its first click, with no goa
   await page.waitForTimeout(1500)
 
   await dashboard(page, onPage(path))
-  await expectGoal(page, key(goal), 1)
+  await expectGoal(page, goal, 1)
 })
 
 test('3. a button goal with a property shows the property in the visitor journey', async ({ page }) => {
@@ -95,10 +92,10 @@ test('3. a button goal with a property shows the property in the visitor journey
   await page.waitForTimeout(1500)
 
   await dashboard(page, onPage(path))
-  await expectGoal(page, key(goal), 1)
+  await expectGoal(page, goal, 1)
   // The properties are read on the visitor's journey: open it from Live.
   await page.goto(`${API}/example.com?view=live`)
-  const row = page.locator('.live-feed .live-open', { has: page.locator(`[title="Goal: ${key(goal)}"]`) })
+  const row = page.locator('.live-feed .live-open', { has: page.locator(`[title="Goal: ${goal}"]`) })
   await expect(async () => {
     await page.reload()
     await expect(row.first()).toBeVisible({ timeout: 4_000 })
@@ -106,7 +103,7 @@ test('3. a button goal with a property shows the property in the visitor journey
   await row.first().focus()
   await page.keyboard.press('Enter')
   const dialog = page.getByRole('dialog', { name: 'Visitor journey' })
-  const node = dialog.locator('.jr-node.goal', { hasText: key(goal) })
+  const node = dialog.locator('.jr-node.goal', { hasText: goal })
   await expect(node).toContainText('plan')
   await expect(node).toContainText('pro')
 })
@@ -121,7 +118,7 @@ test('4. a goal called from code, trckable("goal", name), counts', async ({ page
   await page.waitForTimeout(1500)
 
   await dashboard(page, onPage(path))
-  await expectGoal(page, key(goal), 1)
+  await expectGoal(page, goal, 1)
 })
 
 test('5. a goal sent from a server, as the Your server tab writes it, counts', async ({ page, request }) => {
@@ -144,7 +141,7 @@ test('5. a goal sent from a server, as the Your server tab writes it, counts', a
   expect(res.status()).toBe(202)
 
   await page.keyboard.press('Escape')
-  await expectGoal(page, key(goal), 1)
+  await expectGoal(page, goal, 1)
 })
 
 test('6. a funnel of a page, a button goal and a code goal shows each step', async ({ page }) => {
@@ -160,12 +157,12 @@ test('6. a funnel of a page, a button goal and a code goal shows each step', asy
   await page.waitForTimeout(1500)
 
   await dashboard(page, onPage(path))
-  await expectGoal(page, key(done), 1)
+  await expectGoal(page, done, 1)
   await dashboard(page)
   await page.keyboard.press('a')
   await page.getByRole('menu', { name: 'Create something' }).getByRole('menuitem', { name: /Funnel/ }).click()
   const dialog = page.getByRole('dialog', { name: 'New funnel' })
-  for (const step of [path, key(button), key(done)]) {
+  for (const step of [path, button, done]) {
     await dialog.getByText('+ Add step').click()
     await page.getByRole('searchbox').fill(step)
     await page.getByRole('option', { name: step }).click()
@@ -180,7 +177,7 @@ test('6. a funnel of a page, a button goal and a code goal shows each step', asy
   // Each step with the one visitor who passed it.
   const steps = fn.locator('.fr-step')
   await expect(steps).toHaveCount(3)
-  for (const [i, step] of [path, key(button), key(done)].entries()) {
+  for (const [i, step] of [path, button, done].entries()) {
     await expect(steps.nth(i).locator('.fr-label')).toHaveText(step)
     await expect(steps.nth(i).locator('.fr-count')).toHaveText('1')
   }

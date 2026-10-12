@@ -540,6 +540,31 @@ func TestEventKeptForHoursIsMarkedLate(t *testing.T) {
 	}
 }
 
+type noted struct{ site, goal, label string }
+
+type fakeLabels struct{ got []noted }
+
+func (f *fakeLabels) NoteGoalLabel(_ context.Context, site, goal, label string) {
+	f.got = append(f.got, noted{site, goal, label})
+}
+
+func TestGoalIsKeptUnderItsKeyAndNamedAsWritten(t *testing.T) {
+	h, l := newHandler(t)
+	fl := &fakeLabels{}
+	h.Labels = fl
+	post(h, `{"s":"tkb_test","k":"g","n":"  Start  free ","u":"https://site.com/"}`, chromeUA)
+	post(h, `{"s":"tkb_test","k":"g","n":"Të lumtur","u":"https://site.com/"}`, chromeUA)
+	post(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/"}`, chromeUA)
+	e, _ := lastEvent(t, l)
+	if e.Kind != event.KindPageview {
+		t.Fatalf("last %+v", e)
+	}
+	want := []noted{{"tkb_test", "start-free", "Start free"}, {"tkb_test", "të-lumtur", "Të lumtur"}}
+	if len(fl.got) != 2 || fl.got[0] != want[0] || fl.got[1] != want[1] {
+		t.Fatalf("labels %+v, want %+v", fl.got, want)
+	}
+}
+
 // The forwarded address names no one without the proxy key, with a wrong one
 // or with none at all.
 func TestForwardedIPNeedsTheKey(t *testing.T) {

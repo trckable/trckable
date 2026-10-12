@@ -36,7 +36,7 @@ export function throttle(every: number, say: (text: string) => void) {
 export function sentence(vs: Visit[]): string {
   if (vs.length > 1) return copy.announceMany(vs.length)
   const v = vs[0]
-  const page = v.kind === 'goal' ? copy.goal(v.goal ?? '') : (v.path ?? '/')
+  const page = v.kind === 'goal' ? copy.goal(v.label || (v.goal ?? '')) : (v.path ?? '/')
   return copy.announce(page, channelLabel(v.channel ?? 'Direct'))
 }
 

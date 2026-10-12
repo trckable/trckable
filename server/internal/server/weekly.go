@@ -115,7 +115,7 @@ func goalLine(cur *query.Result) string {
 		return ""
 	}
 	g := cur.Goals[0]
-	return fmt.Sprintf("Top goal: %s, %s visitors", g.Value, number(g.Visitors))
+	return fmt.Sprintf("Top goal: %s, %s visitors", g.Name(), number(g.Visitors))
 }
 
 // revenueLine is the report's line about money, or none without payments.
@@ -253,10 +253,12 @@ func (s *Server) weeklyEvent(ctx context.Context, q *query.Q, info sqlite.SiteIn
 	// More rows than the email shows: the findings compare whole breakdowns.
 	p := query.Params{Site: siteID, From: from.UTC(), To: to.UTC(), TZ: loc.String(), Bucket: "day", Limit: 10,
 		Currency: info.Currency, Revenue: set.Has("revenue"), Goals: set.Has("goals"), NewReferrers: 5}
+	names, _ := s.ctl.GoalLabels(ctx, siteID)
 	cur, err := q.Report(ctx, p)
 	if err != nil {
 		return ev, false
 	}
+	cur = query.GoalNames(names).Report(cur, nil)
 	pp := p
 	pp.From, pp.To = from.AddDate(0, 0, -7).UTC(), from.UTC()
 	pp.NewReferrers = 0

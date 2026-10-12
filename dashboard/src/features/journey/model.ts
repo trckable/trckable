@@ -111,7 +111,7 @@ export function nodesOf(v: JourneyVisit, payments: Payment[], vkey: string): Sto
     const offset = Math.max(0, (at - start) / 1000)
     const key = `${vkey}-${i}`
     if (e.kind === 'goal') {
-      out.push({ kind: 'goal', key, at, offset, goal: e.goal ?? '', props: e.props || undefined })
+      out.push({ kind: 'goal', key, at, offset, goal: e.label || e.goal || '', props: e.props || undefined })
       return
     }
     const path = e.path ?? ''
