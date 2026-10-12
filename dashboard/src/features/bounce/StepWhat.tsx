@@ -4,7 +4,7 @@
 import { fmtDay } from '../../lib/dates'
 import { fmtPct } from '../../lib/format'
 import type { BounceGuide } from '../../lib/apiMore'
-import { copy } from './copy'
+import { copy } from './b'
 
 const BAND = 0.1 // the guide calls a rate "usual" within this much of the usual
 

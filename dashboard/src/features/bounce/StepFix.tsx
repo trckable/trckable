@@ -2,7 +2,7 @@
 // person only; nothing is sent anywhere.
 import { ArrowUpRight, Gauge, Link2, Search, Smartphone, type LucideIcon } from 'lucide-react'
 import type { BounceCause } from '../../lib/apiMore'
-import { copy } from './copy'
+import { copy } from './b'
 import { fixesOf, onPhone, pageURL, topPage, type FixKey } from './fixes'
 import { useTicks } from './ticks'
 

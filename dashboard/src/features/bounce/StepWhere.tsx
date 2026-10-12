@@ -3,9 +3,8 @@ import { fmtPct } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import type { BounceCause } from '../../lib/apiMore'
 import { PathChip } from '../signals/PathChip'
-import { DeviceIcon } from '../../components/visitor/DeviceIcon'
-import { SourceMark } from '../../components/visitor/SourceMark'
-import { copy } from './copy'
+import { DeviceMark, Glyph } from './Glyph'
+import { copy } from './b'
 
 function Bar({ label, value, tone }: { label: string; value: number; tone: 'now' | 'was' }) {
   return (
@@ -23,8 +22,8 @@ function Lead({ c, onSee }: { c: BounceCause; onSee: (page: string) => void }) {
   if (c.kind === 'source_device') {
     return (
       <span className="bg-lead">
-        <SourceMark channel={c.source ?? ''} size={22} />
-        <DeviceIcon device={c.device ?? ''} size={16} />
+        <Glyph channel={c.source ?? ''} size={22} />
+        <DeviceMark device={c.device ?? ''} size={16} />
         {copy.sourceOn(channelLabel(c.source ?? ''), c.device ?? '')}
       </span>
     )

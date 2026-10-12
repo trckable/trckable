@@ -5,8 +5,8 @@ import { Monitor, Smartphone } from 'lucide-react'
 import { fmtFixed, fmtPct } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import type { BounceCause } from '../../lib/apiMore'
-import { SourceMark } from '../../components/visitor/SourceMark'
-import { copy } from './copy'
+import { Glyph } from './Glyph'
+import { copy } from './b'
 
 /** Google's limits for the main content: good up to 2.5 s, poor past 4 s. */
 const GOOD_S = 2.5
@@ -64,12 +64,12 @@ export function SpeedGauge({ c }: { c: BounceCause }) {
 
 export function Handset({ c }: { c: BounceCause }) {
   const phone = c.device !== 'Desktop'
-  const Glyph = phone ? Smartphone : Monitor
+  const Frame = phone ? Smartphone : Monitor
   return (
     <div className="bg-vis">
       <div className={phone ? 'bg-device phone' : 'bg-device desk'} aria-hidden="true">
-        <SourceMark channel={c.source ?? ''} size={30} />
-        <Glyph size={18} strokeWidth={1.6} />
+        <Glyph channel={c.source ?? ''} size={30} />
+        <Frame size={18} strokeWidth={1.6} />
       </div>
       <p className="bg-cap">{copy.fromOn(channelLabel(c.source ?? ''), c.device ?? '')}</p>
     </div>

@@ -1,6 +1,6 @@
 // The picture of each feature, kept out of the registry so the avatar menu
 // (which only needs the ids) does not carry them.
-import { Activity, Ban, Banknote, Bot, ClipboardList, Clock, Code, Coins, Cookie, DoorOpen, ExternalLink, EyeOff, FileText, Filter, Flame, Gauge, Globe, ImageUp, Keyboard, Languages, Layers, LayoutDashboard, Link2, Lock, LogIn, Mail, MousePointerClick, Palette, Play, Radio, Repeat, Route, ScrollText, Search, Smartphone, Sparkles, StickyNote, Target, Trophy, Upload, Users, Zap, type LucideIcon } from 'lucide-react'
+import { Activity, Ban, Banknote, Bot, ClipboardList, Clock, Code, Coins, Cookie, ExternalLink, EyeOff, FileText, Filter, Flame, Gauge, Globe, ImageUp, Keyboard, Languages, Layers, LayoutDashboard, Link2, Lock, LogIn, LogOut, Mail, MousePointerClick, Palette, Play, Radio, Repeat, Route, ScrollText, Search, Smartphone, Sparkles, StickyNote, Target, Trophy, Upload, Users, Zap, type LucideIcon } from 'lucide-react'
 
 export const ICONS: Record<string, LucideIcon> = {
   live: Radio,
@@ -23,7 +23,7 @@ export const ICONS: Record<string, LucideIcon> = {
   replay: Play,
   segments: Layers,
   surge: Zap,
-  bounce: DoorOpen,
+  bounce: LogOut,
   revenue: Coins,
   sales: Banknote,
   sharelinks: Link2,

@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { fmtInt } from '../lib/format'
 import type { SiteRow } from '../lib/api'
 import type { Site } from '../lib/api'
-import { lazyLoad } from '../lib/lazyLoad'
 import { navigate } from '../lib/url'
 import { openSettings } from '../lib/settings'
 import { SiteMark } from '../components/SiteMark'
@@ -13,12 +12,12 @@ import { Spark } from './AllSitesSpark'
 import { MetricArea } from '../kit/MetricArea'
 import { Bounce, bouncePill, Money, Online } from './AllParts'
 import { copy } from './allSitesCopy'
+import { GuideModal } from '../features/bounce/b'
 import { anyPayments, bounceHigh, fromStart, type Layout } from './allSitesLogic'
 import './AllRows.css'
 
 type Props = { rows: SiteRow[]; layout: Layout; days: number; total: number; start: number; colorOf: (id: string) => string; brandOf: (id: string, domain: string) => Pick<Site, 'domain'> }
 
-const BounceGuideModal = lazyLoad(() => import('../features/bounce/BounceGuideModal'))
 
 /** A site with no visit at all, then or now: nothing to count. */
 const waiting = (r: SiteRow) => !r.visitors && !r.previous_visitors && !r.error
@@ -44,7 +43,7 @@ export function AllRows({ rows, layout, days, total, start, colorOf, brandOf }: 
       </button>
     )
   const modal = guide && (
-    <BounceGuideModal site={guide.id} domain={guide.domain} qs={`?days=${days}`} onClose={() => setGuide(null)} />
+    <GuideModal site={guide.id} domain={guide.domain} qs={`?days=${days}`} onClose={() => setGuide(null)} />
   )
   const mark = (r: SiteRow) => <SiteMark site={{ ...brandOf(r.id, r.domain), color: colorOf(r.id) }} size={layout === 'cards' ? 32 : 24} />
   const name = (r: SiteRow) => (

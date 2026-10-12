@@ -36,7 +36,7 @@ func bounceSite(t *testing.T, rows []bsess, lcp map[string]int) Q {
 				pvs = 1
 			}
 			if _, err := st.DB.ExecContext(ctx, `INSERT INTO sessions (site_id, session_id, visitor_id, start, last, channel, entry_page, device, pvs, goals, engaged_ms, dur)
-				VALUES ('s1', ?, ?, TIMESTAMP '`+r.day+` 10:00:00', TIMESTAMP '`+r.day+` 10:01:00', ?, ?, ?, ?, 0, 0, 60)`, id, id, r.ch, r.page, r.device, pvs); err != nil {
+				VALUES ('s1', ?, ?, CAST(? AS TIMESTAMP), CAST(? AS TIMESTAMP), ?, ?, ?, ?, 0, 0, 60)`, id, id, r.day+" 10:00:00", r.day+" 10:01:00", r.ch, r.page, r.device, pvs); err != nil {
 				t.Fatal(err)
 			}
 		}
@@ -44,15 +44,13 @@ func bounceSite(t *testing.T, rows []bsess, lcp map[string]int) Q {
 	for page, ms := range lcp {
 		for i := 0; i < 5; i++ {
 			id++
-			for _, k := range []int{1, 3} {
-				col, val := "path", fmt.Sprintf("'%s'", page)
-				if k == 3 {
-					col, val = "lcp_ms", fmt.Sprint(ms)
-				}
-				if _, err := st.DB.ExecContext(ctx, `INSERT INTO events (seq, site_id, ts, kind, visitor_id, session_id, pageview_id, `+col+`)
-					VALUES (?, 's1', TIMESTAMP '2026-09-20 10:00:00', ?, ?, ?, ?, `+val+`)`, id*10+k, k, id, id, id); err != nil {
-					t.Fatal(err)
-				}
+			if _, err := st.DB.ExecContext(ctx, `INSERT INTO events (seq, site_id, ts, kind, visitor_id, session_id, pageview_id, path)
+				VALUES (?, 's1', TIMESTAMP '2026-09-20 10:00:00', 1, ?, ?, ?, ?)`, id*10+1, id, id, id, page); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := st.DB.ExecContext(ctx, `INSERT INTO events (seq, site_id, ts, kind, visitor_id, session_id, pageview_id, lcp_ms)
+				VALUES (?, 's1', TIMESTAMP '2026-09-20 10:00:00', 3, ?, ?, ?, ?)`, id*10+3, id, id, id, ms); err != nil {
+				t.Fatal(err)
 			}
 		}
 	}

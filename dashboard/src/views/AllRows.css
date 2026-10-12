@@ -285,7 +285,9 @@
 }
 .all-guide-key:not(:focus-visible) {
   position: absolute;
-  clip-path: inset(50%);
-  width: 1px;
-  height: 1px;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
 }

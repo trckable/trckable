@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BounceCause, BounceGuide } from '../../lib/apiMore'
 
 const guide = vi.hoisted(() => ({ current: null as BounceGuide | null }))
-vi.mock('./useBounceGuide', () => ({ useBounceGuide: () => ({ guide: guide.current, state: guide.current ? 'ready' : 'loading' }) }))
+vi.mock('./b', async (original) => ({ ...(await original<typeof import('./b')>()), useBounceGuide: () => ({ guide: guide.current, state: guide.current ? 'ready' : 'loading' }) }))
 
 const seen = vi.hoisted(() => ({ page: vi.fn(), speed: vi.fn() }))
 vi.mock('./seePage', () => ({ seePage: seen.page, seeSpeed: seen.speed }))
