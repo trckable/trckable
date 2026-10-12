@@ -133,7 +133,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
               <AllView value={shape} onChange={(v) => { setPicked(v); saveView(v) }} />
             </div>
 
-            {sorted.length === 0 ? <p className="empty">No site matches.</p> : <AllRows rows={sorted} layout={shape} total={s.total} start={start} colorOf={colorOf} brandOf={brandOf} />}
+            {sorted.length === 0 ? <p className="empty">No site matches.</p> : <AllRows rows={sorted} layout={shape} days={days} total={s.total} start={start} colorOf={colorOf} brandOf={brandOf} />}
           </>
         )}
       </main>

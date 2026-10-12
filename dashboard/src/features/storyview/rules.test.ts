@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { KPIs, Result, Row } from '../../lib/api'
-import { biggestLoss, deltaOf, hintsOf, leavesFastest, sinceOf, stateOf, storyOf, takeawayOf, tiles, type Input } from './rules'
+import { biggestLoss, bounceCardOf, deltaOf, hintsOf, leavesFastest, sinceOf, stateOf, storyOf, takeawayOf, tiles, type Input } from './rules'
 
 const kpis = (o: Partial<KPIs> = {}): KPIs => ({ visitors: 1000, sessions: 1100, pageviews: 3000, bounce_rate: 0.4, avg_session_s: 120, views_per_session: 2.7, new_visitor_share: 0.5, ...o })
 const rows = (r: [string, number, number?][]): Row[] => r.map(([value, visitors, bounce_rate]) => ({ value, visitors, bounce_rate }))
@@ -212,5 +212,18 @@ describe('hints', () => {
   it('waits for what it hangs on and is for an owner only', () => {
     expect(hintsOf({ ...know, ai: undefined }, kept, false, day)).toEqual([])
     expect(hintsOf({ ...know, ai: 'visitor', owner: false }, kept, false, day)).toEqual([])
+  })
+})
+
+describe('the bounce card', () => {
+  const guide = (direction: 'high' | 'low' | 'normal', rate: number, usual: number) => ({ direction, rate, usual, sessions: 500, days: [], causes: [] })
+  it('is said when visitors leave clearly more or less than usual, in tenths', () => {
+    expect(bounceCardOf(guide('high', 0.78, 0.52))).toEqual({ kind: 'high', tenths: 8, usual: 5 })
+    expect(bounceCardOf(guide('low', 0.31, 0.5))).toEqual({ kind: 'low', tenths: 3, usual: 5 })
+  })
+  it('is silent as usual, or when it could not be read', () => {
+    expect(bounceCardOf(guide('normal', 0.5, 0.5))).toBeNull()
+    expect(bounceCardOf(null)).toBeNull()
+    expect(bounceCardOf(undefined)).toBeNull()
   })
 })

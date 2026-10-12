@@ -3,6 +3,7 @@
 // from nothing else. "Normal" is the period before, until the site has a
 // normal of its own. Pure: rules.test.ts.
 import type { Filter, Result, Row } from '../../lib/api'
+import type { BounceGuide } from '../../lib/apiMore'
 import { countryName, fmtDuration, fmtInt, fmtPct } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import { baseEnough, overCap, tooFew } from '../../lib/thin'
@@ -459,4 +460,17 @@ export function hintsOf(k: HintKnown, kept: Kept, heatDone: boolean, today: stri
   }
   if (!heatDone && k.heat?.ask && k.heat.path) out.push({ id: 'heat', answer: 'page', path: k.heat.path, views: k.heat.views ?? 0 })
   return out
+}
+
+/** The card under the headline when visitors leave after one page clearly more or less than usual; nothing when it is as usual or could not be told. */
+export interface BounceCard {
+  kind: 'high' | 'low'
+  /** Visitors who leave after one page, and the usual, in tenths ("8 in 10"). */
+  tenths: number
+  usual: number
+}
+
+export function bounceCardOf(g: BounceGuide | null | undefined): BounceCard | null {
+  if (!g || (g.direction !== 'high' && g.direction !== 'low')) return null
+  return { kind: g.direction, tenths: Math.round(g.rate * 10), usual: Math.round(g.usual * 10) }
 }

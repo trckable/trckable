@@ -26,7 +26,7 @@ export function Bounce({ rate, visitors }: { rate: number; visitors: number }) {
   if (!bounceHigh(rate, visitors)) return <span className="all-bounce">{text}</span>
   const words = copy.highBounce(bounceTenths(rate))
   return (
-    <span className="all-bounce warn" title={words} aria-label={copy.bounceHigh(text, words)}>
+    <span className="all-bounce warn" data-bounce-guide="" title={words} aria-label={copy.bounceHigh(text, words)}>
       <TriangleAlert size={13} aria-hidden="true" />
       {text}
     </span>
@@ -47,7 +47,7 @@ export function bouncePill(rate: number, visitors: number) {
   const words = copy.highBounce(bounceTenths(rate))
   return {
     text: (
-      <span aria-label={copy.bounceHigh(text, words)}>
+      <span data-bounce-guide="" aria-label={copy.bounceHigh(text, words)}>
         <TriangleAlert size={11} aria-hidden="true" /> {copy.bounceShort(text)}
       </span>
     ),
