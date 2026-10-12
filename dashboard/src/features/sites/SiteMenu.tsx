@@ -165,7 +165,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
       )}
       {/* Every site on one page, once there is more than one to compare. */}
       {sites.length > 1 && !found && <AllStrip on={all} numbers={numbers} onPick={() => { onClose(); navigate('/all') }} />}
-      <div className="sites-list" ref={list} title={arrange && sites.length > 1 ? copy.keys : undefined}>
+      <div className="sites-list" ref={list}>
         {found && <ul className="site-group">{found.map((s) => item(s, { kind: 'rest' }))}</ul>}
         {found?.length === 0 && <p className="faint sites-none">{copy.noMatch(q)}</p>}
         {!found &&
@@ -189,7 +189,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
       <p className="sr" aria-live="polite">
         {said}
       </p>
-      <MenuFoot canAdd={!isViewer()} onAdd={() => { onClose(); openAddSite() }} settings={current && canChange() ? { label: copy.settingsFor(current.domain), open: () => { onClose(); openSettings(current) } } : undefined} />
+      <MenuFoot hint={arrange && sites.length > 1 ? copy.keys : undefined} canAdd={!isViewer()} onAdd={() => { onClose(); openAddSite() }} settings={current && canChange() ? { label: copy.settingsFor(current.domain), open: () => { onClose(); openSettings(current) } } : undefined} />
     </div>
   )
 }

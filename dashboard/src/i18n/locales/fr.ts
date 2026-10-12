@@ -1010,6 +1010,8 @@ export default {
   'sites.menu.emptyGroup': 'Faites glisser un site ici, ou utilisez le menu ⋯ d’un site.',
   'sites.menu.setup': 'à configurer',
   'sites.menu.downTip': (span: string) => `Injoignable depuis ${span}. Ouvrez le site pour voir ce qui ne va pas.`,
+  'sites.menu.downLine': (span: string) => `Injoignable · ${span}`,
+  'sites.menu.quietLine': (span: string) => `Calme · ${span}`,
   'sites.menu.quietTip': (span: string) => `Aucune visite depuis ${span}. Rien ne semble anormal sur la page.`,
   'sites.menu.today': (n: string) => `${n} aujourd’hui`,
   'sites.menu.todayAll': 'Visiteurs aujourd’hui, tous les sites',

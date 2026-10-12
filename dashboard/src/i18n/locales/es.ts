@@ -1022,6 +1022,8 @@ export default {
   'sites.menu.emptyGroup': 'Arrastra un sitio hasta aquí o usa el menú ⋯ de un sitio.',
   'sites.menu.setup': 'configurar',
   'sites.menu.downTip': (span: string) => `Sin respuesta desde hace ${span}. Abre el sitio para ver qué pasa.`,
+  'sites.menu.downLine': (span: string) => `Sin respuesta · ${span}`,
+  'sites.menu.quietLine': (span: string) => `Sin visitas · ${span}`,
   'sites.menu.quietTip': (span: string) => `Sin visitas desde hace ${span}. La página no parece tener ningún problema.`,
   'sites.menu.today': (n: string) => `${n} hoy`,
   'sites.menu.todayAll': 'Visitantes hoy, todos los sitios',

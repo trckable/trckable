@@ -1009,6 +1009,8 @@ export default {
   'sites.menu.emptyGroup': 'Sleep een site hierheen, of gebruik het ⋯-menu van een site.',
   'sites.menu.setup': 'instellen',
   'sites.menu.downTip': (span: string) => `Al ${span} niet bereikbaar. Open de site om te zien wat er mis is.`,
+  'sites.menu.downLine': (span: string) => `Niet bereikbaar · ${span}`,
+  'sites.menu.quietLine': (span: string) => `Rustig · ${span}`,
   'sites.menu.quietTip': (span: string) => `Al ${span} geen bezoeken. Er lijkt niets mis met de pagina.`,
   'sites.menu.today': (n: string) => `${n} vandaag`,
   'sites.menu.todayAll': 'Bezoekers vandaag, alle sites',

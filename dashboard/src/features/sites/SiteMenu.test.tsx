@@ -4,6 +4,7 @@ import { feedOnline } from '../../lib/allOnline'
 import type { Site, SiteRow } from '../../lib/api'
 import { AllStrip } from './AllStrip'
 import { SiteItem } from './SiteItem'
+import { stateLine } from './stateLine'
 
 const NOW = Math.floor(Date.now() / 1000)
 const site = (i: number, o: Partial<Site> = {}): Site => ({ id: 's' + String(i), domain: `site${i}.example`, name: `Site ${i}`, timezone: 'UTC', currency: 'USD', proxy_key: '', last_event_at: NOW - 3600, ...o })
@@ -118,5 +119,19 @@ describe('the All sites chip', () => {
     expect(full).toContain('strip-sum')
     expect(full).toContain('3 <i>live</i>')
     expect(full).toContain('42')
+  })
+})
+
+describe('the state line under a site name', () => {
+  const down = { check: { at: NOW, error: 'unreachable' } }
+  it('says how long a down site has been unreachable', () => {
+    expect(stateLine(site(1, { ...down, last_event_at: NOW - 2 * 86400 - 600 }))).toBe('Not reachable · 2d')
+  })
+  it('says how long a quiet site has had no visits', () => {
+    expect(stateLine(site(1, { last_event_at: NOW - 8 * 3600 }))).toBe('Quiet · 8h')
+  })
+  it('is empty for a live and for a new site', () => {
+    expect(stateLine(site(1, { last_event_at: NOW - 3600 }))).toBeNull()
+    expect(stateLine(site(1, { last_event_at: undefined }))).toBeNull()
   })
 })

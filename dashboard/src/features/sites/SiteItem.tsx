@@ -12,7 +12,7 @@ import { copy } from './menuCopy'
 import { copy as first } from './copy'
 import { addGroup, moveTo, pin, placeKey, step, unpin, type Place } from './layout'
 import { dotState, StateDot } from './StateDot'
-import { Tooltip } from '../../kit/Tooltip'
+import { stateLine } from './stateLine'
 import { silence } from '../sitestatus/time'
 import type { Arrange } from './SiteMenu'
 import { MARK, type Density } from './density'
@@ -34,13 +34,9 @@ function Tail({ s, today }: { s: Site; today?: number }) {
       const tip = down ? copy.downTip(silence(s)) : copy.quietTip(silence(s))
       const Icon = down ? CircleAlert : Moon
       return (
-        <Tooltip text={tip}>
-          {(p) => (
-            <span {...p} role="button" tabIndex={0} aria-label={tip} className={down ? 'tail state-icon down' : 'tail state-icon quiet'} onClick={(e) => { e.stopPropagation(); p.onClick() }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); p.onClick() } }}>
-              <Icon size={16} strokeWidth={2} aria-hidden="true" />
-            </span>
-          )}
-        </Tooltip>
+        <span role="img" aria-label={tip} className={down ? 'tail state-icon down' : 'tail state-icon quiet'}>
+          <Icon size={16} strokeWidth={2} aria-hidden="true" />
+        </span>
       )
     }
     default:
@@ -56,6 +52,7 @@ function refocus(id: string) {
 export function SiteItem({ site, place, on, arrange, today, density = 'compact', onPick }: { site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; density?: Density; onPick: () => void }) {
   const name = site.name || site.domain
   const a = arrange
+  const line = stateLine(site)
   const moveStep = (dir: -1 | 1) => {
     if (!a) return
     a.save(step(a.sites, a.layout, site.id, dir), dir < 0 ? copy.up : copy.down)
@@ -73,7 +70,7 @@ export function SiteItem({ site, place, on, arrange, today, density = 'compact',
         type="button"
         data-stop
         aria-current={on ? 'page' : undefined}
-        className={on ? 'site on' : 'site'}
+        className={['site', on && 'on', line && 'stated'].filter(Boolean).join(' ')}
         onClick={onPick}
         onPointerEnter={on ? undefined : () => prefetchSite(site)}
         onFocus={on ? undefined : () => prefetchSite(site)}
@@ -94,6 +91,7 @@ export function SiteItem({ site, place, on, arrange, today, density = 'compact',
         </span>
         <span className="name">
           <b>{name}</b>
+          {line && <small className={'state-line ' + dotState(site)}>{line}</small>}
         </span>
         <span className="right">
           <Tail s={site} today={today} />
