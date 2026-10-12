@@ -77,7 +77,6 @@
 .cmp-root {
   position: relative;
   display: flex;
-  margin-left: 4px; /* 2px picker gap + 4px = the 6px between capsules */
 }
 .ctl-cap .btn.cmp-btn {
   width: 32px;
@@ -421,7 +420,8 @@
 }
 
 /* One baseline: everything in the line is centred, 8px apart, 36px at most. */
-.subbar {
+.subbar,
+.subbar .range-picker.quiet {
   gap: 8px;
 }
 .ctl-cap {
