@@ -96,12 +96,12 @@ Nothing is paid, limited or held back. The complete list: [features](https://doc
   <img src=".github/images/gallery/full.png" width="880" alt="Full mode: moments marked on the chart, then two tabbed cards under it, who came and what they did, with revenue and conversion on every row">
 </p>
 <p align="center">
-  <img src=".github/images/gallery/money-trail.png" width="430" alt="Hovering a channel highlights where those visitors went and what they paid">
-  <img src=".github/images/gallery/modules.png" width="430" alt="Settings, Modules: every module priced in bytes before you turn it on">
+  <img src=".github/images/gallery/money-trail.png" width="410" alt="Hovering a channel highlights where those visitors went and what they paid">
+  <img src=".github/images/gallery/modules.png" width="410" alt="Settings, Modules: every module priced in bytes before you turn it on">
 </p>
 <p align="center">
-  <img src=".github/images/gallery/share-card.png" width="430" alt="The Share dialog: the last 30 days as a picture, with visitors, revenue and the change against a year before">
-  <img src=".github/images/gallery/core-light.png" width="430" alt="Core mode in the light theme">
+  <img src=".github/images/gallery/share-card.png" width="410" alt="The Share dialog: the last 30 days as a picture, with visitors, revenue and the change against a year before">
+  <img src=".github/images/gallery/core-light.png" width="410" alt="Core mode in the light theme">
 </p>
 <p align="center">
   <sub>Full mode, the money trail, modules priced in bytes, the share card and the light theme. <a href="docs/screenshots.md">More screenshots</a></sub>
