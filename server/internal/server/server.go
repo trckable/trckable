@@ -151,6 +151,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/api/e", s.ingest)
+	mux.Handle("/s/e", s.ingest)                 // the neutral path a first-party proxy forwards visits to
 	mux.HandleFunc("/api/crawl", s.ingest.Crawl) // robots, reported by the site's own server
 	mux.HandleFunc("/api/h", s.ingest.Heat)      // clicks and form fields, from the heatmaps script
 	feat := func(site string) []string {
@@ -203,6 +204,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	tracker := web.Tracker(feat, opts)
 	online := web.OnlineScript(func(ctx context.Context, id string) (web.OnlineLook, bool) { return s.api.OnlineLook(ctx, id) })
 	loader := web.WidgetLoader()
+	mux.Handle("GET /s/x.js", tracker) // the neutral name of /js/t.js, for a first-party proxy
 	mux.HandleFunc("GET /js/{file}", func(w http.ResponseWriter, r *http.Request) {
 		if r.PathValue("file") == web.WidgetLoaderFile {
 			loader.ServeHTTP(w, r)

@@ -559,3 +559,19 @@ func TestDashboardNotBuilt(t *testing.T) {
 		t.Errorf("got %d %q", rec.Code, rec.Body.String())
 	}
 }
+
+// The neutral name /s/x.js serves the same script as /js/t.js.
+func TestTrackerNeutralName(t *testing.T) {
+	h := Tracker(func(string) []string { return []string{"goals"} }, nil)
+	get := func(p string) string {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest(http.MethodGet, p, nil))
+		if w.Code != http.StatusOK {
+			t.Fatalf("%s: status %d", p, w.Code)
+		}
+		return w.Body.String()
+	}
+	if get("/s/x.js") != get("/js/t.js") {
+		t.Fatal("/s/x.js differs from /js/t.js")
+	}
+}

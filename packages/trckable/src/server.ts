@@ -77,6 +77,86 @@ export function proxy(options: ProxyOptions = {}): (req: Request) => Promise<Res
 }
 
 /**
+ * The tracker script, served from your own domain. Mount it at /s/x.js next to
+ * the event proxy at /s/e, then point the tag at them:
+ *
+ *   <script defer src="/s/x.js" data-site="tkb_…" data-api="/s/e"></script>
+ *
+ *   // Hono / Express-style runtimes with Request and Response
+ *   app.get('/s/x.js', (c) => trckableScript(c.req.raw))
+ */
+export function scriptProxy(options: Pick<ProxyOptions, 'host'> = {}): (req: Request) => Promise<Response> {
+  return async (req: Request): Promise<Response> => {
+    const host = (options.host ?? env('TRCKABLE_HOST'))?.replace(/\/+$/, '')
+    if (!host) return new Response('trckable: set TRCKABLE_HOST or pass { host }', { status: 500 })
+    if (req.method !== 'GET' && req.method !== 'HEAD') return new Response(null, { status: 405 })
+    let res: Response
+    try {
+      res = await fetch(host + '/js/t.js')
+    } catch {
+      return new Response(null, { status: 502 })
+    }
+    if (!res.ok) return new Response(null, { status: 502 })
+    return new Response(req.method === 'HEAD' ? null : res.body, {
+      status: 200,
+      headers: {
+        'content-type': 'application/javascript; charset=utf-8',
+        'cache-control': 'public, max-age=3600, stale-while-revalidate=86400',
+      },
+    })
+  }
+}
+
+/** The parts of Node's request and response that nodeHandler uses, so no Node types are needed. */
+interface NodeRequest extends AsyncIterable<Uint8Array | string> {
+  method?: string
+  url?: string
+  headers: Record<string, string | string[] | undefined>
+}
+interface NodeResponse {
+  statusCode: number
+  setHeader(name: string, value: string | string[]): void
+  end(body?: Uint8Array): void
+}
+
+/**
+ * Lets Express, Connect or a plain node:http server use the handlers above:
+ *
+ *   app.post('/s/e', nodeHandler(proxy()))
+ *   app.get('/s/x.js', nodeHandler(scriptProxy()))
+ */
+export function nodeHandler(handle: (req: Request) => Promise<Response>): (req: NodeRequest, res: NodeResponse) => Promise<void> {
+  return async (req, res) => {
+    const headers = new Headers()
+    for (const [k, v] of Object.entries(req.headers)) {
+      if (Array.isArray(v)) v.forEach((x) => headers.append(k, x))
+      else if (v !== undefined) headers.set(k, v)
+    }
+    const method = req.method ?? 'GET'
+    let body: ArrayBuffer | undefined
+    if (method !== 'GET' && method !== 'HEAD') {
+      const parts: Uint8Array[] = []
+      for await (const chunk of req) parts.push(typeof chunk === 'string' ? new TextEncoder().encode(chunk) : chunk)
+      const joined = new Uint8Array(parts.reduce((n, p) => n + p.length, 0))
+      let at = 0
+      for (const p of parts) {
+        joined.set(p, at)
+        at += p.length
+      }
+      body = joined.buffer as ArrayBuffer
+    }
+    const out = await handle(new Request('http://' + (headers.get('host') ?? 'localhost') + (req.url ?? '/'), { method, headers, body }))
+    res.statusCode = out.status
+    out.headers.forEach((v, k) => {
+      if (k !== 'set-cookie') res.setHeader(k, v)
+    })
+    const cookies = out.headers.getSetCookie()
+    if (cookies.length) res.setHeader('set-cookie', cookies)
+    res.end(new Uint8Array(await out.arrayBuffer()))
+  }
+}
+
+/**
  * The visitor's IP as set by the platform in front of your app. Each of these
  * headers is overwritten by its platform's edge, so visitors cannot forge them
  * there. Behind your own reverse proxy, make sure it sets X-Real-IP.

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { clientIP, getIds, proxy, checkoutFields, checkoutUrl, reportCrawler } from '../src/server'
+import { clientIP, getIds, proxy, scriptProxy, nodeHandler, checkoutFields, checkoutUrl, reportCrawler } from '../src/server'
 
 afterEach(() => vi.restoreAllMocks())
 
@@ -164,5 +164,84 @@ describe('reportCrawler', () => {
     } finally {
       globalThis.fetch = original
     }
+  })
+})
+
+describe('scriptProxy', () => {
+  const get = (method = 'GET') => new Request('https://site.com/s/x.js', { method })
+
+  it('serves the script from your server with a cache header', async () => {
+    const upstream = vi.fn(async () => new Response('(()=>{})()', { status: 200, headers: { 'content-type': 'text/plain' } }))
+    globalThis.fetch = upstream as any
+    const res = await scriptProxy({ host: 'https://stats.site.com/' })(get())
+    expect((upstream.mock.calls[0] as any)[0]).toBe('https://stats.site.com/js/t.js')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('javascript')
+    expect(res.headers.get('cache-control')).toContain('max-age=3600')
+    expect(await res.text()).toBe('(()=>{})()')
+  })
+
+  it('answers HEAD without a body, refuses other methods, and needs a host', async () => {
+    globalThis.fetch = vi.fn(async () => new Response('x')) as any
+    expect((await scriptProxy({ host: 'https://h.com' })(get('HEAD'))).body).toBeNull()
+    expect((await scriptProxy({ host: 'https://h.com' })(get('POST'))).status).toBe(405)
+    delete process.env.TRCKABLE_HOST
+    expect((await scriptProxy()(get())).status).toBe(500)
+  })
+
+  it('answers 502 when your server is away or answers badly', async () => {
+    globalThis.fetch = vi.fn(async () => { throw new Error('down') }) as any
+    expect((await scriptProxy({ host: 'https://h.com' })(get())).status).toBe(502)
+    globalThis.fetch = vi.fn(async () => new Response('no', { status: 500 })) as any
+    expect((await scriptProxy({ host: 'https://h.com' })(get())).status).toBe(502)
+  })
+})
+
+describe('nodeHandler', () => {
+  function fake(method: string, url: string, chunks: (string | Uint8Array)[], headers: Record<string, string | string[]> = {}) {
+    return {
+      method,
+      url,
+      headers: { host: 'site.com', ...headers },
+      async *[Symbol.asyncIterator]() {
+        for (const c of chunks) yield c
+      },
+    }
+  }
+  function sink() {
+    const out = { statusCode: 0, headers: {} as Record<string, unknown>, body: new Uint8Array(), setHeader(k: string, v: unknown) { this.headers[k] = v }, end(b?: Uint8Array) { this.body = b ?? new Uint8Array() } }
+    return out
+  }
+
+  it('turns a node request into a Request and writes the answer back, cookies included', async () => {
+    let seen: Request | undefined
+    let text = ''
+    const handler = nodeHandler(async (req) => {
+      seen = req
+      text = await req.text()
+      const res = new Response('hi', { status: 202, headers: { 'x-a': '1' } })
+      res.headers.append('set-cookie', 'a=1')
+      res.headers.append('set-cookie', 'b=2')
+      return res
+    })
+    const res = sink()
+    await handler(fake('POST', '/s/e', ['{"a":', new TextEncoder().encode('1}')], { 'x-multi': ['p', 'q'] }) as any, res as any)
+    expect(seen?.url).toBe('http://site.com/s/e')
+    expect(seen?.headers.get('x-multi')).toBe('p, q')
+    expect(text).toBe('{"a":1}')
+    expect(res.statusCode).toBe(202)
+    expect(res.headers['x-a']).toBe('1')
+    expect(res.headers['set-cookie']).toEqual(['a=1', 'b=2'])
+    expect(new TextDecoder().decode(res.body)).toBe('hi')
+  })
+
+  it('sends no body with GET and defaults the method and host', async () => {
+    let seen: Request | undefined
+    const res = sink()
+    await nodeHandler(async (req) => ((seen = req), new Response(null, { status: 204 })))({ headers: {}, async *[Symbol.asyncIterator]() {} } as any, res as any)
+    expect(seen?.method).toBe('GET')
+    expect(seen?.url).toBe('http://localhost/')
+    expect(res.statusCode).toBe(204)
+    expect(res.headers['set-cookie']).toBeUndefined()
   })
 })
