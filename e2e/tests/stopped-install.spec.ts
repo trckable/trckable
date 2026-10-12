@@ -26,13 +26,13 @@ const box = async (l: Locator) => (await l.boundingBox())!
 
 test('a stopped site keeps its mark in the switcher', async ({ page, browserName }) => {
   const site = await newSite(page, `stopped-${browserName}`)
-  // Stopped: visits until three days ago, and a later check found no snippet.
+  // Stopped: visits until three days ago, and a later check could not reach the site.
   const now = Math.floor(Date.now() / 1000)
   await page.route('**/api/v1/sites', async (r) => {
     if (r.request().method() !== 'GET') return r.continue()
     const res = await r.fetch()
     const body = (await res.json()) as { sites: Record<string, unknown>[] }
-    for (const s of body.sites) if (s.id === site.id) Object.assign(s, { last_event_at: now - 3 * DAY, check: { at: now - DAY, found: 'none' } })
+    for (const s of body.sites) if (s.id === site.id) Object.assign(s, { last_event_at: now - 3 * DAY, check: { at: now - DAY, error: 'timeout', down_since: now - 2 * DAY } })
     await r.fulfill({ response: res, json: body })
   })
   await page.goto(`${API}/example.com`)
