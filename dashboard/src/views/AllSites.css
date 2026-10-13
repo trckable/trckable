@@ -34,43 +34,126 @@
   width: 100%;
 }
 
+/* ---- The period pill (as the site dashboard's) ---- */
+.all-period {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.all-period .btn.range {
+  gap: 8px;
+  padding: 0 10px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.all-period .range-chev {
+  margin-left: 2px;
+  color: var(--text-3);
+}
+.all-period .range-icon {
+  color: var(--text-2);
+}
+.all-period-vs {
+  padding-left: 10px;
+  border-left: 1px solid var(--border);
+  color: var(--text-3);
+  font-size: 13px;
+}
+.pop.menu.all-period-pop button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+}
+@media (max-width: 640px) {
+  .all-period-vs {
+    display: none;
+  }
+}
+
 /* ---- The View menu ---- */
 .pop.anchored.all-view {
-  min-width: 250px;
+  min-width: 260px;
   overflow-y: auto;
+}
+.all-view-body {
+  display: grid;
+  gap: 10px;
+  padding: 10px 12px 12px;
 }
 .all-view-sec {
   display: grid;
-  gap: 1px;
-  padding: 4px 0;
+  gap: 6px;
 }
-.pop.menu.all-view button {
-  padding: 8px 12px;
+.all-view-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-.all-view-sec + .all-view-sec {
-  border-top: 1px solid var(--border);
-}
-.all-view-sec > small {
-  padding: 4px 10px;
+.all-view-head > small {
   color: var(--text-3);
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.menu-list [role='menuitemradio'],
-.menu-list [role='menuitemcheckbox'] {
+.all-view .kit-seg {
   display: flex;
-  justify-content: space-between;
+}
+.all-view .kit-seg button {
+  display: inline-flex;
+  flex: 1;
+  justify-content: center;
   align-items: center;
-  gap: 16px;
+  gap: 6px;
+  white-space: nowrap;
 }
-.all-view-reset {
-  margin-top: 4px;
-  border-top: 1px solid var(--border);
+.pop.menu.all-view button.all-view-link {
+  min-height: 0;
+  padding: 0 2px;
+  background: none;
   color: var(--text-2);
+  font-size: 12.5px;
 }
-
-.all-view-more {
+.pop.menu.all-view button.all-view-link:hover {
+  color: var(--text);
+}
+.all-view-sites {
+  display: grid;
+  max-height: 190px;
+  overflow-y: auto;
+}
+.all-view-site {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 2px;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.all-view-site input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+.all-view-site span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.all-view-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.pop.menu.all-view button.all-view-reset {
+  justify-self: start;
+  min-height: 0;
+  padding: 0 2px;
+  background: none;
   color: var(--text-2);
+  font-size: 12.5px;
 }
