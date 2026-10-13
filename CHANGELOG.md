@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - The bounce guide no longer says "nothing unusual" and "usual ~0%" for a site with too few visits. When the period or the 4 weeks before have fewer than 100 visits, it shows the share that leaves after one page and says there are not enough visits yet to say what is usual.
+- The site switcher marks the chosen site with a small dot in the accent colour instead of a check.
 
 ## 0.7.10 (13 Oct 2026)
 

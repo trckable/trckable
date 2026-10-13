@@ -2,7 +2,7 @@
 // to open it, and (for anyone who may arrange) a row to drag (useReorder),
 // Alt + ↑/↓, Shift + Enter to open the site itself, and a ⋯ menu with every move, so a phone and a keyboard can do
 // what a mouse does.
-import { Check, CircleAlert, GripVertical, Moon } from 'lucide-react'
+import { CircleAlert, GripVertical, Moon } from 'lucide-react'
 import type { Site } from '../../lib/api'
 import { Menu } from '../../components/Menu'
 import { SiteMark } from '../../components/SiteMark'
@@ -96,7 +96,6 @@ export function SiteItem({ site, place, on, arrange, today, density = 'compact',
         <span className="right">
           <Tail s={site} today={today} />
         </span>
-        <span className="tick" aria-hidden="true">{on && <Check size={14} strokeWidth={2.25} />}</span>
       </button>
       <OpenSite domain={site.domain} />
       {a && <Moves site={site} place={place} a={a} step={moveStep} />}
