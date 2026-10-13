@@ -673,7 +673,7 @@ export default {
 
   // sites
   'sites.pick': 'Scegli un sito',
-  'sites.all': 'Tutti i siti',
+  'sites.all': 'Siti',
   'sites.dot.now': 'Visitatori in questo momento: una visita negli ultimi 5 minuti',
   'sites.dot.live': 'Riceve visite',
   'sites.dot.quiet': 'Nessuna visita da ore',
@@ -955,7 +955,7 @@ export default {
   'account.people.otp.message': (origin: string, email: string, password: string) => `Accedi a trckable su ${origin} come ${email} con questa password monouso: ${password}\nSubito dopo ne sceglierai una tua.`,
 
   // allsites
-  'allsites.title': 'Tutti i siti',
+  'allsites.title': 'Siti',
   'allsites.addSite': 'Aggiungi sito',
   'allsites.reading': 'Lettura di tutti i siti…',
   'allsites.periodLabel': (days: number) => (days === 365 ? 'Ultimi 12 mesi' : `Ultimi ${days} giorni`),
@@ -2013,7 +2013,7 @@ export default {
   'moments.discover.crawlers.go': 'Attiva',
   'featureList.live.name': 'Vista live',
   'featureList.live.line': 'Chi è sul tuo sito adesso',
-  'featureList.allsites.name': 'Tutti i siti',
+  'featureList.allsites.name': 'Siti',
   'featureList.allsites.line': 'Tutti i tuoi siti in una pagina',
   'featureList.map.name': 'Mappa',
   'featureList.map.line': 'Visitatori su una mappa del mondo',

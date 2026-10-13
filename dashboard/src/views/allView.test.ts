@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { DEFAULT_VIEW, differs, readView, saveView } from './allView'
 
-const at = (search: string) => history.replaceState(null, '', '/all' + search)
+const at = (search: string) => history.replaceState(null, '', '/sites' + search)
 
 describe('the look of All sites', () => {
   beforeEach(() => {

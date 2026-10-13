@@ -22,7 +22,7 @@ test('the View menu changes the layout and the lens, and the choice survives a r
     await route.fulfill({ response: res, json: body })
   })
 
-  await page.goto(`${API}/all`)
+  await page.goto(`${API}/sites`)
   await expect(page.locator('.nx-today')).toBeVisible({ timeout: 20_000 })
   const summary = page.locator('.all-head p')
   await expect(summary).toContainText('Last 30 days · Visitors')
@@ -38,7 +38,7 @@ test('the View menu changes the layout and the lens, and the choice survives a r
   await expect(page).toHaveURL(/lens=revenue/)
 
   // A visit without the address remembers the last choice.
-  await page.goto(`${API}/all`)
+  await page.goto(`${API}/sites`)
   await expect(page.locator('.nx-table')).toBeVisible({ timeout: 20_000 })
   await expect(summary).toContainText('Revenue')
 

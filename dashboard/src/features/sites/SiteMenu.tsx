@@ -164,7 +164,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
         </label>
       )}
       {/* Every site on one page, once there is more than one to compare. */}
-      {sites.length > 1 && !found && <AllStrip on={all} numbers={numbers} onPick={() => { onClose(); navigate('/all') }} />}
+      {sites.length > 1 && !found && <AllStrip on={all} numbers={numbers} onPick={() => { onClose(); navigate('/sites') }} />}
       <div className="sites-list" ref={list}>
         {found && <ul className="site-group">{found.map((s) => item(s, { kind: 'rest' }))}</ul>}
         {found?.length === 0 && <p className="faint sites-none">{copy.noMatch(q)}</p>}
