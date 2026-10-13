@@ -991,8 +991,6 @@ export default {
   'allnext.whyNew': 'Wacht op het eerste bezoek.',
   'allnext.whyUnread': 'Kon niet worden gelezen.',
   'allnext.whyMover': (today: string, usual: string, ref: string) => `${today} tot nu toe; ${ref} waren het er ${usual} rond dit uur.`,
-  'allnext.whySteady': (today: string) => `${today} tot nu toe vandaag.`,
-  'allnext.whyOnline': (n: number) => `${n} nu online.`,
   'allnext.surgeWhy': (times: string, source: string) => `${times}× drukker dan gewoonlijk op dit moment${source ? `. ${source}` : ''}`,
   'allnext.feed': 'Live',
   'allnext.feedEmpty': 'Nog niets te melden.',

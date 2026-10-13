@@ -164,8 +164,8 @@ export function whyLine(i: Item, ref: string, now = Date.now()): string {
   if (i.status === 'quiet' && last) return next.whyQuiet(span(now / 1000 - last), dayWord(last, now))
   if (i.status === 'new') return next.whyNew
   if (i.surge) return next.surgeWhy(i.surge.times.toFixed(1), sourceLine(i.surge))
-  if (i.kind === 'mover' && i.usual !== null) return next.whyMover(fmtInt(i.today), fmtInt(i.usual), ref)
-  return i.online > 0 ? next.whyOnline(i.online) : next.whySteady(fmtInt(i.today))
+  // Who is online now is the Live column's; a row compares today with the usual, or says nothing.
+  return i.usual !== null ? next.whyMover(fmtInt(i.today), fmtInt(i.usual), ref) : ''
 }
 
 export interface FeedEvent {
