@@ -42,10 +42,14 @@ export function Summary({ totals, silent, label, watch }: { totals: Totals; sile
     return <Calm title={copy.clean(label)} note={note} />
   }
   const uptimeNote = [downOnly ? copy.downOnlyNote : copy.uptimeNote, watch.since && copy.watchedSince(watch.since)].filter(Boolean).join(' · ')
+  const up = uptimeOf(watch.span, totals.seconds)
+  let upValue = copy.notWatched
+  if (silent) upValue = copy.noVisitsAll
+  else if (up) upValue = up.pct.toFixed(1) + '%'
   const cards: { label: string; value: string; note?: string }[] = [
     { label: copy.cardIncidents, value: fmtInt(totals.count) },
     { label: copy.cardAffected, value: duration(totals.seconds) },
-    { label: copy.cardUptime, value: silent ? copy.noVisitsAll : uptimeOf(watch.span, totals.seconds)!.pct.toFixed(1) + '%', note: silent ? undefined : uptimeNote },
+    { label: copy.cardUptime, value: upValue, note: silent || !up ? undefined : uptimeNote },
   ]
   if (totals.lost_some) cards.push({ label: copy.cardLost, value: copy.lost(fmtInt(totals.lost)), note: copy.lostNote })
   return (
