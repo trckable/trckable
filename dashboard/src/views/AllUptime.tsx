@@ -6,7 +6,7 @@ import { useMemo } from 'react'
 import { Loading } from '../components/loading/Loading'
 import { StateDot } from '../features/sites/StateDot'
 import { copy } from '../features/incidents/copy'
-import { dayStates, daysBetween, duration, rowTotals, silentAllPeriod } from '../features/incidents/model'
+import { dayStates, daysBetween, accountTotals, duration, rowTotals, silentAllPeriod } from '../features/incidents/model'
 import { incidentsPath } from '../features/incidents/route'
 import { useAccountIncidents, useNow } from '../features/incidents/useIncidents'
 import type { Incident } from '../features/incidents/api'
@@ -54,13 +54,10 @@ export function AllUptime({ sites, days }: { sites: Site[]; days: number }) {
   if (!ready) return <Loading height={200} />
   const shown = sites.map((s) => ({ s, t: rowTotals(by.get(s.id) ?? [], days, now), silent: silentAllPeriod(by.get(s.id) ?? [], now - days * DAY) })).sort((a, b) => Number(a.silent) - Number(b.silent) || a.t.pct - b.t.pct)
   // A site with no visit all period says nothing about uptime: it stays out of the average.
-  const counted = shown.filter((x) => !x.silent)
-  const incidents = counted.reduce((n, x) => n + x.t.count, 0)
-  const seconds = counted.reduce((n, x) => n + x.t.seconds, 0)
-  const pct = counted.length ? Math.max(0, 100 - (seconds / (counted.length * days * DAY)) * 100) : 100
+  const total = accountTotals(sites, list, days, now)
   return (
     <div className="up-wrap">
-      <h2 className="up-head">{copy.allSummary(all.siteCount(sites.length), (seconds > 0 && pct >= 99.95 ? 99.9 : pct).toFixed(1), incidents)}</h2>
+      <h2 className="up-head">{copy.allSummary(all.siteCount(sites.length), total.pct.toFixed(1), total.count)}</h2>
       <div className="up-list">
         {shown.map((x) => (
           <Row key={x.s.id} site={x.s} mine={by.get(x.s.id) ?? []} days={days} now={now} />

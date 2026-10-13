@@ -79,7 +79,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
         {err && <p className="empty">{err}</p>}
         {!rows && !err && !uptime && <Loading height={320} />}
         {uptime && <AllUptime sites={shown} days={days} />}
-        {rows && !uptime && view.layout === 'overview' && <AllToday {...props} surges={surges} />}
+        {rows && !uptime && view.layout === 'overview' && <AllToday {...props} days={days} surges={surges} open={(l) => change({ lens: l })} />}
         {rows && !uptime && view.layout === 'table' && <AllTable {...props} />}
       </main>
     </>
