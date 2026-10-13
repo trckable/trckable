@@ -9,6 +9,10 @@ section into the release.
 
 ## Unreleased
 
+- When a site is down or quiet, the dashboard shows a small badge in the bottom-right corner instead of a large card above the report. Click it to see the gap chart, what was checked and what to do.
+- The down or quiet icon in the site switcher shows its tooltip again.
+- Menus and pop-ups have a fainter edge.
+
 ## 0.7.12 (13 Oct 2026)
 
 - The "stopped receiving visits" alert now sends one email when a site goes quiet and one more after three days if it is still quiet, then stops until visits come back. It used to repeat every 6 hours for as long as the site stayed silent.
