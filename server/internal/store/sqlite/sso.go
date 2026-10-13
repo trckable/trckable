@@ -62,7 +62,7 @@ func (s *Store) RetirePassword(ctx context.Context, id, unused string) error {
 	if n, _ := res.RowsAffected(); n == 0 {
 		return nil // already chosen by the person, or never chosen for them
 	}
-	for _, q := range []string{`DELETE FROM auth_sessions WHERE user_id = ?`, `DELETE FROM known_devices WHERE user_id = ?`} {
+	for _, q := range []string{`DELETE FROM auth_sessions WHERE user_id = ?`, `DELETE FROM known_devices WHERE user_id = ?`, `DELETE FROM devices WHERE user_id = ?`} {
 		if _, err := tx.ExecContext(ctx, q, id); err != nil {
 			return err
 		}

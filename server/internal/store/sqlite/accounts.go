@@ -332,6 +332,12 @@ func (s *Store) UpdateSite(ctx context.Context, id, name, tz, currency string) e
 // ResetPassword sets a new password for a user and signs out all of their
 // sessions (the server-side recovery path; there is no email reset).
 func (s *Store) ResetPassword(ctx context.Context, email, password string) error {
+	return s.ResetPasswordKeeping(ctx, email, password, "")
+}
+
+// ResetPasswordKeeping is ResetPassword that leaves one device signed in: the
+// phone the new password was chosen on. Every other device ends.
+func (s *Store) ResetPasswordKeeping(ctx context.Context, email, password, keepDevice string) error {
 	hash, err := auth.HashPasswordCtx(ctx, password)
 	if err != nil {
 		return err
@@ -356,6 +362,9 @@ func (s *Store) ResetPassword(ctx context.Context, email, password string) error
 		return err
 	}
 	if _, err := tx.ExecContext(ctx, `DELETE FROM known_devices WHERE user_id = ?`, id); err != nil {
+		return err
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM devices WHERE user_id = ? AND id <> ?`, id, keepDevice); err != nil {
 		return err
 	}
 	// Who they are to an identity provider is forgotten with the password:

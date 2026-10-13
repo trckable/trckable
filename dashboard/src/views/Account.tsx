@@ -29,7 +29,7 @@ import { Keys } from './account/Keys'
 import { ThemeLine } from './account/ThemeLine'
 import { SaleLines, TabCountLine } from '../features/signals/PrefLines'
 import { People } from './account/People'
-
+import { Devices } from './account/Devices'
 // The setup wizard carries the QR encoder, so it is fetched only when someone
 // actually turns two-step sign-in on.
 const TwoStepSetup = lazy(() => import('./TwoStepSetup'))
@@ -77,7 +77,7 @@ function ProfileTab({ email, p, v, onProfile }: ProfileProps) {
             Change password
           </button>
         </Line>
-        <TwoStep /><SignedInWith provider={p?.signed_in_with} />
+        <TwoStep /><SignedInWith provider={p?.signed_in_with} /><Devices />
         <Line icon={LogOut} label="This browser" hint={`Signed in as ${email ?? 'you'}`}>
           <button type="button" className="btn" onClick={() => signOut()}>
             Sign out

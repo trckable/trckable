@@ -30,6 +30,12 @@
   height: 36px;
   font-size: 14px;
 }
+/* A phone keeps its 44px touch targets. */
+@media (max-width: 640px) {
+  .all-actions .btn {
+    height: 44px;
+  }
+}
 .all-actions .btn:not(.primary) {
   font-weight: 500;
 }

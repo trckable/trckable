@@ -31,6 +31,10 @@ var routeRules = map[string]string{
 	"POST /api/v1/setup":                                         "public",
 	"POST /api/v1/payments/start-over":                           "write",
 	"POST /api/v1/login":                                         "public",
+	"POST /api/v1/login/code":                                    "public",
+	"POST /api/v1/login/code/verify":                             "public",
+	"GET /api/v1/me/devices":                                     "self",
+	"DELETE /api/v1/me/devices/{id}":                             "selfW",
 	"GET /api/v1/oidc/{provider}/start":                          "public",
 	"GET /api/v1/oidc/{provider}/callback":                       "public",
 	"POST /api/v1/oidc/code":                                     "public",
@@ -199,7 +203,7 @@ var routeRules = map[string]string{
 var refusals = []string{
 	"please sign in", "invalid API key", "API keys are read-only", "missing X-Trckable-Request header",
 	"your account can read this instance, not change it", "only an owner", "only a signed-in",
-	"an API key reads reports only", "API keys have no profile", "shortcuts belong to a person",
+	"an API key reads reports only", "only a signed-in person has devices", "API keys have no profile", "shortcuts belong to a person",
 	"unauthorized", "site not found",
 }
 
