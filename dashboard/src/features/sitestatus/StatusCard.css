@@ -1,4 +1,70 @@
 /* StatusCard's styles on top of the surge story's (signals/surge.css): they load with its chunk. */
+.status-badge {
+  --tone: var(--text-2);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 6px;
+  height: var(--hdr-h);
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--tone) 35%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone) 12%, var(--surface));
+  color: var(--tone);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+button.status-badge {
+  cursor: pointer;
+}
+button.status-badge:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.status-badge.down {
+  --tone: var(--down);
+}
+.status-badge.quiet {
+  --tone: var(--warn);
+}
+.status-badge.back {
+  --tone: var(--up);
+  font-weight: 500;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .status-badge.down::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    animation: status-ring 2.4s ease-out infinite;
+  }
+}
+@keyframes status-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--tone) 45%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+}
+.pop.anchored.status-pop {
+  width: min(560px, calc(100vw - 16px));
+  max-width: none;
+  /* The popover's own cap is for lists: this one is a page of rows, and scrolls inside itself when the screen is short. */
+  max-height: min(680px, calc(100dvh - 96px)) !important;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.pop.anchored.status-pop > .status-card {
+  flex: none;
+}
 .status-card {
   display: grid;
   gap: 14px;
@@ -53,7 +119,24 @@
   height: 120px;
 }
 .status-card .sgm-tiles {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.status-card .sgm-tile {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 4px 12px;
+  align-items: start;
+  padding: 10px 12px;
+}
+.status-card .sgm-tile > * {
+  grid-column: 2;
+  margin: 0;
+}
+.status-card .sgm-tile > h3 {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  padding-top: 1px;
 }
 .status-checks ul {
   display: grid;
@@ -84,20 +167,22 @@
   color: var(--text);
   font-weight: 600;
 }
-.status-back {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-2);
-}
-.status-back svg {
-  color: var(--up);
-}
-@media (max-width: 760px) {
-  .status-card .sgm-tiles {
+@media (max-width: 640px) {
+  .pop.anchored.status-pop {
+    width: auto;
+    max-height: 84dvh !important;
+  }
+  .status-badge {
+    height: 36px;
+    padding: 0 10px;
+  }
+  .status-card .sgm-tile {
     grid-template-columns: 1fr;
+  }
+  .status-card .sgm-tile > *,
+  .status-card .sgm-tile > h3 {
+    grid-column: 1;
+    grid-row: auto;
   }
   .status-card .sgm-count {
     font-size: 44px;

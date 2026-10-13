@@ -69,6 +69,7 @@ export function ControlRow(p: Props) {
               {p.share}
               {p.more}
             </div>
+            {p.status}
           </>
         )}
       </div>
