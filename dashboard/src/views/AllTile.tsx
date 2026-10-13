@@ -66,7 +66,7 @@ function whyLine(r: SiteRow, site: Site | undefined, days: number): string {
   return copy.steady
 }
 
-function tagOf(site: Site | undefined): string | null {
+export function tagOf(site: Site | undefined): string | null {
   const status = site ? statusOf(site) : 'ok'
   if (status === 'down') return copy.downTag
   return status === 'quiet' && site ? copy.quietTag(silence(site)) : null

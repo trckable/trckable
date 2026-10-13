@@ -15,10 +15,14 @@ import { openAddSite } from '../lib/account'
 import { type Site } from '../lib/api'
 import { lazyLoad } from '../lib/lazyLoad'
 import { isViewer } from '../lib/me'
+import { AllBriefing } from './AllBriefing'
 import { AllGroups } from './AllGroups'
 import { AllNeeds } from './AllNeeds'
 import { AllPeriod, PERIODS } from './AllPeriod'
+import { AllRanked } from './AllRanked'
 import { AllSort } from './AllSort'
+import { AllWall } from './AllWall'
+import { designOf } from './allDesignsLogic'
 import { siteColors } from './allSitesColors'
 import { copy } from './allSitesCopy'
 import { blocksOf } from './allSitesGroups'
@@ -27,6 +31,7 @@ import { needsOf } from './allSitesNeeds'
 import { useOverview } from './useOverview'
 import { useSurges } from './useSurges'
 import './AllSites.css'
+import './AllDesigns.css'
 
 const Compare = lazyLoad(() => import('./AllCompare'))
 
@@ -35,6 +40,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
     const d = Number(new URLSearchParams(location.search).get('days'))
     return PERIODS.some((p) => p.days === d) ? d : 30
   })
+  const design = designOf(location.search)
   const { rows, err } = useOverview(days)
   const surges = useSurges(rows)
   // The switcher's order (pins and groups first) until another is picked.
@@ -77,7 +83,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
           </div>
           <div className="all-actions">
             <AllPeriod days={days} onChange={setDays} />
-            {rows && rows.length > 1 && (
+            {!design && rows && rows.length > 1 && (
               <button type="button" className="btn ghost" onClick={() => setComparing(true)}>
                 <ChartLine size={15} aria-hidden="true" />
                 {copy.compare}
@@ -93,7 +99,14 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
         </div>
         {err && <p className="empty">{err}</p>}
         {!sorted && !err && <Loading height={320} />}
-        {sorted && rows && (
+        {sorted && rows && design && (
+          <>
+            {design === 'a' && <AllWall rows={rows} sites={sites} surges={surges} colorOf={colorOf} start={startIndex(rows)} />}
+            {design === 'b' && <AllRanked rows={rows} sites={sites} colors={colors} days={days} start={startIndex(rows)} />}
+            {design === 'c' && <AllBriefing rows={rows} sites={sites} surges={surges} days={days} />}
+          </>
+        )}
+        {sorted && rows && !design && (
           <>
             <AllNeeds needs={needsOf(sites, surges)} sites={sites.length} />
             <div ref={sentinel} className="subbar-sentinel all-sentinel" aria-hidden="true" />
