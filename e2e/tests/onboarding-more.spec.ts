@@ -83,7 +83,7 @@ test('skip for now opens All sites, and the first run stays away', async ({ page
   if (process.env.TRCKABLE_SHOTS) await page.screenshot({ path: `${process.env.TRCKABLE_SHOTS}/onboarding-skip-${browserName}.png` })
   await run.getByRole('button', { name: 'Skip for now — open my dashboard' }).click()
   await expect(run).toBeHidden()
-  await expect(page).toHaveURL(base + '/all')
+  await expect(page).toHaveURL(base + '/sites')
   await page.goto(base + '/')
   await expect(page.getByRole('dialog', { name: 'Set up your first site' })).toHaveCount(0)
 })

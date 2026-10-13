@@ -6,7 +6,7 @@ import { Loading } from "./components/loading/Loading";
 import { logoInner } from "./brand/logo";
 import { Footer } from "./components/Footer";
 import { api, setUnauthorizedHandler, type Site } from "./lib/api"; import { startEarly, takeEarly } from "./lib/earlyStart";
-import { navigate, useLocation } from "./lib/url";
+import { navigate, useLocation } from "./lib/url"; import "./lib/legacyPaths";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
 import "./styles.css";
 import { SiteZone } from "./features/header/SiteZone";
@@ -115,7 +115,7 @@ function App() {
     // Signed in at the root, or at an address that names none of this
     // person's sites (a typo, someone else's site, one since removed): their
     // main dashboard, never a page made up for an address it does not know.
-    if (boot.state === "ready" && !gated && !(path === "/settings" && namesSite(boot.sites, params)) && path !== "/all" && !routeOf(boot.sites, path).site) {
+    if (boot.state === "ready" && !gated && !(path === "/settings" && namesSite(boot.sites, params)) && path !== "/sites" && !routeOf(boot.sites, path).site) {
       const to = landing(boot.sites, new URLSearchParams(location.search));
       navigate(to.path, { replace: true });
       if (to.wizard) openAddSite();
@@ -172,7 +172,7 @@ function App() {
 
   const refreshSites = () =>
     api.sites().then(({ sites }) => setBoot({ ...boot, sites }));
-  const all = path === "/all", { site, incidents } = routeOf(boot.sites, path);
+  const all = path === "/sites", { site, incidents } = routeOf(boot.sites, path);
 
   const header = (
     <Header sites={boot.sites} current={site} all={all} update={latest?.v} onUpdate={() => setShowUpdate(true)} />

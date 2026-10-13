@@ -89,7 +89,7 @@ test('with no site the first run cannot be left, and stays on every address', as
   await expect(run.getByRole('button', { name: /Skip/ })).toHaveCount(0)
   await page.keyboard.press('Escape')
   await expect(run).toBeVisible()
-  for (const path of ['/settings', '/all', '/nosuch.example']) {
+  for (const path of ['/settings', '/sites', '/nosuch.example']) {
     await page.goto(base + path)
     await expect(run).toBeVisible({ timeout: 15_000 })
     await expect(page).toHaveURL(base + '/')
@@ -198,7 +198,7 @@ test('after the first verified site, Add a site closes like any dialog and an un
   await wizard.getByRole('button', { name: /do it later/ }).click()
   await expect(page.getByText('Waiting for the first visit').first()).toBeVisible({ timeout: 15_000 })
   await expect(gate).toHaveCount(0)
-  for (const path of ['/settings', '/all', '/' + verified]) {
+  for (const path of ['/settings', '/sites', '/' + verified]) {
     await page.goto(base + path)
     await expect(page.locator('.app')).toBeVisible({ timeout: 15_000 })
     await expect(gate).toHaveCount(0)

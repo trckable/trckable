@@ -14,7 +14,7 @@ test('a visit turns the waiting line into numbers', async ({ page }) => {
   expect(made.ok()).toBe(true)
   const site = ((await made.json()) as { id: string }).id
 
-  await page.goto(`${API}/all`)
+  await page.goto(`${API}/sites`)
   const tile = page.locator('.nx-line', { hasText: domain })
   await expect(tile).toBeVisible({ timeout: 20_000 })
   await expect(tile).toContainText('Waiting for the first visit')

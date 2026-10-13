@@ -666,7 +666,7 @@ export default {
 
   // sites
   'sites.pick': 'Kies een site',
-  'sites.all': 'Alle sites',
+  'sites.all': 'Sites',
   'sites.dot.now': 'Bezoekers op dit moment: een bezoek in de laatste 5 minuten',
   'sites.dot.live': 'Ontvangt bezoeken',
   'sites.dot.quiet': 'Al uren geen bezoeken',
@@ -948,7 +948,7 @@ export default {
   'account.people.otp.message': (origin: string, email: string, password: string) => `Log in bij trckable op ${origin} als ${email} met dit eenmalige wachtwoord: ${password}\nJe kiest direct daarna je eigen.`,
 
   // allsites
-  'allsites.title': 'Alle sites',
+  'allsites.title': 'Sites',
   'allsites.addSite': 'Site toevoegen',
   'allsites.reading': 'Alle sites worden gelezen…',
   'allsites.periodLabel': (days: number) => (days === 365 ? 'Laatste 12 maanden' : `Laatste ${days} dagen`),
@@ -2009,7 +2009,7 @@ export default {
   'moments.discover.crawlers.go': 'Aanzetten',
   'featureList.live.name': 'Live-weergave',
   'featureList.live.line': 'Wie er nu op je site is',
-  'featureList.allsites.name': 'Alle sites',
+  'featureList.allsites.name': 'Sites',
   'featureList.allsites.line': 'Al je sites op één pagina',
   'featureList.map.name': 'Kaart',
   'featureList.map.line': 'Bezoekers op een wereldkaart',
