@@ -2,7 +2,10 @@ package server
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
+	"sort"
 	"time"
 )
 
@@ -23,7 +26,7 @@ func (s *Server) runRetention(ctx context.Context) {
 		case <-timer.C:
 		}
 		if err := s.pruneOnce(ctx); err != nil && ctx.Err() == nil {
-			slog.Warn("retention pass failed", "err", err)
+			slog.Error("retention pass failed", "err", err)
 		}
 		if err := s.pruneNotices(ctx); err != nil && ctx.Err() == nil {
 			slog.Warn("payment notice pass failed", "err", err)
@@ -42,18 +45,36 @@ func (s *Server) pruneOnce(ctx context.Context) error {
 	if w == nil || !w.Ready() {
 		return nil // still warming up: the next pass will do it
 	}
-	for site, days := range plan {
-		cutoff := time.Now().AddDate(0, 0, -days).UnixMilli()
-		removed, err := w.PruneBefore(ctx, site, cutoff)
+	return pruneEach(ctx, plan, time.Now(), w.PruneBefore, func(site string, days int, removed int64) {
+		slog.Info("retention", "site", site, "days", days, "rows", removed)
+		s.api.PurgeSite(site) // reports must not serve what was just deleted
+	})
+}
+
+// pruneEach prunes every site in the plan. A site that fails does not stop the
+// others: the errors are collected, with the site ids, and returned together.
+func pruneEach(ctx context.Context, plan map[string]int, now time.Time, prune func(context.Context, string, int64) (int64, error), done func(site string, days int, removed int64)) error {
+	sites := make([]string, 0, len(plan))
+	for site := range plan {
+		sites = append(sites, site)
+	}
+	sort.Strings(sites)
+	var errs []error
+	for _, site := range sites {
+		if ctx.Err() != nil {
+			break
+		}
+		days := plan[site]
+		removed, err := prune(ctx, site, now.AddDate(0, 0, -days).UnixMilli())
 		if err != nil {
-			return err
+			errs = append(errs, fmt.Errorf("site %s: %w", site, err))
+			continue
 		}
 		if removed > 0 {
-			slog.Info("retention", "site", site, "days", days, "rows", removed)
-			s.api.PurgeSite(site) // reports must not serve what was just deleted
+			done(site, days, removed)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 // pruneNotices empties the raw payment notices that are past their time: the

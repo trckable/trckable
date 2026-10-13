@@ -33,7 +33,9 @@ func (s *Server) checkSurges(ctx context.Context) {
 		if site.LastEventAt < recent {
 			continue
 		}
-		s.api.CheckSurge(ctx, site.ID)
+		siteCtx, cancel := context.WithTimeout(ctx, siteWork)
+		s.api.CheckSurge(siteCtx, site.ID)
+		cancel()
 	}
 }
 
@@ -67,7 +69,9 @@ func (s *Server) tellSurge(sg surge.Surge) {
 			slog.Warn("alert not delivered", "kind", a.Kind, "err", err)
 			continue
 		}
-		s.ctl.MarkFired(ctx, a.ID, now.Unix())
+		if err := s.ctl.MarkFired(ctx, a.ID, now.Unix()); err != nil {
+			slog.Warn("alert sent but not marked", "kind", a.Kind, "site", sg.Site, "err", err)
+		}
 		slog.Info("alert sent", "kind", a.Kind, "site", sg.Site)
 	}
 }

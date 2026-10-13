@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
@@ -21,6 +22,57 @@ import (
 // alertQuiet is how long an alert stays silent after firing. Being told twice
 // that tracking stopped is worse than being told once.
 const alertQuiet = 6 * time.Hour
+
+// stoppedAgain is how long a site must stay silent before its "stopped"
+// alert speaks a second and last time.
+const stoppedAgain = 3 * 24 * time.Hour
+
+// stoppedDue says whether the "stopped receiving visits" alert should be sent
+// for a site whose last visit was at `last` (unix seconds), given when the
+// alert last fired. It is sent once when the site goes quiet, once more after
+// three more days of quiet, then not again: a visit moves `last` past
+// lastFired and the cycle starts over.
+func stoppedDue(last, lastFired int64, hours float64, now time.Time) bool {
+	quiet := now.Unix() - last
+	if last == 0 || quiet < int64(hours*3600) {
+		return false
+	}
+	if lastFired <= last {
+		return true // quiet, and not told yet
+	}
+	second := int64(hours*3600) + int64(stoppedAgain.Seconds())
+	// Told once already: the second time is three days into the silence, and
+	// a fire at or past that mark was the second.
+	return quiet >= second && lastFired-last < second
+}
+
+// heldAlerts remembers the alerts whose "sent" mark could not be saved, until the
+// quiet window is over, so a failing database never turns into a mail every
+// ten minutes.
+type heldAlerts struct {
+	mu sync.Mutex
+	at map[string]time.Time
+}
+
+func (h *heldAlerts) holding(id string, now time.Time) bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	t, ok := h.at[id]
+	if ok && now.Sub(t) >= alertQuiet {
+		delete(h.at, id)
+		return false
+	}
+	return ok
+}
+
+func (h *heldAlerts) hold(id string, now time.Time) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.at == nil {
+		h.at = map[string]time.Time{}
+	}
+	h.at[id] = now
+}
 
 // runAlerts checks the four conditions every ten minutes. Nothing runs while
 // no alert is configured, which is the normal case. Each site's milestones
@@ -39,11 +91,13 @@ func (s *Server) runAlerts(ctx context.Context) {
 			continue
 		case <-t.C:
 		}
-		s.checkMilestones(ctx)
-		s.checkSurges(ctx)
+		// The alerts that matter most (stopped, disk) go first, so the per-site
+		// work after them can never delay them.
 		if err := s.checkAlerts(ctx); err != nil && ctx.Err() == nil {
 			slog.Warn("alert check failed", "err", err)
 		}
+		s.checkMilestones(ctx)
+		s.checkSurges(ctx)
 		s.checkReports(ctx)
 	}
 }
@@ -56,7 +110,7 @@ func (s *Server) checkAlerts(ctx context.Context) error {
 	now := time.Now()
 	health := s.health(ctx)
 	for _, a := range list {
-		if now.Unix()-a.LastFired < int64(alertQuiet.Seconds()) {
+		if now.Unix()-a.LastFired < int64(alertQuiet.Seconds()) || s.held.holding(a.ID, now) {
 			continue
 		}
 		ev, fire := s.evaluate(ctx, a, health, now)
@@ -69,7 +123,10 @@ func (s *Server) checkAlerts(ctx context.Context) error {
 			slog.Warn("alert not delivered", "kind", a.Kind, "err", err)
 			continue
 		}
-		s.ctl.MarkFired(ctx, a.ID, now.Unix())
+		if err := s.ctl.MarkFired(ctx, a.ID, now.Unix()); err != nil {
+			slog.Warn("alert sent but not marked", "kind", a.Kind, "site", a.SiteID, "err", err)
+			s.held.hold(a.ID, now)
+		}
 		slog.Info("alert sent", "kind", a.Kind, "site", a.SiteID)
 	}
 	return nil
@@ -115,7 +172,7 @@ func (s *Server) evaluate(ctx context.Context, a sqlite.Alert, h api.Health, now
 			}
 			return ev, false
 		}
-		if last == 0 || now.Unix()-last < int64(hours*3600) {
+		if !stoppedDue(last, a.LastFired, hours, now) {
 			return ev, false
 		}
 		ev.Title = "Tracking stopped"

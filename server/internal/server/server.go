@@ -57,6 +57,7 @@ var Version = "0.7.11" // the VERSION file; release builds stamp it too
 type Server struct {
 	cfg    config.Config
 	ctl    *sqlite.Store
+	held   heldAlerts // alerts sent whose mark failed (alerts.go)
 	log    *wal.Log
 	ingest *ingest.Handler
 	http   *http.Server

@@ -11,6 +11,10 @@ import (
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
+// siteWork bounds one site's share of the alerts loop (a milestone check, a
+// report, a surge look), so one slow site cannot hold up the rest.
+const siteWork = 30 * time.Second
+
 // checkMilestones runs each site's milestone check once its day is over
 // (internal/milestones), from the alerts loop: no ticker of its own. A site
 // already checked for yesterday costs one comparison. What is new goes to
@@ -32,7 +36,9 @@ func (s *Server) checkMilestones(ctx context.Context) {
 		if ctx.Err() != nil {
 			return
 		}
-		fresh, err := milestones.Check(ctx, q, s.ctl, site, now)
+		siteCtx, cancel := context.WithTimeout(ctx, siteWork)
+		fresh, err := milestones.Check(siteCtx, q, s.ctl, site, now)
+		cancel()
 		if err != nil {
 			slog.Warn("milestones check failed", "site", site.ID, "err", err)
 			continue
@@ -70,7 +76,9 @@ func (s *Server) tellMilestones(ctx context.Context, site string, fresh []sqlite
 				slog.Warn("alert not delivered", "kind", a.Kind, "err", err)
 				continue
 			}
-			s.ctl.MarkFired(ctx, a.ID, now.Unix())
+			if err := s.ctl.MarkFired(ctx, a.ID, now.Unix()); err != nil {
+				slog.Warn("alert sent but not marked", "kind", a.Kind, "site", site, "err", err)
+			}
 		}
 	}
 }

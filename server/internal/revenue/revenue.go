@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
@@ -55,6 +56,7 @@ type Service struct {
 	bad      badSigs    // invalid signatures per connection
 	mu       sync.Mutex // serialises ledger writes (processor, reprocess)
 	bg       sync.WaitGroup
+	syncing  atomic.Bool // a SyncAll is going: the next tick skips
 }
 
 // Wait blocks until background work started by Connect (the backfill) is
@@ -782,8 +784,18 @@ func (s *Service) Reprocess(ctx context.Context, site string) (int, error) {
 
 // ---- reconciliation ----
 
-// SyncAll reconciles every managed connection (last 7 days).
+// syncParallel is how many connections one SyncAll reconciles at once.
+const syncParallel = 3
+
+// SyncAll reconciles every managed connection (last 7 days), up to three at
+// once. A pass that starts while the last one is still going does nothing, and
+// a panic in one connection's sync is logged instead of ending the process.
 func (s *Service) SyncAll(ctx context.Context) {
+	if !s.syncing.CompareAndSwap(false, true) {
+		slog.Info("payments: reconciliation still running, skipping this round")
+		return
+	}
+	defer s.syncing.Store(false)
 	rows, err := s.DB.QueryContext(ctx, `SELECT id FROM pay_connections WHERE disabled_at IS NULL AND api_key_enc <> ''`)
 	if err != nil {
 		slog.Warn("payments: couldn't list connections to reconcile", "err", err)
@@ -802,10 +814,24 @@ func (s *Service) SyncAll(ctx context.Context) {
 		slog.Warn("payments: couldn't list connections to reconcile", "err", err)
 	}
 	rows.Close()
+	var wg sync.WaitGroup
+	slots := make(chan struct{}, syncParallel)
 	for _, id := range ids {
-		// Sync logs a failure and keeps it as the connection's last error.
-		_, _ = s.Sync(ctx, id, 7*24*time.Hour)
+		slots <- struct{}{}
+		wg.Add(1)
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					slog.Error("payments: reconciliation panicked", "connection", id, "panic", r)
+				}
+				<-slots
+				wg.Done()
+			}()
+			// Sync logs a failure and keeps it as the connection's last error.
+			_, _ = s.Sync(ctx, id, 7*24*time.Hour)
+		}()
 	}
+	wg.Wait()
 }
 
 // Sync pulls the provider's recent payments into the inbox (deduped against
