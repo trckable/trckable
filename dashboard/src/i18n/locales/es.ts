@@ -1004,8 +1004,6 @@ export default {
   'allnext.whyNew': 'Esperando la primera visita.',
   'allnext.whyUnread': 'No se pudo leer.',
   'allnext.whyMover': (today: string, usual: string, ref: string) => `${today} hasta ahora; ${ref} había ${usual} a esta hora.`,
-  'allnext.whySteady': (today: string) => `${today} hasta ahora hoy.`,
-  'allnext.whyOnline': (n: number) => `${n} en línea ahora mismo.`,
   'allnext.surgeWhy': (times: string, source: string) => `${times}× más movimiento que de costumbre ahora mismo${source ? `. ${source}` : ''}`,
   'allnext.feed': 'Live',
   'allnext.feedEmpty': 'Nada que contar todavía.',

@@ -27,8 +27,6 @@ export const next = defineCopy('allnext', {
   whyNew: 'Waiting for the first visit.',
   whyUnread: 'Could not be read.',
   whyMover: (today: string, usual: string, ref: string) => `${today} so far, where ${ref} had ${usual} by now.`,
-  whySteady: (today: string) => `${today} so far today.`,
-  whyOnline: (n: number) => `${n} online right now.`,
   surgeWhy: (times: string, source: string) => `${times}× busier than usual right now${source ? `. ${source}` : ''}`,
   feed: 'Live',
   feedEmpty: 'Nothing to report yet.',

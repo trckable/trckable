@@ -124,8 +124,8 @@
 }
 .nx-line {
   display: grid;
-  grid-template-columns: minmax(150px, 1.1fr) 120px 96px minmax(90px, 160px);
-  grid-template-areas: 'name num badge spark' 'why why why why';
+  grid-template-columns: minmax(120px, max-content) minmax(0, 1fr) 120px 96px minmax(90px, 160px);
+  grid-template-areas: 'name why num badge spark';
   align-items: center;
   gap: 4px 18px;
   padding: 13px 18px;

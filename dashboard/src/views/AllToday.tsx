@@ -44,6 +44,7 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
   const r = i.row
   const cell = cellOf(lens, i, total)
   const hurt = i.kind === 'attention'
+  const why = lens === 'visitors' || hurt ? whyLine(i, against) : cell.note
   return (
     <button type="button" className={'nx-line' + (hurt ? ' hurt ' + i.status : '')} onClick={() => navigate('/' + encodeURIComponent(r.domain))}>
       <span className="nx-name">
@@ -58,7 +59,7 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
       <span className="nx-spark">
         <Trend lens={lens} cell={cell} i={i} start={start} color={color} />
       </span>
-      <span className="nx-why muted">{lens === 'visitors' || hurt ? whyLine(i, against) : cell.note}</span>
+      {why && <span className="nx-why muted">{why}</span>}
     </button>
   )
 }
