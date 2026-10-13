@@ -94,6 +94,12 @@ func (s *Store) SpendLoginCode(ctx context.Context, userID, code string) error {
 	return nil
 }
 
+// RemoveDeviceByToken signs out the device that holds token, if there is one.
+func (s *Store) RemoveDeviceByToken(ctx context.Context, token string) error {
+	_, err := s.DB.ExecContext(ctx, `DELETE FROM devices WHERE token_hash = ?`, auth.Hash(token))
+	return err
+}
+
 // Device is one sign-in of the phone app, as listed (never the token).
 type Device struct {
 	ID       string `json:"id"`

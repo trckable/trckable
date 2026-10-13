@@ -918,6 +918,12 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) logout(w http.ResponseWriter, r *http.Request) {
+	// A phone signing out ends its own device sign-in.
+	if tok, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer "); ok && strings.HasPrefix(tok, sqlite.DeviceTokenPrefix) {
+		if err := a.Ctl.RemoveDeviceByToken(r.Context(), tok); err != nil {
+			slog.Warn("logout: could not remove the device", "err", err)
+		}
+	}
 	if c, err := r.Cookie(sessionCookie); err == nil {
 		if err := a.Ctl.DeleteSession(r.Context(), c.Value); err != nil {
 			slog.Warn("logout: could not delete the session", "err", err)

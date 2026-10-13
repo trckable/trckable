@@ -420,3 +420,23 @@ func mustURL(s string) *url.URL {
 	}
 	return u
 }
+
+func TestLogoutWithADeviceTokenRemovesIt(t *testing.T) {
+	g := newRig(t)
+	g.setup(t, client())
+	login := func() string {
+		_, out := do(t, client(), "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery"`+deviceBody+`}`)
+		tok, _ := out["token"].(string)
+		return tok
+	}
+	a, b := login(), login()
+	if code, _ := do(t, http.DefaultClient, "POST", g.srv.URL+"/api/v1/logout", `{}`, "Authorization", "Bearer "+a); code != http.StatusNoContent {
+		t.Fatalf("logout: %d", code)
+	}
+	if code, _ := bearer(t, a, "GET", g.srv.URL+"/api/v1/me"); code != http.StatusUnauthorized {
+		t.Fatalf("the device after logout: %d", code)
+	}
+	if code, _ := bearer(t, b, "GET", g.srv.URL+"/api/v1/me"); code != http.StatusOK {
+		t.Fatalf("the other device: %d", code)
+	}
+}
