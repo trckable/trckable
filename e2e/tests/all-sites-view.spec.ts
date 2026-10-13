@@ -15,7 +15,7 @@ test('the View menu changes the layout and the lens, and the choice survives a r
     expect(made.ok()).toBe(true)
   }
   // Two payments-connected sites, so the Revenue lens is offered.
-  await page.route('**/api/v1/sites*', async (route) => {
+  await page.route('**/api/v1/overview*', async (route) => {
     const res = await route.fetch()
     const body = (await res.json()) as { sites: Record<string, unknown>[] }
     body.sites.forEach((s, n) => Object.assign(s, { revenue: 5000 + n * 1000, currency: 'USD', exponent: 2 }))

@@ -54,7 +54,7 @@ test('pin, group, reorder by keyboard and drag, saved for the account, same orde
       let menu = await open(page)
       // Past six sites: a search.
       await expect(menu.getByRole('searchbox', { name: 'Search sites' })).toBeVisible()
-      await expect(menu.getByRole('button', { name: /All sites/ })).toBeVisible()
+      await expect(menu.getByRole('button', { name: /^Sites/ })).toBeVisible()
       await expect(menu.getByRole('button', { name: /Add a site/ })).toBeVisible()
 
       // Pin the last new site: it goes to the top, under "Pinned".

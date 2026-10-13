@@ -6,7 +6,7 @@ import { Loading } from "./components/loading/Loading";
 import { logoInner } from "./brand/logo";
 import { Footer } from "./components/Footer";
 import { api, setUnauthorizedHandler, type Site } from "./lib/api"; import { startEarly, takeEarly } from "./lib/earlyStart";
-import { navigate, useLocation } from "./lib/url";
+import { navigate, useLocation } from "./lib/url"; import "./lib/legacyPaths";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
 import "./styles.css";
 import { SiteZone } from "./features/header/SiteZone";
@@ -112,11 +112,6 @@ function App() {
       navigate("/setup" + location.hash, { replace: true });
     if (boot.state === "login" && path !== "/login")
       navigate("/login", { replace: true });
-    // The page of every site was /all before it was /sites: old links still land there.
-    if (boot.state === "ready" && path === "/all") {
-      navigate("/sites" + location.search, { replace: true });
-      return;
-    }
     // Signed in at the root, or at an address that names none of this
     // person's sites (a typo, someone else's site, one since removed): their
     // main dashboard, never a page made up for an address it does not know.
