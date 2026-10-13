@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- In the site switcher, the tooltip of a down or quiet site opens beside the menu instead of over the list.
 - The small charts on cards keep their line off the bottom edge and fade out softly at both sides.
 - Every time a site was down or quiet is now kept: when it began and ended, how long it lasted, what the checks saw and about how many visits it cost, with a short note you can add. A small mark on the chart shows where one began; the badge's panel and the ⋯ menu lead to a page with the figures, a day-by-day strip (a year grid for long periods) and the full list. All sites has an Uptime view in its View menu.
 
