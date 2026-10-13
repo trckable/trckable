@@ -35,7 +35,7 @@ function Tail({ s, today }: { s: Site; today?: number }) {
       const tip = down ? copy.downTip(silence(s)) : copy.quietTip(silence(s))
       const Icon = down ? CircleAlert : Moon
       return (
-        <Tooltip text={tip}>
+        <Tooltip text={tip} float>
           {(p) => (
             <span {...p} role="button" tabIndex={0} aria-label={tip} className={down ? 'tail state-icon down' : 'tail state-icon quiet'} onClick={(e) => { e.stopPropagation(); p.onClick() }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); p.onClick() } }}>
               <Icon size={16} strokeWidth={2} aria-hidden="true" />
