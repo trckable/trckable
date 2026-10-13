@@ -81,16 +81,24 @@ func (a *API) loginCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if a.emailCodesOn() {
-		if u, err := a.Ctl.UserByEmail(r.Context(), email); err == nil {
-			a.issueCode(r.Context(), u, now)
-		} else if !errors.Is(err, auth.ErrNotFound) {
-			slog.Warn("sign-in code: could not look the person up", "err", err)
-		}
+		// Everything that depends on who the address belongs to (the lookup,
+		// the stored code, the mail) happens after the answer has gone, so
+		// the answer's timing is the same for every address.
+		go a.issueCode(context.WithoutCancel(r.Context()), email, now)
 	}
 	writeJSON(w, http.StatusAccepted, map[string]bool{"ok": true})
 }
 
-func (a *API) issueCode(ctx context.Context, u sqlite.User, now time.Time) {
+func (a *API) issueCode(ctx context.Context, email string, now time.Time) {
+	ctx, cancel := context.WithTimeout(ctx, codeSendTimeout)
+	defer cancel()
+	u, err := a.Ctl.UserByEmail(ctx, email)
+	if err != nil {
+		if !errors.Is(err, auth.ErrNotFound) {
+			slog.Warn("sign-in code: could not look the person up", "err", err)
+		}
+		return
+	}
 	code, err := sixDigits()
 	if err != nil {
 		slog.Warn("sign-in code: no random number", "err", err)
@@ -111,15 +119,9 @@ func (a *API) issueCode(ctx context.Context, u sqlite.User, now time.Time) {
 			`<p style="margin:0;color:#555;font-size:14px">It works for 10 minutes. If you did not ask for it, you can ignore this email.</p></div>`,
 		At: now,
 	}
-	// The mail goes in the background: how long it takes must not tell
-	// whether the address was known.
-	go func() {
-		ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), codeSendTimeout)
-		defer cancel()
-		if err := a.sendLoginMail(ctx, u.Email, rep); err != nil {
-			slog.Warn("sign-in code: the email could not be sent", "user", u.ID, "err", err)
-		}
-	}()
+	if err := a.sendLoginMail(ctx, u.Email, rep); err != nil {
+		slog.Warn("sign-in code: the email could not be sent", "user", u.ID, "err", err)
+	}
 }
 
 const badCode = "that code is not right, or it has run out: ask for a new one"
@@ -152,10 +154,13 @@ func (a *API) loginCodeVerify(w http.ResponseWriter, r *http.Request) {
 	}
 	code := cleanCode(in.Code)
 	u, err := a.Ctl.UserByEmail(r.Context(), in.Email)
-	if err == nil {
+	if errors.Is(err, auth.ErrNotFound) {
+		// An unknown address does the same work a known one with a wrong
+		// code does (a read and a write on a stand-in id), so the time taken
+		// does not say whether the address has an account.
+		err = a.Ctl.CheckLoginCode(r.Context(), "-", code, now)
+	} else if err == nil {
 		err = a.Ctl.CheckLoginCode(r.Context(), u.ID, code, now)
-	} else if errors.Is(err, auth.ErrNotFound) {
-		err = auth.ErrBadLogin
 	}
 	if err != nil {
 		if !errors.Is(err, auth.ErrBadLogin) {
@@ -168,11 +173,22 @@ func (a *API) loginCodeVerify(w http.ResponseWriter, r *http.Request) {
 	}
 	// The code was right: no guess.
 	a.loginRate.release(now, lims...)
-	if in.SecondCode != "" && !a.codeTries(w, &u) {
-		return
+	// A second-step code is a guess too: held against the same limits as a
+	// password login holds it.
+	if in.SecondCode != "" {
+		if !a.codeTries(w, &u) {
+			return
+		}
+		if !a.loginRate.reserve(now, lims...) {
+			fail(w, http.StatusTooManyRequests, "too many attempts, try again in a few minutes")
+			return
+		}
 	}
 	err = a.Ctl.CheckSecondStep(r.Context(), u.ID, cleanCode(in.SecondCode), a.unix)
 	a.codeResult(&u, in.SecondCode, err)
+	if in.SecondCode != "" && !errors.Is(err, auth.ErrBadLogin) {
+		a.loginRate.release(now, lims...)
+	}
 	switch {
 	case errors.Is(err, sqlite.ErrNeedsCode):
 		writeJSON(w, http.StatusUnauthorized, map[string]any{

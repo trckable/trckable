@@ -2,11 +2,14 @@ package sqlite
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"crypto/subtle"
 	"database/sql"
 	"errors"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/trckable/trckable/server/internal/auth"
 )
@@ -21,17 +24,30 @@ const (
 	// MaxDevices is how many devices one person keeps; a new one past it
 	// replaces the one used longest ago.
 	MaxDevices = 20
+	// MaxDeviceName is the longest device name kept, in characters.
+	MaxDeviceName = 64
 	// DeviceTokenPrefix starts every device token, so a bearer token is
 	// told apart from an API key without a lookup.
 	DeviceTokenPrefix = "tkb_dev_"
 )
 
-func codeHash(userID, code string) []byte { return auth.Hash(userID + ":" + code) }
+// codeHash is a code as it is kept: HMAC-SHA256 under a key derived from the
+// instance key, so a copy of the database alone cannot be searched for the
+// six digits. Without an instance key (tests) the key is a fixed label.
+func (s *Store) codeHash(userID, code string) []byte {
+	key := []byte("login-code")
+	if s.Sealer != nil {
+		key = s.Sealer.Derive("login-code")
+	}
+	mac := hmac.New(sha256.New, key)
+	mac.Write([]byte(userID + ":" + code))
+	return mac.Sum(nil)
+}
 
 // PutLoginCode keeps a new code for a person. It replaces the one they had.
 func (s *Store) PutLoginCode(ctx context.Context, userID, code string, now time.Time) error {
 	_, err := s.DB.ExecContext(ctx, `INSERT OR REPLACE INTO login_codes (user_id, code_hash, expires_at, tries) VALUES (?, ?, ?, 0)`,
-		userID, codeHash(userID, code), now.Add(LoginCodeTTL).Unix())
+		userID, s.codeHash(userID, code), now.Add(LoginCodeTTL).Unix())
 	_, _ = s.DB.ExecContext(ctx, `DELETE FROM login_codes WHERE expires_at < ?`, now.Unix())
 	return err
 }
@@ -51,7 +67,11 @@ func (s *Store) CheckLoginCode(ctx context.Context, userID, code string, now tim
 	var tries int
 	err = tx.QueryRowContext(ctx, `SELECT code_hash, expires_at, tries FROM login_codes WHERE user_id = ?`, userID).Scan(&hash, &exp, &tries)
 	if errors.Is(err, sql.ErrNoRows) {
-		return auth.ErrBadLogin
+		// A write like the wrong-code path makes, so an address with no code
+		// (or no person: the caller passes a stand-in id) costs about what a
+		// wrong guess costs.
+		_, _ = tx.ExecContext(ctx, `UPDATE login_codes SET tries = tries WHERE user_id = ?`, userID)
+		return commitBad(tx)
 	}
 	if err != nil {
 		return err
@@ -60,7 +80,7 @@ func (s *Store) CheckLoginCode(ctx context.Context, userID, code string, now tim
 		_, _ = tx.ExecContext(ctx, `DELETE FROM login_codes WHERE user_id = ?`, userID)
 		return commitBad(tx)
 	}
-	if subtle.ConstantTimeCompare(hash, codeHash(userID, code)) == 1 {
+	if subtle.ConstantTimeCompare(hash, s.codeHash(userID, code)) == 1 {
 		return tx.Commit()
 	}
 	if tries+1 >= LoginCodeTries {
@@ -84,7 +104,7 @@ func commitBad(tx *sql.Tx) error {
 // SpendLoginCode uses the code up. Only one of two callers racing with the
 // same code gets nil; the other gets auth.ErrBadLogin.
 func (s *Store) SpendLoginCode(ctx context.Context, userID, code string) error {
-	res, err := s.DB.ExecContext(ctx, `DELETE FROM login_codes WHERE user_id = ? AND code_hash = ?`, userID, codeHash(userID, code))
+	res, err := s.DB.ExecContext(ctx, `DELETE FROM login_codes WHERE user_id = ? AND code_hash = ?`, userID, s.codeHash(userID, code))
 	if err != nil {
 		return err
 	}
@@ -112,12 +132,17 @@ type Device struct {
 
 // CreateDevice signs a device in as userID and returns its token (shown once).
 func (s *Store) CreateDevice(ctx context.Context, userID, name, platform string) (string, Device, error) {
-	name = strings.TrimSpace(name)
+	name = strings.TrimSpace(strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) {
+			return -1
+		}
+		return r
+	}, name))
 	if name == "" {
 		name = "Phone"
 	}
-	if r := []rune(name); len(r) > 60 {
-		name = string(r[:60])
+	if r := []rune(name); len(r) > MaxDeviceName {
+		name = strings.TrimSpace(string(r[:MaxDeviceName]))
 	}
 	switch p := strings.ToLower(strings.TrimSpace(platform)); p {
 	case "ios", "android":

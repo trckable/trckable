@@ -440,3 +440,43 @@ func TestLogoutWithADeviceTokenRemovesIt(t *testing.T) {
 		t.Fatalf("the other device: %d", code)
 	}
 }
+
+func TestPasswordChangeFromADeviceKeepsThatDevice(t *testing.T) {
+	g := newRig(t)
+	web := client()
+	g.setup(t, web)
+	login := func(name string) string {
+		_, out := do(t, client(), "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery","device":{"name":"`+name+`","platform":"ios"}}`)
+		tok, _ := out["token"].(string)
+		return tok
+	}
+	a, b := login("A"), login("B")
+	phone := client()
+	code, _ := do(t, phone, "POST", g.srv.URL+"/api/v1/account/password", `{"current":"correct horse battery","password":"another long password"}`, "Authorization", "Bearer "+a)
+	if code != http.StatusNoContent {
+		t.Fatalf("password from a device: %d", code)
+	}
+	if cs := phone.Jar.Cookies(mustURL(g.srv.URL)); len(cs) != 0 {
+		t.Fatalf("a cookie came with it: %v", cs)
+	}
+	if code, _ := bearer(t, a, "GET", g.srv.URL+"/api/v1/me"); code != http.StatusOK {
+		t.Fatalf("the calling device: %d", code)
+	}
+	if code, _ := bearer(t, b, "GET", g.srv.URL+"/api/v1/me"); code != http.StatusUnauthorized {
+		t.Fatalf("the other device: %d", code)
+	}
+	if code, _ := do(t, web, "GET", g.srv.URL+"/api/v1/me", ""); code != http.StatusUnauthorized {
+		t.Fatalf("the browser session: %d", code)
+	}
+}
+
+func TestDeviceNamesAreCleaned(t *testing.T) {
+	g := newRig(t)
+	g.setup(t, client())
+	long := strings.Repeat("x", 100)
+	_, out := do(t, client(), "POST", g.srv.URL+"/api/v1/login", `{"email":"me@site.com","password":"correct horse battery","device":{"name":"Ph\u0000o\nne `+long+`"}}`)
+	name := out["device"].(map[string]any)["name"].(string)
+	if len([]rune(name)) != sqlite.MaxDeviceName || strings.ContainsAny(name, "\x00\n") || !strings.HasPrefix(name, "Phone x") {
+		t.Fatalf("name %q", name)
+	}
+}
