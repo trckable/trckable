@@ -10,6 +10,9 @@ section into the release.
 ## Unreleased
 
 - On Sites, the totals strip has an Uptime card (incidents in the period and how much of it your sites were up), and the Uptime and Revenue cards open their view.
+
+## 0.7.16 (13 Oct 2026)
+
 - The page with every site is called Sites and lives at /sites; old /all links still open it.
 - On All sites each site is one line: who is online now is left to the Live column, and a row compares today with the usual instead.
 - Add a site refuses placeholder domains such as example.com, test.com and demo.com, in the dialog and in the API, and says to enter your own site's address.
