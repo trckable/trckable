@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Incident } from './api'
-import { accountTotals, affectedSeconds, dayIn, dayStates, daysBetween, duration, rowTotals, startOfDay, uptimePct } from './model'
+import { accountTotals, affectedSeconds, dayIn, dayLasted, dayStates, daysBetween, duration, rowTotals, startOfDay, uptimePct } from './model'
 
 const at = (iso: string) => Date.parse(iso) / 1000
 const inc = (o: Partial<Incident>): Incident => ({ id: 'i', site: 's', kind: 'quiet', started_at: 0, ended_at: null, cause: 'no visits', expected_visits: null, note: '', ...o })
@@ -63,5 +63,18 @@ describe('incident words and figures', () => {
     expect(t.count).toBeGreaterThanOrEqual(t.down.length)
     expect(t.pct).toBeCloseTo(100 - ((3 * 3600 + 600) / (3 * 7 * 86400)) * 100, 5)
     expect(accountTotals([{ id: 'z' }], [], 7, now)).toEqual({ count: 0, pct: 100, down: [] })
+  })
+
+  it('counts the time one day spent in an incident', () => {
+    const x = inc({ started_at: at('2026-10-01T22:00:00Z'), ended_at: at('2026-10-02T01:30:00Z') })
+    expect(dayLasted([x], '2026-10-01', 'UTC', at('2026-10-05T00:00:00Z'))).toBe(2 * 3600)
+    expect(dayLasted([x], '2026-10-02', 'UTC', at('2026-10-05T00:00:00Z'))).toBe(1.5 * 3600)
+  })
+
+  it('leaves the days before watching began unknown, unless an incident says otherwise', () => {
+    const days = ['2026-10-01', '2026-10-02', '2026-10-03']
+    const x = inc({ kind: 'down', started_at: at('2026-10-01T10:00:00Z'), ended_at: at('2026-10-01T12:00:00Z') })
+    const got = dayStates([x], days, 'UTC', at('2026-10-04T00:00:00Z'), at('2026-10-03T08:00:00Z'))
+    expect([...got.values()]).toEqual(['down', 'unwatched', 'ok'])
   })
 })

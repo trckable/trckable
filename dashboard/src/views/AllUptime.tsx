@@ -23,7 +23,7 @@ const PERIOD: Record<number, string> = { 7: '7d', 30: '30d', 90: '90d', 365: '12
 
 function Row({ site, mine, days, now }: { site: Site; mine: Incident[]; days: number; now: number }) {
   const today = todayIn(site.timezone)
-  const states = useMemo(() => dayStates(mine, daysBetween(addDays(today, 1 - days), today), site.timezone, now), [mine, days, today, site.timezone, now])
+  const states = useMemo(() => dayStates(mine, daysBetween(addDays(today, 1 - days), today), site.timezone, now, site.watched_since), [mine, days, today, site.timezone, now, site.watched_since])
   const t = rowTotals(mine, days, now)
   const name = site.name || site.domain
   return (

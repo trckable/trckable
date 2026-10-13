@@ -34,20 +34,21 @@ export function dayIn(unix: number, tz: string): string {
   return f.format(new Date(unix * 1000))
 }
 
-export type DayState = 'ok' | 'quiet' | 'down'
+export type DayState = 'ok' | 'quiet' | 'down' | 'unwatched'
 
 /** How long it lasted; an open one lasts until now. */
 export const lasted = (x: Incident, now: number): number => (x.ended_at ?? now) - x.started_at
 
-/** The days of a period (YYYY-MM-DD, oldest first), each coloured by the worst incident that touched it: down over quiet over none. */
-export function dayStates(list: Incident[], days: string[], tz: string, now: number): Map<string, DayState> {
-  const out = new Map<string, DayState>(days.map((d) => [d, 'ok']))
+/** The days of a period (YYYY-MM-DD, oldest first), each coloured by the worst incident that touched it: down over quiet over none. Days before `watchedSince` (unix seconds, when the site's incidents began to be recorded) are unknown, not clear, unless an incident says otherwise. */
+export function dayStates(list: Incident[], days: string[], tz: string, now: number, watchedSince = 0): Map<string, DayState> {
+  const first0 = watchedSince > 0 ? dayIn(watchedSince, tz) : ''
+  const out = new Map<string, DayState>(days.map((d) => [d, d < first0 ? 'unwatched' : 'ok']))
   for (const x of list) {
     const first = dayIn(x.started_at, tz)
     const last = dayIn(x.ended_at ?? now, tz)
     for (const d of days) {
       if (d < first || d > last) continue
-      if (x.kind === 'down' || out.get(d) === 'ok') out.set(d, x.kind)
+      if (x.kind === 'down' || out.get(d) === 'ok' || out.get(d) === 'unwatched') out.set(d, x.kind)
     }
   }
   return out
@@ -74,6 +75,12 @@ export function affectedSeconds(list: Incident[], from: number, to: number, now:
     end = Math.max(end, b)
   }
   return total
+}
+
+/** The time one calendar day (in a time zone) was spent in incidents. */
+export function dayLasted(list: Incident[], day: string, tz: string, now: number): number {
+  const next = new Date(Date.parse(day + 'T00:00:00Z') + DAY * 1000).toISOString().slice(0, 10)
+  return affectedSeconds(list, startOfDay(day, tz), startOfDay(next, tz), now)
 }
 
 /** The days from `from` to `to`, oldest first. */

@@ -2,7 +2,7 @@
 .inc-page {
   padding: 8px 0 60px;
   display: grid;
-  gap: 20px;
+  gap: 16px;
   min-width: 0;
 }
 .inc-head {
@@ -53,6 +53,38 @@
   font-size: 24px;
   letter-spacing: -0.02em;
 }
+.inc-clear {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.inc-clear.unwatched .inc-tick {
+  color: var(--text-3);
+  background: color-mix(in srgb, var(--text-3) 18%, transparent);
+}
+.inc-clear b {
+  display: block;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.inc-clear small {
+  color: var(--text-3);
+  font-size: 13px;
+}
+.inc-tick {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--up);
+  background: color-mix(in srgb, var(--up) 16%, transparent);
+}
 .inc-card em {
   color: var(--text-3);
   font-size: 12px;
@@ -71,7 +103,7 @@
 .inc-days i {
   --tone: var(--up);
   display: block;
-  border-radius: 2px;
+  border-radius: 3px;
   background: color-mix(in srgb, var(--tone) 38%, transparent);
 }
 .inc-days i.quiet {
@@ -85,11 +117,23 @@
 .inc-days i.blank {
   background: none;
 }
+.inc-days .info {
+  display: block;
+}
+.inc-days .info > i {
+  width: 100%;
+  height: 100%;
+}
+.inc-days i.unwatched {
+  --tone: var(--text-3);
+  background: color-mix(in srgb, var(--tone) 22%, transparent);
+}
 .inc-days.strip {
   display: flex;
   gap: 2px;
 }
-.inc-days.strip i {
+.inc-days.strip > i,
+.inc-days.strip > .info {
   flex: 1;
   min-width: 2px;
   height: 28px;
@@ -101,7 +145,7 @@
   grid-auto-columns: minmax(6px, 1fr);
   gap: 3px;
 }
-.inc-days.grid i {
+.inc-days.grid .info {
   aspect-ratio: 1;
 }
 .inc-legend {
@@ -128,6 +172,9 @@
 }
 .inc-legend .quiet {
   --tone: var(--warn);
+}
+.inc-legend .unwatched {
+  --tone: color-mix(in srgb, var(--text-3) 22%, transparent);
 }
 .inc-legend .down {
   --tone: var(--down);
@@ -196,6 +243,7 @@
 /* The period picker is the dashboard's own, which the header's row lays out:
    here it lays itself out, and the comparison it also offers is not for this page. */
 .inc-head .range-picker.quiet {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -207,7 +255,13 @@
   align-content: start;
 }
 
+/* The picker's menu hangs from the picker, as on the dashboard (there the control row is its anchor). */
+.inc-head .range-pop {
+  top: calc(100% + 6px);
+  right: 0;
+}
+
 .inc-foot {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
 }

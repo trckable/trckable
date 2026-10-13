@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The Uptime & incidents page is calmer: a period without an incident is one card instead of four, the day strip explains each day on hover, and the period menu opens under its picker. Days before a site was watched show as "Not watched yet" instead of green, uptime counts only watched time, and a quiet site says its uptime is from down checks only.
 - On Sites, the totals strip has an Uptime card (incidents in the period and how much of it your sites were up), and the Uptime and Revenue cards open their view.
 
 ## 0.7.16 (13 Oct 2026)

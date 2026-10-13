@@ -277,6 +277,9 @@ type SiteInfo struct {
 	// CreatedAt is when the site was added (unix seconds), for what is only
 	// said during a site's first days.
 	CreatedAt int64 `json:"created_at,omitempty"`
+	// WatchedSince is when the site's incidents began to be recorded (unix
+	// seconds, never before CreatedAt): earlier days are unknown, not quiet.
+	WatchedSince int64 `json:"watched_since,omitempty"`
 	// Color and IconURL are the site's own look in the dashboard, if set.
 	Color   string `json:"color,omitempty"`
 	IconURL string `json:"icon_url,omitempty"`
@@ -297,8 +300,8 @@ type SiteInfo struct {
 // SiteInfo returns one site.
 func (s *Store) SiteInfo(ctx context.Context, id string) (SiteInfo, error) {
 	var si SiteInfo
-	err := s.DB.QueryRowContext(ctx, `SELECT id, domain, name, timezone, currency, proxy_key, last_event_at, created_at FROM sites WHERE id = ?`, id).
-		Scan(&si.ID, &si.Domain, &si.Name, &si.Timezone, &si.Currency, &si.ProxyKey, &si.LastEventAt, &si.CreatedAt)
+	err := s.DB.QueryRowContext(ctx, `SELECT id, domain, name, timezone, currency, proxy_key, last_event_at, created_at, max(created_at, coalesce((SELECT since FROM site_watch WHERE site_id = sites.id), 0)) FROM sites WHERE id = ?`, id).
+		Scan(&si.ID, &si.Domain, &si.Name, &si.Timezone, &si.Currency, &si.ProxyKey, &si.LastEventAt, &si.CreatedAt, &si.WatchedSince)
 	if errors.Is(err, sql.ErrNoRows) {
 		return si, auth.ErrNotFound
 	}

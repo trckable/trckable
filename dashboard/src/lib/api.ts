@@ -108,6 +108,8 @@ export interface Site {
   last_event_at?: number
   /** Unix seconds the site was added: what is only said in a site's first days. */
   created_at?: number
+  /** Unix seconds its incidents began to be recorded: days before are unknown, not quiet. */
+  watched_since?: number
   /** The site's own look, when the owner set one: #rrggbb, and its icon. */
   color?: string
   icon_url?: string

@@ -25,7 +25,7 @@ export interface Summary {
 
 export const incidents = {
   /** Every incident that overlaps [from, to] (unix seconds), with the totals. */
-  period: (site: string, from: number, to: number) => call<{ incidents: Incident[]; summary: Summary }>('GET', `/sites/${site}/incidents?from=${from}&to=${to}`),
+  period: (site: string, from: number, to: number) => call<{ incidents: Incident[]; summary: Summary; quiet_tracked?: boolean }>('GET', `/sites/${site}/incidents?from=${from}&to=${to}`),
   /** A page of 50, newest first; `before` is the start of the last one of the page before. */
   page: (site: string, before?: number) => call<{ incidents: Incident[]; next_before: number | null }>('GET', `/sites/${site}/incidents?limit=50${before ? `&before=${before}` : ''}`),
   /** Every site's incidents in the last `days` days. */
