@@ -15,6 +15,7 @@
   --glass-blur-menu: blur(28px) saturate(170%);
   --glass-lite: rgba(255, 255, 255, 0.04);
   --glass-line: rgba(255, 255, 255, 0.1);
+  --glass-line-pop: rgba(255, 255, 255, 0.055); /* a pop-up's edge: its shadow already lifts it */
   --glass-line-hot: rgba(255, 255, 255, 0.62);
   --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.14);
   --glass-hi-hot: inset 0 1px 0 rgba(255, 255, 255, 0.24);
@@ -37,6 +38,7 @@
     --glass-menu: rgba(255, 255, 255, 0.98);
     --glass-lite: rgba(255, 255, 255, 0.55);
     --glass-line: rgba(20, 24, 30, 0.1);
+    --glass-line-pop: rgba(20, 24, 30, 0.08);
     --glass-line-hot: rgba(20, 24, 30, 0.42);
     --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.95);
     --glass-hi-hot: inset 0 1px 0 #ffffff;
@@ -56,6 +58,7 @@
   --glass-menu: rgba(255, 255, 255, 0.98);
   --glass-lite: rgba(255, 255, 255, 0.55);
   --glass-line: rgba(20, 24, 30, 0.1);
+  --glass-line-pop: rgba(20, 24, 30, 0.08);
   --glass-line-hot: rgba(20, 24, 30, 0.42);
   --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --glass-hi-hot: inset 0 1px 0 #ffffff;
@@ -116,11 +119,11 @@
   }
   /* Pop-ups over the page and over cards: menus, dialogs, sheets, toasts, tooltips, the side card. A little more opaque and more blurred. */
   :root:not([data-glass='off']) :is(.pop, .picker-pop, .modal, .toast, .hint, .side-card, .tip, .kit-tip, .chart-tip, .cursor-pill, .moment-tip, .note-tip, .story-pop, .note-cal) {
-    border-color: var(--glass-line);
+    border-color: var(--glass-line-pop);
     background: var(--glass-pop);
     -webkit-backdrop-filter: var(--glass-blur-pop);
     backdrop-filter: var(--glass-blur-pop);
-    box-shadow: var(--glass-hi), var(--glass-shadow-pop);
+    box-shadow: var(--glass-shadow-pop);
   }
   /* The menus (sites, period, ⋯, Filter) are nearly solid with a stronger blur: the page's text never reads through a row. */
   :root:not([data-glass='off']) .pop:is(.menu, .menu-pop, .sites, .lpop, .range-pop, .anchored) {
