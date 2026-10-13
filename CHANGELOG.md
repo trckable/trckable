@@ -9,7 +9,7 @@ section into the release.
 
 ## Unreleased
 
-- All sites is a live wall to leave open: a tile per site with how many people are online now, the period's line, the visitors with the change, and one line about right now. A site that is down or quiet comes first, edged warm. Click a tile to open the site.
+- All sites tells you the day: one sentence about every site, the sites that need you first, who is online now and a live feed beside them. One View menu sets the period, Visitors or Revenue, which sites, and Overview or Table (every site as a sortable row); your choice is in the address and is remembered.
 
 ## 0.7.13 (13 Oct 2026)
 

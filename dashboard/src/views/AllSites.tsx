@@ -1,33 +1,48 @@
-// Every site at a glance, for anyone who runs more than one: a live wall of
-// tiles to leave open. Each tile says how many are online now, the period's
-// line, the visitors with the move and one line about right now; a site that
-// is down or quiet comes first, edged warm. Click a tile to open the site.
+// Every site at a glance, for anyone who runs more than one. The head says what
+// is being looked at; one View menu changes the period, what to show, which
+// sites and the layout: Overview (the day in a sentence, the sites that matter
+// first) or Table (every site as a row, sortable).
 import { Plus } from 'lucide-react'
+import { useMemo } from 'react'
 import { Loading } from '../components/loading/Loading'
 import { AllBar } from '../features/header/AllBar'
 import { openAddSite } from '../lib/account'
 import { type Site } from '../lib/api'
 import { isViewer } from '../lib/me'
-import { useState } from 'react'
-import { AllPeriod, PERIODS } from './AllPeriod'
-import { AllWall } from './AllWall'
+import { AllTable } from './AllTable'
+import { AllToday } from './AllToday'
+import { AllViewMenu } from './AllViewMenu'
 import { siteColors } from './allSitesColors'
 import { copy } from './allSitesCopy'
 import { startIndex } from './allSitesLogic'
+import { useAllView } from './allView'
 import { useOverview } from './useOverview'
 import { useSurges } from './useSurges'
 import './AllSites.css'
 
 export function AllSites({ sites, header }: { sites: Site[]; header: React.ReactNode }) {
-  const [days, setDays] = useState(() => {
-    const d = Number(new URLSearchParams(location.search).get('days'))
-    return PERIODS.some((p) => p.days === d) ? d : 30
-  })
-  const { rows, err } = useOverview(days)
+  const [view, change, reset] = useAllView()
+  // The overview reads the day from the daily series, so it has no 12 months (weekly) period.
+  const days = view.layout === 'overview' && view.days === 365 ? 30 : view.days
+  const { rows: all, err } = useOverview(days)
+  const money = !!all?.some((r) => r.revenue !== undefined)
+  const lens = view.lens === 'revenue' && !money ? 'visitors' : view.lens
+  const shown = useMemo(() => {
+    const picked = sites.filter((s) => view.sites.includes(s.id))
+    return picked.length ? picked : sites
+  }, [sites, view.sites])
+  const rows = useMemo(() => {
+    const ids = new Set(shown.map((s) => s.id))
+    return all?.filter((r) => ids.has(r.id)) ?? null
+  }, [all, shown])
   const surges = useSurges(rows)
   // A site's colour is its place in the account's list, not its place on this page.
   const colors = siteColors(sites)
-  const period = PERIODS.find((p) => p.days === days)?.label ?? ''
+  const colorOf = (id: string) => colors.get(id) ?? 'var(--text-3)'
+  const period = copy.periodLabel(days)
+  const count = shown.length === sites.length ? copy.siteCount(sites.length) : copy.siteCountOf(shown.length, sites.length)
+  const summary = copy.summary(period, lens === 'revenue' ? copy.lensRevenue : copy.lensVisitors, count)
+  const props = { lens, rows: rows ?? [], sites: shown, colorOf, start: startIndex(rows ?? []), period }
 
   return (
     <>
@@ -36,10 +51,10 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
         <div className="all-head">
           <div>
             <h1>{copy.title}</h1>
-            <p className="muted">{rows ? copy.count(rows.length, period) : copy.reading}</p>
+            <p className="muted">{rows ? summary : copy.reading}</p>
           </div>
           <div className="all-actions">
-            <AllPeriod days={days} onChange={setDays} />
+            <AllViewMenu view={{ ...view, days }} sites={sites} money={money} change={change} reset={reset} />
             {!isViewer() && (
               <button type="button" className="btn primary" onClick={openAddSite}>
                 <Plus size={15} aria-hidden="true" />
@@ -50,7 +65,8 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
         </div>
         {err && <p className="empty">{err}</p>}
         {!rows && !err && <Loading height={320} />}
-        {rows && <AllWall rows={rows} sites={sites} surges={surges} colorOf={(id) => colors.get(id) ?? 'var(--text-3)'} start={startIndex(rows)} />}
+        {rows && view.layout === 'overview' && <AllToday {...props} surges={surges} />}
+        {rows && view.layout === 'table' && <AllTable {...props} />}
       </main>
     </>
   )

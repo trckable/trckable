@@ -1,5 +1,5 @@
 // All sites: a site's colour follows the site. Each of the first seven sites of
-// the account has a colour of its own on its tile's line, and the sites past the
+// the account has a colour of its own on its line, and the sites past the
 // palette are drawn neutral, never a colour taken again.
 import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
@@ -12,7 +12,7 @@ test.beforeAll(async () => {
   cookie = await session('all-sites-colors')
 })
 
-test('a tile line has the colour of its site, and the ones past the palette are neutral', async ({ page }) => {
+test('a site line has the colour of its site, and the ones past the palette are neutral', async ({ page }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   const tag = Date.now()
@@ -31,7 +31,7 @@ test('a tile line has the colour of its site, and the ones past the palette are 
   expect(listed.length).toBeGreaterThan(7)
 
   await page.goto(`${API}/all`)
-  await expect(page.locator('.all-tile .all-spark').first()).toBeVisible()
+  await expect(page.locator('.nx-line', { hasText: `colors8-${tag}.example.org` }).locator('.all-spark')).toBeVisible({ timeout: 20_000 })
   const palette = await page.evaluate((n) => Array.from({ length: n }, (_, i) => {
     const probe = document.body.appendChild(document.createElement('i'))
     probe.style.color = `var(--ch-${i + 1})`
@@ -47,14 +47,14 @@ test('a tile line has the colour of its site, and the ones past the palette are 
     return c
   })
   const strokeOf = async (name: string) => {
-    const tile = page.locator('.all-tile', { has: page.locator('.all-tile-name', { hasText: new RegExp(`^${name.replace(/\./g, '\\.')}$`) }) })
+    const tile = page.locator('.nx-line', { has: page.locator('.nx-name b', { hasText: new RegExp(`^${name.replace(/\./g, '\\.')}$`) }) })
     return tile.locator('.all-spark path[stroke]').evaluate((p) => getComputedStyle(p).stroke)
   }
-  // The n-th site of the account has the n-th colour, whichever tile it is on the page.
+  // The n-th site of the account has the n-th colour, whichever line it is on the page.
   let checked = 0
   for (const [at, l] of listed.slice(0, 7).entries()) {
     const name = l.name || l.domain
-    const line = page.locator('.all-tile', { has: page.locator('.all-tile-name', { hasText: new RegExp(`^${name.replace(/\./g, '\\.')}$`) }) }).locator('.all-spark path[stroke]')
+    const line = page.locator('.nx-line', { has: page.locator('.nx-name b', { hasText: new RegExp(`^${name.replace(/\./g, '\\.')}$`) }) }).locator('.all-spark path[stroke]')
     if (!(await line.count())) continue
     expect(await strokeOf(name), `${name}: the colour of its place`).toBe(palette[at])
     checked++

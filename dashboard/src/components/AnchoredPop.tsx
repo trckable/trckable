@@ -29,6 +29,7 @@ export function AnchoredPop({
   anchor,
   label,
   className = '',
+  maxHeight = 420,
   onClose,
   onPointer,
   children,
@@ -36,6 +37,8 @@ export function AnchoredPop({
   anchor: RefObject<HTMLElement | null>
   label: string
   className?: string
+  /** The tallest it grows before it scrolls, in px. */
+  maxHeight?: number
   /** Called on every way out (Escape, a click outside, the page moving). */
   onClose: () => void
   /** Pointer in and out of the panel, for one opened by hover. */
@@ -150,7 +153,7 @@ export function AnchoredPop({
         className={('pop anchored ' + className).trim()}
         role="dialog"
         aria-label={label}
-        style={at ? { left: at.left, top: at.top, bottom: at.bottom, maxHeight: Math.min(420, at.room) } : { visibility: sheet ? undefined : 'hidden' }}
+        style={at ? { left: at.left, top: at.top, bottom: at.bottom, maxHeight: Math.min(maxHeight, at.room) } : { visibility: sheet ? undefined : 'hidden' }}
         onKeyDown={keys}
         onMouseEnter={onPointer?.enter}
         onMouseLeave={onPointer?.leave}
