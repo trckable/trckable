@@ -679,7 +679,7 @@ export default {
 
   // sites
   'sites.pick': 'Elige un sitio',
-  'sites.all': 'Todos los sitios',
+  'sites.all': 'Sitios',
   'sites.dot.now': 'Visitantes ahora mismo: una visita en los últimos 5 minutos',
   'sites.dot.live': 'Recibiendo visitas',
   'sites.dot.quiet': 'Sin visitas desde hace horas',
@@ -972,7 +972,7 @@ export default {
   'account.people.otp.message': (origin: string, email: string, password: string) => `Inicia sesión en trckable en ${origin} como ${email} con esta contraseña de un solo uso: ${password}\nElegirás la tuya justo después.`,
 
   // allsites
-  'allsites.title': 'Todos los sitios',
+  'allsites.title': 'Sitios',
   'allsites.addSite': 'Añadir sitio',
   'allsites.reading': 'Leyendo todos los sitios…',
   'allsites.periodLabel': (days: number) => (days === 365 ? 'Últimos 12 meses' : `Últimos ${days} días`),
@@ -1023,6 +1023,10 @@ export default {
   'allnext.feedQuiet': (name: string) => `${name} se quedó en silencio`,
   'allnext.feedDown': (name: string) => `${name} dejó de responder`,
   'allnext.totalRevenue': 'Ingresos',
+  'allnext.uptimeCount': (n: number) => (n === 0 ? 'Sin incidentes' : `${n} ${n === 1 ? 'incidente' : 'incidentes'}`),
+  'allnext.uptimeUp': (pct: string) => `${pct} % disponible`,
+  'allnext.uptimeDown': (name: string) => `${name} está caído ahora`,
+  'allnext.uptimeDownMany': (n: number) => `${n} sitios están caídos ahora`,
   'allnext.totalVisitors': 'Visitantes',
   'allnext.sitesUp': 'Sitios activos',
   'allnext.vsBefore': 'frente al periodo anterior',
@@ -2026,7 +2030,7 @@ export default {
   'moments.discover.crawlers.go': 'Activar',
   'featureList.live.name': 'Vista en vivo',
   'featureList.live.line': 'Quién está en tu sitio ahora',
-  'featureList.allsites.name': 'Todos los sitios',
+  'featureList.allsites.name': 'Sitios',
   'featureList.allsites.line': 'Todos tus sitios en una página',
   'featureList.map.name': 'Mapa',
   'featureList.map.line': 'Visitantes en un mapa del mundo',

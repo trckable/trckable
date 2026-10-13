@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Incident } from './api'
-import { affectedSeconds, dayIn, dayStates, daysBetween, duration, rowTotals, startOfDay, uptimePct } from './model'
+import { accountTotals, affectedSeconds, dayIn, dayStates, daysBetween, duration, rowTotals, startOfDay, uptimePct } from './model'
 
 const at = (iso: string) => Date.parse(iso) / 1000
 const inc = (o: Partial<Incident>): Incident => ({ id: 'i', site: 's', kind: 'quiet', started_at: 0, ended_at: null, cause: 'no visits', expected_visits: null, note: '', ...o })
@@ -48,5 +48,20 @@ describe('incident words and figures', () => {
     const now = at('2026-10-10T00:00:00Z')
     const t = rowTotals([inc({ started_at: now - 3600 * 5, ended_at: now - 3600 * 2 }), inc({ started_at: now - 40 * 86400, ended_at: now - 39 * 86400 })], 7, now)
     expect(t).toEqual({ count: 1, seconds: 3 * 3600, pct: 98.2 })
+  })
+
+  it('totals the account, counting the incident of a silent site but not its time, and naming those down now', () => {
+    const now = at('2026-10-10T00:00:00Z')
+    const list = [
+      inc({ site: 'a', kind: 'down', started_at: now - 3600 * 5, ended_at: now - 3600 * 2 }),
+      inc({ site: 'b', kind: 'down', started_at: now - 10 * 86400 }),
+      inc({ site: 'c', kind: 'down', started_at: now - 600 }),
+    ]
+    const t = accountTotals([{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }], list, 7, now)
+    expect(t.count).toBe(3)
+    expect(t.down).toEqual(['b', 'c'])
+    expect(t.count).toBeGreaterThanOrEqual(t.down.length)
+    expect(t.pct).toBeCloseTo(100 - ((3 * 3600 + 600) / (3 * 7 * 86400)) * 100, 5)
+    expect(accountTotals([{ id: 'z' }], [], 7, now)).toEqual({ count: 0, pct: 100, down: [] })
   })
 })

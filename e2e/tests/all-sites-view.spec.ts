@@ -22,7 +22,7 @@ test('the View menu changes the layout and the lens, and the choice survives a r
     await route.fulfill({ response: res, json: body })
   })
 
-  await page.goto(`${API}/all`)
+  await page.goto(`${API}/sites`)
   await expect(page.locator('.nx-today')).toBeVisible({ timeout: 20_000 })
   const summary = page.locator('.all-head p')
   await expect(summary).toContainText('Last 30 days · Visitors')
@@ -38,7 +38,7 @@ test('the View menu changes the layout and the lens, and the choice survives a r
   await expect(page).toHaveURL(/lens=revenue/)
 
   // A visit without the address remembers the last choice.
-  await page.goto(`${API}/all`)
+  await page.goto(`${API}/sites`)
   await expect(page.locator('.nx-table')).toBeVisible({ timeout: 20_000 })
   await expect(summary).toContainText('Revenue')
 
@@ -56,4 +56,17 @@ test('the View menu changes the layout and the lens, and the choice survives a r
   await expect(summary).toContainText('Last 30 days · Visitors')
   await page.reload()
   await expect(page.locator('.nx-today')).toBeVisible({ timeout: 20_000 })
+})
+
+test('the Uptime card on the Overview opens the Uptime view', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: await session('all-sites-uptime-card'), url: API }])
+  const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `card-${Date.now()}.view.example.org` } })
+  expect(made.ok()).toBe(true)
+  await page.goto(`${API}/all?layout=overview&lens=visitors`)
+  const card = page.locator('.nx-strip .nx-card', { hasText: 'Uptime' })
+  await expect(card).toContainText('No incidents', { timeout: 20_000 })
+  await card.click()
+  await expect(page).toHaveURL(/lens=uptime/)
+  await expect(page.locator('.up-wrap')).toBeVisible()
+  await expect(page.locator('.all-head p')).toContainText('Uptime')
 })

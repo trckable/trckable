@@ -111,7 +111,7 @@ describe('a site row', () => {
 describe('the All sites chip', () => {
   it('is only the chip until the numbers are here, then adds online now and today', () => {
     const bare = renderToStaticMarkup(<AllStrip on={false} numbers={null} onPick={noop} />)
-    expect(bare).toContain('All sites')
+    expect(bare).toContain('Sites')
     expect(bare).not.toContain('strip-sum')
     feedOnline([{ id: 'a', online: 2 }, { id: 'b', online: 1 }] as SiteRow[])
     const by = new Map([['a', { visitors: 12 }], ['b', { visitors: 30 }]])

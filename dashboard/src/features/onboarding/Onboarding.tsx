@@ -86,7 +86,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
   // "Skip for now — open my dashboard": waiting sites show their install there.
   const toDashboard = () => {
     markSkipped()
-    leave('/all')
+    leave('/sites')
   }
   const added = (s: Site) => {
     setSites((all) => [...all, s])

@@ -666,7 +666,7 @@ export default {
 
   // sites
   'sites.pick': 'Kies een site',
-  'sites.all': 'Alle sites',
+  'sites.all': 'Sites',
   'sites.dot.now': 'Bezoekers op dit moment: een bezoek in de laatste 5 minuten',
   'sites.dot.live': 'Ontvangt bezoeken',
   'sites.dot.quiet': 'Al uren geen bezoeken',
@@ -959,7 +959,7 @@ export default {
   'account.people.otp.message': (origin: string, email: string, password: string) => `Log in bij trckable op ${origin} als ${email} met dit eenmalige wachtwoord: ${password}\nJe kiest direct daarna je eigen.`,
 
   // allsites
-  'allsites.title': 'Alle sites',
+  'allsites.title': 'Sites',
   'allsites.addSite': 'Site toevoegen',
   'allsites.reading': 'Alle sites worden gelezen…',
   'allsites.periodLabel': (days: number) => (days === 365 ? 'Laatste 12 maanden' : `Laatste ${days} dagen`),
@@ -1010,6 +1010,10 @@ export default {
   'allnext.feedQuiet': (name: string) => `${name} is stil geworden`,
   'allnext.feedDown': (name: string) => `${name} reageert niet meer`,
   'allnext.totalRevenue': 'Omzet',
+  'allnext.uptimeCount': (n: number) => (n === 0 ? 'Geen incidenten' : `${n} ${n === 1 ? 'incident' : 'incidenten'}`),
+  'allnext.uptimeUp': (pct: string) => `${pct}% bereikbaar`,
+  'allnext.uptimeDown': (name: string) => `${name} is nu offline`,
+  'allnext.uptimeDownMany': (n: number) => `${n} sites zijn nu offline`,
   'allnext.totalVisitors': 'Bezoekers',
   'allnext.sitesUp': 'Sites bereikbaar',
   'allnext.vsBefore': 't.o.v. de periode ervoor',
@@ -2020,7 +2024,7 @@ export default {
   'moments.discover.crawlers.go': 'Aanzetten',
   'featureList.live.name': 'Live-weergave',
   'featureList.live.line': 'Wie er nu op je site is',
-  'featureList.allsites.name': 'Alle sites',
+  'featureList.allsites.name': 'Sites',
   'featureList.allsites.line': 'Al je sites op één pagina',
   'featureList.map.name': 'Kaart',
   'featureList.map.line': 'Bezoekers op een wereldkaart',

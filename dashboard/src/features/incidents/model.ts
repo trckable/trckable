@@ -108,3 +108,23 @@ export function rowTotals(list: Incident[], days: number, now: number): { count:
 
 /** A site that has had no visit for the whole period: its incident is still open and began before it. Its uptime says nothing worth a number. */
 export const silentAllPeriod = (list: Incident[], from: number): boolean => list.some((x) => x.ended_at === null && x.started_at < from)
+
+/** All sites' totals over `days` days: the incidents, the time-weighted uptime, and the sites down right now. Every incident counts; a silent site stays out of the uptime average only. */
+export function accountTotals(sites: { id: string }[], list: Incident[], days: number, now: number): { count: number; pct: number; down: string[] } {
+  const from = now - days * DAY
+  let count = 0
+  let seconds = 0
+  let counted = 0
+  const down: string[] = []
+  for (const s of sites) {
+    const mine = list.filter((x) => x.site === s.id)
+    if (mine.some((x) => x.kind === 'down' && x.ended_at === null)) down.push(s.id)
+    const t = rowTotals(mine, days, now)
+    count += t.count
+    if (silentAllPeriod(mine, from)) continue
+    seconds += t.seconds
+    counted++
+  }
+  const pct = counted ? Math.max(0, 100 - (seconds / (counted * days * DAY)) * 100) : 100
+  return { count, pct: seconds > 0 && pct >= 99.95 ? 99.9 : pct, down }
+}

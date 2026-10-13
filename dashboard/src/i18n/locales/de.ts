@@ -676,7 +676,7 @@ export default {
 
   // sites
   'sites.pick': 'Website wählen',
-  'sites.all': 'Alle Websites',
+  'sites.all': 'Websites',
   'sites.dot.now': 'Besucher gerade jetzt: ein Besuch in den letzten 5 Minuten',
   'sites.dot.live': 'Empfängt Besuche',
   'sites.dot.quiet': 'Seit Stunden keine Besuche',
@@ -969,7 +969,7 @@ export default {
   'account.people.otp.message': (origin: string, email: string, password: string) => `Melde dich bei trckable unter ${origin} als ${email} mit diesem Einmalpasswort an: ${password}\nDein eigenes wählst du gleich danach.`,
 
   // allsites
-  'allsites.title': 'Alle Websites',
+  'allsites.title': 'Websites',
   'allsites.addSite': 'Website hinzufügen',
   'allsites.reading': 'Alle Websites werden gelesen …',
   'allsites.periodLabel': (days: number) => (days === 365 ? 'Letzte 12 Monate' : `Letzte ${days} Tage`),
@@ -1020,6 +1020,10 @@ export default {
   'allnext.feedQuiet': (name: string) => `${name} ist still geworden`,
   'allnext.feedDown': (name: string) => `${name} antwortet nicht mehr`,
   'allnext.totalRevenue': 'Umsatz',
+  'allnext.uptimeCount': (n: number) => (n === 0 ? 'Keine Vorfälle' : `${n} ${n === 1 ? 'Vorfall' : 'Vorfälle'}`),
+  'allnext.uptimeUp': (pct: string) => `${pct} % erreichbar`,
+  'allnext.uptimeDown': (name: string) => `${name} ist gerade nicht erreichbar`,
+  'allnext.uptimeDownMany': (n: number) => `${n} Websites sind gerade nicht erreichbar`,
   'allnext.totalVisitors': 'Besucher',
   'allnext.sitesUp': 'Websites erreichbar',
   'allnext.vsBefore': 'gegenüber dem Zeitraum davor',
@@ -2023,7 +2027,7 @@ export default {
   'moments.discover.crawlers.go': 'Einschalten',
   'featureList.live.name': 'Live-Ansicht',
   'featureList.live.line': 'Wer gerade auf deiner Seite ist',
-  'featureList.allsites.name': 'Alle Websites',
+  'featureList.allsites.name': 'Websites',
   'featureList.allsites.line': 'Alle deine Websites auf einer Seite',
   'featureList.map.name': 'Karte',
   'featureList.map.line': 'Besucher auf der Weltkarte',

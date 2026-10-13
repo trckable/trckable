@@ -36,6 +36,10 @@ export const next = defineCopy('allnext', {
   feedDown: (name: string) => `${name} stopped answering`,
   // Table
   totalRevenue: 'Revenue',
+  uptimeCount: (n: number) => (n === 0 ? 'No incidents' : `${n} incident${n === 1 ? '' : 's'}`),
+  uptimeUp: (pct: string) => `${pct}% up`,
+  uptimeDown: (name: string) => `${name} is down now`,
+  uptimeDownMany: (n: number) => `${n} sites are down now`,
   totalVisitors: 'Visitors',
   sitesUp: 'Sites up',
   vsBefore: 'vs the period before',

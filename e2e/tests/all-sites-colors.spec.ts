@@ -30,7 +30,7 @@ test('a site line has the colour of its site, and the ones past the palette are 
   const listed = ((await (await page.request.get(`${API}/api/v1/sites`, { headers: H })).json()) as { sites: { domain: string; name: string }[] }).sites
   expect(listed.length).toBeGreaterThan(7)
 
-  await page.goto(`${API}/all`)
+  await page.goto(`${API}/sites`)
   await expect(page.locator('.nx-line', { hasText: `colors8-${tag}.example.org` }).locator('.all-spark')).toBeVisible({ timeout: 20_000 })
   const palette = await page.evaluate((n) => Array.from({ length: n }, (_, i) => {
     const probe = document.body.appendChild(document.createElement('i'))
