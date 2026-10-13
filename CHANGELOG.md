@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.7.14 (13 Oct 2026)
+
 - All sites tells you the day: one sentence about every site, the sites that need you first, who is online now and a live feed beside them. One View menu sets the period, Visitors or Revenue, which sites, and Overview or Table (every site as a sortable row); your choice is in the address and is remembered.
 
 ## 0.7.13 (13 Oct 2026)
