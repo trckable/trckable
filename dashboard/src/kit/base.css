@@ -98,6 +98,12 @@
   width: 100%;
   height: 100%;
 }
+/* A small decorative line in a card: it fades in from the left, stays clear at the right (today),
+   and softens where it runs low, so it blends into the card instead of drawing its edges. */
+.line-fade {
+  mask-image: linear-gradient(to right, transparent, #000 18%, #000 95%, transparent), linear-gradient(to top, rgb(0 0 0 / 0.35), #000 40%);
+  mask-composite: intersect;
+}
 .kit-metric.compact .kit-val {
   justify-content: space-between;
   align-items: flex-end;
