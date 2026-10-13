@@ -6,7 +6,7 @@ import { session } from './session'
 const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36'
 
-test('a visit turns the waiting tile into numbers', async ({ page }) => {
+test('a visit turns the waiting line into numbers', async ({ page }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: await session('all-sites-online'), url: API }])
   const domain = `live-${Date.now()}.example.org`
@@ -15,7 +15,7 @@ test('a visit turns the waiting tile into numbers', async ({ page }) => {
   const site = ((await made.json()) as { id: string }).id
 
   await page.goto(`${API}/all`)
-  const tile = page.locator('.all-tile', { hasText: domain })
+  const tile = page.locator('.nx-line', { hasText: domain })
   await expect(tile).toBeVisible({ timeout: 20_000 })
   await expect(tile).toContainText('Waiting for the first visit')
 
@@ -25,6 +25,6 @@ test('a visit turns the waiting tile into numbers', async ({ page }) => {
   await expect.poll(async () => {
     await page.reload()
     await tile.waitFor()
-    return tile.locator('.all-tile-num b').count()
-  }, { timeout: 40_000 }).toBe(1)
+    return tile.locator('.nx-num b').textContent()
+  }, { timeout: 40_000 }).toBe('1')
 })

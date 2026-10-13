@@ -10,7 +10,7 @@ export type PopTrigger = { ref: RefObject<HTMLButtonElement | null>; 'aria-expan
 
 const LEAVE_MS = 150
 
-export function Popover({ label, openOn = 'click', className, trigger, children }: { label: string; openOn?: 'click' | 'hover'; className?: string; trigger: (p: PopTrigger) => ReactNode; children: (close: () => void) => ReactNode }) {
+export function Popover({ label, openOn = 'click', className, maxHeight, trigger, children }: { label: string; openOn?: 'click' | 'hover'; className?: string; maxHeight?: number; trigger: (p: PopTrigger) => ReactNode; children: (close: () => void) => ReactNode }) {
   const [open, setOpen] = useState(false)
   const anchor = useRef<HTMLButtonElement>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -37,7 +37,7 @@ export function Popover({ label, openOn = 'click', className, trigger, children 
         onMouseLeave: hover ? leave : undefined,
       })}
       {open && (
-        <AnchoredPop anchor={anchor} label={label} className={className} onClose={close} onPointer={hover ? { enter: hold, leave } : undefined}>
+        <AnchoredPop anchor={anchor} label={label} className={className} maxHeight={maxHeight} onClose={close} onPointer={hover ? { enter: hold, leave } : undefined}>
           {children}
         </AnchoredPop>
       )}
