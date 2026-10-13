@@ -1,13 +1,13 @@
 // A short row of choices, one on (D W M Y). A radio group: arrow keys move the
 // choice, and each segment is a finger wide on a phone.
-import type { KeyboardEvent } from 'react'
+import type { KeyboardEvent, ReactNode } from 'react'
 import { kitWords } from './copy'
 import './kit.css'
 
 /** Which way a key moves the choice: right or down is forward, left or up back. */
 const stepOf = (key: string) => ({ ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 })[key] ?? 0
 
-export function Segmented<T extends string>({ options, value, onChange, label = kitWords.period }: { options: { value: T; label: string; title?: string }[]; value: T; onChange: (v: T) => void; label?: string }) {
+export function Segmented<T extends string>({ options, value, onChange, label = kitWords.period }: { options: { value: T; label: ReactNode; title?: string }[]; value: T; onChange: (v: T) => void; label?: string }) {
   const keys = (e: KeyboardEvent<HTMLDivElement>) => {
     const step = stepOf(e.key)
     if (!step) return

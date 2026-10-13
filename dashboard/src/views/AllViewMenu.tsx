@@ -1,62 +1,38 @@
-// The one menu of All sites: period, what to show, which sites and the layout.
-// It stays open while you choose, so several things change in one visit; on a
-// phone it is the usual bottom sheet. Reset shows when anything is off default.
-import { Check, SlidersHorizontal } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
-import { Popover } from '../kit'
+// The View menu of All sites: what to show, the layout and which sites. The
+// period is not in here: it sits beside it in the head (AllPeriod). It stays
+// open while you choose, so several things change in one visit; on a phone it
+// is the usual bottom sheet. Reset shows when anything is off default.
+import { LayoutList, SlidersHorizontal, Table2 } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { Popover, Segmented } from '../kit'
 import type { Site } from '../lib/api'
 import { copy as incidents } from '../features/incidents/copy'
 import { copy } from './allSitesCopy'
-import { differs, LAYOUTS, PERIOD_DAYS, type Layout, type View, type ViewLens } from './allView'
+import { differs, LAYOUTS, type Layout, type View, type ViewLens } from './allView'
+import { siteColors } from './allSitesColors'
 import '../components/sheet.css'
 
 type Props = { view: View; sites: Site[]; money: boolean; change: (c: Partial<View>) => void; reset: () => void }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, aside, children }: { title: string; aside?: ReactNode; children: ReactNode }) {
   return (
     <div className="all-view-sec" role="group" aria-label={title}>
-      <small aria-hidden="true">{title}</small>
+      <div className="all-view-head">
+        <small aria-hidden="true">{title}</small>
+        {aside}
+      </div>
       {children}
     </div>
   )
 }
 
-function Choice({ on, role, onClick, children }: { on: boolean; role: 'menuitemradio' | 'menuitemcheckbox'; onClick: () => void; children: ReactNode }) {
-  return (
-    <button type="button" role={role} aria-checked={on} onClick={onClick}>
-      {children}
-      {on && <Check size={14} aria-hidden="true" />}
-    </button>
-  )
-}
-
-const FIRST_SITES = 5
-
-/** The first few sites; the rest behind "Show all", open from the start when one of them is picked. */
-function SiteChoices({ sites, view, everyone, toggle }: { sites: Site[]; view: View; everyone: boolean; toggle: (id: string) => void }) {
-  const hidden = sites.slice(FIRST_SITES)
-  const [all, setAll] = useState(() => hidden.some((s) => view.sites.includes(s.id)))
-  const shown = all ? sites : sites.slice(0, FIRST_SITES)
-  return (
-    <>
-      {shown.map((s) => (
-        <Choice key={s.id} role="menuitemcheckbox" on={everyone || view.sites.includes(s.id)} onClick={() => toggle(s.id)}>
-          {s.name || s.domain}
-        </Choice>
-      ))}
-      {hidden.length > 0 && (
-        <button type="button" role="menuitem" className="all-view-more" aria-expanded={all} onClick={() => setAll(!all)}>
-          {all ? copy.showFewer : copy.showAll(sites.length)}
-        </button>
-      )}
-    </>
-  )
-}
+const LAYOUT_ICON = { overview: LayoutList, table: Table2 }
 
 export function AllViewMenu({ view, sites, money, change, reset }: Props) {
   const lensLabel: Record<ViewLens, string> = { visitors: copy.lensVisitors, revenue: copy.lensRevenue, uptime: incidents.lensUptime }
   const layoutLabel: Record<Layout, string> = { overview: copy.layoutOverview, table: copy.layoutTable }
   const everyone = view.sites.length === 0
+  const colors = siteColors(sites)
   const toggle = (id: string) => {
     const on = new Set(everyone ? sites.map((s) => s.id) : view.sites)
     if (on.has(id)) on.delete(id)
@@ -65,53 +41,67 @@ export function AllViewMenu({ view, sites, money, change, reset }: Props) {
     if (on.size === 0) return
     change({ sites: on.size === sites.length ? [] : sites.filter((s) => on.has(s.id)).map((s) => s.id) })
   }
-  // The overview reads the day from the daily series, which a 12 months period (weekly) does not have; Uptime does not.
-  const days = PERIOD_DAYS.filter((d) => view.layout === 'table' || view.lens === 'uptime' || d < 365)
+  // None leaves the first site: a page with no sites is not a choice.
+  const allOrNone = () => change({ sites: everyone ? [sites[0].id] : [] })
+  const lenses: ViewLens[] = money ? ['visitors', 'revenue', 'uptime'] : ['visitors', 'uptime']
   return (
     <Popover
       label={copy.viewLabel}
       className="menu all-view"
       maxHeight={640}
       trigger={(p) => (
-        <button type="button" className="btn ghost" {...p} aria-haspopup="menu">
+        <button type="button" className="btn ghost" {...p} aria-haspopup="dialog">
           <SlidersHorizontal size={15} aria-hidden="true" />
           {copy.view}
         </button>
       )}
     >
       {() => (
-        <div className="menu-list" role="menu" aria-label={copy.viewLabel}>
-          <Section title={copy.period}>
-            {days.map((d) => (
-              <Choice key={d} role="menuitemradio" on={d === view.days} onClick={() => change({ days: d })}>
-                {copy.periodLabel(d)}
-              </Choice>
-            ))}
-          </Section>
+        <div className="all-view-body">
           <Section title={copy.show}>
-            {(money ? (['visitors', 'revenue', 'uptime'] as const) : (['visitors', 'uptime'] as const)).map((l) => (
-              <Choice key={l} role="menuitemradio" on={l === view.lens} onClick={() => change({ lens: l })}>
-                {lensLabel[l]}
-              </Choice>
-            ))}
+            <Segmented label={copy.show} value={view.lens} onChange={(lens) => change({ lens })} options={lenses.map((l) => ({ value: l, label: lensLabel[l] }))} />
+          </Section>
+          <Section title={copy.layout}>
+            <Segmented
+              label={copy.layout}
+              value={view.layout}
+              onChange={(layout) => change({ layout })}
+              options={LAYOUTS.map((l) => {
+                const Icon = LAYOUT_ICON[l]
+                return {
+                  value: l,
+                  label: (
+                    <>
+                      <Icon size={14} aria-hidden="true" />
+                      {layoutLabel[l]}
+                    </>
+                  ),
+                }
+              })}
+            />
           </Section>
           {sites.length > 1 && (
-            <Section title={copy.sites}>
-              <Choice role="menuitemradio" on={everyone} onClick={() => change({ sites: [] })}>
-                {copy.allSites}
-              </Choice>
-              <SiteChoices sites={sites} view={view} everyone={everyone} toggle={toggle} />
+            <Section
+              title={copy.sites}
+              aside={
+                <button type="button" className="all-view-link" data-nav onClick={allOrNone}>
+                  {everyone ? copy.none : copy.all}
+                </button>
+              }
+            >
+              <div className="all-view-sites">
+                {sites.map((s) => (
+                  <label key={s.id} className="all-view-site">
+                    <input type="checkbox" data-nav checked={everyone || view.sites.includes(s.id)} onChange={() => toggle(s.id)} />
+                    <i className="all-view-dot" style={{ background: colors.get(s.id) }} aria-hidden="true" />
+                    <span>{s.name || s.domain}</span>
+                  </label>
+                ))}
+              </div>
             </Section>
           )}
-          <Section title={copy.layout}>
-            {LAYOUTS.map((l) => (
-              <Choice key={l} role="menuitemradio" on={l === view.layout} onClick={() => change({ layout: l })}>
-                {layoutLabel[l]}
-              </Choice>
-            ))}
-          </Section>
           {differs(view) && (
-            <button type="button" role="menuitem" className="all-view-reset" onClick={reset}>
+            <button type="button" className="all-view-reset" data-nav onClick={reset}>
               {copy.reset}
             </button>
           )}
