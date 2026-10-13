@@ -28,7 +28,7 @@ const (
 	MaxDeviceName = 64
 	// DeviceTokenPrefix starts every device token, so a bearer token is
 	// told apart from an API key without a lookup.
-	DeviceTokenPrefix = "tkb_dev_"
+	DeviceTokenPrefix = "tkb_dev_" //nolint:gosec // a prefix, not a credential
 )
 
 // codeHash is a code as it is kept: HMAC-SHA256 under a key derived from the
