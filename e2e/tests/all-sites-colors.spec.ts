@@ -31,6 +31,7 @@ test('a tile line has the colour of its site, and the ones past the palette are 
   expect(listed.length).toBeGreaterThan(7)
 
   await page.goto(`${API}/all`)
+  await expect(page.locator('.all-tile .all-spark').first()).toBeVisible()
   const palette = await page.evaluate((n) => Array.from({ length: n }, (_, i) => {
     const probe = document.body.appendChild(document.createElement('i'))
     probe.style.color = `var(--ch-${i + 1})`
