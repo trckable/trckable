@@ -453,7 +453,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const controls = !waiting && (
     <ControlRow
       live={liveView} site={site}
-      status={!showInstall && !isShared() && <StatusCard site={site} />}
       phone={narrow}
       value={pickerValue}
       today={today}
@@ -509,6 +508,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {showInstall && <Suspense fallback={null}><Install site={site} visits={stream.visits} /></Suspense>}
       {!isShared() && location.search.includes('import=ga') && <Suspense fallback={null}><GaReturn site={site} /></Suspense>}
       <MilestonesSlot ms={ms} site={site} quiet={showInstall} revenue={mods === null || shows(mods, 'cards', 'revenue')} />
+      {!showInstall && !isShared() && <StatusCard site={site} />}
       {view.surge && <SurgeNote site={site.id} tz={site.timezone} started={view.surge} filters={view.filters} />}
       {view.test && <Notice kind="test" onAct={() => setView({ test: false })} />}
       {money && money.unconverted > 0 && (

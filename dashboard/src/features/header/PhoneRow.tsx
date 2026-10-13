@@ -23,8 +23,6 @@ export interface PhoneProps extends Pick<SheetProps, 'active' | 'value' | 'today
   /** The date picker, which on a phone is only its popover and its keys. */
   period: ReactNode
   onClear?: () => void
-  /** The site's status badge. */
-  status?: ReactNode
 }
 
 /** "30 days" as "30d", "12 months" as "12m": the line has no room for words. */
@@ -71,7 +69,6 @@ export function PhoneRow(p: PhoneProps & { value: PickerValue; today: ISODate; s
         <b>{tiny(periodShort(p.value, p.today))}</b>
         <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
       </button>
-      {p.status}
       <div className="ctl-cap ctl-do">{p.more}</div>
       <div id="sv-back" className="sv-back" />
       {p.period}
