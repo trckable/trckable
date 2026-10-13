@@ -70,3 +70,7 @@
   border-top: 1px solid var(--border);
   color: var(--text-2);
 }
+
+.all-view-more {
+  color: var(--text-2);
+}

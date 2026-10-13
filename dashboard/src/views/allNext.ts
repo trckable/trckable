@@ -84,16 +84,18 @@ export function items(rows: SiteRow[], sites: Site[], surges: Map<string, Surge>
 
 const KIND_ORDER: Record<Kind, number> = { attention: 0, mover: 1, steady: 2 }
 
-/** Attention first (down before quiet), then the biggest movers, then steady by today's visitors, or by revenue when that is what the page shows. */
-export function ordered(list: Item[], byRevenue = false): Item[] {
-  const size = (i: Item) => (byRevenue ? (i.row.revenue ?? -1) : i.today)
+/** Attention first (down before quiet), then the biggest movers, then steady by today's visitors. */
+export function ordered(list: Item[]): Item[] {
   return [...list].sort((a, b) => {
     if (a.kind !== b.kind) return KIND_ORDER[a.kind] - KIND_ORDER[b.kind]
     if (a.kind === 'attention') return (a.status === 'down' ? 0 : 1) - (b.status === 'down' ? 0 : 1) || b.today - a.today
     if (a.kind === 'mover') return (b.surge?.times ?? 0) - (a.surge?.times ?? 0) || Math.abs(b.move ?? 0) - Math.abs(a.move ?? 0)
-    return size(b) - size(a)
+    return b.today - a.today
   })
 }
+
+/** The most revenue first; a site with none, or that could not be read, last. */
+export const byRevenue = (list: Item[]): Item[] => [...list].sort((a, b) => (b.row.error ? -1 : (b.row.revenue ?? -1)) - (a.row.error ? -1 : (a.row.revenue ?? -1)))
 
 const pctWord = (x: number) => `${fmtInt(Math.abs(x) * 100)}%`
 

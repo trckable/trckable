@@ -962,6 +962,8 @@ export default {
   'allsites.lensRevenue': 'Omzet',
   'allsites.sites': 'Sites',
   'allsites.allSites': 'Alle sites',
+  'allsites.showAll': (n: number) => `Toon alle (${n})`,
+  'allsites.showFewer': 'Toon minder',
   'allsites.layout': 'Indeling',
   'allsites.layoutOverview': 'Overzicht',
   'allsites.layoutTable': 'Tabel',

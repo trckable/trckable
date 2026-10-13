@@ -969,6 +969,8 @@ export default {
   'allsites.lensRevenue': 'Ricavi',
   'allsites.sites': 'Siti',
   'allsites.allSites': 'Tutti i siti',
+  'allsites.showAll': (n: number) => `Mostra tutti (${n})`,
+  'allsites.showFewer': 'Mostra meno',
   'allsites.layout': 'Disposizione',
   'allsites.layoutOverview': 'Panoramica',
   'allsites.layoutTable': 'Tabella',

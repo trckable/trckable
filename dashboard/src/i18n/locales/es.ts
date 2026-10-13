@@ -975,6 +975,8 @@ export default {
   'allsites.lensRevenue': 'Ingresos',
   'allsites.sites': 'Sitios',
   'allsites.allSites': 'Todos los sitios',
+  'allsites.showAll': (n: number) => `Mostrar todos (${n})`,
+  'allsites.showFewer': 'Mostrar menos',
   'allsites.layout': 'Diseño',
   'allsites.layoutOverview': 'Resumen',
   'allsites.layoutTable': 'Tabla',

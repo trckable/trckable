@@ -963,6 +963,8 @@ export default {
   'allsites.lensRevenue': 'Revenus',
   'allsites.sites': 'Sites',
   'allsites.allSites': 'Tous les sites',
+  'allsites.showAll': (n: number) => `Tout afficher (${n})`,
+  'allsites.showFewer': 'Afficher moins',
   'allsites.layout': 'Disposition',
   'allsites.layoutOverview': 'Aperçu',
   'allsites.layoutTable': 'Tableau',

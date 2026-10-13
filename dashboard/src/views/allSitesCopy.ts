@@ -19,6 +19,8 @@ export const copy = defineCopy('allsites', {
   lensRevenue: 'Revenue',
   sites: 'Sites',
   allSites: 'All sites',
+  showAll: (n: number) => `Show all (${n})`,
+  showFewer: 'Show fewer',
   layout: 'Layout',
   layoutOverview: 'Overview',
   layoutTable: 'Table',

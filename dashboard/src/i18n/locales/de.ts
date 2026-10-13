@@ -972,6 +972,8 @@ export default {
   'allsites.lensRevenue': 'Umsatz',
   'allsites.sites': 'Websites',
   'allsites.allSites': 'Alle Websites',
+  'allsites.showAll': (n: number) => `Alle anzeigen (${n})`,
+  'allsites.showFewer': 'Weniger anzeigen',
   'allsites.layout': 'Darstellung',
   'allsites.layoutOverview': 'Übersicht',
   'allsites.layoutTable': 'Tabelle',

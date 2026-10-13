@@ -2,7 +2,7 @@
 // It stays open while you choose, so several things change in one visit; on a
 // phone it is the usual bottom sheet. Reset shows when anything is off default.
 import { Check, SlidersHorizontal } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Popover } from '../kit'
 import type { Site } from '../lib/api'
 import type { Lens } from './allLens'
@@ -27,6 +27,29 @@ function Choice({ on, role, onClick, children }: { on: boolean; role: 'menuitemr
       {children}
       {on && <Check size={14} aria-hidden="true" />}
     </button>
+  )
+}
+
+const FIRST_SITES = 5
+
+/** The first few sites; the rest behind "Show all", open from the start when one of them is picked. */
+function SiteChoices({ sites, view, everyone, toggle }: { sites: Site[]; view: View; everyone: boolean; toggle: (id: string) => void }) {
+  const hidden = sites.slice(FIRST_SITES)
+  const [all, setAll] = useState(() => hidden.some((s) => view.sites.includes(s.id)))
+  const shown = all ? sites : sites.slice(0, FIRST_SITES)
+  return (
+    <>
+      {shown.map((s) => (
+        <Choice key={s.id} role="menuitemcheckbox" on={everyone || view.sites.includes(s.id)} onClick={() => toggle(s.id)}>
+          {s.name || s.domain}
+        </Choice>
+      ))}
+      {hidden.length > 0 && (
+        <button type="button" role="menuitem" className="all-view-more" aria-expanded={all} onClick={() => setAll(!all)}>
+          {all ? copy.showFewer : copy.showAll(sites.length)}
+        </button>
+      )}
+    </>
   )
 }
 
@@ -79,11 +102,7 @@ export function AllViewMenu({ view, sites, money, change, reset }: Props) {
               <Choice role="menuitemradio" on={everyone} onClick={() => change({ sites: [] })}>
                 {copy.allSites}
               </Choice>
-              {sites.map((s) => (
-                <Choice key={s.id} role="menuitemcheckbox" on={everyone || view.sites.includes(s.id)} onClick={() => toggle(s.id)}>
-                  {s.name || s.domain}
-                </Choice>
-              ))}
+              <SiteChoices sites={sites} view={view} everyone={everyone} toggle={toggle} />
             </Section>
           )}
           <Section title={copy.layout}>

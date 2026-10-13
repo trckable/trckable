@@ -8,7 +8,7 @@ import type { Site, SiteRow } from '../lib/api'
 import { fmtInt } from '../lib/format'
 import { navigate } from '../lib/url'
 import { cellOf, revenueHeadline, revenueStrip, revenueTotal, type Cell, type Lens } from './allLens'
-import { feedOf, headline, items, moneyText, ordered, refWord, revenueOf, whyLine, type Item, type Kind } from './allNext'
+import { byRevenue, feedOf, headline, items, moneyText, ordered, refWord, revenueOf, whyLine, type Item, type Kind } from './allNext'
 import { next } from './allNextCopy'
 import { fromStart } from './allSitesLogic'
 import { Spark } from './AllSitesSpark'
@@ -73,7 +73,7 @@ export function AllToday({ lens, rows, sites, surges, colorOf, start, period }: 
   const feed = feedOf(list)
   const total = revenueTotal(rows)
   const figures = lens === 'revenue' ? revenueStrip(list, moneyText(money)) : null
-  const sorted = ordered(list, lens === 'revenue')
+  const sorted = ordered(list)
   return (
     <div className="nx-today">
       <section className="nx-headline" aria-live="polite">
@@ -109,21 +109,31 @@ export function AllToday({ lens, rows, sites, surges, colorOf, start, period }: 
       </div>
       <div className="nx-cols">
         <div className="nx-sites">
-          {GROUPS.map((g) => {
-            const group = sorted.filter((i) => i.kind === g.kind)
-            return (
-              group.length > 0 && (
-                <section key={g.kind} aria-label={g.title}>
-                  <h3>{g.title}</h3>
-                  <div className="nx-list">
-                    {group.map((i) => (
-                      <Line key={i.row.id} i={i} start={start} against={ref} color={colorOf(i.row.id)} lens={lens} total={total} />
-                    ))}
-                  </div>
-                </section>
+          {lens === 'revenue' && (
+            <section aria-label={next.totalRevenue}>
+              <div className="nx-list">
+                {byRevenue(list).map((i) => (
+                  <Line key={i.row.id} i={i} start={start} against={ref} color={colorOf(i.row.id)} lens={lens} total={total} />
+                ))}
+              </div>
+            </section>
+          )}
+          {lens === 'visitors' &&
+            GROUPS.map((g) => {
+              const group = sorted.filter((i) => i.kind === g.kind)
+              return (
+                group.length > 0 && (
+                  <section key={g.kind} aria-label={g.title}>
+                    <h3>{g.title}</h3>
+                    <div className="nx-list">
+                      {group.map((i) => (
+                        <Line key={i.row.id} i={i} start={start} against={ref} color={colorOf(i.row.id)} lens={lens} total={total} />
+                      ))}
+                    </div>
+                  </section>
+                )
               )
-            )
-          })}
+            })}
         </div>
         <aside className="nx-feed" aria-label={next.feed}>
           <h3>{next.feed}</h3>
