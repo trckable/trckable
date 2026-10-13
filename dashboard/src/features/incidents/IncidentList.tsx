@@ -50,6 +50,9 @@ function Note({ site, x, onSaved }: { site: string; x: Incident; onSaved: (x: In
   )
 }
 
+/** What the checks saw of a quiet spell: the page is only said to have answered when a look after the last visit found it so. */
+const seenOf = (x: Incident) => (x.cause.endsWith('page answered') ? `${copy.seenQuiet} ${copy.seenAnswered}` : copy.seenQuiet)
+
 function Row({ x, now, onSaved }: { x: Incident; now: number; onSaved: (x: Incident) => void }) {
   const kind = x.kind === 'down' ? copy.down : copy.quiet
   const span = duration(lasted(x, now))
@@ -61,7 +64,7 @@ function Row({ x, now, onSaved }: { x: Incident; now: number; onSaved: (x: Incid
         {x.expected_visits !== null && <span className="inc-lost">{copy.expected(fmtInt(x.expected_visits))}</span>}
       </div>
       <p className="muted">
-        {copy.seen}: {x.kind === 'down' ? x.cause : copy.seenQuiet}
+        {copy.seen}: {x.kind === 'down' ? x.cause : seenOf(x)}
       </p>
       <Note site={x.site} x={x} onSaved={onSaved} />
     </li>

@@ -71,11 +71,19 @@ func (s *Store) OpenIncident(ctx context.Context, site string) (*Incident, error
 	return &x, nil
 }
 
-// MarkIncidentDown turns an open quiet incident into a down one: the site
-// stopped answering while it was already quiet.
-func (s *Store) MarkIncidentDown(ctx context.Context, id, cause string) error {
-	_, err := s.DB.ExecContext(ctx, `UPDATE incidents SET kind = 'down', cause = ? WHERE id = ? AND ended_at IS NULL`, cause, id)
+// SetIncidentKind changes what an open incident is called and why: a quiet
+// one the site stopped answering during becomes down, and goes back to quiet
+// when the page answers again, as the badge does.
+func (s *Store) SetIncidentKind(ctx context.Context, id, kind, cause string) error {
+	_, err := s.DB.ExecContext(ctx, `UPDATE incidents SET kind = ?, cause = ? WHERE id = ? AND ended_at IS NULL`, kind, cause, id)
 	return err
+}
+
+// IncidentOverlaps says whether any incident of the site touches [from, to).
+func (s *Store) IncidentOverlaps(ctx context.Context, site string, from, to int64) (bool, error) {
+	var n int
+	err := s.DB.QueryRowContext(ctx, `SELECT count(*) FROM incidents WHERE site_id = ? AND started_at < ? AND (ended_at IS NULL OR ended_at > ?)`, site, to, from).Scan(&n)
+	return n > 0, err
 }
 
 // EndIncident closes an open incident. expected may be nil.

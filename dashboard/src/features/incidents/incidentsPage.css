@@ -206,3 +206,8 @@
 .inc-card {
   align-content: start;
 }
+
+.inc-foot {
+  margin: 0;
+  font-size: 13px;
+}

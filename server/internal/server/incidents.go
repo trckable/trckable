@@ -52,10 +52,15 @@ type history interface {
 }
 
 // expectedVisits is the visits a stretch would normally have brought: the
-// average of the same stretch of the week over the four weeks before it.
-// Weeks from before the site's first event do not count, and with fewer than
-// two weeks of history it says nothing (nil) rather than guess.
-func expectedVisits(ctx context.Context, h history, site string, start, end int64) (*int64, error) {
+// average of the same stretch of the week over the weeks before it (up to
+// four), leaving out weeks that had an incident of their own and weeks from
+// before the site's first event. With fewer than two such weeks, or for a
+// stretch longer than a week (no "same hours of the week" to compare), it
+// says nothing (nil) rather than guess.
+func expectedVisits(ctx context.Context, h history, st *sqlite.Store, site string, start, end int64) (*int64, error) {
+	if end-start > weekSecs {
+		return nil, nil
+	}
 	first, err := h.FirstEvent(ctx, site)
 	if err != nil || first == 0 {
 		return nil, err
@@ -65,6 +70,11 @@ func expectedVisits(ctx context.Context, h history, site string, start, end int6
 		from, to := start-k*weekSecs, end-k*weekSecs
 		if from < first {
 			break
+		}
+		if over, err := st.IncidentOverlaps(ctx, site, from, to); err != nil {
+			return nil, err
+		} else if over {
+			continue
 		}
 		n, err := h.Visits(ctx, site, from, to)
 		if err != nil {
@@ -80,27 +90,85 @@ func expectedVisits(ctx context.Context, h history, site string, start, end int6
 	return &avg, nil
 }
 
+// busyEnough says whether a site averaged at least one visit an hour over the
+// four weeks before `start` (or over the time it has existed, at least a
+// day): only then is a silence of hours worth calling a quiet incident. A
+// quieter site is silent most nights without anything being wrong.
+func busyEnough(ctx context.Context, h history, site string, start int64) (bool, error) {
+	first, err := h.FirstEvent(ctx, site)
+	if err != nil || first == 0 {
+		return false, err
+	}
+	from := max(first, start-estimateWeeks*weekSecs)
+	if start-from < 24*hourSecs {
+		return false, nil
+	}
+	n, err := h.Visits(ctx, site, from, start)
+	return float64(n) >= float64(start-from)/hourSecs, err
+}
+
+const hourSecs = 3600
+
+// answered is the cause a quiet incident carries once a look after the last
+// visit found the page answering.
+const (
+	causeQuiet    = "no visits"
+	causeAnswered = "no visits, page answered"
+)
+
+// kindAndCause is what the incident should be called now.
+func kindAndCause(trouble string, last int64, c sqlite.SiteCheck) (string, string) {
+	if trouble == "down" {
+		return "down", c.Error
+	}
+	if c.At > last && c.Error == "" {
+		return "quiet", causeAnswered
+	}
+	return "quiet", causeQuiet
+}
+
 // stepIncident brings one site's record up to date with what the badge would
 // show now. It may be called as often as wanted, and again after a restart:
 // at most one incident is open, and a start already recorded is not recorded
-// twice. h may be nil (the analytics store is not ready): an incident then
-// opens but does not close, and closes on a later round.
+// twice. h may be nil (the analytics store is not ready): then nothing that
+// needs it happens, and it happens on a later round. Quiet incidents are only
+// recorded for sites busy enough that silence means something; a down one
+// always is.
 func stepIncident(ctx context.Context, st *sqlite.Store, h history, site string, last int64, c sqlite.SiteCheck, now int64) error {
 	trouble := troubleOf(last, c, now)
 	open, err := st.OpenIncident(ctx, site)
 	if err != nil {
 		return err
 	}
+	// Visits came back in between and went silent again: the open incident is
+	// a past one, and this is a new one.
+	if open != nil && trouble != "" && last+stoppedHours*3600 > open.StartedAt {
+		if h == nil {
+			return nil
+		}
+		if err := closeIncident(ctx, st, h, *open, last); err != nil {
+			return err
+		}
+		open = nil
+	}
 	switch {
 	case trouble != "" && open == nil:
-		cause := "no visits"
-		if trouble == "down" {
-			cause = c.Error
+		started := last + stoppedHours*3600
+		if trouble == "quiet" {
+			if h == nil {
+				return nil
+			}
+			if ok, err := busyEnough(ctx, h, site, started); err != nil || !ok {
+				return err
+			}
 		}
-		_, err = st.StartIncident(ctx, site, trouble, last+stoppedHours*3600, cause)
+		kind, cause := kindAndCause(trouble, last, c)
+		_, err = st.StartIncident(ctx, site, kind, started, cause)
 		return err
-	case trouble == "down" && open.Kind == "quiet":
-		return st.MarkIncidentDown(ctx, open.ID, c.Error)
+	case trouble != "" && open != nil:
+		if kind, cause := kindAndCause(trouble, last, c); kind != open.Kind || cause != open.Cause {
+			return st.SetIncidentKind(ctx, open.ID, kind, cause)
+		}
 	case trouble == "" && open != nil:
 		if h == nil {
 			return nil
@@ -121,7 +189,7 @@ func closeIncident(ctx context.Context, st *sqlite.Store, h history, in sqlite.I
 		ended = first
 	}
 	ended = max(ended, in.StartedAt)
-	exp, err := expectedVisits(ctx, h, in.Site, in.StartedAt, ended)
+	exp, err := expectedVisits(ctx, h, st, in.Site, in.StartedAt, ended)
 	if err != nil {
 		return err
 	}

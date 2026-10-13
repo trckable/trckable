@@ -12,7 +12,7 @@ import type { Site } from '../../lib/api'
 import { navigate, readView, setView, useLocation } from '../../lib/url'
 import { copy } from './copy'
 import { IncidentList } from './IncidentList'
-import { startOfDay } from './model'
+import { silentAllPeriod, startOfDay } from './model'
 import { Summary } from './Summary'
 import { Timeline } from './Timeline'
 import { useIncidentList, useNow, usePeriodIncidents } from './useIncidents'
@@ -53,12 +53,13 @@ export default function IncidentsPage({ site, header }: { site: Site; header: Re
         {!period.ready && !period.failed && <Loading height={140} />}
         {period.summary && (
           <>
-            <Summary totals={period.summary} period={to - from} />
+            <Summary totals={period.summary} period={to - from} silent={silentAllPeriod(period.list, from)} />
             <Timeline list={period.list} from={range.from} to={range.to} tz={site.timezone} now={now} />
             {period.list.length === 0 && <p className="muted">{copy.none}</p>}
           </>
         )}
         {all.ready ? <IncidentList list={all.list} next={all.next} busy={all.busy} failed={all.failed} now={now} more={all.more} edit={all.edit} /> : !period.failed && <Loading height={120} />}
+        <p className="muted inc-foot">{copy.quietNote}</p>
       </main>
     </>
   )

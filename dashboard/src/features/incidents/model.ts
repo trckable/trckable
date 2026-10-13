@@ -105,3 +105,6 @@ export function rowTotals(list: Incident[], days: number, now: number): { count:
   const seconds = affectedSeconds(mine, from, now, now)
   return { count: mine.length, seconds, pct: uptimePct(days * DAY, seconds) }
 }
+
+/** A site that has had no visit for the whole period: its incident is still open and began before it. Its uptime says nothing worth a number. */
+export const silentAllPeriod = (list: Incident[], from: number): boolean => list.some((x) => x.ended_at === null && x.started_at < from)

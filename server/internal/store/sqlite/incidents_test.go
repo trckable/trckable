@@ -40,7 +40,7 @@ func TestIncidentOpenOnceAndClose(t *testing.T) {
 	if err != nil || open == nil || open.Kind != "quiet" || open.EndedAt != nil || open.Expected != nil {
 		t.Fatalf("open %+v %v", open, err)
 	}
-	if err := st.MarkIncidentDown(ctx, open.ID, "connection refused"); err != nil {
+	if err := st.SetIncidentKind(ctx, open.ID, "down", "connection refused"); err != nil {
 		t.Fatal(err)
 	}
 	exp := int64(340)
@@ -58,6 +58,12 @@ func TestIncidentOpenOnceAndClose(t *testing.T) {
 	_ = st.EndIncident(ctx, open.ID, 9000, nil)
 	if list, _ = st.Incidents(ctx, site, 5, 0, 0, 0); *list[0].EndedAt != 5000 || list[0].Expected == nil {
 		t.Fatalf("a closed incident changed: %+v", list[0])
+	}
+	if over, _ := st.IncidentOverlaps(ctx, site, 4000, 4500); !over {
+		t.Fatal("an incident that ran to 5000 does not touch 4000 to 4500")
+	}
+	if over, _ := st.IncidentOverlaps(ctx, site, 5000, 6000); over {
+		t.Fatal("it ended at 5000: nothing touches after")
 	}
 	// A new one can open once the old one closed.
 	if made, _ := st.StartIncident(ctx, site, "quiet", 8000, "no visits"); !made {

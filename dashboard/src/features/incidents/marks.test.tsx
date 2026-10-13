@@ -38,12 +38,15 @@ describe('the incident page', () => {
   })
 
   it('writes the figures, and a dash where the visits cannot be estimated', () => {
-    const html = renderToStaticMarkup(<Summary totals={{ count: 2, seconds: 3 * 3600, lost: 340, lost_some: true }} period={30 * 86400} />)
+    const html = renderToStaticMarkup(<Summary totals={{ count: 2, seconds: 3 * 3600, lost: 340, lost_some: true }} period={30 * 86400} silent={false} />)
     expect(html).toContain('99.6%')
     expect(html).toContain('≈ 340 visits')
     expect(html).toContain('3h')
-    const none = renderToStaticMarkup(<Summary totals={{ count: 1, seconds: 600, lost: 0, lost_some: false }} period={86400} />)
+    const none = renderToStaticMarkup(<Summary totals={{ count: 1, seconds: 600, lost: 0, lost_some: false }} period={86400} silent={false} />)
     expect(none).not.toContain('≈')
+    const silent = renderToStaticMarkup(<Summary totals={{ count: 1, seconds: 86400, lost: 0, lost_some: false }} period={86400} silent />)
+    expect(silent).toContain('No visits all period')
+    expect(silent).not.toContain('0.0%')
   })
 
   it('draws a long period as a year grid and a short one as a strip', () => {

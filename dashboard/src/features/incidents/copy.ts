@@ -29,7 +29,7 @@ export const copy = defineCopy('incidents', {
   cardLost: 'Visits lost',
   lost: (n: string) => `≈ ${n} visits`,
   lostNone: '–',
-  lostNote: 'Estimated from the same hours of the four weeks before.',
+  lostNote: 'Added up over the incidents that have an estimate, each from the same hours of up to four earlier weeks without an incident.',
   uptimeNote: 'The share of the period without a down or quiet spell.',
 
   // The timeline.
@@ -49,16 +49,19 @@ export const copy = defineCopy('incidents', {
   from: (a: string, b: string) => `${a} to ${b}`,
   ongoing: (a: string) => `${a}, still going`,
   seen: 'What our checks saw',
-  seenQuiet: 'No visits came in, and the page answered when we looked.',
+  seenQuiet: 'No visits came in.',
+  seenAnswered: 'The page answered when we looked.',
   expected: (n: string) => `≈ ${n} visits lost`,
   addNote: 'Add a note',
   editNote: 'Edit note',
-  notePlaceholder: 'Why? For example: hosting migration',
+  notePlaceholder: 'Why? For example: Server move',
   noteLabel: 'Note on this incident',
   save: 'Save',
   cancel: 'Cancel',
   noteFailed: 'The note was not saved. Try again.',
   more: 'Show older incidents',
+  quietNote: 'Quiet periods are tracked once a site gets about 24 visits a day. Down periods always are.',
+  noVisitsAll: 'No visits all period',
 
   // All sites.
   lensUptime: 'Uptime',
