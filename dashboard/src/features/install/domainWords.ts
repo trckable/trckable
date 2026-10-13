@@ -8,6 +8,7 @@ import { type DomainCheck } from './domain'
 export function domainWords(verdict: DomainCheck | 'added', clean: string): string {
   if (verdict === 'space') return t.space
   if (verdict === 'invalid') return t.invalid
+  if (verdict === 'placeholder') return t.placeholderDomain(clean)
   if (verdict === 'added') return t.added(clean)
   return ''
 }

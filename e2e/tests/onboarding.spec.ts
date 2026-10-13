@@ -105,7 +105,7 @@ test('with no site the first run cannot be left, and stays on every address', as
 })
 
 test('a first site, its install, its first visit, then Live', async ({ page, browserName }) => {
-  const domain = `first-${browserName}-${Date.now()}.example`
+  const domain = `first-${browserName}-${Date.now()}.test`
   verified = domain
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: base }])
@@ -190,7 +190,7 @@ test('after the first verified site, Add a site closes like any dialog and an un
   await expect(wizard).toBeHidden()
 
   // A second site, left unverified: no gate, and it shows its own install screen.
-  const second = `second-${browserName}-${Date.now()}.example`
+  const second = `second-${browserName}-${Date.now()}.test`
   await page.goto(`${base}/${verified}?add=site`)
   await wizard.getByLabel('Domain').fill(second)
   await wizard.getByLabel('Domain').press('Enter')

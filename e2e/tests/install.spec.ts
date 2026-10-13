@@ -61,7 +61,7 @@ test('add a site, pick a method, go cookieless, check, and see the first visit',
   // (never locally); Chromium and Firefox still walk the whole flow. Tracked in
   // the backlog with the saved trace.
   test.skip(browserName === 'webkit' && !!process.env.CI, 'flaky on CI WebKit only')
-  const domain = `install-${browserName}-${Date.now()}.example`
+  const domain = `install-${browserName}-${Date.now()}.test`
   await signIn(page)
   await page.goto(`${API}/example.com?account=sites`)
   await page.getByRole('button', { name: 'Add a site' }).first().click()

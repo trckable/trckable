@@ -16,10 +16,13 @@ describe('cleanDomain', () => {
 })
 
 describe('checkDomain', () => {
+  it('flags placeholders, also pasted with www', () => {
+    for (const raw of ['example.com', 'www.example.org', 'https://test.com/x', 'a.example']) expect(checkDomain(cleanDomain(raw), raw)).toBe('placeholder')
+  })
   const check = (raw: string) => checkDomain(cleanDomain(raw), raw)
   it('asks for something first', () => expect(check('  ')).toBe('empty'))
   it('accepts domains and pasted addresses', () => {
-    for (const ok of ['example.com', 'https://www.example.com/pricing', 'a-b.example.co.uk', 'localhost', 'bücher.example'])
+    for (const ok of ['mysite.com', 'https://www.mysite.com/pricing', 'a-b.example.co.uk', 'localhost', 'bücher.test'])
       expect(check(ok)).toBe('ok')
   })
   it('rejects what is not a domain', () => {

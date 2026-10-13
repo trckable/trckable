@@ -34,7 +34,7 @@ function Status({ verdict, clean, shown, refusal }: { verdict: Verdict; clean: s
         {domainWords(verdict, clean)}
       </span>
     )
-  if ((verdict === 'space' || verdict === 'invalid') && shown)
+  if (verdict === 'placeholder' || ((verdict === 'space' || verdict === 'invalid') && shown))
     return (
       <span className="wiz-status bad" id="wiz-status">
         <AlertCircle size={14} strokeWidth={2} aria-hidden="true" />
@@ -62,7 +62,7 @@ export function DomainStep(p: { domain: string; setDomain: (d: string) => void; 
         if (p.verdict === 'ok' || p.locked) p.onSubmit()
       }}
     >
-      <label className={'wiz-field' + ((shown && p.verdict !== 'ok' && p.verdict !== 'empty' && !p.locked) || p.refusal ? ' bad' : '')}>
+      <label className={'wiz-field' + ((shown && p.verdict !== 'ok' && p.verdict !== 'empty' && !p.locked) || p.verdict === 'placeholder' || p.refusal ? ' bad' : '')}>
         {!p.domain.includes('//') && (
           <span className="wiz-prefix" aria-hidden="true">
             {t.prefix}
@@ -76,7 +76,7 @@ export function DomainStep(p: { domain: string; setDomain: (d: string) => void; 
           placeholder={t.placeholder}
           aria-label={t.domain}
           aria-describedby="wiz-status"
-          aria-invalid={(shown && p.verdict !== 'ok' && p.verdict !== 'empty') || !!p.refusal}
+          aria-invalid={(shown && p.verdict !== 'ok' && p.verdict !== 'empty') || p.verdict === 'placeholder' || !!p.refusal}
           readOnly={p.locked}
           autoFocus
           required
