@@ -2,6 +2,7 @@
 // period is not in here: it sits beside it in the head (AllPeriod). It stays
 // open while you choose, so several things change in one visit; on a phone it
 // is the usual bottom sheet. Reset shows when anything is off default.
+import { SiteMark } from '../components/SiteMark'
 import { LayoutList, SlidersHorizontal, Table2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Popover, Segmented } from '../kit'
@@ -9,7 +10,6 @@ import type { Site } from '../lib/api'
 import { copy as incidents } from '../features/incidents/copy'
 import { copy } from './allSitesCopy'
 import { differs, LAYOUTS, type Layout, type View, type ViewLens } from './allView'
-import { siteColors } from './allSitesColors'
 import '../components/sheet.css'
 
 type Props = { view: View; sites: Site[]; money: boolean; change: (c: Partial<View>) => void; reset: () => void }
@@ -32,7 +32,6 @@ export function AllViewMenu({ view, sites, money, change, reset }: Props) {
   const lensLabel: Record<ViewLens, string> = { visitors: copy.lensVisitors, revenue: copy.lensRevenue, uptime: incidents.lensUptime }
   const layoutLabel: Record<Layout, string> = { overview: copy.layoutOverview, table: copy.layoutTable }
   const everyone = view.sites.length === 0
-  const colors = siteColors(sites)
   const toggle = (id: string) => {
     const on = new Set(everyone ? sites.map((s) => s.id) : view.sites)
     if (on.has(id)) on.delete(id)
@@ -93,7 +92,7 @@ export function AllViewMenu({ view, sites, money, change, reset }: Props) {
                 {sites.map((s) => (
                   <label key={s.id} className="all-view-site">
                     <input type="checkbox" data-nav checked={everyone || view.sites.includes(s.id)} onChange={() => toggle(s.id)} />
-                    <i className="all-view-dot" style={{ background: colors.get(s.id) }} aria-hidden="true" />
+                    <SiteMark site={s} size={16} />
                     <span>{s.name || s.domain}</span>
                   </label>
                 ))}

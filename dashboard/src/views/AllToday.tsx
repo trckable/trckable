@@ -5,6 +5,7 @@ import { useMemo } from 'react'
 import { accountTotals } from '../features/incidents/model'
 import { useAccountIncidents, useNow } from '../features/incidents/useIncidents'
 import type { Surge } from '../features/signals/surge'
+import { SiteMark } from '../components/SiteMark'
 import { StateDot } from '../features/sites/StateDot'
 import { when } from '../features/sitestatus/time'
 import type { Site, SiteRow } from '../lib/api'
@@ -54,7 +55,11 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
     <button type="button" className={'nx-line' + (hurt ? ' hurt ' + i.status : '')} onClick={() => navigate('/' + encodeURIComponent(r.domain))}>
       <span className="nx-name">
         {i.site && <StateDot site={i.site} />}
-        <b title={r.domain}>{r.name || r.domain}</b>
+        <SiteMark site={i.site ?? r} size={28} />
+        <span className="nx-who">
+          <b title={r.domain}>{r.name || r.domain}</b>
+          {r.name && r.name !== r.domain && <small className="muted">{r.domain}</small>}
+        </span>
       </span>
       <span className="nx-num">
         <b>{r.error ? '–' : cell.main}</b>
@@ -161,21 +166,23 @@ export function AllToday({ lens, rows, sites, surges, colorOf, start, period, da
               )
             })}
         </div>
-        <aside className="nx-feed" aria-label={next.feed}>
+        <aside className="nx-feedcol" aria-label={next.feed}>
           <h3>{next.feed}</h3>
-          {feed.length === 0 && <p className="muted">{next.feedEmpty}</p>}
-          <ul>
-            {feed.map((e) => (
-              <li key={e.key} className={e.tone}>
-                <i aria-hidden="true" />
-                <span>
-                  {e.text}
-                  {e.detail && <small>{e.detail}</small>}
-                </span>
-                <time>{when(e.at)}</time>
-              </li>
-            ))}
-          </ul>
+          <div className="nx-feed">
+            {feed.length === 0 && <p className="muted">{next.feedEmpty}</p>}
+            <ul>
+              {feed.map((e) => (
+                <li key={e.key} className={e.tone}>
+                  <SiteMark site={e.mark} size={16} />
+                  <span>
+                    {e.text}
+                    {e.detail && <small>{e.detail}</small>}
+                  </span>
+                  <time>{when(e.at)}</time>
+                </li>
+              ))}
+            </ul>
+          </div>
         </aside>
       </div>
     </div>

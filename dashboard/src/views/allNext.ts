@@ -174,6 +174,8 @@ export interface FeedEvent {
   text: string
   detail: string
   tone: 'live' | 'warn' | 'bad'
+  /** Whose event it is: the feed draws its mark. */
+  mark: Pick<Site, 'domain' | 'color' | 'icon_url'>
 }
 
 /** What is happening across the sites, newest first: busy moments, people online, sites that went quiet or down. */
@@ -184,10 +186,11 @@ export function feedOf(list: Item[]): FeedEvent[] {
     const name = i.row.name || i.row.domain
     const surge = i.surge
     const last = i.site?.last_event_at
-    if (surge) out.push({ key: i.row.id + 's', at: surge.started, text: next.feedSurge(name, surge.times.toFixed(1)), detail: sourceLine(surge), tone: 'live' })
-    else if (i.online > 0 && last) out.push({ key: i.row.id + 'o', at: last, text: next.feedOnline(name, i.online), detail: '', tone: 'live' })
-    if (i.status === 'down' && i.site?.check) out.push({ key: i.row.id + 'd', at: i.site.check.down_since ?? i.site.check.at, text: next.feedDown(name), detail: '', tone: 'bad' })
-    if (i.status === 'quiet' && last && i.kind === 'attention') out.push({ key: i.row.id + 'q', at: last, text: next.feedQuiet(name), detail: '', tone: 'warn' })
+    const mark = i.site ?? i.row
+    if (surge) out.push({ key: i.row.id + 's', at: surge.started, text: next.feedSurge(name, surge.times.toFixed(1)), detail: sourceLine(surge), tone: 'live', mark })
+    else if (i.online > 0 && last) out.push({ key: i.row.id + 'o', at: last, text: next.feedOnline(name, i.online), detail: '', tone: 'live', mark })
+    if (i.status === 'down' && i.site?.check) out.push({ key: i.row.id + 'd', at: i.site.check.down_since ?? i.site.check.at, text: next.feedDown(name), detail: '', tone: 'bad', mark })
+    if (i.status === 'quiet' && last && i.kind === 'attention') out.push({ key: i.row.id + 'q', at: last, text: next.feedQuiet(name), detail: '', tone: 'warn', mark })
   }
   return out.sort((a, b) => b.at - a.at).slice(0, 12)
 }

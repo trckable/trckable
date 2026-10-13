@@ -3228,9 +3228,10 @@ body {
   justify-content: center;
 }
 .app :is(.view-switch, .sv-switch, .seg, .kit-seg) button:is([aria-pressed='true'], .on, [aria-selected='true']) {
-  background: color-mix(in srgb, var(--text) 12%, transparent);
-  box-shadow: none;
+  background: var(--raised);
+  box-shadow: 0 0 0 1px var(--raised-line), var(--shadow-soft);
   color: var(--text);
+  font-weight: 600;
 }
 @media (max-width: 1000px) {
   .app .sv-slot .sv-switch {
@@ -3241,8 +3242,8 @@ body {
     border-radius: calc(var(--track-r) - var(--track-in) - 1px);
   }
   .app .sv-slot .sv-switch button.on {
-    background: color-mix(in srgb, var(--text) 12%, transparent);
-    box-shadow: none;
+    background: var(--raised);
+    box-shadow: 0 0 0 1px var(--raised-line), var(--shadow-soft);
   }
 }
 /* A phone's track is the 44 px of its buttons exactly (a finger target, as tall as the buttons beside it): the chosen pill fills it, no inset to spill over the edge. */
