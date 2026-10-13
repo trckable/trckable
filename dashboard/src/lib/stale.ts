@@ -5,8 +5,16 @@
 // (a page being left aborts its own downloads), so the page asks the server
 // which build it is serving now. Once a minute at most, so a server that
 // still answers with the old build can never make a loop.
+//
+// The question waits a moment first. A page being left aborts its own
+// downloads, and the chunk failure that follows runs while the navigation is
+// still under way: a request started then is cancelled with the page, and
+// WebKit reports that as a page error ("Fetch API cannot load ... due to
+// access control checks") even though it is caught here. A page that is really
+// going away never reaches the question; one that stays asks it a moment later.
 const KEY = 'trckable:reloaded'
 let going: Promise<boolean> | undefined
+const SETTLE_MS = 1500
 
 /** The failure of a chunk that is not there, in each browser's words. */
 export const staleChunk = (e: unknown) => /dynamically imported module|Importing a module script failed|Unable to preload CSS/i.test(e instanceof Error ? e.message : String(e))
@@ -14,6 +22,7 @@ export const staleChunk = (e: unknown) => /dynamically imported module|Importing
 async function reload() {
   try {
     if (Date.now() - Number(sessionStorage.getItem(KEY)) < 60_000) return false
+    await new Promise((done) => setTimeout(done, SETTLE_MS))
     // The page's own scripts (the first load is a few, in order): all of them still in the page the server serves now means the same build.
     const mine = Array.from(document.querySelectorAll('script[type=module][src]'), (s) => s.getAttribute('src') ?? '')
     const now = await (await fetch('/', { cache: 'no-store' })).text()
