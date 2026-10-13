@@ -7,6 +7,9 @@ import { AnchoredPop } from '../../components/AnchoredPop'
 import { api, type Site } from '../../lib/api'
 import { isViewer } from '../../lib/me'
 import { openSettings } from '../../lib/settings'
+import { navigate } from '../../lib/url'
+import { copy as incidents } from '../incidents/copy'
+import { incidentsPath } from '../incidents/route'
 import { copy } from './copy'
 import { causeOf, rowsOf } from './rows'
 import { GapChart } from './GapChart'
@@ -99,10 +102,28 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
           {copy.again}
         </button>
       </div>
+      <HistoryLink site={site} />
     </div>
   )
 }
 
+
+/** The one way on to the record of past incidents, quiet at the panel's foot. */
+function HistoryLink({ site }: { site: Site }) {
+  const href = incidentsPath(site.domain)
+  return (
+    <a
+      className="status-history"
+      href={href}
+      onClick={(e) => {
+        e.preventDefault()
+        navigate(href)
+      }}
+    >
+      {incidents.history}
+    </a>
+  )
+}
 
 /** The floating badge: the state and how long; it opens the panel up from its corner, or a sheet on a phone. */
 function Gone({ site, last, down }: { site: Site; last: number; down: boolean }) {
@@ -189,10 +210,12 @@ function Back({ site }: { site: Site }) {
     return null
   }
   return (
-    <div className="status-float"><span className="status-badge back" role="status" title={copy.back(when(gap.back), spanLong(gap.back - gap.since))}>
-      <Check size={15} strokeWidth={2.25} aria-hidden="true" />
-      {copy.backBadge(spanLong(gap.back - gap.since))}
-    </span></div>
+    <div className="status-float">
+      <a className="status-badge back" href={incidentsPath(site.domain)} title={copy.back(when(gap.back), spanLong(gap.back - gap.since))} onClick={(e) => { e.preventDefault(); navigate(incidentsPath(site.domain)) }}>
+        <Check size={15} strokeWidth={2.25} aria-hidden="true" />
+        {copy.backBadge(spanLong(gap.back - gap.since))}
+      </a>
+    </div>
   )
 }
 

@@ -18,8 +18,12 @@ describe('the look of All sites', () => {
     expect(readView()).toEqual({ days: 90, lens: 'revenue', layout: 'table', sites: ['a', 'b'] })
   })
   it('ignores what it does not know', () => {
-    at('?period=11&lens=uptime&layout=wall')
+    at('?period=11&lens=margin&layout=wall')
     expect(readView()).toEqual(DEFAULT_VIEW)
+  })
+  it('knows Uptime as a lens', () => {
+    at('?period=365&lens=uptime')
+    expect(readView()).toMatchObject({ days: 365, lens: 'uptime' })
   })
   it('puts the choice in the address and remembers period, lens and layout', () => {
     saveView({ days: 7, lens: 'revenue', layout: 'table', sites: ['a'] })

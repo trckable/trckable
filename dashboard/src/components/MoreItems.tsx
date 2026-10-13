@@ -1,10 +1,11 @@
 // The ⋯ menu's items (MoreMenu.tsx). Its own chunk, so the first load carries only the button.
-import { Bookmark, Download, Flag, Maximize2, Minimize2, Plus, RefreshCw, Share2 } from 'lucide-react'
+import { Activity, Bookmark, Download, Flag, Maximize2, Minimize2, Plus, RefreshCw, Share2 } from 'lucide-react'
 import { openedFrom } from './panelOpen'
 import type { MenuItems } from '../lib/headerMenu'
 import { caps, keyFor } from '../lib/keys'
 import { isShared } from '../lib/me'
 import type { MoreProps } from './MoreMenu'
+import { copy as incidents } from '../features/incidents/copy'
 import { copy } from './itemsCopy'
 import './MoreItems.css'
 import './sheet.css'
@@ -53,6 +54,12 @@ export default function MoreItems({ p, go }: { p: MoreProps & { onCreate?: () =>
               <Flag size={18} strokeWidth={1.75} aria-hidden="true" />
               {copy.milestones}
               {p.milestones.dot && <span className="more-dot" aria-hidden="true" />}
+            </button>
+          )}
+          {p.onIncidents && (
+            <button type="button" role="menuitem" onClick={go(p.onIncidents)}>
+              <Activity size={18} strokeWidth={1.75} aria-hidden="true" />
+              {incidents.menu}
             </button>
           )}
           <button type="button" role="menuitem" onClick={go(p.onExport)}>

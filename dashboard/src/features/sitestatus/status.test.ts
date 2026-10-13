@@ -13,6 +13,10 @@ describe('a site’s status', () => {
     expect(statusOf(site({ last_event_at: sec - 3600 }), NOW)).toBe('ok')
   })
 
+  it('is ok under the threshold even when the last look failed (the server’s incident rule has the same cases: server/internal/server/incidents_test.go)', () => {
+    expect(statusOf(site({ last_event_at: sec - 5 * 3600, check: { at: sec - 60, error: 'x' } }), NOW)).toBe('ok')
+  })
+
   it('is quiet once the threshold passes and the page answers or was not looked at', () => {
     expect(statusOf(site({ last_event_at: sec - 7 * 3600 }), NOW)).toBe('quiet')
     expect(statusOf(site({ last_event_at: sec - 7 * 3600, check: { at: sec - 60, found: 'none' } }), NOW)).toBe('quiet')

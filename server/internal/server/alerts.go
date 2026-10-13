@@ -87,6 +87,7 @@ func (s *Server) runAlerts(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-soon:
+			s.checkIncidents(ctx)
 			s.checkMilestones(ctx)
 			continue
 		case <-t.C:
@@ -96,6 +97,7 @@ func (s *Server) runAlerts(ctx context.Context) {
 		if err := s.checkAlerts(ctx); err != nil && ctx.Err() == nil {
 			slog.Warn("alert check failed", "err", err)
 		}
+		s.checkIncidents(ctx)
 		s.checkMilestones(ctx)
 		s.checkSurges(ctx)
 		s.checkReports(ctx)
