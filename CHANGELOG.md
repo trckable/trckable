@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The mobile app can sign in with a six-digit code sent by email (where the server can send email) and keeps its own sign-in per phone; Account lists those devices and removes them, and a removed person or a new password ends them. A server without email keeps the password.
 - On All sites each site is one line: who is online now is left to the Live column, and a row compares today with the usual instead.
 - Add a site refuses placeholder domains such as example.com, test.com and demo.com, in the dialog and in the API, and says to enter your own site's address.
 - The share bar under Where they're from fades out softly at both sides, like the card lines.

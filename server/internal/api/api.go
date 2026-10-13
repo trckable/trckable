@@ -23,6 +23,7 @@ import (
 
 	"golang.org/x/sync/singleflight"
 
+	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/ga"
 	"github.com/trckable/trckable/server/internal/query"
@@ -116,6 +117,10 @@ type API struct {
 	ShareDomainAskOpen bool
 	// LookupTXT reads a name's TXT records: the system's resolver, except in tests.
 	LookupTXT func(ctx context.Context, name string) ([]string, error)
+
+	// SendLoginMail sends the email with a sign-in code; nil sends it through
+	// the instance's mail server (alerts.Mail). Tests replace it.
+	SendLoginMail func(ctx context.Context, to string, r alerts.Report) error
 }
 
 // Stop ends every live stream. The server calls it when it starts shutting
@@ -160,6 +165,8 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("POST /api/v1/setup", a.setup)
 	handle("POST /api/v1/payments/start-over", a.authed(a.startOverKeys))
 	handleFunc("POST /api/v1/login", a.login)
+	handleFunc("POST /api/v1/login/code", a.loginCode)
+	handleFunc("POST /api/v1/login/code/verify", a.loginCodeVerify)
 	handleFunc("GET /api/v1/oidc/{provider}/start", a.ssoStart)
 	handleFunc("GET /api/v1/oidc/{provider}/callback", a.ssoCallback)
 	handleFunc("POST /api/v1/oidc/code", a.ssoCode)
@@ -172,6 +179,8 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("POST /api/v1/logout", a.logout)
 	handle("GET /api/v1/me", a.authed(a.me))
 	handle("PUT /api/v1/me/keys", a.authed(a.setKeys))
+	handle("GET /api/v1/me/devices", a.authed(a.devices))
+	handle("DELETE /api/v1/me/devices/{id}", a.authed(a.removeDevice))
 	handle("GET /api/v1/sites", a.authed(a.sites))
 	handle("GET /api/v1/site-layout", a.authed(a.siteLayout))
 	handle("PUT /api/v1/site-layout", a.authed(a.setSiteLayout))
@@ -397,6 +406,9 @@ func decode(r *http.Request, v any) error {
 type principal struct {
 	user   *sqlite.User // nil for API keys
 	cookie bool
+	// device is the phone sign-in this request came with, when it came with
+	// one (devices.go); empty for a browser session or a key.
+	device string
 	// sites, when not nil, is every site of the account this request may
 	// see: a viewer limited to some (store/sqlite/siteaccess.go). Every other
 	// site of the account does not exist for it, exactly like another
@@ -449,6 +461,19 @@ func (a *API) authed(h http.HandlerFunc) http.Handler {
 				// The automation token acts for the installation's own
 				// account, never across accounts.
 				p.account = sqlite.DefaultAccount
+			case strings.HasPrefix(bearer, sqlite.DeviceTokenPrefix):
+				// A phone's own sign-in: it acts as the person it was made
+				// for, with their role. Two-step was passed when it was made.
+				u, device, err := a.Ctl.DeviceUser(r.Context(), bearer)
+				if err != nil {
+					fail(w, http.StatusUnauthorized, "please sign in")
+					return
+				}
+				var ok bool
+				if p, ok = a.personGuards(w, r, u); !ok {
+					return
+				}
+				p.device = device
 			case strings.HasPrefix(bearer, "tkb_live_"):
 				account, err := a.Ctl.APIKeyAccount(r.Context(), bearer)
 				if err != nil {
@@ -472,33 +497,15 @@ func (a *API) authed(h http.HandlerFunc) http.Handler {
 				fail(w, http.StatusUnauthorized, "please sign in")
 				return
 			}
-			p = principal{user: &u, cookie: true, account: u.AccountID}
-			if u.Role != sqlite.RoleOwner {
-				sites, err := a.Ctl.ViewerSites(r.Context(), u.AccountID, u.ID)
-				if err != nil {
-					// Unreadable limits show nothing, never everything.
-					fail(w, http.StatusServiceUnavailable, "please try again")
-					return
-				}
-				p.sites = sites
-			}
 			if r.Method != http.MethodGet && r.Header.Get("X-Trckable-Request") != "1" {
 				fail(w, http.StatusForbidden, "missing X-Trckable-Request header")
 				return
 			}
-			// A viewer reads the reports and nothing else — except their own
-			// account, which is theirs to look after.
-			if u.Role == sqlite.RoleViewer && r.Method != http.MethodGet && !ownAccount(r.URL.Path) {
-				fail(w, http.StatusForbidden, "your account can read this instance, not change it")
+			var ok bool
+			if p, ok = a.personGuards(w, r, u); !ok {
 				return
 			}
-			// A password someone else chose (a new person's, or one an owner
-			// reset) opens only the way to choose your own: whoever saw the
-			// one-time password must not keep the account.
-			if !mustChangeAllowed(r) && a.Ctl.MustChange(r.Context(), u.ID) {
-				fail(w, http.StatusForbidden, "choose your own password first")
-				return
-			}
+			p.cookie = true
 		} else {
 			w.Header().Set("WWW-Authenticate", `Bearer realm="trckable"`)
 			fail(w, http.StatusUnauthorized, "please sign in")
@@ -520,6 +527,35 @@ func (a *API) authed(h http.HandlerFunc) http.Handler {
 		}
 		h.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKey{}, p)))
 	})
+}
+
+// personGuards is what every signed-in person is held to, by session or by
+// device: the sites a viewer is limited to, a viewer changing only their own
+// account, and a password someone else chose opening only the way to choose
+// their own (whoever saw the one-time password must not keep the account).
+// It answers the request itself when one of them says no.
+func (a *API) personGuards(w http.ResponseWriter, r *http.Request, u sqlite.User) (principal, bool) {
+	p := principal{user: &u, account: u.AccountID}
+	if u.Role != sqlite.RoleOwner {
+		sites, err := a.Ctl.ViewerSites(r.Context(), u.AccountID, u.ID)
+		if err != nil {
+			// Unreadable limits show nothing, never everything.
+			fail(w, http.StatusServiceUnavailable, "please try again")
+			return p, false
+		}
+		p.sites = sites
+	}
+	// A viewer reads the reports and nothing else — except their own
+	// account, which is theirs to look after.
+	if u.Role == sqlite.RoleViewer && r.Method != http.MethodGet && !ownAccount(r.URL.Path) {
+		fail(w, http.StatusForbidden, "your account can read this instance, not change it")
+		return p, false
+	}
+	if !mustChangeAllowed(r) && a.Ctl.MustChange(r.Context(), u.ID) {
+		fail(w, http.StatusForbidden, "choose your own password first")
+		return p, false
+	}
+	return p, true
 }
 
 // stillSees asks again whether a long request (the live stream) may still
@@ -554,7 +590,7 @@ func mustChangeAllowed(r *http.Request) bool {
 // rather than to the instance: their password, name, picture, second step
 // and keyboard shortcuts.
 func ownAccount(path string) bool {
-	return strings.HasPrefix(path, "/api/v1/account/") || path == "/api/v1/account" || path == "/api/v1/logout" || path == "/api/v1/me/keys" || closingMilestones(path)
+	return strings.HasPrefix(path, "/api/v1/account/") || path == "/api/v1/account" || path == "/api/v1/logout" || path == "/api/v1/me/keys" || strings.HasPrefix(path, "/api/v1/me/devices") || closingMilestones(path)
 }
 
 // closingMilestones is a person closing a milestone's moment: their own
@@ -741,7 +777,9 @@ func (a *API) setupStatus(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"needs_setup": !has, "sso": a.ssoChoices(has)})
+	// email_codes: this server can email a sign-in code, so the app may offer
+	// it. Only whether, never to whom or from where.
+	writeJSON(w, http.StatusOK, map[string]any{"needs_setup": !has, "sso": a.ssoChoices(has), "email_codes": a.emailCodesOn()})
 }
 
 func (a *API) setup(w http.ResponseWriter, r *http.Request) {
@@ -810,7 +848,10 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.init()
-	var in struct{ Email, Password, Code string }
+	var in struct {
+		Email, Password, Code string
+		Device                *deviceIn
+	}
 	if err := decode(r, &in); err != nil {
 		fail(w, http.StatusBadRequest, "bad request")
 		return
@@ -873,14 +914,7 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	tok, err := a.Ctl.CreateSession(r.Context(), u.ID)
-	if err != nil {
-		fail(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	a.setCookie(w, r, tok, int(sqlite.SessionTTL.Seconds()))
-	a.rememberDevice(w, r, u.ID, in.Email)
-	writeJSON(w, http.StatusOK, map[string]any{"user": map[string]string{"email": u.Email}})
+	a.signedIn(w, r, u, in.Device)
 }
 
 func (a *API) logout(w http.ResponseWriter, r *http.Request) {
