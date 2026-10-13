@@ -1,5 +1,16 @@
 /* StatusCard's styles on top of the surge story's (signals/surge.css): they load with its chunk. */
+.status-float {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
 .status-badge {
+  box-shadow: var(--shadow);
   --tone: var(--text-2);
   position: relative;
   display: inline-flex;
@@ -53,16 +64,20 @@ button.status-badge:focus-visible {
     box-shadow: 0 0 0 7px transparent;
   }
 }
-.pop.anchored.status-pop {
-  width: min(560px, calc(100vw - 16px));
+.status-pop {
+  width: min(560px, calc(100vw - 32px));
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
   max-width: none;
   /* The popover's own cap is for lists: this one is a page of rows, and scrolls inside itself when the screen is short. */
-  max-height: min(680px, calc(100dvh - 96px)) !important;
+  max-height: 70dvh !important;
   padding: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-.pop.anchored.status-pop > .status-card {
+.status-pop > .status-card {
   flex: none;
 }
 .status-card {
@@ -170,6 +185,8 @@ button.status-badge:focus-visible {
 @media (max-width: 640px) {
   .pop.anchored.status-pop {
     width: auto;
+    border-radius: 18px 18px 0 0;
+    padding: 0;
     max-height: 84dvh !important;
   }
   .status-badge {

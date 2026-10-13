@@ -1,5 +1,4 @@
-// A site that stopped sending visits explains itself from a badge in the
-// control row: how long, and a panel under it with what happened and since
+// A site that stopped sending visits explains itself from a floating badge: how long, and a panel under it with what happened and since
 // when, what was checked from outside just now, and what to do. When visits
 // return the badge says so for a day.
 import { useEffect, useRef, useState } from 'react'
@@ -105,18 +104,42 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
 }
 
 
-/** The badge in the control row: the state and how long, opening the panel. */
+/** The floating badge: the state and how long; it opens the panel up from its corner, or a sheet on a phone. */
 function Gone({ site, last, down }: { site: Site; last: number; down: boolean }) {
   const [open, setOpen] = useState(false)
   const btn = useRef<HTMLButtonElement>(null)
+  const box = useRef<HTMLDivElement>(null)
+  const [sheet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches)
   useEffect(() => {
     const prev = readGap(site.id)
     if (!prev || prev.since !== last) writeGap(site.id, { since: last })
   }, [site.id, last])
+  // On a desktop the panel is ours to close; the sheet's popover closes itself.
+  useEffect(() => {
+    if (!open || sheet) return
+    const away = (e: MouseEvent) => {
+      if (!box.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setOpen(false)
+      btn.current?.focus()
+    }
+    document.addEventListener('mousedown', away)
+    window.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('mousedown', away)
+      window.removeEventListener('keydown', esc)
+    }
+  }, [open, sheet])
   const Icon = down ? CircleAlert : Moon
-  const age = silence(site)
   return (
-    <>
+    <div ref={box} className="status-float">
+      {open && !sheet && (
+        <div className="status-pop" role="dialog" aria-label={copy.label}>
+          <StatusPanel site={site} last={last} down={down} />
+        </div>
+      )}
       <button
         ref={btn}
         type="button"
@@ -127,14 +150,14 @@ function Gone({ site, last, down }: { site: Site; last: number; down: boolean })
         onClick={() => setOpen((o) => !o)}
       >
         <Icon size={15} strokeWidth={2} aria-hidden="true" />
-        {copy.badge(down, age)}
+        {copy.badge(down, silence(site))}
       </button>
-      {open && (
+      {open && sheet && (
         <AnchoredPop anchor={btn} label={copy.label} className="status-pop" onClose={() => setOpen(false)}>
           {() => <StatusPanel site={site} last={last} down={down} />}
         </AnchoredPop>
       )}
-    </>
+    </div>
   )
 }
 
@@ -166,10 +189,10 @@ function Back({ site }: { site: Site }) {
     return null
   }
   return (
-    <span className="status-badge back" role="status" title={copy.back(when(gap.back), spanLong(gap.back - gap.since))}>
+    <div className="status-float"><span className="status-badge back" role="status" title={copy.back(when(gap.back), spanLong(gap.back - gap.since))}>
       <Check size={15} strokeWidth={2.25} aria-hidden="true" />
       {copy.backBadge(spanLong(gap.back - gap.since))}
-    </span>
+    </span></div>
   )
 }
 
