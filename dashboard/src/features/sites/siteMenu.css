@@ -409,10 +409,6 @@
 .pop.sites.mid .site {
   gap: 10px;
 }
-.pop.sites.mid .site.on::before {
-  top: 9px;
-  bottom: 9px;
-}
 
 /* One to three: room to breathe, a slightly larger name. */
 .pop.sites.roomy {
@@ -426,10 +422,6 @@
   gap: 12px;
   padding: 0 10px;
   font-size: 14px;
-}
-.pop.sites.roomy .site.on::before {
-  top: 11px;
-  bottom: 11px;
 }
 .pop.sites.roomy .site .tail {
   font-size: 12px;
@@ -513,20 +505,12 @@
   .pop.sites.mid .site {
     gap: 12px;
   }
-  .pop.sites.mid .site.on::before {
-    top: 11px;
-    bottom: 11px;
-  }
   .pop.sites.roomy .site,
   .pop.sites.roomy .foot-add {
     height: 44px;
   }
   .pop.sites.roomy .site {
     gap: 14px;
-  }
-  .pop.sites.roomy .site.on::before {
-    top: 13px;
-    bottom: 13px;
   }
 }
 /* A phone (the phone scale, phone.css): the list is a bottom sheet, every row
@@ -542,10 +526,6 @@
     gap: 12px;
     padding: 0 10px 0 28px;
     font-size: var(--ph-text);
-  }
-  :root .pop.sites .site.on::before {
-    top: 12px;
-    bottom: 12px;
   }
   :root .pop.sites .site-mark {
     font-size: 12px;
