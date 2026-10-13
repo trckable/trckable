@@ -119,7 +119,8 @@ func (a *API) changePassword(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusForbidden, "that is not your current password")
 		return
 	}
-	if err := a.Ctl.ResetPassword(r.Context(), u.Email, in.Password); busy(w, err) {
+	device := principalOf(r).device
+	if err := a.Ctl.ResetPasswordKeeping(r.Context(), u.Email, in.Password, device); busy(w, err) {
 		return
 	} else if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
@@ -129,6 +130,11 @@ func (a *API) changePassword(w http.ResponseWriter, r *http.Request) {
 	// asked for a new password once more, so the change still stands.
 	if err := a.Ctl.SetMustChange(r.Context(), u.ID, false); err != nil {
 		slog.Warn("could not clear the must-change flag", "user", u.ID, "err", err)
+	}
+	// A phone keeps its own sign-in and needs no cookie.
+	if device != "" {
+		w.WriteHeader(http.StatusNoContent)
+		return
 	}
 	// ResetPassword drops every session, including this one: hand the browser
 	// a fresh cookie so the person stays signed in here.
