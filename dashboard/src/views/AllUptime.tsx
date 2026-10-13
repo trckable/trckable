@@ -74,6 +74,7 @@ export function AllUptime({ sites, days }: { sites: Site[]; days: number }) {
         <li className="ok">{copy.legendOk}</li>
         <li className="quiet">{copy.legendQuiet}</li>
         <li className="down">{copy.legendDown}</li>
+        {sites.some((s) => (s.watched_since ?? 0) > now - days * DAY) && <li className="unwatched">{copy.legendUnwatched}</li>}
       </ul>
     </div>
   )
