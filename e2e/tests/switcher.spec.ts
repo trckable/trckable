@@ -146,6 +146,33 @@ test('the dot is real: a visit in the last five minutes, from the sites list', a
   await expect(menu.locator('.now-note')).toHaveCount(0)
 })
 
+test('the chosen site\'s dot sits on the middle of its row, level with the icon', async ({ page, browserName }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  for (const [width, height] of [[1280, 800], [390, 844]]) {
+    await page.setViewportSize({ width, height })
+    await page.goto(`${API}/example.com`)
+    const menu = await open(page)
+    const on = menu.locator('.site.on').first()
+    // The sheet slides in: measure all three in one go, once it has stopped.
+    const mids = () =>
+      on.evaluate((el) => {
+        const r = el.getBoundingClientRect()
+        const cs = getComputedStyle(el, '::before')
+        const m = el.querySelector('.site-mark')!.getBoundingClientRect()
+        return {
+          row: r.top + r.height / 2,
+          dot: r.top + parseFloat(cs.top) + parseFloat(cs.marginTop) + parseFloat(cs.height) / 2,
+          icon: m.top + m.height / 2,
+        }
+      })
+    await expect.poll(async () => {
+      const v = await mids()
+      return Math.max(Math.abs(v.dot - v.icon), Math.abs(v.dot - v.row))
+    }).toBeLessThanOrEqual(1)
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/switcher-dot-${width}-${browserName}.png` })
+  }
+})
+
 test('on a phone the switcher fits the screen', async ({ page, browserName }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
