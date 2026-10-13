@@ -6,7 +6,7 @@ import '../components/sheet.css'
 
 export const PERIODS = [{ days: 7, label: '7 days' }, { days: 30, label: '30 days' }, { days: 90, label: '90 days' }, { days: 365, label: '12 months' }]
 
-export function AllPeriod({ days, onChange }: { days: number; onChange: (days: number) => void }) {
+export function AllPeriod({ days, onChange, periods = PERIODS }: { days: number; onChange: (days: number) => void; periods?: typeof PERIODS }) {
   const now = PERIODS.find((p) => p.days === days)
   return (
     <Popover
@@ -21,7 +21,7 @@ export function AllPeriod({ days, onChange }: { days: number; onChange: (days: n
     >
       {(close) => (
         <div className="menu-list" role="menu" aria-label={copy.period}>
-          {PERIODS.map((p) => (
+          {periods.map((p) => (
             <button key={p.days} type="button" role="menuitemradio" aria-checked={p.days === days} onClick={() => { close(); onChange(p.days) }}>
               {copy.last(p.label)}
               {p.days === days && <Check size={14} aria-hidden="true" />}

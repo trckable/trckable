@@ -1,0 +1,766 @@
+/* The three All sites directions (?design=1|2|3): views/AllToday.tsx,
+   AllTable.tsx, AllMission.tsx. Loaded with the page. */
+.nx-today,
+.nx-table,
+.nx-mission {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.nx-badge {
+  flex: none;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--text-3) 14%, transparent);
+}
+.nx-badge.up {
+  color: var(--up);
+  background: color-mix(in srgb, var(--up) 14%, transparent);
+}
+.nx-badge.down {
+  color: var(--down);
+  background: color-mix(in srgb, var(--down) 14%, transparent);
+}
+@keyframes nx-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nx-strip i,
+  .nx-tile .live i,
+  .nx-strip3 i,
+  .nx-table .on i {
+    animation: none !important;
+  }
+}
+
+/* The Uptime strip: a bar per day, up, quiet, down. */
+.nx-up {
+  display: flex;
+  gap: 2px;
+  height: 26px;
+  min-width: 0;
+}
+.nx-up i {
+  flex: 1;
+  min-width: 2px;
+  border-radius: 2px;
+  background: var(--up);
+}
+.nx-up i.quiet {
+  background: var(--money);
+}
+.nx-up i.down {
+  background: var(--down);
+}
+.nx-up i.none {
+  background: var(--border);
+}
+.nx-tile .nx-up {
+  height: 40px;
+}
+
+/* ---- 1 · Today ---- */
+.nx-headline h2 {
+  margin: 0;
+  max-width: 880px;
+  font-size: 24px;
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.nx-headline .fine {
+  color: var(--up);
+}
+.nx-headline .warn {
+  color: var(--money);
+}
+.nx-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 3.5%, var(--surface)), var(--surface));
+  box-shadow: var(--shadow-soft);
+}
+.nx-strip > div {
+  display: grid;
+  gap: 2px;
+  align-content: start;
+  padding: 16px 20px;
+  min-width: 0;
+}
+.nx-strip > div + div {
+  border-left: 1px solid var(--border);
+}
+.nx-strip small,
+.nx-totals small,
+.nx-strip3 small,
+.nx-asleep small {
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+.nx-strip b {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 28px;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.nx-strip em {
+  color: var(--text-3);
+  font-size: 12px;
+  font-style: normal;
+}
+.nx-strip i,
+.nx-strip3 i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: nx-pulse 1.8s ease-out infinite;
+}
+.nx-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+}
+.nx-sites {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+.nx-sites h3,
+.nx-feed h3 {
+  margin: 0 0 8px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.nx-list {
+  display: grid;
+  gap: 8px;
+}
+.nx-line {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.1fr) 120px 96px minmax(90px, 160px);
+  grid-template-areas: 'name num badge spark' 'why why why why';
+  align-items: center;
+  gap: 4px 18px;
+  padding: 13px 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.nx-line:hover {
+  border-color: var(--border-2);
+}
+.nx-line:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.nx-line.hurt {
+  border-color: color-mix(in srgb, var(--money) 55%, var(--border));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--money) 9%, var(--surface)), var(--surface));
+}
+.nx-line.hurt.down {
+  border-color: color-mix(in srgb, var(--down) 60%, var(--border));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--down) 10%, var(--surface)), var(--surface));
+}
+.nx-name {
+  grid-area: name;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.nx-name b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+}
+.nx-num {
+  grid-area: num;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.nx-num b {
+  font-size: 18px;
+}
+.nx-num small {
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+.nx-line .nx-badge {
+  grid-area: badge;
+  justify-self: start;
+}
+.nx-spark {
+  grid-area: spark;
+  min-width: 0;
+}
+.nx-flat {
+  display: block;
+  height: 30px;
+  border-bottom: 1px dashed var(--border);
+}
+.nx-why {
+  grid-area: why;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+}
+.nx-feed {
+  position: sticky;
+  top: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+.nx-feed ul {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nx-feed li {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 1.35;
+}
+.nx-feed li i {
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.nx-feed li.warn i {
+  background: var(--money);
+}
+.nx-feed li.bad i {
+  background: var(--down);
+}
+.nx-feed small {
+  display: block;
+  color: var(--text-3);
+  font-size: 12px;
+}
+.nx-feed time {
+  color: var(--text-3);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ---- 2 · Portfolio table ---- */
+.nx-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 48px;
+}
+.nx-totals > div {
+  display: grid;
+  gap: 2px;
+}
+.nx-totals b {
+  font-size: 30px;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.nx-totals em {
+  color: var(--text-3);
+  font-size: 12.5px;
+  font-style: normal;
+}
+.nx-totals em.up,
+.nx-table .t-chg.up {
+  color: var(--up);
+}
+.nx-totals em.down,
+.nx-table .t-chg.down {
+  color: var(--down);
+}
+.nx-totals em span {
+  color: var(--text-3);
+}
+.nx-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 340px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-3);
+}
+.nx-search:focus-within {
+  border-color: var(--accent);
+}
+.nx-search input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+.nx-scroll {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+.nx-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font: inherit;
+  font-size: 14px;
+}
+.nx-table th,
+.nx-table td {
+  padding: 0 12px;
+  height: 46px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+.nx-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.nx-table thead th {
+  height: 40px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.nx-table th button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.nx-table th button:hover,
+.nx-table th[aria-sort='ascending'] button,
+.nx-table th[aria-sort='descending'] button {
+  color: var(--text);
+}
+.nx-table .nx-c {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.nx-table th.num button {
+  flex-direction: row-reverse;
+}
+.nx-table .t-pin {
+  width: 36px;
+  padding-right: 0;
+}
+.nx-table .t-pin button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.nx-table .t-pin button.on {
+  color: var(--money);
+}
+.nx-table .t-pin button:hover {
+  background: var(--row);
+}
+.nx-table td.t-site {
+  max-width: 260px;
+}
+.nx-table .t-cell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.nx-table .t-cell b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+.nx-table tbody tr:not(.t-fold) {
+  cursor: pointer;
+}
+.nx-table tbody tr.t-cur {
+  background: color-mix(in srgb, var(--text) 5%, transparent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.nx-table .on {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+}
+.nx-table .on i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: nx-pulse 1.8s ease-out infinite;
+}
+.nx-table .t-trend {
+  width: 130px;
+}
+.nx-table .t-trend .all-spark {
+  width: 110px;
+}
+.nx-table .t-status {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.nx-table .t-status.down {
+  color: var(--down);
+}
+.nx-table .t-status.quiet {
+  color: var(--money);
+}
+.nx-table .t-fold td {
+  height: 38px;
+  background: color-mix(in srgb, var(--text) 3%, transparent);
+}
+.nx-table .t-fold button {
+  border: 0;
+  background: none !important;
+  box-shadow: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.nx-table .t-fold small {
+  margin-left: 8px;
+  color: var(--text-3);
+  font-weight: 400;
+}
+.nx-table .empty {
+  padding: 24px;
+  text-align: center;
+}
+
+/* ---- 3 · Mission control ---- */
+.nx-strip3 {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: 'big chart' 'legend legend';
+  gap: 14px 32px;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 3.5%, var(--surface)), var(--surface));
+  box-shadow: var(--shadow-soft);
+}
+.nx-strip3 .big {
+  grid-area: big;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+}
+.nx-strip3 .big b {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 56px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.nx-strip3 .big i {
+  width: 12px;
+  height: 12px;
+}
+.nx-strip3 .chart {
+  grid-area: chart;
+  min-width: 0;
+}
+.nx-strip3 svg {
+  display: block;
+  width: 100%;
+  height: 96px;
+}
+.nx-strip3 .chart p {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+.nx-strip3 .legend {
+  grid-area: legend;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.nx-strip3 .legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.nx-strip3 .legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  animation: none;
+}
+.nx-strip3 .legend b {
+  font-variant-numeric: tabular-nums;
+}
+.nx-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  gap: 14px;
+}
+.nx-tile-item {
+  min-width: 0;
+  display: grid;
+}
+.nx-tile-item.xl {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.nx-tile-item.lg {
+  grid-column: span 2;
+}
+.nx-tile {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 3.5%, var(--surface)), var(--surface));
+  box-shadow: var(--shadow-soft);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.nx-tile:hover {
+  border-color: var(--border-2);
+  transform: translateY(-1px);
+}
+.nx-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.nx-tile.hurt {
+  border-color: color-mix(in srgb, var(--money) 55%, var(--border));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--money) 9%, var(--surface)), var(--surface));
+}
+.nx-tile.hurt.down {
+  border-color: color-mix(in srgb, var(--down) 60%, var(--border));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--down) 10%, var(--surface)), var(--surface));
+}
+.nx-tile .top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 14px;
+}
+.nx-tile .top b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nx-tile .tag {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--row);
+  color: var(--text-2);
+  font-size: 11.5px;
+}
+.nx-tile .live {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+.nx-tile .live.on b {
+  color: var(--text);
+  font-size: 30px;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.nx-tile-item.xl .live.on b {
+  font-size: 64px;
+  line-height: 1;
+}
+.nx-tile .live i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: nx-pulse 1.8s ease-out infinite;
+}
+.nx-tile .nx-c {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-variant-numeric: tabular-nums;
+}
+.nx-tile .nx-c b {
+  font-size: 17px;
+}
+.nx-tile .nx-c small {
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+.nx-tile .last {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+}
+.nx-asleep {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+.nx-asleep ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nx-asleep button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.nx-asleep button:hover {
+  border-color: var(--border-2);
+  color: var(--text);
+}
+
+@media (max-width: 1100px) {
+  .nx-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .nx-feed {
+    position: static;
+  }
+  .nx-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .nx-headline h2 {
+    font-size: 19px;
+  }
+  .nx-strip {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+  }
+  .nx-strip > div + div {
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+  .nx-line {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'name badge' 'num spark' 'why why';
+    padding: 12px 14px;
+  }
+  .nx-table .t-online,
+  .nx-table .t-trend,
+  .nx-table .t-status {
+    display: none;
+  }
+  .nx-table th,
+  .nx-table td {
+    padding: 0 8px;
+  }
+  .nx-table td.t-site {
+    max-width: 150px;
+  }
+  .nx-totals {
+    gap: 12px 28px;
+  }
+  .nx-totals b {
+    font-size: 24px;
+  }
+  .nx-strip3 {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'big' 'chart' 'legend';
+    padding: 16px;
+  }
+  .nx-strip3 .big b {
+    font-size: 44px;
+  }
+  .nx-tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .nx-tile-item.xl,
+  .nx-tile-item.lg {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+.nx-table .t-trend .nx-up {
+  width: 110px;
+}
+.nx-num small {
+  white-space: nowrap;
+}
