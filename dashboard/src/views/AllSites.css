@@ -143,12 +143,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.all-view-dot {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
 .pop.menu.all-view button.all-view-reset {
   justify-self: start;
   min-height: 0;
