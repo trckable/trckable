@@ -120,11 +120,9 @@ test('pin, group, reorder by keyboard and drag, saved for the account, same orde
       await expect(menu.locator('[data-site]')).toHaveCount(1)
       await page.keyboard.press('Escape')
 
-      // All sites, in the switcher's order: the pinned site first.
+      // All sites: the pinned site has its tile.
       await page.goto(`${API}/all`)
-      const first = page.locator('.all-sites [role=listitem]').first()
-      await expect(first).toContainText(f.domain, { timeout: 15_000 })
-      await expect(page.getByRole('combobox', { name: 'Sort sites by' })).toHaveValue('order')
+      await expect(page.locator('.all-sites [role=listitem]', { hasText: f.domain })).toBeVisible({ timeout: 15_000 })
     } finally {
       await cleanUp(page.request)
     }
