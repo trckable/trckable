@@ -38,36 +38,52 @@ describe('the one reload', () => {
     vi.unstubAllGlobals()
   })
 
+  // The question to the server comes after a short wait: let it pass.
+  const settled = async (p: Promise<boolean>) => {
+    await vi.advanceTimersByTimeAsync(2000)
+    return p
+  }
   it('happens once when the server runs another build, and says so while it is under way', async () => {
     const { reloadOnce } = await load()
-    expect(await reloadOnce()).toBe(true)
-    expect(await reloadOnce()).toBe(true)
+    expect(await settled(reloadOnce())).toBe(true)
+    expect(await settled(reloadOnce())).toBe(true)
     expect(reload).toHaveBeenCalledTimes(1)
+  })
+  it('asks the server only after a moment, so a page that is being left never sends the request', async () => {
+    const asked = vi.fn(() => Promise.resolve({ text: () => Promise.resolve(served) }))
+    vi.stubGlobal('fetch', asked)
+    const { reloadOnce } = await load()
+    const p = reloadOnce()
+    await vi.advanceTimersByTimeAsync(500)
+    expect(asked).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(1500)
+    expect(asked).toHaveBeenCalledTimes(1)
+    expect(await p).toBe(true)
   })
   it('does not happen when the server runs the same build: a download aborted by leaving the page proves nothing', async () => {
     served = '<script type="module" src="/assets/react-cccc3333.js"></script><script type="module" src="/assets/index-aaaa1111.js"></script>'
     const { reloadOnce } = await load()
-    expect(await reloadOnce()).toBe(false)
+    expect(await settled(reloadOnce())).toBe(false)
     expect(reload).not.toHaveBeenCalled()
     served = '<script type="module" src="/assets/react-cccc3333.js"></script><script type="module" src="/assets/index-bbbb2222.js"></script>' // a deploy lands later
-    expect(await reloadOnce()).toBe(true)
+    expect(await settled(reloadOnce())).toBe(true)
   })
   it('does not happen when the server cannot be asked', async () => {
     vi.stubGlobal('fetch', () => Promise.reject(new TypeError('NetworkError')))
     const { reloadOnce } = await load()
-    expect(await reloadOnce()).toBe(false)
+    expect(await settled(reloadOnce())).toBe(false)
     expect(reload).not.toHaveBeenCalled()
   })
   it('never happens twice within a minute: a page that fails again after its reload stays put', async () => {
     store['trckable:reloaded'] = String(Date.now() - 20_000)
     const { reloadOnce } = await load()
-    expect(await reloadOnce()).toBe(false)
+    expect(await settled(reloadOnce())).toBe(false)
     expect(reload).not.toHaveBeenCalled()
   })
   it('may happen again after a minute', async () => {
     store['trckable:reloaded'] = String(Date.now() - 61_000)
     const { reloadOnce } = await load()
-    expect(await reloadOnce()).toBe(true)
+    expect(await settled(reloadOnce())).toBe(true)
     expect(reload).toHaveBeenCalledTimes(1)
   })
   it('does not happen where it cannot be told from a loop (storage blocked)', async () => {
@@ -78,7 +94,7 @@ describe('the one reload', () => {
       setItem: () => {},
     })
     const { reloadOnce } = await load()
-    expect(await reloadOnce()).toBe(false)
+    expect(await settled(reloadOnce())).toBe(false)
     expect(reload).not.toHaveBeenCalled()
   })
 })
