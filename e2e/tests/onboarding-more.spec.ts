@@ -72,7 +72,7 @@ async function openRun(page: Page) {
 }
 
 test('skip for now opens All sites, and the first run stays away', async ({ page, browserName }) => {
-  one = `one-${browserName}-${Date.now()}.example`
+  one = `one-${browserName}-${Date.now()}.test`
   const run = await openRun(page)
   await expect(run.getByRole('heading', { name: 'Which site first?' })).toBeVisible({ timeout: 15_000 })
   await run.getByLabel('Domain').fill(one)
@@ -89,7 +89,7 @@ test('skip for now opens All sites, and the first run stays away', async ({ page
 })
 
 test('another site: a chip each, the first visit on the second moves on, then Live', async ({ page, browserName }) => {
-  const two = `two-${browserName}-${Date.now()}.example`
+  const two = `two-${browserName}-${Date.now()}.test`
   // A fresh browser context has not skipped: the waiting site resumes at step 2.
   const run = await openRun(page)
   await expect(run.getByRole('img', { name: 'Step 2 of 3' })).toBeVisible({ timeout: 15_000 })

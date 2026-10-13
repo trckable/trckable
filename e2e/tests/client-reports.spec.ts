@@ -21,7 +21,7 @@ test.beforeAll(async () => {
 
 async function open(page: Page) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `reports-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.example` } })
+  const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `reports-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.test` } })
   expect(made.status()).toBe(201)
   const { id: site, domain } = (await made.json()) as { id: string; domain: string }
   const ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'

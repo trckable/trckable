@@ -10,6 +10,8 @@ section into the release.
 ## Unreleased
 
 - On All sites each site is one line: who is online now is left to the Live column, and a row compares today with the usual instead.
+- Add a site refuses placeholder domains such as example.com, test.com and demo.com, in the dialog and in the API, and says to enter your own site's address.
+- The share bar under Where they're from fades out softly at both sides, like the card lines.
 - On All sites, the period moves out of the View menu into a pill beside it, like the site dashboard's. The View menu is about half as tall: Show and Layout as switches, and the sites as a short checklist with All and None.
 
 ## 0.7.15 (13 Oct 2026)

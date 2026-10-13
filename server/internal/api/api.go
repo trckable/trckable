@@ -986,6 +986,10 @@ func (a *API) createSite(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, "bad request")
 		return
 	}
+	if host, ok := placeholderHost(in.Domain); ok {
+		fail(w, http.StatusBadRequest, placeholderMessage(host))
+		return
+	}
 	id, err := a.Ctl.CreateSite(r.Context(), principalOf(r).account, in.Domain, "")
 	if errors.Is(err, sqlite.ErrExists) {
 		fail(w, http.StatusConflict, "you already have that site")

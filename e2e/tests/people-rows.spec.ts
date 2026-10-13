@@ -19,7 +19,7 @@ test.describe.configure({ mode: 'serial' })
 test.beforeAll(async ({ request }) => {
   AUTH = { Cookie: 'trckable_session=' + (await session('people-rows')), 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
   // Three sites of their own, so there is something to choose between.
-  for (const n of ['a', 'b', 'c']) await request.post(`${API}/api/v1/sites`, { headers: AUTH, data: { domain: `rows-${n}-${tag}.example` } })
+  for (const n of ['a', 'b', 'c']) await request.post(`${API}/api/v1/sites`, { headers: AUTH, data: { domain: `rows-${n}-${tag}.test` } })
   const made = await (await request.post(`${API}/api/v1/people`, { headers: AUTH, data: { email, role: 'viewer' } })).json()
   personId = made.person.id
 })

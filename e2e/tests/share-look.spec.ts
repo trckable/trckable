@@ -22,7 +22,7 @@ test.beforeAll(async () => {
 test('a link wears the owner\'s logo and colour, and hides trckable\'s name', async ({ page, browser, browserName }) => {
   test.skip(browserName !== 'chromium', 'one browser is enough for the look')
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  const domain = `look-${Date.now()}.example`
+  const domain = `look-${Date.now()}.test`
   const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain } })
   expect(made.status()).toBe(201)
   const { id: site } = (await made.json()) as { id: string }

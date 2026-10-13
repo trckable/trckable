@@ -205,7 +205,7 @@ test('reduced motion: an instant switch, no transition', async ({ page }) => {
 })
 
 test('a site with no visit yet shows its install screen in Live, and the mode comes back', async ({ page }) => {
-  const domain = `nolive-${Date.now()}.example`
+  const domain = `nolive-${Date.now()}.test`
   await signIn(page, '/example.com?view=data')
   await page.evaluate(async (d) => {
     await fetch('/api/v1/sites', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Trckable-Request': '1' }, body: JSON.stringify({ domain: d }) })

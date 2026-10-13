@@ -675,6 +675,8 @@ button.kit-chip:focus-visible {
   gap: 2px;
   height: 8px;
   margin-top: 4px;
+  /* Like the card lines (.line-fade): it fades out softly at both sides instead of ending in hard edges. */
+  mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
 }
 .kit-segbar i {
   display: block;

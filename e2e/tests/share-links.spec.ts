@@ -19,7 +19,7 @@ test.beforeAll(async () => {
 /** A site of its own, so the links here never meet another suite's. */
 async function open(page: Page) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `links-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.example` } })
+  const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `links-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.test` } })
   expect(made.status()).toBe(201)
   const { id: site, domain } = (await made.json()) as { id: string; domain: string }
   // A first visit, or the site opens on its install page rather than its settings.

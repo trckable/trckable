@@ -21,7 +21,7 @@ const layout = async (r: APIRequestContext) => (await (await r.get(`${API}/api/v
 async function makeSites(r: APIRequestContext, tag: string, n: number): Promise<Site[]> {
   const out: Site[] = []
   for (let i = 0; i < n; i++) {
-    const res = await r.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `sw${i}-${tag}.example` } })
+    const res = await r.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `sw${i}-${tag}.test` } })
     expect(res.ok()).toBe(true)
     out.push((await res.json()) as Site)
   }

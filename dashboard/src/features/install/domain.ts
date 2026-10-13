@@ -17,7 +17,15 @@ export function cleanDomain(input: string): string {
 
 const LABEL = /^[a-z0-9¡-￿]([a-z0-9¡-￿-]{0,61}[a-z0-9¡-￿])?$/
 
-export type DomainCheck = 'empty' | 'space' | 'invalid' | 'ok'
+export type DomainCheck = 'empty' | 'space' | 'invalid' | 'placeholder' | 'ok'
+
+// Example names people try the dialog with. The server refuses the same list.
+const PLACEHOLDERS = new Set(['example.com', 'example.net', 'example.org', 'test.com', 'demo.com', 'yourdomain.com', 'yoursite.com', 'domain.com'])
+
+/** Whether a cleaned domain is a placeholder, not a real site. localhost, *.test, *.invalid and IPs are fine. */
+export function isPlaceholder(clean: string): boolean {
+  return PLACEHOLDERS.has(clean) || clean.endsWith('.example')
+}
 
 /** Whether a cleaned domain can be added: labels of letters, digits and inner hyphens, at least two. */
 export function checkDomain(clean: string, raw: string): DomainCheck {
@@ -26,7 +34,8 @@ export function checkDomain(clean: string, raw: string): DomainCheck {
   if (clean.length > 253) return 'invalid'
   const labels = clean.split('.')
   if (labels.length < 2 && clean !== 'localhost') return 'invalid'
-  return labels.every((l) => LABEL.test(l)) ? 'ok' : 'invalid'
+  if (!labels.every((l) => LABEL.test(l))) return 'invalid'
+  return isPlaceholder(clean) ? 'placeholder' : 'ok'
 }
 
 /** Whether a site with this domain already exists (compared without www). */
