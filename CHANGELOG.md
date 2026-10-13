@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- The "stopped receiving visits" alert now sends one email when a site goes quiet and one more after three days if it is still quiet, then stops until visits come back. It used to repeat every 6 hours for as long as the site stayed silent.
+
 ## 0.7.11 (13 Oct 2026)
 
 - The bounce guide no longer says "nothing unusual" and "usual ~0%" for a site with too few visits. When the period or the 4 weeks before have fewer than 100 visits, it shows the share that leaves after one page and says there are not enough visits yet to say what is usual.

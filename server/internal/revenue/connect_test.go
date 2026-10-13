@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -296,5 +297,53 @@ func TestConcurrentSetupsKeepEachOthersEndpoints(t *testing.T) {
 		if !urls["https://stats.example/webhooks/stripe/"+c.ID] {
 			t.Errorf("%s lost its endpoint: %v", c.ID, urls)
 		}
+	}
+}
+
+// A reconciliation that starts while the last one is still going does
+// nothing, so a slow provider never piles up passes.
+func TestSyncAllSkipsWhileRunning(t *testing.T) {
+	g := newRig(t, t.TempDir(), "instance key for tests")
+	ctx := context.Background()
+	c, err := g.svc.Connect(ctx, ConnectRequest{Site: g.site, Provider: "stripe", Secret: "whsec_test", PublicBase: "http://localhost:8080"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := g.st.DB.Exec(`UPDATE pay_connections SET api_key_enc = ? WHERE id = ?`, mustSeal(t, g, "rk_live_ok"), c.ID); err != nil {
+		t.Fatal(err)
+	}
+	var calls atomic.Int32
+	entered := make(chan struct{}, 4)
+	release := make(chan struct{})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		entered <- struct{}{}
+		<-release
+		_, _ = io.WriteString(w, `{"object":"list","has_more":false,"data":[]}`)
+	}))
+	defer srv.Close()
+	var once sync.Once
+	open := func() { once.Do(func() { close(release) }) }
+	defer open()
+	payments.Remotes["stripe"] = &payments.StripeAPI{BaseURL: srv.URL}
+	defer func() { payments.Remotes["stripe"] = &payments.StripeAPI{} }()
+
+	done := make(chan struct{})
+	go func() { g.svc.SyncAll(ctx); close(done) }()
+	select {
+	case <-entered:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the first pass never reached the provider")
+	}
+	g.svc.SyncAll(ctx) // returns at once: the first pass is still going
+	if n := calls.Load(); n != 1 {
+		t.Fatalf("provider was called %d times while one pass was running, want 1", n)
+	}
+	open()
+	<-done
+	before := calls.Load()
+	g.svc.SyncAll(ctx) // after the first ended, a new pass runs again
+	if calls.Load() <= before {
+		t.Fatal("no new pass ran after the first one ended")
 	}
 }

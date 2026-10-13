@@ -131,10 +131,10 @@ func (s *Store) SaveAlert(ctx context.Context, a Alert) (Alert, error) {
 }
 
 // MarkFired records that an alert has just been sent, so it does not repeat.
-func (s *Store) MarkFired(ctx context.Context, id string, at int64) {
-	// Best effort: if this fails the alert may be sent once more, which is
-	// better than failing the send that already happened.
-	_, _ = s.DB.ExecContext(ctx, `UPDATE alerts SET last_fired = ? WHERE id = ?`, at, id)
+// The caller must not send again soon when this fails.
+func (s *Store) MarkFired(ctx context.Context, id string, at int64) error {
+	_, err := s.DB.ExecContext(ctx, `UPDATE alerts SET last_fired = ? WHERE id = ?`, at, id)
+	return err
 }
 
 // DeleteAlert removes one alert.
