@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- On All sites, the totals strip has an Uptime card (incidents in the period and how much of it your sites were up), and the Uptime and Revenue cards open their view.
 - On All sites each site is one line: who is online now is left to the Live column, and a row compares today with the usual instead.
 - Add a site refuses placeholder domains such as example.com, test.com and demo.com, in the dialog and in the API, and says to enter your own site's address.
 - The share bar under Where they're from fades out softly at both sides, like the card lines.

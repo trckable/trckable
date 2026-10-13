@@ -63,15 +63,38 @@
   background: linear-gradient(180deg, color-mix(in srgb, var(--text) 3.5%, var(--surface)), var(--surface));
   box-shadow: var(--shadow-soft);
 }
-.nx-strip > div {
+.nx-strip > div,
+.nx-strip > .nx-card {
   display: grid;
   gap: 2px;
   align-content: start;
   padding: 16px 20px;
   min-width: 0;
 }
-.nx-strip > div + div {
+.nx-strip > * + * {
   border-left: 1px solid var(--border);
+}
+.nx-strip > .nx-card {
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.nx-strip > .nx-card:hover {
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+}
+.nx-strip > .nx-card:last-child {
+  border-radius: 0 16px 16px 0;
+}
+.nx-strip > .nx-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 .nx-strip small,
 .nx-totals small {
@@ -90,6 +113,9 @@
   color: var(--text-3);
   font-size: 12px;
   font-style: normal;
+}
+.nx-strip em.warn {
+  color: var(--money);
 }
 .nx-strip i {
   width: 10px;
@@ -465,11 +491,32 @@
   }
   .nx-strip {
     grid-auto-flow: row;
-    grid-auto-columns: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .nx-strip > div + div {
+  .nx-strip > div,
+  .nx-strip > .nx-card {
+    padding: 14px 16px;
+  }
+  .nx-strip b {
+    font-size: 22px;
+  }
+  .nx-strip > * + * {
     border-left: 0;
+  }
+  .nx-strip > :nth-child(even) {
+    border-left: 1px solid var(--border);
+  }
+  .nx-strip > :nth-child(n + 3) {
     border-top: 1px solid var(--border);
+  }
+  .nx-strip > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .nx-strip > .nx-card:last-child {
+    border-radius: 0 0 16px 0;
+  }
+  .nx-strip > .nx-card:last-child:nth-child(odd) {
+    border-radius: 0 0 16px 16px;
   }
   .nx-line {
     grid-template-columns: minmax(0, 1fr) auto;

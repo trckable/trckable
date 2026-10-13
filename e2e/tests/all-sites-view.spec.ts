@@ -57,3 +57,16 @@ test('the View menu changes the layout and the lens, and the choice survives a r
   await page.reload()
   await expect(page.locator('.nx-today')).toBeVisible({ timeout: 20_000 })
 })
+
+test('the Uptime card on the Overview opens the Uptime view', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: await session('all-sites-uptime-card'), url: API }])
+  const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `card-${Date.now()}.view.example.org` } })
+  expect(made.ok()).toBe(true)
+  await page.goto(`${API}/all?layout=overview&lens=visitors`)
+  const card = page.locator('.nx-strip .nx-card', { hasText: 'Uptime' })
+  await expect(card).toContainText('No incidents', { timeout: 20_000 })
+  await card.click()
+  await expect(page).toHaveURL(/lens=uptime/)
+  await expect(page.locator('.up-wrap')).toBeVisible()
+  await expect(page.locator('.all-head p')).toContainText('Uptime')
+})

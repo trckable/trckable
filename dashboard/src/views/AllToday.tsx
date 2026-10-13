@@ -1,6 +1,9 @@
 // Overview: one sentence about the day across every site, a strip of
 // the totals, then the sites in the order they matter (needs attention,
 // unusual today, steady) beside a live feed.
+import { useMemo } from 'react'
+import { accountTotals } from '../features/incidents/model'
+import { useAccountIncidents, useNow } from '../features/incidents/useIncidents'
 import type { Surge } from '../features/signals/surge'
 import { StateDot } from '../features/sites/StateDot'
 import { when } from '../features/sitestatus/time'
@@ -10,11 +13,13 @@ import { navigate } from '../lib/url'
 import { cellOf, revenueHeadline, revenueStrip, revenueTotal, type Cell, type Lens } from './allLens'
 import { byRevenue, feedOf, headline, items, moneyText, ordered, refWord, revenueOf, whyLine, type Item, type Kind } from './allNext'
 import { next } from './allNextCopy'
+import { copy as incidents } from '../features/incidents/copy'
 import { fromStart } from './allSitesLogic'
+import type { ViewLens } from './allView'
 import { Spark } from './AllSitesSpark'
 import './AllNext.css'
 
-type Props = { lens: Lens; rows: SiteRow[]; sites: Site[]; surges: Map<string, Surge>; colorOf: (id: string) => string; start: number; period: string }
+type Props = { lens: Lens; rows: SiteRow[]; sites: Site[]; surges: Map<string, Surge>; colorOf: (id: string) => string; start: number; period: string; days: number; open: (lens: ViewLens) => void }
 
 const GROUPS: { kind: Kind; title: string }[] = [
   { kind: 'attention', title: next.secAttention },
@@ -64,7 +69,26 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
   )
 }
 
-export function AllToday({ lens, rows, sites, surges, colorOf, start, period }: Props) {
+/** The Uptime card: the period's incidents across the shown sites, and how much of it they were up. */
+function UptimeCard({ sites, days, open }: { sites: Site[]; days: number; open: () => void }) {
+  const { list, ready, failed } = useAccountIncidents(days)
+  const now = useNow()
+  const t = useMemo(() => accountTotals(sites, list, days, now), [sites, list, days, now])
+  const known = ready && !failed
+  const site = sites.find((s) => s.id === t.down[0])
+  let note = next.uptimeUp(t.pct.toFixed(1))
+  if (t.down.length === 1) note = next.uptimeDown(site?.name || site?.domain || '')
+  if (t.down.length > 1) note = next.uptimeDownMany(t.down.length)
+  return (
+    <button type="button" className="nx-card" onClick={open}>
+      <small>{incidents.lensUptime}</small>
+      <b>{known ? next.uptimeCount(t.count) : '–'}</b>
+      {known && <em className={t.down.length > 0 ? 'warn' : ''}>{note}</em>}
+    </button>
+  )
+}
+
+export function AllToday({ lens, rows, sites, surges, colorOf, start, period, days, open }: Props) {
   const list = items(rows, sites, surges)
   const head = headline(list, rows)
   const ref = refWord(rows)
@@ -101,12 +125,13 @@ export function AllToday({ lens, rows, sites, surges, colorOf, start, period }: 
           </div>
         )}
         {!figures && money.length > 0 && (
-          <div>
+          <button type="button" className="nx-card" onClick={() => open('revenue')}>
             <small>{next.totalRevenue}</small>
             <b>{moneyText(money)}</b>
             <em>{period}</em>
-          </div>
+          </button>
         )}
+        {!figures && <UptimeCard sites={sites} days={days} open={() => open('uptime')} />}
       </div>
       <div className="nx-cols">
         <div className="nx-sites">
