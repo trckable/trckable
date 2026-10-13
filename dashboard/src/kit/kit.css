@@ -6,7 +6,7 @@
   gap: 2px;
   padding: 3px;
   border-radius: 9px;
-  background: var(--row);
+  background: var(--raised-well);
 }
 .kit-seg button {
   min-width: 34px;
@@ -15,13 +15,16 @@
   border: 0;
   border-radius: 6px;
   background: none;
-  color: var(--text-3);
-  font: 600 12px var(--mono);
+  color: var(--text-2);
+  font: 500 12px var(--mono);
   cursor: pointer;
 }
-.kit-seg button.on {
+.kit-seg button.on,
+.pop.menu .kit-seg button.on {
   background: var(--raised);
+  box-shadow: 0 0 0 1px var(--raised-line), var(--shadow-soft);
   color: var(--text);
+  font-weight: 600;
 }
 .kit-seg button:focus-visible {
   outline: 2px solid var(--accent);

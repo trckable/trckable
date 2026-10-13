@@ -26,6 +26,13 @@
   align-items: center;
   gap: 10px;
 }
+.all-actions .btn {
+  height: 36px;
+  font-size: 14px;
+}
+.all-actions .btn:not(.primary) {
+  font-weight: 500;
+}
 .all-actions .btn svg {
   margin-right: 6px;
 }
@@ -44,8 +51,6 @@
   gap: 8px;
   padding: 0 10px;
   color: var(--text);
-  font-size: 14px;
-  font-weight: 600;
 }
 .all-period .range-chev {
   margin-left: 2px;

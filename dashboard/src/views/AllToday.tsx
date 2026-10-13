@@ -166,21 +166,23 @@ export function AllToday({ lens, rows, sites, surges, colorOf, start, period, da
               )
             })}
         </div>
-        <aside className="nx-feed" aria-label={next.feed}>
+        <aside className="nx-feedcol" aria-label={next.feed}>
           <h3>{next.feed}</h3>
-          {feed.length === 0 && <p className="muted">{next.feedEmpty}</p>}
-          <ul>
-            {feed.map((e) => (
-              <li key={e.key} className={e.tone}>
-                <i aria-hidden="true" />
-                <span>
-                  {e.text}
-                  {e.detail && <small>{e.detail}</small>}
-                </span>
-                <time>{when(e.at)}</time>
-              </li>
-            ))}
-          </ul>
+          <div className="nx-feed">
+            {feed.length === 0 && <p className="muted">{next.feedEmpty}</p>}
+            <ul>
+              {feed.map((e) => (
+                <li key={e.key} className={e.tone}>
+                  <SiteMark site={e.mark} size={16} />
+                  <span>
+                    {e.text}
+                    {e.detail && <small>{e.detail}</small>}
+                  </span>
+                  <time>{when(e.at)}</time>
+                </li>
+              ))}
+            </ul>
+          </div>
         </aside>
       </div>
     </div>

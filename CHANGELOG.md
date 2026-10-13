@@ -9,7 +9,7 @@ section into the release.
 
 ## Unreleased
 
-- On Sites, each row shows the site's icon (or its letter) and, under its name, its web address.
+- On Sites, each row shows the site's icon (or its letter) and, under its name, its web address; the Live panel lines up with the list and shows each site's icon, the period, View and Add site buttons share one height, and the chosen segment of every segmented switch (View menu, Live | Data) stands out as a raised pill.
 - On Sites, the totals strip has an Uptime card (incidents in the period and how much of it your sites were up), and the Uptime and Revenue cards open their view.
 
 ## 0.7.16 (13 Oct 2026)
