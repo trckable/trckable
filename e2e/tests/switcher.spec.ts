@@ -121,7 +121,7 @@ test('pin, group, reorder by keyboard and drag, saved for the account, same orde
       await page.keyboard.press('Escape')
 
       // All sites: the pinned site has its line.
-      await page.goto(`${API}/all`)
+      await page.goto(`${API}/sites`)
       await expect(page.locator('.all-sites .nx-line', { hasText: f.domain })).toBeVisible({ timeout: 15_000 })
     } finally {
       await cleanUp(page.request)

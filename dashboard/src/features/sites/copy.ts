@@ -6,7 +6,7 @@ import { defineCopy } from '../../i18n'
 
 export const copy = defineCopy('sites', {
   pick: 'Pick a site',
-  all: 'All sites',
+  all: 'Sites',
   dot: {
     now: 'Visitors right now: a visit in the last 5 minutes',
     live: 'Receiving visits',

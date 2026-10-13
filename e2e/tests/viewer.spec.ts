@@ -85,7 +85,7 @@ const PAGES = [
   '/example.com?view=data',
   '/example.com?view=live',
   '/example.com?mode=full',
-  '/all',
+  '/sites',
   '/example.com?account=sites',
   '/example.com?account=keys',
   '/example.com?account=people',

@@ -112,10 +112,15 @@ function App() {
       navigate("/setup" + location.hash, { replace: true });
     if (boot.state === "login" && path !== "/login")
       navigate("/login", { replace: true });
+    // The page of every site was /all before it was /sites: old links still land there.
+    if (boot.state === "ready" && path === "/all") {
+      navigate("/sites" + location.search, { replace: true });
+      return;
+    }
     // Signed in at the root, or at an address that names none of this
     // person's sites (a typo, someone else's site, one since removed): their
     // main dashboard, never a page made up for an address it does not know.
-    if (boot.state === "ready" && !gated && !(path === "/settings" && namesSite(boot.sites, params)) && path !== "/all" && !routeOf(boot.sites, path).site) {
+    if (boot.state === "ready" && !gated && !(path === "/settings" && namesSite(boot.sites, params)) && path !== "/sites" && !routeOf(boot.sites, path).site) {
       const to = landing(boot.sites, new URLSearchParams(location.search));
       navigate(to.path, { replace: true });
       if (to.wizard) openAddSite();
@@ -172,7 +177,7 @@ function App() {
 
   const refreshSites = () =>
     api.sites().then(({ sites }) => setBoot({ ...boot, sites }));
-  const all = path === "/all", { site, incidents } = routeOf(boot.sites, path);
+  const all = path === "/sites", { site, incidents } = routeOf(boot.sites, path);
 
   const header = (
     <Header sites={boot.sites} current={site} all={all} update={latest?.v} onUpdate={() => setShowUpdate(true)} />

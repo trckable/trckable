@@ -24,13 +24,13 @@ test('a site line has the colour of its site, and the ones past the palette are 
     const pv = await page.request.post(`${API}/api/e`, { headers: { 'User-Agent': UA }, data: { s: site, k: 'pv', u: `https://${domain}/` } })
     expect(pv.ok()).toBe(true)
   }
-  await expect.poll(async () => ((await (await page.request.get(`${API}/api/v1/overview?days=30`, { headers: H })).json()) as { sites: { domain: string; visitors: number }[] }).sites.filter((s) => s.domain.endsWith(`-${tag}.example.org`) && s.visitors > 0).length, { timeout: 30_000 }).toBe(9)
+  await expect.poll(async () => ((await (await page.request.get(`${API}/api/v1/sites?days=30`, { headers: H })).json()) as { sites: { domain: string; visitors: number }[] }).sites.filter((s) => s.domain.endsWith(`-${tag}.example.org`) && s.visitors > 0).length, { timeout: 30_000 }).toBe(9)
 
   // The account's sites in their own order: the n-th has the n-th colour, whether or not it has visits.
   const listed = ((await (await page.request.get(`${API}/api/v1/sites`, { headers: H })).json()) as { sites: { domain: string; name: string }[] }).sites
   expect(listed.length).toBeGreaterThan(7)
 
-  await page.goto(`${API}/all`)
+  await page.goto(`${API}/sites`)
   await expect(page.locator('.nx-line', { hasText: `colors8-${tag}.example.org` }).locator('.all-spark')).toBeVisible({ timeout: 20_000 })
   const palette = await page.evaluate((n) => Array.from({ length: n }, (_, i) => {
     const probe = document.body.appendChild(document.createElement('i'))

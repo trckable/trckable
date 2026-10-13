@@ -30,7 +30,7 @@ const press = (key: string) =>
 export function openWhere(w: Where, site: Site | undefined) {
   if (w.to === 'account') openAccount(w.tab)
   else if (w.to === 'shortcuts') openShortcuts()
-  else if (w.to === 'all') navigate('/all')
+  else if (w.to === 'all') navigate('/sites')
   else if (w.to === 'press') press(w.key)
   else if (!site) return
   else if (w.to === 'settings') openSettings(site, w.tab)

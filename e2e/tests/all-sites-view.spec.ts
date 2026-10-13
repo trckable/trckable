@@ -15,14 +15,14 @@ test('the View menu changes the layout and the lens, and the choice survives a r
     expect(made.ok()).toBe(true)
   }
   // Two payments-connected sites, so the Revenue lens is offered.
-  await page.route('**/api/v1/overview*', async (route) => {
+  await page.route('**/api/v1/sites*', async (route) => {
     const res = await route.fetch()
     const body = (await res.json()) as { sites: Record<string, unknown>[] }
     body.sites.forEach((s, n) => Object.assign(s, { revenue: 5000 + n * 1000, currency: 'USD', exponent: 2 }))
     await route.fulfill({ response: res, json: body })
   })
 
-  await page.goto(`${API}/all`)
+  await page.goto(`${API}/sites`)
   await expect(page.locator('.nx-today')).toBeVisible({ timeout: 20_000 })
   const summary = page.locator('.all-head p')
   await expect(summary).toContainText('Last 30 days · Visitors')
@@ -38,7 +38,7 @@ test('the View menu changes the layout and the lens, and the choice survives a r
   await expect(page).toHaveURL(/lens=revenue/)
 
   // A visit without the address remembers the last choice.
-  await page.goto(`${API}/all`)
+  await page.goto(`${API}/sites`)
   await expect(page.locator('.nx-table')).toBeVisible({ timeout: 20_000 })
   await expect(summary).toContainText('Revenue')
 
