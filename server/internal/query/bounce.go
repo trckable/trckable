@@ -49,13 +49,15 @@ type BounceDay struct {
 
 // BounceGuide is the answer.
 type BounceGuide struct {
-	Direction string        `json:"direction"` // high | low | normal
-	Rate      float64       `json:"rate"`
-	Usual     float64       `json:"usual"`
-	Sessions  int64         `json:"sessions"`
-	Since     string        `json:"since,omitempty"` // first day (site zone) the daily rate left the usual
-	Days      []BounceDay   `json:"days"`            // the daily rate over the usual weeks and the period, oldest first; empty when nothing is judged
-	Causes    []BounceCause `json:"causes"`
+	Direction   string        `json:"direction"` // high | low | normal | few (too few visits to compare)
+	Rate        float64       `json:"rate"`
+	Usual       *float64      `json:"usual"` // null when the period or the usual weeks had too few visits
+	Sessions    int64         `json:"sessions"`
+	Weeks       int           `json:"weeks"`           // how many weeks "usual" looks back
+	MinSessions int           `json:"min_sessions"`    // the visits a period and the usual weeks each need
+	Since       string        `json:"since,omitempty"` // first day (site zone) the daily rate left the usual
+	Days        []BounceDay   `json:"days"`            // the daily rate over the usual weeks and the period, oldest first; empty when nothing is judged
+	Causes      []BounceCause `json:"causes"`
 }
 
 type bounceGroup struct {
@@ -72,13 +74,14 @@ func (q Q) BounceGuide(ctx context.Context, p Params, vitals bool) (*BounceGuide
 	}
 	loc, _ := time.LoadLocation(tz)
 	p.TZ = tz
-	out := &BounceGuide{Direction: "normal", Causes: []BounceCause{}, Days: []BounceDay{}}
+	out := &BounceGuide{Direction: "normal", Weeks: BounceWeeks, MinSessions: bounceMinSessions, Causes: []BounceCause{}, Days: []BounceDay{}}
 	prior := p
 	prior.From, prior.To = p.From.In(loc).AddDate(0, 0, -7*BounceWeeks).UTC(), p.From
 
 	var cur, usual map[string]bounceGroup
 	var curPages, curSD, usualPages, usualSD map[[2]string]bounceGroup
 	var days []BounceDay
+	var usualRate float64
 	err = func() error {
 		conn, err := q.DB.Conn(ctx)
 		if err != nil {
@@ -96,9 +99,14 @@ func (q Q) BounceGuide(ctx context.Context, p Params, vitals bool) (*BounceGuide
 			return err
 		}
 		out.Sessions = cur["all"].n
-		out.Rate, out.Usual = cur["all"].rate, usual["all"].rate
-		gap := out.Rate - out.Usual
-		if out.Sessions < bounceMinSessions || usual["all"].n < bounceMinSessions || abs(gap) < bounceNormal {
+		out.Rate, usualRate = cur["all"].rate, usual["all"].rate
+		if out.Sessions < bounceMinSessions || usual["all"].n < bounceMinSessions {
+			out.Direction = "few"
+			return nil
+		}
+		out.Usual = &usualRate
+		gap := out.Rate - usualRate
+		if abs(gap) < bounceNormal {
 			return nil
 		}
 		out.Direction = "high"
@@ -129,11 +137,11 @@ func (q Q) BounceGuide(ctx context.Context, p Params, vitals bool) (*BounceGuide
 	if err != nil {
 		return nil, fmt.Errorf("bounce guide: %w", err)
 	}
-	if out.Direction == "normal" {
+	if out.Direction == "normal" || out.Direction == "few" {
 		return out, nil
 	}
 	out.Days = days
-	out.Since = bounceSince(days, p.From.In(loc).Format("2006-01-02"), out.Usual, out.Direction)
+	out.Since = bounceSince(days, p.From.In(loc).Format("2006-01-02"), usualRate, out.Direction)
 	if out.Direction == "low" {
 		return out, nil
 	}
@@ -145,7 +153,7 @@ func (q Q) BounceGuide(ctx context.Context, p Params, vitals bool) (*BounceGuide
 	var cands []cand
 	total := float64(out.Sessions)
 	explains := func(g bounceGroup) bool {
-		return g.n >= bounceCauseSessions && float64(g.n)/total >= bounceCauseShare && g.rate >= out.Usual+bounceCauseGap
+		return g.n >= bounceCauseSessions && float64(g.n)/total >= bounceCauseShare && g.rate >= usualRate+bounceCauseGap
 	}
 	was := func(g bounceGroup, ok bool) *float64 {
 		if !ok || g.n < 10 {
@@ -159,14 +167,14 @@ func (q Q) BounceGuide(ctx context.Context, p Params, vitals bool) (*BounceGuide
 			continue
 		}
 		u, ok := usualPages[k]
-		cands = append(cands, cand{BounceCause{Kind: "page", Label: k[0], Rate: g.rate, Share: float64(g.n) / total, Was: was(u, ok)}, (g.rate - out.Usual) * float64(g.n)})
+		cands = append(cands, cand{BounceCause{Kind: "page", Label: k[0], Rate: g.rate, Share: float64(g.n) / total, Was: was(u, ok)}, (g.rate - usualRate) * float64(g.n)})
 	}
 	for k, g := range curSD {
 		if !explains(g) {
 			continue
 		}
 		u, ok := usualSD[k]
-		cands = append(cands, cand{BounceCause{Kind: "source_device", Label: k[0] + " · " + k[1], Source: k[0], Device: k[1], Rate: g.rate, Share: float64(g.n) / total, Was: was(u, ok)}, (g.rate - out.Usual) * float64(g.n)})
+		cands = append(cands, cand{BounceCause{Kind: "source_device", Label: k[0] + " · " + k[1], Source: k[0], Device: k[1], Rate: g.rate, Share: float64(g.n) / total, Was: was(u, ok)}, (g.rate - usualRate) * float64(g.n)})
 	}
 	if vitals {
 		slow, err := q.slowPages(ctx, p)

@@ -216,13 +216,14 @@ describe('hints', () => {
 })
 
 describe('the bounce card', () => {
-  const guide = (direction: 'high' | 'low' | 'normal', rate: number, usual: number) => ({ direction, rate, usual, sessions: 500, days: [], causes: [] })
+  const guide = (direction: 'high' | 'low' | 'normal' | 'few', rate: number, usual: number | null) => ({ direction, rate, usual, weeks: 4, min_sessions: 100, sessions: 500, days: [], causes: [] })
   it('is said when visitors leave clearly more or less than usual, in tenths', () => {
     expect(bounceCardOf(guide('high', 0.78, 0.52))).toEqual({ kind: 'high', tenths: 8, usual: 5 })
     expect(bounceCardOf(guide('low', 0.31, 0.5))).toEqual({ kind: 'low', tenths: 3, usual: 5 })
   })
   it('is silent as usual, or when it could not be read', () => {
     expect(bounceCardOf(guide('normal', 0.5, 0.5))).toBeNull()
+    expect(bounceCardOf(guide('few', 0.77, null))).toBeNull()
     expect(bounceCardOf(null)).toBeNull()
     expect(bounceCardOf(undefined)).toBeNull()
   })

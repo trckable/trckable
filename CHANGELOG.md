@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- The bounce guide no longer says "nothing unusual" and "usual ~0%" for a site with too few visits. When the period or the 4 weeks before have fewer than 100 visits, it shows the share that leaves after one page and says there are not enough visits yet to say what is usual.
+
 ## 0.7.10 (13 Oct 2026)
 
 - Far fewer requests from an open page. The tracker's "still here" report goes every 3 minutes instead of every minute (the live count covers the last 5, so nobody drops out of it), and only while the tab is shown; back on screen, the next minute reports. The dashboard no longer refreshes anything in a hidden tab, and reads once when the tab is shown again; how often it refreshes while shown is unchanged.

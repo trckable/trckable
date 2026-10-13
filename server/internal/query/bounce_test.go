@@ -83,7 +83,10 @@ func TestBounceGuideHigh(t *testing.T) {
 	if g.Direction != "high" {
 		t.Fatalf("direction %s, rate %v usual %v", g.Direction, g.Rate, g.Usual)
 	}
-	eq(t, "usual", g.Usual, 0.5)
+	if g.Usual == nil {
+		t.Fatal("usual is missing")
+	}
+	eq(t, "usual", *g.Usual, 0.5)
 	eq(t, "since", g.Since, "2026-09-20")
 	// The daily series runs over the usual weeks and the period, oldest first.
 	var seen []string
@@ -153,7 +156,35 @@ func TestBounceGuideSmallSite(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if g.Direction != "normal" || len(g.Causes) != 0 {
+	if g.Direction != "few" || g.Usual != nil || len(g.Causes) != 0 || g.Sessions != 40 || g.Rate != 1 {
 		t.Fatalf("a period under 100 visits is never judged: %+v", g)
+	}
+}
+
+func TestBounceGuideTooFewToCompare(t *testing.T) {
+	cases := []struct {
+		name string
+		rows []bsess
+		dir  string
+	}{
+		{"period", append(usualDays(), bsess{"2026-09-17", "/x", "Search", "Desktop", 99, 99}), "few"},
+		{"usual weeks", []bsess{{"2026-09-01", "/", "Search", "Desktop", 99, 50}, {"2026-09-17", "/", "Search", "Desktop", 200, 190}}, "few"},
+		{"no history", []bsess{{"2026-09-17", "/", "Search", "Desktop", 200, 154}}, "few"},
+		{"enough", append(usualDays(), bsess{"2026-09-17", "/", "Search", "Desktop", 200, 105}), "normal"},
+	}
+	for _, c := range cases {
+		g, err := bounceSite(t, c.rows, nil).BounceGuide(context.Background(), bouncePeriod, true)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if g.Direction != c.dir || g.Weeks != BounceWeeks || g.MinSessions != bounceMinSessions {
+			t.Fatalf("%s: %+v", c.name, g)
+		}
+		if (c.dir == "few") != (g.Usual == nil) {
+			t.Fatalf("%s: usual %v for %s", c.name, g.Usual, c.dir)
+		}
+		if g.Sessions == 0 || g.Rate == 0 {
+			t.Fatalf("%s: rate and sessions are kept: %+v", c.name, g)
+		}
 	}
 }

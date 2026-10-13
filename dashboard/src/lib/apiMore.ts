@@ -33,9 +33,13 @@ export interface BounceDay {
 
 /** Whether visitors leave after one page more (or less) than usual, and what explains it. */
 export interface BounceGuide {
-  direction: 'high' | 'low' | 'normal'
+  direction: 'high' | 'low' | 'normal' | 'few'
   rate: number
-  usual: number
+  /** The site's usual rate; null when the period or the usual weeks had too few visits. */
+  usual: number | null
+  /** How many weeks "usual" looks back, and the visits a period and those weeks each need. */
+  weeks: number
+  min_sessions: number
   sessions: number
   /** First day (site zone) the daily rate left the usual. */
   since?: string
