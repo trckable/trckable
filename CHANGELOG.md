@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - The Uptime & incidents page is calmer: a period without an incident is one card instead of four, the day strip explains each day on hover, and the period menu opens under its picker. Days before a site was watched show as "Not watched yet" instead of green, uptime counts only watched time, and a quiet site says its uptime is from down checks only.
+- The mobile app can sign in with a six-digit code sent by email (where the server can send email) and keeps its own sign-in per phone; Account lists those devices and removes them, and removing a person ends theirs; a new password ends every other sign-in. A server without email keeps the password.
 - On Sites, the totals strip has an Uptime card (incidents in the period and how much of it your sites were up), and the Uptime and Revenue cards open their view.
 
 ## 0.7.16 (13 Oct 2026)

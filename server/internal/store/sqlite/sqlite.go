@@ -687,7 +687,27 @@ var migrations = []string{
 	);
 	CREATE UNIQUE INDEX IF NOT EXISTS incidents_site_started ON incidents(site_id, started_at);
 	CREATE UNIQUE INDEX IF NOT EXISTS incidents_one_open ON incidents(site_id) WHERE ended_at IS NULL;`,
-	// 56: when a site's incidents began to be watched (unix seconds). Days
+	// 56: signing in with a code sent by email (devices.go): one live code per
+	// person, kept hashed, with the wrong tries it has taken; and the sign-ins
+	// of the phone app, one per device: a random token kept hashed, revoked by
+	// deleting its row.
+	`CREATE TABLE IF NOT EXISTS login_codes (
+		user_id    TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+		code_hash  BLOB NOT NULL,
+		expires_at INTEGER NOT NULL,
+		tries      INTEGER NOT NULL DEFAULT 0
+	);
+	CREATE TABLE IF NOT EXISTS devices (
+		id           TEXT PRIMARY KEY,
+		user_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		token_hash   BLOB NOT NULL UNIQUE,
+		name         TEXT NOT NULL,
+		platform     TEXT NOT NULL,
+		created_at   INTEGER NOT NULL,
+		last_used_at INTEGER NOT NULL
+	);
+	CREATE INDEX IF NOT EXISTS devices_user ON devices(user_id);`,
+	// 57: when a site's incidents began to be watched (unix seconds). Days
 	// before it are not "no incident", they are unknown. A site with no row
 	// here is watched from the day it was added; sites that existed when this
 	// migration ran are watched from that moment (the first time we can prove

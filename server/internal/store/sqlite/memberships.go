@@ -174,6 +174,9 @@ func removeMembership(ctx context.Context, tx *sql.Tx, account, user string) err
 		if _, err := tx.ExecContext(ctx, `DELETE FROM auth_sessions WHERE user_id = ?`, user); err != nil {
 			return err
 		}
+		if _, err := tx.ExecContext(ctx, `DELETE FROM devices WHERE user_id = ?`, user); err != nil {
+			return err
+		}
 		_, err := tx.ExecContext(ctx, `DELETE FROM users WHERE id = ?`, user)
 		return err
 	}

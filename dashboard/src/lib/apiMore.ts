@@ -9,6 +9,16 @@ export * from './api'
 export { siteState, type SiteState } from '../features/sitestatus/status'
 import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, WebVitals, Widget, WidgetLook } from './api'
 
+/** A phone signed in to the account with its own token (never shown). */
+export interface Device {
+  id: string
+  name: string
+  platform: 'ios' | 'android' | 'other'
+  created_at: number
+  last_used_at: number
+  current: boolean
+}
+
 /** One row that explains why more visitors leave after one page. */
 export interface BounceCause {
   kind: 'page' | 'source_device' | 'speed'
@@ -186,4 +196,6 @@ export const more = {
   paymentSecret: (site: string, id: string) => call<{ secret: string }>('GET', `/sites/${site}/payments/${id}/secret`),
   createKey: (name: string) => call<{ key: APIKey; secret: string }>('POST', '/keys', { name }),
   revokeKey: (id: string) => act('DELETE', `/keys/${id}`),
+  devices: () => call<{ devices: Device[] }>('GET', '/me/devices'),
+  removeDevice: (id: string) => act('DELETE', `/me/devices/${id}`),
 }
