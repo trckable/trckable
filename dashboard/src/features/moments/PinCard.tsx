@@ -9,6 +9,7 @@ import { SideCard, type SideCardProps } from '../../components/SideCard/SideCard
 import type { Point } from '../../lib/api'
 import { todayIn } from '../../lib/dates'
 import { ownDays } from './api'
+import { copy } from './copy'
 import { figureOf, whenOf } from './figure'
 import { chipsOf, hasGhost, kindOf } from './kinds'
 import { pinChart, type Own } from './pinChart'
@@ -19,6 +20,9 @@ import { say } from './words'
 
 /** The kinds whose figure does not say it all: the page, the change, the average. */
 const FACTS = ['drop', 'move', 'pays', 'ai']
+/** The kinds whose chip is the source most of the visitors came from: "mostly from" leads it. */
+const FROM = ['spike', 'surge']
+const DOT = '·'
 
 export interface PinCardProps extends Pick<SideCardProps, 'id' | 'asked' | 'onClose' | 'actions' | 'deck'> {
   pin: Pin
@@ -76,7 +80,9 @@ export function PinCard({ pin, site, series, money, closeLabel, label, extra, ..
     >
       {(fig.mult || chips.length > 0) && (
         <div className="side-sub">
-          {fig.mult && <span className="side-mult num">{fig.mult}</span>}
+          {fig.mult && <span className="side-mult">{copy.usual(fig.mult)}</span>}
+          {fig.mult && chips.length > 0 && <span aria-hidden="true">{DOT}</span>}
+          {chips.length > 0 && FROM.includes(pin.kind) && <span>{copy.mostlyFrom}</span>}
           {chips.map((c, i) => (
             <SourceChip key={i} chip={c} />
           ))}

@@ -84,8 +84,9 @@ test('on a phone the bubble fits the screen and its buttons are 44px', async ({ 
   expect(box.x + box.width).toBeLessThanOrEqual(390)
   for (const name of ['Got it', 'Close hint', 'Turn hints off']) {
     const b = (await bubble(page).getByRole('button', { name }).boundingBox())!
-    expect(b.height).toBeGreaterThanOrEqual(44)
-    expect(b.width).toBeGreaterThanOrEqual(44)
+    // A bubble placed at a fractional offset reads a hair under 44 (43.99999): 44 to the pixel.
+    expect(Math.round(b.height)).toBeGreaterThanOrEqual(44)
+    expect(Math.round(b.width)).toBeGreaterThanOrEqual(44)
   }
 })
 

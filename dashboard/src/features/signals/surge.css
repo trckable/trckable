@@ -100,9 +100,11 @@
   width: calc(100% + 28px);
   height: 56px;
   box-sizing: border-box;
-  margin: 2px -14px calc(var(--pb, 14px) * -1);
+  margin: 2px -14px 0;
   padding: 0;
   overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
 }
 .sg-spark .usual {
   stroke: var(--text-4, var(--text-3));

@@ -25,7 +25,7 @@ export function WhyCard({ open, site, series, money, onShare, onPick }: { open: 
       onClose={close}
       actions={
         <>
-          <button type="button" className="btn ghost" onClick={() => focusMoment(open.pins[open.at])}>
+          <button type="button" className="btn" onClick={() => focusMoment(open.pins[open.at])}>
             {copy.today.see}
           </button>
           {onShare ? (

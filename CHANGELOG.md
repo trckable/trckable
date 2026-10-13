@@ -11,6 +11,7 @@ section into the release.
 
 - The bounce guide no longer says "nothing unusual" and "usual ~0%" for a site with too few visits. When the period or the 4 weeks before have fewer than 100 visits, it shows the share that leaves after one page and says there are not enough visits yet to say what is usual.
 - The site switcher marks the chosen site with a small dot in the accent colour instead of a check.
+- Cards that come up beside the chart (a surge, a sale, a milestone and the rest) now have a clear start, body and footer: a header with the icon, what it is ("Busier than usual" for a surge), when ("today 16:45") and the close; a body with the number and one line under it ("2.4× the usual · mostly from facebook.com"); and a footer with the buttons, "See it" outlined and "Share" filled at the same height. Other moments that landed beside the open one are listed under their own label ("Also around then") instead of as a loose line.
 
 ## 0.7.10 (13 Oct 2026)
 

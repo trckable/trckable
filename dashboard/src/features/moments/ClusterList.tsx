@@ -24,6 +24,7 @@ export function ClusterList({ pins, at, money, onPick }: { pins: Pin[]; at: numb
   )
   return (
     <ul className="why-more">
+      <li className="why-label">{copy.alsoThen}</li>
       {shown.map((r) =>
         r.group ? (
           <li key="milestones" className="why-group">

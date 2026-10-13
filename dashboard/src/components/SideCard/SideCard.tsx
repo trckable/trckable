@@ -1,6 +1,7 @@
-// A small card that slides in from the side, for a nudge or a finding: what it
-// is (an icon with its own tint, and when it happened), its title or figure, a
-// body, its actions, and a small chart of the moment running to the bottom edge. It floats above the page
+// A small card that slides in from the side, for a nudge or a finding, in three parts
+// with a hairline between them: a header (an icon with its own tint, what it is, when it
+// happened, the close), a body (its title or figure, the words under it, and a small chart
+// of the moment running edge to edge) and a footer with its actions. It floats above the page
 // (bottom right above the Peek button; a bottom sheet with a grab handle on a
 // phone), so it never moves the layout. One at a time (useSideCard). A card that
 // holds several things (a deck) shows where it is as dots, with the next card
@@ -172,34 +173,38 @@ export function SideCard({ id, label, closeLabel, asked, title, onClose, actions
       <aside
         ref={card}
         tabIndex={-1}
-        className={'side-card flat' + (kind ? ' has-kind' : '') + (leaving ? ' leaving' : '')}
+        className={'side-card flat' + (leaving ? ' leaving' : '')}
         style={kind?.tint ? ({ '--tint': kind.tint } as CSSProperties) : undefined}
         aria-label={label}
       >
         <span className="side-grab" aria-hidden="true" />
-        <button type="button" className="side-card-x" aria-label={closeLabel} onClick={close}>
-          <X size={15} strokeWidth={2} aria-hidden="true" />
-        </button>
-        {kind && (
-          <div className="side-kind">
-            <span className="side-ic" aria-hidden="true">
-              {kind.icon}
-            </span>
-            <span>{kind.label}</span>
-            {when && (
-              <span className="side-when" title={when.title} aria-label={`${when.text}, ${when.title}`}>
-                {when.text}
+        <header className="side-kind">
+          {kind && (
+            <>
+              <span className="side-ic" aria-hidden="true">
+                {kind.icon}
               </span>
-            )}
-          </div>
-        )}
-        <b className="side-card-title">{title}</b>
-        {children}
-        <div className="side-card-actions">
+              <span className="side-name">{kind.label}</span>
+            </>
+          )}
+          {when && (
+            <span className="side-when" title={when.title} aria-label={`${when.text}, ${when.title}`}>
+              {when.text}
+            </span>
+          )}
+          <button type="button" className="side-card-x" aria-label={closeLabel} onClick={close}>
+            <X size={15} strokeWidth={2} aria-hidden="true" />
+          </button>
+        </header>
+        <div className="side-body">
+          <b className="side-card-title">{title}</b>
+          {children}
+          {chart}
+        </div>
+        <footer className="side-card-actions">
           {deck && <Deck {...deck} onPrev={() => turn(-1)} onNext={() => turn(1)} />}
           <Leaving.Provider value={close}>{actions}</Leaving.Provider>
-        </div>
-        {chart}
+        </footer>
       </aside>
     </div>,
     document.body,
