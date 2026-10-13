@@ -1,4 +1,4 @@
-// The words of a site that stopped: its card on the dashboard and its label in
+// The words of a site that stopped: its badge and panel on the dashboard and its label in
 // the switcher's list (menuCopy.ts has the label itself).
 import { defineCopy } from '../../i18n'
 
@@ -6,6 +6,8 @@ export const copy = defineCopy('sitestatus', {
   label: 'Site status',
   chipDown: 'Down',
   chipQuiet: 'Tracking stopped',
+  badge: (down: boolean, age: string) => `${down ? 'Down' : 'Quiet'} · ${age}`,
+  backBadge: (gap: string) => `Back · gap of ${gap}`,
   downSince: (when: string) => `Your site is down since ${when}`,
   sinceVisit: (when: string) => `No visits since ${when}`,
   causeDown: 'The site did not answer when trckable looked. Everything recorded before is kept.',
