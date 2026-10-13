@@ -117,7 +117,13 @@ Go, embedded DuckDB and SQLite, React with an in-house SVG chart kit. Every even
 
 ## Roadmap
 
-Live sandbox runs against each payment provider, an in-app assistant, a mobile app and v1.0. What is done and what is next: [CHANGELOG.md](CHANGELOG.md).
+- [ ] Mobile analytics: track your iOS and Android apps (coming soon)
+- [ ] Live sandbox runs against each payment provider
+- [ ] Peek: an optional in-app assistant on the same read-only tools, with your own AI key
+- [ ] A mobile app (iOS and Android) to see your dashboard on your phone
+- [ ] Public v1.0: a one-click deploy template, a public demo
+
+What is already done: [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 
