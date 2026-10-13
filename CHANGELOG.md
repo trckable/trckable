@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - Add a site refuses placeholder domains such as example.com, test.com and demo.com, in the dialog and in the API, and says to enter your own site's address.
+
 ## 0.7.15 (13 Oct 2026)
 
 - In the site switcher, the tooltip of a down or quiet site opens beside the menu instead of over the list.
