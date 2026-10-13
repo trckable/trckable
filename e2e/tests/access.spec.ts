@@ -36,7 +36,7 @@ test.beforeAll(async ({ request }) => {
   // Site access is the owner's: their session, not the API token.
   AUTH = { Cookie: 'trckable_session=' + (await session('access')), 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
   // More than one site, or there is nothing to choose between.
-  for (const n of ['a', 'b']) await request.post(`${API}/api/v1/sites`, { headers: AUTH, data: { domain: `access-${n}-${tag}.example` } })
+  for (const n of ['a', 'b']) await request.post(`${API}/api/v1/sites`, { headers: AUTH, data: { domain: `access-${n}-${tag}.test` } })
   const list = await (await request.get(`${API}/api/v1/site-access`, { headers: AUTH })).json()
   viewerId = list.viewers.find((v: { email: string }) => v.email === email).id
 })

@@ -52,7 +52,7 @@ type Site = { id: string; domain: string }
 /** A site of its own, cookieless, with one visit: example.com stays as the
  *  other suites expect it. */
 async function cookielessSite(page: Page, r: APIRequestContext, tag: string): Promise<Site> {
-  const made = await r.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `ck-${tag}.example` } })
+  const made = await r.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `ck-${tag}.test` } })
   expect(made.ok()).toBe(true)
   const site = (await made.json()) as Site
   const cfg = await (await r.get(`${API}/api/v1/sites/${site.id}/config`)).json()

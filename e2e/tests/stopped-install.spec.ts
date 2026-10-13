@@ -17,7 +17,7 @@ test.beforeAll(async () => {
 
 async function newSite(page: Page, tag: string) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  const res = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `${tag}-${Date.now()}.example` } })
+  const res = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `${tag}-${Date.now()}.test` } })
   expect(res.ok()).toBe(true)
   return (await res.json()) as { id: string; domain: string }
 }

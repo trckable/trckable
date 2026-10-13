@@ -27,7 +27,7 @@ async function addSite(page: Page, domain: string) {
 
 test('a refused Add site says so under the field, in plain words', async ({ page }) => {
   await refuseSites(page, 500, '{"error":"UNIQUE constraint failed: sites.domain"}')
-  const wizard = await addSite(page, 'toast-check.example')
+  const wizard = await addSite(page, 'toast-check.test')
   await expect(wizard.locator('.wiz-status.bad')).toHaveText('Couldn’t add the site. Try again in a moment.')
   await expect(wizard.getByLabel('Domain')).toHaveAttribute('aria-invalid', 'true')
   await expect(page.getByText('UNIQUE constraint')).toHaveCount(0)
@@ -37,9 +37,19 @@ test('a refused Add site says so under the field, in plain words', async ({ page
   await expect(wizard.locator('.wiz-status.bad')).toHaveText('Use a domain like example.com, with no spaces.')
 })
 
+test('a placeholder domain is refused in the dialog before Continue does anything', async ({ page }) => {
+  await page.goto(`${API}/example.com?add=site`)
+  const wizard = page.getByRole('dialog', { name: 'Add a site' })
+  await wizard.getByLabel('Domain').fill('https://www.demo.com/')
+  await expect(wizard.locator('.wiz-status.bad')).toHaveText('demo.com is a placeholder. Enter your own site’s address.')
+  await expect(wizard.getByRole('button', { name: 'Continue' })).toBeDisabled()
+  await wizard.getByLabel('Domain').fill('placeholder-ok.test')
+  await expect(wizard.getByRole('button', { name: 'Continue' })).toBeEnabled()
+})
+
 test('a lost connection is said in a few words', async ({ page }) => {
   await page.route('**/api/v1/sites', (route) => (route.request().method() === 'POST' ? route.abort() : route.fallback()))
-  const wizard = await addSite(page, 'toast-offline.example')
+  const wizard = await addSite(page, 'toast-offline.test')
   await expect(wizard.locator('.wiz-status.bad')).toHaveText("Can't reach the server")
 })
 
