@@ -29,8 +29,8 @@ test('the View menu changes the layout and the lens, and the choice survives a r
 
   const view = page.getByRole('button', { name: 'View', exact: true })
   await view.click()
-  await page.getByRole('menuitemradio', { name: 'Table' }).click()
-  await page.getByRole('menuitemradio', { name: 'Revenue' }).click()
+  await page.getByRole('radio', { name: 'Table' }).click()
+  await page.getByRole('radio', { name: 'Revenue' }).click()
   await page.keyboard.press('Escape')
   await expect(page.locator('.nx-table')).toBeVisible()
   await expect(summary).toContainText('Last 30 days · Revenue')
@@ -42,9 +42,16 @@ test('the View menu changes the layout and the lens, and the choice survives a r
   await expect(page.locator('.nx-table')).toBeVisible({ timeout: 20_000 })
   await expect(summary).toContainText('Revenue')
 
+  // The period is its own pill beside the menu, not in it.
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Last 30 days' }).click()
+  await page.getByRole('menuitemradio', { name: 'Last 7 days' }).click()
+  await expect(summary).toContainText('Last 7 days')
+  await expect(page).toHaveURL(/period=7/)
+
   // Reset puts the page back as it starts.
   await view.click()
-  await page.getByRole('menuitem', { name: 'Reset' }).click()
+  await page.getByRole('button', { name: 'Reset' }).click()
   await expect(page.locator('.nx-today')).toBeVisible()
   await expect(summary).toContainText('Last 30 days · Visitors')
   await page.reload()

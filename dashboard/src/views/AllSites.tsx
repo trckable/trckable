@@ -1,6 +1,6 @@
 // Every site at a glance, for anyone who runs more than one. The head says what
-// is being looked at; one View menu changes the period, what to show, which
-// sites and the layout: Overview (the day in a sentence, the sites that matter
+// is being looked at; period pill and one View menu change the period, what to show,
+// which sites and the layout: Overview (the day in a sentence, the sites that matter
 // first) or Table (every site as a row, sortable).
 import { Plus } from 'lucide-react'
 import { useMemo } from 'react'
@@ -11,6 +11,7 @@ import { type Site } from '../lib/api'
 import { isViewer } from '../lib/me'
 import { AllTable } from './AllTable'
 import { AllToday } from './AllToday'
+import { AllPeriod } from './AllPeriod'
 import { AllUptime } from './AllUptime'
 import { AllViewMenu } from './AllViewMenu'
 import { siteColors } from './allSitesColors'
@@ -65,6 +66,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
             <p className="muted">{rows || uptime ? summary : copy.reading}</p>
           </div>
           <div className="all-actions">
+            <AllPeriod view={{ ...view, days }} compared={view.layout === 'table' && lens === 'visitors' && !uptime} change={change} />
             <AllViewMenu view={{ ...view, days }} sites={sites} money={money} change={change} reset={reset} />
             {!isViewer() && (
               <button type="button" className="btn primary" onClick={openAddSite}>

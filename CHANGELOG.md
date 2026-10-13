@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- On All sites, the period moves out of the View menu into a pill beside it, like the site dashboard's. The View menu is about half as tall: Show and Layout as switches, and the sites as a short checklist with All and None.
+
 ## 0.7.15 (13 Oct 2026)
 
 - In the site switcher, the tooltip of a down or quiet site opens beside the menu instead of over the list.
