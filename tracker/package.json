@@ -1,7 +1,7 @@
 {
   "name": "@trckable/tracker",
   "private": true,
-  "version": "0.7.10",
+  "version": "0.7.11",
   "description": "trckable tracker core — the ~2 KB script behind /js/t.js and the trckable npm package",
   "license": "MIT",
   "type": "module",
