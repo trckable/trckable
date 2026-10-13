@@ -136,7 +136,7 @@
   min-width: 0;
 }
 .nx-sites h3,
-.nx-feed h3 {
+.nx-feedcol h3 {
   margin: 0 0 8px;
   color: var(--text-3);
   font-size: 12.5px;
@@ -150,7 +150,7 @@
 }
 .nx-line {
   display: grid;
-  grid-template-columns: minmax(120px, max-content) minmax(0, 1fr) 120px 96px minmax(90px, 160px);
+  grid-template-columns: fit-content(280px) minmax(0, 1fr) 120px 96px minmax(90px, 160px);
   grid-template-areas: 'name why num badge spark';
   align-items: center;
   gap: 4px 18px;
@@ -185,6 +185,18 @@
   align-items: center;
   gap: 9px;
   min-width: 0;
+}
+.nx-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.nx-who small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
 }
 .nx-name b {
   overflow: hidden;
@@ -226,9 +238,11 @@
   white-space: nowrap;
   font-size: 12.5px;
 }
-.nx-feed {
+.nx-feedcol {
   position: sticky;
   top: 16px;
+}
+.nx-feed {
   padding: 16px 18px;
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -243,23 +257,14 @@
 }
 .nx-feed li {
   display: grid;
-  grid-template-columns: 10px minmax(0, 1fr) auto;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
   gap: 10px;
   font-size: 13.5px;
   line-height: 1.35;
 }
-.nx-feed li i {
-  width: 8px;
-  height: 8px;
-  margin-top: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-.nx-feed li.warn i {
-  background: var(--money);
-}
-.nx-feed li.bad i {
-  background: var(--down);
+/* The mark is drawn level with the first line of the text. */
+.nx-feed li .site-mark {
+  margin-top: 2px;
 }
 .nx-feed small {
   display: block;
@@ -481,7 +486,7 @@
   .nx-cols {
     grid-template-columns: minmax(0, 1fr);
   }
-  .nx-feed {
+  .nx-feedcol {
     position: static;
   }
 }

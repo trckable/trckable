@@ -26,6 +26,19 @@
   align-items: center;
   gap: 10px;
 }
+.all-actions .btn {
+  height: 36px;
+  font-size: 14px;
+}
+/* A phone keeps its 44px touch targets. */
+@media (max-width: 640px) {
+  .all-actions .btn {
+    height: 44px;
+  }
+}
+.all-actions .btn:not(.primary) {
+  font-weight: 500;
+}
 .all-actions .btn svg {
   margin-right: 6px;
 }
@@ -44,8 +57,6 @@
   gap: 8px;
   padding: 0 10px;
   color: var(--text);
-  font-size: 14px;
-  font-weight: 600;
 }
 .all-period .range-chev {
   margin-left: 2px;
@@ -142,12 +153,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.all-view-dot {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
 }
 .pop.menu.all-view button.all-view-reset {
   justify-self: start;
