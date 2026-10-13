@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.7.13 (13 Oct 2026)
+
 - When a site is down or quiet, the dashboard shows a small badge in the bottom-right corner instead of a large card above the report. Click it to see the gap chart, what was checked and what to do.
 - The down or quiet icon in the site switcher shows its tooltip again.
 - Menus and pop-ups have a fainter edge.
