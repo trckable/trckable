@@ -19,7 +19,7 @@ const page: BounceCause = { kind: 'page', label: '/promo', rate: 0.95, share_of_
 const sd: BounceCause = { kind: 'source_device', label: 'Social · Mobile', source: 'Social', device: 'Mobile', rate: 0.9, share_of_visits: 0.3, was: null }
 const speed: BounceCause = { kind: 'speed', label: '/promo', rate: 0.95, share_of_visits: 0.4, was: 0.5, lcp_ms: 4100 }
 const days = ['2026-09-10', '2026-09-15', '2026-09-20', '2026-09-21'].map((day, i) => ({ day, rate: i < 2 ? 0.5 : 0.9, sessions: 50 }))
-const high = (causes: BounceCause[]): BounceGuide => ({ direction: 'high', rate: 0.78, usual: 0.5, sessions: 400, since: '2026-09-20', days, causes })
+const high = (causes: BounceCause[]): BounceGuide => ({ direction: 'high', rate: 0.78, usual: 0.5, weeks: 4, min_sessions: 100, sessions: 400, since: '2026-09-20', days, causes })
 
 describe('what to try', () => {
   it('lists only what the causes call for', () => {
@@ -167,8 +167,18 @@ describe('the walkthrough', () => {
   })
 
   it('has nothing to walk through when it is as usual', () => {
-    show({ direction: 'normal', rate: 0.5, usual: 0.5, sessions: 400, days: [], causes: [] })
+    show({ direction: 'normal', rate: 0.5, usual: 0.5, weeks: 4, min_sessions: 100, sessions: 400, days: [], causes: [] })
     expect(text()).toContain('Nothing unusual')
+    expect(button('Next')).toBeUndefined()
+  })
+
+  it('says there are too few visits to compare, and shows no usual', () => {
+    show({ direction: 'few', rate: 0.77, usual: null, weeks: 4, min_sessions: 100, sessions: 40, days: [], causes: [] })
+    expect(text()).toContain('77%')
+    expect(text()).toContain('leave after one page')
+    expect(text()).toContain('Not enough visits yet to say what’s usual for this site. We compare once it has 100 visits in a period and in the 4 weeks before.')
+    expect(text()).not.toContain('usual ~')
+    expect(text()).not.toContain('Nothing unusual')
     expect(button('Next')).toBeUndefined()
   })
 

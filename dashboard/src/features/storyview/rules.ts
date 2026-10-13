@@ -471,6 +471,6 @@ export interface BounceCard {
 }
 
 export function bounceCardOf(g: BounceGuide | null | undefined): BounceCard | null {
-  if (!g || (g.direction !== 'high' && g.direction !== 'low')) return null
+  if (!g || (g.direction !== 'high' && g.direction !== 'low') || g.usual === null) return null
   return { kind: g.direction, tenths: Math.round(g.rate * 10), usual: Math.round(g.usual * 10) }
 }

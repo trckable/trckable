@@ -30,7 +30,8 @@ const STEPS = 4
 const walks = (g: BounceGuide) => g.direction === 'high' && g.causes.length > 0
 
 function noteOf(g: BounceGuide): string {
-  if (g.direction === 'normal') return copy.normal(fmtPct(g.usual))
+  if (g.direction === 'few') return copy.few(g.min_sessions, g.weeks)
+  if (g.direction === 'normal' && g.usual !== null) return copy.normal(fmtPct(g.usual))
   return g.direction === 'low' ? copy.low : copy.spread
 }
 
