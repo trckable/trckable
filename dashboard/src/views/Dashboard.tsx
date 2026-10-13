@@ -468,7 +468,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
           onShare={narrow && !isShared() ? () => setSharing(true) : undefined}
           onViews={narrow && !isShared() && segments.length > 0 ? () => savedViews.set(true) : undefined}
           milestones={ms.on ? { open: ms.openList, dot: ms.dot } : undefined}
-          onMode={(m) => setView({ mode: m })} onRefresh={reloadNow}
+          onMode={(m) => setView({ mode: m })} onRefresh={reloadNow} onIncidents={isShared() ? undefined : () => navigate(`/${encodeURIComponent(site.domain)}/incidents`)}
           onExport={() => downloadCsv(site.id, exportQuery(view, query))}
         />
       }

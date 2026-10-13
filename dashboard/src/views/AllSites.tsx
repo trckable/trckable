@@ -11,22 +11,33 @@ import { type Site } from '../lib/api'
 import { isViewer } from '../lib/me'
 import { AllTable } from './AllTable'
 import { AllToday } from './AllToday'
+import { AllUptime } from './AllUptime'
 import { AllViewMenu } from './AllViewMenu'
 import { siteColors } from './allSitesColors'
+import { copy as incidents } from '../features/incidents/copy'
 import { copy } from './allSitesCopy'
 import { startIndex } from './allSitesLogic'
-import { useAllView } from './allView'
+import type { Lens } from './allLens'
+import { useAllView, type ViewLens } from './allView'
 import { useOverview } from './useOverview'
 import { useSurges } from './useSurges'
 import './AllSites.css'
 
+const lensWord = { visitors: copy.lensVisitors, revenue: copy.lensRevenue }
+
+/** The lens of the numbers: Revenue only where something was paid, and Uptime is its own page, so the numbers fall back to Visitors. */
+function numbersLens(l: ViewLens, money: boolean): Lens {
+  return l === 'revenue' && money ? 'revenue' : 'visitors'
+}
+
 export function AllSites({ sites, header }: { sites: Site[]; header: React.ReactNode }) {
   const [view, change, reset] = useAllView()
   // The overview reads the day from the daily series, so it has no 12 months (weekly) period.
-  const days = view.layout === 'overview' && view.days === 365 ? 30 : view.days
+  const days = view.layout === 'overview' && view.lens !== 'uptime' && view.days === 365 ? 30 : view.days
   const { rows: all, err } = useOverview(days)
   const money = !!all?.some((r) => r.revenue !== undefined)
-  const lens = view.lens === 'revenue' && !money ? 'visitors' : view.lens
+  const uptime = view.lens === 'uptime'
+  const lens = numbersLens(view.lens, money)
   const shown = useMemo(() => {
     const picked = sites.filter((s) => view.sites.includes(s.id))
     return picked.length ? picked : sites
@@ -41,7 +52,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
   const colorOf = (id: string) => colors.get(id) ?? 'var(--text-3)'
   const period = copy.periodLabel(days)
   const count = shown.length === sites.length ? copy.siteCount(sites.length) : copy.siteCountOf(shown.length, sites.length)
-  const summary = copy.summary(period, lens === 'revenue' ? copy.lensRevenue : copy.lensVisitors, count)
+  const summary = copy.summary(period, uptime ? incidents.lensUptime : lensWord[lens], count)
   const props = { lens, rows: rows ?? [], sites: shown, colorOf, start: startIndex(rows ?? []), period }
 
   return (
@@ -51,7 +62,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
         <div className="all-head">
           <div>
             <h1>{copy.title}</h1>
-            <p className="muted">{rows ? summary : copy.reading}</p>
+            <p className="muted">{rows || uptime ? summary : copy.reading}</p>
           </div>
           <div className="all-actions">
             <AllViewMenu view={{ ...view, days }} sites={sites} money={money} change={change} reset={reset} />
@@ -64,9 +75,10 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
           </div>
         </div>
         {err && <p className="empty">{err}</p>}
-        {!rows && !err && <Loading height={320} />}
-        {rows && view.layout === 'overview' && <AllToday {...props} surges={surges} />}
-        {rows && view.layout === 'table' && <AllTable {...props} />}
+        {!rows && !err && !uptime && <Loading height={320} />}
+        {uptime && <AllUptime sites={shown} days={days} />}
+        {rows && !uptime && view.layout === 'overview' && <AllToday {...props} surges={surges} />}
+        {rows && !uptime && view.layout === 'table' && <AllTable {...props} />}
       </main>
     </>
   )

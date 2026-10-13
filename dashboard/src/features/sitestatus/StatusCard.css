@@ -28,8 +28,19 @@
   font-weight: 600;
   white-space: nowrap;
 }
-button.status-badge {
+button.status-badge,
+a.status-badge {
   cursor: pointer;
+  text-decoration: none;
+}
+.status-history {
+  justify-self: start;
+  margin-top: 2px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+.status-history:hover {
+  color: var(--text-2);
 }
 button.status-badge:focus-visible {
   outline: 2px solid var(--accent);

@@ -25,6 +25,8 @@ export interface MoreProps {
   onExport: () => void
   /** The milestones timeline; dot: something new in it. Absent while off. */
   milestones?: { open: () => void; dot: boolean }
+  /** The site's uptime and incident history; absent on a shared link. */
+  onIncidents?: () => void
 }
 
 export function MoreMenu(props: MoreProps) {
