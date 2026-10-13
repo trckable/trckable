@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.7.14 (13 Oct 2026)
+
 - All sites is a live wall to leave open: a tile per site with how many people are online now, the period's line, the visitors with the change, and one line about right now. A site that is down or quiet comes first, edged warm. Click a tile to open the site.
 
 ## 0.7.13 (13 Oct 2026)
