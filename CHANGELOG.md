@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - The share bar under Where they're from fades out softly at both sides, like the card lines.
+
 ## 0.7.15 (13 Oct 2026)
 
 - In the site switcher, the tooltip of a down or quiet site opens beside the menu instead of over the list.
