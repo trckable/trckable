@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Incident } from './api'
-import { accountTotals, affectedSeconds, dayIn, dayLasted, dayStates, daysBetween, duration, rowTotals, startOfDay, uptimePct } from './model'
+import { accountTotals, affectedSeconds, dayIn, dayLasted, dayStates, daysBetween, duration, rowTotals, startOfDay, uptimeOf, uptimePct } from './model'
 
 const at = (iso: string) => Date.parse(iso) / 1000
 const inc = (o: Partial<Incident>): Incident => ({ id: 'i', site: 's', kind: 'quiet', started_at: 0, ended_at: null, cause: 'no visits', expected_visits: null, note: '', ...o })
@@ -47,7 +47,7 @@ describe('incident words and figures', () => {
   it('totals a row of All sites over its days', () => {
     const now = at('2026-10-10T00:00:00Z')
     const t = rowTotals([inc({ started_at: now - 3600 * 5, ended_at: now - 3600 * 2 }), inc({ started_at: now - 40 * 86400, ended_at: now - 39 * 86400 })], 7, now)
-    expect(t).toEqual({ count: 1, seconds: 3 * 3600, pct: 98.2 })
+    expect(t).toEqual({ count: 1, seconds: 3 * 3600, pct: 98.2, span: 7 * 86400 })
   })
 
   it('totals the account, counting the incident of a silent site but not its time, and naming those down now', () => {
@@ -76,5 +76,16 @@ describe('incident words and figures', () => {
     const x = inc({ kind: 'down', started_at: at('2026-10-01T10:00:00Z'), ended_at: at('2026-10-01T12:00:00Z') })
     const got = dayStates([x], days, 'UTC', at('2026-10-04T00:00:00Z'), at('2026-10-03T08:00:00Z'))
     expect([...got.values()]).toEqual(['down', 'unwatched', 'ok'])
+  })
+
+  it('counts only watched time in a row, and says nothing when none was watched', () => {
+    const now = at('2026-10-10T00:00:00Z')
+    const x = inc({ kind: 'down', started_at: now - 3 * 86400, ended_at: now - 3 * 86400 + 3600 })
+    const t = rowTotals([x], 7, now, now - 2 * 86400)
+    expect(t).toMatchObject({ count: 0, seconds: 0, span: 2 * 86400 })
+    expect(rowTotals([], 7, now, now + 60).span).toBe(0)
+    expect(uptimeOf(0, 0)).toBeNull()
+    expect(uptimeOf(86400, 0, false)).toEqual({ pct: 100, downOnly: true })
+    expect(uptimeOf(86400, 0, true)?.downOnly).toBe(false)
   })
 })

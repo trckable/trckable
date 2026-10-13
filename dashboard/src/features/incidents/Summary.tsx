@@ -8,7 +8,7 @@ import { Check, Eye } from 'lucide-react'
 import { fmtInt } from '../../lib/format'
 import type { Summary as Totals } from './api'
 import { copy } from './copy'
-import { duration, uptimePct } from './model'
+import { duration, uptimeOf } from './model'
 
 export interface Watch {
   /** Seconds of the period we were watching; 0 or less: none of it. */
@@ -45,7 +45,7 @@ export function Summary({ totals, silent, label, watch }: { totals: Totals; sile
   const cards: { label: string; value: string; note?: string }[] = [
     { label: copy.cardIncidents, value: fmtInt(totals.count) },
     { label: copy.cardAffected, value: duration(totals.seconds) },
-    { label: copy.cardUptime, value: silent ? copy.noVisitsAll : uptimePct(watch.span, totals.seconds).toFixed(1) + '%', note: silent ? undefined : uptimeNote },
+    { label: copy.cardUptime, value: silent ? copy.noVisitsAll : uptimeOf(watch.span, totals.seconds)!.pct.toFixed(1) + '%', note: silent ? undefined : uptimeNote },
   ]
   if (totals.lost_some) cards.push({ label: copy.cardLost, value: copy.lost(fmtInt(totals.lost)), note: copy.lostNote })
   return (

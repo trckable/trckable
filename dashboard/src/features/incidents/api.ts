@@ -29,6 +29,6 @@ export const incidents = {
   /** A page of 50, newest first; `before` is the start of the last one of the page before. */
   page: (site: string, before?: number) => call<{ incidents: Incident[]; next_before: number | null }>('GET', `/sites/${site}/incidents?limit=50${before ? `&before=${before}` : ''}`),
   /** Every site's incidents in the last `days` days. */
-  account: (days: number) => call<{ incidents: Incident[] }>('GET', `/incidents?days=${days}`),
+  account: (days: number) => call<{ incidents: Incident[]; quiet_tracked?: Record<string, boolean> }>('GET', `/incidents?days=${days}`),
   note: (site: string, id: string, note: string) => call<Incident>('PATCH', `/sites/${site}/incidents/${id}`, { note }),
 }

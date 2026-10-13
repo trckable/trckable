@@ -689,14 +689,14 @@ var migrations = []string{
 	CREATE UNIQUE INDEX IF NOT EXISTS incidents_one_open ON incidents(site_id) WHERE ended_at IS NULL;`,
 	// 56: when a site's incidents began to be watched (unix seconds). Days
 	// before it are not "no incident", they are unknown. A site with no row
-	// here is watched from the day it was added; sites that existed when the
-	// history shipped (v0.7.14, 13 Oct 2026 15:16 UTC) are watched from then,
-	// or from being added if that came later.
+	// here is watched from the day it was added; sites that existed when this
+	// migration ran are watched from that moment (the first time we can prove
+	// it), or from being added if that came later.
 	`CREATE TABLE IF NOT EXISTS site_watch (
 		site_id TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
 		since   INTEGER NOT NULL
 	) WITHOUT ROWID;
-	INSERT OR IGNORE INTO site_watch (site_id, since) SELECT id, max(created_at, 1791904560) FROM sites;`,
+	INSERT OR IGNORE INTO site_watch (site_id, since) SELECT id, max(created_at, CAST(strftime('%s', 'now') AS INTEGER)) FROM sites;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

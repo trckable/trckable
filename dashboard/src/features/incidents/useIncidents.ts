@@ -32,8 +32,8 @@ export function usePeriodIncidents(site: string, from: number, to: number, enabl
 
 /** The account's incidents of the last `days` days, for All sites. */
 export function useAccountIncidents(days: number) {
-  const r = useLoaded<Incident[]>(`all:${days}`, () => incidents.account(days).then((x) => x.incidents))
-  return { list: r.data ?? [], ready: r.ready, failed: r.failed }
+  const r = useLoaded<{ incidents: Incident[]; quiet_tracked?: Record<string, boolean> }>(`all:${days}`, () => incidents.account(days))
+  return { list: r.data?.incidents ?? [], quiet: r.data?.quiet_tracked ?? {}, ready: r.ready, failed: r.failed }
 }
 
 /** A site's list, newest first, fifty at a time. */

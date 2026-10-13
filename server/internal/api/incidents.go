@@ -150,8 +150,19 @@ func (a *API) accountIncidents(w http.ResponseWriter, r *http.Request) {
 			out = append(out, x)
 		}
 	}
+	// Which of those sites are busy enough for quiet spells to be recorded.
+	quiet := map[string]bool{}
+	sites, _ := a.Ctl.ListSites(r.Context(), p.account)
+	for _, s := range sites {
+		if !p.sees(s.ID) {
+			continue
+		}
+		if t := a.quietTracked(r.Context(), s.ID, a.Now()); t != nil {
+			quiet[s.ID] = *t
+		}
+	}
 	w.Header().Set("Cache-Control", "private, no-store")
-	writeJSON(w, http.StatusOK, map[string]any{"incidents": out})
+	writeJSON(w, http.StatusOK, map[string]any{"incidents": out, "quiet_tracked": quiet})
 }
 
 // incidentNote is PATCH /api/v1/sites/{site}/incidents/{id}: the note that
