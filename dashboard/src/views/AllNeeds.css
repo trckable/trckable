@@ -1,0 +1,78 @@
+/* The "Needs you" cards of All sites (views/AllNeeds.tsx). */
+.all-needs {
+  display: grid;
+  gap: 10px;
+}
+.all-needs h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.all-needs ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.all-need {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.all-need.down {
+  border-color: color-mix(in srgb, var(--down) 40%, var(--border));
+}
+.all-need.quiet {
+  border-color: color-mix(in srgb, var(--warn) 45%, var(--border));
+}
+.all-need-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--row);
+  color: var(--text-2);
+}
+.all-need.down .all-need-icon {
+  color: var(--down);
+}
+.all-need.quiet .all-need-icon {
+  color: var(--warn);
+}
+.all-need.surge .all-need-icon {
+  color: var(--up);
+}
+.all-need-text {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.all-need-text b {
+  font-weight: 600;
+}
+.all-need-text .muted {
+  font-size: 13px;
+}
+.all-need .btn {
+  flex: none;
+}
+@media (max-width: 640px) {
+  :root .all-need {
+    flex-wrap: wrap;
+  }
+  :root .all-need .btn {
+    width: 100%;
+    min-height: var(--ph-hit);
+  }
+  :root .all-need-text .muted {
+    font-size: 12px;
+  }
+}

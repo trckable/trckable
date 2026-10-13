@@ -46,7 +46,7 @@ export function SiteLines({ rows, days, colors, total, start = 0 }: { rows: Site
   const y = (v: number) => H - 4 - (v / max) * (H - 12)
   const step = days / points
   const when = (i: number) => dayLabel(Math.round((n - 1 - i) * step))
-  const name = (label: string) => label || copy.other
+  const name = (label: string) => label || copy.otherSites
   const toggle = (key: string) =>
     setHidden((h) => {
       const next = new Set(h)

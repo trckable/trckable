@@ -106,7 +106,8 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
 
 /** The floating badge: the state and how long; it opens the panel up from its corner, or a sheet on a phone. */
 function Gone({ site, last, down }: { site: Site; last: number; down: boolean }) {
-  const [open, setOpen] = useState(false)
+  // All sites sends its "See why" buttons here with ?status=1: the panel is open on arrival.
+  const [open, setOpen] = useState(() => typeof location !== 'undefined' && new URLSearchParams(location.search).get('status') === '1')
   const btn = useRef<HTMLButtonElement>(null)
   const box = useRef<HTMLDivElement>(null)
   const [sheet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches)

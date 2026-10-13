@@ -1,10 +1,6 @@
 // The rules of the All sites screen, apart from how it looks: where the charts
-// start, how rows sort, what a site's revenue and bounce say, who is online.
+// start, how sites sort and what a site's revenue says.
 import type { SiteRow } from '../lib/api'
-import { carryOver } from '../lib/carryOver'
-
-/** A bounce rate from here on is high: 3 in 4 leave after one page. */
-export const HIGH_BOUNCE = 0.75
 
 /** The first point of the shared x range: the earliest day with a visit on any shown site, 0 when the data covers the whole period. */
 export function startIndex(rows: SiteRow[]): number {
@@ -19,32 +15,8 @@ export function startIndex(rows: SiteRow[]): number {
 /** A series from the shared start on, so every chart and sparkline covers the same days. */
 export const fromStart = (values: number[] | null, start: number): number[] => (values ?? []).slice(start)
 
-/** One per-bucket list of every shown site, added up bucket for bucket from the shared start. */
-export function sumSeries(rows: SiteRow[], pick: (r: SiteRow) => number[] | null | undefined, start: number): number[] {
-  const lists = rows.map((r) => fromStart(pick(r) ?? null, start))
-  const n = Math.max(0, ...lists.map((l) => l.length))
-  return Array.from({ length: n }, (_, i) => lists.reduce((a, l) => a + (l[i] ?? 0), 0))
-}
-
-/** The bounce rate of each bucket over all shown sites, each site weighted by its sessions that bucket. */
-export function bounceSeries(rows: SiteRow[], start: number): number[] {
-  const weights = sumSeries(rows, (r) => r.session_series, start)
-  const lists = rows.map((r) => ({ rate: fromStart(r.bounce_series ?? null, start), n: fromStart(r.session_series ?? null, start) }))
-  const rates = weights.map((w, i) => (w ? lists.reduce((a, l) => a + (l.rate[i] ?? 0) * (l.n[i] ?? 0), 0) / w : 0))
-  return carryOver(rates, weights.map((w) => w > 0))
-}
-
-/** The bounce rate is high enough to flag. */
-export const bounceHigh = (rate: number, visitors = 1) => visitors > 0 && rate >= HIGH_BOUNCE
-
-/** The rate in tenths, for "8 in 10 leave after one page". */
-export const bounceTenths = (rate: number) => Math.round(rate * 10)
-
 /** Revenue is connected when the site reports it, even if it is zero. */
 export const hasPayments = (r: SiteRow) => r.revenue !== undefined
-
-/** The Revenue column shows only when some shown site has payments connected. */
-export const anyPayments = (rows: SiteRow[]) => rows.some(hasPayments)
 
 export type OrderKey = 'order' | 'visitors' | 'name'
 export const ORDERS: OrderKey[] = ['order', 'visitors', 'name']
@@ -77,57 +49,5 @@ export function saveOrder(k: OrderKey) {
     localStorage.setItem(KEY, k)
   } catch {
     // not remembered; it still applies now
-  }
-}
-
-/** The online line of a row: a number with a dot, or none. */
-export const onlineOf = (r: SiteRow): number => (r.error ? 0 : r.online)
-
-/** Up to this many sites shown, each is a card; beyond it, a slim list. */
-export const CARDS_MAX = 8
-
-export type Layout = 'cards' | 'list'
-
-const VIEW_KEY = 'tkb_all_view'
-
-/** The viewer's picked view, or null (automatic) until one is picked. */
-export function savedView(): Layout | null {
-  try {
-    const v = localStorage.getItem(VIEW_KEY)
-    return v === 'cards' || v === 'list' ? v : null
-  } catch {
-    return null
-  }
-}
-
-export function saveView(v: Layout) {
-  try {
-    localStorage.setItem(VIEW_KEY, v)
-  } catch {
-    // not remembered; it still applies now
-  }
-}
-
-/** ?layout=cards or ?layout=list wins (to look at both), then the viewer's pick, then by site count. */
-export function layoutOf(count: number, override?: string | null, picked?: Layout | null): Layout {
-  if (override === 'cards' || override === 'list') return override
-  if (picked) return picked
-  return count <= CARDS_MAX ? 'cards' : 'list'
-}
-
-/** The numbers over the shown sites: totals, the visitor-weighted bounce rate and who has payments. */
-export function summarize(list: SiteRow[]) {
-  const total = list.reduce((a, r) => a + r.visitors, 0)
-  const bounce = total ? list.reduce((a, r) => a + r.bounce_rate * r.visitors, 0) / total : 0
-  const previous = list.reduce((a, r) => a + r.previous_visitors, 0)
-  return {
-    total,
-    previous,
-    pageviews: list.reduce((a, r) => a + r.pageviews, 0),
-    online: list.reduce((a, r) => a + onlineOf(r), 0),
-    previousPageviews: list.reduce((a, r) => a + (r.previous_pageviews ?? 0), 0),
-    previousBounce: previous ? list.reduce((a, r) => a + (r.previous_bounce_rate ?? 0) * r.previous_visitors, 0) / previous : 0,
-    bounce,
-    paying: list.filter(hasPayments),
   }
 }

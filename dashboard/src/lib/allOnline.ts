@@ -9,7 +9,6 @@ import { visibleInterval } from './visibleInterval'
 const POLL_MS = 15_000
 
 const store = miniStore<number | null>(null)
-const days = miniStore<number[] | null>(null)
 let users = 0
 let held = 0
 let stopPoll: (() => void) | undefined
@@ -18,14 +17,6 @@ let ctl: AbortController | undefined
 /** Takes the online counts of an overview's rows; a row that could not be read has none. */
 export function feedOnline(rows: SiteRow[]) {
   store.set(rows.reduce((n, r) => n + (r.error ? 0 : r.online), 0))
-  days.set(sumMinutes(rows))
-}
-
-/** Every readable site's online count per minute, added up; none until some site sends one. */
-function sumMinutes(rows: SiteRow[]): number[] | null {
-  const lists = rows.filter((r) => !r.error && r.online_series?.length).map((r) => r.online_series as number[])
-  if (!lists.length) return null
-  return Array.from({ length: Math.max(...lists.map((l) => l.length)) }, (_, i) => lists.reduce((n, l) => n + (l[i] ?? 0), 0))
 }
 
 function read() {
@@ -41,8 +32,8 @@ function read() {
 
 /**
  * A page that reads the overview itself and feeds every response in (All sites)
- * owns the number: the poll here stands down while it is held, so the card and
- * the rows can only come from the same read. Returns the release.
+ * owns the number: the poll here stands down while it is held, so the switcher's
+ * count and the rows can only come from the same read. Returns the release.
  */
 export function holdOnline(): () => void {
   held++
@@ -67,11 +58,7 @@ export function useOnlineAll(): number | null {
   return store.use()
 }
 
-/** The last 30 minutes of the same number, one value per minute, null until it is read. */
-export const useOnlineMinutes = (): number[] | null => days.use()
-
 /** For tests: forget everything. */
 export const resetOnline = () => {
   store.set(null)
-  days.set(null)
 }

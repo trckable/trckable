@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- The All sites page opens with what needs you (a site that is down or quiet, or far busier than usual) and shows every site as a tile, in the same groups as the site switcher. Drag a tile onto a group, or use its menu. The multi-line chart moved behind a Compare button.
+
 ## 0.7.13 (13 Oct 2026)
 
 - When a site is down or quiet, the dashboard shows a small badge in the bottom-right corner instead of a large card above the report. Click it to see the gap chart, what was checked and what to do.
