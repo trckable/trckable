@@ -186,6 +186,18 @@
   gap: 9px;
   min-width: 0;
 }
+.nx-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.nx-who small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
 .nx-name b {
   overflow: hidden;
   text-overflow: ellipsis;

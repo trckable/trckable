@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- On Sites, each row shows the site's icon (or its letter) and, under its name, its web address.
 - On Sites, the totals strip has an Uptime card (incidents in the period and how much of it your sites were up), and the Uptime and Revenue cards open their view.
 
 ## 0.7.16 (13 Oct 2026)

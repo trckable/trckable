@@ -5,6 +5,7 @@ import { useMemo } from 'react'
 import { accountTotals } from '../features/incidents/model'
 import { useAccountIncidents, useNow } from '../features/incidents/useIncidents'
 import type { Surge } from '../features/signals/surge'
+import { SiteMark } from '../components/SiteMark'
 import { StateDot } from '../features/sites/StateDot'
 import { when } from '../features/sitestatus/time'
 import type { Site, SiteRow } from '../lib/api'
@@ -54,7 +55,11 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
     <button type="button" className={'nx-line' + (hurt ? ' hurt ' + i.status : '')} onClick={() => navigate('/' + encodeURIComponent(r.domain))}>
       <span className="nx-name">
         {i.site && <StateDot site={i.site} />}
-        <b title={r.domain}>{r.name || r.domain}</b>
+        <SiteMark site={i.site ?? r} size={28} />
+        <span className="nx-who">
+          <b title={r.domain}>{r.name || r.domain}</b>
+          {r.name && r.name !== r.domain && <small className="muted">{r.domain}</small>}
+        </span>
       </span>
       <span className="nx-num">
         <b>{r.error ? '–' : cell.main}</b>
