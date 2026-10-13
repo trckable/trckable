@@ -3135,7 +3135,7 @@ body {
   height: 6px;
   margin-top: -3px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--text); /* the ink, not the accent: the live dot is green */
 }
 :root .pop.sites .all-chip.on {
   border-color: var(--pane-hair);
