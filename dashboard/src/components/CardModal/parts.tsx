@@ -47,7 +47,7 @@ export function Spark({ values, label, base, hl }: { values: readonly number[]; 
   if (!g) return null
   return (
     <figure className="cm-spark">
-      <svg viewBox="0 0 280 46" preserveAspectRatio="none" role="img" aria-label={label}>
+      <svg className="line-fade" viewBox="0 0 280 46" preserveAspectRatio="none" role="img" aria-label={label}>
         {g.base !== undefined && <line className="base" x1="0" x2="280" y1={g.base} y2={g.base} />}
         <path className="ar" d={g.area} />
         <path className="ln" pathLength="1" d={g.line} vectorEffect="non-scaling-stroke" />

@@ -9,7 +9,7 @@ section into the release.
 
 ## Unreleased
 
-- The small charts on cards keep their line off the card's bottom edge, so no thin line shows there on quiet days.
+- The small charts on cards keep their line off the bottom edge and fade out softly at both sides.
 
 ## 0.7.14 (13 Oct 2026)
 

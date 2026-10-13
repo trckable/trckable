@@ -23,7 +23,7 @@ export function Area({ values, color, was, slots }: { values: number[]; color: s
   const before = was && was.length > 1 ? areaPaths(was, W, H, PAD, scale).line : ''
   return (
     <span className={`kit-area ${draw && 'draw-spark'}`} aria-hidden="true">
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+      <svg className="line-fade" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
         <defs>
           <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor={color} stopOpacity="0.18" />

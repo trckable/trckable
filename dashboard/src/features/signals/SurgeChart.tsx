@@ -71,7 +71,7 @@ export function SurgeSpark({ surge }: { surge: Surge }) {
   const from = (surge.story && startSlice(surge.story)) ?? 0
   const hot = series.map((v, i) => (i >= from ? `${i === from ? 'M' : 'L'}${pt(v, i)}` : '')).join(' ')
   return (
-    <svg className="sg-spark" viewBox={`0 0 ${SW} ${SH}`} preserveAspectRatio="none" aria-hidden="true">
+    <svg className="sg-spark line-fade" viewBox={`0 0 ${SW} ${SH}`} preserveAspectRatio="none" aria-hidden="true">
       <line className="usual" x1="0" x2={SW} y1={y(surge.usual)} y2={y(surge.usual)} />
       <path className="ar" d={`${hot} L${SW} ${SH} L${x(from).toFixed(1)} ${SH} Z`} />
       <path className="pre" d={line} vectorEffect="non-scaling-stroke" />
