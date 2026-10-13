@@ -243,8 +243,14 @@ for (const [name, width, height, scheme] of [['desktop', 1440, 900, 'light'], ['
     const line = menu.locator('.state-line').first()
     await expect(line).toHaveText('Not reachable · 2d')
     await expect(menu.locator('.state-icon').first()).toHaveAttribute('aria-label', /Not reachable for 2d/)
-    await menu.locator('.state-icon').first().hover()
-    await expect(page.locator('.tip')).toHaveCount(0)
+    if (width > 640) {
+      await menu.locator('.state-icon').first().hover()
+      const state = page.getByRole('tooltip')
+      await expect(state).toContainText('Not reachable for 2d')
+      const at = (await state.boundingBox())!
+      expect(at.x).toBeGreaterThanOrEqual(8)
+      await page.mouse.move(0, 0)
+    }
     if (width > 640) {
       await menu.locator('.foot-keys').hover()
       const tip = page.getByRole('tooltip')

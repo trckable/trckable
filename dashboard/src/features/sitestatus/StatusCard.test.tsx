@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Site } from '../../lib/api'
 import { setRole } from '../../lib/me'
-import { StatusCard } from './StatusCard'
+import { StatusCard, StatusPanel } from './StatusCard'
 import { readGap, writeGap } from './recovery'
 
 const NOW = Math.floor(Date.now() / 1000)
@@ -13,7 +13,7 @@ function memory() {
   return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v), removeItem: (k: string) => void m.delete(k) }
 }
 
-describe('the card of a site that stopped', () => {
+describe('the badge and panel of a site that stopped', () => {
   beforeEach(() => {
     vi.stubGlobal('localStorage', memory())
     setRole('owner')
@@ -21,7 +21,9 @@ describe('the card of a site that stopped', () => {
   afterEach(() => vi.unstubAllGlobals())
 
   it('says the site is not answering, with its actions', () => {
-    const html = renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 8 * 3600, check: { at: NOW - 60, error: 'a.example could not be reached over https' } })} />)
+    const s = site({ last_event_at: NOW - 8 * 3600, check: { at: NOW - 60, error: 'a.example could not be reached over https' } })
+    expect(renderToStaticMarkup(<StatusCard site={s} />)).toContain('Down · 8h')
+    const html = renderToStaticMarkup(<StatusPanel site={s} last={NOW - 8 * 3600} down />)
     expect(html).toContain('Down')
     expect(html).toContain('did not answer')
     expect(html).toContain('What we checked')
@@ -32,25 +34,27 @@ describe('the card of a site that stopped', () => {
   })
 
   it('says since when the site is down, once the server knows', () => {
-    const html = renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 8 * 3600, check: { at: NOW - 60, error: 'x', down_since: NOW - 5 * 3600 } })} />)
+    const s = site({ last_event_at: NOW - 8 * 3600, check: { at: NOW - 60, error: 'x', down_since: NOW - 5 * 3600 } })
+    const html = renderToStaticMarkup(<StatusPanel site={s} last={NOW - 8 * 3600} down />)
     expect(html).toContain('Your site is down since')
     expect(html).not.toContain('No visits since')
   })
 
   it('says no visits since, and for how long, when the page answers', () => {
-    const html = renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 8 * 3600 })} />)
+    const s = site({ last_event_at: NOW - 8 * 3600 })
+    expect(renderToStaticMarkup(<StatusCard site={s} />)).toContain('Quiet · 8h')
+    const html = renderToStaticMarkup(<StatusPanel site={s} last={NOW - 8 * 3600} down={false} />)
     expect(html).toContain('Tracking stopped')
     expect(html).toContain('No visits since')
     expect(html).toContain('>8h<')
     expect(html).not.toContain('did not answer')
   })
 
-  it('shrinks to a line once visits are back, for a day', () => {
+  it('shows a badge once visits are back, for a day', () => {
     const back = NOW - 3600
     writeGap('s1', { since: back - 42 * 60, back })
     const html = renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 60 })} />)
-    expect(html).toContain('Back since')
-    expect(html).toContain('gap of 42 min')
+    expect(html).toContain('Back · gap of 42 min')
     expect(html).not.toContain('What we checked')
   })
 

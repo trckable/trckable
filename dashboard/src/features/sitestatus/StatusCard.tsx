@@ -1,8 +1,9 @@
-// A site that stopped sending visits explains itself, above its numbers: what
-// happened and since when, what was checked from outside just now, and what
-// to do. When visits return it shrinks to one line for a day.
-import { useEffect, useState } from 'react'
-import { Check, TriangleAlert, X } from 'lucide-react'
+// A site that stopped sending visits explains itself from a floating badge: how long, and a panel under it with what happened and since
+// when, what was checked from outside just now, and what to do. When visits
+// return the badge says so for a day.
+import { useEffect, useRef, useState } from 'react'
+import { Check, CircleAlert, Moon, TriangleAlert, X } from 'lucide-react'
+import { AnchoredPop } from '../../components/AnchoredPop'
 import { api, type Site } from '../../lib/api'
 import { isViewer } from '../../lib/me'
 import { openSettings } from '../../lib/settings'
@@ -18,19 +19,15 @@ import { useChecks } from './useChecks'
 import '../signals/surge.css'
 import './StatusCard.css'
 
-function Gone({ site, last, down }: { site: Site; last: number; down: boolean }) {
+export function StatusPanel({ site, last, down }: { site: Site; last: number; down: boolean }) {
   const { state, again } = useChecks(site.id)
   const recent = useRecent(site.id)
   const mute = useMute(site, !isViewer())
   const downSince = down ? site.check?.down_since : undefined
-  useEffect(() => {
-    const prev = readGap(site.id)
-    if (!prev || prev.since !== last) writeGap(site.id, { since: last })
-  }, [site.id, last])
   const result = state.phase === 'done' ? state.result : undefined
   const rows = result ? rowsOf(result, site.domain) : undefined
   return (
-    <section className={'card status-card ' + (down ? 'down' : 'quiet')} aria-label={copy.label}>
+    <div className={'status-card ' + (down ? 'down' : 'quiet')}>
       <header className="sgm-hero">
         <span className="sgm-badge" aria-hidden="true">
           <TriangleAlert size={18} strokeWidth={2} />
@@ -102,7 +99,65 @@ function Gone({ site, last, down }: { site: Site; last: number; down: boolean })
           {copy.again}
         </button>
       </div>
-    </section>
+    </div>
+  )
+}
+
+
+/** The floating badge: the state and how long; it opens the panel up from its corner, or a sheet on a phone. */
+function Gone({ site, last, down }: { site: Site; last: number; down: boolean }) {
+  const [open, setOpen] = useState(false)
+  const btn = useRef<HTMLButtonElement>(null)
+  const box = useRef<HTMLDivElement>(null)
+  const [sheet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches)
+  useEffect(() => {
+    const prev = readGap(site.id)
+    if (!prev || prev.since !== last) writeGap(site.id, { since: last })
+  }, [site.id, last])
+  // On a desktop the panel is ours to close; the sheet's popover closes itself.
+  useEffect(() => {
+    if (!open || sheet) return
+    const away = (e: MouseEvent) => {
+      if (!box.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setOpen(false)
+      btn.current?.focus()
+    }
+    document.addEventListener('mousedown', away)
+    window.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('mousedown', away)
+      window.removeEventListener('keydown', esc)
+    }
+  }, [open, sheet])
+  const Icon = down ? CircleAlert : Moon
+  return (
+    <div ref={box} className="status-float">
+      {open && !sheet && (
+        <div className="status-pop" role="dialog" aria-label={copy.label}>
+          <StatusPanel site={site} last={last} down={down} />
+        </div>
+      )}
+      <button
+        ref={btn}
+        type="button"
+        className={'status-badge ' + (down ? 'down' : 'quiet')}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        title={copy.label}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <Icon size={15} strokeWidth={2} aria-hidden="true" />
+        {copy.badge(down, silence(site))}
+      </button>
+      {open && sheet && (
+        <AnchoredPop anchor={btn} label={copy.label} className="status-pop" onClose={() => setOpen(false)}>
+          {() => <StatusPanel site={site} last={last} down={down} />}
+        </AnchoredPop>
+      )}
+    </div>
   )
 }
 
@@ -134,10 +189,10 @@ function Back({ site }: { site: Site }) {
     return null
   }
   return (
-    <p className="status-back" role="status">
+    <div className="status-float"><span className="status-badge back" role="status" title={copy.back(when(gap.back), spanLong(gap.back - gap.since))}>
       <Check size={15} strokeWidth={2.25} aria-hidden="true" />
-      {copy.back(when(gap.back), spanLong(gap.back - gap.since))}
-    </p>
+      {copy.backBadge(spanLong(gap.back - gap.since))}
+    </span></div>
   )
 }
 
@@ -147,7 +202,7 @@ function spanLong(secs: number): string {
   return `${Math.round(secs / 86400)} d`
 }
 
-/** Whether there is anything to say about this site's visits: a quiet spell now, or a gap that just closed. */
+/** The badge, if there is anything to say about this site's visits: a quiet spell now, or a gap that just closed. */
 export function StatusCard({ site }: { site: Site }) {
   const status = statusOf(site)
   if (status === 'new') return null
