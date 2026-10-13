@@ -5,6 +5,10 @@
 import { useState } from 'react'
 import { LENSES, type Lens } from './allLens'
 
+/** The lenses plus Uptime, which reads the incident record and is a page of its own, not a lens on the numbers. */
+export type ViewLens = Lens | 'uptime'
+const VIEW_LENSES: ViewLens[] = [...LENSES, 'uptime']
+
 /** The periods the overview can be read for. */
 export const PERIOD_DAYS = [7, 30, 90, 365]
 
@@ -13,7 +17,7 @@ export const LAYOUTS: Layout[] = ['overview', 'table']
 
 export interface View {
   days: number
-  lens: Lens
+  lens: ViewLens
   layout: Layout
   /** The ids of the sites shown; empty means every site. */
   sites: string[]
@@ -27,7 +31,7 @@ const pick = <T extends string>(all: readonly T[], x: unknown, fallback: T): T =
 function remembered(): Partial<View> {
   try {
     const v = JSON.parse(localStorage.getItem(KEY) ?? '{}') as Record<string, unknown>
-    return { days: Number(v.days), lens: v.lens as Lens, layout: v.layout as Layout }
+    return { days: Number(v.days), lens: v.lens as ViewLens, layout: v.layout as Layout }
   } catch {
     return {}
   }
@@ -39,7 +43,7 @@ export function readView(): View {
   const days = Number(q.get('period') ?? old.days)
   return {
     days: PERIOD_DAYS.includes(days) ? days : DEFAULT_VIEW.days,
-    lens: pick(LENSES, q.get('lens') ?? old.lens, DEFAULT_VIEW.lens),
+    lens: pick(VIEW_LENSES, q.get('lens') ?? old.lens, DEFAULT_VIEW.lens),
     layout: pick(LAYOUTS, q.get('layout') ?? old.layout, DEFAULT_VIEW.layout),
     sites: (q.get('sites') ?? '').split(',').filter(Boolean),
   }

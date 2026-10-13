@@ -5,9 +5,9 @@ import { Check, SlidersHorizontal } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Popover } from '../kit'
 import type { Site } from '../lib/api'
-import type { Lens } from './allLens'
+import { copy as incidents } from '../features/incidents/copy'
 import { copy } from './allSitesCopy'
-import { differs, LAYOUTS, PERIOD_DAYS, type Layout, type View } from './allView'
+import { differs, LAYOUTS, PERIOD_DAYS, type Layout, type View, type ViewLens } from './allView'
 import '../components/sheet.css'
 
 type Props = { view: View; sites: Site[]; money: boolean; change: (c: Partial<View>) => void; reset: () => void }
@@ -54,7 +54,7 @@ function SiteChoices({ sites, view, everyone, toggle }: { sites: Site[]; view: V
 }
 
 export function AllViewMenu({ view, sites, money, change, reset }: Props) {
-  const lensLabel: Record<Lens, string> = { visitors: copy.lensVisitors, revenue: copy.lensRevenue }
+  const lensLabel: Record<ViewLens, string> = { visitors: copy.lensVisitors, revenue: copy.lensRevenue, uptime: incidents.lensUptime }
   const layoutLabel: Record<Layout, string> = { overview: copy.layoutOverview, table: copy.layoutTable }
   const everyone = view.sites.length === 0
   const toggle = (id: string) => {
@@ -65,8 +65,8 @@ export function AllViewMenu({ view, sites, money, change, reset }: Props) {
     if (on.size === 0) return
     change({ sites: on.size === sites.length ? [] : sites.filter((s) => on.has(s.id)).map((s) => s.id) })
   }
-  // The overview reads the day from the daily series, which a 12 months period (weekly) does not have.
-  const days = PERIOD_DAYS.filter((d) => view.layout === 'table' || d < 365)
+  // The overview reads the day from the daily series, which a 12 months period (weekly) does not have; Uptime does not.
+  const days = PERIOD_DAYS.filter((d) => view.layout === 'table' || view.lens === 'uptime' || d < 365)
   return (
     <Popover
       label={copy.viewLabel}
@@ -88,15 +88,13 @@ export function AllViewMenu({ view, sites, money, change, reset }: Props) {
               </Choice>
             ))}
           </Section>
-          {money && (
-            <Section title={copy.show}>
-              {(['visitors', 'revenue'] as const).map((l) => (
-                <Choice key={l} role="menuitemradio" on={l === view.lens} onClick={() => change({ lens: l })}>
-                  {lensLabel[l]}
-                </Choice>
-              ))}
-            </Section>
-          )}
+          <Section title={copy.show}>
+            {(money ? (['visitors', 'revenue', 'uptime'] as const) : (['visitors', 'uptime'] as const)).map((l) => (
+              <Choice key={l} role="menuitemradio" on={l === view.lens} onClick={() => change({ lens: l })}>
+                {lensLabel[l]}
+              </Choice>
+            ))}
+          </Section>
           {sites.length > 1 && (
             <Section title={copy.sites}>
               <Choice role="menuitemradio" on={everyone} onClick={() => change({ sites: [] })}>

@@ -1,0 +1,52 @@
+/* The incidents on the chart: a small triangle under the axis, its line on hover. */
+.inc-mark {
+  --tone: var(--warn);
+  position: absolute;
+  z-index: 4;
+  width: 18px;
+  height: 14px;
+  margin: 1px 0 0;
+  padding: 0;
+  transform: translateX(-50%);
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.inc-mark.down {
+  --tone: var(--down);
+}
+.inc-mark::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  width: 9px;
+  height: 7px;
+  transform: translateX(-50%);
+  background: var(--tone);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  transition: transform 0.12s var(--ease);
+}
+.inc-mark:hover::before,
+.inc-mark:focus-visible::before {
+  transform: translateX(-50%) scale(1.25);
+}
+.inc-mark:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+.inc-tip {
+  position: absolute;
+  /* Over the chart's own tooltip (30), which follows the pointer to the same place. */
+  z-index: 31;
+  padding: 6px 10px;
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+  background: var(--pop);
+  box-shadow: var(--shadow-soft);
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.35;
+  pointer-events: none;
+}

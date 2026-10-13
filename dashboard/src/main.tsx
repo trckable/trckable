@@ -14,7 +14,7 @@ import { Dashboard } from "./views/Dashboard";
 import { applyTheme } from "./lib/theme";
 import { openAddSite, useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
-import { siteForSegment } from "./lib/siteRoute";
+import { IncidentsRoute, routeOf } from "./features/incidents/route";
 import { landing, namesSite } from "./lib/landing";
 import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
@@ -115,7 +115,7 @@ function App() {
     // Signed in at the root, or at an address that names none of this
     // person's sites (a typo, someone else's site, one since removed): their
     // main dashboard, never a page made up for an address it does not know.
-    if (boot.state === "ready" && !gated && !(path === "/settings" && namesSite(boot.sites, params)) && path !== "/all" && !siteForSegment(boot.sites, path.slice(1))) {
+    if (boot.state === "ready" && !gated && !(path === "/settings" && namesSite(boot.sites, params)) && path !== "/all" && !routeOf(boot.sites, path).site) {
       const to = landing(boot.sites, new URLSearchParams(location.search));
       navigate(to.path, { replace: true });
       if (to.wizard) openAddSite();
@@ -172,8 +172,7 @@ function App() {
 
   const refreshSites = () =>
     api.sites().then(({ sites }) => setBoot({ ...boot, sites }));
-  const all = path === "/all";
-  const site = siteForSegment(boot.sites, path.slice(1));
+  const all = path === "/all", { site, incidents } = routeOf(boot.sites, path);
 
   const header = (
     <Header sites={boot.sites} current={site} all={all} update={latest?.v} onUpdate={() => setShowUpdate(true)} />
@@ -188,6 +187,7 @@ function App() {
         <AllSites sites={boot.sites} header={header} />
       </Suspense>
     );
+  else if (site && incidents) page = <IncidentsRoute site={site} header={header} />;
   else if (!site)
     page = null; // an unknown address (/settings among them), on its way to the main dashboard
   else

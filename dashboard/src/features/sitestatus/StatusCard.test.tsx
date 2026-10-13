@@ -31,6 +31,8 @@ describe('the badge and panel of a site that stopped', () => {
     expect(html).toContain('Open site')
     expect(html).toContain('Install guide')
     expect(html).toContain('href="https://a.example"')
+    expect(html).toContain('href="/a.example/incidents"')
+    expect(html).toContain('Incident history')
   })
 
   it('says since when the site is down, once the server knows', () => {
@@ -55,6 +57,7 @@ describe('the badge and panel of a site that stopped', () => {
     writeGap('s1', { since: back - 42 * 60, back })
     const html = renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 60 })} />)
     expect(html).toContain('Back · gap of 42 min')
+    expect(html).toContain('href="/a.example/incidents"')
     expect(html).not.toContain('What we checked')
   })
 

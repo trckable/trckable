@@ -671,6 +671,22 @@ var migrations = []string{
 		label   TEXT NOT NULL,
 		PRIMARY KEY (site_id, goal)
 	) WITHOUT ROWID;`,
+	// 55: every stretch a site was down or quiet (incidents.go). Open while
+	// ended_at is NULL, and a site has at most one open at a time; a site's
+	// start times are unique, so a repeated look can never record one twice.
+	// expected_visits is NULL when there was too little history to estimate.
+	`CREATE TABLE IF NOT EXISTS incidents (
+		id              TEXT PRIMARY KEY,
+		site_id         TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		kind            TEXT NOT NULL CHECK (kind IN ('down', 'quiet')),
+		started_at      INTEGER NOT NULL,
+		ended_at        INTEGER,
+		cause           TEXT NOT NULL DEFAULT '',
+		expected_visits INTEGER,
+		note            TEXT NOT NULL DEFAULT ''
+	);
+	CREATE UNIQUE INDEX IF NOT EXISTS incidents_site_started ON incidents(site_id, started_at);
+	CREATE UNIQUE INDEX IF NOT EXISTS incidents_one_open ON incidents(site_id) WHERE ended_at IS NULL;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
