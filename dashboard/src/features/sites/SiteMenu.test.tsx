@@ -101,10 +101,10 @@ describe('a site row', () => {
     expect(row(site(4, { last_event_at: NOW - 3600 }), 5)).toContain('>5<')
   })
 
-  it('has the check on the site you are on', () => {
+  it('marks the site you are on with aria-current, and draws no tick', () => {
     const html = renderToStaticMarkup(<SiteItem site={site(1)} place={{ kind: 'rest' }} on={true} arrange={null} onPick={noop} />)
-    expect(html).toContain('class="tick"')
-    expect(html).toContain('<svg')
+    expect(html).toContain('aria-current="page"')
+    expect(html).not.toContain('tick')
   })
 })
 

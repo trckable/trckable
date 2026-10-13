@@ -3126,22 +3126,16 @@ body {
 :root .pop.sites.pop .site {
   padding-left: 28px;
 }
-:root .pop.sites .site .tick {
-  display: none;
-}
 :root .pop.sites .site.on::before {
   content: '';
   top: 50%;
   bottom: auto;
-  left: 9px;
-  width: 5px;
-  height: 9px;
-  margin-top: -6px;
-  border: solid var(--text);
-  border-width: 0 1.5px 1.5px 0;
-  border-radius: 0;
-  background: none;
-  transform: rotate(40deg) scale(0.9);
+  left: 11px;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  background: var(--text); /* the ink, not the accent: the live dot is green */
 }
 :root .pop.sites .all-chip.on {
   border-color: var(--pane-hair);
