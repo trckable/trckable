@@ -1,7 +1,6 @@
 // All sites: a site's colour follows the site. Each of the first seven sites of
-// the account has a colour of its own (the chart's key and its row's line agree,
-// and no two repeat); the sites past the palette are one "Other sites" band,
-// never a colour taken again.
+// the account has a colour of its own on its tile's line, and the sites past the
+// palette are drawn neutral, never a colour taken again.
 import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
@@ -13,7 +12,7 @@ test.beforeAll(async () => {
   cookie = await session('all-sites-colors')
 })
 
-test('no two sites share a colour, and the ones past the palette are Other', async ({ page }) => {
+test('a tile line has the colour of its site, and the ones past the palette are neutral', async ({ page }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   const tag = Date.now()
@@ -32,9 +31,7 @@ test('no two sites share a colour, and the ones past the palette are Other', asy
   expect(listed.length).toBeGreaterThan(7)
 
   await page.goto(`${API}/all`)
-  const key = page.locator('.all-legend span')
-  await expect(key.first()).toBeVisible()
-  const swatches = await key.evaluateAll((els) => els.map((e) => ({ name: (e.textContent ?? '').trim(), color: getComputedStyle(e.querySelector('i')!).backgroundColor })))
+  await expect(page.locator('.all-tile .all-spark').first()).toBeVisible()
   const palette = await page.evaluate((n) => Array.from({ length: n }, (_, i) => {
     const probe = document.body.appendChild(document.createElement('i'))
     probe.style.color = `var(--ch-${i + 1})`
@@ -42,30 +39,27 @@ test('no two sites share a colour, and the ones past the palette are Other', asy
     probe.remove()
     return c
   }), 7)
-  const other = swatches.find((s) => s.name === 'Other sites')
-  const named = swatches.filter((s) => s !== other)
-
-  expect(named.length).toBeLessThanOrEqual(7)
-  expect(new Set(named.map((s) => s.color)).size, 'no two sites share a colour').toBe(named.length)
-  for (const s of named) {
-    const at = listed.findIndex((l) => (l.name || l.domain) === s.name)
-    expect(at, `${s.name}: one of the account's first seven sites`).toBeGreaterThanOrEqual(0)
-    expect(at).toBeLessThan(7)
-    expect(s.color, `${s.name}: the colour of its place in the list`).toBe(palette[at])
+  const neutral = await page.evaluate(() => {
+    const probe = document.body.appendChild(document.createElement('i'))
+    probe.style.color = 'var(--text-3)'
+    const c = getComputedStyle(probe).color
+    probe.remove()
+    return c
+  })
+  const strokeOf = async (name: string) => {
+    const tile = page.locator('.all-tile', { has: page.locator('.all-tile-name', { hasText: new RegExp(`^${name.replace(/\./g, '\\.')}$`) }) })
+    return tile.locator('.all-spark path[stroke]').evaluate((p) => getComputedStyle(p).stroke)
   }
-  // Past the palette: one grey band, never a colour taken again. Our nine sites are the newest, so some are past it.
-  expect(other, 'the sites past the seventh are one Other band').toBeDefined()
-  expect(named.map((s) => s.color)).not.toContain(other!.color)
-  expect(swatches.at(-1)).toBe(other)
-
-  // The row's line is the key's colour: a colour belongs to the site, here and there.
-  for (const s of named) {
-    const row = page.locator('.all-line', { has: page.locator('.all-line-name b', { hasText: new RegExp(`^${s.name.replace(/\./g, '\\.')}$`) }) })
-    const stroke = await row.locator('.all-spark path[stroke]').evaluate((p) => getComputedStyle(p).stroke)
-    expect(stroke, `${s.name}: its line and its key agree`).toBe(s.color)
-    expect(await row.locator('.site-mark').evaluate((m) => getComputedStyle(m).color), `${s.name}: its mark is the same colour`).toBe(s.color)
+  // The n-th site of the account has the n-th colour, whichever tile it is on the page.
+  let checked = 0
+  for (const [at, l] of listed.slice(0, 7).entries()) {
+    const name = l.name || l.domain
+    const line = page.locator('.all-tile', { has: page.locator('.all-tile-name', { hasText: new RegExp(`^${name.replace(/\./g, '\\.')}$`) }) }).locator('.all-spark path[stroke]')
+    if (!(await line.count())) continue
+    expect(await strokeOf(name), `${name}: the colour of its place`).toBe(palette[at])
+    checked++
   }
-  // The newest site is past the palette: its row line is the neutral one too.
-  const last = page.locator('.all-line', { has: page.locator('.all-line-name b', { hasText: `colors8-${tag}.example.org` }) })
-  expect(await last.locator('.all-spark path[stroke]').evaluate((p) => getComputedStyle(p).stroke)).toBe(other!.color)
+  expect(checked, 'at least one of the first seven sites has a line').toBeGreaterThan(0)
+  // Past the palette: the neutral colour, never one taken again.
+  expect(await strokeOf(`colors8-${tag}.example.org`)).toBe(neutral)
 })

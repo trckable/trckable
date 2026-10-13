@@ -75,9 +75,9 @@ test('Story: cards, tiles and answers fit at 390 and 360, with 44 px targets', a
   await clean(page)
 })
 
-test('All sites: nothing wider than the screen, the open arrow inside its card, no ring on a tap', async ({ page }) => {
+test('All sites: nothing wider than the screen, tiles as wide as the page', async ({ page }) => {
   await page.goto(API + '/all')
-  const card = page.locator('.all-item').first()
+  const card = page.locator('.all-tile').first()
   await expect(card).toBeVisible({ timeout: 20_000 })
   const wide = await page.evaluate(() =>
     [...document.querySelectorAll('main *')]
@@ -90,12 +90,7 @@ test('All sites: nothing wider than the screen, the open arrow inside its card, 
   )
   expect(wide, 'elements wider than the screen').toEqual([])
   const outer = (await card.boundingBox())!
-  const arrow = (await card.locator('.site-open').boundingBox())!
   expect(outer.width).toBeGreaterThanOrEqual(390 - 40)
-  expect(arrow.x).toBeGreaterThanOrEqual(outer.x)
-  expect(arrow.x + arrow.width).toBeLessThanOrEqual(outer.x + outer.width + 0.5)
-  expect(arrow.y).toBeGreaterThanOrEqual(outer.y)
-  await page.locator('.all-sort select').focus()
   await clean(page)
 })
 
@@ -185,7 +180,7 @@ function spills() {
 }
 
 for (const [name, path, ready] of [
-  ['All sites', '/all', '.all-item'],
+  ['All sites', '/all', '.all-tile'],
   ['Story', '/example.com?view=data&v=story', '.sv-tile'],
   ['Data, every card', '/example.com?view=data&v=explore&mode=full', '.kit-tabs'],
   ['Live', '/example.com?view=live', '.live-view'],

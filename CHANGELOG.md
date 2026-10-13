@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- All sites is a live wall to leave open: a tile per site with how many people are online now, the period's line, the visitors with the change, and one line about right now. A site that is down or quiet comes first, edged warm. Click a tile to open the site.
+
 ## 0.7.13 (13 Oct 2026)
 
 - When a site is down or quiet, the dashboard shows a small badge in the bottom-right corner instead of a large card above the report. Click it to see the gap chart, what was checked and what to do.
