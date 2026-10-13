@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The share bar under Where they're from fades out softly at both sides, like the card lines.
 - On All sites, the period moves out of the View menu into a pill beside it, like the site dashboard's. The View menu is about half as tall: Show and Layout as switches, and the sites as a short checklist with All and None.
 
 ## 0.7.15 (13 Oct 2026)
