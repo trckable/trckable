@@ -10,6 +10,8 @@ import './draw.css'
 
 const W = 300
 const H = 64
+// Room above and below the line: a flat stretch (the minimum) never sits on the card's bottom edge.
+const PAD = 10
 
 export function Area({ values, color, was, slots }: { values: number[]; color: string; was?: number[]; slots?: number }) {
     const both = was && was.length > 1 ? [...values, ...was] : values
@@ -17,8 +19,8 @@ export function Area({ values, color, was, slots }: { values: number[]; color: s
   const id = useId()
   const draw = useDraw()
   if (isEmpty(values)) return <NoData />
-  const { line, area } = areaPaths(values, W, H, 4, scale)
-  const before = was && was.length > 1 ? areaPaths(was, W, H, 4, scale).line : ''
+  const { line, area } = areaPaths(values, W, H, PAD, scale)
+  const before = was && was.length > 1 ? areaPaths(was, W, H, PAD, scale).line : ''
   return (
     <span className={`kit-area ${draw && 'draw-spark'}`} aria-hidden="true">
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
