@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.7.12 (13 Oct 2026)
+
 - The "stopped receiving visits" alert now sends one email when a site goes quiet and one more after three days if it is still quiet, then stops until visits come back. It used to repeat every 6 hours for as long as the site stayed silent.
 
 ## 0.7.11 (13 Oct 2026)
