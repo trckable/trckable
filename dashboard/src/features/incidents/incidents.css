@@ -38,7 +38,8 @@
 }
 .inc-tip {
   position: absolute;
-  z-index: 5;
+  /* Over the chart's own tooltip (30), which follows the pointer to the same place. */
+  z-index: 31;
   padding: 6px 10px;
   border: 1px solid var(--border-2);
   border-radius: 8px;

@@ -192,3 +192,17 @@
   flex-basis: 100%;
   color: var(--down);
 }
+
+/* The period picker is the dashboard's own, which the header's row lays out:
+   here it lays itself out, and the comparison it also offers is not for this page. */
+.inc-head .range-picker.quiet {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.inc-head .cmp-root {
+  display: none;
+}
+.inc-card {
+  align-content: start;
+}
