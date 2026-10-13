@@ -3,7 +3,7 @@
 // for money. Pure, so it can be tested; Chart.tsx only draws it.
 export const CHART_W = 280
 export const CHART_H = 46
-const PAD = 3
+const PAD = 6
 
 export interface ChartSpec {
   values: readonly number[]
@@ -54,10 +54,10 @@ export function geometry(spec: ChartSpec): Geometry | null {
       area: '',
       bars: vs.map((v, i) => {
         const empty = v <= 0
-        const yy = empty ? CHART_H - 2 : y(v)
+        const yy = empty ? CHART_H - PAD - 2 : y(v)
         // The first and last bars sit inside the edges.
         const cx = Math.min(Math.max(x(i), w / 2), CHART_W - w / 2)
-        return { x: r(cx - w / 2), y: r(yy), w: r(w), h: r(CHART_H - yy), empty }
+        return { x: r(cx - w / 2), y: r(yy), w: r(w), h: r(CHART_H - PAD - yy), empty }
       }),
     }
   }

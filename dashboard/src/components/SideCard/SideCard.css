@@ -98,7 +98,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 14px 14px 14px;
+  padding: 14px 14px 12px;
 }
 .side-ic {
   display: grid;
@@ -270,11 +270,14 @@
   width: calc(100% + 28px);
   height: 56px;
   box-sizing: border-box;
-  margin: 2px -14px -14px;
+  margin: 2px -14px 0;
   padding: 0;
   background: none;
   overflow: hidden;
   color: var(--tint);
+  /* The ends fade softly: nothing is cut off at the sides. */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
 }
 .side-chart .base {
   stroke: var(--text-4, var(--text-3));
@@ -288,8 +291,13 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.side-chart .ar {
-  fill: color-mix(in srgb, var(--tint) 18%, transparent);
+.side-chart .fade-a {
+  stop-color: var(--tint);
+  stop-opacity: 0.24;
+}
+.side-chart .fade-b {
+  stop-color: var(--tint);
+  stop-opacity: 0;
 }
 .side-chart .pt {
   fill: var(--tint);
