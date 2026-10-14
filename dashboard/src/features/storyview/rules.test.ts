@@ -55,7 +55,8 @@ describe('thin data', () => {
   })
   it('says the fix answer is not ready, and counts one visitor in the singular', () => {
     const a = storyOf(few).answers
-    expect(a.find((x) => x.key === 'fix')).toBeUndefined()
+    expect(a.find((x) => x.key === 'fix')).toMatchObject({ line: 'Not enough visits yet to tell what to fix.', big: '–' })
+    expect(a).toHaveLength(5)
     expect(a.find((x) => x.key === 'did')?.line).toContain('1 visitor so far')
   })
   it('caps a change over ten times the earlier figure', () => {
@@ -91,7 +92,7 @@ describe('tiles', () => {
     expect(t.move).toMatchObject({ arrow: '↓', tone: 'good' })
   })
   it('says one word for how the period went', () => {
-    expect(storyOf({ cur: result({}), goals: false }).answers.find((x) => x.key === 'fine')).toBeUndefined()
+    expect(storyOf({ cur: result({}), goals: false }).answers.find((x) => x.key === 'fine')?.line).toBe('Ask again in a week: we need a week to compare.')
     expect(storyOf({ cur: result({ visitors: 5000 }), prev: result({}), goals: false }).answers.find((x) => x.key === 'fine')?.word?.tone).toBe('good')
   })
   it('compares with nothing when there is no period before', () => {

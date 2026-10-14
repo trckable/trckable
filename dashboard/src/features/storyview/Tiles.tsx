@@ -24,7 +24,6 @@ function pillOf(t: Tile) {
 function Status({ t }: { t: Tile }) {
   const text = brief(t.verdict)
   if (!text) return null
-  if (t.verdict === copy.noBefore || t.verdict === copy.tooFew) return <span title={t.verdict}>{text}</span>
   return <TipText text={text} tip={`${t.verdict}. ${copy.normalTip}`} align="right" />
 }
 
@@ -45,6 +44,7 @@ export function Tiles({ tiles, series, onConnect }: { tiles: Tile[]; series: Til
         )
       })}
       {tiles.some((t) => t.verdict === copy.noBefore) && <p className="sv-tiles-note faint">{copy.stripNoBefore}</p>}
+      {tiles.some((t) => t.verdict === copy.tooFew) && <p className="sv-tiles-note faint">{copy.stripFew}</p>}
     </section>
   )
 }

@@ -4,7 +4,7 @@
 // normal of its own. Pure: rules.test.ts.
 import type { Filter, Result, Row } from '../../lib/api'
 import type { BounceGuide } from '../../lib/apiMore'
-import { addDays, diffDays } from '../../lib/dates'
+import { addDays, diffDays, fmtDay } from '../../lib/dates'
 import { countryName, fmtDuration, fmtInt, fmtPct } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import { baseEnough, overCap, tooFew } from '../../lib/thin'
@@ -273,7 +273,7 @@ export function headline(i: Input, state: StoryState): Headline {
 
 /** A status that fits the top line: the numbers in brackets go (the full line stays as the tooltip). */
 export function brief(verdict: string): string {
-  if (verdict === copy.noBefore) return ''
+  if (verdict === copy.noBefore || verdict === copy.tooFew) return ''
   return verdict.replace(/ \(.*\)$/, '').replace('your normal', 'normal').replace('read one page and go', 'leave')
 }
 
@@ -368,25 +368,26 @@ function did(i: Input): Answer {
   return { key: 'did', question: copy.q.did, line: copy.didSame(fmtInt(was), fmtInt(k.visitors)), sub, look: 'plain', act, delta, big }
 }
 
-function page(i: Input): Answer | null {
+function page(i: Input): Answer {
   const row = (i.cur.dims.entry_page ?? [])[0]
   const total = i.cur.kpis.visitors
-  if (!row || total === 0) return null
+  if (!row || total === 0) return { key: 'page', question: copy.q.page, line: copy.pageNone, sub: '', look: 'quiet', big: copy.none }
   const before = hasPrev(i) ? (i.prev?.dims.entry_page ?? []).find((x) => x.value === row.value)?.visitors : undefined
   const pct = fmtPct(Math.min(1, row.visitors / total))
   const home = row.value === '/' || row.value === ''
+  const title = row.label && row.label !== row.value ? row.label : undefined
   return {
     key: 'page', question: copy.q.page, look: 'plain', delta: deltaOf(row.visitors, before) ?? undefined, deltaWhat: copy.whatVisits,
-    line: home ? copy.pageHome(pct) : copy.pageOther(row.value, pct),
-    code: home ? undefined : row.value,
+    line: home ? copy.pageHome(pct) : copy.pageOther(title ?? row.value, pct),
+    code: home || title ? undefined : row.value,
     sub: copy.pageSub(fmtInt(row.visitors)),
     act: { label: copy.pageAct, filters: [{ dim: 'entry_page', value: row.value }] },
     big: pct,
   }
 }
 
-function fix(i: Input): Answer | null {
-  if (tooFew(i.cur.kpis.sessions)) return null
+function fix(i: Input): Answer {
+  if (tooFew(i.cur.kpis.sessions)) return { key: 'fix', question: copy.q.fix, line: copy.fixFew, sub: '', look: 'quiet', big: copy.dash }
   const f = leavesFastest(i)
   if (!f) return { key: 'fix', question: copy.q.fix, line: copy.fixNone, sub: copy.fixNoneSub, look: 'quiet', big: '' }
   const n = Math.round(f.worst.visitors * rate(f.worst))
@@ -427,9 +428,9 @@ function pays(i: Input): Answer {
   return { key: 'pays', question: copy.q.pays, line: copy.paysNone, sub: copy.paysNoneSub, look: 'quiet', connect: true, big: copy.none }
 }
 
-function fine(i: Input): Answer | null {
+function fine(i: Input): Answer {
   const act = { label: copy.fineAct, filters: [], compare: true }
-  if (!hasPrev(i)) return null
+  if (!hasPrev(i)) return { key: 'fine', question: copy.q.fine, line: i.first && i.today ? copy.fineEarly(fmtDay(addDays(i.first, LEARN_DAYS))) : copy.fineWait, sub: '', look: 'quiet', big: copy.dash }
   const t = tiles(i).filter((x) => x.key !== 'revenue')
   const worse = t.filter((x) => x.tone === 'bad' || x.tone === 'warn').map((x) => copy.worse[x.key as 'visitors' | 'bounce' | 'session'])
   const better = t.some((x) => x.tone === 'good')
@@ -448,7 +449,7 @@ export function storyOf(i: Input): StoryFacts {
     learning: learningOf(i),
     headline: headline(i, state),
     tiles: tiles(i),
-    answers: [did(i), page(i), fix(i), pays(i), fine(i)].filter((a): a is Answer => !!a),
+    answers: [did(i), page(i), fix(i), pays(i), fine(i)],
   }
 }
 
