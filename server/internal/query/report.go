@@ -451,8 +451,16 @@ func safeBucket(b string) string {
 	return "day"
 }
 
+// siteHost matches a referrer that is a plain site name with one dot or a
+// country-style second level (trustmrr.com, shop.co.uk), not a subdomain such
+// as news.ycombinator.com, whose first label says nothing about the site.
+const siteHost = `regexp_matches(referrer, '^[a-z0-9-]+\.([a-z0-9-]{2,}|(co|com|org|net|ac|gov)\.[a-z]{2})$')`
+
 // sessionsCTE returns "WITH s AS (...)" selecting the report's sessions
 // (closed + open, by start time, filtered), with lstart in the site's zone.
+// A visit whose referrer is only a tag (?ref=trustmrr) reports the site's host
+// (trustmrr.com) when a visit in the same period came from that host, so a
+// tagged link and a click from the site are one row. A host never seen stays out.
 func sessionsCTE(p Params) (string, []any, error) {
 	tz, err := safeTZ(p.TZ)
 	if err != nil {
@@ -463,12 +471,17 @@ func sessionsCTE(p Params) (string, []any, error) {
 		return "", nil, err
 	}
 	args := append([]any{p.Site, p.From, p.To, p.Site, p.From, p.To}, fargs...)
-	cte := `WITH s AS (
-		SELECT *, ((start AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS lstart FROM (
+	cte := `WITH raw AS (
 			SELECT * FROM sessions WHERE site_id = ? AND start >= ? AND start < ?
 			UNION ALL
 			SELECT * FROM s_open WHERE site_id = ? AND start >= ? AND start < ?
-		)` + where + `)`
+		), tagged AS (
+			SELECT lower(split_part(referrer, '.', 1)) AS tag, min(referrer) AS host FROM raw
+			WHERE ` + siteHost + ` GROUP BY 1
+		), s AS (
+			SELECT *, ((start AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS lstart FROM (
+				SELECT * REPLACE (coalesce((SELECT host FROM tagged WHERE tag = lower(raw.referrer)), referrer) AS referrer) FROM raw
+			)` + where + `)`
 	return cte, args, nil
 }
 
