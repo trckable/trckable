@@ -2,7 +2,6 @@
 // line saying where it stands. Visitors draws its days behind the number; with
 // no revenue counted the fourth is a progress card with a Connect chip.
 import { Clock, LogOut, Users, Wallet, type LucideIcon } from 'lucide-react'
-import { ShortName } from '../../kit/ShortName'
 import { Card, kitWords, MetricArea, TipText, type Tone as KitTone } from '../../kit'
 import { copy } from './copy'
 import { brief, type Tile, type Tone } from './rules'
@@ -12,12 +11,6 @@ const ICON: Record<Tile['key'], LucideIcon> = { visitors: Users, bounce: LogOut,
 
 /** Each number draws in its own colour from the chart tokens. */
 const COLOR: Record<Tile['key'], string> = { visitors: 'var(--accent)', bounce: 'var(--ch-1)', session: 'var(--ch-7)', revenue: 'var(--money)' }
-
-/** Bounce rate and Session time are "Bounce" and "Session" on a phone. */
-function nameOf(t: Tile) {
-  const short = { bounce: kitWords.shortBounce, session: kitWords.shortSession }[t.key as 'bounce' | 'session']
-  return short ? <ShortName full={t.label} short={short} /> : t.label
-}
 
 const KIT: Record<Tone, KitTone> = { good: 'good', warn: 'warn', bad: 'bad', flat: 'neutral' }
 
@@ -30,6 +23,7 @@ function pillOf(t: Tile) {
 /** The verdict on a tile's top line; with a real comparison behind it, a tap says what "normal" is. */
 function Status({ t }: { t: Tile }) {
   const text = brief(t.verdict)
+  if (!text) return null
   if (t.verdict === copy.noBefore || t.verdict === copy.tooFew) return <span title={t.verdict}>{text}</span>
   return <TipText text={text} tip={`${t.verdict}. ${copy.normalTip}`} align="right" />
 }
@@ -47,9 +41,10 @@ export function Tiles({ tiles, series, onConnect }: { tiles: Tile[]; series: Til
             </button>
           </Card>
         ) : (
-          <MetricArea key={t.key} className="sv-tile" icon={icon} label={nameOf(t)} value={t.value} pill={pillOf(t)} status={<Status t={t} />} tone={KIT[t.tone]} color={COLOR[t.key]} series={series[t.key]} />
+          <MetricArea key={t.key} className="sv-tile" icon={icon} label={t.label} value={t.value} pill={pillOf(t)} status={<Status t={t} />} tone={KIT[t.tone]} color={COLOR[t.key]} series={series[t.key]} />
         )
       })}
+      {tiles.some((t) => t.verdict === copy.noBefore) && <p className="sv-tiles-note faint">{copy.stripNoBefore}</p>}
     </section>
   )
 }

@@ -30,7 +30,7 @@ export interface TimeChartProps {
   labels: string[] // local wall-clock bucket starts ("2026-09-20T09:00")
   values: number[]
   ghost?: number[] // comparison period, aligned by index
-  ghostLabels?: string[]
+  ghostLabels?: string[]; ghostFrom?: string // ghostFrom: the first day to compare with; earlier buckets say so instead of a zero
   overlay?: { values: number[]; color: string; name: string }
   metric: string
   bucket: Bucket

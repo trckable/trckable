@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- The story cards say it in one plain sentence. "Did it work?" no longer shows a number that disagrees with its words, a card with nothing to say is left out instead of saying "Too early", the home page is "Your home page" and not "/", and a source reads "Search sent you 42 visitors (30%), your biggest source". Each card has a small "What does this mean?" with what we measured, why it matters and one button. While a site has less than 7 days of data, one line says "We need 7 days to compare. Ready on 19 Oct" with a thin progress bar. Bounce rate is "Left after one page", Session time is "Visit length", the chart never compares a day with days before tracking began (it says "first days of tracking"), the strip says "Nothing to compare with yet" once, and the moment "Google found you" says "Google started sending visitors · +7,814 over 3 days".
+
 ## 0.7.20 (14 Oct 2026)
 
 - A site whose firewall blocks our uptime check (a 403 or 429 answer, or a Cloudflare challenge page) is no longer called down: those looks do not count as failures, send no down mail and do not end a real outage. The site shows "Can't check" with the plain note "We can't check this site: its firewall blocks our checks. Your visitors aren't affected.", and the panel's list of checks marks such looks as blocked. A homepage behind a login (401 or 407) now counts as answering; a 404 or other client error, no answer, a failed lookup or handshake, a timeout or a server error (5xx, including Cloudflare's 520 to 526) is still down.

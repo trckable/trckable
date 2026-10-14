@@ -21,6 +21,7 @@ export const timeCopy = defineCopy('chart.time', {
   addNoteOn: (day: string) => `Add a note on ${day}`,
   peak: (value: string, when: string) => `${value} · ${when}`,
   noSales: 'No sales',
+  firstDays: 'first days of tracking',
   soFar: 'so far',
   revenue: 'Revenue',
   noSalesPeriod: 'No sales in this period',

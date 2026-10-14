@@ -9,6 +9,8 @@ import { TimeChart } from '../../charts/GuardedChart'
 import type { Report, ReportQuery, Site } from '../../lib/api'
 import { type Range } from '../../lib/dates'
 import { fmtDay, todayIn } from '../../lib/dates'
+import { firstDayOf } from './firstDay'
+import { LearnCard } from './LearnCard'
 import { setView } from '../../lib/url'
 import { patchFor } from '../moments/apply'
 import { placePins } from '../moments/marks'
@@ -51,15 +53,17 @@ export default function StoryView(p: StoryViewProps) {
   const { data } = p
   const cur = data.current
   const [connect, setConnect] = useState(false)
+  const today = todayIn(p.site.timezone)
+  const added = p.site.created_at ? todayIn(p.site.timezone, new Date(p.site.created_at * 1000)) : undefined
+  const first = useMemo(() => firstDayOf(cur, data.previous, added), [cur, data.previous, added])
   const facts = useMemo(
-    () => storyOf({ cur, prev: data.previous, money: p.money, goals: !!p.money || (cur.goals ?? []).length > 0 }),
-    [cur, data.previous, p.money],
+    () => storyOf({ cur, prev: data.previous, money: p.money, goals: !!p.money || (cur.goals ?? []).length > 0, first, today }),
+    [cur, data.previous, p.money, first, today],
   )
   const takeaway = useMemo(() => takeawayOf({ cur, prev: data.previous, money: p.money, goals: false }), [cur, data.previous, p.money])
   const labels = cur.series.map((x) => x.t)
   const labelsKey = labels.join(',')
   const bucket = data.bucket
-  const today = todayIn(p.site.timezone)
   const pins = useMoments(p.site.id, p.query, bucket)
   // Moments that belong together are one; the three that matter most, told in the order they happened.
   const marks = useMemo(() => pickSpans(groupSpans(placePins(pins ?? [], labels, bucket)), MOMENTS), [pins, labelsKey, bucket]) // eslint-disable-line react-hooks/exhaustive-deps -- labels are new arrays each render: keyed by content
@@ -100,6 +104,8 @@ export default function StoryView(p: StoryViewProps) {
         {h.note && <p className="sv-note">{h.note}</p>}
       </section>
 
+      {facts.learning && <LearnCard learning={facts.learning} />}
+
       <Tiles tiles={facts.tiles} series={tileSeries(cur.series, !!p.money)} onConnect={() => setConnect(true)} />
 
       {cur.kpis.sessions > 0 && <BounceCard site={p.site} query={p.query} />}
@@ -111,7 +117,8 @@ export default function StoryView(p: StoryViewProps) {
               height={p.narrow ? 170 : 240}
               labels={labels}
               values={cur.series.map((x) => x.visitors)}
-              ghost={data.previous?.series.map((x) => x.visitors)}
+              ghost={data.previous && data.previous.kpis.visitors > 0 ? data.previous.series.map((x) => x.visitors) : undefined}
+              ghostFrom={first}
               ghostLabels={data.previous?.series.map((x) => x.t)}
               metric={metricName('visitors')}
               bucket={bucket}

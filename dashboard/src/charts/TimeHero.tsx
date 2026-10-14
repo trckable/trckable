@@ -22,7 +22,8 @@ export function Hero({ label, color, big, note, children }: { label: string; col
 }
 
 /** How a bucket compares with the one it is set against. */
-export function Versus({ a, b, fmt, when, bucket }: { a: number; b: number; fmt: (n: number) => string; when?: string; bucket: Bucket }) {
+export function Versus({ a, b, fmt, when, bucket, from }: { a: number; b: number; fmt: (n: number) => string; when?: string; bucket: Bucket; from?: string }) {
+  if (from && when && when.slice(0, 10) < from) return <span className="ct-vs num">{timeCopy.firstDays}</span>
   const pct = b ? Math.round(((a - b) / b) * 100) : null
   return (
     <span className="ct-vs num">

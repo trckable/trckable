@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { KPIs, Result, Row } from '../../lib/api'
-import { biggestLoss, bounceCardOf, deltaOf, hintsOf, leavesFastest, sinceOf, stateOf, storyOf, takeawayOf, tiles, type Input } from './rules'
+import { biggestLoss, bounceCardOf, deltaOf, hintsOf, leavesFastest, learningOf, sinceOf, stateOf, storyOf, takeawayOf, tiles, type Input } from './rules'
 
 const kpis = (o: Partial<KPIs> = {}): KPIs => ({ visitors: 1000, sessions: 1100, pageviews: 3000, bounce_rate: 0.4, avg_session_s: 120, views_per_session: 2.7, new_visitor_share: 0.5, ...o })
 const rows = (r: [string, number, number?][]): Row[] => r.map(([value, visitors, bounce_rate]) => ({ value, visitors, bounce_rate }))
@@ -55,7 +55,7 @@ describe('thin data', () => {
   })
   it('says the fix answer is not ready, and counts one visitor in the singular', () => {
     const a = storyOf(few).answers
-    expect(a.find((x) => x.key === 'fix')).toMatchObject({ line: 'Not enough visits yet.', big: '–' })
+    expect(a.find((x) => x.key === 'fix')).toBeUndefined()
     expect(a.find((x) => x.key === 'did')?.line).toContain('1 visitor so far')
   })
   it('caps a change over ten times the earlier figure', () => {
@@ -91,8 +91,8 @@ describe('tiles', () => {
     expect(t.move).toMatchObject({ arrow: '↓', tone: 'good' })
   })
   it('says one word for how the period went', () => {
-    expect(storyOf({ cur: result({}), goals: false }).answers[4].word?.text).toBe('Too early')
-    expect(storyOf({ cur: result({ visitors: 5000 }), prev: result({}), goals: false }).answers[4].word?.tone).toBe('good')
+    expect(storyOf({ cur: result({}), goals: false }).answers.find((x) => x.key === 'fine')).toBeUndefined()
+    expect(storyOf({ cur: result({ visitors: 5000 }), prev: result({}), goals: false }).answers.find((x) => x.key === 'fine')?.word?.tone).toBe('good')
   })
   it('compares with nothing when there is no period before', () => {
     expect(tiles({ cur: result({}), goals: false })[0].verdict).toBe('No earlier period to compare with yet')
@@ -107,21 +107,21 @@ describe('answers', () => {
   })
   it('says nothing needs fixing when no source stands out', () => {
     const i: Input = { cur: result({}, [['Search', 600, 0.4], ['Direct', 400, 0.45]]), prev: result({}), goals: false }
-    expect(storyOf(i).answers[2].look).toBe('quiet')
+    expect(storyOf(i).answers.find((x) => x.key === 'fix')?.look).toBe('quiet')
   })
   it('says money is not known without sales or goals', () => {
-    const a = storyOf(grew).answers[3]
-    expect(a.line).toBe('Not known yet: no sales or sign-ups are counted.')
-    expect(a.connect).toBe(true)
+    const a = storyOf(grew).answers.find((x) => x.key === 'pays')
+    expect(a?.line).toBe('No sales or sign-ups are counted yet.')
+    expect(a?.connect).toBe(true)
   })
   it('gives each button the filters Explore opens with', () => {
     const a = storyOf(grew).answers
     expect(a[0].act?.filters).toEqual([{ dim: 'channel', value: 'Search' }])
-    expect(a[2].act?.filters).toEqual([{ dim: 'channel', value: 'Paid' }])
-    expect(a[4].act?.compare).toBe(true)
+    expect(a.find((x) => x.key === 'fix')?.act?.filters).toEqual([{ dim: 'channel', value: 'Paid' }])
+    expect(a.find((x) => x.key === 'fine')?.act?.compare).toBe(true)
   })
   it('names the worse numbers in the verdict', () => {
-    expect(storyOf({ cur: result({ visitors: 2000, bounce_rate: 0.9 }), prev: result({ visitors: 1000 }), goals: false }).answers[4].line).toBe('Mostly good. Only bounce rate is worse than before.')
+    expect(storyOf({ cur: result({ visitors: 2000, bounce_rate: 0.9 }), prev: result({ visitors: 1000 }), goals: false }).answers.find((x) => x.key === 'fine')?.line).toBe('Mostly good. Only leaving after one page is worse than before.')
   })
 })
 
@@ -198,8 +198,8 @@ describe('since the last visit', () => {
 
 describe('hints', () => {
   const kept: { done: ('ai' | 'crawlers')[] } = { done: [] }
-  const know = { ai: null, crawlersOff: false, heat: null, owner: true }
   const day = '2026-10-07'
+  const know = { ai: null, crawlersOff: false, heat: null, owner: true }
   it('hangs the AI visitor on the sources answer, until it is put away', () => {
     expect(hintsOf({ ...know, ai: 'visitor' }, kept, false, day)).toEqual([{ id: 'ai', answer: 'did', ai: 'visitor' }])
     expect(hintsOf({ ...know, ai: 'visitor', crawlersOff: true }, { done: ['ai'] }, false, day)).toEqual([{ id: 'crawlers', answer: 'did' }])
@@ -226,5 +226,28 @@ describe('the bounce card', () => {
     expect(bounceCardOf(guide('few', 0.77, null))).toBeNull()
     expect(bounceCardOf(null)).toBeNull()
     expect(bounceCardOf(undefined)).toBeNull()
+  })
+})
+
+describe('plain words', () => {
+  const seen = (visitors: number) => result({ visitors }, [['Search', visitors]])
+  it('never says too early, and a shown number agrees with its sentence', () => {
+    const a = storyOf({ cur: seen(28438), goals: false }).answers
+    for (const x of a) expect(`${x.line} ${x.sub}`.toLowerCase()).not.toContain('too early')
+    const did = a.find((x) => x.key === 'did')
+    expect(did?.big).toBe('28,438')
+    expect(did?.line).toContain('28,438')
+  })
+  it('names the home page, not a slash', () => {
+    const cur = { ...seen(100), dims: { entry_page: [{ value: '/', visitors: 12 } as never] } }
+    const page = storyOf({ cur, goals: false }).answers.find((x) => x.key === 'page')
+    expect(page?.line).toBe('Your home page is the first thing 12% of visitors see.')
+    expect(page?.code).toBeUndefined()
+  })
+  it('counts the days still to wait until a week of data is there', () => {
+    const i: Input = { cur: seen(50), goals: false, first: '2026-10-12', today: '2026-10-14' }
+    expect(learningOf(i)).toEqual({ days: 3, ready: '2026-10-19' })
+    expect(learningOf({ ...i, first: '2026-10-01' })).toBeUndefined()
+    expect(learningOf({ ...i, prev: seen(40) })).toBeUndefined()
   })
 })

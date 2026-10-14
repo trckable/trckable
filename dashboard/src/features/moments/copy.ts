@@ -50,7 +50,7 @@ export const copy = defineCopy('moments', {
   firstAi: 'First AI assistant visit',
   // A moment on the chart, told in plain words: the label, its numbers and the story card.
   span: {
-    found: (who: string) => `${who} found you`,
+    found: (who: string) => `${who} started sending visitors`,
     busy: 'Busier days',
     quiet: 'Quieter days',
     sales: 'Sales came in',
@@ -59,7 +59,7 @@ export const copy = defineCopy('moments', {
     fewer: 'Fewer buyers',
     fresh: (who: string) => `${who} is new`,
     days: (n: number) => (n === 1 ? '1 day' : `${n} days`),
-    more: (n: string) => `+${n} visitors`,
+    over: (more: string, days: string) => `+${more} over ${days}`,
     openDays: 'Open these days →',
     open: (when: string, what: string) => `${when}: ${what}. Tell the story`,
     rowVisitors: 'Visitors in those days',

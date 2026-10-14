@@ -6,7 +6,7 @@ import { extrasCopy } from '../extras/copy'
 import { changeShown } from '../extras/highlightModel'
 import { copy as story } from '../story/copy'
 import { say as milestone } from '../milestones/words'
-import { fmtDay } from '../../lib/dates'
+import { diffDays, fmtDay } from '../../lib/dates'
 import { fmtInt, fmtPct } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import { times } from '../../lib/times'
@@ -94,6 +94,5 @@ export function headline(s: Span): string {
 /** The days and, where the moment is about visitors, what they added: "Sep 27–29 · +7,800 visitors". */
 export function spanLine(s: Span): string {
   const extra = extraOf(s)
-  const days = periodOf([s.from, s.to])
-  return extra ? `${days} · ${copy.span.more(fmtInt(extra))}` : days
+  return extra ? copy.span.over(fmtInt(extra), copy.span.days(diffDays(s.from.slice(0, 10), s.to.slice(0, 10)) + 1)) : periodOf([s.from, s.to])
 }

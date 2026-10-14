@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Answer } from './rules'
 import { subjectOf } from './useOwnSeries'
 
-const base: Omit<Answer, 'key'> = { question: '', line: '', sub: '', look: 'plain', big: '', status: '' }
+const base: Omit<Answer, 'key'> = { question: '', line: '', sub: '', look: 'plain', big: '' }
 
 describe('subjectOf', () => {
   it('reads the page and the channel an answer is about', () => {

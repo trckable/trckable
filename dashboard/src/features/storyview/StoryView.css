@@ -302,32 +302,67 @@
 .sv-answer .kit-chart {
   margin-top: auto;
 }
-.sv-answer .sv-act {
-  margin-top: 0;
-  padding-bottom: 12px;
+.sv-answer .sv-link {
+  margin: 6px 0 12px;
+}
+.sv-explain {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+.sv-explain p {
+  margin: 0;
+}
+.sv-explain b {
+  color: var(--text);
+  font-weight: 600;
+}
+.sv-explain-do {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.sv-a-line code {
+  font: 500 13px var(--mono, ui-monospace, monospace);
+  word-break: break-all;
+}
+.sv-learn {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 12px);
+  font-size: 14px;
+}
+.sv-learn p {
+  margin: 0;
+}
+.sv-learn-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border);
+  overflow: hidden;
+}
+.sv-learn-bar i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+.sv-tiles-note {
+  margin: -4px 0 0;
+  font-size: 13px;
 }
 .sv-a-line {
-  display: -webkit-box;
   margin-top: 8px;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
   font-size: 14px;
   line-height: 1.4;
   font-weight: 500;
 }
 .sv-answer.quiet .sv-a-line {
   opacity: 0.7;
-}
-.sv-act {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-top: auto;
-  padding-top: 4px;
-}
-.sv-act:empty {
-  display: none;
 }
 .sv-link {
   display: inline-flex;

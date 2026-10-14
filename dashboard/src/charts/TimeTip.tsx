@@ -46,7 +46,7 @@ export default function TimeTip({ p, i, left, width, compact, notes }: { p: Time
           </div>
         ))}
       <Hero label={p.metric} color={tone} big={money && !p.values[i] ? null : fmt(p.values[i] ?? 0)} note={money ? sales : null}>
-        {p.ghost && p.ghost[i] !== undefined && <Versus a={p.values[i] ?? 0} b={p.ghost[i] ?? 0} fmt={fmt} when={p.ghostLabels?.[i]} bucket={p.bucket} />}
+        {p.ghost && p.ghost[i] !== undefined && <Versus a={p.values[i] ?? 0} b={p.ghost[i] ?? 0} fmt={fmt} when={p.ghostLabels?.[i]} bucket={p.bucket} from={p.ghostFrom} />}
       </Hero>
       {p.revenue && !money && <Hero label={p.revenue.label} color="var(--money)" big={p.revenue.values[i] > 0 ? p.revenue.fmt(p.revenue.values[i]) : null} note={sales} />}
       {p.overlay && (
