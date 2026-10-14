@@ -902,6 +902,9 @@ func (s *Store) CreateSite(ctx context.Context, account, domain, name string) (s
 	if domain == "" || strings.ContainsAny(domain, " /") {
 		return "", errors.New("use a domain like example.com")
 	}
+	if strings.ContainsAny(domain, ":@?#") {
+		return "", errors.New("use just the domain, like example.com: no port, login, or ? and # parts")
+	}
 	if name == "" {
 		name = domain
 	}
