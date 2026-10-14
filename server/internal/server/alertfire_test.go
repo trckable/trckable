@@ -169,7 +169,7 @@ func TestStoppedAlertReachesTheMailbox(t *testing.T) {
 		t.Fatalf("want one message, for late.example only; got %d", len(got))
 	}
 	to, subject := subjectOf(t, got[0])
-	if to != "<owner@example.com>" || subject != "Tracking stopped · late.example" {
+	if to != "<owner@example.com>" || !strings.HasPrefix(subject, "late.example: no visits for ") {
 		t.Fatalf("the message: to %q, subject %q", to, subject)
 	}
 
@@ -190,7 +190,7 @@ func TestStoppedAlertReachesTheMailbox(t *testing.T) {
 	if len(got) != 2 {
 		t.Fatalf("after lowering the hours: %d messages, want 2", len(got))
 	}
-	if _, subject := subjectOf(t, got[1]); subject != "Tracking stopped · early.example" {
+	if _, subject := subjectOf(t, got[1]); !strings.HasPrefix(subject, "early.example: no visits for ") {
 		t.Fatalf("the second message: %q", subject)
 	}
 }

@@ -280,16 +280,16 @@ func (s *Server) probed(ctx context.Context, site sqlite.SiteRow, before, after 
 	}
 	switch {
 	case !before.Down() && after.Down():
-		s.tellProbe(ctx, site, "down", "Your site isn't answering our checks", downMessage(site.Timezone, after), after)
+		s.tellProbe(ctx, site, "down", "Your site isn't answering our checks", downMessage(site.Timezone, after), before, after)
 	case before.Down() && after.Failures == 0:
-		s.tellProbe(ctx, site, "up", "Your site is back", fmt.Sprintf("%s answers again after %s.", site.Domain, plainDuration(after.At-before.DownSince)), after)
+		s.tellProbe(ctx, site, "up", "Your site is back", fmt.Sprintf("%s answers again after %s.", site.Domain, plainDuration(after.At-before.DownSince)), before, after)
 	}
 }
 
 // tellProbe sends one message to the site's "tracking stopped" alerts, the
 // same mail or webhook as a site that went quiet. It does not mark them as
 // fired: their own cadence is theirs.
-func (s *Server) tellProbe(ctx context.Context, site sqlite.SiteRow, kind, title, message string, p sqlite.SiteProbe) {
+func (s *Server) tellProbe(ctx context.Context, site sqlite.SiteRow, kind, title, message string, before, p sqlite.SiteProbe) {
 	list, err := s.ctl.LiveAlerts(ctx)
 	if err != nil {
 		return
@@ -300,6 +300,7 @@ func (s *Server) tellProbe(ctx context.Context, site sqlite.SiteRow, kind, title
 		}
 		ev := alerts.Event{Kind: kind, Site: site.ID, Domain: site.Domain, At: time.Unix(p.At, 0), Title: title, Message: message,
 			Data: map[string]any{"status": p.Status, "down_since": p.DownSince}}
+		s.probeWords(&ev, site, before, p)
 		ev.Unsubscribe = s.stopLink(a.ID)
 		ev.Settings = s.settingsLink(site.ID)
 		if err := alerts.Send(ctx, a.Target, ev); err != nil {

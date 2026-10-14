@@ -241,6 +241,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	}
 	a := &api.API{
 		Ctl: ctl, Hub: s.hub, Token: cfg.APIToken, SetupEnv: cfg.SetupToken, ClientIP: s.ingest.ClientIP,
+		Locate:  s.place,
 		Revenue: s.revenue, BaseURL: cfg.BaseURL, ReservedHosts: cfg.ReservedHosts, ShareDomainSkipVerify: cfg.ShareDomainSkipVerify, ShareDomainAskOpen: cfg.ShareDomainAskOpen, Box: box, Version: Version, UpdateCheck: cfg.UpdateCheck,
 		Query: func() *query.Q {
 			st, w := s.duck.Load(), s.writer.Load()
@@ -750,4 +751,11 @@ func (s *Server) hosting(ip string) bool {
 		return false
 	}
 	return ingest.HostingASN(s.asn.ASN(ip))
+}
+
+// place is an address's approximate place for a person to read ("Berlin, DE"),
+// empty when the geo database cannot say.
+func (s *Server) place(ip string) string {
+	l := s.geo.Lookup(ip)
+	return strings.Join(slices.DeleteFunc([]string{l.City, l.Country}, func(x string) bool { return x == "" }), ", ")
 }
