@@ -456,6 +456,20 @@ func safeBucket(b string) string {
 // as news.ycombinator.com, whose first label says nothing about the site.
 const siteHost = `regexp_matches(referrer, '^[a-z0-9-]+\.([a-z0-9-]{2,}|(co|com|org|net|ac|gov)\.[a-z]{2})$')`
 
+// refMergeCTEs returns the two CTEs that fold a ref tag into its site: "tagged"
+// (one GROUP BY over src, the tag and the host that sent visits) and the
+// merged rows, named out, which are src with the tag replaced by the host by a
+// join. src must carry a referrer column.
+func refMergeCTEs(src, out string) string {
+	return `tagged AS (
+			SELECT lower(split_part(referrer, '.', 1)) AS tag, min(referrer) AS host FROM ` + src + `
+			WHERE ` + siteHost + ` GROUP BY 1
+		), ` + out + ` AS (
+			SELECT r.* REPLACE (coalesce(t.host, r.referrer) AS referrer) FROM ` + src + ` r
+			LEFT JOIN tagged t ON t.tag = lower(r.referrer)
+		)`
+}
+
 // sessionsCTE returns "WITH s AS (...)" selecting the report's sessions
 // (closed + open, by start time, filtered), with lstart in the site's zone.
 // A visit whose referrer is only a tag (?ref=trustmrr) reports the site's host
@@ -475,13 +489,8 @@ func sessionsCTE(p Params) (string, []any, error) {
 			SELECT * FROM sessions WHERE site_id = ? AND start >= ? AND start < ?
 			UNION ALL
 			SELECT * FROM s_open WHERE site_id = ? AND start >= ? AND start < ?
-		), tagged AS (
-			SELECT lower(split_part(referrer, '.', 1)) AS tag, min(referrer) AS host FROM raw
-			WHERE ` + siteHost + ` GROUP BY 1
-		), s AS (
-			SELECT *, ((start AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS lstart FROM (
-				SELECT * REPLACE (coalesce((SELECT host FROM tagged WHERE tag = lower(raw.referrer)), referrer) AS referrer) FROM raw
-			)` + where + `)`
+		), ` + refMergeCTEs("raw", "merged") + `, s AS (
+			SELECT *, ((start AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS lstart FROM merged` + where + `)`
 	return cte, args, nil
 }
 
