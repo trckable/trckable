@@ -21,7 +21,6 @@ export default function MentionsCard({ site }: { site: Site }) {
   useEffect(() => {
     const el = mark.current
     if (near || !el) return
-    if (typeof IntersectionObserver === 'undefined') return setNear(true)
     const io = new IntersectionObserver((e) => e.some((x) => x.isIntersecting) && setNear(true), { rootMargin: '200px' })
     io.observe(el)
     return () => io.disconnect()
