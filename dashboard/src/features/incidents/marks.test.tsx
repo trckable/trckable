@@ -34,7 +34,8 @@ describe('the incident page', () => {
     const sites = [site('a.example'), site('b.example')]
     expect(routeOf(sites, '/b.example/incidents')).toMatchObject({ incidents: true, site: { id: 'b.example' } })
     expect(routeOf(sites, '/b.example')).toMatchObject({ incidents: false, site: { id: 'b.example' } })
-    expect(routeOf(sites, '/nope.example/incidents')).toEqual({ site: null, incidents: false })
+    expect(routeOf(sites, '/b.example/links')).toMatchObject({ links: true, incidents: false, site: { id: 'b.example' } })
+    expect(routeOf(sites, '/nope.example/incidents')).toEqual({ site: null, incidents: false, links: false })
   })
 
   it('writes the figures, and no visits card where the visits cannot be estimated', () => {

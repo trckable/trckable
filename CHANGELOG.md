@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Your links, in the ⋯ menu: every link you shared with a ?ref= tag or a utm_source as one row, with a bar for its visitors, the visitors who reached a goal, the revenue credited to it, a 30-day line and when it last brought someone, for the dashboard's period. A tag and the site it names count as one row. A tap on a row opens the dashboard for that link alone. Before the first tagged visit it offers a sample link to copy.
+
 ## 0.7.20 (14 Oct 2026)
 
 - A site whose firewall blocks our uptime check (a 403 or 429 answer, or a Cloudflare challenge page) is no longer called down: those looks do not count as failures, send no down mail and do not end a real outage. The site shows "Can't check" with the plain note "We can't check this site: its firewall blocks our checks. Your visitors aren't affected.", and the panel's list of checks marks such looks as blocked. A homepage behind a login (401 or 407) now counts as answering; a 404 or other client error, no answer, a failed lookup or handshake, a timeout or a server error (5xx, including Cloudflare's 520 to 526) is still down.

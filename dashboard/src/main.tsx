@@ -172,7 +172,7 @@ function App() {
 
   const refreshSites = () =>
     api.sites().then(({ sites }) => setBoot({ ...boot, sites }));
-  const all = path === "/sites", { site, incidents } = routeOf(boot.sites, path);
+  const all = path === "/sites", { site, incidents, links } = routeOf(boot.sites, path);
 
   const header = (
     <Header sites={boot.sites} current={site} all={all} update={latest?.v} onUpdate={() => setShowUpdate(true)} />
@@ -187,7 +187,7 @@ function App() {
         <AllSites sites={boot.sites} header={header} />
       </Suspense>
     );
-  else if (site && incidents) page = <IncidentsRoute site={site} header={header} />;
+  else if (site && (incidents || links)) page = <IncidentsRoute site={site} header={header} links={links} />;
   else if (!site)
     page = null; // an unknown address (/settings among them), on its way to the main dashboard
   else

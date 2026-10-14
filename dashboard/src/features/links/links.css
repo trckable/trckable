@@ -1,0 +1,216 @@
+/* Your links (LinksPage.tsx): loaded with it. */
+.yl-page {
+  padding: 8px 0 60px;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.yl-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px 24px;
+}
+.yl-head h1 {
+  margin: 4px 0 0;
+  font-size: 26px;
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.yl-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+.yl-info {
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.yl-info:hover {
+  color: var(--text);
+}
+/* The period picker is the dashboard's own, which the header's row lays out: here it lays itself out, without the comparison. */
+.yl-head .range-picker.quiet {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.yl-head .btn.range {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.yl-head .cmp-root {
+  display: none;
+}
+.yl-head .range-pop {
+  top: calc(100% + 6px);
+  right: 0;
+}
+.yl-list {
+  display: grid;
+  gap: 2px;
+}
+.yl-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.1fr) minmax(80px, 2fr) 56px 150px 90px 110px;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--radius-sm, 10px);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.yl-row:hover {
+  background: var(--surface-2);
+}
+.yl-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.yl-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.yl-tag {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.yl-bar,
+.yl-ghost > div {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.yl-bar i,
+.yl-ghost i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+}
+.yl-n {
+  text-align: right;
+  font-weight: 600;
+  font-size: 15px;
+}
+.yl-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-height: 1px;
+}
+.yl-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 12px;
+}
+.yl-money {
+  color: var(--ok, var(--text-2));
+}
+.yl-spark {
+  display: block;
+  width: 90px;
+}
+.yl-spark svg {
+  width: 90px;
+  height: 24px;
+}
+.yl-last {
+  font-size: 12px;
+  text-align: right;
+}
+.yl-empty {
+  display: grid;
+  gap: 28px;
+  justify-items: center;
+  padding: 36px 0 12px;
+}
+.yl-sample {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  padding: 10px 12px 10px 14px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-2);
+}
+.yl-sample code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  color: var(--text);
+}
+.yl-ghost {
+  display: grid;
+  gap: 14px;
+  width: min(420px, 100%);
+  opacity: 0.35;
+}
+.yl-ghost > div {
+  height: 10px;
+}
+
+@media (max-width: 640px) {
+  .yl-row {
+    grid-template-columns: 1fr auto auto auto;
+    grid-template-areas:
+      'name name name n'
+      'bar bar bar bar'
+      'badges spark last last';
+    gap: 8px 12px;
+    padding: 12px;
+  }
+  .yl-name {
+    grid-area: name;
+  }
+  .yl-n {
+    grid-area: n;
+  }
+  .yl-bar {
+    grid-area: bar;
+  }
+  .yl-badges {
+    grid-area: badges;
+  }
+  .yl-spark {
+    grid-area: spark;
+    width: 70px;
+  }
+  .yl-spark svg {
+    width: 70px;
+  }
+  .yl-last {
+    grid-area: last;
+  }
+}

@@ -5,14 +5,15 @@ import { Loading } from '../../components/loading/Loading'
 import { lazyLoad } from '../../lib/lazyLoad'
 import { siteForSegment } from '../../lib/siteRoute'
 import type { Site } from '../../lib/api'
+import { sitePagePath } from '../../lib/sitePath'
 
-const Page = lazyLoad(() => import('./IncidentsPage'))
+const Page = lazyLoad(() => import('./Pages'))
 
-/** The page itself, its own chunk: only asked for when someone opens it. */
-export function IncidentsRoute({ site, header }: { site: Site; header: ReactNode }) {
+/** The page itself (the history, or Your links), its own chunk: only asked for when someone opens it. */
+export function IncidentsRoute({ site, header, links }: { site: Site; header: ReactNode; links: boolean }) {
   return (
     <Suspense fallback={<Loading height={320} />}>
-      <Page site={site} header={header} />
+      <Page site={site} header={header} links={links} />
     </Suspense>
   )
 }
@@ -20,22 +21,12 @@ export function IncidentsRoute({ site, header }: { site: Site; header: ReactNode
 const SUFFIX = '/incidents'
 
 /** The address of a site's history; `keep` carries the period the dashboard shows over to it. */
-export function incidentsPath(domain: string, keep = false): string {
-  const q = new URLSearchParams()
-  if (keep) {
-    const here = new URLSearchParams(location.search)
-    for (const k of ['period', 'from', 'to']) if (here.get(k)) q.set(k, here.get(k) ?? '')
-  }
-  const s = q.toString()
-  return '/' + encodeURIComponent(domain) + SUFFIX + (s ? '?' + s : '')
-}
+export const incidentsPath = (domain: string, keep = false): string => sitePagePath(domain, SUFFIX, keep)
 
-/** What an address names: one of the sites, and whether it is the history page of it. */
-export function routeOf(sites: Site[], path: string): { site: Site | null; incidents: boolean } {
+/** What an address names: one of the sites, and whether it is the history page of it or its Your links page. */
+export function routeOf(sites: Site[], path: string): { site: Site | null; incidents: boolean; links: boolean } {
   const seg = path.slice(1)
-  if (seg.endsWith(SUFFIX)) {
-    const site = siteForSegment(sites, decodeURIComponent(seg.slice(0, -SUFFIX.length)))
-    if (site) return { site, incidents: true }
-  }
-  return { site: siteForSegment(sites, seg), incidents: false }
+  const at = /^(.+)\/(incidents|links)$/.exec(seg)
+  const site = at && siteForSegment(sites, decodeURIComponent(at[1]))
+  return site ? { site, incidents: at[2] === 'incidents', links: at[2] === 'links' } : { site: siteForSegment(sites, seg), incidents: false, links: false }
 }
