@@ -16,6 +16,12 @@ import (
 // visitor, and returns a query handle over the result.
 func refQ(t *testing.T, refs ...string) Q {
 	t.Helper()
+	return visitsQ(t, len(refs), func(i int, e *event.Event) { e.RefHost = refs[i] })
+}
+
+// visitsQ is refQ for any visit: fill adjusts visit i (from 0) before it is written.
+func visitsQ(t *testing.T, n int, fill func(i int, e *event.Event)) Q {
+	t.Helper()
 	ctx := context.Background()
 	dir := t.TempDir()
 	st, err := duck.Open(ctx, filepath.Join(dir, "r.duckdb"), duck.Options{})
@@ -29,9 +35,11 @@ func refQ(t *testing.T, refs ...string) Q {
 	}
 	t.Cleanup(func() { lg.Close() })
 	base := time.Date(2026, 9, 10, 10, 0, 0, 0, time.UTC).UnixMilli()
-	for i, ref := range refs {
-		e := event.Event{Site: "s1", Kind: event.KindPageview, TS: base + int64(i)*1000, Visitor: uint64(i + 1), Pageview: uint64(i + 1),
-			EventID: uint64(i + 1), Path: "/", Channel: "Referral", RefHost: ref, Country: "US", Device: "Desktop", FirstSeen: base}
+	for i := 0; i < n; i++ {
+		id := uint64(i) + 1 //nolint:gosec // test counter
+		e := event.Event{Site: "s1", Kind: event.KindPageview, TS: base + int64(i)*1000, Visitor: id, Pageview: id,
+			EventID: id, Path: "/", Channel: "Referral", Country: "US", Device: "Desktop", FirstSeen: base}
+		fill(i, &e)
 		b, _ := e.Marshal()
 		if _, err := lg.Append(ctx, b); err != nil {
 			t.Fatal(err)
@@ -42,7 +50,7 @@ func refQ(t *testing.T, refs ...string) Q {
 	wctx, cancel := context.WithCancel(ctx)
 	done := make(chan error, 1)
 	go func() { done <- w.Run(wctx) }()
-	for w.Applied() < uint64(len(refs)) {
+	for w.Applied() < uint64(n) { //nolint:gosec // test counter
 		time.Sleep(5 * time.Millisecond)
 	}
 	time.Sleep(100 * time.Millisecond)
