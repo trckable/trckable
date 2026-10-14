@@ -11,6 +11,7 @@ export const copy = defineCopy('items', {
   core: 'Core view',
   full: 'Full view',
   export: 'Export as CSV',
+  links: 'Your links',
   features: 'Features',
   featuresNew: 'Features, new ones',
   shortcuts: 'Shortcuts',

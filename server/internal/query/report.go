@@ -475,7 +475,11 @@ func refMergeCTEs(src, out string) string {
 // A visit whose referrer is only a tag (?ref=trustmrr) reports the site's host
 // (trustmrr.com) when a visit in the same period came from that host, so a
 // tagged link and a click from the site are one row. A host never seen stays out.
-func sessionsCTE(p Params) (string, []any, error) {
+func sessionsCTE(p Params) (string, []any, error) { return sessionsCTEOf(p, "*") }
+
+// sessionsCTEOf is sessionsCTE with the columns raw selects: "*" and whatever
+// a report needs besides, as long as the closed and the open sessions agree.
+func sessionsCTEOf(p Params, cols string) (string, []any, error) {
 	tz, err := safeTZ(p.TZ)
 	if err != nil {
 		return "", nil, err
@@ -486,9 +490,9 @@ func sessionsCTE(p Params) (string, []any, error) {
 	}
 	args := append([]any{p.Site, p.From, p.To, p.Site, p.From, p.To}, fargs...)
 	cte := `WITH raw AS (
-			SELECT * FROM sessions WHERE site_id = ? AND start >= ? AND start < ?
+			SELECT ` + cols + ` FROM sessions WHERE site_id = ? AND start >= ? AND start < ?
 			UNION ALL
-			SELECT * FROM s_open WHERE site_id = ? AND start >= ? AND start < ?
+			SELECT ` + cols + ` FROM s_open WHERE site_id = ? AND start >= ? AND start < ?
 		), ` + refMergeCTEs("raw", "merged") + `, s AS (
 			SELECT *, ((start AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS lstart FROM merged` + where + `)`
 	return cte, args, nil
