@@ -11,6 +11,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/trckable/trckable/server/internal/reports"
 )
 
 // Email is the second way an alert can arrive, for people who would rather
@@ -115,6 +117,7 @@ func (m *Mailer) send(ctx context.Context, to string, e Event) error {
 			c = *e.Card
 		}
 		page = c.HTML(e.Unsubscribe, e.Settings)
+		e.Inline = append(e.Inline[:len(e.Inline):len(e.Inline)], Attachment{Name: "logo.png", Type: "image/png", Data: reports.Logo, Inline: LogoCID})
 	}
 	return m.sendReport(ctx, to, Report{FromName: "trckable", Subject: subject, Text: body, HTML: page, Unsubscribe: e.Unsubscribe, Attachments: e.Inline, At: e.At})
 }

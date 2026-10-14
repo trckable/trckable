@@ -120,6 +120,10 @@ type API struct {
 
 	// SendLoginMail sends the email with a sign-in code; nil sends it through
 	// the instance's mail server (alerts.Mail). Tests replace it.
+	// Locate names the approximate place of an address ("Berlin, Germany"); nil or
+	// empty says nothing. It rides in the sign-in code email.
+	Locate func(ip string) string
+
 	SendLoginMail func(ctx context.Context, to string, r alerts.Report) error
 }
 

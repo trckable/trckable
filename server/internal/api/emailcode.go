@@ -5,14 +5,15 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"html"
 	"log/slog"
 	"math/big"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/auth"
+	"github.com/trckable/trckable/server/internal/reports"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -44,6 +45,44 @@ func (a *API) sendLoginMail(ctx context.Context, to string, r alerts.Report) err
 	return alerts.SendReport(ctx, to, r)
 }
 
+// locate is the approximate place of an address, "Berlin, Germany", or empty.
+func (a *API) locate(ip string) string {
+	if a.Locate == nil {
+		return ""
+	}
+	return a.Locate(ip)
+}
+
+// codeSource says where a code was asked from: the phone app names its device,
+// anything else is the dashboard in a browser.
+func codeSource(d *deviceIn, place string) alerts.CodeMail {
+	c := alerts.CodeMail{Source: "the trckable dashboard", Requester: "a web browser", Place: place}
+	if d != nil && (d.Name != "" || d.Platform != "") {
+		c.Source = "the trckable mobile app"
+		c.Requester = strings.TrimSpace(clip(d.Name, 60) + " " + platformLabel(d.Platform))
+	}
+	return c
+}
+
+func platformLabel(p string) string {
+	switch strings.ToLower(strings.TrimSpace(p)) {
+	case "android":
+		return "(Android)"
+	case "ios":
+		return "(iOS)"
+	case "":
+		return ""
+	}
+	return "(" + clip(p, 20) + ")"
+}
+
+func clip(s string, n int) string {
+	if r := []rune(strings.TrimSpace(s)); len(r) > n {
+		return string(r[:n])
+	}
+	return strings.TrimSpace(s)
+}
+
 // sixDigits is a random code, "482913".
 func sixDigits() (string, error) {
 	n, err := rand.Int(rand.Reader, big.NewInt(1_000_000))
@@ -62,7 +101,10 @@ func (a *API) loginCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.init()
-	var in struct{ Email string }
+	var in struct {
+		Email  string
+		Device *deviceIn
+	}
 	if err := decode(r, &in); err != nil {
 		fail(w, http.StatusBadRequest, "bad request")
 		return
@@ -84,12 +126,13 @@ func (a *API) loginCode(w http.ResponseWriter, r *http.Request) {
 		// Everything that depends on who the address belongs to (the lookup,
 		// the stored code, the mail) happens after the answer has gone, so
 		// the answer's timing is the same for every address.
-		go a.issueCode(context.WithoutCancel(r.Context()), email, now)
+		src := codeSource(in.Device, a.locate(a.ip(r)))
+		go a.issueCode(context.WithoutCancel(r.Context()), email, now, src)
 	}
 	writeJSON(w, http.StatusAccepted, map[string]bool{"ok": true})
 }
 
-func (a *API) issueCode(ctx context.Context, email string, now time.Time) {
+func (a *API) issueCode(ctx context.Context, email string, now time.Time, src alerts.CodeMail) {
 	ctx, cancel := context.WithTimeout(ctx, codeSendTimeout)
 	defer cancel()
 	u, err := a.Ctl.UserByEmail(ctx, email)
@@ -109,15 +152,14 @@ func (a *API) issueCode(ctx context.Context, email string, now time.Time) {
 		return
 	}
 	spaced := code[:3] + " " + code[3:]
+	src.Code, src.At = spaced, now
 	rep := alerts.Report{
-		FromName: "trckable",
-		Subject:  "Your trckable code: " + spaced,
-		Text:     "Your trckable code: " + spaced + "\n\nIt works for 10 minutes. If you did not ask for it, you can ignore this email.\n\n-- \nSent by trckable.",
-		HTML: `<div style="font-family:-apple-system,Segoe UI,sans-serif;max-width:420px;margin:0 auto;padding:24px;color:#111">` +
-			`<p style="margin:0 0 12px">Your trckable code:</p>` +
-			`<p style="font-size:32px;font-weight:600;letter-spacing:4px;margin:0 0 16px">` + html.EscapeString(spaced) + `</p>` +
-			`<p style="margin:0;color:#555;font-size:14px">It works for 10 minutes. If you did not ask for it, you can ignore this email.</p></div>`,
-		At: now,
+		FromName:    "trckable",
+		Subject:     "Your trckable app sign-in code: " + spaced,
+		Text:        src.Text(),
+		HTML:        src.HTML(),
+		Attachments: []alerts.Attachment{{Name: "logo.png", Type: "image/png", Data: reports.Logo, Inline: alerts.LogoCID}},
+		At:          now,
 	}
 	if err := a.sendLoginMail(ctx, u.Email, rep); err != nil {
 		slog.Warn("sign-in code: the email could not be sent", "user", u.ID, "err", err)

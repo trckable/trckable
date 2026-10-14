@@ -177,8 +177,8 @@ func (s *Server) evaluate(ctx context.Context, a sqlite.Alert, h api.Health, now
 		if !stoppedDue(last, a.LastFired, hours, now) {
 			return ev, false
 		}
-		ev.Title = "Tracking stopped"
-		ev.Message = fmt.Sprintf("%s has sent nothing for %s.", info.Domain, time.Duration(now.Unix()-last)*time.Second)
+		c, _ := s.ctl.CheckOf(ctx, a.SiteID)
+		s.stoppedWords(&ev, info, last, c, now)
 		ev.Data = map[string]any{"last_event_at": last}
 		return ev, true
 
