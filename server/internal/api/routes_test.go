@@ -182,6 +182,7 @@ var routeRules = map[string]string{
 	"PATCH /api/v1/sites/{site}/segments/{id}":                   "write",
 	"DELETE /api/v1/sites/{site}/segments/{id}":                  "write",
 	"GET /api/v1/sites/{site}/incidents":                         "read",
+	"GET /api/v1/sites/{site}/probes":                            "read",
 	"PATCH /api/v1/sites/{site}/incidents/{id}":                  "write",
 	"GET /api/v1/sites/{site}/annotations":                       "read",
 	"POST /api/v1/sites/{site}/annotations":                      "write",

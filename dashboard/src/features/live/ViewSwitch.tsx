@@ -5,7 +5,7 @@
 import { useEffect } from 'react'
 import { caps, keyFor, pressed, useKeymap } from '../../lib/keys'
 import { entryCopy as copy } from './entryCopy'
-import { liveCount, liveLink } from './liveLink'
+import { liveCount, liveLink, siteDown } from './liveLink'
 import { preloadLive } from './liveChunk'
 import { switchView } from './switchView'
 
@@ -16,6 +16,7 @@ export function ViewSwitch({ live }: { live: boolean }) {
   useKeymap()
   const linked = liveLink.use()
   const online = liveCount.use()
+  const down = siteDown.use()
   const n = online && online > 0 ? online : null
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -30,6 +31,7 @@ export function ViewSwitch({ live }: { live: boolean }) {
   const classes = ['view-switch']
   if (live) classes.push('live')
   if (live && !linked) classes.push('lost')
+  if (down) classes.push('down')
   return (
     <div className={classes.join(' ')} role="group" aria-label={copy.switchLabel} title={copy.switchTitle(key)} onPointerEnter={warm} onFocus={warm}>
       <span className="view-pill" aria-hidden="true" />

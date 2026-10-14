@@ -50,6 +50,9 @@ type Config struct {
 	// in the owner's browser, once a day, against GitHub's release list; the
 	// server itself never calls out.
 	UpdateCheck bool
+	// UptimeEvery: how often each site's homepage is looked at to tell whether it
+	// answers (TRCKABLE_UPTIME_EVERY, a duration such as 5m; default 5m, 0 turns it off).
+	UptimeEvery time.Duration
 	BackupS3    string // TRCKABLE_BACKUP_S3: https://key:secret@host/bucket/prefix?region=… (optional)
 	BackupDays  int    // TRCKABLE_BACKUP_KEEP_DAYS: off-site copies, every one for 7 days, then the newest of each day, up to this many days (default 30)
 	// NoticeDays: how long a payment provider's raw notice (it carries the
@@ -103,6 +106,7 @@ func Load() Config {
 		BackupDays:   envInt("TRCKABLE_BACKUP_KEEP_DAYS", 30),
 		NoticeDays:   envDays("TRCKABLE_PAYMENT_NOTICE_DAYS", 30),
 	}
+	c.UptimeEvery = envDuration("TRCKABLE_UPTIME_EVERY", 5*time.Minute)
 	c.OIDCRequireTOTP = !strings.EqualFold(strings.TrimSpace(os.Getenv("OIDC_REQUIRE_TOTP")), "false") && os.Getenv("OIDC_REQUIRE_TOTP") != "0"
 	c.OIDCSignup = envBool("OIDC_ALLOW_SIGNUP")
 	c.GAClientID = strings.TrimSpace(os.Getenv("GA_OAUTH_CLIENT_ID"))
@@ -209,6 +213,19 @@ func envInt(k string, def int) int {
 func envDays(k string, def int) int {
 	if v, err := strconv.Atoi(strings.TrimSpace(os.Getenv(k))); err == nil && v >= 0 {
 		return v
+	}
+	return def
+}
+
+// envDuration reads a duration ("5m", "90s"); "0" means off. Anything
+// unreadable or negative keeps the default.
+func envDuration(k string, def time.Duration) time.Duration {
+	v := strings.TrimSpace(os.Getenv(k))
+	if v == "0" {
+		return 0
+	}
+	if d, err := time.ParseDuration(v); err == nil && d >= 0 {
+		return d
 	}
 	return def
 }

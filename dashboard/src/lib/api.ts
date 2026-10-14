@@ -118,6 +118,9 @@ export interface Site {
   /** Cookieless mode: visitors counted by a daily hash, so no new vs
    *  returning and no journeys (features/cookieless). */
   cookieless?: boolean
+  /** Set while the server's uptime probe finds the site not answering: since when (unix seconds) and why, in plain words. */
+  down_since?: number
+  down_cause?: string
   /** The last time the server looked for the snippet from the outside. */
   check?: { at: number; found?: 'site' | 'other' | 'nosite' | 'none'; via?: string; error?: string; down_since?: number }
   /** Unix seconds until which the site's alerts are snoozed; absent when they are not. */
