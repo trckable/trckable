@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The panel behind the floating site-status badge scrolls inside itself on a short screen and keeps its buttons in view, and the page foot leaves room under its line so the badge no longer covers the Changelog, Docs and Feedback links.
 - The page foot and the Feedback box speak your language (German, French, Spanish, Italian, Dutch): the server status, Changelog, Docs, Feedback and the shortcuts label.
 - Feedback notes are removed together with the person who wrote them and with the site they were written on (and notes left behind by people or sites already gone are cleared on upgrade).
 - The View menu on Sites only offers what changes the page: Layout is gone from Uptime, which has its own list. The Add site button is gone from the Sites header (it stays in the site menu). Period and View look like one set (same height, radius and icon size), and View shows a small dot when it differs from the default.
