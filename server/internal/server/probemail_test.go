@@ -32,7 +32,9 @@ func TestProbeWordsPlainAndPreview(t *testing.T) {
 			h := ev.Card.HTML("https://stats.example.com/u/x", "https://stats.example.com/settings")
 			h = strings.ReplaceAll(h, "cid:"+alerts.LogoCID, "data:image/png;base64,"+base64.StdEncoding.EncodeToString(reports.Logo))
 			name := map[string]string{"down": "alert-down", "up": "alert-back"}[kind]
-			os.WriteFile(dir+"/"+name+".html", []byte(h), 0o644)
+			if err := os.WriteFile(dir+"/"+name+".html", []byte(h), 0o600); err != nil {
+				t.Fatal(err)
+			}
 		}
 	}
 }
