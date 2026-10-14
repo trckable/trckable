@@ -95,6 +95,7 @@ export const copy = defineCopy('install', {
 /** The new-site card on the dashboard: one calm card, nothing behind it. */
 export const waitCard = defineCopy('install.wait', {
   title: 'Waiting for the first visit',
+  back: '← Sites',
   subScript: ['Add this to the', '<head>', (domain: string) => `of ${domain}, then open the site once.`] as const,
   subOther: (where: string) => `${where} Then open the site once.`,
   check: 'Check my site',

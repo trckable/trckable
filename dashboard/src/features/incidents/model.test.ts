@@ -62,7 +62,8 @@ describe('incident words and figures', () => {
     expect(t.down).toEqual(['b', 'c'])
     expect(t.count).toBeGreaterThanOrEqual(t.down.length)
     expect(t.pct).toBeCloseTo(100 - ((3 * 3600 + 600) / (3 * 7 * 86400)) * 100, 5)
-    expect(accountTotals([{ id: 'z' }], [], 7, now)).toEqual({ count: 0, pct: 100, down: [] })
+    expect(accountTotals([{ id: 'z' }], [], 7, now)).toEqual({ count: 0, pct: 100, down: [], watched: true })
+    expect(accountTotals([{ id: 'z', watched_since: now + 60 }], [], 7, now).watched).toBe(false)
   })
 
   it('counts the time one day spent in an incident', () => {

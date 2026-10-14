@@ -21,7 +21,7 @@ export function dayFraction(tz: string | undefined, now = Date.now()): number {
   }
 }
 
-export type Kind = 'attention' | 'mover' | 'steady'
+export type Kind = 'attention' | 'setup' | 'mover' | 'steady'
 
 export interface Item {
   row: SiteRow
@@ -77,18 +77,20 @@ export function items(rows: SiteRow[], sites: Site[], surges: Map<string, Surge>
     const unusual = !!surge || (move !== null && Math.abs(move) >= MOVE)
     let kind: Kind = 'steady'
     if (hurt) kind = 'attention'
+    else if (status === 'new') kind = 'setup'
     else if (unusual) kind = 'mover'
     return { row, site, status, kind, today, usual, move, online: row.error ? 0 : row.online, surge }
   })
 }
 
-const KIND_ORDER: Record<Kind, number> = { attention: 0, mover: 1, steady: 2 }
+const KIND_ORDER: Record<Kind, number> = { attention: 0, setup: 1, mover: 2, steady: 3 }
 
 /** Attention first (down before quiet), then the biggest movers, then steady by today's visitors. */
 export function ordered(list: Item[]): Item[] {
   return [...list].sort((a, b) => {
     if (a.kind !== b.kind) return KIND_ORDER[a.kind] - KIND_ORDER[b.kind]
     if (a.kind === 'attention') return (a.status === 'down' ? 0 : 1) - (b.status === 'down' ? 0 : 1) || b.today - a.today
+    if (a.kind === 'setup') return (a.row.name || a.row.domain).localeCompare(b.row.name || b.row.domain)
     if (a.kind === 'mover') return (b.surge?.times ?? 0) - (a.surge?.times ?? 0) || Math.abs(b.move ?? 0) - Math.abs(a.move ?? 0)
     return b.today - a.today
   })
@@ -104,8 +106,14 @@ const compare = (d: number, ref: string): string => {
   return d > 0 ? next.moreThan(pctWord(d), ref) : next.lessThan(pctWord(d), ref)
 }
 
-/** The one sentence at the top: facts that are unknown are left out. */
-export function headline(list: Item[], rows: SiteRow[], now = Date.now()): { lead: string; tail: string; fine: boolean } {
+/** Whether any site has a day to hold today against; without one the comparison line has nothing to say. */
+export const hasBaseline = (list: Item[]): boolean => list.some((i) => !i.row.error && i.usual !== null && i.usual > 0)
+
+/** The one sentence at the top: facts that are unknown are left out. Sites still waiting for their first visit are said apart and never called fine. */
+export function headline(all: Item[], rows: SiteRow[], now = Date.now()): { lead: string; tail: string; fine: boolean } {
+  const waiting = all.filter((i) => i.kind === 'setup').length
+  const list = all.filter((i) => i.kind !== 'setup')
+  if (list.length === 0 && waiting > 0) return { lead: next.allWaiting(waiting), tail: '', fine: false }
   const ok = list.filter((i) => !i.row.error)
   const today = ok.reduce((n, i) => n + i.today, 0)
   const withRef = ok.filter((i) => i.usual !== null && i.usual >= MIN_USUAL)
@@ -129,7 +137,8 @@ export function headline(list: Item[], rows: SiteRow[], now = Date.now()): { lea
   }).filter(Boolean)
   if (bad.length > 2) parts.push(next.moreLook(bad.length - 2))
   const fine = bad.length === 0 ? next.allFine(list.length) : ''
-  return { lead, tail: parts.length ? parts.join(' ') : fine, fine: bad.length === 0 }
+  const tail = [parts.length ? parts.join(' ') : fine, waiting > 0 ? next.someWaiting(waiting) : ''].filter(Boolean).join(' ')
+  return { lead, tail, fine: bad.length === 0 }
 }
 
 /** Revenue per currency, summed over the rows that have any; empty when no site has payments. */
