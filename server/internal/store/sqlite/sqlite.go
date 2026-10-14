@@ -729,6 +729,17 @@ var migrations = []string{
 		created_at INTEGER NOT NULL
 	);
 	CREATE INDEX IF NOT EXISTS feedback_time ON feedback(created_at);`,
+	// 59: the light uptime probe (server/uptime.go): the last look at each
+	// site's homepage, how many failed in a row, and when the first of them
+	// was. A site is called down after two in a row.
+	`CREATE TABLE IF NOT EXISTS site_probe (
+		site_id    TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		probed_at  INTEGER NOT NULL,
+		status     INTEGER NOT NULL DEFAULT 0,
+		error      TEXT NOT NULL DEFAULT '',
+		failures   INTEGER NOT NULL DEFAULT 0,
+		down_since INTEGER NOT NULL DEFAULT 0
+	) WITHOUT ROWID;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
