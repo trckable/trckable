@@ -1,99 +1,69 @@
-import { X } from 'lucide-react'
-import { useState } from 'react'
-import { fail } from '../../lib/api'
-import { isViewer } from '../../lib/me'
-import { mentionsApi, type Source, type Words } from './api'
+import { Radar } from 'lucide-react'
+import { TipText } from '../../kit/Tooltip'
+import type { Source, Words as WordsValue } from './api'
 import { copy } from './copy'
 import { page } from './pageCopy'
 import { SourceMark } from './SourceMark'
+import { Spark } from './Spark'
+import { Words } from './Words'
 
-/** The words searched for as chips; the ones a person added can be removed or added to on the spot. */
-function Chips({ site, words, onWords }: { site: string; words: Words; onWords: (w: Words) => void }) {
-  const [draft, setDraft] = useState('')
-  const [busy, setBusy] = useState(false)
-  const viewer = isViewer()
-  const save = (added: string[]) => {
-    setBusy(true)
-    mentionsApi
-      .setWords(site, added)
-      .then((w) => {
-        onWords(w)
-        setDraft('')
-      })
-      .catch((e: unknown) => fail(e))
-      .finally(() => setBusy(false))
-  }
-  const add = () => {
-    const w = draft.trim()
-    if (w && words.added.length < words.max && !words.added.some((x) => x.toLowerCase() === w.toLowerCase())) save([...words.added, w])
-  }
+const SAMPLE = [1, 2, 2, 4, 9, 18, 14, 9, 6, 5, 3, 3]
+
+/** A mention as it will look: faded, tagged as a sample, never mistaken for a real one. */
+function Sample() {
   return (
-    <div>
-      <h3>{page.words}</h3>
-      <ul className="mentions-words">
-        {words.default.map((w) => (
-          <li key={w} className="mentions-word fixed">
-            {w}
-          </li>
-        ))}
-        {words.added.map((w) => (
-          <li key={w} className="mentions-word">
-            {w}
-            {!viewer && (
-              <button type="button" aria-label={page.removeWord(w)} disabled={busy} onClick={() => save(words.added.filter((x) => x !== w))}>
-                <X size={12} aria-hidden="true" />
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
-      {!viewer && (
-        <form
-          className="mentions-add"
-          onSubmit={(e) => {
-            e.preventDefault()
-            add()
-          }}
-        >
-          <input value={draft} onChange={(e) => setDraft(e.target.value)} aria-label={page.wordLabel} maxLength={60} />
-          <button type="submit" className="btn ghost" disabled={busy || !draft.trim()}>
-            {page.addWord}
-          </button>
-        </form>
-      )}
+    <div className="card mp-card mp-sample" role="group" aria-label={page.sample}>
+      <div className="mp-card-top">
+        <SourceMark source="hn" />
+        <span>{copy.name.hn}</span>
+        <span className="mp-tag">{page.sampleTag}</span>
+      </div>
+      <p className="mp-title">{page.sampleTitle}</p>
+      <div className="mp-impact">
+        <Spark values={SAMPLE} w={96} h={28} />
+        <p className="mp-num">
+          <strong>{128}</strong>
+          <span>{copy.visitorsLabel}</span>
+        </p>
+      </div>
     </div>
   )
 }
 
-/** Nothing found yet: what is watched, where, how often, and what a mention will look like. */
-export function Empty({ site, words, sources, onWords }: { site: string; words: Words; sources: Source[]; onWords: (w: Words) => void }) {
+/** Nothing found yet: a calm hero, the words and the places watched as small cards, and a faded sample. */
+export function Empty({ site, words, sources, onWords }: { site: string; words: WordsValue; sources: Source[]; onWords: (w: WordsValue) => void }) {
   return (
-    <section className="card mp-empty" aria-labelledby="mp-empty-h">
-      <h2 id="mp-empty-h">{page.emptyTitle}</h2>
-      <p className="muted">{page.emptyLead}</p>
-      <Chips site={site} words={words} onWords={onWords} />
-      <div>
-        <h3>{page.where}</h3>
-        <p className="mp-places">
-          {sources.map((s) => (
-            <span key={s}>
-              <SourceMark source={s} /> {copy.name[s]}
-            </span>
-          ))}
+    <section className="mp-empty" aria-labelledby="mp-empty-h">
+      <div className="card mp-empty-hero">
+        <span className="mp-empty-icon" aria-hidden="true">
+          <Radar size={28} strokeWidth={1.75} />
+        </span>
+        <h2 id="mp-empty-h">{page.emptyTitle}</h2>
+        <p className="mp-watching">
+          <span className="mp-pulse" aria-hidden="true" />
+          {page.watching}
         </p>
-        <p className="muted">{page.every}</p>
       </div>
-      <div className="mp-sample" aria-label={page.sample}>
-        <p className="faint">{page.sampleNote}</p>
-        <div className="mp-row quiet" aria-hidden="true">
-          <SourceMark source="hn" />
-          <div className="mp-main">
-            <p className="mp-title">{page.sampleTitle}</p>
-            <p className="mp-facts">{copy.name.hn}</p>
-            <blockquote className="mp-quote">{page.sampleQuote}</blockquote>
-          </div>
-        </div>
+      <div className="card mp-empty-words">
+        <h3>
+          <TipText text={page.words} tip={page.wordsTip} />
+        </h3>
+        <Words site={site} words={words} onWords={onWords} />
       </div>
+      <div className="card mp-empty-sources">
+        <h3>
+          <TipText text={page.where} tip={page.every} />
+        </h3>
+        <ul className="mp-tiles">
+          {sources.map((s) => (
+            <li key={s} className="mp-tile" title={page.every}>
+              <SourceMark source={s} />
+              <span>{copy.name[s]}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <Sample />
     </section>
   )
 }

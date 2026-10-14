@@ -55,7 +55,7 @@ export default function MentionsPage({ site, header }: { site: Site; header: Rea
         {data && (list.length > 0 || period !== '30d') && (
           <>
             {hero && <Hero hero={hero} curves={curves} onOpen={open} />}
-            <Feed list={list} words={searched} curves={curves} filter={filter} period={period} onFilter={setFilter} onPeriod={setPeriod} onOpen={(m) => open(m.id)} />
+            <Feed list={list} curves={curves} filter={filter} period={period} onFilter={setFilter} onPeriod={setPeriod} onOpen={(m) => open(m.id)} />
           </>
         )}
       </main>

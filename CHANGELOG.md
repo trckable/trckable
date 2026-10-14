@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Mentions looks lighter: the card on the dashboard now sits right under the chart, with each mention as a small tile; the page shows every mention as a card (place, time, title, author, the visitors it brought big, with their curve), and with nothing found yet it is a calm "No mentions yet" card with a live "Watching" dot, your words as chips with a + chip to add one, the places we look as logo tiles, and a faded sample card. Explanations moved into tooltips.
+
 ## 0.7.21 (14 Oct 2026)
 
 - All sites: each site card shows who is online right now, large with a live dot (grey "0 online" when no one is), with today's visitors under it and a small ↓/↑ percent chip against the same time last week (amber when lower; the sentence is in its tooltip) and a red "no visits 22 h" chip for a quiet site. Sites are grouped by the real comparison: 15% or more below the usual pace is "Lower than usual", 15% or more above is "Busier than usual", else "Steady" (before, 15 to 26% below sat under Steady), and sites with no visit in 30 days are "Quiet". The Live card keeps only events (busy moments, went quiet, stopped answering). On a phone the footer is one row and stays clear of the Peek button.

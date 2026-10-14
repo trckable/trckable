@@ -49,7 +49,10 @@ export default function MentionsCard({ site }: { site: Site }) {
           ))}
         </ul>
       ) : (
-        <p className="mentions-empty">{copy.empty}</p>
+        <p className="mentions-empty">
+          <span className="mentions-pulse" aria-hidden="true" />
+          {copy.empty}
+        </p>
       )}
       {mentions.length > SHOWN && (
         <button type="button" className="mentions-more" onClick={() => setAll(!all)}>
