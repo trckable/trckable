@@ -73,7 +73,7 @@ test('the ⋯ menu leads to the page', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: await session('your-links'), url: API }])
   await page.route('**/api/v1/sites/*/report/links*', (r) => r.fulfill({ json: { links: [], goals: false } }))
   await page.goto(`${API}/example.com?period=7d`)
-  await page.getByRole('button', { name: 'More' }).click()
+  await page.getByRole('button', { name: 'More', exact: true }).click()
   await page.getByRole('menuitem', { name: 'Your links' }).click()
   await expect(page).toHaveURL(/\/example\.com\/links\?period=7d/)
 })
