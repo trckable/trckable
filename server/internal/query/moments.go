@@ -46,10 +46,12 @@ func (q Q) CountryFirsts(ctx context.Context, site, tz string, from, to time.Tim
 // [from, to): the "from where" of a spike. Empty when nobody was referred.
 func (q Q) TopReferrer(ctx context.Context, site string, from, to time.Time) (string, error) {
 	var ref string
-	err := q.DB.QueryRowContext(ctx, `SELECT coalesce(max_by(referrer, n), '') FROM (
-			SELECT referrer, count(DISTINCT visitor_id) AS n FROM sessions
+	err := q.DB.QueryRowContext(ctx, `WITH raw AS (
+			SELECT referrer, visitor_id FROM sessions
 			WHERE site_id = ? AND start >= ? AND start < ? AND coalesce(referrer, '') <> ''
-			GROUP BY referrer
+		), `+refMergeCTEs("raw", "merged")+`
+		SELECT coalesce(max_by(referrer, n), '') FROM (
+			SELECT referrer, count(DISTINCT visitor_id) AS n FROM merged GROUP BY referrer
 		)`, site, from, to).Scan(&ref)
 	return ref, err
 }

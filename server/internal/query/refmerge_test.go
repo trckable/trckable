@@ -12,9 +12,9 @@ import (
 	"github.com/trckable/trckable/server/internal/writer"
 )
 
-// refRows runs one visit per referrer through the real writer, each from its
-// own visitor on a site of its own, and returns the report's referrer rows.
-func refRows(t *testing.T, refs ...string) map[string]int64 {
+// refQ runs one visit per referrer through the real writer, each from its own
+// visitor, and returns a query handle over the result.
+func refQ(t *testing.T, refs ...string) Q {
 	t.Helper()
 	ctx := context.Background()
 	dir := t.TempDir()
@@ -50,7 +50,13 @@ func refRows(t *testing.T, refs ...string) map[string]int64 {
 	if err := <-done; err != nil {
 		t.Fatal(err)
 	}
-	r, err := (Q{DB: st.DB, Open: w.OpenSessions}).Report(ctx, sep10)
+	return Q{DB: st.DB, Open: w.OpenSessions}
+}
+
+// refRows returns the report's referrer rows for one visit per referrer.
+func refRows(t *testing.T, refs ...string) map[string]int64 {
+	t.Helper()
+	r, err := refQ(t, refs...).Report(context.Background(), sep10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,5 +89,29 @@ func TestRefTagAndItsSiteAreOneSource(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// A new-referrer insight and a spike's top referrer count a tag and its site
+// as one source too.
+func TestRefTagMergesInInsightsAndMoments(t *testing.T) {
+	ctx := context.Background()
+	q := refQ(t, "trustmrr", "trustmrr", "trustmrr.com", "trustmrr.com", "other.com", "other.com", "other.com")
+	p := sep10
+	p.NewReferrers = 10
+	res, err := q.Report(ctx, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]int64{}
+	for _, n := range res.NewReferrers {
+		got[n.Referrer] = n.Visitors
+	}
+	if len(got) != 2 || got["trustmrr.com"] != 4 || got["other.com"] != 3 {
+		t.Errorf("new referrers = %v", got)
+	}
+	top, err := q.TopReferrer(ctx, "s1", sep10.From, sep10.To)
+	if err != nil || top != "trustmrr.com" {
+		t.Errorf("top referrer = %q, %v", top, err)
 	}
 }
