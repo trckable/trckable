@@ -297,6 +297,10 @@ type SiteInfo struct {
 	// words), so every screen can say so.
 	DownSince int64  `json:"down_since,omitempty"`
 	DownCause string `json:"down_cause,omitempty"`
+	// ProbeBlockedSince is set while the site's firewall blocks the uptime
+	// probe (unix seconds of the first blocked look): we cannot tell whether
+	// the site is up, and its visitors are not affected.
+	ProbeBlockedSince int64 `json:"probe_blocked_since,omitempty"`
 	// AlertsMutedUntil is when the site's snooze of its alerts ends (unix
 	// seconds); absent when they are not snoozed.
 	AlertsMutedUntil int64 `json:"alerts_muted_until,omitempty"`

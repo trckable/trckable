@@ -21,14 +21,18 @@ import (
 
 // The light uptime probe: every few minutes (TRCKABLE_UPTIME_EVERY, 0 is
 // off) one GET of each site's homepage, nothing else: no scripts, a small
-// body read, redirects followed. A final 2xx or 3xx is up. A site is down
-// after two failed probes in a row and up again after one good one. The
-// daily install check (checks.go) is separate and looks for the snippet.
+// body read, redirects followed. A final answer from the site (2xx, 3xx, and
+// 4xx such as 401 or 404) is up; no answer, a failed lookup or handshake, a
+// timeout or a 5xx is down; a block or challenge from a firewall (403, 429, a
+// challenge page) is neither: we cannot look, which says nothing about the
+// site's visitors. A site is down after two failed probes in a row and up
+// again after one good one; blocked looks change neither. The daily install
+// check (checks.go) is separate and looks for the snippet.
 
 const (
 	probeTimeout = 10 * time.Second
 	probeWorkers = 8
-	probeBody    = 4 << 10 // enough to let the server finish its answer
+	probeBody    = 16 << 10 // enough to let the server finish its answer and to see a challenge page
 )
 
 // prober looks at the sites. Its parts are fields so tests can fake the
@@ -39,7 +43,7 @@ type prober struct {
 	workers int
 	now     func() time.Time
 	sleep   func(ctx context.Context, d time.Duration)
-	get     func(ctx context.Context, url string) (int, error)
+	get     func(ctx context.Context, url string) (look, error)
 	refused func(ctx context.Context, url string) bool
 	// changed hears about each probe once it is recorded.
 	changed func(ctx context.Context, site sqlite.SiteRow, before, after sqlite.SiteProbe)
@@ -55,19 +59,22 @@ func (s *Server) newProber() *prober {
 			case <-time.After(d):
 			}
 		},
-		get: func(ctx context.Context, url string) (int, error) {
+		get: func(ctx context.Context, url string) (look, error) {
 			req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 			if err != nil {
-				return 0, err
+				return look{}, err
 			}
 			req.Header.Set("User-Agent", "trckable-uptime/"+Version)
 			res, err := client.Do(req)
 			if err != nil {
-				return 0, err
+				return look{}, err
 			}
 			defer res.Body.Close()
-			_, _ = io.Copy(io.Discard, io.LimitReader(res.Body, probeBody))
-			return res.StatusCode, nil
+			body, _ := io.ReadAll(io.LimitReader(res.Body, probeBody))
+			return look{
+				Status: res.StatusCode, Body: string(body),
+				Challenged: strings.EqualFold(res.Header.Get("Cf-Mitigated"), "challenge"),
+			}, nil
 		},
 		refused: refusedAddress,
 	}
@@ -157,7 +164,7 @@ func (p *prober) probe(ctx context.Context, site sqlite.SiteRow) {
 	}
 	pctx, cancel := context.WithTimeout(ctx, probeTimeout)
 	began := time.Now()
-	status, err := p.get(pctx, url)
+	l, err := p.get(pctx, url)
 	ms := int(time.Since(began).Milliseconds())
 	cancel()
 	if ctx.Err() != nil {
@@ -166,8 +173,12 @@ func (p *prober) probe(ctx context.Context, site sqlite.SiteRow) {
 	if err != nil && errors.Is(err, alerts.ErrUnsafeTarget) {
 		return // redirected somewhere private
 	}
-	cause := probeCause(status, err)
-	before, after, err := p.st.RecordProbe(ctx, site.ID, p.now().Unix(), status, ms, cause)
+	var before, after sqlite.SiteProbe
+	if classify(l, err) == outcomeBlocked {
+		before, after, err = p.st.RecordBlocked(ctx, site.ID, p.now().Unix(), l.Status, ms)
+	} else {
+		before, after, err = p.st.RecordProbe(ctx, site.ID, p.now().Unix(), l.Status, ms, probeCause(l.Status, err))
+	}
 	if err != nil {
 		slog.Warn("uptime probe not saved", "site", site.ID, "err", err)
 		return
@@ -175,11 +186,62 @@ func (p *prober) probe(ctx context.Context, site sqlite.SiteRow) {
 	p.changed(ctx, site, before, after)
 }
 
+// look is what one GET of the homepage answered.
+type look struct {
+	Status     int
+	Body       string // the first bytes of the answer
+	Challenged bool   // Cf-Mitigated: challenge
+}
+
+type outcome int
+
+const (
+	outcomeUp outcome = iota
+	outcomeDown
+	outcomeBlocked
+)
+
+// challengeMarks are what the challenge and block pages of the common
+// firewalls say in their body.
+var challengeMarks = []string{
+	"just a moment...", "cf-chl", "challenge-platform", "attention required! | cloudflare",
+	"checking your browser", "_incapsula_", "incapsula incident", "pardon our interruption",
+	"captcha-delivery.com", "px-captcha",
+}
+
+// classify says what a look means. Up: the site answered. Down: nothing
+// answered, or a server error (Cloudflare's 520 to 526 included). Blocked: a
+// firewall refused or challenged our check (403, 429, a challenge header or
+// page), which is not the site failing.
+func classify(l look, err error) outcome {
+	switch {
+	case err != nil:
+		return outcomeDown
+	case l.Challenged, l.Status == http.StatusForbidden, l.Status == http.StatusTooManyRequests:
+		return outcomeBlocked
+	case l.Status == http.StatusServiceUnavailable && challengePage(l.Body):
+		return outcomeBlocked
+	case l.Status >= 500 || l.Status < 200:
+		return outcomeDown
+	}
+	return outcomeUp
+}
+
+func challengePage(body string) bool {
+	body = strings.ToLower(body)
+	for _, m := range challengeMarks {
+		if strings.Contains(body, m) {
+			return true
+		}
+	}
+	return false
+}
+
 // probeCause says in plain words why a look failed; empty when it did not.
 func probeCause(status int, err error) string {
 	var dns *net.DNSError
 	switch {
-	case err == nil && status >= 200 && status < 400:
+	case err == nil && status >= 200 && status < 500:
 		return ""
 	case err == nil:
 		return fmt.Sprintf("Your homepage answered %d", status)

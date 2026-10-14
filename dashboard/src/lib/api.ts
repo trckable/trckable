@@ -121,6 +121,8 @@ export interface Site {
   /** Set while the server's uptime probe finds the site not answering: since when (unix seconds) and why, in plain words. */
   down_since?: number
   down_cause?: string
+  /** Set while the site's firewall blocks the server's uptime look (unix seconds): we cannot check it, its visitors are not affected. */
+  probe_blocked_since?: number
   /** The last time the server looked for the snippet from the outside. */
   check?: { at: number; found?: 'site' | 'other' | 'nosite' | 'none'; via?: string; error?: string; down_since?: number }
   /** Unix seconds until which the site's alerts are snoozed; absent when they are not. */

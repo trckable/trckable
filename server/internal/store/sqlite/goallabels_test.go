@@ -38,7 +38,7 @@ func TestGoalLabelsMigration(t *testing.T) {
 	ctx := context.Background()
 	st := openT(t)
 	site, _ := st.CreateSite(ctx, DefaultAccount, "a.com", "")
-	if _, err := st.DB.ExecContext(ctx, `DROP TABLE goal_labels; PRAGMA user_version = 53`); err != nil {
+	if _, err := st.DB.ExecContext(ctx, `DROP TABLE goal_labels; DROP TABLE site_probe; DROP TABLE site_probe_log; PRAGMA user_version = 53`); err != nil {
 		t.Fatal(err)
 	}
 	if err := st.MigrateTo(ctx, len(migrations)); err != nil {

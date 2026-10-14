@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- A site whose firewall blocks our uptime check (a 403 or 429 answer, or a Cloudflare challenge page) is no longer called down: those looks do not count as failures, send no down mail and do not end a real outage. The site shows "Can't check" with the plain note "We can't check this site: its firewall blocks our checks. Your visitors aren't affected.", and the panel's list of checks marks such looks as blocked. A homepage that answers with a client error such as 404 or 401 now counts as answering; no answer, a failed lookup or handshake, a timeout or a server error (5xx, including Cloudflare's 520 to 526) is still down.
 - The uptime check spreads its looks over the whole 5 minutes instead of bunching most of them at the end, and only ever calls a plain domain: a site address with a port, login, `?` or `#` (for example `1.2.3.4:6379`) is refused when you add it, with a message saying to use just the domain, and is skipped by the check if it is already there.
 
 ## 0.7.19 (14 Oct 2026)

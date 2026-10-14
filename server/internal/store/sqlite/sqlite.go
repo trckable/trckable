@@ -763,6 +763,11 @@ var migrations = []string{
 	END;
 	DELETE FROM feedback WHERE user_id NOT IN (SELECT id FROM users);
 	DELETE FROM feedback WHERE site_id <> '' AND site_id NOT IN (SELECT id FROM sites);`,
+	// 62: a look the site's firewall answered with a block or a challenge is
+	// neither up nor down: the probe keeps since when the last looks were
+	// blocked, and marks those looks in the panel's list.
+	`ALTER TABLE site_probe ADD COLUMN blocked_since INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE site_probe_log ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

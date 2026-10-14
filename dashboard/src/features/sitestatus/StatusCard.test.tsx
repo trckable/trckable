@@ -67,4 +67,13 @@ describe('the badge and panel of a site that stopped', () => {
     expect(renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 60 })} />)).toBe('')
     expect(readGap('s1')).toBeNull()
   })
+
+  it('says plainly that a blocked site cannot be checked, even when it looks fine', () => {
+    const fine = site({ last_event_at: NOW - 60, probe_blocked_since: NOW - 3600 })
+    const html = renderToStaticMarkup(<StatusCard site={fine} />)
+    expect(html).toContain('Can’t check')
+    const panel = renderToStaticMarkup(<StatusPanel site={site({ last_event_at: NOW - 8 * 3600, probe_blocked_since: NOW - 60 })} last={NOW - 8 * 3600} down={false} />)
+    expect(panel).toContain('its firewall blocks our checks. Your visitors aren’t affected.')
+    expect(renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 60 })} />)).not.toContain('Can’t check')
+  })
 })

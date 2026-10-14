@@ -52,6 +52,7 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
         </span>
       </header>
       <p className="sgm-honest muted">{probed ? downCopy.bar(site.down_cause ?? '') : causeOf(rows, down)}</p>
+      {site.probe_blocked_since && <p className="sgm-honest muted">{downCopy.blocked}</p>}
       {last > 0 && recent && <GapChart slices={recent.slices} last={when(last)} at={slotOf(last, recent.now)} />}
       <div className="sgm-tiles">
         <section className="sgm-tile" aria-label={copy.tileVisit}>
@@ -237,10 +238,28 @@ function spanLong(secs: number): string {
   return `${Math.round(secs / 86400)} d`
 }
 
+/** A site whose firewall blocks our look: a badge that says so plainly, since we can tell neither that it is up nor that it is down. */
+function Blocked() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="status-float">
+      {open && (
+        <div className="status-pop" role="dialog" aria-label={copy.label}>
+          <p className="status-card sgm-honest muted">{downCopy.blocked}</p>
+        </div>
+      )}
+      <button type="button" className="status-badge quiet" aria-expanded={open} title={copy.label} onClick={() => setOpen((o) => !o)}>
+        <CircleAlert size={15} strokeWidth={2} aria-hidden="true" />
+        {downCopy.blockedBadge}
+      </button>
+    </div>
+  )
+}
+
 /** The badge, if there is anything to say about this site's visits: a quiet spell now, or a gap that just closed. */
 export function StatusCard({ site }: { site: Site }) {
   const status = statusOf(site)
-  if (status === 'new') return null
+  if (status === 'new') return site.probe_blocked_since ? <Blocked /> : null
   if (status === 'down' || status === 'quiet') return <Gone site={site} last={site.last_event_at ?? 0} down={status === 'down'} />
-  return <Back site={site} />
+  return site.probe_blocked_since ? <Blocked /> : <Back site={site} />
 }

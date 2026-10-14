@@ -991,6 +991,9 @@ export default {
   'sitestatus.down.bar': (cause: string) =>
     `Je site reageert niet op onze controles${cause ? ` (${cause})` : ''}. Sommige bezoekers komen er nog door, daarom zie je nog mensen online.`,
   'sitestatus.down.see': 'Bekijk het incident',
+  'sitestatus.down.blocked': 'We kunnen deze site niet controleren: de firewall blokkeert onze controles. Je bezoekers merken er niets van.',
+  'sitestatus.down.blockedBadge': 'Niet te controleren',
+  'sitestatus.down.blockedLook': 'Geblokkeerd door de firewall',
   'allnext.moreLook': (n: number) => (n === 1 ? '1 andere heeft aandacht nodig.' : `${n} andere hebben aandacht nodig.`),
   'allnext.yesterday': 'gisteren',
   'allnext.lastDay': (day: string) => `afgelopen ${day}`,
