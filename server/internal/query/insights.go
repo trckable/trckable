@@ -34,11 +34,11 @@ func newReferrers(ctx context.Context, conn *sql.Conn, p Params) ([]NewReferrer,
 	from := p.From.Add(-NewReferrerLookback)
 	// The zone was checked against the zone database by safeTZ; every value is bound as a parameter.
 	//nolint:gosec // see above
-	rows, err := conn.QueryContext(ctx, `WITH w AS (
+	rows, err := conn.QueryContext(ctx, `WITH raw AS (
 			SELECT referrer, visitor_id, start FROM sessions WHERE site_id = ? AND start >= ? AND start < ? AND coalesce(referrer, '') <> ''
 			UNION ALL
 			SELECT referrer, visitor_id, start FROM s_open WHERE site_id = ? AND start >= ? AND start < ? AND coalesce(referrer, '') <> ''
-		)
+		), `+refMergeCTEs("raw", "w")+`
 		SELECT referrer, count(DISTINCT visitor_id) AS n,
 			strftime(date_trunc('day', (min(start) AT TIME ZONE 'UTC') AT TIME ZONE '`+tz+`'), '%Y-%m-%d') AS first FROM w
 		WHERE start >= ? AND referrer NOT IN (SELECT referrer FROM w WHERE start < ?)
