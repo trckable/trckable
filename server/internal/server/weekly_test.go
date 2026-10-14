@@ -62,11 +62,11 @@ func TestWeeklyText(t *testing.T) {
 	for _, want := range []string{
 		"demo.trckable.com, Sep 14 – Sep 20",
 		"4,512 visitors, up 13% on the week before.",
-		"10,301 pageviews · bounce 45% · 2m10s a visit",
+		"10,301 pageviews · bounce 45% · 2m 10s a visit",
 		"Top sources: Search 1,203 · AI assistants 702 · Direct 650",
 		"Top pages: / 2,000 · /docs 900",
 		"Top goal: signup, 312 visitors",
-		"Revenue: $4,210 from 38 payments, up 8% on the week before",
+		"Revenue: $4,210 from 38 payments, up 7.9% on the week before",
 		"https://stats.example.com/demo.trckable.com",
 	} {
 		if !strings.Contains(msg, want) {

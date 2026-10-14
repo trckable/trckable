@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import { timeCopy } from './copy'
 import { bucketLabel } from './timeScale'
 import type { Bucket } from '../lib/api'
+import { move } from '../lib/format'
 
 export function Hero({ label, color, big, note, children }: { label: string; color: string; big: string | null; note?: string | null; children?: ReactNode }) {
   return (
@@ -23,10 +24,10 @@ export function Hero({ label, color, big, note, children }: { label: string; col
 
 /** How a bucket compares with the one it is set against. */
 export function Versus({ a, b, fmt, when, bucket }: { a: number; b: number; fmt: (n: number) => string; when?: string; bucket: Bucket }) {
-  const pct = b ? Math.round(((a - b) / b) * 100) : null
+  const m = move(a, b)
   return (
     <span className="ct-vs num">
-      {pct !== null && <em className={pct >= 0 ? 'tone-up' : 'tone-down'}>{`${pct >= 0 ? '▲ ' : '▼ '}${Math.abs(pct)}%`}</em>} vs {fmt(b)}
+      {m && <em className={m.change >= 0 ? 'tone-up' : 'tone-down'}>{`${m.change >= 0 ? '▲ ' : '▼ '}${m.pct}%`}</em>} vs {fmt(b)}
       {when ? ` on ${bucketLabel(when, bucket, true)}` : ''}
     </span>
   )

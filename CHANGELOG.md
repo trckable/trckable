@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - Your links, in the ⋯ menu: every link you shared with a ?ref= tag or a utm_source as one row, with a bar for its visitors, the visitors who reached a goal, the revenue credited to it, a 30-day line and when it last brought someone, for the dashboard's period. A tag and the site it names count as one row. A tap on a row opens the dashboard for that link alone. Before the first tagged visit it offers a sample link to copy.
+- The same number reads the same everywhere: a change, a share, an uptime, a surge, a visit length, "how long ago" and "online now" are each written by one formatter in the dashboard and one in the emails, held to the same test cases. A move under half a percent is "about the same" on every screen, one decimal under 10%, and the weekly email, the widgets and the share cards round the way the dashboard does.
 
 ## 0.7.21 (14 Oct 2026)
 

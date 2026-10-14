@@ -1,7 +1,7 @@
 // The shapes the kit draws, apart from how they look: pure, so kit.test.ts can
 // check them without a browser.
 import { smooth } from '../charts/smooth'
-import { moveOf, type Move } from '../charts/change'
+import { move, type Move } from '../lib/format'
 
 export type Tone = 'good' | 'bad' | 'warn' | 'neutral'
 
@@ -18,14 +18,14 @@ export function ringPoint(cx: number, cy: number, r: number, pct: number) {
 }
 
 /** A move's tone: up is good unless a lower number is the good one (bounce rate). */
-export function toneOf(m: Move | null, lowerIsBetter = false): Tone {
+export function toneOf(m: Pick<Move, 'dir'> | null, lowerIsBetter = false): Tone {
   if (!m || m.dir === 'flat') return 'neutral'
   return (m.dir === 'up') !== lowerIsBetter ? 'good' : 'bad'
 }
 
 /** "▲ 12%" text and tone for now against before; null when there is nothing to compare. */
 export function deltaOf(now: number, was: number | undefined, up: string, down: string, lowerIsBetter = false) {
-  const m = moveOf(now, was)
+  const m = move(now, was)
   if (!m || m.dir === 'flat') return null
   return { text: `${m.dir === 'up' ? up : down} ${m.pct}%`, tone: toneOf(m, lowerIsBetter) }
 }

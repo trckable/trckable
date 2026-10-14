@@ -179,13 +179,13 @@ describe('takeaway and deltas', () => {
     expect(takeawayOf({ cur: result({ visitors: 1030 }), goals: false })).toBe('')
   })
   it('reads bounce going up as bad and a small move as flat', () => {
-    expect(deltaOf(0.5, 0.4, 'down')).toMatchObject({ arrow: '↑', pct: 25, tone: 'bad' })
+    expect(deltaOf(0.5, 0.4, 'down')).toMatchObject({ arrow: '↑', pct: '25', tone: 'bad' })
     expect(deltaOf(120, 100)).toMatchObject({ arrow: '↑', tone: 'good' })
-    expect(deltaOf(101, 100)).toMatchObject({ arrow: '→', tone: 'flat' })
+    expect(deltaOf(100.2, 100)).toMatchObject({ arrow: '→', tone: 'flat' })
     expect(deltaOf(5, undefined)).toBeNull()
   })
   it('puts an arrow on the first answer only when there is a period before', () => {
-    expect(storyOf(grew).answers[0].delta).toMatchObject({ arrow: '↑', pct: 250 })
+    expect(storyOf(grew).answers[0].delta).toMatchObject({ arrow: '↑', pct: '250' })
     expect(storyOf({ cur: result({ visitors: 500 }), goals: false }).answers[0].delta).toBeUndefined()
   })
 })

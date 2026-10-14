@@ -55,10 +55,5 @@ export const extrasCopy = defineCopy('extras', {
       if (hours < 24) return 'same day'
       return plural(Math.round(hours / 24), 'day', 'days')
     },
-    ago: (s: number) => {
-      if (s < 3600) return `${Math.max(1, Math.round(s / 60))} min ago`
-      if (s < 86400) return `${Math.round(s / 3600)} h ago`
-      return `${Math.round(s / 86400)} d ago`
-    },
   },
 })

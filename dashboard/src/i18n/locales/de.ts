@@ -421,7 +421,7 @@ export default {
   'live.entry.live': 'Live',
   'live.entry.data': 'Daten',
   'live.entry.switchTitle': (key: string) => `Live zeigt die Website jetzt gerade; Daten zeigt den Zeitraum (${key})`,
-  'live.entry.liveOnline': (n: number) => (n === 1 ? 'Live, 1 Person online' : `Live, ${n.toLocaleString()} online`),
+  'live.entry.liveOnline': (n: number) => (n === 1 ? 'Live, 1 Person online' : `Live, ${int(n)} online`),
   'live.entry.onlineNow': 'Jetzt online',
 
   // milestones
@@ -847,11 +847,11 @@ export default {
   'account.devices.removeBody': 'Es wird sofort abgemeldet. Um trckable dort wieder zu nutzen, melde dich erneut an.',
   'account.devices.removing': 'Wird entfernt …',
   'account.devices.removed': 'Gerät entfernt',
-  'account.keys.ago.now': 'gerade eben',
-  'account.keys.ago.minutes': (n: number) => `vor ${n} Min.`,
-  'account.keys.ago.hours': (n: number) => `vor ${n} Std.`,
-  'account.keys.ago.yesterday': 'gestern',
-  'account.keys.ago.days': (n: number) => `vor ${n} Tagen`,
+  'format.ago.now': 'gerade eben',
+  'format.ago.minutes': (n: number) => `vor ${n} Min.`,
+  'format.ago.hours': (n: number) => `vor ${n} Std.`,
+  'format.ago.yesterday': 'gestern',
+  'format.ago.days': (n: number) => `vor ${n} Tagen`,
 
   // goals
   'goals.label': 'Ziele hinzufügen',
@@ -1457,11 +1457,6 @@ export default {
     if (hours < 24) return 'gleicher Tag'
     return count(Math.round(hours / 24), 'Tag', 'Tage')
   },
-  'extras.buyers.ago': (s: number) => {
-    if (s < 3600) return `vor ${Math.max(1, Math.round(s / 60))} Min.`
-    if (s < 86400) return `vor ${Math.round(s / 3600)} Std.`
-    return `vor ${Math.round(s / 86400)} T`
-  },
 
   // journey
   'journey.dialog': 'Besucherpfad',
@@ -1534,12 +1529,6 @@ export default {
   'live.empty': 'Gerade ist niemand auf der Website. Neue Besuche erscheinen hier, sobald sie passieren.',
   'live.waitingSince': (when: string) => `Warte auf den ersten Besuch seit ${when}`,
   'live.goal': (name: string) => `Ziel: ${name}`,
-  'live.ago': (ms: number) => {
-    const s = Math.max(0, Math.round(ms / 1000))
-    if (s < 5) return 'gerade eben'
-    if (s < 60) return `vor ${s} Sek.`
-    return `vor ${Math.floor(s / 60)} Min.`
-  },
   'live.agoShort': (ms: number) => {
     const s = Math.max(0, Math.round(ms / 1000))
     if (s < 60) return `${s} s`

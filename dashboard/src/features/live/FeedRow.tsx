@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react'
 import { Avatar } from '../../components/visitor/Avatar'
 import { DeviceIcon } from '../../components/visitor/DeviceIcon'
 import { SourceMark } from '../../components/visitor/SourceMark'
-import { countryName, flag } from '../../lib/format'
+import { countryName, flag, relativeSince } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import { truncateMiddle } from '../../lib/visitor'
 import { copy } from './copy'
@@ -56,7 +56,7 @@ export function FeedRow({ v, clock, leaving, onVisitor }: { v: Row; clock: numbe
         </span>
       </span>
       <span className="live-side">
-        <time className={active ? 'live-ago num active' : 'live-ago num'} aria-label={copy.ago(since)} title={active ? copy.active : undefined}>
+        <time className={active ? 'live-ago num active' : 'live-ago num'} aria-label={relativeSince(since / 1000)} title={active ? copy.active : undefined}>
           {copy.agoShort(since)}
         </time>
         {v.country && (

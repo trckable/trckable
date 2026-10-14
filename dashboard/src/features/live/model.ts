@@ -3,6 +3,7 @@
 // the truth; visits from the stream that arrived after it are laid on top
 // until the next answer, which already counts them.
 import type { Visit } from '../../lib/api'
+import { fmtPct } from '../../lib/format'
 import type { LiveNow, NowVisit } from './api'
 
 export const MINUTE = 60_000
@@ -86,8 +87,8 @@ export function sharesOf(sources: LiveNow['sources'], top = 3): { parts: Share[]
   return { parts, other: rest / total }
 }
 
-/** Whole percent for a legend, never "0%" for a part that is there. */
+/** A share for a legend (lib/format fmtPct), never "0%" for a part that is there. */
 export function pct(share: number): string {
   if (share > 0 && share < 0.01) return '<1%'
-  return `${Math.round(share * 100)}%`
+  return fmtPct(share)
 }

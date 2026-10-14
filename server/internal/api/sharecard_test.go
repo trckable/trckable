@@ -25,7 +25,7 @@ func TestCardNeverSlipsInRevenue(t *testing.T) {
 	if n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), ""); n.Metric != "visitors" || strings.Contains(n.Post, "$") {
 		t.Fatalf("default: %+v", n)
 	}
-	if n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), "revenue"); n.Big != "$1,234" || !strings.Contains(n.Post, "$1,234 revenue") {
+	if n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), "revenue"); n.Big != "$1,235" || !strings.Contains(n.Post, "$1,235 revenue") {
 		t.Fatalf("revenue: %+v", n)
 	}
 }

@@ -1,9 +1,9 @@
 // ▲ 12% or ▼ 8% against the period before; nothing when there is nothing to compare with.
-import { moveOf } from './change'
+import { move } from '../lib/format'
 import { kitCopy } from './copy'
 
 export function DeltaPill({ now, was }: { now: number; was: number | undefined }) {
-  const m = moveOf(now, was)
+  const m = move(now, was)
   if (!m) return <span className="bl-chg num" aria-hidden="true" />
   if (m.dir === 'flat') return <span className="bl-chg num">{kitCopy.flat}</span>
   return (

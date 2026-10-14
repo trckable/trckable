@@ -5,7 +5,7 @@ import { sourceLine, type Surge } from '../features/signals/surge'
 import { statusOf, type Status } from '../features/sitestatus/status'
 import { span, when } from '../features/sitestatus/time'
 import type { Site, SiteRow } from '../lib/api'
-import { fmtInt, fmtMoney } from '../lib/format'
+import { fmtInt, fmtMoney, MOVE, timesNum } from '../lib/format'
 import { tag } from '../i18n'
 import { next } from './allNextCopy'
 
@@ -57,8 +57,6 @@ const refOf = (s: number[] | null): number | null => {
   return s.length >= 8 ? s[s.length - 8] : s[s.length - 2]
 }
 
-/** A site this far under (or over) its usual pace for the hour is lower (or busier) than usual; inside it, steady. */
-export const MOVE = 0.15
 const MIN_USUAL = 8
 
 export function items(rows: SiteRow[], sites: Site[], surges: Map<string, Surge> = new Map(), now = Date.now()): Item[] {
@@ -181,7 +179,7 @@ export function whyLine(i: Item, ref: string, now = Date.now()): string {
   if (i.status === 'quiet' && last && i.kind === 'quiet') return next.whyDormant(dayWord(last, now))
   if (i.status === 'quiet' && last) return next.whyQuiet(span(now / 1000 - last), dayWord(last, now))
   if (i.status === 'new') return next.whyNew
-  if (i.surge) return next.surgeWhy(i.surge.times.toFixed(1), sourceLine(i.surge))
+  if (i.surge) return next.surgeWhy(timesNum(i.surge.times), sourceLine(i.surge))
   // A row compares today with the usual, or says nothing.
   return i.usual !== null ? next.whyMover(fmtInt(i.today), fmtInt(i.usual), ref) : ''
 }
@@ -205,7 +203,7 @@ export function feedOf(list: Item[]): FeedEvent[] {
     const surge = i.surge
     const last = i.site?.last_event_at
     const mark = i.site ?? i.row
-    if (surge) out.push({ key: i.row.id + 's', at: surge.started, text: next.feedSurge(name, surge.times.toFixed(1)), detail: sourceLine(surge), tone: 'live', mark })
+    if (surge) out.push({ key: i.row.id + 's', at: surge.started, text: next.feedSurge(name, timesNum(surge.times)), detail: sourceLine(surge), tone: 'live', mark })
     if (i.status === 'down' && i.site?.down_since) out.push({ key: i.row.id + 'd', at: i.site.down_since, text: next.feedDown(name), detail: i.site.down_cause ?? '', tone: 'bad', mark })
     else if (i.status === 'down' && i.site?.check) out.push({ key: i.row.id + 'd', at: i.site.check.down_since ?? i.site.check.at, text: next.feedDown(name), detail: '', tone: 'bad', mark })
     if (i.status === 'quiet' && last && i.kind === 'attention') out.push({ key: i.row.id + 'q', at: last, text: next.feedQuiet(name), detail: '', tone: 'warn', mark })

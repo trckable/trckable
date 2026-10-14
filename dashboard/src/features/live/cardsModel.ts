@@ -3,19 +3,6 @@
 // server's "today so far". Pure, so it can be tested.
 import type { Row } from './model'
 
-/** Within this share of last week a change is not worth a colour. */
-export const FLAT = 0.02
-
-export type Move = { dir: 'up' | 'down' | 'flat'; pct: number }
-
-/** Today against last week's same time; null when there is nothing to compare with. */
-export function moveOf(now: number, before: number | undefined, compare = true): Move | null {
-  if (!compare || before === undefined || !(before > 0)) return null
-  const d = Math.round(((now - before) / before) * 1e6) / 1e6
-  if (Math.abs(d) <= FLAT) return { dir: 'flat', pct: Math.round(Math.abs(d) * 100) }
-  return { dir: d > 0 ? 'up' : 'down', pct: Math.round(Math.abs(d) * 100) }
-}
-
 export type Count = { key: string; n: number }
 
 function tally(keys: readonly string[]): Count[] {

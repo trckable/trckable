@@ -4,8 +4,8 @@ import { Smartphone } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { confirm } from '../../components/Confirm'
 import { type Device, more } from '../../lib/apiMore'
+import { relativeAgo } from '../../lib/format'
 import { Line } from '../AccountLine'
-import { ago } from './ago'
 import { devices as t } from './devicesCopy'
 
 export function Devices() {
@@ -25,7 +25,7 @@ export function Devices() {
     if (ok) load()
   }
   return list.map((d) => (
-    <Line key={d.id} icon={Smartphone} label={d.name} hint={[t.platform[d.platform], d.current ? t.thisOne : '', t.hint(ago(d.last_used_at))].filter(Boolean).join(' · ')}>
+    <Line key={d.id} icon={Smartphone} label={d.name} hint={[t.platform[d.platform], d.current ? t.thisOne : '', t.hint(relativeAgo(d.last_used_at))].filter(Boolean).join(' · ')}>
       <button type="button" className="btn" aria-label={t.removeLabel(d.name)} onClick={() => remove(d)}>
         {t.remove}
       </button>

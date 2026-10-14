@@ -49,9 +49,9 @@ func cardPost(n cardNumbers, p cardPeriod) string {
 		return fmt.Sprintf("%s: counting has begun. %s", n.domain, cardWords.counted)
 	}
 	head := fmt.Sprintf("%s %s", n.Big, n.Label)
-	rest := fmt.Sprintf("%s %s", number(n.pageviews), cardWords.pageviews)
+	rest := fmt.Sprintf("%s %s", en.Number(n.pageviews), cardWords.pageviews)
 	if n.Metric != "visitors" {
-		rest = fmt.Sprintf("%s %s", number(n.visitors), cardWords.visitors)
+		rest = fmt.Sprintf("%s %s", en.Number(n.visitors), cardWords.visitors)
 	}
 	top := ""
 	if len(n.rows) > 0 {

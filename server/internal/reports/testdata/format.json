@@ -1,0 +1,59 @@
+{
+  "int": [
+    { "in": 0, "out": "0" },
+    { "in": 999, "out": "999" },
+    { "in": 1000, "out": "1,000" },
+    { "in": 4512, "out": "4,512" },
+    { "in": 1234567, "out": "1,234,567" }
+  ],
+  "percent": [
+    { "in": 0, "out": "0%" },
+    { "in": 0.045, "out": "4.5%" },
+    { "in": 0.05, "out": "5.0%" },
+    { "in": 0.0996, "out": "10.0%" },
+    { "in": 0.1, "out": "10%" },
+    { "in": 0.123, "out": "12%" },
+    { "in": 0.456, "out": "46%" },
+    { "in": 1, "out": "100%" }
+  ],
+  "move": [
+    { "cur": 120, "prev": 100, "dir": "up", "pct": "20" },
+    { "cur": 96, "prev": 100, "dir": "down", "pct": "4.0" },
+    { "cur": 103.4, "prev": 100, "dir": "up", "pct": "3.4" },
+    { "cur": 1002, "prev": 1000, "dir": "flat", "pct": "0.2" },
+    { "cur": 1005, "prev": 1000, "dir": "up", "pct": "0.5" },
+    { "cur": 100, "prev": 100, "dir": "flat", "pct": "0" },
+    { "cur": 109.6, "prev": 100, "dir": "up", "pct": "9.6" },
+    { "cur": 109.96, "prev": 100, "dir": "up", "pct": "10.0" },
+    { "cur": 50, "prev": 100, "dir": "down", "pct": "50" },
+    { "cur": 900, "prev": 100, "dir": "up", "pct": "800" }
+  ],
+  "duration": [
+    { "in": 0, "out": "0s" },
+    { "in": 45, "out": "45s" },
+    { "in": 59.4, "out": "59s" },
+    { "in": 59.6, "out": "1m 00s" },
+    { "in": 65, "out": "1m 05s" },
+    { "in": 130, "out": "2m 10s" },
+    { "in": 3599, "out": "59m 59s" },
+    { "in": 3725, "out": "1h 02m" }
+  ],
+  "times": [
+    { "in": 2.44, "out": "2.4×" },
+    { "in": 3, "out": "3×" },
+    { "in": 9.96, "out": "10×" },
+    { "in": 12.4, "out": "12×" },
+    { "in": 230.2, "out": "230×" }
+  ],
+  "money": [
+    { "minor": 421000, "currency": "USD", "exponent": 2, "out": "$4,210" },
+    { "minor": 129900, "currency": "EUR", "exponent": 2, "out": "€1,299" },
+    { "minor": 150, "currency": "GBP", "exponent": 2, "out": "£2" },
+    { "minor": 5000, "currency": "JPY", "exponent": 0, "out": "¥5,000" }
+  ],
+  "moneyCents": [
+    { "minor": 34.4, "currency": "USD", "exponent": 2, "out": "$0.34" },
+    { "minor": 1250, "currency": "USD", "exponent": 2, "out": "$12.50" },
+    { "minor": 5, "currency": "EUR", "exponent": 2, "out": "€0.05" }
+  ]
+}

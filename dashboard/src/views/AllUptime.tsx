@@ -6,7 +6,8 @@ import { useMemo } from 'react'
 import { Loading } from '../components/loading/Loading'
 import { StateDot } from '../features/sites/StateDot'
 import { copy } from '../features/incidents/copy'
-import { dayStates, daysBetween, accountTotals, duration, rowTotals, silentAllPeriod, tooShort, uptimeOf } from '../features/incidents/model'
+import { fmtSpan, fmtUptime } from '../lib/format'
+import { dayStates, daysBetween, accountTotals, rowTotals, silentAllPeriod, tooShort, uptimeOf } from '../features/incidents/model'
 import { incidentsPath } from '../features/incidents/route'
 import { useAccountIncidents, useNow } from '../features/incidents/useIncidents'
 import type { Incident } from '../features/incidents/api'
@@ -22,9 +23,9 @@ const DAY = 86400
 const PERIOD: Record<number, string> = { 7: '7d', 30: '30d', 90: '90d', 365: '12mo' }
 
 function figsOf(t: ReturnType<typeof rowTotals>, up: ReturnType<typeof uptimeOf>): string {
-  if (tooShort(t.span)) return copy.checkedFor(duration(t.span), t.seconds > 0 ? duration(t.seconds) : '')
+  if (tooShort(t.span)) return copy.checkedFor(fmtSpan(t.span), t.seconds > 0 ? fmtSpan(t.seconds) : '')
   if (!up) return copy.notWatched
-  return [copy.allRow(up.pct.toFixed(1), t.count, duration(t.seconds)), up.downOnly && copy.downOnly].filter(Boolean).join(' · ')
+  return [copy.allRow(fmtUptime(up.pct), t.count, fmtSpan(t.seconds)), up.downOnly && copy.downOnly].filter(Boolean).join(' · ')
 }
 
 function Row({ site, mine, days, now, quiet }: { site: Site; mine: Incident[]; days: number; now: number; quiet?: boolean }) {
@@ -70,7 +71,7 @@ export function AllUptime({ sites, days }: { sites: Site[]; days: number }) {
   const total = accountTotals(sites, list, days, now)
   return (
     <div className="up-wrap">
-      <h2 className="up-head">{copy.allSummary(all.siteCount(sites.length), total.pct.toFixed(1), total.count)}</h2>
+      <h2 className="up-head">{copy.allSummary(all.siteCount(sites.length), fmtUptime(total.pct), total.count)}</h2>
       <div className="up-list">
         {shown.map((x) => (
           <Row key={x.s.id} site={x.s} mine={by.get(x.s.id) ?? []} days={days} now={now} quiet={quiet[x.s.id]} />

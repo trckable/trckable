@@ -1,10 +1,10 @@
 import { X } from 'lucide-react'
 import { useEffect, useRef } from 'react'
-import { countryName, fmtInt } from '../../lib/format'
+import { countryName, fmtInt, relativeAgo } from '../../lib/format'
 import type { Detail as DetailData, Mention, Named } from './api'
 import { copy } from './copy'
 import { page } from './pageCopy'
-import { agoOf, safeURL } from './model'
+import { safeURL } from './model'
 import { reachOf } from './FeedRow'
 import { DetailChart } from './DetailChart'
 import { replyURL } from './pageModel'
@@ -96,7 +96,7 @@ export function Detail({ site, m, words, onClose }: { site: string; m: Mention; 
             <h2>{m.title || copy.name[m.source]}</h2>
             <p className="muted">
               {copy.name[m.source]}
-              {m.author ? ` · ${copy.by(m.author)}` : ''} · {agoOf(m.posted_at)} · {page.visitors(m.visitors)}
+              {m.author ? ` · ${copy.by(m.author)}` : ''} · {relativeAgo(m.posted_at)} · {page.visitors(m.visitors)}
             </p>
           </div>
           <button ref={close} type="button" className="mp-x" aria-label={page.close} onClick={onClose}>

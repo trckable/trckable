@@ -3,6 +3,7 @@ import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { isViewer } from '../lib/me'
 import { api, siteState, fail, type InstallCheck, type Site, type SiteState, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
+import { relativeAgo } from '../lib/format'
 import { Window, type WindowTab } from '../components/Window'
 import { SettingsHead } from './SettingsHead'
 import { SiteMark } from '../components/SiteMark'
@@ -173,7 +174,7 @@ function InstallSection({ site }: { site: Site }) {
   if (last === null) return <Install site={site} visits={[]} variant="settings" />
 
   const fresh = withinDay(last.ts)
-  const seen = `${agoText(last.ts)}${last.path ? ` on ${last.path}` : ''}`
+  const seen = `${relativeAgo(last.ts / 1000)}${last.path ? ` on ${last.path}` : ''}`
   const where = page?.url.replace(/^https?:\/\//, '').replace(/\/$/, '') || site.domain
   const scripts = page ? `${page.scripts} script${page.scripts === 1 ? '' : 's'}` : ''
   // Three things, in the order they are checked. Only the second can verify
@@ -285,15 +286,6 @@ function StepMark({ tone }: { tone: Step['tone'] }) {
 /** Whether a moment was within the last day. */
 function withinDay(ts: number): boolean {
   return Date.now() - ts < 86_400_000
-}
-
-function agoText(ts: number): string {
-  const s = Math.max(0, Math.round((Date.now() - ts) / 1000))
-  if (s < 60) return 'just now'
-  if (s < 3600) return `${Math.round(s / 60)} min ago`
-  if (s < 86400) return `${Math.round(s / 3600)} h ago`
-  const d = Math.round(s / 86400)
-  return d === 1 ? 'a day ago' : `${d} days ago`
 }
 
 /** "Saved" that fades away, so a save needs no button and no banner. */

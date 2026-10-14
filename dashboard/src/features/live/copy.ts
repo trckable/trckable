@@ -39,12 +39,6 @@ export const copy = defineCopy('live', {
   empty: 'Nobody on the site right now. New visits appear here as they happen.',
   waitingSince: (when: string) => `Waiting for the first visit since ${when}`,
   goal: (name: string) => `Goal: ${name}`,
-  ago: (ms: number) => {
-    const s = Math.max(0, Math.round(ms / 1000))
-    if (s < 5) return 'just now'
-    if (s < 60) return `${s} s ago`
-    return `${Math.floor(s / 60)} min ago`
-  },
   agoShort: (ms: number) => {
     const s = Math.max(0, Math.round(ms / 1000))
     if (s < 60) return `${s}s`

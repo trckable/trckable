@@ -111,7 +111,7 @@ func (w widgetWords) plain(key string) string {
 
 // plural picks a message's form for n and fills it in.
 func (w widgetWords) plural(key string, n int64, vars ...string) string {
-	return fillMarks(w.plain(key+"."+pluralForm(w.lang, n)), append([]string{"n", number(n)}, vars...))
+	return fillMarks(w.plain(key+"."+pluralForm(w.lang, n)), append([]string{"n", en.Number(n)}, vars...))
 }
 
 // pluralForm is the CLDR plural category of a whole number in the languages

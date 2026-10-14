@@ -2,12 +2,17 @@ package reports
 
 import (
 	"fmt"
+	"math"
+	"strconv"
 	"strings"
 	"time"
 )
 
-// Words is every sentence a client's report says, in one language. English
-// is the source. The others were written for this release and have not been
+// Words is every sentence a client's report says, in one language, and the
+// only place the server writes a number, a share, a change, a span or an
+// amount. The dashboard writes the same figures with lib/format.ts: the two
+// are held to the same strings by testdata/format.json (format_test.go and
+// lib/format.shared.test.ts). English is the source. The others were written for this release and have not been
 // read by a native speaker yet: they are marked NEEDS REVIEW below, and a
 // correction is a one-line pull request to this file.
 type Words struct {
@@ -38,6 +43,7 @@ type Words struct {
 	OpenWeek        string // its button
 	Date            func(time.Time) string
 	Thousands       string // the digit group separator
+	Decimal         string // the decimal separator
 	Months          [12]string
 }
 
@@ -114,8 +120,10 @@ var words = map[string]Words{
 func init() {
 	for k, w := range words {
 		k, w := k, w
+		w.Decimal = ","
 		switch k {
 		case "en":
+			w.Decimal = "."
 			w.Date = func(t time.Time) string { return fmt.Sprintf("%s %d", w.Months[t.Month()-1], t.Day()) }
 		case "de":
 			w.Date = func(t time.Time) string { return fmt.Sprintf("%d. %s", t.Day(), w.Months[t.Month()-1]) }
@@ -148,7 +156,43 @@ func (w Words) Range(from, to time.Time) string {
 	return w.Date(from) + " – " + w.Date(last)
 }
 
-// Change says how cur moved against prev: "up 12%", "down 3%", "about the
+// MoveFlat is the share of change below which a figure "stayed about the same".
+// The dashboard's FLAT (lib/format.ts) is the same number.
+const MoveFlat = 0.005
+
+// fixed writes x with exactly digits decimals, half up (the way the dashboard
+// rounds), in the language's decimal separator.
+func (w Words) fixed(x float64, digits int) string {
+	p := math.Pow10(digits)
+	s := strconv.FormatFloat(math.Floor(x*p+0.5)/p, 'f', digits, 64)
+	if w.Decimal != "." {
+		s = strings.Replace(s, ".", w.Decimal, 1)
+	}
+	return s
+}
+
+// Percent writes a share (0.123) as a percentage: whole numbers, one decimal
+// under 10% ("45%", "4.5%"). The dashboard's fmtPct.
+func (w Words) Percent(x float64) string {
+	digits := 0
+	if x > 0 && x < 0.1 {
+		digits = 1
+	}
+	return w.fixed(x*100, digits) + "%"
+}
+
+// MovePct writes how far a figure moved, as a share (0.034 is 3.4% either way):
+// one decimal under 10, whole from 10 on, no sign. The dashboard's fmtMove.
+func (w Words) MovePct(change float64) string {
+	pct := math.Abs(change * 100)
+	digits := 1
+	if pct >= 10 || pct == 0 {
+		digits = 0
+	}
+	return w.fixed(pct, digits)
+}
+
+// Change says how cur moved against prev: "up 12%", "down 3.4%", "about the
 // same", or "new" when there was nothing before.
 func (w Words) Change(cur, prev float64) string {
 	if prev <= 0 {
@@ -157,36 +201,51 @@ func (w Words) Change(cur, prev float64) string {
 		}
 		return w.Same
 	}
-	d := (cur - prev) / prev * 100
-	if d > -0.5 && d < 0.5 {
+	d := (cur - prev) / prev
+	if math.Abs(d) < MoveFlat {
 		return w.Same
 	}
 	dir := w.Up
 	if d < 0 {
-		dir, d = w.Down, -d
+		dir = w.Down
 	}
-	return strings.TrimSpace(fmt.Sprintf("%s %.0f%%", dir, d))
+	return strings.TrimSpace(dir + " " + w.MovePct(d) + "%")
 }
 
-// Duration writes a visit's length: "1m 23s", "45s".
+// Duration writes a visit's length: "45s", "1m 05s", "1h 05m". The dashboard's
+// fmtDuration.
 func Duration(sec float64) string {
-	s := int(sec + 0.5)
-	if s >= 60 {
-		return fmt.Sprintf("%dm %ds", s/60, s%60)
+	s := int(math.Floor(sec + 0.5))
+	if s < 60 {
+		return fmt.Sprintf("%ds", s)
 	}
-	return fmt.Sprintf("%ds", s)
+	m := s / 60
+	if m < 60 {
+		return fmt.Sprintf("%dm %02ds", m, s%60)
+	}
+	return fmt.Sprintf("%dh %02dm", m/60, m%60)
 }
 
-// Money writes minor units as whole currency.
+// Money writes minor units as whole currency. The dashboard's fmtMoney with
+// cents off.
 func (w Words) Money(minor int64, cur string, exp int) string {
-	p := int64(1)
-	for range exp {
-		p *= 10
-	}
-	whole := (minor + p/2) / p
-	sym := map[string]string{"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}[cur]
+	whole := int64(math.Floor(float64(minor)/math.Pow10(exp) + 0.5))
+	sym := map[string]string{"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "CHF": "CHF "}[cur]
 	if sym == "" {
 		return w.Number(whole) + " " + cur
 	}
 	return sym + w.Number(whole)
+}
+
+// MoneyCents writes a small amount (minor units, a fraction of a unit is fine:
+// money per visitor) with its decimals, two at most. The dashboard's fmtMoney
+// with cents on.
+func (w Words) MoneyCents(minor float64, cur string, exp int) string {
+	digits := min(exp, 2)
+	v := w.fixed(minor/math.Pow10(exp), digits)
+	sym := map[string]string{"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "CHF": "CHF "}[cur]
+	if sym == "" {
+		return v + " " + cur
+	}
+	return sym + v
 }

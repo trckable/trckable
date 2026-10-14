@@ -11,7 +11,8 @@ import { navigate } from '../../lib/url'
 import type { ChartGeo } from '../moments/marks'
 import type { Incident } from './api'
 import { copy } from './copy'
-import { dayIn, duration, lasted, startOfDay } from './model'
+import { fmtSpan } from '../../lib/format'
+import { dayIn, lasted, startOfDay } from './model'
 import { incidentsPath } from './route'
 import { useNow, usePeriodIncidents } from './useIncidents'
 import './incidents.css'
@@ -22,7 +23,7 @@ const TIP_W = 250
 export function lineOf(x: Incident, now: number): string {
   const kind = x.kind === 'down' ? copy.down : copy.quiet
   const why = x.kind === 'down' ? copy.notReachable : copy.noVisits
-  return (x.ended_at ? copy.line : copy.lineOpen)(kind, duration(lasted(x, now)), why)
+  return (x.ended_at ? copy.line : copy.lineOpen)(kind, fmtSpan(lasted(x, now)), why)
 }
 
 /** The bucket of the chart an incident began in, or -1 when the chart does not show it. */

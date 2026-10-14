@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { fail, type SearchConnection, type SearchProperty, type Site, more } from '../lib/apiMore'
 import { FieldError } from '../kit/FieldError'
 import { words } from '../lib/errors'
+import { relativeAgo } from '../lib/format'
 import { useSearchProperties } from './useSearchProperties'
 import { Row } from '../components/Row'
 import { Copyable } from '../components/Copyable'
@@ -22,11 +23,7 @@ const CONSOLE = 'https://search.google.com/search-console/users'
 
 function when(unix?: number) {
   if (!unix) return 'never'
-  const m = Math.round((Date.now() / 1000 - unix) / 60)
-  if (m < 2) return 'just now'
-  if (m < 90) return `${m} minutes ago`
-  const h = Math.round(m / 60)
-  return h < 36 ? `${h} hours ago` : `${Math.round(h / 24)} days ago`
+  return relativeAgo(unix)
 }
 
 /** The top line: Google's last error, the property being read, or one still to pick. */

@@ -4,9 +4,9 @@
 // normal of its own. Pure: rules.test.ts.
 import type { Filter, Result, Row } from '../../lib/api'
 import type { BounceGuide } from '../../lib/apiMore'
-import { countryName, fmtDuration, fmtInt, fmtPct } from '../../lib/format'
+import { countryName, fmtDuration, fmtInt, fmtPct, move } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
-import { baseEnough, overCap, tooFew } from '../../lib/thin'
+import { baseEnough, tooFew } from '../../lib/thin'
 import type { AiSeen } from '../aisearch/useAiSeen'
 import type { HeatAsk } from '../heatmap/api'
 import { pick, type Kept } from '../moments/firstWeek'
@@ -42,8 +42,8 @@ export interface Tile {
 export interface Delta {
   /** Signed change as a share of one: 0.12 is up 12%. */
   change: number
-  /** Whole percent, never negative. */
-  pct: number
+  /** The percentage a person reads, never negative (lib/format fmtMove): "3.4", "12". */
+  pct: string
   /** More than ten times the earlier figure: shown as "10x+", never as the huge percentage. */
   capped?: boolean
   arrow: '↑' | '↓' | '→'
@@ -107,8 +107,6 @@ const rate = (r: Row) => r.bounce_rate ?? 0
 /** How far a number is from its period before, as a share of that period. */
 const change = (cur: number, prev: number) => (prev > 0 ? (cur - prev) / prev : 0)
 
-/** Within this a move reads as flat. */
-const FLAT = 0.02
 /** A source must explain this share of the movement to be named. */
 const DRIVER = 0.5
 /** A move smaller than this is "about the same" in the takeaway. */
@@ -118,13 +116,11 @@ const WHY_MIN = 5
 
 /** The change of a number against the period before, or none when there is no base. */
 export function deltaOf(now: number, before: number | undefined, goodWhen: 'up' | 'down' = 'up'): Delta | null {
-  if (before === undefined || !(before > 0)) return null
-  const c = (now - before) / before
-  const pct = Math.round(Math.abs(c) * 100)
-  if (Math.abs(c) < FLAT || pct === 0) return { change: c, pct: 0, arrow: '→', tone: 'flat' }
-  const up = c > 0
-  const capped = up && overCap(now, before)
-  return { change: c, pct, ...(capped ? { capped } : {}), arrow: up ? '↑' : '↓', tone: up === (goodWhen === 'up') ? 'good' : 'bad' }
+  const m = move(now, before)
+  if (!m) return null
+  if (m.dir === 'flat') return { change: m.change, pct: m.pct, arrow: '→', tone: 'flat' }
+  const up = m.dir === 'up'
+  return { change: m.change, pct: m.pct, ...(m.capped ? { capped: true } : {}), arrow: up ? '↑' : '↓', tone: up === (goodWhen === 'up') ? 'good' : 'bad' }
 }
 
 const channels = (r: Result): Row[] => r.dims.channel ?? []

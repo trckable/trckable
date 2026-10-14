@@ -10,10 +10,10 @@ import { dotState, StateDot } from '../features/sites/StateDot'
 import { copy as siteCopy } from '../features/sites/copy'
 import { span, when } from '../features/sitestatus/time'
 import type { Site, SiteRow } from '../lib/api'
-import { fmtInt } from '../lib/format'
+import { FLAT, fmtInt, fmtMove, fmtUptime, MOVE, times } from '../lib/format'
 import { navigate } from '../lib/url'
 import { cellOf, revenueHeadline, revenueStrip, revenueTotal, type Cell, type Lens } from './allLens'
-import { byRevenue, feedOf, hasBaseline, headline, items, MOVE, moneyText, ordered, refWord, revenueOf, whyLine, type Item, type Kind } from './allNext'
+import { byRevenue, feedOf, hasBaseline, headline, items, moneyText, ordered, refWord, revenueOf, whyLine, type Item, type Kind } from './allNext'
 import { next } from './allNextCopy'
 import { copy as incidents } from '../features/incidents/copy'
 import { fromStart } from './allSitesLogic'
@@ -40,11 +40,11 @@ function chipTone(move: number): string {
 
 /** How today stands against the usual pace: a small arrow and percent; amber when lower, the sentence in the tooltip. */
 function Chip({ i, tip }: { i: Item; tip: string }) {
-  if (i.surge) return <span className="nx-chip up" title={tip}>{'▲ ' + i.surge.times.toFixed(1) + '×'}</span>
+  if (i.surge) return <span className="nx-chip up" title={tip}>{'▲ ' + times(i.surge.times)}</span>
   const move = i.move
-  if (i.kind === 'attention' || move === null || Math.abs(move) < 0.005) return null
+  if (i.kind === 'attention' || move === null || Math.abs(move) < FLAT) return null
   const tone = chipTone(move)
-  return <span className={'nx-chip ' + tone} title={tip}>{(move > 0 ? '↑ +' : '↓ −') + fmtInt(Math.abs(move) * 100) + '%'}</span>
+  return <span className={'nx-chip ' + tone} title={tip}>{(move > 0 ? '↑ +' : '↓ −') + fmtMove(move) + '%'}</span>
 }
 
 /** The online dot's color: green with people online, else the site's own state when it is quiet or stopped. */
@@ -137,7 +137,7 @@ function UptimeCard({ sites, days, open }: { sites: Site[]; days: number; open: 
   const unwatched = known && !t.watched && t.count === 0
   const figure = known ? next.uptimeCount(t.count) : '–'
   const site = sites.find((s) => s.id === t.down[0])
-  let note = next.uptimeUp(t.pct.toFixed(1))
+  let note = next.uptimeUp(fmtUptime(t.pct))
   if (t.down.length === 1) note = next.uptimeDown(site?.name || site?.domain || '')
   if (t.down.length > 1) note = next.uptimeDownMany(t.down.length)
   return (

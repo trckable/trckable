@@ -1,19 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { Incident } from './api'
-import { accountTotals, affectedSeconds, dayIn, dayLasted, dayStates, daysBetween, duration, rowTotals, startOfDay, uptimeOf, uptimePct } from './model'
+import { accountTotals, affectedSeconds, dayIn, dayLasted, dayStates, daysBetween, rowTotals, startOfDay, uptimeOf, uptimePct } from './model'
 
 const at = (iso: string) => Date.parse(iso) / 1000
 const inc = (o: Partial<Incident>): Incident => ({ id: 'i', site: 's', kind: 'quiet', started_at: 0, ended_at: null, cause: 'no visits', expected_visits: null, note: '', ...o })
 
 describe('incident words and figures', () => {
-  it('writes a span the way people say it', () => {
-    expect(duration(20)).toBe('<1m')
-    expect(duration(45 * 60)).toBe('45m')
-    expect(duration(3 * 3600 + 12 * 60)).toBe('3h 12m')
-    expect(duration(3 * 3600)).toBe('3h')
-    expect(duration(2 * 86400 + 4 * 3600)).toBe('2d 4h')
-  })
-
   it('finds the day of a moment in the site’s own zone', () => {
     expect(dayIn(at('2026-10-01T23:30:00Z'), 'UTC')).toBe('2026-10-01')
     expect(dayIn(at('2026-10-01T23:30:00Z'), 'Europe/Berlin')).toBe('2026-10-02')

@@ -1,23 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { linePoints, moveOf, placesOf, topPages } from './cardsModel'
+import { linePoints, placesOf, topPages } from './cardsModel'
 import type { Row } from './model'
 
 const T0 = Date.UTC(2026, 9, 7, 12)
 const row = (i: number, o: Partial<Row> = {}): Row => ({ kind: 'pageview', ts: T0, last: T0, path: '/a', key: 'k' + String(i), ...o })
-
-describe('today against last week', () => {
-  it('is up, down or flat, flat within 2%', () => {
-    expect(moveOf(112, 100)).toEqual({ dir: 'up', pct: 12 })
-    expect(moveOf(80, 100)).toEqual({ dir: 'down', pct: 20 })
-    expect(moveOf(101, 100)?.dir).toBe('flat')
-    expect(moveOf(98, 100)?.dir).toBe('flat')
-    expect(moveOf(97, 100)?.dir).toBe('down')
-  })
-  it('says nothing without a week before it', () => {
-    expect(moveOf(5, 0)).toBeNull()
-    expect(moveOf(5, 10, false)).toBeNull()
-  })
-})
 
 describe('top pages', () => {
   it('counts people per page, most first, three at most', () => {

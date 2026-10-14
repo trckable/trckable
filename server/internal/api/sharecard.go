@@ -126,7 +126,7 @@ func cardWordsOf(res *query.Result, domain string, p cardPeriod, metric string) 
 		Revenue: res.Money != nil, HasData: res.KPIs.Visitors > 0, Foot: p.label,
 	}
 	if res.Money != nil {
-		n.money = money(res.Money.Revenue, res.Money.Currency, res.Money.Exponent)
+		n.money = en.Money(res.Money.Revenue, res.Money.Currency, res.Money.Exponent)
 	}
 	// Anything not allowed or not known is visitors: revenue never slips in.
 	n.Metric = "visitors"
@@ -140,9 +140,9 @@ func cardWordsOf(res *query.Result, domain string, p cardPeriod, metric string) 
 	case "revenue":
 		n.Big, n.Label = n.money, cardWords.revenue
 	case "pageviews":
-		n.Big, n.Label = number(n.pageviews), cardWords.pageviews
+		n.Big, n.Label = en.Number(n.pageviews), cardWords.pageviews
 	default:
-		n.Big, n.Label = number(n.visitors), cardWords.visitors
+		n.Big, n.Label = en.Number(n.visitors), cardWords.visitors
 	}
 	top := res.Dims["entry_page"]
 	for _, row := range top {
@@ -152,7 +152,7 @@ func cardWordsOf(res *query.Result, domain string, p cardPeriod, metric string) 
 		if row.Value == "" || top[0].Visitors == 0 {
 			continue
 		}
-		n.rows = append(n.rows, cards.Item{Name: row.Value, Value: number(row.Visitors), Share: float64(row.Visitors) / float64(top[0].Visitors)})
+		n.rows = append(n.rows, cards.Item{Name: row.Value, Value: en.Number(row.Visitors), Share: float64(row.Visitors) / float64(top[0].Visitors)})
 	}
 	n.Post = cardPost(n, p)
 	return n

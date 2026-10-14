@@ -17,10 +17,10 @@ describe('half rings', () => {
 
 describe('tones', () => {
   it('calls an up move good, unless lower is better', () => {
-    expect(toneOf({ dir: 'up', pct: 5 })).toBe('good')
-    expect(toneOf({ dir: 'up', pct: 5 }, true)).toBe('bad')
-    expect(toneOf({ dir: 'down', pct: 5 }, true)).toBe('good')
-    expect(toneOf({ dir: 'flat', pct: 0 })).toBe('neutral')
+    expect(toneOf({ dir: 'up' })).toBe('good')
+    expect(toneOf({ dir: 'up' }, true)).toBe('bad')
+    expect(toneOf({ dir: 'down' }, true)).toBe('good')
+    expect(toneOf({ dir: 'flat' })).toBe('neutral')
     expect(toneOf(null)).toBe('neutral')
   })
   it('writes the move, or nothing when there is nothing to compare', () => {

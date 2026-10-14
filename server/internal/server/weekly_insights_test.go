@@ -39,7 +39,7 @@ func TestWeeklyCarriesTheFindingsThatClearTheirFloors(t *testing.T) {
 		t.Fatalf("missing %q in:\n%s", want, msg)
 		return -1
 	}
-	move, pays, fresh, link := at("Search up 52% · 400 → 610 visitors"), at("Search earns $0.49 a visitor, 1.9× the average"), at("New referrer: news.example.org sent 40 visitors"), at("https://stats.example.com/")
+	move, pays, fresh, link := at("Search up 53% · 400 → 610 visitors"), at("Search earns $0.49 a visitor, 1.9× the average"), at("New referrer: news.example.org sent 40 visitors"), at("https://stats.example.com/")
 	if at("1,260 visitors") >= move || move >= pays || pays >= fresh || fresh >= link {
 		t.Errorf("order: numbers, then findings, then the link:\n%s", msg)
 	}

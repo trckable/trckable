@@ -1,9 +1,9 @@
 import { ChevronRight, ExternalLink } from 'lucide-react'
-import { fmtInt } from '../../lib/format'
+import { fmtInt, relativeAgo } from '../../lib/format'
 import type { Mention } from './api'
 import { copy } from './copy'
 import { page } from './pageCopy'
-import { agoOf, safeURL } from './model'
+import { safeURL } from './model'
 import { outletOf } from './pageModel'
 import { Quote } from './Quote'
 import { SourceMark } from './SourceMark'
@@ -28,7 +28,7 @@ export function reachOf(m: Mention): string[] {
 export function FeedRow({ m, words, curve, onOpen }: { m: Mention; words: string[]; curve?: number[]; onOpen: () => void }) {
   const href = safeURL(m.url)
   const title = m.title || copy.name[m.source]
-  const facts = [copy.name[m.source], whoOf(m), agoOf(m.posted_at), ...reachOf(m)].filter(Boolean)
+  const facts = [copy.name[m.source], whoOf(m), relativeAgo(m.posted_at), ...reachOf(m)].filter(Boolean)
   return (
     <li className={'mp-row' + (m.visitors === 0 ? ' quiet' : '')}>
       <SourceMark source={m.source} />

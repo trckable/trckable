@@ -1,5 +1,6 @@
 // What the card says about a mention, as plain values. Pure: model.test.ts.
 import { tag } from '../../i18n'
+import { fmtMove, relativeAgo } from '../../lib/format'
 import { copy } from './copy'
 import type { Mention, Source } from './api'
 
@@ -14,20 +15,6 @@ export function placesOf(sources: Source[]): string {
   }
 }
 
-const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
-  ['day', 86400],
-  ['hour', 3600],
-  ['minute', 60],
-]
-
-/** When a mention was posted, as the language says it: "3 hours ago". */
-export function agoOf(unix: number, now = Date.now() / 1000): string {
-  const s = Math.max(0, now - unix)
-  const rtf = new Intl.RelativeTimeFormat(tag ?? 'en', { numeric: 'auto' })
-  for (const [unit, size] of UNITS) if (s >= size) return rtf.format(-Math.floor(s / size), unit)
-  return rtf.format(0, 'minute')
-}
-
 /** The line under a title: who wrote it, how it did, and when. */
 export function factsOf(m: Mention, now?: number): string[] {
   const out: string[] = []
@@ -35,7 +22,7 @@ export function factsOf(m: Mention, now?: number): string[] {
   if (m.front) out.push(copy.front)
   if (m.author) out.push(copy.by(m.author))
   if (m.points && m.source !== 'news') out.push(copy.points[m.source](m.points))
-  out.push(agoOf(m.posted_at, now))
+  out.push(relativeAgo(m.posted_at, now))
   return out
 }
 
@@ -46,4 +33,4 @@ export const safeURL = (u: string) => (/^https?:\/\//i.test(u) ? u : undefined)
 export const SHOWN = 5
 
 /** "340%" for a jump of 4.4 times the usual. */
-export const jumpOf = (factor: number) => `${Math.round((factor - 1) * 100)}%`
+export const jumpOf = (factor: number) => `${fmtMove(factor - 1)}%`

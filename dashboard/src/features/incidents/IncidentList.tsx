@@ -2,11 +2,11 @@
 // a short note on one ("Hosting migration"); a viewer only reads.
 import { useState } from 'react'
 import { isViewer } from '../../lib/me'
-import { fmtInt } from '../../lib/format'
+import { fmtInt, fmtSpan } from '../../lib/format'
 import { when } from '../sitestatus/time'
 import { incidents, type Incident } from './api'
 import { copy } from './copy'
-import { duration, lasted } from './model'
+import { lasted } from './model'
 
 function Note({ site, x, onSaved }: { site: string; x: Incident; onSaved: (x: Incident) => void }) {
   const [editing, setEditing] = useState(false)
@@ -55,7 +55,7 @@ const seenOf = (x: Incident) => (x.cause.endsWith('page answered') ? `${copy.see
 
 function Row({ x, now, onSaved }: { x: Incident; now: number; onSaved: (x: Incident) => void }) {
   const kind = x.kind === 'down' ? copy.down : copy.quiet
-  const span = duration(lasted(x, now))
+  const span = fmtSpan(lasted(x, now))
   return (
     <li className={'inc-row ' + x.kind}>
       <div className="inc-row-head">

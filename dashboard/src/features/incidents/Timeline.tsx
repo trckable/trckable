@@ -4,9 +4,10 @@
 import { useMemo } from 'react'
 import { Tooltip } from '../../kit'
 import { fmtDay } from '../../lib/dates'
+import { fmtSpan } from '../../lib/format'
 import type { Incident } from './api'
 import { copy } from './copy'
-import { dayLasted, dayStates, daysBetween, duration, type DayState } from './model'
+import { dayLasted, dayStates, daysBetween, type DayState } from './model'
 
 /** From this many days on, the strip becomes the year's grid. */
 export const GRID_FROM = 120
@@ -27,7 +28,7 @@ export function Timeline({ list, from, to, tz, now, watchedSince = 0 }: { list: 
         ))}
         {days.map((d, n) => {
           const state = states.get(d) ?? 'ok'
-          const text = say[state](fmtDay(d, { year: true }), state === 'ok' || state === 'unwatched' ? '' : duration(dayLasted(list, d, tz, now)))
+          const text = say[state](fmtDay(d, { year: true }), state === 'ok' || state === 'unwatched' ? '' : fmtSpan(dayLasted(list, d, tz, now)))
           return (
             <Tooltip key={d} text={text} align={n > days.length / 2 ? 'right' : 'left'}>
               {(p) => <i className={state} {...p} />}

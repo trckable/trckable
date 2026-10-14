@@ -3,6 +3,7 @@
 // text field. It stays tiny: it loads with the dashboard, Live itself does not,
 // but pointing at the switch or focusing it starts fetching Live's code.
 import { useEffect } from 'react'
+import { fmtInt } from '../../lib/format'
 import { caps, keyFor, pressed, useKeymap } from '../../lib/keys'
 import { entryCopy as copy } from './entryCopy'
 import { liveCount, liveLink, siteDown } from './liveLink'
@@ -38,7 +39,7 @@ export function ViewSwitch({ live }: { live: boolean }) {
       <button type="button" aria-pressed={live} aria-keyshortcuts={key} aria-label={n ? copy.liveOnline(n) : undefined} onClick={() => void switchView(true, live)}>
         <span className="pulse" aria-hidden="true" />
         {copy.live}
-        {n && <span className="vs-count" aria-hidden="true"> · {n.toLocaleString()}</span>}
+        {n && <span className="vs-count" aria-hidden="true"> · {fmtInt(n)}</span>}
       </button>
       <button type="button" aria-pressed={!live} onClick={() => void switchView(false, live)}>
         {copy.data}

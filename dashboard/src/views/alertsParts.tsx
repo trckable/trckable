@@ -45,10 +45,3 @@ export function SendIcon({ state }: { state?: 'busy' | 'ok' | 'bad' }) {
   if (state === 'bad') return <TriangleAlert size={15} strokeWidth={2} />
   return <Send size={15} strokeWidth={1.75} />
 }
-
-export function ago(unix: number): string {
-  const s = Math.max(0, Date.now() / 1000 - unix)
-  if (s < 3600) return `${Math.max(1, Math.round(s / 60))} min ago`
-  if (s < 86400) return `${Math.round(s / 3600)} h ago`
-  return `${Math.round(s / 86400)} days ago`
-}

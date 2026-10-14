@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/trckable/trckable/server/internal/insights"
 	"github.com/trckable/trckable/server/internal/moments"
@@ -55,21 +54,13 @@ func insightLine(i insights.Insight, m *query.Money) string {
 		if i.Change < 0 {
 			dir = "down"
 		}
-		return fmt.Sprintf("%s %s %s · %s → %s visitors", name, dir, percent(math.Abs(i.Change)), number(i.Was), number(i.Now))
+		return fmt.Sprintf("%s %s %s · %s → %s visitors", name, dir, en.MovePct(i.Change)+"%", en.Number(i.Was), en.Number(i.Now))
 	case insights.TopRevenue:
 		return fmt.Sprintf("%s earns %s a visitor, %s the average", name, each(i.PerVisitor, m), moments.Times(i.Times))
 	case insights.ConversionDrop:
-		return fmt.Sprintf("%s converts %s, was %s", name, percent(i.Rate), percent(i.WasRate))
+		return fmt.Sprintf("%s converts %s, was %s", name, en.Percent(i.Rate), en.Percent(i.WasRate))
 	}
 	return fmt.Sprintf("New referrer: %s sent %s", name, plural(i.Now, "visitor"))
-}
-
-// percent keeps one decimal below ten percent, as the dashboard does.
-func percent(x float64) string {
-	if x > 0 && x < 0.1 {
-		return fmt.Sprintf("%.1f%%", x*100)
-	}
-	return fmt.Sprintf("%.0f%%", x*100)
 }
 
 // each writes a small amount (minor units, a fraction of a unit is normal for
@@ -79,17 +70,12 @@ func each(minor float64, m *query.Money) string {
 	if m != nil {
 		exp, cur = m.Exponent, m.Currency
 	}
-	sym := map[string]string{"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}[cur]
-	v := minor / math.Pow10(exp)
-	if sym == "" {
-		return fmt.Sprintf("%.2f %s", v, cur)
-	}
-	return fmt.Sprintf("%s%.2f", sym, v)
+	return en.MoneyCents(minor, cur, exp)
 }
 
 func plural(n int64, one string) string {
 	if n == 1 {
 		return "1 " + one
 	}
-	return number(n) + " " + one + "s"
+	return en.Number(n) + " " + one + "s"
 }

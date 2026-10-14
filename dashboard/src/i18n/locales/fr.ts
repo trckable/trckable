@@ -412,7 +412,7 @@ export default {
   'live.entry.live': 'Live',
   'live.entry.data': 'Données',
   'live.entry.switchTitle': (key: string) => `Live montre le site à l’instant ; Données montre la période (${key})`,
-  'live.entry.liveOnline': (n: number) => (n === 1 ? 'En direct, 1 personne en ligne' : `En direct, ${n.toLocaleString()} en ligne`),
+  'live.entry.liveOnline': (n: number) => (n === 1 ? 'En direct, 1 personne en ligne' : `En direct, ${int(n)} en ligne`),
   'live.entry.onlineNow': 'En ligne maintenant',
 
   // milestones
@@ -838,11 +838,11 @@ export default {
   'account.devices.removeBody': 'Il est déconnecté immédiatement. Pour y réutiliser trckable, connectez-vous à nouveau.',
   'account.devices.removing': 'Retrait…',
   'account.devices.removed': 'Appareil retiré',
-  'account.keys.ago.now': 'à l’instant',
-  'account.keys.ago.minutes': (n: number) => `il y a ${n} min`,
-  'account.keys.ago.hours': (n: number) => `il y a ${n} h`,
-  'account.keys.ago.yesterday': 'hier',
-  'account.keys.ago.days': (n: number) => `il y a ${n} jours`,
+  'format.ago.now': 'à l’instant',
+  'format.ago.minutes': (n: number) => `il y a ${n} min`,
+  'format.ago.hours': (n: number) => `il y a ${n} h`,
+  'format.ago.yesterday': 'hier',
+  'format.ago.days': (n: number) => `il y a ${n} jours`,
 
   // goals
   'goals.label': 'Ajouter des objectifs',
@@ -1450,11 +1450,6 @@ export default {
     if (hours < 24) return 'le jour même'
     return count(Math.round(hours / 24), 'jour', 'jours')
   },
-  'extras.buyers.ago': (s: number) => {
-    if (s < 3600) return `il y a ${Math.max(1, Math.round(s / 60))} min`
-    if (s < 86400) return `il y a ${Math.round(s / 3600)} h`
-    return `il y a ${Math.round(s / 86400)} j`
-  },
 
   // journey
   'journey.dialog': 'Parcours du visiteur',
@@ -1527,12 +1522,6 @@ export default {
   'live.empty': 'Personne sur le site en ce moment. Les nouvelles visites apparaissent ici au fur et à mesure.',
   'live.waitingSince': (when: string) => `En attente de la première visite depuis ${when}`,
   'live.goal': (name: string) => `Objectif : ${name}`,
-  'live.ago': (ms: number) => {
-    const s = Math.max(0, Math.round(ms / 1000))
-    if (s < 5) return 'à l’instant'
-    if (s < 60) return `il y a ${s} s`
-    return `il y a ${Math.floor(s / 60)} min`
-  },
   'live.agoShort': (ms: number) => {
     const s = Math.max(0, Math.round(ms / 1000))
     if (s < 60) return `${s} s`

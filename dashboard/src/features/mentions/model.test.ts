@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Mention } from './api'
-import { agoOf, factsOf, jumpOf, placesOf, safeURL } from './model'
+import { factsOf, jumpOf, placesOf, safeURL } from './model'
 
 const NOW = 1_800_000_000
 const m = (o: Partial<Mention> = {}): Mention => ({ id: 1, source: 'hn', url: 'https://news.ycombinator.com/item?id=1', title: 'Show HN', host: 'news.ycombinator.com', posted_at: NOW - 3 * 3600, found_at: NOW, visitors: 212, ...o })
@@ -12,17 +12,11 @@ describe('what the card says about a mention', () => {
     expect(placesOf(['news'])).toBe('News & blogs')
   })
 
-  it('says when it was posted in the language', () => {
-    expect(agoOf(NOW - 3 * 3600, NOW)).toBe('3 hours ago')
-    expect(agoOf(NOW - 2 * 86400, NOW)).toBe('2 days ago')
-    expect(agoOf(NOW - 10, NOW)).toBe('this minute')
-  })
-
   it('lists who wrote it, how it did and when, front page first', () => {
-    expect(factsOf(m({ front: true, author: 'maker1', points: 212 }), NOW)).toEqual(['Front page', 'by maker1', '212 points', '3 hours ago'])
-    expect(factsOf(m({ kind: 'comment', author: 'fan' }), NOW)).toEqual(['Comment', 'by fan', '3 hours ago'])
+    expect(factsOf(m({ front: true, author: 'maker1', points: 212 }), NOW)).toEqual(['Front page', 'by maker1', '212 points', '3 h ago'])
+    expect(factsOf(m({ kind: 'comment', author: 'fan' }), NOW)).toEqual(['Comment', 'by fan', '3 h ago'])
     expect(factsOf(m({ source: 'ph', points: 321 }), NOW)).toContain('321 upvotes')
-    expect(factsOf(m({ source: 'news', points: 5 }), NOW)).toEqual(['3 hours ago'])
+    expect(factsOf(m({ source: 'news', points: 5 }), NOW)).toEqual(['3 h ago'])
   })
 
   it('links only to web addresses', () => {

@@ -1,11 +1,11 @@
 // One tagged link: its mark and name, a bar of its visitors against the busiest, the figures, a 30-day line and when it last brought someone. A tap shows the dashboard for this link alone.
 import { Target } from 'lucide-react'
 import { Spark } from '../../views/AllSitesSpark'
-import { fmtCompact, fmtMoney } from '../../lib/format'
+import { fmtInt, fmtMoney, relativeAgo } from '../../lib/format'
 import { RefMark } from '../cards/refIcons'
 import type { Link } from './api'
 import { copy } from './copy'
-import { barPct, sinceLast } from './model'
+import { barPct } from './model'
 
 interface Props {
   link: Link
@@ -29,12 +29,12 @@ export function LinkRow({ link: l, max, now, icon, goals, money, onOpen }: Props
       <span className="yl-bar" aria-hidden="true">
         <i style={{ width: `${barPct(l.visitors, max)}%` }} />
       </span>
-      <span className="yl-n num" title={copy.visitorsOf(String(l.visitors))}>{fmtCompact(l.visitors)}</span>
+      <span className="yl-n num" title={copy.visitorsOf(fmtInt(l.visitors))}>{fmtInt(l.visitors)}</span>
       <span className="yl-badges">
         {goals && l.goals > 0 && (
-          <span className="yl-badge num" title={copy.goals(String(l.goals))}>
+          <span className="yl-badge num" title={copy.goals(fmtInt(l.goals))}>
             <Target size={13} strokeWidth={1.75} aria-hidden="true" />
-            {fmtCompact(l.goals)}
+            {fmtInt(l.goals)}
           </span>
         )}
         {money && l.revenue ? (
@@ -46,7 +46,7 @@ export function LinkRow({ link: l, max, now, icon, goals, money, onOpen }: Props
       <span className="yl-spark" title={copy.spark}>
         <Spark values={l.spark} w={90} h={24} />
       </span>
-      <span className="yl-last faint">{copy.last(sinceLast(l.last, now))}</span>
+      <span className="yl-last faint">{copy.last(relativeAgo(l.last, now))}</span>
     </button>
   )
 }

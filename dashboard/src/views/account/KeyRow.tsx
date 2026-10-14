@@ -2,7 +2,7 @@
 import { KeyRound } from 'lucide-react'
 import { confirm } from '../../components/Confirm'
 import { type APIKey, more } from '../../lib/apiMore'
-import { ago } from './ago'
+import { relativeAgo } from '../../lib/format'
 import { keys as t } from './keysCopy'
 
 export function KeyRow({ k, onRevoked }: { k: APIKey; onRevoked: () => void }) {
@@ -28,7 +28,7 @@ export function KeyRow({ k, onRevoked }: { k: APIKey; onRevoked: () => void }) {
         <code className="key-prefix">{k.prefix}…</code>
       </span>
       <span className="person-controls">
-        <span className="key-used num">{t.lastUsed(k.last_used_at ? ago(k.last_used_at) : t.never)}</span>
+        <span className="key-used num">{t.lastUsed(k.last_used_at ? relativeAgo(k.last_used_at) : t.never)}</span>
         <button type="button" className="btn ghost danger" aria-label={t.revokeLabel(k.name)} onClick={revoke}>
           {t.revoke}
         </button>

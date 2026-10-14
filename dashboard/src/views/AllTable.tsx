@@ -168,7 +168,7 @@ export function AllTable({ lens, rows, sites, colorOf, period }: Props) {
             {i.site?.mentions && <Suspense fallback={null}><TalkedChip site={r.id} /></Suspense>}
           </span>
         </td>
-        <td className="nx-c t-online">{i.online > 0 ? <span className="on"><i aria-hidden="true" />{i.online}</span> : <span className="muted">{fmtInt(0)}</span>}</td>
+        <td className="nx-c t-online">{i.online > 0 ? <span className="on"><i aria-hidden="true" />{fmtInt(i.online)}</span> : <span className="muted">{fmtInt(0)}</span>}</td>
         <td className="nx-c">{r.error ? '–' : mainOf(lens, i, cell)}</td>
         {!revenue && <td className={'nx-c t-chg ' + (dl?.tone ?? '')}>{dl ? dl.text : '–'}</td>}
         {extra && <td className="nx-c">{extraOf(lens, i, cell)}</td>}

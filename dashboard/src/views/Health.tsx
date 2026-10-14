@@ -6,7 +6,7 @@ import { Activity, ArchiveRestore, CircleCheck, CloudUpload, Cpu, CreditCard, Ha
 import { Card } from '../kit'
 import { type Health as H } from '../lib/api'
 import { useHealth } from './useHealth'
-import { fmtInt } from '../lib/format'
+import { fmtInt, relativeAgo } from '../lib/format'
 import './Health.css'
 import { Loading } from '../components/loading/Loading'
 
@@ -26,11 +26,7 @@ const ageOf = (unix: number) => Date.now() / 1000 - unix
 
 const since = (unix?: number) => {
   if (!unix) return 'never'
-  const s = Math.max(0, ageOf(unix))
-  if (s < 90) return 'just now'
-  if (s < 3600) return `${Math.round(s / 60)} min ago`
-  if (s < 86400) return `${Math.round(s / 3600)} h ago`
-  return `${Math.round(s / 86400)} days ago`
+  return relativeAgo(unix)
 }
 
 const fmtDays = (d: number) => {

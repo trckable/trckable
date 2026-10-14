@@ -31,13 +31,13 @@ export function ScrollDepth({ site, query, rows }: { site: Site; query: ReportQu
       <BarList
         dimLabel="Page"
         valueLabel="Depth"
-        fmtValue={(n) => `${n}%`}
+        fmtValue={(n) => fmtPct(n / 100)}
         subLabel="Read ¾"
         loading={!rep}
         emptyText="No page view has reported how far it scrolled yet."
         pickLabel={(k) => {
           const r = pages.find((x) => x.path === k)
-          return r ? `${k}: read ${Math.round(r.avg)}% of the way down on average, over ${fmtInt(r.pageviews)} views` : k
+          return r ? `${k}: read ${fmtPct(r.avg / 100)} of the way down on average, over ${fmtInt(r.pageviews)} views` : k
         }}
         items={pages.slice(0, rows).map((r) => ({
           key: r.path,
@@ -49,7 +49,7 @@ export function ScrollDepth({ site, query, rows }: { site: Site; query: ReportQu
       />
       {rep && rep.samples > 0 && (
         <p className="faint" style={{ margin: '10px 0 0', fontSize: 12 }}>
-          Across {fmtInt(rep.samples)} page views, people read {Math.round(rep.avg)}% of the way down on average; {fmtPct(rep.reached[1])} got
+          Across {fmtInt(rep.samples)} page views, people read {fmtPct(rep.avg / 100)} of the way down on average; {fmtPct(rep.reached[1])} got
           halfway and {fmtPct(rep.reached[3])} reached the end.
         </p>
       )}

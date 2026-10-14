@@ -15,7 +15,7 @@ import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import { Picker } from '../components/Picker'
 import { useEffect, useState } from 'react'
 import { siteState, stoppedWhy, fail, type Site, type SiteState, more } from '../lib/apiMore'
-import { fmtInt } from '../lib/format'
+import { fmtInt, relativeAgo } from '../lib/format'
 import { navigate } from '../lib/url'
 import { Menu } from '../components/Menu'
 import { toast } from '../components/Toast'
@@ -65,14 +65,6 @@ export function SitesSettings({ sites, onSites }: { sites: Site[]; onSites: () =
   )
 }
 
-function lastVisit(unix: number): string {
-  const s = Math.max(0, Date.now() / 1000 - unix)
-  if (s < 3600) return 'within the hour'
-  if (s < 86400) return `${Math.round(s / 3600)} h ago`
-  const d = Math.round(s / 86400)
-  return d === 1 ? 'yesterday' : `${d} days ago`
-}
-
 const PILL: Record<SiteState, string> = { live: 'Live', stopped: 'Down', quiet: 'Quiet', new: 'Not installed' }
 
 function SiteRow({ site, onSites, onDelete }: { site: Site; onSites: () => void; onDelete: () => void }) {
@@ -96,7 +88,7 @@ function SiteRow({ site, onSites, onDelete }: { site: Site; onSites: () => void;
         <span className="faint">
           {site.name && site.name !== site.domain ? site.domain + ' · ' : ''}
           {site.timezone.replace(/_/g, ' ')} · {site.currency}
-          {site.last_event_at ? ` · last visit ${lastVisit(site.last_event_at)}` : ''}
+          {site.last_event_at ? ` · last visit ${relativeAgo(site.last_event_at)}` : ''}
         </span>
       </div>
       <div className="site-card-actions">

@@ -146,7 +146,7 @@ func (d Data) Tiles() []Tile {
 	return []Tile{
 		{w.Visitors, w.Number(k.Visitors), w.Change(float64(k.Visitors), float64(p.Visitors))},
 		{w.Pageviews, w.Number(k.Pageviews), w.Change(float64(k.Pageviews), float64(p.Pageviews))},
-		{w.Bounce, w.Number(int64(k.BounceRate*100+0.5)) + "%", ""},
+		{w.Bounce, w.Percent(k.BounceRate), ""},
 		{w.Session, Duration(k.AvgSessionS), ""},
 	}
 }

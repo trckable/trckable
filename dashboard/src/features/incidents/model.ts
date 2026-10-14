@@ -6,18 +6,6 @@ import type { Incident } from './api'
 
 const DAY = 86400
 
-/** Seconds as people say a span: 45m, 3h 12m, 2d 4h. */
-export function duration(secs: number): string {
-  const s = Math.max(0, Math.round(secs))
-  if (s < 60) return '<1m'
-  const m = Math.floor(s / 60)
-  if (m < 60) return `${m}m`
-  const h = Math.floor(m / 60)
-  if (h < 24) return m % 60 ? `${h}h ${m % 60}m` : `${h}h`
-  const d = Math.floor(h / 24)
-  return h % 24 ? `${d}d ${h % 24}h` : `${d}d`
-}
-
 const zones = new Map<string, Intl.DateTimeFormat>()
 
 /** The calendar day (YYYY-MM-DD) of a moment in a time zone. */

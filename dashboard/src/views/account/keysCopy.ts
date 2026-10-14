@@ -33,11 +33,4 @@ export const keys = defineCopy('account.keys', {
   revokeUnused: 'This key has never been used. Revoking it cannot be undone.',
   revoking: 'Revoking…',
   revoked: 'Key revoked',
-  ago: {
-    now: 'just now',
-    minutes: (n: number) => `${n} min ago`,
-    hours: (n: number) => `${n} h ago`,
-    yesterday: 'yesterday',
-    days: (n: number) => `${n} days ago`,
-  },
 })

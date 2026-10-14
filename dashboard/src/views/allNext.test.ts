@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Site, SiteRow } from '../lib/api'
-import { hasBaseline, headline, items, MOVE, ordered } from './allNext'
+import { MOVE } from '../lib/format'
+import { hasBaseline, headline, items, ordered } from './allNext'
 
 const NOW = Date.UTC(2026, 9, 14, 12) // noon, so a good part of the day has passed
 const row = (id: string, o: Partial<SiteRow> = {}) => ({ id, domain: id + '.com', name: '', visitors: 0, series: null, online: 0, ...o }) as SiteRow

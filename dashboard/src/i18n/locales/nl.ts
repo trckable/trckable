@@ -411,7 +411,7 @@ export default {
   'live.entry.live': 'Live',
   'live.entry.data': 'Data',
   'live.entry.switchTitle': (key: string) => `Live toont de site op dit moment; Data toont de periode (${key})`,
-  'live.entry.liveOnline': (n: number) => (n === 1 ? 'Live, 1 persoon online' : `Live, ${n.toLocaleString()} online`),
+  'live.entry.liveOnline': (n: number) => (n === 1 ? 'Live, 1 persoon online' : `Live, ${int(n)} online`),
   'live.entry.onlineNow': 'Nu online',
 
   // milestones
@@ -837,11 +837,11 @@ export default {
   'account.devices.removeBody': 'Het wordt meteen uitgelogd. Log opnieuw in om trckable daar weer te gebruiken.',
   'account.devices.removing': 'Verwijderen…',
   'account.devices.removed': 'Apparaat verwijderd',
-  'account.keys.ago.now': 'zojuist',
-  'account.keys.ago.minutes': (n: number) => `${n} min geleden`,
-  'account.keys.ago.hours': (n: number) => `${n} u geleden`,
-  'account.keys.ago.yesterday': 'gisteren',
-  'account.keys.ago.days': (n: number) => `${n} dagen geleden`,
+  'format.ago.now': 'zojuist',
+  'format.ago.minutes': (n: number) => `${n} min geleden`,
+  'format.ago.hours': (n: number) => `${n} u geleden`,
+  'format.ago.yesterday': 'gisteren',
+  'format.ago.days': (n: number) => `${n} dagen geleden`,
 
   // goals
   'goals.label': 'Doelen toevoegen',
@@ -1449,11 +1449,6 @@ export default {
     if (hours < 24) return 'dezelfde dag'
     return count(Math.round(hours / 24), 'dag', 'dagen')
   },
-  'extras.buyers.ago': (s: number) => {
-    if (s < 3600) return `${Math.max(1, Math.round(s / 60))} min geleden`
-    if (s < 86400) return `${Math.round(s / 3600)} u geleden`
-    return `${Math.round(s / 86400)} d geleden`
-  },
 
   // journey
   'journey.dialog': 'Route van de bezoeker',
@@ -1526,12 +1521,6 @@ export default {
   'live.empty': 'Nu niemand op de site. Nieuwe bezoeken verschijnen hier zodra ze gebeuren.',
   'live.waitingSince': (when: string) => `Wachten op het eerste bezoek sinds ${when}`,
   'live.goal': (name: string) => `Doel: ${name}`,
-  'live.ago': (ms: number) => {
-    const s = Math.max(0, Math.round(ms / 1000))
-    if (s < 5) return 'zojuist'
-    if (s < 60) return `${s} s geleden`
-    return `${Math.floor(s / 60)} min geleden`
-  },
   'live.agoShort': (ms: number) => {
     const s = Math.max(0, Math.round(ms / 1000))
     if (s < 60) return `${s}s`

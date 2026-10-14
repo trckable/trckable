@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { Loading } from '../../components/loading/Loading'
 import type { ReportQuery } from '../../lib/api'
 import { extrasApi, type Buyer } from './extrasApi'
+import { relativeSince } from '../../lib/format'
 import { channelColor, channelLabel } from '../../lib/palette'
 import { extrasCopy } from './copy'
 import './extras.css'
@@ -44,7 +45,7 @@ export default function Buyers({ site, query, money }: { site: string; query: Re
           <li key={b.id} className="by-row">
             <span className="by-top">
               <b className="num by-amount">{money(b.amount)}</b>
-              <span className="faint num">{c.ago(Math.max(0, (now - Date.parse(b.at)) / 1000))}</span>
+              <span className="faint num">{relativeSince((now - Date.parse(b.at)) / 1000)}</span>
             </span>
             {path.length > 0 && (
               <span className="by-path num" title={path.join(' → ')}>

@@ -8,11 +8,12 @@ import './Alerts.css'
 import { Switch } from '../components/Switch'
 import { fail, type Alert, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
+import { relativeAgo } from '../lib/format'
 import { toast } from '../components/Toast'
 import { EmptyState } from '../components/EmptyState'
 import { WeeklyNow } from './WeeklyNow'
 import { KINDS } from './alertKinds'
-import { advice, ago, kindOf, SEND_LABEL, SendIcon, shown, stored, whereOf } from './alertsParts'
+import { advice, kindOf, SEND_LABEL, SendIcon, shown, stored, whereOf } from './alertsParts'
 
 export function AlertsSettings({ site }: { site: Site }) {
   const [list, setList] = useState<Alert[] | null>(null)
@@ -194,7 +195,7 @@ export function AlertsSettings({ site }: { site: Site }) {
                     k.hint(site)
                   )}
                 </span>
-                {a?.last_fired ? <span className="faint al-last">Last sent {ago(a.last_fired)}</span> : null}
+                {a?.last_fired ? <span className="faint al-last">Last sent {relativeAgo(a.last_fired)}</span> : null}
                 {k.id === 'weekly' && mail && <WeeklyNow site={site.id} />}
               </span>
               <Switch on={isOn} label={k.label} disabled={!target.trim()} onChange={() => save(k.id, { enabled: !isOn })} />
