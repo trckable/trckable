@@ -27,7 +27,7 @@ describe('sites still waiting for their first visit', () => {
 
   it('make an all-waiting headline that does not say the site looks fine', () => {
     const one = build([fresh('a')])
-    expect(headline(one.list, one.rows, NOW)).toEqual({ lead: '1 site waiting for its first visit. Install the script to start.', tail: '', fine: false })
+    expect(headline(one.list, one.rows, NOW)).toEqual({ alarm: '', lead: '1 site waiting for its first visit. Install the script to start.', tail: '', fine: false })
     const two = build([fresh('a'), fresh('b')])
     expect(headline(two.list, two.rows, NOW).lead).toBe('2 sites waiting for their first visit. Install the script to start.')
   })

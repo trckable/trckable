@@ -7,6 +7,13 @@ const NOW = 1_800_000_000_000
 const sec = NOW / 1000
 const site = (o: Partial<Site> = {}): Site => ({ id: 's1', domain: 'a.example', name: '', timezone: 'UTC', currency: 'USD', proxy_key: '', ...o })
 
+describe('a site the uptime probe finds not answering', () => {
+  it('is down even while visits are still coming in', () => {
+    expect(statusOf(site({ last_event_at: sec - 60, down_since: sec - 600 }), NOW)).toBe('down')
+    expect(statusOf(site({ down_since: sec - 600 }), NOW)).toBe('down')
+  })
+})
+
 describe('a site’s status', () => {
   it('is new before the first visit, ok while visits are recent', () => {
     expect(statusOf(site(), NOW)).toBe('new')

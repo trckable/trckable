@@ -17,7 +17,7 @@ test('the footer shows the server is fine, and Feedback sends a note', async ({ 
   await page.goto(`${API}/`)
 
   const foot = page.locator('footer.app-footer')
-  await expect(foot.getByText('All systems normal')).toBeVisible()
+  await expect(foot.getByText('trckable: all normal')).toBeVisible()
   await expect(foot.getByRole('link', { name: /^v\d/ })).toHaveAttribute('href', /changelog/)
 
   const note = `Footer note ${Date.now()}`

@@ -37,7 +37,7 @@ import { chartTips } from '../features/overview/chartTips'
 import { useChartHold } from '../features/overview/reserve'
 import { LiveSlot } from '../features/live/liveChunk'
 import { useLivePulses } from '../features/live/useLivePulses'
-import { useLiveCount } from '../features/live/liveLink'
+import { useLiveCount, useSiteDown } from '../features/live/liveLink'
 import { liveShown } from '../features/live/liveShown'
 import { useNotes } from '../features/notes/useNotes'
 import { jump } from '../features/notes/jump'
@@ -416,7 +416,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // the tiles, the chart legend and a shared card never disagree with it.
   const vs = 'vs ' + compareLabel(pickerValue.period, compareMode, pickerValue.range)
   const online = onlineNow(stream, data?.online, real?.online)
-  useLiveCount(online) // the Live | Data switch says the same number
+  useLiveCount(online); useSiteDown(!!site.down_since) // the Live | Data switch says the same number, and a red dot while the site is not answering
 
   // Hover must never change the Sources card's height (see its note below).
   // Following a channel, Sources keeps every channel, the followed one lit.
@@ -500,6 +500,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {liveView && (
         <LiveSlot key={site.id} site={site.id} timezone={site.timezone} cookieless={site.cookieless} whole={site} stream={stream} onVisitor={journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined} />
       )}
+      {!showInstall && !isShared() && <StatusCard site={site} />}
       {!liveView && <>
       {sharing && <Suspense fallback={null}><ShareDialog site={site} sites={sites} onClose={() => setSharing(false)} /></Suspense>}
       {naming && <Suspense fallback={null}><SaveViewHost site={site.id} query={current} onClose={() => setNaming(false)} onSaved={loadSegments} /></Suspense>}
@@ -508,7 +509,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {showInstall && <Suspense fallback={null}><Install site={site} visits={stream.visits} /></Suspense>}
       {!isShared() && location.search.includes('import=ga') && <Suspense fallback={null}><GaReturn site={site} /></Suspense>}
       <MilestonesSlot ms={ms} site={site} quiet={showInstall} revenue={mods === null || shows(mods, 'cards', 'revenue')} />
-      {!showInstall && !isShared() && <StatusCard site={site} />}
       {view.surge && <SurgeNote site={site.id} tz={site.timezone} started={view.surge} filters={view.filters} />}
       {view.test && <Notice kind="test" onAct={() => setView({ test: false })} />}
       {money && money.unconverted > 0 && (

@@ -19,6 +19,7 @@ One container, one volume. Every option below runs the same image, `ghcr.io/trck
 - **The first account.** Until one exists, trckable keeps a setup token. The templates that generate one (Railway, Coolify, Dokploy, the chart) set it as `TRCKABLE_SETUP_TOKEN`; open `/setup` on your address and paste it. Without that variable the server makes one and prints the full link, `/setup#token=…`, in its log on start. The token is gone for good once the account is made.
 - **`TRCKABLE_SECRET`** (at least 16 characters) encrypts payment keys in the volume. The templates generate it; keep it when you move or restore the data, and do not change it.
 - **Behind a proxy** (Caddy, nginx, Traefik, an ingress) set `TRCKABLE_TRUST_PROXY=xff`, and `TRCKABLE_BASE_URL` to the public address. The templates that sit behind a proxy already do.
+- **Uptime looks.** Every `TRCKABLE_UPTIME_EVERY` (default `5m`, `0` turns it off) the server loads each site's homepage once; two failed looks in a row open a Down incident. Private addresses are never looked at.
 - **Updating.** The tag in each file is the release it was made for. To update, change the tag to the new release and redeploy (`docker compose pull && docker compose up -d`, Redeploy in Coolify or Dokploy, `helm upgrade`). A migration that changes the store takes a copy of it first.
 - The container runs as user 65532. A new volume takes `/data`'s owner from the image; Railway mounts its volume as root, so its template sets `RAILWAY_RUN_UID=0`; Kubernetes sets `fsGroup`.
 

@@ -477,6 +477,7 @@ func (s *Server) Run(ctx context.Context) error {
 	s.goGuarded("alerts", func() { s.runAlerts(wctx) })              // the four things worth being told about
 	s.goGuarded("health alerts", func() { s.runHealthAlerts(wctx) }) // the installation's own problems, sent as they start and clear
 	s.goGuarded("checks", func() { s.runChecks(wctx) })              // each site's snippet, looked for once a day
+	s.goGuarded("uptime", func() { s.runUptime(wctx) })              // each homepage answers? looked at every few minutes
 	s.goGuarded("log retry", func() { s.runLogRetry(wctx) })         // events again once a full disk has room
 
 	select {

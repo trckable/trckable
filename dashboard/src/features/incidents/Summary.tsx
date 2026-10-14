@@ -8,7 +8,7 @@ import { Check, Eye } from 'lucide-react'
 import { fmtInt } from '../../lib/format'
 import type { Summary as Totals } from './api'
 import { copy } from './copy'
-import { duration, uptimeOf } from './model'
+import { duration, tooShort, uptimeOf } from './model'
 
 export interface Watch {
   /** Seconds of the period we were watching; 0 or less: none of it. */
@@ -36,20 +36,24 @@ function Calm({ title, note, unwatched }: { title: string; note: string; unwatch
 
 export function Summary({ totals, silent, label, watch }: { totals: Totals; silent: boolean; label: string; watch: Watch }) {
   const downOnly = watch.quietTracked === false
+  // Too short a watch for a share: say how long it was and how long down, no percentage.
+  const short = tooShort(watch.span) ? copy.checkedFor(duration(watch.span), totals.seconds > 0 ? duration(totals.seconds) : '') : ''
+  const watched = watch.since && copy.watchedSince(watch.since)
   if (watch.span <= 0) return <Calm unwatched title={copy.notWatched} note={copy.notWatchedNote(watch.since ?? '')} />
   if (totals.count === 0 && !silent) {
-    const note = [copy.cleanUp, downOnly && copy.downOnly, watch.since && copy.watchedSince(watch.since)].filter(Boolean).join(' · ')
+    const note = [short || copy.cleanUp, downOnly && copy.downOnly, watched].filter(Boolean).join(' · ')
     return <Calm title={copy.clean(label)} note={note} />
   }
-  const uptimeNote = [downOnly ? copy.downOnlyNote : copy.uptimeNote, watch.since && copy.watchedSince(watch.since)].filter(Boolean).join(' · ')
+  const uptimeNote = [downOnly ? copy.downOnlyNote : copy.uptimeNote, watched].filter(Boolean).join(' · ')
   const up = uptimeOf(watch.span, totals.seconds)
   let upValue = copy.notWatched
   if (silent) upValue = copy.noVisitsAll
+  else if (short) upValue = copy.tooEarly
   else if (up) upValue = up.pct.toFixed(1) + '%'
   const cards: { label: string; value: string; note?: string }[] = [
     { label: copy.cardIncidents, value: fmtInt(totals.count) },
     { label: copy.cardAffected, value: duration(totals.seconds) },
-    { label: copy.cardUptime, value: upValue, note: silent || !up ? undefined : uptimeNote },
+    { label: copy.cardUptime, value: upValue, note: silent ? undefined : short || (up ? uptimeNote : undefined) },
   ]
   if (totals.lost_some) cards.push({ label: copy.cardLost, value: copy.lost(fmtInt(totals.lost)), note: copy.lostNote })
   return (

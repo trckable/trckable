@@ -3,7 +3,7 @@
 // sites list, and the busy moments. No new reads.
 import { sourceLine, type Surge } from '../features/signals/surge'
 import { statusOf, type Status } from '../features/sitestatus/status'
-import { span } from '../features/sitestatus/time'
+import { span, when } from '../features/sitestatus/time'
 import type { Site, SiteRow } from '../lib/api'
 import { fmtInt, fmtMoney } from '../lib/format'
 import { tag } from '../i18n'
@@ -110,10 +110,10 @@ const compare = (d: number, ref: string): string => {
 export const hasBaseline = (list: Item[]): boolean => list.some((i) => !i.row.error && i.usual !== null && i.usual > 0)
 
 /** The one sentence at the top: facts that are unknown are left out. Sites still waiting for their first visit are said apart and never called fine. */
-export function headline(all: Item[], rows: SiteRow[], now = Date.now()): { lead: string; tail: string; fine: boolean } {
+export function headline(all: Item[], rows: SiteRow[], now = Date.now()): { alarm: string; lead: string; tail: string; fine: boolean } {
   const waiting = all.filter((i) => i.kind === 'setup').length
   const list = all.filter((i) => i.kind !== 'setup')
-  if (list.length === 0 && waiting > 0) return { lead: next.allWaiting(waiting), tail: '', fine: false }
+  if (list.length === 0 && waiting > 0) return { alarm: '', lead: next.allWaiting(waiting), tail: '', fine: false }
   const ok = list.filter((i) => !i.row.error)
   const today = ok.reduce((n, i) => n + i.today, 0)
   const withRef = ok.filter((i) => i.usual !== null && i.usual >= MIN_USUAL)
@@ -127,18 +127,24 @@ export function headline(all: Item[], rows: SiteRow[], now = Date.now()): { lead
   }
   lead += '.'
   const bad = list.filter((i) => i.kind === 'attention')
-  const parts = bad.slice(0, 2).map((i) => {
+  const downs = bad.filter((i) => i.status === 'down')
+  const alarm = downs.slice(0, 2).map((i) => {
     const name = i.row.name || i.row.domain
-    if (i.status === 'down') return next.isDown(name)
+    return i.site?.down_since ? next.notAnswering(name, when(i.site.down_since)) : next.isDown(name)
+  }).join(' ')
+  const rest = bad.filter((i) => i.status !== 'down')
+  const parts = rest.slice(0, 2).map((i) => {
+    const name = i.row.name || i.row.domain
     if (i.status === 'quiet' && i.site?.last_event_at) {
       return next.quietSince(name, dayWord(i.site.last_event_at, now))
     }
     return ''
   }).filter(Boolean)
-  if (bad.length > 2) parts.push(next.moreLook(bad.length - 2))
+  const more = Math.max(0, rest.length - 2) + Math.max(0, downs.length - 2)
+  if (more > 0) parts.push(next.moreLook(more))
   const fine = bad.length === 0 ? next.allFine(list.length) : ''
   const tail = [parts.length ? parts.join(' ') : fine, waiting > 0 ? next.someWaiting(waiting) : ''].filter(Boolean).join(' ')
-  return { lead, tail, fine: bad.length === 0 }
+  return { alarm, lead, tail, fine: bad.length === 0 }
 }
 
 /** Revenue per currency, summed over the rows that have any; empty when no site has payments. */
@@ -167,7 +173,8 @@ export function statusText(i: Item, now = Date.now()): string {
 export function whyLine(i: Item, ref: string, now = Date.now()): string {
   const last = i.site?.last_event_at
   if (i.row.error) return next.whyUnread
-  const since = i.site?.check?.down_since
+  const since = i.site?.down_since ?? i.site?.check?.down_since
+  if (i.status === 'down' && i.site?.down_since) return next.whyNotAnswering(when(i.site.down_since), i.site.down_cause ?? '')
   if (i.status === 'down') return since ? next.whyDown(dayWord(since, now)) : next.whyDownNow
   if (i.status === 'quiet' && last && i.kind === 'steady') return next.whyDormant(dayWord(last, now))
   if (i.status === 'quiet' && last) return next.whyQuiet(span(now / 1000 - last), dayWord(last, now))
@@ -198,7 +205,8 @@ export function feedOf(list: Item[]): FeedEvent[] {
     const mark = i.site ?? i.row
     if (surge) out.push({ key: i.row.id + 's', at: surge.started, text: next.feedSurge(name, surge.times.toFixed(1)), detail: sourceLine(surge), tone: 'live', mark })
     else if (i.online > 0 && last) out.push({ key: i.row.id + 'o', at: last, text: next.feedOnline(name, i.online), detail: '', tone: 'live', mark })
-    if (i.status === 'down' && i.site?.check) out.push({ key: i.row.id + 'd', at: i.site.check.down_since ?? i.site.check.at, text: next.feedDown(name), detail: '', tone: 'bad', mark })
+    if (i.status === 'down' && i.site?.down_since) out.push({ key: i.row.id + 'd', at: i.site.down_since, text: next.feedDown(name), detail: i.site.down_cause ?? '', tone: 'bad', mark })
+    else if (i.status === 'down' && i.site?.check) out.push({ key: i.row.id + 'd', at: i.site.check.down_since ?? i.site.check.at, text: next.feedDown(name), detail: '', tone: 'bad', mark })
     if (i.status === 'quiet' && last && i.kind === 'attention') out.push({ key: i.row.id + 'q', at: last, text: next.feedQuiet(name), detail: '', tone: 'warn', mark })
   }
   return out.sort((a, b) => b.at - a.at).slice(0, 12)

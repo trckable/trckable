@@ -117,7 +117,10 @@ const (
 )
 
 // kindAndCause is what the incident should be called now.
-func kindAndCause(trouble string, last int64, c sqlite.SiteCheck) (string, string) {
+func kindAndCause(trouble string, last int64, c sqlite.SiteCheck, p sqlite.SiteProbe) (string, string) {
+	if p.Down() {
+		return "down", p.Error
+	}
 	if trouble == "down" {
 		return "down", c.Error
 	}
@@ -134,15 +137,25 @@ func kindAndCause(trouble string, last int64, c sqlite.SiteCheck) (string, strin
 // needs it happens, and it happens on a later round. Quiet incidents are only
 // recorded for sites busy enough that silence means something; a down one
 // always is.
-func stepIncident(ctx context.Context, st *sqlite.Store, h history, site string, last int64, c sqlite.SiteCheck, now int64) error {
+func stepIncident(ctx context.Context, st *sqlite.Store, h history, site string, last int64, c sqlite.SiteCheck, p sqlite.SiteProbe, now int64) error {
 	trouble := troubleOf(last, c, now)
+	// A site that is probed is down when the probes say so, whatever its
+	// visits do; when they find the page answering, the daily look's failure
+	// is older news.
+	probeDown := p.Down()
+	switch {
+	case probeDown:
+		trouble = "down"
+	case p.At > 0 && trouble == "down":
+		trouble = "quiet"
+	}
 	open, err := st.OpenIncident(ctx, site)
 	if err != nil {
 		return err
 	}
 	// Visits came back in between and went silent again: the open incident is
 	// a past one, and this is a new one.
-	if open != nil && trouble != "" && last+stoppedHours*3600 > open.StartedAt {
+	if open != nil && trouble != "" && !probeDown && last+stoppedHours*3600 > open.StartedAt {
 		if h == nil {
 			return nil
 		}
@@ -154,6 +167,9 @@ func stepIncident(ctx context.Context, st *sqlite.Store, h history, site string,
 	switch {
 	case trouble != "" && open == nil:
 		started := last + stoppedHours*3600
+		if probeDown {
+			started = p.DownSince
+		}
 		if trouble == "quiet" {
 			if h == nil {
 				return nil
@@ -162,20 +178,38 @@ func stepIncident(ctx context.Context, st *sqlite.Store, h history, site string,
 				return err
 			}
 		}
-		kind, cause := kindAndCause(trouble, last, c)
+		kind, cause := kindAndCause(trouble, last, c, p)
 		_, err = st.StartIncident(ctx, site, kind, started, cause)
 		return err
 	case trouble != "" && open != nil:
-		if kind, cause := kindAndCause(trouble, last, c); kind != open.Kind || cause != open.Cause {
+		if kind, cause := kindAndCause(trouble, last, c, p); kind != open.Kind || cause != open.Cause {
 			return st.SetIncidentKind(ctx, open.ID, kind, cause)
 		}
 	case trouble == "" && open != nil:
+		if open.Kind == "down" && p.At > 0 && p.Failures == 0 {
+			return closeProbed(ctx, st, h, *open, p.At)
+		}
 		if h == nil {
 			return nil
 		}
 		return closeIncident(ctx, st, h, *open, last)
 	}
 	return nil
+}
+
+// closeProbed ends a down incident at the probe that found the page
+// answering. The visits an ordinary stretch would have brought are estimated
+// when the analytics store is ready.
+func closeProbed(ctx context.Context, st *sqlite.Store, h history, in sqlite.Incident, at int64) error {
+	ended := max(at, in.StartedAt)
+	var exp *int64
+	if h != nil {
+		var err error
+		if exp, err = expectedVisits(ctx, h, st, in.Site, in.StartedAt, ended); err != nil {
+			return err
+		}
+	}
+	return st.EndIncident(ctx, in.ID, ended, exp)
 }
 
 // closeIncident ends an incident when visits are back. The end is the first
@@ -217,8 +251,13 @@ func (s *Server) checkIncidents(ctx context.Context) {
 			slog.Warn("incident check failed", "site", site.ID, "err", err)
 			continue
 		}
+		p, err := s.ctl.ProbeOf(ctx, site.ID)
+		if err != nil {
+			slog.Warn("incident check failed", "site", site.ID, "err", err)
+			continue
+		}
 		siteCtx, cancel := context.WithTimeout(ctx, siteWork)
-		err = stepIncident(siteCtx, s.ctl, h, site.ID, site.LastEventAt, c, now)
+		err = stepIncident(siteCtx, s.ctl, h, site.ID, site.LastEventAt, c, p, now)
 		cancel()
 		if err != nil && ctx.Err() == nil {
 			slog.Warn("incident check failed", "site", site.ID, "err", err)
