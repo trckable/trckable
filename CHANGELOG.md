@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- The uptime check spreads its looks over the whole 5 minutes instead of bunching most of them at the end, and only ever calls a plain domain: a site address with a port, login, `?` or `#` (for example `1.2.3.4:6379`) is refused when you add it, with a message saying to use just the domain, and is skipped by the check if it is already there.
+
 ## 0.7.19 (14 Oct 2026)
 
 - A site that stops answering is noticed within minutes, not a day: every 5 minutes the server loads each site's homepage (one plain request, no scripts). Two failed looks in a row open a Down incident with the cause in plain words (for example "Your homepage answered 503" or "No answer within 10 seconds"), mail the same address as the tracking-stopped alert once, and one good look closes it and says how long it was down. The Uptime & incidents page and the Sites Uptime card count these looks. Self-hosters can change the interval with `TRCKABLE_UPTIME_EVERY` (default `5m`, `0` turns it off).
