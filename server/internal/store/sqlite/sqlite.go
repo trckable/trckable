@@ -729,7 +729,28 @@ var migrations = []string{
 		created_at INTEGER NOT NULL
 	);
 	CREATE INDEX IF NOT EXISTS feedback_time ON feedback(created_at);`,
-	// 59: a note is personal data, so it goes with the person who wrote it and
+	// 59: the light uptime probe (server/uptime.go): the last look at each
+	// site's homepage, how many failed in a row, and when the first of them
+	// was. A site is called down after two in a row.
+	`CREATE TABLE IF NOT EXISTS site_probe (
+		site_id    TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		probed_at  INTEGER NOT NULL,
+		status     INTEGER NOT NULL DEFAULT 0,
+		error      TEXT NOT NULL DEFAULT '',
+		failures   INTEGER NOT NULL DEFAULT 0,
+		down_since INTEGER NOT NULL DEFAULT 0
+	) WITHOUT ROWID;`,
+	// 60: the last few probes of each site, for the status panel's list of
+	// what was checked (server/uptime.go keeps about twenty per site).
+	`CREATE TABLE IF NOT EXISTS site_probe_log (
+		site_id   TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		probed_at INTEGER NOT NULL,
+		status    INTEGER NOT NULL DEFAULT 0,
+		ms        INTEGER NOT NULL DEFAULT 0,
+		error     TEXT NOT NULL DEFAULT '',
+		PRIMARY KEY (site_id, probed_at)
+	) WITHOUT ROWID;`,
+	// 61: a note is personal data, so it goes with the person who wrote it and
 	// with the site it was written on. The table has no foreign keys (the site
 	// is plain text), so triggers do what a cascade would, on every delete
 	// path. Notes already left behind by people or sites that are gone are

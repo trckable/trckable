@@ -78,7 +78,7 @@ func TestIncidentFollowsTheSiteAcrossRestarts(t *testing.T) {
 
 	step := func(now int64, c sqlite.SiteCheck, lastVisit int64) {
 		t.Helper()
-		if err := stepIncident(ctx, st, h, site, lastVisit, c, now); err != nil {
+		if err := stepIncident(ctx, st, h, site, lastVisit, c, sqlite.SiteProbe{}, now); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -136,14 +136,14 @@ func TestIncidentEdges(t *testing.T) {
 	st, site := openForIncidents(t)
 	const last = 1_800_000_000
 	busy := &fakeHistory{first: last - 60*24*hour, perHour: 100}
-	if err := stepIncident(ctx, st, busy, site, last+hour, sqlite.SiteCheck{}, last+2*hour); err != nil {
+	if err := stepIncident(ctx, st, busy, site, last+hour, sqlite.SiteCheck{}, sqlite.SiteProbe{}, last+2*hour); err != nil {
 		t.Fatal(err)
 	}
 	if list, _ := st.Incidents(ctx, site, 5, 0, 0, 0); len(list) != 0 {
 		t.Fatalf("a flap between rounds left %+v", list)
 	}
 	// The server was off for days: the first look finds the site quiet since long ago.
-	if err := stepIncident(ctx, st, busy, site, last, sqlite.SiteCheck{}, last+3*24*hour); err != nil {
+	if err := stepIncident(ctx, st, busy, site, last, sqlite.SiteCheck{}, sqlite.SiteProbe{}, last+3*24*hour); err != nil {
 		t.Fatal(err)
 	}
 	open, _ := st.OpenIncident(ctx, site)
@@ -151,7 +151,7 @@ func TestIncidentEdges(t *testing.T) {
 		t.Fatalf("open %+v", open)
 	}
 	// Visits are back but the store is not ready: it stays open.
-	if err := stepIncident(ctx, st, nil, site, last+4*24*hour, sqlite.SiteCheck{}, last+4*24*hour+60); err != nil {
+	if err := stepIncident(ctx, st, nil, site, last+4*24*hour, sqlite.SiteCheck{}, sqlite.SiteProbe{}, last+4*24*hour+60); err != nil {
 		t.Fatal(err)
 	}
 	if open, _ = st.OpenIncident(ctx, site); open == nil {
@@ -209,13 +209,13 @@ func TestSecondSilenceIsNotMerged(t *testing.T) {
 	const last = 1_800_000_000
 	h := &fakeHistory{first: last - 60*24*hour, after: last + 9*hour, perHour: 100}
 	var none sqlite.SiteCheck
-	if err := stepIncident(ctx, st, h, site, last, none, last+3*24*hour); err != nil {
+	if err := stepIncident(ctx, st, h, site, last, none, sqlite.SiteProbe{}, last+3*24*hour); err != nil {
 		t.Fatal(err)
 	}
 	// Visits came back, then stopped again, and nobody looked in between.
 	h.after = last + 3*24*hour + 10*hour
 	l2 := int64(last + 4*24*hour)
-	if err := stepIncident(ctx, st, h, site, l2, none, l2+24*hour); err != nil {
+	if err := stepIncident(ctx, st, h, site, l2, none, sqlite.SiteProbe{}, l2+24*hour); err != nil {
 		t.Fatal(err)
 	}
 	list, _ := st.Incidents(ctx, site, 5, 0, 0, 0)
@@ -234,7 +234,7 @@ func TestQuietDownQuietAndWhatWasSeen(t *testing.T) {
 	h := &fakeHistory{first: last - 60*24*hour, perHour: 100}
 	step := func(now int64, c sqlite.SiteCheck) *sqlite.Incident {
 		t.Helper()
-		if err := stepIncident(ctx, st, h, site, last, c, now); err != nil {
+		if err := stepIncident(ctx, st, h, site, last, c, sqlite.SiteProbe{}, now); err != nil {
 			t.Fatal(err)
 		}
 		o, _ := st.OpenIncident(ctx, site)
@@ -258,13 +258,13 @@ func TestQuietOnlyForBusySites(t *testing.T) {
 	st, site := openForIncidents(t)
 	const last = 1_800_000_000
 	h := &fakeHistory{first: last - 60*24*hour, perHour: 0}
-	if err := stepIncident(ctx, st, h, site, last, sqlite.SiteCheck{}, last+9*hour); err != nil {
+	if err := stepIncident(ctx, st, h, site, last, sqlite.SiteCheck{}, sqlite.SiteProbe{}, last+9*hour); err != nil {
 		t.Fatal(err)
 	}
 	if o, _ := st.OpenIncident(ctx, site); o != nil {
 		t.Fatalf("a quiet incident for a site with no traffic: %+v", o)
 	}
-	if err := stepIncident(ctx, st, h, site, last, sqlite.SiteCheck{At: last + 9*hour, Error: "timeout"}, last+9*hour); err != nil {
+	if err := stepIncident(ctx, st, h, site, last, sqlite.SiteCheck{At: last + 9*hour, Error: "timeout"}, sqlite.SiteProbe{}, last+9*hour); err != nil {
 		t.Fatal(err)
 	}
 	if o, _ := st.OpenIncident(ctx, site); o == nil || o.Kind != "down" {

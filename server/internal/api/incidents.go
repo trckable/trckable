@@ -185,3 +185,14 @@ func (a *API) incidentNote(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, x)
 	}
 }
+
+// probes is GET /api/v1/sites/{site}/probes: the last few looks at the site's
+// homepage by the uptime probe, newest first, for the status panel.
+func (a *API) probes(w http.ResponseWriter, r *http.Request) {
+	list, err := a.Ctl.ProbeLog(r.Context(), r.PathValue("site"), 5)
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"probes": list})
+}

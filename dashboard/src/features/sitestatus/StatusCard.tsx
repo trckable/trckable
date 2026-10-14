@@ -11,22 +11,32 @@ import { navigate } from '../../lib/url'
 import { copy as incidents } from '../incidents/copy'
 import { incidentsPath } from '../incidents/route'
 import { copy } from './copy'
+import { downCopy } from './downCopy'
 import { causeOf, rowsOf } from './rows'
 import { GapChart } from './GapChart'
 import { slotOf, useRecent } from './useRecent'
 import { useMute } from './useMute'
 import { firstAfter, fresh, readGap, writeGap } from './recovery'
 import { statusOf } from './status'
-import { silence, when } from './time'
+import { silence, span, when } from './time'
 import { useChecks } from './useChecks'
+import { useProbes } from './useProbes'
+import { ProbeList } from './ProbeList'
 import '../signals/surge.css'
 import './StatusCard.css'
+
+/** How long the badge says: since the probe found the site down, else since its last visit. */
+function ageOf(site: Site): string {
+  return site.down_since ? span(Date.now() / 1000 - site.down_since) : silence(site)
+}
 
 export function StatusPanel({ site, last, down }: { site: Site; last: number; down: boolean }) {
   const { state, again } = useChecks(site.id)
   const recent = useRecent(site.id)
+  const probes = useProbes(site.id)
   const mute = useMute(site, !isViewer())
-  const downSince = down ? site.check?.down_since : undefined
+  const probed = down ? site.down_since : undefined
+  const downSince = down ? (probed ?? site.check?.down_since) : undefined
   const result = state.phase === 'done' ? state.result : undefined
   const rows = result ? rowsOf(result, site.domain) : undefined
   return (
@@ -35,19 +45,19 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
         <span className="sgm-badge" aria-hidden="true">
           <TriangleAlert size={18} strokeWidth={2} />
         </span>
-        <b className="sgm-count">{silence(site)}</b>
+        <b className="sgm-count">{ageOf(site)}</b>
         <span className="sgm-meta">
           <span className="sg-chip">{down ? copy.chipDown : copy.chipQuiet}</span>
           <span className="sgm-jump">{downSince ? copy.downSince(when(downSince)) : copy.sinceVisit(when(last))}</span>
         </span>
       </header>
-      <p className="sgm-honest muted">{causeOf(rows, down)}</p>
-      {recent && <GapChart slices={recent.slices} last={when(last)} at={slotOf(last, recent.now)} />}
+      <p className="sgm-honest muted">{probed ? downCopy.bar(site.down_cause ?? '') : causeOf(rows, down)}</p>
+      {last > 0 && recent && <GapChart slices={recent.slices} last={when(last)} at={slotOf(last, recent.now)} />}
       <div className="sgm-tiles">
         <section className="sgm-tile" aria-label={copy.tileVisit}>
           <h3>{copy.tileVisit}</h3>
           <p className="sgm-row">
-            <span>{when(last)}</span>
+            <span>{last > 0 ? when(last) : copy.noPage}</span>
           </p>
           <p className="sgm-row">{recent?.path ? <code>{recent.path}</code> : <span className="faint">{copy.noPage}</span>}</p>
         </section>
@@ -55,13 +65,15 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
           <h3>{copy.tileHome}</h3>
           <p className="sgm-row">
             <span>{site.domain}</span>
+            {probed && site.down_cause && <b>{site.down_cause}</b>}
             {result && !result.error && <b>{copy.answered(result.status ?? 200, result.ms ?? 0)}</b>}
           </p>
         </section>
         <section className="sgm-tile status-checks" aria-label={copy.tileChecks} aria-live="polite" aria-busy={state.phase === 'checking'}>
           <h3>{copy.tileChecks}</h3>
           <ul>
-            {state.phase === 'checking' && (
+            <ProbeList probes={probes} />
+            {state.phase === 'checking' && probes.length === 0 && (
               <li className="wait">
                 <span className="btn-spin" aria-hidden="true" />
                 {copy.checking}
@@ -120,7 +132,7 @@ function HistoryLink({ site }: { site: Site }) {
         navigate(href)
       }}
     >
-      {incidents.history}
+      {site.down_since ? downCopy.see : incidents.history}
     </a>
   )
 }
@@ -133,7 +145,7 @@ function Gone({ site, last, down }: { site: Site; last: number; down: boolean })
   const [sheet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches)
   useEffect(() => {
     const prev = readGap(site.id)
-    if (!prev || prev.since !== last) writeGap(site.id, { since: last })
+    if (last > 0 && (!prev || prev.since !== last)) writeGap(site.id, { since: last })
   }, [site.id, last])
   // On a desktop the panel is ours to close; the sheet's popover closes itself.
   useEffect(() => {
@@ -171,7 +183,7 @@ function Gone({ site, last, down }: { site: Site; last: number; down: boolean })
         onClick={() => setOpen((o) => !o)}
       >
         <Icon size={15} strokeWidth={2} aria-hidden="true" />
-        {copy.badge(down, silence(site))}
+        {copy.badge(down, ageOf(site))}
       </button>
       {open && sheet && (
         <AnchoredPop anchor={btn} label={copy.label} className="status-pop" onClose={() => setOpen(false)}>

@@ -2173,6 +2173,12 @@ body[data-mode] .card.overview {
   animation: none;
   opacity: 0.3;
 }
+/* The site is not answering our checks: the dot is red, whichever side is chosen. */
+.view-switch.down .pulse {
+  background: var(--down);
+  animation: none;
+  opacity: 1;
+}
 @media (prefers-reduced-motion: reduce) {
   .view-pill {
     transition: none;

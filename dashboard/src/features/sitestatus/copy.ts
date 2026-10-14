@@ -24,6 +24,7 @@ export const copy = defineCopy('sitestatus', {
   tileChecks: 'What we checked',
   noPage: 'No page recorded',
   answered: (status: number, ms: number) => `${status} · ${ms} ms`,
+  noAnswer: 'No answer',
   checking: 'Checking…',
   tryLater: 'Checked many times just now. Try again in a few minutes.',
   failed: 'The checks did not run. Try again.',

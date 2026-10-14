@@ -6,7 +6,7 @@ import { useMemo } from 'react'
 import { Loading } from '../components/loading/Loading'
 import { StateDot } from '../features/sites/StateDot'
 import { copy } from '../features/incidents/copy'
-import { dayStates, daysBetween, accountTotals, duration, rowTotals, silentAllPeriod, uptimeOf } from '../features/incidents/model'
+import { dayStates, daysBetween, accountTotals, duration, rowTotals, silentAllPeriod, tooShort, uptimeOf } from '../features/incidents/model'
 import { incidentsPath } from '../features/incidents/route'
 import { useAccountIncidents, useNow } from '../features/incidents/useIncidents'
 import type { Incident } from '../features/incidents/api'
@@ -21,12 +21,18 @@ const DAY = 86400
 /** The period ids the dashboard knows for the days All sites offers. */
 const PERIOD: Record<number, string> = { 7: '7d', 30: '30d', 90: '90d', 365: '12mo' }
 
+function figsOf(t: ReturnType<typeof rowTotals>, up: ReturnType<typeof uptimeOf>): string {
+  if (tooShort(t.span)) return copy.checkedFor(duration(t.span), t.seconds > 0 ? duration(t.seconds) : '')
+  if (!up) return copy.notWatched
+  return [copy.allRow(up.pct.toFixed(1), t.count, duration(t.seconds)), up.downOnly && copy.downOnly].filter(Boolean).join(' · ')
+}
+
 function Row({ site, mine, days, now, quiet }: { site: Site; mine: Incident[]; days: number; now: number; quiet?: boolean }) {
   const today = todayIn(site.timezone)
   const states = useMemo(() => dayStates(mine, daysBetween(addDays(today, 1 - days), today), site.timezone, now, site.watched_since), [mine, days, today, site.timezone, now, site.watched_since])
   const t = rowTotals(mine, days, now, site.watched_since)
   const up = uptimeOf(t.span, t.seconds, quiet)
-  const figs = up ? [copy.allRow(up.pct.toFixed(1), t.count, duration(t.seconds)), up.downOnly && copy.downOnly].filter(Boolean).join(' · ') : copy.notWatched
+  const figs = figsOf(t, up)
   const name = site.name || site.domain
   return (
     <button type="button" className="up-row" aria-label={copy.allOpen(name)} onClick={() => navigate(incidentsPath(site.domain) + '?period=' + PERIOD[days])}>
