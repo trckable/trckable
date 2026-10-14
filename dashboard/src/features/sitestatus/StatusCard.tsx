@@ -20,6 +20,8 @@ import { firstAfter, fresh, readGap, writeGap } from './recovery'
 import { statusOf } from './status'
 import { silence, span, when } from './time'
 import { useChecks } from './useChecks'
+import { useProbes } from './useProbes'
+import { ProbeList } from './ProbeList'
 import '../signals/surge.css'
 import './StatusCard.css'
 
@@ -31,6 +33,7 @@ function ageOf(site: Site): string {
 export function StatusPanel({ site, last, down }: { site: Site; last: number; down: boolean }) {
   const { state, again } = useChecks(site.id)
   const recent = useRecent(site.id)
+  const probes = useProbes(site.id)
   const mute = useMute(site, !isViewer())
   const probed = down ? site.down_since : undefined
   const downSince = down ? (probed ?? site.check?.down_since) : undefined
@@ -48,7 +51,7 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
           <span className="sgm-jump">{downSince ? copy.downSince(when(downSince)) : copy.sinceVisit(when(last))}</span>
         </span>
       </header>
-      <p className="sgm-honest muted">{probed ? downCopy.bar(when(probed), site.down_cause ?? '') : causeOf(rows, down)}</p>
+      <p className="sgm-honest muted">{probed ? downCopy.bar(site.down_cause ?? '') : causeOf(rows, down)}</p>
       {last > 0 && recent && <GapChart slices={recent.slices} last={when(last)} at={slotOf(last, recent.now)} />}
       <div className="sgm-tiles">
         <section className="sgm-tile" aria-label={copy.tileVisit}>
@@ -69,7 +72,8 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
         <section className="sgm-tile status-checks" aria-label={copy.tileChecks} aria-live="polite" aria-busy={state.phase === 'checking'}>
           <h3>{copy.tileChecks}</h3>
           <ul>
-            {state.phase === 'checking' && (
+            <ProbeList probes={probes} />
+            {state.phase === 'checking' && probes.length === 0 && (
               <li className="wait">
                 <span className="btn-spin" aria-hidden="true" />
                 {copy.checking}

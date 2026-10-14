@@ -740,6 +740,16 @@ var migrations = []string{
 		failures   INTEGER NOT NULL DEFAULT 0,
 		down_since INTEGER NOT NULL DEFAULT 0
 	) WITHOUT ROWID;`,
+	// 60: the last few probes of each site, for the status panel's list of
+	// what was checked (server/uptime.go keeps about twenty per site).
+	`CREATE TABLE IF NOT EXISTS site_probe_log (
+		site_id   TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		probed_at INTEGER NOT NULL,
+		status    INTEGER NOT NULL DEFAULT 0,
+		ms        INTEGER NOT NULL DEFAULT 0,
+		error     TEXT NOT NULL DEFAULT '',
+		PRIMARY KEY (site_id, probed_at)
+	) WITHOUT ROWID;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

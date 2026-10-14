@@ -139,7 +139,9 @@ func (p *prober) probe(ctx context.Context, site sqlite.SiteRow) {
 		return
 	}
 	pctx, cancel := context.WithTimeout(ctx, probeTimeout)
+	began := time.Now()
 	status, err := p.get(pctx, url)
+	ms := int(time.Since(began).Milliseconds())
 	cancel()
 	if ctx.Err() != nil {
 		return
@@ -148,7 +150,7 @@ func (p *prober) probe(ctx context.Context, site sqlite.SiteRow) {
 		return // redirected somewhere private
 	}
 	cause := probeCause(status, err)
-	before, after, err := p.st.RecordProbe(ctx, site.ID, p.now().Unix(), status, cause)
+	before, after, err := p.st.RecordProbe(ctx, site.ID, p.now().Unix(), status, ms, cause)
 	if err != nil {
 		slog.Warn("uptime probe not saved", "site", site.ID, "err", err)
 		return

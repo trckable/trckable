@@ -994,8 +994,8 @@ export default {
   'allnext.isDown': (name: string) => `${name} non risponde.`,
   'allnext.notAnswering': (name: string, since: string) => `${name} non risponde ai nostri controlli dalle ${since}.`,
   'allnext.whyNotAnswering': (since: string, cause: string) => `Non risponde dalle ${since}${cause ? ` · ${cause}` : ''}`,
-  'sitestatus.down.bar': (since: string, cause: string) =>
-    `Il tuo sito non risponde ai nostri controlli dalle ${since}${cause ? ` (${cause})` : ''}. Alcuni visitatori riescono ancora ad arrivare, per questo vedi ancora persone online.`,
+  'sitestatus.down.bar': (cause: string) =>
+    `Il tuo sito non risponde ai nostri controlli${cause ? ` (${cause})` : ''}. Alcuni visitatori riescono ancora ad arrivare, per questo vedi ancora persone online.`,
   'sitestatus.down.see': 'Vedi l’incidente',
   'allnext.moreLook': (n: number) => (n === 1 ? '1 altro richiede un’occhiata.' : `${n} altri richiedono un’occhiata.`),
   'allnext.yesterday': 'ieri',
@@ -2388,6 +2388,7 @@ export default {
   'sitestatus.tileVisit': 'Ultima visita',
   'sitestatus.tileHome': 'Home page',
   'sitestatus.noPage': 'Nessuna pagina registrata',
+  'sitestatus.noAnswer': 'Nessuna risposta',
   'sitestatus.answered': (status: number, ms: number) => `${status} · ${ms} ms`,
   'sitestatus.tileChecks': 'Cosa abbiamo controllato',
   'sitestatus.downSince': (when: string) => `Il tuo sito non risponde dalle ${when}`,
@@ -2414,7 +2415,8 @@ export default {
   'incidents.downOnly': 'solo controlli di mancata risposta',
   'incidents.downOnlyNote': 'Solo controlli di mancata risposta: questo sito ha troppe poche visite per tracciare i periodi di silenzio.',
   'incidents.watchedSince': (day: string) => `monitorato dal ${day}`,
-  'incidents.watchedFor': (span: string) => `monitorato per ${span}`,
+  'incidents.checkedFor': (span: string, down: string) => (down ? `Controllato per ${span}, fuori servizio per ${down}` : `Controllato per ${span}, nessuna interruzione`),
+  'incidents.tooEarly': 'Troppo presto',
   'incidents.notWatched': 'Non ancora monitorato',
   'incidents.notWatchedNote': (day: string) => `Gli incidenti sono registrati dal ${day}.`,
   'incidents.cardIncidents': 'Incidenti',

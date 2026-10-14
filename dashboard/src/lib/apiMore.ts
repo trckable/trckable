@@ -5,6 +5,14 @@
 import { act, call, raw, rangeQS } from './api'
 
 // Lazy screens import everything API-shaped from here: the names of lib/api, and `more`.
+/** One look at a homepage by the uptime probe: when, what answered and how fast, or why not. */
+export interface ProbeLook {
+  at: number
+  status?: number
+  ms?: number
+  error?: string
+}
+
 export * from './api'
 export { siteState, type SiteState } from '../features/sitestatus/status'
 import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, WebVitals, Widget, WidgetLook } from './api'
@@ -155,6 +163,8 @@ export const more = {
   clearAvatar: () => act('DELETE', '/account/avatar'),
   /** This server reads the site's homepage and looks for the snippet. */
   checkInstall: (site: string) => call<InstallCheck>('POST', `/sites/${encodeURIComponent(site)}/install/check`),
+  /** The uptime probe's last few looks at the site's homepage, newest first. */
+  probes: (site: string) => call<{ probes: ProbeLook[] }>('GET', `/sites/${encodeURIComponent(site)}/probes`),
   keys: () => call<{ keys: APIKey[] }>('GET', '/keys'),
   heatmap: (site: string, q: ReportQuery) => call<Heatmap>('GET', `/sites/${site}/report/heatmap` + rangeQS(q)),
   funnel: (site: string, q: ReportQuery, steps: FunnelStep[]) => call<{ steps: FunnelResult[] }>('GET', `/sites/${site}/report/funnel` + rangeQS(q) + '&steps=' + encodeURIComponent(JSON.stringify(steps))),

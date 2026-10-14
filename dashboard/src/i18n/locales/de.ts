@@ -997,8 +997,8 @@ export default {
   'allnext.isDown': (name: string) => `${name} ist nicht erreichbar.`,
   'allnext.notAnswering': (name: string, since: string) => `${name} antwortet nicht auf unsere Prüfungen seit ${since}.`,
   'allnext.whyNotAnswering': (since: string, cause: string) => `Antwortet nicht seit ${since}${cause ? ` · ${cause}` : ''}`,
-  'sitestatus.down.bar': (since: string, cause: string) =>
-    `Deine Website antwortet nicht auf unsere Prüfungen seit ${since}${cause ? ` (${cause})` : ''}. Manche Besucher kommen trotzdem durch, deshalb siehst du noch Leute online.`,
+  'sitestatus.down.bar': (cause: string) =>
+    `Deine Website antwortet nicht auf unsere Prüfungen${cause ? ` (${cause})` : ''}. Manche Besucher kommen trotzdem durch, deshalb siehst du noch Leute online.`,
   'sitestatus.down.see': 'Vorfall ansehen',
   'allnext.moreLook': (n: number) => (n === 1 ? '1 weitere braucht einen Blick.' : `${n} weitere brauchen einen Blick.`),
   'allnext.yesterday': 'gestern',
@@ -2391,6 +2391,7 @@ export default {
   'sitestatus.tileVisit': 'Letzter Besuch',
   'sitestatus.tileHome': 'Startseite',
   'sitestatus.noPage': 'Keine Seite erfasst',
+  'sitestatus.noAnswer': 'Keine Antwort',
   'sitestatus.answered': (status: number, ms: number) => `${status} · ${ms} ms`,
   'sitestatus.tileChecks': 'Was wir geprüft haben',
   'sitestatus.downSince': (when: string) => `Deine Website ist offline seit ${when}`,
@@ -2417,7 +2418,8 @@ export default {
   'incidents.downOnly': 'nur Offline-Prüfung',
   'incidents.downOnlyNote': 'Nur Offline-Prüfung: Diese Website hat zu wenige Besuche, um stille Phasen zu erfassen.',
   'incidents.watchedSince': (day: string) => `überwacht seit ${day}`,
-  'incidents.watchedFor': (span: string) => `überwacht seit ${span}`,
+  'incidents.checkedFor': (span: string, down: string) => (down ? `Geprüft seit ${span}, offline seit ${down}` : `Geprüft seit ${span}, keine Ausfallzeit`),
+  'incidents.tooEarly': 'Zu früh',
   'incidents.notWatched': 'Noch nicht überwacht',
   'incidents.notWatchedNote': (day: string) => `Vorfälle werden ab ${day} erfasst.`,
   'incidents.cardIncidents': 'Vorfälle',

@@ -26,7 +26,7 @@ func (p SiteProbe) Down() bool { return p.Failures >= DownAfter }
 // returns the state before and after, so the caller can tell the moment a
 // site went down or came back. DownSince is the time of the first failure of
 // the run.
-func (s *Store) RecordProbe(ctx context.Context, site string, at int64, status int, errText string) (before, after SiteProbe, err error) {
+func (s *Store) RecordProbe(ctx context.Context, site string, at int64, status, ms int, errText string) (before, after SiteProbe, err error) {
 	if before, err = s.ProbeOf(ctx, site); err != nil {
 		return
 	}
@@ -42,7 +42,46 @@ func (s *Store) RecordProbe(ctx context.Context, site string, at int64, status i
 		ON CONFLICT(site_id) DO UPDATE SET probed_at = excluded.probed_at, status = excluded.status, error = excluded.error,
 			failures = excluded.failures, down_since = excluded.down_since`,
 		site, after.At, after.Status, after.Error, after.Failures, after.DownSince)
+	if err != nil {
+		return
+	}
+	if _, err = s.DB.ExecContext(ctx, `INSERT OR REPLACE INTO site_probe_log (site_id, probed_at, status, ms, error) VALUES (?, ?, ?, ?, ?)`,
+		site, at, status, ms, errText); err != nil {
+		return
+	}
+	_, err = s.DB.ExecContext(ctx, `DELETE FROM site_probe_log WHERE site_id = ? AND probed_at <
+		COALESCE((SELECT MIN(probed_at) FROM (SELECT probed_at FROM site_probe_log WHERE site_id = ? ORDER BY probed_at DESC LIMIT ?)), 0)`,
+		site, site, probeLogKept)
 	return
+}
+
+// probeLogKept is how many probes per site are kept for the status panel.
+const probeLogKept = 20
+
+// ProbeLogEntry is one look at a site's homepage, as the panel lists it.
+type ProbeLogEntry struct {
+	At     int64  `json:"at"`
+	Status int    `json:"status,omitempty"`
+	Ms     int    `json:"ms,omitempty"`
+	Error  string `json:"error,omitempty"`
+}
+
+// ProbeLog returns a site's latest probes, newest first.
+func (s *Store) ProbeLog(ctx context.Context, site string, limit int) ([]ProbeLogEntry, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT probed_at, status, ms, error FROM site_probe_log WHERE site_id = ? ORDER BY probed_at DESC LIMIT ?`, site, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []ProbeLogEntry{}
+	for rows.Next() {
+		var e ProbeLogEntry
+		if err := rows.Scan(&e.At, &e.Status, &e.Ms, &e.Error); err != nil {
+			return nil, err
+		}
+		out = append(out, e)
+	}
+	return out, rows.Err()
 }
 
 // ProbeOf returns a site's last probe, or a zero one when it was never probed.

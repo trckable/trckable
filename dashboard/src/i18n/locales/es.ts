@@ -1000,8 +1000,8 @@ export default {
   'allnext.isDown': (name: string) => `${name} no responde.`,
   'allnext.notAnswering': (name: string, since: string) => `${name} no responde a nuestras comprobaciones desde ${since}.`,
   'allnext.whyNotAnswering': (since: string, cause: string) => `No responde desde ${since}${cause ? ` · ${cause}` : ''}`,
-  'sitestatus.down.bar': (since: string, cause: string) =>
-    `Tu sitio no responde a nuestras comprobaciones desde ${since}${cause ? ` (${cause})` : ''}. Algunos visitantes aún llegan, por eso sigues viendo gente en línea.`,
+  'sitestatus.down.bar': (cause: string) =>
+    `Tu sitio no responde a nuestras comprobaciones${cause ? ` (${cause})` : ''}. Algunos visitantes aún llegan, por eso sigues viendo gente en línea.`,
   'sitestatus.down.see': 'Ver incidente',
   'allnext.moreLook': (n: number) => (n === 1 ? '1 más necesita atención.' : `${n} más necesitan atención.`),
   'allnext.yesterday': 'ayer',
@@ -2394,6 +2394,7 @@ export default {
   'sitestatus.tileVisit': 'Última visita',
   'sitestatus.tileHome': 'Página de inicio',
   'sitestatus.noPage': 'Ninguna página registrada',
+  'sitestatus.noAnswer': 'Sin respuesta',
   'sitestatus.answered': (status: number, ms: number) => `${status} · ${ms} ms`,
   'sitestatus.tileChecks': 'Qué hemos comprobado',
   'sitestatus.downSince': (when: string) => `Tu sitio está caído desde ${when}`,
@@ -2420,7 +2421,8 @@ export default {
   'incidents.downOnly': 'solo comprobación de caídas',
   'incidents.downOnlyNote': 'Solo comprobación de caídas: este sitio tiene muy pocas visitas para registrar fases inactivas.',
   'incidents.watchedSince': (day: string) => `vigilado desde ${day}`,
-  'incidents.watchedFor': (span: string) => `vigilado durante ${span}`,
+  'incidents.checkedFor': (span: string, down: string) => (down ? `Comprobado durante ${span}, caído durante ${down}` : `Comprobado durante ${span}, sin caídas`),
+  'incidents.tooEarly': 'Demasiado pronto',
   'incidents.notWatched': 'Aún sin vigilar',
   'incidents.notWatchedNote': (day: string) => `Los incidentes se registran desde el ${day}.`,
   'incidents.cardIncidents': 'Incidentes',

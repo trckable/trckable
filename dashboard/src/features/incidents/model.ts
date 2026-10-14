@@ -62,9 +62,15 @@ export function uptimePct(period: number, affected: number): number {
   return affected > 0 && r >= 100 ? 99.9 : r
 }
 
+/** Seconds of watching before a share of time up is worth saying: a few minutes of data says nothing. */
+export const MIN_WATCH = 3600
+
+/** Whether the watch is still too short for a share, though there is some. */
+export const tooShort = (span: number): boolean => span > 0 && span < MIN_WATCH
+
 /** The uptime a period earns, said once for the page and for All sites: nothing when none of it was watched (span <= 0), else the share and whether only down checks stood behind it (a site too quiet for quiet spells to be recorded). */
 export function uptimeOf(span: number, affected: number, quietTracked?: boolean): { pct: number; downOnly: boolean } | null {
-  return span > 0 ? { pct: uptimePct(span, affected), downOnly: quietTracked === false } : null
+  return span >= MIN_WATCH ? { pct: uptimePct(span, affected), downOnly: quietTracked === false } : null
 }
 
 /** Time spent in incidents inside [from, to]; overlapping ones are counted once. */
