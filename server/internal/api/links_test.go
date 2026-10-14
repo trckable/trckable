@@ -17,10 +17,11 @@ func TestLinksEndToEnd(t *testing.T) {
 
 	refs := []string{"trustmrr", "trustmrr.com", "news.ycombinator.com"}
 	for i, ref := range refs {
-		g.event(t, event.Event{EventID: uint64(i + 1), Kind: event.KindPageview, TS: g.now.Add(-time.Hour).UnixMilli(),
-			Visitor: uint64(i + 1), Pageview: uint64(i + 1), Path: "/", Channel: "Referral", RefHost: ref})
+		id := uint64(i) + 1 //nolint:gosec // test counter
+		g.event(t, event.Event{EventID: id, Kind: event.KindPageview, TS: g.now.Add(-time.Hour).UnixMilli(),
+			Visitor: id, Pageview: id, Path: "/", Channel: "Referral", RefHost: ref})
 	}
-	g.waitApplied(t, uint64(len(refs)))
+	g.waitApplied(t, uint64(len(refs))) //nolint:gosec // test counter
 
 	code, out := do(t, c, "GET", base+"/report/links?from=2026-09-22&to=2026-09-22", "")
 	if code != 200 {

@@ -36,8 +36,9 @@ func visitsQ(t *testing.T, n int, fill func(i int, e *event.Event)) Q {
 	t.Cleanup(func() { lg.Close() })
 	base := time.Date(2026, 9, 10, 10, 0, 0, 0, time.UTC).UnixMilli()
 	for i := 0; i < n; i++ {
-		e := event.Event{Site: "s1", Kind: event.KindPageview, TS: base + int64(i)*1000, Visitor: uint64(i + 1), Pageview: uint64(i + 1),
-			EventID: uint64(i + 1), Path: "/", Channel: "Referral", Country: "US", Device: "Desktop", FirstSeen: base}
+		id := uint64(i) + 1 //nolint:gosec // test counter
+		e := event.Event{Site: "s1", Kind: event.KindPageview, TS: base + int64(i)*1000, Visitor: id, Pageview: id,
+			EventID: id, Path: "/", Channel: "Referral", Country: "US", Device: "Desktop", FirstSeen: base}
 		fill(i, &e)
 		b, _ := e.Marshal()
 		if _, err := lg.Append(ctx, b); err != nil {
@@ -49,7 +50,7 @@ func visitsQ(t *testing.T, n int, fill func(i int, e *event.Event)) Q {
 	wctx, cancel := context.WithCancel(ctx)
 	done := make(chan error, 1)
 	go func() { done <- w.Run(wctx) }()
-	for w.Applied() < uint64(n) {
+	for w.Applied() < uint64(n) { //nolint:gosec // test counter
 		time.Sleep(5 * time.Millisecond)
 	}
 	time.Sleep(100 * time.Millisecond)
