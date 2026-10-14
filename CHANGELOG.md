@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- A link tagged `?ref=trustmrr` and a visit from trustmrr.com are one source in the Referrers list: the tagged visits join the site's row when that site also sent visitors in the same period. A tag whose site never appeared stays as it is.
 - The uptime check spreads its looks over the whole 5 minutes instead of bunching most of them at the end, and only ever calls a plain domain: a site address with a port, login, `?` or `#` (for example `1.2.3.4:6379`) is refused when you add it, with a message saying to use just the domain, and is skipped by the check if it is already there.
 
 ## 0.7.19 (14 Oct 2026)
