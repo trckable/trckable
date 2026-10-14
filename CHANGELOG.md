@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Info tips stay inside their panel: a tip near the edge of a table or a sheet slides back in instead of being cut off.
+
 - Your links, in the ⋯ menu: every link you shared with a ?ref= tag or a utm_source as one row, with a bar for its visitors, the visitors who reached a goal, the revenue credited to it, a 30-day line and when it last brought someone, for the dashboard's period. A tag and the site it names count as one row. A tap on a row opens the dashboard for that link alone. Before the first tagged visit it offers a sample link to copy.
 
 ## 0.7.21 (14 Oct 2026)
