@@ -1,0 +1,5 @@
+{"data":{"posts":{"nodes":[
+ {"id":"1","name":"Acme Metrics","tagline":"Analytics without the creep","slug":"acme-metrics","url":"https://www.producthunt.com/posts/acme-metrics","website":"https://www.producthunt.com/r/ABC","votesCount":321,"createdAt":"2026-10-14T07:01:00Z","user":{"username":"maker1"}},
+ {"id":"2","name":"Other thing","tagline":"Unrelated","slug":"other","url":"https://www.producthunt.com/posts/other","website":"https://other.example","votesCount":10,"createdAt":"2026-10-14T07:05:00Z","user":{"username":"z"}},
+ {"id":"3","name":"A tool","tagline":"Works with acme.example","slug":"tool","url":"https://www.producthunt.com/posts/tool","website":"https://tool.example","votesCount":7,"createdAt":"2026-10-14T08:00:00Z","user":{"username":"q"}}
+]}}}

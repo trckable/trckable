@@ -177,3 +177,21 @@ func TestDedupeKeepsEachMilestoneOnceAtItsEarliestDay(t *testing.T) {
 		t.Errorf("the spikes: %+v", got[3:])
 	}
 }
+
+func TestExplainFoldsAMentionIntoItsSpike(t *testing.T) {
+	spike := Moment{T: "2026-10-14T14:00", Kind: "spike", Visitors: 300, Factor: 4.4, Referrer: "news.ycombinator.com"}
+	same := Moment{T: "2026-10-14T14:00", Kind: "mention", Mention: "hn", Brought: 212, Referrer: "news.ycombinator.com", Text: "Show HN"}
+	elsewhere := Moment{T: "2026-10-14T18:00", Kind: "mention", Mention: "news", Brought: 9, Referrer: "blog.example"}
+	other := Moment{T: "2026-10-14T14:00", Kind: "mention", Mention: "ph", Brought: 5, Referrer: "producthunt.com"}
+	got := Explain([]Moment{same, spike, elsewhere, other})
+	if len(got) != 3 || got[0].Kind != "spike" || got[0].Mention != "hn" || got[0].Brought != 212 {
+		t.Fatalf("the spike tells who posted it: %+v", got)
+	}
+	if got[1].Kind != "mention" || got[2].Kind != "mention" {
+		t.Fatalf("a mention that explains nothing stays: %+v", got)
+	}
+	Sort(got)
+	if got[0].Kind != "spike" {
+		t.Fatalf("%+v", got)
+	}
+}

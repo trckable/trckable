@@ -54,6 +54,9 @@ type API struct {
 	UpdateCheck bool
 	// HealthOf answers "is this thing still fine?" for Settings → Health.
 	HealthOf HealthSource
+	// MentionSources are the places mentions are searched (hn, news, and ph
+	// with a Product Hunt token), so the dashboard shows only those.
+	MentionSources []string
 	// PurgeAnalytics removes a site's rows from the analytics store. It runs on
 	// the writer's connection (the only one allowed to write DuckDB); nil while
 	// the store is still warming up, and deleting a site then is refused.
@@ -286,6 +289,9 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/busier", a.authed(a.busierNow))
 	handle("GET /api/v1/sites/{site}/incidents", a.authed(a.incidents))
 	handle("GET /api/v1/sites/{site}/probes", a.authed(a.probes))
+	handle("GET /api/v1/sites/{site}/mentions", a.authed(a.mentions))
+	handle("GET /api/v1/sites/{site}/mentions/keywords", a.authed(a.mentionKeywords))
+	handle("PUT /api/v1/sites/{site}/mentions/keywords", a.authed(a.setMentionKeywords))
 	handle("PATCH /api/v1/sites/{site}/incidents/{id}", a.authed(a.incidentNote))
 	handle("GET /api/v1/incidents", a.authed(a.accountIncidents))
 	handle("GET /api/v1/health", a.authed(a.health))

@@ -1,0 +1,109 @@
+package sqlite
+
+import (
+	"context"
+	"errors"
+	"reflect"
+	"strings"
+	"testing"
+)
+
+func TestMentionKeywordsAreCleanedAndCapped(t *testing.T) {
+	ctx := context.Background()
+	st, site := openIncidents(t)
+	if err := st.SetMentionKeywords(ctx, site, []string{" Acme  Metrics ", "acme metrics", "", "@acme"}, 100); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := st.MentionKeywords(ctx, site)
+	if !reflect.DeepEqual(got, []string{"Acme Metrics", "@acme"}) {
+		t.Fatalf("%v", got)
+	}
+	for name, bad := range map[string][]string{
+		"too short": {"ab"},
+		"quote":     {`say "hi"`},
+		"too long":  {strings.Repeat("x", 61)},
+		"eleven":    {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg", "hhh", "iii", "jjj", "kkk"},
+	} {
+		if err := st.SetMentionKeywords(ctx, site, bad, 1); !errors.Is(err, ErrKeywords) {
+			t.Errorf("%s: %v", name, err)
+		}
+	}
+	if kept, _ := st.MentionKeywords(ctx, site); len(kept) != 2 {
+		t.Fatalf("a refused list changed nothing: %v", kept)
+	}
+	// The address and the name come first, a word is searched once.
+	words := JoinWords(SiteRow{Domain: "a.com", Name: "Acme"}, []string{"acme", "@acme"})
+	if !reflect.DeepEqual(words, []string{"a.com", "Acme", "@acme"}) {
+		t.Fatalf("%v", words)
+	}
+}
+
+func TestMentionSavedOnceThenOnlyWhatChanges(t *testing.T) {
+	ctx := context.Background()
+	st, site := openIncidents(t)
+	m := Mention{Site: site, Source: "hn", URL: "https://news.ycombinator.com/item?id=1", Title: "Show HN", Host: "news.ycombinator.com", Points: 5, PostedAt: 1000}
+	if added, err := st.SaveMention(ctx, m, 2000); err != nil || !added {
+		t.Fatalf("%v %v", added, err)
+	}
+	m.Points, m.Front, m.Title, m.PostedAt = 40, true, "Show HN: new", 9999
+	if added, err := st.SaveMention(ctx, m, 3000); err != nil || added {
+		t.Fatalf("the same address is one mention: %v %v", added, err)
+	}
+	list, _ := st.Mentions(ctx, site, 0, 10000, 10)
+	if len(list) != 1 || list[0].Points != 40 || !list[0].Front || list[0].Title != "Show HN: new" || list[0].PostedAt != 1000 || list[0].FoundAt != 2000 {
+		t.Fatalf("%+v", list)
+	}
+	// Points never go down.
+	m.Points = 3
+	_, _ = st.SaveMention(ctx, m, 4000)
+	if list, _ = st.Mentions(ctx, site, 0, 10000, 10); list[0].Points != 40 {
+		t.Fatalf("%+v", list[0])
+	}
+}
+
+func TestMentionsPeriodScoreCursorPruneAndDelete(t *testing.T) {
+	ctx := context.Background()
+	st, site := openIncidents(t)
+	for i, at := range []int64{100, 200, 300} {
+		_, err := st.SaveMention(ctx, Mention{Site: site, Source: "news", URL: "https://x.example/" + string(rune('a'+i)), Host: "x.example", PostedAt: at}, 500)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	got, _ := st.Mentions(ctx, site, 150, 301, 10)
+	if len(got) != 2 || got[0].PostedAt != 300 {
+		t.Fatalf("newest first, inside the period: %+v", got)
+	}
+	if unscored, _ := st.MentionsToScore(ctx, 1000); len(unscored) != 3 {
+		t.Fatalf("a mention never scored is always to score: %d", len(unscored))
+	}
+	if err := st.SaveScore(ctx, got[0].ID, 212, 3600, 600); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.MarkMentionAlerted(ctx, got[0].ID); err != nil {
+		t.Fatal(err)
+	}
+	scored, _ := st.Mentions(ctx, site, 300, 301, 1)
+	if scored[0].Visitors != 212 || scored[0].PeakHour != 3600 || !scored[0].Alerted {
+		t.Fatalf("%+v", scored[0])
+	}
+	if err := st.SaveMentionCursor(ctx, site, "hn", MentionCursor{Cursor: 7, ETag: "e", CheckedAt: 9}); err != nil {
+		t.Fatal(err)
+	}
+	if c, _ := st.MentionCursors(ctx, "hn"); c[site] != (MentionCursor{Cursor: 7, ETag: "e", CheckedAt: 9}) {
+		t.Fatalf("%+v", c)
+	}
+	if n, err := st.PruneMentions(ctx, site, 250); err != nil || n != 2 {
+		t.Fatalf("%d %v", n, err)
+	}
+	_ = st.SetMentionKeywords(ctx, site, []string{"acme"}, 1)
+	if _, err := st.DeleteSite(ctx, site); err != nil {
+		t.Fatal(err)
+	}
+	for _, table := range []string{"mentions", "mention_keywords", "mention_cursor"} {
+		var n int
+		if err := st.DB.QueryRowContext(ctx, `SELECT count(*) FROM `+table).Scan(&n); err != nil || n != 0 {
+			t.Errorf("%s keeps %d rows of a deleted site (%v)", table, n, err)
+		}
+	}
+}

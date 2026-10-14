@@ -269,6 +269,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			return w.ErasePerson(ctx, site, visitor)
 		},
 	}
+	a.MentionSources = MentionSources(cfg.ProductHuntToken != "")
 	a.SendWeekly = s.sendWeeklyNow
 	a.OnSurge = s.tellSurge
 	if len(cfg.OIDC) > 0 {
@@ -478,6 +479,7 @@ func (s *Server) Run(ctx context.Context) error {
 	s.goGuarded("health alerts", func() { s.runHealthAlerts(wctx) }) // the installation's own problems, sent as they start and clear
 	s.goGuarded("checks", func() { s.runChecks(wctx) })              // each site's snippet, looked for once a day
 	s.goGuarded("uptime", func() { s.runUptime(wctx) })              // each homepage answers? looked at every few minutes
+	s.goGuarded("mentions", func() { s.runMentions(wctx) })          // where each site is talked about, searched every 20 minutes
 	s.goGuarded("log retry", func() { s.runLogRetry(wctx) })         // events again once a full disk has room
 
 	select {

@@ -1,0 +1,5 @@
+{"articles":[
+ {"url":"https://www.dailybyte.example/2026/10/acme-launches-a-new-dashboard/?utm_source=x","title":"Acme launches a new dashboard","seendate":"20261014T093500Z","domain":"dailybyte.example","language":"English"},
+ {"url":"https://blog.other.example/acme-review","title":"A review of Acme","seendate":"20261014T101500Z","domain":"blog.other.example","language":"English"},
+ {"url":"ftp://bad.example/x","title":"Bad","seendate":"20261014T101500Z","domain":"bad.example"}
+]}

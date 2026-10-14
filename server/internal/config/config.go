@@ -53,8 +53,15 @@ type Config struct {
 	// UptimeEvery: how often each site's homepage is looked at to tell whether it
 	// answers (TRCKABLE_UPTIME_EVERY, a duration such as 5m; default 5m, 0 turns it off).
 	UptimeEvery time.Duration
-	BackupS3    string // TRCKABLE_BACKUP_S3: https://key:secret@host/bucket/prefix?region=… (optional)
-	BackupDays  int    // TRCKABLE_BACKUP_KEEP_DAYS: off-site copies, every one for 7 days, then the newest of each day, up to this many days (default 30)
+	// MentionsEvery: how often Hacker News, Product Hunt and the news are
+	// searched for each site's name (TRCKABLE_MENTIONS_EVERY, a duration such as
+	// 20m; default 20m, 0 turns it off). ProductHuntToken is a Product Hunt
+	// developer token (TRCKABLE_PRODUCTHUNT_TOKEN); without one that source is
+	// left out and not shown.
+	MentionsEvery    time.Duration
+	ProductHuntToken string
+	BackupS3         string // TRCKABLE_BACKUP_S3: https://key:secret@host/bucket/prefix?region=… (optional)
+	BackupDays       int    // TRCKABLE_BACKUP_KEEP_DAYS: off-site copies, every one for 7 days, then the newest of each day, up to this many days (default 30)
 	// NoticeDays: how long a payment provider's raw notice (it carries the
 	// payer's email, name and address) is kept after it was read into the
 	// ledger (TRCKABLE_PAYMENT_NOTICE_DAYS, default 30; 0 keeps them). A site's
@@ -107,6 +114,8 @@ func Load() Config {
 		NoticeDays:   envDays("TRCKABLE_PAYMENT_NOTICE_DAYS", 30),
 	}
 	c.UptimeEvery = envDuration("TRCKABLE_UPTIME_EVERY", 5*time.Minute)
+	c.MentionsEvery = envDuration("TRCKABLE_MENTIONS_EVERY", 20*time.Minute)
+	c.ProductHuntToken = strings.TrimSpace(envFile("TRCKABLE_PRODUCTHUNT_TOKEN"))
 	c.OIDCRequireTOTP = !strings.EqualFold(strings.TrimSpace(os.Getenv("OIDC_REQUIRE_TOTP")), "false") && os.Getenv("OIDC_REQUIRE_TOTP") != "0"
 	c.OIDCSignup = envBool("OIDC_ALLOW_SIGNUP")
 	c.GAClientID = strings.TrimSpace(os.Getenv("GA_OAUTH_CLIENT_ID"))

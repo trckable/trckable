@@ -768,6 +768,45 @@ var migrations = []string{
 	// blocked, and marks those looks in the panel's list.
 	`ALTER TABLE site_probe ADD COLUMN blocked_since INTEGER NOT NULL DEFAULT 0;
 	ALTER TABLE site_probe_log ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0;`,
+	// 63: where a site is talked about
+	// (mentions.go, server/mentions.go): its extra search words, the
+	// mentions found (public facts only: a link, a short title, the author's
+	// handle, when) with the visitors they brought, and where each source was
+	// last looked at. All three go with the site.
+	`CREATE TABLE IF NOT EXISTS mention_keywords (
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		keyword    TEXT NOT NULL,
+		created_at INTEGER NOT NULL,
+		PRIMARY KEY (site_id, keyword)
+	) WITHOUT ROWID;
+	CREATE TABLE IF NOT EXISTS mentions (
+		id         INTEGER PRIMARY KEY AUTOINCREMENT,
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		source     TEXT NOT NULL,
+		url        TEXT NOT NULL,
+		kind       TEXT NOT NULL DEFAULT '',
+		title      TEXT NOT NULL DEFAULT '',
+		author     TEXT NOT NULL DEFAULT '',
+		host       TEXT NOT NULL DEFAULT '',
+		points     INTEGER NOT NULL DEFAULT 0,
+		front      INTEGER NOT NULL DEFAULT 0,
+		posted_at  INTEGER NOT NULL,
+		found_at   INTEGER NOT NULL,
+		visitors   INTEGER NOT NULL DEFAULT 0,
+		peak_hour  INTEGER NOT NULL DEFAULT 0,
+		scored_at  INTEGER NOT NULL DEFAULT 0,
+		alerted    INTEGER NOT NULL DEFAULT 0,
+		UNIQUE (site_id, url)
+	);
+	CREATE INDEX IF NOT EXISTS mentions_site_time ON mentions(site_id, posted_at);
+	CREATE TABLE IF NOT EXISTS mention_cursor (
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		source     TEXT NOT NULL,
+		cursor     INTEGER NOT NULL DEFAULT 0,
+		etag       TEXT NOT NULL DEFAULT '',
+		checked_at INTEGER NOT NULL DEFAULT 0,
+		PRIMARY KEY (site_id, source)
+	) WITHOUT ROWID;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
