@@ -1,5 +1,5 @@
-// The small panel under an answer: what was measured, why it matters, and the
-// one thing to do. Lazy (its words are a chunk of their own). `slot` is the place
+// The tooltip behind a card: what was measured, why it matters, and the one
+// thing to do. Lazy (its words are a chunk of their own). `slot` is the place
 // for one more action beside the panel's own; nothing fills it here.
 import type { ReactNode } from 'react'
 import { explainCopy } from './explainCopy'
@@ -15,11 +15,9 @@ export interface ExplainProps {
 export default function Explain({ answer, todo, slot }: ExplainProps) {
   return (
     <div className="sv-explain">
-      {answer.sub && (
-        <p>
-          <b>{explainCopy.measured}</b> {answer.sub}
-        </p>
-      )}
+      <p>
+        <b>{explainCopy.measured}</b> {answer.line}
+      </p>
       <p>
         <b>{explainCopy.matters}</b> {explainCopy.why[answer.key]}
       </p>

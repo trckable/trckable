@@ -55,7 +55,7 @@ describe('thin data', () => {
   })
   it('says the fix answer is not ready, and counts one visitor in the singular', () => {
     const a = storyOf(few).answers
-    expect(a.find((x) => x.key === 'fix')).toMatchObject({ line: 'Not enough visits yet to tell what to fix.', big: '–' })
+    expect(a.find((x) => x.key === 'fix')).toMatchObject({ line: 'Not enough visits yet to tell what to fix.', viz: { kind: 'fix', count: -1 } })
     expect(a).toHaveLength(5)
     expect(a.find((x) => x.key === 'did')?.line).toContain('1 visitor so far')
   })
@@ -232,7 +232,7 @@ describe('the bounce card', () => {
 
 describe('plain words', () => {
   const seen = (visitors: number) => result({ visitors }, [['Search', visitors]])
-  it('never says too early, and a shown number agrees with its sentence', () => {
+  it('never says too early, and the number agrees with its sentence', () => {
     const a = storyOf({ cur: seen(28438), goals: false }).answers
     for (const x of a) expect(`${x.line} ${x.sub}`.toLowerCase()).not.toContain('too early')
     const did = a.find((x) => x.key === 'did')
@@ -250,5 +250,18 @@ describe('plain words', () => {
     expect(learningOf(i)).toEqual({ days: 3, ready: '2026-10-19' })
     expect(learningOf({ ...i, first: '2026-10-01' })).toBeUndefined()
     expect(learningOf({ ...i, prev: seen(40) })).toBeUndefined()
+  })
+})
+
+describe('pictures', () => {
+  it('says a doubling as a times and a drop as a percent, and draws no earlier bar before there is one', () => {
+    const a = (prev?: Result) => storyOf({ cur: result({ visitors: 200 }), prev, goals: false }).answers[0]
+    expect(a(result({ visitors: 100 })).big).toBe('+2×')
+    expect(a(result({ visitors: 250 })).big).toBe('−20%')
+    expect(a().viz).toEqual({ kind: 'bars', now: 200 })
+  })
+  it('greys the gauge until there is something to compare with', () => {
+    const fine = storyOf({ cur: result({}), goals: false }).answers.find((x) => x.key === 'fine')
+    expect(fine?.viz).toEqual({ kind: 'gauge' })
   })
 })

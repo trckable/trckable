@@ -55,8 +55,6 @@ export const copy = defineCopy('storyview', {
   notCounted: 'not counted',
   connect: 'Connect Stripe to see it',
   connectChip: 'Connect Stripe',
-  stripNoBefore: 'Nothing to compare with yet.',
-  stripFew: 'Too few visits yet to judge these.',
   noBefore: 'No earlier period to compare with yet',
   tooFew: 'Too few visits yet',
   normalTip: 'Normal is the period before this one. It needs a few days of data.',
@@ -124,7 +122,9 @@ export const copy = defineCopy('storyview', {
   wordMixed: 'Mostly good',
   wordBad: 'Not good',
   // Until there is an earlier period to compare with: one card, no guesses.
-  learnLine: (date: string) => `We need 7 days to compare. Ready on ${date}.`,
+  learnReady: (date: string) => `Ready ${date}`,
+  home: 'Home',
+  allGood: 'All good',
   learnDays: (n: number) => `${n} of 7 days`,
   what: 'What does this mean?',
   // Asking, and the verdict.

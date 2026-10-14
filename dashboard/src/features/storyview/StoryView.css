@@ -280,31 +280,6 @@
 .sv-answer.page {
   grid-column: span 5;
 }
-.sv-answer.fine.good .sv-big {
-  color: var(--up);
-}
-.sv-answer.fine.warn .sv-big {
-  color: var(--warn);
-}
-.sv-answer.fine.bad .sv-big {
-  color: var(--down);
-}
-.sv-answer .kit-area {
-  display: block;
-  height: 56px;
-}
-.sv-answer .kit-area svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-/* Equal heights per row, the chart on the bottom edge whatever the text above */
-.sv-answer .kit-chart {
-  margin-top: auto;
-}
-.sv-answer .sv-link {
-  margin: 6px 0 12px;
-}
 .sv-explain {
   display: grid;
   gap: 6px;
@@ -325,44 +300,164 @@
   flex-wrap: wrap;
   gap: 14px;
 }
-.sv-a-line code {
-  font: 500 13px var(--mono, ui-monospace, monospace);
-  word-break: break-all;
-}
 .sv-learn {
-  display: grid;
-  gap: 8px;
-  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius, 12px);
   font-size: 14px;
 }
-.sv-learn p {
-  margin: 0;
+.sv-learn-days {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  max-width: 280px;
 }
-.sv-learn-bar {
-  height: 3px;
-  border-radius: 2px;
+.sv-learn-days i {
+  flex: 1;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--border);
+}
+.sv-learn-days i.on {
+  background: var(--accent);
+}
+.sv-info {
+  display: inline-grid;
+  place-items: center;
+  padding: 2px;
+  border: 0;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.sv-info:hover,
+.sv-info[aria-expanded='true'] {
+  color: var(--text);
+}
+.sv-big {
+  font-size: 34px;
+  line-height: 1;
+}
+.sv-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 72px;
+  margin-top: 12px;
+}
+.sv-bars i {
+  width: 36px;
+  border-radius: 6px 6px 2px 2px;
+}
+.sv-bars .was {
+  background: var(--border);
+}
+.sv-bars .now {
+  background: var(--accent);
+}
+.sv-pages {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.sv-pages li {
+  display: grid;
+  grid-template-columns: minmax(0, 7em) 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.sv-pages-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sv-pages-bar {
+  height: 10px;
+  border-radius: 5px;
   background: var(--border);
   overflow: hidden;
 }
-.sv-learn-bar i {
+.sv-pages-bar i {
   display: block;
   height: 100%;
   background: var(--accent);
 }
-.sv-tiles-note {
-  margin: -4px 0 0;
+.sv-sources {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+.sv-stack {
+  display: flex;
+  height: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--border);
+}
+.sv-stack i {
+  height: 100%;
+}
+.sv-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   font-size: 13px;
 }
-.sv-a-line {
-  margin-top: 8px;
-  font-size: 14px;
-  line-height: 1.4;
-  font-weight: 500;
+.sv-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-.sv-answer.quiet .sv-a-line {
-  opacity: 0.7;
+.sv-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.sv-fix {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-weight: 600;
+}
+.sv-fix > svg,
+.sv-fix.bad b {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 7px;
+  border-radius: 50%;
+  color: #fff;
+}
+.sv-fix.good > svg {
+  background: var(--up);
+}
+.sv-fix.off > svg {
+  background: var(--border);
+}
+.sv-fix.bad b {
+  padding: 0;
+  background: var(--down);
+  font-size: 15px;
+}
+.sv-gauge {
+  display: block;
+  width: 150px;
+  margin-top: 8px;
+}
+.sv-answer .sv-link {
+  margin-top: 10px;
 }
 .sv-link {
   display: inline-flex;
@@ -510,10 +605,9 @@
   .sv-answer {
     grid-column: span 12;
   }
-  .sv-answers .sv-link {
+  .sv-info {
     min-width: var(--ph-hit, 44px);
     min-height: var(--ph-hit, 44px);
-    justify-content: center;
   }
   /* A card above the screen's foot, the width of the page, buttons a finger tall. */
   .sv-ask {

@@ -1,5 +1,5 @@
-// "What does this mean?" under an answer opens a small panel: what was
-// measured, why it matters, and one button; a second press closes it.
+// The i on an answer card opens its tooltip: what was measured, why it
+// matters, and one button; Escape closes it.
 import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
@@ -12,18 +12,16 @@ test.beforeAll(async ({ browser }) => {
   await ctx.close()
 })
 
-test('an answer explains itself in three short lines and one button', async ({ page, browserName }) => {
+test('an answer explains itself in its tooltip: two lines and one button', async ({ page, browserName }) => {
   test.skip(browserName !== 'chromium', 'one browser is enough')
   await page.context().addCookies([{ name: 'trckable_session', value: await session('explain'), url: API }])
   await page.goto(`${API}/example.com?v=story`)
-  const card = page.locator('.sv-answers .sv-answer').first()
-  const ask = card.getByRole('button', { name: 'What does this mean?' })
-  await expect(ask).toHaveAttribute('aria-expanded', 'false')
+  const ask = page.locator('.sv-answers .sv-answer').first().getByRole('button', { name: 'What does this mean?' })
   await ask.focus()
   await page.keyboard.press('Enter')
-  await expect(ask).toHaveAttribute('aria-expanded', 'true')
-  const panel = card.locator('.sv-explain')
+  const panel = page.locator('.sv-explain')
   await expect(panel).toContainText('Why it matters')
-  await ask.click()
+  await expect(panel.getByRole('button')).toHaveCount(1)
+  await page.keyboard.press('Escape')
   await expect(panel).toHaveCount(0)
 })

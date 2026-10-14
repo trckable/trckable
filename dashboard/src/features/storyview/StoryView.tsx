@@ -29,7 +29,6 @@ import { sinceOf, storyOf, takeawayOf } from './rules'
 import { Tiles } from './Tiles'
 import { tileSeries } from './tileSeries'
 import { useHints } from './useHints'
-import { useOwnSeries } from './useOwnSeries'
 import { useSince } from './useSince'
 
 const ProviderCard = lazy(() => import('../overview/ProviderCard').then((m) => ({ default: m.ProviderCard })))
@@ -71,7 +70,6 @@ export default function StoryView(p: StoryViewProps) {
   const since = useSince(p.site)
   const told = sinceOf(since.found?.items ?? [], fmt)
   const { hints, away } = useHints(p.site)
-  const own = useOwnSeries(p.site.id, p.query, facts.answers)
   // A moment of one day opens that day, as a pin always did; a longer one opens its days.
   const open = (m: Span) =>
     m.i0 === m.i1
@@ -130,7 +128,7 @@ export default function StoryView(p: StoryViewProps) {
         {marks.length === 0 && pins && <p className="sv-none faint">{copy.noMoments}</p>}
       </Card>
 
-      <Answers answers={facts.answers} onConnect={() => setConnect(true)} onGoal={p.onGoal} site={p.site} series={{ visitors: cur.series.map((x) => x.visitors), was: data.previous?.series.map((x) => x.visitors), revenue: p.money ? cur.series.map((x) => x.revenue ?? 0) : undefined, own }} hints={hints} onAway={away} />
+      <Answers answers={facts.answers} onConnect={() => setConnect(true)} onGoal={p.onGoal} site={p.site} hints={hints} onAway={away} />
       <Ask />
       {connect && (
         <Suspense fallback={null}>
