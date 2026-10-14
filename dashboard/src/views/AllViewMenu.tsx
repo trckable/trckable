@@ -9,7 +9,7 @@ import { Popover, Segmented } from '../kit'
 import type { Site } from '../lib/api'
 import { copy as incidents } from '../features/incidents/copy'
 import { copy } from './allSitesCopy'
-import { differs, LAYOUTS, type Layout, type View, type ViewLens } from './allView'
+import { hasLayout, LAYOUTS, menuDiffers, type Layout, type View, type ViewLens } from './allView'
 import '../components/sheet.css'
 
 type Props = { view: View; sites: Site[]; money: boolean; change: (c: Partial<View>) => void; reset: () => void }
@@ -49,9 +49,10 @@ export function AllViewMenu({ view, sites, money, change, reset }: Props) {
       className="menu all-view"
       maxHeight={640}
       trigger={(p) => (
-        <button type="button" className="btn ghost" {...p} aria-haspopup="dialog">
+        <button type="button" className="btn" {...p} aria-haspopup="dialog">
           <SlidersHorizontal size={15} aria-hidden="true" />
           {copy.view}
+          {menuDiffers(view) && <span className="all-view-dot" aria-hidden="true" />}
         </button>
       )}
     >
@@ -60,25 +61,27 @@ export function AllViewMenu({ view, sites, money, change, reset }: Props) {
           <Section title={copy.show}>
             <Segmented label={copy.show} value={view.lens} onChange={(lens) => change({ lens })} options={lenses.map((l) => ({ value: l, label: lensLabel[l] }))} />
           </Section>
-          <Section title={copy.layout}>
-            <Segmented
-              label={copy.layout}
-              value={view.layout}
-              onChange={(layout) => change({ layout })}
-              options={LAYOUTS.map((l) => {
-                const Icon = LAYOUT_ICON[l]
-                return {
-                  value: l,
-                  label: (
-                    <>
-                      <Icon size={14} aria-hidden="true" />
-                      {layoutLabel[l]}
-                    </>
-                  ),
-                }
-              })}
-            />
-          </Section>
+          {hasLayout(view) && (
+            <Section title={copy.layout}>
+              <Segmented
+                label={copy.layout}
+                value={view.layout}
+                onChange={(layout) => change({ layout })}
+                options={LAYOUTS.map((l) => {
+                  const Icon = LAYOUT_ICON[l]
+                  return {
+                    value: l,
+                    label: (
+                      <>
+                        <Icon size={14} aria-hidden="true" />
+                        {layoutLabel[l]}
+                      </>
+                    ),
+                  }
+                })}
+              />
+            </Section>
+          )}
           {sites.length > 1 && (
             <Section
               title={copy.sites}
@@ -99,7 +102,7 @@ export function AllViewMenu({ view, sites, money, change, reset }: Props) {
               </div>
             </Section>
           )}
-          {differs(view) && (
+          {menuDiffers(view) && (
             <button type="button" className="all-view-reset" data-nav onClick={reset}>
               {copy.reset}
             </button>

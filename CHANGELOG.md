@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- The View menu on Sites only offers what changes the page: Layout is gone from Uptime, which has its own list. The Add site button is gone from the Sites header (it stays in the site menu). Period and View look like one set (same height, radius and icon size), and View shows a small dot when it differs from the default.
+
 ## 0.7.18 (14 Oct 2026)
 
 - The foot of every page is one faint line: the ghost and how the server is doing (normal, delayed, or can't be reached, checked once a minute while the tab is open), then the version, Changelog, Docs, Feedback and the shortcuts. Feedback opens a small box; what people write is kept for the instance's owners, who can read it at `/api/v1/admin/feedback`. On a phone only the dot, the version and the shortcuts stay.

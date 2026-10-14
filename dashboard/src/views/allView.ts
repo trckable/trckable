@@ -67,6 +67,12 @@ export function saveView(v: View) {
 
 export const differs = (v: View): boolean => v.days !== DEFAULT_VIEW.days || v.lens !== DEFAULT_VIEW.lens || v.layout !== DEFAULT_VIEW.layout || v.sites.length > 0
 
+/** Layout only applies to the numbers: Uptime is its own list, so there the menu does not offer it. */
+export const hasLayout = (v: Pick<View, 'lens'>): boolean => v.lens !== 'uptime'
+
+/** Whether what the menu shows differs from the start: a setting the menu hides in this mode does not count. */
+export const menuDiffers = (v: View): boolean => v.days !== DEFAULT_VIEW.days || v.lens !== DEFAULT_VIEW.lens || (hasLayout(v) && v.layout !== DEFAULT_VIEW.layout) || v.sites.length > 0
+
 export function useAllView(): [View, (change: Partial<View>) => void, () => void] {
   const [view, setView] = useState(readView)
   const change = (c: Partial<View>) => {

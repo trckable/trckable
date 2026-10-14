@@ -967,7 +967,6 @@ export default {
 
   // allsites
   'allsites.title': 'Siti',
-  'allsites.addSite': 'Aggiungi sito',
   'allsites.reading': 'Lettura di tutti i siti…',
   'allsites.periodLabel': (days: number) => (days === 365 ? 'Ultimi 12 mesi' : `Ultimi ${days} giorni`),
   'allsites.siteCount': (n: number) => `${n} ${n === 1 ? 'sito' : 'siti'}`,

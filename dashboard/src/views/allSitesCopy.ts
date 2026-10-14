@@ -4,7 +4,6 @@ import { defineCopy } from '../i18n'
 export const copy = defineCopy('allsites', {
   // The head.
   title: 'Sites',
-  addSite: 'Add site',
   reading: 'Reading every site…',
   periodLabel: (days: number) => (days === 365 ? 'Last 12 months' : `Last ${days} days`),
   summary: (period: string, lens: string, sites: string) => `${period} · ${lens} · ${sites}`,
