@@ -6,7 +6,7 @@ import { useMemo } from 'react'
 import { Loading } from '../components/loading/Loading'
 import { StateDot } from '../features/sites/StateDot'
 import { copy } from '../features/incidents/copy'
-import { dayStates, daysBetween, accountTotals, duration, rowTotals, silentAllPeriod } from '../features/incidents/model'
+import { dayStates, daysBetween, accountTotals, duration, rowTotals, silentAllPeriod, uptimeOf } from '../features/incidents/model'
 import { incidentsPath } from '../features/incidents/route'
 import { useAccountIncidents, useNow } from '../features/incidents/useIncidents'
 import type { Incident } from '../features/incidents/api'
@@ -21,10 +21,12 @@ const DAY = 86400
 /** The period ids the dashboard knows for the days All sites offers. */
 const PERIOD: Record<number, string> = { 7: '7d', 30: '30d', 90: '90d', 365: '12mo' }
 
-function Row({ site, mine, days, now }: { site: Site; mine: Incident[]; days: number; now: number }) {
+function Row({ site, mine, days, now, quiet }: { site: Site; mine: Incident[]; days: number; now: number; quiet?: boolean }) {
   const today = todayIn(site.timezone)
-  const states = useMemo(() => dayStates(mine, daysBetween(addDays(today, 1 - days), today), site.timezone, now), [mine, days, today, site.timezone, now])
-  const t = rowTotals(mine, days, now)
+  const states = useMemo(() => dayStates(mine, daysBetween(addDays(today, 1 - days), today), site.timezone, now, site.watched_since), [mine, days, today, site.timezone, now, site.watched_since])
+  const t = rowTotals(mine, days, now, site.watched_since)
+  const up = uptimeOf(t.span, t.seconds, quiet)
+  const figs = up ? [copy.allRow(up.pct.toFixed(1), t.count, duration(t.seconds)), up.downOnly && copy.downOnly].filter(Boolean).join(' · ') : copy.notWatched
   const name = site.name || site.domain
   return (
     <button type="button" className="up-row" aria-label={copy.allOpen(name)} onClick={() => navigate(incidentsPath(site.domain) + '?period=' + PERIOD[days])}>
@@ -37,13 +39,13 @@ function Row({ site, mine, days, now }: { site: Site; mine: Incident[]; days: nu
           <i key={d} className={s} />
         ))}
       </span>
-      <span className="up-figs muted">{silentAllPeriod(mine, now - days * DAY) ? copy.noVisitsAll : copy.allRow(t.pct.toFixed(1), t.count, duration(t.seconds))}</span>
+      <span className="up-figs muted">{silentAllPeriod(mine, now - days * DAY) ? copy.noVisitsAll : figs}</span>
     </button>
   )
 }
 
 export function AllUptime({ sites, days }: { sites: Site[]; days: number }) {
-  const { list, ready, failed } = useAccountIncidents(days)
+  const { list, quiet, ready, failed } = useAccountIncidents(days)
   const now = useNow()
   const by = useMemo(() => {
     const m = new Map<string, Incident[]>()
@@ -52,7 +54,12 @@ export function AllUptime({ sites, days }: { sites: Site[]; days: number }) {
   }, [list])
   if (failed) return <p className="muted" role="alert">{copy.failed}</p>
   if (!ready) return <Loading height={200} />
-  const shown = sites.map((s) => ({ s, t: rowTotals(by.get(s.id) ?? [], days, now), silent: silentAllPeriod(by.get(s.id) ?? [], now - days * DAY) })).sort((a, b) => Number(a.silent) - Number(b.silent) || a.t.pct - b.t.pct)
+  const shown = sites
+    .map((s) => {
+      const t = rowTotals(by.get(s.id) ?? [], days, now, s.watched_since)
+      return { s, t, silent: silentAllPeriod(by.get(s.id) ?? [], now - days * DAY) || t.span <= 0 }
+    })
+    .sort((a, b) => Number(a.silent) - Number(b.silent) || a.t.pct - b.t.pct)
   // A site with no visit all period says nothing about uptime: it stays out of the average.
   const total = accountTotals(sites, list, days, now)
   return (
@@ -60,13 +67,14 @@ export function AllUptime({ sites, days }: { sites: Site[]; days: number }) {
       <h2 className="up-head">{copy.allSummary(all.siteCount(sites.length), total.pct.toFixed(1), total.count)}</h2>
       <div className="up-list">
         {shown.map((x) => (
-          <Row key={x.s.id} site={x.s} mine={by.get(x.s.id) ?? []} days={days} now={now} />
+          <Row key={x.s.id} site={x.s} mine={by.get(x.s.id) ?? []} days={days} now={now} quiet={quiet[x.s.id]} />
         ))}
       </div>
       <ul className="inc-legend" aria-hidden="true">
         <li className="ok">{copy.legendOk}</li>
         <li className="quiet">{copy.legendQuiet}</li>
         <li className="down">{copy.legendDown}</li>
+        {sites.some((s) => (s.watched_since ?? 0) > now - days * DAY) && <li className="unwatched">{copy.legendUnwatched}</li>}
       </ul>
     </div>
   )

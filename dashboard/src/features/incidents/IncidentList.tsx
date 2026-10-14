@@ -75,7 +75,6 @@ export function IncidentList({ list, next, busy, failed, now, more, edit }: { li
   return (
     <section aria-label={copy.list}>
       <h2>{copy.list}</h2>
-      {list.length === 0 && !failed && <p className="muted">{copy.none}</p>}
       {failed && <p className="muted" role="alert">{copy.failed}</p>}
       <ul className="inc-rows">
         {list.map((x) => (

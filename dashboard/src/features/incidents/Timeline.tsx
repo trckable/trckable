@@ -2,19 +2,20 @@
 // touched it. A short period is a strip; a year is a calendar grid (a column a
 // week, like a contributions grid). The list below says the same in words.
 import { useMemo } from 'react'
+import { Tooltip } from '../../kit'
 import { fmtDay } from '../../lib/dates'
 import type { Incident } from './api'
 import { copy } from './copy'
-import { dayStates, daysBetween, type DayState } from './model'
+import { dayLasted, dayStates, daysBetween, duration, type DayState } from './model'
 
 /** From this many days on, the strip becomes the year's grid. */
 export const GRID_FROM = 120
 
-const say: Record<DayState, (d: string) => string> = { ok: copy.dayOk, quiet: copy.dayQuiet, down: copy.dayDown }
+const say: Record<DayState, (day: string, span: string) => string> = { ok: copy.dayOk, quiet: copy.dayQuiet, down: copy.dayDown, unwatched: copy.dayUnwatched }
 
-export function Timeline({ list, from, to, tz, now }: { list: Incident[]; from: string; to: string; tz: string; now: number }) {
+export function Timeline({ list, from, to, tz, now, watchedSince = 0 }: { list: Incident[]; from: string; to: string; tz: string; now: number; watchedSince?: number }) {
   const days = useMemo(() => daysBetween(from, to), [from, to])
-  const states = useMemo(() => dayStates(list, days, tz, now), [list, days, tz, now])
+  const states = useMemo(() => dayStates(list, days, tz, now, watchedSince), [list, days, tz, now, watchedSince])
   const grid = days.length >= GRID_FROM
   // The grid starts on a Monday: blank cells fill the first week.
   const lead = grid ? (new Date(days[0] + 'T00:00:00Z').getUTCDay() + 6) % 7 : 0
@@ -24,14 +25,21 @@ export function Timeline({ list, from, to, tz, now }: { list: Incident[]; from: 
         {Array.from({ length: lead }, (_, i) => (
           <i key={`b${i}`} className="blank" />
         ))}
-        {days.map((d) => (
-          <i key={d} className={states.get(d) ?? 'ok'} title={say[states.get(d) ?? 'ok'](fmtDay(d, { year: true }))} />
-        ))}
+        {days.map((d, n) => {
+          const state = states.get(d) ?? 'ok'
+          const text = say[state](fmtDay(d, { year: true }), state === 'ok' || state === 'unwatched' ? '' : duration(dayLasted(list, d, tz, now)))
+          return (
+            <Tooltip key={d} text={text} align={n > days.length / 2 ? 'right' : 'left'}>
+              {(p) => <i className={state} {...p} />}
+            </Tooltip>
+          )
+        })}
       </div>
       <ul className="inc-legend" aria-hidden="true">
         <li className="ok">{copy.legendOk}</li>
         <li className="quiet">{copy.legendQuiet}</li>
         <li className="down">{copy.legendDown}</li>
+        {[...states.values()].includes('unwatched') && <li className="unwatched">{copy.legendUnwatched}</li>}
       </ul>
     </section>
   )

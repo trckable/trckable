@@ -34,20 +34,21 @@ export function dayIn(unix: number, tz: string): string {
   return f.format(new Date(unix * 1000))
 }
 
-export type DayState = 'ok' | 'quiet' | 'down'
+export type DayState = 'ok' | 'quiet' | 'down' | 'unwatched'
 
 /** How long it lasted; an open one lasts until now. */
 export const lasted = (x: Incident, now: number): number => (x.ended_at ?? now) - x.started_at
 
-/** The days of a period (YYYY-MM-DD, oldest first), each coloured by the worst incident that touched it: down over quiet over none. */
-export function dayStates(list: Incident[], days: string[], tz: string, now: number): Map<string, DayState> {
-  const out = new Map<string, DayState>(days.map((d) => [d, 'ok']))
+/** The days of a period (YYYY-MM-DD, oldest first), each coloured by the worst incident that touched it: down over quiet over none. Days before `watchedSince` (unix seconds, when the site's incidents began to be recorded) are unknown, not clear, unless an incident says otherwise. */
+export function dayStates(list: Incident[], days: string[], tz: string, now: number, watchedSince = 0): Map<string, DayState> {
+  const first0 = watchedSince > 0 ? dayIn(watchedSince, tz) : ''
+  const out = new Map<string, DayState>(days.map((d) => [d, d < first0 ? 'unwatched' : 'ok']))
   for (const x of list) {
     const first = dayIn(x.started_at, tz)
     const last = dayIn(x.ended_at ?? now, tz)
     for (const d of days) {
       if (d < first || d > last) continue
-      if (x.kind === 'down' || out.get(d) === 'ok') out.set(d, x.kind)
+      if (x.kind === 'down' || out.get(d) === 'ok' || out.get(d) === 'unwatched') out.set(d, x.kind)
     }
   }
   return out
@@ -59,6 +60,11 @@ export function uptimePct(period: number, affected: number): number {
   const pct = (1 - Math.min(affected, period) / period) * 100
   const r = Math.round(pct * 10) / 10
   return affected > 0 && r >= 100 ? 99.9 : r
+}
+
+/** The uptime a period earns, said once for the page and for All sites: nothing when none of it was watched (span <= 0), else the share and whether only down checks stood behind it (a site too quiet for quiet spells to be recorded). */
+export function uptimeOf(span: number, affected: number, quietTracked?: boolean): { pct: number; downOnly: boolean } | null {
+  return span > 0 ? { pct: uptimePct(span, affected), downOnly: quietTracked === false } : null
 }
 
 /** Time spent in incidents inside [from, to]; overlapping ones are counted once. */
@@ -74,6 +80,12 @@ export function affectedSeconds(list: Incident[], from: number, to: number, now:
     end = Math.max(end, b)
   }
   return total
+}
+
+/** The time one calendar day (in a time zone) was spent in incidents. */
+export function dayLasted(list: Incident[], day: string, tz: string, now: number): number {
+  const next = new Date(Date.parse(day + 'T00:00:00Z') + DAY * 1000).toISOString().slice(0, 10)
+  return affectedSeconds(list, startOfDay(day, tz), startOfDay(next, tz), now)
 }
 
 /** The days from `from` to `to`, oldest first. */
@@ -98,33 +110,34 @@ export function startOfDay(day: string, tz: string): number {
   return utc - offset
 }
 
-/** The incident figure for a whole All sites row: its totals over `days` days. */
-export function rowTotals(list: Incident[], days: number, now: number): { count: number; seconds: number; pct: number } {
-  const from = now - days * DAY
+/** The incident figure for a whole All sites row: its totals over the last `days` days, of the time since `watchedSince` only (`span` is those seconds; none when nothing was watched). */
+export function rowTotals(list: Incident[], days: number, now: number, watchedSince = 0): { count: number; seconds: number; pct: number; span: number } {
+  const from = Math.max(now - days * DAY, watchedSince)
   const mine = list.filter((x) => (x.ended_at ?? now) > from)
   const seconds = affectedSeconds(mine, from, now, now)
-  return { count: mine.length, seconds, pct: uptimePct(days * DAY, seconds) }
+  const span = Math.max(0, now - from)
+  return { count: mine.length, seconds, pct: uptimePct(span, seconds), span }
 }
 
 /** A site that has had no visit for the whole period: its incident is still open and began before it. Its uptime says nothing worth a number. */
 export const silentAllPeriod = (list: Incident[], from: number): boolean => list.some((x) => x.ended_at === null && x.started_at < from)
 
 /** All sites' totals over `days` days: the incidents, the time-weighted uptime, and the sites down right now. Every incident counts; a silent site stays out of the uptime average only. */
-export function accountTotals(sites: { id: string }[], list: Incident[], days: number, now: number): { count: number; pct: number; down: string[] } {
+export function accountTotals(sites: { id: string; watched_since?: number }[], list: Incident[], days: number, now: number): { count: number; pct: number; down: string[] } {
   const from = now - days * DAY
   let count = 0
   let seconds = 0
-  let counted = 0
+  let span = 0
   const down: string[] = []
   for (const s of sites) {
     const mine = list.filter((x) => x.site === s.id)
     if (mine.some((x) => x.kind === 'down' && x.ended_at === null)) down.push(s.id)
-    const t = rowTotals(mine, days, now)
+    const t = rowTotals(mine, days, now, s.watched_since)
     count += t.count
-    if (silentAllPeriod(mine, from)) continue
+    if (silentAllPeriod(mine, from) || t.span <= 0) continue
     seconds += t.seconds
-    counted++
+    span += t.span
   }
-  const pct = counted ? Math.max(0, 100 - (seconds / (counted * days * DAY)) * 100) : 100
+  const pct = span ? Math.max(0, 100 - (seconds / span) * 100) : 100
   return { count, pct: seconds > 0 && pct >= 99.95 ? 99.9 : pct, down }
 }

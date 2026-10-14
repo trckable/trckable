@@ -1,9 +1,11 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
@@ -44,6 +46,37 @@ func summarize(list []sqlite.Incident, from, to int64) incidentSummary {
 	return s
 }
 
+// quietTracked says whether the site is busy enough for quiet spells to be
+// recorded at all (server/incidents.go busyEnough: on average a visit an hour
+// over the last four weeks, or over the time it has existed, at least a day).
+// A quieter one has its down periods recorded only. nil when the analytics
+// store is not ready or cannot tell.
+func (a *API) quietTracked(ctx context.Context, site string, now time.Time) *bool {
+	q := a.Query()
+	if q == nil {
+		return nil
+	}
+	var first *time.Time
+	if err := q.DB.QueryRowContext(ctx, `SELECT min(start) FROM sessions WHERE site_id = ?`, site).Scan(&first); err != nil {
+		return nil
+	}
+	yes := false
+	if first == nil {
+		return &yes
+	}
+	from := max(first.Unix(), now.Unix()-4*7*86400)
+	if now.Unix()-from < 86400 {
+		return &yes
+	}
+	var n int64
+	if err := q.DB.QueryRowContext(ctx, `SELECT count(*) FROM sessions WHERE site_id = ? AND start >= ? AND start < ?`,
+		site, time.Unix(from, 0).UTC(), now.UTC()).Scan(&n); err != nil {
+		return nil
+	}
+	yes = float64(n) >= float64(now.Unix()-from)/3600
+	return &yes
+}
+
 func intParam(r *http.Request, name string) int64 {
 	n, _ := strconv.ParseInt(r.URL.Query().Get(name), 10, 64)
 	return max(n, 0)
@@ -73,6 +106,9 @@ func (a *API) incidents(w http.ResponseWriter, r *http.Request) {
 		}
 		out["summary"] = summarize(list, from, to)
 		out["incidents"] = list
+		if t := a.quietTracked(r.Context(), site, a.Now()); t != nil {
+			out["quiet_tracked"] = *t
+		}
 		w.Header().Set("Cache-Control", "private, no-store")
 		writeJSON(w, http.StatusOK, out)
 		return
@@ -114,8 +150,19 @@ func (a *API) accountIncidents(w http.ResponseWriter, r *http.Request) {
 			out = append(out, x)
 		}
 	}
+	// Which of those sites are busy enough for quiet spells to be recorded.
+	quiet := map[string]bool{}
+	sites, _ := a.Ctl.ListSites(r.Context(), p.account)
+	for _, s := range sites {
+		if !p.sees(s.ID) {
+			continue
+		}
+		if t := a.quietTracked(r.Context(), s.ID, a.Now()); t != nil {
+			quiet[s.ID] = *t
+		}
+	}
 	w.Header().Set("Cache-Control", "private, no-store")
-	writeJSON(w, http.StatusOK, map[string]any{"incidents": out})
+	writeJSON(w, http.StatusOK, map[string]any{"incidents": out, "quiet_tracked": quiet})
 }
 
 // incidentNote is PATCH /api/v1/sites/{site}/incidents/{id}: the note that

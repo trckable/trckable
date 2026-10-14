@@ -3,16 +3,16 @@
 // saw. Reached from the status panel, the chart's marks and the ⋯ menu.
 import { ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { DatePicker, type PickerValue } from '../../components/DatePicker'
+import { DatePicker, periodLabel, type PickerValue } from '../../components/DatePicker'
 import { AllBar } from '../header/AllBar'
 import { Loading } from '../../components/loading/Loading'
 import { rangeOf } from '../../lib/dashQuery'
-import { todayIn } from '../../lib/dates'
+import { fmtDay, todayIn } from '../../lib/dates'
 import type { Site } from '../../lib/api'
 import { navigate, readView, setView, useLocation } from '../../lib/url'
 import { copy } from './copy'
 import { IncidentList } from './IncidentList'
-import { silentAllPeriod, startOfDay } from './model'
+import { dayIn, silentAllPeriod, startOfDay } from './model'
 import { Summary } from './Summary'
 import { Timeline } from './Timeline'
 import { useIncidentList, useNow, usePeriodIncidents } from './useIncidents'
@@ -25,10 +25,13 @@ export default function IncidentsPage({ site, header }: { site: Site; header: Re
   const range = rangeOf(view, today)
   const picker: PickerValue = { period: view.period, range, compare: 'none' }
   const now = useNow()
-  const from = startOfDay(range.from, site.timezone)
+  const periodFrom = startOfDay(range.from, site.timezone)
   const to = Math.min(startOfDay(range.to, site.timezone) + 86400, now)
+  // Only the time we were watching counts: before that, nothing is known.
+  const from = Math.min(Math.max(periodFrom, site.watched_since ?? 0), to)
   const period = usePeriodIncidents(site.id, from, to)
   const all = useIncidentList(site.id)
+  const since = (site.watched_since ?? 0) > periodFrom ? fmtDay(dayIn(site.watched_since ?? 0, site.timezone), { year: true }) : undefined
   return (
     <>
       <AllBar header={header} />
@@ -53,12 +56,12 @@ export default function IncidentsPage({ site, header }: { site: Site; header: Re
         {!period.ready && !period.failed && <Loading height={140} />}
         {period.summary && (
           <>
-            <Summary totals={period.summary} period={to - from} silent={silentAllPeriod(period.list, from)} />
-            <Timeline list={period.list} from={range.from} to={range.to} tz={site.timezone} now={now} />
-            {period.list.length === 0 && <p className="muted">{copy.none}</p>}
+            <Summary totals={period.summary} silent={silentAllPeriod(period.list, from)} label={periodLabel(picker, today)} watch={{ span: to - from, since, quietTracked: period.quietTracked }} />
+            <Timeline list={period.list} from={range.from} to={range.to} tz={site.timezone} now={now} watchedSince={site.watched_since} />
           </>
         )}
-        {all.ready ? <IncidentList list={all.list} next={all.next} busy={all.busy} failed={all.failed} now={now} more={all.more} edit={all.edit} /> : !period.failed && <Loading height={120} />}
+        {!all.ready && !period.failed && <Loading height={120} />}
+        {all.ready && (all.list.length > 0 || all.failed) && <IncidentList list={all.list} next={all.next} busy={all.busy} failed={all.failed} now={now} more={all.more} edit={all.edit} />}
         <p className="muted inc-foot">{copy.quietNote}</p>
       </main>
     </>

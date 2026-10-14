@@ -64,3 +64,31 @@ test('an incident is marked on the chart and listed on its page', async ({ page 
   await expect(rows.nth(0)).toContainText('Quiet')
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/incidents-page-1280-dark.png`, fullPage: true })
 })
+
+test('a quiet period is one calm card, and the period menu hangs from its picker', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: await session('incident-history'), url: API }])
+  await page.route('**/api/v1/sites/*/incidents?*', async (r) => {
+    const url = new URL(r.request().url())
+    await r.fulfill({ json: url.searchParams.has('from') ? { incidents: [], summary: { count: 0, seconds: 0, lost: 0, lost_some: false } } : { incidents: [], next_before: null } })
+  })
+  await page.goto(`${API}/${HISTORY_DOMAIN}/incidents?period=30d`)
+  await expect(page.getByRole('heading', { name: 'Uptime & incidents' })).toBeVisible({ timeout: 20_000 })
+
+  // No row of four mostly empty cards, no "All incidents", the good news said once.
+  await expect(page.locator('.inc-clear')).toHaveCount(1)
+  await expect(page.locator('.inc-clear')).toContainText('No incidents')
+  await expect(page.locator('.inc-card')).toHaveCount(0)
+  await expect(page.getByText(/No incidents/)).toHaveCount(1)
+  await expect(page.getByRole('heading', { name: 'All incidents' })).toHaveCount(0)
+  // The site is new: the days before it was added are not "no incident".
+  await expect(page.locator('.inc-days i.unwatched').first()).toBeVisible()
+  await expect(page.locator('.inc-legend .unwatched')).toBeVisible()
+
+  // The menu opens under the picker, not at the window's edge.
+  await page.locator('.inc-head .btn.range').click()
+  const pick = (await page.locator('.inc-head .range-picker').boundingBox())!
+  const menu = (await page.locator('.inc-head .range-pop').boundingBox())!
+  expect(Math.abs(menu.x + menu.width - (pick.x + pick.width))).toBeLessThan(40)
+  expect(menu.y - (pick.y + pick.height)).toBeLessThan(40)
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/incidents-zero-menu.png` })
+})

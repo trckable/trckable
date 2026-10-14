@@ -20,15 +20,20 @@ export const copy = defineCopy('incidents', {
   back: 'Back to the dashboard',
   loading: 'Reading the incidents…',
   failed: 'Could not read the incidents. Try again.',
-  none: 'No incidents in this period.',
 
   // The summary cards.
+  clean: (period: string) => `No incidents · ${period}`,
+  cleanUp: '100% up',
+  downOnly: 'down checks only',
+  downOnlyNote: 'Down checks only: this site has too few visits for quiet spells to be tracked.',
+  watchedSince: (day: string) => `watched since ${day}`,
+  notWatched: 'Not watched yet',
+  notWatchedNote: (day: string) => `Incidents are recorded from ${day} on.`,
   cardIncidents: 'Incidents',
   cardAffected: 'Down or quiet for',
   cardUptime: 'Uptime',
   cardLost: 'Visits lost',
   lost: (n: string) => `≈ ${n} visits`,
-  lostNone: '–',
   lostNote: 'Added up over the incidents that have an estimate, each from the same hours of up to four earlier weeks without an incident.',
   uptimeNote: 'The share of the period without a down or quiet spell.',
 
@@ -36,11 +41,13 @@ export const copy = defineCopy('incidents', {
   strip: 'Each day of the period',
   year: 'Each day of the year',
   dayOk: (day: string) => `${day}: no incident`,
-  dayQuiet: (day: string) => `${day}: quiet`,
-  dayDown: (day: string) => `${day}: down`,
+  dayQuiet: (day: string, span: string) => `${day}: quiet · ${span}`,
+  dayUnwatched: (day: string) => `${day}: not watched yet`,
+  dayDown: (day: string, span: string) => `${day}: down · ${span}`,
   legendOk: 'No incident',
   legendQuiet: 'Quiet',
   legendDown: 'Down',
+  legendUnwatched: 'Not watched yet',
 
   // The list.
   list: 'All incidents',

@@ -707,6 +707,16 @@ var migrations = []string{
 		last_used_at INTEGER NOT NULL
 	);
 	CREATE INDEX IF NOT EXISTS devices_user ON devices(user_id);`,
+	// 57: when a site's incidents began to be watched (unix seconds). Days
+	// before it are not "no incident", they are unknown. A site with no row
+	// here is watched from the day it was added; sites that existed when this
+	// migration ran are watched from that moment (the first time we can prove
+	// it), or from being added if that came later.
+	`CREATE TABLE IF NOT EXISTS site_watch (
+		site_id TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		since   INTEGER NOT NULL
+	) WITHOUT ROWID;
+	INSERT OR IGNORE INTO site_watch (site_id, since) SELECT id, max(created_at, CAST(strftime('%s', 'now') AS INTEGER)) FROM sites;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
@@ -828,6 +838,7 @@ type SiteRow struct {
 	ID, Domain, Name, Timezone, Currency, ProxyKey string
 	LastEventAt                                    int64
 	CreatedAt                                      int64 // unix seconds
+	WatchedSince                                   int64 // unix seconds: incidents are known from here on
 }
 
 // SeenSite records that a site just sent an event. Called at most once a
@@ -976,7 +987,7 @@ func (s *Store) AllSites(ctx context.Context) ([]SiteRow, error) {
 }
 
 func (s *Store) listSites(ctx context.Context, where string, args ...any) ([]SiteRow, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT id, domain, name, timezone, currency, proxy_key, last_event_at, created_at FROM sites `+where+` ORDER BY created_at`, args...) //nolint:gosec // where is a constant fragment from the two callers above; values are bound as parameters
+	rows, err := s.DB.QueryContext(ctx, `SELECT id, domain, name, timezone, currency, proxy_key, last_event_at, created_at, max(created_at, coalesce((SELECT since FROM site_watch WHERE site_id = sites.id), 0)) FROM sites `+where+` ORDER BY created_at`, args...) //nolint:gosec // where is a constant fragment from the two callers above; values are bound as parameters
 	if err != nil {
 		return nil, err
 	}
@@ -984,7 +995,7 @@ func (s *Store) listSites(ctx context.Context, where string, args ...any) ([]Sit
 	var out []SiteRow
 	for rows.Next() {
 		var r SiteRow
-		if err := rows.Scan(&r.ID, &r.Domain, &r.Name, &r.Timezone, &r.Currency, &r.ProxyKey, &r.LastEventAt, &r.CreatedAt); err != nil {
+		if err := rows.Scan(&r.ID, &r.Domain, &r.Name, &r.Timezone, &r.Currency, &r.ProxyKey, &r.LastEventAt, &r.CreatedAt, &r.WatchedSince); err != nil {
 			return nil, err
 		}
 		out = append(out, r)
