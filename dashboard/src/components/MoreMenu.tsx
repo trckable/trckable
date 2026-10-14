@@ -27,6 +27,8 @@ export interface MoreProps {
   milestones?: { open: () => void; dot: boolean }
   /** The site's uptime and incident history; absent on a shared link. */
   onIncidents?: () => void
+  /** The domain whose Your links page the menu opens; absent on a shared link. */
+  linksOf?: string
 }
 
 export function MoreMenu(props: MoreProps) {
