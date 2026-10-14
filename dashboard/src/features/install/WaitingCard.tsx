@@ -7,6 +7,7 @@ import { useState, type ReactNode } from 'react'
 import { Ghost } from '../../components/Logo'
 import type { Site, Visit } from '../../lib/api'
 import type { Ctx } from '../../lib/install'
+import { navigate } from '../../lib/url'
 import { CheckPanel } from './CheckPanel'
 import { FirstCards } from './FirstCards'
 import { aiPrompt, copy, waitCard as t } from './copy'
@@ -39,6 +40,11 @@ export function WaitingCard({ site, visits, ctx, pick, onPick, setup, after }: {
     })
   return (
     <section className="wait-card rise" aria-label={copy.label}>
+      {!setup && (
+        <a className="wait-back faint" href="/sites" onClick={(e) => { e.preventDefault(); navigate('/sites') }}>
+          {t.back}
+        </a>
+      )}
       <div className={first ? 'wait-mark live' : 'wait-mark'} aria-hidden="true">
         <span className="ring" />
         <span className="ring b" />

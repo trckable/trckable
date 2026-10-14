@@ -1,6 +1,6 @@
 // Overview: one sentence about the day across every site, a strip of
 // the totals, then the sites in the order they matter (needs attention,
-// unusual today, steady) beside a live feed.
+// setting up, unusual today, steady) beside a live feed.
 import { useMemo } from 'react'
 import { accountTotals } from '../features/incidents/model'
 import { useAccountIncidents, useNow } from '../features/incidents/useIncidents'
@@ -12,7 +12,7 @@ import type { Site, SiteRow } from '../lib/api'
 import { fmtInt } from '../lib/format'
 import { navigate } from '../lib/url'
 import { cellOf, revenueHeadline, revenueStrip, revenueTotal, type Cell, type Lens } from './allLens'
-import { byRevenue, feedOf, headline, items, moneyText, ordered, refWord, revenueOf, whyLine, type Item, type Kind } from './allNext'
+import { byRevenue, feedOf, hasBaseline, headline, items, moneyText, ordered, refWord, revenueOf, whyLine, type Item, type Kind } from './allNext'
 import { next } from './allNextCopy'
 import { copy as incidents } from '../features/incidents/copy'
 import { fromStart } from './allSitesLogic'
@@ -24,6 +24,7 @@ type Props = { lens: Lens; rows: SiteRow[]; sites: Site[]; surges: Map<string, S
 
 const GROUPS: { kind: Kind; title: string }[] = [
   { kind: 'attention', title: next.secAttention },
+  { kind: 'setup', title: next.secSetup },
   { kind: 'mover', title: next.secMovers },
   { kind: 'steady', title: next.secSteady },
 ]
@@ -50,6 +51,7 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
   const r = i.row
   const cell = cellOf(lens, i, total)
   const hurt = i.kind === 'attention'
+  const waiting = i.kind === 'setup'
   const why = lens === 'visitors' || hurt ? whyLine(i, against) : cell.note
   return (
     <button type="button" className={'nx-line' + (hurt ? ' hurt ' + i.status : '')} onClick={() => navigate('/' + encodeURIComponent(r.domain))}>
@@ -61,14 +63,20 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
           {r.name && r.name !== r.domain && <small className="muted">{r.domain}</small>}
         </span>
       </span>
-      <span className="nx-num">
-        <b>{r.error ? '–' : cell.main}</b>
-        <small>{cell.unit}</small>
-      </span>
-      <Badge i={i} lens={lens} />
-      <span className="nx-spark">
-        <Trend lens={lens} cell={cell} i={i} start={start} color={color} />
-      </span>
+      {waiting && lens === 'visitors' ? (
+        <span className="nx-action">{next.setupAction}</span>
+      ) : (
+        <>
+          <span className="nx-num">
+            <b>{r.error ? '–' : cell.main}</b>
+            <small>{cell.unit}</small>
+          </span>
+          <Badge i={i} lens={lens} />
+          <span className="nx-spark">
+            <Trend lens={lens} cell={cell} i={i} start={start} color={color} />
+          </span>
+        </>
+      )}
       {why && <span className="nx-why muted">{why}</span>}
     </button>
   )
@@ -78,8 +86,11 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
 function UptimeCard({ sites, days, open }: { sites: Site[]; days: number; open: () => void }) {
   const { list, ready, failed } = useAccountIncidents(days)
   const now = useNow()
-  const t = useMemo(() => accountTotals(sites, list, days, now), [sites, list, days, now])
+  // A site with no visit and no check yet has not been watched: it stays out of the totals.
+  const t = useMemo(() => accountTotals(sites.filter((x) => x.last_event_at || x.check), list, days, now), [sites, list, days, now])
   const known = ready && !failed
+  const unwatched = known && !t.watched && t.count === 0
+  const figure = known ? next.uptimeCount(t.count) : '–'
   const site = sites.find((s) => s.id === t.down[0])
   let note = next.uptimeUp(t.pct.toFixed(1))
   if (t.down.length === 1) note = next.uptimeDown(site?.name || site?.domain || '')
@@ -87,8 +98,8 @@ function UptimeCard({ sites, days, open }: { sites: Site[]; days: number; open: 
   return (
     <button type="button" className="nx-card" onClick={open}>
       <small>{incidents.lensUptime}</small>
-      <b>{known ? next.uptimeCount(t.count) : '–'}</b>
-      {known && <em className={t.down.length > 0 ? 'warn' : ''}>{note}</em>}
+      <b>{unwatched ? next.uptimeUnwatched : figure}</b>
+      {known && <em className={t.down.length > 0 ? 'warn' : ''}>{unwatched ? next.uptimeUnwatchedNote : note}</em>}
     </button>
   )
 }
@@ -126,7 +137,7 @@ export function AllToday({ lens, rows, sites, surges, colorOf, start, period, da
           <div>
             <small>{next.visitorsTodayLabel}</small>
             <b>{fmtInt(today)}</b>
-            <em>{next.paceNote(ref)}</em>
+            {hasBaseline(list) && <em>{next.paceNote(ref)}</em>}
           </div>
         )}
         {!figures && money.length > 0 && (
