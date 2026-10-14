@@ -1,0 +1,13 @@
+/* Moved out of the first load: only this component uses these rules. */
+.src-split {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 22px;
+  align-items: center;
+}
+@media (max-width: 560px) {
+.src-split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+}

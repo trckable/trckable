@@ -6,6 +6,7 @@ import { fmtCompact, fmtInt, fmtPct } from '../../lib/format'
 import { cardCopy } from './copy'
 import type { CardsCtx } from './ctx'
 import { engagedOf, goalFunnel, goalKind, type FunnelStep, type GoalKind } from './goalModel'
+import './GoalRows.css'
 
 const ICON: Record<GoalKind, LucideIcon> = { outbound: SquareArrowOutUpRight, download: Download, form: TextCursorInput, custom: SquareCheckBig }
 

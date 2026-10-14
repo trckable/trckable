@@ -20,12 +20,14 @@ type Card struct {
 	Rows      [][2]string // label and value, one line each
 	CTA, Link string      // the one button; none without a link
 	Note      string      // what the footer says this email is
+	Ask       string      // an address that opens the dashboard on this event; left out when empty
 }
 
 const (
 	cardNoteDefault = "Sent by trckable."
 	cardStop        = "Stop these alerts"
 	cardSettings    = "Alert settings"
+	cardAsk         = "Open in dashboard"
 	rowValueRunes   = 30
 )
 
@@ -129,6 +131,9 @@ func (c Card) HTML(stop, settings string) string {
 	}
 	b.WriteString(`<div class="mu" style="font-size:12px;line-height:1.6;color:#6b7078">` + esc(note))
 	var links []string
+	if l := safeLink(c.Ask); l != "" {
+		links = append(links, `<a href="`+esc(l)+`" style="color:inherit">`+cardAsk+`</a>`)
+	}
 	if l := safeLink(stop); l != "" {
 		links = append(links, `<a href="`+esc(l)+`" style="color:inherit">`+cardStop+`</a>`)
 	}

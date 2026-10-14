@@ -1,0 +1,5 @@
+/* Moved out of the first load: only this component uses these rules. */
+.money-col {
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--money) 40%, transparent));
+  transition: fill-opacity 0.12s;
+}

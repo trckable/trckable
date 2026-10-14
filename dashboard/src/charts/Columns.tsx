@@ -2,6 +2,7 @@
 // glow. A day with no sales draws nothing, the one still counting is striped,
 // and the hovered day is drawn in full with the others a little softer.
 import { columnHeight, columnPath } from './moneyPlot'
+import './Columns.css'
 
 interface ColumnsProps {
   values: number[]
