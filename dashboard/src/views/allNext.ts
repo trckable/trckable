@@ -21,7 +21,7 @@ export function dayFraction(tz: string | undefined, now = Date.now()): number {
   }
 }
 
-export type Kind = 'attention' | 'setup' | 'mover' | 'steady'
+export type Kind = 'attention' | 'setup' | 'lower' | 'busier' | 'steady' | 'quiet'
 
 export interface Item {
   row: SiteRow
@@ -57,7 +57,8 @@ const refOf = (s: number[] | null): number | null => {
   return s.length >= 8 ? s[s.length - 8] : s[s.length - 2]
 }
 
-const MOVE = 0.4
+/** A site this far under (or over) its usual pace for the hour is lower (or busier) than usual; inside it, steady. */
+export const MOVE = 0.15
 const MIN_USUAL = 8
 
 export function items(rows: SiteRow[], sites: Site[], surges: Map<string, Surge> = new Map(), now = Date.now()): Item[] {
@@ -74,24 +75,25 @@ export function items(rows: SiteRow[], sites: Site[], surges: Map<string, Surge>
     const hurt = row.error || status === 'down' || (status === 'quiet' && !dormant)
     const found = surges.get(row.id)
     const surge = found && !found.ended ? found : undefined
-    const unusual = !!surge || (move !== null && Math.abs(move) >= MOVE)
     let kind: Kind = 'steady'
     if (hurt) kind = 'attention'
     else if (status === 'new') kind = 'setup'
-    else if (unusual) kind = 'mover'
+    else if (dormant) kind = 'quiet'
+    else if (surge || (move !== null && move >= MOVE)) kind = 'busier'
+    else if (move !== null && move <= -MOVE) kind = 'lower'
     return { row, site, status, kind, today, usual, move, online: row.error ? 0 : row.online, surge }
   })
 }
 
-const KIND_ORDER: Record<Kind, number> = { attention: 0, setup: 1, mover: 2, steady: 3 }
+const KIND_ORDER: Record<Kind, number> = { attention: 0, setup: 1, lower: 2, busier: 3, steady: 4, quiet: 5 }
 
-/** Attention first (down before quiet), then the biggest movers, then steady by today's visitors. */
+/** Attention first (down before quiet), then the sites lower and busier than usual (the biggest move first), then steady ones by today's visitors. */
 export function ordered(list: Item[]): Item[] {
   return [...list].sort((a, b) => {
     if (a.kind !== b.kind) return KIND_ORDER[a.kind] - KIND_ORDER[b.kind]
     if (a.kind === 'attention') return (a.status === 'down' ? 0 : 1) - (b.status === 'down' ? 0 : 1) || b.today - a.today
     if (a.kind === 'setup') return (a.row.name || a.row.domain).localeCompare(b.row.name || b.row.domain)
-    if (a.kind === 'mover') return (b.surge?.times ?? 0) - (a.surge?.times ?? 0) || Math.abs(b.move ?? 0) - Math.abs(a.move ?? 0)
+    if (a.kind === 'lower' || a.kind === 'busier') return (b.surge?.times ?? 0) - (a.surge?.times ?? 0) || Math.abs(b.move ?? 0) - Math.abs(a.move ?? 0)
     return b.today - a.today
   })
 }
@@ -176,11 +178,11 @@ export function whyLine(i: Item, ref: string, now = Date.now()): string {
   const since = i.site?.down_since ?? i.site?.check?.down_since
   if (i.status === 'down' && i.site?.down_since) return next.whyNotAnswering(when(i.site.down_since), i.site.down_cause ?? '')
   if (i.status === 'down') return since ? next.whyDown(dayWord(since, now)) : next.whyDownNow
-  if (i.status === 'quiet' && last && i.kind === 'steady') return next.whyDormant(dayWord(last, now))
+  if (i.status === 'quiet' && last && i.kind === 'quiet') return next.whyDormant(dayWord(last, now))
   if (i.status === 'quiet' && last) return next.whyQuiet(span(now / 1000 - last), dayWord(last, now))
   if (i.status === 'new') return next.whyNew
   if (i.surge) return next.surgeWhy(i.surge.times.toFixed(1), sourceLine(i.surge))
-  // Who is online now is the Live column's; a row compares today with the usual, or says nothing.
+  // A row compares today with the usual, or says nothing.
   return i.usual !== null ? next.whyMover(fmtInt(i.today), fmtInt(i.usual), ref) : ''
 }
 
@@ -194,7 +196,7 @@ export interface FeedEvent {
   mark: Pick<Site, 'domain' | 'color' | 'icon_url'>
 }
 
-/** What is happening across the sites, newest first: busy moments, people online, sites that went quiet or down. */
+/** What is happening across the sites, newest first: busy moments and sites that went quiet or down; who is online is on each site's card. */
 export function feedOf(list: Item[]): FeedEvent[] {
   const out: FeedEvent[] = []
   for (const i of list) {
@@ -204,7 +206,6 @@ export function feedOf(list: Item[]): FeedEvent[] {
     const last = i.site?.last_event_at
     const mark = i.site ?? i.row
     if (surge) out.push({ key: i.row.id + 's', at: surge.started, text: next.feedSurge(name, surge.times.toFixed(1)), detail: sourceLine(surge), tone: 'live', mark })
-    else if (i.online > 0 && last) out.push({ key: i.row.id + 'o', at: last, text: next.feedOnline(name, i.online), detail: '', tone: 'live', mark })
     if (i.status === 'down' && i.site?.down_since) out.push({ key: i.row.id + 'd', at: i.site.down_since, text: next.feedDown(name), detail: i.site.down_cause ?? '', tone: 'bad', mark })
     else if (i.status === 'down' && i.site?.check) out.push({ key: i.row.id + 'd', at: i.site.check.down_since ?? i.site.check.at, text: next.feedDown(name), detail: '', tone: 'bad', mark })
     if (i.status === 'quiet' && last && i.kind === 'attention') out.push({ key: i.row.id + 'q', at: last, text: next.feedQuiet(name), detail: '', tone: 'warn', mark })
