@@ -41,12 +41,18 @@ function Chip({ i, tip }: { i: Item; tip: string }) {
   return <span className={'nx-chip ' + tone} title={tip}>{(move > 0 ? '↑ +' : '↓ −') + fmtInt(Math.abs(move) * 100) + '%'}</span>
 }
 
+/** The online dot's color: green with people online, else the site's own state when it is quiet or stopped. */
+function dotTone(online: number, state: string): string {
+  if (online > 0) return 'on'
+  return state === 'quiet' || state === 'stopped' ? state : ''
+}
+
 /** Who is online now, large with a live dot; grey and 0 when no one is. */
 function Pulse({ i, tip }: { i: Item; tip: string }) {
   const last = i.site?.last_event_at
   const silent = i.status === 'quiet' && last ? span(Date.now() / 1000 - last) : ''
   const state = i.site ? dotState(i.site) : 'live'
-  const tone = i.online > 0 ? 'on' : state === 'quiet' || state === 'stopped' ? state : ''
+  const tone = dotTone(i.online, state)
   return (
     <span className="nx-pulse">
       <span className={'nx-online ' + tone} title={i.site ? siteCopy.dot[state] : undefined}>
