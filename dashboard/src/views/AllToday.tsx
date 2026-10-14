@@ -6,7 +6,8 @@ import { accountTotals } from '../features/incidents/model'
 import { useAccountIncidents, useNow } from '../features/incidents/useIncidents'
 import type { Surge } from '../features/signals/surge'
 import { SiteMark } from '../components/SiteMark'
-import { StateDot } from '../features/sites/StateDot'
+import { dotState, StateDot } from '../features/sites/StateDot'
+import { copy as siteCopy } from '../features/sites/copy'
 import { span, when } from '../features/sitestatus/time'
 import type { Site, SiteRow } from '../lib/api'
 import { fmtInt } from '../lib/format'
@@ -44,9 +45,11 @@ function Chip({ i, tip }: { i: Item; tip: string }) {
 function Pulse({ i, tip }: { i: Item; tip: string }) {
   const last = i.site?.last_event_at
   const silent = i.status === 'quiet' && last ? span(Date.now() / 1000 - last) : ''
+  const state = i.site ? dotState(i.site) : 'live'
+  const tone = i.online > 0 ? 'on' : state === 'quiet' || state === 'stopped' ? state : ''
   return (
     <span className="nx-pulse">
-      <span className={'nx-online' + (i.online > 0 ? ' on' : '')}>
+      <span className={'nx-online ' + tone} title={i.site ? siteCopy.dot[state] : undefined}>
         <i aria-hidden="true" />
         <b>{i.row.error ? '–' : fmtInt(i.online)}</b>
         <small>{next.onlineWord}</small>
@@ -82,7 +85,7 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
   return (
     <button type="button" className={'nx-line' + (live ? ' live' : '') + (hurt ? ' hurt ' + i.status : '')} onClick={() => navigate('/' + encodeURIComponent(r.domain))}>
       <span className="nx-name">
-        {i.site && <StateDot site={i.site} />}
+        {i.site && !(lens === 'visitors' && !waiting) && <StateDot site={i.site} />}
         <SiteMark site={i.site ?? r} size={28} />
         <span className="nx-who">
           <b title={r.domain}>{r.name || r.domain}</b>

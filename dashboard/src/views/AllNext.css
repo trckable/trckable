@@ -275,6 +275,12 @@
   border-radius: 50%;
   background: var(--text-4);
 }
+.nx-online.quiet i {
+  background: var(--warn);
+}
+.nx-online.stopped i {
+  background: var(--down);
+}
 .nx-online.on i {
   background: var(--up);
   animation: nx-pulse 1.8s ease-out infinite;
