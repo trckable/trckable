@@ -10,8 +10,10 @@ section into the release.
 ## Unreleased
 
 - A site that stops answering is noticed within minutes, not a day: every 5 minutes the server loads each site's homepage (one plain request, no scripts). Two failed looks in a row open a Down incident with the cause in plain words (for example "Your homepage answered 503" or "No answer within 10 seconds"), mail the same address as the tracking-stopped alert once, and one good look closes it and says how long it was down. The Uptime & incidents page and the Sites Uptime card count these looks. Self-hosters can change the interval with `TRCKABLE_UPTIME_EVERY` (default `5m`, `0` turns it off).
-
 - A site that is not answering our checks now says so everywhere: Sites lists it under Needs attention with a red dot and "Not answering since 10:42", its headline leads with it instead of "look fine", every page of the site carries a red bar with the cause and a link to the incident, the Live switch shows a red dot, and the down alert uses the same words. A short watch on the Uptime & incidents page says "watched for 2m", and the footer reads "trckable: all normal" so it is clear it is about our service, not your sites.
+
+## 0.7.18 (14 Oct 2026)
+
 - The foot of every page is one faint line: the ghost and how the server is doing (normal, delayed, or can't be reached, checked once a minute while the tab is open), then the version, Changelog, Docs, Feedback and the shortcuts. Feedback opens a small box; what people write is kept for the instance's owners, who can read it at `/api/v1/admin/feedback`. On a phone only the dot, the version and the shortcuts stay.
 - The Uptime & incidents page is calmer: a period without an incident is one card instead of four, the day strip explains each day on hover, and the period menu opens under its picker. Days before a site was watched show as "Not watched yet" instead of green, uptime counts only watched time, and a quiet site says its uptime is from down checks only.
 
