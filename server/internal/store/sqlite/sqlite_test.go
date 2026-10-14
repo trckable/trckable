@@ -94,3 +94,17 @@ func TestEnsureSiteIsIdempotent(t *testing.T) {
 		t.Fatalf("second ensure: id %s vs %s, created=%v err=%v", a, b, created, err)
 	}
 }
+
+func TestSiteDomainRefusesPortAndLogin(t *testing.T) {
+	ctx := context.Background()
+	st, err := Open(ctx, filepath.Join(t.TempDir(), "trckable.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	for _, d := range []string{"1.2.3.4:6379", "example.com:8080", "me@example.com", "example.com?a=1", "example.com#top"} {
+		if _, err := st.CreateSite(context.Background(), DefaultAccount, d, ""); err == nil {
+			t.Errorf("%q was accepted", d)
+		}
+	}
+}

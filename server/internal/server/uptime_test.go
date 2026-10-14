@@ -175,6 +175,51 @@ func TestRoundSpreadsAndBoundsTheLooks(t *testing.T) {
 	}
 }
 
+func TestRoundLooksInTheOrderOfTheMoments(t *testing.T) {
+	ctx := context.Background()
+	st, _ := openForIncidents(t)
+	for _, d := range []string{"b.com", "c.com", "d.com", "e.com", "f.com", "g.com", "h.com", "i.com", "j.com"} {
+		if _, err := st.CreateSite(ctx, sqlite.DefaultAccount, d, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	sites, _ := st.AllSites(ctx)
+	p, _ := fakeProber(st, func(string) (int, error) { return 200, nil })
+	byAge := true // are the sites, in the order they were made, already in the order of their moments?
+	for i := 1; i < len(sites); i++ {
+		if offset(sites[i].ID, p.every) < offset(sites[i-1].ID, p.every) {
+			byAge = false
+		}
+	}
+	if byAge {
+		t.Skip("random ids happened to match the creation order")
+	}
+	var waits []time.Duration
+	p.sleep = func(_ context.Context, d time.Duration) { waits = append(waits, d) }
+	p.round(ctx)
+	if len(waits) < 2 {
+		t.Fatalf("waits %v", waits)
+	}
+	for i := 1; i < len(waits); i++ {
+		if waits[i] < waits[i-1] {
+			t.Fatalf("looks start out of order: %v", waits)
+		}
+	}
+}
+
+func TestOnlyBareHostnamesAreProbed(t *testing.T) {
+	ctx := context.Background()
+	st, site := openForIncidents(t)
+	var got []string
+	p, _ := fakeProber(st, func(u string) (int, error) { got = append(got, u); return 200, nil })
+	for _, d := range []string{"1.2.3.4:6379", "me@example.com", "example.com?x=1", "example.com#a", "", "example.com"} {
+		p.probe(ctx, sqlite.SiteRow{ID: site, Domain: d})
+	}
+	if len(got) != 1 || got[0] != "https://example.com/" {
+		t.Fatalf("fetched %v", got)
+	}
+}
+
 func TestPlainDuration(t *testing.T) {
 	for secs, want := range map[int64]string{20: "under a minute", 60: "1 minute", 600: "10 minutes", 3600: "1 hour", 5400: "1 hour 30 minutes", 7200: "2 hours", 3 * 86400: "3 days"} {
 		if got := plainDuration(secs); got != want {

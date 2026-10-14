@@ -750,6 +750,19 @@ var migrations = []string{
 		error     TEXT NOT NULL DEFAULT '',
 		PRIMARY KEY (site_id, probed_at)
 	) WITHOUT ROWID;`,
+	// 61: a note is personal data, so it goes with the person who wrote it and
+	// with the site it was written on. The table has no foreign keys (the site
+	// is plain text), so triggers do what a cascade would, on every delete
+	// path. Notes already left behind by people or sites that are gone are
+	// removed once here.
+	`CREATE TRIGGER IF NOT EXISTS feedback_user_gone AFTER DELETE ON users BEGIN
+		DELETE FROM feedback WHERE user_id = OLD.id;
+	END;
+	CREATE TRIGGER IF NOT EXISTS feedback_site_gone AFTER DELETE ON sites BEGIN
+		DELETE FROM feedback WHERE site_id = OLD.id;
+	END;
+	DELETE FROM feedback WHERE user_id NOT IN (SELECT id FROM users);
+	DELETE FROM feedback WHERE site_id <> '' AND site_id NOT IN (SELECT id FROM sites);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
@@ -888,6 +901,9 @@ func (s *Store) CreateSite(ctx context.Context, account, domain, name string) (s
 	domain = normalizeDomain(domain)
 	if domain == "" || strings.ContainsAny(domain, " /") {
 		return "", errors.New("use a domain like example.com")
+	}
+	if strings.ContainsAny(domain, ":@?#") {
+		return "", errors.New("use just the domain, like example.com: no port, login, or ? and # parts")
 	}
 	if name == "" {
 		name = domain

@@ -9,6 +9,9 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	neturl "net/url"
+	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -108,6 +111,11 @@ func (p *prober) round(ctx context.Context) {
 		slog.Warn("uptime probe failed", "err", err)
 		return
 	}
+	// Sites come in the order they were made; wait for them in the order of
+	// their moments, or most looks would pile up at the end of the period.
+	sort.SliceStable(sites, func(i, j int) bool {
+		return offset(sites[i].ID, p.every) < offset(sites[j].ID, p.every)
+	})
 	began := p.now()
 	slots := make(chan struct{}, p.workers)
 	var wg sync.WaitGroup
@@ -131,10 +139,19 @@ func (p *prober) round(ctx context.Context) {
 	wg.Wait()
 }
 
+// bareHostname says whether a stored domain is only a hostname: no port, login,
+// path or query.
+func bareHostname(d string) bool {
+	return d != "" && !strings.ContainsAny(d, " /:@?#\\[]%")
+}
+
 // probe looks at one site and records what it found. An address this server
 // will not call (a private one) is not looked at, and is not down.
 func (p *prober) probe(ctx context.Context, site sqlite.SiteRow) {
-	url := "https://" + site.Domain + "/"
+	if !bareHostname(site.Domain) {
+		return // a port, login or query would aim the look somewhere else
+	}
+	url := (&neturl.URL{Scheme: "https", Host: site.Domain, Path: "/"}).String()
 	if p.refused(ctx, url) {
 		return
 	}

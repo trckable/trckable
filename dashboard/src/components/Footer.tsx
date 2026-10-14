@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from 'react'
 import { Ghost } from './Logo'
 import { openShortcuts } from './ShortcutsHost'
+import { footerCopy as t } from './footerCopy'
 
 const FeedbackDialog = lazy(() => import('./FeedbackDialog'))
 // The status looks at the server after the page is up, so it is a chunk of its own.
@@ -24,21 +25,21 @@ export function Footer({ version, newer, onNewer, site }: { version?: string; ne
       <span className="app-footer-links">
         {newer ? (
           <button type="button" className="footer-newer" onClick={onNewer}>
-            v{newer} is out
+            {t.newer(newer)}
           </button>
         ) : (
           version && <a href={CHANGELOG}>v{version}</a>
         )}
         <a href={CHANGELOG} className="footer-wide">
-          Changelog
+          {t.changelog}
         </a>
         <a href="https://trckable.com/docs/" className="footer-wide">
-          Docs
+          {t.docs}
         </a>
         <button type="button" className="footer-wide" onClick={() => setFeedback(true)}>
-          Feedback
+          {t.feedback}
         </button>
-        <button type="button" aria-label="Keyboard shortcuts" onClick={openShortcuts}>
+        <button type="button" aria-label={t.shortcuts} onClick={openShortcuts}>
           ?
         </button>
       </span>
