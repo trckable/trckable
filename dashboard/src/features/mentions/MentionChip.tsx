@@ -1,0 +1,24 @@
+// On Live, while a mention is sending people right now: "From Hacker News now".
+// Nothing shows otherwise. Asked about once a minute, like the busy-moment line.
+import { fmtInt } from '../../lib/format'
+import { navigate } from '../../lib/url'
+import { copy } from './copy'
+import { mentionsPath } from './route'
+import { SourceMark } from './SourceMark'
+import { useMentions } from './useMentions'
+import './mentions.css'
+
+export default function MentionChip({ site, domain }: { site: string; domain?: string }) {
+  const got = useMentions(site, '7d', 60_000)
+  if (got.state !== 'ready' || !got.data.driving) return null
+  const m = got.data.driving
+  return (
+    <p className="mention-chip" role="status">
+      <button type="button" className="mp-plain" disabled={!domain} onClick={() => domain && navigate(`${mentionsPath(domain)}?m=${m.id}`)}>
+        <SourceMark source={m.source} />
+        <span>{copy.chip(copy.name[m.source])}</span>
+        <strong>{fmtInt(m.visitors)}</strong>
+      </button>
+    </p>
+  )
+}

@@ -3,9 +3,11 @@
 // dashboard already has open (lib/useLive) and the server's last 30 minutes
 // (useLiveNow), and shows the second laid over the first.
 import './Live.css'
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import type { Sale, Visit } from '../../lib/api'
 import { onlineNow } from '../../lib/live'
+import { lazyLoad } from '../../lib/lazyLoad'
+import { isShared } from '../../lib/me'
 import { useAnnounce } from './announce'
 import { BusierLine } from './BusierLine'
 import { copy } from './copy'
@@ -19,6 +21,8 @@ import { liveCount, liveLink } from './liveLink'
 import { useBusier } from './useBusier'
 import { useLiveNow } from './useLiveNow'
 import { Loading } from '../../components/loading/Loading'
+
+const MentionChip = lazyLoad(() => import('../mentions/MentionChip')) // "From Hacker News now": only while a mention is sending people
 
 export type LiveStream = {
   online: number | null
@@ -47,6 +51,7 @@ export default function LiveView({ site, timezone, stream, onVisitor, cookieless
     <>
       <div className="live-view view-stage" role="region" aria-label={copy.region}>
         <BusierLine busier={busier} site={site} timezone={timezone} />
+        {!isShared() && <Suspense fallback={null}><MentionChip site={site} domain={whole?.domain} /></Suspense>}
         {data ? (
           <>
             <NowPanel data={data} series={seriesAt(data, stream.visits, clock)} online={online ?? 0} connected={stream.connected} failed={failed} sales={stream.sales} timezone={timezone} />

@@ -1,0 +1,6 @@
+{"hits":[
+ {"objectID":"41000001","created_at_i":1791972600,"title":"Show HN: Acme Metrics, privacy-friendly analytics","url":"https://acme.example/","author":"maker1","points":212,"_tags":["story","author_maker1","story_41000001"]},
+ {"objectID":"41000002","created_at_i":1791973200,"title":null,"comment_text":"I switched to <a href=\"https://acme.example\">acme.example</a> last month &amp; it is great.","author":"fan2","points":null,"story_title":"Ask HN: analytics?","_tags":["comment","author_fan2","story_40999999"]},
+ {"objectID":"41000003","created_at_i":1791973260,"title":"Acmeism: a philosophy","url":"https://philosophy.example/","author":"x","points":3,"_tags":["story"]},
+ {"objectID":"41000004","created_at_i":1789376400,"title":"Old post about Acme","url":"https://old.example/","author":"y","points":1,"_tags":["story"]}
+]}

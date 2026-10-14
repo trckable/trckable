@@ -1,5 +1,5 @@
 // The ⋯ menu's items (MoreMenu.tsx). Its own chunk, so the first load carries only the button.
-import { Activity, Bookmark, Download, Flag, Link2, Maximize2, Minimize2, Plus, RefreshCw, Share2 } from 'lucide-react'
+import { Activity, Bookmark, Download, Flag, Link2, Maximize2, Megaphone, Minimize2, Plus, RefreshCw, Share2 } from 'lucide-react'
 import { openedFrom } from './panelOpen'
 import type { MenuItems } from '../lib/headerMenu'
 import { caps, keyFor } from '../lib/keys'
@@ -7,6 +7,8 @@ import { isShared } from '../lib/me'
 import type { MoreProps } from './MoreMenu'
 import { copy as incidents } from '../features/incidents/copy'
 import { sitePagePath } from '../lib/sitePath'
+import { page as mentions } from '../features/mentions/pageCopy'
+import { SUFFIX as mentionsSuffix } from '../features/mentions/route'
 import { navigate } from '../lib/url'
 import { copy } from './itemsCopy'
 import './MoreItems.css'
@@ -62,6 +64,12 @@ export default function MoreItems({ p, go }: { p: MoreProps & { onCreate?: () =>
             <button type="button" role="menuitem" onClick={go(p.onIncidents)}>
               <Activity size={18} strokeWidth={1.75} aria-hidden="true" />
               {incidents.menu}
+            </button>
+          )}
+          {p.onIncidents && (
+            <button type="button" role="menuitem" onClick={go(() => navigate(`${location.pathname}${mentionsSuffix}`))}>
+              <Megaphone size={18} strokeWidth={1.75} aria-hidden="true" />
+              {mentions.menu}
             </button>
           )}
           {p.linksOf && (

@@ -49,8 +49,9 @@ func (a *API) moments(w http.ResponseWriter, r *http.Request) {
 	out = append(out, a.surgeMoments(r, site, p, ask.Loc)...)
 	out = append(out, salesOf(res)...)
 	out = append(out, a.firstsOf(r, q, p)...)
+	out = append(out, a.mentionMoments(r, site, p, ask.Loc)...)
 	out = append(out, a.dayMoments(r, site, ask)...)
-	out = moments.Dedupe(out)
+	out = moments.Explain(moments.Dedupe(out))
 	moments.Sort(out)
 	if len(out) > maxMoments {
 		out = out[:maxMoments]
@@ -178,4 +179,23 @@ func bucketKey(hour, bucket string) string {
 		return hour[:10] + "T00:00"
 	}
 	return hour
+}
+
+// mentionMoments are the mentions posted in the period that brought visitors,
+// each at the hour it was posted.
+func (a *API) mentionMoments(r *http.Request, site string, p query.Params, loc *time.Location) []moments.Moment {
+	list, err := a.Ctl.Mentions(r.Context(), site, p.From.Unix(), p.To.Unix(), maxMoments)
+	if err != nil {
+		return nil
+	}
+	var out []moments.Moment
+	for _, m := range list {
+		if m.Visitors <= 0 {
+			continue
+		}
+		at := time.Unix(m.PostedAt, 0).In(loc)
+		hour := time.Date(at.Year(), at.Month(), at.Day(), at.Hour(), 0, 0, 0, time.UTC).Format("2006-01-02T15:04")
+		out = append(out, moments.Moment{T: bucketKey(hour, p.Bucket), Kind: "mention", Mention: m.Source, Brought: m.Visitors, Referrer: m.Host, Text: m.Title})
+	}
+	return out
 }

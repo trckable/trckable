@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { Incident } from './api'
 import { bucketFor, lineOf } from './IncidentMarks'
-import { routeOf } from './route'
+import { routeOf } from '../subpage'
 import { Summary } from './Summary'
 import { Timeline } from './Timeline'
 import type { Site } from '../../lib/api'
@@ -32,10 +32,10 @@ describe('the incident marks on the chart', () => {
 describe('the incident page', () => {
   it('reads its address as the site and the page', () => {
     const sites = [site('a.example'), site('b.example')]
-    expect(routeOf(sites, '/b.example/incidents')).toMatchObject({ incidents: true, site: { id: 'b.example' } })
-    expect(routeOf(sites, '/b.example')).toMatchObject({ incidents: false, site: { id: 'b.example' } })
-    expect(routeOf(sites, '/b.example/links')).toMatchObject({ links: true, incidents: false, site: { id: 'b.example' } })
-    expect(routeOf(sites, '/nope.example/incidents')).toEqual({ site: null, incidents: false, links: false })
+    expect(routeOf(sites, '/b.example/incidents')).toMatchObject({ sub: 'incidents', site: { id: 'b.example' } })
+    expect(routeOf(sites, '/b.example/mentions')).toMatchObject({ sub: 'mentions', site: { id: 'b.example' } })
+    expect(routeOf(sites, '/b.example')).toMatchObject({ sub: null, site: { id: 'b.example' } })
+    expect(routeOf(sites, '/nope.example/incidents')).toEqual({ site: null, sub: null })
   })
 
   it('writes the figures, and no visits card where the visits cannot be estimated', () => {
