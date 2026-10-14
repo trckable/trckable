@@ -2516,50 +2516,70 @@ body[data-mode] .card.overview {
   padding-bottom: 6px;
 }
 
-/* ---- Footer: the full logo, the year and the version ----------------------- */
+/* ---- Footer: one quiet line ------------------------------------------------ */
+/* Faint at rest (the footer's grey is the AA one, so it stays readable), full on hover or focus. */
 .app-footer {
   margin-top: auto; /* on a short page it stays at the bottom */
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 6px 14px;
-  padding: 14px 16px 18px;
+  padding: 14px 24px 18px;
   color: var(--text-4);
-  font-size: 11px;
+  font-size: 12px;
 }
-/* The logo keeps its own proportions; the footer only draws it smaller. */
-.app-footer .tkb-logo {
-  zoom: 0.7;
-  color: var(--text);
-  text-decoration: none;
-}
-/* The footer stays out of the way: the logo in the quiet greys (AA, so the
-   wordmark passes contrast too) until pointed at, then in full colour. */
-.app-footer .tkb-logo {
-  --tkb-ink: var(--text-4);
-  --tkb-muted: var(--text-4);
-  color: var(--text-4);
-  filter: grayscale(1);
-  transition: color 0.2s var(--ease), filter 0.2s var(--ease);
-}
-.app-footer:hover .tkb-logo,
-.app-footer .tkb-logo:focus-visible {
-  --tkb-ink: var(--text);
-  --tkb-muted: var(--text-2);
-  color: var(--text);
-  filter: none;
-}
+.app-footer-start,
 .app-footer-links {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 14px;
 }
-.app-footer a:not(.tkb-logo) {
-  color: var(--text-4);
+.app-footer-ghost {
+  display: inline-flex;
+  filter: grayscale(1);
+  opacity: 0.7;
+  transition: filter 0.2s var(--ease), opacity 0.2s var(--ease);
+}
+.app-footer:hover .app-footer-ghost,
+.app-footer-ghost:focus-visible {
+  filter: none;
+  opacity: 1;
+}
+.app-footer a,
+.app-footer button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
   text-decoration: none;
+  cursor: pointer;
 }
-.app-footer a:not(.tkb-logo):hover {
-  color: var(--text-2);
+.app-footer :is(a, button):hover,
+.app-footer :is(a, button):focus-visible {
+  color: var(--text);
+}
+.footer-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.footer-status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--up);
+}
+.footer-status[data-status='late'] i {
+  background: var(--warn);
+}
+.footer-status[data-status='down'] i {
+  background: var(--down);
+}
+.feedback-text {
+  width: 100%;
+  resize: vertical;
+  margin-bottom: 14px;
 }
 
 /* ---- Dropdowns on a phone: bottom sheets (phone.css) ---- */
@@ -2671,15 +2691,11 @@ body[data-mode] .card.overview {
   box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent);
   animation: kpi-live 2s ease-in-out infinite;
 }
-.footer-newer {
-  padding: 0;
-  border: 0;
-  background: none;
+.app-footer .footer-newer {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
   color: var(--accent);
-  font: inherit;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 @media (max-width: 640px) {
   .update-pill .num {

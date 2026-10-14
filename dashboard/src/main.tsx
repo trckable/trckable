@@ -210,7 +210,7 @@ function App() {
   return (
     <div className="app">
       {page}
-      <Footer version={boot.version} newer={latest?.v} onNewer={() => setShowUpdate(true)} />
+      <Footer version={boot.version} newer={latest?.v} onNewer={() => setShowUpdate(true)} site={site?.id} />
       {showUpdate && latest && boot.version && (
         <Suspense fallback={null}>
           <UpdateDialog latest={latest} current={boot.version} onClose={() => setShowUpdate(false)} />

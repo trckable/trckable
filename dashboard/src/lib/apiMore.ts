@@ -148,6 +148,8 @@ export const more = {
   // While two-step is on, changing it needs a code from the app (or a recovery code) as well.
   disableTwoStep: (password: string, code: string) => act('POST', '/account/2fa/disable', { password, code }),
   health: () => call<Health>('GET', '/health'),
+  /** A note for this instance's owners, with where in the dashboard it was written. */
+  sendFeedback: (message: string, site: string | undefined, path: string) => act('POST', '/feedback', { message, site, path }),
   setName: (name: string) => call<Profile>('PATCH', '/account', { name }),
   setAvatar: (file: Blob) => raw('PUT', '/account/avatar', file),
   clearAvatar: () => act('DELETE', '/account/avatar'),

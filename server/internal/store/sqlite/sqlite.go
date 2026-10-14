@@ -717,6 +717,18 @@ var migrations = []string{
 		since   INTEGER NOT NULL
 	) WITHOUT ROWID;
 	INSERT OR IGNORE INTO site_watch (site_id, since) SELECT id, max(created_at, CAST(strftime('%s', 'now') AS INTEGER)) FROM sites;`,
+	// 58: what people write in the dashboard's Feedback box, for the owners
+	// of the instance to read. The site is kept as text: a note outlives it.
+	`CREATE TABLE IF NOT EXISTS feedback (
+		id         INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id    TEXT NOT NULL,
+		site_id    TEXT NOT NULL DEFAULT '',
+		path       TEXT NOT NULL DEFAULT '',
+		version    TEXT NOT NULL DEFAULT '',
+		message    TEXT NOT NULL,
+		created_at INTEGER NOT NULL
+	);
+	CREATE INDEX IF NOT EXISTS feedback_time ON feedback(created_at);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
