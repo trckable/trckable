@@ -25,6 +25,6 @@ test('a visit turns the waiting line into numbers', async ({ page }) => {
   await expect.poll(async () => {
     await page.reload()
     await tile.waitFor()
-    return tile.locator('.nx-num b').textContent()
+    return tile.locator('.nx-today-n > span').first().textContent()
   }, { timeout: 40_000 }).toBe('1')
 })
