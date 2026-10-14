@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Site, SiteRow } from '../lib/api'
-import { hasBaseline, headline, items, ordered } from './allNext'
+import { hasBaseline, headline, items, MOVE, ordered } from './allNext'
 
 const NOW = Date.UTC(2026, 9, 14, 12) // noon, so a good part of the day has passed
 const row = (id: string, o: Partial<SiteRow> = {}) => ({ id, domain: id + '.com', name: '', visitors: 0, series: null, online: 0, ...o }) as SiteRow
@@ -44,5 +44,33 @@ describe('sites still waiting for their first visit', () => {
   it('leave no comparison line when nothing has a day to compare with', () => {
     expect(hasBaseline(build([fresh('a')]).list)).toBe(false)
     expect(hasBaseline(build([live('b')]).list)).toBe(true)
+  })
+})
+
+describe('groups from the real comparison', () => {
+  // At noon the pace is half the reference day, so 40 by the day's end means 20 "usual" by now.
+  const at = (id: string, today: number, o: Partial<Site> = {}) => ({ row: row(id, { series: [40, 40, 40, 40, 40, 40, 40, 40, today], visitors: 300 }), site: site(id, { last_event_at: NOW / 1000 - 60, ...o }) })
+  const kindOf = (today: number) => build([at('a', today)]).list[0].kind
+
+  it('uses a 15% line each way, edges included', () => {
+    expect(MOVE).toBe(0.15)
+    expect(kindOf(18)).toBe('steady') // 10% below
+    expect(kindOf(17)).toBe('lower') // exactly 15% below
+    expect(kindOf(22)).toBe('steady') // 10% above
+    expect(kindOf(23)).toBe('busier') // exactly 15% above
+  })
+
+  it('calls a site 15 to 26% below the same time last week lower, never steady', () => {
+    for (const today of [17, 16, 15]) expect(kindOf(today)).toBe('lower')
+  })
+
+  it('puts a dormant site under quiet, and a recently silent one under attention', () => {
+    const dormant = { row: row('d'), site: site('d', { last_event_at: NOW / 1000 - 40 * 86400 }) }
+    expect(build([dormant]).list[0].kind).toBe('quiet')
+  })
+
+  it('orders lower and busier before steady', () => {
+    const { list } = build([at('s', 20), at('l', 10), at('b', 30)])
+    expect(ordered(list).map((i) => i.row.id)).toEqual(['l', 'b', 's'])
   })
 })

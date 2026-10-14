@@ -7,12 +7,12 @@ import { useAccountIncidents, useNow } from '../features/incidents/useIncidents'
 import type { Surge } from '../features/signals/surge'
 import { SiteMark } from '../components/SiteMark'
 import { StateDot } from '../features/sites/StateDot'
-import { when } from '../features/sitestatus/time'
+import { span, when } from '../features/sitestatus/time'
 import type { Site, SiteRow } from '../lib/api'
 import { fmtInt } from '../lib/format'
 import { navigate } from '../lib/url'
 import { cellOf, revenueHeadline, revenueStrip, revenueTotal, type Cell, type Lens } from './allLens'
-import { byRevenue, feedOf, hasBaseline, headline, items, moneyText, ordered, refWord, revenueOf, whyLine, type Item, type Kind } from './allNext'
+import { byRevenue, feedOf, hasBaseline, headline, items, MOVE, moneyText, ordered, refWord, revenueOf, whyLine, type Item, type Kind } from './allNext'
 import { next } from './allNextCopy'
 import { copy as incidents } from '../features/incidents/copy'
 import { fromStart } from './allSitesLogic'
@@ -25,17 +25,39 @@ type Props = { lens: Lens; rows: SiteRow[]; sites: Site[]; surges: Map<string, S
 const GROUPS: { kind: Kind; title: string }[] = [
   { kind: 'attention', title: next.secAttention },
   { kind: 'setup', title: next.secSetup },
-  { kind: 'mover', title: next.secMovers },
+  { kind: 'lower', title: next.secLower },
+  { kind: 'busier', title: next.secBusier },
   { kind: 'steady', title: next.secSteady },
+  { kind: 'quiet', title: next.secQuiet },
 ]
 
-function Badge({ i, lens }: { i: Item; lens: Lens }) {
-  if (lens !== 'visitors') return null
-  if (i.surge) return <span className="nx-badge up">{'▲ ' + i.surge.times.toFixed(1) + '×'}</span>
+/** How today stands against the usual pace: a small arrow and percent; amber when lower, the sentence in the tooltip. */
+function Chip({ i, tip }: { i: Item; tip: string }) {
+  if (i.surge) return <span className="nx-chip up" title={tip}>{'▲ ' + i.surge.times.toFixed(1) + '×'}</span>
   const move = i.move
-  if (i.kind === 'attention' || move === null || Math.abs(move) < 0.4) return null
-  const up = move > 0
-  return <span className={'nx-badge ' + (up ? 'up' : 'down')}>{(up ? '▲ +' : '▼ −') + fmtInt(Math.abs(move) * 100) + '%'}</span>
+  if (i.kind === 'attention' || move === null || Math.abs(move) < 0.005) return null
+  const tone = move <= -MOVE ? 'low' : move >= MOVE ? 'up' : ''
+  return <span className={'nx-chip ' + tone} title={tip}>{(move > 0 ? '↑ +' : '↓ −') + fmtInt(Math.abs(move) * 100) + '%'}</span>
+}
+
+/** Who is online now, large with a live dot; grey and 0 when no one is. */
+function Pulse({ i, tip }: { i: Item; tip: string }) {
+  const last = i.site?.last_event_at
+  const silent = i.status === 'quiet' && last ? span(Date.now() / 1000 - last) : ''
+  return (
+    <span className="nx-pulse">
+      <span className={'nx-online' + (i.online > 0 ? ' on' : '')}>
+        <i aria-hidden="true" />
+        <b>{i.row.error ? '–' : fmtInt(i.online)}</b>
+        <small>{next.onlineWord}</small>
+      </span>
+      <span className="nx-today-n">
+        <span>{fmtInt(i.today)}</span> <small>{next.todayWord}</small>
+        <Chip i={i} tip={tip} />
+        {silent && <span className="nx-chip bad">{next.noVisits(silent)}</span>}
+      </span>
+    </span>
+  )
 }
 
 /** The line beside a site's number: its visitors' days, or its share of the revenue. */
@@ -52,9 +74,13 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
   const cell = cellOf(lens, i, total)
   const hurt = i.kind === 'attention'
   const waiting = i.kind === 'setup'
-  const why = lens === 'visitors' || hurt ? whyLine(i, against) : cell.note
+  const line = lens === 'visitors' || hurt ? whyLine(i, against) : cell.note
+  const tip = i.usual !== null ? next.whyMover(fmtInt(i.today), fmtInt(i.usual), against) : ''
+  // The comparison sentence lives in the chip's tooltip; a row keeps a line only for what is wrong.
+  const why = lens === 'visitors' && line === tip ? '' : line
+  const live = lens === 'visitors' && !waiting
   return (
-    <button type="button" className={'nx-line' + (hurt ? ' hurt ' + i.status : '')} onClick={() => navigate('/' + encodeURIComponent(r.domain))}>
+    <button type="button" className={'nx-line' + (live ? ' live' : '') + (hurt ? ' hurt ' + i.status : '')} onClick={() => navigate('/' + encodeURIComponent(r.domain))}>
       <span className="nx-name">
         {i.site && <StateDot site={i.site} />}
         <SiteMark site={i.site ?? r} size={28} />
@@ -67,11 +93,14 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
         <span className="nx-action">{next.setupAction}</span>
       ) : (
         <>
-          <span className="nx-num">
-            <b>{r.error ? '–' : cell.main}</b>
-            <small>{cell.unit}</small>
-          </span>
-          <Badge i={i} lens={lens} />
+          {live ? (
+            <Pulse i={i} tip={tip} />
+          ) : (
+            <span className="nx-num">
+              <b>{r.error ? '–' : cell.main}</b>
+              <small>{cell.unit}</small>
+            </span>
+          )}
           <span className="nx-spark">
             <Trend lens={lens} cell={cell} i={i} start={start} color={color} />
           </span>

@@ -6,20 +6,26 @@
   gap: 18px;
   min-width: 0;
 }
-.nx-badge {
+.nx-chip {
   flex: none;
-  padding: 2px 9px;
+  padding: 1px 8px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text-3);
   background: color-mix(in srgb, var(--text-3) 14%, transparent);
 }
-.nx-badge.up {
+.nx-chip.up {
   color: var(--up);
   background: color-mix(in srgb, var(--up) 14%, transparent);
 }
-.nx-badge.down {
+.nx-chip.low {
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+}
+.nx-chip.bad {
   color: var(--down);
   background: color-mix(in srgb, var(--down) 14%, transparent);
 }
@@ -231,9 +237,60 @@
   color: var(--text-3);
   font-size: 12.5px;
 }
-.nx-line .nx-badge {
-  grid-area: badge;
-  justify-self: start;
+/* A card of the Visitors lens: the site, then online now (large) over today's visitors, beside the chart. */
+.nx-line.live {
+  grid-template-columns: fit-content(280px) minmax(0, 1fr) minmax(190px, 260px);
+  grid-template-areas: 'name pulse spark' 'why why why';
+  gap: 4px 28px;
+}
+.nx-pulse {
+  grid-area: pulse;
+  display: grid;
+  gap: 2px;
+  justify-self: end;
+  min-width: 0;
+}
+.nx-online {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-3);
+}
+.nx-online.on {
+  color: var(--text);
+}
+.nx-online b {
+  font-size: 30px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.nx-online small {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.nx-online i {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-4);
+}
+.nx-online.on i {
+  background: var(--up);
+  animation: nx-pulse 1.8s ease-out infinite;
+}
+.nx-today-n {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  color: var(--text-2);
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+.nx-today-n small {
+  color: var(--text-3);
+  font-size: 12.5px;
 }
 .nx-spark {
   grid-area: spark;
@@ -538,8 +595,16 @@
   }
   .nx-line {
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: 'name badge' 'num spark' 'why why';
+    grid-template-areas: 'name name' 'num spark' 'why why';
     padding: 12px 14px;
+  }
+  .nx-line.live {
+    grid-template-columns: minmax(0, 1fr) minmax(90px, 40%);
+    grid-template-areas: 'name name' 'pulse spark' 'why why';
+    gap: 8px 16px;
+  }
+  .nx-pulse {
+    justify-self: start;
   }
   .nx-table .t-online,
   .nx-table .t-trend,

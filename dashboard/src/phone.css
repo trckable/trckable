@@ -334,8 +334,13 @@
   .banner {
     font-size: var(--ph-text-2);
   }
+  /* One row; the bottom clears the Peek bubble (56 px high, 28 px from the corner) and a gap. */
   .app-footer {
-    padding: 4px 0 8px;
+    flex-wrap: nowrap;
+    padding: 4px 0 calc(56px + 28px + 12px);
+  }
+  .app-footer-start {
+    min-width: 0;
   }
   /* On a phone the line keeps the dot, the version and the ?. */
   .app-footer .app-footer-ghost,
