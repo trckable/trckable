@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.7.21 (14 Oct 2026)
+
 - Mentions: see where your site is talked about and what it brought. Every 20 minutes (`TRCKABLE_MENTIONS_EVERY`) trckable searches Hacker News, the news and blogs, and Product Hunt (with `TRCKABLE_PRODUCTHUNT_TOKEN`) for your address, your site name and up to 10 words you add in Settings → Mentions, and shows each mention on the dashboard with the visitors that came from it in the next two days. A traffic jump that a mention explains says so in Replay ("posted on Hacker News, 212 visitors came from it"), Live shows "From Hacker News now" while one is sending people, and a new Mention alert (off until you turn it on) tells you when one brings 20 or more visitors or reaches the Hacker News front page. Only the link, a short title, the author's public handle and the time are kept, and they are removed with the site and with its retention. `GET /api/v1/sites/{site}/mentions` and `/mentions/keywords` serve the same to the API.
 - Mentions has a page of its own (the ⋯ menu, or "All mentions" under the dashboard's cards): who is talking about your site right now, a feed you can filter by place and period with what each one said and how many people it brought, and a panel per mention with the traffic it sent over your usual traffic, what those visitors read and where they are from. Mentions are marked on the main chart, a site with a fresh one shows "Talked about" in the All sites list, and Live's chip opens it.
 
