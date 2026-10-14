@@ -37,7 +37,10 @@ export default defineConfig({
     outDir: '../server/internal/web/dist',
     emptyOutDir: true,
     target: 'es2022',
-    modulePreload: { polyfill: false },
+    // A lazy chunk's styles are fetched with it; its script imports are left to the browser. The list of
+    // every chunk's script imports sat in the first script (about 2.7 KB gzipped of hashed names) to save
+    // one round trip, once, on the first open of a chunk that shares code with another.
+    modulePreload: { polyfill: false, resolveDependencies: (_file, deps) => deps.filter((d) => d.endsWith('.css')) },
     reportCompressedSize: false,
     rolldownOptions: { output: { hashCharacters: 'hex', codeSplitting: split } },
   },

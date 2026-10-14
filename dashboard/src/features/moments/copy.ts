@@ -13,6 +13,7 @@ export const copy = defineCopy('moments', {
     spike: 'Traffic spike',
     surge: 'Busier than usual',
     newTraffic: 'New traffic',
+    mention: 'Mentioned',
     sale: 'Sales',
     referrer: 'New referrer',
     drop: 'Fewer buyers',

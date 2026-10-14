@@ -26,7 +26,7 @@ export function lineOf(x: Incident, now: number): string {
 }
 
 /** The bucket of the chart an incident began in, or -1 when the chart does not show it. */
-export function bucketFor(x: Incident, labels: string[], bucket: Bucket, tz: string): number {
+export function bucketFor(x: Pick<Incident, 'started_at'>, labels: string[], bucket: Bucket, tz: string): number {
   if (bucket === 'hour') {
     const hour = new Intl.DateTimeFormat('en-CA', { timeZone: tz, hourCycle: 'h23', hour: '2-digit' }).format(new Date(x.started_at * 1000))
     return labels.indexOf(`${dayIn(x.started_at, tz)}T${hour}:00`)

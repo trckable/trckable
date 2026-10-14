@@ -124,3 +124,16 @@ describe('pins from milestones', () => {
     expect(pins.map((p) => p.id)).toEqual(['milestone:visitors:1k'])
   })
 })
+
+describe('a mention on the chart', () => {
+  it('is a pin that filters to the host that sent the people, with where it was posted and what it brought', () => {
+    const m: Moment = { t: '2026-10-14T10:00', kind: 'mention', mention: 'hn', brought: 212, referrer: 'news.ycombinator.com', text: 'Show HN' }
+    const [p] = pinsFromMoments([m], false)
+    expect(p).toMatchObject({ kind: 'mention', day: '2026-10-14', at: '2026-10-14T10:00', showDay: true, filters: [{ dim: 'referrer', value: 'news.ycombinator.com' }], n: { visitors: 212, mention: 'hn', name: 'Show HN' } })
+  })
+
+  it('a spike it explains carries who posted it and how many came', () => {
+    const [p] = pinsFromMoments([{ ...spike, mention: 'hn', brought: 212 }], true)
+    expect(p.n).toMatchObject({ mention: 'hn', brought: 212 })
+  })
+})

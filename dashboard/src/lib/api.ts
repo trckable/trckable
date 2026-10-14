@@ -120,6 +120,8 @@ export interface Site {
   cookieless?: boolean
   /** Set while the server's uptime probe finds the site not answering: since when (unix seconds) and why, in plain words. */
   down_since?: number
+  /** At least one mention was found, so a screen asks for them only then. */
+  mentions?: boolean
   down_cause?: string
   /** Set while the site's firewall blocks the server's uptime look (unix seconds): we cannot check it, its visitors are not affected. */
   probe_blocked_since?: number
@@ -187,7 +189,7 @@ export interface Visit {
 export interface Alert {
   id: string
   site_id: string
-  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone' | 'surge'
+  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone' | 'surge' | 'mention'
   enabled: boolean
   target: string
   threshold: number

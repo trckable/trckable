@@ -6,9 +6,21 @@ import { CardPair, whatTabs, whoTabs } from './base'
 import type { CardsCtx } from './ctx'
 
 const FullCards = lazy(() => import('./FullCards'))
+const MentionsCard = lazy(() => import('../mentions/MentionsCard')) // where the site is talked about: a chunk of its own
 
 export function Cards({ c }: { c: CardsCtx }) {
   const basic = <CardPair c={c} who={whoTabs(c)} what={whatTabs(c)} />
   // A card that cannot be drawn says so; the chart above and the page stay.
-  return <Boundary reset={c.cur}>{c.deep ? <Suspense fallback={basic}><FullCards c={c} /></Suspense> : basic}</Boundary>
+  return (
+    <>
+      <Boundary reset={c.cur}>{c.deep ? <Suspense fallback={basic}><FullCards c={c} /></Suspense> : basic}</Boundary>
+      {!c.shared && (
+        <Boundary reset={c.site.id}>
+          <Suspense fallback={null}>
+            <MentionsCard key={c.site.id} site={c.site} />
+          </Suspense>
+        </Boundary>
+      )}
+    </>
+  )
 }

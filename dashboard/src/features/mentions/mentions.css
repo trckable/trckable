@@ -1,0 +1,211 @@
+/* Mentions: the dashboard card, Live's chip and the source marks. */
+.mention-mark {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--raised);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+.mention-mark[data-source='hn'] {
+  background: #ff6600;
+  color: #fff;
+}
+.mention-mark[data-source='ph'] {
+  background: #da552f;
+  color: #fff;
+}
+.mentions-period {
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+.mention-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mention-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.mention-row:first-child {
+  border-top: 0;
+}
+.mention-body {
+  min-width: 0;
+}
+.mention-title,
+.mention-facts,
+.mention-brought {
+  margin: 0;
+}
+.mention-title {
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.mention-title a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--text);
+  text-decoration: none;
+}
+.mention-title a:hover span {
+  text-decoration: underline;
+}
+.mention-title a svg {
+  flex: none;
+  color: var(--text-3);
+}
+.mention-facts {
+  margin-top: 2px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+.mention-brought {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 56px;
+  font-variant-numeric: tabular-nums;
+}
+.mention-brought strong {
+  font-size: 16px;
+  font-weight: 600;
+}
+.mention-brought span {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.mentions-empty,
+.mentions-watch {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.mentions-more,
+.mentions-link {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.mentions-link {
+  font-size: inherit;
+}
+.mentions-more:hover,
+.mentions-link:hover {
+  color: var(--text);
+}
+.mentions-more:focus-visible,
+.mentions-link:focus-visible,
+.mention-title a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.mention-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 5px 12px 5px 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 13px;
+}
+.mention-chip strong {
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 640px) {
+  .mentions-more,
+  .mentions-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+@media (max-width: 520px) {
+  .mention-row {
+    gap: 10px;
+  }
+}
+/* Settings → Mentions */
+.mentions-set {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.mentions-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mentions-word {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--raised);
+  font-size: 13px;
+}
+.mentions-word.fixed {
+  padding-right: 10px;
+  color: var(--text-2);
+}
+.mentions-word button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.mentions-word button:hover {
+  color: var(--text);
+  background: var(--hover-veil);
+}
+.mentions-add {
+  display: flex;
+  gap: 8px;
+}
+.mentions-add input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The card's place before it is asked for: a line, so it can be seen coming. */
+.mentions-mark {
+  min-height: 1px;
+}

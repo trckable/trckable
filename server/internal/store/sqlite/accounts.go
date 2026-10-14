@@ -280,6 +280,8 @@ type SiteInfo struct {
 	// WatchedSince is when the site's incidents began to be recorded (unix
 	// seconds, never before CreatedAt): earlier days are unknown, not quiet.
 	WatchedSince int64 `json:"watched_since,omitempty"`
+	// Mentions says the site has at least one mention found, so a screen asks for them only then.
+	Mentions bool `json:"mentions,omitempty"`
 	// Color and IconURL are the site's own look in the dashboard, if set.
 	Color   string `json:"color,omitempty"`
 	IconURL string `json:"icon_url,omitempty"`

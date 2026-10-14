@@ -14,7 +14,7 @@ import (
 // own clock, "2026-09-27T20:00", the same keys as the report's series).
 type Moment struct {
 	T    string `json:"t"`
-	Kind string `json:"kind"` // spike | surge | sale | country | ai | milestone | note
+	Kind string `json:"kind"` // spike | surge | mention | sale | country | ai | milestone | note
 
 	Factor   float64 `json:"factor,omitempty"`   // spike, surge: times the usual; absent for new traffic (see Quiet)
 	Referrer string  `json:"referrer,omitempty"` // spike: who sent them; surge: the referring host of the source
@@ -28,7 +28,9 @@ type Moment struct {
 	Family   string  `json:"family,omitempty"`   // milestone: its kind (visitors, revenue, ...)
 	Value    float64 `json:"value,omitempty"`    // milestone: the round number reached
 	Currency string  `json:"currency,omitempty"` // milestone: revenue's currency
-	Text     string  `json:"text,omitempty"`     // note: its words; surge: the source as a name ("Facebook")
+	Text     string  `json:"text,omitempty"`     // note: its words; surge: the source as a name ("Facebook"); mention: its title
+	Mention  string  `json:"mention,omitempty"`  // mention: where it was posted (hn | ph | news); spike, surge: set when a mention from the same host explains it
+	Brought  int64   `json:"brought,omitempty"`  // mention: visitors it brought; spike, surge: those of the mention that explains it
 }
 
 // Spike is a bucket far above the ones before it.
@@ -137,7 +139,7 @@ func Top(s []Spike, n int) []Spike {
 // Sort puts moments in time order; within a bucket, a fixed order of kinds so
 // the story reads the same every time.
 func Sort(ms []Moment) {
-	rank := map[string]int{"note": 0, "milestone": 1, "spike": 2, "surge": 3, "country": 4, "ai": 5, "sale": 6}
+	rank := map[string]int{"note": 0, "milestone": 1, "spike": 2, "surge": 3, "mention": 4, "country": 5, "ai": 6, "sale": 7}
 	sort.SliceStable(ms, func(a, b int) bool {
 		if ms[a].T != ms[b].T {
 			return ms[a].T < ms[b].T
@@ -203,6 +205,37 @@ func Bursts(counts []int64, min int64, factor float64) []Burst {
 	for i, c := range counts {
 		if f := float64(c) / med; c >= min && f >= factor {
 			out = append(out, Burst{I: i, Factor: f})
+		}
+	}
+	return out
+}
+
+// Explain folds each mention into the spike or surge it explains: the same
+// bucket and the same host sending the visitors. The spike then tells who
+// posted it ("posted on Hacker News, 212 visitors came from it") and the
+// mention is not told twice; a mention that explains nothing stays a moment
+// of its own. Order is kept.
+func Explain(ms []Moment) []Moment {
+	out := make([]Moment, 0, len(ms))
+	var posted []Moment
+	for _, m := range ms {
+		if m.Kind == "mention" {
+			posted = append(posted, m)
+			continue
+		}
+		out = append(out, m)
+	}
+	for _, p := range posted {
+		explained := false
+		for i, m := range out {
+			if (m.Kind == "spike" || m.Kind == "surge") && m.T == p.T && m.Referrer != "" && m.Referrer == p.Referrer && m.Mention == "" {
+				out[i].Mention, out[i].Brought = p.Mention, p.Brought
+				explained = true
+				break
+			}
+		}
+		if !explained {
+			out = append(out, p)
 		}
 	}
 	return out

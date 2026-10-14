@@ -2,19 +2,22 @@
 // that sorts by any column. Pinned sites sit on top, sites with no visit in 30
 // days fold into "Dormant". Keys: / search, j and k move, Enter opens.
 import { ArrowDown, ArrowUp, Search, Star } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { pin, unpin } from '../features/sites/layout'
 import { StateDot } from '../features/sites/StateDot'
 import { saveLayout, useSiteLayout } from '../features/sites/useSiteLayout'
 import { EMPTY } from '../features/sites/empty'
 import type { Site, SiteRow } from '../lib/api'
 import { delta, fmtInt, fmtMoney } from '../lib/format'
+import { lazyLoad } from '../lib/lazyLoad'
 import { navigate } from '../lib/url'
 import { cellOf, revenueStrip, revenueTotal, type Cell, type Lens } from './allLens'
 import { items, moneyText, revenueOf, statusText, type Item } from './allNext'
 import { next } from './allNextCopy'
 import { Spark } from './AllSitesSpark'
 import './AllNext.css'
+
+const TalkedChip = lazyLoad(() => import('../features/mentions/TalkedChip')) // a mention in the last day: a chunk of its own
 
 type Key = 'name' | 'online' | 'main' | 'change' | 'extra' | 'status'
 const STATUS = { down: 0, quiet: 1, ok: 2, new: 3 }
@@ -162,6 +165,7 @@ export function AllTable({ lens, rows, sites, colorOf, period }: Props) {
           <span className="t-cell">
             {i.site && <StateDot site={i.site} />}
             <b title={r.domain}>{r.name || r.domain}</b>
+            {i.site?.mentions && <Suspense fallback={null}><TalkedChip site={r.id} /></Suspense>}
           </span>
         </td>
         <td className="nx-c t-online">{i.online > 0 ? <span className="on"><i aria-hidden="true" />{i.online}</span> : <span className="muted">{fmtInt(0)}</span>}</td>
