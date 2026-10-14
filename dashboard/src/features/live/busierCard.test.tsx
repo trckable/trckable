@@ -46,7 +46,8 @@ const open = async (selector: string) => {
   })
   expect(dialog()).toBeNull()
   act(() => host.querySelector<HTMLButtonElement>(selector)?.click())
-  for (let i = 0; i < 40 && !dialog(); i++) await act(() => new Promise((r) => setTimeout(r, 25)))
+  // The card is a lazy chunk: on a cold cache or a busy machine its first transform takes seconds.
+  for (let i = 0; i < 400 && !dialog(); i++) await act(() => new Promise((r) => setTimeout(r, 25)))
 }
 
 describe('the busy line opens the busy-moment card', () => {
@@ -55,5 +56,5 @@ describe('the busy line opens the busy-moment card', () => {
     expect(dialog()?.textContent).toContain('31')
     expect(dialog()?.querySelector('.sg-chip, .sgm-landing')).not.toBeNull()
     expect(host.querySelector('.live-busier-parts')?.textContent).not.toContain('/news')
-  })
+  }, 20_000)
 })
