@@ -47,7 +47,7 @@ export const copy = defineCopy('storyview', {
   deltaLabel: (word: string, by: string, what: string) => `${what ? `${what}: ` : ''}${word} ${by} on the period before`,
   // The tiles.
   visitors: 'Visitors',
-  bounce: 'Left after one page',
+  bounce: 'One-page visits',
   session: 'Visit length',
   revenue: 'Revenue',
   tilesLabel: 'Key numbers',
@@ -85,7 +85,7 @@ export const copy = defineCopy('storyview', {
   didNo: (a: string, b: string) => `Not yet. Visitors went from ${a} to ${b}.`,
   didSame: (a: string, b: string) => `About the same as before: ${b} visitors, ${a} then.`,
   didEarly: (who: string) => `${who} so far.`,
-  didSub: (n: string, pct: string, name: string) => `${name} sent you ${n} visitors (${pct}), your biggest source.`,
+  didSub: (n: string, pct: string, name: string) => `${name} sent you ${n} (${pct}), your biggest source.`,
   didBought: (n: string) => `${n} bought.`,
   didAct: (name: string) => `See ${name}'s numbers`,
   pageHome: (pct: string) => `Your home page is the first thing ${pct} of visitors see.`,

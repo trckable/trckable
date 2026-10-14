@@ -358,7 +358,7 @@ function did(i: Input): Answer {
   const act = top ? { label: copy.didAct(named(top.value)), filters: [{ dim: 'channel', value: top.value }] } : undefined
   const big = fmtInt(k.visitors)
   const bought = top?.customers ? ` ${copy.didBought(fmtInt(top.customers))}` : ''
-  const sub = top ? copy.didSub(fmtInt(top.visitors), share, named(top.value)) + bought : ''
+  const sub = top ? copy.didSub(visitorsIn(top.visitors), share, named(top.value)) + bought : ''
   if (!hasPrev(i)) return { key: 'did', question: copy.q.did, line: copy.didEarly(visitorsIn(k.visitors)), sub, look: 'plain', act, big }
   const was = earlier(i)?.visitors ?? 0
   const d = change(k.visitors, was)
