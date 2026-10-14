@@ -6,6 +6,9 @@ import { DialogActions } from './DialogActions'
 import { DialogHead } from './DialogHead'
 import { toast } from './Toast'
 import { fail, more } from '../lib/apiMore'
+import { footerCopy } from './footerCopy'
+
+const t = footerCopy.dialog
 
 const MAX = 2000
 
@@ -19,7 +22,7 @@ export default function FeedbackDialog({ site, onClose }: { site?: string; onClo
     more
       .sendFeedback(message, site, location.pathname)
       .then(() => {
-        toast('Thank you, that was sent')
+        toast(t.thanks)
         onClose()
       })
       .catch((e: unknown) => {
@@ -28,32 +31,32 @@ export default function FeedbackDialog({ site, onClose }: { site?: string; onClo
       })
   }
   return (
-    <Modal label="Feedback" onClose={onClose} keepSize={false}>
+    <Modal label={footerCopy.feedback} onClose={onClose} keepSize={false}>
       <form
         onSubmit={(e) => {
           e.preventDefault()
           send()
         }}
       >
-        <DialogHead icon={MessageSquare} heading="Feedback" hint="What would make trckable better? A bug, a wish, a kind word." />
+        <DialogHead icon={MessageSquare} heading={footerCopy.feedback} hint={t.hint} />
         <textarea
           className="input feedback-text"
           rows={5}
           value={text}
           maxLength={MAX}
           onChange={(e) => setText(e.target.value)}
-          aria-label="Your feedback"
+          aria-label={t.field}
           autoFocus
         />
         <DialogActions
           left={
             <button type="button" className="btn ghost" onClick={onClose}>
-              Cancel
+              {t.cancel}
             </button>
           }
         >
           <button type="submit" className="btn primary big" disabled={busy || !text.trim()}>
-            {busy ? 'Sending…' : 'Send'}
+            {busy ? t.sending : t.send}
           </button>
         </DialogActions>
       </form>
