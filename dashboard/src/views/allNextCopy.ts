@@ -4,6 +4,8 @@ import { defineCopy } from '../i18n'
 export const next = defineCopy('allnext', {
   // Overview
   allFine: (n: number) => (n === 1 ? 'Your site looks fine.' : `All ${n} sites look fine.`),
+  allWaiting: (n: number) => `${n} site${n === 1 ? '' : 's'} waiting for ${n === 1 ? 'its' : 'their'} first visit. Install the script to start.`,
+  someWaiting: (n: number) => `${n} waiting for the first visit.`,
   visitorsToday: (n: string, sites: number) => `${n} visitors today${sites > 1 ? ` across ${sites} sites` : ''}`,
   moreThan: (pct: string, ref: string) => `${pct} more than ${ref}`,
   lessThan: (pct: string, ref: string) => `${pct} less than ${ref}`,
@@ -17,6 +19,8 @@ export const next = defineCopy('allnext', {
   visitorsTodayLabel: 'Visitors today',
   paceNote: (ref: string) => `Against ${ref}, for the hours so far`,
   secAttention: 'Needs attention',
+  secSetup: 'Setting up',
+  setupAction: 'Install',
   secMovers: 'Unusual today',
   secSteady: 'Steady',
   todayWord: 'today',
@@ -37,6 +41,8 @@ export const next = defineCopy('allnext', {
   // Table
   totalRevenue: 'Revenue',
   uptimeCount: (n: number) => (n === 0 ? 'No incidents' : `${n} incident${n === 1 ? '' : 's'}`),
+  uptimeUnwatched: 'Not watched yet',
+  uptimeUnwatchedNote: 'Starts with the first check',
   uptimeUp: (pct: string) => `${pct}% up`,
   uptimeDown: (name: string) => `${name} is down now`,
   uptimeDownMany: (n: number) => `${n} sites are down now`,
