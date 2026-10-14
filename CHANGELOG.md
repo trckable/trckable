@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.7.18 (14 Oct 2026)
+
 - The foot of every page is one faint line: the ghost and how the server is doing (normal, delayed, or can't be reached, checked once a minute while the tab is open), then the version, Changelog, Docs, Feedback and the shortcuts. Feedback opens a small box; what people write is kept for the instance's owners, who can read it at `/api/v1/admin/feedback`. On a phone only the dot, the version and the shortcuts stay.
 - The Uptime & incidents page is calmer: a period without an incident is one card instead of four, the day strip explains each day on hover, and the period menu opens under its picker. Days before a site was watched show as "Not watched yet" instead of green, uptime counts only watched time, and a quiet site says its uptime is from down checks only.
 
