@@ -374,6 +374,15 @@
   margin: 48px auto 24px;
   text-align: center;
 }
+.wait-back {
+  align-self: flex-start;
+  margin-bottom: -6px;
+  font-size: 13px;
+  text-decoration: none;
+}
+.wait-back:hover {
+  color: var(--text);
+}
 .wait-card > .inst-tabs-row,
 .wait-card > .inst-panel,
 .wait-card > .inst-check {

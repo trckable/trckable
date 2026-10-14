@@ -140,17 +140,20 @@
   display: grid;
   flex: none;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 8px;
-  background: none;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--sunken);
   color: var(--text-2);
   cursor: pointer;
+  transition: color 0.15s ease, transform 0.2s ease;
 }
 .side-card-x:hover {
-  background: var(--raised-well);
+  background-image: var(--hover-veil);
   color: var(--text);
+  transform: rotate(90deg);
 }
 .side-card-x:focus-visible {
   outline: 2px solid var(--accent);
@@ -238,7 +241,7 @@
   .side-card-x {
     width: 44px;
     height: 44px;
-    margin: -8px 0;
+    margin-block: -8px;
   }
   .side-card-actions {
     padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
