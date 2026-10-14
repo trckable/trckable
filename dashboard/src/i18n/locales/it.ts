@@ -2424,6 +2424,8 @@ export default {
   'yourLinks.copy': 'Copia',
   'yourLinks.copied': 'Link copiato',
   'yourLinks.copyLabel': 'Copia il link di esempio',
+  'yourLinks.all': 'Tutti i link',
+  'yourLinks.dismiss': 'Nascondi',
   'yourLinks.nothingYet': 'Nessuna visita con tag in questo periodo',
   // incidents
   'incidents.marker': (n: number, when: string) => (n === 1 ? `Incidente il ${when}` : `${n} incidenti il ${when}`),

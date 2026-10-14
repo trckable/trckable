@@ -5,11 +5,12 @@ import { linksApi, type LinksAnswer } from './api'
 
 type State = { key: string; data: LinksAnswer | null; failed: boolean }
 
-export function useLinks(site: string, from: string, to: string) {
+export function useLinks(site: string, from: string, to: string, enabled = true) {
   const key = `${site}:${from}:${to}`
   const [state, setState] = useState<State>({ key: '', data: null, failed: false })
   const [icons, setIcons] = useState<{ key: string; set: Set<string> } | null>(null)
   useEffect(() => {
+    if (!enabled) return
     let live = true
     linksApi.read(site, from, to).then(
       (data) => live && setState({ key, data, failed: false }),
@@ -18,7 +19,7 @@ export function useLinks(site: string, from: string, to: string) {
     return () => {
       live = false
     }
-  }, [key]) // eslint-disable-line react-hooks/exhaustive-deps -- the key says what is read
+  }, [key, enabled]) // eslint-disable-line react-hooks/exhaustive-deps -- the key says what is read
   const data = state.key === key ? state.data : null
   useEffect(() => {
     const hosts = (data?.links ?? []).filter((l) => l.dim === 'referrer' && l.value.includes('.')).map((l) => l.value)

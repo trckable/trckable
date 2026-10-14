@@ -17,5 +17,7 @@ export const copy = defineCopy('yourLinks', {
   copy: 'Copy',
   copied: 'Link copied',
   copyLabel: 'Copy the sample link',
+  all: 'All links',
+  dismiss: 'Hide this',
   nothingYet: 'No tagged visits in this period',
 })

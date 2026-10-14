@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Your links is on the dashboard now, not only in the ⋯ menu: a card above Mentions with the three tagged links that brought the most (mark, tag, a bar, visitors, and a goal badge), a tap shows the dashboard for that link, and "All links" opens the page. With no tagged visit yet it is one slim line with a sample link to copy, which you can hide. It loads when it is about to be seen, so the first load is unchanged.
+
 - Your links, in the ⋯ menu: every link you shared with a ?ref= tag or a utm_source as one row, with a bar for its visitors, the visitors who reached a goal, the revenue credited to it, a 30-day line and when it last brought someone, for the dashboard's period. A tag and the site it names count as one row. A tap on a row opens the dashboard for that link alone. Before the first tagged visit it offers a sample link to copy.
 
 ## 0.7.21 (14 Oct 2026)
