@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Chart hover tips stay fully inside their card: at the first or last minute of Live, and in every other chart, the tip moves to the side of the cursor that has room, or above it, and never covers the point you are on.
+
 ## 0.7.21 (14 Oct 2026)
 
 - All sites: each site card shows who is online right now, large with a live dot (grey "0 online" when no one is), with today's visitors under it and a small ↓/↑ percent chip against the same time last week (amber when lower; the sentence is in its tooltip) and a red "no visits 22 h" chip for a quiet site. Sites are grouped by the real comparison: 15% or more below the usual pace is "Lower than usual", 15% or more above is "Busier than usual", else "Steady" (before, 15 to 26% below sat under Steady), and sites with no visit in 30 days are "Quiet". The Live card keeps only events (busy moments, went quiet, stopped answering). On a phone the footer is one row and stays clear of the Peek button.

@@ -263,3 +263,22 @@ test('a site with visits opens in Live when the address has no mode, and Data st
   await page.goto(`${API}/example.com?view=live`)
   await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
 })
+
+test('the minute chart tip stays inside the card at the first and the last minute', async ({ page }) => {
+  await visit(page, 'tip-edge')
+  await signIn(page, '/example.com?view=live')
+  const chart = page.getByRole('img', { name: /Pageviews per minute/ })
+  await expect(chart).toBeVisible({ timeout: 15_000 })
+  const box = (await chart.boundingBox())!
+  const tip = page.locator('.live-line .chart-tip')
+  for (const dx of [2, box.width - 2]) {
+    await page.mouse.move(box.x + dx, box.y + box.height / 2)
+    await expect(tip).toBeVisible()
+    // Measured once its entrance has settled: the place it stays in.
+    await expect.poll(() => tip.evaluate((el) => el.getAnimations().length)).toBe(0)
+    const t =(await tip.boundingBox())!
+    expect(t.x).toBeGreaterThanOrEqual(box.x - 0.5)
+    expect(t.x + t.width).toBeLessThanOrEqual(box.x + box.width + 0.5)
+    expect(t.y).toBeGreaterThanOrEqual(box.y - 0.5)
+  }
+})
