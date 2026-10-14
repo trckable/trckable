@@ -1,6 +1,6 @@
 // Card 2's first tab, what they did: the goals they reached.
 import { EmptyState } from '../../components/EmptyState'
-import { Loading } from '../../components/loading/Loading'
+import { Skeleton } from '../../components/skeleton/Skeleton'
 import { cardCopy } from './copy'
 import type { CardsCtx } from './ctx'
 import { GoalRows } from './GoalRows'
@@ -19,7 +19,7 @@ export function GoalsPanel({ c }: { c: CardsCtx }) {
           {cardCopy.trackGoal}
         </button>
       </div>
-      {c.loading ? <Loading height={164} /> : <GoalRows c={c} />}
+      {c.loading ? <Skeleton height={164} /> : <GoalRows c={c} />}
     </>
   )
 }

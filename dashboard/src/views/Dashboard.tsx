@@ -42,7 +42,7 @@ import { liveShown } from '../features/live/liveShown'
 import { useNotes } from '../features/notes/useNotes'
 import { jump } from '../features/notes/jump'
 import { ChartFoot } from '../features/overview/ChartFoot'
-import { Loading } from '../components/loading/Loading'
+import { Skeleton } from '../components/skeleton/Skeleton'
 import { lazyLoad, whenIdle } from '../lib/lazyLoad'
 import type { CardsCtx } from '../features/cards/ctx'
 import { DIM_LABEL } from '../features/overview/dimLabels'
@@ -548,7 +548,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         {/* Until a short span's hours, or the notes that may move a new
             site's start, arrive: never one chart first, then a jump. */}
         {firstLoad || (byHour && !hours) ? (
-          <Loading height={hold.height} />
+          <Skeleton height={hold.height} />
         ) : (
           <TimeChart
             height={narrow ? 170 : 220}
@@ -626,7 +626,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </Suspense>
       )}
 
-      {hasData && <Suspense fallback={<div aria-hidden="true" style={{ minHeight: 325 }} />}><Cards c={cardsCtx} /></Suspense>}
+      {hasData && <Suspense fallback={<Skeleton height={325} />}><Cards c={cardsCtx} /></Suspense>}
       </StorySlot>
       {cur?.approximate && <Notice kind="approx" />}
       </>}

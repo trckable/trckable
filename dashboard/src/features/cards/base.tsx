@@ -2,7 +2,7 @@
 // devices) and card 2, what they did (goals, what paid).
 import { Target, Users } from 'lucide-react'
 import { lazy, Suspense } from 'react'
-import { Loading } from '../../components/loading/Loading'
+import { Skeleton } from '../../components/skeleton/Skeleton'
 import { lazyLoad, whenIdle } from '../../lib/lazyLoad'
 import { isOn, shows } from '../../lib/modules'
 import { PagesPanel, SourcesPanel } from './Breakdowns'
@@ -18,7 +18,7 @@ whenIdle(Earners.preload)
 const Locations = lazyLoad(() => import('./PlacePanels').then((m) => ({ default: m.LocationsPanel })))
 const Devices = lazyLoad(() => import('./PlacePanels').then((m) => ({ default: m.DevicesPanel })))
 whenIdle(Locations.preload)
-const later = (node: React.ReactNode) => <Suspense fallback={<Loading height={164} />}>{node}</Suspense>
+const later = (node: React.ReactNode) => <Suspense fallback={<Skeleton height={164} />}>{node}</Suspense>
 const FullButton = lazy(() => import('./FullButton'))
 // Google, the AI assistants and the AI crawlers: one chunk, fetched when its tab is opened.
 const AiSearch = lazyLoad(() => import('../aisearch/AiSearch'))
@@ -40,7 +40,7 @@ export function whoTabs(c: CardsCtx): CardTab[] {
 export function whatTabs(c: CardsCtx): CardTab[] {
   const tabs: CardTab[] = []
   if (shows(c.mods, 'cards', 'goals')) tabs.push({ id: 'goals', label: cardCopy.goals, render: () => <GoalsPanel c={c} /> })
-  if (c.money) tabs.push({ id: 'earners', label: cardCopy.earners, render: () => <Suspense fallback={<Loading height={164} />}><Earners c={c} /></Suspense> })
+  if (c.money) tabs.push({ id: 'earners', label: cardCopy.earners, render: () => <Suspense fallback={<Skeleton height={164} />}><Earners c={c} /></Suspense> })
   return tabs
 }
 
