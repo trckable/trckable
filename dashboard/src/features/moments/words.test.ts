@@ -67,3 +67,27 @@ describe('what a pin says', () => {
     expect(s.line).toBe('Milestone · 10,000 visitors')
   })
 })
+
+describe('what a mention says', () => {
+  it('a spike a mention explains is told whole, with the hour', () => {
+    const s = say(pin('spike', { day: '2026-10-14', at: '2026-10-14T14:00', n: { factor: 4.4, visitors: 300, referrer: 'news.ycombinator.com', mention: 'hn', brought: 212 } }), usd)
+    expect(s.line).toBe('Visits jumped 340% at 14:00: posted on Hacker News, 212 visitors came from it.')
+    expect(s.big).toBe('300 visitors')
+  })
+
+  it('by the day there is no hour to give', () => {
+    const s = say(pin('spike', { day: '2026-10-14', at: '2026-10-14T00:00', n: { factor: 3, visitors: 300, mention: 'ph', brought: 1 } }), usd)
+    expect(s.line).toBe('Visits jumped 200%: launched on Product Hunt, 1 visitor came from it.')
+  })
+
+  it('a spike without a mention reads as it did', () => {
+    expect(say(pin('spike', { n: { factor: 4.2, visitors: 816 } }), usd).line).toBe('Spike · 4.2× the usual')
+  })
+
+  it('a mention of its own: where, and the people it brought', () => {
+    const s = say(pin('mention', { day: '2026-10-14', n: { visitors: 40, name: 'X launch', mention: 'ph' } }), usd)
+    expect(s.title).toBe('Mentioned')
+    expect(s.line).toBe('Launched on Product Hunt: 40 visitors came from it')
+    expect(s.facts).toEqual(['X launch', 'Wed, Oct 14'])
+  })
+})

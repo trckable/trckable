@@ -5,7 +5,7 @@ import { bucketLabel } from '../../charts/timeScale'
 import { fmtDay } from '../../lib/dates'
 import { copy } from './copy'
 
-export type MomentKind = 'spike' | 'surge' | 'sale' | 'country' | 'ai' | 'milestone' | 'note'
+export type MomentKind = 'spike' | 'surge' | 'mention' | 'sale' | 'country' | 'ai' | 'milestone' | 'note'
 
 export interface Moment {
   t: string
@@ -23,6 +23,10 @@ export interface Moment {
   value?: number
   currency?: string
   text?: string
+  /** Where it was posted (hn, ph, news): a mention, or a spike one explains. */
+  mention?: string
+  /** The visitors that mention brought. */
+  brought?: number
 }
 
 export interface Placed {

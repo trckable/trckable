@@ -10,6 +10,8 @@ import { fmtDay } from '../../lib/dates'
 import { fmtInt, fmtPct } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import { times } from '../../lib/times'
+import { copy as mentions } from '../mentions/copy'
+import { jumpOf } from '../mentions/model'
 import { copy, titleOf } from './copy'
 import { extraOf, type Span } from './spans'
 import { periodOf } from '../story/moments'
@@ -25,6 +27,17 @@ export interface Said {
 const when = (day?: string) => (day ? fmtDay(day, { weekday: true }) : '')
 const signed = (x: number) => (x >= 0 ? '+' : '−') + fmtPct(Math.abs(x))
 
+const sourceOf = (s?: string): 'hn' | 'ph' | 'news' => (s === 'hn' || s === 'ph' ? s : 'news')
+
+/** A jump a mention explains, told whole: "Visits jumped 340% at 14:10: posted on Hacker News, 212 visitors came from it." */
+function jumped(pin: Pin): string {
+  const { n } = pin
+  if (!n.mention || !n.factor || !n.brought) return ''
+  const posted = mentions.posted[sourceOf(n.mention)]
+  const at = pin.at?.slice(11, 16) ?? ''
+  return at && at !== '00:00' ? mentions.jumped(jumpOf(n.factor), at, posted, n.brought) : mentions.jumpedDay(jumpOf(n.factor), posted, n.brought)
+}
+
 /** `money` writes an amount in the site's currency. */
 export function say(pin: Pin, money: (minor: number) => string): Said {
   const { n } = pin
@@ -32,10 +45,16 @@ export function say(pin: Pin, money: (minor: number) => string): Said {
   const name = pin.filters[0]?.dim === 'channel' ? channelLabel(n.name ?? '') : (n.name ?? '')
   switch (pin.kind) {
     case 'spike': {
+      const said = jumped(pin)
+      if (said) return { title, line: said, big: copy.visitors(n.visitors ?? 0), facts: [copy.usual(times(n.factor ?? 0)), when(pin.day)].filter(Boolean) }
       const from = n.referrer ? extrasCopy.ring.from(n.referrer) : ''
       // Without a usual to multiply (a quiet or young site) it is new traffic: the count and the source.
       if (!n.factor) return { title, line: [extrasCopy.ring.newTraffic(n.visitors ?? 0), from].filter(Boolean).join(' · '), big: copy.visitors(n.visitors ?? 0), facts: [from, when(pin.day)].filter(Boolean) }
       return { title, line: [extrasCopy.ring.spike(n.factor), from].filter(Boolean).join(' · '), big: n.visitors ? copy.visitors(n.visitors) : times(n.factor), facts: [copy.usual(times(n.factor)), from, when(pin.day)].filter(Boolean) }
+    }
+    case 'mention': {
+      const line = mentions.postedLine(mentions.postedHead[sourceOf(n.mention)], n.visitors ?? 0)
+      return { title, line, big: copy.visitors(n.visitors ?? 0), facts: [n.name ?? '', when(pin.day)].filter(Boolean) }
     }
     case 'surge':
       return { title, line: n.name ? copy.surgeFrom(n.name) : title, big: copy.visitors(n.visitors ?? 0), facts: [copy.usual(times(n.factor ?? 0)), when(pin.day)] }

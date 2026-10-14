@@ -187,7 +187,7 @@ export interface Visit {
 export interface Alert {
   id: string
   site_id: string
-  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone' | 'surge'
+  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone' | 'surge' | 'mention'
   enabled: boolean
   target: string
   threshold: number

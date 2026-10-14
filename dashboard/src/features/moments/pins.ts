@@ -7,7 +7,7 @@ import type { Filter, Milestone } from '../../lib/api'
 import type { Insight } from '../extras/extrasApi'
 import type { Moment } from '../story/moments'
 
-export type PinKind = 'spike' | 'surge' | 'sale' | 'referrer' | 'drop' | 'milestone' | 'ai' | 'move' | 'pays'
+export type PinKind = 'spike' | 'surge' | 'mention' | 'sale' | 'referrer' | 'drop' | 'milestone' | 'ai' | 'move' | 'pays'
 
 export interface Pin {
   id: string
@@ -44,6 +44,9 @@ export interface Figures {
   family?: Milestone['kind']
   value?: number
   currency?: string
+  /** Where a mention was posted, and the visitors it brought (a spike one explains has them too). */
+  mention?: string
+  brought?: number
 }
 
 const day = (t: string) => t.slice(0, 10)
@@ -59,7 +62,10 @@ export function pinsFromMoments(list: Moment[], money: boolean): Pin[] {
     switch (m.kind) {
       case 'spike':
       case 'surge':
-        out.push({ ...base, kind: m.kind, score: (m.kind === 'surge' ? 85 : 80) + Math.min(15, m.factor ?? 0), filters: m.referrer ? [{ dim: 'referrer', value: m.referrer }] : [], showDay: true, n: { factor: m.factor, visitors: m.visitors, referrer: m.referrer, name: m.text } })
+        out.push({ ...base, kind: m.kind, score: (m.kind === 'surge' ? 85 : 80) + Math.min(15, m.factor ?? 0), filters: m.referrer ? [{ dim: 'referrer', value: m.referrer }] : [], showDay: true, n: { factor: m.factor, visitors: m.visitors, referrer: m.referrer, name: m.text, mention: m.mention, brought: m.brought } })
+        break
+      case 'mention':
+        out.push({ ...base, kind: 'mention', score: 78, filters: m.referrer ? [{ dim: 'referrer', value: m.referrer }] : [], showDay: true, n: { visitors: m.brought, referrer: m.referrer, name: m.text, mention: m.mention } })
         break
       case 'sale':
         if (money) out.push({ ...base, kind: 'sale', score: 60 + 20 * ((m.amount ?? 0) / biggest), filters: m.channel ? [{ dim: 'channel', value: m.channel }] : [], showDay: true, n: { count: m.count, amount: m.amount, channel: m.channel } })

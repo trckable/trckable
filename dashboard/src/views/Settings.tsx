@@ -1,4 +1,4 @@
-import { Activity, Bell, Blocks, Check, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, LayoutTemplate, RefreshCw, Search, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert } from 'lucide-react'
+import { Activity, Bell, Blocks, Check, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, LayoutTemplate, RefreshCw, Search, Newspaper, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { isViewer } from '../lib/me'
 import { api, siteState, fail, type InstallCheck, type Site, type SiteState, more } from '../lib/apiMore'
@@ -23,17 +23,19 @@ import { WidgetsSettings } from './Widgets'
 import { HealthSettings } from './Health'
 import { AlertsTab } from '../features/reports/AlertsTab'
 import { SearchSettings } from './Search'
-import { MODULE_WHY, moduleOf } from './settingsModules'
+import { moduleOf } from './settingsModules'
 import { NotesSettings } from '../features/notes/NotesSettings'
 import { MilestonesSetting } from '../features/milestones/MilestonesSetting'
 import { ImportSetting } from '../features/install/ImportSetting'
 import { DeleteSite } from './Sites'
+import { ModuleOff } from './ModuleOff'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import './Settings.css'
 
 type TabID = SettingsTab
 
 const IconCrop = lazy(() => import('../components/AvatarCrop'))
+const MentionsSettings = lazy(() => import('../features/mentions/MentionsSettings'))
 
 // Only the open site lives here. Anything about the account — the list of
 // sites, keys, the password — is one dialog away (see AccountDialog), so the
@@ -47,58 +49,17 @@ const TABS: { id: TabID; label: string; icon: typeof Cog }[] = [
   { id: 'notes', label: 'Notes', icon: StickyNote },
   { id: 'payments', label: 'Payments', icon: CreditCard },
   { id: 'search', label: 'Search Console', icon: Search },
+  { id: 'mentions', label: 'Mentions', icon: Newspaper },
   { id: 'privacy', label: 'Data & privacy', icon: ShieldCheck },
   { id: 'alerts', label: 'Alerts', icon: Bell },
   { id: 'health', label: 'Health', icon: Activity },
 ]
 
-function NavIcon({ d: Icon }: { d: typeof Cog }) {
-  return <Icon size={15} strokeWidth={1.75} aria-hidden="true" />
-}
-
-/** A module's section while the module is off: what it would do, and the
- *  switch to turn it on — rather than a setup for something that is off. */
-function ModuleOff({ site, tab, onOn }: { site: Site; tab: TabID; onOn: () => void }) {
-  const [busy, setBusy] = useState(false)
-  const why = MODULE_WHY[tab]
-  const id = moduleOf(tab)
-  const icon = TABS.find((t) => t.id === tab)?.icon
-  if (!why || !id || !icon) return null
-  return (
-    <section className="card module-off">
-      <span className="icon-tile">
-        <NavIcon d={icon} />
-      </span>
-      <div>
-        <h3>The {why.name} module is off</h3>
-        <p className="muted">{why.what}</p>
-      </div>
-      {!isViewer() && (
-        <button
-          type="button"
-          className="btn primary"
-          disabled={busy}
-          onClick={() => {
-            setBusy(true)
-            more
-              .setModule(site.id, id, true)
-              .then(onOn)
-              .catch((e: unknown) => fail(e))
-              .finally(() => setBusy(false))
-          }}
-        >
-          {busy ? 'Turning on…' : 'Turn on'}
-        </button>
-      )}
-    </section>
-  )
-}
-
 // The dialog's menu, grouped the way an owner looks for things.
 const GROUPS: { name: string; tabs: TabID[] }[] = [
   { name: 'This site', tabs: ['site', 'install', 'modules', 'sharing', 'widgets', 'notes'] },
   { name: 'Money', tabs: ['payments'] },
-  { name: 'Data', tabs: ['search', 'privacy', 'alerts'] },
+  { name: 'Data', tabs: ['search', 'mentions', 'privacy', 'alerts'] },
   { name: 'Instance', tabs: ['health'] },
 ]
 /** A site's settings as a dialog over its dashboard: the sections on the
@@ -134,7 +95,7 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
   )
   return (
     <Window label={`Settings for ${p.site.domain}`} head={<SettingsHead site={p.site} />} tabs={tabs} tab={tab} onTab={(id) => go(id as TabID)} onClose={close}>
-      {off(tab) ? <ModuleOff site={p.site} tab={tab} onOn={loadMods} /> : <SettingsSection tab={tab} site={p.site} onSites={p.onSites} />}
+      {off(tab) ? <ModuleOff site={p.site} tab={tab} icon={TABS.find((t) => t.id === tab)?.icon} onOn={loadMods} /> : <SettingsSection tab={tab} site={p.site} onSites={p.onSites} />}
     </Window>
   )
 }
@@ -159,6 +120,7 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
       {tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
       {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}
       {tab === 'search' && <SearchSettings key={'sc' + site.id} site={site} />}
+      {tab === 'mentions' && <Suspense fallback={null}><MentionsSettings key={'mn' + site.id} site={site} /></Suspense>}
       {tab === 'privacy' && <Locked><PrivacyTab key={'pv' + site.id} site={site} onSites={onSites} /></Locked>}
       {tab === 'alerts' && <Locked><AlertsTab key={'al' + site.id} site={site} /></Locked>}
       {tab === 'health' && <HealthSettings />}
