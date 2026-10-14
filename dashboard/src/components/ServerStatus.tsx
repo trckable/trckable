@@ -1,11 +1,11 @@
 // The footer's dot and its few words: how the server is doing (lib/serverStatus.ts).
 import { Tooltip } from '../kit/Tooltip'
 import { useServerStatus } from '../lib/serverStatus'
-import { footerCopy } from './footerCopy'
+import { footerMoreCopy } from './footerMoreCopy'
 
 export default function ServerStatus() {
   const status = useServerStatus()
-  const words = footerCopy.status[status]
+  const words = footerMoreCopy.status[status]
   return (
     <Tooltip text={words.tip}>
       {(tip) => (

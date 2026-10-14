@@ -6,9 +6,9 @@ import { DialogActions } from './DialogActions'
 import { DialogHead } from './DialogHead'
 import { toast } from './Toast'
 import { fail, more } from '../lib/apiMore'
-import { footerCopy } from './footerCopy'
+import { footerMoreCopy } from './footerMoreCopy'
 
-const t = footerCopy.dialog
+const t = footerMoreCopy.dialog
 
 const MAX = 2000
 
@@ -31,14 +31,14 @@ export default function FeedbackDialog({ site, onClose }: { site?: string; onClo
       })
   }
   return (
-    <Modal label={footerCopy.feedback} onClose={onClose} keepSize={false}>
+    <Modal label={footerMoreCopy.feedback} onClose={onClose} keepSize={false}>
       <form
         onSubmit={(e) => {
           e.preventDefault()
           send()
         }}
       >
-        <DialogHead icon={MessageSquare} heading={footerCopy.feedback} hint={t.hint} />
+        <DialogHead icon={MessageSquare} heading={footerMoreCopy.feedback} hint={t.hint} />
         <textarea
           className="input feedback-text"
           rows={5}
