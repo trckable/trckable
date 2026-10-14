@@ -6,12 +6,23 @@ import { downCopy } from './downCopy'
 import { when } from './time'
 
 export function ProbeList({ probes }: { probes: ProbeLook[] }) {
-  return probes.map((p) => (
-    <li key={p.at} className={p.blocked ? 'faint' : p.error ? 'bad' : 'ok'} data-probe={p.at}>
-      {p.blocked ? <CircleAlert size={15} strokeWidth={2.25} aria-hidden="true" /> : p.error ? <X size={15} strokeWidth={2.25} aria-hidden="true" /> : <Check size={15} strokeWidth={2.25} aria-hidden="true" />}
+  return probes.map((p) => {
+    const kind = lookKind(p)
+    const Icon = icons[kind]
+    return (
+    <li key={p.at} className={kind} data-probe={p.at}>
+      <Icon size={15} strokeWidth={2.25} aria-hidden="true" />
       <span>
         <b>{when(p.at)}</b> {p.blocked ? `${downCopy.blockedLook} · ${p.status}` : p.error || (p.status ? copy.answered(p.status, p.ms ?? 0) : copy.noAnswer)}
       </span>
     </li>
-  ))
+    )
+  })
+}
+
+const icons = { faint: CircleAlert, bad: X, ok: Check }
+
+function lookKind(p: ProbeLook): keyof typeof icons {
+  if (p.blocked) return 'faint'
+  return p.error ? 'bad' : 'ok'
 }
