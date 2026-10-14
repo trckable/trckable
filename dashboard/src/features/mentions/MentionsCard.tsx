@@ -15,7 +15,7 @@ import { useMentions } from './useMentions'
 import './mentions.css'
 
 export default function MentionsCard({ site }: { site: Site }) {
-  const [near, setNear] = useState(false)
+  const [near, setNear] = useState(() => typeof IntersectionObserver === 'undefined')
   const mark = useRef<HTMLDivElement>(null)
   // Asked for only when the card is about to be seen: it is under the fold and never part of the first load.
   useEffect(() => {
