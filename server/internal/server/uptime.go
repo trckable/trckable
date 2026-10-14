@@ -97,7 +97,7 @@ func (s *Server) runUptime(ctx context.Context) {
 func offset(site string, every time.Duration) time.Duration {
 	h := fnv.New32a()
 	h.Write([]byte(site))
-	return time.Duration(uint64(every) * uint64(h.Sum32()) / (1 << 32))
+	return time.Duration(uint64(every) * uint64(h.Sum32()) / (1 << 32)) //nolint:gosec // a duration is never negative
 }
 
 // round looks at every site once, each at its offset, with at most

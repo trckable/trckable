@@ -153,11 +153,11 @@ func TestRoundSpreadsAndBoundsTheLooks(t *testing.T) {
 	p.sleep = func(_ context.Context, d time.Duration) { mu.Lock(); waits = append(waits, d); mu.Unlock() }
 	done := make(chan struct{})
 	go func() { p.round(ctx); close(done) }()
-	for atomic.LoadInt32(&total) < int32(p.workers) {
+	for atomic.LoadInt32(&total) < int32(p.workers) { //nolint:gosec // a handful of workers
 		time.Sleep(time.Millisecond)
 	}
 	time.Sleep(20 * time.Millisecond)
-	if got := atomic.LoadInt32(&peak); got != int32(p.workers) {
+	if got := atomic.LoadInt32(&peak); got != int32(p.workers) { //nolint:gosec // a handful of workers
 		t.Fatalf("%d looks at once, want %d", got, p.workers)
 	}
 	close(release)
