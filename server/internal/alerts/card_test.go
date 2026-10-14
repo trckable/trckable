@@ -78,7 +78,7 @@ func TestCardEscapesEverythingAndKeepsLinksSafe(t *testing.T) {
 	if strings.Contains(h, "Stop these alerts") {
 		t.Error("an unsafe stop link was drawn")
 	}
-	if strings.Contains(h, "<link") || strings.Contains(h, "@import") || strings.Contains(h, "src=") {
+	if strings.Contains(h, "<link") || strings.Contains(h, "@import") || strings.Contains(h, `src="http`) {
 		t.Error("an external resource")
 	}
 }

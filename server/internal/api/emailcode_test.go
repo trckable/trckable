@@ -32,7 +32,7 @@ func nextCode(t *testing.T, box chan alerts.Report) string {
 	select {
 	case r := <-box:
 		m := codeInSubject.FindStringSubmatch(r.Subject)
-		if m == nil || !strings.Contains(r.Text, m[0]) || !strings.Contains(r.HTML, m[0]) {
+		if m == nil || !strings.Contains(r.Text, m[0]) || !strings.Contains(r.HTML, m[1]+m[2]) {
 			t.Fatalf("the email has no code: %q", r.Subject)
 		}
 		return m[1] + m[2]
@@ -478,5 +478,47 @@ func TestDeviceNamesAreCleaned(t *testing.T) {
 	name := out["device"].(map[string]any)["name"].(string)
 	if len([]rune(name)) != sqlite.MaxDeviceName || strings.ContainsAny(name, "\x00\n") || !strings.HasPrefix(name, "Phone x") {
 		t.Fatalf("name %q", name)
+	}
+}
+
+func TestEmailCodeMailSaysWhyAndFromWhere(t *testing.T) {
+	g := newRig(t)
+	g.setup(t, client())
+	g.api.Locate = func(string) string { return "Berlin, DE" }
+	box := mailbox(g)
+	g.askCodeBody(t, `{"email":"me@site.com","device":{"name":"Pixel 8","platform":"android"}}`)
+	select {
+	case r := <-box:
+		if !strings.HasPrefix(r.Subject, "Your trckable app sign-in code: ") {
+			t.Fatalf("subject: %q", r.Subject)
+		}
+		m := codeInSubject.FindStringSubmatch(r.Subject)
+		for _, want := range []string{m[1] + m[2], "cid:" + alerts.LogoCID, "Sign in to the trckable mobile app", "Pixel 8 (Android)", "Berlin, DE", "trckable.com"} {
+			if !strings.Contains(r.HTML, want) {
+				t.Errorf("the HTML lacks %q", want)
+			}
+		}
+		for _, want := range []string{m[0], "Pixel 8 (Android)", "Berlin, DE", "nobody can sign in without the code"} {
+			if !strings.Contains(r.Text, want) {
+				t.Errorf("the text lacks %q", want)
+			}
+		}
+		if len(r.Attachments) != 1 || r.Attachments[0].Inline != alerts.LogoCID {
+			t.Errorf("the logo is not attached inline: %v", r.Attachments)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("no email was sent")
+	}
+	g.askCodeBody(t, `{"email":"me@site.com"}`)
+	r := <-box
+	if !strings.Contains(r.HTML, "the trckable dashboard") || !strings.Contains(r.Text, "a web browser") {
+		t.Errorf("a code asked without a device should name the browser: %q", r.Text)
+	}
+}
+
+func (g *rig) askCodeBody(t *testing.T, body string) {
+	t.Helper()
+	if code, out := do(t, client(), "POST", g.srv.URL+"/api/v1/login/code", body); code != http.StatusAccepted {
+		t.Fatalf("ask: %d %v", code, out)
 	}
 }

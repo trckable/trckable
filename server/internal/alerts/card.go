@@ -63,14 +63,22 @@ const cardCSS = `:root{color-scheme:light dark;supported-color-schemes:light dar
 .bt a{color:#0b0d10 !important}
 }`
 
+// pageOpen starts every branded email: head, light page, one centred column.
+// extraCSS rides in the style block after the shared dark-mode rules.
+func pageOpen(extraCSS string) string {
+	return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><style>` + cardCSS + extraCSS + `</style></head>` +
+		`<body class="bg" style="margin:0;padding:0;background:#ffffff"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="bg" style="background:#ffffff"><tr><td align="center" style="padding:24px 16px">` +
+		`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%"><tr><td class="tx" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.5;color:#16181c">`
+}
+
+const pageClose = `</td></tr></table></td></tr></table></body></html>`
+
 // HTML draws the card. stop and settings are the footer's two links, left out
 // when empty.
 func (c Card) HTML(stop, settings string) string {
 	var b strings.Builder
-	b.WriteString(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><style>` + cardCSS + `</style></head>`)
-	b.WriteString(`<body class="bg" style="margin:0;padding:0;background:#ffffff"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="bg" style="background:#ffffff"><tr><td align="center" style="padding:24px 16px">`)
-	b.WriteString(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%"><tr><td class="tx" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.5;color:#16181c">`)
-
+	b.WriteString(pageOpen(""))
+	b.WriteString(brandHeader())
 	if c.Eyebrow != "" {
 		dot := ""
 		if c.Live {
@@ -130,7 +138,8 @@ func (c Card) HTML(stop, settings string) string {
 	if len(links) > 0 {
 		b.WriteString(`<br>` + strings.Join(links, " · "))
 	}
-	b.WriteString(`</div></td></tr></table></td></tr></table></body></html>`)
+	b.WriteString(`<div class="mu" style="font-size:12px;line-height:1.6;color:#6b7078;margin:10px 0 0">` + brandFoot + `</div>`)
+	b.WriteString(pageClose)
 	return b.String()
 }
 
