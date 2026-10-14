@@ -54,6 +54,8 @@ var routeRules = map[string]string{
 	"GET /api/v1/incidents":                                      "read",
 	"GET /api/v1/sites/{site}/mentions":                          "read",
 	"GET /api/v1/sites/{site}/mentions/keywords":                 "read",
+	"GET /api/v1/sites/{site}/mentions/curves":                   "read",
+	"GET /api/v1/sites/{site}/mentions/{id}":                     "read",
 	"PUT /api/v1/sites/{site}/mentions/keywords":                 "write",
 	"POST /api/v1/sites":                                         "write",
 	"GET /api/v1/sites/{site}":                                   "read",
