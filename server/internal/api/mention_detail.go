@@ -161,13 +161,19 @@ func (a *API) mentionDetail(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+const topPagesSQL = `SELECT entry_page, count(DISTINCT visitor_id) AS n FROM sessions
+	WHERE site_id = ? AND start >= ? AND start < ? AND referrer = ? AND coalesce(entry_page, '') <> ''
+	GROUP BY 1 ORDER BY n DESC, 1 LIMIT ?`
+
+const topCountriesSQL = `SELECT country, count(DISTINCT visitor_id) AS n FROM sessions
+	WHERE site_id = ? AND start >= ? AND start < ? AND referrer = ? AND coalesce(country, '') <> ''
+	GROUP BY 1 ORDER BY n DESC, 1 LIMIT ?`
+
 // mentionBreakdown is what the visitors from a host read, where they live and
 // how many of them reached a goal.
 func mentionBreakdown(ctx context.Context, db *sql.DB, site, host string, from, to time.Time) (pages, countries []namedCount, goals int64, err error) {
-	top := func(col string) ([]namedCount, error) {
-		rows, err := db.QueryContext(ctx, `SELECT coalesce(`+col+`, ''), count(DISTINCT visitor_id) AS n FROM sessions
-			WHERE site_id = ? AND start >= ? AND start < ? AND referrer = ? AND coalesce(`+col+`, '') <> ''
-			GROUP BY 1 ORDER BY n DESC, 1 LIMIT ?`, site, from.UTC(), to.UTC(), host, topRows)
+	top := func(q string) ([]namedCount, error) {
+		rows, err := db.QueryContext(ctx, q, site, from.UTC(), to.UTC(), host, topRows)
 		if err != nil {
 			return nil, err
 		}
@@ -182,10 +188,10 @@ func mentionBreakdown(ctx context.Context, db *sql.DB, site, host string, from, 
 		}
 		return out, rows.Err()
 	}
-	if pages, err = top("entry_page"); err != nil {
+	if pages, err = top(topPagesSQL); err != nil {
 		return
 	}
-	if countries, err = top("country"); err != nil {
+	if countries, err = top(topCountriesSQL); err != nil {
 		return
 	}
 	err = db.QueryRowContext(ctx, `SELECT count(DISTINCT visitor_id) FROM sessions

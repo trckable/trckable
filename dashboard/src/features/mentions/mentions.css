@@ -138,6 +138,15 @@
 .mention-chip strong {
   font-variant-numeric: tabular-nums;
 }
+@media (max-width: 640px) {
+  .mentions-more,
+  .mentions-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
 @media (max-width: 520px) {
   .mention-row {
     gap: 10px;

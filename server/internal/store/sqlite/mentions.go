@@ -118,7 +118,7 @@ func JoinWords(site SiteRow, added []string) []string {
 	seen := map[string]bool{}
 	name := strings.TrimSpace(site.Name)
 	label := strings.ToLower(strings.SplitN(strings.TrimPrefix(strings.ToLower(site.Domain), "www."), ".", 2)[0])
-	if len(strings.Fields(name)) < 2 && !(len(label) >= 3 && strings.Contains(strings.ToLower(name), label)) {
+	if len(strings.Fields(name)) < 2 && (len(label) < 3 || !strings.Contains(strings.ToLower(name), label)) {
 		name = ""
 	}
 	for _, k := range append([]string{site.Domain, name}, added...) {

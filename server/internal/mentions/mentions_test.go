@@ -28,7 +28,7 @@ func (f *fake) Do(r *http.Request) (*http.Response, error) {
 	var body []byte
 	for prefix, file := range f.files {
 		if strings.HasPrefix(r.URL.String(), prefix) {
-			b, err := os.ReadFile("testdata/" + file)
+			b, err := os.ReadFile("testdata/" + file) //nolint:gosec // a fixture named in this test file
 			if err != nil {
 				f.t.Fatal(err)
 			}

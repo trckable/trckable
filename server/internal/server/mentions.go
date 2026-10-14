@@ -340,7 +340,10 @@ func (f *mentionFinder) productHunt(ctx context.Context, sites []sqlite.SiteRow,
 }
 
 // visit is one visitor in one hour.
-type visit struct{ visitor, hour int64 }
+type visit struct {
+	visitor uint64
+	hour    int64
+}
 
 // hostVisits are the visitors whose sessions began in [from, to) with host as
 // their referrer, by hour.
@@ -380,7 +383,7 @@ func openVisits(list []writer.Session, host string, from, to time.Time) []visit 
 	for _, s := range list {
 		at := time.UnixMilli(s.Start)
 		if s.Referrer == host && !at.Before(from) && at.Before(to) {
-			out = append(out, visit{int64(s.Visitor), at.Truncate(time.Hour).Unix()})
+			out = append(out, visit{s.Visitor, at.Truncate(time.Hour).Unix()})
 		}
 	}
 	return out
@@ -389,12 +392,12 @@ func openVisits(list []writer.Session, host string, from, to time.Time) []visit 
 // tally is how many different visitors came and the hour most of them came in
 // (the earliest when two tie).
 func tally(list []visit) (visitors, peak int64) {
-	people := map[int64]bool{}
-	hours := map[int64]map[int64]bool{}
+	people := map[uint64]bool{}
+	hours := map[int64]map[uint64]bool{}
 	for _, v := range list {
 		people[v.visitor] = true
 		if hours[v.hour] == nil {
-			hours[v.hour] = map[int64]bool{}
+			hours[v.hour] = map[uint64]bool{}
 		}
 		hours[v.hour][v.visitor] = true
 	}
