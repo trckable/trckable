@@ -22,8 +22,8 @@ import (
 // The light uptime probe: every few minutes (TRCKABLE_UPTIME_EVERY, 0 is
 // off) one GET of each site's homepage, nothing else: no scripts, a small
 // body read, redirects followed. A final answer from the site (2xx, 3xx, and
-// 4xx such as 401 or 404) is up; no answer, a failed lookup or handshake, a
-// timeout or a 5xx is down; a block or challenge from a firewall (403, 429, a
+// an auth wall, 401 or 407) is up; no answer, a failed lookup or handshake, a
+// timeout or a 5xx or other 4xx such as 404 is down; a block or challenge from a firewall (403, 429, a
 // challenge page) is neither: we cannot look, which says nothing about the
 // site's visitors. A site is down after two failed probes in a row and up
 // again after one good one; blocked looks change neither. The daily install
@@ -221,7 +221,9 @@ func classify(l look, err error) outcome {
 		return outcomeBlocked
 	case l.Status == http.StatusServiceUnavailable && challengePage(l.Body):
 		return outcomeBlocked
-	case l.Status >= 500 || l.Status < 200:
+	case l.Status == http.StatusUnauthorized, l.Status == http.StatusProxyAuthRequired:
+		return outcomeUp // an auth wall: the server answers
+	case l.Status >= 400 || l.Status < 200:
 		return outcomeDown
 	}
 	return outcomeUp
@@ -241,7 +243,7 @@ func challengePage(body string) bool {
 func probeCause(status int, err error) string {
 	var dns *net.DNSError
 	switch {
-	case err == nil && status >= 200 && status < 500:
+	case err == nil && (status >= 200 && status < 400 || status == http.StatusUnauthorized || status == http.StatusProxyAuthRequired):
 		return ""
 	case err == nil:
 		return fmt.Sprintf("Your homepage answered %d", status)
