@@ -11,6 +11,7 @@ export interface ProbeLook {
   status?: number
   ms?: number
   error?: string
+  blocked?: boolean
 }
 
 export * from './api'

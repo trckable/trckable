@@ -22,6 +22,7 @@ import { silence, span, when } from './time'
 import { useChecks } from './useChecks'
 import { useProbes } from './useProbes'
 import { ProbeList } from './ProbeList'
+import { Blocked } from './Blocked'
 import '../signals/surge.css'
 import './StatusCard.css'
 
@@ -52,6 +53,7 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
         </span>
       </header>
       <p className="sgm-honest muted">{probed ? downCopy.bar(site.down_cause ?? '') : causeOf(rows, down)}</p>
+      {site.probe_blocked_since && <p className="sgm-honest muted">{downCopy.blocked}</p>}
       {last > 0 && recent && <GapChart slices={recent.slices} last={when(last)} at={slotOf(last, recent.now)} />}
       <div className="sgm-tiles">
         <section className="sgm-tile" aria-label={copy.tileVisit}>
@@ -240,7 +242,7 @@ function spanLong(secs: number): string {
 /** The badge, if there is anything to say about this site's visits: a quiet spell now, or a gap that just closed. */
 export function StatusCard({ site }: { site: Site }) {
   const status = statusOf(site)
-  if (status === 'new') return null
+  if (status === 'new') return site.probe_blocked_since ? <Blocked /> : null
   if (status === 'down' || status === 'quiet') return <Gone site={site} last={site.last_event_at ?? 0} down={status === 'down'} />
-  return <Back site={site} />
+  return site.probe_blocked_since ? <Blocked /> : <Back site={site} />
 }

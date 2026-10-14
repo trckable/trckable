@@ -1004,6 +1004,9 @@ export default {
   'sitestatus.down.bar': (cause: string) =>
     `Tu sitio no responde a nuestras comprobaciones${cause ? ` (${cause})` : ''}. Algunos visitantes aún llegan, por eso sigues viendo gente en línea.`,
   'sitestatus.down.see': 'Ver incidente',
+  'sitestatus.down.blocked': 'No podemos comprobar este sitio: su cortafuegos bloquea nuestras comprobaciones. Tus visitantes no se ven afectados.',
+  'sitestatus.down.blockedBadge': 'No se puede comprobar',
+  'sitestatus.down.blockedLook': 'Bloqueado por el cortafuegos',
   'allnext.moreLook': (n: number) => (n === 1 ? '1 más necesita atención.' : `${n} más necesitan atención.`),
   'allnext.yesterday': 'ayer',
   'allnext.lastDay': (day: string) => `el ${day} pasado`,

@@ -1001,6 +1001,9 @@ export default {
   'sitestatus.down.bar': (cause: string) =>
     `Deine Website antwortet nicht auf unsere Prüfungen${cause ? ` (${cause})` : ''}. Manche Besucher kommen trotzdem durch, deshalb siehst du noch Leute online.`,
   'sitestatus.down.see': 'Vorfall ansehen',
+  'sitestatus.down.blocked': 'Wir können diese Website nicht prüfen: Deren Firewall blockt unsere Prüfungen. Deine Besucher sind nicht betroffen.',
+  'sitestatus.down.blockedBadge': 'Nicht prüfbar',
+  'sitestatus.down.blockedLook': 'Von der Firewall blockiert',
   'allnext.moreLook': (n: number) => (n === 1 ? '1 weitere braucht einen Blick.' : `${n} weitere brauchen einen Blick.`),
   'allnext.yesterday': 'gestern',
   'allnext.lastDay': (day: string) => `letzten ${day}`,

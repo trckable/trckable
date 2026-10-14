@@ -992,6 +992,9 @@ export default {
   'sitestatus.down.bar': (cause: string) =>
     `Votre site ne répond pas à nos vérifications${cause ? ` (${cause})` : ''}. Certains visiteurs passent encore, c’est pourquoi vous voyez toujours des gens en ligne.`,
   'sitestatus.down.see': 'Voir l’incident',
+  'sitestatus.down.blocked': 'Nous ne pouvons pas vérifier ce site : son pare-feu bloque nos vérifications. Tes visiteurs ne sont pas concernés.',
+  'sitestatus.down.blockedBadge': 'Vérification impossible',
+  'sitestatus.down.blockedLook': 'Bloqué par le pare-feu',
   'allnext.moreLook': (n: number) => (n === 1 ? '1 autre mérite un coup d’œil.' : `${n} autres méritent un coup d’œil.`),
   'allnext.yesterday': 'hier',
   'allnext.lastDay': (day: string) => `${day} dernier`,

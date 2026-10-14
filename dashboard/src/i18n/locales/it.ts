@@ -998,6 +998,9 @@ export default {
   'sitestatus.down.bar': (cause: string) =>
     `Il tuo sito non risponde ai nostri controlli${cause ? ` (${cause})` : ''}. Alcuni visitatori riescono ancora ad arrivare, per questo vedi ancora persone online.`,
   'sitestatus.down.see': 'Vedi l’incidente',
+  'sitestatus.down.blocked': 'Non possiamo controllare questo sito: il suo firewall blocca i nostri controlli. I tuoi visitatori non sono colpiti.',
+  'sitestatus.down.blockedBadge': 'Controllo impossibile',
+  'sitestatus.down.blockedLook': 'Bloccato dal firewall',
   'allnext.moreLook': (n: number) => (n === 1 ? '1 altro richiede un’occhiata.' : `${n} altri richiedono un’occhiata.`),
   'allnext.yesterday': 'ieri',
   'allnext.lastDay': (day: string) => `${day} scorso`,

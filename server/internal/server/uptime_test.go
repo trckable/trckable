@@ -18,9 +18,12 @@ func fakeProber(st *sqlite.Store, answer func(url string) (int, error)) (*prober
 	*clock = 1_800_000_000
 	p := &prober{
 		st: st, every: 5 * time.Minute, workers: 3,
-		now:     func() time.Time { return time.Unix(atomic.LoadInt64(clock), 0) },
-		sleep:   func(context.Context, time.Duration) {},
-		get:     func(_ context.Context, u string) (int, error) { return answer(u) },
+		now:   func() time.Time { return time.Unix(atomic.LoadInt64(clock), 0) },
+		sleep: func(context.Context, time.Duration) {},
+		get: func(_ context.Context, u string) (look, error) {
+			status, err := answer(u)
+			return look{Status: status}, err
+		},
 		refused: func(context.Context, string) bool { return false },
 		changed: func(context.Context, sqlite.SiteRow, sqlite.SiteProbe, sqlite.SiteProbe) {},
 	}
@@ -101,6 +104,9 @@ func TestProbeCauses(t *testing.T) {
 		{200, nil, ""},
 		{301, nil, ""},
 		{404, nil, "Your homepage answered 404"},
+		{401, nil, ""},
+		{500, nil, "Your homepage answered 500"},
+		{521, nil, "Your homepage answered 521"},
 		{0, &net.DNSError{IsNotFound: true}, "DNS name not found"},
 		{0, context.DeadlineExceeded, "No answer within 10 seconds"},
 		{0, errors.New("connection refused"), "The server could not be reached"},
@@ -225,5 +231,89 @@ func TestPlainDuration(t *testing.T) {
 		if got := plainDuration(secs); got != want {
 			t.Errorf("%d: %q want %q", secs, got, want)
 		}
+	}
+}
+
+func TestClassifyLooks(t *testing.T) {
+	challenge := "<html><title>Just a moment...</title></html>"
+	cases := []struct {
+		name string
+		l    look
+		err  error
+		want outcome
+	}{
+		{"200", look{Status: 200}, nil, outcomeUp},
+		{"301", look{Status: 301}, nil, outcomeUp},
+		{"401", look{Status: 401}, nil, outcomeUp},
+		{"404", look{Status: 404}, nil, outcomeDown},
+		{"410", look{Status: 410}, nil, outcomeDown},
+		{"407", look{Status: 407}, nil, outcomeUp},
+		{"403", look{Status: 403}, nil, outcomeBlocked},
+		{"429", look{Status: 429}, nil, outcomeBlocked},
+		{"cloudflare challenge header", look{Status: 200, Challenged: true}, nil, outcomeBlocked},
+		{"cloudflare challenge 403", look{Status: 403, Challenged: true, Body: challenge}, nil, outcomeBlocked},
+		{"challenge page on 503", look{Status: 503, Body: challenge}, nil, outcomeBlocked},
+		{"503", look{Status: 503, Body: "maintenance"}, nil, outcomeDown},
+		{"500", look{Status: 500}, nil, outcomeDown},
+		{"520", look{Status: 520}, nil, outcomeDown},
+		{"526", look{Status: 526}, nil, outcomeDown},
+		{"timeout", look{}, context.DeadlineExceeded, outcomeDown},
+		{"dns", look{}, &net.DNSError{IsNotFound: true}, outcomeDown},
+		{"handshake", look{}, errors.New("tls: handshake failure"), outcomeDown},
+	}
+	for _, c := range cases {
+		if got := classify(c.l, c.err); got != c.want {
+			t.Errorf("%s: %d, want %d", c.name, got, c.want)
+		}
+	}
+}
+
+func TestBlockedLooksNeverMakeNorEndADown(t *testing.T) {
+	ctx := context.Background()
+	st, site := openForIncidents(t)
+	p, clock := fakeProber(st, nil)
+	answer := look{Status: 403}
+	p.get = func(context.Context, string) (look, error) { return answer, nil }
+	row := sqlite.SiteRow{ID: site, Domain: "a.com"}
+	var told []string
+	p.changed = func(_ context.Context, _ sqlite.SiteRow, before, after sqlite.SiteProbe) {
+		switch {
+		case !before.Down() && after.Down():
+			told = append(told, "down")
+		case before.Down() && after.Failures == 0:
+			told = append(told, "up")
+		}
+	}
+	for range 5 {
+		p.probe(ctx, row)
+		*clock += 300
+	}
+	got, _ := st.ProbeOf(ctx, site)
+	if got.Down() || got.Failures != 0 || got.BlockedSince != 1_800_000_000 || got.Status != 403 || len(told) != 0 {
+		t.Fatalf("blocked: %+v told %v", got, told)
+	}
+	// Two real failures make it down; a blocked look then neither ends it nor adds to it.
+	answer = look{Status: 503}
+	p.probe(ctx, row)
+	*clock += 300
+	p.probe(ctx, row)
+	*clock += 300
+	answer = look{Status: 429}
+	p.probe(ctx, row)
+	*clock += 300
+	got, _ = st.ProbeOf(ctx, site)
+	if !got.Down() || got.Failures != 2 || got.Error != "Your homepage answered 503" || got.BlockedSince == 0 {
+		t.Fatalf("down then blocked: %+v", got)
+	}
+	// An answer ends the block, and the down with it.
+	answer = look{Status: 200}
+	p.probe(ctx, row)
+	got, _ = st.ProbeOf(ctx, site)
+	if got.Down() || got.BlockedSince != 0 || len(told) != 2 || told[0] != "down" || told[1] != "up" {
+		t.Fatalf("answered: %+v told %v", got, told)
+	}
+	list, _ := st.ProbeLog(ctx, site, 20)
+	if !list[len(list)-1].Blocked || list[0].Blocked {
+		t.Fatalf("log: %+v", list)
 	}
 }
