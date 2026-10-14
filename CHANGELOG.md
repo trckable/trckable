@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+## 0.7.20 (14 Oct 2026)
+
 - A site whose firewall blocks our uptime check (a 403 or 429 answer, or a Cloudflare challenge page) is no longer called down: those looks do not count as failures, send no down mail and do not end a real outage. The site shows "Can't check" with the plain note "We can't check this site: its firewall blocks our checks. Your visitors aren't affected.", and the panel's list of checks marks such looks as blocked. A homepage behind a login (401 or 407) now counts as answering; a 404 or other client error, no answer, a failed lookup or handshake, a timeout or a server error (5xx, including Cloudflare's 520 to 526) is still down.
 - Emails look like trckable. The sign-in code email says why it was sent ("Someone asked to sign in to the trckable mobile app with this email address"), shows the code large in a box, and where and when it was asked from (device, time with timezone, approximate place); the subject is "Your trckable app sign-in code: 331 983". Every alert email now has the logo header and the trckable.com footer, and "Tracking stopped" says what happened in plain words ("No visits for 6 hours"), what the checks suggest (quiet night, script removed, or site down), the last visit with its timezone, and an "Open site status" button; its subject is "example.com: no visits for 6 hours".
 - A link tagged `?ref=trustmrr` and a visit from trustmrr.com are one source in the Referrers list: the tagged visits join the site's row when that site also sent visitors in the same period. A tag whose site never appeared stays as it is.
