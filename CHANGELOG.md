@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - Cards and alert emails can hand a question to an add-on: a card raises a `trckable:ask-about` window event, alert mails can carry an optional link, and the footer loads lazily. Nothing changes on a plain install.
+- Your links, in the ⋯ menu: every link you shared with a ?ref= tag or a utm_source as one row, with a bar for its visitors, the visitors who reached a goal, the revenue credited to it, a 30-day line and when it last brought someone, for the dashboard's period. A tag and the site it names count as one row. A tap on a row opens the dashboard for that link alone. Before the first tagged visit it offers a sample link to copy.
 
 ## 0.7.21 (14 Oct 2026)
 
