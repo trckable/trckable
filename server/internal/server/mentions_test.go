@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/store/duck"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
+	"github.com/trckable/trckable/server/internal/writer"
 )
 
 // recorded answers each source's address from the files the mentions package
@@ -152,12 +154,13 @@ func TestMentionsAreFoundDedupedAndCounted(t *testing.T) {
 		}
 		t.Fatalf("want story, comment, launch, tool, two articles; got %v", keys)
 	}
+	// The comment came ten minutes after the story: the story has the visits up to it, the comment the rest.
 	hn := got["hn:news.ycombinator.com"]
-	if hn.Visitors != 25 || !hn.Front || hn.Points != 212 || hn.Author != "maker1" || hn.PeakHour != mday.Add(10*time.Hour).Unix() {
+	if hn.Visitors != 6 || !hn.Front || hn.Points != 212 || hn.Author != "maker1" || hn.PeakHour != mday.Add(10*time.Hour).Unix() {
 		t.Fatalf("story: %+v", hn)
 	}
-	if c := got["hn:news.ycombinator.com:comment"]; c.Visitors != 0 || c.Kind != "comment" {
-		t.Fatalf("a comment under the story shows none of its own: %+v", c)
+	if c := got["hn:news.ycombinator.com:comment"]; c.Visitors != 19 || c.Kind != "comment" || !strings.Contains(c.Snippet, "acme.example") {
+		t.Fatalf("the comment has what came after it, and its own sentence: %+v", c)
 	}
 	if n := got["news:dailybyte.example"]; n.Visitors != 1 || n.Source != "news" {
 		t.Fatalf("article: %+v", n)
@@ -165,8 +168,8 @@ func TestMentionsAreFoundDedupedAndCounted(t *testing.T) {
 	if ph := got["ph:producthunt.com"]; ph.Visitors != 1 || ph.Points != 321 {
 		t.Fatalf("launch: %+v", ph)
 	}
-	// Told once: the story crossed 20 visitors (and is on the front page).
-	if len(r.told) != 1 || r.told[0].Source != "hn" {
+	// Told once: the story is on the front page. The comment's 19 are under the line.
+	if len(r.told) != 1 || r.told[0].Source != "hn" || r.told[0].Kind != "" {
 		t.Fatalf("told %+v", r.told)
 	}
 	cur, _ := r.st.MentionCursors(ctx, "hn")
@@ -179,12 +182,12 @@ func TestMentionsAreFoundDedupedAndCounted(t *testing.T) {
 	r.visit(t, 99, "news.ycombinator.com", r.now.Add(-time.Minute))
 	r.f.round(ctx)
 	again := r.all(t)
-	if len(again) != 6 || again["hn:news.ycombinator.com"].Visitors != 26 {
-		t.Fatalf("again: %+v", again["hn:news.ycombinator.com"])
+	if len(again) != 6 || again["hn:news.ycombinator.com"].Visitors != 6 || again["hn:news.ycombinator.com:comment"].Visitors != 20 {
+		t.Fatalf("again: %+v", again["hn:news.ycombinator.com:comment"])
 	}
-	// Mark as told by the rig's callback only; the store knows it was told once.
-	if got := again["hn:news.ycombinator.com"]; len(r.told) != 1 {
-		t.Fatalf("a mention is told once: %d (%+v)", len(r.told), got)
+	// Each mention is told once: the comment now has 20 of its own, the story is not told again.
+	if len(r.told) != 2 || r.told[1].Kind != "comment" {
+		t.Fatalf("a mention is told once: %d", len(r.told))
 	}
 }
 
@@ -304,4 +307,113 @@ func TestRetentionRemovesOldMentions(t *testing.T) {
 	if len(mine) != 1 || len(theirs) != 2 {
 		t.Fatalf("mine %d (the 60-day one goes), theirs %d (no limit set)", len(mine), len(theirs))
 	}
+}
+
+// save puts mentions of one host in the store at the given hours.
+func (r *mentionRig) save(t *testing.T, host string, kind string, hours ...float64) {
+	t.Helper()
+	for i, h := range hours {
+		at := mday.Add(time.Duration(h * float64(time.Hour))).Unix()
+		_, err := r.st.SaveMention(context.Background(), sqlite.Mention{Site: r.site, Source: "hn", URL: fmt.Sprintf("https://%s/item?id=%d%s", host, int(h*100)+i, kind), Kind: kind, Host: host, PostedAt: at}, at)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func (r *mentionRig) scored(t *testing.T) []sqlite.Mention {
+	t.Helper()
+	r.f.score(context.Background(), []sqlite.SiteRow{{ID: r.site, Domain: "acme.example"}})
+	list, err := r.st.Mentions(context.Background(), r.site, 0, mday.Add(100*time.Hour).Unix(), 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	slices.Reverse(list) // oldest first
+	return list
+}
+
+// A comment, then a story an hour later from the same host: each visit is the
+// comment's or the story's, never both.
+func TestMentionsNeverCountTheSameVisitTwice(t *testing.T) {
+	r := newMentionRig(t)
+	r.save(t, "news.ycombinator.com", "comment", 1)
+	r.save(t, "news.ycombinator.com", "", 2)
+	r.now = mday.Add(5 * time.Hour)
+	for i, h := range []float64{0.9, 1.2, 1.9, 2.1, 2.5} {
+		r.visit(t, i+1, "news.ycombinator.com", mday.Add(time.Duration(h*float64(time.Hour))))
+	}
+	got := r.scored(t)
+	// 0.9 h is inside the comment's ten minutes before; 1.2 and 1.9 are the comment's; 2.1 and 2.5 are the story's.
+	if got[0].Visitors != 3 || got[1].Visitors != 2 {
+		t.Fatalf("comment %d (0.9, 1.2, 1.9), story %d (2.1, 2.5)", got[0].Visitors, got[1].Visitors)
+	}
+}
+
+// Two stories five minutes apart: a visit after the second belongs to the second alone.
+func TestTwoPostsMinutesApartShareNothing(t *testing.T) {
+	r := newMentionRig(t)
+	r.save(t, "news.ycombinator.com", "", 3, 3+5.0/60)
+	r.now = mday.Add(6 * time.Hour)
+	r.visit(t, 1, "news.ycombinator.com", mday.Add(3*time.Hour+2*time.Minute))  // the first's
+	r.visit(t, 2, "news.ycombinator.com", mday.Add(3*time.Hour+7*time.Minute))  // the second's
+	r.visit(t, 3, "news.ycombinator.com", mday.Add(3*time.Hour+30*time.Minute)) // the second's
+	got := r.scored(t)
+	if got[0].Visitors != 1 || got[1].Visitors != 2 {
+		t.Fatalf("first %d, second %d", got[0].Visitors, got[1].Visitors)
+	}
+	if got[0].Visitors+got[1].Visitors != 3 {
+		t.Fatal("three visitors, counted three times in all")
+	}
+}
+
+// A big shared site says nothing about one post on it: only a visit from the
+// post's own page counts. Visits still open (not yet written) count too.
+func TestGenericHostsCountByPageAndOpenVisitsCount(t *testing.T) {
+	r := newMentionRig(t)
+	ctx := context.Background()
+	at := mday.Add(2 * time.Hour)
+	for _, m := range []sqlite.Mention{
+		{Site: r.site, Source: "news", URL: "https://medium.com/@maker/acme-review", Host: "medium.com", PostedAt: at.Unix()},
+		{Site: r.site, Source: "news", URL: "https://blog.example/acme", Host: "blog.example", PostedAt: at.Unix()},
+	} {
+		if _, err := r.st.SaveMention(ctx, m, at.Unix()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r.now = at.Add(3 * time.Hour)
+	r.visit(t, 1, "medium.com", at.Add(time.Hour))
+	r.visit(t, 2, "medium.com", at.Add(2*time.Hour))
+	for i, ref := range []string{"medium.com/@maker/acme-review", "medium.com/@other/post"} {
+		_, err := r.db.DB.Exec(`INSERT INTO events (seq, site_id, ts, kind, visitor_id, session_id, referrer_url) VALUES (?, ?, ?, 1, ?, ?, ?)`,
+			i+1, r.site, at.Add(time.Hour).UTC(), 10+i, 10+i, ref)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	r.f.open = func(string) []writer.Session {
+		return []writer.Session{{Site: r.site, Visitor: 77, Start: at.Add(90 * time.Minute).UnixMilli(), Referrer: "blog.example"}, {Site: r.site, Visitor: 78, Start: at.Add(90 * time.Minute).UnixMilli(), Referrer: "medium.com"}}
+	}
+	got := map[string]int64{}
+	for _, m := range r.scored(t) {
+		got[m.Host] = m.Visitors
+	}
+	if got["medium.com"] != 1 || got["blog.example"] != 1 {
+		t.Fatalf("medium: one visit from the post's page, none host-wide; the blog: the open visit: %v", got)
+	}
+}
+
+// The passes run side by side over the same sites: each sorts its own copy.
+func TestRoundSharesNoSlicesBetweenPasses(t *testing.T) {
+	r := newMentionRig(t)
+	ctx := context.Background()
+	for k, d := range []string{"b.example", "c.example", "d.example"} {
+		id, err := r.st.CreateSite(ctx, sqlite.DefaultAccount, d, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i, src := range []string{"hn", "news"} {
+			_ = r.st.SaveMentionCursor(ctx, id, src, sqlite.MentionCursor{CheckedAt: int64(1000 - k*100 + i*10)})
+		}
+	}
+	r.f.round(ctx) // go test -race fails here if two passes sort one slice
 }

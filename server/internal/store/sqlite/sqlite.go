@@ -789,6 +789,8 @@ var migrations = []string{
 		author     TEXT NOT NULL DEFAULT '',
 		host       TEXT NOT NULL DEFAULT '',
 		points     INTEGER NOT NULL DEFAULT 0,
+		comments   INTEGER NOT NULL DEFAULT 0,
+		snippet    TEXT NOT NULL DEFAULT '',
 		front      INTEGER NOT NULL DEFAULT 0,
 		posted_at  INTEGER NOT NULL,
 		found_at   INTEGER NOT NULL,
@@ -799,6 +801,7 @@ var migrations = []string{
 		UNIQUE (site_id, url)
 	);
 	CREATE INDEX IF NOT EXISTS mentions_site_time ON mentions(site_id, posted_at);
+	CREATE INDEX IF NOT EXISTS mentions_url ON mentions(url); -- MarkFront asks by address alone
 	CREATE TABLE IF NOT EXISTS mention_cursor (
 		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
 		source     TEXT NOT NULL,

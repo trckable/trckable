@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -32,8 +33,8 @@ func TestMentionKeywordsAreCleanedAndCapped(t *testing.T) {
 		t.Fatalf("a refused list changed nothing: %v", kept)
 	}
 	// The address and the name come first, a word is searched once.
-	words := JoinWords(SiteRow{Domain: "a.com", Name: "Acme"}, []string{"acme", "@acme"})
-	if !reflect.DeepEqual(words, []string{"a.com", "Acme", "@acme"}) {
+	words := JoinWords(SiteRow{Domain: "acme.com", Name: "Acme"}, []string{"acme", "@acme"})
+	if !reflect.DeepEqual(words, []string{"acme.com", "Acme", "@acme"}) {
 		t.Fatalf("%v", words)
 	}
 }
@@ -104,6 +105,23 @@ func TestMentionsPeriodScoreCursorPruneAndDelete(t *testing.T) {
 		var n int
 		if err := st.DB.QueryRowContext(ctx, `SELECT count(*) FROM `+table).Scan(&n); err != nil || n != 0 {
 			t.Errorf("%s keeps %d rows of a deleted site (%v)", table, n, err)
+		}
+	}
+}
+
+func TestSearchWordsKeepTheNameOnlyWhenItIsDistinctive(t *testing.T) {
+	for _, c := range []struct {
+		domain, name string
+		want         []string
+	}{
+		{"acme.example", "Acme", []string{"acme.example", "Acme"}},                 // holds the address's own label
+		{"acme.example", "Acme Metrics", []string{"acme.example", "Acme Metrics"}}, // two words
+		{"notes.example", "Studio", []string{"notes.example"}},                     // one ordinary word says nothing about the site
+		{"x.example", "", []string{"x.example"}},
+	} {
+		got := JoinWords(SiteRow{Domain: c.domain, Name: c.name}, nil)
+		if !slices.Equal(got, c.want) {
+			t.Errorf("%s / %s: %v, want %v", c.domain, c.name, got, c.want)
 		}
 	}
 }

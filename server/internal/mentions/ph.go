@@ -13,11 +13,15 @@ import (
 
 const phAPI = "https://api.producthunt.com/v2/api/graphql"
 
-const phQuery = `query($after: DateTime) {
-  posts(order: NEWEST, postedAfter: $after, first: 50) {
+const phQuery = `query($after: DateTime, $cursor: String) {
+  posts(order: NEWEST, postedAfter: $after, first: 50, after: $cursor) {
     nodes { id name tagline slug url website votesCount createdAt user { username } }
+    pageInfo { hasNextPage endCursor }
   }
 }`
+
+// PHPages is the most pages one look reads (50 launches each).
+const PHPages = 20
 
 // PHPost is a launch as Product Hunt tells it.
 type PHPost struct {
@@ -27,14 +31,37 @@ type PHPost struct {
 	Maker                                 string
 }
 
-// RecentPH returns the posts launched after the given moment.
+// RecentPH returns the posts launched after the given moment, page after page
+// (at most PHPages) until the list ends, so a busy day is not cut short.
 func RecentPH(ctx context.Context, d Doer, token string, after time.Time) ([]PHPost, error) {
-	payload, _ := json.Marshal(map[string]any{"query": phQuery, "variables": map[string]string{"after": after.UTC().Format(time.RFC3339)}})
+	var out []PHPost
+	cursor := ""
+	for page := 0; page < PHPages; page++ {
+		posts, next, err := phPage(ctx, d, token, after, cursor)
+		if err != nil {
+			return out, err
+		}
+		out = append(out, posts...)
+		if next == "" {
+			break
+		}
+		cursor = next
+	}
+	return out, nil
+}
+
+// phPage reads one page and the cursor of the next ("" at the end).
+func phPage(ctx context.Context, d Doer, token string, after time.Time, cursor string) ([]PHPost, string, error) {
+	vars := map[string]any{"after": after.UTC().Format(time.RFC3339)}
+	if cursor != "" {
+		vars["cursor"] = cursor
+	}
+	payload, _ := json.Marshal(map[string]any{"query": phQuery, "variables": vars})
 	body, _, _, err := get(ctx, d, "POST", phAPI, map[string]string{
 		"Authorization": "Bearer " + token, "Content-Type": "application/json", "Accept": "application/json",
 	}, bytes.NewReader(payload))
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	var res struct {
 		Data struct {
@@ -45,15 +72,19 @@ func RecentPH(ctx context.Context, d Doer, token string, after time.Time) ([]PHP
 					CreatedAt                             string
 					User                                  struct{ Username string }
 				}
+				PageInfo struct {
+					HasNextPage bool
+					EndCursor   string
+				}
 			}
 		}
 		Errors []struct{ Message string }
 	}
 	if err := json.Unmarshal(body, &res); err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if len(res.Errors) > 0 {
-		return nil, &phError{res.Errors[0].Message}
+		return nil, "", &phError{res.Errors[0].Message}
 	}
 	var out []PHPost
 	for _, n := range res.Data.Posts.Nodes {
@@ -63,7 +94,11 @@ func RecentPH(ctx context.Context, d Doer, token string, after time.Time) ([]PHP
 		}
 		out = append(out, PHPost{ID: n.ID, Name: n.Name, Tagline: n.Tagline, Slug: n.Slug, URL: n.URL, Website: n.Website, Votes: n.VotesCount, At: at.Unix(), Maker: n.User.Username})
 	}
-	return out, nil
+	next := ""
+	if res.Data.Posts.PageInfo.HasNextPage {
+		next = res.Data.Posts.PageInfo.EndCursor
+	}
+	return out, next, nil
 }
 
 type phError struct{ msg string }
@@ -82,7 +117,7 @@ func PHMatch(posts []PHPost, keywords []string) []Mention {
 		if p.Tagline != "" {
 			title += " — " + p.Tagline
 		}
-		out = append(out, Mention{Source: PH, URL: strings.TrimSpace(p.URL), Title: Snippet(title), Author: p.Maker, Host: PHHost, PostedAt: p.At, Points: p.Votes})
+		out = append(out, Mention{Source: PH, URL: strings.TrimSpace(p.URL), Title: Snippet(title), Snippet: Sentence(p.Tagline, keywords), Author: p.Maker, Host: PHHost, PostedAt: p.At, Points: p.Votes})
 	}
 	return out
 }

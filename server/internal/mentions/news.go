@@ -74,9 +74,13 @@ func SearchGoogleNews(ctx context.Context, d Doer, keywords []string, etag strin
 		if name := strings.TrimSpace(it.Source.Name); name != "" {
 			title = strings.TrimSuffix(title, " - "+name)
 		}
+		desc := Snippet(it.Desc)
+		if !HasAny(title+" "+desc+" "+it.Link, keywords) {
+			continue // the search matches loosely; only an article that names a keyword is a mention
+		}
 		out := Mention{Source: News, URL: it.Link, Title: title, Host: host, PostedAt: at.Unix()}
-		if d := Snippet(it.Desc); d != "" && d != title && !strings.HasPrefix(d, title) {
-			out.Title = Snippet(title + " — " + d)
+		if desc != "" && desc != title && !strings.HasPrefix(desc, title) {
+			out.Snippet = Sentence(desc, keywords)
 		}
 		list = append(list, out)
 	}
@@ -103,6 +107,9 @@ func SearchGDELT(ctx context.Context, d Doer, keywords []string) ([]Mention, err
 		at, err := time.Parse("20060102T150405Z", a.SeenDate)
 		host := HostOf(a.URL)
 		if err != nil || !Web(a.URL) || host == "" {
+			continue
+		}
+		if !HasAny(a.Title+" "+a.URL, keywords) {
 			continue
 		}
 		out = append(out, Mention{Source: News, URL: a.URL, Title: Snippet(a.Title), Host: host, PostedAt: at.Unix()})

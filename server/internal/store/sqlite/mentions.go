@@ -26,6 +26,8 @@ type Mention struct {
 	Author   string `json:"author,omitempty"`
 	Host     string `json:"host"`                // whose visits it can bring
 	Points   int    `json:"points,omitempty"`    // Hacker News points, Product Hunt upvotes
+	Comments int    `json:"comments,omitempty"`  // Hacker News comments on a story
+	Snippet  string `json:"snippet,omitempty"`   // the sentence that named a keyword
 	Front    bool   `json:"front,omitempty"`     // on the Hacker News front page
 	PostedAt int64  `json:"posted_at"`           // unix seconds
 	FoundAt  int64  `json:"found_at"`            // unix seconds
@@ -107,11 +109,19 @@ func (s *Store) SearchWords(ctx context.Context, site SiteRow) ([]string, error)
 	return JoinWords(site, added), nil
 }
 
-// JoinWords is SearchWords for words already read.
+// JoinWords is SearchWords for words already read. A site's address is always
+// searched; its name only when it is distinctive: it holds the address's own
+// label ("Acme" for acme.example) or is two words or more. A lone ordinary word
+// ("Notes", "Studio") would find everything but the site.
 func JoinWords(site SiteRow, added []string) []string {
 	out := []string{}
 	seen := map[string]bool{}
-	for _, k := range append([]string{site.Domain, site.Name}, added...) {
+	name := strings.TrimSpace(site.Name)
+	label := strings.ToLower(strings.SplitN(strings.TrimPrefix(strings.ToLower(site.Domain), "www."), ".", 2)[0])
+	if len(strings.Fields(name)) < 2 && !(len(label) >= 3 && strings.Contains(strings.ToLower(name), label)) {
+		name = ""
+	}
+	for _, k := range append([]string{site.Domain, name}, added...) {
 		k = strings.TrimSpace(k)
 		if utf8.RuneCountInString(k) < 3 || seen[strings.ToLower(k)] {
 			continue
@@ -126,21 +136,21 @@ func JoinWords(site SiteRow, added []string) []string {
 // what can change (a title edited, points gained, reaching the front page).
 // It says whether the mention is new.
 func (s *Store) SaveMention(ctx context.Context, m Mention, now int64) (bool, error) {
-	res, err := s.DB.ExecContext(ctx, `INSERT INTO mentions (site_id, source, url, kind, title, author, host, points, front, posted_at, found_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (site_id, url) DO NOTHING`,
-		m.Site, m.Source, m.URL, m.Kind, m.Title, m.Author, m.Host, m.Points, boolInt(m.Front), m.PostedAt, now)
+	res, err := s.DB.ExecContext(ctx, `INSERT INTO mentions (site_id, source, url, kind, title, author, host, points, comments, snippet, front, posted_at, found_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (site_id, url) DO NOTHING`,
+		m.Site, m.Source, m.URL, m.Kind, m.Title, m.Author, m.Host, m.Points, m.Comments, m.Snippet, boolInt(m.Front), m.PostedAt, now)
 	if err != nil {
 		return false, err
 	}
 	if n, _ := res.RowsAffected(); n > 0 {
 		return true, nil
 	}
-	_, err = s.DB.ExecContext(ctx, `UPDATE mentions SET title = ?, points = max(points, ?), front = max(front, ?) WHERE site_id = ? AND url = ?`,
-		m.Title, m.Points, boolInt(m.Front), m.Site, m.URL)
+	_, err = s.DB.ExecContext(ctx, `UPDATE mentions SET title = ?, points = max(points, ?), comments = max(comments, ?), snippet = CASE WHEN ? <> '' THEN ? ELSE snippet END, front = max(front, ?) WHERE site_id = ? AND url = ?`,
+		m.Title, m.Points, m.Comments, m.Snippet, m.Snippet, boolInt(m.Front), m.Site, m.URL)
 	return false, err
 }
 
-const mentionCols = `id, site_id, source, url, kind, title, author, host, points, front, posted_at, found_at, visitors, peak_hour, scored_at, alerted`
+const mentionCols = `id, site_id, source, url, kind, title, author, host, points, comments, snippet, front, posted_at, found_at, visitors, peak_hour, scored_at, alerted`
 
 func scanMentions(rows interface {
 	Next() bool
@@ -151,7 +161,7 @@ func scanMentions(rows interface {
 	for rows.Next() {
 		var m Mention
 		var front, alerted int
-		if err := rows.Scan(&m.ID, &m.Site, &m.Source, &m.URL, &m.Kind, &m.Title, &m.Author, &m.Host, &m.Points, &front, &m.PostedAt, &m.FoundAt, &m.Visitors, &m.PeakHour, &m.ScoredAt, &alerted); err != nil {
+		if err := rows.Scan(&m.ID, &m.Site, &m.Source, &m.URL, &m.Kind, &m.Title, &m.Author, &m.Host, &m.Points, &m.Comments, &m.Snippet, &front, &m.PostedAt, &m.FoundAt, &m.Visitors, &m.PeakHour, &m.ScoredAt, &alerted); err != nil {
 			return nil, err
 		}
 		m.Front, m.Alerted = front == 1, alerted == 1

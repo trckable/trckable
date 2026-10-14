@@ -13,6 +13,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"unicode"
 )
@@ -46,7 +47,9 @@ type Mention struct {
 	Host     string // the host whose visits it can bring: HN and Product Hunt's own, an article's site
 	PostedAt int64  // unix seconds
 	Points   int    // Hacker News points, Product Hunt upvotes
+	Comments int    // Hacker News comments on a story
 	Front    bool   // on the Hacker News front page
+	Snippet  string // the sentence that names a keyword, at most SnippetMax characters
 }
 
 // Doer is the part of an HTTP client the sources need, so tests can answer
@@ -175,3 +178,52 @@ func HostOf(addr string) string {
 
 // Web says whether an address is one a link may point to.
 func Web(addr string) bool { return HostOf(addr) != "" }
+
+// genericHosts are sites where anyone posts, so a visit from one says nothing
+// about a single mention there: only a visit from the mention's own page counts.
+var genericHosts = []string{
+	"medium.com", "github.com", "reddit.com", "youtube.com", "youtu.be", "x.com", "twitter.com", "linkedin.com",
+	"facebook.com", "instagram.com", "tiktok.com", "substack.com", "dev.to", "quora.com", "stackoverflow.com",
+	"wikipedia.org", "google.com", "bing.com", "t.me", "discord.com", "notion.site", "wordpress.com", "blogspot.com",
+}
+
+// Generic says whether a host is one of those big shared sites (or a part of one).
+func Generic(host string) bool {
+	host = strings.TrimPrefix(strings.ToLower(host), "www.")
+	for _, g := range genericHosts {
+		if host == g || strings.HasSuffix(host, "."+g) {
+			return true
+		}
+	}
+	return false
+}
+
+// RefForm is an address as a visit's referrer is stored: host without "www."
+// and the path, with no scheme, query or closing slash. ok is false when that
+// form cannot name the page (no path, or a query that is dropped), so a visit
+// from it could not be told from any other page of the host.
+func RefForm(addr string) (form string, ok bool) {
+	u, err := url.Parse(strings.TrimSpace(addr))
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.RawQuery != "" {
+		return "", false
+	}
+	path := strings.TrimSuffix(u.EscapedPath(), "/")
+	if path == "" {
+		return "", false
+	}
+	return strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.") + path, true
+}
+
+var sentenceEnd = regexp.MustCompile(`[.!?]+\s+`) // not the dot inside "acme.example"
+
+// Sentence is the sentence of text that names one of the keywords, as a
+// snippet; the start of the text when none does.
+func Sentence(text string, keywords []string) string {
+	text = Snippet(text)
+	for _, part := range sentenceEnd.Split(text, -1) {
+		if part = strings.TrimSpace(part); part != "" && HasAny(part, keywords) {
+			return Snippet(part)
+		}
+	}
+	return text
+}

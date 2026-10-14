@@ -70,7 +70,7 @@ func TestSnippetIsOneShortPlainLine(t *testing.T) {
 
 func TestSearchHNKeepsOnlyRealNewMentions(t *testing.T) {
 	f := &fake{t: t, files: map[string]string{algolia: "hn_search.json"}}
-	list, err := SearchHN(context.Background(), f, "acme.example", 1791968400)
+	list, err := SearchHN(context.Background(), f, []string{"acme.example", "Acme Metrics"}, 1791968400)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,6 +86,12 @@ func TestSearchHNKeepsOnlyRealNewMentions(t *testing.T) {
 		t.Fatalf("%+v", c)
 	}
 	q := f.seen[0].URL.Query()
+	if len(f.seen) != 1 || q.Get("query") != `"acme.example" "Acme Metrics"` || q.Get("optionalWords") != q.Get("query") || q.Get("advancedSyntax") != "true" {
+		t.Fatalf("one call for every word, any of them may match: %v", q)
+	}
+	if s.Snippet != "" || !strings.Contains(c.Snippet, "acme.example") || c.Comments != 0 {
+		t.Fatalf("a comment is its own snippet: %+v", c)
+	}
 	if q.Get("numericFilters") != "created_at_i>1791968400" || q.Get("tags") != "(story,comment)" {
 		t.Fatalf("%v", q)
 	}
@@ -161,5 +167,63 @@ func TestProductHuntMatchesByWordsAndNamesLimits(t *testing.T) {
 	limited := &fake{t: t, status: 429}
 	if _, err := RecentPH(context.Background(), limited, "x", time.Now()); !errors.Is(err, ErrLimited) {
 		t.Fatalf("%v", err)
+	}
+}
+
+func TestNewsMustNameAKeyword(t *testing.T) {
+	g := &fake{t: t, files: map[string]string{gdelt: "gdelt.json"}}
+	b, err := SearchGDELT(context.Background(), g, []string{"Acme"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, m := range b {
+		if !HasAny(m.Title+" "+m.URL, []string{"Acme"}) {
+			t.Fatalf("an article that names no keyword is not a mention: %+v", m)
+		}
+	}
+	// "Unrelated" is in the recorded answer (the search matches loosely) and is dropped.
+	if len(b) != 2 {
+		t.Fatalf("%+v", b)
+	}
+}
+
+func TestGenericHostsRefFormAndSentence(t *testing.T) {
+	for host, want := range map[string]bool{"medium.com": true, "www.github.com": true, "old.reddit.com": true, "news.ycombinator.com": false, "acme.example": false, "notmedium.com": false} {
+		if Generic(host) != want {
+			t.Errorf("Generic(%q) = %v", host, !want)
+		}
+	}
+	for addr, want := range map[string]string{
+		"https://www.Medium.com/@a/post-1/":      "medium.com/@a/post-1",
+		"https://news.ycombinator.com/item?id=5": "", // the query is not stored, so it cannot name the page
+		"https://blog.example/":                  "",
+	} {
+		if got, ok := RefForm(addr); got != want || ok != (want != "") {
+			t.Errorf("RefForm(%q) = %q %v", addr, got, ok)
+		}
+	}
+	got := Sentence("Nothing here. I use Acme every day! Really.", []string{"acme"})
+	if got != "I use Acme every day" {
+		t.Fatalf("%q", got)
+	}
+}
+
+type pages struct{ n int }
+
+func (p *pages) Do(*http.Request) (*http.Response, error) {
+	p.n++
+	next := `{"hasNextPage":true,"endCursor":"c1"}`
+	if p.n == 2 {
+		next = `{"hasNextPage":false,"endCursor":""}`
+	}
+	body := `{"data":{"posts":{"nodes":[{"id":"` + strings.Repeat("x", p.n) + `","name":"Acme","tagline":"","slug":"a","url":"https://www.producthunt.com/posts/a","website":"","votesCount":1,"createdAt":"2026-10-14T07:01:00Z","user":{"username":"m"}}],"pageInfo":` + next + `}}}`
+	return &http.Response{StatusCode: 200, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(body))}, nil
+}
+
+func TestProductHuntReadsPageAfterPage(t *testing.T) {
+	p := &pages{}
+	posts, err := RecentPH(context.Background(), p, "tok", time.Now())
+	if err != nil || len(posts) != 2 || p.n != 2 {
+		t.Fatalf("until the list ends: %d posts, %d calls, %v", len(posts), p.n, err)
 	}
 }

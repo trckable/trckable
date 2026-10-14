@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/mentions"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
+	"github.com/trckable/trckable/server/internal/writer"
 )
 
 // Where each site is talked about. Every TRCKABLE_MENTIONS_EVERY (default 20
@@ -91,10 +93,12 @@ type mentionFinder struct {
 	now     func() time.Time
 	sleep   func(ctx context.Context, d time.Duration)
 	gap     map[string]time.Duration
-	analyze func() *sql.DB // the analytics store; nil while it warms up
+	analyze func() *sql.DB                     // the analytics store; nil while it warms up
+	open    func(site string) []writer.Session // visits still open, not yet in the store; nil is none
 	told    func(ctx context.Context, site sqlite.SiteRow, m sqlite.Mention) bool
 	pause   pauses
 	phSince time.Time
+	phLast  time.Time // when the newest Product Hunt mention was posted: its upvotes are looked at again for two days
 }
 
 func (s *Server) newMentionFinder() *mentionFinder {
@@ -110,6 +114,13 @@ func (s *Server) newMentionFinder() *mentionFinder {
 		analyze: func() *sql.DB {
 			if st := s.duck.Load(); st != nil {
 				return st.DB
+			}
+			return nil
+		},
+		open: func(site string) []writer.Session {
+			if w := s.writer.Load(); w != nil {
+				open, _ := w.OpenSessions(site)
+				return open
 			}
 			return nil
 		},
@@ -178,7 +189,7 @@ func (f *mentionFinder) save(ctx context.Context, site string, list []mentions.M
 			continue
 		}
 		_, err := f.st.SaveMention(ctx, sqlite.Mention{Site: site, Source: m.Source, URL: m.URL, Kind: m.Kind, Title: m.Title, Author: m.Author, Host: m.Host,
-			Points: m.Points, Front: m.Front, PostedAt: m.PostedAt}, f.now().Unix())
+			Points: m.Points, Comments: m.Comments, Snippet: m.Snippet, Front: m.Front, PostedAt: m.PostedAt}, f.now().Unix())
 		if err != nil {
 			slog.Warn("mentions: not saved", "site", site, "err", err)
 		}
@@ -187,7 +198,7 @@ func (f *mentionFinder) save(ctx context.Context, site string, list []mentions.M
 }
 
 // hackerNews asks Algolia, site by site (the ones looked at longest ago
-// first), one call per word, and notes what is on the front page.
+// first), one call per site for all its words, and notes what is on the front page.
 func (f *mentionFinder) hackerNews(ctx context.Context, sites []sqlite.SiteRow, words map[string][]string, deadline time.Time) {
 	if f.pause.blocked("hn", f.now()) {
 		return
@@ -196,6 +207,7 @@ func (f *mentionFinder) hackerNews(ctx context.Context, sites []sqlite.SiteRow, 
 	if err != nil {
 		return
 	}
+	sites = slices.Clone(sites) // the passes run side by side: each sorts its own
 	sqlite.SortMentionsDue(sites, cur)
 	front, err := mentions.FrontHN(ctx, f.get)
 	if err == nil {
@@ -217,19 +229,10 @@ func (f *mentionFinder) hackerNews(ctx context.Context, sites []sqlite.SiteRow, 
 		if since == 0 {
 			since = f.now().Add(-mentionFirstLook).Unix()
 		}
-		var found []mentions.Mention
-		failed := false
-		for _, word := range w {
-			list, err := mentions.SearchHN(ctx, f.get, word, since)
-			if err != nil {
-				f.fail("hn", err)
-				failed = true
-				break
-			}
-			found = append(found, list...)
-			f.sleep(ctx, f.gap["hn"])
-		}
-		if failed {
+		found, err := mentions.SearchHN(ctx, f.get, w, since)
+		f.sleep(ctx, f.gap["hn"])
+		if err != nil {
+			f.fail("hn", err)
 			continue
 		}
 		f.pause.ok("hn")
@@ -249,6 +252,7 @@ func (f *mentionFinder) news(ctx context.Context, sites []sqlite.SiteRow, words 
 	if err != nil {
 		return
 	}
+	sites = slices.Clone(sites)
 	sqlite.SortMentionsDue(sites, cur)
 	for _, site := range sites {
 		w := words[site.ID]
@@ -314,52 +318,158 @@ func (f *mentionFinder) productHunt(ctx context.Context, sites []sqlite.SiteRow,
 		return
 	}
 	now := f.now()
-	if f.phSince.IsZero() {
-		f.phSince = now.Add(-24 * time.Hour)
+	after := now.Add(-time.Hour) // launches are listed for a while before they settle; saving twice is harmless
+	switch {
+	case f.phSince.IsZero():
+		after = now.Add(-24 * time.Hour)
+	case now.Sub(f.phLast) < mentionAfter:
+		after = now.Add(-mentionAfter) // a recent launch of ours: its upvotes are read again for two days
 	}
-	posts, err := mentions.RecentPH(ctx, f.get, f.token, f.phSince)
+	posts, err := mentions.RecentPH(ctx, f.get, f.token, after)
 	if err != nil {
 		f.fail("ph", err)
 		return
 	}
 	f.pause.ok("ph")
-	f.phSince = now.Add(-time.Hour) // launches are listed for a while before they settle; saving twice is harmless
+	f.phSince = now
 	for _, site := range sites {
 		if w := words[site.ID]; len(w) > 0 {
-			f.save(ctx, site.ID, mentions.PHMatch(posts, w))
+			f.phLast = time.Unix(max(f.phLast.Unix(), f.save(ctx, site.ID, mentions.PHMatch(posts, w))), 0)
 		}
 	}
 }
 
-// brought counts the people a mention sent: sessions that began between its
-// start and its end with the host as their referrer, and the busiest hour.
-func brought(ctx context.Context, db *sql.DB, site, host string, from, to time.Time) (visitors, peak int64, err error) {
-	if err = db.QueryRowContext(ctx, `SELECT count(DISTINCT visitor_id) FROM sessions
-		WHERE site_id = ? AND start >= ? AND start < ? AND referrer = ?`, site, from.UTC(), to.UTC(), host).Scan(&visitors); err != nil || visitors == 0 {
-		return visitors, 0, err
+// visit is one visitor in one hour.
+type visit struct{ visitor, hour int64 }
+
+// hostVisits are the visitors whose sessions began in [from, to) with host as
+// their referrer, by hour.
+func hostVisits(ctx context.Context, db *sql.DB, site, host string, from, to time.Time) ([]visit, error) {
+	return visitsOf(ctx, db, `SELECT DISTINCT visitor_id, CAST(epoch(date_trunc('hour', start)) AS BIGINT) FROM sessions
+		WHERE site_id = ? AND start >= ? AND start < ? AND referrer = ?`, site, from.UTC(), to.UTC(), host)
+}
+
+// pageVisits are the visitors who arrived from one page (its address as a
+// visit stores it, mentions.RefForm), by hour.
+func pageVisits(ctx context.Context, db *sql.DB, site, form string, from, to time.Time) ([]visit, error) {
+	return visitsOf(ctx, db, `SELECT DISTINCT visitor_id, CAST(epoch(date_trunc('hour', ts)) AS BIGINT) FROM events
+		WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts < ? AND referrer_url = ?`, site, from.UTC(), to.UTC(), form)
+}
+
+func visitsOf(ctx context.Context, db *sql.DB, q string, args ...any) ([]visit, error) {
+	rows, err := db.QueryContext(ctx, q, args...)
+	if err != nil {
+		return nil, err
 	}
-	var hour time.Time
-	err = db.QueryRowContext(ctx, `SELECT date_trunc('hour', start) AS h FROM sessions
-		WHERE site_id = ? AND start >= ? AND start < ? AND referrer = ?
-		GROUP BY h ORDER BY count(DISTINCT visitor_id) DESC, h LIMIT 1`, site, from.UTC(), to.UTC(), host).Scan(&hour)
-	return visitors, hour.Unix(), err
+	defer rows.Close()
+	var out []visit
+	for rows.Next() {
+		var v visit
+		if err := rows.Scan(&v.visitor, &v.hour); err != nil {
+			return nil, err
+		}
+		out = append(out, v)
+	}
+	return out, rows.Err()
 }
 
-// exact counts the visits that came from the mention's own address.
-func exact(ctx context.Context, db *sql.DB, site, addr string, from, to time.Time) (int64, error) {
-	var n int64
-	err := db.QueryRowContext(ctx, `SELECT count(DISTINCT visitor_id) FROM events
-		WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts < ? AND referrer_url = ?`, site, from.UTC(), to.UTC(), addr).Scan(&n)
-	return n, err
+// openVisits are the visits still open (not yet in the sessions table) that
+// began in [from, to) from host.
+func openVisits(list []writer.Session, host string, from, to time.Time) []visit {
+	var out []visit
+	for _, s := range list {
+		at := time.UnixMilli(s.Start)
+		if s.Referrer == host && !at.Before(from) && at.Before(to) {
+			out = append(out, visit{int64(s.Visitor), at.Truncate(time.Hour).Unix()})
+		}
+	}
+	return out
 }
 
-// score counts what each mention brought: the visitors from its host in
-// [posted - 10 min, posted + 48 h], never past the next mention of its kind
-// from the same host (those visitors are that one's) and never past now. A
-// comment posted under a story of the same host shows none of its own: they
-// are the story's. The visits that
-// came from the mention's own address count alone when there are any. Mentions
-// stay counted for two days; after that they keep their last number.
+// tally is how many different visitors came and the hour most of them came in
+// (the earliest when two tie).
+func tally(list []visit) (visitors, peak int64) {
+	people := map[int64]bool{}
+	hours := map[int64]map[int64]bool{}
+	for _, v := range list {
+		people[v.visitor] = true
+		if hours[v.hour] == nil {
+			hours[v.hour] = map[int64]bool{}
+		}
+		hours[v.hour][v.visitor] = true
+	}
+	most := 0
+	for h, who := range hours {
+		if len(who) > most || (len(who) == most && h < peak) {
+			most, peak = len(who), h
+		}
+	}
+	return int64(len(people)), peak
+}
+
+// brought counts the people a mention sent in [from, to). A visit from the
+// mention's own page counts alone when its address can name it. Otherwise the
+// visits from its host count, open ones too, except on a big shared site
+// (Medium, GitHub, Reddit…), where a visit from the host says nothing about
+// one post: those count only by the page, else none.
+func (f *mentionFinder) brought(ctx context.Context, db *sql.DB, m sqlite.Mention, from, to time.Time) (visitors, peak int64, err error) {
+	var vs []visit
+	if form, ok := mentions.RefForm(m.URL); ok {
+		if vs, err = pageVisits(ctx, db, m.Site, form, from, to); err != nil {
+			return 0, 0, err
+		}
+	}
+	if len(vs) == 0 && !mentions.Generic(m.Host) {
+		if vs, err = hostVisits(ctx, db, m.Site, m.Host, from, to); err != nil {
+			return 0, 0, err
+		}
+		if f.open != nil {
+			vs = append(vs, openVisits(f.open(m.Site), m.Host, from, to)...)
+		}
+	}
+	visitors, peak = tally(vs)
+	return visitors, peak, nil
+}
+
+// window is the stretch of time whose visits a mention gets: from ten minutes
+// before it was posted, or from where the one before it from the same host
+// stopped, to two days after, or to where the next one from that host begins,
+// and never past now. Each visit goes to one mention: the same traffic is
+// never counted, or alerted, twice. host lists every mention of that host.
+func window(m sqlite.Mention, host []sqlite.Mention, now time.Time) (from, to time.Time) {
+	posted := time.Unix(m.PostedAt, 0)
+	from, to = posted.Add(-mentionBefore), posted.Add(mentionAfter)
+	for _, o := range host {
+		if o.ID == m.ID {
+			continue
+		}
+		at := time.Unix(o.PostedAt, 0)
+		if o.PostedAt > m.PostedAt || (o.PostedAt == m.PostedAt && o.ID > m.ID) {
+			to = minTimes(to, at) // the next one takes the visitors after it
+		} else {
+			from = maxTimes(from, minTimes(at.Add(mentionAfter), posted)) // the one before had them until now
+		}
+	}
+	return from, minTimes(to, now)
+}
+
+func minTimes(a, b time.Time) time.Time {
+	if b.Before(a) {
+		return b
+	}
+	return a
+}
+
+func maxTimes(a, b time.Time) time.Time {
+	if b.After(a) {
+		return b
+	}
+	return a
+}
+
+// score counts what each mention brought: the visitors from its host in its
+// window (see window). Mentions stay counted for two days; after that they
+// keep their last number.
 func (f *mentionFinder) score(ctx context.Context, sites []sqlite.SiteRow) {
 	db := f.analyze()
 	if db == nil {
@@ -383,42 +493,17 @@ func (f *mentionFinder) score(ctx context.Context, sites []sqlite.SiteRow) {
 		if m.ScoredAt != 0 && now.Sub(posted) >= mentionAfter+time.Hour {
 			continue // settled
 		}
-		end := posted.Add(mentionAfter)
-		if end.After(now) {
-			end = now
-		}
-		covered := false
+		var host []sqlite.Mention
 		if sib, err := f.st.MentionsOfHost(ctx, m.Site, m.Host, m.PostedAt-int64(mentionAfter.Seconds())); err == nil {
-			for _, o := range sib {
-				if o.ID == m.ID {
-					continue
-				}
-				later := o.PostedAt > m.PostedAt || (o.PostedAt == m.PostedAt && o.ID > m.ID)
-				switch {
-				case later && (o.Kind == m.Kind) && time.Unix(o.PostedAt, 0).Before(end):
-					end = time.Unix(o.PostedAt, 0) // the next of its kind takes the visitors after it
-				case m.Kind == "comment" && o.Kind != "comment" && !later && posted.Sub(time.Unix(o.PostedAt, 0)) < mentionAfter:
-					covered = true // a comment under a story shares its visitors
-				}
+			host = sib
+		}
+		from, to := window(m, host, now)
+		var visitors, peak int64
+		if to.After(from) {
+			if visitors, peak, err = f.brought(ctx, db, m, from, to); err != nil {
+				slog.Warn("mentions: not counted", "site", m.Site, "err", err)
+				continue
 			}
-		}
-		if covered {
-			if err := f.st.SaveScore(ctx, m.ID, 0, 0, now.Unix()); err != nil {
-				slog.Warn("mentions: score not saved", "site", m.Site, "err", err)
-			}
-			continue
-		}
-		from := posted.Add(-mentionBefore)
-		if !end.After(from) {
-			end = from.Add(time.Minute)
-		}
-		visitors, peak, err := brought(ctx, db, m.Site, m.Host, from, end)
-		if err != nil {
-			slog.Warn("mentions: not counted", "site", m.Site, "err", err)
-			continue
-		}
-		if n, err := exact(ctx, db, m.Site, m.URL, from, end); err == nil && n > 0 && n <= visitors {
-			visitors = n
 		}
 		if err := f.st.SaveScore(ctx, m.ID, visitors, peak, now.Unix()); err != nil {
 			slog.Warn("mentions: score not saved", "site", m.Site, "err", err)
@@ -431,13 +516,6 @@ func (f *mentionFinder) score(ctx context.Context, sites []sqlite.SiteRow) {
 			}
 		}
 	}
-}
-
-func minTime(a, b time.Time) time.Time {
-	if b.Before(a) {
-		return b
-	}
-	return a
 }
 
 // SourceName is a source as a person calls it.
