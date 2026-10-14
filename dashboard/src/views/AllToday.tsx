@@ -32,12 +32,18 @@ const GROUPS: { kind: Kind; title: string }[] = [
   { kind: 'quiet', title: next.secQuiet },
 ]
 
+/** Amber when 15% or more under the usual, green when 15% or more over. */
+function chipTone(move: number): string {
+  if (move <= -MOVE) return 'low'
+  return move >= MOVE ? 'up' : ''
+}
+
 /** How today stands against the usual pace: a small arrow and percent; amber when lower, the sentence in the tooltip. */
 function Chip({ i, tip }: { i: Item; tip: string }) {
   if (i.surge) return <span className="nx-chip up" title={tip}>{'▲ ' + i.surge.times.toFixed(1) + '×'}</span>
   const move = i.move
   if (i.kind === 'attention' || move === null || Math.abs(move) < 0.005) return null
-  const tone = move <= -MOVE ? 'low' : move >= MOVE ? 'up' : ''
+  const tone = chipTone(move)
   return <span className={'nx-chip ' + tone} title={tip}>{(move > 0 ? '↑ +' : '↓ −') + fmtInt(Math.abs(move) * 100) + '%'}</span>
 }
 
@@ -49,8 +55,9 @@ function dotTone(online: number, state: string): string {
 
 /** Who is online now, large with a live dot; grey and 0 when no one is. */
 function Pulse({ i, tip }: { i: Item; tip: string }) {
+  const now = useNow()
   const last = i.site?.last_event_at
-  const silent = i.status === 'quiet' && last ? span(Date.now() / 1000 - last) : ''
+  const silent = i.status === 'quiet' && last ? span(now / 1000 - last) : ''
   const state = i.site ? dotState(i.site) : 'live'
   const tone = dotTone(i.online, state)
   return (
