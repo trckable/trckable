@@ -197,7 +197,7 @@ func (s *Server) probed(ctx context.Context, site sqlite.SiteRow, before, after 
 	}
 	switch {
 	case !before.Down() && after.Down():
-		s.tellProbe(ctx, site, "down", "Your site is down", after.Error+".", after)
+		s.tellProbe(ctx, site, "down", "Your site isn't answering our checks", downMessage(site.Timezone, after), after)
 	case before.Down() && after.Failures == 0:
 		s.tellProbe(ctx, site, "up", "Your site is back", fmt.Sprintf("%s answers again after %s.", site.Domain, plainDuration(after.At-before.DownSince)), after)
 	}
@@ -225,6 +225,17 @@ func (s *Server) tellProbe(ctx context.Context, site sqlite.SiteRow, kind, title
 		}
 		slog.Info("alert sent", "kind", kind, "site", site.ID)
 	}
+}
+
+// downMessage is the down alert's text: the same words as the bar on the
+// site's pages in the dashboard.
+func downMessage(tz string, p sqlite.SiteProbe) string {
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		loc = time.UTC
+	}
+	return fmt.Sprintf("Your site isn't answering our checks since %s (%s). Some visitors still get through, which is why you may still see people online.",
+		time.Unix(p.DownSince, 0).In(loc).Format("15:04"), p.Error)
 }
 
 // plainDuration is a stretch in the words an email uses.

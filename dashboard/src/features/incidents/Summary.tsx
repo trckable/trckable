@@ -36,12 +36,14 @@ function Calm({ title, note, unwatched }: { title: string; note: string; unwatch
 
 export function Summary({ totals, silent, label, watch }: { totals: Totals; silent: boolean; label: string; watch: Watch }) {
   const downOnly = watch.quietTracked === false
+  // A short watch is said as how long it was, not since when: the share is of that time only.
+  const watched = watch.span > 0 && watch.span < 3600 ? copy.watchedFor(duration(watch.span)) : watch.since && copy.watchedSince(watch.since)
   if (watch.span <= 0) return <Calm unwatched title={copy.notWatched} note={copy.notWatchedNote(watch.since ?? '')} />
   if (totals.count === 0 && !silent) {
-    const note = [copy.cleanUp, downOnly && copy.downOnly, watch.since && copy.watchedSince(watch.since)].filter(Boolean).join(' · ')
+    const note = [copy.cleanUp, downOnly && copy.downOnly, watched].filter(Boolean).join(' · ')
     return <Calm title={copy.clean(label)} note={note} />
   }
-  const uptimeNote = [downOnly ? copy.downOnlyNote : copy.uptimeNote, watch.since && copy.watchedSince(watch.since)].filter(Boolean).join(' · ')
+  const uptimeNote = [downOnly ? copy.downOnlyNote : copy.uptimeNote, watched].filter(Boolean).join(' · ')
   const up = uptimeOf(watch.span, totals.seconds)
   let upValue = copy.notWatched
   if (silent) upValue = copy.noVisitsAll

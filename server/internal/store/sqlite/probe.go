@@ -55,3 +55,24 @@ func (s *Store) ProbeOf(ctx context.Context, site string) (SiteProbe, error) {
 	}
 	return p, err
 }
+
+// DownProbes returns the last probe of every site in an account that is down
+// (enough failures in a row), by site id.
+func (s *Store) DownProbes(ctx context.Context, account string) (map[string]SiteProbe, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT p.site_id, p.probed_at, p.status, p.error, p.failures, p.down_since
+		FROM site_probe p JOIN sites s ON s.id = p.site_id WHERE s.account_id = ? AND p.failures >= ?`, account, DownAfter)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]SiteProbe{}
+	for rows.Next() {
+		var id string
+		var p SiteProbe
+		if err := rows.Scan(&id, &p.At, &p.Status, &p.Error, &p.Failures, &p.DownSince); err != nil {
+			return nil, err
+		}
+		out[id] = p
+	}
+	return out, rows.Err()
+}

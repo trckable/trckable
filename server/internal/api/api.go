@@ -985,6 +985,7 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 	rows = visible(principalOf(r), rows)
 	brands, _ := a.Ctl.Brands(r.Context(), principalOf(r).account)
 	checks, _ := a.Ctl.Checks(r.Context(), principalOf(r).account)
+	downs, _ := a.Ctl.DownProbes(r.Context(), principalOf(r).account)
 	out := []sqlite.SiteInfo{}
 	for _, s := range rows {
 		b := brands[s.ID]
@@ -996,6 +997,9 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 			Color: b.Color, IconURL: iconURL(s.ID, b), WeekStart: week, Cookieless: cookieless, AlertsMutedUntil: a.mutedUntil(r, s.ID)})
 		if c, ok := checks[s.ID]; ok {
 			out[len(out)-1].Check = &c
+		}
+		if p, ok := downs[s.ID]; ok {
+			out[len(out)-1].DownSince, out[len(out)-1].DownCause = p.DownSince, p.Error
 		}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"sites": out})
@@ -1019,6 +1023,9 @@ func (a *API) site(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	si.ProxyKey = a.proxyKeyFor(r, si.ProxyKey)
+	if p, err := a.Ctl.ProbeOf(r.Context(), si.ID); err == nil && p.Down() {
+		si.DownSince, si.DownCause = p.DownSince, p.Error
+	}
 	writeJSON(w, http.StatusOK, si)
 }
 

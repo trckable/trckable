@@ -10,6 +10,8 @@ export const next = defineCopy('allnext', {
   sameAs: (ref: string) => `about the same as ${ref}`,
   quietSince: (name: string, when: string) => `${name} has been quiet since ${when}.`,
   isDown: (name: string) => `${name} is down.`,
+  notAnswering: (name: string, since: string) => `${name} isn’t answering since ${since}.`,
+  whyNotAnswering: (since: string, cause: string) => `Not answering since ${since}${cause ? ` · ${cause}` : ''}`,
   moreLook: (n: number) => (n === 1 ? '1 more needs a look.' : `${n} more need a look.`),
   yesterday: 'yesterday',
   lastDay: (day: string) => `last ${day}`,

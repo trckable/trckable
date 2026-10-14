@@ -108,6 +108,7 @@ export function AllToday({ lens, rows, sites, surges, colorOf, start, period, da
     <div className="nx-today">
       <section className="nx-headline" aria-live="polite">
         <h2>
+          {head.alarm && <span className="warn">{head.alarm} </span>}
           {lens === 'revenue' ? revenueHeadline(list, moneyText(money)) : head.lead} {head.tail && <span className={head.fine ? 'fine' : 'warn'}>{head.tail}</span>}
         </h2>
       </section>

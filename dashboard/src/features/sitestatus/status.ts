@@ -11,6 +11,7 @@ export const STOPPED_HOURS = 6
 export type Status = 'new' | 'ok' | 'quiet' | 'down'
 
 export function statusOf(s: Site, now = Date.now()): Status {
+  if (s.down_since) return 'down' // the uptime probe: some visitors may still get through, the site is down for our checks
   const last = s.last_event_at
   if (!last) return 'new'
   if (now / 1000 - last < STOPPED_HOURS * 3600) return 'ok'

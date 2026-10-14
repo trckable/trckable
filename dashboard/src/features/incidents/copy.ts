@@ -27,6 +27,7 @@ export const copy = defineCopy('incidents', {
   downOnly: 'down checks only',
   downOnlyNote: 'Down checks only: this site has too few visits for quiet spells to be tracked.',
   watchedSince: (day: string) => `watched since ${day}`,
+  watchedFor: (span: string) => `watched for ${span}`,
   notWatched: 'Not watched yet',
   notWatchedNote: (day: string) => `Incidents are recorded from ${day} on.`,
   cardIncidents: 'Incidents',
