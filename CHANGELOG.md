@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - Sites is honest about a site nobody has visited yet: it sits in its own "Setting up" group with an Install button instead of under Steady, the headline says it is waiting instead of "looks fine", the Uptime card says "Not watched yet" until a site has been watched, and the "against last week" line hides when there is nothing to compare. The install card has a "← Sites" link back.
+- The close button on the first-screen cards (Import your history, Weekly email) sits at the right edge of the card's header, round like the one on dialogs, instead of right beside the title.
 
 ## 0.7.18 (14 Oct 2026)
 
