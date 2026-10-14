@@ -2,11 +2,11 @@
 // (the server reads them every 20 minutes). A failed read keeps what was shown.
 import { useEffect, useState } from 'react'
 import { visibleInterval } from '../../lib/visibleInterval'
-import { mentionsApi, type Mentions } from './api'
+import { mentionsApi, type Mentions, type Period } from './api'
 
 export type MentionsState = { state: 'loading' } | { state: 'failed' } | { state: 'ready'; data: Mentions }
 
-export function useMentions(site: string, period: '7d' | '30d', every = 0): MentionsState {
+export function useMentions(site: string, period: Period, every = 0): MentionsState {
   const [answer, setAnswer] = useState<{ key: string; data: Mentions } | 'failed' | null>(null)
   useEffect(() => {
     const c = new AbortController()

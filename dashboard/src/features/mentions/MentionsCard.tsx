@@ -5,7 +5,10 @@ import { useState } from 'react'
 import { openSettings } from '../../lib/settings'
 import { isViewer } from '../../lib/me'
 import type { Site } from '../../lib/api'
+import { navigate } from '../../lib/url'
 import { copy } from './copy'
+import { page } from './pageCopy'
+import { mentionsPath } from './route'
 import { MentionRow } from './MentionRow'
 import { placesOf, SHOWN } from './model'
 import { useMentions } from './useMentions'
@@ -24,6 +27,9 @@ export default function MentionsCard({ site }: { site: Site }) {
       <div className="card-head">
         <h2 id="mentions-h">{copy.title}</h2>
         <span className="mentions-period">{copy.period}</span>
+        <button type="button" className="mentions-link" onClick={() => navigate(mentionsPath(site.domain))}>
+          {page.all30}
+        </button>
       </div>
       {mentions.length > 0 ? (
         <ul className="mention-list">

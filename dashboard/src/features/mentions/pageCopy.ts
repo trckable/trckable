@@ -1,0 +1,61 @@
+// The words of the Mentions page: its hero, feed, detail panel and empty state.
+import { defineCopy } from '../../i18n'
+import { count } from '../../i18n/helpers'
+
+export const page = defineCopy('mentionsPage', {
+  menu: 'Mentions',
+  back: 'Back to the dashboard',
+  failed: 'Could not read the mentions. Try again.',
+  // Hero
+  nowTitle: 'Talked about now',
+  nowLine: (n: number) => `${count(n, 'visitor', 'visitors')} so far`,
+  stillComing: 'still coming',
+  calm: (n: number, v: number) => `${count(n, 'mention', 'mentions')} in 30 days brought ${count(v, 'visitor', 'visitors')}`,
+  best: 'The best one',
+  curveLabel: 'Visitors from this mention, hour by hour',
+  // Feed
+  feedTitle: 'Mentions',
+  filters: 'Show',
+  all: 'All',
+  period: 'Period',
+  periods: { '7d': '7 days', '30d': '30 days', '90d': '90 days', '1y': 'Year' },
+  noMatch: 'Nothing matches these filters.',
+  comments: (n: number) => count(n, 'comment', 'comments'),
+  visitors: (n: number) => count(n, 'visitor', 'visitors'),
+  viaOutlet: (name: string) => `in ${name}`,
+  openDetail: (title: string) => `Details: ${title}`,
+  // Detail
+  detail: 'Mention details',
+  close: 'Close',
+  full: 'What was said',
+  platform: 'On the platform',
+  traffic: 'Visitors from it, over the usual traffic',
+  fromIt: 'From this mention',
+  usual: 'All visitors',
+  topPages: 'What they read',
+  countries: 'Where they are from',
+  goals: (n: number) => `${count(n, 'visitor', 'visitors')} from it reached a goal`,
+  noGoals: 'No goals reached from it yet',
+  openDiscussion: 'Open the discussion',
+  openArticle: 'Read it',
+  reply: 'Reply on Hacker News',
+  noTraffic: 'No visitors counted from it yet.',
+  // Empty
+  emptyTitle: 'Nothing yet, and here is what we watch',
+  emptyLead: 'When someone writes about your site, it shows up here with the people it sent.',
+  words: 'Words we look for',
+  addWord: 'Add a word',
+  wordLabel: 'Word to look for',
+  removeWord: (w: string) => `Remove ${w}`,
+  where: 'Where we look',
+  every: 'We check every 20 minutes.',
+  sample: 'An example',
+  sampleTitle: 'Show HN: Your product, privacy-friendly analytics',
+  sampleQuote: 'Found this while looking for a simple way to see who visits.',
+  sampleNote: 'Example only. Yours will look like this.',
+  // Elsewhere
+  talked: 'Talked about',
+  all30: 'All mentions',
+  pin: (title: string, visitors: number) => `${title}: ${count(visitors, 'visitor', 'visitors')}`,
+  pinsGroup: 'Mentions on the chart',
+})

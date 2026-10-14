@@ -291,6 +291,8 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/probes", a.authed(a.probes))
 	handle("GET /api/v1/sites/{site}/mentions", a.authed(a.mentions))
 	handle("GET /api/v1/sites/{site}/mentions/keywords", a.authed(a.mentionKeywords))
+	handle("GET /api/v1/sites/{site}/mentions/curves", a.authed(a.mentionCurves))
+	handle("GET /api/v1/sites/{site}/mentions/{id}", a.authed(a.mentionDetail))
 	handle("PUT /api/v1/sites/{site}/mentions/keywords", a.authed(a.setMentionKeywords))
 	handle("PATCH /api/v1/sites/{site}/incidents/{id}", a.authed(a.incidentNote))
 	handle("GET /api/v1/incidents", a.authed(a.accountIncidents))

@@ -14,7 +14,7 @@ import { Dashboard } from "./views/Dashboard";
 import { applyTheme } from "./lib/theme";
 import { openAddSite, useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
-import { IncidentsRoute, routeOf } from "./features/incidents/route";
+import { routeOf, SubRoute } from "./features/subpage";
 import { landing, namesSite } from "./lib/landing";
 import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
@@ -172,7 +172,7 @@ function App() {
 
   const refreshSites = () =>
     api.sites().then(({ sites }) => setBoot({ ...boot, sites }));
-  const all = path === "/sites", { site, incidents } = routeOf(boot.sites, path);
+  const all = path === "/sites", { site, sub } = routeOf(boot.sites, path);
 
   const header = (
     <Header sites={boot.sites} current={site} all={all} update={latest?.v} onUpdate={() => setShowUpdate(true)} />
@@ -187,7 +187,7 @@ function App() {
         <AllSites sites={boot.sites} header={header} />
       </Suspense>
     );
-  else if (site && incidents) page = <IncidentsRoute site={site} header={header} />;
+  else if (site && sub) page = <SubRoute {...{ sub, site, header }} />;
   else if (!site)
     page = null; // an unknown address (/settings among them), on its way to the main dashboard
   else
