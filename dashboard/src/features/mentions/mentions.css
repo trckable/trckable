@@ -87,7 +87,7 @@
 }
 .mention-brought span {
   color: var(--text-3);
-  font-size: 11.5px;
+  font-size: 12px;
 }
 .mentions-empty,
 .mentions-watch {
@@ -203,4 +203,9 @@
 .mentions-add input {
   flex: 1;
   min-width: 0;
+}
+
+/* The card's place before it is asked for: a line, so it can be seen coming. */
+.mentions-mark {
+  min-height: 1px;
 }

@@ -165,7 +165,7 @@ export function AllTable({ lens, rows, sites, colorOf, period }: Props) {
           <span className="t-cell">
             {i.site && <StateDot site={i.site} />}
             <b title={r.domain}>{r.name || r.domain}</b>
-            <Suspense fallback={null}><TalkedChip site={r.id} /></Suspense>
+            {i.site?.mentions && <Suspense fallback={null}><TalkedChip site={r.id} /></Suspense>}
           </span>
         </td>
         <td className="nx-c t-online">{i.online > 0 ? <span className="on"><i aria-hidden="true" />{i.online}</span> : <span className="muted">{fmtInt(0)}</span>}</td>

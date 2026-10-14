@@ -22,6 +22,12 @@ test('the card lists what was found with the visitors it brought, and the words 
   await page.context().addCookies([{ name: 'trckable_session', value: await session('mentions'), url: API }])
   let saved: string[] | null = null
   await page.route('**/api/v1/sites/*/mentions?*', (r) => r.fulfill({ json: answer(mentions) }))
+  await page.route('**/api/v1/sites', async (r) => {
+    const res = await r.fetch() // the site says it has mentions: only then does the chart ask for its pins
+    const body = (await res.json()) as { sites: { mentions?: boolean }[] }
+    body.sites.forEach((s) => (s.mentions = true))
+    await r.fulfill({ response: res, json: body })
+  })
   await page.route('**/api/v1/sites/*/mentions/keywords', async (r) => {
     saved = (r.request().postDataJSON() as { keywords: string[] }).keywords
     await r.fulfill({ json: { ...words, added: saved } })
@@ -65,6 +71,8 @@ test('nothing found yet says what is watched; a phone gets the same card', async
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(`${API}/${HISTORY_DOMAIN}?period=7d`)
   const card = page.locator('.card.mentions')
+  await expect(page.locator('.kpi .value.num').first()).toBeVisible({ timeout: 20_000 })
+  await page.locator('.mentions-mark').scrollIntoViewIfNeeded() // the card asks for its mentions when it nears the screen
   await expect(card).toBeVisible({ timeout: 20_000 })
   await expect(card).toContainText('No mentions yet')
   await expect(card).toContainText('It searches for')

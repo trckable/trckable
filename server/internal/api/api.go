@@ -1000,6 +1000,7 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 	checks, _ := a.Ctl.Checks(r.Context(), principalOf(r).account)
 	downs, _ := a.Ctl.DownProbes(r.Context(), principalOf(r).account)
 	blocked, _ := a.Ctl.BlockedProbes(r.Context(), principalOf(r).account)
+	talked, _ := a.Ctl.SitesWithMentions(r.Context())
 	out := []sqlite.SiteInfo{}
 	for _, s := range rows {
 		b := brands[s.ID]
@@ -1016,6 +1017,7 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 			out[len(out)-1].DownSince, out[len(out)-1].DownCause = p.DownSince, p.Error
 		}
 		out[len(out)-1].ProbeBlockedSince = blocked[s.ID]
+		out[len(out)-1].Mentions = talked[s.ID]
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"sites": out})
 }

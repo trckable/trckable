@@ -271,3 +271,21 @@ func (s *Store) MarkFront(ctx context.Context, urls []string) error {
 	}
 	return nil
 }
+
+// SitesWithMentions are the sites that have found at least one mention.
+func (s *Store) SitesWithMentions(ctx context.Context) (map[string]bool, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT DISTINCT site_id FROM mentions`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]bool{}
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out[id] = true
+	}
+	return out, rows.Err()
+}

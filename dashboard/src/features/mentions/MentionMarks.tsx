@@ -28,7 +28,7 @@ function periodFor(labels: string[], now: number): Period {
 
 export default function MentionMarks({ g, site, labels, bucket }: { g: ChartGeo; site: Site; labels: string[]; bucket: Bucket }) {
   const now = useNow()
-  const got = useMentions(site.id, periodFor(labels, now))
+  const got = useMentions(site.id, periodFor(labels, now), 0, !!site.mentions)
   const marks = useMemo(() => {
     const list = got.state === 'ready' ? got.data.mentions : []
     const by = new Map<number, Mention>()
