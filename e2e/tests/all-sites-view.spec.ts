@@ -70,3 +70,25 @@ test('the Uptime card on the Overview opens the Uptime view', async ({ page }) =
   await expect(page.locator('.up-wrap')).toBeVisible()
   await expect(page.locator('.all-head p')).toContainText('Uptime')
 })
+
+test('on Uptime the View menu has no Layout, and every period changes the day strip', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: await session('all-sites-uptime-menu'), url: API }])
+  const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `menu-${Date.now()}.view.example.org` } })
+  expect(made.ok()).toBe(true)
+  await page.goto(`${API}/sites?lens=uptime&period=30`)
+  const days = page.locator('.up-row').first().locator('.strip i')
+  await expect(days).toHaveCount(30, { timeout: 20_000 })
+  await page.getByRole('button', { name: 'View', exact: true }).click()
+  await expect(page.getByRole('group', { name: 'Show' })).toBeVisible()
+  await expect(page.getByRole('group', { name: 'Layout' })).toHaveCount(0)
+  await page.keyboard.press('Escape')
+  for (const [name, n] of [['Last 7 days', 7], ['Last 90 days', 90], ['Last 12 months', 365]] as const) {
+    await page.getByRole('button', { name: /^Last / }).first().click()
+    await page.getByRole('menuitemradio', { name }).click()
+    await expect(days).toHaveCount(n)
+  }
+  // Back on the numbers, Layout is there again.
+  await page.getByRole('button', { name: 'View', exact: true }).click()
+  await page.getByRole('radio', { name: 'Visitors' }).click()
+  await expect(page.getByRole('group', { name: 'Layout' })).toBeVisible()
+})

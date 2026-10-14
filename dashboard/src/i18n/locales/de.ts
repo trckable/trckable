@@ -970,7 +970,6 @@ export default {
 
   // allsites
   'allsites.title': 'Websites',
-  'allsites.addSite': 'Website hinzufügen',
   'allsites.reading': 'Alle Websites werden gelesen …',
   'allsites.periodLabel': (days: number) => (days === 365 ? 'Letzte 12 Monate' : `Letzte ${days} Tage`),
   'allsites.siteCount': (n: number) => `${n} ${n === 1 ? 'Website' : 'Websites'}`,

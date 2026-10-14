@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from 'vitest'
-import { DEFAULT_VIEW, differs, readView, saveView } from './allView'
+import { DEFAULT_VIEW, differs, hasLayout, menuDiffers, readView, saveView } from './allView'
+import { periodsFor } from './AllPeriod'
 
 const at = (search: string) => history.replaceState(null, '', '/sites' + search)
 
@@ -36,5 +37,20 @@ describe('the look of All sites', () => {
     at('?layout=overview')
     expect(readView().layout).toBe('overview')
     expect(readView().days).toBe(7)
+  })
+  it('offers Layout only where it changes what is shown, not on Uptime', () => {
+    expect(hasLayout({ lens: 'visitors' })).toBe(true)
+    expect(hasLayout({ lens: 'revenue' })).toBe(true)
+    expect(hasLayout({ lens: 'uptime' })).toBe(false)
+  })
+  it('does not count a setting the menu hides as a change', () => {
+    expect(menuDiffers({ ...DEFAULT_VIEW, lens: 'uptime', layout: 'table' })).toBe(true) // Uptime itself differs
+    expect(menuDiffers({ ...DEFAULT_VIEW, layout: 'table' })).toBe(true)
+    expect(menuDiffers(DEFAULT_VIEW)).toBe(false)
+  })
+  it('offers 12 months wherever the data has it, and every period on Uptime', () => {
+    expect(periodsFor({ layout: 'overview', lens: 'visitors' })).toEqual([7, 30, 90])
+    expect(periodsFor({ layout: 'table', lens: 'visitors' })).toEqual([7, 30, 90, 365])
+    expect(periodsFor({ layout: 'overview', lens: 'uptime' })).toEqual([7, 30, 90, 365])
   })
 })
