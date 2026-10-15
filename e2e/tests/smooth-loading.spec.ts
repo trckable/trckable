@@ -7,6 +7,7 @@ import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
+import { pageSettled } from './pageSettled'
 
 const BIN = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../server/bin/trckabled')
 const PASSWORD = 'probe smooth e2e password 1'
@@ -48,20 +49,8 @@ test('switching the period never shows a blank frame', async ({ page }) => {
   await page.goto(`${API}/${HISTORY_DOMAIN}?mode=full`)
   const chart = page.locator('.overview .chart-wrap svg[role="img"]')
   await expect(chart).toBeVisible({ timeout: 30_000 })
-  // Wait until the page has finished filling in (lazy cards arrive on their own
-  // time, slower on a busy machine): the height is the same for a full second.
-  let height = 0
-  let since = Date.now()
-  await expect
-    .poll(async () => {
-      const h = await page.evaluate(() => document.documentElement.scrollHeight)
-      if (h !== height) {
-        height = h
-        since = Date.now()
-      }
-      return Date.now() - since
-    }, { timeout: 30_000, intervals: [250] })
-    .toBeGreaterThanOrEqual(1000)
+  // Wait until the page has finished filling in (lazy cards arrive on their own time, slower on a busy machine).
+  const height = await pageSettled(page)
   // Every frame from here: the chart is there, nothing is a placeholder, the page holds its height.
   await page.evaluate(() => {
     const w = window as unknown as { bad: string[] }

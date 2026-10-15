@@ -8,7 +8,11 @@ import { session } from './session'
 
 const SHOTS = process.env.POLISH_SHOTS
 // The card is asked for when it is about to be seen: scroll to the foot of the page first.
-const down = (page: Page) => page.locator('.yc-mark, section.yc, section.yc-hint').first().scrollIntoViewIfNeeded()
+// The marker is swapped for the card on the way, so scroll the page itself, not the element.
+const down = async (page: Page) => {
+  await page.locator('.yc-mark, section.yc, section.yc-hint').first().waitFor({ state: 'attached' })
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+}
 const NOW = Math.floor(Date.now() / 1000)
 const link = (o: Record<string, unknown>) => ({ dim: 'referrer', value: '', visitors: 0, goals: 0, last: NOW - 7200, spark: Array(30).fill(0), ...o })
 

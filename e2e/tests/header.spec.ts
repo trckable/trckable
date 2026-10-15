@@ -160,7 +160,8 @@ test('Live keeps only Live/Data, in the same place, and has no ⋯', async ({ pa
   await expect(page).toHaveURL(/view=live/)
   await expect(page.locator('.subbar .range-picker')).toHaveCount(0)
   await expect(more(page)).toHaveCount(0)
-  expect(await view.boundingBox()).toEqual(before)
+  const after = (await view.boundingBox())!
+  for (const k of ['x', 'y', 'width', 'height'] as const) expect(Math.abs(after[k] - before![k]), k).toBeLessThan(0.5) // sub-pixel text rounding is not a move
 })
 
 test('⋯ runs what left the row, and the keys still work', async ({ page }) => {
