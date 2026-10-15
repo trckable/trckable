@@ -6,7 +6,7 @@
 // saved for the whole account.
 import { Search } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { api, type Site, type SiteLayout } from '../../lib/api'
+import { type Site, type SiteLayout } from '../../lib/api'
 import { navigate } from '../../lib/url'
 import { openAddSite } from '../../lib/account'
 import { canChange, isViewer } from '../../lib/me'
@@ -52,21 +52,13 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
   const [folded, fold] = useFolded()
   const numbers = useToday()
   const layout = useSiteLayout() ?? EMPTY
-  // The dots come from the sites list, read again on opening (one small
-  // query for all of them), so "right now" is right now.
-  const [sites, setSites] = useState(given)
+  // The dots come from the sites list the dashboard keeps current (lib/useLiveSites.ts).
+  const sites = given
   // Opening the list starts the first few sites' reports, so a pick shows
   // numbers at once; the rest start when pointed at (SiteItem).
   useEffect(() => {
     for (const s of given.filter((x) => x.id !== current?.id).slice(0, PREFETCH)) prefetchSite(s)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- once, when the list opens
-
-  useEffect(() => {
-    api
-      .sites()
-      .then((r) => setSites(r.sites ?? given))
-      .catch(() => {}) // the list the page has is still right, only older
-  }, [given])
 
   useEffect(() => {
     // Outside the switcher closes it, but not its own ⋯ menus and dialogs,
