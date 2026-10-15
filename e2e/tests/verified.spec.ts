@@ -1,4 +1,5 @@
-// The Verified seal: "Verified · N" beside the site, its panel, the badges that
+// The Verified seal: a small seal on the site's avatar, its panel (one row per
+// independent kind: Payments, Search; trckable's own snippet is no source), the badges that
 // name the source behind a card, the seal in the site switcher, the shared page
 // (money counts only on a link that shows money) and the website badge. Run at
 // 1440 and at 390 (VERIFIED_WIDTH); VERIFIED_SHOTS=<dir> also takes the pictures,
@@ -22,7 +23,7 @@ let site: TestSite
 let openLink = ''
 let moneyLink = ''
 
-const ALL = sources([{ kind: 'snippet' }, { kind: 'gsc', checked: Math.floor(Date.now() / 1000) - 7200 }, { kind: 'payments', provider: 'stripe' }])
+const ALL = sources([{ kind: 'gsc', checked: Math.floor(Date.now() / 1000) - 7200 }, { kind: 'payments', provider: 'stripe' }])
 
 test.beforeAll(async ({ browser }) => {
   const page = await (await browser.newContext()).newPage()
@@ -69,73 +70,79 @@ async function shoot(page: Page, name: string, clip?: { x?: number; y?: number; 
 
 const noSideScroll = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
 
-test('the seal counts the sources that work, and its panel lists each one', async ({ page }) => {
+test('the seal sits on the avatar, and its panel lists a row per kind of badge', async ({ page }) => {
   await told(page, ALL)
   await open(page, `/${site.domain}?v=explore`)
-  const pill = page.locator('.vf-pill')
-  await expect(pill).toBeVisible({ timeout: 15_000 })
-  await expect(pill).toHaveAttribute('aria-label', /3 sources/)
-  if (!phone) await expect(pill).toContainText('Verified · 3')
-  else await expect(pill).toContainText('3')
+  const seal = page.locator('.site-zone .vf-sealbtn')
+  await expect(seal).toBeVisible({ timeout: 15_000 })
+  await expect(seal).toHaveAttribute('title', 'Verified · Payments, Search')
+  await expect(page.locator('.vf-pill')).toHaveCount(0)
   expect(await noSideScroll(page), 'the header scrolls sideways').toBeLessThanOrEqual(0)
-  await shoot(page, 'pill', { height: 120 })
+  await shoot(page, 'seal', { height: 120 })
 
-  await pill.click()
+  await seal.click()
   const panel = page.locator('.vf-panel')
   await expect(panel).toBeVisible()
-  await expect(panel.locator('.vf-row')).toHaveCount(3)
-  await expect(panel).toContainText('Verified by 3 sources')
-  await expect(panel).toContainText('Google Search Console')
-  await expect(panel).toContainText('Stripe')
-  // The providers not connected yet are one dashed row that opens Settings.
-  await expect(panel.locator('.vf-connect')).toContainText('PayPal, Paddle, Lemon Squeezy')
+  await expect(panel.locator('.vf-row')).toHaveCount(2)
+  await expect(panel).toContainText('Verified · Payments, Search')
+  await expect(panel).toContainText('Search')
+  await expect(panel).toContainText('Payments')
+  await expect(panel).not.toContainText('trckable on the site')
+  await expect(panel.locator('.vf-connect')).toHaveCount(0)
   await expect(panel.locator('.vf-foot')).toContainText('Last checked')
   expect(await noSideScroll(page)).toBeLessThanOrEqual(0)
   await shoot(page, 'panel', { height: phone ? 900 : 480 })
 
   await page.keyboard.press('Escape')
   await expect(panel).toBeHidden()
-  await expect(pill).toBeFocused()
+  await expect(seal).toBeFocused()
+})
 
-  await pill.click()
-  await page.locator('.vf-connect').click()
+test('a kind not earned yet is a Connect row that opens Settings', async ({ page }) => {
+  await told(page, sources([{ kind: 'payments', provider: 'stripe' }]))
+  await open(page, `/${site.domain}?v=explore`)
+  await page.locator('.site-zone .vf-sealbtn').click({ timeout: 15_000 })
+  const panel = page.locator('.vf-panel')
+  await expect(panel.locator('.vf-row')).toHaveCount(1)
+  await expect(panel.locator('.vf-connect')).toHaveCount(1)
+  await expect(panel.locator('.vf-connect')).toContainText('Search')
+  await panel.locator('.vf-connect').click()
   await expect(page.getByRole('dialog').first()).toBeVisible()
 })
 
-test('the Visitors and Revenue numbers name their source; a source that fails drops its badge', async ({ page }) => {
+test('the Revenue number names its source; a source that fails drops its badge and the seal', async ({ page }) => {
   await told(page, ALL)
   await open(page, `/${site.domain}?v=explore`)
   const tile = (name: string) => page.locator('.kpis .kpi').filter({ hasText: name }).first()
-  await expect(tile('Visitors').locator('.vf-chip')).toContainText('Live', { timeout: 15_000 })
-  await expect(tile('Revenue').locator('.vf-chip')).toContainText('Stripe')
+  await expect(tile('Revenue').locator('.vf-chip')).toContainText('Payments verified', { timeout: 15_000 })
+  // trckable's own snippet is no source: Visitors carries no badge.
+  await expect(tile('Visitors').locator('.vf-chip')).toHaveCount(0)
   expect(await noSideScroll(page)).toBeLessThanOrEqual(0)
   await shoot(page, 'chips', { y: 60, height: 300 })
 
-  // The snippet stops: its badge goes, and the seal counts one fewer.
-  const failing = ALL.map((s) => (s.kind === 'snippet' ? { ...s, ok: false } : s))
+  const failing = ALL.map((s) => (s.kind === 'payments' ? { ...s, ok: false } : s))
   await page.unroute('**/api/v1/sites')
   await page.unroute(`**/api/v1/sites/${site.id}/verified`)
   await told(page, failing)
   await page.reload()
-  await expect(page.locator('.vf-pill')).toHaveAttribute('aria-label', /2 sources/, { timeout: 15_000 })
-  await expect(tile('Visitors').locator('.vf-chip')).toHaveCount(0)
-  await expect(tile('Revenue').locator('.vf-chip')).toContainText('Stripe')
+  await expect(page.locator('.site-zone .vf-sealbtn')).toHaveAttribute('title', 'Verified · Search', { timeout: 15_000 })
+  await expect(tile('Revenue').locator('.vf-chip')).toHaveCount(0)
 })
 
 test('the Story cards carry the same badges', async ({ page }) => {
   await told(page, ALL)
   await open(page, `/${site.domain}?v=story`)
   await expect(page.locator('.sv-tile .vf-chip').first()).toBeVisible({ timeout: 15_000 })
-  await expect(page.locator('.sv-tile .vf-chip')).toHaveCount(2)
+  await expect(page.locator('.sv-tile .vf-chip')).toHaveCount(1)
   expect(await noSideScroll(page)).toBeLessThanOrEqual(0)
   await shoot(page, 'story', { y: 120, height: 560 })
 })
 
 test('with nothing working there is no seal and no badge, and the switcher marks only a site that has one', async ({ page }) => {
-  await told(page, sources([{ kind: 'snippet', ok: false }, { kind: 'payments', provider: 'stripe', ok: false }]))
+  await told(page, sources([{ kind: 'payments', provider: 'stripe', ok: false }]))
   await open(page, `/${site.domain}?v=explore`)
   await expect(page.locator('.site-pick')).toBeVisible({ timeout: 15_000 })
-  await expect(page.locator('.vf-pill')).toHaveCount(0)
+  await expect(page.locator('.vf-sealbtn')).toHaveCount(0)
   await expect(page.locator('.kpis .vf-chip')).toHaveCount(0)
 
   await page.unroute('**/api/v1/sites')
@@ -160,18 +167,18 @@ test('a shared link shows the seal for its readers, and money only on a link tha
   await page.goto(moneyLink)
   const pill = page.locator('.vf-pill')
   await expect(pill).toBeVisible({ timeout: 15_000 })
-  await expect(pill).toHaveAttribute('aria-label', /1 source/)
+  await expect(pill).toHaveAttribute('aria-label', /Payments/)
   await pill.click()
   const panel = page.locator('.vf-panel')
   await expect(panel).toContainText('These numbers are real')
-  await expect(panel).toContainText('Checked by trckable against 1 source')
+  await expect(panel).toContainText('Confirmed by an independent source: Payments')
   await expect(panel.locator('.vf-connect')).toHaveCount(0)
   await expect(panel.getByRole('link', { name: /Verify your own site/ })).toHaveAttribute('href', 'https://trckable.com/?ref=verified')
   expect(await noSideScroll(page)).toBeLessThanOrEqual(0)
   await shoot(page, 'shared', { height: phone ? 900 : 520 })
   await page.keyboard.press('Escape')
   await expect(panel).toBeHidden()
-  await expect(page.locator('.kpis .kpi').filter({ hasText: 'Revenue' }).locator('.vf-chip')).toContainText('Stripe')
+  await expect(page.locator('.kpis .kpi').filter({ hasText: 'Revenue' }).locator('.vf-chip')).toContainText('Payments verified')
 })
 
 test('the website badge shows what works, and nothing while no source does', async ({ page }) => {

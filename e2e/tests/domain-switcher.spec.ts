@@ -1,4 +1,5 @@
-// A site seen on two domains shows All / each domain beside its name: a click
+// A site seen on two domains says "· All" (or the domain) after its name and holds the choice in
+// the site switcher's menu as a compact row: a click
 // filters the whole dashboard, All clears it, and the chip row agrees. A site
 // on one domain has no switcher. Run at 1440 and at 390 (DOMAINS_WIDTH);
 // SWITCHER_SHOTS=<dir> also takes the pictures.
@@ -54,66 +55,50 @@ async function shoot(page: Page, name: string) {
   }
 }
 
-test('two domains: pick one, the dashboard follows; All clears it', async ({ page }) => {
+const tag = (page: Page) => page.locator('.dom-btn')
+const row = (page: Page) => page.locator('.dom-pop')
+const opt = (page: Page, name: string | RegExp) => row(page).getByRole('menuitemradio', { name })
+
+test('two domains: pick one in the site list, the dashboard follows; All clears it', async ({ page }) => {
   await open(page, `/${two}?view=data`)
-  const phone = page.viewportSize()!.width < 640
-  const group = page.locator('.dom-switch')
-  await expect(group).toBeVisible({ timeout: 30_000 })
+  await expect(tag(page)).toHaveText('·All', { timeout: 30_000 })
+  await shoot(page, 'all')
+  await tag(page).click()
+  await expect(opt(page, 'All domains')).toHaveAttribute('aria-checked', 'true')
+  await shoot(page, 'menu')
   const docs = `docs.${two}`
-  if (phone) {
-    await group.locator('.dom-menu').click()
-    await shoot(page, 'menu')
-    await page.getByRole('menuitemradio', { name: /^docs/ }).click()
-    await expect(group.locator('.dom-menu')).toHaveText('docs')
-  } else {
-    await expect(group.getByRole('radio', { name: 'All' })).toHaveAttribute('aria-checked', 'true')
-    await shoot(page, 'all')
-    await group.getByRole('radio', { name: 'docs' }).click()
-    await expect(group.getByRole('radio', { name: 'docs' })).toHaveAttribute('aria-checked', 'true')
-    await expect(group.getByRole('radio', { name: 'docs' })).toHaveAttribute('title', new RegExp(docs.replace(/\./g, '\\.')))
-  }
+  await opt(page, /^docs/).click()
   await expect(page).toHaveURL(/f=hostname%3Adocs\./)
-  // The switcher stays after the report narrows to one domain.
-  await expect(group).toBeVisible()
-  if (!phone) {
+  await expect(tag(page)).toHaveText('·docs')
+  if (page.viewportSize()!.width >= 640) {
     const chip = page.locator('.toolbar-filters .chip:not(.more)')
     await expect(chip).toHaveCount(1)
     await expect(chip.locator('b')).toHaveAttribute('title', docs)
   }
   await shoot(page, 'picked')
-  if (phone) {
-    await group.locator('.dom-menu').click()
-    await page.getByRole('menuitemradio', { name: 'All domains' }).click()
-  } else {
-    await group.getByRole('radio', { name: 'All' }).click()
-  }
+  await tag(page).click()
+  await expect(opt(page, /^docs/)).toHaveAttribute('aria-checked', 'true')
+  await opt(page, 'All domains').click()
   await expect(page).not.toHaveURL(/hostname/)
-  await expect(group.locator(phone ? '.dom-menu' : '[aria-checked=true]')).toHaveText(phone ? 'All domains' : 'All')
+  await expect(tag(page)).toHaveText('·All')
 })
 
-test('opened already filtered: every domain is listed and that one is on; Live has no switcher', async ({ page }) => {
+test('opened already filtered: every domain is listed and that one is on; Live has no domain control', async ({ page }) => {
   await open(page, `/${two}?view=data&f=hostname%3Adocs.${two}`)
-  const phone = page.viewportSize()!.width < 640
-  const group = page.locator('.dom-switch')
-  await expect(group).toBeVisible({ timeout: 30_000 })
-  if (phone) {
-    await expect(group.locator('.dom-menu')).toHaveText('docs')
-    await group.locator('.dom-menu').click()
-    await expect(page.getByRole('menuitemradio')).toHaveCount(3)
-    await page.keyboard.press('Escape')
-  } else {
-    await expect(group.getByRole('radio')).toHaveCount(3)
-    await expect(group.getByRole('radio', { name: 'docs' })).toHaveAttribute('aria-checked', 'true')
-  }
-  // Live shows every visit of the site and takes no filter, so it has no switcher.
+  await expect(tag(page)).toHaveText('·docs', { timeout: 30_000 })
+  await tag(page).click()
+  await expect(row(page).getByRole('menuitemradio')).toHaveCount(3)
+  await expect(opt(page, /^docs/)).toHaveAttribute('aria-checked', 'true')
+  await page.keyboard.press('Escape')
+  // Live shows every visit of the site and takes no filter, so it has no domain control.
   await open(page, `/${two}?view=live`)
   await expect(page.locator('.hdr-band')).toBeVisible({ timeout: 30_000 })
-  await expect(page.locator('.dom-switch')).toHaveCount(0)
+  await expect(tag(page)).toHaveCount(0)
 })
 
-test('one domain: no switcher', async ({ page }) => {
+test('one domain: nothing extra', async ({ page }) => {
   await open(page, `/${one}?view=data`)
   await expect(page.locator('.hdr-band')).toBeVisible({ timeout: 30_000 })
   await expect(page.getByRole('tab', { name: 'Pages', exact: true })).toBeVisible()
-  await expect(page.locator('.dom-switch')).toHaveCount(0)
+  await expect(tag(page)).toHaveCount(0)
 })

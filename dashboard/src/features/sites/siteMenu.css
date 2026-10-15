@@ -395,12 +395,6 @@
   gap: 2px;
 }
 
-/* The current site's settings: only where the header has no room for the cog
-   (phone.css shows it on a narrow phone). */
-.foot-settings {
-  display: none;
-}
-
 /* Four to six sites. */
 .pop.sites.mid .site,
 .pop.sites.mid .foot-add {

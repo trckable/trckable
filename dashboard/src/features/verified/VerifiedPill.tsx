@@ -1,5 +1,6 @@
-// The header's seal: "Verified · N", N the sources that work right now. A click
-// opens what stands behind the numbers, one row per source. Nothing at all
+// The seal: "Verified · Payments", the badges that work right now. On a shared page it
+// is a pill; in the header it is a small seal on the site's avatar (`seal`). A click
+// opens what stands behind the numbers, one row per badge. Nothing at all
 // while no source works: the seal claims only what is true. Only the button is
 // in the first load; the panel is a chunk of its own, asked for when the
 // pointer or focus reaches the button.
@@ -8,7 +9,7 @@ import { lazyLoad, warm } from '../../lib/lazyLoad'
 import type { Verified } from '../../lib/api'
 import { copy } from './copy'
 import { Seal } from './Marks'
-import { working } from './model'
+import { earned } from './model'
 import './verified.css'
 
 const Pop = lazyLoad(() => import('./Pop'))
@@ -21,30 +22,31 @@ export interface PillProps {
   viewer?: boolean
   /** A link that hides trckable's name also leaves out the link back. */
   brand?: boolean
+  /** The small seal on the site's avatar, not the pill with words. */
+  seal?: boolean
 }
 
-export function VerifiedPill({ verified, site, viewer, brand = true }: PillProps) {
+export function VerifiedPill({ verified, site, viewer, brand = true, seal }: PillProps) {
   const [open, setOpen] = useState(false)
   const anchor = useRef<HTMLButtonElement>(null)
   const close = useCallback(() => setOpen(false), [])
-  const n = working(verified).length
-  if (n === 0) return null
+  const names = earned(verified).map((k) => copy.names[k]).join(', ')
+  if (!names) return null
   return (
     <>
       <button
         ref={anchor}
         type="button"
         {...warm(Pop.preload)}
-        className="vf-pill"
+        className={seal ? 'vf-sealbtn' : 'vf-pill'}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={copy.pillLabel(n)}
-        title={copy.pillLabel(n)}
+        aria-label={copy.pillLabel(names)}
+        title={copy.sealLabel(names)}
         onClick={() => setOpen((o) => !o)}
       >
-        <Seal size={14} />
-        <span className="vf-pill-text">{copy.pill(n)}</span>
-        <span className="vf-pill-short">{copy.pillShort(n)}</span>
+        <Seal size={seal ? 12 : 14} />
+        {!seal && <span className="vf-pill-text">{copy.sealLabel(names)}</span>}
       </button>
       {open && (
         <Suspense fallback={null}>

@@ -90,12 +90,11 @@ for (const width of [1440, 700, 375]) {
     if (width > 640) await expect(page.locator('.subbar').getByRole('button', { name: 'Share' })).toBeVisible()
     else await expect(page.locator('.subbar').getByRole('button', { name: 'Share' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Peek' })).toBeVisible()
-    // The cog is in the site card; on a phone on a phone it is the first row of the site list instead.
-    if (width <= 640) {
-      await page.locator('.site-zone button.site-btn').click()
-      await expect(page.locator('.pop.sites .foot-settings')).toBeVisible()
-      await page.keyboard.press('Escape')
-    } else await expect(page.locator('.site-zone').getByRole('button', { name: /^Settings for/ })).toBeVisible()
+    // No cog in the header: the site's settings are a row of the site list, at every width.
+    await expect(page.locator('.site-zone').getByRole('button', { name: /^Settings for/ })).toHaveCount(0)
+    await page.locator('.site-zone button.site-btn').click()
+    await expect(page.locator('.pop.sites .foot-settings')).toContainText('Site settings')
+    await page.keyboard.press('Escape')
     // Row 2 says what the numbers are. A phone has one pill for it (Live/Data,
     // the periods and Filter are in its sheet); the comparison is the
     // period's title, not a line of text.
@@ -116,7 +115,7 @@ for (const width of [1440, 700, 375]) {
     await expect(items.filter({ hasText: 'Refresh' })).toBeVisible()
     await expect(items.filter({ hasText: 'Create…' })).toContainText('A')
     await expect(items.filter({ hasText: 'Full view' })).toContainText('F')
-    // The site's settings are the cog in the site card, on a phone too, not an item here.
+    // The site's settings are in the site list, not an item here.
     await expect(items.filter({ hasText: 'Site settings' })).toHaveCount(0)
     await expect(items.filter({ hasText: 'Export as CSV' })).toBeVisible()
     // Nothing of the person's is in it.

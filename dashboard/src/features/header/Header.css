@@ -315,3 +315,13 @@ html {
   font-size: 12px;
   color: var(--text-3);
 }
+
+/* The seal sits on the corner of the site's avatar, beside the name's own button. */
+.site-zone {
+  position: relative;
+}
+.site-zone .vf-sealbtn {
+  position: absolute;
+  left: 22px;
+  top: -1px;
+}

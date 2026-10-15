@@ -1,35 +1,31 @@
-/* The domain switcher: a small segmented row beside the site's name. */
-.dom-switch {
-  display: inline-flex;
-  flex: 0 1 auto;
-  gap: 2px;
-  min-width: 0;
-  padding: 3px;
-  border-radius: 10px;
-  background: var(--raised-well);
-}
+/* The domain dropdown after the site's name: "· All ▾", quiet until pointed at. */
 .dom-btn {
   display: inline-flex;
+  flex: 0 1 auto;
   align-items: center;
   gap: 4px;
-  min-height: 28px;
-  max-width: 160px;
-  padding: 0 10px;
+  min-width: 0;
+  max-width: 140px;
+  min-height: 32px;
+  padding: 0 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 8px;
   background: none;
   color: var(--text-2);
-  font: 500 13px var(--sans, inherit);
+  font: 500 14px var(--sans, inherit);
   white-space: nowrap;
   cursor: pointer;
 }
-.dom-btn:hover {
+.dom-btn .dom-dot {
+  color: var(--text-3);
+}
+.dom-btn:hover,
+.dom-btn[aria-expanded='true'] {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
   color: var(--text);
 }
 .dom-btn.on {
-  background: var(--raised);
-  box-shadow: 0 0 0 1px var(--raised-line), var(--shadow-soft);
-  color: var(--text);
+  color: var(--accent);
   font-weight: 600;
 }
 .dom-btn:focus-visible {
@@ -41,23 +37,69 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.dom-pop {
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  max-width: 320px;
+}
+.dom-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  color: var(--text-3);
+}
+.dom-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: 14px var(--sans, inherit);
+  outline: none;
+}
+/* About eight rows, then it scrolls. */
+.dom-list {
+  max-height: 288px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 .dom-row .faint {
   margin-left: auto;
+  padding-left: 12px;
   font-size: 11.5px;
   font-variant-numeric: tabular-nums;
 }
 .dom-row[aria-checked='true'] {
   font-weight: 600;
 }
+.dom-none {
+  margin: 0;
+  padding: 10px 12px;
+}
 @media (max-width: 640px) {
-  .dom-switch {
-    padding: 0;
-    background: none;
-  }
   .dom-btn {
     min-height: 44px;
-    max-width: 150px;
-    border: 1px solid var(--border);
-    background: var(--surface);
+    max-width: 110px;
   }
+  .dom-pop {
+    max-width: none;
+  }
+  .dom-list {
+    max-height: 56dvh;
+  }
+  .dom-row {
+    min-height: 44px;
+  }
+}
+.dom-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.dom-row .dom-name {
+  flex: 1 1 auto;
+  white-space: nowrap;
 }

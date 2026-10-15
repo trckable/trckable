@@ -143,23 +143,16 @@ test('the period opens as six choices; More opens the rest in place; compare and
 })
 
 for (const width of [1280, 390]) {
-  test(`at ${width}px the site is plain text with its cog beside it`, async ({ page }) => {
+  test(`at ${width}px the site is plain text, and its settings are a row of the site list`, async ({ page }) => {
     await open(page, width)
     const zone = page.locator('.site-zone')
     const card = (await zone.boundingBox())!
-    // A phone's capsules are 46 px (a finger wide), and its cog is in the site list, not beside the name.
+    // A phone's capsules are 46 px (a finger wide).
     expect(card.height, 'one control tall').toBe(width > 640 ? 36 : 46)
-    const gear = zone.getByRole('button', { name: /^Settings for/ })
-    if (width <= 640) {
-      await expect(gear).toBeHidden()
-      await zone.locator('button.site-btn').click()
-      await expect(page.locator('.pop.sites .foot-settings')).toBeVisible()
-      return
-    }
-    await expect(gear).toBeVisible()
-    const g = (await gear.boundingBox())!
-    expect(g.x, 'the cog is inside the card').toBeGreaterThanOrEqual(card.x)
-    expect(g.x + g.width).toBeLessThanOrEqual(card.x + card.width)
+    await expect(zone.getByRole('button', { name: /^Settings for/ })).toHaveCount(0)
+    await zone.locator('button.site-btn').click()
+    await expect(page.locator('.pop.sites .foot-settings')).toBeVisible()
+    await page.keyboard.press('Escape')
     // At rest it has no box of its own: a soft fill only on hover.
     const look = await zone.evaluate((n) => ({ border: getComputedStyle(n).borderTopColor, fill: getComputedStyle(n).backgroundColor }))
     expect(look.border).toMatch(/rgba\(0, 0, 0, 0\)|transparent/)

@@ -181,7 +181,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
       <p className="sr" aria-live="polite">
         {said}
       </p>
-      <MenuFoot hint={arrange && sites.length > 1 ? copy.keys : undefined} canAdd={!isViewer()} onAdd={() => { onClose(); openAddSite() }} settings={current && canChange() ? { label: copy.settingsFor(current.domain), open: () => { onClose(); openSettings(current) } } : undefined} />
+      <MenuFoot hint={arrange && sites.length > 1 ? copy.keys : undefined} canAdd={!isViewer()} onAdd={() => { onClose(); openAddSite() }} settings={current && canChange() ? { label: copy.siteSettings, open: () => { onClose(); openSettings(current) } } : undefined} />
     </div>
   )
 }
