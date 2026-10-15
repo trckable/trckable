@@ -7,14 +7,14 @@ import { priorOf } from './prior'
 import { Tabs, type TabItem } from '../../kit/Tabs'
 
 /** The small tabs of one list, and the list of the one picked. */
-export function SubPanel({ id, label, tabs, c, render, foot }: { id: string; label: string; tabs: TabItem[]; c: CardsCtx; render: (dim: string) => React.ReactNode; foot?: string }) {
+export function SubPanel({ id, label, tabs, c, render, foot, noFoot }: { id: string; label: string; tabs: TabItem[]; c: CardsCtx; render: (dim: string) => React.ReactNode; foot?: string; noFoot?: (dim: string) => boolean }) {
   const [asked, setAsked] = useState(tabs[0].id)
   const active = tabs.some((t) => t.id === asked) ? asked : tabs[0].id
   return (
     <>
       {tabs.length > 1 && <Tabs prefix={`${id}-${c.site.id}`} label={label} tabs={tabs} value={active} onChange={setAsked} sub />}
       {render(active)}
-      {foot && !c.loading && <p className="list-foot">{foot}</p>}
+      {foot && !c.loading && !noFoot?.(active) && <p className="list-foot">{foot}</p>}
     </>
   )
 }

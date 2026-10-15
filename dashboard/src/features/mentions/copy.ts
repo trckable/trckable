@@ -1,4 +1,4 @@
-// The words of Mentions: the card on the dashboard, its settings, Live's chip
+// The words of Mentions: its tab on the Sources card, its settings, Live's chip
 // and the lines Replay tells. A mention's place is said three ways: its name
 // ("Hacker News"), where it was posted ("on Hacker News") and what happened
 // ("posted on Hacker News").
@@ -7,14 +7,10 @@ import { count } from '../../i18n/helpers'
 
 export const copy = defineCopy('mentions', {
   title: 'Mentions',
-  period: 'Last 30 days',
   name: { hn: 'Hacker News', ph: 'Product Hunt', news: 'News & blogs' },
   posted: { hn: 'posted on Hacker News', ph: 'launched on Product Hunt', news: 'written about in the news' },
   postedHead: { hn: 'Posted on Hacker News', ph: 'Launched on Product Hunt', news: 'Written about in the news' },
-  lookingOn: (places: string) => `trckable looks on ${places} every 20 minutes.`,
-  empty: 'No mentions yet. When someone writes about your site, it shows up here with the visitors it brought.',
-  searched: 'It searches for',
-  change: 'Change the words',
+  empty: 'No mentions yet',
   brought: (n: number) => `${count(n, 'visitor', 'visitors')} came from it`,
   noneYet: 'No visitors counted yet',
   visitorsLabel: 'visitors',
@@ -24,7 +20,6 @@ export const copy = defineCopy('mentions', {
   points: { hn: (n: number) => `${n} points`, ph: (n: number) => `${n} upvotes` },
   open: (title: string) => `Open: ${title}`,
   more: (n: number) => `Show ${n} more`,
-  less: 'Show fewer',
   // Replay: a jump a mention explains, and a mention of its own.
   jumped: (change: string, at: string, posted: string, n: number) => `Visits jumped ${change} at ${at}: ${posted}, ${count(n, 'visitor', 'visitors')} came from it.`,
   jumpedDay: (change: string, posted: string, n: number) => `Visits jumped ${change}: ${posted}, ${count(n, 'visitor', 'visitors')} came from it.`,

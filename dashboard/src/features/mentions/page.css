@@ -518,23 +518,78 @@
   transform: translateX(-50%);
   cursor: pointer;
 }
-.mp-pin .mention-mark {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  font-size: 12px;
+.mp-dot {
+  display: grid;
+  place-items: center;
+  min-width: 10px;
+  height: 10px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--accent);
   box-shadow: 0 0 0 2px var(--surface);
+  color: var(--accent-ink);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+.mp-pin.many .mp-dot {
+  min-width: 16px;
+  height: 16px;
 }
 .mp-tip {
   position: absolute;
   z-index: 4;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--pop, var(--surface));
   box-shadow: var(--shadow-soft);
   font-size: 12.5px;
   pointer-events: none;
+  transform: translateY(-100%);
+}
+.mp-tip.kept {
+  pointer-events: auto;
+}
+.mp-tiplist {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mp-tiplist li,
+.mp-tiplist a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.mp-tiplist li > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+.mp-tiplist a {
+  width: 100%;
+}
+.mp-tiplist a:hover .mp-tiptitle {
+  text-decoration: underline;
+}
+.mp-tiptitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mp-tiplist .num {
+  flex: none;
 }
 .mp-talked {
   margin-left: 8px;

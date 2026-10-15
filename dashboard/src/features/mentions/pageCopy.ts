@@ -57,5 +57,6 @@ export const page = defineCopy('mentionsPage', {
   talked: 'Talked about',
   all30: 'All mentions',
   pin: (title: string, visitors: number) => `${title}: ${count(visitors, 'visitor', 'visitors')}`,
+  pinMany: (n: number) => `${count(n, 'mention', 'mentions')} on this day`,
   pinsGroup: 'Mentions on the chart',
 })

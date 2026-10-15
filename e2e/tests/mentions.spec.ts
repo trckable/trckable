@@ -1,5 +1,5 @@
-// Where the site is talked about: the card under the dashboard's cards, its
-// words in Settings, and Live's chip. The server's mentions are faked through
+// Where the site is talked about: dots on the chart, a tab on the Sources card, the
+// page behind it, its words in Settings, and Live's chip. The server's mentions are faked through
 // the route, the way the Down badge fakes the probe.
 import { expect, test } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
@@ -17,67 +17,98 @@ const mentions = [
 ]
 const answer = (list: unknown[]) => ({ mentions: list, sources: ['hn', 'ph', 'news'], words, driving: list[0] && (list[0] as { driving?: boolean }).driving ? list[0] : null })
 
-test('the card lists what was found with the visitors it brought, and the words open in Settings', async ({ page }) => {
+test('the Sources card has a Mentions tab, and the chart marks each day with a dot', async ({ page }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: await session('mentions'), url: API }])
-  let saved: string[] | null = null
   await page.route('**/api/v1/sites/*/mentions?*', (r) => r.fulfill({ json: answer(mentions) }))
   await page.route('**/api/v1/sites', async (r) => {
-    const res = await r.fetch() // the site says it has mentions: only then does the chart ask for its pins
+    const res = await r.fetch() // the site says it has mentions: only then does the chart ask for its dots
     const body = (await res.json()) as { sites: { mentions?: boolean }[] }
     body.sites.forEach((s) => (s.mentions = true))
     await r.fulfill({ response: res, json: body })
   })
-  await page.route('**/api/v1/sites/*/mentions/keywords', async (r) => {
-    saved = (r.request().postDataJSON() as { keywords: string[] }).keywords
-    await r.fulfill({ json: { ...words, added: saved } })
-  })
   await page.emulateMedia({ colorScheme: 'dark' })
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto(`${API}/${HISTORY_DOMAIN}?period=7d`)
-  const card = page.locator('.card.mentions')
-  await expect(card).toBeVisible({ timeout: 20_000 })
-  await card.scrollIntoViewIfNeeded()
-  await expect(card.getByRole('heading', { name: 'Mentions' })).toBeVisible()
-  await expect(card.getByRole('link', { name: /Show HN: Acme Metrics/ })).toHaveAttribute('href', 'https://news.ycombinator.com/item?id=41000001')
-  await expect(card).toContainText('1,212')
-  await expect(page.locator('.mp-pin').first()).toBeVisible() // the chart marks where a mention was posted
-  await page.locator('.mp-pin').first().hover()
-  await expect(page.getByRole('tooltip')).toContainText('visitors')
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-pin-dark-1440.png`, clip: { x: 0, y: 150, width: 1440, height: 500 } })
-  await expect(card).toContainText('Front page')
-  await expect(card).toContainText('Hacker News, Product Hunt, and News & blogs')
-  await expect(card).toContainText('History, Acme Metrics')
-  if (SHOTS) await card.screenshot({ path: `${SHOTS}/mentions-card-dark-1440.png` })
-  await page.emulateMedia({ colorScheme: 'light' })
-  if (SHOTS) await card.screenshot({ path: `${SHOTS}/mentions-card-light-1440.png` })
+  await expect(page.locator('.card.mentions')).toHaveCount(0) // no card of its own any more
+  const dot = page.locator('.mp-pin').first()
+  await expect(dot).toBeVisible({ timeout: 20_000 })
+  await dot.hover()
+  const tip = page.getByRole('tooltip')
+  await expect(tip).toContainText('visitors')
+  await expect(tip.locator('.mention-mark')).toHaveCount(1)
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-dot-dark-1440.png`, clip: { x: 0, y: 150, width: 1440, height: 500 } })
 
-  // The words: add one, save, and the server is sent the whole list.
-  await card.getByRole('button', { name: 'Change the words' }).click()
-  const set = page.getByRole('dialog')
-  await expect(set.getByRole('heading', { name: 'Mentions' })).toBeVisible()
-  await set.getByLabel('Word to search for').fill('@acmemetrics')
-  await set.getByRole('button', { name: 'Add a word' }).click()
-  await set.getByRole('button', { name: 'Save words' }).click()
-  await expect.poll(() => saved).toEqual(['Acme Metrics', '@acmemetrics'])
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-settings-light-1440.png` })
+  const sources = page.locator('#cards').getByRole('tabpanel', { name: 'Sources' })
+  await sources.getByRole('tab', { name: 'Mentions' }).click()
+  await expect(sources.getByRole('link', { name: /Show HN: Acme Metrics/ })).toHaveAttribute('href', 'https://news.ycombinator.com/item?id=41000001')
+  await expect(sources.getByRole('link', { name: /Show HN: Acme Metrics/ })).toHaveAttribute('rel', /noopener/)
+  await expect(sources).toContainText('1,212')
+  await expect(sources.locator('.ml-row')).toHaveCount(3)
+  await sources.scrollIntoViewIfNeeded()
+  if (SHOTS) await page.locator('#cards').screenshot({ path: `${SHOTS}/mentions-tab-dark-1440.png` })
+  await page.emulateMedia({ colorScheme: 'light' })
+  if (SHOTS) await page.locator('#cards').screenshot({ path: `${SHOTS}/mentions-tab-light-1440.png` })
 })
 
-test('nothing found yet says what is watched; a phone gets the same card', async ({ page }) => {
+test('several mentions on one day are one dot with a count; a click keeps the list open', async ({ page }) => {
+  test.slow()
+  await page.context().addCookies([{ name: 'trckable_session', value: await session('mentions-many'), url: API }])
+  const day = NOW - 2 * 86400
+  const two = [{ ...mentions[0], id: 11, posted_at: day, driving: false }, { ...mentions[1], id: 12, posted_at: day + 600 }]
+  await page.route('**/api/v1/sites/*/mentions?*', (r) => r.fulfill({ json: answer(two) }))
+  await page.route('**/api/v1/sites', async (r) => {
+    const res = await r.fetch()
+    const body = (await res.json()) as { sites: { mentions?: boolean }[] }
+    body.sites.forEach((s) => (s.mentions = true))
+    await r.fulfill({ response: res, json: body })
+  })
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.goto(`${API}/${HISTORY_DOMAIN}?period=7d`)
+  const dot = page.locator('.mp-pin.many')
+  await expect(dot).toBeVisible({ timeout: 20_000 })
+  await expect(dot.locator('.mp-dot')).toHaveText('2')
+  await dot.click()
+  const list = page.getByRole('tooltip')
+  await expect(list.getByRole('link')).toHaveCount(2)
+  await expect(list.getByRole('link').first()).toHaveAttribute('rel', /noopener/)
+  await page.keyboard.press('Escape')
+  await page.mouse.move(0, 0)
+  await expect(list).toBeHidden()
+  if (SHOTS) {
+    const around = async (name: string, width: number) => {
+      await dot.scrollIntoViewIfNeeded()
+      const box = (await dot.boundingBox())!
+      await page.screenshot({ path: `${SHOTS}/mentions-${name}.png`, clip: { x: 0, y: Math.max(0, box.y - 170), width, height: 300 } })
+    }
+    await dot.hover()
+    for (const scheme of ['dark', 'light'] as const) {
+      await page.emulateMedia({ colorScheme: scheme })
+      await around(`dots-${scheme}-1440`, 1440)
+    }
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.mouse.move(0, 0)
+    for (const scheme of ['dark', 'light'] as const) {
+      await page.emulateMedia({ colorScheme: scheme })
+      await around(`dots-${scheme}-390`, 390)
+    }
+  }
+})
+
+test('a phone has the dots only; with nothing found the tab says so in one line', async ({ page }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: await session('mentions-empty'), url: API }])
   await page.route('**/api/v1/sites/*/mentions?*', (r) => r.fulfill({ json: answer([]) }))
   await page.emulateMedia({ colorScheme: 'dark' })
-  await page.setViewportSize({ width: 390, height: 844 })
+  await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto(`${API}/${HISTORY_DOMAIN}?period=7d`)
-  const card = page.locator('.card.mentions')
+  const sources = page.locator('#cards').getByRole('tabpanel', { name: 'Sources' })
+  await sources.getByRole('tab', { name: 'Mentions' }).click({ timeout: 20_000 })
+  await expect(sources.locator('.ml-empty')).toHaveText('No mentions yet')
+  await page.setViewportSize({ width: 390, height: 844 })
   await expect(page.locator('.kpi .value.num').first()).toBeVisible({ timeout: 20_000 })
-  await expect(card).toBeVisible({ timeout: 20_000 })
-  await expect(card).toContainText('No mentions yet')
-  await expect(card).toContainText('It searches for')
+  await expect(page.getByRole('tab', { name: 'Mentions' })).toHaveCount(0)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  await card.scrollIntoViewIfNeeded()
-  if (SHOTS) await card.screenshot({ path: `${SHOTS}/mentions-empty-dark-390.png` })
 })
 
 test('Live says which mention is sending people right now', async ({ page }) => {
