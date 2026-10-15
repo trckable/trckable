@@ -48,3 +48,12 @@ export function useTheme(): [Theme, (t: Theme) => void] {
   }
   return [theme, pick]
 }
+
+// The theme the person chose last time, before the first paint (storage may be blocked).
+export function applySavedTheme() {
+  try {
+    applyTheme(localStorage.getItem('trckable:theme') ?? 'system')
+  } catch {
+    /* storage blocked */
+  }
+}

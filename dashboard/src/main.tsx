@@ -10,8 +10,8 @@ import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialog
 import "./styles.css";
 import { SiteZone } from "./features/header/SiteZone";
 import { Dashboard } from "./views/Dashboard";
-import { applyTheme } from "./lib/theme";
-import { useLiveSites } from "./lib/useLiveSites";
+import { applySavedTheme } from "./lib/theme";
+import { NO_SITES, useLiveSites } from "./lib/useLiveSites";
 import { openAddSite, useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
 import { routeOf, SubRoute } from "./features/subpage";
@@ -36,13 +36,7 @@ const SharedSite = lazy(() => import("./views/SharedSite"));
 import { Toasts } from "./components/Toast"; import { Hints } from "./features/hints/HintsDoor"; import { Boundary } from "./components/Boundary"; import "./lib/pwa";
 import "./phone.css"; // last: what it sets on a phone wins over the styles imported before it
 void import("./kit/glass").then((m) => m.startGlass()); // the glass: its own small chunk, asked for at once, so the first load keeps its weight
-try {
-  applyTheme(localStorage.getItem("trckable:theme") ?? "system");
-} catch {
-  /* storage blocked */
-}
-
-const NO_SITES: Site[] = [];
+applySavedTheme();
 
 type Boot =
   | { state: "loading" }
@@ -89,10 +83,9 @@ function App() {
     void load();
   }, [load, shared]);
 
-  const ready = boot.state === "ready" && !boot.mustChange;
   const liveSites = boot.state === "ready" ? boot.sites : NO_SITES;
   const applySites = useCallback((sites: Site[]) => setBoot((b) => (b.state === "ready" ? { ...b, sites } : b)), []);
-  useLiveSites(ready, liveSites, applySites);
+  useLiveSites(boot.state === "ready" && !boot.mustChange, liveSites, applySites);
   const accountTab = useAccountTab(); // a hook: must run before any early return
   usePreloadDialogs(boot.state === "ready");
   const adding = useAddSite();

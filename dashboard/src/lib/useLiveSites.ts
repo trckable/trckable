@@ -17,6 +17,8 @@ export function changed(a: Site[], b: Site[]): boolean {
 }
 
 /** Reads the list again every few seconds while `on`; `apply` gets only a list that differs. Returns a counter that moves with each read, to re-render by. */
+export const NO_SITES: Site[] = []
+
 export function useLiveSites(on: boolean, current: Site[], apply: (sites: Site[]) => void): number {
   const [tick, setTick] = useState(0)
   useEffect(() => {
