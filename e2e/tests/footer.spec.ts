@@ -3,6 +3,7 @@
 // profile marks that have an address. Feedback sends a note the owner can read back.
 // Pictures for the review: POLISH_SHOTS=<folder>.
 import { expect, test } from './fixtures'
+import { mkdirSync } from 'node:fs'
 import { API } from '../playwright.config'
 import { session } from './session'
 
@@ -98,6 +99,30 @@ test('a site that is down turns the dot red and says which', async ({ page }) =>
     return colour
   })
   await expect(status.locator('i')).toHaveCSS('background-color', down)
+})
+
+test('a quiet site, none down, turns the dot amber and says how many', async ({ page }) => {
+  await page.route('**/api/v1/sites', async (route) => {
+    const res = await route.fetch()
+    const body = (await res.json()) as { sites: Record<string, unknown>[] }
+    const last = Math.floor(Date.now() / 1000) - 10 * 3600
+    body.sites = body.sites.map((s, i) => (i === 0 ? { ...s, last_event_at: last, check: { at: Math.floor(Date.now() / 1000) }, watched_since: last - 3 * 86400 } : { ...s, last_event_at: Math.floor(Date.now() / 1000) - 30, down_since: undefined }))
+    await route.fulfill({ response: res, json: body })
+  })
+  const foot = await open(page)
+  const status = foot.locator('.footer-status')
+  await expect(status).toHaveAttribute('data-status', 'quiet')
+  await expect(status).toHaveText('1 quiet')
+  await expect(foot.getByText('All systems normal')).toHaveCount(0)
+  await status.hover()
+  await expect(page.getByRole('tooltip')).toContainText('traffic, not an outage')
+  if (SHOTS) {
+    mkdirSync(SHOTS, { recursive: true })
+    for (const scheme of ['dark', 'light'] as const) {
+      await page.emulateMedia({ colorScheme: scheme })
+      await foot.screenshot({ path: `${SHOTS}/footer-quiet-${scheme}.png` })
+    }
+  }
 })
 
 test('a release this browser has not seen puts a lime dot by What’s new', async ({ page }) => {

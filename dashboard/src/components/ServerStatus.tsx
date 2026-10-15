@@ -2,7 +2,7 @@
 // every site of this account answering (features/sitestatus). It never says "normal" while one fails.
 import { Tooltip } from '../kit/Tooltip'
 import type { Site } from '../lib/api'
-import { statusOf } from '../features/sitestatus/status'
+import { quietSites, statusOf } from '../features/sitestatus/status'
 import { useServerStatus } from '../lib/serverStatus'
 import { footerMoreCopy as t } from './footerMoreCopy'
 
@@ -10,12 +10,26 @@ export default function ServerStatus({ sites }: { sites: Site[] }) {
   const server = useServerStatus()
   const down = sites.filter((s) => statusOf(s) === 'down')
   const siteDown = server === 'ok' && down.length > 0
+  const quiet = quietSites(sites)
+  const hush = server === 'ok' && !siteDown && quiet.length > 0
   const words = t.status[server]
-  const label = siteDown ? t.siteDown(down.map((s) => s.name || s.domain), down.length === 1 ? down[0].down_cause : undefined) : words.label
+  let label = words.label
+  let tip = words.tip
+  let status: string = server
+  if (hush) {
+    label = t.siteQuiet(quiet.length)
+    tip = t.siteQuietTip
+    status = 'quiet'
+  }
+  if (siteDown) {
+    label = t.siteDown(down.map((s) => s.name || s.domain), down.length === 1 ? down[0].down_cause : undefined)
+    tip = t.siteDownTip
+    status = 'down'
+  }
   return (
-    <Tooltip text={siteDown ? t.siteDownTip : words.tip}>
+    <Tooltip text={tip}>
       {(p) => (
-        <button type="button" className="footer-status" data-status={siteDown ? 'down' : server} {...p}>
+        <button type="button" className="footer-status" data-status={status} {...p}>
           <i aria-hidden="true" />
           <span>{label}</span>
         </button>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Site, SiteRow } from '../lib/api'
 import { dayWord, hasBaseline, headline, items, MOVE, ordered, silentFor, whyLine } from './allNext'
+import { quietSites } from '../features/sitestatus/status'
 
 const NOW = Date.UTC(2026, 9, 14, 12) // noon, so a good part of the day has passed
 const row = (id: string, o: Partial<SiteRow> = {}) => ({ id, domain: id + '.com', name: '', visitors: 0, series: null, online: 0, ...o }) as SiteRow
@@ -96,5 +97,18 @@ describe('a quiet site says one thing everywhere', () => {
 
   it('has no silence for a site that is not quiet', () => {
     expect(silentFor(build([live('b')]).list[0], NOW)).toBe('')
+  })
+})
+
+describe('the quiet count the footer and the Uptime note share', () => {
+  it('counts quiet sites, not new, live, down or dormant ones', () => {
+    const sites = [
+      site('q', { last_event_at: NOW / 1000 - 10 * 3600 }),
+      site('l', { last_event_at: NOW / 1000 - 60 }),
+      site('n'),
+      site('d', { last_event_at: NOW / 1000 - 40 * 86400 }),
+      site('x', { last_event_at: NOW / 1000 - 10 * 3600, down_since: NOW / 1000 - 600 }),
+    ]
+    expect(quietSites(sites, NOW).map((s) => s.id)).toEqual(['q'])
   })
 })

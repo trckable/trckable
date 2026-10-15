@@ -1,4 +1,4 @@
-// A site seen on two domains says "· All" (or the domain) after its name and holds the choice in
+// A site seen on two domains says "/ All" (or the domain) after its name and holds the choice in
 // the site switcher's menu as a compact row: a click
 // filters the whole dashboard, All clears it, and the chip row agrees. A site
 // on one domain has no switcher. Run at 1440 and at 390 (DOMAINS_WIDTH);
@@ -56,37 +56,48 @@ async function shoot(page: Page, name: string) {
 }
 
 const tag = (page: Page) => page.locator('.dom-btn')
-const row = (page: Page) => page.locator('.dom-pop')
+const phone = (page: Page) => page.viewportSize()!.width < 641
+// Wide: the crumb after the site's name opens the list. A phone has only the site; its list holds the domain rows.
+const openList = async (page: Page) => {
+  if (phone(page)) await page.locator('.site-pick .site-btn').click()
+  else await tag(page).click()
+}
+const said = async (page: Page, text: string) => {
+  if (phone(page)) await expect(tag(page)).toBeHidden()
+  else await expect(tag(page)).toHaveText(text)
+}
+const row = (page: Page) => page.locator('.dom-pop').first()
 const opt = (page: Page, name: string | RegExp) => row(page).getByRole('menuitemradio', { name })
 
 test('two domains: pick one in the site list, the dashboard follows; All clears it', async ({ page }) => {
   await open(page, `/${two}?view=data`)
-  await expect(tag(page)).toHaveText('·All', { timeout: 30_000 })
+  if (phone(page)) await expect(page.locator('.site-btn')).toBeVisible({ timeout: 30_000 })
+  else await expect(tag(page)).toHaveText('/All', { timeout: 30_000 })
   await shoot(page, 'all')
-  await tag(page).click()
+  await openList(page)
   await expect(opt(page, 'All domains')).toHaveAttribute('aria-checked', 'true')
   await shoot(page, 'menu')
   const docs = `docs.${two}`
   await opt(page, /^docs/).click()
   await expect(page).toHaveURL(/f=hostname%3Adocs\./)
-  await expect(tag(page)).toHaveText('·docs')
+  await said(page, '/docs')
   if (page.viewportSize()!.width >= 640) {
     const chip = page.locator('.toolbar-filters .chip:not(.more)')
     await expect(chip).toHaveCount(1)
     await expect(chip.locator('b')).toHaveAttribute('title', docs)
   }
   await shoot(page, 'picked')
-  await tag(page).click()
+  await openList(page)
   await expect(opt(page, /^docs/)).toHaveAttribute('aria-checked', 'true')
   await opt(page, 'All domains').click()
   await expect(page).not.toHaveURL(/hostname/)
-  await expect(tag(page)).toHaveText('·All')
+  await said(page, '/All')
 })
 
 test('opened already filtered: every domain is listed and that one is on; Live has no domain control', async ({ page }) => {
   await open(page, `/${two}?view=data&f=hostname%3Adocs.${two}`)
-  await expect(tag(page)).toHaveText('·docs', { timeout: 30_000 })
-  await tag(page).click()
+  if (!phone(page)) await expect(tag(page)).toHaveText('/docs', { timeout: 30_000 })
+  await openList(page)
   await expect(row(page).getByRole('menuitemradio')).toHaveCount(3)
   await expect(opt(page, /^docs/)).toHaveAttribute('aria-checked', 'true')
   await page.keyboard.press('Escape')

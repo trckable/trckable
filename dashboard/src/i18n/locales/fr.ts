@@ -2539,6 +2539,8 @@ export default {
   'footerMore.feedback': 'Avis',
   'footerMore.siteDown': (names: string[], why?: string) => (names.length === 1 ? `${names[0]} est hors ligne${why ? `: ${why}` : ''}` : `${names.length} sites sont hors ligne`),
   'footerMore.siteDownTip': 'Le serveur n’arrive pas à ouvrir ce site pour le moment. Tout ce qui a été enregistré avant est conservé, et trckable réessaie tout seul.',
+  'footerMore.siteQuiet': (n: number) => `${n} au calme`,
+  'footerMore.siteQuietTip': 'Aucune visite depuis des heures sur ce site. Le serveur l’atteint toujours : il s’agit du trafic, pas d’une panne.',
   'footer.shortcuts': 'Raccourcis',
   'footerMore.status.ok.label': 'Tout est normal',
   'footerMore.status.ok.tip': 'Ce serveur répond, vos sites répondent à nos contrôles, et les visites qu’il compte apparaissent au fur et à mesure.',

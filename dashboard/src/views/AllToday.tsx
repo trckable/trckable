@@ -7,6 +7,7 @@ import { useAccountIncidents, useNow } from '../features/incidents/useIncidents'
 import type { Surge } from '../features/signals/surge'
 import { SiteMark } from '../components/SiteMark'
 import { SiteSeal } from '../features/verified/SiteSeal'
+import { quietSites } from '../features/sitestatus/status'
 import { dotState, StateDot } from '../features/sites/StateDot'
 import { copy as siteCopy } from '../features/sites/copy'
 import { when } from '../features/sitestatus/time'
@@ -92,19 +93,15 @@ function Line({ i, start, against, color, lens, total, period }: { i: Item; star
   const waiting = i.kind === 'setup'
   const line = lens === 'visitors' || hurt ? whyLine(i, against) : cell.note
   const tip = i.usual !== null ? next.whyMover(fmtInt(i.today), fmtInt(i.usual), against) : ''
-  // The comparison sentence lives in the chip's tooltip; a row keeps a line only for what is wrong.
-  const why = lens === 'visitors' && line === tip ? '' : line
   const live = lens === 'visitors' && !waiting
+  const why = lens === 'visitors' && line === tip ? '' : line // the comparison sentence is in the chip's tooltip
   return (
     <button type="button" className={'nx-line' + (live ? ' live' : '') + (hurt ? ' hurt ' + i.status : '')} onClick={() => navigate('/' + encodeURIComponent(r.domain))}>
       <span className="nx-name">
-        {i.site && !(lens === 'visitors' && !waiting) && <StateDot site={i.site} />}
-        <span className="nx-mark">
-          <SiteMark site={i.site ?? r} size={28} />
-          <SiteSeal verified={i.site?.verified} />
-        </span>
+        {i.site && !live && <StateDot site={i.site} />}
+        <SiteMark site={i.site ?? r} size={28} />
         <span className="nx-who">
-          <b title={r.domain}>{r.name || r.domain}</b>
+          <span className="nx-title"><b title={r.domain}>{r.name || r.domain}</b><SiteSeal verified={i.site?.verified} /></span>
           {r.name && r.name !== r.domain && <small className="muted">{r.domain}</small>}
         </span>
       </span>
@@ -199,7 +196,7 @@ export function AllToday({ lens, rows, sites, surges, colorOf, start, period, da
             <em>{period}</em>
           </button>
         )}
-        {!figures && <UptimeCard sites={sites} days={days} quiet={list.filter((i) => i.kind === 'attention' && i.status === 'quiet').length} open={() => open('uptime')} />}
+        {!figures && <UptimeCard sites={sites} days={days} quiet={quietSites(sites).length} open={() => open('uptime')} />}
       </div>
       <div className="nx-cols">
         <div className="nx-sites">

@@ -41,7 +41,9 @@ for (const size of [{ name: 'desktop', width: 1440, height: 900 }, { name: 'phon
     await expect(page.locator('.all-head p')).toHaveText(/^Today · /)
     await expect(page.locator('.nx-card', { hasText: 'Uptime' })).toContainText('1 quiet')
     await expect(page.locator('.nx-card', { hasText: 'Uptime' })).not.toContainText('looks fine')
-    await expect(page.locator('.footer, footer').first()).toBeVisible()
+    const status = page.locator('.footer-status')
+    await expect(status).toHaveAttribute('data-status', 'quiet')
+    await expect(status).toContainText('1 quiet')
 
     if (SHOTS) {
       mkdirSync(SHOTS, { recursive: true })

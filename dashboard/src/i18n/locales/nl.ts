@@ -2538,6 +2538,8 @@ export default {
   'footerMore.feedback': 'Feedback',
   'footerMore.siteDown': (names: string[], why?: string) => (names.length === 1 ? `${names[0]} is offline${why ? `: ${why}` : ''}` : `${names.length} sites zijn offline`),
   'footerMore.siteDownTip': 'De server kan deze site nu niet openen. Alles wat eerder is vastgelegd blijft bewaard en trckable kijkt vanzelf opnieuw.',
+  'footerMore.siteQuiet': (n: number) => `${n} stil`,
+  'footerMore.siteQuietTip': 'Al uren geen bezoek op deze site. De server bereikt hem nog steeds: het gaat om verkeer, niet om een storing.',
   'footer.shortcuts': 'Sneltoetsen',
   'footerMore.status.ok.label': 'Alles in orde',
   'footerMore.status.ok.tip': 'Deze server antwoordt, je sites antwoorden op onze controles en de bezoeken die hij telt verschijnen direct.',

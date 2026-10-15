@@ -2541,6 +2541,8 @@ export default {
   'footerMore.feedback': 'Feedback',
   'footerMore.siteDown': (names: string[], why?: string) => (names.length === 1 ? `${names[0]} ist offline${why ? `: ${why}` : ''}` : `${names.length} Websites sind offline`),
   'footerMore.siteDownTip': 'Der Server erreicht diese Website gerade nicht. Alles bisher Aufgezeichnete bleibt erhalten, trckable prüft von selbst wieder.',
+  'footerMore.siteQuiet': (n: number) => `${n} still`,
+  'footerMore.siteQuietTip': 'Keine Besuche seit Stunden auf dieser Website. Der Server erreicht sie weiterhin, es geht also um den Verkehr, nicht um einen Ausfall.',
   'footer.shortcuts': 'Tastenkürzel',
   'footerMore.status.ok.label': 'Alles in Ordnung',
   'footerMore.status.ok.tip': 'Dieser Server antwortet, deine Websites antworten auf unsere Prüfungen, und die Besuche, die er zählt, erscheinen laufend.',

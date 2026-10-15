@@ -2544,6 +2544,8 @@ export default {
   'footerMore.feedback': 'Comentarios',
   'footerMore.siteDown': (names: string[], why?: string) => (names.length === 1 ? `${names[0]} está caído${why ? `: ${why}` : ''}` : `${names.length} sitios están caídos`),
   'footerMore.siteDownTip': 'El servidor no puede abrir este sitio ahora mismo. Todo lo registrado antes se conserva y trckable vuelve a mirar por su cuenta.',
+  'footerMore.siteQuiet': (n: number) => `${n} en calma`,
+  'footerMore.siteQuietTip': 'Sin visitas desde hace horas en este sitio. El servidor aún lo alcanza: es tráfico, no una caída.',
   'footer.shortcuts': 'Atajos',
   'footerMore.status.ok.label': 'Todo en orden',
   'footerMore.status.ok.tip': 'Este servidor responde, tus sitios responden a nuestras comprobaciones y las visitas que cuenta aparecen a medida que ocurren.',
