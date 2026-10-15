@@ -44,3 +44,15 @@ describe('a site’s status', () => {
     expect(silence(site(), NOW)).toBe('')
   })
 })
+
+describe('a quiet site and the next visit', () => {
+  it('is quiet from the last visit and the clock alone, and ok again at the next visit', () => {
+    const was = site({ last_event_at: sec - 14 * 3600 })
+    expect(statusOf(was, NOW)).toBe('quiet')
+    expect(statusOf({ ...was, last_event_at: sec - 5 }, NOW)).toBe('ok')
+    // Nothing new arrived, only time: a site goes quiet without a new fact.
+    const fresh = site({ last_event_at: sec - 60 })
+    expect(statusOf(fresh, NOW)).toBe('ok')
+    expect(statusOf(fresh, NOW + 7 * 3600_000)).toBe('quiet')
+  })
+})

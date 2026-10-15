@@ -11,6 +11,7 @@ import "./styles.css";
 import { SiteZone } from "./features/header/SiteZone";
 import { Dashboard } from "./views/Dashboard";
 import { applyTheme } from "./lib/theme";
+import { useLiveSites } from "./lib/useLiveSites";
 import { openAddSite, useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
 import { routeOf, SubRoute } from "./features/subpage";
@@ -40,6 +41,8 @@ try {
 } catch {
   /* storage blocked */
 }
+
+const NO_SITES: Site[] = [];
 
 type Boot =
   | { state: "loading" }
@@ -86,6 +89,10 @@ function App() {
     void load();
   }, [load, shared]);
 
+  const ready = boot.state === "ready" && !boot.mustChange;
+  const liveSites = boot.state === "ready" ? boot.sites : NO_SITES;
+  const applySites = useCallback((sites: Site[]) => setBoot((b) => (b.state === "ready" ? { ...b, sites } : b)), []);
+  useLiveSites(ready, liveSites, applySites);
   const accountTab = useAccountTab(); // a hook: must run before any early return
   usePreloadDialogs(boot.state === "ready");
   const adding = useAddSite();

@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- A site's state follows its visits without a refresh: the Quiet and Down badge, the switcher's dot and line, All sites, and the Sites list read one sites list that the dashboard re-reads every 15 seconds, so a new visit clears "Quiet" at once and a site goes quiet with the clock.
 - Info tips stay inside their panel: a tip near the edge of a table or a sheet slides back in instead of being cut off.
 - Cards and alert emails can hand a question to an add-on: a card raises a `trckable:ask-about` window event, alert mails can carry an optional link, and the footer loads lazily. Nothing changes on a plain install.
 - Your links is on the dashboard now, not only in the ⋯ menu: a card above Mentions with the three tagged links that brought the most (mark, tag, a bar, visitors, and a goal badge), a tap shows the dashboard for that link, and "All links" opens the page. With no tagged visit yet it is one slim line with a sample link to copy, which you can hide. It loads when it is about to be seen, so the first load is unchanged.
