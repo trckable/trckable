@@ -68,7 +68,7 @@
 .dom-row .faint {
   margin-left: auto;
   padding-left: 12px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 .dom-row[aria-checked='true'] {

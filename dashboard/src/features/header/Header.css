@@ -352,3 +352,10 @@ html {
   background: none;
   box-shadow: none;
 }
+@media (max-width: 640px) {
+  .site-pick .site-chev {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
