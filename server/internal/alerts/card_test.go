@@ -115,3 +115,19 @@ func TestEmailCarriesTextAndHTML(t *testing.T) {
 		t.Error("the text must come first")
 	}
 }
+
+func TestCardShowsTheAskLinkOnlyWhenItIsSafeAndSet(t *testing.T) {
+	c := Card{Big: "Tracking stopped", Ask: "https://stats.example.com/shop.example?peek=stopped&at=1760000000"}
+	h := c.HTML("https://stats.example.com/u/t", "")
+	for _, want := range []string{"Open in dashboard", `shop.example?peek=stopped&amp;at=1760000000`} {
+		if !strings.Contains(h, want) {
+			t.Errorf("missing %q", want)
+		}
+	}
+	if strings.Contains(Card{Big: "x"}.HTML("", ""), "Open in dashboard") {
+		t.Error("a link was drawn with none set")
+	}
+	if strings.Contains(Card{Big: "x", Ask: "javascript:alert(1)"}.HTML("", ""), "javascript:") {
+		t.Error("an unsafe ask link was drawn")
+	}
+}

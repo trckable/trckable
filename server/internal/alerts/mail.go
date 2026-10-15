@@ -116,6 +116,7 @@ func (m *Mailer) send(ctx context.Context, to string, e Event) error {
 		if e.Card != nil {
 			c = *e.Card
 		}
+		c.Ask = e.Ask
 		page = c.HTML(e.Unsubscribe, e.Settings)
 		e.Inline = append(e.Inline[:len(e.Inline):len(e.Inline)], Attachment{Name: "logo.png", Type: "image/png", Data: reports.Logo, Inline: LogoCID})
 	}

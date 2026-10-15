@@ -16,6 +16,7 @@ import { RefMark } from './refIcons'
 import { useRowExtras } from './useRowExtras'
 import { listProps, SubPanel } from './SubPanel'
 import type { TabItem } from '../../kit/Tabs'
+import './Breakdowns.css'
 
 const HeatOverlay = lazy(() => import('../heatmap/HeatOverlay'))
 const ScrollDepth = lazy(() => import('../../views/ScrollDepth').then((m) => ({ default: m.ScrollDepth })))
