@@ -161,23 +161,20 @@ func (a *API) verified(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, a.verifiedOf(r.Context(), si, check))
 }
 
-// sharedVerified is what a shared link may say: the sources behind what the
-// link shows. Payments count only when the link shows money.
+// sharedVerified is what a shared link may say: only the sources that work
+// now (a reader has no use for the owner's loose ends), and payments only when
+// the link shows money.
 func (a *API) sharedVerified(ctx context.Context, si sqlite.SiteInfo, money bool) verified {
 	var check *sqlite.SiteCheck
 	if c, err := a.Ctl.CheckOf(ctx, si.ID); err == nil && c.At > 0 {
 		check = &c
 	}
 	v := a.verifiedOf(ctx, si, check)
-	if money {
-		return v
-	}
-	kept := v.Sources[:0]
+	kept := []verifiedSource{}
 	for _, s := range v.Sources {
-		if s.Kind != "payments" {
+		if s.OK && (money || s.Kind != "payments") {
 			kept = append(kept, s)
 		}
 	}
-	v.Sources = kept
-	return v
+	return verified{Sources: kept}
 }

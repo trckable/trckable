@@ -37,25 +37,30 @@ test.beforeAll(async () => {
   cookie = await session('widget-responsive')
 })
 
+// A site holds at most ten widgets, so the designs are made on two sites.
+const PER_SITE = 10
+
 async function made(page: Page) {
-  const domain = `widgets-${Date.now()}.example.org`
-  const site = ((await (await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain } })).json()) as { id: string }).id
-  await page.request.put(`${API}/api/v1/sites/${site}/modules/revenue`, { headers: H, data: { enabled: true } })
-  const paths = ['/', '/pricing', '/blog/a-rather-long-page-name-that-will-not-fit-on-a-phone', '/docs']
-  for (let i = 0; i < 6; i++) {
-    await page.request.post(`${API}/api/e`, { headers: { 'User-Agent': UA }, data: { s: site, k: 'pv', u: `https://${domain}${paths[i % 4]}`, id: `wr${i}`, v: `wr${i}.1` } })
-  }
-  // The verified badge draws only what works: Stripe, with a sale delivered.
-  await stripeSale(page.request, site)
   const ids: Record<string, string> = {}
-  for (const l of LOOKS) {
-    const res = await page.request.post(`${API}/api/v1/sites/${site}/widgets`, { headers: H, data: { kind: l.kind, theme: 'dark', shows: l.shows, brand: true } })
-    expect(res.ok(), `${l.name}: ${await res.text()}`).toBe(true)
-    const id = ((await res.json()) as { id: string }).id
-    // A new widget is off until it is switched on.
-    const on = await page.request.put(`${API}/api/v1/sites/${site}/widgets/${id}`, { headers: H, data: { kind: l.kind, theme: 'dark', shows: l.shows, brand: true, on: true } })
-    expect(on.ok(), `${l.name}: ${await on.text()}`).toBe(true)
-    ids[l.name] = id
+  for (let at = 0; at < LOOKS.length; at += PER_SITE) {
+    const domain = `widgets-${at}-${Date.now()}.example.org`
+    const site = ((await (await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain } })).json()) as { id: string }).id
+    await page.request.put(`${API}/api/v1/sites/${site}/modules/revenue`, { headers: H, data: { enabled: true } })
+    const paths = ['/', '/pricing', '/blog/a-rather-long-page-name-that-will-not-fit-on-a-phone', '/docs']
+    for (let i = 0; i < 6; i++) {
+      await page.request.post(`${API}/api/e`, { headers: { 'User-Agent': UA }, data: { s: site, k: 'pv', u: `https://${domain}${paths[i % 4]}`, id: `wr${at}${i}`, v: `wr${at}${i}.1` } })
+    }
+    // The verified badge draws only what works: Stripe, with a sale delivered.
+    await stripeSale(page.request, site)
+    for (const l of LOOKS.slice(at, at + PER_SITE)) {
+      const res = await page.request.post(`${API}/api/v1/sites/${site}/widgets`, { headers: H, data: { kind: l.kind, theme: 'dark', shows: l.shows, brand: true } })
+      expect(res.ok(), `${l.name}: ${await res.text()}`).toBe(true)
+      const id = ((await res.json()) as { id: string }).id
+      // A new widget is off until it is switched on.
+      const on = await page.request.put(`${API}/api/v1/sites/${site}/widgets/${id}`, { headers: H, data: { kind: l.kind, theme: 'dark', shows: l.shows, brand: true, on: true } })
+      expect(on.ok(), `${l.name}: ${await on.text()}`).toBe(true)
+      ids[l.name] = id
+    }
   }
   return ids
 }

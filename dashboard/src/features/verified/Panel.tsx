@@ -88,7 +88,7 @@ export default function Panel({ verified, site, viewer, brand, close }: Props) {
         </span>
       </div>
       <ul className="vf-rows">
-        {(data?.sources ?? []).map((s, i) => (
+        {(viewer ? working(data) : (data?.sources ?? [])).map((s, i) => (
           <Row key={`${s.kind}${s.provider ?? ''}${i}`} s={s} viewer={viewer} />
         ))}
       </ul>

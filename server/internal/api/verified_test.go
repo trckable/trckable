@@ -164,6 +164,14 @@ func TestVerifiedAcrossTheAPI(t *testing.T) {
 		t.Fatalf("a link that shows money shows the provider: %v", info["verified"])
 	}
 
+	// What stopped working is not shown to readers at all.
+	_, _ = g.ctl.DB.ExecContext(ctx, `UPDATE sites SET last_event_at = 1 WHERE id = ?`, g.site)
+	_, info = do(t, client(), "POST", g.srv.URL+"/api/v1/share/open", `{"token":"`+url[len(url)-26:]+`"}`)
+	if n := len(info["verified"].(map[string]any)["sources"].([]any)); n != 1 {
+		t.Fatalf("a reader is told of working sources only: %v", info["verified"])
+	}
+	_, _ = g.ctl.DB.ExecContext(ctx, `UPDATE sites SET last_event_at = ? WHERE id = ?`, site.Add(-time.Hour).Unix(), g.site)
+
 	// The badge links to the open link, never the one with money.
 	_, w := do(t, owner, "POST", base+"/widgets", `{"kind":"verified"}`, csrf, "1")
 	res, err := http.Get(g.srv.URL + "/w/" + w["id"].(string))

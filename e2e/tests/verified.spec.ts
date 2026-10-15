@@ -8,7 +8,7 @@
 import { mkdirSync } from 'node:fs'
 import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
-import { H, newSite, type TestSite } from './audit-kit'
+import { H, newSite, signIn, type TestSite } from './audit-kit'
 import { sources, stripeSale, type Source } from './verified-kit'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one browser is enough: the server does the work')
@@ -51,7 +51,7 @@ async function told(page: Page, list: Source[]) {
 }
 
 async function open(page: Page, path: string) {
-  await newSite(page, 'verified-session', false).catch(() => undefined) // signs this browser in
+  await signIn(page)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: WIDTH, height: 900 })
   await page.goto(API + path)
@@ -144,7 +144,8 @@ test('with nothing working there is no seal and no badge, and the switcher marks
   await page.reload()
   await page.locator('.site-pick .site-btn').click()
   await expect(page.locator(`[data-site="${site.id}"] .vf-seal-dot`)).toBeVisible({ timeout: 15_000 })
-  await expect(page.locator('.pop.sites .vf-seal-dot')).toHaveCount(1)
+  // A site with no source has no seal (other suites' sites with a real Stripe sale may have one).
+  await expect(page.locator('.pop.sites .site-row').filter({ hasText: 'history.example' }).locator('.vf-seal-dot')).toHaveCount(0)
   await shoot(page, 'switcher', { height: 520 })
 })
 
@@ -174,6 +175,7 @@ test('a shared link shows the seal for its readers, and money only on a link tha
 })
 
 test('the website badge shows what works, and nothing while no source does', async ({ page }) => {
+  await signIn(page)
   const make = async (id: string) => {
     const made = await page.request.post(`${API}/api/v1/sites/${id}/widgets`, { headers: H, data: { kind: 'verified', theme: 'dark', on: true } })
     expect(made.ok(), await made.text()).toBe(true)
@@ -202,5 +204,10 @@ test('the website badge shows what works, and nothing while no source does', asy
 
 test('Settings → Widgets offers the Verified badge', async ({ page }) => {
   await open(page, `/settings?site=${site.id}&tab=widgets`)
-  await expect(page.getByRole('radio', { name: /Verified badge/ }).first()).toBeVisible({ timeout: 15_000 })
+  await page.getByRole('button', { name: 'New widget' }).first().click()
+  const studio = page.getByRole('dialog', { name: 'New widget' })
+  await studio.getByRole('radio', { name: /Verified badge/ }).click()
+  // The brand line is the badge's own words, so there is nothing to switch off.
+  await expect(studio.getByText('Brand', { exact: true })).toHaveCount(0)
+  await expect(studio.locator('iframe').first()).toBeVisible()
 })
