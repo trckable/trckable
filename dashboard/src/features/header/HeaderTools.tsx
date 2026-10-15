@@ -55,3 +55,6 @@ export function ShareButton({ onShare }: { onShare: () => void }) {
     </button>
   )
 }
+
+// The header's other control, next to the site's name; it is placed with the tools.
+export { DomainSwitchHost as DomainSwitch } from './DomainSwitchHost'

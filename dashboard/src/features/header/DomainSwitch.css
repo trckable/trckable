@@ -1,0 +1,63 @@
+/* The domain switcher: a small segmented row beside the site's name. */
+.dom-switch {
+  display: inline-flex;
+  flex: 0 1 auto;
+  gap: 2px;
+  min-width: 0;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--raised-well);
+}
+.dom-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  max-width: 160px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-2);
+  font: 500 13px var(--sans, inherit);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.dom-btn:hover {
+  color: var(--text);
+}
+.dom-btn.on {
+  background: var(--raised);
+  box-shadow: 0 0 0 1px var(--raised-line), var(--shadow-soft);
+  color: var(--text);
+  font-weight: 600;
+}
+.dom-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.dom-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dom-row .faint {
+  margin-left: auto;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+.dom-row[aria-checked='true'] {
+  font-weight: 600;
+}
+@media (max-width: 640px) {
+  .dom-switch {
+    padding: 0;
+    background: none;
+  }
+  .dom-btn {
+    min-height: 44px;
+    max-width: 150px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+}

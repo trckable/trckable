@@ -354,7 +354,21 @@ func (q Q) report(ctx context.Context, p Params) (*Result, error) {
 	// One site can be seen on several domains (docs.example.com, example.com):
 	// the list and its count ride along only once there are two, so a
 	// one-domain site pays one small query and shows nothing new.
-	if hosts, err := eventRows(ctx, conn, cte, args, evWhere, evArgs, "hostname", 1, max(p.Limit, 2), len(p.Filters) > 0, distinct); err != nil {
+	// The list ignores the domain filter, so the switcher still lists every
+	// domain once one is picked (or the address arrives already filtered).
+	hp, hcte, hargs := p, cte, args
+	hp.Filters = nil
+	for _, f := range p.Filters {
+		if f.Dim != "hostname" {
+			hp.Filters = append(hp.Filters, f)
+		}
+	}
+	if len(hp.Filters) != len(p.Filters) {
+		if hcte, hargs, err = sessionsCTE(hp); err != nil {
+			return nil, err
+		}
+	}
+	if hosts, err := eventRows(ctx, conn, hcte, hargs, evWhere, evArgs, "hostname", 1, max(p.Limit, 2), len(hp.Filters) > 0, distinct); err != nil {
 		return nil, err
 	} else if len(hosts) >= 2 {
 		res.Dims["hostname"], res.Hosts = hosts, len(hosts)

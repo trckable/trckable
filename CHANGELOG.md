@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- Domain switcher: a site seen on more than one domain shows All and each domain beside its name in the header; a click filters the whole dashboard to that domain, All clears it, and it stays in step with the "Domain is …" chip. With more than four domains the rest sit behind More; on a phone it is one chip with a menu.
 - Domains: a site that runs on more than one domain (example.com and docs.example.com) gets a Domains tab in the Pages card, listing the visitors per domain; a click on a row filters the whole dashboard to "Domain is docs.example.com". A site on one domain shows no tab. The API takes `f=hostname:docs.example.com` as a filter and returns the list in `dims.hostname` (with `hosts`, the count) once two domains were seen.
 - A site's state follows its visits without a refresh: the Quiet and Down badge, the switcher's dot and line, All sites, and the Sites list read one sites list that the dashboard re-reads every 15 seconds, so a new visit clears "Quiet" at once and a site goes quiet with the clock.
 - Info tips stay inside their panel: a tip near the edge of a table or a sheet slides back in instead of being cut off.
