@@ -1,4 +1,4 @@
-/* The domain dropdown after the site's name: "· All ▾", quiet until pointed at. */
+/* The domain dropdown after the site's name: "/ All ▾", quiet until pointed at. */
 .dom-btn {
   display: inline-flex;
   flex: 0 1 auto;
@@ -68,7 +68,7 @@
 .dom-row .faint {
   margin-left: auto;
   padding-left: 12px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 .dom-row[aria-checked='true'] {
@@ -80,8 +80,7 @@
 }
 @media (max-width: 640px) {
   .dom-btn {
-    min-height: 44px;
-    max-width: 110px;
+    display: none; /* a phone holds the domain choice in the site list */
   }
   .dom-pop {
     max-width: none;
@@ -102,4 +101,14 @@
 .dom-row .dom-name {
   flex: 1 1 auto;
   white-space: nowrap;
+}
+
+/* The site list carries the domain choice on a phone, where the header has only the site. */
+.sites-domains {
+  border-bottom: 1px solid var(--border);
+}
+@media (min-width: 641px) {
+  .sites-domains {
+    display: none;
+  }
 }

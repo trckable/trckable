@@ -39,8 +39,9 @@ export interface Item {
   surge?: Surge
 }
 
-/** A day as people say it: the weekday for the last six days, else the date. */
+/** A day as people say it: the time when it is today, the weekday for the last six days, else the date. */
 export function dayWord(unix: number, now = Date.now()): string {
+  if (new Date(unix * 1000).toDateString() === new Date(now).toDateString()) return new Date(unix * 1000).toLocaleTimeString(tag, { hour: '2-digit', minute: '2-digit' })
   const old = now / 1000 - unix > 6 * 86400
   return new Date(unix * 1000).toLocaleDateString(tag, old ? { day: 'numeric', month: 'short' } : { weekday: 'short' })
 }
@@ -163,11 +164,17 @@ export function revenueOf(rows: SiteRow[]): { currency: string; exponent: number
 
 export const moneyText = (r: { currency: string; exponent: number; minor: number }[]): string => r.map((x) => fmtMoney(x.minor, x.currency, x.exponent, { cents: false })).join(' + ')
 
+/** How long a quiet site has been silent, from its one last-visit time; empty unless the site is quiet. The row's pill and its line both read this. */
+export function silentFor(i: Item, now = Date.now()): string {
+  const last = i.site?.last_event_at
+  return i.status === 'quiet' && last ? span(now / 1000 - last) : ''
+}
+
 export function statusText(i: Item, now = Date.now()): string {
   if (i.row.error) return next.statusUnread
   if (i.status === 'down') return next.statusDown
   if (i.status === 'new') return next.statusNew
-  if (i.status === 'quiet' && i.site?.last_event_at) return next.statusQuiet(span(now / 1000 - i.site.last_event_at))
+  if (i.status === 'quiet' && i.site?.last_event_at) return next.statusQuiet(silentFor(i, now))
   return next.statusUp
 }
 
@@ -179,7 +186,7 @@ export function whyLine(i: Item, ref: string, now = Date.now()): string {
   if (i.status === 'down' && i.site?.down_since) return next.whyNotAnswering(when(i.site.down_since), i.site.down_cause ?? '')
   if (i.status === 'down') return since ? next.whyDown(dayWord(since, now)) : next.whyDownNow
   if (i.status === 'quiet' && last && i.kind === 'quiet') return next.whyDormant(dayWord(last, now))
-  if (i.status === 'quiet' && last) return next.whyQuiet(span(now / 1000 - last), dayWord(last, now))
+  if (i.status === 'quiet' && last) return next.whyQuiet(silentFor(i, now), dayWord(last, now))
   if (i.status === 'new') return next.whyNew
   if (i.surge) return next.surgeWhy(i.surge.times.toFixed(1), sourceLine(i.surge))
   // A row compares today with the usual, or says nothing.

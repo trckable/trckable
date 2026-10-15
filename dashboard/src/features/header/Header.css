@@ -316,12 +316,46 @@ html {
   color: var(--text-3);
 }
 
-/* The seal sits on the corner of the site's avatar, beside the name's own button. */
+/* The breadcrumb: a muted slash before the site, plain text, no boxes. */
 .site-zone {
   position: relative;
 }
-.site-zone .vf-sealbtn {
-  position: absolute;
-  left: 22px;
-  top: -1px;
+@media (min-width: 641px) {
+  .header.quiet > .site-zone::before {
+    content: '/';
+    color: var(--text-3);
+    margin: 0 2px 0 4px;
+  }
+}
+.site-pick {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+.site-pick .site-chev {
+  flex: none;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+}
+.header.quiet .site-zone {
+  border-color: transparent;
+  background: none;
+}
+.header.quiet .site-zone:hover,
+.header.quiet .site-zone:focus-within {
+  background-image: none;
+}
+.header.quiet .site-zone .btn.site-btn {
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
+}
+@media (max-width: 640px) {
+  .site-pick .site-chev {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
 }

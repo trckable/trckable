@@ -25,7 +25,7 @@ test('the View menu changes the layout and the lens, and the choice survives a r
   await page.goto(`${API}/sites`)
   await expect(page.locator('.nx-today')).toBeVisible({ timeout: 20_000 })
   const summary = page.locator('.all-head p')
-  await expect(summary).toContainText('Last 30 days · Visitors')
+  await expect(summary).toContainText('Today · Visitors') // the overview's numbers are today's; the period draws the sparklines
 
   const view = page.getByRole('button', { name: 'View', exact: true })
   await view.click()
@@ -53,7 +53,7 @@ test('the View menu changes the layout and the lens, and the choice survives a r
   await view.click()
   await page.getByRole('button', { name: 'Reset' }).click()
   await expect(page.locator('.nx-today')).toBeVisible()
-  await expect(summary).toContainText('Last 30 days · Visitors')
+  await expect(summary).toContainText('Today · Visitors') // the overview's numbers are today's; the period draws the sparklines
   await page.reload()
   await expect(page.locator('.nx-today')).toBeVisible({ timeout: 20_000 })
 })

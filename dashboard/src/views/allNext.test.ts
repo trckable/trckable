@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Site, SiteRow } from '../lib/api'
-import { hasBaseline, headline, items, MOVE, ordered } from './allNext'
+import { dayWord, hasBaseline, headline, items, MOVE, ordered, silentFor, whyLine } from './allNext'
+import { quietSites } from '../features/sitestatus/status'
 
 const NOW = Date.UTC(2026, 9, 14, 12) // noon, so a good part of the day has passed
 const row = (id: string, o: Partial<SiteRow> = {}) => ({ id, domain: id + '.com', name: '', visitors: 0, series: null, online: 0, ...o }) as SiteRow
@@ -72,5 +73,42 @@ describe('groups from the real comparison', () => {
   it('orders lower and busier before steady', () => {
     const { list } = build([at('s', 20), at('l', 10), at('b', 30)])
     expect(ordered(list).map((i) => i.row.id)).toEqual(['l', 'b', 's'])
+  })
+})
+
+describe('a quiet site says one thing everywhere', () => {
+  const quiet = () => {
+    const p = { row: row('q', { series: [5, 5, 5, 5, 5, 5, 5, 5, 1], visitors: 40 }), site: site('q', { last_event_at: NOW / 1000 - 10 * 3600 }) }
+    return build([p]).list[0]
+  }
+
+  it('reads the silence from the last visit for the pill and the line alike', () => {
+    const i = quiet()
+    expect(i.kind).toBe('attention')
+    expect(silentFor(i, NOW)).toBe('10h')
+    expect(whyLine(i, 'yesterday', NOW)).toMatch(/^No visits for 10h\. Last visit .+\.$/)
+  })
+
+  it('names a last visit from today by its time, not a weekday', () => {
+    const last = NOW / 1000 - 60
+    expect(dayWord(last, NOW)).toMatch(/\d/)
+    expect(dayWord(last - 2 * 86400, NOW)).not.toMatch(/\d/)
+  })
+
+  it('has no silence for a site that is not quiet', () => {
+    expect(silentFor(build([live('b')]).list[0], NOW)).toBe('')
+  })
+})
+
+describe('the quiet count the footer and the Uptime note share', () => {
+  it('counts quiet sites, not new, live, down or dormant ones', () => {
+    const sites = [
+      site('q', { last_event_at: NOW / 1000 - 10 * 3600 }),
+      site('l', { last_event_at: NOW / 1000 - 60 }),
+      site('n'),
+      site('d', { last_event_at: NOW / 1000 - 40 * 86400 }),
+      site('x', { last_event_at: NOW / 1000 - 10 * 3600, down_since: NOW / 1000 - 600 }),
+    ]
+    expect(quietSites(sites, NOW).map((s) => s.id)).toEqual(['q'])
   })
 })

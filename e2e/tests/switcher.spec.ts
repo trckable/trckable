@@ -129,7 +129,7 @@ test('pin, group, reorder by keyboard and drag, saved for the account, same orde
   })
 })
 
-test('the dot is real: a visit in the last five minutes, from the sites list', async ({ page, browserName }) => {
+test('the dot is real (in the list, none on the avatar): a visit in the last five minutes, from the sites list', async ({ page, browserName }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   const ctx = await page.context().browser()!.newContext()
   const p = await ctx.newPage()
@@ -137,8 +137,9 @@ test('the dot is real: a visit in the last five minutes, from the sites list', a
   await p.waitForTimeout(1500)
   await ctx.close()
   await page.goto(`${API}/example.com`)
-  await expect(page.locator('.site-pick .site-btn .state-dot')).toHaveClass(/\bnow\b/, { timeout: 15_000 })
+  await expect(page.locator('.site-pick .site-btn .state-dot')).toHaveCount(0) // the avatar carries no marks; the list says the state
   const menu = await open(page)
+  await expect(menu.locator('.site .state-dot.now').first()).toBeVisible({ timeout: 15_000 })
   // In the list the dot says it alone: no line of text under the name.
   await expect(menu.locator('.site .state-dot.now').first()).toBeVisible()
   await expect(menu.locator('.now-note')).toHaveCount(0)

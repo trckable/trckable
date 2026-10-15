@@ -1076,12 +1076,13 @@ table.t td {
   align-items: center;
   margin-right: 4px;
 }
+/* The breadcrumb starts with the ghost alone; the name is spelled out on the sign-in and error pages. */
+.header > .brand .tkb-wm {
+  display: none;
+}
 @media (max-width: 640px) {
   .brand {
     margin-right: 0;
-  }
-  .brand .tkb-wm {
-    display: none;
   }
   .header {
     gap: 8px;
