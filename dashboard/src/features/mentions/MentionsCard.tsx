@@ -14,10 +14,14 @@ import { placesOf, SHOWN } from './model'
 import { useMentions } from './useMentions'
 import './mentions.css'
 
+// The page's own reads (the report and its side reads) go first: this one is
+// asked for only once they are done, even when the card sits in view at once.
+const QUIET_MS = 1500
+
 export default function MentionsCard({ site }: { site: Site }) {
   const [near, setNear] = useState(() => typeof IntersectionObserver === 'undefined')
   const mark = useRef<HTMLDivElement>(null)
-  // Asked for only when the card is about to be seen: it is under the fold and never part of the first load.
+  // Asked for only when the card is about to be seen, and never as part of the first load.
   useEffect(() => {
     const el = mark.current
     if (near || !el) return
@@ -25,7 +29,12 @@ export default function MentionsCard({ site }: { site: Site }) {
     io.observe(el)
     return () => io.disconnect()
   }, [near])
-  const got = useMentions(site.id, '30d', 0, near)
+  const [quiet, setQuiet] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setQuiet(true), QUIET_MS)
+    return () => clearTimeout(t)
+  }, [])
+  const got = useMentions(site.id, '30d', 0, near && quiet)
   const [all, setAll] = useState(false)
   if (!near) return <div ref={mark} className="mentions-mark" aria-hidden="true" />
   if (got.state === 'loading') return null
@@ -49,7 +58,10 @@ export default function MentionsCard({ site }: { site: Site }) {
           ))}
         </ul>
       ) : (
-        <p className="mentions-empty">{copy.empty}</p>
+        <p className="mentions-empty">
+          <span className="mentions-pulse" aria-hidden="true" />
+          {copy.empty}
+        </p>
       )}
       {mentions.length > SHOWN && (
         <button type="button" className="mentions-more" onClick={() => setAll(!all)}>

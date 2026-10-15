@@ -2,7 +2,7 @@
 // from and on what, how much they read and how long ago. Opening one opens the
 // journey. The head says how many are on the site now.
 import { useEffect, useState } from 'react'
-import { Loading } from '../../components/loading/Loading'
+import { Skeleton } from '../../components/skeleton/Skeleton'
 import { CookielessOff } from '../cookieless/Off'
 import { call, type Site } from '../../lib/api'
 import { countryName, flag } from '../../lib/format'
@@ -73,7 +73,7 @@ export default function People({ site, onPick }: { site: Site; onPick: (visitor:
   return (
     <div className="pp-panel">
       <div className="kit-tools">{online !== null && <span className="pp-online num">{deepCopy.people.online(online)}</span>}</div>
-      {!people && <Loading height={140} />}
+      {!people && <Skeleton height={140} />}
       {people && people.length === 0 && <span className="faint">{deepCopy.people.none}</span>}
       {people && people.length > 0 && (
         <ul className="pp">

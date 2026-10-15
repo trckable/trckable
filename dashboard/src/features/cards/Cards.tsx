@@ -1,4 +1,4 @@
-// The two cards under the chart, in Compact and in Full. Full's extra tabs are
+// Under the chart: who talks about the site first, then the two cards, in Compact and in Full. Full's extra tabs are
 // a chunk of their own (FullCards); until it is here, the cards as Compact has them.
 import { lazy, Suspense } from 'react'
 import { Boundary } from '../../components/Boundary'
@@ -14,7 +14,6 @@ export function Cards({ c }: { c: CardsCtx }) {
   // A card that cannot be drawn says so; the chart above and the page stay.
   return (
     <>
-      <Boundary reset={c.cur}>{c.deep ? <Suspense fallback={basic}><FullCards c={c} /></Suspense> : basic}</Boundary>
       {!c.shared && (
         <Boundary reset={c.site.id}>
           <Suspense fallback={null}>
@@ -23,6 +22,7 @@ export function Cards({ c }: { c: CardsCtx }) {
           </Suspense>
         </Boundary>
       )}
+      <Boundary reset={c.cur}>{c.deep ? <Suspense fallback={basic}><FullCards c={c} /></Suspense> : basic}</Boundary>
     </>
   )
 }
