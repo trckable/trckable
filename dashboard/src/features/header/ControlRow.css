@@ -73,39 +73,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* The comparison: an icon while there is none, its words once one is set. */
-.cmp-root {
-  position: relative;
-  display: flex;
-}
-.ctl-cap .btn.cmp-btn {
-  width: 32px;
-  padding: 0;
-  justify-content: center;
-  gap: 6px;
-}
-.ctl-cap .btn.cmp-btn.on {
-  width: auto;
-  padding: 0 8px 0 12px;
-  animation: ctl-grow-w 0.28s var(--ease) both;
-}
-.cmp-btn.on .cmp-icon {
-  color: var(--ch-7);
-}
-.cmp-chev {
-  color: var(--text-3);
-}
-@keyframes ctl-grow-w {
-  from {
-    max-width: 32px;
-    opacity: 0.2;
-  }
-  to {
-    max-width: 240px;
-    opacity: 1;
-  }
-}
-
 .ctl-cap .filter-root {
   position: relative;
   display: flex;
@@ -182,24 +149,11 @@
   margin-top: 10px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ctl-cap .btn.cmp-btn.on {
-    animation: none;
-  }
-}
-
-/* Tablet: the dates, Filter's word and the comparison's words give way (its
-   menu and the period's list still say it). */
+/* Tablet: the dates and Filter's word give way (the period's list still says it). */
 @media (max-width: 960px) {
   .ctl-cap .range-dates,
-  .ctl-cap .btn.filter .filter-label,
-  .cmp-btn .cmp-words,
-  .cmp-btn .cmp-chev {
+  .ctl-cap .btn.filter .filter-label {
     display: none;
-  }
-  .ctl-cap .btn.cmp-btn.on {
-    width: 32px;
-    padding: 0;
   }
 }
 
@@ -300,44 +254,35 @@
 .ctl-inline {
   gap: 6px;
 }
-/* The period: one button, "Last 30 days ⌄", with the comparison's words after it. */
+/* The period: one control, "Last 30 days", a small tag while a comparison is on, and the chevron. */
 .subbar .range-picker.quiet {
   display: flex;
   align-items: center;
   gap: 2px;
 }
 .ctl-cap .btn.step,
-.ctl-cap .range-icon,
 .ctl-cap .range-dates {
   display: none;
 }
-/* No comparison: the icon stays, a quiet switch to turn it on. */
-.ctl-cap .btn.cmp-btn:not(.on) {
-  color: var(--text-3);
-}
-.ctl-cap .btn.cmp-btn:not(.on):hover {
-  color: var(--text);
-}
 .ctl-cap .btn.range {
-  padding: 0 10px;
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--border); /* one control: a hairline, no fill */
+  border-radius: 999px;
   font-weight: 500;
   font-size: 13px;
+}
+.range-cmp {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong); /* the darker lime in the light theme: 5:1 on its soft ground */
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 .range-chev {
   color: var(--text-3);
   margin-left: 2px;
-}
-.ctl-cap .btn.cmp-btn.on {
-  color: var(--text-3);
-  padding: 0 12px;
-  border: 1px solid var(--border); /* secondary: no fill (the base is transparent), a hairline */
-}
-/* Wide: just the words. Tablet: just the icon (the rule above gives the words way). */
-@media (min-width: 961px) {
-  .ctl-cap .btn.cmp-btn.on .cmp-icon,
-  .ctl-cap .btn.cmp-btn.on .cmp-chev {
-    display: none;
-  }
 }
 /* Filters: nothing in force is a dashed "+ Filter"; chips carry their own x. */
 .ctl-cap .filter-root .btn.filter,
@@ -432,7 +377,6 @@
 }
 .ctl-cap .btn,
 .ctl-cap .btn.range,
-.ctl-cap .btn.cmp-btn.on,
 .ctl-cap .filter-root .btn.filter,
 .ctl-inline .filter-root .btn.filter,
 .ctl-inline .chip,

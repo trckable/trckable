@@ -3,6 +3,7 @@
 // Only this small piece is in the first load; the rest is one lazy chunk (StoryHost).
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Loading } from '../../components/loading/Loading'
+import { StorySkeleton } from '../../components/skeleton/DashSkeleton'
 import { isShared } from '../../lib/me'
 import type { Report } from '../../lib/api'
 import type { ViewState } from '../../lib/url'
@@ -50,7 +51,9 @@ function useSwitching(key: string, loading: boolean): boolean {
 export function StorySlot({ view, data, ready, waiting, loading, children, ...rest }: StorySlotProps) {
   const switchOn = ready && !waiting && !isShared()
   const shown = switchOn && storyOn(view)
-  const switching = useSwitching(`${shown}|${view.story ?? ''}`, loading)
+  // The story's own boxes while its first numbers are on their way, never Explore's layout first and the story after it.
+  const veiled = !data && loading && !waiting && !isShared() && storyOn(view)
+  const switching = useSwitching(`${shown || veiled}|${view.story ?? ''}`, loading) // the story's boxes handing over to the story is no switch
   const cls = ['sleep', 'view-stage', waiting && 'waiting', switching ? 'sv-switching' : 'sv-settled', ready && loading && !switching ? 'pending' : 'settled'].filter(Boolean).join(' ')
   useEffect(() => {
     if (switching) window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -63,11 +66,12 @@ export function StorySlot({ view, data, ready, waiting, loading, children, ...re
         </div>
       )}
       {switchOn && data && (
-        <Suspense fallback={null}>
+        <Suspense fallback={shown ? <StorySkeleton /> : null}>
           <StoryHost {...rest} on={shown} from={view.story} data={data} />
         </Suspense>
       )}
-      {!shown && children}
+      {veiled && <StorySkeleton />}
+      {!shown && !veiled && children}
     </div>
   )
 }

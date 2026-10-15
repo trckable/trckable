@@ -3,7 +3,7 @@
 // with one chip, the answer as a line, one link, and a chart to the bottom edge.
 // The page and the fix draw their own page's or channel's days; the rest draw the site's.
 // The link opens Explore with the matching filters, so the claim can be checked.
-import { ArrowRight, Coins, FileText, Gauge, Target, Wrench, type LucideIcon } from 'lucide-react'
+import { ArrowRight, Coins, FileText, Gauge, Link2, Target, Wrench, type LucideIcon } from 'lucide-react'
 import { Area, Card, Pill, type Tone as KitTone } from '../../kit'
 import { toneColor } from '../../kit/model'
 import type { Site } from '../../lib/api'
@@ -22,7 +22,7 @@ function toneOfAnswer(a: Answer): KitTone {
   return a.delta ? KIT[a.delta.tone] : 'neutral'
 }
 
-const ICON: Record<Answer['key'], LucideIcon> = { did: Target, fine: Gauge, page: FileText, fix: Wrench, pays: Coins }
+const ICON: Record<Answer['key'], LucideIcon> = { did: Target, fine: Gauge, page: FileText, fix: Wrench, pays: Coins, link: Link2 }
 
 interface Props {
   answers: Answer[]
@@ -77,7 +77,7 @@ export function Answers({ answers, onConnect, onGoal, site, series, hints = [], 
     const own = series.own?.[a.key]
     const flat = series.visitors.map(() => 0)
     const lines = a.key === 'pays' && series.revenue && a.chip ? series.revenue : series.visitors
-    const drawn = a.key === 'page' || a.key === 'fix' ? (own ?? flat) : lines
+    const drawn = a.key === 'page' || a.key === 'fix' ? (own ?? flat) : (a.spark ?? lines)
     const was = a.key === 'fine' ? series.was : undefined
     // Which source pays: the provider's badge takes the status' place; the status moves under the answer.
     const proof = a.key === 'pays' && a.chip && proofFor(site.verified, 'revenue') ? <SourceChip verified={site.verified} slot="revenue" /> : null

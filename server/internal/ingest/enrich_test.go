@@ -134,3 +134,21 @@ func TestSocialTagSharesTheReferrerRow(t *testing.T) {
 		t.Fatalf("unknown ref host = %q", got)
 	}
 }
+
+func TestLocalAddressesAreNeverASource(t *testing.T) {
+	for _, h := range []string{"localhost", "127.0.0.1", "127.1.2.3", "[::1]", "::1", "0.0.0.0", "app.local", "web.localhost", "shop.test", "LOCALHOST"} {
+		if !isLocalAddr(h) {
+			t.Errorf("%q should be local", h)
+		}
+	}
+	for _, h := range []string{"example.com", "latest.dev", "testing.io", "local.example.com", "127.example.com", "producthunt.com"} {
+		if isLocalAddr(h) {
+			t.Errorf("%q should not be local", h)
+		}
+	}
+	for _, ref := range []string{"http://localhost:3000/page", "http://127.0.0.1:8080/", "http://[::1]:5173/", "https://my.app.local/x", "https://x.test/"} {
+		if host, clean := parseReferrer(ref, "site.com"); host != "" || clean != "" {
+			t.Errorf("referrer %q kept as %q %q", ref, host, clean)
+		}
+	}
+}

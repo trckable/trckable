@@ -64,15 +64,15 @@ test('the period is one button, and it opens the choices', async ({ page }) => {
 test('comparison, the period and Filter open their popovers, Share and More are named icons', async ({ page }) => {
   await open(page, 1280)
   const see = page.locator('.ctl-see')
-  // A preset period compares with the one before: its words follow the period. "No comparison" leaves a quiet Compare button, and the C key sets one again.
-  const set = see.getByRole('button', { name: /^vs / })
+  // A preset period compares with the one before: a small tag says so inside the period's control. "No comparison" in its list takes the tag away, and the C key sets one again.
+  const set = see.locator('.range-cmp')
   await expect(set).toBeVisible()
-  await set.click()
-  const menu = page.getByRole('menu', { name: 'Compare with' })
-  await expect(menu.getByRole('menuitemradio', { name: 'Period before' })).toHaveAttribute('aria-checked', 'true')
-  await menu.getByRole('menuitemradio', { name: 'No comparison' }).click()
+  await see.locator('.btn.range').click()
+  const list = page.getByRole('dialog', { name: 'Choose a date range' })
+  await expect(list.getByRole('button', { name: 'Period before' })).toHaveAttribute('aria-pressed', 'true')
+  await list.getByRole('button', { name: 'No comparison' }).click()
   await expect(set).toHaveCount(0)
-  await expect(see.getByRole('button', { name: 'Compare', exact: true })).toBeVisible()
+  await page.keyboard.press('Escape')
   await page.locator('body').click({ position: { x: 5, y: 400 } })
   await page.keyboard.press('c')
   await expect(set).toBeVisible()
@@ -117,16 +117,17 @@ test('the period opens as six choices; More opens the rest in place; compare and
   await today.hover()
   await expect(today.locator('.k')).toHaveCSS('opacity', '1')
   await expect(today.locator('.k')).toHaveText('T')
-  // More: the other periods, Compare, Detail and Custom dates, in place.
+  // The comparison is in the list at once; More has the other periods, Detail and Custom dates, in place.
+  await expect(picker.getByRole('group', { name: 'Compare' })).toBeVisible()
   await picker.getByRole('button', { name: 'More' }).click()
   for (const name of [/^Last 12 months/, /^This week/, /^This month/, /^Last month/, /^This year/, /^Custom dates/]) await expect(picker.getByRole('button', { name })).toBeVisible()
   await expect(picker.getByRole('group', { name: 'Detail' })).toBeVisible()
   // Compare applies at once and the popover stays open; pressing it again clears it.
   await picker.getByRole('group', { name: 'Compare' }).getByRole('button', { name: 'Last year' }).click()
   await expect(picker).toBeVisible()
-  await expect(see.getByRole('button', { name: /^vs / })).toBeVisible()
+  await expect(see.locator('.range-cmp')).toBeVisible()
   await picker.getByRole('group', { name: 'Compare' }).getByRole('button', { name: 'Last year' }).click()
-  await expect(see.getByRole('button', { name: /^vs / })).toHaveCount(0)
+  await expect(see.locator('.range-cmp')).toHaveCount(0)
   await picker.getByRole('group', { name: 'Detail' }).getByRole('button', { name: 'Daily', exact: true }).click()
   await expect(picker.getByRole('group', { name: 'Detail' }).getByRole('button', { name: 'Daily', exact: true })).toHaveAttribute('aria-pressed', 'true')
   await expect(picker).toBeVisible()

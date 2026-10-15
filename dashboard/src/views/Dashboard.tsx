@@ -186,7 +186,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const askOn = canAsk()
   const sample = useSample(site, range.from, range.to, waiting)
   const data = waiting ? sample : real
-
   // ---- money trail: hover a source to preview where its visitors went ----
   const [trail, setTrail] = useState<string | null>(null)
   const trailQuery = useMemo(
@@ -195,6 +194,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   )
   const trailReport = useReport(trail ? site.id : null, trailQuery)
   const hoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useEffect(() => () => clearTimeout(hoverTimer.current), []) // a hover delay must not fire into the next site
   const onSourceHover = useCallback(
     (key: string | null) => {
       clearTimeout(hoverTimer.current)
@@ -477,7 +477,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const inHeader = isShared() && !narrow
   return (
     <>
-      {!liveView && (firstLoad || loading) && <div className="loadbar" role="status" aria-label="Loading" />/* Live loads no report: it shows its own connection */}
       <HeaderBand><div className="header quiet">
         {header}{!waiting && !liveView && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}
         <HeaderTools

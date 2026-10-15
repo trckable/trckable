@@ -73,6 +73,8 @@ export interface Answer {
   status: string
   /** A small chip when there is no move to show (an amount). */
   chip?: string
+  /** The line the card draws, when it is not the site's days (a link's own days). */
+  spark?: number[]
 }
 
 export interface StoryFacts {

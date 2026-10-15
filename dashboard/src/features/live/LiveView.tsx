@@ -20,7 +20,6 @@ import { LiveCards } from './LiveCards'
 import { liveCount, liveLink } from './liveLink'
 import { useBusier } from './useBusier'
 import { useLiveNow } from './useLiveNow'
-import { Loading } from '../../components/loading/Loading'
 
 const MentionChip = lazyLoad(() => import('../mentions/MentionChip')) // "From Hacker News now": only while a mention is sending people
 
@@ -78,7 +77,7 @@ function LiveLoading({ failed }: { failed: boolean }) {
             {copy.failed}
           </p>
         ) : (
-          <Loading label={copy.loading}>{copy.loading}</Loading>
+          <div className="skel live-fill" role="status" aria-busy="true" aria-label={copy.loading} />
         )}
       </section>
       <section className="card live-panel live-onsite" aria-hidden="true" />

@@ -5,23 +5,22 @@ import { linksApi, type LinksAnswer } from './api'
 
 type State = { key: string; data: LinksAnswer | null; failed: boolean }
 
-export function useLinks(site: string, from: string, to: string, enabled = true) {
+export function useLinks(site: string, from: string, to: string, enabled = true, withIcons = true) {
   const key = `${site}:${from}:${to}`
   const [state, setState] = useState<State>({ key: '', data: null, failed: false })
   const [icons, setIcons] = useState<{ key: string; set: Set<string> } | null>(null)
   useEffect(() => {
     if (!enabled) return
-    let live = true
-    linksApi.read(site, from, to).then(
-      (data) => live && setState({ key, data, failed: false }),
-      () => live && setState({ key, data: null, failed: true }),
+    const ctl = new AbortController()
+    linksApi.read(site, from, to, ctl.signal).then(
+      (data) => setState({ key, data, failed: false }),
+      () => !ctl.signal.aborted && setState({ key, data: null, failed: true }),
     )
-    return () => {
-      live = false
-    }
+    return () => ctl.abort()
   }, [key, enabled]) // eslint-disable-line react-hooks/exhaustive-deps -- the key says what is read
   const data = state.key === key ? state.data : null
   useEffect(() => {
+    if (!withIcons) return
     const hosts = (data?.links ?? []).filter((l) => l.dim === 'referrer' && l.value.includes('.')).map((l) => l.value)
     if (!hosts.length) return
     let live = true

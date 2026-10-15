@@ -414,10 +414,14 @@ body[data-mode] .live-head-row h2,
   font-size: 11px;
 }
 /* Waiting for the first answer: the panels keep their height. */
-.live-panel .ld,
-.live-panel:empty {
+.live-panel:empty,
+.live-fill {
   flex: 1;
   min-height: 236px;
+}
+/* Live's numbers on their way: the panel's own size, one soft block in it. */
+.live-fill {
+  margin: 16px;
 }
 @keyframes live-in {
   from {

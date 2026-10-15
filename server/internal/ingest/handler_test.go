@@ -616,3 +616,28 @@ func BenchmarkIngest(b *testing.B) {
 		})
 	}
 }
+
+// A visit that came from the machine the site is built on is no link and no source: its referrer, its ?ref tag and its utm_source say nothing.
+func TestLocalAddressesAreNotASourceOnAVisit(t *testing.T) {
+	h, l := newHandler(t)
+	for _, c := range []struct{ name, url, ref string }{
+		{"referrer", "https://site.com/", "http://localhost:5173/page"},
+		{"loopback referrer", "https://site.com/", "http://127.0.0.1:3000/"},
+		{"ref tag", "https://site.com/?ref=localhost", ""},
+		{"utm_source", "https://site.com/?utm_source=127.0.0.1", ""},
+		{"dev suffix", "https://site.com/", "https://shop.test/"},
+	} {
+		if w := post(h, `{"s":"tkb_test","k":"pv","u":"`+c.url+`","r":"`+c.ref+`"}`, chrome); w.Code != http.StatusAccepted {
+			t.Fatalf("%s: %d", c.name, w.Code)
+		}
+		ev, _ := lastEvent(t, l)
+		if ev.RefHost != "" || ev.UTMSource != "" {
+			t.Errorf("%s: kept as %q / %q", c.name, ev.RefHost, ev.UTMSource)
+		}
+	}
+	// A real tag still counts.
+	post(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/?ref=friend"}`, chrome)
+	if ev, _ := lastEvent(t, l); ev.RefHost != "friend" {
+		t.Errorf("a real ref tag was dropped: %+v", ev)
+	}
+}

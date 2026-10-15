@@ -7,11 +7,11 @@ import { caps, keyFor } from '../lib/keys'
 import type { Bucket } from '../lib/api'
 import { PRESETS, diffDays, fmtRange, type CompareMode, type ISODate, type Preset } from '../lib/dates'
 import { CalendarIcon, type PickerValue } from './DatePicker'
-import { BUCKET_LABEL, CMP_LABEL, PERIODS_FIRST, PERIODS_MORE, periodsCopy as t } from './dateRangeCopy'
+import { BUCKET_LABEL, CMP_LABEL, CMP_SHORT, PERIODS_FIRST, PERIODS_MORE, periodsCopy as t } from './dateRangeCopy'
 import './ListPop.css'
 import './DateRangePeriods.css'
 
-const COMPARES: CompareMode[] = ['previous', 'year', 'custom']
+const COMPARES: CompareMode[] = ['none', 'previous', 'year', 'custom']
 
 /** Which granularities make sense for a period this long (undefined = auto). */
 function bucketsFor(days: number): (Bucket | undefined)[] {
@@ -56,11 +56,12 @@ export function Periods({
   autoBucket?: string
   onBucket?: (b?: Bucket) => void
   onPeriod: (p: Preset) => void
-  onCompare: (m: CompareMode) => void
+  /** Absent on a page that has no comparison. */
+  onCompare?: (m: CompareMode) => void
   onCustom: () => void
 }) {
   // Open from the start when what is chosen lives under More.
-  const [more, setMore] = useState(PERIODS_MORE.includes(value.period) || value.compare === 'custom')
+  const [more, setMore] = useState(PERIODS_MORE.includes(value.period))
   const bucketName = (b: Bucket | undefined) => {
     if (b) return BUCKET_LABEL[b]
     if (!bucket && autoBucket) return t.autoWith(BUCKET_LABEL[autoBucket as Bucket].toLowerCase())
@@ -71,6 +72,21 @@ export function Periods({
   return (
     <div className="periods" role="group" aria-label={t.panelLabel}>
       {byId(PERIODS_FIRST).map(row)}
+      {onCompare && (
+        <>
+          <div className="lline" />
+          <div className="lopt">
+            <span>{t.compare}</span>
+            <div className="lseg cmp" role="group" aria-label={t.compare}>
+              {COMPARES.map((m) => (
+                <button key={m} type="button" aria-pressed={value.compare === m} aria-label={CMP_LABEL[m]} onClick={() => onCompare(m)}>
+                  {CMP_SHORT[m]}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
       <button type="button" className={more ? 'lrow ld-more open' : 'lrow ld-more'} aria-expanded={more} onClick={() => setMore(!more)}>
         <span>{t.more}</span>
         <span className="end">
@@ -81,16 +97,6 @@ export function Periods({
         <div inert={!more}>
           <div className="ld-2">{byId(PERIODS_MORE).map(row)}</div>
           <div className="lline" />
-          <div className="lopt">
-            <span>{t.compare}</span>
-            <div className="lseg cmp" role="group" aria-label={t.compare}>
-              {COMPARES.map((m) => (
-                <button key={m} type="button" aria-pressed={value.compare === m} onClick={() => onCompare(m)}>
-                  {CMP_LABEL[m]}
-                </button>
-              ))}
-            </div>
-          </div>
           {buckets.length > 0 && (
             <div className="lopt">
               <span>{t.detail}</span>

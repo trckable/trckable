@@ -51,9 +51,12 @@ function startShare() {
 
 type Early = ReturnType<typeof api.early>
 let early: Early | null = null
+let setup: ReturnType<typeof api.setupStatus> | null = null
 
-/** /me and /sites, and the report of the site the address names. */
+/** /setup, /me and /sites leave together (not setup after the first render), and the report of the site the address names. */
 function startBoot() {
+  setup = api.setupStatus()
+  setup.catch(() => undefined) // its failure is the app's to show, when it asks for it
   early = api.early()
   void early.sites.then((r) => {
     if (!r) return
@@ -73,6 +76,13 @@ export function takeEarly(): Early {
   const e = early ?? api.early()
   early = null
   return e
+}
+
+/** Whether the server needs its first-run setup: the answer start-up already asked for (once), else a fresh one. */
+export function takeSetup(): ReturnType<typeof api.setupStatus> {
+  const s = setup ?? api.setupStatus()
+  setup = null
+  return s
 }
 
 export function startEarly() {

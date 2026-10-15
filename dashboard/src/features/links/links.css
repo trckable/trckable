@@ -51,9 +51,6 @@
   color: var(--text);
   border: 1px solid var(--border);
 }
-.yl-head .cmp-root {
-  display: none;
-}
 .yl-head .range-pop {
   top: calc(100% + 6px);
   right: 0;

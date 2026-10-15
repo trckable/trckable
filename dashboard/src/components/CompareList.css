@@ -1,6 +1,0 @@
-/* CompareList's styles: they load with its chunk, not with the first load. */
-.cmp-pop {
-  top: calc(100% + 9px);
-  left: 0;
-  width: 200px;
-}

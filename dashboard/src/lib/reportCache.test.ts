@@ -73,6 +73,65 @@ describe('the report cache', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
+  describe('a read the page has left', () => {
+    /** A report that never answers by itself, and whether the browser was told to stop waiting for it. */
+    const hung = () => {
+      const stopped: boolean[] = []
+      fetchMock.mockImplementation((_url: string, init: RequestInit) => {
+        const at = stopped.length
+        stopped.push(false)
+        return new Promise<Response>((_, fail) =>
+          init.signal?.addEventListener('abort', () => {
+            stopped[at] = true
+            fail(new DOMException('aborted', 'AbortError'))
+          }),
+        )
+      })
+      return stopped
+    }
+
+    it('is cancelled when its only reader goes', async () => {
+      const stopped = hung()
+      const ctl = new AbortController()
+      const read = cachedReport('a', past, undefined, ctl.signal)
+      ctl.abort()
+      await expect(read).rejects.toThrow('aborted')
+      expect(stopped).toEqual([true])
+      // The next ask starts a read of its own, not the cancelled one.
+      fetchMock.mockImplementation(() => Promise.resolve(answer()))
+      await cachedReport('a', past)
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+    })
+
+    it('leaves no listener behind on a signal that outlives the read', async () => {
+      fetchMock.mockImplementation(() => Promise.resolve(answer()))
+      const ctl = new AbortController()
+      const add = vi.spyOn(ctl.signal, 'addEventListener')
+      const remove = vi.spyOn(ctl.signal, 'removeEventListener')
+      // A page that asks again for the same period every time a visit lands, on one signal.
+      for (let i = 0; i < 5; i++) await cachedReport('a', past, 0, ctl.signal)
+      await Promise.resolve()
+      expect(add).toHaveBeenCalledTimes(5)
+      expect(remove).toHaveBeenCalledTimes(5)
+    })
+
+    it('goes on while another reader still wants it, and for a reader that cannot cancel', () => {
+      const stopped = hung()
+      const one = new AbortController()
+      const two = new AbortController()
+      const first = cachedReport('a', past, undefined, one.signal)
+      const second = cachedReport('a', past, undefined, two.signal)
+      expect(fetchMock).toHaveBeenCalledTimes(1) // shared
+      one.abort()
+      expect(stopped).toEqual([false])
+      second.catch(() => undefined)
+      first.catch(() => undefined)
+      void cachedReport('a', past).catch(() => undefined) // a prefetch: nobody can cancel it
+      two.abort()
+      expect(stopped).toEqual([false])
+    })
+  })
+
   it('starts the picker’s first periods with the address’s filters, not the one chosen, not Now', () => {
     vi.stubGlobal('location', { search: '?period=7d&f=channel:Search', pathname: '/x' })
     prefetchPeriods('a', 'UTC', ['now', 'today', '7d', '30d', '90d'])

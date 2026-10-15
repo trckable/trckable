@@ -248,9 +248,6 @@
   align-items: center;
   gap: 4px;
 }
-.inc-head .cmp-root {
-  display: none;
-}
 .inc-card {
   align-content: start;
 }
