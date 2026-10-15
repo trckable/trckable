@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
+import { stripeSale } from './verified-kit'
 
 const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36'
@@ -24,6 +25,8 @@ const LOOKS = [
   { name: 'counter', kind: 'counter', shows: [], w: 200, h: 44 + 34, fluid: false },
   { name: 'revenue', kind: 'revenue', shows: ['channels'], w: 320, h: 210 + 34, fluid: true },
   { name: 'privacy', kind: 'privacy', shows: [], w: 320, h: 300 + 34, fluid: true },
+  // No line under it: the badge says whose it is itself.
+  { name: 'verified', kind: 'verified', shows: [], w: 300, h: 48, fluid: true },
   { name: 'online-pill', kind: 'online', shows: [], w: 180, h: 44, fluid: false },
   { name: 'online-spark', kind: 'online', shows: ['spark'], w: 230, h: 44, fluid: false },
   { name: 'online-card', kind: 'online', shows: ['card', 'pages', 'countries'], w: 280, h: 214 + 34 + 208, fluid: true },
@@ -34,23 +37,31 @@ test.beforeAll(async () => {
   cookie = await session('widget-responsive')
 })
 
+// A site holds at most ten widgets, so the designs are made on two sites.
+const PER_SITE = 10
+
 async function made(page: Page) {
-  const domain = `widgets-${Date.now()}.example.org`
-  const site = ((await (await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain } })).json()) as { id: string }).id
-  await page.request.put(`${API}/api/v1/sites/${site}/modules/revenue`, { headers: H, data: { enabled: true } })
-  const paths = ['/', '/pricing', '/blog/a-rather-long-page-name-that-will-not-fit-on-a-phone', '/docs']
-  for (let i = 0; i < 6; i++) {
-    await page.request.post(`${API}/api/e`, { headers: { 'User-Agent': UA }, data: { s: site, k: 'pv', u: `https://${domain}${paths[i % 4]}`, id: `wr${i}`, v: `wr${i}.1` } })
-  }
   const ids: Record<string, string> = {}
-  for (const l of LOOKS) {
-    const res = await page.request.post(`${API}/api/v1/sites/${site}/widgets`, { headers: H, data: { kind: l.kind, theme: 'dark', shows: l.shows, brand: true } })
-    expect(res.ok(), `${l.name}: ${await res.text()}`).toBe(true)
-    const id = ((await res.json()) as { id: string }).id
-    // A new widget is off until it is switched on.
-    const on = await page.request.put(`${API}/api/v1/sites/${site}/widgets/${id}`, { headers: H, data: { kind: l.kind, theme: 'dark', shows: l.shows, brand: true, on: true } })
-    expect(on.ok(), `${l.name}: ${await on.text()}`).toBe(true)
-    ids[l.name] = id
+  for (let at = 0; at < LOOKS.length; at += PER_SITE) {
+    const domain = `widgets-${at}-${Date.now()}.example.org`
+    const site = ((await (await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain } })).json()) as { id: string }).id
+    await page.request.put(`${API}/api/v1/sites/${site}/modules/revenue`, { headers: H, data: { enabled: true } })
+    // Paths and sources with nothing to break at: a row must still truncate, whatever the data.
+    const paths = ['/', '/pricing', '/blog/a-rather-long-page-name-that-will-not-fit-on-a-phone', `/${'x'.repeat(90)}`]
+    for (let i = 0; i < 6; i++) {
+      await page.request.post(`${API}/api/e`, { headers: { 'User-Agent': UA }, data: { s: site, k: 'pv', u: `https://${domain}${paths[i % 4]}`, r: i % 2 ? `https://${'sub'.repeat(25)}.example.net/` : '', id: `wr${at}${i}`, v: `wr${at}${i}.1` } })
+    }
+    // The verified badge draws only what works: Stripe, with a sale delivered.
+    await stripeSale(page.request, site)
+    for (const l of LOOKS.slice(at, at + PER_SITE)) {
+      const res = await page.request.post(`${API}/api/v1/sites/${site}/widgets`, { headers: H, data: { kind: l.kind, theme: 'dark', shows: l.shows, brand: true } })
+      expect(res.ok(), `${l.name}: ${await res.text()}`).toBe(true)
+      const id = ((await res.json()) as { id: string }).id
+      // A new widget is off until it is switched on.
+      const on = await page.request.put(`${API}/api/v1/sites/${site}/widgets/${id}`, { headers: H, data: { kind: l.kind, theme: 'dark', shows: l.shows, brand: true, on: true } })
+      expect(on.ok(), `${l.name}: ${await on.text()}`).toBe(true)
+      ids[l.name] = id
+    }
   }
   return ids
 }

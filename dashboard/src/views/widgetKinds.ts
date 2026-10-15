@@ -1,7 +1,7 @@
 // The designs of Settings → Widgets: what each one is called, the parts it can
 // show, the size of its frame, and the code that puts it on a page. The server
 // has the same sizes for the online design's corner script (api/widgetonline.go).
-import { Activity, BadgeCheck, Banknote, CircleDot, ShieldCheck, Users } from 'lucide-react'
+import { Activity, BadgeCheck, Banknote, CircleDot, ShieldCheck, Stamp, Users } from 'lucide-react'
 import type { Widget, WidgetKind, WidgetLook } from '../lib/apiMore'
 import { copy } from './widgetCopy'
 
@@ -14,6 +14,7 @@ export const KINDS: { id: WidgetKind; name: string; hint: string; Icon: typeof A
   { id: 'counter', name: 'Counter', hint: 'Visitors in the last 30 minutes, in one line', Icon: CircleDot, w: 200 },
   { id: 'revenue', name: 'Open revenue', hint: "This month's revenue and the channels that brought it", Icon: Banknote, w: 320, fresh: true },
   { id: 'privacy', name: 'Privacy seal', hint: 'What this site records, read live from its settings', Icon: ShieldCheck, w: 320, fresh: true },
+  { id: 'verified', name: 'Verified badge', hint: 'Which sources stand behind your numbers, read live. Shows nothing while none works', Icon: Stamp, w: 300, fresh: true },
 ]
 // Every WidgetKind has its entry above; the fallback only satisfies the types.
 export const kindOf = (id: WidgetKind) => KINDS.find((x) => x.id === id) ?? KINDS[0]
@@ -35,8 +36,9 @@ export const PARTS: Record<WidgetKind, { id: string; name: string; hint?: string
   counter: [],
   revenue: [{ id: 'channels', name: 'Where it came from', hint: 'The channels that brought the money' }],
   privacy: [],
+  verified: [],
 }
-export const DEFAULT_PARTS: Record<WidgetKind, string[]> = { live: ['bars', 'countries'], online: [], badge: [], counter: [], revenue: ['channels'], privacy: [] }
+export const DEFAULT_PARTS: Record<WidgetKind, string[]> = { live: ['bars', 'countries'], online: [], badge: [], counter: [], revenue: ['channels'], privacy: [], verified: [] }
 
 // The online design's three modes, each a set of parts.
 export const MODES = [
@@ -114,6 +116,7 @@ export const TEXT_FIELDS: Record<WidgetKind, TextField[]> = {
     { key: 'title', msg: 'seal_title', label: 'Title', def: 'How {domain} measures visits' },
     { key: 'foot', msg: 'seal_foot', label: 'Footer', def: "Read live from this site's settings at {time}" },
   ],
+  verified: [{ key: 'title', msg: 'verified_title', label: 'Title', def: 'Verified by trckable' }],
 }
 export const MAX_TEXT = 40
 export const EMPTY_LOOK: WidgetLook = { kind: 'live', theme: 'auto', accent: '', radius: 16, brand: true, lang: 'auto', texts: {}, shows: DEFAULT_PARTS.live }
@@ -132,7 +135,8 @@ export const TEXT = copy.text
 const LIST = 104 // a heading and three rows
 export const size = (look: WidgetLook) => {
   const has = (p: string) => look.shows.includes(p)
-  const brand = look.brand ? 34 : 0
+  // The verified badge says whose it is itself: no line under it.
+  const brand = look.brand && look.kind !== 'verified' ? 34 : 0
   if (look.kind === 'online') {
     // The pills carry their brand as a mark inside; the card has a line under it.
     if (!has('card')) return { w: has('spark') ? 230 : 180, h: 44 }
@@ -143,6 +147,7 @@ export const size = (look: WidgetLook) => {
   else if (look.kind === 'revenue') h = 106 + (has('channels') ? LIST : 0)
   else if (look.kind === 'privacy') h = 300
   else if (look.kind === 'badge') h = 72
+  else if (look.kind === 'verified') h = 48
   else h = 44
   return { w: kindOf(look.kind).w, h: h + brand }
 }
@@ -155,7 +160,7 @@ export const hasOldCode = (w: Widget) => w.created_at < AUTO_HEIGHT_SINCE
 
 // Cards fill their container up to their own width; the one-line designs keep
 // their size and only shrink to fit. The loader sets the height from the card.
-const FLUID = new Set(['live', 'revenue', 'privacy'])
+const FLUID = new Set(['live', 'revenue', 'privacy', 'verified'])
 
 export function frameCode(base: string, w: Widget, domain: string) {
   const { w: width, h } = size(w)

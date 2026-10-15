@@ -1,0 +1,143 @@
+/* What the Verified pill opens: loads with the panel, not with the first load. */
+.pop.anchored.vf-pop {
+  width: 340px;
+  max-width: min(340px, calc(100vw - 16px));
+  padding: 0;
+  gap: 0;
+}
+.vf-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.vf-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px 10px;
+}
+.vf-seal {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.vf-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.vf-txt b {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.vf-txt small {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-3);
+  overflow-wrap: anywhere;
+}
+.vf-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0 10px;
+  list-style: none;
+}
+.vf-row,
+.vf-connect {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: var(--row);
+}
+.vf-ico {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+.vf-state {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+.vf-state.ok {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.vf-state.warn {
+  color: var(--warn);
+}
+.vf-row.off .vf-txt b {
+  color: var(--text-2);
+}
+.vf-connect {
+  margin: 6px 10px 0;
+  width: calc(100% - 20px);
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.vf-connect:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+.vf-connect:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.vf-btn {
+  flex: none;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.vf-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--text-4);
+}
+.vf-foot a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.vf-foot a:hover,
+.vf-foot a:focus-visible {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .pop.anchored.vf-pop {
+    width: auto;
+    max-width: none;
+  }
+}

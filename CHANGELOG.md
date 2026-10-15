@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Verified sources: a "Verified · N" seal in the header shows how many sources stand behind your numbers, and its panel lists each one: the snippet seen on your site with visits arriving, Search Console synced in the last 3 days, and a payment provider that delivered in the last 30 days (revenue typed in by hand never counts, and a source that stops working drops out at once). Small badges on the Visitors, Revenue, Which source pays and Search terms cards name the source behind each number, the site switcher marks sites that have one, shared links show the same seal for the people reading them, and Settings → Widgets has a Verified badge for your own pages that shows nothing while no source works. `GET /api/v1/sites/{site}/verified` returns the same list.
+
 ## 0.7.23 (15 Oct 2026)
 
 - Where a jump came from, on the charts: when Hacker News, Indie Hackers, Product Hunt, Reddit, X, LinkedIn, Google, Bing or an AI assistant (or one of your tagged links) brings its first visits or a jump on a day, the Visitors chart and "What happened, day by day" show a small marker ("+40"), at most three, the biggest only. Open one and it says "Hacker News sent 40 visitors on Oct 2" with one button, "See these visitors". When one source explains most of a day's rise, one line on the chart says so. "Show markers" in the replay speed menu turns them off. Nothing is asked for on the first load.

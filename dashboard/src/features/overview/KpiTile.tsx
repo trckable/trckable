@@ -32,6 +32,8 @@ interface Props {
   pace?: ReactNode
   /** What the number is, in a tooltip that opens on hover, focus or a tap (Visitors adds what it leaves out: the bots filtered). */
   tip?: string
+  /** The badge naming the source that proves the number (features/verified), after the name. */
+  proof?: ReactNode
   /** Which mark stands before the name (KpiMarks). */
   icon?: ComponentProps<typeof KpiMark>['k']
 }
@@ -76,6 +78,7 @@ export function KpiTile(p: Props) {
             {name}
           </button>
         )}
+        {p.proof}
       </span>
       {/* The skeleton is decorative: the loading bar at the top of the page
           is the one thing that announces loading, and it says it once. */}

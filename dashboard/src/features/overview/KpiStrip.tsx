@@ -13,6 +13,7 @@ import { copy } from './copy'
 import { KpiTile } from './KpiTile'
 import { KpiMark } from './kpiMark'
 import { canChange } from '../../lib/me'
+import { SourceChip } from '../verified/SourceChip'
 
 interface Props {
   loading: boolean
@@ -55,7 +56,7 @@ export function KpiStrip(p: Props) {
   const { k, pk, money, pm } = p
   const rate = (x: number) => fmtRatio(x, x < 0.1 ? 2 : 1)
   const cents = (x: number) => (money ? fmtMoney(x, money.currency, money.exponent, { cents: true }) : '')
-  const tile = (key: ChartMetric, label: string, value: number | undefined, fmt: (n: number) => string, d: Delta | null, o: { live?: (r: { kpis: KPIs; revenue: number }) => number; money?: boolean; hint?: ReactNode; pace?: ReactNode; tip?: string } = {}) => (
+  const tile = (key: ChartMetric, label: string, value: number | undefined, fmt: (n: number) => string, d: Delta | null, o: { live?: (r: { kpis: KPIs; revenue: number }) => number; money?: boolean; hint?: ReactNode; pace?: ReactNode; tip?: string; proof?: ReactNode } = {}) => (
     <KpiTile
       key={key}
       loading={p.loading}
@@ -71,6 +72,7 @@ export function KpiStrip(p: Props) {
       hint={o.hint}
       pace={o.pace}
       tip={o.tip}
+      proof={o.proof}
       pressed={p.metric === key}
       onClick={canChart(key, p.can) ? () => p.onPick(key) : undefined}
     />
@@ -83,7 +85,7 @@ export function KpiStrip(p: Props) {
     if (money)
       return (
         <>
-          {tile('revenue', copy.revenue, p.revenue, (n) => fmtMoney(n, money.currency, money.exponent), pm ? delta(money.revenue, pm.revenue) : null, { live: (r) => r.revenue, money: true, tip: copy.tips.revenue })}
+          {tile('revenue', copy.revenue, p.revenue, (n) => fmtMoney(n, money.currency, money.exponent), pm ? delta(money.revenue, pm.revenue) : null, { live: (r) => r.revenue, money: true, tip: copy.tips.revenue, proof: <SourceChip verified={p.site.verified} slot="revenue" /> })}
           {tile('conversion', copy.conversion, p.conv, rate, pm && p.conv !== undefined ? delta(p.conv, pm.conversion) : null, { tip: copy.tips.conversion })}
           {tile('per-visitor', copy.perVisitorTile, p.rpv, cents, pm && p.rpv !== undefined ? delta(p.rpv, pm.revenue_per_visitor) : null, { live: (r) => (r.kpis.visitors ? r.revenue / r.kpis.visitors : 0), money: true, tip: copy.tips.perVisitor })}
         </>
@@ -109,7 +111,7 @@ export function KpiStrip(p: Props) {
   return (
     <>
       <div role="group" aria-label={copy.keyNumbers} className="kpis">
-        {tile('visitors', copy.visitors, k?.visitors, fmtInt, delta(k?.visitors ?? 0, pk?.visitors), { live: (r) => r.kpis.visitors, hint: p.hint, pace: p.pace, tip: [copy.tips.visitors, botsLine(p.bots)].filter(Boolean).join(' ') })}
+        {tile('visitors', copy.visitors, k?.visitors, fmtInt, delta(k?.visitors ?? 0, pk?.visitors), { live: (r) => r.kpis.visitors, hint: p.hint, pace: p.pace, proof: <SourceChip verified={p.site.verified} slot="visitors" />, tip: [copy.tips.visitors, botsLine(p.bots)].filter(Boolean).join(' ') })}
         {second()}
         {tile('bounce', copy.bounce, few ? undefined : k?.bounce_rate, fmtPct, few ? null : delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true), { live: (r) => r.kpis.bounce_rate, tip: few ? `${copy.tips.bounce} ${copy.tips.tooFew}.` : copy.tips.bounce })}
         {tile('session', copy.session, few ? undefined : k?.avg_session_s, fmtDuration, few ? null : delta(k?.avg_session_s ?? 0, pk?.avg_session_s), { live: (r) => r.kpis.avg_session_s, tip: few ? `${copy.tips.session} ${copy.tips.tooFew}.` : copy.tips.session })}

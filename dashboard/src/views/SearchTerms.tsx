@@ -9,6 +9,8 @@ import { BarList } from '../charts/BarList'
 import { fmtInt } from '../lib/format'
 import { ConnectSearch } from '../features/aisearch/ConnectSearch'
 import { aiCopy } from '../features/aisearch/copy'
+import { SourceChip } from '../features/verified/SourceChip'
+import { proofFor } from '../features/verified/model'
 
 export function SearchTerms({ site, query, rows }: { site: Site; query: ReportQuery; rows: number }) {
   const [rep, setRep] = useState<SearchReport | null>(null)
@@ -38,6 +40,11 @@ export function SearchTerms({ site, query, rows }: { site: Site; query: ReportQu
   const ignored = rep?.ignored_filters?.length ? rep.ignored_filters : null
   return (
     <>
+      {proofFor(site.verified, 'search') && (
+        <div className="vf-line">
+          <SourceChip verified={site.verified} slot="search" />
+        </div>
+      )}
       <BarList
         dimLabel={aiCopy.search}
         valueLabel={aiCopy.clicks}

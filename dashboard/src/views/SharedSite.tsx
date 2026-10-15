@@ -20,6 +20,7 @@ const asSite = (info: ShareInfo): Site => ({
   proxy_key: '',
   last_event_at: Math.floor(Date.now() / 1000),
   cookieless: info.cookieless,
+  verified: info.verified,
 })
 
 export default function SharedSite() {

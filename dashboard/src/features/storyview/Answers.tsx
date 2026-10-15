@@ -11,6 +11,8 @@ import { setView } from '../../lib/url'
 import { copy } from './copy'
 import { HintLine } from './HintLine'
 import type { Answer, Hint, Tone } from './rules'
+import { SourceChip } from '../verified/SourceChip'
+import { proofFor } from '../verified/model'
 
 const KIT: Record<Tone, KitTone> = { good: 'good', warn: 'warn', bad: 'bad', flat: 'neutral' }
 
@@ -77,6 +79,8 @@ export function Answers({ answers, onConnect, onGoal, site, series, hints = [], 
     const lines = a.key === 'pays' && series.revenue && a.chip ? series.revenue : series.visitors
     const drawn = a.key === 'page' || a.key === 'fix' ? (own ?? flat) : lines
     const was = a.key === 'fine' ? series.was : undefined
+    // Which source pays: the provider's badge takes the status' place; the status moves under the answer.
+    const proof = a.key === 'pays' && a.chip && proofFor(site.verified, 'revenue') ? <SourceChip verified={site.verified} slot="revenue" /> : null
     return (
       <Card
         key={a.key}
@@ -85,7 +89,7 @@ export function Answers({ answers, onConnect, onGoal, site, series, hints = [], 
         icon={<Icon size={15} strokeWidth={1.8} />}
         tone={a.key === 'fix' && a.look === 'fix' ? 'warn' : undefined}
         title={a.question}
-        status={a.status}
+        status={proof ?? a.status}
         chart={drawn.length > 1 && !(a.key === 'fix' && a.look === 'quiet') ? <Area values={drawn} was={was} color={toneColor(tone)} /> : undefined}
       >
         <span className="kit-val">
@@ -95,6 +99,7 @@ export function Answers({ answers, onConnect, onGoal, site, series, hints = [], 
         <span className="sv-a-line" title={a.sub}>
           {a.line}
         </span>
+        {proof && a.status && <span className="sv-a-status">{a.status}</span>}
         {links(a)}
         {hints.filter((h) => h.answer === a.key).map((h) => (
           <HintLine key={h.id} site={site} hint={h} onAway={() => onAway(h)} />

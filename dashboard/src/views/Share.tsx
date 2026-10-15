@@ -9,6 +9,7 @@ import { isEmbed, openShare, shareToken } from '../lib/earlyStart'
 import { setShared } from '../lib/me'
 import { Ghost, Name, Wordmark } from '../components/Logo'
 import { SiteMark } from '../components/SiteMark'
+import { VerifiedPill } from '../features/verified/VerifiedPill'
 import './Share.css'
 
 type State = { state: 'loading' } | { state: 'password'; error?: string; hideBrand?: boolean } | { state: 'ready'; info: ShareInfo } | { state: 'error'; message: string }
@@ -129,6 +130,7 @@ export function ShareHeader({ info }: { info: ShareInfo }) {
           </span>
         )}
       </span>
+      <VerifiedPill verified={info.verified} viewer brand={!info.hide_brand} />
     </>
   )
 }

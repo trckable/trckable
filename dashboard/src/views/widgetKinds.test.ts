@@ -101,3 +101,13 @@ describe('the rewordable labels match the server', () => {
     for (const f of Object.values(TEXT_FIELDS).flat()) expect(f.def).toBe(en[f.msg])
   })
 })
+
+describe('the verified badge', () => {
+  it('is one line with no brand line under it, and only its title can be reworded', () => {
+    expect(size(look({ kind: 'verified', brand: true }))).toEqual({ w: 300, h: 48 })
+    expect(size(look({ kind: 'verified', brand: false }))).toEqual({ w: 300, h: 48 })
+    expect(defaultName(look({ kind: 'verified' }))).toBe('Verified badge')
+    expect(TEXT_FIELDS.verified.map((f) => f.key)).toEqual(['title'])
+    expect(partsOf(look({ kind: 'verified' }))).toEqual([])
+  })
+})

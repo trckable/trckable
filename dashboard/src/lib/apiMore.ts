@@ -16,7 +16,7 @@ export interface ProbeLook {
 
 export * from './api'
 export { siteState, type SiteState } from '../features/sitestatus/status'
-import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, WebVitals, Widget, WidgetLook } from './api'
+import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, Verified, WebVitals, Widget, WidgetLook } from './api'
 
 /** A phone signed in to the account with its own token (never shown). */
 export interface Device {
@@ -164,6 +164,8 @@ export const more = {
   clearAvatar: () => act('DELETE', '/account/avatar'),
   /** This server reads the site's homepage and looks for the snippet. */
   checkInstall: (site: string) => call<InstallCheck>('POST', `/sites/${encodeURIComponent(site)}/install/check`),
+  /** What stands behind the site's numbers, read now. */
+  verified: (site: string) => call<Verified>('GET', `/sites/${encodeURIComponent(site)}/verified`),
   /** The uptime probe's last few looks at the site's homepage, newest first. */
   probes: (site: string) => call<{ probes: ProbeLook[] }>('GET', `/sites/${encodeURIComponent(site)}/probes`),
   keys: () => call<{ keys: APIKey[] }>('GET', '/keys'),

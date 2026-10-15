@@ -106,7 +106,7 @@ export default function StoryView(p: StoryViewProps) {
         {h.note && <p className="sv-note">{h.note}</p>}
       </section>
 
-      <Tiles tiles={facts.tiles} series={tileSeries(cur.series, !!p.money)} onConnect={() => setConnect(true)} />
+      <Tiles tiles={facts.tiles} series={tileSeries(cur.series, !!p.money)} verified={p.site.verified} onConnect={() => setConnect(true)} />
 
       {cur.kpis.sessions > 0 && <BounceCard site={p.site} query={p.query} />}
 

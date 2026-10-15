@@ -362,6 +362,7 @@ func (a *API) shareInfoWith(w http.ResponseWriter, r *http.Request, sh sqlite.Sh
 		"timezone":   si.Timezone,
 		"currency":   si.Currency,
 		"modules":    mods,
+		"verified":   a.sharedVerified(r.Context(), si, sh.Revenue),
 		"session":    session,
 	})
 }
