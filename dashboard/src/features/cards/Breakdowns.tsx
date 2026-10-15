@@ -85,6 +85,8 @@ export function PagesPanel({ c }: { c: CardsCtx }) {
     ...(c.full ? [{ id: 'exit_page', label: cardCopy.exit }] : []),
     // Sections only exist once the site defines them, so the tab appears with the first rule and not before.
     ...(c.full && (c.cur?.dims.group?.length ?? 0) > 0 ? [{ id: 'group', label: cardCopy.sections }] : []),
+    // Only a site seen on two or more domains has a list of them; one already filtered by domain keeps its tab.
+    ...(((c.cur?.hosts ?? 0) >= 2 || c.query.filters?.some((f) => f.dim === 'hostname')) ? [{ id: 'hostname', label: cardCopy.domains, tip: cardCopy.domainsTip }] : []),
     // How far down people read. Full only, and not on share links, which only reach the main report.
     ...(c.full && !c.shared ? [{ id: 'scroll', label: cardCopy.scroll }] : []),
   ]
@@ -107,19 +109,19 @@ function PageBars({ c, dim }: { c: CardsCtx; dim: string }) {
   const rows = (c.perDay(dim) ? c.dims(dim) : []).slice(0, c.rows)
   // A heatmap for the page, once the module is on: not on a share link, and not for sections, which are not a page.
   const [heat, setHeat] = useState<string | null>(null)
-  const action = shows(c.mods, 'cards', 'heatmaps') && !c.shared && dim !== 'group' ? { icon: <Flame size={14} aria-hidden="true" />, label: (k: string) => cardCopy.heatmap(k || '/'), onAct: setHeat } : undefined
+  const action = shows(c.mods, 'cards', 'heatmaps') && !c.shared && dim !== 'group' && dim !== 'hostname' ? { icon: <Flame size={14} aria-hidden="true" />, label: (k: string) => cardCopy.heatmap(k || '/'), onAct: setHeat } : undefined
   return (
     <>
       <BarList
         {...listProps(c, dim)}
         action={action}
         dimLabel={DIM_LABEL[dim]}
-        subLabel={c.full && dim !== 'page' && !c.money && !c.scrubbing ? 'Bounce' : undefined}
+        subLabel={c.full && dim !== 'page' && dim !== 'hostname' && !c.money && !c.scrubbing ? 'Bounce' : undefined}
         onPick={(v) => c.addFilter(dim, v)}
         barColor={c.trail ? channelColor(c.trail) : undefined}
         emptyText={!c.perDay(dim) ? cardCopy.perDayEntry : undefined}
         // A sale belongs to a visit, and a visit has one entry page but many pages and sections: nothing to attribute there.
-        money={c.full && c.money && !c.scrubbing && dim !== 'page' && dim !== 'group' ? c.fmtMoney : undefined}
+        money={c.full && c.money && !c.scrubbing && dim !== 'page' && dim !== 'group' && dim !== 'hostname' ? c.fmtMoney : undefined}
         items={rows.map((r) => ({ key: r.value, label: r.value || '/', title: r.value, value: r.visitors, sub: r.bounce_rate, rev: r.revenue }))}
       />
       {heat !== null && (

@@ -134,6 +134,8 @@ func (g group) where(p Params, evFrom, evTo time.Time) (string, []any, error) {
 		return g.goalWhere(p, evFrom, evTo)
 	case "page":
 		return g.eventsWhere(p, evFrom, evTo, "kind = 1 AND path "+g.positive(), anyOf(g.values))
+	case "hostname":
+		return g.eventsWhere(p, evFrom, evTo, "kind = 1 AND hostname "+g.positive(), anyOf(g.values))
 	case "group":
 		// Filtering by a section means "visits that read anything in it",
 		// the same way a page filter means "visits that read that page".

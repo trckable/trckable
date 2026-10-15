@@ -68,6 +68,8 @@ export interface Result {
   series: Point[]
   imported?: { days: number; from: string; to: string }
   dims: Record<string, Row[] | null>
+  /** Domains the period saw, when two or more. */
+  hosts?: number
   goals: Row[] | null
   days?: Day[]
   money?: Money

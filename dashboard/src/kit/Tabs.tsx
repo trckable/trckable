@@ -8,6 +8,8 @@ import './kit.css'
 export interface TabItem {
   id: string
   label: string
+  /** One line shown on hover. */
+  tip?: string
 }
 
 export const tabId = (prefix: string, id: string) => `${prefix}-tab-${id}`
@@ -57,6 +59,7 @@ export function Tabs({ prefix, label, tabs, value, onChange, sub }: { prefix: st
           aria-selected={t.id === value}
           aria-controls={sub ? undefined : panelId(prefix)}
           tabIndex={t.id === value ? 0 : -1}
+          title={t.tip}
           className={sub ? undefined : 'kit-tab'}
           onClick={() => onChange(t.id)}
           onKeyDown={(e) => move(e, i)}

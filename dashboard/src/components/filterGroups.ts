@@ -45,6 +45,7 @@ export const FILTER_GROUPS: FilterGroup[] = [
       { dim: 'page', label: t.dim.page, icon: FileText },
       { dim: 'exit_page', label: t.dim.exit_page, icon: LogOut, note: t.fullMode },
       { dim: 'group', label: t.dim.group, icon: FolderTree, note: t.noneYet },
+      { dim: 'hostname', label: t.dim.hostname, icon: Globe, note: t.noneYet },
     ],
   },
   {

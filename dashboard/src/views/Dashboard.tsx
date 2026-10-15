@@ -55,7 +55,7 @@ import { HeaderBand } from '../features/header/HeaderBand'
 import { savedViews } from '../components/panelOpen'
 import { FilterRowHost } from '../features/header/FilterRowHost'
 const SaveViewHost = lazy(() => import('../features/header/SaveViewHost').then((m) => ({ default: m.SaveViewHost }))) // a dialog: only when a view is named
-import { HeaderTools, ShareButton } from '../features/header/HeaderTools'
+import { DomainSwitch, HeaderTools, ShareButton } from '../features/header/HeaderTools'
 import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
 import { useMilestones } from '../features/milestones/useMilestones'
 import { filterFrom } from '../features/journey/filterFrom'
@@ -479,7 +479,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     <>
       {!liveView && (firstLoad || loading) && <div className="loadbar" role="status" aria-label="Loading" />/* Live loads no report: it shows its own connection */}
       <HeaderBand><div className="header quiet">
-        {header}
+        {header}{!waiting && !liveView && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}
         <HeaderTools
           live={liveView}
           waiting={waiting} site={site}
