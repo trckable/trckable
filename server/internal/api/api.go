@@ -1018,7 +1018,7 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 		}
 		// The sources behind the numbers ride with the list, so the header's
 		// seal and the site switcher need no request of their own.
-		last.Verified = a.verifiedOf(r.Context(), last.SiteInfo, last.Check)
+		last.Verified = a.verifiedOf(r.Context(), last.SiteInfo)
 		if p, ok := downs[s.ID]; ok {
 			out[len(out)-1].DownSince, out[len(out)-1].DownCause = p.DownSince, p.Error
 		}

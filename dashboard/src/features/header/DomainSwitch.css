@@ -1,38 +1,41 @@
-/* The domain switcher: a small segmented row beside the site's name. */
-.dom-switch {
-  display: inline-flex;
-  flex: 0 1 auto;
-  gap: 2px;
-  min-width: 0;
-  padding: 3px;
-  border-radius: 10px;
-  background: var(--raised-well);
-}
-.dom-btn {
-  display: inline-flex;
+/* The domain row inside the site switcher: a label and a few quiet options that wrap. */
+.dom-row-box {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--hairline, var(--border));
+}
+.dom-title {
+  margin-right: 4px;
+  color: var(--text-3);
+  font: 500 12px var(--sans, inherit);
+}
+.dom-opt {
+  display: inline-flex;
+  align-items: center;
+  max-width: 140px;
   min-height: 28px;
-  max-width: 160px;
   padding: 0 10px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 999px;
   background: none;
   color: var(--text-2);
   font: 500 13px var(--sans, inherit);
   white-space: nowrap;
   cursor: pointer;
 }
-.dom-btn:hover {
+.dom-opt:hover {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
   color: var(--text);
 }
-.dom-btn.on {
-  background: var(--raised);
-  box-shadow: 0 0 0 1px var(--raised-line), var(--shadow-soft);
-  color: var(--text);
+.dom-opt.on {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
   font-weight: 600;
 }
-.dom-btn:focus-visible {
+.dom-opt:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
@@ -41,23 +44,16 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.dom-row .faint {
-  margin-left: auto;
-  font-size: 11.5px;
-  font-variant-numeric: tabular-nums;
-}
-.dom-row[aria-checked='true'] {
-  font-weight: 600;
+.site-btn .dom-tag {
+  flex: none;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-3);
+  font-weight: 500;
 }
 @media (max-width: 640px) {
-  .dom-switch {
-    padding: 0;
-    background: none;
-  }
-  .dom-btn {
-    min-height: 44px;
-    max-width: 150px;
-    border: 1px solid var(--border);
-    background: var(--surface);
+  .dom-opt {
+    min-height: 40px;
   }
 }

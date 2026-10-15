@@ -11,6 +11,8 @@ import { StateDot } from '../features/sites/StateDot'
 import { usePhoneLock } from './lockScroll'
 import { SiteMark } from './SiteMark'
 import { lazyLoad, warm, whenIdle } from '../lib/lazyLoad'
+import { useDomainControl } from '../lib/domainControl'
+import { domainLabel } from '../features/header/DomainRow'
 import { layoutReady, preloadLayout } from '../features/sites/useSiteLayout'
 
 const SiteMenu = lazyLoad(() => import('../features/sites/SiteMenu').then((m) => ({ default: m.SiteMenu })))
@@ -28,6 +30,7 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
   usePhoneLock(open)
   const close = useCallback(() => setOpen(false), [])
   useOnlyOpen('sites', open, close)
+  const domains = useDomainControl()
   const name = current?.name || current?.domain || copy.pick
   return (
     <div className="site-pick">
@@ -50,6 +53,7 @@ export function SitePicker({ sites, current, all }: { sites: Site[]; current: Si
           </span>
         )}
         <span className="name">{all ? copy.all : name}</span>
+        {!all && domains && <span className="dom-tag">· {domainLabel(domains)}</span>}
         <ChevronDown size={15} strokeWidth={1.75} aria-hidden="true" />
       </button>
       {open && (

@@ -111,7 +111,7 @@ export function KpiStrip(p: Props) {
   return (
     <>
       <div role="group" aria-label={copy.keyNumbers} className="kpis">
-        {tile('visitors', copy.visitors, k?.visitors, fmtInt, delta(k?.visitors ?? 0, pk?.visitors), { live: (r) => r.kpis.visitors, hint: p.hint, pace: p.pace, proof: <SourceChip verified={p.site.verified} slot="visitors" />, tip: [copy.tips.visitors, botsLine(p.bots)].filter(Boolean).join(' ') })}
+        {tile('visitors', copy.visitors, k?.visitors, fmtInt, delta(k?.visitors ?? 0, pk?.visitors), { live: (r) => r.kpis.visitors, hint: p.hint, pace: p.pace, tip: [copy.tips.visitors, botsLine(p.bots)].filter(Boolean).join(' ') })}
         {second()}
         {tile('bounce', copy.bounce, few ? undefined : k?.bounce_rate, fmtPct, few ? null : delta(k?.bounce_rate ?? 0, pk?.bounce_rate, true), { live: (r) => r.kpis.bounce_rate, tip: few ? `${copy.tips.bounce} ${copy.tips.tooFew}.` : copy.tips.bounce })}
         {tile('session', copy.session, few ? undefined : k?.avg_session_s, fmtDuration, few ? null : delta(k?.avg_session_s ?? 0, pk?.avg_session_s), { live: (r) => r.kpis.avg_session_s, tip: few ? `${copy.tips.session} ${copy.tips.tooFew}.` : copy.tips.session })}

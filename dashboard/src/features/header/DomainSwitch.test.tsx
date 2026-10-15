@@ -3,8 +3,10 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Filter, Row } from '../../lib/api'
-import { pickedHost, shortHost, split } from '../../lib/domainSwitch'
+import { pickedHost, shortHost } from '../../lib/domainSwitch'
 import { DomainSwitch } from './DomainSwitch'
+import { DomainRow, domainLabel } from './DomainRow'
+import { domainsNow as current, type DomainControl } from '../../lib/domainControl'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -19,7 +21,6 @@ const onPick = vi.fn()
 function draw(seen: Row[] | null, filters: Filter[] = [], narrow = false) {
   act(() => root.render(<DomainSwitch seen={seen} filters={filters} site="trckable.com" narrow={narrow} onPick={onPick} />))
 }
-const radios = () => [...host.querySelectorAll<HTMLElement>('[role=radio]')]
 
 beforeEach(() => {
   onPick.mockReset()
@@ -39,11 +40,6 @@ describe('the words', () => {
     expect(shortHost('www.trckable.com', 'www.trckable.com')).toBe('trckable.com')
     expect(shortHost('other.org', 'trckable.com')).toBe('other.org')
   })
-  it('five or more domains keep three buttons', () => {
-    expect(split(many).shown).toHaveLength(3)
-    expect(split(many).rest).toHaveLength(2)
-    expect(split(two).rest).toHaveLength(0)
-  })
   it('only a single "is" filter counts as picked', () => {
     expect(pickedHost([{ dim: 'hostname', value: 'a' }])).toBe('a')
     expect(pickedHost([{ dim: 'hostname', op: 'not', value: 'a' }])).toBeNull()
@@ -51,41 +47,32 @@ describe('the words', () => {
   })
 })
 
-describe('DomainSwitch', () => {
-  it('shows nothing for one domain', () => {
+describe('DomainSwitch and DomainRow', () => {
+  const radios = () => [...host.querySelectorAll<HTMLElement>('[role=radio]')]
+  it('publishes nothing for one domain', () => {
     draw(null)
     expect(host.textContent).toBe('')
+    expect(current()).toBeNull()
   })
-  it('shows All and each domain, All on', () => {
+  it('publishes the control; the header says All until a domain is picked', () => {
     draw(two)
-    expect(radios().map((r) => r.textContent)).toEqual(['All', 'trckable.com', 'docs'])
-    expect(radios()[0].getAttribute('aria-checked')).toBe('true')
-    expect(radios()[2].title).toContain('docs.trckable.com')
-  })
-  it('a click picks the full domain and All clears', () => {
-    draw(two)
-    act(() => radios()[2].click())
-    expect(onPick).toHaveBeenLastCalledWith('docs.trckable.com')
+    expect(domainLabel((current() as DomainControl))).toBe('All')
     draw(two, [{ dim: 'hostname', value: 'docs.trckable.com' }])
+    expect(domainLabel((current() as DomainControl))).toBe('docs')
+    act(() => root.unmount())
+    expect(current()).toBeNull()
+    root = createRoot(host)
+  })
+  it('the row has All and each domain; a click picks the full domain, All clears', () => {
+    draw(many, [{ dim: 'hostname', value: 'docs.trckable.com' }])
+    const done = vi.fn()
+    act(() => root.render(<DomainRow control={(current() as DomainControl)} onDone={done} />))
+    expect(radios().map((r) => r.textContent)).toEqual(['All', 'trckable.com', 'docs', 'blog', 'app', 'status'])
     expect(radios()[2].getAttribute('aria-checked')).toBe('true')
+    act(() => radios()[3].click())
+    expect(onPick).toHaveBeenLastCalledWith('blog.trckable.com')
     act(() => radios()[0].click())
     expect(onPick).toHaveBeenLastCalledWith(null)
-  })
-  it('with a domain filter on, all domains stay listed and the picked one is on', () => {
-    draw(two, [{ dim: 'hostname', value: 'docs.trckable.com' }])
-    expect(radios().map((r) => r.textContent)).toEqual(['All', 'trckable.com', 'docs'])
-    expect(radios()[2].getAttribute('aria-checked')).toBe('true')
-  })
-  it('more than four: three buttons and a More menu', () => {
-    draw(many)
-    expect(radios()).toHaveLength(4)
-    expect(host.querySelector('.dom-menu')?.textContent).toBe('More')
-  })
-  it('a phone gets one chip', () => {
-    draw(two, [], true)
-    expect(radios()).toHaveLength(0)
-    expect(host.querySelector('.dom-menu')?.textContent).toBe('All domains')
-    draw(two, [{ dim: 'hostname', value: 'docs.trckable.com' }], true)
-    expect(host.querySelector('.dom-menu')?.textContent).toBe('docs')
+    expect(done).toHaveBeenCalledTimes(2)
   })
 })

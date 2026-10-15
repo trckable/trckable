@@ -25,32 +25,11 @@ func kindsOK(list []verifiedSource) map[string]bool {
 	return out
 }
 
-func TestSnippetCountsOnlyWhileSeenAndVisited(t *testing.T) {
-	good := &sqlite.SiteCheck{At: ago(2 * time.Hour), Found: "site"}
-	cases := []struct {
-		name  string
-		in    verifiedIn
-		listd bool
-		ok    bool
-	}{
-		{"found and a visit today", verifiedIn{Check: good, LastEvent: ago(time.Hour)}, true, true},
-		{"found, no visit for two days", verifiedIn{Check: good, LastEvent: ago(48 * time.Hour)}, true, false},
-		{"found, never a visit", verifiedIn{Check: good}, true, false},
-		{"visits, never checked", verifiedIn{LastEvent: ago(time.Hour)}, true, false},
-		{"another site's snippet", verifiedIn{Check: &sqlite.SiteCheck{At: ago(time.Hour), Found: "other"}, LastEvent: ago(time.Hour)}, true, false},
-		{"the page could not be read", verifiedIn{Check: &sqlite.SiteCheck{At: ago(time.Hour), Error: "unreachable"}, LastEvent: ago(time.Hour)}, true, false},
-		{"the check is older than three days", verifiedIn{Check: &sqlite.SiteCheck{At: ago(4 * 24 * time.Hour), Found: "site"}, LastEvent: ago(time.Hour)}, true, false},
-		{"nothing at all", verifiedIn{}, false, false},
-	}
-	for _, c := range cases {
-		c.in.Now = vNow
-		got := verifiedSources(c.in)
-		if (len(got) == 1) != c.listd {
-			t.Fatalf("%s: listed %v, want %v", c.name, got, c.listd)
-		}
-		if c.listd && got[0].OK != c.ok {
-			t.Fatalf("%s: ok %v, want %v (%s)", c.name, got[0].OK, c.ok, got[0].Detail)
-		}
+// The trckable snippet on the site vouches for nothing: no check, no visit, no
+// listing. Only independent third parties are sources.
+func TestTheSnippetIsNeverASource(t *testing.T) {
+	if got := verifiedSources(verifiedIn{Now: vNow}); len(got) != 0 {
+		t.Fatalf("nothing connected, nothing listed: %v", got)
 	}
 }
 
@@ -82,26 +61,35 @@ func TestSearchConsoleCountsOnlyWhileItWorks(t *testing.T) {
 	}
 }
 
-func TestPaymentsCountOnlyWhileTheProviderDelivers(t *testing.T) {
+func TestPaymentsAreOneSourceWhoeverDelivers(t *testing.T) {
 	conn := func(provider, mode string, event, sync *int64, errText string) revenue.Connection {
 		return revenue.Connection{Provider: provider, Mode: mode, CreatedAt: ago(60 * 24 * time.Hour), LastEvent: event, LastSync: sync, LastError: errText}
 	}
-	got := kindsOK(verifiedSources(verifiedIn{Now: vNow, Pay: []revenue.Connection{
-		conn("stripe", "live", ptr(ago(time.Hour)), nil, ""),
-		conn("paddle", "live", nil, ptr(ago(10*24*time.Hour)), ""),
-		conn("paypal", "live", ptr(ago(31*24*time.Hour)), nil, ""),
-		conn("lemonsqueezy", "live", nil, ptr(ago(time.Hour)), "401: bad key"),
-		conn("polar", "test", ptr(ago(time.Hour)), nil, ""),
-		conn("custom", "live", ptr(ago(time.Hour)), nil, ""),
-	}}))
-	want := map[string]bool{"payments/stripe": true, "payments/paddle": true, "payments/paypal": false, "payments/lemonsqueezy": false}
-	if len(got) != len(want) {
-		t.Fatalf("manual, custom and test connections are not listed at all: %v", got)
-	}
-	for k, v := range want {
-		if ok, here := got[k]; !here || ok != v {
-			t.Fatalf("%s: %v, want %v (all: %v)", k, ok, v, got)
+	one := func(c ...revenue.Connection) (verifiedSource, int) {
+		got := verifiedSources(verifiedIn{Now: vNow, Pay: c})
+		if len(got) == 0 {
+			return verifiedSource{}, 0
 		}
+		return got[0], len(got)
+	}
+	// Several providers, one entry, ok while any delivers, named for the one that did last.
+	s, n := one(conn("stripe", "live", ptr(ago(time.Hour)), nil, ""), conn("paddle", "live", nil, ptr(ago(10*24*time.Hour)), ""), conn("paypal", "live", ptr(ago(31*24*time.Hour)), nil, ""))
+	if n != 1 || s.Kind != "payments" || !s.OK || s.Provider != "stripe" {
+		t.Fatalf("one Payments source: %d %+v", n, s)
+	}
+	// A provider that delivered within thirty days counts; older, or a sync that failed, does not.
+	if s, _ := one(conn("paddle", "live", nil, ptr(ago(10*24*time.Hour)), "")); !s.OK {
+		t.Fatalf("a sync ten days ago counts: %+v", s)
+	}
+	if s, _ := one(conn("paypal", "live", ptr(ago(31*24*time.Hour)), nil, "")); s.OK {
+		t.Fatalf("31 days ago does not: %+v", s)
+	}
+	if s, _ := one(conn("lemonsqueezy", "live", nil, ptr(ago(time.Hour)), "401: bad key")); s.OK {
+		t.Fatalf("a failing sync does not: %+v", s)
+	}
+	// Typed in by hand and test connections are not listed at all.
+	if _, n := one(conn("polar", "test", ptr(ago(time.Hour)), nil, ""), conn("custom", "live", ptr(ago(time.Hour)), nil, "")); n != 0 {
+		t.Fatalf("manual, custom and test connections are not listed: %d", n)
 	}
 }
 
@@ -113,10 +101,6 @@ func TestVerifiedAcrossTheAPI(t *testing.T) {
 	g.setup(t, owner)
 	ctx := context.Background()
 	site := g.api.Now() // the rig's clock
-	_, _ = g.ctl.DB.ExecContext(ctx, `UPDATE sites SET last_event_at = ? WHERE id = ?`, site.Add(-time.Hour).Unix(), g.site)
-	if err := g.ctl.SetCheck(ctx, g.site, sqlite.SiteCheck{At: site.Add(-time.Hour).Unix(), Found: "site", Via: "page"}); err != nil {
-		t.Fatal(err)
-	}
 	c, err := g.rev.Connect(ctx, revenue.ConnectRequest{Site: g.site, Provider: "stripe", Secret: "whsec_test", PublicBase: "http://localhost:8080"})
 	if err != nil {
 		t.Fatal(err)
@@ -127,7 +111,9 @@ func TestVerifiedAcrossTheAPI(t *testing.T) {
 	base := g.srv.URL + "/api/v1/sites/" + g.site
 
 	count := func(v any) (ok int, kinds string) {
-		for _, s := range v.(map[string]any)["sources"].([]any) {
+		m, _ := v.(map[string]any)
+		list, _ := m["sources"].([]any)
+		for _, s := range list {
 			m := s.(map[string]any)
 			if m["ok"] == true {
 				ok++
@@ -140,12 +126,12 @@ func TestVerifiedAcrossTheAPI(t *testing.T) {
 	if code != http.StatusOK {
 		t.Fatalf("verified: %d", code)
 	}
-	if n, kinds := count(one); n != 2 || kinds != "snippet,payments," {
-		t.Fatalf("snippet and Stripe: %d %s", n, kinds)
+	if n, kinds := count(one); n != 1 || kinds != "payments," {
+		t.Fatalf("Stripe is the one source, the snippet is none: %d %s", n, kinds)
 	}
 	_, list := do(t, owner, "GET", g.srv.URL+"/api/v1/sites", "")
 	row := list["sites"].([]any)[0].(map[string]any)
-	if n, _ := count(row["verified"]); n != 2 {
+	if n, _ := count(row["verified"]); n != 1 {
 		t.Fatalf("the sites list carries the same: %v", row["verified"])
 	}
 
@@ -154,23 +140,15 @@ func TestVerifiedAcrossTheAPI(t *testing.T) {
 	url := made["url"].(string)
 	anon := client()
 	_, info := do(t, anon, "POST", g.srv.URL+"/api/v1/share/open", `{"token":"`+url[len(url)-26:]+`"}`)
-	if n, kinds := count(info["verified"]); n != 1 || kinds != "snippet," {
+	if n, kinds := count(info["verified"]); n != 0 || kinds != "" {
 		t.Fatalf("a link that hides money hides the provider: %d %s", n, kinds)
 	}
 	_, made = do(t, owner, "POST", base+"/shares", `{"name":"y","revenue":true}`, csrf, "1")
 	url = made["url"].(string)
 	_, info = do(t, client(), "POST", g.srv.URL+"/api/v1/share/open", `{"token":"`+url[len(url)-26:]+`"}`)
-	if n, _ := count(info["verified"]); n != 2 {
+	if n, _ := count(info["verified"]); n != 1 {
 		t.Fatalf("a link that shows money shows the provider: %v", info["verified"])
 	}
-
-	// What stopped working is not shown to readers at all.
-	_, _ = g.ctl.DB.ExecContext(ctx, `UPDATE sites SET last_event_at = 1 WHERE id = ?`, g.site)
-	_, info = do(t, client(), "POST", g.srv.URL+"/api/v1/share/open", `{"token":"`+url[len(url)-26:]+`"}`)
-	if n := len(info["verified"].(map[string]any)["sources"].([]any)); n != 1 {
-		t.Fatalf("a reader is told of working sources only: %v", info["verified"])
-	}
-	_, _ = g.ctl.DB.ExecContext(ctx, `UPDATE sites SET last_event_at = ? WHERE id = ?`, site.Add(-time.Hour).Unix(), g.site)
 
 	// The badge links to the open link, never the one with money.
 	_, w := do(t, owner, "POST", base+"/widgets", `{"kind":"verified"}`, csrf, "1")
@@ -212,8 +190,11 @@ func TestBadgeLinkFallsBack(t *testing.T) {
 	g.setup(t, owner)
 	ctx := context.Background()
 	now := g.api.Now()
-	_, _ = g.ctl.DB.ExecContext(ctx, `UPDATE sites SET last_event_at = ? WHERE id = ?`, now.Add(-time.Hour).Unix(), g.site)
-	_ = g.ctl.SetCheck(ctx, g.site, sqlite.SiteCheck{At: now.Add(-time.Hour).Unix(), Found: "site"})
+	c, err := g.rev.Connect(ctx, revenue.ConnectRequest{Site: g.site, Provider: "stripe", Secret: "whsec_test", PublicBase: "http://localhost:8080"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = g.ctl.DB.ExecContext(ctx, `UPDATE pay_connections SET last_event_at = ? WHERE id = ?`, now.Add(-time.Hour).Unix(), c.ID)
 	base := g.srv.URL + "/api/v1/sites/" + g.site
 	const home = `href="https://trckable.com/?ref=verified"`
 

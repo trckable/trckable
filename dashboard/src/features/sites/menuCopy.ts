@@ -9,7 +9,7 @@ export const copy = defineCopy('sites.menu', {
   search: 'Search sites',
   noMatch: (q: string) => `No site matches “${q}”.`,
   add: 'Add a site',
-  settingsFor: (domain: string) => `Settings for ${domain}`,
+  siteSettings: 'Site settings',
   yourOrder: 'Switcher order',
   pinned: 'Pinned',
   others: 'Other sites',

@@ -20,9 +20,8 @@ type widgetMark struct {
 
 // Our own constant SVGs, never input.
 const (
-	markSnippet template.HTML = `<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5.5 4.5-3 3.5 3 3.5M10.5 4.5l3 3.5-3 3.5"/></svg>`
-	markGSC     template.HTML = `<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="#4285f4" d="M15.2 8.2c0-.5 0-.9-.1-1.3H8v2.5h4a3.5 3.5 0 0 1-1.5 2.3v1.9h2.4c1.4-1.3 2.3-3.2 2.3-5.4z"/><path fill="#34a853" d="M8 15.5c2 0 3.7-.7 4.9-1.8l-2.4-1.9c-.7.4-1.5.7-2.5.7a4.4 4.4 0 0 1-4.1-3H1.4v1.9A7.5 7.5 0 0 0 8 15.5z"/><path fill="#fbbc05" d="M3.9 9.5a4.5 4.5 0 0 1 0-3V4.6H1.4a7.5 7.5 0 0 0 0 6.8z"/><path fill="#ea4335" d="M8 3.5c1.1 0 2.1.4 2.9 1.1l2.1-2.1A7.5 7.5 0 0 0 1.4 4.6l2.5 1.9A4.5 4.5 0 0 1 8 3.5z"/></svg>`
-	markPay     template.HTML = `<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.8" y="3.5" width="12.4" height="9" rx="2"/><path d="M1.8 6.6h12.4"/></svg>`
+	markGSC template.HTML = `<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="#4285f4" d="M15.2 8.2c0-.5 0-.9-.1-1.3H8v2.5h4a3.5 3.5 0 0 1-1.5 2.3v1.9h2.4c1.4-1.3 2.3-3.2 2.3-5.4z"/><path fill="#34a853" d="M8 15.5c2 0 3.7-.7 4.9-1.8l-2.4-1.9c-.7.4-1.5.7-2.5.7a4.4 4.4 0 0 1-4.1-3H1.4v1.9A7.5 7.5 0 0 0 8 15.5z"/><path fill="#fbbc05" d="M3.9 9.5a4.5 4.5 0 0 1 0-3V4.6H1.4a7.5 7.5 0 0 0 0 6.8z"/><path fill="#ea4335" d="M8 3.5c1.1 0 2.1.4 2.9 1.1l2.1-2.1A7.5 7.5 0 0 0 1.4 4.6l2.5 1.9A4.5 4.5 0 0 1 8 3.5z"/></svg>`
+	markPay template.HTML = `<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.8" y="3.5" width="12.4" height="9" rx="2"/><path d="M1.8 6.6h12.4"/></svg>`
 )
 
 // widgetMarks are the icons of the sources that count, in order, with their
@@ -35,8 +34,6 @@ func widgetMarks(v verified, words widgetWords) []widgetMark {
 			continue
 		}
 		switch s.Kind {
-		case "snippet":
-			out = append(out, widgetMark{words.plain("v_snippet"), markSnippet})
 		case "gsc":
 			out = append(out, widgetMark{words.plain("v_gsc"), markGSC})
 		case "payments":
@@ -75,16 +72,12 @@ func (a *API) verifiedHref(r *http.Request, si sqlite.SiteInfo, wd sqlite.Widget
 }
 
 func (a *API) fillVerified(r *http.Request, d *widgetData, si sqlite.SiteInfo, wd sqlite.Widget, words widgetWords, public bool) {
-	var check *sqlite.SiteCheck
-	if c, err := a.Ctl.CheckOf(r.Context(), si.ID); err == nil && c.At > 0 {
-		check = &c
-	}
-	d.Marks = widgetMarks(a.verifiedOf(r.Context(), si, check), words)
+	d.Marks = widgetMarks(a.verifiedOf(r.Context(), si), words)
 	d.Href = "https://trckable.com/?ref=verified"
 	if len(d.Marks) > 0 {
 		d.Href = a.verifiedHref(r, si, wd)
 	}
 	if len(d.Marks) == 0 && !public {
-		d.Off = "Nothing is verified yet. Add the snippet, connect Search Console or a payment provider and the badge shows."
+		d.Off = "Nothing is verified yet. Connect Search Console or a payment provider and the badge shows."
 	}
 }

@@ -25,7 +25,7 @@ function nameOf(t: Tile) {
 }
 
 /** Which tiles a source can prove. */
-const PROOF: Partial<Record<Tile['key'], Slot>> = { visitors: 'visitors', revenue: 'revenue' }
+const PROOF: Partial<Record<Tile['key'], Slot>> = { revenue: 'revenue' }
 
 const KIT: Record<Tone, KitTone> = { good: 'good', warn: 'warn', bad: 'bad', flat: 'neutral' }
 

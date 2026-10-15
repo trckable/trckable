@@ -1,7 +1,7 @@
 // The small marks of the Verified seal: the seal itself, and one per source.
 // Brand colours live only in the tiny Google and Stripe marks; everything else
 // takes the text colour.
-import { BadgeCheck, Check, Code, CreditCard } from 'lucide-react'
+import { BadgeCheck, Check, CreditCard } from 'lucide-react'
 import type { VerifiedSource } from '../../lib/api'
 
 export const Seal = ({ size = 15 }: { size?: number }) => <BadgeCheck size={size} strokeWidth={2} aria-hidden="true" />
@@ -30,9 +30,8 @@ export function StripeS({ size = 14 }: { size?: number }) {
   )
 }
 
-/** The mark of one source: Google's G, Stripe's S, a card for any other provider, the code brackets for the snippet. */
+/** The mark of one source: Google's G, Stripe's S, a card for any other provider. */
 export function SourceMark({ s, size = 14 }: { s: Pick<VerifiedSource, 'kind' | 'provider'>; size?: number }) {
   if (s.kind === 'gsc') return <GoogleG size={size} />
-  if (s.kind === 'payments') return s.provider === 'stripe' ? <StripeS size={size} /> : <CreditCard size={size} strokeWidth={1.9} aria-hidden="true" />
-  return <Code size={size} strokeWidth={2} aria-hidden="true" />
+  return s.provider === 'stripe' ? <StripeS size={size} /> : <CreditCard size={size} strokeWidth={1.9} aria-hidden="true" />
 }
