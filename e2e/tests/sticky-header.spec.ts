@@ -3,6 +3,7 @@
 // line stays where it is (a dialog's scroll lock must not carry it off).
 import { expect, test, type Page } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
+import { pageSettled } from './pageSettled'
 import { session } from './session'
 
 async function stuck(page: Page, view: 'story' | 'explore') {
@@ -14,6 +15,7 @@ async function stuck(page: Page, view: 'story' | 'explore') {
   await expect(page.locator('.subbar .btn.range')).toBeVisible()
   if (view === 'story') await expect(page.locator('.sv-tile')).toHaveCount(4, { timeout: 30_000 })
   else await expect(page.locator('.overview-chart .chart-wrap svg')).toBeVisible({ timeout: 30_000 })
+  await pageSettled(page) // the cards under the cards have arrived: nothing moves the page from here
   await page.evaluate(() => window.scrollTo(0, 400))
   await expect(page.locator('.subbar')).toHaveAttribute('data-stuck', 'true')
 }

@@ -13,6 +13,7 @@ import { expect, test, type Locator, type Page } from './fixtures'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { pageSettled } from './pageSettled'
 
 const BASE = process.env.TRCKABLE_A11Y_URL
 const EMAIL = process.env.TRCKABLE_A11Y_EMAIL ?? 'me@site.com'
@@ -160,12 +161,14 @@ test('Live keeps only Live/Data, in the same place, and has no ⋯', async ({ pa
   await expect(page).toHaveURL(/view=live/)
   await expect(page.locator('.subbar .range-picker')).toHaveCount(0)
   await expect(more(page)).toHaveCount(0)
-  expect(await view.boundingBox()).toEqual(before)
+  const after = (await view.boundingBox())!
+  for (const k of ['x', 'y', 'width', 'height'] as const) expect(Math.abs(after[k] - before![k]), k).toBeLessThan(0.5) // sub-pixel text rounding is not a move
 })
 
 test('⋯ runs what left the row, and the keys still work', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await open(page)
+  await pageSettled(page) // a side card that arrives late is put away by the fixture, and that would close the menu
   // Create: from ⋯, then Escape hands focus back to ⋯.
   await more(page).click()
   await menu(page).getByRole('menuitem', { name: /Create/ }).click()

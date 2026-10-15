@@ -5,6 +5,7 @@
 import { expect, test } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
+import { pageSettled } from './pageSettled'
 
 const SHOTS = process.env.POLISH_SHOTS
 const NOW = Math.floor(Date.now() / 1000)
@@ -41,6 +42,7 @@ test('an incident is marked on the chart and listed on its page', async ({ page 
   await page.goto(`${API}/${HISTORY_DOMAIN}?period=7d`)
   const mark = page.locator('.inc-mark').first()
   await expect(mark).toBeVisible({ timeout: 20_000 })
+  await pageSettled(page) // nothing moves under the pointer after this
   await mark.hover()
   await expect(page.locator('.inc-tip')).toContainText('Down 3h 12m · not reachable')
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/incidents-chart-1280.png` })

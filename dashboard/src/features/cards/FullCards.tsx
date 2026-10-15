@@ -2,7 +2,7 @@
 // people came from, and the funnel, retention, people and the rest of what they
 // did. A chunk of its own: Compact never loads any of it.
 import { lazy, Suspense } from 'react'
-import { Loading } from '../../components/loading/Loading'
+import { Skeleton } from '../../components/skeleton/Skeleton'
 import { shows } from '../../lib/modules'
 import Highlights, { useInsights } from '../extras/Highlights'
 import { extrasCopy } from '../extras/copy'
@@ -21,7 +21,7 @@ const People = lazy(() => import('./People'))
 const Crawlers = lazy(() => import('../crawlers/Crawlers').then((m) => ({ default: m.Crawlers })))
 const Vitals = lazy(() => import('../../views/Vitals').then((m) => ({ default: m.Vitals })))
 
-const later = (node: React.ReactNode) => <Suspense fallback={<Loading height={180} />}>{node}</Suspense>
+const later = (node: React.ReactNode) => <Suspense fallback={<Skeleton height={180} />}>{node}</Suspense>
 
 export default function FullCards({ c }: { c: CardsCtx }) {
   const tab = (id: string, label: string, render: () => React.ReactNode): CardTab => ({ id, label, render: () => later(render()) })

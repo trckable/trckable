@@ -5,7 +5,6 @@ import { copy } from './copy'
 import { page } from './pageCopy'
 import { agoOf, safeURL } from './model'
 import { outletOf } from './pageModel'
-import { Quote } from './Quote'
 import { SourceMark } from './SourceMark'
 import { Spark } from './Spark'
 
@@ -24,38 +23,39 @@ export function reachOf(m: Mention): string[] {
   return out
 }
 
-/** One mention in the feed: where, who, when, what was said, and what it brought. */
-export function FeedRow({ m, words, curve, onOpen }: { m: Mention; words: string[]; curve?: number[]; onOpen: () => void }) {
+/** One mention as a card: where and when, its title, who said it, and the visitors it brought, big, with their curve. */
+export function FeedRow({ m, curve, onOpen }: { m: Mention; curve?: number[]; onOpen: () => void }) {
   const href = safeURL(m.url)
   const title = m.title || copy.name[m.source]
-  const facts = [copy.name[m.source], whoOf(m), agoOf(m.posted_at), ...reachOf(m)].filter(Boolean)
   return (
-    <li className={'mp-row' + (m.visitors === 0 ? ' quiet' : '')}>
-      <SourceMark source={m.source} />
-      <div className="mp-main">
-        <p className="mp-title">
-          {href ? (
-            <a href={href} target="_blank" rel="noopener noreferrer nofollow" aria-label={copy.open(title)}>
-              <span>{title}</span>
-              <ExternalLink size={12} strokeWidth={2} aria-hidden="true" />
-            </a>
-          ) : (
-            title
-          )}
-        </p>
-        <p className="mp-facts">{facts.join(' · ')}</p>
-        {m.snippet && <Quote text={m.snippet} words={words} />}
+    <li className={'card mp-card' + (m.visitors === 0 ? ' quiet' : '')}>
+      <div className="mp-card-top">
+        <SourceMark source={m.source} />
+        <span>{copy.name[m.source]}</span>
+        <span className="mp-when">{agoOf(m.posted_at)}</span>
+        {m.front && <span className="mp-tag">{copy.front}</span>}
+        <button type="button" className="mp-go" aria-label={page.openDetail(title)} onClick={onOpen}>
+          <ChevronRight size={16} aria-hidden="true" />
+        </button>
       </div>
+      <p className="mp-title">
+        {href ? (
+          <a href={href} target="_blank" rel="noopener noreferrer nofollow" aria-label={copy.open(title)}>
+            <span>{title}</span>
+            <ExternalLink size={12} strokeWidth={2} aria-hidden="true" />
+          </a>
+        ) : (
+          title
+        )}
+      </p>
+      <p className="mp-facts">{whoOf(m)}</p>
       <div className="mp-impact" title={m.visitors > 0 ? copy.brought(m.visitors) : copy.noneYet}>
-        <Spark values={curve ?? []} />
+        <Spark values={curve ?? []} w={96} h={28} />
         <p className="mp-num">
           <strong>{m.visitors > 0 ? fmtInt(m.visitors) : '–'}</strong>
           <span>{copy.visitorsLabel}</span>
         </p>
       </div>
-      <button type="button" className="mp-go" aria-label={page.openDetail(title)} onClick={onOpen}>
-        <ChevronRight size={16} aria-hidden="true" />
-      </button>
     </li>
   )
 }

@@ -42,7 +42,10 @@ test('first load stays small and the report stays fast', async ({ page, browserN
   const asked: { path: string; at: number }[] = []
   page.on('request', (r) => {
     const u = new URL(r.url())
-    if (u.pathname.startsWith('/api/') && !u.pathname.endsWith('/stream') && !u.pathname.endsWith('/live')) asked.push({ path: u.pathname, at: Date.now() })
+    // The cards under the cards (Links, Mentions) ask when they are in view and the page has been quiet
+    // for a moment: how soon depends on the machine, so they are not part of the first load.
+    const lazy = u.pathname.endsWith('/report/links') || u.pathname.includes('/mentions')
+    if (u.pathname.startsWith('/api/') && !u.pathname.endsWith('/stream') && !u.pathname.endsWith('/live') && !lazy) asked.push({ path: u.pathname, at: Date.now() })
   })
   await page.reload()
   await expect(page.locator('.kpi .value.num').first()).toBeVisible()

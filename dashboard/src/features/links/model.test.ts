@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { barPct, filterOf, sampleLink, sinceLast } from './model'
+import { barPct, filterOf, sampleLink, sinceLast, topLinks } from './model'
 
 describe('barPct', () => {
   it('is the share of the busiest row, with a floor so a small one still shows', () => {
@@ -29,5 +29,12 @@ describe('sinceLast', () => {
 describe('sampleLink', () => {
   it('is the site with a tag', () => {
     expect(sampleLink('example.com')).toBe('example.com/?ref=newsletter')
+  })
+})
+
+describe('topLinks', () => {
+  it('keeps the three busiest, busiest first', () => {
+    const rows = [1, 9, 4, 7, 2].map((visitors) => ({ visitors }))
+    expect(topLinks(rows).map((r) => r.visitors)).toEqual([9, 7, 4])
   })
 })
