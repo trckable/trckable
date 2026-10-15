@@ -20,6 +20,9 @@
   font-size: 12px;
   line-height: 1.45;
   white-space: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
   animation: rise 0.14s var(--ease) backwards;
 }
 .tip.right {
