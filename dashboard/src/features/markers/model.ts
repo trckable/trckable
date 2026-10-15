@@ -12,8 +12,8 @@ export const TIMES = 3
 const RISE = 1.5
 /** The days before a day that say what is usual for it. */
 const WEEK = 7
-/** At most this many days of one source are marked: its biggest. */
-const PER_SOURCE = 3
+/** One day of a source is marked: its biggest, never one a day. */
+const PER_SOURCE = 1
 
 export interface Jump {
   /** 'source' for a known source, 'link' for a tagged link. */
@@ -84,8 +84,8 @@ export interface Mark {
 
 /** A marker is at most this wide in pixels, count included. */
 export const GAP = 66
-/** Most markers on one chart. */
-export const MAX = 6
+/** Most markers on one chart: only what explains something. */
+export const MAX = 3
 
 /** The biggest jumps first; any that would touch one already placed join it ("Hacker News +40" and "+2"). */
 export function cluster(placed: Placed[], x: (i: number) => number, edge: [number, number], max = MAX, gap = GAP): Mark[] {

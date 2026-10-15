@@ -52,16 +52,16 @@ function linksOf(site: string, from: string, to: string): Promise<Jump[]> {
   })
 }
 
-/** The source jumps and the link jumps of a period; each stays empty while its layer is off or its answer is on its way. */
+/** The source jumps and the link jumps of a period; empty while markers are off or the answer is on its way. */
 export function useJumps(site: string, from: string, to: string): { sources: Jump[]; links: Jump[] } {
   const on = useMarkers()
   const [found, setFound] = useState<{ key: string; sources: Jump[]; links: Jump[] } | null>(null)
-  const key = [site, from, to, on.sources, on.links].join('|')
+  const key = [site, from, to, on].join('|')
   useEffect(() => {
-    if (!on.sources && !on.links) return
+    if (!on) return
     let live = true
     const cancel = whenQuiet(() => {
-      void Promise.all([on.sources ? sourcesOf(site, from, to) : [], on.links ? linksOf(site, from, to) : []]).then(([sources, links]) => live && setFound({ key, sources, links }))
+      void Promise.all([sourcesOf(site, from, to), linksOf(site, from, to)]).then(([sources, links]) => live && setFound({ key, sources, links }))
     })
     return () => {
       live = false
@@ -69,5 +69,5 @@ export function useJumps(site: string, from: string, to: string): { sources: Jum
     }
   }, [key]) // eslint-disable-line react-hooks/exhaustive-deps -- keyed by content
   const mine = found && found.key === key ? found : null
-  return { sources: on.sources ? (mine?.sources ?? []) : [], links: on.links ? (mine?.links ?? []) : [] }
+  return { sources: on ? (mine?.sources ?? []) : [], links: on ? (mine?.links ?? []) : [] }
 }

@@ -2,12 +2,15 @@
 // Each is a duration for this period, written on the right; ↑ ↓ move, Enter picks.
 import { Check } from 'lucide-react'
 import { useEffect, useRef, type KeyboardEvent } from 'react'
+import { copy as markers } from '../features/markers/copy'
+import { setMarkers, useMarkers } from '../features/markers/settings'
 import { speedCopy } from '../features/overview/speedCopy'
 import { fmtSecs, replaySeconds, SPEEDS, speedOf } from '../features/overview/replayTime'
 import './MenuPop.css'
 import './sheet.css'
 
 export default function SpeedPop({ speed, points, onPick }: { speed: string; points: number; onPick: (id: string) => void }) {
+  const showing = useMarkers()
   const list = useRef<HTMLDivElement>(null)
   const rows = () => [...(list.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])]
   // The chosen speed has the focus on opening, so the arrows start from it.
@@ -48,6 +51,14 @@ export default function SpeedPop({ speed, points, onPick }: { speed: string; poi
             </button>
           )
         })}
+      </div>
+      <div className="menu-list markers-list">
+        <button type="button" role="menuitemcheckbox" aria-checked={showing} tabIndex={-1} className={'menu-row speed-row' + (showing ? ' on' : '')} onClick={() => setMarkers(!showing)}>
+          <span className="menu-title">{markers.show}</span>
+          <span className="speed-check" aria-hidden="true">
+            {showing && <Check size={15} strokeWidth={2.25} />}
+          </span>
+        </button>
       </div>
       <div className="menu-pop-head speed-keys faint" aria-hidden="true">
         {speedCopy.speedKeys}

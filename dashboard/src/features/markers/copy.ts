@@ -11,9 +11,6 @@ export const copy = defineCopy('markers', {
   sent: (name: string, visitors: number, day: string) => `${name} sent ${fmtInt(visitors)} ${visitors === 1 ? 'visitor' : 'visitors'} on ${day}`,
   alsoNear: (n: number) => `and ${n} more around then`,
   see: 'See these visitors',
-  close: 'Close',
   line: (day: string, name: string, added: number) => `Most of the ${day} jump came from ${name} (+${fmtInt(added)})`,
-  menu: 'Markers',
-  menuLabel: 'Markers on the charts',
-  layers: { sources: 'Sources', links: 'Links', goals: 'Goals', moments: 'Moments' },
+  show: 'Show markers',
 })

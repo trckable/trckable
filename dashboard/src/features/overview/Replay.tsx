@@ -9,7 +9,6 @@ import { loadReplay } from './replayLoad'
 
 // The speed shows only once the chart is pointed at: its own small chunk,
 // with a slot of its size meanwhile so nothing moves when it arrives.
-const MarkersMenu = lazy(() => import('../markers/MarkersMenu'))
 const SpeedMenu = lazy(() => import('../../components/SpeedMenu').then((m) => ({ default: m.SpeedMenu })))
 
 // Pointed at, pressed or focused: fetch what a replay needs, so it starts the moment the press lands.
@@ -23,9 +22,6 @@ export function ReplayButton(p: { playing: boolean; byDay: boolean; byHour?: boo
   else if (p.byHour) label = copy.replayByHour
   return (
     <span className="replay">
-      <Suspense fallback={null}>
-        <MarkersMenu />
-      </Suspense>
       <span className="replay-speed">
         <Suspense fallback={<span className="speed-slot" />}>
           <SpeedMenu speed={p.speed} points={p.points} onPick={p.onSpeed} />

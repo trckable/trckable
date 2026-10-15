@@ -18,9 +18,9 @@ describe('jumpDays', () => {
   it('keeps the day after a jump from marking again while it is still high', () => {
     expect(jumpDays(days(5), [0, 0, 50, 55, 60]).map((j) => j.day)).toEqual(['2026-10-03'])
   })
-  it('keeps the three biggest days of one source', () => {
+  it('keeps only the biggest day of one source', () => {
     const v = [0, 0, 10, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 40]
-    expect(jumpDays(days(26), v).map((j) => j.added)).toEqual([40, 30, 19])
+    expect(jumpDays(days(26), v).map((j) => j.added)).toEqual([40])
   })
 })
 
@@ -54,9 +54,9 @@ describe('place and cluster', () => {
     const marks = cluster(placed, x, [0, 400])
     expect(marks.map((m) => [m.jump.id, m.more.length])).toEqual([['ph', 1], ['x', 0]])
   })
-  it('shows at most six', () => {
+  it('shows at most three', () => {
     const many = Array.from({ length: 9 }, (_, i) => jump({ day: `2026-10-0${i + 1}`, added: 10 + i }))
-    expect(cluster(place(many, labels, 'day'), (i) => i * 100, [0, 2000])).toHaveLength(6)
+    expect(cluster(place(many, labels, 'day'), (i) => i * 100, [0, 2000])).toHaveLength(3)
   })
 })
 

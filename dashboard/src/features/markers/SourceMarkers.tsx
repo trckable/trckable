@@ -10,9 +10,10 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { Bucket, Site } from '../../lib/api'
 import { fmtDay } from '../../lib/dates'
 import { readView, setView } from '../../lib/url'
+import { LANE_H } from '../../charts/plot'
 import type { ChartGeo } from '../moments/marks'
 import { copy } from './copy'
-import { cluster, place, type Jump } from './model'
+import { biggest, cluster, place, type Jump } from './model'
 import { useJumps } from './useJumps'
 import './markers.css'
 
@@ -34,6 +35,8 @@ export interface SourceMarkersProps {
   from: string
   to: string
   labels: string[]
+  /** The chart's visitors per bucket: what says whether a source explains a day's rise. */
+  visitors: number[]
   bucket: Bucket
   /** Opens Explore with the filter (the day-by-day chart is in Story). */
   explore?: boolean
@@ -43,6 +46,7 @@ export default function SourceMarkers(p: SourceMarkersProps) {
   const { g } = p
   const { sources, links } = useJumps(p.site.id, p.from, p.to)
   const marks = useMemo(() => cluster(place([...sources, ...links], p.labels, p.bucket), g.x, [g.x(0) + 12, g.w - 30]), [sources, links, p.labels, p.bucket, g.w]) // eslint-disable-line react-hooks/exhaustive-deps -- g.x changes with the width, which is listed
+  const lead = useMemo(() => biggest(sources, p.labels, p.visitors), [sources, p.labels, p.visitors])
   const [hover, setHover] = useState<number | null>(null)
   const [open, setOpen] = useState<number | null>(null)
   const root = useRef<HTMLDivElement>(null)
@@ -58,8 +62,9 @@ export default function SourceMarkers(p: SourceMarkersProps) {
       document.removeEventListener('keydown', esc)
     }
   }, [open])
-  if (!marks.length) return null
-  const top = g.y(0) - RISE
+  if (!marks.length && !lead) return null
+  // Its own row: under the moments' lane and over the mentions' pins, so none touches another.
+  const top = Math.max(LANE_H + 40, g.y(0) - RISE)
   const see = (j: Jump) => {
     const view = readView(new URLSearchParams(location.search))
     setView({ filters: [...view.filters.filter((f) => f.dim !== j.filter.dim), j.filter], day: undefined, ...(p.explore ? { v: 'explore' as const } : {}) })
@@ -70,6 +75,11 @@ export default function SourceMarkers(p: SourceMarkersProps) {
   const left = (m: { at: number }) => Math.max(4, Math.min(m.at - POP_W / 2, g.w - POP_W - 4))
   return (
     <div ref={root} role="group" aria-label={copy.group} className="sm-marks">
+      {lead && (
+        <p className="sm-line" style={{ left: g.x(0) + 4, top: LANE_H + 2, maxWidth: g.w - g.x(0) - 12 }}>
+          {copy.line(fmtDay(lead.day), lead.name, lead.added)}
+        </p>
+      )}
       {marks.map((m) => (
         <button
           key={m.i}

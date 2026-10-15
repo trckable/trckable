@@ -67,6 +67,12 @@
   width: 16px;
   color: var(--accent);
 }
+/* The markers' switch is the speed list's last row, set off by a hairline. */
+.markers-list {
+  margin-top: 2px;
+  border-top: 1px solid var(--border);
+  padding-top: 2px;
+}
 .speed-keys {
   justify-content: center;
   margin-top: 2px;

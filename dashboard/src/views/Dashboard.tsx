@@ -27,7 +27,6 @@ import { momentLayer } from '../features/moments/slots'
 import { KpiStrip } from '../features/overview/KpiStrip'
 import { visitorsHint } from '../features/overview/visitorsHint'
 import { ChartHead } from '../features/overview/ChartHead'
-import { HeadLine } from '../features/markers/HeadLine'
 import { ReplayButton, ScrubBar } from '../features/overview/Replay'
 import { useReplayTimer, useSpeed } from '../features/overview/useReplay'
 import { useRaceNow, useRaceRows } from '../features/overview/useRace'
@@ -531,7 +530,10 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         <ChartHead title={name}>
           {(canScrub || canReplayByDay) && (
             <ReplayButton
-              playing={playing} byDay={!canScrub} byHour={!!hours} speed={speed} points={canScrub ? replayPoints : diffDays(range.from, range.to) + 1}
+              playing={playing}
+              byDay={!canScrub}
+              byHour={!!hours}
+              speed={speed} points={canScrub ? replayPoints : diffDays(range.from, range.to) + 1}
               onSpeed={pickSpeed}
               onPlay={() => {
                 if (!playing) setStory('on')
@@ -543,7 +545,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
             />
           )}
         </ChartHead>
-        <HeadLine off={isShared() || telling || !!hours} site={site.id} from={query.from} to={query.to} series={chartSeries} />
         {/* Until a short span's hours, or the notes that may move a new
             site's start, arrive: never one chart first, then a jump. */}
         {firstLoad || (byHour && !hours) ? (
