@@ -37,9 +37,11 @@ test('the Sources card has a Mentions tab, and the chart marks each day with a d
   const tip = page.getByRole('tooltip')
   await expect(tip).toContainText('visitors')
   await expect(tip.locator('.mention-mark')).toHaveCount(1)
+  await expect(dot.locator('.mention-mark')).toHaveAttribute('data-source', /hn|ph|news/)
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-dot-dark-1440.png`, clip: { x: 0, y: 150, width: 1440, height: 500 } })
 
   const sources = page.locator('#cards').getByRole('tabpanel', { name: 'Sources' })
+  await expect(sources.getByRole('tab', { name: /^Mentions \d+$/ })).toBeVisible() // the count rides on the tab
   await sources.getByRole('tab', { name: 'Mentions' }).click()
   await expect(sources.getByRole('link', { name: /Show HN: Acme Metrics/ })).toHaveAttribute('href', 'https://news.ycombinator.com/item?id=41000001')
   await expect(sources.getByRole('link', { name: /Show HN: Acme Metrics/ })).toHaveAttribute('rel', /noopener/)
@@ -67,7 +69,8 @@ test('several mentions on one day are one dot with a count; a click keeps the li
   await page.goto(`${API}/${HISTORY_DOMAIN}?period=7d`)
   const dot = page.locator('.mp-pin.many')
   await expect(dot).toBeVisible({ timeout: 20_000 })
-  await expect(dot.locator('.mp-dot')).toHaveText('2')
+  await expect(dot.locator('.mention-mark')).toBeVisible() // the source's own mark, with the count beside it
+  await expect(dot.locator('.mp-n')).toHaveText('2')
   await dot.click()
   const list = page.getByRole('tooltip')
   await expect(list.getByRole('link')).toHaveCount(2)
@@ -93,6 +96,46 @@ test('several mentions on one day are one dot with a count; a click keeps the li
       await around(`dots-${scheme}-390`, 390)
     }
   }
+})
+
+test('the chart header says how many, lights the markers, and opens the Mentions tab; a phone gets a sheet', async ({ page }) => {
+  test.slow()
+  await page.context().addCookies([{ name: 'trckable_session', value: await session('mentions'), url: API }])
+  const recent = mentions.map((m, i) => ({ ...m, posted_at: NOW - (i + 1) * 86400 }))
+  await page.route('**/api/v1/sites/*/mentions?*', (r) => r.fulfill({ json: answer(recent) }))
+  await page.route('**/api/v1/sites', async (r) => {
+    const res = await r.fetch()
+    const body = (await res.json()) as { sites: { mentions?: boolean }[] }
+    body.sites.forEach((s) => (s.mentions = true))
+    await r.fulfill({ response: res, json: body })
+  })
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.goto(`${API}/${HISTORY_DOMAIN}?period=7d`)
+  const chip = page.locator('.mp-chip')
+  await expect(chip).toContainText('Mentions · 3', { timeout: 20_000 })
+  await chip.hover()
+  await expect(page.locator('.mp-pin.lit').first()).toBeVisible()
+  const shoot = async (name: string) => {
+    if (!SHOTS) return
+    for (const scheme of ['dark', 'light'] as const) {
+      await page.emulateMedia({ colorScheme: scheme })
+      await page.screenshot({ path: `${SHOTS}/mentions2-${name}-${scheme}.png`, clip: { x: 0, y: 120, width: page.viewportSize()!.width, height: 460 } })
+    }
+  }
+  await shoot('1440')
+  await chip.click()
+  const panel = page.locator('#cards').getByRole('tabpanel', { name: 'Sources' })
+  await expect(panel.getByRole('tab', { name: 'Mentions 3', selected: true })).toBeVisible()
+  await expect(panel.locator('.ml-row')).toHaveCount(3)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.evaluate(() => scrollTo(0, 0))
+  await expect(chip).toBeVisible()
+  await expect(page.locator('#cards').getByRole('tab', { name: /^Mentions/ })).toHaveCount(0)
+  await shoot('390')
+  await chip.click()
+  await expect(page.locator('.pop.anchored .ml-row')).toHaveCount(3)
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions2-390-sheet-dark.png` })
 })
 
 test('a phone has the dots only; with nothing found the tab says so in one line', async ({ page }) => {

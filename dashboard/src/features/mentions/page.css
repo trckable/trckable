@@ -512,29 +512,67 @@
   position: absolute;
   z-index: 3;
   display: grid;
-  padding: 0;
+  padding: 4px;
+  margin-top: -4px;
   border: 0;
   background: none;
   transform: translateX(-50%);
   cursor: pointer;
 }
-.mp-dot {
-  display: grid;
-  place-items: center;
-  min-width: 10px;
-  height: 10px;
+.mp-pin .mention-mark {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.mp-pin.lit .mention-mark {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+}
+.mp-n {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 14px;
   padding: 0 3px;
   border-radius: 999px;
   background: var(--accent);
   box-shadow: 0 0 0 2px var(--surface);
   color: var(--accent-ink);
   font-size: 10px;
+  font-style: normal;
   font-weight: 700;
-  line-height: 1;
+  line-height: 14px;
+  text-align: center;
 }
-.mp-pin.many .mp-dot {
-  min-width: 16px;
-  height: 16px;
+.mp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mp-chip:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.mp-chip .mention-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+}
+@media (max-width: 640px) {
+  .mp-chip {
+    min-height: 44px;
+  }
 }
 .mp-tip {
   position: absolute;

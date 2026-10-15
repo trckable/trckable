@@ -7,6 +7,9 @@ import { count } from '../../i18n/helpers'
 
 export const copy = defineCopy('mentions', {
   title: 'Mentions',
+  chipCount: (n: number) => `Mentions · ${n}`,
+  tabCount: (n: number) => `Mentions ${n}`,
+  jumpTag: (name: string, n: number) => `${name} mention · +${n}`,
   name: { hn: 'Hacker News', ph: 'Product Hunt', news: 'News & blogs' },
   posted: { hn: 'posted on Hacker News', ph: 'launched on Product Hunt', news: 'written about in the news' },
   postedHead: { hn: 'Posted on Hacker News', ph: 'Launched on Product Hunt', news: 'Written about in the news' },

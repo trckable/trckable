@@ -2551,6 +2551,9 @@ export default {
   'footerMore.dialog.thanks': 'Bedankt, het is verstuurd',
   // mentions
   'mentions.title': 'Vermeldingen',
+  'mentions.chipCount': (n: number) => `Vermeldingen · ${n}`,
+  'mentions.tabCount': (n: number) => `Vermeldingen ${n}`,
+  'mentions.jumpTag': (name: string, n: number) => `Vermelding op ${name} · +${n}`,
   'mentions.name.hn': 'Hacker News',
   'mentions.name.ph': 'Product Hunt',
   'mentions.name.news': 'Nieuws en blogs',

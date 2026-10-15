@@ -2551,6 +2551,9 @@ export default {
   'footerMore.dialog.thanks': 'Grazie, è stato inviato',
   // mentions
   'mentions.title': 'Menzioni',
+  'mentions.chipCount': (n: number) => `Menzioni · ${n}`,
+  'mentions.tabCount': (n: number) => `Menzioni ${n}`,
+  'mentions.jumpTag': (name: string, n: number) => `Menzione su ${name} · +${n}`,
   'mentions.name.hn': 'Hacker News',
   'mentions.name.ph': 'Product Hunt',
   'mentions.name.news': 'Notizie e blog',

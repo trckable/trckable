@@ -526,7 +526,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       />
 
       <div className={active ? 'overview-chart replaying' : 'overview-chart'} role="group" aria-label={`${name} over time`}>
-        <ChartHead title={name}>
+        <ChartHead title={name} mentions={!isShared() && !!site.mentions && !firstLoad ? { site, labels: chartSeries.map((p) => p.t), from: range.from, to: range.to } : undefined}>
           {(canScrub || canReplayByDay) && (
             <ReplayButton
               playing={playing}

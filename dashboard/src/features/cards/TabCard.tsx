@@ -9,7 +9,8 @@ export interface CardTab extends TabItem {
   render: () => ReactNode
 }
 
-const EVENT = 'trckable:tab'
+export const TAB_EVENT = 'trckable:tab'
+const EVENT = TAB_EVENT
 
 /** Opens a tab of a card from anywhere (a guide card's action): the card that has it switches. */
 export const openTab = (card: string, tab: string) => window.dispatchEvent(new CustomEvent(EVENT, { detail: { card, tab } }))

@@ -8,6 +8,7 @@ import { Donut } from '../../charts/Donut'
 import { Skeleton } from '../../components/skeleton/Skeleton'
 import { useNarrow } from '../../lib/useNarrow'
 import { copy as mentionsCopy } from '../mentions/copy'
+import { useMentions } from '../mentions/useMentions'
 import { fmtCompact } from '../../lib/format'
 import type { Row } from '../../lib/api'
 import { shows } from '../../lib/modules'
@@ -35,7 +36,9 @@ export function SourcesPanel({ c }: { c: CardsCtx }) {
     { id: 'campaign', label: cardCopy.campaigns },
   ]
   const mentions = !c.shared && !narrow
-  if (mentions) tabs.push({ id: 'mentions', label: mentionsCopy.title })
+  const found = useMentions(c.site.id, '30d', 0, mentions && !!c.site.mentions)
+  const n = found.state === 'ready' ? found.data.mentions.length : 0
+  if (mentions) tabs.push({ id: 'mentions', label: n > 0 ? mentionsCopy.tabCount(n) : mentionsCopy.title })
   const render = (dim: string) => (dim === 'mentions' ? <Suspense fallback={<Skeleton height={164} />}><MentionList site={c.site} /></Suspense> : <SourceBars c={c} dim={dim} />)
   return <SubPanel id="src" label={cardCopy.sources} tabs={tabs} c={c} render={render} foot={cardCopy.sharesFoot} noFoot={(dim) => dim === 'mentions'} />
 }

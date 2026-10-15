@@ -7,25 +7,18 @@ import type { Bucket, Site } from '../../lib/api'
 import { useNow } from '../incidents/useIncidents'
 import { bucketFor } from '../incidents/IncidentMarks'
 import type { ChartGeo } from '../moments/marks'
-import type { Mention, Period } from './api'
+import type { Mention } from './api'
 import { copy } from './copy'
 import { page } from './pageCopy'
 import { safeURL } from './model'
+import { periodFor } from './periodFor'
 import { SourceMark } from './SourceMark'
+import { useLit } from './lit'
 import { useMentions } from './useMentions'
 import './page.css'
 
 const TIP_W = 300
-const DAY = 86400
 const LISTED = 4
-
-/** The shortest period the server offers that reaches back to the chart's first day. */
-function periodFor(labels: string[], now: number): Period {
-  const days = labels.length ? (now - Date.parse(labels[0].slice(0, 10)) / 1000) / DAY : 0
-  if (days <= 30) return '30d'
-  return days <= 90 ? '90d' : '1y'
-}
-
 const titleOf = (m: Mention) => m.title || copy.name[m.source]
 
 /** The mentions of one bucket, as rows: source mark, title (cut short), visitors. */
@@ -70,6 +63,7 @@ export default function MentionMarks({ g, site, labels, bucket }: { g: ChartGeo;
     }
     return [...by].sort((a, b) => a[0] - b[0])
   }, [got, labels, bucket, site.timezone])
+  const lit = useLit()
   const [shown, setShown] = useState<number | null>(null)
   const [kept, setKept] = useState<number | null>(null)
   const id = useId()
@@ -98,7 +92,7 @@ export default function MentionMarks({ g, site, labels, bucket }: { g: ChartGeo;
         <button
           key={i}
           type="button"
-          className={'mp-pin' + (list.length > 1 ? ' many' : '')}
+          className={'mp-pin' + (list.length > 1 ? ' many' : '') + (lit ? ' lit' : '')}
           style={{ left: `clamp(11px, ${g.x(i)}px, calc(100% - 11px))`, top }}
           aria-label={list.length > 1 ? page.pinMany(list.length) : page.pin(titleOf(list[0]), list[0].visitors)}
           aria-describedby={at?.[0] === i ? id : undefined}
@@ -109,9 +103,12 @@ export default function MentionMarks({ g, site, labels, bucket }: { g: ChartGeo;
           onBlur={() => setShown(null)}
           onClick={() => click(i, list)}
         >
-          <span className="mp-dot num" aria-hidden="true">
-            {list.length > 1 ? list.length : ''}
-          </span>
+          <SourceMark source={list[0].source} />
+          {list.length > 1 && (
+            <i className="mp-n num" aria-hidden="true">
+              {list.length}
+            </i>
+          )}
         </button>
       ))}
       {at && (
