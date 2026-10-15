@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- Info tips stay inside their panel: a tip near the edge of a table or a sheet slides back in instead of being cut off.
 - Cards and alert emails can hand a question to an add-on: a card raises a `trckable:ask-about` window event, alert mails can carry an optional link, and the footer loads lazily. Nothing changes on a plain install.
 
 ## 0.7.22 (14 Oct 2026)
