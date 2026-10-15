@@ -71,7 +71,9 @@ test('no tagged visit: a slim sample line, and it can be put away', async ({ pag
   await expect(hint).toHaveCount(0)
   await page.reload()
   await page.locator('.overview').waitFor({ timeout: 30_000 })
-  await down(page)
+  // Nothing is left on the page to scroll to once the hint is put away (the
+  // marker goes as soon as the answer is in), so go to the foot of the page.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
   await page.waitForTimeout(1500)
   await expect(page.locator('section.yc-hint')).toHaveCount(0)
 })
