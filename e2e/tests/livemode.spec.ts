@@ -140,6 +140,14 @@ test('on a phone the panels stack and the list scrolls inside', async ({ page })
   expect(await live.locator('.live-feed').evaluate((el) => getComputedStyle(el).overflowY)).toBe('auto')
 })
 
+// Firefox lays a button's text out a hair (under a pixel) differently from one
+// frame to the next: "does not move" means by less than a pixel.
+type Box = { x: number; y: number; width: number; height: number } | null
+function expectSamePlace(now: Box, was: Box) {
+  expect(now && was).toBeTruthy()
+  for (const k of ['x', 'y', 'width', 'height'] as const) expect(Math.abs(now![k] - was![k])).toBeLessThan(1)
+}
+
 // Switching is one movement, not two pages: Live's code is fetched on hover,
 // so no placeholder ever shows; the top bar does not move; Live opens at the
 // top and Data comes back scrolled where it was left.
@@ -160,7 +168,7 @@ test('switching both ways: no blank frame, no shift, scroll kept', async ({ page
   await chunk
   const top = await view.boundingBox()
   const y = await page.evaluate(() => {
-    window.scrollTo(0, Math.min(400, document.documentElement.scrollHeight - innerHeight))
+    window.scrollTo(0, Math.min(300, document.documentElement.scrollHeight - innerHeight))
     return scrollY
   })
 
@@ -170,13 +178,13 @@ test('switching both ways: no blank frame, no shift, scroll kept', async ({ page
   await expect(page).toHaveURL(/[?&]view=live/)
   expect(await page.evaluate(() => scrollY)).toBe(0)
   await page.evaluate(() => window.scrollTo(0, 0))
-  expect(await view.boundingBox()).toEqual(top)
+  expectSamePlace(await view.boundingBox(), top)
 
   await view.getByRole('button', { name: 'Data' }).click()
   await expect(page.locator('.range-picker')).toBeVisible()
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(y)
   await page.evaluate(() => window.scrollTo(0, 0))
-  expect(await view.boundingBox()).toEqual(top)
+  expectSamePlace(await view.boundingBox(), top)
   expect(await page.evaluate(() => (window as unknown as { blanks: number }).blanks)).toBe(0)
 })
 
