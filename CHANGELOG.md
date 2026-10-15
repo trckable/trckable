@@ -9,7 +9,12 @@ section into the release.
 
 ## Unreleased
 
+- Info tips stay inside their panel: a tip near the edge of a table or a sheet slides back in instead of being cut off.
+- Cards and alert emails can hand a question to an add-on: a card raises a `trckable:ask-about` window event, alert mails can carry an optional link, and the footer loads lazily. Nothing changes on a plain install.
 - Mentions looks lighter: the card on the dashboard now sits right under the chart, with each mention as a small tile; the page shows every mention as a card (place, time, title, author, the visitors it brought big, with their curve), and with nothing found yet it is a calm "No mentions yet" card with a live "Watching" dot, your words as chips with a + chip to add one, the places we look as logo tiles, and a faded sample card. Explanations moved into tooltips.
+
+## 0.7.22 (14 Oct 2026)
+
 - Your links, in the ⋯ menu: every link you shared with a ?ref= tag or a utm_source as one row, with a bar for its visitors, the visitors who reached a goal, the revenue credited to it, a 30-day line and when it last brought someone, for the dashboard's period. A tag and the site it names count as one row. A tap on a row opens the dashboard for that link alone. Before the first tagged visit it offers a sample link to copy.
 
 ## 0.7.21 (14 Oct 2026)

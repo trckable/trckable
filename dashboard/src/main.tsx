@@ -4,7 +4,6 @@ import { createRoot } from "react-dom/client";
 import { Ghost } from "./components/Logo";
 import { Loading } from "./components/loading/Loading";
 import { logoInner } from "./brand/logo";
-import { Footer } from "./components/Footer";
 import { api, setUnauthorizedHandler, type Site } from "./lib/api"; import { startEarly, takeEarly } from "./lib/earlyStart";
 import { navigate, useLocation } from "./lib/url"; import "./lib/legacyPaths";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
@@ -25,6 +24,7 @@ import { NoneShared, useGate } from "./features/onboarding/Gate";
 const Setup = lazy(() => import("./views/Auth").then((m) => ({ default: m.Setup })));
 const Login = lazy(() => import("./views/Auth").then((m) => ({ default: m.Login })));
 const FirstPassword = lazy(() => import("./views/FirstPassword").then((m) => ({ default: m.FirstPassword })));
+const Footer = lazy(() => import("./components/Footer").then((m) => ({ default: m.Footer })));
 const UpdateDialog = lazy(() => import("./components/UpdateDialog"));
 // Only people with more than one site open it, so it loads when asked.
 const AllSites = lazy(() => import("./views/AllSites").then((m) => ({ default: m.AllSites })));
@@ -210,7 +210,7 @@ function App() {
   return (
     <div className="app">
       {page}
-      <Footer version={boot.version} newer={latest?.v} onNewer={() => setShowUpdate(true)} site={site?.id} />
+      <Suspense fallback={null}><Footer version={boot.version} newer={latest?.v} onNewer={() => setShowUpdate(true)} site={site?.id} /></Suspense>
       {showUpdate && latest && boot.version && (
         <Suspense fallback={null}>
           <UpdateDialog latest={latest} current={boot.version} onClose={() => setShowUpdate(false)} />

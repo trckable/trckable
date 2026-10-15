@@ -2,6 +2,7 @@
 // Decoration for a list beside it, which carries the same numbers.
 import type { ReactNode } from 'react'
 import { donutArcs } from './donutModel'
+import './Donut.css'
 
 const R = 15.9155 // a circumference of 100
 const WIDTH = 5

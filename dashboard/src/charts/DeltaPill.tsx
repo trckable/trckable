@@ -1,6 +1,7 @@
 // ▲ 12% or ▼ 8% against the period before; nothing when there is nothing to compare with.
 import { moveOf } from './change'
 import { kitCopy } from './copy'
+import './BarList.css'
 
 export function DeltaPill({ now, was }: { now: number; was: number | undefined }) {
   const m = moveOf(now, was)

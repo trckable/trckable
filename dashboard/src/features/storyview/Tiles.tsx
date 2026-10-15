@@ -3,7 +3,9 @@
 // no revenue counted the fourth is a progress card with a Connect chip.
 import { Clock, LogOut, Users, Wallet, type LucideIcon } from 'lucide-react'
 import { ShortName } from '../../kit/ShortName'
+import { AskAbout } from '../../components/Ask'
 import { Card, kitWords, MetricArea, TipText, type Tone as KitTone } from '../../kit'
+import { aboutTile } from './aboutTile'
 import { copy } from './copy'
 import { brief, type Tile, type Tone } from './rules'
 import type { TileSeries } from './tileSeries'
@@ -47,7 +49,7 @@ export function Tiles({ tiles, series, onConnect }: { tiles: Tile[]; series: Til
             </button>
           </Card>
         ) : (
-          <MetricArea key={t.key} className="sv-tile" icon={icon} label={nameOf(t)} value={t.value} pill={pillOf(t)} status={<Status t={t} />} tone={KIT[t.tone]} color={COLOR[t.key]} series={series[t.key]} />
+          <MetricArea key={t.key} className="sv-tile" icon={icon} label={nameOf(t)} value={t.value} pill={pillOf(t)} status={<Status t={t} />} tone={KIT[t.tone]} color={COLOR[t.key]} series={series[t.key]} aside={<AskAbout about={aboutTile(t)} />} />
         )
       })}
     </section>
