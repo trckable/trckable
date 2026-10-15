@@ -1,6 +1,7 @@
 // Every incident of a site, newest first, fifty at a time. An owner can write
 // a short note on one ("Hosting migration"); a viewer only reads.
 import { useState } from 'react'
+import { AskAbout } from '../../components/Ask'
 import { isViewer } from '../../lib/me'
 import { fmtInt } from '../../lib/format'
 import { when } from '../sitestatus/time'
@@ -53,13 +54,14 @@ function Note({ site, x, onSaved }: { site: string; x: Incident; onSaved: (x: In
 /** What the checks saw of a quiet spell: the page is only said to have answered when a look after the last visit found it so. */
 const seenOf = (x: Incident) => (x.cause.endsWith('page answered') ? `${copy.seenQuiet} ${copy.seenAnswered}` : copy.seenQuiet)
 
-function Row({ x, now, onSaved }: { x: Incident; now: number; onSaved: (x: Incident) => void }) {
+function Row({ x, now, domain, onSaved }: { x: Incident; now: number; domain?: string; onSaved: (x: Incident) => void }) {
   const kind = x.kind === 'down' ? copy.down : copy.quiet
   const span = duration(lasted(x, now))
   return (
     <li className={'inc-row ' + x.kind}>
       <div className="inc-row-head">
         <b>{(x.ended_at ? copy.row : copy.rowOpen)(kind, span)}</b>
+        <AskAbout about={{ title: (x.ended_at ? copy.row : copy.rowOpen)(kind, span), domain, facts: [x.ended_at ? copy.from(when(x.started_at), when(x.ended_at)) : copy.ongoing(when(x.started_at)), x.kind === 'down' ? x.cause : seenOf(x)], question: copy.askWhat(kind) }} />
         <span className="muted">{x.ended_at ? copy.from(when(x.started_at), when(x.ended_at)) : copy.ongoing(when(x.started_at))}</span>
         {x.expected_visits !== null && <span className="inc-lost">{copy.expected(fmtInt(x.expected_visits))}</span>}
       </div>
@@ -71,14 +73,14 @@ function Row({ x, now, onSaved }: { x: Incident; now: number; onSaved: (x: Incid
   )
 }
 
-export function IncidentList({ list, next, busy, failed, now, more, edit }: { list: Incident[]; next: number | null; busy: boolean; failed: boolean; now: number; more: () => void; edit: (x: Incident) => void }) {
+export function IncidentList({ domain, list, next, busy, failed, now, more, edit }: { domain?: string; list: Incident[]; next: number | null; busy: boolean; failed: boolean; now: number; more: () => void; edit: (x: Incident) => void }) {
   return (
     <section aria-label={copy.list}>
       <h2>{copy.list}</h2>
       {failed && <p className="muted" role="alert">{copy.failed}</p>}
       <ul className="inc-rows">
         {list.map((x) => (
-          <Row key={x.id} x={x} now={now} onSaved={edit} />
+          <Row key={x.id} x={x} now={now} domain={domain} onSaved={edit} />
         ))}
       </ul>
       {next !== null && (

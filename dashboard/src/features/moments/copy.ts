@@ -23,6 +23,7 @@ export const copy = defineCopy('moments', {
     pays: 'Best payer',
   },
   // The figure's unit, when it happened and what the action says: the card is a deck of kinds.
+  ask: (title: string) => `What happened: ${title}?`,
   unit: { visitors: 'visitors', buying: 'buying', eachVisitor: 'a visitor' },
   ago: { today: 'today', yesterday: 'yesterday', days: (n: number) => `${n} days ago` },
   show: (day: string) => `Show ${day}`,
