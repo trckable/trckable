@@ -11,6 +11,7 @@ section into the release.
 
 - Info tips stay inside their panel: a tip near the edge of a table or a sheet slides back in instead of being cut off.
 - Cards and alert emails can hand a question to an add-on: a card raises a `trckable:ask-about` window event, alert mails can carry an optional link, and the footer loads lazily. Nothing changes on a plain install.
+- Chart hover tips stay fully inside their card: at the first or last minute of Live, and in every other chart, the tip moves to the side of the cursor that has room, or above it, and never covers the point you are on.
 
 ## 0.7.22 (14 Oct 2026)
 
