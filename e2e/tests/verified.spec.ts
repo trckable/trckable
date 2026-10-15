@@ -176,21 +176,31 @@ test('a shared link shows the seal for its readers, and money only on a link tha
 
 test('the website badge shows what works, and nothing while no source does', async ({ page }) => {
   await signIn(page)
-  const make = async (id: string) => {
-    const made = await page.request.post(`${API}/api/v1/sites/${id}/widgets`, { headers: H, data: { kind: 'verified', theme: 'dark', on: true } })
+  const make = async (id: string, shows: string[] = []) => {
+    const made = await page.request.post(`${API}/api/v1/sites/${id}/widgets`, { headers: H, data: { kind: 'verified', theme: 'dark', on: true, shows } })
     expect(made.ok(), await made.text()).toBe(true)
     const wid = ((await made.json()) as { id: string }).id
-    await page.request.put(`${API}/api/v1/sites/${id}/widgets/${wid}`, { headers: H, data: { kind: 'verified', theme: 'dark', on: true } })
+    await page.request.put(`${API}/api/v1/sites/${id}/widgets/${wid}`, { headers: H, data: { kind: 'verified', theme: 'dark', on: true, shows } })
     return wid
   }
-  // The real Stripe source, and the open link to lead to (never the one with money).
+  // The real Stripe source. With no choice the badge leads to trckable.com, and says "Payments verified", never the provider.
   const wid = await make(site.id)
   await page.setViewportSize({ width: WIDTH, height: 300 })
   await page.goto(`${API}/w/${wid}`)
   const card = page.locator('a.card')
   await expect(card).toContainText('Verified by trckable')
-  await expect(card).toHaveAttribute('href', openLink)
+  await expect(card).toHaveAttribute('href', 'https://trckable.com/?ref=verified')
   await expect(card.locator('i')).toHaveCount(1)
+  await expect(card.locator('i')).toHaveAttribute('aria-label', 'Payments verified')
+  // An open link the owner chose is followed; one with money in it never is.
+  const list = ((await (await page.request.get(`${API}/api/v1/sites/${site.id}/shares`, { headers: H })).json()) as { shares: { id: string; name: string }[] }).shares
+  const chosen = async (name: string) => {
+    await page.goto(`${API}/w/${await make(site.id, [`link:${list.find((x) => x.name === name)!.id}`])}`)
+    return page.locator('a.card').getAttribute('href')
+  }
+  expect(await chosen('open')).toBe(openLink)
+  expect(await chosen('with money')).toBe('https://trckable.com/?ref=verified')
+  await page.goto(`${API}/w/${wid}`)
   expect(await noSideScroll(page)).toBeLessThanOrEqual(0)
   await shoot(page, 'badge', { height: 120 })
 

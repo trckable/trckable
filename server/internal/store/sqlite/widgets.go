@@ -92,7 +92,27 @@ var widgetDefaults = map[string][]string{"live": {"bars", "countries"}, "revenue
 func HexColor(s string) bool { return hexColor.MatchString(s) }
 
 // WidgetPart says whether a design has a part.
-func WidgetPart(kind, part string) bool { return widgetParts[kind][part] }
+func WidgetPart(kind, part string) bool { return widgetParts[kind][part] || LinkPart(kind, part) }
+
+// LinkPrefix starts the part of a verified badge that names the share link it
+// leads to ("link:" and the link's id).
+const LinkPrefix = "link:"
+
+// LinkPart says whether part is a verified badge's choice of share link.
+func LinkPart(kind, part string) bool {
+	id, ok := strings.CutPrefix(part, LinkPrefix)
+	return kind == "verified" && ok && id != "" && len(id) <= 40 && strings.Trim(id, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-") == ""
+}
+
+// LinkOf is the share link a verified badge was set to lead to, or "".
+func (w Widget) LinkOf() string {
+	for _, p := range w.Shows {
+		if LinkPart(w.Kind, p) {
+			return strings.TrimPrefix(p, LinkPrefix)
+		}
+	}
+	return ""
+}
 
 // Has says whether the widget shows a part.
 func (w Widget) Has(part string) bool {
@@ -180,8 +200,14 @@ func (w *Widget) Clean() error {
 	var parts []string
 	seen := map[string]bool{}
 	for _, p := range w.Shows {
-		if !widgetParts[w.Kind][p] {
+		if !WidgetPart(w.Kind, p) {
 			return ErrBadWidget
+		}
+		if LinkPart(w.Kind, p) {
+			if seen[LinkPrefix] {
+				continue // one link
+			}
+			seen[LinkPrefix] = true
 		}
 		if !seen[p] {
 			seen[p] = true

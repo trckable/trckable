@@ -2660,4 +2660,6 @@ export default {
   'verified.searchConsole': 'Search Console',
   'verified.badge': (what: string) => `Verificato: ${what}`,
   'verified.seal': 'Verificato da trckable',
+  'badgelink.label': 'Il badge porta a',
+  'badgelink.home': 'trckable.com',
 } satisfies Messages

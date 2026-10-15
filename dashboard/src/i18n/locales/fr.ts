@@ -2661,4 +2661,6 @@ export default {
   'verified.searchConsole': 'Search Console',
   'verified.badge': (what: string) => `Vérifié : ${what}`,
   'verified.seal': 'Vérifié par trckable',
+  'badgelink.label': 'Le badge mène vers',
+  'badgelink.home': 'trckable.com',
 } satisfies Messages

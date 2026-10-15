@@ -181,7 +181,7 @@ func TestVerifiedAcrossTheAPI(t *testing.T) {
 	b, _ := io.ReadAll(res.Body)
 	res.Body.Close()
 	page := string(b)
-	if res.StatusCode != http.StatusOK || !strings.Contains(page, "Verified by trckable") || !strings.Contains(page, `href="`+made0(t, owner, base)+`"`) {
+	if res.StatusCode != http.StatusOK || !strings.Contains(page, "Verified by trckable") || !strings.Contains(page, `href="https://trckable.com/?ref=verified"`) || strings.Contains(page, "Stripe") {
 		t.Fatalf("badge: %d %s", res.StatusCode, page)
 	}
 
@@ -204,17 +204,77 @@ func TestVerifiedAcrossTheAPI(t *testing.T) {
 	}
 }
 
-// made0 is the address of the open (no money, no password) link, as the
-// badge writes it.
-func made0(t *testing.T, owner *http.Client, base string) string {
-	t.Helper()
-	_, out := do(t, owner, "GET", base+"/shares", "")
-	for _, s := range out["shares"].([]any) {
-		m := s.(map[string]any)
-		if m["name"] == "x" {
-			return m["url"].(string)
+// The badge leads to trckable.com unless the owner chose an open link, and
+// falls back the moment that link stops being open.
+func TestBadgeLinkFallsBack(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	ctx := context.Background()
+	now := g.api.Now()
+	_, _ = g.ctl.DB.ExecContext(ctx, `UPDATE sites SET last_event_at = ? WHERE id = ?`, now.Add(-time.Hour).Unix(), g.site)
+	_ = g.ctl.SetCheck(ctx, g.site, sqlite.SiteCheck{At: now.Add(-time.Hour).Unix(), Found: "site"})
+	base := g.srv.URL + "/api/v1/sites/" + g.site
+	const home = `href="https://trckable.com/?ref=verified"`
+
+	mk := func(body string) (id, url string) {
+		_, out := do(t, owner, "POST", base+"/shares", body, csrf, "1")
+		return out["share"].(map[string]any)["id"].(string), out["url"].(string)
+	}
+	openID, openURL := mk(`{"name":"open"}`)
+	passID, _ := mk(`{"name":"pw","password":"open sesame please"}`)
+	expID, _ := mk(`{"name":"exp","days":1}`)
+	revID, _ := mk(`{"name":"rev","revenue":true}`)
+	goneID, _ := mk(`{"name":"gone"}`)
+	_, _ = g.ctl.DB.ExecContext(ctx, `UPDATE site_shares SET expires_at = ? WHERE id = ?`, now.Add(-time.Hour).Unix(), expID)
+
+	badge := func(link string) string {
+		shows := "[]"
+		if link != "" {
+			shows = `["link:` + link + `"]`
+		}
+		code, w := do(t, owner, "POST", base+"/widgets", `{"kind":"verified","on":true,"shows":`+shows+`}`, csrf, "1")
+		if code != http.StatusCreated {
+			t.Fatalf("create with %q: %d %v", link, code, w)
+		}
+		do(t, owner, "PUT", base+"/widgets/"+w["id"].(string), `{"kind":"verified","on":true,"shows":`+shows+`}`, csrf, "1")
+		res, err := http.Get(g.srv.URL + "/w/" + w["id"].(string))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer res.Body.Close()
+		b, _ := io.ReadAll(res.Body)
+		do(t, owner, "DELETE", base+"/widgets/"+w["id"].(string), "", csrf, "1")
+		return string(b)
+	}
+	if p := badge(""); !strings.Contains(p, home) {
+		t.Fatalf("no choice: trckable.com: %s", p)
+	}
+	if p := badge(openID); !strings.Contains(p, `href="`+openURL+`"`) {
+		t.Fatalf("the chosen open link is used: %s", p)
+	}
+	for name, id := range map[string]string{"password": passID, "expired": expID, "revenue": revID} {
+		if p := badge(id); !strings.Contains(p, home) || strings.Contains(p, "/s/") {
+			t.Fatalf("a %s link falls back: %s", name, p)
 		}
 	}
-	t.Fatal("no open link")
-	return ""
+	if code, _ := do(t, owner, "DELETE", base+"/shares/"+goneID, "", csrf, "1"); code != http.StatusNoContent {
+		t.Fatalf("delete link: %d", code)
+	}
+	if p := badge(goneID); !strings.Contains(p, home) {
+		t.Fatalf("a deleted link falls back: %s", p)
+	}
+	// The open link gets a password later: the badge stops following it.
+	code, w := do(t, owner, "POST", base+"/widgets", `{"kind":"verified","on":true,"shows":["link:`+openID+`"]}`, csrf, "1")
+	if code != http.StatusCreated {
+		t.Fatal(code)
+	}
+	do(t, owner, "PUT", base+"/widgets/"+w["id"].(string), `{"kind":"verified","on":true,"shows":["link:`+openID+`"]}`, csrf, "1")
+	_, _ = g.ctl.DB.ExecContext(ctx, `UPDATE site_shares SET pass_hash = 'x' WHERE id = ?`, openID)
+	res, _ := http.Get(g.srv.URL + "/w/" + w["id"].(string))
+	b, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	if !strings.Contains(string(b), home) {
+		t.Fatalf("a link that later gets a password falls back: %s", b)
+	}
 }

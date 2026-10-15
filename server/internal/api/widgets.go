@@ -287,7 +287,7 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 
 	switch wd.Kind {
 	case "verified":
-		a.fillVerified(r, &view, si, words, public)
+		a.fillVerified(r, &view, si, wd, words, public)
 	case "privacy":
 		// Read from the site's own settings, now: a seal that cannot say more
 		// than the site does.
