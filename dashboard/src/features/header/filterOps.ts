@@ -15,6 +15,8 @@ export const filterOps = {
   pick: (dim: string, value: string) => setView({ filters: withValue(now(), dim, value), day: undefined }),
   dropValue: (f: Filter) => setView({ filters: withoutValue(now(), f.dim, f.value) }),
   dropSet: (set: FilterSet) => setView({ filters: withoutSet(now(), set) }),
+  /** From the domain switcher: one domain, or none for all. */
+  domain: (host: string | null) => setView({ filters: [...now().filter((f) => f.dim !== 'hostname'), ...(host ? [{ dim: 'hostname', value: host }] : [])], day: undefined }),
   flip: (set: FilterSet) => setView({ filters: flipped(now(), set) }),
 }
 
