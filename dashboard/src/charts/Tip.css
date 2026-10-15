@@ -47,6 +47,10 @@
 /* The other charts' hover card: the main chart's look (its corner, its glass,
    its shadow) at the size of a line or two. */
 .chart-tip.kit-tip {
+  /* Placed by Tip.tsx from its own size: the older centred .kit-tip rule
+     (translate -50%) must not move it again. */
+  transform: none;
+  min-width: 0;
   gap: 4px;
   padding: 8px 12px;
   border-radius: 12px;

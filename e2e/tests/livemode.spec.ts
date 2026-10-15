@@ -140,6 +140,14 @@ test('on a phone the panels stack and the list scrolls inside', async ({ page })
   expect(await live.locator('.live-feed').evaluate((el) => getComputedStyle(el).overflowY)).toBe('auto')
 })
 
+// Firefox lays a button's text out a hair (under a pixel) differently from one
+// frame to the next: "does not move" means by less than a pixel.
+type Box = { x: number; y: number; width: number; height: number } | null
+function expectSamePlace(now: Box, was: Box) {
+  expect(now && was).toBeTruthy()
+  for (const k of ['x', 'y', 'width', 'height'] as const) expect(Math.abs(now![k] - was![k])).toBeLessThan(1)
+}
+
 // Switching is one movement, not two pages: Live's code is fetched on hover,
 // so no placeholder ever shows; the top bar does not move; Live opens at the
 // top and Data comes back scrolled where it was left.
@@ -160,7 +168,7 @@ test('switching both ways: no blank frame, no shift, scroll kept', async ({ page
   await chunk
   const top = await view.boundingBox()
   const y = await page.evaluate(() => {
-    window.scrollTo(0, Math.min(400, document.documentElement.scrollHeight - innerHeight))
+    window.scrollTo(0, Math.min(300, document.documentElement.scrollHeight - innerHeight))
     return scrollY
   })
 
@@ -170,13 +178,13 @@ test('switching both ways: no blank frame, no shift, scroll kept', async ({ page
   await expect(page).toHaveURL(/[?&]view=live/)
   expect(await page.evaluate(() => scrollY)).toBe(0)
   await page.evaluate(() => window.scrollTo(0, 0))
-  expect(await view.boundingBox()).toEqual(top)
+  expectSamePlace(await view.boundingBox(), top)
 
   await view.getByRole('button', { name: 'Data' }).click()
   await expect(page.locator('.range-picker')).toBeVisible()
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(y)
   await page.evaluate(() => window.scrollTo(0, 0))
-  expect(await view.boundingBox()).toEqual(top)
+  expectSamePlace(await view.boundingBox(), top)
   expect(await page.evaluate(() => (window as unknown as { blanks: number }).blanks)).toBe(0)
 })
 
@@ -262,4 +270,23 @@ test('a site with visits opens in Live when the address has no mode, and Data st
   // ?view=live still says Live.
   await page.goto(`${API}/example.com?view=live`)
   await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
+})
+
+test('the minute chart tip stays inside the card at the first and the last minute', async ({ page }) => {
+  await visit(page, 'tip-edge')
+  await signIn(page, '/example.com?view=live')
+  const chart = page.getByRole('img', { name: /Pageviews per minute/ })
+  await expect(chart).toBeVisible({ timeout: 15_000 })
+  const box = (await chart.boundingBox())!
+  const tip = page.locator('.live-line .chart-tip')
+  for (const dx of [2, box.width - 2]) {
+    await page.mouse.move(box.x + dx, box.y + box.height / 2)
+    await expect(tip).toBeVisible()
+    // Measured once its entrance has settled: the place it stays in.
+    await expect.poll(() => tip.evaluate((el) => el.getAnimations().length)).toBe(0)
+    const t =(await tip.boundingBox())!
+    expect(t.x).toBeGreaterThanOrEqual(box.x - 0.5)
+    expect(t.x + t.width).toBeLessThanOrEqual(box.x + box.width + 0.5)
+    expect(t.y).toBeGreaterThanOrEqual(box.y - 0.5)
+  }
 })
