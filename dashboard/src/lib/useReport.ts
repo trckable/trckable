@@ -17,6 +17,8 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { li
   const [lastKey, setLastKey] = useState('')
   // A refetch asked for because something new arrived skips the 10 s cache.
   const fresh = useRef(false)
+  const reading = useRef<{ key: string; ctl: AbortController }>(undefined)
+  useEffect(() => () => reading.current?.ctl.abort(), [key])
 
   useEffect(() => {
     if (!site || !q) {
@@ -26,6 +28,9 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { li
     }
     let cancelled = false
     let retry: ReturnType<typeof setTimeout>
+    // One reader per site and period: leaving it cancels the read that is still on its way (below); asking again for the same one (a new visit) shares it.
+    if (reading.current?.key !== key || reading.current.ctl.signal.aborted) reading.current = { key, ctl: new AbortController() }
+    const { signal } = reading.current.ctl
     const load = () => {
       setLoading(true)
       const maxAge = fresh.current ? 0 : undefined
@@ -36,7 +41,7 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { li
         setData(seen)
         setError(null)
       }
-      cachedReport(site, q, maxAge)
+      cachedReport(site, q, maxAge, signal)
         .then((r) => {
           if (cancelled) return
           setLastKey(key)

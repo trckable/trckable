@@ -18,6 +18,14 @@ export const periodsCopy = defineCopy('range.periods', {
 export { PERIODS_FIRST } from './periodIds'
 export const PERIODS_MORE = ['12mo', 'wtd', 'mtd', 'lastmonth', 'ytd']
 
+/** The same four, short enough for a row of buttons. */
+export const CMP_SHORT: Record<CompareMode, string> = defineCopy('range.compareShort', {
+  none: 'Off',
+  previous: 'Before',
+  year: 'Last year',
+  custom: 'Custom',
+})
+
 export const BUCKET_LABEL: Record<Bucket, string> = defineCopy('range.bucket', { hour: 'Hourly', day: 'Daily', week: 'Weekly', month: 'Monthly' })
 
 export const calendarCopy = defineCopy('range.calendar', {

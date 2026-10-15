@@ -2,14 +2,16 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { copy } from './src/components/loading/copy'
 import { bootHtml } from './src/components/loading/markup'
+import { dashHtml } from './src/components/skeleton/dashMarkup'
 import { wordmarkFont } from './wordmarkFont'
 
-// The first paint, before any JavaScript, is the loading ghost rather than a
-// blank page: its markup goes straight into #root (React replaces it), and its
-// CSS is already in the render-blocking stylesheet, so no inline style needed.
+// The first paint, before any JavaScript, is never a blank page: the dashboard's own boxes where this
+// browser kept its site list (public/theme.js says so on <html>), the loading ghost anywhere else. The
+// markup goes straight into #root (React replaces it), and its CSS is already in the render-blocking
+// stylesheet, so no inline style needed.
 const bootGhost = {
   name: 'boot-ghost',
-  transformIndexHtml: (html: string) => html.replace('<div id="root"></div>', `<div id="root">${bootHtml(copy.boot)}</div>`),
+  transformIndexHtml: (html: string) => html.replace('<div id="root"></div>', `<div id="root"><div class="boot-ghost">${bootHtml(copy.boot)}</div>${dashHtml(copy.boot)}</div>`),
 }
 
 // The first load is one script and one stylesheet, and React beside them (it

@@ -1,0 +1,119 @@
+/* The foot of every page: a hairline, then one quiet line (two on a phone). No card, no logo.
+   Faint at rest (the grey is the AA one, so it stays readable), full on hover or focus. */
+.app-footer {
+  margin-top: auto; /* on a short page it stays at the bottom */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 22px;
+  padding: 14px 24px 18px;
+  border-top: 1px solid var(--border);
+  color: var(--text-4);
+  font-size: 12px;
+}
+.app-footer-start,
+.app-footer-end,
+.app-footer-keys,
+.app-footer-social {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+.app-footer-start {
+  flex-wrap: wrap;
+}
+.app-footer-end {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.app-footer-social {
+  gap: 14px;
+}
+.app-footer-keys {
+  gap: 14px;
+}
+.app-footer a,
+.app-footer button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.app-footer :is(a, button):hover,
+.app-footer :is(a, button):focus-visible {
+  color: var(--text);
+}
+.footer-key kbd {
+  padding: 1px 6px;
+  border: 1px solid var(--border-2);
+  border-radius: 5px;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.4;
+}
+span.footer-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.footer-status {
+  gap: 8px;
+  min-width: 0;
+}
+.footer-status span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.footer-status i,
+.footer-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.footer-status[data-status='late'] i {
+  background: var(--warn);
+}
+.footer-status[data-status='down'] i {
+  background: var(--down);
+}
+.footer-status[data-status='down'] span {
+  color: var(--down);
+}
+
+/* A phone: two quiet lines (how things are, then the links), every target a finger tall; the keys are for
+   a keyboard. Here and not in phone.css: this file loads with the foot, after it. */
+@media (max-width: 640px) {
+  .app-footer {
+    gap: 0 14px;
+    padding: 8px 0 calc(56px + 28px + 12px); /* clears the corner's round button */
+  }
+  .app-footer-keys {
+    display: none;
+  }
+  .app-footer-start,
+  .app-footer-end {
+    gap: 0 14px;
+  }
+  .app-footer-end {
+    justify-content: flex-start;
+  }
+  .app-footer-social {
+    gap: 0;
+  }
+  .app-footer :is(a, button) {
+    min-width: var(--ph-hit, 44px);
+    min-height: var(--ph-hit, 44px);
+    justify-content: center;
+  }
+}

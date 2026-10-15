@@ -11,6 +11,7 @@ export const bar = defineCopy('storyview.bar', {
     page: 'Which page carries you?',
     fix: 'What should I fix?',
     pays: 'Which source pays?',
+    link: 'Which link worked?',
     fine: 'Is it good or bad?',
   },
 })

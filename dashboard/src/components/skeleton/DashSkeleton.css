@@ -1,0 +1,349 @@
+/* The dashboard on its way (dashMarkup.ts): the real page's boxes as soft blocks. Every size is the
+   real part's (measured at 1440 and 390 wide), so nothing moves when the numbers land. It is in the
+   first stylesheet, so index.html can paint it before any script runs. <html data-boot> says which
+   shape shows (set by theme.js), data-ask whether Ask has its place in the header. */
+.dsk-root {
+  display: contents;
+}
+.dsk,
+.dsk-inline {
+  --dsk-fill: var(--sunken);
+  --dsk-shine: color-mix(in srgb, var(--border) 60%, var(--sunken));
+}
+.dsk {
+  display: none;
+  box-sizing: border-box;
+  max-width: 1440px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 24px 32px 0;
+  flex-direction: column;
+  gap: 16px;
+}
+html[data-boot='story'] .dsk-is-story,
+html[data-boot='live'] .dsk-is-live {
+  display: flex;
+}
+/* The ghost of the first paint steps aside for the page's own shape. */
+.boot-ghost {
+  display: contents;
+}
+html[data-boot] .boot-ghost {
+  display: none;
+}
+/* Every block: soft, with one slow shine across it (still under reduced motion). */
+.dsk i,
+.dsk-inline i {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(100deg, var(--dsk-fill) 30%, var(--dsk-shine) 50%, var(--dsk-fill) 70%) 0 0 / 300% 100%;
+  animation: skel-shimmer 1.6s ease-in-out infinite;
+}
+.dsk i.dsk-card,
+.dsk-inline i.dsk-card {
+  border-radius: 16px;
+}
+.dsk-grow {
+  flex: 1 1 0;
+}
+.dsk-phone-only {
+  display: none !important;
+}
+.dsk-header > *,
+.dsk-controls > i {
+  flex: none;
+}
+.dsk-header > .dsk-grow {
+  flex: 1 1 0;
+}
+
+/* The header: 48 px, the band's own place (it sits 8 px above the page's padding). */
+.dsk-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  margin-top: -8px;
+}
+.dsk-logo {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+}
+.dsk-site {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+.dsk-mark {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+.dsk-name {
+  min-width: 100px;
+  font-weight: 500;
+}
+/* The cached name, set on <html> by theme.js; the block stands until there is one. */
+.dsk-name::after {
+  content: var(--dsk-name, none);
+}
+html:not([style*='--dsk-name']) .dsk-name {
+  height: 12px;
+  border-radius: 6px;
+  background: var(--dsk-fill);
+}
+.dsk-switch {
+  width: 127px;
+  height: 36px;
+  margin-right: -8px;
+  border-radius: 999px !important;
+}
+.dsk-ask {
+  display: none !important;
+  width: 95px;
+  height: 36px;
+  margin-right: -8px;
+}
+html[data-ask] .dsk-ask {
+  display: block !important;
+}
+.dsk-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50% !important;
+}
+
+/* The control row: 56 px, the Story | Explore switch, the period, share and ⋯. */
+.dsk-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  margin-top: -8px;
+}
+.dsk-tabs {
+  width: 181px;
+  height: 36px;
+  border-radius: 999px !important;
+}
+.dsk-filter {
+  width: 66px;
+  height: 36px;
+}
+.dsk-period {
+  width: 234px;
+  height: 36px;
+  border-radius: 999px !important;
+}
+.dsk-btn {
+  width: 36px;
+  height: 36px;
+}
+
+/* Data's story: the headline, four tiles, the chart and the answers (the story's own 22 px rhythm). */
+.dsk-story-body {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+.dsk-setup {
+  display: none !important;
+}
+html[style*='--dsk-setup'] .dsk-setup {
+  display: block !important;
+  height: var(--dsk-setup);
+}
+.dsk-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: var(--dsk-head, 172px); /* the last headline's height at this width (theme.js), else two lines */
+  overflow: hidden;
+}
+.dsk-eyebrow {
+  width: 220px;
+  height: 14px;
+}
+.dsk-line {
+  width: min(92%, 1252px);
+  height: calc(clamp(24px, 3.4vw, 64px) * 1.14);
+}
+.dsk-line.short {
+  width: min(62%, 800px);
+  margin-top: -12px; /* the two lines are one heading */
+}
+.dsk-take {
+  width: min(50%, 643px);
+  height: 22px;
+}
+.dsk-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.dsk-tile {
+  height: var(--dsk-tile, 157px);
+}
+.dsk-chart {
+  height: var(--dsk-chart, 348px);
+}
+.dsk-answers {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.dsk-title {
+  width: 200px;
+  height: 21px;
+}
+.dsk-cards {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
+}
+.dsk-answer {
+  grid-column: span 4;
+  height: var(--dsk-a1, 207px);
+}
+.dsk-answer:nth-child(2) {
+  height: var(--dsk-a2, 207px);
+}
+.dsk-answer:nth-child(3) {
+  height: var(--dsk-a3, 227px);
+}
+.dsk-answer:nth-child(4) {
+  height: var(--dsk-a4, 227px);
+}
+.dsk-answer:nth-child(5) {
+  height: var(--dsk-a5, 227px);
+}
+.dsk-answer:nth-child(1) {
+  grid-column: span 7;
+}
+.dsk-answer:nth-child(2) {
+  grid-column: span 5;
+}
+
+/* Live: the big panel and the feed, as tall as Live makes them (features/live/Live.css), stacked when it stacks. */
+.dsk-live-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 16px;
+  height: max(460px, calc(100dvh - var(--live-chrome, 248px)));
+}
+.dsk-panel,
+.dsk-feed {
+  height: 100%;
+}
+
+@media (max-width: 960px) {
+  .dsk-live-body {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+  .dsk-panel {
+    height: 422px;
+  }
+  .dsk-feed {
+    height: 560px;
+  }
+}
+@media (max-width: 900px) {
+  .dsk-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dsk-tile {
+    height: var(--dsk-tile, 124px);
+  }
+  .dsk-answer {
+    grid-column: span 6;
+  }
+  .dsk-answer:nth-child(1),
+  .dsk-answer:nth-child(2),
+  .dsk-answer:nth-child(5) {
+    grid-column: span 12;
+  }
+}
+@media (max-width: 720px) {
+  .dsk {
+    padding: 12px 16px 32px;
+    gap: 12px;
+  }
+  .dsk-header {
+    height: 46px;
+  }
+  .dsk-switch {
+    display: none;
+  }
+  .dsk-tabs {
+    width: 199px;
+    height: 44px;
+  }
+  .dsk-filter,
+  .dsk-ask,
+  .dsk-avatar,
+  .dsk-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .dsk-period {
+    width: 51px;
+    height: 44px;
+  }
+  .dsk-btn + .dsk-btn {
+    display: none;
+  }
+  .dsk-controls {
+    gap: 4px;
+    height: 56px;
+    margin-top: -2px;
+  }
+  .dsk-phone-only {
+    display: flex !important;
+  }
+  .dsk-tabs.dsk-switch-only {
+    width: 105px;
+  }
+  .dsk-live-body {
+    gap: 14px;
+  }
+}
+@media (max-width: 640px) {
+  .dsk-answer {
+    grid-column: span 12 !important;
+  }
+  .dsk-answer:nth-child(1) {
+    height: var(--dsk-a1, 232px);
+  }
+  .dsk-answer:nth-child(2) {
+    height: var(--dsk-a2, 232px);
+  }
+  .dsk-answer:nth-child(3) {
+    height: var(--dsk-a3, 252px);
+  }
+  .dsk-answer:nth-child(4) {
+    height: var(--dsk-a4, 232px);
+  }
+  .dsk-answer:nth-child(5) {
+    height: var(--dsk-a5, 252px);
+  }
+  .dsk-chart {
+    height: var(--dsk-chart, 270px);
+  }
+  .dsk-head {
+    height: var(--dsk-head, 192px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dsk i,
+  .dsk-inline i {
+    animation: none;
+  }
+}

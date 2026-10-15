@@ -3,7 +3,7 @@
 // away instead of flashing a placeholder while the chunk arrives.
 import { lazy, Suspense, useState, type ComponentProps } from 'react'
 import type LiveViewType from './LiveView'
-import { Loading } from '../../components/loading/Loading'
+import { LiveSkeleton } from '../../components/skeleton/DashSkeleton'
 
 type LiveComponent = typeof LiveViewType
 
@@ -26,7 +26,7 @@ export function LiveSlot(props: ComponentProps<LiveComponent>) {
   if (Ready) return <Ready {...props} />
   return (
     // Live's own size while its code arrives, so nothing below jumps.
-    <Suspense fallback={<div className="live-wait"><Loading /></div>}>
+    <Suspense fallback={<LiveSkeleton />}>
       <LazyLive {...props} />
     </Suspense>
   )

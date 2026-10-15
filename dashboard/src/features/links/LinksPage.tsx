@@ -44,6 +44,7 @@ export default function LinksPage({ site, header }: { site: Site; header: ReactN
             </h1>
           </div>
           <DatePicker
+            noCompare
             value={picker}
             today={today}
             tz={site.timezone}

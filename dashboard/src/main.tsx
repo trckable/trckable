@@ -2,8 +2,8 @@ import { StrictMode, Suspense, lazy, useCallback, useEffect, useState } from "re
 import { loadKeymap } from "./lib/keys";
 import { createRoot } from "react-dom/client";
 import { Ghost } from "./components/Logo";
-import { Loading } from "./components/loading/Loading";
-import { logoInner } from "./brand/logo";
+import { Booting } from "./components/skeleton/DashSkeleton"; import { Loading } from "./components/loading/Loading";
+import { logoInner } from "./brand/logo"; import { useBootCache } from "./lib/bootCache";
 import { api, setUnauthorizedHandler, type Site } from "./lib/api"; import { startEarly, takeEarly } from "./lib/earlyStart";
 import { navigate, useLocation } from "./lib/url"; import "./lib/legacyPaths";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
@@ -75,7 +75,7 @@ function App() {
       });
     }
   }, []);
-
+  useBootCache(boot.state, boot.state === "ready" ? boot.sites : undefined); // what the next refresh paints first
   useEffect(() => {
     if (shared) return;
     setUnauthorizedHandler(() => setBoot({ state: "login" }));
@@ -129,7 +129,7 @@ function App() {
       </Suspense>
     );
 
-  if (boot.state === "loading") return <Loading size="page" />;
+  if (boot.state === "loading") return <Booting />;
   if (boot.state === "error")
     return (
       <Splash>
@@ -210,7 +210,7 @@ function App() {
   return (
     <div className="app">
       {page}
-      <Suspense fallback={null}><Footer version={boot.version} newer={latest?.v} onNewer={() => setShowUpdate(true)} site={site?.id} /></Suspense>
+      <Suspense fallback={null}><Footer version={boot.version} newer={latest?.v} onNewer={() => setShowUpdate(true)} site={site?.id} sites={boot.sites} /></Suspense>
       {showUpdate && latest && boot.version && (
         <Suspense fallback={null}>
           <UpdateDialog latest={latest} current={boot.version} onClose={() => setShowUpdate(false)} />

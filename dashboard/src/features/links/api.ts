@@ -24,6 +24,35 @@ export interface LinksAnswer {
   exponent?: number
 }
 
+// The links of a period are asked for by more than one part of the page (the chart's markers, the Which link
+// worked? card): one read answers them all, and a period read a moment ago is not asked again.
+const KEEP_MS = 30_000
+const KEPT = 8
+const kept = new Map<string, { at: number; p: Promise<LinksAnswer> }>()
+
+/** The same answer, given up on (not the read) when the caller leaves. */
+function abortable<T>(p: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return p
+  if (signal.aborted) return Promise.reject(new DOMException('aborted', 'AbortError'))
+  return new Promise<T>((resolve, reject) => {
+    const stop = () => reject(new DOMException('aborted', 'AbortError'))
+    signal.addEventListener('abort', stop, { once: true })
+    p.then(resolve, reject).finally(() => signal.removeEventListener('abort', stop))
+  })
+}
+
 export const linksApi = {
-  read: (site: string, from: string, to: string) => call<LinksAnswer>('GET', `/sites/${encodeURIComponent(site)}/report/links` + rangeQS({ from, to })),
+  read: (site: string, from: string, to: string, signal?: AbortSignal): Promise<LinksAnswer> => {
+    const key = `${site}:${from}:${to}`
+    const hit = kept.get(key)
+    if (hit && Date.now() - hit.at < KEEP_MS) return abortable(hit.p, signal)
+    const p = call<LinksAnswer>('GET', `/sites/${encodeURIComponent(site)}/report/links` + rangeQS({ from, to }))
+    kept.delete(key)
+    kept.set(key, { at: Date.now(), p })
+    if (kept.size > KEPT) kept.delete(kept.keys().next().value as string)
+    p.catch(() => {
+      if (kept.get(key)?.p === p) kept.delete(key) // a failed read is asked again next time
+    })
+    return abortable(p, signal)
+  },
 }

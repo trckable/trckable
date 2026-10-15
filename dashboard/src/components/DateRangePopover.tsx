@@ -7,7 +7,6 @@ import type { CompareMode, ISODate } from '../lib/dates'
 import { withCustom } from './compareCustom'
 import { CalendarPane } from './DateRangeCalendar'
 import { Periods } from './DateRangePeriods'
-import { periodStart } from './panelOpen'
 import { useLockScroll } from './lockScroll'
 import type { PickerValue } from './DatePicker'
 import { calendarCopy as c } from './dateRangeCopy'
@@ -22,6 +21,7 @@ export default function Popover({
   bucket,
   autoBucket,
   onBucket,
+  noCompare,
   onApply,
   onChange,
   onCancel,
@@ -33,6 +33,7 @@ export default function Popover({
   bucket?: Bucket
   autoBucket?: string
   onBucket?: (b?: Bucket) => void
+  noCompare?: boolean
   /** A choice that ends it: the popover closes. */
   onApply: (v: PickerValue) => void
   /** A choice that stays open: the comparison. */
@@ -41,13 +42,10 @@ export default function Popover({
 }) {
   useLockScroll()
   // One thing at a time: the periods first, the calendar only if you want it.
-  const [cal, setCal] = useState<{ value: PickerValue; editing: 'main' | 'compare' } | null>(() =>
-    periodStart.get() === 'compare' ? { value: withCustom(value), editing: 'compare' } : null,
-  )
+  const [cal, setCal] = useState<{ value: PickerValue; editing: 'main' | 'compare' } | null>(null)
   const dialog = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    periodStart.set('periods')
     // focus moves in: the chosen period, else the box (the calendar takes its own day)
     const box = dialog.current
     if (!box?.querySelector('[data-day]')) (box?.querySelector<HTMLElement>('[data-initial]') ?? box)?.focus({ preventScroll: true })
@@ -93,7 +91,7 @@ export default function Popover({
             autoBucket={autoBucket}
             onBucket={onBucket}
             onPeriod={(p) => onApply({ ...value, period: p.id, range: p.range(today) })}
-            onCompare={compare}
+            onCompare={noCompare ? undefined : compare}
             onCustom={() => setCal({ value, editing: 'main' })}
           />
         )}

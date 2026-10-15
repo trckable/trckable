@@ -46,6 +46,7 @@ export default function IncidentsPage({ site, header }: { site: Site; header: Re
             <p className="muted">{site.name || site.domain}</p>
           </div>
           <DatePicker
+            noCompare
             value={picker}
             today={today}
             tz={site.timezone}

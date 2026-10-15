@@ -3,8 +3,11 @@ import { defineCopy } from '../i18n'
 
 export const footerCopy = defineCopy('footer', {
   newer: (v: string) => `v${v} is out`,
-  changelog: 'Changelog',
+  whatsNew: 'What’s new',
   docs: 'Docs',
   feedback: 'Feedback',
-  shortcuts: 'Keyboard shortcuts',
+  shortcuts: 'Shortcuts',
+  filter: 'Filter',
+  ask: 'Ask',
+  social: { github: 'GitHub', x: 'X', linkedin: 'LinkedIn' },
 })

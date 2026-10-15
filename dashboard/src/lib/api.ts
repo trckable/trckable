@@ -900,7 +900,9 @@ export const api = {
 // browser can know); one that includes today for ten seconds, and the live stream asks
 // again the moment a visit lands.
 const cache = new Map<string, { at: number; data: Report }>()
-const inflight = new Map<string, { gen: number; p: Promise<Report> }>()
+// `holders`: how many readers still want it; a reader that cannot cancel (a prefetch) keeps it for good.
+type Running = { gen: number; p: Promise<Report>; ctl: AbortController; holders: number }
+const inflight = new Map<string, Running>()
 // Moves whenever reports are dropped: a read that began before is answered,
 // but neither kept nor shared with a later ask.
 let generation = 0
@@ -921,15 +923,35 @@ export function reportTtl(q: Pick<ReportQuery, 'to' | 'cto'>, now = Date.now()):
   return latest < new Date(now - 12 * 3_600_000).toISOString().slice(0, 10) ? CLOSED_MS : SHORT_MS
 }
 
-export function cachedReport(site: string, q: ReportQuery, maxAgeMs = reportTtl(q)): Promise<Report> {
+/** The read is cancelled when its last reader gives up (the page moved to another site or period): a dashboard that is switched quickly asks the server for what is on screen, not for everything it passed. */
+function hold(key: string, run: Running, signal?: AbortSignal): Promise<Report> {
+  if (!signal) {
+    run.holders = Infinity
+    return run.p
+  }
+  run.holders++
+  const leave = () => {
+    if (--run.holders > 0) return
+    if (inflight.get(key) === run) inflight.delete(key) // the next ask starts a read of its own
+    run.ctl.abort()
+  }
+  signal.addEventListener('abort', leave, { once: true })
+  // A reader that stays (a page asking again for the same period each time a visit lands) must not pile up listeners on its signal.
+  const done = () => signal.removeEventListener('abort', leave)
+  run.p.then(done, done)
+  return run.p
+}
+
+export function cachedReport(site: string, q: ReportQuery, maxAgeMs = reportTtl(q), signal?: AbortSignal): Promise<Report> {
   const key = site + reportURL(site, q)
   const hit = cache.get(key)
   if (hit && Date.now() - hit.at < maxAgeMs) return Promise.resolve(hit.data)
   const running = inflight.get(key)
-  if (running && running.gen === generation) return running.p
+  if (running && running.gen === generation) return hold(key, running, signal)
   const gen = generation
+  const ctl = new AbortController()
   const p = api
-    .report(site, q)
+    .report(site, q, ctl.signal)
     .then((data) => {
       if (gen !== generation) return data // dropped while it ran: it may predate the change
       cache.delete(key) // re-inserted last: the oldest read is the first to go
@@ -941,8 +963,9 @@ export function cachedReport(site: string, q: ReportQuery, maxAgeMs = reportTtl(
     .finally(() => {
       if (inflight.get(key)?.p === p) inflight.delete(key)
     })
-  inflight.set(key, { gen, p })
-  return p
+  const run: Running = { gen, p, ctl, holders: 0 }
+  inflight.set(key, run)
+  return hold(key, run, signal)
 }
 
 export function peekReport(site: string, q: ReportQuery): Report | undefined {

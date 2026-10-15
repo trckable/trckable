@@ -6,7 +6,6 @@ import { CardPair, whatTabs, whoTabs } from './base'
 import type { CardsCtx } from './ctx'
 
 const FullCards = lazy(() => import('./FullCards'))
-const LinksCard = lazy(() => import('../links/LinksCard')) // what each tagged link brought: a chunk of its own
 const MentionsCard = lazy(() => import('../mentions/MentionsCard')) // where the site is talked about: a chunk of its own
 
 export function Cards({ c }: { c: CardsCtx }) {
@@ -17,7 +16,6 @@ export function Cards({ c }: { c: CardsCtx }) {
       {!c.shared && (
         <Boundary reset={c.site.id}>
           <Suspense fallback={null}>
-            <LinksCard key={'l' + c.site.id} site={c.site} from={c.query.from} to={c.query.to} onPick={c.addFilter} />
             <MentionsCard key={c.site.id} site={c.site} />
           </Suspense>
         </Boundary>

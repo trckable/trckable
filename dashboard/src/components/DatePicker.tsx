@@ -4,8 +4,7 @@
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef } from 'react'
 import { copy } from '../features/header/copy'
-import { closer, compareMenu, focusOpener, periodMenu, toggler } from './panelOpen'
-import { CompareControl } from './CompareMenu'
+import { closer, focusOpener, periodMenu, toggler } from './panelOpen'
 import { PERIODS_FIRST } from './periodIds'
 import { prefetchPeriods } from '../lib/dashQuery'
 import { pressed, useKeymap } from '../lib/keys'
@@ -66,7 +65,7 @@ function stepOf(e: KeyboardEvent) {
   return 0
 }
 
-export function DatePicker({ value, today, onChange, short, tz, site, bucket, autoBucket, onBucket }: Props & { short?: boolean; tz?: string; site?: string; bucket?: Bucket; autoBucket?: string; onBucket?: (b?: Bucket) => void }) {
+export function DatePicker({ value, today, onChange, short, tz, site, bucket, autoBucket, onBucket, noCompare }: Props & { short?: boolean; tz?: string; site?: string; bucket?: Bucket; autoBucket?: string; onBucket?: (b?: Bucket) => void; /** A page that has no comparison: the list offers none. */ noCompare?: boolean }) {
   // The period is plain words in the header's row, not a boxed control: the
   // arrows either side, the label opening the calendar.
   const open = periodMenu.use()
@@ -129,6 +128,7 @@ export function DatePicker({ value, today, onChange, short, tz, site, bucket, au
         bucket={bucket}
         autoBucket={autoBucket}
         onBucket={onBucket}
+        noCompare={noCompare}
         onCancel={closer(periodMenu.set)}
         onApply={(v) => {
           periodMenu.set(false)
@@ -159,15 +159,14 @@ export function DatePicker({ value, today, onChange, short, tz, site, bucket, au
         className="btn range"
         aria-haspopup="dialog"
         aria-expanded={open}
-        onClick={(e) => {
-          compareMenu.set(false)
-          toggler(periodMenu.set, open)(e)
-        }}
+        title={cmpText}
+        onClick={toggler(periodMenu.set, open)}
       >
         <span className="range-line">
           {calendar}
           <span className="range-label">{label}</span>
           {presetLabel && <span className="range-dates">{fmtRange(value.range, today)}</span>}
+          {value.compare !== 'none' && <span className="range-cmp" aria-hidden="true">± {copy.cmpTag[value.compare]}</span>}
           <ChevronDown size={13} strokeWidth={1.75} className="range-chev" aria-hidden="true" />
           {cmpText && <span className="sr">{cmpText}</span>}
           {value.period === 'now' && <span className="pulse" aria-hidden="true" />}
@@ -183,7 +182,6 @@ export function DatePicker({ value, today, onChange, short, tz, site, bucket, au
       >
         <Chevron dir="right" />
       </button>
-      <CompareControl value={value} onChange={onChange} />
       {popover}
     </div>
   )

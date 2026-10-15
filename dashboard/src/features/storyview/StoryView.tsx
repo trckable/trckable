@@ -3,7 +3,7 @@
 // answered, each with a button into Explore. Rules over the report only; its
 // own chunk, loaded when the view is on (Dashboard).
 import { ChartLine } from 'lucide-react'
-import { lazy, Suspense, useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useRef, useState } from 'react'
 import { Card } from '../../kit/Card'
 import { TimeChart } from '../../charts/GuardedChart'
 import type { Report, ReportQuery, Site } from '../../lib/api'
@@ -27,7 +27,9 @@ import { SetupCard } from './SetupCard'
 import { sinceOf, storyOf, takeawayOf } from './rules'
 import { Tiles } from './Tiles'
 import { tileSeries } from './tileSeries'
+import { useLinkAnswer } from '../links/linkAnswer'
 import { useHints } from './useHints'
+import { useKeepShape } from './useKeepShape'
 import { useOwnSeries } from './useOwnSeries'
 import { useSince } from './useSince'
 
@@ -69,6 +71,10 @@ export default function StoryView(p: StoryViewProps) {
   const told = sinceOf(since.found?.items ?? [], fmt)
   const { hints, away } = useHints(p.site)
   const own = useOwnSeries(p.site.id, p.query, facts.answers)
+  // Which link worked? sits after Which source pays?, and only when it has something to say.
+  const topGoal = cur.goals?.[0]
+  const linked = useLinkAnswer(p.site.id, p.query.from, p.query.to, topGoal && cur.kpis.visitors > 0 ? topGoal.visitors / cur.kpis.visitors : undefined)
+  const answers = useMemo(() => (linked ? facts.answers.flatMap((a) => (a.key === 'pays' ? [a, linked] : [a])) : facts.answers), [facts.answers, linked])
   // A moment of one day opens that day, as a pin always did; a longer one opens its days.
   const open = (m: Span) =>
     m.i0 === m.i1
@@ -83,8 +89,11 @@ export default function StoryView(p: StoryViewProps) {
   )
   const period = `${fmtDay(data.from)} ${bar.to} ${fmtDay(data.to)}`
   const h = facts.headline
+  // The next refresh draws its boxes this tall while the numbers load.
+  const shape = useRef<HTMLDivElement>(null)
+  useKeepShape(shape)
   return (
-    <div className="story-view">
+    <div ref={shape} className="story-view">
       <SetupCard site={p.site} goals={(cur.goals ?? []).length > 0} revenue={!!p.money} onGoal={p.onGoal} />
       <section className="sv-head" aria-label={copy.eyebrow(period)}>
         <div className="sv-eyebrow">{copy.eyebrow(period)}</div>
@@ -129,7 +138,7 @@ export default function StoryView(p: StoryViewProps) {
         {marks.length === 0 && pins && <p className="sv-none faint">{copy.noMoments}</p>}
       </Card>
 
-      <Answers answers={facts.answers} onConnect={() => setConnect(true)} onGoal={p.onGoal} site={p.site} series={{ visitors: cur.series.map((x) => x.visitors), was: data.previous?.series.map((x) => x.visitors), revenue: p.money ? cur.series.map((x) => x.revenue ?? 0) : undefined, own }} hints={hints} onAway={away} />
+      <Answers answers={answers} onConnect={() => setConnect(true)} onGoal={p.onGoal} site={p.site} series={{ visitors: cur.series.map((x) => x.visitors), was: data.previous?.series.map((x) => x.visitors), revenue: p.money ? cur.series.map((x) => x.revenue ?? 0) : undefined, own }} hints={hints} onAway={away} />
       <Ask />
       {connect && (
         <Suspense fallback={null}>

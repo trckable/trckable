@@ -64,7 +64,7 @@ test('before the first visit the key numbers show a dash, then the numbers', asy
   expect(await page.locator('.kpis .kpi').first().innerText()).not.toMatch(/%/)
 })
 
-// The comparison, set in the period's menu (More): a choice applies at once and
+// The comparison, set in the period's list: a choice applies at once and
 // pressing it again clears it. Clearing takes the line away at once (the address
 // says compare=none); a new choice brings it back. By the hour (Now) and by the day.
 for (const period of ['now', '7d']) {
@@ -78,25 +78,25 @@ for (const period of ['now', '7d']) {
     const compare = picker.getByRole('group', { name: 'Compare' })
     const choose = async (name: string) => {
       await page.locator('.ctl-see .btn.range').click()
-      await picker.getByRole('button', { name: 'More' }).click()
       await compare.getByRole('button', { name }).click()
       await page.keyboard.press('Escape')
       await expect(picker).toBeHidden()
     }
     await expect(ghost).toHaveCount(0)
-    await expect(page.locator('.cmp-btn')).not.toContainText(/vs|year/i)
+    await expect(page.locator('.range-cmp')).toHaveCount(0)
     await choose('Period before')
     await expect(ghost).toHaveCount(1)
     expect(page.url()).not.toContain('compare=')
-    await page.locator('.cmp-btn').click()
-    const menu = page.getByRole('menu', { name: 'Compare with' })
-    await expect(menu.getByRole('menuitemradio', { name: 'Period before' })).toHaveAttribute('aria-checked', 'true')
-    await menu.getByRole('menuitemradio', { name: 'No comparison' }).click()
+    await page.locator('.ctl-see .btn.range').click()
+    await expect(compare.getByRole('button', { name: 'Period before' })).toHaveAttribute('aria-pressed', 'true')
+    await compare.getByRole('button', { name: 'No comparison' }).click()
+    await page.keyboard.press('Escape')
+    await expect(picker).toBeHidden()
     await expect(ghost).toHaveCount(0)
     expect(page.url()).toContain('compare=none')
     await choose('Last year')
     await expect(ghost).toHaveCount(1)
     expect(page.url()).toContain('compare=year')
-    await expect(page.locator('.cmp-btn')).toContainText(/year/i)
+    await expect(page.locator('.range-cmp')).toContainText(/year/i)
   })
 }
