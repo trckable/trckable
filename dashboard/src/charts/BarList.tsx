@@ -10,6 +10,7 @@ import { shareOf } from './change'
 import { DeltaPill } from './DeltaPill'
 import { SPARK_H, SPARK_W, sparkPoints } from './sparkPath'
 import { kitCopy } from './copy'
+import './BarList.css'
 
 export interface BarItem {
   key: string

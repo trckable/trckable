@@ -53,6 +53,10 @@ type Event struct {
 	Subject  string       `json:"-"`
 	Settings string       `json:"-"`
 	Inline   []Attachment `json:"-"`
+
+	// Ask, when set, is an address that opens the dashboard on this event; the
+	// email shows it as one more link beside the stop link. Chat tools get none.
+	Ask string `json:"-"`
 }
 
 // ErrUnsafeTarget is returned for a destination trckable will not call.

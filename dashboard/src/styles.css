@@ -594,172 +594,9 @@ textarea:focus-visible {
   background: var(--surface-2);
 }
 /* ---- ranked lists ---- */
-.bl {
-  /* A narrow card drops its secondary column before it cuts the names. */
-  container-type: inline-size;
-  /* Rows are separate pieces: a gap between them, not a hairline. */
-  display: grid;
-  gap: 4px;
-}
-.bl-cols,
-.bl-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.bl-cols {
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-4);
-  font-size: 12px;
-}
-.bl-lead,
-.bl-main {
-  flex: 1;
-  min-width: 0;
-}
-.bl-row {
-  position: relative;
-  isolation: isolate;
-  min-height: 36px;
-  width: 100%;
-  padding: 6px 10px;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--text);
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-  transition: opacity 0.25s, background 0.15s;
-}
-.bl-row:hover,
-.bl-row:focus-visible {
-  background: transparent;
-  outline: none;
-}
 /* Name, trend and visitors: the bar's track is exactly this group. */
-.bl-lead {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-  align-self: stretch;
-  margin: -6px 0 -6px -10px;
-  padding: 6px 10px 6px 10px;
-}
-.bl-cols .bl-lead {
-  margin: 0;
-  padding: 0 10px 0 0;
-}
-.bl-main {
-  display: grid;
-  gap: 6px;
-}
-.bl-name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  font-size: 13px;
-}
-.bl .bl-line {
-  position: absolute;
-  /* The track ends one inner gap past the visitors number, the gap the name has on the left. */
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  border-radius: 4px;
-  pointer-events: none;
-}
-.bl .bl-line i {
-  display: block;
-  height: 100%;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--bar, var(--text)) 5%, transparent);
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--bar, var(--text)) 45%, transparent);
-  transition: width 0.12s var(--ease);
-}
-.bl-row:hover .bl-line i,
-.bl-row:focus-visible .bl-line i {
-  background: color-mix(in srgb, var(--bar, var(--text)) 9%, transparent);
-}
-.bl-val,
-.bl-sub,
-.bl-rev,
-.bl-tail,
-.bl-cols .bl-chg {
-  flex: none;
-  text-align: right;
-  font-family: var(--mono);
-  font-size: 12.5px;
-}
-.bl-val {
-  width: 46px;
-}
-.bl-sub {
-  width: 44px;
-  color: var(--text-2);
-}
-.bl-rev {
-  width: 60px;
-}
 /* The column heads are labels, not numbers. */
-.bl-cols .bl-val,
-.bl-cols .bl-sub,
-.bl-cols .bl-rev {
-  font-family: inherit;
-  font-size: 11px;
-  white-space: nowrap; /* a head is one line, whatever the column */
-}
-.bl-rev.none {
-  color: var(--text-3);
-}
-.bl-cols .bl-chg,
-.bl-tail {
-  position: relative;
-  width: 42px;
-}
-.bl-tail {
-  height: 16px;
-}
-.bl-chg,
-.bl-share {
-  position: absolute;
-  inset: 0 0 0 auto;
-  font-size: 11px;
-  line-height: 16px;
-  white-space: nowrap;
-  transition: opacity 0.12s;
-}
-.bl-chg {
-  color: var(--text-3);
-}
-.bl-chg.up {
-  color: var(--up);
-}
-.bl-chg.down {
-  color: var(--down);
-}
-.bl-share {
-  color: var(--text-2);
-  opacity: 0;
-}
-.bl-row:hover .bl-share,
-.bl-row:focus-visible .bl-share {
-  opacity: 1;
-}
-.bl-row:hover .bl-chg,
-.bl-row:focus-visible .bl-chg {
-  opacity: 0;
-}
 /* The channels: a ring beside the list; stacked on a narrow card. */
-.src-split {
-  display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
-  gap: 22px;
-  align-items: center;
-}
 .donut {
   position: relative;
   width: 150px;
@@ -774,29 +611,6 @@ textarea:focus-visible {
 }
 .donut-track {
   stroke: color-mix(in srgb, var(--text) 7%, transparent);
-}
-.donut-mid {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-content: center;
-  text-align: center;
-}
-.donut-mid b {
-  display: block;
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-.donut-mid small {
-  color: var(--text-3);
-  font-size: 12px;
-}
-@media (max-width: 560px) {
-  .src-split {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 14px;
-  }
 }
 /* The goals tab: a row a goal, with the road from a visit to the first one under them. */
 .goal {
@@ -842,17 +656,6 @@ textarea:focus-visible {
   gap: 2px;
   min-width: 0;
 }
-.goal-name b {
-  overflow: hidden;
-  font-size: 13px;
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.goal-name small {
-  color: var(--text-3);
-  font-size: 12px;
-}
 .goal-conv {
   justify-items: end;
 }
@@ -870,38 +673,7 @@ textarea:focus-visible {
   color: var(--text-3);
   font-size: 12px;
 }
-.goal-step {
-  display: grid;
-  grid-template-columns: minmax(70px, 110px) minmax(0, 1fr) 52px;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 8px;
-  font-size: 13px;
-}
-.goal-step-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.goal-step .kit-rowbar {
-  margin: 0;
-}
-.goal-step .num {
-  text-align: right;
-}
 /* A row's last 30 days, between its name and its number. */
-.bl-spark {
-  flex: none;
-  display: flex;
-  align-items: center;
-  width: 56px;
-  height: 18px;
-  color: var(--text-3);
-}
-.bl-row:hover .bl-spark,
-.bl-row:focus-visible .bl-spark {
-  color: var(--accent);
-}
 @container (max-width: 240px) {
   .bl-tail,
   .bl-cols .bl-tail {
@@ -910,47 +682,6 @@ textarea:focus-visible {
 }
 /* A button at the end of a row (the Pages list's heatmap): there on hover, and
    always on a screen with no hover. The head leaves its room. */
-.bl-item {
-  display: flex;
-  align-items: center;
-}
-.bl-item .bl-row {
-  flex: 1;
-  min-width: 0;
-  width: auto;
-}
-.bl.has-act .bl-cols {
-  padding-right: 36px;
-}
-.bl-act {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text-3);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.12s, color 0.12s, background 0.12s;
-}
-.bl-item:hover .bl-act,
-.bl-act:focus-visible {
-  opacity: 1;
-}
-.bl-act:hover,
-.bl-act:focus-visible {
-  color: var(--accent);
-  background: var(--sunken);
-  outline: none;
-}
-@media (hover: none) {
-  .bl-act {
-    opacity: 0.7;
-  }
-}
 @container (max-width: 340px) {
   .bl-sub,
   .bl-cols .bl-sub {
@@ -1632,28 +1363,6 @@ table.t td {
   font-size: 15px;
   padding: 0 20px;
 }
-.keybox {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid var(--accent);
-  border-radius: 12px;
-  background: var(--sunken);
-}
-.keybox code {
-  flex: 1;
-  min-width: 180px;
-  font-family: var(--mono);
-  font-size: 12.5px;
-  word-break: break-all;
-  color: var(--text);
-}
-.keybox .faint {
-  flex-basis: 100%;
-  font-size: 12px;
-}
 /* On a phone a module is a small card: its picture across the top, then the
    name with its switch, the tags, and what it does. */
 @media (max-width: 640px) {
@@ -2100,11 +1809,6 @@ body[data-mode] .card.overview {
 }
 /* Timezone and currency sit side by side while there is room: they are one
    decision about how this site's numbers are read. */
-.edit-pair {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 14px;
-}
 .app.shared .header {
   gap: 10px;
 }
@@ -2599,10 +2303,6 @@ body[data-mode] .card.overview {
 
 /* ---- The main chart's finish ------------------------------------------------
    Money's columns carry a soft gold glow; the line has none. */
-.money-col {
-  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--money) 40%, transparent));
-  transition: fill-opacity 0.12s;
-}
 
 /* ---- Overview: the key numbers and the chart, one section -------------------
    The dialogs' soft light across the top; each number on a quiet tile with its
