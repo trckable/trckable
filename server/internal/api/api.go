@@ -189,6 +189,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/me/devices", a.authed(a.devices))
 	handle("DELETE /api/v1/me/devices/{id}", a.authed(a.removeDevice))
 	handle("GET /api/v1/sites", a.authed(a.sites))
+	handle("GET /api/v1/sites/{site}/verified", a.authed(a.verified))
 	handle("GET /api/v1/site-layout", a.authed(a.siteLayout))
 	handle("PUT /api/v1/site-layout", a.authed(a.setSiteLayout))
 	handle("GET /api/v1/overview", a.authed(a.overview))
@@ -1002,18 +1003,22 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 	downs, _ := a.Ctl.DownProbes(r.Context(), principalOf(r).account)
 	blocked, _ := a.Ctl.BlockedProbes(r.Context(), principalOf(r).account)
 	talked, _ := a.Ctl.SitesWithMentions(r.Context())
-	out := []sqlite.SiteInfo{}
+	out := []siteListRow{}
 	for _, s := range rows {
 		b := brands[s.ID]
 		week, cookieless := 1, false
 		if c, err := a.Ctl.SiteConfig(r.Context(), s.ID); err == nil {
 			week, cookieless = c.WeekStart, c.ConsentFree
 		}
-		out = append(out, sqlite.SiteInfo{ID: s.ID, Domain: s.Domain, Name: s.Name, Timezone: s.Timezone, Currency: s.Currency, ProxyKey: a.proxyKeyFor(r, s.ProxyKey), LastEventAt: s.LastEventAt, CreatedAt: s.CreatedAt, WatchedSince: s.WatchedSince,
-			Color: b.Color, IconURL: iconURL(s.ID, b), WeekStart: week, Cookieless: cookieless, AlertsMutedUntil: a.mutedUntil(r, s.ID)})
+		out = append(out, siteListRow{SiteInfo: sqlite.SiteInfo{ID: s.ID, Domain: s.Domain, Name: s.Name, Timezone: s.Timezone, Currency: s.Currency, ProxyKey: a.proxyKeyFor(r, s.ProxyKey), LastEventAt: s.LastEventAt, CreatedAt: s.CreatedAt, WatchedSince: s.WatchedSince,
+			Color: b.Color, IconURL: iconURL(s.ID, b), WeekStart: week, Cookieless: cookieless, AlertsMutedUntil: a.mutedUntil(r, s.ID)}})
+		last := &out[len(out)-1]
 		if c, ok := checks[s.ID]; ok {
-			out[len(out)-1].Check = &c
+			last.Check = &c
 		}
+		// The sources behind the numbers ride with the list, so the header's
+		// seal and the site switcher need no request of their own.
+		last.Verified = a.verifiedOf(r.Context(), last.SiteInfo, last.Check)
 		if p, ok := downs[s.ID]; ok {
 			out[len(out)-1].DownSince, out[len(out)-1].DownCause = p.DownSince, p.Error
 		}
@@ -1021,6 +1026,12 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 		out[len(out)-1].Mentions = talked[s.ID]
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"sites": out})
+}
+
+// siteListRow is a site in the list, with what stands behind its numbers.
+type siteListRow struct {
+	sqlite.SiteInfo
+	Verified verified `json:"verified"`
 }
 
 // proxyKeyFor hides a site's proxy key from anyone who only reads: it is a

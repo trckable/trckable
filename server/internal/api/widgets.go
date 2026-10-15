@@ -286,6 +286,8 @@ func (a *API) renderWidget(w http.ResponseWriter, r *http.Request, wd sqlite.Wid
 	view := widgetView(wd, si, now, loc, words)
 
 	switch wd.Kind {
+	case "verified":
+		a.fillVerified(r, &view, si, words, public)
 	case "privacy":
 		// Read from the site's own settings, now: a seal that cannot say more
 		// than the site does.
@@ -384,6 +386,8 @@ type widgetData struct {
 	N               string            // the number the owner's {n} stands for
 	L               map[string]string // every label, in the page's language and with the owner's own words
 	Pill            bool              // online, in a pill: the brand is a mark in it, not a line under it
+	Marks           []widgetMark      // verified: the sources that work now
+	Href            string            // verified: where the badge leads
 }
 
 type widgetBar struct {
@@ -421,7 +425,7 @@ func channelName(name string, words widgetWords) string {
 func widgetLabels(words widgetWords, d widgetData) map[string]string {
 	vars := []string{"n", d.N, "pct", d.AI, "month", d.Month, "domain", d.Domain, "time", d.Checked}
 	out := map[string]string{"brand": words.plain("brand")}
-	for _, k := range []string{"online", "online_title", "from", "reading", "came", "live_title", "week", "ai", "counter", "rev_title", "rev_channels", "seal_title", "seal_foot"} {
+	for _, k := range []string{"online", "online_title", "from", "reading", "came", "live_title", "week", "ai", "counter", "rev_title", "rev_channels", "seal_title", "seal_foot", "verified_title"} {
 		out[k] = words.msg(k, vars...)
 	}
 	return out
@@ -588,6 +592,13 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 .spark i{flex:1;height:100%;display:flex;align-items:flex-end}
 .spark s{display:block;width:100%;background:var(--acc);border-radius:1px 1px 0 0;min-height:1px;opacity:.9}
 .spark s.z{background:var(--line)}
+.vf{display:flex;align-items:center;gap:10px;padding:10px 14px;text-decoration:none;color:var(--fg)}
+.vf .seal{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,var(--acc) 22%,transparent);color:var(--acc)}
+.vf b{flex:1;min-width:0;font-size:13px;font-weight:650}
+.vf .marks{display:flex;gap:5px;flex:none}
+.vf .marks i{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--line);color:var(--fg)}
+.vf:hover b,.vf:focus-visible b{text-decoration:underline}
+.vf:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .foot{margin-top:12px;font-size:11px;color:var(--mute)}
 .off{color:var(--mute);font-size:13px}
 .facts li{align-items:flex-start}
@@ -612,6 +623,7 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 {{if .Channels}}<h3>{{.L.rev_channels}}</h3><ul>{{range .Channels}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
 {{if .Brand}}{{template "by" .}}{{end}}
 </div>
+{{else if eq .Kind "verified"}}{{if .Marks}}<a class="card vf" href="{{.Href}}" target="_blank" rel="noopener"><span class="seal"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5 13.5 3.5v4c0 3.2-2.3 5.8-5.5 7-3.2-1.2-5.5-3.8-5.5-7v-4z"/><path d="m5.5 8 1.8 1.8 3.2-3.500"/></svg></span><b>{{.L.verified_title}}</b><span class="marks">{{range .Marks}}<i title="{{.Name}}" role="img" aria-label="{{.Name}}">{{.Svg}}</i>{{end}}</span></a>{{end}}
 {{else if eq .Kind "privacy"}}<div class="card">
 <div class="lab">{{.L.seal_title}}</div>
 <ul class="facts">{{range .Facts}}<li><span class="ok">✓</span><span>{{.}}</span></li>{{end}}</ul>

@@ -22,7 +22,7 @@ type Widget struct {
 	// Name is how the owner tells their widgets apart, at most 40 characters.
 	// Left blank it is the design's own name, so it follows the design.
 	Name   string `json:"name"`
-	Kind   string `json:"kind"`   // live, badge, counter, revenue, privacy, online
+	Kind   string `json:"kind"`   // live, badge, counter, revenue, privacy, verified, online
 	Theme  string `json:"theme"`  // auto, dark, light
 	Accent string `json:"accent"` // #rrggbb, or empty for trckable's own
 	Radius int    `json:"radius"` // corner radius in px, 0–28
@@ -51,12 +51,13 @@ var WidgetLangs = map[string]bool{"auto": true, "en": true, "de": true, "fr": tr
 // privacy seal's statements are read from the site's settings and stay as they
 // are, so a seal cannot say more than the site does.
 var WidgetTexts = map[string]map[string]string{
-	"online":  {"online": "online", "few": "few", "title": "online_title", "countries": "from", "pages": "reading"},
-	"live":    {"title": "live_title", "countries": "from", "pages": "reading", "channels": "came"},
-	"badge":   {"week": "week", "ai": "ai"},
-	"counter": {"now": "counter"},
-	"revenue": {"title": "rev_title", "channels": "rev_channels"},
-	"privacy": {"title": "seal_title", "foot": "seal_foot"},
+	"online":   {"online": "online", "few": "few", "title": "online_title", "countries": "from", "pages": "reading"},
+	"live":     {"title": "live_title", "countries": "from", "pages": "reading", "channels": "came"},
+	"badge":    {"week": "week", "ai": "ai"},
+	"counter":  {"now": "counter"},
+	"revenue":  {"title": "rev_title", "channels": "rev_channels"},
+	"privacy":  {"title": "seal_title", "foot": "seal_foot"},
+	"verified": {"title": "verified_title"},
 }
 
 // MaxWidgetText is the longest label, in characters.
@@ -76,7 +77,7 @@ const MaxWidgets = 10
 
 // WidgetKinds are the designs there are, with the parts each may show and
 // the ones it shows when nothing was chosen.
-var WidgetKinds = map[string]bool{"live": true, "badge": true, "counter": true, "revenue": true, "privacy": true, "online": true}
+var WidgetKinds = map[string]bool{"live": true, "badge": true, "counter": true, "revenue": true, "privacy": true, "verified": true, "online": true}
 
 var widgetParts = map[string]map[string]bool{
 	"live":    {"bars": true, "countries": true, "pages": true, "channels": true},
@@ -104,7 +105,7 @@ func (w Widget) Has(part string) bool {
 }
 
 // widgetNames are what an unnamed widget is called.
-var widgetNames = map[string]string{"live": "Live now", "badge": "Last 7 days", "counter": "Counter", "revenue": "Open revenue", "privacy": "Privacy seal"}
+var widgetNames = map[string]string{"live": "Live now", "badge": "Last 7 days", "counter": "Counter", "revenue": "Open revenue", "privacy": "Privacy seal", "verified": "Verified badge"}
 
 // DefaultWidgetName is what a widget with no name of its own is called: its
 // design, and for the online design its mode.
