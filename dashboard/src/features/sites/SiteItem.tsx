@@ -8,6 +8,7 @@ import { Menu } from '../../components/Menu'
 import { SiteMark } from '../../components/SiteMark'
 import { confirmWith } from '../../components/Confirm'
 import { fmtCompact, fmtInt } from '../../lib/format'
+import { Tooltip } from '../../kit/Tooltip'
 import { copy } from './menuCopy'
 import { copy as first } from './copy'
 import { addGroup, moveTo, pin, placeKey, step, unpin, type Place } from './layout'
@@ -35,9 +36,13 @@ function Tail({ s, today }: { s: Site; today?: number }) {
       const tip = down ? copy.downTip(silence(s)) : copy.quietTip(silence(s))
       const Icon = down ? CircleAlert : Moon
       return (
-        <span role="img" aria-label={tip} title={tip} className={down ? 'tail state-icon down' : 'tail state-icon quiet'}>
-          <Icon size={16} strokeWidth={2} aria-hidden="true" />
-        </span>
+        <Tooltip text={tip} float>
+          {(p) => (
+            <span {...p} role="button" tabIndex={0} aria-label={tip} className={down ? 'tail state-icon down' : 'tail state-icon quiet'} onClick={(e) => { e.stopPropagation(); p.onClick() }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); p.onClick() } }}>
+              <Icon size={16} strokeWidth={2} aria-hidden="true" />
+            </span>
+          )}
+        </Tooltip>
       )
     }
     default:
