@@ -2433,6 +2433,8 @@ export default {
   'yourLinks.copy': 'Kopieren',
   'yourLinks.copied': 'Link kopiert',
   'yourLinks.copyLabel': 'Beispiel-Link kopieren',
+  'yourLinks.all': 'Alle Links',
+  'yourLinks.dismiss': 'Ausblenden',
   'yourLinks.nothingYet': 'Keine getaggten Besuche in diesem Zeitraum',
   // incidents
   'incidents.marker': (n: number, when: string) => (n === 1 ? `Vorfall am ${when}` : `${n} Vorfälle am ${when}`),

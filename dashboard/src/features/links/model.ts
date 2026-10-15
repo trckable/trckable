@@ -28,3 +28,9 @@ function span(s: number): [number, Intl.RelativeTimeFormatUnit] {
 
 /** The address the empty state offers to copy: this site with a tag to rename. */
 export const sampleLink = (domain: string): string => `${domain}/?ref=newsletter`
+
+/** The most rows the dashboard card shows: the rest is on the page. */
+export const CARD_ROWS = 3
+
+/** The links the dashboard card shows: the busiest few. */
+export const topLinks = <T extends { visitors: number }>(links: T[]): T[] => [...links].sort((a, b) => b.visitors - a.visitors).slice(0, CARD_ROWS)
