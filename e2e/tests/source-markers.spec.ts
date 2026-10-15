@@ -30,6 +30,14 @@ async function given(page: Page, ago = 4, crowd = false) {
       await r.fulfill({ response: res, json: body })
     })
   }
+  // The chart's own numbers, too: other specs send visitors to the same site, and a busy day would hide the jump.
+  await page.route(/\/api\/v1\/sites\/[^/]+\/report\?/, async (r) => {
+    const res = await r.fetch().catch(() => null) // the test may end while a read is still on its way
+    if (!res) return
+    const body = (await res.json()) as { current?: { series?: { t: string; visitors: number }[] } }
+    body.current?.series?.forEach((s) => (s.visitors = s.t.slice(0, 10) === iso(at) ? 45 : 5))
+    await r.fulfill({ response: res, json: body }).catch(() => {})
+  })
   await page.route(/\/api\/v1\/sites\/[^/]+\/insights\?/, (r) => r.fulfill({ json: { insights: [] } }))
   await page.route(/\/api\/v1\/sites\/[^/]+\/report\/links/, (r) => r.fulfill({ json: { links: [], goals: false } }))
   await page.route(/\/api\/v1\/sites\/[^/]+\/sparks\?/, (r) => {
