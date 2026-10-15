@@ -16,8 +16,8 @@ let root: Root
 let host: HTMLDivElement
 const onPick = vi.fn()
 
-function draw(seen: Row[] | null, filters: Filter[] = [], narrow = false, loaded = true) {
-  act(() => root.render(<DomainSwitch seen={seen} loaded={loaded} filters={filters} site="trckable.com" narrow={narrow} onPick={onPick} />))
+function draw(seen: Row[] | null, filters: Filter[] = [], narrow = false) {
+  act(() => root.render(<DomainSwitch seen={seen} filters={filters} site="trckable.com" narrow={narrow} onPick={onPick} />))
 }
 const radios = () => [...host.querySelectorAll<HTMLElement>('[role=radio]')]
 
@@ -71,14 +71,10 @@ describe('DomainSwitch', () => {
     act(() => radios()[0].click())
     expect(onPick).toHaveBeenLastCalledWith(null)
   })
-  it('keeps the list while the filter hides the other domains', () => {
-    draw(two)
-    draw(null, [{ dim: 'hostname', value: 'docs.trckable.com' }])
-    expect(radios()).toHaveLength(3)
-  })
-  it('after a deep link it offers All and the picked domain', () => {
-    draw(null, [{ dim: 'hostname', value: 'docs.trckable.com' }])
-    expect(radios().map((r) => r.textContent)).toEqual(['All', 'docs'])
+  it('with a domain filter on, all domains stay listed and the picked one is on', () => {
+    draw(two, [{ dim: 'hostname', value: 'docs.trckable.com' }])
+    expect(radios().map((r) => r.textContent)).toEqual(['All', 'trckable.com', 'docs'])
+    expect(radios()[2].getAttribute('aria-checked')).toBe('true')
   })
   it('more than four: three buttons and a More menu', () => {
     draw(many)

@@ -96,6 +96,7 @@ func TestDomainsListAndFilter(t *testing.T) {
 				t.Fatal(err)
 			}
 			eq(t, "visitors", r.KPIs.Visitors, c.want)
+			eq(t, "hosts under a domain filter", r.Hosts, 2)
 		}
 	}
 }

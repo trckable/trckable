@@ -2,11 +2,10 @@
 // each domain. It is the "Domain is …" filter in another place: the address
 // holds the one state, so the chip row and this control always agree. On a
 // phone it is one chip with a menu.
-import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Popover } from '../../kit'
 import type { Filter, Row } from '../../lib/api'
-import { hostFiltered, offered, pickedHost, shortHost, split } from '../../lib/domainSwitch'
+import { hostFiltered, pickedHost, shortHost, split } from '../../lib/domainSwitch'
 import { fmtInt } from '../../lib/format'
 import { domainCopy as copy } from './domainCopy'
 import './DomainSwitch.css'
@@ -14,8 +13,6 @@ import './DomainSwitch.css'
 export interface DomainSwitchProps {
   /** The report's list of domains, when it carries one (two or more seen). */
   seen: Row[] | null
-  /** Whether the report has loaded: until then the last list stands. */
-  loaded: boolean
   filters: Filter[]
   site: string
   narrow: boolean
@@ -23,18 +20,8 @@ export interface DomainSwitchProps {
   onPick: (host: string | null) => void
 }
 
-/** The list stays while a domain filter hides the others: the report then only knows the domain picked. */
-function useRemembered(seen: Row[] | null, loaded: boolean, filters: Filter[]) {
-  const [kept, setKept] = useState<Row[] | null>(null)
-  // Set during the render that learns it, so nothing flashes (react.dev: adjusting state while rendering).
-  const list = seen && seen.length >= 2 ? seen : null
-  const fresh = loaded && !hostFiltered(filters) ? list : undefined
-  if (fresh !== undefined && fresh !== kept) setKept(fresh)
-  return fresh === undefined ? kept : fresh
-}
-
-export function DomainSwitch({ seen, loaded, filters, site, narrow, onPick }: DomainSwitchProps) {
-  const rows = offered(useRemembered(seen, loaded, filters), filters)
+export function DomainSwitch({ seen, filters, site, narrow, onPick }: DomainSwitchProps) {
+  const rows = seen ?? []
   if (rows.length === 0) return null
   const picked = pickedHost(filters)
   const name = (r: Row) => shortHost(r.value, site)

@@ -479,7 +479,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     <>
       {!liveView && (firstLoad || loading) && <div className="loadbar" role="status" aria-label="Loading" />/* Live loads no report: it shows its own connection */}
       <HeaderBand><div className="header quiet">
-        {header}{!waiting && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} loaded={!!cur && !liveView} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}
+        {header}{!waiting && !liveView && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}
         <HeaderTools
           live={liveView}
           waiting={waiting} site={site}

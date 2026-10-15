@@ -91,6 +91,26 @@ test('two domains: pick one, the dashboard follows; All clears it', async ({ pag
   await expect(group.locator(phone ? '.dom-menu' : '[aria-checked=true]')).toHaveText(phone ? 'All domains' : 'All')
 })
 
+test('opened already filtered: every domain is listed and that one is on; Live has no switcher', async ({ page }) => {
+  await open(page, `/${two}?view=data&f=hostname%3Adocs.${two}`)
+  const phone = page.viewportSize()!.width < 640
+  const group = page.locator('.dom-switch')
+  await expect(group).toBeVisible({ timeout: 30_000 })
+  if (phone) {
+    await expect(group.locator('.dom-menu')).toHaveText('docs')
+    await group.locator('.dom-menu').click()
+    await expect(page.getByRole('menuitemradio')).toHaveCount(3)
+    await page.keyboard.press('Escape')
+  } else {
+    await expect(group.getByRole('radio')).toHaveCount(3)
+    await expect(group.getByRole('radio', { name: 'docs' })).toHaveAttribute('aria-checked', 'true')
+  }
+  // Live shows every visit of the site and takes no filter, so it has no switcher.
+  await open(page, `/${two}?view=live`)
+  await expect(page.locator('.hdr-band')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('.dom-switch')).toHaveCount(0)
+})
+
 test('one domain: no switcher', async ({ page }) => {
   await open(page, `/${one}?view=data`)
   await expect(page.locator('.hdr-band')).toBeVisible({ timeout: 30_000 })

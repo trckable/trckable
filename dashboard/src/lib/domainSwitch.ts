@@ -25,13 +25,6 @@ export function pickedHost(filters: Filter[]): string | null {
 /** Whether the address filters by domain in any way. */
 export const hostFiltered = (filters: Filter[]) => filters.some((f) => f.dim === 'hostname')
 
-/** The list the control shows: what the report saw, or the one picked while a filter hides the rest. */
-export function offered(seen: Row[] | null, filters: Filter[]): Row[] {
-  if (seen && seen.length >= 2) return seen
-  const one = pickedHost(filters)
-  return one ? [{ value: one, visitors: 0 }] : []
-}
-
 /** The buttons and the overflow: the first three and the rest when there are more than four. */
 export function split(rows: Row[]): { shown: Row[]; rest: Row[] } {
   return rows.length > BUTTONS ? { shown: rows.slice(0, SHOWN), rest: rows.slice(SHOWN) } : { shown: rows, rest: [] }
