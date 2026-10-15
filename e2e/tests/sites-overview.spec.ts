@@ -8,13 +8,21 @@ import { session } from './session'
 const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
 const SHOTS = process.env.SITES_SHOTS
 
+const gone: { id: string; domain: string }[] = []
+test.afterEach(async ({ request }) => {
+  for (const s of gone.splice(0)) await request.delete(`${API}/api/v1/sites/${s.id}`, { headers: H, data: { domain: s.domain } })
+})
+
 for (const size of [{ name: 'desktop', width: 1440, height: 900 }, { name: 'phone', width: 390, height: 844 }]) {
   test(`a quiet site says one thing on every line, ${size.name}`, async ({ page }) => {
     await page.setViewportSize(size)
     await page.context().addCookies([{ name: 'trckable_session', value: await session('sites-overview'), url: API }])
     await page.addInitScript(() => localStorage.setItem('trckable.onboarding.skipped', '1'))
-    const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `quiet-${Date.now()}.overview.example.org` } })
+    const domain = `quiet-${Date.now()}.overview.example.org`
+    const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain } })
     const id = ((await made.json()) as { id: string }).id
+    // Taken away again: an unreachable site would turn up as "Not reachable" in the site list other specs read.
+    gone.push({ id, domain })
     const last = Math.floor(Date.now() / 1000) - 10 * 3600
 
     const quiet = async (route: import('@playwright/test').Route) => {
