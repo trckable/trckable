@@ -6,6 +6,7 @@ export const copy = defineCopy('allsites', {
   title: 'Sites',
   reading: 'Reading every site…',
   periodLabel: (days: number) => (days === 365 ? 'Last 12 months' : `Last ${days} days`),
+  periodToday: 'Today',
   summary: (period: string, lens: string, sites: string) => `${period} · ${lens} · ${sites}`,
   siteCount: (n: number) => `${n} site${n === 1 ? '' : 's'}`,
   siteCountOf: (n: number, all: number) => `${n} of ${all} sites`,

@@ -298,6 +298,20 @@
   color: var(--text-3);
   font-size: 12.5px;
 }
+.nx-mark {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.nx-mark .vf-seal-dot {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  margin: 0;
+  border-radius: 50%;
+  background: var(--bg);
+  line-height: 0;
+}
 .nx-spark {
   grid-area: spark;
   min-width: 0;

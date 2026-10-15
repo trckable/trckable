@@ -6,14 +6,15 @@ import { accountTotals } from '../features/incidents/model'
 import { useAccountIncidents, useNow } from '../features/incidents/useIncidents'
 import type { Surge } from '../features/signals/surge'
 import { SiteMark } from '../components/SiteMark'
+import { SiteSeal } from '../features/verified/SiteSeal'
 import { dotState, StateDot } from '../features/sites/StateDot'
 import { copy as siteCopy } from '../features/sites/copy'
-import { span, when } from '../features/sitestatus/time'
+import { when } from '../features/sitestatus/time'
 import type { Site, SiteRow } from '../lib/api'
 import { fmtInt } from '../lib/format'
 import { navigate } from '../lib/url'
 import { cellOf, revenueHeadline, revenueStrip, revenueTotal, type Cell, type Lens } from './allLens'
-import { byRevenue, feedOf, hasBaseline, headline, items, MOVE, moneyText, ordered, refWord, revenueOf, whyLine, type Item, type Kind } from './allNext'
+import { byRevenue, feedOf, hasBaseline, headline, items, MOVE, moneyText, ordered, refWord, revenueOf, silentFor, whyLine, type Item, type Kind } from './allNext'
 import { next } from './allNextCopy'
 import { copy as incidents } from '../features/incidents/copy'
 import { fromStart } from './allSitesLogic'
@@ -55,9 +56,8 @@ function dotTone(online: number, state: string): string {
 
 /** Who is online now, large with a live dot; grey and 0 when no one is. */
 function Pulse({ i, tip }: { i: Item; tip: string }) {
-  const now = useNow()
-  const last = i.site?.last_event_at
-  const silent = i.status === 'quiet' && last ? span(now / 1000 - last) : ''
+  const now = useNow() * 1000 // useNow is in seconds; the row's helpers take milliseconds
+  const silent = silentFor(i, now)
   const state = i.site ? dotState(i.site) : 'live'
   const tone = dotTone(i.online, state)
   return (
@@ -85,7 +85,7 @@ function Trend({ lens, cell, i, start, color }: { lens: Lens; cell: Cell; i: Ite
   return <Spark values={fromStart(i.row.series, start)} color={i.kind === 'attention' ? 'var(--money)' : color} h={30} />
 }
 
-function Line({ i, start, against, color, lens, total }: { i: Item; start: number; against: string; color: string; lens: Lens; total: number }) {
+function Line({ i, start, against, color, lens, total, period }: { i: Item; start: number; against: string; color: string; lens: Lens; total: number; period: string }) {
   const r = i.row
   const cell = cellOf(lens, i, total)
   const hurt = i.kind === 'attention'
@@ -99,7 +99,10 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
     <button type="button" className={'nx-line' + (live ? ' live' : '') + (hurt ? ' hurt ' + i.status : '')} onClick={() => navigate('/' + encodeURIComponent(r.domain))}>
       <span className="nx-name">
         {i.site && !(lens === 'visitors' && !waiting) && <StateDot site={i.site} />}
-        <SiteMark site={i.site ?? r} size={28} />
+        <span className="nx-mark">
+          <SiteMark site={i.site ?? r} size={28} />
+          <SiteSeal verified={i.site?.verified} />
+        </span>
         <span className="nx-who">
           <b title={r.domain}>{r.name || r.domain}</b>
           {r.name && r.name !== r.domain && <small className="muted">{r.domain}</small>}
@@ -117,7 +120,7 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
               <small>{cell.unit}</small>
             </span>
           )}
-          <span className="nx-spark">
+          <span className="nx-spark" title={period}>
             <Trend lens={lens} cell={cell} i={i} start={start} color={color} />
           </span>
         </>
@@ -128,7 +131,7 @@ function Line({ i, start, against, color, lens, total }: { i: Item; start: numbe
 }
 
 /** The Uptime card: the period's incidents across the shown sites, and how much of it they were up. */
-function UptimeCard({ sites, days, open }: { sites: Site[]; days: number; open: () => void }) {
+function UptimeCard({ sites, days, quiet, open }: { sites: Site[]; days: number; quiet: number; open: () => void }) {
   const { list, ready, failed } = useAccountIncidents(days)
   const now = useNow()
   // A site with no visit and no check yet has not been watched: it stays out of the totals.
@@ -140,11 +143,14 @@ function UptimeCard({ sites, days, open }: { sites: Site[]; days: number; open: 
   let note = next.uptimeUp(t.pct.toFixed(1))
   if (t.down.length === 1) note = next.uptimeDown(site?.name || site?.domain || '')
   if (t.down.length > 1) note = next.uptimeDownMany(t.down.length)
+  // Uptime is the HTTP checks; a site with no visits is a traffic state, so the tile never reads as all fine while one is quiet.
+  const hush = t.down.length === 0 && quiet > 0
+  if (hush) note = next.uptimeUpQuiet(t.pct.toFixed(1), quiet)
   return (
     <button type="button" className="nx-card" onClick={open}>
       <small>{incidents.lensUptime}</small>
       <b>{unwatched ? next.uptimeUnwatched : figure}</b>
-      {known && <em className={t.down.length > 0 ? 'warn' : ''}>{unwatched ? next.uptimeUnwatchedNote : note}</em>}
+      {known && <em className={t.down.length > 0 || hush ? 'warn' : ''}>{unwatched ? next.uptimeUnwatchedNote : note}</em>}
     </button>
   )
 }
@@ -193,7 +199,7 @@ export function AllToday({ lens, rows, sites, surges, colorOf, start, period, da
             <em>{period}</em>
           </button>
         )}
-        {!figures && <UptimeCard sites={sites} days={days} open={() => open('uptime')} />}
+        {!figures && <UptimeCard sites={sites} days={days} quiet={list.filter((i) => i.kind === 'attention' && i.status === 'quiet').length} open={() => open('uptime')} />}
       </div>
       <div className="nx-cols">
         <div className="nx-sites">
@@ -201,7 +207,7 @@ export function AllToday({ lens, rows, sites, surges, colorOf, start, period, da
             <section aria-label={next.totalRevenue}>
               <div className="nx-list">
                 {byRevenue(list).map((i) => (
-                  <Line key={i.row.id} i={i} start={start} against={ref} color={colorOf(i.row.id)} lens={lens} total={total} />
+                  <Line key={i.row.id} i={i} start={start} against={ref} color={colorOf(i.row.id)} lens={lens} total={total} period={period} />
                 ))}
               </div>
             </section>
@@ -215,7 +221,7 @@ export function AllToday({ lens, rows, sites, surges, colorOf, start, period, da
                     <h3>{g.title}</h3>
                     <div className="nx-list">
                       {group.map((i) => (
-                        <Line key={i.row.id} i={i} start={start} against={ref} color={colorOf(i.row.id)} lens={lens} total={total} />
+                        <Line key={i.row.id} i={i} start={start} against={ref} color={colorOf(i.row.id)} lens={lens} total={total} period={period} />
                       ))}
                     </div>
                   </section>
