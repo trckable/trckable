@@ -168,7 +168,8 @@ test('switching both ways: no blank frame, no shift, scroll kept', async ({ page
   await chunk
   const top = await view.boundingBox()
   const y = await page.evaluate(() => {
-    window.scrollTo(0, Math.min(300, document.documentElement.scrollHeight - innerHeight))
+    // Well inside the page as it is on the way back, before the cards under the cards have come in again.
+    window.scrollTo(0, Math.min(150, document.documentElement.scrollHeight - innerHeight))
     return scrollY
   })
 
