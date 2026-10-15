@@ -3,7 +3,7 @@
 // tabs a card opens on, stay in the first load).
 import { lazy, Suspense } from 'react'
 import { BarList } from '../../charts/BarList'
-import { Loading } from '../../components/loading/Loading'
+import { Skeleton } from '../../components/skeleton/Skeleton'
 import { channelColor } from '../../lib/palette'
 import { DIM_LABEL, PLACE_LABEL } from '../overview/dimLabels'
 import { cardCopy } from './copy'
@@ -25,7 +25,7 @@ export function LocationsPanel({ c }: { c: CardsCtx }) {
     <SubPanel id="loc" label={cardCopy.locations} tabs={tabs} c={c}
       render={(dim) =>
         dim === 'map' ? (
-          <Suspense fallback={<Loading height={180} />}>
+          <Suspense fallback={<Skeleton height={180} />}>
             <WorldMap rows={c.dims('country')} onPick={(code) => c.addFilter('country', code)} />
           </Suspense>
         ) : (

@@ -3,7 +3,7 @@
 // they share the numbers they read (useCharts).
 import type { CardsCtx } from '../cards/ctx'
 import { kitLater } from '../../charts/kitLater'
-import { Loading } from '../../components/loading/Loading'
+import { Skeleton } from '../../components/skeleton/Skeleton'
 import { ConvertCard } from './cards/ConvertCard'
 import { FlowCard } from './cards/FlowCard'
 import { FunnelCard } from './cards/FunnelCard'
@@ -23,7 +23,7 @@ export default function ChartPanel({ tab, c }: { tab: ChartTab; c: CardsCtx }) {
   if (tab === 'hours') return <RhythmCard site={c.site.id} query={c.query} timezone={c.site.timezone} />
   if (tab === 'revenue-map') return <MoneyMapCard rows={c.countryRevenue} fmtMoney={c.fmtMoney} onPick={(code) => c.addFilter('country', code)} />
   if (tab === 'flow') return <FlowCard charts={charts} />
-  if (!charts) return <Loading height={190} />
+  if (!charts) return <Skeleton height={190} />
   const steps = charts.conversion ?? []
   if (tab === 'visit-to-sale') return steps.length >= 2 ? <FunnelCard steps={steps} /> : <p className="faint kit-empty">{kitLater.empty}</p>
   const spans = charts.to_convert

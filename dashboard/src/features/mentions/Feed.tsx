@@ -20,10 +20,10 @@ function Choice<T extends string>({ label, value, options, name, onPick }: { lab
 }
 
 /** The newest-first list with its source and period filters. */
-export function Feed({ list, words, curves, filter, period, onFilter, onPeriod, onOpen }: { list: Mention[]; words: string[]; curves: Record<string, number[]>; filter: Filter; period: Period; onFilter: (f: Filter) => void; onPeriod: (p: Period) => void; onOpen: (m: Mention) => void }) {
+export function Feed({ list, curves, filter, period, onFilter, onPeriod, onOpen }: { list: Mention[]; curves: Record<string, number[]>; filter: Filter; period: Period; onFilter: (f: Filter) => void; onPeriod: (p: Period) => void; onOpen: (m: Mention) => void }) {
   const shown = filterOf(list, filter)
   return (
-    <section className="card mp-feed" aria-labelledby="mp-feed-h">
+    <section className="mp-feed" aria-labelledby="mp-feed-h">
       <div className="mp-feed-head">
         <h2 id="mp-feed-h">{page.feedTitle}</h2>
         <Choice label={page.filters} value={filter} options={FILTERS} name={(f) => (f === 'all' ? page.all : copy.name[f])} onPick={onFilter} />
@@ -32,7 +32,7 @@ export function Feed({ list, words, curves, filter, period, onFilter, onPeriod, 
       {shown.length > 0 ? (
         <ul className="mp-list">
           {shown.map((m) => (
-            <FeedRow key={m.id} m={m} words={words} curve={curves[m.id]} onOpen={() => onOpen(m)} />
+            <FeedRow key={m.id} m={m} curve={curves[m.id]} onOpen={() => onOpen(m)} />
           ))}
         </ul>
       ) : (

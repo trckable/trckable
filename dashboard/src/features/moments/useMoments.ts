@@ -5,6 +5,7 @@
 // is no pins, never an error: markers are garnish.
 import { useEffect, useState } from 'react'
 import type { Bucket, ReportQuery } from '../../lib/api'
+import { useKept } from '../../lib/useKept'
 import { extrasApi } from '../extras/extrasApi'
 import { whenQuiet } from '../extras/quiet'
 import { momentsApi } from './api'
@@ -13,7 +14,12 @@ import { dedupePins, pinsFromInsights, pinsFromMoments, type Pin } from './pins'
 /** Moments come by the day, or by the hour for an hourly chart; a week or a month holds the days it is made of. */
 export const momentBucket = (chart: Bucket): 'day' | 'hour' => (chart === 'hour' ? 'hour' : 'day')
 
+/** The pins of the period on screen; while another period's are on their way the last ones stay (a pin of another day simply finds no mark), so the markers do not blink out and back. */
 export function useMoments(site: string, query: ReportQuery, bucket: Bucket): Pin[] | null {
+  return useKept(usePins(site, query, bucket), site) ?? null
+}
+
+function usePins(site: string, query: ReportQuery, bucket: Bucket): Pin[] | null {
   const [found, setFound] = useState<{ key: string; pins: Pin[] } | null>(null)
   const which = momentBucket(bucket)
   const key = [site, query.from, query.to, which, query.testPayments ? 'test' : '', query.attr ?? ''].join('|')

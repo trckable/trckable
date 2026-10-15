@@ -27,6 +27,7 @@
 .mention-list {
   display: flex;
   flex-direction: column;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -36,11 +37,9 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  padding: 10px 0;
-  border-top: 1px solid var(--border);
-}
-.mention-row:first-child {
-  border-top: 0;
+  padding: 8px 12px 8px 8px;
+  border-radius: 10px;
+  background: var(--raised);
 }
 .mention-body {
   min-width: 0;
@@ -89,11 +88,25 @@
   color: var(--text-3);
   font-size: 12px;
 }
+.mentions-pulse {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--up);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--up) 22%, transparent);
+}
+.mentions-empty {
+  padding: 10px 12px;
+  border: 1px dashed var(--border-2);
+  border-radius: 10px;
+}
 .mentions-empty,
 .mentions-watch {
   margin: 0;
   color: var(--text-3);
-  font-size: 13px;
+  font-size: 12.5px;
   line-height: 1.5;
 }
 .mentions-more,
