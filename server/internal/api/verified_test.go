@@ -17,14 +17,6 @@ var vNow = time.Date(2026, 10, 15, 12, 0, 0, 0, time.UTC)
 func ago(d time.Duration) int64 { return vNow.Add(-d).Unix() }
 func ptr(v int64) *int64        { return &v }
 
-func kindsOK(list []verifiedSource) map[string]bool {
-	out := map[string]bool{}
-	for _, s := range list {
-		out[s.Kind+"/"+s.Provider] = s.OK
-	}
-	return out
-}
-
 // The trckable snippet on the site vouches for nothing: no check, no visit, no
 // listing. Only independent third parties are sources.
 func TestTheSnippetIsNeverASource(t *testing.T) {
