@@ -477,7 +477,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const inHeader = isShared() && !narrow
   return (
     <>
-      {!liveView && (firstLoad || loading) && <div className="loadbar" role="status" aria-label="Loading" />/* Live loads no report: it shows its own connection */}
       <HeaderBand><div className="header quiet">
         {header}{!waiting && !liveView && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}
         <HeaderTools

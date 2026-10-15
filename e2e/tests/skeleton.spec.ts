@@ -140,3 +140,27 @@ test('period and filter changes keep the numbers on screen, dimmed (no skeleton)
   await page.waitForTimeout(1500)
   expect(await page.evaluate(() => (window as unknown as { bad: string[] }).bad)).toEqual([])
 })
+
+test('an automatic refresh is silent: no skeleton, no bar, no dimming, no shimmer', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await warm(page)
+  await page.clock.install()
+  await page.goto(URL)
+  await expect(page.locator('.sv-chart')).toBeVisible({ timeout: 30_000 })
+  await page.evaluate(() => {
+    const w = window as unknown as { seen: string[] }
+    w.seen = []
+    const look = () => {
+      for (const s of ['.skel', '.dsk', '.dsk-inline', '.loadbar', '.pending', '.ld', '.sv-veil']) if (document.querySelector(s)) w.seen.push(s)
+      requestAnimationFrame(look)
+    }
+    look()
+  })
+  let reads = 0
+  page.on('request', (r) => /\/report\?/.test(r.url()) && reads++)
+  await page.clock.runFor(31_000) // the page's own 30 s refresh of a period that includes today
+  await page.clock.runFor(2_000)
+  await expect.poll(() => reads).toBeGreaterThan(0) // it did read again
+  expect(await page.evaluate(() => [...new Set((window as unknown as { seen: string[] }).seen)])).toEqual([])
+  await expect(page.locator('.sv-chart')).toBeVisible()
+})

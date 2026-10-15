@@ -17,6 +17,7 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { li
   const [lastKey, setLastKey] = useState('')
   // A refetch asked for because something new arrived skips the 10 s cache.
   const fresh = useRef(false)
+  const onScreen = useRef('') // the key of the report on screen
   const reading = useRef<{ key: string; ctl: AbortController }>(undefined)
   useEffect(() => () => reading.current?.ctl.abort(), [key])
 
@@ -32,11 +33,13 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { li
     if (reading.current?.key !== key || reading.current.ctl.signal.aborted) reading.current = { key, ctl: new AbortController() }
     const { signal } = reading.current.ctl
     const load = () => {
-      setLoading(true)
+      // Only a read for numbers that are not on screen yet (a new site, period or filter) says it is loading: a read that refreshes what is shown (a visit, the clock, the tab shown again) is silent.
+      if (onScreen.current !== key) setLoading(true)
       const maxAge = fresh.current ? 0 : undefined
       fresh.current = false
       const seen = peekReport(site, q)
       if (seen) {
+        onScreen.current = key
         setLastKey(key)
         setData(seen)
         setError(null)
@@ -44,6 +47,7 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { li
       cachedReport(site, q, maxAge, signal)
         .then((r) => {
           if (cancelled) return
+          onScreen.current = key
           setLastKey(key)
           setData(r)
           setError(null)

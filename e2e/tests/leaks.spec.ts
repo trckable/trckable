@@ -33,7 +33,11 @@ const go = (page: Page, path: string) =>
     window.dispatchEvent(new Event('trckable:navigate')) // what the app's own navigate() does
   }, path)
 
+// The heap and listener numbers are noisy on a shared CI runner: they run locally and nightly (TRCKABLE_LEAK_SPECS=1).
+const memory = !!process.env.TRCKABLE_LEAK_SPECS
+
 test('switching sites twenty times grows neither the heap nor the DOM nor the listeners', async ({ page }) => {
+  test.skip(!memory, 'set TRCKABLE_LEAK_SPECS=1')
   test.setTimeout(240_000)
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=data&v=story`)
@@ -67,6 +71,7 @@ test('switching sites twenty times grows neither the heap nor the DOM nor the li
 })
 
 test('Live kept open for five minutes of visits keeps the heap and the DOM flat', async ({ page }) => {
+  test.skip(!memory, 'set TRCKABLE_LEAK_SPECS=1')
   test.setTimeout(240_000)
   await page.setViewportSize({ width: 1440, height: 900 })
   // The stream is a page of ours that fires what the test says, so five minutes of visits take seconds.
