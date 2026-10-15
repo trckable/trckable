@@ -21,6 +21,7 @@ import { copy } from './copy'
 import { Answers } from './Answers'
 import { BounceCard } from './BounceCard'
 import { Ask } from './Ask'
+import SourceMarkers from '../markers/SourceMarkers'
 import { MomentSpans } from './MomentSpans'
 import { SetupCard } from './SetupCard'
 import { sinceOf, storyOf, takeawayOf } from './rules'
@@ -74,7 +75,12 @@ export default function StoryView(p: StoryViewProps) {
       ? setView({ ...patchFor(m.main, { filters: [], range: p.range, today, bucket }), v: 'explore', story: 'moment' })
       : setView({ ...patchFor(m.main, { filters: [], range: p.range, today, bucket }), period: 'custom', from: m.from, to: m.to, bucket: undefined, day: undefined, live: false, v: 'explore', story: 'moment' })
   const visitors = cur.series.map((x) => x.visitors)
-  const layer = (g: { x: (i: number) => number; y: (v: number) => number; vals: number[]; w: number }) => <MomentSpans spans={marks} geo={g} site={p.site.id} visitors={visitors} narrow={p.narrow} onOpen={open} />
+  const layer = (g: { x: (i: number) => number; y: (v: number) => number; vals: number[]; w: number }) => (
+    <>
+      {marks.length > 0 && <MomentSpans spans={marks} geo={g} site={p.site.id} visitors={visitors} narrow={p.narrow} onOpen={open} />}
+      <SourceMarkers g={g} site={p.site} from={data.from} to={data.to} labels={labels} visitors={visitors} bucket={bucket} explore />
+    </>
+  )
   const period = `${fmtDay(data.from)} ${bar.to} ${fmtDay(data.to)}`
   const h = facts.headline
   return (
@@ -116,7 +122,7 @@ export default function StoryView(p: StoryViewProps) {
               metric={metricName('visitors')}
               bucket={bucket}
               partialLast={data.to === today}
-              layer={marks.length > 0 ? layer : undefined}
+              layer={layer}
             />
           </div>
         </div>

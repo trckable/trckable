@@ -2625,4 +2625,13 @@ export default {
   'mentionsPage.goals': (n: number) => `${count(n, 'visiteur', 'visiteurs')} venus de là ont atteint un objectif`,
   'mentionsPage.removeWord': (w: string) => `Retirer ${w}`,
   'mentionsPage.pin': (t: string, n: number) => `${t} : ${count(n, 'visiteur', 'visiteurs')}`,
+  // markers
+  'markers.group': 'Sources et liens sur le graphique',
+  'markers.chip': (name: string, added: number) => `${name} +${int(added)}`,
+  'markers.mark': (name: string, added: number, day: string, more: number) => `${name}, ${int(added)} visiteurs de plus le ${day}${more ? `, et ${more} autres` : ''}. Ouvrir`,
+  'markers.sent': (name: string, visitors: number, day: string) => `${name} a envoyé ${count(visitors, 'visiteur', 'visiteurs')} le ${day}`,
+  'markers.alsoNear': (n: number) => `et ${n} autres à ce moment-là`,
+  'markers.show': 'Afficher les repères',
+  'markers.see': 'Voir ces visiteurs',
+  'markers.line': (day: string, name: string, added: number) => `L’essentiel de la hausse du ${day} vient de ${name} (+${int(added)})`,
 } satisfies Messages

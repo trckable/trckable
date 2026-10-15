@@ -14,6 +14,7 @@ import { sameFilter } from '../../lib/filterSet'
 import { readView, setView } from '../../lib/url'
 import IncidentMarks from '../incidents/IncidentMarks'
 import MentionMarks from '../mentions/MentionMarks'
+import SourceMarkers from '../markers/SourceMarkers'
 import { SurgeBand } from '../signals/SurgeBand'
 import { rangeOf } from '../../lib/dashQuery'
 import { LANE_H } from '../../charts/plot'
@@ -96,6 +97,7 @@ export default function MomentLayer(p: LayerProps) {
     <>
       <IncidentMarks g={g} site={p.site} labels={p.labels} bucket={p.bucket} />
       <MentionMarks g={g} site={p.site} labels={p.labels} bucket={p.bucket} />
+      <SourceMarkers g={g} site={p.site} from={p.query.from} to={p.query.to} labels={p.labels} visitors={p.series.map((x) => x.visitors)} bucket={p.bucket} />
       {surge && <SurgeBand site={p.site.id} tz={p.site.timezone} started={surge} g={g} labels={p.labels} />}
       {marks.length > 0 && <i className="moment-lane" aria-hidden="true" style={{ left: g.x(0), width: g.w - g.x(0), top: LANE }} />}
       {day && <i className={`moment-day ${day.pin.kind}`} aria-hidden="true" style={{ left: g.x(day.i), width: Math.max(8, g.x(1) - g.x(0)), top: LANE_H, height: g.y(0) - LANE_H }} />}

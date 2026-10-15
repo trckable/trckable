@@ -2630,4 +2630,13 @@ export default {
   'mentionsPage.goals': (n: number) => `${count(n, 'visitante', 'visitantes')} desde ahí alcanzaron un objetivo`,
   'mentionsPage.removeWord': (w: string) => `Quitar ${w}`,
   'mentionsPage.pin': (t: string, n: number) => `${t}: ${count(n, 'visitante', 'visitantes')}`,
+  // markers
+  'markers.group': 'Fuentes y enlaces en el gráfico',
+  'markers.chip': (name: string, added: number) => `${name} +${int(added)}`,
+  'markers.mark': (name: string, added: number, day: string, more: number) => `${name}, ${int(added)} visitantes más el ${day}${more ? `, y ${more} más` : ''}. Abrir`,
+  'markers.sent': (name: string, visitors: number, day: string) => `${name} envió ${count(visitors, 'visitante', 'visitantes')} el ${day}`,
+  'markers.alsoNear': (n: number) => `y ${n} más por esas fechas`,
+  'markers.show': 'Mostrar marcas',
+  'markers.see': 'Ver estos visitantes',
+  'markers.line': (day: string, name: string, added: number) => `La mayor parte del salto del ${day} vino de ${name} (+${int(added)})`,
 } satisfies Messages
