@@ -143,4 +143,9 @@ export const copy = defineCopy('storyview', {
   thanks: 'Thanks.',
   exploreAll: 'Explore all the numbers: Sources, Pages, Locations, Devices, Calendar',
   loading: 'Reading your numbers',
+  // What a tile tells a listener when it is asked about.
+  aboutTile: (label: string) => `Why is ${label.toLowerCase()} where it is, and what moved it?`,
+  aboutMove: (dir: string, pct: string) => `${dir} ${pct} on the period before`,
+  aboutUp: 'Up',
+  aboutDown: 'Down',
 })

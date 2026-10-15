@@ -14,6 +14,23 @@ export function Tooltip({ text, align = 'left', float = false, children }: { tex
   const [at, setAt] = useState<CSSProperties | null>(null)
   const id = useId()
   const root = useRef<HTMLSpanElement>(null)
+  const tip = useRef<HTMLSpanElement>(null)
+  const [nudge, setNudge] = useState(0)
+  useLayoutEffect(() => {
+    // Keep the tip inside what shows it (the window, or a panel that clips): shift it sideways by what spills over.
+    if (!open || float || !tip.current) return setNudge(0)
+    const r = tip.current.getBoundingClientRect()
+    const x = r.left - nudge
+    let lo = 8
+    let hi = document.documentElement.clientWidth - 8
+    for (let el = tip.current.parentElement; el && el !== document.body; el = el.parentElement) {
+      if (getComputedStyle(el).overflowX === 'visible') continue
+      const b = el.getBoundingClientRect()
+      lo = Math.max(lo, b.left + 8)
+      hi = Math.min(hi, b.right - 8)
+    }
+    setNudge(Math.max(lo - x, Math.min(0, hi - (x + r.width))))
+  }, [open, float, text]) // eslint-disable-line react-hooks/exhaustive-deps -- nudge is read to undo itself, not a trigger
   useLayoutEffect(() => {
     if (!open || !float || !root.current) return setAt(null)
     // Beside the panel the trigger sits in, at the trigger's height: right of it when there is room, else left.
@@ -37,7 +54,7 @@ export function Tooltip({ text, align = 'left', float = false, children }: { tex
     <span className="info" ref={root} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
       {children({ 'aria-describedby': open ? id : undefined, onClick: () => setOpen((o) => !o), onFocus: () => setOpen(true), onBlur: () => setOpen(false) })}
       {open && !float && (
-        <span className={align === 'right' ? 'tip right' : 'tip'} id={id} role="tooltip">
+        <span ref={tip} className={align === 'right' ? 'tip right' : 'tip'} id={id} role="tooltip" style={nudge ? { translate: `${nudge}px 0` } : undefined}>
           {text}
         </span>
       )}

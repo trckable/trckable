@@ -22,3 +22,27 @@
 .keybox.as-button:hover {
   background: var(--surface-2);
 }
+
+/* Moved out of the first load: only this component uses these rules. */
+.keybox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: var(--sunken);
+}
+.keybox code {
+  flex: 1;
+  min-width: 180px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  word-break: break-all;
+  color: var(--text);
+}
+.keybox .faint {
+  flex-basis: 100%;
+  font-size: 12px;
+}
