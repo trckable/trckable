@@ -557,7 +557,7 @@ var widgetTmpl = template.Must(template.New("w").Parse(strings.Replace(`<!doctyp
 *{box-sizing:border-box;margin:0}
 body{container-type:inline-size;min-width:0}
 html,body{overflow:hidden;background:transparent;overflow-wrap:anywhere;font:14px/1.35 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--fg)}
-.card{background:var(--bg);border:1px solid var(--line);border-radius:{{.Radius}}px;padding:clamp(12px,5cqw,18px) clamp(14px,6cqw,20px);min-width:0}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:{{.Radius}}px;padding:clamp(12px,5cqw,18px) clamp(14px,6cqw,20px);min-width:0;overflow:hidden}
 body>.card:not(.pill):not(.badge){max-width:560px}
 .lab{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
 .big{display:flex;align-items:center;gap:10px;font-size:clamp(26px,10cqw,34px);font-weight:700;letter-spacing:-.02em;margin:6px 0 12px;font-variant-numeric:tabular-nums}
@@ -575,8 +575,10 @@ body>.card:not(.pill):not(.badge){max-width:560px}
 .bars i:hover b{display:block}
 .ax{display:flex;justify-content:space-between;margin-top:6px;font-size:10.5px;color:var(--mute);font-variant-numeric:tabular-nums}
 h3{margin-top:14px;font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
-ul{list-style:none;padding:0;margin-top:8px;display:grid;gap:6px}
-li{display:flex;align-items:center;gap:8px}
+ul{list-style:none;padding:0;margin-top:8px;display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+li{display:flex;align-items:center;gap:8px;min-width:0}
+li>*{min-width:0}
+li b{flex:none}
 li span:nth-child(2){flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 li b{font-weight:500;font-variant-numeric:tabular-nums}
 .ok{color:var(--acc);font-weight:700}
@@ -598,7 +600,7 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 .vf .marks{display:flex;gap:5px;flex:none}
 .vf .marks i{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--line);color:var(--fg)}
 .vf:hover b,.vf:focus-visible b{text-decoration:underline}
-.vf:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.vf:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
 .foot{margin-top:12px;font-size:11px;color:var(--mute)}
 .off{color:var(--mute);font-size:13px}
 .facts li{align-items:flex-start}

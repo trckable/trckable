@@ -46,9 +46,10 @@ async function made(page: Page) {
     const domain = `widgets-${at}-${Date.now()}.example.org`
     const site = ((await (await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain } })).json()) as { id: string }).id
     await page.request.put(`${API}/api/v1/sites/${site}/modules/revenue`, { headers: H, data: { enabled: true } })
-    const paths = ['/', '/pricing', '/blog/a-rather-long-page-name-that-will-not-fit-on-a-phone', '/docs']
+    // Paths and sources with nothing to break at: a row must still truncate, whatever the data.
+    const paths = ['/', '/pricing', '/blog/a-rather-long-page-name-that-will-not-fit-on-a-phone', `/${'x'.repeat(90)}`]
     for (let i = 0; i < 6; i++) {
-      await page.request.post(`${API}/api/e`, { headers: { 'User-Agent': UA }, data: { s: site, k: 'pv', u: `https://${domain}${paths[i % 4]}`, id: `wr${at}${i}`, v: `wr${at}${i}.1` } })
+      await page.request.post(`${API}/api/e`, { headers: { 'User-Agent': UA }, data: { s: site, k: 'pv', u: `https://${domain}${paths[i % 4]}`, r: i % 2 ? `https://${'sub'.repeat(25)}.example.net/` : '', id: `wr${at}${i}`, v: `wr${at}${i}.1` } })
     }
     // The verified badge draws only what works: Stripe, with a sale delivered.
     await stripeSale(page.request, site)
