@@ -51,7 +51,7 @@ export function StorySlot({ view, data, ready, waiting, loading, children, ...re
   const switchOn = ready && !waiting && !isShared()
   const shown = switchOn && storyOn(view)
   const switching = useSwitching(`${shown}|${view.story ?? ''}`, loading)
-  const cls = ['sleep', 'view-stage', waiting && 'waiting', switching ? 'sv-switching' : 'sv-settled'].filter(Boolean).join(' ')
+  const cls = ['sleep', 'view-stage', waiting && 'waiting', switching ? 'sv-switching' : 'sv-settled', ready && loading && !switching ? 'pending' : 'settled'].filter(Boolean).join(' ')
   useEffect(() => {
     if (switching) window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [switching])

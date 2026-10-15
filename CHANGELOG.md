@@ -11,6 +11,7 @@ section into the release.
 
 - Info tips stay inside their panel: a tip near the edge of a table or a sheet slides back in instead of being cut off.
 - Cards and alert emails can hand a question to an add-on: a card raises a `trckable:ask-about` window event, alert mails can carry an optional link, and the footer loads lazily. Nothing changes on a plain install.
+- Changing the period or a filter no longer flashes: the numbers and chart on screen stay, a little dimmer, until the new ones land, the markers on the chart no longer blink out and back, and cards waiting for their first data show a soft shimmering block of their final height instead of a spinner. Nothing moves when the data arrives, and reduced motion turns the shimmer and the fade off.
 - Chart hover tips stay fully inside their card: at the first or last minute of Live, and in every other chart, the tip moves to the side of the cursor that has room, or above it, and never covers the point you are on.
 
 ## 0.7.22 (14 Oct 2026)
@@ -691,6 +692,7 @@ section into the release.
 - The demo data seeder turns the Revenue module on when it seeds payments, so the demo shows revenue, Top earners and the money in Full mode instead of hiding them.
 - The visitor journey tells one visitor's story: an identity card (generated avatar, country, device, browser and OS, new or returning, first and last seen, visits, time on site, and what they paid with the visit it is credited to), then a timeline per visit with the entry source, time on each page, repeated views folded (×3), goals and payments marked, and the exit. A visitor still on the site shows it with the page they are on. The source and pages filter the dashboard; copy id, Data request and Erase visitor sit in a small menu. A bottom sheet on a phone. A visit with no pages no longer breaks the dialog.
 - Live's "On the site right now" matches it: each person's avatar with their source pinned to it, a device icon, the path cut in the middle, a ticking "5s" chip that glows for anyone active in the last 30 seconds, new rows glowing in and a round arrow on hover or focus that opens the journey.
+
 ## 0.4.0 (27 Sep 2026)
 
 ### New

@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { ChartHead } from '../../charts/ChartHead'
 import { HeatKey } from '../../charts/HeatGrid'
 import { Info } from '../../components/Info'
-import { Loading } from '../../components/loading/Loading'
+import { Skeleton } from '../../components/skeleton/Skeleton'
 import { type Cohorts, type ReportQuery, type Site, more } from '../../lib/apiMore'
 import { fmtInt, fmtPct } from '../../lib/format'
 import { deepCopy } from './deepCopy'
@@ -57,7 +57,7 @@ export default function Retention({ site, query }: { site: Site; query: ReportQu
     <div className="rt-panel">
       <ChartHead start={r.kind === 'table' && <HeatKey color="var(--accent)" fewer={c.low} more={c.high} />} end={<Info text={INFO} />} />
       {err && <span className="faint">{c.failed}</span>}
-      {!err && !data && <Loading height={140} />}
+      {!err && !data && <Skeleton height={140} />}
       {!err && data && r.kind === 'none' && <span className="faint">{c.none}</span>}
       {!err && r.kind === 'line' && <p className="rt-line num">{c.nextWeek(r.nextWeek)}</p>}
       {!err && r.kind === 'table' && (
