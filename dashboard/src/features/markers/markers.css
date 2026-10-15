@@ -80,6 +80,9 @@
   pointer-events: none;
 }
 .sm-pop {
+  /* Above its pin, inside the chart: below it the card ends and would cut it off. */
+  transform: translateY(-100%);
+  z-index: 30;
   display: grid;
   gap: 8px;
   padding: 12px;
