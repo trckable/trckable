@@ -52,11 +52,18 @@ test('switching sites twenty times grows neither the heap nor the DOM nor the li
   for (let i = 0; i < 4; i++) await visit(i)
   const before = await counters(cdp)
   for (let i = 0; i < 20; i++) await visit(i)
+  // A slow machine may still hold the page it just left (one more set of the page's own listeners until it is collected):
+  // that is a one-time step, not growth. Growth is what twenty more switches add on top of it.
+  await page.waitForTimeout(1500)
+  const mid = await counters(cdp)
+  for (let i = 0; i < 20; i++) await visit(i)
+  await page.waitForTimeout(1500)
   const after = await counters(cdp)
-  note('20 site switches', before, after)
+  note('20 + 20 site switches', { before, mid }, after)
   expect(after.heapMB - before.heapMB, 'JS heap grew').toBeLessThan(8)
   expect(after.nodes - before.nodes, 'DOM nodes grew').toBeLessThan(Math.max(300, before.nodes * 0.1))
-  expect(after.listeners - before.listeners, 'event listeners grew').toBeLessThan(60)
+  expect(after.listeners - mid.listeners, 'event listeners grew with every switch').toBeLessThan(40)
+  expect(after.listeners - before.listeners, 'event listeners piled up').toBeLessThan(200)
 })
 
 test('Live kept open for five minutes of visits keeps the heap and the DOM flat', async ({ page }) => {

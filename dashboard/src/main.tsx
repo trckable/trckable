@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { Ghost } from "./components/Logo";
 import { Booting } from "./components/skeleton/DashSkeleton"; import { Loading } from "./components/loading/Loading";
 import { logoInner } from "./brand/logo"; import { useBootCache } from "./lib/bootCache";
-import { api, setUnauthorizedHandler, type Site } from "./lib/api"; import { startEarly, takeEarly } from "./lib/earlyStart";
+import { api, setUnauthorizedHandler, type Site } from "./lib/api"; import { startEarly, takeEarly, takeSetup } from "./lib/earlyStart";
 import { navigate, useLocation } from "./lib/url"; import "./lib/legacyPaths";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
 import "./styles.css";
@@ -53,7 +53,7 @@ function App() {
   const load = useCallback(async () => {
     try {
       const early = takeEarly(); // /me and /sites went out with the script, and /setup goes now: one round trip, not three
-      const s = await api.setupStatus();
+      const s = await takeSetup();
       if (s.needs_setup) {
         setBoot({ state: "setup" });
         return;

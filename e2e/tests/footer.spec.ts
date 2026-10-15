@@ -13,10 +13,18 @@ test.beforeAll(async () => {
   cookie = await session('footer')
 })
 
+// The sites made here are taken away again: an unreachable one would turn up (as "Not reachable") in the site list other specs read.
+const made: { id: string; domain: string }[] = []
+test.afterEach(async ({ request }) => {
+  for (const s of made.splice(0)) await request.delete(`${API}/api/v1/sites/${s.id}`, { headers: { ...H, Cookie: `trckable_session=${cookie}` }, data: { domain: s.domain } })
+})
+
 const open = async (page: import('@playwright/test').Page) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `footer-${Date.now()}.example.org` } })
-  expect(made.ok()).toBe(true)
+  const res = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `footer-${Date.now()}.example.org` } })
+  expect(res.ok()).toBe(true)
+  const body = (await res.json()) as { site?: { id: string; domain: string } } & { id?: string; domain?: string }
+  made.push(body.site ?? { id: body.id!, domain: body.domain! })
   await page.goto(`${API}/`)
   const foot = page.locator('footer.app-footer')
   await expect(foot).toBeVisible({ timeout: 20_000 })
