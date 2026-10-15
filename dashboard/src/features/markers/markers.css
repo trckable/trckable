@@ -1,0 +1,166 @@
+/* The source markers on the charts (SourceMarkers): a small pill with the
+   source's badge and what it added, above the baseline, never on the line. */
+.sm-marks {
+  display: contents;
+}
+.sm-mark {
+  --mk: var(--ch-1);
+  position: absolute;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  height: 22px;
+  margin: 0;
+  padding: 0 7px 0 3px;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid var(--mk);
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+.sm-mark.link {
+  --mk: var(--ch-3);
+}
+/* A finger-sized target around the small pill. */
+.sm-mark::after {
+  content: '';
+  position: absolute;
+  inset: -8px -4px;
+}
+.sm-mark:hover,
+.sm-mark:focus-visible,
+.sm-mark.on {
+  border-width: 2.5px;
+  background: color-mix(in srgb, var(--mk) 14%, var(--surface));
+  outline: none;
+}
+.sm-mark:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--text) 35%, transparent);
+}
+.sm-badge {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 2px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background: var(--mk);
+  color: var(--surface);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+.sm-more {
+  color: var(--text-2);
+  font-size: 12px;
+  font-style: normal;
+}
+.sm-tip,
+.sm-pop {
+  position: absolute;
+  z-index: 6;
+  box-sizing: border-box;
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: 12.5px;
+}
+.sm-tip {
+  padding: 6px 10px;
+  pointer-events: none;
+}
+.sm-pop {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  font-size: 13px;
+}
+.sm-pop p {
+  margin: 0;
+}
+.sm-says {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.sm-says .sm-badge {
+  --mk: var(--ch-1);
+  margin-top: 1px;
+}
+.sm-also {
+  font-size: 12px;
+}
+.sm-see {
+  justify-self: start;
+}
+@media (max-width: 640px) {
+  .sm-tip {
+    font-size: 12px;
+  }
+}
+
+/* The line under a headline: where the biggest jump came from. */
+.sm-line {
+  margin: 4px 0 0;
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+/* The menu beside the replay speed: opens upwards, like the speed does. */
+.markers-menu {
+  position: relative;
+  flex: none;
+}
+.markers-narrow {
+  display: none;
+}
+.pop.menu-pop.markers-pop {
+  bottom: 46px;
+  left: 0;
+  width: 200px;
+  max-width: calc(100vw - 32px);
+}
+.markers-row {
+  min-height: 38px;
+  gap: 10px;
+}
+.markers-row .menu-title {
+  flex: 1;
+}
+.markers-box {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--border-2);
+  border-radius: 4px;
+}
+.markers-row.on .markers-box {
+  border-color: var(--accent);
+  background: var(--accent) radial-gradient(circle at 50% 50%, var(--surface) 0 3px, transparent 3.5px);
+}
+@media (max-width: 640px) {
+  .markers-wide {
+    display: none;
+  }
+  .markers-narrow {
+    display: block;
+  }
+  .markers-btn {
+    padding: 0 10px;
+  }
+  .pop.menu-pop.markers-pop {
+    left: auto;
+    right: 0;
+  }
+}

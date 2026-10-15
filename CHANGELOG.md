@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- Where a jump came from, on the charts: when Hacker News, Indie Hackers, Product Hunt, Reddit, X, LinkedIn, Google, Bing or an AI assistant brings its first visits or a jump on a day, the Visitors chart and "What happened, day by day" show a small marker ("+40"); open it and it says "Hacker News sent 40 visitors on Oct 2" with one button, "See these visitors". Your tagged links get markers too. When one source explains most of a day's rise, one line under the headline says so ("Most of the Oct 2 jump came from Hacker News (+40)"). A Markers menu beside the replay speed (⋯ on a phone) turns Sources, Links, Goals and Moments on or off for both charts and remembers it in this browser; Goals start off. Nothing is asked for on the first load.
 - Info tips stay inside their panel: a tip near the edge of a table or a sheet slides back in instead of being cut off.
 - Cards and alert emails can hand a question to an add-on: a card raises a `trckable:ask-about` window event, alert mails can carry an optional link, and the footer loads lazily. Nothing changes on a plain install.
 - Your links is on the dashboard now, not only in the ⋯ menu: a card above Mentions with the three tagged links that brought the most (mark, tag, a bar, visitors, and a goal badge), a tap shows the dashboard for that link, and "All links" opens the page. With no tagged visit yet it is one slim line with a sample link to copy, which you can hide. It loads when it is about to be seen, so the first load is unchanged.

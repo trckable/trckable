@@ -14,6 +14,8 @@ import { sameFilter } from '../../lib/filterSet'
 import { readView, setView } from '../../lib/url'
 import IncidentMarks from '../incidents/IncidentMarks'
 import MentionMarks from '../mentions/MentionMarks'
+import { useMarkers } from '../markers/settings'
+import SourceMarkers from '../markers/SourceMarkers'
 import { SurgeBand } from '../signals/SurgeBand'
 import { rangeOf } from '../../lib/dashQuery'
 import { LANE_H } from '../../charts/plot'
@@ -73,7 +75,10 @@ export default function MomentLayer(p: LayerProps) {
   }, [])
   // The card belongs to the chart it was opened on: when the chart goes (another site, Replay), so does it.
   useEffect(() => () => openMark.set(null), [])
-  const placed = useMemo(() => placePins(pins ?? [], p.labels, p.bucket), [pins, p.labels, p.bucket])
+  // The Markers menu: a first goal is a goal marker, every other moment a moment.
+  const on = useMarkers()
+  const wanted = useMemo(() => (pins ?? []).filter((q) => (q.kind === 'milestone' && q.n.family === 'first_goal' ? on.goals : on.moments)), [pins, on.goals, on.moments])
+  const placed = useMemo(() => placePins(wanted, p.labels, p.bucket), [wanted, p.labels, p.bucket])
   const marks = useMemo(() => pickMarks(placed, g.x, [g.x(0), g.w - MARK_EDGE]), [placed, g.w, p.labels.length]) // eslint-disable-line react-hooks/exhaustive-deps -- g.x changes with the width and the number of buckets, which are listed
   /** Applies a pin to the address; `drop` is the pin it replaces, whose filter goes. */
   const apply = (pin: Pin, drop?: Pin) => {
@@ -96,6 +101,7 @@ export default function MomentLayer(p: LayerProps) {
     <>
       <IncidentMarks g={g} site={p.site} labels={p.labels} bucket={p.bucket} />
       <MentionMarks g={g} site={p.site} labels={p.labels} bucket={p.bucket} />
+      <SourceMarkers g={g} site={p.site} from={p.query.from} to={p.query.to} labels={p.labels} bucket={p.bucket} />
       {surge && <SurgeBand site={p.site.id} tz={p.site.timezone} started={surge} g={g} labels={p.labels} />}
       {marks.length > 0 && <i className="moment-lane" aria-hidden="true" style={{ left: g.x(0), width: g.w - g.x(0), top: LANE }} />}
       {day && <i className={`moment-day ${day.pin.kind}`} aria-hidden="true" style={{ left: g.x(day.i), width: Math.max(8, g.x(1) - g.x(0)), top: LANE_H, height: g.y(0) - LANE_H }} />}
