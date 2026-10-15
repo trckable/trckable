@@ -99,6 +99,23 @@ export interface Bots {
 
 export type Bucket = 'hour' | 'day' | 'week' | 'month'
 
+/** What stands behind a site's numbers, and whether it works right now (features/verified). */
+export interface VerifiedSource {
+  kind: 'snippet' | 'gsc' | 'payments'
+  /** payments: stripe, paypal, paddle, lemonsqueezy… */
+  provider?: string
+  ok: boolean
+  /** Unix seconds: when it was set up. */
+  since: number
+  /** Unix seconds: when it last worked, or was last looked at. */
+  checked: number
+  /** One plain sentence in English, for scripts; the dashboard words it itself. */
+  detail: string
+}
+export interface Verified {
+  sources: VerifiedSource[]
+}
+
 export interface Site {
   id: string
   domain: string
@@ -131,6 +148,8 @@ export interface Site {
   check?: { at: number; found?: 'site' | 'other' | 'nosite' | 'none'; via?: string; error?: string; down_since?: number }
   /** Unix seconds until which the site's alerts are snoozed; absent when they are not. */
   alerts_muted_until?: number
+  /** The sources behind the numbers (a shared page carries the same). */
+  verified?: Verified
 }
 
 /** Whether the dashboard shows the install card over sample numbers. A site
@@ -645,6 +664,8 @@ export interface ShareInfo {
   accent?: string
   logo_url?: string
   hide_brand?: boolean
+  /** What stands behind the numbers this link shows. */
+  verified?: Verified
   /** Only for an embedded link: the session the page sends as a header,
    *  because a browser does not send cookies into another site's iframe. */
   session?: string
@@ -804,7 +825,7 @@ export interface Milestones {
   next?: MilestoneNext[]
 }
 
-export type WidgetKind = 'live' | 'badge' | 'counter' | 'revenue' | 'privacy' | 'online'
+export type WidgetKind = 'live' | 'badge' | 'counter' | 'revenue' | 'privacy' | 'verified' | 'online'
 export interface WidgetLook {
   /** What the owner calls it, at most 40 characters; blank is the design's own name. */
   name?: string

@@ -9,6 +9,9 @@ import { aboutTile } from './aboutTile'
 import { copy } from './copy'
 import { brief, type Tile, type Tone } from './rules'
 import type { TileSeries } from './tileSeries'
+import type { Verified } from '../../lib/api'
+import { SourceChip } from '../verified/SourceChip'
+import { proofFor, type Slot } from '../verified/model'
 
 const ICON: Record<Tile['key'], LucideIcon> = { visitors: Users, bounce: LogOut, session: Clock, revenue: Wallet }
 
@@ -20,6 +23,9 @@ function nameOf(t: Tile) {
   const short = { bounce: kitWords.shortBounce, session: kitWords.shortSession }[t.key as 'bounce' | 'session']
   return short ? <ShortName full={t.label} short={short} /> : t.label
 }
+
+/** Which tiles a source can prove. */
+const PROOF: Partial<Record<Tile['key'], Slot>> = { visitors: 'visitors', revenue: 'revenue' }
 
 const KIT: Record<Tone, KitTone> = { good: 'good', warn: 'warn', bad: 'bad', flat: 'neutral' }
 
@@ -36,12 +42,17 @@ function Status({ t }: { t: Tile }) {
   return <TipText text={text} tip={`${t.verdict}. ${copy.normalTip}`} align="right" />
 }
 
-export function Tiles({ tiles, series, onConnect }: { tiles: Tile[]; series: TileSeries; onConnect: () => void }) {
+export function Tiles({ tiles, series, verified, onConnect }: { tiles: Tile[]; series: TileSeries; verified?: Verified; onConnect: () => void }) {
+  const proof = (t: Tile): Slot | undefined => {
+    const slot = PROOF[t.key]
+    return slot && proofFor(verified, slot) ? slot : undefined
+  }
   return (
     <section className="sv-tiles" aria-label={copy.tilesLabel}>
       {tiles.map((t) => {
         const Icon = ICON[t.key]
         const icon = <Icon size={15} strokeWidth={1.8} />
+        const slot = proof(t)
         return t.connect ? (
           <Card key={t.key} variant="dashed" className="sv-tile" icon={icon} title={t.label}>
             <button type="button" className="kit-linkline" onClick={onConnect}>
@@ -49,7 +60,8 @@ export function Tiles({ tiles, series, onConnect }: { tiles: Tile[]; series: Til
             </button>
           </Card>
         ) : (
-          <MetricArea key={t.key} className="sv-tile" icon={icon} label={nameOf(t)} value={t.value} pill={pillOf(t)} status={<Status t={t} />} tone={KIT[t.tone]} color={COLOR[t.key]} series={series[t.key]} aside={<AskAbout about={aboutTile(t)} />} />
+          // The badge takes the verdict's place in the head; the verdict moves under the number.
+          <MetricArea key={t.key} className="sv-tile" icon={icon} label={nameOf(t)} value={t.value} pill={pillOf(t)} status={slot ? <SourceChip verified={verified} slot={slot} /> : <Status t={t} />} sub={slot ? <Status t={t} /> : undefined} tone={KIT[t.tone]} color={COLOR[t.key]} series={series[t.key]} aside={<AskAbout about={aboutTile(t)} />} />
         )
       })}
     </section>

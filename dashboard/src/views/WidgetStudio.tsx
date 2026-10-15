@@ -145,14 +145,17 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
               </label>
             ))}
           </WidgetSection>
-          <WidgetSection summary={brandSummary(look)} {...group('brand')}>
-            <label className="wg-part">
-              <span>
-                <b>{TEXT.credit}</b>
-              </span>
-              <Switch on={look.brand} label={TEXT.credit} onChange={() => set({ brand: !look.brand })} />
-            </label>
-          </WidgetSection>
+          {/* The verified badge says whose it is itself, so it has no line to switch off. */}
+          {look.kind !== 'verified' && (
+            <WidgetSection summary={brandSummary(look)} {...group('brand')}>
+              <label className="wg-part">
+                <span>
+                  <b>{TEXT.credit}</b>
+                </span>
+                <Switch on={look.brand} label={TEXT.credit} onChange={() => set({ brand: !look.brand })} />
+              </label>
+            </WidgetSection>
+          )}
           <input className="wg-name" value={look.name ?? ''} maxLength={MAX_NAME} placeholder={defaultName(look)} aria-label={TEXT.name} title={TEXT.nameLabel} onChange={(e) => set({ name: e.target.value })} />
           {footer}
         </div>

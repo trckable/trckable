@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
+import { stripeSale } from './verified-kit'
 
 const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36'
@@ -24,6 +25,8 @@ const LOOKS = [
   { name: 'counter', kind: 'counter', shows: [], w: 200, h: 44 + 34, fluid: false },
   { name: 'revenue', kind: 'revenue', shows: ['channels'], w: 320, h: 210 + 34, fluid: true },
   { name: 'privacy', kind: 'privacy', shows: [], w: 320, h: 300 + 34, fluid: true },
+  // No line under it: the badge says whose it is itself.
+  { name: 'verified', kind: 'verified', shows: [], w: 300, h: 48, fluid: true },
   { name: 'online-pill', kind: 'online', shows: [], w: 180, h: 44, fluid: false },
   { name: 'online-spark', kind: 'online', shows: ['spark'], w: 230, h: 44, fluid: false },
   { name: 'online-card', kind: 'online', shows: ['card', 'pages', 'countries'], w: 280, h: 214 + 34 + 208, fluid: true },
@@ -42,6 +45,8 @@ async function made(page: Page) {
   for (let i = 0; i < 6; i++) {
     await page.request.post(`${API}/api/e`, { headers: { 'User-Agent': UA }, data: { s: site, k: 'pv', u: `https://${domain}${paths[i % 4]}`, id: `wr${i}`, v: `wr${i}.1` } })
   }
+  // The verified badge draws only what works: Stripe, with a sale delivered.
+  await stripeSale(page.request, site)
   const ids: Record<string, string> = {}
   for (const l of LOOKS) {
     const res = await page.request.post(`${API}/api/v1/sites/${site}/widgets`, { headers: H, data: { kind: l.kind, theme: 'dark', shows: l.shows, brand: true } })

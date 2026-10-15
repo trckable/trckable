@@ -5,6 +5,7 @@ import { SitePicker } from '../../components/SitePicker'
 import type { Site } from '../../lib/api'
 import { canChange } from '../../lib/me'
 import { openSettings } from '../../lib/settings'
+import { VerifiedPill } from '../verified/VerifiedPill'
 import { copy } from './copy'
 
 export function SiteZone({ sites, current, all }: { sites: Site[]; current: Site | null; all?: boolean }) {
@@ -12,6 +13,7 @@ export function SiteZone({ sites, current, all }: { sites: Site[]; current: Site
   return (
     <div className="site-zone">
       <SitePicker sites={sites} current={current} all={all} />
+      {current && !all && <VerifiedPill verified={current.verified} site={current} />}
       {settings && <span className="site-sep" aria-hidden="true" />}
       {settings && (
         <button type="button" className="btn icon ghost gear" data-key="settings" aria-label={copy.settingsFor(settings.domain)} title={copy.settingsFor(settings.domain)} onClick={() => openSettings(settings)}>

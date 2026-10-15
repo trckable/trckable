@@ -316,6 +316,11 @@
   line-height: 1.4;
   font-weight: 500;
 }
+.sv-a-status {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-4);
+}
 .sv-answer.quiet .sv-a-line {
   opacity: 0.7;
 }

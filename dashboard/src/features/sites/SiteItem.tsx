@@ -19,6 +19,7 @@ import type { Arrange } from './SiteMenu'
 import { MARK, type Density } from './density'
 import { prefetchSite } from '../../lib/dashQuery'
 import { OpenSite, openSiteTab } from './OpenSite'
+import { SiteSeal } from '../verified/SiteSeal'
 import './SiteItem.css'
 
 /**
@@ -98,6 +99,7 @@ export function SiteItem({ site, place, on, arrange, today, density = 'compact',
           <b>{name}</b>
           {line && <small className={'state-line ' + dotState(site)}>{line}</small>}
         </span>
+        <SiteSeal verified={site.verified} />
         <span className="right">
           <Tail s={site} today={today} />
         </span>
