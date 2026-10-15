@@ -81,7 +81,8 @@ span.footer-key {
   border-radius: 50%;
   background: var(--accent);
 }
-.footer-status[data-status='late'] i {
+.footer-status[data-status='late'] i,
+.footer-status[data-status='quiet'] i {
   background: var(--warn);
 }
 .footer-status[data-status='down'] i {

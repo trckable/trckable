@@ -100,17 +100,18 @@
   }
 }
 
-/* The seal on the site's avatar: a small lime disc at its corner. */
+/* The check after the site's name: plain, in the accent colour, no disc. */
 .vf-sealbtn {
   display: inline-grid;
+  flex: none;
   place-items: center;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   padding: 0;
-  border: 2px solid var(--bg);
+  border: 0;
   border-radius: 50%;
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: none;
+  color: var(--accent);
   cursor: pointer;
 }
 .vf-sealbtn:focus-visible {

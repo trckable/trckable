@@ -1,4 +1,4 @@
-// After the site's name, for a site seen on more than one domain: "· All ▾", or the domain
+// After the site's name, for a site seen on more than one domain: "/ All ▾", or the domain
 // picked, as a small dropdown of its own: "All domains", then each domain by its short name
 // with its visitors, the busiest first, the current one checked. A search appears above six
 // domains. On a phone it is a bottom sheet (Popover). Single-domain sites show nothing.
@@ -21,7 +21,7 @@ export function domainLabel(c: DomainControl): string {
   return picked ? shortHost(picked, c.site) : copy.all
 }
 
-function List({ c, close }: { c: DomainControl; close: () => void }) {
+export function List({ c, close }: { c: DomainControl; close: () => void }) {
   const [q, setQ] = useState('')
   const picked = pickedHost(c.filters)
   const rows = useMemo(() => [...c.seen].sort((a, b) => b.visitors - a.visitors), [c.seen])
@@ -71,7 +71,7 @@ export function DomainMenu() {
       className="menu"
       trigger={(p) => (
         <button type="button" {...p} aria-haspopup="menu" aria-label={copy.menuLabel(label)} title={label} className={'dom-btn' + (hostFiltered(c.filters) ? ' on' : '')}>
-          <span className="dom-dot" aria-hidden="true">·</span>
+          <span className="dom-dot" aria-hidden="true">/</span>
           <span className="dom-name">{label}</span>
           <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
         </button>

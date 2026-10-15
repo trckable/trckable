@@ -4,6 +4,8 @@
 // Anyone who may change the account arranges it (drag, with the rows sliding
 // aside as the site moves; Alt + ↑/↓; or a site's ⋯ menu); the layout is
 // saved for the whole account.
+import { List as DomainList } from '../header/DomainMenu'
+import { useDomainControl } from '../../lib/domainControl'
 import { Search } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { type Site, type SiteLayout } from '../../lib/api'
@@ -109,6 +111,7 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
         },
       }
   const density = densityOf(sites.length)
+  const domains = useDomainControl()
   const item = (s: Site, place: Place) => {
     return <SiteItem key={s.id} site={s} place={place} density={density} on={s.id === current?.id} arrange={found ? null : arrange} today={numbers?.get(s.id)?.visitors} onPick={() => pick(s)} />
   }
@@ -157,6 +160,11 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
       )}
       {/* Every site on one page, once there is more than one to compare. */}
       {sites.length > 1 && !found && <AllStrip on={all} numbers={numbers} onPick={() => { onClose(); navigate('/sites') }} />}
+      {domains && current && !all && (
+        <div className="sites-domains">
+          <DomainList c={domains} close={onClose} />
+        </div>
+      )}
       <div className="sites-list" ref={list}>
         {found && <ul className="site-group">{found.map((s) => item(s, { kind: 'rest' }))}</ul>}
         {found?.length === 0 && <p className="faint sites-none">{copy.noMatch(q)}</p>}

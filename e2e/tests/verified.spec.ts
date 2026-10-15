@@ -70,13 +70,16 @@ async function shoot(page: Page, name: string, clip?: { x?: number; y?: number; 
 
 const noSideScroll = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
 
-test('the seal sits on the avatar, and its panel lists a row per kind of badge', async ({ page }) => {
+test('the seal is a check after the site name, and its panel lists a row per kind of badge', async ({ page }) => {
   await told(page, ALL)
   await open(page, `/${site.domain}?v=explore`)
   const seal = page.locator('.site-zone .vf-sealbtn')
   await expect(seal).toBeVisible({ timeout: 15_000 })
   await expect(seal).toHaveAttribute('title', 'Verified · Payments, Search')
   await expect(page.locator('.vf-pill')).toHaveCount(0)
+  const at = async (sel: string) => (await page.locator(sel).first().boundingBox())!
+  expect((await at('.site-zone .vf-sealbtn')).x, 'the check comes after the name').toBeGreaterThan((await at('.site-pick .site-btn .name')).x)
+  await expect(page.locator('.site-pick .site-btn .vf-sealbtn, .site-pick .site-btn .state-dot')).toHaveCount(0) // the avatar is clean
   expect(await noSideScroll(page), 'the header scrolls sideways').toBeLessThanOrEqual(0)
   await shoot(page, 'seal', { height: 120 })
 

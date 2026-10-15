@@ -27,3 +27,8 @@ const STATE = { new: 'new', down: 'stopped', quiet: 'quiet', ok: 'live' } as con
 export function siteState(s: Site, now = Date.now()): SiteState {
   return STATE[statusOf(s, now)]
 }
+
+/** Sites that went quiet and still matter: no visits for the stopped threshold, not down, and seen within 30 days (older ones are dormant). The footer and the Sites page's Uptime note both count these, so they say the same number. */
+export function quietSites(sites: Site[], now = Date.now()): Site[] {
+  return sites.filter((s) => statusOf(s, now) === 'quiet' && !!s.last_event_at && now / 1000 - s.last_event_at <= 30 * 86400)
+}

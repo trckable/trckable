@@ -49,6 +49,7 @@ export const next = defineCopy('allnext', {
   uptimeUnwatched: 'Not watched yet',
   uptimeUnwatchedNote: 'Starts with the first check',
   uptimeUp: (pct: string) => `${pct}% up`,
+  uptimeUpQuiet: (pct: string, quiet: number) => `${pct}% up · ${quiet} quiet`,
   uptimeDown: (name: string) => `${name} is down now`,
   uptimeDownMany: (n: number) => `${n} sites are down now`,
   totalVisitors: 'Visitors',

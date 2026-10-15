@@ -49,8 +49,10 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
   const colors = siteColors(sites)
   const colorOf = (id: string) => colors.get(id) ?? 'var(--text-3)'
   const period = copy.periodLabel(days)
+  // The overview's numbers are today's; the period only draws the sparklines.
+  const said = view.layout === 'overview' && lens === 'visitors' && !uptime ? copy.periodToday : period
   const count = shown.length === sites.length ? copy.siteCount(sites.length) : copy.siteCountOf(shown.length, sites.length)
-  const summary = copy.summary(period, uptime ? incidents.lensUptime : lensWord[lens], count)
+  const summary = copy.summary(said, uptime ? incidents.lensUptime : lensWord[lens], count)
   const props = { lens, rows: rows ?? [], sites: shown, colorOf, start: startIndex(rows ?? []), period }
 
   return (
