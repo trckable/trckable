@@ -128,3 +128,8 @@
   padding: 6px 12px 8px;
   font-size: 12px;
 }
+
+/* While the line shows, the chart's own peak label steps aside: both live at the top of the plot. */
+.chart-wrap:has(.sm-line) .chart-peak {
+  display: none;
+}

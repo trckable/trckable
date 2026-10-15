@@ -117,8 +117,8 @@ for (const width of [1440, 390]) {
     await expect(page.locator('.chart-wrap .mp-pin')).toHaveCount(1, { timeout: 30_000 })
     await expect(page.locator('.chart-wrap .moment-mark').first()).toBeVisible({ timeout: 30_000 })
     await expect(page.locator('.chart-wrap .sm-line')).toHaveText(/Most of the .* jump came from Hacker News \(\+40\)/)
-    const boxes = await page.locator('.chart-wrap').locator('.sm-mark, .mp-pin, .moment-mark, .sm-line').evaluateAll((els) =>
-      els.map((e) => ({ name: e.className.toString().split(' ')[0], r: e.getBoundingClientRect() })).map((b) => ({ name: b.name, l: b.r.left, t: b.r.top, rt: b.r.right, bt: b.r.bottom })),
+    const boxes = await page.locator('.chart-wrap').locator('.sm-mark, .mp-pin, .moment-mark, .sm-line, .chart-peak').evaluateAll((els) =>
+      els.filter((e) => e.getBoundingClientRect().width > 0).map((e) => ({ name: e.className.toString().split(' ')[0], r: e.getBoundingClientRect() })).map((b) => ({ name: b.name, l: b.r.left, t: b.r.top, rt: b.r.right, bt: b.r.bottom })),
     )
     for (let i = 0; i < boxes.length; i++)
       for (let j = i + 1; j < boxes.length; j++) {
