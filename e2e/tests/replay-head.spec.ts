@@ -35,8 +35,16 @@ test('the playhead is a gradient line with a chip, a dot on the line and a dim f
   const dot = chart.locator('.replay-dot circle[r="6"]')
   await expect(dot).toHaveCount(1)
   await expect(chart.locator('.replay-ring')).toHaveCount(1)
-  const axis = (await chart.locator('svg').boundingBox())!
-  await expect.poll(async () => (await dot.boundingBox())!.y, { timeout: 30_000 }).toBeLessThan(axis.y + axis.height - 60)
+  // Both read in the same breath: the page may move a little while it is still filling in.
+  await expect
+    .poll(
+      async () => {
+        const axis = (await chart.locator('svg').boundingBox())!
+        return axis.y + axis.height - (await dot.boundingBox())!.y
+      },
+      { timeout: 30_000 },
+    )
+    .toBeGreaterThan(60)
   // What has not been played is there, dim (30%), not hidden.
   await expect(chart.locator('svg path[stroke-opacity="0.3"]')).toHaveCount(1)
 })
