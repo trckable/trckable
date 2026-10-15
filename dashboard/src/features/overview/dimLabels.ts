@@ -7,6 +7,7 @@ export const DIM_LABEL: Record<string, string> = {
   exit_page: 'Exit page',
   page: 'Page',
   group: 'Section',
+  hostname: 'Domain',
   country: 'Country',
   device: 'Device',
   browser: 'Browser',

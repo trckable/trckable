@@ -88,7 +88,7 @@ const common = {
     type: 'array',
     items: { type: 'string' },
     description:
-      'Only count visits matching all filters, each "dimension:value". Dimensions: channel (Direct, Search, Social, Referral, AI, Email, Paid), referrer, campaign, entry_page, exit_page, page, country (ISO code, e.g. DE), device, browser, os, goal.',
+      'Only count visits matching all filters, each "dimension:value". Dimensions: channel (Direct, Search, Social, Referral, AI, Email, Paid), referrer, campaign, entry_page, exit_page, page, hostname (the domain, e.g. docs.example.com), country (ISO code, e.g. DE), device, browser, os, goal.',
   },
 } as const
 

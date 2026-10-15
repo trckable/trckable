@@ -144,6 +144,7 @@ type Result struct {
 	Series       []Point          `json:"series"`
 	Imported     *Imported        `json:"imported,omitempty"` // nil unless days from an import are in the report
 	Dims         map[string][]Row `json:"dims"`
+	Hosts        int              `json:"hosts,omitempty"` // domains the period saw, when 2 or more (then Dims["hostname"] lists them)
 	Goals        []Row            `json:"goals"`
 	Days         []Day            `json:"days,omitempty"`
 	Money        *Money           `json:"money,omitempty"`        // nil until a payment provider is connected
@@ -208,7 +209,7 @@ var DailyDims = []string{"channel", "entry_page", "country", "device"}
 // ValidDim reports whether d can be grouped or filtered by.
 func ValidDim(d string) bool {
 	_, ok := sessionDims[d]
-	return ok || d == "page" || d == "goal" || d == "group"
+	return ok || d == "page" || d == "goal" || d == "group" || d == "hostname"
 }
 
 const bounce = "CASE WHEN pvs <= 1 AND goals = 0 THEN 1.0 ELSE 0.0 END"
@@ -349,6 +350,14 @@ func (q Q) report(ctx context.Context, p Params) (*Result, error) {
 	evWhere, evArgs := eventScope(p)
 	if res.Dims["page"], err = eventRows(ctx, conn, cte, args, evWhere, evArgs, "path", 1, p.Limit, len(p.Filters) > 0, distinct); err != nil {
 		return nil, err
+	}
+	// One site can be seen on several domains (docs.example.com, example.com):
+	// the list and its count ride along only once there are two, so a
+	// one-domain site pays one small query and shows nothing new.
+	if hosts, err := eventRows(ctx, conn, cte, args, evWhere, evArgs, "hostname", 1, max(p.Limit, 2), len(p.Filters) > 0, distinct); err != nil {
+		return nil, err
+	} else if len(hosts) >= 2 {
+		res.Dims["hostname"], res.Hosts = hosts, len(hosts)
 	}
 	if p.Goals {
 		if res.Goals, err = eventRows(ctx, conn, cte, args, evWhere, evArgs, "goal", 2, p.Limit, len(p.Filters) > 0, distinct); err != nil {

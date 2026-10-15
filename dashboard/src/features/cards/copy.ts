@@ -16,6 +16,8 @@ export const cardCopy = defineCopy('cards', {
   top: 'Most viewed',
   exit: 'Exit',
   sections: 'Sections',
+  domains: 'Domains',
+  domainsTip: 'Visits by the domain they were on, for a site that runs on more than one.',
   scroll: 'Scroll',
   goals: 'Goals',
   earners: 'Sources that pay',
