@@ -33,8 +33,12 @@
   :root .live-onsite {
     height: auto; /* a count and a line, not a screen */
   }
-  :root .live-onsite .live-feed,
+  :root .live-onsite.none .live-feed,
   :root .live-onsite .cookieless-note {
+    display: none;
+  }
+  /* A glance: the newest three, not the whole list. */
+  :root .live-onsite .live-feed > :nth-child(n + 4) {
     display: none;
   }
   .live-brief {
