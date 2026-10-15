@@ -1,16 +1,13 @@
 /* StatusCard's styles on top of the surge story's (signals/surge.css): they load with its chunk. */
+/* A line under the header, in the page's flow: nothing floats. */
 .status-float {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 30;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 8px;
+  margin-bottom: 12px;
 }
 .status-badge {
-  box-shadow: var(--shadow);
   --tone: var(--text-2);
   position: relative;
   display: inline-flex;
@@ -46,34 +43,12 @@ button.status-badge:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.status-badge.down {
-  --tone: var(--down);
-}
 .status-badge.quiet {
   --tone: var(--warn);
 }
 .status-badge.back {
   --tone: var(--up);
   font-weight: 500;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .status-badge.down::after {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    pointer-events: none;
-    animation: status-ring 2.4s ease-out infinite;
-  }
-}
-@keyframes status-ring {
-  0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--tone) 45%, transparent);
-  }
-  70%,
-  100% {
-    box-shadow: 0 0 0 7px transparent;
-  }
 }
 .status-pop {
   width: min(560px, calc(100vw - 32px));
@@ -121,10 +96,6 @@ button.status-badge:focus-visible {
     padding: 0;
     border-top: 0;
   }
-}
-/* The floating badge sits over the corner of the page: the foot leaves room under its line so the badge never covers the links. */
-body:has(.status-float) .app-footer {
-  padding-bottom: calc(var(--hdr-h) + 28px);
 }
 .status-card .sgm-hero {
   padding-right: 0;
@@ -244,4 +215,43 @@ body:has(.status-float) .app-footer {
   align-self: center;
   margin-right: auto;
   font-size: 13px;
+}
+/* The foot's list of sites that stopped. */
+.status-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+}
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.status-row:hover {
+  background: var(--row);
+}
+.status-row b {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status-back {
+  align-self: flex-start;
+  margin: 8px 8px 0;
 }

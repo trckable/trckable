@@ -7,6 +7,7 @@ import { cardModal } from '../../components/CardModal/copy'
 import { SideCard } from '../../components/SideCard/SideCard'
 import type { Site } from '../../lib/api'
 import { canChange } from '../../lib/me'
+import { useNarrow } from '../../lib/useNarrow'
 import { first } from './firstCopy'
 import { useSeen } from './seen'
 import { useWeeklyEmail } from './useWeeklyEmail'
@@ -29,17 +30,18 @@ function Cards({ site, quiet }: { site: Site; quiet: boolean }) {
   const [importSeen, putImportAway] = useSeen('import', site.id)
   const [weeklySeen, putWeeklyAway] = useSeen('weekly', site.id)
   const weekly = useWeeklyEmail(site)
+  const narrow = useNarrow() // a phone is not given a sheet over its first screen to import history
   // The dialog has the screen while it is open; the weekly card waits for it.
   const showWeekly = weekly.ready && !weekly.on && (weekly.deliverable || !quiet) && !weeklySeen && !importing
   return (
     <>
-      {!importSeen && (
+      {!importSeen && !narrow && (
         <SideCard
           id="first-import"
           label={t.import.label}
           closeLabel={t.close}
           kind={{ icon: <FileUp size={14} strokeWidth={2} />, label: t.import.label, tint: 'var(--ch-1)' }}
-          title={t.import.title}
+          title={t.import.body}
           onClose={putImportAway}
           actions={
             <button
@@ -53,9 +55,7 @@ function Cards({ site, quiet }: { site: Site; quiet: boolean }) {
               {t.import.go}
             </button>
           }
-        >
-          <p className="muted fa-body">{t.import.body}</p>
-        </SideCard>
+        />
       )}
       {showWeekly && (
         <SideCard

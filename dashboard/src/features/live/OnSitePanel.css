@@ -3,3 +3,44 @@
   margin: 8px 8px 0;
   font-size: 12px;
 }
+.live-help,
+.live-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-3);
+  font: inherit;
+  cursor: help;
+}
+.live-help {
+  margin-left: 2px;
+}
+.live-brief {
+  display: none;
+  margin: 0;
+  padding: 6px 22px 14px;
+  font-size: 13px;
+}
+/* Nobody here: the card is as tall as what it says, not the screen. */
+.live-onsite.none {
+  align-self: start;
+  height: auto;
+}
+@media (max-width: 640px) {
+  :root .live-onsite {
+    height: auto; /* a count and a line, not a screen */
+  }
+  :root .live-onsite .live-feed,
+  :root .live-onsite .cookieless-note {
+    display: none;
+  }
+  .live-brief {
+    display: block;
+  }
+  .live-help {
+    display: none; /* the list it explains is not on a phone */
+  }
+}

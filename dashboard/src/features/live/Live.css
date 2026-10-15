@@ -406,13 +406,6 @@ body[data-mode] .live-head-row h2,
     background: transparent;
   }
 }
-.live-foot {
-  margin: 0;
-  padding: 12px 22px;
-  border-top: 1px solid var(--grid);
-  font-family: var(--mono);
-  font-size: 11px;
-}
 /* Waiting for the first answer: the panels keep their height. */
 .live-panel:empty,
 .live-fill {
@@ -499,9 +492,6 @@ body[data-mode] .live-head-row h2,
   .live-country-name {
     display: none;
   }
-  .live-foot {
-    padding: 10px 16px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -536,8 +526,7 @@ body[data-mode] .live-head-row h2,
   :root :is(
     .live-meta,
     .live-axis,
-    .live-ago,
-    .live-foot
+    .live-ago
   ) {
     font-size: 12px;
   }
@@ -614,10 +603,6 @@ body[data-mode] .live-head-row h2,
   }
   :root .live-country {
     font-size: var(--ph-text-2);
-  }
-  :root .live-foot {
-    padding: 10px var(--ph-pad);
-    font-size: 12px;
   }
   :root .live-more {
     min-height: var(--ph-hit);
@@ -708,4 +693,24 @@ body[data-mode] .live-head-row h2,
 }
 @media (prefers-reduced-motion: reduce) {
   .live-delta { animation: none; }
+}
+.live-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone) 15%, transparent);
+  color: var(--tone);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: default;
+}
+.live-state.down {
+  --tone: var(--down);
+}
+.live-state.quiet {
+  --tone: var(--warn);
 }

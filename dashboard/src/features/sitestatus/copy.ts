@@ -4,6 +4,8 @@ import { defineCopy } from '../../i18n'
 
 export const copy = defineCopy('sitestatus', {
   label: 'Site status',
+  list: 'Sites that need a look',
+  listBack: 'All of them',
   chipDown: 'Down',
   chipQuiet: 'Tracking stopped',
   badge: (down: boolean, age: string) => `${down ? 'Down' : 'Quiet'} · ${age}`,

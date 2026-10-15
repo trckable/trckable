@@ -1,10 +1,16 @@
 // The footer's dot and its few words: is the server there and keeping up (lib/serverStatus.ts), and is
-// every site of this account answering (features/sitestatus). It never says "normal" while one fails.
+// every site of this account answering (features/sitestatus). It never says "normal" while one fails or
+// goes quiet. With a site down or quiet it is the one way in: it opens what happened and what to do.
+import { lazy, Suspense, useRef, useState } from 'react'
 import { Tooltip } from '../kit/Tooltip'
 import type { Site } from '../lib/api'
 import { quietSites, statusOf } from '../features/sitestatus/status'
+import { copy as status } from '../features/sitestatus/copy'
 import { useServerStatus } from '../lib/serverStatus'
+import { AnchoredPop } from './AnchoredPop'
 import { footerMoreCopy as t } from './footerMoreCopy'
+
+const StatusList = lazy(() => import('../features/sitestatus/StatusList'))
 
 export default function ServerStatus({ sites }: { sites: Site[] }) {
   const server = useServerStatus()
@@ -15,25 +21,52 @@ export default function ServerStatus({ sites }: { sites: Site[] }) {
   const words = t.status[server]
   let label = words.label
   let tip = words.tip
-  let status: string = server
+  let state: string = server
   if (hush) {
     label = t.siteQuiet(quiet.length)
     tip = t.siteQuietTip
-    status = 'quiet'
+    state = 'quiet'
   }
   if (siteDown) {
     label = t.siteDown(down.map((s) => s.name || s.domain), down.length === 1 ? down[0].down_cause : undefined)
     tip = t.siteDownTip
-    status = 'down'
+    state = 'down'
   }
+  let affected: Site[] = []
+  if (siteDown) affected = [...down, ...quiet]
+  else if (hush) affected = quiet
+  const [open, setOpen] = useState(false)
+  const btn = useRef<HTMLButtonElement>(null)
   return (
-    <Tooltip text={tip}>
-      {(p) => (
-        <button type="button" className="footer-status" data-status={status} {...p}>
-          <i aria-hidden="true" />
-          <span>{label}</span>
-        </button>
+    <>
+      <Tooltip text={tip}>
+        {(p) => (
+          <button
+            ref={btn}
+            type="button"
+            className="footer-status"
+            data-status={state}
+            {...p}
+            {...(affected.length > 0 ? { 'aria-haspopup': 'dialog' as const, 'aria-expanded': open } : {})}
+            onClick={() => {
+              p.onClick()
+              if (affected.length > 0) setOpen((o) => !o)
+            }}
+          >
+            <i aria-hidden="true" />
+            <span>{label}</span>
+          </button>
+        )}
+      </Tooltip>
+      {open && affected.length > 0 && (
+        <AnchoredPop anchor={btn} label={status.list} className="status-pop" onClose={() => setOpen(false)}>
+          {() => (
+            <Suspense fallback={null}>
+              <StatusList sites={affected} />
+            </Suspense>
+          )}
+        </AnchoredPop>
       )}
-    </Tooltip>
+    </>
   )
 }

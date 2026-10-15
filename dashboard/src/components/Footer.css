@@ -68,6 +68,12 @@ span.footer-key {
   gap: 8px;
   min-width: 0;
 }
+.footer-status {
+  cursor: default;
+}
+.footer-status[aria-haspopup] {
+  cursor: pointer;
+}
 .footer-status span {
   overflow: hidden;
   text-overflow: ellipsis;

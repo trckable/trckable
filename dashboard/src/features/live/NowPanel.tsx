@@ -1,9 +1,12 @@
 // The left panel: how many are here now, how many came in the last half
 // hour, the minute-by-minute line, where they came from and, with the
 // revenue module on, today's money.
-import { Radio } from 'lucide-react'
+import { CircleAlert, Moon, Radio } from 'lucide-react'
 import { RollingNumber } from '../../kit/RollingNumber'
-import type { Sale } from '../../lib/api'
+import type { Sale, Site } from '../../lib/api'
+import { Tooltip } from '../../kit/Tooltip'
+import { copy as status } from '../sitestatus/copy'
+import { statusOf } from '../sitestatus/status'
 import { delta, fmtInt } from '../../lib/format'
 import type { LiveNow } from './api'
 import { copy } from './copy'
@@ -18,7 +21,25 @@ function Status({ connected, failed }: { connected: boolean; failed: boolean }) 
   return <span className="live-meta faint live-calm">{copy.window}</span>
 }
 
-export function NowPanel(p: { data: LiveNow; series: number[]; online: number; connected: boolean; failed: boolean; sales: (Sale & { id: number })[]; timezone: string }) {
+/** A site that stopped says so in this card's header, in red for down and amber for quiet. */
+function State({ site }: { site?: Site }) {
+  const state = site ? statusOf(site) : 'ok'
+  if (state !== 'down' && state !== 'quiet') return null
+  const down = state === 'down'
+  const Icon = down ? CircleAlert : Moon
+  return (
+    <Tooltip text={status.label}>
+      {(t) => (
+        <button type="button" className={'live-state ' + (down ? 'down' : 'quiet')} {...t}>
+          <Icon size={13} strokeWidth={2} aria-hidden="true" />
+          {down ? status.chipDown : status.chipQuiet}
+        </button>
+      )}
+    </Tooltip>
+  )
+}
+
+export function NowPanel(p: { site?: Site; data: LiveNow; series: number[]; online: number; connected: boolean; failed: boolean; sales: (Sale & { id: number })[]; timezone: string }) {
   const d = delta(p.data.visitors, p.data.previous)
   return (
     <section className="card live-panel live-now" aria-label={copy.regionNow}>
@@ -27,6 +48,7 @@ export function NowPanel(p: { data: LiveNow; series: number[]; online: number; c
           <Radio size={15} strokeWidth={1.8} />
         </span>
         <h2>{copy.title}</h2>
+        <State site={p.site} />
         <Status connected={p.connected} failed={p.failed} />
       </div>
       <div className="live-figures">
