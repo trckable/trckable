@@ -426,9 +426,12 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 		if e.RefHost == "" {
 			if h := socialRefHost(u); h != "" {
 				e.RefHost = h
-			} else if u.Ref != "" {
+			} else if u.Ref != "" && !isLocalAddr(u.Ref) {
 				e.RefHost = strings.ToLower(u.Ref)
 			}
+		}
+		if isLocalAddr(e.UTMSource) {
+			e.UTMSource = ""
 		}
 	case "g":
 		e.Kind = event.KindGoal

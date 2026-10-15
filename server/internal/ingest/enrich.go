@@ -1,6 +1,7 @@
 package ingest
 
 import (
+	"net"
 	"net/url"
 	"strings"
 )
@@ -113,6 +114,9 @@ func parseReferrer(raw, pageHost string) (host, clean string) {
 		return "", ""
 	}
 	host = strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.")
+	if isLocalAddr(host) {
+		return "", "" // a developer's own machine is not a place visitors come from
+	}
 	if host == pageHost || strings.HasSuffix(host, "."+pageHost) || strings.HasSuffix(pageHost, "."+host) {
 		return "", "" // internal navigation / own subdomain
 	}
@@ -126,6 +130,26 @@ func parseReferrer(raw, pageHost string) (host, clean string) {
 		clean = strings.TrimSuffix(clean, "/")
 	}
 	return host, clip(clean, 512)
+}
+
+// isLocalAddr reports whether a host names the machine or network it was
+// typed on: localhost, a loopback or unspecified address, *.local, *.localhost
+// or *.test. Such an address is never a source or a link.
+func isLocalAddr(host string) bool {
+	host = strings.Trim(strings.ToLower(host), "[]")
+	switch host {
+	case "localhost", "::1", "0.0.0.0":
+		return true
+	}
+	if strings.HasPrefix(host, "127.") {
+		return net.ParseIP(host) != nil
+	}
+	for _, s := range []string{".local", ".localhost", ".test"} {
+		if strings.HasSuffix(host, s) {
+			return true
+		}
+	}
+	return false
 }
 
 // classify assigns the marketing channel, in priority order.
