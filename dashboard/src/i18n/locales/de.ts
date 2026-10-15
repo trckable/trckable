@@ -2632,6 +2632,7 @@ export default {
   'markers.chip': (name: string, added: number) => `${name} +${int(added)}`,
   'markers.mark': (name: string, added: number, day: string, more: number) => `${name}, ${int(added)} Besucher mehr am ${day}${more ? `, und ${more} weitere` : ''}. Öffnen`,
   'markers.sent': (name: string, visitors: number, day: string) => `${name} hat am ${day} ${count(visitors, 'Besucher', 'Besucher')} gebracht`,
+  'markers.over': (added: number) => `${int(added)} mehr als an einem normalen Tag`,
   'markers.alsoNear': (n: number) => `und ${n} weitere um diese Zeit`,
   'markers.show': 'Markierungen zeigen',
   'markers.see': 'Diese Besucher ansehen',

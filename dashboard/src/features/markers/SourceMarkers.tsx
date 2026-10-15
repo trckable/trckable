@@ -113,11 +113,12 @@ export default function SourceMarkers(p: SourceMarkersProps) {
         </div>
       )}
       {at && (
-        <div id={id} role="dialog" aria-label={copy.sent(at.jump.name, at.jump.visitors, fmtDay(at.jump.day))} className="sm-pop" style={{ left: left(at), top: top + 20, width: POP_W }}>
+        <div id={id} role="dialog" aria-label={copy.sent(at.jump.name, at.jump.visitors, fmtDay(at.jump.day))} className="sm-pop" style={{ left: left(at), top: top - 10, width: POP_W }}>
           <p className="sm-says">
             <Badge j={at.jump} />
             <span>{copy.sent(at.jump.name, at.jump.visitors, fmtDay(at.jump.day))}</span>
           </p>
+          <p className="sm-also faint">{copy.over(at.jump.added)}</p>
           {at.more.length > 0 && <p className="sm-also faint">{copy.alsoNear(at.more.length)}</p>}
           <button type="button" className="btn sm-see" autoFocus onClick={() => see(at.jump)}>
             {copy.see}
