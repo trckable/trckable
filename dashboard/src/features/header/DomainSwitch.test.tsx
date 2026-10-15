@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Filter, Row } from '../../lib/api'
 import { pickedHost, shortHost } from '../../lib/domainSwitch'
 import { DomainSwitch } from './DomainSwitch'
-import { DomainRow, domainLabel } from './DomainRow'
+import { DomainMenu, domainLabel } from './DomainMenu'
 import { domainsNow as current, type DomainControl } from '../../lib/domainControl'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -48,7 +48,6 @@ describe('the words', () => {
 })
 
 describe('DomainSwitch and DomainRow', () => {
-  const radios = () => [...host.querySelectorAll<HTMLElement>('[role=radio]')]
   it('publishes nothing for one domain', () => {
     draw(null)
     expect(host.textContent).toBe('')
@@ -63,16 +62,26 @@ describe('DomainSwitch and DomainRow', () => {
     expect(current()).toBeNull()
     root = createRoot(host)
   })
-  it('the row has All and each domain; a click picks the full domain, All clears', () => {
-    draw(many, [{ dim: 'hostname', value: 'docs.trckable.com' }])
-    const done = vi.fn()
-    act(() => root.render(<DomainRow control={(current() as DomainControl)} onDone={done} />))
-    expect(radios().map((r) => r.textContent)).toEqual(['All', 'trckable.com', 'docs', 'blog', 'app', 'status'])
-    expect(radios()[2].getAttribute('aria-checked')).toBe('true')
-    act(() => radios()[3].click())
+  it('the dropdown lists All domains, then each domain busiest first; a click picks the full domain', () => {
+    const SEEN = many
+    const FILT: Filter[] = [{ dim: 'hostname', value: 'docs.trckable.com' }]
+    act(() => root.render(<><DomainSwitch seen={SEEN} filters={FILT} site="trckable.com" onPick={onPick} /><DomainMenu /></>))
+    const btn = host.querySelector<HTMLElement>('.dom-btn')
+    expect(btn?.textContent).toContain('docs')
+    act(() => btn?.click())
+    const items = [...document.querySelectorAll<HTMLElement>('[role=menuitemradio]')]
+    expect(items.map((r) => r.textContent?.replace(/\d+$/, ''))).toEqual(['All domains', 'trckable.com', 'docs', 'blog', 'app', 'status'])
+    expect(items[2].getAttribute('aria-checked')).toBe('true')
+    expect(document.querySelector('.dom-search')).toBeNull()
+    act(() => items[3].click())
     expect(onPick).toHaveBeenLastCalledWith('blog.trckable.com')
-    act(() => radios()[0].click())
-    expect(onPick).toHaveBeenLastCalledWith(null)
-    expect(done).toHaveBeenCalledTimes(2)
+  })
+  it('more than six domains bring a search', () => {
+    const lots = Array.from({ length: 9 }, (_, i) => row(`d${i}.trckable.com`, 100 - i))
+    const SEEN = lots
+    const FILT: Filter[] = []
+    act(() => root.render(<><DomainSwitch seen={SEEN} filters={FILT} site="trckable.com" onPick={onPick} /><DomainMenu /></>))
+    act(() => host.querySelector<HTMLElement>('.dom-btn')?.click())
+    expect(document.querySelector('.dom-search input')).not.toBeNull()
   })
 })

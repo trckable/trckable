@@ -23,8 +23,6 @@ import { digitIndex, stepFocus, typing } from './nav'
 import { useToday } from './useToday'
 import { useFolded } from './useFolded'
 import { densityOf } from './density'
-import { DomainRow } from '../header/DomainRow'
-import { useDomainControl } from '../../lib/domainControl'
 import { prefetchSite } from '../../lib/dashQuery'
 import './siteMenu.css'
 import '../../kit/Modal.css'
@@ -53,7 +51,6 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
   const list = useRef<HTMLDivElement>(null)
   const [folded, fold] = useFolded()
   const numbers = useToday()
-  const domains = useDomainControl()
   const layout = useSiteLayout() ?? EMPTY
   // The dots come from the sites list the dashboard keeps current (lib/useLiveSites.ts).
   const sites = given
@@ -158,7 +155,6 @@ export function SiteMenu({ sites: given, current, all, onClose }: { sites: Site[
           />
         </label>
       )}
-      {domains && current && !all && !found && <DomainRow control={domains} onDone={onClose} />}
       {/* Every site on one page, once there is more than one to compare. */}
       {sites.length > 1 && !found && <AllStrip on={all} numbers={numbers} onPick={() => { onClose(); navigate('/sites') }} />}
       <div className="sites-list" ref={list}>
