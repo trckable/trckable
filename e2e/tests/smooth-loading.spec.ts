@@ -77,13 +77,17 @@ test('while a new period loads, the numbers stay on screen, dimmed', async ({ pa
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/${HISTORY_DOMAIN}`)
   await expect(page.locator('.overview .chart-wrap svg[role="img"]')).toBeVisible({ timeout: 30_000 })
+  // The read is held until the test lets it go: a slow machine cannot outwait a timer.
+  let release!: () => void
+  const held = new Promise<void>((r) => (release = r))
   await page.route('**/api/v1/sites/*/report*', async (route) => {
-    await new Promise((r) => setTimeout(r, 1500))
+    await held
     await route.continue()
   })
   await page.locator('.ctl-see .btn.range').click()
   await page.getByRole('dialog', { name: 'Choose a date range' }).getByRole('button', { name: /^Last 90 days/ }).click()
   await expect(page.locator('.view-stage.pending')).toHaveCount(1)
   await expect(page.locator('.overview .chart-wrap svg[role="img"]')).toBeVisible()
+  release()
   await expect(page.locator('.view-stage.pending')).toHaveCount(0, { timeout: 10_000 })
 })
