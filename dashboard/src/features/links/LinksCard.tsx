@@ -4,7 +4,7 @@
 // is about to be seen. Before any tagged visit: one slim line with a sample link,
 // which can be put away.
 import { ChevronRight, Link2, Target, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import type { Site } from '../../lib/api'
 import { fmtCompact } from '../../lib/format'
 import { navigate } from '../../lib/url'
@@ -16,6 +16,7 @@ import { copy } from './copy'
 import { LinksTip } from './LinksTip'
 import { barPct, sampleLink, topLinks } from './model'
 import { useLinks } from './useLinks'
+import { useLazyCard } from '../../lib/useLazyCard'
 import './linksCard.css'
 
 const HIDE_KEY = 'trckable:links-hint-off'
@@ -54,17 +55,8 @@ function Row({ l, max, icon, goals, onOpen }: { l: Link; max: number; icon: bool
 }
 
 export default function LinksCard({ site, from, to, onPick }: { site: Site; from: string; to: string; onPick: (dim: string, value: string) => void }) {
-  const [near, setNear] = useState(() => typeof IntersectionObserver === 'undefined')
-  const mark = useRef<HTMLDivElement>(null)
-  // Asked for only when the card is about to be seen: it is under the fold and never part of the first load.
-  useEffect(() => {
-    const el = mark.current
-    if (near || !el) return
-    const io = new IntersectionObserver((e) => e.some((x) => x.isIntersecting) && setNear(true), { rootMargin: '200px' })
-    io.observe(el)
-    return () => io.disconnect()
-  }, [near])
-  const { data, ready, failed, icons } = useLinks(site.id, from, to, near)
+  const { mark, near, load } = useLazyCard()
+  const { data, ready, failed, icons } = useLinks(site.id, from, to, load)
   const [off, setOff] = useState(hidden)
   if (!near) return <div ref={mark} className="yc-mark" aria-hidden="true" />
   if (!ready || failed || !data) return null // a hint under the page, never an error on it
