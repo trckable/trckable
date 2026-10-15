@@ -61,7 +61,7 @@ export default function IncidentsPage({ site, header }: { site: Site; header: Re
           </>
         )}
         {!all.ready && !period.failed && <Loading height={120} />}
-        {all.ready && (all.list.length > 0 || all.failed) && <IncidentList list={all.list} next={all.next} busy={all.busy} failed={all.failed} now={now} more={all.more} edit={all.edit} />}
+        {all.ready && (all.list.length > 0 || all.failed) && <IncidentList domain={site.domain} list={all.list} next={all.next} busy={all.busy} failed={all.failed} now={now} more={all.more} edit={all.edit} />}
         <p className="muted inc-foot">{copy.quietNote}</p>
       </main>
     </>

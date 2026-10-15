@@ -4,10 +4,12 @@
 // marker opens are this. The figure and its words are figure.ts's; the chart's
 // numbers are pinChart.ts's.
 import { useEffect, useState, type ReactNode } from 'react'
+import { AskAbout } from '../../components/Ask'
 import { Chart } from '../../components/SideCard/Chart'
 import { SideCard, type SideCardProps } from '../../components/SideCard/SideCard'
 import type { Point } from '../../lib/api'
 import { todayIn } from '../../lib/dates'
+import { aboutPin } from './aboutPin'
 import { ownDays } from './api'
 import { copy } from './copy'
 import { figureOf, whenOf } from './figure'
@@ -65,6 +67,12 @@ export function PinCard({ pin, site, series, money, closeLabel, label, extra, ..
   return (
     <SideCard
       {...card}
+      actions={
+        <>
+          {card.actions}
+          <AskAbout about={aboutPin(said, fig, whenOf(pin, todayIn(site.timezone)))} />
+        </>
+      }
       label={label ?? said.title}
       closeLabel={closeLabel}
       kind={kindOf(pin)}

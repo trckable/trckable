@@ -426,3 +426,10 @@
     font-size: var(--ph-text);
   }
 }
+
+/* Moved out of the first load: only this component uses these rules. */
+.edit-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}

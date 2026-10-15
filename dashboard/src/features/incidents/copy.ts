@@ -2,6 +2,7 @@
 import { defineCopy } from '../../i18n'
 
 export const copy = defineCopy('incidents', {
+  askWhat: (kind: string) => `What happened in this ${kind.toLowerCase()} spell, and was it on our side or the site's?`,
   // The chart's marker and its line.
   marker: (n: number, when: string) => (n === 1 ? `Incident on ${when}` : `${n} incidents on ${when}`),
   down: 'Down',

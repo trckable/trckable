@@ -9,7 +9,12 @@ section into the release.
 
 ## Unreleased
 
+- Info tips stay inside their panel: a tip near the edge of a table or a sheet slides back in instead of being cut off.
+- Cards and alert emails can hand a question to an add-on: a card raises a `trckable:ask-about` window event, alert mails can carry an optional link, and the footer loads lazily. Nothing changes on a plain install.
 - Changing the period or a filter no longer flashes: the numbers and chart on screen stay, a little dimmer, until the new ones land, the markers on the chart no longer blink out and back, and cards waiting for their first data show a soft shimmering block of their final height instead of a spinner. Nothing moves when the data arrives, and reduced motion turns the shimmer and the fade off.
+
+## 0.7.22 (14 Oct 2026)
+
 - Your links, in the ⋯ menu: every link you shared with a ?ref= tag or a utm_source as one row, with a bar for its visitors, the visitors who reached a goal, the revenue credited to it, a 30-day line and when it last brought someone, for the dashboard's period. A tag and the site it names count as one row. A tap on a row opens the dashboard for that link alone. Before the first tagged visit it offers a sample link to copy.
 
 ## 0.7.21 (14 Oct 2026)

@@ -204,9 +204,6 @@
   .tabs:has(> button:nth-child(3)) button[aria-selected='true'] {
     background: var(--surface-2);
   }
-  :root .bl-cols span {
-    font-size: 12px;
-  }
   /* The two cards' tabs: a finger tall, the row scrolling sideways. */
   .kit-tab {
     min-width: var(--ph-hit);
@@ -224,61 +221,7 @@
      right-aligned at the inner edge, and the thin bar under the whole row, scaled
      by share. The change and the small columns are for wider screens. The heads
      sit on the same two or three columns as the numbers. */
-  .bl-cols,
-  .bl-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 64px;
-    column-gap: 8px;
-    align-items: center;
-  }
-  .bl.has-rev :is(.bl-cols, .bl-row) {
-    grid-template-columns: minmax(0, 1fr) 64px 72px;
-  }
-  .bl-cols {
-    padding: 6px 10px;
-  }
-  .bl.has-act .bl-cols {
-    padding-right: 36px;
-  }
-  .bl-row {
-    align-content: center;
-    min-height: var(--ph-row);
-    padding: 6px 10px;
-    font-size: var(--ph-text-2);
-  }
-  .bl-lead,
-  .bl-main {
-    display: contents;
-  }
-  .bl-cols .bl-main {
-    display: block;
-    grid-column: 1;
-  }
   /* No lead group here: the track runs to the row's edge and the numbers keep the row's inner padding. */
-  .bl .bl-line {
-    inset: 0;
-  }
-  .bl-name {
-    grid-column: 1;
-    grid-row: 1;
-  }
-  .bl-val {
-    grid-column: 2;
-    grid-row: 1;
-    width: auto;
-    font-size: var(--ph-text-2);
-  }
-  .bl-rev {
-    grid-column: 3;
-    grid-row: 1;
-    width: auto;
-  }
-  .bl-tail,
-  .bl-sub,
-  .bl-spark,
-  .bl-cols .bl-sub {
-    display: none;
-  }
   .empty {
     font-size: var(--ph-text-2);
   }
