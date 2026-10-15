@@ -48,8 +48,20 @@ test('switching the period never shows a blank frame', async ({ page }) => {
   await page.goto(`${API}/${HISTORY_DOMAIN}?mode=full`)
   const chart = page.locator('.overview .chart-wrap svg[role="img"]')
   await expect(chart).toBeVisible({ timeout: 30_000 })
-  await page.waitForTimeout(3000)
-  const height = await page.evaluate(() => document.documentElement.scrollHeight)
+  // Wait until the page has finished filling in (lazy cards arrive on their own
+  // time, slower on a busy machine): the height is the same for a full second.
+  let height = 0
+  let since = Date.now()
+  await expect
+    .poll(async () => {
+      const h = await page.evaluate(() => document.documentElement.scrollHeight)
+      if (h !== height) {
+        height = h
+        since = Date.now()
+      }
+      return Date.now() - since
+    }, { timeout: 30_000, intervals: [250] })
+    .toBeGreaterThanOrEqual(1000)
   // Every frame from here: the chart is there, nothing is a placeholder, the page holds its height.
   await page.evaluate(() => {
     const w = window as unknown as { bad: string[] }
