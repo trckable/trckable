@@ -57,7 +57,8 @@ test('at most three at once, each with its own mark, and the quiet ones are poli
   await page.goto(`${API}/example.com?view=data`)
   await expect(page.locator('.kpi').first()).toBeVisible()
   await expect(page.locator('.toasts')).toBeAttached() // the toasts load apart from the page
-  await page.evaluate(() => {
+  await page.evaluate(async () => {
+    await new Promise((r) => setTimeout(r, 100)) // its listener is added in an effect, just after it mounts
     const send = (id: number, text: string, kind: string) => window.dispatchEvent(new CustomEvent('trckable:toast', { detail: { id, text, kind } }))
     send(9001, 'Saved', 'success')
     send(9002, 'New version', 'info')

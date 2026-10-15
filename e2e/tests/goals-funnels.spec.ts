@@ -58,15 +58,21 @@ test('1. a page-visit goal made in Track a goal counts the visit', async ({ page
   await page.locator('[data-card=what]').getByRole('button', { name: /Track a goal/ }).first().click()
   const dialog = page.getByRole('dialog', { name: 'Add goals' })
   await dialog.getByLabel('Goal name').fill(name)
-  await dialog.getByLabel('Page').fill(path)
+  await dialog.getByLabel('Page', { exact: true }).fill(path)
   await dialog.getByRole('button', { name: 'Add goal' }).click()
   await expect(dialog.getByRole('list', { name: 'Page goals' })).toContainText(name)
   await dialog.getByRole('button', { name: 'Done' }).click()
 
   await expectGoal(page, name, 1)
   // Clean up: the shared site keeps no goal from this run.
-  await page.locator('[data-card=what] .kit-tools').getByRole('button', { name: /Track a goal/ }).click()
-  await page.getByRole('dialog', { name: 'Add goals' }).getByRole('button', { name: `Remove the goal ${name}` }).click()
+  // The list in the dialog can open before the goal is in it: close and open it again until it is.
+  const remove = page.getByRole('dialog', { name: 'Add goals' }).getByRole('button', { name: `Remove the goal ${name}` })
+  await expect(async () => {
+    await page.keyboard.press('Escape')
+    await page.locator('[data-card=what] .kit-tools').getByRole('button', { name: /Track a goal/ }).click()
+    await expect(remove).toBeVisible({ timeout: 3_000 })
+  }).toPass({ timeout: 30_000 })
+  await remove.click()
 })
 
 test('2. a button with data-trckable-goal counts on its first click, with no goal made in the dialog', async ({ page }) => {
