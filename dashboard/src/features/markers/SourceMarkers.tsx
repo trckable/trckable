@@ -14,6 +14,10 @@ import { LANE_H } from '../../charts/plot'
 import type { ChartGeo } from '../moments/marks'
 import { copy } from './copy'
 import { biggest, cluster, place, type Jump } from './model'
+import { copy as mentionCopy } from '../mentions/copy'
+import { periodFor } from '../mentions/periodFor'
+import { useMentions } from '../mentions/useMentions'
+import { useNow } from '../incidents/useIncidents'
 import { useJumps } from './useJumps'
 import './markers.css'
 
@@ -47,6 +51,14 @@ export default function SourceMarkers(p: SourceMarkersProps) {
   const { sources, links } = useJumps(p.site.id, p.from, p.to)
   const marks = useMemo(() => cluster(place([...sources, ...links], p.labels, p.bucket), g.x, [g.x(0) + 12, g.w - 30]), [sources, links, p.labels, p.bucket, g.w]) // eslint-disable-line react-hooks/exhaustive-deps -- g.x changes with the width, which is listed
   const lead = useMemo(() => biggest(sources, p.labels, p.visitors), [sources, p.labels, p.visitors])
+  const now = useNow()
+  const mentions = useMentions(p.site.id, periodFor(p.labels, now), 0, !!p.site.mentions)
+  const tag = useMemo(() => {
+    if (!lead || mentions.state !== 'ready') return null
+    const day = (t: number) => new Intl.DateTimeFormat('en-CA', { timeZone: p.site.timezone }).format(new Date(t * 1000))
+    const best = mentions.data.mentions.filter((m) => day(m.posted_at) === lead.day && m.visitors * 10 >= lead.added * 3).sort((a, b) => b.visitors - a.visitors)[0]
+    return best ? mentionCopy.jumpTag(mentionCopy.name[best.source], best.visitors) : null
+  }, [lead, mentions, p.site.timezone])
   const [hover, setHover] = useState<number | null>(null)
   const [open, setOpen] = useState<number | null>(null)
   const root = useRef<HTMLDivElement>(null)
@@ -78,6 +90,7 @@ export default function SourceMarkers(p: SourceMarkersProps) {
       {lead && (
         <p className="sm-line" style={{ left: g.x(0) + 4, top: LANE_H + 2, maxWidth: g.w - g.x(0) - 12 }}>
           {copy.line(fmtDay(lead.day), lead.name, lead.added)}
+          {tag && <> · {tag}</>}
         </p>
       )}
       {marks.map((m) => (

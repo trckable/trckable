@@ -5,6 +5,10 @@ import { Flame } from 'lucide-react'
 import { lazy, Suspense, useState } from 'react'
 import { BarList } from '../../charts/BarList'
 import { Donut } from '../../charts/Donut'
+import { Skeleton } from '../../components/skeleton/Skeleton'
+import { useNarrow } from '../../lib/useNarrow'
+import { copy as mentionsCopy } from '../mentions/copy'
+import { useMentions } from '../mentions/useMentions'
 import { fmtCompact } from '../../lib/format'
 import type { Row } from '../../lib/api'
 import { shows } from '../../lib/modules'
@@ -18,18 +22,25 @@ import { listProps, SubPanel } from './SubPanel'
 import type { TabItem } from '../../kit/Tabs'
 import './Breakdowns.css'
 
+const MentionList = lazy(() => import('../mentions/MentionList')) // a chunk of its own, fetched when the tab opens
 const HeatOverlay = lazy(() => import('../heatmap/HeatOverlay'))
 const ScrollDepth = lazy(() => import('../../views/ScrollDepth').then((m) => ({ default: m.ScrollDepth })))
 
 const convOrBounce = (c: CardsCtx) => (c.money ? 'Conv.' : 'Bounce')
 
 export function SourcesPanel({ c }: { c: CardsCtx }) {
+  const narrow = useNarrow() // a phone glances: the chart's dots say it, the list is for a wider screen
   const tabs: TabItem[] = [
     { id: 'channel', label: cardCopy.channels },
     { id: 'referrer', label: cardCopy.referrers },
     { id: 'campaign', label: cardCopy.campaigns },
   ]
-  return <SubPanel id="src" label={cardCopy.sources} tabs={tabs} c={c} render={(dim) => <SourceBars c={c} dim={dim} />} foot={cardCopy.sharesFoot} />
+  const mentions = !c.shared && !narrow
+  const found = useMentions(c.site.id, '30d', 0, mentions && !!c.site.mentions)
+  const n = found.state === 'ready' ? found.data.mentions.length : 0
+  if (mentions) tabs.push({ id: 'mentions', label: n > 0 ? mentionsCopy.tabCount(n) : mentionsCopy.title })
+  const render = (dim: string) => (dim === 'mentions' ? <Suspense fallback={<Skeleton height={164} />}><MentionList site={c.site} /></Suspense> : <SourceBars c={c} dim={dim} />)
+  return <SubPanel id="src" label={cardCopy.sources} tabs={tabs} c={c} render={render} foot={cardCopy.sharesFoot} noFoot={(dim) => dim === 'mentions'} />
 }
 
 function SourceBars({ c, dim }: { c: CardsCtx; dim: string }) {
