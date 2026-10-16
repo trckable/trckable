@@ -106,8 +106,10 @@ export default function Briefing({ site, data, loading, period, range, money, on
   const nowSec = useNow()
   const setupState = useSetup(site)
   const wset = watched.use()
-  const cur = useMemo(() => normal(data?.current), [data?.current])
-  const prev = useMemo(() => normal(data?.previous), [data?.previous])
+  const current = data?.current
+  const previous = data?.previous
+  const cur = useMemo(() => normal(current), [current])
+  const prev = useMemo(() => normal(previous), [previous])
   const unit = unitOf(period)
   const usual = useUsual(site.id, range.to, unit === 'today' || unit === 'yesterday')
   const downNow = !!site.down_since
