@@ -1,5 +1,6 @@
 // The answers Explore asks for beside the report: the funnel, the robots, the outbound links and the saved views. Dev only.
 import type { CrawlerReport, FunnelResult, FunnelStep } from '../../lib/api'
+import { hash, mulberry } from './rand'
 import { siteOf, countIn, dayIndex, reportOf, type Ctx, type Query } from './report'
 
 /** A funnel as the server answers it: each step counted from the people who reached the one before. */
@@ -59,4 +60,19 @@ export const segments = {
     return s
   },
   drop: (id: string, seg: string) => (views[id] = (views[id] ?? []).filter((x) => x.id !== seg)),
+}
+
+/** How far people read a page, as the walkthrough works it out (seeded by the page, so it is the same on every load). */
+export function scrollOf(id: string, page: string) {
+  const r = mulberry(hash(`${page}${id}sd`))
+  const reached = [Math.round(82 + r() * 8), Math.round(60 + r() * 12), Math.round(38 + r() * 14), Math.round(18 + r() * 10)].map((x) => x / 100)
+  return { samples: 120, avg: 52, reached }
+}
+
+/** Where people click on a page: a few elements, each a share of the page's views. */
+export function heatOf(c: Ctx, id: string, q: Query, path: string) {
+  const views = countIn(c, id, dayIndex(c, q.from) * 1440, (dayIndex(c, q.to) + 1) * 1440, [{ dim: 'entry_page', not: false, value: path }])
+  const r = mulberry(hash(`${path}${id}heat`))
+  const spots = ['a.nav', 'button.cta', 'a.pricing', 'a.docs'].map((el, i) => ({ el, cx: Math.floor(r() * 10), cy: Math.floor(r() * 10), n: Math.round(views * (0.25 - i * 0.05) * (0.6 + r() * 0.5)), x: 80 + Math.round(r() * 700), y: 60 + i * 340, w: 120 + Math.round(r() * 120), h: 44 }))
+  return { path, width: 1280, widths: [{ width: 1280, views }], views, window: 1280, height: 3000, clicks: views ? spots : [], dead: [], rage: [], elements: [], fields: [], scroll: [1, 0.9, 0.78, 0.6, 0.5, 0.42, 0.34, 0.27, 0.2, 0.14], scroll_views: views }
 }

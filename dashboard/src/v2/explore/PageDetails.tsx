@@ -1,6 +1,9 @@
 // What Explore knows about one page, in a sheet over it: how far people read down it and how fast it loads. Opened from
 // the ⋯ menu or the note under the pages table, while a page is the filter.
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { heatApi } from '../../features/heatmap/api'
+import { glow, pageSize, place, strength, busiest } from '../../features/heatmap/model'
+import { lazyLoad } from '../../lib/lazyLoad'
 import { more, type Site } from '../../lib/apiMore'
 import type { Range } from '../../lib/dates'
 import { queryOf } from '../../lib/dashQuery'
@@ -14,6 +17,32 @@ import { gradeOf } from './data/mapSections'
 import { pageDetails } from './pageStore'
 
 const STEPS = ['0%', '25%', '50%', '75%', '90%']
+
+// The page's own heatmap (features/heatmap) is its own chunk, fetched when it is first asked for.
+const HeatOverlay = lazyLoad(() => import('../../features/heatmap/HeatOverlay'))
+
+/** Where people clicked on the page, as dots in a small box: the real counts, placed as the full heatmap places them. */
+function Clicks({ site, range, page, q }: { site: Site; range: Range; page: string; q: ReturnType<typeof queryOf> }) {
+  const [open, setOpen] = useState(false)
+  const key = [site.id, range.from, range.to, page].join('|')
+  const heat = useLoad(`h|${key}`, (signal) => heatApi.map(site.id, q, page, 0, signal), true)
+  const map = heat.state === 'ok' && (heat.data.views > 0 || heat.data.clicks.length > 0) ? heat.data : null
+  if (!map) return <div className="mk-quiet">{heat.state === 'loading' ? copy.loading : copy.noHeat}</div>
+  const size = pageSize(map)
+  const top = busiest(map.clicks)
+  return (
+    <>
+      <button type="button" className="heat" title={copy.openHeat(page)} aria-label={copy.openHeat(page)} onClick={() => setOpen(true)}>
+        {map.clicks.slice(0, 40).map((s) => {
+          const at = place(s, size.w)
+          const g = glow(s, size.w) * (0.6 + strength(s.n, top) * 0.8)
+          return <i key={`${s.el}|${s.cx}|${s.cy}`} style={{ left: `${Math.min(100, (at.x / size.w) * 100)}%`, top: `${Math.min(100, (at.y / size.h) * 100)}%`, '--s': `${Math.round(g)}px` } as CSSProperties} />
+        })}
+      </button>
+      {open && <HeatOverlay site={site} path={page} query={q} onClose={() => setOpen(false)} />}
+    </>
+  )
+}
 
 function Body({ site, range, view, page }: { site: Site; range: Range; view: ViewState; page: string }) {
   const q = { ...queryOf(view, range), compare: undefined, cfrom: undefined, cto: undefined, filters: [{ dim: 'page', value: page }] }
@@ -44,6 +73,8 @@ function Body({ site, range, view, page }: { site: Site; range: Range; view: Vie
       ) : (
         <div className="mk-quiet">{read.state === 'loading' ? copy.loading : copy.noScroll}</div>
       )}
+      <XSec a={copy.whereClick} b={copy.heatmap} />
+      <Clicks site={site} range={range} page={page} q={q} />
       <XSec a={copy.speed} b={lcp != null ? copy.grades[gradeOf(0, lcp)] : undefined} />
       <div className="mk-quiet">{line}</div>
     </div>

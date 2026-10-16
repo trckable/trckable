@@ -10,3 +10,10 @@
   }
 }
 
+
+/* The page sheet's small heatmap: the dots of where people clicked, as the walkthrough draws its box. */
+.mk .heat{position:relative;display:block;width:100%;height:120px;border:1px solid var(--mk-line);border-radius:12px;background:linear-gradient(#17191c,#131417);overflow:hidden;cursor:pointer}
+.mk .heat i{position:absolute;width:var(--s);height:var(--s);margin:calc(var(--s) / -2);border-radius:50%;background:radial-gradient(rgba(255,107,107,.7),rgba(255,154,74,.3) 50%,transparent 70%)}
+.mk .sdr{display:flex;align-items:center;gap:var(--mk-s3);font-size:12.5px}
+.mk .sdr span{width:36px;color:var(--mk-muted)}
+.mk .sdr b{width:40px;text-align:right}

@@ -16,7 +16,7 @@ import {
   type Ctx,
 } from './report'
 import { busierOf, nowOf } from './live'
-import { crawlersOf, funnelOf, linksOf, segments } from './sections'
+import { crawlersOf, funnelOf, heatOf, linksOf, scrollOf, segments } from './sections'
 import { hash, mulberry, pick } from './rand'
 import { osOf, visitsOf, BROWSERS } from './visits'
 
@@ -263,6 +263,12 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       return ok(funnelOf(c, id, parseQuery(sp), JSON.parse(sp.get('steps') ?? '[]') as FunnelStep[]))
     case 'report/crawlers':
       return ok(crawlersOf(c, id, parseQuery(sp)))
+    case 'report/scroll': {
+      const f = parseQuery(sp).filters.find((x) => x.dim === 'page')
+      return ok(scrollOf(id, f?.value ?? site.pages[0][0]))
+    }
+    case 'heat':
+      return ok(heatOf(c, id, parseQuery(sp), sp.get('path') ?? '/'))
     case 'report/goal-props':
       return ok(linksOf(c, id, parseQuery(sp)))
     case 'modules':
