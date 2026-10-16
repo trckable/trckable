@@ -13,7 +13,6 @@ import (
 
 	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/auth"
-	"github.com/trckable/trckable/server/internal/reports"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -153,14 +152,7 @@ func (a *API) issueCode(ctx context.Context, email string, now time.Time, src al
 	}
 	spaced := code[:3] + " " + code[3:]
 	src.Code, src.At = spaced, now
-	rep := alerts.Report{
-		FromName:    "trckable",
-		Subject:     "Your trckable app sign-in code: " + spaced,
-		Text:        src.Text(),
-		HTML:        src.HTML(),
-		Attachments: []alerts.Attachment{{Name: "logo.png", Type: "image/png", Data: reports.Logo, Inline: alerts.LogoCID}},
-		At:          now,
-	}
+	rep := src.Report("Your trckable app sign-in code: " + spaced)
 	if err := a.sendLoginMail(ctx, u.Email, rep); err != nil {
 		slog.Warn("sign-in code: the email could not be sent", "user", u.ID, "err", err)
 	}

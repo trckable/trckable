@@ -33,8 +33,17 @@ func TestStoppedWordsReadTheChecks(t *testing.T) {
 		if !strings.Contains(ev.Message, c.want) || strings.Contains(ev.Message, "5m46s") {
 			t.Errorf("%s: message %q", c.name, ev.Message)
 		}
-		if ev.Card == nil || ev.Card.CTA != "Open site status" || ev.Card.Link != "https://stats.example.com/tash.example.dev" {
-			t.Errorf("%s: card %+v", c.name, ev.Card)
+		if ev.Email == nil {
+			t.Fatalf("%s: no email", c.name)
+		}
+		r := alerts.Compose(ev)
+		for _, want := range []string{"No visits for 6 hours", `class="bd"`, "What we checked", c.want, `href="https://stats.example.com/tash.example.dev"`, "Open site status →"} {
+			if !strings.Contains(r.HTML, want) {
+				t.Errorf("%s: html misses %q", c.name, want)
+			}
+		}
+		if !strings.Contains(r.Text, "What we checked\n") || !strings.Contains(r.Text, c.want) {
+			t.Errorf("%s: text:\n%s", c.name, r.Text)
 		}
 	}
 }

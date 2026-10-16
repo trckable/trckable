@@ -21,6 +21,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/trckable/trckable/server/internal/mailkit"
 )
 
 // Event is what a webhook receives.
@@ -40,19 +42,15 @@ type Event struct {
 	// Unsubscribe is the address that stops this alert, put in an email's
 	// headers and last line. Chat tools have their own mute; it is not sent.
 	Unsubscribe string `json:"-"`
-	// HTML, when set, dresses the email as a designed message (the plain text
-	// stays as its twin); it is given the stop link, which is known only at
-	// the moment of sending. Inline are the files it shows. Chat tools get
-	// neither.
-	HTML func(unsubscribe string) string `json:"-"`
-	// Card dresses an email that has no HTML of its own (without one, the title
-	// and message are the card); Subject replaces the email's subject line;
-	// Settings is where the person changes the alert, shown beside the stop
-	// link. Chat tools get none of them.
-	Card     *Card        `json:"-"`
-	Subject  string       `json:"-"`
-	Settings string       `json:"-"`
-	Inline   []Attachment `json:"-"`
+	// Email dresses the email as a designed message, drawn by the mail kit
+	// (without one, the title and message are drawn plainly); its plain text
+	// becomes the email's text part, and the stop, settings and Ask links are
+	// added to its footer when it is sent. Subject replaces the email's
+	// subject line; Settings is where the person changes the alert. Chat
+	// tools get none of them.
+	Email    *mailkit.Email `json:"-"`
+	Subject  string         `json:"-"`
+	Settings string         `json:"-"`
 
 	// Ask, when set, is an address that opens the dashboard on this event; the
 	// email shows it as one more link beside the stop link. Chat tools get none.

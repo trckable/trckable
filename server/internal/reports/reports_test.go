@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/zlib"
 	"fmt"
+	"github.com/trckable/trckable/server/internal/mailkit"
 	"image"
 	"image/color"
 	"image/png"
@@ -119,7 +120,7 @@ func TestHTMLIsEscapedBrandedAndTranslated(t *testing.T) {
 	}
 	d.Brand.Logo, d.Brand.HideBrand = []byte{1}, true
 	out = HTML(d)
-	if !strings.Contains(out, "cid:"+LogoCID) || strings.Contains(out, "trckable") {
+	if !strings.Contains(out, "cid:"+mailkit.LogoCID) || strings.Contains(out, "trckable") {
 		t.Errorf("a logo, and trckable's name hidden:\n%s", out)
 	}
 	if empty := sample("en"); true {
@@ -251,8 +252,5 @@ func TestFitCutsWithAnEllipsis(t *testing.T) {
 	}
 	if fit(regular, 10, "short", 100) != "short" {
 		t.Error("a short text was cut")
-	}
-	if Ink("#ffee00") != "#111111" || Ink("#112233") != "#ffffff" || Ink("nope") != "#ffffff" {
-		t.Error("ink")
 	}
 }

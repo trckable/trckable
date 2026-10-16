@@ -80,6 +80,12 @@ const (
 	mailVs      = "what's usual at this time"
 	mailNote    = "You get this when a site is busier than usual."
 
+	// ChartCaption, ChartFrom and ChartTo name the email's chart of the
+	// last half hour.
+	ChartCaption = "People online, the last 30 minutes"
+	ChartFrom    = "30 min ago"
+	ChartTo      = "now"
+
 	// Open is the email's one button.
 	Open = "Open Live →"
 )

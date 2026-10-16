@@ -1,13 +1,10 @@
 package server
 
 import (
-	"encoding/base64"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/trckable/trckable/server/internal/alerts"
-	"github.com/trckable/trckable/server/internal/reports"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -25,16 +22,21 @@ func TestProbeWordsPlainAndPreview(t *testing.T) {
 			after = up
 		}
 		s.probeWords(&ev, site, before, after)
-		if ev.Subject != want || ev.Card == nil || ev.Card.CTA != "Open site status" || ev.Card.Link != "https://stats.example.com/tash.albindudija.workers.dev" {
-			t.Errorf("%s: %q %+v", kind, ev.Subject, ev.Card)
+		if ev.Subject != want || ev.Email == nil {
+			t.Fatalf("%s: %q %+v", kind, ev.Subject, ev.Email)
 		}
-		if dir := os.Getenv("PREVIEW_DIR"); dir != "" {
-			h := ev.Card.HTML("https://stats.example.com/u/x", "https://stats.example.com/settings")
-			h = strings.ReplaceAll(h, "cid:"+alerts.LogoCID, "data:image/png;base64,"+base64.StdEncoding.EncodeToString(reports.Logo))
-			name := map[string]string{"down": "alert-down", "up": "alert-back"}[kind]
-			if err := os.WriteFile(dir+"/"+name+".html", []byte(h), 0o600); err != nil { //nolint:gosec // test preview dir from the developer's own env
-				t.Fatal(err)
+		r := alerts.Compose(ev)
+		wants := map[string][]string{
+			"down": {"Not answering", `class="bd"`, "What we checked", "3 checks in a row got no answer", "Failed checks in a row", "No answer within 10 seconds"},
+			"up":   {"Back up", `class="ok"`, "Answering again", "23 minutes", "Down since"},
+		}[kind]
+		for _, w := range append(wants, "Open site status →", `href="https://stats.example.com/tash.albindudija.workers.dev"`) {
+			if !strings.Contains(r.HTML, w) {
+				t.Errorf("%s: html misses %q", kind, w)
 			}
+		}
+		if !strings.Contains(r.Text, "Open site status: https://stats.example.com/tash.albindudija.workers.dev") {
+			t.Errorf("%s: text:\n%s", kind, r.Text)
 		}
 	}
 }

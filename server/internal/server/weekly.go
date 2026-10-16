@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
+	"github.com/trckable/trckable/server/internal/mailkit"
 	"github.com/trckable/trckable/server/internal/modules"
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/reports"
@@ -134,10 +135,10 @@ func revenueLine(cur, prev *query.Result) string {
 	return line
 }
 
-// weeklyHTML is the report as a designed email: the same numbers and
-// sentences as weeklyText, laid out by package reports. It returns the page
-// as a function of the stop link, which is known only when it is sent.
-func weeklyHTML(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link string) func(string) string {
+// weeklyEmail is the report as a designed email: the same numbers and
+// sentences as weeklyText, laid out by package reports on the mail kit. The
+// stop link is added to it when it is sent.
+func weeklyEmail(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link string) *mailkit.Email {
 	var x reports.Weekly
 	x.Link = link
 	if cur.KPIs.Visitors > 0 {
@@ -152,10 +153,7 @@ func weeklyHTML(domain string, from, to time.Time, cur, prev *query.Result, ai a
 		x.Moments = append(x.Moments, weeklyInsights(cur, prev)...)
 	}
 	d := reports.Data{Site: domain, Cadence: "weekly", Lang: "en", From: from, To: to, Cur: cur, Prev: prev}
-	return func(stop string) string {
-		d.Unsubscribe = stop
-		return reports.WeeklyHTML(d, x)
-	}
+	return reports.WeeklyEmail(d, x)
 }
 
 // weeklyText words the report. It is plain text on purpose: every chat tool
@@ -288,8 +286,7 @@ func (s *Server) weeklyEvent(ctx context.Context, q *query.Q, info sqlite.SiteIn
 	}
 	ev.Title, ev.Message, ev.Data = weeklyText(info.Domain, from, to, cur, prev, ai, busiest, link)
 	ev.Text = ev.Title + " — " + ev.Message
-	ev.HTML = weeklyHTML(info.Domain, from, to, cur, prev, ai, busiest, link)
-	ev.Inline = []alerts.Attachment{{Name: "logo.png", Type: "image/png", Data: reports.Logo, Inline: reports.LogoCID}}
+	ev.Email = weeklyEmail(info.Domain, from, to, cur, prev, ai, busiest, link)
 	return ev, true
 }
 

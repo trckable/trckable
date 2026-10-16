@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
+	"github.com/trckable/trckable/server/internal/mailkit"
 	"github.com/trckable/trckable/server/internal/mentions"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 	"github.com/trckable/trckable/server/internal/writer"
@@ -575,7 +576,7 @@ func mentionEvent(site sqlite.SiteRow, m sqlite.Mention, link string) alerts.Eve
 	if m.Source == mentions.News {
 		title = "Mentioned in the news"
 	}
-	msg := fmt.Sprintf("%s was mentioned on %s: %q.", site.Domain, where, alerts.Short(m.Title, 120))
+	msg := fmt.Sprintf("%s was mentioned on %s: %q.", site.Domain, where, mailkit.Short(m.Title, 120))
 	switch {
 	case m.Visitors > 0:
 		msg += fmt.Sprintf(" %d people have come from it so far.", m.Visitors)
@@ -586,17 +587,52 @@ func mentionEvent(site sqlite.SiteRow, m sqlite.Mention, link string) alerts.Eve
 	if link != "" {
 		ev.Message += "\n\n" + link
 	}
-	card := &alerts.Card{Eyebrow: title, Live: true, Text: alerts.Short(m.Title, 160), CTA: "See it on your dashboard", Link: link, Note: "You get this when a mention brings people to your site."}
-	if m.Visitors > 0 {
-		card.Big, card.Strong, card.Sub, card.Text = fmt.Sprint(m.Visitors), "visitors", "came from it so far", ""
-		card.Rows = [][2]string{{"Where", where}, {"What", alerts.Short(m.Title, 60)}}
-	}
-	if m.Front {
-		card.Rows = append(card.Rows, [2]string{"Front page", "Yes"})
-	}
-	ev.Card = card
+	ev.Email = mentionEmail(site.Domain, title, where, m, link)
 	ev.Data = map[string]any{"source": m.Source, "url": m.URL, "visitors": m.Visitors, "front": m.Front}
 	return ev
+}
+
+// mentionEmail is the mention as a designed email: what it brought, and a
+// quote card of where the site was named, with the source's own mark.
+func mentionEmail(domain, title, where string, m sqlite.Mention, link string) *mailkit.Email {
+	e := &mailkit.Email{Preheader: mailkit.Cut(m.Title, 120), Foot: mailkit.Foot{Note: "You get this when a mention brings people to your site."}}
+	e.Blocks = []mailkit.Block{mailkit.Heading{Eyebrow: title, Title: domain}}
+	var front *mailkit.Badge
+	if m.Front {
+		front = &mailkit.Badge{Text: "On the front page", Tone: mailkit.Celebrate, Dot: true}
+	}
+	switch {
+	case m.Visitors > 0:
+		e.Blocks = append(e.Blocks, mailkit.Hero{Tone: mailkit.Celebrate, Badge: front, Big: mailkit.Number(m.Visitors), Unit: "visitors", Line: "came from it so far"})
+	case front != nil:
+		e.Blocks = append(e.Blocks, *front)
+	}
+	source, mark := where, mailkit.Mark{Letter: "N", Color: "#5b6573"}
+	switch m.Source {
+	case mentions.HN:
+		mark = mailkit.Mark{Letter: "Y", Color: "#ff6600"}
+	case mentions.PH:
+		mark = mailkit.Mark{Letter: "P", Color: "#da552f"}
+	default:
+		if m.Host != "" {
+			source = m.Host
+			mark.Letter = strings.ToUpper(string([]rune(m.Host)[0]))
+		}
+	}
+	var meta []string
+	if m.Author != "" {
+		meta = append(meta, "by "+m.Author)
+	}
+	if m.Points > 0 {
+		meta = append(meta, fmt.Sprintf("%d points", m.Points))
+	}
+	if m.Comments > 0 {
+		meta = append(meta, fmt.Sprintf("%d comments", m.Comments))
+	}
+	e.Blocks = append(e.Blocks,
+		mailkit.Quote{Mark: mark, Source: source, Meta: strings.Join(meta, " · "), Title: mailkit.Cut(m.Title, 160), Text: mailkit.Cut(m.Snippet, 280), URL: m.URL},
+		mailkit.Button{Label: "See it on your dashboard", URL: link})
+	return e
 }
 
 // pruneMentions removes the mentions older than a site's own "keep for N days".

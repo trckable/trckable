@@ -1,6 +1,8 @@
 package server
 
 import (
+	"github.com/trckable/trckable/server/internal/alerts"
+	"github.com/trckable/trckable/server/internal/mailkit"
 	"strings"
 	"testing"
 	"time"
@@ -24,10 +26,11 @@ func weeklySample() (from time.Time, cur, prev *query.Result) {
 
 // The weekly email is a designed HTML page with the plain text beside it:
 // tiles with their change, bars for the lists, one button, the stop link.
-func TestWeeklyHTML(t *testing.T) {
+func TestWeeklyEmail(t *testing.T) {
 	from, cur, prev := weeklySample()
 	link := "https://stats.example.com/demo.trckable.com?from=2026-09-28&to=2026-10-04&compare=previous"
-	page := weeklyHTML("demo.trckable.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{Visitors: 702}, "Busiest: Tuesday", link)("https://stats.example.com/u/abc.def")
+	cur.Series = []query.Point{{T: "2026-09-28", Visitors: 600}, {T: "2026-09-29", Visitors: 900}, {T: "2026-09-30", Visitors: 700}}
+	page := weeklyPage(weeklyEmail("demo.trckable.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{Visitors: 702}, "Busiest: Tuesday", link), "https://stats.example.com/u/abc.def")
 	for _, want := range []string{
 		"cid:logo@report", "Your week", "demo.trckable.com", "Sep 28 – Oct 4",
 		"Visitors", "4,512", "up 13%", "Pageviews", "Bounce rate", "45%", "Visit length", "2m 10s",
@@ -35,7 +38,7 @@ func TestWeeklyHTML(t *testing.T) {
 		"AI assistants sent 702 visitors.", "Busiest: Tuesday",
 		"Open your week", `href="https://stats.example.com/demo.trckable.com?from=2026-09-28&amp;to=2026-10-04&amp;compare=previous"`,
 		`href="https://stats.example.com/u/abc.def"`, "Stop receiving this report",
-		"prefers-color-scheme:dark", `width="600"`, "max-width:600px",
+		"prefers-color-scheme:dark", `width="600"`, "max-width:600px", "Visitors per day", "Mon", "Tue",
 	} {
 		if !strings.Contains(page, want) {
 			t.Errorf("missing %q", want)
@@ -44,12 +47,17 @@ func TestWeeklyHTML(t *testing.T) {
 	if strings.Contains(page, "<b>docs</b>") || strings.Contains(page, "with-more-segments") || !strings.Contains(page, "…") {
 		t.Errorf("paths are escaped and long ones are cut with an ellipsis")
 	}
-	if strings.Contains(page, "<script") || strings.Count(page, `class="tk-btn"`) != 1 {
-		t.Errorf("one button, no script")
+	if strings.Contains(page, "<script") || strings.Count(page, "v:roundrect") != 2 || strings.Count(page, `class="hot"`) < 1+6 {
+		t.Errorf("one button, no script, the best day and the bars lit")
 	}
 	// No address, no button; a week with nobody says so.
-	quiet := weeklyHTML("x.com", from, from.AddDate(0, 0, 7), &query.Result{}, prev, aiWeek{}, "", "")("")
+	quiet := weeklyPage(weeklyEmail("x.com", from, from.AddDate(0, 0, 7), &query.Result{}, prev, aiWeek{}, "", ""), "")
 	if strings.Contains(quiet, "Open your week") || strings.Contains(quiet, "Stop receiving") || !strings.Contains(quiet, "No visitors arrived") {
 		t.Errorf("a quiet week without links:\n%s", quiet)
 	}
+}
+
+// weeklyPage is the weekly email as it is sent, with its stop link.
+func weeklyPage(m *mailkit.Email, stop string) string {
+	return alerts.Compose(alerts.Event{Title: "Your week", Unsubscribe: stop, Email: m}).HTML
 }

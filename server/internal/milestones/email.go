@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/trckable/trckable/server/internal/alerts"
+	"github.com/trckable/trckable/server/internal/mailkit"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -22,7 +22,8 @@ const (
 	mailReachedOn  = "Reached on %s"
 	mailNext       = "Next up: %s"
 	mailOpen       = "Open %s"
-	mailOpenPlain  = "Open %s: %s"
+	mailWay        = "%d%% of the way"
+	mailNote       = "You get this when a site reaches a milestone."
 	mailHeadlineNo = "milestone"
 )
 
@@ -68,45 +69,46 @@ func sinceFirst(m sqlite.Milestone, list []sqlite.Milestone) string {
 	return ""
 }
 
-// nextStep is the step after m on its ladder, "" at the top or for a family
+// nextStep is the step after m on its ladder, 0 at the top or for a family
 // without one (an amount of money is never named).
-func nextStep(m sqlite.Milestone) string {
+func nextStep(m sqlite.Milestone) float64 {
 	if m.Kind != Visitors && m.Kind != Pageviews && m.Kind != Countries {
-		return ""
+		return 0
 	}
 	for _, v := range Steps[m.Kind] {
 		if v > m.Value {
-			return fmt.Sprintf(mailNext, Number(v))
+			return v
 		}
 	}
-	return ""
+	return 0
 }
 
-// EmailCard dresses a milestone as the celebration email. list is the site's
-// milestones, for the one line of context; baseURL is where the dashboard
-// lives, empty for no button. Money is never named: an alert can go to a
-// shared channel.
-func EmailCard(m sqlite.Milestone, list []sqlite.Milestone, domain, baseURL string) *alerts.Card {
+// Email dresses a milestone as the celebration email: the cheering ghost in
+// its confetti, the warm headline, the number as the lime hero, one line of
+// real context, the way to the next step, and one button. list is the site's
+// milestones, for the context; baseURL is where the dashboard lives, empty
+// for no button. Money is never named: an alert can go to a shared channel.
+func Email(m sqlite.Milestone, list []sqlite.Milestone, domain, baseURL string) (headline string, e *mailkit.Email) {
 	w := Say(m, false)
-	c := &alerts.Card{Headline: w.Headline(domain), Big: w.Big, Unit: w.Label, Next: nextStep(m)}
-	if c.Sub = sinceFirst(m, list); c.Sub == "" {
-		c.Sub = Context(m, list)
+	headline = w.Headline(domain)
+	sub := sinceFirst(m, list)
+	if sub == "" {
+		sub = Context(m, list)
 	}
-	if c.Sub == "" {
+	if sub == "" {
 		reached := m.Day
 		if t, err := time.Parse(time.DateOnly, m.Day); err == nil {
 			reached = t.Format("2 Jan 2006")
 		}
-		c.Sub = fmt.Sprintf(mailReachedOn, reached)
+		sub = fmt.Sprintf(mailReachedOn, reached)
 	}
-	plain := []string{c.Headline, "", w.Line(), c.Sub}
-	if c.Next != "" {
-		plain = append(plain, c.Next)
+	e = &mailkit.Email{Preheader: sub, Foot: mailkit.Foot{Note: mailNote}}
+	e.Blocks = []mailkit.Block{mailkit.Hero{Tone: mailkit.Celebrate, Picture: &mailkit.Cheer, Confetti: true, Headline: headline, Big: w.Big, Unit: w.Label, Line: sub}}
+	if next := nextStep(m); next > 0 {
+		e.Blocks = append(e.Blocks, mailkit.Progress{Label: fmt.Sprintf(mailNext, Number(next)), Note: fmt.Sprintf(mailWay, int(m.Value*100/next)), Value: m.Value, Of: next})
 	}
 	if baseURL != "" {
-		c.CTA, c.Link = fmt.Sprintf(mailOpen, domain), strings.TrimSuffix(baseURL, "/")+"/"+domain
-		plain = append(plain, "", fmt.Sprintf(mailOpenPlain, domain, c.Link))
+		e.Blocks = append(e.Blocks, mailkit.Button{Label: fmt.Sprintf(mailOpen, domain), URL: strings.TrimSuffix(baseURL, "/") + "/" + domain})
 	}
-	c.Plain = strings.Join(plain, "\n")
-	return c
+	return headline, e
 }

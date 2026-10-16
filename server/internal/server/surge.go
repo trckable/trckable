@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
+	"github.com/trckable/trckable/server/internal/mailkit"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 	"github.com/trckable/trckable/server/internal/surge"
 )
@@ -57,11 +58,15 @@ func (s *Server) tellSurge(sg surge.Surge) {
 	if err != nil {
 		loc = time.UTC
 	}
+	var online []int64
 	for _, a := range list {
 		if !surgeDue(a, sg.Site, now) {
 			continue
 		}
-		ev := surgeEvent(sg, info.Domain, s.surgeLink(info.Domain, sg), now, loc)
+		if q := s.api.Query(); q != nil && online == nil {
+			online, _ = q.OnlineSeries(ctx, sg.Site, now)
+		}
+		ev := surgeEvent(sg, info.Domain, s.surgeLink(info.Domain, sg), now, loc, online)
 		ev.Site = sg.Site
 		ev.Unsubscribe = s.stopLink(a.ID)
 		ev.Settings = s.settingsLink(sg.Site)
@@ -82,11 +87,23 @@ func surgeDue(a sqlite.Alert, site string, now time.Time) bool {
 	return a.SiteID == site && a.Kind == "surge" && a.Enabled && now.Unix()-a.LastFired >= int64(surge.Cooldown.Seconds())
 }
 
-// surgeEvent words one surge for a webhook or an email.
-func surgeEvent(sg surge.Surge, domain, link string, now time.Time, loc *time.Location) alerts.Event {
+// surgeEvent words one surge for a webhook or an email. online is the last
+// half hour of people online, a minute each, for the email's chart; none
+// leaves the chart out.
+func surgeEvent(sg surge.Surge, domain, link string, now time.Time, loc *time.Location, online []int64) alerts.Event {
 	ev := alerts.Event{Kind: "surge", Domain: domain, At: now, Title: surge.Subject, Message: surge.Body(sg, domain, link), Subject: surge.MailSubject(domain)}
 	eyebrow, big, ratio, vs, note, rows := surge.MailLines(sg, loc)
-	ev.Card = &alerts.Card{Eyebrow: eyebrow, Live: true, Big: big, Strong: ratio, Sub: vs, Rows: rows, CTA: surge.Open, Link: link, Note: note}
+	ev.Email = &mailkit.Email{
+		Preheader: big + ", " + ratio + " " + vs,
+		Blocks: []mailkit.Block{
+			mailkit.Heading{Title: domain},
+			mailkit.Hero{Badge: &mailkit.Badge{Text: "Live", Tone: mailkit.Good, Dot: true}, Eyebrow: eyebrow, Big: big, Strong: ratio, Line: vs},
+			mailkit.Spark{Caption: surge.ChartCaption, Values: online, From: surge.ChartFrom, To: surge.ChartTo, Hot: 3},
+			mailkit.Rows{Rows: rows},
+			mailkit.Button{Label: surge.Open, URL: link},
+		},
+		Foot: mailkit.Foot{Note: note},
+	}
 	ev.Data = map[string]any{"online": sg.Online, "usual": sg.Usual, "source": sg.Why.Source, "page": sg.Why.Page}
 	return ev
 }
