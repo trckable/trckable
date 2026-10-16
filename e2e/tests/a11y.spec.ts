@@ -44,12 +44,14 @@ async function scan(page: Page, where: string) {
   await page.waitForTimeout(700)
   // A menu that has just swapped in is still fading: axe reads text that is not yet shown as none.
   await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => Number.isFinite(a.effect?.getComputedTiming().endTime as number)).map((a) => a.finished.catch(() => undefined))))
-  // The entrance can start a frame after it opens, and a list is placed after it is measured: wait for its items to be shown and opaque.
+  // The entrance can start a frame after it opens, and a list is placed after it is measured: wait for its items to be shown, opaque and on the screen.
   await expect
     .poll(() =>
       page.evaluate(() =>
         [...document.querySelectorAll('[role=menuitem]:not([disabled])')].some((el) => {
           if (getComputedStyle(el).visibility !== 'visible') return true
+          const r = el.getBoundingClientRect() // a list not yet placed sits off the screen, and axe then reads its text as hidden
+          if (r.width === 0 || r.right <= 0 || r.bottom <= 0 || r.left >= innerWidth || r.top >= innerHeight) return true
           for (let n: Element | null = el; n; n = n.parentElement) if (+getComputedStyle(n).opacity < 1) return true
           return false
         }),
