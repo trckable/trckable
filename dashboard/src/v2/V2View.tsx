@@ -1,6 +1,7 @@
 // Live and the Briefing: the walkthrough's header, and one of its two screens under it. This replaces the dashboard's
 // own header and control rows for these two views; Explore (the full numbers) opens over either as a panel.
 import { useEffect, useMemo, useState } from 'react'
+import { lazyLoad, whenIdle } from '../lib/lazyLoad'
 import '../mock/mock.css'
 import '../mock/theme.css'
 import type { Report, Site } from '../lib/api'
@@ -32,13 +33,15 @@ import { SegmentedSwitch } from './ui/SegmentedSwitch'
 import { SiteChip, type SiteItem } from './ui/SiteMenu'
 import { TabBar } from './ui/TabBar'
 import { goExplore } from './briefing/deeper'
-import { ExplorePanel } from './explore/Panel'
 import { MkToastHost } from './ui/MkToastHost'
-import { Palette } from './ui/Palette'
 import { paletteItems } from './explore/palette'
 import { copy as pal } from './explore/paletteCopy'
 import { Live } from './live/Live'
 import type { LiveProps } from './live/Live'
+
+// Explore's panel and the ⌘K list are their own chunks, fetched when the page is idle, so the first load does not carry them.
+const ExplorePanel = lazyLoad(() => import('./explore/Panel').then((m) => ({ default: m.ExplorePanel })))
+const Palette = lazyLoad(() => import('./ui/Palette').then((m) => ({ default: m.Palette })))
 
 const FIRST = ['today', 'yesterday', '7d', '30d', '90d']
 const MORE = ['12mo', 'wtd', 'mtd', 'lastmonth', 'ytd']
@@ -108,6 +111,15 @@ export function V2View(p: V2Props) {
   )
   const here = p.tab
   const [find, setFind] = useState(false)
+  // Explore's panel is built the first time it is asked for, and stays so it can slide out again.
+  const [opened, setOpened] = useState(false)
+  if (p.view.xp !== undefined && !opened) setOpened(true)
+  useEffect(() => {
+    whenIdle(() => {
+      ExplorePanel.preload()
+      Palette.preload()
+    })
+  }, [])
   useViewKeys(here)
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -171,7 +183,7 @@ export function V2View(p: V2Props) {
       <main id="main" className="vfade">
         {here === 'briefing' ? <BriefingSlot site={p.site} data={p.data} loading={p.loading} period={p.view.period} range={p.range} money={p.money} onGoal={p.onGoal} visits={p.live.stream.visits} /> : <Live {...p.live} />}
       </main>
-      <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} money={p.money} onGoal={p.onGoal} />
+      {opened && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} money={p.money} onGoal={p.onGoal} />}
       {find && <Palette items={paletteItems({ sites: p.sites, site: p.site, data: p.data, here: p.tab, onAsk: p.onAsk, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} onClose={() => setFind(false)} />}
       <MkToastHost />
       <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />

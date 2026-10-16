@@ -33,6 +33,8 @@ export interface Down {
 
 export interface ChartIn {
   points: ChartPoint[]
+  /** The label of each bucket of the axis, those still to come too. */
+  axis: { i: number; tick: string }[]
   /** How many buckets the axis spans (the hours still to come are shaded). */
   span: number
   /** Whether the last point is "now": it pulses, and what is to its right is shaded. */
@@ -105,7 +107,7 @@ export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt
   const kfmt = (g: number) => (g >= 1000 ? `${g / 1000}k` : String(g))
   const bi = Math.min(ladder.length - 1, Math.floor(ladder.length * 0.08))
   const rise = c.rise && pts[c.rise.i] && !(ph && c.downs.length > 0) ? { p: pts[c.rise.i], text: ph ? c.rise.short : c.rise.text } : null
-  const ticks = c.points.filter((p) => p.tick && p.i % every === 0)
+  const ticks = c.axis.filter((p) => p.tick && p.i % every === 0)
   return (
     <svg
       ref={box}

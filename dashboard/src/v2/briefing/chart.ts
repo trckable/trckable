@@ -95,8 +95,11 @@ export function chartOf(a: ChartArgs): ChartIn {
   const c0 = best >= 0 ? bandAt(best).c : 0
   const ratio = best >= 0 && c0 > 0.5 ? points[best].v / c0 : 0
   const rise = best >= 0 ? { i: best, text: `${a.riseName ?? copy.traffic} · ${ratio >= 1.3 ? `${mult(ratio)} a usual ${hourly ? 'hour' : 'day'}` : 'above usual'}`, short: `${sourceShort(a.riseName ?? copy.traffic)} ${ratio >= 1.3 ? mult(ratio) : 'up'}` } : undefined
+  // The axis names every bucket of the span, the hours still to come too.
+  const axis = a.cur.series.slice(0, span).map((p, i) => ({ i, tick: tickOf(hourly, a.cur.series.length, Number(p.t.slice(11, 13)), p.t.slice(0, 10), fmtDay(p.t.slice(0, 10))) }))
   return {
     points,
+    axis,
     span,
     live,
     band,

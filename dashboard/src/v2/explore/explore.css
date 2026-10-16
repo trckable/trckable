@@ -1,12 +1,5 @@
 /* Explore's own few rules; everything else of it is the walkthrough's (src/mock/mock.css). */
 
-/* The mock draws its text with the browser's own smoothing; the page's global setting thins it. */
-.mk #xp,
-.mk #xscrim {
-  -webkit-font-smoothing: auto;
-  -moz-osx-font-smoothing: auto;
-}
-
 /* The saved views fold into the ⋯ menu on a phone only. */
 .mk .onlyph {
   display: none;
