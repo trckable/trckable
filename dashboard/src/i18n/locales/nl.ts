@@ -2693,4 +2693,5 @@ export default {
   'verified.seal': 'Geverifieerd door trckable',
   'badgelink.label': 'Badge linkt naar',
   'badgelink.home': 'trckable.com',
+  'live.entry.briefing': 'Briefing',
 } satisfies Messages

@@ -2696,4 +2696,5 @@ export default {
   'verified.seal': 'Von trckable geprüft',
   'badgelink.label': 'Das Abzeichen führt zu',
   'badgelink.home': 'trckable.com',
+  'live.entry.briefing': 'Briefing',
 } satisfies Messages

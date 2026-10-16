@@ -6,7 +6,8 @@ export const entryCopy = defineCopy('live.entry', {
   switchLabel: 'View',
   live: 'Live',
   liveOnline: (n: number) => (n === 1 ? 'Live, 1 online now' : `Live, ${n.toLocaleString()} online now`),
+  briefing: 'Briefing',
   data: 'Data',
-  switchTitle: (key: string) => `Live shows the site right now; Data shows the period (${key})`,
+  switchTitle: (key: string) => `Live shows the site right now, the Briefing tells the day, Data shows the numbers (${key})`,
   onlineNow: 'Online now',
 })

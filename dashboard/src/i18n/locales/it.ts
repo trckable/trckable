@@ -2693,4 +2693,5 @@ export default {
   'verified.seal': 'Verificato da trckable',
   'badgelink.label': 'Il badge porta a',
   'badgelink.home': 'trckable.com',
+  'live.entry.briefing': 'Briefing',
 } satisfies Messages

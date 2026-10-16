@@ -11,6 +11,39 @@
    main.tsx, so it wins over the plain class rules before it; the files that
    load later write their phone rules with a :root in front. */
 @media (max-width: 640px) {
+
+  /* ---- Live | Briefing | Data: the bar at the bottom, under the thumb ----- */
+  .app .view-switch.bottom {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30; /* under dialogs and sheets (40) and pop-overs (120) */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    height: auto;
+    padding: 6px 10px calc(6px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    view-transition-name: none;
+  }
+  .app .view-switch.bottom button {
+    justify-content: center;
+    height: 48px;
+    font-size: var(--ph-text-2);
+  }
+  html:has(.view-switch.bottom),
+  body:has(.view-switch.bottom) {
+    scroll-padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+  /* The cards that slide up from the bottom stop at the bar, not behind it. */
+  body:has(.view-switch.bottom) .side-deck {
+    bottom: calc(62px + env(safe-area-inset-bottom));
+  }
+  body:has(.view-switch.bottom) {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
   :root {
     --ph-hit: 44px; /* the least a finger target is, both ways */
     --ph-bar: 46px; /* a control in the header and the row under it */

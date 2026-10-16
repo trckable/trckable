@@ -1,8 +1,9 @@
-// Moving between Live and Data, deliberately: Live is one screen, so it opens
-// at the top; Data comes back scrolled to where it was left. Live's code is
+// Moving between Live, the Briefing and Data, deliberately: Live is one screen,
+// so it opens at the top; the others come back scrolled to where they were left. Live's code is
 // awaited (briefly) before the switch, so the change is one frame to the next
 // with nothing blank in between.
-import { setView } from '../../lib/url'
+import { rememberTab, type Tab } from '../../lib/tab'
+import { readView, setView } from '../../lib/url'
 import { transition } from '../../lib/viewTransition'
 import { preloadLive } from './liveChunk'
 import { minuteView } from './minute'
@@ -19,13 +20,27 @@ const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
 export async function switchView(live: boolean, now: boolean): Promise<void> {
   if (now === live) return
-  if (live) {
+  return switchTab(live ? 'live' : 'data', live ? 'data' : 'live')
+}
+
+/** What the address says for each tab. The Briefing is told by the day, so a bare 30 days becomes today. */
+function patchFor(to: Tab): Parameters<typeof setView>[0] {
+  if (to === 'live') return { live: true }
+  if (to === 'data') return { live: false }
+  const cur = readView(new URLSearchParams(location.search))
+  return { live: false, briefing: true, ...(cur.period === '30d' && !cur.from ? { period: 'today' } : {}) }
+}
+
+export async function switchTab(to: Tab, from: Tab): Promise<void> {
+  if (to === from) return
+  rememberTab(to)
+  if (to === 'live') {
     dataScroll = scrollY
     await Promise.race([preloadLive().catch(() => undefined), pause(WAIT_MS)])
   }
-  const top = live ? 0 : dataScroll
+  const top = to === 'live' ? 0 : dataScroll
   await transition(
-    () => setView({ live }),
+    () => setView(patchFor(to)),
     () => keepScroll(top),
   )
 }

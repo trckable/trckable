@@ -2699,4 +2699,5 @@ export default {
   'verified.seal': 'Verificado por trckable',
   'badgelink.label': 'La insignia enlaza a',
   'badgelink.home': 'trckable.com',
+  'live.entry.briefing': 'Briefing',
 } satisfies Messages

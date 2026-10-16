@@ -15,6 +15,7 @@ import './Header.css'
 
 interface Props {
   live: boolean
+  briefing?: boolean
   askOpen: boolean
   onAsk: () => void
   extra?: ReactNode
@@ -34,7 +35,7 @@ export function HeaderTools(p: Props) {
   return (
     <div className="header-tools quiet">
       <div className="spacer" />
-      {wide && !shared && !p.waiting && <ViewSwitch live={p.live} />}
+      {wide && !shared && !p.waiting && <ViewSwitch live={p.live} briefing={p.briefing} />}
       {p.extra}
       {canAsk() && !p.waiting && (
         <button type="button" className="btn ghost ask" onClick={p.onAsk} aria-expanded={p.askOpen} aria-label={copy.ask} title={copy.askTitle(askKey)}>
