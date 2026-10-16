@@ -17,7 +17,7 @@ export interface SiteMenuProps {
   /** The workspace line at the top, when the account has one. */
   workspace?: { name: string; d: string; run?: () => void }
   onPick: (id: string) => void
-  footer: { key: string; label: ReactNode; run: () => void; dot?: 'ok' | 'down' }[]
+  footer: { key: string; label: ReactNode; run: () => void; dot?: 'ok' | 'warn' }[]
   find: string
   all: string
 }
@@ -99,10 +99,16 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
                     close()
                   }}
                 >
-                  {f.dot && <i className={`pdot ${f.dot === 'down' ? 'down' : ''}`} />}
-                  <span className="mt2">
-                    <div className="nm">{f.label}</div>
-                  </span>
+                  {f.dot ? (
+                    <>
+                      <i className={`pdot${f.dot === 'warn' ? ' warn' : ''}`} />
+                      <span className="mt2">
+                        <div className="nm">{f.label}</div>
+                      </span>
+                    </>
+                  ) : (
+                    f.label
+                  )}
                 </button>
               ))}
             </div>

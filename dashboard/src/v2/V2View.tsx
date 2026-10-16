@@ -84,7 +84,7 @@ export function V2View(p: V2Props) {
               options={options}
               more={more}
               value={p.view.period}
-              compare={p.view.compare}
+              compare={day ? 'none' : p.view.compare}
               yearOk={false}
               today={today}
               customRange={p.range}

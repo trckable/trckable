@@ -41,6 +41,9 @@ export interface PageHeaderProps {
   onUpdate?: () => void
 }
 
+/** The dot by "Tracking & script check": amber while the snippet is not found or nothing has arrived. */
+const tracking = (s: Site): 'ok' | 'warn' => (s.last_event_at && s.check?.found !== 'none' && s.check?.found !== 'nosite' ? 'ok' : 'warn')
+
 export function PageHeader(p: PageHeaderProps) {
   const online = liveCount.use()
   const down = siteDown.use()
@@ -69,7 +72,7 @@ export function PageHeader(p: PageHeaderProps) {
     onPick: (id: string) => (id === '*' ? navigate('/') : navigate('/' + encodeURIComponent(p.sites.find((s) => s.id === id)?.domain ?? ''))),
     footer: site
       ? [
-          { key: 'install', label: copy.track, run: () => openSettings(site, 'install') },
+          { key: 'install', label: copy.track, dot: tracking(site), run: () => openSettings(site, 'install') },
           { key: 'add', label: copy.addSite, run: openAddSite },
           { key: 'share', label: copy.share, run: () => openSettings(site, 'sharing') },
           { key: 'status', label: copy.statusPage, run: () => navigate(`/${encodeURIComponent(site.domain)}/incidents`) },

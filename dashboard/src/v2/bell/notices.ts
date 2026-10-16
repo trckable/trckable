@@ -3,6 +3,7 @@
 import type { Alert, Milestone } from '../../lib/api'
 import type { Incident } from '../../features/incidents/api'
 import type { Mention } from '../../features/mentions/api'
+import { sourceName } from '../briefing/model'
 import { copy } from './copy'
 
 export type NoticeKind = 'down' | 'up' | 'spike' | 'sale' | 'mention' | 'milestone' | 'weekly' | 'failed' | 'plan' | 'team'
@@ -33,7 +34,7 @@ export function fromIncidents(list: Incident[], domain: (id: string) => string |
 }
 
 export function fromMentions(list: Mention[], domain: string): Notice[] {
-  return list.map((m) => ({ id: `mention:${m.id}`, kind: 'mention' as const, site: domain, title: copy.mention(m.host), sub: m.title, at: m.posted_at }))
+  return list.map((m) => ({ id: `mention:${m.id}`, kind: 'mention' as const, site: domain, title: copy.mention(m.source === 'hn' ? sourceName(m.host) : m.host), sub: m.title, at: m.posted_at }))
 }
 
 export function fromMilestones(list: Milestone[], domain: string): Notice[] {

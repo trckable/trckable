@@ -633,6 +633,7 @@
 .mk .lkc.mini{gap:6px 18px}
 /* The "Why?" in the down notice sits in the line, so the notice is as tall as the walkthrough's. */
 .mk .downbox .lk3{padding:0;line-height:inherit;height:auto;vertical-align:baseline;font:inherit}
+.mk .ck2{color:var(--mk-lime);flex:none}
 .mk .setups{display:flex;flex-direction:column;gap:var(--mk-s2)}
 .mk .mk-srow{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s2) var(--mk-s4);border:1px dashed #2a2d33;border-radius:16px;color:var(--mk-muted);font-size:13px;min-height:48px}
 .mk .mk-srow .ic-i{display:block;width:20px;height:20px;flex:none;color:var(--mk-faint)}

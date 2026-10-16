@@ -1,7 +1,8 @@
 // The period, as the header says it ("Today · Fri 16 Oct", and what it is set against), and its menu: five periods, More,
 // the comparison, and a calendar for custom dates. The menu is a sheet from the bottom on a phone.
 import { useState } from 'react'
-import { addMonths, diffDays, fmtDay, type ISODate } from '../../lib/dates'
+import { addMonths, diffDays, type ISODate } from '../../lib/dates'
+import { rangeWords } from '../dayWords'
 import { copy } from '../copy'
 import { useMenu } from './useMenu'
 
@@ -169,8 +170,8 @@ export function PeriodChip(p: PeriodChipProps) {
         <div className="d">{o.d}</div>
       </span>
       {p.value === o.id && (
-        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-          <path d="M3 7.5 6 10.5 11 4" stroke="currentColor" fill="none" strokeWidth="1.8" />
+        <svg className="ck2" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M3 8.5 6.5 12 13 4.5" />
         </svg>
       )}
     </button>
@@ -185,6 +186,7 @@ export function PeriodChip(p: PeriodChipProps) {
     <div className="pwrap" ref={attach}>
       <button
         type="button"
+        id="perBtn"
         className="pill"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -214,8 +216,8 @@ export function PeriodChip(p: PeriodChipProps) {
               <span className="mt2">
                 <div className="nm">{copy.more}</div>
               </span>
-              <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-                <path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" fill="none" strokeWidth="1.5" />
+              <svg width="14" height="14" viewBox="0 0 12 12" aria-hidden="true">
+                <path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" fill="none" strokeWidth="1.6" />
               </svg>
             </button>
             {moreOpen && p.more.map(opt)}
@@ -232,13 +234,13 @@ export function PeriodChip(p: PeriodChipProps) {
             </div>
             <div className="mk-lline" />
             <button type="button" className="mi" onClick={() => setCal(true)}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-                <rect x="2" y="3" width="12" height="11" rx="2" />
-                <path d="M2 6.5h12M5.5 2v2.5M10.5 2v2.5" />
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+                <rect x="2.5" y="3.5" width="11" height="10" rx="2" />
+                <path d="M2.5 7h11M5.5 2v3M10.5 2v3" />
               </svg>
               <span className="mt2">
                 <div className="nm">{copy.custom}</div>
-                <div className="d">{fmtDay(p.customRange.to, { weekday: true })}</div>
+                <div className="d">{rangeWords(p.customRange, p.today, copy.todayWord)}</div>
               </span>
             </button>
           </>
