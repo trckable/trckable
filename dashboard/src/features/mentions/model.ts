@@ -1,4 +1,4 @@
-// What the card says about a mention, as plain values. Pure: model.test.ts.
+// What the lists say about a mention, as plain values. Pure: model.test.ts.
 import { tag } from '../../i18n'
 import { copy } from './copy'
 import type { Mention, Source } from './api'
@@ -42,8 +42,8 @@ export function factsOf(m: Mention, now?: number): string[] {
 /** The address a link may point to: a web address, nothing else. */
 export const safeURL = (u: string) => (/^https?:\/\//i.test(u) ? u : undefined)
 
-/** The most mentions the card shows before "Show more". */
-export const SHOWN = 5
-
 /** "340%" for a jump of 4.4 times the usual. */
 export const jumpOf = (factor: number) => `${Math.round((factor - 1) * 100)}%`
+
+/** A short date for a mention's row: "Oct 14". */
+export const dateOf = (unix: number) => new Date(unix * 1000).toLocaleDateString(tag ?? 'en', { month: 'short', day: 'numeric' })

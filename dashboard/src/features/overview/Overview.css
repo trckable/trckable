@@ -321,3 +321,9 @@ button.kpi:focus-visible {
   left: auto;
   right: 8px;
 }
+/* A narrow screen: the chart's tools wrap under its name rather than push the card wider. */
+@media (max-width: 640px) {
+  .overview-chart > .chart-head {
+    flex-wrap: wrap;
+  }
+}

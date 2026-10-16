@@ -1,4 +1,4 @@
-/* Mentions: the dashboard card, Live's chip and the source marks. */
+/* Mentions: the Sources tab, Live's chip and the source marks. */
 .mention-mark {
   display: inline-grid;
   place-items: center;
@@ -20,96 +20,6 @@
   background: #da552f;
   color: #fff;
 }
-.mentions-period {
-  color: var(--text-3);
-  font-size: 12.5px;
-}
-.mention-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.mention-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 12px 8px 8px;
-  border-radius: 10px;
-  background: var(--raised);
-}
-.mention-body {
-  min-width: 0;
-}
-.mention-title,
-.mention-facts,
-.mention-brought {
-  margin: 0;
-}
-.mention-title {
-  font-size: 14px;
-  font-weight: 500;
-  overflow-wrap: anywhere;
-}
-.mention-title a {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  color: var(--text);
-  text-decoration: none;
-}
-.mention-title a:hover span {
-  text-decoration: underline;
-}
-.mention-title a svg {
-  flex: none;
-  color: var(--text-3);
-}
-.mention-facts {
-  margin-top: 2px;
-  color: var(--text-3);
-  font-size: 12.5px;
-}
-.mention-brought {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  min-width: 56px;
-  font-variant-numeric: tabular-nums;
-}
-.mention-brought strong {
-  font-size: 16px;
-  font-weight: 600;
-}
-.mention-brought span {
-  color: var(--text-3);
-  font-size: 12px;
-}
-.mentions-pulse {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 8px;
-  border-radius: 50%;
-  background: var(--up);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--up) 22%, transparent);
-}
-.mentions-empty {
-  padding: 10px 12px;
-  border: 1px dashed var(--border-2);
-  border-radius: 10px;
-}
-.mentions-empty,
-.mentions-watch {
-  margin: 0;
-  color: var(--text-3);
-  font-size: 12.5px;
-  line-height: 1.5;
-}
-.mentions-more,
 .mentions-link {
   align-self: flex-start;
   padding: 0;
@@ -117,24 +27,71 @@
   background: none;
   color: var(--text-2);
   font: inherit;
-  font-size: 13px;
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
 }
-.mentions-link {
-  font-size: inherit;
-}
-.mentions-more:hover,
 .mentions-link:hover {
   color: var(--text);
 }
-.mentions-more:focus-visible,
 .mentions-link:focus-visible,
-.mention-title a:focus-visible {
+.ml-title:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 4px;
+}
+/* The Mentions tab of the Sources card */
+.ml-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ml-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+.ml-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 13.5px;
+  text-decoration: none;
+}
+.ml-title span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+a.ml-title:hover span {
+  text-decoration: underline;
+}
+.ml-title svg {
+  flex: none;
+  color: var(--text-3);
+}
+.ml-date {
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.ml-n {
+  min-width: 40px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: right;
+}
+.ml-empty {
+  margin: 0;
+  padding: 12px 0;
+  color: var(--text-3);
+  font-size: 13px;
 }
 .mention-chip {
   display: inline-flex;
@@ -150,20 +107,6 @@
 }
 .mention-chip strong {
   font-variant-numeric: tabular-nums;
-}
-@media (max-width: 640px) {
-  .mentions-more,
-  .mentions-link {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    min-width: 44px;
-  }
-}
-@media (max-width: 520px) {
-  .mention-row {
-    gap: 10px;
-  }
 }
 /* Settings → Mentions */
 .mentions-set {
