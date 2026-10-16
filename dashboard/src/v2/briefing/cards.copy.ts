@@ -120,5 +120,23 @@ export const copy = defineCopy('briefing.cards', {
   speedPrompt: 'Copy a speed prompt',
   speedCopied: 'Speed prompt copied',
   speedPromptText: (site: string, now: string, usual: string) => `On ${site}, loading (LCP) rose to ${now} from ${usual}. Find the heaviest image or script on the top pages and shrink or defer it.`,
+  // The signup path, and a first customer.
+  leakHead: (to: string, from: string, a: string, b: string) => `Only ${to} of ${from} people made it from ${a} to ${b}`,
+  leakRest: (usual: string) => `, usually about ${usual}`,
+  leakAlt: (page: string) => `Many go to ${page} instead.`,
+  leakUsualRange: 'Compared with the usual range for this step.',
+  leakHow: 'Each step counts the people who reached it in the same visit.',
+  leakEv: (to: string, from: string, usual: string) => `${to} of ${from} went on; usually about ${usual}.`,
+  leakGoOn: (r: string, u: string) => `${r} go on here, usually ${u}`,
+  leakPrompt: (site: string, r: string, a: string, b: string, u: string, alt?: string) =>
+    `On ${site}, only ${r} of visitors go from "${a}" to "${b}" (usually ${u}). Review the "${a}" step and make the next one obvious.${alt ? ` Many go to ${alt} instead: check what they look for there.` : ''}`,
+  leakCopied: 'Fix prompt copied',
+  firstFrom: (name: string) => `Your first customer from ${name}`,
+  firstWhy: (amt: string, src: string, at: string, name: string, range: string) => `${amt} via ${src} at ${at}. People from ${name} visit (usually ${range}) but nobody there had paid before.`,
+  firstHow: (name: string) => `We looked at every payment in the last 90 days: none came from ${name} before this one.`,
+  firstNote: 'first customer',
+  firstUnit: 'customer',
+  firstAlert: 'Alert me on the next one',
+  firstAlertMsg: (name: string) => `We will tell you when another customer pays from ${name}`,
   topicNames: { sources: 'sources', search: 'search', devices: 'devices', countries: 'countries', pages: 'pages', goals: 'goals' },
 })

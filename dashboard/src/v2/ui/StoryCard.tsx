@@ -1,7 +1,7 @@
 // What stood out, as cards: a sentence that says it, the picture that proves it, one line of why, and the buttons.
 // A phone sees them as flat rows (icon, sentence, number, arrow) that open the detail. Markup and classes are the
 // walkthrough's own.
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { fmtInt } from '../../lib/format'
 import { Ico } from './icons'
 import { Spark } from './KpiCard'
@@ -71,6 +71,26 @@ function Outage({ v }: { v: Extract<Vis, { k: 'outage' }> }) {
   )
 }
 
+/** The signup path as bars, the step that leaks in red with what usually goes on there. */
+function Steps({ v }: { v: Extract<Vis, { k: 'funnel' }> }) {
+  return (
+    <div className="mf">
+      {v.rows.map((r) => (
+        <Fragment key={r.name}>
+          {r.hot && <div className="mfd">{r.hot}</div>}
+          <div className="mfr">
+            <span>{r.name}</span>
+            <div className="mb">
+              <i className={r.hot ? 'red' : ''} style={{ width: `${r.w}%` }} />
+            </div>
+            <b>{fmtInt(r.v)}</b>
+          </div>
+        </Fragment>
+      ))}
+    </div>
+  )
+}
+
 export function Visual({ s }: { s: Story }) {
   const v = s.vis
   if (!v) return null
@@ -81,6 +101,7 @@ function pictureOf(v: Vis): ReactNode {
   if (v.k === 'dots') return <Dots v={v} />
   if (v.k === 'ba') return <Ba v={v} />
   if (v.k === 'outage') return <Outage v={v} />
+  if (v.k === 'funnel') return <Steps v={v} />
   if (v.k === 'goals') {
     return v.rows.map((g) => (
       <div className={`mk-goal ${g.st}`} key={g.name}>

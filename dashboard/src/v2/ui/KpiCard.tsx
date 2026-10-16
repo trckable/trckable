@@ -5,6 +5,7 @@ import type { Why } from '../briefing/why'
 import { copy } from '../briefing/copy'
 import { Ico } from './icons'
 import { spark } from '../briefing/geometry'
+import { Glide, useGlide } from './glide'
 
 export interface Kc {
   key: string
@@ -23,9 +24,10 @@ export interface Kc {
   why?: Why
 }
 
-export function Spark({ vals, h = 64, lo, hi, className = 'ksp' }: { vals: number[]; h?: number; lo?: number; hi?: number; className?: string }) {
+export function Spark({ vals, h = 64, lo, hi, className = 'ksp', name }: { vals: number[]; h?: number; lo?: number; hi?: number; className?: string; name?: string }) {
   const id = useId()
-  const s = spark(vals, h, lo ?? 0, hi)
+  const glided = useGlide(`s:${name ?? id}`, vals)
+  const s = spark(name ? glided : vals, h, lo ?? 0, hi)
   if (!s) return <svg className={className} viewBox={`0 0 300 ${h}`} preserveAspectRatio="none" aria-hidden="true" />
   return (
     <svg className={className} viewBox={`0 0 300 ${h}`} preserveAspectRatio="none" aria-hidden="true">
@@ -60,10 +62,10 @@ function Card({ k, h }: { k: Kc; h?: number }) {
         )}
       </div>
       <div className="kv">
-        {k.val}
+        <Glide name={k.key} text={k.val} />
         {k.unit && <small>{k.unit}</small>}
       </div>
-      <Spark vals={k.vals} lo={k.lo} hi={k.hi} h={h} />
+      <Spark vals={k.vals} lo={k.lo} hi={k.hi} h={h} name={`kc:${k.key}`} />
       {open && k.why && (
         <div className="hw show" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 2, background: 'var(--mk-card2)', padding: 'var(--mk-s3) var(--mk-s4)', borderRadius: '0 0 var(--mk-r) var(--mk-r)', color: 'var(--mk-muted)' }}>
           <b>{copy.whyDot}</b> {k.why.cause} <span className="ev">{k.why.todo}</span>

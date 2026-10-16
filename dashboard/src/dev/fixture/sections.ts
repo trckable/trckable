@@ -13,7 +13,9 @@ export function funnelOf(c: Ctx, id: string, q: Query, steps: FunnelStep[]): { s
   const out: FunnelResult[] = []
   steps.forEach((s, i) => {
     const raw = count(s)
-    const v = i === 0 ? raw : Math.min(out[i - 1].visitors, raw)
+    // The Show HN day: from the pricing page on, people leave more than usual (the walkthrough's "pricing starts leaking").
+    const leak = c.w.key === 'hn' && i >= 2 && dayIndex(c, q.to) === Math.floor(c.nowAbs / 1440) ? 0.45 : 1
+    const v = i === 0 ? raw : Math.round(Math.min(out[i - 1].visitors, raw) * leak)
     const first = out[0]?.visitors ?? v
     out.push({ ...s, label: s.kind === 'goal' ? rep.goals?.find((g) => g.value === s.value)?.label : undefined, visitors: v, rate: i === 0 || !out[i - 1].visitors ? 1 : v / out[i - 1].visitors, of_total: first ? v / first : 0, median_s: 20 + i * 15, dropped: i === 0 ? 0 : out[i - 1].visitors - v })
   })

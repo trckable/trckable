@@ -7,10 +7,10 @@ import { copy } from './cards.copy'
 import { mult, sourceName, type Deeper, type Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
 import { whyDown, whyJump, type Why } from './why'
-import { salesCards, searchCard, stuckCard, type SalesIn } from './cards.money'
-import type { SearchStory, Stuck } from './useExtras'
+import { firstCard, leakCard, salesCards, searchCard, stuckCard, type SalesIn } from './cards.money'
+import type { FirstFrom, FunnelStory, SearchStory, Stuck } from './useExtras'
 
-export type Topic = 'uptime' | 'sales' | 'sources' | 'countries' | 'devices' | 'search' | 'pages' | 'goals' | 'peek' | 'mentions' | 'speed' | 'milestone'
+export type Topic = 'uptime' | 'sales' | 'sources' | 'countries' | 'devices' | 'search' | 'pages' | 'goals' | 'peek' | 'mentions' | 'speed' | 'milestone' | 'funnel'
 export type Dim = 'referrer' | 'country' | 'device' | 'entry_page'
 
 /** The one thing a card offers to do. */
@@ -25,6 +25,7 @@ export type Vis =
   | { k: 'dots'; n: number; per: number; grey: number; name: string }
   | { k: 'ba'; lo: number; hi: number; c: number; v: number; red: boolean }
   | { k: 'outage'; a: number; b: number; nowAt: number; from: string; now: string }
+  | { k: 'funnel'; rows: { name: string; v: number; w: number; hot: string }[] }
   | { k: 'goals'; rows: { name: string; v: number; lo: number; hi: number; st: Judged }[] }
 
 export interface Story {
@@ -101,6 +102,10 @@ export interface CardsIn {
   sales?: SalesIn
   search?: SearchStory
   stuck?: Stuck
+  /** The signup path, where people leave more than usual. */
+  funnel?: FunnelStory
+  /** A customer from a country nobody had paid from before. */
+  first?: FirstFrom
 }
 
 const people = (n: number) => (n === 1 ? '1 person' : `${fmtInt(n)} people`)
@@ -304,6 +309,10 @@ export function cardsOf(i: CardsIn): Story[] {
     const goal = goalCard(i)
     if (goal) out.push(goal)
     if (i.sales) out.push(...salesCards(i.sales))
+    const first = i.first && i.sales ? firstCard({ first: i.first, band: i.slices.country.find((x) => x.value === i.first?.country)?.band ?? null, fmt: i.sales.fmt, clock: i.sales.clock, rule: i.rule }) : null
+    if (first) out.push(first)
+    const leak = i.funnel && !i.low ? leakCard({ f: i.funnel, domain: i.domain, rule: i.rule }) : null
+    if (leak) out.push(leak)
     const found = i.search ? searchCard({ story: i.search, domain: i.domain, rule: i.rule }) : null
     if (found) out.push(found)
     if (i.stuck && !i.low) out.push(stuckCard(i.stuck, i.rule))

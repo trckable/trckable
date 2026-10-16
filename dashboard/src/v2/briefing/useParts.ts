@@ -150,6 +150,8 @@ export function useParts(a: PartsIn) {
       sales: cur.money && money && extras.buyers ? { money: cur.money, buyers: extras.buyers, band: moneyBand, fmt: money, clock: (iso) => clockOf(Date.parse(iso) / 1000), today: unit === 'today', rule } : undefined,
       search: extras.search ?? undefined,
       stuck: extras.stuck ?? undefined,
+      funnel: extras.funnel ?? undefined,
+      first: extras.first ?? undefined,
     })
     const lead = learning ? undefined : leadSource(slices.slices.referrer, cur.kpis.visitors, site.domain)
     const jump = lead?.band ? { name: sourceName(lead.value), value: lead.value, visitors: lead.v, times: lead.band.c > 0.5 ? lead.v / lead.band.c : null, vs: unit === 'today' || unit === 'yesterday' ? 'your usual' : undefined, st: lead.st === 'dn' ? ('dn' as const) : ('up' as const) } : null

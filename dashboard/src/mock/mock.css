@@ -1424,9 +1424,44 @@
 /* "Why?" beside "Replay": two buttons in a line, aligned at the top so the line is as tall as the walkthrough's one. */
 .mk .hl-col .rpb{vertical-align:top}
 /* A period being read: the page of the last one stays, dimmed, until the new one is whole. */
-.mk .mk-held{opacity:.55;transition:opacity .2s;pointer-events:none}
+.mk-hold{display:contents}
+.mk-held{opacity:.55;transition:opacity .2s;pointer-events:none}
 @container (min-width:601px){.mk .hd .account-menu .account-btn{width:32px;height:32px}}
 /* "Why?" is kept on every width, beside Replay: the walkthrough hides it on a desktop. */
 .mk .whyb.rpb{display:inline-flex}
 /* A phone's ghost is a 44 px target as the rest are, in the room of the walkthrough's 34 px. */
 @container (max-width:600px){.mk .hd .logo{box-sizing:content-box;padding:6px;margin:-6px}}
+.mk .mfd{margin-left:102px;font-size:12px;color:var(--mk-red);background:var(--mk-redD);border-radius:8px;padding:2px 9px;align-self:flex-start}
+.mk .mk-ring circle:last-of-type{transition:stroke-dasharray .45s ease,stroke .3s}
+@media (prefers-reduced-motion:reduce){.mk .mk-ring circle:last-of-type{transition:none}}
+/* a site before its first visit */
+.mk .snip{display:block;border:1px solid var(--mk-line);background:#0f1012;border-radius:12px;padding:var(--mk-s3);font-size:12px;color:var(--mk-muted);word-break:break-all;white-space:pre-wrap;text-align:left}
+.mk .xrow2{display:flex;gap:var(--mk-s2);flex-wrap:wrap}
+.mk .fz{grid-template-columns:repeat(2,minmax(0,1fr))}
+.mk .sidecol.setup{display:flex;flex-direction:column;gap:var(--mk-s3);align-items:stretch;min-width:min(420px,100%);max-width:520px}
+.mk .fresh-found{font-size:12.5px;color:var(--mk-muted);min-height:1.2em}
+.mk .fresh-other{margin-top:var(--mk-s3);padding:var(--mk-s3) var(--mk-s4)}
+.mk .fresh-other summary{cursor:pointer;color:var(--mk-muted);font-size:14px;min-height:32px;display:flex;align-items:center}
+.mk .fresh-other[open] summary{color:var(--mk-text)}
+.mk .fresh-body{display:flex;flex-direction:column;gap:var(--mk-s3);padding:var(--mk-s2) 0}
+.mk .fresh-pick{display:flex;align-items:center;gap:var(--mk-s3);font-size:13px;color:var(--mk-muted)}
+.mk .fresh-pick select{background:var(--mk-card2);color:var(--mk-text);border:1px solid var(--mk-line);border-radius:10px;height:36px;padding:0 var(--mk-s3);font:inherit}
+.mk .fresh-code{display:flex;flex-direction:column;gap:var(--mk-s2);align-items:flex-start}
+.mk .fresh-code .snip{width:100%}
+.mk .fresh-step{margin:0 0 var(--mk-s2);font-size:13px;color:var(--mk-text)}
+.mk .fresh-row{display:flex;align-items:center;justify-content:space-between;gap:var(--mk-s3);font-size:13px;color:var(--mk-muted);border-top:1px solid var(--mk-line);padding-top:var(--mk-s3)}
+.mk .fresh-row b{color:var(--mk-text);font-weight:600}
+@media (max-width:600px){
+ .mk .hsub.keep{display:block;-webkit-line-clamp:3}
+ .mk .sidecol.setup{display:flex;width:100%;margin-top:var(--mk-s4);min-width:0}
+ .mk .fz{display:grid;grid-template-columns:1fr 1fr;gap:var(--mk-s4);margin:var(--mk-s4) 0 0;padding:0;border:0;overflow:visible}
+ .mk .xrow2 .xb{flex:1;height:44px}
+}
+@media (min-width:601px){
+.mk .facts{margin:var(--mk-s2) calc(var(--mk-s6) * -1) 0}
+.mk .fact{padding:var(--mk-s4) var(--mk-s6);border-right:1px solid var(--mk-line);min-width:0}
+.mk .fact:last-child{border-right:0}
+}
+.mk .fact b{font-size:22px;letter-spacing:-.02em;font-weight:700;font-variant-numeric:tabular-nums}
+.mk .fact small{color:var(--mk-muted);font-size:13px;margin-left:6px}
+.mk .fact .m{display:block;font-size:12.5px;color:var(--mk-faint);margin-top:3px}

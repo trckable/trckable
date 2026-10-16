@@ -7,6 +7,7 @@ import { fmtInt } from '../../lib/format'
 import { copy } from '../briefing/copy'
 import { niceStep } from '../briefing/geometry'
 import type { Band, Judged } from '../briefing/usual'
+import { useGlide } from './glide'
 
 export interface ChartPoint {
   /** Where on the axis (in buckets from its start). */
@@ -98,8 +99,12 @@ export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt
   const span = Math.max(1, ph ? c.full : c.span)
   const X = (i: number) => L + ((W - L - Rr) * (i + 0.5)) / span
   const edge = (i: number) => L + ((W - L - Rr) * i) / span
-  const pts = c.points
-  const ladder = c.ladder.slice(0, span)
+  // The line and the band glide from the last period's to this one's.
+  const gv = useGlide('chart:v', c.points.map((p) => p.v))
+  const gl = useGlide('chart:lo', c.ladder.map((b) => b.lo))
+  const gh = useGlide('chart:hi', c.ladder.map((b) => b.hi))
+  const pts = c.points.map((p, i) => ({ ...p, v: gv[i] ?? p.v }))
+  const ladder = c.ladder.map((b, i) => ({ ...b, lo: gl[i] ?? b.lo, hi: gh[i] ?? b.hi })).slice(0, span)
   const mx = Math.max(1, ...pts.map((p) => p.v), ...(c.band ? ladder.map((b) => b.hi) : [])) * 1.15
   const Y = (v: number) => B - ((B - T) * v) / mx
   const step = niceStep(mx)

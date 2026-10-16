@@ -8,10 +8,12 @@ export function Hold({ ready, id, children }: { ready: boolean; id: string; chil
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the page that is whole is kept for the moment the next one is being read
     if (ready && last?.id !== id) setLast({ id, node: children })
   }, [ready, id, last, children])
-  if (ready || !last) return <>{children}</>
+  // One wrapper whether held or not, so the page that follows is the same elements as the one it replaces: its ring, its
+  // numbers and its line move from what they showed instead of being drawn anew.
+  const held = !ready && !!last
   return (
-    <div className="mk-held" aria-busy="true" inert>
-      {last.node}
+    <div className={held ? 'mk-held' : 'mk-hold'} aria-busy={held || undefined} inert={held}>
+      {held ? last.node : children}
     </div>
   )
 }

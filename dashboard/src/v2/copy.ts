@@ -10,6 +10,7 @@ export const copy = defineCopy('v2', {
   live: 'Live',
   liveTitle: 'Live (L)',
   briefing: 'Briefing',
+  loading: 'Reading the numbers',
   briefingTitle: 'Briefing (B)',
   explore: 'Explore all data',
   exploreTab: 'Explore',

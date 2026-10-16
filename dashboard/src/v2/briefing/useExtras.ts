@@ -1,6 +1,6 @@
 // The two things a card can say that come from outside the report: a new mention of the site today, and pages that got
 // slower than their usual. Each is asked once and never blocks the page.
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { more } from '../../lib/apiMore'
 import { addDays, diffDays, type ISODate, type Range } from '../../lib/dates'
 import type { SearchReport, Site } from '../../lib/api'
@@ -8,6 +8,8 @@ import { extrasApi, type Buyer } from '../../features/extras/extrasApi'
 import { heatApi } from '../../features/heatmap/api'
 import { isShared } from '../../lib/me'
 import { mentionsApi, type Mention } from '../../features/mentions/api'
+import { leakOf } from '../explore/data/mapSections'
+import type { FunnelStep } from '../../lib/api'
 
 export interface SearchStory {
   cur: SearchReport
@@ -21,6 +23,23 @@ export interface Stuck {
   rage: { el: string; n: number }[]
 }
 
+export interface FunnelStory {
+  steps: { name: string; v: number; c: number }[]
+  leak: { at: number; r: number; ur: number }
+  /** The page many go to instead of the next step. */
+  alt?: string
+}
+
+/** The first sale from a country nobody had paid from in the last 90 days. */
+export interface FirstFrom {
+  country: string
+  amount: number
+  at: string
+  referrer?: string
+  /** Visitors from there in the period. */
+  people: number
+}
+
 export interface Extras {
   mention: Mention | null
   speed: { cur: [number, number, number]; usual: [number, number, number] } | null
@@ -30,6 +49,10 @@ export interface Extras {
   search: SearchStory | null
   /** A page people got stuck on, when heatmaps are on. */
   stuck: Stuck | null
+  /** The signup path against the period before. */
+  funnel: FunnelStory | null
+  /** A customer from a country that never had one. */
+  first: FirstFrom | null
   /** Read for the period on screen. */
   fresh?: boolean
 }
@@ -39,13 +62,54 @@ export interface ExtrasWant {
   search: boolean
   /** The page to look at for stuck visitors. */
   page: string | null
+  /** The steps of the signup path to read, with the page many go to instead. */
+  funnel: { steps: FunnelStep[]; alt?: string } | null
+  /** The countries the period's people came from, most first, to look for a first customer in. */
+  countries: { code: string; people: number }[]
 }
 
-const none: Extras = { mention: null, speed: null, buyers: null, search: null, stuck: null }
+const none: Extras = { mention: null, speed: null, buyers: null, search: null, stuck: null, funnel: null, first: null }
+
+/** The path's steps in this period and in the one before it, and the first step where fewer go on than usual. */
+function readFunnel(site: string, range: Range, days: number, want: NonNullable<ExtrasWant['funnel']>): Promise<FunnelStory | null> {
+  const before: Range = { from: addDays(range.from, -days), to: addDays(range.from, -1) }
+  return Promise.all([more.funnel(site, range, want.steps), more.funnel(site, before, want.steps).catch(() => null)]).then(
+    ([c, p]) => {
+      const steps = c.steps.map((s, i) => ({ name: s.label || s.value, v: s.visitors, c: p?.steps[i]?.visitors ?? 0 }))
+      return { steps, leak: leakOf(steps), alt: want.alt }
+    },
+    () => null,
+  )
+}
+
+/** The first of the period's top countries with a sale in the period and none in the 90 days before it, once the site has sold enough to say so. */
+async function readFirst(site: string, range: Range, countries: ExtrasWant['countries']): Promise<FirstFrom | null> {
+  if (!countries.length) return null
+  const back: Range = { from: addDays(range.from, -90), to: addDays(range.from, -1) }
+  const past = await extrasApi.buyers(site, back, 20).then((r) => r.buyers ?? [], () => [] as Buyer[])
+  if (past.length < 10) return null
+  for (const c of countries.slice(0, 5)) {
+    const f = [{ dim: 'country', value: c.code }]
+    const [now, was] = await Promise.all([
+      extrasApi.buyers(site, { ...range, filters: f }, 1).then((r) => r.buyers ?? [], () => [] as Buyer[]),
+      extrasApi.buyers(site, { ...back, filters: f }, 1).then((r) => r.buyers ?? [], () => [] as Buyer[]),
+    ])
+    if (now[0] && now[0].amount > 0 && !was.length) return { country: c.code, amount: now[0].amount, at: now[0].at, referrer: now[0].referrer, people: c.people }
+  }
+  return null
+}
+
+/** The same object while its contents are: a list built again from every new report does not read everything again. */
+export function useSame<T>(v: T): T {
+  const k = JSON.stringify(v)
+  return useMemo(() => JSON.parse(k) as T, [k])
+}
 
 export function useExtras(site: Site, today: ISODate, range: Range, want: ExtrasWant, on: boolean): Extras {
   const [got, setGot] = useState<{ key: string; x: Extras } | null>(null)
-  const key = `${site.id}|${today}|${range.from}|${range.to}|${want.money}|${want.search}|${want.page}`
+  const funnelKey = want.funnel ? want.funnel.steps.map((x) => x.value).join(',') : ''
+  const countryKey = want.countries.map((x) => x.code).join(',')
+  const key = `${site.id}|${today}|${range.from}|${range.to}|${want.money}|${want.search}|${want.page}|${funnelKey}|${countryKey}`
   useEffect(() => {
     if (!on || isShared()) return
     let live = true
@@ -64,10 +128,12 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
     const stuck = want.page
       ? heatApi.map(site.id, range, want.page, 0).then((m): Stuck | null => (m.rage.length ? { page: want.page ?? '', views: m.views, rage: m.rage.map((r) => ({ el: r.el, n: r.n })) } : null), () => null)
       : Promise.resolve(null)
-    void Promise.all([mention, vit(today, today), vit(addDays(today, -28), addDays(today, -1)), buyers, search, stuck]).then(([m, c, u, b, sr, st]) => live && setGot({ key, x: { fresh: true, mention: m, speed: c && u ? { cur: c, usual: u } : null, buyers: b, search: sr, stuck: st } }))
+    const funnel = want.funnel ? readFunnel(site.id, range, days, want.funnel) : Promise.resolve(null)
+    const first = want.money && days <= 31 ? readFirst(site.id, range, want.countries) : Promise.resolve(null)
+    void Promise.all([mention, vit(today, today), vit(addDays(today, -28), addDays(today, -1)), buyers, search, stuck, funnel, first]).then(([m, c, u, b, sr, st, fn, fs]) => live && setGot({ key, x: { fresh: true, mention: m, speed: c && u ? { cur: c, usual: u } : null, buyers: b, search: sr, stuck: st, funnel: fn, first: fs } }))
     return () => {
       live = false
     }
-  }, [key, site.id, site.mentions, today, on, range, want.money, want.search, want.page])
+  }, [key, site.id, site.mentions, today, on, range, want.money, want.search, want.page, want.funnel, want.countries])
   return got && got.key === key ? got.x : none
 }

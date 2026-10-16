@@ -2,11 +2,11 @@
 // reads real answers (the payments, Search Console, the page's heatmap) and says nothing without them. Pure: cards.money.test.ts.
 import type { Money, SearchRow } from '../../lib/api'
 import type { Buyer } from '../../features/extras/extrasApi'
-import { fmtInt, fmtFixed } from '../../lib/format'
+import { countryName, flag, fmtInt, fmtFixed } from '../../lib/format'
 import { copy } from './cards.copy'
 import type { Story } from './cards'
 import { sourceName } from './model'
-import type { SearchStory, Stuck } from './useExtras'
+import type { FirstFrom, FunnelStory, SearchStory, Stuck } from './useExtras'
 import { bandFromBefore, judge, type Band } from './usual'
 
 export interface SalesIn {
@@ -185,5 +185,58 @@ export function stuckCard(s: Stuck, rule: string): Story {
     ev: copy.stuckEv(n, s.views),
     act: { k: 'x', t: copy.stuckAct },
     deeper: { kind: 'explore', filter: { dim: 'entry_page', value: s.page } },
+  }
+}
+
+const pct0 = (x: number) => `${Math.round(x * 100)}%`
+
+/** The signup path where fewer go on than usual: the steps as bars, the step that leaks in red, and what to ask an editor. */
+export function leakCard(i: { f: FunnelStory; domain: string; rule: string }): Story | null {
+  const { steps, leak, alt } = i.f
+  if (leak.at < 1) return null
+  const a = steps[leak.at - 1]
+  const b = steps[leak.at]
+  const usual = Math.round(a.v * leak.ur)
+  // Too few people to say "usually" about.
+  if (usual < 3) return null
+  const rows = steps.map((s, k) => ({ name: s.name, v: s.v, w: Math.max(3, (s.v / (steps[0].v || 1)) * 100), hot: k === leak.at ? copy.leakGoOn(pct0(b.v / (a.v || 1)), pct0(leak.ur)) : '' }))
+  return {
+    key: 'funnel',
+    score: 74,
+    bad: true,
+    head: copy.leakHead(fmtInt(b.v), fmtInt(a.v), a.name, b.name),
+    rest: copy.leakRest(fmtInt(usual)),
+    vis: { k: 'funnel', rows },
+    why: alt ? copy.leakAlt(alt) : copy.leakUsualRange,
+    val: pct0(leak.r),
+    m: b.v,
+    u: 'people',
+    how: `${i.rule} ${copy.leakHow}`,
+    ev: copy.leakEv(fmtInt(b.v), fmtInt(a.v), fmtInt(usual)),
+    act: { k: 'copy', t: copy.fixPrompt, text: copy.leakPrompt(i.domain, pct0(leak.r), a.name, b.name, pct0(leak.ur), alt), done: copy.leakCopied },
+    deeper: { kind: 'table', tab: 'funnels' },
+  }
+}
+
+/** The first payment from a country nobody had paid from in the last 90 days. */
+export function firstCard(i: { first: FirstFrom; band: Band | null; fmt: (minor: number) => string; clock: (iso: string) => string; rule: string }): Story {
+  const { first: f, band } = i
+  const name = countryName(f.country)
+  const via = f.referrer ? sourceName(f.referrer) : copy.newCustomer.toLowerCase()
+  return {
+    key: 'countries',
+    score: 68,
+    head: copy.firstFrom(name),
+    rest: ` ${flag(f.country)}`,
+    vis: null,
+    why: copy.firstWhy(i.fmt(f.amount), via, i.clock(f.at), name, band ? `${fmtInt(Math.max(0, band.lo))}–${fmtInt(band.hi)}` : ''),
+    val: '1st',
+    m: 1,
+    u: copy.firstUnit,
+    how: copy.firstHow(name),
+    ev: band ? `Now ${fmtInt(f.people)}, usual ${fmtInt(Math.max(0, band.lo))} to ${fmtInt(band.hi)}.` : '',
+    act: { k: 'set', t: copy.firstAlert, msg: copy.firstAlertMsg(name) },
+    deeper: { kind: 'explore', filter: { dim: 'country', value: f.country } },
+    kc: { flag: flag(f.country), label: name, note: copy.firstNote, tone: 'up', filter: { dim: 'country', value: f.country } },
   }
 }

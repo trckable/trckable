@@ -12,6 +12,7 @@ import { dayWords, rangeWords } from './dayWords'
 import { switchTab } from '../features/live/switchView'
 import { useViewKeys } from './useViewKeys'
 import { BriefingSlot } from './briefing/BriefingSlot'
+import { FreshSlot } from './briefing/FreshSlot'
 import { copy } from './copy'
 import { PeriodChip } from './ui/PeriodChip'
 import { TabBar } from './ui/TabBar'
@@ -28,6 +29,8 @@ const MORE = ['12mo', 'wtd', 'mtd', 'lastmonth', 'ytd']
 
 export interface V2Props {
   tab: 'live' | 'briefing'
+  /** The site has had no visit yet: the page says it is listening, and how to install. */
+  waiting?: boolean
   site: Site
   sites: Site[]
   view: ViewState
@@ -68,6 +71,8 @@ export function V2View(p: V2Props) {
   useViewKeys(here)
   const exploreOpen = () => goExplore()
   const setTab = (t: 'live' | 'briefing') => void switchTab(t, here)
+  const brief = <BriefingSlot site={p.site} data={p.data} loading={p.loading} period={p.view.period} range={p.range} money={p.money} onGoal={p.onGoal} visits={p.live.stream.visits} />
+  const screen = here === 'briefing' ? brief : <Live {...p.live} />
   return (
     <div className="mk mk-body" id="app">
       <PageHeader
@@ -77,7 +82,7 @@ export function V2View(p: V2Props) {
         data={p.data}
         onAsk={p.onAsk}
         period={
-          here === 'briefing' ? (
+          here === 'briefing' && !p.waiting ? (
             <PeriodChip
               label={label}
               vs={vs}
@@ -97,7 +102,7 @@ export function V2View(p: V2Props) {
         }
       />
       <main id="main" className="vfade">
-        {here === 'briefing' ? <BriefingSlot site={p.site} data={p.data} loading={p.loading} period={p.view.period} range={p.range} money={p.money} onGoal={p.onGoal} visits={p.live.stream.visits} /> : <Live {...p.live} />}
+        {p.waiting ? <FreshSlot site={p.site} visits={p.live.stream.visits} /> : screen}
       </main>
       {opened && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} money={p.money} onGoal={p.onGoal} />}
       <MkToastHost />
