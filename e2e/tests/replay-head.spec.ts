@@ -21,7 +21,11 @@ async function playing(page: Page, path: string, speed = 'slow') {
 }
 
 test('the playhead is a gradient line with a chip, a dot on the line and a dim future', async ({ page }) => {
-  const chart = await playing(page, `/${HISTORY_DOMAIN}?view=data`, 'fast')
+  // A week at the slow speed (40 s): the replay is still playing when a slow
+  // browser gets to the dot, which is gone once it has ended; the days with
+  // visitors are the last four of the seven, reached after about 20 s.
+  test.setTimeout(90_000)
+  const chart = await playing(page, `/${HISTORY_DOMAIN}?view=data&period=7d`, 'slow')
   // The line takes its colour from the gradient, not a flat white.
   await expect.poll(() => chart.locator('.chart-cut').evaluate((el) => getComputedStyle(el).stroke)).toContain('g-area-head')
   expect(await chart.locator('.chart-cut').evaluate((el) => getComputedStyle(el).strokeWidth)).toBe('1.5px')
