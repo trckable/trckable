@@ -1,7 +1,6 @@
 // The small parts of an Explore page: a titled line, a quiet note, an empty message, a row that asks to connect, the
 // segmented switch inside a section, and the loading shape.
 import type { ReactNode } from 'react'
-import { Ico } from './icons'
 
 export function XSec({ a, b }: { a: ReactNode; b?: ReactNode }) {
   return (
@@ -20,32 +19,6 @@ export function XEmpty({ title, hint, children }: { title: string; hint: string;
       <b>{title}</b>
       <span>{hint}</span>
       {children}
-    </div>
-  )
-}
-
-export interface SetupText {
-  t: string
-  d: string
-  b: string
-}
-
-/** A row that says what is not connected, with the way to do it and how it works. */
-export function XSetup({ icon, x, howLabel, onSet, onHow }: { icon: string; x: SetupText; howLabel: string; onSet: () => void; onHow: () => void }) {
-  return (
-    <div className="mk-srow big">
-      <Ico name={icon} className="ic-i" />
-      <span className="st2">
-        <b>{x.t}</b> {x.d}
-      </span>
-      <span className="sa">
-        <button type="button" className="xb" onClick={onSet}>
-          {x.b}
-        </button>
-        <button type="button" className="lk3 how" onClick={onHow}>
-          {howLabel}
-        </button>
-      </span>
     </div>
   )
 }

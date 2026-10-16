@@ -92,7 +92,7 @@ test('the picker has ten sections in four groups, and the tabs of a section stay
   await page.locator('[data-xm="pick"]').click()
   await expect(page.locator('#xm-pick .xmi', { hasText: 'Sales' }).locator('.xtag')).toHaveText('Connect')
   await page.locator('#xm-pick').getByRole('menuitem', { name: /^Sales/ }).click()
-  await expect(page.locator('#xp .mk-srow')).toContainText('No revenue yet')
+  await expect(page.locator('#xp .lkc')).toContainText('See what each source earns')
 })
 
 test('a tapped row filters, the chip takes it off, and Show all lists the rest', async ({ page }) => {

@@ -1,7 +1,8 @@
 // Sales: each sale with who it came from, what kind it was and what it earned, newest first, and a switch by kind.
-import { XEmpty, XSec, XSetup, XSub } from '../../ui/XBits'
+import { XEmpty, XSec, XSub } from '../../ui/XBits'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
+import { Lock } from './Lock'
 import type { Sale, Sales as Model } from '../types'
 
 const KINDS = ['', 'new', 'upgrade', 'renewal', 'refund'] as const
@@ -25,7 +26,7 @@ function Line({ s, money }: { s: Sale; money: (minor: number) => string }) {
 }
 
 export function Sales({ x, d }: { x: XCtx; d: Model }) {
-  if (d.state === 'connect') return <XSetup icon="sales" x={copy.setup.rev} howLabel={copy.howWorks} onSet={() => x.connect('rev')} onHow={() => x.how('rev')} />
+  if (d.state === 'connect') return <Lock k="rev" x={x} />
   if (d.state === 'none') return <XEmpty title={copy.emptyProducts} hint={copy.emptyProductsHint} />
   const list = d.sales.filter((s) => !x.kind || s.kind === x.kind)
   const net = list.reduce((p, s) => p + s.amt, 0)

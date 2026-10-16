@@ -1,10 +1,11 @@
 // Search: what Google says about the site, the four numbers and the queries (or pages) behind them.
 import { fmtInt } from '../../../lib/format'
-import { XEmpty, XNote, XSetup, XSub } from '../../ui/XBits'
+import { XEmpty, XNote, XSub } from '../../ui/XBits'
 import { XKcsPlain } from '../../ui/XKcs'
 import { XCols, type CRow } from '../../ui/XTable'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
+import { Lock } from './Lock'
 import type { Search as Model, SearchRow } from '../types'
 import { fmtK, pct1 } from './numbers'
 
@@ -32,7 +33,7 @@ function rowsOf(list: SearchRow[], mono: boolean): CRow[] {
 }
 
 export function Search({ x, d }: { x: XCtx; d: Model }) {
-  if (!d.on) return <XSetup icon="search" x={copy.setup.search} howLabel={copy.howWorks} onSet={() => x.connect('search')} onHow={() => x.how('search')} />
+  if (!d.on) return <Lock k="search" x={x} />
   if (!d.enough) return <XEmpty title={copy.emptySearch} hint={copy.emptySearchHint} />
   const q = x.sdim === 'q'
   return (

@@ -1,8 +1,9 @@
 // Goals & funnels: the funnel as bars with where people leave, the goals under it, and the card to change the funnel.
-import { XEmpty, XSec, XSetup, XSub } from '../../ui/XBits'
+import { XEmpty, XSec, XSub } from '../../ui/XBits'
 import { XGoals, XMiniFunnel } from '../../ui/XFunnel'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
+import { Lock } from './Lock'
 import type { Funnel, Goal, Step } from '../types'
 
 function Editor({ x, d }: { x: XCtx; d: Funnel }) {
@@ -84,7 +85,7 @@ export function Results({ x, d }: { x: XCtx; d: Funnel }) {
       {x.edit && <Editor x={x} d={d} />}
       {steps.length >= 2 ? <XMiniFunnel steps={steps} leak={d.leak} ghost={d.ghost} onConnect={() => x.connect('rev')} /> : <XEmpty title={copy.emptyFunnel} hint={copy.emptyFunnelHint} />}
       <XSec a={copy.goals} b={d.vs} />
-      {!d.goalsOn && <XSetup icon="goals" x={copy.setup.goals} howLabel={copy.howWorks} onSet={() => x.connect('goals')} onHow={() => x.how('goals')} />}
+      {!d.goalsOn && <Lock k="goals" x={x} />}
       <XGoals goals={d.goalsOn ? [...d.goals, ...own] : []} />
     </>
   )
