@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
@@ -70,6 +71,7 @@ func (s *Server) tellMilestones(ctx context.Context, site string, fresh []sqlite
 			title, msg := milestones.AlertLine(milestones.Say(m, false), info.Domain)
 			ev := alerts.Event{Kind: "milestone", Site: site, Domain: info.Domain, At: now, Title: title, Message: msg,
 				Data: map[string]any{"milestone": m.Kind, "step": m.Step, "reached_on": m.Day}}
+			ev.Card = s.milestoneCard(info.Domain, milestones.Say(m, false), m.Day)
 			ev.Unsubscribe = s.stopLink(a.ID)
 			ev.Settings = s.settingsLink(site)
 			if err := alerts.Send(ctx, a.Target, ev); err != nil {
@@ -81,4 +83,21 @@ func (s *Server) tellMilestones(ctx context.Context, site string, fresh []sqlite
 			}
 		}
 	}
+}
+
+// milestoneCard dresses a milestone as an email: the site, the number as the
+// hero with its word under it, the day, and one button to the dashboard.
+func (s *Server) milestoneCard(domain string, w milestones.Words, day string) *alerts.Card {
+	reached := day
+	if t, err := time.Parse(time.DateOnly, day); err == nil {
+		reached = t.Format("2 Jan 2006")
+	}
+	c := &alerts.Card{Site: domain, Eyebrow: "Milestone reached", Big: w.Big, Unit: w.Label, Sub: "Reached on " + reached}
+	plain := []string{c.Eyebrow, "", w.Line(), domain + " · " + c.Sub}
+	if s.cfg.BaseURL != "" {
+		c.CTA, c.Link = "Open "+domain, strings.TrimSuffix(s.cfg.BaseURL, "/")+"/"+domain
+		plain = append(plain, "", c.CTA+": "+c.Link)
+	}
+	c.Plain = strings.Join(plain, "\n")
+	return c
 }

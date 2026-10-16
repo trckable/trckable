@@ -70,7 +70,7 @@ func TestCardEscapesEverythingAndKeepsLinksSafe(t *testing.T) {
 	}
 	for _, want := range []string{"&lt;b&gt;x&lt;/b&gt;", "&#34;people&#34;", "…", "&lt;end&gt;", "a&lt;script&gt;<br>b",
 		`href="https://stats.example.com/x?a=1&amp;b=&#34;2&#34;"`, "Open Live →", "settings?site=s&amp;tab=alerts", "Alert settings",
-		"prefers-color-scheme: dark", "color-scheme", "max-width:560px"} {
+		"prefers-color-scheme: dark", "color-scheme", "max-width:600px"} {
 		if !strings.Contains(h, want) {
 			t.Errorf("missing %q", want)
 		}
@@ -129,5 +129,20 @@ func TestCardShowsTheAskLinkOnlyWhenItIsSafeAndSet(t *testing.T) {
 	}
 	if strings.Contains(Card{Big: "x", Ask: "javascript:alert(1)"}.HTML("", ""), "javascript:") {
 		t.Error("an unsafe ask link was drawn")
+	}
+}
+
+func TestCardKeepsMailClientsFromLinkingDomainsAndDates(t *testing.T) {
+	c := Card{Site: "shop.example", Eyebrow: "Milestone reached", Big: "10,000", Unit: "pageviews", Sub: "Reached on 15 Oct 2026",
+		CTA: "Open shop.example", Link: "https://stats.example.com/shop.example"}
+	h := c.HTML("https://stats.example.com/u/t", "https://stats.example.com/settings")
+	for _, want := range []string{"shop.&#8203;example", "15​ Oct 2026", "10,000", "pageviews", `href="https://stats.example.com/shop.example"`, "background:#c6ff3a", "color:#0b0d10", "Stop these alerts", "x-apple-data-detectors"} {
+		want = strings.ReplaceAll(want, "&#8203;", "​")
+		if !strings.Contains(h, want) {
+			t.Errorf("missing %q", want)
+		}
+	}
+	if strings.Contains(h, "shop.example<") || strings.Contains(h, "text-transform:uppercase") {
+		t.Error("a bare domain or caps eyebrow is left")
 	}
 }

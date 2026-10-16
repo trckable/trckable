@@ -103,7 +103,11 @@ func (m *Mailer) message(to string, e Event) (subject, body string) {
 	if u := header(e.Unsubscribe); u != "" {
 		foot = "Stop this email: " + u
 	}
-	return subject, e.Message + "\n\n-- \n" + foot
+	text := e.Message
+	if e.Card != nil && e.Card.Plain != "" {
+		text = e.Card.Plain
+	}
+	return subject, text + "\n\n-- \n" + foot
 }
 
 func (m *Mailer) send(ctx context.Context, to string, e Event) error {
