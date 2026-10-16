@@ -1,4 +1,4 @@
-// "Your five questions, answered", on the card kit with one anatomy (the same as
+// "Your questions, answered", on the card kit with one anatomy (the same as
 // a site card): the question and a quiet status on the top line, one big number
 // with one chip, the answer as a line, one link, and a chart to the bottom edge.
 // The page and the fix draw their own page's or channel's days; the rest draw the site's.

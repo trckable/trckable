@@ -2278,7 +2278,7 @@ export default {
   'storyview.chartLabel': 'Visitatori nel periodo, con i momenti segnati',
   'storyview.before': 'il periodo precedente',
   'storyview.noMoments': 'Niente di insolito da segnare in questo periodo.',
-  'storyview.questionsTitle': 'Le tue cinque domande, con risposta',
+  'storyview.questionsTitle': 'Le tue domande, con risposta',
   'storyview.q.did': 'Ha funzionato?',
   'storyview.q.page': 'Quale pagina ti sostiene?',
   'storyview.q.fix': 'Cosa devo sistemare?',

@@ -271,14 +271,12 @@
   gap: 12px;
 }
 .sv-answer {
-  grid-column: span 4;
+  grid-column: span 6;
   min-width: 0;
 }
-.sv-answer.did {
-  grid-column: span 7;
-}
-.sv-answer.page {
-  grid-column: span 5;
+/* An odd last card (a hidden one leaves five) spans the row instead of leaving a hole */
+.sv-answer:last-child:nth-child(odd) {
+  grid-column: span 12;
 }
 .sv-answer.fine.good .sv-big {
   color: var(--up);
@@ -460,14 +458,6 @@
   .sv-tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .sv-answer {
-    grid-column: span 6;
-  }
-  .sv-answer.did,
-  .sv-answer.page,
-  .sv-answer.fine {
-    grid-column: span 12;
-  }
 }
 @media (max-width: 640px) {
   .sv-hint {
@@ -477,7 +467,8 @@
     width: var(--ph-hit, 44px);
     height: var(--ph-hit, 44px);
   }
-  .sv-answer {
+  .sv-answer,
+  .sv-answer:last-child:nth-child(odd) {
     grid-column: span 12;
   }
   .sv-answers .sv-link {

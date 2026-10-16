@@ -2279,7 +2279,7 @@ export default {
   'storyview.chartLabel': 'Visiteurs sur la période, avec les moments marqués',
   'storyview.before': 'la période précédente',
   'storyview.noMoments': "Rien d'inhabituel à marquer sur cette période.",
-  'storyview.questionsTitle': 'Vos cinq questions, avec leurs réponses',
+  'storyview.questionsTitle': 'Vos questions, avec leurs réponses',
   'storyview.q.did': 'Ça a marché ?',
   'storyview.q.page': 'Quelle page vous porte ?',
   'storyview.q.fix': 'Que dois-je corriger ?',
