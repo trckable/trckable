@@ -9,6 +9,9 @@ import { defineCopy } from '../../i18n'
 const sales = (n: number) => `${fmtInt(n)} ${n === 1 ? 'sale' : 'sales'}`
 
 export const copy = defineCopy('moments', {
+  /** What a sale moment was, when its payments were all of one kind. */
+  what: { new: 'New customer', upgrade: 'Upgrade', renewal: 'Renewal', sale: 'Sale' },
+  whatMany: { new: 'new customers', upgrade: 'upgrades', renewal: 'renewals', sale: 'sales' },
   title: {
     spike: 'Traffic spike',
     surge: 'Busier than usual',

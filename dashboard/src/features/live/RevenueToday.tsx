@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Sale } from '../../lib/api'
 import { fmtMoney } from '../../lib/format'
 import { useTween } from '../../lib/motion'
+import { arriving } from '../signals/saleLine'
 import { copy } from './copy'
 import type { LiveNow } from './api'
 
@@ -15,7 +16,7 @@ export function RevenueToday({ revenue, sales }: { revenue: NonNullable<LiveNow[
   // Only sales that arrive while Live is open, not the ones before it.
   const seen = useRef(sales[0]?.id ?? 0)
   const [sold, setSold] = useState<(Sale & { id: number }) | null>(null)
-  const newest = sales[0]
+  const newest = sales.find(arriving)
   useEffect(() => {
     if (!newest || newest.id <= seen.current) return
     seen.current = newest.id
@@ -32,7 +33,7 @@ export function RevenueToday({ revenue, sales }: { revenue: NonNullable<LiveNow[
       <span className="live-money num">{fmt(Math.round(v))}</span>
       {sold && (
         <span key={sold.id} className="live-sold num">
-          {copy.sold(fmtMoney(sold.amount, sold.currency, sold.exponent))}
+          {sold.text ? copy.soldWords(sold.text) : copy.sold(fmtMoney(sold.amount, sold.currency, sold.exponent))}
         </span>
       )}
     </div>

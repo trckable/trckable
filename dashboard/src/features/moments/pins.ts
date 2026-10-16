@@ -5,7 +5,7 @@
 // Pure: pins.test.ts.
 import type { Filter, Milestone } from '../../lib/api'
 import type { Insight } from '../extras/extrasApi'
-import type { Moment } from '../story/moments'
+import type { Moment, SaleWhat } from '../story/moments'
 
 export type PinKind = 'spike' | 'surge' | 'mention' | 'sale' | 'referrer' | 'drop' | 'milestone' | 'ai' | 'move' | 'pays'
 
@@ -34,6 +34,7 @@ export interface Figures {
   count?: number
   amount?: number
   channel?: string
+  what?: SaleWhat
   referrer?: string
   was?: number
   change?: number
@@ -68,7 +69,7 @@ export function pinsFromMoments(list: Moment[], money: boolean): Pin[] {
         out.push({ ...base, kind: 'mention', score: 78, filters: m.referrer ? [{ dim: 'referrer', value: m.referrer }] : [], showDay: true, n: { visitors: m.brought, referrer: m.referrer, name: m.text, mention: m.mention } })
         break
       case 'sale':
-        if (money) out.push({ ...base, kind: 'sale', score: 60 + 20 * ((m.amount ?? 0) / biggest), filters: m.channel ? [{ dim: 'channel', value: m.channel }] : [], showDay: true, n: { count: m.count, amount: m.amount, channel: m.channel } })
+        if (money) out.push({ ...base, kind: 'sale', score: 60 + 20 * ((m.amount ?? 0) / biggest), filters: m.channel ? [{ dim: 'channel', value: m.channel }] : [], showDay: true, n: { count: m.count, amount: m.amount, channel: m.channel, what: m.what } })
         break
       case 'ai':
         out.push({ ...base, kind: 'ai', score: 55, filters: [{ dim: 'channel', value: 'AI' }], showDay: false, n: { name: m.bot } })

@@ -43,6 +43,15 @@ describe('what a pin says', () => {
     expect(s.big).toBe('$1,322')
   })
 
+  it('sales say what they were when they were all of one kind', () => {
+    const one = say(pin('sale', { day: '2026-09-02', n: { count: 1, amount: 4900, channel: 'Search', what: 'new' } }), usd)
+    expect(one.line).toBe('New customer · $49 · mostly Search')
+    expect(one.facts[0]).toBe('New customer')
+    const many = say(pin('sale', { day: '2026-09-02', n: { count: 3, amount: 14700, what: 'renewal' } }), usd)
+    expect(many.line).toBe('3 renewals · $147')
+    expect(many.facts[0]).toBe('3 renewals')
+  })
+
   it('a page that lost buyers: the two rates, the page and since when', () => {
     const s = say(pin('drop', { day: '2026-09-12', filters: [{ dim: 'entry_page', value: '/pricing' }], n: { name: '/pricing', visitors: 1204, rate: 0.031, wasRate: 0.051 } }), usd)
     expect(s.line).toBe('/pricing converts 3.1%, was 5.1%')

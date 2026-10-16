@@ -11,7 +11,7 @@ import { fail, type PayConnection, type Provider, type Site, more } from '../lib
 import { words } from '../lib/errors'
 import { visibleInterval } from '../lib/visibleInterval'
 import { navigate } from '../lib/url'
-import { modeTag, statusOf } from '../lib/payments'
+import { modeNote, modeTag, statusOf } from '../lib/payments'
 import { CodeBlock } from '../components/Code'
 import { Picker } from '../components/Picker'
 import { confirmWith, useConfirm } from '../components/Confirm'
@@ -196,7 +196,7 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <strong>{provider?.name ?? c.provider}</strong>
-          {c.mode === 'test' && <span className="tag quiet">{modeTag(c.provider)}</span>}
+          {c.mode === 'test' && <span className="tag quiet" title={modeNote}>{modeTag(c.provider)}</span>}
         </div>
         <div className="conn-status">
           {busy ? (

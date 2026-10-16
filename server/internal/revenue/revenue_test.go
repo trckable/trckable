@@ -254,9 +254,10 @@ func TestOneKeySetupAndReconciliation(t *testing.T) {
 	}
 }
 
-// A sale is announced live once: when a real payment first reaches the ledger.
-// Another event about the same payment, a test-mode payment, or one a sync
-// found from hours ago are all facts for the ledger and none of them is news.
+// A payment is told once: when a real payment first reaches the ledger.
+// Another event about the same payment and a test-mode payment tell nothing;
+// one a sync found from hours ago is told late (no pulse), and one from last
+// month is history.
 func TestSalesAreAnnouncedOnceAndOnlyWhenNew(t *testing.T) {
 	g := newRig(t, t.TempDir(), "instance key for tests")
 	ctx := context.Background()
@@ -264,12 +265,16 @@ func TestSalesAreAnnouncedOnceAndOnlyWhenNew(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var sales []Sale
-	g.svc.OnSale = func(site string, s Sale) {
+	// Connected a while ago: what a provider brings in from before is history.
+	if _, err := g.st.DB.Exec(`UPDATE pay_connections SET created_at = created_at - 40 * 86400`); err != nil {
+		t.Fatal(err)
+	}
+	var sales []Notice
+	g.svc.OnNotice = func(site string, n Notice) {
 		if site != g.site {
 			t.Errorf("sale for the wrong site: %s", site)
 		}
-		sales = append(sales, s)
+		sales = append(sales, n)
 	}
 	path := HookPath("stripe", c.ID)
 	send := func(evt, pi string, live bool, created time.Time) {
@@ -285,21 +290,30 @@ func TestSalesAreAnnouncedOnceAndOnlyWhenNew(t *testing.T) {
 	}
 
 	send("evt_1", "pi_1", true, time.Now())
-	if len(sales) != 1 || sales[0].Amount != 4900 || sales[0].Currency != "USD" || sales[0].Exponent != 2 {
+	// A Stripe payment waits a moment for its invoice, then is told as a sale.
+	if len(sales) != 0 {
+		t.Fatalf("told before the wait was over: %+v", sales)
+	}
+	g.svc.Now = func() time.Time { return time.Now().Add(3 * time.Minute) }
+	if _, err := g.svc.Process(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if len(sales) != 1 || sales[0].Amount != 4900 || sales[0].Currency != "USD" || sales[0].Exponent != 2 || sales[0].Late {
 		t.Fatalf("a new sale: %+v", sales)
 	}
-	send("evt_2", "pi_1", true, time.Now())                   // the same payment again
-	send("evt_3", "pi_2", false, time.Now())                  // test mode
-	send("evt_4", "pi_3", true, time.Now().Add(-3*time.Hour)) // found by a sync, not arriving now
-	if len(sales) != 1 {
-		t.Fatalf("announced %d sales, want 1: %+v", len(sales), sales)
+	send("evt_2", "pi_1", true, time.Now())                       // the same payment again
+	send("evt_3", "pi_2", false, time.Now())                      // test mode
+	send("evt_4", "pi_3", true, time.Now().Add(-3*time.Hour))     // found by a sync, not arriving now
+	send("evt_5", "pi_4", true, time.Now().Add(-30*24*time.Hour)) // history
+	if len(sales) != 2 || !sales[1].Late || sales[1].At > time.Now().Add(-2*time.Hour).UnixMilli() {
+		t.Fatalf("told %d, want the new one and the late one: %+v", len(sales), sales)
 	}
-	// All four are still in the ledger, of course; only the news is filtered.
+	// All of them are still in the ledger, of course; only the news is told.
 	var n int
 	if err := g.st.DB.QueryRow(`SELECT count(*) FROM pay_payments`).Scan(&n); err != nil {
 		t.Fatal(err)
 	}
-	if n != 3 {
-		t.Fatalf("ledger payments: %d, want 3", n)
+	if n != 4 {
+		t.Fatalf("ledger payments: %d, want 4", n)
 	}
 }

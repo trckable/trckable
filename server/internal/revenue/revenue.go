@@ -45,11 +45,12 @@ type Service struct {
 	// OnRates is called after exchange rates were fetched and stored: what past
 	// foreign-currency payments are worth may have changed, for every site.
 	OnRates func()
-	// OnSale is told about a payment the moment it is committed: new, real
-	// (not test mode) and recent, so a dashboard can show it arriving. A
-	// webhook replayed for a payment already in the ledger, or a sync that
-	// backfills last month, announces nothing.
-	OnSale func(site string, s Sale)
+	// OnNotice is told about money the moment it is committed: a payment new
+	// to the ledger or a refund not told before, real (not test mode). A
+	// webhook replayed for a payment already in the ledger announces nothing;
+	// one found late (a reconciliation) comes with Late set; history older
+	// than a few days is not news at all.
+	OnNotice func(site string, n Notice)
 
 	emailKey []byte
 	wake     chan struct{}
@@ -606,6 +607,16 @@ func (s *Service) Process(ctx context.Context) (int, error) {
 		}
 		rows.Close()
 		if len(items) == 0 {
+			// Payments that waited for their invoice are told now, or when the wait is over.
+			held, err := s.releaseHeld(ctx)
+			if err != nil {
+				return total, err
+			}
+			if s.OnNotice != nil {
+				for _, h := range held {
+					s.OnNotice(h.Site, h.N)
+				}
+			}
 			return total, nil
 		}
 		// One transaction per batch: one fsync for 200 events, all or nothing.
@@ -616,35 +627,40 @@ func (s *Service) Process(ctx context.Context) (int, error) {
 		sites := map[string]bool{}
 		type announced struct {
 			site string
-			sale Sale
+			n    Notice
 		}
-		var sales []announced
+		var told []announced
+		// What each event brought, asked before Apply writes it: a payment the
+		// ledger already has is not news, and afterwards every one exists.
+		type brought struct {
+			sc      ledger.Scope
+			pays    []payments.Payment
+			refunds map[string]int64 // payment id as the refund names it -> when
+		}
+		var batch []brought
 		for _, it := range items {
 			ev, perr := payments.Registry[it.sc.Provider].Parse(it.body)
 			msg := ""
 			if perr != nil {
 				msg = "parse: " + perr.Error()
 			} else {
-				// Which payments are new has to be asked before Apply writes
-				// them; afterwards every one of them exists.
-				if s.OnSale != nil && !it.sc.Test && !ev.Test {
+				if !it.sc.Test && !ev.Test {
+					br := brought{sc: it.sc, refunds: map[string]int64{}}
 					for _, p := range ev.Payments {
-						if s.Now().UnixMilli()-p.PaidAt > liveWindow.Milliseconds() {
-							continue
-						}
 						var seen int
 						_ = tx.QueryRowContext(ctx, `SELECT count(*) FROM pay_payments WHERE site_id = ? AND provider = ? AND id = ?`,
 							it.sc.Site, it.sc.Provider, p.ID).Scan(&seen)
-						if seen > 0 {
-							continue
+						if seen == 0 {
+							br.pays = append(br.pays, p)
 						}
-						net := p.Gross
-						if p.Tax != nil {
-							net -= *p.Tax
+					}
+					for _, r := range ev.Refunds {
+						if r.Status == payments.RefundSucceeded && r.PaymentID != "" {
+							br.refunds[r.PaymentID] = max(br.refunds[r.PaymentID], r.At)
 						}
-						cur := strings.ToUpper(p.Currency)
-						net = ledger.RoundDiv(net, payments.AmountScale(it.sc.Provider, cur))
-						sales = append(sales, announced{it.sc.Site, Sale{At: p.PaidAt, Amount: net, Currency: cur, Exponent: fx.Exponent(cur), Kind: saleKind(p.Kind)}})
+					}
+					if len(br.pays)+len(br.refunds) > 0 {
+						batch = append(batch, br)
 					}
 				}
 				if err := ledger.Apply(ctx, tx, it.sc, ev); err != nil {
@@ -673,6 +689,28 @@ func (s *Service) Process(ctx context.Context) (int, error) {
 			}
 			sites[it.sc.Site] = true
 		}
+		for _, br := range batch {
+			for _, p := range br.pays {
+				n, ok, err := s.payNotice(ctx, tx, br.sc, p)
+				if err != nil {
+					tx.Rollback()
+					return total, err
+				}
+				if ok {
+					told = append(told, announced{br.sc.Site, n})
+				}
+			}
+			for raw, at := range br.refunds {
+				n, ok, err := s.refundNotice(ctx, tx, br.sc, raw, at)
+				if err != nil {
+					tx.Rollback()
+					return total, err
+				}
+				if ok {
+					told = append(told, announced{br.sc.Site, n})
+				}
+			}
+		}
 		for site := range sites {
 			if _, err := forgetErased(ctx, tx, site); err != nil {
 				tx.Rollback()
@@ -688,34 +726,14 @@ func (s *Service) Process(ctx context.Context) (int, error) {
 				s.OnChange(site)
 			}
 		}
-		// Only after the commit: a sale shown live is a sale the ledger has.
-		for _, a := range sales {
-			s.OnSale(a.site, a.sale)
+		// Only after the commit: what is told is what the ledger has.
+		if s.OnNotice != nil {
+			for _, a := range told {
+				s.OnNotice(a.site, a.n)
+			}
 		}
 	}
 }
-
-// Sale is one payment announced live: what arrived, not who paid it.
-type Sale struct {
-	At       int64  `json:"ts"`       // unix ms
-	Amount   int64  `json:"amount"`   // net of tax when tax is known, minor units
-	Currency string `json:"currency"` // ISO 4217
-	Exponent int    `json:"exponent"` // minor-unit digits
-	Kind     string `json:"kind"`     // one_time | subscription | renewal
-}
-
-// saleKind names a payment whose event did not say (a Stripe
-// PaymentIntent): a one-time sale until the ledger learns otherwise.
-func saleKind(k string) string {
-	if k == "" {
-		return payments.KindOneTime
-	}
-	return k
-}
-
-// liveWindow is how recent a payment must be to be announced. A reconciliation
-// that finds one from last week is filling a gap, not reporting a sale.
-const liveWindow = 10 * time.Minute
 
 // Reprocess rebuilds a site's ledger from its inbox in one transaction.
 //

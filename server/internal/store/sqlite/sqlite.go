@@ -810,6 +810,40 @@ var migrations = []string{
 		checked_at INTEGER NOT NULL DEFAULT 0,
 		PRIMARY KEY (site_id, source)
 	) WITHOUT ROWID;`,
+	// 64: telling the owner when money comes in (revenue/notice.go). The plans
+	// an upgrade left and took, when the payload named them; one row per
+	// payment (or refunded payment) already announced, so a retried webhook or
+	// a reconciliation never announces it twice (amount: how much of a refund
+	// was told); and the money alert, on for the sites that already have alerts
+	// on, to where their newest enabled alert goes. A site that has one already,
+	// even switched off, keeps its choice.
+	`ALTER TABLE pay_hints ADD COLUMN from_plan TEXT NOT NULL DEFAULT '';
+	ALTER TABLE pay_hints ADD COLUMN to_plan TEXT NOT NULL DEFAULT '';
+	CREATE TABLE pay_notices (
+		site_id  TEXT NOT NULL,
+		provider TEXT NOT NULL,
+		id       TEXT NOT NULL,
+		kind     TEXT NOT NULL,
+		amount   INTEGER NOT NULL DEFAULT 0,
+		at       INTEGER NOT NULL,
+		PRIMARY KEY (site_id, provider, id)
+	) WITHOUT ROWID;
+	INSERT OR IGNORE INTO pay_notices (site_id, provider, id, kind, amount, at)
+	SELECT p.site_id, p.provider, 'refund:' || p.id, 'refund', min(p.gross, max(s.sm, s.cm)), CAST(strftime('%s', 'now') AS INTEGER) * 1000
+	FROM pay_payments p JOIN (
+		SELECT p2.site_id, p2.provider, p2.id AS pid,
+		       coalesce(sum(CASE WHEN r.cumulative = 0 THEN r.amount END), 0) AS sm, coalesce(max(CASE WHEN r.cumulative = 1 THEN r.amount END), 0) AS cm
+		FROM pay_payments p2 JOIN pay_refunds r ON r.site_id = p2.site_id AND r.provider = p2.provider AND r.status = 'succeeded'
+			AND (r.payment_id = p2.id OR r.payment_id IN (SELECT a.alias FROM pay_aliases a WHERE a.site_id = p2.site_id AND a.provider = p2.provider AND a.payment_id = p2.id))
+		GROUP BY p2.site_id, p2.provider, p2.id
+	) s ON s.site_id = p.site_id AND s.provider = p.provider AND s.pid = p.id;
+	INSERT INTO alerts (id, site_id, kind, enabled, target, threshold, last_fired, created_at)
+	SELECT 'alert_' || lower(hex(randomblob(8))), site_id, 'customer', 1, target, 0, 0, CAST(strftime('%s', 'now') AS INTEGER)
+	FROM (
+		SELECT site_id, target, row_number() OVER (PARTITION BY site_id ORDER BY created_at DESC, rowid DESC) AS rn
+		FROM alerts WHERE enabled = 1 AND target != ''
+	)
+	WHERE rn = 1 AND site_id NOT IN (SELECT site_id FROM alerts WHERE kind = 'customer');`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
@@ -1004,6 +1038,7 @@ func (s *Store) DeleteSite(ctx context.Context, id string) (Removed, error) {
 		`DELETE FROM pay_refunds WHERE site_id = ?`,
 		`DELETE FROM pay_disputes WHERE site_id = ?`,
 		`DELETE FROM pay_links WHERE site_id = ?`,
+		`DELETE FROM pay_notices WHERE site_id = ?`,
 		`DELETE FROM pay_connections WHERE site_id = ?`,
 		`DELETE FROM site_modules WHERE site_id = ?`,
 		`DELETE FROM sites WHERE id = ?`,

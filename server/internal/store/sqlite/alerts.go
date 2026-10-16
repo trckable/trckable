@@ -13,7 +13,7 @@ import (
 //
 //	stopped   nothing has arrived for a while, and it should have
 //	spike     today is far above the usual
-//	customer  someone paid
+//	customer  money came in: a new customer, an upgrade, a refund
 //	disk      the volume is filling up
 //
 // A surge (the site far busier than usual right now) is the seventh, and

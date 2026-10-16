@@ -13,9 +13,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/api"
-	"github.com/trckable/trckable/server/internal/ledger"
 	"github.com/trckable/trckable/server/internal/moments"
-	"github.com/trckable/trckable/server/internal/payments"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -203,8 +201,8 @@ func (s *Server) evaluate(ctx context.Context, a sqlite.Alert, h api.Health, now
 	return s.evaluateReport(ctx, a, ev, now)
 }
 
-// evaluateReport handles the two alerts that need the analytics store: a day
-// far above the usual, and a customer who just paid.
+// evaluateReport handles the alert that needs the analytics store: a day far
+// above the usual. (Money coming in is told as it happens: see money.go.)
 func (s *Server) evaluateReport(ctx context.Context, a sqlite.Alert, ev alerts.Event, now time.Time) (alerts.Event, bool) {
 	st := s.duck.Load()
 	if st == nil {
@@ -250,24 +248,6 @@ func (s *Server) evaluateReport(ctx context.Context, a sqlite.Alert, ev alerts.E
 		ev.Data = map[string]any{"visitors": todayN, "usual": median}
 		return ev, true
 
-	case "customer":
-		// Someone paid since the last time this alert fired.
-		since := a.LastFired
-		if since == 0 {
-			since = now.Add(-alertQuiet).Unix()
-		}
-		n, amount := paidSince(ctx, s.ctl.DB, a.SiteID, info.Currency, since)
-		if n == 0 {
-			return ev, false
-		}
-		ev.Title = "You got paid"
-		if n == 1 {
-			ev.Message = fmt.Sprintf("A new payment came in on %s.", info.Domain)
-		} else {
-			ev.Message = fmt.Sprintf("%d payments came in on %s.", n, info.Domain)
-		}
-		ev.Data = map[string]any{"payments": n, "amount_minor": amount, "currency": info.Currency}
-		return ev, true
 	}
 	return ev, false
 }
@@ -280,29 +260,4 @@ func busyDay(domain string, today, usual float64, days int) (title, message stri
 		return "New traffic", fmt.Sprintf("%s has %.0f visitors today, more than it usually gets.", domain, today)
 	}
 	return "Busy day", fmt.Sprintf("%s has %.0f visitors today — about %s a normal day.", domain, today, moments.Times(today/usual))
-}
-
-// paidSince counts a site's real payments after `since` (unix seconds;
-// paid_at is unix milliseconds) and sums, net of tax, those paid in the
-// site's own currency, in ISO minor units. Other currencies are counted but
-// not added: adding yen to dollars would be a wrong number.
-func paidSince(ctx context.Context, db *sql.DB, site, currency string, since int64) (n int, amount int64) {
-	rows, err := db.QueryContext(ctx, `SELECT provider, currency, gross - coalesce(tax, 0) FROM pay_payments
-		WHERE site_id = ? AND paid_at > ? AND test = 0`, site, since*1000)
-	if err != nil {
-		return 0, 0
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var prov, cur string
-		var net int64
-		if rows.Scan(&prov, &cur, &net) != nil {
-			continue
-		}
-		n++
-		if strings.EqualFold(cur, currency) {
-			amount += ledger.RoundDiv(max(net, 0), payments.AmountScale(prov, cur))
-		}
-	}
-	return n, amount
 }

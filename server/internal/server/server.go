@@ -72,9 +72,10 @@ type Server struct {
 	api        *api.API
 	box        *secrets.Box
 
-	duck      atomic.Pointer[duck.Store]
-	writer    atomic.Pointer[writer.Writer]
-	writerErr atomic.Value // error
+	duck        atomic.Pointer[duck.Store]
+	writer      atomic.Pointer[writer.Writer]
+	mailedMoney mailed       // money messages sent per site, for the hourly cap
+	writerErr   atomic.Value // error
 	// exit ends the process with a non-zero status (os.Exit; tests replace it).
 	// Used when the writer cannot recover or a background goroutine panics:
 	// a restart replays the WAL from the last committed mark.
@@ -332,9 +333,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	}
 	s.revenue.OnChange = a.PurgeSite
 	s.revenue.OnRates = a.PurgeAll // a new exchange rate changes what past payments are worth
-	s.revenue.OnSale = func(site string, sale revenue.Sale) {
-		s.hub.PublishSale(site, sale.At, sale.Amount, sale.Currency, sale.Exponent)
-	}
+	s.revenue.OnNotice = s.tellMoney
 	// Webhooks go straight to the SQLite inbox: they work while DuckDB warms up.
 	mux.HandleFunc("POST /webhooks/{provider}/{conn}", s.revenue.Webhook)
 	mux.Handle("/", web.DashboardFramed(a.FrameAncestors))

@@ -78,7 +78,7 @@ test('each alert: its switch and its number are saved where the checker reads th
     ['Tracking stopped', 'stopped'],
     ['Busy day', 'spike'],
     ['Traffic surge', 'surge'],
-    ['Someone paid', 'customer'],
+    ['Money in', 'customer'],
     ['Disk filling up', 'disk'],
     ['Weekly report', 'weekly'],
     ['Milestone reached', 'milestone'],

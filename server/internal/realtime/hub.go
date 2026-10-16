@@ -32,6 +32,12 @@ type Live struct {
 	Amount   int64  `json:"amount,omitempty"`
 	Currency string `json:"currency,omitempty"`
 	Exponent int    `json:"exponent,omitempty"`
+	// What the money was, in words (see revenue.Notice): new | upgrade |
+	// renewal | sale | refund, the line to show, and whether it was found late
+	// (shown with its own time, not as arriving).
+	Change string `json:"change,omitempty"`
+	Text   string `json:"text,omitempty"`
+	Late   bool   `json:"late,omitempty"`
 }
 
 // Hub routes events to per-site subscribers.
@@ -122,12 +128,23 @@ func (h *Hub) Publish(evs []event.Event) {
 	}
 }
 
-// PublishSale announces a payment the ledger has just recorded.
-func (h *Hub) PublishSale(site string, ts, amount int64, currency string, exponent int) {
+// Sale is money that reached the ledger, as the live stream tells it.
+type Sale struct {
+	TS       int64
+	Amount   int64
+	Currency string
+	Exponent int
+	Change   string
+	Text     string
+	Late     bool
+}
+
+// PublishSale announces money the ledger has just recorded.
+func (h *Hub) PublishSale(site string, s Sale) {
 	h.bump(site)
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	l := Live{Kind: "sale", TS: ts, Amount: amount, Currency: currency, Exponent: exponent}
+	l := Live{Kind: "sale", TS: s.TS, Amount: s.Amount, Currency: s.Currency, Exponent: s.Exponent, Change: s.Change, Text: s.Text, Late: s.Late}
 	for ch := range h.subs[site] {
 		select {
 		case ch <- l:

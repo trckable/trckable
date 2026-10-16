@@ -60,7 +60,11 @@ export function say(pin: Pin, money: (minor: number) => string): Said {
       return { title, line: n.name ? copy.surgeFrom(n.name) : title, big: copy.visitors(n.visitors ?? 0), facts: [copy.usual(times(n.factor ?? 0)), when(pin.day)] }
     case 'sale': {
       const channel = n.channel ? copy.mostly(channelLabel(n.channel)) : ''
-      return { title, line: [extrasCopy.ring.sales(n.count ?? 1, money(n.amount ?? 0)), channel].filter(Boolean).join(' · '), big: money(n.amount ?? 0), facts: [copy.sales(n.count ?? 1), channel, when(pin.day)].filter(Boolean) }
+      const count = n.count ?? 1
+      const many = n.what ? `${fmtInt(count)} ${copy.whatMany[n.what]}` : ''
+      const what = n.what && count === 1 ? copy.what[n.what] : many
+      const line = what ? [what, money(n.amount ?? 0)] : [extrasCopy.ring.sales(count, money(n.amount ?? 0))]
+      return { title, line: [...line, channel].filter(Boolean).join(' · '), big: money(n.amount ?? 0), facts: [what || copy.sales(count), channel, when(pin.day)].filter(Boolean) }
     }
     case 'referrer':
       return { title, line: extrasCopy.highlights.fresh(name, n.visitors ?? 0), big: name, facts: [copy.visitors(n.visitors ?? 0), pin.day ? copy.firstSeen(fmtDay(pin.day)) : ''].filter(Boolean) }

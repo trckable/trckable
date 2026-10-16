@@ -40,10 +40,10 @@ func TestANewSiteGetsTheWeeklyReportTrackingStoppedAndASurgeAlert(t *testing.T) 
 		t.Fatalf("with mail: %v %v", on, err)
 	}
 	got := alertsOf(t, s, site)
-	if len(got) != 3 {
-		t.Fatalf("want weekly, stopped and a surge, got %v", got)
+	if len(got) != 4 {
+		t.Fatalf("want weekly, stopped, a surge and money, got %v", got)
 	}
-	for _, kind := range []string{"weekly", "stopped", "surge"} {
+	for _, kind := range []string{"weekly", "stopped", "surge", "customer"} {
 		if a := got[kind]; !a.Enabled || a.Target != "mailto:owner@example.com" {
 			t.Errorf("%s: %+v", kind, a)
 		}

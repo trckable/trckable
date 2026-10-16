@@ -32,6 +32,9 @@ export function testModeName(provider: string) {
   return 'Test'
 }
 
+/** What the tag on a test-mode connection says on hover. */
+export const modeNote = 'Test payments are not counted, shown live or announced.'
+
 /** The small tag on a connection that runs in test mode. */
 export function modeTag(provider: string) {
   if (SANDBOX_NAMED.has(provider)) return 'Sandbox'
