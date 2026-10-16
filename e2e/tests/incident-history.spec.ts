@@ -43,8 +43,14 @@ test('an incident is marked on the chart and listed on its page', async ({ page 
   const mark = page.locator('.inc-mark').first()
   await expect(mark).toBeVisible({ timeout: 20_000 })
   await pageSettled(page) // nothing moves under the pointer after this
-  await mark.hover()
-  await expect(page.locator('.inc-tip')).toContainText('Down 3h 12m · not reachable')
+  // The chart can redraw under a pointer that is already there (the incident
+  // list lands late), and a pointer that never moved fires no new enter: leave
+  // and point again until the tooltip shows.
+  await expect(async () => {
+    await page.mouse.move(0, 0)
+    await mark.hover()
+    await expect(page.locator('.inc-tip')).toContainText('Down 3h 12m · not reachable', { timeout: 1500 })
+  }).toPass({ timeout: 15_000 })
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/incidents-chart-1280.png` })
 
   // The status panel has one quiet link to the history.
