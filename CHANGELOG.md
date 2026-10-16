@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Badge and widget links to trckable.com are nofollow.
+- The story's loading boxes follow the three-column answer cards, so nothing jumps when the numbers land.
 - On a desktop with nobody on the site, the "On the site right now" card stretches to the height of the Live card again, with its line in the middle, instead of shrinking to a short box. The green "Back" chip after a gap now shows only for a gap of 15 minutes or more, and goes an hour after visits came back (not a day).
 - The story's answers are compact: three columns and two rows on a desktop (1100 px and up; with five cards the last takes the two slots left), two columns on a tablet, one on a phone, with tighter padding and a shorter chart so no card looks empty. The heading no longer counts: "Your questions, answered" (also in German, French, Spanish, Italian and Dutch).
 - A site that stopped is told once and nothing floats over the page: the foot's status (red for down, amber for quiet) opens what happened and what to do, the Live card says Down or Quiet in its header, and the site's name carries a red or amber dot (a site that fails is never drawn green, even while visits still arrive). The floating Down badge is gone. Live is quieter when empty: a faint flat line instead of a wave and a pill, no heading over an empty sources bar, "Quiet since 14:05" instead of "Waiting for the first visit", the explanation behind a "?", and a card as tall as what it says; on a phone the on-site list is one line, Today comes first and the "Import your history" sheet no longer covers the first screen. The sign-in page keeps its help behind a "?".

@@ -151,7 +151,7 @@ func TestVerifiedAcrossTheAPI(t *testing.T) {
 	b, _ := io.ReadAll(res.Body)
 	res.Body.Close()
 	page := string(b)
-	if res.StatusCode != http.StatusOK || !strings.Contains(page, "Verified by trckable") || !strings.Contains(page, `href="https://trckable.com/?ref=verified"`) || strings.Contains(page, "Stripe") {
+	if res.StatusCode != http.StatusOK || !strings.Contains(page, "Verified by trckable") || !strings.Contains(page, `href="https://trckable.com/?ref=verified`) || strings.Contains(page, "Stripe") {
 		t.Fatalf("badge: %d %s", res.StatusCode, page)
 	}
 
@@ -188,7 +188,7 @@ func TestBadgeLinkFallsBack(t *testing.T) {
 	}
 	_, _ = g.ctl.DB.ExecContext(ctx, `UPDATE pay_connections SET last_event_at = ? WHERE id = ?`, now.Add(-time.Hour).Unix(), c.ID)
 	base := g.srv.URL + "/api/v1/sites/" + g.site
-	const home = `href="https://trckable.com/?ref=verified"`
+	const home = `href="https://trckable.com/?ref=verified`
 
 	mk := func(body string) (id, url string) {
 		_, out := do(t, owner, "POST", base+"/shares", body, csrf, "1")
