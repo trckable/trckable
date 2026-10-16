@@ -288,6 +288,8 @@ function Splash({ children }: { children?: React.ReactNode }) {
 
 const root = document.getElementById("root");
 if (!root) throw new Error("index.html has no #root");
+// A development build can answer from a fixture (?fixture=hn): the clock and the API, before the first request leaves.
+if (import.meta.env.DEV) await import("./dev/fixture").then((m) => m.installFixture());
 startEarly(); // first requests leave now (lib/earlyStart.ts)
 createRoot(root).render(
   <StrictMode>

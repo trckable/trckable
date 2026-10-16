@@ -47,6 +47,10 @@ export function sourceName(value: string): string {
   return KNOWN.find((k) => k.hosts.some((x) => h === x || h.endsWith('.' + x)))?.name ?? h
 }
 
+const SHORT: Record<string, string> = { 'Hacker News': 'HN', Newsletter: 'News', ChatGPT: 'GPT' }
+/** The short name a phone has room for. */
+export const sourceShort = (name: string): string => SHORT[name] ?? name
+
 export interface Top {
   name: string
   value: string

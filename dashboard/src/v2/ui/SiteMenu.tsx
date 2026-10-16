@@ -29,7 +29,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   const list = p.sites.filter((s) => s.name.toLowerCase().includes(q.toLowerCase()))
   return (
     <div ref={attach} style={{ position: 'relative' }}>
-      <button type="button" className="mk-chip" aria-haspopup="menu" aria-expanded={open} data-key="site" onClick={toggle}>
+      <button type="button" id="siteBtn" className="mk-chip" aria-haspopup="menu" aria-expanded={open} data-key="site" onClick={toggle}>
         <span className={`mk-dot ${cur?.down ? 'down' : ''}`} />
         <span className="nmx">{cur?.name ?? p.all}</span>
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">

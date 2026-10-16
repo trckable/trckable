@@ -4,7 +4,7 @@ import type { Bucket, Point, Result } from '../../lib/api'
 import { fmtDay } from '../../lib/dates'
 import { copy } from './copy'
 import type { ChartIn, Down } from '../ui/DayChart'
-import { mult, type Unit } from './model'
+import { mult, sourceShort, type Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -94,7 +94,7 @@ export function chartOf(a: ChartArgs): ChartIn {
   })
   const c0 = best >= 0 ? bandAt(best).c : 0
   const ratio = best >= 0 && c0 > 0.5 ? points[best].v / c0 : 0
-  const rise = best >= 0 ? { i: best, text: `${a.riseName ?? copy.traffic} · ${ratio >= 1.3 ? `${mult(ratio)} a usual ${hourly ? 'hour' : 'day'}` : 'above usual'}` } : undefined
+  const rise = best >= 0 ? { i: best, text: `${a.riseName ?? copy.traffic} · ${ratio >= 1.3 ? `${mult(ratio)} a usual ${hourly ? 'hour' : 'day'}` : 'above usual'}`, short: `${sourceShort(a.riseName ?? copy.traffic)} ${ratio >= 1.3 ? mult(ratio) : 'up'}` } : undefined
   return {
     points,
     span,

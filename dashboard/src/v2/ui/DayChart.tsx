@@ -49,7 +49,7 @@ export interface ChartIn {
   downs: Down[]
   notes: { i: number; text: string }[]
   /** The label over the biggest rise: "Hacker News · 2.4× a usual hour". */
-  rise?: { i: number; text: string }
+  rise?: { i: number; text: string; short: string }
 }
 
 const DOT = { up: '#c6ff3a', dn: '#ff6b6b', none: '#ececee' }
@@ -104,7 +104,7 @@ export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt
   const every = Math.max(1, Math.ceil(span / (ph ? 3 : 7)))
   const kfmt = (g: number) => (g >= 1000 ? `${g / 1000}k` : String(g))
   const bi = Math.min(ladder.length - 1, Math.floor(ladder.length * 0.08))
-  const rise = c.rise && pts[c.rise.i] && !(ph && c.downs.length > 0) ? { p: pts[c.rise.i], text: c.rise.text } : null
+  const rise = c.rise && pts[c.rise.i] && !(ph && c.downs.length > 0) ? { p: pts[c.rise.i], text: ph ? c.rise.short : c.rise.text } : null
   const ticks = c.points.filter((p) => p.tick && p.i % every === 0)
   return (
     <svg
