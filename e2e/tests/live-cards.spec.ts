@@ -47,7 +47,7 @@ test.beforeAll(async () => {
 
 async function signIn(page: Page, path = '/example.com') {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(API + path)
+  await page.goto(API + path + (path.includes('?') ? '&v=' : '?v='))
 }
 
 /** A new visitor on the test site, from a browser context of its own. */
@@ -66,48 +66,27 @@ async function visit(page: Page, name: string, people = 1) {
 }
 
 
-const cards = (page: Page) => page.locator('.lv-cards')
+const cards = (page: Page) => page.locator('.lcards')
 
-test('the cards show today and the page someone is on, and open Data on today', async ({ page }) => {
+test('the cards show today and the pages people are on', async ({ page }) => {
   await signIn(page, '/example.com?view=live')
-  const live = page.getByRole('region', { name: 'Live', exact: true })
-  await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('.lnow .lfig .lbign').first()).toBeVisible({ timeout: 15_000 })
   const run = await visit(page, 'livecards', 4)
-  const today = cards(page).locator('.lv-card', { hasText: 'Today so far' })
+  const today = cards(page).locator('.lcard', { hasText: 'Today' }).first()
   await expect(today).toBeVisible({ timeout: 10_000 })
-  await expect(today.locator('.kit-val b')).not.toHaveText('0')
-  const pages = cards(page).locator('.lv-card', { hasText: 'Top pages right now' })
-  const row = pages.getByRole('button', { name: new RegExp(run) })
-  await expect(row).toBeVisible({ timeout: 10_000 })
-  expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(36)
-
-  // A row narrows Data to that page, for today.
-  await row.click()
-  await expect(page).toHaveURL(/period=today/)
-  await expect(page).toHaveURL(new RegExp('f=.*' + run))
-  await expect(page).not.toHaveURL(/view=live/)
-
-  // The whole card opens today's numbers.
-  await signIn(page, '/example.com?view=live')
-  await expect(today).toBeVisible({ timeout: 15_000 })
-  await today.getByRole('button', { name: /Today so far/ }).click()
-  await expect(page).toHaveURL(/period=today/)
-  await expect(page).not.toHaveURL(/[?&]f=/)
+  await expect(today.locator('.lbig')).not.toHaveText(/^0/)
+  const pages = cards(page).locator('.lcard', { hasText: 'Pages' })
+  await expect(pages.locator('.lr', { hasText: run })).toBeVisible({ timeout: 10_000 })
 })
 
-test('on a phone the cards stack and nothing runs off the side', async ({ page }) => {
+test('on a phone the cards give way to the two panels and nothing runs off the side', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await signIn(page, '/example.com?view=live')
-  await expect(page.getByRole('region', { name: 'Live', exact: true }).locator('.live-online')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('.lnow .lfig .lbign').first()).toBeVisible({ timeout: 15_000 })
   await visit(page, 'livecards-phone-' + 'long-'.repeat(12))
-  const all = cards(page).locator('.lv-card')
-  await expect(all.first()).toBeVisible({ timeout: 10_000 })
-  const boxes = await all.evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => ({ x: r.x, y: r.y, w: r.width })))
-  for (const [i, b] of boxes.entries()) {
-    expect(b.w).toBeLessThanOrEqual(390)
-    if (i > 0) expect(b.y).toBeGreaterThan(boxes[i - 1].y)
-  }
-  const rows = await cards(page).locator('.bl-row').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right))
+  // The cards are for a wider screen; the two panels stack, and the long path stays inside its row.
+  await expect(page.locator('.lcards')).toBeHidden()
+  const rows = await page.locator('.lfeed .lv').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right))
   for (const right of rows) expect(right).toBeLessThanOrEqual(390)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })

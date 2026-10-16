@@ -47,7 +47,7 @@ test.beforeAll(async () => {
 async function open(page: Page, width: number, query: string) {
   await page.setViewportSize({ width, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(`${API}/${HISTORY_DOMAIN}${query}`)
+  await page.goto(`${API}/${HISTORY_DOMAIN}${query}${query.includes('?') ? '&v=' : '?v='}`)
 }
 
 // The suite's page adds ?v=explore to a dashboard address; a bare address is what is asked about here, so the browser goes there itself.
@@ -65,28 +65,26 @@ test('Live to Briefing: the sentence, the ring, a card in place, and the period'
   await expect(page).toHaveURL(/view=briefing/)
   await expect(tab(page, 'Briefing')).toHaveAttribute('aria-selected', 'true')
   // The tab opens on today; the site has no visits today, and says so plainly.
-  await expect(page.locator('.hero .hl').first()).toContainText('Nobody')
+  await expect(page.locator('.hero .mk-hl').first()).toContainText('Nobody')
   // A week has people: the sentence, the ring, the four numbers.
   await page.locator('.pill').click()
   await page.locator('#perMenu').getByRole('button', { name: /^Last 7 days/ }).click()
   await expect(page).toHaveURL(/period=7d/)
-  await expect(page.locator('.hero .hl').first()).toContainText('47 people')
+  await expect(page.locator('.hero .mk-hl').first()).toContainText('47 people')
   // A site in its first week has no normal yet: it says so where the ring would be.
   await expect(page.locator('.sidecol .sn')).toContainText('learn your normal over 7 days')
   await expect(page.locator('.kcs .kc')).toHaveCount(4)
-  // A card opens in place, and Escape closes it; the way deeper leaves the Briefing.
-  await page.locator('.icard .ic-h').first().click()
-  await expect(page.locator('aside.cd.on')).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(page.locator('aside.cd.on')).toHaveCount(0)
   // The range picker: Custom dates opens the calendar.
   await page.locator('.pill').click()
   await page.locator('#perMenu').getByRole('button', { name: /^Custom dates/ }).click()
-  await expect(page.locator('#perMenu .cal .cm')).toBeVisible()
+  await expect(page.locator('#perMenu .cal .mk-cm')).toBeVisible()
   await page.keyboard.press('Escape')
-  await page.locator('.icard').first().getByRole('button', { name: /Go deeper/ }).click()
-  await expect(page).not.toHaveURL(/view=briefing/)
-  await expect(page).toHaveURL(/v=explore/)
+  // The way deeper opens Explore over the Briefing, and Escape closes it.
+  await page.getByRole('button', { name: /^Explore all data/ }).last().click()
+  await expect(page.locator('aside.xp.on')).toBeVisible()
+  await expect(page).toHaveURL(/[?&]x=/)
+  await page.keyboard.press('Escape')
+  await expect(page.locator('aside.xp.on')).toHaveCount(0)
 })
 
 test('the Briefing is remembered until Live is chosen', async ({ page }) => {
@@ -96,8 +94,8 @@ test('the Briefing is remembered until Live is chosen', async ({ page }) => {
   await bare(page)
   await expect(page.locator('.brief')).toBeVisible()
   await tab(page, 'Live').click()
-  await bare(page)
-  await expect(page.locator('.brief')).toHaveCount(0)
+  await expect(page).toHaveURL(/view=live/)
+  expect(await page.evaluate(() => localStorage.getItem('trckable.tab'))).toBe('other')
 })
 
 test('on a phone the tabs are the bar at the bottom, and nothing runs off the side', async ({ page }) => {
@@ -106,7 +104,7 @@ test('on a phone the tabs are the bar at the bottom, and nothing runs off the si
   await expect(bar).toBeVisible()
   const box = (await bar.boundingBox())!
   expect(box.y + box.height, 'at the bottom of the screen').toBeGreaterThanOrEqual(899)
-  await expect(page.locator('.hero .hl.s')).toBeVisible()
+  await expect(page.locator('.hero .mk-hl.s')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
   await bar.getByRole('button', { name: 'Live' }).click()
   await expect(page.locator('.liveview')).toBeVisible()

@@ -59,7 +59,7 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
   const rows = useMemo(() => (data ? feedOf(data.recent, stream.visits, data.at, now) : []), [data, stream.visits, now])
   const lists = useMemo(() => listsOf(rows), [rows])
   const upSources = useMemo(() => new Set((busier?.why ?? []).filter((w) => w.dim === 'source').map((w) => w.value)), [busier])
-  if (!data) return <div className="liveview"><p className="mk-quiet">{failed ? copy.failed : copy.loading}</p></div>
+  if (!data) return <div className="liveview" role="region" aria-label={copy.live}><p className="mk-quiet">{failed ? copy.failed : copy.loading}</p></div>
   const n = online ?? 0
   const bars = barsOf(seriesAt(data, stream.visits, now))
   const ch = changeOf(data.visitors, data.previous)
@@ -70,11 +70,6 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
   const week7 = (week.data?.current.series ?? []).map((p) => p.visitors)
   return (
     <>
-      {!isShared() && (
-        <Suspense fallback={null}>
-          <MentionChip site={site} domain={whole?.domain} />
-        </Suspense>
-      )}
       <div className="liveview">
         <section className="mk-card lnow">
           <div className="lhead">
@@ -94,12 +89,17 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
             </div>
           </div>
           <BusyLine busier={busier} site={site} timezone={timezone} />
+          {!isShared() && (
+        <Suspense fallback={null}>
+          <MentionChip site={site} domain={whole?.domain} />
+        </Suspense>
+      )}
           {down && (
             <div className="downbox">
               {copy.downBox} <WhyInline why={whyDown({ domain: whole?.domain ?? '', cause: whole?.down_cause, minutes: 0, ongoing: true })} />
             </div>
           )}
-          <div className="mins">
+          <div className="mins" role="img" aria-label={copy.minsLabel(data.visitors)}>
             {bars.map((b, i) => (
               <i key={i} className={b.z ? 'z' : ''} style={{ height: `${b.h}%` }} />
             ))}

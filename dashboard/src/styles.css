@@ -2450,11 +2450,7 @@ body[data-mode] .card.overview {
 .view-switch {
   view-transition-name: view-switch;
 }
-.live-online {
-  view-transition-name: online-count;
-}
-.overview .chart-wrap,
-.live-line {
+.overview .chart-wrap {
   view-transition-name: main-chart;
 }
 ::view-transition-group(*) {

@@ -85,8 +85,6 @@ const PATHS: Record<string, ReactNode> = {
   milestone: <path d="M6 21V4M6 5h11l-2 4 2 4H6" />,
 }
 
-export type IconName = keyof typeof PATHS
-
 export function Ico({ name, className, strokeWidth = 1.7, style }: { name: string; className?: string; strokeWidth?: number; style?: CSSProperties }) {
   return (
     <svg className={className} style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

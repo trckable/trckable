@@ -134,7 +134,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const showInstall = showsInstall({ site, hasData, filtered: view.filters.length > 0, everTracked })
   const waiting = showInstall && stream.visits.length === 0
   const liveView = liveShown({ wanted: wantsLive(view, site), shared: isShared(), waiting }) // Data on a shared link, the install screen first
-  const briefing = !liveView && !isShared() && !waiting // the Briefing is every other face of an owner's dashboard; Explore is the panel over it
+  const briefing = !liveView && !isShared() && !waiting && view.v === undefined && (!!view.briefing || view.live !== false) // the Briefing is an owner's dashboard but for the older addresses (?view=data, ?v=explore), which keep the old Data
   const mods = useMods(site.id)
   const [journey, setJourney] = useState<string | null>(null)
   const [addGoals, setAddGoals] = useState(false)

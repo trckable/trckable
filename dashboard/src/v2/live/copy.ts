@@ -4,6 +4,7 @@ import { fmtInt } from '../../lib/format'
 
 export const copy = defineCopy('v2.live', {
   live: 'Live',
+  minsLabel: (n: number) => `Visitors per minute over the last 30 minutes: ${n} in all`,
   window: (at: string) => `Last 30 minutes · ${at}`,
   onlineNow: 'Online now',
   visitors30: 'Visitors, last 30 min',

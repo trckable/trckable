@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { Busier } from './api'
-import { BusierLine } from './BusierLine'
+import { BusyLine as BusierLine } from '../../v2/ui/BusyLine'
 import { asSurge, clock, parts, shown } from './busier'
 
 // 14:32 in Tirana (UTC+2 in October)

@@ -1,22 +1,14 @@
 // Moving between Live, the Briefing and Data, deliberately: Live is one screen,
-// so it opens at the top; the others come back scrolled to where they were left. Live's code is
-// awaited (briefly) before the switch, so the change is one frame to the next
-// with nothing blank in between.
+// so it opens at the top; the others come back scrolled to where they were left.
 import { rememberTab, type Tab } from '../../lib/tab'
 import { readView, setView } from '../../lib/url'
 import { transition } from '../../lib/viewTransition'
-import { preloadLive } from './liveChunk'
 import { minuteView } from './minute'
 
-// Long enough for a chunk on a slow line; past it the switch goes ahead and
-// Live shows its placeholder rather than making the click feel ignored.
-const WAIT_MS = 400
 // How long a restored scroll place is held while the page fills in.
 const SETTLE_MS = 1500
 
 let dataScroll = 0
-
-const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
 export async function switchView(live: boolean, now: boolean): Promise<void> {
   if (now === live) return
@@ -36,7 +28,6 @@ export async function switchTab(to: Tab, from: Tab): Promise<void> {
   rememberTab(to)
   if (to === 'live') {
     dataScroll = scrollY
-    await Promise.race([preloadLive().catch(() => undefined), pause(WAIT_MS)])
   }
   const top = to === 'live' ? 0 : dataScroll
   await transition(

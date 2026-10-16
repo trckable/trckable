@@ -65,3 +65,11 @@
     padding-top: 0;
   }
 }
+/* The cards that slide up from the bottom (a busy moment) stop at the bar of the three places, not behind it. */
+@media (max-width: 600px) {
+  body:has(#app.mk) .side-deck {
+    bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+}
+/* A dialog opened over the page covers the tab bar too. */
+body:has(.modal-back) .mk .tabbar{z-index:30}

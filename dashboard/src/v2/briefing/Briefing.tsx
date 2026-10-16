@@ -43,6 +43,7 @@ import { useSlices } from './useSlices'
 import { useBriefingKeys } from './useBriefingKeys'
 import { readerOf, readerWords } from './reader'
 import { useBriefingState } from './useBriefingState'
+import { useRecent } from './useRecent'
 import { useHistory, useHourly, wantsHours } from './useHistory'
 import { useParts } from './useParts'
 import { useSlice } from './useSeries'
@@ -91,6 +92,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const usual = useUsual(site.id, range.to, unit === 'today' || unit === 'yesterday')
   const hist = useHistory(site, today, data?.bucket === 'hour', !!data)
   const notes = useNotes(site.id, { from: addDays(today, -365), to: today }, () => undefined)
+  const recent = useRecent(site.id, true)
   const goalValue = (cur0?.goals ?? []).find((g) => g.visitors > 0)?.value
   const goalSlice = useSlice(site, range, data?.bucket, goalValue ? { dim: 'goal', value: goalValue } : null)
   const downNow = !!site.down_since
@@ -178,7 +180,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
         )}
       </span>
     ) : undefined
-  const reader = readerOf(visits, site.domain, top?.value)
+  const reader = readerOf(recent.length ? recent : visits, site.domain, top?.value)
   const sub = heroSub(reader && !learning && !low ? copy.meet(readerWords(reader)) : null, low, say.sub)
   const dots = Math.min(80, Math.round(v))
   const crowd = low && !learning ? { big: v === 1 ? copy.onePerson : copy.nPeople(fmtInt(v)), n: dots, note: copy.dotNote(dots < Math.round(v) ? dots : 0) } : null
@@ -222,6 +224,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
           }
         />
         {!empty && <Kcs items={kcs} />}
+        <div className="npw" />
         <WatchCard rows={watchRows} onStop={(k) => toggleWatch(k, { at: 0, m: 0, u: '' })} />
         {empty ? <p className="mk-quiet">{copy.empty}</p> : <CardList list={shown} c={ctx} />}
         {rest.length > 0 && (

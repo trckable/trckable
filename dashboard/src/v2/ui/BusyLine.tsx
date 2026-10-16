@@ -13,13 +13,16 @@ export function BusyLine({ busier, site, timezone }: { busier: Busier | null; si
   if (!busier || shown(busier) !== 'busier') return null
   return (
     <>
-      <div className="since" style={{ margin: 'var(--mk-s3) 0 0', alignSelf: 'flex-start', maxWidth: '100%' }} role="status">
+      <p className="since live-busier-line" style={{ margin: 'var(--mk-s3) 0 0', alignSelf: 'flex-start', maxWidth: '100%', minWidth: 0 }} role="status">
         <span className="mk-pulse" />
-        {copy.busier(busier.now, busier.usual)} · {parts(busier, timezone).join(' · ')} ·{' '}
-        <button type="button" className="lk3" aria-haspopup="dialog" onClick={() => setOpen(true)}>
-          {copy.why} {'→'}
+        <span className="live-busier-head">{copy.busier(busier.now, busier.usual)}</span>
+        <button type="button" className="lk3 live-busier-parts" aria-haspopup="dialog" onClick={() => setOpen(true)} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+          {parts(busier, timezone).join(' · ')}
         </button>
-      </div>
+        <button type="button" className="lk3 live-busier-why" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+          {copy.why} {'\u2192'}
+        </button>
+      </p>
       {open && <SurgeModal surge={asSurge(busier)} site={site} tz={timezone} onClose={() => setOpen(false)} onSee={() => setOpen(false)} />}
     </>
   )

@@ -1,7 +1,7 @@
 // The cards' words, as the walkthrough writes them.
 import { defineCopy } from '../../i18n'
 
-export const copy = defineCopy('cards', {
+export const copy = defineCopy('briefing.cards', {
   // Uptime.
   stoppedAt: (d: string, at: string) => `${d} stopped answering at ${at}`,
   wasDownFor: (d: string, min: number) => `${d} was down for ${min} minutes`,

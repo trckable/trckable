@@ -1,8 +1,7 @@
 // Live | Briefing | Data: which of the three the dashboard shows. On a phone it is the
 // bar at the bottom of the screen (the thumb's), elsewhere a segmented control. A pill glides under the
 // chosen one (styles.css, .view-switch); L flips it from anywhere but a
-// text field. It stays tiny: it loads with the dashboard, Live itself does not,
-// but pointing at the switch or focusing it starts fetching Live's code.
+// text field.
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { caps, keyFor, pressed, useKeymap } from '../../lib/keys'
@@ -10,12 +9,8 @@ import { wantsBriefing, type Tab } from '../../lib/tab'
 import { useNarrow } from '../../lib/useNarrow'
 import { entryCopy as copy } from './entryCopy'
 import { liveCount, liveLink, siteDown } from './liveLink'
-import { preloadLive } from './liveChunk'
 import { navigate, readView, writeView } from '../../lib/url'
 import { switchTab } from './switchView'
-
-// A failed fetch is not an error here: the click tries again and Live says so.
-const warm = () => void preloadLive().catch(() => undefined)
 
 function tabOf(live: boolean, briefing: boolean): Tab {
   if (live) return 'live'
@@ -54,7 +49,7 @@ export function ViewSwitch({ live, briefing = false }: { live: boolean; briefing
   if (live && !linked) classes.push('lost')
   if (down) classes.push('down')
   const bar = (
-    <div className={classes.filter(Boolean).join(' ')} role="group" aria-label={copy.switchLabel} title={copy.switchTitle(key)} onPointerEnter={warm} onFocus={warm}>
+    <div className={classes.filter(Boolean).join(' ')} role="group" aria-label={copy.switchLabel} title={copy.switchTitle(key)}>
       <span className="view-pill" aria-hidden="true" />
       <button type="button" aria-pressed={live} aria-keyshortcuts={key} aria-label={n ? copy.liveOnline(n) : undefined} onClick={() => go('live')}>
         <span className="pulse" aria-hidden="true" />

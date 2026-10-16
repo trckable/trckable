@@ -21,7 +21,7 @@ export function FeedList({ rows, up, clock, more, onVisitor }: { rows: Row[]; up
         return (
           <button key={r.key} type="button" className="lv" onClick={() => r.visitor && onVisitor?.(r.visitor)} disabled={!r.visitor || !onVisitor}>
             <span className={`mk-dot ${hot ? '' : 'off'}`} />
-            <span className="pg mono">{r.kind === 'active' ? copy.still : (r.path ?? '/')}</span>
+            <span className="pg mono" title={r.path}>{r.kind === 'active' ? copy.still : (r.path ?? '/')}</span>
             <span className="src" style={hot ? { color: 'var(--mk-lime)' } : undefined}>
               {src}
             </span>

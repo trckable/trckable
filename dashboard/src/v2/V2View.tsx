@@ -19,6 +19,7 @@ import { LANGUAGES } from '../i18n/languages'
 import { THEMES, useTheme } from '../lib/theme'
 import { openShortcuts } from '../components/ShortcutsHost'
 import { useOverview } from '../views/useOverview'
+import { useViewKeys } from './useViewKeys'
 import { Bell } from './bell/Bell'
 import { useNotices } from './bell/useNotices'
 import { useV2Extras } from './slots'
@@ -107,6 +108,7 @@ export function V2View(p: V2Props) {
   )
   const here = p.tab
   const [find, setFind] = useState(false)
+  useViewKeys(here)
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
