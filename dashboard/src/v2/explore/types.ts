@@ -1,7 +1,6 @@
 import type { Filter } from '../../lib/api'
 
-// What Explore draws. Each section reads one of these; the real ones are made from the API's answers (data/), the
-// sample ones (fixture/, development only) are written down in the same shape.
+// What Explore draws. Each section reads one of these, made from the API's answers (data/).
 
 /** Against the usual: above it, below it, or inside it. */
 export type Tone = '' | 'up' | 'dn'
@@ -210,15 +209,4 @@ export interface SavedView {
   id?: string
   name: string
   filters: Filter[]
-}
-
-/** The sample world the development fixture draws: one site, one period, a few sets of filters. */
-export interface World {
-  site: string
-  label: string
-  connected: Connected
-  options: Record<FilterDim, Option[]>
-  views: SavedView[]
-  /** The answers by filter key (see filterKey). */
-  variants: Record<string, Tabs>
 }

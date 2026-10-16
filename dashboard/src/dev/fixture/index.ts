@@ -1,6 +1,6 @@
 // Fixture mode (a development build only): `?fixture=hn` answers the whole API from one of the mock's scenarios, with the
 // clock at the scenario's "now", so the page can be set beside the mock number for number. `&conn=` says what is
-// connected: none (the default), rev, search or both. The choice is kept for the tab, so a reload or a link inside the
+// connected: none (the default), rev, search or both; `&hold=1` never answers a report, so a loading shape can be looked at. The choice is kept for the tab, so a reload or a link inside the
 // app stays on it. main.tsx loads this behind `import.meta.env.DEV`, so a production build carries none of it.
 import { SCN, END, SITES, SRCS } from './data'
 import { buildWorld } from './engine'
@@ -18,7 +18,7 @@ function connOf(name: ConnName): Conn {
   return { rev: name === 'rev' || name === 'both', search: name === 'search' || name === 'both', goals: true, uptime: true, alerts: true }
 }
 
-function chosen(): { name: string; conn: ConnName } | null {
+function chosen(): { name: string; conn: ConnName; hold: boolean } | null {
   const sp = new URLSearchParams(location.search)
   const fromUrl = sp.get('fixture')
   let raw = fromUrl
@@ -30,19 +30,20 @@ function chosen(): { name: string; conn: ConnName } | null {
     }
   }
   if (!raw) return null
-  const [name, suffix] = raw.split(':')
+  const [name, suffix, kept] = raw.split(':')
   const asked = sp.get('conn') ?? suffix ?? 'none'
+  const hold = sp.has('fixture') ? sp.has('hold') : kept === 'hold'
   const conn = (CONNS as readonly string[]).includes(asked) ? (asked as ConnName) : 'none'
   if (!(name in SCN)) {
     console.warn(`fixture: no scenario "${name}"; there are ${Object.keys(SCN).join(', ')}`)
     return null
   }
   try {
-    sessionStorage.setItem(KEY, `${name}:${conn}`)
+    sessionStorage.setItem(KEY, `${name}:${conn}${hold ? ':hold' : ''}`)
   } catch {
     /* only the reload forgets it */
   }
-  return { name, conn }
+  return { name, conn, hold }
 }
 
 /** The page's clock stands at one moment, as the mock's does. */
@@ -71,8 +72,9 @@ export function installFixture() {
   window.fetch = (input, init) => {
     const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url, location.origin)
     if (!url.pathname.startsWith('/api/v1/')) return real(input, init)
+    if (pick.hold && /\/report(\/|\?|$)/.test(url.pathname)) return new Promise<Response>(() => undefined)
     const method = (init?.method ?? (input instanceof Request ? input.method : 'GET')).toUpperCase()
-    const r = answer(ctx, method, url.pathname.slice('/api/v1'.length), url.searchParams)
+    const r = answer(ctx, method, url.pathname.slice('/api/v1'.length), url.searchParams, typeof init?.body === 'string' ? (JSON.parse(init.body) as unknown) : undefined)
     if (!r) {
       console.warn(`fixture: no answer for ${method} ${url.pathname}`)
       return Promise.resolve(new Response(JSON.stringify({ error: 'not in the fixture' }), { status: 404, headers: { 'Content-Type': 'application/json' } }))

@@ -154,7 +154,7 @@ export default function PanelContent(p: ContentProps) {
       <div className="xph">
         <b>{copy.title}</b>
         <span className="mk-quiet" id="xpSub">
-          {x.siteName} {'·'} {meta.label ?? p.label}
+          {x.siteName} {'·'} {p.label}
         </span>
         <FullButton full={p.full} onClick={p.onFull} />
         <button type="button" className="ib x" id="xpClose" title={copy.close} onClick={p.close}>

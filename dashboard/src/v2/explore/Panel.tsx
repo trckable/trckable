@@ -2,7 +2,6 @@
 // a phone a sheet from the bottom. It is always in the page, off to the side, so opening it is a slide, not a build.
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import './explore.css'
-import './data/xfx'
 import { MkPortal } from '../ui/Portal'
 import { copy } from '../copy'
 import type { ContentProps } from './PanelContent'

@@ -1,5 +1,5 @@
 // The API a fixture answers with, by path. Anything it does not know answers 404, and says so in the console. Dev only.
-import type { Site, VerifiedSource } from '../../lib/api'
+import type { FunnelStep, Site, VerifiedSource } from '../../lib/api'
 import { CTYS, DEVS, END, GSC, SITES, SRCS, type SiteDef } from './data'
 import {
   countIn,
@@ -16,6 +16,7 @@ import {
   type Ctx,
 } from './report'
 import { busierOf, nowOf } from './live'
+import { crawlersOf, funnelOf, linksOf, segments } from './sections'
 import { hash, mulberry, pick } from './rand'
 import { osOf, visitsOf, BROWSERS } from './visits'
 
@@ -188,7 +189,13 @@ function searchReport(c: Ctx, id: string, sp: URLSearchParams) {
   return { property: `sc-domain:${siteOf(id).name}`, dim, rows: dim === 'query' ? list : null, from: q.from, to: q.to, clicks: list.reduce((p, x) => p + x.clicks, 0), impressions: list.reduce((p, x) => p + x.impressions, 0), preliminary_from: dateOf(c, END - 1), ignored_filters: null }
 }
 
-export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams): Reply | null {
+export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams, body?: unknown): Reply | null {
+  const seg = /^\/sites\/([^/]+)\/segments(?:\/(.+))?$/.exec(path)
+  if (seg && method === 'POST') return ok(segments.add(decodeURIComponent(seg[1]), body as { name: string; query: string }))
+  if (seg?.[2] && method === 'DELETE') {
+    segments.drop(decodeURIComponent(seg[1]), seg[2])
+    return none()
+  }
   if (method !== 'GET') return none()
   const sites = SITES
   switch (path) {
@@ -251,7 +258,13 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case 'search-console':
       return ok(c.conn.search ? { connected: true, connection: { client_email: 'trckable@fixture.iam.gserviceaccount.com', property: `sc-domain:${site.name}`, created_at: secs(c, c.nowAbs - 9000) } } : { connected: false })
     case 'segments':
-      return ok({ segments: [] })
+      return ok(segments.list(id))
+    case 'report/funnel':
+      return ok(funnelOf(c, id, parseQuery(sp), JSON.parse(sp.get('steps') ?? '[]') as FunnelStep[]))
+    case 'report/crawlers':
+      return ok(crawlersOf(c, id, parseQuery(sp)))
+    case 'report/goal-props':
+      return ok(linksOf(c, id, parseQuery(sp)))
     case 'modules':
       return ok({ modules: [], script: { size: 0, gz: 0 } })
     case 'incidents': {
