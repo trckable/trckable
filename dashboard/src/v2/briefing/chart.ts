@@ -42,6 +42,8 @@ export interface ChartArgs {
   bands?: (Band | null)[]
   /** The whole period against its usual, for the standing note. */
   overall?: Judged
+  /** Sales to mark on the line, with when each was (the site's clock) and what it came to as written. */
+  sales?: { at: string; text: string; neg?: boolean; size: number }[]
 }
 
 const bandFrom = (was: number[], i: number): Band => {
@@ -97,9 +99,21 @@ export function chartOf(a: ChartArgs): ChartIn {
   const rise = best >= 0 ? { i: best, text: `${a.riseName ?? copy.traffic} · ${ratio >= 1.3 ? `${mult(ratio)} a usual ${hourly ? 'hour' : 'day'}` : 'above usual'}`, short: `${sourceShort(a.riseName ?? copy.traffic)} ${ratio >= 1.3 ? mult(ratio) : 'up'}` } : undefined
   // The axis names every bucket of the span, the hours still to come too.
   const axis = a.cur.series.slice(0, span).map((p, i) => ({ i, tick: tickOf(hourly, a.cur.series.length, Number(p.t.slice(11, 13)), p.t.slice(0, 10), fmtDay(p.t.slice(0, 10))) }))
+  // A sale sits where it happened on the hours of the day, when the chart is by the hour and short enough to read them.
+  const sales =
+    hourly && a.cur.series.length <= 48
+      ? (a.sales ?? [])
+          .flatMap((x) => {
+            const i = a.cur.series.findIndex((p) => p.t.slice(0, 13) === x.at.slice(0, 13))
+            return i < 0 ? [] : [{ at: i + Number(x.at.slice(14, 16)) / 60, text: x.text, neg: x.neg, size: x.size }]
+          })
+          .sort((p, q) => q.size - p.size)
+          .map(({ at, text, neg }) => ({ at, text, neg }))
+      : []
   return {
     points,
     axis,
+    sales,
     span,
     live,
     band,

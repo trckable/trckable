@@ -1017,6 +1017,7 @@
 .mk .khint{display:flex;gap:var(--mk-s2) var(--mk-s4);flex-wrap:wrap;justify-content:center;align-items:center;font-size:12px;color:var(--mk-faint)}
 .mk .khint kbd{border:1px solid var(--mk-line);border-radius:5px;padding:0 5px;font:inherit;font-size:12px;color:var(--mk-muted)}
 .mk .npw{position:sticky;top:64px;height:0;margin:-8px 0;z-index:6;display:flex;justify-content:center;pointer-events:none}
+.mk .newpill{pointer-events:auto;height:32px;padding:0 var(--mk-s4);border-radius:16px;background:var(--mk-lime);color:#0a0b0c;font-weight:700;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:mk-rise .3s both}
 .mk .sk-t{width:150px;height:22px}
 .mk .sk-h1{width:78%;height:30px;margin-top:16px}
 .mk .sk-h2{width:52%;height:30px;margin-top:10px}

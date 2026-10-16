@@ -39,6 +39,7 @@ import { bounceNote, kpiCards, noteOf, pctText, usualNote } from './kpis'
 import { unitOf } from './model'
 import { calmTopics, type Story } from './cards'
 import { runAct } from './actions'
+import { useCardLock } from './useCardLock'
 import { useExtras } from './useExtras'
 import { useSlices } from './useSlices'
 import { useBriefingKeys } from './useBriefingKeys'
@@ -107,7 +108,9 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const rv = useReplayView({ site, today, cur: cur0, end, dayStart, slices, extras, incidents: up.list, money: money })
   const cur = rv.cur
   const parts = useParts({ site, cur, prev, usual, unit, range, today, bucket: data?.bucket, hist, up, downMin, nowSec, notes: notes.notes, slices, extras, money, clockAt: rv.clockAt })
-  const keyed = parts?.stories.filter((x) => !rv.held(x)) ?? []
+  // The cards keep the order the page opened with; what is new waits behind the pill.
+  const lock = useCardLock([site.id, period, range.from, range.to].join('|'), parts?.stories.filter((x) => !rv.held(x)) ?? [])
+  const keyed = lock.known
   useBriefingKeys({ cards: (ui.all ? keyed : keyed.slice(0, 4)).map((s) => s.key), ui, open: (k) => ui.setOpen(keyed.find((s) => s.key === k) ?? null) })
   if (!cur || !parts) return loading || !data ? <Skeleton height={420} label={copy.loading} /> : null
   const label = unit === 'today' ? `${presetById('today')?.label ?? 'Today'} · ${dayWords(range.to)}` : (presetById(period)?.label ?? fmtRange(range, today))
@@ -166,8 +169,8 @@ export default function Briefing({ site, data: page, loading, period, range, mon
     money,
     moneyVals: cur.series.slice(0, pts.length).map((p) => p.revenue ?? 0),
   })
-  const shown = stories.slice(0, 4)
-  const rest = stories.slice(4)
+  const shown = lock.known.slice(0, 4)
+  const rest = lock.known.slice(4)
   const act = nextStep({ site, cur, stories, top, downNow })
   const setups = setupRows({ site, cur, can: setupState.can, noSearch: setupState.noSearch, noAlerts: setupState.noAlerts, onGoal })
   const heroWhy = stories.find((x) => x.key === 'uptime')?.cause ?? stories.find((x) => x.key === 'sources')?.cause ?? (usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : null)
@@ -244,7 +247,13 @@ export default function Briefing({ site, data: page, loading, period, range, mon
           }
         />
         {!empty && <Kcs items={kcs} />}
-        <div className="npw" />
+        <div className="npw">
+          {lock.queued.length > 0 && (
+            <button type="button" className="newpill" onClick={lock.release}>
+              {copy.newCards(lock.queued.length)}
+            </button>
+          )}
+        </div>
         <WatchCard rows={watchRows} onStop={(k) => toggleWatch(k, { at: 0, m: 0, u: '' })} />
         {empty ? <p className="mk-quiet">{copy.empty}</p> : <CardList list={shown} c={ctx} />}
         {rest.length > 0 && (

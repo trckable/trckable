@@ -161,7 +161,7 @@ export function useParts(a: PartsIn) {
       const last = cur.series.reduce((k, p, i) => (p.t.slice(0, 10) === n.day ? i : k), first)
       return [{ i: hourly ? Math.min(first + 12, last) : first, text: n.text }]
     })
-    const chart = chartOf({ cur, prev, bucket: bucket ?? 'day', unit, nowT: live ? clock : undefined, weekday, riseName: top?.times && top.times >= 1.5 ? top.name : undefined, downs, notes: marks, bands, overall: st })
+    const chart = chartOf({ cur, prev, bucket: bucket ?? 'day', unit, nowT: live ? clock : undefined, weekday, riseName: top?.times && top.times >= 1.5 ? top.name : undefined, downs, notes: marks, bands, overall: st, sales: money && extras.buyers ? extras.buyers.filter((b) => b.amount > 0).map((b) => ({ at: siteNow(site.timezone, new Date(b.at)), text: money(b.amount), size: b.amount })) : undefined })
     const mo =
       hist.daily && !learning && !low
         ? moments({ totals, days, todayUp: unit === 'today' ? st === 'up' : false, from: Math.max(0, days.indexOf(range.from)), to: Math.max(0, days.indexOf(range.to)), elapsed: Math.round(nowHour * 60), today: unit === 'today', week: unit === 'week', filtered: false })

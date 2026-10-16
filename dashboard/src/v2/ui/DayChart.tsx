@@ -52,6 +52,8 @@ export interface ChartIn {
   notes: { i: number; text: string }[]
   /** The label over the biggest rise: "Hacker News · 2.4× a usual hour". */
   rise?: { i: number; text: string; short: string }
+  /** Sales on the line of the day: where on the axis (in buckets, with the part of the hour), and the amount as written. */
+  sales?: { at: number; text: string; neg?: boolean }[]
 }
 
 const DOT = { up: '#c6ff3a', dn: '#ff6b6b', none: '#ececee' }
@@ -183,6 +185,21 @@ export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt
           )}
         </>
       )}
+      {(c.sales ?? []).slice(0, ph ? 12 : 10).map((x) => {
+        const xx = edge(x.at)
+        const col = x.neg ? '#ff6b6b' : '#c6ff3a'
+        if (ph) return <circle key={`${x.at}${x.text}`} cx={xx} cy={B - 5} r="3.5" fill={col} />
+        const w = x.text.length * 7 + 14
+        return (
+          <g key={`${x.at}${x.text}`}>
+            <line x1={xx} x2={xx} y1={B} y2={B - 30} stroke={col} strokeDasharray="2 3" />
+            <rect x={xx - w / 2} y={B - 24} width={w} height="20" rx="10" fill={x.neg ? '#3a1a1a' : '#2a3410'} stroke={col} />
+            <text x={xx} y={B - 10} fill={col} fontSize="12" textAnchor="middle">
+              {x.text}
+            </text>
+          </g>
+        )
+      })}
       {c.notes.map((n) => (
         <path key={`${n.i}${n.text}`} d={`M${X(n.i) - 6} ${B - 1}h12l-6-10z`} fill="#f0c64a">
           <title>{n.text}</title>

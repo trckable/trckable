@@ -185,6 +185,7 @@ export const copy = defineCopy('briefing', {
   detail: 'Detail',
   rows: 'The numbers behind it',
   more: (n: number) => `${n === 1 ? 'More' : 'More'} (${n} smaller ${n === 1 ? 'change' : 'changes'})`,
+  newCards: (n: number) => `${n} new`,
   hideMore: (n: number) => `Hide (${n} smaller ${n === 1 ? 'change' : 'changes'})`,
   wasNormal: 'Everything was normal',
   allNormal: 'Everything else was normal',
