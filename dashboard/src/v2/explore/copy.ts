@@ -172,12 +172,6 @@ export const copy = defineCopy('v2explore', {
   when: 'When',
   bot: 'Bot',
   requests: 'Requests',
-  sample: 'Sample',
-  lock: {
-    rev: { title: 'Revenue', line: 'See what each source earns', hint: 'Connect Stripe, Paddle or Lemon Squeezy', button: 'Connect' },
-    search: { title: 'Google search', line: 'See the searches that bring people', hint: 'Connect Google Search Console', button: 'Connect' },
-    goals: { title: 'Goals', line: 'See what counts as a win', hint: 'Pick a signup or a purchase', button: 'Set up' },
-  },
   howWorks: 'How it works',
   how: {
     rev: 'Connect a payment provider and every sale is matched to the visit that brought it. Nothing about the buyer is stored.',
