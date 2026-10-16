@@ -104,17 +104,20 @@ jobs:
       - name: govulncheck
         run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 
-  # The tests in two halves side by side: the ledger and the API take as long
-  # as everything else together. Between them, every package in ./... runs.
+  # The tests in three parts side by side: the API and the ledger each take as
+  # long as everything else together (the API alone passed the default 10-minute
+  # limit of go test under the race detector when it shared a runner with the
+  # ledger). Between them, every package in ./... runs.
   server-test:
     name: server tests (${{ matrix.part }})
     needs: changes
     if: needs.changes.outputs.server_pkgs != ''
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        part: [ledger and api, the rest]
+        part: [api, ledger, the rest]
     defaults:
       run:
         working-directory: server
@@ -139,14 +142,14 @@ jobs:
             echo "changed: $CHANGED"
           fi
           slow='/internal/(ledger|api)$'
-          if [ "${{ matrix.part }}" = "ledger and api" ]; then
-            pkgs=$(echo "$all" | grep -E "$slow" || true)
-          else
-            pkgs=$(echo "$all" | grep -vE "$slow" || true)
-          fi
+          case "${{ matrix.part }}" in
+            api) pkgs=$(echo "$all" | grep -E '/internal/api$' || true) ;;
+            ledger) pkgs=$(echo "$all" | grep -E '/internal/ledger$' || true) ;;
+            *) pkgs=$(echo "$all" | grep -vE "$slow" || true) ;;
+          esac
           [ -n "$pkgs" ] || { echo "nothing of this half is affected"; exit 0; }
           echo "$pkgs"
-          go test $pkgs $race -count=1 -short
+          go test $pkgs $race -count=1 -short -timeout 20m
 
   server-crash:
     name: server crash, backup and upgrade
