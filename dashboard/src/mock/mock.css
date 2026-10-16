@@ -1377,12 +1377,54 @@
  .mk .chwrap .chart{display:block;margin:0}
 }
 
+/* Round 12: the phone Briefing on one full-width grid, as the walkthrough has it. */
+.mk .sincem{display:none}
+@container (max-width:600px){
+ .mk .hd .bellw{order:1;margin-left:auto!important}
+ .mk .hd .account-menu{order:2;margin-left:0!important}
+ .mk .hd .account-btn{margin-left:0}
+ .mk .hd .bellw .ib.bell,.mk .hd .account-btn{width:44px;height:44px}
+ .mk .hl-col{display:grid;grid-template-columns:1fr 1fr;column-gap:var(--mk-s2);row-gap:var(--mk-s3);align-items:center}
+ .mk .hl-col>*{grid-column:1/-1;margin:0!important;min-width:0}
+ .mk .hl-col>.tline{grid-column:1;justify-self:start;order:0}
+ .mk .hl-col>.since{display:none}
+ .mk .hl-col>.since.off{display:flex;order:5;height:auto;min-height:28px;white-space:normal}
+ .mk .hl-col>.sincem{display:block;grid-column:2;justify-self:end;text-align:right;font-size:12px;color:var(--mk-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;order:0}
+ .mk .hl-col>.sincem b{color:var(--mk-text);font-weight:600}
+ .mk .hl-col>.mk-hl.s{order:1}
+ .mk .hl-col>.hsub{order:2}
+ .mk .hl-col>.moments{display:flex;order:3;margin-top:calc(var(--mk-s2) * -1)!important;gap:var(--mk-s3)}
+ .mk .hl-col>.moments .mom{display:inline-flex;align-items:center;gap:var(--mk-s2);height:auto;min-height:0;margin:0;padding:0;border:0;background:none;color:var(--mk-muted);font-size:13px}
+ .mk .hl-col>.moments .mom::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--mk-lime);flex:none}
+ .mk .hl-col>.rpb,.mk .hl-col>.whyb{order:4;grid-column:auto;width:100%;height:44px;padding:0;border-radius:12px}
+ .mk .hl-col:not(:has(>.whyb))>.rpb,.mk .hl-col:not(:has(>.rpb))>.whyb{grid-column:1/-1}
+ .mk .pulsewrap{display:block;margin-top:var(--mk-s3)}
+ .mk .pulsewrap .mk-ring{display:none}
+ .mk .contrib{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--mk-line);border-radius:16px;background:var(--mk-card2);overflow:hidden;flex:none}
+ .mk .contrib button{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:2px;height:auto;min-height:44px;padding:var(--mk-s3);border:0;border-radius:0;text-align:left;min-width:0}
+ .mk .contrib button+button{border-left:1px solid var(--mk-line)}
+ .mk .contrib button::after{inset:0}
+ .mk .contrib button b{order:1;font-size:24px;line-height:1.15;font-weight:650;color:var(--mk-text)}
+ .mk .contrib button b .cn{display:block;position:absolute;top:var(--mk-s3);left:var(--mk-s3);font-size:12px;font-weight:500;color:var(--mk-muted);line-height:16px}
+ .mk .contrib button{position:relative;padding-top:calc(var(--mk-s3) + 20px)}
+ .mk .contrib button>span{order:2;display:block;font-size:12px;line-height:16px;color:var(--mk-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
+ .mk .contrib button.up b,.mk .contrib button.up:first-child b{color:var(--mk-text)}
+ .mk .contrib button.up[data-contrib="traffic"] b,.mk .contrib button.up:first-child b{color:var(--mk-lime)}
+ .mk .contrib button.dn b{color:var(--mk-red)}
+ .mk .contrib button b .cn{color:var(--mk-muted)!important}
+ .mk .chwrap{margin-top:var(--mk-s3)}
+ .mk .chwrap .nbtn{margin-left:auto}
+}
+
 /* The person's menu in the page header is today's account menu (components/AccountMenu), kept as it is: it hangs from the
    avatar's right edge like the walkthrough's menus and takes their colours. */
 .mk .hd .account-menu{position:relative;flex:none}
-.mk .hd .account-menu .account-btn{width:32px;height:32px;padding:0;border:0;background:none;box-shadow:none;display:grid;place-items:center;border-radius:50%}
+.mk .hd .account-menu .account-btn{padding:0;border:0;background:none;box-shadow:none;display:grid;place-items:center;border-radius:50%}
 .mk .hd .account-menu .more-menu{right:0;left:auto;top:calc(100% + var(--mk-s2));width:280px;min-width:0;max-width:calc(100vw - 16px);background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:var(--z-menu)}
 /* "Why?" beside "Replay": two buttons in a line, aligned at the top so the line is as tall as the walkthrough's one. */
 .mk .hl-col .rpb{vertical-align:top}
 /* A period being read: the page of the last one stays, dimmed, until the new one is whole. */
 .mk .mk-held{opacity:.55;transition:opacity .2s;pointer-events:none}
+@container (min-width:601px){.mk .hd .account-menu .account-btn{width:32px;height:32px}}
+/* "Why?" is kept on every width, beside Replay: the walkthrough hides it on a desktop. */
+.mk .whyb.rpb{display:inline-flex}

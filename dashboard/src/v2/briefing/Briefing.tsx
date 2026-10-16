@@ -190,6 +190,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const down = up.list.reduce((n, x) => n + Math.max(0, Math.min(x.ended_at ?? nowSec, nowSec) - Math.max(x.started_at, lockSec)), 0)
   const sn = unit === 'today' && v > 0 ? sinceOf({ series: cur.series, nowMin: end, sales, downSec: down, calm: stories.length === 0 && sales === 0 }) : null
   const since = sn ? (
+    <>
     <span className="since">
       <span className="mk-pulse" />
       {sn.quiet ? (
@@ -212,6 +213,8 @@ export default function Briefing({ site, data: page, loading, period, range, mon
         </>
       )}
     </span>
+    <span className="sincem">{sn.quiet ? copy.quietSinceM(sn.at) : <><b>+{fmtInt(sn.people)}</b> {copy.sinceM(sn.at)}</>}</span>
+    </>
   ) : undefined
   const reader = readerOf(recent.length ? recent : visits, site.domain, top?.value)
   const sub = heroSub(reader && !learning && !low ? copy.meet(readerWords(reader)) : null, low, say.sub, say.own)
@@ -246,7 +249,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
               <div className="chwrap">
                 <div className="ch-top">
                   <span className="mk-quiet" id="chNote" style={uptime.verdict === 'down' ? { color: 'var(--mk-red)' } : undefined}>
-                    {chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow))}
+                    {chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia('(max-width: 500px)').matches))}
                   </span>
                   <button type="button" className="gh nbtn" data-info="notes" onClick={() => ui.setSheet('notes')}>
                     {copy.noteBtn(notes.notes.length)}

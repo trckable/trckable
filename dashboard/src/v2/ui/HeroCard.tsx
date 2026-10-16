@@ -71,7 +71,8 @@ function Side({ scores, learn, crowd }: { scores: Score[]; learn: { day: number 
         {scores.map((s) => (
           <button key={s.key} type="button" className={toneOf(s)} data-contrib={s.key}>
             <b>
-              {names[s.key]} {s.value ?? '–'}
+              <span className="cn">{names[s.key]} </span>
+              {s.value ?? '–'}
             </b>
             <span>{s.words}</span>
           </button>
@@ -131,7 +132,7 @@ export function Hero({ say, scores, learn, crowd = null, since, period, onPeriod
             </button>
           )}
           {why && (
-            <button type="button" className="gh rpb" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+            <button type="button" className="gh rpb whyb" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
               {copy.whyQ}
             </button>
           )}

@@ -35,8 +35,9 @@ export interface ChartIn {
   points: ChartPoint[]
   /** The label of each bucket of the axis, those still to come too. */
   axis: { i: number; tick: string }[]
-  /** How many buckets the axis spans (the hours still to come are shaded). */
+  /** How many buckets the axis spans (the hours still to come are shaded), and how many the whole period has (a phone draws all of them). */
   span: number
+  full: number
   /** Whether the last point is "now": it pulses, and what is to its right is shaded. */
   live: boolean
   /** Hours (with the part of the last one) passed so far; 0 when the period is over. */
@@ -59,7 +60,7 @@ export interface ChartIn {
 const DOT = { up: '#c6ff3a', dn: '#ff6b6b', none: '#ececee' }
 
 /** The text over the chart: the standing note, or the point under the pointer. */
-export function chartNote(c: ChartIn, at: number | null, down = false): string {
+export function chartNote(c: ChartIn, at: number | null, down = false, short = false): string {
   if (at !== null && c.points[at]) {
     const p = c.points[at]
     return copy.chartRead(p.name, fmtInt(p.raw.v), fmtInt(p.raw.lo), fmtInt(p.raw.hi))
@@ -68,6 +69,8 @@ export function chartNote(c: ChartIn, at: number | null, down = false): string {
   if (!c.band) return ''
   const up = c.points.filter((p) => p.st === 'up').length
   const dn = c.points.filter((p) => p.st === 'dn').length
+  // A phone says it short: "Above usual · 4 of 17 h".
+  if (short && c.bucket === 'hour' && (up || dn)) return `${up ? copy.aboveShort(up) : copy.belowShort(dn)}${copy.ofHours(c.points.length)}`
   if (c.overall === '' && c.bucket !== 'hour') return up + dn ? copy.normalOverall(up + dn, c.points.length) : copy.withinBand
   if (up) return copy.aboveBand(up, c.points.length, c.unit)
   if (dn) return copy.belowBand(dn, c.unit)
@@ -92,7 +95,7 @@ export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt
   const Rr = ph ? 8 : 10
   const T = ph ? 18 : 30
   const B = H - 22
-  const span = Math.max(1, c.span)
+  const span = Math.max(1, ph ? c.full : c.span)
   const X = (i: number) => L + ((W - L - Rr) * (i + 0.5)) / span
   const edge = (i: number) => L + ((W - L - Rr) * i) / span
   const pts = c.points
@@ -111,7 +114,7 @@ export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt
   const rise = c.rise && pts[c.rise.i] && !(ph && c.downs.length > 0) ? { p: pts[c.rise.i], text: ph ? c.rise.short : c.rise.text } : null
   // On a phone a label that would run off the edge is written to the left of its line.
   const flip = ph && rise !== null && X(rise.p.i) + 6 + rise.text.length * 8 > W - Rr - 4
-  const ticks = c.axis.filter((p) => p.tick && p.i % every === 0)
+  const ticks = c.axis.filter((p) => p.i < span && p.tick && p.i % every === 0)
   return (
     <svg
       ref={box}

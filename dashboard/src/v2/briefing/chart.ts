@@ -84,7 +84,7 @@ export function chartOf(a: ChartArgs): ChartIn {
     const tick = tickOf(hourly, a.cur.series.length, h, p.t.slice(0, 10), day)
     return { i, name, tick, v, lo: full.lo, hi: full.hi, st, raw }
   })
-  const ladder = Array.from({ length: Math.max(span, pts.length) }, (_, i) => bandAt(i))
+  const ladder = Array.from({ length: Math.max(a.cur.series.length, pts.length) }, (_, i) => bandAt(i))
   let best = -1
   let bv = 0
   points.forEach((p, i) => {
@@ -97,8 +97,8 @@ export function chartOf(a: ChartArgs): ChartIn {
   const c0 = best >= 0 ? bandAt(best).c : 0
   const ratio = best >= 0 && c0 > 0.5 ? points[best].v / c0 : 0
   const rise = best >= 0 ? { i: best, text: `${a.riseName ?? copy.traffic} · ${ratio >= 1.3 ? `${mult(ratio)} a usual ${hourly ? 'hour' : 'day'}` : 'above usual'}`, short: `${sourceShort(a.riseName ?? copy.traffic)} ${ratio >= 1.3 ? mult(ratio) : 'up'}` } : undefined
-  // The axis names every bucket of the span, the hours still to come too.
-  const axis = a.cur.series.slice(0, span).map((p, i) => ({ i, tick: tickOf(hourly, a.cur.series.length, Number(p.t.slice(11, 13)), p.t.slice(0, 10), fmtDay(p.t.slice(0, 10))) }))
+  // The axis names every bucket of the period, the hours still to come too (a phone draws the whole day).
+  const axis = a.cur.series.map((p, i) => ({ i, tick: tickOf(hourly, a.cur.series.length, Number(p.t.slice(11, 13)), p.t.slice(0, 10), fmtDay(p.t.slice(0, 10))) }))
   // A sale sits where it happened on the hours of the day, when the chart is by the hour and short enough to read them.
   const sales =
     hourly && a.cur.series.length <= 48
@@ -113,6 +113,7 @@ export function chartOf(a: ChartArgs): ChartIn {
   return {
     points,
     axis,
+    full: a.cur.series.length,
     sales,
     span,
     live,
