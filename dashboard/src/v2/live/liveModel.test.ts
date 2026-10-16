@@ -30,11 +30,10 @@ describe('Live', () => {
   it('keeps a mark off the ends of its bar', () => {
     expect([place(0, 10), place(5, 10), place(10, 10)]).toEqual([2, 50, 98])
   })
-  it('lists five pages and five countries, with the device split', () => {
+  it('lists five pages and five countries', () => {
     const rows = [row(1, { path: '/a', country: 'US', device: 'mobile' }), row(2, { path: '/a', country: 'US', device: 'desktop' }), row(3, { path: '/b', country: 'DE' })]
     const l = listsOf(rows)
     expect(l.pages).toEqual([{ label: '/a', n: 2 }, { label: '/b', n: 1 }])
     expect(l.countries.map((c) => [c.label, c.n])).toEqual([['United States', 2], ['Germany', 1]])
-    expect(l.mobile).toBe(0.5)
   })
 })

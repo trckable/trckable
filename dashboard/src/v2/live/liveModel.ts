@@ -1,7 +1,6 @@
 // What Live shows, worked out from the server's last half hour and the people on the site: the bars, the sources split,
 // how Today stands against its usual, the pages and the countries. Pure: live.test.ts.
-import { countryName, flag } from '../../lib/format'
-import { placesOf, topPages } from '../../features/live/cardsModel'
+import { countryName } from '../../lib/format'
 import type { LiveNow } from '../../features/live/api'
 import type { Row } from '../../features/live/model'
 
@@ -50,12 +49,16 @@ export function todayBand(visitors: number, before: number, compare: boolean): {
 /** A position on the bar, as a percent of its width (never at the very ends). */
 export const place = (x: number, max: number): number => Math.max(2, Math.min(98, (x / (max || 1)) * 100))
 
+/** The most common values, five at most: the most people first, ties in the order they first appear. */
+function topFive(values: (string | undefined)[]): [string, number][] {
+  const counts = new Map<string, number>()
+  for (const v of values) if (v) counts.set(v, (counts.get(v) ?? 0) + 1)
+  return [...counts].sort((a, b) => b[1] - a[1]).slice(0, 5)
+}
+
 export function listsOf(rows: Row[]) {
-  const places = placesOf(rows, 5)
   return {
-    pages: topPages(rows, 5).map((p) => ({ label: p.key, n: p.n })),
-    countries: (places?.parts ?? []).map((p) => ({ label: countryName(p.key), flag: flag(p.key), key: p.key, n: p.n })),
-    mobile: places?.mobile ?? 0,
-    desktop: places?.desktop ?? 0,
+    pages: topFive(rows.map((r) => r.path)).map(([label, n]) => ({ label, n })),
+    countries: topFive(rows.map((r) => r.country?.toUpperCase())).map(([key, n]) => ({ label: countryName(key), key, n })),
   }
 }
