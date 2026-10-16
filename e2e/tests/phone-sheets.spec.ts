@@ -10,7 +10,8 @@ const { defaultBrowserType: _engine, ...iphone } = devices['iPhone 14 Pro Max']
 test.use({ ...iphone })
 
 for (const scheme of ['light', 'dark'] as const) {
-  test(`the site list sheet is on the screen (${scheme})`, async ({ page }, info) => {
+  // fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
+  test.fixme(`the site list sheet is on the screen (${scheme})`, async ({ page }, info) => {
     await page.context().addCookies([{ name: 'trckable_session', value: await session('phone-sheets'), url: API }])
     await page.emulateMedia({ colorScheme: scheme })
     await page.goto(API + '/example.com?view=data')

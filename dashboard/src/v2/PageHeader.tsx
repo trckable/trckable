@@ -110,6 +110,20 @@ export function PageHeader(p: PageHeaderProps) {
         bell={<Bell site={site} notices={notices} />}
         account={isShared() ? null : <AccountMenu site={site ?? undefined} />}
       />
+      {/* The keys of the page (comma, slash, Shift S) press these, out of sight and out of the tab order. */}
+      {site && !isShared() && !viewer && (
+        <>
+          <button type="button" className="sr" data-key="settings" tabIndex={-1} aria-hidden="true" onClick={() => openSettings(site)}>
+            {copy.settings}
+          </button>
+          <button type="button" className="sr" data-key="share" tabIndex={-1} aria-hidden="true" onClick={() => openSettings(site, 'sharing')}>
+            {copy.share}
+          </button>
+        </>
+      )}
+      <button type="button" className="sr" data-key="filter" tabIndex={-1} aria-hidden="true" onClick={() => setFind(true)}>
+        {copy.filter}
+      </button>
       {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', onAsk: p.onAsk, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} onClose={() => setFind(false)} />}
     </>
   )

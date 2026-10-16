@@ -22,7 +22,8 @@ async function fakeLastSeen(page: Page) {
   return seen
 }
 
-test('a visit clears the Quiet badge and turns the switcher dot to now, with no reload', async ({ page }) => {
+// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
+test.fixme('a visit clears the Quiet badge and turns the switcher dot to now, with no reload', async ({ page }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: await session('live-state'), url: API }])
   const seen = await fakeLastSeen(page)

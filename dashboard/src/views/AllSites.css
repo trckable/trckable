@@ -177,6 +177,4 @@
   --border: var(--mk-line);
   --border-2: var(--mk-line);
   --text: var(--mk-text);
-  --text-2: var(--mk-muted);
-  --text-3: var(--mk-faint);
 }

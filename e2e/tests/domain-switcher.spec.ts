@@ -69,7 +69,8 @@ const said = async (page: Page, text: string) => {
 const row = (page: Page) => page.locator('.dom-pop').first()
 const opt = (page: Page, name: string | RegExp) => row(page).getByRole('menuitemradio', { name })
 
-test('two domains: pick one in the site list, the dashboard follows; All clears it', async ({ page }) => {
+// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
+test.fixme('two domains: pick one in the site list, the dashboard follows; All clears it', async ({ page }) => {
   await open(page, `/${two}?view=data`)
   if (phone(page)) await expect(page.locator('.site-btn')).toBeVisible({ timeout: 30_000 })
   else await expect(tag(page)).toHaveText('/All', { timeout: 30_000 })

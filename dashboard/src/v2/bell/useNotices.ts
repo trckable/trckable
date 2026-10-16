@@ -5,6 +5,7 @@ import { more } from '../../lib/apiMore'
 import { incidents } from '../../features/incidents/api'
 import { mentionsApi } from '../../features/mentions/api'
 import { isShared, isViewer } from '../../lib/me'
+import { visibleInterval } from '../../lib/visibleInterval'
 import { arrange, fromAlerts, fromIncidents, fromMentions, fromMilestones, unreadCount, type Notice } from './notices'
 
 const KEY = 'trckable:bell:read'
@@ -43,10 +44,10 @@ export function useNotices(site: Site | null, sites: Site[]) {
       if (live) setItems(arrange(parts.flat(), now))
     }
     void run()
-    const t = setInterval(() => void run(), 5 * 60_000)
+    const stop = visibleInterval(() => void run(), 5 * 60_000, false)
     return () => {
       live = false
-      clearInterval(t)
+      stop()
     }
   }, [site?.id, site?.domain, site?.mentions, sites, can]) // eslint-disable-line react-hooks/exhaustive-deps -- the site's own fields say when it changed
   const mark = useCallback((id: string) => {

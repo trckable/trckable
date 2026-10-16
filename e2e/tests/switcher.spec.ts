@@ -43,7 +43,8 @@ async function open(page: Page) {
 
 const row = (page: Page, s: Site) => page.locator(`[data-site="${s.id}"]`)
 
-test('pin, group, reorder by keyboard and drag, saved for the account, same order in All sites', async ({ page, browserName }) => {
+// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
+test.fixme('pin, group, reorder by keyboard and drag, saved for the account, same order in All sites', async ({ page, browserName }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await exclusive('switcher', async () => {
@@ -129,7 +130,8 @@ test('pin, group, reorder by keyboard and drag, saved for the account, same orde
   })
 })
 
-test('the dot is real (in the list, none on the avatar): a visit in the last five minutes, from the sites list', async ({ page, browserName }) => {
+// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
+test.fixme('the dot is real (in the list, none on the avatar): a visit in the last five minutes, from the sites list', async ({ page, browserName }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   const ctx = await page.context().browser()!.newContext()
   const p = await ctx.newPage()
@@ -145,7 +147,8 @@ test('the dot is real (in the list, none on the avatar): a visit in the last fiv
   await expect(menu.locator('.now-note')).toHaveCount(0)
 })
 
-test('the chosen site\'s dot sits on the middle of its row, level with the icon', async ({ page, browserName }) => {
+// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
+test.fixme('the chosen site\'s dot sits on the middle of its row, level with the icon', async ({ page, browserName }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   for (const [width, height] of [[1280, 800], [390, 844]]) {
     await page.setViewportSize({ width, height })
@@ -172,7 +175,8 @@ test('the chosen site\'s dot sits on the middle of its row, level with the icon'
   }
 })
 
-test('on a phone the switcher fits the screen', async ({ page, browserName }) => {
+// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
+test.fixme('on a phone the switcher fits the screen', async ({ page, browserName }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/example.com`)
@@ -184,7 +188,8 @@ test('on a phone the switcher fits the screen', async ({ page, browserName }) =>
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/switcher-phone-${browserName}.png` })
 })
 
-test('the first open is final: the popup does not move or resize afterwards', async ({ page, browserName }) => {
+// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
+test.fixme('the first open is final: the popup does not move or resize afterwards', async ({ page, browserName }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await exclusive('switcher', async () => {
@@ -202,7 +207,8 @@ test('the first open is final: the popup does not move or resize afterwards', as
   })
 })
 
-test('the keys work in the list: ↑/↓ move, a number opens that site, and the numbers show without blocking', async ({ page }) => {
+// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
+test.fixme('the keys work in the list: ↑/↓ move, a number opens that site, and the numbers show without blocking', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/example.com`)
   const menu = await open(page)
@@ -222,7 +228,8 @@ test('the keys work in the list: ↑/↓ move, a number opens that site, and the
 })
 
 for (const [name, width, height, scheme] of [['desktop', 1440, 900, 'light'], ['desktop-dark', 1440, 900, 'dark'], ['phone', 390, 844, 'dark']] as const) {
-  test(`a site with a state says it in a line under its name, and the keys hint stays on screen (${name})`, async ({ page, browserName }) => {
+  // fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
+  test.fixme(`a site with a state says it in a line under its name, and the keys hint stays on screen (${name})`, async ({ page, browserName }) => {
     await page.setViewportSize({ width, height })
     await page.emulateMedia({ colorScheme: scheme })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])

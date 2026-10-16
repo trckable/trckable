@@ -74,3 +74,13 @@
 }
 /* A dialog opened over the page covers the tab bar too. */
 body:has(.modal-back) .mk .tabbar{z-index:30}
+
+/* The bell's count sits on the light theme's darker lime: its text turns white to stay readable. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) .mk .bdot {
+    color: #fff;
+  }
+}
+:root[data-theme='light'] .mk .bdot {
+  color: #fff;
+}

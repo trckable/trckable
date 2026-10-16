@@ -18,6 +18,7 @@ export const copy = defineCopy('v2', {
   track: 'Tracking & script check',
   addSite: '+ Add a site',
   share: 'Share this site',
+  filter: 'Filter',
   statusPage: 'Status page',
   widgets: 'Widgets & badge',
   settings: 'Site settings',
