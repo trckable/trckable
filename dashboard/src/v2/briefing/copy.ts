@@ -163,6 +163,7 @@ export const copy = defineCopy('briefing', {
   whyQ: 'Why?',
   whyDot: 'Why.',
   deeper: 'Go deeper',
+  weekdayRuleDay: (weekday: string) => `Compared with the last 8 ${weekday}s.`,
   weekdayRule: (weekday: string, until: string) => `Compared with the last 8 ${weekday}s, up to ${until}.`,
   periodRule: 'Compared with the period before.',
   sourceKnow: 'Where visitors came from is read from the page that sent them.',

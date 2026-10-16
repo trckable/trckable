@@ -38,6 +38,13 @@ export interface PartsIn {
   clockAt?: number
 }
 
+/** What "usual" means on this page: the same weekday's last weeks (up to this time of day for today), else the period before. */
+function ruleOf(usual: boolean, unit: Unit, weekday: string, at: string): string {
+  if (!usual) return copy.periodRule
+  if (unit === 'today') return copy.weekdayRule(weekday, at)
+  return unit === 'yesterday' ? copy.weekdayRuleDay(weekday) : copy.periodRule
+}
+
 const usualWordsOf = (unit: Unit, weekday: string, at: string): string => {
   if (unit === 'today') return copy.usualByNow(weekday, at)
   return unit === 'yesterday' ? copy.usualDay1(weekday) : copy.usualBare
@@ -122,7 +129,7 @@ export function useParts(a: PartsIn) {
       b: up.list.length ? Math.min(1, (Math.max(...up.list.map((x) => x.ended_at ?? nowSec)) - up.from0) / (periodEnd - up.from0)) : 0,
       now: clockOf(nowSec),
     }
-    const rule = usual && (unit === 'today' || unit === 'yesterday') ? copy.weekdayRule(weekday, '') : copy.periodRule
+    const rule = ruleOf(!!usual, unit, weekday, clock.slice(11))
     const mention = extras.mention
     const stories = cardsOf({
       domain: site.domain,
