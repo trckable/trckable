@@ -3,7 +3,6 @@
 // chart here; the curve is TimeChart's, so the two never draw differently.
 // Hover, touch or the arrow keys read one minute, as on the main chart;
 // a click, Enter or a second tap on the same minute opens it in Data.
-import { NoData } from '../../kit/NoData'
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { Tip } from '../../charts/Tip'
 import { smooth } from '../../charts/TimeChart'
@@ -44,6 +43,7 @@ export function LiveLine({ values, onOpen }: { values: number[]; onOpen?: (ago: 
   const running = n > 2 ? `M${x(n - 2).toFixed(1)} ${y(vals[n - 2]).toFixed(1)}L${x(n - 1).toFixed(1)} ${y(vals[n - 1]).toFixed(1)}` : ''
   const total = values.reduce((a, b) => a + b, 0)
   const last = n ? vals[n - 1] : 0
+  const empty = n > 0 && values.every((v) => v === 0) // nothing yet: a faint flat baseline, no glow, no wave, no words
   const hover = useHover(n, PAD_X, w - 2 * PAD_X)
   const at = hover.i != null && hover.i < n ? hover.i : null
   // A touch shows a minute first; only a tap on the minute already shown opens it.
@@ -97,17 +97,18 @@ export function LiveLine({ values, onOpen }: { values: number[]; onOpen?: (ago: 
               <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
             </linearGradient>
           </defs>
-          <path d={area} fill="url(#live-area)" />
-          <path className="live-glow" d={done} fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
-          {running && <path d={running} fill="none" stroke="var(--accent)" strokeWidth="2.25" strokeDasharray="3 5" strokeLinecap="round" />}
-          {n > 0 && <circle className="live-head" cx={x(n - 1)} cy={y(last)} r="4.5" fill="var(--accent)" />}
+          {empty ? (
+            <line x1={PAD_X} x2={w - PAD_X} y1={y(0)} y2={y(0)} stroke="var(--border-2)" strokeOpacity="0.6" strokeWidth="1.5" strokeLinecap="round" />
+          ) : (
+            <>
+              <path d={area} fill="url(#live-area)" />
+              <path className="live-glow" d={done} fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+              {running && <path d={running} fill="none" stroke="var(--accent)" strokeWidth="2.25" strokeDasharray="3 5" strokeLinecap="round" />}
+              {n > 0 && <circle className="live-head" cx={x(n - 1)} cy={y(last)} r="4.5" fill="var(--accent)" />}
+            </>
+          )}
           {at != null && <CursorMark x={x(at)} y={y(vals[at])} top={PAD_T} bottom={H} />}
         </svg>
-        {n > 0 && values.every((v) => v === 0) && (
-          <span className="chart-nodata" style={{ left: 0, top: PAD_T, height: H - PAD_T * 2 }}>
-            <NoData />
-          </span>
-        )}
         <Tip at={tip} width={w} />
         {at != null && <CursorPill x={x(at)} w={w} text={copy.minuteAgo(n - 1 - at)} />}
       </div>

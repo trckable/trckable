@@ -13,6 +13,7 @@ export type DotState = SiteState | 'now'
 const NOW_S = 300
 
 export function dotState(s: Site, now = Date.now()): DotState {
+  if (siteState(s, now) === 'stopped') return 'stopped' // a site that fails is never shown as fine, visits or not
   if (s.last_event_at && now / 1000 - s.last_event_at < NOW_S) return 'now'
   return siteState(s, now)
 }

@@ -359,3 +359,7 @@ html {
     justify-content: center;
   }
 }
+.site-pick .state-dot {
+  flex: none;
+  margin: 0 2px 0 6px;
+}

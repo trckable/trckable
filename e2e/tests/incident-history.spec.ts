@@ -48,7 +48,7 @@ test('an incident is marked on the chart and listed on its page', async ({ page 
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/incidents-chart-1280.png` })
 
   // The status panel has one quiet link to the history.
-  await page.getByRole('button', { name: /^(Down|Quiet) ·/ }).click()
+  await page.locator('.footer-status').click() // the foot's status opens the panel
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/incidents-panel-1280.png` })
   await page.getByRole('link', { name: 'Incident history' }).click()
   await expect(page).toHaveURL(new RegExp(`/${HISTORY_DOMAIN}/incidents`))

@@ -1,9 +1,8 @@
-// A site that stopped sending visits explains itself from a floating badge: how long, and a panel under it with what happened and since
+// A site that stopped sending visits explains itself in a panel opened from the foot's status: how long, what happened and since
 // when, what was checked from outside just now, and what to do. When visits
-// return the badge says so for a day.
-import { useEffect, useRef, useState } from 'react'
-import { Check, CircleAlert, Moon, TriangleAlert, X } from 'lucide-react'
-import { AnchoredPop } from '../../components/AnchoredPop'
+// return a line under the header says so for a day.
+import { useEffect, useState } from 'react'
+import { Check, TriangleAlert, X } from 'lucide-react'
 import { api, type Site } from '../../lib/api'
 import { isViewer } from '../../lib/me'
 import { openSettings } from '../../lib/settings'
@@ -139,61 +138,13 @@ function HistoryLink({ site }: { site: Site }) {
   )
 }
 
-/** The floating badge: the state and how long; it opens the panel up from its corner, or a sheet on a phone. */
-function Gone({ site, last, down }: { site: Site; last: number; down: boolean }) {
-  const [open, setOpen] = useState(false)
-  const btn = useRef<HTMLButtonElement>(null)
-  const box = useRef<HTMLDivElement>(null)
-  const [sheet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches)
+/** Remembers when visits stopped, so the "visits are back" line can say how long the gap was. The state itself shows in the Live header, by the site's name and in the foot. */
+function Gap({ site, last }: { site: Site; last: number }) {
   useEffect(() => {
     const prev = readGap(site.id)
     if (last > 0 && (!prev || prev.since !== last)) writeGap(site.id, { since: last })
   }, [site.id, last])
-  // On a desktop the panel is ours to close; the sheet's popover closes itself.
-  useEffect(() => {
-    if (!open || sheet) return
-    const away = (e: MouseEvent) => {
-      if (!box.current?.contains(e.target as Node)) setOpen(false)
-    }
-    const esc = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      setOpen(false)
-      btn.current?.focus()
-    }
-    document.addEventListener('mousedown', away)
-    window.addEventListener('keydown', esc)
-    return () => {
-      document.removeEventListener('mousedown', away)
-      window.removeEventListener('keydown', esc)
-    }
-  }, [open, sheet])
-  const Icon = down ? CircleAlert : Moon
-  return (
-    <div ref={box} className="status-float">
-      {open && !sheet && (
-        <div className="status-pop" role="dialog" aria-label={copy.label}>
-          <StatusPanel site={site} last={last} down={down} />
-        </div>
-      )}
-      <button
-        ref={btn}
-        type="button"
-        className={'status-badge ' + (down ? 'down' : 'quiet')}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        title={copy.label}
-        onClick={() => setOpen((o) => !o)}
-      >
-        <Icon size={15} strokeWidth={2} aria-hidden="true" />
-        {copy.badge(down, ageOf(site))}
-      </button>
-      {open && sheet && (
-        <AnchoredPop anchor={btn} label={copy.label} className="status-pop" onClose={() => setOpen(false)}>
-          {() => <StatusPanel site={site} last={last} down={down} />}
-        </AnchoredPop>
-      )}
-    </div>
-  )
+  return null
 }
 
 /** Visits are back after a gap this browser saw: one line, for a day. */
@@ -239,10 +190,10 @@ function spanLong(secs: number): string {
   return `${Math.round(secs / 86400)} d`
 }
 
-/** The badge, if there is anything to say about this site's visits: a quiet spell now, or a gap that just closed. */
+/** What stands under the header about this site's visits: a gap that just closed, or a blocked look. A site that stopped is told in the foot (ServerStatus), the Live header and the site list. */
 export function StatusCard({ site }: { site: Site }) {
   const status = statusOf(site)
   if (status === 'new') return site.probe_blocked_since ? <Blocked /> : null
-  if (status === 'down' || status === 'quiet') return <Gone site={site} last={site.last_event_at ?? 0} down={status === 'down'} />
+  if (status === 'down' || status === 'quiet') return <Gap site={site} last={site.last_event_at ?? 0} />
   return site.probe_blocked_since ? <Blocked /> : <Back site={site} />
 }

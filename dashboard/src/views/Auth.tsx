@@ -1,6 +1,8 @@
 // First-run setup (guarded by the one-time token from the server log, passed
 // in the URL fragment so it never reaches access logs) and sign-in.
+import { CircleHelp } from 'lucide-react'
 import { useEffect, useState, type SubmitEvent } from 'react'
+import { Tooltip } from '../kit/Tooltip'
 import { FieldError, fieldProps } from '../kit/FieldError'
 import { api, APIError, type Site, more } from '../lib/apiMore'
 import { browserZone } from '../lib/dates'
@@ -190,9 +192,13 @@ export function Login({ onDone }: { onDone: () => void }) {
             ← Back
           </button>
         ) : (
-          <span className="faint" style={{ fontSize: 12, lineHeight: 1.5 }}>
-            Forgot it? Ask an owner for new sign-in details. The owner of the server can run <span className="num">trckabled admin reset-password &lt;email&gt;</span>.
-          </span>
+          <Tooltip text={authCopy.forgotTip}>
+            {(p) => (
+              <button type="button" className="linkish" style={{ fontSize: 12 }} aria-label={authCopy.forgot} {...p}>
+                <CircleHelp size={14} strokeWidth={1.8} aria-hidden="true" />
+              </button>
+            )}
+          </Tooltip>
         )}
       </form>
       {step === 'password' && <SignInWith />}

@@ -27,7 +27,7 @@ test('a visit clears the Quiet badge and turns the switcher dot to now, with no 
   await page.context().addCookies([{ name: 'trckable_session', value: await session('live-state'), url: API }])
   const seen = await fakeLastSeen(page)
   await page.goto(`${API}/${HISTORY_DOMAIN}?period=7d`)
-  const badge = page.getByRole('button', { name: /^Quiet · 14h/ })
+  const badge = page.locator('.footer-status[data-status="quiet"]') // the foot says it, nothing floats
   await expect(badge).toBeVisible({ timeout: 20_000 })
   await expect(page.locator('.site-pick .site-btn .state-dot')).toHaveCount(0)
   await page.locator('.site-pick .site-btn').click() // the switcher stays open while the visit arrives

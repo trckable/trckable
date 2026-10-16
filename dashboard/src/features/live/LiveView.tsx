@@ -18,6 +18,7 @@ import { statusOf } from '../sitestatus/status'
 import type { Site } from '../../lib/api'
 import { LiveCards } from './LiveCards'
 import { liveCount, liveLink } from './liveLink'
+import { useNarrow } from '../../lib/useNarrow'
 import { useBusier } from './useBusier'
 import { useLiveNow } from './useLiveNow'
 
@@ -46,14 +47,18 @@ export default function LiveView({ site, timezone, stream, onVisitor, cookieless
   const online = onlineNow(stream, data?.online, data?.online, got) ?? null
   useEffect(() => liveCount.set(online), [online])
   const rows = data ? feedOf(data.recent, stream.visits, data.at, clock) : []
+  const narrow = useNarrow()
+  // Today leads on a phone: it is the number a glance wants.
+  const cards = data ? <LiveCards data={data} rows={rows} /> : null
   return (
     <>
+      {narrow && cards}
       <div className="live-view view-stage" role="region" aria-label={copy.region}>
         <BusierLine busier={busier} site={site} timezone={timezone} />
         {!isShared() && <Suspense fallback={null}><MentionChip site={site} domain={whole?.domain} /></Suspense>}
         {data ? (
           <>
-            <NowPanel data={data} series={seriesAt(data, stream.visits, clock)} online={online ?? 0} connected={stream.connected} failed={failed} sales={stream.sales} timezone={timezone} />
+            <NowPanel site={whole} data={data} series={seriesAt(data, stream.visits, clock)} online={online ?? 0} connected={stream.connected} failed={failed} sales={stream.sales} timezone={timezone} />
             <OnSitePanel rows={rows} online={online} clock={clock} skew={skew} onVisitor={onVisitor} cookieless={cookieless} quiet={whole && statusOf(whole) !== 'ok' ? whole.last_event_at : undefined} />
           </>
         ) : (
@@ -63,7 +68,7 @@ export default function LiveView({ site, timezone, stream, onVisitor, cookieless
           {said}
         </p>
       </div>
-      {data && <LiveCards data={data} rows={rows} />}
+      {!narrow && cards}
     </>
   )
 }

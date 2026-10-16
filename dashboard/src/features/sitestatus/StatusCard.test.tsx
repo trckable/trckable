@@ -13,7 +13,7 @@ function memory() {
   return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v), removeItem: (k: string) => void m.delete(k) }
 }
 
-describe('the badge and panel of a site that stopped', () => {
+describe('the panel of a site that stopped, and the line when visits are back', () => {
   beforeEach(() => {
     vi.stubGlobal('localStorage', memory())
     setRole('owner')
@@ -22,7 +22,7 @@ describe('the badge and panel of a site that stopped', () => {
 
   it('says the site is not answering, with its actions', () => {
     const s = site({ last_event_at: NOW - 8 * 3600, check: { at: NOW - 60, error: 'a.example could not be reached over https' } })
-    expect(renderToStaticMarkup(<StatusCard site={s} />)).toContain('Down · 8h')
+    expect(renderToStaticMarkup(<StatusCard site={s} />)).toBe('') // told in the foot, the Live header and the site list, not by a floating badge
     const html = renderToStaticMarkup(<StatusPanel site={s} last={NOW - 8 * 3600} down />)
     expect(html).toContain('Down')
     expect(html).toContain('did not answer')
@@ -44,7 +44,7 @@ describe('the badge and panel of a site that stopped', () => {
 
   it('says no visits since, and for how long, when the page answers', () => {
     const s = site({ last_event_at: NOW - 8 * 3600 })
-    expect(renderToStaticMarkup(<StatusCard site={s} />)).toContain('Quiet · 8h')
+    expect(renderToStaticMarkup(<StatusCard site={s} />)).toBe('')
     const html = renderToStaticMarkup(<StatusPanel site={s} last={NOW - 8 * 3600} down={false} />)
     expect(html).toContain('Tracking stopped')
     expect(html).toContain('No visits since')

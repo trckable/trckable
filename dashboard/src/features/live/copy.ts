@@ -25,7 +25,6 @@ export const copy = defineCopy('live', {
   minuteAgo: (m: number) => (m === 0 ? 'This minute' : `${m} min ago`),
   minuteViews: (n: string, count: number) => `${n} ${count === 1 ? 'pageview' : 'pageviews'}`,
   sources: 'Top sources right now',
-  noSources: 'No visits in the last 30 minutes.',
   other: 'Other',
   sourceLabel: (channel: string) => channelLabel(channel),
   revenueToday: 'Revenue today',
@@ -37,7 +36,10 @@ export const copy = defineCopy('live', {
   more: (n: number) => `and ${fmtInt(n)} more`,
   stillHere: 'Still on the site',
   empty: 'Nobody on the site right now. New visits appear here as they happen.',
-  waitingSince: (when: string) => `Waiting for the first visit since ${when}`,
+  quietSince: (when: string) => `Quiet since ${when}`,
+  quietTip: 'No visit since then. New ones appear here as they happen.',
+  lastVisit: (ago: string) => `Last visit ${ago}`,
+  help: 'How this list works',
   goal: (name: string) => `Goal: ${name}`,
   ago: (ms: number) => {
     const s = Math.max(0, Math.round(ms / 1000))
