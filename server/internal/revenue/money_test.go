@@ -31,6 +31,10 @@ func TestExportAndLiveSaleUseISOMinorUnits(t *testing.T) {
 	if _, err := g.svc.Process(ctx); err != nil {
 		t.Fatal(err)
 	}
+	g.svc.Now = func() time.Time { return time.Now().Add(3 * time.Minute) } // the wait for its invoice is over
+	if _, err := g.svc.Process(ctx); err != nil {
+		t.Fatal(err)
+	}
 	if len(sales) != 1 || sales[0].Amount != 12500 || sales[0].Exponent != 0 || sales[0].Currency != "ISK" || sales[0].Kind != NoticeSale {
 		t.Fatalf("live sale: %+v, want 12500 ISK with exponent 0", sales)
 	}

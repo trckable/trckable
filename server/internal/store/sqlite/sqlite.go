@@ -828,6 +828,15 @@ var migrations = []string{
 		at       INTEGER NOT NULL,
 		PRIMARY KEY (site_id, provider, id)
 	) WITHOUT ROWID;
+	INSERT OR IGNORE INTO pay_notices (site_id, provider, id, kind, amount, at)
+	SELECT p.site_id, p.provider, 'refund:' || p.id, 'refund', min(p.gross, max(s.sm, s.cm)), CAST(strftime('%s', 'now') AS INTEGER) * 1000
+	FROM pay_payments p JOIN (
+		SELECT p2.site_id, p2.provider, p2.id AS pid,
+		       coalesce(sum(CASE WHEN r.cumulative = 0 THEN r.amount END), 0) AS sm, coalesce(max(CASE WHEN r.cumulative = 1 THEN r.amount END), 0) AS cm
+		FROM pay_payments p2 JOIN pay_refunds r ON r.site_id = p2.site_id AND r.provider = p2.provider AND r.status = 'succeeded'
+			AND (r.payment_id = p2.id OR r.payment_id IN (SELECT a.alias FROM pay_aliases a WHERE a.site_id = p2.site_id AND a.provider = p2.provider AND a.payment_id = p2.id))
+		GROUP BY p2.site_id, p2.provider, p2.id
+	) s ON s.site_id = p.site_id AND s.provider = p.provider AND s.pid = p.id;
 	INSERT INTO alerts (id, site_id, kind, enabled, target, threshold, last_fired, created_at)
 	SELECT 'alert_' || lower(hex(randomblob(8))), site_id, 'customer', 1, target, 0, 0, CAST(strftime('%s', 'now') AS INTEGER)
 	FROM (

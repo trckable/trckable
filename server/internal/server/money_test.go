@@ -108,3 +108,28 @@ func TestMoneyMessagesAreCappedPerHour(t *testing.T) {
 		t.Fatalf("sent %d of 30; want %d, other sites unaffected, and an hour later open again", sent, moneyMailPerHour)
 	}
 }
+
+// The cap is for the burst a reconciliation brings; a refund is always told.
+func TestARefundIsNeverHeldBackByTheCap(t *testing.T) {
+	ctx := context.Background()
+	s, ctl := moneyServer(t)
+	box := fakeMailServer(t)
+	site, err := ctl.CreateSite(ctx, sqlite.DefaultAccount, "cap.example", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ctl.SaveAlert(ctx, sqlite.Alert{SiteID: site, Kind: "customer", Enabled: true, Target: "mailto:owner@example.com"}); err != nil {
+		t.Fatal(err)
+	}
+	for range moneyMailPerHour {
+		s.mailedMoney.allow(site, time.Now())
+	}
+	n := revenue.Notice{At: time.Now().UnixMilli(), Amount: 1200, Currency: "USD", Exponent: 2}
+	n.Kind = revenue.NoticeNew
+	s.mailMoney(ctx, site, n, "")
+	n.Kind = revenue.NoticeRefund
+	s.mailMoney(ctx, site, n, "")
+	if got := box.all(); len(got) != 1 {
+		t.Fatalf("messages: %d, want only the refund", len(got))
+	}
+}

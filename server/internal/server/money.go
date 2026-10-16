@@ -108,7 +108,8 @@ func (s *Server) mailMoney(ctx context.Context, site string, n revenue.Notice, s
 		if a.SiteID != site || a.Kind != "customer" {
 			continue
 		}
-		if !s.mailedMoney.allow(site, time.Now()) {
+		// A refund is always told: the cap is for the burst a reconciliation can bring.
+		if n.Kind != revenue.NoticeRefund && !s.mailedMoney.allow(site, time.Now()) {
 			slog.Warn("money message held back: too many in an hour", "site", site)
 			return
 		}

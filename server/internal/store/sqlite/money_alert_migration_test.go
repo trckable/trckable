@@ -33,12 +33,27 @@ func TestMoneyAlertBackfill(t *testing.T) {
 	add(off, "weekly", "mailto:a@example.com", false, 1)
 	add(chose, "weekly", "mailto:b@example.com", true, 1)
 	add(chose, "customer", "mailto:b@example.com", false, 2) // switched off by its unsubscribe link
+	// A payment already refunded in two parts, and one in a running total.
+	for _, q := range []string{
+		`INSERT INTO pay_payments (site_id, provider, id, connection_id, test, paid_at, currency, gross, kind, version) VALUES ('` + on + `', 'stripe', 'pi_1', 'c', 0, 1, 'USD', 5000, 'one_time', 1)`,
+		`INSERT INTO pay_refunds (site_id, provider, id, payment_id, amount, currency, status, cumulative, at, version) VALUES ('` + on + `', 'stripe', 're_1', 'pi_1', 1200, 'USD', 'succeeded', 0, 1, 1)`,
+		`INSERT INTO pay_refunds (site_id, provider, id, payment_id, amount, currency, status, cumulative, at, version) VALUES ('` + on + `', 'stripe', 're_2', 'pi_1', 800, 'USD', 'succeeded', 0, 1, 1)`,
+		`INSERT INTO pay_refunds (site_id, provider, id, payment_id, amount, currency, status, cumulative, at, version) VALUES ('` + on + `', 'stripe', 'cum:ch_1', 'pi_1', 2000, 'USD', 'succeeded', 1, 1, 1)`,
+	} {
+		if _, err := s.DB.ExecContext(ctx, q); err != nil {
+			t.Fatal(err)
+		}
+	}
 	// The schema as it was before the migration.
 	if _, err := s.DB.ExecContext(ctx, `DROP TABLE pay_notices; ALTER TABLE pay_hints DROP COLUMN from_plan; ALTER TABLE pay_hints DROP COLUMN to_plan; PRAGMA user_version = 63`); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.MigrateTo(ctx, 64); err != nil {
 		t.Fatal(err)
+	}
+	var told int64
+	if err := s.DB.QueryRowContext(ctx, `SELECT amount FROM pay_notices WHERE id = 'refund:pi_1'`).Scan(&told); err != nil || told != 2000 {
+		t.Errorf("refunds already made are told as such: %d, %v; want 2000, so the next one announces only itself", told, err)
 	}
 	money := func(site string) *Alert {
 		list, _ := s.Alerts(ctx, site)

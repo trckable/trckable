@@ -265,6 +265,10 @@ func TestSalesAreAnnouncedOnceAndOnlyWhenNew(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Connected a while ago: what a provider brings in from before is history.
+	if _, err := g.st.DB.Exec(`UPDATE pay_connections SET created_at = created_at - 40 * 86400`); err != nil {
+		t.Fatal(err)
+	}
 	var sales []Notice
 	g.svc.OnNotice = func(site string, n Notice) {
 		if site != g.site {
@@ -286,6 +290,14 @@ func TestSalesAreAnnouncedOnceAndOnlyWhenNew(t *testing.T) {
 	}
 
 	send("evt_1", "pi_1", true, time.Now())
+	// A Stripe payment waits a moment for its invoice, then is told as a sale.
+	if len(sales) != 0 {
+		t.Fatalf("told before the wait was over: %+v", sales)
+	}
+	g.svc.Now = func() time.Time { return time.Now().Add(3 * time.Minute) }
+	if _, err := g.svc.Process(ctx); err != nil {
+		t.Fatal(err)
+	}
 	if len(sales) != 1 || sales[0].Amount != 4900 || sales[0].Currency != "USD" || sales[0].Exponent != 2 || sales[0].Late {
 		t.Fatalf("a new sale: %+v", sales)
 	}

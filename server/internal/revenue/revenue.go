@@ -607,6 +607,16 @@ func (s *Service) Process(ctx context.Context) (int, error) {
 		}
 		rows.Close()
 		if len(items) == 0 {
+			// Payments that waited for their invoice are told now, or when the wait is over.
+			held, err := s.releaseHeld(ctx)
+			if err != nil {
+				return total, err
+			}
+			if s.OnNotice != nil {
+				for _, h := range held {
+					s.OnNotice(h.Site, h.N)
+				}
+			}
 			return total, nil
 		}
 		// One transaction per batch: one fsync for 200 events, all or nothing.

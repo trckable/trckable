@@ -23,6 +23,10 @@ func newNoticeRig(t *testing.T) *noticeRig {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Connected a while ago: what a provider brings in from before is history.
+	if _, err := g.st.DB.Exec(`UPDATE pay_connections SET created_at = created_at - 40 * 86400`); err != nil {
+		t.Fatal(err)
+	}
 	n := &noticeRig{rig: g, t: t, path: HookPath("stripe", c.ID)}
 	g.svc.OnNotice = func(_ string, x Notice) { n.told = append(n.told, x) }
 	return n
@@ -41,6 +45,15 @@ func (n *noticeRig) resend(body []byte) {
 	if code := n.post(n.t, n.path, stripeSigned("whsec_test", body, time.Now()), body); code != 200 {
 		n.t.Fatalf("webhook: %d", code)
 	}
+	if _, err := n.svc.Process(context.Background()); err != nil {
+		n.t.Fatal(err)
+	}
+}
+
+// wait lets the time a payment may wait for its invoice pass.
+func (n *noticeRig) wait() {
+	n.t.Helper()
+	n.svc.Now = func() time.Time { return time.Now().Add(3 * time.Minute) }
 	if _, err := n.svc.Process(context.Background()); err != nil {
 		n.t.Fatal(err)
 	}
@@ -78,6 +91,7 @@ func TestEachPaymentIsToldOnceWithWhatItWas(t *testing.T) {
 	g.intent("pi_3", "in_3", now)
 	g.send("payment_intent.succeeded", now, `{"id":"pi_4","amount_received":1200,"currency":"usd"}`)
 
+	g.wait()
 	kinds := []string{}
 	for _, x := range g.told {
 		kinds = append(kinds, x.Kind)
@@ -142,6 +156,7 @@ func TestLatePaymentsAreToldWithTheirRealTime(t *testing.T) {
 	g.invoice("subscription_create", "in_1", paid, "")
 	g.intent("pi_1", "in_1", paid)
 	g.intent("pi_old", "", time.Now().Add(-10*24*time.Hour))
+	g.wait()
 	if len(g.told) != 1 {
 		t.Fatalf("told %d, want the late one only: %+v", len(g.told), g.told)
 	}
@@ -189,5 +204,76 @@ func TestWordsSayOnlyWhatIsKnown(t *testing.T) {
 		if got := c.n.Words(c.source); got != c.want {
 			t.Errorf("%+v: got %q, want %q", c.n, got, c.want)
 		}
+	}
+}
+
+// Stripe's events come in any order: the payment can arrive before the invoice
+// that says it was a first payment or a renewal (on the newer API the payment
+// carries no invoice, and a third event links them). The notice waits for it,
+// so a new subscription is never announced as a sale.
+func TestPaymentBeforeItsInvoiceIsToldWithTheInvoicesKind(t *testing.T) {
+	for _, c := range []struct{ reason, want string }{{"subscription_create", NoticeNew}, {"subscription_cycle", NoticeRenewal}} {
+		g := newNoticeRig(t)
+		now := time.Now()
+		g.intent("pi_1", "", now)
+		if len(g.told) != 0 {
+			t.Fatalf("%s: told before its invoice: %+v", c.reason, g.told)
+		}
+		g.invoice(c.reason, "in_1", now, "")
+		g.send("invoice_payment.paid", now, `{"invoice":"in_1","payment":{"type":"payment_intent","payment_intent":"pi_1"}}`)
+		if len(g.told) != 1 || g.told[0].Kind != c.want {
+			t.Fatalf("%s: told %+v, want one %s", c.reason, g.told, c.want)
+		}
+		g.wait()
+		if len(g.told) != 1 {
+			t.Fatalf("%s: told again after the wait: %+v", c.reason, g.told)
+		}
+	}
+}
+
+// A payment whose invoice never comes (a one-off charge) is told as what it
+// is once the wait is over.
+func TestPaymentWithNoInvoiceIsToldAsASaleAfterTheWait(t *testing.T) {
+	g := newNoticeRig(t)
+	g.intent("pi_1", "", time.Now())
+	g.wait()
+	if len(g.told) != 1 || g.told[0].Kind != NoticeNew { // it has a customer nobody has seen before
+		t.Fatalf("told %+v", g.told)
+	}
+}
+
+// The first one-time purchase of a customer the ledger knows is a new
+// customer; the next one from the same customer, or from nobody it can
+// recognise, is a sale.
+func TestFirstPurchaseIsANewCustomer(t *testing.T) {
+	g := newNoticeRig(t)
+	now := time.Now()
+	g.send("payment_intent.succeeded", now, `{"id":"pi_1","amount_received":1200,"currency":"usd","customer":"cus_a"}`)
+	g.send("payment_intent.succeeded", now, `{"id":"pi_2","amount_received":1200,"currency":"usd","customer":"cus_a"}`)
+	g.send("payment_intent.succeeded", now, `{"id":"pi_3","amount_received":1200,"currency":"usd"}`)
+	g.wait()
+	got := []string{}
+	for _, x := range g.told {
+		got = append(got, x.Kind)
+	}
+	if fmt.Sprint(got) != fmt.Sprint([]string{NoticeNew, NoticeSale, NoticeSale}) {
+		t.Fatalf("told %v", got)
+	}
+}
+
+// What a provider brings in from before the connection existed is history:
+// connecting tells nothing, and neither does a refund of an old payment.
+func TestConnectingTellsNothingAboutThePast(t *testing.T) {
+	g := newNoticeRig(t)
+	if _, err := g.st.DB.Exec(`UPDATE pay_connections SET created_at = ?`, time.Now().Unix()); err != nil {
+		t.Fatal(err)
+	}
+	past := time.Now().Add(-5 * time.Hour)
+	g.invoice("subscription_create", "in_1", past, "")
+	g.intent("pi_1", "in_1", past)
+	g.send("refund.created", past.Add(time.Hour), `{"id":"re_1","amount":1200,"currency":"usd","status":"succeeded","payment_intent":"pi_1","created":`+fmt.Sprint(past.Unix())+`}`)
+	g.wait()
+	if len(g.told) != 0 {
+		t.Fatalf("told about the past: %+v", g.told)
 	}
 }

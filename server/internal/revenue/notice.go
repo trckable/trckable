@@ -160,13 +160,17 @@ func hintsOf(ctx context.Context, tx *sql.Tx, sc ledger.Scope, id string) (h hin
 	return h, rows.Err()
 }
 
-// payNotice words a payment that has just reached the ledger, and records
-// that it was told. ok is false when it was told before, or is not worth a
-// notice (no money, or too old to be news and recorded as history).
-func (s *Service) payNotice(ctx context.Context, tx *sql.Tx, sc ledger.Scope, p payments.Payment) (n Notice, ok bool, err error) {
-	h, err := hintsOf(ctx, tx, sc, p.ID)
+// holdFor is how long a Stripe payment of no known kind waits for its invoice
+// (which says whether it was a first payment, a renewal or an upgrade) before it
+// is told as the one-time sale it may really be.
+const holdFor = 2 * time.Minute
+
+// classify words a payment: what it was, how much, from which plans, and who
+// earned it. emailHash is the payer's keyed hash, for telling a first purchase.
+func (s *Service) classify(ctx context.Context, tx *sql.Tx, sc ledger.Scope, p payments.Payment, emailHash string) (n Notice, h hintFacts, resolved bool, err error) {
+	h, err = hintsOf(ctx, tx, sc, p.ID)
 	if err != nil {
-		return n, false, err
+		return n, h, false, err
 	}
 	net := p.Gross
 	switch {
@@ -177,13 +181,11 @@ func (s *Service) payNotice(ctx context.Context, tx *sql.Tx, sc ledger.Scope, p 
 	}
 	cur := strings.ToUpper(p.Currency)
 	net = ledger.RoundDiv(net, payments.AmountScale(sc.Provider, cur))
-	if net <= 0 {
-		return n, false, nil
-	}
 	kind := p.Kind
 	if h.kind != "" && (kind == "" || kind == payments.KindOneTime) {
 		kind = h.kind
 	}
+	resolved = kind != "" && kind != payments.KindOneTime
 	n = Notice{At: p.PaidAt, Amount: net, Currency: cur, Exponent: fx.Exponent(cur), Visitor: p.Visitor}
 	switch kind {
 	case payments.KindSubscription:
@@ -198,15 +200,67 @@ func (s *Service) payNotice(ctx context.Context, tx *sql.Tx, sc ledger.Scope, p 
 	if h.kind == payments.KindUpgrade && kind != payments.KindUpgrade && kind != payments.KindSubscription {
 		n.Kind, n.From, n.To = NoticeUpgrade, h.from, h.to
 	}
+	cus := firstOf(p.CustomerID, h.customer)
+	if n.Kind == NoticeSale && s.firstPurchase(ctx, tx, sc, p, cus, emailHash) {
+		n.Kind = NoticeNew
+	}
 	if n.Visitor == 0 {
 		n.Visitor = uint64(h.visitor) //nolint:gosec // visitor ids are stored bit for bit in SQLite's signed integer and read back the same way
 	}
 	if n.Visitor == 0 && (n.Kind == NoticeNew || n.Kind == NoticeSale) {
-		n.Visitor = s.linkedVisitor(ctx, tx, sc, firstOf(p.CustomerID, h.customer), firstOf(p.SubscriptionID, h.sub))
+		n.Visitor = s.linkedVisitor(ctx, tx, sc, cus, firstOf(p.SubscriptionID, h.sub))
 	}
+	return n, h, resolved, nil
+}
+
+// firstPurchase says whether a one-time payment is the first of a customer the
+// ledger can recognise (by the provider's customer id or the payer's hashed
+// email). A payment from someone it cannot recognise is a plain sale.
+func (s *Service) firstPurchase(ctx context.Context, tx *sql.Tx, sc ledger.Scope, p payments.Payment, customer, emailHash string) bool {
+	if customer == "" && emailHash == "" {
+		return false
+	}
+	var before int
+	err := tx.QueryRowContext(ctx, `SELECT count(*) FROM pay_payments WHERE site_id = ? AND provider = ? AND id <> ? AND test = 0
+		AND ((? <> '' AND customer_id = ?) OR (? <> '' AND email_hash = ?))
+		AND (paid_at < ? OR (paid_at = ? AND id < ?))`,
+		sc.Site, sc.Provider, p.ID, customer, customer, emailHash, emailHash, p.PaidAt, p.PaidAt, p.ID).Scan(&before)
+	return err == nil && before == 0
+}
+
+// before says whether something happened before the connection existed: the
+// past a newly connected provider brings in is history, never news.
+func (s *Service) before(ctx context.Context, tx *sql.Tx, sc ledger.Scope, at int64) bool {
+	var created int64
+	if tx.QueryRowContext(ctx, `SELECT created_at FROM pay_connections WHERE id = ?`, sc.Connection).Scan(&created) != nil {
+		return false
+	}
+	return at < created*1000
+}
+
+// payNotice tells a payment that has just reached the ledger, and records that
+// it was told. ok is false when it was told before, is not worth a notice (no
+// money, history) or is held for a moment (see holdFor).
+func (s *Service) payNotice(ctx context.Context, tx *sql.Tx, sc ledger.Scope, p payments.Payment) (Notice, bool, error) {
+	n, _, resolved, err := s.classify(ctx, tx, sc, p, ledger.EmailHash(sc.EmailKey, p.Email))
+	if err != nil || n.Amount <= 0 {
+		return n, false, err
+	}
+	// Stripe sends a payment and its invoice as separate events, in any order.
+	if sc.Provider == "stripe" && !resolved && s.Now().Sub(time.UnixMilli(p.PaidAt)) < holdFor {
+		_, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO pay_notices (site_id, provider, id, kind, amount, at) VALUES (?, ?, ?, 'held', 0, ?)`,
+			sc.Site, sc.Provider, p.ID, p.PaidAt)
+		return n, false, err
+	}
+	return s.settle(ctx, tx, sc, p.ID, n)
+}
+
+// settle records the notice and says whether it is to be told.
+func (s *Service) settle(ctx context.Context, tx *sql.Tx, sc ledger.Scope, id string, n Notice) (Notice, bool, error) {
 	late, history := s.age(n.At)
+	history = history || s.before(ctx, tx, sc, n.At)
 	res, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO pay_notices (site_id, provider, id, kind, amount, at) VALUES (?, ?, ?, ?, ?, ?)`,
-		sc.Site, sc.Provider, p.ID, n.Kind, net, n.At)
+		sc.Site, sc.Provider, id, n.Kind, n.Amount, n.At)
 	if err != nil {
 		return n, false, err
 	}
@@ -215,6 +269,88 @@ func (s *Service) payNotice(ctx context.Context, tx *sql.Tx, sc ledger.Scope, p 
 	}
 	n.Late = late
 	return n, true, nil
+}
+
+// releaseHeld tells the payments that waited for their invoice: once it has
+// arrived, or when the wait is over.
+func (s *Service) releaseHeld(ctx context.Context) (out []struct {
+	Site string
+	N    Notice
+}, err error) {
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	type row struct {
+		sc        ledger.Scope
+		p         payments.Payment
+		emailHash string
+		tax       sql.NullInt64
+		cus, sub  string
+		vis       int64
+		gone      bool
+	}
+	rows, err := tx.QueryContext(ctx, `SELECT n.site_id, n.provider, n.id, coalesce(p.connection_id, ''), p.paid_at, p.currency, p.gross, p.tax,
+		p.customer_id, p.subscription_id, p.email_hash, p.visitor_id, p.kind, p.id IS NULL OR p.test
+		FROM pay_notices n LEFT JOIN pay_payments p ON p.site_id = n.site_id AND p.provider = n.provider AND p.id = n.id WHERE n.kind = 'held'`)
+	if err != nil {
+		return nil, err
+	}
+	var held []row
+	for rows.Next() {
+		var r row
+		var paid, gross sql.NullInt64
+		var cur, cus, sub, eh, kind sql.NullString
+		var vis sql.NullInt64
+		if err := rows.Scan(&r.sc.Site, &r.sc.Provider, &r.p.ID, &r.sc.Connection, &paid, &cur, &gross, &r.tax, &cus, &sub, &eh, &vis, &kind, &r.gone); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		r.p.PaidAt, r.p.Currency, r.p.Gross = paid.Int64, cur.String, gross.Int64
+		r.p.CustomerID, r.p.SubscriptionID, r.p.Kind, r.emailHash = cus.String, sub.String, kind.String, eh.String
+		r.p.Visitor = uint64(vis.Int64) //nolint:gosec // visitor ids are stored bit for bit in SQLite's signed integer and read back the same way
+		if r.tax.Valid {
+			r.p.Tax = &r.tax.Int64
+		}
+		r.sc.EmailKey = s.emailKey
+		held = append(held, r)
+	}
+	rows.Close()
+	for _, r := range held {
+		del := func() error {
+			_, err := tx.ExecContext(ctx, `DELETE FROM pay_notices WHERE site_id = ? AND provider = ? AND id = ? AND kind = 'held'`, r.sc.Site, r.sc.Provider, r.p.ID)
+			return err
+		}
+		if r.gone {
+			if err := del(); err != nil {
+				return nil, err
+			}
+			continue
+		}
+		n, _, resolved, err := s.classify(ctx, tx, r.sc, r.p, r.emailHash)
+		if err != nil {
+			return nil, err
+		}
+		if !resolved && s.Now().Sub(time.UnixMilli(r.p.PaidAt)) < holdFor {
+			continue
+		}
+		if err := del(); err != nil {
+			return nil, err
+		}
+		if n.Amount <= 0 {
+			continue
+		}
+		if n, ok, err := s.settle(ctx, tx, r.sc, r.p.ID, n); err != nil {
+			return nil, err
+		} else if ok {
+			out = append(out, struct {
+				Site string
+				N    Notice
+			}{r.sc.Site, n})
+		}
+	}
+	return out, tx.Commit()
 }
 
 func firstOf(a, b string) string {
@@ -274,6 +410,7 @@ func (s *Service) refundNotice(ctx context.Context, tx *sql.Tx, sc ledger.Scope,
 		return n, false, err
 	}
 	late, history := s.age(at)
+	history = history || s.before(ctx, tx, sc, at)
 	cur = strings.ToUpper(cur)
 	back := ledger.RoundDiv(total-told, payments.AmountScale(sc.Provider, cur))
 	if history || back <= 0 {
