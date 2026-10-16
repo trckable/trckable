@@ -6,7 +6,7 @@ import { fmtMoney } from '../../lib/format'
 import type { Range } from '../../lib/dates'
 import { openSettings } from '../../lib/settings'
 import type { ViewState } from '../../lib/url'
-import { toast } from '../../components/toastBus'
+import { say } from '../ui/toast'
 import { FullButton } from './FullButton'
 import { Rail } from './Rail'
 import { SectionBody } from './SectionBody'
@@ -16,10 +16,11 @@ import type { XCtx } from './ctx'
 import { useMeta, useTab, type DataCtx } from './data/useExplore'
 import { nameOf } from './filters'
 import { sectionOf } from './sections'
-import type { Ask } from './store'
+import type { Ask } from './open'
 import { useActions } from './useActions'
 import { usePanelState } from './usePanelState'
 import { useMenuKeys } from './useMenuKeys'
+import { firstFocusable } from './usePanelKeys'
 
 export interface ContentProps {
   site: Site
@@ -37,18 +38,19 @@ export interface ContentProps {
 }
 
 export default function PanelContent(p: ContentProps) {
-  const { s, set, act } = usePanelState(p.ask, p.view.filters)
-  const c: DataCtx = { site: p.site, range: p.range, view: p.view, filters: s.filters, money: p.money }
+  const { tab, filters } = p.ask
+  const { s, set, act } = usePanelState(p.ask)
+  const c: DataCtx = { site: p.site, range: p.range, view: p.view, filters, money: p.money }
   const { meta, save, drop } = useMeta(c, true)
-  const loaded = useTab(s.tab, c, true)
-  const section = sectionOf(s.tab)
+  const loaded = useTab(tab, c, true)
+  const section = sectionOf(tab)
   const body = useRef<HTMLDivElement>(null)
   const keys = useMenuKeys(body, s, act.shut)
-  const a = useActions({ site: p.site, view: p.view, range: p.range, filters: s.filters, tab: s.tab, section })
+  const a = useActions({ site: p.site, view: p.view, range: p.range, filters, tab, section })
   const money = p.money ?? ((m: number) => fmtMoney(m, p.site.currency || 'USD', 2, { cents: false }))
   const x: XCtx = {
     siteName: p.site.name || p.site.domain,
-    filters: s.filters,
+    filters,
     options: meta.options,
     conn: meta.connected,
     limit: s.n,
@@ -57,7 +59,7 @@ export default function PanelContent(p: ContentProps) {
     clearFilters: act.clear,
     goTo: act.tab,
     connect: (k) => (k === 'goals' ? p.onGoal() : openSettings(p.site, k === 'rev' ? 'payments' : 'search')),
-    how: (k) => toast(copy.how[k], 'success'),
+    how: (k) => say(copy.howWorks, copy.how[k], { icon: 'i' }),
     money,
     kind: s.kind,
     setKind: (kind) => set({ kind, n: 12 }),
@@ -83,33 +85,33 @@ export default function PanelContent(p: ContentProps) {
   // The panel's own parts load after it opens: focus moves into it once they are here.
   useEffect(() => {
     const el = document.getElementById('xp')
-    if (el && !el.contains(document.activeElement)) el.querySelector<HTMLElement>('button')?.focus({ preventScroll: true })
+    if (el && (document.activeElement === el || !el.contains(document.activeElement))) firstFocusable(el)?.focus({ preventScroll: true })
   }, [])
   const content = (
       <>
         <Toolbar
           section={section}
-          tab={s.tab}
-          filters={s.filters}
+          tab={tab}
+          filters={filters}
           options={meta.options}
           conn={meta.connected}
           menu={s.menu}
           fd={s.fd}
-          details={section === 'pages' && s.filters.some((f) => f.dim === 'page')}
+          details={section === 'pages' && filters.some((f) => f.dim === 'page')}
           views={{
             views: meta.views,
             manage: s.manage,
-            canSave: s.filters.length > 0,
-            onApply: (i) => set({ filters: meta.views[i].filters, menu: null, n: 12 }),
+            canSave: filters.length > 0,
+            onApply: (i) => act.apply(meta.views[i].filters),
             onDelete: (i) => {
               drop(i)
               if (meta.views.length <= 1) set({ manage: false })
             },
             onManage: () => set({ manage: !s.manage }),
             onSave: () => {
-              save({ name: nameOf(s.filters, meta.options), filters: s.filters })
+              save({ name: nameOf(filters, meta.options), filters })
               set({ menu: null })
-              toast(copy.saved, 'success')
+              say(copy.saved, copy.savedHint)
             },
           }}
           onMenu={(k) => {
@@ -144,14 +146,14 @@ export default function PanelContent(p: ContentProps) {
             a.copyLink()
           }}
         />
-        <SectionBody tab={s.tab} x={x} r={loaded} />
+        <SectionBody tab={tab} x={x} r={loaded} />
       </>
   )
   return (
     <>
       <div className="xph">
         <b>{copy.title}</b>
-        <span className="quiet" id="xpSub">
+        <span className="mk-quiet" id="xpSub">
           {x.siteName} {'·'} {meta.label ?? p.label}
         </span>
         <FullButton full={p.full} onClick={p.onFull} />

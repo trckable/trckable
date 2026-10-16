@@ -1,6 +1,6 @@
 // Live and the Briefing: the walkthrough's header, and one of its two screens under it. This replaces the dashboard's
 // own header and control rows for these two views; Explore (the full numbers) opens over either as a panel.
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import '../mock/mock.css'
 import '../mock/theme.css'
 import type { Report, Site } from '../lib/api'
@@ -14,8 +14,14 @@ import { isViewer } from '../lib/me'
 import { navigate, setView, type ViewState } from '../lib/url'
 import { openSettings } from '../lib/settings'
 import { signOut } from '../lib/signOut'
+import { chooseLang, chosen } from '../i18n/choose'
+import { LANGUAGES } from '../i18n/languages'
+import { THEMES, useTheme } from '../lib/theme'
 import { openShortcuts } from '../components/ShortcutsHost'
 import { useOverview } from '../views/useOverview'
+import { Bell } from './bell/Bell'
+import { useNotices } from './bell/useNotices'
+import { useV2Extras } from './slots'
 import { BriefingSlot } from './briefing/BriefingSlot'
 import { copy } from './copy'
 import { AvatarMenu, type AvatarItem } from './ui/AvatarMenu'
@@ -24,9 +30,12 @@ import { PeriodChip } from './ui/PeriodChip'
 import { SegmentedSwitch } from './ui/SegmentedSwitch'
 import { SiteChip, type SiteItem } from './ui/SiteMenu'
 import { TabBar } from './ui/TabBar'
+import { goExplore } from './briefing/deeper'
 import { ExplorePanel } from './explore/Panel'
-import { exploreAsk, openExplore } from './explore/store'
-import { useExploreKeys } from './explore/useExploreKeys'
+import { MkToastHost } from './ui/MkToastHost'
+import { Palette } from './ui/Palette'
+import { paletteItems } from './explore/palette'
+import { copy as pal } from './explore/paletteCopy'
 import { Live } from './live/Live'
 import type { LiveProps } from './live/Live'
 
@@ -43,6 +52,8 @@ export interface V2Props {
   loading: boolean
   money?: (minor: number) => string
   onGoal: () => void
+  /** Open Peek; absent where the person cannot ask. */
+  onAsk?: () => void
   live: LiveProps
 }
 
@@ -57,6 +68,8 @@ export function V2View(p: V2Props) {
   const online = liveCount.use()
   const down = siteDown.use()
   const { profile } = useProfile()
+  const slots = useV2Extras()
+  const notices = useNotices(p.site, p.sites)
   const { rows } = useOverview(1)
   const today = todayIn(p.site.timezone)
   const viewer = isViewer()
@@ -71,21 +84,41 @@ export function V2View(p: V2Props) {
   const day = p.view.period === 'today' || p.view.period === 'yesterday'
   const vs = vsWords(day, weekday, p.view, p.range)
   const label = day ? `${p.view.period === 'today' ? copy.today : copy.yesterday} · ${dayWords(p.range.to)}` : (PRESETS.find((q) => q.id === p.view.period)?.label ?? rangeWords(p.range, today, copy.todayWord))
+  const [theme, pickTheme] = useTheme()
   const account: AvatarItem[] = useMemo(
     () => [
-      { key: 'sites', name: copy.sites, d: copy.sitesCount(p.sites.length), run: () => openAccount('sites') },
+      { key: 'notices', name: notices.unread ? `${copy.notifications} (${notices.unread})` : copy.notifications, run: () => document.getElementById('bellBtn')?.click() },
+      ...(slots.accountRows ?? []),
+      { key: 'sites', name: copy.sites, d: copy.sitesCount(p.sites.length), run: () => openAccount('sites'), line: true },
       { key: 'team', name: copy.team, run: () => openAccount('people') },
       { key: 'api', name: copy.api, run: () => openAccount('keys') },
       { key: 'profile', name: copy.profile, run: () => openAccount('profile') },
+      { key: 'security', name: copy.security, d: copy.securityD, run: () => openAccount('profile') },
+      {
+        key: 'language',
+        name: copy.language,
+        panel: { title: copy.language, rows: [{ code: 'auto', name: copy.languageAuto }, ...LANGUAGES].map((l) => ({ key: l.code, name: l.name, on: chosen() === l.code, run: () => chooseLang(l.code) })) },
+      },
+      { key: 'theme', name: copy.theme, panel: { title: copy.theme, rows: THEMES.map((t) => ({ key: t, name: copy.themes[t], on: theme === t, run: () => pickTheme(t) })) } },
       { key: 'keys', name: copy.shortcuts, run: openShortcuts },
       { key: 'out', name: copy.signOut, line: true, run: signOut },
     ],
-    [p.sites.length],
+    [p.sites.length, slots.accountRows, theme, pickTheme, notices.unread],
   )
   const here = p.tab
-  const exploreOpen = () => openExplore()
-  const exploring = exploreAsk.use() !== null
-  useExploreKeys()
+  const [find, setFind] = useState(false)
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        setFind((f) => !f)
+      }
+    }
+    window.addEventListener('keydown', key, true)
+    return () => window.removeEventListener('keydown', key, true)
+  }, [])
+  const exploreOpen = () => goExplore()
   const siteMenu = {
     sites: items,
     current: p.site.id,
@@ -98,6 +131,7 @@ export function V2View(p: V2Props) {
       { key: 'widgets', label: copy.widgets, run: () => openSettings(p.site, 'widgets') },
       { key: 'settings', label: copy.settings, run: () => openSettings(p.site, 'site') },
     ].filter((f) => !viewer || f.key === 'status'),
+    workspace: slots.workspace,
     find: copy.find,
     all: copy.allSites,
   }
@@ -128,13 +162,17 @@ export function V2View(p: V2Props) {
           ) : null
         }
         explore={<ExploreChip label={copy.explore} kbd="⌘K" onClick={exploreOpen} />}
-        account={<AvatarMenu initial={(profile?.name || profile?.email || '?').slice(0, 1).toUpperCase()} who={profile?.name || profile?.email.split('@')[0] || ''} d={viewer ? copy.viewer : copy.owner} items={account} />}
+        extras={slots.headerExtra}
+        bell={<Bell site={p.site} notices={notices} />}
+        account={<AvatarMenu initial={(profile?.name || profile?.email || '?').slice(0, 1).toUpperCase()} who={profile?.name || profile?.email.split('@')[0] || ''} d={viewer ? copy.viewer : copy.owner} items={account} back={copy.back} extras={slots.menuExtra} />}
       />
       <main id="main" className="vfade">
-        {here === 'briefing' ? <BriefingSlot site={p.site} data={p.data} loading={p.loading} period={p.view.period} range={p.range} money={p.money} onGoal={p.onGoal} /> : <Live {...p.live} />}
+        {here === 'briefing' ? <BriefingSlot site={p.site} data={p.data} loading={p.loading} period={p.view.period} range={p.range} money={p.money} onGoal={p.onGoal} visits={p.live.stream.visits} /> : <Live {...p.live} />}
       </main>
-      <TabBar value={exploring ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />
       <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} money={p.money} onGoal={p.onGoal} />
+      {find && <Palette items={paletteItems({ sites: p.sites, site: p.site, data: p.data, here: p.tab, onAsk: p.onAsk, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} onClose={() => setFind(false)} />}
+      <MkToastHost />
+      <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />
     </div>
   )
 }

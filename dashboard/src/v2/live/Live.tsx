@@ -10,7 +10,9 @@ import { fmtInt } from '../../lib/format'
 import { channelColor, channelLabel } from '../../lib/palette'
 import { useReport } from '../../lib/useReport'
 import type { Sale, Site, Visit } from '../../lib/api'
-import { BusierLine } from '../../features/live/BusierLine'
+import { BusyLine } from '../ui/BusyLine'
+import { WhyInline } from '../ui/WhyInline'
+import { whyDown } from '../briefing/why'
 import { liveCount, liveLink } from '../../features/live/liveLink'
 import { feedOf, seriesAt } from '../../features/live/model'
 import { useBusier } from '../../features/live/useBusier'
@@ -57,7 +59,7 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
   const rows = useMemo(() => (data ? feedOf(data.recent, stream.visits, data.at, now) : []), [data, stream.visits, now])
   const lists = useMemo(() => listsOf(rows), [rows])
   const upSources = useMemo(() => new Set((busier?.why ?? []).filter((w) => w.dim === 'source').map((w) => w.value)), [busier])
-  if (!data) return <div className="liveview"><p className="quiet">{failed ? copy.failed : copy.loading}</p></div>
+  if (!data) return <div className="liveview"><p className="mk-quiet">{failed ? copy.failed : copy.loading}</p></div>
   const n = online ?? 0
   const bars = barsOf(seriesAt(data, stream.visits, now))
   const ch = changeOf(data.visitors, data.previous)
@@ -68,18 +70,17 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
   const week7 = (week.data?.current.series ?? []).map((p) => p.visitors)
   return (
     <>
-      <BusierLine busier={busier} site={site} timezone={timezone} />
       {!isShared() && (
         <Suspense fallback={null}>
           <MentionChip site={site} domain={whole?.domain} />
         </Suspense>
       )}
       <div className="liveview">
-        <section className="card lnow">
+        <section className="mk-card lnow">
           <div className="lhead">
-            <span className={`pulse ${down || !stream.connected ? 'off' : ''}`} />
+            <span className={`mk-pulse ${down || !stream.connected ? 'off' : ''}`} />
             <span className="lt">{copy.live}</span>
-            <span className="quiet lm">{copy.window(clockText)}</span>
+            <span className="mk-quiet lm">{copy.window(clockText)}</span>
           </div>
           <div className="lfig">
             <div>
@@ -89,10 +90,15 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
             <div>
               <span className="ll">{copy.visitors30}</span>
               <b className="lbign">{fmtInt(data.visitors)}</b>
-              {ch && <span className={`ld ${ch.up ? 'up' : 'dn'}`}>{copy.change(ch.up, ch.pct)}</span>}
+              {ch && <span className={`mk-ld ${ch.up ? 'up' : 'dn'}`}>{copy.change(ch.up, ch.pct)}</span>}
             </div>
           </div>
-          {down && <div className="downbox">{copy.downBox}</div>}
+          <BusyLine busier={busier} site={site} timezone={timezone} />
+          {down && (
+            <div className="downbox">
+              {copy.downBox} <WhyInline why={whyDown({ domain: whole?.domain ?? '', cause: whole?.down_cause, minutes: 0, ongoing: true })} />
+            </div>
+          )}
           <div className="mins">
             {bars.map((b, i) => (
               <i key={i} className={b.z ? 'z' : ''} style={{ height: `${b.h}%` }} />
@@ -126,7 +132,7 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
                   </ul>
                 </>
               ) : (
-                <div className="quiet" style={{ marginTop: 8 }}>
+                <div className="mk-quiet" style={{ marginTop: 8 }}>
                   {copy.noVisitors}
                 </div>
               )}
@@ -150,20 +156,20 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
             )}
           </div>
         </section>
-        <section className="card lon">
+        <section className="mk-card lon">
           <div className="lhead">
             <span className="lt">{copy.onSite}</span>
-            <span className="quiet lm">{copy.people(n)}</span>
+            <span className="mk-quiet lm">{copy.people(n)}</span>
           </div>
           <FeedList rows={rows} up={upSources} clock={now} more={Math.max(0, n - rows.length)} onVisitor={onVisitor} />
         </section>
       </div>
       <div className="lcards">
         {data.today && data.today.visitors > 0 && (
-          <section className="card lcard">
+          <section className="mk-card lcard">
             <div className="ph">
               <span className="t">{copy.today}</span>
-              {tb && <span className="quiet">{tb.word === 'usual' ? copy.usualWord : copy[tb.word]}</span>}
+              {tb && <span className="mk-quiet">{tb.word === 'usual' ? copy.usualWord : copy[tb.word]}</span>}
             </div>
             <div className="pb">
               <div className="lbig">
@@ -173,12 +179,12 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
               {tb && (
                 <>
                   <Rng v={data.today.visitors} lo={tb.lo} hi={tb.hi} max={tb.max} />
-                  <div className="n">{copy.usual(tb.lo, tb.hi)}</div>
+                  <div className="mk-n">{copy.usual(tb.lo, tb.hi)}</div>
                 </>
               )}
               {week7.length > 1 && (
                 <>
-                  <div className="n" style={{ marginTop: 'var(--mk-s4)' }}>{copy.last7}</div>
+                  <div className="mk-n" style={{ marginTop: 'var(--mk-s4)' }}>{copy.last7}</div>
                   <span style={{ color: 'var(--mk-muted)' }}>
                     <Spark vals={week7} h={56} className="" />
                   </span>
@@ -188,7 +194,7 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
           </section>
         )}
         {lists.pages.length > 0 && (
-          <section className="card lcard">
+          <section className="mk-card lcard">
             <div className="ph">
               <span className="t">{copy.pages}</span>
             </div>
@@ -203,7 +209,7 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
           </section>
         )}
         {lists.countries.length > 0 && (
-          <section className="card lcard">
+          <section className="mk-card lcard">
             <div className="ph">
               <span className="t">{copy.countries}</span>
             </div>
@@ -214,7 +220,7 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
                   <b>{c.n}</b>
                 </div>
               ))}
-              {lists.mobile + lists.desktop > 0 && <div className="n">{copy.devices(Math.round(lists.mobile * 100), Math.round(lists.desktop * 100))}</div>}
+              {lists.mobile + lists.desktop > 0 && <div className="mk-n">{copy.devices(Math.round(lists.mobile * 100), Math.round(lists.desktop * 100))}</div>}
             </div>
           </section>
         )}

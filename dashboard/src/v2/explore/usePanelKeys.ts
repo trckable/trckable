@@ -1,9 +1,12 @@
 // The keys that belong to the open panel as a whole: Esc shuts the menu that is open, or else the panel (from anywhere in
 // it, an input too); F toggles full width; Tab stays inside it. The keys of one menu or one list are in PanelContent.
 import { useEffect, type RefObject } from 'react'
-import { closeExplore } from './store'
+import { closeExplore } from './open'
 
 const FOCUSABLE = 'a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])'
+
+/** The first thing in the panel that can take focus and is on screen. */
+export const firstFocusable = (el: HTMLElement | null): HTMLElement | undefined => [...(el?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])].find((x) => !(x as HTMLButtonElement).disabled && x.getClientRects().length > 0)
 
 const typing = (t: EventTarget | null) => t instanceof HTMLElement && /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)
 

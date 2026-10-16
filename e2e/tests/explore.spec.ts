@@ -1,4 +1,4 @@
-// Explore as a panel over the Briefing: opened from the chip, a card's "Go deeper" and the keyboard; its sections and
+// Explore as a panel over the Briefing: opened from the chip and the keyboard (E; a card's "Go deeper" is in briefing.spec.ts); its sections and
 // the picker, a filter from a tapped row, full width with the section list, Escape and focus, and the phone's sheet.
 // Chromium only (it runs against the site with a few days behind it).
 import { expect, test, type Page } from './fixtures'
@@ -47,7 +47,8 @@ test.beforeAll(async () => {
 async function open(page: Page, width: number) {
   await page.setViewportSize({ width, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d`)
+  // An empty v is the address with no view: the suite would otherwise send it to Explore, which opens the panel.
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
   await expect(page.locator('.brief')).toBeVisible()
 }
 
@@ -59,26 +60,27 @@ const pick = async (page: Page, name: RegExp) => {
 
 test('the chip opens it over the Briefing, and Escape, the cross and the dim shut it', async ({ page }) => {
   await open(page, 1440)
-  await page.locator('.chip.exb').click()
+  await page.locator('.mk-chip.exb').click()
   await expect(panel(page)).toBeVisible()
-  await expect(page).toHaveURL(/view=briefing/)
+  await expect(page).toHaveURL(/view=briefing.*x=overview/)
   await expect(page.locator('#xp .kcs .kc')).toHaveCount(4)
   await expect(page.locator('#xpSub')).toContainText(HISTORY_DOMAIN)
   const box = (await page.locator('#xp').boundingBox())!
   expect(Math.round(box.width), 'a side panel 560 px wide').toBe(560)
   await page.keyboard.press('Escape')
   await expect(panel(page)).toHaveCount(0)
-  await page.locator('.chip.exb').click()
+  await expect(page).not.toHaveURL(/[?&]x=/)
+  await page.locator('.mk-chip.exb').click()
   await page.locator('#xpClose').click()
   await expect(panel(page)).toHaveCount(0)
-  await page.locator('.chip.exb').click()
+  await page.locator('.mk-chip.exb').click()
   await page.mouse.click(100, 400)
   await expect(panel(page)).toHaveCount(0)
 })
 
 test('the picker has ten sections in four groups, and the tabs of a section stay in it', async ({ page }) => {
   await open(page, 1440)
-  await page.locator('.chip.exb').click()
+  await page.locator('.mk-chip.exb').click()
   await page.locator('[data-xm="pick"]').click()
   await expect(page.locator('#xm-pick .xgl')).toHaveText(['Traffic', 'Audience', 'Results', 'Site'])
   await expect(page.locator('#xm-pick .xmi')).toHaveCount(10)
@@ -90,18 +92,19 @@ test('the picker has ten sections in four groups, and the tabs of a section stay
   await page.locator('[data-xm="pick"]').click()
   await expect(page.locator('#xm-pick .xmi', { hasText: 'Sales' }).locator('.xtag')).toHaveText('Connect')
   await page.locator('#xm-pick').getByRole('menuitem', { name: /^Sales/ }).click()
-  await expect(page.locator('#xp .srow.big')).toContainText('No revenue yet')
+  await expect(page.locator('#xp .mk-srow')).toContainText('No revenue yet')
 })
 
 test('a tapped row filters, the chip takes it off, and Show all lists the rest', async ({ page }) => {
   await open(page, 1440)
-  await page.locator('.chip.exb').click()
+  await page.locator('.mk-chip.exb').click()
   await pick(page, /^Pages/)
   const rows = page.locator('#xp .xt .xrw')
   await expect(rows.first()).toBeVisible()
-  const first = (await rows.first().locator('.bar span').textContent())!
+  const first = (await rows.first().locator('.mk-bar span').textContent())!
   await rows.first().click()
   await expect(page.locator('#xp .xchip2')).toContainText(first)
+  await expect(page).toHaveURL(/xf=page/)
   await page.locator('#xp .xchip2 button').click()
   await expect(page.locator('#xp .xchip2')).toHaveCount(0)
   // The filter menu: a dimension, then its values; Views is empty until one is saved.
@@ -115,8 +118,8 @@ test('a tapped row filters, the chip takes it off, and Show all lists the rest',
 
 test('full width has the section list beside it, and F, Tab and Escape keep to the panel', async ({ page }) => {
   await open(page, 1440)
-  await page.keyboard.press('Meta+k')
-  await expect(panel(page)).toBeVisible()
+  await page.keyboard.press('e')
+  await expect(page.locator('#xp.on .xtb')).toBeVisible()
   await page.keyboard.press('f')
   await expect(page.locator('#xp.full .xrail .xri')).toHaveCount(10)
   await page.locator('#xp .xrail').getByRole('button', { name: /^Speed/ }).click()
@@ -136,14 +139,6 @@ test('full width has the section list beside it, and F, Tab and Escape keep to t
   await expect(panel(page)).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(panel(page)).toHaveCount(0)
-})
-
-test('Go deeper on a card opens it over the Briefing with the thing filtered', async ({ page }) => {
-  await open(page, 1440)
-  await page.locator('.icard').first().getByRole('button', { name: /Go deeper/ }).click()
-  await expect(panel(page)).toBeVisible()
-  await expect(page).toHaveURL(/view=briefing/)
-  await expect(page.locator('#xp .xtb')).toBeVisible()
 })
 
 test('on a phone it is a sheet from the bottom, opened by the bar, and its menus are sheets too', async ({ page }) => {

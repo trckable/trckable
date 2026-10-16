@@ -47,7 +47,8 @@ test.beforeAll(async () => {
 async function open(page: Page, width: number, query: string) {
   await page.setViewportSize({ width, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(`${API}/${HISTORY_DOMAIN}${query}`)
+  // An empty v is the address with no view: the suite would otherwise send it to Explore, which opens the panel.
+  await page.goto(`${API}/${HISTORY_DOMAIN}${query}${query ? '&' : '?'}v=`)
 }
 
 // The suite's page adds ?v=explore to a dashboard address; a bare address is what is asked about here, so the browser goes there itself.

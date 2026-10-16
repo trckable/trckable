@@ -9,10 +9,10 @@ const KINDS = ['', 'new', 'upgrade', 'renewal', 'refund'] as const
 function Line({ s, money }: { s: Sale; money: (minor: number) => string }) {
   return (
     <div className="sale">
-      <span className={`tag ${s.kind}`}>{copy.tags[s.kind]}</span>
+      <span className={`mk-tag ${s.kind}`}>{copy.tags[s.kind]}</span>
       <span className="gn">
         <div>{s.label}</div>
-        <div className="quiet" style={{ fontSize: '12px' }}>
+        <div className="mk-quiet" style={{ fontSize: '12px' }}>
           {[s.from, s.country, s.device, s.when].filter(Boolean).join(' · ')}
         </div>
       </span>
@@ -45,7 +45,7 @@ export function Sales({ x, d }: { x: XCtx; d: Model }) {
         list.slice(0, x.limit).map((s, i) => <Line key={`${i}${s.when}`} s={s} money={x.money} />)
       )}
       {list.length > x.limit && (
-        <button type="button" className="more" id="xMore" onClick={x.showAll}>
+        <button type="button" className="mk-more" id="xMore" onClick={x.showAll}>
           {copy.showAll(list.length)}
         </button>
       )}

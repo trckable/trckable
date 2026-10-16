@@ -48,7 +48,7 @@ export function XGoals({ goals }: { goals: Goal[] }) {
   return (
     <>
       {goals.map((g) => (
-        <div key={g.name} className={`goal ${g.st}`}>
+        <div key={g.name} className={`mk-goal ${g.st}`}>
           <span className="gn">{g.name}</span>
           <Rng v={g.v} lo={g.lo} hi={g.hi} max={Math.max(g.v, g.hi, 1) * 1.3} />
           <span className="gv" style={g.st === 'dn' ? { color: 'var(--mk-red)' } : undefined}>

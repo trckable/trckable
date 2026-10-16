@@ -17,13 +17,13 @@ export function Logo({ onClick, title }: { onClick: () => void; title: string })
 
 export function ExploreChip({ onClick, label, kbd }: { onClick: () => void; label: string; kbd: string }) {
   return (
-    <button type="button" className="chip exb" title={label} onClick={onClick}>
+    <button type="button" className="mk-chip exb" title={label} onClick={onClick}>
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
         <circle cx="7" cy="7" r="4.5" />
         <path d="M10.5 10.5 14 14" />
       </svg>
       <span className="t2">{label}</span>
-      <span className="kbd">{kbd}</span>
+      <span className="mk-kbd">{kbd}</span>
     </button>
   )
 }
@@ -35,6 +35,9 @@ export interface HeaderProps {
   period: ReactNode
   explore: ReactNode
   account: ReactNode
+  /** Between the person and the bell: a build with a plan puts its chip here (see ../slots). */
+  extras?: ReactNode
+  bell?: ReactNode
 }
 
 export function Header(p: HeaderProps) {
@@ -47,6 +50,8 @@ export function Header(p: HeaderProps) {
       <span className="sp" />
       {p.explore}
       {p.account}
+      {p.extras}
+      {p.bell}
     </header>
   )
 }

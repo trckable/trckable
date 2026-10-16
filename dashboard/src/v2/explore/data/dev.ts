@@ -1,16 +1,13 @@
 // The way into the sample worlds. Only in development: in a build the check below is false and the fixture is never
-// part of the page. `?xfx=full` (or bare, long) turns it on and stays on for the tab; `?xfx=off` turns it off.
+// part of the page. `?xfx=full` (or bare, long) turns it on and stays on for the tab; `?xfx=off` turns it off (xfx.ts).
 import type { Filter } from '../../../lib/api'
 import type { Tab, Tabs, World } from '../types'
-
-const KEY = 'trckable:xfx'
+import { XFH, XFX } from './xfx'
 
 export function fixtureName(): string | null {
   if (!import.meta.env.DEV) return null
   try {
-    const q = new URLSearchParams(location.search).get('xfx')
-    if (q !== null) sessionStorage.setItem(KEY, q)
-    const name = sessionStorage.getItem(KEY)
+    const name = sessionStorage.getItem(XFX)
     return name && name !== 'off' ? name : null
   } catch {
     return null
@@ -19,7 +16,7 @@ export function fixtureName(): string | null {
 
 /** How long the sample takes to answer, so the loading shape can be seen: forever when `?xfh=1` holds it. */
 const wait = (): Promise<void> => {
-  if (new URLSearchParams(location.search).has('xfh')) return new Promise(() => undefined)
+  if (sessionStorage.getItem(XFH)) return new Promise(() => undefined)
   return new Promise((r) => setTimeout(r, matchMedia('(prefers-reduced-motion:reduce)').matches ? 0 : 240))
 }
 

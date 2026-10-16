@@ -5,6 +5,7 @@ import { fmtDay } from '../../lib/dates'
 import { copy } from './copy'
 import type { ChartIn, Down } from '../ui/DayChart'
 import { mult, type Unit } from './model'
+import { judge, type Band, type Judged } from './usual'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -16,6 +17,13 @@ export function siteNow(tz: string, now = new Date()): string {
   } catch {
     return now.toISOString().slice(0, 16)
   }
+}
+
+/** An axis label: the hour for a day, the weekday at each midnight for longer stretches by the hour, the date for days. */
+function tickOf(hourly: boolean, n: number, h: number, date: string, day: string): string {
+  if (!hourly) return day.replace(/^[A-Za-z]+,? /, '')
+  if (n <= 48) return `${pad(h)}:00`
+  return h === 0 ? new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) : ''
 }
 
 export interface ChartArgs {
@@ -30,49 +38,71 @@ export interface ChartArgs {
   riseName?: string
   downs?: Down[]
   notes?: { i: number; text: string }[]
+  /** The usual band of each bucket of the period, when the site's own history says it (else the period before, a quarter either way). */
+  bands?: (Band | null)[]
+  /** The whole period against its usual, for the standing note. */
+  overall?: Judged
+}
+
+const bandFrom = (was: number[], i: number): Band => {
+  const c = was[i] ?? 0
+  return { c, lo: Math.floor(c * 0.75), hi: Math.ceil(c * 1.25) + 1 }
 }
 
 export function chartOf(a: ChartArgs): ChartIn {
   const hourly = a.bucket === 'hour'
-  const live = !!a.nowT && a.cur.series.some((p) => p.t.slice(0, 10) === a.nowT?.slice(0, 10))
+  const nowDay = a.nowT?.slice(0, 10)
+  const live = !!a.nowT && a.cur.series.some((p) => p.t.slice(0, 10) === nowDay)
   let pts: Point[] = a.cur.series
   let e = 0
   let span = pts.length
   if (live && a.nowT) {
-    const nowHour = Number(a.nowT.slice(11, 13))
-    e = nowHour + Number(a.nowT.slice(14, 16)) / 60
-    pts = pts.filter((p) => p.t.slice(0, 13) <= (a.nowT as string).slice(0, 13))
-    if (hourly) span = Math.min(a.cur.series.length, Math.max(6, Math.ceil(e) + 2))
+    const nowHour = Number(a.nowT.slice(11, 13)) + Number(a.nowT.slice(14, 16)) / 60
+    const key = a.nowT.slice(0, hourly ? 13 : 10)
+    const idx = a.cur.series.findIndex((p) => p.t.slice(0, key.length) === key)
+    e = (idx < 0 ? 0 : idx) + (hourly ? nowHour - Math.floor(nowHour) : nowHour / 24)
+    pts = pts.filter((p) => p.t.slice(0, key.length) <= key)
+    // A day is drawn up to the hour after next; a longer stretch shows all of its days.
+    if (hourly && a.cur.series.length <= 24) span = Math.min(a.cur.series.length, Math.max(6, Math.ceil(e) + 2))
   }
   const was = (a.prev?.series ?? []).map((p) => p.visitors)
-  const band = was.length >= pts.length / 2 && pts.length > 1
+  const band = (a.bands ? a.bands.filter(Boolean).length >= a.cur.series.length / 2 : was.length >= pts.length / 2) && pts.length > 1
+  const bandAt = (i: number): Band => a.bands?.[i] ?? bandFrom(was, i)
   const unitWord = hourly ? copy.hours : copy.days
   const points = pts.map((p, i) => {
     const h = Number(p.t.slice(11, 13))
-    const fr = live && hourly && i === pts.length - 1 ? Math.min(1, e - h) : 1
+    const fr = live && hourly && i === pts.length - 1 ? Math.min(1, Math.max(0, e - i)) : 1
+    const full = bandAt(i)
+    const raw = { v: p.visitors, lo: full.lo * fr, hi: full.hi * fr }
     const v = fr >= 0.25 ? Math.round(p.visitors / fr) : p.visitors
-    const lo = Math.floor((was[i] ?? 0) * 0.75)
-    const hi = Math.ceil((was[i] ?? 0) * 1.25) + 1
-    const name = hourly ? `${pad(h)}:00` : fmtDay(p.t.slice(0, 10))
-    const tick = hourly ? `${pad(h)}:00` : fmtDay(p.t.slice(0, 10)).replace(/^[A-Za-z]+,? /, '')
-    return { i, name, tick, v, lo, hi }
+    const st: Judged = !band || fr < 0.25 ? '' : judge(p.visitors, { c: full.c * fr, lo: raw.lo, hi: raw.hi })
+    const day = fmtDay(p.t.slice(0, 10))
+    const days = a.cur.series.length > 24
+    const name = hourly ? `${days ? `${day} ` : ''}${pad(h)}:00` : day
+    const tick = tickOf(hourly, a.cur.series.length, h, p.t.slice(0, 10), day)
+    return { i, name, tick, v, lo: full.lo, hi: full.hi, st, raw }
   })
+  const ladder = Array.from({ length: Math.max(span, pts.length) }, (_, i) => bandAt(i))
   let best = -1
   let bv = 0
   points.forEach((p, i) => {
     const x = (p.v - p.hi) / Math.max(p.hi, 1)
-    if (band && p.v > p.hi && x > bv) {
+    if (p.st === 'up' && x > bv) {
       bv = x
       best = i
     }
   })
-  const ratio = best >= 0 && points[best].lo > 0 ? points[best].v / ((points[best].lo / 0.75 + (points[best].hi - 1) / 1.25) / 2) : 0
+  const c0 = best >= 0 ? bandAt(best).c : 0
+  const ratio = best >= 0 && c0 > 0.5 ? points[best].v / c0 : 0
   const rise = best >= 0 ? { i: best, text: `${a.riseName ?? copy.traffic} · ${ratio >= 1.3 ? `${mult(ratio)} a usual ${hourly ? 'hour' : 'day'}` : 'above usual'}` } : undefined
   return {
     points,
     span,
     live,
     band,
+    ladder,
+    overall: a.overall ?? '',
+    elapsed: live ? e : 0,
     usualLabel: a.unit === 'today' || a.unit === 'yesterday' ? copy.usualDay(a.weekday) : copy.usualWord,
     unit: unitWord,
     bucket: a.bucket,

@@ -16,14 +16,14 @@ export function Overview({ x, d }: { x: XCtx; d: Model }) {
       {d.shape ? (
         <XShape shape={d.shape} />
       ) : (
-        <div className="quiet" style={{ padding: '8px 0' }}>
+        <div className="mk-quiet" style={{ padding: '8px 0' }}>
           {copy.notEnough}
         </div>
       )}
       <XSec a={copy.downtime} b={d.down.length ? copy.incidents(d.down.length) : copy.none} />
       {d.down.map((i) => (
         <div key={i.from} className="sale">
-          <span className="tag refund">{copy.down}</span>
+          <span className="mk-tag refund">{copy.down}</span>
           <span className="gn">{copy.downSpan(i.from, i.to)}</span>
           <span className="amt">{copy.minutes(i.min)}</span>
         </div>

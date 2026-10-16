@@ -30,9 +30,4 @@ export const valueOf = (list: Filter[], dim: string | undefined): string | null 
 /** A name for a set of filters, as a saved view is called. */
 export const nameOf = (list: Filter[], options: Partial<Record<FilterDim, Option[]>>): string => list.map((f) => chipName(f, options)).join(' · ')
 
-/** Two sets of filters are the same, whatever their order. */
-export const keyOf = (list: Filter[]): string =>
-  list
-    .map((f) => `${f.dim}=${f.value}`)
-    .sort()
-    .join('&')
+export { keyOf } from './key'

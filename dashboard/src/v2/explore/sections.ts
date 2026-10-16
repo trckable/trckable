@@ -1,6 +1,8 @@
 // Explore's ten sections in four groups, and the tables each one holds.
 import type { FilterDim, Section, Tab } from './types'
 
+export type { Section, Tab } from './types'
+
 export const GROUPS: { key: 'traffic' | 'audience' | 'results' | 'site'; items: Section[] }[] = [
   { key: 'traffic', items: ['overview', 'pages', 'sources'] },
   { key: 'audience', items: ['places', 'tech'] },
@@ -24,6 +26,11 @@ export const TABS: Record<Section, Tab[]> = {
 }
 
 export const sectionOf = (t: Tab): Section => SECTIONS.find((s) => TABS[s].includes(t)) ?? 'overview'
+
+export const ALL_TABS: Tab[] = SECTIONS.flatMap((s) => TABS[s])
+
+/** Whether an address's word for a table (?x=pages) is one. */
+export const isTab = (v: string | undefined): v is Tab => !!v && (ALL_TABS as string[]).includes(v)
 
 export const FILTER_DIMS: FilterDim[] = ['referrer', 'page', 'country', 'device']
 

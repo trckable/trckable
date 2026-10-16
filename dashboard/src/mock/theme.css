@@ -1,4 +1,4 @@
-/* The walkthrough's colours: its own in the dark theme (they are the design), the page's tokens in the light one. */
+/* The walkthrough's colours: its own in the dark theme (they are the design). The light theme is the same set, turned. */
 .mk {
   --mk-grid: #1d1f23;
   --mk-axis: #70747b;
@@ -6,32 +6,32 @@
 @media (prefers-color-scheme: light) {
   :root:not([data-theme='dark']) .mk {
     color-scheme: light;
-    --mk-bg: var(--bg);
-    --mk-card: var(--surface);
-    --mk-card2: var(--surface-2);
-    --mk-line: var(--border);
-    --mk-text: var(--text);
-    --mk-muted: var(--text-3);
-    --mk-faint: var(--text-4);
-    --mk-lime: var(--accent);
-    --mk-red: var(--down);
-    --mk-grid: var(--grid);
-    --mk-axis: var(--text-4);
+    --mk-bg: #fafaf7;
+    --mk-card: #ffffff;
+    --mk-card2: #f3f4f1;
+    --mk-line: #e3e5e0;
+    --mk-text: #0b0d10;
+    --mk-muted: #58606c;
+    --mk-faint: #5f6671;
+    --mk-lime: #487f00;
+    --mk-red: #c62828;
+    --mk-grid: #eef0eb;
+    --mk-axis: #5f6671;
   }
 }
 :root[data-theme='light'] .mk {
   color-scheme: light;
-  --mk-bg: var(--bg);
-  --mk-card: var(--surface);
-  --mk-card2: var(--surface-2);
-  --mk-line: var(--border);
-  --mk-text: var(--text);
-  --mk-muted: var(--text-3);
-  --mk-faint: var(--text-4);
-  --mk-lime: var(--accent);
-  --mk-red: var(--down);
-  --mk-grid: var(--grid);
-  --mk-axis: var(--text-4);
+  --mk-bg: #fafaf7;
+  --mk-card: #ffffff;
+  --mk-card2: #f3f4f1;
+  --mk-line: #e3e5e0;
+  --mk-text: #0b0d10;
+  --mk-muted: #58606c;
+  --mk-faint: #5f6671;
+  --mk-lime: #487f00;
+  --mk-red: #c62828;
+  --mk-grid: #eef0eb;
+  --mk-axis: #5f6671;
 }
 /* Inside the dashboard the walkthrough is a body, not a page: no padding of its own, no background over the page. */
 .mk.mk-body {
@@ -46,4 +46,22 @@
   max-width: none;
   width: auto;
   background: none;
+}
+/* The walkthrough's page: its own black in the dark theme, with none of the dashboard's ambient glow behind it. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):has(#app.mk) body {
+    background: #0a0b0c;
+  }
+}
+:root[data-theme='dark']:has(#app.mk) body {
+  background: #0a0b0c;
+}
+:root:has(#app.mk) body::before {
+  display: none;
+}
+/* The page's own top padding on a phone is the walkthrough's header to fill: it sits at the very top. */
+@media (max-width: 600px) {
+  .app:has(> #app.mk) {
+    padding-top: 0;
+  }
 }

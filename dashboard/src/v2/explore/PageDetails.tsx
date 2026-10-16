@@ -42,10 +42,10 @@ function Body({ site, range, view, page }: { site: Site; range: Range; view: Vie
           </div>
         ))
       ) : (
-        <div className="quiet">{read.state === 'loading' ? copy.loading : copy.noScroll}</div>
+        <div className="mk-quiet">{read.state === 'loading' ? copy.loading : copy.noScroll}</div>
       )}
       <XSec a={copy.speed} b={lcp != null ? copy.grades[gradeOf(0, lcp)] : undefined} />
-      <div className="quiet">{line}</div>
+      <div className="mk-quiet">{line}</div>
     </div>
   )
 }
@@ -72,7 +72,7 @@ export default function PageDetails({ site, range, view }: { site: Site; range: 
       <aside ref={box} className="cd on" aria-label={copy.pageDetails} tabIndex={-1} style={{ zIndex: 73 }}>
         <div className="cdh">
           <b>{copy.pageDetails}</b>
-          <span className="quiet">{site.name || site.domain}</span>
+          <span className="mk-quiet">{site.name || site.domain}</span>
           <button type="button" className="ib x" title={copy.close} onClick={close}>
             {'×'}
           </button>

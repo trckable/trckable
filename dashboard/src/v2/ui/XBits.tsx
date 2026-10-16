@@ -33,7 +33,7 @@ export interface SetupText {
 /** A row that says what is not connected, with the way to do it and how it works. */
 export function XSetup({ icon, x, howLabel, onSet, onHow }: { icon: string; x: SetupText; howLabel: string; onSet: () => void; onHow: () => void }) {
   return (
-    <div className="srow big">
+    <div className="mk-srow big">
       <Ico name={icon} className="ic-i" />
       <span className="st2">
         <b>{x.t}</b> {x.d}

@@ -15,7 +15,7 @@ export interface SiteMenuProps {
   sites: SiteItem[]
   current: string | null
   /** The workspace line at the top, when the account has one. */
-  workspace?: { name: string; d: string }
+  workspace?: { name: string; d: string; run?: () => void }
   onPick: (id: string) => void
   footer: { key: string; label: ReactNode; run: () => void; dot?: 'ok' | 'down' }[]
   find: string
@@ -28,28 +28,31 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   const cur = p.sites.find((s) => s.id === p.current)
   const list = p.sites.filter((s) => s.name.toLowerCase().includes(q.toLowerCase()))
   return (
-    <div ref={attach}>
-      <button type="button" className="chip" aria-haspopup="menu" aria-expanded={open} data-key="site" onClick={toggle}>
-        <span className={`dot ${cur?.down ? 'down' : ''}`} />
+    <div ref={attach} style={{ position: 'relative' }}>
+      <button type="button" className="mk-chip" aria-haspopup="menu" aria-expanded={open} data-key="site" onClick={toggle}>
+        <span className={`mk-dot ${cur?.down ? 'down' : ''}`} />
         <span className="nmx">{cur?.name ?? p.all}</span>
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
           <path d="M3 4.5 6 7.5 9 4.5" stroke="var(--mk-muted)" fill="none" strokeWidth="1.5" />
         </svg>
-        <span className="kbd">{'S'}</span>
+        <span className="mk-kbd">{'S'}</span>
       </button>
-      <div className={`menu${open ? ' on' : ''}`} id="siteMenu">
+      <div className={`mk-menu${open ? ' on' : ''}`} id="siteMenu">
         {open && (
           <>
             {p.workspace && (
-              <div className="mi ws">
+              <button type="button" className="mi ws" onClick={() => p.workspace?.run?.()}>
                 <span className="mt2">
                   <div className="nm">{p.workspace.name}</div>
                   <div className="d">{p.workspace.d}</div>
                 </span>
-              </div>
+                <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                  <path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" fill="none" strokeWidth="1.5" />
+                </svg>
+              </button>
             )}
-            <input placeholder={p.find} value={q} onChange={(e) => setQ(e.target.value)} aria-label={p.find} />
-            <div>
+            <input id="siteFind" placeholder={p.find} value={q} onChange={(e) => setQ(e.target.value)} aria-label={p.find} />
+            <div id="siteList">
               <button
                 type="button"
                 className={`mi ${p.current === null ? 'on' : ''}`}
@@ -58,7 +61,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
                   close()
                 }}
               >
-                <span className="dot off" />
+                <span className="mk-dot off" />
                 <span>
                   <div className="nm">{p.all}</div>
                   <div className="d">{copy.overview}</div>
@@ -74,7 +77,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
                     close()
                   }}
                 >
-                  <span className={`dot ${s.down ? 'down' : ''}`} />
+                  <span className={`mk-dot ${s.down ? 'down' : ''}`} />
                   <span>
                     <div className="nm">{s.name}</div>
                     {s.note && <div className="d">{s.note}</div>}

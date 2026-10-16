@@ -6,7 +6,7 @@ export function XMenu({ id, cls, open, label, button, pick, children }: { id: st
   return (
     <div className={`xw ${cls ?? ''}`}>
       {button}
-      <div className={`menu xm ${pick ? 'xmenu' : ''} ${open ? 'on' : ''}`} id={`xm-${id}`} role="menu" aria-label={label}>
+      <div className={`mk-menu xm ${pick ? 'xmenu' : ''} ${open ? 'on' : ''}`} id={`xm-${id}`} role="menu" aria-label={label}>
         {children}
       </div>
     </div>

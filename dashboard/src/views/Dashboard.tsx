@@ -59,12 +59,12 @@ import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
 import { useMilestones } from '../features/milestones/useMilestones'
 import { filterFrom } from '../features/journey/filterFrom'
 import { StorySlot } from '../features/storyview/StorySlot'
-import { V2View } from '../v2/V2View'
 
 // Full mode's extra views live in their own chunk (Core never loads them), and so does the share dialog.
 const Cards = lazyLoad(() => import('../features/cards/Cards').then((m) => ({ default: m.Cards }))) // the two cards under the chart: Explore's numbers, fetched when idle so the switch to Explore finds them here
 whenIdle(Cards.preload)
 const ShareDialog = lazy(() => import('../features/share/ShareDialog'))
+const V2View = lazy(() => import('../v2/V2View').then((m) => ({ default: m.V2View }))) // the walkthrough's two screens and their styles: one chunk, fetched when the page shows one
 const GaReturn = lazy(() => import('../features/install/GaReturn').then((m) => ({ default: m.GaReturn }))) // only on the way back from Google (?import=ga)
 const Story = lazy(() => import('../features/story/Story')) // Replay as a story: loaded when Replay starts
 const Install = lazy(() => import('../features/install/Install')) // new sites only: never in the first load
@@ -134,7 +134,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const showInstall = showsInstall({ site, hasData, filtered: view.filters.length > 0, everTracked })
   const waiting = showInstall && stream.visits.length === 0
   const liveView = liveShown({ wanted: wantsLive(view, site), shared: isShared(), waiting }) // Data on a shared link, the install screen first
-  const briefing = !!view.briefing && !liveView && !isShared() && !waiting
+  const briefing = !liveView && !isShared() && !waiting // the Briefing is every other face of an owner's dashboard; Explore is the panel over it
   const mods = useMods(site.id)
   const [journey, setJourney] = useState<string | null>(null)
   const [addGoals, setAddGoals] = useState(false)
@@ -255,9 +255,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   }
 
   const [askOpen, setAskOpen] = useState(false)
-  // ---- keyboard: ⌘K opens Ask, F toggles Core/Full, Esc clears scrub ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (liveView || briefing) return // the walkthrough's screens have their own ⌘K (its first row asks Peek) and keys
       if (askOn && pressed(e, 'ask')) {
         e.preventDefault()
         setAskOpen((o) => !o)
@@ -269,7 +269,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [full, view.day, askOn])
+  }, [full, view.day, askOn, liveView, briefing])
 
   const pickerValue: PickerValue = {
     period: view.period,
@@ -497,7 +497,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
       <AskPanel open={askOn && askOpen} onClose={() => setAskOpen(false)} />
   </>)
-  return liveView || briefing ? <><V2View tab={liveView ? 'live' : 'briefing'} site={site} sites={sites} view={view} range={range} data={real} loading={loading || firstLoad} money={money ? fmtM : undefined} onGoal={() => setAddGoals(true)} live={{ site: site.id, timezone: site.timezone, stream, cookieless: site.cookieless, whole: site, onVisitor: journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined }} />{tail}</> : (
+  return liveView || briefing ? <><Suspense fallback={null}><V2View tab={liveView ? 'live' : 'briefing'} site={site} sites={sites} view={view} range={range} data={real} loading={loading || firstLoad} money={money ? fmtM : undefined} onGoal={() => setAddGoals(true)} onAsk={askOn ? () => setAskOpen(true) : undefined} live={{ site: site.id, timezone: site.timezone, stream, cookieless: site.cookieless, whole: site, onVisitor: journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined }} /></Suspense>{tail}</> : (
     <>
       <HeaderBand><div className="header quiet">
         {header}{!waiting && !liveView && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}

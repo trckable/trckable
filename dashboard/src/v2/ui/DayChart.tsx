@@ -1,10 +1,12 @@
-// The period's visitors against the usual band, drawn the way the walkthrough draws it: a smooth grey line, lit
-// where it rose above the band, the band in soft white, the hours still to come shaded, and a dot that pulses at
-// "now". The line never runs into hours that have not happened. Hovering reads one point in the line above.
+// The period's visitors against the usual band, drawn the way the walkthrough draws it: a grey line, lit where it rose
+// above the band (and red where it fell under), the band in soft white, the hours still to come shaded, and a dot that
+// pulses at "now". The line never runs into hours that have not happened. Hovering reads one point in the line above.
 import { useEffect, useRef, useState } from 'react'
 import type { Bucket } from '../../lib/api'
+import { fmtInt } from '../../lib/format'
 import { copy } from '../briefing/copy'
-import { niceStep, smooth, type XY } from '../briefing/geometry'
+import { niceStep } from '../briefing/geometry'
+import type { Band, Judged } from '../briefing/usual'
 
 export interface ChartPoint {
   /** Where on the axis (in buckets from its start). */
@@ -16,6 +18,9 @@ export interface ChartPoint {
   v: number
   lo: number
   hi: number
+  st: Judged
+  /** What was counted so far in a bucket that is still going, and the band over the same share of it. */
+  raw: { v: number; lo: number; hi: number }
 }
 
 export interface Down {
@@ -32,7 +37,12 @@ export interface ChartIn {
   span: number
   /** Whether the last point is "now": it pulses, and what is to its right is shaded. */
   live: boolean
+  /** Hours (with the part of the last one) passed so far; 0 when the period is over. */
+  elapsed: number
   band: boolean
+  /** The usual band of every bucket of the axis, the ones to come too. */
+  ladder: Band[]
+  overall: Judged
   usualLabel: string
   unit: string
   bucket: Bucket
@@ -42,17 +52,19 @@ export interface ChartIn {
   rise?: { i: number; text: string }
 }
 
-const H = 180
+const DOT = { up: '#c6ff3a', dn: '#ff6b6b', none: '#ececee' }
 
 /** The text over the chart: the standing note, or the point under the pointer. */
-export function chartNote(c: ChartIn, at: number | null): string {
+export function chartNote(c: ChartIn, at: number | null, down = false): string {
   if (at !== null && c.points[at]) {
     const p = c.points[at]
-    return copy.chartRead(p.name, String(p.v), String(p.lo), String(p.hi))
+    return copy.chartRead(p.name, fmtInt(p.raw.v), fmtInt(p.raw.lo), fmtInt(p.raw.hi))
   }
-  const up = c.points.filter((p) => c.band && p.v > p.hi).length
-  const dn = c.points.filter((p) => c.band && p.v < p.lo).length
+  if (down) return copy.downRightNow
   if (!c.band) return ''
+  const up = c.points.filter((p) => p.st === 'up').length
+  const dn = c.points.filter((p) => p.st === 'dn').length
+  if (c.overall === '' && c.bucket !== 'hour') return up + dn ? copy.normalOverall(up + dn, c.points.length) : copy.withinBand
   if (up) return copy.aboveBand(up, c.points.length, c.unit)
   if (dn) return copy.belowBand(dn, c.unit)
   return copy.withinBand
@@ -60,37 +72,40 @@ export function chartNote(c: ChartIn, at: number | null): string {
 
 export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt: (i: number | null) => void }) {
   const box = useRef<SVGSVGElement>(null)
-  const [W, setW] = useState(900)
+  const [size, setSize] = useState({ W: 900, H: 180 })
   useEffect(() => {
     const el = box.current
     if (!el) return
-    const read = () => setW(Math.max(260, el.clientWidth || 900))
+    const read = () => setSize({ W: Math.max(260, el.clientWidth || 900), H: el.clientHeight || 260 })
     read()
     const ro = new ResizeObserver(read)
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
+  const { W, H } = size
   const ph = W < 500
   const L = ph ? 8 : 36
   const Rr = ph ? 8 : 10
   const T = ph ? 18 : 30
   const B = H - 22
-  const X = (i: number) => L + ((W - L - Rr) * (i + 0.5)) / Math.max(1, c.span)
+  const span = Math.max(1, c.span)
+  const X = (i: number) => L + ((W - L - Rr) * (i + 0.5)) / span
+  const edge = (i: number) => L + ((W - L - Rr) * i) / span
   const pts = c.points
-  const mx = Math.max(1, ...pts.map((p) => p.v), ...(c.band ? pts.map((p) => p.hi) : [])) * 1.15
+  const ladder = c.ladder.slice(0, span)
+  const mx = Math.max(1, ...pts.map((p) => p.v), ...(c.band ? ladder.map((b) => b.hi) : [])) * 1.15
   const Y = (v: number) => B - ((B - T) * v) / mx
   const step = niceStep(mx)
   const grid: number[] = []
   for (let g = 0; g < mx; g += step) grid.push(g)
-  const line: XY[] = pts.map((p) => [X(p.i), Y(p.v)])
-  const lineD = smooth(line)
-  const bandTop = smooth(pts.map((p) => [X(p.i), Y(p.hi)] as XY))
-  const bandBot = smooth(pts.map((p) => [X(p.i), Y(p.lo)] as XY).reverse())
+  const line = pts.map((p) => `${X(p.i)},${Y(p.v)}`).join(' ')
   const last = pts[pts.length - 1]
-  const nowX = last ? X(last.i) : 0
-  const lit = pts.flatMap((p, i) => (c.band && p.v > p.hi ? [[Math.max(0, i - 1), Math.min(pts.length - 1, i + 1)] as const] : []))
-  const every = Math.max(1, Math.ceil(c.span / (ph ? 3 : 7)))
+  const nowEdge = c.live ? edge(Math.min(c.elapsed, span)) : edge(span)
+  const every = Math.max(1, Math.ceil(span / (ph ? 3 : 7)))
   const kfmt = (g: number) => (g >= 1000 ? `${g / 1000}k` : String(g))
+  const bi = Math.min(ladder.length - 1, Math.floor(ladder.length * 0.08))
+  const rise = c.rise && pts[c.rise.i] && !(ph && c.downs.length > 0) ? { p: pts[c.rise.i], text: c.rise.text } : null
+  const ticks = c.points.filter((p) => p.tick && p.i % every === 0)
   return (
     <svg
       ref={box}
@@ -101,11 +116,8 @@ export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt
       onPointerMove={(e) => {
         const r = e.currentTarget.getBoundingClientRect()
         const x = ((e.clientX - r.left) / r.width) * W
-        let best = 0
-        pts.forEach((p, i) => {
-          if (Math.abs(X(p.i) - x) < Math.abs(X(pts[best].i) - x)) best = i
-        })
-        onAt(pts.length ? best : null)
+        const i = Math.floor(((x - L) / (W - L - Rr)) * span)
+        onAt(i >= 0 && i < pts.length ? i : null)
       }}
       onPointerLeave={() => onAt(null)}
     >
@@ -119,63 +131,70 @@ export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt
           )}
         </g>
       ))}
-      {c.band && pts.length > 1 && <path d={`${bandTop} L${bandBot.slice(1)} Z`} fill="rgba(255,255,255,.055)" />}
-      {c.band && !ph && pts.length > 1 && (
-        <text x={X(pts[Math.floor(pts.length * 0.08)].i)} y={Y(pts[Math.floor(pts.length * 0.08)].hi) - 8} fill="var(--mk-axis)" fontSize="12">
+      {c.band && ladder.length > 1 && <polygon points={`${ladder.map((b, i) => `${X(i)},${Y(b.hi)}`).join(' ')} ${ladder.map((b, i) => `${X(i)},${Y(b.lo)}`).reverse().join(' ')}`} fill="rgba(255,255,255,.055)" />}
+      {c.band && !ph && ladder.length > 1 && (
+        <text x={X(bi)} y={Y(ladder[bi].hi) - 8} fill="var(--mk-axis)" fontSize="12">
           {c.usualLabel}
         </text>
       )}
       {c.downs.map((d) => {
-        const x1 = L + ((W - L - Rr) * d.a) / c.span
-        const w = Math.max(3, ((W - L - Rr) * (d.b - d.a)) / c.span)
+        const x1 = edge(d.a)
+        const w = Math.max(3, edge(d.b) - x1)
         return (
           <g key={d.a}>
             <rect x={x1} y={T} width={w} height={B - T} fill="rgba(255,107,107,.16)" />
-            <text x={Math.min(x1 + w + 5, W - 120)} y={T + 14} fill="var(--mk-red)" fontSize="12" fontWeight="600">
-              {copy.downLabel(d.min, d.now)}
+            <text x={Math.min(x1 + w + 5, W - 120)} y={T + 14} fill="#ff6b6b" fontSize="12" fontWeight="600">
+              {ph ? copy.downShort(d.min, d.now) : copy.downLabel(d.min, d.now)}
             </text>
           </g>
         )
       })}
-      {c.live && last && <rect x={nowX} y={T} width={Math.max(0, W - Rr - nowX)} height={B - T} fill="rgba(10,11,12,.4)" />}
-      {pts.length > 1 && (
+      {c.live && <rect x={nowEdge} y={T} width={Math.max(0, W - Rr - nowEdge)} height={B - T} fill="rgba(10,11,12,.4)" />}
+      {pts.length > 0 && (
         <>
-          <path d={`${lineD} L${X(last.i)},${B} L${X(pts[0].i)},${B} Z`} fill="rgba(255,255,255,.03)" />
-          <path d={lineD} fill="none" stroke="var(--mk-muted)" strokeWidth="2" strokeLinejoin="round" />
-          {lit.map(([a, b], k) => (
-            <path key={k} d={smooth(line.slice(a, b + 1))} fill="none" stroke="var(--mk-lime)" strokeWidth="2.4" strokeLinejoin="round" />
-          ))}
+          <polygon points={`${X(pts[0].i)},${B} ${line} ${X(last.i)},${B}`} fill="rgba(255,255,255,.03)" />
+          <polyline points={line} fill="none" stroke="#8b8e94" strokeWidth="2" strokeLinejoin="round" />
+          {pts.map((p, i) =>
+            p.st ? (
+              <polyline
+                key={p.i}
+                points={[Math.max(0, i - 1), i, Math.min(pts.length - 1, i + 1)].map((j) => `${X(pts[j].i)},${Y(pts[j].v)}`).join(' ')}
+                fill="none"
+                stroke={p.st === 'up' ? '#c6ff3a' : '#ff6b6b'}
+                strokeWidth="2.4"
+                strokeLinejoin="round"
+              />
+            ) : null,
+          )}
+          {c.live && (
+            <circle cx={X(last.i)} cy={Y(last.v)} r="4.5" fill={DOT[last.st || 'none']}>
+              <animate attributeName="r" values="4;7;4" dur="1.6s" repeatCount="indefinite" />
+            </circle>
+          )}
+          {rise && (
+            <g>
+              <line x1={X(rise.p.i)} x2={X(rise.p.i)} y1={Y(rise.p.v) - 6} y2={Math.max(T - 6, Y(rise.p.v) - 24)} stroke="#c6ff3a" />
+              <text x={Math.min(X(rise.p.i) + 6, W - Rr - rise.text.length * 7.4)} y={Math.max(T - 8, Y(rise.p.v) - 27)} fill="#c6ff3a" fontSize="12" fontWeight="600">
+                {rise.text}
+              </text>
+            </g>
+          )}
         </>
-      )}
-      {last && c.live && (
-        <circle cx={nowX} cy={Y(last.v)} r="4.5" fill={last.v > last.hi && c.band ? 'var(--mk-lime)' : 'var(--mk-text)'}>
-          <animate attributeName="r" values="4;7;4" dur="1.6s" repeatCount="indefinite" />
-        </circle>
-      )}
-      {c.rise && !(ph && c.downs.length > 0) && pts[c.rise.i] && (
-        <g>
-          <line x1={X(pts[c.rise.i].i)} x2={X(pts[c.rise.i].i)} y1={Y(pts[c.rise.i].v) - 6} y2={Math.max(T - 6, Y(pts[c.rise.i].v) - 24)} stroke="var(--mk-lime)" />
-          <text x={Math.min(X(pts[c.rise.i].i) + 6, W - Rr - c.rise.text.length * 7.4)} y={Math.max(T - 8, Y(pts[c.rise.i].v) - 27)} fill="var(--mk-lime)" fontSize="12" fontWeight="600">
-            {c.rise.text}
-          </text>
-        </g>
       )}
       {c.notes.map((n) => (
         <path key={`${n.i}${n.text}`} d={`M${X(n.i) - 6} ${B - 1}h12l-6-10z`} fill="#f0c64a">
           <title>{n.text}</title>
         </path>
       ))}
-      {c.points.map((p) =>
-        p.tick && p.i % every === 0 ? (
-          <text key={p.i} x={ph ? Math.max(20, Math.min(W - 20, X(p.i))) : X(p.i)} y={B + 17} fill="var(--mk-axis)" fontSize="12" textAnchor="middle">
-            {p.tick}
-          </text>
-        ) : null,
-      )}
+      {ticks.map((p) => (
+        <text key={p.i} x={ph ? Math.max(20, Math.min(W - 20, X(p.i))) : X(p.i)} y={B + 17} fill="var(--mk-axis)" fontSize="12" textAnchor="middle">
+          {p.tick}
+        </text>
+      ))}
       {at !== null && pts[at] && (
         <>
-          <line x1={X(pts[at].i)} x2={X(pts[at].i)} y1={T} y2={B} stroke="var(--mk-text)" strokeOpacity=".35" />
-          <circle cx={X(pts[at].i)} cy={Y(pts[at].v)} r="4" fill="var(--mk-text)" />
+          <line x1={X(pts[at].i)} x2={X(pts[at].i)} y1={T} y2={B} stroke="#ececee" strokeOpacity=".35" />
+          <circle cx={X(pts[at].i)} cy={Y(pts[at].v)} r="4" fill="#ececee" />
         </>
       )}
     </svg>

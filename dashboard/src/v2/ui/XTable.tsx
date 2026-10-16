@@ -19,7 +19,7 @@ export interface More {
 export function XMore({ more }: { more: More }) {
   if (more.len <= more.shown) return null
   return (
-    <button type="button" className="more" data-xall={more.go ? undefined : '1'} data-xsec={more.go?.section} onClick={more.go ? more.go.run : more.onAll}>
+    <button type="button" className="mk-more" data-xall={more.go ? undefined : '1'} data-xsec={more.go?.section} onClick={more.go ? more.go.run : more.onAll}>
       {more.go ? `${more.go.label} ›` : copy.showAll(more.len)}
     </button>
   )
@@ -62,11 +62,11 @@ export function XTable({ rows, head, unit = copy.people, mono, flags, selected, 
         const d = delta(r)
         const inner = (
           <>
-            <span className="bar">
+            <span className="mk-bar">
               <i style={{ width: `${(r.v / max) * 100}%` }} />
               <span className={mono ? 'mono' : ''}>{flags && r.code ? `${flag(r.code)} ${r.name}` : r.name}</span>
             </span>
-            <span className="n">{fmtInt(r.v)}</span>
+            <span className="mk-n">{fmtInt(r.v)}</span>
             <span className={`d ${d.tone}`}>{d.text}</span>
             <span className="sh">{Math.round((r.v / total) * 100)}%</span>
           </>
@@ -116,7 +116,7 @@ export function XCols({ first, cols, rows, xc, xcm, limit, onAll }: { first: str
       {rows.slice(0, limit).map((r) => (
         <div key={r.key} className="xrw">
           {r.bar !== undefined ? (
-            <span className="bar">
+            <span className="mk-bar">
               <i style={{ width: `${r.bar * 100}%` }} />
               <span className={r.mono ? 'mono' : ''}>{r.a}</span>
             </span>
@@ -124,7 +124,7 @@ export function XCols({ first, cols, rows, xc, xcm, limit, onAll }: { first: str
             <span className="two">{r.a}</span>
           )}
           {r.c.map((x, i) => (
-            <span key={cols[i].h} className={`n ${cols[i].hm ? 'hm' : ''}`}>
+            <span key={cols[i].h} className={`mk-n ${cols[i].hm ? 'hm' : ''}`}>
               {x}
             </span>
           ))}
