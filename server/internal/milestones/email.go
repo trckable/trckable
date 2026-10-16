@@ -12,7 +12,7 @@ import (
 // The words of the milestone email, which is a celebration: the headline, the
 // one line of context and what comes next.
 const (
-	mailPassed     = "%s just passed %s 🎉"
+	mailCrossed    = "%s just passed %s 🎉"
 	mailFirstView  = "%s just got its first pageview 🎉"
 	mailFirstGoal  = "%s just reached its first goal 🎉"
 	mailFirstSale  = "%s just made its first sale 🎉"
@@ -34,7 +34,7 @@ func (w Words) Headline(domain string) string {
 	case w.Kind == Pageviews && w.Big == words.first:
 		return fmt.Sprintf(mailFirstView, domain)
 	case w.Kind == Visitors, w.Kind == Pageviews, w.Kind == Countries:
-		return fmt.Sprintf(mailPassed, domain, w.Line())
+		return fmt.Sprintf(mailCrossed, domain, w.Line())
 	case w.Kind == FirstGoal:
 		return fmt.Sprintf(mailFirstGoal, domain)
 	case w.Kind == FirstSale:
@@ -44,7 +44,7 @@ func (w Words) Headline(domain string) string {
 	case w.Kind == RecordDay:
 		return fmt.Sprintf(mailBestDay, domain)
 	}
-	return fmt.Sprintf(mailPassed, domain, mailHeadlineNo)
+	return fmt.Sprintf(mailCrossed, domain, mailHeadlineNo)
 }
 
 // sinceFirst says how long a counted milestone took from the site's first

@@ -129,9 +129,9 @@ func TestWritePreview(t *testing.T) {
 	if err := WritePreview(dir, []Page{{Name: "one", Subject: "S <1>", HTML: m.HTML(), Text: m.Text(), Images: m.Images()}}); err != nil {
 		t.Fatal(err)
 	}
-	one, _ := os.ReadFile(filepath.Join(dir, "one.html"))
-	index, _ := os.ReadFile(filepath.Join(dir, "index.html"))
-	text, _ := os.ReadFile(filepath.Join(dir, "one.txt"))
+	one, _ := os.ReadFile(filepath.Join(dir, "one.html"))     //nolint:gosec // the test's own temp folder
+	index, _ := os.ReadFile(filepath.Join(dir, "index.html")) //nolint:gosec // the test's own temp folder
+	text, _ := os.ReadFile(filepath.Join(dir, "one.txt"))     //nolint:gosec // the test's own temp folder
 	if strings.Contains(string(one), "cid:") || !strings.Contains(string(one), "data:image/png;base64,") {
 		t.Error("the pictures are not inlined")
 	}
