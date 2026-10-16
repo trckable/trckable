@@ -247,10 +247,10 @@ test('Create: A opens the menu, and a funnel lands in the address', async ({ pag
   await funnelItem.click()
   const dialog = page.getByRole('dialog', { name: 'New funnel' })
   for (let i = 0; i < 2; i++) {
-    await expect(async () => {
-      if (!(await page.getByRole('option').first().isVisible())) await dialog.getByText('+ Add step').click({ timeout: 2000 })
-      await expect(page.getByRole('option').first()).toBeVisible({ timeout: 2000 })
-    }).toPass({ timeout: 15_000 })
+    // One click opens the list (a second would close it); then it fills in.
+    await dialog.getByText('+ Add step').click()
+    await expect(page.getByRole('dialog', { name: 'Add a step' })).toBeVisible()
+    await expect(page.getByRole('option').first()).toBeVisible({ timeout: 15_000 })
     await expect(page.getByRole('searchbox')).toBeFocused()
     await page.keyboard.press('Enter')
   }
