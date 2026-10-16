@@ -2281,7 +2281,7 @@ export default {
   'storyview.chartLabel': 'Besucher im Zeitraum, mit den markierten Momenten',
   'storyview.before': 'der Zeitraum davor',
   'storyview.noMoments': 'In diesem Zeitraum gibt es nichts Ungewöhnliches zu markieren.',
-  'storyview.questionsTitle': 'Deine fünf Fragen, beantwortet',
+  'storyview.questionsTitle': 'Deine Fragen, beantwortet',
   'storyview.q.did': 'Hat es gewirkt?',
   'storyview.q.page': 'Welche Seite trägt dich?',
   'storyview.q.fix': 'Was sollte ich verbessern?',

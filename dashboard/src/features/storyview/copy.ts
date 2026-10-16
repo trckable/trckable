@@ -86,7 +86,7 @@ export const copy = defineCopy('storyview', {
   statusGoal: 'times',
   none: 'None yet',
   noIssues: '0 issues',
-  questionsTitle: 'Your five questions, answered',
+  questionsTitle: 'Your questions, answered',
   q: bar.q,
   didYes: (a: string, b: string) => `Yes. Visitors went from ${a} to ${b}.`,
   didNo: (a: string, b: string) => `Not yet. Visitors went from ${a} to ${b}.`,

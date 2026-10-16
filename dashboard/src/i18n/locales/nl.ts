@@ -2278,7 +2278,7 @@ export default {
   'storyview.chartLabel': 'Bezoekers over de periode, met de momenten gemarkeerd',
   'storyview.before': 'de periode ervoor',
   'storyview.noMoments': 'Niets bijzonders om te markeren in deze periode.',
-  'storyview.questionsTitle': 'Je vijf vragen, beantwoord',
+  'storyview.questionsTitle': 'Je vragen, beantwoord',
   'storyview.q.did': 'Werkte het?',
   'storyview.q.page': 'Welke pagina draagt je?',
   'storyview.q.fix': 'Wat moet ik verbeteren?',

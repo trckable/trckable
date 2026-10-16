@@ -271,14 +271,26 @@
   gap: 12px;
 }
 .sv-answer {
-  grid-column: span 4;
+  grid-column: span 6;
   min-width: 0;
 }
-.sv-answer.did {
-  grid-column: span 7;
+/* A tablet: two columns, an odd last card spans the row. A desktop: three columns, two rows;
+   with five cards the last takes the two slots left, so there is no hole. */
+.sv-answer:last-child:nth-child(odd) {
+  grid-column: span 12;
 }
-.sv-answer.page {
-  grid-column: span 5;
+@media (min-width: 1100px) {
+  .sv-answer,
+  .sv-answer:last-child:nth-child(odd) {
+    grid-column: span 4;
+  }
+  .sv-answer:last-child:nth-child(5) {
+    grid-column: span 8;
+  }
+}
+/* Compact: tight padding, a short chart on the bottom edge, no room left empty */
+.sv-answer.kit-card {
+  padding: 12px 14px 0;
 }
 .sv-answer.fine.good .sv-big {
   color: var(--up);
@@ -291,7 +303,7 @@
 }
 .sv-answer .kit-area {
   display: block;
-  height: 56px;
+  height: 44px;
 }
 .sv-answer .kit-area svg {
   display: block;
@@ -304,11 +316,11 @@
 }
 .sv-answer .sv-act {
   margin-top: 0;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
 }
 .sv-a-line {
   display: -webkit-box;
-  margin-top: 8px;
+  margin-top: 6px;
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -460,14 +472,6 @@
   .sv-tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .sv-answer {
-    grid-column: span 6;
-  }
-  .sv-answer.did,
-  .sv-answer.page,
-  .sv-answer.fine {
-    grid-column: span 12;
-  }
 }
 @media (max-width: 640px) {
   .sv-hint {
@@ -477,7 +481,8 @@
     width: var(--ph-hit, 44px);
     height: var(--ph-hit, 44px);
   }
-  .sv-answer {
+  .sv-answer,
+  .sv-answer:last-child:nth-child(odd) {
     grid-column: span 12;
   }
   .sv-answers .sv-link {

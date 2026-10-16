@@ -82,3 +82,29 @@ test('on a phone the card is one of the stacked answers', async ({ page }) => {
   expect(b.width).toBeGreaterThan(330)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
 })
+
+// Three columns (two rows) on a desktop, two on a tablet, one on a phone; with five cards the last takes the two slots left.
+const columns = (page: Page) =>
+  page.locator('.sv-answer').evaluateAll((els) => {
+    const rects = els.map((e) => e.getBoundingClientRect())
+    return { lefts: new Set(rects.map((r) => Math.round(r.left))).size, last: rects[rects.length - 1].width, first: rects[0].width }
+  })
+
+test('the answers sit in two columns, one on a phone, and a hidden card leaves no hole', async ({ page }) => {
+  await read(page, [link({ value: 'producthunt', visitors: 120, goals: 6 })])
+  await open(page)
+  await expect(page.locator('.sv-answer')).toHaveCount(6, { timeout: 30_000 })
+  await expect.poll(async () => (await columns(page)).lefts).toBe(3)
+  await page.setViewportSize({ width: 800, height: 900 })
+  await expect.poll(async () => (await columns(page)).lefts).toBe(2)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect.poll(async () => (await columns(page)).lefts).toBe(1)
+
+  await page.unroute('**/api/v1/sites/*/report/links*')
+  await read(page, [link({ value: 'friend', visitors: 7 })])
+  await open(page)
+  await expect(page.locator('.sv-answer')).toHaveCount(5, { timeout: 30_000 })
+  await page.waitForTimeout(3000)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await expect.poll(async () => { const c = await columns(page); return c.last / c.first }).toBeGreaterThan(1.8) // the fifth spans both columns
+})
