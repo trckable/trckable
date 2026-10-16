@@ -42,6 +42,8 @@ async function scan(page: Page, where: string) {
   // page runs with reduced motion (the dashboard then skips its entrance
   // animations), and a short pause lets late-loading parts arrive.
   await page.waitForTimeout(700)
+  // A menu that has just swapped in is still fading: axe reads text that is not yet shown as none.
+  await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => Number.isFinite(a.effect?.getComputedTiming().endTime as number)).map((a) => a.finished.catch(() => undefined))))
   // The footer's logo is faint on purpose until pointed at: a logotype is
   // exempt from text contrast (WCAG 1.4.3), and its links are still scanned.
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).exclude('.app-footer .tkb-logo').analyze()
