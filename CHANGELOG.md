@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - The dashboard's new header and Briefing: one header on every page (site list with pins, groups, drag and the domain choice, the bell, your menu), a Briefing that reads like the walkthrough (the signup path leaking, a first customer from a new country, numbers and lines that glide to the next period, loading shapes that match the page), and a page for a site before its first visit with the one line to paste, the check and every other way to install.
+
 ## 0.7.24 (16 Oct 2026)
 
 - The site list's search box shows a thin border while you type instead of a bright ring, and a test keeps the phone's site list a sheet on the screen in every browser, light and dark.
