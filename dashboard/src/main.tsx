@@ -8,7 +8,7 @@ import { api, setUnauthorizedHandler, type Site } from "./lib/api"; import { sta
 import { navigate, useLocation } from "./lib/url"; import "./lib/legacyPaths";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
 import "./styles.css";
-import { PageBar } from "./v2/PageBar";
+import { lazyLoad, whenIdle } from "./lib/lazyLoad";
 import { Dashboard } from "./views/Dashboard";
 import { applySavedTheme } from "./lib/theme";
 import { NO_SITES, useLiveSites } from "./lib/useLiveSites";
@@ -20,6 +20,9 @@ import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
 import { setRole } from "./lib/me";
 import { NoneShared, useGate } from "./features/onboarding/Gate";
+// The header of every page is its own chunk, fetched at once after the first paint: the first load carries only the page's boxes.
+const PageBar = lazyLoad(() => import("./v2/PageBar").then((m) => ({ default: m.PageBar })));
+whenIdle(PageBar.preload);
 // Settings and the account dialog are their own screens: the dashboard should not carry them.
 // Sign-in and first-run setup are for the minutes before someone is in: a signed-in owner never downloads them.
 const Setup = lazy(() => import("./views/Auth").then((m) => ({ default: m.Setup })));
@@ -174,7 +177,7 @@ function App() {
     api.sites().then(({ sites }) => setBoot({ ...boot, sites }));
   const all = path === "/sites", { site, sub } = routeOf(boot.sites, path);
 
-  const header = <PageBar sites={boot.sites} site={all ? null : site} update={latest?.v} onUpdate={() => setShowUpdate(true)} />;
+  const header = <Suspense fallback={null}><PageBar sites={boot.sites} site={all ? null : site} update={latest?.v} onUpdate={() => setShowUpdate(true)} /></Suspense>;
   // Until an owner's first site has had a visit, only the first run (Gate).
   let page: React.ReactNode;
   if (gated) page = null;

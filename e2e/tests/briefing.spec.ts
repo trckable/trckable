@@ -80,8 +80,8 @@ test('Live to Briefing: the sentence, the ring, a card in place, and the period'
   await page.locator('#perMenu').getByRole('button', { name: /^Custom dates/ }).click()
   await expect(page.locator('#perMenu .cal .mk-cm')).toBeVisible()
   await page.keyboard.press('Escape')
-  await page.locator('.icard').first().getByRole('button', { name: /Go deeper/ }).click()
-  // Explore opens over the Briefing, which stays where it was.
+  // The way deeper (a week in its first days has no card yet): Explore opens over the Briefing, which stays where it was.
+  await page.getByRole('button', { name: /^Explore all data/ }).last().click()
   await expect(page.locator('#xp.on')).toBeVisible()
   await expect(page).toHaveURL(/view=briefing/)
 })
