@@ -168,3 +168,15 @@
   color: var(--text-2);
   font-size: 12.5px;
 }
+
+/* The page keeps its own layout and features; it takes the walkthrough's colours and card surface so it sits beside the Briefing. */
+.mk-allsites {
+  --bg: var(--mk-bg);
+  --surface: var(--mk-card);
+  --surface-2: var(--mk-card2);
+  --border: var(--mk-line);
+  --border-2: var(--mk-line);
+  --text: var(--mk-text);
+  --text-2: var(--mk-muted);
+  --text-3: var(--mk-faint);
+}

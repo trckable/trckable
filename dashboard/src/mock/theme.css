@@ -1,10 +1,11 @@
 /* The walkthrough's colours: its own in the dark theme (they are the design). The light theme is the same set, turned. */
-.mk {
+.mk,
+.mk-tokens {
   --mk-grid: #1d1f23;
   --mk-axis: #70747b;
 }
 @media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) .mk {
+  :root:not([data-theme='dark']) :is(.mk, .mk-tokens) {
     color-scheme: light;
     --mk-bg: #fafaf7;
     --mk-card: #ffffff;
@@ -19,7 +20,7 @@
     --mk-axis: #5f6671;
   }
 }
-:root[data-theme='light'] .mk {
+:root[data-theme='light'] :is(.mk, .mk-tokens) {
   color-scheme: light;
   --mk-bg: #fafaf7;
   --mk-card: #ffffff;

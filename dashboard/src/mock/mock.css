@@ -1,5 +1,5 @@
 .mk{color-scheme:dark}
-.mk{--mk-bg:#0a0b0c;--mk-card:#131417;--mk-card2:#181a1e;--mk-line:#24262a;--mk-text:#ececee;--mk-muted:#8b8e94;--mk-faint:#767a82;--mk-lime:#c6ff3a;--mk-limeD:rgba(198,255,58,.14);--mk-red:#ff6b6b;--mk-redD:rgba(255,107,107,.14);--mk-band:rgba(255,255,255,.06);--mk-r:22px}
+.mk,.mk-tokens{--mk-bg:#0a0b0c;--mk-card:#131417;--mk-card2:#181a1e;--mk-line:#24262a;--mk-text:#ececee;--mk-muted:#8b8e94;--mk-faint:#767a82;--mk-lime:#c6ff3a;--mk-limeD:rgba(198,255,58,.14);--mk-red:#ff6b6b;--mk-redD:rgba(255,107,107,.14);--mk-band:rgba(255,255,255,.06);--mk-r:22px}
 .mk *{box-sizing:border-box}
 .mk{margin:0;background:var(--mk-bg);color:var(--mk-text);font:14px/1.4 Inter,system-ui,-apple-system,sans-serif}
 /* The walkthrough draws its text with the browser's own smoothing; the page's global setting (styles.css) thins it. */
