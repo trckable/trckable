@@ -30,6 +30,8 @@ export interface Extras {
   search: SearchStory | null
   /** A page people got stuck on, when heatmaps are on. */
   stuck: Stuck | null
+  /** Read for the period on screen. */
+  fresh?: boolean
 }
 
 export interface ExtrasWant {
@@ -62,7 +64,7 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
     const stuck = want.page
       ? heatApi.map(site.id, range, want.page, 0).then((m): Stuck | null => (m.rage.length ? { page: want.page ?? '', views: m.views, rage: m.rage.map((r) => ({ el: r.el, n: r.n })) } : null), () => null)
       : Promise.resolve(null)
-    void Promise.all([mention, vit(today, today), vit(addDays(today, -28), addDays(today, -1)), buyers, search, stuck]).then(([m, c, u, b, sr, st]) => live && setGot({ key, x: { mention: m, speed: c && u ? { cur: c, usual: u } : null, buyers: b, search: sr, stuck: st } }))
+    void Promise.all([mention, vit(today, today), vit(addDays(today, -28), addDays(today, -1)), buyers, search, stuck]).then(([m, c, u, b, sr, st]) => live && setGot({ key, x: { fresh: true, mention: m, speed: c && u ? { cur: c, usual: u } : null, buyers: b, search: sr, stuck: st } }))
     return () => {
       live = false
     }

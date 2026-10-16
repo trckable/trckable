@@ -2,7 +2,7 @@
 // its usual, the four numbers, what stood out (each opening in place, with a way to the full numbers) and what is not
 // set up yet. Everything comes from the report the page already read, the site's own past (its "usual"), and the
 // incident record.
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Skeleton } from '../../components/skeleton/Skeleton'
 import type { Report, Result, Site, Visit } from '../../lib/api'
 import { fmtRange, presetById, todayIn, type Range } from '../../lib/dates'
@@ -39,6 +39,7 @@ import { bounceNote, kpiCards, noteOf, pctText, usualNote } from './kpis'
 import { unitOf } from './model'
 import { calmTopics, type Story } from './cards'
 import { runAct } from './actions'
+import { Hold } from '../ui/Hold'
 import { useCardLock } from './useCardLock'
 import { useExtras } from './useExtras'
 import { useSlices } from './useSlices'
@@ -107,6 +108,14 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const end = Number(clock.slice(11, 13)) * 60 + Number(clock.slice(14, 16))
   const rv = useReplayView({ site, today, cur: cur0, end, dayStart, slices, extras, incidents: up.list, money: money })
   const cur = rv.cur
+  // The page is whole when everything it is told by has been read for this period (or two seconds on, whatever is missing).
+  const sig = [site.id, period, range.from, range.to].join('|')
+  const [late, setLate] = useState('')
+  useEffect(() => {
+    const t = setTimeout(() => setLate(sig), 2500)
+    return () => clearTimeout(t)
+  }, [sig])
+  const ready = late === sig || (!loading && !!hist.daily && slices.fresh === true && extras.fresh === true && (unit !== 'today' && unit !== 'yesterday' ? true : usual !== null))
   const parts = useParts({ site, cur, prev, usual, unit, range, today, bucket: data?.bucket, hist, up, downMin, nowSec, notes: notes.notes, slices, extras, money, clockAt: rv.clockAt })
   // The cards keep the order the page opened with; what is new waits behind the pill.
   const lock = useCardLock([site.id, period, range.from, range.to].join('|'), parts?.stories.filter((x) => !rv.held(x)) ?? [])
@@ -137,7 +146,8 @@ export default function Briefing({ site, data: page, loading, period, range, mon
     onHow: (s) => ui.toggleHow(watchKey(s)),
     focused: ui.kf,
   }
-  const empty = cur.kpis.visitors === 0
+  // A day with nobody yet still has its chart and numbers once the site has a history; only a site that never had anyone is empty.
+  const empty = cur.kpis.visitors === 0 && (parts.hd === 0 || !hist.daily)
   const v = cur.kpis.visitors
   const peopleNote = () => {
     if (parts.whole && !learning) return usualNote(v, parts.whole.c, parts.st)
@@ -216,7 +226,8 @@ export default function Briefing({ site, data: page, loading, period, range, mon
       return { key: k, topic: copy.topic(k.split('|')[1]), gone: !s, since: { at: new Date(w.at * 1000).toISOString().slice(11, 16), delta: `${d < 0 ? '−' : '+'}${fmtCompact(Math.abs(d))}`, unit: w.u } }
     })
   const canNote = !isViewer() && !isShared()
-  return (
+  const body = (
+
     <div className="mk mk-body">
       <div className="brief" aria-busy={loading}>
         <Hero
@@ -271,5 +282,10 @@ export default function Briefing({ site, data: page, loading, period, range, mon
       <ReplayBar r={rv.r} moments={rv.moments} phone={window.matchMedia('(max-width: 600px)').matches} />
       <Overlays ui={ui} site={site} range={range} today={today} notes={notes} ctx={ctx} headline={headline} kcs={kcs} shown={shown} canNote={canNote} />
     </div>
+  )
+  return (
+    <Hold ready={ready} id={[site.id, period, range.from, range.to].join('|')}>
+      {body}
+    </Hold>
   )
 }

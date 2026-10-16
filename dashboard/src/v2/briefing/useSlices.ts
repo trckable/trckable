@@ -1,7 +1,7 @@
 // The slices a card is told by (sources, countries, devices, pages), each with its usual: what the server says the same
 // weekday brought, for a day; the period before, for anything longer. And the two extra answers a card gives: the page
 // a source's people landed on, and the source a country's came from.
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { api, call, rangeQS, type Filter, type Result, type Row, type Site } from '../../lib/api'
 import type { Range } from '../../lib/dates'
 import { sourceName, type Unit, type Usual } from './model'
@@ -40,6 +40,8 @@ export interface SliceData {
   goals: Slice[]
   /** The country card's own line, bucket by bucket. */
   spark: number[]
+  /** Read for the period on screen (false while the last period's are still shown). */
+  fresh?: boolean
 }
 
 const rowsOf = (cur: Result, dim: Dim): Row[] => cur.dims[dim] ?? []
@@ -72,6 +74,7 @@ export function useSlices(site: Site, range: Range, cur: Result | undefined, pre
         setGot({
           key,
           data: {
+            fresh: true,
             slices: out,
             goals,
             topPage: src && page ? { for: src.value, name: page.value, value: page.value } : undefined,
@@ -84,5 +87,7 @@ export function useSlices(site: Site, range: Range, cur: Result | undefined, pre
       live = false
     }
   }, [key, cur, prev, ready, unit, site.id, site.domain, range.from, range.to, total])
-  return got && got.key === key ? got.data : got?.data ?? { slices: { referrer: [], country: [], device: [], entry_page: [] }, goals: [], spark: [] }
+  // What was read for the last period stays on screen, marked as not fresh, until the new one is here.
+  const old = useMemo((): SliceData => ({ ...(got?.data ?? { slices: { referrer: [], country: [], device: [], entry_page: [] }, goals: [], spark: [] }), fresh: false }), [got])
+  return got && got.key === key ? got.data : old
 }

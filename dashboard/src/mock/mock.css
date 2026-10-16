@@ -1365,3 +1365,5 @@
 .mk .hd .account-menu .more-menu{right:0;left:auto;top:calc(100% + var(--mk-s2));width:280px;min-width:0;max-width:calc(100vw - 16px);background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:var(--z-menu)}
 /* "Why?" beside "Replay": two buttons in a line, aligned at the top so the line is as tall as the walkthrough's one. */
 .mk .hl-col .rpb{vertical-align:top}
+/* A period being read: the page of the last one stays, dimmed, until the new one is whole. */
+.mk .mk-held{opacity:.55;transition:opacity .2s;pointer-events:none}
