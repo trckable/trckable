@@ -1522,3 +1522,4 @@
 .mk .xp.full ~ .xscrim,.mk .xscrim:has(~ .xp.full){background:transparent}
 .mk .fresh-back{display:inline-flex;align-items:center;min-height:44px;color:var(--mk-muted);font-size:13px;align-self:flex-start}
 .mk .fresh-back:hover{color:var(--mk-text)}
+@media (max-width:600px){.mk .downbox .lk3{display:inline-flex;align-items:center;min-height:44px;min-width:44px}}
