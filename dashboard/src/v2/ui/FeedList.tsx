@@ -8,13 +8,13 @@ import { copy } from '../live/copy'
 
 const SHOWN = 8
 
-export function FeedList({ rows, up, clock, more, onVisitor }: { rows: Row[]; up: Set<string>; clock: number; more: number; onVisitor?: (v: string) => void }) {
+export function FeedList({ rows, up, clock, more, empty, onVisitor }: { rows: Row[]; up: Set<string>; clock: number; more: number; empty: string; onVisitor?: (v: string) => void }) {
   const [all, setAll] = useState(false)
   const list = useLeaving(rows)
   const shown = all ? list : list.slice(0, SHOWN)
   return (
     <div className="lfeed">
-      {shown.length === 0 && <div className="mk-quiet" style={{ padding: '16px 20px' }}>{copy.nobody}</div>}
+      {shown.length === 0 && <div className="mk-quiet" style={{ padding: '16px 20px' }}>{empty}</div>}
       {shown.map((r) => {
         const src = r.referrer ? r.referrer.replace(/^www\./, '') : channelLabel(r.channel || 'Direct')
         const hot = up.has(r.channel || 'Direct') || clock - r.last < 30_000
