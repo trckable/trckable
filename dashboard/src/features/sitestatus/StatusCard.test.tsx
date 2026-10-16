@@ -52,8 +52,8 @@ describe('the panel of a site that stopped, and the line when visits are back', 
     expect(html).not.toContain('did not answer')
   })
 
-  it('shows a badge once visits are back, for a day', () => {
-    const back = NOW - 3600
+  it('shows a badge once visits are back, for an hour', () => {
+    const back = NOW - 1800
     writeGap('s1', { since: back - 42 * 60, back })
     const html = renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 60 })} />)
     expect(html).toContain('Back · gap of 42 min')
@@ -61,11 +61,13 @@ describe('the panel of a site that stopped, and the line when visits are back', 
     expect(html).not.toContain('What we checked')
   })
 
-  it('says nothing for a healthy site, and drops a note older than a day', () => {
+  it('says nothing for a healthy site, and drops a note older than an hour or a gap under 15 minutes', () => {
     expect(renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 60 })} />)).toBe('')
     writeGap('s1', { since: NOW - 3 * 86400, back: NOW - 2 * 86400 })
     expect(renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 60 })} />)).toBe('')
     expect(readGap('s1')).toBeNull()
+    writeGap('s1', { since: NOW - 600 - 60, back: NOW - 60 })
+    expect(renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 30 })} />)).toBe('')
   })
 
   it('says plainly that a blocked site cannot be checked, even when it looks fine', () => {

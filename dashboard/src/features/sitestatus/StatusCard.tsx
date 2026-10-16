@@ -1,6 +1,6 @@
 // A site that stopped sending visits explains itself in a panel opened from the foot's status: how long, what happened and since
 // when, what was checked from outside just now, and what to do. When visits
-// return a line under the header says so for a day.
+// return a line under the header says so for an hour.
 import { useEffect, useState } from 'react'
 import { Check, TriangleAlert, X } from 'lucide-react'
 import { api, type Site } from '../../lib/api'
@@ -147,7 +147,7 @@ function Gap({ site, last }: { site: Site; last: number }) {
   return null
 }
 
-/** Visits are back after a gap this browser saw: one line, for a day. */
+/** Visits are back after a gap this browser saw: one line, for an hour, only for a gap of 15 minutes or more. */
 function Back({ site }: { site: Site }) {
   const [gap, setGap] = useState(() => readGap(site.id))
   const since = gap?.since

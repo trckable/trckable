@@ -3,7 +3,9 @@
 // one after it closes the gap, and the note stands for a day. Per browser:
 // the sites list holds no history, so only a gap this browser saw is told.
 const KEY = (site: string) => 'trckable.gap.' + site
-const DAY = 86400
+/** A gap shorter than this is not worth a line; the line goes an hour after the return. */
+const MIN_GAP = 15 * 60
+const SHOWN_FOR = 3600
 
 export interface Gap {
   since: number
@@ -34,7 +36,7 @@ export function firstAfter(since: number, times: number[]): number | undefined {
   return later.length ? Math.min(...later) : undefined
 }
 
-/** Whether a closed gap is still worth a line: a day from the return. */
+/** Whether a closed gap is still worth a line: at least 15 minutes long, and an hour from the return. */
 export function fresh(g: Gap, now = Date.now()): boolean {
-  return g.back !== undefined && now / 1000 - g.back < DAY
+  return g.back !== undefined && g.back - g.since >= MIN_GAP && now / 1000 - g.back < SHOWN_FOR
 }
