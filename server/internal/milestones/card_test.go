@@ -67,3 +67,35 @@ func TestCardHidesTheAmount(t *testing.T) {
 		t.Fatalf("context %q without a first sale", got)
 	}
 }
+
+func TestEmailCardCelebrates(t *testing.T) {
+	m := sqlite.Milestone{Kind: Pageviews, Step: "10000", Value: 10000, Day: "2026-10-15"}
+	list := []sqlite.Milestone{m, {Kind: Pageviews, Step: "1", Value: 1, Day: "2026-08-29"}}
+	c := EmailCard(m, list, "shop.example", "https://stats.example.com/")
+	if c.Headline != "shop.example just passed 10,000 pageviews 🎉" || c.Big != "10,000" || c.Unit != "pageviews" {
+		t.Errorf("card = %+v", c)
+	}
+	if c.Sub != "It took 47 days from the first visit" || c.Next != "Next up: 25,000" {
+		t.Errorf("context = %q, next = %q", c.Sub, c.Next)
+	}
+	if c.Link != "https://stats.example.com/shop.example" || c.CTA != "Open shop.example" {
+		t.Errorf("button = %q %q", c.CTA, c.Link)
+	}
+	for _, want := range []string{c.Headline, "It took 47 days", "Next up: 25,000", "Open shop.example: https://"} {
+		if !strings.Contains(c.Plain, want) {
+			t.Errorf("plain text misses %q:\n%s", want, c.Plain)
+		}
+	}
+}
+
+func TestEmailCardInventsNothing(t *testing.T) {
+	m := sqlite.Milestone{Kind: FirstSale, Step: "1", Value: 1, Day: "2026-10-15"}
+	c := EmailCard(m, nil, "shop.example", "")
+	if c.Sub != "Reached on 15 Oct 2026" || c.Next != "" || c.Link != "" {
+		t.Errorf("card = %+v", c)
+	}
+	r := EmailCard(sqlite.Milestone{Kind: Revenue, Value: 5000, Currency: "USD", Day: "2026-10-15"}, nil, "shop.example", "")
+	if strings.Contains(r.Big+r.Headline+r.Plain, "5,000") || r.Next != "" {
+		t.Errorf("an amount leaked: %+v", r)
+	}
+}

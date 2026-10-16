@@ -123,6 +123,9 @@ func (m *Mailer) send(ctx context.Context, to string, e Event) error {
 		c.Ask = e.Ask
 		page = c.HTML(e.Unsubscribe, e.Settings)
 		e.Inline = append(e.Inline[:len(e.Inline):len(e.Inline)], Attachment{Name: "logo.png", Type: "image/png", Data: reports.Logo, Inline: LogoCID})
+		if c.Headline != "" {
+			e.Inline = append(e.Inline, Attachment{Name: "cheer.png", Type: "image/png", Data: Cheer, Inline: CheerCID})
+		}
 	}
 	return m.sendReport(ctx, to, Report{FromName: "trckable", Subject: subject, Text: body, HTML: page, Unsubscribe: e.Unsubscribe, Attachments: e.Inline, At: e.At})
 }

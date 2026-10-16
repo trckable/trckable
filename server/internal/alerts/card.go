@@ -25,6 +25,8 @@ type Card struct {
 	CTA, Link string      // the one button; none without a link
 	Note      string      // what the footer says this email is
 	Ask       string      // an address that opens the dashboard on this event; left out when empty
+	Headline  string      // a warm line over the number: the card becomes a celebration, with the ghost cheering
+	Next      string      // a celebration's last line: what comes next
 }
 
 const (
@@ -103,16 +105,22 @@ func txt(s string) string { return esc(quiet(s)) }
 // when empty.
 func (c Card) HTML(stop, settings string) string {
 	var b strings.Builder
-	b.WriteString(pageOpen(""))
+	css := ""
+	if c.Headline != "" {
+		css = celebrateCSS
+	}
+	b.WriteString(pageOpen(css))
 	b.WriteString(brandHeader())
-	if c.Site != "" {
+	if c.Headline != "" {
+		b.WriteString(c.celebration())
+	} else if c.Site != "" {
 		site := txt(c.Site)
 		if l := safeLink(c.Link); l != "" {
 			site = `<a href="` + esc(l) + `" style="color:inherit;text-decoration:none">` + site + `</a>`
 		}
 		b.WriteString(`<div class="tx" style="font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin:0 0 20px;color:#16181c">` + site + `</div>`)
 	}
-	if c.hasBox() {
+	if c.Headline == "" && c.hasBox() {
 		b.WriteString(boxOpen)
 		if c.Eyebrow != "" {
 			dot := ""

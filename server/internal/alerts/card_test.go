@@ -146,3 +146,20 @@ func TestCardKeepsMailClientsFromLinkingDomainsAndDates(t *testing.T) {
 		t.Error("a bare domain or caps eyebrow is left")
 	}
 }
+
+func TestCelebrationCard(t *testing.T) {
+	c := Card{Headline: "shop.example just passed 10,000 pageviews 🎉", Big: "10,000", Unit: "pageviews", Sub: "It took 47 days from the first visit", Next: "Next up: 25,000",
+		CTA: "Open shop.example", Link: "https://stats.example.com/shop.example"}
+	h := c.HTML("https://stats.example.com/u/t", "")
+	for _, want := range []string{"cid:" + CheerCID, `alt=""`, "shop.\u200bexample just passed", "10,000", "Next up: 25,000", "Open shop.\u200bexample", "background:#c6ff3a", ".cz{", "Stop these alerts"} {
+		if !strings.Contains(h, want) {
+			t.Errorf("missing %q", want)
+		}
+	}
+	if strings.Contains(Card{Big: "1"}.HTML("", ""), CheerCID) {
+		t.Error("an ordinary card shows the cheering ghost")
+	}
+	if len(Cheer) == 0 || len(Cheer) > 15<<10 {
+		t.Errorf("the picture is %d bytes", len(Cheer))
+	}
+}
