@@ -62,7 +62,7 @@ const cardCSS = `:root{color-scheme:light dark;supported-color-schemes:light dar
 .bg{background:#0b0d10 !important}
 .tx{color:#eceee9 !important}
 .mu{color:#8b9097 !important}
-.rw{background:#14171c !important}
+.cb{background:#14171c !important;border-color:#22262d !important}
 .ln{border-top-color:#22262d !important}
 .st{color:#2fbf71 !important}
 .bt{background:#c6ff3a !important;color:#0b0d10 !important}
@@ -108,41 +108,44 @@ func (c Card) HTML(stop, settings string) string {
 	if c.Site != "" {
 		site := txt(c.Site)
 		if l := safeLink(c.Link); l != "" {
-			site = `<a href="` + esc(l) + `" style="color:#6b7078;text-decoration:none">` + site + `</a>`
+			site = `<a href="` + esc(l) + `" style="color:inherit;text-decoration:none">` + site + `</a>`
 		}
-		b.WriteString(`<div class="mu" style="font-size:15px;line-height:1.4;color:#6b7078;margin:0 0 18px">` + site + `</div>`)
+		b.WriteString(`<div class="tx" style="font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin:0 0 20px;color:#16181c">` + site + `</div>`)
 	}
-	if c.Eyebrow != "" {
-		dot := ""
-		if c.Live {
-			dot = `<span style="color:#2fbf71">&#9679;</span>&nbsp; `
+	if c.hasBox() {
+		b.WriteString(boxOpen)
+		if c.Eyebrow != "" {
+			dot := ""
+			if c.Live {
+				dot = `<span style="color:#2fbf71">&#9679;</span>&nbsp; `
+			}
+			b.WriteString(`<div class="mu" style="font-size:14px;font-weight:600;color:#6b7078">` + dot + txt(c.Eyebrow) + `</div>`)
 		}
-		b.WriteString(`<div class="mu" style="font-size:14px;font-weight:600;color:#6b7078">` + dot + txt(c.Eyebrow) + `</div>`)
-	}
-	size := "56px"
-	if c.Text != "" {
-		size = "26px"
-	}
-	if c.Big != "" {
-		b.WriteString(`<div class="tx" style="font-size:` + size + `;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:6px 0 0;color:#16181c">` + txt(c.Big) + `</div>`)
-	}
-	if c.Unit != "" {
-		b.WriteString(`<div class="mu" style="font-size:20px;font-weight:500;margin:2px 0 0;color:#6b7078">` + txt(c.Unit) + `</div>`)
-	}
-	if c.Strong != "" || c.Sub != "" {
-		b.WriteString(`<div class="tx" style="font-size:16px;margin:10px 0 0;color:#16181c">`)
-		if c.Strong != "" {
-			b.WriteString(`<b class="st" style="color:#177a44">` + txt(c.Strong) + `</b> `)
+		size := "56px"
+		if c.Text != "" {
+			size = "26px"
 		}
-		b.WriteString(txt(c.Sub) + `</div>`)
+		if c.Big != "" {
+			b.WriteString(`<div class="tx" style="font-size:` + size + `;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:6px 0 0;color:#16181c">` + txt(c.Big) + `</div>`)
+		}
+		if c.Unit != "" {
+			b.WriteString(`<div class="mu" style="font-size:20px;font-weight:500;margin:2px 0 0;color:#6b7078">` + txt(c.Unit) + `</div>`)
+		}
+		if c.Strong != "" || c.Sub != "" {
+			b.WriteString(`<div class="tx" style="font-size:16px;margin:10px 0 0;color:#16181c">`)
+			if c.Strong != "" {
+				b.WriteString(`<b class="st" style="color:#177a44">` + txt(c.Strong) + `</b> `)
+			}
+			b.WriteString(txt(c.Sub) + `</div>`)
+		}
+		if c.Text != "" {
+			b.WriteString(`<div class="tx" style="margin:12px 0 0;font-size:16px;color:#16181c">` + strings.ReplaceAll(txt(c.Text), "\n", "<br>") + `</div>`)
+		}
+		b.WriteString(boxClose)
 	}
-	if c.Text != "" {
-		b.WriteString(`<div class="tx" style="margin:12px 0 0;font-size:16px;color:#16181c">` + strings.ReplaceAll(txt(c.Text), "\n", "<br>") + `</div>`)
-	}
-	b.WriteString(`<div style="height:24px;line-height:24px">&nbsp;</div>`)
 
 	if len(c.Rows) > 0 {
-		b.WriteString(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="rw" style="background:#f4f4f0;border-radius:12px">`)
+		b.WriteString(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="cb" style="margin:14px 0 0;` + boxStyle + `">`)
 		for i, r := range c.Rows {
 			line := ""
 			if i > 0 {
@@ -151,34 +154,37 @@ func (c Card) HTML(stop, settings string) string {
 			b.WriteString(`<tr><td class="mu ln" style="` + line + `padding:11px 14px;font-size:14px;color:#6b7078;white-space:nowrap">` + txt(r[0]) + `</td>`)
 			b.WriteString(`<td class="tx ln" align="right" style="` + line + `padding:11px 14px;font-size:14px;font-weight:500;color:#16181c">` + txt(Short(r[1], rowValueRunes)) + `</td></tr>`)
 		}
-		b.WriteString(`</table><div style="height:24px;line-height:24px">&nbsp;</div>`)
+		b.WriteString(`</table>`)
 	}
 
 	if l := safeLink(c.Link); l != "" && c.CTA != "" {
-		b.WriteString(`<table role="presentation" cellpadding="0" cellspacing="0" align="left"><tr><td align="center" bgcolor="#c6ff3a" class="bt" style="background:#c6ff3a;border-radius:10px"><a href="` + esc(l) + `" style="display:block;padding:14px 28px;font-size:16px;font-weight:700;color:#0b0d10;text-decoration:none">` + txt(c.CTA) + `</a></td></tr></table>`)
-		b.WriteString(`<div style="clear:both;height:36px;line-height:36px">&nbsp;</div>`)
+		b.WriteString(`<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:20px auto 0"><tr><td align="center" bgcolor="#c6ff3a" class="bt" style="background:#c6ff3a;border-radius:10px"><a href="` + esc(l) + `" style="display:block;padding:14px 28px;font-size:16px;font-weight:700;color:#0b0d10;text-decoration:none">` + txt(c.CTA) + `</a></td></tr></table>`)
 	}
 
 	note := c.Note
 	if note == "" {
 		note = cardNoteDefault
 	}
-	b.WriteString(`<div class="mu" style="font-size:13px;line-height:1.7;color:#6b7078">` + txt(note))
+	inner := txt(note)
 	var links []string
 	link := func(u, label string) {
 		if l := safeLink(u); l != "" {
-			links = append(links, `<a href="`+esc(l)+`" style="color:#6b7078;text-decoration:underline">`+label+`</a>`)
+			links = append(links, `<a href="`+esc(l)+`" style="color:inherit;text-decoration:underline">`+label+`</a>`)
 		}
 	}
 	link(c.Ask, cardAsk)
 	link(stop, cardStop)
 	link(settings, cardSettings)
 	if len(links) > 0 {
-		b.WriteString(`<br>` + strings.Join(links, " &nbsp;·&nbsp; "))
+		inner += `<br>` + strings.Join(links, " &nbsp;·&nbsp; ")
 	}
-	b.WriteString(`</div><div class="mu" style="font-size:13px;line-height:1.6;color:#6b7078;margin:10px 0 0">` + brandFoot + `</div>`)
+	b.WriteString(foot(inner + `<br>` + brandFoot))
 	b.WriteString(pageClose)
 	return b.String()
+}
+
+func (c Card) hasBox() bool {
+	return c.Eyebrow != "" || c.Big != "" || c.Unit != "" || c.Strong != "" || c.Sub != "" || c.Text != ""
 }
 
 // cardFor is the card of an alert that brought none: its title and message,

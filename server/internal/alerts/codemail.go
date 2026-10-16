@@ -32,9 +32,20 @@ type CodeMail struct {
 
 const codeCSS = `
 @media (prefers-color-scheme: dark){
-.cb{background:#14171c !important;border-color:#22262d !important}
 .cd{color:#c6ff3a !important}
 }`
+
+// boxStyle is the soft box the code and the alert numbers sit in.
+const boxStyle = `background:#f4f4f0;border:1px solid #e4e4de;border-radius:14px`
+
+const boxOpen = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="cb" style="` + boxStyle + `"><tr><td align="center" style="padding:22px 12px">`
+
+const boxClose = `</td></tr></table>`
+
+// foot is the divider and the small muted line that closes the branded emails.
+func foot(inner string) string {
+	return `<div class="ln mu" style="border-top:1px solid #e4e4de;margin:24px 0 0;padding:14px 0 0;font-size:12px;color:#6b7078">` + inner + `</div>`
+}
 
 func (c CodeMail) from() string {
 	parts := []string{c.Requester, c.At.UTC().Format("2 Jan 2006, 15:04 MST")}
@@ -62,13 +73,12 @@ func (c CodeMail) HTML() string {
 	b.WriteString(brandHeader())
 	b.WriteString(`<div class="tx" style="font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin:0 0 10px;color:#16181c">Sign in to ` + esc(c.Source) + `</div>`)
 	b.WriteString(`<div class="tx" style="margin:0 0 20px;color:#16181c">Someone asked to sign in to ` + esc(c.Source) + ` with this email address.</div>`)
-	b.WriteString(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="cb" style="background:#f4f4f0;border:1px solid #e4e4de;border-radius:14px"><tr><td align="center" style="padding:22px 12px">` +
-		`<span class="cd tx" style="font-family:Menlo,Consolas,'Courier New',monospace;font-size:38px;font-weight:700;letter-spacing:.18em;line-height:1;color:#16181c;white-space:nowrap">` + esc(strings.ReplaceAll(c.Code, " ", "")) + `</span>` +
-		`</td></tr></table>`)
+	b.WriteString(boxOpen +
+		`<span class="cd tx" style="font-family:Menlo,Consolas,'Courier New',monospace;font-size:38px;font-weight:700;letter-spacing:.18em;line-height:1;color:#16181c;white-space:nowrap">` + esc(strings.ReplaceAll(c.Code, " ", "")) + `</span>` + boxClose)
 	b.WriteString(`<div class="tx" style="margin:18px 0 0;color:#16181c">Enter it in the app. It works for 10 minutes.</div>`)
 	b.WriteString(`<div class="mu" style="margin:18px 0 0;font-size:13px;color:#6b7078"><b>Requested from</b><br>` + esc(c.from()) + `</div>`)
 	b.WriteString(`<div class="mu" style="margin:14px 0 0;font-size:13px;color:#6b7078">Didn&#39;t ask for it? Ignore this email; nobody can sign in without the code.</div>`)
-	b.WriteString(`<div class="ln mu" style="border-top:1px solid #e4e4de;margin:24px 0 0;padding:14px 0 0;font-size:12px;color:#6b7078">` + brandFoot + `</div>`)
+	b.WriteString(foot(brandFoot))
 	b.WriteString(pageClose)
 	return b.String()
 }
