@@ -36,7 +36,7 @@ func TestTopReferrer(t *testing.T) {
 }
 
 // Sales per hour, summed, each with the channel that earned most of it;
-// unattributed money has no channel. Asked for only with Params.Sales.
+// unattributed money has no channel, and a bucket says what its payments were. Asked for only with Params.Sales.
 func TestSaleBuckets(t *testing.T) {
 	q := withPayments(golden(t, false))
 	p := sep10
@@ -51,10 +51,10 @@ func TestSaleBuckets(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []SaleBucket{
-		{"2026-09-10T11:00", 1, 1500, "AI"},
-		{"2026-09-10T12:00", 1, 1000, ""},
-		{"2026-09-10T13:00", 1, 700, "Search"},
-		{"2026-09-10T15:00", 1, 5000, "Search"},
+		{"2026-09-10T11:00", 1, 1500, "AI", "new"},
+		{"2026-09-10T12:00", 1, 1000, "", "sale"},
+		{"2026-09-10T13:00", 1, 700, "Search", "renewal"},
+		{"2026-09-10T15:00", 1, 5000, "Search", "sale"},
 	}
 	if len(res.Sales) != len(want) {
 		t.Fatalf("got %+v", res.Sales)

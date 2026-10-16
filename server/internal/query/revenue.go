@@ -56,12 +56,14 @@ type Money struct {
 // New and renewal are split the same way the period total is, so a day that looks
 // flat can still show that all of it was renewals.
 // SaleBucket is one bucket's payments, summed: how many, their net amount,
-// and the channel that earned the most of it (empty when unattributed).
+// the channel that earned the most of it (empty when unattributed) and what
+// they were, when they were all the same.
 type SaleBucket struct {
 	T       string
 	Count   int64
 	Amount  int64
 	Channel string
+	What    string // new | upgrade | renewal | sale when all the bucket's payments are of that kind, else empty
 }
 
 type DayMoney struct {
@@ -156,7 +158,7 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 			GROUP BY f.payment_id
 		),
 		a AS (
-			SELECT f.payment_id, f.visitor_id, f.paid_at, f.amount, f.refunded, f.customer, f.kind, f.converted,
+			SELECT f.payment_id, f.visitor_id, f.paid_at, f.amount, f.refunded, f.customer, f.kind, f.change, f.converted,
 			       t.sid IS NOT NULL AS attributed,
 			       ((f.paid_at AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS lpaid,
 			       c.* EXCLUDE (site_id, visitor_id)
@@ -327,7 +329,7 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 func loadFacts(ctx context.Context, conn *sql.Conn, facts []ledger.Fact) error {
 	if _, err := conn.ExecContext(ctx, `CREATE OR REPLACE TEMP TABLE p_facts (
 		payment_id VARCHAR, visitor_id UBIGINT, paid_at TIMESTAMP, touch_at TIMESTAMP, amount BIGINT, refunded BIGINT,
-		customer VARCHAR, kind VARCHAR, converted BOOLEAN)`); err != nil {
+		customer VARCHAR, kind VARCHAR, change VARCHAR, converted BOOLEAN)`); err != nil {
 		return err
 	}
 	if len(facts) == 0 {
@@ -347,7 +349,7 @@ func loadFacts(ctx context.Context, conn *sql.Conn, facts []ledger.Fact) error {
 			if touch.IsZero() {
 				touch = f.PaidAt
 			}
-			if err := app.AppendRow(f.Provider+":"+f.ID, f.Visitor, f.PaidAt.UTC(), touch.UTC(), amount, refunded, f.Customer, f.Kind, f.Converted); err != nil {
+			if err := app.AppendRow(f.Provider+":"+f.ID, f.Visitor, f.PaidAt.UTC(), touch.UTC(), amount, refunded, f.Customer, f.Kind, f.Change, f.Converted); err != nil {
 				app.Close()
 				return err
 			}
@@ -371,9 +373,11 @@ func sortDays(ds []Day) { sort.Slice(ds, func(i, j int) bool { return ds[i].Date
 // its biggest share: aggregates only, never a payment or a visitor.
 func saleBuckets(ctx context.Context, conn *sql.Conn, sqlText string, args []any, p Params) ([]SaleBucket, error) {
 	rows, err := conn.QueryContext(ctx, sqlText+`, b AS (
-			SELECT strftime(`+bucketOf(p, "lpaid")+`, '%Y-%m-%dT%H:%M') AS t, CASE WHEN attributed THEN coalesce(channel, 'Direct') ELSE '' END AS ch, amount - refunded AS net FROM ar
-		), g AS (SELECT t, ch, count(*) AS n, sum(net) AS rev FROM b WHERE net > 0 GROUP BY t, ch)
-		SELECT t, sum(n)::BIGINT, sum(rev)::BIGINT, max_by(ch, rev) FROM g GROUP BY t ORDER BY t`, args...)
+			SELECT strftime(`+bucketOf(p, "lpaid")+`, '%Y-%m-%dT%H:%M') AS t, CASE WHEN attributed THEN coalesce(channel, 'Direct') ELSE '' END AS ch, amount - refunded AS net,
+			       CASE WHEN change <> '' THEN change WHEN kind = 'subscription' THEN 'new' WHEN kind = 'renewal' THEN 'renewal' ELSE 'sale' END AS what FROM ar
+		), g AS (SELECT t, ch, count(*) AS n, sum(net) AS rev FROM b WHERE net > 0 GROUP BY t, ch),
+		w AS (SELECT t, CASE WHEN count(DISTINCT what) = 1 THEN min(what) ELSE '' END AS what FROM b WHERE net > 0 GROUP BY t)
+		SELECT g.t, sum(g.n)::BIGINT, sum(g.rev)::BIGINT, max_by(g.ch, g.rev), min(w.what) FROM g JOIN w USING (t) GROUP BY g.t ORDER BY g.t`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("sales: %w", err)
 	}
@@ -381,7 +385,7 @@ func saleBuckets(ctx context.Context, conn *sql.Conn, sqlText string, args []any
 	var out []SaleBucket
 	for rows.Next() {
 		var s SaleBucket
-		if err := rows.Scan(&s.T, &s.Count, &s.Amount, &s.Channel); err != nil {
+		if err := rows.Scan(&s.T, &s.Count, &s.Amount, &s.Channel, &s.What); err != nil {
 			return nil, err
 		}
 		out = append(out, s)

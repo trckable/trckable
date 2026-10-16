@@ -97,9 +97,13 @@ func (lemonSqueezy) Parse(body []byte) (Event, error) {
 		if a.BillingReason == "initial" {
 			return ev, nil // counted as the order
 		}
+		kind := KindRenewal
+		if a.BillingReason == "updated" {
+			kind = KindUpgrade // the plan changed and the change was charged for
+		}
 		if paid && a.Total > 0 {
 			ev.Payments = append(ev.Payments, Payment{ID: id, PaidAt: rfc3339ms(a.CreatedAt), Currency: a.Currency, Gross: a.Total, Tax: ptr(a.Tax),
-				CustomerID: cus, SubscriptionID: sub, Email: a.UserEmail, Visitor: vis, Kind: KindRenewal})
+				CustomerID: cus, SubscriptionID: sub, Email: a.UserEmail, Visitor: vis, Kind: kind})
 		}
 		if a.RefundedAmount > 0 {
 			ev.Refunds = append(ev.Refunds, Refund{ID: "cum:" + id, PaymentID: id, Amount: a.RefundedAmount, Currency: a.Currency, Status: RefundSucceeded, At: at, Cumulative: true})

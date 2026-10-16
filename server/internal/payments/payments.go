@@ -63,6 +63,7 @@ const (
 	KindOneTime      = "one_time"
 	KindSubscription = "subscription" // first payment of a subscription
 	KindRenewal      = "renewal"
+	KindUpgrade      = "upgrade" // a payment that moved a subscription to another plan
 )
 
 // Payment is money received.
@@ -88,6 +89,8 @@ type Hint struct {
 	CustomerID     string
 	SubscriptionID string
 	Kind           string // payment kind, when this source knows it (e.g. invoice billing reason)
+	FromPlan       string // upgrade: the plan left and the plan taken, when the payload names them
+	ToPlan         string
 }
 
 // Alias says two ids name the same payment (a Stripe invoice and the

@@ -810,6 +810,31 @@ var migrations = []string{
 		checked_at INTEGER NOT NULL DEFAULT 0,
 		PRIMARY KEY (site_id, source)
 	) WITHOUT ROWID;`,
+	// 64: telling the owner when money comes in (revenue/notice.go). The plans
+	// an upgrade left and took, when the payload named them; one row per
+	// payment (or refunded payment) already announced, so a retried webhook or
+	// a reconciliation never announces it twice (amount: how much of a refund
+	// was told); and the money alert, on for the sites that already have alerts
+	// on, to where their newest enabled alert goes. A site that has one already,
+	// even switched off, keeps its choice.
+	`ALTER TABLE pay_hints ADD COLUMN from_plan TEXT NOT NULL DEFAULT '';
+	ALTER TABLE pay_hints ADD COLUMN to_plan TEXT NOT NULL DEFAULT '';
+	CREATE TABLE pay_notices (
+		site_id  TEXT NOT NULL,
+		provider TEXT NOT NULL,
+		id       TEXT NOT NULL,
+		kind     TEXT NOT NULL,
+		amount   INTEGER NOT NULL DEFAULT 0,
+		at       INTEGER NOT NULL,
+		PRIMARY KEY (site_id, provider, id)
+	) WITHOUT ROWID;
+	INSERT INTO alerts (id, site_id, kind, enabled, target, threshold, last_fired, created_at)
+	SELECT 'alert_' || lower(hex(randomblob(8))), site_id, 'customer', 1, target, 0, 0, CAST(strftime('%s', 'now') AS INTEGER)
+	FROM (
+		SELECT site_id, target, row_number() OVER (PARTITION BY site_id ORDER BY created_at DESC, rowid DESC) AS rn
+		FROM alerts WHERE enabled = 1 AND target != ''
+	)
+	WHERE rn = 1 AND site_id NOT IN (SELECT site_id FROM alerts WHERE kind = 'customer');`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
@@ -1004,6 +1029,7 @@ func (s *Store) DeleteSite(ctx context.Context, id string) (Removed, error) {
 		`DELETE FROM pay_refunds WHERE site_id = ?`,
 		`DELETE FROM pay_disputes WHERE site_id = ?`,
 		`DELETE FROM pay_links WHERE site_id = ?`,
+		`DELETE FROM pay_notices WHERE site_id = ?`,
 		`DELETE FROM pay_connections WHERE site_id = ?`,
 		`DELETE FROM site_modules WHERE site_id = ?`,
 		`DELETE FROM sites WHERE id = ?`,

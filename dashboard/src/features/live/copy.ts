@@ -29,6 +29,7 @@ export const copy = defineCopy('live', {
   sourceLabel: (channel: string) => channelLabel(channel),
   revenueToday: 'Revenue today',
   sold: (amount: string) => `+ ${amount} just now`,
+  soldWords: (line: string) => `${line} · just now`,
 
   // Who is on the site.
   onSite: 'On the site right now',

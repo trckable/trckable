@@ -21,6 +21,10 @@ func TestEmailSamplesCoverEveryKind(t *testing.T) {
 		"report-client": {"Wochenbericht", "#336699", "Diesen Bericht abbestellen", "Besucher pro Tag"},
 		"sign-in-code":  {"331983", "Pixel 8 (Android)", "Berlin, DE"},
 		"plain-alert":   {"The disk is 91% full", "Settings → Data"},
+		"money-new":     {"New customer", "$42", "Google", "okt"},
+		"money-upgrade": {"Upgrade", "+$218", "Pro → Business"},
+		"money-refund":  {"Refund", "−$12", "wnt"},
+		"money-late":    {"New customer", "Paid", "04:30"},
 	}
 	if len(pages) != len(want) {
 		t.Fatalf("%d samples, want %d", len(pages), len(want))

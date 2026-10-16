@@ -83,9 +83,14 @@ func (paddle) Parse(body []byte) (Event, error) {
 			CustomData     map[string]any `json:"custom_data"`
 			CurrencyCode   string         `json:"currency_code"`
 			Origin         string         `json:"origin"`
-			BilledAt       string         `json:"billed_at"`
-			CreatedAt      string         `json:"created_at"`
-			Details        struct {
+			Items          []struct {
+				Price struct {
+					Name string `json:"name"`
+				} `json:"price"`
+			} `json:"items"`
+			BilledAt  string `json:"billed_at"`
+			CreatedAt string `json:"created_at"`
+			Details   struct {
 				Totals struct {
 					Tax        amount `json:"tax"`
 					Total      amount `json:"total"`
@@ -109,7 +114,9 @@ func (paddle) Parse(body []byte) (Event, error) {
 		}
 		kind := KindOneTime
 		switch {
-		case t.Origin == "subscription_recurring" || t.Origin == "subscription_update" || t.Origin == "subscription_charge":
+		case t.Origin == "subscription_update":
+			kind = KindUpgrade
+		case t.Origin == "subscription_recurring" || t.Origin == "subscription_charge":
 			kind = KindRenewal
 		case t.SubscriptionID != "":
 			kind = KindSubscription
@@ -118,6 +125,10 @@ func (paddle) Parse(body []byte) (Event, error) {
 		ev.Payments = append(ev.Payments, Payment{ID: t.ID, PaidAt: paidAt, Currency: t.CurrencyCode, Gross: gross, Tax: ptr(int64(t.Details.Totals.Tax)),
 			CustomerID: t.CustomerID, SubscriptionID: t.SubscriptionID, Visitor: vis, Kind: kind})
 		ev.Links = links(vis, t.CustomerID, t.SubscriptionID)
+		// The plan taken, when the transaction lists a single price.
+		if kind == KindUpgrade && len(t.Items) == 1 && t.Items[0].Price.Name != "" {
+			ev.Hints = append(ev.Hints, Hint{PaymentID: t.ID, Source: "plan:" + t.ID, Kind: KindUpgrade, ToPlan: t.Items[0].Price.Name})
+		}
 
 	case "adjustment.created", "adjustment.updated":
 		var a struct {

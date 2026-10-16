@@ -20,8 +20,8 @@ func TestExportAndLiveSaleUseISOMinorUnits(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var sales []Sale
-	g.svc.OnSale = func(_ string, s Sale) { sales = append(sales, s) }
+	var sales []Notice
+	g.svc.OnNotice = func(_ string, n Notice) { sales = append(sales, n) }
 	paid := time.Now().Truncate(time.Second)
 	body := []byte(fmt.Sprintf(`{"id":"evt_isk","object":"event","type":"payment_intent.succeeded","created":%d,"livemode":true,
  "data":{"object":{"id":"pi_isk","object":"payment_intent","amount_received":1250000,"currency":"isk","metadata":{"trckable_vid":"abc123.x"}}}}`, paid.Unix()))
@@ -31,7 +31,7 @@ func TestExportAndLiveSaleUseISOMinorUnits(t *testing.T) {
 	if _, err := g.svc.Process(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if len(sales) != 1 || sales[0].Amount != 12500 || sales[0].Exponent != 0 || sales[0].Currency != "ISK" || sales[0].Kind != payments.KindOneTime {
+	if len(sales) != 1 || sales[0].Amount != 12500 || sales[0].Exponent != 0 || sales[0].Currency != "ISK" || sales[0].Kind != NoticeSale {
 		t.Fatalf("live sale: %+v, want 12500 ISK with exponent 0", sales)
 	}
 	list, err := g.svc.PaymentsOf(ctx, g.site, payments.ParseVisitor("abc123.x"))

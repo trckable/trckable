@@ -3,6 +3,7 @@ package payments
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 )
@@ -166,9 +167,18 @@ func (stripe) Parse(body []byte) (Event, error) {
 			PaymentIntent       json.RawMessage           `json:"payment_intent"`       // pre-Basil
 			Lines               struct {
 				Data []struct {
-					Metadata sMeta `json:"metadata"`
+					Metadata    sMeta  `json:"metadata"`
+					Amount      int64  `json:"amount"`
+					Description string `json:"description"`
+					Price       *struct {
+						Nickname string `json:"nickname"`
+					} `json:"price"`
+					Plan *struct {
+						Nickname string `json:"nickname"`
+					} `json:"plan"` // pre-Basil
 				} `json:"data"`
 			} `json:"lines"`
+			AmountPaid *int64 `json:"amount_paid"`
 		}
 		if err := json.Unmarshal(obj, &in); err != nil {
 			return ev, err
@@ -196,14 +206,35 @@ func (stripe) Parse(body []byte) (Event, error) {
 			metas = append(metas, l.Metadata)
 		}
 		vis, cus := visitorFrom(metas...), idOf(in.Customer)
-		kind := ""
+		kind, from, to := "", "", ""
 		switch in.BillingReason {
 		case "subscription_create":
 			kind = KindSubscription
-		case "subscription_cycle", "subscription_update", "subscription_threshold", "subscription":
+		case "subscription_cycle", "subscription_threshold", "subscription":
 			kind = KindRenewal
+		case "subscription_update":
+			// A change of plan that was charged for; one that cost nothing
+			// has no payment to name.
+			kind = KindRenewal
+			if in.AmountPaid == nil || *in.AmountPaid > 0 {
+				kind = KindUpgrade
+				for _, l := range in.Lines.Data {
+					name := ""
+					if l.Price != nil {
+						name = l.Price.Nickname
+					} else if l.Plan != nil {
+						name = l.Plan.Nickname
+					}
+					switch {
+					case l.Amount < 0 && from == "":
+						from = firstName(name, l.Description, unusedTime)
+					case l.Amount > 0 && to == "":
+						to = firstName(name, l.Description, remainingTime)
+					}
+				}
+			}
 		}
-		ev.Hints = append(ev.Hints, Hint{PaymentID: in.ID, Source: "invoice:" + in.ID, Tax: tax, Visitor: vis, CustomerID: cus, SubscriptionID: sub, Kind: kind})
+		ev.Hints = append(ev.Hints, Hint{PaymentID: in.ID, Source: "invoice:" + in.ID, Tax: tax, Visitor: vis, CustomerID: cus, SubscriptionID: sub, Kind: kind, FromPlan: from, ToPlan: to})
 		if pi := idOf(in.PaymentIntent); pi != "" {
 			ev.Aliases = append(ev.Aliases, Alias{Alias: in.ID, PaymentID: pi})
 		}
@@ -287,6 +318,24 @@ func (stripe) Parse(body []byte) (Event, error) {
 		ev.Disputes = append(ev.Disputes, Dispute{ID: d.ID, PaymentID: pay, Amount: d.Amount, Currency: d.Currency, Status: st, At: ev.At})
 	}
 	return ev, nil
+}
+
+// Stripe words a plan change's two proration lines "Unused time on 1 × Pro
+// (at $29.00 / month) after 16 Oct" and "Remaining time on 1 × Business …":
+// the price's nickname is the plan's name when it has one, else the line says it.
+var (
+	unusedTime    = regexp.MustCompile(`^Unused time on (?:\d+ × )?(.+?)(?: \(at .*\))? after `)
+	remainingTime = regexp.MustCompile(`^Remaining time on (?:\d+ × )?(.+?)(?: \(at .*\))? after `)
+)
+
+func firstName(nickname, description string, line *regexp.Regexp) string {
+	if nickname != "" {
+		return nickname
+	}
+	if m := line.FindStringSubmatch(description); m != nil {
+		return m[1]
+	}
+	return ""
 }
 
 func stripeRefundStatus(s string) string {

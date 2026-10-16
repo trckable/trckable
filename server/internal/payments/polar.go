@@ -82,8 +82,10 @@ func (polar) Parse(body []byte) (Event, error) {
 			switch o.BillingReason {
 			case "subscription_create":
 				kind = KindSubscription
-			case "subscription_cycle", "subscription_update", "subscription_meter_cycle":
+			case "subscription_cycle", "subscription_meter_cycle":
 				kind = KindRenewal
+			case "subscription_update":
+				kind = KindUpgrade
 			}
 			ev.Payments = append(ev.Payments, Payment{ID: o.ID, PaidAt: rfc3339ms(o.CreatedAt), Currency: o.Currency, Gross: o.TotalAmount, Tax: ptr(o.TaxAmount),
 				CustomerID: o.CustomerID, SubscriptionID: o.SubscriptionID, Email: email, Visitor: vis, Kind: kind})

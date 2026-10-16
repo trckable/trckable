@@ -5,6 +5,7 @@ import { bucketLabel } from '../../charts/timeScale'
 import { fmtDay } from '../../lib/dates'
 import { copy } from './copy'
 
+export type SaleWhat = 'new' | 'upgrade' | 'renewal' | 'sale'
 export type MomentKind = 'spike' | 'surge' | 'mention' | 'sale' | 'country' | 'ai' | 'milestone' | 'note'
 
 export interface Moment {
@@ -16,6 +17,8 @@ export interface Moment {
   count?: number
   amount?: number
   channel?: string
+  /** A sale's kind, when all its payments were the same. */
+  what?: SaleWhat
   country?: string
   bot?: string
   step?: string

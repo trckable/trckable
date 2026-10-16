@@ -2,6 +2,9 @@ package query
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"strconv"
 	"time"
 )
 
@@ -54,4 +57,28 @@ func (q Q) TopReferrer(ctx context.Context, site string, from, to time.Time) (st
 			SELECT referrer, count(DISTINCT visitor_id) AS n FROM merged GROUP BY referrer
 		)`, site, from, to).Scan(&ref)
 	return ref, err
+}
+
+// VisitorSource is how a buyer reached the site: the referring host and the
+// channel of their latest visit before paying that did not start direct, in
+// the attribution window the revenue reports use; the latest direct visit
+// when there is nothing else. Empty when the visitor has no visit on record.
+func (q Q) VisitorSource(ctx context.Context, site string, visitor uint64, at time.Time) (referrer, channel string, err error) {
+	conn, err := q.conn(ctx, site)
+	if err != nil {
+		return "", "", err
+	}
+	defer q.done(conn)
+	// The visitor id is our own unsigned 64-bit number, which database/sql
+	// refuses with the high bit set, so it goes in as a literal.
+	//nolint:gosec // a formatted uint64, not text from a request; the rest is bound as parameters
+	err = conn.QueryRowContext(ctx, `SELECT coalesce(referrer, ''), coalesce(channel, 'Direct')
+		FROM (SELECT * FROM sessions UNION ALL SELECT * FROM s_open)
+		WHERE site_id = ? AND visitor_id = `+strconv.FormatUint(visitor, 10)+` AND start <= ? AND start >= ?
+		ORDER BY coalesce(channel, 'Direct') <> 'Direct' DESC, start DESC LIMIT 1`,
+		site, at.UTC().Add(time.Minute), at.UTC().Add(-AttributionWindow)).Scan(&referrer, &channel)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", "", nil
+	}
+	return referrer, channel, err
 }

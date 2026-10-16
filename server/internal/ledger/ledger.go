@@ -63,16 +63,18 @@ func Apply(ctx context.Context, tx *sql.Tx, sc Scope, ev payments.Event) error {
 	}
 	for _, h := range ev.Hints {
 		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO pay_hints (site_id, provider, payment_id, source, tax, visitor_id, customer_id, subscription_id, kind, version)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO pay_hints (site_id, provider, payment_id, source, tax, visitor_id, customer_id, subscription_id, kind, from_plan, to_plan, version)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT (site_id, provider, payment_id, source) DO UPDATE SET
 				tax             = coalesce(CASE WHEN excluded.version >= version THEN excluded.tax END, tax, excluded.tax),
 				visitor_id      = CASE WHEN excluded.visitor_id <> 0 THEN excluded.visitor_id ELSE visitor_id END,
 				customer_id     = CASE WHEN excluded.customer_id <> '' THEN excluded.customer_id ELSE customer_id END,
 				subscription_id = CASE WHEN excluded.subscription_id <> '' THEN excluded.subscription_id ELSE subscription_id END,
 				kind            = CASE WHEN excluded.kind <> '' THEN excluded.kind ELSE kind END,
+				from_plan       = CASE WHEN excluded.from_plan <> '' THEN excluded.from_plan ELSE from_plan END,
+				to_plan         = CASE WHEN excluded.to_plan <> '' THEN excluded.to_plan ELSE to_plan END,
 				version         = max(version, excluded.version)`,
-			sc.Site, sc.Provider, h.PaymentID, h.Source, h.Tax, int64(h.Visitor), h.CustomerID, h.SubscriptionID, h.Kind, v); err != nil { //nolint:gosec // visitor ids are stored bit for bit in SQLite's signed integer and read back the same way
+			sc.Site, sc.Provider, h.PaymentID, h.Source, h.Tax, int64(h.Visitor), h.CustomerID, h.SubscriptionID, h.Kind, h.FromPlan, h.ToPlan, v); err != nil { //nolint:gosec // visitor ids are stored bit for bit in SQLite's signed integer and read back the same way
 			return err
 		}
 	}
@@ -161,6 +163,7 @@ type Fact struct {
 	Visitor   uint64
 	Customer  string // stable per-customer key (provider customer, email hash, or payment)
 	Kind      string
+	Change    string    // "upgrade" for a renewal-sized payment that moved the customer to another plan
 	Converted bool      // false: no FX rate yet (excluded from sums until one arrives)
 	Currency  string    // the currency it was paid in
 	NoRate    bool      // not converted, and the ECB publishes no rate for Currency at all
@@ -436,6 +439,14 @@ func Facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 		case p.kind == "one_time" && h.kind != "":
 			kind = h.kind
 		}
+		// An upgrade is a payment of a customer who already pays: in every sum
+		// it is a renewal, and only Change says it moved to another plan.
+		change := ""
+		if p.kind == payments.KindUpgrade || h.kind == payments.KindUpgrade {
+			if kind != payments.KindSubscription {
+				kind, change = payments.KindRenewal, payments.KindUpgrade
+			}
+		}
 		custKey := cus
 		if custKey == "" {
 			custKey = p.email
@@ -444,7 +455,7 @@ func Facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 			custKey = p.id
 		}
 		back := max(sumRef[k], cumNet[k]) + lost[k]
-		f := Fact{Provider: p.provider, ID: p.id, PaidAt: time.UnixMilli(p.paid).UTC(), Visitor: uint64(vis), Customer: p.provider + ":" + custKey, Kind: kind} //nolint:gosec // visitor ids are stored bit for bit in SQLite's signed integer and read back the same way
+		f := Fact{Provider: p.provider, ID: p.id, PaidAt: time.UnixMilli(p.paid).UTC(), Visitor: uint64(vis), Customer: p.provider + ":" + custKey, Kind: kind, Change: change} //nolint:gosec // visitor ids are stored bit for bit in SQLite's signed integer and read back the same way
 		f.TouchAt = f.PaidAt
 		if kind == payments.KindRenewal {
 			// A renewal is earned by the visit that started the subscription.

@@ -190,6 +190,10 @@ export interface Sale {
   amount: number // minor units, net of tax when known
   currency: string
   exponent: number
+  /** From servers that word it: what it was, the line to show ("New customer · $42 · via Google"), and whether it was found late. */
+  change?: 'new' | 'upgrade' | 'renewal' | 'sale' | 'refund'
+  text?: string
+  late?: boolean
 }
 
 export interface Visit {

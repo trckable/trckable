@@ -112,7 +112,7 @@ func salesOf(res *query.Result) []moments.Moment {
 	}
 	var out []moments.Moment
 	for _, s := range res.Sales {
-		out = append(out, moments.Moment{T: s.T, Kind: "sale", Count: s.Count, Amount: s.Amount, Channel: s.Channel})
+		out = append(out, moments.Moment{T: s.T, Kind: "sale", Count: s.Count, Amount: s.Amount, Channel: s.Channel, What: s.What})
 	}
 	return out
 }

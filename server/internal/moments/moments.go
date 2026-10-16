@@ -22,6 +22,7 @@ type Moment struct {
 	Count    int64   `json:"count,omitempty"`    // sale: payments in the bucket
 	Amount   int64   `json:"amount,omitempty"`   // sale: net, minor units
 	Channel  string  `json:"channel,omitempty"`  // sale: the channel that earned most of it
+	What     string  `json:"what,omitempty"`     // sale: new | upgrade | renewal | sale, when all its payments were of one kind
 	Country  string  `json:"country,omitempty"`  // country: its first visit ever
 	Bot      string  `json:"bot,omitempty"`      // ai: the assistant
 	Step     string  `json:"step,omitempty"`     // milestone: its step ("1k")

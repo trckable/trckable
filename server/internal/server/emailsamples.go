@@ -9,6 +9,7 @@ import (
 	"github.com/trckable/trckable/server/internal/milestones"
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/reports"
+	"github.com/trckable/trckable/server/internal/revenue"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 	"github.com/trckable/trckable/server/internal/surge"
 )
@@ -67,6 +68,21 @@ func EmailSamples(base string) []mailkit.Page {
 		Points: 212, Comments: 87, Snippet: "We switched to shop.example.com for our launch and it was the smoothest checkout we have tried.", Front: true, Visitors: 1240}
 	ev := mentionEvent(site, men, base+"/"+domain)
 	out = append(out, alert("mention", ev))
+
+	// Money coming in: a new customer, an upgrade, a refund, and one found late.
+	ms := now.UnixMilli()
+	for _, m := range []struct {
+		name   string
+		n      revenue.Notice
+		source string
+	}{
+		{"money-new", revenue.Notice{At: ms, Kind: revenue.NoticeNew, Amount: 4200, Currency: "USD", Exponent: 2}, "Google"},
+		{"money-upgrade", revenue.Notice{At: ms, Kind: revenue.NoticeUpgrade, Amount: 21800, Currency: "USD", Exponent: 2, From: "Pro", To: "Business"}, ""},
+		{"money-refund", revenue.Notice{At: ms, Kind: revenue.NoticeRefund, Amount: 1200, Currency: "USD", Exponent: 2}, ""},
+		{"money-late", revenue.Notice{At: now.Add(-5 * time.Hour).UnixMilli(), Kind: revenue.NoticeNew, Amount: 4200, Currency: "USD", Exponent: 2, Late: true}, "Google"},
+	} {
+		out = append(out, alert(m.name, moneyEvent(m.n, domain, m.source, base+"/"+domain, time.UTC)))
+	}
 
 	// The weekly report.
 	from := time.Date(2026, 10, 5, 0, 0, 0, 0, time.UTC)

@@ -103,6 +103,26 @@ describe('a sale', () => {
   })
 })
 
+describe('money with a line from the server', () => {
+  const told = (id: number, text: string, extra: object = {}) => ({ ...sale(id), text, change: 'new' as const, ...extra })
+  it('is the toast: the line as the server said it, with its own time when it was found late', () => {
+    draw(<Sales sales={[]} />)
+    draw(<Sales sales={[told(1, 'New customer · $42 · via Google')]} />)
+    expect(toast).toHaveBeenLastCalledWith('New customer · $42 · via Google', 'sale')
+    draw(<Sales sales={[told(2, 'Renewal · $348', { late: true, ts: new Date(2026, 9, 16, 14, 5).getTime(), change: 'renewal' }), told(1, 'x')]} />)
+    expect(toast.mock.calls.at(-1)?.[0]).toMatch(/^Renewal · \$348 · .*(14.05|2.05)/)
+  })
+  it('chimes for a sale arriving, not for a refund or for money found late', () => {
+    setPref('sound', true)
+    draw(<Sales sales={[]} />)
+    draw(<Sales sales={[told(2, 'Refund · −$12', { change: 'refund' })]} />)
+    draw(<Sales sales={[told(3, 'Renewal · $348', { late: true }), told(2, 'x')]} />)
+    expect(chime).not.toHaveBeenCalled()
+    draw(<Sales sales={[told(4, 'Upgrade · +$218', { change: 'upgrade' }), told(3, 'x')]} />)
+    expect(chime).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('the question about notices', () => {
   const sold = { kind: 'sale' as const, ts: 1, amount: 1250, currency: 'USD', exponent: 2 }
   const ask = vi.fn(() => Promise.resolve('granted' as NotificationPermission))

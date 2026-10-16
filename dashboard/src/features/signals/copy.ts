@@ -5,12 +5,14 @@ import { defineCopy } from '../../i18n'
 
 export const signals = defineCopy('signals', {
   sale: (amount: string) => `Cha-ching! ${amount}`,
+  /** Money found late says when it really happened. */
+  late: (line: string, time: string) => `${line} · ${time}`,
   // Settings.
   on: 'On',
   off: 'Off',
   tab: { label: 'Live count in the tab', hint: 'A ● and how many are online, in the title of this browser tab' },
   sound: { label: 'Sale sound', hint: 'A short chime when a payment arrives' },
-  notify: { label: 'Browser notices', hint: 'A first sale from a new source, a surge, a spike, or tracking stopping, while a trckable tab is open' },
+  notify: { label: 'Browser notices', hint: 'A new customer, an upgrade, a refund, a first sale from a new source, a surge, a spike, or tracking stopping, while a trckable tab is open' },
   blocked: 'Notices are blocked for this site: allow them in your browser’s site settings',
   // The notices themselves.
   firstSource: (source: string) => `First sale from ${source}`,
