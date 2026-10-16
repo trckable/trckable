@@ -102,7 +102,8 @@ test.fixme('the seal is a check after the site name, and its panel lists a row p
   await expect(seal).toBeFocused()
 })
 
-test('a kind not earned yet is a Connect row that opens Settings', async ({ page }) => {
+// fixme: asks the old site switcher's dialog or seal, which has no home in the one v2 header; the code is kept.
+test.fixme('a kind not earned yet is a Connect row that opens Settings', async ({ page }) => {
   await told(page, sources([{ kind: 'payments', provider: 'stripe' }]))
   await open(page, `/${site.domain}?v=explore`)
   await page.locator('.site-zone .vf-sealbtn').click({ timeout: 15_000 })

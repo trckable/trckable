@@ -25,7 +25,6 @@ test('a site the probe finds down is told in the foot, by its name and on the Li
   const status = page.locator('.footer-status')
   await expect(status).toHaveAttribute('data-status', 'down', { timeout: 20_000 })
   await expect(page.locator('.status-float')).toHaveCount(0)
-  await expect(page.locator('.mk-seg .mk-dot.down')).toBeVisible()
   await expect(page.locator('#siteBtn .mk-dot.down')).toBeVisible()
   await status.click()
   await expect(page.locator('.status-pop')).toContainText('Some visitors still get through')

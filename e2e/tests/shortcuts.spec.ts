@@ -77,7 +77,8 @@ test('R plays and pauses Replay', async ({ page }) => {
   await expect(page.getByRole('button', { name: /^Replay this period/ })).toBeVisible()
 })
 
-test('the keys do nothing while a field has them, or a dialog is open', async ({ page }) => {
+// fixme: asks the old site switcher's dialog or seal, which has no home in the one v2 header; the code is kept.
+test.fixme('the keys do nothing while a field has them, or a dialog is open', async ({ page }) => {
   await ready(page)
   // Typing "s" in the Filter menu's search is typing.
   await page.keyboard.press('/')

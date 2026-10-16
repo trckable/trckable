@@ -1429,4 +1429,4 @@
 /* "Why?" is kept on every width, beside Replay: the walkthrough hides it on a desktop. */
 .mk .whyb.rpb{display:inline-flex}
 /* A phone's ghost is a 44 px target as the rest are, in the room of the walkthrough's 34 px. */
-@container (max-width:600px){.mk .hd .logo{box-sizing:content-box;padding:5px;margin:-5px}}
+@container (max-width:600px){.mk .hd .logo{box-sizing:content-box;padding:6px;margin:-6px}}

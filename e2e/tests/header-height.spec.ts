@@ -56,7 +56,7 @@ test('a site page: the site card, Live/Data, Ask and the avatar are one height',
   await page.goto(`${API}/example.com`)
   await expect(page.locator('.hd #siteBtn')).toBeVisible()
   await expect(page.locator('.hd .account-btn')).toBeVisible()
-  await same(page, ['site', 'liveData', 'avatar'], 'site', ['capsule'])
+  await same(page, ['site', 'ask', 'avatar'], 'site', ['capsule'])
 })
 
 test('All sites: the same row, the same height', async ({ page }) => {

@@ -43,8 +43,9 @@ function audit() {
   const seen = new Set<Element>()
   while (walker.nextNode()) {
     const e = walker.currentNode.parentElement
+    // The lock card's Sample tag is the walkthrough's own 10.5 px.
     // The bell's count is a dot on a phone (its number is there for a screen reader, drawn at no size).
-    if (!e || seen.has(e) || e.matches('.bdot') || !walker.currentNode.textContent?.trim() || !shown(e)) continue
+    if (!e || seen.has(e) || e.matches('.bdot, .lkc-tag') || !walker.currentNode.textContent?.trim() || !shown(e)) continue
     seen.add(e)
     if (parseFloat(getComputedStyle(e).fontSize) < 12) text.push(`${getComputedStyle(e).fontSize} ${who(e)}`)
   }
@@ -60,7 +61,7 @@ async function clean(page: Page) {
 
 async function data(page: Page) {
   await page.goto(API + '/example.com?view=data')
-  await expect(page.locator('.overview-chart .chart-wrap svg')).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('.overview-chart .chart-wrap svg[role="img"]')).toBeVisible({ timeout: 20_000 })
 }
 
 test('the Data view: header, row, numbers, chart and cards', async ({ page }) => {
@@ -98,7 +99,7 @@ test('All sites: nothing wider than the screen, lines as wide as the page', asyn
 test('the Live view', async ({ page }) => {
   await data(page)
   await page.getByRole('button', { name: /^Live/ }).click()
-  await expect(page.locator('.live-view')).toBeVisible()
+  await expect(page.locator('.liveview')).toBeVisible()
   await clean(page)
 })
 
@@ -186,7 +187,7 @@ for (const [name, path, ready] of [
   ['All sites', '/sites', '.nx-line'],
   ['Story', '/example.com?view=data&v=story', '.sv-tile'],
   ['Data, every card', '/example.com?view=data&v=explore&mode=full', '.kit-tabs'],
-  ['Live', '/example.com?view=live', '.live-view'],
+  ['Live', '/example.com?view=live', '.liveview'],
 ] as const) {
   test(`${name}: no card is wider than it is, nothing passes the screen's edge (390 and 360)`, async ({ page }) => {
     await page.goto(API + path)

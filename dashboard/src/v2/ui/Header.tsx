@@ -38,6 +38,8 @@ export interface HeaderProps {
   /** Between ⌘K and the bell: a build with a plan puts its chip here (see ../slots). */
   extras?: ReactNode
   bell?: ReactNode
+  /** Buttons for the page's keys, out of sight (the header is what they sit in). */
+  keys?: ReactNode
 }
 
 export function Header(p: HeaderProps) {
@@ -52,6 +54,7 @@ export function Header(p: HeaderProps) {
       {p.extras}
       {p.bell}
       {p.account}
+      {p.keys}
     </header>
   )
 }

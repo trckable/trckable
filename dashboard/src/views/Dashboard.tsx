@@ -257,18 +257,19 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const [askOpen, setAskOpen] = useState(false)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (liveView || briefing) return // the walkthrough's screens have their own ⌘K (its first row asks Peek) and keys
-      if (askOn && pressed(e, 'ask')) {
-        e.preventDefault()
-        setAskOpen((o) => !o)
-        return
-      }
+      if (liveView || briefing) return // the walkthrough's screens have their own keys
       if ((e.target as HTMLElement).closest('input, textarea, select')) return
       if (pressed(e, 'mode')) setView({ mode: full ? 'core' : 'full' })
       if (e.key === 'Escape' && view.day) setView({ day: undefined })
     }
+    // The header's ⌘K list asks for Peek by this event.
+    const onAsk = () => askOn && setAskOpen((o) => !o)
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('trckable:ask', onAsk)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('trckable:ask', onAsk)
+    }
   }, [full, view.day, askOn, liveView, briefing])
 
   const pickerValue: PickerValue = {
