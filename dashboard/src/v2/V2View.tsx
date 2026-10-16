@@ -1,6 +1,6 @@
 // Live and the Briefing: the walkthrough's header, and one of its two screens under it. This replaces the dashboard's
 // own header and control rows for these two views; Explore (the full numbers) opens over either as a panel.
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import '../mock/mock.css'
 import '../mock/theme.css'
 import type { Report, Site } from '../lib/api'
@@ -86,13 +86,6 @@ export function V2View(p: V2Props) {
   const exploreOpen = () => openExplore()
   const exploring = exploreAsk.use() !== null
   useExploreKeys()
-  // A link to the old Data's Explore (?v=explore) opens the panel over the Briefing.
-  const wants = p.view.v === 'explore'
-  useEffect(() => {
-    if (!wants) return
-    openExplore({ filters: p.view.filters })
-    setView({ v: undefined, briefing: true })
-  }, [wants]) // eslint-disable-line react-hooks/exhaustive-deps -- once per link: the filters are read as the link had them
   const siteMenu = {
     sites: items,
     current: p.site.id,

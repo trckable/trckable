@@ -1,7 +1,7 @@
 // Explore's numbers from the API, and nothing the API does not already say: the period's report (this one and the one
 // before it, in one request), the funnel, Search Console, Web Vitals, mentions, the robots, the incident record and the
 // saved views. Each section is asked for when it is opened.
-import { api, cachedReport, call, rangeQS, type Filter, type Report, type ReportQuery } from '../../../lib/api'
+import { api, cachedReport, call, rangeQS, type Filter, type Report, type ReportQuery, type WebVitals } from '../../../lib/api'
 import { more } from '../../../lib/apiMore'
 import { queryOf } from '../../../lib/dashQuery'
 import { diffDays, fmtRange, todayIn, type Range } from '../../../lib/dates'
@@ -84,7 +84,9 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
     case 'speed': {
       const report = await cachedReport(c.site.id, q, undefined, signal)
       const p = before(report)
-      const [cur, prev] = await Promise.all([more.vitals(c.site.id, q), more.vitals(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }).catch(() => undefined)])
+      // A site that does not measure speed has none to show.
+      const none: WebVitals = { samples: 0, good: 0 }
+      const [cur, prev] = await Promise.all([more.vitals(c.site.id, q).catch(() => none), more.vitals(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }).catch(() => undefined)])
       return mapSpeed(cur, prev)
     }
     case 'mentions': {

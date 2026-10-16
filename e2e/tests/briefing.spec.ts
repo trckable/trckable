@@ -85,8 +85,9 @@ test('Live to Briefing: the sentence, the ring, a card in place, and the period'
   await expect(page.locator('#perMenu .cal .cm')).toBeVisible()
   await page.keyboard.press('Escape')
   await page.locator('.icard').first().getByRole('button', { name: /Go deeper/ }).click()
-  await expect(page).not.toHaveURL(/view=briefing/)
-  await expect(page).toHaveURL(/v=explore/)
+  // Explore opens over the Briefing, which stays where it was.
+  await expect(page.locator('#xp.on')).toBeVisible()
+  await expect(page).toHaveURL(/view=briefing/)
 })
 
 test('the Briefing is remembered until Live is chosen', async ({ page }) => {

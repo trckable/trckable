@@ -134,7 +134,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const showInstall = showsInstall({ site, hasData, filtered: view.filters.length > 0, everTracked })
   const waiting = showInstall && stream.visits.length === 0
   const liveView = liveShown({ wanted: wantsLive(view, site), shared: isShared(), waiting }) // Data on a shared link, the install screen first
-  const briefing = (!!view.briefing || view.v === 'explore') && !liveView && !isShared() && !waiting
+  const briefing = !!view.briefing && !liveView && !isShared() && !waiting
   const mods = useMods(site.id)
   const [journey, setJourney] = useState<string | null>(null)
   const [addGoals, setAddGoals] = useState(false)

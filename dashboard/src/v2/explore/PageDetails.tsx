@@ -50,7 +50,7 @@ function Body({ site, range, view, page }: { site: Site; range: Range; view: Vie
   )
 }
 
-export function PageDetails({ site, range, view }: { site: Site; range: Range; view: ViewState }) {
+export default function PageDetails({ site, range, view }: { site: Site; range: Range; view: ViewState }) {
   const page = pageDetails.use()
   const box = useRef<HTMLElement>(null)
   useEffect(() => {
