@@ -25,7 +25,7 @@ function go(n: Notice) {
   else navigate(`${base}?view=briefing&period=${n.kind === 'weekly' ? '7d' : 'today'}`)
 }
 
-export function Bell({ site, notices }: { site: Site; notices: ReturnType<typeof useNotices> }) {
+export function Bell({ site, notices }: { site: Site | null; notices: ReturnType<typeof useNotices> }) {
   const { items, read, unread, mark, markAll, can } = notices
   const [sheet, setSheet] = useState(false)
   useEffect(() => {
@@ -53,7 +53,7 @@ export function Bell({ site, notices }: { site: Site; notices: ReturnType<typeof
         if (n) go(n)
       }}
       onAll={markAll}
-      onSettings={() => openSettings(site, 'alerts')}
+      onSettings={() => site && openSettings(site, 'alerts')}
     />
   )
 }

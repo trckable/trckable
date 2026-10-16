@@ -4,7 +4,6 @@
 // first) or Table (every site as a row, sortable).
 import { useMemo } from 'react'
 import { Loading } from '../components/loading/Loading'
-import { AllBar } from '../features/header/AllBar'
 import { type Site } from '../lib/api'
 import { AllTable } from './AllTable'
 import { AllToday } from './AllToday'
@@ -57,7 +56,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
 
   return (
     <>
-      <AllBar header={header} />
+      {header}
       <main className="all-sites">
         <div className="all-head">
           <div>

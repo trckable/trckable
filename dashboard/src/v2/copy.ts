@@ -48,4 +48,6 @@ export const copy = defineCopy('v2', {
   nextMonth: 'Next month',
   owner: 'Owner',
   viewer: 'Viewer',
+  updateOut: (v: string) => `trckable ${v} is out`,
+  upgrade: 'is out: see how to upgrade',
 })

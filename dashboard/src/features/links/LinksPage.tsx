@@ -7,7 +7,6 @@ import type { Site } from '../../lib/api'
 import { rangeOf } from '../../lib/dashQuery'
 import { todayIn } from '../../lib/dates'
 import { navigate, readView, setView, useLocation, writeView } from '../../lib/url'
-import { AllBar } from '../header/AllBar'
 import { copy } from './copy'
 import { Empty } from './Empty'
 import { LinkRow } from './LinkRow'
@@ -31,7 +30,7 @@ export default function LinksPage({ site, header }: { site: Site; header: ReactN
   const open = (l: (typeof rows)[number]) => navigate('/' + encodeURIComponent(site.domain) + writeView({ ...view, filters: [filterOf(l)], live: false }))
   return (
     <>
-      <AllBar header={header} />
+      {header}
       <main className="yl-page">
         <div className="yl-head">
           <div>

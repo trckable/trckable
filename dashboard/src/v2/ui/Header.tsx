@@ -1,4 +1,4 @@
-// The header, one row: the ghost (all sites), the site, Live | Briefing, the period, and on the right Explore, the
+// The header, one row: the ghost (all sites), the site, Live | Briefing, the period, and on the right ⌘K, the plan, the bell and the
 // person. Nothing else lives here: no filters, no share, no second row. A phone keeps the site and the person; the
 // period moves into the page, and the switch into the bar at the bottom.
 import type { ReactNode } from 'react'
@@ -35,7 +35,7 @@ export interface HeaderProps {
   period: ReactNode
   explore: ReactNode
   account: ReactNode
-  /** Between the person and the bell: a build with a plan puts its chip here (see ../slots). */
+  /** Between ⌘K and the bell: a build with a plan puts its chip here (see ../slots). */
   extras?: ReactNode
   bell?: ReactNode
 }
@@ -49,9 +49,9 @@ export function Header(p: HeaderProps) {
       {p.period}
       <span className="sp" />
       {p.explore}
-      {p.account}
       {p.extras}
       {p.bell}
+      {p.account}
     </header>
   )
 }

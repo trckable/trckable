@@ -1322,3 +1322,8 @@
 .mk .kcs.xk.k3 .kc{padding:var(--mk-s3) var(--mk-s3) var(--mk-s3)}
 .mk .xk .kc .kv{font-size:22px}
 }
+/* The person's menu in the page header is today's account menu (components/AccountMenu), kept as it is: it hangs from the
+   avatar's right edge like the walkthrough's menus and takes their colours. */
+.mk .hd .account-menu{position:relative;flex:none}
+.mk .hd .account-menu .account-btn{width:var(--mk-h);height:var(--mk-h);padding:0;border:0;background:none;box-shadow:none;display:grid;place-items:center;border-radius:50%}
+.mk .hd .account-menu .more-menu{right:0;left:auto;top:calc(100% + var(--mk-s2));width:280px;min-width:0;max-width:calc(100vw - 16px);background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:var(--z-menu)}

@@ -503,7 +503,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         {header}{!waiting && !liveView && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}
         <HeaderTools
           live={liveView} briefing={briefing}
-          waiting={waiting} site={site}
+          waiting={waiting}
           askOpen={askOpen}
           onAsk={() => setAskOpen(true)}
           extra={trail && trailData && (

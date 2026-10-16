@@ -24,7 +24,7 @@ const save = (s: Set<string>) => {
   }
 }
 
-export function useNotices(site: Site, sites: Site[]) {
+export function useNotices(site: Site | null, sites: Site[]) {
   const [items, setItems] = useState<Notice[]>([])
   const [read, setRead] = useState<Set<string>>(load)
   const can = !isShared()
@@ -36,9 +36,9 @@ export function useNotices(site: Site, sites: Site[]) {
       const domain = (id: string) => sites.find((s) => s.id === id)?.domain
       const parts = await Promise.all([
         incidents.account(7).then((r) => fromIncidents(r.incidents, domain, now), () => []),
-        api.milestones(site.id).then((r) => fromMilestones(r.milestones, site.domain), () => []),
-        site.mentions ? mentionsApi.list(site.id, '7d').then((r) => fromMentions(r.mentions, site.domain), () => []) : Promise.resolve([]),
-        isViewer() ? Promise.resolve([]) : more.alerts(site.id).then((r) => fromAlerts(r.alerts, site.domain), () => []),
+        site ? api.milestones(site.id).then((r) => fromMilestones(r.milestones, site.domain), () => []) : Promise.resolve([]),
+        site?.mentions ? mentionsApi.list(site.id, '7d').then((r) => fromMentions(r.mentions, site.domain), () => []) : Promise.resolve([]),
+        isViewer() || !site ? Promise.resolve([]) : more.alerts(site.id).then((r) => fromAlerts(r.alerts, site.domain), () => []),
       ])
       if (live) setItems(arrange(parts.flat(), now))
     }
@@ -48,7 +48,7 @@ export function useNotices(site: Site, sites: Site[]) {
       live = false
       clearInterval(t)
     }
-  }, [site.id, site.domain, site.mentions, sites, can])
+  }, [site?.id, site?.domain, site?.mentions, sites, can]) // eslint-disable-line react-hooks/exhaustive-deps -- the site's own fields say when it changed
   const mark = useCallback((id: string) => {
     setRead((r) => {
       const n = new Set(r).add(id)

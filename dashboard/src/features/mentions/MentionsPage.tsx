@@ -3,7 +3,6 @@
 // panel, and an empty state that teaches. All of it is this chunk.
 import { ArrowLeft } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { AllBar } from '../header/AllBar'
 import { Loading } from '../../components/loading/Loading'
 import type { Site } from '../../lib/api'
 import { navigate, useLocation } from '../../lib/url'
@@ -37,7 +36,7 @@ export default function MentionsPage({ site, header }: { site: Site; header: Rea
   const open = (id: number | null) => navigate(mentionsPath(site.domain) + (id ? `?m=${id}` : ''), { replace: true })
   return (
     <>
-      <AllBar header={header} />
+      {header}
       <main className="mp-page">
         <div className="mp-head">
           <div>

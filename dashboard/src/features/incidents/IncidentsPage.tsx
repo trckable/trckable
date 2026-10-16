@@ -4,7 +4,6 @@
 import { ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { DatePicker, periodLabel, type PickerValue } from '../../components/DatePicker'
-import { AllBar } from '../header/AllBar'
 import { Loading } from '../../components/loading/Loading'
 import { rangeOf } from '../../lib/dashQuery'
 import { fmtDay, todayIn } from '../../lib/dates'
@@ -34,7 +33,7 @@ export default function IncidentsPage({ site, header }: { site: Site; header: Re
   const since = (site.watched_since ?? 0) > periodFrom ? fmtDay(dayIn(site.watched_since ?? 0, site.timezone), { year: true }) : undefined
   return (
     <>
-      <AllBar header={header} />
+      {header}
       <main className="inc-page">
         <div className="inc-head">
           <div>
