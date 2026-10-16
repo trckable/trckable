@@ -75,7 +75,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
         <span className="mk-kbd">{'S'}</span>
       </button>
       {cur && <VerifiedPill verified={cur.verified} site={cur} seal />}
-      <div className={`mk-menu sites${open ? ' on' : ''}`} id="siteMenu" role="dialog" aria-label={copy.sites}>
+      <div className={`mk-menu sites${open ? ' on' : ''}`} id="siteMenu" role={open ? 'dialog' : undefined} aria-label={open ? copy.sites : undefined}>
         {open && (
           <Suspense fallback={null}>
             <SiteList

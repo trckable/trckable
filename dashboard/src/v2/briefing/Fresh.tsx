@@ -14,6 +14,7 @@ import { useCookieless } from '../../features/install/useCookieless'
 import { useInstallCheck, type CheckState } from '../../features/install/useInstallCheck'
 import { useWeeklyEmail } from '../../features/install/useWeeklyEmail'
 import { dayWords } from '../dayWords'
+import { navigate } from '../../lib/url'
 import { todayIn } from '../../lib/dates'
 import { copy } from './copy'
 import { copy as v2 } from '../copy'
@@ -153,6 +154,16 @@ export default function Fresh({ site, visits }: { site: Site; visits: Visit[] })
         <section className="mk-card hero" aria-label={copy.freshLabel}>
           <div className="htop">
             <div className="hl-col">
+              <a
+                className="gh fresh-back"
+                href="/sites"
+                onClick={(e) => {
+                  e.preventDefault()
+                  navigate('/sites')
+                }}
+              >
+                {waitCard.back}
+              </a>
               <span className="tline">
                 {v2.today} · {day}
               </span>

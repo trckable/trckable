@@ -2211,10 +2211,18 @@ body[data-mode] .card.overview {
   .update-pill .num {
     display: none;
   }
+  /* A finger needs 44 px: the pill is only its dot, in a target of that size. */
   .update-pill {
-    width: 26px;
+    width: 44px;
+    height: 44px;
     padding: 0;
+    border: 0;
+    background: none;
     justify-content: center;
+  }
+  .update-pill .dot {
+    width: 10px;
+    height: 10px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
