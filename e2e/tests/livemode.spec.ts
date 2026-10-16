@@ -169,9 +169,10 @@ test('switching both ways: no blank frame, no shift, scroll kept', async ({ page
   const top = await view.boundingBox()
   const y = await page.evaluate(() => {
     // Well inside the page as it is on the way back, before the cards under the cards have come in again.
-    window.scrollTo(0, Math.min(150, document.documentElement.scrollHeight - innerHeight - 40))
+    window.scrollTo(0, Math.min(100, document.documentElement.scrollHeight - innerHeight - 120))
     return scrollY
   })
+  expect(y).toBeGreaterThan(20)
 
   // Scrolled down, the switch is out of sight: L is the way to Live.
   await page.keyboard.press('l')
