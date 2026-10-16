@@ -47,7 +47,8 @@ test.beforeAll(async () => {
 async function open(page: Page, width: number, query: string) {
   await page.setViewportSize({ width, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(`${API}/${HISTORY_DOMAIN}${query}${query.includes('?') ? '&v=' : '?v='}`)
+  // An empty v is the address with no view: the suite would otherwise send it to Explore, which opens the panel.
+  await page.goto(`${API}/${HISTORY_DOMAIN}${query}${query ? '&' : '?'}v=`)
 }
 
 // The suite's page adds ?v=explore to a dashboard address; a bare address is what is asked about here, so the browser goes there itself.
@@ -79,12 +80,10 @@ test('Live to Briefing: the sentence, the ring, a card in place, and the period'
   await page.locator('#perMenu').getByRole('button', { name: /^Custom dates/ }).click()
   await expect(page.locator('#perMenu .cal .mk-cm')).toBeVisible()
   await page.keyboard.press('Escape')
-  // The way deeper opens Explore over the Briefing, and Escape closes it.
-  await page.getByRole('button', { name: /^Explore all data/ }).last().click()
-  await expect(page.locator('aside.xp.on')).toBeVisible()
-  await expect(page).toHaveURL(/[?&]x=/)
-  await page.keyboard.press('Escape')
-  await expect(page.locator('aside.xp.on')).toHaveCount(0)
+  await page.locator('.icard').first().getByRole('button', { name: /Go deeper/ }).click()
+  // Explore opens over the Briefing, which stays where it was.
+  await expect(page.locator('#xp.on')).toBeVisible()
+  await expect(page).toHaveURL(/view=briefing/)
 })
 
 test('the Briefing is remembered until Live is chosen', async ({ page }) => {

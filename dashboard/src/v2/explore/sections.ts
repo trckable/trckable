@@ -1,20 +1,16 @@
-// Explore's ten sections in four groups, and the tabs inside the ones that have more than one. The walkthrough's
-// own list: people and trends first, then who they are, what they did, and the site itself.
+// Explore's ten sections in four groups, and the tables each one holds.
+import type { FilterDim, Section, Tab } from './types'
 
-export type Tab = 'overview' | 'pages' | 'sources' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots'
-export type Section = 'overview' | 'pages' | 'sources' | 'places' | 'tech' | 'results' | 'sales' | 'speed' | 'mentions' | 'links'
+export type { Section, Tab } from './types'
 
-export interface SectionDef {
-  id: Section
-  tabs: Tab[]
-}
-
-export const GROUPS: { id: 'traffic' | 'audience' | 'results' | 'site'; items: Section[] }[] = [
-  { id: 'traffic', items: ['overview', 'pages', 'sources'] },
-  { id: 'audience', items: ['places', 'tech'] },
-  { id: 'results', items: ['results', 'sales'] },
-  { id: 'site', items: ['speed', 'mentions', 'links'] },
+export const GROUPS: { key: 'traffic' | 'audience' | 'results' | 'site'; items: Section[] }[] = [
+  { key: 'traffic', items: ['overview', 'pages', 'sources'] },
+  { key: 'audience', items: ['places', 'tech'] },
+  { key: 'results', items: ['results', 'sales'] },
+  { key: 'site', items: ['speed', 'mentions', 'links'] },
 ]
+
+export const SECTIONS: Section[] = GROUPS.flatMap((g) => g.items)
 
 export const TABS: Record<Section, Tab[]> = {
   overview: ['overview'],
@@ -29,16 +25,14 @@ export const TABS: Record<Section, Tab[]> = {
   links: ['outbound', 'bots'],
 }
 
-export const sectionOf = (t: Tab): Section => (Object.keys(TABS) as Section[]).find((k) => TABS[k].includes(t)) ?? 'overview'
+export const sectionOf = (t: Tab): Section => SECTIONS.find((s) => TABS[s].includes(t)) ?? 'overview'
 
-export const ALL_TABS: Tab[] = (Object.keys(TABS) as Section[]).flatMap((s) => TABS[s])
+export const ALL_TABS: Tab[] = SECTIONS.flatMap((s) => TABS[s])
+
+/** Whether an address's word for a table (?x=pages) is one. */
 export const isTab = (v: string | undefined): v is Tab => !!v && (ALL_TABS as string[]).includes(v)
 
-/** The dimensions a filter can take, and the report's own name for each. */
-export const FILTER_DIMS = [
-  { id: 'referrer', label: 'source', report: 'referrer' },
-  { id: 'page', label: 'page', report: 'page' },
-  { id: 'country', label: 'country', report: 'country' },
-  { id: 'device', label: 'device', report: 'device' },
-] as const
-export type FilterDim = (typeof FILTER_DIMS)[number]['id']
+export const FILTER_DIMS: FilterDim[] = ['referrer', 'page', 'country', 'device']
+
+/** What a table's rows filter by when a row is tapped. */
+export const ROW_DIM: Partial<Record<Tab, FilterDim>> = { pages: 'page', sources: 'referrer', referrers: 'referrer', utm: 'referrer', countries: 'country', devices: 'device' }

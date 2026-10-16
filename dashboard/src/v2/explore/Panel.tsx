@@ -1,61 +1,96 @@
-// Explore's shell: a panel from the right over the page (a sheet from the bottom on a phone) with its own scrim,
-// a header with the site and the period, the way to full width, and the way out. At full width the sections are a
-// rail beside the table. Escape closes the top layer.
-import { useEffect, useState, type ReactNode } from 'react'
+// Explore as a panel over the page: a sheet from the right (560 px), full width with the section list beside it, or on
+// a phone a sheet from the bottom. It is always in the page, off to the side, so opening it is a slide, not a build.
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import './explore.css'
+import './data/xfx'
 import { MkPortal } from '../ui/Portal'
-import { copy } from './copy'
+import { copy } from '../copy'
+import type { ContentProps } from './PanelContent'
+import { keyOf } from './key'
+import { askOf, closeExplore, type Ask } from './open'
+import { pageDetails } from './pageStore'
+import { keepFull, wasFull } from './persist'
+import { firstFocusable, usePanelKeys } from './usePanelKeys'
 
-const WIDEN = 'M9.5 2.5h4v4M6.5 13.5h-4v-4M13.5 2.5 9 7M2.5 13.5 7 9'
-const NARROW = 'M13 6.5h-3.5v-3.5M3 9.5h3.5v3.5M9.5 6.5 14 2M6.5 9.5 2 14'
+// The content is its own chunk: nothing of it is loaded until Explore is first opened.
+const PanelContent = lazy(() => import('./PanelContent'))
+const PageDetails = lazy(() => import('./PageDetails'))
 
-export function Panel({ sub, full, collapsed, canFull, rail, onFull, onClose, hasMenu, onShutMenu, children }: { sub: string; full: boolean; collapsed: boolean; canFull: boolean; rail: ReactNode; onFull: () => void; onClose: () => void; hasMenu: boolean; onShutMenu: () => void; children: ReactNode }) {
-  const [on, setOn] = useState(false)
+const OUT = 340
+
+const sameAsk = (a: Ask | null, b: Ask | null): boolean => (a === null || b === null ? a === b : a.tab === b.tab && keyOf(a.filters) === keyOf(b.filters))
+
+const wide = () => matchMedia('(min-width:701px)').matches
+
+export type PanelProps = Omit<ContentProps, 'ask' | 'full' | 'onFull' | 'close'>
+
+/** The panel and what dims the page behind it. */
+export function ExplorePanel(p: PanelProps) {
+  const { xp, xf, filters } = p.view
+  const asked = askOf({ xp, xf, filters })
+  // The address's tab and filters, by content: a new object only when they changed.
+  const [ask, setAsk] = useState(asked)
+  if (!sameAsk(ask, asked)) setAsk(asked)
+  const open = ask !== null
+  const details = pageDetails.use()
+  // What it shows stays until it has slid out; `armed` is the frame after it is built, so the slide in has a start.
+  const [shown, setShown] = useState(ask)
+  if (ask && ask !== shown) setShown(ask)
+  const [armed, setArmed] = useState(false)
+  const [full, setFull] = useState(wasFull)
+  const box = useRef<HTMLElement>(null)
+  const opener = useRef<Element | null>(null)
   useEffect(() => {
-    const id = requestAnimationFrame(() => setOn(true))
+    if (open) {
+      opener.current = document.activeElement
+      const f = requestAnimationFrame(() => setArmed(true))
+      return () => cancelAnimationFrame(f)
+    }
+    const t = setTimeout(() => {
+      setArmed(false)
+      setShown(null)
+    }, OUT)
+    const o = opener.current
+    if (o instanceof HTMLElement && document.contains(o)) o.focus({ preventScroll: true })
+    return () => clearTimeout(t)
+  }, [open])
+  const on = open && armed
+  // Nothing behind the panel scrolls while it is there.
+  useEffect(() => {
+    if (!shown) return
     document.documentElement.style.overflow = 'hidden'
     return () => {
-      cancelAnimationFrame(id)
       document.documentElement.style.overflow = ''
     }
-  }, [])
+  }, [shown])
   useEffect(() => {
-    const key = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopImmediatePropagation()
-        if (hasMenu) onShutMenu()
-        else onClose()
-        return
-      }
-      const tg = (e.target as HTMLElement).tagName
-      if (e.key.toLowerCase() === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey && tg !== 'INPUT' && tg !== 'SELECT' && tg !== 'TEXTAREA' && canFull) {
-        e.preventDefault()
-        onFull()
-      }
-    }
-    window.addEventListener('keydown', key, true)
-    return () => window.removeEventListener('keydown', key, true)
-  }, [hasMenu, onShutMenu, onClose, onFull, canFull])
-  const wide = full && canFull
+    if (!on) return
+    const el = box.current
+    ;(firstFocusable(el) ?? el)?.focus({ preventScroll: true })
+  }, [on])
+  const toggleFull = () =>
+    setFull((f) => {
+      const next = wide() ? !f : f
+      keepFull(next)
+      return next
+    })
+  usePanelKeys(box, on, toggleFull)
+  const fw = full && wide()
   return (
     <MkPortal>
-      <div className={`xscrim${on ? ' on' : ''}`} onClick={onClose} aria-hidden="true" />
-      <aside className={`xp${on ? ' on' : ''}${wide ? ' full' : ''}`} aria-label={copy.title}>
-        <div className="xph">
-          <b>{copy.title}</b>
-          <span className="mk-quiet">{sub}</span>
-          {canFull && (
-            <button type="button" className="ib xfull" title={wide ? copy.sidePanel : copy.fullWidth} aria-label={wide ? copy.sidePanel : copy.fullWidth} aria-pressed={wide} onClick={onFull}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d={wide ? NARROW : WIDEN} />
-              </svg>
-            </button>
-          )}
-          <button type="button" className="ib x" title={copy.close} onClick={onClose}>
-            &times;
-          </button>
-        </div>
-        <div id="xpBody">{wide ? <div className={`xlay${collapsed ? ' rc' : ''}`}>{rail}<div className="xmain">{children}</div></div> : children}</div>
+      {!fw && <div className={`xscrim${on ? ' on' : ''}`} id="xscrim" onClick={closeExplore} aria-hidden="true" />}
+      <aside ref={box} className={`xp${on ? ' on' : ''}${fw ? ' full' : ''}`} id="xp" aria-label={copy.exploreTab} tabIndex={-1}>
+        {shown && (
+          <Suspense fallback={null}>
+            <PanelContent {...p} ask={shown} full={fw} onFull={toggleFull} close={closeExplore} />
+          </Suspense>
+        )}
       </aside>
+      {details !== null && (
+        <Suspense fallback={null}>
+          <PageDetails site={p.site} range={p.range} view={p.view} />
+        </Suspense>
+      )}
     </MkPortal>
   )
 }

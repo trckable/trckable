@@ -16,7 +16,7 @@ const PERIODS: [string, string][] = [['today', 'Today'], ['7d', 'Last 7 days'], 
 export function paletteItems(o: { sites: Site[]; site: Site; data: Report | null; here: 'live' | 'briefing'; onAsk?: () => void; domainOf: (s: Site) => string }): PaletteItem[] {
   const out: PaletteItem[] = []
   if (o.onAsk) out.push({ title: pc.ask, kind: pc.kinds.peek, group: pc.groups.ask, run: o.onAsk })
-  for (const t of ALL_TABS) out.push({ title: `${copy.title} · ${t in copy.sub ? copy.sub[t as keyof typeof copy.sub] : copy.names[sectionOf(t)]}`, kind: pc.kinds.table, group: copy.title, run: () => openExplore(t) })
+  for (const t of ALL_TABS) out.push({ title: `${copy.title} · ${t in copy.sub ? copy.sub[t as keyof typeof copy.sub] : copy.names[sectionOf(t)][0]}`, kind: pc.kinds.table, group: copy.title, run: () => openExplore(t) })
   out.push(
     { title: pc.goLive, kind: pc.kinds.view, group: pc.groups.goTo, run: () => void switchTab('live', o.here) },
     { title: pc.goBriefing, kind: pc.kinds.view, group: pc.groups.goTo, run: () => void switchTab('briefing', o.here) },

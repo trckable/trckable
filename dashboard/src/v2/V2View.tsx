@@ -1,5 +1,5 @@
 // Live and the Briefing: the walkthrough's header, and one of its two screens under it. This replaces the dashboard's
-// own header and control rows for these two views; Explore (the full numbers) is still the dashboard's Data.
+// own header and control rows for these two views; Explore (the full numbers) opens over either as a panel.
 import { useEffect, useMemo, useState } from 'react'
 import '../mock/mock.css'
 import '../mock/theme.css'
@@ -32,7 +32,7 @@ import { SegmentedSwitch } from './ui/SegmentedSwitch'
 import { SiteChip, type SiteItem } from './ui/SiteMenu'
 import { TabBar } from './ui/TabBar'
 import { goExplore } from './briefing/deeper'
-import { ExploreView } from './explore/ExploreView'
+import { ExplorePanel } from './explore/Panel'
 import { MkToastHost } from './ui/MkToastHost'
 import { Palette } from './ui/Palette'
 import { paletteItems } from './explore/palette'
@@ -171,7 +171,7 @@ export function V2View(p: V2Props) {
       <main id="main" className="vfade">
         {here === 'briefing' ? <BriefingSlot site={p.site} data={p.data} loading={p.loading} period={p.view.period} range={p.range} money={p.money} onGoal={p.onGoal} visits={p.live.stream.visits} /> : <Live {...p.live} />}
       </main>
-      {p.view.xp && <ExploreView site={p.site} view={p.view} range={p.range} label={label} money={p.money} onGoal={p.onGoal} />}
+      <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} money={p.money} onGoal={p.onGoal} />
       {find && <Palette items={paletteItems({ sites: p.sites, site: p.site, data: p.data, here: p.tab, onAsk: p.onAsk, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} onClose={() => setFind(false)} />}
       <MkToastHost />
       <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />

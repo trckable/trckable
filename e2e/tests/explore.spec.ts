@@ -1,5 +1,6 @@
-// Explore, the bell and the search box (⌘K) of the walkthrough's screens: the ten sections in a panel over the page, what
-// it can be narrowed by, full width with a rail, the bell's list, and Peek as the search's first row. Chromium only.
+// Explore as a panel over the Briefing: opened from the chip and the keyboard (E; a card's "Go deeper" is in briefing.spec.ts); its sections and
+// the picker, a filter from a tapped row, full width with the section list, Escape and focus, and the phone's sheet.
+// Chromium only (it runs against the site with a few days behind it).
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
@@ -7,7 +8,7 @@ import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 
-test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for the tab')
+test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for the panel')
 
 const BIN = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../server/bin/trckabled')
 const PASSWORD = 'explore e2e password 1'
@@ -43,110 +44,117 @@ test.beforeAll(async () => {
   cookie = await session()
 })
 
-// The suite's page sends a dashboard address to the older Data (?v=explore) unless the address has a v of its own.
-async function open(page: Page, width: number, query: string) {
+async function open(page: Page, width: number) {
   await page.setViewportSize({ width, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(`${API}/${HISTORY_DOMAIN}${query}${query.includes('?') ? '&v=' : '?v='}`)
+  // An empty v is the address with no view: the suite would otherwise send it to Explore, which opens the panel.
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
+  await expect(page.locator('.brief')).toBeVisible()
 }
 
-const panel = (page: Page) => page.locator('aside.xp.on')
+const panel = (page: Page) => page.locator('#xp.on')
+const pick = async (page: Page, name: RegExp) => {
+  await page.locator('[data-xm="pick"]').click()
+  await page.locator('#xm-pick').getByRole('menuitem', { name }).click()
+}
 
-test('the Explore chip opens the panel over the page; the picker holds ten sections; Escape closes it', async ({ page }) => {
-  await open(page, 1280, '?view=briefing&period=7d')
-  await expect(page.locator('.hero')).toBeVisible({ timeout: 15_000 })
-  await page.getByRole('button', { name: 'Explore all data' }).click()
+test('the chip opens it over the Briefing, and Escape, the cross and the dim shut it', async ({ page }) => {
+  await open(page, 1440)
+  await page.locator('.mk-chip.exb').click()
   await expect(panel(page)).toBeVisible()
-  await expect(page).toHaveURL(/[?&]x=overview/)
-  // The briefing stays behind it.
-  await expect(page.locator('.hero')).toBeVisible()
-  await page.getByRole('button', { name: /Overview/ }).first().click()
-  const names = ['Overview', 'Pages', 'Sources', 'Places', 'Tech', 'Goals & funnels', 'Sales', 'Speed', 'Mentions', 'Links & bots']
-  await expect(page.locator('#xm-pick .xmi')).toHaveCount(names.length)
-  for (const n of names) await expect(page.locator('#xm-pick').getByRole('menuitem', { name: new RegExp('^' + n.replace('&', '\\&')) })).toBeVisible()
-  await page.locator('#xm-pick').getByRole('menuitem', { name: /^Sources/ }).click()
-  await expect(page).toHaveURL(/[?&]x=sources/)
-  await expect(panel(page).getByRole('tab', { name: 'Referrers' })).toBeVisible()
-  await panel(page).getByRole('tab', { name: 'Referrers' }).click()
-  await expect(page).toHaveURL(/[?&]x=referrers/)
+  await expect(page).toHaveURL(/view=briefing.*x=overview/)
+  await expect(page.locator('#xp .kcs .kc')).toHaveCount(4)
+  await expect(page.locator('#xpSub')).toContainText(HISTORY_DOMAIN)
+  const box = (await page.locator('#xp').boundingBox())!
+  expect(Math.round(box.width), 'a side panel 560 px wide').toBe(560)
   await page.keyboard.press('Escape')
   await expect(panel(page)).toHaveCount(0)
   await expect(page).not.toHaveURL(/[?&]x=/)
-})
-
-test('a row narrows everything; the chip takes it off; Views and More are there', async ({ page }) => {
-  await open(page, 1280, '?view=briefing&period=7d&x=pages')
-  await expect(panel(page)).toBeVisible({ timeout: 15_000 })
-  const rows = panel(page).locator('.xrw')
-  await expect(rows.first()).toBeVisible({ timeout: 15_000 })
-  await rows.first().click()
-  const chip = panel(page).locator('.xchip2')
-  await expect(chip).toHaveCount(1)
-  await expect(page).toHaveURL(/[?&]xf=page/)
-  await chip.getByRole('button', { name: /Remove/ }).click()
-  await expect(chip).toHaveCount(0)
-  // The filter menu: a dimension, then a value.
-  await panel(page).getByRole('button', { name: /Filter/ }).click()
-  await panel(page).locator('#xm-filt').getByRole('menuitem', { name: /^Page/ }).click()
-  await panel(page).locator('#xm-filt').getByRole('menuitemradio').first().click()
-  await expect(chip).toHaveCount(1)
-  await panel(page).getByRole('button', { name: 'Views' }).click()
-  await expect(panel(page).locator('#xm-views')).toContainText('Save current view')
-  await page.keyboard.press('Escape')
-  await panel(page).getByRole('button', { name: 'More' }).click()
-  await expect(panel(page).locator('#xm-more')).toContainText('Export CSV')
-})
-
-test('f gives the panel the whole width, with the sections as a rail', async ({ page }) => {
-  await open(page, 1280, '?view=briefing&period=7d&x=overview')
-  await expect(panel(page)).toBeVisible({ timeout: 15_000 })
-  const side = (await panel(page).boundingBox())!.width
-  await page.keyboard.press('f')
-  await expect(panel(page)).toHaveClass(/full/)
-  await expect(panel(page).locator('.xrail .xri')).toHaveCount(10)
-  expect((await panel(page).boundingBox())!.width).toBeGreaterThan(side + 100)
-  await panel(page).locator('.xrail .xri', { hasText: 'Pages' }).click()
-  await expect(page).toHaveURL(/[?&]x=pages/)
-  await page.keyboard.press('f')
-  await expect(panel(page)).not.toHaveClass(/full/)
-})
-
-test('on a phone Explore is a sheet from the bottom, opened by the bar', async ({ page }) => {
-  await open(page, 390, '?view=briefing&period=7d')
-  await expect(page.locator('.hero')).toBeVisible({ timeout: 15_000 })
-  await page.locator('.tabbar').getByRole('button', { name: 'Explore' }).click()
-  await expect(panel(page)).toBeVisible()
-  const box = (await panel(page).boundingBox())!
-  expect(box.width).toBeGreaterThanOrEqual(389)
-  expect(box.y).toBeGreaterThan(20)
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
-  await page.getByRole('button', { name: 'Close', exact: true }).click()
+  await page.locator('.mk-chip.exb').click()
+  await page.locator('#xpClose').click()
+  await expect(panel(page)).toHaveCount(0)
+  await page.locator('.mk-chip.exb').click()
+  await page.mouse.click(100, 400)
   await expect(panel(page)).toHaveCount(0)
 })
 
-test('⌘K opens the search whose first row asks Peek, and a table is one key away', async ({ page }) => {
-  await open(page, 1280, '?view=briefing&period=7d')
-  await expect(page.locator('.hero')).toBeVisible({ timeout: 15_000 })
-  await page.keyboard.press('Control+k')
-  const box = page.locator('.pal .palbox')
-  await expect(box).toBeVisible()
-  await expect(box.locator('.pi').first()).toContainText('Ask Peek')
-  await page.keyboard.press('Escape')
-  await expect(box).toHaveCount(0)
-  await page.keyboard.press('Control+k')
-  await box.locator('input').fill('speed')
-  await page.keyboard.press('Enter')
-  await expect(panel(page)).toBeVisible()
-  await expect(page).toHaveURL(/[?&]x=speed/)
+test('the picker has ten sections in four groups, and the tabs of a section stay in it', async ({ page }) => {
+  await open(page, 1440)
+  await page.locator('.mk-chip.exb').click()
+  await page.locator('[data-xm="pick"]').click()
+  await expect(page.locator('#xm-pick .xgl')).toHaveText(['Traffic', 'Audience', 'Results', 'Site'])
+  await expect(page.locator('#xm-pick .xmi')).toHaveCount(10)
+  await page.locator('#xm-pick').getByRole('menuitem', { name: /^Sources/ }).click()
+  await expect(page.locator('.xsub').getByRole('tab')).toHaveText(['Channels', 'Referrers', 'UTMs', 'Search'])
+  await page.getByRole('tab', { name: 'Referrers' }).click()
+  await expect(page.getByRole('tab', { name: 'Referrers' })).toHaveAttribute('aria-selected', 'true')
+  // Payments are not connected here: Sales says so and tags itself in the picker.
+  await page.locator('[data-xm="pick"]').click()
+  await expect(page.locator('#xm-pick .xmi', { hasText: 'Sales' }).locator('.xtag')).toHaveText('Connect')
+  await page.locator('#xm-pick').getByRole('menuitem', { name: /^Sales/ }).click()
+  await expect(page.locator('#xp .lkc')).toContainText('See what each source earns')
 })
 
-test('the bell lists what happened and keeps what was read', async ({ page }) => {
-  await open(page, 1280, '?view=briefing&period=7d')
-  await expect(page.locator('.hero')).toBeVisible({ timeout: 15_000 })
-  const bell = page.getByRole('button', { name: 'Notifications' })
-  await bell.click()
-  await expect(page.locator('#bellMenu')).toContainText('Notifications')
-  await expect(page.locator('#bellMenu .nfh .lk3')).toBeVisible()
-  await page.locator('#bellMenu .nfh .lk3').click()
-  await expect(page.locator('#bellDot')).toBeHidden()
+test('a tapped row filters, the chip takes it off, and Show all lists the rest', async ({ page }) => {
+  await open(page, 1440)
+  await page.locator('.mk-chip.exb').click()
+  await pick(page, /^Pages/)
+  const rows = page.locator('#xp .xt .xrw')
+  await expect(rows.first()).toBeVisible()
+  const first = (await rows.first().locator('.mk-bar span').textContent())!
+  await rows.first().click()
+  await expect(page.locator('#xp .xchip2')).toContainText(first)
+  await expect(page).toHaveURL(/xf=page/)
+  await page.locator('#xp .xchip2 button').click()
+  await expect(page.locator('#xp .xchip2')).toHaveCount(0)
+  // The filter menu: a dimension, then its values; Views is empty until one is saved.
+  await page.locator('[data-xm="filt"]').click()
+  await page.locator('#xm-filt .xmi').first().click()
+  await expect(page.locator('#xm-filt .xmi.back')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.locator('#xm-filt.on')).toHaveCount(0)
+  await expect(panel(page)).toBeVisible()
+})
+
+test('full width has the section list beside it, and F, Tab and Escape keep to the panel', async ({ page }) => {
+  await open(page, 1440)
+  await page.keyboard.press('e')
+  await expect(page.locator('#xp.on .xtb')).toBeVisible()
+  await page.keyboard.press('f')
+  await expect(page.locator('#xp.full .xrail .xri')).toHaveCount(10)
+  await page.locator('#xp .xrail').getByRole('button', { name: /^Speed/ }).click()
+  await expect(page.locator('#xp .kcs.k3 .kc')).toHaveCount(3)
+  await page.getByRole('button', { name: 'Collapse the section list' }).click()
+  await expect(page.locator('#xp .xrail.c')).toBeVisible()
+  await page.keyboard.press('f')
+  await expect(page.locator('#xp.full')).toHaveCount(0)
+  for (let i = 0; i < 30; i++) await page.keyboard.press('Tab')
+  expect(await page.evaluate(() => document.getElementById('xp')!.contains(document.activeElement)), 'Tab stays in the panel').toBe(true)
+  // A menu opens from its button with the arrow, Escape shuts it first and the panel after.
+  await page.locator('[data-xm="pick"]').focus()
+  await page.keyboard.press('ArrowDown')
+  await expect(page.locator('#xm-pick.on')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.locator('#xm-pick.on')).toHaveCount(0)
+  await expect(panel(page)).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(panel(page)).toHaveCount(0)
+})
+
+test('on a phone it is a sheet from the bottom, opened by the bar, and its menus are sheets too', async ({ page }) => {
+  await open(page, 390)
+  await page.locator('.tabbar').getByRole('button', { name: 'Explore' }).click()
+  await expect(panel(page)).toBeVisible()
+  const bottom = (sel: string) => async () => {
+    const b = (await page.locator(sel).boundingBox())!
+    return Math.round(b.y + b.height)
+  }
+  expect(Math.round((await page.locator('#xp').boundingBox())!.width)).toBe(390)
+  await expect.poll(bottom('#xp'), { message: 'it sits on the bottom edge' }).toBe(900)
+  await page.locator('[data-xm="pick"]').click()
+  await expect.poll(bottom('#xm-pick'), { message: 'the menu too' }).toBe(900)
+  await page.keyboard.press('Escape')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  await page.locator('#xpClose').click()
+  await expect(panel(page)).toHaveCount(0)
 })
