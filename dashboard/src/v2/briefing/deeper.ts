@@ -1,17 +1,22 @@
-// "Go deeper" leaves the Briefing for the view that holds the full numbers: Data's Explore with the thing filtered, or the incident record.
+// "Go deeper" opens Explore over the Briefing with the thing filtered, or leads to the incident record.
 import type { Site } from '../../lib/api'
-import { navigate, setView } from '../../lib/url'
+import { navigate } from '../../lib/url'
+import { openExplore } from '../explore/store'
+import type { Tab } from '../explore/types'
 import type { Deeper } from './model'
+
+const TAB: Record<string, Tab> = { referrer: 'referrers', entry_page: 'pages', country: 'countries', goal: 'funnels' }
 
 export function goDeeper(site: Site, d: Deeper) {
   if (d.kind === 'incidents') {
     navigate(`/${encodeURIComponent(site.domain)}/incidents`)
     return
   }
-  setView({ live: false, briefing: false, v: 'explore', filters: [d.filter] })
+  const { dim } = d.filter
+  openExplore({ tab: TAB[dim], filters: dim === 'goal' ? [] : [d.filter] })
 }
 
-/** Data's Explore, with nothing narrowed. */
+/** Explore, with nothing narrowed. */
 export function goExplore() {
-  setView({ live: false, briefing: false, v: 'explore' })
+  openExplore()
 }

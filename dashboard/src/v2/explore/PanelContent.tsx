@@ -80,6 +80,11 @@ export default function PanelContent(p: ContentProps) {
     else if (s.menu && !t.closest('.xw')) act.shut()
   }
   useEffect(() => keys.afterRender())
+  // The panel's own parts load after it opens: focus moves into it once they are here.
+  useEffect(() => {
+    const el = document.getElementById('xp')
+    if (el && !el.contains(document.activeElement)) el.querySelector<HTMLElement>('button')?.focus({ preventScroll: true })
+  }, [])
   const content = (
       <>
         <Toolbar
