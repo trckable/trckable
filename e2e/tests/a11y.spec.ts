@@ -10,6 +10,7 @@ import { expect, test, type Page } from './fixtures'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { pageSettled } from './pageSettled'
 
 const BASE = process.env.TRCKABLE_A11Y_URL
 const EMAIL = process.env.TRCKABLE_A11Y_EMAIL ?? 'me@site.com'
@@ -152,9 +153,13 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await page.locator('[data-card=what]').getByRole('tab', { name: 'Page flow' }).click({ timeout: 20_000 })
       await page.waitForSelector('[data-chart=flow] svg', { timeout: 20_000 })
       await scan(page, 'dashboard, full grid')
+      await pageSettled(page) // a card that arrives late redraws the page under a menu that is open
       await page.getByRole('button', { name: 'More', exact: true }).click()
       await scan(page, 'more menu')
       await page.getByRole('menu', { name: 'More' }).getByRole('menuitem', { name: /Create/ }).click()
+      const create = page.getByRole('menu', { name: 'Create something' })
+      await expect(create.getByRole('menuitem').first()).toBeFocused() // the list is placed and has taken focus
+      await expect(page.getByRole('menu', { name: 'More' })).toBeHidden()
       await scan(page, 'create menu')
       const funnel = page.getByRole('menuitem', { name: /Funnel/ })
       if (await funnel.isEnabled()) {
