@@ -83,7 +83,7 @@ test('on a phone the card is one of the stacked answers', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
 })
 
-// Two columns on a desktop and a tablet, one on a phone; an odd last card spans the row.
+// Three columns (two rows) on a desktop, two on a tablet, one on a phone; with five cards the last takes the two slots left.
 const columns = (page: Page) =>
   page.locator('.sv-answer').evaluateAll((els) => {
     const rects = els.map((e) => e.getBoundingClientRect())
@@ -94,7 +94,7 @@ test('the answers sit in two columns, one on a phone, and a hidden card leaves n
   await read(page, [link({ value: 'producthunt', visitors: 120, goals: 6 })])
   await open(page)
   await expect(page.locator('.sv-answer')).toHaveCount(6, { timeout: 30_000 })
-  await expect.poll(async () => (await columns(page)).lefts).toBe(2)
+  await expect.poll(async () => (await columns(page)).lefts).toBe(3)
   await page.setViewportSize({ width: 800, height: 900 })
   await expect.poll(async () => (await columns(page)).lefts).toBe(2)
   await page.setViewportSize({ width: 390, height: 844 })
