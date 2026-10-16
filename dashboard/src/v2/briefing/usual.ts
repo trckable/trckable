@@ -28,19 +28,26 @@ export interface Table {
 }
 
 /** The 168 hours of a week from hourly history (oldest first, the site's own clock), the eight weeks before `today`. */
-export function hourTable(hist: Point[], today: string, mode: Mode = 'short'): Table | null {
+export function hourTable(hist: Point[], today: string, mode: Mode = 'short', of: (p: Point) => number = (p) => p.visitors, mean = false): Table | null {
   const from = mode === 'long' ? '0000-00-00' : addDays(today, -WINDOW)
   const slots: number[][] = Array.from({ length: 168 }, () => [])
   for (const p of hist) {
     const day = p.t.slice(0, 10)
     if (day >= today || day < from) continue
-    slots[weekdayOf(day) * 24 + Number(p.t.slice(11, 13))].push(p.visitors)
+    slots[weekdayOf(day) * 24 + Number(p.t.slice(11, 13))].push(of(p))
   }
   if (slots.every((s) => s.length < 2)) return null
   const c = new Array<number>(168).fill(0)
   const hw = new Array<number>(168).fill(0)
   slots.forEach((xs, i) => {
     if (!xs.length) return
+    if (mean) {
+      // Sales are sparse: their usual is the average, and how far the weeks spread is their deviation.
+      const m = xs.reduce((a, b) => a + b, 0) / xs.length
+      c[i] = m
+      hw[i] = Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / xs.length)
+      return
+    }
     xs.sort((a, b) => a - b)
     c[i] = quantile(xs, 0.5)
     hw[i] = spread(xs)
@@ -51,7 +58,7 @@ export function hourTable(hist: Point[], today: string, mode: Mode = 'short'): T
 const width = (spreadSq: number, c: number, mode: Mode) => 1.3 * Math.sqrt(spreadSq) + (mode === 'long' ? 0.1 : 0.06) * Math.abs(c)
 
 /** The band over a stretch of hours: each counted by the share of it that has happened (fr, 0 to 1). */
-export function stretchBand(t: Table, hours: { day: string; hour: number; fr: number }[], mode: Mode = 'short'): Band {
+export function stretchBand(t: Table, hours: { day: string; hour: number; fr: number }[], mode: Mode = 'short', signed = false): Band {
   let c = 0
   let q = 0
   for (const h of hours) {
@@ -60,7 +67,7 @@ export function stretchBand(t: Table, hours: { day: string; hour: number; fr: nu
     q += (t.hw[i] * h.fr) ** 2
   }
   const m = width(q, c, mode)
-  return { c, lo: Math.max(0, c - m), hi: c + m }
+  return { c, lo: signed ? c - m : Math.max(0, c - m), hi: c + m }
 }
 
 /** One day's band from the daily totals (oldest first, the last being today and left out): the same weekday, the days of the window except itself. */

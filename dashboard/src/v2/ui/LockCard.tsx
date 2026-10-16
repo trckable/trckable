@@ -2,7 +2,6 @@
 // the one button that sets it up. In the Briefing's grid, in Explore (big) and in Live (mini): one card, three sizes.
 import { useId, type ReactNode } from 'react'
 import { lockCopy, type LockKind } from './lockCopy'
-import './lock.css'
 
 export interface LockCardProps {
   kind: LockKind

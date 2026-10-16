@@ -99,13 +99,14 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const downNow = !!site.down_since
   const downMin = Math.round(up.lost / 60)
   const slices = useSlices(site, range, cur0, prev, unit, cur0?.kpis.visitors ?? 0, !!cur0 && !!hist.daily)
-  const extras = useExtras(site, today, !!cur0)
+  const stuckPage = cur0?.dims.entry_page?.find((r) => r.value === '/pricing')?.value ?? cur0?.dims.entry_page?.[0]?.value ?? null
+  const extras = useExtras(site, today, range, { money: !!cur0?.money, search: setupState.can && !setupState.noSearch, page: unit === 'today' ? stuckPage : null }, !!cur0)
   const dayStart = startOfDay(today, site.timezone)
   const clock = siteNow(site.timezone, new Date(nowSec * 1000))
   const end = Number(clock.slice(11, 13)) * 60 + Number(clock.slice(14, 16))
   const rv = useReplayView({ site, today, cur: cur0, end, dayStart, slices, extras, incidents: up.list, money: money })
   const cur = rv.cur
-  const parts = useParts({ site, cur, prev, usual, unit, range, today, bucket: data?.bucket, hist, up, downMin, nowSec, notes: notes.notes, slices, extras, clockAt: rv.clockAt })
+  const parts = useParts({ site, cur, prev, usual, unit, range, today, bucket: data?.bucket, hist, up, downMin, nowSec, notes: notes.notes, slices, extras, money, clockAt: rv.clockAt })
   const keyed = parts?.stories.filter((x) => !rv.held(x)) ?? []
   useBriefingKeys({ cards: (ui.all ? keyed : keyed.slice(0, 4)).map((s) => s.key), ui, open: (k) => ui.setOpen(keyed.find((s) => s.key === k) ?? null) })
   if (!cur || !parts) return loading || !data ? <Skeleton height={420} label={copy.loading} /> : null
@@ -158,6 +159,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
     uptime,
     low,
     peopleBand: parts.whole,
+    moneyBand: parts.moneyBand,
     goalBand: slices.goals.find((g) => g.value === goalValue)?.band ?? null,
     uptimePct: pctText(pct),
     uptimeVals: pts.map((_, i) => 100 * (1 - chart.downs.reduce((a, d) => a + Math.max(0, Math.min(i + 1, d.b) - Math.max(i, d.a)), 0))),

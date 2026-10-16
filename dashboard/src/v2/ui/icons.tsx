@@ -43,6 +43,12 @@ const PATHS: Record<string, ReactNode> = {
     </>
   ),
   speed: <path d="M4 16a8 8 0 1 1 16 0M12 16l4-5" />,
+  peek: (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M10 9l5 3-5 3z" />
+    </>
+  ),
   people: (
     <>
       <circle cx="9" cy="9" r="3" />

@@ -19,7 +19,7 @@ function perMin(c: Ctx, site: SiteDef, m: number): number {
 /** The mock's usual for one figure by now: the same weekday's last four weeks, up to this time. */
 function usualOf(c: Ctx, id: string, filters: Parameters<typeof countIn>[4]) {
   const cut = c.nowAbs - END * 1440
-  const xs = [1, 2, 3, 4].map((k) => countIn(c, id, (END - 7 * k) * 1440, (END - 7 * k) * 1440 + cut, filters)).sort((a, b) => a - b)
+  const xs = [1, 2, 3, 4, 5, 6, 7, 8].map((k) => countIn(c, id, (END - 7 * k) * 1440, (END - 7 * k) * 1440 + cut, filters)).sort((a, b) => a - b)
   const q = (t: number) => xs[Math.round(t * (xs.length - 1))]
   const mid = q(0.5)
   const m = 1.3 * ((q(0.8) - q(0.2)) / 2) + 0.06 * mid

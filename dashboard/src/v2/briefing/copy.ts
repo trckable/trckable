@@ -169,7 +169,7 @@ export const copy = defineCopy('briefing', {
   pageKnow: 'The page people first saw is the first page of their visit.',
   countryKnow: "Country comes from the visitor's network address, which we never store.",
   goalKnow: 'A goal counts the people who reached it once each.',
-  detailTitle: { sources: 'Where people came from', pages: 'Pages', countries: 'Countries', devices: 'Devices', goals: 'Goals', uptime: 'Uptime', mentions: 'New mention', speed: 'Page speed', milestone: 'Milestone' },
+  detailTitle: { sales: 'Sales', search: 'Google search', peek: 'Peek replay', sources: 'Where people came from', pages: 'Pages', countries: 'Countries', devices: 'Devices', goals: 'Goals', uptime: 'Uptime', mentions: 'New mention', speed: 'Page speed', milestone: 'Milestone' },
   alertSet: 'Alert set ✓',
   copiedDone: 'Copied ✓',
   goalDone: 'Goal added ✓',

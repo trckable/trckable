@@ -1,6 +1,6 @@
 // The API a fixture answers with, by path. Anything it does not know answers 404, and says so in the console. Dev only.
 import type { FunnelStep, Site, VerifiedSource } from '../../lib/api'
-import { CTYS, DEVS, END, GSC, SITES, SRCS, type SiteDef } from './data'
+import { CTYS, DEVS, END, GKIND, GNEW, GSC, SITES, SRCS, type SiteDef } from './data'
 import {
   countIn,
   dailyOf,
@@ -19,6 +19,9 @@ import { busierOf, nowOf } from './live'
 import { crawlersOf, funnelOf, heatOf, linksOf, scrollOf, segments } from './sections'
 import { hash, mulberry, pick } from './rand'
 import { osOf, visitsOf, BROWSERS } from './visits'
+
+const CHANNEL_OF: Record<string, string> = { google: 'Search', direct: 'Direct', hn: 'Referral', reddit: 'Social', x: 'Social', newsletter: 'Email', chatgpt: 'Referral', github: 'Referral', badge: 'Referral' }
+const MODULES = ['goals', 'outbound', 'revenue', 'funnels', 'notes', 'rhythm', 'journeys', 'map', 'retention', 'vitals', 'consent', 'crawlers', 'forms', 'heatmaps', 'search']
 
 export interface Reply {
   status: number
@@ -178,15 +181,22 @@ function events(c: Ctx, id: string, limit: number) {
 }
 
 function searchReport(c: Ctx, id: string, sp: URLSearchParams) {
-  const rows = GSC[id] ?? []
   const q = parseQuery(sp)
   const g = reportOf(c, id, { ...q, filters: [{ dim: 'referrer', not: false, value: 'google.com' }] }).current.kpis.visitors
   const dim = sp.get('dim') === 'page' ? 'page' : 'query'
-  const list = rows.map(([key, share, pos, ctr]) => {
-    const clicks = Math.round(g * share)
-    return { key, clicks, impressions: Math.round(clicks / Math.max(ctr, 0.005)), ctr, position: pos }
+  // The scenario's search story (new query, one that rose, a better position, fewer clicks) belongs to the period that holds today.
+  const now = q.to >= dateOf(c, END)
+  const kind = now ? GKIND[c.w.key]?.[id] : null
+  const rows = (GSC[id] ?? []).map(([key, share, pos, ctr], i) => {
+    const m = kind?.t === 'top' && kind.qi === i ? (kind.m ?? 1) : 1
+    const clicks = Math.round(g * share * m)
+    const p = kind?.t === 'pos' ? pos + (kind.dp ?? 0) : pos
+    const im = kind?.t === 'ctr' ? (kind.im ?? 1) : 1
+    return { key, clicks, impressions: Math.round((clicks / Math.max(ctr, 0.005)) * im), ctr, position: p }
   })
-  return { property: `sc-domain:${siteOf(id).name}`, dim, rows: dim === 'query' ? list : null, from: q.from, to: q.to, clicks: list.reduce((p, x) => p + x.clicks, 0), impressions: list.reduce((p, x) => p + x.impressions, 0), preliminary_from: dateOf(c, END - 1), ignored_filters: null }
+  if (kind?.t === 'new' && GNEW[id]) rows.push({ key: GNEW[id], clicks: Math.round(g * 0.07), impressions: Math.round((g * 0.07) / 0.03), ctr: 0.03, position: 8.4 })
+  rows.sort((a, b) => b.clicks - a.clicks)
+  return { property: `sc-domain:${siteOf(id).name}`, dim, rows: dim === 'query' ? rows : null, from: q.from, to: q.to, clicks: rows.reduce((p, x) => p + x.clicks, 0), impressions: rows.reduce((p, x) => p + x.impressions, 0), preliminary_from: dateOf(c, END - 1), ignored_filters: null }
 }
 
 export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams, body?: unknown): Reply | null {
@@ -272,7 +282,7 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case 'report/goal-props':
       return ok(linksOf(c, id, parseQuery(sp)))
     case 'modules':
-      return ok({ modules: [], script: { size: 0, gz: 0 } })
+      return ok({ modules: MODULES.map((m) => ({ id: m, name: m, summary: '', collects: true, default_on: true, enabled: m === 'revenue' ? c.conn.rev : m === 'search' ? c.conn.search : !['consent', 'forms'].includes(m) })), script: { bytes: 2068, core: 1650, full: 2091, url: '/js/fixture.js' } })
     case 'incidents': {
       const from = Number(sp.get('from') ?? 0)
       const to = Number(sp.get('to') ?? Number.MAX_SAFE_INTEGER)
@@ -319,7 +329,7 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       const d = dayIndex(c, q.from)
       const cut = d === END ? c.nowAbs - d * 1440 : 1440
       const at = (k: number) => countIn(c, id, (d - 7 * k) * 1440, (d - 7 * k) * 1440 + cut, q.filters)
-      const weeks = [1, 2, 3, 4].map((k) => ({ day: dateOf(c, d - 7 * k), visitors: at(k) }))
+      const weeks = [1, 2, 3, 4, 5, 6, 7, 8].map((k) => ({ day: dateOf(c, d - 7 * k), visitors: at(k) }))
       return ok({ visitors: at(0), average: Math.round(weeks.reduce((p, x) => p + x.visitors, 0) / weeks.length), weeks })
     }
     case 'now':
@@ -330,6 +340,16 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       return ok(siteJson(c, site).verified)
     case 'payments':
       return ok({ connections: hasMoney(c, site) ? [{ id: 'pay_1', provider: 'stripe', mode: 'live', status: 'ok' }] : [], providers: [], webhook_base: '' })
+    case 'buyers': {
+      const q = parseQuery(sp)
+      const n = Number(sp.get('n') ?? 8)
+      const list = salesIn(c, site, dayIndex(c, q.from) * 1440, (dayIndex(c, q.to) + 1) * 1440, q.filters)
+        .filter((x) => x.amt > 0)
+        .reverse()
+        .slice(0, n)
+        .map((x) => ({ id: `pay_${x.min}`, at: new Date(c.w.start + x.min * 60000).toISOString(), amount: x.amt * 100, kind: x.kind, channel: CHANNEL_OF[SRCS[x.s].id], referrer: REFS[SRCS[x.s].id], pages: [site.pages[x.page][0]] }))
+      return ok({ buyers: list, currency: 'USD', exponent: 2 })
+    }
     case 'sales':
       return ok({ sales: salesIn(c, site, END * 1440, c.nowAbs + 1, []) })
   }

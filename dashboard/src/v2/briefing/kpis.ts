@@ -56,6 +56,8 @@ export interface KpiIn {
   peopleBand?: UsualBand | null
   /** The goal against its own usual, when the history says (else the period before is the measure). */
   goalBand?: UsualBand | null
+  /** What the sales of the period are told against, when the history says. */
+  moneyBand?: UsualBand | null
   /** The uptime figure ("99.9") and its line, a bucket at a time. */
   uptimePct: string
   uptimeVals: number[]
@@ -91,7 +93,7 @@ export function kpiCards(a: KpiIn): Kc[] {
       : { key: 'views', icon: 'click', label: copy.views, val: fmtCompact(cur.kpis.pageviews), note: a.learning ? { t: copy.learning } : noteOf(cur.kpis.pageviews, prev?.kpis.pageviews, a.before), vals: a.viewsVals, col: '#7f9cf5' },
     { key: 'uptime', icon: 'uptime', label: copy.uptimeCard, val: a.uptime.value === null ? '–' : `${a.uptimePct}%`, note: upNote, vals: a.uptime.value === null ? [] : a.uptimeVals, lo: Math.min(90, ...a.uptimeVals), hi: Math.min(90, ...a.uptimeVals) + (100 - Math.min(90, ...a.uptimeVals)) * 1.7, dn: down },
     cur.money && a.money
-      ? { key: 'money', icon: 'sales', label: copy.net(cur.money.payments), val: a.money(cur.money.revenue), note: a.learning ? { t: copy.soFarToday } : noteOf(cur.money.revenue, prev?.money?.revenue, a.before), vals: a.moneyVals }
+      ? { key: 'money', icon: 'sales', label: copy.net(cur.money.payments), val: a.money(cur.money.revenue), note: a.learning ? { t: copy.soFarToday } : (bandNote(cur.money.revenue, a.moneyBand) ?? noteOf(cur.money.revenue, prev?.money?.revenue, a.before)), vals: a.moneyVals }
       : { key: 'leave', icon: 'leave', label: copy.left, val: leaveVal(), note: say({ t: copy.ofPeople(fmtInt(cur.kpis.visitors)) }, soFar, thin ? soFar : a.leave.note), vals: a.leave.vals, lo: 0, hi: Math.max(0.8, ...a.leave.vals), col: '#7f9cf5' },
   ]
   return cards

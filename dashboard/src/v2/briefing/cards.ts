@@ -7,8 +7,10 @@ import { copy } from './cards.copy'
 import { mult, sourceName, type Deeper, type Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
 import { whyDown, whyJump, type Why } from './why'
+import { salesCards, searchCard, stuckCard, type SalesIn } from './cards.money'
+import type { SearchStory, Stuck } from './useExtras'
 
-export type Topic = 'uptime' | 'sources' | 'countries' | 'devices' | 'pages' | 'goals' | 'mentions' | 'speed' | 'milestone'
+export type Topic = 'uptime' | 'sales' | 'sources' | 'countries' | 'devices' | 'search' | 'pages' | 'goals' | 'peek' | 'mentions' | 'speed' | 'milestone'
 export type Dim = 'referrer' | 'country' | 'device' | 'entry_page'
 
 /** The one thing a card offers to do. */
@@ -19,7 +21,7 @@ export type Act =
   | { k: 'x'; t: string }
 
 export type Vis =
-  | { k: 'rcpt'; rows: { l: string; t?: string; a?: string; flag?: string; neg?: boolean }[] }
+  | { k: 'rcpt'; rows: { l: string; t?: string; a?: string; flag?: string; neg?: boolean; more?: boolean; tot?: boolean; mark?: 'up' | 'dn' }[] }
   | { k: 'dots'; n: number; per: number; grey: number; name: string }
   | { k: 'ba'; lo: number; hi: number; c: number; v: number; red: boolean }
   | { k: 'outage'; a: number; b: number; nowAt: number; from: string; now: string }
@@ -95,6 +97,10 @@ export interface CardsIn {
   uptime: UptimeIn
   mention?: { host: string; title: string; at: string; points: number; comments: number; page: string }
   speed?: { cur: [number, number, number]; usual: [number, number, number] }
+  /** What was sold, what Google sent, and where people got stuck: each from its own answer, absent without it. */
+  sales?: SalesIn
+  search?: SearchStory
+  stuck?: Stuck
 }
 
 const people = (n: number) => (n === 1 ? '1 person' : `${fmtInt(n)} people`)
@@ -297,6 +303,10 @@ export function cardsOf(i: CardsIn): Story[] {
     if (page) out.push(pageCard(page, i))
     const goal = goalCard(i)
     if (goal) out.push(goal)
+    if (i.sales) out.push(...salesCards(i.sales))
+    const found = i.search ? searchCard({ story: i.search, domain: i.domain, rule: i.rule }) : null
+    if (found) out.push(found)
+    if (i.stuck && !i.low) out.push(stuckCard(i.stuck, i.rule))
   }
   if (i.mention) {
     const m = i.mention

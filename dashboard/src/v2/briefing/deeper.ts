@@ -13,6 +13,7 @@ export function goDeeper(site: Site, d: Deeper) {
   if (d.kind === 'incidents') navigate(`/${encodeURIComponent(site.domain)}/incidents`)
   else if (d.kind === 'mentions') openExplore('mentions')
   else if (d.kind === 'speed') openExplore('speed')
+  else if (d.kind === 'table') openExplore(d.tab)
   else openExplore(TAB[d.filter.dim] ?? 'overview', [{ ...d.filter, dim: d.filter.dim === 'entry_page' ? 'page' : d.filter.dim }])
 }
 

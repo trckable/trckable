@@ -32,6 +32,8 @@ export interface PartsIn {
   notes: { day: string; text: string }[]
   slices: SliceData
   extras: Extras
+  /** Writes an amount in the site's currency; absent where revenue is not shown. */
+  money?: (minor: number) => string
   /** The replay's "now", as minutes into today; the clock itself when absent. */
   clockAt?: number
 }
@@ -57,7 +59,7 @@ function bandsOf(series: Point[], table: ReturnType<typeof hourTable>, days: { t
 }
 
 export function useParts(a: PartsIn) {
-  const { site, cur, prev, usual, unit, range, today, bucket, hist, up, downMin, nowSec, notes, slices, extras, clockAt } = a
+  const { site, cur, prev, usual, unit, range, today, bucket, hist, up, downMin, nowSec, notes, slices, extras, money, clockAt } = a
   const hourly = bucket === 'hour'
   const downNow = !!site.down_since
   const clock = clockAt === undefined ? siteNow(site.timezone, new Date(nowSec * 1000)) : `${today}T${String(Math.floor(clockAt / 60)).padStart(2, '0')}:${String(clockAt % 60).padStart(2, '0')}`
@@ -77,11 +79,13 @@ export function useParts(a: PartsIn) {
     const live = range.to === today
     const nowHour = Number(clock.slice(11, 13)) + Number(clock.slice(14, 16)) / 60
     let whole: Band | null = null
+    let wholeHours: { day: string; hour: number; fr: number }[] = []
     if (table) {
       const hours = cur.series
         .map((p) => ({ day: p.t.slice(0, 10), hour: Number(p.t.slice(11, 13)) }))
         .filter((h) => !(live && h.day === today && h.hour > nowHour))
         .map((h) => ({ ...h, fr: live && h.day === today ? Math.min(1, Math.max(0, nowHour - h.hour)) : 1 }))
+      wholeHours = hours
       whole = stretchBand(table, hours)
     } else if (bands) {
       const ok = bands.filter((b): b is Band => !!b)
@@ -91,6 +95,9 @@ export function useParts(a: PartsIn) {
         whole = { c, lo: Math.max(0, c - m), hi: c + m }
       }
     }
+    // What the sales of the period are told against: the average of the same hours, the weeks before.
+    const moneyTable = hourly && hist.hourly ? hourTable(hist.hourly, today, 'short', (p) => p.revenue ?? 0, true) : null
+    const moneyBand = moneyTable && live ? stretchBand(moneyTable, wholeHours, 'short', true) : null
     const v = cur.kpis.visitors
     const st = whole ? judge(v, whole) : ''
     const bounceUsual = hist.daily ? usualBounce(hist.daily, today, unit === 'today' || unit === 'yesterday' ? new Date(range.to + 'T12:00:00Z').getUTCDay() : null) : null
@@ -133,6 +140,9 @@ export function useParts(a: PartsIn) {
       uptime: uptimeIn,
       mention: mention && unit === 'today' ? { host: mentionHost(mention), title: mention.title, at: clockOf(mention.posted_at), points: mention.points ?? 0, comments: mention.comments ?? 0, page: cur.dims.entry_page?.[0]?.value ?? '/' } : undefined,
       speed: extras.speed ?? undefined,
+      sales: cur.money && money && extras.buyers ? { money: cur.money, buyers: extras.buyers, band: moneyBand, fmt: money, clock: (iso) => clockOf(Date.parse(iso) / 1000), today: unit === 'today', rule } : undefined,
+      search: extras.search ?? undefined,
+      stuck: extras.stuck ?? undefined,
     })
     const lead = learning ? undefined : leadSource(slices.slices.referrer, cur.kpis.visitors, site.domain)
     const jump = lead?.band ? { name: sourceName(lead.value), value: lead.value, visitors: lead.v, times: lead.band.c > 0.5 ? lead.v / lead.band.c : null, vs: unit === 'today' || unit === 'yesterday' ? 'your usual' : undefined, st: lead.st === 'dn' ? ('dn' as const) : ('up' as const) } : null
@@ -156,6 +166,6 @@ export function useParts(a: PartsIn) {
       hist.daily && !learning && !low
         ? moments({ totals, days, todayUp: unit === 'today' ? st === 'up' : false, from: Math.max(0, days.indexOf(range.from)), to: Math.max(0, days.indexOf(range.to)), elapsed: Math.round(nowHour * 60), today: unit === 'today', week: unit === 'week', filtered: false })
         : { pills: [], line: '' }
-    return { hhmm: clock.slice(11), learning, hd, low, uptime, scores, stories, say, top, chart, weekday, whole, st, bounceUsual, mo }
-  }, [cur, prev, usual, unit, up.pct, up.list, up.from0, downNow, downMin, site.domain, site.down_since, site.down_cause, site.timezone, site.watched_since, range.to, range.from, bucket, nowSec, hist, hourly, today, notes, clock, slices, extras])
+    return { hhmm: clock.slice(11), learning, hd, low, uptime, scores, stories, say, top, chart, weekday, whole, moneyBand, st, bounceUsual, mo }
+  }, [cur, prev, usual, unit, up.pct, up.list, up.from0, downNow, downMin, site.domain, money, site.down_since, site.down_cause, site.timezone, site.watched_since, range.to, range.from, bucket, nowSec, hist, hourly, today, notes, clock, slices, extras])
 }

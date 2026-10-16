@@ -599,6 +599,40 @@
 .mk .tabbar button:active,.mk .icard:active,.mk .deep:active,.mk .mk-chip:active,.mk .pill:active,.mk .mi:active,.mk .pi:active,.mk .xrw:active{transform:scale(.97);background:var(--mk-hov2)}
 }
 .mk .tabbar button.on{color:var(--mk-lime)}
+/* The locked preview cards (round 10), where the walkthrough has them. */
+.mk .lkcs{margin-top:var(--mk-s4)}
+.mk .lkc{position:relative;overflow:hidden;background:var(--mk-card);border:1px solid var(--mk-line);border-radius:var(--mk-r,16px);min-height:230px;display:grid;container-type:inline-size}
+.mk .lkc.big{margin:var(--mk-s3) 0}
+.mk .lkc-s{grid-area:1/1;padding:20px 22px;display:flex;flex-direction:column;gap:12px;filter:blur(6px);opacity:.45;pointer-events:none;user-select:none}
+.mk .lkc-s h4{margin:0;font-size:15px;color:var(--mk-text);font-weight:600}
+.mk .lkc-s .bg{font-size:30px;font-weight:700;color:var(--mk-text);letter-spacing:-.02em}
+.mk .lkc-s .ln{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mk-muted)}
+.mk .lkc-s .ln i{display:block;height:8px;border-radius:4px;background:var(--mk-faint);flex:none}
+.mk .lkc-s .ln b{margin-left:auto;color:var(--mk-text);font-weight:600}
+.mk .lkc-s .tg2{width:30px;height:16px;border-radius:8px;background:var(--mk-faint);margin-left:auto}
+.mk .lkc-o{grid-area:1/1;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:var(--mk-s2);padding:var(--mk-s4)}
+.mk .lkc-o svg{width:22px;height:22px;color:var(--mk-muted);fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mk .lkc-o .lt1{font-size:15px;font-weight:700;color:var(--mk-text);margin:0}
+.mk .lkc-o .lt2{font-size:12.5px;color:var(--mk-muted);margin:0}
+.mk .lkc-o .lkgo{height:36px;padding:0 18px;border-radius:10px;background:var(--mk-lime);color:#0a0b0c;font-weight:600;font-size:13px;margin-top:var(--mk-s1)}
+.mk .lkc-o .lkgo:hover{filter:brightness(1.08)}
+.mk .lkc-o .how{color:var(--mk-muted);font-size:12.5px;height:var(--mk-h);padding:0 var(--mk-s2);border-radius:var(--mk-rc)}
+.mk .lkc-o .how:hover{color:var(--mk-text);background:var(--mk-hov)}
+.mk .lkc-tag{position:absolute;top:10px;right:12px;z-index:2;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--mk-muted);border:1px solid var(--mk-line);background:var(--mk-card2);border-radius:999px;padding:2px 8px}
+.mk .lkc.mini{min-height:96px;border-radius:12px;margin-top:var(--mk-s2)}
+.mk .lkc.mini .lkc-s{padding:10px 12px}
+.mk .lkc.mini .lkc-s .bg{font-size:22px}
+.mk .lkc.mini .lkc-o{flex-direction:row;flex-wrap:wrap;gap:var(--mk-s2);padding:var(--mk-s2)}
+.mk .lkc.mini .lkc-o .lt2,.mk .lkc.mini .lkc-o svg{display:none}
+.mk .lkc.mini .lkc-o .lt1{font-size:13px}
+@container (max-width:600px){.mk .lkc{min-height:176px}.mk .lkc-s{padding:14px}.mk .lkc .lkgo,.mk .lkc-o .how{min-height:44px;height:44px}.mk .lkc.mini{min-height:96px}}
+.mk.phone .lkcs{grid-template-columns:1fr}
+.mk.phone .lkc{min-height:176px}
+.mk.phone .lkc .lkgo,.mk.phone .lkc-o .how{height:44px}
+/* The walkthrough's general .mini rule also lands on this card, which gives it its gap. */
+.mk .lkc.mini{gap:6px 18px}
+/* The "Why?" in the down notice sits in the line, so the notice is as tall as the walkthrough's. */
+.mk .downbox .lk3{padding:0;line-height:inherit;height:auto;vertical-align:baseline;font:inherit}
 .mk .setups{display:flex;flex-direction:column;gap:var(--mk-s2)}
 .mk .mk-srow{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s2) var(--mk-s4);border:1px dashed #2a2d33;border-radius:16px;color:var(--mk-muted);font-size:13px;min-height:48px}
 .mk .mk-srow .ic-i{display:block;width:20px;height:20px;flex:none;color:var(--mk-faint)}
@@ -1327,3 +1361,5 @@
 .mk .hd .account-menu{position:relative;flex:none}
 .mk .hd .account-menu .account-btn{width:var(--mk-h);height:var(--mk-h);padding:0;border:0;background:none;box-shadow:none;display:grid;place-items:center;border-radius:50%}
 .mk .hd .account-menu .more-menu{right:0;left:auto;top:calc(100% + var(--mk-s2));width:280px;min-width:0;max-width:calc(100vw - 16px);background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:var(--z-menu)}
+/* "Why?" beside "Replay": two buttons in a line, aligned at the top so the line is as tall as the walkthrough's one. */
+.mk .hl-col .rpb{vertical-align:top}
