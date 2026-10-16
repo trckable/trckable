@@ -177,7 +177,7 @@ function App() {
     api.sites().then(({ sites }) => setBoot({ ...boot, sites }));
   const all = path === "/sites", { site, sub } = routeOf(boot.sites, path);
 
-  const header = <Suspense fallback={null}><PageBar sites={boot.sites} site={all ? null : site} update={latest?.v} onUpdate={() => setShowUpdate(true)} /></Suspense>;
+  const header = <Suspense fallback={<div className="bar-hold" aria-hidden="true" />}><PageBar sites={boot.sites} site={all ? null : site} update={latest?.v} onUpdate={() => setShowUpdate(true)} /></Suspense>;
   // Until an owner's first site has had a visit, only the first run (Gate).
   let page: React.ReactNode;
   if (gated) page = null;

@@ -2871,3 +2871,9 @@ body {
   color: var(--text-3);
   font-size: 12px;
 }
+
+/* The page's header is its own chunk: this holds its place until it has loaded, so nothing under it moves. */
+.bar-hold {
+  width: 100%;
+  height: 48px;
+}
