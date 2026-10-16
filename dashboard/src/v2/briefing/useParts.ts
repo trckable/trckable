@@ -6,11 +6,11 @@ import type { Point, Result, Site } from '../../lib/api'
 import type { Range } from '../../lib/dates'
 import { chartOf, siteNow } from './chart'
 import { copy } from './copy'
-import { cardsOf, type UptimeIn } from './cards'
+import { cardsOf, leadSource, type UptimeIn } from './cards'
 import { moments } from './moments'
 import type { Extras } from './useExtras'
 import type { SliceData } from './useSlices'
-import { engagementFromBounce, engagementScore, sentence, topSource, trafficFromBand, trafficScore, uptimeScore, type Score, type Unit, type Usual } from './model'
+import { engagementFromBounce, sourceName, engagementScore, sentence, trafficFromBand, trafficScore, uptimeScore, type Score, type Unit, type Usual } from './model'
 import { dayBandOf, hourTable, judge, stretchBand, usualBounce, type Band } from './usual'
 import type { History } from './useHistory'
 
@@ -32,6 +32,13 @@ export interface PartsIn {
   notes: { day: string; text: string }[]
   slices: SliceData
   extras: Extras
+  /** The replay's "now", as minutes into today; the clock itself when absent. */
+  clockAt?: number
+}
+
+const usualWordsOf = (unit: Unit, weekday: string, at: string): string => {
+  if (unit === 'today') return copy.usualByNow(weekday, at)
+  return unit === 'yesterday' ? copy.usualDay1(weekday) : copy.usualBare
 }
 
 const mentionHost = (m: { source: string; host: string }): string => {
@@ -50,10 +57,10 @@ function bandsOf(series: Point[], table: ReturnType<typeof hourTable>, days: { t
 }
 
 export function useParts(a: PartsIn) {
-  const { site, cur, prev, usual, unit, range, today, bucket, hist, up, downMin, nowSec, notes, slices, extras } = a
+  const { site, cur, prev, usual, unit, range, today, bucket, hist, up, downMin, nowSec, notes, slices, extras, clockAt } = a
   const hourly = bucket === 'hour'
   const downNow = !!site.down_since
-  const clock = siteNow(site.timezone, new Date(nowSec * 1000))
+  const clock = clockAt === undefined ? siteNow(site.timezone, new Date(nowSec * 1000)) : `${today}T${String(Math.floor(clockAt / 60)).padStart(2, '0')}:${String(clockAt % 60).padStart(2, '0')}`
   return useMemo(() => {
     if (!cur) return null
     const days = (hist.daily ?? []).map((p) => p.t.slice(0, 10))
@@ -125,8 +132,11 @@ export function useParts(a: PartsIn) {
       mention: mention && unit === 'today' ? { host: mentionHost(mention), title: mention.title, at: clockOf(mention.posted_at), points: mention.points ?? 0, comments: mention.comments ?? 0, page: cur.dims.entry_page?.[0]?.value ?? '/' } : undefined,
       speed: extras.speed ?? undefined,
     })
-    const say = sentence({ cur, prev, usual, unit, weekday, self: site.domain, downMin, learning })
-    const top = topSource(cur, prev, site.domain)
+    const lead = learning ? undefined : leadSource(slices.slices.referrer, cur.kpis.visitors, site.domain)
+    const jump = lead?.st === 'up' && lead.band ? { name: sourceName(lead.value), value: lead.value, visitors: lead.v, times: lead.band.c > 0.5 ? lead.v / lead.band.c : null, vs: unit === 'today' || unit === 'yesterday' ? 'your usual' : undefined } : null
+    const usualWords = usualWordsOf(unit, weekday, clock.slice(11))
+    const say = sentence({ cur, prev, usual, unit, weekday, self: site.domain, downMin, learning, jump, band: whole && !learning ? { ratio: whole.c > 0.5 ? v / whole.c : null, st, words: usualWords } : null })
+    const top = jump
     const downs = up.list.flatMap((x) => {
       const per = hourly ? 3600 : 86400
       const s = (Math.max(x.started_at, up.from0) - up.from0) / per

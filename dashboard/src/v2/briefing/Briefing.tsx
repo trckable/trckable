@@ -24,6 +24,10 @@ import { MailRow } from '../ui/MailRow'
 import { WatchCard } from '../ui/WatchCard'
 import { Act, Calm, Setups } from '../ui/ConnectPlaceholder'
 import { Overlays } from './Overlays'
+import { ReplayBar } from '../ui/ReplayBar'
+import { useReplayView } from '../replay/useReplayView'
+import { startOfDay } from '../../features/incidents/model'
+import { siteNow } from './chart'
 import { nextStep, setupRows } from './steps'
 import { copy } from './copy'
 import { say as flash } from '../ui/toast'
@@ -38,7 +42,7 @@ import { useSlices } from './useSlices'
 import { useBriefingKeys } from './useBriefingKeys'
 import { readerOf, readerWords } from './reader'
 import { useBriefingState } from './useBriefingState'
-import { useHistory } from './useHistory'
+import { useHistory, useHourly, wantsHours } from './useHistory'
 import { useParts } from './useParts'
 import { useSlice } from './useSeries'
 
@@ -53,8 +57,6 @@ export interface BriefingProps {
   onGoal: () => void
   /** The latest visits on the site, for "meet one of them". */
   visits: Visit[]
-  /** Play the day back (today only). */
-  onReplay?: () => void
 }
 
 const heroSub = (meet: string | null, low: boolean, fallback: string): string => {
@@ -70,35 +72,43 @@ const chartLine = (learning: boolean, low: boolean, hd: number, note: () => stri
 /** An empty period has no series at all (the server sends null): an empty list, so nothing below has to ask. */
 const normal = (r?: Result): Result | undefined => (r ? { ...r, series: r.series ?? [] } : undefined)
 
-export default function Briefing({ site, data, loading, period, range, money, onGoal, visits, onReplay }: BriefingProps) {
+export default function Briefing({ site, data: page, loading, period, range, money, onGoal, visits }: BriefingProps) {
   const ui = useBriefingState(site.id)
   const [at, setAt] = useState<number | null>(null)
   const up = useUptime(site, range)
   const nowSec = useNow()
   const setupState = useSetup(site)
   const wset = watched.use()
+  const hours = useHourly(site, range, !!page && page.bucket !== 'hour' && wantsHours(period, range))
+  const data = useMemo(() => (page && hours ? { ...page, bucket: hours.bucket, current: hours.current } : page), [page, hours])
   const current = data?.current
   const previous = data?.previous
-  const cur = useMemo(() => normal(current), [current])
+  const cur0 = useMemo(() => normal(current), [current])
   const prev = useMemo(() => normal(previous), [previous])
   const unit = unitOf(period)
   const today = todayIn(site.timezone)
   const usual = useUsual(site.id, range.to, unit === 'today' || unit === 'yesterday')
   const hist = useHistory(site, today, data?.bucket === 'hour', !!data)
   const notes = useNotes(site.id, { from: addDays(today, -365), to: today }, () => undefined)
-  const goalValue = (cur?.goals ?? []).find((g) => g.visitors > 0)?.value
+  const goalValue = (cur0?.goals ?? []).find((g) => g.visitors > 0)?.value
   const goalSlice = useSlice(site, range, data?.bucket, goalValue ? { dim: 'goal', value: goalValue } : null)
   const downNow = !!site.down_since
   const downMin = Math.round(up.lost / 60)
-  const slices = useSlices(site, range, cur, prev, unit, cur?.kpis.visitors ?? 0, !!cur && !!hist.daily)
-  const extras = useExtras(site, today, !!cur)
-  const parts = useParts({ site, cur, prev, usual, unit, range, today, bucket: data?.bucket, hist, up, downMin, nowSec, notes: notes.notes, slices, extras })
-  const keyed = parts?.stories ?? []
+  const slices = useSlices(site, range, cur0, prev, unit, cur0?.kpis.visitors ?? 0, !!cur0 && !!hist.daily)
+  const extras = useExtras(site, today, !!cur0)
+  const dayStart = startOfDay(today, site.timezone)
+  const clock = siteNow(site.timezone, new Date(nowSec * 1000))
+  const end = Number(clock.slice(11, 13)) * 60 + Number(clock.slice(14, 16))
+  const rv = useReplayView({ site, today, cur: cur0, end, dayStart, slices, extras, incidents: up.list, money: money })
+  const cur = rv.cur
+  const parts = useParts({ site, cur, prev, usual, unit, range, today, bucket: data?.bucket, hist, up, downMin, nowSec, notes: notes.notes, slices, extras, clockAt: rv.clockAt })
+  const keyed = parts?.stories.filter((x) => !rv.held(x)) ?? []
   useBriefingKeys({ cards: (ui.all ? keyed : keyed.slice(0, 4)).map((s) => s.key), ui, open: (k) => ui.setOpen(keyed.find((s) => s.key === k) ?? null) })
   if (!cur || !parts) return loading || !data ? <Skeleton height={420} label={copy.loading} /> : null
   const label = unit === 'today' ? `${presetById('today')?.label ?? 'Today'} · ${dayWords(range.to)}` : (presetById(period)?.label ?? fmtRange(range, today))
   const before = copy.before[unit]
-  const { learning, scores, stories, say, chart, uptime, low, mo, top } = parts
+  const { learning, scores, say, chart, uptime, low, mo, top } = parts
+  const stories = parts.stories.filter((x) => !rv.held(x))
   const watchKey = (s: Story) => `${site.id}|${s.key}`
   const ctx: CardCtx = {
     know: () => null,
@@ -190,7 +200,7 @@ export default function Briefing({ site, data, loading, period, range, money, on
           period={label}
           onPeriod={() => document.querySelector<HTMLElement>('.mk-pill, .range-picker, .btn.range')?.click()}
           moments={mo}
-          onReplay={unit === 'today' && onReplay && v > 0 ? onReplay : undefined}
+          onReplay={unit === 'today' && !rv.r.on && end >= 60 && v > 0 ? rv.r.open : undefined}
           chart={
             empty ? null : (
               <div className="chwrap">
@@ -222,6 +232,7 @@ export default function Briefing({ site, data, loading, period, range, money, on
         {!empty && canNote && <MailRow on={ui.mail} headline={headline} onPreview={() => ui.setSheet('mail')} onManage={() => openSettings(site, 'alerts')} onToggle={ui.toggleMail} />}
         {ui.hint && <KeyHint onHide={ui.hideHint} />}
       </div>
+      <ReplayBar r={rv.r} moments={rv.moments} phone={window.matchMedia('(max-width: 600px)').matches} />
       <Overlays ui={ui} site={site} range={range} today={today} notes={notes} ctx={ctx} headline={headline} kcs={kcs} shown={shown} canNote={canNote} />
     </div>
   )

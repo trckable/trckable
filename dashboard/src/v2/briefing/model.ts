@@ -53,6 +53,8 @@ export interface Top {
   visitors: number
   /** Against the period before, when that had enough of this source to measure. */
   times: number | null
+  /** What it is measured against, in words ("your usual"); the period before when absent. */
+  vs?: string
 }
 
 /** The one outside site that sent the period's visitors: big enough to name, and not the site itself. */
@@ -88,6 +90,10 @@ export interface SayIn {
   downMin: number
   /** Fewer visitors than a base worth measuring: people, not percentages. */
   learning: boolean
+  /** The source that jumped against its own usual, which leads the sentence. None: no source is named. */
+  jump?: Top | null
+  /** The period against the site's own usual, when the history says: how many times it, whether it is above or below the band, and the words for it ("a usual Friday by 16:30"). */
+  band?: { ratio: number | null; st: '' | 'up' | 'dn'; words: string } | null
 }
 
 function paid(r: Result): number {
@@ -96,6 +102,7 @@ function paid(r: Result): number {
 
 /** Today (or yesterday) against what the weekday usually brings, when the server says; otherwise the period before. */
 function baseline(o: SayIn): { ratio: number | null; words: string } {
+  if (o.band) return { ratio: o.band.ratio, words: o.band.words }
   const u = o.usual
   if (u && (u.weeks?.length ?? 0) > 0 && u.average >= 5 && (o.unit === 'today' || o.unit === 'yesterday')) {
     return { ratio: o.cur.kpis.visitors / u.average, words: `a usual ${o.weekday}` }
@@ -114,8 +121,9 @@ function moodWord(bumpy: boolean, up: boolean, down: boolean): string {
 export function sentence(o: SayIn): Sentence {
   const v = o.cur.kpis.visitors
   const { ratio, words } = baseline(o)
-  const top = topSource(o.cur, o.prev, o.self)
+  const top = o.jump ?? null
   const x = top?.times && top.times >= 1.5 ? mult(top.times) : ''
+  const vs = top?.vs ?? copy.before[o.unit]
   const noun = { today: o.weekday, yesterday: o.weekday, week: copy.week, month: copy.month, range: copy.stretch }[o.unit]
   const n = paid(o.cur)
   const c2 = n > 0 ? [{ t: copy.paid(n), em: true }] : []
@@ -127,17 +135,18 @@ export function sentence(o: SayIn): Sentence {
   if (o.learning) {
     return { lead: copy.dayOne, long: [{ t: people(v), em: true }, { t: copy.soFar }, ...andC2, { t: '.' }], short: [{ t: copy.soFarShort(people(v)), em: true }], sub: copy.learnSub, bad: false }
   }
-  const up = ratio !== null && ratio >= 1.15
-  const down = ratio !== null && ratio <= 0.7
+  const up = o.band ? o.band.st === 'up' || !!(o.jump?.times && o.jump.times >= 1.5) : (ratio !== null && ratio >= 1.15) || !!(o.jump?.times && o.jump.times >= 1.5)
+  const down = o.band ? o.band.st === 'dn' : ratio !== null && ratio <= 0.7
   const adj = moodWord(o.downMin > 0, up, down)
   let c1: Part[]
   let short: Part[]
   if (top && x) {
-    c1 = [{ t: `${top.name} brought ${people(top.visitors)}, ${x} ${copy.before[o.unit]}`, em: true }]
-    short = [{ t: `${top.name} sent ${x} ${copy.before[o.unit]}.`, em: true }]
+    c1 = [{ t: `${top.name} brought ${people(top.visitors)}, ${x} ${vs}`, em: true }]
+    short = [{ t: `${top.name} sent ${x} ${vs}.`, em: true }]
   } else if (up) {
-    c1 = [{ t: `${people(v)} came, ${ratio >= 1.3 ? `${mult(ratio)} ` : 'above '}${words}` }]
-    short = [{ t: `${people(v)} came`, em: true }, { t: `, ${ratio >= 1.3 ? mult(ratio) + ' usual' : 'above usual'}.` }]
+    const r = ratio ?? 0
+    c1 = [{ t: `${people(v)} came, ${r >= 1.3 ? `${mult(r)} ` : 'above '}${words}` }]
+    short = [{ t: `${people(v)} came`, em: true }, { t: `, ${r >= 1.3 ? mult(r) + ' usual' : 'above usual'}.` }]
   } else if (down) {
     c1 = [{ t: `only ${people(v)} came, below ${words}` }]
     short = [{ t: 'Only ' }, { t: people(v), em: true }, { t: ' came, below usual.' }]

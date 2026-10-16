@@ -153,6 +153,12 @@ const sourceRest = (up: boolean, r: number, low: boolean): string => {
   return r >= 1.5 && !low ? `, ${mult(r)} your usual` : ''
 }
 
+/** The source that rose furthest above its usual, when there is one: it leads the headline and the first card. */
+export function leadSource(list: Slice[], total: number, domain: string): (Slice & { st: Judged }) | undefined {
+  const self = (s: Slice) => !s.value || s.value.replace(/^www\./, '') === domain.replace(/^www\./, '')
+  return movers(list, total, self).sort((a, b) => Math.abs(b.v - (b.band?.c ?? 0)) - Math.abs(a.v - (a.band?.c ?? 0)))[0]
+}
+
 function sourceCard(s: Slice & { st: Judged }, i: CardsIn, total: number, topPage?: { name: string; value: string }): Story {
   const up = s.st === 'up'
   const b = s.band as Band
@@ -289,7 +295,7 @@ export function cardsOf(i: CardsIn): Story[] {
   if (u.downNow || u.minutes > 0) out.push(uptimeCard(u, i.domain))
   if (u.downNow) return out
   if (!i.learning) {
-    const src = movers(i.slices.referrer, total, (s) => !s.value || s.value.replace(/^www\./, '') === i.domain.replace(/^www\./, '')).sort((a, b) => Math.abs(b.v - (b.band?.c ?? 0)) - Math.abs(a.v - (a.band?.c ?? 0)))[0]
+    const src = leadSource(i.slices.referrer, total, i.domain)
     if (src) out.push(sourceCard(src, i, total, i.topPageOf?.(src.value)))
     const cty = movers(i.slices.country, total)[0]
     if (cty) out.push(countryCard(cty, i, total, i.topSourceOf?.(cty.value)))
