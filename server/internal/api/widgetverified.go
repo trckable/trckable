@@ -3,6 +3,7 @@ package api
 import (
 	"html/template"
 	"net/http"
+	"strings"
 
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
@@ -48,12 +49,15 @@ func widgetMarks(v verified, words widgetWords) []widgetMark {
 	return out
 }
 
+// verifiedHome is the badge's plain link to trckable.com.
+const verifiedHome = "https://trckable.com/?ref=verified"
+
 // verifiedHref is where the badge leads: trckable.com, unless the owner chose
 // one of the site's share links and it is still open (no password, not
 // expired, no money in it, not deleted). A link that stops being open is
 // simply not followed: the badge falls back at once.
 func (a *API) verifiedHref(r *http.Request, si sqlite.SiteInfo, wd sqlite.Widget) string {
-	const home = "https://trckable.com/?ref=verified"
+	home := verifiedHome
 	want := wd.LinkOf()
 	if want == "" {
 		return home
@@ -73,9 +77,12 @@ func (a *API) verifiedHref(r *http.Request, si sqlite.SiteInfo, wd sqlite.Widget
 
 func (a *API) fillVerified(r *http.Request, d *widgetData, si sqlite.SiteInfo, wd sqlite.Widget, words widgetWords, public bool) {
 	d.Marks = widgetMarks(a.verifiedOf(r.Context(), si), words)
-	d.Href = "https://trckable.com/?ref=verified"
+	d.Href, d.HrefRel = verifiedHome, "noopener nofollow"
 	if len(d.Marks) > 0 {
 		d.Href = a.verifiedHref(r, si, wd)
+		if !strings.HasPrefix(d.Href, "https://trckable.com/") {
+			d.HrefRel = "noopener" // the site's own share link: followed normally
+		}
 	}
 	if len(d.Marks) == 0 && !public {
 		d.Off = "Nothing is verified yet. Connect Search Console or a payment provider and the badge shows."
