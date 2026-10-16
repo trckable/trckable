@@ -62,6 +62,21 @@ async function scan(page: Page, where: string) {
   // exempt from text contrast (WCAG 1.4.3), and its links are still scanned.
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).exclude('.app-footer .tkb-logo').analyze()
   const found = violations.flatMap((v) => v.nodes.map((n) => `${where}: ${v.id} — ${n.any?.[0]?.message ?? v.help}\n    ${n.html.slice(0, 160)}`))
+  if (found.length) {
+    const first = violations[0]?.nodes[0]
+    const why = await page.evaluate((sel) => {
+      const el = document.querySelector(sel as string)
+      if (!el) return 'gone'
+      const up: string[] = []
+      for (let n: Element | null = el; n; n = n.parentElement) {
+        const c = getComputedStyle(n)
+        up.push(`${n.tagName}.${String(n.className).slice(0, 20)} vis=${c.visibility} op=${c.opacity} disp=${c.display} ah=${n.getAttribute('aria-hidden')} inert=${n.hasAttribute('inert')} clip=${c.clipPath} tf=${c.transform}`)
+      }
+      const r = el.getBoundingClientRect()
+      return `${JSON.stringify([r.x, r.y, r.width, r.height])} text=${JSON.stringify(el.textContent)} ${up.join(' | ')}`
+    }, String(first?.target?.[0] ?? 'body'))
+    found.push(`state: ${why}`)
+  }
   expect(found, where).toEqual([])
 }
 
