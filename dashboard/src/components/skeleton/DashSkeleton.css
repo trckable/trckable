@@ -209,7 +209,7 @@ html[style*='--dsk-setup'] .dsk-setup {
   gap: 12px;
 }
 .dsk-answer {
-  grid-column: span 4;
+  grid-column: span 6;
   height: var(--dsk-a1, 207px);
 }
 .dsk-answer:nth-child(2) {
@@ -224,11 +224,18 @@ html[style*='--dsk-setup'] .dsk-setup {
 .dsk-answer:nth-child(5) {
   height: var(--dsk-a5, 227px);
 }
-.dsk-answer:nth-child(1) {
-  grid-column: span 7;
+/* The Story's columns (features/storyview/StoryView.css): two on a tablet, three by two on a desktop. */
+.dsk-answer:last-child:nth-child(odd) {
+  grid-column: span 12;
 }
-.dsk-answer:nth-child(2) {
-  grid-column: span 5;
+@media (min-width: 1100px) {
+  .dsk-answer,
+  .dsk-answer:last-child:nth-child(odd) {
+    grid-column: span 4;
+  }
+  .dsk-answer:last-child:nth-child(5) {
+    grid-column: span 8;
+  }
 }
 
 /* Live: the big panel and the feed, as tall as Live makes them (features/live/Live.css), stacked when it stacks. */
@@ -261,14 +268,6 @@ html[style*='--dsk-setup'] .dsk-setup {
   }
   .dsk-tile {
     height: var(--dsk-tile, 124px);
-  }
-  .dsk-answer {
-    grid-column: span 6;
-  }
-  .dsk-answer:nth-child(1),
-  .dsk-answer:nth-child(2),
-  .dsk-answer:nth-child(5) {
-    grid-column: span 12;
   }
 }
 @media (max-width: 720px) {
