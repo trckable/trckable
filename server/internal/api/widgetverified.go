@@ -3,7 +3,6 @@ package api
 import (
 	"html/template"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/trckable/trckable/server/internal/store/sqlite"
@@ -50,12 +49,15 @@ func widgetMarks(v verified, words widgetWords) []widgetMark {
 	return out
 }
 
+// verifiedHome is the badge's plain link to trckable.com.
+const verifiedHome = "https://trckable.com/?ref=verified"
+
 // verifiedHref is where the badge leads: trckable.com, unless the owner chose
 // one of the site's share links and it is still open (no password, not
 // expired, no money in it, not deleted). A link that stops being open is
 // simply not followed: the badge falls back at once.
 func (a *API) verifiedHref(r *http.Request, si sqlite.SiteInfo, wd sqlite.Widget) string {
-	home := verifiedHome(si.Domain)
+	home := verifiedHome
 	want := wd.LinkOf()
 	if want == "" {
 		return home
@@ -73,31 +75,9 @@ func (a *API) verifiedHref(r *http.Request, si sqlite.SiteInfo, wd sqlite.Widget
 	return home
 }
 
-// verifiedHome is the badge's link to trckable.com. It carries the site's own
-// public domain (never an internal id or a share token) so trckable.com can
-// tell which site the click came from; with no domain it is the plain link.
-func verifiedHome(domain string) string {
-	const home = "https://trckable.com/?ref=verified"
-	d := strings.ToLower(strings.TrimSpace(domain))
-	if d == "" {
-		return home
-	}
-	return home + "&utm_source=" + url.QueryEscape(d) + "&utm_medium=badge&utm_campaign=verified"
-}
-
-// widgetHome is the "powered by" link of the other widgets, tagged with the
-// site's domain and the widget kind. No domain, plain link.
-func widgetHome(domain, kind string) string {
-	d := strings.ToLower(strings.TrimSpace(domain))
-	if d == "" {
-		return "https://trckable.com"
-	}
-	return "https://trckable.com/?utm_source=" + url.QueryEscape(d) + "&utm_medium=" + url.QueryEscape(kind) + "&utm_campaign=widget"
-}
-
 func (a *API) fillVerified(r *http.Request, d *widgetData, si sqlite.SiteInfo, wd sqlite.Widget, words widgetWords, public bool) {
 	d.Marks = widgetMarks(a.verifiedOf(r.Context(), si), words)
-	d.Href, d.HrefRel = verifiedHome(si.Domain), "noopener nofollow"
+	d.Href, d.HrefRel = verifiedHome, "noopener nofollow"
 	if len(d.Marks) > 0 {
 		d.Href = a.verifiedHref(r, si, wd)
 		if !strings.HasPrefix(d.Href, "https://trckable.com/") {

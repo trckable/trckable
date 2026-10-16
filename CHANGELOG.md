@@ -9,7 +9,7 @@ section into the release.
 
 ## Unreleased
 
-- The Verified badge and the other widgets now tell trckable.com which site a click came from: the link carries your site's domain as `utm_source` (`utm_medium=badge` for the badge, the widget's kind for the others), so a visit from albas.al shows as albas.al. No domain, no tags; a badge that leads to your own share link is unchanged.
+- Badge and widget links to trckable.com are nofollow.
 - The story's loading boxes follow the three-column answer cards, so nothing jumps when the numbers land.
 - On a desktop with nobody on the site, the "On the site right now" card stretches to the height of the Live card again, with its line in the middle, instead of shrinking to a short box. The green "Back" chip after a gap now shows only for a gap of 15 minutes or more, and goes an hour after visits came back (not a day).
 - The story's answers are compact: three columns and two rows on a desktop (1100 px and up; with five cards the last takes the two slots left), two columns on a tablet, one on a phone, with tighter padding and a shorter chart so no card looks empty. The heading no longer counts: "Your questions, answered" (also in German, French, Spanish, Italian and Dutch).
