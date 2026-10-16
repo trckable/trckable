@@ -47,3 +47,15 @@
   width: auto;
   background: none;
 }
+/* The walkthrough's page: its own black in the dark theme, with none of the dashboard's ambient glow behind it. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):has(#app.mk) body {
+    background: #0a0b0c;
+  }
+}
+:root[data-theme='dark']:has(#app.mk) body {
+  background: #0a0b0c;
+}
+:root:has(#app.mk) body::before {
+  display: none;
+}

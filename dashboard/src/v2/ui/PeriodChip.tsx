@@ -65,14 +65,14 @@ function Month({ first, today, from, to, onDay }: { first: ISODate; today: ISODa
       </div>
       <div className="days">
         {Array.from({ length: lead }, (_, i) => (
-          <i key={i} className="day out" />
+          <i key={i} className="mk-day out" />
         ))}
         {days.map((d) => {
           const [lo, hi] = ends(from, to)
           const inside = !!lo && !!hi && d > lo && d < hi
           const edge = d === lo || d === hi
           return (
-            <button key={d} type="button" className={`day ${inside ? 'in' : ''} ${edge ? 'edge' : ''} ${d === today ? 'today' : ''}`} disabled={d > today} aria-label={d > today ? undefined : short(d)} onClick={() => onDay(d)}>
+            <button key={d} type="button" className={`mk-day ${inside ? 'in' : ''} ${edge ? 'mk-edge' : ''} ${d === today ? 'today' : ''}`} disabled={d > today} aria-label={d > today ? undefined : short(d)} onClick={() => onDay(d)}>
               {Number(d.slice(8))}
             </button>
           )
@@ -104,7 +104,7 @@ function Calendar({ p, onBack, onApply }: { p: PeriodChipProps; onBack: () => vo
   const n = lo && hi ? diffDays(lo, hi) + 1 : 0
   return (
     <div className="cal">
-      <button type="button" className="back" onClick={onBack}>
+      <button type="button" className="mk-back" onClick={onBack}>
         {copy.periods}
       </button>
       <div className="cf">
@@ -123,8 +123,8 @@ function Calendar({ p, onBack, onApply }: { p: PeriodChipProps; onBack: () => vo
           </span>
         )}
       </div>
-      <p className="ch">{step === 'start' ? 'Pick a start date, then an end date' : 'Now pick the end date'}</p>
-      <div className="cm">
+      <p className="mk-ch">{step === 'start' ? 'Pick a start date, then an end date' : 'Now pick the end date'}</p>
+      <div className="mk-cm">
         {[cursor, addMonths(cursor, 1)].map((m, i) => (
           <div key={m}>
             <div className="mth">
@@ -196,7 +196,7 @@ export function PeriodChip(p: PeriodChipProps) {
         <span>{p.label}</span>
         {p.vs && <span className="vs hide-s">{p.vs}</span>}
       </button>
-      <div className={`menu pmenu${open ? ' on' : ''}${cal ? ' cal' : ''}`} id="perMenu">
+      <div className={`mk-menu pmenu${open ? ' on' : ''}${cal ? ' cal' : ''}`} id="perMenu">
         {open && cal && (
           <Calendar
             p={p}
@@ -210,7 +210,7 @@ export function PeriodChip(p: PeriodChipProps) {
         {open && !cal && (
           <>
             {p.options.map(opt)}
-            <button type="button" className={`mi more ${moreOpen ? 'on' : ''}`} onClick={() => setMoreOpen((o) => !o)}>
+            <button type="button" className={`mi mk-more ${moreOpen ? 'on' : ''}`} onClick={() => setMoreOpen((o) => !o)}>
               <span className="mt2">
                 <div className="nm">{copy.more}</div>
               </span>
@@ -219,10 +219,10 @@ export function PeriodChip(p: PeriodChipProps) {
               </svg>
             </button>
             {moreOpen && p.more.map(opt)}
-            <div className="lline" />
-            <div className="lopt">
+            <div className="mk-lline" />
+            <div className="mk-lopt">
               <span>{copy.compare}</span>
-              <div className="lseg">
+              <div className="mk-lseg">
                 {cmp.map((c) => (
                   <button key={c.v} type="button" className={p.compare === c.v ? 'on' : ''} disabled={c.off} title={c.title} onClick={() => p.onCompare(c.v)}>
                     {c.t}
@@ -230,7 +230,7 @@ export function PeriodChip(p: PeriodChipProps) {
                 ))}
               </div>
             </div>
-            <div className="lline" />
+            <div className="mk-lline" />
             <button type="button" className="mi" onClick={() => setCal(true)}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                 <rect x="2" y="3" width="12" height="11" rx="2" />

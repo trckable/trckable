@@ -3,12 +3,26 @@ import { useState, type ReactNode } from 'react'
 import { Ico } from './icons'
 import { copy } from '../briefing/copy'
 
-export function Calm({ others, onExplore }: { others: boolean; onExplore: () => void }) {
+const lead = (cards: boolean, some: boolean): string => {
+  if (!cards) return copy.wasNormal
+  return some ? copy.allNormal : copy.nothingElse
+}
+
+export function Calm({ cards, names, paused, learning, onExplore }: { cards: boolean; names: string[]; paused: boolean; learning: boolean; onExplore: () => void }) {
   return (
     <div className="calm2">
       <span className="ck">&#10003;</span>
       <span>
-        <b>{others ? copy.allNormal : copy.nothingElse}</b>.
+        {paused ? (
+          <>
+            <b>{copy.paused}</b> {copy.pausedRest}
+          </>
+        ) : (
+          <>
+            <b>{lead(cards, names.length > 0)}</b>
+            {names.length && !learning ? `: ${names.join(', ')}` : ''}.
+          </>
+        )}
       </span>
       <button type="button" onClick={onExplore}>
         {copy.exploreAll} {'\u203A'}
@@ -43,7 +57,7 @@ export interface Setup {
 function Row({ s }: { s: Setup }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="srow">
+    <div className="mk-srow">
       <Ico name={s.icon} className="ic-i" />
       <span className="st2">
         <b>{s.t}</b> {s.d}
@@ -56,7 +70,7 @@ function Row({ s }: { s: Setup }) {
           {open ? copy.hideHow : copy.howWorks}
         </button>
       </span>
-      {open && <p className="quiet">{s.how}</p>}
+      {open && <p className="mk-quiet">{s.how}</p>}
     </div>
   )
 }

@@ -10,7 +10,7 @@ const RING = { lime: 'var(--mk-lime)', amber: '#f0c64a', red: 'var(--mk-red)' }
 function Ring({ value }: { value: number | null }) {
   const r = 27
   return (
-    <div className="ring">
+    <div className="mk-ring">
       <svg viewBox="0 0 64 64">
         <circle cx="32" cy="32" r={r} fill="none" stroke="var(--mk-line)" strokeWidth="5" />
         {value !== null && <circle cx="32" cy="32" r={r} fill="none" stroke={RING[ringTone(value)]} strokeWidth="5" strokeLinecap="round" strokeDasharray={dash(value, r)} />}
@@ -27,7 +27,28 @@ function toneOf(s: Score): string {
 
 const parts = (list: Part[]): ReactNode[] => list.map((p, i) => (p.em ? <em key={i}>{p.t}</em> : p.t))
 
-function Side({ scores, learn }: { scores: Score[]; learn: { day: number } | null }) {
+export interface Crowd {
+  /** "186 people" */
+  big: string
+  /** How many dots are drawn, one per person up to 80. */
+  n: number
+  note: string
+}
+
+function Side({ scores, learn, crowd }: { scores: Score[]; learn: { day: number } | null; crowd: Crowd | null }) {
+  if (crowd) {
+    return (
+      <div className="sidecol">
+        <b className="sbig">{crowd.big}</b>
+        <div className="dots">
+          {Array.from({ length: crowd.n }, (_, i) => (
+            <i key={i} />
+          ))}
+        </div>
+        <span className="sn">{crowd.note}</span>
+      </div>
+    )
+  }
   if (learn) {
     return (
       <div className="sidecol">
@@ -66,13 +87,21 @@ export interface HeroProps {
   since?: ReactNode
   period: string
   onPeriod: () => void
+  /** A quiet site: its people as dots, not a score. */
+  crowd?: Crowd | null
   /** The chart, drawn in the card's lower half. */
   chart: ReactNode
+  /** The pills and the line under them (a record day, a run above usual). */
+  moments?: { pills: string[]; line: string }
+  /** Play the day back; absent when there is not enough day to play. */
+  onReplay?: () => void
+  /** The card has the first-load shimmer, or the site is down and not answering. */
+  enter?: boolean
 }
 
-export function Hero({ say, scores, learn, since, period, onPeriod, chart }: HeroProps) {
+export function Hero({ say, scores, learn, crowd = null, since, period, onPeriod, chart, moments, onReplay, enter }: HeroProps) {
   return (
-    <section className={`card hero${say.bad ? ' bad' : ''}`}>
+    <section className={`mk-card hero${say.bad ? ' bad' : ''}${enter ? ' enter' : ''}`}>
       <div className="htop">
         <div className="hl-col">
           <button type="button" className="tline" onClick={onPeriod} title={copy.tline}>
@@ -82,13 +111,31 @@ export function Hero({ say, scores, learn, since, period, onPeriod, chart }: Her
             </svg>
           </button>
           {since}
-          <h1 className={`hl${say.bad ? ' bad' : ''}`}>
+          <h1 className={`mk-hl${say.bad ? ' bad' : ''}`}>
             <b>{say.lead}</b> {parts(say.long)}
           </h1>
-          <h1 className={`hl s${say.bad ? ' bad' : ''}`}>{parts(say.short)}</h1>
+          <h1 className={`mk-hl s${say.bad ? ' bad' : ''}`}>{parts(say.short)}</h1>
           {say.sub && <p className="hsub">{say.sub}</p>}
+          {onReplay && (
+            <button type="button" className="gh rpb" data-replay="1" title={copy.replayTitle} onClick={onReplay}>
+              <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+                <path d="M2.5 1.2v9.6L10.5 6z" />
+              </svg>
+              {copy.replay}
+            </button>
+          )}
+          {moments && (moments.pills.length > 0 || moments.line) && (
+            <div className="moments">
+              {moments.pills.map((t) => (
+                <span key={t} className="mom">
+                  {t}
+                </span>
+              ))}
+              {moments.line && <span className="mline">{moments.line}</span>}
+            </div>
+          )}
         </div>
-        <Side scores={scores} learn={learn} />
+        <Side scores={scores} learn={learn} crowd={crowd} />
       </div>
       {chart}
     </section>

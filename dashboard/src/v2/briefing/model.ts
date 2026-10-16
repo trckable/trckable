@@ -3,10 +3,11 @@
 // weekday's average where the server gives one (visitors), and the period before
 // everywhere else. Pure: model.test.ts.
 import type { Filter, Point, Result, Row } from '../../lib/api'
-import { countryName, flag, fmtFixed, fmtInt, fmtPct } from '../../lib/format'
+import { fmtFixed, fmtInt } from '../../lib/format'
 import { baseEnough, MAX_TIMES, tooFew } from '../../lib/thin'
 import { KNOWN } from '../../features/markers/sources'
 import { copy } from './copy'
+import { judge, type Band as UsualBand } from './usual'
 
 export type Unit = 'today' | 'yesterday' | 'week' | 'month' | 'range'
 
@@ -175,6 +176,22 @@ export function trafficScore(cur: Result, prev?: Result): Score {
   return fromRatio('traffic', prev && baseEnough(prev.kpis.visitors) ? timesOf(cur.kpis.visitors, prev.kpis.visitors) : null, copy.normal)
 }
 
+/** Traffic against the site's own usual: full marks unless it fell under the band, and then in proportion to how far. */
+export function trafficFromBand(v: number, b: UsualBand): Score {
+  const st = judge(v, b)
+  const value = b.c > 0.5 ? clamp(100 - Math.max(0, (b.lo - v) / Math.max(b.lo, 1)) * 160) : 80
+  if (st === 'up') return { key: 'traffic', value, verdict: 'above', words: copy.above }
+  return st === 'dn' ? { key: 'traffic', value, verdict: 'below', words: copy.below } : { key: 'traffic', value, verdict: 'usual', words: copy.normal }
+}
+
+/** Engagement from the share who left after one page, against what the site usually sees (a few points either way is as usual). */
+export function engagementFromBounce(now: number, usual: number | null, sessions: number): Score {
+  if (usual === null || tooFew(sessions)) return { key: 'engagement', value: null, verdict: 'none', words: '' }
+  const worse = Math.round(now * 100) > Math.round((usual + 0.04) * 100)
+  if (worse) return { key: 'engagement', value: clamp(100 - Math.max(0, now - (usual + 0.04)) * 400), verdict: 'below', words: copy.leaveEarly }
+  return { key: 'engagement', value: 100, verdict: Math.round(now * 100) < Math.round((usual - 0.04) * 100) ? 'above' : 'usual', words: copy.usual }
+}
+
 /** Stays and one-page leaves against the period before; thin visits on either side say nothing. */
 export function engagementScore(cur: Result, prev?: Result): Score {
   if (!prev || tooFew(cur.kpis.sessions) || tooFew(prev.kpis.sessions)) return fromRatio('engagement', null, copy.usual)
@@ -197,7 +214,7 @@ export function uptimeScore(o: { pct: number | null; downNow: boolean; downMin: 
 export function overall(scores: Score[]): number | null {
   const known = scores.filter((s) => s.value !== null).map((s) => s.value as number)
   if (!known.length) return null
-  if (scores.some((s) => s.verdict === 'down')) return Math.min(...known)
+  if (scores.some((s) => s.verdict === 'down')) return null
   return Math.round(known.reduce((a, b) => a + b, 0) / known.length)
 }
 
@@ -230,159 +247,6 @@ export function bandOf(cur: Point[], prev: Point[] | undefined): Band {
   return { values, lo, hi, above: values.filter((v, i) => v > hi[i]).length, below: values.filter((v, i) => v < lo[i]).length, total: values.length }
 }
 
-// ---- the cards ----
+// ---- where a card goes deeper ----
 
-export type StoryKey = 'sources' | 'pages' | 'countries' | 'goals' | 'uptime'
-export type Deeper = { kind: 'explore'; filter: Filter } | { kind: 'incidents' }
-
-export interface StoryRow {
-  label: string
-  value: number
-  was?: number
-}
-
-export interface Story {
-  key: StoryKey
-  /** What it is worth reading first: bigger is earlier. */
-  score: number
-  /** The bold start of the title, and the quieter rest. */
-  head: string
-  tail?: string
-  /** The number on the right of a phone's row. */
-  val: string
-  rows: StoryRow[]
-  /** The line under the picture. */
-  why: string
-  /** A red card: the site is down. */
-  bad?: boolean
-  /** A card that is a number with a line (countries). */
-  flag?: string
-  note?: { t: string; up?: boolean; dn?: boolean }
-  deeper: Deeper
-}
-
-/** How far a figure moved from the one before, as a size of surprise: nothing for a small move. */
-export function surprise(now: number, was: number | undefined): number {
-  if (was === undefined || was < 3) return 0
-  const r = now / was
-  if (r >= 2) return Math.min(30, 12 * Math.log2(r))
-  if (r <= 0.5) return Math.min(20, 8 * Math.log2(1 / r))
-  return 0
-}
-
-const rowsOf = (rows: Row[] | null | undefined, prev: Row[] | null | undefined, label: (r: Row) => string): StoryRow[] =>
-  (rows ?? []).slice(0, 6).map((r) => ({ label: label(r), value: r.visitors, was: rowOf(prev, r.value)?.visitors }))
-
-export interface StoryIn {
-  cur: Result
-  prev?: Result
-  unit: Unit
-  self: string
-  downNow: boolean
-  downWhy?: string
-  /** The time lost in the period, in minutes (0 for none). */
-  downMin: number
-}
-
-function sourceStory(o: StoryIn): Story | null {
-  const rows = (o.cur.dims.referrer ?? []).filter((r) => r.value && host(r.value) !== host(o.self))
-  const top = rows[0]
-  if (!top) return null
-  const name = sourceName(top.value)
-  const was = rowOf(o.prev?.dims.referrer, top.value)?.visitors
-  const x = timesOf(top.visitors, was, 3)
-  const page = o.cur.dims.entry_page?.[0]
-  return {
-    key: 'sources',
-    score: 30 + surprise(top.visitors, was) + 30 * (top.visitors / Math.max(1, o.cur.kpis.visitors)),
-    head: copy.sourceHead(name, top.visitors),
-    tail: x && x >= 1.5 ? `${mult(x)} ${copy.before[o.unit]}` : undefined,
-    val: fmtInt(top.visitors),
-    rows: rowsOf(rows, o.prev?.dims.referrer, (r) => sourceName(r.value)),
-    why: [was !== undefined ? copy.usuallyFrom(was, name) : '', page ? copy.mostLandedOn(page.value) : ''].filter(Boolean).join('; ') + '.',
-    deeper: { kind: 'explore', filter: { dim: 'referrer', value: top.value } },
-  }
-}
-
-function pageStory(o: StoryIn): Story | null {
-  const top = o.cur.dims.entry_page?.[0]
-  if (!top) return null
-  const was = rowOf(o.prev?.dims.entry_page, top.value)?.visitors
-  const share = top.visitors / Math.max(1, o.cur.kpis.visitors)
-  return {
-    key: 'pages',
-    score: 20 + surprise(top.visitors, was) + 30 * share,
-    head: copy.pageHead(top.value, top.visitors),
-    tail: copy.share(fmtPct(share)),
-    val: fmtInt(top.visitors),
-    rows: rowsOf(o.cur.dims.entry_page, o.prev?.dims.entry_page, (r) => r.value),
-    why: was !== undefined ? copy.usuallyOn(was, top.value) : copy.firstTimeTop,
-    deeper: { kind: 'explore', filter: { dim: 'entry_page', value: top.value } },
-  }
-}
-
-function countryNote(x: number | null, fresh: boolean): { t: string; up?: boolean; dn?: boolean } {
-  if (x && x >= 1.3) return { t: copy.moreThanUsual, up: true }
-  if (x && x <= 0.7) return { t: copy.lessThanUsual, dn: true }
-  return fresh ? { t: copy.newHere, up: true } : { t: copy.asUsualNote }
-}
-
-function countryStory(o: StoryIn): Story | null {
-  const list = o.cur.dims.country ?? []
-  const top = list[0]
-  if (!top) return null
-  const fresh = o.prev && baseEnough(o.prev.kpis.visitors) ? list.find((r) => r.visitors >= 3 && !rowOf(o.prev?.dims.country, r.value)) : undefined
-  const pick = fresh ?? top
-  const was = rowOf(o.prev?.dims.country, pick.value)?.visitors
-  const x = timesOf(pick.visitors, was, 3)
-  const name = countryName(pick.value)
-  return {
-    key: 'countries',
-    score: (fresh ? 45 : 15) + surprise(pick.visitors, was) + 20 * (pick.visitors / Math.max(1, o.cur.kpis.visitors)),
-    head: fresh ? copy.countryNew(name) : copy.countryHead(name, pick.visitors),
-    val: fmtInt(pick.visitors),
-    rows: rowsOf(list, o.prev?.dims.country, (r) => countryName(r.value)),
-    flag: flag(pick.value),
-    note: countryNote(x, !!fresh),
-    why: was !== undefined ? copy.usuallyFromCountry(was, name) : copy.firstFrom(name),
-    deeper: { kind: 'explore', filter: { dim: 'country', value: pick.value } },
-  }
-}
-
-function goalStory(o: StoryIn): Story | null {
-  const top = (o.cur.goals ?? []).find((g) => g.visitors > 0)
-  if (!top) return null
-  const was = rowOf(o.prev?.goals, top.value)?.visitors
-  const name = top.label || top.value
-  return {
-    key: 'goals',
-    score: 45 + surprise(top.visitors, was),
-    head: copy.goalHead(name, top.visitors),
-    val: fmtInt(top.visitors),
-    rows: rowsOf(o.cur.goals, o.prev?.goals, (r) => r.label || r.value),
-    why: was !== undefined ? copy.usuallyGoal(was) : copy.firstGoal,
-    deeper: { kind: 'explore', filter: { dim: 'goal', value: top.value } },
-  }
-}
-
-function uptimeStory(o: StoryIn): Story | null {
-  if (o.downNow) return { key: 'uptime', score: 100, head: copy.downHead, tail: o.downWhy || undefined, val: '', rows: [], why: copy.downWhy, bad: true, deeper: { kind: 'incidents' } }
-  if (o.downMin > 0) return { key: 'uptime', score: 80, head: copy.downSpan(o.downMin), val: '', rows: [], why: copy.downWhy, bad: true, deeper: { kind: 'incidents' } }
-  return null
-}
-
-/** Every card the numbers have, the most worth reading first. A down site comes before everything. */
-export function rank(o: StoryIn): Story[] {
-  return [sourceStory(o), pageStory(o), countryStory(o), goalStory(o), uptimeStory(o)].filter((s): s is Story => s !== null).sort((a, b) => b.score - a.score)
-}
-
-/** The first few get their own card; the rest wait under "More". */
-export const MAIN = 3
-export const split = (list: Story[]): { main: Story[]; more: Story[] } => ({ main: list.slice(0, MAIN), more: list.slice(MAIN) })
-
-/** The grey and coloured dots of the sources card: one dot is a few people; grey is the usual, coloured the extra. */
-export function dotsOf(now: number, usual: number): { n: number; grey: number; per: number } {
-  const per = Math.max(1, Math.ceil(now / 60))
-  const n = Math.max(1, Math.round(now / per))
-  return { n, grey: Math.min(n, Math.round(usual / per)), per }
-}
+export type Deeper = { kind: 'explore'; filter: Filter } | { kind: 'incidents' } | { kind: 'mentions' } | { kind: 'speed' }

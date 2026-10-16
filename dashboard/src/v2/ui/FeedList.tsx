@@ -14,13 +14,13 @@ export function FeedList({ rows, up, clock, more, onVisitor }: { rows: Row[]; up
   const shown = all ? list : list.slice(0, SHOWN)
   return (
     <div className="lfeed">
-      {shown.length === 0 && <div className="quiet" style={{ padding: '16px 20px' }}>{copy.nobody}</div>}
+      {shown.length === 0 && <div className="mk-quiet" style={{ padding: '16px 20px' }}>{copy.nobody}</div>}
       {shown.map((r) => {
         const src = r.referrer ? r.referrer.replace(/^www\./, '') : channelLabel(r.channel || 'Direct')
         const hot = up.has(r.channel || 'Direct') || clock - r.last < 30_000
         return (
           <button key={r.key} type="button" className="lv" onClick={() => r.visitor && onVisitor?.(r.visitor)} disabled={!r.visitor || !onVisitor}>
-            <span className={`dot ${hot ? '' : 'off'}`} />
+            <span className={`mk-dot ${hot ? '' : 'off'}`} />
             <span className="pg mono">{r.kind === 'active' ? copy.still : (r.path ?? '/')}</span>
             <span className="src" style={hot ? { color: 'var(--mk-lime)' } : undefined}>
               {src}
@@ -28,7 +28,7 @@ export function FeedList({ rows, up, clock, more, onVisitor }: { rows: Row[]; up
             <span className="cc">{r.country?.toUpperCase()}</span>
             <span className="dv">{r.device}</span>
             {r.visitor && onVisitor && (
-              <span className="rp" title={copy.replayTitle}>
+              <span className="mk-rp" title={copy.replayTitle}>
                 {'\u25B6'}<em> {copy.replay}</em>
               </span>
             )}

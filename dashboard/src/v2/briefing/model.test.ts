@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Point, Result, Row } from '../../lib/api'
-import { bandOf, dotsOf, engagementScore, mult, overall, rank, sentence, sourceName, split, surprise, topSource, trafficScore, unitOf, untilNow, uptimeScore, type Part, type SayIn, type StoryIn } from './model'
+import { bandOf, engagementFromBounce, engagementScore, mult, overall, sentence, sourceName, topSource, trafficFromBand, trafficScore, unitOf, untilNow, uptimeScore, type Part, type SayIn } from './model'
 
 const rows = (xs: [string, number][]): Row[] => xs.map(([value, visitors]) => ({ value, visitors }))
 const kpis = (o: Partial<Result['kpis']> = {}): Result['kpis'] => ({ visitors: 0, sessions: 0, pageviews: 0, bounce_rate: 0.5, avg_session_s: 60, views_per_session: 2, new_visitor_share: 0.5, ...o })
@@ -100,7 +100,7 @@ describe('scores', () => {
     const t = trafficScore(result(130), result(100))
     const u = uptimeScore({ pct: 90, downNow: false, downMin: 60, off: false })
     expect(overall([t, u, engagementScore(result(1), result(1))])).toBe(95)
-    expect(overall([t, uptimeScore({ pct: 100, downNow: true, downMin: 0, off: false })])).toBe(0)
+    expect(overall([t, uptimeScore({ pct: 100, downNow: true, downMin: 0, off: false })])).toBeNull()
     expect(overall([engagementScore(result(1), result(1))])).toBeNull()
   })
 })
@@ -120,39 +120,15 @@ describe('the band', () => {
   })
 })
 
-describe('the cards', () => {
-  const o = (cur: Result, prev?: Result, extra: Partial<StoryIn> = {}): StoryIn => ({ cur, prev, unit: 'today', self: 'x.com', downNow: false, downMin: 0, ...extra })
-  const cur = result(400, { referrer: rows([['news.ycombinator.com', 186]]), entry_page: rows([['/pricing', 150], ['/', 100]]), country: rows([['US', 200], ['IS', 5]]) }, { goals: rows([['signup', 31]]) })
-  const prev = result(100, { referrer: rows([['news.ycombinator.com', 30]]), entry_page: rows([['/pricing', 50]]), country: rows([['US', 90]]) })
-  it('puts the biggest surprise first, in the walkthrough\'s words', () => {
-    const list = rank(o(cur, prev))
-    expect(list[0]).toMatchObject({ key: 'sources', head: 'Hacker News sent 186 people', tail: '6.2× the day before' })
-    expect(list.map((s) => s.key)).toEqual(expect.arrayContaining(['sources', 'pages', 'countries', 'goals']))
+describe('the scores against the usual', () => {
+  it('traffic keeps full marks above its band and loses them in proportion under it', () => {
+    expect(trafficFromBand(150, { c: 100, lo: 80, hi: 120 })).toMatchObject({ value: 100, verdict: 'above', words: 'above normal' })
+    expect(trafficFromBand(100, { c: 100, lo: 80, hi: 120 })).toMatchObject({ value: 100, verdict: 'usual' })
+    expect(trafficFromBand(40, { c: 100, lo: 80, hi: 120 })).toMatchObject({ value: 20, verdict: 'below' })
   })
-  it('names a country that was not there before, as a number with a flag', () => {
-    const c = rank(o(cur, prev)).find((s) => s.key === 'countries')
-    expect(c).toMatchObject({ head: 'First visitors from Iceland', flag: '🇮🇸', deeper: { kind: 'explore', filter: { dim: 'country', value: 'IS' } } })
-  })
-  it('a site that is down comes first, red, and leads to the record', () => {
-    const list = rank(o(cur, prev, { downNow: true, downWhy: 'Timed out' }))
-    expect(list[0]).toMatchObject({ key: 'uptime', bad: true, deeper: { kind: 'incidents' } })
-    expect(rank(o(cur, prev, { downMin: 12 }))[0].head).toBe('Your site was down for 12 minutes')
-  })
-  it('has no goal card without goals, and no card without numbers', () => {
-    expect(rank(o(result(10, { entry_page: rows([['/', 10]]) }))).map((s) => s.key)).toEqual(['pages'])
-    expect(rank(o(result(0)))).toEqual([])
-  })
-  it('gives the first three their own card', () => {
-    const { main, more } = split(rank(o(cur, prev, { downMin: 3 })))
-    expect(main).toHaveLength(3)
-    expect(more.length).toBeGreaterThan(0)
-  })
-  it('a small move is no surprise', () => {
-    expect([surprise(11, 10), surprise(30, 1)]).toEqual([0, 0])
-    expect(surprise(30, 10)).toBeGreaterThan(10)
-  })
-  it('draws a dot for a few people, grey for the usual and coloured for the extra', () => {
-    expect(dotsOf(186, 9)).toEqual({ n: 47, grey: 2, per: 4 })
-    expect(dotsOf(5, 0)).toEqual({ n: 5, grey: 0, per: 1 })
+  it('engagement is as usual within a few points, and falls when more leave early', () => {
+    expect(engagementFromBounce(0.45, 0.43, 100)).toMatchObject({ value: 100, words: 'as usual' })
+    expect(engagementFromBounce(0.6, 0.43, 100)).toMatchObject({ verdict: 'below', words: 'more leave early' })
+    expect(engagementFromBounce(0.6, null, 100).value).toBeNull()
   })
 })
