@@ -1,0 +1,45 @@
+/* Explore's own few rules; everything else of it is the walkthrough's (src/mock/mock.css). */
+
+/* The mock draws its text with the browser's own smoothing; the page's global setting thins it. */
+.mk #xp,
+.mk #xscrim {
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+}
+
+/* A goal row is the mock's flat line; the dashboard's own .goal (a tappable grid row) must not show through. */
+.mk .goal {
+  grid-template-columns: none;
+  min-height: 0;
+  width: auto;
+  border-radius: 0;
+  background: none;
+  cursor: auto;
+  transition: none;
+}
+.mk .goal + .goal {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+.mk .goal:hover,
+.mk .goal:focus-visible {
+  background: none;
+}
+
+/* The saved views fold into the ⋯ menu on a phone only. */
+.mk .onlyph {
+  display: none;
+}
+@media (max-width: 600px) {
+  .mk .onlyph {
+    display: block;
+  }
+}
+
+/* The dashboard's own .srow (a settings line) turns to a column on a narrow screen; the mock's stays a row. */
+.mk .srow.big {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--mk-s3);
+  padding: var(--mk-s2) var(--mk-s4);
+}
