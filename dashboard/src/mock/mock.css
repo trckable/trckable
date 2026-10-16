@@ -1343,10 +1343,44 @@
 .mk .kcs.xk.k3 .kc{padding:var(--mk-s3) var(--mk-s3) var(--mk-s3)}
 .mk .xk .kc .kv{font-size:22px}
 }
+/* Round 11: the phone hero and the chart header, as the walkthrough has them. */
+.mk .whyb{display:none}
+@container (max-width:600px){
+ .mk .hl-col{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mk-s2)}
+ .mk .hl-col>*{flex:0 0 100%;min-width:0}
+ .mk .hl-col>.tline{flex:0 0 auto;white-space:nowrap;margin:0}
+ .mk .hl-col>.since{flex:0 0 auto;margin:0;align-self:center;height:28px;min-height:28px;padding:0 var(--mk-s2);font-size:12px;white-space:nowrap;max-width:100%}
+ .mk .hl-col>.since .mk-pulse{flex:none}
+ .mk .hl-col>.since.off{max-width:100%}
+ .mk .hl-col>.mk-hl.s{margin:var(--mk-s1) 0 0}
+ .mk .hl-col>.rpb,.mk .hl-col>.whyb{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;margin:var(--mk-s1) 0 0;padding:0 var(--mk-s4);border:1px solid var(--mk-line);border-radius:12px;background:var(--mk-card2);color:var(--mk-text);font-size:13px;position:relative}
+ .mk .hl-col>.rpb::after,.mk .hl-col>.whyb::after{content:"";position:absolute;inset:-4px -2px}
+ .mk .hl-col>.moments{display:contents}
+ .mk .hl-col>.moments .mom{flex:0 0 auto;display:inline-flex;align-items:center;height:28px;min-height:28px;margin:var(--mk-s1) 0 0;padding:0 var(--mk-s3);border:1px solid rgba(198,255,58,.28);background:rgba(198,255,58,.05);border-radius:999px;font-size:12px;color:var(--mk-lime)}
+ .mk .hl-col>.moments .mline{display:none}
+ .mk .pulsewrap{margin-top:var(--mk-s3);gap:var(--mk-s4);align-items:center}
+ .mk .mk-ring,.mk .mk-ring svg{width:56px;height:56px}
+ .mk .mk-ring b{font-size:17px}
+ .mk .contrib{display:flex;flex-direction:column;flex-wrap:nowrap;gap:2px;flex:1;min-width:0}
+ .mk .contrib button{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,1fr);column-gap:var(--mk-s3);align-items:baseline;height:24px;min-height:24px;flex:none;position:relative}
+ .mk .contrib button::after{inset:-1px -6px}
+ .mk .contrib button b{font-size:13px;color:var(--mk-text);font-weight:600;white-space:nowrap}
+ .mk .contrib button span{display:block;font-size:12px;color:var(--mk-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+ .mk .contrib button.up b{color:var(--mk-text)}
+ .mk .contrib button.up:first-child b{color:var(--mk-lime)}
+ .mk .contrib button.dn b{color:var(--mk-red)}
+ .mk .chwrap{margin-top:var(--mk-s3)}
+ .mk .chwrap .ch-top{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:var(--mk-s2);margin:0;min-height:32px}
+ .mk .chwrap #chNote{flex:1 1 auto;min-width:0;font-size:12px;font-weight:500;color:var(--mk-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .mk .chwrap .nbtn{flex:none;margin:0;height:28px;padding:0 var(--mk-s3);border:1px solid var(--mk-line);border-radius:999px;font-size:12px;color:var(--mk-muted);position:relative}
+ .mk .chwrap .nbtn::after{content:"";position:absolute;inset:-8px -4px}
+ .mk .chwrap .chart{display:block;margin:0}
+}
+
 /* The person's menu in the page header is today's account menu (components/AccountMenu), kept as it is: it hangs from the
    avatar's right edge like the walkthrough's menus and takes their colours. */
 .mk .hd .account-menu{position:relative;flex:none}
-.mk .hd .account-menu .account-btn{width:var(--mk-h);height:var(--mk-h);padding:0;border:0;background:none;box-shadow:none;display:grid;place-items:center;border-radius:50%}
+.mk .hd .account-menu .account-btn{width:32px;height:32px;padding:0;border:0;background:none;box-shadow:none;display:grid;place-items:center;border-radius:50%}
 .mk .hd .account-menu .more-menu{right:0;left:auto;top:calc(100% + var(--mk-s2));width:280px;min-width:0;max-width:calc(100vw - 16px);background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:var(--z-menu)}
 /* "Why?" beside "Replay": two buttons in a line, aligned at the top so the line is as tall as the walkthrough's one. */
 .mk .hl-col .rpb{vertical-align:top}

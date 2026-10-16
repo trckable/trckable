@@ -9,6 +9,9 @@ import { online, siteOf, type Conn, type Ctx } from './report'
 
 const KEY = 'trckable:fixture'
 
+/** A name Live's own sample used (its `down` is the mock's `outage`, a scenario of its own), for a link that still has it. */
+const ALIAS: Record<string, string> = { empty: 'newsite' }
+
 const SRC_COLOR: Record<string, string> = { google: '#7f9cf5', direct: '#8b8e94', hn: '#ff9a4a', reddit: '#ff6b4a', x: '#d7dadf', newsletter: '#c6ff3a', chatgpt: '#3fd0b0', github: '#b58cff', badge: '#f0c64a' }
 
 const CONNS = ['none', 'rev', 'search', 'both'] as const
@@ -30,7 +33,8 @@ function chosen(): { name: string; conn: ConnName; hold: boolean } | null {
     }
   }
   if (!raw) return null
-  const [name, suffix, kept] = raw.split(':')
+  const [asked0, suffix, kept] = raw.split(':')
+  const name = ALIAS[asked0] ?? asked0
   const asked = sp.get('conn') ?? suffix ?? 'none'
   const hold = sp.has('fixture') ? sp.has('hold') : kept === 'hold'
   const conn = (CONNS as readonly string[]).includes(asked) ? (asked as ConnName) : 'none'

@@ -109,6 +109,8 @@ export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt
   const kfmt = (g: number) => (g >= 1000 ? `${g / 1000}k` : String(g))
   const bi = Math.min(ladder.length - 1, Math.floor(ladder.length * 0.08))
   const rise = c.rise && pts[c.rise.i] && !(ph && c.downs.length > 0) ? { p: pts[c.rise.i], text: ph ? c.rise.short : c.rise.text } : null
+  // On a phone a label that would run off the edge is written to the left of its line.
+  const flip = ph && rise !== null && X(rise.p.i) + 6 + rise.text.length * 8 > W - Rr - 4
   const ticks = c.axis.filter((p) => p.tick && p.i % every === 0)
   return (
     <svg
@@ -178,7 +180,7 @@ export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt
           {rise && (
             <g>
               <line x1={X(rise.p.i)} x2={X(rise.p.i)} y1={Y(rise.p.v) - 6} y2={Math.max(T - 6, Y(rise.p.v) - 24)} stroke="#c6ff3a" />
-              <text x={Math.min(X(rise.p.i) + 6, W - Rr - rise.text.length * 7.4)} y={Math.max(T - 8, Y(rise.p.v) - 27)} fill="#c6ff3a" fontSize="12" fontWeight="600">
+              <text x={flip ? X(rise.p.i) - 6 : Math.min(X(rise.p.i) + 6, W - Rr - rise.text.length * 7.4)} textAnchor={flip ? 'end' : undefined} y={Math.max(T - 8, Y(rise.p.v) - 27)} fill="#c6ff3a" fontSize="12" fontWeight="600">
                 {rise.text}
               </text>
             </g>

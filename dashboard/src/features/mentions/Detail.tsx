@@ -90,7 +90,7 @@ export function Detail({ site, m, words, onClose }: { site: string; m: Mention; 
     <>
       <div className="mp-scrim" onClick={onClose} aria-hidden="true" />
       <div className="mp-detail" role="dialog" aria-modal="true" aria-label={page.detail}>
-        <header>
+        <header role="none">
           <SourceMark source={m.source} />
           <div>
             <h2>{m.title || copy.name[m.source]}</h2>
