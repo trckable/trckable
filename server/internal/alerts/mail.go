@@ -11,8 +11,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/trckable/trckable/server/internal/reports"
 )
 
 // Email is the second way an alert can arrive, for people who would rather
@@ -88,39 +86,8 @@ func mailAddress(target string) (string, bool) {
 // header strips line breaks, so a site name or title can never add a header.
 func header(s string) string { return strings.NewReplacer("\r", " ", "\n", " ").Replace(s) }
 
-// message is the email's subject and plain text, the twin of its HTML. A
-// message with an unsubscribe link carries it in the last lines, where people
-// look; the headers mail clients read (RFC 8058) are added with the report.
-func (m *Mailer) message(to string, e Event) (subject, body string) {
-	subject = header(e.Subject)
-	if subject == "" {
-		subject = header(e.Title)
-		if e.Domain != "" {
-			subject += " · " + header(e.Domain)
-		}
-	}
-	foot := "Sent by trckable. Change or stop it under Settings → Alerts."
-	if u := header(e.Unsubscribe); u != "" {
-		foot = "Stop this email: " + u
-	}
-	return subject, e.Message + "\n\n-- \n" + foot
-}
-
 func (m *Mailer) send(ctx context.Context, to string, e Event) error {
-	subject, body := m.message(to, e)
-	var page string
-	if e.HTML != nil {
-		page = e.HTML(e.Unsubscribe)
-	} else {
-		c := cardFor(e)
-		if e.Card != nil {
-			c = *e.Card
-		}
-		c.Ask = e.Ask
-		page = c.HTML(e.Unsubscribe, e.Settings)
-		e.Inline = append(e.Inline[:len(e.Inline):len(e.Inline)], Attachment{Name: "logo.png", Type: "image/png", Data: reports.Logo, Inline: LogoCID})
-	}
-	return m.sendReport(ctx, to, Report{FromName: "trckable", Subject: subject, Text: body, HTML: page, Unsubscribe: e.Unsubscribe, Attachments: e.Inline, At: e.At})
+	return m.sendReport(ctx, to, Compose(e))
 }
 
 // deliver hands one finished message (headers and body, CRLF line ends) to the

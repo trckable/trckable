@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/store/duck"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 	"github.com/trckable/trckable/server/internal/writer"
@@ -275,9 +276,18 @@ func TestProductHuntNeedsAToken(t *testing.T) {
 // The mail says where, how many, and links the dashboard.
 func TestMentionEventWords(t *testing.T) {
 	site := sqlite.SiteRow{ID: "s", Domain: "acme.example"}
-	ev := mentionEvent(site, sqlite.Mention{Source: "hn", Title: "Show HN: Acme", Visitors: 212, Front: true}, "https://app.example/acme.example")
-	if ev.Kind != "mention" || ev.Title != "Mentioned on Hacker News" || !strings.Contains(ev.Message, "212 people have come from it") || ev.Card == nil || ev.Card.Big != "212" {
+	ev := mentionEvent(site, sqlite.Mention{Source: "hn", URL: "https://news.ycombinator.com/item?id=1", Title: "Show HN: <Acme>", Author: "pg", Points: 120, Snippet: "acme.example is neat", Visitors: 1212, Front: true}, "https://app.example/acme.example")
+	if ev.Kind != "mention" || ev.Title != "Mentioned on Hacker News" || !strings.Contains(ev.Message, "1212 people have come from it") || ev.Email == nil {
 		t.Fatalf("%+v", ev)
+	}
+	r := alerts.Compose(ev)
+	for _, want := range []string{"1,212", "On the front page", "#ff6600", ">Y<", "by pg · 120 points", "Show HN: &lt;Acme&gt;", `href="https://news.ycombinator.com/item?id=1"`, "&ldquo;", "acme.&#8203;example is neat", "See it on your dashboard →"} {
+		if !strings.Contains(r.HTML, want) {
+			t.Errorf("html misses %q", want)
+		}
+	}
+	if !strings.Contains(r.Text, "Hacker News · by pg · 120 points\nShow HN: <Acme>\n“acme.example is neat”") {
+		t.Errorf("text:\n%s", r.Text)
 	}
 	if got := mentionEvent(site, sqlite.Mention{Source: "news", Title: "x"}, ""); got.Title != "Mentioned in the news" {
 		t.Fatalf("%+v", got)

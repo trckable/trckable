@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
+	"github.com/trckable/trckable/server/internal/mailkit"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -26,13 +27,16 @@ func (s *Server) stoppedWords(ev *alerts.Event, info sqlite.SiteInfo, last int64
 	if s.cfg.BaseURL != "" {
 		link = strings.TrimSuffix(s.cfg.BaseURL, "/") + "/" + info.Domain
 	}
-	ev.Card = &alerts.Card{
-		Eyebrow: "Tracking stopped",
-		Big:     "No visits for " + quiet,
-		Text:    fmt.Sprintf("No visits have reached trckable from %s since %s.\n\n%s", info.Domain, lastAt, meaning),
-		Rows:    [][2]string{{"Site", info.Domain}, {"Last visit", lastAt}},
-		CTA:     "Open site status",
-		Link:    link,
+	ev.Email = &mailkit.Email{
+		Preheader: meaning,
+		Blocks: []mailkit.Block{
+			mailkit.Heading{Eyebrow: "Tracking stopped", Title: info.Domain},
+			mailkit.Callout{Tone: mailkit.Bad, Title: "No visits for " + quiet, Text: fmt.Sprintf("No visits have reached trckable from %s since %s.", info.Domain, lastAt)},
+			mailkit.Paragraph{Lead: checkedLead, Text: meaning},
+			mailkit.Rows{Rows: [][2]string{{"Last visit", lastAt}, {"Quiet for", quiet}}},
+			mailkit.Button{Label: statusButton, URL: link},
+		},
+		Foot: mailkit.Foot{Note: "You get this when a site's visits stop."},
 	}
 }
 
@@ -64,20 +68,35 @@ func (s *Server) probeWords(ev *alerts.Event, site sqlite.SiteRow, before, after
 		link = strings.TrimSuffix(s.cfg.BaseURL, "/") + "/" + site.Domain
 	}
 	at := func(t int64) string { return time.Unix(t, 0).In(loc).Format("15:04 MST, 2 Jan") }
-	c := alerts.Card{CTA: "Open site status", Link: link}
+	m := &mailkit.Email{Foot: mailkit.Foot{Note: "You get this when a site stops answering, and when it is back."}}
 	if ev.Kind == "up" {
 		gap := plainDuration(after.At - before.DownSince)
 		ev.Subject = site.Domain + " is back up after " + gap
-		c.Eyebrow, c.Live, c.Big = "Back up", true, site.Domain+" is back"
-		c.Text = fmt.Sprintf("%s answers our checks again after %s.", site.Domain, gap)
-		c.Rows = [][2]string{{"Down since", at(before.DownSince)}, {"Answering again", at(after.At)}}
-		ev.Message = c.Text
+		ev.Message = fmt.Sprintf("%s answers our checks again after %s.", site.Domain, gap)
+		m.Preheader = ev.Message
+		m.Blocks = []mailkit.Block{
+			mailkit.Heading{Eyebrow: "Back up", Title: site.Domain},
+			mailkit.Hero{Tone: mailkit.Good, Badge: &mailkit.Badge{Text: "Answering again", Tone: mailkit.Good, Dot: true}, Eyebrow: "It was down for", Big: gap, Line: "Our checks get an answer again."},
+			mailkit.Rows{Rows: [][2]string{{"Down since", at(before.DownSince)}, {"Answering again", at(after.At)}}},
+			mailkit.Button{Label: statusButton, URL: link},
+		}
 	} else {
 		ev.Subject = site.Domain + " isn't answering"
-		c.Eyebrow, c.Big = "Not answering", site.Domain+" isn't answering"
-		c.Text = fmt.Sprintf("Our checks have not got an answer from %s since %s (%s).\n\nThat usually means the site or its server is down. Some visitors may still get through, which is why you may still see people online.", site.Domain, at(after.DownSince), after.Error)
-		c.Rows = [][2]string{{"Down since", at(after.DownSince)}, {"Failed checks in a row", fmt.Sprint(after.Failures)}, {"Last check", at(after.At)}}
 		ev.Message = downMessage(site.Timezone, after)
+		m.Preheader = fmt.Sprintf("No answer since %s (%s).", at(after.DownSince), after.Error)
+		m.Blocks = []mailkit.Block{
+			mailkit.Heading{Eyebrow: "Not answering", Title: site.Domain},
+			mailkit.Callout{Tone: mailkit.Bad, Title: site.Domain + " isn't answering", Text: fmt.Sprintf("Our checks have not got an answer from %s since %s (%s).", site.Domain, at(after.DownSince), after.Error)},
+			mailkit.Paragraph{Lead: checkedLead, Text: fmt.Sprintf("%d checks in a row got no answer, the last at %s. That usually means the site or its server is down. Some visitors may still get through, which is why you may still see people online.", after.Failures, at(after.At))},
+			mailkit.Rows{Rows: [][2]string{{"Down since", at(after.DownSince)}, {"Failed checks in a row", fmt.Sprint(after.Failures)}, {"Last check", at(after.At)}}},
+			mailkit.Button{Label: statusButton, URL: link},
+		}
 	}
-	ev.Card = &c
+	ev.Email = m
 }
+
+// The words both site emails share.
+const (
+	checkedLead  = "What we checked"
+	statusButton = "Open site status"
+)

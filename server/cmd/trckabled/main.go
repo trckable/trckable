@@ -33,6 +33,7 @@ import (
 	"github.com/trckable/trckable/server/internal/config"
 	"github.com/trckable/trckable/server/internal/geo"
 	"github.com/trckable/trckable/server/internal/importer"
+	"github.com/trckable/trckable/server/internal/mailkit"
 	"github.com/trckable/trckable/server/internal/revenue"
 	"github.com/trckable/trckable/server/internal/secrets"
 	"github.com/trckable/trckable/server/internal/server"
@@ -70,6 +71,8 @@ func main() {
 		err = restoreCmd(cfg, os.Args[2:])
 	case "import":
 		err = importCmd(cfg, os.Args[2:])
+	case "emails":
+		err = emailsCmd(cfg, os.Args[2:])
 	case "version", "--version", "-v":
 		fmt.Println("trckabled", server.Version)
 	case "help", "--help", "-h":
@@ -488,6 +491,9 @@ usage:
   trckabled import <site> <file.ndjson|csv>
                                bring history in from another tool (one row per
                                pageview or goal; "-" reads standard input)
+  trckabled emails preview <dir>
+                               write every email as HTML (pictures inlined),
+                               its plain text, and an index.html gallery
   trckabled version            print the version
 
 configuration: TRCKABLE_* environment variables (see docs/self-host/configuration)`)
@@ -802,5 +808,17 @@ func importCmd(cfg config.Config, args []string) error {
 			"the columns may be named ts/path/visitor, or timestamp/url/session_id as Plausible and Umami name them; GA4 rows come from its BigQuery export", res.Skipped, res.Skipped+res.Rows)
 	}
 	fmt.Println("start the server and the writer will apply them")
+	return nil
+}
+
+func emailsCmd(cfg config.Config, args []string) error {
+	if len(args) != 2 || args[0] != "preview" {
+		return fmt.Errorf("usage: trckabled emails preview <dir>")
+	}
+	pages := server.EmailSamples(cfg.BaseURL)
+	if err := mailkit.WritePreview(args[1], pages); err != nil {
+		return err
+	}
+	fmt.Printf("%d emails in %s; open %s\n", len(pages), args[1], filepath.Join(args[1], "index.html"))
 	return nil
 }

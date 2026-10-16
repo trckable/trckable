@@ -65,33 +65,6 @@ func (d Data) Accent() string {
 	return "#487f00"
 }
 
-// Ink is the text colour that reads on the accent: black or white.
-func Ink(hex string) string {
-	if len(hex) != 7 || hex[0] != '#' {
-		return "#ffffff"
-	}
-	var c [3]float64
-	for i := range c {
-		v := 0
-		for _, ch := range hex[1+2*i : 3+2*i] {
-			v *= 16
-			switch {
-			case ch >= '0' && ch <= '9':
-				v += int(ch - '0')
-			case ch >= 'a' && ch <= 'f':
-				v += int(ch-'a') + 10
-			case ch >= 'A' && ch <= 'F':
-				v += int(ch-'A') + 10
-			}
-		}
-		c[i] = float64(v) / 255
-	}
-	if 0.2126*c[0]+0.7152*c[1]+0.0722*c[2] > 0.5 {
-		return "#111111"
-	}
-	return "#ffffff"
-}
-
 // Row is a line of a list: a name and its visitors.
 type Row struct {
 	Name  string
@@ -137,16 +110,35 @@ func (d Data) Money() (amount, change string) {
 }
 
 // Tile is one number of the report's top row.
-type Tile struct{ Label, Value, Change string }
+type Tile struct {
+	Label, Value, Change string
+	Trend                int // above zero up, below down, zero about the same
+}
 
 // Tiles are the four numbers on top: visitors, pageviews, bounce rate and
 // how long a visit lasted, each against the period before.
 func (d Data) Tiles() []Tile {
 	w, k, p := d.words(), d.Cur.KPIs, d.Prev.KPIs
 	return []Tile{
-		{w.Visitors, w.Number(k.Visitors), w.Change(float64(k.Visitors), float64(p.Visitors))},
-		{w.Pageviews, w.Number(k.Pageviews), w.Change(float64(k.Pageviews), float64(p.Pageviews))},
-		{w.Bounce, w.Number(int64(k.BounceRate*100+0.5)) + "%", ""},
-		{w.Session, Duration(k.AvgSessionS), ""},
+		{w.Visitors, w.Number(k.Visitors), w.Change(float64(k.Visitors), float64(p.Visitors)), trend(float64(k.Visitors), float64(p.Visitors))},
+		{w.Pageviews, w.Number(k.Pageviews), w.Change(float64(k.Pageviews), float64(p.Pageviews)), trend(float64(k.Pageviews), float64(p.Pageviews))},
+		{w.Bounce, w.Number(int64(k.BounceRate*100+0.5)) + "%", "", 0},
+		{w.Session, Duration(k.AvgSessionS), "", 0},
 	}
+}
+
+// trend is the direction Change words: up, down, or about the same (within
+// half a percent, or nothing to compare with).
+func trend(cur, prev float64) int {
+	if prev <= 0 {
+		return 0
+	}
+	d := (cur - prev) / prev * 100
+	switch {
+	case d >= 0.5:
+		return 1
+	case d <= -0.5:
+		return -1
+	}
+	return 0
 }

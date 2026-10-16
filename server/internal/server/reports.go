@@ -228,15 +228,13 @@ func (s *Server) sendSchedule(ctx context.Context, q *query.Q, sc sqlite.ReportS
 
 // reportEmail dresses a report as the email one person gets.
 func (s *Server) reportEmail(d reports.Data, files []alerts.Attachment) alerts.Report {
-	atts := append([]alerts.Attachment{}, files...)
-	if len(d.Brand.Logo) > 0 {
-		atts = append([]alerts.Attachment{{Name: "logo", Type: d.Brand.LogoType, Data: d.Brand.Logo, Inline: reports.LogoCID}}, atts...)
-	}
+	m := reports.Email(d)
+	atts := append(alerts.Inline(m), files...)
 	from := "trckable"
 	if d.Brand.HideBrand {
 		from = d.Brand.Name
 	}
-	return alerts.Report{FromName: from, Subject: d.Subject(), Text: reports.Text(d), HTML: reports.HTML(d), Unsubscribe: d.Unsubscribe, Attachments: atts, At: time.Now()}
+	return alerts.Report{FromName: from, Subject: d.Subject(), Text: m.Text(), HTML: m.HTML(), Unsubscribe: d.Unsubscribe, Attachments: atts, At: time.Now()}
 }
 
 // pdfName is the file's name: the site and the day the period began.

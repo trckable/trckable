@@ -45,7 +45,7 @@ func TestEmailCarriesTheStopLink(t *testing.T) {
 		t.Fatal(err)
 	}
 	msg := <-got
-	for _, want := range []string{"List-Unsubscribe: <" + link + ">", "List-Unsubscribe-Post: List-Unsubscribe=One-Click", "Stop this email: " + link} {
+	for _, want := range []string{"List-Unsubscribe: <" + link + ">", "List-Unsubscribe-Post: List-Unsubscribe=One-Click", "Stop these alerts: " + link} {
 		if !strings.Contains(msg, want) {
 			t.Errorf("missing %q in:\n%s", want, msg)
 		}
@@ -90,7 +90,7 @@ func TestResendSendsTheSameMessageOverHTTPS(t *testing.T) {
 	if err := m.send(context.Background(), "me@example.com", Event{Title: "Your week", Domain: "demo.example.com", Message: "4,512 visitors", Unsubscribe: link}); err != nil {
 		t.Fatal(err)
 	}
-	if auth != "Bearer re_abc" || body["subject"] != "Your week · demo.example.com" || !strings.Contains(body["text"].(string), "Stop this email: "+link) {
+	if auth != "Bearer re_abc" || body["subject"] != "Your week · demo.example.com" || !strings.Contains(body["text"].(string), "Stop these alerts: "+link) {
 		t.Fatalf("auth %q body %v", auth, body)
 	}
 	if h := body["headers"].(map[string]any); h["List-Unsubscribe"] != "<"+link+">" || h["List-Unsubscribe-Post"] != "List-Unsubscribe=One-Click" {

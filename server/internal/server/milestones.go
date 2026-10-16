@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
@@ -62,6 +63,10 @@ func (s *Server) tellMilestones(ctx context.Context, site string, fresh []sqlite
 	if err != nil {
 		return
 	}
+	list, err := s.ctl.Milestones(ctx, site, "")
+	if err != nil {
+		list = nil
+	}
 	for _, a := range live {
 		if a.SiteID != site || a.Kind != "milestone" {
 			continue
@@ -70,6 +75,8 @@ func (s *Server) tellMilestones(ctx context.Context, site string, fresh []sqlite
 			title, msg := milestones.AlertLine(milestones.Say(m, false), info.Domain)
 			ev := alerts.Event{Kind: "milestone", Site: site, Domain: info.Domain, At: now, Title: title, Message: msg,
 				Data: map[string]any{"milestone": m.Kind, "step": m.Step, "reached_on": m.Day}}
+			headline, mail := milestones.Email(m, list, info.Domain, s.cfg.BaseURL)
+			ev.Email, ev.Subject = mail, strings.TrimSuffix(headline, " 🎉")
 			ev.Unsubscribe = s.stopLink(a.ID)
 			ev.Settings = s.settingsLink(site)
 			if err := alerts.Send(ctx, a.Target, ev); err != nil {

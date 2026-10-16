@@ -36,6 +36,7 @@ var words = struct {
 
 // Words is how a milestone reads: the big part and the line under it.
 type Words struct {
+	Kind  string
 	Big   string
 	Label string
 	Day   string // Sep 21, 2026
@@ -44,7 +45,7 @@ type Words struct {
 // Say puts a milestone into words. showAmount false leaves the amount of a
 // money milestone out.
 func Say(m sqlite.Milestone, showAmount bool) Words {
-	w := Words{Day: longDay(m.Day)}
+	w := Words{Kind: m.Kind, Day: longDay(m.Day)}
 	switch m.Kind {
 	case Visitors:
 		w.Big, w.Label = Number(m.Value), words.visitors

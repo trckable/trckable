@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"github.com/trckable/trckable/server/internal/mailkit"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -493,7 +494,7 @@ func TestEmailCodeMailSaysWhyAndFromWhere(t *testing.T) {
 			t.Fatalf("subject: %q", r.Subject)
 		}
 		m := codeInSubject.FindStringSubmatch(r.Subject)
-		for _, want := range []string{m[1] + m[2], "cid:" + alerts.LogoCID, "Sign in to the trckable mobile app", "Pixel 8 (Android)", "Berlin, DE", "trckable.com"} {
+		for _, want := range []string{m[1] + m[2], "cid:" + mailkit.LogoCID, "Sign in to the trckable mobile app", "Pixel 8 (Android)", "Berlin, DE", "trckable.com"} {
 			if !strings.Contains(r.HTML, want) {
 				t.Errorf("the HTML lacks %q", want)
 			}
@@ -503,7 +504,7 @@ func TestEmailCodeMailSaysWhyAndFromWhere(t *testing.T) {
 				t.Errorf("the text lacks %q", want)
 			}
 		}
-		if len(r.Attachments) != 1 || r.Attachments[0].Inline != alerts.LogoCID {
+		if len(r.Attachments) != 1 || r.Attachments[0].Inline != mailkit.LogoCID {
 			t.Errorf("the logo is not attached inline: %v", r.Attachments)
 		}
 	case <-time.After(3 * time.Second):
