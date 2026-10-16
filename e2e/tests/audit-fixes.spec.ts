@@ -47,7 +47,7 @@ for (const size of [{ w: 1440, h: 900 }, { w: 390, h: 844 }]) {
     if (size.w > 640) {
       await expect(page.locator('.live-onsite.none')).toBeVisible()
       const [now, onsite] = await Promise.all([page.locator('.live-now').boundingBox(), page.locator('.live-onsite').boundingBox()])
-      expect(onsite!.height).toBeLessThan(now!.height)
+      expect(Math.abs(onsite!.height - now!.height)).toBeLessThan(2) // as tall as the Live card
       await page.locator('.live-help').hover()
       await expect(page.getByRole('tooltip')).toContainText('idle for 5 minutes')
     } else {
