@@ -44,6 +44,18 @@ async function scan(page: Page, where: string) {
   await page.waitForTimeout(700)
   // A menu that has just swapped in is still fading: axe reads text that is not yet shown as none.
   await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => Number.isFinite(a.effect?.getComputedTiming().endTime as number)).map((a) => a.finished.catch(() => undefined))))
+  // The entrance can start a frame after it opens, and a list is placed after it is measured: wait for its items to be shown and opaque.
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('[role=menuitem]:not([disabled])')].some((el) => {
+          if (getComputedStyle(el).visibility !== 'visible') return true
+          for (let n: Element | null = el; n; n = n.parentElement) if (+getComputedStyle(n).opacity < 1) return true
+          return false
+        }),
+      ),
+    )
+    .toBe(false)
   // The footer's logo is faint on purpose until pointed at: a logotype is
   // exempt from text contrast (WCAG 1.4.3), and its links are still scanned.
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).exclude('.app-footer .tkb-logo').analyze()
