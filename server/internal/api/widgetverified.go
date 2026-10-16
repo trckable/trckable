@@ -97,9 +97,12 @@ func widgetHome(domain, kind string) string {
 
 func (a *API) fillVerified(r *http.Request, d *widgetData, si sqlite.SiteInfo, wd sqlite.Widget, words widgetWords, public bool) {
 	d.Marks = widgetMarks(a.verifiedOf(r.Context(), si), words)
-	d.Href = verifiedHome(si.Domain)
+	d.Href, d.HrefRel = verifiedHome(si.Domain), "noopener nofollow"
 	if len(d.Marks) > 0 {
 		d.Href = a.verifiedHref(r, si, wd)
+		if !strings.HasPrefix(d.Href, "https://trckable.com/") {
+			d.HrefRel = "noopener" // the site's own share link: followed normally
+		}
 	}
 	if len(d.Marks) == 0 && !public {
 		d.Off = "Nothing is verified yet. Connect Search Console or a payment provider and the badge shows."

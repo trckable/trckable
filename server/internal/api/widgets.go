@@ -388,6 +388,7 @@ type widgetData struct {
 	Pill            bool              // online, in a pill: the brand is a mark in it, not a line under it
 	Marks           []widgetMark      // verified: the sources that work now
 	Href            string            // verified: where the badge leads
+	HrefRel         string            // verified: rel of that link
 	Home            string            // the brand link to trckable.com, tagged with the site and widget kind
 }
 
@@ -626,7 +627,7 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 {{if .Channels}}<h3>{{.L.rev_channels}}</h3><ul>{{range .Channels}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
 {{if .Brand}}{{template "by" .}}{{end}}
 </div>
-{{else if eq .Kind "verified"}}{{if .Marks}}<a class="card vf" href="{{.Href}}" target="_blank" rel="noopener"><span class="seal"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5 13.5 3.5v4c0 3.2-2.3 5.8-5.5 7-3.2-1.2-5.5-3.8-5.5-7v-4z"/><path d="m5.5 8 1.8 1.8 3.2-3.500"/></svg></span><b>{{.L.verified_title}}</b><span class="marks">{{range .Marks}}<i title="{{.Name}}" role="img" aria-label="{{.Name}}">{{.Svg}}</i>{{end}}</span></a>{{end}}
+{{else if eq .Kind "verified"}}{{if .Marks}}<a class="card vf" href="{{.Href}}" target="_blank" rel="{{.HrefRel}}"><span class="seal"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5 13.5 3.5v4c0 3.2-2.3 5.8-5.5 7-3.2-1.2-5.5-3.8-5.5-7v-4z"/><path d="m5.5 8 1.8 1.8 3.2-3.500"/></svg></span><b>{{.L.verified_title}}</b><span class="marks">{{range .Marks}}<i title="{{.Name}}" role="img" aria-label="{{.Name}}">{{.Svg}}</i>{{end}}</span></a>{{end}}
 {{else if eq .Kind "privacy"}}<div class="card">
 <div class="lab">{{.L.seal_title}}</div>
 <ul class="facts">{{range .Facts}}<li><span class="ok">✓</span><span>{{.}}</span></li>{{end}}</ul>
@@ -642,9 +643,9 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 {{if .Pages}}<h3>{{.L.reading}}</h3><ul>{{range .Pages}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
 {{if .Brand}}{{template "by" .}}{{end}}
 </div>
-{{else}}<div class="card pill on"><span class="dot"></span><span>{{.Count}} {{.L.online}}</span>{{if .Bars}}<span class="spark" aria-hidden="true">{{range .Bars}}<i><s{{if eq .H 0}} class="z"{{end}} style="height:{{.H}}%"></s></i>{{end}}</span>{{end}}{{if .Brand}}<a class="gh" href="{{.Home}}" target="_blank" rel="noopener" title="{{.L.brand}} trckable" aria-label="{{.L.brand}} trckable">{{.Ghost}}</a>{{end}}</div>{{end}}
+{{else}}<div class="card pill on"><span class="dot"></span><span>{{.Count}} {{.L.online}}</span>{{if .Bars}}<span class="spark" aria-hidden="true">{{range .Bars}}<i><s{{if eq .H 0}} class="z"{{end}} style="height:{{.H}}%"></s></i>{{end}}</span>{{end}}{{if .Brand}}<a class="gh" href="{{.Home}}" target="_blank" rel="noopener nofollow" title="{{.L.brand}} trckable" aria-label="{{.L.brand}} trckable">{{.Ghost}}</a>{{end}}</div>{{end}}
 {{else}}<div class="card pill"><div class="row"><span class="dot"></span>{{.L.counter}}</div>{{if .Brand}}{{template "by" .}}{{end}}</div>{{end}}
-<script>@SCRIPT@</script></body></html>{{define "by"}}<a class="by" href="{{.Home}}" target="_blank" rel="noopener">{{.Ghost}}<span>{{.L.brand}} <b>trck</b><i>able</i></span></a>{{end}}`, "@SCRIPT@", web.WidgetPageScript, 1)))
+<script>@SCRIPT@</script></body></html>{{define "by"}}<a class="by" href="{{.Home}}" target="_blank" rel="noopener nofollow">{{.Ghost}}<span>{{.L.brand}} <b>trck</b><i>able</i></span></a>{{end}}`, "@SCRIPT@", web.WidgetPageScript, 1)))
 
 // readWidget reads the numbers a widget shows and keeps them for a while.
 func (a *API) readWidget(ctx context.Context, q *query.Q, wd sqlite.Widget, si sqlite.SiteInfo, ask query.WidgetAsk, now time.Time, loc *time.Location, key string) (widgetNumbers, error) {
