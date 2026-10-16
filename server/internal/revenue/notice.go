@@ -217,15 +217,9 @@ func (s *Service) classify(ctx context.Context, tx *sql.Tx, sc ledger.Scope, p p
 // ledger can recognise (by the provider's customer id or the payer's hashed
 // email). A payment from someone it cannot recognise is a plain sale.
 func (s *Service) firstPurchase(ctx context.Context, tx *sql.Tx, sc ledger.Scope, p payments.Payment, customer, emailHash string) bool {
-	if customer == "" && emailHash == "" {
-		return false
-	}
-	var before int
-	err := tx.QueryRowContext(ctx, `SELECT count(*) FROM pay_payments WHERE site_id = ? AND provider = ? AND id <> ? AND test = 0
-		AND ((? <> '' AND customer_id = ?) OR (? <> '' AND email_hash = ?))
-		AND (paid_at < ? OR (paid_at = ? AND id < ?))`,
-		sc.Site, sc.Provider, p.ID, customer, customer, emailHash, emailHash, p.PaidAt, p.PaidAt, p.ID).Scan(&before)
-	return err == nil && before == 0
+	id := ledger.Ident{Provider: sc.Provider, ID: p.ID, PaidAt: p.PaidAt, Customer: customer, EmailHash: emailHash}
+	first, err := ledger.FirstPurchases(ctx, tx, sc.Site, []ledger.Ident{id})
+	return err == nil && first[sc.Provider+"\x00"+p.ID]
 }
 
 // before says whether something happened before the connection existed: the

@@ -259,6 +259,18 @@ func TestFirstPurchaseIsANewCustomer(t *testing.T) {
 	if fmt.Sprint(got) != fmt.Sprint([]string{NoticeNew, NoticeSale, NoticeSale}) {
 		t.Fatalf("told %v", got)
 	}
+	// The chart's Sales moment is built from the same rule.
+	facts, err := g.svc.Facts(context.Background(), g.site, "USD", now.Add(-time.Hour), now.Add(time.Hour), false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	changes := map[string]string{}
+	for _, f := range facts {
+		changes[f.ID] = f.Change
+	}
+	if changes["pi_1"] != "new" || changes["pi_2"] != "" || changes["pi_3"] != "" {
+		t.Fatalf("the chart's kinds: %v", changes)
+	}
 }
 
 // What a provider brings in from before the connection existed is history:

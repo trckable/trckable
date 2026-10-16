@@ -163,7 +163,7 @@ type Fact struct {
 	Visitor   uint64
 	Customer  string // stable per-customer key (provider customer, email hash, or payment)
 	Kind      string
-	Change    string    // "upgrade" for a renewal-sized payment that moved the customer to another plan
+	Change    string    // what the payment was beyond its kind: "upgrade" (a renewal-sized payment that moved the customer to another plan) or "new" (a first one-time purchase)
 	Converted bool      // false: no FX rate yet (excluded from sums until one arrives)
 	Currency  string    // the currency it was paid in
 	NoRate    bool      // not converted, and the ECB publishes no rate for Currency at all
@@ -407,6 +407,17 @@ func Facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 		}
 	}
 
+	var idents []Ident
+	for _, p := range ps {
+		if p.kind == payments.KindOneTime {
+			idents = append(idents, Ident{Provider: p.provider, ID: p.id, PaidAt: p.paid, Customer: cusOf(p), EmailHash: p.email})
+		}
+	}
+	firsts1, err := FirstPurchases(ctx, db, site, idents)
+	if err != nil {
+		return nil, err
+	}
+
 	out := make([]Fact, 0, len(ps))
 	for _, p := range ps {
 		k := key(p.provider, p.id)
@@ -447,6 +458,9 @@ func Facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 				kind, change = payments.KindRenewal, payments.KindUpgrade
 			}
 		}
+		if kind == payments.KindOneTime && change == "" && firsts1[p.provider+"\x00"+p.id] {
+			change = "new" // a first purchase is a new customer, in the chart as in the notice
+		}
 		custKey := cus
 		if custKey == "" {
 			custKey = p.email
@@ -481,6 +495,74 @@ func Facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 			f.NoRate = !rates.Publishes(ctx, p.cur) || !rates.Publishes(ctx, currency)
 		}
 		out = append(out, f)
+	}
+	return out, nil
+}
+
+// Ident is what tells one payment's payer from another's.
+type Ident struct {
+	Provider, ID string
+	PaidAt       int64 // unix ms
+	Customer     string
+	EmailHash    string
+}
+
+// FirstPurchases says which of the payments are the first of a payer the ledger
+// can recognise (by the provider's customer id or the payer's hashed email):
+// no other real payment of the same payer was paid before it. A payment from
+// someone it cannot recognise is never first. Reports and notices both ask
+// here, so a first one-time purchase is a new customer in the chart and in the
+// message alike. The result is keyed by provider, a NUL and the payment id.
+func FirstPurchases(ctx context.Context, db interface {
+	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
+}, site string, list []Ident) (map[string]bool, error) {
+	var cus, eh []string
+	for _, x := range list {
+		if x.Customer != "" {
+			cus = append(cus, x.Customer)
+		}
+		if x.EmailHash != "" {
+			eh = append(eh, x.EmailHash)
+		}
+	}
+	out := map[string]bool{}
+	type other struct {
+		provider, id, customer, email string
+		paid                          int64
+	}
+	var others []other
+	if len(cus)+len(eh) > 0 {
+		rows, err := db.QueryContext(ctx, `SELECT provider, id, paid_at, customer_id, email_hash FROM pay_payments
+			WHERE site_id = ?1 AND test = 0 AND (customer_id IN (SELECT value FROM json_each(?2)) OR email_hash IN (SELECT value FROM json_each(?3)))`,
+			site, jsonList(cus), jsonList(eh))
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var o other
+			if err := rows.Scan(&o.provider, &o.id, &o.paid, &o.customer, &o.email); err != nil {
+				return nil, err
+			}
+			others = append(others, o)
+		}
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
+	}
+	for _, x := range list {
+		if x.Customer == "" && x.EmailHash == "" {
+			continue
+		}
+		first := true
+		for _, o := range others {
+			same := o.provider == x.Provider && o.id != x.ID && ((x.Customer != "" && o.customer == x.Customer) || (x.EmailHash != "" && o.email == x.EmailHash))
+			if same && (o.paid < x.PaidAt || (o.paid == x.PaidAt && o.id < x.ID)) {
+				first = false
+				break
+			}
+		}
+		out[x.Provider+"\x00"+x.ID] = first
 	}
 	return out, nil
 }
