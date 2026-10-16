@@ -318,11 +318,14 @@ test('the Replay slider spans the chart, so its thumb sits at the picked day', a
   const at = await thumbAndMarker(page, chart)
   expect(Math.abs(at.thumb - at.marker)).toBeLessThan(0.04)
   // The chart's own cursor, put on that marker, names the chip's day.
-  const b = (await chart.boundingBox())!
   const day = ((await chip.textContent()) ?? '').trim()
-  await page.mouse.move(b.x + PAD_L + at.marker * (b.width - PAD_L), b.y + b.height / 2)
-  await page.mouse.move(b.x + PAD_L + at.marker * (b.width - PAD_L) + 1, b.y + b.height / 2)
-  await expect(chart.locator('.cursor-pill')).toContainText(day)
+  // The chart may still be settling under the pointer: measure and point again until the pill shows.
+  await expect(async () => {
+    const b = (await chart.boundingBox())!
+    await page.mouse.move(b.x + PAD_L + at.marker * (b.width - PAD_L), b.y + b.height / 2)
+    await page.mouse.move(b.x + PAD_L + at.marker * (b.width - PAD_L) + 1, b.y + b.height / 2)
+    await expect(chart.locator('.cursor-pill')).toContainText(day, { timeout: 1500 })
+  }).toPass({ timeout: 15_000 })
 })
 
 // In Full the chart itself picks the day (a click or drag on it): the thumb follows.
