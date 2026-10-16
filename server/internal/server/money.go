@@ -20,7 +20,7 @@ import (
 // the dashboards that are open, as the line they show, and by message to the
 // site's money alert ("Money in" in Settings → Alerts). A new customer, an
 // upgrade and a refund each get a message; renewals and one-time sales are in
-// the weekly report, not in the inbox.
+// the dashboard, not in the inbox.
 
 // moneyMailPerHour bounds the messages one site's money alert sends in an
 // hour: a reconciliation that finds a burst of late payments is a few

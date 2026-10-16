@@ -281,8 +281,6 @@ func (s *Service) releaseHeld(ctx context.Context) (out []struct {
 		p         payments.Payment
 		emailHash string
 		tax       sql.NullInt64
-		cus, sub  string
-		vis       int64
 		gone      bool
 	}
 	rows, err := tx.QueryContext(ctx, `SELECT n.site_id, n.provider, n.id, coalesce(p.connection_id, ''), p.paid_at, p.currency, p.gross, p.tax,
