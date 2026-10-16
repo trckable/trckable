@@ -136,8 +136,8 @@ func TestCardKeepsMailClientsFromLinkingDomainsAndDates(t *testing.T) {
 	c := Card{Site: "shop.example", Eyebrow: "Milestone reached", Big: "10,000", Unit: "pageviews", Sub: "Reached on 15 Oct 2026",
 		CTA: "Open shop.example", Link: "https://stats.example.com/shop.example"}
 	h := c.HTML("https://stats.example.com/u/t", "https://stats.example.com/settings")
-	for _, want := range []string{"shop.&#8203;example", "15​ Oct 2026", "10,000", "pageviews", `href="https://stats.example.com/shop.example"`, "background:#c6ff3a", "color:#0b0d10", "Stop these alerts", "x-apple-data-detectors"} {
-		want = strings.ReplaceAll(want, "&#8203;", "​")
+	for _, want := range []string{"shop.&#8203;example", "15\u200b Oct 2026", "10,000", "pageviews", `href="https://stats.example.com/shop.example"`, "background:#c6ff3a", "color:#0b0d10", "Stop these alerts", "x-apple-data-detectors"} {
+		want = strings.ReplaceAll(want, "&#8203;", "\u200b")
 		if !strings.Contains(h, want) {
 			t.Errorf("missing %q", want)
 		}
