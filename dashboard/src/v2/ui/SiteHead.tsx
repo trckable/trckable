@@ -1,22 +1,16 @@
-// A heading in the switcher: Pinned, a named group, or the other sites. A
-// group's heading folds it and has its own ⋯ menu (rename, move, remove);
-// a site dragged onto any heading goes first under it (useReorder).
+// A heading in the site list: Pinned, a named group, or the other sites. A group's heading folds it and has its own ⋯ menu
+// (rename, move, remove); a site dragged onto any heading goes first under it.
 import { ChevronRight } from 'lucide-react'
 import { Menu } from '../../components/Menu'
 import { confirm, confirmWith } from '../../components/Confirm'
-import { copy } from './menuCopy'
-import { removeGroup, renameGroup, stepGroup, type Place } from './layout'
-import type { Arrange } from './SiteMenu'
+import { copy } from '../../features/sites/menuCopy'
+import { removeGroup, renameGroup, stepGroup, type Place } from '../../features/sites/layout'
+import type { Arrange } from '../../features/sites/arrange'
 
 const TITLE: Record<'pinned' | 'rest', string> = { pinned: copy.pinned, rest: copy.others }
 
-export function SectionHead({ place, count, shut, onFold, arrange: a }: { place: Place; count: number; shut: boolean; onFold: () => void; arrange: Arrange | null }) {
-  if (place.kind !== 'group')
-    return (
-      <h3 className="site-head">
-        {TITLE[place.kind]}
-      </h3>
-    )
+export function SiteHead({ place, count, shut, onFold, arrange: a }: { place: Place; count: number; shut: boolean; onFold: () => void; arrange: Arrange | null }) {
+  if (place.kind !== 'group') return <h3 className="site-head">{TITLE[place.kind]}</h3>
   const name = place.name
   const rename = async () => {
     const to = (await confirmWith({ title: copy.renameTitle(name), confirmLabel: copy.save, field: { label: copy.groupName, type: 'text' } }))?.trim()

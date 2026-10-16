@@ -2,9 +2,13 @@
 // the ⋯ menu or the note under the pages table, while a page is the filter.
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { heatApi } from '../../features/heatmap/api'
+import { markHeatDone } from '../../features/heatmap/guide'
+import { canChange } from '../../lib/me'
+import { isOn } from '../../lib/modules'
+import { modulesChanged, useMods } from '../../lib/useMods'
 import { glow, pageSize, place, strength, busiest } from '../../features/heatmap/model'
 import { lazyLoad } from '../../lib/lazyLoad'
-import { more, type Site } from '../../lib/apiMore'
+import { fail, more, type Site } from '../../lib/apiMore'
 import type { Range } from '../../lib/dates'
 import { queryOf } from '../../lib/dashQuery'
 import type { ViewState } from '../../lib/url'
@@ -20,14 +24,47 @@ const STEPS = ['0%', '25%', '50%', '75%', '90%']
 
 // The page's own heatmap (features/heatmap) is its own chunk, fetched when it is first asked for.
 const HeatOverlay = lazyLoad(() => import('../../features/heatmap/HeatOverlay'))
+const HeatModal = lazyLoad(() => import('../../features/heatmap/HeatModal'))
 
 /** Where people clicked on the page, as dots in a small box: the real counts, placed as the full heatmap places them. */
 function Clicks({ site, range, page, q }: { site: Site; range: Range; page: string; q: ReturnType<typeof queryOf> }) {
   const [open, setOpen] = useState(false)
+  const [about, setAbout] = useState(false)
+  const [demo, setDemo] = useState(false)
+  const mods = useMods(site.id)
   const key = [site.id, range.from, range.to, page].join('|')
   const heat = useLoad(`h|${key}`, (signal) => heatApi.map(site.id, q, page, 0, signal), true)
   const map = heat.state === 'ok' && (heat.data.views > 0 || heat.data.clicks.length > 0) ? heat.data : null
-  if (!map) return <div className="mk-quiet">{heat.state === 'loading' ? copy.loading : copy.noHeat}</div>
+  // Nothing recorded: say what a heatmap shows (nobody is recorded), with an example, and for an owner the way to turn it on.
+  const turnOn = () =>
+    more
+      .setModule(site.id, 'heatmaps', true)
+      .then(() => {
+        markHeatDone(site.id)
+        modulesChanged()
+        setAbout(false)
+      })
+      .catch((e: unknown) => fail(e))
+  if (!map) {
+    const off = mods !== null && !isOn(mods, 'heatmaps') && canChange()
+    return (
+      <div className="mk-quiet">
+        {heat.state === 'loading' ? copy.loading : copy.noHeat}
+        {heat.state !== 'loading' && off && (
+          <>
+            {' '}
+            <button type="button" className="xb" onClick={() => setAbout(true)}>
+              {copy.aboutHeat}
+            </button>
+          </>
+        )}
+        {about && (
+          <HeatModal site={site} path={page} views={heat.state === 'ok' ? heat.data.views : 0} onClose={() => setAbout(false)} onPreview={() => setDemo(true)} onGo={() => void turnOn()} />
+        )}
+        {demo && <HeatOverlay site={site} path={page} query={q} demo onClose={() => setDemo(false)} />}
+      </div>
+    )
+  }
   const size = pageSize(map)
   const top = busiest(map.clicks)
   return (

@@ -17,6 +17,8 @@ export interface Notice {
   sub: string
   /** Unix seconds. */
   at: number
+  /** A milestone told in full when it is tapped. */
+  milestone?: Milestone
 }
 
 const mins = (s: number) => Math.max(1, Math.round(s / 60))
@@ -38,7 +40,7 @@ export function fromMentions(list: Mention[], domain: string): Notice[] {
 }
 
 export function fromMilestones(list: Milestone[], domain: string): Notice[] {
-  return list.map((m) => ({ id: `mile:${m.kind}:${m.step}`, kind: 'milestone' as const, site: domain, title: copy.milestone(m.kind, m.value), sub: copy.milestoneSub, at: m.created_at }))
+  return list.map((m) => ({ id: `mile:${m.kind}:${m.step}`, kind: 'milestone' as const, site: domain, title: copy.milestone(m.kind, m.value), sub: copy.milestoneSub, at: m.created_at, milestone: m }))
 }
 
 /** The alerts that have fired: a spike or surge, a customer, the weekly report. */

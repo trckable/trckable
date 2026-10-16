@@ -18,6 +18,7 @@ import { PeriodChip } from './ui/PeriodChip'
 import { TabBar } from './ui/TabBar'
 import { goExplore } from './briefing/deeper'
 import { MkToastHost } from './ui/MkToastHost'
+import { AiHost } from './ui/AiHost'
 import { Live } from './live/Live'
 import type { LiveProps } from './live/Live'
 
@@ -105,6 +106,7 @@ export function V2View(p: V2Props) {
         {p.waiting ? <FreshSlot site={p.site} visits={p.live.stream.visits} /> : screen}
       </main>
       {opened && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} money={p.money} onGoal={p.onGoal} />}
+      <AiHost site={p.site} />
       <MkToastHost />
       <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />
     </div>

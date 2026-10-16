@@ -21,7 +21,7 @@ import { copy as pal } from './explore/paletteCopy'
 import { useV2Extras } from './slots'
 import { ExploreChip, Header, Logo } from './ui/Header'
 import { SegmentedSwitch } from './ui/SegmentedSwitch'
-import { SiteChip, type SiteItem } from './ui/SiteMenu'
+import { SiteChip } from './ui/SiteMenu'
 
 const Palette = lazyLoad(() => import('./ui/Palette').then((m) => ({ default: m.Palette })))
 
@@ -64,11 +64,11 @@ export function PageHeader(p: PageHeaderProps) {
     window.addEventListener('keydown', key, true)
     return () => window.removeEventListener('keydown', key, true)
   }, [])
-  const items: SiteItem[] = p.sites.map((s) => ({ id: s.id, name: s.name || s.domain, note: s.domain === s.name ? undefined : s.domain, online: rows?.find((r) => r.id === s.id)?.online ?? 0, down: !!s.down_since }))
   const site = p.site
   const siteMenu = {
-    sites: items,
-    current: site?.id ?? null,
+    sites: p.sites,
+    current: site,
+    online: (id: string) => rows?.find((r) => r.id === id)?.online ?? 0,
     onPick: (id: string) => (id === '*' ? navigate('/') : navigate('/' + encodeURIComponent(p.sites.find((s) => s.id === id)?.domain ?? ''))),
     footer: site
       ? [

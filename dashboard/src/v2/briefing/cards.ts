@@ -3,6 +3,7 @@
 // one thing to do. The cards are ranked by how much they matter and how bad the news is. Pure: cards.test.ts.
 import type { Result, Row } from '../../lib/api'
 import { countryName, flag, fmtInt } from '../../lib/format'
+import { assistantOf } from '../../features/extras/assistants'
 import { copy } from './cards.copy'
 import { mult, sourceName, type Deeper, type Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
@@ -163,6 +164,9 @@ export function leadSource(list: Slice[], total: number, domain: string): (Slice
   return movers(list, total, self).sort((a, b) => Math.abs(b.v - (b.band?.c ?? 0)) - Math.abs(a.v - (a.band?.c ?? 0)))[0]
 }
 
+/** A referrer that is one of the AI assistants: its card goes deeper into the AI & Search dialog. */
+const isAssistant = (referrer: string): boolean => assistantOf(referrer) !== referrer
+
 function sourceCard(s: Slice & { st: Judged }, i: CardsIn, total: number, topPage?: { name: string; value: string }): Story {
   const why = s.st === 'up' && s.band ? whyJump({ name: sourceName(s.value), host: s.value, now: s.v, lo: s.band.lo, hi: s.band.hi, mention: i.mention, page: topPage?.name }) : undefined
   const up = s.st === 'up'
@@ -187,7 +191,7 @@ function sourceCard(s: Slice & { st: Judged }, i: CardsIn, total: number, topPag
     ev: evidence(s.v, b),
     act: up ? { k: 'copy', t: copy.shareLink, text: link, done: copy.linkCopied } : { k: 'set', t: copy.setAlert, msg: copy.alertDrops(name, fmtInt(Math.round(b.lo))) },
     cause: why,
-    deeper: { kind: 'explore', filter: { dim: 'referrer', value: s.value } },
+    deeper: isAssistant(s.value) ? { kind: 'ai' } : { kind: 'explore', filter: { dim: 'referrer', value: s.value } },
   }
 }
 

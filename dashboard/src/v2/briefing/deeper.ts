@@ -4,6 +4,7 @@ import type { Site } from '../../lib/api'
 import { navigate } from '../../lib/url'
 import { openExplore } from '../explore/open'
 import type { Tab } from '../explore/sections'
+import { openAi } from '../ui/AiHost'
 import type { Deeper } from './model'
 
 /** The table that holds a card's numbers, by the dimension it narrows. */
@@ -13,6 +14,7 @@ export function goDeeper(site: Site, d: Deeper) {
   if (d.kind === 'incidents') navigate(`/${encodeURIComponent(site.domain)}/incidents`)
   else if (d.kind === 'mentions') openExplore('mentions')
   else if (d.kind === 'speed') openExplore('speed')
+  else if (d.kind === 'ai') openAi()
   else if (d.kind === 'table') openExplore(d.tab)
   else openExplore(TAB[d.filter.dim] ?? 'overview', [{ ...d.filter, dim: d.filter.dim === 'entry_page' ? 'page' : d.filter.dim }])
 }

@@ -1,19 +1,31 @@
-// The site in the header, and the list that opens from it: every site with who is on it now, a finder, and what belongs to this site.
-import { useState, type ReactNode } from 'react'
+// The site in the header, and the list that opens from it (SiteList): every site with who is on it now, a finder, and what
+// belongs to this site. The check beside the name says when something independent vouches for the numbers.
+import { Suspense, useCallback, type ReactNode } from 'react'
+import type { Site } from '../../lib/api'
+import { lazyLoad, warm } from '../../lib/lazyLoad'
+import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
+import { dotState } from '../../features/sites/StateDot'
+import { VerifiedPill } from '../../features/verified/VerifiedPill'
+import { useDomainControl } from '../../lib/domainControl'
 import { copy } from '../copy'
+import { domainLabel } from './DomainRows'
 import { useMenu } from './useMenu'
 
-export interface SiteItem {
-  id: string
-  name: string
-  note?: string
-  online: number
-  down: boolean
+const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
+const warmUp = () => {
+  SiteList.preload()
+  preloadLayout()
 }
+/** The list opens with its final order: the layout is waited for (300 ms at most) rather than shown late. */
+const LAYOUT_WAIT = 300
+
+const DOT: Record<string, string> = { stopped: 'down', quiet: 'quiet' }
 
 export interface SiteMenuProps {
-  sites: SiteItem[]
-  current: string | null
+  sites: Site[]
+  current: Site | null
+  /** Who is on a site now. */
+  online: (id: string) => number
   /** The workspace line at the top, when the account has one. */
   workspace?: { name: string; d: string; run?: () => void }
   onPick: (id: string) => void
@@ -23,96 +35,73 @@ export interface SiteMenuProps {
 }
 
 export function SiteChip({ p }: { p: SiteMenuProps }) {
-  const { open, attach, toggle, close } = useMenu()
-  const [q, setQ] = useState('')
-  const cur = p.sites.find((s) => s.id === p.current)
-  const list = p.sites.filter((s) => s.name.toLowerCase().includes(q.toLowerCase()))
+  const { open, setOpen, attach, close } = useMenu()
+  const cur = p.current
+  const domains = useDomainControl()
+  const picked = cur && domains ? domainLabel(domains) : null
+  const state = cur ? dotState(cur) : 'live'
+  const toggle = () => {
+    if (open) setOpen(false)
+    else void layoutReady(LAYOUT_WAIT).then(() => setOpen(true))
+  }
+  const done = useCallback(() => close(), [close])
+  const footer = (
+    <div className="mfoot col">
+      {p.footer.map((f) => (
+        <button key={f.key} type="button" data-stop className="mi" onClick={() => { f.run(); done() }}>
+          {f.dot ? (
+            <>
+              <i className={`pdot${f.dot === 'warn' ? ' warn' : ''}`} />
+              <span className="mt2">
+                <div className="nm">{f.label}</div>
+              </span>
+            </>
+          ) : (
+            f.label
+          )}
+        </button>
+      ))}
+    </div>
+  )
   return (
-    <div ref={attach} style={{ position: 'relative' }}>
-      <button type="button" id="siteBtn" className="mk-chip" aria-haspopup="menu" aria-expanded={open} data-key="site" onClick={toggle}>
-        <span className={`mk-dot ${cur?.down ? 'down' : ''}`} />
-        <span className="nmx">{cur?.name ?? p.all}</span>
+    <div ref={attach} style={{ position: 'relative' }} className="sitechip">
+      <button type="button" id="siteBtn" className="mk-chip" aria-haspopup="menu" aria-expanded={open} data-key="site" {...warm(warmUp)} onClick={toggle}>
+        <span className={`mk-dot ${DOT[state] ?? ''}`} />
+        <span className="nmx">{cur ? cur.name || cur.domain : p.all}</span>
+        {picked && <span className="dom">{`/ ${picked}`}</span>}
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
           <path d="M3 4.5 6 7.5 9 4.5" stroke="var(--mk-muted)" fill="none" strokeWidth="1.5" />
         </svg>
         <span className="mk-kbd">{'S'}</span>
       </button>
-      <div className={`mk-menu${open ? ' on' : ''}`} id="siteMenu">
+      {cur && <VerifiedPill verified={cur.verified} site={cur} seal />}
+      <div className={`mk-menu sites${open ? ' on' : ''}`} id="siteMenu" role="dialog" aria-label={copy.sites}>
         {open && (
-          <>
-            {p.workspace && (
-              <button type="button" className="mi ws" onClick={() => p.workspace?.run?.()}>
-                <span className="mt2">
-                  <div className="nm">{p.workspace.name}</div>
-                  <div className="d">{p.workspace.d}</div>
-                </span>
-                <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-                  <path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" fill="none" strokeWidth="1.5" />
-                </svg>
-              </button>
-            )}
-            <input id="siteFind" placeholder={p.find} value={q} onChange={(e) => setQ(e.target.value)} aria-label={p.find} />
-            <div id="siteList">
-              <button
-                type="button"
-                className={`mi ${p.current === null ? 'on' : ''}`}
-                onClick={() => {
-                  p.onPick('*')
-                  close()
-                }}
-              >
-                <span className="mk-dot off" />
-                <span>
-                  <div className="nm">{p.all}</div>
-                  <div className="d">{copy.overview}</div>
-                </span>
-              </button>
-              {list.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  className={`mi ${s.id === p.current ? 'on' : ''}`}
-                  onClick={() => {
-                    p.onPick(s.id)
-                    close()
-                  }}
-                >
-                  <span className={`mk-dot ${s.down ? 'down' : ''}`} />
-                  <span>
-                    <div className="nm">{s.name}</div>
-                    {s.note && <div className="d">{s.note}</div>}
-                  </span>
-                  <span className="now">
-                    <b>{s.online}</b> {copy.nowWord}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <div className="mfoot col">
-              {p.footer.map((f) => (
-                <button
-                  key={f.key}
-                  type="button"
-                  className="mi"
-                  onClick={() => {
-                    f.run()
-                    close()
-                  }}
-                >
-                  {f.dot ? (
-                    <>
-                      <i className={`pdot${f.dot === 'warn' ? ' warn' : ''}`} />
-                      <span className="mt2">
-                        <div className="nm">{f.label}</div>
-                      </span>
-                    </>
-                  ) : (
-                    f.label
-                  )}
-                </button>
-              ))}
-            </div>
-          </>
+          <Suspense fallback={null}>
+            <SiteList
+              sites={p.sites}
+              current={cur}
+              online={p.online}
+              workspace={
+                p.workspace && (
+                  <button type="button" className="mi ws" onClick={() => p.workspace?.run?.()}>
+                    <span className="mt2">
+                      <div className="nm">{p.workspace.name}</div>
+                      <div className="d">{p.workspace.d}</div>
+                    </span>
+                    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                      <path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" fill="none" strokeWidth="1.5" />
+                    </svg>
+                  </button>
+                )
+              }
+              onPick={p.onPick}
+              footer={footer}
+              find={p.find}
+              all={p.all}
+              close={done}
+            />
+          </Suspense>
         )}
       </div>
     </div>

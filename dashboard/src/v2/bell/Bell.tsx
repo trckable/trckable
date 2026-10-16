@@ -1,6 +1,7 @@
 // The bell: the list of notices, which of them are read, and where a tap on one goes.
-import { useEffect, useState } from 'react'
-import type { Site } from '../../lib/api'
+import { Suspense, useEffect, useState } from 'react'
+import type { Milestone, Site } from '../../lib/api'
+import { lazyLoad } from '../../lib/lazyLoad'
 import { dayWords } from '../dayWords'
 import { mentionsPath } from '../../features/mentions/route'
 import { navigate } from '../../lib/url'
@@ -9,6 +10,8 @@ import { BellMenu, type BellRow } from '../ui/BellMenu'
 import { copy } from './copy'
 import { badge, type Notice } from './notices'
 import type { useNotices } from './useNotices'
+
+const MilestoneSheet = lazyLoad(() => import('./MilestoneSheet'))
 
 /** "16:05" for today, "Thu 15 Oct 16:05" for another day. */
 export function when(at: number): string {
@@ -28,6 +31,7 @@ function go(n: Notice) {
 export function Bell({ site, notices }: { site: Site | null; notices: ReturnType<typeof useNotices> }) {
   const { items, read, unread, mark, markAll, can } = notices
   const [sheet, setSheet] = useState(false)
+  const [told, setTold] = useState<Milestone | null>(null)
   useEffect(() => {
     const q = window.matchMedia('(max-width: 600px)')
     const f = () => setSheet(q.matches)
@@ -38,6 +42,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   if (!can) return null
   const rows: BellRow[] = items.map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: !read.has(n.id) }))
   return (
+    <>
     <BellMenu
       rows={rows}
       unread={unread}
@@ -50,10 +55,17 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
       onPick={(id) => {
         mark(id)
         const n = items.find((x) => x.id === id)
-        if (n) go(n)
+        if (n?.milestone && site) setTold(n.milestone)
+        else if (n) go(n)
       }}
       onAll={markAll}
       onSettings={() => site && openSettings(site, 'alerts')}
     />
+    {told && site && (
+      <Suspense fallback={null}>
+        <MilestoneSheet site={site} m={told} onClose={() => setTold(null)} />
+      </Suspense>
+    )}
+    </>
   )
 }

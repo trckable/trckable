@@ -7,6 +7,7 @@ import { XCols, type CRow } from '../../ui/XTable'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import type { Bot, Mention, Speed as SpeedModel } from '../types'
+import { openAi } from '../../ui/AiHost'
 
 export function Speed({ x, d }: { x: XCtx; d: SpeedModel }) {
   const max = Math.max(1, ...d.pages.map((p) => p.v))
@@ -64,7 +65,12 @@ export function Bots({ x, d }: { x: XCtx; d: Bot[] }) {
   return (
     <>
       <XCols first={copy.bot} cols={[{ h: copy.requests }, { h: copy.share }]} rows={rows} xc="minmax(0,1fr) 84px 64px" limit={x.limit} onAll={x.showAll} />
-      <XNote>{copy.noteBots}</XNote>
+      <XNote>
+        {copy.noteBots}{' '}
+        <button type="button" className="xb" onClick={() => openAi('crawler')}>
+          {copy.aboutAi}
+        </button>
+      </XNote>
     </>
   )
 }

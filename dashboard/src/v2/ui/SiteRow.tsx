@@ -1,0 +1,137 @@
+// One site in the list that opens from the header: its dot (green while visits come, amber when quiet, red when down, hollow
+// when not installed), its name with what its state needs said in words, the check when something vouches for its numbers,
+// and who is on it now. Anyone who may arrange can drag the row, move it with Alt + ↑/↓ or its ⋯ menu (pin, a group).
+import { CircleAlert, GripVertical, Moon } from 'lucide-react'
+import type { Site } from '../../lib/api'
+import { Menu } from '../../components/Menu'
+import { confirmWith } from '../../components/Confirm'
+import { Tooltip } from '../../kit/Tooltip'
+import { fmtCompact, fmtInt } from '../../lib/format'
+import { prefetchSite } from '../../lib/dashQuery'
+import { copy } from '../../features/sites/menuCopy'
+import { copy as first } from '../../features/sites/copy'
+import { addGroup, moveTo, pin, placeKey, step, unpin, type Place } from '../../features/sites/layout'
+import { dotState } from '../../features/sites/StateDot'
+import { stateLine } from '../../features/sites/stateLine'
+import { OpenSite, openSiteTab } from '../../features/sites/OpenSite'
+import { silence } from '../../features/sitestatus/time'
+import { VerifiedPill } from '../../features/verified/VerifiedPill'
+import type { Arrange } from '../../features/sites/arrange'
+import { copy as v2 } from '../copy'
+
+const DOT = { now: 'now', live: '', quiet: 'quiet', stopped: 'down', new: 'off' } as const
+
+/** What stands where the people on it would: "setup", a moon (quiet) or an alert (down) when the dot alone cannot say it. */
+function Tail({ s, online, today }: { s: Site; online: number; today?: number }) {
+  const state = dotState(s)
+  if (state === 'new') {
+    return (
+      <span className="now" title={first.dot.new}>
+        {copy.setup}
+      </span>
+    )
+  }
+  if (state === 'stopped' || state === 'quiet') {
+    const down = state === 'stopped'
+    const tip = down ? copy.downTip(silence(s)) : copy.quietTip(silence(s))
+    const Icon = down ? CircleAlert : Moon
+    return (
+      <Tooltip text={tip} float>
+        {(p) => (
+          <span {...p} role="button" tabIndex={0} aria-label={tip} className={`now state-icon ${down ? 'down' : 'quiet'}`} onClick={(e) => { e.stopPropagation(); p.onClick() }} onKeyDown={(e) => e.key === 'Enter' && p.onClick()}>
+            <Icon size={16} strokeWidth={2} aria-hidden="true" />
+          </span>
+        )}
+      </Tooltip>
+    )
+  }
+  return (
+    <span className="now" title={today === undefined ? undefined : copy.today(fmtInt(today))}>
+      <b>{fmtCompact(online)}</b> {v2.nowWord}
+    </span>
+  )
+}
+
+/** After a move React may re-insert the row, which drops focus: put it back. */
+function refocus(id: string) {
+  requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-site="${CSS.escape(id)}"] .site`)?.focus())
+}
+
+export function SiteRow({ site, place, on, arrange: a, online, today, onPick }: { site: Site; place: Place; on: boolean; arrange: Arrange | null; online: number; today?: number; onPick: () => void }) {
+  const name = site.name || site.domain
+  const line = stateLine(site)
+  const note = line ?? (site.domain === name ? undefined : site.domain)
+  const moveStep = (dir: -1 | 1) => {
+    if (!a) return
+    a.save(step(a.sites, a.layout, site.id, dir), dir < 0 ? copy.up : copy.down)
+    refocus(site.id)
+  }
+  return (
+    <li data-site={site.id} className={['site-row', a && 'sortable', a?.drag === site.id && 'dragging'].filter(Boolean).join(' ')} onPointerDown={(e) => a?.grab(e, site.id)} onDragStart={(e) => e.preventDefault()}>
+      {a && <GripVertical className="grip" size={12} strokeWidth={2.25} aria-hidden="true" />}
+      <button
+        type="button"
+        data-stop
+        aria-current={on ? 'page' : undefined}
+        className={['mi', 'site', on && 'on'].filter(Boolean).join(' ')}
+        onClick={onPick}
+        onPointerEnter={on ? undefined : () => prefetchSite(site)}
+        onFocus={on ? undefined : () => prefetchSite(site)}
+        onKeyDown={(e) => {
+          if (e.shiftKey && e.key === 'Enter' && site.domain) {
+            e.preventDefault()
+            openSiteTab(site.domain)
+            return
+          }
+          if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return
+          e.preventDefault()
+          moveStep(e.key === 'ArrowUp' ? -1 : 1)
+        }}
+      >
+        <span className={`mk-dot ${DOT[dotState(site)]}`} title={first.dot[dotState(site)]} />
+        <span className="mt2">
+          <div className="nm">{name}</div>
+          {note && <div className={`d${line ? ` state-line ${dotState(site)}` : ''}`}>{note}</div>}
+        </span>
+        {site.verified && <VerifiedPill verified={site.verified} site={site} seal />}
+        <Tail s={site} online={online} today={today} />
+      </button>
+      <OpenSite domain={site.domain} />
+      {a && <Moves site={site} place={place} a={a} step={moveStep} />}
+    </li>
+  )
+}
+
+function Moves({ site, place, a, step: moveStep }: { site: Site; place: Place; a: Arrange; step: (dir: -1 | 1) => void }) {
+  const here = placeKey(place)
+  const go = (to: Place, said: string) => a.save(moveTo(a.sites, a.layout, site.id, to), said)
+  const newGroup = async () => {
+    const name = (await confirmWith({ title: copy.newGroupTitle, body: copy.newGroupBody, confirmLabel: copy.create, field: { label: copy.groupName, type: 'text' } }))?.trim()
+    if (!name) return
+    const l = addGroup(a.layout, name)
+    a.save(moveTo(a.sites, l, site.id, { kind: 'group', name }), copy.toGroup(name))
+  }
+  return (
+    <Menu label={copy.options(site.name || site.domain)}>
+      {(close) => {
+        const item = (label: string, fn: () => void) => (
+          <button type="button" role="menuitem" onClick={() => { close(); fn() }}>
+            {label}
+          </button>
+        )
+        return (
+          <>
+            {item(copy.up, () => moveStep(-1))}
+            {item(copy.down, () => moveStep(1))}
+            {place.kind === 'pinned' ? item(copy.unpin, () => a.save(unpin(a.sites, a.layout, site.id), copy.unpin)) : item(copy.pin, () => a.save(pin(a.sites, a.layout, site.id), copy.pin))}
+            {a.layout.groups
+              .filter((g) => placeKey({ kind: 'group', name: g.name }) !== here)
+              .map((g) => item(copy.toGroup(g.name), () => go({ kind: 'group', name: g.name }, copy.toGroup(g.name))))}
+            {place.kind === 'group' && item(copy.noGroup, () => go({ kind: 'rest' }, copy.noGroup))}
+            {item(copy.newGroup, () => void newGroup())}
+          </>
+        )
+      }}
+    </Menu>
+  )
+}
