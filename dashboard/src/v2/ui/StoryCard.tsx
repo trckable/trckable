@@ -138,7 +138,7 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
         </button>
       )}
       <button type="button" className="gh" data-hw="1" aria-expanded={c.how(s)} onClick={() => c.onHow(s)}>
-        {copy.how}
+        {s.cause ? copy.whyQ : copy.how}
       </button>
       <button type="button" className="deep" data-deeper="1" onClick={() => c.onDeeper(s)}>
         {copy.deeper} {'›'}
@@ -150,6 +150,11 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
 function How({ s }: { s: Story }) {
   return (
     <div className="hw">
+      {s.cause && (
+        <>
+          <b>{copy.whyDot}</b> {s.cause.cause} <span className="ev">{s.cause.todo}</span>
+        </>
+      )}
       <b>{copy.how}.</b> {s.how} <span className="ev">{s.ev}</span>
     </div>
   )

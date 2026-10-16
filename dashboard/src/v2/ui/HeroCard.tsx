@@ -1,6 +1,7 @@
 // The top card of the Briefing: the sentence, the score ring and what makes it up, and the day against its usual band.
 // Markup and classes are the walkthrough's own (mock/mock.css).
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import type { Why } from '../briefing/why'
 import { dash, ringTone } from '../briefing/geometry'
 import { copy } from '../briefing/copy'
 import { overall, type Part, type Score, type Sentence } from '../briefing/model'
@@ -97,9 +98,12 @@ export interface HeroProps {
   onReplay?: () => void
   /** The card has the first-load shimmer, or the site is down and not answering. */
   enter?: boolean
+  /** Why the headline says what it says. */
+  why?: Why | null
 }
 
-export function Hero({ say, scores, learn, crowd = null, since, period, onPeriod, chart, moments, onReplay, enter }: HeroProps) {
+export function Hero({ say, scores, learn, crowd = null, since, period, onPeriod, chart, moments, onReplay, enter, why }: HeroProps) {
+  const [open, setOpen] = useState(false)
   return (
     <section className={`mk-card hero${say.bad ? ' bad' : ''}${enter ? ' enter' : ''}`}>
       <div className="htop">
@@ -123,6 +127,16 @@ export function Hero({ say, scores, learn, crowd = null, since, period, onPeriod
               </svg>
               {copy.replay}
             </button>
+          )}
+          {why && (
+            <button type="button" className="gh rpb" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+              {copy.whyQ}
+            </button>
+          )}
+          {open && why && (
+            <div className="hw show">
+              <b>{copy.whyDot}</b> {why.cause} <span className="ev">{why.todo}</span>
+            </div>
           )}
           {moments && (moments.pills.length > 0 || moments.line) && (
             <div className="moments">

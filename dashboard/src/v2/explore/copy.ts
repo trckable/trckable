@@ -120,6 +120,7 @@ export const copy = defineCopy('explore', {
   speedNoneSub: 'Browsers report these when a page is hidden, so the first numbers appear once people have been and gone.',
   vitalLabels: ['Loading', 'Response', 'Stability'],
   vitalAbbr: ['LCP', 'INP', 'CLS'],
+  usualWord: 'usual',
   grades: { good: 'Good', mid: 'Needs work', poor: 'Poor' },
   slowest: 'Slowest pages',
   byLcp: 'by loading time (LCP)',

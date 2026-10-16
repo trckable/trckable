@@ -37,6 +37,11 @@ export function Detail({ s, site, c, onClose }: { s: Story; site: string; c: Car
           <Visual s={s} />
           <p className="cdw">{s.why}</p>
           <div className="hw show">
+            {s.cause && (
+              <>
+                <b>{copy.whyDot}</b> {s.cause.cause} <span className="ev">{s.cause.todo}</span>
+              </>
+            )}
             <b>{copy.how}.</b> {s.how} <span className="ev">{s.ev}</span>
           </div>
         </div>

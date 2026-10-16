@@ -1,6 +1,6 @@
 // Live and the Briefing: the walkthrough's header, and one of its two screens under it. This replaces the dashboard's
 // own header and control rows for these two views; Explore (the full numbers) is still the dashboard's Data.
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import '../mock/mock.css'
 import '../mock/theme.css'
 import type { Report, Site } from '../lib/api'
@@ -33,6 +33,9 @@ import { TabBar } from './ui/TabBar'
 import { goExplore } from './briefing/deeper'
 import { ExploreView } from './explore/ExploreView'
 import { MkToastHost } from './ui/MkToastHost'
+import { Palette } from './ui/Palette'
+import { paletteItems } from './explore/palette'
+import { copy as pal } from './explore/paletteCopy'
 import { Live } from './live/Live'
 import type { LiveProps } from './live/Live'
 
@@ -49,6 +52,8 @@ export interface V2Props {
   loading: boolean
   money?: (minor: number) => string
   onGoal: () => void
+  /** Open Peek; absent where the person cannot ask. */
+  onAsk?: () => void
   live: LiveProps
 }
 
@@ -101,6 +106,18 @@ export function V2View(p: V2Props) {
     [p.sites.length, slots.accountRows, theme, pickTheme, notices.unread],
   )
   const here = p.tab
+  const [find, setFind] = useState(false)
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        setFind((f) => !f)
+      }
+    }
+    window.addEventListener('keydown', key, true)
+    return () => window.removeEventListener('keydown', key, true)
+  }, [])
   const exploreOpen = () => goExplore()
   const siteMenu = {
     sites: items,
@@ -153,6 +170,7 @@ export function V2View(p: V2Props) {
         {here === 'briefing' ? <BriefingSlot site={p.site} data={p.data} loading={p.loading} period={p.view.period} range={p.range} money={p.money} onGoal={p.onGoal} visits={p.live.stream.visits} /> : <Live {...p.live} />}
       </main>
       {p.view.xp && <ExploreView site={p.site} view={p.view} range={p.range} label={label} money={p.money} onGoal={p.onGoal} />}
+      {find && <Palette items={paletteItems({ sites: p.sites, site: p.site, data: p.data, here: p.tab, onAsk: p.onAsk, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} onClose={() => setFind(false)} />}
       <MkToastHost />
       <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />
     </div>

@@ -24,6 +24,7 @@ import { MailRow } from '../ui/MailRow'
 import { WatchCard } from '../ui/WatchCard'
 import { Act, Calm, Setups } from '../ui/ConnectPlaceholder'
 import { Overlays } from './Overlays'
+import { whyUsual } from './why'
 import { ReplayBar } from '../ui/ReplayBar'
 import { useReplayView } from '../replay/useReplayView'
 import { startOfDay } from '../../features/incidents/model'
@@ -161,6 +162,8 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const rest = stories.slice(4)
   const act = nextStep({ site, cur, stories, top, downNow })
   const setups = setupRows({ site, cur, can: setupState.can, noSearch: setupState.noSearch, noAlerts: setupState.noAlerts, onGoal })
+  const heroWhy = stories.find((x) => x.key === 'uptime')?.cause ?? stories.find((x) => x.key === 'sources')?.cause ?? (usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : null)
+  if (kcs[0] && heroWhy && !stories.find((x) => x.key === 'uptime')) kcs[0].why = usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : undefined
   const sales = cur.money?.payments ?? 0
   const since =
     unit === 'today' && v > 0 ? (
@@ -200,6 +203,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
           period={label}
           onPeriod={() => document.querySelector<HTMLElement>('.mk-pill, .range-picker, .btn.range')?.click()}
           moments={mo}
+          why={heroWhy}
           onReplay={unit === 'today' && !rv.r.on && end >= 60 && v > 0 ? rv.r.open : undefined}
           chart={
             empty ? null : (

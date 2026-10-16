@@ -50,7 +50,7 @@ export function DimTable({ tab, site, range, a, filters, comparing, limit, onPic
   const values = (a.cur.dims[def?.dim ?? 'page'] ?? []).slice(0, Math.min(limit, 14)).map((r) => r.value)
   const bands = useBands(site, day ?? range.to, !!day && !comparing && !!def, filters, def?.dim ?? 'page', values)
   if (!def) return null
-  const rows = rowsFor(a.cur, a.prev, def.dim, def.name, bands)
+  const rows = rowsFor(a.cur, a.prev, def.dim, def.name, bands, comparing)
   const picked = filters.find((f) => f.dim === def.filter)?.value ?? null
   const active = filters.length > 0
   const empty = active ? <XEmpty title={copy.noMatch} sub={copy.noMatchSub} action={{ label: copy.clearFilters, run: onClear }} /> : <XEmpty title={copy.nothing} sub={copy.nothingSub} />

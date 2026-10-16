@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { api, type Filter, type Result, type Site } from '../../lib/api'
 import type { Range } from '../../lib/dates'
 import { usualBand } from '../briefing/useSlices'
-import type { Band } from '../briefing/usual'
+import { bandFromBefore, type Band } from '../briefing/usual'
 import { sameFilter } from '../../lib/filterSet'
 import type { Row } from './model'
 
@@ -22,7 +22,7 @@ export function useReport(site: Site, range: Range, filters: Filter[], comparing
   useEffect(() => {
     if (!on) return
     let live = true
-    void api.report(site.id, { from: range.from, to: range.to, filters, compare: comparing ? 'previous' : undefined, deep: true }).then(
+    void api.report(site.id, { from: range.from, to: range.to, filters, compare: 'previous', deep: true }).then(
       (r) => live && setGot({ key, a: { cur: norm(r.current) as Result, prev: norm(r.previous), bucket: r.bucket } }),
       () => undefined,
     )
@@ -51,9 +51,9 @@ export function useBands(site: Site, day: string, enabled: boolean, filters: Fil
 }
 
 /** The rows of a table: the report's rows with the people of each, its usual and (when comparing) the period before. */
-export function rowsFor(cur: Result, prev: Result | undefined, dim: string, name: (v: string) => string, bands: Map<string, Band | null>): Row[] {
+export function rowsFor(cur: Result, prev: Result | undefined, dim: string, name: (v: string) => string, bands: Map<string, Band | null>, comparing = false): Row[] {
   const before = new Map((prev?.dims[dim] ?? []).map((r) => [r.value, r.visitors]))
   return (cur.dims[dim] ?? [])
     .filter((r) => r.value !== '')
-    .map((r) => ({ value: r.value, name: name(r.value), v: r.visitors, band: bands.get(r.value) ?? null, p: prev ? (before.get(r.value) ?? 0) : undefined }))
+    .map((r) => ({ value: r.value, name: name(r.value), v: r.visitors, band: bands.get(r.value) ?? bandFromBefore(prev ? (before.get(r.value) ?? 0) : undefined), p: comparing && prev ? (before.get(r.value) ?? 0) : undefined }))
 }

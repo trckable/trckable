@@ -10,7 +10,9 @@ import { fmtInt } from '../../lib/format'
 import { channelColor, channelLabel } from '../../lib/palette'
 import { useReport } from '../../lib/useReport'
 import type { Sale, Site, Visit } from '../../lib/api'
-import { BusierLine } from '../../features/live/BusierLine'
+import { BusyLine } from '../ui/BusyLine'
+import { WhyInline } from '../ui/WhyInline'
+import { whyDown } from '../briefing/why'
 import { liveCount, liveLink } from '../../features/live/liveLink'
 import { feedOf, seriesAt } from '../../features/live/model'
 import { useBusier } from '../../features/live/useBusier'
@@ -68,7 +70,6 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
   const week7 = (week.data?.current.series ?? []).map((p) => p.visitors)
   return (
     <>
-      <BusierLine busier={busier} site={site} timezone={timezone} />
       {!isShared() && (
         <Suspense fallback={null}>
           <MentionChip site={site} domain={whole?.domain} />
@@ -92,7 +93,12 @@ export function Live({ site, timezone, stream, onVisitor, whole }: LiveProps) {
               {ch && <span className={`mk-ld ${ch.up ? 'up' : 'dn'}`}>{copy.change(ch.up, ch.pct)}</span>}
             </div>
           </div>
-          {down && <div className="downbox">{copy.downBox}</div>}
+          <BusyLine busier={busier} site={site} timezone={timezone} />
+          {down && (
+            <div className="downbox">
+              {copy.downBox} <WhyInline why={whyDown({ domain: whole?.domain ?? '', cause: whole?.down_cause, minutes: 0, ongoing: true })} />
+            </div>
+          )}
           <div className="mins">
             {bars.map((b, i) => (
               <i key={i} className={b.z ? 'z' : ''} style={{ height: `${b.h}%` }} />

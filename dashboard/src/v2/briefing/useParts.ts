@@ -105,6 +105,7 @@ export function useParts(a: PartsIn) {
     const uptimeIn: UptimeIn = {
       downNow,
       since: site.down_since ? clockOf(site.down_since) : '',
+      cause: site.down_cause,
       minutesNow: site.down_since ? Math.round((nowSec - site.down_since) / 60) : 0,
       incidents: up.list.map((x) => ({ from: clockOf(x.started_at), to: clockOf(x.ended_at ?? nowSec) })),
       minutes: downMin,
@@ -155,5 +156,5 @@ export function useParts(a: PartsIn) {
         ? moments({ totals, days, todayUp: unit === 'today' ? st === 'up' : false, from: Math.max(0, days.indexOf(range.from)), to: Math.max(0, days.indexOf(range.to)), elapsed: Math.round(nowHour * 60), today: unit === 'today', week: unit === 'week', filtered: false })
         : { pills: [], line: '' }
     return { hhmm: clock.slice(11), learning, hd, low, uptime, scores, stories, say, top, chart, weekday, whole, st, bounceUsual, mo }
-  }, [cur, prev, usual, unit, up.pct, up.list, up.from0, downNow, downMin, site.domain, site.down_since, site.timezone, site.watched_since, range.to, range.from, bucket, nowSec, hist, hourly, today, notes, clock, slices, extras])
+  }, [cur, prev, usual, unit, up.pct, up.list, up.from0, downNow, downMin, site.domain, site.down_since, site.down_cause, site.timezone, site.watched_since, range.to, range.from, bucket, nowSec, hist, hourly, today, notes, clock, slices, extras])
 }

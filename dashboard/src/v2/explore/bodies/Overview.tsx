@@ -120,8 +120,8 @@ export function Overview({ site, range, a, filters, comparing, day, onPick, goTo
     { key: 'leave', icon: 'leave', label: copy.cards.left, val: fmtPct(v0.bounce_rate), note: bu === null ? noteOf(v0.bounce_rate, prev?.kpis.bounce_rate, before) : bounceNote(v0.bounce_rate, bu), vals: vals((p) => p.bounce_rate ?? 0), lo: 0, hi: 0.8, col: '#7f9cf5' },
   ]
   const pct = prev ? Math.round(((v - prev.kpis.visitors) / Math.max(1, prev.kpis.visitors)) * 100) : 0
-  const pageRows = rowsFor(cur, prev, 'page', (x) => x, pb)
-  const srcRows = rowsFor(cur, prev, 'referrer', (x) => sourceName(x) || x, sb)
+  const pageRows = rowsFor(cur, prev, 'page', (x) => x, pb, comparing)
+  const srcRows = rowsFor(cur, prev, 'referrer', (x) => sourceName(x) || x, sb, comparing)
   return (
     <>
       <Kcs items={kcs} className="kcs xk" h={56} />

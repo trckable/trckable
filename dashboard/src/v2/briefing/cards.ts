@@ -6,6 +6,7 @@ import { countryName, flag, fmtInt } from '../../lib/format'
 import { copy } from './cards.copy'
 import { mult, sourceName, type Deeper, type Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
+import { whyDown, whyJump, type Why } from './why'
 
 export type Topic = 'uptime' | 'sources' | 'countries' | 'devices' | 'pages' | 'goals' | 'mentions' | 'speed' | 'milestone'
 export type Dim = 'referrer' | 'country' | 'device' | 'entry_page'
@@ -41,6 +42,8 @@ export interface Story {
   how: string
   ev: string
   act?: Act
+  /** Why it happened, as far as can be known: shown as "Why?" with the evidence. */
+  cause?: Why
   deeper: Deeper
   /** A card that is a number with a line (a country). */
   kc?: { flag: string; label: string; note: string; tone: 'up' | 'dn'; filter: { dim: string; value: string } }
@@ -131,6 +134,7 @@ function uptimeCard(u: UptimeIn, domain: string): Story {
     how: copy.downHow,
     ev: copy.incidentsEv(n, dur),
     act: { k: 'x', t: copy.openIncident },
+    cause: whyDown({ domain, cause: u.cause, minutes: dur, ongoing: u.downNow }),
     deeper: { kind: 'incidents' },
   }
 }
@@ -147,6 +151,7 @@ export function leadSource(list: Slice[], total: number, domain: string): (Slice
 }
 
 function sourceCard(s: Slice & { st: Judged }, i: CardsIn, total: number, topPage?: { name: string; value: string }): Story {
+  const why = s.st === 'up' && s.band ? whyJump({ name: sourceName(s.value), host: s.value, now: s.v, lo: s.band.lo, hi: s.band.hi, mention: i.mention, page: topPage?.name }) : undefined
   const up = s.st === 'up'
   const b = s.band as Band
   const name = sourceName(s.value)
@@ -168,6 +173,7 @@ function sourceCard(s: Slice & { st: Judged }, i: CardsIn, total: number, topPag
     how: `${i.rule} ${copy.sourceKnow}`,
     ev: evidence(s.v, b),
     act: up ? { k: 'copy', t: copy.shareLink, text: link, done: copy.linkCopied } : { k: 'set', t: copy.setAlert, msg: copy.alertDrops(name, fmtInt(Math.round(b.lo))) },
+    cause: why,
     deeper: { kind: 'explore', filter: { dim: 'referrer', value: s.value } },
   }
 }

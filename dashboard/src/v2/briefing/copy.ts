@@ -159,6 +159,8 @@ export const copy = defineCopy('briefing', {
   watching: 'Watching ✓',
   watchTitle: "Pin to the top of tomorrow's Briefing",
   how: 'How we know',
+  whyQ: 'Why?',
+  whyDot: 'Why.',
   deeper: 'Go deeper',
   weekdayRule: (weekday: string, until: string) => `Compared with the last 8 ${weekday}s, up to ${until}.`,
   periodRule: 'Compared with the period before.',

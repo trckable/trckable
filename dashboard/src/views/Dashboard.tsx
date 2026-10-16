@@ -255,9 +255,9 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   }
 
   const [askOpen, setAskOpen] = useState(false)
-  // ---- keyboard: ⌘K opens Ask, F toggles Core/Full, Esc clears scrub ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (liveView || briefing) return // the walkthrough's screens have their own ⌘K (its first row asks Peek) and keys
       if (askOn && pressed(e, 'ask')) {
         e.preventDefault()
         setAskOpen((o) => !o)
@@ -269,7 +269,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [full, view.day, askOn])
+  }, [full, view.day, askOn, liveView, briefing])
 
   const pickerValue: PickerValue = {
     period: view.period,
@@ -497,7 +497,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
       <AskPanel open={askOn && askOpen} onClose={() => setAskOpen(false)} />
   </>)
-  return liveView || briefing ? <><Suspense fallback={null}><V2View tab={liveView ? 'live' : 'briefing'} site={site} sites={sites} view={view} range={range} data={real} loading={loading || firstLoad} money={money ? fmtM : undefined} onGoal={() => setAddGoals(true)} live={{ site: site.id, timezone: site.timezone, stream, cookieless: site.cookieless, whole: site, onVisitor: journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined }} /></Suspense>{tail}</> : (
+  return liveView || briefing ? <><Suspense fallback={null}><V2View tab={liveView ? 'live' : 'briefing'} site={site} sites={sites} view={view} range={range} data={real} loading={loading || firstLoad} money={money ? fmtM : undefined} onGoal={() => setAddGoals(true)} onAsk={askOn ? () => setAskOpen(true) : undefined} live={{ site: site.id, timezone: site.timezone, stream, cookieless: site.cookieless, whole: site, onVisitor: journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined }} /></Suspense>{tail}</> : (
     <>
       <HeaderBand><div className="header quiet">
         {header}{!waiting && !liveView && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}
