@@ -28,7 +28,7 @@ describe('the sentence', () => {
   it('names the source, how many times the day before, and who paid', () => {
     const cur = result(300, { referrer: rows(ref), entry_page: rows([['/', 100]]) }, { money })
     const prev = result(100, { referrer: rows([['news.ycombinator.com', 30]]) })
-    const s = say({ cur, prev })
+    const s = say({ cur, prev, jump: topSource(cur, prev, 'x.com') })
     expect(s.lead).toBe('A busy Friday:')
     expect(text(s.long)).toBe('Hacker News brought 186 people, 6.2× the day before, and 1 person paid.')
     expect(s.long[0].em).toBe(true)
@@ -42,8 +42,10 @@ describe('the sentence', () => {
   it('never writes a huge multiple', () => {
     const cur = result(300, { referrer: rows(ref) })
     const prev = result(100, { referrer: rows([['news.ycombinator.com', 3]]) })
-    expect(text(say({ cur, prev }).long)).toContain('62×')
-    expect(text(say({ cur, prev: result(100, { referrer: rows([['news.ycombinator.com', 1]]) }) }).long)).not.toContain('186×')
+    const jump = (p: Result) => topSource(cur, p, 'x.com')
+    expect(text(say({ cur, prev, jump: jump(prev) }).long)).toContain('62×')
+    const tiny = result(100, { referrer: rows([['news.ycombinator.com', 1]]) })
+    expect(text(say({ cur, prev: tiny, jump: jump(tiny) }).long)).not.toContain('186×')
   })
   it('does not name the site itself, or a source too small to name', () => {
     const own = result(100, { referrer: rows([['www.trckable.com', 90], ['a.com', 3]]) })

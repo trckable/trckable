@@ -19,7 +19,7 @@ export type Act =
 
 export type Vis =
   | { k: 'rcpt'; rows: { l: string; t?: string; a?: string; flag?: string; neg?: boolean }[] }
-  | { k: 'dots'; n: number; per: number; grey: number; col: string; name: string }
+  | { k: 'dots'; n: number; per: number; grey: number; name: string }
   | { k: 'ba'; lo: number; hi: number; c: number; v: number; red: boolean }
   | { k: 'outage'; a: number; b: number; nowAt: number; from: string; now: string }
   | { k: 'goals'; rows: { name: string; v: number; lo: number; hi: number; st: Judged }[] }
@@ -44,8 +44,6 @@ export interface Story {
   deeper: Deeper
   /** A card that is a number with a line (a country). */
   kc?: { flag: string; label: string; note: string; tone: 'up' | 'dn'; filter: { dim: string; value: string } }
-  /** The source's own colour, for its dots. */
-  col?: string
 }
 
 export interface Slice {
@@ -97,17 +95,6 @@ export interface CardsIn {
 const people = (n: number) => (n === 1 ? '1 person' : `${fmtInt(n)} people`)
 const rg = (b: Band) => `${fmtInt(Math.max(0, b.lo))}–${fmtInt(b.hi)}`
 const evidence = (v: number, b: Band) => `Now ${fmtInt(v)}, usual ${fmtInt(Math.max(0, b.lo))} to ${fmtInt(b.hi)}.`
-const SOURCE_COLOR: Record<string, string> = {
-  'Hacker News': '#ff9a4a',
-  Google: '#7f9cf5',
-  Reddit: '#ff6b4a',
-  X: '#d7dadf',
-  GitHub: '#b58cff',
-  ChatGPT: '#3fd0b0',
-  Newsletter: '#c6ff3a',
-}
-export const sourceColor = (name: string): string => SOURCE_COLOR[name] ?? '#8b8e94'
-
 /** The slices whose number rose above or fell under their usual, enough to be worth a sentence. */
 export function movers(list: Slice[], total: number, exclude?: (s: Slice) => boolean): (Slice & { st: Judged })[] {
   const sig = Math.max(6, total * 0.06)
@@ -173,7 +160,7 @@ function sourceCard(s: Slice & { st: Judged }, i: CardsIn, total: number, topPag
     bad: !up,
     head: up ? copy.sent(name, people(Math.round(s.v))) : copy.sentOnly(name, people(Math.round(s.v))),
     rest: sourceRest(up, r, i.low),
-    vis: up ? { k: 'dots', n: Math.max(1, Math.round(s.v / per)), per, grey: Math.min(Math.max(1, Math.round(s.v / per)), Math.round(b.c / per)), col: sourceColor(name), name } : { k: 'ba', lo: b.lo, hi: b.hi, c: b.c, v: s.v, red: true },
+    vis: up ? { k: 'dots', n: Math.max(1, Math.round(s.v / per)), per, grey: Math.min(Math.max(1, Math.round(s.v / per)), Math.round(b.c / per)), name } : { k: 'ba', lo: b.lo, hi: b.hi, c: b.c, v: s.v, red: true },
     why: `${copy.usually(rg(b), name)}${topPage ? copy.mostLanded(topPage.name) : ''}${up && !i.low && leave !== null ? copy.leave(leave) : ''}.`,
     val: fmtInt(Math.round(s.v)),
     m: s.v,
@@ -182,7 +169,6 @@ function sourceCard(s: Slice & { st: Judged }, i: CardsIn, total: number, topPag
     ev: evidence(s.v, b),
     act: up ? { k: 'copy', t: copy.shareLink, text: link, done: copy.linkCopied } : { k: 'set', t: copy.setAlert, msg: copy.alertDrops(name, fmtInt(Math.round(b.lo))) },
     deeper: { kind: 'explore', filter: { dim: 'referrer', value: s.value } },
-    col: sourceColor(name),
   }
 }
 

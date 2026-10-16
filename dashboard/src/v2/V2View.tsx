@@ -31,6 +31,8 @@ import { SegmentedSwitch } from './ui/SegmentedSwitch'
 import { SiteChip, type SiteItem } from './ui/SiteMenu'
 import { TabBar } from './ui/TabBar'
 import { goExplore } from './briefing/deeper'
+import { ExploreView } from './explore/ExploreView'
+import { MkToastHost } from './ui/MkToastHost'
 import { Live } from './live/Live'
 import type { LiveProps } from './live/Live'
 
@@ -150,7 +152,9 @@ export function V2View(p: V2Props) {
       <main id="main" className="vfade">
         {here === 'briefing' ? <BriefingSlot site={p.site} data={p.data} loading={p.loading} period={p.view.period} range={p.range} money={p.money} onGoal={p.onGoal} visits={p.live.stream.visits} /> : <Live {...p.live} />}
       </main>
-      <TabBar value={here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />
+      {p.view.xp && <ExploreView site={p.site} view={p.view} range={p.range} label={label} money={p.money} onGoal={p.onGoal} />}
+      <MkToastHost />
+      <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />
     </div>
   )
 }

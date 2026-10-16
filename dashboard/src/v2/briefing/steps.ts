@@ -8,17 +8,28 @@ import { copy } from './copy'
 import { goDeeper } from './deeper'
 import type { Top } from './model'
 
-/** What is not set up yet: revenue, search, goals, uptime checks, alerts. Each row says how it helps and opens its setting. */
+/** One thing that is not set up yet, as a row: how it helps and the button that opens its setting. */
+export function setupOf(key: 'rev' | 'search' | 'goals' | 'uptime' | 'alerts', site: Site, onGoal: () => void): Setup {
+  const rows: Record<typeof key, Setup> = {
+    rev: { key: 'rev', icon: 'sales', t: copy.revT, d: copy.revD, b: copy.connect, how: copy.revHow, act: () => openSettings(site, 'payments') },
+    search: { key: 'search', icon: 'search', t: copy.searchT, d: copy.searchD, b: copy.connect, how: copy.searchHow, act: () => openSettings(site, 'search') },
+    goals: { key: 'goals', icon: 'goals', t: copy.goalsT, d: copy.goalsD, b: copy.setUp, how: copy.goalsHow, act: onGoal },
+    uptime: { key: 'uptime', icon: 'uptime', t: copy.uptimeT, d: copy.uptimeD, b: copy.turnOn, how: copy.uptimeHow, act: () => openSettings(site, 'health') },
+    alerts: { key: 'alerts', icon: 'setup', t: copy.alertsT, d: copy.alertsD, b: copy.turnOn, how: copy.alertsHow, act: () => openSettings(site, 'alerts') },
+  }
+  return rows[key]
+}
+
+/** What is not set up yet: revenue, search, goals, uptime checks, alerts. */
 export function setupRows(o: { site: Site; cur: Result; can: boolean; noSearch: boolean; noAlerts: boolean; onGoal: () => void }): Setup[] {
-  const { site, cur } = o
   if (!o.can) return []
-  const rows: Setup[] = []
-  if (!cur.money) rows.push({ key: 'rev', icon: 'sales', t: copy.revT, d: copy.revD, b: copy.connect, how: copy.revHow, act: () => openSettings(site, 'payments') })
-  if (o.noSearch) rows.push({ key: 'search', icon: 'search', t: copy.searchT, d: copy.searchD, b: copy.connect, how: copy.searchHow, act: () => openSettings(site, 'search') })
-  if ((cur.goals ?? []).length === 0) rows.push({ key: 'goals', icon: 'goals', t: copy.goalsT, d: copy.goalsD, b: copy.setUp, how: copy.goalsHow, act: o.onGoal })
-  if (!site.watched_since) rows.push({ key: 'uptime', icon: 'uptime', t: copy.uptimeT, d: copy.uptimeD, b: copy.turnOn, how: copy.uptimeHow, act: () => openSettings(site, 'health') })
-  if (o.noAlerts) rows.push({ key: 'alerts', icon: 'setup', t: copy.alertsT, d: copy.alertsD, b: copy.turnOn, how: copy.alertsHow, act: () => openSettings(site, 'alerts') })
-  return rows
+  const want: ('rev' | 'search' | 'goals' | 'uptime' | 'alerts')[] = []
+  if (!o.cur.money) want.push('rev')
+  if (o.noSearch) want.push('search')
+  if ((o.cur.goals ?? []).length === 0) want.push('goals')
+  if (!o.site.watched_since) want.push('uptime')
+  if (o.noAlerts) want.push('alerts')
+  return want.map((k) => setupOf(k, o.site, o.onGoal))
 }
 
 export interface Next {

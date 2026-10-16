@@ -54,10 +54,10 @@ export interface Setup {
   act: () => void
 }
 
-function Row({ s }: { s: Setup }) {
+export function SetupRow({ s, big }: { s: Setup; big?: boolean }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="mk-srow">
+    <div className={`mk-srow${big ? ' big' : ''}`}>
       <Ico name={s.icon} className="ic-i" />
       <span className="st2">
         <b>{s.t}</b> {s.d}
@@ -80,7 +80,7 @@ export function Setups({ rows }: { rows: Setup[] }): ReactNode {
   return (
     <div className="setups">
       {rows.map((r) => (
-        <Row key={r.key} s={r} />
+        <SetupRow key={r.key} s={r} />
       ))}
     </div>
   )

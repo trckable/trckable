@@ -37,9 +37,9 @@ export function Spark({ vals, h = 64, lo, hi, className = 'ksp' }: { vals: numbe
   )
 }
 
-export function Kcs({ items }: { items: Kc[] }) {
+export function Kcs({ items, className = 'kcs', h }: { items: Kc[]; className?: string; h?: number }) {
   return (
-    <div className="kcs">
+    <div className={className}>
       {items.map((k) => (
         <div key={k.key} className={`kc${k.dn ? ' dn' : ''}`} data-k={k.key} style={{ color: k.dn ? 'var(--mk-red)' : (k.col ?? 'var(--mk-lime)') }}>
           <div className="kt">
@@ -53,7 +53,7 @@ export function Kcs({ items }: { items: Kc[] }) {
             {k.val}
             {k.unit && <small>{k.unit}</small>}
           </div>
-          <Spark vals={k.vals} lo={k.lo} hi={k.hi} />
+          <Spark vals={k.vals} lo={k.lo} hi={k.hi} h={h} />
         </div>
       ))}
     </div>

@@ -17,11 +17,12 @@ const DIMS: { dim: Dim; take: number }[] = [
 
 const cache = new Map<string, Promise<Band | null>>()
 
-function usualOf(site: string, day: string, f: Filter): Promise<Band | null> {
-  const key = `${site}|${day}|${f.dim}|${f.value}`
+/** What the server says the same weekday brought for the people who match the filters, as a band; null when it has too few weeks to say. */
+export function usualBand(site: string, day: string, fs: Filter[]): Promise<Band | null> {
+  const key = `${site}|${day}|${fs.map((f) => `${f.dim}${f.op ?? '='}${f.value}`).join('&')}`
   let p = cache.get(key)
   if (!p) {
-    p = call<Usual>('GET', `/sites/${encodeURIComponent(site)}/usual` + rangeQS({ from: day, to: day, filters: [f] }), undefined, undefined, true).then(
+    p = call<Usual>('GET', `/sites/${encodeURIComponent(site)}/usual` + rangeQS({ from: day, to: day, filters: fs }), undefined, undefined, true).then(
       (u) => bandFromWeeks((u.weeks ?? []).map((w) => w.visitors)),
       () => null,
     )
@@ -53,7 +54,7 @@ export function useSlices(site: Site, range: Range, cur: Result | undefined, pre
       const out = {} as Record<Dim, Slice[]>
       for (const { dim, take } of DIMS) {
         const rows = rowsOf(cur, dim).filter((r) => dim !== 'referrer' || !isSelf(r.value, site.domain)).slice(0, take)
-        const bands = await Promise.all(rows.map((r) => (day ? usualOf(site.id, range.to, { dim, value: r.value }) : Promise.resolve(bandFromBefore(rowsOf(prev ?? cur, dim).find((x) => x.value === r.value && prev)?.visitors)))))
+        const bands = await Promise.all(rows.map((r) => (day ? usualBand(site.id, range.to, [{ dim, value: r.value }]) : Promise.resolve(bandFromBefore(rowsOf(prev ?? cur, dim).find((x) => x.value === r.value && prev)?.visitors)))))
         out[dim] = rows.map((r, i) => ({ value: r.value, name: dim === 'referrer' ? sourceName(r.value) : r.value, v: r.visitors, band: bands[i], bounce: r.bounce_rate }))
       }
       const src = movers(out.referrer, total).sort((a, b) => Math.abs(b.v - (b.band?.c ?? 0)) - Math.abs(a.v - (a.band?.c ?? 0)))[0]

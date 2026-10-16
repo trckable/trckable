@@ -16,12 +16,12 @@ function Dots({ v }: { v: Extract<Vis, { k: 'dots' }> }) {
     <div>
       <div className="dots">
         {Array.from({ length: v.n }, (_, i) => (
-          <i key={i} style={i >= v.grey ? { background: v.col } : undefined} />
+          <i key={i} style={i >= v.grey ? { background: 'var(--mk-lime)' } : undefined} />
         ))}
       </div>
       <div className="dotn">
         {copy.dotsNote(v.per, v.name)}
-        <span style={{ color: v.col }}>{copy.dotsExtra}</span>.
+        {copy.dotsExtra}.
       </div>
     </div>
   )

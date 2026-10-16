@@ -1,5 +1,5 @@
 // The line icons of the walkthrough: one 24 x 24 box, 1.7 stroke, round ends.
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 
 const PATHS: Record<string, ReactNode> = {
   uptime: <path d="M3 12h4l3-7 4 14 3-7h4" />,
@@ -67,13 +67,29 @@ const PATHS: Record<string, ReactNode> = {
   spark: <path d="M12 4v4M12 16v4M4 12h4M16 12h4" />,
   mentions: <path d="M5 6h14v9H10l-4 3v-3H5z" />,
   chev: <path d="M9 6l6 6-6 6" />,
+  overview: <path d="M4 19V5M4 19h16M8 15l3-4 3 2 5-6" />,
+  places: (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16" />
+    </>
+  ),
+  tech: (
+    <>
+      <rect x="7" y="3" width="10" height="18" rx="2" />
+      <path d="M11 18h2" />
+    </>
+  ),
+  results: <path d="M4 5h16l-6 8v6l-4-2v-4z" />,
+  links: <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />,
+  milestone: <path d="M6 21V4M6 5h11l-2 4 2 4H6" />,
 }
 
 export type IconName = keyof typeof PATHS
 
-export function Ico({ name, className, strokeWidth = 1.7 }: { name: string; className?: string; strokeWidth?: number }) {
+export function Ico({ name, className, strokeWidth = 1.7, style }: { name: string; className?: string; strokeWidth?: number; style?: CSSProperties }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className={className} style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {PATHS[name] ?? PATHS.pages}
     </svg>
   )

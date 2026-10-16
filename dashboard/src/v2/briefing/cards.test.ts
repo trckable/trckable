@@ -30,8 +30,8 @@ describe('the cards', () => {
     const list = cardsOf(base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [], device: [], entry_page: [] }, topPageOf: () => ({ name: '/', value: '/' }) }))
     expect(list).toHaveLength(1)
     const c = list[0]
-    expect(c).toMatchObject({ key: 'sources', head: 'Hacker News sent 186 people', rest: ', 21× your usual', col: '#ff9a4a' })
-    expect(c.vis).toMatchObject({ k: 'dots', col: '#ff9a4a' })
+    expect(c).toMatchObject({ key: 'sources', head: 'Hacker News sent 186 people', rest: ', 21× your usual' })
+    expect(c.vis).toMatchObject({ k: 'dots' })
     expect(c.act).toMatchObject({ k: 'copy', t: 'Share the link that worked' })
     expect(c.why).toContain('most landed on /')
     expect(c.why).toContain('66% leave after one page')

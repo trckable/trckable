@@ -65,6 +65,10 @@ export interface ViewState {
   story?: string
   /** Data opened on a busy moment: when it began (unix seconds). The page marks it and says what it was. */
   surge?: number
+  /** Explore's panel over the Briefing: which table it is on ("x=pages"). Absent = shut. */
+  xp?: string
+  /** What the panel narrows by, until it is closed (then it is kept as the page's own filters, if changed). */
+  xf?: Filter[]
 }
 
 /** Funnel steps from the address; anything but a page or a goal is dropped. */
@@ -116,6 +120,8 @@ export function readView(params: URLSearchParams): ViewState {
     v: params.get('v')?.match(/^(story|explore)$/)?.[0],
     story: params.get('story')?.match(/^[a-z]{1,12}$/)?.[0],
     surge: params.get('sg')?.match(/^\d{9,11}$/) ? Number(params.get('sg')) : undefined,
+    xp: params.get('x')?.match(/^[a-z]{3,12}$/)?.[0] ?? (params.get('v') === 'explore' ? 'overview' : undefined),
+    xf: params.has('xf') ? params.getAll('xf').flatMap((f) => parseFilterParam(f) ?? []) : undefined,
   }
 }
 
@@ -144,6 +150,8 @@ export function writeView(v: ViewState): string {
   if (v.v) p.set('v', v.v)
   if (v.story) p.set('story', v.story)
   if (v.surge) p.set('sg', String(v.surge))
+  if (v.xp) p.set('x', v.xp)
+  for (const f of v.xf ?? []) p.append('xf', filterParam(f))
   // Data says so only when nothing else in the address does: a bare address
   // opens Live on a site with visits.
   if (v.live === false && p.size === 0) p.set('view', 'data')
