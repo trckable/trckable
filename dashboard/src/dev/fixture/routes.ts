@@ -21,6 +21,11 @@ import { hash, mulberry, pick } from './rand'
 import { osOf, visitsOf, BROWSERS } from './visits'
 
 const CHANNEL_OF: Record<string, string> = { google: 'Search', direct: 'Direct', hn: 'Referral', reddit: 'Social', x: 'Social', newsletter: 'Email', chatgpt: 'Referral', github: 'Referral', badge: 'Referral' }
+const moduleOn = (c: Ctx, m: string): boolean => {
+  if (m === 'revenue') return c.conn.rev
+  if (m === 'search') return c.conn.search
+  return !['consent', 'forms'].includes(m)
+}
 const MODULES = ['goals', 'outbound', 'revenue', 'funnels', 'notes', 'rhythm', 'journeys', 'map', 'retention', 'vitals', 'consent', 'crawlers', 'forms', 'heatmaps', 'search']
 
 export interface Reply {
@@ -282,7 +287,7 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case 'report/goal-props':
       return ok(linksOf(c, id, parseQuery(sp)))
     case 'modules':
-      return ok({ modules: MODULES.map((m) => ({ id: m, name: m, summary: '', collects: true, default_on: true, enabled: m === 'revenue' ? c.conn.rev : m === 'search' ? c.conn.search : !['consent', 'forms'].includes(m) })), script: { bytes: 2068, core: 1650, full: 2091, url: '/js/fixture.js' } })
+      return ok({ modules: MODULES.map((m) => ({ id: m, name: m, summary: '', collects: true, default_on: true, enabled: moduleOn(c, m) })), script: { bytes: 2068, core: 1650, full: 2091, url: '/js/fixture.js' } })
     case 'incidents': {
       const from = Number(sp.get('from') ?? 0)
       const to = Number(sp.get('to') ?? Number.MAX_SAFE_INTEGER)
