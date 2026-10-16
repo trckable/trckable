@@ -1,12 +1,10 @@
-// Live: reads the site's last half hour (or, in development with ?fixture=, the walkthrough's sample) and hands it to
-// the view. The numbers are the server's last half hour and the stream's newer visits.
-import { useEffect, useMemo, useState } from 'react'
+// Live: reads the site's last half hour and hands it to the view. The numbers are the server's last half hour and the stream's newer visits.
+import { useMemo } from 'react'
 import { addDays, todayIn } from '../../lib/dates'
 import { useReport } from '../../lib/useReport'
 import type { Sale, Site, Visit } from '../../lib/api'
 import { useBusier } from '../../features/live/useBusier'
 import { useLiveNow } from '../../features/live/useLiveNow'
-import { FIXTURE, FIXTURE_COLORS, FIXTURE_WEEK, fixtureDownSince, fixtureNow, type FixtureKind } from './fixture'
 import { LiveView, type LiveFeed } from './LiveView'
 
 export type LiveStream = {
@@ -41,32 +39,14 @@ function ServerLive(p: LiveProps) {
     busier,
     week: (week.data?.current.series ?? []).map((d) => d.visitors),
     downSince: p.whole?.down_since,
+    ...fixtureLook(),
   }
   return <LiveView feed={feed} {...p} />
 }
 
-// The development sample, taken again every few seconds so the people in it keep coming and going as time passes.
-function SampleLive({ kind, ...p }: LiveProps & { kind: FixtureKind }) {
-  const [at, setAt] = useState(() => Date.now())
-  useEffect(() => {
-    const t = setInterval(() => setAt(Date.now()), 5000)
-    return () => clearInterval(t)
-  }, [])
-  const feed: LiveFeed = {
-    data: fixtureNow(kind, at),
-    failed: false,
-    got: at,
-    clock: at,
-    skew: 0,
-    busier: null,
-    week: kind === 'empty' ? [] : FIXTURE_WEEK,
-    downSince: kind === 'down' ? fixtureDownSince(at) : undefined,
-    colors: FIXTURE_COLORS,
-    sample: true,
-  }
-  return <LiveView feed={feed} {...p} stream={{ online: null, visits: [], sales: [], connected: true, stale: false }} />
-}
+/** A development build answering from a fixture (dev/fixture) says so: the walkthrough's colours for its named sources, and nothing added to its blocks. */
+const fixtureLook = (): Pick<LiveFeed, 'colors' | 'sample'> => (import.meta.env.DEV ? ((globalThis as { trckableFixture?: Pick<LiveFeed, 'colors' | 'sample'> }).trckableFixture ?? {}) : {})
 
 export function Live(p: LiveProps) {
-  return FIXTURE ? <SampleLive kind={FIXTURE} {...p} /> : <ServerLive {...p} />
+  return <ServerLive {...p} />
 }

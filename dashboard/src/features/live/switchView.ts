@@ -1,5 +1,5 @@
 // Moving between Live, the Briefing and Data, deliberately: Live is one screen,
-// so it opens at the top; the others come back scrolled to where they were left.
+// so it opens at the top, and so does the Briefing (as the walkthrough's does); Data comes back scrolled to where it was left.
 import { rememberTab, type Tab } from '../../lib/tab'
 import { readView, setView } from '../../lib/url'
 import { transition } from '../../lib/viewTransition'
@@ -26,10 +26,8 @@ function patchFor(to: Tab): Parameters<typeof setView>[0] {
 export async function switchTab(to: Tab, from: Tab): Promise<void> {
   if (to === from) return
   rememberTab(to)
-  if (to === 'live') {
-    dataScroll = scrollY
-  }
-  const top = to === 'live' ? 0 : dataScroll
+  if (from === 'data') dataScroll = scrollY
+  const top = to === 'data' ? dataScroll : 0
   await transition(
     () => setView(patchFor(to)),
     () => keepScroll(top),

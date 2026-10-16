@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { call, rangeQS, type Site } from '../../../lib/api'
 import type { Range } from '../../../lib/dates'
 import { setupOf } from '../../briefing/steps'
-import { SetupRow } from '../../ui/ConnectPlaceholder'
+import { SetupLock } from '../../ui/ConnectPlaceholder'
 import type { Buyer } from '../../../features/extras/extrasApi'
 import { copy } from '../copy'
 import { XEmpty, XSec, XSub } from '../ui'
@@ -22,7 +22,7 @@ export function Sales({ site, range, money, limit, onAll, onGoal }: { site: Site
       live = false
     }
   }, [site.id, range.from, range.to, money])
-  if (!money) return <SetupRow s={setupOf('rev', site, onGoal)} big />
+  if (!money) return <SetupLock s={setupOf('rev', site, onGoal)} size="big" />
   if (!list) return null
   const shown = list.filter((b) => !kind || b.kind === kind)
   const net = shown.reduce((a, b) => a + (b.kind === 'refund' ? -b.amount : b.amount), 0)

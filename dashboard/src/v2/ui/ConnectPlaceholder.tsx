@@ -1,7 +1,9 @@
 // The quiet rows under the cards: what else was normal, the next step, and what is not set up yet.
-import { useState, type ReactNode } from 'react'
-import { Ico } from './icons'
+import type { ReactNode } from 'react'
 import { copy } from '../briefing/copy'
+import { DOCS } from '../../components/footerLinks'
+import { LockCard } from './LockCard'
+import type { LockKind } from './lockCopy'
 
 const lead = (cards: boolean, some: boolean): string => {
   if (!cards) return copy.wasNormal
@@ -54,33 +56,17 @@ export interface Setup {
   act: () => void
 }
 
-export function SetupRow({ s, big }: { s: Setup; big?: boolean }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <div className={`mk-srow${big ? ' big' : ''}`}>
-      <Ico name={s.icon} className="ic-i" />
-      <span className="st2">
-        <b>{s.t}</b> {s.d}
-      </span>
-      <span className="sa">
-        <button type="button" className="xb" onClick={s.act}>
-          {s.b}
-        </button>
-        <button type="button" className="lk3 how" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-          {open ? copy.hideHow : copy.howWorks}
-        </button>
-      </span>
-      {open && <p className="mk-quiet">{s.how}</p>}
-    </div>
-  )
+/** One thing not set up yet, as the locked preview of what it would show. */
+export function SetupLock({ s, size }: { s: Setup; size?: 'card' | 'big' | 'mini' }) {
+  return <LockCard kind={s.key as LockKind} size={size} go={s.b} onGo={s.act} onHow={() => window.open(DOCS, '_blank', 'noopener')} />
 }
 
 export function Setups({ rows }: { rows: Setup[] }): ReactNode {
   if (rows.length === 0) return null
   return (
-    <div className="setups">
+    <div className="cards lkcs">
       {rows.map((r) => (
-        <SetupRow key={r.key} s={r} />
+        <SetupLock key={r.key} s={r} />
       ))}
     </div>
   )

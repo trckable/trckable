@@ -2,12 +2,14 @@
 // clock at the scenario's "now", so the page can be set beside the mock number for number. `&conn=` says what is
 // connected: none (the default), rev, search or both. The choice is kept for the tab, so a reload or a link inside the
 // app stays on it. main.tsx loads this behind `import.meta.env.DEV`, so a production build carries none of it.
-import { SCN, END, SITES } from './data'
+import { SCN, END, SITES, SRCS } from './data'
 import { buildWorld } from './engine'
 import { answer } from './routes'
 import { online, siteOf, type Conn, type Ctx } from './report'
 
 const KEY = 'trckable:fixture'
+
+const SRC_COLOR: Record<string, string> = { google: '#7f9cf5', direct: '#8b8e94', hn: '#ff9a4a', reddit: '#ff6b4a', x: '#d7dadf', newsletter: '#c6ff3a', chatgpt: '#3fd0b0', github: '#b58cff', badge: '#f0c64a' }
 
 export const CONNS = ['none', 'rev', 'search', 'both'] as const
 export type ConnName = (typeof CONNS)[number]
@@ -63,6 +65,8 @@ export function installFixture() {
   const w = buildWorld(pick.name)
   const ctx: Ctx = { w, nowAbs: END * 1440 + w.sc.now, conn: connOf(pick.conn) }
   freezeClock(w.start + ctx.nowAbs * 60000)
+  // Live draws the mock's named sources in the mock's colours, and adds nothing to its blocks.
+  Object.assign(globalThis, { trckableFixture: { sample: true, colors: Object.fromEntries(SRCS.map((x) => [x.name, SRC_COLOR[x.id]])) } })
   const real = window.fetch.bind(window)
   window.fetch = (input, init) => {
     const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url, location.origin)

@@ -19,7 +19,8 @@ import { FeedList } from '../ui/FeedList'
 import { Rng } from '../ui/RangeBar'
 import { barsOf, changeOf, listsOf, sourceParts, todayBand } from './liveModel'
 import { LiveSpark } from './LiveSpark'
-import { LockMini } from './LockMini'
+import { DOCS } from '../../components/footerLinks'
+import { LockCard } from '../ui/LockCard'
 import { copy } from './copy'
 import type { LiveStream } from './Live'
 
@@ -155,7 +156,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
               !isShared() && (
                 <div className="lrev">
                   <span className="ll">{copy.revenueToday}</span>
-                  <LockMini onConnect={() => openSettings(whole, 'payments')} onHow={() => openSettings(whole, 'payments')} />
+                  <LockCard kind="rev" size="mini" go={copy.connect} onGo={() => openSettings(whole, 'payments')} onHow={() => window.open(DOCS, '_blank', 'noopener')} />
                 </div>
               )
             )}

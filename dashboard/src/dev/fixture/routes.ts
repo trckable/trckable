@@ -15,6 +15,7 @@ import {
   siteOf,
   type Ctx,
 } from './report'
+import { busierOf, nowOf } from './live'
 import { hash, mulberry, pick } from './rand'
 import { osOf, visitsOf, BROWSERS } from './visits'
 
@@ -302,6 +303,10 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       const weeks = [1, 2, 3, 4].map((k) => ({ day: dateOf(c, d - 7 * k), visitors: at(k) }))
       return ok({ visitors: at(0), average: Math.round(weeks.reduce((p, x) => p + x.visitors, 0) / weeks.length), weeks })
     }
+    case 'now':
+      return ok(nowOf(c, id))
+    case 'busier':
+      return ok(busierOf(c, id))
     case 'verified':
       return ok(siteJson(c, site).verified)
     case 'payments':

@@ -7,7 +7,7 @@ import { addDays } from '../../../lib/dates'
 import { more } from '../../../lib/apiMore'
 import type { SearchReport, Site } from '../../../lib/api'
 import { setupOf } from '../../briefing/steps'
-import { SetupRow } from '../../ui/ConnectPlaceholder'
+import { SetupLock } from '../../ui/ConnectPlaceholder'
 import { copy } from '../copy'
 import { XCols, XEmpty, XKc, XNote, XSub, type ColRow } from '../ui'
 import { noteOf } from '../../briefing/kpis'
@@ -54,7 +54,7 @@ export function Search({ site, range, limit, onAll, onGoal }: { site: Site; rang
   const [dim, setDim] = useState<'query' | 'page'>('query')
   const r = useSearch(site, range, dim)
   if (!r) return null
-  if (!r.connected) return <SetupRow s={setupOf('search', site, onGoal)} big />
+  if (!r.connected) return <SetupLock s={setupOf('search', site, onGoal)} size="big" />
   const rows = r.now?.rows ?? []
   if (!r.now || rows.length === 0) return <XEmpty title={copy.searchNone} sub={copy.searchNoneSub} />
   const before = r.before

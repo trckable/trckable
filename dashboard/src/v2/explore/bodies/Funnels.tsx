@@ -7,7 +7,7 @@ import type { Range } from '../../../lib/dates'
 import { fmtInt } from '../../../lib/format'
 import { readView, setView } from '../../../lib/url'
 import { setupOf } from '../../briefing/steps'
-import { SetupRow } from '../../ui/ConnectPlaceholder'
+import { SetupLock } from '../../ui/ConnectPlaceholder'
 import { Rng } from '../../ui/RangeBar'
 import { copy } from '../copy'
 import type { Answer } from '../useData'
@@ -107,7 +107,7 @@ export function Funnels({ site, range, a, onGoal }: { site: Site; range: Range; 
       </div>
       <XSec l={copy.goals} r={copy.vsPreviousPeriod} />
       {goals.length === 0 ? (
-        <SetupRow s={setupOf('goals', site, onGoal)} big />
+        <SetupLock s={setupOf('goals', site, onGoal)} size="big" />
       ) : (
         goals.map((g) => {
           const was = a.prev?.goals?.find((x) => x.value === g.value)?.visitors ?? g.visitors
