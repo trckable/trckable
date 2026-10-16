@@ -17,7 +17,7 @@ export function noteOf(now: number, was: number | undefined, before: string): Kc
 }
 
 /** A figure against its own usual: how far above or below it, "as usual" inside the band, nothing to say without one. */
-export function bandNote(v: number, b: UsualBand | null | undefined): Kc['note'] | null {
+function bandNote(v: number, b: UsualBand | null | undefined): Kc['note'] | null {
   if (!b) return null
   const st = judge(v, b)
   if (b.c > 0.5 && st) return usualNote(v, b.c, st)
@@ -25,7 +25,7 @@ export function bandNote(v: number, b: UsualBand | null | undefined): Kc['note']
 }
 
 /** "usual 5–6 people": the range in numbers, for a site where a percentage says nothing. */
-export function rangeNote(v: number, b: UsualBand | null | undefined, unit: string): Kc['note'] {
+function rangeNote(v: number, b: UsualBand | null | undefined, unit: string): Kc['note'] {
   if (!b) return { t: copy.asUsual }
   const st = judge(v, b)
   return { t: `${copy.usualRange(fmtInt(Math.round(b.lo)), fmtInt(Math.round(b.hi)))}${unit}`, up: st === 'up', dn: st === 'dn' }

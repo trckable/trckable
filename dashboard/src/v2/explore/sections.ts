@@ -10,7 +10,7 @@ export const GROUPS: { key: 'traffic' | 'audience' | 'results' | 'site'; items: 
   { key: 'site', items: ['speed', 'mentions', 'links'] },
 ]
 
-export const SECTIONS: Section[] = GROUPS.flatMap((g) => g.items)
+const SECTIONS: Section[] = GROUPS.flatMap((g) => g.items)
 
 export const TABS: Record<Section, Tab[]> = {
   overview: ['overview'],

@@ -48,16 +48,12 @@ export function Act({ text, rest, label, onAct }: { text: string; rest?: string;
 
 export interface Setup {
   key: string
-  icon: string
-  t: string
-  d: string
   b: string
-  how: string
   act: () => void
 }
 
 /** One thing not set up yet, as the locked preview of what it would show. */
-export function SetupLock({ s, size }: { s: Setup; size?: 'card' | 'big' | 'mini' }) {
+function SetupLock({ s, size }: { s: Setup; size?: 'card' | 'big' | 'mini' }) {
   return <LockCard kind={s.key as LockKind} size={size} go={s.b} onGo={s.act} onHow={() => window.open(DOCS, '_blank', 'noopener')} />
 }
 

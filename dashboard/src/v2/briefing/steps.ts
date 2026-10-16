@@ -8,14 +8,14 @@ import { copy } from './copy'
 import { goDeeper } from './deeper'
 import type { Top } from './model'
 
-/** One thing that is not set up yet, as a row: how it helps and the button that opens its setting. */
-export function setupOf(key: 'rev' | 'search' | 'goals' | 'uptime' | 'alerts', site: Site, onGoal: () => void): Setup {
+/** One thing that is not set up yet, as a locked preview: the button that sets it up. */
+function setupOf(key: 'rev' | 'search' | 'goals' | 'uptime' | 'alerts', site: Site, onGoal: () => void): Setup {
   const rows: Record<typeof key, Setup> = {
-    rev: { key: 'rev', icon: 'sales', t: copy.revT, d: copy.revD, b: copy.connect, how: copy.revHow, act: () => openSettings(site, 'payments') },
-    search: { key: 'search', icon: 'search', t: copy.searchT, d: copy.searchD, b: copy.connect, how: copy.searchHow, act: () => openSettings(site, 'search') },
-    goals: { key: 'goals', icon: 'goals', t: copy.goalsT, d: copy.goalsD, b: copy.setUp, how: copy.goalsHow, act: onGoal },
-    uptime: { key: 'uptime', icon: 'uptime', t: copy.uptimeT, d: copy.uptimeD, b: copy.turnOn, how: copy.uptimeHow, act: () => openSettings(site, 'health') },
-    alerts: { key: 'alerts', icon: 'setup', t: copy.alertsT, d: copy.alertsD, b: copy.turnOn, how: copy.alertsHow, act: () => openSettings(site, 'alerts') },
+    rev: { key: 'rev', b: copy.connect, act: () => openSettings(site, 'payments') },
+    search: { key: 'search', b: copy.connect, act: () => openSettings(site, 'search') },
+    goals: { key: 'goals', b: copy.setUp, act: onGoal },
+    uptime: { key: 'uptime', b: copy.turnOn, act: () => openSettings(site, 'health') },
+    alerts: { key: 'alerts', b: copy.turnOn, act: () => openSettings(site, 'alerts') },
   }
   return rows[key]
 }

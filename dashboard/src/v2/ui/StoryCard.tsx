@@ -208,7 +208,7 @@ export function Card({ s, wide, c }: { s: Story; wide: boolean; c: CardCtx }) {
 }
 
 /** The first across both columns, then pairs, and a last one alone across both. */
-export const wideOf = (i: number, n: number, first: boolean) => (first ? i === 0 || (n % 2 === 0 && i === n - 1) : n % 2 === 1 && i === n - 1)
+const wideOf = (i: number, n: number, first: boolean) => (first ? i === 0 || (n % 2 === 0 && i === n - 1) : n % 2 === 1 && i === n - 1)
 
 export function CardList({ list, c, first = true }: { list: Story[]; c: CardCtx; first?: boolean }) {
   return (

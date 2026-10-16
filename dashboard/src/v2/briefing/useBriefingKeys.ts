@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import type { useBriefingState } from './useBriefingState'
 
 /** The card after (or before) the one the keyboard is on; the first (or the last) when it is on none. */
-export function nextCard(at: number, n: number, down: boolean): number {
+function nextCard(at: number, n: number, down: boolean): number {
   if (at < 0) return down ? 0 : n - 1
   return Math.max(0, Math.min(n - 1, at + (down ? 1 : -1)))
 }

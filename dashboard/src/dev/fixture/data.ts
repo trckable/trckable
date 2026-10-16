@@ -1,11 +1,11 @@
 // The mock's dummy world, copied as it is (the walkthrough mock, round 2): sources, places, devices, the four sites and
 // the ten scenarios. Dev only: nothing here is reachable from a production build (see ./index.ts).
-export interface SrcDef {
+interface SrcDef {
   id: string
   name: string
   short?: string
 }
-export interface SiteRaw {
+interface SiteRaw {
   id: string
   name: string
   note: string
@@ -63,15 +63,15 @@ export interface Scn {
   sales: [string, number, number, string, string, SaleEx?][]
   caps: ([number, string] | [number, string, string])[]
 }
-export type GKind = { t: string; qi?: number; m?: number; dp?: number; im?: number } | null
+type GKind = { t: string; qi?: number; m?: number; dp?: number; im?: number } | null
 import { norm } from './rand'
 
 export const SRCS: SrcDef[] =[{id:"google",name:"Google"},{id:"direct",name:"Direct"},{id:"hn",name:"Hacker News",short:"HN"},{id:"reddit",name:"Reddit"},{id:"x",name:"X"},{id:"newsletter",name:"Newsletter",short:"News"},{id:"chatgpt",name:"ChatGPT",short:"GPT"},{id:"github",name:"GitHub"},{id:"badge",name:"trckable badge",short:"Badge"}];
 export const NS=SRCS.length,SI: Record<string, number> = {};SRCS.forEach((s, i) => (SI[s.id] = i));
 export const CTYS: { id: string; name: string }[] =[["US","United States"],["DE","Germany"],["GB","United Kingdom"],["IN","India"],["FR","France"],["NL","Netherlands"],["CA","Canada"],["AL","Albania"]].map(([id,name])=>({id,name}));
 export const DEVS: { id: string; name: string }[] =[{id:"desktop",name:"Desktop"},{id:"mobile",name:"Mobile"},{id:"tablet",name:"Tablet"}];
-export const SRCDEV: Record<string, number[]> ={google:[.6,.37,.03],direct:[.66,.31,.03],hn:[.7,.28,.02],reddit:[.45,.52,.03],x:[.3,.67,.03],newsletter:[.5,.47,.03],chatgpt:[.8,.19,.01],github:[.9,.09,.01],badge:[.7,.28,.02]};
-export const CTYMOD: Record<string, Record<string, number>> ={hn:{US:1.7,IN:1.3,DE:.8},reddit:{US:1.5},x:{US:1.2,GB:1.2}};
+const SRCDEV: Record<string, number[]> ={google:[.6,.37,.03],direct:[.66,.31,.03],hn:[.7,.28,.02],reddit:[.45,.52,.03],x:[.3,.67,.03],newsletter:[.5,.47,.03],chatgpt:[.8,.19,.01],github:[.9,.09,.01],badge:[.7,.28,.02]};
+const CTYMOD: Record<string, Record<string, number>> ={hn:{US:1.7,IN:1.3,DE:.8},reddit:{US:1.5},x:{US:1.2,GB:1.2}};
 export const BOUNCE = SRCS.map((s) => ({google:.42,direct:.35,hn:.66,reddit:.6,x:.58,newsletter:.3,chatgpt:.28,github:.38,badge:.5} as Record<string, number>)[s.id])
 export const CONV = SRCS.map((s) => ({google:1,direct:1.2,hn:.3,reddit:.5,x:.6,newsletter:1.5,chatgpt:1.7,github:1.1,badge:.6} as Record<string, number>)[s.id])
 export const CURVE: Record<string, number[]> ={work:norm([8,6,5,4,4,6,12,22,34,46,54,58,60,58,62,60,56,52,50,48,46,40,32,20]).map(x=>x*24),

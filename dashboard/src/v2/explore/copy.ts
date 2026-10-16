@@ -183,8 +183,6 @@ export const copy = defineCopy('v2explore', {
     goals: 'A goal counts the people who reach a page or an event, so the Briefing can say how many signed up.',
   },
   place: 'Place',
-  topbar: 'Explore all data',
   saved: 'View saved',
   savedHint: 'Find it in Views',
-  savePrompt: 'Name this view',
 })

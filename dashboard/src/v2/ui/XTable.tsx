@@ -16,7 +16,7 @@ export interface More {
   go?: { label: string; run: () => void; section?: string }
 }
 
-export function XMore({ more }: { more: More }) {
+function XMore({ more }: { more: More }) {
   if (more.len <= more.shown) return null
   return (
     <button type="button" className="mk-more" data-xall={more.go ? undefined : '1'} data-xsec={more.go?.section} onClick={more.go ? more.go.run : more.onAll}>

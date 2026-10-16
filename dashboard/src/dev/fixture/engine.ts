@@ -12,7 +12,7 @@ export interface Sale {
   cty: number
   page: number
 }
-export interface Inc {
+interface Inc {
   a: number
   b: number
 }

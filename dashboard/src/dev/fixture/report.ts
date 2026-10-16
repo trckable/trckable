@@ -148,7 +148,7 @@ export function money(sales: Sale[], visitors: number): Money {
 }
 
 /** The goal the Briefing's second card is about: the funnel step the mock picks, by the name the mock gives it. */
-export function kpiGoal(c: Ctx, site: SiteDef): { key: string; label: string } {
+function kpiGoal(c: Ctx, site: SiteDef): { key: string; label: string } {
   const funnel = hasMoney(c, site) || !site.money ? site.funnel : site.funnel.slice(0, site.rates.length + 1)
   const i = Math.min(site.kpi, funnel.length - 1)
   const named = hasMoney(c, site) ? site.kpiName : site.kpiFree
@@ -268,7 +268,7 @@ export function parseQuery(sp: URLSearchParams): Query {
   return { from: sp.get('from') ?? '', to: sp.get('to') ?? '', bucket: sp.get('bucket') ?? undefined, compare: sp.get('compare') ?? undefined, filters }
 }
 
-export function bucketFor(days: number, asked?: string): Bucket {
+function bucketFor(days: number, asked?: string): Bucket {
   if (asked === 'hour' || asked === 'day') return asked
   return days <= 2 ? 'hour' : 'day'
 }

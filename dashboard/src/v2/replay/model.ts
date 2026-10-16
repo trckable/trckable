@@ -72,6 +72,6 @@ export function asOf(cur: Result, t: number): Result {
 }
 
 /** One tick of the clock: how far the playhead moves in a tick and whether it waits on a moment. Twenty seconds for the whole day at normal speed. */
-export const REPLAY_MS = 20000
+const REPLAY_MS = 20000
 export const TICK_MS = 45
 export const step = (end: number, speed: number): number => (end / (REPLAY_MS / TICK_MS)) * speed

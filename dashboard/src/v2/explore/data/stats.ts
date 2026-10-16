@@ -5,7 +5,7 @@ import type { Row as ApiRow } from '../../../lib/api'
 import { baseEnough } from '../../../lib/thin'
 import type { Row, Stat, Tone } from '../types'
 
-export const FLOOR = 5
+const FLOOR = 5
 
 /** Where a number is against its usual: the range and which side of it it is on. */
 export function statOf(v: number, was: number | undefined, base = true): Stat {

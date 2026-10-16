@@ -47,7 +47,7 @@ export function goalsOf(site: SiteDef): Goal[] {
   return out
 }
 
-export function buildVisits(w: World, site: SiteDef, nowAbs: number): Visits {
+function buildVisits(w: World, site: SiteDef, nowAbs: number): Visits {
   const H = w.data[site.id].H
   const list = goalsOf(site)
   const r = mulberry(hash(`${site.id}|visits|${w.key}|${w.seed}`))

@@ -11,8 +11,8 @@ const KEY = 'trckable:fixture'
 
 const SRC_COLOR: Record<string, string> = { google: '#7f9cf5', direct: '#8b8e94', hn: '#ff9a4a', reddit: '#ff6b4a', x: '#d7dadf', newsletter: '#c6ff3a', chatgpt: '#3fd0b0', github: '#b58cff', badge: '#f0c64a' }
 
-export const CONNS = ['none', 'rev', 'search', 'both'] as const
-export type ConnName = (typeof CONNS)[number]
+const CONNS = ['none', 'rev', 'search', 'both'] as const
+type ConnName = (typeof CONNS)[number]
 
 function connOf(name: ConnName): Conn {
   return { rev: name === 'rev' || name === 'both', search: name === 'search' || name === 'both', goals: true, uptime: true, alerts: true }

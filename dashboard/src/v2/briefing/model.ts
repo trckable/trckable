@@ -28,7 +28,7 @@ export interface Usual {
 }
 
 /** An earlier figure is a base worth measuring against from this many. */
-export const timesOf = (now: number, before: number | undefined, floor = 1): number | null => (before !== undefined && before >= floor ? now / before : null)
+const timesOf = (now: number, before: number | undefined, floor = 1): number | null => (before !== undefined && before >= floor ? now / before : null)
 
 /** "21×", "2.4×": the multiple with one decimal under ten, whole above, and never a huge number. */
 export function mult(r: number): string {
