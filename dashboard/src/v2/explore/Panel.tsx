@@ -21,7 +21,7 @@ const sameAsk = (a: Ask | null, b: Ask | null): boolean => (a === null || b === 
 
 const wide = () => matchMedia('(min-width:701px)').matches
 
-export type PanelProps = Omit<ContentProps, 'ask' | 'full' | 'onFull' | 'close'>
+type PanelProps = Omit<ContentProps, 'ask' | 'full' | 'onFull' | 'close'>
 
 /** The panel and what dims the page behind it. */
 export function ExplorePanel(p: PanelProps) {

@@ -25,7 +25,7 @@ export function NotesSheet({ site, notes, onClose, onAdd }: { site: string; note
   )
 }
 
-export interface MailFact {
+interface MailFact {
   n: string
   u: string
   t: string

@@ -4,7 +4,7 @@ import type { Visit } from '../../lib/api'
 import { countryName } from '../../lib/format'
 import { sourceName } from './model'
 
-export interface Reader {
+interface Reader {
   where: string
   /** The outside site that sent them, as people say it ("Hacker News"), when there was one. */
   via?: string

@@ -45,7 +45,7 @@ const PATH: Record<string, ReactNode> = {
   weekly: <path d="M7 3h7l4 4v14H7z M14 3v4h4" />,
 }
 
-export interface BellProps {
+interface BellProps {
   rows: BellRow[]
   unread: number
   /** The count as the dot says it: "9+" over nine. */

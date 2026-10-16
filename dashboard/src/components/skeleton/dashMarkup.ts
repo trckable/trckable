@@ -39,7 +39,7 @@ export const storyBody = (): string =>
 const liveTabs = (): string => '<div class="dsk-controls dsk-phone-only"><i class="dsk-tabs dsk-switch-only"></i></div>'
 
 /** Live's two panels (the row of cards under them is made of what the site has, so it is not drawn). */
-export const liveBody = (): string => '<div class="dsk-live-body"><i class="dsk-card dsk-panel"></i><i class="dsk-card dsk-feed"></i></div>'
+const liveBody = (): string => '<div class="dsk-live-body"><i class="dsk-card dsk-panel"></i><i class="dsk-card dsk-feed"></i></div>'
 
 const shell = (kind: 'story' | 'live', label: string): string =>
   `<div class="dsk dsk-is-${kind}" role="status" aria-busy="true" aria-label="${label}">${header(kind === 'story')}${kind === 'story' ? tools() + controls() + storyBody() : liveTabs() + liveBody()}</div>`

@@ -1,70 +1,7 @@
 /* The domain dropdown after the site's name: "/ All ▾", quiet until pointed at. */
-.dom-btn {
-  display: inline-flex;
-  flex: 0 1 auto;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-  max-width: 140px;
-  min-height: 32px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 8px;
-  background: none;
-  color: var(--text-2);
-  font: 500 14px var(--sans, inherit);
-  white-space: nowrap;
-  cursor: pointer;
-}
-.dom-btn .dom-dot {
-  color: var(--text-3);
-}
-.dom-btn:hover,
-.dom-btn[aria-expanded='true'] {
-  background: color-mix(in srgb, var(--text) 7%, transparent);
-  color: var(--text);
-}
-.dom-btn.on {
-  color: var(--accent);
-  font-weight: 600;
-}
-.dom-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-.dom-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.dom-pop {
-  display: flex;
-  flex-direction: column;
-  min-width: 220px;
-  max-width: 320px;
-}
-.dom-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  color: var(--text-3);
-}
-.dom-search input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  background: none;
-  color: var(--text);
-  font: 14px var(--sans, inherit);
-  outline: none;
-}
+
 /* About eight rows, then it scrolls. */
-.dom-list {
-  max-height: 288px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
+
 .dom-row .faint {
   margin-left: auto;
   padding-left: 12px;
@@ -74,20 +11,11 @@
 .dom-row[aria-checked='true'] {
   font-weight: 600;
 }
-.dom-none {
-  margin: 0;
-  padding: 10px 12px;
-}
+
 @media (max-width: 640px) {
-  .dom-btn {
-    display: none; /* a phone holds the domain choice in the site list */
-  }
-  .dom-pop {
-    max-width: none;
-  }
-  .dom-list {
-    max-height: 56dvh;
-  }
+  
+  
+  
   .dom-row {
     min-height: 44px;
   }
@@ -97,10 +25,6 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-}
-.dom-row .dom-name {
-  flex: 1 1 auto;
-  white-space: nowrap;
 }
 
 /* The site list carries the domain choice on a phone, where the header has only the site. */

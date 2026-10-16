@@ -23,7 +23,7 @@ export function XEmpty({ title, hint, children }: { title: string; hint: string;
   )
 }
 
-export interface SubItem<T extends string> {
+interface SubItem<T extends string> {
   key: T
   label: string
   dot?: string

@@ -20,6 +20,7 @@ import { Rng } from '../ui/RangeBar'
 import { barsOf, changeOf, listsOf, sourceParts, todayBand } from './liveModel'
 import { LiveSpark } from './LiveSpark'
 import { DOCS } from '../../components/footerLinks'
+import { openMinute } from '../../features/live/switchView'
 import { LockCard } from '../ui/LockCard'
 import { copy } from './copy'
 import type { LiveStream } from './Live'
@@ -69,6 +70,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   if (!data) return <div className="liveview" role="region" aria-label={copy.live}><p className="mk-quiet">{failed ? copy.failed : copy.loading}</p></div>
   const n = online ?? 0
   const bars = barsOf(seriesAt(data, stream.visits, now))
+  const phone = window.matchMedia('(max-width: 600px)').matches // a thumb taps the bar; it is no target to tab to
   const ch = changeOf(data.visitors, data.previous)
   const src = sourceParts(data.sources)
   const tb = data.today ? todayBand(data.today.visitors, data.today.before, data.today.compare) : null
@@ -107,9 +109,19 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
               <WhyInline why={whyDown({ domain: whole?.domain ?? '', cause: whole?.down_cause, minutes: 0, ongoing: true })} />
             </div>
           )}
-          <div className="mins" role="img" aria-label={copy.minsLabel(data.visitors)}>
+          <div className="mins" role="group" aria-label={copy.minsLabel(data.visitors)}>
             {bars.map((b, i) => (
-              <i key={i} className={b.z ? 'z' : ''} style={{ height: `${b.h}%` }} />
+              <i
+                key={i}
+                className={b.z ? 'z' : ''}
+                style={{ height: `${b.h}%` }}
+                role={phone ? undefined : 'button'}
+                tabIndex={phone ? undefined : 0}
+                title={copy.openMinute(at(now - (bars.length - 1 - i) * 60_000))}
+                aria-label={copy.openMinute(at(now - (bars.length - 1 - i) * 60_000))}
+                onClick={() => void openMinute(bars.length - 1 - i, timezone)}
+                onKeyDown={(e) => e.key === 'Enter' && void openMinute(bars.length - 1 - i, timezone)}
+              />
             ))}
           </div>
           <div className="minl">

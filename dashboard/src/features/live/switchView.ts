@@ -50,6 +50,7 @@ function keepScroll(top: number) {
   setTimeout(() => ro.disconnect(), SETTLE_MS)
 }
 
+/** A minute on Live's line, opened in Data: that minute's day (Now when it is today), from the top. */
 export async function openMinute(ago: number, tz: string): Promise<void> {
   const patch = minuteView(ago, tz)
   await transition(

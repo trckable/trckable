@@ -28,7 +28,7 @@ function toneOf(s: Score): string {
 
 const parts = (list: Part[]): ReactNode[] => list.map((p, i) => (p.em ? <em key={i}>{p.t}</em> : p.t))
 
-export interface Crowd {
+interface Crowd {
   /** "186 people" */
   big: string
   /** How many dots are drawn, one per person up to 80. */
@@ -82,7 +82,7 @@ function Side({ scores, learn, crowd }: { scores: Score[]; learn: { day: number 
   )
 }
 
-export interface HeroProps {
+interface HeroProps {
   say: Sentence
   scores: Score[]
   learn: { day: number } | null

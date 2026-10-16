@@ -26,7 +26,7 @@ function tickOf(hourly: boolean, n: number, h: number, date: string, day: string
   return h === 0 ? new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) : ''
 }
 
-export interface ChartArgs {
+interface ChartArgs {
   cur: Result
   prev?: Result
   bucket: Bucket

@@ -28,7 +28,7 @@ const ExplorePanel = lazyLoad(() => import('./explore/Panel').then((m) => ({ def
 const FIRST = ['today', 'yesterday', '7d', '30d', '90d']
 const MORE = ['12mo', 'wtd', 'mtd', 'lastmonth', 'ytd']
 
-export interface V2Props {
+interface V2Props {
   tab: 'live' | 'briefing'
   /** The site has had no visit yet: the page says it is listening, and how to install. */
   waiting?: boolean

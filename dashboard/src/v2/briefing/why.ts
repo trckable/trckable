@@ -8,7 +8,7 @@ export interface Why {
   todo?: string
 }
 
-export interface JumpIn {
+interface JumpIn {
   name: string
   host: string
   now: number

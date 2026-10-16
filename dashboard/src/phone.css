@@ -86,35 +86,12 @@
     height: var(--ph-hit);
     margin-left: -6px;
   }
-  .header.quiet .site-zone {
-    height: var(--ph-bar);
-    padding: 0;
-    border-radius: 14px;
-  }
-  .header.quiet .site-zone .btn.site-btn {
-    height: 44px;
-    padding: 0 2px 0 8px;
-    gap: 7px;
-    font-size: var(--ph-text-2);
-    border-radius: 13px;
-  }
-  .header.quiet .site-zone .btn.site-btn svg {
-    width: var(--ph-icon);
-    height: var(--ph-icon);
-  }
-  .header.quiet .site-zone .btn.gear {
-    width: var(--ph-hit);
-    height: var(--ph-hit);
-    margin-right: 0;
-    border-radius: 13px;
-  }
-  .header.quiet .site-zone .btn.gear svg {
-    width: var(--ph-icon);
-    height: var(--ph-icon);
-  }
-  .header.quiet .site-zone .site-sep {
-    height: 22px;
-  }
+  
+  
+  
+  
+  
+  
   .header-tools.quiet .btn {
     height: var(--ph-hit);
   }
@@ -165,16 +142,8 @@
   .phone-row .view-switch .vs-count {
     display: none;
   }
-  .phone-pill {
-    height: var(--ph-bar);
-    padding: 0 8px 0 11px;
-    gap: 7px;
-    font-size: var(--ph-text-2);
-  }
-  .phone-pill svg {
-    width: var(--ph-icon);
-    height: var(--ph-icon);
-  }
+  
+  
   .phone-row .ctl-cap {
     height: var(--ph-bar);
     padding: 0;
@@ -347,11 +316,7 @@
   .header.quiet > .brand {
     margin-right: -4px;
   }
-  .pill-dot,
-  .phone-pill > svg,
-  .header.quiet .site-zone .btn.site-btn > svg {
-    display: none;
-  }
+  
   .phone-row .view-switch button {
     padding: 0 9px;
   }

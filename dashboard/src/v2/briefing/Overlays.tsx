@@ -13,7 +13,7 @@ import type { useBriefingState } from './useBriefingState'
 
 const NoteDialog = lazy(() => import('../../components/NoteDialog').then((m) => ({ default: m.NoteDialog })))
 
-export interface OverlaysProps {
+interface OverlaysProps {
   ui: ReturnType<typeof useBriefingState>
   site: Site
   range: Range

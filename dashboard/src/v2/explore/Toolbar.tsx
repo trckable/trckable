@@ -12,7 +12,7 @@ import type { Connected, FilterDim, Option, Section, Tab } from './types'
 
 export type MenuKey = 'pick' | 'filt' | 'views' | 'more'
 
-export interface ToolbarProps {
+interface ToolbarProps {
   section: Section
   tab: Tab
   filters: Filter[]

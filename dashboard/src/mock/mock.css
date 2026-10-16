@@ -1513,3 +1513,5 @@
 @media (max-width:600px){
  .mk .site-row .site-open,.mk .site-row .btn.icon.ghost{width:44px;height:44px;opacity:1}
 }
+.mk .mins i[role=button]{cursor:pointer}
+.mk .mins i[role=button]:focus-visible{outline:2px solid var(--mk-lime);outline-offset:1px}

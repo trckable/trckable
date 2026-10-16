@@ -1,7 +1,7 @@
 // The one switch of the walkthrough (Live | Briefing, and the sub-switches of Explore): a pill glides under the chosen one.
 import type { ReactNode } from 'react'
 
-export interface SwitchItem<T extends string> {
+interface SwitchItem<T extends string> {
   value: T
   label: ReactNode
   title?: string

@@ -2,7 +2,7 @@
 // last. Said from anywhere, drawn by MkToastHost.
 import { miniStore } from '../../lib/miniStore'
 
-export interface MkToast {
+interface MkToast {
   id: number
   title: string
   sub: string

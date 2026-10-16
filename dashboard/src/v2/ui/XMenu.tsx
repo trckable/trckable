@@ -19,7 +19,7 @@ export const XGl = ({ children }: { children: ReactNode }) => <div className="xg
 
 export const XSep = () => <div className="xsep" />
 
-export interface XMiProps {
+interface XMiProps {
   name: ReactNode
   desc?: string
   icon?: ReactNode

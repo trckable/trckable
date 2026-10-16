@@ -5,7 +5,7 @@ import { api } from '../../lib/api'
 import { more, type AiSearchReport } from '../../lib/apiMore'
 import type { Period } from '../../components/CardModal/period'
 
-export interface AiModalData {
+interface AiModalData {
   rep: AiSearchReport
   /** Visitors from AI for each bucket of the period. */
   series: number[]

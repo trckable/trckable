@@ -1,6 +1,6 @@
 // The Briefing's drawings as plain numbers: the smooth line through a series, the gridlines, a sparkline. Pure: geometry.test.ts.
 
-export type XY = [number, number]
+type XY = [number, number]
 
 /** A smooth path through the points (each segment bends toward its neighbours), the way the cards' lines are drawn. */
 export function smooth(P: XY[]): string {

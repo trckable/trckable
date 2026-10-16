@@ -7,7 +7,7 @@ export type Tab = 'live' | 'briefing' | 'data'
 const KEY = 'trckable.tab'
 
 /** Whether a bare address opens the Briefing for someone who has not chosen yet. Off: Live stays the first screen. */
-export const BRIEFING_FIRST = false
+const BRIEFING_FIRST = false
 
 function read(): string | null {
   try {

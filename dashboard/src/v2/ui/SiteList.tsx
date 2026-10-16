@@ -34,7 +34,7 @@ function Keys() {
   )
 }
 
-export interface SiteListProps {
+interface SiteListProps {
   sites: Site[]
   current: Site | null
   /** Who is on each site now. */

@@ -11,11 +11,11 @@
 import { createElement, lazy, useState, type ComponentProps, type ComponentType } from 'react'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the same bound React's own lazy() uses
-export function lazyLoad<T extends ComponentType<any>>(load: () => Promise<{ default: T }>) {
+export function lazyLoad<T extends ComponentType<any>>(fetchChunk: () => Promise<{ default: T }>) {
   let once: Promise<{ default: T }> | null = null
   let ready: T | null = null
   const get = () =>
-    (once ??= load().then((m) => {
+    (once ??= fetchChunk().then((m) => {
       ready = m.default
       return m
     }))
@@ -25,15 +25,16 @@ export function lazyLoad<T extends ComponentType<any>>(load: () => Promise<{ def
     const [Ready] = useState(() => ready)
     return createElement(Ready ?? Lazy, props)
   }
-  /** Starts the download; the promise says when it is here (a failed one is forgotten, so it may be tried again). */
-  const preload = (): Promise<void> =>
+  /** Starts the download and says when it is here (a failed one is forgotten, so it may be tried again). */
+  const load = (): Promise<void> =>
     get().then(
       () => undefined,
       () => {
         once = null
       },
     )
-  return Object.assign(Loaded, { preload })
+  const preload = () => void load()
+  return Object.assign(Loaded, { preload, load })
 }
 
 /** Runs `fn` once the page has loaded (a chunk fetched earlier would hold the load event back) and the browser has nothing better to do. */

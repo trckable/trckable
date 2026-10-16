@@ -17,6 +17,7 @@ export interface V2Extras {
   workspace?: { name: string; d: string; run?: () => void }
 }
 
+// The public product never reads these exports itself: a build that has more wraps the app in the provider.
 export const V2ExtrasContext = createContext<V2Extras>({})
 
 export const useV2Extras = (): V2Extras => useContext(V2ExtrasContext)

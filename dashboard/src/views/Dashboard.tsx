@@ -262,8 +262,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       if (pressed(e, 'mode')) setView({ mode: full ? 'core' : 'full' })
       if (e.key === 'Escape' && view.day) setView({ day: undefined })
     }
-    // The header's ⌘K list asks for Peek by this event.
-    const onAsk = () => askOn && setAskOpen((o) => !o)
+    const onAsk = () => askOn && setAskOpen((o) => !o) // the header's ⌘K list asks for Peek by this event
     window.addEventListener('keydown', onKey)
     window.addEventListener('trckable:ask', onAsk)
     return () => {

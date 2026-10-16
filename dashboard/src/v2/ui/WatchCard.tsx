@@ -1,7 +1,7 @@
 // What a person pinned with Watch: each line says how the number moved since they started watching.
 import { copyOf } from './watchCopy'
 
-export interface WatchRow {
+interface WatchRow {
   key: string
   topic: string
   /** The card is no longer among the day's: it went back to normal. */

@@ -28,7 +28,7 @@ export function ExploreChip({ onClick, label, kbd }: { onClick: () => void; labe
   )
 }
 
-export interface HeaderProps {
+interface HeaderProps {
   logo: ReactNode
   site: ReactNode
   views: ReactNode

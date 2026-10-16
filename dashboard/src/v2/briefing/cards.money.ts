@@ -97,7 +97,7 @@ export function salesCards(i: SalesIn): Story[] {
   return out
 }
 
-export interface SearchIn {
+interface SearchIn {
   story: SearchStory
   domain: string
   rule: string

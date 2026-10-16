@@ -40,7 +40,7 @@ export function usualNote(v: number, c: number, st: Judged): Kc['note'] {
   return { t: copy.asUsual }
 }
 
-export interface KpiIn {
+interface KpiIn {
   cur: Result
   prev?: Result
   learning: boolean

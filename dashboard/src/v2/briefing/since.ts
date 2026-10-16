@@ -16,7 +16,7 @@ export interface Since {
   quiet: boolean
 }
 
-export interface SinceIn {
+interface SinceIn {
   series: Point[]
   /** Minutes into the day. */
   nowMin: number

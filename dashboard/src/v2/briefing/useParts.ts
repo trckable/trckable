@@ -16,7 +16,7 @@ import type { History } from './useHistory'
 
 const weekdayOf = (day: string) => new Date(day + 'T12:00:00Z').toLocaleDateString(tag ?? 'en-US', { weekday: 'long', timeZone: 'UTC' })
 
-export interface PartsIn {
+interface PartsIn {
   site: Site
   cur: Result | undefined
   prev: Result | undefined

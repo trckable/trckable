@@ -57,7 +57,7 @@ export interface Extras {
   fresh?: boolean
 }
 
-export interface ExtrasWant {
+interface ExtrasWant {
   money: boolean
   search: boolean
   /** The page to look at for stuck visitors. */

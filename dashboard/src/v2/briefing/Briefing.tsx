@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Report, Result, Site, Visit } from '../../lib/api'
 import { fmtRange, presetById, todayIn, type Range } from '../../lib/dates'
 import { dayWords } from '../dayWords'
-import { fmtCompact, fmtInt } from '../../lib/format'
+import { fmtInt } from '../../lib/format'
 import { isShared, isViewer } from '../../lib/me'
 import { openSettings } from '../../lib/settings'
 import { baseEnough } from '../../lib/thin'
@@ -14,7 +14,7 @@ import { toggleWatch, watched } from '../../lib/watch'
 import { useNow } from '../../features/incidents/useIncidents'
 import { useNotes } from '../../features/notes/useNotes'
 import { addDays } from '../../lib/dates'
-import { CardList, type CardCtx } from '../ui/StoryCard'
+import { CardList } from '../ui/StoryCard'
 import { Hero } from '../ui/HeroCard'
 import { HeroChart, chartNote } from '../ui/DayChart'
 import { KeyHint } from '../ui/KeyHint'
@@ -31,14 +31,14 @@ import { siteNow } from './chart'
 import { nextStep, setupRows } from './steps'
 import { copy } from './copy'
 import { LOOKED_AT, sinceOf } from './since'
-import { say as flash } from '../ui/toast'
-import { goDeeper, goExplore } from './deeper'
+import { goExplore } from './deeper'
 import { useSetup, useUptime, useUsual } from './hooks'
 import { bounceNote, kpiCards, noteOf, pctText, usualNote } from './kpis'
 import { unitOf } from './model'
-import { calmTopics, type Story } from './cards'
-import { runAct } from './actions'
+import { calmTopics } from './cards'
 import { Hold } from '../ui/Hold'
+import { SinceLine } from './SinceLine'
+import { cardCtx, watchRowsOf } from './cardCtx'
 import { BriefingSkeleton, rememberCards } from '../ui/BriefingSkeleton'
 import { useCardLock } from './useCardLock'
 import { useExtras, useSame } from './useExtras'
@@ -129,26 +129,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const before = copy.before[unit]
   const { learning, scores, say, chart, uptime, low, mo, top } = parts
   const stories = parts.stories.filter((x) => !rv.held(x))
-  const watchKey = (s: Story) => `${site.id}|${s.key}`
-  const ctx: CardCtx = {
-    know: () => null,
-    onOpen: (s) => window.matchMedia('(max-width: 600px)').matches && ui.setOpen(s),
-    onDeeper: (s) => goDeeper(site, s.deeper),
-    watched: (s) => watchKey(s) in wset,
-    onWatch: (s) => {
-      if (watchKey(s) in wset) toggleWatch(watchKey(s), { at: 0, m: 0, u: '' })
-      else {
-        toggleWatch(watchKey(s), { at: nowSec, m: s.m, u: s.u })
-        flash(copy.watchingTitle(copy.topic(s.key)), copy.watchingSub(parts.hhmm))
-      }
-    },
-    spark: () => (slices.spark.length ? slices.spark : cur.series.map((p) => p.visitors)),
-    onAct: (s) => runAct(s, { site, onGoal }) && ui.markDone(watchKey(s)),
-    done: (s) => ui.done.has(watchKey(s)),
-    how: (s) => ui.how.has(watchKey(s)),
-    onHow: (s) => ui.toggleHow(watchKey(s)),
-    focused: ui.kf,
-  }
+  const ctx = cardCtx({ site, ui, wset, nowSec, hhmm: parts.hhmm, spark: slices.spark.length ? slices.spark : cur.series.map((p) => p.visitors), onGoal })
   // A day with nobody yet still has its chart and numbers once the site has a history; only a site that never had anyone is empty.
   const empty = cur.kpis.visitors === 0 && (parts.hd === 0 || !hist.daily)
   const v = cur.kpis.visitors
@@ -193,45 +174,13 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const lockSec = dayStart + LOOKED_AT * 3600
   const down = up.list.reduce((n, x) => n + Math.max(0, Math.min(x.ended_at ?? nowSec, nowSec) - Math.max(x.started_at, lockSec)), 0)
   const sn = unit === 'today' && v > 0 ? sinceOf({ series: cur.series, nowMin: end, sales, downSec: down, calm: stories.length === 0 && sales === 0 }) : null
-  const since = sn ? (
-    <>
-    <span className="since">
-      <span className="mk-pulse" />
-      {sn.quiet ? (
-        copy.quietSince(sn.morning ? copy.thisMorning : sn.at)
-      ) : (
-        <>
-          {copy.since(sn.morning ? copy.thisMorning : sn.at)} · <b>+{fmtInt(sn.people)}</b> {copy.plusPeople(sn.people)}
-          {sn.sales > 0 && (
-            <>
-              {' '}
-              · <b>+{sn.sales}</b> {copy.plusSales(sn.sales)}
-            </>
-          )}
-          {sn.down > 0 && (
-            <>
-              {' '}
-              · <b style={{ color: 'var(--mk-red)' }}>{copy.downMin(sn.down)}</b>
-            </>
-          )}
-        </>
-      )}
-    </span>
-    <span className="sincem">{sn.quiet ? copy.quietSinceM(sn.at) : <><b>+{fmtInt(sn.people)}</b> {copy.sinceM(sn.at)}</>}</span>
-    </>
-  ) : undefined
+  const since = sn ? <SinceLine sn={sn} /> : undefined
   const reader = readerOf(recent.length ? recent : visits, site.domain, top?.value)
   const sub = heroSub(reader && !learning && !low ? copy.meet(readerWords(reader)) : null, low, say.sub, say.own)
   const dots = Math.min(80, Math.round(v))
   const crowd = low && !learning ? { big: v === 1 ? copy.onePerson : copy.nPeople(fmtInt(v)), n: dots, note: copy.dotNote(dots < Math.round(v) ? dots : 0) } : null
   const headline = `${say.lead} ${say.long.map((p) => p.t).join('')}`
-  const watchRows = Object.entries(wset)
-    .filter(([k]) => k.startsWith(site.id + '|'))
-    .map(([k, w]) => {
-      const s = stories.find((x) => watchKey(x) === k)
-      const d = s ? s.m - w.m : 0
-      return { key: k, topic: copy.topic(k.split('|')[1]), gone: !s, since: { at: new Date(w.at * 1000).toISOString().slice(11, 16), delta: `${d < 0 ? '−' : '+'}${fmtCompact(Math.abs(d))}`, unit: w.u } }
-    })
+  const watchRows = watchRowsOf(site.id, wset, stories)
   const canNote = !isViewer() && !isShared()
   const body = (
 

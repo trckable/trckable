@@ -1,7 +1,7 @@
 // The phone's bar at the bottom: Live, Briefing, Explore. The chosen one is lime; the bar keeps clear of the home indicator.
 import { Ico } from './icons'
 
-export type TabKey = 'live' | 'briefing' | 'explore'
+type TabKey = 'live' | 'briefing' | 'explore'
 
 const ICON = {
   live: (
