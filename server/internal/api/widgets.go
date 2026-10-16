@@ -388,6 +388,7 @@ type widgetData struct {
 	Pill            bool              // online, in a pill: the brand is a mark in it, not a line under it
 	Marks           []widgetMark      // verified: the sources that work now
 	Href            string            // verified: where the badge leads
+	Home            string            // the brand link to trckable.com, tagged with the site and widget kind
 }
 
 type widgetBar struct {
@@ -400,7 +401,7 @@ type widgetLine struct {
 }
 
 func widgetView(wd sqlite.Widget, si sqlite.SiteInfo, now time.Time, loc *time.Location, words widgetWords) widgetData {
-	d := widgetData{Lang: words.lang, Kind: wd.Kind, Theme: wd.Theme, Radius: wd.Radius, Brand: wd.Brand, Domain: si.Domain, Ghost: template.HTML(widgetGhost), ShowBars: wd.Has("bars"), Refresh: widgetRefresh(wd.Kind)} //nolint:gosec // widgetGhost is our own constant SVG, never input
+	d := widgetData{Lang: words.lang, Kind: wd.Kind, Theme: wd.Theme, Radius: wd.Radius, Brand: wd.Brand, Domain: si.Domain, Home: widgetHome(si.Domain, wd.Kind), Ghost: template.HTML(widgetGhost), ShowBars: wd.Has("bars"), Refresh: widgetRefresh(wd.Kind)} //nolint:gosec // widgetGhost is our own constant SVG, never input
 	d.AccentDark, d.AccentLight = "#b8ff3c", "#3f6212"
 	// Checked again here, whatever the caller did: it is written into CSS.
 	if sqlite.HexColor(wd.Accent) {
@@ -641,9 +642,9 @@ li b{font-weight:500;font-variant-numeric:tabular-nums}
 {{if .Pages}}<h3>{{.L.reading}}</h3><ul>{{range .Pages}}<li><span></span><span>{{.Name}}</span><b>{{.N}}</b></li>{{end}}</ul>{{end}}
 {{if .Brand}}{{template "by" .}}{{end}}
 </div>
-{{else}}<div class="card pill on"><span class="dot"></span><span>{{.Count}} {{.L.online}}</span>{{if .Bars}}<span class="spark" aria-hidden="true">{{range .Bars}}<i><s{{if eq .H 0}} class="z"{{end}} style="height:{{.H}}%"></s></i>{{end}}</span>{{end}}{{if .Brand}}<a class="gh" href="https://trckable.com" target="_blank" rel="noopener" title="{{.L.brand}} trckable" aria-label="{{.L.brand}} trckable">{{.Ghost}}</a>{{end}}</div>{{end}}
+{{else}}<div class="card pill on"><span class="dot"></span><span>{{.Count}} {{.L.online}}</span>{{if .Bars}}<span class="spark" aria-hidden="true">{{range .Bars}}<i><s{{if eq .H 0}} class="z"{{end}} style="height:{{.H}}%"></s></i>{{end}}</span>{{end}}{{if .Brand}}<a class="gh" href="{{.Home}}" target="_blank" rel="noopener" title="{{.L.brand}} trckable" aria-label="{{.L.brand}} trckable">{{.Ghost}}</a>{{end}}</div>{{end}}
 {{else}}<div class="card pill"><div class="row"><span class="dot"></span>{{.L.counter}}</div>{{if .Brand}}{{template "by" .}}{{end}}</div>{{end}}
-<script>@SCRIPT@</script></body></html>{{define "by"}}<a class="by" href="https://trckable.com" target="_blank" rel="noopener">{{.Ghost}}<span>{{.L.brand}} <b>trck</b><i>able</i></span></a>{{end}}`, "@SCRIPT@", web.WidgetPageScript, 1)))
+<script>@SCRIPT@</script></body></html>{{define "by"}}<a class="by" href="{{.Home}}" target="_blank" rel="noopener">{{.Ghost}}<span>{{.L.brand}} <b>trck</b><i>able</i></span></a>{{end}}`, "@SCRIPT@", web.WidgetPageScript, 1)))
 
 // readWidget reads the numbers a widget shows and keeps them for a while.
 func (a *API) readWidget(ctx context.Context, q *query.Q, wd sqlite.Widget, si sqlite.SiteInfo, ask query.WidgetAsk, now time.Time, loc *time.Location, key string) (widgetNumbers, error) {

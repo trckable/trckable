@@ -151,7 +151,7 @@ func TestVerifiedAcrossTheAPI(t *testing.T) {
 	b, _ := io.ReadAll(res.Body)
 	res.Body.Close()
 	page := string(b)
-	if res.StatusCode != http.StatusOK || !strings.Contains(page, "Verified by trckable") || !strings.Contains(page, `href="https://trckable.com/?ref=verified"`) || strings.Contains(page, "Stripe") {
+	if res.StatusCode != http.StatusOK || !strings.Contains(page, "Verified by trckable") || !strings.Contains(page, `href="https://trckable.com/?ref=verified`) || strings.Contains(page, "Stripe") {
 		t.Fatalf("badge: %d %s", res.StatusCode, page)
 	}
 
@@ -188,7 +188,7 @@ func TestBadgeLinkFallsBack(t *testing.T) {
 	}
 	_, _ = g.ctl.DB.ExecContext(ctx, `UPDATE pay_connections SET last_event_at = ? WHERE id = ?`, now.Add(-time.Hour).Unix(), c.ID)
 	base := g.srv.URL + "/api/v1/sites/" + g.site
-	const home = `href="https://trckable.com/?ref=verified"`
+	const home = `href="https://trckable.com/?ref=verified`
 
 	mk := func(body string) (id, url string) {
 		_, out := do(t, owner, "POST", base+"/shares", body, csrf, "1")
@@ -249,5 +249,23 @@ func TestBadgeLinkFallsBack(t *testing.T) {
 	res.Body.Close()
 	if !strings.Contains(string(b), home) {
 		t.Fatalf("a link that later gets a password falls back: %s", b)
+	}
+}
+
+func TestBadgeHomeCarriesTheSite(t *testing.T) {
+	if got, want := verifiedHome("Albas.AL"), "https://trckable.com/?ref=verified&utm_source=albas.al&utm_medium=badge&utm_campaign=verified"; got != want {
+		t.Fatalf("badge home: %s", got)
+	}
+	if got := verifiedHome("a b&c.com"); !strings.Contains(got, "utm_source=a+b%26c.com&") {
+		t.Fatalf("domain is escaped: %s", got)
+	}
+	if got := verifiedHome(""); got != "https://trckable.com/?ref=verified" {
+		t.Fatalf("no domain, plain link: %s", got)
+	}
+	if got, want := widgetHome("albas.al", "pill"), "https://trckable.com/?utm_source=albas.al&utm_medium=pill&utm_campaign=widget"; got != want {
+		t.Fatalf("widget home: %s", got)
+	}
+	if got := widgetHome("", "pill"); got != "https://trckable.com" {
+		t.Fatalf("no domain, plain link: %s", got)
 	}
 }
