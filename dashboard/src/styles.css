@@ -2747,8 +2747,8 @@ body {
   background: var(--pane-row);
 }
 :root .pop:is(.menu-pop, .sites) .menu-search:focus-within {
-  border-color: var(--pane-hair);
-  box-shadow: 0 0 0 2px var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--pane-hair));
+  box-shadow: none;
 }
 :root .pop.sheet .pop-actions {
   background: transparent;
