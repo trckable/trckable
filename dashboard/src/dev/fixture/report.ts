@@ -243,8 +243,18 @@ function resultOf(c: Ctx, v: Visits, a: number, b: number, bucket: Bucket, filte
   }
   const leadRow = goals.find((g) => g.value === lead.key) ?? goals.find((g) => g.label === lead.label)
   if (leadRow) leadRow.label = lead.label
-  out.goals = c.conn.goals ? [...(leadRow ? [leadRow] : []), ...goals.filter((g) => g !== leadRow)] : []
+  // The server lists the goals somebody reached.
+  out.goals = c.conn.goals ? [...(leadRow ? [leadRow] : []), ...goals.filter((g) => g !== leadRow)].filter((g) => g.visitors > 0) : []
   return out
+}
+
+/** The visitors in a stretch of minutes, under a filter. */
+export function countIn(c: Ctx, siteId: string, a: number, b: number, filters: Flt[]): number {
+  const v = visitsOf(c.w, siteId, c.nowAbs)
+  const tests = filters.flatMap((f) => testOf(v.site, f) ?? [])
+  let n = 0
+  for (let i = 0; i < v.n; i++) if (v.t[i] >= a && v.t[i] < b && tests.every((f) => f(v, i))) n++
+  return n
 }
 
 export function parseQuery(sp: URLSearchParams): Query {

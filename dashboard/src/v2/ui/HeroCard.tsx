@@ -116,7 +116,9 @@ export function Hero({ say, scores, learn, crowd = null, since, period, onPeriod
           </button>
           {since}
           <h1 className={`mk-hl${say.bad ? ' bad' : ''}`}>
-            <b>{say.lead}</b> {parts(say.long)}
+            <b>{say.lead}</b>
+            {say.long[0]?.t.startsWith(',') ? '' : ' '}
+            {parts(say.long)}
           </h1>
           <h1 className={`mk-hl s${say.bad ? ' bad' : ''}`}>{parts(say.short)}</h1>
           {say.sub && <p className="hsub">{say.sub}</p>}

@@ -59,6 +59,8 @@ export interface Top {
   times: number | null
   /** What it is measured against, in words ("your usual"); the period before when absent. */
   vs?: string
+  /** Above or under its own usual, when the history says. */
+  st?: 'up' | 'dn'
 }
 
 /** The one outside site that sent the period's visitors: big enough to name, and not the site itself. */
@@ -81,6 +83,8 @@ export interface Sentence {
   short: Part[]
   sub: string
   bad: boolean
+  /** The line under the headline is part of what it says (the site is down), so nobody is introduced beneath it. */
+  own?: boolean
 }
 
 export interface SayIn {
@@ -94,6 +98,13 @@ export interface SayIn {
   downMin: number
   /** Fewer visitors than a base worth measuring: people, not percentages. */
   learning: boolean
+  /** The site is not answering right now: since when (its clock) and for how many minutes. */
+  ongoing?: { since: string; minutes: number }
+  /** Stretches it was down in the period, in the site's clock, and how many people would normally have come in that time. */
+  incidents?: { from: string; to: string; minutes: number }[]
+  lost?: number
+  /** A site with few visitors: people, not percentages. */
+  low?: boolean
   /** The source that jumped against its own usual, which leads the sentence. None: no source is named. */
   jump?: Top | null
   /** The period against the site's own usual, when the history says: how many times it, whether it is above or below the band, and the words for it ("a usual Friday by 16:30"). */
@@ -126,7 +137,7 @@ export function sentence(o: SayIn): Sentence {
   const v = o.cur.kpis.visitors
   const { ratio, words } = baseline(o)
   const top = o.jump ?? null
-  const x = top?.times && top.times >= 1.5 ? mult(top.times) : ''
+  const x = top?.st !== 'dn' && top?.times && top.times >= 1.5 ? mult(top.times) : ''
   const vs = top?.vs ?? copy.before[o.unit]
   const noun = { today: o.weekday, yesterday: o.weekday, week: copy.week, month: copy.month, range: copy.stretch }[o.unit]
   const n = paid(o.cur)
@@ -136,6 +147,24 @@ export function sentence(o: SayIn): Sentence {
     const lead = copy.nobody(copy.when[o.unit])
     return { lead, long: [], short: [{ t: `${lead}.`, em: true }], sub: '', bad: false }
   }
+  if (o.ongoing) {
+    const n = o.ongoing
+    return { lead: copy.notAnswering(o.self), long: [{ t: copy.wentQuiet(n.since, n.minutes) }], short: [{ t: copy.notAnsweringShort(o.self), em: true }, { t: ` ${copy.quietAt(n.since)}.` }], sub: copy.cantReach(n.since), bad: true, own: true }
+  }
+  const inc = o.incidents ?? []
+  if (inc.length && !o.learning) {
+    const dur = inc.reduce((a, x) => a + x.minutes, 0)
+    const ppl = `${people(v)}${o.unit === 'today' ? copy.soFar : copy.inAll}`
+    const one = inc.length === 1
+    return {
+      lead: one ? copy.wasDownFor(o.self, dur) : copy.downTimes(o.self, inc.length),
+      long: [{ t: `${one ? copy.downSpan(inc[0].from, inc[0].to) : copy.downTotal(dur)} ${ppl}.` }],
+      short: [{ t: copy.wasDownShort(o.self, dur), em: true }, { t: ` ${ppl}.` }],
+      sub: copy.lostSub(people(Math.round(o.lost ?? 0))),
+      bad: true,
+      own: true,
+    }
+  }
   if (o.learning) {
     return { lead: copy.dayOne, long: [{ t: people(v), em: true }, { t: copy.soFar }, ...andC2, { t: '.' }], short: [{ t: copy.soFarShort(people(v)), em: true }], sub: copy.learnSub, bad: false }
   }
@@ -144,19 +173,26 @@ export function sentence(o: SayIn): Sentence {
   const adj = moodWord(o.downMin > 0, up, down)
   let c1: Part[]
   let short: Part[]
-  if (top && x) {
+  const low = !!o.low
+  if (top?.st === 'dn') {
+    c1 = [{ t: copy.sentFewer(top.name) }]
+    short = [{ t: top.name, em: true }, { t: copy.sentFewerShort }]
+  } else if (top && x && !low) {
     c1 = [{ t: `${top.name} brought ${people(top.visitors)}, ${x} ${vs}`, em: true }]
     short = [{ t: `${top.name} sent ${x} ${vs}.`, em: true }]
+  } else if (top?.st === 'up') {
+    c1 = [{ t: `${top.name} brought ${people(top.visitors)}`, em: true }]
+    short = [{ t: `${top.name} sent ${people(top.visitors)}.`, em: true }]
   } else if (up) {
     const r = ratio ?? 0
-    c1 = [{ t: `${people(v)} came, ${r >= 1.3 ? `${mult(r)} ` : 'above '}${words}` }]
-    short = [{ t: `${people(v)} came`, em: true }, { t: `, ${r >= 1.3 ? mult(r) + ' usual' : 'above usual'}.` }]
+    c1 = [{ t: `${people(v)} came, ${r >= 1.3 && !low ? `${mult(r)} ` : 'above '}${words}` }]
+    short = [{ t: `${people(v)} came`, em: true }, { t: `, ${r >= 1.3 && !low ? mult(r) + ' usual' : 'above usual'}.` }]
   } else if (down) {
     c1 = [{ t: `only ${people(v)} came, below ${words}` }]
     short = [{ t: 'Only ' }, { t: people(v), em: true }, { t: ' came, below usual.' }]
   } else {
-    c1 = [{ t: `${people(v)} came, right about what you'd expect` }]
-    short = [{ t: `${people(v)} came, as usual.` }]
+    c1 = [{ t: `${people(v)} came${low ? '' : ", right about what you'd expect"}` }]
+    short = [{ t: `${people(v)} came${low ? '' : ', as usual'}.` }]
   }
   const down2 = o.downMin > 0 ? [{ t: ' ' + copy.wasDown(o.downMin) }] : []
   const page = o.cur.dims.entry_page?.[0]
@@ -214,21 +250,22 @@ export function engagementScore(cur: Result, prev?: Result): Score {
   return fromRatio('engagement', parts.length ? parts.reduce((a, b) => a + b, 0) / parts.length : null, copy.usual)
 }
 
-/** What the incident record says of the period: its share up (null when it was not watched long enough, or the checks are off), and whether the site is down right now. */
+/** What the incident record says of the period: three points lost for every minute down (null when it was not watched long enough, or the checks are off), and whether the site is down right now. */
 export function uptimeScore(o: { pct: number | null; downNow: boolean; downMin: number; off: boolean }): Score {
   if (o.off) return { key: 'uptime', value: null, verdict: 'off', words: copy.checksOff }
-  if (o.downNow) return { key: 'uptime', value: 0, verdict: 'down', words: copy.downNow }
+  const value = clamp(100 - o.downMin * 3)
+  if (o.downNow) return { key: 'uptime', value, verdict: 'down', words: copy.downFor(o.downMin) }
   if (o.pct === null) return { key: 'uptime', value: null, verdict: 'none', words: '' }
   if (o.pct >= 100) return { key: 'uptime', value: 100, verdict: 'clear', words: copy.clear }
-  return { key: 'uptime', value: Math.floor(o.pct), verdict: 'lost', words: copy.downFor(o.downMin) }
+  return { key: 'uptime', value, verdict: 'lost', words: copy.downFor(o.downMin) }
 }
 
-/** The ring's number: the scores that can be told, averaged; the worst one when the site is down. Null when none can be told. */
+/** The ring's number: traffic counts for 40, engagement for 25 and uptime for 35, one that cannot be told as if nothing were wrong with it. Null while the site is down, or when none can be told. */
 export function overall(scores: Score[]): number | null {
-  const known = scores.filter((s) => s.value !== null).map((s) => s.value as number)
-  if (!known.length) return null
+  if (scores.every((s) => s.value === null)) return null
   if (scores.some((s) => s.verdict === 'down')) return null
-  return Math.round(known.reduce((a, b) => a + b, 0) / known.length)
+  const of = (k: Score['key'], none: number) => scores.find((s) => s.key === k)?.value ?? none
+  return Math.round(of('traffic', 80) * 0.4 + of('engagement', 100) * 0.25 + of('uptime', 100) * 0.35)
 }
 
 // ---- the day against its usual band ----

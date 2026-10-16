@@ -2,6 +2,7 @@
 import type { Site, VerifiedSource } from '../../lib/api'
 import { CTYS, DEVS, END, GSC, SITES, SRCS, type SiteDef } from './data'
 import {
+  countIn,
   dailyOf,
   dateOf,
   dayIndex,
@@ -14,7 +15,7 @@ import {
   siteOf,
   type Ctx,
 } from './report'
-import { hash } from './rand'
+import { hash, mulberry, pick } from './rand'
 import { osOf, visitsOf, BROWSERS } from './visits'
 
 export interface Reply {
@@ -148,26 +149,30 @@ function events(c: Ctx, id: string, limit: number) {
   const v = visitsOf(c.w, id, c.nowAbs)
   const site = siteOf(id)
   const out = []
+  // The latest visitors, a page at a time (the first page carries where they came from).
   for (let i = v.n - 1; i >= 0 && out.length < limit; i--) {
     const cc = CTYS[v.cty[i]].id
     const src = SRCS[v.s[i]].id
-    out.push({
-      seq: i,
-      ts: new Date(c.w.start + v.t[i] * 60000).toISOString(),
-      kind: 'pageview',
-      visitor: `v${i}`,
-      session: `s${i}`,
-      path: site.pages[v.pg[i]][0],
-      hostname: site.name,
-      referrer: REFS[src],
-      country: cc,
-      city: CITY[cc][i % 3],
-      device: DEVS[v.dev[i]].name,
-      browser: BROWSERS[v.br[i]],
-      os: osOf(v.dev[i], v.br[i]),
-    })
+    const r = mulberry(hash(`ev${id}${i}`))
+    for (let q = 0; q < v.np[i]; q++) {
+      out.push({
+        seq: i * 10 + q,
+        ts: new Date(c.w.start + v.t[i] * 60000 + q * 45000).toISOString(),
+        kind: 'pageview',
+        visitor: `v${i}`,
+        session: `s${i}`,
+        path: site.pages[q ? pick(r, site.pg[v.s[i]]) : v.pg[i]][0],
+        hostname: site.name,
+        referrer: q ? undefined : REFS[src],
+        country: cc,
+        city: CITY[cc][i % 3],
+        device: DEVS[v.dev[i]].name,
+        browser: BROWSERS[v.br[i]],
+        os: osOf(v.dev[i], v.br[i]),
+      })
+    }
   }
-  return out
+  return out.sort((x, y) => y.ts.localeCompare(x.ts)).slice(0, limit)
 }
 
 function searchReport(c: Ctx, id: string, sp: URLSearchParams) {
@@ -289,9 +294,11 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
         mail: true,
       })
     case 'usual': {
+      // What is usual for the day: the same weekday's last four weeks, counted up to the same time of day.
       const q = parseQuery(sp)
       const d = dayIndex(c, q.from)
-      const at = (k: number) => reportOf(c, id, { from: dateOf(c, d - 7 * k), to: dateOf(c, d - 7 * k), bucket: 'day', filters: q.filters }).current.kpis.visitors
+      const cut = d === END ? c.nowAbs - d * 1440 : 1440
+      const at = (k: number) => countIn(c, id, (d - 7 * k) * 1440, (d - 7 * k) * 1440 + cut, q.filters)
       const weeks = [1, 2, 3, 4].map((k) => ({ day: dateOf(c, d - 7 * k), visitors: at(k) }))
       return ok({ visitors: at(0), average: Math.round(weeks.reduce((p, x) => p + x.visitors, 0) / weeks.length), weeks })
     }

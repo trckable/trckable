@@ -85,6 +85,8 @@ export interface CardsIn {
   low: boolean
   /** The slices of the period with their usual (null where there is none to say). */
   slices: Record<Dim, Slice[]>
+  /** Each goal against its usual. */
+  goals: Slice[]
   /** The page most of a source's people landed on, and the source most of a country's came from. */
   topPageOf?: (referrer: string) => { name: string; value: string } | undefined
   topSourceOf?: (country: string) => string | undefined
@@ -245,14 +247,12 @@ function pageCard(s: Slice & { st: Judged }, i: CardsIn): Story {
   }
 }
 
-function goalCard(i: CardsIn, prev: Result | undefined): Story | null {
-  const goals = (i.cur.goals ?? []).flatMap((g) => {
-    const was = prev?.goals?.find((x) => x.value === g.value)?.visitors
-    if (was === undefined || was < 3) return []
-    const c = was
-    const band = { c, lo: Math.max(0, c * 0.75 - 1), hi: c * 1.25 + 1 }
-    const st = judge(g.visitors, band)
-    return st ? [{ name: (g.label || g.value).replace(/^./, (x) => x.toUpperCase()), v: g.visitors, lo: band.lo, hi: band.hi, st }] : []
+function goalCard(i: CardsIn): Story | null {
+  const goals = i.goals.flatMap((g) => {
+    const band = g.band
+    if (!band) return []
+    const st = judge(g.v, band)
+    return st ? [{ name: g.name.replace(/^./, (x) => x.toUpperCase()), v: g.v, lo: band.lo, hi: band.hi, st }] : []
   })
   if (!goals.length) return null
   const g = goals[0]
@@ -295,7 +295,7 @@ export function cardsOf(i: CardsIn): Story[] {
     if (dev) out.push(deviceCard(dev, i, total))
     const page = movers(i.slices.entry_page, total)[0]
     if (page) out.push(pageCard(page, i))
-    const goal = goalCard(i, i.prev)
+    const goal = goalCard(i)
     if (goal) out.push(goal)
   }
   if (i.mention) {

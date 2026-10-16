@@ -36,6 +36,8 @@ export interface SliceData {
   slices: Record<Dim, Slice[]>
   topPage?: { for: string; name: string; value: string }
   topSource?: { for: string; name: string }
+  /** The goals, each against its usual. */
+  goals: Slice[]
   /** The country card's own line, bucket by bucket. */
   spark: number[]
 }
@@ -57,6 +59,9 @@ export function useSlices(site: Site, range: Range, cur: Result | undefined, pre
         const bands = await Promise.all(rows.map((r) => (day ? usualBand(site.id, range.to, [{ dim, value: r.value }]) : Promise.resolve(bandFromBefore(rowsOf(prev ?? cur, dim).find((x) => x.value === r.value && prev)?.visitors)))))
         out[dim] = rows.map((r, i) => ({ value: r.value, name: dim === 'referrer' ? sourceName(r.value) : r.value, v: r.visitors, band: bands[i], bounce: r.bounce_rate }))
       }
+      const gl = (cur.goals ?? []).filter((g) => g.visitors > 0 || day).slice(0, 8)
+      const gb = await Promise.all(gl.map((g) => (day ? usualBand(site.id, range.to, [{ dim: 'goal', value: g.value }]) : Promise.resolve(bandFromBefore(prev?.goals?.find((x) => x.value === g.value)?.visitors)))))
+      const goals = gl.map((g, i): Slice => ({ value: g.value, name: g.label || g.value, v: g.visitors, band: gb[i] }))
       const src = movers(out.referrer, total).sort((a, b) => Math.abs(b.v - (b.band?.c ?? 0)) - Math.abs(a.v - (a.band?.c ?? 0)))[0]
       const cty = movers(out.country, total)[0]
       const [page, from] = await Promise.all([
@@ -68,6 +73,7 @@ export function useSlices(site: Site, range: Range, cur: Result | undefined, pre
           key,
           data: {
             slices: out,
+            goals,
             topPage: src && page ? { for: src.value, name: page.value, value: page.value } : undefined,
             topSource: cty && from?.from ? { for: cty.value, name: sourceName(from.from.value) } : undefined,
             spark: from?.spark ?? [],
@@ -78,5 +84,5 @@ export function useSlices(site: Site, range: Range, cur: Result | undefined, pre
       live = false
     }
   }, [key, cur, prev, ready, unit, site.id, site.domain, range.from, range.to, total])
-  return got && got.key === key ? got.data : got?.data ?? { slices: { referrer: [], country: [], device: [], entry_page: [] }, spark: [] }
+  return got && got.key === key ? got.data : got?.data ?? { slices: { referrer: [], country: [], device: [], entry_page: [] }, goals: [], spark: [] }
 }

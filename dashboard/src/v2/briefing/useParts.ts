@@ -126,6 +126,7 @@ export function useParts(a: PartsIn) {
       learning,
       low,
       slices: slices.slices,
+      goals: slices.goals,
       topPageOf: (v) => (slices.topPage?.for === v ? { name: slices.topPage.name, value: slices.topPage.value } : undefined),
       topSourceOf: (v) => (slices.topSource?.for === v ? slices.topSource.name : undefined),
       rule,
@@ -134,9 +135,9 @@ export function useParts(a: PartsIn) {
       speed: extras.speed ?? undefined,
     })
     const lead = learning ? undefined : leadSource(slices.slices.referrer, cur.kpis.visitors, site.domain)
-    const jump = lead?.st === 'up' && lead.band ? { name: sourceName(lead.value), value: lead.value, visitors: lead.v, times: lead.band.c > 0.5 ? lead.v / lead.band.c : null, vs: unit === 'today' || unit === 'yesterday' ? 'your usual' : undefined } : null
+    const jump = lead?.band ? { name: sourceName(lead.value), value: lead.value, visitors: lead.v, times: lead.band.c > 0.5 ? lead.v / lead.band.c : null, vs: unit === 'today' || unit === 'yesterday' ? 'your usual' : undefined, st: lead.st === 'dn' ? ('dn' as const) : ('up' as const) } : null
     const usualWords = usualWordsOf(unit, weekday, clock.slice(11))
-    const say = sentence({ cur, prev, usual, unit, weekday, self: site.domain, downMin, learning, jump, band: whole && !learning ? { ratio: whole.c > 0.5 ? v / whole.c : null, st, words: usualWords } : null })
+    const say = sentence({ cur, prev, usual, unit, weekday, self: site.domain, downMin, learning, low, jump, ongoing: downNow ? { since: uptimeIn.since, minutes: uptimeIn.minutesNow } : undefined, incidents: up.list.filter((x) => x.ended_at !== null).map((x, i) => ({ from: uptimeIn.incidents[i]?.from ?? '', to: uptimeIn.incidents[i]?.to ?? '', minutes: Math.round(((x.ended_at ?? nowSec) - x.started_at) / 60) })), lost: uptimeIn.lost, band: whole && !learning ? { ratio: whole.c > 0.5 ? v / whole.c : null, st, words: usualWords } : null })
     const top = jump
     const downs = up.list.flatMap((x) => {
       const per = hourly ? 3600 : 86400

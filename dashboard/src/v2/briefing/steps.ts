@@ -39,13 +39,11 @@ export interface Next {
   run: () => void
 }
 
-/** The one next step: find out why the site stopped; answer the people a source sent; or look at the page people land on. */
+/** The one next step: find out why the site stopped, or answer the people a source sent. Nothing else is worth a bar of its own. */
 export function nextStep(o: { site: Site; cur: Result; stories: Story[]; top: Top | null; downNow: boolean }): Next | null {
   const { site, cur, top } = o
   if (o.downNow) return { text: copy.actDown(site.domain), label: copy.actDownBtn, run: () => goDeeper(site, { kind: 'incidents' }) }
   const s = o.stories[0]
-  if (top?.times && top.times > 2 && s?.key === 'sources') return { text: copy.actSource(top.name), rest: copy.actSourceRest(fmtPct(cur.kpis.bounce_rate)), label: copy.actSourceBtn, run: () => goDeeper(site, s.deeper) }
-  const page = cur.dims.entry_page?.find((r) => r.value !== '/')
-  if (!page) return null
-  return { text: copy.actPage(page.value), rest: copy.actPageRest, label: copy.actPageBtn(page.value), run: () => goDeeper(site, { kind: 'explore', filter: { dim: 'entry_page', value: page.value } }) }
+  if (top?.times && top.times > 2 && s?.key === 'sources') return { text: copy.actSource(top.name), rest: copy.actSourceRest(fmtPct(cur.dims.referrer?.find((r) => r.value === top.value)?.bounce_rate ?? cur.kpis.bounce_rate)), label: copy.actSourceBtn, run: () => goDeeper(site, s.deeper) }
+  return null
 }

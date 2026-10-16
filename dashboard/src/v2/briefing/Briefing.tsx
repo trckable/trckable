@@ -31,6 +31,7 @@ import { startOfDay } from '../../features/incidents/model'
 import { siteNow } from './chart'
 import { nextStep, setupRows } from './steps'
 import { copy } from './copy'
+import { LOOKED_AT, sinceOf } from './since'
 import { say as flash } from '../ui/toast'
 import { goDeeper, goExplore } from './deeper'
 import { useSetup, useUptime, useUsual } from './hooks'
@@ -61,8 +62,8 @@ export interface BriefingProps {
   visits: Visit[]
 }
 
-const heroSub = (meet: string | null, low: boolean, fallback: string): string => {
-  if (meet) return meet
+const heroSub = (meet: string | null, low: boolean, fallback: string, own?: boolean): string => {
+  if (meet && !own) return meet
   return low ? copy.fewVisitors : fallback
 }
 
@@ -155,6 +156,9 @@ export default function Briefing({ site, data: page, loading, period, range, mon
     viewsVals: cur.series.slice(0, pts.length).map((p) => p.pageviews),
     leave: { note: bounceNote(cur.kpis.bounce_rate, parts.bounceUsual), vals: pts.map((_, i) => cur.series[i]?.bounce_rate ?? 0) },
     uptime,
+    low,
+    peopleBand: parts.whole,
+    goalBand: slices.goals.find((g) => g.value === goalValue)?.band ?? null,
     uptimePct: pctText(pct),
     uptimeVals: pts.map((_, i) => 100 * (1 - chart.downs.reduce((a, d) => a + Math.max(0, Math.min(i + 1, d.b) - Math.max(i, d.a)), 0))),
     money,
@@ -167,21 +171,35 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const heroWhy = stories.find((x) => x.key === 'uptime')?.cause ?? stories.find((x) => x.key === 'sources')?.cause ?? (usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : null)
   if (kcs[0] && heroWhy && !stories.find((x) => x.key === 'uptime')) kcs[0].why = usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : undefined
   const sales = cur.money?.payments ?? 0
-  const since =
-    unit === 'today' && v > 0 ? (
-      <span className="since">
-        <span className="mk-pulse" />
-        {copy.since(copy.thisMorning)} · <b>+{fmtInt(v)}</b> {copy.plusPeople(v)}
-        {sales > 0 && (
-          <>
-            {' '}
-            · <b>+{sales}</b> {copy.plusSales(sales)}
-          </>
-        )}
-      </span>
-    ) : undefined
+  const lockSec = dayStart + LOOKED_AT * 3600
+  const down = up.list.reduce((n, x) => n + Math.max(0, Math.min(x.ended_at ?? nowSec, nowSec) - Math.max(x.started_at, lockSec)), 0)
+  const sn = unit === 'today' && v > 0 ? sinceOf({ series: cur.series, nowMin: end, sales, downSec: down, calm: stories.length === 0 && sales === 0 }) : null
+  const since = sn ? (
+    <span className="since">
+      <span className="mk-pulse" />
+      {sn.quiet ? (
+        copy.quietSince(sn.morning ? copy.thisMorning : sn.at)
+      ) : (
+        <>
+          {copy.since(sn.morning ? copy.thisMorning : sn.at)} · <b>+{fmtInt(sn.people)}</b> {copy.plusPeople(sn.people)}
+          {sn.sales > 0 && (
+            <>
+              {' '}
+              · <b>+{sn.sales}</b> {copy.plusSales(sn.sales)}
+            </>
+          )}
+          {sn.down > 0 && (
+            <>
+              {' '}
+              · <b style={{ color: 'var(--mk-red)' }}>{copy.downMin(sn.down)}</b>
+            </>
+          )}
+        </>
+      )}
+    </span>
+  ) : undefined
   const reader = readerOf(recent.length ? recent : visits, site.domain, top?.value)
-  const sub = heroSub(reader && !learning && !low ? copy.meet(readerWords(reader)) : null, low, say.sub)
+  const sub = heroSub(reader && !learning && !low ? copy.meet(readerWords(reader)) : null, low, say.sub, say.own)
   const dots = Math.min(80, Math.round(v))
   const crowd = low && !learning ? { big: v === 1 ? copy.onePerson : copy.nPeople(fmtInt(v)), n: dots, note: copy.dotNote(dots < Math.round(v) ? dots : 0) } : null
   const headline = `${say.lead} ${say.long.map((p) => p.t).join('')}`

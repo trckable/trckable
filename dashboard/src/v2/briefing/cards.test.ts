@@ -13,6 +13,7 @@ const base = (o: Partial<CardsIn> = {}): CardsIn => ({
   learning: false,
   low: false,
   slices: { referrer: [], country: [], device: [], entry_page: [] },
+  goals: [],
   rule: 'Compared with the last 4 Fridays, up to 16:30.',
   uptime: { downNow: false, since: '', minutesNow: 0, incidents: [], minutes: 0, lost: 0, a: 0, nowAt: 0.7, b: 0, now: '16:30' },
   ...o,
@@ -71,5 +72,11 @@ describe('the quiet line', () => {
     const cards = cardsOf(base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [], device: [], entry_page: [] } }))
     expect(calmTopics(cards, false)).toEqual(['devices', 'countries', 'pages', 'goals'])
     expect(calmTopics(cards, true)).toContain('search')
+  })
+  it('tells a goal against its own usual, not against a whole day before', () => {
+    const [g] = cardsOf(base({ goals: [slice('signed-up', 30, 31)] })).filter((x) => x.key === 'goals')
+    expect(g).toBeUndefined()
+    const down = cardsOf(base({ goals: [slice('signed-up', 10, 31)] })).find((x) => x.key === 'goals')
+    expect(down?.bad).toBe(true)
   })
 })

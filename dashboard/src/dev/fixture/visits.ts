@@ -81,6 +81,7 @@ export function buildVisits(w: World, site: SiteDef, nowAbs: number): Visits {
     goals: new Uint16Array(total),
     list,
   }
+  const bcarry = new Float64Array(NS)
   let n = 0
   for (let i = 0; i < hours; i++) {
     const hStart = i * 60
@@ -94,7 +95,10 @@ export function buildVisits(w: World, site: SiteDef, nowAbs: number): Visits {
         v.dev[n] = pick(r, site.dv[s])
         v.cty[n] = pick(r, site.ct[s])
         v.pg[n] = pick(r, site.pg[s])
-        const b = r() < BOUNCE[s]
+        // Who leaves after one page is spread evenly, so the day's share is the source's own, as in the mock.
+        bcarry[s] += BOUNCE[s]
+        const b = bcarry[s] >= 1
+        if (b) bcarry[s] -= 1
         v.bounced[n] = b ? 1 : 0
         v.np[n] = b ? 1 : 2 + Math.floor(r() * 3)
         v.dur[n] = b ? Math.floor(r() * 8) : Math.round((v.np[n] - 1) * (30 + r() * 40))
