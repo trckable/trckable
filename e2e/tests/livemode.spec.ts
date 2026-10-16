@@ -185,7 +185,11 @@ test('switching both ways: no blank frame, no shift, scroll kept', async ({ page
   await view.getByRole('button', { name: 'Data' }).click()
   await expect(page.locator('.range-picker')).toBeVisible()
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(y)
-  await page.evaluate(() => window.scrollTo(0, 0))
+  // The reader scrolls back up (a wheel turn ends the page's hold on the old place).
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('wheel'))
+    window.scrollTo(0, 0)
+  })
   expectSamePlace(await view.boundingBox(), top)
   expect(await page.evaluate(() => (window as unknown as { blanks: number }).blanks)).toBe(0)
 })
