@@ -1,0 +1,61 @@
+// What Live shows, worked out from the server's last half hour and the people on the site: the bars, the sources split,
+// how Today stands against its usual, the pages and the countries. Pure: live.test.ts.
+import { countryName, flag } from '../../lib/format'
+import { placesOf, topPages } from '../../features/live/cardsModel'
+import type { LiveNow } from '../../features/live/api'
+import type { Row } from '../../features/live/model'
+
+/** The 30 minutes as bars: each a share of the tallest, never under 3%, and flagged when nothing came. */
+export function barsOf(minutes: number[]): { h: number; z: boolean }[] {
+  const mx = Math.max(0.5, ...minutes)
+  return minutes.map((b) => ({ h: Math.max(3, (b / mx) * 100), z: b === 0 }))
+}
+
+/** The last half hour against the one before it: a signed whole percent, or nothing when there was too little before. */
+export function changeOf(now: number, before: number): { up: boolean; pct: number } | null {
+  if (!(before > 3)) return null
+  const d = (now - before) / before
+  return { up: d >= 0, pct: Math.round(Math.abs(d) * 100) }
+}
+
+export interface Part {
+  channel: string
+  grow: number
+  pct: number
+}
+
+/** The sources bar: the top five that are over 1% each, and the rest as one grey part. */
+export function sourceParts(sources: LiveNow['sources']): { parts: Part[]; other: number } {
+  const total = sources.reduce((n, s) => n + s.visitors, 0)
+  if (!total) return { parts: [], other: 0 }
+  const all = sources.map((s) => ({ channel: s.channel, grow: s.visitors / total, pct: Math.round((s.visitors / total) * 100) })).filter((s) => s.grow > 0.01)
+  const parts = all.slice(0, 5)
+  return { parts, other: Math.max(0, 1 - parts.reduce((n, p) => n + p.grow, 0)) }
+}
+
+function wordOf(v: number, lo: number, hi: number): 'above' | 'below' | 'usual' {
+  if (v > hi) return 'above'
+  return v < lo ? 'below' : 'usual'
+}
+
+/** "Today" against what the same time last week brought: the verdict word and the band the dot sits on. */
+export function todayBand(visitors: number, before: number, compare: boolean): { word: 'above' | 'below' | 'usual'; lo: number; hi: number; max: number } | null {
+  if (!compare || !(before > 0)) return null
+  const lo = Math.floor(before * 0.8)
+  const hi = Math.ceil(before * 1.2)
+  const word = wordOf(visitors, lo, hi)
+  return { word, lo, hi, max: Math.max(visitors, hi, 1) * 1.25 }
+}
+
+/** A position on the bar, as a percent of its width (never at the very ends). */
+export const place = (x: number, max: number): number => Math.max(2, Math.min(98, (x / (max || 1)) * 100))
+
+export function listsOf(rows: Row[]) {
+  const places = placesOf(rows, 5)
+  return {
+    pages: topPages(rows, 5).map((p) => ({ label: p.key, n: p.n })),
+    countries: (places?.parts ?? []).map((p) => ({ label: countryName(p.key), flag: flag(p.key), key: p.key, n: p.n })),
+    mobile: places?.mobile ?? 0,
+    desktop: places?.desktop ?? 0,
+  }
+}

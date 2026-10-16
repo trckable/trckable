@@ -1,0 +1,37 @@
+// Live's words, as the walkthrough writes them. English here; other languages come as message files.
+import { defineCopy } from '../../i18n'
+import { fmtInt } from '../../lib/format'
+
+export const copy = defineCopy('v2.live', {
+  live: 'Live',
+  window: (at: string) => `Last 30 minutes · ${at}`,
+  onlineNow: 'Online now',
+  visitors30: 'Visitors, last 30 min',
+  change: (up: boolean, pct: number) => `${up ? '+' : '−'}${pct}% vs the 30 minutes before`,
+  downBox: 'The site is not answering · nobody can reach it',
+  ago30: '30 min ago',
+  nowWord: 'now',
+  topSources: 'Top sources right now',
+  noVisitors: 'No visitors right now.',
+  revenueToday: 'Revenue today',
+  connectRevenue: 'Connect revenue',
+  onSite: 'On the site right now',
+  people: (n: number) => (n === 1 ? '1 person' : `${fmtInt(n)} people`),
+  nobody: 'Nobody on the site right now. Quiet is normal at this hour.',
+  still: 'Still on the site',
+  replay: 'Replay',
+  replayTitle: 'Watch replay',
+  seeAll: (n: number) => `See all ${fmtInt(n)}`,
+  today: 'Today',
+  above: 'above usual',
+  below: 'below usual',
+  usualWord: 'as usual',
+  visitors: 'visitors',
+  usual: (lo: number, hi: number) => `usual ${fmtInt(lo)}–${fmtInt(hi)}`,
+  last7: 'Last 7 days',
+  pages: 'Pages',
+  countries: 'Countries',
+  devices: (mobile: number, desktop: number) => `Mobile ${mobile}% · Desktop ${desktop}%`,
+  failed: 'Live could not be read. Trying again.',
+  loading: 'Reading the last half hour',
+})

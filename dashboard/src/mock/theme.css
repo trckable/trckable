@@ -1,0 +1,49 @@
+/* The walkthrough's colours: its own in the dark theme (they are the design), the page's tokens in the light one. */
+.mk {
+  --mk-grid: #1d1f23;
+  --mk-axis: #70747b;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) .mk {
+    color-scheme: light;
+    --mk-bg: var(--bg);
+    --mk-card: var(--surface);
+    --mk-card2: var(--surface-2);
+    --mk-line: var(--border);
+    --mk-text: var(--text);
+    --mk-muted: var(--text-3);
+    --mk-faint: var(--text-4);
+    --mk-lime: var(--accent);
+    --mk-red: var(--down);
+    --mk-grid: var(--grid);
+    --mk-axis: var(--text-4);
+  }
+}
+:root[data-theme='light'] .mk {
+  color-scheme: light;
+  --mk-bg: var(--bg);
+  --mk-card: var(--surface);
+  --mk-card2: var(--surface-2);
+  --mk-line: var(--border);
+  --mk-text: var(--text);
+  --mk-muted: var(--text-3);
+  --mk-faint: var(--text-4);
+  --mk-lime: var(--accent);
+  --mk-red: var(--down);
+  --mk-grid: var(--grid);
+  --mk-axis: var(--text-4);
+}
+/* Inside the dashboard the walkthrough is a body, not a page: no padding of its own, no background over the page. */
+.mk.mk-body {
+  padding: 0;
+  max-width: none;
+  background: none;
+}
+/* A panel that floats over the page (the detail, a menu): the walkthrough's classes without its page box, so fixed means the screen. */
+.mk.mk-portal {
+  container-type: normal;
+  padding: 0;
+  max-width: none;
+  width: auto;
+  background: none;
+}
