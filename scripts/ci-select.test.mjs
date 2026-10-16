@@ -107,15 +107,15 @@ test('a pull request runs WebKit on the key specs and the changed ones, in one j
   assert.deepEqual(jobs(o, 'demo_browsers'), ['chromium:all'])
   // Every spec on the other two; the key specs only on WebKit.
   const wide = out('dashboard/src/styles.css')
-  assert.deepEqual(jobs(wide).slice(0, 2), ['chromium:all', 'firefox:all'])
-  assert.equal(JSON.parse(wide.browsers)[2].specs, 'chart-hover cookieless install journey landing live methods onboarding switcher tracking')
+  assert.deepEqual(jobs(wide).slice(0, 6), ['chromium 1/3:all', 'chromium 2/3:all', 'chromium 3/3:all', 'firefox 1/3:all', 'firefox 2/3:all', 'firefox 3/3:all'])
+  assert.equal(JSON.parse(wide.browsers)[6].specs, 'chart-hover cookieless install journey landing live methods onboarding switcher tracking')
   assert.equal(wide.full, 'false')
 })
 
 test('main, a release and the nightly run put the whole suite on WebKit, in shards', () => {
   const o = outputs(everything())
   assert.equal(o.full, 'true')
-  assert.deepEqual(jobs(o), ['chromium:all', 'firefox:all', 'webkit 1/3:all', 'webkit 2/3:all', 'webkit 3/3:all'])
+  assert.deepEqual(jobs(o), ['chromium 1/3:all', 'chromium 2/3:all', 'chromium 3/3:all', 'firefox 1/3:all', 'firefox 2/3:all', 'firefox 3/3:all', 'webkit 1/3:all', 'webkit 2/3:all', 'webkit 3/3:all'])
   assert.deepEqual(jobs(o, 'demo_browsers'), ['chromium:all', 'firefox:all', 'webkit 1/2:all', 'webkit 2/2:all'])
   assert.deepEqual(JSON.parse(o.browsers).filter((j) => j.browser === 'webkit').map((j) => j.shard), ['1/3', '2/3', '3/3'])
 })

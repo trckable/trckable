@@ -48,6 +48,7 @@ const DASHBOARD = [
 // stream, the install paths, and the screens Safari has broken before.
 const WEBKIT_SMOKE = ['chart-hover', 'cookieless', 'install', 'journey', 'landing', 'live', 'methods', 'onboarding', 'switcher', 'tracking']
 const WEBKIT_SHARDS = 3 // the whole browser suite on WebKit
+const WHOLE_SHARDS = 3 // the whole suite on Chromium or Firefox: one job outgrew Playwright's 10 minute limit
 const WEBKIT_DEMO_SHARDS = 2 // the accessibility pass and the Full charts on WebKit
 
 const PROSE = /(\.md$|^(docs|\.github)\/.*\.(png|jpe?g|gif|svg|webp)$)/
@@ -127,11 +128,12 @@ const jobs = (browser, shards, specs) => Array.from({ length: shards }, (_, i) =
 
 const names = (v) => (v === ALL ? ALL : [...v].sort().join(' '))
 
-/** The browser jobs. Chromium and Firefox run what was selected; WebKit runs it all in shards on a full run, else the key specs and the changed ones. */
+/** The browser jobs. Chromium and Firefox run what was selected (the whole suite in shards); WebKit runs it all in shards on a full run, else the key specs and the changed ones. */
 export function browserMatrix(s) {
   if (s.e2e !== ALL && s.e2e.size === 0) return []
   const webkit = s.full ? jobs('webkit', WEBKIT_SHARDS, ALL) : jobs('webkit', 1, names(s.e2e === ALL ? new Set(WEBKIT_SMOKE) : new Set([...WEBKIT_SMOKE, ...s.e2e])))
-  return [...jobs('chromium', 1, names(s.e2e)), ...jobs('firefox', 1, names(s.e2e)), ...webkit]
+  const whole = s.e2e === ALL ? WHOLE_SHARDS : 1 // a handful of specs stays one job
+  return [...jobs('chromium', whole, names(s.e2e)), ...jobs('firefox', whole, names(s.e2e)), ...webkit]
 }
 
 /** The accessibility and demo-data jobs: Chromium on a pull request, all three on a full run. */
