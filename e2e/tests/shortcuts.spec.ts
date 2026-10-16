@@ -36,10 +36,9 @@ async function opens(page: Page, key: string, target: Locator) {
   await expect(target).toBeVisible()
 }
 
-// fixme: S opened the old site switcher's dialog and Shift S the old share dialog; the one v2 header opens its site menu and the settings.
-test.fixme('S, U, comma, slash and Shift S open what their buttons open', async ({ page }) => {
+test('S, U, comma, slash and Shift S open what their buttons open', async ({ page }) => {
   await ready(page)
-  const sites = page.getByRole('dialog', { name: 'Sites' })
+  const sites = page.locator('#siteMenu.on')
   const account = page.getByRole('menu', { name: 'Account' })
 
   await opens(page, 's', sites)
@@ -77,8 +76,7 @@ test('R plays and pauses Replay', async ({ page }) => {
   await expect(page.getByRole('button', { name: /^Replay this period/ })).toBeVisible()
 })
 
-// fixme: asks the old site switcher's dialog or seal, which has no home in the one v2 header; the code is kept.
-test.fixme('the keys do nothing while a field has them, or a dialog is open', async ({ page }) => {
+test('the keys do nothing while a field has them, or a dialog is open', async ({ page }) => {
   await ready(page)
   // Typing "s" in the Filter menu's search is typing.
   await page.keyboard.press('/')
@@ -86,13 +84,13 @@ test.fixme('the keys do nothing while a field has them, or a dialog is open', as
   await expect(search).toBeVisible()
   await search.focus()
   await page.keyboard.type('sus')
-  await expect(page.getByRole('dialog', { name: 'Sites' })).toBeHidden()
+  await expect(page.locator('#siteMenu.on')).toBeHidden()
   await page.keyboard.press('Escape')
   // Under a dialog the page is not the one being used.
   await page.keyboard.press('Shift+S')
   await expect(page.locator('.sd-modal')).toBeVisible()
   await page.keyboard.press('s')
-  await expect(page.getByRole('dialog', { name: 'Sites' })).toBeHidden()
+  await expect(page.locator('#siteMenu.on')).toBeHidden()
 })
 
 test('the list shows them in a group of their own, and a key an action has is refused', async ({ page }) => {

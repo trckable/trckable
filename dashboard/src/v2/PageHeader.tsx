@@ -108,22 +108,25 @@ export function PageHeader(p: PageHeaderProps) {
         explore={<ExploreChip label={copy.explore} kbd="⌘K" onClick={exploreOpen} />}
         extras={slots.headerExtra}
         bell={<Bell site={site} notices={notices} />}
-        account={isShared() ? null : <AccountMenu site={site ?? undefined} />}
+        account={isShared() ? null : <AccountMenu site={site ?? undefined} alert={slots.accountAlert} />}
         keys={
           <>
             {site && !isShared() && !viewer && (
-              <>
-                <button type="button" className="sr" data-key="settings" tabIndex={-1} aria-hidden="true" onClick={() => openSettings(site)}>
-                  {copy.settings}
-                </button>
-                <button type="button" className="sr" data-key="share" tabIndex={-1} aria-hidden="true" onClick={() => openSettings(site, 'sharing')}>
-                  {copy.share}
-                </button>
-              </>
+              <button type="button" className="sr" data-key="settings" tabIndex={-1} aria-hidden="true" onClick={() => openSettings(site)}>
+                {copy.settings}
+              </button>
             )}
-            <button type="button" className="sr" data-key="filter" tabIndex={-1} aria-hidden="true" onClick={() => setFind(true)}>
-              {copy.filter}
-            </button>
+            {/* Share and Filter have their own buttons on a page that is not Live or the Briefing: the key is theirs there. */}
+            {here && site && !isShared() && !viewer && (
+              <button type="button" className="sr" data-key="share" tabIndex={-1} aria-hidden="true" onClick={() => openSettings(site, 'sharing')}>
+                {copy.share}
+              </button>
+            )}
+            {here && (
+              <button type="button" className="sr" data-key="filter" tabIndex={-1} aria-hidden="true" onClick={() => setFind(true)}>
+                {copy.filter}
+              </button>
+            )}
           </>
         }
       />

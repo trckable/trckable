@@ -3,7 +3,7 @@
 // screens a person uses (Data, Live, the site list, the period sheet, the ⋯
 // menu, Settings, Share). Chromium only: it reads boxes and computed sizes.
 import { expect, test, type Page } from './fixtures'
-import { API } from '../playwright.config'
+import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'reads boxes and computed sizes: one engine is enough')
@@ -60,7 +60,8 @@ async function clean(page: Page) {
 }
 
 async function data(page: Page) {
-  await page.goto(API + '/example.com?view=data')
+  // The site with history: example.com has visits only when another suite has sent some, and a site with none shows its install page.
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=data`)
   await expect(page.locator('.overview-chart .chart-wrap svg[role="img"]')).toBeVisible({ timeout: 20_000 })
 }
 
@@ -70,7 +71,7 @@ test('the Data view: header, row, numbers, chart and cards', async ({ page }) =>
 })
 
 test('Story: cards, tiles and answers fit at 390 and 360, with 44 px targets', async ({ page }) => {
-  await page.goto(API + '/example.com?v=story')
+  await page.goto(`${API}/${HISTORY_DOMAIN}?v=story`)
   await expect(page.locator('.sv-tile')).toHaveCount(4)
   await clean(page)
   await page.setViewportSize({ width: 360, height: 800 })
@@ -103,11 +104,10 @@ test('the Live view', async ({ page }) => {
   await clean(page)
 })
 
-// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
-test.fixme('the site list is a bottom sheet with rows 44 px tall', async ({ page }) => {
+test('the site list is a bottom sheet with rows 44 px tall', async ({ page }) => {
   await data(page)
-  await page.locator('button.site-btn').click()
-  const sheet = page.locator('.pop.sites')
+  await page.locator('#siteBtn').click()
+  const sheet = page.locator('#siteMenu.on')
   await expect(sheet).toBeVisible()
   const box = (await sheet.boundingBox())!
   expect(box.y + box.height).toBeGreaterThanOrEqual(844 - 1) // on the bottom edge
@@ -130,12 +130,11 @@ test('the period sheet and the ⋯ menu', async ({ page }) => {
   await clean(page)
 })
 
-// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
-test.fixme('Settings, and the share card', async ({ page }) => {
+test('Settings, and the share card', async ({ page }) => {
   await data(page)
-  // The cog is in the site list's foot on a phone: the header has no room for it beside the name.
-  await page.locator('button.site-btn').click()
-  await page.locator('.foot-settings').click()
+  // Site settings is the last row of the site list's foot: the header has no room for a cog beside the name.
+  await page.locator('#siteBtn').click()
+  await page.locator('#siteMenu').getByRole('button', { name: 'Site settings' }).click()
   await expect(page.locator('.modal.window')).toBeVisible()
   await clean(page)
   await page.getByRole('button', { name: 'Close' }).click()
@@ -185,9 +184,9 @@ function spills() {
 
 for (const [name, path, ready] of [
   ['All sites', '/sites', '.nx-line'],
-  ['Story', '/example.com?view=data&v=story', '.sv-tile'],
-  ['Data, every card', '/example.com?view=data&v=explore&mode=full', '.kit-tabs'],
-  ['Live', '/example.com?view=live', '.liveview'],
+  ['Story', `/${HISTORY_DOMAIN}?view=data&v=story`, '.sv-tile'],
+  ['Data, every card', `/${HISTORY_DOMAIN}?view=data&v=explore&mode=full`, '.kit-tabs'],
+  ['Live', `/${HISTORY_DOMAIN}?view=live`, '.liveview'],
 ] as const) {
   test(`${name}: no card is wider than it is, nothing passes the screen's edge (390 and 360)`, async ({ page }) => {
     await page.goto(API + path)

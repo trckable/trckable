@@ -13,10 +13,10 @@ import { useMenu } from './useMenu'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
 const warmUp = () => {
-  SiteList.preload()
+  void SiteList.preload()
   preloadLayout()
 }
-/** The list opens with its final order: the layout is waited for (300 ms at most) rather than shown late. */
+/** The list opens whole and in its final order: its chunk is waited for, and the layout (300 ms at most), rather than shown late. */
 const LAYOUT_WAIT = 300
 
 const DOT: Record<string, string> = { stopped: 'down', quiet: 'quiet' }
@@ -42,7 +42,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   const state = cur ? dotState(cur) : 'live'
   const toggle = () => {
     if (open) setOpen(false)
-    else void layoutReady(LAYOUT_WAIT).then(() => setOpen(true))
+    else void Promise.all([layoutReady(LAYOUT_WAIT), SiteList.preload()]).then(() => setOpen(true))
   }
   const done = useCallback(() => close(), [close])
   const footer = (

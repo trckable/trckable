@@ -113,6 +113,31 @@ html:not([style*='--dsk-name']) .dsk-name {
 html[data-ask] .dsk-ask {
   display: block !important;
 }
+.dsk-explore {
+  width: 185px;
+  height: 32px;
+  border-radius: 999px !important;
+}
+.dsk-bell {
+  width: 32px;
+  height: 32px;
+  border-radius: 50% !important;
+}
+/* Data's row under the header: the Live | Briefing | Data switch and Ask, 8 px under it. */
+.dsk-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 36px;
+  margin-top: -8px;
+}
+.dsk-tools > i {
+  flex: none;
+}
+.dsk-tools > .dsk-switch {
+  width: 201px;
+  margin-right: 0;
+}
 .dsk-avatar {
   width: 36px;
   height: 36px;
@@ -276,7 +301,18 @@ html[style*='--dsk-setup'] .dsk-setup {
     gap: 12px;
   }
   .dsk-header {
-    height: 46px;
+    height: 53px;
+  }
+  .dsk-tools {
+    height: 44px;
+    margin-top: -4px;
+    justify-content: flex-start;
+  }
+  .dsk-tools > .dsk-grow {
+    display: none;
+  }
+  .dsk-header > .dsk-explore {
+    display: none;
   }
   .dsk-switch {
     display: none;

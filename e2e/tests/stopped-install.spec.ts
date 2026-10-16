@@ -1,5 +1,5 @@
 // Two layouts that went wrong: a stopped site in the switcher kept only a red
-// ring where its mark should be (the stopped banner's class styled the dot),
+// ring where its dot should be (the stopped banner's class styled the dot),
 // and Settings → Install squeezed the "Not verified" card under the code panel
 // (the scrolling column shrank it).
 import { expect, test, type Locator, type Page } from './fixtures'
@@ -24,8 +24,7 @@ async function newSite(page: Page, tag: string) {
 
 const box = async (l: Locator) => (await l.boundingBox())!
 
-// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
-test.fixme('a stopped site keeps its mark in the switcher', async ({ page, browserName }) => {
+test('a stopped site keeps its dot in the switcher', async ({ page, browserName }) => {
   const site = await newSite(page, `stopped-${browserName}`)
   // Stopped: visits until three days ago, and a later check could not reach the site.
   const now = Math.floor(Date.now() / 1000)
@@ -37,28 +36,23 @@ test.fixme('a stopped site keeps its mark in the switcher', async ({ page, brows
     await r.fulfill({ response: res, json: body })
   })
   await page.goto(`${API}/example.com`)
-  await page.locator('.site-pick .site-btn').click()
+  await page.locator('#siteBtn').click()
   const row = page.locator(`[data-site="${site.id}"]`)
   const icon = row.locator('.state-icon.down')
   await expect(icon).toBeVisible()
   await expect(icon).toHaveAttribute('aria-label', 'Not reachable for 3d. Open the site to see what’s wrong.')
   await expect(row.locator('.state-line')).toHaveText('Not reachable · 3d')
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/state-icon-down-${browserName}.png` })
-  const mark = row.locator('.site-mark')
-  const dot = row.locator('.state-dot.stopped')
-  await expect(mark).toBeVisible()
-  await expect(mark).toHaveText(site.domain[0].toUpperCase())
-  // The dot is the small corner dot, not a box over the mark.
+  const dot = row.locator('.mk-dot.down')
+  await expect(dot).toBeVisible()
+  // The dot is the small dot before the name, not a box over it.
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/stopped-mark-${browserName}.png` })
-  const m = await box(mark)
   const d = await box(dot)
   expect(d.width).toBeLessThan(14)
   expect(d.height).toBeLessThan(14)
-  expect(d.width * d.height).toBeLessThan((m.width * m.height) / 3)
 })
 
-// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
-test.fixme('a quiet site shows a moon with its explanation', async ({ page, browserName }) => {
+test('a quiet site shows a moon with its explanation', async ({ page, browserName }) => {
   const site = await newSite(page, `quiet-${browserName}`)
   const gone = await newSite(page, `gone-${browserName}`)
   const now = Math.floor(Date.now() / 1000)
@@ -77,7 +71,7 @@ test.fixme('a quiet site shows a moon with its explanation', async ({ page, brow
     await page.emulateMedia({ colorScheme: 'dark' })
   }
   await page.goto(`${API}/example.com`)
-  await page.locator('.site-pick .site-btn').click()
+  await page.locator('#siteBtn').click()
   const row = page.locator(`[data-site="${site.id}"]`)
   const icon = row.locator('.state-icon.quiet')
   await expect(icon).toHaveAttribute('aria-label', 'No visits for 19h. Nothing looks wrong with the page.')

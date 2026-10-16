@@ -8,6 +8,7 @@ import type { Site } from '../../lib/api'
 import { useDomainControl } from '../../lib/domainControl'
 import { isViewer } from '../../lib/me'
 import { prefetchSite } from '../../lib/dashQuery'
+import { Tooltip } from '../../kit/Tooltip'
 import { EMPTY, flat, placeKey, sectionsOf, type Place } from '../../features/sites/layout'
 import { saveLayout, useSiteLayout } from '../../features/sites/useSiteLayout'
 import { useReorder } from '../../features/sites/useReorder'
@@ -23,6 +24,15 @@ import { DomainRows } from './DomainRows'
 import type { ReactNode } from 'react'
 
 const PREFETCH = 3
+
+/** The keys that work in the list, said once at the foot (desktop only): move, open, open the site itself, close. */
+function Keys() {
+  return (
+    <p className="foot-keys mk-quiet" aria-hidden="true">
+      {menu.keyMove.join(' ')} {menu.keyOpen} <span title={menu.openSiteKey}>{menu.keyOpenSite}</span> {menu.keyClose}
+    </p>
+  )
+}
 
 export interface SiteListProps {
   sites: Site[]
@@ -56,10 +66,11 @@ export function SiteList(p: SiteListProps) {
     for (const s of sites.filter((x) => x.id !== current?.id).slice(0, PREFETCH)) prefetchSite(s)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- once, when the list opens
   useEffect(() => {
-    const box = root.current
-    // Search takes the typing; the site you are on is in view when the list opens, however long it is.
-    search.current?.focus()
-    box?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest' })
+    // Search takes the typing; the site you are on is in view when the list opens, however long it is. Only the list moves: the page stays where it is.
+    search.current?.focus({ preventScroll: true })
+    const box = list.current
+    const on = box?.querySelector<HTMLElement>('[aria-current="page"]')
+    if (box && on) box.scrollTop += on.getBoundingClientRect().top - box.getBoundingClientRect().top - (box.clientHeight - on.offsetHeight) / 2
   }, [])
   const found = useMemo(() => {
     const t = q.trim().toLowerCase()
@@ -155,9 +166,13 @@ export function SiteList(p: SiteListProps) {
         {said}
       </p>
       {p.footer}
-      <p className="foot-keys mk-quiet" aria-hidden="true" title={arrange && sites.length > 1 ? menu.keys : undefined}>
-        {menu.keyMove.join(' ')} {menu.keyOpen} <span title={menu.openSiteKey}>{menu.keyOpenSite}</span> {menu.keyClose}
-      </p>
+      {arrange && sites.length > 1 ? (
+        <Tooltip text={menu.keys} align="right">
+          {() => <Keys />}
+        </Tooltip>
+      ) : (
+        <Keys />
+      )}
     </div>
   )
 }

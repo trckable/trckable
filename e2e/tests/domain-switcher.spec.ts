@@ -55,25 +55,24 @@ async function shoot(page: Page, name: string) {
   }
 }
 
-const tag = (page: Page) => page.locator('.dom-btn')
+// The domain picked is said in the site chip ("/ docs"); the choice is a section of the site list, under All sites.
+const tag = (page: Page) => page.locator('#siteBtn .dom')
 const phone = (page: Page) => page.viewportSize()!.width < 641
-// Wide: the crumb after the site's name opens the list. A phone has only the site; its list holds the domain rows.
 const openList = async (page: Page) => {
-  if (phone(page)) await page.locator('.site-pick .site-btn').click()
-  else await tag(page).click()
+  await page.locator('#siteBtn').click()
+  await expect(page.locator('#siteMenu.on')).toBeVisible()
 }
 const said = async (page: Page, text: string) => {
-  if (phone(page)) await expect(tag(page)).toBeHidden()
-  else await expect(tag(page)).toHaveText(text)
+  if (text === '/All') await expect(tag(page)).toHaveCount(0)
+  else await expect(tag(page)).toHaveText(text.replace('/', '/ '))
 }
-const row = (page: Page) => page.locator('.dom-pop').first()
+const row = (page: Page) => page.locator('#siteMenu .sites-domains').first()
 const opt = (page: Page, name: string | RegExp) => row(page).getByRole('menuitemradio', { name })
 
-// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
-test.fixme('two domains: pick one in the site list, the dashboard follows; All clears it', async ({ page }) => {
+test('two domains: pick one in the site list, the dashboard follows; All clears it', async ({ page }) => {
   await open(page, `/${two}?view=data`)
-  if (phone(page)) await expect(page.locator('.site-btn')).toBeVisible({ timeout: 30_000 })
-  else await expect(tag(page)).toHaveText('/All', { timeout: 30_000 })
+  await expect(page.locator('#siteBtn')).toBeVisible({ timeout: 30_000 })
+  await said(page, '/All')
   await shoot(page, 'all')
   await openList(page)
   await expect(opt(page, 'All domains')).toHaveAttribute('aria-checked', 'true')
@@ -97,7 +96,7 @@ test.fixme('two domains: pick one in the site list, the dashboard follows; All c
 
 test('opened already filtered: every domain is listed and that one is on; Live has no domain control', async ({ page }) => {
   await open(page, `/${two}?view=data&f=hostname%3Adocs.${two}`)
-  if (!phone(page)) await expect(tag(page)).toHaveText('/docs', { timeout: 30_000 })
+  await expect(tag(page)).toHaveText('/ docs', { timeout: 30_000 })
   await openList(page)
   await expect(row(page).getByRole('menuitemradio')).toHaveCount(3)
   await expect(opt(page, /^docs/)).toHaveAttribute('aria-checked', 'true')

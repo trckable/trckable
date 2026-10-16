@@ -498,7 +498,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       )}
       <AskPanel open={askOn && askOpen} onClose={() => setAskOpen(false)} />
   </>)
-  return liveView || briefing ? <><Suspense fallback={null}><V2View tab={liveView ? 'live' : 'briefing'} waiting={waiting} site={site} sites={sites} view={view} range={range} data={real} loading={loading || firstLoad} money={money ? fmtM : undefined} onGoal={() => setAddGoals(true)} onAsk={askOn ? () => setAskOpen(true) : undefined} live={{ site: site.id, timezone: site.timezone, stream, cookieless: site.cookieless, whole: site, onVisitor: journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined }} /></Suspense>{tail}</> : (
+  return liveView || briefing ? <><Suspense fallback={null}><V2View tab={liveView ? 'live' : 'briefing'} waiting={waiting} site={site} sites={sites} view={view} range={range} data={real} loading={loading || firstLoad} money={money ? fmtM : undefined} onGoal={() => setAddGoals(true)} onAsk={askOn ? () => setAskOpen(true) : undefined} live={{ site: site.id, timezone: site.timezone, stream, cookieless: site.cookieless, whole: site, onVisitor: journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined }} /></Suspense>{briefing && !waiting && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}{tail}</> : (
     <>
       <HeaderBand><div className="header quiet">
         {header}{!waiting && !liveView && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}

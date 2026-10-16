@@ -25,11 +25,14 @@ export function lazyLoad<T extends ComponentType<any>>(load: () => Promise<{ def
     const [Ready] = useState(() => ready)
     return createElement(Ready ?? Lazy, props)
   }
-  const preload = () => {
-    void get().catch(() => {
-      once = null // a failed download may be tried again
-    })
-  }
+  /** Starts the download; the promise says when it is here (a failed one is forgotten, so it may be tried again). */
+  const preload = (): Promise<void> =>
+    get().then(
+      () => undefined,
+      () => {
+        once = null
+      },
+    )
   return Object.assign(Loaded, { preload })
 }
 

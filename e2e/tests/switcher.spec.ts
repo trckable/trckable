@@ -35,16 +35,15 @@ async function cleanUp(r: APIRequestContext) {
 }
 
 async function open(page: Page) {
-  await page.locator('.site-pick .site-btn').click()
-  const menu = page.getByRole('dialog', { name: 'Sites' })
+  await page.locator('#siteBtn').click()
+  const menu = page.locator('#siteMenu.on')
   await expect(menu).toBeVisible()
   return menu
 }
 
 const row = (page: Page, s: Site) => page.locator(`[data-site="${s.id}"]`)
 
-// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
-test.fixme('pin, group, reorder by keyboard and drag, saved for the account, same order in All sites', async ({ page, browserName }) => {
+test('pin, group, reorder by keyboard and drag, saved for the account, same order in All sites', async ({ page, browserName }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await exclusive('switcher', async () => {
@@ -53,9 +52,9 @@ test.fixme('pin, group, reorder by keyboard and drag, saved for the account, sam
     try {
       await page.goto(`${API}/example.com`)
       let menu = await open(page)
-      // Past six sites: a search.
-      await expect(menu.getByRole('searchbox', { name: 'Search sites' })).toBeVisible()
-      await expect(menu.getByRole('button', { name: /^Sites/ })).toBeVisible()
+      // The finder, All sites first, and Add a site last.
+      await expect(menu.getByRole('searchbox', { name: 'Find a site...' })).toBeVisible()
+      await expect(menu.getByRole('button', { name: /^All sites/ })).toBeVisible()
       await expect(menu.getByRole('button', { name: /Add a site/ })).toBeVisible()
 
       // Pin the last new site: it goes to the top, under "Pinned".
@@ -101,7 +100,7 @@ test.fixme('pin, group, reorder by keyboard and drag, saved for the account, sam
       await page.keyboard.press('Escape')
       await page.mouse.up()
       await expect(row(page, b)).not.toHaveClass(/dragging/)
-      await expect(page.locator('.pop.sites')).toBeVisible()
+      await expect(page.locator('#siteMenu.on')).toBeVisible()
       await page.waitForTimeout(300)
       expect(idx(await layout(page.request), b)).toBeGreaterThan(idx(await layout(page.request), c))
       await page.mouse.move(grab.x + grab.width / 2, grab.y + grab.height / 2)
@@ -117,7 +116,7 @@ test.fixme('pin, group, reorder by keyboard and drag, saved for the account, sam
       await expect(menu.locator('.site-section').first().getByRole('heading', { name: 'Pinned' })).toBeVisible()
       await expect(menu.getByRole('button', { name: new RegExp(`^Clients ${browserName}, 1 site`) })).toBeVisible()
       // Search flattens the sections.
-      await menu.getByRole('searchbox', { name: 'Search sites' }).fill(`sw2-${tag}`)
+      await menu.getByRole('searchbox', { name: 'Find a site...' }).fill(`sw2-${tag}`)
       await expect(menu.locator('[data-site]')).toHaveCount(1)
       await page.keyboard.press('Escape')
 
@@ -130,8 +129,7 @@ test.fixme('pin, group, reorder by keyboard and drag, saved for the account, sam
   })
 })
 
-// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
-test.fixme('the dot is real (in the list, none on the avatar): a visit in the last five minutes, from the sites list', async ({ page, browserName }) => {
+test('the dot is real (in the list, none on the avatar): a visit in the last five minutes, from the sites list', async ({ page, browserName }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   const ctx = await page.context().browser()!.newContext()
   const p = await ctx.newPage()
@@ -139,44 +137,33 @@ test.fixme('the dot is real (in the list, none on the avatar): a visit in the la
   await p.waitForTimeout(1500)
   await ctx.close()
   await page.goto(`${API}/example.com`)
-  await expect(page.locator('.site-pick .site-btn .state-dot')).toHaveCount(0) // the avatar carries no marks; the list says the state
+  await expect(page.locator('#siteBtn .mk-dot.now')).toHaveCount(0) // the chip carries no "now" mark; the list says the state
   const menu = await open(page)
-  await expect(menu.locator('.site .state-dot.now').first()).toBeVisible({ timeout: 15_000 })
+  await expect(menu.locator('.site .mk-dot.now').first()).toBeVisible({ timeout: 15_000 })
   // In the list the dot says it alone: no line of text under the name.
-  await expect(menu.locator('.site .state-dot.now').first()).toBeVisible()
   await expect(menu.locator('.now-note')).toHaveCount(0)
 })
 
-// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
-test.fixme('the chosen site\'s dot sits on the middle of its row, level with the icon', async ({ page, browserName }) => {
+test('the chosen site\'s dot sits on the middle of its row', async ({ page, browserName }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   for (const [width, height] of [[1280, 800], [390, 844]]) {
     await page.setViewportSize({ width, height })
     await page.goto(`${API}/example.com`)
     const menu = await open(page)
     const on = menu.locator('.site.on').first()
-    // The sheet slides in: measure all three in one go, once it has stopped.
-    const mids = () =>
+    // The sheet slides in: measure once it has stopped. The dot is level with the row's middle.
+    const gap = () =>
       on.evaluate((el) => {
         const r = el.getBoundingClientRect()
-        const cs = getComputedStyle(el, '::before')
-        const m = el.querySelector('.site-mark')!.getBoundingClientRect()
-        return {
-          row: r.top + r.height / 2,
-          dot: r.top + parseFloat(cs.top) + parseFloat(cs.marginTop) + parseFloat(cs.height) / 2,
-          icon: m.top + m.height / 2,
-        }
+        const d = el.querySelector('.mk-dot')!.getBoundingClientRect()
+        return Math.abs(r.top + r.height / 2 - (d.top + d.height / 2))
       })
-    await expect.poll(async () => {
-      const v = await mids()
-      return Math.max(Math.abs(v.dot - v.icon), Math.abs(v.dot - v.row))
-    }).toBeLessThanOrEqual(1)
+    await expect.poll(gap).toBeLessThanOrEqual(1)
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/switcher-dot-${width}-${browserName}.png` })
   }
 })
 
-// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
-test.fixme('on a phone the switcher fits the screen', async ({ page, browserName }) => {
+test('on a phone the switcher fits the screen', async ({ page, browserName }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/example.com`)
@@ -188,8 +175,7 @@ test.fixme('on a phone the switcher fits the screen', async ({ page, browserName
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/switcher-phone-${browserName}.png` })
 })
 
-// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
-test.fixme('the first open is final: the popup does not move or resize afterwards', async ({ page, browserName }) => {
+test('the first open is final: the popup does not move or resize afterwards', async ({ page, browserName }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await exclusive('switcher', async () => {
@@ -207,29 +193,25 @@ test.fixme('the first open is final: the popup does not move or resize afterward
   })
 })
 
-// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
-test.fixme('the keys work in the list: ↑/↓ move, a number opens that site, and the numbers show without blocking', async ({ page }) => {
+test('the keys work in the list: ↑/↓ move, a number opens that site, and the numbers show without blocking', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/example.com`)
   const menu = await open(page)
   // Today's numbers arrive after the list is open.
-  await expect(menu.locator('.site .tail').first()).toBeVisible({ timeout: 15_000 })
+  await expect(menu.locator('.site .now b').first()).toBeVisible({ timeout: 15_000 })
   const rows = menu.locator('.site')
   await rows.first().focus()
   await page.keyboard.press('ArrowDown')
   await expect(rows.nth(1)).toBeFocused()
   await page.keyboard.press('ArrowUp')
   await expect(rows.first()).toBeFocused()
-  // Compact rows: 32 px on a desktop.
-  expect(await rows.first().evaluate((e: HTMLElement) => e.offsetHeight)).toBe(32)
-  const second = await rows.nth(1).locator('.name b').textContent()
+  const second = await rows.nth(1).locator('.nm').textContent()
   await page.keyboard.press('2')
   await expect(page).toHaveURL(new RegExp('/' + encodeURIComponent(second!).replace(/\./g, '\\.')))
 })
 
 for (const [name, width, height, scheme] of [['desktop', 1440, 900, 'light'], ['desktop-dark', 1440, 900, 'dark'], ['phone', 390, 844, 'dark']] as const) {
-  // fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
-  test.fixme(`a site with a state says it in a line under its name, and the keys hint stays on screen (${name})`, async ({ page, browserName }) => {
+    test(`a site with a state says it in a line under its name, and the keys hint stays on screen (${name})`, async ({ page, browserName }) => {
     await page.setViewportSize({ width, height })
     await page.emulateMedia({ colorScheme: scheme })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])

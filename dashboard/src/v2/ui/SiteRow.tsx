@@ -15,7 +15,7 @@ import { dotState } from '../../features/sites/StateDot'
 import { stateLine } from '../../features/sites/stateLine'
 import { OpenSite, openSiteTab } from '../../features/sites/OpenSite'
 import { silence } from '../../features/sitestatus/time'
-import { VerifiedPill } from '../../features/verified/VerifiedPill'
+import { SiteSeal } from '../../features/verified/SiteSeal'
 import type { Arrange } from '../../features/sites/arrange'
 import { copy as v2 } from '../copy'
 
@@ -93,7 +93,7 @@ export function SiteRow({ site, place, on, arrange: a, online, today, onPick }: 
           <div className="nm">{name}</div>
           {note && <div className={`d${line ? ` state-line ${dotState(site)}` : ''}`}>{note}</div>}
         </span>
-        {site.verified && <VerifiedPill verified={site.verified} site={site} seal />}
+        <SiteSeal verified={site.verified} />
         <Tail s={site} online={online} today={today} />
       </button>
       <OpenSite domain={site.domain} />

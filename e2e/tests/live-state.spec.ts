@@ -22,21 +22,21 @@ async function fakeLastSeen(page: Page) {
   return seen
 }
 
-// fixme: the old site switcher (pins, groups, state line, seal, domain choice) has no home in the one v2 header (v2/PageHeader); the code is kept.
-test.fixme('a visit clears the Quiet badge and turns the switcher dot to now, with no reload', async ({ page }) => {
+test('a visit clears the Quiet badge and turns the switcher dot to now, with no reload', async ({ page }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: await session('live-state'), url: API }])
   const seen = await fakeLastSeen(page)
   await page.goto(`${API}/${HISTORY_DOMAIN}?period=7d`)
   const badge = page.locator('.footer-status[data-status="quiet"]') // the foot says it, nothing floats
   await expect(badge).toBeVisible({ timeout: 20_000 })
-  await expect(page.locator('.site-pick .site-btn .state-dot')).toHaveCount(0)
-  await page.locator('.site-pick .site-btn').click() // the switcher stays open while the visit arrives
+  await expect(page.locator('#siteBtn .mk-dot.quiet')).toBeVisible() // the chip's dot is amber while it is quiet
+  await page.locator('#siteBtn').click() // the switcher stays open while the visit arrives
   await expect(page.locator('.state-line.quiet')).toContainText('Quiet · 14h')
   await page.evaluate(() => ((window as unknown as { __kept?: boolean }).__kept = true))
   seen.at = Math.floor(Date.now() / 1000) - 5
   await expect(badge).toHaveCount(0, WAIT)
-  await expect(page.locator('.pop.sites .state-dot.now').first()).toBeVisible(WAIT)
+  await expect(page.locator('#siteMenu .site .mk-dot.now').first()).toBeVisible(WAIT)
+  await expect(page.locator('#siteBtn .mk-dot.quiet')).toHaveCount(0)
   await expect(page.locator('.state-line')).toHaveCount(0)
   expect(await page.evaluate(() => (window as unknown as { __kept?: boolean }).__kept)).toBe(true) // the same page: nothing reloaded
 })

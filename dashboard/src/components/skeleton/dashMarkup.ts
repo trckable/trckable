@@ -9,14 +9,18 @@ import { logoInner } from '../../brand/logo'
 
 const bars = (n: number, cls: string) => Array.from({ length: n }, () => `<i class="${cls}"></i>`).join('')
 
-/** The header row: logo, the site (its name is set by theme.js), the Live | Data switch, Ask, the avatar. */
-const header = (): string =>
+/** The header row: logo, the site (its name is set by theme.js), then Live's switch and Ask, or Data's Explore and the bell, and the avatar. */
+const header = (data: boolean): string =>
   '<div class="dsk-header">' +
   `<span class="dsk-logo tkb-logo">${logoInner()}</span>` +
   '<span class="dsk-site"><i class="dsk-mark"></i><b class="dsk-name"></b></span>' +
   '<span class="dsk-grow"></span>' +
-  '<i class="dsk-switch"></i><i class="dsk-ask"></i><i class="dsk-avatar"></i>' +
+  (data ? '<i class="dsk-explore"></i><i class="dsk-bell"></i>' : '<i class="dsk-switch"></i><i class="dsk-ask"></i>') +
+  '<i class="dsk-avatar"></i>' +
   '</div>'
+
+/** Data keeps the Live | Briefing | Data switch and Ask in a row of their own under the header. */
+const tools = (): string => '<div class="dsk-tools"><span class="dsk-grow"></span><i class="dsk-switch"></i><i class="dsk-ask"></i></div>'
 
 /** The control row under it: the Story | Explore switch, then the period and the buttons. */
 const controls = (): string => '<div class="dsk-controls"><i class="dsk-tabs"></i><i class="dsk-filter"></i><span class="dsk-grow"></span><i class="dsk-period"></i><i class="dsk-btn"></i><i class="dsk-btn"></i></div>'
@@ -38,7 +42,7 @@ const liveTabs = (): string => '<div class="dsk-controls dsk-phone-only"><i clas
 export const liveBody = (): string => '<div class="dsk-live-body"><i class="dsk-card dsk-panel"></i><i class="dsk-card dsk-feed"></i></div>'
 
 const shell = (kind: 'story' | 'live', label: string): string =>
-  `<div class="dsk dsk-is-${kind}" role="status" aria-busy="true" aria-label="${label}">${header()}${kind === 'story' ? controls() + storyBody() : liveTabs() + liveBody()}</div>`
+  `<div class="dsk dsk-is-${kind}" role="status" aria-busy="true" aria-label="${label}">${header(kind === 'story')}${kind === 'story' ? tools() + controls() + storyBody() : liveTabs() + liveBody()}</div>`
 
 /** Both shapes; the one that shows is the <html data-boot> value. */
 export const dashHtml = (label: string): string => shell('story', label) + shell('live', label)

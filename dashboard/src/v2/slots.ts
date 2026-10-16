@@ -2,6 +2,7 @@
 // product provides nothing: the header and the menus are the same without it. A build wraps the app in
 // `V2ExtrasContext.Provider` with what it has.
 import { createContext, useContext, type ReactNode } from 'react'
+import type { AccountAlert } from '../components/AccountDot'
 
 export interface V2Extras {
   /** Rendered in the header, after the person and before the bell (a plan chip). */
@@ -10,6 +11,8 @@ export interface V2Extras {
   menuExtra?: ReactNode
   /** More rows under Notifications in the person's menu (plan & billing). */
   accountRows?: { key: string; name: ReactNode; d?: ReactNode; run: () => void }[]
+  /** A dot on the person's avatar when the account needs them (a limit reached): the public product has none. */
+  accountAlert?: AccountAlert | null
   /** The workspace line at the top of the site menu, and what a press on it does. */
   workspace?: { name: string; d: string; run?: () => void }
 }

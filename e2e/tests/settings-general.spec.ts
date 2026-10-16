@@ -13,8 +13,7 @@ test.skip(({ browserName }) => browserName !== 'chromium', 'one browser is enoug
 const sites = async (page: Page) => ((await (await page.request.get(`${API}/api/v1/sites`)).json()) as { sites: { id: string; name: string; timezone: string; currency: string }[] }).sites
 const mine = async (page: Page, site: TestSite) => (await sites(page)).find((s) => s.id === site.id)!
 
-// fixme: asks the old site switcher's dialog or seal, which has no home in the one v2 header; the code is kept.
-test.fixme('Display name: "What you call this site in trckable" shows in the header, the site list and a shared page', async ({ page, browser }) => {
+test('Display name: "What you call this site in trckable" shows in the header, the site list and a shared page', async ({ page, browser }) => {
   const site = await newSite(page, 'name')
   const shared = await page.request.post(`${API}/api/v1/sites/${site.id}/shares`, { headers: H, data: { name: 'name check', revenue: false, days: 1 } })
   const link = ((await shared.json()) as { url: string }).url.replace(/^https?:\/\/[^/]+/, API)
@@ -33,7 +32,7 @@ test.fixme('Display name: "What you call this site in trckable" shows in the hea
   await page.goto(`${API}/${site.domain}?v=explore`)
   await expect(page.locator('#siteBtn')).toContainText('Bakery of the Bridge')
   await page.locator('#siteBtn').click()
-  await expect(page.getByRole('dialog', { name: 'Sites' })).toContainText('Bakery of the Bridge')
+  await expect(page.locator('#siteMenu.on')).toContainText('Bakery of the Bridge')
   await page.keyboard.press('Escape')
 
   // A page shared with someone who has no account.
