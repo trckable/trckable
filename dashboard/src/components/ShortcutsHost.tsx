@@ -1,6 +1,5 @@
-// Listens for the shortcuts key everywhere and opens the list; the Features key
-// opens the Features pop-up. Each is
-// its own chunk: the key costs nothing until somebody presses it. The keys that
+// Listens for the shortcuts key everywhere and opens the list (its own chunk: the key costs nothing until somebody
+// presses it). The keys that
 // open a menu or press a button on the page (Switch site, Your menu, Settings,
 // Filter, Share, Replay) click the control that carries their name in
 // data-key, so a key does exactly what its button does, and nothing when the
@@ -10,7 +9,7 @@ import { openFeatures } from './AccountMenu'
 import { pressed } from '../lib/keys'
 
 const Shortcuts = lazy(() => import('../views/Shortcuts'))
-const CLICKS = ['site', 'user', 'settings', 'filter', 'share', 'replay']
+const CLICKS = ['site', 'user', 'settings', 'filter', 'share', 'replay', 'create']
 
 /** The control a shortcut stands for, when it is on the page, on screen and enabled. */
 function control(id: string): HTMLElement | undefined {
@@ -40,10 +39,6 @@ export function ShortcutsHost() {
       }
       // Under a dialog the page is not the one being used.
       if (document.querySelector('[aria-modal="true"]')) return
-      if (pressed(e, 'features')) {
-        openFeatures()
-        return
-      }
       const id = CLICKS.find((c) => pressed(e, c))
       const button = id && control(id)
       if (button) {

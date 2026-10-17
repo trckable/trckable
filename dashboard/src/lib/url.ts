@@ -4,6 +4,7 @@ import { useSyncExternalStore } from 'react'
 import type { Filter, FunnelStep } from './api'
 import type { CompareMode } from './dates'
 import { filterParam, parseFilterParam } from './filterSet'
+import { wantsBriefing } from './tab'
 
 const EVENT = 'trckable:navigate'
 
@@ -54,6 +55,8 @@ export interface ViewState {
    *  is the person's choice of the period's numbers, kept when nothing else
    *  in the address would say so. */
   live?: boolean
+  /** Data's second face: the day told in order (?view=briefing). Never together with live. */
+  briefing?: boolean
   /** Full's funnel: its steps, in order ("fs=page:/pricing"). Absent = a suggested one. */
   funnel?: FunnelStep[]
   /** Data's two views: the story of the period, or all its numbers. 'story' or 'explore'; absent = the story, unless the address already narrows the numbers. */
@@ -62,6 +65,10 @@ export interface ViewState {
   story?: string
   /** Data opened on a busy moment: when it began (unix seconds). The page marks it and says what it was. */
   surge?: number
+  /** Explore's panel over the Briefing: which table it is on ("x=pages"). Absent = shut. */
+  xp?: string
+  /** What the panel narrows by, until it is closed (then it is kept as the page's own filters, if changed). */
+  xf?: Filter[]
 }
 
 /** Funnel steps from the address; anything but a page or a goal is dropped. */
@@ -77,7 +84,7 @@ function funnelOf(raw: string[]): FunnelStep[] | undefined {
 
 function liveOf(v: string | null): boolean | undefined {
   if (v === 'live') return true
-  if (v === 'data') return false
+  if (v === 'data' || v === 'briefing') return false
   return undefined
 }
 
@@ -108,16 +115,20 @@ export function readView(params: URLSearchParams): ViewState {
     test: params.get('payments') === 'test',
     attr: params.get('attr') === 'first' ? 'first' : undefined,
     live: liveOf(params.get('view')),
+    briefing: params.get('view') === 'briefing' || undefined,
     funnel: funnelOf(params.getAll('fs')),
     v: params.get('v')?.match(/^(story|explore)$/)?.[0],
     story: params.get('story')?.match(/^[a-z]{1,12}$/)?.[0],
     surge: params.get('sg')?.match(/^\d{9,11}$/) ? Number(params.get('sg')) : undefined,
+    xp: params.get('x')?.match(/^[a-z]{2,12}$/)?.[0],
+    xf: params.has('xf') ? params.getAll('xf').flatMap((f) => parseFilterParam(f) ?? []) : undefined,
   }
 }
 
 export function writeView(v: ViewState): string {
   const p = new URLSearchParams()
-  if (v.live) p.set('view', 'live')
+  if (v.briefing) p.set('view', 'briefing')
+  else if (v.live) p.set('view', 'live')
   if (v.period === 'custom' && v.from && v.to) {
     p.set('from', v.from)
     p.set('to', v.to)
@@ -139,6 +150,8 @@ export function writeView(v: ViewState): string {
   if (v.v) p.set('v', v.v)
   if (v.story) p.set('story', v.story)
   if (v.surge) p.set('sg', String(v.surge))
+  if (v.xp) p.set('x', v.xp)
+  for (const f of v.xf ?? []) p.append('xf', filterParam(f))
   // Data says so only when nothing else in the address does: a bare address
   // opens Live on a site with visits.
   if (v.live === false && p.size === 0) p.set('view', 'data')
@@ -153,7 +166,7 @@ export function writeView(v: ViewState): string {
 // yet keeps its install screen and Data.
 export function wantsLive(view: ViewState, site: { last_event_at?: number }): boolean {
   if (view.live !== undefined) return view.live
-  return !!site.last_event_at && writeView(view) === ''
+  return !!site.last_event_at && writeView(view) === '' && !wantsBriefing()
 }
 
 /** Update part of the view; scrub moves replace history, everything else pushes. */
@@ -162,6 +175,8 @@ export function setView(patch: Partial<ViewState>) {
   // An address with a period, filters and so on is Data; if this change takes
   // the last of them out, it keeps saying Data.
   const data: Partial<ViewState> = cur.live === undefined && writeView(cur) !== '' ? { live: false } : {}
-  const next = { ...cur, ...data, ...patch }
+  // Moving to Live or Data leaves the briefing unless the change says otherwise.
+  const leave: Partial<ViewState> = patch.live !== undefined && !('briefing' in patch) ? { briefing: undefined } : {}
+  const next = { ...cur, ...data, ...leave, ...patch }
   navigate(location.pathname + writeView(next), { replace: Object.keys(patch).every((k) => k === 'day') })
 }

@@ -3,12 +3,12 @@ import { loadKeymap } from "./lib/keys";
 import { createRoot } from "react-dom/client";
 import { Ghost } from "./components/Logo";
 import { Booting } from "./components/skeleton/DashSkeleton"; import { Loading } from "./components/loading/Loading";
-import { logoInner } from "./brand/logo"; import { useBootCache } from "./lib/bootCache";
+import { useBootCache } from "./lib/bootCache";
 import { api, setUnauthorizedHandler, type Site } from "./lib/api"; import { startEarly, takeEarly, takeSetup } from "./lib/earlyStart";
 import { navigate, useLocation } from "./lib/url"; import "./lib/legacyPaths";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
 import "./styles.css";
-import { SiteZone } from "./features/header/SiteZone";
+import { lazyLoad, whenIdle } from "./lib/lazyLoad";
 import { Dashboard } from "./views/Dashboard";
 import { applySavedTheme } from "./lib/theme";
 import { NO_SITES, useLiveSites } from "./lib/useLiveSites";
@@ -20,6 +20,9 @@ import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
 import { useLatest } from "./lib/update";
 import { setRole } from "./lib/me";
 import { NoneShared, useGate } from "./features/onboarding/Gate";
+// The header of every page is its own chunk, fetched at once after the first paint: the first load carries only the page's boxes.
+const PageBar = lazyLoad(() => import("./v2/PageBar").then((m) => ({ default: m.PageBar })));
+whenIdle(PageBar.preload);
 // Settings and the account dialog are their own screens: the dashboard should not carry them.
 // Sign-in and first-run setup are for the minutes before someone is in: a signed-in owner never downloads them.
 const Setup = lazy(() => import("./views/Auth").then((m) => ({ default: m.Setup })));
@@ -174,9 +177,7 @@ function App() {
     api.sites().then(({ sites }) => setBoot({ ...boot, sites }));
   const all = path === "/sites", { site, sub } = routeOf(boot.sites, path);
 
-  const header = (
-    <Header sites={boot.sites} current={site} all={all} update={latest?.v} onUpdate={() => setShowUpdate(true)} />
-  );
+  const header = <Suspense fallback={<div className="bar-hold" aria-hidden="true" />}><PageBar sites={boot.sites} site={all ? null : site} update={latest?.v} onUpdate={() => setShowUpdate(true)} /></Suspense>;
   // Until an owner's first site has had a visit, only the first run (Gate).
   let page: React.ReactNode;
   if (gated) page = null;
@@ -234,48 +235,6 @@ function App() {
   );
 }
 
-function Header({
-  sites,
-  current,
-  all,
-  update,
-  onUpdate,
-}: {
-  sites: Site[];
-  current: Site | null;
-  all?: boolean;
-  /** A newer version, when there is one: a small lime pill by the logo. */
-  update?: string;
-  onUpdate?: () => void;
-}) {
-  return (
-    <>
-      {/* The full logo, the same as everywhere else (src/brand). On a phone
-          the header has room for the ghost only (styles.css). */}
-      <a
-        href="/"
-        aria-label="trckable home"
-        className="brand tkb-logo"
-        onClick={(e) => {
-          e.preventDefault();
-          navigate("/");
-        }}
-        dangerouslySetInnerHTML={{ __html: logoInner() }}
-      />
-      {update && (
-        <button type="button" className="update-pill" onClick={onUpdate} title={`trckable ${update} is out`}>
-          <span className="dot" aria-hidden="true" />
-          <span className="num">v{update}</span>
-          <span className="sr">is out: see how to upgrade</span>
-        </button>
-      )}
-
-      {/* One control, two actions: which site, and that site's settings. */}
-      {sites.length > 0 && <SiteZone sites={sites} current={current} all={all} />}
-    </>
-  );
-}
-
 // The server could not be reached: the ghost, still, and a way to retry.
 function Splash({ children }: { children?: React.ReactNode }) {
   return (
@@ -288,6 +247,8 @@ function Splash({ children }: { children?: React.ReactNode }) {
 
 const root = document.getElementById("root");
 if (!root) throw new Error("index.html has no #root");
+// A development build can answer from a fixture (?fixture=hn): the clock and the API, before the first request leaves.
+if (import.meta.env.DEV) await import("./dev/fixture").then((m) => m.installFixture());
 startEarly(); // first requests leave now (lib/earlyStart.ts)
 createRoot(root).render(
   <StrictMode>

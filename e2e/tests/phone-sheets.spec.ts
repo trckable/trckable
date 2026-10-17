@@ -14,10 +14,10 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.context().addCookies([{ name: 'trckable_session', value: await session('phone-sheets'), url: API }])
     await page.emulateMedia({ colorScheme: scheme })
     await page.goto(API + '/example.com?view=data')
-    await expect(page.locator('button.site-btn')).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('#siteBtn')).toBeVisible({ timeout: 20_000 })
     await page.waitForTimeout(1500) // a person looks first: the list's chunk is fetched when the browser is idle
-    await page.locator('button.site-btn').tap()
-    const sheet = page.locator('.pop.sites')
+    await page.locator('#siteBtn').tap()
+    const sheet = page.locator('#siteMenu.on')
     await expect(sheet).toBeVisible()
     await expect.poll(() => sheet.evaluate((e) => getComputedStyle(e).opacity)).toBe('1')
     const { width, height } = page.viewportSize()!

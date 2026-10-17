@@ -35,7 +35,6 @@ import { hourIn, hourlySpan, canCompare, thinPeriod } from '../features/overview
 import { chartMetric, ghostValues, metricName, metricProps, metricValues, type ChartMetric } from '../features/overview/chartMetric'
 import { chartTips } from '../features/overview/chartTips'
 import { useChartHold } from '../features/overview/reserve'
-import { LiveSlot } from '../features/live/liveChunk'
 import { useLivePulses } from '../features/live/useLivePulses'
 import { useLiveCount, useSiteDown } from '../features/live/liveLink'
 import { liveShown } from '../features/live/liveShown'
@@ -61,11 +60,11 @@ import { useMilestones } from '../features/milestones/useMilestones'
 import { filterFrom } from '../features/journey/filterFrom'
 import { StorySlot } from '../features/storyview/StorySlot'
 
-// Full mode's extra views live in their own chunk: Core never loads them.
-// The share dialog is its own chunk: nothing of it loads until Share is pressed.
+// Full mode's extra views live in their own chunk (Core never loads them), and so does the share dialog.
 const Cards = lazyLoad(() => import('../features/cards/Cards').then((m) => ({ default: m.Cards }))) // the two cards under the chart: Explore's numbers, fetched when idle so the switch to Explore finds them here
 whenIdle(Cards.preload)
 const ShareDialog = lazy(() => import('../features/share/ShareDialog'))
+const V2View = lazy(() => import('../v2/V2View').then((m) => ({ default: m.V2View }))) // the walkthrough's two screens and their styles: one chunk, fetched when the page shows one
 const GaReturn = lazy(() => import('../features/install/GaReturn').then((m) => ({ default: m.GaReturn }))) // only on the way back from Google (?import=ga)
 const Story = lazy(() => import('../features/story/Story')) // Replay as a story: loaded when Replay starts
 const Install = lazy(() => import('../features/install/Install')) // new sites only: never in the first load
@@ -73,8 +72,7 @@ const Signals = lazy(() => import('../features/signals/Signals')) // the tab's c
 const AddGoals = lazy(() => import('./AddGoals').then((m) => ({ default: m.AddGoals })))
 const NotesDialog = lazy(() => import('../features/notes/NotesList').then((m) => ({ default: m.NotesDialog })))
 const NoteDialog = lazy(() => import('../components/NoteDialog').then((m) => ({ default: m.NoteDialog })))
-// Full mode's live card, the save-view dialog and Live mode: each its own
-// chunk, loaded when shown.
+// The journey dialog is its own chunk, loaded when shown.
 const JourneyDialog = lazy(() => import('../features/journey/JourneyDialog').then((m) => ({ default: m.JourneyDialog })))
 
 /** A filter's value as people read it: a channel's or a country's name, a goal as it was written. */
@@ -136,6 +134,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   const showInstall = showsInstall({ site, hasData, filtered: view.filters.length > 0, everTracked })
   const waiting = showInstall && stream.visits.length === 0
   const liveView = liveShown({ wanted: wantsLive(view, site), shared: isShared(), waiting }) // Data on a shared link, the install screen first
+  const briefing = !liveView && !isShared() && view.v === undefined && (!!view.briefing || view.live !== false) // the Briefing is an owner's dashboard but for the older addresses (?view=data, ?v=explore), which keep the old Data
   const mods = useMods(site.id)
   const [journey, setJourney] = useState<string | null>(null)
   const [addGoals, setAddGoals] = useState(false)
@@ -256,21 +255,21 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   }
 
   const [askOpen, setAskOpen] = useState(false)
-  // ---- keyboard: ⌘K opens Ask, F toggles Core/Full, Esc clears scrub ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (askOn && pressed(e, 'ask')) {
-        e.preventDefault()
-        setAskOpen((o) => !o)
-        return
-      }
+      if (liveView || briefing) return // the walkthrough's screens have their own keys
       if ((e.target as HTMLElement).closest('input, textarea, select')) return
       if (pressed(e, 'mode')) setView({ mode: full ? 'core' : 'full' })
       if (e.key === 'Escape' && view.day) setView({ day: undefined })
     }
+    const onAsk = () => askOn && setAskOpen((o) => !o) // the header's ⌘K list asks for Peek by this event
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [full, view.day, askOn])
+    window.addEventListener('trckable:ask', onAsk)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('trckable:ask', onAsk)
+    }
+  }, [full, view.day, askOn, liveView, briefing])
 
   const pickerValue: PickerValue = {
     period: view.period,
@@ -452,7 +451,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
   // The second row (a shared link on a desktop has it in the header's row); before the first visit there is nothing to switch or date, so it waits.
   const controls = !waiting && (
     <ControlRow
-      live={liveView} site={site}
+      live={liveView} briefing={briefing} site={site}
       phone={narrow}
       value={pickerValue}
       today={today}
@@ -475,13 +474,38 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
     />
   )
   const inHeader = isShared() && !narrow
-  return (
+  const tail = (<>
+      {journey && mods !== null && shows(mods, 'cards', 'journey') && (
+        <Suspense fallback={null}>
+          <JourneyDialog site={site} visitor={journey} query={query} onClose={() => setJourney(null)} onFilter={(dim, value) => { setTrail(null); filterFrom(view, dim, value) }} />
+        </Suspense>
+      )}
+
+      {addGoals && shows(mods, 'cards', 'goals') && (
+        <Suspense fallback={null}>
+          <AddGoals site={site} pages={(cur?.dims.page ?? []).map((r) => r.value)} onClose={() => setAddGoals(false)} onChanged={() => {
+            dropReports(site.id)
+            refresh()
+          }} />
+        </Suspense>
+      )}
+
+      {!isShared() && (stream.online !== null || stream.sales.length > 0) && (
+        <Suspense fallback={null}>
+          <Signals key={site.id} site={site} online={stream.online} visits={stream.visits} sales={stream.sales} scope={site.id + range.from + range.to + filtersKey} sources={live && !scrubbing && cur?.revenue_dims ? (cur.revenue_dims.channel ?? []).map((r) => r.value) : undefined} />
+        </Suspense>
+      )}
+      <AskPanel open={askOn && askOpen} onClose={() => setAskOpen(false)} />
+      {!isShared() && location.search.includes('import=ga') && <Suspense fallback={null}><GaReturn site={site} /></Suspense>}
+      {view.test && <Notice kind="test" onAct={() => setView({ test: false })} />}
+  </>)
+  return liveView || briefing ? <><Suspense fallback={null}><V2View tab={liveView ? 'live' : 'briefing'} waiting={waiting} site={site} sites={sites} view={view} range={range} data={real} loading={loading || firstLoad} money={money ? fmtM : undefined} onGoal={() => setAddGoals(true)} onAsk={askOn ? () => setAskOpen(true) : undefined} live={{ site: site.id, timezone: site.timezone, stream, cookieless: site.cookieless, whole: site, onVisitor: journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined }} /></Suspense>{briefing && !waiting && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}{tail}</> : (
     <>
       <HeaderBand><div className="header quiet">
         {header}{!waiting && !liveView && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}
         <HeaderTools
-          live={liveView}
-          waiting={waiting} site={site}
+          live={liveView} briefing={briefing}
+          waiting={waiting}
           askOpen={askOpen}
           onAsk={() => setAskOpen(true)}
           extra={trail && trailData && (
@@ -496,9 +520,6 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       </div></HeaderBand>
 
       {!inHeader && controls}
-      {liveView && (
-        <LiveSlot key={site.id} site={site.id} timezone={site.timezone} cookieless={site.cookieless} whole={site} stream={stream} onVisitor={journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined} />
-      )}
       {!showInstall && !isShared() && <StatusCard site={site} />}
       {!liveView && <>
       {sharing && <Suspense fallback={null}><ShareDialog site={site} sites={sites} onClose={() => setSharing(false)} /></Suspense>}
@@ -506,10 +527,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {error && <Notice kind="error" text={error} />}
       {warming && <Notice kind="warming" />}
       {showInstall && <Suspense fallback={null}><Install site={site} visits={stream.visits} /></Suspense>}
-      {!isShared() && location.search.includes('import=ga') && <Suspense fallback={null}><GaReturn site={site} /></Suspense>}
       <MilestonesSlot ms={ms} site={site} quiet={showInstall} revenue={mods === null || shows(mods, 'cards', 'revenue')} />
       {view.surge && <SurgeNote site={site.id} tz={site.timezone} started={view.surge} filters={view.filters} />}
-      {view.test && <Notice kind="test" onAct={() => setView({ test: false })} />}
       {money && money.unconverted > 0 && (
         <div className="banner">{unconvertedNote(money)}</div>
       )}
@@ -630,27 +649,7 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {cur?.approximate && <Notice kind="approx" />}
       </>}
 
-      {journey && mods !== null && shows(mods, 'cards', 'journey') && (
-        <Suspense fallback={null}>
-          <JourneyDialog site={site} visitor={journey} query={query} onClose={() => setJourney(null)} onFilter={(dim, value) => { setTrail(null); filterFrom(view, dim, value) }} />
-        </Suspense>
-      )}
-
-      {addGoals && shows(mods, 'cards', 'goals') && (
-        <Suspense fallback={null}>
-          <AddGoals site={site} pages={(cur?.dims.page ?? []).map((r) => r.value)} onClose={() => setAddGoals(false)} onChanged={() => {
-            dropReports(site.id)
-            refresh()
-          }} />
-        </Suspense>
-      )}
-
-      {!isShared() && (stream.online !== null || stream.sales.length > 0) && (
-        <Suspense fallback={null}>
-          <Signals key={site.id} site={site} online={stream.online} visits={stream.visits} sales={stream.sales} scope={site.id + range.from + range.to + filtersKey} sources={live && !scrubbing && cur?.revenue_dims ? (cur.revenue_dims.channel ?? []).map((r) => r.value) : undefined} />
-        </Suspense>
-      )}
-      <AskPanel open={askOn && askOpen} onClose={() => setAskOpen(false)} />
+      {tail}
     </>
   )
 }

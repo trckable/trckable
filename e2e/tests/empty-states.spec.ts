@@ -58,6 +58,7 @@ test('notes: the list says what a note is for and offers one', async ({ page }) 
 test('alerts: where to send them, before anything else', async ({ page }) => {
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=data`)
   await expect(page.locator('.overview-chart .chart-wrap svg[role="img"]')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('[data-key="settings"]')).toBeAttached() // the header is its own chunk
   await page.keyboard.press(',')
   const settings = page.getByRole('dialog', { name: /^Settings for/ })
   await settings.getByRole('tab', { name: /Alerts/ }).click()

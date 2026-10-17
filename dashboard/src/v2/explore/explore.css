@@ -1,0 +1,42 @@
+/* Explore's own few rules; everything else of it is the walkthrough's (src/mock/mock.css). */
+
+/* The saved views fold into the ⋯ menu on a phone only. */
+.mk .onlyph {
+  display: none;
+}
+@media (max-width: 600px) {
+  .mk .onlyph {
+    display: block;
+  }
+}
+
+
+/* The page sheet's small heatmap: the dots of where people clicked, as the walkthrough draws its box. */
+.mk .heat{position:relative;display:block;width:100%;height:120px;border:1px solid var(--mk-line);border-radius:12px;background:linear-gradient(#17191c,#131417);overflow:hidden;cursor:pointer}
+.mk .heat i{position:absolute;width:var(--s);height:var(--s);margin:calc(var(--s) / -2);border-radius:50%;background:radial-gradient(rgba(255,107,107,.7),rgba(255,154,74,.3) 50%,transparent 70%)}
+.mk .sdr{display:flex;align-items:center;gap:var(--mk-s3);font-size:12.5px}
+.mk .sdr span{width:36px;color:var(--mk-muted)}
+.mk .sdr b{width:40px;text-align:right}
+
+/* The tabs that were the old cards: lines as Sales draws them, the retention table, a chart's key. */
+.mk button.sale.xbtn{width:100%;text-align:left}
+.mk button.sale.xbtn:hover{background:rgba(255,255,255,.04)}
+.mk .sale .xdt{width:8px;height:8px;border-radius:50%;flex:none}
+.mk .sale .xface{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:700}
+.mk .xsec{flex-wrap:wrap;gap:var(--mk-s2)}
+.mk .xsec>span:last-child{display:flex;align-items:center;gap:var(--mk-s3)}
+.mk .xlg{display:flex;flex-wrap:wrap;gap:var(--mk-s3);font-size:12px;color:var(--mk-muted)}
+.mk .xlg span{display:inline-flex;align-items:center;gap:6px}
+.mk .xlg i{width:9px;height:9px;border-radius:3px}
+.mk .xlg i.ln{height:0;border-top:2px solid;border-radius:0}
+.mk .xchb{min-width:0}
+.mk .xrt .xth,.mk .xrt .xrw{grid-template-columns:64px 64px repeat(var(--weeks),minmax(0,1fr))}
+.mk .xrt .xrw{min-height:0;padding:3px 0}
+.mk .xrt .xrw>span:first-child{text-align:left}
+.mk .xrt .xth span:nth-child(n+3){text-align:center}
+.mk .xrt .xrcell{justify-self:stretch;height:28px;border-radius:6px;display:grid;place-items:center;font-size:12px;font-variant-numeric:tabular-nums}
+.mk .xrt .xrcell.open{color:var(--mk-faint)}
+.mk .xrt .xrw.avg{border-top:1px solid var(--mk-line);margin-top:6px;padding-top:9px;color:var(--mk-muted)}
+.mk .xrt .xrw.avg .xrcell{height:auto}
+@media (max-width:600px){.mk .xrt .xth,.mk .xrt .xrw{grid-template-columns:52px 52px repeat(var(--weeks),minmax(0,1fr));min-height:0}.mk .xrt .xrcell{font-size:11px}}
+.mk .xchb .kit-chart{margin:0}

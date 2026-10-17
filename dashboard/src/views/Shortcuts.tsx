@@ -18,10 +18,16 @@ const ICON = { around: Compass, page: LayoutDashboard, period: Calendar, mouse: 
 const GROUPS: { id: Group | 'mouse'; title: string; hint: string }[] = [
   { id: 'around', title: 'Getting around', hint: 'Anywhere in trckable' },
   { id: 'page', title: 'On a dashboard', hint: 'Its controls, by key' },
-  { id: 'period', title: 'The period', hint: 'On a site’s dashboard' },
+  { id: 'period', title: 'The period', hint: 'On the Briefing' },
   { id: 'mouse', title: 'Reading the chart', hint: 'With the mouse or a finger' },
 ]
 
+
+// The keys of a Briefing's cards; they are not changed.
+const FIXED = [
+  { keys: ['j', 'k'], what: 'Next and previous card' },
+  { keys: ['enter'], what: 'Open the card in place' },
+]
 
 // Fixed on purpose: Esc closes what is open everywhere, and the gestures are
 // not keys.
@@ -133,7 +139,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
         {GROUPS.map((g) => {
           const items = g.id === 'mouse' ? [] : ACTIONS.filter((a) => a.group === g.id && (a.id !== 'ask' || canAsk()))
           return (
-            <section key={g.id} className={'keys-group g-' + g.id + (g.id === 'period' ? ' wide' : '')}>
+            <section key={g.id} className={`keys-group g-${g.id}${g.id === 'period' ? ' wide' : ''}`}>
               <header>
                 <span className="keys-gicon">
                   {(() => {
@@ -185,6 +191,19 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
                     <span className="keys-what">Close what is open</span>
                   </li>
                 )}
+                {g.id === 'page' &&
+                  FIXED.map((f) => (
+                    <li key={f.keys.join()} className={f.keys.includes(lit) ? 'on' : undefined} style={{ ['--i' as string]: n++ }}>
+                      <span className="keys-caps fixed">
+                        {f.keys.map((k) => (
+                          <kbd key={k} className={'cap' + (lit === k ? ' down' : '')}>
+                            {caps(k)[0]}
+                          </kbd>
+                        ))}
+                      </span>
+                      <span className="keys-what">{f.what}</span>
+                    </li>
+                  ))}
                 {g.id === 'mouse' &&
                   MOUSE.map((m) => (
                     <li key={m.mouse} className="keys-mouse" style={{ ['--i' as string]: n++ }}>

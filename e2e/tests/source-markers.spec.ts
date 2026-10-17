@@ -34,7 +34,8 @@ async function given(page: Page, ago = 4, crowd = false) {
   await page.route(/\/api\/v1\/sites\/[^/]+\/report\?/, async (r) => {
     const res = await r.fetch().catch(() => null) // the test may end while a read is still on its way
     if (!res) return
-    const body = (await res.json()) as { current?: { series?: { t: string; visitors: number }[] } }
+    const body = (await res.json().catch(() => null)) as { current?: { series?: { t: string; visitors: number }[] } } | null // the test may end while the answer is read
+    if (!body) return
     body.current?.series?.forEach((s) => (s.visitors = s.t.slice(0, 10) === iso(at) ? 45 : 5))
     await r.fulfill({ response: res, json: body }).catch(() => {})
   })

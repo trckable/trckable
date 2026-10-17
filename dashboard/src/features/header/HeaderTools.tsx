@@ -1,11 +1,9 @@
-// The header's first row, after the site: Live/Data (on a desktop), borderless Ask and Filter, the avatar's menu (the person's own things).
+// The tools of the old Data view's header row, after the site: Live/Data (on a desktop) and the borderless Ask.
 // What the numbers are, Live/Data on a phone or tablet, the period and the page's ⋯ (Refresh,
 // Create, Core/Full, Milestones, Export), is the row under it, and so is
 // Share: an icon beside ⋯ (on a phone it is ⋯'s first item).
 import { Search, Share2 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import type { Site } from '../../lib/api'
-import { AccountMenu } from '../../components/AccountMenu'
 import { caps, keyFor, useKeymap } from '../../lib/keys'
 import { canAsk, isShared } from '../../lib/me'
 import { ViewSwitch } from '../live/ViewSwitch'
@@ -15,13 +13,12 @@ import './Header.css'
 
 interface Props {
   live: boolean
+  briefing?: boolean
   askOpen: boolean
   onAsk: () => void
   extra?: ReactNode
   /** Before the first visit there is nothing to ask about. */
   waiting?: boolean
-  /** The site on screen: the avatar's menu has a choice about it. */
-  site?: Site
 }
 
 export function HeaderTools(p: Props) {
@@ -34,7 +31,7 @@ export function HeaderTools(p: Props) {
   return (
     <div className="header-tools quiet">
       <div className="spacer" />
-      {wide && !shared && !p.waiting && <ViewSwitch live={p.live} />}
+      {wide && !shared && !p.waiting && <ViewSwitch live={p.live} briefing={p.briefing} />}
       {p.extra}
       {canAsk() && !p.waiting && (
         <button type="button" className="btn ghost ask" onClick={p.onAsk} aria-expanded={p.askOpen} aria-label={copy.ask} title={copy.askTitle(askKey)}>
@@ -43,7 +40,6 @@ export function HeaderTools(p: Props) {
           <span className="kbd">{askKey}</span>
         </button>
       )}
-      {!shared && <AccountMenu site={p.site} />}
     </div>
   )
 }

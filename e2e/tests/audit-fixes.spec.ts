@@ -35,25 +35,14 @@ for (const size of [{ w: 1440, h: 900 }, { w: 390, h: 844 }]) {
       await r.fulfill({ response: res, json: body })
     })
     await page.goto(`${API}/${site.domain}?view=live`)
-    await expect(page.locator('.live-state.down')).toHaveText('Down', { timeout: 20_000 })
+    await expect(page.locator('.downbox')).toContainText('Down since', { timeout: 20_000 })
     await expect(page.locator('.status-float')).toHaveCount(0) // nothing floats over the page
     await expect(page.locator('.footer-status')).toHaveAttribute('data-status', 'down')
-    await expect(page.locator('.site-zone .state-dot.stopped')).toBeVisible()
-    // Empty: a faint baseline, no wave, no pill, no heading over nothing.
-    await expect(page.locator('.kit-nodata')).toHaveCount(0)
-    await expect(page.getByText('Top sources right now')).toHaveCount(0)
+    await expect(page.locator('#siteBtn .mk-dot.down')).toBeVisible()
+    // Empty: a line that says why nobody is there, no heading over nothing.
     await expect(page.getByText('Waiting for the first visit since')).toHaveCount(0)
-    await expect(page.locator('.live-quiet')).toContainText('Quiet since')
-    if (size.w > 640) {
-      await expect(page.locator('.live-onsite.none')).toBeVisible()
-      const [now, onsite] = await Promise.all([page.locator('.live-now').boundingBox(), page.locator('.live-onsite').boundingBox()])
-      expect(Math.abs(onsite!.height - now!.height)).toBeLessThan(2) // as tall as the Live card
-      await page.locator('.live-help').hover()
-      await expect(page.getByRole('tooltip')).toContainText('idle for 5 minutes')
-    } else {
-      await expect(page.locator('.live-feed')).toBeHidden() // a count and a line, not a screen of rows
-      expect((await page.locator('.live-onsite').boundingBox())!.height).toBeLessThan(120)
-    }
+    await expect(page.locator('.lfeed')).toContainText('No visitors while it is down.')
+    await expect(page.locator('.lfeed .lv')).toHaveCount(0)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
     await shoot(page, 'live')
     await page.locator('.footer-status').click()

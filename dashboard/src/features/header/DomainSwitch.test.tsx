@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Filter, Row } from '../../lib/api'
 import { pickedHost, shortHost } from '../../lib/domainSwitch'
 import { DomainSwitch } from './DomainSwitch'
-import { DomainMenu, domainLabel } from './DomainMenu'
+import { DomainRows, domainLabel } from '../../v2/ui/DomainRows'
 import { domainsNow as current, type DomainControl } from '../../lib/domainControl'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -53,35 +53,31 @@ describe('DomainSwitch and DomainRow', () => {
     expect(host.textContent).toBe('')
     expect(current()).toBeNull()
   })
-  it('publishes the control; the header says All until a domain is picked', () => {
+  it('publishes the control; the header says nothing until a domain is picked', () => {
     draw(two)
-    expect(domainLabel((current() as DomainControl))).toBe('All')
+    expect(domainLabel((current() as DomainControl))).toBeNull()
     draw(two, [{ dim: 'hostname', value: 'docs.trckable.com' }])
     expect(domainLabel((current() as DomainControl))).toBe('docs')
     act(() => root.unmount())
     expect(current()).toBeNull()
     root = createRoot(host)
   })
-  it('the dropdown lists All domains, then each domain busiest first; a click picks the full domain', () => {
-    const SEEN = many
-    const FILT: Filter[] = [{ dim: 'hostname', value: 'docs.trckable.com' }]
-    act(() => root.render(<><DomainSwitch seen={SEEN} filters={FILT} site="trckable.com" onPick={onPick} /><DomainMenu /></>))
-    const btn = host.querySelector<HTMLElement>('.dom-btn')
-    expect(btn?.textContent).toContain('docs')
-    act(() => btn?.click())
-    const items = [...document.querySelectorAll<HTMLElement>('[role=menuitemradio]')]
+  it('the list has All domains, then each domain busiest first; a click picks the full domain', () => {
+    draw(many, [{ dim: 'hostname', value: 'docs.trckable.com' }])
+    const close = vi.fn()
+    act(() => root.render(<DomainRows c={current() as DomainControl} close={close} />))
+    const items = [...host.querySelectorAll<HTMLElement>('[role=menuitemradio]')]
     expect(items.map((r) => r.textContent?.replace(/\d+$/, ''))).toEqual(['All domains', 'trckable.com', 'docs', 'blog', 'app', 'status'])
     expect(items[2].getAttribute('aria-checked')).toBe('true')
-    expect(document.querySelector('.dom-search')).toBeNull()
+    expect(host.querySelector('input[type=search]')).toBeNull()
     act(() => items[3].click())
     expect(onPick).toHaveBeenLastCalledWith('blog.trckable.com')
+    expect(close).toHaveBeenCalled()
   })
   it('more than six domains bring a search', () => {
     const lots = Array.from({ length: 9 }, (_, i) => row(`d${i}.trckable.com`, 100 - i))
-    const SEEN = lots
-    const FILT: Filter[] = []
-    act(() => root.render(<><DomainSwitch seen={SEEN} filters={FILT} site="trckable.com" onPick={onPick} /><DomainMenu /></>))
-    act(() => host.querySelector<HTMLElement>('.dom-btn')?.click())
-    expect(document.querySelector('.dom-search input')).not.toBeNull()
+    draw(lots)
+    act(() => root.render(<DomainRows c={current() as DomainControl} close={() => {}} />))
+    expect(host.querySelector('input[type=search]')).not.toBeNull()
   })
 })

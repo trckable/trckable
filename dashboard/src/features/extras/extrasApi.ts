@@ -40,5 +40,5 @@ export const extrasApi = {
   // Highlights are about the whole site: no filters.
   insights: (site: string, q: ReportQuery) => call<{ insights: Insight[] }>('GET', `/sites/${site}/insights` + qs({ ...q, filters: undefined })),
   pagesSell: (site: string, q: ReportQuery) => call<{ pages: Row[] }>('GET', `/sites/${site}/report/pages-sell` + qs(q)),
-  buyers: (site: string, q: ReportQuery) => call<{ buyers: Buyer[] }>('GET', `/sites/${site}/buyers` + qs(q) + '&n=8'),
+  buyers: (site: string, q: ReportQuery, n = 8) => call<{ buyers: Buyer[] }>('GET', `/sites/${site}/buyers` + qs(q) + `&n=${n}`),
 }

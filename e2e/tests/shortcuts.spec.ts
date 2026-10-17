@@ -38,7 +38,7 @@ async function opens(page: Page, key: string, target: Locator) {
 
 test('S, U, comma, slash and Shift S open what their buttons open', async ({ page }) => {
   await ready(page)
-  const sites = page.getByRole('dialog', { name: 'Sites' })
+  const sites = page.locator('#siteMenu.on')
   const account = page.getByRole('menu', { name: 'Account' })
 
   await opens(page, 's', sites)
@@ -65,6 +65,31 @@ test('S, U, comma, slash and Shift S open what their buttons open', async ({ pag
   await opens(page, ',', page.getByRole('dialog', { name: /^Settings for/ }))
 })
 
+test('on the Briefing the period keys work: 3 and Y pick, the arrows step, C compares, A opens Create', async ({ page }) => {
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&v=&period=7d`)
+  await expect(page.locator('.brief')).toBeVisible({ timeout: 20_000 })
+  await page.locator('body').click({ position: { x: 5, y: 400 } })
+  await page.keyboard.press('3')
+  await expect(page).not.toHaveURL(/period=/) // 30 days is the address with none
+  await page.keyboard.press('y')
+  await expect(page).toHaveURL(/period=yesterday/)
+  await page.keyboard.press('ArrowLeft')
+  await expect(page).toHaveURL(/from=\d{4}-\d\d-\d\d&to=/)
+  await page.keyboard.press('7')
+  await expect(page).toHaveURL(/period=7d/)
+  await page.keyboard.press('c')
+  await expect(page).toHaveURL(/compare=none/)
+  await page.keyboard.press('a')
+  await expect(page.locator('.pal.on')).toBeVisible()
+  await expect(page.locator('.pal.on')).toContainText('Create · A goal')
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.pal.on')).toHaveCount(0)
+  // Opened again with no key of its own, the list starts empty and Peek is its first row.
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect(page.locator('.pal.on .palbox input')).toHaveValue('')
+  await expect(page.locator('.pal.on .pi').first()).toContainText('Ask Peek')
+})
+
 test('R plays and pauses Replay', async ({ page }) => {
   await ready(page)
   await page.addInitScript(() => localStorage.setItem('tkb_replay_speed', 'slow'))
@@ -84,13 +109,13 @@ test('the keys do nothing while a field has them, or a dialog is open', async ({
   await expect(search).toBeVisible()
   await search.focus()
   await page.keyboard.type('sus')
-  await expect(page.getByRole('dialog', { name: 'Sites' })).toBeHidden()
+  await expect(page.locator('#siteMenu.on')).toBeHidden()
   await page.keyboard.press('Escape')
   // Under a dialog the page is not the one being used.
   await page.keyboard.press('Shift+S')
   await expect(page.locator('.sd-modal')).toBeVisible()
   await page.keyboard.press('s')
-  await expect(page.getByRole('dialog', { name: 'Sites' })).toBeHidden()
+  await expect(page.locator('#siteMenu.on')).toBeHidden()
 })
 
 test('the list shows them in a group of their own, and a key an action has is refused', async ({ page }) => {
@@ -100,7 +125,7 @@ test('the list shows them in a group of their own, and a key an action has is re
   await expect(list).toBeVisible()
   await expect(list.getByRole('heading', { name: 'On a dashboard' }).or(list.locator('.g-page b'))).toBeVisible()
   // Shift is spelt out, or drawn as ⇧ on a Mac.
-  for (const [name, caps] of [['Switch site', 'S'], ['Your menu', 'U'], ['Settings', ','], ['Filter', '/'], ['Share', '(Shift|⇧) S'], ['Replay: play or pause', 'R']] as const) {
+  for (const [name, caps] of [['Peek and the palette', '(Ctrl|⌘) K'], ['Live', 'L'], ['Briefing', 'B'], ['Explore', 'E'], ['Switch site', 'S'], ['Your menu', 'U'], ['Settings', ','], ['Find \\(the palette\\)', '/'], ['Share', '(Shift|⇧) S']] as const) {
     await expect(list.getByRole('button', { name: new RegExp(`^${name}: ${caps}\\.`) })).toBeVisible()
   }
   if (SHOTS) {
@@ -110,9 +135,13 @@ test('the list shows them in a group of their own, and a key an action has is re
       await page.screenshot({ path: `${SHOTS}/shortcuts-1280-${scheme}.png` })
     }
   }
-  // Record Switch site as "c": Compare has it.
+  // E is Explore's alone: no Features key shares it, and the list names no key the page does not have.
+  await expect(list.getByText('Features')).toHaveCount(0)
+  await expect(list.getByText('Core ↔ Full')).toHaveCount(0)
+  await expect(list.getByText('Live ↔ Data')).toHaveCount(0)
+  // Record Switch site as "e": Explore has it.
   await list.getByRole('button', { name: /^Switch site: S\./ }).click()
-  await page.keyboard.press('c')
-  await expect(list.locator('.field-err-msg')).toContainText('already means “Compare”')
+  await page.keyboard.press('e')
+  await expect(list.locator('.field-err-msg')).toContainText('already means “Explore”')
   await page.keyboard.press('Escape')
 })

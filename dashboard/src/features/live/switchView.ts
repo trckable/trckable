@@ -1,31 +1,35 @@
-// Moving between Live and Data, deliberately: Live is one screen, so it opens
-// at the top; Data comes back scrolled to where it was left. Live's code is
-// awaited (briefly) before the switch, so the change is one frame to the next
-// with nothing blank in between.
-import { setView } from '../../lib/url'
+// Moving between Live, the Briefing and Data, deliberately: Live is one screen,
+// so it opens at the top, and so does the Briefing (as the walkthrough's does); Data comes back scrolled to where it was left.
+import { rememberTab, type Tab } from '../../lib/tab'
+import { readView, setView } from '../../lib/url'
 import { transition } from '../../lib/viewTransition'
-import { preloadLive } from './liveChunk'
 import { minuteView } from './minute'
 
-// Long enough for a chunk on a slow line; past it the switch goes ahead and
-// Live shows its placeholder rather than making the click feel ignored.
-const WAIT_MS = 400
 // How long a restored scroll place is held while the page fills in.
 const SETTLE_MS = 1500
 
 let dataScroll = 0
 
-const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
-
 export async function switchView(live: boolean, now: boolean): Promise<void> {
   if (now === live) return
-  if (live) {
-    dataScroll = scrollY
-    await Promise.race([preloadLive().catch(() => undefined), pause(WAIT_MS)])
-  }
-  const top = live ? 0 : dataScroll
+  return switchTab(live ? 'live' : 'data', live ? 'data' : 'live')
+}
+
+/** What the address says for each tab. The Briefing is told by the day, so a bare 30 days becomes today. */
+function patchFor(to: Tab): Parameters<typeof setView>[0] {
+  if (to === 'live') return { live: true }
+  if (to === 'data') return { live: false }
+  const cur = readView(new URLSearchParams(location.search))
+  return { live: false, briefing: true, ...(cur.period === '30d' && !cur.from ? { period: 'today' } : {}) }
+}
+
+export async function switchTab(to: Tab, from: Tab): Promise<void> {
+  if (to === from) return
+  rememberTab(to)
+  if (from === 'data') dataScroll = scrollY
+  const top = to === 'data' ? dataScroll : 0
   await transition(
-    () => setView({ live }),
+    () => setView(patchFor(to)),
     () => keepScroll(top),
   )
 }
@@ -51,6 +55,7 @@ function keepScroll(top: number) {
   for (const e of READER) window.addEventListener(e, stop, { passive: true })
 }
 
+/** A minute on Live's line, opened in Data: that minute's day (Now when it is today), from the top. */
 export async function openMinute(ago: number, tz: string): Promise<void> {
   const patch = minuteView(ago, tz)
   await transition(

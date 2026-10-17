@@ -861,6 +861,20 @@ export interface Profile {
   signed_in_with?: string
 }
 
+const heldMilestones = new Map<string, Promise<Milestones>>()
+function sharedMilestones(site: string, next: boolean): Promise<Milestones> {
+  const key = `${site}|${next}`
+  let p = heldMilestones.get(key)
+  if (!p) {
+    p = call<Milestones>('GET', `/sites/${encodeURIComponent(site)}/milestones${next ? '?next=1' : ''}`)
+    heldMilestones.set(key, p)
+    // A read is shared for half a minute; a failed one is not kept.
+    p.catch(() => heldMilestones.delete(key))
+    setTimeout(() => heldMilestones.delete(key), 30_000)
+  }
+  return p
+}
+
 export const api = {
   setupStatus: () => call<{ needs_setup: boolean; sso?: { id: string; label: string }[] }>('GET', '/setup'),
   ssoCode: (code: string) => call<{ return_to: string }>('POST', '/oidc/code', { code }),
@@ -878,8 +892,12 @@ export const api = {
   sites: () => call<{ sites: Site[] }>('GET', '/sites'),
   siteLayout: () => call<SiteLayout>('GET', '/site-layout'),
   setSiteLayout: (l: SiteLayout) => call<SiteLayout>('PUT', '/site-layout', l),
-  milestones: (site: string, next = false) => call<Milestones>('GET', `/sites/${encodeURIComponent(site)}/milestones${next ? '?next=1' : ''}`),
-  closeMilestones: (site: string, keys: [string, string][]) => act('POST', `/sites/${encodeURIComponent(site)}/milestones/seen`, { keys }),
+  // The bell and the dashboard's own milestone card ask at the same moment: one read answers both.
+  milestones: (site: string, next = false) => sharedMilestones(site, next),
+  closeMilestones: (site: string, keys: [string, string][]) => {
+    heldMilestones.clear()
+    return act('POST', `/sites/${encodeURIComponent(site)}/milestones/seen`, { keys })
+  },
 
   openShare: (token: string, password?: string, embed?: boolean) => call<ShareInfo>('POST', '/share/open', { token, password, embed }),
   shareMe: () => call<ShareInfo>('GET', '/share/me'),

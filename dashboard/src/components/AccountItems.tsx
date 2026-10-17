@@ -11,6 +11,7 @@ import { caps, keyFor } from '../lib/keys'
 import { isViewer } from '../lib/me'
 import { signOut } from '../lib/signOut'
 import { THEMES, useTheme } from '../lib/theme'
+import { useV2Extras } from '../v2/slots'
 import { PersonAvatar } from './PersonAvatar'
 import { LanguageList, LanguageRow } from './LanguageItems'
 import { openShortcuts } from './ShortcutsHost'
@@ -104,6 +105,8 @@ function FeaturesItem({ go, user }: { go: Parameters<MenuItems>[0]; user: string
 
 /** The items of the avatar menu. */
 export default function AccountItems({ profile, v, go, site }: { profile: Profile | null; v: number; go: Parameters<MenuItems>[0]; site?: Site }) {
+  // A build that has a plan puts one compact row at the top of the menu (v2/slots); the public product has none.
+  const { menuExtra } = useV2Extras()
   // The language list takes the menu's place until a choice or Back; Back puts focus on the row again.
   const [listing, setListing] = useState(false)
   const [back, setBack] = useState(false)
@@ -119,6 +122,7 @@ export default function AccountItems({ profile, v, go, site }: { profile: Profil
     )
   return (
     <>
+      {menuExtra}
       <Who profile={profile} v={v} />
       <button type="button" role="menuitem" aria-label={copy.accountLabel} onClick={go(() => openAccount('sites'))}>
         <CircleUser size={18} strokeWidth={1.75} aria-hidden="true" />

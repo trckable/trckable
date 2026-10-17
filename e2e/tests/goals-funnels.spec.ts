@@ -101,7 +101,7 @@ test('3. a button goal with a property shows the property in the visitor journey
   await expectGoal(page, goal, 1)
   // The properties are read on the visitor's journey: open it from Live.
   await page.goto(`${API}/example.com?view=live`)
-  const row = page.locator('.live-feed .live-open', { has: page.locator(`[title="Goal: ${goal}"]`) })
+  const row = page.locator('.lfeed .lv:not([disabled])', { has: page.locator(`.pg[title="Goal: ${goal}"]`) })
   await expect(async () => {
     await page.reload()
     await expect(row.first()).toBeVisible({ timeout: 4_000 })

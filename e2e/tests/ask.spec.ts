@@ -1,4 +1,4 @@
-// Peek: ⌘K opens a panel that says how to connect your own assistant
+// Peek: ⌘K offers it first, and it opens a panel that says how to connect your own assistant
 // over MCP: the config to paste, a link to the docs and a way to make a key.
 import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
@@ -20,8 +20,10 @@ test.beforeEach(async ({ page }) => {
 test('opens with the MCP setup, and closes again', async ({ page, browserName }) => {
   test.skip(browserName !== 'chromium', 'one browser is enough')
   await page.goto(API + '/example.com')
-  await expect(page.getByRole('button', { name: 'Peek' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Explore all data/ })).toBeVisible()
   await page.keyboard.press('ControlOrMeta+k')
+  await expect(page.locator('.pal.on .palbox input')).toBeVisible() // the list is its own chunk: Enter waits for it
+  await page.keyboard.press('Enter') // the list's first row is Peek
   const panel = page.getByRole('complementary', { name: 'Peek' })
   await expect(panel.getByRole('link', { name: 'Setup' })).toHaveAttribute('rel', /noopener/)
   await expect(panel).toContainText('TRCKABLE_API_KEY')
@@ -34,8 +36,10 @@ test('opens with the MCP setup, and closes again', async ({ page, browserName })
 test('Create a key opens the API keys', async ({ page, browserName }) => {
   test.skip(browserName !== 'chromium', 'one browser is enough')
   await page.goto(API + '/example.com')
-  await expect(page.getByRole('button', { name: 'Peek' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Explore all data/ })).toBeVisible()
   await page.keyboard.press('ControlOrMeta+k')
+  await expect(page.locator('.pal.on .palbox input')).toBeVisible() // the list is its own chunk: Enter waits for it
+  await page.keyboard.press('Enter') // the list's first row is Peek
   await page.getByRole('complementary', { name: 'Peek' }).getByRole('button', { name: 'Create a key' }).click()
   await expect(page.getByRole('dialog', { name: 'Profile, your account' })).toBeVisible()
   await expect(page.getByRole('tab', { name: 'API keys', selected: true })).toBeVisible()

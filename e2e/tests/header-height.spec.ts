@@ -12,10 +12,10 @@ const SCHEME = process.env.HH_SCHEME === 'light' ? 'light' : 'dark'
 const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
 
 const CONTROLS: Record<string, string> = {
-  site: '.header .site-zone',
-  liveData: '.header .view-switch',
-  ask: '.header .btn.ask',
-  avatar: '.header .account-btn',
+  site: '.hd #siteBtn',
+  liveData: '.hd .mk-seg',
+  ask: '.hd .exb',
+  avatar: '.hd .account-btn',
   capsule: '.header .ctl-cap',
 }
 
@@ -45,7 +45,8 @@ async function same(page: Page, expected: string[], name: string, offRow: string
     }
   }
   expect(Object.keys(found), 'the controls on this page').toEqual(expect.arrayContaining(expected))
-  const token = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hdr-h')))
+  // The page's one header (v2/PageHeader) draws its controls at the walkthrough's height; a shared link keeps its own capsules.
+  const token = found.capsule ? await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hdr-h'))) : 32
   for (const [key, heights] of Object.entries(found)) for (const h of heights) expect(h, `${key} is ${h}px, ${JSON.stringify(found)}`).toBe(token)
   expect(Math.max(...mids) - Math.min(...mids), `centres ${JSON.stringify(mids)}`).toBeLessThanOrEqual(0.5)
 }
@@ -53,9 +54,9 @@ async function same(page: Page, expected: string[], name: string, offRow: string
 test('a site page: the site card, Live/Data, Ask and the avatar are one height', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/example.com`)
-  await expect(page.locator('.header .site-zone')).toBeVisible()
-  await expect(page.locator('.header .account-btn')).toBeVisible()
-  await same(page, ['site', 'liveData', 'avatar'], 'site', ['capsule'])
+  await expect(page.locator('.hd #siteBtn')).toBeVisible()
+  await expect(page.locator('.hd .account-btn')).toBeVisible()
+  await same(page, ['site', 'ask', 'avatar'], 'site', ['capsule'])
 })
 
 test('All sites: the same row, the same height', async ({ page }) => {
@@ -80,26 +81,18 @@ test('a shared link: its capsules are the same height', async ({ page, browser }
   await reader.close()
 })
 
-test('the Live card leads with its icon tile, in the accent while the feed is connected', async ({ page }) => {
+test('the Live card leads with its pulse, lit while the feed is connected', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/example.com?view=live`)
-  await expect(page.locator('.live-now .live-calm')).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('.lnow .lhead .mk-pulse')).toBeVisible({ timeout: 20_000 })
   await page.emulateMedia({ colorScheme: SCHEME, reducedMotion: 'no-preference' })
   await page.waitForTimeout(300)
   await shot(page, 'live') // before the checks, so a failing run still has its picture
-  const tile = () => page.locator('.live-now .live-head-row .kit-tile').evaluate((el) => {
+  const pulse = () => page.locator('.lnow .lhead .mk-pulse').evaluate((el) => {
     const s = getComputedStyle(el)
-    return { w: s.width, h: s.height, color: s.color }
+    return { w: s.width, h: s.height, off: el.classList.contains('off') }
   })
-  const accent = await page.evaluate(() => {
-    const probe = document.createElement('span')
-    probe.style.color = 'var(--accent)'
-    document.body.append(probe)
-    const c = getComputedStyle(probe).color
-    probe.remove()
-    return c
-  })
-  expect(await tile()).toEqual({ w: '28px', h: '28px', color: accent })
+  expect(await pulse()).toEqual({ w: '9px', h: '9px', off: false })
   await page.emulateMedia({ colorScheme: SCHEME, reducedMotion: 'reduce' })
-  expect(await tile()).toEqual({ w: '28px', h: '28px', color: accent })
+  expect(await pulse()).toEqual({ w: '9px', h: '9px', off: false })
 })

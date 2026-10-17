@@ -75,7 +75,7 @@ for (const width of [1440, 700, 375]) {
     await open(page)
     // Row 1: who and which site, then Peek, the avatar. Row 2:
     // Live/Data (in row 1 from 1024 px up), then the period and Filter, Share and ⋯ in two capsules. Each one line, inside the screen.
-    for (const sel of ['.header.quiet', '.subbar']) {
+    for (const sel of width >= 1024 ? ['.hd', '.header-tools', '.subbar'] : ['.hd', '.subbar']) {
       const boxes = await controls(page, sel)
       expect(boxes.length, sel).toBeGreaterThan(1)
       const mids = boxes.map((b) => b.mid)
@@ -92,9 +92,9 @@ for (const width of [1440, 700, 375]) {
     else await expect(page.locator('.subbar').getByRole('button', { name: 'Share' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Peek' })).toBeVisible()
     // No cog in the header: the site's settings are a row of the site list, at every width.
-    await expect(page.locator('.site-zone').getByRole('button', { name: /^Settings for/ })).toHaveCount(0)
-    await page.locator('.site-zone button.site-btn').click()
-    await expect(page.locator('.pop.sites .foot-settings')).toContainText('Site settings')
+    await expect(page.getByRole('button', { name: /^Settings for/ })).toHaveCount(0)
+    await page.locator('#siteBtn').click()
+    await expect(page.locator('#siteMenu').getByRole('button', { name: 'Site settings' })).toBeVisible()
     await page.keyboard.press('Escape')
     // Row 2 says what the numbers are. A phone has one pill for it (Live/Data,
     // the periods and Filter are in its sheet); the comparison is the
@@ -152,17 +152,17 @@ test('the avatar menu holds the person\'s own things, by keyboard too', async ({
   await expect(page.getByRole('dialog', { name: 'Profile, your account' })).toBeVisible()
 })
 
-test('Live keeps only Live/Data, in the same place, and has no ⋯', async ({ page }) => {
+test('Live keeps only Live/Briefing in the header, and has no ⋯ and no period', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await open(page)
   const view = page.locator('.header-tools').getByRole('group', { name: 'View' })
-  const before = await view.boundingBox()
   await view.getByRole('button', { name: 'Live' }).click()
   await expect(page).toHaveURL(/view=live/)
   await expect(page.locator('.subbar .range-picker')).toHaveCount(0)
   await expect(more(page)).toHaveCount(0)
-  const after = (await view.boundingBox())!
-  for (const k of ['x', 'y', 'width', 'height'] as const) expect(Math.abs(after[k] - before![k]), k).toBeLessThan(0.5) // sub-pixel text rounding is not a move
+  // The two tabs are the header's own on the walkthrough's screens.
+  await expect(page.locator('#views').getByRole('tab', { name: 'Live' })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.locator('#views').getByRole('tab')).toHaveCount(2)
 })
 
 test('⋯ runs what left the row, and the keys still work', async ({ page }) => {

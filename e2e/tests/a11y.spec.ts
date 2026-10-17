@@ -120,8 +120,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await page.waitForSelector('[data-chart=flow] svg', { timeout: 20_000 })
       await scan(page, 'dashboard, full')
       // The site switcher's list and the Notes list load on demand: open each.
-      await page.locator('.site-pick .site-btn').click()
-      await page.waitForSelector('.pop.sites .sites-list', { timeout: 15_000 })
+      await page.locator('#siteBtn').click()
+      await page.waitForSelector('#siteMenu.on #siteList', { timeout: 15_000 })
       await scan(page, 'site switcher')
       await page.keyboard.press('Escape')
       await page.getByRole('button', { name: /^Notes/ }).click()
@@ -173,7 +173,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       // Live needs a real site in the path: the demo's, not a made-up one.
       const site = await start(page)
       await page.goto(`${BASE}/${site.domain}?view=live`)
-      await page.waitForSelector('.live-online', { timeout: 15_000 })
+      await page.waitForSelector('.liveview', { timeout: 15_000 })
       await scan(page, 'live')
     })
 

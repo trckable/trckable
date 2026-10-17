@@ -2,6 +2,8 @@
 **/node_modules
 **/bin
 **/data
+# Explore's data layer is source, not a database folder
+!dashboard/src/v2/explore/data
 **/*.duckdb
 **/*.duckdb.wal
 **/*.test

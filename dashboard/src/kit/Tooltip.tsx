@@ -8,62 +8,60 @@ import './Tooltip.css'
 
 export type TipTrigger = { 'aria-describedby': string | undefined; onClick: () => void; onFocus: () => void; onBlur: () => void }
 
-/** `float` lifts the tip out to the page, beside the trigger, for triggers inside a list that scrolls and clips (the site switcher). */
-export function Tooltip({ text, align = 'left', float = false, children }: { text: string; align?: 'left' | 'right'; float?: boolean; children: (p: TipTrigger) => ReactNode }) {
+/** Where a tip of this size goes: under its trigger, or over it when there is no room under, and never past the window's edges. */
+export function placeTip(r: { left: number; right: number; top: number; bottom: number }, w: number, h: number, vw: number, vh: number, align: 'left' | 'right'): { left: number; top: number } {
+  const M = 8
+  const left = Math.max(M, Math.min(align === 'right' ? r.right - w : r.left, vw - w - M))
+  const under = r.bottom + 6
+  const top = under + h > vh - M && r.top - 6 - h >= M ? r.top - 6 - h : Math.max(M, Math.min(under, vh - h - M))
+  return { left, top }
+}
+
+/** The tip is drawn on the top layer of the page (a popover), so no card's overflow or stacking can clip or cover it. */
+export function Tooltip({ text, align = 'left', children }: { text: string; align?: 'left' | 'right'; children: (p: TipTrigger) => ReactNode }) {
   const [open, setOpen] = useState(false)
   const [at, setAt] = useState<CSSProperties | null>(null)
   const id = useId()
   const root = useRef<HTMLSpanElement>(null)
   const tip = useRef<HTMLSpanElement>(null)
-  const [nudge, setNudge] = useState(0)
   useLayoutEffect(() => {
-    // Keep the tip inside what shows it (the window, or a panel that clips): shift it sideways by what spills over.
-    if (!open || float || !tip.current) return setNudge(0)
-    const r = tip.current.getBoundingClientRect()
-    const x = r.left - nudge
-    let lo = 8
-    let hi = document.documentElement.clientWidth - 8
-    for (let el = tip.current.parentElement; el && el !== document.body; el = el.parentElement) {
-      if (getComputedStyle(el).overflowX === 'visible') continue
-      const b = el.getBoundingClientRect()
-      lo = Math.max(lo, b.left + 8)
-      hi = Math.min(hi, b.right - 8)
+    const el = tip.current
+    if (!open || !el || !root.current) return setAt(null)
+    try {
+      el.showPopover()
+    } catch {
+      // No top layer in this browser: the high z-index still lifts it.
     }
-    setNudge(Math.max(lo - x, Math.min(0, hi - (x + r.width))))
-  }, [open, float, text]) // eslint-disable-line react-hooks/exhaustive-deps -- nudge is read to undo itself, not a trigger
-  useLayoutEffect(() => {
-    if (!open || !float || !root.current) return setAt(null)
-    // Beside the panel the trigger sits in, at the trigger's height: right of it when there is room, else left.
-    const r = root.current.getBoundingClientRect()
-    const box = (root.current.closest('.pop') ?? root.current).getBoundingClientRect()
-    const side = window.innerWidth - box.right >= 220 ? { left: box.right + 8, right: 'auto' } : { left: 'auto', right: window.innerWidth - box.left + 8 }
-    setAt({ position: 'fixed', top: r.top - 6, ...side, zIndex: 1000 })
-  }, [open, float])
+    const w = el.offsetWidth
+    const h = el.offsetHeight
+    setAt(placeTip(root.current.getBoundingClientRect(), w, h, document.documentElement.clientWidth, window.innerHeight, align))
+  }, [open, text, align])
   useEffect(() => {
     if (!open) return
     const away = (e: MouseEvent) => !root.current?.contains(e.target as Node) && setOpen(false)
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    const move = () => setOpen(false)
     document.addEventListener('mousedown', away)
     document.addEventListener('keydown', esc)
+    window.addEventListener('scroll', move, true)
+    window.addEventListener('resize', move)
     return () => {
       document.removeEventListener('mousedown', away)
       document.removeEventListener('keydown', esc)
+      window.removeEventListener('scroll', move, true)
+      window.removeEventListener('resize', move)
     }
   }, [open])
   return (
     <span className="info" ref={root} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
       {children({ 'aria-describedby': open ? id : undefined, onClick: () => setOpen((o) => !o), onFocus: () => setOpen(true), onBlur: () => setOpen(false) })}
-      {open && !float && (
-        <span ref={tip} className={align === 'right' ? 'tip right' : 'tip'} id={id} role="tooltip" style={nudge ? { translate: `${nudge}px 0` } : undefined}>
-          {text}
-        </span>
-      )}
-      {open && float && at && createPortal(
-        <span className="tip" id={id} role="tooltip" style={at}>
-          {text}
-        </span>,
-        document.body,
-      )}
+      {open &&
+        createPortal(
+          <span ref={tip} popover="manual" className="tip tip-top" id={id} role="tooltip" style={at ?? { visibility: 'hidden' }}>
+            {text}
+          </span>,
+          document.body,
+        )}
     </span>
   )
 }

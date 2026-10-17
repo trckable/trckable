@@ -30,9 +30,9 @@ test('Display name: "What you call this site in trckable" shows in the header, t
 
   // The dashboard header and the site list.
   await page.goto(`${API}/${site.domain}?v=explore`)
-  await expect(page.locator('.site-btn')).toContainText('Bakery of the Bridge')
-  await page.locator('.site-btn').click()
-  await expect(page.getByRole('dialog', { name: 'Sites' })).toContainText('Bakery of the Bridge')
+  await expect(page.locator('#siteBtn')).toContainText('Bakery of the Bridge')
+  await page.locator('#siteBtn').click()
+  await expect(page.locator('#siteMenu.on')).toContainText('Bakery of the Bridge')
   await page.keyboard.press('Escape')
 
   // A page shared with someone who has no account.

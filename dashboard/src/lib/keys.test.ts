@@ -27,14 +27,14 @@ describe('keymap', () => {
 
   it('knows which action a key already belongs to', () => {
     loadKeymap({})
-    expect(takenBy('c', 'mode')?.id).toBe('compare')
-    expect(takenBy('c', 'compare')).toBeUndefined()
-    expect(takenBy('q', 'mode')).toBeUndefined()
+    expect(takenBy('e', 'site')?.id).toBe('explore')
+    expect(takenBy('e', 'explore')).toBeUndefined()
+    expect(takenBy('q', 'site')).toBeUndefined()
   })
 
   it('drops actions that no longer exist', () => {
     loadKeymap({ gone: 'x' })
-    expect(takenBy('x', 'mode')).toBeUndefined()
+    expect(takenBy('x', 'site')).toBeUndefined()
   })
 
   it('tells Shift S from S', () => {
@@ -75,9 +75,8 @@ describe('keymap', () => {
 
   it('refuses a key an action already has, Shift S included', () => {
     loadKeymap({})
-    expect(takenBy('shift+s', 'mode')?.id).toBe('share')
+    expect(takenBy('shift+s', 'site')?.id).toBe('share')
     expect(takenBy('s', 'share')?.id).toBe('site')
-    expect(takenBy('r', 'replay')).toBeUndefined()
   })
 
   it('draws arrows and letters as keycaps', () => {

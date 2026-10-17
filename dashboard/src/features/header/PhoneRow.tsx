@@ -23,6 +23,8 @@ export interface PhoneProps extends Pick<SheetProps, 'active' | 'value' | 'today
   /** The date picker, which on a phone is only its popover and its keys. */
   period: ReactNode
   onClear?: () => void
+  /** The Briefing is the tab on. */
+  briefing?: boolean
 }
 
 /** "30 days" as "30d", "12 months" as "12m": the line has no room for words. */
@@ -56,7 +58,7 @@ export function PhoneRow(p: PhoneProps & { value: PickerValue; today: ISODate; s
   return (
     <div className="subbar phone-row" data-stuck={p.stuck || undefined}>
       <div ref={tabs} className="pr-tabs">
-        {!isShared() && <ViewSwitch live={false} />}
+        {!isShared() && <ViewSwitch live={false} briefing={p.briefing} />}
         <div id="sv-slot" className="sv-slot" />
       </div>
       {!isShared() && (

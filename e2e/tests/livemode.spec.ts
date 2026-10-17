@@ -1,7 +1,6 @@
-// Live mode: the site right now. A visit from another browser slides into
-// "On the site right now" and moves the numbers, without a reload; the switch
-// and the L key lead there; a phone gets the panels
-// stacked with the list scrolling inside.
+// Live: the site right now, in the walkthrough's layout. A visit from another browser slides into "On the site right
+// now" and moves the numbers, without a reload; the switch and the L and B keys lead between Live and the Briefing;
+// a phone gets the panels stacked; a site with no visit yet shows its install screen.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
@@ -47,9 +46,13 @@ test.beforeAll(async () => {
   cookie = await session()
 })
 
+// The suite's page sends a dashboard address to the older Data (?v=explore) unless the address has a v of its own: an
+// empty one says "no view", which is the walkthrough's.
+const mine = (path: string) => path + (path.includes('?') ? '&v=' : '?v=')
+
 async function signIn(page: Page, path = '/example.com') {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(API + path)
+  await page.goto(API + (path.includes('v=') ? path : mine(path)))
 }
 
 /** A new visitor on the test site, from a browser context of its own. */
@@ -63,236 +66,156 @@ async function visit(page: Page, name: string) {
   return run
 }
 
-const num = async (page: Page, sel: string) => Number((await page.locator(sel).innerText()).replace(/[^\d]/g, '') || 0)
+const num = async (page: Page, sel: string) => Number((await page.locator(sel).first().innerText()).replace(/[^\d]/g, '') || 0)
+
+const live = (page: Page) => page.getByRole('region', { name: 'Live', exact: true })
+const online = (page: Page) => page.locator('.lnow .lfig .lbign').first()
+const visitors = (page: Page) => page.locator('.lnow .lfig .lbign').nth(1)
+const tabs = (page: Page) => page.getByRole('tablist', { name: 'View' })
 
 test('a visit slides in and the numbers move, without a reload', async ({ page }) => {
   await signIn(page, '/example.com?view=live')
-  const live = page.getByRole('region', { name: 'Live', exact: true })
-  await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
-  // Live is always now: no period, no filters, and no ⋯ page menu at all.
-  await expect(page.locator('.range-picker')).toHaveCount(0)
-  await expect(page.locator('.subbar .btn.filter')).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'More', exact: true })).toHaveCount(0)
-  // Live loads no report, so the report's loading bar never runs over it.
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
+  // Live is always now: no period, and no reload bar over it.
+  await expect(page.locator('.pwrap')).toHaveCount(0)
   await expect(page.locator('.loadbar')).toHaveCount(0)
   // One screen: the two panels fit it; the cards, when there are any, come below.
-  expect(await page.locator('.live-view').evaluate((el) => el.getBoundingClientRect().bottom - innerHeight)).toBeLessThanOrEqual(0)
-
+  expect(await page.locator('.lnow').evaluate((el) => el.getBoundingClientRect().bottom - innerHeight)).toBeLessThanOrEqual(0)
   let reloads = 0
   page.on('framenavigated', (f) => f === page.mainFrame() && reloads++)
-  const online = await num(page, '.live-online')
-  const visitors = await num(page, '.live-visitors')
+  const before = { online: await num(page, '.lnow .lfig .lbign'), visitors: await visitors(page).innerText() }
   const run = await visit(page, 'livemode')
   // The path is cut in the middle on screen; its full text is the title.
-  const row = live.locator('.live-feed .live-row', { has: page.locator(`.live-page[title*="${run}"]`) })
+  const row = page.locator('.lfeed .lv', { has: page.locator(`.pg[title*="${run}"]`) })
   await expect(row).toBeVisible({ timeout: 5_000 })
   // Near the top: newest first (other browsers' tests may visit at the same time).
-  expect(await row.evaluate((li) => [...li.parentElement!.children].indexOf(li))).toBeLessThan(4)
-  await expect.poll(() => num(page, '.live-online'), { timeout: 5_000 }).toBeGreaterThan(online)
-  await expect.poll(() => num(page, '.live-visitors'), { timeout: 5_000 }).toBeGreaterThan(visitors)
-  // The chart counted it: its label carries the 30 minutes' total.
-  await expect(live.getByRole('img', { name: /Pageviews per minute/ })).not.toHaveAttribute('aria-label', /: 0 pageviews/)
+  expect(await row.evaluate((el) => [...el.parentElement!.children].indexOf(el))).toBeLessThan(4)
+  await expect.poll(() => num(page, '.lnow .lfig .lbign'), { timeout: 5_000 }).toBeGreaterThan(before.online)
+  await expect.poll(() => visitors(page).innerText(), { timeout: 5_000 }).not.toBe(before.visitors)
+  // The strip counted it: its label carries the 30 minutes' total.
+  await expect(page.locator('.lnow .mins')).not.toHaveAttribute('aria-label', /: 0 in all/)
   expect(reloads).toBe(0)
 })
 
-test('Live has no dots of its own: the switch has the one, and it dims while the connection is down', async ({ page }) => {
+test('the switch has the one dot, and it dims while the connection is down', async ({ page }) => {
   await signIn(page, '/example.com?view=live')
-  const live = page.getByRole('region', { name: 'Live', exact: true })
-  await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
-  await expect(live.locator('.live-now .pulse, .live-now .live-dot')).toHaveCount(0)
-  const dot = page.getByRole('group', { name: 'View' }).locator('.pulse')
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
+  const dot = tabs(page).locator('.mk-dot')
   await expect(dot).toHaveCount(1)
-  await expect(dot).toHaveCSS('opacity', '1')
-  // The stream refused: Live says so in words, and the switch's dot dims.
+  // The stream refused: the card's own dot goes grey.
   await page.route('**/api/v1/sites/*/live', (route) => route.abort())
   await page.reload()
-  await expect(live.getByText('Reconnecting…')).toBeVisible({ timeout: 15_000 })
-  await expect(dot).toHaveCSS('opacity', '0.3')
+  await expect(page.locator('.lnow .lhead .mk-pulse.off')).toBeVisible({ timeout: 15_000 })
 })
 
-test('L and the switch lead to Live and back', async ({ page }) => {
-  await signIn(page, '/example.com?view=data')
-  await expect(page.locator('.range-picker')).toBeVisible({ timeout: 15_000 })
-  await page.getByRole('group', { name: 'View' }).getByRole('button', { name: /^Live/ }).click()
+test('L and B and the switch lead between Live and the Briefing', async ({ page }) => {
+  await signIn(page, '/example.com?view=briefing')
+  await expect(page.locator('.hero')).toBeVisible({ timeout: 15_000 })
+  await tabs(page).getByRole('tab', { name: /^Live/ }).click()
   await expect(page).toHaveURL(/[?&]view=live/)
-  await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible()
-  await page.keyboard.press('l')
-  await expect(page).not.toHaveURL(/view=live/)
-  await expect(page.locator('.range-picker')).toBeVisible()
+  await expect(live(page)).toBeVisible()
+  await page.keyboard.press('b')
+  await expect(page).toHaveURL(/[?&]view=briefing/)
+  await expect(page.locator('.hero')).toBeVisible()
   await page.keyboard.press('l')
   await expect(page).toHaveURL(/[?&]view=live/)
-  await page.getByRole('group', { name: 'View' }).getByRole('button', { name: 'Data' }).click()
-  await expect(page).not.toHaveURL(/view=live/)
-  await expect(page.getByRole('group', { name: 'View' }).getByRole('button', { name: 'Data' })).toHaveAttribute('aria-pressed', 'true')
+  await tabs(page).getByRole('tab', { name: 'Briefing' }).click()
+  await expect(tabs(page).getByRole('tab', { name: 'Briefing' })).toHaveAttribute('aria-selected', 'true')
 })
 
-test('on a phone the panels stack and the list scrolls inside', async ({ page }) => {
+test('on a phone the panels stack and nothing runs off the side', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await signIn(page, '/example.com?view=live')
-  const live = page.getByRole('region', { name: 'Live', exact: true })
-  await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
-  const now = await live.locator('.live-now').boundingBox()
-  const onSite = await live.locator('.live-onsite').boundingBox()
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
+  const now = await page.locator('.lnow').boundingBox()
+  const onSite = await page.locator('.lon').boundingBox()
   expect(now && onSite && onSite.y >= now.y + now.height - 1).toBe(true)
   expect(now!.width).toBeLessThanOrEqual(375)
-  const wide = await page.evaluate(() => document.documentElement.scrollWidth)
-  expect(wide).toBeLessThanOrEqual(375)
-  expect(await live.locator('.live-feed').evaluate((el) => getComputedStyle(el).overflowY)).toBe('auto')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375)
+  // The bar at the bottom names the three places, and Live is the one on.
+  await expect(page.getByRole('navigation', { name: 'Views' }).getByRole('button', { name: 'Live' })).toHaveAttribute('aria-current', 'page')
 })
 
-// Firefox lays a button's text out a hair (under a pixel) differently from one
-// frame to the next: "does not move" means by less than a pixel.
+// Firefox lays a button's text out a hair (under a pixel) differently from one frame to the next: "does not move"
+// means by less than a pixel.
 type Box = { x: number; y: number; width: number; height: number } | null
-function expectSamePlace(now: Box, was: Box) {
-  expect(now && was).toBeTruthy()
-  for (const k of ['x', 'y', 'width', 'height'] as const) expect(Math.abs(now![k] - was![k])).toBeLessThan(1)
+async function expectSamePlace(read: () => Promise<Box>, was: Box) {
+  expect(was).toBeTruthy()
+  // The switch's width follows the digits of the count of people online: where it sits and how tall it is must not move.
+  // The header slides back in as the page returns to the top, so the place is read until it settles.
+  for (const k of ['x', 'y', 'height'] as const) await expect.poll(async () => Math.abs(((await read())?.[k] ?? 1e9) - was![k])).toBeLessThan(1)
 }
 
-// Switching is one movement, not two pages: Live's code is fetched on hover,
-// so no placeholder ever shows; the top bar does not move; Live opens at the
-// top and Data comes back scrolled where it was left.
-test('switching both ways: no blank frame, no shift, scroll kept', async ({ page }) => {
-  await visit(page, 'switch') // a site with data shows the full Data view
-  await signIn(page, '/example.com?view=data')
-  const view = page.getByRole('group', { name: 'View' })
-  await expect(page.locator('.range-picker')).toBeVisible({ timeout: 15_000 })
-  await page.evaluate(() => {
-    const w = window as unknown as { blanks: number }
-    w.blanks = 0
-    new MutationObserver(() => {
-      if (document.querySelector('.live-wait')) w.blanks++
-    }).observe(document.body, { childList: true, subtree: true })
-  })
-  const chunk = page.waitForRequest(/\/assets\/LiveView-[^/]+\.js$/)
-  await view.hover()
-  await chunk
-  const top = await view.boundingBox()
-  const y = await page.evaluate(() => {
-    // Well inside the page as it is on the way back, before the cards under the cards have come in again.
-    window.scrollTo(0, Math.min(100, document.documentElement.scrollHeight - innerHeight - 120))
-    return scrollY
-  })
-  expect(y).toBeGreaterThan(20)
-
+test('switching both ways: the header does not move and Live opens at the top', async ({ page }) => {
+  await visit(page, 'switch') // a site with data shows its Briefing
+  await signIn(page, '/example.com?view=briefing')
+  await expect(page.locator('.hero')).toBeVisible({ timeout: 15_000 })
+  const top = await tabs(page).boundingBox()
+  await page.evaluate(() => window.scrollTo(0, Math.min(150, document.documentElement.scrollHeight - innerHeight - 40)))
   // Scrolled down, the switch is out of sight: L is the way to Live.
   await page.keyboard.press('l')
-  await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible()
+  await expect(live(page)).toBeVisible({ timeout: 15_000 })
   await expect(page).toHaveURL(/[?&]view=live/)
   expect(await page.evaluate(() => scrollY)).toBe(0)
-  await page.evaluate(() => window.scrollTo(0, 0))
-  expectSamePlace(await view.boundingBox(), top)
-
-  await view.getByRole('button', { name: 'Data' }).click()
-  await expect(page.locator('.range-picker')).toBeVisible()
-  await expect.poll(() => page.evaluate(() => scrollY)).toBe(y)
-  // The reader scrolls back up (a wheel turn ends the page's hold on the old place).
-  await page.evaluate(() => {
-    window.dispatchEvent(new Event('wheel'))
-    window.scrollTo(0, 0)
-  })
-  expectSamePlace(await view.boundingBox(), top)
-  expect(await page.evaluate(() => (window as unknown as { blanks: number }).blanks)).toBe(0)
+  await expectSamePlace(() => tabs(page).boundingBox(), top)
+  await tabs(page).getByRole('tab', { name: 'Briefing' }).click()
+  await expect(page.locator('.hero')).toBeVisible()
+  await expectSamePlace(() => tabs(page).boundingBox(), top)
 })
 
-test('reduced motion: an instant switch, no transition', async ({ page }) => {
+test('reduced motion: the pill jumps rather than slides', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.addInitScript(() => {
-    const d = document as Document & { startViewTransition?: unknown; transitions?: number }
-    d.transitions = 0
-    if (typeof d.startViewTransition !== 'function') return
-    const real = d.startViewTransition as (cb: () => void) => unknown
-    d.startViewTransition = function (cb: () => void) {
-      d.transitions!++
-      return real.call(this, cb)
-    }
-  })
-  await signIn(page, '/example.com?view=data')
-  const view = page.getByRole('group', { name: 'View' })
-  await view.getByRole('button', { name: 'Live' }).click()
-  await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible()
-  await view.getByRole('button', { name: 'Data' }).click()
-  await expect(page.locator('.range-picker')).toBeVisible()
-  expect(await page.evaluate(() => (document as Document & { transitions?: number }).transitions)).toBe(0)
-  expect(await page.evaluate(() => document.documentElement.dataset.swap)).toBeUndefined()
-  // The pill jumps rather than slides.
-  expect(await page.locator('.view-pill').evaluate((el) => parseFloat(getComputedStyle(el).transitionDuration))).toBeLessThan(0.01)
+  await signIn(page, '/example.com?view=briefing')
+  await tabs(page).getByRole('tab', { name: /^Live/ }).click()
+  await expect(live(page)).toBeVisible({ timeout: 15_000 })
+  expect(await tabs(page).locator('.spill').evaluate((el) => parseFloat(getComputedStyle(el).transitionDuration))).toBeLessThan(0.01)
 })
 
 test('a site with no visit yet shows its install screen in Live, and the mode comes back', async ({ page }) => {
   const domain = `nolive-${Date.now()}.test`
-  await signIn(page, '/example.com?view=data')
+  await visit(page, 'default')
+  await signIn(page, '/example.com?view=briefing')
   await page.evaluate(async (d) => {
     await fetch('/api/v1/sites', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Trckable-Request': '1' }, body: JSON.stringify({ domain: d }) })
   }, domain)
-  const view = page.getByRole('group', { name: 'View' })
-  // Live on a working site, then the switcher to the new one.
-  await view.getByRole('button', { name: 'Live' }).click()
-  await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible({ timeout: 15_000 })
+  await tabs(page).getByRole('tab', { name: /^Live/ }).click()
+  await expect(live(page)).toBeVisible({ timeout: 15_000 })
   await page.goto(`${API}/${domain}?view=live`)
   await expect(page.getByText('Waiting for the first visit').first()).toBeVisible({ timeout: 15_000 })
-  await expect(page.getByRole('region', { name: 'Live', exact: true })).toHaveCount(0)
-  await expect(view).toHaveCount(0)
-  // Data mode shows the same screen; back on a working site, the choice is kept.
-  await page.goto(`${API}/${domain}`)
+  await expect(live(page)).toHaveCount(0)
+  await expect(tabs(page)).toHaveCount(0)
+  // The Briefing shows the same screen; back on a working site, the choice is kept.
+  await page.goto(`${API}/${domain}?v=`)
   await expect(page.getByText('Waiting for the first visit').first()).toBeVisible()
   await page.goto(`${API}/example.com?view=live`)
-  await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible({ timeout: 15_000 })
+  await expect(live(page)).toBeVisible({ timeout: 15_000 })
 })
 
-// Live is what a dashboard with visitors opens in: the address says nothing of
-// the view. A period, Full, filters or ?view=data say Data, and a choice of
-// Data stays in the address, so a reload keeps it.
-test('a site with visits opens in Live when the address has no mode, and Data stays Data', async ({ page }) => {
+// Live is what a dashboard with visitors opens in: the address says nothing of the view. A period, filters or
+// ?view=briefing say the Briefing; ?view=data is the older Data, still there for addresses made before.
+test('a site with visits opens in Live when the address has no mode', async ({ page }) => {
   await visit(page, 'default')
-  await signIn(page, '/example.com?v=') // an empty v is the address with no view, which the suite would otherwise send to Explore
-  const live = page.getByRole('region', { name: 'Live', exact: true })
-  const view = page.getByRole('group', { name: 'View' })
-  await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
-  await expect(view.getByRole('button', { name: 'Live' })).toHaveAttribute('aria-pressed', 'true')
+  await signIn(page, '/example.com?v=')
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
+  await expect(tabs(page).getByRole('tab', { name: /^Live/ })).toHaveAttribute('aria-selected', 'true')
   await expect(page).not.toHaveURL(/view=/)
-  await expect(page.locator('.range-picker')).toHaveCount(0)
+  await expect(page.locator('.pwrap')).toHaveCount(0)
 
-  // Data, chosen: the address keeps it through a reload.
-  await view.getByRole('button', { name: 'Data' }).click()
-  await expect(page.locator('.range-picker')).toBeVisible()
-  await expect(page).toHaveURL(/[?&](view=data|v=explore)/)
+  // The Briefing, chosen: the address keeps it through a reload.
+  await tabs(page).getByRole('tab', { name: 'Briefing' }).click()
+  await expect(page.locator('.pwrap')).toBeVisible()
+  await expect(page).toHaveURL(/[?&]view=briefing/)
   await page.reload()
-  await expect(page.locator('.range-picker')).toBeVisible({ timeout: 15_000 })
-  await expect(live).toHaveCount(0)
+  await expect(page.locator('.hero')).toBeVisible({ timeout: 15_000 })
+  await expect(live(page)).toHaveCount(0)
 
-  // Addresses made before Live was the default stay Data.
-  for (const q of ['?period=7d', '?mode=full', '?f=channel:Direct']) {
-    await page.goto(`${API}/example.com${q}`)
-    await expect(page.locator('.range-picker')).toBeVisible({ timeout: 15_000 })
-    await expect(live).toHaveCount(0)
+  // Addresses made before Live was the default are the Briefing now.
+  for (const q of ['?period=7d', '?f=channel:Direct']) {
+    await page.goto(`${API}/example.com${q}&v=`)
+    await expect(page.locator('.hero')).toBeVisible({ timeout: 15_000 })
+    await expect(live(page)).toHaveCount(0)
   }
-  // Taking the last filter out does not flip to Live.
-  await page.goto(`${API}/example.com?f=channel:Direct`)
-  await page.getByRole('button', { name: /^Clear filters|Remove filter/i }).first().click()
-  await expect(page.locator('.range-picker')).toBeVisible()
-  await expect(live).toHaveCount(0)
-  await expect(page).toHaveURL(/[?&](view=data|v=explore)/)
-
   // ?view=live still says Live.
   await page.goto(`${API}/example.com?view=live`)
-  await expect(live.locator('.live-online')).toBeVisible({ timeout: 15_000 })
-})
-
-test('the minute chart tip stays inside the card at the first and the last minute', async ({ page }) => {
-  await visit(page, 'tip-edge')
-  await signIn(page, '/example.com?view=live')
-  const chart = page.getByRole('img', { name: /Pageviews per minute/ })
-  await expect(chart).toBeVisible({ timeout: 15_000 })
-  const box = (await chart.boundingBox())!
-  const tip = page.locator('.live-line .chart-tip')
-  for (const dx of [2, box.width - 2]) {
-    await page.mouse.move(box.x + dx, box.y + box.height / 2)
-    await expect(tip).toBeVisible()
-    // Measured once its entrance has settled: the place it stays in.
-    await expect.poll(() => tip.evaluate((el) => el.getAnimations().length)).toBe(0)
-    const t =(await tip.boundingBox())!
-    expect(t.x).toBeGreaterThanOrEqual(box.x - 0.5)
-    expect(t.x + t.width).toBeLessThanOrEqual(box.x + box.width + 0.5)
-    expect(t.y).toBeGreaterThanOrEqual(box.y - 0.5)
-  }
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
 })

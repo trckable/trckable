@@ -138,7 +138,7 @@
     border-radius: 20px;
   }
   /* A dialog's title bar and sticky heads are part of the same glass: no flat fill over it. */
-  :root:not([data-glass='off']) :is(.window-head, .feat-top, .live-onsite .live-head-row) {
+  :root:not([data-glass='off']) :is(.window-head, .feat-top) {
     background: transparent;
   }
 

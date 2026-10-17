@@ -46,7 +46,7 @@ export function ControlRow(p: Props) {
     <>
       <div ref={sentinel} className="subbar-sentinel" aria-hidden="true" />
       <div className="subbar" data-stuck={stuck || undefined}>
-        {!isShared() && !wide && <ViewSwitch live={p.live} />}
+        {!isShared() && !wide && <ViewSwitch live={p.live} briefing={p.briefing} />}
         {!p.live && p.site && !isShared() && (
           <>
             <span className="ctl-site">

@@ -73,13 +73,13 @@ const noSideScroll = (page: Page) => page.evaluate(() => document.documentElemen
 test('the seal is a check after the site name, and its panel lists a row per kind of badge', async ({ page }) => {
   await told(page, ALL)
   await open(page, `/${site.domain}?v=explore`)
-  const seal = page.locator('.site-zone .vf-sealbtn')
+  const seal = page.locator('.sitechip .vf-sealbtn')
   await expect(seal).toBeVisible({ timeout: 15_000 })
   await expect(seal).toHaveAttribute('title', 'Verified · Payments, Search')
   await expect(page.locator('.vf-pill')).toHaveCount(0)
   const at = async (sel: string) => (await page.locator(sel).first().boundingBox())!
-  expect((await at('.site-zone .vf-sealbtn')).x, 'the check comes after the name').toBeGreaterThan((await at('.site-pick .site-btn .name')).x)
-  await expect(page.locator('.site-pick .site-btn .vf-sealbtn, .site-pick .site-btn .state-dot')).toHaveCount(0) // the avatar is clean
+  expect((await at('.sitechip .vf-sealbtn')).x, 'the check comes after the name').toBeGreaterThan((await at('#siteBtn .nmx')).x)
+  await expect(page.locator('#siteBtn .vf-sealbtn')).toHaveCount(0) // the chip's own button is clean: the check sits beside it
   expect(await noSideScroll(page), 'the header scrolls sideways').toBeLessThanOrEqual(0)
   await shoot(page, 'seal', { height: 120 })
 
@@ -104,7 +104,7 @@ test('the seal is a check after the site name, and its panel lists a row per kin
 test('a kind not earned yet is a Connect row that opens Settings', async ({ page }) => {
   await told(page, sources([{ kind: 'payments', provider: 'stripe' }]))
   await open(page, `/${site.domain}?v=explore`)
-  await page.locator('.site-zone .vf-sealbtn').click({ timeout: 15_000 })
+  await page.locator('.sitechip .vf-sealbtn').click({ timeout: 15_000 })
   const panel = page.locator('.vf-panel')
   await expect(panel.locator('.vf-row')).toHaveCount(1)
   await expect(panel.locator('.vf-connect')).toHaveCount(1)
@@ -128,7 +128,7 @@ test('the Revenue number names its source; a source that fails drops its badge a
   await page.unroute(`**/api/v1/sites/${site.id}/verified`)
   await told(page, failing)
   await page.reload()
-  await expect(page.locator('.site-zone .vf-sealbtn')).toHaveAttribute('title', 'Verified · Search', { timeout: 15_000 })
+  await expect(page.locator('.sitechip .vf-sealbtn')).toHaveAttribute('title', 'Verified · Search', { timeout: 15_000 })
   await expect(tile('Revenue').locator('.vf-chip')).toHaveCount(0)
 })
 
@@ -144,7 +144,7 @@ test('the Story cards carry the same badges', async ({ page }) => {
 test('with nothing working there is no seal and no badge, and the switcher marks only a site that has one', async ({ page }) => {
   await told(page, sources([{ kind: 'payments', provider: 'stripe', ok: false }]))
   await open(page, `/${site.domain}?v=explore`)
-  await expect(page.locator('.site-pick')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('#siteBtn')).toBeVisible({ timeout: 15_000 })
   await expect(page.locator('.vf-sealbtn')).toHaveCount(0)
   await expect(page.locator('.kpis .vf-chip')).toHaveCount(0)
 
@@ -152,10 +152,10 @@ test('with nothing working there is no seal and no badge, and the switcher marks
   await page.unroute(`**/api/v1/sites/${site.id}/verified`)
   await told(page, ALL)
   await page.reload()
-  await page.locator('.site-pick .site-btn').click()
+  await page.locator('#siteBtn').click()
   await expect(page.locator(`[data-site="${site.id}"] .vf-seal-dot`)).toBeVisible({ timeout: 15_000 })
   // A site with no source has no seal (other suites' sites with a real Stripe sale may have one).
-  await expect(page.locator('.pop.sites .site-row').filter({ hasText: 'history.example' }).locator('.vf-seal-dot')).toHaveCount(0)
+  await expect(page.locator('#siteMenu .site-row').filter({ hasText: 'history.example' }).locator('.vf-seal-dot')).toHaveCount(0)
   await shoot(page, 'switcher', { height: 520 })
 })
 

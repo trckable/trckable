@@ -408,15 +408,6 @@ button.kit-ask:hover {
   }
 }
 
-.kit-key {
-  display: inline-block;
-  width: 14px;
-  border-top: 2px solid var(--accent);
-}
-.kit-key.was {
-  border-top: 1.5px dashed var(--text-3);
-}
-
 /* Rows that open something: the first cell's button covers the whole row */
 .kit-table tr {
   position: relative;
@@ -464,7 +455,6 @@ button.kit-ask:hover {
   background: var(--accent);
 }
 
-
 /* Phone scale: the least a finger target is */
 @media (max-width: 640px) {
   .kit-seg button {
@@ -485,24 +475,6 @@ button.kit-ask:hover {
 }
 
 /* Small helpers the cards share */
-.kit-clip {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.kit-devs {
-  gap: 16px;
-  margin-top: 12px;
-}
-.kit-devs span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-.kit-devs b {
-  color: var(--text);
-  font-weight: 500;
-}
 
 /* Tabs: one thin underline on the one picked; a row wider than its card scrolls sideways */
 .kit-tabs {
@@ -630,61 +602,9 @@ button.kit-ask:hover {
 }
 
 /* A big number with its name beside it, chips under it, a segmented bar at the edge */
-.kit-val-name {
-  color: var(--text-2);
-  font-size: 15px;
-}
-.kit-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-}
-.kit-chip {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 28px;
-  padding: 0 10px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--row);
-  color: var(--text-2);
-  font: inherit;
-  font-size: 12px;
-}
-button.kit-chip {
-  cursor: pointer;
-}
-button.kit-chip:hover {
-  color: var(--text);
-}
-button.kit-chip:focus-visible {
-  outline: 2px solid var(--accent);
-}
-.kit-chip b {
-  color: var(--text);
-  font-weight: 500;
-}
+
 @media (max-width: 640px) {
-  button.kit-chip {
-    min-height: var(--ph-hit);
-  }
-}
-.kit-segbar {
-  display: flex;
-  gap: 2px;
-  height: 8px;
-  margin-top: 4px;
-  /* Like the card lines (.line-fade): it fades out softly at both sides instead of ending in hard edges. */
-  mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
-}
-.kit-segbar i {
-  display: block;
-  min-width: 4px;
-  opacity: 0.7;
+  
 }
 
 /* An empty or connect state: one dashed line with its action, no big button */

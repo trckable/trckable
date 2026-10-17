@@ -7,7 +7,7 @@ vi.mock('../../lib/url', () => ({ setView: vi.fn() }))
 vi.mock('../signals/useFullSurge', () => ({ useFullSurge: (given: unknown) => ({ surge: given, state: 'ready' }) }))
 
 import type { Busier } from './api'
-import { BusierLine } from './BusierLine'
+import { BusyLine as BusierLine } from '../../v2/ui/BusyLine'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 

@@ -1,0 +1,113 @@
+import { isValidElement, type ReactElement, type ReactNode } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { Site } from '../../lib/api'
+import { OpenSite } from '../../features/sites/OpenSite'
+import { stateLine } from '../../features/sites/stateLine'
+import { SiteRow } from './SiteRow'
+
+const NOW = Math.floor(Date.now() / 1000)
+const site = (o: Partial<Site> = {}): Site => ({ id: 's1', domain: 'example.com', name: 'Example', timezone: 'UTC', currency: 'USD', proxy_key: '', last_event_at: NOW - 60, ...o })
+const noop = () => {}
+const row = (s: Site, online = 0, today?: number) => renderToStaticMarkup(<SiteRow site={s} place={{ kind: 'rest' }} on={false} arrange={null} online={online} today={today} onPick={noop} />)
+
+// A row holds no state, so it can be called as a plain function and its element tree walked for handlers.
+function find(node: ReactNode, test: (e: ReactElement<Record<string, unknown>>) => boolean): ReactElement<Record<string, unknown>> | undefined {
+  if (!isValidElement<Record<string, unknown>>(node)) return undefined
+  if (test(node)) return node
+  const kids = node.props.children as ReactNode
+  for (const k of Array.isArray(kids) ? (kids as ReactNode[]) : [kids]) {
+    const hit = find(k, test)
+    if (hit) return hit
+  }
+  return undefined
+}
+
+describe('a site in the list', () => {
+  it('shows who is on it now, and today in its tooltip', () => {
+    const html = row(site(), 3, 1284)
+    expect(html).toContain('<b>3</b>')
+    expect(html).toContain('title="1,284 today"')
+  })
+
+  it('says setup, down or quiet in the number’s place', () => {
+    expect(row(site({ last_event_at: undefined }), 0, 0)).toContain('setup')
+    const gone = row(site({ last_event_at: NOW - 3 * 86400, check: { at: NOW - 3600, error: 'example.com could not be reached over https' } }), 5)
+    expect(gone).toContain('state-icon down')
+    expect(gone).toContain('aria-label="Not reachable for 3d. Open the site to see what’s wrong."')
+    expect(gone).toContain('mk-dot down')
+    expect(gone).not.toContain('<b>5</b>')
+    const quiet = row(site({ last_event_at: NOW - 7 * 3600, check: { at: NOW - 3600, found: 'none' } }), 5)
+    expect(quiet).toContain('state-icon quiet')
+    expect(quiet).toContain('mk-dot quiet')
+    expect(quiet).toContain('aria-label="No visits for 7h. Nothing looks wrong with the page."')
+    expect(row(site({ last_event_at: NOW - 3600 }), 5)).toContain('<b>5</b>')
+  })
+
+  it('puts the state in words under the name, and the domain under a name that is not it', () => {
+    expect(row(site({ last_event_at: NOW - 7 * 3600, check: { at: NOW - 3600, found: 'none' } }))).toContain('Quiet · 7h')
+    expect(row(site())).toContain('>example.com<')
+    expect(row(site({ name: 'example.com' }))).not.toContain('class="d')
+  })
+
+  it('marks the site you are on with aria-current', () => {
+    const html = renderToStaticMarkup(<SiteRow site={site()} place={{ kind: 'rest' }} on={true} arrange={null} online={0} onPick={noop} />)
+    expect(html).toContain('aria-current="page"')
+  })
+})
+
+describe('the state line under a site name', () => {
+  const down = { check: { at: NOW, error: 'unreachable' } }
+  it('says how long a down site has been unreachable', () => {
+    expect(stateLine(site({ ...down, last_event_at: NOW - 2 * 86400 - 600 }))).toBe('Not reachable · 2d')
+  })
+  it('says how long a quiet site has had no visits', () => {
+    expect(stateLine(site({ last_event_at: NOW - 8 * 3600 }))).toBe('Quiet · 8h')
+  })
+  it('is empty for a live and for a new site', () => {
+    expect(stateLine(site({ last_event_at: NOW - 3600 }))).toBeNull()
+    expect(stateLine(site({ last_event_at: undefined }))).toBeNull()
+  })
+})
+
+describe('the open-site link on a row', () => {
+  afterEach(() => vi.unstubAllGlobals())
+  const pick = vi.fn()
+  const tree = () => SiteRow({ site: site(), place: { kind: 'rest' }, on: false, arrange: null, online: 0, onPick: pick })
+
+  it('links to the site in a new tab, with the domain in its tooltip', () => {
+    const html = renderToStaticMarkup(<OpenSite domain="example.com" />)
+    expect(html).toContain('href="https://example.com"')
+    expect(html).toContain('target="_blank"')
+    expect(html).toContain('rel="noopener noreferrer"')
+    expect(html).toContain('title="Open example.com"')
+  })
+
+  it('is left out for a site without a domain', () => {
+    expect(renderToStaticMarkup(<OpenSite domain="" />)).toBe('')
+    expect(row(site({ domain: '' }))).not.toContain('site-open')
+  })
+
+  it('is clicked without switching the site', () => {
+    expect(find(tree(), (e) => e.type === OpenSite)).toBeDefined()
+    const el = (OpenSite as (p: { domain: string }) => ReactElement<{ onClick: (e: unknown) => void }>)({ domain: 'example.com' })
+    const stop = vi.fn()
+    el.props.onClick({ stopPropagation: stop })
+    expect(stop).toHaveBeenCalled()
+    expect(pick).not.toHaveBeenCalled()
+  })
+
+  it('opens the site on Shift + Enter, and not on Enter alone', () => {
+    const open = vi.fn()
+    vi.stubGlobal('window', { open })
+    const btn = find(tree(), (e) => e.type === 'button' && typeof e.props.onKeyDown === 'function')
+    const onKeyDown = btn?.props.onKeyDown as (e: unknown) => void
+    const preventDefault = vi.fn()
+    onKeyDown({ key: 'Enter', shiftKey: true, altKey: false, preventDefault })
+    expect(open).toHaveBeenCalledWith('https://example.com', '_blank', 'noopener,noreferrer')
+    expect(preventDefault).toHaveBeenCalled()
+    open.mockClear()
+    onKeyDown({ key: 'Enter', shiftKey: false, altKey: false, preventDefault })
+    expect(open).not.toHaveBeenCalled()
+  })
+})

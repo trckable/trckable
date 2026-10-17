@@ -4,7 +4,6 @@
 // first) or Table (every site as a row, sortable).
 import { useMemo } from 'react'
 import { Loading } from '../components/loading/Loading'
-import { AllBar } from '../features/header/AllBar'
 import { type Site } from '../lib/api'
 import { AllTable } from './AllTable'
 import { AllToday } from './AllToday'
@@ -19,6 +18,8 @@ import type { Lens } from './allLens'
 import { useAllView, type ViewLens } from './allView'
 import { useOverview } from './useOverview'
 import { useSurges } from './useSurges'
+import '../mock/mock.css'
+import '../mock/theme.css'
 import './AllSites.css'
 
 const lensWord = { visitors: copy.lensVisitors, revenue: copy.lensRevenue }
@@ -57,7 +58,8 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
 
   return (
     <>
-      <AllBar header={header} />
+      {header}
+      <div className="mk-tokens mk-allsites">
       <main className="all-sites">
         <div className="all-head">
           <div>
@@ -75,6 +77,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
         {rows && !uptime && view.layout === 'overview' && <AllToday {...props} days={days} surges={surges} open={(l) => change({ lens: l })} />}
         {rows && !uptime && view.layout === 'table' && <AllTable {...props} />}
       </main>
+      </div>
     </>
   )
 }

@@ -25,8 +25,7 @@ test('a site the probe finds down is told in the foot, by its name and on the Li
   const status = page.locator('.footer-status')
   await expect(status).toHaveAttribute('data-status', 'down', { timeout: 20_000 })
   await expect(page.locator('.status-float')).toHaveCount(0)
-  await expect(page.locator('.view-switch.down')).toBeVisible()
-  await expect(page.locator('.site-zone .state-dot.stopped')).toBeVisible()
+  await expect(page.locator('#siteBtn .mk-dot.down')).toBeVisible()
   await status.click()
   await expect(page.locator('.status-pop')).toContainText('Some visitors still get through')
   await expect(page.locator('.status-pop')).toContainText('No answer within 10 seconds')
@@ -51,8 +50,8 @@ test('the Live card says Down in its header, and the panel in the foot lists the
   await page.emulateMedia({ colorScheme: 'dark' })
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=live`)
-  await expect(page.locator('.view-switch.live')).toBeVisible({ timeout: 20_000 })
-  await expect(page.locator('.live-state.down')).toHaveText('Down') // the Live card's header says it
+  await expect(page.getByRole('tablist', { name: 'View' }).locator('.mk-dot.down')).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('.lnow .downbox')).toContainText('nobody can reach the site') // the Live card says it
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/down2-live-badge-1440.png` })
   await page.locator('.footer-status').click()
   const pop = page.locator('.status-pop')

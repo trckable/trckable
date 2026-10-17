@@ -214,8 +214,8 @@ test('/settings is not a page: an owner lands on the dashboard, a viewer is neve
   await expect(page).toHaveURL(new RegExp(`/${verified.replace(/\./g, '\\.')}(\\?|$)`), { timeout: 15_000 })
   await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toHaveCount(0)
   // The site list's first row opens that site's settings, over its dashboard.
-  await page.locator('.site-zone button.site-btn').click()
-  await page.locator('.pop.sites .foot-settings').click()
+  await page.locator('#siteBtn').click()
+  await page.locator('#siteMenu').getByRole('button', { name: 'Site settings' }).click()
   await expect(page.getByRole('dialog').first()).toBeVisible()
 
   const env = { ...process.env, TRCKABLE_DATA_DIR: dataDir, TRCKABLE_GEO: 'off' }
@@ -231,9 +231,9 @@ test('/settings is not a page: an owner lands on the dashboard, a viewer is neve
     // The viewer lands on the site's dashboard (its switcher is there) and has no settings cog.
     await expect(v.getByRole('button', { name: verified })).toBeVisible({ timeout: 15_000 })
     await expect(v.getByRole('button', { name: /^Settings for/ })).toHaveCount(0)
-    await v.locator('.site-zone button.site-btn').click()
-    await expect(v.locator('.pop.sites')).toBeVisible()
-    await expect(v.locator('.pop.sites .foot-settings')).toHaveCount(0)
+    await v.locator('#siteBtn').click()
+    await expect(v.locator('#siteMenu.on')).toBeVisible()
+    await expect(v.locator('#siteMenu').getByRole('button', { name: 'Site settings' })).toHaveCount(0)
     await v.keyboard.press('Escape')
     await expect(v.getByRole('dialog', { name: 'Set up your first site' })).toHaveCount(0)
   }

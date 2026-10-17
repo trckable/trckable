@@ -209,3 +209,13 @@ export const browserZone = () => {
     return 'UTC'
   }
 }
+
+/** Which granularities make sense for a period this long (undefined = auto); none when there is only the choice of auto. */
+export function bucketsFor(days: number): ('hour' | 'day' | 'week' | 'month' | undefined)[] {
+  const out: ('hour' | 'day' | 'week' | 'month' | undefined)[] = [undefined]
+  if (days <= 14) out.push('hour')
+  if (days <= 400) out.push('day')
+  if (days >= 7) out.push('week')
+  if (days >= 60) out.push('month')
+  return out.length > 2 ? out : []
+}

@@ -1088,14 +1088,8 @@ table.t td {
     gap: 8px;
     min-height: 0;
   }
-  .site-pick {
-    flex: 1;
-    min-width: 0;
-  }
-  .site-pick select {
-    width: 100%;
-    height: 40px !important;
-  }
+  
+  
   .header-tools .btn,
   .header-tools .btn.icon {
     height: 40px;
@@ -1175,43 +1169,12 @@ table.t td {
   .header-tools .spin {
     display: none;
   }
-  .site-pick select {
-    text-overflow: ellipsis;
-  }
+  
 }
 
 /* ---- Site picker -----------------------------------------------------------
    The header's own control, not the browser's. */
-.site-pick {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-.btn.site-btn {
-  height: 44px;
-  gap: 9px;
-  max-width: 280px;
-  padding: 0 12px;
-}
-.btn.site-btn .name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.btn.site-btn svg {
-  color: var(--text-3);
-  flex: none;
-}
-.pop.sites {
-  top: 50px;
-  left: 0;
-  width: 300px;
-  max-width: min(360px, calc(100vw - 24px));
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
-}
+
 /* An icon on a small rounded square: menu rows and headings. */
 .icon-tile {
   display: grid;
@@ -1227,24 +1190,10 @@ table.t td {
   color: var(--accent);
 }
 @media (max-width: 640px) {
-  .site-pick {
-    flex: 1;
-  }
-  .btn.site-btn {
-    height: 40px;
-    width: 100%;
-    max-width: none;
-  }
+  
+  
   /* The picker button is narrow; its list is not. */
-  .pop.sites {
-    position: fixed;
-    top: 56px;
-    left: 12px;
-    right: 12px;
-    width: auto;
-    max-width: none;
-    min-width: 0;
-  }
+  
 }
 @keyframes fade {
   from {
@@ -1529,9 +1478,7 @@ ul.people button:hover {
 .header > .brand {
   order: 0;
 }
-.header > .site-pick {
-  order: 1;
-}
+
 .header > .gear {
   order: 1;
   margin-right: 4px;
@@ -1842,27 +1789,6 @@ body[data-mode] .card.overview {
 /* ---- Which site, and that site's settings ----------------------------------
    One control with a divider, not two buttons that happen to be adjacent: the
    cog belongs to the name beside it, and the border says so. */
-.site-zone {
-  display: flex;
-  align-items: stretch;
-  min-width: 0;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-}
-.site-zone .btn.site-btn,
-.site-zone .btn.gear {
-  border: 0;
-  background: transparent;
-  border-radius: 11px;
-}
-.site-zone .btn.site-btn:hover,
-.site-zone .btn.gear:hover {
-  background: var(--surface-2);
-}
-.site-zone:focus-within {
-  background-image: var(--hover-veil);
-}
 
 /* ---- The Filter menu -------------------------------------------------------
    Clicking a row is still the fast way to filter. This is for when the row
@@ -2062,14 +1988,8 @@ body[data-mode] .card.overview {
   .header > .brand {
     flex: none;
   }
-  .header > .site-zone {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-  .site-zone .site-pick {
-    flex: 1;
-    min-width: 0;
-  }
+  
+  
   /* Only Ask, the view and ⋯ are left up here (the period, Filter and
      Views are in the toolbar), so they share the first row. */
   .header-tools {
@@ -2291,10 +2211,18 @@ body[data-mode] .card.overview {
   .update-pill .num {
     display: none;
   }
+  /* A finger needs 44 px: the pill is only its dot, in a target of that size. */
   .update-pill {
-    width: 26px;
+    width: 44px;
+    height: 44px;
     padding: 0;
+    border: 0;
+    background: none;
     justify-content: center;
+  }
+  .update-pill .dot {
+    width: 10px;
+    height: 10px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2327,19 +2255,7 @@ body[data-mode] .card.overview {
   line-height: 1;
 }
 /* The live dot sits on the mark's corner. */
-.mark-wrap {
-  position: relative;
-  display: inline-flex;
-  flex: none;
-}
-.mark-wrap > .dot {
-  position: absolute;
-  right: -3px;
-  bottom: -3px;
-  width: 9px !important;
-  height: 9px !important;
-  box-shadow: 0 0 0 2px var(--surface);
-}
+
 /* A site's state (features/sites/StateDot.tsx). */
 .state-dot {
   border-radius: 50%;
@@ -2450,11 +2366,7 @@ body[data-mode] .card.overview {
 .view-switch {
   view-transition-name: view-switch;
 }
-.live-online {
-  view-transition-name: online-count;
-}
-.overview .chart-wrap,
-.live-line {
+.overview .chart-wrap {
   view-transition-name: main-chart;
 }
 ::view-transition-group(*) {
@@ -2703,12 +2615,7 @@ body {
 :root .menu-foot {
   border-color: var(--pane-sep);
 }
-:root .menu-group-head {
-  margin: 6px 9px 3px;
-  font-size: 11px;
-  letter-spacing: 0;
-  text-transform: none;
-}
+
 /* The chosen row: a check at the left, no coloured edge (the period's list and the site switcher alike). */
 :root .pop.range-pop.small .lrow {
   padding-left: 28px;
@@ -2719,29 +2626,7 @@ body {
   left: 9px;
   margin-top: -7px;
 }
-:root .pop.sites.pop .site {
-  padding-left: 28px;
-}
-:root .pop.sites .site.on::before {
-  content: '';
-  top: 50%;
-  bottom: auto;
-  left: 11px;
-  width: 6px;
-  height: 6px;
-  margin-top: -3px;
-  border-radius: 50%;
-  background: var(--text); /* the ink, not the accent: the live dot is green */
-}
-:root .pop.sites .all-chip.on {
-  border-color: var(--pane-hair);
-  color: var(--text);
-  background: var(--pane-row);
-}
-:root .pop.sites .all-chip:hover,
-:root .pop.sites .all-chip:focus-visible {
-  border-color: var(--pane-hair);
-}
+
 :root .pop:is(.menu-pop, .sites) .menu-search {
   border-color: var(--pane-hair);
   background: var(--pane-row);
@@ -2773,9 +2658,7 @@ body {
     font-size: 15px;
     border-radius: 12px;
   }
-  :root .pop.sites .site.on::before {
-    left: 12px;
-  }
+  
   /* The grab handle: one on every sheet. */
   :root .pop:is(.anchored, .menu.more-menu, .menu-pop, .sites, .lpop, .range-pop)::before {
     content: '';
@@ -2874,4 +2757,24 @@ body {
   padding: 0 4px 6px;
   color: var(--text-3);
   font-size: 12px;
+}
+
+/* The page's header is its own chunk: this holds its place until it has loaded, so nothing under it moves. */
+.bar-hold {
+  width: 100%;
+  height: 48px;
+}
+
+/* A popover menu on the top layer: the browser's own box (inset, margin, border, padding) is replaced by the menu's. */
+:where(.pop.anchored[popover]) {
+  inset: auto;
+  margin: 0;
+}
+:where(.pop[popover], .mk-menu[popover]) {
+  inset: auto;
+  margin: 0;
+  color: inherit;
+}
+body:has(.account-menu .pop) .tabbar {
+  visibility: hidden;
 }
