@@ -78,6 +78,19 @@ test('a mention is a dot over the chart, with its source and what it brought', a
   await expect(dot.locator('.mention-mark')).toHaveAttribute('data-source', 'hn')
 })
 
+test('the chart header says how many mentions the period has, lights their dots, and opens the Mentions page', async ({ page }) => {
+  const posted = Math.floor(Date.now() / 86400_000) * 86400 - 2 * 86400 + 12 * 3600
+  const mention = { id: 8, source: 'hn', url: 'https://news.ycombinator.com/item?id=41000002', title: 'Show HN: Acme Metrics', author: 'maker1', host: 'news.ycombinator.com', points: 90, comments: 12, snippet: 'It just works.', front: false, posted_at: posted, found_at: posted + 600, visitors: 300, peak_hour: posted + 3600, driving: false }
+  await page.route('**/api/v1/sites/*/mentions?*', (r) => r.fulfill({ json: { mentions: [mention], sources: ['hn'], words: { default: [HISTORY_DOMAIN], added: [], max: 10 }, driving: null } }))
+  await told(page, { mentions: true })
+  await open(page, '?view=briefing&period=7d')
+  const chip = page.locator('.mp-chip')
+  await expect(chip).toBeVisible({ timeout: 20_000 })
+  await expect(chip).toContainText('1')
+  await chip.click()
+  await expect(page).toHaveURL(new RegExp(`/${HISTORY_DOMAIN.replace('.', '\\.')}/mentions`))
+})
+
 test('a busy moment opens the page with its line over the Briefing and its band on the chart', async ({ page }) => {
   const started = NOW - 3 * 86400
   const surge = { id: 'sg_1', started, ended: started + 1500, online: 60, usual: 8, times: 7, why: { source: 'Hacker News', source_dim: 'referrer', source_value: 'news.ycombinator.com', source_n: 40, source_usual: 1, page: '/blog/launch', page_n: 31, before: 4, minutes: 25 } }

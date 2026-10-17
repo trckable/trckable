@@ -22,6 +22,7 @@ import { ChartBlock } from './ChartBlock'
 import { fmtInt as fmtN } from '../../lib/format'
 import { useStoryReplay } from './useStoryReplay'
 import { BounceNote } from './BounceNote'
+import { PaceFoot } from './PaceFoot'
 import { KeyHint } from '../ui/KeyHint'
 import { Kcs } from '../ui/KpiCard'
 import { MailRow } from '../ui/MailRow'
@@ -191,7 +192,6 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const canNote = !isViewer() && !isShared()
   const replayStory = /* any period but today plays as a story */ pts.length > 1 && v > 0 && storyR.phase === 'off' ? storyR.start : undefined
   const replayToday = !rv.r.on && end >= 60 && v > 0 ? rv.r.open : undefined
-  const replayOf = unit === 'today' ? replayToday : replayStory
   const note = chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia('(max-width: 500px)').matches))
   const chartBlock = { site, range, chart, at, onAt: setAt, story: storyR, series: cur.series.slice(0, pts.length), bucket: data?.bucket ?? 'day', money: moneyIn, total: fmtN(v), source: top?.value, note, down: uptime.verdict === 'down', notes: notes.notes.length, onNotes: () => ui.setSheet('notes') }
   const body = (
@@ -208,14 +208,14 @@ export default function Briefing({ site, data: page, loading, period, range, mon
           onPeriod={() => document.querySelector<HTMLElement>('.mk-pill, .range-picker, .btn.range')?.click()}
           moments={mo}
           why={heroWhy}
-          onReplay={replayOf}
+          onReplay={unit === 'today' ? replayToday : replayStory}
           chart={
             empty ? null : (
               <ChartBlock {...chartBlock} />
             )
           }
         />
-        {!empty && <Kcs items={kcs} />}
+        {!empty && <Kcs items={kcs} foot={{ people: <PaceFoot site={site.id} today={today} live={range.to === today} /> }} />}
         <div className="npw">
           {lock.queued.length > 0 && (
             <button type="button" className="newpill" onClick={lock.release}>

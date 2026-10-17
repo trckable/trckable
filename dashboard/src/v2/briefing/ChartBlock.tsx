@@ -15,6 +15,7 @@ import type { StoryReplay } from './useStoryReplay'
 // Replay as a story, for the periods that are not today: its own chunk, fetched when it starts.
 const Story = lazyLoad(() => import('../../features/story/Story'))
 // The moments, the sources' pills and the busy band over the chart: their own chunk, drawn when the chart is.
+const MentionsChip = lazyLoad(() => import('../../features/mentions/MentionsChip'))
 const MomentLayer = lazyLoad(() => import('../../features/moments/MomentLayer'))
 
 export interface ChartBlockProps {
@@ -44,6 +45,9 @@ export function ChartBlock(p: ChartBlockProps) {
         <span className="mk-quiet" id="chNote" style={p.down ? { color: 'var(--mk-red)' } : undefined}>
           {p.note}
         </span>
+        <Suspense fallback={null}>
+          <MentionsChip site={p.site} labels={labels} from={p.series[0]?.t.slice(0, 10) ?? p.range.from} to={p.range.to} />
+        </Suspense>
         <button type="button" className="gh nbtn" data-info="notes" onClick={p.onNotes}>
           {copy.noteBtn(p.notes)}
         </button>

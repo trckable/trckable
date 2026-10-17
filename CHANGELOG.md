@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The Visitors tile says "→ ~9.4k this month" again once three days of the month have gone, and the chart's header says how many mentions the period has (pointing at it lights their dots, a click opens the Mentions page).
 - The Briefing keeps what the old Data page had, each in its place: the moments' markers, the sources' and links' pills and the mentions' dots over the chart (the search list, ⌘K, puts the pills away or brings them back), the busy moment's band and the line that leads back to it, a long period played as a story with a card that sums it up, the guide to leaving after one page (a line under the numbers, and the search list), the seal on the cards that rest on payments or Google's own data, and Google's searches beside the assistants in AI & search.
 - Shared links and their embeds open the new page, read only: the Briefing and Explore on what the public report carries (no Live, no site list, bell or person, nothing that writes), under a header with the site's name, logo and colour. The old Data page is gone: its addresses (?view=data, ?v=explore, Full) open the Briefing or Explore, and the share card and the link's look (logo, colour, domain) are one tap away in Settings → Sharing.
 

@@ -1,6 +1,6 @@
 // The four numbers: the dashboard's kept card, in the walkthrough's markup: an icon tile and a name, a quiet note on the
 // right, one big number, and a smooth line with a soft glow, full-bleed to the card's bottom edge.
-import { useId, useState } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import type { Why } from '../briefing/why'
 import { copy } from '../briefing/copy'
 import { Ico } from './icons'
@@ -43,7 +43,7 @@ export function Spark({ vals, h = 64, lo, hi, className = 'ksp', name }: { vals:
   )
 }
 
-function Card({ k, h }: { k: Kc; h?: number }) {
+function Card({ k, h, foot }: { k: Kc; h?: number; foot?: ReactNode }) {
   const [open, setOpen] = useState(false)
   const tone = `kn${k.note.up ? ' up' : ''}${k.note.dn ? ' dn' : ''}`
   return (
@@ -65,6 +65,7 @@ function Card({ k, h }: { k: Kc; h?: number }) {
         <Glide name={k.key} text={k.val} />
         {k.unit && <small>{k.unit}</small>}
       </div>
+      {foot}
       <Spark vals={k.vals} lo={k.lo} hi={k.hi} h={h} name={`kc:${k.key}`} />
       {open && k.why && (
         <div className="hw show" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 2, background: 'var(--mk-card2)', padding: 'var(--mk-s3) var(--mk-s4)', borderRadius: '0 0 var(--mk-r) var(--mk-r)', color: 'var(--mk-muted)' }}>
@@ -75,11 +76,12 @@ function Card({ k, h }: { k: Kc; h?: number }) {
   )
 }
 
-export function Kcs({ items, className = 'kcs', h }: { items: Kc[]; className?: string; h?: number }) {
+/** `foot`: a quiet line under a card's number, by the card's key (the Visitors tile's pace). */
+export function Kcs({ items, className = 'kcs', h, foot }: { items: Kc[]; className?: string; h?: number; foot?: Record<string, ReactNode> }) {
   return (
     <div className={className}>
       {items.map((k) => (
-        <Card key={k.key} k={k} h={h} />
+        <Card key={k.key} k={k} h={h} foot={foot?.[k.key]} />
       ))}
     </div>
   )
