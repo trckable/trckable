@@ -1097,7 +1097,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .chwrap .ch-top{margin:0 0 var(--mk-s1);min-height:16px;align-items:flex-start}
 .mk #chNote{font-size:12px;color:var(--mk-muted);font-weight:500;line-height:1.3}
 .mk #chart, .mk .hero .chart, .mk .chart{height:120px}
-.mk .chwrap #chart{height:170px}
+.mk .chwrap #chart{height:140px}
 .mk .facts, .mk .fz{display:grid;grid-template-columns:1fr 1fr;gap:var(--mk-s4);margin:var(--mk-s4) 0 0;padding:0;border:0;overflow:visible}
 .mk .fact, .mk .fact:nth-child(n){flex:none;padding:0;border:0!important;border-radius:0;background:none}
 .mk .fact b{font-size:22px;display:inline}
