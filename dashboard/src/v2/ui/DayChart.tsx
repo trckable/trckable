@@ -10,6 +10,7 @@ import type { Band, Judged } from '../briefing/usual'
 import type { ChartGeo } from '../../features/moments/marks'
 import { useGlide } from './glide'
 import { FutureHatch } from './FutureHatch'
+import { DRAWN, RevealTip, useReveal } from './RevealClip'
 import './chartLayer.css'
 
 export interface ChartPoint {
@@ -129,6 +130,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   // On a phone a label that would run off the edge is written to the left of its line.
   const flip = ph && rise !== null && X(rise.p.i) + 6 + rise.text.length * 8 > W - Rr - 4
   const ticks = c.axis.filter((p) => p.i < span && p.tick && p.i % every === 0)
+  useReveal({ pts: pts.map((p) => [X(p.i), Y(p.v)]), h: H })
   const chart = (
     <svg
       ref={box}
@@ -174,7 +176,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
       })}
       {c.live && <FutureHatch x={nowEdge} y={T} width={Math.max(0, W - Rr - nowEdge)} height={B - T} />}
       {pts.length > 0 && (
-        <>
+        <g {...DRAWN}>
           <polygon points={`${X(pts[0].i)},${B} ${line} ${X(last.i)},${B}`} fill="var(--mk-areafill)" />
           <polyline points={line} fill="none" stroke="var(--mk-muted)" strokeWidth="2" strokeLinejoin="round" />
           {pts.map((p, i) =>
@@ -194,23 +196,24 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
               <animate attributeName="r" values="4;7;4" dur="1.6s" repeatCount="indefinite" />
             </circle>
           )}
-          {rise && (
-            <g>
-              <line x1={X(rise.p.i)} x2={X(rise.p.i)} y1={Y(rise.p.v) - 6} y2={Math.max(T - 6, Y(rise.p.v) - 24)} stroke="var(--mk-lime)" />
-              <text x={flip ? X(rise.p.i) - 6 : Math.min(X(rise.p.i) + 6, W - Rr - rise.text.length * 7.4)} textAnchor={flip ? 'end' : undefined} y={Math.max(T - 8, Y(rise.p.v) - 27)} fill="var(--mk-lime)" fontSize="12" fontWeight="600">
-                {rise.text}
-              </text>
-            </g>
-          )}
-        </>
+        </g>
       )}
+      {rise && (
+        <g data-rv={X(rise.p.i)}>
+          <line x1={X(rise.p.i)} x2={X(rise.p.i)} y1={Y(rise.p.v) - 6} y2={Math.max(T - 6, Y(rise.p.v) - 24)} stroke="var(--mk-lime)" />
+          <text x={flip ? X(rise.p.i) - 6 : Math.min(X(rise.p.i) + 6, W - Rr - rise.text.length * 7.4)} textAnchor={flip ? 'end' : undefined} y={Math.max(T - 8, Y(rise.p.v) - 27)} fill="var(--mk-lime)" fontSize="12" fontWeight="600">
+            {rise.text}
+          </text>
+        </g>
+      )}
+      <RevealTip h={H} />
       {(c.sales ?? []).slice(0, ph ? 12 : 10).map((x) => {
         const xx = edge(x.at)
         const col = x.neg ? 'var(--mk-red)' : 'var(--mk-lime)'
-        if (ph) return <circle key={`${x.at}${x.text}`} cx={xx} cy={B - 5} r="3.5" fill={col} />
+        if (ph) return <circle key={`${x.at}${x.text}`} data-rv={xx} cx={xx} cy={B - 5} r="3.5" fill={col} />
         const w = x.text.length * 7 + 14
         return (
-          <g key={`${x.at}${x.text}`}>
+          <g key={`${x.at}${x.text}`} data-rv={xx}>
             <line x1={xx} x2={xx} y1={B} y2={B - 30} stroke={col} strokeDasharray="2 3" />
             <rect x={xx - w / 2} y={B - 24} width={w} height="20" rx="10" fill={x.neg ? 'var(--mk-redP)' : 'var(--mk-limeP)'} stroke={col} />
             <text x={xx} y={B - 10} fill={col} fontSize="12" textAnchor="middle">
@@ -220,7 +223,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
         )
       })}
       {c.notes.map((n) => (
-        <path key={`${n.i}${n.text}`} d={`M${X(n.i) - 6} ${B - 1}h12l-6-10z`} fill="var(--mk-amber)">
+        <path key={`${n.i}${n.text}`} data-rv={X(n.i)} d={`M${X(n.i) - 6} ${B - 1}h12l-6-10z`} fill="var(--mk-amber)">
           <title>{n.text}</title>
         </path>
       ))}

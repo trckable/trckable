@@ -66,10 +66,6 @@ export const copy = defineCopy('briefing', {
   anotherSale: (a: string) => `another sale · ${a}`,
   replayBar: 'Replay of the day',
   replayList: 'The day, moment by moment',
-  play: 'Play',
-  pause: 'Pause',
-  scrub: 'Scrub through the day',
-  speed: 'Speed',
   closeReplay: 'Close replay (Esc)',
   // Sheets, the quiet states.
   notes: 'Notes',
@@ -117,6 +113,8 @@ export const copy = defineCopy('briefing', {
   meet: (who: string) => `Meet one of them: ${who}.`,
   replay: 'Replay',
   replayTitle: 'Play the day back as a short story',
+  stop: 'Stop',
+  stopReplay: 'Stop the replay (Esc)',
   // The three scores.
   traffic: 'Traffic',
   engagement: 'Engagement',
