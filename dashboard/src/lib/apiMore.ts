@@ -122,11 +122,27 @@ export interface SetupState {
   items: SetupItem[]
 }
 
+// The bell and the setup ring both ask which marks the account has at the first load: one read answers both. A mark
+// sent ends the sharing, so the next ask sees it.
+let heldBell: Promise<{ read: string[] }> | null = null
+function sharedBellRead(): Promise<{ read: string[] }> {
+  if (!heldBell) {
+    const p = call<{ read: string[] }>('GET', '/me/bell-read')
+    heldBell = p
+    p.catch(() => heldBell === p && (heldBell = null))
+    setTimeout(() => heldBell === p && (heldBell = null), 30_000)
+  }
+  return heldBell
+}
+
 export const more = {
   me: () => call<{ kind: string; email?: string; ip?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean }>('GET', '/me'),
   setKeys: (keys: Record<string, string>) => call<{ keys: Record<string, string> }>('PUT', '/me/keys', { keys }),
-  bellRead: () => call<{ read: string[] }>('GET', '/me/bell-read'),
-  markBellRead: (read: string[]) => call<{ read: string[] }>('POST', '/me/bell-read', { read }),
+  bellRead: sharedBellRead,
+  markBellRead: (read: string[]) => {
+    heldBell = null
+    return call<{ read: string[] }>('POST', '/me/bell-read', { read })
+  },
   setup: (site: string) => call<SetupState>('GET', `/sites/${site}/setup`, undefined, undefined, true),
   setupSkip: (site: string, item: string, skipped: boolean) => call<SetupState>(skipped ? 'PUT' : 'DELETE', `/sites/${site}/setup/skip/${item}`),
   setupLocale: (site: string) => call<SetupState>('PUT', `/sites/${site}/setup/locale`),
