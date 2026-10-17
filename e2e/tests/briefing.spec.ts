@@ -156,3 +156,18 @@ for (const width of [620, 640, 700]) {
     await expect(page).toHaveURL(/view=live/)
   })
 }
+
+test('N and 4 pick Now and the last 28 days, and the ? list names them', async ({ page }) => {
+  await open(page, 1280, '?view=briefing&period=7d')
+  await expect(page.locator('.hero')).toBeVisible()
+  await page.keyboard.press('4')
+  await expect(page).toHaveURL(/period=28d/)
+  await expect(page.locator('.hero')).toBeVisible()
+  await page.keyboard.press('n')
+  await expect(page).toHaveURL(/period=now/)
+  await expect(page.locator('.hero')).toBeVisible()
+  await page.keyboard.press('?')
+  const list = page.getByRole('dialog')
+  await expect(list).toContainText('Now')
+  await expect(list).toContainText('Last 28 days')
+})
