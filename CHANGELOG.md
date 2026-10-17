@@ -14,6 +14,7 @@ section into the release.
 - Shared links and their embeds open the new page, read only: the Briefing and Explore on what the public report carries (no Live, no site list, bell or person, nothing that writes), under a header with the site's name, logo and colour. The old Data page is gone: its addresses (?view=data, ?v=explore, Full) open the Briefing or Explore, and the share card and the link's look (logo, colour, domain) are one tap away in Settings → Sharing.
 - The weekly email has a "Who talked about you" section: up to three mentions of the week, each with its source, its title as a link and the visitors it brought, and a link to the rest on the Mentions page; a week with none leaves it out. The new pages now say Mentions watches Hacker News, Product Hunt and the news and blogs, in all six languages.
 - Sales and refunds say more: a refund shows as its own line on the Briefing with the number in the last 90 days, a sale shows the buyer's billing country when the payment provider sends one (Stripe and Polar), and the signup path ends in a Paid step once payments are connected.
+- The bell remembers which notices you have read on your account, so the count is the same in every browser and on every device; and in the Briefing a refund and the sales beside it each open their own Why?, the number's Why? can be closed again on a phone, and a test opens every kind of Why?.
 
 ## 0.7.25 (17 Oct 2026)
 

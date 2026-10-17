@@ -13,6 +13,8 @@ import type { useBriefingState } from './useBriefingState'
 export function cardCtx(o: { site: Site; ui: ReturnType<typeof useBriefingState>; wset: Record<string, Watched>; nowSec: number; hhmm: string; spark: number[]; onGoal: () => void }): CardCtx {
   const { site, ui, wset } = o
   const key = (s: Story) => `${site.id}|${s.key}`
+  // Two cards can share a topic (a refund and the sales beside it): each has its own "Why?" and its own done mark.
+  const own = (s: Story) => `${key(s)}|${s.head}`
   return {
     verified: site.verified,
     know: () => null,
@@ -27,10 +29,10 @@ export function cardCtx(o: { site: Site; ui: ReturnType<typeof useBriefingState>
       }
     },
     spark: () => o.spark,
-    onAct: (s) => runAct(s, { site, onGoal: o.onGoal }) && ui.markDone(key(s)),
-    done: (s) => ui.done.has(key(s)),
-    how: (s) => ui.how.has(key(s)),
-    onHow: (s) => ui.toggleHow(key(s)),
+    onAct: (s) => runAct(s, { site, onGoal: o.onGoal }) && ui.markDone(own(s)),
+    done: (s) => ui.done.has(own(s)),
+    how: (s) => ui.how.has(own(s)),
+    onHow: (s) => ui.toggleHow(own(s)),
     focused: ui.kf,
   }
 }

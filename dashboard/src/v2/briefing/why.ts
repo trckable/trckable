@@ -41,7 +41,7 @@ export function whyDown(o: { domain: string; cause?: string; since?: string; min
 
 /** Why a number is above or below usual: the days it is told against, hour for hour. */
 export function whyUsual(o: { label: string; now: number; weeks: { day: string; visitors: number }[]; weekday: string; at: string }): Why {
-  if (!o.weeks.length) return { cause: copy.noWeeks(o.label) }
+  if (!o.weeks.some((w) => w.visitors > 0)) return { cause: copy.noWeeks(o.label) }
   const list = o.weeks.map((w) => fmtInt(w.visitors)).join(', ')
   return { cause: copy.weeksSaid(o.label, fmtInt(o.now), o.weekday, o.at, list), todo: copy.sourceBelow }
 }

@@ -186,6 +186,8 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("POST /api/v1/logout", a.logout)
 	handle("GET /api/v1/me", a.authed(a.me))
 	handle("PUT /api/v1/me/keys", a.authed(a.setKeys))
+	handle("GET /api/v1/me/bell", a.authed(a.bellRead))
+	handle("POST /api/v1/me/bell", a.authed(a.markBellRead))
 	handle("GET /api/v1/me/devices", a.authed(a.devices))
 	handle("DELETE /api/v1/me/devices/{id}", a.authed(a.removeDevice))
 	handle("GET /api/v1/sites", a.authed(a.sites))
@@ -606,9 +608,9 @@ func mustChangeAllowed(r *http.Request) bool {
 
 // ownAccount is the part of the API that belongs to the signed-in person
 // rather than to the instance: their password, name, picture, second step
-// and keyboard shortcuts.
+// keyboard shortcuts and read notices.
 func ownAccount(path string) bool {
-	return strings.HasPrefix(path, "/api/v1/account/") || path == "/api/v1/account" || path == "/api/v1/logout" || path == "/api/v1/me/keys" || path == "/api/v1/feedback" || strings.HasPrefix(path, "/api/v1/me/devices") || closingMilestones(path)
+	return strings.HasPrefix(path, "/api/v1/account/") || path == "/api/v1/account" || path == "/api/v1/logout" || path == "/api/v1/me/keys" || path == "/api/v1/me/bell" || path == "/api/v1/feedback" || strings.HasPrefix(path, "/api/v1/me/devices") || closingMilestones(path)
 }
 
 // closingMilestones is a person closing a milestone's moment: their own
@@ -988,6 +990,43 @@ func (a *API) setKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"keys": in.Keys})
+}
+
+// bellRead lists the notices this person has read, so the bell shows the same
+// unread count in any browser.
+func (a *API) bellRead(w http.ResponseWriter, r *http.Request) {
+	p := r.Context().Value(ctxKey{}).(principal)
+	if p.user == nil {
+		fail(w, http.StatusForbidden, "the bell belongs to a person, not an API key")
+		return
+	}
+	ids, err := a.Ctl.BellRead(r.Context(), p.user.ID)
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"read": ids})
+}
+
+// markBellRead adds notices to this person's read list.
+func (a *API) markBellRead(w http.ResponseWriter, r *http.Request) {
+	p := r.Context().Value(ctxKey{}).(principal)
+	if p.user == nil {
+		fail(w, http.StatusForbidden, "the bell belongs to a person, not an API key")
+		return
+	}
+	var in struct {
+		Read []string `json:"read"`
+	}
+	if err := decode(r, &in); err != nil {
+		fail(w, http.StatusBadRequest, "bad request")
+		return
+	}
+	if err := a.Ctl.MarkBellRead(r.Context(), p.user.ID, in.Read, time.Now().Unix()); err != nil {
+		fail(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"read": in.Read})
 }
 
 // ---- sites ----

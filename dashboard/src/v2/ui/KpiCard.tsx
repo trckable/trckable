@@ -54,7 +54,7 @@ function Card({ k, h, foot }: { k: Kc; h?: number; foot?: ReactNode }) {
         </span>
         <span className="kl">{k.label}</span>
         {k.why && k.note.t ? (
-          <button type="button" className={tone} aria-expanded={open} title={copy.whyQ} onClick={() => setOpen((o) => !o)} style={{ cursor: 'pointer', padding: 0 }}>
+          <button type="button" className={tone} aria-expanded={open} title={copy.whyQ} onClick={() => setOpen((o) => !o)} style={{ cursor: 'pointer', padding: 0, position: 'relative', zIndex: 3 }}>
             {k.note.t}
           </button>
         ) : (

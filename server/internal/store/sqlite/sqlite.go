@@ -848,6 +848,14 @@ var migrations = []string{
 	// ISO 3166 code), kept on the payment and on the hints that describe it.
 	`ALTER TABLE pay_payments ADD COLUMN country TEXT NOT NULL DEFAULT '';
 	ALTER TABLE pay_hints ADD COLUMN country TEXT NOT NULL DEFAULT '';`,
+	// Which of the bell's notices a person has read, kept with the person so
+	// it follows them to any browser.
+	`CREATE TABLE bell_read (
+		user_id   TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		notice_id TEXT NOT NULL,
+		at        INTEGER NOT NULL,
+		PRIMARY KEY (user_id, notice_id)
+	) WITHOUT ROWID;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

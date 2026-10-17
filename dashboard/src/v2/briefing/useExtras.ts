@@ -11,6 +11,7 @@ import { mentionsApi, type Mention } from '../../features/mentions/api'
 import { leakOf } from '../explore/data/mapSections'
 import type { FunnelStep, PaidStep } from '../../lib/api'
 import { copy } from './copy'
+import { moduleOn } from './moduleOn'
 
 export interface SearchStory {
   cur: SearchReport
@@ -118,7 +119,7 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
     let live = true
     const day0 = Math.floor(new Date(today + 'T00:00:00Z').getTime() / 1000)
     const mention = site.mentions ? mentionsApi.list(site.id, '7d').then((r) => r.mentions.filter((m) => m.posted_at >= day0 - 3600).sort((a, b) => b.posted_at - a.posted_at)[0] ?? null, () => null) : Promise.resolve(null)
-    const vit = (from: ISODate, to: ISODate) => more.vitals(site.id, { from, to }).then((v) => (v.samples >= 5 && v.lcp_ms != null && v.inp_ms != null && v.cls_1k != null ? ([v.lcp_ms / 1000, v.inp_ms, v.cls_1k / 1000] as [number, number, number]) : null), () => null)
+    const vit = (from: ISODate, to: ISODate) => moduleOn(site.id, 'vitals').then((on) => (on ? more.vitals(site.id, { from, to }) : null)).then((v) => (v && v.samples >= 5 && v.lcp_ms != null && v.inp_ms != null && v.cls_1k != null ? ([v.lcp_ms / 1000, v.inp_ms, v.cls_1k / 1000] as [number, number, number]) : null), () => null)
     const buyers = want.money ? extrasApi.buyers(site.id, { from: range.from, to: range.to }, 20).then((r) => r.buyers ?? [], () => null) : Promise.resolve(null)
     const refunds = want.money ? extrasApi.refunds(site.id, { from: range.from, to: range.to }).then((r) => (r.filtered ? null : r), () => null) : Promise.resolve(null)
     // Google is a day behind, so a single day is read as the week it ends.
@@ -127,7 +128,7 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
     const cur: Range = { from: addDays(range.to, -(span - 1)), to: range.to }
     const before: Range = { from: addDays(cur.from, -span), to: addDays(cur.from, -1) }
     const search = want.search
-      ? Promise.all([more.searchReport(site.id, cur, 'query'), more.searchReport(site.id, before, 'query').catch(() => null)]).then(([c, p]): SearchStory => ({ cur: c, prev: p }), () => null)
+      ? moduleOn(site.id, 'search').then((on) => (on ? Promise.all([more.searchReport(site.id, cur, 'query'), more.searchReport(site.id, before, 'query').catch(() => null)]).then(([c, p]): SearchStory => ({ cur: c, prev: p })) : null)).catch(() => null)
       : Promise.resolve(null)
     const stuck = want.page
       ? heatApi.map(site.id, range, want.page, 0).then((m): Stuck | null => (m.rage.length ? { page: want.page ?? '', views: m.views, rage: m.rage.map((r) => ({ el: r.el, n: r.n })) } : null), () => null)
