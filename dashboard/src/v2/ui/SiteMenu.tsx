@@ -1,6 +1,6 @@
 // The site in the header, and the list that opens from it (SiteList): every site with who is on it now, a finder, and what
 // belongs to this site. The check beside the name says when something independent vouches for the numbers.
-import { Suspense, useCallback, useRef } from 'react'
+import { Suspense, useCallback, useRef, type ReactNode } from 'react'
 import type { Site } from '../../lib/api'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
@@ -27,7 +27,7 @@ interface SiteMenuProps {
   sites: Site[]
   current: Site | null
   /** The workspace line at the top, when the account has one. */
-  workspace?: { name: string; d: string; run?: () => void }
+  workspace?: { name: string; d: string; run?: () => void; mark?: ReactNode }
   onPick: (id: string) => void
   footer: FootItem[]
   find: string
@@ -72,6 +72,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
                       p.workspace?.run?.()
                       close()
                     }}>
+                    {p.workspace.mark}
                     <span className="mt2">
                       <div className="nm">{p.workspace.name}</div>
                       <div className="d">{p.workspace.d}</div>

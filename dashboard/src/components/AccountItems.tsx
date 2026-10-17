@@ -41,13 +41,14 @@ function ThemeRow() {
 /** Who is signed in: picture, name, email and role. */
 function Who({ profile, v }: { profile: Profile | null; v: number }) {
   const viewer = isViewer()
+  const { personName, personRole } = useV2Extras()
   return (
     <div className="menu-who">
-      <PersonAvatar p={profile} v={v} size="big" />
+      <PersonAvatar p={profile} email={personName} v={v} size="big" />
       <span className="menu-who-text">
         <span className="menu-who-name">
-          <b>{profile?.name || profile?.email.split('@')[0]}</b>
-          <span className={'tag' + (viewer ? ' quiet' : ' on')}>{viewer ? copy.viewer : copy.owner}</span>
+          <b>{profile?.name || personName || profile?.email.split('@')[0]}</b>
+          <span className={'tag' + (viewer ? ' quiet' : ' on')}>{personRole ?? (viewer ? copy.viewer : copy.owner)}</span>
         </span>
         <span className="menu-who-email">{profile?.email}</span>
       </span>
@@ -106,7 +107,7 @@ function FeaturesItem({ go, user }: { go: Parameters<MenuItems>[0]; user: string
 /** The items of the avatar menu. */
 export default function AccountItems({ profile, v, go, site }: { profile: Profile | null; v: number; go: Parameters<MenuItems>[0]; site?: Site }) {
   // A build that has a plan puts one compact row at the top of the menu (v2/slots); the public product has none.
-  const { menuExtra, menuAfterProfile } = useV2Extras()
+  const { menuExtra, menuBeforeProfile, menuAfterProfile, signOut: signOutOf } = useV2Extras()
   // The language list takes the menu's place until a choice or Back; Back puts focus on the row again.
   const [listing, setListing] = useState(false)
   const [back, setBack] = useState(false)
@@ -124,6 +125,7 @@ export default function AccountItems({ profile, v, go, site }: { profile: Profil
     <>
       {menuExtra}
       <Who profile={profile} v={v} />
+      {typeof menuBeforeProfile === 'function' ? menuBeforeProfile(go) : menuBeforeProfile}
       <button type="button" role="menuitem" aria-label={copy.accountLabel} onClick={go(() => openAccount('sites'))}>
         <CircleUser size={18} strokeWidth={1.75} aria-hidden="true" />
         {copy.account}
@@ -139,7 +141,7 @@ export default function AccountItems({ profile, v, go, site }: { profile: Profil
         <kbd className="menu-kbd">{caps(keyFor('shortcuts')).join('')}</kbd>
       </button>
       <InstallItem go={go} />
-      <button type="button" role="menuitem" onClick={go(signOut)}>
+      <button type="button" role="menuitem" onClick={go(signOutOf ?? signOut)}>
         <LogOut size={18} strokeWidth={1.75} aria-hidden="true" />
         {copy.signOut}
       </button>

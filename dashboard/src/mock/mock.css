@@ -1524,6 +1524,9 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .fresh-back:hover{color:var(--mk-text)}
 @media (max-width:600px){.mk .downbox .lk3{display:inline-flex;align-items:center;min-height:44px;min-width:44px}}
 .mk .sitelist > :not(#siteList){flex:none}
+/* A site waiting to be handed to someone: a Stop on its row, its line readable on both themes */
+.mk .site-row .sw-stop{flex:none;height:28px;margin-left:4px;padding:0 10px;font-size:12px}
+.mk .site-row .d.state-line.moving{color:var(--mk-text)}
 /* the period when it is not today: the pill and a × that goes back */
 .mk .pwrap.set{display:flex;align-items:center}
 .mk .pwrap.set .pill{border-top-right-radius:0;border-bottom-right-radius:0;border-right:0}

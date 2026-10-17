@@ -59,6 +59,16 @@ describe('a site in the list', () => {
   })
 })
 
+describe('a site that is being handed to someone', () => {
+  it('says so on its row, with a Stop, instead of its state', () => {
+    const move = { text: 'Moving to a@b.c', title: 'Waiting for a@b.c', stopLabel: 'Stop moving x', stopWord: 'Stop', stop: () => {} }
+    const html = renderToStaticMarkup(<SiteRow site={site()} place={{ kind: 'rest' }} on={false} arrange={null} move={move} onPick={noop} />)
+    expect(html).toContain('Moving to a@b.c')
+    expect(html).toContain('sw-stop')
+    expect(html).toContain('mk-dot quiet')
+  })
+})
+
 describe('the state line under a site name', () => {
   const down = { check: { at: NOW, error: 'unreachable' } }
   it('says how long a down site has been unreachable', () => {

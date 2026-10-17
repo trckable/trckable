@@ -16,6 +16,7 @@ import { OpenSite, openSiteTab } from '../../features/sites/OpenSite'
 import { silence } from '../../features/sitestatus/time'
 import type { Arrange } from '../../features/sites/arrange'
 import { SiteMark } from '../../components/SiteMark'
+import type { SiteMove } from '../slots'
 
 const DOT = { now: 'now', live: '', quiet: 'quiet', stopped: 'down', new: 'off' } as const
 
@@ -57,7 +58,7 @@ function refocus(id: string) {
   requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-site="${CSS.escape(id)}"] .site`)?.focus())
 }
 
-export function SiteRow({ site, place, on, arrange: a, today, onPick }: { site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; onPick: () => void }) {
+export function SiteRow({ site, place, on, arrange: a, today, onPick, move }: { move?: SiteMove; site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; onPick: () => void }) {
   const name = site.name || site.domain
   const line = stateLine(site)
   const note = line ?? (site.domain === name ? undefined : site.domain)
@@ -90,14 +91,19 @@ export function SiteRow({ site, place, on, arrange: a, today, onPick }: { site: 
       >
         <span className="mkwrap">
           <SiteMark site={site} size={22} />
-          <span className={`mk-dot ${DOT[dotState(site)]}`} title={first.dot[dotState(site)]} />
+          <span className={`mk-dot ${move ? 'quiet' : DOT[dotState(site)]}`} title={move?.title ?? first.dot[dotState(site)]} />
         </span>
         <span className="mt2">
           <div className="nm">{name}</div>
-          {note && <div className={`d${line ? ` state-line ${dotState(site)}` : ''}`}>{note}</div>}
+          {move ? <div className="d state-line quiet moving" title={move.title}>{move.text}</div> : note && <div className={`d${line ? ` state-line ${dotState(site)}` : ''}`}>{note}</div>}
         </span>
         <Tail s={site} today={today} />
       </button>
+      {move && (
+        <button type="button" data-stop className="btn sw-stop" aria-label={move.stopLabel} onClick={move.stop}>
+          {move.stopWord}
+        </button>
+      )}
       <OpenSite domain={site.domain} />
       {a && <Moves site={site} place={place} a={a} step={moveStep} />}
     </li>

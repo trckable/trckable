@@ -37,4 +37,33 @@ describe('the account menu order', () => {
     act(() => root.unmount())
     host.remove()
   })
+
+  it('takes a build’s row between the person and Profile, its name and role for the person, and its Sign out', () => {
+    const host = document.createElement('div')
+    document.body.append(host)
+    const root = createRoot(host)
+    let out = 0
+    const mark = (id: string) => (
+      <button type="button" role="menuitem" data-test={id}>
+        {id}
+      </button>
+    )
+    act(() =>
+      root.render(
+        <V2ExtrasContext.Provider value={{ menuBeforeProfile: () => mark('before'), menuAfterProfile: () => mark('after'), personName: 'Ada L', personRole: 'Billing', signOut: () => { out++ } }}>
+          <AccountItems profile={{ email: 'a@b.c', name: '' } as never} v={0} go={(fn) => fn} />
+        </V2ExtrasContext.Provider>,
+      ),
+    )
+    const items = [...host.querySelectorAll('[role=menuitem]')]
+    const at = (id: string) => items.findIndex((e) => e.getAttribute('data-test') === id)
+    expect(at('before')).toBe(0)
+    expect(at('after')).toBe(2)
+    expect(host.querySelector('.menu-who-name')?.textContent).toContain('Ada L')
+    expect(host.querySelector('.menu-who-name .tag')?.textContent).toBe('Billing')
+    act(() => (items[items.length - 1] as HTMLButtonElement).click())
+    expect(out).toBe(1)
+    act(() => root.unmount())
+    host.remove()
+  })
 })
