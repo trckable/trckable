@@ -320,8 +320,8 @@ func (s *Store) mentionsIn(ctx context.Context, site string, from, to int64, lim
 	for _, st := range states {
 		args = append(args, st)
 	}
-	rows, err := s.DB.QueryContext(ctx, `SELECT `+mentionCols+` FROM mentions WHERE site_id = ? AND posted_at >= ? AND posted_at < ? AND state IN (`+marks+`)
-		ORDER BY posted_at DESC, id DESC LIMIT ?`, append(args, limit)...)
+	query := "SELECT " + mentionCols + " FROM mentions WHERE site_id = ? AND posted_at >= ? AND posted_at < ? AND state IN (" + marks + ") ORDER BY posted_at DESC, id DESC LIMIT ?" //nolint:gosec // only "?" placeholders are joined in
+	rows, err := s.DB.QueryContext(ctx, query, append(args, limit)...)
 	if err != nil {
 		return nil, err
 	}
