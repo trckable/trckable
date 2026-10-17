@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -133,7 +134,7 @@ func TestResetAndReplayRebuildsTheSameLedger(t *testing.T) {
 		t.Fatalf("facts: before %d after %d", len(before), len(after))
 	}
 	for i := range before {
-		if before[i] != after[i] {
+		if !reflect.DeepEqual(before[i], after[i]) {
 			t.Fatalf("replay differs: %+v vs %+v", before[i], after[i])
 		}
 	}

@@ -51,6 +51,8 @@ export interface Refunds {
   amount: number
   /** How many in the 90 days before the period ends. */
   count_90d: number
+  /** True when a filter on visits was asked for: a refund belongs to no visit, so the answer is empty. */
+  filtered?: boolean
 }
 
 /** The report's own selectors, and the two that change what is credited: test payments and the first-touch model. */
@@ -61,5 +63,5 @@ export const extrasApi = {
   insights: (site: string, q: ReportQuery) => call<{ insights: Insight[] }>('GET', `/sites/${site}/insights` + qs({ ...q, filters: undefined })),
   pagesSell: (site: string, q: ReportQuery) => call<{ pages: Row[] }>('GET', `/sites/${site}/report/pages-sell` + qs(q)),
   buyers: (site: string, q: ReportQuery, n = 8) => call<{ buyers: Buyer[] }>('GET', `/sites/${site}/buyers` + qs(q) + `&n=${n}`),
-  refunds: (site: string, q: ReportQuery, n = 4) => call<Refunds>('GET', `/sites/${site}/refunds` + qs({ ...q, filters: undefined }) + `&n=${n}`),
+  refunds: (site: string, q: ReportQuery, n = 4) => call<Refunds>('GET', `/sites/${site}/refunds` + qs(q) + `&n=${n}`),
 }

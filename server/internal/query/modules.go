@@ -59,7 +59,7 @@ func (q Q) Heatmap(ctx context.Context, p Params) (*Heatmap, error) {
 }
 
 // StepPaid is the funnel step that counts the visitors of the step before who
-// then paid (a customer's first payment or a one-time sale, never a renewal).
+// then paid (a customer's first payment or a one-time sale, never a renewal or an upgrade).
 // It is the last step only, and needs a connected payment provider.
 const StepPaid = "paid"
 
@@ -141,7 +141,7 @@ func (q Q) Funnel(ctx context.Context, p Params, steps []Step) ([]FunnelStep, er
 	b.WriteString(")")
 	for i, st := range steps {
 		if st.Kind == StepPaid {
-			fmt.Fprintf(&b, ", f%d AS (SELECT x.visitor_id, min(x.paid_at) AS t, any_value(p.t) AS prev FROM p_facts x JOIN f%d p ON p.visitor_id = x.visitor_id AND x.paid_at >= p.t WHERE x.visitor_id <> 0 AND x.kind <> 'renewal' GROUP BY 1)", i, i-1)
+			fmt.Fprintf(&b, ", f%d AS (SELECT x.visitor_id, min(x.paid_at) AS t, any_value(p.t) AS prev FROM p_facts x JOIN f%d p ON p.visitor_id = x.visitor_id AND x.paid_at >= p.t WHERE x.visitor_id <> 0 AND x.kind <> 'renewal' AND x.change <> 'upgrade' GROUP BY 1)", i, i-1)
 			continue
 		}
 		match := "kind = 1 AND path = ?"

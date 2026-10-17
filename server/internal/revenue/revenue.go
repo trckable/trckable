@@ -1012,6 +1012,12 @@ func (s *Service) Facts(ctx context.Context, site, currency string, from, to tim
 	return ledger.Facts(ctx, s.DB, s.Rates, site, currency, from, to, test)
 }
 
+// FactsRefundedIn returns the payments that had a refund or lost dispute
+// arrive in [from, to), whatever date they were paid.
+func (s *Service) FactsRefundedIn(ctx context.Context, site, currency string, from, to time.Time, test bool) ([]ledger.Fact, error) {
+	return ledger.FactsRefundedIn(ctx, s.DB, s.Rates, site, currency, from, to, test)
+}
+
 // Enabled reports whether a site has (or had) any payment connection.
 func (s *Service) Enabled(ctx context.Context, site string) bool {
 	var n int

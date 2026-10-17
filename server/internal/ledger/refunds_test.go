@@ -49,26 +49,76 @@ func TestFactsCarryCountryAndRefundTime(t *testing.T) {
 			t.Errorf("%s country = %q, want %q", id, by[id].Country, want)
 		}
 	}
-	if got, want := by["p1"].RefundedAt, time.UnixMilli(at+5000).UTC(); !got.Equal(want) {
-		t.Errorf("p1 refunded at %v, want %v (the failed refund does not count)", got, want)
+	// Each refund at its own time: p1 gave back $10 then $5 (the failed one never counts), p2 lost $20 in a dispute.
+	rows := func(id string) (out []int64) {
+		for _, r := range by[id].Refunds {
+			out = append(out, r.At.UnixMilli()-at, r.Amount)
+		}
+		return
 	}
-	if got, want := by["p2"].RefundedAt, time.UnixMilli(at+7000).UTC(); !got.Equal(want) {
-		t.Errorf("p2 refunded at %v, want %v (a lost dispute)", got, want)
+	for id, want := range map[string][]int64{"p1": {1000, 1000, 5000, 500}, "p2": {7000, 2000}, "p3": nil} {
+		got := rows(id)
+		if len(got) != len(want) {
+			t.Fatalf("%s refunds %v, want %v", id, got, want)
+		}
+		for i := range want {
+			if got[i] != want[i] {
+				t.Errorf("%s refunds %v, want %v", id, got, want)
+				break
+			}
+		}
 	}
-	if !by["p3"].RefundedAt.IsZero() {
-		t.Errorf("p3 was never refunded: %v", by["p3"].RefundedAt)
+}
+
+// One sale, two refunds in different months: each month gets its own, not the
+// whole of it dated by the last.
+func TestRefundsLandInTheirOwnPeriod(t *testing.T) {
+	db, rates := fresh(t)
+	ctx := context.Background()
+	d := func(m time.Month, day int) int64 { return time.Date(2025, m, day, 12, 0, 0, 0, time.UTC).UnixMilli() }
+	if _, err := db.Exec(`INSERT INTO fx_rates (day, currency, per_eur) VALUES ('2025-08-20', 'USD', 1.2)`); err != nil {
+		t.Fatal(err)
+	}
+	if err := rates.Reload(ctx); err != nil {
+		t.Fatal(err)
+	}
+	evs := []payments.Event{
+		{Key: "e1", At: d(8, 20), Payments: []payments.Payment{{ID: "p1", PaidAt: d(8, 20), Currency: "USD", Gross: 5000, Tax: ptr(0)}}},
+		{Key: "e2", At: d(9, 5), Refunds: []payments.Refund{{ID: "r1", PaymentID: "p1", Amount: 2000, Currency: "USD", Status: payments.RefundSucceeded, At: d(9, 5)}}},
+		{Key: "e3", At: d(10, 3), Refunds: []payments.Refund{{ID: "r2", PaymentID: "p1", Amount: 1000, Currency: "USD", Status: payments.RefundSucceeded, At: d(10, 3)}}},
+	}
+	apply(t, db, "stripe", evs, seq(len(evs)))
+	m := func(mo time.Month) time.Time { return time.UnixMilli(d(mo, 1)).UTC().Truncate(24 * time.Hour) }
+	for name, c := range map[string]struct {
+		from, to time.Time
+		want     int64
+	}{"September": {m(9), m(10), 2000}, "October": {m(10), m(11), 1000}, "August": {m(8), m(9), 0}} {
+		facts, err := FactsRefundedIn(ctx, db, rates, "site1", "USD", c.from, c.to, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var got int64
+		for _, r := range RefundsIn("site1", facts, c.from, c.to) {
+			got += r.Amount
+		}
+		if got != c.want {
+			t.Errorf("%s: %d went back, want %d", name, got, c.want)
+		}
+	}
+	all, _ := Facts(ctx, db, rates, "site1", "USD", time.Unix(0, 0), time.UnixMilli(d(12, 1)), false)
+	if len(all) != 1 || all[0].Refunded != 3000 {
+		t.Fatalf("the sale's own total is untouched: %+v", all)
 	}
 }
 
 func TestRefundsIn(t *testing.T) {
 	d := func(day int) time.Time { return time.Date(2026, 9, day, 12, 0, 0, 0, time.UTC) }
 	facts := []Fact{
-		{Provider: "stripe", ID: "a", Refunded: 500, RefundedAt: d(3), Kind: "one_time", Country: "DE"},
-		{Provider: "stripe", ID: "b", Refunded: 1500, RefundedAt: d(5), Kind: "subscription"},
-		{Provider: "stripe", ID: "c", Refunded: 0, RefundedAt: d(4)},    // nothing went back
-		{Provider: "stripe", ID: "d", Refunded: 100},                    // no time known
-		{Provider: "stripe", ID: "e", Refunded: 700, RefundedAt: d(10)}, // after the period
-		{Provider: "stripe", ID: "f", Refunded: 800, RefundedAt: d(1)},  // before it
+		{Provider: "stripe", ID: "a", Kind: "one_time", Country: "DE", Refunds: []RefundAt{{At: d(3), Amount: 500}, {At: d(1), Amount: 800}}},
+		{Provider: "stripe", ID: "b", Kind: "subscription", Refunds: []RefundAt{{At: d(5), Amount: 1500}}},
+		{Provider: "stripe", ID: "c", Refunds: []RefundAt{{At: d(4), Amount: 0}}}, // nothing went back
+		{Provider: "stripe", ID: "d"},
+		{Provider: "stripe", ID: "e", Refunds: []RefundAt{{At: d(10), Amount: 700}}}, // after the period
 	}
 	got := RefundsIn("s1", facts, d(2).Add(-12*time.Hour), d(8))
 	if len(got) != 2 || got[0].Amount != 1500 || got[1].Amount != 500 {

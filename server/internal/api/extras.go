@@ -326,9 +326,24 @@ func (a *API) refunds(w http.ResponseWriter, r *http.Request) {
 	if cur == "" {
 		cur = "USD"
 	}
-	facts, err := a.Revenue.Facts(r.Context(), p.Site, cur, time.Unix(0, 0), p.To, p.Test)
+	out := map[string]any{"currency": cur, "exponent": fx.Exponent(cur)}
+	// A refund belongs to no visit, so a filter on visits has nothing to say
+	// about it: the answer is empty and says why, rather than a whole-site figure
+	// under a filtered view.
+	if len(p.Filters) > 0 {
+		out["refunds"], out["count"], out["amount"], out["count_90d"], out["filtered"] = []ledger.Refund{}, 0, 0, 0, true
+		writeJSON(w, http.StatusOK, out)
+		return
+	}
+	// The period and the 90 days before it ends: only payments with a refund
+	// arriving then are read.
+	from := p.From
+	if w90 := p.To.Add(-refundWindow); w90.Before(from) {
+		from = w90
+	}
+	facts, err := a.Revenue.FactsRefundedIn(r.Context(), p.Site, cur, from, p.To, p.Test)
 	if err != nil {
-		fail(w, http.StatusInternalServerError, err.Error())
+		reportFail(w, err)
 		return
 	}
 	in := ledger.RefundsIn(p.Site, facts, p.From, p.To)
@@ -340,9 +355,7 @@ func (a *API) refunds(w http.ResponseWriter, r *http.Request) {
 	if len(rows) > n {
 		rows = rows[:n]
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"refunds": append([]ledger.Refund{}, rows...), "count": len(in), "amount": total,
-		"count_90d": len(ledger.RefundsIn(p.Site, facts, p.To.Add(-refundWindow), p.To)),
-		"currency":  cur, "exponent": fx.Exponent(cur),
-	})
+	out["refunds"], out["count"], out["amount"] = append([]ledger.Refund{}, rows...), len(in), total
+	out["count_90d"] = len(ledger.RefundsIn(p.Site, facts, p.To.Add(-refundWindow), p.To))
+	writeJSON(w, http.StatusOK, out)
 }

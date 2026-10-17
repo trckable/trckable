@@ -49,3 +49,27 @@ func TestExportAndLiveSaleUseISOMinorUnits(t *testing.T) {
 		t.Errorf("export gross: %d, want 12500", list[0].Gross)
 	}
 }
+
+// The data export names the billing country a payment carries, from the
+// payment itself or from a hint that describes it.
+func TestExportNamesTheBillingCountry(t *testing.T) {
+	g := newRig(t, t.TempDir(), "instance key for tests")
+	ctx := context.Background()
+	for _, q := range []string{
+		`INSERT INTO pay_payments (site_id, provider, id, connection_id, paid_at, currency, gross, visitor_id, kind, country, version) VALUES ('` + g.site + `', 'stripe', 'pa', 'c', 1000, 'USD', 500, 77, 'one_time', 'DE', 1)`,
+		`INSERT INTO pay_payments (site_id, provider, id, connection_id, paid_at, currency, gross, visitor_id, kind, version) VALUES ('` + g.site + `', 'stripe', 'pb', 'c', 2000, 'USD', 700, 77, 'one_time', 1)`,
+		`INSERT INTO pay_payments (site_id, provider, id, connection_id, paid_at, currency, gross, visitor_id, kind, version) VALUES ('` + g.site + `', 'stripe', 'pc', 'c', 3000, 'USD', 900, 77, 'one_time', 1)`,
+		`INSERT INTO pay_hints (site_id, provider, payment_id, source, country, version) VALUES ('` + g.site + `', 'stripe', 'pb', 'checkout:cs', 'FR', 1)`,
+	} {
+		if _, err := g.svc.DB.ExecContext(ctx, q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	list, err := g.svc.PaymentsOf(ctx, g.site, 77)
+	if err != nil || len(list) != 3 {
+		t.Fatalf("export: %+v %v", list, err)
+	}
+	if list[0].Country != "DE" || list[1].Country != "FR" || list[2].Country != "" {
+		t.Errorf("countries: %q %q %q, want DE FR and none", list[0].Country, list[1].Country, list[2].Country)
+	}
+}

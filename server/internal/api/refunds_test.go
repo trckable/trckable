@@ -60,6 +60,10 @@ func TestRefundsRoute(t *testing.T) {
 	if strings.Contains(raw, "ord_old") || strings.Contains(raw, "re_1") {
 		t.Fatalf("the provider's ids leaked: %s", raw)
 	}
+	filtered, raw := read("from=2026-09-15&to=2026-09-22&tz=UTC&f=channel:AI")
+	if filtered.Count != 0 || !strings.Contains(raw, `"filtered":true`) || !strings.Contains(raw, `"refunds":[]`) {
+		t.Fatalf("a refund belongs to no visit, so a visit filter gets an empty answer that says so: %s", raw)
+	}
 	quiet, raw := read("from=2026-09-01&to=2026-09-05&tz=UTC")
 	if quiet.Count != 0 || quiet.Amount != 0 || !strings.Contains(raw, `"refunds":[]`) {
 		t.Fatalf("a quiet period is an empty list: %s", raw)

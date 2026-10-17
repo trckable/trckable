@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/trckable/trckable/server/internal/ledger"
 )
 
 // The golden site again (Sep 10 2026 is a Thursday, so weekday index 3):
@@ -266,6 +268,12 @@ func TestFunnelPaidStep(t *testing.T) {
 		}
 
 		q = withPayments(q)
+		// C's plan change at 13:00 is a first-payment-sized upgrade: it is not a sale of a new customer.
+		inner := q.Payments
+		q.Payments = func(ctx context.Context, site, cur string, from, to time.Time, test bool) ([]ledger.Fact, bool, error) {
+			facts, ok, err := inner(ctx, site, cur, from, to, test)
+			return append(facts, ledger.Fact{Provider: "stripe", ID: "pu", PaidAt: time.Date(2026, 9, 10, 13, 0, 0, 0, time.UTC), Amount: 900, Visitor: 3, Customer: "stripe:cc", Kind: "subscription", Change: "upgrade", Converted: true}), ok, err
+		}
 		f, err := q.Funnel(ctx, p, []Step{{Kind: "page", Value: "/"}, paid})
 		if err != nil {
 			t.Fatal(err)

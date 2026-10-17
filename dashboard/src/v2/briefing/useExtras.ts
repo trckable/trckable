@@ -120,7 +120,7 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
     const mention = site.mentions ? mentionsApi.list(site.id, '7d').then((r) => r.mentions.filter((m) => m.posted_at >= day0 - 3600).sort((a, b) => b.posted_at - a.posted_at)[0] ?? null, () => null) : Promise.resolve(null)
     const vit = (from: ISODate, to: ISODate) => more.vitals(site.id, { from, to }).then((v) => (v.samples >= 5 && v.lcp_ms != null && v.inp_ms != null && v.cls_1k != null ? ([v.lcp_ms / 1000, v.inp_ms, v.cls_1k / 1000] as [number, number, number]) : null), () => null)
     const buyers = want.money ? extrasApi.buyers(site.id, { from: range.from, to: range.to }, 20).then((r) => r.buyers ?? [], () => null) : Promise.resolve(null)
-    const refunds = want.money ? extrasApi.refunds(site.id, { from: range.from, to: range.to }).then((r) => r, () => null) : Promise.resolve(null)
+    const refunds = want.money ? extrasApi.refunds(site.id, { from: range.from, to: range.to }).then((r) => (r.filtered ? null : r), () => null) : Promise.resolve(null)
     // Google is a day behind, so a single day is read as the week it ends.
     const days = diffDays(range.from, range.to) + 1
     const span = Math.max(7, days)
