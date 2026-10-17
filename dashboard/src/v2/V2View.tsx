@@ -22,6 +22,7 @@ import { goExplore } from './briefing/deeper'
 import { routeFiltered } from './explore/open'
 import { MkToastHost } from './ui/MkToastHost'
 import { AiHost } from './ui/AiHost'
+import { useActiveRow } from './ui/activeRow'
 import { Live } from './live/Live'
 import type { LiveProps } from './live/Live'
 
@@ -75,6 +76,7 @@ export function V2View(p: V2Props) {
   // Explore's panel is built the first time it is asked for, and stays so it can slide out again.
   const [opened, setOpened] = useState(false)
   if (p.view.xp !== undefined && !opened) setOpened(true)
+  useActiveRow()
   useEffect(() => whenIdle(ExplorePanel.preload), [])
   // The other tab's code, fetched on idle: switching to it then has nothing to wait for.
   useEffect(() => whenIdle(Briefing.preload), [])

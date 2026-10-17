@@ -68,7 +68,6 @@
 .mk .mk-menu.on{display:block}
 .mk .mk-menu input{width:100%;height:36px;border-radius:10px;border:1.5px solid var(--mk-lime);background:var(--mk-field);color:var(--mk-text);padding:0 12px;font:inherit;outline:0;margin-bottom:4px}
 .mk .mi{display:flex;width:100%;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;text-align:left}
-.mk .mi:hover{background:var(--mk-sel)}
 .mk .mi .nm{font-weight:600}
 .mk .mi .d{color:var(--mk-muted);font-size:12px}
 .mk .mi .now{margin-left:auto;font-size:12px;color:var(--mk-muted)}
@@ -261,7 +260,7 @@
 .mk .palbox{width:min(560px,92vw);background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:18px;padding:8px;box-shadow:0 30px 80px var(--mk-shc2)}
 .mk .palbox input{width:100%;height:42px;border-radius:12px;border:1.5px solid var(--mk-lime);background:var(--mk-field);color:var(--mk-text);padding:0 14px;font:inherit;font-size:15px;outline:0;margin-bottom:6px}
 .mk .pi{display:flex;width:100%;gap:10px;align-items:center;padding:9px 12px;border-radius:10px;text-align:left;font-size:13.5px}
-.mk .pi.on,.mk .pi:hover{background:var(--mk-sel)}
+.mk .pi.on{background:var(--mk-sel)}
 .mk .pi .s{margin-left:auto;color:var(--mk-faint);font-size:12px}
 .mk .exb .t2{font-weight:600;font-size:13px}
 @media (max-width:700px){
@@ -435,7 +434,6 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .mi{min-height:var(--mk-h);padding:var(--mk-s2) var(--mk-s3);border-radius:var(--mk-rc);gap:var(--mk-s3)}
 .mk .mi .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .mk .mi .now{white-space:nowrap}
-.mk .mi:hover,.mk .pi:hover{background:var(--mk-hov)}
 .mk .mfoot{padding:var(--mk-s3) var(--mk-s3) var(--mk-s1);margin-top:var(--mk-s2)}
 .mk .mk-menu input{margin-bottom:var(--mk-s2);padding:0 var(--mk-s3);border-width:1px}
 .mk .pmenu .dates{padding:var(--mk-s2) var(--mk-s3) var(--mk-s1);gap:var(--mk-s2)}
@@ -730,7 +728,6 @@ html[data-motion='off'] .mk .ib.bell.shake svg{animation:none}
 .mk .nfl{display:flex;flex-direction:column;max-height:min(60vh,460px);overflow:auto}
 .mk .nf{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s3);text-align:left;border-top:1px solid var(--mk-line);min-height:56px;width:100%}
 .mk .nf:first-child{border-top:0}
-.mk .nf:hover{background:var(--mk-hov)}
 .mk .nfi{width:22px;height:22px;flex:none;color:var(--mk-muted)}
 .mk .nfi.k-down,.mk .nfi.k-failed,.mk .nfi.k-refund{color:var(--mk-red)}
 .mk .nfi.k-up,.mk .nfi.k-sale,.mk .nfi.k-spike,.mk .nfi.k-goal,.mk .nfi.k-milestone{color:var(--mk-lime)}
@@ -1205,8 +1202,6 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .xw.r .xm{left:auto;right:0}
 .mk .xgl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mk-muted);padding:var(--mk-s2) var(--mk-s3) 2px}
 .mk .xmi,.mk .xri{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:var(--mk-s3);width:100%;min-height:40px;padding:var(--mk-s1) var(--mk-s3);border-radius:10px;cursor:pointer;color:var(--mk-text);font-size:13.5px}
-.mk .xmi:hover,.mk .xri:hover,.mk .xmi:focus-visible,.mk .xri:focus-visible{background:var(--mk-hov)}
-.mk .xmi.on,.mk .xri.on{background:var(--mk-sel)}
 .mk .xmi.on .xi,.mk .xri.on .xi{color:var(--mk-lime)}
 .mk .xmi[disabled]{opacity:.4;cursor:default}
 .mk .xmi .xi,.mk .xri .xi{width:18px;height:18px;flex:none;color:var(--mk-muted)}
@@ -1499,7 +1494,6 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .site-row:hover .site-open,.mk .site-row:hover .btn.icon.ghost,.mk .site-row:focus-within .site-open,.mk .site-row:focus-within .btn.icon.ghost{opacity:1}
 .mk .site-row .site-open:hover,.mk .site-row .btn.icon.ghost:hover{background:var(--mk-hov);color:var(--mk-text)}
 .mk .site-head .btn.icon.ghost{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--mk-faint)}
-.mk .mi.all{margin-bottom:2px}
 .mk .mi .state-line.stopped{color:var(--mk-red)}
 .mk .mi .state-line.quiet{color:var(--mk-amber)}
 .mk .mi .now.state-icon{display:inline-grid;place-items:center}
@@ -1658,3 +1652,22 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .lrevb .lkgo{height:32px;padding:0 14px;border-radius:10px;background:var(--mk-lime);color:var(--mk-on-lime);font-weight:600}
 .mk .lrevb .how{color:var(--mk-muted);font-size:13px}
 .mk .lsp{display:block;width:100%;height:44px;color:var(--mk-lime);margin-top:var(--mk-s2)}
+
+/* Menus and lists, one row (the palette, the site list, the period, Explore's menus, the bell): one active row at a time, a small gap
+   between neighbours, one rhythm on the 4px grid. The active row is the one under the mouse (data-act, set by useActiveRow) or the one
+   a key reached (focus, or the palette's cursor); while the mouse has a row, the key's row is clear. The chosen row (.on) is told by its
+   colour and check, not by a fill. */
+.mk{--mk-row-gap:2px;--mk-row-pad:var(--mk-s1) var(--mk-s3);--mk-row-h:40px;--mk-row-act:var(--mk-sel)}
+.mk :is(.mk-menu,.palbox) :is(.mi,.xmi,.xri,.pi){box-sizing:border-box;min-height:var(--mk-row-h);padding:var(--mk-row-pad);margin-top:var(--mk-row-gap);border-radius:var(--mk-rc);outline:0}
+.mk :is(.mk-menu,.palbox) :is(.mi,.xmi,.xri,.pi):first-child,.mk :is(.sites-domains,.site-group)>:is(.mi,li){margin-top:0}
+.mk :is(.mk-menu,.palbox) :is(.mi,.xmi,.xri) :is(.nm){line-height:20px}
+.mk :is(.mk-menu,.palbox) :is(.mi,.xmi,.xri) .d{line-height:16px;margin-top:0}
+.mk :is(.mk-menu,.palbox) :is(.mi,.xmi,.xri):has(.d) :is(.xi,.mkwrap){align-self:flex-start}
+.mk :is(.mk-menu,.palbox) .xmi:has(.d) .xi{margin-top:1px}
+.mk .xmi.on .nm,.mk .xri.on .nm{color:var(--mk-lime)}
+.mk :is(.mi,.xmi,.xri,.nf)[data-act],.mk :is(.mi,.xmi,.xri,.nf):focus-visible{background:var(--mk-row-act)}
+.mk :is(.mk-menu,.palbox):has([data-act]) :is(.mi,.xmi,.xri,.nf):focus-visible:not([data-act]){background:none}
+.mk :is(.mk-menu,.palbox) .pgh:first-child,.mk :is(.mk-menu,.palbox) .xgl:first-child{padding-top:var(--mk-s1)}
+.mk :is(.mk-menu,.palbox) .xgl{padding-top:var(--mk-s3);padding-bottom:var(--mk-s1)}
+.mk .palbox .pgh{padding-top:var(--mk-s3);padding-bottom:var(--mk-s1)}
+@media (max-width:600px){.mk{--mk-row-h:44px}}
