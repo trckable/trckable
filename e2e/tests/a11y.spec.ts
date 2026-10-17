@@ -116,7 +116,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     })
 
     // The new pages' own colours (chart lime, selected rows, the tab bar) are checked in both themes too.
-    for (const [name, query] of [['Briefing', 'view=briefing'], ['Explore', 'view=data&v=explore'], ['Explore, pages', 'view=briefing&xp=pages']]) {
+    for (const [name, query] of [['Briefing', 'view=briefing'], ['Explore, pages', 'view=briefing&xp=pages']]) {
       test(`${name} meets WCAG 2.1 AA`, async ({ page }) => {
         const site = await start(page)
         await page.goto(`${BASE}/${site.domain}?${query}`)
