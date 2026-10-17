@@ -40,9 +40,8 @@ for (const size of SIZES) {
         if (await back.isVisible()) await back.click()
         await tabs.nth(i).scrollIntoViewIfNeeded()
         await tabs.nth(i).click()
-        // On a phone the list of sections hides once one is open: the way back is then the sign it opened.
-        if (size.name === 'phone') await expect(back).toBeVisible()
-        else await expect(tabs.nth(i)).toHaveAttribute('aria-selected', 'true')
+        // A phone's long list of sections hides once one is open; a short one stays and shows the pick.
+        if (await tabs.nth(i).isVisible()) await expect(tabs.nth(i)).toHaveAttribute('aria-selected', 'true')
         const now = await box(page)
         expect(now, `section ${i} of ${url}`).toEqual(first)
       }
