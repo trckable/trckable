@@ -368,4 +368,6 @@ func TestJourneyLongVisitLeavesRoomForTheNext(t *testing.T) {
 	eq(t, "and says so", j.Visits[0].Pageviews, int64(2))
 	eq(t, "the long visit is capped", len(j.Visits[1].Events), MaxJourneyEvents)
 	eq(t, "and still counts every view", j.Visits[1].Pageviews, int64(2100))
+	eq(t, "and says how many are not listed", j.Visits[1].EventsMore, int64(2100-MaxJourneyEvents))
+	eq(t, "a short visit has none left out", j.Visits[0].EventsMore, int64(0))
 }

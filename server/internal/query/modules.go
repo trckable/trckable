@@ -268,6 +268,8 @@ type JourneyVisit struct {
 	Pageviews int64          `json:"pageviews"`
 	EngagedS  float64        `json:"engaged_s"`
 	Events    []JourneyEvent `json:"events"`
+	// EventsMore is how many of the visit's events are not listed (the list stops at MaxJourneyEvents); the page count above stays exact.
+	EventsMore int64 `json:"events_more,omitempty"`
 }
 
 // JourneyEvent is a pageview or goal inside a visit.
@@ -355,8 +357,8 @@ func (q Q) Journey(ctx context.Context, site string, visitor uint64, upTo time.T
 	}
 	//nolint:gosec // session ids are formatted uint64s, not text from a request; the site is bound as a parameter
 	rows, err = conn.QueryContext(ctx, `
-		SELECT session_id, ts, kind, coalesce(path, ''), coalesce(goal, ''), coalesce(props, ''), coalesce(engaged_ms, 0) FROM (
-			SELECT *, row_number() OVER (PARTITION BY session_id ORDER BY ts, seq) AS n
+		SELECT session_id, ts, kind, coalesce(path, ''), coalesce(goal, ''), coalesce(props, ''), coalesce(engaged_ms, 0), total FROM (
+			SELECT *, row_number() OVER (PARTITION BY session_id ORDER BY ts, seq) AS n, count(*) OVER (PARTITION BY session_id) AS total
 			FROM events WHERE site_id = ? AND session_id IN (`+strings.Join(list, ", ")+`) AND kind <> 3
 		) WHERE n <= `+strconv.Itoa(MaxJourneyEvents)+`
 		ORDER BY ts`, site)
@@ -366,9 +368,10 @@ func (q Q) Journey(ctx context.Context, site string, visitor uint64, upTo time.T
 	defer rows.Close()
 	for rows.Next() {
 		var id, eng uint64
+		var total int64
 		var kind uint8
 		var e JourneyEvent
-		if err := rows.Scan(&id, &e.At, &kind, &e.Path, &e.Goal, &e.Props, &eng); err != nil {
+		if err := rows.Scan(&id, &e.At, &kind, &e.Path, &e.Goal, &e.Props, &eng, &total); err != nil {
 			return nil, err
 		}
 		e.Kind, e.EngagedS = "pageview", float64(eng)/1000
@@ -377,6 +380,7 @@ func (q Q) Journey(ctx context.Context, site string, visitor uint64, upTo time.T
 		}
 		if i, ok := byID[id]; ok {
 			out.Visits[i].Events = append(out.Visits[i].Events, e)
+			out.Visits[i].EventsMore = max(0, total-MaxJourneyEvents)
 		}
 	}
 	return out, rows.Err()

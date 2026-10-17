@@ -603,6 +603,8 @@ export interface JourneyVisit {
   os?: string
   pageviews: number
   engaged_s: number
+  /** Events the visit has beyond the ones listed. */
+  events_more?: number
   /** null when the visit holds no pageview or goal. */
   events: { at: string; kind: string; path?: string; goal?: string; label?: string; props?: string; engaged_s?: number }[] | null
 }
