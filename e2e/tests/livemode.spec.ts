@@ -131,6 +131,20 @@ test('the chart switch keeps bars or line across a reload and both draw the same
   await expect(page.locator('.lchart')).toHaveAttribute('data-mode', 'bars')
 })
 
+test('the sample revenue card on Live is never clipped: Connect sits fully inside the card', async ({ page }) => {
+  for (const width of [1440, 1024, 768, 390]) {
+    await page.setViewportSize({ width, height: 900 })
+    await signIn(page, '/example.com?view=live')
+    await expect(online(page)).toBeVisible({ timeout: 15_000 })
+    const connect = page.locator('.lnow .lrev').getByRole('button', { name: 'Connect' })
+    await expect(connect).toBeVisible()
+    const [b, card] = await Promise.all([connect.boundingBox(), page.locator('.lnow').boundingBox()])
+    expect(b && card && b.x >= card.x && b.x + b.width <= card.x + card.width + 0.5, `Connect inside the card at ${width}`).toBe(true)
+    const lock = await page.locator('.lnow .lrev').boundingBox()
+    expect(lock && b && b.x + b.width <= lock.x + lock.width + 0.5, `Connect inside its own block at ${width}`).toBe(true)
+  }
+})
+
 test('the switch has the one dot, and it dims while the connection is down', async ({ page }) => {
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })

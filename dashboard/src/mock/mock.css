@@ -1580,3 +1580,8 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @media (max-width:700px){
 .mk .lchart{flex:none}
 }
+
+/* Live's sample revenue card sits in an auto-width column and its size containment shrinks it to nothing: give it room so its Connect button is never cut. */
+.mk .lbottom.money .lrev{min-width:240px}
+/* The account menu is a sheet on a phone: its desktop place (below the button) must not win over the sheet's bottom edge whichever stylesheet loaded last. */
+@media (max-width:640px){:root .mk .hd .account-menu .pop.menu.more-menu{top:auto}}

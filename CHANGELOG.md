@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- Live's sample Revenue today card keeps its size, so its Connect button is no longer cut off; the account menu sits at the bottom as a sheet on a phone; and a notice told while a screen is being drawn again waits for the next one instead of getting lost.
 - Live welcomes a new visit again: the row slides in at the top while the rows below make room, a soft lime glow fades and its dot beats once, and the online and last-half-hour numbers count up instead of swapping. Ten or more at once enter together, reduced motion keeps only the glow, and nothing moves on the first look. The half hour can also be drawn as a line (a small bars and line switch on the card, remembered in this browser), with the same minutes, tooltip and axis.
 - The Visitors tile says "→ ~9.4k this month" again once three days of the month have gone, and the chart's header says how many mentions the period has (pointing at it lights their dots, a click opens the Mentions page).
 - The Briefing keeps what the old Data page had, each in its place: the moments' markers, the sources' and links' pills and the mentions' dots over the chart (the search list, ⌘K, puts the pills away or brings them back), the busy moment's band and the line that leads back to it, a long period played as a story with a card that sums it up, the guide to leaving after one page (a line under the numbers, and the search list), the seal on the cards that rest on payments or Google's own data, and Google's searches beside the assistants in AI & search.
