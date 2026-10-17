@@ -188,8 +188,8 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("POST /api/v1/logout", a.logout)
 	handle("GET /api/v1/me", a.authed(a.me))
 	handle("PUT /api/v1/me/keys", a.authed(a.setKeys))
-	handle("GET /api/v1/me/bell", a.authed(a.bellRead))
-	handle("POST /api/v1/me/bell", a.authed(a.markBellRead))
+	handle("GET /api/v1/me/bell-read", a.authed(a.bellRead))
+	handle("POST /api/v1/me/bell-read", a.authed(a.markBellRead))
 	handle("GET /api/v1/me/devices", a.authed(a.devices))
 	handle("DELETE /api/v1/me/devices/{id}", a.authed(a.removeDevice))
 	handle("GET /api/v1/sites", a.authed(a.sites))
@@ -618,7 +618,7 @@ func mustChangeAllowed(r *http.Request) bool {
 // rather than to the instance: their password, name, picture, second step
 // keyboard shortcuts and read notices.
 func ownAccount(path string) bool {
-	return strings.HasPrefix(path, "/api/v1/account/") || path == "/api/v1/account" || path == "/api/v1/logout" || path == "/api/v1/me/keys" || path == "/api/v1/me/bell" || path == "/api/v1/feedback" || strings.HasPrefix(path, "/api/v1/me/devices") || closingMilestones(path)
+	return strings.HasPrefix(path, "/api/v1/account/") || path == "/api/v1/account" || path == "/api/v1/logout" || path == "/api/v1/me/keys" || path == "/api/v1/me/bell-read" || path == "/api/v1/feedback" || strings.HasPrefix(path, "/api/v1/me/devices") || closingMilestones(path)
 }
 
 // closingMilestones is a person closing a milestone's moment: their own
