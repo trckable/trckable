@@ -2594,6 +2594,7 @@ export default {
   'why.lookBack': 'Mira qué cambió por entonces: un despliegue, un certificado, un proveedor.',
   'why.noWeeks': (l: string) => `${l} aún no tiene días anteriores con los que compararse.`,
   'why.weeksSaid': (l: string, now: string, weekday: string, at: string, list: string) => `${l} hasta ahora hoy: ${now}. El mismo tramo (hasta las ${at}) las últimas veces que fue ${weekday}: ${list}.`,
+  'why.askWhy': (cause: string) => `¿Por qué es así? ${cause}`,
   'why.sourceBelow': 'Abre Explore para ver qué fuente o página lo movió.',
   'v2explore.title': 'Explore',
   'v2explore.close': 'Cerrar',

@@ -139,6 +139,8 @@ test('the outage Why? in Live and in the Briefing names the site and what the ch
   await hero.getByRole('button', { name: 'Why?' }).click()
   await expect(hero).toContainText(HISTORY_DOMAIN)
   await expect(hero).toContainText('connection refused')
+  // The public product has no Peek: the text stands alone, with no button that leads nowhere.
+  await expect(hero.getByRole('button', { name: 'Ask Peek' })).toHaveCount(0)
 })
 
 // A tap on any card of the Briefing on a phone opens that card's sheet, whichever card it is and in whatever order they come.

@@ -14,5 +14,6 @@ export const copy = defineCopy('why', {
   lookBack: 'Look at what changed around then: a deploy, a certificate, a provider.',
   noWeeks: (l: string) => `${l} has no earlier days to be told against yet.`,
   weeksSaid: (l: string, now: string, weekday: string, at: string, list: string) => `${l} so far today: ${now}. The same stretch (up to ${at}) on the last ${weekday}s: ${list}.`,
+  askWhy: (cause: string) => `Why is this? ${cause}`,
   sourceBelow: 'Open Explore to see which source or page moved it.',
 })
