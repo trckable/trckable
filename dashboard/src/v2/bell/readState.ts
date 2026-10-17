@@ -1,7 +1,8 @@
 // Which notices a person has read: kept on the server per account, with this browser's copy as the fallback.
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { more } from '../../lib/apiMore'
 
-const KEY = 'trckable:bell:read'
+export const KEY = 'trckable:bell:read'
 const KEEP = 300
 const PER_POST = 100
 
@@ -37,4 +38,41 @@ export async function syncRead(local: ReadonlySet<string>): Promise<Set<string> 
   } catch {
     return null
   }
+}
+
+/**
+ * The read set a bell shows: this browser's copy at first, joined with the account's once the server answers (never
+ * replacing what was read meanwhile), kept in step with other tabs, and every mark told to the server once.
+ */
+export function useReadSet(on: boolean) {
+  const [read, setRead] = useState<Set<string>>(loadLocal)
+  const latest = useRef(read)
+  const join = useCallback((ids: Iterable<string>) => {
+    const u = new Set([...ids, ...latest.current])
+    if (u.size === latest.current.size) return
+    latest.current = u
+    saveLocal(u)
+    setRead(u)
+  }, [])
+  useEffect(() => {
+    if (!on) return
+    let live = true
+    void syncRead(loadLocal()).then((all) => live && all && join(all))
+    const other = (e: StorageEvent) => e.key === KEY && join(loadLocal())
+    window.addEventListener('storage', other)
+    return () => {
+      live = false
+      window.removeEventListener('storage', other)
+    }
+  }, [on, join])
+  const mark = useCallback(
+    (ids: string[]) => {
+      const fresh = ids.filter((id) => !latest.current.has(id))
+      if (!fresh.length) return
+      join(fresh)
+      void more.markBellRead(fresh.slice(-PER_POST)).catch(() => undefined)
+    },
+    [join],
+  )
+  return { read, mark }
 }

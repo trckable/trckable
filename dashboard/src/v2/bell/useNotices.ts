@@ -7,14 +7,13 @@ import { mentionsApi } from '../../features/mentions/api'
 import { isShared, isViewer } from '../../lib/me'
 import { useV2Extras } from '../slots'
 import { visibleInterval } from '../../lib/visibleInterval'
-import { loadLocal, saveLocal, syncRead } from './readState'
+import { useReadSet } from './readState'
 import { arrange, fromAlerts, fromIncidents, fromMentions, fromMilestones, unreadCount, type Notice } from './notices'
 
 export function useNotices(site: Site | null, sites: Site[]) {
   const [own, setItems] = useState<Notice[]>([])
   const extra = useV2Extras().bell
   const items = useMemo(() => (extra?.length ? [...own, ...extra.filter((e) => !own.some((o) => o.id === e.id))].sort((a, b) => b.at - a.at).slice(0, 40) : own), [own, extra])
-  const [read, setRead] = useState<Set<string>>(loadLocal)
   const can = !isShared()
   useEffect(() => {
     if (!can) return
@@ -39,39 +38,9 @@ export function useNotices(site: Site | null, sites: Site[]) {
       stop()
     }
   }, [site?.id, site?.domain, site?.mentions, sites, can]) // eslint-disable-line react-hooks/exhaustive-deps -- the site's own fields say when it changed
-  // The server keeps the account's read list; this browser's copy is what shows when it cannot be reached, and
-  // what it holds that the server lacks (read offline, or before this existed) is sent up.
-  useEffect(() => {
-    if (!can) return
-    let live = true
-    void syncRead(loadLocal()).then((all) => {
-      if (!live || !all) return
-      saveLocal(all)
-      setRead(all)
-    })
-    return () => {
-      live = false
-    }
-  }, [can])
-  const mark = useCallback((id: string) => {
-    setRead((r) => {
-      if (r.has(id)) return r
-      const n = new Set(r).add(id)
-      saveLocal(n)
-      void more.markBellRead([id]).catch(() => undefined)
-      return n
-    })
-  }, [])
-  const markAll = useCallback(() => {
-    setRead((r) => {
-      const fresh = items.filter((i) => !r.has(i.id)).map((i) => i.id)
-      if (!fresh.length) return r
-      const n = new Set([...r, ...fresh])
-      saveLocal(n)
-      void more.markBellRead(fresh).catch(() => undefined)
-      return n
-    })
-  }, [items])
+  const { read, mark: send } = useReadSet(can)
+  const mark = useCallback((id: string) => send([id]), [send])
+  const markAll = useCallback(() => send(items.map((i) => i.id)), [send, items])
   const unread = useMemo(() => unreadCount(items, read), [items, read])
   return { items, read, unread, mark, markAll, can }
 }
