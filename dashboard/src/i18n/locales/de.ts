@@ -1341,6 +1341,7 @@ export default {
   'journey.title': (id: string) => `Besucher ${id}`,
   'journey.loading': 'Der Weg dieses Besuchers wird geladen…',
   'journey.failed': (why: string) => `Dieser Weg ließ sich nicht laden: ${why}`,
+  'journey.retry': 'Erneut versuchen',
   'journey.empty': 'Für diesen Besucher wurden in diesem Zeitraum keine Besuche erfasst.',
   'journey.close': 'Schließen',
   'journey.options': 'Besucheroptionen',

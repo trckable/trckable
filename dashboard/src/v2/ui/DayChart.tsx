@@ -9,6 +9,7 @@ import { niceStep } from '../briefing/geometry'
 import type { Band, Judged } from '../briefing/usual'
 import type { ChartGeo } from '../../features/moments/marks'
 import { useGlide } from './glide'
+import { FutureHatch } from './FutureHatch'
 import './chartLayer.css'
 
 export interface ChartPoint {
@@ -170,16 +171,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
           </g>
         )
       })}
-      {c.live && (
-        <>
-          <defs>
-            <pattern id="mk-future" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-              <line x1="0" y1="0" x2="0" y2="7" stroke="var(--mk-axis)" strokeOpacity="0.22" strokeWidth="1.5" />
-            </pattern>
-          </defs>
-          <rect x={nowEdge} y={T} width={Math.max(0, W - Rr - nowEdge)} height={B - T} fill="url(#mk-future)" />
-        </>
-      )}
+      {c.live && <FutureHatch x={nowEdge} y={T} width={Math.max(0, W - Rr - nowEdge)} height={B - T} />}
       {pts.length > 0 && (
         <>
           <polygon points={`${X(pts[0].i)},${B} ${line} ${X(last.i)},${B}`} fill="var(--mk-areafill)" />

@@ -1334,6 +1334,7 @@ export default {
   'journey.title': (id: string) => `Visiteur ${id}`,
   'journey.loading': 'Chargement du parcours de ce visiteur…',
   'journey.failed': (why: string) => `Impossible de charger ce parcours : ${why}`,
+  'journey.retry': 'Réessayer',
   'journey.empty': 'Aucune visite enregistrée pour ce visiteur sur cette période.',
   'journey.close': 'Fermer',
   'journey.options': 'Options du visiteur',

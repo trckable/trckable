@@ -10,6 +10,7 @@ export const copy = defineCopy('journey', {
   title: (id: string) => `Visitor ${id}`,
   loading: 'Loading this visitor’s journey…',
   failed: (why: string) => `Couldn’t load this journey: ${why}`,
+  retry: 'Try again',
   empty: 'No visits recorded for this visitor in this period.',
   close: 'Close',
   options: 'Visitor options',

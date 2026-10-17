@@ -1344,6 +1344,7 @@ export default {
   'journey.title': (id: string) => `Visitante ${id}`,
   'journey.loading': 'Cargando el recorrido de este visitante…',
   'journey.failed': (why: string) => `No se pudo cargar este recorrido: ${why}`,
+  'journey.retry': 'Intentar de nuevo',
   'journey.empty': 'No hay visitas registradas de este visitante en este periodo.',
   'journey.close': 'Cerrar',
   'journey.options': 'Opciones del visitante',

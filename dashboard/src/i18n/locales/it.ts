@@ -1338,6 +1338,7 @@ export default {
   'journey.title': (id: string) => `Visitatore ${id}`,
   'journey.loading': 'Caricamento del percorso di questo visitatore…',
   'journey.failed': (why: string) => `Impossibile caricare questo percorso: ${why}`,
+  'journey.retry': 'Riprova',
   'journey.empty': 'Nessuna visita registrata per questo visitatore in questo periodo.',
   'journey.close': 'Chiudi',
   'journey.options': 'Opzioni del visitatore',

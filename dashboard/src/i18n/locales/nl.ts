@@ -1333,6 +1333,7 @@ export default {
   'journey.title': (id: string) => `Bezoeker ${id}`,
   'journey.loading': 'De route van deze bezoeker laden…',
   'journey.failed': (why: string) => `Deze route kon niet worden geladen: ${why}`,
+  'journey.retry': 'Opnieuw proberen',
   'journey.empty': 'Geen bezoeken vastgelegd voor deze bezoeker in deze periode.',
   'journey.close': 'Sluiten',
   'journey.options': 'Bezoekeropties',
