@@ -6,6 +6,7 @@ export const copy = defineCopy('v2', {
   yesterday: 'Yesterday',
   todayWord: 'today',
   vsUsual: (weekday: string) => `vs usual ${weekday}`,
+  vsLabel: (what: string) => `vs ${what}`,
   view: 'View',
   live: 'Live',
   liveTitle: 'Live (L)',

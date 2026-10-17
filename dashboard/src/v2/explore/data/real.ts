@@ -15,6 +15,7 @@ import { read as readHistory } from '../../briefing/useHistory'
 import { hourTable, stretchBand } from '../../briefing/usual'
 import type { Usual } from '../../briefing/model'
 import type { Down, SavedView, Tab } from '../types'
+import { basisOf, type Basis } from './basis'
 import { scaled } from './scaled'
 import { mapOverview, mapTable, optionsOf, type Uptime } from './mapReport'
 import { mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed } from './mapSections'
@@ -56,14 +57,16 @@ async function usualOf(c: DataCtx): Promise<Usual | null> {
 }
 
 /** One day is told against the Briefing's usual, not against all of the day before: the earlier day's figures are scaled to it (a day still going is only partly there). Longer periods keep the period before, and say so. */
-async function basisOf(c: DataCtx, r: Report): Promise<{ report: Report; usual: boolean }> {
+async function toBasis(c: DataCtx, r: Report): Promise<{ report: Report; basis: Basis }> {
+  const basis = basisOf({ range: c.range, filters: c.filters, compare: c.view.compare })
+  if (basis !== 'usual') return { report: r, basis }
   const [u, got] = await Promise.all([usualOf(c), usualHours(c, r)])
   const hours = got?.people ?? null
   const was = r.previous?.kpis.visitors ?? 0
   // The hours of the weeks before come first, as in the Briefing; the server's usual for the day is the other way to it.
   const usual = hours ?? (u && u.average >= 5 ? u.average : null)
-  if (!r.previous || usual === null || was <= 0) return { report: r, usual: c.range.from === c.range.to && usual !== null }
-  return { report: { ...r, previous: scaled(r.previous, usual / was, got?.money) }, usual: true }
+  if (!r.previous || usual === null || was <= 0) return { report: r, basis: usual === null ? 'previous' : 'usual' }
+  return { report: { ...r, previous: scaled(r.previous, usual / was, got?.money) }, basis: 'usual' }
 }
 
 /** What the same hours of the last eight weeks brought, the part of the day that has happened (as the Briefing counts it). */
@@ -97,8 +100,8 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
   switch (tab) {
     case 'overview': {
       const [raw, uptime] = await Promise.all([cachedReport(c.site.id, q, undefined, signal), periodUptime(c)])
-      const { report, usual } = await basisOf(c, raw)
-      return mapOverview(report, { money: c.money, uptime, now: today, usual })
+      const { report, basis } = await toBasis(c, raw)
+      return mapOverview(report, { money: c.money, uptime, now: today, basis })
     }
     case 'funnels': {
       const report = await cachedReport(c.site.id, q, undefined, signal)
@@ -145,7 +148,7 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       // These read their own numbers (views/Hosted.tsx).
       return null
     default:
-      return mapTable(tab, (await basisOf(c, await cachedReport(c.site.id, q, undefined, signal))).report)
+      return mapTable(tab, (await toBasis(c, await cachedReport(c.site.id, q, undefined, signal))).report)
   }
 }
 

@@ -7,6 +7,7 @@ import { baseEnough, tooFew } from '../../../lib/thin'
 import { sourceName } from '../../briefing/model'
 import { copy } from '../copy'
 import type { Down, FilterDim, Kc, Option, Overview, Shape, Stat, Tab, Table } from '../types'
+import type { Basis } from './basis'
 import { noteOf, rowsOf, statOf } from './stats'
 
 /** What the uptime card needs: the share of the period the site answered, and the incidents of the period. */
@@ -37,11 +38,11 @@ function shapeOf(r: Report, now: ISODate): Shape | null {
 }
 
 /** The overview's four cards: people, a goal (or views), money (or uptime), and who left after one page. */
-export function mapOverview(r: Report, o: { money?: (minor: number) => string; uptime: Uptime | null; now: ISODate; usual?: boolean }): Overview {
+export function mapOverview(r: Report, o: { money?: (minor: number) => string; uptime: Uptime | null; now: ISODate; basis?: Basis }): Overview {
   const cur = r.current
   const prev = r.previous
   const base = !!prev && baseEnough(prev.kpis.visitors)
-  const pe = (s: Stat): Kc['note'] => (o.usual ?? true) ? noteOf(s, copy.vsUsual, copy.asUsual, '') : noteOf(s, copy.vsBefore, copy.asBefore, '')
+  const pe = (s: Stat): Kc['note'] => noteOf(s, copy.vs[o.basis ?? 'usual'], o.basis && o.basis !== 'usual' ? copy.asBefore : copy.asUsual, '')
   const people = statOf(cur.kpis.visitors, prev?.kpis.visitors, base)
   const goal = (cur.goals ?? []).find((g) => g.visitors > 0)
   const gs = goal ? statOf(goal.visitors, prev?.goals?.find((g) => g.value === goal.value)?.visitors, base) : null

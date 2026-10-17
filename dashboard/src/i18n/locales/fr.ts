@@ -3009,7 +3009,6 @@ export default {
   'v2explore.hour': 'heure',
   'v2explore.sixHours': '6 heures',
   'v2explore.vsUsual': 'vs habituel',
-  'v2explore.vsBefore': 'vs la période précédente',
   'v2explore.asBefore': 'comme avant',
   'v2explore.share': 'Part',
   'v2explore.usual': 'habituel',
@@ -3449,4 +3448,9 @@ export default {
   'v2.live.computer': 'Ordinateur',
   'live.announce': (page: string, source: string) => `Nouvelle visite : ${page}, depuis ${source}`,
   'live.announceMany': (n: number) => `${n} nouvelles visites`,
+  'v2.vsLabel': (what: string) => `vs ${what}`,
+  'v2explore.vs.usual': 'vs habituel',
+  'v2explore.vs.previous': 'vs la période précédente',
+  'v2explore.vs.year': 'vs l’année précédente',
+  'v2explore.vs.custom': 'vs l’autre période',
 } satisfies Messages

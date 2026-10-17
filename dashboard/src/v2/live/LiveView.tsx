@@ -5,7 +5,8 @@ import { lazyLoad } from '../../lib/lazyLoad'
 import { onlineNow } from '../../lib/live'
 import { isShared, isViewer } from '../../lib/me'
 import { openSettings } from '../../lib/settings'
-import { fmtInt } from '../../lib/format'
+import { tag } from '../../i18n'
+import { fmtInt, fmtMoney } from '../../lib/format'
 import { channelColor, channelLabel } from '../../lib/palette'
 import type { Site } from '../../lib/api'
 import { BusyLine } from '../ui/BusyLine'
@@ -77,7 +78,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   const src = sourceParts(data.sources)
   const tb = data.today ? todayBand(data.today.visitors, data.today.before, data.today.compare) : null
   const down = downSince !== undefined
-  const at = (ms: number) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone })
+  const at = (ms: number) => new Date(ms).toLocaleTimeString(tag ?? [], { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone })
   const colorOf = (channel: string) => colors?.[channel] ?? channelColor(channel)
   return (
     <>
@@ -163,7 +164,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
             {data.revenue ? (
               <div className="lrev">
                 <span className="ll">{copy.revenueToday}</span>
-                <b className="lmoney">{new Intl.NumberFormat(undefined, { style: 'currency', currency: data.revenue.currency, maximumFractionDigits: data.revenue.exponent ? 2 : 0 }).format(data.revenue.amount / 10 ** data.revenue.exponent)}</b>
+                <b className="lmoney">{fmtMoney(data.revenue.amount, data.revenue.currency, data.revenue.exponent)}</b>
               </div>
             ) : (
               whole &&

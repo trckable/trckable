@@ -3008,7 +3008,6 @@ export default {
   'v2explore.hour': 'ora',
   'v2explore.sixHours': '6 ore',
   'v2explore.vsUsual': 'rispetto al solito',
-  'v2explore.vsBefore': 'rispetto al periodo precedente',
   'v2explore.asBefore': 'come prima',
   'v2explore.share': 'Quota',
   'v2explore.usual': 'solito',
@@ -3461,4 +3460,9 @@ export default {
   'v2.live.computer': 'Computer',
   'live.announce': (page: string, source: string) => `Nuova visita: ${page}, da ${source}`,
   'live.announceMany': (n: number) => `${n} nuove visite`,
+  'v2.vsLabel': (what: string) => `rispetto a ${what}`,
+  'v2explore.vs.usual': 'rispetto al solito',
+  'v2explore.vs.previous': 'rispetto al periodo precedente',
+  'v2explore.vs.year': 'rispetto all’anno precedente',
+  'v2explore.vs.custom': 'rispetto all’altro periodo',
 } satisfies Messages

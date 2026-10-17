@@ -3008,7 +3008,6 @@ export default {
   'v2explore.hour': 'uur',
   'v2explore.sixHours': '6 uur',
   'v2explore.vsUsual': 't.o.v. gebruikelijk',
-  'v2explore.vsBefore': 't.o.v. de periode ervoor',
   'v2explore.asBefore': 'zoals ervoor',
   'v2explore.share': 'Aandeel',
   'v2explore.usual': 'gebruikelijk',
@@ -3461,4 +3460,9 @@ export default {
   'v2.live.computer': 'Computer',
   'live.announce': (page: string, source: string) => `Nieuw bezoek: ${page}, via ${source}`,
   'live.announceMany': (n: number) => `${n} nieuwe bezoeken`,
+  'v2.vsLabel': (what: string) => `t.o.v. ${what}`,
+  'v2explore.vs.usual': 't.o.v. gebruikelijk',
+  'v2explore.vs.previous': 't.o.v. de periode ervoor',
+  'v2explore.vs.year': 't.o.v. vorig jaar',
+  'v2explore.vs.custom': 't.o.v. de andere periode',
 } satisfies Messages
