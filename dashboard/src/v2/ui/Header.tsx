@@ -1,4 +1,4 @@
-// The header, one row: the ghost (all sites), the site, Live | Briefing, the period, and on the right ⌘K, the plan, the bell and the
+// The header, one row: the ghost (all sites), the site and its setup ring, Live | Briefing, the period, and on the right ⌘K, the plan, the bell and the
 // person. Nothing else lives here: no filters, no share, no second row. A phone keeps the site and the person; the
 // period moves into the page, and the switch into the bar at the bottom.
 import type { ReactNode } from 'react'
@@ -38,6 +38,8 @@ export function ExploreChip({ onClick, label, kbd }: { onClick: () => void; labe
 interface HeaderProps {
   logo: ReactNode
   site: ReactNode
+  /** The setup ring, right of the site. */
+  ring?: ReactNode
   views: ReactNode
   period: ReactNode
   explore: ReactNode
@@ -54,6 +56,7 @@ export function Header(p: HeaderProps) {
     <header className="hd">
       {p.logo}
       <div>{p.site}</div>
+      {p.ring}
       {p.views}
       {p.period}
       <span className="sp" />
