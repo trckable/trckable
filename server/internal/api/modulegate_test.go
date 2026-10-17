@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/trckable/trckable/server/internal/web"
 )
 
 // Every route the gate still guards (payments while no provider is connected,
@@ -104,5 +106,24 @@ func TestModuleOffRefusesWritesThenAllowsThem(t *testing.T) {
 	do(t, c, "PUT", base+"/modules/goals", `{"enabled":true}`, csrf, "1")
 	if code, _ := do(t, c, "PUT", base+"/config", `{"page_goals":[{"name":"Saw pricing","path":"/pricing"}]}`, csrf, "1"); code != http.StatusOK {
 		t.Errorf("page goal with Goals on: %d, want 200", code)
+	}
+}
+
+// Outbound links and forms ship with Goals and share code with it: the list
+// shows what they add on top of Goals, as the tracker build measured it.
+func TestOutboundAndFormsShowTheirSizeOnGoals(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	_, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/modules", "")
+	sizes := web.TrackerSizes()
+	for _, m := range out["modules"].([]any) {
+		row := m.(map[string]any)
+		id, _ := row["id"].(string)
+		if want, ok := sizes.OnGoals[id]; ok {
+			if got, _ := row["tracker_bytes"].(float64); int(got) != want || want <= 0 || want >= sizes.Feature[id] {
+				t.Errorf("%s: list says %v B, on Goals it is %d B (alone %d B)", id, row["tracker_bytes"], want, sizes.Feature[id])
+			}
+		}
 	}
 }

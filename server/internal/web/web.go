@@ -35,9 +35,11 @@ var dist embed.FS
 // Sizes are the measured gzip sizes of the script variants (written by
 // tracker/build.mjs), so the dashboard can show what a module costs.
 type Sizes struct {
-	Core     int            `json:"core"`
-	Full     int            `json:"full"`
-	Feature  map[string]int `json:"feature"`
+	Core    int            `json:"core"`
+	Full    int            `json:"full"`
+	Feature map[string]int `json:"feature"`
+	// OnGoals is what outbound links and forms add to a script that has Goals.
+	OnGoals  map[string]int `json:"feature_on_goals"`
 	Variants map[string]int `json:"variants"`
 }
 

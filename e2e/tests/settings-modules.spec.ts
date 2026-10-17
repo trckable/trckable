@@ -124,9 +124,8 @@ test('the script: a module that is off sends no code, and the sizes the dialog s
     const m = (await listing(page, site)).modules.find((x) => x.id === id)!
     // "+N B in the browser": that module costs about what it says.
     expect(now, `${id} adds code`).toBeGreaterThan(base)
-    // Measured on its own the cost is the promise; on top of Goals it shares code with it, so it is never more.
-    if (inGoals) expect(now - base, `${id}: ${now - base} B added, ${m.tracker_bytes} B promised`).toBeLessThanOrEqual((m.tracker_bytes ?? 0) + 40)
-    else expect(Math.abs(now - base - (m.tracker_bytes ?? 0)), `${id}: ${now - base} B added, ${m.tracker_bytes} B promised`).toBeLessThan(40)
+    // Outbound links and forms are listed with what they add on top of Goals.
+    expect(Math.abs(now - base - (m.tracker_bytes ?? 0)), `${id}: ${now - base} B added, ${m.tracker_bytes} B promised`).toBeLessThan(40)
     await set(id, false)
     if (inGoals) await set('goals', false)
     expect(await size(), `${id} off again`).toBe(core)

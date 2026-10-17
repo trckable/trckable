@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// Migration 66 makes Core Web Vitals a default for new sites without touching
+// Migration 67 makes Core Web Vitals a default for new sites without touching
 // a site that exists: one that never chose keeps it off, one that chose keeps
 // its choice.
 func TestVitalsDefaultKeepsExistingSites(t *testing.T) {
@@ -19,13 +19,13 @@ func TestVitalsDefaultKeepsExistingSites(t *testing.T) {
 		return id
 	}
 	plain, chose := site("plain.com"), site("chose.com")
-	if _, err := s.DB.ExecContext(ctx, `DELETE FROM site_modules; PRAGMA user_version = 65`); err != nil {
+	if _, err := s.DB.ExecContext(ctx, `DELETE FROM site_modules; PRAGMA user_version = 66`); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.DB.ExecContext(ctx, `INSERT INTO site_modules (site_id, module_id, enabled, updated_at) VALUES (?, 'vitals', 1, 1)`, chose); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.MigrateTo(ctx, 66); err != nil {
+	if err := s.MigrateTo(ctx, 67); err != nil {
 		t.Fatal(err)
 	}
 	on := func(site string) (enabled, found bool) {

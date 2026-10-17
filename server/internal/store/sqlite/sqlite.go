@@ -882,10 +882,11 @@ var migrations = []string{
 		PRIMARY KEY (site_id, item)
 	) WITHOUT ROWID;`,
 	// 66: Core Web Vitals is on for new sites. A site that had not chosen keeps
+	// 67: Core Web Vitals is on for new sites. A site that had not chosen keeps
 	// what it had (off), so nothing starts being recorded that was not before.
 	`INSERT OR IGNORE INTO site_modules (site_id, module_id, enabled, updated_at)
 	SELECT id, 'vitals', 0, CAST(strftime('%s', 'now') AS INTEGER) FROM sites;`,
-	// 67: revenue and Search Console are on once connected. A site that connected
+	// 68: revenue and Search Console are on once connected. A site that connected
 	// before this, and has an old "off" row, would otherwise be connected and
 	// refused: its payments routes answered 404.
 	`INSERT INTO site_modules (site_id, module_id, enabled, updated_at)

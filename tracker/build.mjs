@@ -123,9 +123,16 @@ writeFileSync('../server/internal/web/assets/heat.js', heatJs)
 const cost = {}
 for (const [f, code] of FEATURES) cost[f] = built[code].gzip - core.gzip
 cost.heat = heatGzip // Keep in sync with modules.TrackHeat
+// Outbound links and forms ship only with Goals and share code with it, so on
+// a site that has Goals they cost less than on their own: that is the size the
+// list shows.
+const onGoals = {}
+for (const f of ['outbound', 'forms']) {
+  onGoals[f] = built[variantName(new Set(['goals', f]))].gzip - built[variantName(new Set(['goals']))].gzip
+}
 writeFileSync(
   '../server/internal/web/assets/sizes.json',
-  JSON.stringify({ core: core.gzip, full: all.gzip, feature: cost, variants: Object.fromEntries(Object.entries(built).map(([k, v]) => [k, v.gzip])) }, null, 2) + '\n',
+  JSON.stringify({ core: core.gzip, full: all.gzip, feature: cost, feature_on_goals: onGoals, variants: Object.fromEntries(Object.entries(built).map(([k, v]) => [k, v.gzip])) }, null, 2) + '\n',
 )
 
 // The corner script for the "online" widget is its own file with its own
