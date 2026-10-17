@@ -6,7 +6,7 @@ import { dash, ringTone } from '../briefing/geometry'
 import { copy } from '../briefing/copy'
 import { overall, type Part, type Score, type Sentence } from '../briefing/model'
 
-const RING = { lime: 'var(--mk-lime)', amber: '#f0c64a', red: 'var(--mk-red)' }
+const RING = { lime: 'var(--mk-lime)', amber: 'var(--mk-amber)', red: 'var(--mk-red)' }
 
 function Ring({ value }: { value: number | null }) {
   const r = 27
