@@ -30,6 +30,10 @@ async function open(page: Page) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/${DOMAIN}`)
   await expect(page.locator('.hd #siteBtn')).toBeVisible()
+  // A site this browser has not read yet shows its ring at the next look (it would push the header otherwise): read it, look again.
+  await page.waitForFunction(() => Object.keys(localStorage).some((k) => k.startsWith('trckable:ring:state:')), undefined, { timeout: 15_000 })
+  await page.reload()
+  await expect(page.locator('.hd #siteBtn')).toBeVisible()
 }
 
 async function shot(page: Page, name: string, width: number) {
