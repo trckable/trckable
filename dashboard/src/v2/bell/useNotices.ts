@@ -12,7 +12,7 @@ import { arrange, fromIncidents, fromMentions, fromMilestones, othersOf, unreadC
 export function useNotices(site: Site | null, sites: Site[]) {
   const [own, setItems] = useState<Notice[]>([])
   const [ready, setReady] = useState(false)
-  const extra = useV2Extras().bell
+  const { bell: extra, bellMore } = useV2Extras()
   const items = useMemo(() => withFeed(own, extra), [own, extra])
   const can = !isShared()
   useEffect(() => {
@@ -47,7 +47,10 @@ export function useNotices(site: Site | null, sites: Site[]) {
   }, [site?.id, site?.domain, site?.mentions, sites, can]) // eslint-disable-line react-hooks/exhaustive-deps -- the site's own fields say when it changed
   const { read, mark: send } = useReadSet(can)
   const mark = useCallback((id: string) => send([id]), [send])
-  const markAll = useCallback(() => send(items.map((i) => i.id)), [send, items])
+  const markAll = useCallback(() => {
+    bellMore?.readAll()
+    send(items.map((i) => i.id))
+  }, [send, items, bellMore])
   const unread = useMemo(() => unreadCount(items, read), [items, read])
-  return { items, read, unread, mark, markAll, can, ready }
+  return { items, read, unread, mark, markAll, can, ready, dismiss: bellMore?.dismiss, archive: bellMore?.archive }
 }
