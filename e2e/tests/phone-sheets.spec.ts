@@ -13,7 +13,7 @@ for (const scheme of ['light', 'dark'] as const) {
   test(`the site list sheet is on the screen (${scheme})`, async ({ page }, info) => {
     await page.context().addCookies([{ name: 'trckable_session', value: await session('phone-sheets'), url: API }])
     await page.emulateMedia({ colorScheme: scheme })
-    await page.goto(API + '/example.com?view=data')
+    await page.goto(API + '/example.com?view=briefing')
     await expect(page.locator('#siteBtn')).toBeVisible({ timeout: 20_000 })
     await page.waitForTimeout(1500) // a person looks first: the list's chunk is fetched when the browser is idle
     await page.locator('#siteBtn').tap()

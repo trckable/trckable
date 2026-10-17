@@ -23,7 +23,7 @@ try {
       if (site) {
         // Live is the default for a site that has had visits, when the address says nothing else (lib/url.ts wantsLive).
         var q = location.search
-        var live = /[?&]view=live/.test(q) || (!/[?&]view=data/.test(q) && (q === '' || q === '?') && site.e === 1)
+        var live = /[?&]view=live/.test(q) || ((q === '' || q === '?') && site.e === 1)
         var root = document.documentElement
         root.dataset.boot = live ? 'live' : 'story'
         root.style.setProperty('--dsk-name', JSON.stringify(site.n || site.d))

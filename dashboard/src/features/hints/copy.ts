@@ -6,7 +6,6 @@ export const copy = defineCopy('hints', {
   seen: 'Got it',
   off: 'Turn hints off',
   close: 'Close hint',
-  story: 'Each answer opens the full picture: chart, every row, export.',
   rows: 'Click any row to filter the whole page by it.',
   peek: (key: string) => `Press ${key} to ask Peek anything about your numbers.`,
 })

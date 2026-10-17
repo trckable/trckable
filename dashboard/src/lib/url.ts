@@ -59,7 +59,7 @@ export interface ViewState {
   briefing?: boolean
   /** Full's funnel: its steps, in order ("fs=page:/pricing"). Absent = a suggested one. */
   funnel?: FunnelStep[]
-  /** Data's two views: the story of the period, or all its numbers. 'story' or 'explore'; absent = the story, unless the address already narrows the numbers. */
+  /** The old Data page's two views ('story' or 'explore'), only read so an address made before still opens: SiteHost sends it to the Briefing, or to Explore. */
   v?: string
   /** Explore opened from one of the story's answers: which, so the page can say so and lead back. */
   story?: string
@@ -179,4 +179,11 @@ export function setView(patch: Partial<ViewState>) {
   const leave: Partial<ViewState> = patch.live !== undefined && !('briefing' in patch) ? { briefing: undefined } : {}
   const next = { ...cur, ...data, ...leave, ...patch }
   navigate(location.pathname + writeView(next), { replace: Object.keys(patch).every((k) => k === 'day') })
+}
+
+/** Where an address the old Data page made (?v=story, ?v=explore, Full) goes: the Briefing, and Explore for the ones that were its numbers. Null for any other address. */
+export function oldAddressTarget(view: ViewState): ViewState | null {
+  if (view.v === undefined && view.mode !== 'full') return null
+  const opens = view.v === 'explore' || view.mode === 'full'
+  return { ...view, v: undefined, mode: 'core', xp: view.xp ?? (opens ? 'overview' : undefined) }
 }

@@ -2018,7 +2018,6 @@ export default {
   'hints.seen': 'Compris',
   'hints.off': 'Désactiver les astuces',
   'hints.close': 'Fermer l’astuce',
-  'hints.story': 'Chaque réponse ouvre l’image complète : graphique, chaque ligne, export.',
   'hints.rows': 'Cliquez sur une ligne pour filtrer toute la page.',
   'hints.peek': (key: string) => `Appuyez sur ${key} pour poser à Peek toutes vos questions sur vos chiffres.`,
   'format.capped': 'en hausse de plus de dix fois',
