@@ -3109,6 +3109,7 @@ export default {
   'v2.live.still': 'Siguen en el sitio',
   'v2.live.replay': 'Repetición',
   'v2.live.replayTitle': 'Ver la repetición',
+  'v2.live.seeLess': 'Mostrar menos',
   'v2.live.seeAll': (n: number) => `Ver los ${int(n)}`,
   'v2.live.today': 'Hoy',
   'v2.live.above': 'por encima de lo habitual',

@@ -9,7 +9,7 @@ section into the release.
 
 ## Unreleased
 
-- Live moves a little more calmly: the half hour's bars slide one place left when a minute passes instead of jumping, and the Live dot beats once for each new visit.
+- Live moves a little more calmly: the half hour's bars slide one place left when a minute passes instead of jumping, and the Live dot beats once for each new visit. A long "On the site right now" list scrolls inside its card with a soft fade at the bottom while more rows are below, the two cards keep one height, and "See all" turns into "Show fewer" to fold it back.
 - The Briefing's chart has its own row for the words above it and the Notes button, so they no longer sit on the chart's labels, and Replay and Why? have room between them
 - The header stays at the top of the window while you scroll (its bottom edge shows once the page has moved under it), and N (Now) and 4 (28 days) pick a period again, with the ? list naming them.
 - Switching between Live and the Briefing is smooth: the other tab's code is fetched while the page is idle, a tab you come back to shows what it showed at once and refreshes behind it (no "Loading" line, no page building up piece by piece), the first visit shows a loading shape with the page's own boxes and sizes (Live too, no layout shift), and Explore opens and closes with a fade and a glide that finish before it leaves (instant with reduced motion).

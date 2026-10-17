@@ -3116,6 +3116,7 @@ export default {
   'v2.live.still': 'Nog op de site',
   'v2.live.replay': 'Replay',
   'v2.live.replayTitle': 'Replay bekijken',
+  'v2.live.seeLess': 'Minder tonen',
   'v2.live.seeAll': (n: number) => `Alle ${int(n)} bekijken`,
   'v2.live.today': 'Vandaag',
   'v2.live.above': 'boven gebruikelijk',
