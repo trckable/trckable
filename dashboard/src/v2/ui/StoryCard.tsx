@@ -243,7 +243,7 @@ export function CardList({ list, c, first = true }: { list: Story[]; c: CardCtx;
   return (
     <div className="cards">
       {list.map((s, i) => (
-        <Card key={s.key} s={s} c={c} wide={wideOf(i, list.length, first)} />
+        <Card key={`${s.key}:${s.head}`} s={s} c={c} wide={wideOf(i, list.length, first)} />
       ))}
     </div>
   )
