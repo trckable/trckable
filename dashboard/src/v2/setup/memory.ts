@@ -1,7 +1,7 @@
 // What the ring remembers: "Hide this" per account (told to the server, this browser's copy as the fallback), and in
 // this browser when everything counted was first seen done, which starts the seven days of the check.
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { more } from '../../lib/apiMore'
+import { more, type SetupState } from '../../lib/apiMore'
 import { hideId, hiddenBy } from './model'
 
 const HIDE_KEY = 'trckable:ring:hide'
@@ -86,3 +86,13 @@ export function useDoneSince(site: string | null, allSet: boolean | null): numbe
   }, [site, allSet])
   return since
 }
+
+const STATE_KEY = 'trckable:ring:state:'
+
+/** The site's checklist as this browser last read it, so the ring shows at once (null when it was never read). */
+export function lastState(site: string): SetupState | null {
+  const v = get(STATE_KEY + site) as SetupState | null
+  return v && typeof v.done === 'number' && typeof v.counted === 'number' && Array.isArray(v.items) ? v : null
+}
+
+export const remember = (site: string, state: SetupState) => put(STATE_KEY + site, state)
