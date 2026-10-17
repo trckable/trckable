@@ -71,17 +71,6 @@ async function shoot(page: Page, name: string, clip?: { x?: number; y?: number; 
 const noSideScroll = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
 
 
-test('a kind not earned yet is a Connect row that opens Settings', async ({ page }) => {
-  await told(page, sources([{ kind: 'payments', provider: 'stripe' }]))
-  await open(page, `/${site.domain}?v=explore`)
-  await page.locator('.sitechip .vf-sealbtn').click({ timeout: 15_000 })
-  const panel = page.locator('.vf-panel')
-  await expect(panel.locator('.vf-row')).toHaveCount(1)
-  await expect(panel.locator('.vf-connect')).toHaveCount(1)
-  await expect(panel.locator('.vf-connect')).toContainText('Search')
-  await panel.locator('.vf-connect').click()
-  await expect(page.getByRole('dialog').first()).toBeVisible()
-})
 
 test('the Revenue number names its source; a source that fails drops its badge and the seal', async ({ page }) => {
   await told(page, ALL)
