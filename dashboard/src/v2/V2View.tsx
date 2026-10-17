@@ -13,7 +13,7 @@ import { dayWords, rangeWords } from './dayWords'
 import { switchTab } from '../features/live/switchView'
 import { useViewKeys } from './useViewKeys'
 import { usePeriodKeys } from './usePeriodKeys'
-import { BriefingSlot } from './briefing/BriefingSlot'
+import { Briefing, BriefingSlot } from './briefing/BriefingSlot'
 import { FreshSlot } from './briefing/FreshSlot'
 import { copy } from './copy'
 import { PeriodChip } from './ui/PeriodChip'
@@ -76,6 +76,8 @@ export function V2View(p: V2Props) {
   const [opened, setOpened] = useState(false)
   if (p.view.xp !== undefined && !opened) setOpened(true)
   useEffect(() => whenIdle(ExplorePanel.preload), [])
+  // The other tab's code, fetched on idle: switching to it then has nothing to wait for.
+  useEffect(() => whenIdle(Briefing.preload), [])
   useViewKeys(here)
   usePeriodKeys({ on: here === 'briefing' && !p.waiting, today, range: p.range, view: p.view, day })
   // An old address with filters lands where the filters can be seen.

@@ -5,12 +5,9 @@
 .dsk-root {
   display: contents;
 }
-.dsk,
-.dsk-inline {
+.dsk {
   --dsk-fill: var(--sunken);
   --dsk-shine: color-mix(in srgb, var(--border) 60%, var(--sunken));
-}
-.dsk {
   display: none;
   box-sizing: border-box;
   max-width: 1440px;
@@ -32,15 +29,13 @@ html[data-boot] .boot-ghost {
   display: none;
 }
 /* Every block: soft, with one slow shine across it (still under reduced motion). */
-.dsk i,
-.dsk-inline i {
+.dsk i {
   display: block;
   border-radius: 8px;
   background: linear-gradient(100deg, var(--dsk-fill) 30%, var(--dsk-shine) 50%, var(--dsk-fill) 70%) 0 0 / 300% 100%;
   animation: skel-shimmer 1.6s ease-in-out infinite;
 }
-.dsk i.dsk-card,
-.dsk-inline i.dsk-card {
+.dsk i.dsk-card {
   border-radius: 16px;
 }
 .dsk-grow {
@@ -377,8 +372,7 @@ html[style*='--dsk-setup'] .dsk-setup {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dsk i,
-  .dsk-inline i {
+  .dsk i {
     animation: none;
   }
 }

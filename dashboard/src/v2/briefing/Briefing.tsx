@@ -243,7 +243,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
     </div>
   )
   return (
-    <Hold ready={ready} id={[site.id, period, range.from, range.to].join('|')}>
+    <Hold ready={ready} id={[site.id, period, range.from, range.to].join('|')} first={<BriefingSkeleton site={site.id} label={copy.loading} />}>
       {body}
     </Hold>
   )
