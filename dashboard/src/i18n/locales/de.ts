@@ -1003,7 +1003,6 @@ export default {
   'sites.menu.dragged': (name: string, where: string) => `${name} nach ${where} verschoben`,
 
   // full
-  'full.failed': (why: string) => `Die Diagramme ließen sich nicht laden: ${why}`,
   'full.day': 'Tag',
   'full.sources.title': 'Quellen im Zeitverlauf',
   'full.sources.question': 'Woher die Besuche kamen, Intervall für Intervall',
@@ -3261,4 +3260,11 @@ export default {
   'exclude.ips.added': 'Deine Adresse wird jetzt ausgelassen',
   'exclude.ips.have': 'Deine Adresse wird schon ausgelassen',
   'exclude.ips.fail': 'Deine Adresse konnte nicht gelesen werden',
+  'v2explore.retry': 'Erneut versuchen',
+  'v2explore.salesUpgrade': 'Upgrades',
+  'v2explore.emptyEarnersHint': 'Ein Verkauf erscheint hier, sobald sich zuordnen lässt, woher der Besucher kam.',
+  'cards.deep.people.failed': 'Die letzten Personen ließen sich nicht lesen.',
+  'full.failedShort': 'Dieses Diagramm ließ sich nicht laden.',
+  'extras.highlights.failed': 'Die Änderungen ließen sich nicht lesen.',
+  'allnext.lowerThanUsual': (names: string, more: number) => `${names}${more > 0 ? ` und ${more} weitere` : ''} ${more > 0 || names.includes(' und ') ? 'sind' : 'ist'} niedriger als sonst.`,
 } satisfies Messages

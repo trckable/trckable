@@ -1000,7 +1000,6 @@ export default {
   'sites.menu.dragged': (name: string, where: string) => `${name} spostato in ${where}`,
 
   // full
-  'full.failed': (why: string) => `Impossibile caricare i grafici: ${why}`,
   'full.day': 'Giorno',
   'full.sources.title': 'Fonti nel tempo',
   'full.sources.question': 'Da dove sono arrivate le visite, intervallo per intervallo',
@@ -3271,4 +3270,11 @@ export default {
   'exclude.ips.added': 'Il tuo indirizzo ora è escluso',
   'exclude.ips.have': 'Il tuo indirizzo è già escluso',
   'exclude.ips.fail': 'Impossibile leggere il tuo indirizzo',
+  'v2explore.retry': 'Riprova',
+  'v2explore.salesUpgrade': 'Upgrade',
+  'v2explore.emptyEarnersHint': 'Una vendita compare qui quando si può collegare alla provenienza del visitatore.',
+  'cards.deep.people.failed': 'Impossibile leggere le ultime persone.',
+  'full.failedShort': 'Impossibile caricare questo grafico.',
+  'extras.highlights.failed': 'Impossibile leggere cosa è cambiato.',
+  'allnext.lowerThanUsual': (names: string, more: number) => `${names}${more > 0 ? ` e ${more} altri` : ''} ${more > 0 || names.includes(' e ') ? 'sono' : 'è'} più basso del solito.`,
 } satisfies Messages

@@ -993,7 +993,6 @@ export default {
   'sites.menu.dragged': (name: string, where: string) => `${name} verplaatst naar ${where}`,
 
   // full
-  'full.failed': (why: string) => `De grafieken konden niet worden geladen: ${why}`,
   'full.day': 'Dag',
   'full.sources.title': 'Bronnen in de tijd',
   'full.sources.question': 'Waar bezoeken vandaan kwamen, interval voor interval',
@@ -3271,4 +3270,11 @@ export default {
   'exclude.ips.added': 'Je adres wordt nu uitgesloten',
   'exclude.ips.have': 'Je adres is al uitgesloten',
   'exclude.ips.fail': 'Je adres kon niet worden gelezen',
+  'v2explore.retry': 'Opnieuw proberen',
+  'v2explore.salesUpgrade': 'Upgrades',
+  'v2explore.emptyEarnersHint': 'Een verkoop verschijnt hier zodra die aan de herkomst van de bezoeker te koppelen is.',
+  'cards.deep.people.failed': 'De nieuwste mensen konden niet worden gelezen.',
+  'full.failedShort': 'Deze grafiek kon niet worden geladen.',
+  'extras.highlights.failed': 'Wat er veranderd is kon niet worden gelezen.',
+  'allnext.lowerThanUsual': (names: string, more: number) => `${names}${more > 0 ? ` en ${more} meer` : ''} ${more > 0 || names.includes(' en ') ? 'zijn' : 'is'} lager dan gewoonlijk.`,
 } satisfies Messages
