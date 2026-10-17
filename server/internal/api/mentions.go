@@ -3,8 +3,10 @@ package api
 import (
 	"errors"
 	"net/http"
+	"sort"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/mentions"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -41,6 +43,10 @@ type mentionWords struct {
 	Default []string `json:"default"`
 	Added   []string `json:"added"`
 	Max     int      `json:"max"`
+	// Suggested is the name in the address ("albas" for albas.al): offered,
+	// never searched until the owner adds it.
+	Suggested []string            `json:"suggested"`
+	Rules     sqlite.MentionRules `json:"rules"`
 }
 
 func (a *API) mentionWords(r *http.Request, site string) (mentionWords, error) {
@@ -52,7 +58,12 @@ func (a *API) mentionWords(r *http.Request, site string) (mentionWords, error) {
 	if err != nil {
 		return mentionWords{}, err
 	}
-	return mentionWords{Default: sqlite.JoinWords(sqlite.SiteRow{Domain: row.Domain, Name: row.Name}, nil), Added: added, Max: sqlite.MaxKeywords}, nil
+	rules, err := a.Ctl.MentionRules(r.Context(), site)
+	if err != nil {
+		return mentionWords{}, err
+	}
+	return mentionWords{Default: sqlite.JoinWords(sqlite.SiteRow{Domain: row.Domain, Name: row.Name}, nil), Added: added, Max: sqlite.MaxKeywords,
+		Suggested: suggestedName(row.Domain, added), Rules: rules}, nil
 }
 
 // ifMentions answers 404 while Mentions is switched off.
@@ -87,6 +98,11 @@ func (a *API) mentions(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, "could not read the mentions")
 		return
 	}
+	// The pages that sent visitors come first: the visits confirm them.
+	sort.SliceStable(list, func(i, j int) bool {
+		a, b := list[i].Via == mentions.ViaPage, list[j].Via == mentions.ViaPage
+		return a && !b || a && b && list[i].Visitors > list[j].Visitors
+	})
 	out := make([]mentionOut, 0, len(list))
 	var driving *mentionOut
 	for _, m := range list {

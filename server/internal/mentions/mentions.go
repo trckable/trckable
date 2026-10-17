@@ -23,6 +23,7 @@ const (
 	HN   = "hn"
 	PH   = "ph"
 	News = "news"
+	Ref  = "ref" // a page that sent visitors: confirmed by the visits themselves
 )
 
 // Hosts whose visits count as brought by a mention of that source.
@@ -50,6 +51,7 @@ type Mention struct {
 	Comments int    // Hacker News comments on a story
 	Front    bool   // on the Hacker News front page
 	Snippet  string // the sentence that names a keyword, at most SnippetMax characters
+	Link     string // what it points at: a Hacker News story's address, a launch's website
 }
 
 // Doer is the part of an HTTP client the sources need, so tests can answer
@@ -92,7 +94,7 @@ func get(ctx context.Context, d Doer, method, addr string, header map[string]str
 // Has says whether text names keyword as a word of its own, in any case:
 // "acme" is in "Show HN: Acme, a tool" and not in "acmeism".
 func Has(text, keyword string) bool {
-	text, keyword = strings.ToLower(text), strings.ToLower(strings.TrimSpace(keyword))
+	text, keyword = strings.ToLower(Defang(text)), strings.ToLower(strings.TrimSpace(keyword))
 	if keyword == "" {
 		return false
 	}
