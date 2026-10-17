@@ -36,6 +36,7 @@ export const copy = defineCopy('v2explore', {
   notConnected: 'Not connected',
   loading: 'Loading',
   failed: 'We could not load this',
+  retry: 'Try again',
   dims: { referrer: 'Source', page: 'Page', country: 'Country', device: 'Device' },
   groups: { traffic: 'Traffic', audience: 'Audience', results: 'Results', site: 'Site' },
   names: {
@@ -83,6 +84,7 @@ export const copy = defineCopy('v2explore', {
   noteUtm: 'Only tagged links appear here.',
   noteLinks: 'Clicks on links that leave your site.',
   salesNew: 'New customers',
+  salesUpgrade: 'Upgrades',
   salesRenewal: 'Renewals',
   salesRefund: 'Refunds',
   aboveUsual: 'above usual',
@@ -112,6 +114,7 @@ export const copy = defineCopy('v2explore', {
   emptySearchHint: 'Search data shows once this period has more visits from Google.',
   emptyProducts: 'No products to sell here',
   emptyProductsHint: 'Sales appear once this site has a product.',
+  emptyEarnersHint: 'A sale shows here once it can be tied to where the visitor came from.',
   emptyKind: 'No sales of this kind',
   emptyKindHint: 'Nothing in this period.',
   showAllSales: 'Show all sales',

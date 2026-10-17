@@ -145,9 +145,13 @@ export function headline(all: Item[], rows: SiteRow[], now = Date.now()): { alar
   }).filter(Boolean)
   const more = Math.max(0, rest.length - 2) + Math.max(0, downs.length - 2)
   if (more > 0) parts.push(next.moreLook(more))
-  const fine = bad.length === 0 ? next.allFine(list.length) : ''
-  const tail = [parts.length ? parts.join(' ') : fine, waiting > 0 ? next.someWaiting(waiting) : ''].filter(Boolean).join(' ')
-  return { alarm, lead, tail, fine: bad.length === 0 }
+  // A site under its usual pace is not "fine": when nothing is broken the sentence names the ones that are lower.
+  const lower = list.filter((i) => i.kind === 'lower')
+  const lowerNames = lower.slice(0, 2).map((i) => i.row.name || i.row.domain)
+  const dips = lower.length > 0 && bad.length === 0 ? next.lowerThanUsual(lowerNames.join(' and '), lower.length - lowerNames.length) : ''
+  const fine = bad.length === 0 && !dips ? next.allFine(list.length) : ''
+  const tail = [parts.length ? parts.join(' ') : dips || fine, waiting > 0 ? next.someWaiting(waiting) : ''].filter(Boolean).join(' ')
+  return { alarm, lead, tail, fine: bad.length === 0 && !dips }
 }
 
 /** Revenue per currency, summed over the rows that have any; empty when no site has payments. */

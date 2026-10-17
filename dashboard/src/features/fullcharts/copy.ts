@@ -6,7 +6,7 @@ import { defineCopy } from '../../i18n'
 const plural = (n: number, one: string, many: string) => `${fmtInt(n)} ${n === 1 ? one : many}`
 
 export const copy = defineCopy('full', {
-  failed: (why: string) => `Couldn’t load the charts: ${why}`,
+  failedShort: 'Couldn’t load this chart.',
   day: 'Day',
 
   sources: {

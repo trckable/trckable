@@ -26,6 +26,17 @@ describe('All sites with a site the probe finds down', () => {
     expect(h.tail).not.toMatch(/look fine|looks fine/)
   })
 
+  it('names the sites under their usual pace instead of saying all look fine', () => {
+    const slow = (id: string, domain: string): SiteRow => ({ ...row(id, domain), series: [20, 20, 20, 20, 20, 20, 20, 20, 2] })
+    const rs = [slow('a', 'one.example'), slow('b', 'two.example'), row('c', 'three.example')]
+    const ss = rs.map((r) => site(r.id, r.domain, { timezone: 'UTC' }))
+    const noon = Date.UTC(2027, 0, 15, 18, 0, 0)
+    const list2 = items(rs, ss.map((s) => ({ ...s, last_event_at: noon / 1000 - 30 })), new Map(), noon)
+    const h = headline(list2, rs, noon)
+    expect(h.tail).toBe('one.example and two.example are lower than usual.')
+    expect(h.fine).toBe(false)
+  })
+
   it('still says all fine when nothing is down', () => {
     const ok = items(rows, [site('a', 'fine.example'), site('b', 'portalishkollor.al')], new Map(), NOW)
     const h = headline(ok, rows, NOW)
