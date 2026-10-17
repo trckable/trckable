@@ -144,7 +144,7 @@ describe('mentions, robots and links', () => {
     const day = Date.UTC(2026, 9, 16, 14, 5) / 1000
     const out = mapMentions([m(1, day - 86400 * 3), m(2, day), m(3, day, { kind: 'comment' })], 'UTC', '2026-10-16')
     expect(out.map((x) => [x.title, x.src, x.when])).toEqual([
-      ['t2', 'Hacker News', '14:05'],
+      ['t2', 'Hacker News', 'Today 14:05'],
       ['t1', 'Hacker News', 'Oct 13 14:05'],
     ])
   })

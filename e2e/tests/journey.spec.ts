@@ -78,7 +78,7 @@ test('tells one visitor’s story', async ({ page }) => {
   const dialog = await openJourney(page)
   await expect(dialog.getByText('Returning', { exact: true })).toBeVisible()
   await expect(dialog.getByRole('status').filter({ hasText: 'On the site now' })).toBeVisible()
-  await expect(dialog.locator('.jr-fact.money .jr-money')).toHaveText('$49.00')
+  await expect(dialog.locator('.jr-fact.money .jr-money')).toHaveText('$49')
   await expect(dialog.locator('.jr-fact.money .jr-chip')).toContainText('Search · google.com')
 
   const visits = dialog.getByRole('list', { name: 'Visits, newest first' }).locator(':scope > li')
@@ -88,7 +88,7 @@ test('tells one visitor’s story', async ({ page }) => {
   await expect(newest.locator('.jr-node.page')).toHaveCount(3)
   await expect(newest.getByLabel('viewed 3 times in a row')).toBeVisible()
   await expect(newest.locator('.jr-node.goal')).toContainText('Signup')
-  await expect(newest.locator('.jr-node.payment')).toContainText('$49.00')
+  await expect(newest.locator('.jr-node.payment')).toContainText('$49')
   // A long path is cut in the middle, whole in its tooltip.
   const long = newest.locator('.jr-node.here .jr-path')
   await expect(long).toHaveAttribute('title', new RegExp(LONG.replace(/[/.]/g, '\\$&')))

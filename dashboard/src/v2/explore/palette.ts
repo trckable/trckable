@@ -26,7 +26,7 @@ export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report
   if (o.site && !isShared()) out.push({ title: pc.newFunnel, kind: pc.kinds.create, group: pc.groups.create, run: () => openExplore('funnels') })
   if (o.site && o.here === 'briefing' && !isShared()) out.push({ title: pc.newNote, kind: pc.kinds.create, group: pc.groups.create, run: () => window.dispatchEvent(new Event('trckable:note')) })
   // The tables and the two views belong to a site; a page without one offers the sites and the periods only.
-  if (o.site) for (const t of ALL_TABS.filter(offered)) out.push({ title: `${copy.title} · ${t in copy.sub ? copy.sub[t] : copy.names[sectionOf(t)][0]}`, kind: pc.kinds.table, group: copy.title, run: () => openExplore(t) })
+  if (o.site) for (const t of ALL_TABS.filter(offered)) out.push({ title: t in copy.sub ? copy.sub[t] : copy.names[sectionOf(t)][0], also: copy.title, kind: '', group: copy.title, run: () => openExplore(t) })
   // The chart's markers (the sources' pills) are shown or put away from here; the guide to leaving after one page opens from here too.
   if (o.site && !isShared()) out.push({ title: kc.group, kind: pc.kinds.view, group: pc.groups.goTo, run: () => setMarkers(!markersOn()) })
   if (o.site && !isShared()) out.push({ title: bc.label, kind: pc.kinds.view, group: pc.groups.goTo, run: () => window.dispatchEvent(new Event('trckable:bounce')) })

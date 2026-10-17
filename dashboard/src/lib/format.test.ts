@@ -50,6 +50,7 @@ describe('fmtMoney', () => {
     expect(fmtMoney(127, 'EUR', 0, { cents: true })).toBe('€127')
     expect(fmtMoney(127, 'EUR', 2, { cents: true })).toBe('€1.27')
     expect(fmtMoney(574_500, 'EUR', 2)).toBe('€5,745')
-    expect(fmtMoney(6800, 'EUR', 2)).toBe('€68.00')
+    expect(fmtMoney(6800, 'EUR', 2)).toBe('€68')
+    expect(fmtMoney(6850, 'EUR', 2)).toBe('€68.50')
   })
 })

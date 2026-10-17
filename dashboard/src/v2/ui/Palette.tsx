@@ -6,8 +6,10 @@ import { MkPortal } from './Portal'
 export interface PaletteItem {
   /** What is typed to find it, and what is shown. */
   title: string
-  /** The small word on the right ("table", "site", "peek"). */
+  /** The small word on the right ("site", "peek"); none for a row whose group already says it. */
   kind: string
+  /** More words that find it, beside its title ("Explore" for a table, whose group heading says it). */
+  also?: string
   group: string
   run: () => void
 }
@@ -19,7 +21,7 @@ export function Palette({ items, placeholder, none, onClose, initial = '' }: { i
   useEffect(() => input.current?.focus(), [])
   const list = useMemo(() => {
     const t = q.toLowerCase().trim()
-    return items.filter((i) => i.title.toLowerCase().includes(t)).slice(0, 16)
+    return items.filter((i) => `${i.title} ${i.also ?? ''}`.toLowerCase().includes(t)).slice(0, 16)
   }, [items, q])
   const sel = Math.max(0, Math.min(at, list.length - 1))
   const run = (i: PaletteItem | undefined) => {
@@ -68,7 +70,7 @@ export function Palette({ items, placeholder, none, onClose, initial = '' }: { i
                   {head}
                   <button type="button" className={`pi${k === sel ? ' on' : ''}`} onClick={() => run(i)} onPointerMove={() => k !== sel && setAt(k)}>
                     {i.title}
-                    <span className="s">{i.kind}</span>
+                    {i.kind && <span className="s">{i.kind}</span>}
                   </button>
                 </Fragment>
               )

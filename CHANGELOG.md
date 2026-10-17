@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - Which notices the bell has read are kept at /api/v1/me/bell-read (it was never released under the old name).
+- The Journey dialog writes whole-dollar amounts like the rest of the dashboard ($49, not $49.00).
 - The Briefing's chart has its own row for the words above it and the Notes button, so they no longer sit on the chart's labels, and Replay and Why? have room between them
 - The menus and lists share one row: the palette, the site list, the period, Explore's menus and the bell and the account menu show one active row at a time (the mouse moves it, the arrow keys move it, no second fill), neighbouring rows have a small gap so their fills no longer merge, icons sit on the title line, and the spacing between title, hint, group label and panel edge follows one 4px rhythm. The chosen row is told by its colour and check, not a fill.
 - The header stays at the top of the window while you scroll (its bottom edge shows once the page has moved under it), and N (Now) and 4 (28 days) pick a period again, with the ? list naming them.
