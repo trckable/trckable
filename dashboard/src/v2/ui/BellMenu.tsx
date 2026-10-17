@@ -132,7 +132,7 @@ export function BellMenu(p: BellProps) {
   useTopLayerWhen(open && !p.sheet, menu)
   return (
     <div className="bellw" ref={attach} style={{ position: 'relative' }}>
-      <button type="button" className={`ib bell${p.shaking ? " shake" : ""}`} id="bellBtn" data-bell="1" data-key="notes" title={p.title} aria-label={p.title} aria-haspopup="menu" aria-expanded={open} onClick={toggle}>
+      <button type="button" className={`ib bell${p.shaking ? " shake" : ""}`} id="bellBtn" data-bell="1" data-key="notes" title={p.title} aria-label={p.title} aria-haspopup={p.sheet ? "dialog" : "menu"} aria-expanded={open} onClick={toggle}>
         <i className="bdot" id="bellDot" style={p.unread ? undefined : { display: 'none' }}>
           {p.badge}
         </i>
@@ -149,7 +149,7 @@ export function BellMenu(p: BellProps) {
       {p.sheet && open && (
         <MkPortal>
           <div className="xscrim on" onClick={close} aria-hidden="true" />
-          <aside className="cd on" aria-label={p.title} tabIndex={-1}>
+          <aside className="cd on" role="dialog" aria-modal="true" aria-label={p.title} tabIndex={-1}>
             <div className="cdh">
               <b>{p.title}</b>
               <button type="button" className="ib x" title="Close" onClick={close}>
