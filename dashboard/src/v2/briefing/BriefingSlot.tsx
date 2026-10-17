@@ -1,11 +1,13 @@
 // The Briefing takes the place of Data's numbers while it is the tab on. Only this
 // small piece is in the first load; the Briefing itself is one lazy chunk.
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
+import { lazyLoad } from '../../lib/lazyLoad'
 import { BriefingSkeleton } from '../ui/BriefingSkeleton'
 import { copy } from '../copy'
 import type { BriefingProps } from './Briefing'
 
-const Briefing = lazy(() => import('./Briefing'))
+// A chunk of its own, fetched when the page is idle (V2View), so the first switch to it has the code already.
+export const Briefing = lazyLoad(() => import('./Briefing'))
 
 export function BriefingSlot(p: BriefingProps) {
   return (

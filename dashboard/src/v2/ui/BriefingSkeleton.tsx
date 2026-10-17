@@ -58,13 +58,10 @@ export function BriefingSkeleton({ site, label }: { site: string; label: string 
   return (
     <div className="mk mk-body">
       <div className="brief" aria-busy="true" role="status" aria-label={label}>
-        <section className="card hero">
+        <section className="mk-card hero">
           <div className="htop">
             <div className="hl-col">
-              <i className="skl sk-t" />
-              <i className="skl sk-h1" />
-              <i className="skl sk-h2" />
-              <i className="skl sk-p" />
+              <i className="skl sk-hl" />
             </div>
             <div className="pulsewrap">
               <i className="skl sk-ring" />
@@ -76,15 +73,19 @@ export function BriefingSkeleton({ site, label }: { site: string; label: string 
             </div>
           </div>
           <i className="skl sk-chart" />
-          <div className="facts">
-            {[0, 1, 2, 3].map((k) => (
-              <div className="fact" key={k}>
-                <i className="skl" style={{ width: 70, height: 26 }} />
-                <i className="skl" style={{ width: 110, display: 'block', marginTop: 8 }} />
-              </div>
-            ))}
-          </div>
         </section>
+        <div className="kcs">
+          {[0, 1, 2, 3].map((k) => (
+            <div className="kc sk-kc" key={k}>
+              <div className="kt">
+                <i className="skl" style={{ width: 28, height: 28, margin: 0 }} />
+                <i className="skl" style={{ width: 80, height: 14, margin: 0 }} />
+              </div>
+              <i className="skl" style={{ width: 96, height: 30, margin: '12px 0 8px' }} />
+              <i className="skl sk-sp" />
+            </div>
+          ))}
+        </div>
         <div className="cards">
           {topics.map((t, k) => (
             <Card key={t} topic={t} wide={k === 0 || (topics.length % 2 === 0 && k === topics.length - 1)} />
