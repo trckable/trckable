@@ -7,7 +7,7 @@ import { session } from './session'
 const SHOTS = process.env.HN_SHOTS
 const AUTH = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
 const WIDTHS = [390, 463, 600, 700, 900, 1440]
-const CONTROLS = ['#siteBtn', '.hd .exb', '.hd .ib.bell', '.hd .account-btn', '.hd .ptop-chip']
+const CONTROLS = ['#siteBtn', '.hd .exb', '.hd .ib.bell', '.hd .account-btn', '.hd .ptop-chip', '.hd .ringb']
 
 let cookie = ''
 let longSite = ''
@@ -43,14 +43,16 @@ for (const scheme of ['dark', 'light'] as const)
         if (SHOTS) await page.screenshot({ path: `${SHOTS}/${process.env.HN_TAG ?? 'after'}-${w}-${scheme}${long ? '-long' : ''}.png`, clip: { x: 0, y: 0, width: w, height: 130 } })
         const row = await boxes(page)
         expect(row.map((c) => c.sel), 'the controls on the row').toEqual(expect.arrayContaining(['#siteBtn', '.hd .ib.bell', '.hd .account-btn']))
-        const hs = new Set(row.map((c) => Math.round(c.h * 10) / 10))
+        // The setup ring is a bare ring, not a box: it counts for the gaps and the centre line, not for the height.
+        const hs = new Set(row.filter((c) => c.sel !== '.hd .ringb').map((c) => Math.round(c.h * 10) / 10))
         expect([...hs], `one height ${JSON.stringify(row)}`).toHaveLength(1)
         if (w <= 700) expect([...hs][0]).toBe(40)
         const mids = row.map((c) => c.y + c.h / 2)
         expect(Math.max(...mids) - Math.min(...mids), `one centre line ${JSON.stringify(row)}`).toBeLessThanOrEqual(0.5)
         // The right group (from the bell back to whatever sits before it) has one gap; with no spacer (600 and under) the site joins it.
         const gaps = row.slice(1).map((c, i) => Math.round((c.x - row[i].x - row[i].w) * 10) / 10)
-        const group = w <= 600 ? gaps : gaps.slice(1)
+        const right = ['.hd .exb', '.hd .ptop-chip', '.hd .ib.bell', '.hd .account-btn']
+        const group = w <= 600 ? gaps : gaps.filter((_, i) => right.includes(row[i].sel) && right.includes(row[i + 1].sel))
         expect(new Set(group).size, `gaps ${JSON.stringify(gaps)} ${JSON.stringify(row)}`).toBe(1)
         expect(group.every((g) => g === 12), `gaps ${JSON.stringify(gaps)}`).toBe(true)
         const last = row[row.length - 1]
