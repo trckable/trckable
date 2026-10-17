@@ -79,6 +79,8 @@ export default defineConfig({
         TRCKABLE_SITES: 'example.com',
         TRCKABLE_API_TOKEN: TOKEN,
         TRCKABLE_GEO: 'off',
+        TRCKABLE_MENTIONS: 'on', // the specs fake the answers; the search itself stays off
+        TRCKABLE_MENTIONS_EVERY: '0',
         TRCKABLE_LOG_LEVEL: 'warn',
       },
     },
