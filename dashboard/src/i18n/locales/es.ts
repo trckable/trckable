@@ -1006,7 +1006,6 @@ export default {
   'sites.menu.dragged': (name: string, where: string) => `${name} movido a ${where}`,
 
   // full
-  'full.failed': (why: string) => `No se pudieron cargar los gráficos: ${why}`,
   'full.day': 'Día',
   'full.sources.title': 'Fuentes a lo largo del tiempo',
   'full.sources.question': 'De dónde vinieron las visitas, intervalo a intervalo',
@@ -3179,4 +3178,11 @@ export default {
   'briefing.cards.refundTot': 'Reembolsado',
   'briefing.cards.refunds90': (n: number, one: boolean) => `Son ${n} reembolso${n === 1 ? '' : 's'} en los últimos 90 días. ${one ? 'Un mensaje corto a esa persona' : 'Un mensaje corto a cada una'} suele mostrar el motivo.`,
   'briefing.paidStep': 'Pagado',
+  'v2explore.retry': 'Reintentar',
+  'v2explore.salesUpgrade': 'Mejoras de plan',
+  'v2explore.emptyEarnersHint': 'Una venta aparece aquí cuando se puede ligar a la procedencia del visitante.',
+  'cards.deep.people.failed': 'No se pudo leer a las últimas personas.',
+  'full.failedShort': 'No se pudo cargar este gráfico.',
+  'extras.highlights.failed': 'No se pudo leer qué cambió.',
+  'allnext.lowerThanUsual': (names: string, more: number) => `${names}${more > 0 ? ` y ${more} más` : ''} ${more > 0 || names.includes(' y ') ? 'están' : 'está'} por debajo de lo habitual.`,
 } satisfies Messages

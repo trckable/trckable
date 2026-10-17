@@ -994,7 +994,6 @@ export default {
   'sites.menu.dragged': (name: string, where: string) => `${name} déplacé vers ${where}`,
 
   // full
-  'full.failed': (why: string) => `Impossible de charger les graphiques : ${why}`,
   'full.day': 'Jour',
   'full.sources.title': 'Sources au fil du temps',
   'full.sources.question': 'D’où venaient les visites, intervalle par intervalle',
@@ -3174,4 +3173,11 @@ export default {
   'briefing.cards.refundTot': 'Remboursé',
   'briefing.cards.refunds90': (n: number, one: boolean) => `Cela fait ${n} remboursement${n === 1 ? '' : 's'} sur les 90 derniers jours. ${one ? 'Un court message à cette personne' : 'Un court message à chacune'} en montre souvent la raison.`,
   'briefing.paidStep': 'Payé',
+  'v2explore.retry': 'Réessayer',
+  'v2explore.salesUpgrade': 'Mises à niveau',
+  'v2explore.emptyEarnersHint': 'Une vente apparaît ici dès qu’on peut la relier à la provenance du visiteur.',
+  'cards.deep.people.failed': 'Impossible de lire les derniers visiteurs.',
+  'full.failedShort': 'Impossible de charger ce graphique.',
+  'extras.highlights.failed': 'Impossible de lire ce qui a changé.',
+  'allnext.lowerThanUsual': (names: string, more: number) => `${names}${more > 0 ? ` et ${more} autres` : ''} ${more > 0 || names.includes(' et ') ? 'sont' : 'est'} plus bas que d’habitude.`,
 } satisfies Messages
