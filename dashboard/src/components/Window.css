@@ -1,6 +1,27 @@
 /* Window's styles: they load with its chunk. One shell for Profile and a
-   site's settings: same size, same head, same menu, same phone layout. */
+   site's settings, drawn with the dashboard's own tokens (--mk-*): the same
+   cards, type steps and controls as the Briefing and Explore. */
 .modal.window {
+  /* What the sections inside draw with, read from the walkthrough's tokens. */
+  --bg: var(--mk-bg);
+  --surface: var(--mk-card);
+  --surface-2: var(--mk-card2);
+  --sunken: var(--mk-card2);
+  --row: var(--mk-hover);
+  --grid: var(--mk-line);
+  --border: var(--mk-line);
+  --border-2: var(--mk-bord2);
+  --text: var(--mk-text);
+  --text-2: var(--mk-muted);
+  --text-3: var(--mk-muted);
+  --text-4: var(--mk-faint);
+  --accent: var(--mk-lime);
+  --accent-strong: var(--mk-lime);
+  --accent-ink: var(--mk-on-lime);
+  --accent-soft: var(--mk-limeD);
+  --down: var(--mk-red);
+  --up: var(--mk-lime);
+  --warn: var(--mk-amber);
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
@@ -11,6 +32,10 @@
   height: min(720px, calc(100dvh - 64px));
   max-height: none;
   overflow: hidden; /* only the body scrolls: never two scrollbars */
+  background: var(--mk-bg);
+  color: var(--mk-text);
+  border: 1px solid var(--mk-line);
+  border-radius: 22px;
 }
 /* One section (a viewer's Profile): no menu, the body takes the whole width. */
 .modal.window.single {
@@ -22,13 +47,17 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 76px;
+  height: 68px;
   padding: 0 16px 0 20px;
-  border-bottom: 1px solid var(--grid);
-  background: var(--surface);
+  border-bottom: 1px solid var(--mk-line);
+  background: var(--mk-card);
 }
-.window-head .close {
+.window-head .close,
+.window-head .window-back {
   flex: none;
+}
+.window-back {
+  display: none;
 }
 .window-who {
   display: flex;
@@ -44,16 +73,16 @@
   min-width: 0;
 }
 .window-name b {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 650;
-  color: var(--text);
+  color: var(--mk-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .window-sub {
   font-size: 13px;
-  color: var(--text-3);
+  color: var(--mk-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -63,8 +92,7 @@
   position: relative;
   min-height: 0;
   display: flex;
-  border-right: 1px solid var(--grid);
-  background: color-mix(in srgb, var(--sunken) 55%, transparent);
+  border-right: 1px solid var(--mk-line);
 }
 .window-nav {
   flex: 1;
@@ -82,9 +110,10 @@
 .window-group {
   margin-top: 10px;
   padding: 6px 12px 4px;
-  color: var(--text-3);
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
+  color: var(--mk-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 .window-tab:first-child .window-group {
@@ -94,31 +123,40 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 40px;
-  padding: 0 8px;
+  min-height: 38px;
+  padding: 0 10px;
   border: 0;
   border-radius: 10px;
   background: transparent;
-  color: var(--text-2);
+  color: var(--mk-muted);
   font: inherit;
-  font-size: 13.5px;
+  font-size: 14px;
   text-align: left;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
-.window-nav button:hover,
-.window-nav button[aria-selected='true'] {
-  background: var(--surface-2);
-  color: var(--text);
+.window-nav button:hover {
+  background: var(--mk-hover);
+  color: var(--mk-text);
 }
-.window-nav button[aria-selected='true'] .icon-tile {
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  background: var(--accent-soft);
-  color: var(--accent);
+.window-nav button[aria-selected='true'] {
+  background: var(--mk-sel);
+  color: var(--mk-text);
+  font-weight: 600;
+}
+/* The section's icon sits bare, as in the palette: no tile. */
+.window-nav .icon-tile {
+  width: 20px;
+  height: 20px;
+  background: none;
+  color: inherit;
 }
 .window-nav .tag {
   margin-left: auto;
-  font-size: 10.5px;
+  font-size: 11px;
+}
+.window-go {
+  display: none;
 }
 
 .window-body {
@@ -143,14 +181,69 @@
    would otherwise shrink under the ones after it. */
 .window-body > * {
   flex-shrink: 0;
+  min-width: 0; /* a long line inside never makes its section wider than the window */
 }
 .window-short {
   display: none;
 }
 
-/* The arrows exist on a phone only, where the sections are a scrolling row. */
-.window-scroll {
+/* What every section is made of, in the dashboard's own cards and controls:
+   flat and solid, over the page's glass. */
+:root:not([data-glass='off']) .modal.window {
+  background: var(--mk-bg);
+  border-color: var(--mk-line);
+  box-shadow: var(--shadow);
+}
+:root:not([data-glass='off']) .modal.window .window-head {
+  background: var(--mk-card);
+}
+:root:not([data-glass='off']) .modal.window .card {
+  --border: var(--mk-line);
+  background: var(--mk-card);
+  border: 1px solid var(--mk-line);
+  border-radius: 18px;
+  padding: 18px 20px;
+}
+:root:not([data-glass='off']) .modal.window .card::before {
   display: none;
+}
+.modal.window .card-head h2,
+.modal.window .pay-head h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mk-text);
+}
+.modal.window :is(.btn, .input, select, input[type='text'], input[type='url'], input[type='email'], input[type='password'], input[type='number']) {
+  border-radius: var(--mk-rc, 10px);
+  border-color: var(--mk-line);
+  background: var(--mk-field);
+}
+.modal.window .btn.primary {
+  background: var(--mk-lime);
+  color: var(--mk-on-lime);
+  border-color: transparent;
+}
+.modal.window .btn.ghost {
+  background: transparent;
+  border-color: transparent;
+}
+.modal.window .btn:hover {
+  background-color: var(--mk-hover);
+}
+.modal.window .btn.primary:hover {
+  background-color: var(--mk-lime);
+}
+.modal.window .icon-tile {
+  border-radius: 10px;
+}
+/* The status heads of Payments, Alerts, Health and Search Console are plain
+   cards here, not tinted panels. */
+.modal.window :is(.pay-head, .al-head, .health-hero, .gsc-status, .card.eu.on) {
+  background: var(--mk-card);
+  border-radius: 18px;
+}
+.modal.window :is(.pay-link, .pay .conn) {
+  border-radius: 14px;
 }
 
 @media (max-width: 760px) {
@@ -170,14 +263,36 @@
     grid-template-rows: auto minmax(0, 1fr);
   }
   .window-head {
-    height: 68px;
+    height: 64px;
     padding: 0 12px 0 14px;
   }
   .window-menu {
     border-right: 0;
-    border-bottom: 1px solid var(--grid);
+    border-bottom: 1px solid var(--mk-line);
   }
-  .window-nav {
+  .window-body,
+  .modal.window.single .window-body {
+    grid-column: 1;
+    padding: 14px 12px 24px;
+  }
+}
+
+/* A phone: the sheet is one size, 44px under the top and 8px from the other
+   edges, the same for every section. Up to five sections share a row of icon
+   tabs; more are a list of them, and the one picked opens with a way back. */
+@media (max-width: 640px) {
+  .modal-back:has(.window) {
+    padding: max(44px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    place-items: stretch;
+  }
+  .modal.window {
+    width: 100%;
+    height: 100%;
+    border-radius: 22px;
+    border: 1px solid var(--mk-line);
+    padding: 0;
+  }
+  .modal.window:not(.many) .window-nav {
     flex-direction: row;
     gap: 6px;
     padding: 10px 12px;
@@ -185,23 +300,6 @@
     overflow-y: hidden;
     scrollbar-width: none;
   }
-  .window-nav::-webkit-scrollbar {
-    display: none;
-  }
-  .window-tab {
-    display: contents;
-  }
-  .window-group {
-    display: none;
-  }
-  .window-nav button {
-    flex: none;
-    white-space: nowrap;
-    min-height: 38px;
-    padding: 0 12px 0 6px;
-  }
-  /* Up to five sections: equal columns, an icon over a short name, no
-     sideways scroll. The open one is marked in the accent. */
   .modal.window.equal .window-nav {
     display: grid;
     grid-template-columns: repeat(var(--tabs), minmax(0, 1fr));
@@ -209,17 +307,20 @@
     padding: 6px;
     overflow: hidden;
   }
+  .modal.window.equal .window-tab {
+    display: contents;
+  }
   .modal.window.equal .window-nav button {
     flex-direction: column;
     justify-content: center;
     gap: 3px;
-    min-height: 52px;
+    min-height: 56px;
     padding: 0 2px;
-    font-size: 11px;
+    font-size: 12px;
     text-align: center;
   }
   .modal.window.equal .window-nav button[aria-selected='true'] {
-    color: var(--accent-strong);
+    color: var(--mk-lime);
   }
   .modal.window.equal .window-long,
   .modal.window.equal .window-nav .tag {
@@ -231,111 +332,81 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .window-body,
-  .modal.window.single .window-body {
-    grid-column: 1;
-    padding: 14px 12px 24px;
+  .modal.window.equal .window-group {
+    display: none;
   }
-  .window-nav.more-left {
-    mask-image: linear-gradient(90deg, transparent, #000 48px);
+
+  /* The list of sections: grouped rows, a chevron on each. */
+  .modal.window.many {
+    grid-template-rows: auto minmax(0, 1fr);
   }
-  .window-nav.more-right {
-    mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent);
+  .modal.window.many .window-menu {
+    grid-row: 2;
+    border-bottom: 0;
   }
-  .window-nav.more-left.more-right {
-    mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent);
+  .modal.window.many .window-nav {
+    gap: 2px;
+    padding: 6px 12px 20px;
   }
-  .window-scroll {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
+  .modal.window.many .window-nav button {
+    min-height: var(--ph-row, 52px);
+    padding: 0 8px;
+    font-size: var(--ph-text, 16px);
+    color: var(--mk-text);
+  }
+  .modal.window.many .window-nav button[aria-selected='true'] {
+    background: transparent;
+    font-weight: 500;
+  }
+  .modal.window.many .window-go {
+    display: block;
+    margin-left: auto;
+    color: var(--mk-faint);
+  }
+  .modal.window.many .window-nav .tag + .window-go {
+    margin-left: 8px;
+  }
+  .modal.window.many .window-nav .icon-tile {
+    width: 24px;
+    height: 24px;
+  }
+  .modal.window.many.view-list .window-body,
+  .modal.window.many.view-detail .window-menu {
+    display: none;
+  }
+  .modal.window.many .window-body {
+    grid-row: 2;
+  }
+  .modal.window.many.view-detail .window-back {
     display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    border: 1px solid var(--border-2);
-    border-radius: 999px;
-    background: var(--surface-2);
-    color: var(--text);
-    box-shadow: var(--shadow);
-    cursor: pointer;
   }
-  .window-scroll.left {
-    left: 6px;
+  .modal.window.many.view-detail .window-head {
+    padding-left: 6px;
   }
-  .window-scroll.right {
-    right: 6px;
-  }
-}
 
-/* On a small phone it is a sheet of one size, 44px under the top and 8px from
-   the other edges: the same for every section. */
-@media (max-width: 640px) {
-  .modal-back:has(.window) {
-    padding: max(44px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
-    place-items: stretch;
-  }
-  .modal.window {
-    width: 100%;
-    height: 100%;
-    border-radius: 20px;
-    border: 1px solid var(--border-2);
-    padding: 0;
-  }
-}
-
-
-/* The 12 px floor on a phone: every text rule of this file under 12 px on a
-   desktop is raised to 12 (the phone scale, phone.css). */
-@media (max-width: 640px) {
-  :root :is(
-    .window-group,
-    .window-nav .tag,
-    .modal.window.equal .window-nav button
-  ) {
+  .window-group {
     font-size: 12px;
   }
-}
-
-/* The phone scale (phone.css): a finger-high close button and section tabs,
-   text at 15 and 16 px. */
-@media (max-width: 640px) {
-  :root .window-head {
+  .window-head {
     height: 64px;
     padding: 0 8px 0 14px;
   }
-  :root .window-name b {
+  .window-name b {
     font-size: var(--ph-text);
   }
-  :root .window-sub {
+  .window-sub {
     font-size: var(--ph-small);
   }
-  :root .window-head .btn.icon {
+  .window-head .btn.icon {
     width: var(--ph-hit);
     height: var(--ph-hit);
   }
-  :root .window-head .btn.icon svg {
+  .window-head .btn.icon svg {
     width: var(--ph-icon);
     height: var(--ph-icon);
   }
-  :root .window-nav {
-    padding: 8px 10px;
-  }
-  :root .window-nav button {
-    min-height: var(--ph-hit);
-    font-size: var(--ph-text-2);
-  }
-  :root .modal.window.equal .window-nav button {
-    min-height: 56px;
-    font-size: 12px;
-  }
-  :root .window-scroll {
-    width: var(--ph-hit);
-    height: var(--ph-hit);
-  }
-  :root .window-body,
-  :root .modal.window.single .window-body {
+  .window-body,
+  .modal.window.single .window-body {
     padding: 12px var(--ph-edge) 24px;
     gap: 14px;
   }

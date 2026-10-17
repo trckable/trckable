@@ -75,7 +75,7 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
     }),
   )
   return (
-    <Window label={`Settings for ${p.site.domain}`} head={<SettingsHead site={p.site} />} tabs={tabs} tab={tab} onTab={(id) => go(id as TabID)} onClose={close}>
+    <Window label={`Settings for ${p.site.domain}`} head={<SettingsHead site={p.site} />} tabs={tabs} tab={tab} onTab={(id) => go(id as TabID)} onClose={close} listFirst={p.tab === 'site'}>
       <SettingsSection tab={tab} site={p.site} onSites={p.onSites} />
     </Window>
   )
@@ -329,20 +329,10 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
   const stateText = STATE_TEXT[state]
   return (
     <>
-    <section className="gen-head">
-      <SiteMark site={site} size={44} />
-      <span className="gen-head-text">
-        <b>{site.name || site.domain}</b>
-        <span className="faint">
-          {site.domain} · {site.timezone.replace(/_/g, ' ')} · {site.currency}
-        </span>
-      </span>
-      <span className={'gen-state ' + state}>{stateText}</span>
-    </section>
-
     <section className="card" style={{ gap: 0 }}>
       <div className="card-head" style={{ paddingBottom: 10 }}>
         <h2>Basics</h2>
+        <span className={'gen-state ' + state}>{stateText}</span>
         <span className={saved ? 'saved on' : 'saved'} aria-live="polite">
           Saved
         </span>
