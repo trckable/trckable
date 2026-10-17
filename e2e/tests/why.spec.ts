@@ -106,7 +106,11 @@ test('on a phone a card opens a sheet that tells the cause, about this site', as
   await page.setViewportSize({ width: 390, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=today&v=`)
-  await page.locator('.icard .ic-h').first().click()
+  // The card about the outage, once the cards have settled (a card that is still moving is not tapped).
+  const card = page.locator('article[data-topic="uptime"] .ic-h').first()
+  await expect(card).toBeVisible()
+  await card.scrollIntoViewIfNeeded()
+  await card.click()
   const sheet = page.locator('aside.cd')
   await expect(sheet.locator('.hw.show')).toContainText(HISTORY_DOMAIN)
   await expect(sheet.locator('.hw.show')).toContainText('connection refused')
