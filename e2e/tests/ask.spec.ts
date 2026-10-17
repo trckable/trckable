@@ -22,6 +22,7 @@ test('opens with the MCP setup, and closes again', async ({ page, browserName })
   await page.goto(API + '/example.com')
   await expect(page.getByRole('button', { name: /^Explore all data/ })).toBeVisible()
   await page.keyboard.press('ControlOrMeta+k')
+  await expect(page.locator('.pal.on .palbox input')).toBeVisible() // the list is its own chunk: Enter waits for it
   await page.keyboard.press('Enter') // the list's first row is Peek
   const panel = page.getByRole('complementary', { name: 'Peek' })
   await expect(panel.getByRole('link', { name: 'Setup' })).toHaveAttribute('rel', /noopener/)
@@ -37,6 +38,7 @@ test('Create a key opens the API keys', async ({ page, browserName }) => {
   await page.goto(API + '/example.com')
   await expect(page.getByRole('button', { name: /^Explore all data/ })).toBeVisible()
   await page.keyboard.press('ControlOrMeta+k')
+  await expect(page.locator('.pal.on .palbox input')).toBeVisible() // the list is its own chunk: Enter waits for it
   await page.keyboard.press('Enter') // the list's first row is Peek
   await page.getByRole('complementary', { name: 'Peek' }).getByRole('button', { name: 'Create a key' }).click()
   await expect(page.getByRole('dialog', { name: 'Profile, your account' })).toBeVisible()

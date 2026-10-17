@@ -28,9 +28,11 @@ export function liftToTop(el: HTMLElement): () => void {
     const w = el.offsetWidth
     const h = el.offsetHeight
     el.style.position = 'fixed'
+    el.style.pointerEvents = 'auto' // the page's hover-only rules (a faded toolbar) are not the menu's
     el.style.left = `${Math.max(M, Math.min((ar?.left ?? 0) + dx, vw - w - M))}px`
     el.style.top = `${Math.max(M, Math.min((ar?.top ?? 0) + dy, vh - h - M))}px`
   }
+  el.style.pointerEvents = 'auto'
   if (!sheet) {
     place()
     window.addEventListener('scroll', place, true)
@@ -45,7 +47,7 @@ export function liftToTop(el: HTMLElement): () => void {
       // Already gone with its page.
     }
     el.removeAttribute('popover')
-    for (const p of ['position', 'left', 'top', 'maxHeight'] as const) el.style[p] = ''
+    for (const p of ['position', 'left', 'top', 'maxHeight', 'pointerEvents'] as const) el.style[p] = ''
   }
 }
 
