@@ -28,6 +28,18 @@ const moduleOn = (c: Ctx, m: string): boolean => {
 }
 const MODULES = ['goals', 'outbound', 'revenue', 'funnels', 'notes', 'rhythm', 'journeys', 'map', 'retention', 'vitals', 'consent', 'crawlers', 'forms', 'heatmaps', 'search']
 
+/** `&role=viewer` looks at the pages as a viewer sees them (kept for the tab). */
+function roleOf(): string {
+  const key = 'trckable:fixture:role'
+  const asked = new URLSearchParams(location.search).get('role')
+  try {
+    if (asked) sessionStorage.setItem(key, asked)
+    return asked ?? sessionStorage.getItem(key) ?? 'owner'
+  } catch {
+    return asked ?? 'owner'
+  }
+}
+
 export interface Reply {
   status: number
   body: unknown
@@ -217,7 +229,7 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case '/setup':
       return ok({ email_codes: false, needs_setup: false, sso: [] })
     case '/me':
-      return ok({ kind: 'user', email: 'albi@example.com', role: 'owner', operator: true, version: '0.7.23', keys: {}, update_check: false, must_change: false })
+      return ok({ kind: 'user', email: 'albi@example.com', role: roleOf(), operator: true, version: '0.7.23', keys: {}, update_check: false, must_change: false })
     case '/account':
       return ok({ email: 'albi@example.com', name: 'Albi', has_avatar: false })
     case '/sites':

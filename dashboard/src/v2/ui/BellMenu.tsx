@@ -109,7 +109,7 @@ export function BellMenu(p: BellProps) {
   useTopLayerWhen(open && !p.sheet, menu)
   return (
     <div className="bellw" ref={attach} style={{ position: 'relative' }}>
-      <button type="button" className="ib bell" id="bellBtn" data-bell="1" title={p.title} aria-label={p.title} aria-haspopup="menu" aria-expanded={open} onClick={toggle}>
+      <button type="button" className="ib bell" id="bellBtn" data-bell="1" data-key="notes" title={p.title} aria-label={p.title} aria-haspopup="menu" aria-expanded={open} onClick={toggle}>
         <i className="bdot" id="bellDot" style={p.unread ? undefined : { display: 'none' }}>
           {p.badge}
         </i>
