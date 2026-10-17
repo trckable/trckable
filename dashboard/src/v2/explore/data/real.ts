@@ -175,7 +175,7 @@ export async function loadMeta(c: DataCtx): Promise<Meta> {
 
 export async function saveView(site: string, view: DataCtx['view'], v: SavedView): Promise<void> {
   const q = writeView({ ...view, filters: v.filters, live: false, briefing: false, v: undefined }).slice(1)
-  await more.saveSegment(site, v.name, q || 'view=data')
+  await more.saveSegment(site, v.name, q || 'view=briefing')
 }
 
 export async function removeView(site: string, v: SavedView): Promise<void> {

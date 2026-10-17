@@ -10,6 +10,7 @@ section into the release.
 ## Unreleased
 
 - Live moves a little more calmly: the half hour's bars slide one place left when a minute passes instead of jumping, and the Live dot beats once for each new visit. A long "On the site right now" list scrolls inside its card with a soft fade at the bottom while more rows are below, the two cards keep one height, and "See all" turns into "Show fewer" to fold it back.
+- The first hints (rows, then Peek) show again: the old Story-card hint pointed at a page that no longer exists and held the others back. "See this page" in the leaving-after-one-page guide opens Explore on that page, and the last leftovers of the old Data page's address handling are gone (an old address still opens the Briefing, or Explore, and a test keeps that).
 - Which notices the bell has read are kept at /api/v1/me/bell-read (it was never released under the old name).
 - The Journey dialog writes whole-dollar amounts like the rest of the dashboard ($49, not $49.00).
 - Settings looks like the rest of the dashboard: the same cards, type and controls in every section, light and dark, the site name once, and on a phone a list of sections that opens the one you pick.

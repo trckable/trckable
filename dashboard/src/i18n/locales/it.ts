@@ -2028,7 +2028,6 @@ export default {
   'hints.seen': 'Capito',
   'hints.off': 'Disattiva i suggerimenti',
   'hints.close': 'Chiudi il suggerimento',
-  'hints.story': 'Ogni risposta apre il quadro completo: grafico, ogni riga, esportazione.',
   'hints.rows': 'Clicca su una riga per filtrare tutta la pagina.',
   'hints.peek': (key: string) => `Premi ${key} per chiedere a Peek qualsiasi cosa sui tuoi numeri.`,
   'format.capped': 'in aumento di più di 10 volte',

@@ -61,7 +61,7 @@ test('pictures for review', async ({ page }) => {
     for (const scheme of ['dark', 'light'] as const) {
       await page.setViewportSize({ width, height })
       await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
-      await page.goto(`${API}/example.com?view=data`)
+      await page.goto(`${API}/example.com?view=briefing`)
       await expect(page.locator('.kpi').first()).toBeVisible()
       await expect(page.locator('.toasts')).toBeAttached()
       await page.evaluate(() => {

@@ -1,13 +1,13 @@
 // Which hint is next, if any. The order is the unlock order: a hint waits for
 // the one before it to be seen. One at a time, one a visit, none in the first
 // seconds, none once turned off; a viewer or shared link only sees the first
-// two. Pure over what the caller knows: rules.test.ts.
+// one. Pure over what the caller knows: rules.test.ts.
 
-export type HintId = 'story' | 'rows' | 'peek'
-export const ORDER: HintId[] = ['story', 'rows', 'peek']
+export type HintId = 'rows' | 'peek'
+export const ORDER: HintId[] = ['rows', 'peek']
 
 /** Hints a viewer (a read-only person or a shared link) may see. */
-export const FOR_VIEWERS: HintId[] = ['story', 'rows']
+export const FOR_VIEWERS: HintId[] = ['rows']
 
 /** The quiet at the start of a visit, in milliseconds. */
 export const QUIET_MS = 10_000

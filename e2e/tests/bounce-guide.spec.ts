@@ -66,7 +66,7 @@ const dialog = (page: Page) => page.getByRole('dialog', { name: 'Why visitors le
 
 
 test('the Features list has the bounce guide', async ({ page }) => {
-  await open(page, `/${domain}?view=data&v=story`)
+  await open(page, `/${domain}?view=briefing`)
   await page.getByRole('button', { name: 'Account' }).click()
   await page.getByRole('menuitem', { name: /^Features/ }).click()
   const feats = page.getByRole('dialog', { name: 'Features', exact: true })

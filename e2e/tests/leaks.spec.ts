@@ -40,14 +40,14 @@ test('switching sites twenty times grows neither the heap nor the DOM nor the li
   test.skip(!memory, 'set TRCKABLE_LEAK_SPECS=1')
   test.setTimeout(240_000)
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto(`${API}/${HISTORY_DOMAIN}?view=data&v=story`)
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing`)
   await expect(page.locator('.sv-chart')).toBeVisible({ timeout: 30_000 })
   const cdp = await page.context().newCDPSession(page)
   await cdp.send('HeapProfiler.enable')
   const sites = ['example.com', HISTORY_DOMAIN]
   const visit = async (i: number) => {
     const domain = sites[i % 2]
-    await go(page, `/${domain}?view=data&v=story`)
+    await go(page, `/${domain}?view=briefing`)
     await expect(page.locator('.sv-head')).toBeVisible({ timeout: 30_000 })
     await expect(page.locator('#siteBtn .nmx')).toHaveText(domain)
     await page.waitForTimeout(250)
