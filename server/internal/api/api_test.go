@@ -1088,19 +1088,19 @@ func TestBellReadFollowsThePerson(t *testing.T) {
 	g := newRig(t)
 	c := client()
 	g.setup(t, c)
-	if code, out := do(t, c, "GET", g.srv.URL+"/api/v1/me/bell", ""); code != 200 || len(out["read"].([]any)) != 0 {
+	if code, out := do(t, c, "GET", g.srv.URL+"/api/v1/me/bell-read", ""); code != 200 || len(out["read"].([]any)) != 0 {
 		t.Fatalf("empty bell: %d %v", code, out)
 	}
-	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/me/bell", `{"read":["down:1"]}`); code != http.StatusForbidden {
+	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/me/bell-read", `{"read":["down:1"]}`); code != http.StatusForbidden {
 		t.Fatalf("POST without CSRF header: %d", code)
 	}
-	if code, out := do(t, c, "POST", g.srv.URL+"/api/v1/me/bell", `{"read":["down:1","up:1"]}`, csrf, "1"); code != 200 {
+	if code, out := do(t, c, "POST", g.srv.URL+"/api/v1/me/bell-read", `{"read":["down:1","up:1"]}`, csrf, "1"); code != 200 {
 		t.Fatalf("mark read: %d %v", code, out)
 	}
-	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/me/bell", `{"read":[""]}`, csrf, "1"); code != http.StatusBadRequest {
+	if code, _ := do(t, c, "POST", g.srv.URL+"/api/v1/me/bell-read", `{"read":[""]}`, csrf, "1"); code != http.StatusBadRequest {
 		t.Fatalf("empty id: %d", code)
 	}
-	if code, out := do(t, c, "GET", g.srv.URL+"/api/v1/me/bell", ""); code != 200 || len(out["read"].([]any)) != 2 {
+	if code, out := do(t, c, "GET", g.srv.URL+"/api/v1/me/bell-read", ""); code != 200 || len(out["read"].([]any)) != 2 {
 		t.Fatalf("read list: %d %v", code, out)
 	}
 }

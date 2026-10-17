@@ -102,8 +102,8 @@ export interface AiSearchReport {
 export const more = {
   me: () => call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean }>('GET', '/me'),
   setKeys: (keys: Record<string, string>) => call<{ keys: Record<string, string> }>('PUT', '/me/keys', { keys }),
-  bellRead: () => call<{ read: string[] }>('GET', '/me/bell'),
-  markBellRead: (read: string[]) => call<{ read: string[] }>('POST', '/me/bell', { read }),
+  bellRead: () => call<{ read: string[] }>('GET', '/me/bell-read'),
+  markBellRead: (read: string[]) => call<{ read: string[] }>('POST', '/me/bell-read', { read }),
   createSite: (domain: string) => call<Site>('POST', '/sites', { domain }),
   updateSite: (id: string, patch: { name?: string; timezone?: string; currency?: string }) => call<Site>('PATCH', `/sites/${id}`, patch),
   deleteSite: (id: string, domain: string) => call<{ events: number; sessions: number; payments: number; connections: number }>('DELETE', `/sites/${id}`, { domain }),
