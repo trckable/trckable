@@ -296,7 +296,7 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case 'report/search':
       return ok(searchReport(c, id, sp))
     case 'search-console':
-      return ok(c.conn.search ? { connected: true, connection: { client_email: 'trckable@fixture.iam.gserviceaccount.com', property: `sc-domain:${site.name}`, created_at: secs(c, c.nowAbs - 9000) } } : { connected: false })
+      return ok(c.conn.search ? { connected: true, connection: { client_email: 'trckable@fixture.iam.gserviceaccount.com', property: `sc-domain:${site.name}`, created_at: secs(c, c.nowAbs - 9000), last_ok_at: secs(c, c.nowAbs) } } : { connected: false })
     case 'insights': {
       // What moved: the sources that sent clearly more or fewer people than the period before.
       const r = reportOf(c, id, { ...parseQuery(sp), compare: 'previous', filters: [] })
@@ -318,6 +318,10 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       return ok(segments.list(id))
     case 'report/funnel':
       return ok(funnelOf(c, id, parseQuery(sp), JSON.parse(sp.get('steps') ?? '[]') as FunnelStep[]))
+    case 'report/ai-search': {
+      const bots = crawlersOf(c, id, parseQuery(sp)).series.filter((s) => s.kind === 'train')
+      return ok({ visitors: 12, referrers: [{ value: 'chatgpt.com', visitors: 9 }, { value: 'perplexity.ai', visitors: 3 }], crawled: bots.reduce((n, s) => n + s.total, 0), bots: bots.map((s) => ({ name: s.name, kind: s.kind, hits: s.total })), pages: [], google: c.conn.search })
+    }
     case 'report/crawlers':
       return ok(crawlersOf(c, id, parseQuery(sp)))
     case 'report/scroll': {

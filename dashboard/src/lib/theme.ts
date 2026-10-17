@@ -29,24 +29,26 @@ const watchers = new Set<(t: Theme) => void>()
 
 /** The chosen theme, and a way to change it that every other control sees. */
 export function useTheme(): [Theme, (t: Theme) => void] {
-  const [theme, setTheme] = useState(read)
+  const [theme, setNow] = useState(read)
   useEffect(() => {
-    watchers.add(setTheme)
+    watchers.add(setNow)
     return () => {
-      watchers.delete(setTheme)
+      watchers.delete(setNow)
     }
   }, [])
-  const pick = (t: Theme) => {
-    // The crossfade is its own small chunk, fetched when a theme is first chosen.
-    void import('./themeSwitch').then((m) => m.switchTheme(t, applyTheme))
-    try {
-      localStorage.setItem(KEY, t)
-    } catch {
-      /* private mode */
-    }
-    for (const w of watchers) w(t)
+  return [theme, setTheme]
+}
+
+/** Choose a theme from anywhere (the menu, the account page, ⌘K): every control showing it hears. */
+export function setTheme(t: Theme) {
+  // The crossfade is its own small chunk, fetched when a theme is first chosen.
+  void import('./themeSwitch').then((m) => m.switchTheme(t, applyTheme))
+  try {
+    localStorage.setItem(KEY, t)
+  } catch {
+    /* private mode */
   }
-  return [theme, pick]
+  for (const w of watchers) w(t)
 }
 
 // The theme the person chose last time, before the first paint (storage may be blocked).

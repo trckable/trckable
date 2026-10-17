@@ -69,6 +69,7 @@ export const copy = defineCopy('v2explore', {
   hour: 'hour',
   sixHours: '6 hours',
   vsUsual: 'vs usual',
+  noUsual: '–',
   vs: { usual: 'vs usual', previous: 'vs the period before', year: 'vs the year before', custom: 'vs the other period' },
   asBefore: 'as before',
   share: 'Share',

@@ -1,0 +1,11 @@
+/* A card's label and its note wrap rather than run to the card's edge or hide behind an ellipsis. */
+.mk .kcs .kc .kl {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.mk .kcs .kc .kn {
+  white-space: normal;
+  min-width: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}

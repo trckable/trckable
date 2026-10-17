@@ -8,6 +8,7 @@ export function useHealth() {
   const [h, setH] = useState<H | null>(null)
   const [at, setAt] = useState<Date | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [round, setRound] = useState(0)
   useEffect(() => {
     const load = () => {
       more
@@ -21,6 +22,6 @@ export function useHealth() {
     }
     load()
     return visibleInterval(load, 15_000)
-  }, [])
-  return { h, at, err }
+  }, [round])
+  return { h, at, err, retry: () => setRound((n) => n + 1) }
 }

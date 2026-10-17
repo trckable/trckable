@@ -178,7 +178,10 @@ export function setView(patch: Partial<ViewState>) {
   // Moving to Live or Data leaves the briefing unless the change says otherwise.
   const leave: Partial<ViewState> = patch.live !== undefined && !('briefing' in patch) ? { briefing: undefined } : {}
   const next = { ...cur, ...data, ...leave, ...patch }
-  navigate(location.pathname + writeView(next), { replace: Object.keys(patch).every((k) => k === 'day') })
+  // An open settings section stays in the address (lib/settings.ts).
+  const settings = new URLSearchParams(location.search).get('settings')
+  const view = writeView(next)
+  navigate(location.pathname + (settings ? view + (view ? '&' : '?') + 'settings=' + encodeURIComponent(settings) : view), { replace: Object.keys(patch).every((k) => k === 'day') })
 }
 
 /** Where an address the old Data page made (?v=story, ?v=explore, Full) goes: the Briefing, and Explore for the ones that were its numbers. Null for any other address. */

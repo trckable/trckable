@@ -1,6 +1,8 @@
 // Which site's settings are open, and at which section. Settings are a dialog
-// over the dashboard, so opening them is not a new address: the page under
-// them stays where it was, and closing leaves you exactly there. An old
+// over the dashboard, so opening them is not a new page: the dashboard under
+// them stays where it was, and closing leaves you exactly there. The open
+// section is in the address as ?settings=alerts (replacing the entry, so Back
+// does not step through tabs), which makes a section linkable. An old
 // /settings?site=…&tab=… link still works: main.tsx opens the dialog from it
 // and puts the dashboard's own address back.
 import { useEffect, useState } from 'react'
@@ -21,23 +23,39 @@ let open: SettingsOpen | null = null
 const EVENT = 'trckable:settings'
 const emit = () => window.dispatchEvent(new Event(EVENT))
 
+/** The address names the open section (or none): the rest of it stays as it is. */
+function writeAddress(tab: SettingsTab | null) {
+  const p = new URLSearchParams(location.search)
+  if (tab) p.set('settings', tab)
+  else p.delete('settings')
+  const q = p.toString()
+  const to = location.pathname + (q ? '?' + q : '') + location.hash
+  if (to !== location.pathname + location.search + location.hash) history.replaceState(null, '', to)
+}
+
+/** The section an address names, if it names one that exists. */
+export const settingsInAddress = (params: URLSearchParams): SettingsTab | null => SETTINGS_TABS.find((t) => t === params.get('settings')) ?? null
+
 /** Open a site's settings over its dashboard. From another page (All sites,
  *  say) the dashboard opens first, with the dialog on it. */
 export function openSettings(site: { id: string; domain: string }, tab: SettingsTab = 'site', extra?: Record<string, string>, opts: { replace?: boolean } = {}) {
   const home = '/' + encodeURIComponent(site.domain)
   if (location.pathname !== home) navigate(home, opts)
   open = { site: site.id, tab, extra }
+  writeAddress(tab)
   emit()
 }
 
 export function setSettingsTab(tab: SettingsTab) {
   if (!open) return
   open = { site: open.site, tab }
+  writeAddress(tab)
   emit()
 }
 
 export function closeSettings() {
   open = null
+  writeAddress(null)
   emit()
 }
 

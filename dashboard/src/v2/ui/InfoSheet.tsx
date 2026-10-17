@@ -1,16 +1,12 @@
 // A short sheet over the page (a drawer on a wide screen, a sheet from the bottom on a phone): a title, what it is
 // about, a body and buttons. Notes, the email preview and the like. Escape and the scrim close it.
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
+import { useSheet } from './useSheet'
 import { MkPortal } from './Portal'
 
 export function InfoSheet({ title, sub, onClose, children, foot, close, className }: { title: ReactNode; sub?: ReactNode; onClose: () => void; children: ReactNode; foot?: ReactNode; close: string; className?: string }) {
   const box = useRef<HTMLElement>(null)
-  useEffect(() => {
-    const key = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', key)
-    box.current?.focus()
-    return () => window.removeEventListener('keydown', key)
-  }, [onClose])
+  useSheet(box, onClose)
   return (
     <MkPortal>
       <div className="xscrim on" onClick={onClose} aria-hidden="true" />

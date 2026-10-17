@@ -17,6 +17,7 @@ import { DialogActions } from '../components/DialogActions'
 import { BarPreview } from '../components/BarPreview'
 import { settingsParam } from '../lib/settings'
 import { ConsentOff } from './ConsentOff'
+import { LoadFailed } from '../components/LoadFailed'
 import './Privacy.css'
 import { Loading } from '../components/loading/Loading'
 import { ReportRows } from './ReportRows'
@@ -43,16 +44,18 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
   const [mods, setMods] = useState<Record<string, boolean> | null>(null)
   const [paths, setPaths] = useState('')
   const [err, setErr] = useState<string | null>(null)
+  const [round, setRound] = useState(0)
 
   useEffect(() => {
     more
       .siteConfig(site.id)
       .then((r) => {
+        setErr(null)
         setC(r)
         setPaths((r.exclude_paths ?? []).join('\n'))
       })
       .catch((e: unknown) => setErr(words(e)))
-  }, [site.id])
+  }, [site.id, round])
 
   // Which modules are on decides what this site records, so both the banner
   // card and the policy paragraph need it — once, not twice.
@@ -78,7 +81,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
       .catch((e: unknown) => fail(e))
   }
 
-  if (err) return <div className="banner">{err}</div>
+  if (err) return <LoadFailed reason={err} onRetry={() => setRound((n) => n + 1)} />
   if (!c) return <Loading height={240} />
   const free = c.consent_free
   const kept = KEEP.find((k) => k.id === String(c.retention_days))?.label ?? `${c.retention_days} days`
