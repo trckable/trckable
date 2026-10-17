@@ -38,7 +38,8 @@ function Tail({ s, online, today }: { s: Site; online: number; today?: number })
     return (
       <Tooltip text={tip}>
         {(p) => (
-          <span {...p} role="button" tabIndex={0} aria-label={tip} className={`now state-icon ${down ? 'down' : 'quiet'}`} onClick={(e) => { e.stopPropagation(); p.onClick() }} onKeyDown={(e) => e.key === 'Enter' && p.onClick()}>
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- a tap shows the tip; the state is also in words under the name, and a key reaches the row itself
+          <span {...p} role="img" aria-label={tip} className={`now state-icon ${down ? 'down' : 'quiet'}`} onClick={(e) => { e.stopPropagation(); p.onClick() }}>
             <Icon size={16} strokeWidth={2} aria-hidden="true" />
           </span>
         )}

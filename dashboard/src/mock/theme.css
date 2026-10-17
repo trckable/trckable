@@ -14,7 +14,7 @@
     --mk-text: #0b0d10;
     --mk-muted: #58606c;
     --mk-faint: #5f6671;
-    --mk-lime: #487f00;
+    --mk-lime: #437800;
     --mk-red: #c62828;
     --mk-grid: #eef0eb;
     --mk-axis: #5f6671;
@@ -29,7 +29,7 @@
   --mk-text: #0b0d10;
   --mk-muted: #58606c;
   --mk-faint: #5f6671;
-  --mk-lime: #487f00;
+  --mk-lime: #437800;
   --mk-red: #c62828;
   --mk-grid: #eef0eb;
   --mk-axis: #5f6671;
@@ -83,4 +83,28 @@ body:has(.modal-back) .mk .tabbar{z-index:30}
 }
 :root[data-theme='light'] .mk .bdot {
   color: #fff;
+}
+
+/* Parts of the walkthrough drawn in the dark theme's greys: in the light theme they take the light set. */
+:root[data-theme='light'] :is(.mk .mk-menu input, .mk .pmenu .dates input, .mk .xp select, .mk .xp input[type=text], .mk .palbox input, .mk .xsub, .mk .snip) {
+  background: var(--mk-card2);
+}
+:root[data-theme='light'] :is(.mk .mk-chip:hover, .mk .pill:hover, .mk .xb:hover, .mk .morebtn:hover, .mk .kinds button:hover, .mk .ib:hover) {
+  background: var(--mk-card2);
+  border-color: var(--mk-line);
+}
+:root[data-theme='light'] .mk #views .spill {
+  background: var(--mk-line);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) :is(.mk .mk-menu input, .mk .pmenu .dates input, .mk .xp select, .mk .xp input[type=text], .mk .palbox input, .mk .xsub, .mk .snip) {
+    background: var(--mk-card2);
+  }
+  :root:not([data-theme='dark']) :is(.mk .mk-chip:hover, .mk .pill:hover, .mk .xb:hover, .mk .morebtn:hover, .mk .kinds button:hover, .mk .ib:hover) {
+    background: var(--mk-card2);
+    border-color: var(--mk-line);
+  }
+  :root:not([data-theme='dark']) .mk #views .spill {
+    background: var(--mk-line);
+  }
 }

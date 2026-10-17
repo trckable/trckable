@@ -155,7 +155,7 @@ test('with nothing working there is no seal and no badge, and the switcher marks
   await page.locator('#siteBtn').click()
   await expect(page.locator(`[data-site="${site.id}"] .vf-seal-dot`)).toBeVisible({ timeout: 15_000 })
   // A site with no source has no seal (other suites' sites with a real Stripe sale may have one).
-  await expect(page.locator('.pop.sites .site-row').filter({ hasText: 'history.example' }).locator('.vf-seal-dot')).toHaveCount(0)
+  await expect(page.locator('#siteMenu .site-row').filter({ hasText: 'history.example' }).locator('.vf-seal-dot')).toHaveCount(0)
   await shoot(page, 'switcher', { height: 520 })
 })
 

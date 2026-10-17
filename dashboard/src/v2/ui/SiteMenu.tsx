@@ -25,8 +25,6 @@ const DOT: Record<string, string> = { stopped: 'down', quiet: 'quiet' }
 interface SiteMenuProps {
   sites: Site[]
   current: Site | null
-  /** Who is on a site now. */
-  online: (id: string) => number
   /** The workspace line at the top, when the account has one. */
   workspace?: { name: string; d: string; run?: () => void }
   onPick: (id: string) => void
@@ -84,7 +82,6 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
             <SiteList
               sites={p.sites}
               current={cur}
-              online={p.online}
               workspace={
                 p.workspace && (
                   <button type="button" className="mi ws" onClick={() => p.workspace?.run?.()}>

@@ -38,7 +38,7 @@ for (const size of [{ w: 1440, h: 900 }, { w: 390, h: 844 }]) {
     await expect(page.locator('.live-state.down')).toHaveText('Down', { timeout: 20_000 })
     await expect(page.locator('.status-float')).toHaveCount(0) // nothing floats over the page
     await expect(page.locator('.footer-status')).toHaveAttribute('data-status', 'down')
-    await expect(page.locator('.site-zone .state-dot.stopped')).toBeVisible()
+    await expect(page.locator('#siteBtn .mk-dot.down')).toBeVisible()
     // Empty: a faint baseline, no wave, no pill, no heading over nothing.
     await expect(page.locator('.kit-nodata')).toHaveCount(0)
     await expect(page.getByText('Top sources right now')).toHaveCount(0)

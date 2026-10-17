@@ -49,7 +49,7 @@ test('switching sites twenty times grows neither the heap nor the DOM nor the li
     const domain = sites[i % 2]
     await go(page, `/${domain}?view=data&v=story`)
     await expect(page.locator('.sv-head')).toBeVisible({ timeout: 30_000 })
-    await expect(page.locator('.site-btn .name')).toHaveText(domain)
+    await expect(page.locator('#siteBtn .nmx')).toHaveText(domain)
     await page.waitForTimeout(250)
   }
   // Four rounds first: the caches, the lazy chunks and the fonts are in.

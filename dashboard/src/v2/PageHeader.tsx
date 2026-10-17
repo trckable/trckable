@@ -11,7 +11,6 @@ import { isShared, isViewer } from '../lib/me'
 import { navigate } from '../lib/url'
 import { openSettings } from '../lib/settings'
 import { lazyLoad, whenIdle } from '../lib/lazyLoad'
-import { useOverview } from '../views/useOverview'
 import { Bell } from './bell/Bell'
 import { useNotices } from './bell/useNotices'
 import { goExplore } from './briefing/deeper'
@@ -49,7 +48,6 @@ export function PageHeader(p: PageHeaderProps) {
   const down = siteDown.use()
   const slots = useV2Extras()
   const notices = useNotices(p.site, p.sites)
-  const { rows } = useOverview(1)
   const viewer = isViewer()
   const [find, setFind] = useState(false)
   useEffect(() => whenIdle(Palette.preload), [])
@@ -68,7 +66,6 @@ export function PageHeader(p: PageHeaderProps) {
   const siteMenu = {
     sites: p.sites,
     current: site,
-    online: (id: string) => rows?.find((r) => r.id === id)?.online ?? 0,
     onPick: (id: string) => (id === '*' ? navigate('/') : navigate('/' + encodeURIComponent(p.sites.find((s) => s.id === id)?.domain ?? ''))),
     footer: site
       ? [

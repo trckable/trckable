@@ -143,20 +143,16 @@ test('the period opens as six choices; More opens the rest in place; compare and
 })
 
 for (const width of [1280, 390]) {
-  test(`at ${width}px the site is plain text, and its settings are a row of the site list`, async ({ page }) => {
+  test(`at ${width}px the site is one control, and its settings are a row of the site list`, async ({ page }) => {
     await open(page, width)
-    const zone = page.locator('.site-zone')
-    const card = (await zone.boundingBox())!
-    // A phone's capsules are 46 px (a finger wide).
-    expect(card.height, 'one control tall').toBe(width > 640 ? 36 : 46)
-    await expect(zone.getByRole('button', { name: /^Settings for/ })).toHaveCount(0)
-    await zone.locator('button.site-btn').click()
-    await expect(page.locator('.pop.sites .foot-settings')).toBeVisible()
+    const chip = page.locator('#siteBtn')
+    const card = (await chip.boundingBox())!
+    // A phone's controls are 44 px (a finger wide).
+    expect(card.height, 'one control tall').toBe(width > 640 ? 32 : 44)
+    await expect(page.getByRole('button', { name: /^Settings for/ })).toHaveCount(0)
+    await chip.click()
+    await expect(page.locator('#siteMenu').getByRole('button', { name: 'Site settings' })).toBeVisible()
     await page.keyboard.press('Escape')
-    // At rest it has no box of its own: a soft fill only on hover.
-    const look = await zone.evaluate((n) => ({ border: getComputedStyle(n).borderTopColor, fill: getComputedStyle(n).backgroundColor }))
-    expect(look.border).toMatch(/rgba\(0, 0, 0, 0\)|transparent/)
-    expect(look.fill).toMatch(/rgba\(0, 0, 0, 0\)|transparent/)
   })
 }
 
@@ -238,7 +234,7 @@ for (const width of [390, 360]) {
     const date = page.locator('.pr-date')
     await expect(filter.locator('.pr-badge')).toHaveText('1')
     await expect(date).toContainText('30d')
-    await expect(page.locator('.subbar').getByRole('group', { name: 'View' })).toBeVisible()
+    await expect(page.getByRole('group', { name: 'View' })).toBeVisible()
     await page.getByRole('button', { name: 'More', exact: true }).click()
     await expect(page.getByRole('menu', { name: 'More' }).getByRole('menuitem').first()).toHaveText(/Share/)
     await page.keyboard.press('Escape')
@@ -382,8 +378,8 @@ test('a phone: Add in the sheet opens the filter menu on screen, and Views in â‹
     await page.keyboard.press('Enter')
     await pick.click()
     await expect(pick).toBeHidden()
-    await expect(more).toBeFocused()
-    await expect(page.locator('.pr-filter .pr-badge')).toHaveText('1')
+    // The saved view's own address replaces this one, so the page it opens is not this page's: the filter is in it.
+    await expect(page).toHaveURL(/channel/)
   } finally {
     if (made) await page.evaluate(async ([i, m]) => void (await fetch(`/api/v1/sites/${i}/segments/${m}`, { method: 'DELETE', headers: { 'X-Trckable-Request': '1' } })), [id, made])
   }

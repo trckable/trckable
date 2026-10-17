@@ -43,10 +43,12 @@ export function useNotices(site: Site | null, sites: Site[]) {
       ])
       if (live) setItems(arrange(parts.flat(), now))
     }
-    void run()
+    // After the first paint has had its reads: the bell is not what the page is waiting for.
+    const first = setTimeout(() => void run(), 3000)
     const stop = visibleInterval(() => void run(), 5 * 60_000, false)
     return () => {
       live = false
+      clearTimeout(first)
       stop()
     }
   }, [site?.id, site?.domain, site?.mentions, sites, can]) // eslint-disable-line react-hooks/exhaustive-deps -- the site's own fields say when it changed
