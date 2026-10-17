@@ -34,6 +34,8 @@ export const copy = defineCopy('v2.live', {
   last7: 'Last 7 days',
   pages: 'Pages',
   countries: 'Countries',
+  phone: 'Phone',
+  computer: 'Computer',
   failed: 'Live could not be read. Trying again.',
   loading: 'Reading the last half hour',
 })

@@ -110,7 +110,7 @@ export const copy = defineCopy('briefing', {
   recordDay: '\u2605 Record day',
   busiestOngoing: "Your busiest day in 90 days, and it isn't over yet.",
   busiest: (day: string) => `${day} was your busiest day in 90 days.`,
-  nthDay: (n: string) => `${n} day in a row above usual`,
+  nthDay: (n: number) => `${n}${['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th'} day in a row above usual`,
   daysAbove: (n: number) => `${n} days above usual`,
   meet: (who: string) => `Meet one of them: ${who}.`,
   replay: 'Replay',

@@ -56,9 +56,18 @@ function topFive(values: (string | undefined)[]): [string, number][] {
   return [...counts].sort((a, b) => b[1] - a[1]).slice(0, 5)
 }
 
+/** Phone against computer, as shares of the people whose device is known (a tablet counts with the phone). */
+export function deviceSplit(rows: Row[]): { phone: number; computer: number } | null {
+  const known = rows.filter((r) => r.device === 'mobile' || r.device === 'tablet' || r.device === 'desktop')
+  if (!known.length) return null
+  const phone = known.filter((r) => r.device !== 'desktop').length / known.length
+  return { phone, computer: 1 - phone }
+}
+
 export function listsOf(rows: Row[]) {
   return {
     pages: topFive(rows.map((r) => r.path)).map(([label, n]) => ({ label, n })),
     countries: topFive(rows.map((r) => r.country?.toUpperCase())).map(([key, n]) => ({ label: countryName(key), key, n })),
+    devices: deviceSplit(rows),
   }
 }

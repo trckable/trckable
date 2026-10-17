@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Row } from '../../features/live/model'
-import { barsOf, changeOf, listsOf, place, sourceParts, todayBand } from './liveModel'
+import { barsOf, changeOf, deviceSplit, listsOf, place, sourceParts, todayBand } from './liveModel'
 
 const row = (i: number, o: Partial<Row> = {}): Row => ({ kind: 'pageview', ts: 0, last: 0, path: '/p', visitor: `v${i}`, key: `v${i}`, ...o })
 
@@ -35,5 +35,10 @@ describe('Live', () => {
     const l = listsOf(rows)
     expect(l.pages).toEqual([{ label: '/a', n: 2 }, { label: '/b', n: 1 }])
     expect(l.countries.map((c) => [c.label, c.n])).toEqual([['United States', 2], ['Germany', 1]])
+  })
+
+  it('splits phone against computer from the people whose device is known', () => {
+    expect(deviceSplit([row(1, { device: 'mobile' }), row(2, { device: 'desktop' }), row(3, { device: 'desktop' }), row(4, { device: 'tablet' })])).toEqual({ phone: 0.5, computer: 0.5 })
+    expect(deviceSplit([row(1)])).toBeNull()
   })
 })
