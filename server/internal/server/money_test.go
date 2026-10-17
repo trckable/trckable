@@ -63,7 +63,8 @@ func TestMoneyMessagesFollowTheAlert(t *testing.T) {
 		}
 	}
 	// The email says the same in its text part, and a late one says when.
-	late := moneyEvent(revenue.Notice{At: time.Date(2026, 10, 16, 14, 5, 0, 0, time.UTC).UnixMilli(), Kind: revenue.NoticeNew, Amount: 4200, Currency: "USD", Exponent: 2, Late: true},
+	today := time.Now().UTC().Truncate(24 * time.Hour) // 14:05 of today, whatever the hour: a payment of an earlier day names its date as well
+	late := moneyEvent(revenue.Notice{At: today.Add(14*time.Hour + 5*time.Minute).UnixMilli(), Kind: revenue.NoticeNew, Amount: 4200, Currency: "USD", Exponent: 2, Late: true},
 		"shop.example", "Google", "https://stats.example.com/shop.example", time.UTC)
 	text := late.Email.Text()
 	for _, want := range []string{"New customer", "$42", "Came from: Google", "Paid: 14:05", "Open shop.example"} {
