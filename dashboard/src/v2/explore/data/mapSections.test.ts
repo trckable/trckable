@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { CrawlerReport, FunnelResult, Money, Report, SearchReport, WebVitals } from '../../../lib/api'
 import type { Mention as ApiMention } from '../../../features/mentions/api'
-import { gradeOf, leakOf, mapBots, mapFunnel, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed } from './mapSections'
+import { gradeOf, leakOf, mapBots, mapFunnel, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed, stepsOf } from './mapSections'
 
 const step = (value: string, visitors: number): FunnelResult => ({ kind: 'page', value, visitors, rate: 1, of_total: 1, median_s: 0, dropped: 0 })
 const kpis = { visitors: 100, sessions: 100, pageviews: 200, bounce_rate: 0.4, avg_session_s: 60, views_per_session: 2, new_visitor_share: 0.5 }
@@ -137,5 +137,21 @@ describe('mentions, robots and links', () => {
       { key: 'url', value: 'docs.x.com', visitors: 7 },
     ])
     expect(rows.map((r) => r.name)).toEqual(['docs.x.com', 'github.com/x'])
+  })
+})
+
+describe('the funnel an old address names', () => {
+  const pages = [{ value: '/' }, { value: '/pricing' }, { value: '/docs' }]
+  it('keeps the steps of fs= when there are two or more', () => {
+    const fs = [{ kind: 'page' as const, value: '/docs' }, { kind: 'goal' as const, value: 'signup' }]
+    expect(stepsOf(fs, pages, { value: 'x' })).toEqual(fs)
+  })
+  it('suggests the two busiest pages and the first goal otherwise', () => {
+    expect(stepsOf(undefined, pages, { value: 'signup' })).toEqual([
+      { kind: 'page', value: '/' },
+      { kind: 'page', value: '/pricing' },
+      { kind: 'goal', value: 'signup' },
+    ])
+    expect(stepsOf([{ kind: 'page', value: '/' }], pages)).toHaveLength(2)
   })
 })

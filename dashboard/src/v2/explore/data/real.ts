@@ -12,7 +12,7 @@ import { incidents } from '../../../features/incidents/api'
 import { mentionsApi, type Period } from '../../../features/mentions/api'
 import type { Down, SavedView, Tab } from '../types'
 import { mapOverview, mapTable, optionsOf, type Uptime } from './mapReport'
-import { mapBots, mapFunnel, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed } from './mapSections'
+import { mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed } from './mapSections'
 import type { DataCtx, Meta, TabData } from './useExplore'
 
 const query = (c: DataCtx, filters: Filter[] = c.filters): ReportQuery => queryOf({ ...c.view, filters }, c.range)
@@ -63,7 +63,7 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       const report = await cachedReport(c.site.id, q, undefined, signal)
       const pages = report.current.dims.entry_page ?? []
       const goal = (report.current.goals ?? [])[0]
-      const steps = [...pages.slice(0, 2).map((p) => ({ kind: 'page' as const, value: p.value })), ...(goal ? [{ kind: 'goal' as const, value: goal.value }] : [])]
+      const steps = stepsOf(c.view.funnel, pages, goal)
       if (steps.length < 2) return mapFunnel({ cur: [], report, ghost: !report.current.money })
       const p = before(report)
       const [cur, prev] = await Promise.all([more.funnel(c.site.id, q, steps), report.previous ? more.funnel(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }, steps) : Promise.resolve(null)])
