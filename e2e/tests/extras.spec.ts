@@ -104,7 +104,12 @@ test('Full: AI & Search is one tab of Who came, with the assistants by name', as
   const site = await signIn(page)
   await page.goto(`${BASE}/${site.domain}?mode=full`)
   const who = page.locator('[data-card=who]')
-  await who.getByRole('tab', { name: 'AI & Search', exact: true }).click({ timeout: 20_000 })
+  // The card can be redrawn once more as its late parts arrive, which puts the Sources tab back: choose the tab until it holds. A click on the chosen tab changes nothing.
+  const ai = who.getByRole('tab', { name: 'AI & Search', exact: true })
+  await expect(async () => {
+    await ai.click({ timeout: 5000 })
+    await expect(ai).toHaveAttribute('aria-selected', 'true', { timeout: 1500 })
+  }).toPass({ timeout: 25_000 })
   await expect(who.getByRole('group', { name: 'AI assistants' }).locator('.bl-row').first()).toContainText(/ChatGPT|Claude|Perplexity|Gemini|Copilot/, { timeout: 20_000 })
   // The old AI and Search tabs of Sources are gone.
   await who.getByRole('tab', { name: 'Sources', exact: true }).click()

@@ -36,18 +36,23 @@ export async function switchTab(to: Tab, from: Tab): Promise<void> {
 
 // Data's charts and lists fill in after the switch, so the page can still be a
 // few pixels short when the old place is restored and the browser clamps the
-// scroll to it. While the page settles, put it back (unless the reader moved).
+// scroll to it (WebKit moves scrollY itself while the page shrinks, so a changed
+// scrollY is no sign of the reader). While the page settles, put it back, until
+// the reader scrolls, presses a key or touches the page.
+const READER = ['wheel', 'touchmove', 'keydown', 'pointerdown'] as const
+
 function keepScroll(top: number) {
   window.scrollTo(0, top)
   if (!top || !window.ResizeObserver) return
-  let mine = scrollY
-  const ro = new ResizeObserver(() => {
-    if (scrollY !== mine) return ro.disconnect()
-    scrollTo(0, top)
-    mine = scrollY
-  })
+  const stop = () => {
+    ro.disconnect()
+    clearTimeout(timer)
+    for (const e of READER) window.removeEventListener(e, stop)
+  }
+  const ro = new ResizeObserver(() => scrollTo(0, top))
+  const timer = setTimeout(stop, SETTLE_MS)
   ro.observe(document.body)
-  setTimeout(() => ro.disconnect(), SETTLE_MS)
+  for (const e of READER) window.addEventListener(e, stop, { passive: true })
 }
 
 /** A minute on Live's line, opened in Data: that minute's day (Now when it is today), from the top. */

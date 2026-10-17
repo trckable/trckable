@@ -21,7 +21,30 @@ function onExplore(address: string): string {
   return url.toString()
 }
 
+// A route handler that fetches the real answer can be overtaken by the page
+// moving on or closing: the response is then disposed, or the page gone. That
+// is the load being replaced, not a failure; thrown out of the handler, it
+// would end the worker and take the next test with it.
+const GONE = /Response has been disposed|Target page, context or browser has been closed|Target closed|Test ended|Test timeout/
+type Routing = { route: (url: never, handler: (...a: never[]) => unknown, options?: never) => Promise<void> }
+function tolerant(target: Routing) {
+  const route = target.route.bind(target)
+  target.route = (url, handler, options) =>
+    route(
+      url,
+      (async (...a: never[]) => {
+        try {
+          await handler(...a)
+        } catch (e) {
+          if (!GONE.test(String(e))) throw e
+        }
+      }) as typeof handler,
+      options,
+    )
+}
+
 function onPage(page: Page): Page {
+  tolerant(page as unknown as Routing)
   const goto = page.goto.bind(page)
   page.goto = (url, options) => goto(onExplore(url), options)
   // Charts draw in and figures count up on first sight: a test measures the page at rest.
@@ -34,6 +57,7 @@ function onPage(page: Page): Page {
 }
 
 function onContext<T extends BrowserContext>(context: T): T {
+  tolerant(context as unknown as Routing)
   const newPage = context.newPage.bind(context)
   context.newPage = async () => onPage(await newPage())
   return context

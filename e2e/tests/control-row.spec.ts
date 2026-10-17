@@ -374,8 +374,12 @@ test('a phone: Add in the sheet opens the filter menu on screen, and Views in â‹
     await expect(pick).toBeHidden()
     await expect(more).toBeFocused()
     await page.keyboard.press('Enter')
+    // Each key waits for the focus the one before it set, as the first time above.
+    await expect(items.first()).toBeFocused()
     await page.keyboard.press('ArrowDown')
+    await expect(items.nth(1)).toBeFocused()
     await page.keyboard.press('Enter')
+    await expect(pick).toBeVisible()
     await pick.click()
     await expect(pick).toBeHidden()
     // The saved view's own address replaces this one, so the page it opens is not this page's: the filter is in it.

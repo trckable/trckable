@@ -17,7 +17,11 @@ test.beforeAll(async () => {
 
 function watch(page: Page) {
   const errors: string[] = []
-  page.on('pageerror', (e) => errors.push(e.stack ?? e.message))
+  // WebKit reports a request cut off by the next navigation as a failed access
+  // check; that is the load being replaced, not an error of the page.
+  page.on('pageerror', (e) => {
+    if (!/due to access control checks/.test(e.message)) errors.push(e.stack ?? e.message)
+  })
   return errors
 }
 

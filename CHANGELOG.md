@@ -13,6 +13,7 @@ section into the release.
 - The light theme of the new header and menus reads clearly (the site list, the Live and Briefing tabs, the fields and hover fills), the faint grey text is a little lighter in the dark theme, and the bell and the online counts are read a moment after the page, not with it.
 - Tooltips and menus (the site list, the period, the bell, your menu, Filter, the (i) tips) are drawn on the page's top layer and kept whole inside the window, so a card's edge never cuts them off; a test opens each at a phone, a tablet and two desktop widths.
 - The dashboard's new header and Briefing: one header on every page (site list with pins, groups, drag and the domain choice, the bell, your menu), a Briefing that reads like the walkthrough (the signup path leaking, a first customer from a new country, numbers and lines that glide to the next period, loading shapes that match the page), and a page for a site before its first visit with the one line to paste, the check and every other way to install.
+- Switching between Live and Data keeps the scroll place you left in Safari too: the page holds it while the cards fill in, until you scroll yourself.
 
 ## 0.7.24 (16 Oct 2026)
 

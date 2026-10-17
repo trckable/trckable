@@ -73,10 +73,14 @@ test('alerts: where to send them, before anything else', async ({ page }) => {
 test('funnels: two steps make one, and the card says so', async ({ page }) => {
   // A site whose report has no pages and no goals has nothing to suggest.
   await page.route(/\/api\/v1\/sites\/[^/]+\/report\?/, async (route) => {
-    const res = await route.fetch()
-    const body = await res.json()
-    for (const r of [body.current, body.previous]) if (r) (r.dims.entry_page = []), (r.goals = [])
-    await route.fulfill({ response: res, json: body })
+    try {
+      const res = await route.fetch()
+      const body = await res.json()
+      for (const r of [body.current, body.previous]) if (r) (r.dims.entry_page = []), (r.goals = [])
+      await route.fulfill({ response: res, json: body })
+    } catch {
+      // The page moved on while this was in flight (WebKit disposes the response): the next report is the one that counts.
+    }
   })
   await page.goto(`${API}/${HISTORY_DOMAIN}?mode=full`)
   await page.locator('[data-card=what]').getByRole('tab', { name: 'Funnel' }).click()
