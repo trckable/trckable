@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The header's controls look like one set at every width: the site, the search, the bell and the person are boxes of the same height (40 px on a phone) with the same border and fill, one gap between them, and a long site name is cut with an ellipsis before anything is pushed off the screen.
 - Which notices the bell has read are kept at /api/v1/me/bell-read (it was never released under the old name).
 - The Briefing's chart has its own row for the words above it and the Notes button, so they no longer sit on the chart's labels, and Replay and Why? have room between them
 - The header stays at the top of the window while you scroll (its bottom edge shows once the page has moved under it), and N (Now) and 4 (28 days) pick a period again, with the ? list naming them.
