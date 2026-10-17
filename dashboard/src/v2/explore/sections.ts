@@ -14,10 +14,10 @@ const SECTIONS: Section[] = GROUPS.flatMap((g) => g.items)
 
 export const TABS: Record<Section, Tab[]> = {
   overview: ['overview', 'highlights', 'overtime', 'hours'],
-  pages: ['pages', 'sells'],
-  sources: ['sources', 'referrers', 'utm', 'search', 'earners'],
-  places: ['countries', 'revmap', 'people'],
-  tech: ['devices', 'browsers'],
+  pages: ['pages', 'exits', 'groups', 'sells'],
+  sources: ['sources', 'referrers', 'utm', 'utmsource', 'medium', 'search', 'earners'],
+  places: ['countries', 'regions', 'cities', 'languages', 'revmap', 'people'],
+  tech: ['devices', 'browsers', 'bversion', 'screens'],
   results: ['funnels', 'retention', 'vsale', 'toconvert', 'flow'],
   sales: ['sales', 'buyers'],
   speed: ['speed'],

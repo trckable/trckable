@@ -21,7 +21,8 @@ import { mapOverview, mapTable, optionsOf, type Uptime } from './mapReport'
 import { mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed } from './mapSections'
 import type { DataCtx, Meta, TabData } from './useExplore'
 
-const query = (c: DataCtx, filters: Filter[] = c.filters): ReportQuery => queryOf({ ...c.view, filters }, c.range)
+/** Explore asks for the deep report: the breakdowns of regions, cities, exit pages and the rest ride in the same read. */
+const query = (c: DataCtx, filters: Filter[] = c.filters): ReportQuery => ({ ...queryOf({ ...c.view, filters }, c.range), deep: true })
 
 /** The range the report compared with: the period before. */
 const before = (r: Report): Range => ({ from: r.previous_from ?? r.from, to: r.previous_to ?? r.to })

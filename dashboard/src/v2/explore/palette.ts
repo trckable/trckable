@@ -30,8 +30,8 @@ export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report
   for (const s of o.sites) out.push({ title: pc.switchTo(s.name || s.domain), kind: pc.kinds.site, group: pc.groups.sites, run: () => navigate('/' + encodeURIComponent(s.domain)) })
   for (const [id, name] of PERIODS) out.push({ title: `${pc.period} · ${name}`, kind: pc.kinds.period, group: pc.groups.period, run: () => setView({ period: id, from: undefined, to: undefined }) })
   const dims = o.data?.current.dims
-  for (const r of (dims?.referrer ?? []).slice(0, 8)) out.push({ title: `${pc.filter} · ${pc.source} ${sourceName(r.value) || r.value}`, kind: pc.kinds.filter, group: pc.groups.filters, run: () => setView({ filters: [{ dim: 'referrer', value: r.value }] }) })
-  for (const r of (dims?.country ?? []).slice(0, 8)) out.push({ title: `${pc.filter} · ${pc.country} ${countryName(r.value)}`, kind: pc.kinds.filter, group: pc.groups.filters, run: () => setView({ filters: [{ dim: 'country', value: r.value }] }) })
-  for (const r of (dims?.device ?? []).slice(0, 4)) out.push({ title: `${pc.filter} · ${r.value}`, kind: pc.kinds.filter, group: pc.groups.filters, run: () => setView({ filters: [{ dim: 'device', value: r.value }] }) })
+  for (const r of (dims?.referrer ?? []).slice(0, 8)) out.push({ title: `${pc.filter} · ${pc.source} ${sourceName(r.value) || r.value}`, kind: pc.kinds.filter, group: pc.groups.filters, run: () => openExplore('overview', [{ dim: 'referrer', value: r.value }]) })
+  for (const r of (dims?.country ?? []).slice(0, 8)) out.push({ title: `${pc.filter} · ${pc.country} ${countryName(r.value)}`, kind: pc.kinds.filter, group: pc.groups.filters, run: () => openExplore('overview', [{ dim: 'country', value: r.value }]) })
+  for (const r of (dims?.device ?? []).slice(0, 4)) out.push({ title: `${pc.filter} · ${r.value}`, kind: pc.kinds.filter, group: pc.groups.filters, run: () => openExplore('overview', [{ dim: 'device', value: r.value }]) })
   return out
 }

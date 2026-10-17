@@ -77,3 +77,19 @@ describe('the tables', () => {
     expect(o.device).toEqual([])
   })
 })
+
+describe('the deep tables', () => {
+  const dims = { region: [{ value: 'Bavaria', visitors: 40 }], city: [{ value: 'Munich', visitors: 30 }], exit_page: [{ value: '/pricing', visitors: 20 }], group: [{ value: '/blog', visitors: 50 }], language: [{ value: 'de', visitors: 60 }], browser_version: [{ value: 'Chrome 120', visitors: 10 }], screen: [{ value: '1025–1440', visitors: 15 }], source: [{ value: 'newsletter', visitors: 12 }], medium: [{ value: 'email', visitors: 12 }] }
+  const tabs = ['regions', 'cities', 'exits', 'groups', 'languages', 'bversion', 'screens', 'utmsource', 'medium'] as const
+  it('has a table for each breakdown only the deep report has, and a tap on a row filters by it', () => {
+    const t = Object.fromEntries(tabs.map((k) => [k, mapTable(k, report(result(100, { dims })))]))
+    expect(Object.entries(t).map(([k, v]) => [k, v.rows.length, v.dim])).toEqual([['regions', 1, 'region'], ['cities', 1, 'city'], ['exits', 1, 'exit_page'], ['groups', 1, 'group'], ['languages', 1, 'language'], ['bversion', 1, 'browser_version'], ['screens', 1, 'screen'], ['utmsource', 1, 'source'], ['medium', 1, 'medium']])
+  })
+  it('gives each row its customers and revenue where payments are connected, and none to pages and sections', () => {
+    const cur = result(100, { dims: { ...dims, country: [{ value: 'DE', visitors: 40 }] }, money: money(30500), revenue_dims: { country: [{ value: 'DE', visitors: 40, customers: 2, revenue: 30500 }], group: [{ value: '/blog', visitors: 50, customers: 1, revenue: 100 }] } })
+    expect(mapTable('countries', report(cur)).rows[0]).toMatchObject({ cust: 2, rev: 30500 })
+    expect(mapTable('groups', report(cur)).rows[0].rev).toBeUndefined()
+    expect(mapTable('countries', report(result(100, { dims: { country: [{ value: 'DE', visitors: 40 }] } }))).rows[0].rev).toBeUndefined()
+  })
+})
+
