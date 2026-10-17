@@ -42,7 +42,7 @@ async function open(page: Page, width: number, revenue: boolean) {
       await route.fulfill({ response: res, json: body })
     })
   }
-  await page.goto(`${API}/example.com?view=data`)
+  await page.goto(`${API}/example.com?view=briefing`)
   const tiles = page.getByRole('group', { name: 'Key numbers' })
   await expect(tiles.locator('.kpi .value.num').first()).toBeVisible()
   // Without payments an owner has the dimmed Revenue tile in the money numbers' place: five.

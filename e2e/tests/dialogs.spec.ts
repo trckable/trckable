@@ -39,7 +39,7 @@ async function open(page: Page, width: number) {
   await page.context().addCookies([{ name: 'trckable_session', value: await session(), url: BASE! }])
   await page.goto(BASE + '/')
   const domain = await page.evaluate(async () => (await (await fetch('/api/v1/sites')).json()).sites[0].domain as string)
-  await page.goto(`${BASE}/${domain}?view=data`)
+  await page.goto(`${BASE}/${domain}?view=briefing`)
   await expect(page.locator('.overview-chart .chart-wrap svg')).toBeVisible({ timeout: 20_000 })
 }
 

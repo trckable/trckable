@@ -1,13 +1,13 @@
-// "See this page" and "See speed details": the site's Data, filtered to one page.
+// "See this page" and "See speed details": Explore, on one page.
 import { navigate, setView } from '../../lib/url'
 
-function toData(domain: string, page: string, patch: Parameters<typeof setView>[0]) {
+function toExplore(domain: string, page: string, tab: 'pages' | 'speed') {
   const home = '/' + encodeURIComponent(domain)
   if (location.pathname !== home) navigate(home)
-  setView({ live: false, filters: [{ dim: 'page', value: page }], ...patch })
+  setView({ live: false, xp: tab, xf: [{ dim: 'page', value: page }] })
 }
 
-export const seePage = (domain: string, page: string) => toData(domain, page, { v: 'explore' })
+export const seePage = (domain: string, page: string) => toExplore(domain, page, 'pages')
 
-/** Full mode, where the speed tab is. */
-export const seeSpeed = (domain: string, page: string) => toData(domain, page, { mode: 'full' })
+/** The speed tab. */
+export const seeSpeed = (domain: string, page: string) => toExplore(domain, page, 'speed')
