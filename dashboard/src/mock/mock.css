@@ -964,7 +964,9 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 }
 @container (min-width:601px){
 .mk .chwrap{position:relative;margin-top:var(--mk-s2)}
-.mk .chwrap .ch-top{position:absolute;left:44px;top:2px;margin:0;min-height:0;z-index:1}
+.mk .chwrap .ch-top{justify-content:space-between;align-items:center;gap:var(--mk-s3);margin:0 0 var(--mk-s1);min-height:28px;padding-left:44px}
+.mk .chwrap #chNote{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mk .chwrap .ch-top>:not(#chNote){flex:none}
 .mk .hero .chart, .mk #chart, .mk .chart{height:180px}
 .mk .hero{padding-bottom:0}
 }
@@ -1430,6 +1432,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .hd .account-menu .more-menu{right:0;left:auto;top:calc(100% + var(--mk-s2));width:280px;min-width:0;max-width:calc(100vw - 16px);background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:14px;box-shadow:0 20px 50px var(--mk-shc);z-index:var(--z-menu)}
 /* "Why?" beside "Replay": two buttons in a line, aligned at the top so the line is as tall as the walkthrough's one. */
 .mk .hl-col .rpb{vertical-align:top}
+@container (min-width:601px){.mk .hl-col .rpb+.rpb{margin-left:var(--mk-s2)}}
 /* A period being read: the page of the last one stays, dimmed, until the new one is whole. */
 .mk-hold{display:contents}
 .mk-held{opacity:.55;transition:opacity .2s;pointer-events:none}

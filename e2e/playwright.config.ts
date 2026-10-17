@@ -24,6 +24,17 @@ if (!existsSync(HISTORY)) {
   )
   writeFileSync(HISTORY, rows.join('\n') + '\n')
 }
+// The same days with a crowd on each: the chart's labels with a busy site behind them.
+export const BUSY_DOMAIN = 'busy.example'
+const BUSY = join(DATA, 'busy.ndjson')
+if (!existsSync(BUSY)) {
+  const noon = Math.floor(Date.now() / 86_400_000) * 86_400_000 + 12 * 3_600_000
+  const perDay = [180, 140, 210, 90, 160, 120]
+  const rows = perDay.flatMap((n, d) =>
+    Array.from({ length: n }, (_, i) => JSON.stringify({ ts: new Date(noon - (d + 1) * 86_400_000 + i * 60_000).toISOString(), path: i % 3 ? '/pricing' : '/', visitor: `busy-${d}-${i}` })),
+  )
+  writeFileSync(BUSY, rows.join('\n') + '\n')
+}
 export const API = 'http://127.0.0.1:18300'
 export const TOKEN = 'e2e-token'
 
@@ -59,7 +70,7 @@ export default defineConfig({
   webServer: [
     {
       // example.com first (the suite's own site), then the one with history, then the server.
-      command: `sh -c '"${BIN}" site add example.com && "${BIN}" site add ${HISTORY_DOMAIN} && "${BIN}" import ${HISTORY_DOMAIN} "${HISTORY}" && exec "${BIN}" serve'`,
+      command: `sh -c '"${BIN}" site add example.com && "${BIN}" site add ${HISTORY_DOMAIN} && "${BIN}" import ${HISTORY_DOMAIN} "${HISTORY}" && "${BIN}" site add ${BUSY_DOMAIN} && "${BIN}" import ${BUSY_DOMAIN} "${BUSY}" && exec "${BIN}" serve'`,
       url: `${API}/readyz`,
       reuseExistingServer: false,
       env: {
