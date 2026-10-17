@@ -10,6 +10,7 @@ import { expect, test, type Page } from './fixtures'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { pageSettled } from './pageSettled'
 
 const BASE = process.env.TRCKABLE_A11Y_URL
 const EMAIL = process.env.TRCKABLE_A11Y_EMAIL ?? 'me@site.com'
@@ -42,10 +43,41 @@ async function scan(page: Page, where: string) {
   // page runs with reduced motion (the dashboard then skips its entrance
   // animations), and a short pause lets late-loading parts arrive.
   await page.waitForTimeout(700)
+  // A menu that has just swapped in is still fading: axe reads text that is not yet shown as none.
+  await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => Number.isFinite(a.effect?.getComputedTiming().endTime as number)).map((a) => a.finished.catch(() => undefined))))
+  // The entrance can start a frame after it opens, and a list is placed after it is measured: wait for its items to be shown, opaque and on the screen.
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('[role=menuitem]:not([disabled])')].some((el) => {
+          if (getComputedStyle(el).visibility !== 'visible') return true
+          const r = el.getBoundingClientRect() // a list not yet placed sits off the screen, and axe then reads its text as hidden
+          if (r.width === 0 || r.right <= 0 || r.bottom <= 0 || r.left >= innerWidth || r.top >= innerHeight) return true
+          for (let n: Element | null = el; n; n = n.parentElement) if (+getComputedStyle(n).opacity < 1) return true
+          return false
+        }),
+      ),
+    )
+    .toBe(false)
   // The footer's logo is faint on purpose until pointed at: a logotype is
   // exempt from text contrast (WCAG 1.4.3), and its links are still scanned.
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).exclude('.app-footer .tkb-logo').analyze()
   const found = violations.flatMap((v) => v.nodes.map((n) => `${where}: ${v.id} — ${n.any?.[0]?.message ?? v.help}\n    ${n.html.slice(0, 160)}`))
+  if (found.length) {
+    const first = violations[0]?.nodes[0]
+    const why = await page.evaluate((sel) => {
+      const el = document.querySelector(sel as string)
+      if (!el) return 'gone'
+      const up: string[] = []
+      for (let n: Element | null = el; n; n = n.parentElement) {
+        const c = getComputedStyle(n)
+        up.push(`${n.tagName}.${String(n.className).slice(0, 20)} vis=${c.visibility} op=${c.opacity} disp=${c.display} ah=${n.getAttribute('aria-hidden')} inert=${n.hasAttribute('inert')} clip=${c.clipPath} tf=${c.transform}`)
+      }
+      const r = el.getBoundingClientRect()
+      return `${JSON.stringify([r.x, r.y, r.width, r.height])} text=${JSON.stringify(el.textContent)} ${up.join(' | ')}`
+    }, String(first?.target?.[0] ?? 'body'))
+    found.push(`state: ${why}`)
+  }
   expect(found, where).toEqual([])
 }
 
@@ -121,9 +153,13 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await page.locator('[data-card=what]').getByRole('tab', { name: 'Page flow' }).click({ timeout: 20_000 })
       await page.waitForSelector('[data-chart=flow] svg', { timeout: 20_000 })
       await scan(page, 'dashboard, full grid')
+      await pageSettled(page) // a card that arrives late redraws the page under a menu that is open
       await page.getByRole('button', { name: 'More', exact: true }).click()
       await scan(page, 'more menu')
       await page.getByRole('menu', { name: 'More' }).getByRole('menuitem', { name: /Create/ }).click()
+      const create = page.getByRole('menu', { name: 'Create something' })
+      await expect(create.getByRole('menuitem').first()).toBeFocused() // the list is placed and has taken focus
+      await expect(page.getByRole('menu', { name: 'More' })).toBeHidden()
       await scan(page, 'create menu')
       const funnel = page.getByRole('menuitem', { name: /Funnel/ })
       if (await funnel.isEnabled()) {

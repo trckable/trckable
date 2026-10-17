@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Switching between Live and Data keeps the scroll place you left in Safari too: the page holds it while the cards fill in, until you scroll yourself.
+
 ## 0.7.24 (16 Oct 2026)
 
 - The site list's search box shows a thin border while you type instead of a bright ring, and a test keeps the phone's site list a sheet on the screen in every browser, light and dark.

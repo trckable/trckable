@@ -46,7 +46,14 @@ say "the new image refused it, naming: chown -R 65532:65532 /data"
 docker run --rm -v "$V":/data busybox chown -R 65532:65532 /data
 docker run -d --name "$N" -e TRCKABLE_GEO=off -p "127.0.0.1:$PORT:8080" -v "$V":/data "$NEW" >/dev/null
 ready "the new image"
-docker exec "$N" trckabled site list | grep -q "$site" || fail "site $site is gone"
+# The command opens the store beside the running server, which can still hold it for a moment after it is ready: ask again.
+listed=""
+for _ in $(seq 1 25); do
+  listed=$(docker exec "$N" trckabled site list 2>&1 || true)
+  echo "$listed" | grep -q "$site" && break
+  sleep 0.4
+done
+echo "$listed" | grep -q "$site" || fail "site $site is gone ($listed)"
 after=$(committed)
 [ "$after" = "$before" ] || fail "events: $before before, $after after"
 stop "the new image"

@@ -88,6 +88,8 @@ for (const width of [1440, 390]) {
     await expect(page.locator('.sv-tiles .kit-card').first()).toBeVisible({ timeout: 30_000 })
     await expect(page.locator('.sv-chart')).toBeVisible()
     await expect(page.locator('.dsk, .dsk-inline')).toHaveCount(0)
+    // The page comes in with a soft 0.28 s step (it rises 8 px): measure it where it lands, not on the way.
+    await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => Number.isFinite(a.effect?.getComputedTiming().endTime as number)).map((a) => a.finished.catch(() => undefined))))
     const real = { tile: await rect(page, '.sv-tiles .kit-card'), chart: await rect(page, '.sv-chart'), answer: await rect(page, '.sv-answer'), head: await rect(page, '.sv-head') }
     for (const key of ['head', 'tile', 'chart', 'answer'] as const) {
       const a = skeleton[key]!
@@ -147,6 +149,7 @@ test('an automatic refresh is silent: no skeleton, no bar, no dimming, no shimme
   await page.clock.install()
   await page.goto(URL)
   await expect(page.locator('.sv-chart')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('.ld, .sv-veil')).toHaveCount(0) // the first load's own ghost has gone: only the refresh is watched
   await page.evaluate(() => {
     const w = window as unknown as { seen: string[] }
     w.seen = []

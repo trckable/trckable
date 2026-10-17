@@ -133,7 +133,9 @@ test('5. a goal sent from a server, as the Your server tab writes it, counts', a
   await dashboard(page)
   await page.locator('[data-card=what]').getByRole('button', { name: /Track a goal/ }).first().click()
   const dialog = page.getByRole('dialog', { name: 'Add goals' })
-  await dialog.getByRole('radio', { name: /Your server/ }).check({ force: true })
+  const server = dialog.getByRole('radio', { name: /Your server/ })
+  await server.click({ force: true })
+  await expect(server).toBeChecked()
   const code = await dialog.locator('pre').innerText()
   await expect(dialog).toContainText('after the first event')
 

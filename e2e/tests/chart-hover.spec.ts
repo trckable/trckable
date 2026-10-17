@@ -56,8 +56,9 @@ async function openChart(page: Page) {
   await page.goto(`${API}/${HISTORY_DOMAIN}?compare=previous`)
   const chart = page.locator('.chart-wrap')
   await expect(chart.locator('svg[role="img"]')).toBeVisible({ timeout: 30_000 })
-  const points = Number(/(\d+) points/.exec((await chart.locator('svg[role="img"]').getAttribute('aria-label')) ?? '')?.[1] ?? 0)
-  expect(points, `the chart needs at least 3 buckets to hover between, and has ${points}: is ${HISTORY_DOMAIN} seeded?`).toBeGreaterThanOrEqual(3)
+  // The chart is drawn before its numbers arrive (0 points): wait for them.
+  const read = async () => Number(/(\d+) points/.exec((await chart.locator('svg[role="img"]').getAttribute('aria-label')) ?? '')?.[1] ?? 0)
+  await expect.poll(read, { message: `the chart needs at least 3 buckets to hover between: is ${HISTORY_DOMAIN} seeded?`, timeout: 20_000 }).toBeGreaterThanOrEqual(3)
   // The page settles (a scrollbar, a banner) before anything is measured on it.
   let at = JSON.stringify(await chart.boundingBox())
   for (let same = 0, i = 0; same < 3 && i < 40; i++) {
@@ -268,8 +269,12 @@ test('a paused Replay leaves a quiet marker on the picked day', async ({ page })
   const chart = await openHistory(page)
   await page.getByRole('button', { name: /^Replay this period/ }).click()
   await expect(chart).toHaveAttribute('data-locked', 'true')
-  await page.getByRole('button', { name: 'Pause replay' }).click()
-  await expect(chart).not.toHaveAttribute('data-locked', 'true')
+  // Pause only while it plays (the button exists only then), until it is paused.
+  await expect(async () => {
+    const pause = page.getByRole('button', { name: 'Pause replay' })
+    if (await pause.count()) await pause.click({ timeout: 2000 })
+    await expect(chart).not.toHaveAttribute('data-locked', 'true', { timeout: 1500 })
+  }).toPass({ timeout: 15_000 })
   await expect(chart).toHaveAttribute('data-quiet', 'true')
   await expect(chart).toHaveAttribute('data-cut', 'on')
   const style = (sel: string, prop: string) => chart.locator(sel).evaluate((el, p) => getComputedStyle(el).getPropertyValue(p), prop)
@@ -303,6 +308,7 @@ async function thumbAndMarker(page: Page, chart: Locator) {
 
 test('the Replay slider spans the chart, so its thumb sits at the picked day', async ({ page }) => {
   const chart = await openHistory(page)
+  await expect(chart.locator('svg[role="img"]')).toHaveAttribute('aria-label', /[1-9]\d* points/) // drawn before its numbers arrive
   const points = Number(/(\d+) points/.exec((await chart.locator('svg[role="img"]').getAttribute('aria-label')) ?? '')?.[1] ?? 0)
   const slider = page.locator('#scrub')
   expect(await slider.getAttribute('min')).toBe('0')
@@ -314,11 +320,14 @@ test('the Replay slider spans the chart, so its thumb sits at the picked day', a
   const at = await thumbAndMarker(page, chart)
   expect(Math.abs(at.thumb - at.marker)).toBeLessThan(0.04)
   // The chart's own cursor, put on that marker, names the chip's day.
-  const b = (await chart.boundingBox())!
   const day = ((await chip.textContent()) ?? '').trim()
-  await page.mouse.move(b.x + PAD_L + at.marker * (b.width - PAD_L), b.y + b.height / 2)
-  await page.mouse.move(b.x + PAD_L + at.marker * (b.width - PAD_L) + 1, b.y + b.height / 2)
-  await expect(chart.locator('.cursor-pill')).toContainText(day)
+  // The chart may still be settling under the pointer: measure and point again until the pill shows.
+  await expect(async () => {
+    const b = (await chart.boundingBox())!
+    await page.mouse.move(b.x + PAD_L + at.marker * (b.width - PAD_L), b.y + b.height / 2)
+    await page.mouse.move(b.x + PAD_L + at.marker * (b.width - PAD_L) + 1, b.y + b.height / 2)
+    await expect(chart.locator('.cursor-pill')).toContainText(day, { timeout: 1500 })
+  }).toPass({ timeout: 15_000 })
 })
 
 // In Full the chart itself picks the day (a click or drag on it): the thumb follows.

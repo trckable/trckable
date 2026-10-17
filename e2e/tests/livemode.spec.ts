@@ -169,9 +169,10 @@ test('switching both ways: no blank frame, no shift, scroll kept', async ({ page
   const top = await view.boundingBox()
   const y = await page.evaluate(() => {
     // Well inside the page as it is on the way back, before the cards under the cards have come in again.
-    window.scrollTo(0, Math.min(150, document.documentElement.scrollHeight - innerHeight - 40))
+    window.scrollTo(0, Math.min(100, document.documentElement.scrollHeight - innerHeight - 120))
     return scrollY
   })
+  expect(y).toBeGreaterThan(20)
 
   // Scrolled down, the switch is out of sight: L is the way to Live.
   await page.keyboard.press('l')
@@ -184,7 +185,11 @@ test('switching both ways: no blank frame, no shift, scroll kept', async ({ page
   await view.getByRole('button', { name: 'Data' }).click()
   await expect(page.locator('.range-picker')).toBeVisible()
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(y)
-  await page.evaluate(() => window.scrollTo(0, 0))
+  // The reader scrolls back up (a wheel turn ends the page's hold on the old place).
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('wheel'))
+    window.scrollTo(0, 0)
+  })
   expectSamePlace(await view.boundingBox(), top)
   expect(await page.evaluate(() => (window as unknown as { blanks: number }).blanks)).toBe(0)
 })
