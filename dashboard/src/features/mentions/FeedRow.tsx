@@ -1,4 +1,4 @@
-import { ChevronRight, ExternalLink } from 'lucide-react'
+import { ChevronRight, EyeOff, ExternalLink } from 'lucide-react'
 import { fmtInt } from '../../lib/format'
 import type { Mention } from './api'
 import { copy } from './copy'
@@ -7,6 +7,7 @@ import { agoOf, safeURL } from './model'
 import { outletOf } from './pageModel'
 import { SourceMark } from './SourceMark'
 import { Spark } from './Spark'
+import { trust } from './trustCopy'
 
 /** Who said it: the author's handle, or the outlet for a news item. */
 function whoOf(m: Mention): string {
@@ -18,13 +19,13 @@ function whoOf(m: Mention): string {
 export function reachOf(m: Mention): string[] {
   const out: string[] = []
   if (m.front) out.push(copy.front)
-  if (m.points && m.source !== 'news') out.push(copy.points[m.source](m.points))
+  if (m.points && (m.source === 'hn' || m.source === 'ph')) out.push(copy.points[m.source](m.points))
   if (m.comments) out.push(page.comments(m.comments))
   return out
 }
 
 /** One mention as a card: where and when, its title, who said it, and the visitors it brought, big, with their curve. */
-export function FeedRow({ m, curve, onOpen }: { m: Mention; curve?: number[]; onOpen: () => void }) {
+export function FeedRow({ m, curve, onOpen, onHide }: { m: Mention; curve?: number[]; onOpen: () => void; onHide?: () => void }) {
   const href = safeURL(m.url)
   const title = m.title || copy.name[m.source]
   return (
@@ -34,6 +35,16 @@ export function FeedRow({ m, curve, onOpen }: { m: Mention; curve?: number[]; on
         <span>{copy.name[m.source]}</span>
         <span className="mp-when">{agoOf(m.posted_at)}</span>
         {m.front && <span className="mp-tag">{copy.front}</span>}
+        {m.via === 'page' && (
+          <span className="mp-tag mp-confirmed" title={trust.confirmedTip}>
+            {trust.confirmed(m.visitors)}
+          </span>
+        )}
+        {onHide && (
+          <button type="button" className="mp-go mp-hide" aria-label={trust.notAboutUs} title={trust.notAboutUs} onClick={onHide}>
+            <EyeOff size={15} aria-hidden="true" />
+          </button>
+        )}
         <button type="button" className="mp-go" aria-label={page.openDetail(title)} onClick={onOpen}>
           <ChevronRight size={16} aria-hidden="true" />
         </button>

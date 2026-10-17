@@ -45,7 +45,11 @@ type rssFeed struct {
 // from the last two days. etag is the one the last answer carried (empty the
 // first time); notModified says nothing changed since.
 func SearchGoogleNews(ctx context.Context, d Doer, keywords []string, etag string) (list []Mention, newTag string, notModified bool, err error) {
-	q := url.Values{"q": {anyOf(keywords) + " when:2d"}, "hl": {"en-US"}, "gl": {"US"}, "ceid": {"US:en"}}
+	return searchGoogleNews(ctx, d, keywords, etag, "2d")
+}
+
+func searchGoogleNews(ctx context.Context, d Doer, keywords []string, etag, within string) (list []Mention, newTag string, notModified bool, err error) {
+	q := url.Values{"q": {anyOf(keywords) + " when:" + within}, "hl": {"en-US"}, "gl": {"US"}, "ceid": {"US:en"}}
 	header := map[string]string{}
 	if etag != "" {
 		header["If-None-Match"] = etag
@@ -147,20 +151,4 @@ func TitleKey(title string) string {
 		}
 	}
 	return b.String()
-}
-
-// Dedupe drops a mention that has the same canonical address, or the same
-// headline on the same site, as an earlier one. Order is kept.
-func Dedupe(list []Mention) []Mention {
-	seen := map[string]bool{}
-	var out []Mention
-	for _, m := range list {
-		a, b := Canonical(m.URL), m.Host+"|"+TitleKey(m.Title)
-		if seen[a] || (m.Source == News && seen[b]) {
-			continue
-		}
-		seen[a], seen[b] = true, true
-		out = append(out, m)
-	}
-	return out
 }

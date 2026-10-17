@@ -45,6 +45,9 @@ func (r *recorded) Do(req *http.Request) (*http.Response, error) {
 	if limited {
 		return &http.Response{StatusCode: 429, Body: io.NopCloser(strings.NewReader(""))}, nil
 	}
+	if strings.HasPrefix(u.Host+u.Path, "news.google.com/rss/articles/") {
+		return &http.Response{StatusCode: 200, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(""))}, nil // a link that does not give its publisher away
+	}
 	if file == "" {
 		r.t.Fatalf("unexpected call to %s", u)
 	}
@@ -85,8 +88,12 @@ func newMentionRig(t *testing.T) *mentionRig {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// The recorded answers name the site by its bare name, which only counts when its owner added it.
-	if err := st.SetMentionKeywords(ctx, site, []string{"Acme"}, 1); err != nil {
+	// The recorded answers name the site by its bare name, which only counts when its
+	// owner added it, with a topic word beside it (and in the news, as a phrase).
+	if err := st.SetMentionKeywords(ctx, site, []string{"Acme", "Acme launches", "review of Acme"}, 1); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.SetMentionRules(ctx, site, sqlite.MentionRules{Topic: []string{"analytics", "dashboard", "review"}}); err != nil {
 		t.Fatal(err)
 	}
 	r := &mentionRig{st: st, db: dk, site: site, now: mday.Add(12 * time.Hour), net: &recorded{t: t, calls: map[string]int{}, limit: map[string]bool{}}}

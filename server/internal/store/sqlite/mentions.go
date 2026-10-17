@@ -2,10 +2,13 @@ package sqlite
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"sort"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/trckable/trckable/server/internal/mentions"
 )
 
 // MaxKeywords is how many extra search words a site may add; its address is
@@ -35,7 +38,18 @@ type Mention struct {
 	PeakHour int64  `json:"peak_hour,omitempty"` // unix seconds of the busiest hour; 0 when none came
 	ScoredAt int64  `json:"-"`
 	Alerted  bool   `json:"-"`
+	State    string `json:"state,omitempty"` // shown | hidden | rejected | pending
+	Via      string `json:"via,omitempty"`   // domain | name | page: how it matched; "page" is confirmed by visits
+	Link     string `json:"-"`               // what it points at
 }
+
+// What a mention's state says: only a shown one is counted or listed.
+const (
+	MentionShown    = "shown"
+	MentionHidden   = "hidden"   // the owner said "Not about us"
+	MentionRejected = "rejected" // a judge said it is not about the site
+	MentionPending  = "pending"  // a judge has not answered yet
+)
 
 // MentionKeywords are the words a person added to a site's search.
 func (s *Store) MentionKeywords(ctx context.Context, site string) ([]string, error) {
@@ -100,7 +114,7 @@ func (s *Store) SetMentionKeywords(ctx context.Context, site string, words []str
 }
 
 // SearchWords are every word a site is searched for: its address (with and
-// without "www."), then the ones added. In that order, no repeats.
+// without "www."), then the names added. In that order, no repeats.
 func (s *Store) SearchWords(ctx context.Context, site SiteRow) ([]string, error) {
 	added, err := s.MentionKeywords(ctx, site.ID)
 	if err != nil {
@@ -111,7 +125,8 @@ func (s *Store) SearchWords(ctx context.Context, site SiteRow) ([]string, error)
 
 // JoinWords is SearchWords for words already read. Only the address is a
 // default: the bare name in it ("acme" for acme.example) also names people,
-// places and other sites, so it is searched only when its owner adds it.
+// places and other sites, so it is searched only when its owner adds it, and
+// even then it counts only with a topic word beside it (mentions.Rules).
 func JoinWords(site SiteRow, added []string) []string {
 	out := []string{}
 	seen := map[string]bool{}
@@ -128,13 +143,122 @@ func JoinWords(site SiteRow, added []string) []string {
 	return out
 }
 
+// MentionRules are the owner's rules for what counts as a mention of a site.
+type MentionRules struct {
+	Topic    []string `json:"topic"`    // words that must stand beside a name word
+	Required []string `json:"required"` // words that must all be in an item
+	Excluded []string `json:"excluded"` // words that rule an item out
+	Blocked  []string `json:"blocked"`  // sites whose items never count
+}
+
+// MaxRules is how many words or sites each rule list may hold.
+const MaxRules = 20
+
+var ruleKinds = map[string]func(*MentionRules) *[]string{
+	"topic":    func(r *MentionRules) *[]string { return &r.Topic },
+	"required": func(r *MentionRules) *[]string { return &r.Required },
+	"excluded": func(r *MentionRules) *[]string { return &r.Excluded },
+	"blocked":  func(r *MentionRules) *[]string { return &r.Blocked },
+}
+
+// MentionRules reads a site's rules; empty lists, never nil.
+func (s *Store) MentionRules(ctx context.Context, site string) (MentionRules, error) {
+	out := MentionRules{Topic: []string{}, Required: []string{}, Excluded: []string{}, Blocked: []string{}}
+	rows, err := s.DB.QueryContext(ctx, `SELECT kind, value FROM mention_rules WHERE site_id = ? ORDER BY kind, value`, site)
+	if err != nil {
+		return out, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var kind, value string
+		if err := rows.Scan(&kind, &value); err != nil {
+			return out, err
+		}
+		if f := ruleKinds[kind]; f != nil {
+			l := f(&out)
+			*l = append(*l, value)
+		}
+	}
+	return out, rows.Err()
+}
+
+// CleanRules trims, drops empty and repeated entries (in any case), turns
+// blocked sites into bare hosts, and refuses too many or too long.
+func CleanRules(in MentionRules) (MentionRules, error) {
+	var out MentionRules
+	for kind, get := range ruleKinds {
+		src := *get(&in)
+		seen := map[string]bool{}
+		list := []string{}
+		for _, v := range src {
+			v = strings.Join(strings.Fields(v), " ")
+			if kind == "blocked" {
+				v = mentions.BlockedHost(v)
+			}
+			if v == "" || seen[strings.ToLower(v)] {
+				continue
+			}
+			if n := utf8.RuneCountInString(v); n < 2 || n > 60 || strings.ContainsAny(v, `"<>`) {
+				return out, errors.Join(ErrKeywords, errors.New("each entry is 2 to 60 characters, without quotes"))
+			}
+			seen[strings.ToLower(v)] = true
+			list = append(list, v)
+		}
+		if len(list) > MaxRules {
+			return out, errors.Join(ErrKeywords, errors.New("at most 20 entries in each list"))
+		}
+		*ruleKinds[kind](&out) = list
+	}
+	return out, nil
+}
+
+// SetMentionRules replaces a site's rules.
+func (s *Store) SetMentionRules(ctx context.Context, site string, r MentionRules) error {
+	r, err := CleanRules(r)
+	if err != nil {
+		return err
+	}
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	if _, err := tx.ExecContext(ctx, `DELETE FROM mention_rules WHERE site_id = ?`, site); err != nil {
+		return err
+	}
+	for kind, get := range ruleKinds {
+		for _, v := range *get(&r) {
+			if _, err := tx.ExecContext(ctx, `INSERT INTO mention_rules (site_id, kind, value) VALUES (?, ?, ?)`, site, kind, v); err != nil {
+				return err
+			}
+		}
+	}
+	return tx.Commit()
+}
+
+// MatchRules is everything the matcher needs for one site.
+func (s *Store) MatchRules(ctx context.Context, site SiteRow) (mentions.Rules, error) {
+	names, err := s.MentionKeywords(ctx, site.ID)
+	if err != nil {
+		return mentions.Rules{}, err
+	}
+	r, err := s.MentionRules(ctx, site.ID)
+	if err != nil {
+		return mentions.Rules{}, err
+	}
+	return mentions.Rules{Domain: site.Domain, Names: names, Topic: r.Topic, Required: r.Required, Excluded: r.Excluded, Blocked: r.Blocked}, nil
+}
+
 // SaveMention keeps a mention the first time it is seen and, after that, only
 // what can change (a title edited, points gained, reaching the front page).
 // It says whether the mention is new.
 func (s *Store) SaveMention(ctx context.Context, m Mention, now int64) (bool, error) {
-	res, err := s.DB.ExecContext(ctx, `INSERT INTO mentions (site_id, source, url, kind, title, author, host, points, comments, snippet, front, posted_at, found_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (site_id, url) DO NOTHING`,
-		m.Site, m.Source, m.URL, m.Kind, m.Title, m.Author, m.Host, m.Points, m.Comments, m.Snippet, boolInt(m.Front), m.PostedAt, now)
+	if m.State == "" {
+		m.State = MentionShown
+	}
+	res, err := s.DB.ExecContext(ctx, `INSERT INTO mentions (site_id, source, url, kind, title, author, host, points, comments, snippet, front, posted_at, found_at, state, via, link)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (site_id, url) DO NOTHING`,
+		m.Site, m.Source, m.URL, m.Kind, m.Title, m.Author, m.Host, m.Points, m.Comments, m.Snippet, boolInt(m.Front), m.PostedAt, now, m.State, m.Via, m.Link)
 	if err != nil {
 		return false, err
 	}
@@ -146,7 +270,7 @@ func (s *Store) SaveMention(ctx context.Context, m Mention, now int64) (bool, er
 	return false, err
 }
 
-const mentionCols = `id, site_id, source, url, kind, title, author, host, points, comments, snippet, front, posted_at, found_at, visitors, peak_hour, scored_at, alerted`
+const mentionCols = `id, site_id, source, url, kind, title, author, host, points, comments, snippet, front, posted_at, found_at, visitors, peak_hour, scored_at, alerted, state, via, link`
 
 func scanMentions(rows interface {
 	Next() bool
@@ -157,7 +281,7 @@ func scanMentions(rows interface {
 	for rows.Next() {
 		var m Mention
 		var front, alerted int
-		if err := rows.Scan(&m.ID, &m.Site, &m.Source, &m.URL, &m.Kind, &m.Title, &m.Author, &m.Host, &m.Points, &m.Comments, &m.Snippet, &front, &m.PostedAt, &m.FoundAt, &m.Visitors, &m.PeakHour, &m.ScoredAt, &alerted); err != nil {
+		if err := rows.Scan(&m.ID, &m.Site, &m.Source, &m.URL, &m.Kind, &m.Title, &m.Author, &m.Host, &m.Points, &m.Comments, &m.Snippet, &front, &m.PostedAt, &m.FoundAt, &m.Visitors, &m.PeakHour, &m.ScoredAt, &alerted, &m.State, &m.Via, &m.Link); err != nil {
 			return nil, err
 		}
 		m.Front, m.Alerted = front == 1, alerted == 1
@@ -166,10 +290,38 @@ func scanMentions(rows interface {
 	return out, rows.Err()
 }
 
-// Mentions lists a site's mentions posted in [from, to), newest first, at most limit.
+// Mentions lists a site's shown mentions posted in [from, to), newest first,
+// at most limit. These are the rows every count reads: a mention that is
+// hidden, rejected or waiting for a judge is not here, so no count is higher
+// than the rows a person can see.
 func (s *Store) Mentions(ctx context.Context, site string, from, to int64, limit int) ([]Mention, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT `+mentionCols+` FROM mentions WHERE site_id = ? AND posted_at >= ? AND posted_at < ?
-		ORDER BY posted_at DESC, id DESC LIMIT ?`, site, from, to, limit)
+	return s.mentionsIn(ctx, site, from, to, limit, MentionShown)
+}
+
+// HiddenMentions lists what a site's owner or a judge kept out of the list.
+func (s *Store) HiddenMentions(ctx context.Context, site string, limit int) ([]Mention, error) {
+	return s.mentionsIn(ctx, site, 0, 1<<40, limit, MentionHidden, MentionRejected)
+}
+
+// AllMentions lists a mention of any state: for the finder, which must not
+// find again what was hidden.
+func (s *Store) AllMentions(ctx context.Context, site string, from, to int64, limit int) ([]Mention, error) {
+	return s.mentionsIn(ctx, site, from, to, limit, MentionShown, MentionHidden, MentionRejected, MentionPending)
+}
+
+// PendingMentions lists the mentions a judge has not answered for.
+func (s *Store) PendingMentions(ctx context.Context, site string, limit int) ([]Mention, error) {
+	return s.mentionsIn(ctx, site, 0, 1<<40, limit, MentionPending)
+}
+
+func (s *Store) mentionsIn(ctx context.Context, site string, from, to int64, limit int, states ...string) ([]Mention, error) {
+	marks := strings.TrimSuffix(strings.Repeat("?,", len(states)), ",")
+	args := []any{site, from, to}
+	for _, st := range states {
+		args = append(args, st)
+	}
+	query := "SELECT " + mentionCols + " FROM mentions WHERE site_id = ? AND posted_at >= ? AND posted_at < ? AND state IN (" + marks + ") ORDER BY posted_at DESC, id DESC LIMIT ?" //nolint:gosec // only "?" placeholders are joined in
+	rows, err := s.DB.QueryContext(ctx, query, append(args, limit)...)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +332,7 @@ func (s *Store) Mentions(ctx context.Context, site string, from, to int64, limit
 // MentionsToScore lists, for every site, the mentions whose traffic is still
 // being counted: not scored yet, or posted after `since`.
 func (s *Store) MentionsToScore(ctx context.Context, since int64) ([]Mention, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT `+mentionCols+` FROM mentions WHERE scored_at = 0 OR posted_at >= ? ORDER BY site_id, posted_at`, since)
+	rows, err := s.DB.QueryContext(ctx, `SELECT `+mentionCols+` FROM mentions WHERE state = 'shown' AND via <> 'page' AND (scored_at = 0 OR posted_at >= ?) ORDER BY site_id, posted_at`, since)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +342,7 @@ func (s *Store) MentionsToScore(ctx context.Context, since int64) ([]Mention, er
 
 // MentionsOfHost lists a site's mentions that can bring visitors through one host.
 func (s *Store) MentionsOfHost(ctx context.Context, site, host string, from int64) ([]Mention, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT `+mentionCols+` FROM mentions WHERE site_id = ? AND host = ? AND posted_at >= ? ORDER BY posted_at, id`, site, host, from)
+	rows, err := s.DB.QueryContext(ctx, `SELECT `+mentionCols+` FROM mentions WHERE site_id = ? AND host = ? AND posted_at >= ? AND state = 'shown' AND via <> 'page' ORDER BY posted_at, id`, site, host, from)
 	if err != nil {
 		return nil, err
 	}
@@ -207,6 +359,63 @@ func (s *Store) SaveScore(ctx context.Context, id, visitors, peak, at int64) err
 // MarkMentionAlerted records that a mention has been told about.
 func (s *Store) MarkMentionAlerted(ctx context.Context, id int64) error {
 	_, err := s.DB.ExecContext(ctx, `UPDATE mentions SET alerted = 1 WHERE id = ?`, id)
+	return err
+}
+
+// SetMentionState shows, hides or rejects one of a site's mentions; it says
+// whether the mention exists.
+func (s *Store) SetMentionState(ctx context.Context, site string, id int64, state string) (bool, error) {
+	res, err := s.DB.ExecContext(ctx, `UPDATE mentions SET state = ? WHERE site_id = ? AND id = ?`, state, site, id)
+	if err != nil {
+		return false, err
+	}
+	n, _ := res.RowsAffected()
+	return n > 0, nil
+}
+
+// MentionOf reads one of a site's mentions, of any state.
+func (s *Store) MentionOf(ctx context.Context, site string, id int64) (Mention, bool, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT `+mentionCols+` FROM mentions WHERE site_id = ? AND id = ?`, site, id)
+	if err != nil {
+		return Mention{}, false, err
+	}
+	defer rows.Close()
+	list, err := scanMentions(rows)
+	if err != nil || len(list) == 0 {
+		return Mention{}, false, err
+	}
+	return list[0], true, nil
+}
+
+// MentionState says what state a site's mention at an address is in, and
+// whether it is kept at all.
+func (s *Store) MentionState(ctx context.Context, site, url string) (string, bool, error) {
+	var st string
+	err := s.DB.QueryRowContext(ctx, `SELECT state FROM mentions WHERE site_id = ? AND url = ?`, site, url).Scan(&st)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", false, nil
+	}
+	return st, err == nil, err
+}
+
+// MentionsAtAddress reads the mention a site has at an address (the zero
+// Mention when there is none).
+func (s *Store) MentionsAtAddress(ctx context.Context, site, url string) (Mention, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT `+mentionCols+` FROM mentions WHERE site_id = ? AND url = ?`, site, url)
+	if err != nil {
+		return Mention{}, err
+	}
+	defer rows.Close()
+	list, err := scanMentions(rows)
+	if err != nil || len(list) == 0 {
+		return Mention{}, err
+	}
+	return list[0], nil
+}
+
+// ConfirmMention marks a mention the visits confirmed: its page sent people.
+func (s *Store) ConfirmMention(ctx context.Context, site string, id int64) error {
+	_, err := s.DB.ExecContext(ctx, `UPDATE mentions SET via = 'page' WHERE site_id = ? AND id = ? AND state = 'shown'`, site, id)
 	return err
 }
 
@@ -276,7 +485,7 @@ func (s *Store) MarkFront(ctx context.Context, urls []string) error {
 
 // SitesWithMentions are the sites that have found at least one mention.
 func (s *Store) SitesWithMentions(ctx context.Context) (map[string]bool, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT DISTINCT site_id FROM mentions`)
+	rows, err := s.DB.QueryContext(ctx, `SELECT DISTINCT site_id FROM mentions WHERE state = 'shown'`)
 	if err != nil {
 		return nil, err
 	}

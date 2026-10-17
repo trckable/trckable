@@ -114,13 +114,18 @@ func TestMentionsOffShowsNothingAnywhere(t *testing.T) {
 	g.mention(t, sqlite.Mention{Source: "hn", URL: "https://news.ycombinator.com/item?id=1", Title: "Show HN", Host: "news.ycombinator.com", PostedAt: now.Add(-2 * time.Hour).Unix()}, 212, now.Add(-time.Hour).Truncate(time.Hour).Unix())
 	g.api.MentionsOn = false
 	base := g.srv.URL + "/api/v1/sites/" + g.site + "/mentions"
-	for _, path := range []string{base, base + "/keywords", base + "/curves", base + "/1"} {
+	for _, path := range []string{base, base + "/keywords", base + "/curves", base + "/1", base + "/rules", base + "/hidden", base + "/lookalike?word=acme"} {
 		if code, _ := do(t, c, "GET", path, ""); code != http.StatusNotFound {
 			t.Errorf("%s answered %d with Mentions off", path, code)
 		}
 	}
 	if code, _ := do(t, c, "PUT", base+"/keywords", `{"keywords":["acme"]}`, csrf, "1"); code != http.StatusNotFound {
 		t.Errorf("words saved with Mentions off: %d", code)
+	}
+	for _, path := range []string{base + "/rules", base + "/1/not-about-us", base + "/1/restore"} {
+		if code, _ := do(t, c, map[bool]string{true: "PUT", false: "POST"}[strings.HasSuffix(path, "/rules")], path, `{}`, csrf, "1"); code != http.StatusNotFound {
+			t.Errorf("%s answered %d with Mentions off", path, code)
+		}
 	}
 	if _, out := do(t, c, "GET", g.srv.URL+"/api/v1/me", ""); out["mentions"] != false {
 		t.Errorf("/me says %v", out["mentions"])

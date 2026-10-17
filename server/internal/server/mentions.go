@@ -1,6 +1,7 @@
 package server
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"errors"
@@ -35,6 +36,10 @@ const (
 	mentionsPerSite  = 12                 // words searched per site and source
 	mentionAlertAt   = 20                 // visitors from one mention that are worth an email
 	mentionNewsDays  = 3 * 24 * time.Hour // how far back a news item is compared to find the same story
+	mentionResolves  = 10                 // Google News links followed to their publisher per round
+	mentionPageDays  = 30                 // how far back the pages that sent visitors are read
+	mentionPageEvery = time.Hour          // the least time between two readings of a site's visiting pages
+	mentionPageMin   = 2                  // visitors a page must have sent to be listed
 )
 
 // The pace of each source (the least time between two of its calls) and the
@@ -97,9 +102,28 @@ type mentionFinder struct {
 	analyze func() *sql.DB                     // the analytics store; nil while it warms up
 	open    func(site string) []writer.Session // visits still open, not yet in the store; nil is none
 	told    func(ctx context.Context, site sqlite.SiteRow, m sqlite.Mention) bool
+	judge   mentions.Judge // the optional yes/no check after a match; nil in the core
+	judgeOf func() mentions.Judge
 	pause   pauses
+	pagesAt map[string]time.Time // when each site's visiting pages were last read
 	phSince time.Time
 	phLast  time.Time // when the newest Product Hunt mention was posted: its upvotes are looked at again for two days
+}
+
+// mentionJudge holds the judge a build set, so it can be read while the finder runs.
+type mentionJudge struct{ mentions.Judge }
+
+// SetMentionJudge sets the optional yes/no check that runs on each mention
+// after it matched ("is this about the site?"). The core has none and works
+// without one; a build that has one (it may call a service) sets it before
+// Run. A mention it refuses is kept hidden, not deleted; one it cannot answer
+// for waits, hidden, for the next round. nil removes it.
+func (s *Server) SetMentionJudge(j mentions.Judge) {
+	if j == nil {
+		s.judge.Store(nil)
+		return
+	}
+	s.judge.Store(&mentionJudge{j})
 }
 
 func (s *Server) newMentionFinder() *mentionFinder {
@@ -127,6 +151,12 @@ func (s *Server) newMentionFinder() *mentionFinder {
 		},
 	}
 	f.told = s.tellMention
+	f.judgeOf = func() mentions.Judge {
+		if j := s.judge.Load(); j != nil {
+			return j.Judge
+		}
+		return nil
+	}
 	return f
 }
 
@@ -144,6 +174,13 @@ func (s *Server) runMentions(ctx context.Context) {
 	}
 }
 
+// plan is what one site is searched for and judged by in a round.
+type plan struct {
+	terms   []string
+	rules   mentions.Rules
+	subject mentions.Subject
+}
+
 // round searches every source, then counts what the mentions brought.
 func (f *mentionFinder) round(ctx context.Context) {
 	sites, err := f.st.AllSites(ctx)
@@ -151,41 +188,124 @@ func (f *mentionFinder) round(ctx context.Context) {
 		slog.Warn("mentions: sites not read", "err", err)
 		return
 	}
-	words := map[string][]string{}
+	if f.judgeOf != nil {
+		f.judge = f.judgeOf()
+	}
+	plans := map[string]plan{}
 	for _, site := range sites {
-		if w, err := f.st.SearchWords(ctx, site); err == nil && len(w) > 0 {
-			words[site.ID] = w[:min(len(w), mentionsPerSite)]
-			f.dropStaleNews(ctx, site.ID, words[site.ID])
+		rules, err := f.st.MatchRules(ctx, site)
+		if err != nil {
+			continue
+		}
+		p := plan{rules: rules, terms: rules.SearchTerms(), subject: mentions.Subject{Domain: site.Domain, Name: site.Name, Topic: rules.Topic}}
+		p.terms = p.terms[:min(len(p.terms), mentionsPerSite)]
+		plans[site.ID] = p
+		if len(p.terms) > 0 {
+			f.review(ctx, site.ID, p)
+			f.judgePending(ctx, site.ID, p)
 		}
 	}
 	deadline := f.now().Add(f.every)
 	var wg sync.WaitGroup
-	for _, pass := range []func(context.Context, []sqlite.SiteRow, map[string][]string, time.Time){f.hackerNews, f.news, f.productHunt} {
+	for _, pass := range []func(context.Context, []sqlite.SiteRow, map[string]plan, time.Time){f.hackerNews, f.news, f.productHunt} {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			pass(ctx, sites, words, deadline)
+			pass(ctx, sites, plans, deadline)
 		}()
 	}
 	wg.Wait()
 	if ctx.Err() == nil {
+		f.pages(ctx, sites, plans)
 		f.score(ctx, sites)
 	}
 }
 
-// dropStaleNews removes the news items kept for a site that its words no
-// longer name (a word dropped, or a rule that matched too loosely), so a wrong
-// mention does not stay once the matching is stricter.
-func (f *mentionFinder) dropStaleNews(ctx context.Context, site string, words []string) {
-	have, err := f.st.Mentions(ctx, site, 0, f.now().Add(time.Hour).Unix(), 1000)
+// itemOf is a stored mention as the matcher reads it.
+func itemOf(m sqlite.Mention) mentions.Item {
+	return mentions.Item{Source: m.Source, URL: m.URL, Host: m.Host, Title: m.Title, Snippet: m.Snippet, Link: m.Link}
+}
+
+// review checks what a site has kept against its rules as they are now, so a
+// wrong mention does not stay once the matching is stricter or a rule is
+// added: what no longer passes is removed, and a news story told twice is
+// kept once. A mention the owner hid stays hidden, and one the visits
+// confirmed stays (only blocked sites rule it out).
+func (f *mentionFinder) review(ctx context.Context, site string, p plan) {
+	have, err := f.st.AllMentions(ctx, site, 0, f.now().Add(time.Hour).Unix(), 1000)
 	if err != nil {
 		return
 	}
+	slices.SortStableFunc(have, func(a, b sqlite.Mention) int {
+		return cmp.Or(cmp.Compare(a.FoundAt, b.FoundAt), cmp.Compare(a.ID, b.ID))
+	})
+	var kept []mentions.Mention
 	for _, m := range have {
-		if m.Source == mentions.News && !mentions.HasAny(m.Title+" "+m.Snippet+" "+m.URL, words) {
+		if m.Via == mentions.ViaPage {
+			if p.rules.Page(m.URL).Show {
+				continue
+			}
 			_ = f.st.DeleteMention(ctx, m.ID)
+			continue
+		}
+		if m.State != sqlite.MentionHidden {
+			v := p.rules.Allowed(itemOf(m))
+			if v.Show && (m.Source == mentions.News || m.Link != "") {
+				v = p.rules.Match(itemOf(m))
+			}
+			if !v.Show {
+				_ = f.st.DeleteMention(ctx, m.ID)
+				continue
+			}
+			// An item kept before the matcher has no record of what it pointed at, so it is
+			// matched on its own text; if that does not name the site it is hidden, not deleted.
+			if m.Via == "" && m.Source != mentions.News && m.Link == "" && m.State == sqlite.MentionShown && !p.rules.Match(itemOf(m)).Show {
+				_, _ = f.st.SetMentionState(ctx, site, m.ID, sqlite.MentionRejected)
+				continue
+			}
+		}
+		if m.Source == mentions.News {
+			nm := mentions.Mention{Source: m.Source, URL: m.URL, Title: m.Title}
+			if slices.ContainsFunc(kept, func(o mentions.Mention) bool { return mentions.Same(o, nm) }) {
+				_ = f.st.DeleteMention(ctx, m.ID)
+				continue
+			}
+			kept = append(kept, nm)
 		}
 	}
+}
+
+// judgePending asks the judge again about the mentions it could not answer for.
+func (f *mentionFinder) judgePending(ctx context.Context, site string, p plan) {
+	if f.judge == nil {
+		return
+	}
+	list, err := f.st.PendingMentions(ctx, site, 100)
+	if err != nil {
+		return
+	}
+	for _, m := range list {
+		state, ok := f.ask(ctx, p, itemOf(m))
+		if ok {
+			_, _ = f.st.SetMentionState(ctx, site, m.ID, state)
+		}
+	}
+}
+
+// ask puts an item to the judge. ok is false when the judge could not answer.
+func (f *mentionFinder) ask(ctx context.Context, p plan, it mentions.Item) (state string, ok bool) {
+	if f.judge == nil {
+		return sqlite.MentionShown, true
+	}
+	about, err := f.judge.About(ctx, p.subject, it)
+	switch {
+	case err != nil:
+		slog.Warn("mentions: judge did not answer", "err", err)
+		return sqlite.MentionPending, false
+	case !about:
+		return sqlite.MentionRejected, true
+	}
+	return sqlite.MentionShown, true
 }
 
 // within says whether a pass may go on: not cancelled, not past its round.
@@ -199,14 +319,26 @@ func (f *mentionFinder) fail(src string, err error) {
 	slog.Warn("mentions: source failed", "source", src, "pause", d, "err", err)
 }
 
-func (f *mentionFinder) save(ctx context.Context, site string, list []mentions.Mention) (newest int64) {
+// save keeps the mentions that pass the site's rules (and the judge, if
+// there is one). What fails a rule is not kept; what the judge refuses is kept
+// hidden; what it cannot answer for waits, hidden, for the next round.
+func (f *mentionFinder) save(ctx context.Context, site string, p plan, list []mentions.Mention) (newest int64) {
 	for _, m := range list {
 		newest = max(newest, m.PostedAt)
 		if !mentions.Web(m.URL) {
 			continue
 		}
+		it := mentions.Item{Source: m.Source, URL: m.URL, Host: m.Host, Title: m.Title, Snippet: m.Snippet, Link: m.Link}
+		v := p.rules.Match(it)
+		if !v.Show {
+			continue
+		}
+		state := sqlite.MentionShown
+		if _, known, _ := f.st.MentionState(ctx, site, m.URL); !known {
+			state, _ = f.ask(ctx, p, it)
+		}
 		_, err := f.st.SaveMention(ctx, sqlite.Mention{Site: site, Source: m.Source, URL: m.URL, Kind: m.Kind, Title: m.Title, Author: m.Author, Host: m.Host,
-			Points: m.Points, Comments: m.Comments, Snippet: m.Snippet, Front: m.Front, PostedAt: m.PostedAt}, f.now().Unix())
+			Points: m.Points, Comments: m.Comments, Snippet: m.Snippet, Front: m.Front, PostedAt: m.PostedAt, State: state, Via: v.Via, Link: m.Link}, f.now().Unix())
 		if err != nil {
 			slog.Warn("mentions: not saved", "site", site, "err", err)
 		}
@@ -216,7 +348,7 @@ func (f *mentionFinder) save(ctx context.Context, site string, list []mentions.M
 
 // hackerNews asks Algolia, site by site (the ones looked at longest ago
 // first), one call per site for all its words, and notes what is on the front page.
-func (f *mentionFinder) hackerNews(ctx context.Context, sites []sqlite.SiteRow, words map[string][]string, deadline time.Time) {
+func (f *mentionFinder) hackerNews(ctx context.Context, sites []sqlite.SiteRow, plans map[string]plan, deadline time.Time) {
 	if f.pause.blocked("hn", f.now()) {
 		return
 	}
@@ -238,7 +370,8 @@ func (f *mentionFinder) hackerNews(ctx context.Context, sites []sqlite.SiteRow, 
 		return
 	}
 	for _, site := range sites {
-		w := words[site.ID]
+		p := plans[site.ID]
+		w := p.terms
 		if len(w) == 0 || !f.within(ctx, deadline) || f.pause.blocked("hn", f.now()) {
 			continue
 		}
@@ -257,14 +390,15 @@ func (f *mentionFinder) hackerNews(ctx context.Context, sites []sqlite.SiteRow, 
 		for i := range found {
 			_, found[i].Front = front[found[i].URL]
 		}
-		newest := f.save(ctx, site.ID, found)
+		newest := f.save(ctx, site.ID, p, found)
 		_ = f.st.SaveMentionCursor(ctx, site.ID, mentions.HN, sqlite.MentionCursor{Cursor: max(since, newest), CheckedAt: f.now().Unix()})
 	}
 }
 
 // news asks Google News and GDELT for each site's words together. The same
 // story from both, or found again by another word, is one mention.
-func (f *mentionFinder) news(ctx context.Context, sites []sqlite.SiteRow, words map[string][]string, deadline time.Time) {
+func (f *mentionFinder) news(ctx context.Context, sites []sqlite.SiteRow, plans map[string]plan, deadline time.Time) {
+	resolves := mentionResolves
 	cur, err := f.st.MentionCursors(ctx, mentions.News)
 	if err != nil {
 		return
@@ -272,7 +406,8 @@ func (f *mentionFinder) news(ctx context.Context, sites []sqlite.SiteRow, words 
 	sites = slices.Clone(sites)
 	sqlite.SortMentionsDue(sites, cur)
 	for _, site := range sites {
-		w := words[site.ID]
+		p := plans[site.ID]
+		w := p.terms
 		if len(w) == 0 || !f.within(ctx, deadline) {
 			continue
 		}
@@ -285,6 +420,9 @@ func (f *mentionFinder) news(ctx context.Context, sites []sqlite.SiteRow, words 
 				f.fail("gnews", err)
 			default:
 				f.pause.ok("gnews")
+				for i := range list {
+					list[i].URL = f.resolve(ctx, list[i].URL, &resolves)
+				}
 				found, tag = append(found, list...), newTag
 			}
 			f.sleep(ctx, f.gap["gnews"])
@@ -299,38 +437,49 @@ func (f *mentionFinder) news(ctx context.Context, sites []sqlite.SiteRow, words 
 			}
 			f.sleep(ctx, f.gap["gdelt"])
 		}
-		f.save(ctx, site.ID, f.unseenNews(ctx, site.ID, mentions.Dedupe(found)))
+		f.save(ctx, site.ID, p, f.unseenNews(ctx, site.ID, mentions.Dedupe(found)))
 		_ = f.st.SaveMentionCursor(ctx, site.ID, mentions.News, sqlite.MentionCursor{ETag: tag, CheckedAt: f.now().Unix()})
 	}
 }
 
-// unseenNews drops the stories a site already has, found by the other source
-// or by an earlier round: by address, or by headline on the same site.
+// unseenNews drops the stories a site already has (of any state: one the
+// owner hid is not found again), found by the other source or by an earlier
+// round: the same address, or a near-identical headline on any site.
 func (f *mentionFinder) unseenNews(ctx context.Context, site string, list []mentions.Mention) []mentions.Mention {
 	if len(list) == 0 {
 		return nil
 	}
-	have, err := f.st.Mentions(ctx, site, f.now().Add(-mentionNewsDays).Unix(), f.now().Add(time.Hour).Unix(), 500)
+	have, err := f.st.AllMentions(ctx, site, f.now().Add(-mentionNewsDays).Unix(), f.now().Add(time.Hour).Unix(), 500)
 	if err != nil {
 		return list
 	}
-	seen := map[string]bool{}
+	var seen []mentions.Mention
 	for _, m := range have {
-		if m.Source == mentions.News {
-			seen[mentions.Canonical(m.URL)], seen[m.Host+"|"+mentions.TitleKey(m.Title)] = true, true
-		}
+		seen = append(seen, mentions.Mention{Source: m.Source, URL: m.URL, Title: m.Title})
 	}
 	var out []mentions.Mention
 	for _, m := range list {
-		if !seen[mentions.Canonical(m.URL)] && !seen[m.Host+"|"+mentions.TitleKey(m.Title)] {
+		if !slices.ContainsFunc(seen, func(o mentions.Mention) bool { return mentions.Same(o, m) }) {
 			out = append(out, m)
 		}
 	}
 	return out
 }
 
+// resolve gives a Google News link its publisher's address, so the story
+// found there and by another source is one; the call that follows a redirect
+// is made for a few links per round.
+func (f *mentionFinder) resolve(ctx context.Context, link string, budget *int) string {
+	real := mentions.Resolve(ctx, f.get, link, false)
+	if real == link && *budget > 0 && mentions.HostOf(link) == "news.google.com" {
+		*budget--
+		real = mentions.Resolve(ctx, f.get, link, true)
+	}
+	return real
+}
+
 // productHunt looks at the newest launches once and matches them to every site.
-func (f *mentionFinder) productHunt(ctx context.Context, sites []sqlite.SiteRow, words map[string][]string, _ time.Time) {
+func (f *mentionFinder) productHunt(ctx context.Context, sites []sqlite.SiteRow, plans map[string]plan, _ time.Time) {
 	if f.token == "" || f.pause.blocked("ph", f.now()) {
 		return
 	}
@@ -350,8 +499,8 @@ func (f *mentionFinder) productHunt(ctx context.Context, sites []sqlite.SiteRow,
 	f.pause.ok("ph")
 	f.phSince = now
 	for _, site := range sites {
-		if w := words[site.ID]; len(w) > 0 {
-			f.phLast = time.Unix(max(f.phLast.Unix(), f.save(ctx, site.ID, mentions.PHMatch(posts, w))), 0)
+		if p := plans[site.ID]; len(p.terms) > 0 {
+			f.phLast = time.Unix(max(f.phLast.Unix(), f.save(ctx, site.ID, p, mentions.PHMatch(posts, p.terms))), 0)
 		}
 	}
 }

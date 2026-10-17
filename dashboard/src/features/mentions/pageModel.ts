@@ -3,7 +3,7 @@ import type { Mention, Source } from './api'
 
 export type Filter = 'all' | Source
 
-export const FILTERS: Filter[] = ['all', 'hn', 'ph', 'news']
+export const FILTERS: Filter[] = ['all', 'ref', 'hn', 'ph', 'news']
 
 /** A mention younger than this is "talked about now". */
 export const FRESH = 24 * 3600

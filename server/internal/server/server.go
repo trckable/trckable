@@ -56,6 +56,7 @@ var Version = "0.7.25" // the VERSION file; release builds stamp it too
 // Server is a running trckable instance.
 type Server struct {
 	cfg    config.Config
+	judge  atomic.Pointer[mentionJudge] // the optional yes/no check on a mention (SetMentionJudge)
 	ctl    *sqlite.Store
 	held   heldAlerts // alerts sent whose mark failed (alerts.go)
 	log    *wal.Log
@@ -273,6 +274,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	}
 	a.MentionSources = MentionSources(cfg.ProductHuntToken != "")
 	a.MentionsOn = cfg.MentionsOn
+	a.MentionGet = alerts.SafeClient(10 * time.Second)
 	a.SendWeekly = s.sendWeeklyNow
 	a.OnSurge = s.tellSurge
 	if len(cfg.OIDC) > 0 {
