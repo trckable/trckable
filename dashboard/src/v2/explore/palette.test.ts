@@ -4,8 +4,12 @@ import type { Report, Site } from '../../lib/api'
 const openExplore = vi.hoisted(() => vi.fn<(tab: string, filters?: unknown[]) => void>())
 vi.mock('./open', () => ({ openExplore }))
 vi.mock('../../lib/url', () => ({ navigate: vi.fn(), setView: vi.fn() }))
+vi.mock('../../lib/theme', () => ({ THEMES: ['system', 'dark', 'light'], setTheme: vi.fn() }))
+vi.mock('../../lib/signOut', () => ({ signOut: vi.fn() }))
+vi.mock('../../lib/settings', async (orig) => ({ ...(await orig<object>()), openSettings: vi.fn() }))
 vi.mock('../../features/live/switchView', () => ({ switchTab: vi.fn() }))
 
+import * as me from '../../lib/me'
 import { paletteItems } from './palette'
 
 const data = { current: { dims: { referrer: [{ value: 'news.ycombinator.com', visitors: 5 }], country: [{ value: 'DE', visitors: 4 }], device: [{ value: 'mobile', visitors: 3 }] } } } as unknown as Report
@@ -30,6 +34,24 @@ describe('the palette', () => {
     paletteItems({ sites: [site], site, data, here: 'briefing', domainOf: (s) => s.domain }).find((i) => i.title === 'Refresh the numbers')?.run()
     vi.unstubAllGlobals()
     expect(seen).toHaveBeenCalledOnce()
+  })
+
+  it('finds settings, alerts, share, the theme and sign out by their words', () => {
+    const items = paletteItems({ sites: [site], site, data, here: 'briefing', domainOf: (s) => s.domain })
+    const find = (word: string) => items.filter((i) => `${i.title} ${i.also ?? ''}`.toLowerCase().includes(word)).map((i) => i.title)
+    expect(find('settings')).toContain('Settings · Alerts')
+    expect(find('alerts')).toEqual(['Settings · Alerts'])
+    expect(find('share')).toEqual(['Settings · Sharing'])
+    expect(find('dark')).toEqual(expect.arrayContaining(['Theme · Dark']))
+    expect(find('sign out')).toEqual(['Sign out'])
+    expect(find('privacy')).toContain('Settings · Data & privacy')
+  })
+
+  it('leaves the account and the settings to a shared page’s owner', () => {
+    vi.spyOn(me, 'isShared').mockReturnValue(true)
+    const items = paletteItems({ sites: [site], site, data, here: 'briefing', domainOf: (s) => s.domain })
+    expect(items.some((i) => i.title.startsWith('Settings') || i.title === 'Sign out')).toBe(false)
+    vi.restoreAllMocks()
   })
 
   it('offers Peek before Create', () => {

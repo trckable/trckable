@@ -7,6 +7,7 @@ import { WhyBody } from './WhyBody'
 import { Ico } from './icons'
 import { spark } from '../briefing/geometry'
 import { Glide, useGlide } from './glide'
+import './kpi.css'
 
 export interface Kc {
   key: string

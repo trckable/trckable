@@ -4,6 +4,12 @@
 .mk .onlyph {
   display: none;
 }
+/* The panel is a full sheet on a phone: nothing to widen. */
+@media (max-width: 767px) {
+  .mk .xph .xfull {
+    display: none;
+  }
+}
 @media (max-width: 600px) {
   .mk .onlyph {
     display: block;

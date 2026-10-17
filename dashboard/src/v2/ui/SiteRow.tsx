@@ -9,7 +9,7 @@ import { fmtCompact, fmtInt } from '../../lib/format'
 import { prefetchSite } from '../../lib/dashQuery'
 import { copy } from '../../features/sites/menuCopy'
 import { copy as first } from '../../features/sites/copy'
-import { addGroup, moveTo, pin, placeKey, step, unpin, type Place } from '../../features/sites/layout'
+import { addGroup, moveTo, pin, placeKey, sectionsOf, step, unpin, type Place } from '../../features/sites/layout'
 import { dotState } from '../../features/sites/StateDot'
 import { stateLine } from '../../features/sites/stateLine'
 import { OpenSite, openSiteTab } from '../../features/sites/OpenSite'
@@ -110,8 +110,12 @@ export function SiteRow({ site, place, on, arrange: a, today, onPick, move }: { 
   )
 }
 
-function Moves({ site, place, a, step: moveStep }: { site: Site; place: Place; a: Arrange; step: (dir: -1 | 1) => void }) {
+export function Moves({ site, place, a, step: moveStep }: { site: Site; place: Place; a: Arrange; step: (dir: -1 | 1) => void }) {
   const here = placeKey(place)
+  const sec = sectionsOf(a.sites, a.layout).find((x) => x.sites.some((s) => s.id === site.id))
+  const at = sec ? sec.sites.findIndex((s) => s.id === site.id) : -1
+  const canUp = at > 0
+  const canDown = sec ? at >= 0 && at < sec.sites.length - 1 : true
   const go = (to: Place, said: string) => a.save(moveTo(a.sites, a.layout, site.id, to), said)
   const newGroup = async () => {
     const name = (await confirmWith({ title: copy.newGroupTitle, body: copy.newGroupBody, confirmLabel: copy.create, field: { label: copy.groupName, type: 'text' } }))?.trim()
@@ -129,8 +133,8 @@ function Moves({ site, place, a, step: moveStep }: { site: Site; place: Place; a
         )
         return (
           <>
-            {item(copy.up, () => moveStep(-1))}
-            {item(copy.down, () => moveStep(1))}
+            {canUp && item(copy.up, () => moveStep(-1))}
+            {canDown && item(copy.down, () => moveStep(1))}
             {place.kind === 'pinned' ? item(copy.unpin, () => a.save(unpin(a.sites, a.layout, site.id), copy.unpin)) : item(copy.pin, () => a.save(pin(a.sites, a.layout, site.id), copy.pin))}
             {a.layout.groups
               .filter((g) => placeKey({ kind: 'group', name: g.name }) !== here)

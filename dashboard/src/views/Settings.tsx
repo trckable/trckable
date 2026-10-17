@@ -109,6 +109,15 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
   )
 }
 
+/** The time of day as the app writes it everywhere (24 hours, no seconds), in the site's own zone. */
+function clock(at: Date, zone: string) {
+  try {
+    return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: zone || undefined }).format(at)
+  } catch {
+    return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(at)
+  }
+}
+
 /** Once visits arrive, Install becomes a check you can run: this server reads
  *  the homepage and looks for the snippet, and the latest recorded visit says
  *  whether the script is sending. The code stays one click away. */
@@ -222,7 +231,7 @@ function InstallSection({ site }: { site: Site }) {
             <p className="muted">{sub}</p>
             {at && !checking && (
               <span className="install-at faint" key={at.getTime()}>
-                Checked at {at.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                Checked at {clock(at, site.timezone)}
               </span>
             )}
           </div>

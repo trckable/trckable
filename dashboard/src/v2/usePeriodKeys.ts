@@ -19,7 +19,7 @@ export function usePeriodKeys(o: { on: boolean; today: ISODate; range: Range; vi
   useEffect(() => {
     if (!on) return
     const key = (e: KeyboardEvent) => {
-      const el = e.target as HTMLElement
+      const el = e.target instanceof Element ? e.target : document.body
       if (el.closest('input, textarea, select, [contenteditable], [role=slider]') || document.querySelector('.xscrim.on, .pal.on, .cd.on, [aria-modal="true"]')) return
       const preset = PRESETS.find((p) => p.key && KEYED.includes(p.id) && pressed(e, 'period.' + p.id))
       const step = stepOf(e)

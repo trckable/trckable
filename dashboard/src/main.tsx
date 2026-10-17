@@ -16,7 +16,7 @@ import { openAddSite, useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
 import { routeOf, SubRoute } from "./features/subpage";
 import { landing, namesSite } from "./lib/landing";
-import { openSettings, settingsTarget, useSettings } from "./lib/settings";
+import { openSettings, settingsInAddress, settingsTarget, useSettings } from "./lib/settings";
 import { useLatest } from "./lib/update";
 import { setRole } from "./lib/me";
 import { NoneShared, useGate } from "./features/onboarding/Gate";
@@ -107,6 +107,14 @@ function App() {
     const { tab, extra } = settingsTarget(params.get("tab"));
     openSettings(s, tab, params.get("visitor") ? { ...extra, visitor: params.get("visitor") ?? "" } : extra, { replace: true });
   }, [boot, gated, path, params]);
+
+  // A dashboard address that names a section (?settings=alerts: a link, a reload) opens it.
+  const namedTab = settingsInAddress(params);
+  useEffect(() => {
+    if (boot.state !== "ready" || gated || !namedTab || settingsOpen) return;
+    const s = routeOf(boot.sites, path).site;
+    if (s) openSettings(s, namedTab, undefined, { replace: true });
+  }, [boot, gated, path, namedTab, settingsOpen]);
 
   // Keep the address bar honest about the screen shown.
   useEffect(() => {

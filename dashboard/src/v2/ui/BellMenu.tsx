@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { MkPortal } from './Portal'
 import { useMenu } from './useMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
+import './bellMenu.css'
 
 export interface BellRow {
   id: string
@@ -77,7 +78,7 @@ function List(p: BellProps & { close: () => void }) {
     <>
       <div className="nfh">
         <b>{p.title}</b>
-        <button type="button" className="lk3" onClick={p.onAll}>
+        <button type="button" className="lk3" disabled={!p.rows.some((r) => r.unread)} onClick={p.onAll}>
           {p.markAll}
         </button>
       </div>
