@@ -182,6 +182,17 @@ test('the Live card has no empty band and no wrapped titles, wide and narrow', a
   }
 })
 
+test('the two top Live cards are the same height side by side', async ({ page }) => {
+  for (const width of [1440, 1024]) {
+    await page.setViewportSize({ width, height: 900 })
+    await signIn(page, '/example.com?view=live')
+    await expect(online(page)).toBeVisible({ timeout: 15_000 })
+    await page.waitForTimeout(300)
+    const [a, b] = await Promise.all([page.locator('.lnow').boundingBox(), page.locator('.lon').boundingBox()])
+    expect(a && b && Math.abs(a.height - b.height) <= 1, `heights ${a?.height} and ${b?.height} at ${width}`).toBe(true)
+  }
+})
+
 test('online is never more than the visitors of the half hour', async ({ page }) => {
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })
