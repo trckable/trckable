@@ -13,7 +13,7 @@ describe('read state', () => {
     vi.spyOn(more, 'bellRead').mockResolvedValue({ read: ['x', 'y'] })
     const post = vi.spyOn(more, 'markBellRead').mockResolvedValue({ read: [] })
     const all = await syncRead(new Set(['y', 'z']))
-    expect([...all!].sort()).toEqual(['x', 'y', 'z'])
+    expect([...(all ?? [])].sort()).toEqual(['x', 'y', 'z'])
     expect(post).toHaveBeenCalledWith(['z'])
   })
 
