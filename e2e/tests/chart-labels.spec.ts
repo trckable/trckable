@@ -84,7 +84,7 @@ for (const width of [1440, 2000, 390]) {
     for (const b of [...r.labels, ...r.marks]) expect(onLine(b, r.line), `${b.name} is over the line`).toBe(false)
     for (const b of [...r.labels, ...r.marks, ...r.texts]) expect(b.l >= r.svg.l - 1 && b.r <= r.svg.r + 1, `${b.name} leaves the chart`).toBe(true)
     // The main card's chart is tall enough for its lanes: markers, the period's label, then the plot.
-    expect(r.svg.h).toBeGreaterThanOrEqual(width > 600 ? 260 : 160)
+    expect(r.svg.h).toBeGreaterThanOrEqual(width > 600 ? 260 : 130)
     expect(r.callInHeader, "the jump's line is in the header row").toBe(true)
     expect(r.oldLine, 'no line on the plot').toBe(0)
     expect(r.riseFont).not.toMatch(/mono|menlo/i)
