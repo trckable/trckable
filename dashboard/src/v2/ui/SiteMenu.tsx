@@ -1,6 +1,6 @@
 // The site in the header, and the list that opens from it (SiteList): every site with who is on it now, a finder, and what
 // belongs to this site. The check beside the name says when something independent vouches for the numbers.
-import { Suspense, useCallback, useRef, type ReactNode } from 'react'
+import { Suspense, useCallback, useRef } from 'react'
 import type { Site } from '../../lib/api'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
@@ -9,6 +9,7 @@ import { VerifiedPill } from '../../features/verified/VerifiedPill'
 import { useDomainControl } from '../../lib/domainControl'
 import { copy } from '../copy'
 import { domainLabel } from './DomainRows'
+import { MenuFoot, type FootItem } from './MenuFoot'
 import { useMenu } from './useMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
 
@@ -28,7 +29,7 @@ interface SiteMenuProps {
   /** The workspace line at the top, when the account has one. */
   workspace?: { name: string; d: string; run?: () => void }
   onPick: (id: string) => void
-  footer: { key: string; label: ReactNode; run: () => void; dot?: 'ok' | 'warn' }[]
+  footer: FootItem[]
   find: string
   all: string
 }
@@ -46,24 +47,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
     else void Promise.all([layoutReady(LAYOUT_WAIT), SiteList.load()]).then(() => setOpen(true))
   }
   const done = useCallback(() => close(), [close])
-  const footer = (
-    <div className="mfoot col">
-      {p.footer.map((f) => (
-        <button key={f.key} type="button" data-stop className="mi" onClick={() => { f.run(); done() }}>
-          {f.dot ? (
-            <>
-              <i className={`pdot${f.dot === 'warn' ? ' warn' : ''}`} />
-              <span className="mt2">
-                <div className="nm">{f.label}</div>
-              </span>
-            </>
-          ) : (
-            f.label
-          )}
-        </button>
-      ))}
-    </div>
-  )
+  const footer = <MenuFoot items={p.footer} done={done} />
   return (
     <div ref={attach} style={{ position: 'relative' }} className="sitechip">
       <button type="button" id="siteBtn" className="mk-chip" aria-haspopup="menu" aria-expanded={open} data-key="site" {...warm(warmUp)} onClick={toggle}>

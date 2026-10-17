@@ -144,21 +144,27 @@ test('the dot is real (in the list, none on the avatar): a visit in the last fiv
   await expect(menu.locator('.now-note')).toHaveCount(0)
 })
 
-test('the chosen site\'s dot sits on the middle of its row', async ({ page, browserName }) => {
+test('the chosen site\'s mark sits on the middle of its row, with its dot on the mark', async ({ page, browserName }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   for (const [width, height] of [[1280, 800], [390, 844]]) {
     await page.setViewportSize({ width, height })
     await page.goto(`${API}/example.com`)
     const menu = await open(page)
     const on = menu.locator('.site.on').first()
-    // The sheet slides in: measure once it has stopped. The dot is level with the row's middle.
+    // The sheet slides in: measure once it has stopped. The mark is level with the row's middle, and the dot sits on its corner.
     const gap = () =>
       on.evaluate((el) => {
         const r = el.getBoundingClientRect()
-        const d = el.querySelector('.mk-dot')!.getBoundingClientRect()
-        return Math.abs(r.top + r.height / 2 - (d.top + d.height / 2))
+        const m = el.querySelector('.mkwrap')!.getBoundingClientRect()
+        return Math.abs(r.top + r.height / 2 - (m.top + m.height / 2))
       })
     await expect.poll(gap).toBeLessThanOrEqual(1)
+    const onMark = await on.evaluate((el) => {
+      const m = el.querySelector('.mkwrap')!.getBoundingClientRect()
+      const d = el.querySelector('.mk-dot')!.getBoundingClientRect()
+      return d.right <= m.right + 4 && d.bottom <= m.bottom + 4 && d.right >= m.right - 8 && d.bottom >= m.bottom - 8
+    })
+    expect(onMark).toBe(true)
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/switcher-dot-${width}-${browserName}.png` })
   }
 })

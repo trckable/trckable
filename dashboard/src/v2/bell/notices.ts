@@ -1,6 +1,6 @@
 // The bell's list: what happened that a person would want to hear of, put together from what the server already
-// records (incidents, milestones, mentions, the alerts that fired). Pure; read marks are kept by useNotices.
-import type { Alert, Milestone } from '../../lib/api'
+// records (incidents, milestones, mentions). Pure; read marks are kept by useNotices.
+import type { Milestone, Site } from '../../lib/api'
 import type { Incident } from '../../features/incidents/api'
 import type { Mention } from '../../features/mentions/api'
 import { sourceName } from '../briefing/model'
@@ -17,6 +17,8 @@ export interface Notice {
   sub: string
   /** Unix seconds. */
   at: number
+  /** Already read where it comes from (a build's own list): listed, but not counted as unread and no chime. */
+  seen?: boolean
   /** A milestone told in full when it is tapped. */
   milestone?: Milestone
   /** Called when the notice is marked read (a build that keeps its own list marks it there too). */
@@ -24,6 +26,12 @@ export interface Notice {
   /** What a tap does instead of going to the page the notice is about. */
   open?: () => void
 }
+
+/** How many of the account's other sites the bell reads on top of the one in view. */
+export const OTHERS = 6
+
+/** The sites the bell reads besides the one in view: those that have had a visit, the first few in the account's order. */
+export const othersOf = (sites: Site[], current: Site | null): Site[] => sites.filter((s) => s.id !== current?.id && !!s.last_event_at).slice(0, OTHERS)
 
 const mins = (s: number) => Math.max(1, Math.round(s / 60))
 
@@ -47,17 +55,16 @@ export function fromMilestones(list: Milestone[], domain: string): Notice[] {
   return list.map((m) => ({ id: `mile:${m.kind}:${m.step}`, kind: 'milestone' as const, site: domain, title: copy.milestone(m.kind, m.value), sub: copy.milestoneSub, at: m.created_at, milestone: m }))
 }
 
-/** The alerts that have fired: a spike or surge, a customer, the weekly report. */
-export function fromAlerts(list: Alert[], domain: string): Notice[] {
-  const out: Notice[] = []
-  for (const a of list) {
-    if (!a.last_fired) continue
-    const id = `alert:${a.id}:${a.last_fired}`
-    if (a.kind === 'spike' || a.kind === 'surge') out.push({ id, kind: 'spike', site: domain, title: copy.spike, sub: domain, at: a.last_fired })
-    else if (a.kind === 'customer') out.push({ id, kind: 'sale', site: domain, title: copy.customer, sub: domain, at: a.last_fired })
-    else if (a.kind === 'weekly') out.push({ id, kind: 'weekly', site: domain, title: copy.weekly, sub: domain, at: a.last_fired })
-  }
-  return out
+/**
+ * A build's own feed (its slot) tells surges and milestones with their numbers: where it has any of a kind, the site's own
+ * of that kind are left out, so one event is not two rows. Alert rules that fired are not rows: they carry no number or
+ * detail to say, and the feed or the Briefing has the event itself.
+ */
+export function withFeed(own: Notice[], feed: Notice[] | undefined): Notice[] {
+  if (!feed?.length) return own
+  const told = new Set(feed.map((f) => f.kind))
+  const ids = new Set(feed.map((f) => f.id))
+  return [...own.filter((n) => !ids.has(n.id) && !((n.kind === 'spike' || n.kind === 'milestone') && told.has(n.kind))), ...feed].sort((a, b) => b.at - a.at).slice(0, 40)
 }
 
 /** Newest first, a week back at most, and never more than 40. */
@@ -69,5 +76,5 @@ export function arrange(all: Notice[], now: number): Notice[] {
     .slice(0, 40)
 }
 
-export const unreadCount = (list: Notice[], read: ReadonlySet<string>): number => list.filter((n) => !read.has(n.id)).length
+export const unreadCount = (list: Notice[], read: ReadonlySet<string>): number => list.filter((n) => !n.seen && !read.has(n.id)).length
 export const badge = (n: number): string => (n > 9 ? '9+' : String(n))
