@@ -21,6 +21,8 @@ import (
 //	f          filters, repeatable: f=channel:Search&f=country:DE (is). f=country!:US is "is not".
 //	           The same dimension twice means any of: f=country:DE&f=country:AT
 //	segment    a saved segment's id: its filters are added to the f ones
+//	sofar      1 = with compare=previous, a period that includes now is compared
+//	           with the same elapsed time of the period before, not all of it
 //	daily      1 = include per-day data for the scrubber
 //	deep       1 = also break down exit pages, regions, cities, languages, browser versions and screens (Full mode)
 //	tz         override the site's timezone
@@ -108,6 +110,14 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 	case "previous":
 		p := params
 		p.From, p.To = previousStart(from, to, loc).UTC(), params.From
+		// A period still running is told against the same stretch of the one
+		// before (today at 14:00 against yesterday up to 14:00), not all of it.
+		if v.Get("sofar") == "1" {
+			now := a.Now()
+			if el := now.Sub(params.From); el > 0 && now.Before(params.To) && p.From.Add(el).Before(p.To) {
+				p.To = p.From.Add(el)
+			}
+		}
 		p.Daily = false
 		prev = &p
 	case "year":

@@ -25,12 +25,15 @@ interface SinceIn {
   downSec: number
   /** No card to show and nobody paid: a day with nothing in it. */
   calm: boolean
+  /** The people of the whole day: those since the hour are some of them, never more. */
+  day: number
 }
 
 export function sinceOf(i: SinceIn): Since | null {
   const lock = LOOKED_AT * 60
   if (i.nowMin < lock + 30) return null
-  const people = i.series.slice(LOOKED_AT).reduce((n, p) => n + p.visitors, 0)
+  // The hours add a visitor once per hour they were active, so the sum is held to the day's own count of people.
+  const people = Math.min(i.day, i.series.slice(LOOKED_AT).reduce((n, p) => n + p.visitors, 0))
   const down = Math.round(i.downSec / 60)
   return { morning: i.nowMin - lock >= 120, at: `${String(LOOKED_AT).padStart(2, '0')}:00`, people, sales: i.sales, down, quiet: i.sales === 0 && down <= 0 && i.calm }
 }

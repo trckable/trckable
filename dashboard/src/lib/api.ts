@@ -546,6 +546,8 @@ export interface ReportQuery {
   compare?: 'previous' | 'year' | 'custom'
   cfrom?: string
   cto?: string
+  /** A period still running is compared with the same stretch of the one before, not all of it. */
+  sofar?: boolean
   filters?: Filter[]
   daily?: boolean
   bucket?: Bucket
@@ -627,6 +629,7 @@ export function reportURL(site: string, q: ReportQuery): string {
     p.set('cfrom', q.cfrom)
     p.set('cto', q.cto)
   }
+  if (q.compare === 'previous' && q.sofar) p.set('sofar', '1')
   if (q.bucket) p.set('bucket', q.bucket)
   if (q.daily) p.set('daily', '1')
   if (q.deep) p.set('deep', '1')

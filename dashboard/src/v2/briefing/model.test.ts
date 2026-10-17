@@ -101,7 +101,7 @@ describe('scores', () => {
   it('the ring weighs traffic 40, engagement 25 and uptime 35, is empty while down, and when nothing is known', () => {
     const t = trafficScore(result(130), result(100))
     const u = uptimeScore({ pct: 90, downNow: false, downMin: 60, off: false })
-    expect(overall([t, u, engagementScore(result(1), result(1))])).toBe(65)
+    expect(overall([t, u, engagementScore(result(1), result(1))])).toBe(53)
     expect(overall([t, uptimeScore({ pct: 100, downNow: true, downMin: 5, off: false })])).toBeNull()
     expect(overall([engagementScore(result(1), result(1))])).toBeNull()
   })

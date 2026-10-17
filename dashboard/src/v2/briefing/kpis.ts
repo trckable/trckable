@@ -6,7 +6,7 @@ import { tooFew } from '../../lib/thin'
 import type { Kc } from '../ui/KpiCard'
 import { copy } from './copy'
 import type { Score } from './model'
-import { judge, type Band as UsualBand, type Judged } from './usual'
+import { judge, type Band as UsualBand, type Judged, type Verdict } from './usual'
 
 /** "+27% vs usual", "as usual", "−6% vs the day before": the note on a number that has a figure to be told against. */
 export function noteOf(now: number, was: number | undefined, before: string): Kc['note'] {
@@ -53,7 +53,8 @@ interface KpiIn {
   uptime: Score
   /** A site with few visitors: each card says its usual range in numbers, and the last one counts people, not a share. */
   low?: boolean
-  peopleBand?: UsualBand | null
+  /** The one verdict on people against their usual (the headline reads the same). */
+  peopleVerdict?: Verdict | null
   /** The goal against its own usual, when the history says (else the period before is the measure). */
   goalBand?: UsualBand | null
   /** What the sales of the period are told against, when the history says. */
@@ -86,8 +87,10 @@ export function kpiCards(a: KpiIn): Kc[] {
     if (few) return fmtInt(Math.round(cur.kpis.bounce_rate * cur.kpis.visitors))
     return thin ? '–' : fmtPct(cur.kpis.bounce_rate)
   }
+  // An uptime nobody measured (a past day with no monitor data) is not a card with a dash: the card is left out.
+  const unmeasured = a.uptime.value === null && !down
   const cards: Kc[] = [
-    { key: 'people', icon: 'people', label: copy.people, val: fmtInt(cur.kpis.visitors), note: say(rangeNote(cur.kpis.visitors, a.peopleBand, ` ${copy.peopleWord}`), learning, a.people.note), vals: a.people.vals, dn: false },
+    { key: 'people', icon: 'people', label: copy.people, val: fmtInt(cur.kpis.visitors), note: say(rangeNote(a.peopleVerdict?.now ?? cur.kpis.visitors, a.peopleVerdict?.band, ` ${copy.peopleWord}`), learning, a.people.note), vals: a.people.vals, dn: false },
     goal
       ? { key: 'goal', icon: 'goal', label: (goal.label || goal.value).replace(/^./, (c) => c.toUpperCase()), val: fmtInt(goal.visitors), note: say(rangeNote(goal.visitors, a.goalBand, ''), learning, bandNote(goal.visitors, a.goalBand) ?? noteOf(goal.visitors, prev?.goals?.find((g) => g.value === goal.value)?.visitors, a.before)), vals: a.goal?.vals ?? [], col: '#7f9cf5' }
       : { key: 'views', icon: 'click', label: copy.views, val: fmtCompact(cur.kpis.pageviews), note: a.learning ? { t: copy.learning } : noteOf(cur.kpis.pageviews, prev?.kpis.pageviews, a.before), vals: a.viewsVals, col: '#7f9cf5' },
@@ -96,7 +99,7 @@ export function kpiCards(a: KpiIn): Kc[] {
       ? { key: 'money', icon: 'sales', label: copy.net(cur.money.payments), val: a.money(cur.money.revenue), note: a.learning ? { t: copy.soFarToday } : (bandNote(cur.money.revenue, a.moneyBand) ?? noteOf(cur.money.revenue, prev?.money?.revenue, a.before)), vals: a.moneyVals }
       : { key: 'leave', icon: 'leave', label: copy.left, val: leaveVal(), note: say({ t: copy.ofPeople(fmtInt(cur.kpis.visitors)) }, soFar, thin ? soFar : a.leave.note), vals: a.leave.vals, lo: 0, hi: Math.max(0.8, ...a.leave.vals), col: '#7f9cf5' },
   ]
-  return cards
+  return unmeasured ? cards.filter((c) => c.key !== 'uptime') : cards
 }
 
 /** The note under "left after one page": higher or lower than the site usually sees, within a few points as usual. */

@@ -18,6 +18,9 @@ import { useNotes } from '../../features/notes/useNotes'
 import { addDays } from '../../lib/dates'
 import { CardList } from '../ui/StoryCard'
 import { Hero } from '../ui/HeroCard'
+import { openExplore } from '../explore/open'
+import { navigate } from '../../lib/url'
+import { whyRows } from './scoreWhy'
 import { chartNote } from '../ui/DayChart'
 import { ChartBlock } from './ChartBlock'
 import { fmtInt as fmtN } from '../../lib/format'
@@ -143,7 +146,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const empty = cur.kpis.visitors === 0 && (parts.hd === 0 || !hist.daily)
   const v = cur.kpis.visitors
   const peopleNote = () => {
-    if (parts.whole && !learning) return usualNote(v, parts.whole.c, parts.st)
+    if (parts.verdict && !learning) return usualNote(parts.verdict.now, parts.verdict.band.c, parts.st)
     if (usual && usual.average >= 5 && (usual.weeks?.length ?? 0) > 0 && (unit === 'today' || unit === 'yesterday')) {
       const d = v / usual.average - 1
       if (Math.abs(d) < 0.05) return { t: copy.asUsual }
@@ -164,7 +167,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
     leave: { note: bounceNote(cur.kpis.bounce_rate, parts.bounceUsual), vals: pts.map((_, i) => cur.series[i]?.bounce_rate ?? 0) },
     uptime,
     low,
-    peopleBand: parts.whole,
+    peopleVerdict: parts.verdict,
     moneyBand: parts.moneyBand,
     goalBand: slices.goals.find((g) => g.value === goalValue)?.band ?? null,
     uptimePct: pctText(pct),
@@ -182,7 +185,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const sales = cur.money?.payments ?? 0
   const lockSec = dayStart + LOOKED_AT * 3600
   const down = up.list.reduce((n, x) => n + Math.max(0, Math.min(x.ended_at ?? nowSec, nowSec) - Math.max(x.started_at, lockSec)), 0)
-  const sn = unit === 'today' && v > 0 ? sinceOf({ series: cur.series, nowMin: end, sales, downSec: down, calm: stories.length === 0 && sales === 0 }) : null
+  const sn = unit === 'today' && v > 0 ? sinceOf({ series: cur.series, nowMin: end, sales, downSec: down, calm: stories.length === 0 && sales === 0, day: v }) : null
   const since = sn ? <SinceLine sn={sn} /> : undefined
   const reader = readerOf(recent.length ? recent : visits, site.domain, top?.value)
   const sub = heroSub(reader && !learning && !low ? copy.meet(readerWords(reader)) : null, low, say.sub, say.own)
@@ -201,6 +204,8 @@ export default function Briefing({ site, data: page, loading, period, range, mon
         <Hero
           say={{ ...say, sub }}
           scores={scores}
+          rows={whyRows(scores, parts.facts)}
+          onSee={(k) => (k === 'uptime' ? navigate(`/${encodeURIComponent(site.domain)}/incidents`) : openExplore(k === 'traffic' ? 'overtime' : 'pages'))}
           learn={learning ? { day: Math.min(7, parts.hd + 1) } : null}
           crowd={crowd}
           since={since}

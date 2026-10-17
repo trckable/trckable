@@ -5,17 +5,21 @@ const hours = (n: number, v: number) => Array.from({ length: n }, (_, i) => ({ t
 
 describe('since this morning', () => {
   it('says nothing before half past nine', () => {
-    expect(sinceOf({ series: hours(24, 5), nowMin: 9 * 60 + 29, sales: 0, downSec: 0, calm: false })).toBeNull()
+    expect(sinceOf({ series: hours(24, 5), nowMin: 9 * 60 + 29, sales: 0, downSec: 0, calm: false, day: 999 })).toBeNull()
   })
   it('counts the people after nine, and names the hour until it is two hours old', () => {
-    const early = sinceOf({ series: hours(24, 5), nowMin: 10 * 60, sales: 0, downSec: 0, calm: false })
+    const early = sinceOf({ series: hours(24, 5), nowMin: 10 * 60, sales: 0, downSec: 0, calm: false, day: 999 })
     expect(early?.people).toBe(75)
     expect(early?.morning).toBe(false)
-    expect(sinceOf({ series: hours(24, 5), nowMin: 11 * 60, sales: 0, downSec: 0, calm: false })?.morning).toBe(true)
+    expect(sinceOf({ series: hours(24, 5), nowMin: 11 * 60, sales: 0, downSec: 0, calm: false, day: 999 })?.morning).toBe(true)
   })
   it('is quiet only when nothing sold, nothing went down and nothing needs a look', () => {
-    expect(sinceOf({ series: hours(24, 1), nowMin: 12 * 60, sales: 0, downSec: 0, calm: true })?.quiet).toBe(true)
-    expect(sinceOf({ series: hours(24, 1), nowMin: 12 * 60, sales: 1, downSec: 0, calm: true })?.quiet).toBe(false)
-    expect(sinceOf({ series: hours(24, 1), nowMin: 12 * 60, sales: 0, downSec: 600, calm: true })?.down).toBe(10)
+    expect(sinceOf({ series: hours(24, 1), nowMin: 12 * 60, sales: 0, downSec: 0, calm: true, day: 999 })?.quiet).toBe(true)
+    expect(sinceOf({ series: hours(24, 1), nowMin: 12 * 60, sales: 1, downSec: 0, calm: true, day: 999 })?.quiet).toBe(false)
+    expect(sinceOf({ series: hours(24, 1), nowMin: 12 * 60, sales: 0, downSec: 600, calm: true, day: 999 })?.down).toBe(10)
+  })
+  it('never counts more people since the morning than the day has people', () => {
+    // Twenty visitors active in many hours add up to far more than the day's 40 people.
+    expect(sinceOf({ series: hours(24, 20), nowMin: 18 * 60, sales: 0, downSec: 0, calm: false, day: 40 })?.people).toBe(40)
   })
 })
