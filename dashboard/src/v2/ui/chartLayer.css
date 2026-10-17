@@ -10,3 +10,12 @@
 /* A replay draws the line on: the marks that sit on it wait, and come in as the line reaches them. */
 .mk .chwrap [data-rv]{transition:opacity .3s}
 .mk .chwrap[data-reveal] [data-rv]:not([data-in]){opacity:0;pointer-events:none}
+
+/* The words in the plot: the interface's own face (not the axis's mono), and a label with no free slot is put away. */
+.mk svg text.lbl{font-family:inherit}
+.mk .chwrap [data-hidden]{visibility:hidden}
+.mk .chlay-in .lbl-more{position:absolute;right:4px;top:8px;font-size:11.5px;font-weight:600;color:var(--mk-muted);padding:1px 6px;border-radius:9px;background:var(--mk-card2);pointer-events:auto}
+.mk .chlay-in .lbl-more[hidden]{display:none}
+
+/* A line that only says what a label is must not take the pointer from it (a nudged label can end up under its own line). */
+.mk .chlay-in .mp-tip:not(.kept),.mk .chlay-in .sm-tip,.mk .chlay-in .moment-tip{pointer-events:none}
