@@ -37,7 +37,7 @@ describe('the bell with a build’s own feed', () => {
 describe('the account’s other sites', () => {
   const site = (id: string, last?: number) => ({ id, domain: id + '.com', last_event_at: last }) as never
   it('are read when they have had a visit, a few of them, never the one in view', () => {
-    const all = [site('a', 1), site('b'), ...Array.from({ length: 9 }, (_, i) => site('s' + i, 1))]
+    const all = [site('a', 1), site('b'), ...Array.from({ length: 9 }, (_, i) => site(`s${i}`, 1))]
     const out = othersOf(all, all[0])
     expect(out.map((s) => s.id)).not.toContain('a')
     expect(out.map((s) => s.id)).not.toContain('b')
