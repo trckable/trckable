@@ -10,7 +10,7 @@
 .mk .ringb .rtext{color:var(--mk-muted);font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:reduce){.mk .ringb .rarc{transition:none}}
 html[data-motion='off'] .mk .ringb .rarc{transition:none}
-.mk .setupmenu{left:0;width:380px;display:none;gap:var(--mk-s3);padding:var(--mk-s3)}
+.mk .setupmenu{left:0;width:360px;display:none;gap:var(--mk-s2);padding:var(--mk-s4)}
 .mk .setupmenu.on{display:grid}
 .mk .setupmenu .skind{font-size:12.5px;color:var(--mk-muted);display:flex;gap:var(--mk-s2);flex-wrap:wrap;align-items:baseline}
 .mk .setupmenu .skinds{display:flex;gap:var(--mk-s1);flex-wrap:wrap;width:100%}
@@ -24,20 +24,20 @@ html[data-motion='off'] .mk .ringb .rarc{transition:none}
 html[data-motion='off'] .mk .setupmenu .sbar i{transition:none}
 .mk .setupmenu .sgrp{display:grid;gap:2px}
 .mk .setupmenu .sgrp h4{margin:4px 0 2px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mk-muted)}
-.mk .setupmenu .sprow{display:grid;grid-template-columns:20px 1fr auto;gap:var(--mk-s3);align-items:center;padding:7px 6px;border-radius:8px}
+.mk .setupmenu .sprow{display:grid;grid-template-columns:18px 1fr auto;gap:var(--mk-s2);align-items:center;padding:6px var(--mk-s2);border-radius:8px}
 .mk .setupmenu .sprow:hover{background:var(--mk-hov)}
-.mk .setupmenu .schk{width:17px;height:17px;border-radius:50%;border:1.5px solid var(--mk-fill);display:grid;place-items:center}
+.mk .setupmenu .schk{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--mk-fill);display:grid;place-items:center}
 .mk .setupmenu .sprow.done .schk{background:var(--mk-lime);border-color:var(--mk-lime)}
 .mk .setupmenu .sprow.done .schk::after{content:"";width:7px;height:3.5px;border:2px solid var(--mk-on-lime);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
-.mk .setupmenu .stxt b{display:block;font-size:13px;font-weight:600}
-.mk .setupmenu .stxt small{font-size:12px;color:var(--mk-muted)}
+.mk .setupmenu .stxt b{display:block;font-size:12.5px;font-weight:600}
+.mk .setupmenu .stxt small{font-size:11.5px;color:var(--mk-muted)}
 .mk .setupmenu .sprow.done .stxt b{color:var(--mk-muted);font-weight:500}
 .mk .setupmenu .sacts{display:flex;gap:var(--mk-s2);align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .mk .setupmenu .sgo,.mk .setupmenu .snf,.mk .setupmenu .smore{font:inherit;font-size:12.5px;padding:2px 0;cursor:pointer}
 .mk .setupmenu .sgo{color:var(--mk-lime);font-weight:600}
 .mk .setupmenu .snf{color:var(--mk-muted)}
 .mk .setupmenu .sok{font-size:12px;color:var(--mk-muted)}
-.mk .setupmenu .smore{display:flex;justify-content:space-between;align-items:center;color:var(--mk-muted);padding:6px;border-radius:8px;width:100%}
+.mk .setupmenu .smore{display:flex;justify-content:space-between;align-items:center;color:var(--mk-muted);padding:6px var(--mk-s2);border-radius:8px;width:100%}
 .mk .setupmenu .smore:hover{background:var(--mk-hov)}
 .mk .setupmenu button:focus-visible{outline:2px solid var(--mk-lime);outline-offset:2px}
 .mk .setupmenu .spfoot{display:flex;justify-content:space-between;font-size:12px;color:var(--mk-muted);border-top:1px solid var(--mk-line);padding-top:var(--mk-s3)}

@@ -27,6 +27,24 @@ export function rowsOf(items: SetupItem[]): Rows {
   return { core: live('core'), optional: live('optional'), more: [...items.filter((i) => i.skipped), ...live('more')] }
 }
 
+/** How many steps still to do show before the rest fold. */
+export const SHOWN = 3
+
+export interface Split {
+  /** Counted and not done, in the server's order. */
+  todo: SetupItem[]
+  /** Counted and done. */
+  done: SetupItem[]
+  /** Skipped steps, then the extras. */
+  more: SetupItem[]
+}
+
+export function splitOf(items: SetupItem[]): Split {
+  const r = rowsOf(items)
+  const counted = [...r.core, ...r.optional]
+  return { todo: counted.filter((i) => !i.done), done: counted.filter((i) => i.done), more: r.more }
+}
+
 const PROVIDERS: Record<string, string> = { stripe: 'Stripe', paddle: 'Paddle', lemonsqueezy: 'Lemon Squeezy', polar: 'Polar', gumroad: 'Gumroad' }
 
 /** A payment provider's id as its name; an unknown id is shown as it came. */

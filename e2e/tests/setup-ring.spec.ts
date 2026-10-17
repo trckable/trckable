@@ -73,6 +73,7 @@ test('Not for me on Payments lowers what counts and moves the row to More', asyn
   await page.locator('.ringb').click()
   const panel = page.locator('.setupmenu.on')
   await expect(page.locator('.ringb .rtext')).toHaveText('0/5 set up')
+  await panel.getByRole('button', { name: /Show \d+ more/ }).click()
   await panel.locator('[data-step="payments"] button', { hasText: 'I don’t sell online' }).click()
   await expect(page.locator('.ringb .rtext')).toHaveText('0/4 set up')
   await expect(panel.locator('[data-step="payments"]')).toHaveCount(0)
@@ -114,4 +115,34 @@ test('after seven days the check is gone', async ({ page }) => {
   await expect(page.locator('.hd #siteBtn')).toBeVisible()
   await expect(page.locator('.ringb')).toHaveCount(0)
   await page.unrouteAll({ behavior: 'ignoreErrors' })
+})
+
+test('Add a site asks the kind after the domain: a choice is saved, Skip saves none', async ({ page, request }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  const H = { 'X-Trckable-Request': '1', Cookie: `trckable_session=${cookie}` }
+  const kindOf = async (domain: string) => {
+    const sites = ((await (await request.get(`${API}/api/v1/sites`, { headers: H })).json()) as { sites: { id: string; domain: string }[] }).sites
+    const id = sites.find((s) => s.domain === domain)!.id
+    return ((await (await request.get(`${API}/api/v1/sites/${id}/setup`, { headers: H })).json()) as { kind: { value: string; chosen: boolean } }).kind
+  }
+  const wizard = page.getByRole('dialog', { name: 'Add a site' })
+  for (const [name, pick] of [['picked', 'Shop'], ['skipped', null]] as const) {
+    const domain = `kind-${name}-${Date.now()}.example.org`
+    await page.goto(`${API}/${DOMAIN}?add=site`)
+    await wizard.getByLabel('Domain').fill(domain)
+    await wizard.getByLabel('Domain').press('Enter')
+    await expect(wizard.getByRole('group', { name: 'Kind' })).toBeVisible({ timeout: 15_000 })
+    await expect(wizard.getByRole('button', { name: 'Continue' })).toBeDisabled()
+    if (pick) {
+      await wizard.getByRole('button', { name: pick }).click()
+      await wizard.getByRole('button', { name: 'Continue' }).click()
+    } else {
+      await wizard.getByRole('button', { name: 'Skip' }).click()
+    }
+    await expect(wizard.getByRole('tablist', { name: 'How to install' })).toBeVisible()
+    const kind = await kindOf(domain)
+    expect(kind.chosen).toBe(pick !== null)
+    if (pick) expect(kind.value).toBe('shop')
+  }
 })

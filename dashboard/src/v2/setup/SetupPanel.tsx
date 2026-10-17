@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import { more, type SetupState, type SiteKind } from '../../lib/apiMore'
+import { useState, type ReactNode } from 'react'
+import { more, type SetupItem, type SetupState, type SiteKind } from '../../lib/apiMore'
 import { fmtPct } from '../../lib/format'
 import { copy } from './copy'
-import { percent, rowsOf } from './model'
+import { SHOWN, percent, splitOf } from './model'
 import { rowView, type RowCtx } from './rows'
 import { SetupRow } from './SetupRow'
 
@@ -42,12 +42,26 @@ function Kind({ state, x }: { state: SetupState; x: RowCtx }) {
   )
 }
 
-/** The panel: what the ring counts, the steps grouped, what can wait, and who sees it. */
+function Fold({ label, open, onToggle, children }: { label: string; open: boolean; onToggle: () => void; children: ReactNode }) {
+  return (
+    <>
+      <button type="button" className="smore" aria-expanded={open} onClick={onToggle}>
+        <span>{label}</span>
+        <span aria-hidden="true">{open ? '\u25B4' : '\u25BE'}</span>
+      </button>
+      {open && <div className="sgrp">{children}</div>}
+    </>
+  )
+}
+
+/** The panel: the next few steps open, the rest folded (done, more to do, more you can add), and who sees it. */
 export function SetupPanel({ state, x, onHide }: { state: SetupState; x: RowCtx; onHide: () => void }) {
-  const [moreOpen, setMoreOpen] = useState(false)
-  const rows = rowsOf(state.items)
-  const view = (items: typeof rows.core) => items.map((it) => <SetupRow key={it.id} row={rowView(it, x, state.goal_suggestion)} />)
+  const [open, setOpen] = useState({ todo: false, done: false, more: false })
+  const toggle = (k: keyof typeof open) => setOpen({ ...open, [k]: !open[k] })
+  const { todo, done, more: extra } = splitOf(state.items)
+  const view = (items: SetupItem[]) => items.map((it) => <SetupRow key={it.id} row={rowView(it, x, state.goal_suggestion)} />)
   const pct = percent(state.done, state.counted)
+  const rest = todo.slice(SHOWN)
   return (
     <>
       <Kind state={state} x={x} />
@@ -58,21 +72,27 @@ export function SetupPanel({ state, x, onHide }: { state: SetupState; x: RowCtx;
       <div className="sbar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={copy.title}>
         <i style={{ width: `${pct}%` }} />
       </div>
-      <section className="sgrp" aria-label={copy.groups.core}>
-        <h4>{copy.groups.core}</h4>
-        {view(rows.core)}
-      </section>
-      {rows.optional.length > 0 && (
-        <section className="sgrp" aria-label={copy.groups.optional}>
-          <h4>{copy.groups.optional}</h4>
-          {view(rows.optional)}
+      {todo.length > 0 && (
+        <section className="sgrp" aria-label={copy.next}>
+          <h4>{copy.next}</h4>
+          {view(todo.slice(0, SHOWN))}
+          {rest.length > 0 && (
+            <Fold label={copy.moreToDo(rest.length)} open={open.todo} onToggle={() => toggle('todo')}>
+              {view(rest)}
+            </Fold>
+          )}
         </section>
       )}
-      <button type="button" className="smore" aria-expanded={moreOpen} onClick={() => setMoreOpen(!moreOpen)}>
-        <span>{copy.moreCount(rows.more.length)}</span>
-        <span aria-hidden="true">{moreOpen ? '▴' : '▾'}</span>
-      </button>
-      {moreOpen && <div className="sgrp">{view(rows.more)}</div>}
+      {done.length > 0 && (
+        <Fold label={copy.doneCount(done.length)} open={open.done} onToggle={() => toggle('done')}>
+          {view(done)}
+        </Fold>
+      )}
+      {extra.length > 0 && (
+        <Fold label={copy.moreCount(extra.length)} open={open.more} onToggle={() => toggle('more')}>
+          {view(extra)}
+        </Fold>
+      )}
       <div className="spfoot">
         <span>{copy.only}</span>
         <button type="button" className="snf" onClick={onHide}>

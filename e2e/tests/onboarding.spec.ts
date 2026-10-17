@@ -194,6 +194,7 @@ test('after the first verified site, Add a site closes like any dialog and an un
   await page.goto(`${base}/${verified}?add=site`)
   await wizard.getByLabel('Domain').fill(second)
   await wizard.getByLabel('Domain').press('Enter')
+  await wizard.getByRole('button', { name: 'Skip' }).click()
   await expect(wizard.getByRole('tablist', { name: 'How to install' })).toBeVisible({ timeout: 15_000 })
   await wizard.getByRole('button', { name: /do it later/ }).click()
   await expect(page.getByText('Waiting for the first visit').first()).toBeVisible({ timeout: 15_000 })
