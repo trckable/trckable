@@ -13,6 +13,7 @@ section into the release.
 
 ## 0.7.25 (17 Oct 2026)
 
+- The weekly email has a "Who talked about you" section: up to three mentions of the week, each with its source, its title as a link and the visitors it brought, and a link to the rest on the Mentions page; a week with none leaves it out. The new pages now say Mentions watches Hacker News, Product Hunt and the news and blogs, in all six languages.
 - The dashboard's keys follow the new pages: E opens Explore only, L and B switch, T Y 7 3 9 1 W M, the arrows, C, R and A work on the Briefing, and the list and the docs say exactly that; Explore tells a day against the same usual as the Briefing, an address with filters opens Explore with the chips on, notes can be edited and deleted from the notes sheet, Create (goal, funnel, note) is in the palette, Live names new visits to a screen reader and shows phone against computer, numbers follow the language, and all five languages have the new pages again.
 - Explore's tabs that were the old cards (highlights, sources that pay, pages that sell, latest buyers, people, retention, the charts, AI and search) are drawn in the panel's own tables and lines, every tab has a name in the tab bar, and an old address with a funnel's steps (fs=) or ?x=ai opens what it names.
 - The light theme of the new header and menus reads clearly (the site list, the Live and Briefing tabs, the fields and hover fills), the faint grey text is a little lighter in the dark theme, and the bell and the online counts are read a moment after the page, not with it.
