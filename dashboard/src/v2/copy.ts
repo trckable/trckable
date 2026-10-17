@@ -19,6 +19,7 @@ export const copy = defineCopy('v2', {
   explore: 'Explore all data',
   exploreTab: 'Explore',
   allSites: 'All sites',
+  askPeek: 'Ask Peek',
   find: 'Find a site...',
   track: 'Tracking & script check',
   addSite: '+ Add a site',

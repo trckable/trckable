@@ -61,7 +61,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
         mark(id)
         const n = items.find((x) => x.id === id)
         n?.read?.()
-        if (n?.milestone && site) setTold(n.milestone)
+        if (n?.milestone && site && n.site === site.domain) setTold(n.milestone)
         else if (n?.open) n.open()
         else if (n) go(n)
       }}

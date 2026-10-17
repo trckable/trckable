@@ -2346,6 +2346,7 @@ export default {
   'v2.explore': 'Alle gegevens verkennen',
   'v2.exploreTab': 'Explore',
   'v2.allSites': 'Alle sites',
+  'v2.askPeek': 'Vraag het Peek',
   'v2.find': 'Zoek een site...',
   'v2.track': 'Tracking en scriptcontrole',
   'v2.addSite': '+ Site toevoegen',

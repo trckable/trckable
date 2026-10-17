@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { arrange, badge, unreadCount, withFeed, type Notice } from './notices'
+import { arrange, badge, othersOf, OTHERS, unreadCount, withFeed, type Notice } from './notices'
 
 const n = (id: string, at: number, kind: Notice['kind'] = 'down'): Notice => ({ id, kind, site: 'a.com', title: id, sub: '', at })
 
@@ -31,5 +31,16 @@ describe('the bell with a build’s own feed', () => {
 
   it('keeps the site’s own milestones when the feed has none of that kind', () => {
     expect(withFeed([n('m', 7, 'milestone')], [n('p', 3, 'plan')]).map((o) => o.id)).toEqual(['m', 'p'])
+  })
+})
+
+describe('the account’s other sites', () => {
+  const site = (id: string, last?: number) => ({ id, domain: id + '.com', last_event_at: last }) as never
+  it('are read when they have had a visit, a few of them, never the one in view', () => {
+    const all = [site('a', 1), site('b'), ...Array.from({ length: 9 }, (_, i) => site('s' + i, 1))]
+    const out = othersOf(all, all[0])
+    expect(out.map((s) => s.id)).not.toContain('a')
+    expect(out.map((s) => s.id)).not.toContain('b')
+    expect(out).toHaveLength(OTHERS)
   })
 })

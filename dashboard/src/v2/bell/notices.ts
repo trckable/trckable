@@ -1,6 +1,6 @@
 // The bell's list: what happened that a person would want to hear of, put together from what the server already
 // records (incidents, milestones, mentions). Pure; read marks are kept by useNotices.
-import type { Milestone } from '../../lib/api'
+import type { Milestone, Site } from '../../lib/api'
 import type { Incident } from '../../features/incidents/api'
 import type { Mention } from '../../features/mentions/api'
 import { sourceName } from '../briefing/model'
@@ -26,6 +26,12 @@ export interface Notice {
   /** What a tap does instead of going to the page the notice is about. */
   open?: () => void
 }
+
+/** How many of the account's other sites the bell reads on top of the one in view. */
+export const OTHERS = 6
+
+/** The sites the bell reads besides the one in view: those that have had a visit, the first few in the account's order. */
+export const othersOf = (sites: Site[], current: Site | null): Site[] => sites.filter((s) => s.id !== current?.id && !!s.last_event_at).slice(0, OTHERS)
 
 const mins = (s: number) => Math.max(1, Math.round(s / 60))
 

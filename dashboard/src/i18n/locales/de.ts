@@ -2349,6 +2349,7 @@ export default {
   'v2.explore': 'Alle Daten erkunden',
   'v2.exploreTab': 'Explore',
   'v2.allSites': 'Alle Websites',
+  'v2.askPeek': 'Peek fragen',
   'v2.find': 'Website suchen...',
   'v2.track': 'Tracking & Skript-Check',
   'v2.addSite': '+ Website hinzufügen',

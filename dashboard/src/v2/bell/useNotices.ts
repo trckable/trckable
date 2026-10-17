@@ -7,7 +7,7 @@ import { isShared } from '../../lib/me'
 import { useV2Extras } from '../slots'
 import { visibleInterval } from '../../lib/visibleInterval'
 import { useReadSet } from './readState'
-import { arrange, fromIncidents, fromMentions, fromMilestones, unreadCount, withFeed, type Notice } from './notices'
+import { arrange, fromIncidents, fromMentions, fromMilestones, othersOf, unreadCount, withFeed, type Notice } from './notices'
 
 export function useNotices(site: Site | null, sites: Site[]) {
   const [own, setItems] = useState<Notice[]>([])
@@ -25,6 +25,11 @@ export function useNotices(site: Site | null, sites: Site[]) {
         incidents.account(7).then((r) => fromIncidents(r.incidents, domain, now), () => []),
         site ? api.milestones(site.id).then((r) => fromMilestones(r.milestones, site.domain), () => []) : Promise.resolve([]),
         site?.mentions ? mentionsApi.list(site.id, '7d').then((r) => fromMentions(r.mentions, site.domain), () => []) : Promise.resolve([]),
+        // The account's other sites tell their milestones and mentions too, the first few of them.
+        ...othersOf(sites, site).flatMap((o) => [
+          api.milestones(o.id).then((r) => fromMilestones(r.milestones, o.domain), () => []),
+          o.mentions ? mentionsApi.list(o.id, '7d').then((r) => fromMentions(r.mentions, o.domain), () => []) : Promise.resolve([]),
+        ]),
       ])
       if (live) {
         setItems(arrange(parts.flat(), now))

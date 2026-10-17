@@ -1529,10 +1529,10 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 /* the period when it is not today: the pill and a × that goes back */
 .mk .pwrap.set{display:flex;align-items:center}
 .mk .pwrap.set .pill{border-top-right-radius:0;border-bottom-right-radius:0;border-right:0}
-.mk .pill-x{height:var(--mk-h,36px);width:34px;display:inline-grid;place-items:center;border:1px solid var(--mk-line);border-left:0;border-radius:0 12px 12px 0;background:var(--mk-card);color:var(--mk-muted)}
+.mk .pill-x{align-self:stretch;width:34px;display:inline-grid;place-items:center;border:1px solid var(--mk-line);border-left:0;border-radius:0 12px 12px 0;background:var(--mk-card);color:var(--mk-muted)}
 .mk .pill-x:hover{color:var(--mk-text);background:var(--mk-hov)}
 .mk .pill-x:focus-visible{outline:2px solid var(--mk-lime);outline-offset:1px}
-@media (max-width:600px){.mk .pill-x{width:44px;height:44px}}
+@media (max-width:600px){.mk .pill-x{width:44px}}
 /* the list's rows: a mark with the state dot on it; the foot is one row, the rest under More */
 .mk .site-row .mkwrap{position:relative;display:inline-flex;flex:none}
 .mk .site-row .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--pane,var(--mk-card2));box-shadow:none}

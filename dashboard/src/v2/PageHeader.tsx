@@ -16,6 +16,7 @@ import { Bell } from './bell/Bell'
 import { useNotices } from './bell/useNotices'
 import { goExplore } from './briefing/deeper'
 import { copy } from './copy'
+import { openPeek } from './openPeek'
 import { paletteItems } from './explore/palette'
 import { copy as pal } from './explore/paletteCopy'
 import { useV2Extras } from './slots'
@@ -99,7 +100,7 @@ export function PageHeader(p: PageHeaderProps) {
       <Header
         logo={p.identity ? <div className="hd-id">{p.identity}</div> : (
           <>
-            <Logo title={copy.allSites} onClick={() => navigate('/')} />
+            <Logo title={copy.askPeek} onClick={p.onAsk ?? openPeek} />
             {p.update && (
               <button type="button" className="update-pill" onClick={p.onUpdate} title={copy.updateOut(p.update)}>
                 <span className="dot" aria-hidden="true" />
@@ -142,7 +143,7 @@ export function PageHeader(p: PageHeaderProps) {
           </>
         }
       />
-      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', onAsk: p.onAsk ?? (() => window.dispatchEvent(new Event('trckable:ask'))), onGoal: p.onGoal, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} initial={seed} onClose={() => setFind(false)} />}
+      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', onAsk: p.onAsk ?? openPeek, onGoal: p.onGoal, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} initial={seed} onClose={() => setFind(false)} />}
     </>
   )
 }
