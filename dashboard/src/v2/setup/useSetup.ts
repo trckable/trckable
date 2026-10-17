@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { more, type SetupState, type Site } from '../../lib/apiMore'
 import { useSettings } from '../../lib/settings'
 
+const FIRST = 2500
+
 export function useSetup(site: Site | null, on: boolean) {
   const [got, setGot] = useState<{ site: string; state: SetupState } | null>(null)
   const id = site?.id ?? null
@@ -15,7 +17,11 @@ export function useSetup(site: Site | null, on: boolean) {
       .then((state) => setGot({ site: id, state }))
       .catch(() => undefined)
   }, [id, on])
-  useEffect(load, [load, settingsOpen])
+  // The first read waits a little: the ring is not what the page is waiting for.
+  useEffect(() => {
+    const t = setTimeout(load, FIRST)
+    return () => clearTimeout(t)
+  }, [load, settingsOpen])
   useEffect(() => {
     const look = () => document.visibilityState === 'visible' && load()
     document.addEventListener('visibilitychange', look)
