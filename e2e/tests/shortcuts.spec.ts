@@ -100,7 +100,7 @@ test('the list shows them in a group of their own, and a key an action has is re
   await expect(list).toBeVisible()
   await expect(list.getByRole('heading', { name: 'On a dashboard' }).or(list.locator('.g-page b'))).toBeVisible()
   // Shift is spelt out, or drawn as ⇧ on a Mac.
-  for (const [name, caps] of [['Switch site', 'S'], ['Your menu', 'U'], ['Settings', ','], ['Filter', '/'], ['Share', '(Shift|⇧) S'], ['Replay: play or pause', 'R']] as const) {
+  for (const [name, caps] of [['Peek and the palette', '(Ctrl|⌘) K'], ['Live', 'L'], ['Briefing', 'B'], ['Explore', 'E'], ['Switch site', 'S'], ['Your menu', 'U'], ['Settings', ','], ['Find \\(the palette\\)', '/'], ['Share', '(Shift|⇧) S']] as const) {
     await expect(list.getByRole('button', { name: new RegExp(`^${name}: ${caps}\\.`) })).toBeVisible()
   }
   if (SHOTS) {
@@ -110,9 +110,13 @@ test('the list shows them in a group of their own, and a key an action has is re
       await page.screenshot({ path: `${SHOTS}/shortcuts-1280-${scheme}.png` })
     }
   }
-  // Record Switch site as "c": Compare has it.
+  // E is Explore's alone: no Features key shares it, and the list names no key the page does not have.
+  await expect(list.getByText('Features')).toHaveCount(0)
+  await expect(list.getByText('Core ↔ Full')).toHaveCount(0)
+  await expect(list.getByText('Live ↔ Data')).toHaveCount(0)
+  // Record Switch site as "e": Explore has it.
   await list.getByRole('button', { name: /^Switch site: S\./ }).click()
-  await page.keyboard.press('c')
-  await expect(list.locator('.field-err-msg')).toContainText('already means “Compare”')
+  await page.keyboard.press('e')
+  await expect(list.locator('.field-err-msg')).toContainText('already means “Explore”')
   await page.keyboard.press('Escape')
 })

@@ -1,32 +1,25 @@
 // The shortcuts as the list shows them: each action's name and group beside the
 // key it answers to by default (lib/keys.ts keeps only the keys, so the names
 // are not part of the first load).
-import { PRESETS } from './dates'
 import { defaultOf, keyFor } from './keys'
 
-export type Group = 'around' | 'page' | 'period'
+export type Group = 'around' | 'page'
 export type Action = { id: string; label: string; group: Group; def: string }
 
 const named = (id: string, label: string, group: Group): Action => ({ id, label, group, def: defaultOf(id) })
 
 export const ACTIONS: Action[] = [
   named('shortcuts', 'This list', 'around'),
-  named('ask', 'Peek', 'around'),
-  named('features', 'Features', 'around'),
-  named('mode', 'Core ↔ Full', 'around'),
-  named('live', 'Live ↔ Data', 'around'),
-  named('create', 'Create a goal, funnel or note', 'around'),
+  named('ask', 'Peek and the palette', 'around'),
+  named('live', 'Live', 'around'),
+  named('briefing', 'Briefing', 'around'),
+  named('explore', 'Explore', 'around'),
   named('site', 'Switch site', 'around'),
   named('user', 'Your menu', 'around'),
   named('settings', 'Settings', 'around'),
   // Each answers to the control on the page that does it (ShortcutsHost): one that is not there answers nothing.
-  named('filter', 'Filter', 'page'),
+  named('filter', 'Find (the palette)', 'page'),
   named('share', 'Share', 'page'),
-  named('replay', 'Replay: play or pause', 'page'),
-  ...PRESETS.flatMap((p) => (p.key ? [named('period.' + p.id, p.label, 'period')] : [])),
-  named('back', 'Step back', 'period'),
-  named('forward', 'Step forward', 'period'),
-  named('compare', 'Compare', 'period'),
 ]
 
 /** The action a key already belongs to, if any, so two never share one. */

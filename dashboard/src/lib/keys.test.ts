@@ -27,14 +27,14 @@ describe('keymap', () => {
 
   it('knows which action a key already belongs to', () => {
     loadKeymap({})
-    expect(takenBy('c', 'mode')?.id).toBe('compare')
-    expect(takenBy('c', 'compare')).toBeUndefined()
-    expect(takenBy('q', 'mode')).toBeUndefined()
+    expect(takenBy('e', 'site')?.id).toBe('explore')
+    expect(takenBy('e', 'explore')).toBeUndefined()
+    expect(takenBy('q', 'site')).toBeUndefined()
   })
 
   it('drops actions that no longer exist', () => {
     loadKeymap({ gone: 'x' })
-    expect(takenBy('x', 'mode')).toBeUndefined()
+    expect(takenBy('x', 'site')).toBeUndefined()
   })
 
   it('tells Shift S from S', () => {
@@ -63,21 +63,20 @@ describe('keymap', () => {
     // Esc closes what is open, [ and ] set Replay's speed, Tab and Enter belong to the page's own controls.
     for (const reserved of ['escape', '[', ']', 'tab', 'enter', 'space']) expect(seen.has(reserved)).toBe(false)
     // The ones this round added, and the periods they sit beside.
-    expect(['site', 'user', 'settings', 'filter', 'share', 'replay'].map(keyFor)).toEqual(['s', 'u', ',', '/', 'shift+s', 'r'])
+    expect(['site', 'user', 'settings', 'filter', 'share'].map(keyFor)).toEqual(['s', 'u', ',', '/', 'shift+s'])
     expect(keyFor('period.now')).toBe('n')
     expect(keyFor('period.mtd')).toBe('m')
   })
 
   it('names every action in words and puts it in a group the list draws', () => {
     expect(new Set(ACTIONS.map((a) => a.label)).size).toBe(ACTIONS.length)
-    expect(new Set(ACTIONS.map((a) => a.group))).toEqual(new Set(['around', 'page', 'period']))
+    expect(new Set(ACTIONS.map((a) => a.group))).toEqual(new Set(['around', 'page']))
   })
 
   it('refuses a key an action already has, Shift S included', () => {
     loadKeymap({})
-    expect(takenBy('shift+s', 'mode')?.id).toBe('share')
+    expect(takenBy('shift+s', 'site')?.id).toBe('share')
     expect(takenBy('s', 'share')?.id).toBe('site')
-    expect(takenBy('r', 'replay')).toBeUndefined()
   })
 
   it('draws arrows and letters as keycaps', () => {

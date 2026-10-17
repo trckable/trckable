@@ -8,6 +8,7 @@ import { liveCount, siteDown } from '../features/live/liveLink'
 import { switchTab } from '../features/live/switchView'
 import { AccountMenu } from '../components/AccountMenu'
 import { isShared, isViewer } from '../lib/me'
+import { pressed } from '../lib/keys'
 import { navigate } from '../lib/url'
 import { openSettings } from '../lib/settings'
 import { lazyLoad, whenIdle } from '../lib/lazyLoad'
@@ -53,7 +54,7 @@ export function PageHeader(p: PageHeaderProps) {
   useEffect(() => whenIdle(Palette.preload), [])
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      if (pressed(e, 'ask')) {
         e.preventDefault()
         e.stopImmediatePropagation()
         setFind((f) => !f)
