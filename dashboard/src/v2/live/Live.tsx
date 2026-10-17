@@ -6,6 +6,7 @@ import type { Sale, Site, Visit } from '../../lib/api'
 import { useBusier } from '../../features/live/useBusier'
 import { useLiveNow } from '../../features/live/useLiveNow'
 import { LiveView, type LiveFeed } from './LiveView'
+import { LiveSkeleton } from '../ui/LiveSkeleton'
 
 export type LiveStream = {
   online: number | null
@@ -41,6 +42,8 @@ function ServerLive(p: LiveProps) {
     downSince: p.whole?.down_since,
     ...fixtureLook(),
   }
+  // Until the first answer (and when the site has none cached) the page's own shape, not a line of text.
+  if (!data && !failed) return <LiveSkeleton />
   return <LiveView feed={feed} {...p} />
 }
 
