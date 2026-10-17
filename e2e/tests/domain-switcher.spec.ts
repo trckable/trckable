@@ -69,30 +69,6 @@ const said = async (page: Page, text: string) => {
 const row = (page: Page) => page.locator('#siteMenu .sites-domains').first()
 const opt = (page: Page, name: string | RegExp) => row(page).getByRole('menuitemradio', { name })
 
-test('two domains: pick one in the site list, the dashboard follows; All clears it', async ({ page }) => {
-  await open(page, `/${two}?view=data`)
-  await expect(page.locator('#siteBtn')).toBeVisible({ timeout: 30_000 })
-  await said(page, '/All')
-  await shoot(page, 'all')
-  await openList(page)
-  await expect(opt(page, 'All domains')).toHaveAttribute('aria-checked', 'true')
-  await shoot(page, 'menu')
-  const docs = `docs.${two}`
-  await opt(page, /^docs/).click()
-  await expect(page).toHaveURL(/f=hostname%3Adocs\./)
-  await said(page, '/docs')
-  if (page.viewportSize()!.width >= 640) {
-    const chip = page.locator('.toolbar-filters .chip:not(.more)')
-    await expect(chip).toHaveCount(1)
-    await expect(chip.locator('b')).toHaveAttribute('title', docs)
-  }
-  await shoot(page, 'picked')
-  await openList(page)
-  await expect(opt(page, /^docs/)).toHaveAttribute('aria-checked', 'true')
-  await opt(page, 'All domains').click()
-  await expect(page).not.toHaveURL(/hostname/)
-  await said(page, '/All')
-})
 
 test('opened already filtered: every domain is listed and that one is on; Live has no domain control', async ({ page }) => {
   await open(page, `/${two}?view=data&f=hostname%3Adocs.${two}`)

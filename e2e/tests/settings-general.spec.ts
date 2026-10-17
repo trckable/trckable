@@ -29,7 +29,7 @@ test('Display name: "What you call this site in trckable" shows in the header, t
   await expect(dialog.locator('.gen-head-text b')).toHaveText('Bakery of the Bridge')
 
   // The dashboard header and the site list.
-  await page.goto(`${API}/${site.domain}?v=explore`)
+  await page.goto(`${API}/${site.domain}`)
   await expect(page.locator('#siteBtn')).toContainText('Bakery of the Bridge')
   await page.locator('#siteBtn').click()
   await expect(page.locator('#siteMenu.on')).toContainText('Bakery of the Bridge')

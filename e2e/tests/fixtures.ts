@@ -1,25 +1,8 @@
-// The suite's `test`. Data opens on Story; almost every suite is about the
-// numbers on Explore, so a dashboard address opened without a view goes to
-// Explore. A suite about Story asks for ?v=story.
+// The suite's `test`: the page and context made steadier (see below).
 import { test as base, type BrowserContext, type Page } from '@playwright/test'
 import { API } from '../playwright.config'
 
 export * from '@playwright/test'
-
-// The site server (18301) and anything not on this machine are not the dashboard.
-const NOT_DATA = /^\/(settings|login|setup|api|r|s|embed|widget-embed)(\/|$)|^\/_|\.html$/
-
-function onExplore(address: string): string {
-  let url: URL
-  try {
-    url = new URL(address, API)
-  } catch {
-    return address
-  }
-  if (!/^(127\.0\.0\.1|localhost)$/.test(url.hostname) || url.port === '18301' || NOT_DATA.test(url.pathname) || url.pathname.split('/').length > 2 || url.searchParams.has('v')) return address
-  url.searchParams.set('v', 'explore')
-  return url.toString()
-}
 
 // A route handler that fetches the real answer can be overtaken by the page
 // moving on or closing: the response is then disposed, or the page gone. That
@@ -45,8 +28,6 @@ function tolerant(target: Routing) {
 
 function onPage(page: Page): Page {
   tolerant(page as unknown as Routing)
-  const goto = page.goto.bind(page)
-  page.goto = (url, options) => goto(onExplore(url), options)
   // Charts draw in and figures count up on first sight: a test measures the page at rest.
   void page.addInitScript(() => {
     const off = () => document.documentElement.setAttribute('data-motion', 'off')

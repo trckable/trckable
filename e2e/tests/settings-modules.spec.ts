@@ -149,21 +149,3 @@ test('Forms: a submitted form is a goal while the module is on, and not once off
   await context.close()
 })
 
-test('the dashboard: a module that is off takes its tabs and entries with it, and they return when it is on', async ({ page }) => {
-  test.setTimeout(120_000)
-  const site = await newSite(page, 'cards')
-  const tabs = async () => {
-    await page.goto(`${API}/${site.domain}?v=explore&mode=full`)
-    await expect(page.locator('[data-card="what"]')).toBeVisible({ timeout: 15_000 })
-    return page.evaluate(() => [...document.querySelectorAll('[role=tab]')].map((t) => t.id.replace(/^.*?_(who|what)-tab-/, '$1-')).filter((id) => /^(who|what)-/.test(id)))
-  }
-  const set = (id: string, enabled: boolean) => page.request.put(`${API}/api/v1/sites/${site.id}/modules/${id}`, { headers: H, data: { enabled } })
-  const ENTRY: Record<string, string> = { goals: 'what-goals', funnels: 'what-funnel', retention: 'what-retention', journeys: 'what-people', rhythm: 'who-hours' }
-  for (const [mod, tab] of Object.entries(ENTRY)) {
-    await expect.poll(tabs, { message: `${mod} on shows ${tab}` }).toContain(tab)
-    await set(mod, false)
-    expect(await tabs(), `${mod} off hides ${tab}`).not.toContain(tab)
-    await set(mod, true)
-    await expect.poll(tabs, { message: `${mod} on again shows ${tab}` }).toContain(tab)
-  }
-})

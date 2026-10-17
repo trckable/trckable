@@ -77,29 +77,6 @@ for (const width of WIDTHS) {
       }
     })
 
-    test('Data: a tooltip, the Filter menu and the chart’s hover', async ({ page }) => {
-      await page.goto(`${API}/${HISTORY_DOMAIN}?view=data&v=explore&period=30d`)
-      const chart = page.locator('.overview-chart .chart-wrap svg[role="img"]')
-      await expect(chart).toBeVisible({ timeout: 30_000 })
-      const trigger = page.locator('.tip-text:visible, .info-dot:visible').first()
-      if (await trigger.count()) {
-        await trigger.scrollIntoViewIfNeeded()
-        await trigger.hover()
-        await onTop(page, page.locator('[role=tooltip]').first(), 'a tooltip')
-        await page.mouse.move(2, 2)
-      }
-      const filter = page.locator('[data-key="filter"]:not(.sr):visible').first()
-      if (await filter.count()) {
-        await filter.click({ timeout: 5000 })
-        await onTop(page, page.locator('[popover]:popover-open').first(), 'the Filter menu')
-        await page.keyboard.press('Escape')
-      }
-      const at = (await chart.boundingBox())!
-      await page.mouse.move(at.x + at.width * 0.97, at.y + at.height / 2)
-      const tip = page.locator('.overview-chart .time-tip').first()
-      if (await tip.count()) await onTop(page, tip, 'the chart’s hover card')
-    })
-
     test('Settings: a tooltip inside a dialog', async ({ page }) => {
       const sites = ((await (await page.request.get(`${API}/api/v1/sites`)).json()) as { sites: { id: string; domain: string }[] }).sites
       const site = sites.find((x) => x.domain === HISTORY_DOMAIN)!

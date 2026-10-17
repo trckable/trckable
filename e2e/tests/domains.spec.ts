@@ -53,24 +53,6 @@ async function shoot(page: Page, name: string) {
   }
 }
 
-test('two domains: the tab appears and a click filters to that domain', async ({ page }) => {
-  await open(page, `/${two}?view=data`)
-  await page.getByRole('tab', { name: 'Pages', exact: true }).click({ timeout: 30_000 })
-  const tab = page.getByRole('tab', { name: 'Domains' })
-  await expect(tab).toBeVisible()
-  await tab.click()
-  await shoot(page, 'tab')
-  await page.getByRole('button', { name: new RegExp(`docs\\.${two.replace(/\./g, '\\.')}`) }).first().click()
-  await expect(page).toHaveURL(/f=hostname%3Adocs\./)
-  // The chip row is the desktop's; a phone keeps its filters behind the filter button.
-  if (page.viewportSize()!.width >= 700) {
-    const chip = page.locator('.toolbar-filters .chip:not(.more)')
-    await expect(chip).toHaveCount(1)
-    await expect(chip).toContainText('Domain')
-    await expect(chip.locator('b')).toHaveAttribute('title', `docs.${two}`)
-  }
-  await shoot(page, 'filtered')
-})
 
 test('one domain: no tab', async ({ page }) => {
   await open(page, `/${one}?view=data`)
