@@ -1706,9 +1706,9 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
    is taken back from the gap below, so nothing moves down. */
 .mk .hd{--hpb:var(--mk-s3);padding-bottom:var(--hpb);margin-bottom:calc(var(--hpb) * -1)}
 @container (min-width:601px){.mk .hd{margin-bottom:calc(var(--mk-s4) - var(--hpb))}}
-/* The person is the last thing on the right, whatever a build puts before them; the bell comes just before. */
-.mk .hd>.bellw{order:98}
-.mk .hd>.account-menu{order:99}
+/* The person is the last thing on the right, whatever a build puts before them; the bell comes just before (the view switch, order 9, wraps below them). */
+.mk .hd>.bellw{order:7}
+.mk .hd>.account-menu{order:8}
 /* The account line of the site menu opens its list in place. */
 .mk .mi.ws svg{transition:transform .15s}
 .mk .mi.ws.open svg{transform:rotate(180deg)}
@@ -1725,7 +1725,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .setupline{display:flex}
 }
 @container (max-width:1100px){
-.mk .hd .exb{width:var(--hc);padding:0;justify-content:center;flex:none}
+.mk .hd .exb{width:var(--hc);padding:0;justify-content:center}
 .mk .hd .exb .t2,.mk .hd .exb .mk-kbd{display:none}
 }
 @container (max-width:1200px){

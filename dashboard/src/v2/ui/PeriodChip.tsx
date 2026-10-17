@@ -100,8 +100,10 @@ export function PeriodChip(p: PeriodChipProps) {
           toggle()
         }}
       >
-        <span>{head}</span>
-        {rest && <span className="pl-rest">{` · ${rest}`}</span>}
+        <span>
+          {head}
+          {rest && <span className="pl-rest">{` · ${rest}`}</span>}
+        </span>
         {p.vs && <span className="vs hide-s">{p.vs}</span>}
       </button>
       {p.onReset && (
