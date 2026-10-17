@@ -63,6 +63,7 @@ export function PageHeader(p: PageHeaderProps) {
       if (pressed(e, 'ask')) {
         e.preventDefault()
         e.stopImmediatePropagation()
+        setSeed('')
         setFind((f) => !f)
       }
     }

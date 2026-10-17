@@ -55,7 +55,9 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
       onPick={(id) => {
         mark(id)
         const n = items.find((x) => x.id === id)
+        n?.read?.()
         if (n?.milestone && site) setTold(n.milestone)
+        else if (n?.open) n.open()
         else if (n) go(n)
       }}
       onAll={markAll}

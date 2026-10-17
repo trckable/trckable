@@ -1521,3 +1521,28 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .fresh-back:hover{color:var(--mk-text)}
 @media (max-width:600px){.mk .downbox .lk3{display:inline-flex;align-items:center;min-height:44px;min-width:44px}}
 .mk .sitelist > :not(#siteList){flex:none}
+/* 601 to 700 px: no phone bar yet, but too narrow for one row: the header wraps, the views take a row of their own below, and the bell stays. */
+@container (min-width:601px) and (max-width:700px){
+.mk .hd{flex-wrap:wrap;height:auto;min-height:0;position:static;margin:0;padding:0;box-sizing:border-box;row-gap:var(--mk-s2)}
+.mk #views{order:9;flex:0 0 100%;width:100%}
+.mk .mk-seg{height:var(--mk-h);padding:2px}
+.mk .mk-seg button{height:calc(var(--mk-h) - 6px);font-size:13px}
+.mk .hd .bellw .ib.bell{display:grid}
+}
+/* Where the page is narrow (its own width, which is the screen's less its padding) but the screen is 601 px or more: the bar at the bottom names Live, the Briefing and Explore, as on a phone. */
+@media (min-width:601px) and (max-width:700px){
+@container (max-width:600px){
+.mk .tabbar{display:flex}
+.mk{padding-bottom:calc(168px + env(safe-area-inset-bottom))}
+.mk .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:55;padding:var(--mk-s2) var(--mk-s2) calc(var(--mk-s2) + env(safe-area-inset-bottom));background:rgba(15,16,18,.96);border-top:1px solid var(--mk-line);gap:var(--mk-s1)}
+.mk .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px;border-radius:12px;color:var(--mk-muted);font-size:12px;font-weight:600;transition:transform .12s,background .15s,color .15s}
+.mk .tabbar button svg{width:22px;height:22px}
+.mk .tabbar button.on{color:var(--mk-lime)}
+.mk .tabbar button:active,.mk .icard:active,.mk .deep:active,.mk .mk-chip:active,.mk .pill:active,.mk .mi:active,.mk .pi:active,.mk .xrw:active{transform:scale(.97);background:var(--mk-hov2)}
+}
+}
+/* The site list, the period and the bell are the same frosted pane as the account menu (styles.css, "Menus"). */
+.mk .mk-menu{background:var(--pane);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border-color:var(--pane-hair)}
+@media (min-width:601px){
+.mk .mk-menu{border-radius:12px;box-shadow:var(--pane-shadow),inset 0 1px 0 var(--pane-top)}
+}

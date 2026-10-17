@@ -138,3 +138,20 @@ test('the chart can be cut by week from the period menu, and Refresh is in the p
   await page.keyboard.press('Enter')
   await refresh
 })
+
+for (const width of [620, 640, 700]) {
+  test(`at ${width} px the header holds: nothing passes the edge, the bell stays, Live is one tap away`, async ({ page }) => {
+    await open(page, width, '?view=briefing')
+    await expect(page.locator('.hero, .brief').first()).toBeVisible({ timeout: 20_000 })
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+    const [site, bell, avatar] = await Promise.all([page.locator('#siteBtn').boundingBox(), page.locator('#bellBtn').boundingBox(), page.getByRole('button', { name: 'Account' }).boundingBox()])
+    expect({ site: !!site, bell: !!bell && bell.width > 0, avatar: !!avatar }).toEqual({ site: true, bell: true, avatar: true })
+    expect(avatar!.x + avatar!.width).toBeLessThanOrEqual(width)
+    // A page this narrow has the bar at the bottom; a little wider, the views are a row of the header, under the site.
+    const views = await page.locator('#views').boundingBox()
+    if (views) expect(views.y).toBeGreaterThan(site!.y + site!.height - 1)
+    else await expect(page.locator('.tabbar').getByRole('button', { name: 'Live' })).toBeVisible()
+    await (views ? page.locator('#views').getByRole('tab', { name: /^Live/ }) : page.locator('.tabbar').getByRole('button', { name: 'Live' })).click()
+    await expect(page).toHaveURL(/view=live/)
+  })
+}

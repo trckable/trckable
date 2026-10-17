@@ -84,7 +84,10 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
               current={cur}
               workspace={
                 p.workspace && (
-                  <button type="button" className="mi ws" onClick={() => p.workspace?.run?.()}>
+                  <button type="button" className="mi ws" onClick={() => {
+                      p.workspace?.run?.()
+                      close()
+                    }}>
                     <span className="mt2">
                       <div className="nm">{p.workspace.name}</div>
                       <div className="d">{p.workspace.d}</div>

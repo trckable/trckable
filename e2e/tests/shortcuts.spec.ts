@@ -84,6 +84,10 @@ test('on the Briefing the period keys work: 3 and Y pick, the arrows step, C com
   await expect(page.locator('.pal.on')).toContainText('Create · A goal')
   await page.keyboard.press('Escape')
   await expect(page.locator('.pal.on')).toHaveCount(0)
+  // Opened again with no key of its own, the list starts empty and Peek is its first row.
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect(page.locator('.pal.on .palbox input')).toHaveValue('')
+  await expect(page.locator('.pal.on .pi').first()).toContainText('Ask Peek')
 })
 
 test('R plays and pauses Replay', async ({ page }) => {

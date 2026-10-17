@@ -5,6 +5,7 @@ import { more } from '../../lib/apiMore'
 import { incidents } from '../../features/incidents/api'
 import { mentionsApi } from '../../features/mentions/api'
 import { isShared, isViewer } from '../../lib/me'
+import { useV2Extras } from '../slots'
 import { visibleInterval } from '../../lib/visibleInterval'
 import { arrange, fromAlerts, fromIncidents, fromMentions, fromMilestones, unreadCount, type Notice } from './notices'
 
@@ -26,7 +27,9 @@ const save = (s: Set<string>) => {
 }
 
 export function useNotices(site: Site | null, sites: Site[]) {
-  const [items, setItems] = useState<Notice[]>([])
+  const [own, setItems] = useState<Notice[]>([])
+  const extra = useV2Extras().bell
+  const items = useMemo(() => (extra?.length ? [...own, ...extra.filter((e) => !own.some((o) => o.id === e.id))].sort((a, b) => b.at - a.at).slice(0, 40) : own), [own, extra])
   const [read, setRead] = useState<Set<string>>(load)
   const can = !isShared()
   useEffect(() => {

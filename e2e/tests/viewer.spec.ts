@@ -120,3 +120,17 @@ test('the search finds an owner\'s controls', async ({ page }) => {
   const switches = async () => (await writeControls(page)).filter((c) => c.startsWith('switch: ')).length
   await expect.poll(switches).toBeGreaterThan(3)
 })
+
+test('on a phone, a viewer on a site with no visit yet gets the account menu inside the screen', async ({ page, request }) => {
+  const domain = `viewer-fresh-${Date.now()}.test`
+  expect((await request.post(`${API}/api/v1/sites`, { headers: AUTH, data: { domain } })).ok()).toBeTruthy()
+  await page.setViewportSize({ width: 375, height: 700 })
+  await open(page, `/${domain}`)
+  await page.getByRole('button', { name: 'Account' }).click()
+  // The sheet slides up: its place is read once it has settled.
+  const menu = page.getByRole('menu', { name: 'Account' })
+  await expect.poll(async () => {
+    const b = await menu.boundingBox()
+    return !!b && b.x >= 0 && b.x + b.width <= 375 && b.y >= 0 && b.y + b.height <= 700
+  }).toBe(true)
+})

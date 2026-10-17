@@ -19,6 +19,10 @@ export interface Notice {
   at: number
   /** A milestone told in full when it is tapped. */
   milestone?: Milestone
+  /** Called when the notice is marked read (a build that keeps its own list marks it there too). */
+  read?: () => void
+  /** What a tap does instead of going to the page the notice is about. */
+  open?: () => void
 }
 
 const mins = (s: number) => Math.max(1, Math.round(s / 60))
