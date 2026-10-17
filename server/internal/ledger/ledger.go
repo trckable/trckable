@@ -220,6 +220,7 @@ func facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 		test                                                   bool
 	}
 	key := func(provider, id string) string { return provider + "\x00" + id }
+	//nolint:gosec // extra is one of this package's own fixed clauses (all values bound), never text from a request
 	rows, err := db.QueryContext(ctx, `SELECT provider, id, paid_at, currency, gross, tax, customer_id, subscription_id, email_hash, visitor_id, kind, test, country
 		FROM pay_payments WHERE site_id = ? AND paid_at >= ? AND paid_at < ? AND (test = 0 OR ?)`+extra+` ORDER BY paid_at, provider, id`,
 		append([]any{site, from.UnixMilli(), to.UnixMilli(), test}, extraArgs...)...)

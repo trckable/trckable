@@ -160,7 +160,7 @@ func TestFailedRefundIsItsOwnNegativeRow(t *testing.T) {
 // Whatever the events and in whatever order they come, the rows add up to the
 // payment's refunded total.
 func TestRefundRowsAlwaysAddUp(t *testing.T) {
-	rnd := rand.New(rand.NewSource(7))
+	rnd := rand.New(rand.NewSource(7))                                //nolint:gosec // a fixed seed so a failing sequence can be reproduced; nothing secret
 	conv := func(b int64) int64 { return MulDiv(min(b, 1000), 5, 7) } // capped and rounded, like the real conversion
 	for n := 0; n < 2000; n++ {
 		var evs []refEv
