@@ -1652,7 +1652,6 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .lrevb .lkgo{height:32px;padding:0 14px;border-radius:10px;background:var(--mk-lime);color:var(--mk-on-lime);font-weight:600}
 .mk .lrevb .how{color:var(--mk-muted);font-size:13px}
 .mk .lsp{display:block;width:100%;height:44px;color:var(--mk-lime);margin-top:var(--mk-s2)}
-<<<<<<< HEAD
 /* The header's one rule for its controls: the site, the search, the bell and the person are boxes of the same height (--hc: the
    row's, 40 px once the page is 700 px or narrower) with the same border, fill and corners; one gap between them; the site's name
    gives way first. A build's own chip (the plan) takes its height from --hc as well. */
@@ -1670,7 +1669,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .hd>div:has(#siteBtn) .sitechip{width:100%}
 .mk .hd>div:has(#siteBtn) #siteBtn{max-width:100%;flex:1 1 auto;min-width:0}
 }
-=======
+
 
 /* Menus and lists, one row (the palette, the site list, the period, Explore's menus, the bell): one active row at a time, a small gap
    between neighbours, one rhythm on the 4px grid. The active row is the one under the mouse (data-act, set by useActiveRow) or the one
@@ -1695,4 +1694,3 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .khint .gh{height:24px;padding:0 var(--mk-s2);border:1px solid var(--mk-line);font-size:12px}
 @container (max-width:600px){.mk .mailrow .mt{flex:1 1 100%}.mk .mailrow .gh{flex:1}}
 .mk .cards{align-items:start}
->>>>>>> origin/main
