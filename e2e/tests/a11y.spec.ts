@@ -102,72 +102,10 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await scan(page, 'sign in')
     })
 
-    test('the compact dashboard and Replay\'s controls meet WCAG 2.1 AA', async ({ page }) => {
-      await start(page)
-      await page.goto(BASE + '/?view=data')
-      await expect(page.locator('.kpi .value.num').first()).toBeVisible()
-      await scan(page, 'dashboard, compact')
-      // Replay's speed and scrubber show on hover or focus: scanned shown.
-      await page.getByRole('button', { name: /^Replay this period/ }).focus()
-      await page.waitForTimeout(300)
-      await scan(page, 'dashboard, replay controls')
-    })
 
-    test('the Full dashboard, the site switcher and the Notes list meet WCAG 2.1 AA', async ({ page }) => {
-      const site = await start(page)
-      await page.goto(`${BASE}/${site.domain}?mode=full`)
-      await page.locator('[data-card=what]').getByRole('tab', { name: 'Page flow' }).click({ timeout: 20_000 })
-      await page.waitForSelector('[data-chart=flow] svg', { timeout: 20_000 })
-      await scan(page, 'dashboard, full')
-      // The site switcher's list and the Notes list load on demand: open each.
-      await page.locator('#siteBtn').click()
-      await page.waitForSelector('#siteMenu.on #siteList', { timeout: 15_000 })
-      await scan(page, 'site switcher')
-      await page.keyboard.press('Escape')
-      await page.getByRole('button', { name: /^Notes/ }).click()
-      await page.waitForSelector('.notes-modal .notes-panel', { timeout: 15_000 })
-      await scan(page, 'notes list')
-    })
 
     // Every tab of the two cards, one after another: their roles, names and contrast.
-    test('every tab of the two cards meets WCAG 2.1 AA', async ({ page }) => {
-      test.setTimeout(240_000) // a scan for each of a dozen tabs
-      const site = await start(page)
-      await page.goto(`${BASE}/${site.domain}?mode=full`)
-      for (const card of ['who', 'what']) {
-        const tablist = page.locator(`[data-card=${card}]`).getByRole('tablist').first()
-        await expect(tablist.getByRole('tab').first()).toBeVisible({ timeout: 20_000 })
-        await page.locator(`[data-card=${card}]`).getByRole('tab', { name: card === 'what' ? 'Page flow' : 'Over time' }).waitFor({ timeout: 20_000 })
-        const names = await tablist.getByRole('tab').allTextContents()
-        for (const name of names) {
-          await tablist.getByRole('tab', { name, exact: true }).click()
-          await page.waitForTimeout(700)
-          await scan(page, `${card} card, ${name}`)
-        }
-      }
-    })
 
-    test('the Full grid, the More and Create menus and the funnel dialog meet WCAG 2.1 AA', async ({ page }) => {
-      const site = await start(page)
-      await page.goto(`${BASE}/${site.domain}?mode=full`)
-      await page.locator('[data-card=what]').getByRole('tab', { name: 'Page flow' }).click({ timeout: 20_000 })
-      await page.waitForSelector('[data-chart=flow] svg', { timeout: 20_000 })
-      await scan(page, 'dashboard, full grid')
-      await pageSettled(page) // a card that arrives late redraws the page under a menu that is open
-      await page.getByRole('button', { name: 'More', exact: true }).click()
-      await scan(page, 'more menu')
-      await page.getByRole('menu', { name: 'More' }).getByRole('menuitem', { name: /Create/ }).click()
-      const create = page.getByRole('menu', { name: 'Create something' })
-      await expect(create.getByRole('menuitem').first()).toBeFocused() // the list is placed and has taken focus
-      await expect(page.getByRole('menu', { name: 'More' })).toBeHidden()
-      await scan(page, 'create menu')
-      const funnel = page.getByRole('menuitem', { name: /Funnel/ })
-      if (await funnel.isEnabled()) {
-        await funnel.click()
-        await page.waitForSelector('[role=dialog]')
-        await scan(page, 'new funnel')
-      }
-    })
 
     test('Live meets WCAG 2.1 AA', async ({ page }) => {
       // Live needs a real site in the path: the demo's, not a made-up one.

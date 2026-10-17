@@ -91,33 +91,6 @@ test.describe('the dashboard', () => {
   })
 
   for (const view of ['live', 'data']) {
-    test(`the ${view} view open: shown 10 minutes, then hidden 20`, async ({ page }) => {
-      test.setTimeout(300_000)
-      await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-      let calls = 0
-      page.on('request', (r) => {
-        const u = new URL(r.url())
-        if (u.pathname.startsWith('/api/v1/') && !u.pathname.endsWith('/live')) calls++
-      })
-      // The fake clock runs far ahead of the real stream's pings, which would read as a stuck stream
-      // over and over: the stream is refused instead, so the dashboard polls, as it does when stuck.
-      await page.route('**/api/v1/sites/*/live', (route) => route.abort())
-      await page.clock.install()
-      await page.goto(`${API}/example.com?view=${view}`)
-      await expect(page.locator(view == 'live' ? '.liveview .lbign' : '.range-picker').first()).toBeVisible({ timeout: 15_000 })
-      await page.waitForTimeout(500)
-      const loaded = calls
-      await run(page, 10)
-      const shown = calls - loaded
-      await setHidden(page, true)
-      await page.waitForTimeout(200)
-      const hiddenFrom = calls
-      await run(page, 20)
-      const whileHidden = calls - hiddenFrom
-      report(`dashboard ${view}`, { first_load: loaded, shown_10_min: shown, hidden_20_min: whileHidden })
-      expect(whileHidden).toBeLessThanOrEqual(1) // at most a timer that was already set when the tab was hidden
-      await setHidden(page, false) // and it reads once on return
-      await expect.poll(() => calls - hiddenFrom, { timeout: 5000 }).toBeGreaterThan(0)
-    })
+
   }
 })

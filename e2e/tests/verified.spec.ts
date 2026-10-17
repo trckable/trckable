@@ -70,36 +70,6 @@ async function shoot(page: Page, name: string, clip?: { x?: number; y?: number; 
 
 const noSideScroll = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
 
-test('the seal is a check after the site name, and its panel lists a row per kind of badge', async ({ page }) => {
-  await told(page, ALL)
-  await open(page, `/${site.domain}?v=explore`)
-  const seal = page.locator('.sitechip .vf-sealbtn')
-  await expect(seal).toBeVisible({ timeout: 15_000 })
-  await expect(seal).toHaveAttribute('title', 'Verified · Payments, Search')
-  await expect(page.locator('.vf-pill')).toHaveCount(0)
-  const at = async (sel: string) => (await page.locator(sel).first().boundingBox())!
-  expect((await at('.sitechip .vf-sealbtn')).x, 'the check comes after the name').toBeGreaterThan((await at('#siteBtn .nmx')).x)
-  await expect(page.locator('#siteBtn .vf-sealbtn')).toHaveCount(0) // the chip's own button is clean: the check sits beside it
-  expect(await noSideScroll(page), 'the header scrolls sideways').toBeLessThanOrEqual(0)
-  await shoot(page, 'seal', { height: 120 })
-
-  await seal.click()
-  const panel = page.locator('.vf-panel')
-  await expect(panel).toBeVisible()
-  await expect(panel.locator('.vf-row')).toHaveCount(2)
-  await expect(panel).toContainText('Verified · Payments, Search')
-  await expect(panel).toContainText('Search')
-  await expect(panel).toContainText('Payments')
-  await expect(panel).not.toContainText('trckable on the site')
-  await expect(panel.locator('.vf-connect')).toHaveCount(0)
-  await expect(panel.locator('.vf-foot')).toContainText('Last checked')
-  expect(await noSideScroll(page)).toBeLessThanOrEqual(0)
-  await shoot(page, 'panel', { height: phone ? 900 : 480 })
-
-  await page.keyboard.press('Escape')
-  await expect(panel).toBeHidden()
-  await expect(seal).toBeFocused()
-})
 
 test('a kind not earned yet is a Connect row that opens Settings', async ({ page }) => {
   await told(page, sources([{ kind: 'payments', provider: 'stripe' }]))

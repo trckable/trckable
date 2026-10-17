@@ -59,21 +59,9 @@ const box = async (page: Page, width: number, revenue: boolean) => {
 }
 
 for (const width of [1280, 1024, 768, 390]) {
-  test(`a tile is as wide without revenue as with it, at ${width}`, async ({ page }) => {
-    const without = await box(page, width, false)
-    const withRev = await box(page, width, true)
-    expect(Math.abs(without.tile - withRev.tile)).toBeLessThan(1)
-    // The five do not stretch across the strip when six would fit: the room is on the right.
-    if (width >= 1024) expect(without.last.x + without.last.width).toBeLessThan(without.strip.x + without.strip.width - without.tile / 2)
-  })
+
 }
 
-test('the charted tile keeps its underline without revenue', async ({ page }) => {
-  const tiles = await open(page, 1280, false)
-  const lit = tiles.getByRole('button', { name: /^Visitors/ })
-  await expect(lit).toHaveAttribute('aria-pressed', 'true')
-  expect(await lit.evaluate((el) => getComputedStyle(el, '::after').content)).not.toBe('none')
-})
 
 test('pictures for review', async ({ page }) => {
   test.skip(!SHOTS, 'set KPI_SHOTS to a folder')

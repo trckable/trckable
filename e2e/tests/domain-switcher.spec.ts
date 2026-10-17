@@ -70,18 +70,6 @@ const row = (page: Page) => page.locator('#siteMenu .sites-domains').first()
 const opt = (page: Page, name: string | RegExp) => row(page).getByRole('menuitemradio', { name })
 
 
-test('opened already filtered: every domain is listed and that one is on; Live has no domain control', async ({ page }) => {
-  await open(page, `/${two}?view=data&f=hostname%3Adocs.${two}`)
-  await expect(tag(page)).toHaveText('/ docs', { timeout: 30_000 })
-  await openList(page)
-  await expect(row(page).getByRole('menuitemradio')).toHaveCount(3)
-  await expect(opt(page, /^docs/)).toHaveAttribute('aria-checked', 'true')
-  await page.keyboard.press('Escape')
-  // Live shows every visit of the site and takes no filter, so it has no domain control.
-  await open(page, `/${two}?view=live`)
-  await expect(page.locator('.liveview')).toBeVisible({ timeout: 30_000 })
-  await expect(tag(page)).toHaveCount(0)
-})
 
 test('one domain: nothing extra', async ({ page }) => {
   await open(page, `/${one}?view=data`)

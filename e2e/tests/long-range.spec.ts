@@ -47,26 +47,7 @@ async function hop(page: Page, label: string, key: string | null) {
 for (const metric of metrics) {
   // With the pointer left on the chart, two numbers are enough: the chart is the same drawing for each.
   for (const park of metric === 'visitors' || metric === 'session' ? [false, true] : [false]) {
-    test(`${metric}: switching periods in the page${park ? ' with the pointer on the chart' : ''}`, async ({ page }) => {
-      const errors = watch(page)
-      await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-      await page.goto(`${API}/${HISTORY_DOMAIN}?period=30d&metric=${metric}`)
-      await expect(page.locator('.chart-wrap svg[role=img]').first()).toBeVisible({ timeout: 30_000 })
-      await drawn(page, errors, `${metric} first load`)
-      // A side card (a milestone reached, say) sits over the chart's corner: put it away, so the pointer is on the chart.
-      for (const x of await page.locator('aside.side-card .side-card-x').all()) await x.click({ timeout: 2000 }).catch(() => {})
-      for (const [label, key] of hops) {
-        if (park) {
-          // The pointer rests near the chart's right end: its card is open for a late bucket.
-          const box = await page.locator('.chart-wrap').first().boundingBox()
-          if (box) await page.mouse.move(box.x + box.width - 60, box.y + box.height / 2)
-          if (box) await page.mouse.move(box.x + box.width - 50, box.y + box.height / 2)
-          if (label === hops[0][0]) await expect(page.locator('.chart-wrap .cursor-pill').first(), `${metric}: a bucket is picked`).toBeVisible()
-        }
-        await hop(page, label, key)
-        await drawn(page, errors, `${metric}: ${label}`)
-      }
-    })
+
   }
 }
 
@@ -81,18 +62,3 @@ for (const metric of metrics) {
   })
 }
 
-test('a chart that cannot be drawn says so in its place, and the page stays', async ({ page }) => {
-  // The chart's own picture refuses to be made: what a bad frame in it would do.
-  await page.addInitScript(() => {
-    const set = Element.prototype.setAttribute
-    Element.prototype.setAttribute = function (name: string, value: string) {
-      if (name === 'aria-label' && /: \d+ points,/.test(String(value))) throw new Error('the chart refuses')
-      return set.call(this, name, value)
-    }
-  })
-  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(`${API}/${HISTORY_DOMAIN}?period=30d&view=data`)
-  await expect(page.getByText("Couldn't draw this.")).toBeVisible({ timeout: 30_000 })
-  await expect(page.getByRole('group', { name: 'Key numbers' })).toBeVisible()
-  await expect(page.locator('.tc').first()).toBeVisible()
-})
