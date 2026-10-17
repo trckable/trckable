@@ -108,6 +108,8 @@ export function V2View(p: V2Props) {
               grain={grain}
               onPick={(id) => setView({ period: id, from: undefined, to: undefined, bucket: undefined, day: undefined })}
               onCompare={(c) => setView({ compare: c })}
+              bucket={p.view.bucket}
+              onBucket={(b) => setView({ bucket: b })}
               onRange={(from, to) => setView({ period: 'custom', from, to, bucket: undefined, day: undefined })}
             />
           ) : null

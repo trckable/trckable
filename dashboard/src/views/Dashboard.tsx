@@ -496,6 +496,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
         </Suspense>
       )}
       <AskPanel open={askOn && askOpen} onClose={() => setAskOpen(false)} />
+      {!isShared() && location.search.includes('import=ga') && <Suspense fallback={null}><GaReturn site={site} /></Suspense>}
+      {view.test && <Notice kind="test" onAct={() => setView({ test: false })} />}
   </>)
   return liveView || briefing ? <><Suspense fallback={null}><V2View tab={liveView ? 'live' : 'briefing'} waiting={waiting} site={site} sites={sites} view={view} range={range} data={real} loading={loading || firstLoad} money={money ? fmtM : undefined} onGoal={() => setAddGoals(true)} onAsk={askOn ? () => setAskOpen(true) : undefined} live={{ site: site.id, timezone: site.timezone, stream, cookieless: site.cookieless, whole: site, onVisitor: journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined }} /></Suspense>{briefing && !waiting && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}{tail}</> : (
     <>
@@ -525,10 +527,8 @@ export function Dashboard({ site, sites, header }: { site: Site; sites: Site[]; 
       {error && <Notice kind="error" text={error} />}
       {warming && <Notice kind="warming" />}
       {showInstall && <Suspense fallback={null}><Install site={site} visits={stream.visits} /></Suspense>}
-      {!isShared() && location.search.includes('import=ga') && <Suspense fallback={null}><GaReturn site={site} /></Suspense>}
       <MilestonesSlot ms={ms} site={site} quiet={showInstall} revenue={mods === null || shows(mods, 'cards', 'revenue')} />
       {view.surge && <SurgeNote site={site.id} tz={site.timezone} started={view.surge} filters={view.filters} />}
-      {view.test && <Notice kind="test" onAct={() => setView({ test: false })} />}
       {money && money.unconverted > 0 && (
         <div className="banner">{unconvertedNote(money)}</div>
       )}

@@ -25,6 +25,7 @@ export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report
   if (o.site) out.push(
     { title: pc.goLive, kind: pc.kinds.view, group: pc.groups.goTo, run: () => void switchTab('live', o.here) },
     { title: pc.goBriefing, kind: pc.kinds.view, group: pc.groups.goTo, run: () => void switchTab('briefing', o.here) },
+    { title: pc.refresh, kind: pc.kinds.action, group: pc.groups.goTo, run: () => window.dispatchEvent(new Event('trckable:refresh')) },
     { title: pc.clear, kind: pc.kinds.filter, group: pc.groups.goTo, run: () => setView({ filters: [], xf: undefined }) },
   )
   for (const s of o.sites) out.push({ title: pc.switchTo(s.name || s.domain), kind: pc.kinds.site, group: pc.groups.sites, run: () => navigate('/' + encodeURIComponent(s.domain)) })

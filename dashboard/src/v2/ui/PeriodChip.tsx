@@ -1,7 +1,7 @@
 // The period, as the header says it ("Today · Fri 16 Oct", and what it is set against), and its menu: five periods, More,
 // the comparison, and a calendar for custom dates. The menu is a sheet from the bottom on a phone.
 import { useRef, useState } from 'react'
-import type { ISODate } from '../../lib/dates'
+import { bucketsFor, diffDays, type ISODate } from '../../lib/dates'
 import { rangeWords } from '../dayWords'
 import { copy } from '../copy'
 import { Calendar } from './PeriodCalendar'
@@ -14,6 +14,8 @@ export interface PeriodOption {
   /** The dates it covers, said short. */
   d: string
 }
+
+export type Bucket = 'hour' | 'day' | 'week' | 'month'
 
 export type CompareChoice = 'none' | 'previous' | 'year' | 'custom'
 
@@ -32,6 +34,9 @@ export interface PeriodChipProps {
   onPick: (id: string) => void
   onCompare: (c: CompareChoice) => void
   onRange: (from: ISODate, to: ISODate) => void
+  /** How the chart is cut (absent = trckable picks), and a change of it. */
+  bucket?: Bucket
+  onBucket?: (b?: Bucket) => void
   /** The unit the chart is cut in for the chosen dates ("by hour", "by day"). */
   grain: (from: ISODate, to: ISODate) => string
 }
@@ -63,6 +68,7 @@ export function PeriodChip(p: PeriodChipProps) {
       )}
     </button>
   )
+  const buckets = bucketsFor(diffDays(p.customRange.from, p.customRange.to) + 1)
   const cmp: { v: CompareChoice; t: string; off?: boolean; title?: string }[] = [
     { v: 'none', t: 'Off' },
     { v: 'previous', t: 'Before' },
@@ -119,6 +125,18 @@ export function PeriodChip(p: PeriodChipProps) {
                 ))}
               </div>
             </div>
+            {buckets.length > 0 && p.onBucket && (
+              <div className="mk-lopt">
+                <span>{copy.groupBy}</span>
+                <div className="mk-lseg">
+                  {buckets.map((b) => (
+                    <button key={b ?? 'auto'} type="button" className={p.bucket === b ? 'on' : ''} onClick={() => p.onBucket?.(b)}>
+                      {b ? copy.buckets[b] : copy.bucketAuto}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="mk-lline" />
             <button type="button" className="mi" onClick={() => setCal(true)}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">

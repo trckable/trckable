@@ -3484,4 +3484,12 @@ export default {
   'v2explore.heads.screen': 'Schermbreedte',
   'v2explore.heads.language': 'Taal',
   'v2explore.heads.conv': 'Conversie',
+  'v2.groupBy': 'Groeperen per',
+  'v2.bucketAuto': 'Auto',
+  'v2.buckets.hour': 'Uur',
+  'v2.buckets.day': 'Dag',
+  'v2.buckets.week': 'Week',
+  'v2.buckets.month': 'Maand',
+  'palette.refresh': 'Cijfers verversen',
+  'palette.kinds.action': 'actie',
 } satisfies Messages

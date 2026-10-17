@@ -3477,4 +3477,12 @@ export default {
   'v2explore.heads.screen': 'Ancho de pantalla',
   'v2explore.heads.language': 'Idioma',
   'v2explore.heads.conv': 'Conversión',
+  'v2.groupBy': 'Agrupar por',
+  'v2.bucketAuto': 'Auto',
+  'v2.buckets.hour': 'Hora',
+  'v2.buckets.day': 'Día',
+  'v2.buckets.week': 'Semana',
+  'v2.buckets.month': 'Mes',
+  'palette.refresh': 'Actualizar las cifras',
+  'palette.kinds.action': 'acción',
 } satisfies Messages

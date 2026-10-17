@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calendarPrevious, compareLabel, compareRange, presetById, shiftRange } from './dates'
+import { bucketsFor, calendarPrevious, compareLabel, compareRange, presetById, shiftRange } from './dates'
 
 describe('comparing a calendar period', () => {
   it('compares this year to date with last year to date', () => {
@@ -35,5 +35,14 @@ describe('Yesterday', () => {
     const r = { from: '2026-09-30', to: '2026-09-30' }
     expect(shiftRange(r, -1)).toEqual({ from: '2026-09-29', to: '2026-09-29' })
     expect(shiftRange(r, 1)).toEqual({ from: '2026-10-01', to: '2026-10-01' })
+  })
+})
+
+describe('bucketsFor', () => {
+  it('offers the cuts that make sense for a period this long, auto first', () => {
+    expect(bucketsFor(1)).toEqual([undefined, 'hour', 'day'])
+    expect(bucketsFor(30)).toEqual([undefined, 'day', 'week'])
+    expect(bucketsFor(90)).toEqual([undefined, 'day', 'week', 'month'])
+    expect(bucketsFor(500)).toEqual([undefined, 'week', 'month'])
   })
 })
