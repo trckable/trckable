@@ -56,7 +56,7 @@ test('the Sources card has a Mentions tab, and the chart marks each day with a d
 test('several mentions on one day are one dot with a count; a click keeps the list open', async ({ page }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: await session('mentions-many'), url: API }])
-  const day = NOW - 2 * 86400
+  const day = Math.floor(NOW / 86400) * 86400 - 2 * 86400 + 12 * 3600 // noon, two days ago: both posts share a day at any time of day
   const two = [{ ...mentions[0], id: 11, posted_at: day, driving: false }, { ...mentions[1], id: 12, posted_at: day + 600 }]
   await page.route('**/api/v1/sites/*/mentions?*', (r) => r.fulfill({ json: answer(two) }))
   await page.route('**/api/v1/sites', async (r) => {

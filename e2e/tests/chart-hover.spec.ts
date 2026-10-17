@@ -56,8 +56,9 @@ async function openChart(page: Page) {
   await page.goto(`${API}/${HISTORY_DOMAIN}?compare=previous`)
   const chart = page.locator('.chart-wrap')
   await expect(chart.locator('svg[role="img"]')).toBeVisible({ timeout: 30_000 })
-  const points = Number(/(\d+) points/.exec((await chart.locator('svg[role="img"]').getAttribute('aria-label')) ?? '')?.[1] ?? 0)
-  expect(points, `the chart needs at least 3 buckets to hover between, and has ${points}: is ${HISTORY_DOMAIN} seeded?`).toBeGreaterThanOrEqual(3)
+  // The chart is drawn before its numbers arrive (0 points): wait for them.
+  const read = async () => Number(/(\d+) points/.exec((await chart.locator('svg[role="img"]').getAttribute('aria-label')) ?? '')?.[1] ?? 0)
+  await expect.poll(read, { message: `the chart needs at least 3 buckets to hover between: is ${HISTORY_DOMAIN} seeded?`, timeout: 20_000 }).toBeGreaterThanOrEqual(3)
   // The page settles (a scrollbar, a banner) before anything is measured on it.
   let at = JSON.stringify(await chart.boundingBox())
   for (let same = 0, i = 0; same < 3 && i < 40; i++) {
@@ -307,6 +308,7 @@ async function thumbAndMarker(page: Page, chart: Locator) {
 
 test('the Replay slider spans the chart, so its thumb sits at the picked day', async ({ page }) => {
   const chart = await openHistory(page)
+  await expect(chart.locator('svg[role="img"]')).toHaveAttribute('aria-label', /[1-9]\d* points/) // drawn before its numbers arrive
   const points = Number(/(\d+) points/.exec((await chart.locator('svg[role="img"]').getAttribute('aria-label')) ?? '')?.[1] ?? 0)
   const slider = page.locator('#scrub')
   expect(await slider.getAttribute('min')).toBe('0')
