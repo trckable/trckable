@@ -15,6 +15,8 @@ import { liveCount, liveLink } from '../../features/live/liveLink'
 import { feedOf, seriesAt } from '../../features/live/model'
 import type { Busier, LiveNow } from '../../features/live/api'
 import { useTicking } from '../../features/live/useTicking'
+import { CountriesCard } from './CountriesCard'
+import { Announce } from '../ui/Announce'
 import { FeedList } from '../ui/FeedList'
 import { Rng } from '../ui/RangeBar'
 import { barsOf, changeOf, listsOf, sourceParts, todayBand } from './liveModel'
@@ -80,6 +82,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   return (
     <>
       <div className="liveview" role="region" aria-label={copy.live}>
+        <Announce visits={stream.visits} />
         <section className="mk-card lnow">
           <div className="lhead">
             <span className={`mk-pulse ${down || !stream.connected ? 'off' : ''}`} />
@@ -224,21 +227,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
             </div>
           </section>
         )}
-        {lists.countries.length > 0 && (
-          <section className="mk-card lcard">
-            <div className="ph">
-              <span className="t">{copy.countries}</span>
-            </div>
-            <div className="pb">
-              {lists.countries.map((c) => (
-                <div className="lr" key={c.key}>
-                  <span>{c.label}</span>
-                  <b>{c.n}</b>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        <CountriesCard lists={lists} />
       </div>
     </>
   )

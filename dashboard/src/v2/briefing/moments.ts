@@ -38,12 +38,6 @@ export function streak(totals: number[], days: string[], last: number): number {
   return n
 }
 
-const ordinal = (n: number): string => {
-  const s = ['th', 'st', 'nd', 'rd']
-  const v = n % 100
-  return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`
-}
-
 export function moments(o: MomentsIn): Moments {
   const out: Moments = { pills: [], line: '' }
   const end = o.totals.length - 1
@@ -64,6 +58,6 @@ export function moments(o: MomentsIn): Moments {
     out.line = rec === end ? copy.busiestOngoing : copy.busiest(dayWords(o.days[rec]))
   }
   const n = streak(o.totals, o.days, end - 1) + (o.todayUp ? 1 : 0)
-  if ((o.today || o.week) && n >= 3) out.pills.push(o.todayUp ? copy.nthDay(ordinal(n)) : copy.daysAbove(n))
+  if ((o.today || o.week) && n >= 3) out.pills.push(o.todayUp ? copy.nthDay(n) : copy.daysAbove(n))
   return out
 }

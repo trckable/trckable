@@ -49,6 +49,7 @@ test('the footer says all is normal, hints the keys, and Feedback sends a note',
   await foot.getByRole('button', { name: /Shortcuts/ }).click()
   await expect(page.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeVisible()
   await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeHidden()
   // This version and what is new, Docs, and the one profile that has an address.
   await expect(foot.getByRole('link', { name: /^v\d+\.\d+\.\d+ · What’s new/ })).toHaveAttribute('href', /changelog/)
   await expect(foot.getByRole('link', { name: 'Docs' })).toHaveAttribute('href', /docs/)

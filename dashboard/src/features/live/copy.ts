@@ -28,6 +28,8 @@ export const copy = defineCopy('live', {
   quietTip: 'No visit since then. New ones appear here as they happen.',
   help: 'How this list works',
   goal: (name: string) => `Goal: ${name}`,
+  announce: (page: string, source: string) => `New visit: ${page}, from ${source}`,
+  announceMany: (n: number) => `${n} new visits`,
   ago: (ms: number) => {
     const s = Math.max(0, Math.round(ms / 1000))
     if (s < 5) return 'just now'

@@ -270,7 +270,7 @@ jobs:
   e2e-browser:
     name: browsers (${{ matrix.name }})
     needs: [changes, build]
-    if: needs.changes.outputs.e2e != ''
+    if: github.event_name != 'push' && needs.changes.outputs.e2e != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     container:
@@ -342,7 +342,7 @@ jobs:
   e2e-demo:
     name: WCAG 2.1 AA and the Full charts on demo data (${{ matrix.name }})
     needs: [changes, build]
-    if: needs.changes.outputs.demo == 'true'
+    if: github.event_name != 'push' && needs.changes.outputs.demo == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     container:
@@ -396,7 +396,7 @@ jobs:
   accuracy-browser:
     name: accuracy (${{ matrix.browser }})
     needs: [changes, build]
-    if: needs.changes.outputs.accuracy == 'true'
+    if: github.event_name != 'push' && needs.changes.outputs.accuracy == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     container:
@@ -463,7 +463,7 @@ jobs:
   accuracy:
     name: accuracy (exact counts)
     needs: [changes, accuracy-browser, accuracy-server]
-    if: always() && needs.changes.outputs.accuracy == 'true'
+    if: always() && github.event_name != 'push' && needs.changes.outputs.accuracy == 'true'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -497,7 +497,9 @@ jobs:
           done
           # main, a release, the nightly run and a manual run: every browser job,
           # WebKit's shards included, ran and passed. Skipped is not enough.
-          if [ "${{ needs.changes.outputs.full }}" = true ]; then
+          # (A push to main skips the browser jobs: they run on pull requests,
+          # the nightly run and by hand.)
+          if [ "${{ needs.changes.outputs.full }}" = true ] && [ "${{ github.event_name }}" != push ]; then
             for r in ${{ needs.e2e-browser.result }} ${{ needs.e2e-demo.result }} ${{ needs.accuracy.result }}; do
               [ "$r" = success ] || { echo "a full run needs every browser job, WebKit and the accuracy score included"; exit 1; }
             done

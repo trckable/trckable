@@ -50,6 +50,7 @@ async function open(page: Page, query = '?view=data'): Promise<string> {
   await page.addLocatorHandler(page.locator('aside.side-card .side-card-x').first(), (x) => x.click())
   // The handler can put the card away between the listing and the click: a card already gone is fine.
   for (const x of await page.locator('aside.side-card .side-card-x').all()) await x.click({ timeout: 2000 }).catch(() => {})
+  await pageSettled(page) // what arrives late would otherwise close a menu opened meanwhile
   return domain
 }
 
