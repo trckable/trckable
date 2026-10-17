@@ -36,6 +36,7 @@ export interface PageHeaderProps {
   /** What the ⌘K list knows about the page, beyond the sites and the tables. */
   data?: Report | null
   onAsk?: () => void
+  onGoal?: () => void
   /** A newer version of the product, when there is one: a small pill by the ghost. */
   update?: string
   onUpdate?: () => void
@@ -53,6 +54,11 @@ export function PageHeader(p: PageHeaderProps) {
   const notices = useNotices(p.site, p.sites)
   const viewer = isViewer()
   const [find, setFind] = useState(false)
+  const [seed, setSeed] = useState('')
+  const openFind = (q: string) => {
+    setSeed(q)
+    setFind(true)
+  }
   useEffect(() => whenIdle(Palette.preload), [])
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -123,14 +129,19 @@ export function PageHeader(p: PageHeaderProps) {
               </button>
             )}
             {here && (
-              <button type="button" className="sr" data-key="filter" tabIndex={-1} aria-hidden="true" onClick={() => setFind(true)}>
+              <button type="button" className="sr" data-key="filter" tabIndex={-1} aria-hidden="true" onClick={() => openFind('')}>
                 {copy.filter}
+              </button>
+            )}
+            {here && !viewer && (
+              <button type="button" className="sr" data-key="create" tabIndex={-1} aria-hidden="true" onClick={() => openFind(pal.create)}>
+                {pal.create}
               </button>
             )}
           </>
         }
       />
-      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', onAsk: p.onAsk ?? (() => window.dispatchEvent(new Event('trckable:ask'))), domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} onClose={() => setFind(false)} />}
+      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', onAsk: p.onAsk ?? (() => window.dispatchEvent(new Event('trckable:ask'))), onGoal: p.onGoal, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} initial={seed} onClose={() => setFind(false)} />}
     </>
   )
 }

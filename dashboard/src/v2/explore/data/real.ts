@@ -4,13 +4,18 @@
 import { api, cachedReport, call, rangeQS, type Filter, type Report, type ReportQuery, type WebVitals } from '../../../lib/api'
 import { more } from '../../../lib/apiMore'
 import { queryOf } from '../../../lib/dashQuery'
-import { diffDays, fmtRange, todayIn, type Range } from '../../../lib/dates'
+import { addDays, diffDays, fmtRange, todayIn, type Range } from '../../../lib/dates'
 import { parseFilterParam } from '../../../lib/filterSet'
 import { writeView } from '../../../lib/url'
 import { startOfDay, uptimeOf } from '../../../features/incidents/model'
 import { incidents } from '../../../features/incidents/api'
 import { mentionsApi, type Period } from '../../../features/mentions/api'
+import { siteNow } from '../../briefing/chart'
+import { read as readHistory } from '../../briefing/useHistory'
+import { hourTable, stretchBand } from '../../briefing/usual'
+import type { Usual } from '../../briefing/model'
 import type { Down, SavedView, Tab } from '../types'
+import { scaled } from './scaled'
 import { mapOverview, mapTable, optionsOf, type Uptime } from './mapReport'
 import { mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed } from './mapSections'
 import type { DataCtx, Meta, TabData } from './useExplore'
@@ -44,6 +49,41 @@ async function periodUptime(c: DataCtx): Promise<Uptime> {
   return { pct: uptimeOf(to - from, lost, r.quiet_tracked)?.pct ?? null, down, lost }
 }
 
+/** The usual the Briefing tells a single day against: the same weekday's last weeks, up to the same time of day. */
+async function usualOf(c: DataCtx): Promise<Usual | null> {
+  if (c.range.from !== c.range.to) return null
+  return call<Usual>('GET', `/sites/${encodeURIComponent(c.site.id)}/usual${rangeQS({ from: c.range.from, to: c.range.to })}`, undefined, undefined, true).catch(() => null)
+}
+
+/** One day is told against the Briefing's usual, not against all of the day before: the earlier day's figures are scaled to it (a day still going is only partly there). Longer periods keep the period before, and say so. */
+async function basisOf(c: DataCtx, r: Report): Promise<{ report: Report; usual: boolean }> {
+  const [u, got] = await Promise.all([usualOf(c), usualHours(c, r)])
+  const hours = got?.people ?? null
+  const was = r.previous?.kpis.visitors ?? 0
+  // The hours of the weeks before come first, as in the Briefing; the server's usual for the day is the other way to it.
+  const usual = hours ?? (u && u.average >= 5 ? u.average : null)
+  if (!r.previous || usual === null || was <= 0) return { report: r, usual: c.range.from === c.range.to && usual !== null }
+  return { report: { ...r, previous: scaled(r.previous, usual / was, got?.money) }, usual: true }
+}
+
+/** What the same hours of the last eight weeks brought, the part of the day that has happened (as the Briefing counts it). */
+async function usualHours(c: DataCtx, r: Report): Promise<{ people: number; money: number } | null> {
+  if (c.range.from !== c.range.to || r.bucket !== 'hour') return null
+  const today = todayIn(c.site.timezone)
+  const hist = await readHistory(c.site.id, addDays(today, -56), addDays(today, -1), 'hour').catch(() => null)
+  const table = hist ? hourTable(hist, today) : null
+  if (!table) return null
+  const clock = siteNow(c.site.timezone, new Date())
+  const nowHour = Number(clock.slice(11, 13)) + Number(clock.slice(14, 16)) / 60
+  const live = c.range.to === today
+  const hours = r.current.series
+    .map((p) => ({ day: p.t.slice(0, 10), hour: Number(p.t.slice(11, 13)) }))
+    .filter((h) => !(live && h.day === today && h.hour > nowHour))
+    .map((h) => ({ ...h, fr: live && h.day === today ? Math.min(1, Math.max(0, nowHour - h.hour)) : 1 }))
+  const sales = hist ? hourTable(hist, today, 'short', (p) => p.revenue ?? 0, true) : null
+  return { people: stretchBand(table, hours).c, money: sales ? stretchBand(sales, hours, 'short', true).c : 0 }
+}
+
 const periodFor = (c: DataCtx): Period => {
   const days = diffDays(c.range.from, c.range.to) + 1
   if (days <= 7) return '7d'
@@ -56,8 +96,9 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
   const today = todayIn(c.site.timezone)
   switch (tab) {
     case 'overview': {
-      const [report, uptime] = await Promise.all([cachedReport(c.site.id, q, undefined, signal), periodUptime(c)])
-      return mapOverview(report, { money: c.money, uptime, now: today })
+      const [raw, uptime] = await Promise.all([cachedReport(c.site.id, q, undefined, signal), periodUptime(c)])
+      const { report, usual } = await basisOf(c, raw)
+      return mapOverview(report, { money: c.money, uptime, now: today, usual })
     }
     case 'funnels': {
       const report = await cachedReport(c.site.id, q, undefined, signal)
@@ -104,7 +145,7 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       // These read their own numbers (views/Hosted.tsx).
       return null
     default:
-      return mapTable(tab, await cachedReport(c.site.id, q, undefined, signal))
+      return mapTable(tab, (await basisOf(c, await cachedReport(c.site.id, q, undefined, signal))).report)
   }
 }
 

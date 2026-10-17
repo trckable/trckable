@@ -194,3 +194,13 @@ test('an old address with fs= opens the funnel it names', async ({ page }) => {
   await expect(page.locator('#xp')).not.toContainText('We could not load this')
   await expect(page.locator('#xp .xsec').first()).toBeVisible()
 })
+
+test('an old address with filters opens Explore with the chip on, and shutting it takes them off', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&f=country%3AUS`)
+  await expect(page.locator('#xp.on .xchip2')).toHaveCount(1)
+  await expect(page).toHaveURL(/xf=country/)
+  await page.keyboard.press('Escape')
+  await expect(page.locator('#xp.on')).toHaveCount(0)
+  await expect(page).not.toHaveURL(/f=country/)
+})

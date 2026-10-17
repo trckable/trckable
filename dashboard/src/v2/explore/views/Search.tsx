@@ -1,5 +1,5 @@
 // Search: what Google says about the site, the four numbers and the queries (or pages) behind them.
-import { fmtInt } from '../../../lib/format'
+import { fmtFixed, fmtInt } from '../../../lib/format'
 import { XEmpty, XNote, XSub } from '../../ui/XBits'
 import { XKcsPlain } from '../../ui/XKcs'
 import { XCols, type CRow } from '../../ui/XTable'
@@ -28,7 +28,7 @@ function rowsOf(list: SearchRow[], mono: boolean): CRow[] {
     ),
     bar: r.clicks / max,
     mono,
-    c: [fmtInt(r.clicks), fmtK(r.impr), pct1(r.ctr), r.pos.toFixed(1)],
+    c: [fmtInt(r.clicks), fmtK(r.impr), pct1(r.ctr), fmtFixed(r.pos, 1)],
   }))
 }
 

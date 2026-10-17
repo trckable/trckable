@@ -11,7 +11,7 @@ export interface History {
 
 const cache = new Map<string, Promise<Point[]>>()
 
-function read(site: string, from: ISODate, to: ISODate, bucket: 'day' | 'hour'): Promise<Point[]> {
+export function read(site: string, from: ISODate, to: ISODate, bucket: 'day' | 'hour'): Promise<Point[]> {
   const key = `${site}|${bucket}|${from}|${to}`
   let p = cache.get(key)
   if (!p) {

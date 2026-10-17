@@ -65,6 +65,27 @@ test('S, U, comma, slash and Shift S open what their buttons open', async ({ pag
   await opens(page, ',', page.getByRole('dialog', { name: /^Settings for/ }))
 })
 
+test('on the Briefing the period keys work: 3 and Y pick, the arrows step, C compares, A opens Create', async ({ page }) => {
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&v=&period=7d`)
+  await expect(page.locator('.brief')).toBeVisible({ timeout: 20_000 })
+  await page.locator('body').click({ position: { x: 5, y: 400 } })
+  await page.keyboard.press('3')
+  await expect(page).not.toHaveURL(/period=/) // 30 days is the address with none
+  await page.keyboard.press('y')
+  await expect(page).toHaveURL(/period=yesterday/)
+  await page.keyboard.press('ArrowLeft')
+  await expect(page).toHaveURL(/from=\d{4}-\d\d-\d\d&to=/)
+  await page.keyboard.press('7')
+  await expect(page).toHaveURL(/period=7d/)
+  await page.keyboard.press('c')
+  await expect(page).toHaveURL(/compare=none/)
+  await page.keyboard.press('a')
+  await expect(page.locator('.pal.on')).toBeVisible()
+  await expect(page.locator('.pal.on')).toContainText('Create · A goal')
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.pal.on')).toHaveCount(0)
+})
+
 test('R plays and pauses Replay', async ({ page }) => {
   await ready(page)
   await page.addInitScript(() => localStorage.setItem('tkb_replay_speed', 'slow'))

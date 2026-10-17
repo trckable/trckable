@@ -2,6 +2,7 @@
 // and the chart's points move to their new places. Each remembers what it last showed by a name, so it starts from there
 // even when the page that held it was swapped for the next one.
 import { useEffect, useRef, useState } from 'react'
+import { tag } from '../../i18n'
 
 const MS = 420
 const shown = new Map<string, number[]>()
@@ -59,17 +60,34 @@ export function useGlide(name: string, to: number[]): number[] {
   return frame
 }
 
-/** A number as written ("1,234", "$1.2k", "42%", "3.4 s"): the one run of digits in it, or null when it has none or several. */
-const RUN = /^([^\d-]*)(-?\d[\d,]*)(\.\d+)?([^\d]*)$/
+/** The language's own marks in a number: what groups thousands and what starts the decimals ("1.234,5" in German). */
+export function marksOf(lang: string) {
+  const parts = new Intl.NumberFormat(lang).formatToParts(1234.5)
+  const at = (t: string, d: string) => parts.find((x) => x.type === t)?.value ?? d
+  return { lang, group: at('group', ','), decimal: at('decimal', '.') }
+}
+type Marks = ReturnType<typeof marksOf>
+const MARKS = marksOf(tag ?? 'en-US')
+const esc = (c: string) => c.replace(/[\\^$.*+?()[\]{}|-]/g, '\\$&')
 
-function parse(text: string): { pre: string; n: number; dec: number; comma: boolean; post: string } | null {
-  const m = RUN.exec(text)
-  if (!m) return null
-  return { pre: m[1], n: Number((m[2] + (m[3] ?? '')).replace(/,/g, '')), dec: (m[3] ?? '').length - (m[3] ? 1 : 0), comma: m[2].includes(','), post: m[4] }
+interface Parsed {
+  pre: string
+  n: number
+  dec: number
+  comma: boolean
+  post: string
 }
 
-const write = (p: NonNullable<ReturnType<typeof parse>>, n: number): string => {
-  const s = n.toLocaleString('en-US', { minimumFractionDigits: p.dec, maximumFractionDigits: p.dec, useGrouping: p.comma })
+/** A number as written ("1,234", "$1.2k", "42%", "3.4 s", "3,4 s"): the one run of digits in it, or null when it has none or several. */
+export function parse(text: string, k: Marks = MARKS): Parsed | null {
+  const m = new RegExp(`^([^\\d-]*)(-?\\d[\\d${esc(k.group)}]*)(${esc(k.decimal)}\\d+)?([^\\d]*)$`).exec(text)
+  if (!m) return null
+  const decimals = m[3] ? m[3].slice(k.decimal.length) : ''
+  return { pre: m[1], n: Number(m[2].split(k.group).join('') + (decimals ? '.' + decimals : '')), dec: decimals.length, comma: m[2].includes(k.group), post: m[4] }
+}
+
+export const write = (p: Parsed, n: number, k: Marks = MARKS): string => {
+  const s = n.toLocaleString(k.lang, { minimumFractionDigits: p.dec, maximumFractionDigits: p.dec, useGrouping: p.comma })
   return `${p.pre}${s}${p.post}`
 }
 

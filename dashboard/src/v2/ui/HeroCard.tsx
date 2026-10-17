@@ -124,7 +124,7 @@ export function Hero({ say, scores, learn, crowd = null, since, period, onPeriod
           <h1 className={`mk-hl s${say.bad ? ' bad' : ''}`}>{parts(say.short)}</h1>
           {say.sub && <p className="hsub">{say.sub}</p>}
           {onReplay && (
-            <button type="button" className="gh rpb" data-replay="1" title={copy.replayTitle} onClick={onReplay}>
+            <button type="button" className="gh rpb" data-replay="1" data-key="replay" title={copy.replayTitle} onClick={onReplay}>
               <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
                 <path d="M2.5 1.2v9.6L10.5 6z" />
               </svg>

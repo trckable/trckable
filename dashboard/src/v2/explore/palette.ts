@@ -14,11 +14,15 @@ import type { PaletteItem } from '../ui/Palette'
 
 const PERIODS: [string, string][] = [['today', 'Today'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days'], ['90d', 'Last 90 days']]
 
-export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report | null; here: 'live' | 'briefing'; onAsk?: () => void; domainOf: (s: Site) => string }): PaletteItem[] {
+export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report | null; here: 'live' | 'briefing'; onAsk?: () => void; onGoal?: () => void; domainOf: (s: Site) => string }): PaletteItem[] {
   const out: PaletteItem[] = []
+  // What the old Create menu made: a goal, a funnel (its steps are set in Explore), a note on the chart (the Briefing's sheet).
+  if (o.site && o.onGoal && !isShared()) out.push({ title: pc.newGoal, kind: pc.kinds.create, group: pc.groups.create, run: o.onGoal })
+  if (o.site && !isShared()) out.push({ title: pc.newFunnel, kind: pc.kinds.create, group: pc.groups.create, run: () => openExplore('funnels') })
+  if (o.site && o.here === 'briefing' && !isShared()) out.push({ title: pc.newNote, kind: pc.kinds.create, group: pc.groups.create, run: () => window.dispatchEvent(new Event('trckable:note')) })
   if (o.onAsk) out.push({ title: pc.ask, kind: pc.kinds.peek, group: pc.groups.ask, run: o.onAsk })
   // The tables and the two views belong to a site; a page without one offers the sites and the periods only.
-  if (o.site) for (const t of ALL_TABS.filter(offered)) out.push({ title: `${copy.title} · ${t in copy.sub ? copy.sub[t as keyof typeof copy.sub] : copy.names[sectionOf(t)][0]}`, kind: pc.kinds.table, group: copy.title, run: () => openExplore(t) })
+  if (o.site) for (const t of ALL_TABS.filter(offered)) out.push({ title: `${copy.title} · ${t in copy.sub ? copy.sub[t] : copy.names[sectionOf(t)][0]}`, kind: pc.kinds.table, group: copy.title, run: () => openExplore(t) })
   if (o.site) out.push(
     ...(isShared() ? [] : [{ title: pc.goLive, kind: pc.kinds.view, group: pc.groups.goTo, run: () => void switchTab('live', o.here) }]),
     { title: pc.goBriefing, kind: pc.kinds.view, group: pc.groups.goTo, run: () => void switchTab('briefing', o.here) },

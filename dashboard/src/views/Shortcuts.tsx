@@ -2,7 +2,7 @@
 // on a phone, and from the account dialog — the keys are the fastest way to
 // use trckable, so they should not be a secret.
 import { useEffect, useState } from 'react'
-import { ChartSpline, Compass, Gauge, Keyboard, LayoutDashboard, MousePointer2, MoveHorizontal, RotateCcw, Rows3, X } from 'lucide-react'
+import { Calendar, ChartSpline, Compass, Gauge, Keyboard, LayoutDashboard, MousePointer2, MoveHorizontal, RotateCcw, Rows3, X } from 'lucide-react'
 import { useConfirm } from '../components/Confirm'
 import { Modal } from '../kit/Modal'
 import { toast } from '../components/Toast'
@@ -13,11 +13,12 @@ import { caps, comboOf, customKeys, keyFor, loadKeymap, useKeymap } from '../lib
 import { ACTIONS, takenBy, type Group } from '../lib/shortcutList'
 import './Shortcuts.css'
 
-const ICON = { around: Compass, page: LayoutDashboard, mouse: MousePointer2 }
+const ICON = { around: Compass, page: LayoutDashboard, period: Calendar, mouse: MousePointer2 }
 
 const GROUPS: { id: Group | 'mouse'; title: string; hint: string }[] = [
   { id: 'around', title: 'Getting around', hint: 'Anywhere in trckable' },
   { id: 'page', title: 'On a dashboard', hint: 'Its controls, by key' },
+  { id: 'period', title: 'The period', hint: 'On the Briefing' },
   { id: 'mouse', title: 'Reading the chart', hint: 'With the mouse or a finger' },
 ]
 
@@ -138,7 +139,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
         {GROUPS.map((g) => {
           const items = g.id === 'mouse' ? [] : ACTIONS.filter((a) => a.group === g.id && (a.id !== 'ask' || canAsk()))
           return (
-            <section key={g.id} className={`keys-group g-${g.id}`}>
+            <section key={g.id} className={`keys-group g-${g.id}${g.id === 'period' ? ' wide' : ''}`}>
               <header>
                 <span className="keys-gicon">
                   {(() => {

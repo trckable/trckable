@@ -10,10 +10,16 @@ export function openExplore(tab: Tab = 'overview', filters?: Filter[]) {
   setView({ xp: tab, xf: filters ?? cur.filters })
 }
 
-/** Shut. What the panel narrowed by is kept as the page's own filters. */
+/** Shut. The Briefing and Live read the whole site, so what the panel narrowed by goes with it. */
 export function closeExplore() {
-  const cur = readView(new URLSearchParams(location.search))
-  setView({ xp: undefined, xf: undefined, filters: cur.xf ?? cur.filters })
+  setView({ xp: undefined, xf: undefined, filters: [] })
+}
+
+/** An address that narrows the site (?f=country:US) opens Explore with those filters on, where the chips show them and every table is narrowed. */
+export function routeFiltered(view: Pick<ViewState, 'xp' | 'filters'>): boolean {
+  if (view.xp !== undefined || view.filters.length === 0) return false
+  setView({ xp: 'overview', xf: view.filters, filters: [] })
+  return true
 }
 
 /** What the address asks the panel to show: nothing while it is shut. */

@@ -37,11 +37,11 @@ function shapeOf(r: Report, now: ISODate): Shape | null {
 }
 
 /** The overview's four cards: people, a goal (or views), money (or uptime), and who left after one page. */
-export function mapOverview(r: Report, o: { money?: (minor: number) => string; uptime: Uptime | null; now: ISODate }): Overview {
+export function mapOverview(r: Report, o: { money?: (minor: number) => string; uptime: Uptime | null; now: ISODate; usual?: boolean }): Overview {
   const cur = r.current
   const prev = r.previous
   const base = !!prev && baseEnough(prev.kpis.visitors)
-  const pe = (s: Stat): Kc['note'] => noteOf(s, copy.vsUsual, copy.asUsual, '')
+  const pe = (s: Stat): Kc['note'] => (o.usual ?? true) ? noteOf(s, copy.vsUsual, copy.asUsual, '') : noteOf(s, copy.vsBefore, copy.asBefore, '')
   const people = statOf(cur.kpis.visitors, prev?.kpis.visitors, base)
   const goal = (cur.goals ?? []).find((g) => g.visitors > 0)
   const gs = goal ? statOf(goal.visitors, prev?.goals?.find((g) => g.value === goal.value)?.visitors, base) : null

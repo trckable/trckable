@@ -1,11 +1,12 @@
 // The two sheets the Briefing opens over itself: the notes of the site, and tomorrow's email as it will read.
+import { NoteLine } from './NoteLine'
 import type { ReactNode } from 'react'
 import type { Annotation } from '../../lib/api'
 import { copy } from '../briefing/copy'
 import { dayWords } from '../dayWords'
 import { InfoRow, InfoSheet } from './InfoSheet'
 
-export function NotesSheet({ site, notes, onClose, onAdd }: { site: string; notes: Annotation[]; onClose: () => void; onAdd?: () => void }) {
+export function NotesSheet({ site, siteId, notes, onClose, onAdd, onChanged }: { site: string; siteId: string; notes: Annotation[]; onClose: () => void; onAdd?: () => void; onChanged: () => void }) {
   return (
     <InfoSheet
       title={copy.notes}
@@ -20,7 +21,7 @@ export function NotesSheet({ site, notes, onClose, onAdd }: { site: string; note
         )
       }
     >
-      {notes.length ? [...notes].reverse().map((n) => <InfoRow key={n.id} t={n.text} d={`${dayWords(n.day)}${n.author ? ` · ${n.author}` : ''}`} />) : <div className="mk-quiet">{copy.noNotes}</div>}
+      {notes.length ? [...notes].reverse().map((n) => (onAdd ? <NoteLine key={n.id} n={n} site={siteId} onChanged={onChanged} /> : <InfoRow key={n.id} t={n.text} d={`${dayWords(n.day)}${n.author ? ` · ${n.author}` : ''}`} />)) : <div className="mk-quiet">{copy.noNotes}</div>}
     </InfoSheet>
   )
 }

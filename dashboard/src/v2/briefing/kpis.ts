@@ -1,7 +1,7 @@
 // The four numbers under the hero, as the walkthrough builds them: People, the goal (or pageviews), Uptime, and
 // what people paid (or how many left after one page). Pure: kpis.test.ts.
 import type { Result } from '../../lib/api'
-import { delta, fmtCompact, fmtInt, fmtPct } from '../../lib/format'
+import { delta, fmtCompact, fmtFixed, fmtInt, fmtPct } from '../../lib/format'
 import { tooFew } from '../../lib/thin'
 import type { Kc } from '../ui/KpiCard'
 import { copy } from './copy'
@@ -110,5 +110,5 @@ export function bounceNote(now: number, usual: number | null): Kc['note'] {
 /** An uptime figure as the card writes it: whole when it is whole, one decimal otherwise, nothing without one. */
 export function pctText(pct: number | null): string {
   if (pct === null) return ''
-  return Number.isInteger(pct) ? String(pct) : pct.toFixed(1)
+  return Number.isInteger(pct) ? fmtInt(pct) : fmtFixed(pct, 1)
 }
