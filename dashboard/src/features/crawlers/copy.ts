@@ -31,7 +31,7 @@ export const copy = defineCopy('crawlers', {
     title: 'Connect crawler data',
     hint: 'Robots run no JavaScript: your server or CDN reports them.',
     help: 'Only the robot’s name, the page and the time are sent. No address, no cookie, no visitor.',
-    titles: ['Where does your site run?', 'Add the code', 'Turn it on'],
+    titles: ['Where does your site run?', 'Add the code', 'Wait for the first robot'],
     leads: ['Robots run no JavaScript, so your server or CDN reports them to us.', 'Paste it where your site runs. It never slows a visit down.', 'Crawlers show in AI & Search as soon as the first one arrives.'],
     step: (n: number, total: number) => `Step ${n} of ${total}`,
     options: [

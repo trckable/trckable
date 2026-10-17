@@ -88,7 +88,7 @@ export default function AiTab({ x }: { x: XCtx }) {
       </XNote>
       {setup && (
         <Suspense fallback={null}>
-          <CrawlerSetup site={x.site} on={rep.crawlers} onChanged={reload} onClose={() => setSetup(false)} />
+          <CrawlerSetup site={x.site} onChanged={reload} onClose={() => setSetup(false)} />
         </Suspense>
       )}
     </>

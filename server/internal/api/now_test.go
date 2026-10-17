@@ -172,8 +172,9 @@ func TestLiveNowIsExact(t *testing.T) {
 	}
 }
 
-// With the journeys module off, no row carries a visitor id, as on the
-// stream; with revenue off there is no money. A share link has no Live.
+// Journeys have no switch, so every row carries the visitor id even when an
+// old client asks to turn them off; with revenue off there is no money. A
+// share link has no Live.
 func TestLiveNowFollowsModulesAndAccess(t *testing.T) {
 	g := newRig(t)
 	c := client()
@@ -194,13 +195,13 @@ func TestLiveNowFollowsModulesAndAccess(t *testing.T) {
 		return out["recent"].([]any)[0].(map[string]any)["visitor"]
 	}
 	if v := visitorOf(); v != "5" {
-		t.Fatalf("journeys on: visitor %v", v)
+		t.Fatalf("journeys: visitor %v", v)
 	}
 	if code, _ := do(t, c, "PUT", base+"/modules/journeys", `{"enabled":false}`, csrf, "1"); code != 200 {
 		t.Fatal("journeys off")
 	}
-	if v := visitorOf(); v != nil {
-		t.Fatalf("journeys off: visitor %v sent", v)
+	if v := visitorOf(); v != "5" {
+		t.Fatalf("journeys asked off: visitor %v, want 5 (no switch)", v)
 	}
 
 	// A share session is no way in.

@@ -1,14 +1,16 @@
-// Package modules is trckable's à-la-carte layer: every feature beyond the
-// core report is a module you turn on per site, and a module that is off
-// costs nothing at all —
+// Package modules is what a site records and shows beyond the core report.
+// Most of it has no switch: funnels, notes, the weekly rhythm, journeys, the
+// map, retention and crawlers are simply there (Always), revenue and search
+// appear once connected (Connect), and only what changes the script, goals,
+// outbound links, forms, vitals, heatmaps and consent, is a choice (Choice).
+// A choice that is off costs nothing at all —
 //
 //   - no bytes in the browser: the tracker is built per feature, so a site
 //     without goals or outbound links gets a smaller script (see tracker/);
 //   - no work on the server for what it adds: its endpoints answer 404 and
-//     what it alone collects (crawler hits) is not recorded. Revenue is the one
-//     exception, on purpose: payments keep arriving while it is off, so turning
-//     it back on shows everything and no sale is lost;
-//   - no code in the dashboard: its chunk is never downloaded.
+//     what it alone collects is not recorded. Revenue is the exception, on
+//     purpose: payments keep arriving until a provider is disconnected, so
+//     connecting again shows everything and no sale is lost.
 //
 // Modules are first-party only. Nothing here loads foreign code into the
 // server: extensions live outside, on the read-only API and MCP tools.
@@ -54,7 +56,18 @@ type Module struct {
 	Loses []string `json:"loses,omitempty"`
 	// On by default for a new site.
 	On bool `json:"default_on"`
+	// Group says how the module is switched: Always (no switch, the feature is
+	// simply there), Connect (on once its source is connected, and connecting
+	// is the switch) or Choice (changes what the script records).
+	Group string `json:"group"`
 }
+
+// The three ways a module is switched.
+const (
+	Always  = "always"
+	Connect = "connect"
+	Choice  = "choice"
+)
 
 // Tracker features, matched by tracker/build.mjs.
 const (
@@ -70,7 +83,7 @@ const (
 
 // All modules, in the order the dashboard shows them.
 var All = []Module{
-	{ID: "goals", Name: "Goals", Summary: "Count signups, trials and anything else you mark, with properties.",
+	{ID: "goals", Group: Choice, Name: "Goals", Summary: "Count signups, trials and anything else you mark, with properties.",
 		Tracker: TrackGoals, Collects: true, Gap: "Goals stop being recorded. Past goals stay.", On: true,
 		Gives: []string{
 			"Counts signups, trials and any click you mark",
@@ -85,7 +98,7 @@ var All = []Module{
 			"New goals stop being recorded — that gap cannot be filled in later",
 			"Funnels with a goal step stop working",
 		}},
-	{ID: "outbound", Name: "Outbound links & downloads", Summary: "Count clicks that leave your site and file downloads.",
+	{ID: "outbound", Group: Choice, Name: "Outbound links & downloads", Summary: "Count clicks that leave your site and file downloads.",
 		Tracker: TrackOutbound, Collects: true, Gap: "Outbound clicks and downloads stop being recorded. Past ones stay.",
 		Gives: []string{
 			"Counts every click that leaves your site",
@@ -101,8 +114,8 @@ var All = []Module{
 			"Outbound clicks and downloads stop being recorded",
 			"Recorded ones stay in your reports",
 		}},
-	{ID: "revenue", Name: "Revenue", Summary: "Stripe, Lemon Squeezy, Polar, Paddle, Dodo, Gumroad and PayPal: which traffic pays.",
-		Tracker: TrackCheckout, Collects: true, Gap: "Revenue is hidden and checkout links lose the visitor id. Payments keep arriving, so nothing is lost.",
+	{ID: "revenue", Group: Connect, Name: "Revenue", Summary: "Stripe, Lemon Squeezy, Polar, Paddle, Dodo, Gumroad and PayPal: which traffic pays.",
+		Tracker: TrackCheckout, Collects: true, Gap: "Checkout links carry the visitor id only while a provider is connected. Payments keep arriving, so nothing is lost.",
 		Server: "webhook inbox, payment ledger, reconciliation every 6 h, exchange rates",
 		Gives: []string{
 			"Revenue, conversion and revenue per visitor beside your traffic",
@@ -115,30 +128,27 @@ var All = []Module{
 			"Checks your provider for missed payments every 6 hours",
 		},
 		Loses: []string{
-			"Revenue is hidden from the dashboard; payments keep arriving and are kept",
-			"Checkout links lose the visitor id, so sales made while off are unattributed",
-			"Turn it back on and everything recorded meanwhile is there",
+			"Disconnecting hides revenue from the dashboard; payments keep arriving and are kept",
+			"Checkout links lose the visitor id, so sales made while disconnected are unattributed",
+			"Connect again and everything recorded meanwhile is there",
 		}},
-	{ID: "funnels", Name: "Funnels", Summary: "Follow visitors through steps and see where they stop.", On: true,
+	{ID: "funnels", Group: Always, Name: "Funnels", Summary: "Follow visitors through steps and see where they stop.", On: true,
 		Gives: []string{
 			"Build a funnel from your own pages and goals",
 			"See the drop-off at each step and the time between them",
 			"Filters apply, so you can compare channels",
 		},
-		Costs: []string{"Nothing in the browser — it reads what is already stored"},
-		Loses: []string{"The funnel card disappears. Your data is untouched."}},
-	{ID: "notes", Name: "Notes", Summary: "A line on a day: why the chart looks the way it does.", On: true,
+		Costs: []string{"Nothing in the browser — it reads what is already stored"}},
+	{ID: "notes", Group: Always, Name: "Notes", Summary: "A line on a day: why the chart looks the way it does.", On: true,
 		Gives: []string{
 			"A note on any day, shown as a marker on the chart",
 			"Share links can carry them, if you say so",
 		},
-		Costs: []string{"Nothing in the browser — notes are typed by you, not recorded"},
-		Loses: []string{"Markers and the notes list disappear, and no new notes can be added. Existing notes are kept."}},
-	{ID: "rhythm", Name: "Weekly rhythm", Summary: "When your visitors come: hour by weekday.", On: true,
+		Costs: []string{"Nothing in the browser — notes are typed by you, not recorded"}},
+	{ID: "rhythm", Group: Always, Name: "Weekly rhythm", Summary: "When your visitors come: hour by weekday.", On: true,
 		Gives: []string{"Shows when your audience is actually awake", "Good for choosing when to publish or deploy"},
-		Costs: []string{"Nothing in the browser — it reads what is already stored"},
-		Loses: []string{"The rhythm card disappears. Your data is untouched."}},
-	{ID: "journeys", Name: "Journeys", Summary: "One visitor's whole history: visits, pages, goals and payments.", On: true,
+		Costs: []string{"Nothing in the browser — it reads what is already stored"}},
+	{ID: "journeys", Group: Always, Name: "Journeys", Summary: "One visitor's whole history: visits, pages, goals and payments.", On: true,
 		Gives: []string{
 			"One person's whole story: every visit, page, goal and payment",
 			"Opens from the live feed or the People card",
@@ -146,20 +156,17 @@ var All = []Module{
 		Costs: []string{
 			"Nothing in the browser",
 			"The live feed carries the pseudonymous visitor id while this is on",
-		},
-		Loses: []string{"The People card and journeys disappear, and the live feed stops carrying visitor ids."}},
-	{ID: "map", Name: "Map", Summary: "Visitors on a world map (the map file downloads only when you open it).", On: true,
+		}},
+	{ID: "map", Group: Always, Name: "Map", Summary: "Visitors on a world map (the map file downloads only when you open it).", On: true,
 		Gives: []string{"Your countries on a world map", "Click a country to filter the whole dashboard"},
-		Costs: []string{"27 KB of map outlines, downloaded once, only when you open the map tab"},
-		Loses: []string{"The map tab disappears. The country list stays."}},
-	{ID: "retention", Name: "Retention", Summary: "Of the people who first came in a week, how many came back.", On: true,
+		Costs: []string{"27 KB of map outlines, downloaded once, only when you open the map tab"}},
+	{ID: "retention", Group: Always, Name: "Retention", Summary: "Of the people who first came in a week, how many came back.", On: true,
 		Gives: []string{
 			"A cohort grid: each week's new visitors, and how many returned in the weeks after",
 			"The one number that says whether a site is building an audience or renting one",
 		},
-		Costs: []string{"Nothing in the browser — it is worked out from visits you already have"},
-		Loses: []string{"The retention card disappears. Nothing stops being recorded."}},
-	{ID: "vitals", Name: "Core Web Vitals", Summary: "How fast your pages feel, measured by the browsers that visited them.",
+		Costs: []string{"Nothing in the browser — it is worked out from visits you already have"}},
+	{ID: "vitals", Group: Choice, Name: "Core Web Vitals", Summary: "How fast your pages feel, measured by the browsers that visited them.", On: true,
 		Tracker: TrackVitals, Collects: true, Gap: "Speed scores stop being recorded. Past ones stay.",
 		Gives: []string{
 			"Largest contentful paint, layout shift and the slowest interaction, at the 75th percentile",
@@ -171,7 +178,7 @@ var All = []Module{
 			"No extra request, and nothing runs until the page is being hidden",
 		},
 		Loses: []string{"The Web Vitals card disappears", "New measurements stop; the ones you have stay"}},
-	{ID: "consent", Name: "Cookie consent", Summary: "Keep the cookie and ask first — with a bar of trckable's own, or by reading the banner you already run.",
+	{ID: "consent", Group: Choice, Name: "Cookie consent", Summary: "Keep the cookie and ask first — with a bar of trckable's own, or by reading the banner you already run.",
 		Tracker: TrackConsent, Label: "records less", Gap: "The script stops asking and follows the site's own setting again.",
 		Gives: []string{
 			"Until someone agrees, the script stores nothing; someone who says no is not counted at all",
@@ -187,8 +194,7 @@ var All = []Module{
 			"The script stops asking, and goes back to the site's own setting",
 			"Nothing already recorded changes",
 		}},
-	{ID: "crawlers", Name: "AI assistants & crawlers", Summary: "Who crawls you: AI answers, search indexing and training data.",
-		Collects: true, Gap: "Crawler hits stop being recorded. Past ones stay.",
+	{ID: "crawlers", Group: Always, Name: "AI assistants & crawlers", Summary: "Who crawls you: AI answers, search indexing and training data.",
 		Server: "one endpoint your server posts to; nothing extra while idle",
 		Gives: []string{
 			"See which AI assistants read your pages to answer questions",
@@ -198,9 +204,8 @@ var All = []Module{
 		Costs: []string{
 			"Nothing in the browser — robots do not run JavaScript",
 			"Your server forwards robot requests to /api/crawl (one middleware)",
-		},
-		Loses: []string{"New crawler hits stop being recorded", "Recorded ones stay in your reports"}},
-	{ID: "forms", Name: "Form submissions", Summary: "Count every form people send as a goal, with no code.",
+		}},
+	{ID: "forms", Group: Choice, Name: "Form submissions", Summary: "Count every form people send as a goal, with no code.",
 		Tracker: TrackForms, Collects: true, Gap: "Form submissions stop being counted. Past ones stay.",
 		Gives: []string{
 			"A goal each time a form is sent: signups, contact forms, newsletters",
@@ -213,7 +218,7 @@ var All = []Module{
 			"Search forms and forms marked data-trckable-ignore are left out",
 		},
 		Loses: []string{"New form submissions stop being counted", "Recorded ones stay in your goals"}},
-	{ID: "heatmaps", Name: "Heatmaps", Summary: "Where people click on a page, and where they stop. Nobody is recorded.",
+	{ID: "heatmaps", Group: Choice, Name: "Heatmaps", Summary: "Where people click on a page, and where they stop. Nobody is recorded.",
 		Tracker: TrackHeat, Collects: true, Gap: "Click, scroll and form counts stop being recorded. Past ones stay.",
 		Server: "counts per element, page and day, kept in memory and written once a minute",
 		Gives: []string{
@@ -228,7 +233,7 @@ var All = []Module{
 			"Off for visitors who send Do Not Track, and while Cookie consent is on",
 		},
 		Loses: []string{"New clicks, dead and rage clicks and form drop-offs stop being counted", "Counts already kept stay in your heatmaps"}},
-	{ID: "search", Name: "Search Console", Summary: "The Google searches that showed your site, and which of them were clicked.",
+	{ID: "search", Group: Connect, Name: "Search Console", Summary: "The Google searches that showed your site, and which of them were clicked.",
 		Server: "reads Google Search Console when a report asks, at most once an hour; nothing runs while idle",
 		Gives: []string{
 			"The searches that showed your site, with clicks, impressions and position",
@@ -240,7 +245,7 @@ var All = []Module{
 			"A Google service account with read-only access: five minutes, once",
 			"Your server asks Google for the report; no visitor data is sent",
 		},
-		Loses: []string{"The Search terms tab goes away", "Nothing was copied from Google, so nothing is lost", "The key stays on this server until you disconnect"}},
+		Loses: []string{"The Search terms tab goes away once disconnected", "Nothing was copied from Google, so nothing is lost"}},
 	// Asking in plain words is not a module: the MCP server is the way.
 }
 
@@ -290,7 +295,7 @@ type Store struct{ DB *sql.DB }
 func (st Store) Of(ctx context.Context, site string) (Set, error) {
 	out := Set{}
 	for _, m := range All {
-		out[m.ID] = m.On
+		out[m.ID] = m.On || m.Group == Always
 	}
 	rows, err := st.DB.QueryContext(ctx, `SELECT module_id, enabled FROM site_modules WHERE site_id = ?`, site)
 	if err != nil {
@@ -303,17 +308,30 @@ func (st Store) Of(ctx context.Context, site string) (Set, error) {
 		if err := rows.Scan(&id, &on); err != nil {
 			return out, err
 		}
-		if _, ok := Get(id); ok {
+		// What has no switch is always there, whatever an old row says.
+		if m, ok := Get(id); ok && m.Group != Always {
 			out[id] = on
 		}
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return out, err
+	}
+	// Outbound links and forms are goals: with Goals off they record nothing
+	// and read as off; their own choice comes back with Goals.
+	if !out["goals"] {
+		out["outbound"], out["forms"] = false, false
+	}
+	return out, nil
 }
 
 // Set turns a module on or off for a site.
 func (st Store) Set(ctx context.Context, site, id string, on bool) error {
-	if _, ok := Get(id); !ok {
+	m, ok := Get(id)
+	if !ok {
 		return fmt.Errorf("unknown module %q", id)
+	}
+	if m.Group == Always {
+		return nil // no switch: an old client asking is answered, nothing changes
 	}
 	_, err := st.DB.ExecContext(ctx, `
 		INSERT INTO site_modules (site_id, module_id, enabled, updated_at) VALUES (?, ?, ?, ?)

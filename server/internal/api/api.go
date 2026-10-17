@@ -106,6 +106,8 @@ type API struct {
 	once       sync.Once
 	stopping   chan struct{} // closed by Stop: live streams end so a restart need not wait for them
 	patterns   []string      // every route Routes registered
+	factsMu    sync.Mutex
+	facts      map[string]factsEntry // the setup checklist's analytics counts, kept a minute
 	stopOnce   sync.Once
 	shareHosts atomic.Pointer[map[string]string] // verified share domain -> site, kept in memory
 	shareTried atomic.Int64                      // when the list was last tried and failed (unix nanoseconds)
@@ -210,6 +212,12 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}/widgets/{id}", a.authed(a.deleteWidget))
 	handleFunc("GET /w/{id}", a.widgetPage)
 	handle("POST /api/v1/sites/{site}/install/check", a.authed(a.checkInstall))
+	handle("GET /api/v1/sites/{site}/setup", a.authed(a.checklist))
+	handle("PUT /api/v1/sites/{site}/setup/skip/{item}", a.authed(a.setupSkip(true)))
+	handle("DELETE /api/v1/sites/{site}/setup/skip/{item}", a.authed(a.setupSkip(false)))
+	handle("PUT /api/v1/sites/{site}/setup/locale", a.authed(a.setupLocale))
+	handle("PUT /api/v1/sites/{site}/setup/kind", a.authed(a.setupKind))
+	handle("POST /api/v1/sites/{site}/setup/funnel", a.authed(a.setupFunnel))
 	handle("DELETE /api/v1/sites/{site}", a.authed(a.deleteSite))
 	handle("GET /api/v1/sites/{site}/delete-preview", a.authed(a.deletePreview))
 	handle("GET /api/v1/sites/{site}/milestones", a.authed(a.milestones))
@@ -336,10 +344,10 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("POST /api/v1/sites/{site}/segments", a.authed(a.saveSegment))
 	handle("PATCH /api/v1/sites/{site}/segments/{id}", a.authed(a.renameSegment))
 	handle("DELETE /api/v1/sites/{site}/segments/{id}", a.authed(a.deleteSegment))
-	handle("GET /api/v1/sites/{site}/annotations", a.authed(a.gated("GET /api/v1/sites/{site}/annotations", a.annotations)))
-	handle("POST /api/v1/sites/{site}/annotations", a.authed(a.gated("POST /api/v1/sites/{site}/annotations", a.addAnnotation)))
-	handle("PATCH /api/v1/sites/{site}/annotations/{id}", a.authed(a.gated("PATCH /api/v1/sites/{site}/annotations/{id}", a.updateAnnotation)))
-	handle("DELETE /api/v1/sites/{site}/annotations/{id}", a.authed(a.gated("DELETE /api/v1/sites/{site}/annotations/{id}", a.deleteAnnotation)))
+	handle("GET /api/v1/sites/{site}/annotations", a.authed(a.annotations))
+	handle("POST /api/v1/sites/{site}/annotations", a.authed(a.addAnnotation))
+	handle("PATCH /api/v1/sites/{site}/annotations/{id}", a.authed(a.updateAnnotation))
+	handle("DELETE /api/v1/sites/{site}/annotations/{id}", a.authed(a.deleteAnnotation))
 	handle("GET /api/v1/sites/{site}/report/funnel", a.authed(a.funnel))
 	handle("GET /api/v1/sites/{site}/report/goal-props", a.authed(a.goalProps))
 	handle("GET /api/v1/sites/{site}/journey/{visitor}", a.authed(a.journey))
@@ -1228,9 +1236,6 @@ func (a *API) live(w http.ResponseWriter, r *http.Request) {
 
 	ch, cancel := a.Hub.Subscribe(site)
 	defer cancel()
-	// The visitor id is only useful for opening a journey, so it only travels
-	// when that module is on: off means off, here too.
-	withVisitor := a.moduleOn(r, site, "journeys")
 	send := func(ev string, v any) bool {
 		b, _ := json.Marshal(v)
 		if _, err := w.Write([]byte("event: " + ev + "\ndata: " + string(b) + "\n\n")); err != nil {
@@ -1276,9 +1281,6 @@ func (a *API) live(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				continue
-			}
-			if !withVisitor {
-				l.Visitor = ""
 			}
 			if !send("visit", l) {
 				return

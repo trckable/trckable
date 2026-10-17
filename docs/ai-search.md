@@ -56,7 +56,7 @@ The request carries your site's key in the `X-Trckable-Proxy-Key` header, the sa
 key a proxy uses (Settings → Install). Keep it out of the page's code.
 
 In the dashboard, the empty crawler column has **Connect crawler data**: three
-steps (where your site runs, copy this, turn it on), with your site's id, key and
+steps (where your site runs, copy this, wait for the first robot), with your site's id, key and
 address already in the code, and a line that says when the first robot arrives. The
 same setups, for copying here:
 

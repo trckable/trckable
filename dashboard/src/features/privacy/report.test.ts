@@ -59,11 +59,13 @@ describe('buildReport', () => {
     expect(value(buildReport(input()), /Retention/)).toContain('until you delete')
   })
 
-  it('lists only the modules that are on', () => {
+  it('tells what has no switch with what is collected, and lists only the choices that are on', () => {
     const r = buildReport(input({ modules: { goals: true, forms: true, vitals: false } }))
     expect(r.modules).toHaveLength(2)
     expect(r.modules.join('\n')).toContain('never what was typed')
     expect(buildReport(input()).modules).toEqual([])
+    expect(buildReport(input()).collected.join('\n')).toContain('robots that read the site')
+    expect(buildReport(input({ config: config({ consent_free: true }) })).collected.join('\n')).not.toContain('random id')
   })
 
   it('carries the generated policy paragraph, and says the data stays on your server', () => {

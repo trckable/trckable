@@ -139,6 +139,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		Sites:    ctl,
 		Salts:    ingest.NewSalts(ctl),
 		Seen:     ctl,
+		Proxied:  ctl,
 		Labels:   ctl,
 		ClientIP: ipResolver(cfg),
 		Now:      time.Now,

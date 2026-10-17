@@ -95,8 +95,6 @@ export interface AiSearchReport {
   crawled: number
   bots: AiBot[]
   pages: AiPage[]
-  /** The crawlers module is on: robots are being recorded. */
-  crawlers: boolean
   /** Search Console answered: pages carry its clicks. */
   google: boolean
 }

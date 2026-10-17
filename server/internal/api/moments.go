@@ -118,16 +118,13 @@ func salesOf(res *query.Result) []moments.Moment {
 }
 
 // firstsOf is each country's first visit ever, and the first AI assistant
-// that came by in the period (crawlers module on).
+// that came by in the period.
 func (a *API) firstsOf(r *http.Request, q *query.Q, p query.Params) []moments.Moment {
 	var out []moments.Moment
 	if cs, err := q.CountryFirsts(r.Context(), p.Site, p.TZ, p.From, p.To, 20); err == nil {
 		for _, c := range cs {
 			out = append(out, moments.Moment{T: bucketKey(c.At, p.Bucket), Kind: "country", Country: c.Country})
 		}
-	}
-	if !a.moduleOn(r, p.Site, "crawlers") {
-		return out
 	}
 	rep, err := q.Crawlers(r.Context(), p)
 	if err != nil {

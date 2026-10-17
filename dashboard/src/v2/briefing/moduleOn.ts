@@ -1,5 +1,6 @@
-// Whether a module is on for a site, read once a minute: the Briefing asks for speed and Search Console numbers only
-// where the server measures them, so a site with the module off is not met with a stream of 404s.
+// Whether a choice or a connection is on for a site, read once a minute: the Briefing asks for speed numbers only where
+// vitals are recorded and for Search Console numbers only where it is connected, so no site is met with a stream of 404s.
+// Features with no switch are never asked about.
 import { api } from '../../lib/api'
 
 const kept = new Map<string, { at: number; on: Promise<Set<string> | null> }>()

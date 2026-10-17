@@ -566,7 +566,10 @@ func TestWebVitalsEndToEnd(t *testing.T) {
 	}
 	g.waitApplied(t, id)
 
-	// The module is off by default for a site that never asked for it.
+	// Vitals are on for a new site; off is a choice, and then the report is refused.
+	if code, _ := do(t, c, "PUT", base+"/modules/vitals", `{"enabled":false}`, csrf, "1"); code != 200 {
+		t.Fatal("could not turn the module off")
+	}
 	if code, _ := do(t, c, "GET", base+"/report/vitals?from=2026-09-22&to=2026-09-22", ""); code != http.StatusNotFound {
 		t.Fatalf("vitals answered with the module off: %d", code)
 	}

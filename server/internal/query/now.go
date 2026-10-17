@@ -71,12 +71,11 @@ type NowVisit struct {
 	City    string `json:"city,omitempty"`
 	Device  string `json:"device,omitempty"`
 	Browser string `json:"browser,omitempty"`
-	Visitor string `json:"visitor,omitempty"` // only when asked for (the journeys module)
+	Visitor string `json:"visitor,omitempty"` // the pseudonymous id the live stream sends, so a row opens the same journey
 }
 
-// LiveNow reads the last 30 minutes of a site. withVisitor says whether each
-// row may carry the visitor's pseudonymous id.
-func (q Q) LiveNow(ctx context.Context, site string, now time.Time, withVisitor bool) (*Now, error) {
+// LiveNow reads the last 30 minutes of a site.
+func (q Q) LiveNow(ctx context.Context, site string, now time.Time) (*Now, error) {
 	now = now.UTC()
 	start := now.Truncate(time.Minute).Add(-(NowMinutes - 1) * time.Minute)
 	out := &Now{At: now.UnixMilli(), Start: start.UnixMilli(), Minutes: make([]int64, NowMinutes), Sources: []NowSource{}, Recent: []NowVisit{}}
@@ -142,7 +141,7 @@ func (q Q) LiveNow(ctx context.Context, site string, now time.Time, withVisitor 
 	if out.Online, err = q.Online(ctx, site, now); err != nil {
 		return nil, err
 	}
-	if out.Recent, err = q.onSite(ctx, site, now, withVisitor); err != nil {
+	if out.Recent, err = q.onSite(ctx, site, now); err != nil {
 		return nil, err
 	}
 	if more := out.Online - int64(len(out.Recent)); more > 0 {
@@ -155,7 +154,7 @@ func (q Q) LiveNow(ctx context.Context, site string, now time.Time, withVisitor 
 // row each, most recently active first. A row shows the visitor's latest page
 // or goal from the last day; someone with none in that time still gets a row
 // (kind "active"), so the list and the count are the same people.
-func (q Q) onSite(ctx context.Context, site string, now time.Time, withVisitor bool) ([]NowVisit, error) {
+func (q Q) onSite(ctx context.Context, site string, now time.Time) ([]NowVisit, error) {
 	rows, err := q.DB.QueryContext(ctx, `
 		WITH act AS (
 			SELECT visitor_id, max(ts) AS last
@@ -198,10 +197,7 @@ func (q Q) onSite(ctx context.Context, site string, now time.Time, withVisitor b
 		default:
 			v.Kind = "active"
 		}
-		// The same id the live stream sends, so a row opens the same journey.
-		if withVisitor {
-			v.Visitor = strconv.FormatUint(visitor, 36)
-		}
+		v.Visitor = strconv.FormatUint(visitor, 36)
 		out = append(out, v)
 	}
 	return out, rows.Err()

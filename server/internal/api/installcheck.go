@@ -40,6 +40,10 @@ type installCheck struct {
 	// on-demand check loads it.
 	Script       string `json:"script,omitempty"`
 	ScriptStatus int    `json:"script_status,omitempty"`
+	// Kind is the guess from the homepage: shop, saas, content or other;
+	// Provider the payment provider the page carries (sitekind.go).
+	Kind     string `json:"kind,omitempty"`
+	Provider string `json:"provider,omitempty"`
 }
 
 // checkClient is the guarded client checks use; tests swap it so they never
@@ -145,7 +149,7 @@ func (a *API) checkInstall(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out := verifySite(r.Context(), si.ID, si.Domain)
-	a.remember(r.Context(), si.ID, out)
+	a.remember(r.Context(), si.ID, si.Domain, out)
 	out.ScriptStatus = scriptStatus(r.Context(), out)
 	writeJSON(w, http.StatusOK, out)
 }
@@ -171,8 +175,13 @@ func scriptStatus(parent context.Context, c installCheck) int {
 
 // remember keeps a check's outcome, so the site picker and the dashboard can
 // tell a working install from one that stopped.
-func (a *API) remember(ctx context.Context, site string, c installCheck) {
+func (a *API) remember(ctx context.Context, site, domain string, c installCheck) {
 	_ = a.Ctl.SetCheck(ctx, site, sqlite.SiteCheck{At: time.Now().Unix(), Found: c.Found, Via: c.Via, Error: c.Error})
+	// Only a page that carries this site's own script, served from the site's
+	// own address, says what the site is; a redirect elsewhere says nothing.
+	if u, err := url.Parse(c.URL); err == nil && c.Kind != "" && c.Found == "site" && sameSite(u.Hostname(), domain) {
+		_ = a.Ctl.GuessKind(ctx, site, c.Kind, c.Provider)
+	}
 }
 
 // The daily check's limits. One account cannot make this server read
@@ -220,7 +229,7 @@ func (a *API) VerifyAll(ctx context.Context) {
 		go func() {
 			defer wg.Done()
 			for s := range jobs {
-				a.remember(ctx, s.ID, verifySite(ctx, s.ID, s.Domain))
+				a.remember(ctx, s.ID, s.Domain, verifySite(ctx, s.ID, s.Domain))
 				select {
 				case <-ctx.Done():
 				case <-time.After(verifyPause):
@@ -261,6 +270,7 @@ func verifySite(parent context.Context, siteID, domain string) installCheck {
 		out.Error = final.Host + " answered " + http.StatusText(status)
 		return out
 	}
+	out.Kind, out.Provider = guessKind(page)
 	out.Found = snippetIn(page, siteID)
 	if out.Found == "site" {
 		out.Via = "page"
@@ -314,4 +324,10 @@ func verifySite(parent context.Context, siteID, domain string) installCheck {
 	}
 	wg.Wait()
 	return out
+}
+
+// sameSite says whether host is the site's domain, with or without www.
+func sameSite(host, domain string) bool {
+	trim := func(h string) string { return strings.TrimPrefix(strings.ToLower(h), "www.") }
+	return trim(host) == trim(domain)
 }
