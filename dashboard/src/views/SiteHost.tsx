@@ -19,6 +19,8 @@ import { useLiveCount, useSiteDown } from '../features/live/liveLink'
 import { filterOps } from '../features/header/filterOps'
 import { DomainSwitch } from '../features/header/HeaderTools'
 import { filterFrom } from '../features/journey/filterFrom'
+import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
+import { useMilestones } from '../features/milestones/useMilestones'
 import { AskPanel } from './AskLazy'
 import { useLiveRefresh } from './useLiveRefresh'
 
@@ -72,6 +74,13 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
   }, [view.v, view.mode]) // eslint-disable-line react-hooks/exhaustive-deps -- the address is read whole when it needs the change
 
   const mods = useMods(site.id)
+  // Milestones: the celebration when one is reached, and the timeline (opened from ⌘K) with its share sheet.
+  const ms = useMilestones(site)
+  useEffect(() => {
+    if (shared) return
+    window.addEventListener('trckable:milestones', ms.openList)
+    return () => window.removeEventListener('trckable:milestones', ms.openList)
+  }, [shared, ms.openList])
   const [journey, setJourney] = useState<string | null>(null)
   const [addGoals, setAddGoals] = useState(false)
   const [askOpen, setAskOpen] = useState(false)
@@ -130,6 +139,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
           <GaReturn site={site} />
         </Suspense>
       )}
+      {!shared && <MilestonesSlot ms={ms} site={site} quiet={waiting} revenue={mods === null || shows(mods, 'cards', 'revenue')} />}
       <AskPanel open={askOn && askOpen} onClose={() => setAskOpen(false)} />
     </>
   )
