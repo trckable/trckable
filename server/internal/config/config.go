@@ -118,7 +118,7 @@ func Load() Config {
 		NoticeDays:   envDays("TRCKABLE_PAYMENT_NOTICE_DAYS", 30),
 	}
 	c.UptimeEvery = envDuration("TRCKABLE_UPTIME_EVERY", 5*time.Minute)
-	c.MentionsOn = envBool("TRCKABLE_MENTIONS")
+	c.MentionsOn = envBool("TRCKABLE_MENTIONS") || strings.EqualFold(strings.TrimSpace(os.Getenv("TRCKABLE_MENTIONS")), "on")
 	c.MentionsEvery = envDuration("TRCKABLE_MENTIONS_EVERY", 20*time.Minute)
 	c.ProductHuntToken = strings.TrimSpace(envFile("TRCKABLE_PRODUCTHUNT_TOKEN"))
 	c.OIDCRequireTOTP = !strings.EqualFold(strings.TrimSpace(os.Getenv("OIDC_REQUIRE_TOTP")), "false") && os.Getenv("OIDC_REQUIRE_TOTP") != "0"
