@@ -1652,6 +1652,24 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .lrevb .lkgo{height:32px;padding:0 14px;border-radius:10px;background:var(--mk-lime);color:var(--mk-on-lime);font-weight:600}
 .mk .lrevb .how{color:var(--mk-muted);font-size:13px}
 .mk .lsp{display:block;width:100%;height:44px;color:var(--mk-lime);margin-top:var(--mk-s2)}
+/* The header's one rule for its controls: the site, the search, the bell and the person are boxes of the same height (--hc: the
+   row's, 40 px once the page is 700 px or narrower) with the same border, fill and corners; one gap between them; the site's name
+   gives way first. A build's own chip (the plan) takes its height from --hc as well. */
+.mk .hd{--hc:var(--mk-h);gap:var(--mk-s3)}
+@container (max-width:700px){.mk .hd{--hc:40px}}
+.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .bellw .ib.bell,.mk .hd .account-menu .account-btn{box-sizing:border-box;height:var(--hc);min-height:var(--hc)}
+.mk .hd .ib,.mk .hd .bellw .ib.bell,.mk .hd .account-menu .account-btn{width:var(--hc);flex:none;border:1px solid var(--mk-line);background:var(--mk-card);border-radius:var(--mk-rc);color:var(--mk-muted)}
+.mk .hd .ib:hover,.mk .hd .bellw .ib.bell:hover,.mk .hd .account-menu .account-btn:hover{background:var(--mk-hovbg);border-color:var(--mk-bord2)}
+.mk .hd .account-menu .account-btn .acct-dot{top:-3px;right:-3px}
+.mk .hd .logo{align-self:center}
+.mk .hd>div:has(#siteBtn){min-width:0}
+.mk .hd #siteBtn .nmx{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@container (max-width:900px){.mk .hd .exb{width:var(--hc);padding:0;justify-content:center}}
+@container (max-width:600px){
+.mk .hd>div:has(#siteBtn) .sitechip{width:100%}
+.mk .hd>div:has(#siteBtn) #siteBtn{max-width:100%;flex:1 1 auto;min-width:0}
+}
+
 
 /* Live's calm motion: the bars slide one place left when a minute passes, and the Live dot beats once for each visit. */
 .mk .lchart.shift{animation:mk-shift .3s ease-out}
