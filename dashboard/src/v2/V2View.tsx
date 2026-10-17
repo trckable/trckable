@@ -17,6 +17,7 @@ import { copy } from './copy'
 import { PeriodChip } from './ui/PeriodChip'
 import { TabBar } from './ui/TabBar'
 import { goExplore } from './briefing/deeper'
+import { routeFiltered } from './explore/open'
 import { MkToastHost } from './ui/MkToastHost'
 import { AiHost } from './ui/AiHost'
 import { Live } from './live/Live'
@@ -70,6 +71,12 @@ export function V2View(p: V2Props) {
   if (p.view.xp !== undefined && !opened) setOpened(true)
   useEffect(() => whenIdle(ExplorePanel.preload), [])
   useViewKeys(here)
+  // An old address with filters lands where the filters can be seen.
+  useEffect(() => {
+    if (!p.waiting) routeFiltered(p.view)
+    // Once, on the address that was opened: shutting the panel clears the filters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.waiting])
   const exploreOpen = () => goExplore()
   const setTab = (t: 'live' | 'briefing') => void switchTab(t, here)
   const brief = <BriefingSlot site={p.site} data={p.data} loading={p.loading} period={p.view.period} range={p.range} money={p.money} onGoal={p.onGoal} visits={p.live.stream.visits} />
