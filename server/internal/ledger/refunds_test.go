@@ -2,6 +2,8 @@ package ledger
 
 import (
 	"context"
+	"math"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -132,5 +134,46 @@ func TestRefundsIn(t *testing.T) {
 	}
 	if len(RefundsIn("s1", nil, d(1), d(8))) != 0 {
 		t.Error("no facts, no refunds")
+	}
+}
+
+// A refund that fails after the running total was reported lowers it: that
+// moment is a negative row, and the rows still add up to what is refunded.
+func TestFailedRefundIsItsOwnNegativeRow(t *testing.T) {
+	evs := []refEv{
+		{at: 1, amount: 100, cum: true, version: 1},
+		{at: 2, amount: 40, failed: true, version: 2},
+		{at: 3, amount: 120, cum: true, version: 3},
+	}
+	rows := refundSteps(evs, func(b int64) int64 { return b })
+	var got []int64
+	var sum int64
+	for _, r := range rows {
+		got = append(got, r.Amount)
+		sum += r.Amount
+	}
+	if len(got) != 3 || got[0] != 100 || got[1] != -40 || got[2] != 60 || sum != 120 {
+		t.Fatalf("rows %v (sum %d), want [100 -40 60] adding up to 120", got, sum)
+	}
+}
+
+// Whatever the events and in whatever order they come, the rows add up to the
+// payment's refunded total.
+func TestRefundRowsAlwaysAddUp(t *testing.T) {
+	rnd := rand.New(rand.NewSource(7))
+	conv := func(b int64) int64 { return MulDiv(min(b, 1000), 5, 7) } // capped and rounded, like the real conversion
+	for n := 0; n < 2000; n++ {
+		var evs []refEv
+		for i := rnd.Intn(8); i >= 0; i-- {
+			evs = append(evs, refEv{at: int64(rnd.Intn(6)), amount: int64(rnd.Intn(400)), version: int64(rnd.Intn(8)),
+				cum: rnd.Intn(3) == 0, failed: rnd.Intn(4) == 0, lost: rnd.Intn(8) == 0})
+		}
+		var sum int64
+		for _, r := range refundSteps(evs, conv) {
+			sum += r.Amount
+		}
+		if want := conv(refundedAt(evs, math.MaxInt64)); sum != want {
+			t.Fatalf("%+v: rows add up to %d, refunded is %d", evs, sum, want)
+		}
 	}
 }

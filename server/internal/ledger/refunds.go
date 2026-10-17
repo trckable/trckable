@@ -21,13 +21,13 @@ type Refund struct {
 
 // RefundsIn lists the money paid back in [from, to), one row per refund or
 // lost dispute at its own time and amount, newest first. It is read off the
-// same facts the revenue sums use, so the rows add up to what they refund; a
+// same facts the revenue sums use, so the rows add up to what they refund (a refund that failed after it was counted is a negative row); a
 // payment with no rate yet (nothing converted) has none.
 func RefundsIn(site string, facts []Fact, from, to time.Time) []Refund {
 	var out []Refund
 	for _, f := range facts {
 		for _, r := range f.Refunds {
-			if r.Amount <= 0 || r.At.Before(from) || !r.At.Before(to) {
+			if r.Amount == 0 || r.At.Before(from) || !r.At.Before(to) {
 				continue
 			}
 			sum := sha256.Sum256([]byte(site + "\x00" + f.Provider + "\x00" + f.ID + "\x00" + strconv.FormatInt(r.At.UnixMilli(), 10)))

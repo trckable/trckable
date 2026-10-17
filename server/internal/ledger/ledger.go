@@ -157,7 +157,8 @@ func emailHash(key []byte, e string) string {
 	return hex.EncodeToString(mac.Sum(nil)[:16])
 }
 
-// RefundAt is the part of a payment that went back at one moment, net of tax.
+// RefundAt is the part of a payment that went back at one moment, net of tax;
+// negative when a refund that was counted then failed.
 type RefundAt struct {
 	At     time.Time
 	Amount int64
@@ -505,16 +506,10 @@ func facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 		b, ok2 := rates.Convert(ctx, RoundDiv(backNet(refundedAt(evs[k], math.MaxInt64)), scale), p.cur, currency, day)
 		f.Amount, f.Refunded, f.Converted, f.Currency = a, b, ok1 && ok2, strings.ToUpper(p.cur)
 		if f.Converted {
-			// Each refund at its own time: the running total after it, converted
-			// like the whole, less the one before, so the rows add up to Refunded.
-			var prev int64
-			for _, at := range refundTimes(evs[k]) {
-				cur, _ := rates.Convert(ctx, RoundDiv(backNet(refundedAt(evs[k], at)), scale), p.cur, currency, day)
-				if cur > prev {
-					f.Refunds = append(f.Refunds, RefundAt{At: time.UnixMilli(at).UTC(), Amount: cur - prev})
-				}
-				prev = cur
-			}
+			f.Refunds = refundSteps(evs[k], func(back int64) int64 {
+				v, _ := rates.Convert(ctx, RoundDiv(backNet(back), scale), p.cur, currency, day)
+				return v
+			})
 		}
 		f.Country = payments.CountryCode(cmp.Or(p.country, h.country))
 		if !f.Converted {
@@ -740,5 +735,22 @@ func refundTimes(evs []refEv) []int64 {
 		}
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	return out
+}
+
+// refundSteps is what went back at each moment: the running total after it
+// (turned into the site's money by total), less the one before. A refund that
+// failed after it was counted lowers the total, so that moment is a negative
+// row, and the rows always add up to the whole.
+func refundSteps(evs []refEv, total func(back int64) int64) []RefundAt {
+	var out []RefundAt
+	var prev int64
+	for _, at := range refundTimes(evs) {
+		cur := total(refundedAt(evs, at))
+		if cur != prev {
+			out = append(out, RefundAt{At: time.UnixMilli(at).UTC(), Amount: cur - prev})
+		}
+		prev = cur
+	}
 	return out
 }

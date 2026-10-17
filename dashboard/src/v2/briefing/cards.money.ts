@@ -38,7 +38,7 @@ function who(buyers: Buyer[], money: Money): string {
 function refundVis(i: SalesIn): Story['vis'] {
   const r = i.refunds
   if (!r || r.refunds.length === 0) return null
-  const rows = r.refunds.slice(0, 4).map((x) => ({ l: copy.refundRow(kindWord(x.kind)), t: i.clock(x.at), a: `-${i.fmt(x.amount)}`, flag: flag(x.country ?? ''), neg: true }))
+  const rows = r.refunds.slice(0, 4).map((x) => ({ l: copy.refundRow(kindWord(x.kind)), t: i.clock(x.at), a: x.amount > 0 ? `-${i.fmt(x.amount)}` : `+${i.fmt(-x.amount)}`, flag: flag(x.country ?? ''), neg: true }))
   const extra = r.count > rows.length ? [{ l: copy.more(r.count - rows.length), more: true }] : []
   return { k: 'rcpt', rows: [...rows, ...extra, { l: copy.refundTot, t: '', a: `-${i.fmt(r.amount)}`, flag: '', neg: true, tot: true }] }
 }
