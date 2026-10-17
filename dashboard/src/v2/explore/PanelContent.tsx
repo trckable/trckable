@@ -4,6 +4,7 @@ import { useEffect, useRef, type KeyboardEvent, type MouseEvent } from 'react'
 import type { Site } from '../../lib/api'
 import { fmtMoney } from '../../lib/format'
 import type { Range } from '../../lib/dates'
+import { queryOf } from '../../lib/dashQuery'
 import { openSettings } from '../../lib/settings'
 import type { ViewState } from '../../lib/url'
 import { say } from '../ui/toast'
@@ -49,6 +50,8 @@ export default function PanelContent(p: ContentProps) {
   const a = useActions({ site: p.site, view: p.view, range: p.range, filters, tab, section })
   const money = p.money ?? ((m: number) => fmtMoney(m, p.site.currency || 'USD', 2, { cents: false }))
   const x: XCtx = {
+    site: p.site,
+    query: queryOf({ ...p.view, filters }, p.range),
     siteName: p.site.name || p.site.domain,
     filters,
     options: meta.options,

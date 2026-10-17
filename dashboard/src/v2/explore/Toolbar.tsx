@@ -10,6 +10,9 @@ import { FilterMenu, MoreMenu, PickMenu, ViewsMenu, type ViewsProps } from './me
 import { FILTER_DIMS, TABS } from './sections'
 import type { Connected, FilterDim, Option, Section, Tab } from './types'
 
+/** The tabs that read the payments. */
+const PAID: Tab[] = ['revmap', 'earners', 'sells', 'buyers', 'vsale', 'toconvert']
+
 export type MenuKey = 'pick' | 'filt' | 'views' | 'more'
 
 interface ToolbarProps {
@@ -135,7 +138,7 @@ export function Toolbar(p: ToolbarProps) {
         </XMenu>
       </div>
       <Chips p={p} />
-      {tabs.length > 1 && <XSub label={name} attr="xtab" value={p.tab} items={tabs.map((t) => ({ key: t, label: copy.sub[t as keyof typeof copy.sub], dot: t === 'search' && !p.conn.search ? copy.notConnected : undefined }))} onPick={p.onTab} />}
+      {tabs.length > 1 && <XSub label={name} attr="xtab" value={p.tab} items={tabs.map((t) => ({ key: t, label: copy.sub[t as keyof typeof copy.sub], dot: (t === 'search' && !p.conn.search) || (!p.conn.rev && PAID.includes(t)) ? copy.notConnected : undefined }))} onPick={p.onTab} />}
     </>
   )
 }

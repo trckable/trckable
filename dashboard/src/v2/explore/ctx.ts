@@ -1,5 +1,5 @@
 // What a section needs from the panel around it: the filters, how many rows to show, and the things a tap does.
-import type { Filter } from '../../lib/api'
+import type { Filter, ReportQuery, Site } from '../../lib/api'
 import type { Connected, FilterDim, Option, Tab } from './types'
 
 export type Setup = 'rev' | 'search' | 'goals'
@@ -10,6 +10,9 @@ export interface Custom {
 }
 
 export interface XCtx {
+  site: Site
+  /** The report's question for this site, period and filters, for the cards that read their own numbers. */
+  query: ReportQuery
   siteName: string
   filters: Filter[]
   options: Partial<Record<FilterDim, Option[]>>

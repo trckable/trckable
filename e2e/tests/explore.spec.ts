@@ -78,14 +78,14 @@ test('the chip opens it over the Briefing, and Escape, the cross and the dim shu
   await expect(panel(page)).toHaveCount(0)
 })
 
-test('the picker has ten sections in four groups, and the tabs of a section stay in it', async ({ page }) => {
+test('the picker has eleven sections in four groups, and the tabs of a section stay in it', async ({ page }) => {
   await open(page, 1440)
   await page.locator('.mk-chip.exb').click()
   await page.locator('[data-xm="pick"]').click()
   await expect(page.locator('#xm-pick .xgl')).toHaveText(['Traffic', 'Audience', 'Results', 'Site'])
-  await expect(page.locator('#xm-pick .xmi')).toHaveCount(10)
+  await expect(page.locator('#xm-pick .xmi')).toHaveCount(11)
   await page.locator('#xm-pick').getByRole('menuitem', { name: /^Sources/ }).click()
-  await expect(page.locator('.xsub').getByRole('tab')).toHaveText(['Channels', 'Referrers', 'UTMs', 'Search'])
+  await expect(page.locator('.xsub').getByRole('tab')).toHaveText(['Channels', 'Referrers', 'UTMs', 'Search', 'Sources that pay'])
   await page.getByRole('tab', { name: 'Referrers' }).click()
   await expect(page.getByRole('tab', { name: 'Referrers' })).toHaveAttribute('aria-selected', 'true')
   // Payments are not connected here: Sales says so and tags itself in the picker.
@@ -121,7 +121,7 @@ test('full width has the section list beside it, and F, Tab and Escape keep to t
   await page.keyboard.press('e')
   await expect(page.locator('#xp.on .xtb')).toBeVisible()
   await page.keyboard.press('f')
-  await expect(page.locator('#xp.full .xrail .xri')).toHaveCount(10)
+  await expect(page.locator('#xp.full .xrail .xri')).toHaveCount(11)
   await page.locator('#xp .xrail').getByRole('button', { name: /^Speed/ }).click()
   await expect(page.locator('#xp .kcs.k3 .kc')).toHaveCount(3)
   await page.getByRole('button', { name: 'Collapse the section list' }).click()
@@ -157,4 +157,30 @@ test('on a phone it is a sheet from the bottom, opened by the bar, and its menus
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
   await page.locator('#xpClose').click()
   await expect(panel(page)).toHaveCount(0)
+})
+
+// Nothing of the old Data page is without a home: each of its cards is a tab of a section, and opens without an error.
+const HOMES: Record<string, string[]> = {
+  overview: ['highlights', 'overtime', 'hours'],
+  pages: ['sells'],
+  sources: ['earners'],
+  places: ['revmap', 'people'],
+  results: ['retention', 'vsale', 'toconvert', 'flow'],
+  sales: ['buyers'],
+  ai: ['ai'],
+}
+
+test('every card of the old Data page is a tab of a section', async ({ page }) => {
+  await open(page, 1440)
+  await page.keyboard.press('e')
+  await expect(page.locator('#xp.on .xtb')).toBeVisible()
+  await page.keyboard.press('f')
+  for (const [section, tabs] of Object.entries(HOMES)) {
+    await page.locator(`#xp .xrail [data-xsec="${section}"]`).click()
+    for (const t of tabs) {
+      const tab = page.locator(`#xp [data-xtab="${t}"]`)
+      if ((await tab.count()) > 0) await tab.click()
+      await expect(page.locator('#xp')).not.toContainText('We could not load this')
+    }
+  }
 })

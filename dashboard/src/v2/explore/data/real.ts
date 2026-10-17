@@ -100,6 +100,9 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       const r = await call<{ properties: { key: string; value: string; visitors: number }[] | null }>('GET', `/sites/${c.site.id}/report/goal-props${rangeQS(q)}&goal=outbound_click`, undefined, signal)
       return { rows: mapLinks(r.properties ?? []) }
     }
+    case 'highlights': case 'overtime': case 'hours': case 'revmap': case 'earners': case 'sells': case 'people': case 'buyers': case 'retention': case 'vsale': case 'toconvert': case 'flow': case 'ai':
+      // These read their own numbers (views/Hosted.tsx).
+      return null
     default:
       return mapTable(tab, await cachedReport(c.site.id, q, undefined, signal))
   }

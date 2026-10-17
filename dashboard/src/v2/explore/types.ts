@@ -182,9 +182,12 @@ export interface Connected {
   goals: boolean
 }
 
-export type Tab = 'overview' | 'pages' | 'sources' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots'
+/** Tables that bring their own numbers: the cards the old Full page had, each opened by its section as it was. */
+export type HostedTab = 'highlights' | 'overtime' | 'hours' | 'revmap' | 'earners' | 'sells' | 'people' | 'buyers' | 'retention' | 'vsale' | 'toconvert' | 'flow' | 'ai'
 
-export type Section = 'overview' | 'pages' | 'sources' | 'places' | 'tech' | 'results' | 'sales' | 'speed' | 'mentions' | 'links'
+export type Tab = HostedTab | 'overview' | 'pages' | 'sources' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots'
+
+export type Section = 'overview' | 'pages' | 'sources' | 'places' | 'tech' | 'results' | 'sales' | 'speed' | 'mentions' | 'links' | 'ai'
 
 /** Every section's answer for one site, period and set of filters. */
 export interface Tabs {
@@ -203,6 +206,19 @@ export interface Tabs {
   sales: Sales
   speed: Speed
   mentions: Mention[]
+  highlights: null
+  overtime: null
+  hours: null
+  revmap: null
+  earners: null
+  sells: null
+  people: null
+  buyers: null
+  retention: null
+  vsale: null
+  toconvert: null
+  flow: null
+  ai: null
 }
 
 export interface SavedView {
