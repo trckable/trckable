@@ -100,6 +100,16 @@ func (a *API) mentionLookAlike(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, none)
 		return
 	}
+	now := a.Now()
+	if res, ok := a.lookAlike.cached(site, word, now); ok {
+		writeJSON(w, http.StatusOK, res)
+		return
+	}
+	if !a.lookAlike.allow(site, now) {
+		w.Header().Set("Retry-After", "3600")
+		fail(w, http.StatusTooManyRequests, "Too many new words checked this hour. Try again later.")
+		return
+	}
 	rules, err := a.Ctl.MentionRules(r.Context(), site)
 	if err != nil {
 		fail(w, http.StatusInternalServerError, "could not read the rules")
@@ -108,6 +118,8 @@ func (a *API) mentionLookAlike(w http.ResponseWriter, r *http.Request) {
 	res, err := mentions.CheckLookAlike(r.Context(), a.MentionGet, word, row.Domain, rules.Topic)
 	if err != nil {
 		res = none // nothing is claimed when the news could not be read
+	} else {
+		a.lookAlike.keep(site, word, res, now)
 	}
 	w.Header().Set("Cache-Control", "private, max-age=300")
 	writeJSON(w, http.StatusOK, res)

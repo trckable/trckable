@@ -130,6 +130,16 @@ func TestLookAlikeWarnsAboutAnotherMeaning(t *testing.T) {
 	if code != http.StatusOK || out["checked"] != true || out["elsewhere"] != float64(2) || !has(sug, "Dan") || !has(sug, "MP") {
 		t.Fatalf("%d %v", code, out)
 	}
+	g.api.MentionGet = fixedNews{"not a feed"} // a held answer needs no second call
+	if _, again := do(t, c, "GET", url, ""); again["elsewhere"] != float64(2) {
+		t.Fatalf("held for a day: %v", again)
+	}
+	for i := 0; i < lookAlikeFresh; i++ {
+		code, _ = do(t, c, "GET", url+"x"+strconv.Itoa(i), "")
+	}
+	if code != http.StatusTooManyRequests {
+		t.Fatalf("a site may check only so many new words an hour: %d", code)
+	}
 	if code, _ = do(t, c, "GET", url+`%22`, ""); code != http.StatusBadRequest {
 		t.Fatalf("a quote is refused: %d", code)
 	}

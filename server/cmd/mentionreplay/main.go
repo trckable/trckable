@@ -44,7 +44,7 @@ func main() {
 func run(path string, all bool, stdin io.Reader, out, errOut io.Writer) error {
 	r := stdin
 	if path != "" {
-		f, err := os.Open(path) //nolint:gosec // the dump the operator named
+		f, err := os.Open(path) //nolint:gosec // the dump named on the command line
 		if err != nil {
 			return err
 		}

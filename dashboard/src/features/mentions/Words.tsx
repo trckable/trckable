@@ -2,25 +2,30 @@ import { Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { fail } from '../../lib/api'
 import { isViewer } from '../../lib/me'
-import { mentionsApi, type Words as WordsValue } from './api'
+import { mentionsApi, type LookAlike, type Words as WordsValue } from './api'
+import { LookAlikeNote } from './LookAlikeNote'
+import { otherMeaning } from './lookAlike'
 import { page } from './pageCopy'
 
 /** The words searched for as chips: the ones a person added can be removed, and a + chip turns into an input to add one. */
 export function Words({ site, words, onWords }: { site: string; words: WordsValue; onWords: (w: WordsValue) => void }) {
   const [draft, setDraft] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [look, setLook] = useState<LookAlike | null>(null)
   const input = useRef<HTMLInputElement>(null)
   const viewer = isViewer()
   useEffect(() => {
     if (draft === '') input.current?.focus()
   }, [draft])
-  const save = (added: string[]) => {
+  const save = (added: string[], exclude: string[] = []) => {
     setBusy(true)
     mentionsApi
       .setWords(site, added)
-      .then((w) => {
-        onWords(w)
+      .then(async (w) => {
+        const rules = exclude.length > 0 ? await mentionsApi.setRules(site, { ...w.rules, excluded: [...w.rules.excluded, ...exclude.filter((x) => !w.rules.excluded.includes(x))].slice(0, 20) }) : w.rules
+        onWords({ ...w, rules })
         setDraft(null)
+        setLook(null)
       })
       .catch((e: unknown) => fail(e))
       .finally(() => setBusy(false))
@@ -29,10 +34,17 @@ export function Words({ site, words, onWords }: { site: string; words: WordsValu
     if (busy) return
     const w = (draft ?? '').trim()
     const fresh = w !== '' && words.added.length < words.max && !words.added.some((x) => x.toLowerCase() === w.toLowerCase())
-    if (fresh) save([...words.added, w])
-    else setDraft(null)
+    if (!fresh) {
+      setDraft(null)
+      return
+    }
+    setBusy(true)
+    void otherMeaning(site, w)
+      .then((other) => (other ? setLook(other) : save([...words.added, w])))
+      .finally(() => setBusy(false))
   }
   return (
+    <>
     <ul className="mentions-words">
       {words.default.map((w) => (
         <li key={w} className="mentions-word fixed">
@@ -74,5 +86,7 @@ export function Words({ site, words, onWords }: { site: string; words: WordsValu
         </li>
       )}
     </ul>
+    {look && <LookAlikeNote look={look} onExclude={() => save([...words.added, look.word], look.suggest_exclude)} onOnly={() => save([...words.added, look.word])} onCancel={() => { setLook(null); setDraft(null) }} />}
+    </>
   )
 }

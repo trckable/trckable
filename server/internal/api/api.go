@@ -64,6 +64,7 @@ type API struct {
 	// MentionGet fetches the news for the look-alike check on a name word; nil
 	// leaves that check off (it then says it checked nothing).
 	MentionGet mentions.Doer
+	lookAlike  lookAlikeGate
 	// PurgeAnalytics removes a site's rows from the analytics store. It runs on
 	// the writer's connection (the only one allowed to write DuckDB); nil while
 	// the store is still warming up, and deleting a site then is refused.

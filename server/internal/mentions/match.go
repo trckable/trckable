@@ -3,6 +3,7 @@ package mentions
 import (
 	"context"
 	"net/url"
+	"slices"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -158,60 +159,89 @@ func (r Rules) evidence(it Item, text string) (via, word string) {
 
 // HasDomain says whether text names the address d (no "www."): as a word of
 // its own, as a subdomain's end ("blog.acme.example"), followed by a path or
-// a sentence's dot, and not as the middle of a longer name or address.
+// a sentence's dot, and not as the middle of a longer name or address, nor as
+// two sentences run together ("plan.Al Smith", "about time.Is it").
 func HasDomain(text, d string) bool {
-	text, d = Defang(strings.ToLower(text)), strings.ToLower(strings.TrimSpace(d))
-	if d == "" || !strings.Contains(d, ".") {
+	orig := []rune(Defang(text))
+	dom := lowerRunes(strings.TrimSpace(d))
+	if len(dom) == 0 || !slices.Contains(dom, '.') {
 		return false
 	}
-	for from := 0; from < len(text); {
-		i := strings.Index(text[from:], d)
-		if i < 0 {
-			return false
+	last := slices.Index(dom, '.')
+	for k, r := range dom {
+		if r == '.' {
+			last = k
 		}
-		i += from
-		end := i + len(d)
-		if domainLeft(text, i) && domainRight(text, end) {
+	}
+	for i := 0; i+len(dom) <= len(orig); i++ {
+		if !equalFold(orig[i:], dom) || !domainLeft(orig, i) || !domainRight(orig, i+len(dom)) {
+			continue
+		}
+		if last == 0 || last == len(dom)-1 {
 			return true
 		}
-		from = i + 1
+		before, after := orig[i+last-1], orig[i+last+1]
+		if unicode.IsLower(before) && unicode.IsUpper(after) && (i+len(dom) >= len(orig) || orig[i+len(dom)] != '/') {
+			continue // a sentence ended and the next began without a space
+		}
+		return true
 	}
 	return false
 }
 
-func domainLeft(s string, at int) bool {
+func lowerRunes(s string) []rune {
+	r := []rune(s)
+	for i := range r {
+		r[i] = unicode.ToLower(r[i])
+	}
+	return r
+}
+
+// equalFold says whether the runes at the start of text are want, in any case.
+func equalFold(text, want []rune) bool {
+	if len(text) < len(want) {
+		return false
+	}
+	for i, w := range want {
+		if unicode.ToLower(text[i]) != w {
+			return false
+		}
+	}
+	return true
+}
+
+// wordRune says whether a character belongs to a word: a letter, a digit, or
+// a mark that sits on one (the accent of a decomposed "e\u0301").
+func wordRune(r rune) bool { return unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsMark(r) }
+
+func domainLeft(s []rune, at int) bool {
 	if at == 0 {
 		return true
 	}
-	r, size := utf8.DecodeLastRuneInString(s[:at])
+	r := s[at-1]
 	switch {
 	case r == '.':
 		// a subdomain: a label stands before the dot
-		p, _ := utf8.DecodeLastRuneInString(s[:at-size])
-		return unicode.IsLetter(p) || unicode.IsDigit(p)
-	case r == '-' || r == '_':
+		return at >= 2 && wordRune(s[at-2])
+	case r == '-' || r == '_' || r == '=':
 		return false
 	}
-	return !unicode.IsLetter(r) && !unicode.IsDigit(r)
+	return !wordRune(r)
 }
 
-func domainRight(s string, at int) bool {
+func domainRight(s []rune, at int) bool {
 	if at >= len(s) {
 		return true
 	}
-	r, size := utf8.DecodeRuneInString(s[at:])
+	r := s[at]
 	switch {
 	case r == '.':
 		// the end of a sentence, not the start of a longer address
-		if at+size >= len(s) {
-			return true
-		}
-		n, _ := utf8.DecodeRuneInString(s[at+size:])
-		return !unicode.IsLetter(n) && !unicode.IsDigit(n)
+		return at+1 >= len(s) || !wordRune(s[at+1])
 	case r == '-' || r == '_':
 		return false
 	}
-	return !unicode.IsLetter(r) && !unicode.IsDigit(r)
+	return !wordRune(r)
 }
 
 var defang = strings.NewReplacer("[.]", ".", "(.)", ".", "{.}", ".", "[dot]", ".", "(dot)", ".")
@@ -221,48 +251,35 @@ func Defang(s string) string { return defang.Replace(s) }
 
 // hasWord is Has with the stricter edges a name needs: a hyphen or an
 // underscore joins a word to its neighbour ("Albas-Smith"), and so does a dot
-// that goes on ("albas.com").
+// that goes on ("albas.com"), and an accent counts as part of the letter.
 func hasWord(text, word string) bool {
-	text, word = strings.ToLower(Defang(text)), strings.ToLower(strings.TrimSpace(word))
-	if word == "" {
+	orig := []rune(Defang(text))
+	w := lowerRunes(strings.TrimSpace(word))
+	if len(w) == 0 {
 		return false
 	}
-	for from := 0; from < len(text); {
-		i := strings.Index(text[from:], word)
-		if i < 0 {
-			return false
-		}
-		i += from
-		if wordLeft(text, i) && wordRight(text, i+len(word)) {
+	for i := 0; i+len(w) <= len(orig); i++ {
+		if equalFold(orig[i:], w) && wordLeft(orig, i) && wordRight(orig, i+len(w)) {
 			return true
 		}
-		from = i + 1
 	}
 	return false
 }
 
-func wordLeft(s string, at int) bool {
-	if at == 0 {
-		return true
-	}
-	r, _ := utf8.DecodeLastRuneInString(s[:at])
-	return !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != '-' && r != '_'
+func wordLeft(s []rune, at int) bool {
+	return at == 0 || !(wordRune(s[at-1]) || s[at-1] == '-' || s[at-1] == '_')
 }
 
-func wordRight(s string, at int) bool {
+func wordRight(s []rune, at int) bool {
 	if at >= len(s) {
 		return true
 	}
-	r, size := utf8.DecodeRuneInString(s[at:])
+	r := s[at]
 	switch {
-	case unicode.IsLetter(r) || unicode.IsDigit(r) || r == '-' || r == '_':
+	case wordRune(r) || r == '-' || r == '_':
 		return false
 	case r == '.':
-		if at+size >= len(s) {
-			return true
-		}
-		n, _ := utf8.DecodeRuneInString(s[at+size:])
-		return !unicode.IsLetter(n) && !unicode.IsDigit(n)
+		return at+1 >= len(s) || !wordRune(s[at+1])
 	}
 	return true
 }

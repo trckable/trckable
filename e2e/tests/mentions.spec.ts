@@ -9,7 +9,8 @@ import { session } from './session'
 const SHOTS = process.env.POLISH_SHOTS
 const NOW = Math.floor(Date.now() / 1000)
 
-const words = { default: [HISTORY_DOMAIN, 'History'], added: ['Acme Metrics'], max: 10 }
+const rules = { topic: ['analytics'], required: [], excluded: [], blocked: [] }
+const words = { default: [HISTORY_DOMAIN, 'History'], added: ['Acme Metrics'], max: 10, suggested: ['history'], rules }
 const mentions = [
   { id: 3, source: 'hn', url: 'https://news.ycombinator.com/item?id=41000001', title: 'Show HN: Acme Metrics, privacy-friendly analytics', author: 'maker1', host: 'news.ycombinator.com', points: 212, comments: 87, snippet: 'Been looking for something like Acme Metrics for my side projects: no cookies, one script, and it just works.', front: true, posted_at: NOW - 2 * 3600, found_at: NOW - 3600, visitors: 1212, peak_hour: NOW - 3600, driving: true },
   { id: 2, source: 'news', url: 'https://dailybyte.example/acme-launches', title: 'Acme launches a new dashboard', host: 'dailybyte.example', posted_at: NOW - 30 * 3600, found_at: NOW - 29 * 3600, visitors: 38 },
@@ -109,4 +110,90 @@ test('a phone gets the page and the detail as a sheet; with nothing found the pa
   await page.keyboard.press('Enter')
   await expect.poll(() => saved).toEqual(['Acme Metrics', '@acmemetrics'])
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-empty-dark-390.png` })
+})
+
+// What makes a mention trustworthy: a page the visits confirmed leads with its badge, "Not about us" hides one
+// and offers to keep the like of it out, the hidden list brings it back, and the rules are edited in Settings.
+const confirmed = { id: 9, source: 'ref', via: 'page', url: 'https://reddit.com/r/saas/comments/abc/best_analytics', title: 'reddit.com/r/saas/comments/abc/best_analytics', host: 'reddit.com', posted_at: NOW - 3 * 86400, found_at: NOW - 3 * 86400, visitors: 41 }
+const albas = { id: 8, source: 'news', url: 'https://paper.example/mp-report', title: 'Dan Albas MP Report: a train', host: 'paper.example', posted_at: NOW - 6 * 3600, found_at: NOW - 5 * 3600, visitors: 0 }
+
+test('a confirmed page leads, Not about us hides and offers to keep the like of it out, and the hidden list brings it back', async ({ page }) => {
+  test.slow()
+  await seed(page, [confirmed, ...mentions, albas], 'mentions-trust')
+  let hidden = false
+  let ruled: unknown = null
+  await page.route('**/api/v1/sites/*/mentions/8/not-about-us', (r) => {
+    hidden = true
+    return r.fulfill({ json: { hidden: true, suggest_exclude: ['Dan', 'MP', 'Report'], suggest_block: 'paper.example' } })
+  })
+  await page.route('**/api/v1/sites/*/mentions/rules', async (r) => {
+    ruled = r.request().postDataJSON()
+    await r.fulfill({ json: ruled })
+  })
+  await page.route('**/api/v1/sites/*/mentions/hidden', (r) => r.fulfill({ json: { mentions: hidden ? [albas] : [] } }))
+  await page.route('**/api/v1/sites/*/mentions/8/restore', (r) => {
+    hidden = false
+    return r.fulfill({ json: { hidden: false } })
+  })
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.setViewportSize({ width: 1440, height: 1100 })
+  await page.goto(`${API}/${HISTORY_DOMAIN}/mentions`)
+  const feed = page.locator('.mp-feed')
+  await expect(feed.locator('.mp-card').first()).toContainText('Confirmed · 41 visits', { timeout: 20_000 })
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-trust-dark-1440.png` })
+  await feed.locator('.mp-card', { hasText: 'Dan Albas' }).getByRole('button', { name: 'Not about us' }).click()
+  const note = page.locator('.mp-note')
+  await expect(note).toContainText('Hidden. It will not come back.')
+  await expect(note.getByRole('button', { name: 'Exclude “Dan”' })).toBeVisible()
+  await expect(note.getByRole('button', { name: 'Block paper.example' })).toBeVisible()
+  await note.getByRole('button', { name: 'Exclude “MP”' }).click()
+  await expect.poll(() => ruled).toMatchObject({ excluded: ['MP'] })
+  await expect(note).toBeHidden()
+  await expect(page.locator('.mp-hidden summary')).toHaveText('Hidden · 1')
+  await page.locator('.mp-hidden summary').click()
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-hidden-dark-1440.png` })
+  await page.getByRole('button', { name: /Restore: / }).click()
+  await expect(page.locator('.mp-hidden')).toBeHidden()
+  await page.emulateMedia({ colorScheme: 'light' })
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-trust-light-1440.png` })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await feed.locator('.mp-card').first().scrollIntoViewIfNeeded()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-trust-light-390.png` })
+  await page.emulateMedia({ colorScheme: 'dark' })
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-trust-dark-390.png` })
+})
+
+test('Settings: a new name is checked against the news, and the rules are edited and saved', async ({ page }) => {
+  test.slow()
+  await seed(page, mentions, 'mentions-rules')
+  const site = ((await (await page.request.get(`${API}/api/v1/sites`)).json()) as { sites: { id: string; domain: string }[] }).sites.find((s) => s.domain === HISTORY_DOMAIN)!
+  let saved: unknown = null
+  await page.route('**/api/v1/sites/*/mentions/lookalike*', (r) => r.fulfill({ json: { word: 'albas', checked: true, elsewhere: 2, examples: ['Dan Albas MP Report: a train', 'MP Dan Albas on the budget'], suggest_exclude: ['Dan', 'MP'] } }))
+  await page.route('**/api/v1/sites/*/mentions/rules', async (r) => {
+    saved = r.request().postDataJSON()
+    await r.fulfill({ json: saved })
+  })
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.setViewportSize({ width: 1440, height: 1500 })
+  await page.goto(`${API}/settings?site=${site.id}&tab=mentions`)
+  const card = page.locator('.mentions-set')
+  await expect(card).toContainText('What counts as a mention', { timeout: 20_000 })
+  await card.getByLabel('Word to search for').fill('albas')
+  await card.getByRole('button', { name: 'Add a word' }).click()
+  const warn = card.locator('.mp-note')
+  await expect(warn).toContainText('“albas” is also used for something else in the news')
+  await expect(warn).toContainText('Dan Albas MP Report: a train')
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-rules-dark-1440.png` })
+  await warn.getByRole('button', { name: /Add it and exclude/ }).click()
+  await expect(card.locator('li.mentions-word', { hasText: 'albas' })).toHaveCount(1)
+  await card.getByRole('button', { name: 'Save rules' }).click()
+  await expect.poll(() => saved).toMatchObject({ topic: ['analytics'], excluded: ['Dan', 'MP'] })
+  await page.emulateMedia({ colorScheme: 'light' })
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-rules-light-1440.png` })
+  await page.setViewportSize({ width: 390, height: 1800 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-rules-light-390.png` })
+  await page.emulateMedia({ colorScheme: 'dark' })
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-rules-dark-390.png` })
 })

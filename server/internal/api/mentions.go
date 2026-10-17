@@ -98,6 +98,7 @@ func (a *API) mentions(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, "could not read the mentions")
 		return
 	}
+	a.confirmedInPeriod(r, site, list, now.Add(-span), now)
 	// The pages that sent visitors come first: the visits confirm them.
 	sort.SliceStable(list, func(i, j int) bool {
 		a, b := list[i].Via == mentions.ViaPage, list[j].Via == mentions.ViaPage
@@ -148,4 +149,25 @@ func (a *API) setMentionKeywords(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.mentionKeywords(w, r)
+}
+
+// confirmedInPeriod sets the visitors of the pages the visits confirmed to
+// those that came in the chosen period (they are kept for the last month).
+func (a *API) confirmedInPeriod(r *http.Request, site string, list []sqlite.Mention, from, to time.Time) {
+	q := a.Query()
+	if q == nil {
+		return
+	}
+	for i, m := range list {
+		form, ok := mentions.RefForm(m.URL)
+		if m.Via != mentions.ViaPage || !ok {
+			continue
+		}
+		var n int64
+		err := q.DB.QueryRowContext(r.Context(), `SELECT count(DISTINCT visitor_id) FROM events WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts < ? AND referrer_url = ?`,
+			site, from.UTC(), to.UTC(), form).Scan(&n)
+		if err == nil {
+			list[i].Visitors = n
+		}
+	}
 }

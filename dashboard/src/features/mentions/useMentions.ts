@@ -6,7 +6,7 @@ import { mentionsApi, type Mentions, type Period } from './api'
 
 export type MentionsState = { state: 'loading' } | { state: 'failed' } | { state: 'ready'; data: Mentions }
 
-export function useMentions(site: string, period: Period, every = 0, enabled = true): MentionsState {
+export function useMentions(site: string, period: Period, every = 0, enabled = true, tick = 0): MentionsState {
   const [answer, setAnswer] = useState<{ key: string; data: Mentions } | 'failed' | null>(null)
   useEffect(() => {
     if (!enabled) return
@@ -22,7 +22,7 @@ export function useMentions(site: string, period: Period, every = 0, enabled = t
       stop?.()
       c.abort()
     }
-  }, [site, period, every, enabled])
+  }, [site, period, every, enabled, tick])
   if (answer === 'failed') return { state: 'failed' }
   if (answer && answer.key === site + period) return { state: 'ready', data: answer.data }
   return { state: 'loading' }

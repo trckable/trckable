@@ -14,8 +14,14 @@ import (
 // refVisit writes one pageview that arrived from a page.
 func (r *mentionRig) refVisit(t *testing.T, seq, visitor int, page string, at time.Time) {
 	t.Helper()
-	if _, err := r.db.DB.Exec(`INSERT INTO events (seq, site_id, ts, kind, visitor_id, session_id, referrer_url) VALUES (?, ?, ?, 1, ?, ?, ?)`,
-		seq, r.site, at.UTC(), visitor, visitor, page); err != nil {
+	channel := "Referral"
+	if strings.HasPrefix(page, "chatgpt.com") {
+		channel = "AI"
+	} else if strings.HasPrefix(page, "google.") {
+		channel = "Search"
+	}
+	if _, err := r.db.DB.Exec(`INSERT INTO events (seq, site_id, ts, kind, visitor_id, session_id, referrer_url, channel) VALUES (?, ?, ?, 1, ?, ?, ?, ?)`,
+		seq, r.site, at.UTC(), visitor, visitor, page, channel); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -36,7 +42,8 @@ func TestAPageThatSentVisitorsIsAConfirmedMention(t *testing.T) {
 	}
 	visit("reddit.com/r/saas/comments/abc/best_analytics", 1, 2, 3, 3)
 	visit("reddit.com/r/other/comments/x/one_person", 4)
-	visit("mail.google.com/mail/u/0", 5, 6)
+	visit("chatgpt.com/c/0f3a-private", 5, 6)
+	visit("google.de/search/x", 11, 12)
 	visit("acme.example/blog/post", 7, 8)
 	visit("blog.example/roundup", 9, 10)
 
@@ -50,14 +57,14 @@ func TestAPageThatSentVisitorsIsAConfirmedMention(t *testing.T) {
 		t.Fatalf("a page of another site that sent two people: %+v", blog)
 	}
 	for k, m := range got {
-		if m.Source == "ref" && (strings.Contains(m.URL, "mail.google") || strings.Contains(m.URL, "acme.example") || strings.Contains(m.URL, "one_person")) {
+		if m.Source == "ref" && (strings.Contains(m.URL, "chatgpt") || strings.Contains(m.URL, "google.de") || strings.Contains(m.URL, "acme.example") || strings.Contains(m.URL, "one_person")) {
 			t.Errorf("%s should not be a mention: %+v", k, m)
 		}
 	}
 
 	// A second round neither adds it again nor loses the count; more visitors raise it.
 	r.now = r.now.Add(2 * time.Hour)
-	visit("reddit.com/r/saas/comments/abc/best_analytics", 11)
+	visit("reddit.com/r/saas/comments/abc/best_analytics", 21)
 	r.f.round(ctx)
 	refs := 0
 	for _, m := range r.all(t) {
@@ -265,5 +272,23 @@ func TestTheJudgeIsNotAskedAboutWhatDidNotMatch(t *testing.T) {
 	r.f.round(context.Background())
 	if j.asked != 0 || len(r.all(t)) != 0 {
 		t.Fatalf("asked %d, kept %d", j.asked, len(r.all(t)))
+	}
+}
+
+// An item kept before the matcher, whose text does not name the site, is hidden at the next round, not deleted.
+func TestOldItemsWithoutALinkAreMatchedOnTheirText(t *testing.T) {
+	r := newMentionRig(t)
+	ctx := context.Background()
+	at := r.now.Add(-time.Hour).Unix()
+	for i, title := range []string{"Show HN: a map of the world", "Show HN: acme.example now has dashboards"} {
+		if _, err := r.st.SaveMention(ctx, sqlite.Mention{Site: r.site, Source: "hn", URL: "https://news.ycombinator.com/item?id=" + string(rune('5'+i)), Title: title, Host: "news.ycombinator.com", PostedAt: at}, at); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r.f.review(ctx, r.site, plan{rules: mentions.Rules{Domain: "acme.example"}})
+	shown, _ := r.st.Mentions(ctx, r.site, 0, at+100, 10)
+	hidden, _ := r.st.HiddenMentions(ctx, r.site, 10)
+	if len(shown) != 1 || !strings.Contains(shown[0].Title, "acme.example") || len(hidden) != 1 {
+		t.Fatalf("shown %d, hidden %d", len(shown), len(hidden))
 	}
 }

@@ -34,7 +34,7 @@ export function factsOf(m: Mention, now?: number): string[] {
   if (m.kind === 'comment') out.push(copy.comment)
   if (m.front) out.push(copy.front)
   if (m.author) out.push(copy.by(m.author))
-  if (m.points && m.source !== 'news') out.push(copy.points[m.source](m.points))
+  if (m.points && (m.source === 'hn' || m.source === 'ph')) out.push(copy.points[m.source](m.points))
   out.push(agoOf(m.posted_at, now))
   return out
 }
