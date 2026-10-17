@@ -1,6 +1,6 @@
 // The section the person is on: its loading shape while the numbers come, a plain line when they could not, or the
 // section itself.
-import { XEmpty, XSkeleton } from '../ui/XBits'
+import { XError, XSkeleton } from '../ui/XBits'
 import { copy } from './copy'
 import type { XCtx } from './ctx'
 import type { TabData } from './data/useExplore'
@@ -43,6 +43,6 @@ function Shown({ tab, x, d }: { tab: Tab; x: XCtx; d: TabData }) {
 export function SectionBody({ tab, x, r }: { tab: Tab; x: XCtx; r: Loaded<TabData> }) {
   if (isHosted(tab)) return <Hosted tab={tab} x={x} />
   if (r.state === 'loading') return <XSkeleton cards={CARDS[tab] ?? 0} label={copy.loading} />
-  if (r.state === 'error') return <XEmpty title={copy.failed} hint={r.message} />
+  if (r.state === 'error') return <XError title={copy.failed} hint={r.message} onRetry={r.retry} />
   return <Shown tab={tab} x={x} d={r.data} />
 }

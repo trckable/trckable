@@ -2,6 +2,7 @@
 // status page, widgets) one tap away under More. A viewer, who has nothing in the row, sees those at once.
 import { useState, type ReactNode } from 'react'
 import { copy } from '../copy'
+import { useV2Extras } from '../slots'
 
 export interface FootItem {
   key: string
@@ -14,15 +15,18 @@ export interface FootItem {
 
 export function MenuFoot({ items, done }: { items: FootItem[]; done: () => void }) {
   const [open, setOpen] = useState(false)
+  const { addSiteGuard } = useV2Extras()
   const row = items.filter((f) => !f.more)
   const rest = items.filter((f) => f.more)
   const shown = open || row.length === 0
-  const button = (f: FootItem) => (
-    <button key={f.key} type="button" data-stop className="mi" onClick={() => { f.run(); done() }}>
+  const draw = (f: FootItem, off: boolean) => (
+    <button key={f.key} type="button" data-stop className="mi" disabled={off} onClick={() => { f.run(); done() }}>
       {f.dot && <i className={`pdot${f.dot === 'warn' ? ' warn' : ''}`} />}
       {f.label}
     </button>
   )
+  // A build may show "Add a site" off, with its reason (an account that is read only).
+  const button = (f: FootItem) => (f.key === 'add' && addSiteGuard ? <span key={f.key}>{addSiteGuard((off) => draw(f, off))}</span> : draw(f, false))
   return (
     <div className="mfoot-wrap">
       <div className="mfoot sfoot">

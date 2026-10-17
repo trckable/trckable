@@ -17,6 +17,8 @@ export interface Notice {
   sub: string
   /** Unix seconds. */
   at: number
+  /** From a build that keeps its own list: it can be put away (to its archive). */
+  dismissable?: boolean
   /** Already read where it comes from (a build's own list): listed, but not counted as unread and no chime. */
   seen?: boolean
   /** A milestone told in full when it is tapped. */

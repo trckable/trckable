@@ -14,6 +14,7 @@ export const next = defineCopy('allnext', {
   isDown: (name: string) => `${name} is down.`,
   notAnswering: (name: string, since: string) => `${name} isn’t answering since ${since}.`,
   whyNotAnswering: (since: string, cause: string) => `Not answering since ${since}${cause ? ` · ${cause}` : ''}`,
+  lowerThanUsual: (names: string, more: number) => `${names}${more > 0 ? ` and ${more} more` : ''} ${more > 0 || names.includes(' and ') ? 'are' : 'is'} lower than usual.`,
   moreLook: (n: number) => (n === 1 ? '1 more needs a look.' : `${n} more need a look.`),
   yesterday: 'yesterday',
   lastDay: (day: string) => `last ${day}`,

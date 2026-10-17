@@ -1,6 +1,7 @@
 // The cards that come from outside the visits: what was sold, what Google sent, and a page people got stuck on. Each
 // reads real answers (the payments, Search Console, the page's heatmap) and says nothing without them. Pure: cards.money.test.ts.
 import type { Money, SearchRow } from '../../lib/api'
+import { averagePosition } from '../../lib/searchPosition'
 import type { Buyer, Refunds } from '../../features/extras/extrasApi'
 import { countryName, flag, fmtInt, fmtFixed } from '../../lib/format'
 import { copy } from './cards.copy'
@@ -146,7 +147,7 @@ export function searchCard(i: SearchIn): Story | null {
       const m = mark(r, was.get(r.key))
       return { l: `“${r.key}”`, t: copy.pos(fmtFixed(r.position, 1)), a: fmtInt(r.clicks), flag: m.flag, mark: m.cls }
     })
-  const tot = { l: copy.clicksTot(fmtInt(cur.clicks), fmtInt(cur.impressions)), t: copy.ctr(pct1(cur.impressions ? cur.clicks / cur.impressions : 0)), a: fmtFixed(avgPos(rows), 1), flag: '', tot: true }
+  const tot = { l: copy.clicksTot(fmtInt(cur.clicks), fmtInt(cur.impressions)), t: `${copy.ctr(pct1(cur.impressions ? cur.clicks / cur.impressions : 0))} · ${copy.pos(fmtFixed(averagePosition(cur.rows), 1))}`, a: '', flag: '', tot: true }
   const base = { key: 'search' as const, vis: { k: 'rcpt' as const, rows: [...list, tot] }, deeper: { kind: 'table' as const, tab: 'search' as const }, how: `${copy.searchKnow} ${i.rule}`, u: 'clicks' }
   if (fresh) {
     return { ...base, score: 74, head: copy.rankNew(fresh.key), rest: copy.onGoogle, why: copy.newWhy(copy.clicks(fresh.clicks), fmtFixed(fresh.position, 1)), val: 'new', m: fresh.clicks, ev: '', act: { k: 'set', t: copy.alertNewSearch, msg: copy.alertNewSearchMsg } }
@@ -172,11 +173,6 @@ export function searchCard(i: SearchIn): Story | null {
 function movedWords(up: boolean, x: number): string {
   if (!up) return copy.farBelow
   return x >= 1.5 ? copy.yourUsual(`${fmtFixed(x, 1)}×`) : ''
-}
-
-const avgPos = (rows: SearchRow[]): number => {
-  const w = rows.reduce((n, r) => n + r.clicks, 0)
-  return w ? rows.reduce((n, r) => n + r.position * r.clicks, 0) / w : 0
 }
 
 /** A page where the same thing was pressed again and again: someone, somewhere, is stuck. */

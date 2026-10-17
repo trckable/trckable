@@ -135,7 +135,12 @@ export function mapTable(tab: Tab, r: Report): Table {
   const t = TABLES[tab]
   if (!t) return { rows: [] }
   const sales = !!r.current.money && !NO_SALE.has(t.key)
-  const paid = new Map((sales ? (r.current.revenue_dims?.[t.key] ?? []) : []).map((x) => [x.value, x]))
+  // The rows carry what they earned; the top list covers a row the report left without it.
+  const paid = new Map<string, ApiRow>()
+  if (sales) {
+    for (const x of r.current.revenue_dims?.[t.key] ?? []) paid.set(x.value, x)
+    for (const x of r.current.dims[t.key] ?? []) if (x.revenue !== undefined) paid.set(x.value, x)
+  }
   const extra = (v: string): Partial<Row> => ({ ...(t.code ? { code: v } : {}), ...(sales ? { cust: paid.get(v)?.customers ?? 0, rev: paid.get(v)?.revenue ?? 0 } : {}) })
   const rows = rowsOf(r.current.dims[t.key], r.previous?.dims[t.key], r.previous?.kpis.visitors, t.name, extra)
   return { rows, dim: t.dim }

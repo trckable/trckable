@@ -207,6 +207,17 @@
   white-space: nowrap;
 }
 
+/* On a phone the button that finishes a setup sits under the text, inside the card. */
+@media (max-width: 640px) {
+  .pay .conn {
+    flex-wrap: wrap;
+  }
+  .pay .conn > .btn.primary {
+    order: 3;
+    flex: 1 1 100%;
+  }
+}
+
 /* The 12 px floor on a phone: every text rule of this file under 12 px on a
    desktop is raised to 12 (the phone scale, phone.css). */
 @media (max-width: 640px) {

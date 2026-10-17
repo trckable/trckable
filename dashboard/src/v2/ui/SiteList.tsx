@@ -5,6 +5,7 @@
 // site's ⋯ menu); the layout is saved for the whole account.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Site } from '../../lib/api'
+import { useV2Extras } from '../slots'
 import { useDomainControl } from '../../lib/domainControl'
 import { isViewer } from '../../lib/me'
 import { prefetchSite } from '../../lib/dashQuery'
@@ -57,6 +58,7 @@ export function SiteList(p: SiteListProps) {
   const [said, setSaid] = useState('')
   const [folded, fold] = useFolded()
   const numbers = useToday()
+  const moves = useV2Extras().siteMoves
   const layout = useSiteLayout() ?? EMPTY
   const domains = useDomainControl()
   // Opening the list starts the first few sites' reports, so a pick shows numbers at once.
@@ -97,7 +99,7 @@ export function SiteList(p: SiteListProps) {
         },
       }
   const item = (s: Site, place: Place) => (
-    <SiteRow key={s.id} site={s} place={place} on={s.id === current?.id} arrange={found ? null : arrange} today={numbers?.get(s.id)?.visitors} onPick={() => pick(s)} />
+    <SiteRow key={s.id} move={moves?.(s.id, s.name || s.domain)} site={s} place={place} on={s.id === current?.id} arrange={found ? null : arrange} today={numbers?.get(s.id)?.visitors} onPick={() => pick(s)} />
   )
   const onKeys = (e: KeyboardEvent) => {
     const box = root.current
