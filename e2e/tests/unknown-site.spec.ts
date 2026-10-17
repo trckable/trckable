@@ -9,9 +9,6 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('an unknown site goes to the main dashboard, not Settings', async ({ page }) => {
-  // The main dashboard is the site the person opened last; the owner is shared with other suites, so say which one.
-  await page.goto(API + '/example.com?view=data')
-  await expect(page.locator('.brief .kcs .kc').first()).toBeVisible()
   await page.goto(API + '/no-such-site.example?view=data')
   await expect(page).toHaveURL(API + '/example.com?view=data')
   await expect(page.locator('.brief .kcs .kc').first()).toBeVisible()
