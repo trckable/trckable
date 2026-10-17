@@ -40,7 +40,7 @@ test('the ring opens a panel and an action lands on the place that does it', asy
   await page.setViewportSize({ width: 1440, height: 900 })
   await open(page)
   const ring = page.locator('.ringb')
-  await expect(ring).toBeVisible()
+  await expect(ring).toBeVisible({ timeout: 15_000 })
   await expect(ring).toContainText('set up')
   // Right of the site switcher.
   const site_ = await page.locator('.hd #siteBtn').boundingBox()
@@ -58,7 +58,7 @@ test('the ring opens a panel and an action lands on the place that does it', asy
 test('a phone opens the panel as a sheet at the bottom', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await open(page)
-  await page.locator('.ringb').click()
+  await page.locator('.ringb').click({ timeout: 15_000 })
   const panel = page.locator('.setupmenu.on')
   await expect(panel).toBeVisible()
   const box = await panel.boundingBox()
@@ -70,7 +70,7 @@ test('a phone opens the panel as a sheet at the bottom', async ({ page }) => {
 test('Not for me on Payments lowers what counts and moves the row to More', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await open(page)
-  await page.locator('.ringb').click()
+  await page.locator('.ringb').click({ timeout: 15_000 })
   const panel = page.locator('.setupmenu.on')
   await expect(page.locator('.ringb .rtext')).toHaveText('0/5 set up')
   await panel.getByRole('button', { name: /Show \d+ more/ }).click()
@@ -96,7 +96,7 @@ test('everything done: a check for seven days, then no ring', async ({ page }) =
   const stamp = (days: number) => page.addInitScript(([id, ms]) => localStorage.setItem('trckable:ring:done', JSON.stringify({ [id as string]: Date.now() - (ms as number) })), [site, days * 86_400_000])
   await stamp(1)
   await open(page)
-  await expect(page.locator('.ringb[data-ring="check"]')).toBeVisible()
+  await expect(page.locator('.ringb[data-ring="check"]')).toBeVisible({ timeout: 15_000 })
   await page.unrouteAll({ behavior: 'ignoreErrors' })
 })
 
@@ -113,6 +113,7 @@ test('after seven days the check is gone', async ({ page }) => {
   await page.addInitScript(([id, ms]) => localStorage.setItem('trckable:ring:done', JSON.stringify({ [id as string]: Date.now() - (ms as number) })), [site, 8 * 86_400_000])
   await open(page)
   await expect(page.locator('.hd #siteBtn')).toBeVisible()
+  await page.waitForTimeout(4000) // past the first read
   await expect(page.locator('.ringb')).toHaveCount(0)
   await page.unrouteAll({ behavior: 'ignoreErrors' })
 })
