@@ -193,8 +193,8 @@ button.sites-btn:hover {
 }
 .role-pill.owner {
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  background: var(--accent-soft);
-  color: var(--accent-strong, var(--accent));
+  background: var(--mk-sel);
+  color: var(--mk-text);
 }
 .role-pill:hover:not(:disabled) {
   background-image: var(--hover-veil);
