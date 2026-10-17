@@ -12,15 +12,15 @@
 
 
 /* The page sheet's small heatmap: the dots of where people clicked, as the walkthrough draws its box. */
-.mk .heat{position:relative;display:block;width:100%;height:120px;border:1px solid var(--mk-line);border-radius:12px;background:linear-gradient(#17191c,#131417);overflow:hidden;cursor:pointer}
-.mk .heat i{position:absolute;width:var(--s);height:var(--s);margin:calc(var(--s) / -2);border-radius:50%;background:radial-gradient(rgba(255,107,107,.7),rgba(255,154,74,.3) 50%,transparent 70%)}
+.mk .heat{position:relative;display:block;width:100%;height:120px;border:1px solid var(--mk-line);border-radius:12px;background:linear-gradient(var(--mk-heat1),var(--mk-heat2));overflow:hidden;cursor:pointer}
+.mk .heat i{position:absolute;width:var(--s);height:var(--s);margin:calc(var(--s) / -2);border-radius:50%;background:radial-gradient(var(--mk-heatA),var(--mk-heatB) 50%,transparent 70%)}
 .mk .sdr{display:flex;align-items:center;gap:var(--mk-s3);font-size:12.5px}
 .mk .sdr span{width:36px;color:var(--mk-muted)}
 .mk .sdr b{width:40px;text-align:right}
 
 /* The tabs that were the old cards: lines as Sales draws them, the retention table, a chart's key. */
 .mk button.sale.xbtn{width:100%;text-align:left}
-.mk button.sale.xbtn:hover{background:rgba(255,255,255,.04)}
+.mk button.sale.xbtn:hover{background:var(--mk-faintbg3)}
 .mk .sale .xdt{width:8px;height:8px;border-radius:50%;flex:none}
 .mk .sale .xface{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:700}
 .mk .xsec{flex-wrap:wrap;gap:var(--mk-s2)}

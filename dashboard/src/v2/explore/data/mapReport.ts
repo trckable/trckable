@@ -51,8 +51,8 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
   const kcs: Kc[] = [
     { icon: 'people', label: copy.people, val: fmtInt(people.v), note: pe(people), vals: series.map((p) => p.visitors), st: people.st === 'dn' ? 'dn' : '' },
     goal && gs
-      ? { icon: 'goal', label: cap(goal.label || goal.value), val: fmtInt(goal.visitors), note: pe(gs), vals: [], col: '#7f9cf5', st: gs.st === 'dn' ? 'dn' : '' }
-      : { icon: 'click', label: copy.kc.views, val: fmtInt(views.v), note: pe(views), vals: series.map((p) => p.pageviews), col: '#7f9cf5', st: views.st === 'dn' ? 'dn' : '' },
+      ? { icon: 'goal', label: cap(goal.label || goal.value), val: fmtInt(goal.visitors), note: pe(gs), vals: [], col: 'var(--mk-blue)', st: gs.st === 'dn' ? 'dn' : '' }
+      : { icon: 'click', label: copy.kc.views, val: fmtInt(views.v), note: pe(views), vals: series.map((p) => p.pageviews), col: 'var(--mk-blue)', st: views.st === 'dn' ? 'dn' : '' },
   ]
   if (cur.money && o.money) {
     const m = statOf(cur.money.revenue, prev?.money?.revenue, base)
@@ -67,7 +67,7 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
     vals: series.flatMap((p) => (p.bounce_rate === undefined ? [] : [p.bounce_rate])),
     lo: 0,
     hi: 0.8,
-    col: '#7f9cf5',
+    col: 'var(--mk-blue)',
     st: worse ? 'dn' : '',
   })
   const rows = (dim: string, name: (v: string) => string) => rowsOf(cur.dims[dim], prev?.dims[dim], prev?.kpis.visitors, name)

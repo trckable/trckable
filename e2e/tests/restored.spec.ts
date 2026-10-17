@@ -165,5 +165,5 @@ test('a note is a flag on the chart, with its words', async ({ page }) => {
   const made = await page.request.post(`${API}/api/v1/sites/${id}/annotations`, { headers: H, data: { day: day(2), text } })
   expect(made.status()).toBe(201)
   await open(page, '?view=briefing&period=7d')
-  await expect(page.locator(`svg#chart path[fill="#f0c64a"] title`).filter({ hasText: text })).toHaveCount(1, { timeout: 20_000 })
+  await expect(page.locator(`svg#chart path[fill="var(--mk-amber)"] title`).filter({ hasText: text })).toHaveCount(1, { timeout: 20_000 })
 })
