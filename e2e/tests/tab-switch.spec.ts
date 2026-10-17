@@ -132,10 +132,24 @@ test('Explore closes after its exit animation and leaves no overlay behind', asy
   await page.getByRole('button', { name: /^Explore all data/ }).last().click()
   await expect(page.locator('#xp.on')).toBeVisible()
   await expect(page.locator('#xscrim')).toHaveCSS('opacity', '1')
+  // When Escape lands and when the panel's content is taken out, on the page's own clock.
+  await page.evaluate(() => {
+    const w = window as unknown as { __esc: number; __gone: number }
+    w.__esc = 0
+    w.__gone = 0
+    window.addEventListener('keydown', (e) => e.key === 'Escape' && !w.__esc && (w.__esc = performance.now()), true)
+    new MutationObserver(() => {
+      if (!document.querySelector('#xp #xpBody') && !w.__gone) w.__gone = performance.now()
+    }).observe(document.querySelector('#xp')!, { childList: true, subtree: true })
+  })
   await page.keyboard.press('Escape')
-  // The panel is still built while it slides out; it is taken out afterwards.
-  await expect(page.locator('#xp #xpBody')).toHaveCount(1)
-  await expect(page.locator('#xp #xpBody')).toHaveCount(0)
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __gone: number }).__gone)).toBeGreaterThan(0)
+  // The panel stays built while it slides out (at least the exit glide), and is taken out after.
+  const wait = await page.evaluate(() => {
+    const w = window as unknown as { __esc: number; __gone: number }
+    return w.__gone - w.__esc
+  })
+  expect(wait).toBeGreaterThanOrEqual(180)
   await expect(page.locator('#xscrim')).toHaveCSS('opacity', '0')
   await expect(page.locator('#xscrim')).toHaveCSS('pointer-events', 'none')
   await expect(page).not.toHaveURL(/xp=/)
