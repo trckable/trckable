@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && vite build && node scripts/precompress.mjs && node scripts/size.mjs",
     "build:map": "node scripts/build-map.mjs",
     "typecheck": "tsc --noEmit",
-    "lint": "node scripts/lint.mjs && node scripts/component-size.mjs",
+    "lint": "node scripts/lint.mjs && node scripts/colors.mjs && node scripts/component-size.mjs",
     "test": "vitest run"
   },
   "dependencies": {

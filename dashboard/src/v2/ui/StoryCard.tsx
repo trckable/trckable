@@ -193,7 +193,7 @@ export function Card({ s, wide, c }: { s: Story; wide: boolean; c: CardCtx }) {
   const open = () => c.onOpen(s)
   if (s.kc) {
     return (
-      <article className={`icard kc kcty${cls}`} tabIndex={-1} data-topic={s.key} style={{ ['--kcc' as string]: s.kc.tone === 'up' ? '#c6ff3a' : '#ff6b6b' }}>
+      <article className={`icard kc kcty${cls}`} tabIndex={-1} data-topic={s.key} style={{ ['--kcc' as string]: s.kc.tone === 'up' ? 'var(--mk-lime)' : 'var(--mk-red)' }}>
         <div className="kt" role="button" tabIndex={0} onClick={open} onKeyDown={(e) => e.key === 'Enter' && open()}>
           <span className="ki">
             <Ico name="countries" />

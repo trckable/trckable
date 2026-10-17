@@ -50,6 +50,7 @@ async function scan(page: Page, where: string) {
     .poll(() =>
       page.evaluate(() =>
         [...document.querySelectorAll('[role=menuitem]:not([disabled])')].some((el) => {
+          if (el.getClientRects().length === 0) return false // in a menu that is shut (display: none, like Explore's list of sections): nothing to read
           if (getComputedStyle(el).visibility !== 'visible') return true
           const r = el.getBoundingClientRect() // a list not yet placed sits off the screen, and axe then reads its text as hidden
           if (r.width === 0 || r.right <= 0 || r.bottom <= 0 || r.left >= innerWidth || r.top >= innerHeight) return true
@@ -114,6 +115,16 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await page.waitForSelector('.liveview', { timeout: 15_000 })
       await scan(page, 'live')
     })
+
+    // The new pages' own colours (chart lime, selected rows, the tab bar) are checked in both themes too.
+    for (const [name, query] of [['Briefing', 'view=briefing'], ['Explore', 'view=data&v=explore'], ['Explore, pages', 'view=briefing&xp=pages']]) {
+      test(`${name} meets WCAG 2.1 AA`, async ({ page }) => {
+        const site = await start(page)
+        await page.goto(`${BASE}/${site.domain}?${query}`)
+        await page.waitForSelector('.mk', { timeout: 15_000 })
+        await scan(page, name)
+      })
+    }
 
     for (const tab of ['site', 'install', 'notes', 'payments', 'privacy', 'alerts', 'health']) {
       test(`settings, ${tab} meets WCAG 2.1 AA`, async ({ page }) => {

@@ -89,12 +89,12 @@ export function kpiCards(a: KpiIn): Kc[] {
   const cards: Kc[] = [
     { key: 'people', icon: 'people', label: copy.people, val: fmtInt(cur.kpis.visitors), note: say(rangeNote(cur.kpis.visitors, a.peopleBand, ` ${copy.peopleWord}`), learning, a.people.note), vals: a.people.vals, dn: false },
     goal
-      ? { key: 'goal', icon: 'goal', label: (goal.label || goal.value).replace(/^./, (c) => c.toUpperCase()), val: fmtInt(goal.visitors), note: say(rangeNote(goal.visitors, a.goalBand, ''), learning, bandNote(goal.visitors, a.goalBand) ?? noteOf(goal.visitors, prev?.goals?.find((g) => g.value === goal.value)?.visitors, a.before)), vals: a.goal?.vals ?? [], col: '#7f9cf5' }
-      : { key: 'views', icon: 'click', label: copy.views, val: fmtCompact(cur.kpis.pageviews), note: a.learning ? { t: copy.learning } : noteOf(cur.kpis.pageviews, prev?.kpis.pageviews, a.before), vals: a.viewsVals, col: '#7f9cf5' },
+      ? { key: 'goal', icon: 'goal', label: (goal.label || goal.value).replace(/^./, (c) => c.toUpperCase()), val: fmtInt(goal.visitors), note: say(rangeNote(goal.visitors, a.goalBand, ''), learning, bandNote(goal.visitors, a.goalBand) ?? noteOf(goal.visitors, prev?.goals?.find((g) => g.value === goal.value)?.visitors, a.before)), vals: a.goal?.vals ?? [], col: 'var(--mk-blue)' }
+      : { key: 'views', icon: 'click', label: copy.views, val: fmtCompact(cur.kpis.pageviews), note: a.learning ? { t: copy.learning } : noteOf(cur.kpis.pageviews, prev?.kpis.pageviews, a.before), vals: a.viewsVals, col: 'var(--mk-blue)' },
     { key: 'uptime', icon: 'uptime', label: copy.uptimeCard, val: a.uptime.value === null ? '–' : `${a.uptimePct}%`, note: upNote, vals: a.uptime.value === null ? [] : a.uptimeVals, lo: Math.min(90, ...a.uptimeVals), hi: Math.min(90, ...a.uptimeVals) + (100 - Math.min(90, ...a.uptimeVals)) * 1.7, dn: down },
     cur.money && a.money
       ? { key: 'money', icon: 'sales', label: copy.net(cur.money.payments), val: a.money(cur.money.revenue), note: a.learning ? { t: copy.soFarToday } : (bandNote(cur.money.revenue, a.moneyBand) ?? noteOf(cur.money.revenue, prev?.money?.revenue, a.before)), vals: a.moneyVals }
-      : { key: 'leave', icon: 'leave', label: copy.left, val: leaveVal(), note: say({ t: copy.ofPeople(fmtInt(cur.kpis.visitors)) }, soFar, thin ? soFar : a.leave.note), vals: a.leave.vals, lo: 0, hi: Math.max(0.8, ...a.leave.vals), col: '#7f9cf5' },
+      : { key: 'leave', icon: 'leave', label: copy.left, val: leaveVal(), note: say({ t: copy.ofPeople(fmtInt(cur.kpis.visitors)) }, soFar, thin ? soFar : a.leave.note), vals: a.leave.vals, lo: 0, hi: Math.max(0.8, ...a.leave.vals), col: 'var(--mk-blue)' },
   ]
   return cards
 }
