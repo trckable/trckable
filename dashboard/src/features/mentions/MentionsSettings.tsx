@@ -8,7 +8,7 @@ import { Field } from '../../components/Field'
 import { fail, type Site } from '../../lib/api'
 import { isViewer } from '../../lib/me'
 import { mentionsApi, type LookAlike, type Rules, type Source, type Words } from './api'
-import { LookAlikeNote } from './LookAlikeNote'
+import { LookAlikeNote, UncheckedNote } from './LookAlikeNote'
 import { RulesEditor } from './RulesEditor'
 import { otherMeaning } from './lookAlike'
 import { trust } from './trustCopy'
@@ -26,6 +26,7 @@ export default function MentionsSettings({ site }: { site: Site }) {
   const [busy, setBusy] = useState(false)
   const [rules, setRules] = useState<Rules | null>(null)
   const [look, setLook] = useState<LookAlike | null>(null)
+  const [unchecked, setUnchecked] = useState<string | null>(null)
   const [checking, setChecking] = useState(false)
   useEffect(() => {
     mentionsApi
@@ -44,6 +45,7 @@ export default function MentionsSettings({ site }: { site: Site }) {
     if (w && !added.some((x) => x.toLowerCase() === w.toLowerCase()) && added.length < words.max) setAdded([...added, w])
     setDraft('')
     setLook(null)
+    setUnchecked(null)
   }
   // A new name is checked against the news first: if headlines use it for something else, say so.
   const add = (name = draft) => {
@@ -51,12 +53,35 @@ export default function MentionsSettings({ site }: { site: Site }) {
     if (!w) return
     setChecking(true)
     void otherMeaning(site.id, w)
-      .then((other) => (other ? setLook(other) : put(w)))
+      .then((m) => {
+        if (m.kind === 'other') setLook(m.look)
+        else if (m.kind === 'unchecked') setUnchecked(w)
+        else put(w)
+      })
       .finally(() => setChecking(false))
   }
+  // The name and the words to exclude are saved together, so one never goes in without the other.
   const addAndExclude = () => {
-    if (look) setRules({ ...rules, excluded: [...rules.excluded, ...look.suggest_exclude.filter((x) => !rules.excluded.includes(x))].slice(0, 20) })
-    put(look?.word ?? '')
+    if (!look) return
+    const excluded = [...rules.excluded, ...look.suggest_exclude.filter((x) => !rules.excluded.includes(x))]
+    if (excluded.length > 20 || added.length >= words.max) {
+      toast(trust.excludedFull(20), 'warning')
+      return
+    }
+    setBusy(true)
+    mentionsApi
+      .setWords(site.id, [...added, look.word])
+      .then(async (w) => {
+        const r = await mentionsApi.setRules(site.id, { ...rules, excluded })
+        setWords({ ...w, rules: r })
+        setAdded(w.added)
+        setRules(r)
+        setLook(null)
+        setDraft('')
+        toast(copy.settings.saved)
+      })
+      .catch((e: unknown) => fail(e))
+      .finally(() => setBusy(false))
   }
   const save = () => {
     setBusy(true)
@@ -126,6 +151,7 @@ export default function MentionsSettings({ site }: { site: Site }) {
             )}
           </Field>
           {checking && <p className="muted">{trust.checking}</p>}
+          {unchecked && <UncheckedNote word={unchecked} onAdd={() => put(unchecked)} onCancel={() => setUnchecked(null)} />}
           {look && <LookAlikeNote look={look} onExclude={addAndExclude} onOnly={() => put(look.word)} onCancel={() => setLook(null)} />}
           {words.suggested.length > 0 && (
             <p className="muted mp-suggest">

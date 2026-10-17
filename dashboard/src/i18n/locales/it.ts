@@ -3316,4 +3316,7 @@ export default {
   'mentionsTrust.removeEntry': (w: string) => `Rimuovi ${w}`,
   'mentionsTrust.suggested': (w: string) => `Aggiungi «${w}»`,
   'mentionsTrust.lookTitle': (w: string) => `«${w}» nelle notizie indica anche altro`,
+  'mentionsTrust.uncheckedTitle': (w: string) => `Non è stato possibile controllare le notizie per «${w}» in questo momento`,
+  'mentionsTrust.addAnyway': 'Aggiungi comunque',
+  'mentionsTrust.excludedFull': (n: number) => `Supererebbe il limite di ${n} parole escluse. Rimuovine una prima.`,
 } satisfies Messages

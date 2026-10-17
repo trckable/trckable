@@ -41,4 +41,7 @@ export const trust = defineCopy('mentionsTrust', {
   lookAddExclude: 'Add it and exclude these words',
   lookAddOnly: 'Add the word only',
   lookCancel: 'Do not add',
+  uncheckedTitle: (w: string) => `The news could not be checked for “${w}” just now`,
+  addAnyway: 'Add anyway',
+  excludedFull: (n: number) => `That would pass the limit of ${n} excluded words. Remove one first.`,
 })
