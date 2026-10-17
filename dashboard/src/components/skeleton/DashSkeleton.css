@@ -1,7 +1,10 @@
 /* The dashboard on its way (dashMarkup.ts): the real page's boxes as soft blocks. Every size is the
-   real part's (measured at 1440 and 390 wide), so nothing moves when the numbers land. It is in the
-   first stylesheet, so index.html can paint it before any script runs. <html data-boot> says which
-   shape shows (set by theme.js), data-ask whether Ask has its place in the header. */
+   real part's (measured at 1440 and 390 wide),
+so nothing moves when the numbers land. It is in the
+   first stylesheet,
+so index.html can paint it before any script runs. <html data-boot> says which
+   shape shows (set by theme.js),
+data-ask whether Ask has its place in the header. */
 .dsk-root {
   display: contents;
 }
@@ -41,11 +44,8 @@ html[data-boot] .boot-ghost {
 .dsk-grow {
   flex: 1 1 0;
 }
-.dsk-phone-only {
-  display: none !important;
-}
-.dsk-header > *,
-.dsk-controls > i {
+
+.dsk-header > * {
   flex: none;
 }
 .dsk-header > .dsk-grow {
@@ -119,20 +119,7 @@ html[data-ask] .dsk-ask {
   border-radius: 50% !important;
 }
 /* Data's row under the header: the Live | Briefing | Data switch and Ask, 8 px under it. */
-.dsk-tools {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 36px;
-  margin-top: -8px;
-}
-.dsk-tools > i {
-  flex: none;
-}
-.dsk-tools > .dsk-switch {
-  width: 201px;
-  margin-right: 0;
-}
+
 .dsk-avatar {
   width: 36px;
   height: 36px;
@@ -140,123 +127,10 @@ html[data-ask] .dsk-ask {
 }
 
 /* The control row: 56 px, the Story | Explore switch, the period, share and ⋯. */
-.dsk-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 56px;
-  margin-top: -8px;
-}
-.dsk-tabs {
-  width: 181px;
-  height: 36px;
-  border-radius: 999px !important;
-}
-.dsk-filter {
-  width: 66px;
-  height: 36px;
-}
-.dsk-period {
-  width: 234px;
-  height: 36px;
-  border-radius: 999px !important;
-}
-.dsk-btn {
-  width: 36px;
-  height: 36px;
-}
 
 /* Data's story: the headline, four tiles, the chart and the answers (the story's own 22 px rhythm). */
-.dsk-story-body {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  min-width: 0;
-}
-.dsk-setup {
-  display: none !important;
-}
-html[style*='--dsk-setup'] .dsk-setup {
-  display: block !important;
-  height: var(--dsk-setup);
-}
-.dsk-head {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  height: var(--dsk-head, 172px); /* the last headline's height at this width (theme.js), else two lines */
-  overflow: hidden;
-}
-.dsk-eyebrow {
-  width: 220px;
-  height: 14px;
-}
-.dsk-line {
-  width: min(92%, 1252px);
-  height: calc(clamp(24px, 3.4vw, 64px) * 1.14);
-}
-.dsk-line.short {
-  width: min(62%, 800px);
-  margin-top: -12px; /* the two lines are one heading */
-}
-.dsk-take {
-  width: min(50%, 643px);
-  height: 22px;
-}
-.dsk-tiles {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-.dsk-tile {
-  height: var(--dsk-tile, 157px);
-}
-.dsk-chart {
-  height: var(--dsk-chart, 348px);
-}
-.dsk-answers {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.dsk-title {
-  width: 200px;
-  height: 21px;
-}
-.dsk-cards {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 12px;
-}
-.dsk-answer {
-  grid-column: span 6;
-  height: var(--dsk-a1, 207px);
-}
-.dsk-answer:nth-child(2) {
-  height: var(--dsk-a2, 207px);
-}
-.dsk-answer:nth-child(3) {
-  height: var(--dsk-a3, 227px);
-}
-.dsk-answer:nth-child(4) {
-  height: var(--dsk-a4, 227px);
-}
-.dsk-answer:nth-child(5) {
-  height: var(--dsk-a5, 227px);
-}
+
 /* The Story's columns (features/storyview/StoryView.css): two on a tablet, three by two on a desktop. */
-.dsk-answer:last-child:nth-child(odd) {
-  grid-column: span 12;
-}
-@media (min-width: 1100px) {
-  .dsk-answer,
-  .dsk-answer:last-child:nth-child(odd) {
-    grid-column: span 4;
-  }
-  .dsk-answer:last-child:nth-child(5) {
-    grid-column: span 8;
-  }
-}
 
 /* Live: the big panel and the feed, as tall as Live makes them (features/live/Live.css), stacked when it stacks. */
 .dsk-live-body {
@@ -282,97 +156,77 @@ html[style*='--dsk-setup'] .dsk-setup {
     height: 560px;
   }
 }
-@media (max-width: 900px) {
-  .dsk-tiles {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .dsk-tile {
-    height: var(--dsk-tile, 124px);
-  }
-}
 @media (max-width: 720px) {
   .dsk {
     padding: 12px 16px 32px;
     gap: 12px;
   }
   .dsk-header {
-    height: 53px;
+    height: 41px;
   }
-  .dsk-tools {
-    height: 44px;
-    margin-top: -4px;
-    justify-content: flex-start;
-  }
-  .dsk-tools > .dsk-grow {
-    display: none;
-  }
+
   .dsk-header > .dsk-explore {
     display: none;
   }
   .dsk-switch {
     display: none;
   }
-  .dsk-tabs {
-    width: 199px;
-    height: 44px;
-  }
-  .dsk-filter,
+
   .dsk-ask,
-  .dsk-avatar,
-  .dsk-btn {
+.dsk-avatar {
     width: 44px;
     height: 44px;
   }
-  .dsk-period {
-    width: 51px;
-    height: 44px;
-  }
-  .dsk-btn + .dsk-btn {
-    display: none;
-  }
-  .dsk-controls {
-    gap: 4px;
-    height: 56px;
-    margin-top: -2px;
-  }
-  .dsk-phone-only {
-    display: flex !important;
-  }
-  .dsk-tabs.dsk-switch-only {
-    width: 105px;
-  }
+
   .dsk-live-body {
     gap: 14px;
-  }
-}
-@media (max-width: 640px) {
-  .dsk-answer {
-    grid-column: span 12 !important;
-  }
-  .dsk-answer:nth-child(1) {
-    height: var(--dsk-a1, 232px);
-  }
-  .dsk-answer:nth-child(2) {
-    height: var(--dsk-a2, 232px);
-  }
-  .dsk-answer:nth-child(3) {
-    height: var(--dsk-a3, 252px);
-  }
-  .dsk-answer:nth-child(4) {
-    height: var(--dsk-a4, 232px);
-  }
-  .dsk-answer:nth-child(5) {
-    height: var(--dsk-a5, 252px);
-  }
-  .dsk-chart {
-    height: var(--dsk-chart, 270px);
-  }
-  .dsk-head {
-    height: var(--dsk-head, 192px);
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .dsk i {
     animation: none;
+  }
+}
+
+/* The Briefing: the hero card, the four tiles and the cards, at the sizes the page has (measured at 1280 and 390 wide). */
+.dsk-story-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.dsk-hero {
+  height: 349px;
+}
+.dsk-kcs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.dsk-kc {
+  height: 177px;
+}
+.dsk-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.dsk-answer {
+  height: 220px;
+}
+@media (max-width: 720px) {
+  .dsk-hero {
+    height: 285px;
+  }
+  .dsk-kcs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .dsk-kc {
+    height: 155px;
+  }
+  .dsk-cards {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
   }
 }
