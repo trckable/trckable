@@ -8,6 +8,9 @@
 .mk .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .mk{width:100%;max-width:1440px;padding:22px 32px 40px;container-type:inline-size}
 .mk .hd{display:flex;align-items:center;gap:14px}
+/* The header stays at the top of the window; its bottom edge shows once the page has moved under it (data-stuck, Header.tsx). */
+.mk .hd{position:sticky;top:0;z-index:20;margin:-22px -32px 0;padding:22px 32px 0;box-sizing:content-box;background:var(--mk-bg);border-bottom:1px solid transparent;transition:border-color .15s}
+.mk .hd[data-stuck=true]{border-bottom-color:var(--mk-line)}
 .mk .logo{width:34px;height:34px}
 .mk .mk-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--mk-line);background:var(--mk-card);border-radius:12px;height:36px;padding:0 12px;font-weight:600}
 .mk .mk-dot{width:8px;height:8px;border-radius:50%;background:var(--mk-green);flex:none}
@@ -269,12 +272,16 @@
 .mk .mk-ring{position:relative;width:64px;height:64px;flex:none}
 .mk .mk-ring svg{width:64px;height:64px;transform:rotate(-90deg)}
 .mk .mk-ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:19px;letter-spacing:-.02em}
-.mk .contrib{display:flex;gap:6px;flex-wrap:wrap}
-.mk .contrib button{display:flex;flex-direction:column;align-items:flex-start;padding:5px 12px;border-radius:12px;border:1px solid var(--mk-line);font-size:12px;color:var(--mk-muted);text-align:left}
+.mk .contrib{display:grid;gap:6px;min-width:210px}
+.mk .contrib button{display:grid;grid-template-columns:1fr auto;align-items:baseline;column-gap:14px;padding:5px 12px;border-radius:12px;border:1px solid var(--mk-line);font-size:12px;color:var(--mk-muted);text-align:left;cursor:pointer}
 .mk .contrib button:hover{background:var(--mk-hover)}
+.mk .contrib button:focus-visible,.mk .mk-ring:focus-visible{outline:2px solid var(--mk-lime);outline-offset:2px}
+.mk .contrib .cw{text-align:right}
 .mk .contrib b{font-size:13.5px;color:var(--mk-text);font-weight:600}
 .mk .contrib button.dn b{color:var(--mk-red)}
 .mk .contrib button.up b{color:var(--mk-lime)}
+.mk .mk-ring{border-radius:50%;cursor:pointer;padding:0;background:none;border:0;color:inherit}
+.mk .mk-ring:hover svg{opacity:.8}
 .mk .dots{display:flex;flex-wrap:wrap;gap:4px}
 .mk .dots i{width:9px;height:9px;border-radius:50%;background:var(--mk-dim)}
 .mk .dotn{font-size:12px;color:var(--mk-faint);margin-top:6px}
@@ -957,7 +964,9 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 }
 @container (min-width:601px){
 .mk .chwrap{position:relative;margin-top:var(--mk-s2)}
-.mk .chwrap .ch-top{position:absolute;left:44px;top:2px;margin:0;min-height:0;z-index:1}
+.mk .chwrap .ch-top{justify-content:space-between;align-items:center;gap:var(--mk-s3);margin:0 0 var(--mk-s1);min-height:28px;padding-left:44px}
+.mk .chwrap #chNote{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mk .chwrap .ch-top>:not(#chNote){flex:none}
 .mk .hero .chart, .mk #chart, .mk .chart{height:180px}
 .mk .hero{padding-bottom:0}
 }
@@ -1011,21 +1020,20 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .khint kbd{border:1px solid var(--mk-line);border-radius:5px;padding:0 5px;font:inherit;font-size:12px;color:var(--mk-muted)}
 .mk .npw{position:sticky;top:64px;height:0;margin:-8px 0;z-index:6;display:flex;justify-content:center;pointer-events:none}
 .mk .newpill{pointer-events:auto;height:32px;padding:0 var(--mk-s4);border-radius:16px;background:var(--mk-lime);color:var(--mk-on-lime);font-weight:700;font-size:13px;box-shadow:0 8px 24px var(--mk-shc3);animation:mk-rise .3s both}
-.mk .sk-t{width:150px;height:22px}
-.mk .sk-h1{width:78%;height:30px;margin-top:16px}
-.mk .sk-h2{width:52%;height:30px;margin-top:10px}
-.mk .sk-p{width:66%;margin-top:14px}
-.mk .sk-ring{width:64px;height:64px;border-radius:50%}
-.mk .sk-c{width:150px;height:40px}
-.mk .sk-chart{height:180px;margin:16px 0}
-@container (max-width:600px){
-.mk .sk-t{width:130px;height:14px}
-.mk .sk-h1{height:22px;margin-top:8px;width:92%}
-.mk .sk-h2{height:22px;margin-top:6px;width:60%}
-.mk .sk-p{display:none}
+.mk .sk-hl{width:100%;height:127px;margin:0;border-radius:12px}
+.mk .sk-ring{width:64px;height:64px;border-radius:50%;margin:0}
+.mk .sk-c{width:150px;height:40px;margin:0}
+.mk .sk-chart{height:180px;margin:8px 0 0}
+.mk .sk-kc{height:177px}
+.mk .sk-kc .skl{flex:none}
+.mk .sk-sp{width:calc(100% + var(--mk-s4) * 2);height:64px;margin:auto calc(var(--mk-s4) * -1) 0;border-radius:0}
+@media (max-width:600px){
+.mk .sk-hl{height:121px}
 .mk .sk-ring{width:44px;height:44px}
-.mk .sk-c{width:62px;height:14px;margin:0}
-.mk .sk-chart{height:120px;margin:12px 0}
+.mk .sk-c{width:62px;height:14px}
+.mk .sk-chart{height:152px;margin:12px 0 0}
+.mk .sk-kc{height:155px}
+.mk .sk-sp{height:40px}
 }
 .mk .mk-toast{opacity:0;visibility:hidden;transition:transform .45s cubic-bezier(.2,1.3,.4,1),opacity .2s,visibility 0s .45s}
 .mk .mk-toast.on{opacity:1;visibility:visible;transition-delay:0s}
@@ -1424,6 +1432,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .hd .account-menu .more-menu{right:0;left:auto;top:calc(100% + var(--mk-s2));width:280px;min-width:0;max-width:calc(100vw - 16px);background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:14px;box-shadow:0 20px 50px var(--mk-shc);z-index:var(--z-menu)}
 /* "Why?" beside "Replay": two buttons in a line, aligned at the top so the line is as tall as the walkthrough's one. */
 .mk .hl-col .rpb{vertical-align:top}
+@container (min-width:601px){.mk .hl-col .rpb+.rpb{margin-left:var(--mk-s2)}}
 /* A period being read: the page of the last one stays, dimmed, until the new one is whole. */
 .mk-hold{display:contents}
 .mk-held{opacity:.55;transition:opacity .2s;pointer-events:none}

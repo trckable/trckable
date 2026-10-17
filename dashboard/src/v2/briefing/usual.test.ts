@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Point } from '../../lib/api'
-import { dayBandOf, hourTable, judge, stretchBand } from './usual'
+import { dayBandOf, hourlyPeople, hourTable, judge, stretchBand, verdictOf } from './usual'
 
 describe('usual', () => {
   it('has no table without weeks behind it', () => {
@@ -32,5 +32,22 @@ describe('usual', () => {
     const totals = days.map(() => 100)
     const b = dayBandOf(totals, days, 25)
     expect(b?.c).toBe(100)
+  })
+})
+
+describe('one verdict', () => {
+  const band = { c: 800, lo: 720, hi: 880 }
+  it('tells hourly sums against an hourly band, the day figure no longer pulled under it', () => {
+    // 590 people in the day, 900 summed hour by hour: the old comparison (590) read well under 800, the like-with-like one reads above.
+    expect(verdictOf(590, band)?.st).toBe('dn')
+    expect(verdictOf(900, band)?.st).toBe('up')
+    expect(verdictOf(900, band)?.ratio).toBeCloseTo(1.125)
+  })
+  it('says nothing without a band', () => {
+    expect(verdictOf(5, null)).toBeNull()
+  })
+  it('adds up only the hours that have happened', () => {
+    const series = [8, 9, 10, 11].map((h, i) => ({ t: `2026-10-17T${String(h).padStart(2, '0')}:00`, visitors: 10 * (i + 1), pageviews: 0 }))
+    expect(hourlyPeople(series, [8, 9, 10].map((hour) => ({ day: '2026-10-17', hour, fr: 1 })))).toBe(60)
   })
 })

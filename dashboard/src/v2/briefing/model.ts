@@ -44,8 +44,23 @@ const people = (n: number) => (n === 1 ? '1 person' : `${fmtInt(n)} people`)
 /** A host as people say it: "Hacker News" for news.ycombinator.com, the host itself when it is not a known place. */
 export function sourceName(value: string): string {
   const h = host(value)
-  return KNOWN.find((k) => k.hosts.some((x) => h === x || h.endsWith('.' + x)))?.name ?? h
+  const is = (k: { hosts: string[] }) => k.hosts.some((x) => h === x || h.endsWith('.' + x))
+  return KNOWN.find(is)?.name ?? PLACES.find(is)?.name ?? h
 }
+
+/** More places people know by name, under any of their subdomains (lm.facebook.com is Facebook). Proper nouns, the same in every language. */
+const PLACES = [
+  { name: 'Facebook', hosts: ['facebook.com', 'fb.com', 'fb.me'] },
+  { name: 'Instagram', hosts: ['instagram.com'] },
+  { name: 'YouTube', hosts: ['youtube.com', 'youtu.be'] },
+  { name: 'Pinterest', hosts: ['pinterest.com'] },
+  { name: 'TikTok', hosts: ['tiktok.com'] },
+  { name: 'WhatsApp', hosts: ['whatsapp.com', 'wa.me'] },
+  { name: 'Yahoo', hosts: ['yahoo.com'] },
+  { name: 'DuckDuckGo', hosts: ['duckduckgo.com'] },
+  { name: 'Yandex', hosts: ['yandex.com', 'yandex.ru'] },
+  { name: 'Baidu', hosts: ['baidu.com'] },
+]
 
 const SHORT: Record<string, string> = { 'Hacker News': 'HN', Newsletter: 'News', ChatGPT: 'GPT' }
 /** The short name a phone has room for. */
@@ -168,7 +183,9 @@ export function sentence(o: SayIn): Sentence {
   if (o.learning) {
     return { lead: copy.dayOne, long: [{ t: people(v), em: true }, { t: copy.soFar }, ...andC2, { t: '.' }], short: [{ t: copy.soFarShort(people(v)), em: true }], sub: copy.learnSub, bad: false }
   }
-  const up = o.band ? o.band.st === 'up' || !!(o.jump?.times && o.jump.times >= 1.5) : (ratio !== null && ratio >= 1.15) || !!(o.jump?.times && o.jump.times >= 1.5)
+  const rose = o.band ? o.band.st === 'up' : ratio !== null && ratio >= 1.15
+  // A source that sent far fewer people cannot lead a busy headline: the mood waits for the period's own verdict.
+  const up = o.jump?.st === 'dn' ? false : rose || !!(o.jump?.times && o.jump.times >= 1.5)
   const down = o.band ? o.band.st === 'dn' : ratio !== null && ratio <= 0.7
   const adj = moodWord(o.downMin > 0, up, down)
   let c1: Part[]
@@ -264,9 +281,14 @@ export function uptimeScore(o: { pct: number | null; downNow: boolean; downMin: 
 export function overall(scores: Score[]): number | null {
   if (scores.every((s) => s.value === null)) return null
   if (scores.some((s) => s.verdict === 'down')) return null
-  const of = (k: Score['key'], none: number) => scores.find((s) => s.key === k)?.value ?? none
-  return Math.round(of('traffic', 80) * 0.4 + of('engagement', 100) * 0.25 + of('uptime', 100) * 0.35)
+  // A part that cannot be told counts for nothing, and the others count in full (their weights scaled up to 1).
+  const told = scores.filter((s): s is Score & { value: number } => s.value !== null)
+  const w = told.reduce((n, s) => n + WEIGHT[s.key], 0)
+  return Math.round(told.reduce((n, s) => n + s.value * WEIGHT[s.key], 0) / w)
 }
+
+/** How much each part weighs in the score. */
+export const WEIGHT: Record<Score['key'], number> = { traffic: 0.4, engagement: 0.25, uptime: 0.35 }
 
 // ---- the day against its usual band ----
 

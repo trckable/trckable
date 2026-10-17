@@ -11,13 +11,13 @@ import { fmtInt } from '../../lib/format'
 import { wholeMoney } from './wholeMoney'
 import { isShared, isViewer } from '../../lib/me'
 import { openSettings } from '../../lib/settings'
-import { baseEnough } from '../../lib/thin'
 import { toggleWatch, watched } from '../../lib/watch'
 import { useNow } from '../../features/incidents/useIncidents'
 import { useNotes } from '../../features/notes/useNotes'
 import { addDays } from '../../lib/dates'
 import { CardList } from '../ui/StoryCard'
 import { Hero } from '../ui/HeroCard'
+import { whyRows } from './scoreWhy'
 import { chartNote } from '../ui/DayChart'
 import { ChartBlock } from './ChartBlock'
 import { fmtInt as fmtN } from '../../lib/format'
@@ -38,9 +38,9 @@ import { siteNow } from './chart'
 import { nextStep, setupRows } from './steps'
 import { copy } from './copy'
 import { LOOKED_AT, sinceOf } from './since'
-import { goExplore } from './deeper'
-import { useSetup, useUptime, useUsual } from './hooks'
-import { bounceNote, kpiCards, noteOf, pctText, usualNote } from './kpis'
+import { goExplore, seeScorePart } from './deeper'
+import { useSetup, useSinceCount, useUptime, useUsual } from './hooks'
+import { bounceNote, kpiCards, pctText, peopleNoteOf } from './kpis'
 import { unitOf } from './model'
 import { calmTopics } from './cards'
 import { Hold } from '../ui/Hold'
@@ -100,6 +100,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const prev = useMemo(() => normal(previous), [previous])
   const unit = unitOf(period)
   const today = todayIn(site.timezone)
+  const sinceCount = useSinceCount(site.id, today, LOOKED_AT, range.to === today)
   const usual = useUsual(site.id, range.to, unit === 'today' || unit === 'yesterday')
   const hist = useHistory(site, today, data?.bucket === 'hour', !!data)
   const notes = useNotes(site.id, { from: addDays(today, -365), to: today }, () => undefined)
@@ -142,15 +143,6 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   // A day with nobody yet still has its chart and numbers once the site has a history; only a site that never had anyone is empty.
   const empty = cur.kpis.visitors === 0 && (parts.hd === 0 || !hist.daily)
   const v = cur.kpis.visitors
-  const peopleNote = () => {
-    if (parts.whole && !learning) return usualNote(v, parts.whole.c, parts.st)
-    if (usual && usual.average >= 5 && (usual.weeks?.length ?? 0) > 0 && (unit === 'today' || unit === 'yesterday')) {
-      const d = v / usual.average - 1
-      if (Math.abs(d) < 0.05) return { t: copy.asUsual }
-      return d > 0 ? { t: copy.vsUsual('+', Math.round(d * 100)), up: true } : { t: copy.vsUsual('−', Math.round(-d * 100)), dn: true }
-    }
-    return prev && baseEnough(prev.kpis.visitors) ? noteOf(v, prev.kpis.visitors, before) : { t: unit === 'today' ? copy.soFarToday : '' }
-  }
   const pts = chart.points
   const pct = up.pct === null ? uptime.value : up.pct
   const kcs = kpiCards({
@@ -158,13 +150,13 @@ export default function Briefing({ site, data: page, loading, period, range, mon
     prev,
     learning,
     before,
-    people: { note: peopleNote(), vals: pts.map((p) => p.v) },
+    people: { note: peopleNoteOf({ verdict: parts.verdict, learning, usual, unit, prev, v, before }), vals: pts.map((p) => p.v) },
     goal: goalSlice.length ? { vals: goalSlice.slice(0, pts.length) } : null,
     viewsVals: cur.series.slice(0, pts.length).map((p) => p.pageviews),
     leave: { note: bounceNote(cur.kpis.bounce_rate, parts.bounceUsual), vals: pts.map((_, i) => cur.series[i]?.bounce_rate ?? 0) },
     uptime,
     low,
-    peopleBand: parts.whole,
+    peopleVerdict: parts.verdict,
     moneyBand: parts.moneyBand,
     goalBand: slices.goals.find((g) => g.value === goalValue)?.band ?? null,
     uptimePct: pctText(pct),
@@ -182,7 +174,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const sales = cur.money?.payments ?? 0
   const lockSec = dayStart + LOOKED_AT * 3600
   const down = up.list.reduce((n, x) => n + Math.max(0, Math.min(x.ended_at ?? nowSec, nowSec) - Math.max(x.started_at, lockSec)), 0)
-  const sn = unit === 'today' && v > 0 ? sinceOf({ series: cur.series, nowMin: end, sales, downSec: down, calm: stories.length === 0 && sales === 0 }) : null
+  const sn = unit === 'today' && v > 0 ? sinceOf({ people: sinceCount, nowMin: end, sales, downSec: down, calm: stories.length === 0 && sales === 0 }) : null
   const since = sn ? <SinceLine sn={sn} /> : undefined
   const reader = readerOf(recent.length ? recent : visits, site.domain, top?.value)
   const sub = heroSub(reader && !learning && !low ? copy.meet(readerWords(reader)) : null, low, say.sub, say.own)
@@ -201,6 +193,8 @@ export default function Briefing({ site, data: page, loading, period, range, mon
         <Hero
           say={{ ...say, sub }}
           scores={scores}
+          rows={whyRows(scores, parts.facts)}
+          onSee={(k) => seeScorePart(site, k)}
           learn={learning ? { day: Math.min(7, parts.hd + 1) } : null}
           crowd={crowd}
           since={since}
@@ -243,7 +237,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
     </div>
   )
   return (
-    <Hold ready={ready} id={[site.id, period, range.from, range.to].join('|')}>
+    <Hold ready={ready} id={[site.id, period, range.from, range.to].join('|')} first={<BriefingSkeleton site={site.id} label={copy.loading} />}>
       {body}
     </Hold>
   )

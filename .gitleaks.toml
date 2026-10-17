@@ -1,0 +1,30 @@
+# gitleaks: the default rules, plus the allowlist below. Each entry is a real
+# false positive (a test fixture, a documented example) with the reason beside
+# it; nothing is allowed because it is inconvenient. A real secret that was
+# committed is rotated, not allowed.
+title = "trckable"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Go tests: dummy keys, tokens and secrets made up for the test (totp, payments, revenue, server exposure)"
+paths = ['''_test\.go$''']
+
+[[allowlists]]
+description = "the round-trip bench: a made-up token for a throw-away server on a local port"
+paths = ['''^server/bench/''']
+
+[[allowlists]]
+description = "deploy-check's usage example: a placeholder secret next to stats.example.com"
+paths = ['''^scripts/deploy-check\.sh$''']
+condition = "AND"
+regexTarget = "line"
+regexes = ['''TRCKABLE_SECRET=0123456789abcdef''']
+
+[[allowlists]]
+description = "the DNS verification record's fixed prefix; the random token after it is generated per site and not stored here"
+paths = ['''^server/internal/store/sqlite/sharelook\.go$''']
+condition = "AND"
+regexTarget = "line"
+regexes = ['''"trckable-verify=" \+ auth\.Token''']

@@ -74,7 +74,8 @@ test('Live to Briefing: the sentence, the ring, a card in place, and the period'
   await expect(page.locator('.hero .mk-hl').first()).toContainText('47 people')
   // A site in its first week has no normal yet: it says so where the ring would be.
   await expect(page.locator('.sidecol .sn')).toContainText('learn your normal over 7 days')
-  await expect(page.locator('.kcs .kc')).toHaveCount(4)
+  // Uptime has nothing measured here, so its card is left out instead of showing a dash.
+  await expect(page.locator('.kcs .kc')).toHaveCount(3)
   // The range picker: Custom dates opens the calendar.
   await page.locator('.pill').click()
   await page.locator('#perMenu').getByRole('button', { name: /^Custom dates/ }).click()
@@ -155,3 +156,18 @@ for (const width of [620, 640, 700]) {
     await expect(page).toHaveURL(/view=live/)
   })
 }
+
+test('N and 4 pick Now and the last 28 days, and the ? list names them', async ({ page }) => {
+  await open(page, 1280, '?view=briefing&period=7d')
+  await expect(page.locator('.hero')).toBeVisible()
+  await page.keyboard.press('4')
+  await expect(page).toHaveURL(/period=28d/)
+  await expect(page.locator('.hero')).toBeVisible()
+  await page.keyboard.press('n')
+  await expect(page).toHaveURL(/period=now/)
+  await expect(page.locator('.hero')).toBeVisible()
+  await page.keyboard.press('?')
+  const list = page.getByRole('dialog')
+  await expect(list).toContainText('Now')
+  await expect(list).toContainText('Last 28 days')
+})
