@@ -24,7 +24,7 @@ import (
 func withPayments(q Q) Q {
 	at := func(d, h, m int) time.Time { return time.Date(2026, 9, d, h, m, 0, 0, time.UTC) }
 	facts := []ledger.Fact{
-		{Provider: "stripe", ID: "pa", PaidAt: at(10, 15, 5), Amount: 5000, Visitor: 1, Customer: "stripe:ca", Kind: "one_time", Converted: true},
+		{Provider: "stripe", ID: "pa", PaidAt: at(10, 15, 5), Amount: 5000, Visitor: 1, Customer: "stripe:ca", Kind: "one_time", Converted: true, Country: "DE"},
 		{Provider: "stripe", ID: "pb", PaidAt: at(10, 11, 30), Amount: 2000, Refunded: 500, Visitor: 2, Customer: "stripe:cb", Kind: "subscription", Converted: true},
 		{Provider: "stripe", ID: "px", PaidAt: at(10, 12, 30), Amount: 1000, Customer: "stripe:cx", Kind: "one_time", Converted: true},
 		{Provider: "paddle", ID: "pc", PaidAt: at(10, 13, 0), Amount: 700, Visitor: 3, Customer: "paddle:cc", Kind: "renewal", Converted: true},
@@ -287,6 +287,8 @@ func TestBuyers(t *testing.T) {
 		eq(t, "newest", got[0].At, at(15, 5))
 		eq(t, "amount", got[0].Amount, int64(5000))
 		eq(t, "kind", got[0].Kind, "one_time")
+		eq(t, "billing country", got[0].Country, "DE")
+		eq(t, "no country named", got[2].Country, "")
 		eq(t, "channel", got[0].Channel, "Search")
 		eq(t, "referrer", got[0].Referrer, "google.com")
 		eq(t, "pages", strings.Join(got[0].Pages, " "), "/ /pricing")

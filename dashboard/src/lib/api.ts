@@ -575,7 +575,14 @@ export interface FunnelStep {
   value: string
 }
 
-export interface FunnelResult extends FunnelStep {
+/** The last step of a funnel when payments are connected: the visitors of the step before who then paid. */
+export interface PaidStep {
+  kind: 'paid'
+  value: string
+}
+
+export interface FunnelResult extends Omit<FunnelStep, 'kind'> {
+  kind: FunnelStep['kind'] | PaidStep['kind']
   label?: string // a goal step's name as written
   visitors: number
   rate: number

@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 )
@@ -245,6 +246,56 @@ func TestSiteSummary(t *testing.T) {
 		// The other cards' days, bucket for bucket with the visitors'.
 		if len(s.PageviewSeries) != 1 || s.PageviewSeries[0] != 6 || len(s.SessionSeries) != 1 || s.SessionSeries[0] != 4 || len(s.BounceSeries) != 1 || s.BounceSeries[0] != 0.5 {
 			t.Fatalf("pageviews %v sessions %v bounce %v, want [6] [4] [0.5]", s.PageviewSeries, s.SessionSeries, s.BounceSeries)
+		}
+	})
+}
+
+// The paid step counts the visitors of the step before who then paid (never a
+// renewal), and only when a payment provider is connected. On the golden site:
+// A sees / at 10:00 and pays $50 at 15:05; C sees / at 12:01 but only renews;
+// B reads /blog at 11:00 and pays at 11:30.
+func TestFunnelPaidStep(t *testing.T) {
+	both(t, func(t *testing.T, q Q) {
+		ctx := context.Background()
+		p := sep10
+		p.Currency = "USD"
+		paid := Step{Kind: StepPaid}
+
+		if _, err := q.Funnel(ctx, p, []Step{{Kind: "page", Value: "/"}, paid}); err == nil || !strings.Contains(err.Error(), "payment provider") {
+			t.Fatalf("without a provider: %v", err)
+		}
+
+		q = withPayments(q)
+		f, err := q.Funnel(ctx, p, []Step{{Kind: "page", Value: "/"}, paid})
+		if err != nil {
+			t.Fatal(err)
+		}
+		eq(t, "saw /", f[0].Visitors, int64(2))
+		eq(t, "then paid", f[1].Visitors, int64(1)) // A; C only renewed
+		eq(t, "rate", f[1].Rate, 0.5)
+		eq(t, "dropped before paying", f[0].Dropped, int64(1))
+		eq(t, "median seconds to pay", f[1].MedianS, 5*3600.0+5*60) // 10:00 to 15:05
+
+		f, err = q.Funnel(ctx, p, []Step{{Kind: "page", Value: "/blog"}, {Kind: "page", Value: "/pricing"}, paid})
+		if err != nil {
+			t.Fatal(err)
+		}
+		eq(t, "blog then pricing then paid", f[2].Visitors, int64(0))
+
+		f, err = q.Funnel(ctx, p, []Step{{Kind: "page", Value: "/blog"}, paid})
+		if err != nil {
+			t.Fatal(err)
+		}
+		eq(t, "B paid after /blog", f[1].Visitors, int64(1))
+
+		// A payment before the step does not count, and the step goes last.
+		f, err = q.Funnel(ctx, p, []Step{{Kind: "goal", Value: "signup"}, paid})
+		if err != nil {
+			t.Fatal(err)
+		}
+		eq(t, "A signed up at 10:03 and paid at 15:05", f[1].Visitors, int64(1))
+		if _, err := q.Funnel(ctx, p, []Step{paid, {Kind: "page", Value: "/"}}); err == nil {
+			t.Error("a paid step in front was accepted")
 		}
 	})
 }

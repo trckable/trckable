@@ -4,12 +4,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { more } from '../../lib/apiMore'
 import { addDays, diffDays, type ISODate, type Range } from '../../lib/dates'
 import type { SearchReport, Site } from '../../lib/api'
-import { extrasApi, type Buyer } from '../../features/extras/extrasApi'
+import { extrasApi, type Buyer, type Refunds } from '../../features/extras/extrasApi'
 import { heatApi } from '../../features/heatmap/api'
 import { isShared } from '../../lib/me'
 import { mentionsApi, type Mention } from '../../features/mentions/api'
 import { leakOf } from '../explore/data/mapSections'
-import type { FunnelStep } from '../../lib/api'
+import type { FunnelStep, PaidStep } from '../../lib/api'
+import { copy } from './copy'
 
 export interface SearchStory {
   cur: SearchReport
@@ -45,6 +46,8 @@ export interface Extras {
   speed: { cur: [number, number, number]; usual: [number, number, number] } | null
   /** The latest sales of the period, when payments are connected. */
   buyers: Buyer[] | null
+  /** The payments paid back in the period, when payments are connected. */
+  refunds?: Refunds | null
   /** What Google sent, against the period before, when Search Console is connected. */
   search: SearchStory | null
   /** A page people got stuck on, when heatmaps are on. */
@@ -63,7 +66,7 @@ interface ExtrasWant {
   /** The page to look at for stuck visitors. */
   page: string | null
   /** The steps of the signup path to read, with the page many go to instead. */
-  funnel: { steps: FunnelStep[]; alt?: string } | null
+  funnel: { steps: (FunnelStep | PaidStep)[]; alt?: string } | null
   /** The countries the period's people came from, most first, to look for a first customer in. */
   countries: { code: string; people: number }[]
 }
@@ -75,7 +78,7 @@ function readFunnel(site: string, range: Range, days: number, want: NonNullable<
   const before: Range = { from: addDays(range.from, -days), to: addDays(range.from, -1) }
   return Promise.all([more.funnel(site, range, want.steps), more.funnel(site, before, want.steps).catch(() => null)]).then(
     ([c, p]) => {
-      const steps = c.steps.map((s, i) => ({ name: s.label || s.value, v: s.visitors, c: p?.steps[i]?.visitors ?? 0 }))
+      const steps = c.steps.map((s, i) => ({ name: s.kind === 'paid' ? copy.paidStep : s.label || s.value, v: s.visitors, c: p?.steps[i]?.visitors ?? 0 }))
       return { steps, leak: leakOf(steps), alt: want.alt }
     },
     () => null,
@@ -117,6 +120,7 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
     const mention = site.mentions ? mentionsApi.list(site.id, '7d').then((r) => r.mentions.filter((m) => m.posted_at >= day0 - 3600).sort((a, b) => b.posted_at - a.posted_at)[0] ?? null, () => null) : Promise.resolve(null)
     const vit = (from: ISODate, to: ISODate) => more.vitals(site.id, { from, to }).then((v) => (v.samples >= 5 && v.lcp_ms != null && v.inp_ms != null && v.cls_1k != null ? ([v.lcp_ms / 1000, v.inp_ms, v.cls_1k / 1000] as [number, number, number]) : null), () => null)
     const buyers = want.money ? extrasApi.buyers(site.id, { from: range.from, to: range.to }, 20).then((r) => r.buyers ?? [], () => null) : Promise.resolve(null)
+    const refunds = want.money ? extrasApi.refunds(site.id, { from: range.from, to: range.to }).then((r) => r, () => null) : Promise.resolve(null)
     // Google is a day behind, so a single day is read as the week it ends.
     const days = diffDays(range.from, range.to) + 1
     const span = Math.max(7, days)
@@ -130,7 +134,7 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
       : Promise.resolve(null)
     const funnel = want.funnel ? readFunnel(site.id, range, days, want.funnel) : Promise.resolve(null)
     const first = want.money && days <= 31 ? readFirst(site.id, range, want.countries) : Promise.resolve(null)
-    void Promise.all([mention, vit(today, today), vit(addDays(today, -28), addDays(today, -1)), buyers, search, stuck, funnel, first]).then(([m, c, u, b, sr, st, fn, fs]) => live && setGot({ key, x: { fresh: true, mention: m, speed: c && u ? { cur: c, usual: u } : null, buyers: b, search: sr, stuck: st, funnel: fn, first: fs } }))
+    void Promise.all([mention, vit(today, today), vit(addDays(today, -28), addDays(today, -1)), buyers, search, stuck, funnel, first, refunds]).then(([m, c, u, b, sr, st, fn, fs, rf]) => live && setGot({ key, x: { fresh: true, mention: m, speed: c && u ? { cur: c, usual: u } : null, buyers: b, refunds: rf, search: sr, stuck: st, funnel: fn, first: fs } }))
     return () => {
       live = false
     }

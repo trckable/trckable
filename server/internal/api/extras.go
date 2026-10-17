@@ -6,7 +6,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/fx"
 	"github.com/trckable/trckable/server/internal/insights"
+	"github.com/trckable/trckable/server/internal/ledger"
 	"github.com/trckable/trckable/server/internal/moments"
 	"github.com/trckable/trckable/server/internal/query"
 )
@@ -294,4 +296,53 @@ func (a *API) buyers(w http.ResponseWriter, r *http.Request) {
 		out["currency"], out["exponent"] = res.Money.Currency, res.Money.Exponent
 	}
 	writeJSON(w, http.StatusOK, out)
+}
+
+// refundWindow is how far back the refund count looks.
+const refundWindow = 90 * 24 * time.Hour
+
+// refunds serves GET /api/v1/sites/{site}/refunds: the payments paid back in
+// the period, newest first (at most n, default 8), how many and how much in
+// all, and how many in the 90 days before the period ends. Straight from the
+// payment providers' refund and dispute events; never a name, an email or an id.
+func (a *API) refunds(w http.ResponseWriter, r *http.Request) {
+	if !a.needs(w, r, "revenue") {
+		return
+	}
+	ask := a.parse(w, r, r.PathValue("site"), true)
+	if ask == nil {
+		return
+	}
+	if a.Revenue == nil {
+		fail(w, http.StatusNotFound, "payments are not connected")
+		return
+	}
+	n, _ := strconv.Atoi(r.URL.Query().Get("n"))
+	if n <= 0 || n > 20 {
+		n = 8
+	}
+	p := ask.Params
+	cur := p.Currency
+	if cur == "" {
+		cur = "USD"
+	}
+	facts, err := a.Revenue.Facts(r.Context(), p.Site, cur, time.Unix(0, 0), p.To, p.Test)
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	in := ledger.RefundsIn(p.Site, facts, p.From, p.To)
+	var total int64
+	for _, x := range in {
+		total += x.Amount
+	}
+	rows := in
+	if len(rows) > n {
+		rows = rows[:n]
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"refunds": append([]ledger.Refund{}, rows...), "count": len(in), "amount": total,
+		"count_90d": len(ledger.RefundsIn(p.Site, facts, p.To.Add(-refundWindow), p.To)),
+		"currency":  cur, "exponent": fx.Exponent(cur),
+	})
 }

@@ -115,8 +115,8 @@ function pictureOf(v: Vis): ReactNode {
   }
   return (
       <div className="rcpt">
-        {v.rows.map((r) => (
-          <div className={`rr${r.more ? ' more' : ''}${r.tot ? ' tot' : ''}`} key={r.l}>
+        {v.rows.map((r, n) => (
+          <div className={`rr${r.more ? ' more' : ''}${r.tot ? ' tot' : ''}`} key={`${n}${r.l}`}>
             <span className={`fl${r.mark ? ` ${r.mark}m` : ''}`}>{r.flag}</span>
             <span className="rl">{r.l}</span>
             <span className="mk-rt">{r.t}</span>

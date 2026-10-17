@@ -844,6 +844,10 @@ var migrations = []string{
 		FROM alerts WHERE enabled = 1 AND target != ''
 	)
 	WHERE rn = 1 AND site_id NOT IN (SELECT site_id FROM alerts WHERE kind = 'customer');`,
+	// The billing country a payment names, when its provider sends one (an
+	// ISO 3166 code), kept on the payment and on the hints that describe it.
+	`ALTER TABLE pay_payments ADD COLUMN country TEXT NOT NULL DEFAULT '';
+	ALTER TABLE pay_hints ADD COLUMN country TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

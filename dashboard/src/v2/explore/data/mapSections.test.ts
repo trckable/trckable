@@ -41,6 +41,10 @@ describe('the funnel', () => {
     expect(f.pages[0]).toMatchObject({ name: '/', v: 80, c: 40, st: 'up' })
     expect(f).toMatchObject({ ghost: true, goalsOn: true })
   })
+  it('names the paid step Paid', () => {
+    const f = mapFunnel({ cur: [step('/', 100), { kind: 'paid', value: 'paid', visitors: 4, rate: 0.04, of_total: 0.04, median_s: 60, dropped: 0 }], report: report(null, false), ghost: false })
+    expect(f.steps.map((s) => s.name)).toEqual(['/', 'Paid'])
+  })
   it('has no goals on when the site has none', () => {
     expect(mapFunnel({ cur: [], report: report(null, false), ghost: false }).goalsOn).toBe(false)
   })
@@ -153,5 +157,11 @@ describe('the funnel an old address names', () => {
       { kind: 'goal', value: 'signup' },
     ])
     expect(stepsOf([{ kind: 'page', value: '/' }], pages)).toHaveLength(2)
+  })
+  it('ends with a Paid step when payments are connected, once', () => {
+    const paid = stepsOf(undefined, pages, { value: 'signup' }, true)
+    expect(paid.map((s) => s.kind)).toEqual(['page', 'page', 'goal', 'paid'])
+    expect(stepsOf(paid, pages, undefined, true)).toEqual(paid)
+    expect(stepsOf(undefined, pages, { value: 'signup' }, false).some((s) => s.kind === 'paid')).toBe(false)
   })
 })
