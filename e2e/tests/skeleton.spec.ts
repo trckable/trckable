@@ -7,7 +7,7 @@ import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
 
 const SHOTS = process.env.POLISH_SHOTS
-const URL = `${API}/${HISTORY_DOMAIN}?view=data&v=story&period=30d`
+const URL = `${API}/${HISTORY_DOMAIN}?view=briefing&period=30d`
 
 /** One ordinary visit: the page keeps what a refresh paints from (lib/bootCache.ts). */
 async function warm(page: Page) {

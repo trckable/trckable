@@ -6,7 +6,7 @@ import { cachedReport, dropReports, showsInstall, api, type ReportQuery, type Si
 import { setWeekStart, todayIn, type Range } from '../lib/dates'
 import { fmtMoney } from '../lib/format'
 import { journeysOn } from '../features/cookieless/labels'
-import { navigate, readView, setView, useLocation, wantsLive, writeView } from '../lib/url'
+import { navigate, oldAddressTarget, readView, setView, useLocation, wantsLive, writeView } from '../lib/url'
 import { queryOf, rangeOf } from '../lib/dashQuery'
 import { canAsk, canChange, isShared } from '../lib/me'
 import { useMods } from '../lib/useMods'
@@ -81,9 +81,8 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
 
   // The addresses the old Data page had (?view=data, ?v=explore, Full) land here: the Briefing, and Explore for the ones that were its numbers.
   useEffect(() => {
-    if (view.v === undefined && view.mode !== 'full') return
-    const opens = view.v === 'explore' || view.mode === 'full'
-    navigate(location.pathname + writeView({ ...view, v: undefined, mode: 'core', xp: view.xp ?? (opens ? 'overview' : undefined) }), { replace: true })
+    const to = oldAddressTarget(view)
+    if (to) navigate(location.pathname + writeView(to), { replace: true })
   }, [view.v, view.mode]) // eslint-disable-line react-hooks/exhaustive-deps -- the address is read whole when it needs the change
 
   const mods = useMods(site.id)

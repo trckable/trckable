@@ -2034,7 +2034,6 @@ export default {
   'hints.seen': 'Entendido',
   'hints.off': 'Desactivar los consejos',
   'hints.close': 'Cerrar el consejo',
-  'hints.story': 'Cada respuesta abre la imagen completa: gráfico, todas las filas, exportación.',
   'hints.rows': 'Haz clic en una fila para filtrar toda la página.',
   'hints.peek': (key: string) => `Pulsa ${key} para preguntarle a Peek lo que quieras sobre tus cifras.`,
   'format.capped': 'más de 10 veces más',

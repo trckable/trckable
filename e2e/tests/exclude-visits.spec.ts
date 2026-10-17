@@ -42,7 +42,7 @@ test('exclude my visits: the menu opens the site with the flag, and the IP list 
     flags.push(route.request().url())
     return route.fulfill({ contentType: 'text/html', body: '<title>site</title>' })
   })
-  await page.goto(`${API}/${domain}?view=data`)
+  await page.goto(`${API}/${domain}?view=briefing`)
   const avatar = page.getByRole('button', { name: 'Account', exact: true })
   await avatar.click()
   const menu = page.getByRole('menu', { name: 'Account' })

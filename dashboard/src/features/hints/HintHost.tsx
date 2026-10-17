@@ -4,15 +4,13 @@ import { useEffect, useRef, useState } from 'react'
 import { Hint } from '../../components/Hint'
 import { caps, keyFor } from '../../lib/keys'
 import { isViewer } from '../../lib/me'
-import { readView, useLocation } from '../../lib/url'
-import { storyOn } from '../storyview/mode'
+import { useLocation } from '../../lib/url'
 import { copy } from './copy'
 import { nextHint, type HintId } from './rules'
 import { keep, kept, type Kept, markShown, shownThisVisit } from './store'
 
-/** Where each hint points. The answers row is Story's (the whole row, so the bubble never lands on a neighbour card); the rows are Explore's lists; Peek is the header's button. */
+/** Where each hint points: the rows are Explore's lists; Peek is the header's button. */
 const ANCHOR: Record<HintId, string> = {
-  story: '.sv-answers',
   rows: '#cards .bl-row',
   peek: '.header button.ask',
 }
@@ -30,8 +28,7 @@ const covered = () => !!document.querySelector('[role="dialog"], [role="menu"]')
 
 /** Which of the places the hints point at are on the page now. */
 function placesNow(): Record<HintId, boolean> {
-  const story = storyOn(readView(new URLSearchParams(location.search)))
-  return { story: story && !!find('story'), rows: !story && !!find('rows'), peek: !!find('peek') }
+  return { rows: !!find('rows'), peek: !!find('peek') }
 }
 
 export default function HintHost() {
