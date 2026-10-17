@@ -193,6 +193,36 @@ test('the two top Live cards are the same height side by side', async ({ page })
   }
 })
 
+test('a long list scrolls inside its card with a fade, the cards keep one height, and See all toggles back', async ({ page }) => {
+  await page.route('**/api/v1/sites/*/now*', async (route) => {
+    const res = await route.fetch()
+    const body = await res.json()
+    const r0 = body.recent[0] ?? { kind: 'pageview', path: '/', channel: 'Direct', country: 'DE', device: 'Desktop', ts: body.at, last: body.at }
+    body.recent = Array.from({ length: 19 }, (_, i) => ({ ...r0, visitor: `x${i}`, ts: r0.ts - i * 1000, last: r0.last - i * 1000 }))
+    body.online = Math.max(body.online, 19)
+    await route.fulfill({ response: res, json: body })
+  })
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await signIn(page, '/example.com?view=live')
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
+  const heights = async () => Promise.all([page.locator('.lnow').boundingBox(), page.locator('.lon').boundingBox()])
+  const equal = async () => {
+    const [a, b] = await heights()
+    return !!a && !!b && Math.abs(a.height - b.height) <= 1
+  }
+  expect(await equal()).toBe(true)
+  await page.getByRole('button', { name: /^See all/ }).click()
+  expect(await equal()).toBe(true)
+  const feed = page.locator('.lon .lfeed')
+  expect(await feed.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true)
+  await expect(feed).toHaveAttribute('data-below', 'true')
+  await feed.evaluate((el) => (el.scrollTop = el.scrollHeight))
+  await expect(feed).not.toHaveAttribute('data-below', 'true')
+  await page.getByRole('button', { name: 'Show fewer' }).click()
+  await expect(page.getByRole('button', { name: /^See all/ })).toBeVisible()
+  expect(await equal()).toBe(true)
+})
+
 test('online is never more than the visitors of the half hour', async ({ page }) => {
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })

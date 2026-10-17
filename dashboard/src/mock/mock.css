@@ -1671,6 +1671,17 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 }
 
 
+/* Live's calm motion: the bars slide one place left when a minute passes, and the Live dot beats once for each visit. */
+.mk .lchart.shift{animation:mk-shift .3s ease-out}
+@keyframes mk-shift{from{opacity:.55;transform:translateX(3%)}}
+.mk .mk-pulse.ev{animation:mk-beat 1s ease-out 1,mk-pl 2s infinite}
+
+/* Two columns: the list scrolls inside its card, which is as tall as the Live card beside it; a soft fade shows there is more below. */
+@container (min-width:701px){
+.mk .liveview>.lon{contain:size}
+.mk .liveview .lon .lfeed{flex:1 1 0;min-height:0;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain}
+.mk .liveview .lon .lfeed[data-below]{-webkit-mask-image:linear-gradient(to bottom,var(--mk-text) calc(100% - 40px),transparent);mask-image:linear-gradient(to bottom,var(--mk-text) calc(100% - 40px),transparent)}
+}
 /* Menus and lists, one row (the palette, the site list, the period, Explore's menus, the bell): one active row at a time, a small gap
    between neighbours, one rhythm on the 4px grid. The active row is the one under the mouse (data-act, set by useActiveRow) or the one
    a key reached (focus, or the palette's cursor); while the mouse has a row, the key's row is clear. The chosen row (.on) is told by its
