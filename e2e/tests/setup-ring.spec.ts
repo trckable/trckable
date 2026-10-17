@@ -63,7 +63,8 @@ test('a phone opens the panel as a sheet at the bottom', async ({ page }) => {
   await expect(panel).toBeVisible()
   const box = await panel.boundingBox()
   expect(Math.round(box!.y + box!.height)).toBe(844)
-  expect(Math.round(box!.width)).toBe(390)
+  // The sheet spans the page: a browser with classic scrollbars (WebKit's) takes 10 px of the 390 for its own.
+  expect(Math.round(box!.width)).toBe(await page.evaluate(() => document.documentElement.clientWidth))
   await shot(page, 'setup-ring', 390)
 })
 

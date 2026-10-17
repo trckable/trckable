@@ -698,9 +698,6 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .plm{display:flex;justify-content:space-between;font-size:12px;color:var(--mk-muted)}
 .mk .pln{margin:0;font-size:13px;color:var(--mk-muted)}
 .mk .pla{display:flex;gap:var(--mk-s2);align-items:center;margin-top:var(--mk-s2)}
-@container (max-width:1100px){
-.mk .hd .planw{display:none}
-}
 @container (max-width:900px){
 .mk .hd>div:has(#siteBtn) .mk-chip{max-width:150px}
 .mk .hd .pill{max-width:170px}
@@ -1264,10 +1261,9 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .xtitle{display:none;align-items:center;gap:var(--mk-s2);font-size:15px;margin-right:var(--mk-s2)}
 .mk .xtitle .xi{width:18px;height:18px;color:var(--mk-lime)}
 .mk .xp.full .xtitle{display:inline-flex}
-.mk .xp.full .xmain{max-width:960px}
 .mk .xsec{align-items:center;min-height:34px}
-.mk .xsub{display:inline-grid;grid-auto-flow:column;grid-auto-columns:minmax(88px,1fr);overflow:visible;max-width:100%;vertical-align:top}
-.mk .xsub button{justify-content:center;min-width:0;overflow:hidden;text-overflow:ellipsis;padding:0 var(--mk-s2)}
+.mk .xsub{display:inline-flex;max-width:100%;vertical-align:top;scroll-padding:0 var(--mk-s3)}
+.mk .xsub button{flex:1 0 auto;justify-content:center;padding:0 var(--mk-s3)}
 .mk .xdot{width:6px;height:6px;border-radius:50%;background:var(--mk-lime);flex:none}
 .mk .xsub+.xchips,.mk .xchips+.xsub{margin-top:0}
 .mk .xsub{margin-top:var(--mk-s1)}
@@ -1293,7 +1289,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .xedc{border:1px solid var(--mk-line);border-radius:var(--mk-r);background:var(--mk-card);padding:var(--mk-s3);display:flex;flex-direction:column;gap:var(--mk-s3);margin-bottom:var(--mk-s3)}
 .mk .xedr{display:flex;gap:var(--mk-s2);align-items:center;flex-wrap:wrap}
 .mk .xedr select{flex:1;min-width:160px}
-.mk .xedr .xsub{margin:0;grid-auto-columns:minmax(56px,1fr)}
+.mk .xedr .xsub{margin:0}
 .mk .xedc .xchips{margin:0}
 .mk .xedf{display:flex;align-items:center;justify-content:space-between;gap:var(--mk-s3);font-size:13px;color:var(--mk-muted)}
 .mk .xmr{display:flex;align-items:center;min-height:40px;padding:0 var(--mk-s1) 0 var(--mk-s3);font-size:14px}
@@ -1705,3 +1701,33 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .khint .gh{height:24px;padding:0 var(--mk-s2);border:1px solid var(--mk-line);font-size:12px}
 @container (max-width:600px){.mk .mailrow .mt{flex:1 1 100%}.mk .mailrow .gh{flex:1}}
 .mk .cards{align-items:start}
+
+/* The header is a bar of its own: a band of room under the controls, so the page moves under it and never touches them. The room
+   is taken back from the gap below, so nothing moves down. */
+.mk .hd{--hpb:var(--mk-s3);padding-bottom:var(--hpb);margin-bottom:calc(var(--hpb) * -1)}
+@container (min-width:601px){.mk .hd{margin-bottom:calc(var(--mk-s4) - var(--hpb))}}
+/* The person is the last thing on the right, whatever a build puts before them; the bell comes just before. */
+.mk .hd>.bellw{order:98}
+.mk .hd>.account-menu{order:99}
+/* The account line of the site menu opens its list in place. */
+.mk .mi.ws svg{transition:transform .15s}
+.mk .mi.ws.open svg{transform:rotate(180deg)}
+.mk .ws-list{display:flex;flex-direction:column;padding:var(--mk-s1) 0 var(--mk-s2);border-bottom:1px solid var(--mk-line);margin-bottom:var(--mk-s2)}
+
+/* Compact header, 700 to 1100 px (a tablet, an unfolded phone): the site's key hint and the setup ring give way (the ring's line is
+   in the site menu), the period says only its first word (the whole in its tooltip), the search is a square like the bell and the
+   person, and a build's plan chip is in the person's menu. Nothing overlaps at any width. */
+.mk .setupline{display:none}
+@container (min-width:701px) and (max-width:1100px){
+.mk .hd .sitechip .mk-kbd,.mk .hd .pill .pl-rest,.mk .hd .pill .vs{display:none}
+.mk .hd .ringw{width:0;margin-left:calc(var(--mk-s3) * -1);flex:none}
+.mk .hd .ringw .ringb{display:none}
+.mk .setupline{display:flex}
+}
+@container (max-width:1100px){
+.mk .hd .exb{width:var(--hc);padding:0;justify-content:center;flex:none}
+.mk .hd .exb .t2,.mk .hd .exb .mk-kbd{display:none}
+}
+@container (max-width:1200px){
+.mk .hd .planw{display:none}
+}

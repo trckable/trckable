@@ -78,7 +78,7 @@ export function PageHeader(p: PageHeaderProps) {
   const siteMenu = {
     sites: p.sites,
     current: site,
-    onPick: (id: string) => (id === '*' ? navigate('/') : navigate('/' + encodeURIComponent(p.sites.find((s) => s.id === id)?.domain ?? ''))),
+    onPick: (id: string) => (id === '*' ? navigate('/sites') : navigate('/' + encodeURIComponent(p.sites.find((s) => s.id === id)?.domain ?? ''))),
     footer: site
       ? [
           { key: 'add', label: copy.addSite, run: openAddSite },
