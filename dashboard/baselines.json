@@ -11,5 +11,6 @@
     "src/views/Settings.tsx": 533,
     "src/views/Sites.tsx": 402,
     "src/views/TwoStepSetup.tsx": 255
-  }
+  },
+  "colors": 25
 }
