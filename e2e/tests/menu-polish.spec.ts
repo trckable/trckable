@@ -9,7 +9,7 @@ test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough
 const SHOTS = process.env.MP_SHOTS
 const SCHEME = process.env.MP_SCHEME === 'light' ? 'light' : 'dark'
 const WIDTH = Number(process.env.MP_WIDTH ?? 1440)
-const ROW = '.mi, .xmi, .xri, .pi'
+const ROW = '.mi, .xmi, .xri, .pi, button[role="menuitem"]'
 
 test.use({ colorScheme: SCHEME })
 
@@ -48,6 +48,14 @@ const menus: Record<string, { open: (p: Page) => Promise<Locator> }> = {
     open: async (p) => {
       await p.locator('#perBtn').click()
       const box = p.locator('#perMenu.on')
+      await expect(box).toBeVisible()
+      return box
+    },
+  },
+  account: {
+    open: async (p) => {
+      await p.locator('.hd .account-btn').click()
+      const box = p.locator('.pop.more-menu')
       await expect(box).toBeVisible()
       return box
     },
@@ -92,8 +100,8 @@ for (const [name, m] of Object.entries(menus)) {
     if (WIDTH < 600) return // no pointer on a phone
     await rows.nth(1).hover()
     expect(await painted(), 'after hover').toBe(1)
-    await page.keyboard.press('ArrowDown')
-    await page.keyboard.press('ArrowDown')
+    // The keys walk to a row (the account menu's theme switch comes first, and is not a row).
+    for (let i = 0; i < 6 && !(await page.evaluate((sel) => !!document.activeElement?.matches(sel), ROW)); i++) await page.keyboard.press('ArrowDown')
     expect(await painted(), 'after hover and arrow keys').toBe(1)
     await rows.nth(Math.min(3, n - 1)).hover()
     expect(await painted(), 'after hovering another row').toBe(1)

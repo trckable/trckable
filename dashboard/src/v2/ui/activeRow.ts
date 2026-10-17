@@ -3,7 +3,7 @@
 // so the key's row takes over again until the mouse moves.
 import { useEffect } from 'react'
 
-const ROWS = '.mk .mi, .mk .xmi, .mk .xri, .mk .nf'
+const ROWS = '.mk .mi, .mk .xmi, .mk .xri, .mk .nf, .pop.more-menu button[role="menuitem"]'
 
 export function useActiveRow() {
   useEffect(() => {
