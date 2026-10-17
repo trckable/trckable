@@ -58,11 +58,14 @@ test('opens from the avatar menu, searches, switches a module on, and closes on 
   await expect(page.getByRole('button', { name: 'Account' })).toBeFocused()
 })
 
-test('opens from its key and a link, keeps focus inside, and finds nothing for nonsense', async ({ page }) => {
+test('opens from a link, E does not open it, focus stays inside, and nonsense finds nothing', async ({ page }) => {
   const { domain } = await site(page)
-  await page.goto(`${API}/${domain}?view=data`)
+  await page.goto(`${API}/${domain}?view=briefing`)
   await page.locator('body').click({ position: { x: 5, y: 400 } })
   await page.keyboard.press('e')
+  await page.waitForTimeout(500)
+  await expect(page.getByRole('dialog', { name: 'Features', exact: true })).toHaveCount(0)
+  await page.goto(`${API}/${domain}?view=data&features`)
   const dialog = page.getByRole('dialog', { name: 'Features', exact: true })
   await expect(dialog).toBeVisible()
   for (let i = 0; i < 12; i++) {

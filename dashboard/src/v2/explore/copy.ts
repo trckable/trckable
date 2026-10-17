@@ -53,6 +53,7 @@ export const copy = defineCopy('v2explore', {
   },
   sub: { sources: 'Channels', referrers: 'Referrers', utm: 'UTMs', search: 'Search', devices: 'Devices', browsers: 'Browsers', outbound: 'Links', bots: 'Bots', highlights: 'Highlights', overtime: 'Over time', hours: 'Hours', revmap: 'Revenue map', earners: 'Sources that pay', sells: 'Pages that sell', people: 'People', buyers: 'Latest buyers', retention: 'Retention', vsale: 'Visit to sale', toconvert: 'Time to convert', flow: 'Flow', ai: 'AI & search' },
   people: 'People',
+  trackGoal: 'Track another goal',
   emptyHighlights: 'Nothing changed much',
   emptyHighlightsHint: 'What moved against the period before shows here.',
   kc: { views: 'Views', money: 'Money', uptime: 'Uptime', leave: 'Left after one page' },

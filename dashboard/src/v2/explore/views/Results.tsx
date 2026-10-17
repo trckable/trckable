@@ -87,6 +87,11 @@ export function Results({ x, d }: { x: XCtx; d: Funnel }) {
       <XSec a={copy.goals} b={d.vs} />
       {!d.goalsOn && <Lock k="goals" x={x} />}
       <XGoals goals={d.goalsOn ? [...d.goals, ...own] : []} />
+      {d.goalsOn && (
+        <button type="button" className="xb" id="xTrack" onClick={() => x.connect('goals')}>
+          {copy.trackGoal}
+        </button>
+      )}
     </>
   )
 }
