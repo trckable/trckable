@@ -16,7 +16,7 @@ import { kitLater } from '../../../../charts/kitLater'
 import { fmtCompact, fmtInt } from '../../../../lib/format'
 import type { Report, ReportQuery, Row } from '../../../../lib/api'
 import { type Heatmap, more } from '../../../../lib/apiMore'
-import { XEmpty, XNote, XSub } from '../../../ui/XBits'
+import { XEmpty, XError, XNote, XSub } from '../../../ui/XBits'
 import type { XCtx } from '../../ctx'
 import { XChart } from './XChart'
 import '../../../../charts/charts.css'
@@ -29,23 +29,26 @@ const HOURS = Array.from({ length: 24 }, (_, h) => chartCopy.rhythm.hour(h))
 const NONE = { caption: '', columns: [], rows: [] }
 
 function Hours({ x, query }: { x: XCtx; query: ReportQuery }) {
-  const [data, setData] = useState<{ key: string; h: Heatmap } | null>(null)
-  const key = x.site.id + JSON.stringify([query.from, query.to, query.filters])
+  const [data, setData] = useState<{ key: string; h: Heatmap | null } | null>(null)
+  const [round, setRound] = useState(0)
+  const key = x.site.id + JSON.stringify([query.from, query.to, query.filters, round])
   useEffect(() => {
     let live = true
     more
       .heatmap(x.site.id, query)
       .then((h) => live && setData({ key, h }))
-      .catch(() => undefined)
+      .catch(() => live && setData({ key, h: null }))
     return () => {
       live = false
     }
     // Keyed by content: the query is a new object each render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
-  const h = data?.key === key ? data.h : null
+  const got = data?.key === key ? data : null
+  const h = got?.h ?? null
   const tz = x.site.timezone
   const c = chartCopy.rhythm
+  if (got && !got.h) return <XError title={chartCopy.failedShort} onRetry={() => setRound((n) => n + 1)} />
   return (
     <XChart id="rhythm" title={c.title} question={c.question} loading={!h} empty={!!h && h.total === 0} table={h ? rhythmModel(h).table : NONE} headKey={<HeatKey color="var(--accent)" fewer={c.fewer} more={c.more} />} foot={<XNote>{c.caption(tz)}</XNote>}>
       {h && <HeatGrid cells={h.cells} rows={c.days} cols={HOURS} colTicks={[0, 6, 12, 18, 23]} color="var(--accent)" label={c.label(tz)} tip={(r, col, n) => c.tip(c.days[r], col, n)} />}
@@ -67,8 +70,9 @@ function RevMap({ x, rows }: { x: XCtx; rows: Row[] }) {
 }
 
 function OverTime({ x, report, query }: { x: XCtx; report: Report; query: ReportQuery }) {
-  const { charts } = useCharts(x.site.id, query, report.bucket)
+  const { charts, error, retry } = useCharts(x.site.id, query, report.bucket)
   const [sub, setSub] = useState<'sources' | 'returning'>('sources')
+  if (error && !charts) return <XError title={chartCopy.failedShort} hint={error} onRetry={retry} />
   const bucket = report.bucket
   const s = charts ? sourcesModel(charts, bucket) : null
   const v = charts ? visitorsModel(charts, bucket) : null
@@ -91,7 +95,8 @@ function OverTime({ x, report, query }: { x: XCtx; report: Report; query: Report
 }
 
 function Steps({ x, report, query, tab }: { x: XCtx; report: Report; query: ReportQuery; tab: 'visit-to-sale' | 'to-convert' | 'flow' }) {
-  const { charts } = useCharts(x.site.id, query, report.bucket)
+  const { charts, error, retry } = useCharts(x.site.id, query, report.bucket)
+  if (error && !charts) return <XError title={chartCopy.failedShort} hint={error} onRetry={retry} />
   if (tab === 'flow') {
     const m = charts ? flowModel(charts) : null
     const c = chartCopy.flow

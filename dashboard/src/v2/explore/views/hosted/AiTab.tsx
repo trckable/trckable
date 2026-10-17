@@ -1,7 +1,7 @@
 // AI & Search in the section's frame: the assistants that sent people, the crawlers that read the pages and each page's
 // reads against the visitors sent; Google's searches are the Search tab of Sources, one tap away.
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { XEmpty, XNote, XSec } from '../../../ui/XBits'
+import { XEmpty, XError, XNote, XSec } from '../../../ui/XBits'
 import { XCols, type CRow } from '../../../ui/XTable'
 import { Loading } from '../../../../components/loading/Loading'
 import { fmtInt } from '../../../../lib/format'
@@ -50,7 +50,7 @@ export default function AiTab({ x }: { x: XCtx }) {
   const { rep, reload } = useAiSearch(x.site.id, x.query, ROWS)
   const [setup, setSetup] = useState(false)
   if (rep === undefined) return <Loading height={180} />
-  if (rep === null) return <XEmpty title={aiCopy.failed} hint="" />
+  if (rep === null) return <XError title={aiCopy.failed} onRetry={reload} />
   const people = byAssistant(rep.referrers.map((r) => ({ value: r.value, visitors: r.visitors }))).slice(0, ROWS)
   const top = Math.max(1, ...people.map((a) => a.visitors))
   const assistants: CRow[] = people.map((a) => ({ key: a.referrer, a: a.name, bar: a.visitors / top, onPick: () => x.pick('referrer', a.referrer), c: [fmtInt(a.visitors)] }))

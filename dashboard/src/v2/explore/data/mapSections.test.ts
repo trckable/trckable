@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { CrawlerReport, FunnelResult, Money, Report, SearchReport, WebVitals } from '../../../lib/api'
 import type { Mention as ApiMention } from '../../../features/mentions/api'
+import { searchCard } from '../../briefing/cards.money'
 import { gradeOf, leakOf, mapBots, mapFunnel, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed, stepsOf } from './mapSections'
 
 const step = (value: string, visitors: number): FunnelResult => ({ kind: 'page', value, visitors, rate: 1, of_total: 1, median_s: 0, dropped: 0 })
@@ -51,7 +52,7 @@ describe('the funnel', () => {
 })
 
 describe('sales', () => {
-  const m = { new_revenue: 8700, renewal_revenue: 0, refunds: 500 } as Money
+  const m = { revenue: 8200, payments: 2, new_revenue: 8700, renewal_revenue: 0, refunds: 500 } as Money
   it('has nothing to say until payments are connected', () => {
     expect(mapSales(undefined, 'Today').state).toBe('connect')
   })
@@ -62,6 +63,16 @@ describe('sales', () => {
       ['new', 8700, 'Today'],
       ['refund', -500, 'Today'],
     ])
+  })
+  it('agrees with the Briefing: two payments, an upgrade among them, add up to the period net', () => {
+    const two = { revenue: 30500, payments: 2, new_revenue: 8700, renewal_revenue: 0, refunds: 0 } as Money
+    const s = mapSales(two, 'Today')
+    expect(s.payments).toBe(2)
+    expect(s.sales.map((x) => [x.kind, x.amt])).toEqual([
+      ['new', 8700],
+      ['upgrade', 21800],
+    ])
+    expect(s.sales.reduce((p, x) => p + x.amt, 0)).toBe(two.revenue)
   })
 })
 
@@ -81,6 +92,13 @@ describe('search', () => {
       ['Position', '6.7', 'below usual', 'dn'],
     ])
     expect(s.kcs[0].detail).toBe('usual 45–76')
+  })
+  it('says the same position as the Briefing\'s search card, and labels it there', () => {
+    const prev = rep(60, 4000, [{ key: 'trckable', clicks: 60, impressions: 4000, ctr: 0.015, position: 3 }])
+    const explore = mapSearch({ query: q, pages: q, prev }).kcs[3].val
+    const card = searchCard({ story: { cur: q, prev }, domain: 'x.com', rule: '' })
+    const total = card?.vis?.k === 'rcpt' ? card.vis.rows.find((r) => r.tot) : undefined
+    expect(total?.t).toContain(`pos ${explore}`)
   })
   it('marks a query that was not there before as new, in quotes', () => {
     const s = mapSearch({ query: q, pages: q, prev: rep(60, 4000, [{ key: 'trckable', clicks: 60, impressions: 4000, ctr: 0.015, position: 3 }]) })

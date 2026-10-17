@@ -89,6 +89,9 @@ describe('the deep tables', () => {
     const cur = result(100, { dims: { ...dims, country: [{ value: 'DE', visitors: 40 }] }, money: money(30500), revenue_dims: { country: [{ value: 'DE', visitors: 40, customers: 2, revenue: 30500 }], group: [{ value: '/blog', visitors: 50, customers: 1, revenue: 100 }] } })
     expect(mapTable('countries', report(cur)).rows[0]).toMatchObject({ cust: 2, rev: 30500 })
     expect(mapTable('groups', report(cur)).rows[0].rev).toBeUndefined()
+    const own = result(100, { dims: { country: [{ value: 'DE', visitors: 40, customers: 1, revenue: 8700 }, { value: 'US', visitors: 30, customers: 1, revenue: 21800 }] }, money: money(30500) })
+    const rows = mapTable('countries', report(own)).rows
+    expect(rows.reduce((p, x) => p + (x.rev ?? 0), 0)).toBe(30500)
     expect(mapTable('countries', report(result(100, { dims: { country: [{ value: 'DE', visitors: 40 }] } }))).rows[0].rev).toBeUndefined()
   })
 })

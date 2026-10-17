@@ -1,6 +1,6 @@
 // The bell at the end of the header: a dot with how many are unread, and the list under it (a sheet on a phone).
 // Markup and classes are the walkthrough's own.
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { MkPortal } from './Portal'
 import { useMenu } from './useMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
@@ -11,6 +11,7 @@ export interface BellRow {
   title: string
   sub: string
   unread: boolean
+  dismissable?: boolean
 }
 
 const PATH: Record<string, ReactNode> = {
@@ -64,9 +65,14 @@ interface BellProps {
   onPick: (id: string) => void
   onAll: () => void
   onSettings: () => void
+  /** A build with its own list: a row can be put away, and the archive is a second view. */
+  onDismiss?: (id: string) => void
+  archive?: { rows: BellRow[]; load: () => void; loading: boolean; words: { dismiss: string; archive: string; fresh: string; none: string } }
 }
 
 function List(p: BellProps & { close: () => void }) {
+  const [old, setOld] = useState(false)
+  const rows = old && p.archive ? p.archive.rows : p.rows
   return (
     <>
       <div className="nfh">
@@ -76,10 +82,10 @@ function List(p: BellProps & { close: () => void }) {
         </button>
       </div>
       <div className="nfl">
-        {p.rows.length === 0 && <div className="xnone">{p.none}</div>}
-        {p.rows.map((n) => (
+        {rows.length === 0 && <div className="xnone">{old && p.archive ? p.archive.words.none : p.none}</div>}
+        {rows.map((n) => (
+          <div key={n.id} className="nfw">
           <button
-            key={n.id}
             type="button"
             className={`nf ${n.unread ? 'unread' : ''}`}
             onClick={() => {
@@ -96,9 +102,20 @@ function List(p: BellProps & { close: () => void }) {
             </span>
             {n.unread && <i className="nfd" />}
           </button>
+          {n.dismissable && !old && p.onDismiss && (
+            <button type="button" className="nfx" aria-label={p.archive?.words.dismiss} title={p.archive?.words.dismiss} onClick={() => p.onDismiss?.(n.id)}>
+              ×
+            </button>
+          )}
+          </div>
         ))}
       </div>
       <div className="nff">
+        {p.archive && (
+          <button type="button" className="lk3" aria-pressed={old} onClick={() => { if (!old) p.archive?.load(); setOld(!old) }}>
+            {old ? p.archive.words.fresh : p.archive.words.archive}
+          </button>
+        )}
         <button type="button" className="lk3" onClick={() => { p.onSettings(); p.close() }}>
           {p.settings}
         </button>

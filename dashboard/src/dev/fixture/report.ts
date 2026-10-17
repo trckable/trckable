@@ -155,6 +155,34 @@ function kpiGoal(c: Ctx, site: SiteDef): { key: string; label: string } {
   return { key: slug(funnel[i]), label: named || funnel[i] }
 }
 
+/** What each row earned, as the server says it: every row with its net revenue and payers, and the top list by revenue. The sales add up to the period's money. */
+function attribute(out: Result, d: Record<string, Row[] | null>, sales: Sale[], site: SiteDef): void {
+  const keys: Record<string, (x: Sale) => string> = {
+    channel: (x) => CHANNEL[SRCS[x.s].id],
+    referrer: (x) => REFS[SRCS[x.s].id] || '',
+    country: (x) => CTYS[x.cty].id,
+    device: (x) => DEVS[x.dev].name,
+    entry_page: (x) => site.pages[x.page][0],
+    browser: (x) => BROWSERS[(x.cty + x.dev) % BROWSERS.length],
+  }
+  const top: Record<string, Row[]> = {}
+  for (const [dim, key] of Object.entries(keys)) {
+    const by = new Map<string, { rev: number; n: number }>()
+    for (const x of sales) {
+      const e = by.get(key(x)) ?? { rev: 0, n: 0 }
+      by.set(key(x), { rev: e.rev + x.amt * 100, n: e.n + (x.amt > 0 ? 1 : 0) })
+    }
+    for (const r of d[dim] ?? []) {
+      const e = by.get(r.value)
+      r.revenue = e?.rev ?? 0
+      r.customers = e?.n ?? 0
+    }
+    const list = [...by.entries()].filter(([v]) => v !== '' || dim === 'referrer').map(([value, e]): Row => ({ value, visitors: 0, revenue: e.rev, customers: e.n }))
+    if (list.length) top[dim] = list.sort((p, q) => (q.revenue ?? 0) - (p.revenue ?? 0))
+  }
+  out.revenue_dims = top
+}
+
 function resultOf(c: Ctx, v: Visits, a: number, b: number, bucket: Bucket, filters: Flt[]): Result {
   const site = v.site
   const tests = filters.flatMap((f) => testOf(site, f) ?? [])
@@ -234,6 +262,7 @@ function resultOf(c: Ctx, v: Visits, a: number, b: number, bucket: Bucket, filte
   const sales = hasMoney(c, site) ? salesIn(c, site, a, b, filters) : []
   if (hasMoney(c, site)) {
     out.money = money(sales, tot.visitors)
+    attribute(out, d, sales, site)
     sales.forEach((x) => {
       const i = Math.min(nb - 1, Math.floor((x.min - a) / step))
       points[i].revenue = (points[i].revenue ?? 0) + x.amt * 100

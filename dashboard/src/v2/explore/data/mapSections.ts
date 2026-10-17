@@ -2,6 +2,7 @@
 import type { CrawlerReport, FunnelResult, FunnelStep, Money, PaidStep, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
 import { fmtDay } from '../../../lib/dates'
 import { fmtFixed, fmtInt } from '../../../lib/format'
+import { averagePosition } from '../../../lib/searchPosition'
 import type { Mention as ApiMention } from '../../../features/mentions/api'
 import { baseEnough } from '../../../lib/thin'
 import { copy } from '../copy'
@@ -50,22 +51,15 @@ export function mapFunnel(o: { cur: FunnelResult[]; prev?: FunnelResult[]; repor
 
 // ---- sales ----
 
-/** What the period earned, by kind: there is no list of single sales to read, so each kind is one line. */
+/** What the period earned, by kind: there is no list of single sales to read, so each kind is one line. The lines add up to the period's net revenue (what the Briefing and the buyers say); what is neither new nor a renewal is the upgrades. */
 export function mapSales(money: Money | undefined, label: string): Sales {
-  if (!money) return { state: 'connect', sales: [] }
+  if (!money) return { state: 'connect', sales: [], payments: 0 }
   const one = (kind: Sale['kind'], text: string, amt: number): Sale[] => (amt === 0 ? [] : [{ kind, label: text, from: '', country: '', device: '', when: label, amt }])
-  return { state: 'ok', sales: [...one('new', copy.salesNew, money.new_revenue), ...one('renewal', copy.salesRenewal, money.renewal_revenue), ...one('refund', copy.salesRefund, -money.refunds)] }
+  const upgrades = money.revenue - money.new_revenue - money.renewal_revenue + money.refunds
+  return { state: 'ok', payments: money.payments, sales: [...one('new', copy.salesNew, money.new_revenue), ...one('upgrade', copy.salesUpgrade, upgrades), ...one('renewal', copy.salesRenewal, money.renewal_revenue), ...one('refund', copy.salesRefund, -money.refunds)] }
 }
 
 // ---- search ----
-
-const sum = (rows: SearchReport['rows'], f: (r: { clicks: number; impressions: number; ctr: number; position: number }) => number) => (rows ?? []).reduce((p, r) => p + f(r), 0)
-
-/** The average position, each query weighted by how often it was shown. */
-const positionOf = (r: SearchReport) => {
-  const shown = sum(r.rows, (x) => x.impressions)
-  return shown ? sum(r.rows, (x) => x.position * x.impressions) / shown : 0
-}
 
 const fmtK = (n: number) => (n >= 1000 ? `${fmtFixed(n / 1000, n >= 10000 ? 0 : 1)}k` : fmtInt(n))
 const pct1 = (x: number) => `${fmtFixed(x * 100, 1)}%`
@@ -91,8 +85,8 @@ export function mapSearch(o: { query: SearchReport; pages: SearchReport; prev?: 
   const ctr = query.impressions ? query.clicks / query.impressions : 0
   const ctr0 = prev?.impressions ? prev.clicks / prev.impressions : 0
   const ctrSt = base && ctr < ctr0 * 0.88 ? 'dn' : ''
-  const pos = positionOf(query)
-  const pos0 = prev ? positionOf(prev) : 0
+  const pos = averagePosition(query.rows)
+  const pos0 = prev ? averagePosition(prev.rows) : 0
   const posSt = base ? movedOf(pos, pos0) : ''
   const kc = (icon: string, label: string, val: string, st: string, detail: string): Xkc => ({ icon, label, val, ...tagOf(st), detail })
   const known = new Set((prev?.rows ?? []).map((r) => r.key))
