@@ -1,46 +1,35 @@
-// The tabs whose numbers their own card reads: the highlights, the charts of the old Full page, sources that pay, pages
-// that sell, the people, the latest buyers, retention, and AI & search. Each is the card it always was, opened by its
-// section; the ones that read the payments show the locked sample until they are connected.
+// The tabs whose numbers their own request reads: the highlights, the charts of the old Full page, sources that pay, pages
+// that sell, the people, the latest buyers, retention, and AI & search. Each reads what its card always read and is drawn
+// as the other tables are; the ones that read the payments show the locked sample until they are connected.
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { Loading } from '../../../components/loading/Loading'
 import { cachedReport, type Report, type ReportQuery } from '../../../lib/api'
-import type { CardsCtx } from '../../../features/cards/ctx'
-import Highlights, { useInsights } from '../../../features/extras/Highlights'
+import { useInsights } from '../../../features/extras/useInsights'
 import { XEmpty } from '../../ui/XBits'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import type { HostedTab } from '../types'
 import { Lock } from './Lock'
+import type { ChartTab } from './hosted/Charts'
 
-const ChartPanel = lazy(() => import('../../../features/fullcharts/ChartPanels'))
-const Earners = lazy(() => import('../../../features/cards/Earners'))
-const SalePages = lazy(() => import('../../../features/extras/SalePages'))
-const Buyers = lazy(() => import('../../../features/extras/Buyers'))
-const Retention = lazy(() => import('../../../features/cards/Retention'))
-const People = lazy(() => import('../../../features/cards/People'))
-const AiSearch = lazy(() => import('../../../features/aisearch/AiSearch'))
+const XCharts = lazy(() => import('./hosted/Charts'))
+const AiTab = lazy(() => import('./hosted/AiTab'))
+const Earners = lazy(() => import('./hosted/Revenue').then((m) => ({ default: m.Earners })))
+const SalePages = lazy(() => import('./hosted/Revenue').then((m) => ({ default: m.SalePages })))
+const Buyers = lazy(() => import('./hosted/Lines').then((m) => ({ default: m.Buyers })))
+const People = lazy(() => import('./hosted/Lines').then((m) => ({ default: m.People })))
+const HighlightLines = lazy(() => import('./hosted/Lines').then((m) => ({ default: m.HighlightLines })))
+const Retention = lazy(() => import('./hosted/Retention').then((m) => ({ default: m.XRetention })))
 const JourneyDialog = lazy(() => import('../../../features/journey/JourneyDialog').then((m) => ({ default: m.JourneyDialog })))
 
 const PAID: HostedTab[] = ['revmap', 'earners', 'sells', 'buyers', 'vsale', 'toconvert']
-const CHART = { overtime: 'over-time', hours: 'hours', revmap: 'revenue-map', vsale: 'visit-to-sale', toconvert: 'to-convert', flow: 'flow' } as const
-
-/** What the old cards read from their page, made from the period's report. */
-function ctxOf(x: XCtx, q: ReportQuery, report: Report, first: boolean, onAttr: (f: boolean) => void, onVisitor: (v: string) => void): CardsCtx {
-  const cur = report.current
-  const dims = (d: string) => cur.dims[d] ?? []
-  return {
-    site: x.site, query: q, bucket: report.bucket, full: true, shared: false, deep: true, loading: false, scrubbing: false, mods: null, money: cur.money, fmtMoney: x.money,
-    rows: 10, cur, prev: undefined, compare: false, dims, sourceRows: dims, perDay: () => false, trail: null, dimTrail: false, onSourceHover: () => undefined, addFilter: x.pick, mapOn: true,
-    goals: cur.goals ?? [], revenueDims: cur.revenue_dims ?? {}, countryRevenue: cur.revenue_dims?.country ?? [], attrFirst: first, onAttr, onTrackGoal: () => x.connect('goals'), onFull: () => undefined,
-    steps: [], onSteps: () => undefined, onPickVisitor: onVisitor, visitors: cur.kpis.visitors,
-  }
-}
+const CHART: Partial<Record<HostedTab, ChartTab>> = { overtime: 'over-time', hours: 'hours', revmap: 'revenue-map', vsale: 'visit-to-sale', toconvert: 'to-convert', flow: 'flow' }
 
 function Highlighted({ x }: { x: XCtx }) {
   const found = useInsights(x.site.id, x.query, true)
   if (!found) return <Loading height={180} />
   if (found.length === 0) return <XEmpty title={copy.emptyHighlights} hint={copy.emptyHighlightsHint} />
-  return <Highlights list={found} money={x.money} onPick={x.pick} />
+  return <HighlightLines x={x} list={found} />
 }
 
 export function Hosted({ tab, x }: { tab: HostedTab; x: XCtx }) {
@@ -59,24 +48,36 @@ export function Hosted({ tab, x }: { tab: HostedTab; x: XCtx }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
   if (PAID.includes(tab) && !x.conn.rev) return <Lock k="rev" x={x} />
-  if (tab === 'highlights') return <Highlighted x={x} />
+  if (tab === 'highlights')
+    return (
+      <Suspense fallback={<Loading height={180} />}>
+        <Highlighted x={x} />
+      </Suspense>
+    )
   const report = got?.key === key ? got.report : null
   if (!report) return <Loading height={180} />
-  const c = ctxOf(x, q, report, first, setFirst, setVisitor)
-  const chart = tab in CHART ? CHART[tab as keyof typeof CHART] : null
+  const chart = CHART[tab]
   return (
     <Suspense fallback={<Loading height={180} />}>
-      {chart && <ChartPanel tab={chart} c={c} />}
-      {tab === 'earners' && <Earners c={c} />}
-      {tab === 'sells' && <SalePages site={x.site.id} query={q} money={x.money} rows={c.rows} onPick={(page) => x.pick('page', page)} />}
-      {tab === 'buyers' && <Buyers site={x.site.id} query={q} money={x.money} />}
-      {tab === 'retention' && <Retention site={x.site} query={q} />}
-      {tab === 'people' && <People site={x.site} onPick={setVisitor} />}
-      {tab === 'ai' && <AiSearch c={c} />}
-      {visitor && <JourneyDialog site={x.site} visitor={visitor} query={q} onClose={() => setVisitor(null)} onFilter={(dim, value) => {
-          setVisitor(null)
-          x.pick(dim, value)
-        }} />}
+      {chart && <XCharts tab={chart} x={x} report={report} query={q} />}
+      {tab === 'earners' && <Earners x={x} report={report} first={first} onAttr={setFirst} />}
+      {tab === 'sells' && <SalePages x={x} query={q} />}
+      {tab === 'buyers' && <Buyers x={x} query={q} />}
+      {tab === 'retention' && <Retention x={x} query={q} />}
+      {tab === 'people' && <People x={x} onPick={setVisitor} />}
+      {tab === 'ai' && <AiTab x={x} />}
+      {visitor && (
+        <JourneyDialog
+          site={x.site}
+          visitor={visitor}
+          query={q}
+          onClose={() => setVisitor(null)}
+          onFilter={(dim, value) => {
+            setVisitor(null)
+            x.pick(dim, value)
+          }}
+        />
+      )}
     </Suspense>
   )
 }
