@@ -592,6 +592,24 @@ func mentionEvent(site sqlite.SiteRow, m sqlite.Mention, link string) alerts.Eve
 	return ev
 }
 
+// mentionMark is where a mention was made, as the email names it, and the
+// source's own tile: drawn, not fetched.
+func mentionMark(m sqlite.Mention, where string) (string, mailkit.Mark) {
+	source, mark := where, mailkit.Mark{Letter: "N", Color: "#5b6573"}
+	switch m.Source {
+	case mentions.HN:
+		mark = mailkit.Mark{Letter: "Y", Color: "#ff6600"}
+	case mentions.PH:
+		mark = mailkit.Mark{Letter: "P", Color: "#da552f"}
+	default:
+		if m.Host != "" {
+			source = m.Host
+			mark.Letter = strings.ToUpper(string([]rune(m.Host)[0]))
+		}
+	}
+	return source, mark
+}
+
 // mentionEmail is the mention as a designed email: what it brought, and a
 // quote card of where the site was named, with the source's own mark.
 func mentionEmail(domain, title, where string, m sqlite.Mention, link string) *mailkit.Email {
@@ -607,18 +625,7 @@ func mentionEmail(domain, title, where string, m sqlite.Mention, link string) *m
 	case front != nil:
 		e.Blocks = append(e.Blocks, *front)
 	}
-	source, mark := where, mailkit.Mark{Letter: "N", Color: "#5b6573"}
-	switch m.Source {
-	case mentions.HN:
-		mark = mailkit.Mark{Letter: "Y", Color: "#ff6600"}
-	case mentions.PH:
-		mark = mailkit.Mark{Letter: "P", Color: "#da552f"}
-	default:
-		if m.Host != "" {
-			source = m.Host
-			mark.Letter = strings.ToUpper(string([]rune(m.Host)[0]))
-		}
-	}
+	source, mark := mentionMark(m, where)
 	var meta []string
 	if m.Author != "" {
 		meta = append(meta, "by "+m.Author)
