@@ -2,7 +2,7 @@
 // usual of that slice, never against nothing), written as one claim with the picture that proves it, a line of why, and
 // one thing to do. The cards are ranked by how much they matter and how bad the news is. Pure: cards.test.ts.
 import type { Result, Row } from '../../lib/api'
-import { countryName, flag, fmtInt } from '../../lib/format'
+import { countryName, flag, fmtFixed, fmtInt } from '../../lib/format'
 import { assistantOf } from '../../features/extras/assistants'
 import { copy } from './cards.copy'
 import { mult, sourceName, type Deeper, type Unit } from './model'
@@ -290,8 +290,8 @@ function goalCard(i: CardsIn): Story | null {
 }
 
 function speedWords(n: number, i: number): string {
-  if (i === 0) return `${n.toFixed(1)} s`
-  return i === 1 ? `${Math.round(n)} ms` : n.toFixed(2)
+  if (i === 0) return `${fmtFixed(n, 1)} s`
+  return i === 1 ? `${Math.round(n)} ms` : fmtFixed(n, 2)
 }
 
 /** The cards of the period, most worth reading first. A site that is not answering has one card only. */
