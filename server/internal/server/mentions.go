@@ -249,13 +249,18 @@ func (f *mentionFinder) review(ctx context.Context, site string, p plan) {
 			continue
 		}
 		if m.State != sqlite.MentionHidden {
-			// An older item has no record of what it pointed at: only the rules that need no evidence apply.
 			v := p.rules.Allowed(itemOf(m))
 			if v.Show && (m.Source == mentions.News || m.Link != "") {
 				v = p.rules.Match(itemOf(m))
 			}
 			if !v.Show {
 				_ = f.st.DeleteMention(ctx, m.ID)
+				continue
+			}
+			// An item kept before the matcher has no record of what it pointed at, so it is
+			// matched on its own text; if that does not name the site it is hidden, not deleted.
+			if m.Via == "" && m.Source != mentions.News && m.Link == "" && m.State == sqlite.MentionShown && !p.rules.Match(itemOf(m)).Show {
+				_, _ = f.st.SetMentionState(ctx, site, m.ID, sqlite.MentionRejected)
 				continue
 			}
 		}

@@ -4,10 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
+	"slices"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/ingest"
 	"github.com/trckable/trckable/server/internal/mentions"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
@@ -18,25 +20,54 @@ import (
 // visitors they sent over the last month, and are never judged by the
 // matcher (only the site's own pages and blocked sites rule them out).
 
-// pageVisitors are the visitors that came from each page, by hour, over a stretch.
-func pageVisitors(ctx context.Context, db *sql.DB, site string, from, to time.Time) (map[string][]visit, error) {
-	rows, err := db.QueryContext(ctx, `SELECT referrer_url, visitor_id, CAST(epoch(date_trunc('hour', ts)) AS BIGINT) FROM events
-		WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts < ? AND referrer_url IS NOT NULL AND referrer_url <> '' AND position('/' IN referrer_url) > 0
-		GROUP BY ALL LIMIT 50000`, site, from.UTC(), to.UTC())
+// pageStat is what one visiting page sent: how many different people, the
+// hour the first came, and the hour most came.
+type pageStat struct{ visitors, first, peak int64 }
+
+// pageVisitors reads, in the database, the pages that sent at least min people
+// in [from, to), counting only visits the classifier called Social or Referral
+// (a search result, an AI answer, mail or a campaign is not a page that
+// mentions the site).
+func pageVisitors(ctx context.Context, db *sql.DB, site string, from, to time.Time, min int) (map[string]pageStat, error) {
+	where := `site_id = ? AND kind = 1 AND ts >= ? AND ts < ? AND channel IN (?, ?) AND referrer_url IS NOT NULL AND position('/' IN referrer_url) > 0`
+	args := []any{site, from.UTC(), to.UTC(), ingest.ChannelSocial, ingest.ChannelReferral}
+	rows, err := db.QueryContext(ctx, `SELECT referrer_url, count(DISTINCT visitor_id), CAST(epoch(min(ts)) AS BIGINT) FROM events WHERE `+where+`
+		GROUP BY referrer_url HAVING count(DISTINCT visitor_id) >= ? ORDER BY 2 DESC, 1 LIMIT 500`, append(slices.Clone(args), min)...)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	out := map[string][]visit{}
+	out := map[string]pageStat{}
 	for rows.Next() {
 		var form string
-		var v visit
-		if err := rows.Scan(&form, &v.visitor, &v.hour); err != nil {
+		var st pageStat
+		if err := rows.Scan(&form, &st.visitors, &st.first); err != nil {
+			rows.Close()
 			return nil, err
 		}
-		out[form] = append(out[form], v)
+		out[form] = st
 	}
-	return out, rows.Err()
+	rows.Close()
+	if err := rows.Err(); err != nil || len(out) == 0 {
+		return out, err
+	}
+	hours, err := db.QueryContext(ctx, `SELECT referrer_url, CAST(epoch(date_trunc('hour', ts)) AS BIGINT), count(DISTINCT visitor_id) FROM events WHERE `+where+`
+		GROUP BY 1, 2 ORDER BY 1, 3 DESC, 2`, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer hours.Close()
+	for hours.Next() {
+		var form string
+		var hour, n int64
+		if err := hours.Scan(&form, &hour, &n); err != nil {
+			return nil, err
+		}
+		if st, ok := out[form]; ok && st.peak == 0 {
+			st.peak = hour // the busiest hour comes first for each page
+			out[form] = st
+		}
+	}
+	return out, hours.Err()
 }
 
 // pages lists, for each site, the pages that sent at least two visitors in the
@@ -61,7 +92,7 @@ func (f *mentionFinder) pages(ctx context.Context, sites []sqlite.SiteRow, plans
 		if !ok {
 			continue
 		}
-		got, err := pageVisitors(ctx, db, site.ID, now.AddDate(0, 0, -mentionPageDays), now)
+		got, err := pageVisitors(ctx, db, site.ID, now.AddDate(0, 0, -mentionPageDays), now, mentionPageMin)
 		if err != nil {
 			slog.Warn("mentions: pages not read", "site", site.ID, "err", err)
 			continue
@@ -86,14 +117,13 @@ func (f *mentionFinder) pages(ctx context.Context, sites []sqlite.SiteRow, plans
 // confirm keeps one visiting page as a mention, or marks the one already
 // found at that address (by words, with or without "www.") as confirmed, and
 // stores the visitors it sent.
-func (f *mentionFinder) confirm(ctx context.Context, site string, p plan, form string, list []visit, byAddress map[string]sqlite.Mention, now time.Time) {
-	visitors, peak := tally(list)
+func (f *mentionFinder) confirm(ctx context.Context, site string, p plan, form string, st pageStat, byAddress map[string]sqlite.Mention, now time.Time) {
 	host := form
 	if i := strings.IndexByte(form, '/'); i > 0 {
 		host = form[:i]
 	}
 	addr := "https://" + form
-	if visitors < mentionPageMin || mentions.RefIgnored(host) || !mentions.Web(addr) || !p.rules.Page(addr).Show {
+	if st.visitors < mentionPageMin || !mentions.Web(addr) || !p.rules.Page(addr).Show {
 		return
 	}
 	cur, found := byAddress[mentions.Canonical(addr)]
@@ -101,11 +131,7 @@ func (f *mentionFinder) confirm(ctx context.Context, site string, p plan, form s
 		return // one the owner hid, or a judge refused, stays out
 	}
 	if !found {
-		first := list[0].hour
-		for _, v := range list {
-			first = min(first, v.hour)
-		}
-		m := sqlite.Mention{Site: site, Source: mentions.Ref, URL: addr, Title: form, Host: host, PostedAt: first, State: sqlite.MentionShown, Via: mentions.ViaPage}
+		m := sqlite.Mention{Site: site, Source: mentions.Ref, URL: addr, Title: form, Host: host, PostedAt: st.first, State: sqlite.MentionShown, Via: mentions.ViaPage}
 		if _, err := f.st.SaveMention(ctx, m, now.Unix()); err != nil {
 			slog.Warn("mentions: page not saved", "site", site, "err", err)
 			return
@@ -116,5 +142,5 @@ func (f *mentionFinder) confirm(ctx context.Context, site string, p plan, form s
 		}
 	}
 	_ = f.st.ConfirmMention(ctx, site, cur.ID)
-	_ = f.st.SaveScore(ctx, cur.ID, visitors, peak, now.Unix())
+	_ = f.st.SaveScore(ctx, cur.ID, st.visitors, st.peak, now.Unix())
 }

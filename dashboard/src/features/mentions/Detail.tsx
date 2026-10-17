@@ -11,6 +11,7 @@ import { replyURL } from './pageModel'
 import { Quote } from './Quote'
 import { SourceMark } from './SourceMark'
 import { useDetail } from './usePage'
+import { trust } from './trustCopy'
 
 const HOURS = ['-10 min', '+12 h', '+24 h', '+36 h', '+48 h']
 
@@ -59,7 +60,7 @@ function Body({ d, m, words }: { d: DetailData; m: Mention; words: string[] }) {
       <p className="mp-links">
         {href && (
           <a className="btn ghost" href={href} target="_blank" rel="noopener noreferrer nofollow">
-            {m.source === 'news' ? page.openArticle : page.openDiscussion}
+            {m.source === 'news' || m.source === 'ref' ? page.openArticle : page.openDiscussion}
           </a>
         )}
         {reply && (
@@ -96,6 +97,7 @@ export function Detail({ site, m, words, onClose }: { site: string; m: Mention; 
             <h2>{m.title || copy.name[m.source]}</h2>
             <p className="muted">
               {copy.name[m.source]}
+              {m.via === 'page' ? ` · ${trust.confirmed(m.visitors)}` : ''}
               {m.author ? ` · ${copy.by(m.author)}` : ''} · {agoOf(m.posted_at)} · {page.visitors(m.visitors)}
             </p>
           </div>

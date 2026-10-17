@@ -1,11 +1,14 @@
 // What the server found: GET /sites/{site}/mentions and its words.
 import { call } from '../../lib/api'
 
-export type Source = 'hn' | 'ph' | 'news'
+/** `ref` is a page that sent visitors: the visits confirm it. */
+export type Source = 'hn' | 'ph' | 'news' | 'ref'
 
 export interface Mention {
   id: number
   source: Source
+  /** `page`: confirmed by the visits that came from it. */
+  via?: string
   url: string
   kind?: 'comment'
   title: string
@@ -53,10 +56,37 @@ export interface Detail {
   goals: number
 }
 
+/** What the owner says counts as a mention of the site. */
+export interface Rules {
+  topic: string[]
+  required: string[]
+  excluded: string[]
+  blocked: string[]
+}
+
 export interface Words {
   default: string[]
   added: string[]
   max: number
+  /** The name in the address, offered and not searched until added. */
+  suggested: string[]
+  rules: Rules
+}
+
+/** What the news says about a word that is about to be added. */
+export interface LookAlike {
+  word: string
+  checked: boolean
+  elsewhere: number
+  examples: string[]
+  suggest_exclude: string[]
+}
+
+/** The answer to "Not about us": what could keep the like of it out. */
+export interface Hidden {
+  hidden: boolean
+  suggest_exclude: string[]
+  suggest_block: string
 }
 
 export interface Mentions {
@@ -68,14 +98,14 @@ export interface Mentions {
 
 const base = (site: string) => `/sites/${encodeURIComponent(site)}/mentions`
 
-/** A page the visits confirmed ("ref") is shown with the news until the screens name it. */
-const known = (m: Mention): Mention => ((m.source as string) === 'ref' ? { ...m, source: 'news' } : m)
-
 export const mentionsApi = {
-  list: (site: string, period: Period, signal?: AbortSignal) =>
-    call<Mentions>('GET', `${base(site)}?period=${period}`, undefined, signal, true).then((r) => ({ ...r, mentions: r.mentions.map(known), driving: r.driving && known(r.driving) })),
+  list: (site: string, period: Period, signal?: AbortSignal) => call<Mentions>('GET', `${base(site)}?period=${period}`, undefined, signal, true),
   curves: (site: string, period: Period, signal?: AbortSignal) => call<Curves>('GET', `${base(site)}/curves?period=${period}`, undefined, signal, true),
-  detail: (site: string, id: number, signal?: AbortSignal) =>
-    call<Detail>('GET', `${base(site)}/${id}`, undefined, signal, true).then((r) => ({ ...r, mention: known(r.mention) })),
+  detail: (site: string, id: number, signal?: AbortSignal) => call<Detail>('GET', `${base(site)}/${id}`, undefined, signal, true),
   setWords: (site: string, keywords: string[]) => call<Words>('PUT', `${base(site)}/keywords`, { keywords }),
+  setRules: (site: string, rules: Rules) => call<Rules>('PUT', `${base(site)}/rules`, rules),
+  hidden: (site: string, signal?: AbortSignal) => call<{ mentions: Mention[] }>('GET', `${base(site)}/hidden`, undefined, signal, true),
+  lookAlike: (site: string, word: string) => call<LookAlike>('GET', `${base(site)}/lookalike?word=${encodeURIComponent(word)}`, undefined, undefined, true),
+  notAboutUs: (site: string, id: number) => call<Hidden>('POST', `${base(site)}/${id}/not-about-us`),
+  restore: (site: string, id: number) => call<{ hidden: boolean }>('POST', `${base(site)}/${id}/restore`),
 }

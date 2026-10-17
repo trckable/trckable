@@ -20,7 +20,7 @@ function Choice<T extends string>({ label, value, options, name, onPick }: { lab
 }
 
 /** The newest-first list with its source and period filters. */
-export function Feed({ list, curves, filter, period, onFilter, onPeriod, onOpen }: { list: Mention[]; curves: Record<string, number[]>; filter: Filter; period: Period; onFilter: (f: Filter) => void; onPeriod: (p: Period) => void; onOpen: (m: Mention) => void }) {
+export function Feed({ list, curves, filter, period, onFilter, onPeriod, onOpen, onHide }: { list: Mention[]; curves: Record<string, number[]>; filter: Filter; period: Period; onFilter: (f: Filter) => void; onPeriod: (p: Period) => void; onOpen: (m: Mention) => void; onHide?: (m: Mention) => void }) {
   const shown = filterOf(list, filter)
   return (
     <section className="mp-feed" aria-labelledby="mp-feed-h">
@@ -32,7 +32,7 @@ export function Feed({ list, curves, filter, period, onFilter, onPeriod, onOpen 
       {shown.length > 0 ? (
         <ul className="mp-list">
           {shown.map((m) => (
-            <FeedRow key={m.id} m={m} curve={curves[m.id]} onOpen={() => onOpen(m)} />
+            <FeedRow key={m.id} m={m} curve={curves[m.id]} onOpen={() => onOpen(m)} onHide={onHide && (() => onHide(m))} />
           ))}
         </ul>
       ) : (

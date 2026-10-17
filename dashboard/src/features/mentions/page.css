@@ -186,6 +186,7 @@
   color: var(--text-2);
   font-size: 12.5px;
   white-space: nowrap;
+  flex-wrap: wrap;
 }
 .mp-when {
   color: var(--text-3);
@@ -670,3 +671,20 @@
     border-radius: 16px 16px 0 0;
   }
 }
+
+/* Not about us, the hidden list and the notes that offer a way to keep the like of a mention out */
+.mp-card-top .mp-go + .mp-go { margin-left: 0; }
+.mp-confirmed { color: var(--accent-strong); }
+.mp-note { display: grid; gap: 8px; padding: 12px 16px; margin-block: 8px; border: 1px solid var(--border); border-radius: 12px; }
+.mp-note p { margin: 0; }
+.mp-note ul { margin: 0; padding-inline-start: 18px; }
+.mp-note-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.mp-hidden { margin-top: 16px; padding: 12px 16px; }
+.mp-hidden summary { cursor: pointer; }
+.mp-hidden ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.mp-hidden li { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.mp-hidden li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.mentions-rules { display: grid; gap: 12px; margin-top: 16px; }
+.mentions-rules h4 { margin: 0; }
+.mentions-rule { display: grid; gap: 6px; }
