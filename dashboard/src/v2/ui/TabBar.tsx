@@ -13,7 +13,7 @@ const ICON = {
   briefing: <path d="M6 3h9l4 4v14H6zM9 12h7M9 16h7M9 8h3" />,
 }
 
-export function TabBar({ value, onChange, labels }: { value: TabKey | null; onChange: (t: TabKey) => void; labels: Record<TabKey, string> }) {
+export function TabBar({ value, onChange, labels, hide }: { value: TabKey | null; onChange: (t: TabKey) => void; labels: Record<TabKey, string>; /** Tabs this page does not have (a shared link has no Live). */ hide?: TabKey[] }) {
   const tab = (k: TabKey) => (
     <button key={k} type="button" className={value === k ? 'on' : ''} aria-current={value === k ? 'page' : undefined} onClick={() => onChange(k)}>
       {k === 'explore' ? (
@@ -28,7 +28,7 @@ export function TabBar({ value, onChange, labels }: { value: TabKey | null; onCh
   )
   return (
     <nav className="tabbar" aria-label="Views">
-      {(['live', 'briefing', 'explore'] as const).map(tab)}
+      {(['live', 'briefing', 'explore'] as const).filter((k) => !hide?.includes(k)).map(tab)}
     </nav>
   )
 }

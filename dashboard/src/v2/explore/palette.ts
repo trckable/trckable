@@ -2,13 +2,18 @@
 // the page's own numbers suggest.
 import type { Report, Site } from '../../lib/api'
 import { countryName } from '../../lib/format'
+import { isShared } from '../../lib/me'
 import { navigate, setView } from '../../lib/url'
 import { sourceName } from '../briefing/model'
 import { switchTab } from '../../features/live/switchView'
 import { openExplore } from './open'
-import { ALL_TABS, sectionOf } from './sections'
+import { ALL_TABS, offered, sectionOf } from './sections'
 import { copy } from './copy'
 import { copy as pc } from './paletteCopy'
+import { copy as mc } from '../../features/milestones/copy'
+import { copy as bc } from '../../features/bounce/b'
+import { copy as kc } from '../../features/markers/copy'
+import { markersOn, setMarkers } from '../../features/markers/settings'
 import type { PaletteItem } from '../ui/Palette'
 
 const PERIODS: [string, string][] = [['today', 'Today'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days'], ['90d', 'Last 90 days']]
@@ -17,13 +22,17 @@ export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report
   const out: PaletteItem[] = []
   if (o.onAsk) out.push({ title: pc.ask, kind: pc.kinds.peek, group: pc.groups.ask, run: o.onAsk })
   // What the old Create menu made: a goal, a funnel (its steps are set in Explore), a note on the chart (the Briefing's sheet).
-  if (o.site && o.onGoal) out.push({ title: pc.newGoal, kind: pc.kinds.create, group: pc.groups.create, run: o.onGoal })
-  if (o.site) out.push({ title: pc.newFunnel, kind: pc.kinds.create, group: pc.groups.create, run: () => openExplore('funnels') })
-  if (o.site && o.here === 'briefing') out.push({ title: pc.newNote, kind: pc.kinds.create, group: pc.groups.create, run: () => window.dispatchEvent(new Event('trckable:note')) })
+  if (o.site && o.onGoal && !isShared()) out.push({ title: pc.newGoal, kind: pc.kinds.create, group: pc.groups.create, run: o.onGoal })
+  if (o.site && !isShared()) out.push({ title: pc.newFunnel, kind: pc.kinds.create, group: pc.groups.create, run: () => openExplore('funnels') })
+  if (o.site && o.here === 'briefing' && !isShared()) out.push({ title: pc.newNote, kind: pc.kinds.create, group: pc.groups.create, run: () => window.dispatchEvent(new Event('trckable:note')) })
   // The tables and the two views belong to a site; a page without one offers the sites and the periods only.
-  if (o.site) for (const t of ALL_TABS) out.push({ title: `${copy.title} · ${t in copy.sub ? copy.sub[t] : copy.names[sectionOf(t)][0]}`, kind: pc.kinds.table, group: copy.title, run: () => openExplore(t) })
+  if (o.site) for (const t of ALL_TABS.filter(offered)) out.push({ title: `${copy.title} · ${t in copy.sub ? copy.sub[t] : copy.names[sectionOf(t)][0]}`, kind: pc.kinds.table, group: copy.title, run: () => openExplore(t) })
+  // The chart's markers (the sources' pills) are shown or put away from here; the guide to leaving after one page opens from here too.
+  if (o.site && !isShared()) out.push({ title: kc.group, kind: pc.kinds.view, group: pc.groups.goTo, run: () => setMarkers(!markersOn()) })
+  if (o.site && !isShared()) out.push({ title: bc.label, kind: pc.kinds.view, group: pc.groups.goTo, run: () => window.dispatchEvent(new Event('trckable:bounce')) })
+  if (o.site && !isShared()) out.push({ title: mc.title, kind: pc.kinds.view, group: pc.groups.goTo, run: () => window.dispatchEvent(new Event('trckable:milestones')) })
   if (o.site) out.push(
-    { title: pc.goLive, kind: pc.kinds.view, group: pc.groups.goTo, run: () => void switchTab('live', o.here) },
+    ...(isShared() ? [] : [{ title: pc.goLive, kind: pc.kinds.view, group: pc.groups.goTo, run: () => void switchTab('live', o.here) }]),
     { title: pc.goBriefing, kind: pc.kinds.view, group: pc.groups.goTo, run: () => void switchTab('briefing', o.here) },
     { title: pc.refresh, kind: pc.kinds.action, group: pc.groups.goTo, run: () => window.dispatchEvent(new Event('trckable:refresh')) },
     { title: pc.clear, kind: pc.kinds.filter, group: pc.groups.goTo, run: () => setView({ filters: [], xf: undefined }) },

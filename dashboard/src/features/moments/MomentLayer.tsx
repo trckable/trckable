@@ -9,22 +9,18 @@
 // chart is first drawn.
 import { useEffect, useId, useMemo, useState } from 'react'
 import type { Bucket, Point, ReportQuery, Site } from '../../lib/api'
-import { fmtDay, todayIn } from '../../lib/dates'
-import { sameFilter } from '../../lib/filterSet'
-import { readView, setView } from '../../lib/url'
+import { fmtDay } from '../../lib/dates'
+import { readView } from '../../lib/url'
 import IncidentMarks from '../incidents/IncidentMarks'
 import MentionMarks from '../mentions/MentionMarks'
 import SourceMarkers from '../markers/SourceMarkers'
 import { SurgeBand } from '../signals/SurgeBand'
-import { rangeOf } from '../../lib/dashQuery'
 import { LANE_H } from '../../charts/plot'
-import { patchFor } from './apply'
 import { copy } from './copy'
 import { HIT, HIT_MS } from './focus'
 import { iconOf } from './kinds'
 import { MARK_EDGE, pickMarks, placePins, tipOf, type ChartGeo, type Mark } from './marks'
 import { openMark } from './open'
-import type { Pin } from './pins'
 import { settle } from './settle'
 import { useMoments } from './useMoments'
 import { say } from './words'
@@ -76,17 +72,8 @@ export default function MomentLayer(p: LayerProps) {
   useEffect(() => () => openMark.set(null), [])
   const placed = useMemo(() => placePins(pins ?? [], p.labels, p.bucket), [pins, p.labels, p.bucket])
   const marks = useMemo(() => pickMarks(placed, g.x, [g.x(0), g.w - MARK_EDGE]), [placed, g.w, p.labels.length]) // eslint-disable-line react-hooks/exhaustive-deps -- g.x changes with the width and the number of buckets, which are listed
-  /** Applies a pin to the address; `drop` is the pin it replaces, whose filter goes. */
-  const apply = (pin: Pin, drop?: Pin) => {
-    const view = readView(new URLSearchParams(location.search))
-    const today = todayIn(p.site.timezone)
-    const filters = view.filters.filter((f) => !drop?.filters.some((d) => sameFilter(d, f)))
-    setView(patchFor(pin, { filters, range: rangeOf(view, today), today, bucket: p.bucket }))
-  }
-  const click = (m: Mark) => {
-    apply(m.pin)
-    openMark.set({ pins: [m.pin, ...m.more], at: 0 })
-  }
+  // A marker opens its card; the card's "See it" is what narrows the page, so the chart under it stays as it is.
+  const click = (m: Mark) => openMark.set({ pins: [m.pin, ...m.more], at: 0 })
   // One thing at a time: with a card open, a marker is only lit by the pointer, never explained.
   const tip = tipOf(marks, shown, !!current)
   // The first marker also says what the markers are.
@@ -138,10 +125,7 @@ export default function MomentLayer(p: LayerProps) {
           series={p.series}
           money={fmt}
           onShare={p.onShare}
-          onPick={(at) => {
-            apply(current.pins[at], current.pins[current.at])
-            openMark.set({ pins: current.pins, at })
-          }}
+          onPick={(at) => openMark.set({ pins: current.pins, at })}
         />
       )}
       {tip && (

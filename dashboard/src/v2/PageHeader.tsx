@@ -40,6 +40,8 @@ export interface PageHeaderProps {
   /** A newer version of the product, when there is one: a small pill by the ghost. */
   update?: string
   onUpdate?: () => void
+  /** A shared link: whose numbers these are, in place of the ghost and the site menu; no Live, bell or person. */
+  identity?: ReactNode
 }
 
 /** The dot by "Tracking & script check": amber while the snippet is not found or nothing has arrived. */
@@ -95,7 +97,7 @@ export function PageHeader(p: PageHeaderProps) {
   return (
     <>
       <Header
-        logo={
+        logo={p.identity ? <div className="hd-id">{p.identity}</div> : (
           <>
             <Logo title={copy.allSites} onClick={() => navigate('/')} />
             {p.update && (
@@ -106,13 +108,13 @@ export function PageHeader(p: PageHeaderProps) {
               </button>
             )}
           </>
-        }
-        site={<SiteChip p={siteMenu} />}
-        views={here ? <SegmentedSwitch id="views" label={copy.view} value={here} onChange={(t) => void switchTab(t, here)} items={[{ value: 'live', label: copy.live, title: copy.liveTitle, dot: down ? 'down' : 'ok', count: online ?? undefined }, { value: 'briefing', label: copy.briefing, title: copy.briefingTitle }]} /> : null}
+        )}
+        site={p.identity ? null : <SiteChip p={siteMenu} />}
+        views={here && !p.identity ? <SegmentedSwitch id="views" label={copy.view} value={here} onChange={(t) => void switchTab(t, here)} items={[{ value: 'live', label: copy.live, title: copy.liveTitle, dot: down ? 'down' : 'ok', count: online ?? undefined }, { value: 'briefing', label: copy.briefing, title: copy.briefingTitle }]} /> : null}
         period={here === 'briefing' ? p.period : null}
         explore={<ExploreChip label={copy.explore} kbd="⌘K" onClick={exploreOpen} />}
         extras={slots.headerExtra}
-        bell={<Bell site={site} notices={notices} />}
+        bell={p.identity ? null : <Bell site={site} notices={notices} />}
         account={isShared() ? null : <AccountMenu site={site ?? undefined} alert={slots.accountAlert} />}
         keys={
           <>

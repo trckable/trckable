@@ -35,3 +35,6 @@ const subscribe = (fn: () => void) => {
 }
 
 export const useMarkers = (): boolean => useSyncExternalStore(subscribe, read, () => true)
+
+/** The setting now, for a menu that flips it. */
+export const markersOn = read

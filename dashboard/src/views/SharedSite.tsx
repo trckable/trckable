@@ -2,7 +2,7 @@
 // endpoint, with everything that writes gone. It is a lazy chunk, so nobody
 // signing in normally ever downloads it.
 import { useState } from 'react'
-import { Dashboard } from './Dashboard'
+import { SiteHost } from './SiteHost'
 import { Hints } from '../features/hints/HintsDoor'
 import { EmbedHeader, ShareHeader, SharePassword, ShareShell, useShare } from './Share'
 import { isEmbed } from '../lib/earlyStart'
@@ -31,7 +31,7 @@ export default function SharedSite() {
   if (info)
     return (
       <div className={isEmbed() ? 'app shared embed' : 'app shared'} style={accentVars(info.accent)}>
-        <Dashboard key={info.domain} site={asSite(info)} sites={[]} header={isEmbed() ? <EmbedHeader info={info} /> : <ShareHeader info={info} />} />
+        <SiteHost key={info.domain} site={asSite(info)} sites={[]} identity={isEmbed() ? <EmbedHeader info={info} /> : <ShareHeader info={info} />} />
         {!isEmbed() && <Hints />}
       </div>
     )

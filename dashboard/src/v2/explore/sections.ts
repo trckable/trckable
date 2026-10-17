@@ -1,18 +1,19 @@
 // Explore's ten sections in four groups, and the tables each one holds.
+import { isShared } from '../../lib/me'
 import type { FilterDim, Section, Tab } from './types'
 
 export type { Section, Tab } from './types'
 
-export const GROUPS: { key: 'traffic' | 'audience' | 'results' | 'site'; items: Section[] }[] = [
+const ALL_GROUPS: { key: 'traffic' | 'audience' | 'results' | 'site'; items: Section[] }[] = [
   { key: 'traffic', items: ['overview', 'pages', 'sources'] },
   { key: 'audience', items: ['places', 'tech'] },
   { key: 'results', items: ['results', 'sales'] },
   { key: 'site', items: ['speed', 'mentions', 'links', 'ai'] },
 ]
 
-const SECTIONS: Section[] = GROUPS.flatMap((g) => g.items)
+const SECTIONS: Section[] = ALL_GROUPS.flatMap((g) => g.items)
 
-export const TABS: Record<Section, Tab[]> = {
+const EVERY: Record<Section, Tab[]> = {
   overview: ['overview', 'highlights', 'overtime', 'hours'],
   pages: ['pages', 'exits', 'groups', 'sells'],
   sources: ['sources', 'referrers', 'utm', 'utmsource', 'medium', 'search', 'earners'],
@@ -26,12 +27,25 @@ export const TABS: Record<Section, Tab[]> = {
   ai: ['ai'],
 }
 
-export const sectionOf = (t: Tab): Section => SECTIONS.find((s) => TABS[s].includes(t)) ?? 'overview'
+/** What a shared link can read: the report alone (the public endpoint answers nothing else), so its tables and the payments the report carries. */
+const SHARED: Tab[] = ['overview', 'pages', 'sources', 'referrers', 'utm', 'countries', 'devices', 'browsers', 'sales', 'earners']
 
-export const ALL_TABS: Tab[] = SECTIONS.flatMap((s) => TABS[s])
+/** Whether a table is offered here: all of them, but on a shared link only those the report can fill. */
+export const offered = (t: Tab): boolean => !isShared() || SHARED.includes(t)
+
+/** A section's tables, as offered here. */
+export const TABS = Object.fromEntries(SECTIONS.map((s) => [s, []])) as unknown as Record<Section, Tab[]>
+for (const sec of SECTIONS) Object.defineProperty(TABS, sec, { get: () => EVERY[sec].filter(offered), enumerable: true })
+
+/** The groups of sections, those that have a table to offer. */
+export const groups = () => ALL_GROUPS.map((g) => ({ ...g, items: g.items.filter((sec) => TABS[sec].length > 0) })).filter((g) => g.items.length > 0)
+
+export const sectionOf = (t: Tab): Section => SECTIONS.find((s) => EVERY[s].includes(t)) ?? 'overview'
+
+export const ALL_TABS: Tab[] = SECTIONS.flatMap((s) => EVERY[s])
 
 /** Whether an address's word for a table (?x=pages) is one. */
-export const isTab = (v: string | undefined): v is Tab => !!v && (ALL_TABS as string[]).includes(v)
+export const isTab = (v: string | undefined): v is Tab => !!v && (ALL_TABS as string[]).includes(v) && offered(v as Tab)
 
 export const FILTER_DIMS: FilterDim[] = ['referrer', 'page', 'country', 'device']
 

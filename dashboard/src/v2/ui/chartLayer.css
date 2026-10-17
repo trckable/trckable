@@ -1,0 +1,8 @@
+/* The chart's layer: what is drawn over the plot (moment markers, source pills, the busy band) sits in the chart's own box. */
+.mk .chlay{position:relative}
+.mk .chlay-in{position:absolute;inset:26px 0 0;pointer-events:none}
+.mk .chlay-in button,.mk .chlay-in a,.mk .chlay-in [role=tooltip],.mk .chlay-in .moment-mark,.mk .chlay-in .sm-mark,.mk .chlay-in .sm-pop{pointer-events:auto}
+
+/* Replay as a story: its rail lines up with the plot, whose left edge is the axis's width. */
+.mk .chwrap{--plot-l:36px}
+@media (max-width:500px){.mk .chwrap{--plot-l:8px}}

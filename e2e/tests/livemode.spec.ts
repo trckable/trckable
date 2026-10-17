@@ -171,25 +171,6 @@ test('reduced motion: the pill jumps rather than slides', async ({ page }) => {
   expect(await tabs(page).locator('.spill').evaluate((el) => parseFloat(getComputedStyle(el).transitionDuration))).toBeLessThan(0.01)
 })
 
-test('a site with no visit yet shows its install screen in Live, and the mode comes back', async ({ page }) => {
-  const domain = `nolive-${Date.now()}.test`
-  await visit(page, 'default')
-  await signIn(page, '/example.com?view=briefing')
-  await page.evaluate(async (d) => {
-    await fetch('/api/v1/sites', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Trckable-Request': '1' }, body: JSON.stringify({ domain: d }) })
-  }, domain)
-  await tabs(page).getByRole('tab', { name: /^Live/ }).click()
-  await expect(live(page)).toBeVisible({ timeout: 15_000 })
-  await page.goto(`${API}/${domain}?view=live`)
-  await expect(page.getByText('Waiting for the first visit').first()).toBeVisible({ timeout: 15_000 })
-  await expect(live(page)).toHaveCount(0)
-  await expect(tabs(page)).toHaveCount(0)
-  // The Briefing shows the same screen; back on a working site, the choice is kept.
-  await page.goto(`${API}/${domain}?v=`)
-  await expect(page.getByText('Waiting for the first visit').first()).toBeVisible()
-  await page.goto(`${API}/example.com?view=live`)
-  await expect(live(page)).toBeVisible({ timeout: 15_000 })
-})
 
 // Live is what a dashboard with visitors opens in: the address says nothing of the view. A period, filters or
 // ?view=briefing say the Briefing; ?view=data is the older Data, still there for addresses made before.

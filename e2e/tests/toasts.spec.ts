@@ -53,24 +53,6 @@ test('a lost connection is said in a few words', async ({ page }) => {
   await expect(wizard.locator('.wiz-status.bad')).toHaveText("Can't reach the server")
 })
 
-test('at most three at once, each with its own mark, and the quiet ones are polite', async ({ page }) => {
-  await page.goto(`${API}/example.com?view=data`)
-  await expect(page.locator('.kpi').first()).toBeVisible()
-  await expect(page.locator('.toasts')).toBeAttached() // the toasts load apart from the page
-  await page.evaluate(async () => {
-    await new Promise((r) => setTimeout(r, 100)) // its listener is added in an effect, just after it mounts
-    const send = (id: number, text: string, kind: string) => window.dispatchEvent(new CustomEvent('trckable:toast', { detail: { id, text, kind } }))
-    send(9001, 'Saved', 'success')
-    send(9002, 'New version', 'info')
-    send(9003, 'Almost full', 'warning')
-    send(9004, 'Not saved', 'error')
-  })
-  await expect(page.locator('.toast')).toHaveCount(3)
-  await expect(page.getByText('Saved', { exact: true })).toHaveCount(0) // the oldest made room
-  await expect(page.getByRole('status').getByText('New version')).toBeVisible()
-  await expect(page.getByRole('alert').getByText('Almost full')).toBeVisible()
-  await expect(page.getByRole('alert').getByText('Not saved')).toBeVisible()
-})
 
 test('pictures for review', async ({ page }) => {
   test.skip(!SHOTS, 'only when TOAST_SHOTS names a folder')

@@ -1,13 +1,15 @@
 // The period's visitors against the usual band, drawn the way the walkthrough draws it: a grey line, lit where it rose
 // above the band (and red where it fell under), the band in soft white, the hours still to come shaded, and a dot that
 // pulses at "now". The line never runs into hours that have not happened. Hovering reads one point in the line above.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Bucket } from '../../lib/api'
 import { fmtInt } from '../../lib/format'
 import { copy } from '../briefing/copy'
 import { niceStep } from '../briefing/geometry'
 import type { Band, Judged } from '../briefing/usual'
+import type { ChartGeo } from '../../features/moments/marks'
 import { useGlide } from './glide'
+import './chartLayer.css'
 
 export interface ChartPoint {
   /** Where on the axis (in buckets from its start). */
@@ -58,6 +60,9 @@ export interface ChartIn {
   sales?: { at: number; text: string; neg?: boolean }[]
 }
 
+/** The layer starts this far down the chart, under the line of words that sits on its top edge. */
+const LAYER_TOP = 26
+
 const DOT = { up: '#c6ff3a', dn: '#ff6b6b', none: '#ececee' }
 
 /** The text over the chart: the standing note, or the point under the pointer. */
@@ -78,7 +83,8 @@ export function chartNote(c: ChartIn, at: number | null, down = false, short = f
   return copy.withinBand
 }
 
-export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt: (i: number | null) => void }) {
+/** `layer` draws over the plot, in pixels of the chart's own box: the moments' markers, the sources' pills, the busy band. */
+export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | null; onAt: (i: number | null) => void; layer?: (g: ChartGeo) => ReactNode }) {
   const box = useRef<SVGSVGElement>(null)
   const [size, setSize] = useState({ W: 900, H: 180 })
   useEffect(() => {
@@ -94,7 +100,8 @@ export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt
   const ph = W < 500
   const L = ph ? 8 : 36
   const Rr = ph ? 8 : 10
-  const T = ph ? 18 : 30
+  // With a layer over the plot, its markers have a lane of their own above it.
+  const T = (ph ? 18 : 30) + (layer ? LAYER_TOP + 6 : 0)
   const B = H - 22
   const span = Math.max(1, ph ? c.full : c.span)
   const X = (i: number) => L + ((W - L - Rr) * (i + 0.5)) / span
@@ -120,7 +127,7 @@ export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt
   // On a phone a label that would run off the edge is written to the left of its line.
   const flip = ph && rise !== null && X(rise.p.i) + 6 + rise.text.length * 8 > W - Rr - 4
   const ticks = c.axis.filter((p) => p.i < span && p.tick && p.i % every === 0)
-  return (
+  const chart = (
     <svg
       ref={box}
       className="chart"
@@ -227,5 +234,12 @@ export function HeroChart({ c, at, onAt }: { c: ChartIn; at: number | null; onAt
         </>
       )}
     </svg>
+  )
+  if (!layer) return chart
+  return (
+    <div className="chlay">
+      {chart}
+      <div className="chlay-in">{layer({ x: X, y: (v: number) => Y(v) - LAYER_TOP, vals: pts.map((p) => p.v), w: W })}</div>
+    </div>
   )
 }

@@ -1,10 +1,11 @@
 // Settings → Sharing → a link to this site's numbers for someone with
 // no account. What it may show is decided on the server: hiding revenue means
 // the figure is never asked for, not that the page leaves it out.
-import { Link2, Plus } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Link2, Plus, Share2 } from 'lucide-react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Info } from '../components/Info'
 import { copy, nameOf } from '../features/sharelinks/copy'
+import { copy as cardCopy } from '../features/share/copy'
 import { Created } from '../features/sharelinks/Created'
 import { LinkRow } from '../features/sharelinks/LinkRow'
 import { NewLink, type Made } from '../features/sharelinks/NewLink'
@@ -12,10 +13,14 @@ import { type Share, type Site, more } from '../lib/apiMore'
 import { isViewer } from '../lib/me'
 import '../features/sharelinks/sharelinks.css'
 
+// The card for a post, and the link's own look (logo, colour, domain): a dialog, fetched when it is asked for.
+const ShareDialog = lazy(() => import('../features/share/ShareDialog'))
+
 export function Shares({ site }: { site: Site }) {
   const [list, setList] = useState<Share[] | null>(null)
   const [making, setMaking] = useState(false)
   const [made, setMade] = useState<Made | null>(null)
+  const [card, setCard] = useState(false)
   const readOnly = isViewer()
   const load = () => more.shares(site.id).then((r) => setList(r.shares ?? [])).catch(() => setList([]))
   useEffect(() => {
@@ -34,6 +39,12 @@ export function Shares({ site }: { site: Site }) {
       <div className="card-head">
         <h2>{copy.title}</h2>
         <Info text={copy.tip} />
+        {!readOnly && (
+          <button type="button" className="btn ghost sl-card-btn" onClick={() => setCard(true)}>
+            <Share2 size={15} strokeWidth={1.75} aria-hidden="true" />
+            {cardCopy.title}
+          </button>
+        )}
         {!readOnly && !making && !empty && (
           <button type="button" className="btn primary sl-new-btn" onClick={open}>
             <Plus size={15} strokeWidth={2} aria-hidden="true" />
@@ -85,6 +96,11 @@ export function Shares({ site }: { site: Site }) {
             />
           ))}
         </ul>
+      )}
+      {card && (
+        <Suspense fallback={null}>
+          <ShareDialog site={site} sites={[site]} onClose={() => setCard(false)} />
+        </Suspense>
       )}
     </section>
   )

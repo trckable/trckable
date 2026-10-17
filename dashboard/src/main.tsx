@@ -9,7 +9,7 @@ import { navigate, useLocation } from "./lib/url"; import "./lib/legacyPaths";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
 import "./styles.css";
 import { lazyLoad, whenIdle } from "./lib/lazyLoad";
-import { Dashboard } from "./views/Dashboard";
+import { SiteHost } from "./views/SiteHost";
 import { applySavedTheme } from "./lib/theme";
 import { NO_SITES, useLiveSites } from "./lib/useLiveSites";
 import { openAddSite, useAccountTab, useAddSite } from "./lib/account";
@@ -194,12 +194,7 @@ function App() {
   else
     page = (
       <>
-        <Dashboard
-          key={site.id}
-          site={site}
-          sites={boot.sites}
-          header={header}
-        />
+        <SiteHost key={site.id} site={site} sites={boot.sites} />
         {/* Settings open over the dashboard they belong to. */}
         {settingsOpen?.site === site.id && (
           <Suspense fallback={null}>

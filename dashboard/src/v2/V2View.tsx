@@ -1,6 +1,6 @@
 // Live and the Briefing: the walkthrough's header, and one of its two screens under it. This replaces the dashboard's
 // own header and control rows for these two views; Explore (the full numbers) opens over either as a panel.
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { tag } from '../i18n'
 import { lazyLoad, whenIdle } from '../lib/lazyLoad'
 import { setView, type ViewState } from '../lib/url'
@@ -46,6 +46,10 @@ interface V2Props {
   /** Open Peek; absent where the person cannot ask. */
   onAsk?: () => void
   live: LiveProps
+  /** A shared link's header (whose numbers these are): the page then has no Live and nothing that writes. */
+  identity?: ReactNode
+  /** A line over the screen: the busy moment the page was opened on. */
+  top?: ReactNode
 }
 
 function vsWords(day: boolean, weekday: string, view: ViewState, range: Range): string | undefined {
@@ -92,6 +96,7 @@ export function V2View(p: V2Props) {
         tab={here}
         data={p.data}
         onAsk={p.onAsk}
+        identity={p.identity}
         onGoal={p.onGoal}
         period={
           here === 'briefing' && !p.waiting ? (
@@ -116,12 +121,13 @@ export function V2View(p: V2Props) {
         }
       />
       <main id="main" className="vfade">
+        {p.top}
         {p.waiting ? <FreshSlot site={p.site} visits={p.live.stream.visits} /> : screen}
       </main>
       {opened && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} money={p.money} onGoal={p.onGoal} />}
       <AiHost site={p.site} />
       <MkToastHost />
-      <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />
+      <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} hide={p.identity ? ['live'] : undefined} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />
     </div>
   )
 }

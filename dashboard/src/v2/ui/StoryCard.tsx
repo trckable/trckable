@@ -3,6 +3,9 @@
 // walkthrough's own.
 import { Fragment, type ReactNode } from 'react'
 import { fmtInt } from '../../lib/format'
+import { isShared } from '../../lib/me'
+import type { Verified } from '../../lib/api'
+import { CardSeal } from '../../features/verified/SourceChip'
 import { Ico } from './icons'
 import { Spark } from './KpiCard'
 import { Rng } from './RangeBar'
@@ -141,6 +144,8 @@ export interface CardCtx {
   onHow: (s: Story) => void
   /** The card the keyboard is on. */
   focused: string | null
+  /** What proves the site's numbers: the card that rests on a source says so, in a small mark. */
+  verified?: Verified
 }
 
 const doneLabel: Record<Act['k'], string> = { set: copy.alertSet, copy: copy.copiedDone, goal: copy.goalDone, x: '' }
@@ -150,10 +155,12 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
   const dn = c.done(s)
   return (
     <div className="ic-f">
-      <button type="button" className={`gh${w ? ' on' : ''}`} data-watch="1" title={copy.watchTitle} onClick={() => c.onWatch(s)}>
-        {w ? copy.watching : copy.watch}
-      </button>
-      {s.act && (
+      {!isShared() && (
+        <button type="button" className={`gh${w ? ' on' : ''}`} data-watch="1" title={copy.watchTitle} onClick={() => c.onWatch(s)}>
+          {w ? copy.watching : copy.watch}
+        </button>
+      )}
+      {s.act && !isShared() && (
         <button type="button" className={`xb cact${dn ? ' done' : ''}`} data-ca="1" onClick={() => c.onAct(s)}>
           {dn ? doneLabel[s.act.k] || copy.doneMark : s.act.t}
         </button>
@@ -221,6 +228,7 @@ export function Card({ s, wide, c }: { s: Story; wide: boolean; c: CardCtx }) {
       <Visual s={s} />
       <div className="ic-w">
         <span>{s.why}</span>
+        <CardSeal verified={c.verified} topic={s.key} />
       </div>
       <Foot s={s} c={c} />
       <How s={s} />

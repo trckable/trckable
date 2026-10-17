@@ -18,7 +18,12 @@ import { useNotes } from '../../features/notes/useNotes'
 import { addDays } from '../../lib/dates'
 import { CardList } from '../ui/StoryCard'
 import { Hero } from '../ui/HeroCard'
-import { HeroChart, chartNote } from '../ui/DayChart'
+import { chartNote } from '../ui/DayChart'
+import { ChartBlock } from './ChartBlock'
+import { fmtInt as fmtN } from '../../lib/format'
+import { useStoryReplay } from './useStoryReplay'
+import { BounceNote } from './BounceNote'
+import { PaceFoot } from './PaceFoot'
 import { KeyHint } from '../ui/KeyHint'
 import { Kcs } from '../ui/KpiCard'
 import { MailRow } from '../ui/MailRow'
@@ -127,6 +132,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const lock = useCardLock([site.id, period, range.from, range.to].join('|'), parts?.stories.filter((x) => !rv.held(x)) ?? [])
   const keyed = lock.known
   useBriefingKeys({ cards: (ui.all ? keyed : keyed.slice(0, 4)).map((s) => s.key), ui, open: (k) => ui.setOpen(keyed.find((s) => s.key === k) ?? null) })
+  const storyR = useStoryReplay(cur0?.series.length ?? 0)
   if (!cur || !parts) return loading || !data ? <BriefingSkeleton site={site.id} label={copy.loading} /> : null
   const label = unit === 'today' ? `${presetById('today')?.label ?? 'Today'} · ${dayWords(range.to)}` : (presetById(period)?.label ?? fmtRange(range, today))
   const before = copy.before[unit]
@@ -169,7 +175,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const shown = lock.known.slice(0, 4)
   rememberCards(site.id, shown.map((x) => x.key))
   const rest = lock.known.slice(4)
-  const act = nextStep({ site, cur, stories, top, downNow })
+  const act = isShared() ? null : nextStep({ site, cur, stories, top, downNow })
   const setups = setupRows({ site, cur, can: setupState.can, noSearch: setupState.noSearch, noAlerts: setupState.noAlerts, onGoal })
   const heroWhy = stories.find((x) => x.key === 'uptime')?.cause ?? stories.find((x) => x.key === 'sources')?.cause ?? (usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : null)
   if (kcs[0] && heroWhy && !stories.find((x) => x.key === 'uptime')) kcs[0].why = usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : undefined
@@ -185,6 +191,9 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const headline = `${say.lead} ${say.long.map((p) => p.t).join('')}`
   const watchRows = watchRowsOf(site.id, wset, stories)
   const canNote = !isViewer() && !isShared()
+  const replayStory = /* any period but today plays as a story */ pts.length > 1 && v > 0 && storyR.phase === 'off' ? storyR.start : undefined
+  const replayToday = !rv.r.on && end >= 60 && v > 0 ? rv.r.open : undefined
+  const chartBlock = { site, range, chart, at, onAt: setAt, story: storyR, series: cur.series.slice(0, pts.length), bucket: data?.bucket ?? 'day', money: moneyIn, total: fmtN(v), source: top?.value, note: chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia('(max-width: 500px)').matches)), down: uptime.verdict === 'down', notes: notes.notes.length, onNotes: () => ui.setSheet('notes') }
   const body = (
 
     <div className="mk mk-body">
@@ -199,24 +208,14 @@ export default function Briefing({ site, data: page, loading, period, range, mon
           onPeriod={() => document.querySelector<HTMLElement>('.mk-pill, .range-picker, .btn.range')?.click()}
           moments={mo}
           why={heroWhy}
-          onReplay={unit === 'today' && !rv.r.on && end >= 60 && v > 0 ? rv.r.open : undefined}
+          onReplay={unit === 'today' ? replayToday : replayStory}
           chart={
             empty ? null : (
-              <div className="chwrap">
-                <div className="ch-top">
-                  <span className="mk-quiet" id="chNote" style={uptime.verdict === 'down' ? { color: 'var(--mk-red)' } : undefined}>
-                    {chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia('(max-width: 500px)').matches))}
-                  </span>
-                  <button type="button" className="gh nbtn" data-info="notes" onClick={() => ui.setSheet('notes')}>
-                    {copy.noteBtn(notes.notes.length)}
-                  </button>
-                </div>
-                <HeroChart c={chart} at={at} onAt={setAt} />
-              </div>
+              <ChartBlock {...chartBlock} />
             )
           }
         />
-        {!empty && <Kcs items={kcs} />}
+        {!empty && <Kcs items={kcs} foot={{ people: <PaceFoot site={site.id} today={today} live={range.to === today} /> }} />}
         <div className="npw">
           {lock.queued.length > 0 && (
             <button type="button" className="newpill" onClick={lock.release}>
@@ -235,6 +234,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
         {!empty && <Calm cards={stories.length > 0} paused={downNow} learning={learning} names={calmTopics(stories, !setupState.noSearch && setupState.can)} onExplore={() => goExplore()} />}
         <Setups rows={setups} />
         {act && <Act text={act.text} rest={act.rest} label={act.label} onAct={act.run} />}
+        <BounceNote site={site} range={range} />
         {!empty && canNote && <MailRow on={ui.mail} headline={headline} onPreview={() => ui.setSheet('mail')} onManage={() => openSettings(site, 'alerts')} onToggle={ui.toggleMail} />}
         {ui.hint && <KeyHint onHide={ui.hideHint} />}
       </div>

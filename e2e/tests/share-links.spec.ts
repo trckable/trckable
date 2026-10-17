@@ -204,26 +204,26 @@ test('a shared link keeps its address: a reload goes back in, a password link wi
   expect(first!.headers()['referrer-policy']).toBe('no-referrer')
   await tab.getByLabel('Password').fill('phrase phrase phrase')
   await tab.getByRole('button', { name: 'Open' }).click()
-  await expect(tab.locator('.header')).toBeVisible()
+  await expect(tab.locator('.hd')).toBeVisible()
   expect(tab.url()).toBe(locked)
-  // One row: the name on the left, the period and ⋯ on the right, centred together.
+  // One row: the name on the left, the period beside it, centred together.
   const mid = async (sel: string) => {
     const b = (await tab.locator(sel).first().boundingBox())!
     return b.y + b.height / 2
   }
-  expect(Math.abs((await mid('.header .share-who')) - (await mid('.header .ctl-see')))).toBeLessThanOrEqual(8)
+  expect(Math.abs((await mid('.hd .share-who')) - (await mid('.hd .pill')))).toBeLessThanOrEqual(8)
   // The site's own mark comes first, on the same line as its name.
-  const mark = (await tab.locator('.header .share-id .site-mark').boundingBox())!
-  const name = (await tab.locator('.header .share-who b').boundingBox())!
+  const mark = (await tab.locator('.hd .share-id .site-mark').boundingBox())!
+  const name = (await tab.locator('.hd .share-who b').boundingBox())!
   expect(mark.x + mark.width).toBeLessThanOrEqual(name.x)
   expect(Math.abs(mark.y + mark.height / 2 - (name.y + name.height / 2))).toBeLessThanOrEqual(12)
 
   // A reload is let in by its session; another link does not borrow it.
   await tab.reload()
-  await expect(tab.locator('.header .share-who')).toContainText('Locked')
+  await expect(tab.locator('.hd .share-who')).toContainText('Locked')
   expect(tab.url()).toBe(locked)
   await tab.goto(plain)
-  await expect(tab.locator('.header .share-who')).toContainText('Plain')
+  await expect(tab.locator('.hd .share-who')).toContainText('Plain')
   expect(tab.url()).toBe(plain)
   // The session is now the plain link's: the locked one asks again.
   await tab.goto(locked)

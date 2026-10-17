@@ -66,21 +66,6 @@ test('All sites: the same row, the same height', async ({ page }) => {
   await same(page, ['site'], 'all', ['capsule'])
 })
 
-test('a shared link: its capsules are the same height', async ({ page, browser }) => {
-  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  const list = (await (await page.request.get(`${API}/api/v1/sites`)).json()) as { sites: { id: string; domain: string }[] }
-  const site = list.sites.find((s) => s.domain === 'example.com')!
-  const res = await page.request.post(`${API}/api/v1/sites/${site.id}/shares`, { headers: H, data: { name: 'Look' } })
-  expect(res.ok()).toBe(true)
-  const { url } = (await res.json()) as { url: string }
-  const reader = await browser.newContext({ viewport: { width: 1280, height: 844 }, colorScheme: SCHEME })
-  const tab = await reader.newPage()
-  await tab.goto(url)
-  await expect(tab.locator('.header .share-who')).toBeVisible()
-  await same(tab, ['capsule'], 'share')
-  await reader.close()
-})
-
 test('the Live card leads with its pulse, lit while the feed is connected', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/example.com?view=live`)

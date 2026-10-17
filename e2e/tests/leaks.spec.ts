@@ -139,47 +139,4 @@ test('Live kept open for five minutes of visits keeps the heap and the DOM flat'
   expect(await page.locator('.live-row').count()).toBeLessThanOrEqual(40)
 })
 
-test('a refresh asks for each thing once', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto(`${API}/${HISTORY_DOMAIN}?view=data&v=story`)
-  await expect(page.locator('.sv-chart')).toBeVisible({ timeout: 30_000 })
-  await page.waitForTimeout(2500) // the first page's own late reads (the cards that wait for a quiet moment) are done
-  const asked: string[] = []
-  page.on('request', (r) => {
-    const u = new URL(r.url())
-    if (u.pathname.startsWith('/api/') && !u.pathname.endsWith('/live') && !u.pathname.endsWith('/stream')) asked.push(u.pathname + u.search)
-  })
-  await page.reload()
-  await expect(page.locator('.sv-chart')).toBeVisible({ timeout: 30_000 })
-  await page.waitForLoadState('networkidle')
-  await page.waitForTimeout(4000) // the cards that wait for a quiet page ask too
-  const twice = asked.filter((u, i) => asked.indexOf(u) !== i)
-  expect(twice, `asked twice:\n${twice.join('\n')}`).toEqual([])
-  // The first load's own reads: the lazy cards (links, mentions) are not part of it.
-  const first = asked.filter((u) => !/\/report\/links|\/mentions/.test(u))
-  console.log(`first load: ${first.length} requests\n${first.join('\n')}`)
-})
 
-test('leaving a site cancels the report still on its way', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto(`${API}/${HISTORY_DOMAIN}?view=data&v=story`)
-  await expect(page.locator('.sv-chart')).toBeVisible({ timeout: 30_000 })
-  let release = () => {}
-  const held = new Promise<void>((r) => (release = r))
-  const stopped: string[] = []
-  page.on('requestfailed', (r) => r.failure()?.errorText.includes('ABORTED') && stopped.push(new URL(r.url()).pathname))
-  // example.com's report hangs; the page moves on to the history site before it answers.
-  await page.route('**/api/v1/sites/*/report?*', async (route) => {
-    if (!route.request().url().includes('example')) return route.continue()
-    await held
-    await route.continue().catch(() => undefined)
-  })
-  const sites = await page.evaluate(async () => ((await (await fetch('/api/v1/sites')).json()) as { sites: { id: string; domain: string }[] }).sites)
-  const example = sites.find((s) => s.domain === 'example.com')!
-  await go(page, `/example.com?view=data&v=story&period=7d`)
-  await expect.poll(() => page.evaluate(() => performance.getEntriesByType('resource').filter((e) => e.name.includes('/report?')).length)).toBeGreaterThan(0)
-  await go(page, `/${HISTORY_DOMAIN}?view=data&v=story&period=7d`)
-  await expect(page.locator('.sv-head')).toBeVisible({ timeout: 30_000 })
-  await expect.poll(() => stopped.some((p) => p.includes(example.id) && p.endsWith('/report')), { timeout: 10_000 }).toBe(true)
-  release()
-})

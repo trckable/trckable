@@ -3,6 +3,7 @@ import { XEmpty, XSec, XSub } from '../../ui/XBits'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import { Lock } from './Lock'
+import { SourceChip } from '../../../features/verified/SourceChip'
 import type { Sale, Sales as Model } from '../types'
 
 const KINDS = ['', 'new', 'upgrade', 'renewal', 'refund'] as const
@@ -33,7 +34,13 @@ export function Sales({ x, d }: { x: XCtx; d: Model }) {
   return (
     <>
       <XSub label={copy.kindLabel} attr="xkind" value={x.kind} items={KINDS.map((k) => ({ key: k, label: copy.kinds[k || 'all'] }))} onPick={x.setKind} />
-      <XSec a={copy.saleCount(list.length)} b={`${x.money(net)} ${copy.net}`} />
+      <XSec a={copy.saleCount(list.length)} b={
+          <>
+            {`${x.money(net)} ${copy.net}`}
+            <SourceChip verified={x.site.verified} slot="revenue" />
+          </>
+        }
+      />
       {list.length === 0 ? (
         <XEmpty title={copy.emptyKind} hint={copy.emptyKindHint}>
           {x.kind && (
