@@ -1,6 +1,6 @@
 // The period, as the header says it ("Today · Fri 16 Oct", and what it is set against), and its menu: five periods, More,
 // the comparison, and a calendar for custom dates. The menu is a sheet from the bottom on a phone.
-import { useRef, useState } from 'react'
+import { useRef, useState, type KeyboardEvent } from 'react'
 import { bucketsFor, diffDays, type ISODate } from '../../lib/dates'
 import { rangeWords } from '../dayWords'
 import { copy } from '../copy'
@@ -37,6 +37,8 @@ export interface PeriodChipProps {
   /** How the chart is cut (absent = trckable picks), and a change of it. */
   bucket?: Bucket
   onBucket?: (b?: Bucket) => void
+  /** Set while the page is on anything but today: the × beside the period, and Esc on it, go back to today. */
+  onReset?: () => void
   /** The unit the chart is cut in for the chosen dates ("by hour", "by day"). */
   grain: (from: ISODate, to: ISODate) => string
 }
@@ -47,6 +49,12 @@ export function PeriodChip(p: PeriodChipProps) {
   useTopLayerWhen(open, menu)
   const [cal, setCal] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
+  // Esc on the period, or on its ×, goes back to today (while its menu is shut: there Esc shuts the menu).
+  const esc = (e: KeyboardEvent) => {
+    if (e.key !== 'Escape' || open || !p.onReset) return
+    e.preventDefault()
+    p.onReset()
+  }
   const opt = (o: PeriodOption) => (
     <button
       key={o.id}
@@ -76,10 +84,11 @@ export function PeriodChip(p: PeriodChipProps) {
     { v: 'custom', t: 'Custom' },
   ]
   return (
-    <div className="pwrap" ref={attach}>
+    <div className={`pwrap${p.onReset ? ' set' : ''}`} ref={attach}>
       <button
         type="button"
         id="perBtn"
+        onKeyDown={esc}
         className="pill"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -91,6 +100,13 @@ export function PeriodChip(p: PeriodChipProps) {
         <span>{p.label}</span>
         {p.vs && <span className="vs hide-s">{p.vs}</span>}
       </button>
+      {p.onReset && (
+        <button type="button" className="pill-x" onKeyDown={esc} aria-label={copy.backToToday} title={copy.backToToday} onClick={p.onReset}>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+            <path d="M2 2l6 6M8 2 2 8" />
+          </svg>
+        </button>
+      )}
       <div ref={menu} className={`mk-menu pmenu${open ? ' on' : ''}${cal ? ' cal' : ''}`} id="perMenu">
         {open && cal && (
           <Calendar

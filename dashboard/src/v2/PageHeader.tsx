@@ -79,12 +79,12 @@ export function PageHeader(p: PageHeaderProps) {
     onPick: (id: string) => (id === '*' ? navigate('/') : navigate('/' + encodeURIComponent(p.sites.find((s) => s.id === id)?.domain ?? ''))),
     footer: site
       ? [
-          { key: 'install', label: copy.track, dot: tracking(site), run: () => openSettings(site, 'install') },
           { key: 'add', label: copy.addSite, run: openAddSite },
-          { key: 'share', label: copy.share, run: () => openSettings(site, 'sharing') },
-          { key: 'status', label: copy.statusPage, run: () => navigate(`/${encodeURIComponent(site.domain)}/incidents`) },
-          { key: 'widgets', label: copy.widgets, run: () => openSettings(site, 'widgets') },
           { key: 'settings', label: copy.settings, run: () => openSettings(site, 'site') },
+          { key: 'install', label: copy.track, dot: tracking(site), run: () => openSettings(site, 'install'), more: true },
+          { key: 'share', label: copy.share, run: () => openSettings(site, 'sharing'), more: true },
+          { key: 'status', label: copy.statusPage, run: () => navigate(`/${encodeURIComponent(site.domain)}/incidents`), more: true },
+          { key: 'widgets', label: copy.widgets, run: () => openSettings(site, 'widgets'), more: true },
         ].filter((f) => !viewer || f.key === 'status')
       : [{ key: 'add', label: copy.addSite, run: openAddSite }].filter(() => !viewer),
     workspace: slots.workspace,

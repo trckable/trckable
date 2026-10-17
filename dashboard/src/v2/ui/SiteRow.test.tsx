@@ -9,7 +9,7 @@ import { SiteRow } from './SiteRow'
 const NOW = Math.floor(Date.now() / 1000)
 const site = (o: Partial<Site> = {}): Site => ({ id: 's1', domain: 'example.com', name: 'Example', timezone: 'UTC', currency: 'USD', proxy_key: '', last_event_at: NOW - 60, ...o })
 const noop = () => {}
-const row = (s: Site, online = 0, today?: number) => renderToStaticMarkup(<SiteRow site={s} place={{ kind: 'rest' }} on={false} arrange={null} online={online} today={today} onPick={noop} />)
+const row = (s: Site, today?: number) => renderToStaticMarkup(<SiteRow site={s} place={{ kind: 'rest' }} on={false} arrange={null} today={today} onPick={noop} />)
 
 // A row holds no state, so it can be called as a plain function and its element tree walked for handlers.
 function find(node: ReactNode, test: (e: ReactElement<Record<string, unknown>>) => boolean): ReactElement<Record<string, unknown>> | undefined {
@@ -24,20 +24,23 @@ function find(node: ReactNode, test: (e: ReactElement<Record<string, unknown>>) 
 }
 
 describe('a site in the list', () => {
-  it('shows who is on it now, and today in its tooltip', () => {
-    const html = row(site(), 3, 1284)
-    expect(html).toContain('<b>3</b>')
+  it('shows today’s visitors only, on a mark that carries the state dot', () => {
+    const html = row(site(), 1284)
+    expect(html).toContain('<b>1,284</b>')
     expect(html).toContain('title="1,284 today"')
+    expect(html).not.toContain(' now<')
+    expect(html).toMatch(/class="mkwrap">.*class="mk-dot/)
+    expect(html).not.toContain('vf-seal')
   })
 
   it('says setup, down or quiet in the number’s place', () => {
-    expect(row(site({ last_event_at: undefined }), 0, 0)).toContain('setup')
-    const gone = row(site({ last_event_at: NOW - 3 * 86400, check: { at: NOW - 3600, error: 'example.com could not be reached over https' } }), 5)
+    expect(row(site({ last_event_at: undefined }), 0)).toContain('setup')
+    const gone = row(site({ last_event_at: NOW - 3 * 86400, check: { at: NOW - 3600, error: 'example.com could not be reached over https' } }))
     expect(gone).toContain('state-icon down')
     expect(gone).toContain('aria-label="Not reachable for 3d. Open the site to see what’s wrong."')
     expect(gone).toContain('mk-dot down')
-    expect(gone).not.toContain('<b>5</b>')
-    const quiet = row(site({ last_event_at: NOW - 7 * 3600, check: { at: NOW - 3600, found: 'none' } }), 5)
+    expect(gone).not.toContain('<b>')
+    const quiet = row(site({ last_event_at: NOW - 7 * 3600, check: { at: NOW - 3600, found: 'none' } }))
     expect(quiet).toContain('state-icon quiet')
     expect(quiet).toContain('mk-dot quiet')
     expect(quiet).toContain('aria-label="No visits for 7h. Nothing looks wrong with the page."')
@@ -51,7 +54,7 @@ describe('a site in the list', () => {
   })
 
   it('marks the site you are on with aria-current', () => {
-    const html = renderToStaticMarkup(<SiteRow site={site()} place={{ kind: 'rest' }} on={true} arrange={null} online={0} onPick={noop} />)
+    const html = renderToStaticMarkup(<SiteRow site={site()} place={{ kind: 'rest' }} on={true} arrange={null} onPick={noop} />)
     expect(html).toContain('aria-current="page"')
   })
 })
@@ -73,7 +76,7 @@ describe('the state line under a site name', () => {
 describe('the open-site link on a row', () => {
   afterEach(() => vi.unstubAllGlobals())
   const pick = vi.fn()
-  const tree = () => SiteRow({ site: site(), place: { kind: 'rest' }, on: false, arrange: null, online: 0, onPick: pick })
+  const tree = () => SiteRow({ site: site(), place: { kind: 'rest' }, on: false, arrange: null, onPick: pick })
 
   it('links to the site in a new tab, with the domain in its tooltip', () => {
     const html = renderToStaticMarkup(<OpenSite domain="example.com" />)

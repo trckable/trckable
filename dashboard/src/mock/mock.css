@@ -713,6 +713,11 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .hero .ch-top{display:flex;align-items:center;justify-content:space-between}
 .mk .bdot{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--mk-lime);color:#0a0b0c;font-size:12px;font-style:normal;font-weight:700;display:grid;place-items:center;padding:0 4px;line-height:1}
 .mk .ib.bell{position:relative}
+/* A short wiggle for what is new (useBellAlert): the glyph turns about the top of the bell; not with reduced motion. */
+.mk .ib.bell.shake svg{transform-origin:50% 12%;animation:mk-bell-shake .6s ease-in-out}
+@keyframes mk-bell-shake{0%,100%{transform:rotate(0)}15%{transform:rotate(16deg)}30%{transform:rotate(-14deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(4deg)}}
+@media (prefers-reduced-motion:reduce){.mk .ib.bell.shake svg{animation:none}}
+html[data-motion='off'] .mk .ib.bell.shake svg{animation:none}
 .mk .bellmenu{left:auto;right:0;width:380px;padding:0}
 .mk .nfh,.mk .nff{display:flex;justify-content:space-between;align-items:center;padding:var(--mk-s2) var(--mk-s3);gap:var(--mk-s3)}
 .mk .nfh{border-bottom:1px solid var(--mk-line)}
@@ -1521,6 +1526,21 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .fresh-back:hover{color:var(--mk-text)}
 @media (max-width:600px){.mk .downbox .lk3{display:inline-flex;align-items:center;min-height:44px;min-width:44px}}
 .mk .sitelist > :not(#siteList){flex:none}
+/* the period when it is not today: the pill and a × that goes back */
+.mk .pwrap.set{display:flex;align-items:center}
+.mk .pwrap.set .pill{border-top-right-radius:0;border-bottom-right-radius:0;border-right:0}
+.mk .pill-x{height:var(--mk-h,36px);width:34px;display:inline-grid;place-items:center;border:1px solid var(--mk-line);border-left:0;border-radius:0 12px 12px 0;background:var(--mk-card);color:var(--mk-muted)}
+.mk .pill-x:hover{color:var(--mk-text);background:var(--mk-hov)}
+.mk .pill-x:focus-visible{outline:2px solid var(--mk-lime);outline-offset:1px}
+@media (max-width:600px){.mk .pill-x{width:44px;height:44px}}
+/* the list's rows: a mark with the state dot on it; the foot is one row, the rest under More */
+.mk .site-row .mkwrap{position:relative;display:inline-flex;flex:none}
+.mk .site-row .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--pane,var(--mk-card2));box-shadow:none}
+.mk .mfoot.sfoot{flex-direction:row;align-items:center;gap:var(--mk-s1);padding:var(--mk-s2) 0 0}
+.mk .mfoot.sfoot .mi{width:auto;font-size:13.5px;min-height:var(--mk-h)}
+.mk .mfoot.sfoot .mi.more{margin-left:auto;color:var(--mk-muted);gap:var(--mk-s1)}
+.mk .mfoot.sfoot .mi.more svg.up{transform:rotate(180deg)}
+.mk .mfoot.sfoot-more{margin-top:0;padding-top:0;border-top:0}
 /* 601 to 700 px: no phone bar yet, but too narrow for one row: the header wraps, the views take a row of their own below, and the bell stays. */
 @container (min-width:601px) and (max-width:700px){
 .mk .hd{flex-wrap:wrap;height:auto;min-height:0;position:static;margin:0;padding:0;box-sizing:border-box;row-gap:var(--mk-s2)}

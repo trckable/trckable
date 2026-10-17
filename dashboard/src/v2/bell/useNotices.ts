@@ -1,19 +1,19 @@
 // The bell's list, read once (and again every few minutes), and which of it has been read by this person.
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { api, type Site } from '../../lib/api'
-import { more } from '../../lib/apiMore'
 import { incidents } from '../../features/incidents/api'
 import { mentionsApi } from '../../features/mentions/api'
-import { isShared, isViewer } from '../../lib/me'
+import { isShared } from '../../lib/me'
 import { useV2Extras } from '../slots'
 import { visibleInterval } from '../../lib/visibleInterval'
 import { useReadSet } from './readState'
-import { arrange, fromAlerts, fromIncidents, fromMentions, fromMilestones, unreadCount, type Notice } from './notices'
+import { arrange, fromIncidents, fromMentions, fromMilestones, unreadCount, withFeed, type Notice } from './notices'
 
 export function useNotices(site: Site | null, sites: Site[]) {
   const [own, setItems] = useState<Notice[]>([])
+  const [ready, setReady] = useState(false)
   const extra = useV2Extras().bell
-  const items = useMemo(() => (extra?.length ? [...own, ...extra.filter((e) => !own.some((o) => o.id === e.id))].sort((a, b) => b.at - a.at).slice(0, 40) : own), [own, extra])
+  const items = useMemo(() => withFeed(own, extra), [own, extra])
   const can = !isShared()
   useEffect(() => {
     if (!can) return
@@ -25,9 +25,11 @@ export function useNotices(site: Site | null, sites: Site[]) {
         incidents.account(7).then((r) => fromIncidents(r.incidents, domain, now), () => []),
         site ? api.milestones(site.id).then((r) => fromMilestones(r.milestones, site.domain), () => []) : Promise.resolve([]),
         site?.mentions ? mentionsApi.list(site.id, '7d').then((r) => fromMentions(r.mentions, site.domain), () => []) : Promise.resolve([]),
-        isViewer() || !site ? Promise.resolve([]) : more.alerts(site.id).then((r) => fromAlerts(r.alerts, site.domain), () => []),
       ])
-      if (live) setItems(arrange(parts.flat(), now))
+      if (live) {
+        setItems(arrange(parts.flat(), now))
+        setReady(true)
+      }
     }
     // After the first paint has had its reads: the bell is not what the page is waiting for.
     const first = setTimeout(() => void run(), 3000)
@@ -42,5 +44,5 @@ export function useNotices(site: Site | null, sites: Site[]) {
   const mark = useCallback((id: string) => send([id]), [send])
   const markAll = useCallback(() => send(items.map((i) => i.id)), [send, items])
   const unread = useMemo(() => unreadCount(items, read), [items, read])
-  return { items, read, unread, mark, markAll, can }
+  return { items, read, unread, mark, markAll, can, ready }
 }

@@ -24,6 +24,7 @@ export const copy = defineCopy('v2', {
   addSite: '+ Add a site',
   share: 'Share this site',
   filter: 'Filter',
+  backToToday: 'Back to today',
   statusPage: 'Status page',
   widgets: 'Widgets & badge',
   settings: 'Site settings',
