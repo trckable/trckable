@@ -1,12 +1,12 @@
-// The period's keys on the Briefing, as they were on the old dashboard: T, Y, 7, 3, 9, 1, W and M pick a period, the
+// The period's keys on the Briefing, as they were on the old dashboard: N, T, Y, 7, 4, 3, 9, 1, W and M pick a period, the
 // arrows step it back and forward, C compares with the period before. Not while typing, nor while a panel is open.
 import { useEffect } from 'react'
 import { PRESETS, shiftRange, type ISODate, type Range } from '../lib/dates'
 import { pressed } from '../lib/keys'
 import { setView, type ViewState } from '../lib/url'
 
-/** The periods the Briefing's menu offers; the others (Now, 28 days) have no key here. */
-export const KEYED = ['today', 'yesterday', '7d', '30d', '90d', '12mo', 'wtd', 'mtd']
+/** The periods that have a key on the Briefing (Now and 28 days are not in its menu, only on the keys). */
+export const KEYED = ['now', 'today', 'yesterday', '7d', '28d', '30d', '90d', '12mo', 'wtd', 'mtd']
 
 /** ← is -1, → is +1, anything else 0. */
 function stepOf(e: KeyboardEvent): -1 | 0 | 1 {

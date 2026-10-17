@@ -8,7 +8,7 @@ export type Group = 'around' | 'page' | 'period'
 export type Action = { id: string; label: string; group: Group; def: string }
 
 /** The periods that have a key on the Briefing. */
-const KEYED = ['today', 'yesterday', '7d', '30d', '90d', '12mo', 'wtd', 'mtd']
+const KEYED = ['now', 'today', 'yesterday', '7d', '28d', '30d', '90d', '12mo', 'wtd', 'mtd']
 
 const named = (id: string, label: string, group: Group): Action => ({ id, label, group, def: defaultOf(id) })
 

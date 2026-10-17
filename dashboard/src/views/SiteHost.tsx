@@ -2,7 +2,7 @@
 // live stream, and holds the dialogs the two screens open (a visitor's journey, the goals). A shared link is the same page
 // read only: the Briefing and Explore on what the public report carries, with no Live, no person and nothing that writes.
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { dropReports, showsInstall, api, type ReportQuery, type Site } from '../lib/api'
+import { cachedReport, dropReports, showsInstall, api, type ReportQuery, type Site } from '../lib/api'
 import { setWeekStart, todayIn, type Range } from '../lib/dates'
 import { fmtMoney } from '../lib/format'
 import { journeysOn } from '../features/cookieless/labels'
@@ -25,6 +25,7 @@ import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
 import { useMilestones } from '../features/milestones/useMilestones'
 import { AskPanel } from './AskLazy'
 import { useLiveRefresh } from './useLiveRefresh'
+import { whenIdle } from '../lib/lazyLoad'
 
 const V2View = lazy(() => import('../v2/V2View').then((m) => ({ default: m.V2View }))) // the two screens and their styles: one chunk, fetched when the page shows one
 const GaReturn = lazy(() => import('../features/install/GaReturn').then((m) => ({ default: m.GaReturn }))) // only on the way back from Google (?import=ga)
@@ -53,6 +54,14 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
   // A shared link has no session, so no stream (its report refreshes on a timer); a new visit on the stream reloads the report past its cache.
   const refreshHours = useRef<(skipCache: boolean) => void>(undefined)
   const stream = useLiveRefresh(shared ? '' : site.id, live, refresh, refreshHours)
+
+  // On Live, the Briefing's report is read when the page is idle, so the first switch to it has its numbers.
+  const onLive = !shared && wantsLive(view, site)
+  useEffect(() => {
+    if (!onLive) return
+    const v = { ...view, period: view.period === '30d' && !view.from ? 'today' : view.period }
+    return whenIdle(() => void cachedReport(site.id, queryOf(v, rangeOf(v, today))).catch(() => undefined))
+  }, [onLive, site.id, today]) // eslint-disable-line react-hooks/exhaustive-deps -- once per site and day: the view is read as it is when idle
 
   // A site with nothing in it yet shows the install screen until its first visit; a shared link is only made for a site that works.
   const firstLoad = !data && !error && !!site.last_event_at
