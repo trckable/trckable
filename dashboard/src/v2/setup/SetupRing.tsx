@@ -14,7 +14,7 @@ import './setup.css'
 
 export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => void }) {
   const on = !!site && !isShared()
-  const { state, waiting, run } = useSetup(site, on)
+  const { state, run } = useSetup(site, on)
   const { hidden, hide } = useHidden(on)
   const since = useDoneSince(site?.id ?? null, state ? state.all_set : null)
   const [now] = useState(Date.now)
@@ -24,16 +24,6 @@ export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => v
   // Another site: the panel of the last one is shut.
   const id = site?.id
   useEffect(close, [id, close])
-  if (site && waiting) {
-    return (
-      <div className="ringw" aria-hidden="true">
-        <span className="ringb ringph">
-          <svg viewBox="0 0 36 36" />
-          <span className="rtext">{copy.ring(0, 0)}</span>
-        </span>
-      </div>
-    )
-  }
   if (!site || !state) return null
   const mode = ringMode({ state, hidden: hidden(site.id, left(state)), doneSince: since, now })
   if (mode === 'none') return null

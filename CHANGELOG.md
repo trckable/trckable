@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The setup ring shows at once: it comes from what this browser last read for the site and is refreshed quietly behind it, instead of leaving an empty place for the first few seconds. A site this browser has not read yet shows it at the next look (so it never pushes the header's controls), and a site that is fully set up never flashes it.
 - Mentions no longer match a site by its bare name: only the address (`acme.example`, `www.acme.example`) is searched unless the owner adds a word, so a headline about someone who shares the name ("Dan Albas" for albas.al) is no longer a mention. News items kept under the old rule are dropped at the next round when the site's words no longer name them. Mentions is now off until `TRCKABLE_MENTIONS=on`: while off nothing is searched, and the dashboard, API, bell, setup list and weekly email show nothing of it.
 - A Briefing "Why?" can lead on to Peek again: under its text a build that has Peek shows Ask Peek, which opens Peek with the question and the numbers behind it ready to send. The public product has no Peek and shows the text alone, with no button.
 - The header's controls look like one set at every width: the site, the search, the bell and the person are boxes of the same height (40 px on a phone) with the same border and fill, one gap between them, and a long site name is cut with an ellipsis before anything is pushed off the screen.
