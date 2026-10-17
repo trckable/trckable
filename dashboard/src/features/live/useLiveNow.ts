@@ -16,6 +16,9 @@ const POLL_MS = 15_000
 // How often "2 min ago" and the idle cut-off are worked out again.
 const TICK_MS = 5000
 
+// The last answer for each site: coming back to Live (from the Briefing) shows it at once while a fresh one is read.
+const seen = new Map<string, { data: LiveNow; got: number }>()
+
 type Stream = { visits: (Visit & { id: number })[]; sales: (Sale & { id: number })[]; stale: boolean }
 
 /**
@@ -26,7 +29,7 @@ type Stream = { visits: (Visit & { id: number })[]; sales: (Sale & { id: number 
  */
 export function useLiveNow(site: string, stream: Stream) {
   // The answer, and the local time it arrived.
-  const [answer, setAnswer] = useState<{ data: LiveNow; got: number } | null>(null)
+  const [answer, setAnswer] = useState<{ data: LiveNow; got: number } | null>(() => seen.get(site) ?? null)
   // Failed reads in a row: each one schedules the next try.
   const [failures, setFailures] = useState(0)
   const [local, setLocal] = useState(() => Date.now())
@@ -42,7 +45,11 @@ export function useLiveNow(site: string, stream: Stream) {
         const now = Date.now()
         setLocal(now)
         // An answer older than the one shown (a slow read landing late) is dropped.
-        setAnswer((was) => (was && d.at < was.data.at ? was : { data: d, got: now }))
+        setAnswer((was) => {
+          const next = was && d.at < was.data.at ? was : { data: d, got: now }
+          seen.set(site, next)
+          return next
+        })
         setFailures(0)
       })
       .catch(() => {
@@ -53,7 +60,7 @@ export function useLiveNow(site: string, stream: Stream) {
   // A new site starts clean.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- a new site: drop the old site's numbers while its own load
-    setAnswer(null)
+    setAnswer(seen.get(site) ?? null)
     load()
     const wake = () => document.visibilityState === 'visible' && load()
     document.addEventListener('visibilitychange', wake)
@@ -61,7 +68,7 @@ export function useLiveNow(site: string, stream: Stream) {
       document.removeEventListener('visibilitychange', wake)
       ctl.current?.abort()
     }
-  }, [load])
+  }, [load, site])
 
   // A failed read is tried again in a moment.
   useEffect(() => {
