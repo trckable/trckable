@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/event"
+	"github.com/trckable/trckable/server/internal/ledger"
 )
 
 // Full-mode modules. Each is its own request, so Core never pays for them:
@@ -57,9 +58,14 @@ func (q Q) Heatmap(ctx context.Context, p Params) (*Heatmap, error) {
 	return out, rows.Err()
 }
 
-// Step is one funnel step: a page path or a goal name.
+// StepPaid is the funnel step that counts the visitors of the step before who
+// then paid (a customer's first payment or a one-time sale, never a renewal or an upgrade).
+// It is the last step only, and needs a connected payment provider.
+const StepPaid = "paid"
+
+// Step is one funnel step: a page path or a goal name, or the payment that ends it.
 type Step struct {
-	Kind  string `json:"kind"` // "page" | "goal"
+	Kind  string `json:"kind"` // "page" | "goal" | "paid"
 	Value string `json:"value"`
 }
 
@@ -87,11 +93,38 @@ func (q Q) Funnel(ctx context.Context, p Params, steps []Step) ([]FunnelStep, er
 	if len(steps) > MaxFunnelSteps {
 		return nil, fmt.Errorf("a funnel takes at most %d steps", MaxFunnelSteps)
 	}
+	for i, st := range steps {
+		if st.Kind == StepPaid && i != len(steps)-1 {
+			return nil, fmt.Errorf("the paid step comes last")
+		}
+	}
+	paid := steps[len(steps)-1].Kind == StepPaid
 	conn, err := q.conn(ctx, p.Site)
 	if err != nil {
 		return nil, err
 	}
 	defer q.done(conn)
+	if paid {
+		cur := p.Currency
+		if cur == "" {
+			cur = "USD"
+		}
+		var facts []ledger.Fact
+		enabled := false
+		if q.Payments != nil {
+			facts, enabled, err = q.Payments(ctx, p.Site, cur, p.From, p.To, p.Test)
+		}
+		if err != nil {
+			return nil, err
+		}
+		if !enabled {
+			return nil, fmt.Errorf("the paid step needs a connected payment provider")
+		}
+		if err := loadFacts(ctx, conn, facts); err != nil {
+			return nil, err
+		}
+		defer func() { _, _ = conn.ExecContext(context.Background(), `DROP TABLE IF EXISTS p_facts`) }()
+	}
 	cte, args, err := sessionsCTE(p)
 	if err != nil {
 		return nil, err
@@ -107,6 +140,10 @@ func (q Q) Funnel(ctx context.Context, p Params, steps []Step) ([]FunnelStep, er
 	}
 	b.WriteString(")")
 	for i, st := range steps {
+		if st.Kind == StepPaid {
+			fmt.Fprintf(&b, ", f%d AS (SELECT x.visitor_id, min(x.paid_at) AS t, any_value(p.t) AS prev FROM p_facts x JOIN f%d p ON p.visitor_id = x.visitor_id AND x.paid_at >= p.t WHERE x.visitor_id <> 0 AND x.kind <> 'renewal' AND x.change <> 'upgrade' GROUP BY 1)", i, i-1)
+			continue
+		}
 		match := "kind = 1 AND path = ?"
 		if st.Kind == "goal" {
 			match = "kind = 2 AND goal = ?"

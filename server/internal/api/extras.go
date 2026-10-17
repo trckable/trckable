@@ -6,7 +6,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/fx"
 	"github.com/trckable/trckable/server/internal/insights"
+	"github.com/trckable/trckable/server/internal/ledger"
 	"github.com/trckable/trckable/server/internal/moments"
 	"github.com/trckable/trckable/server/internal/query"
 )
@@ -293,5 +295,67 @@ func (a *API) buyers(w http.ResponseWriter, r *http.Request) {
 	if res.Money != nil {
 		out["currency"], out["exponent"] = res.Money.Currency, res.Money.Exponent
 	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// refundWindow is how far back the refund count looks.
+const refundWindow = 90 * 24 * time.Hour
+
+// refunds serves GET /api/v1/sites/{site}/refunds: the payments paid back in
+// the period, newest first (at most n, default 8), how many and how much in
+// all, and how many in the 90 days before the period ends. Straight from the
+// payment providers' refund and dispute events; never a name, an email or an id.
+func (a *API) refunds(w http.ResponseWriter, r *http.Request) {
+	if !a.needs(w, r, "revenue") {
+		return
+	}
+	ask := a.parse(w, r, r.PathValue("site"), true)
+	if ask == nil {
+		return
+	}
+	if a.Revenue == nil {
+		fail(w, http.StatusNotFound, "payments are not connected")
+		return
+	}
+	n, _ := strconv.Atoi(r.URL.Query().Get("n"))
+	if n <= 0 || n > 20 {
+		n = 8
+	}
+	p := ask.Params
+	cur := p.Currency
+	if cur == "" {
+		cur = "USD"
+	}
+	out := map[string]any{"currency": cur, "exponent": fx.Exponent(cur)}
+	// A refund belongs to no visit, so a filter on visits has nothing to say
+	// about it: the answer is empty and says why, rather than a whole-site figure
+	// under a filtered view.
+	if len(p.Filters) > 0 {
+		out["refunds"], out["count"], out["amount"], out["count_90d"], out["filtered"] = []ledger.Refund{}, 0, 0, 0, true
+		writeJSON(w, http.StatusOK, out)
+		return
+	}
+	// The period and the 90 days before it ends: only payments with a refund
+	// arriving then are read.
+	from := p.From
+	if w90 := p.To.Add(-refundWindow); w90.Before(from) {
+		from = w90
+	}
+	facts, err := a.Revenue.FactsRefundedIn(r.Context(), p.Site, cur, from, p.To, p.Test)
+	if err != nil {
+		reportFail(w, err)
+		return
+	}
+	in := ledger.RefundsIn(p.Site, facts, p.From, p.To)
+	var total int64
+	for _, x := range in {
+		total += x.Amount
+	}
+	rows := in
+	if len(rows) > n {
+		rows = rows[:n]
+	}
+	out["refunds"], out["count"], out["amount"] = append([]ledger.Refund{}, rows...), ledger.CountRefunds(in), total
+	out["count_90d"] = ledger.CountRefunds(ledger.RefundsIn(p.Site, facts, p.To.Add(-refundWindow), p.To))
 	writeJSON(w, http.StatusOK, out)
 }

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -120,7 +121,7 @@ func TestWebhookToLedger(t *testing.T) {
 	if n, err := g.svc.Reprocess(ctx, g.site); err != nil || n != 1 {
 		t.Fatalf("reprocess: %d %v", n, err)
 	}
-	if f, _ := g.svc.Facts(ctx, g.site, "USD", time.Now().Add(-time.Hour), time.Now().Add(time.Hour), false); len(f) != 1 || f[0] != facts[0] {
+	if f, _ := g.svc.Facts(ctx, g.site, "USD", time.Now().Add(-time.Hour), time.Now().Add(time.Hour), false); len(f) != 1 || !reflect.DeepEqual(f[0], facts[0]) {
 		t.Fatalf("after reprocess: %+v", f)
 	}
 }

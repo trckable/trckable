@@ -118,7 +118,7 @@ func TestExtrasRoutes(t *testing.T) {
 	base := g.srv.URL + "/api/v1/sites/" + g.site
 	day := time.Now().UTC().Format("2006-01-02")
 	q := "?from=" + day + "&to=" + day
-	for _, path := range []string{"/insights", "/markers", "/buyers", "/report/pages-sell"} {
+	for _, path := range []string{"/insights", "/markers", "/buyers", "/refunds", "/report/pages-sell"} {
 		if code, _, _ := get(t, client(), base+path+q); code != http.StatusUnauthorized {
 			t.Fatalf("%s signed out: %d", path, code)
 		}
@@ -134,7 +134,7 @@ func TestExtrasRoutes(t *testing.T) {
 	if code, _, _ := get(t, owner, base+"/markers"+q+"&bucket=week"); code != http.StatusBadRequest {
 		t.Fatalf("markers by the week: %d", code)
 	}
-	for _, path := range []string{"/buyers", "/report/pages-sell"} {
+	for _, path := range []string{"/buyers", "/refunds", "/report/pages-sell"} {
 		if code, _, body := get(t, owner, base+path+q); code != http.StatusNotFound || !strings.Contains(body, "module is off") {
 			t.Fatalf("%s with revenue off: %d %s", path, code, body)
 		}

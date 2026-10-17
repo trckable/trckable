@@ -158,7 +158,7 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 			GROUP BY f.payment_id
 		),
 		a AS (
-			SELECT f.payment_id, f.visitor_id, f.paid_at, f.amount, f.refunded, f.customer, f.kind, f.change, f.converted,
+			SELECT f.payment_id, f.visitor_id, f.paid_at, f.amount, f.refunded, f.customer, f.kind, f.change, f.converted, f.bill_country,
 			       t.sid IS NOT NULL AS attributed,
 			       ((f.paid_at AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS lpaid,
 			       c.* EXCLUDE (site_id, visitor_id)
@@ -329,7 +329,7 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 func loadFacts(ctx context.Context, conn *sql.Conn, facts []ledger.Fact) error {
 	if _, err := conn.ExecContext(ctx, `CREATE OR REPLACE TEMP TABLE p_facts (
 		payment_id VARCHAR, visitor_id UBIGINT, paid_at TIMESTAMP, touch_at TIMESTAMP, amount BIGINT, refunded BIGINT,
-		customer VARCHAR, kind VARCHAR, change VARCHAR, converted BOOLEAN)`); err != nil {
+		customer VARCHAR, kind VARCHAR, change VARCHAR, converted BOOLEAN, bill_country VARCHAR)`); err != nil {
 		return err
 	}
 	if len(facts) == 0 {
@@ -349,7 +349,7 @@ func loadFacts(ctx context.Context, conn *sql.Conn, facts []ledger.Fact) error {
 			if touch.IsZero() {
 				touch = f.PaidAt
 			}
-			if err := app.AppendRow(f.Provider+":"+f.ID, f.Visitor, f.PaidAt.UTC(), touch.UTC(), amount, refunded, f.Customer, f.Kind, f.Change, f.Converted); err != nil {
+			if err := app.AppendRow(f.Provider+":"+f.ID, f.Visitor, f.PaidAt.UTC(), touch.UTC(), amount, refunded, f.Customer, f.Kind, f.Change, f.Converted, f.Country); err != nil {
 				app.Close()
 				return err
 			}
@@ -440,6 +440,7 @@ type Buyer struct {
 	Pages    []string  `json:"pages,omitempty"`
 	Visits   int64     `json:"visits,omitempty"` // within the window before the sale
 	Seconds  int64     `json:"seconds,omitempty"`
+	Country  string    `json:"country,omitempty"` // the billing country the provider named (ISO 3166 alpha-2)
 }
 
 // BuyerPages is how many pages of the earning visit a buyer's line names.
@@ -452,10 +453,10 @@ const BuyerPages = 3
 // is a row with an amount and a time only.
 func buyers(ctx context.Context, conn *sql.Conn, sqlText string, args []any, winFrom time.Time, p Params) ([]Buyer, error) {
 	rows, err := conn.QueryContext(ctx, sqlText+`, t AS (
-			SELECT payment_id, paid_at, amount - refunded AS net, kind, visitor_id, attributed, session_id,
+			SELECT payment_id, paid_at, amount - refunded AS net, kind, bill_country, visitor_id, attributed, session_id,
 			       coalesce(channel, 'Direct') AS ch, coalesce(referrer, '') AS ref
 			FROM ar WHERE kind <> 'renewal' ORDER BY paid_at DESC, payment_id LIMIT ?)
-		SELECT t.payment_id, t.paid_at, t.net, t.kind, t.attributed, CAST(t.session_id AS VARCHAR), t.ch, t.ref,
+		SELECT t.payment_id, t.paid_at, t.net, t.kind, t.bill_country, t.attributed, CAST(t.session_id AS VARCHAR), t.ch, t.ref,
 		       (SELECT count(*) FROM cand c WHERE c.visitor_id = t.visitor_id AND t.visitor_id <> 0
 		          AND c.start <= t.paid_at + INTERVAL 1 MINUTE AND c.start >= t.paid_at - INTERVAL 90 DAY),
 		       (SELECT min(coalesce(c.first_seen, c.start)) FROM cand c WHERE c.visitor_id = t.visitor_id AND t.visitor_id <> 0
@@ -468,18 +469,18 @@ func buyers(ctx context.Context, conn *sql.Conn, sqlText string, args []any, win
 	var sessions []string
 	byRow := map[string]int{}
 	for rows.Next() {
-		var pid, kind, ch, ref string
+		var pid, kind, country, ch, ref string
 		var at time.Time
 		var net, visits int64
 		var attributed bool
 		var session sql.NullString
 		var first sql.NullTime
-		if err := rows.Scan(&pid, &at, &net, &kind, &attributed, &session, &ch, &ref, &visits, &first); err != nil {
+		if err := rows.Scan(&pid, &at, &net, &kind, &country, &attributed, &session, &ch, &ref, &visits, &first); err != nil {
 			rows.Close()
 			return nil, err
 		}
 		sum := sha256.Sum256([]byte(p.Site + "\x00" + pid))
-		b := Buyer{ID: hex.EncodeToString(sum[:6]), At: at.UTC(), Amount: net, Kind: kind}
+		b := Buyer{ID: hex.EncodeToString(sum[:6]), At: at.UTC(), Amount: net, Kind: kind, Country: country}
 		if attributed {
 			b.Channel, b.Referrer, b.Visits = ch, ref, visits
 			if first.Valid {

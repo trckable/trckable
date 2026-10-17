@@ -95,14 +95,21 @@ func (a *API) funnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for i, s := range in.Steps {
-		if s.Kind != "page" && s.Kind != "goal" {
-			fail(w, http.StatusBadRequest, "step "+strconv.Itoa(i+1)+": kind must be page or goal")
+		if s.Kind != "page" && s.Kind != "goal" && s.Kind != query.StepPaid {
+			fail(w, http.StatusBadRequest, "step "+strconv.Itoa(i+1)+": kind must be page, goal or paid")
 			return
 		}
-		if s.Value == "" {
+		if s.Kind == query.StepPaid && i != len(in.Steps)-1 {
+			fail(w, http.StatusBadRequest, "the paid step comes last")
+			return
+		}
+		if s.Value == "" && s.Kind != query.StepPaid {
 			fail(w, http.StatusBadRequest, "step "+strconv.Itoa(i+1)+" is empty")
 			return
 		}
+	}
+	if len(in.Steps) > 0 && in.Steps[len(in.Steps)-1].Kind == query.StepPaid && !a.needs(w, r, "revenue") {
+		return
 	}
 	q, p, ok := a.params(w, r)
 	if !ok {

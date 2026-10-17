@@ -281,6 +281,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/referrer-icons/{host}", a.authed(a.referrerIcon))
 	handle("GET /api/v1/sites/{site}/usual", a.authed(a.usual))
 	handle("GET /api/v1/sites/{site}/buyers", a.authed(a.buyers))
+	handle("GET /api/v1/sites/{site}/refunds", a.authed(a.refunds))
 	handle("GET /api/v1/sites/{site}/export.csv", a.authed(a.export))
 	handle("GET /api/v1/sites/{site}/events", a.authed(a.recent))
 	handle("GET /api/v1/sites/{site}/live", a.authed(a.live))

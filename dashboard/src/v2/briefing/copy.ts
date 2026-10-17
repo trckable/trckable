@@ -7,6 +7,8 @@ import { fmtInt } from '../../lib/format'
 const people = (n: number) => (n === 1 ? '1 person' : `${fmtInt(n)} people`)
 
 export const copy = defineCopy('briefing', {
+  // The last step of the signup path, when payments are connected.
+  paidStep: 'Paid',
   // The sentence.
   busy: 'A busy',
   slow: 'A slow',

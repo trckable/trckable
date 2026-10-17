@@ -1,5 +1,5 @@
 // The other sections' answers, said as Explore's models. Pure: mapSections.test.ts.
-import type { CrawlerReport, FunnelResult, FunnelStep, Money, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
+import type { CrawlerReport, FunnelResult, FunnelStep, Money, PaidStep, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
 import { fmtDay } from '../../../lib/dates'
 import { fmtFixed, fmtInt } from '../../../lib/format'
 import type { Mention as ApiMention } from '../../../features/mentions/api'
@@ -30,16 +30,19 @@ export function leakOf(steps: Step[]): Funnel['leak'] {
   return { at, r, ur }
 }
 
-/** The funnel's steps: those an old address names ("fs=page:/pricing"), else the two busiest entry pages and the first goal. */
-export function stepsOf(wanted: FunnelStep[] | undefined, pages: { value: string }[], goal?: { value: string }): FunnelStep[] {
-  if (wanted && wanted.length >= 2) return wanted
-  return [...pages.slice(0, 2).map((p) => ({ kind: 'page' as const, value: p.value })), ...(goal ? [{ kind: 'goal' as const, value: goal.value }] : [])]
+/** The last step of a funnel on a site with payments: the visitors of the step before who then paid. */
+export const PAID_STEP: PaidStep = { kind: 'paid', value: 'paid' }
+
+/** The funnel's steps: those an old address names ("fs=page:/pricing"), else the two busiest entry pages and the first goal; with payments connected, a Paid step at the end. */
+export function stepsOf(wanted: (FunnelStep | PaidStep)[] | undefined, pages: { value: string }[], goal?: { value: string }, paid = false): (FunnelStep | PaidStep)[] {
+  const steps: (FunnelStep | PaidStep)[] = wanted && wanted.length >= 2 ? wanted : [...pages.slice(0, 2).map((p) => ({ kind: 'page' as const, value: p.value })), ...(goal ? [{ kind: 'goal' as const, value: goal.value }] : [])]
+  return paid && steps.length >= 1 && steps.length < 8 && !steps.some((s) => s.kind === 'paid') ? [...steps, PAID_STEP] : steps
 }
 
 export function mapFunnel(o: { cur: FunnelResult[]; prev?: FunnelResult[]; report: Report; ghost: boolean }): Funnel {
   const { cur, prev, report } = o
   const base = !!report.previous && baseEnough(report.previous.kpis.visitors)
-  const steps: Step[] = cur.map((s, i) => ({ name: s.label || s.value, v: s.visitors, c: prev?.[i]?.visitors ?? 0 }))
+  const steps: Step[] = cur.map((s, i) => ({ name: s.kind === 'paid' ? copy.paid : s.label || s.value, v: s.visitors, c: prev?.[i]?.visitors ?? 0 }))
   const goals: Goal[] = (report.current.goals ?? []).map((g) => ({ name: g.label || g.value, ...statOf(g.visitors, report.previous?.goals?.find((p) => p.value === g.value)?.visitors, base) }))
   const pages = (report.current.dims.page ?? []).map((r) => ({ name: r.value, ...statOf(r.visitors, report.previous?.dims.page?.find((p) => p.value === r.value)?.visitors, base) }))
   return { steps, leak: leakOf(steps), goals, vs: copy.vsUsual, ghost: o.ghost, goalsOn: goals.length > 0, pages }

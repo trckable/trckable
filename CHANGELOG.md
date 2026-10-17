@@ -9,6 +9,8 @@ section into the release.
 
 ## Unreleased
 
+- Sales and refunds say more: a refund shows as its own line on the Briefing with the number in the last 90 days, a sale shows the buyer's billing country when the payment provider sends one (Stripe and Polar), and the signup path ends in a Paid step once payments are connected.
+
 ## 0.7.25 (17 Oct 2026)
 
 - The dashboard's keys follow the new pages: E opens Explore only, L and B switch, T Y 7 3 9 1 W M, the arrows, C, R and A work on the Briefing, and the list and the docs say exactly that; Explore tells a day against the same usual as the Briefing, an address with filters opens Explore with the chips on, notes can be edited and deleted from the notes sheet, Create (goal, funnel, note) is in the palette, Live names new visits to a screen reader and shows phone against computer, numbers follow the language, and all five languages have the new pages again.

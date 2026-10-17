@@ -1,7 +1,7 @@
 // The cards that come from outside the visits: what was sold, what Google sent, and a page people got stuck on. Each
 // reads real answers (the payments, Search Console, the page's heatmap) and says nothing without them. Pure: cards.money.test.ts.
 import type { Money, SearchRow } from '../../lib/api'
-import type { Buyer } from '../../features/extras/extrasApi'
+import type { Buyer, Refunds } from '../../features/extras/extrasApi'
 import { countryName, flag, fmtInt, fmtFixed } from '../../lib/format'
 import { copy } from './cards.copy'
 import type { Story } from './cards'
@@ -12,6 +12,8 @@ import { bandFromBefore, judge, type Band } from './usual'
 export interface SalesIn {
   money: Money
   buyers: Buyer[]
+  /** The payments paid back in the period, newest first, with the count over 90 days; none when it could not be read. */
+  refunds?: Refunds | null
   /** What the period's sales are told against; none without the history. */
   band: Band | null
   fmt: (minor: number) => string
@@ -32,6 +34,15 @@ function who(buyers: Buyer[], money: Money): string {
   return parts.length ? parts.join(', ') : copy.becameCustomers(money.payments)
 }
 
+/** The receipt of the refunds: one line each (the sale it undoes, when, how much went back) and what the period gave back in all. */
+function refundVis(i: SalesIn): Story['vis'] {
+  const r = i.refunds
+  if (!r || r.refunds.length === 0) return null
+  const rows = r.refunds.slice(0, 4).map((x) => ({ l: copy.refundRow(kindWord(x.kind)), t: i.clock(x.at), a: x.amount > 0 ? `-${i.fmt(x.amount)}` : `+${i.fmt(-x.amount)}`, flag: flag(x.country ?? ''), neg: true }))
+  const extra = r.count > rows.length ? [{ l: copy.more(r.count - rows.length), more: true }] : []
+  return { k: 'rcpt', rows: [...rows, ...extra, { l: copy.refundTot, t: '', a: `-${i.fmt(r.amount)}`, flag: '', neg: true, tot: true }] }
+}
+
 export function salesCards(i: SalesIn): Story[] {
   const { money, buyers, band, fmt } = i
   const out: Story[] = []
@@ -44,8 +55,8 @@ export function salesCards(i: SalesIn): Story[] {
       bad: true,
       head: copy.refunded,
       rest: copy.refundedRest(fmt(money.refunds)),
-      vis: null,
-      why: copy.refundWhy,
+      vis: refundVis(i),
+      why: i.refunds && i.refunds.count_90d > i.refunds.count ? copy.refunds90(i.refunds.count_90d, i.refunds.count === 1) : copy.refundWhy,
       val: fmt(money.refunds),
       m: money.refunds,
       u: '',
@@ -56,7 +67,7 @@ export function salesCards(i: SalesIn): Story[] {
   }
   if (money.payments > 0) {
     const total = money.revenue + money.refunds
-    const rows = buyers.slice(0, 4).map((b) => ({ l: `${kindWord(b.kind)}${b.referrer ? copy.via(sourceName(b.referrer)) : ''}`, t: i.clock(b.at), a: `+${fmt(b.amount)}`, flag: '' }))
+    const rows = buyers.slice(0, 4).map((b) => ({ l: `${kindWord(b.kind)}${b.referrer ? copy.via(sourceName(b.referrer)) : ''}`, t: i.clock(b.at), a: `+${fmt(b.amount)}`, flag: flag(b.country ?? '') }))
     const extra = buyers.length > 4 ? [{ l: copy.more(buyers.length - 4), more: true }] : []
     const bySource = new Map<string, number>()
     buyers.forEach((b) => b.referrer && bySource.set(b.referrer, (bySource.get(b.referrer) ?? 0) + 1))

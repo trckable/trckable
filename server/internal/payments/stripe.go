@@ -122,6 +122,11 @@ func (stripe) Parse(body []byte) (Event, error) {
 			TotalDetails      *struct {
 				AmountTax int64 `json:"amount_tax"`
 			} `json:"total_details"`
+			CustomerDetails *struct {
+				Address *struct {
+					Country string `json:"country"`
+				} `json:"address"`
+			} `json:"customer_details"`
 		}
 		if err := json.Unmarshal(obj, &cs); err != nil {
 			return ev, err
@@ -140,6 +145,9 @@ func (stripe) Parse(body []byte) (Event, error) {
 			if cs.TotalDetails != nil {
 				h.Tax = ptr(cs.TotalDetails.AmountTax)
 			}
+			if cs.CustomerDetails != nil && cs.CustomerDetails.Address != nil {
+				h.Country = CountryCode(cs.CustomerDetails.Address.Country)
+			}
 			if cs.Mode == "subscription" {
 				h.Kind = KindSubscription
 			}
@@ -152,7 +160,10 @@ func (stripe) Parse(body []byte) (Event, error) {
 			ID            string          `json:"id"`
 			BillingReason string          `json:"billing_reason"`
 			Customer      json.RawMessage `json:"customer"`
-			TotalTaxes    []struct {
+			CustomerAddr  *struct {
+				Country string `json:"country"`
+			} `json:"customer_address"`
+			TotalTaxes []struct {
 				Amount int64 `json:"amount"`
 			} `json:"total_taxes"`
 			Tax    *int64 `json:"tax"` // pre-Basil
@@ -234,7 +245,7 @@ func (stripe) Parse(body []byte) (Event, error) {
 				}
 			}
 		}
-		ev.Hints = append(ev.Hints, Hint{PaymentID: in.ID, Source: "invoice:" + in.ID, Tax: tax, Visitor: vis, CustomerID: cus, SubscriptionID: sub, Kind: kind, FromPlan: from, ToPlan: to})
+		ev.Hints = append(ev.Hints, Hint{PaymentID: in.ID, Source: "invoice:" + in.ID, Tax: tax, Visitor: vis, CustomerID: cus, SubscriptionID: sub, Kind: kind, FromPlan: from, ToPlan: to, Country: invoiceCountry(in.CustomerAddr)})
 		if pi := idOf(in.PaymentIntent); pi != "" {
 			ev.Aliases = append(ev.Aliases, Alias{Alias: in.ID, PaymentID: pi})
 		}
@@ -364,4 +375,14 @@ func idOf(raw json.RawMessage) string {
 		return o.ID
 	}
 	return ""
+}
+
+// invoiceCountry is the billing country an invoice names for its customer.
+func invoiceCountry(a *struct {
+	Country string `json:"country"`
+}) string {
+	if a == nil {
+		return ""
+	}
+	return CountryCode(a.Country)
 }

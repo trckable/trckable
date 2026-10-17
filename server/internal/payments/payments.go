@@ -78,6 +78,7 @@ type Payment struct {
 	Email          string // stored only as a keyed hash (for data requests by email)
 	Visitor        uint64
 	Kind           string
+	Country        string // billing country (ISO 3166 alpha-2) when the payload names one
 }
 
 // Hint attaches facts to a payment known by id.
@@ -91,6 +92,17 @@ type Hint struct {
 	Kind           string // payment kind, when this source knows it (e.g. invoice billing reason)
 	FromPlan       string // upgrade: the plan left and the plan taken, when the payload names them
 	ToPlan         string
+	Country        string // billing country, as Payment.Country
+}
+
+// CountryCode is a provider's country as an upper-case ISO 3166 alpha-2 code,
+// or empty when it is anything else (a name, a blank, a placeholder).
+func CountryCode(s string) string {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	if len(s) != 2 || s[0] < 'A' || s[0] > 'Z' || s[1] < 'A' || s[1] > 'Z' {
+		return ""
+	}
+	return s
 }
 
 // Alias says two ids name the same payment (a Stripe invoice and the
