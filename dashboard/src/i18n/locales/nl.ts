@@ -3214,7 +3214,6 @@ export default {
   'setup.next': 'Hierna',
   'setup.moreToDo': (n: number) => `Nog ${int(n)} tonen`,
   'setup.doneCount': (n: number) => `${int(n)} klaar`,
-  'setup.groups.more': 'Meer om toe te voegen',
   'setup.moreCount': (n: number) => `Meer om toe te voegen · ${int(n)}`,
   'setup.done': 'Klaar',
   'setup.notForMe': 'Niet voor mij',

@@ -3207,7 +3207,6 @@ export default {
   'setup.next': 'Lo siguiente',
   'setup.moreToDo': (n: number) => `Ver ${int(n)} más`,
   'setup.doneCount': (n: number) => `${int(n)} hechas`,
-  'setup.groups.more': 'Más que puedes añadir',
   'setup.moreCount': (n: number) => `Más que puedes añadir · ${int(n)}`,
   'setup.done': 'Hecho',
   'setup.notForMe': 'No es para mí',
