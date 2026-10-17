@@ -97,6 +97,111 @@ test('a visit slides in and the numbers move, without a reload', async ({ page }
   expect(reloads).toBe(0)
 })
 
+test('a visit that arrives later is marked as arriving, then settles; the first look is not', async ({ page }) => {
+  await signIn(page, '/example.com?view=live')
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('.lfeed .lv').first()).toBeVisible({ timeout: 15_000 })
+  // Whoever was there at the first look came in without a mark.
+  await expect(page.locator('.lfeed .lv.arriving')).toHaveCount(0)
+  const run = await visit(page, 'livearrive')
+  const row = page.locator('.lfeed .lv', { has: page.locator(`.pg[title*="${run}"]`) })
+  await expect(row).toHaveClass(/arriving/, { timeout: 5_000 })
+  await expect(row).not.toHaveClass(/arriving/, { timeout: 6_000 })
+})
+
+test('the chart switch keeps bars or line across a reload and both draw the same minutes', async ({ page }) => {
+  await signIn(page, '/example.com?view=live')
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
+  const style = page.getByRole('group', { name: 'Chart style' })
+  await expect(style.getByRole('button', { name: 'Bars' })).toHaveAttribute('aria-pressed', 'true')
+  await style.getByRole('button', { name: 'Line' }).click()
+  await page.reload()
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
+  await expect(style.getByRole('button', { name: 'Line' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.lchart')).toHaveAttribute('data-mode', 'line')
+  const read = (sel: string) =>
+    page.locator(sel).evaluate((el) => ({ label: el.getAttribute('aria-label'), titles: [...el.querySelectorAll('i[title]')].map((i) => i.getAttribute('title')) }))
+  const bars = await read('.lnow .mins')
+  const line = await read('.lnow .mline')
+  expect(line.label).toBe(bars.label)
+  expect(line.titles.length).toBe(30)
+  expect(line.titles).toEqual(bars.titles)
+  await expect(page.locator('.lnow .mline-dot')).toBeVisible()
+  await style.getByRole('button', { name: 'Bars' }).click()
+  await expect(page.locator('.lchart')).toHaveAttribute('data-mode', 'bars')
+})
+
+test('the sample revenue card on Live is never clipped: Connect sits fully inside the card', async ({ page }) => {
+  // Other specs may have connected payments on this site: the sample card is what a site without sales shows.
+  await page.route('**/api/v1/sites/*/now*', async (route) => {
+    const res = await route.fetch()
+    const body = await res.json()
+    delete body.revenue
+    await route.fulfill({ response: res, json: body })
+  })
+  for (const width of [1440, 1024, 768, 390]) {
+    await page.setViewportSize({ width, height: 900 })
+    await signIn(page, '/example.com?view=live')
+    await expect(online(page)).toBeVisible({ timeout: 15_000 })
+    const connect = page.locator('.lnow .lrev').getByRole('button', { name: 'Connect' })
+    await expect(connect).toBeVisible()
+    const [b, card] = await Promise.all([connect.boundingBox(), page.locator('.lnow').boundingBox()])
+    expect(b && card && b.x >= card.x && b.x + b.width <= card.x + card.width + 0.5, `Connect inside the card at ${width}`).toBe(true)
+    const lock = await page.locator('.lnow .lrev').boundingBox()
+    expect(lock && b && b.x + b.width <= lock.x + lock.width + 0.5, `Connect inside its own block at ${width}`).toBe(true)
+  }
+})
+
+// The left Live card is as tall as what is in it: no band of nothing, whatever the card's width or how quiet the site is,
+// and no section title that wraps.
+test('the Live card has no empty band and no wrapped titles, wide and narrow', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  for (const width of [900, 420]) {
+    await signIn(page, '/example.com?view=live')
+    await expect(online(page)).toBeVisible({ timeout: 15_000 })
+    await page.evaluate((w) => ((document.querySelector('.liveview') as HTMLElement).style.gridTemplateColumns = `${w}px 1fr`), width)
+    await page.waitForTimeout(300)
+    const r = await page.locator('.lnow').evaluate((card) => {
+      const box = card.getBoundingClientRect()
+      const chart = card.querySelector('.lchart')!
+      const parts = [...card.querySelectorAll('*')].filter((el) => (!el.children.length || el === chart) && !chart.contains(el) || el === chart)
+      const rects = parts.map((el) => el.getBoundingClientRect()).filter((b) => b.width > 0 && b.height > 0).sort((a, b) => a.top - b.top)
+      let reach = box.top
+      let gap = 0
+      for (const b of rects) {
+        gap = Math.max(gap, b.top - reach)
+        reach = Math.max(reach, b.bottom)
+      }
+      gap = Math.max(gap, box.bottom - reach)
+      const titles = [...card.querySelectorAll('.ll')].map((el) => el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight || '16'))
+      return { gap, width: box.width, titles }
+    })
+    expect(r.width).toBeLessThanOrEqual(width + 1)
+    expect(r.gap, `empty band at ${width}`).toBeLessThanOrEqual(48)
+    for (const t of r.titles) expect(t, `a title wraps at ${width}`).toBeLessThan(1.6)
+  }
+})
+
+test('the two top Live cards are the same height side by side', async ({ page }) => {
+  for (const width of [1440, 1024]) {
+    await page.setViewportSize({ width, height: 900 })
+    await signIn(page, '/example.com?view=live')
+    await expect(online(page)).toBeVisible({ timeout: 15_000 })
+    await page.waitForTimeout(300)
+    const [a, b] = await Promise.all([page.locator('.lnow').boundingBox(), page.locator('.lon').boundingBox()])
+    expect(a && b && Math.abs(a.height - b.height) <= 1, `heights ${a?.height} and ${b?.height} at ${width}`).toBe(true)
+  }
+})
+
+test('online is never more than the visitors of the half hour', async ({ page }) => {
+  await signIn(page, '/example.com?view=live')
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
+  for (let i = 0; i < 4; i++) {
+    expect(await num(page, '.lnow .lfig .lbign')).toBeLessThanOrEqual(await num(page, '.lnow .lfig > div:nth-child(2) .lbign'))
+    await page.waitForTimeout(500)
+  }
+})
+
 test('the switch has the one dot, and it dims while the connection is down', async ({ page }) => {
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })

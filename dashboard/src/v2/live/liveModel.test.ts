@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Row } from '../../features/live/model'
-import { barsOf, changeOf, deviceSplit, listsOf, place, sourceParts, todayBand } from './liveModel'
+import { fitOf } from './cardWidth'
+import { visitors30, barsOf, changeOf, deviceSplit, listsOf, place, sourceParts, todayBand } from './liveModel'
 
 const row = (i: number, o: Partial<Row> = {}): Row => ({ kind: 'pageview', ts: 0, last: 0, path: '/p', visitor: `v${i}`, key: `v${i}`, ...o })
 
@@ -40,5 +41,26 @@ describe('Live', () => {
   it('splits phone against computer from the people whose device is known', () => {
     expect(deviceSplit([row(1, { device: 'mobile' }), row(2, { device: 'desktop' }), row(3, { device: 'desktop' }), row(4, { device: 'tablet' })])).toEqual({ phone: 0.5, computer: 0.5 })
     expect(deviceSplit([row(1)])).toBeNull()
+  })
+})
+
+describe('visitors30', () => {
+  it('is never less than the people online, at every tick', () => {
+    for (let visitors = 0; visitors < 6; visitors++) {
+      for (let online = 0; online < 6; online++) expect(visitors30(visitors, online)).toBeGreaterThanOrEqual(online)
+    }
+    expect(visitors30(1, 3)).toBe(3)
+    expect(visitors30(5, 3)).toBe(5)
+    expect(visitors30(4, null)).toBe(4)
+  })
+})
+
+describe('a quiet half hour', () => {
+  it('draws one visit as a short bar', () => expect(barsOf([0, 0, 1]).map((b) => b.h)).toEqual([3, 3, 25]))
+})
+
+describe('fitOf', () => {
+  it('tells how roomy the card is', () => {
+    expect([fitOf(420), fitOf(479), fitOf(480), fitOf(559), fitOf(560), fitOf(900)]).toEqual(['tiny', 'tiny', 'narrow', 'narrow', 'wide', 'wide'])
   })
 })
