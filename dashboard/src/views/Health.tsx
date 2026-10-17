@@ -21,7 +21,6 @@ const bytes = (n: number) => {
   }
   return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${units[i]}`
 }
-
 /** Seconds since a unix time. */
 const ageOf = (unix: number) => Date.now() / 1000 - unix
 

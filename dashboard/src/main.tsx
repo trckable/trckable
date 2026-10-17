@@ -16,7 +16,8 @@ import { openAddSite, useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
 import { routeOf, SubRoute } from "./features/subpage";
 import { landing, namesSite } from "./lib/landing";
-import { openSettings, settingsInAddress, settingsTarget, useSettings } from "./lib/settings";
+import { openSettings, settingsTarget } from "./lib/settings";
+import { useSettingsAddress } from "./features/settingsAddress";
 import { useLatest } from "./lib/update";
 import { setRole } from "./lib/me";
 import { NoneShared, useGate } from "./features/onboarding/Gate";
@@ -40,7 +41,6 @@ import { Toasts } from "./components/Toast"; import { Hints } from "./features/h
 import "./phone.css"; // last: what it sets on a phone wins over the styles imported before it
 void import("./kit/glass").then((m) => m.startGlass()); // the glass: its own small chunk, asked for at once, so the first load keeps its weight
 applySavedTheme();
-
 type Boot =
   | { state: "loading" }
   | { state: "setup" }
@@ -93,7 +93,7 @@ function App() {
   usePreloadDialogs(boot.state === "ready");
   const adding = useAddSite();
   const { gated, pass } = useGate(boot.state === "ready" ? boot.sites : null, boot.state === "ready" && !!boot.mustChange, path);
-  const settingsOpen = useSettings();
+  const settingsOpen = useSettingsAddress(boot.state === "ready" && !gated ? boot.sites : null, path, params); // the dialog, and the address that names a section of it
   // A newer release, if this owner's dashboard may look (lib/update.ts).
   const latest = useLatest(boot.state === "ready" ? boot.version : undefined, boot.state === "ready" ? boot.updateCheck : false);
   const [showUpdate, setShowUpdate] = useState(false);
@@ -107,14 +107,6 @@ function App() {
     const { tab, extra } = settingsTarget(params.get("tab"));
     openSettings(s, tab, params.get("visitor") ? { ...extra, visitor: params.get("visitor") ?? "" } : extra, { replace: true });
   }, [boot, gated, path, params]);
-
-  // A dashboard address that names a section (?settings=alerts: a link, a reload) opens it.
-  const namedTab = settingsInAddress(params);
-  useEffect(() => {
-    if (boot.state !== "ready" || gated || !namedTab || settingsOpen) return;
-    const s = routeOf(boot.sites, path).site;
-    if (s) openSettings(s, namedTab, undefined, { replace: true });
-  }, [boot, gated, path, namedTab, settingsOpen]);
 
   // Keep the address bar honest about the screen shown.
   useEffect(() => {
