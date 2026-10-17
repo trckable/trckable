@@ -98,13 +98,9 @@ test('tells one visitor’s story', async ({ page }) => {
     const box = await t.boundingBox()
     expect(box!.height).toBeLessThan(24)
   }
-})
-
-test('the window holds a height and the visits scroll inside it', async ({ page }) => {
+  // The window holds one height: the visits scroll inside it and the visitor stays in view.
   await page.setViewportSize({ width: 1280, height: 520 })
-  const dialog = await openJourney(page)
-  const box = await dialog.boundingBox()
-  expect(box!.height).toBeLessThanOrEqual(520 * 0.85 + 1)
+  expect((await dialog.boundingBox())!.height).toBeLessThanOrEqual(520 * 0.85 + 1)
   const list = dialog.locator('.jr-visits')
   await expect.poll(() => list.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true)
   await list.evaluate((el) => (el.scrollTop = el.scrollHeight))
