@@ -1,5 +1,4 @@
 // "Since this morning": what happened after nine, the hour the walkthrough takes as the last time you looked. Pure: since.test.ts.
-import type { Point } from '../../lib/api'
 
 /** The hour the day is taken to start for someone looking in (the walkthrough's own). */
 export const LOOKED_AT = 9
@@ -17,7 +16,6 @@ export interface Since {
 }
 
 interface SinceIn {
-  series: Point[]
   /** Minutes into the day. */
   nowMin: number
   sales: number
@@ -25,12 +23,15 @@ interface SinceIn {
   downSec: number
   /** No card to show and nobody paid: a day with nothing in it. */
   calm: boolean
+  /** The people seen since the hour, counted as people by the server (null while it is read: the line waits). */
+  people: number | null
 }
 
 export function sinceOf(i: SinceIn): Since | null {
   const lock = LOOKED_AT * 60
   if (i.nowMin < lock + 30) return null
-  const people = i.series.slice(LOOKED_AT).reduce((n, p) => n + p.visitors, 0)
+  if (i.people === null) return null
+  const people = i.people
   const down = Math.round(i.downSec / 60)
   return { morning: i.nowMin - lock >= 120, at: `${String(LOOKED_AT).padStart(2, '0')}:00`, people, sales: i.sales, down, quiet: i.sales === 0 && down <= 0 && i.calm }
 }

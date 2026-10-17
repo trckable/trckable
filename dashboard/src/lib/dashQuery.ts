@@ -25,6 +25,7 @@ export function queryOf(view: ViewState, range: Range): ReportQuery {
     compare: calPrev ? 'custom' : mode,
     cfrom: calPrev ? calPrev.from : view.cfrom,
     cto: calPrev ? calPrev.to : view.cto,
+    sofar: mode === 'previous' && !calPrev,
     filters: view.filters,
     daily: days >= 1 && days < 400,
     testPayments: view.test,
