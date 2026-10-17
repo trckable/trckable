@@ -23,6 +23,7 @@ export const extrasCopy = defineCopy('extras', {
   highlights: {
     tab: 'Highlights',
     label: 'What changed, against the period before',
+    failed: 'Couldn’t read what changed.',
     // `by`: the percentage only where the earlier figure can carry one (lib/thin): a handful before is just "up", ten times over is "more than 10x".
     moved: (name: string, change: number, now: number, was: number, by: 'percent' | 'capped' | 'bare') => {
       const dir = change >= 0 ? 'up' : 'down'
