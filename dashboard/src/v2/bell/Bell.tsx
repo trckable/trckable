@@ -9,6 +9,7 @@ import { openSettings } from '../../lib/settings'
 import { BellMenu, type BellRow } from '../ui/BellMenu'
 import { copy } from './copy'
 import { badge, type Notice } from './notices'
+import { useBellAlert } from './useBellAlert'
 import type { useNotices } from './useNotices'
 
 const MilestoneSheet = lazyLoad(() => import('./MilestoneSheet'))
@@ -32,6 +33,8 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   const { items, read, unread, mark, markAll, can } = notices
   const [sheet, setSheet] = useState(false)
   const [told, setTold] = useState<Milestone | null>(null)
+  const [open, setOpen] = useState(false)
+  const shaking = useBellAlert(items, read, unread, open, notices.ready)
   useEffect(() => {
     const q = window.matchMedia('(max-width: 600px)')
     const f = () => setSheet(q.matches)
@@ -40,11 +43,13 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
     return () => q.removeEventListener('change', f)
   }, [])
   if (!can) return null
-  const rows: BellRow[] = items.map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: !read.has(n.id) }))
+  const rows: BellRow[] = items.map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: !n.seen && !read.has(n.id) }))
   return (
     <>
     <BellMenu
       rows={rows}
+      shaking={shaking}
+      onOpenChange={setOpen}
       unread={unread}
       badge={badge(unread)}
       title={copy.title}
@@ -56,7 +61,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
         mark(id)
         const n = items.find((x) => x.id === id)
         n?.read?.()
-        if (n?.milestone && site) setTold(n.milestone)
+        if (n?.milestone && site && n.site === site.domain) setTold(n.milestone)
         else if (n?.open) n.open()
         else if (n) go(n)
       }}

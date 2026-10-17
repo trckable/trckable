@@ -1,6 +1,6 @@
 // The bell at the end of the header: a dot with how many are unread, and the list under it (a sheet on a phone).
 // Markup and classes are the walkthrough's own.
-import { useRef, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { MkPortal } from './Portal'
 import { useMenu } from './useMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
@@ -47,6 +47,10 @@ const PATH: Record<string, ReactNode> = {
 }
 
 interface BellProps {
+  /** The bell is mid-wiggle for something new (useBellAlert). */
+  shaking?: boolean
+  /** Told when the list opens or shuts. */
+  onOpenChange?: (open: boolean) => void
   rows: BellRow[]
   unread: number
   /** The count as the dot says it: "9+" over nine. */
@@ -106,10 +110,12 @@ function List(p: BellProps & { close: () => void }) {
 export function BellMenu(p: BellProps) {
   const { open, attach, toggle, close } = useMenu()
   const menu = useRef<HTMLDivElement>(null)
+  const { onOpenChange } = p
+  useEffect(() => onOpenChange?.(open), [open, onOpenChange])
   useTopLayerWhen(open && !p.sheet, menu)
   return (
     <div className="bellw" ref={attach} style={{ position: 'relative' }}>
-      <button type="button" className="ib bell" id="bellBtn" data-bell="1" data-key="notes" title={p.title} aria-label={p.title} aria-haspopup="menu" aria-expanded={open} onClick={toggle}>
+      <button type="button" className={`ib bell${p.shaking ? " shake" : ""}`} id="bellBtn" data-bell="1" data-key="notes" title={p.title} aria-label={p.title} aria-haspopup="menu" aria-expanded={open} onClick={toggle}>
         <i className="bdot" id="bellDot" style={p.unread ? undefined : { display: 'none' }}>
           {p.badge}
         </i>

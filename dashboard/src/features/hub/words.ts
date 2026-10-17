@@ -45,6 +45,5 @@ export const words = defineCopy('featureList', {
   language: { name: 'Languages', line: 'English, German, French, Spanish, Italian, Dutch' },
   shortcuts: { name: 'Shortcuts', line: 'Keys for the things you do most' },
   peek: { name: 'Peek', line: 'Ask your own assistant, over MCP' },
-  modules: { name: 'Modules', line: 'Switch pieces on, see their weight' },
   health: { name: 'Health', line: 'How this server is doing' },
 })

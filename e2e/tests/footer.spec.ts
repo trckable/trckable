@@ -113,7 +113,7 @@ test('a quiet site, none down, turns the dot amber and says how many', async ({ 
   const foot = await open(page)
   const status = foot.locator('.footer-status')
   await expect(status).toHaveAttribute('data-status', 'quiet')
-  await expect(status).toHaveText('1 quiet')
+  await expect(status).toHaveText('1 site quiet')
   await expect(foot.getByText('All systems normal')).toHaveCount(0)
   await status.hover()
   await expect(page.getByRole('tooltip')).toContainText('traffic, not an outage')

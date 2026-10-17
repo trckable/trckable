@@ -1,6 +1,5 @@
-// One site in the list that opens from the header: its dot (green while visits come, amber when quiet, red when down, hollow
-// when not installed), its name with what its state needs said in words, the check when something vouches for its numbers,
-// and who is on it now. Anyone who may arrange can drag the row, move it with Alt + ↑/↓ or its ⋯ menu (pin, a group).
+// One site in the list that opens from the header: its mark with the state dot on it (green while visits come, amber when quiet, red when down, hollow
+// when not installed), its name with what its state needs said in words, and today's visitors. Anyone who may arrange can drag the row, move it with Alt + ↑/↓ or its ⋯ menu (pin, a group).
 import { CircleAlert, GripVertical, Moon } from 'lucide-react'
 import type { Site } from '../../lib/api'
 import { Menu } from '../../components/Menu'
@@ -15,14 +14,13 @@ import { dotState } from '../../features/sites/StateDot'
 import { stateLine } from '../../features/sites/stateLine'
 import { OpenSite, openSiteTab } from '../../features/sites/OpenSite'
 import { silence } from '../../features/sitestatus/time'
-import { SiteSeal } from '../../features/verified/SiteSeal'
 import type { Arrange } from '../../features/sites/arrange'
-import { copy as v2 } from '../copy'
+import { SiteMark } from '../../components/SiteMark'
 
 const DOT = { now: 'now', live: '', quiet: 'quiet', stopped: 'down', new: 'off' } as const
 
 /** What stands where the people on it would: "setup", a moon (quiet) or an alert (down) when the dot alone cannot say it. */
-function Tail({ s, online, today }: { s: Site; online: number; today?: number }) {
+function Tail({ s, today }: { s: Site; today?: number }) {
   const state = dotState(s)
   if (state === 'new') {
     return (
@@ -46,9 +44,10 @@ function Tail({ s, online, today }: { s: Site; online: number; today?: number })
       </Tooltip>
     )
   }
+  if (today === undefined) return null
   return (
-    <span className="now" title={today === undefined ? undefined : copy.today(fmtInt(today))}>
-      <b>{fmtCompact(online)}</b> {v2.nowWord}
+    <span className="now" title={copy.today(fmtInt(today))}>
+      <b>{fmtCompact(today)}</b>
     </span>
   )
 }
@@ -58,7 +57,7 @@ function refocus(id: string) {
   requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-site="${CSS.escape(id)}"] .site`)?.focus())
 }
 
-export function SiteRow({ site, place, on, arrange: a, online, today, onPick }: { site: Site; place: Place; on: boolean; arrange: Arrange | null; online: number; today?: number; onPick: () => void }) {
+export function SiteRow({ site, place, on, arrange: a, today, onPick }: { site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; onPick: () => void }) {
   const name = site.name || site.domain
   const line = stateLine(site)
   const note = line ?? (site.domain === name ? undefined : site.domain)
@@ -89,13 +88,15 @@ export function SiteRow({ site, place, on, arrange: a, online, today, onPick }: 
           moveStep(e.key === 'ArrowUp' ? -1 : 1)
         }}
       >
-        <span className={`mk-dot ${DOT[dotState(site)]}`} title={first.dot[dotState(site)]} />
+        <span className="mkwrap">
+          <SiteMark site={site} size={22} />
+          <span className={`mk-dot ${DOT[dotState(site)]}`} title={first.dot[dotState(site)]} />
+        </span>
         <span className="mt2">
           <div className="nm">{name}</div>
           {note && <div className={`d${line ? ` state-line ${dotState(site)}` : ''}`}>{note}</div>}
         </span>
-        <SiteSeal verified={site.verified} />
-        <Tail s={site} online={online} today={today} />
+        <Tail s={site} today={today} />
       </button>
       <OpenSite domain={site.domain} />
       {a && <Moves site={site} place={place} a={a} step={moveStep} />}

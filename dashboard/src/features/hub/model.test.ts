@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MODULES } from '../../lib/modules'
+import { ALWAYS, CHOICES, MODULES } from '../../lib/modules'
 import { ICONS } from './icons'
 import { canOpen, canToggle, matches, statusOf } from './model'
 import { FEATURES, GROUPS, ownerOnly } from './registry'
@@ -12,9 +12,9 @@ const by = (id: string) => {
 }
 
 describe('the feature list', () => {
-  it('has every module the registry knows, once each', () => {
+  it('has every module that is connected or chosen, once each; what is simply there has no module', () => {
     const listed = FEATURES.flatMap((f) => (f.module ? [f.module] : []))
-    expect([...listed].sort()).toEqual(Object.keys(MODULES).sort())
+    expect([...listed].sort()).toEqual(Object.keys(MODULES).filter((id) => !ALWAYS.includes(id)).sort())
   })
 
   it('has each feature once, with a group, a name, a line and a picture', () => {
@@ -45,10 +45,10 @@ describe('the status of a card', () => {
 })
 
 describe('who may switch a module', () => {
-  it('an owner switches a module and nothing else; a viewer switches nothing', () => {
+  it('an owner switches a choice and nothing else; a viewer switches nothing', () => {
     for (const f of FEATURES) {
       expect(canToggle(f, false), f.id).toBe(false)
-      expect(canToggle(f, true), f.id).toBe(f.module !== undefined)
+      expect(canToggle(f, true), f.id).toBe(f.module !== undefined && CHOICES.includes(f.module))
     }
   })
 
@@ -58,9 +58,11 @@ describe('who may switch a module', () => {
     expect(canOpen(by('widgets'), { owner: true, mods: {} })).toBe(true)
   })
 
-  it('a module that is off has nowhere to open yet, and a feature with no place has none', () => {
-    expect(canOpen(by('map'), { owner: true, mods: { map: false } })).toBe(false)
-    expect(canOpen(by('map'), { owner: true, mods: { map: true } })).toBe(true)
+  it('a choice that is off has nowhere to open yet, a connection opens its settings, and a feature with no place has none', () => {
+    expect(canOpen(by('heatmaps'), { owner: true, mods: { heatmaps: false } })).toBe(false)
+    expect(canOpen(by('heatmaps'), { owner: true, mods: { heatmaps: true } })).toBe(true)
+    expect(canOpen(by('revenue'), { owner: true, mods: { revenue: false } })).toBe(true)
+    expect(canOpen(by('map'), { owner: true, mods: {} })).toBe(true)
     expect(canOpen(by('sso'), { owner: true, mods: {} })).toBe(false)
   })
 })

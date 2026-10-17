@@ -261,10 +261,9 @@ func (a *API) pagesSell(w http.ResponseWriter, r *http.Request) {
 // buyers serves GET /api/v1/sites/{site}/buyers: the latest sales in the
 // period (new customers, not renewals), newest first, each with its path. The
 // report's own reading: its attribution, its filters, test payments when it
-// asks for them. Needs the revenue and journeys modules: the same reads the
-// People tab and the report already make. Never a name, an email or an id.
+// asks for them. Needs a payment provider connected. Never a name, an email or an id.
 func (a *API) buyers(w http.ResponseWriter, r *http.Request) {
-	if !a.needs(w, r, "revenue") || !a.needs(w, r, "journeys") {
+	if !a.needs(w, r, "revenue") {
 		return
 	}
 	q := a.Query()

@@ -476,7 +476,7 @@ export function middleware(req) {
     ua: req.headers.get('user-agent'),
   })
 }`,
-    note: 'Turn the AI crawlers module on first (Settings → Modules), or nothing is recorded: then it shows who reads you to answer questions, who indexes you, and who collects training data. It needs TRCKABLE_PROXY_KEY on the server.',
+    note: 'Once robots are reported it shows who reads you to answer questions, who indexes you, and who collects training data. It needs TRCKABLE_PROXY_KEY on the server.',
     keywords: 'gptbot chatgpt claude perplexity googlebot ai crawler robots seo',
   },
   {

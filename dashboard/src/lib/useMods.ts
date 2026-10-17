@@ -1,7 +1,7 @@
 // Which modules the open site has on, for the dashboard: read once, and read
-// again whenever Settings → Modules (or a card that turns one on) changes
-// them, so a module that was just switched on shows its entry points without a
-// reload. A shared link carries its modules and never asks.
+// again whenever What the script records (or a card that turns one on)
+// changes them, so a choice that was just switched on shows its entry points
+// without a reload. A shared link carries its modules and never asks.
 import { useEffect, useState } from 'react'
 import { api } from './api'
 import { isShared, sharedModules } from './me'

@@ -141,6 +141,9 @@ func TestLiveNowIsExact(t *testing.T) {
 			t.Fatalf("minute %d: %v, want %v (all %v vs %v)", i, got[i], minutes[i], got, minutes)
 		}
 	}
+	for v := range online {
+		cur[v] = true // whoever is online is in the half hour, whatever their event was
+	}
 	if out["visitors"] != float64(len(cur)) || out["previous"] != float64(len(prev)) || out["online"] != float64(len(online)) {
 		t.Fatalf("visitors %v previous %v online %v, want %d %d %d", out["visitors"], out["previous"], out["online"], len(cur), len(prev), len(online))
 	}
@@ -169,8 +172,9 @@ func TestLiveNowIsExact(t *testing.T) {
 	}
 }
 
-// With the journeys module off, no row carries a visitor id, as on the
-// stream; with revenue off there is no money. A share link has no Live.
+// Journeys have no switch, so every row carries the visitor id even when an
+// old client asks to turn them off; with revenue off there is no money. A
+// share link has no Live.
 func TestLiveNowFollowsModulesAndAccess(t *testing.T) {
 	g := newRig(t)
 	c := client()
@@ -191,13 +195,13 @@ func TestLiveNowFollowsModulesAndAccess(t *testing.T) {
 		return out["recent"].([]any)[0].(map[string]any)["visitor"]
 	}
 	if v := visitorOf(); v != "5" {
-		t.Fatalf("journeys on: visitor %v", v)
+		t.Fatalf("journeys: visitor %v", v)
 	}
 	if code, _ := do(t, c, "PUT", base+"/modules/journeys", `{"enabled":false}`, csrf, "1"); code != 200 {
 		t.Fatal("journeys off")
 	}
-	if v := visitorOf(); v != nil {
-		t.Fatalf("journeys off: visitor %v sent", v)
+	if v := visitorOf(); v != "5" {
+		t.Fatalf("journeys asked off: visitor %v, want 5 (no switch)", v)
 	}
 
 	// A share session is no way in.
@@ -320,6 +324,24 @@ func TestLiveNowStillHereKeepsOnlineWithoutViews(t *testing.T) {
 	}
 	if views != 1 {
 		t.Fatalf("page views %v after the pings, want 1", views)
+	}
+}
+
+// Someone whose page was opened before the half hour and who is still pinging is online, so the half hour counts them
+// too: Online is never more than the half hour's visitors.
+func TestLiveNowOnlineIsNeverMoreThanTheHalfHour(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	now := g.advance(time.Second)
+	ms := now.UnixMilli()
+	min := int64(60_000)
+	g.event(t, event.Event{Kind: event.KindPageview, EventID: 1, TS: ms - 40*min, Visitor: 1, Pageview: 1, Path: "/open"})
+	g.event(t, event.Event{Kind: event.KindEngagement, EventID: 2, TS: ms - min, Visitor: 1, Pageview: 1, Path: "/open", EngagedMs: 39 * 60_000})
+	g.waitApplied(t, 2)
+	_, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/now", "")
+	if out["online"] != float64(1) || out["visitors"].(float64) < out["online"].(float64) {
+		t.Fatalf("online %v, visitors %v", out["online"], out["visitors"])
 	}
 }
 

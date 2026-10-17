@@ -15,7 +15,8 @@ import { policyCaveats, policyText } from '../lib/policy'
 import { Row } from '../components/Row'
 import { DialogActions } from '../components/DialogActions'
 import { BarPreview } from '../components/BarPreview'
-import { setSettingsTab, settingsParam } from '../lib/settings'
+import { settingsParam } from '../lib/settings'
+import { ConsentOff } from './ConsentOff'
 import './Privacy.css'
 import { Loading } from '../components/loading/Loading'
 import { ReportRows } from './ReportRows'
@@ -156,7 +157,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
         {free && <span className="faint eu-note">Visitors get the smaller, storage-free script within the hour.</span>}
       </section>
 
-      {!free && <Consent site={site} config={c} on={!!mods?.consent} onSave={save} />}
+      {!free && <Consent site={site} config={c} on={!!mods?.consent} onSave={save} onOn={() => setMods((m) => ({ ...m, consent: true }))} />}
 
       <section className="card" style={{ gap: 0 }}>
         <div className="card-head" style={{ paddingBottom: 10 }}>
@@ -239,7 +240,7 @@ function previewClass(position?: string) {
 /** One card for one decision: keep the cookie and ask first. How you ask —
  *  by reading the consent manager the site already runs, or with a bar of
  *  trckable's own — is a setting inside it, not a second module. */
-function Consent({ config, on, onSave }: { site: Site; config: SiteConfig; on: boolean; onSave: (patch: Partial<SiteConfig>, said?: string) => void }) {
+function Consent({ site, config, on, onSave, onOn }: { site: Site; config: SiteConfig; on: boolean; onSave: (patch: Partial<SiteConfig>, said?: string) => void; onOn: () => void }) {
   const saved = { ...EMPTY_BAR, ...(config.banner ?? {}) }
   const [b, setB] = useState(saved)
   const [css, setCSS] = useState(false)
@@ -272,23 +273,7 @@ function Consent({ config, on, onSave }: { site: Site; config: SiteConfig; on: b
   if (b.position === 'wide') look['--tkb-width'] = 'none'
   const cssAction = b.css ? 'Edit' : 'Write CSS'
 
-  if (!on) {
-    return (
-      <section className="card" id="consent" style={{ gap: 12 }}>
-        <div className="card-head">
-          <h2>Cookie consent</h2>
-          <Info text="For sites that want the cookie and the returning-visitor numbers that come with it, and are willing to ask first. Cookieless mode above is the other answer: no cookie, and nothing stored on the device. A visitor who declines your banner is never counted, and the first page waits for their answer." />
-        </div>
-        <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
-          Keep the cookie and ask first. trckable can read the consent manager you already run, or ask with a small bar of its own — about its one cookie and nothing else. Turn on the
-          Cookie consent module to choose.
-        </p>
-        <button type="button" className="btn" style={{ alignSelf: 'flex-start' }} onClick={() => setSettingsTab('modules')}>
-          Open Modules
-        </button>
-      </section>
-    )
-  }
+  if (!on) return <ConsentOff site={site} onOn={onOn} />
 
   return (
     <section className="card" id="consent" style={{ gap: 12 }}>

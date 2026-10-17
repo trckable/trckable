@@ -4,11 +4,14 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/trckable/trckable/server/internal/web"
 )
 
-// Every route a module owns answers 404 while that module is off, and works
-// again once it is back on. The table is the gate's own, so a route added to
-// it later is tested without being listed here.
+// Every route the gate still guards (payments while no provider is connected,
+// heatmaps while the choice is off) answers 404, and works again once it is
+// on. The table is the gate's own, so a route added to it later is tested
+// without being listed here.
 func TestDisabledModuleRefusesItsRoutes(t *testing.T) {
 	g := newRig(t)
 	c := client()
@@ -41,24 +44,58 @@ func TestDisabledModuleRefusesItsRoutes(t *testing.T) {
 	}
 }
 
-// With Notes off a note cannot be added; turned back on, the same request
-// works. With Goals off, page goals cannot be changed, but the rest of the
-// site's settings still save.
+// Features without a switch keep answering when an older client asks to turn
+// them off: the request is accepted, the list still says on, and the routes
+// they own work, notes included.
+func TestFeaturesWithoutASwitchAlwaysAnswer(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	base := g.srv.URL + "/api/v1/sites/" + g.site
+	period := "?from=2026-09-01&to=2026-09-21&tz=UTC"
+	for _, id := range []string{"funnels", "notes", "rhythm", "journeys", "map", "retention", "crawlers"} {
+		code, out := do(t, c, "PUT", base+"/modules/"+id, `{"enabled":false}`, csrf, "1")
+		if code != http.StatusOK {
+			t.Fatalf("asking %s off: %d %v", id, code, out)
+		}
+		for _, m := range out["modules"].([]any) {
+			if row := m.(map[string]any); row["id"] == id && row["enabled"] != true {
+				t.Errorf("%s reads %v after asking it off, want on", id, row["enabled"])
+			}
+		}
+	}
+	for _, path := range []string{
+		"/annotations" + period, "/report/retention" + period, "/report/crawlers" + period,
+		"/report/heatmap" + period, "/report/funnel" + period + "&steps=%5B%5D",
+	} {
+		if code, out := do(t, c, "GET", base+path, ""); code == http.StatusNotFound {
+			t.Errorf("GET %s answered 404 (%v): a feature without a switch must work", path, out)
+		}
+	}
+	// A journey and the latest buyers no longer wait for journeys to be on.
+	if code, out := do(t, c, "GET", base+"/journey/1"+period, ""); code == http.StatusNotFound {
+		t.Errorf("GET /journey answered 404 (%v) with journeys asked off", out)
+	}
+	if code, _ := do(t, c, "GET", base+"/buyers"+period, ""); code != http.StatusNotFound {
+		t.Errorf("GET /buyers with no provider connected: %d, want 404", code)
+	}
+	do(t, c, "PUT", base+"/modules/revenue", `{"enabled":true}`, csrf, "1")
+	if code, out := do(t, c, "GET", base+"/buyers"+period, ""); code == http.StatusNotFound {
+		t.Errorf("GET /buyers with revenue connected and journeys asked off answered 404 (%v)", out)
+	}
+	note := `{"day":"2026-09-20","text":"Launch"}`
+	if code, out := do(t, c, "POST", base+"/annotations", note, csrf, "1"); code != http.StatusCreated {
+		t.Errorf("a note with Notes asked off: %d %v, want 201", code, out)
+	}
+}
+
+// With Goals off, page goals cannot be changed, but the rest of the site's
+// settings still save.
 func TestModuleOffRefusesWritesThenAllowsThem(t *testing.T) {
 	g := newRig(t)
 	c := client()
 	g.setup(t, c)
 	base := g.srv.URL + "/api/v1/sites/" + g.site
-	note := `{"day":"2026-09-20","text":"Launch"}`
-	do(t, c, "PUT", base+"/modules/notes", `{"enabled":false}`, csrf, "1")
-	if code, _ := do(t, c, "POST", base+"/annotations", note, csrf, "1"); code != http.StatusNotFound {
-		t.Errorf("note with Notes off: %d, want 404", code)
-	}
-	do(t, c, "PUT", base+"/modules/notes", `{"enabled":true}`, csrf, "1")
-	if code, _ := do(t, c, "POST", base+"/annotations", note, csrf, "1"); code != http.StatusCreated {
-		t.Errorf("note with Notes on: %d, want 201", code)
-	}
-
 	do(t, c, "PUT", base+"/modules/goals", `{"enabled":false}`, csrf, "1")
 	if code, _ := do(t, c, "PUT", base+"/config", `{"page_goals":[{"name":"Saw pricing","path":"/pricing"}]}`, csrf, "1"); code != http.StatusNotFound {
 		t.Errorf("page goal with Goals off: %d, want 404", code)
@@ -69,5 +106,24 @@ func TestModuleOffRefusesWritesThenAllowsThem(t *testing.T) {
 	do(t, c, "PUT", base+"/modules/goals", `{"enabled":true}`, csrf, "1")
 	if code, _ := do(t, c, "PUT", base+"/config", `{"page_goals":[{"name":"Saw pricing","path":"/pricing"}]}`, csrf, "1"); code != http.StatusOK {
 		t.Errorf("page goal with Goals on: %d, want 200", code)
+	}
+}
+
+// Outbound links and forms ship with Goals and share code with it: the list
+// shows what they add on top of Goals, as the tracker build measured it.
+func TestOutboundAndFormsShowTheirSizeOnGoals(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	_, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/modules", "")
+	sizes := web.TrackerSizes()
+	for _, m := range out["modules"].([]any) {
+		row := m.(map[string]any)
+		id, _ := row["id"].(string)
+		if want, ok := sizes.OnGoals[id]; ok {
+			if got, _ := row["tracker_bytes"].(float64); int(got) != want || want <= 0 || want >= sizes.Feature[id] {
+				t.Errorf("%s: list says %v B, on Goals it is %d B (alone %d B)", id, row["tracker_bytes"], want, sizes.Feature[id])
+			}
+		}
 	}
 }

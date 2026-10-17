@@ -1,0 +1,25 @@
+/* ScriptRecords.tsx: loaded with the settings chunk. */
+.rec-lead {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+.rec-subs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0 12px 16px;
+}
+.rec-sub {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+}
+.rec-sub .faint {
+  margin-left: auto;
+  font-size: 12px;
+}
+.rec-foot {
+  margin-top: 12px;
+  font-size: 12px;
+}

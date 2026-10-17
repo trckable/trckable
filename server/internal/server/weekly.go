@@ -88,7 +88,7 @@ func amount(minor int64, cur string, exp int) string {
 }
 
 // aiWeek is what AI did in the week: the visitors its assistants sent, and the
-// hits its crawlers made (answering and training; zero with the crawlers module off).
+// hits its crawlers made (answering and training).
 type aiWeek struct{ Visitors, Crawls int64 }
 
 // aiLine is the report's one line about AI, or none when it was quiet.
@@ -270,10 +270,8 @@ func (s *Server) weeklyEvent(ctx context.Context, q *query.Q, info sqlite.SiteIn
 			ai.Visitors = r.Visitors
 		}
 	}
-	if set.Has("crawlers") {
-		if rep, err := q.Crawlers(ctx, p); err == nil {
-			ai.Crawls = rep.Kinds["answer"] + rep.Kinds["train"]
-		}
+	if rep, err := q.Crawlers(ctx, p); err == nil {
+		ai.Crawls = rep.Kinds["answer"] + rep.Kinds["train"]
 	}
 	link := ""
 	if s.cfg.BaseURL != "" {

@@ -45,23 +45,20 @@ func TestCrawlerSpecificityWins(t *testing.T) {
 	}
 }
 
-// With the Crawlers module off a report is answered 202 and nothing is
-// written; with it on, the hit is recorded.
-func TestCrawlRespectsTheModule(t *testing.T) {
-	for _, on := range []bool{false, true} {
-		h, l := newHandler(t)
-		h.Module = func(site, id string) bool { return on }
-		before, _ := l.Committed()
-		req := httptest.NewRequest(http.MethodPost, "/api/crawl", strings.NewReader(`{"s":"tkb_test","u":"https://site.com/pricing","ua":"GPTBot/1.2","st":200}`))
-		req.Header.Set("X-Trckable-Proxy-Key", "tkb_px_secret")
-		w := httptest.NewRecorder()
-		h.Crawl(w, req)
-		if w.Code != http.StatusAccepted {
-			t.Fatalf("module on=%v: status %d %s", on, w.Code, w.Body)
-		}
-		after, _ := l.Committed()
-		if wrote := after > before; wrote != on {
-			t.Fatalf("module on=%v: wrote=%v", on, wrote)
-		}
+// Crawlers have no switch: a report is recorded whatever any module list
+// says, and answered 202 so the site's middleware sees no error to log.
+func TestCrawlIsAlwaysRecorded(t *testing.T) {
+	h, l := newHandler(t)
+	h.Module = func(site, id string) bool { return id != "crawlers" }
+	before, _ := l.Committed()
+	req := httptest.NewRequest(http.MethodPost, "/api/crawl", strings.NewReader(`{"s":"tkb_test","u":"https://site.com/pricing","ua":"GPTBot/1.2","st":200}`))
+	req.Header.Set("X-Trckable-Proxy-Key", "tkb_px_secret")
+	w := httptest.NewRecorder()
+	h.Crawl(w, req)
+	if w.Code != http.StatusAccepted {
+		t.Fatalf("status %d %s", w.Code, w.Body)
+	}
+	if after, _ := l.Committed(); after <= before {
+		t.Fatal("the crawler hit was not recorded")
 	}
 }

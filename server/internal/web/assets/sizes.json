@@ -11,6 +11,10 @@
     "forms": 108,
     "heat": 1535
   },
+  "feature_on_goals": {
+    "outbound": 88,
+    "forms": 101
+  },
   "variants": {
     "core": 1650,
     "g": 1835,

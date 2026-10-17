@@ -22,7 +22,7 @@ export type Where =
 export interface Feature {
   id: string
   group: GroupId
-  /** The module that switches it on and off. */
+  /** The module behind it, when connecting or choosing it changes anything: not for what is simply there. */
   module?: string
   where?: Where
 }
@@ -34,21 +34,21 @@ const full: Where = { to: 'full' }
 export const FEATURES: Feature[] = [
   { id: 'live', group: 'traffic', where: { to: 'live' } },
   { id: 'allsites', group: 'traffic', where: { to: 'all' } },
-  { id: 'map', group: 'traffic', module: 'map', where: full },
+  { id: 'map', group: 'traffic', where: full },
   { id: 'ai', group: 'traffic', where: { to: 'ai' } },
-  { id: 'crawlers', group: 'traffic', module: 'crawlers', where: { to: 'ai' } },
+  { id: 'crawlers', group: 'traffic', where: { to: 'ai' } },
   { id: 'search', group: 'traffic', module: 'search', where: settings('search') },
   { id: 'outbound', group: 'traffic', module: 'outbound' },
   { id: 'forms', group: 'traffic', module: 'forms' },
-  { id: 'rhythm', group: 'traffic', module: 'rhythm', where: full },
+  { id: 'rhythm', group: 'traffic', where: full },
 
   { id: 'goals', group: 'insights', module: 'goals', where: full },
-  { id: 'funnels', group: 'insights', module: 'funnels', where: full },
-  { id: 'journeys', group: 'insights', module: 'journeys', where: full },
-  { id: 'retention', group: 'insights', module: 'retention', where: full },
+  { id: 'funnels', group: 'insights', where: full },
+  { id: 'journeys', group: 'insights', where: full },
+  { id: 'retention', group: 'insights', where: full },
   { id: 'vitals', group: 'insights', module: 'vitals', where: full },
   { id: 'heatmaps', group: 'insights', module: 'heatmaps', where: full },
-  { id: 'notes', group: 'insights', module: 'notes', where: settings('notes') },
+  { id: 'notes', group: 'insights', where: settings('notes') },
   { id: 'milestones', group: 'insights', where: settings('notes') },
   { id: 'replay', group: 'insights', where: { to: 'press', key: 'replay' } },
   { id: 'segments', group: 'insights', where: { to: 'press', key: 'filter' } },
@@ -80,7 +80,6 @@ export const FEATURES: Feature[] = [
   { id: 'language', group: 'setup', where: { to: 'press', key: 'user' } },
   { id: 'shortcuts', group: 'setup', where: { to: 'shortcuts' } },
   { id: 'peek', group: 'setup', where: { to: 'press', key: 'ask' } },
-  { id: 'modules', group: 'setup', where: settings('modules') },
   { id: 'health', group: 'setup', where: settings('health') },
 ]
 
