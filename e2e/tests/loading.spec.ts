@@ -18,7 +18,7 @@ async function holdBoot(page: Page) {
 test('the first paint is the ghost, announced as a status', async ({ page }) => {
   const release = await holdBoot(page)
   await page.goto(API + '/', { waitUntil: 'commit' })
-  const status = page.getByRole('status', { name: /loading/i })
+  const status = page.getByRole('status', { name: /loading/i }).first()
   await expect(status).toBeVisible()
   await expect(status).toHaveAttribute('aria-busy', 'true')
   await expect(status.locator('.ld-boo')).toHaveCount(1)
