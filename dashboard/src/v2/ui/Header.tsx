@@ -1,7 +1,7 @@
 // The header, one row: the ghost (all sites), the site, Live | Briefing, the period, and on the right ⌘K, the plan, the bell and the
 // person. Nothing else lives here: no filters, no share, no second row. A phone keeps the site and the person; the
 // period moves into the page, and the switch into the bar at the bottom.
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { ghostSvg } from '../../brand/logo'
 import '../../brand/logo.css'
 
@@ -49,9 +49,22 @@ interface HeaderProps {
   keys?: ReactNode
 }
 
+/** Whether the page has moved under the header (its bottom edge shows then). */
+function useStuck(): boolean {
+  const [stuck, setStuck] = useState(false)
+  useEffect(() => {
+    const on = () => setStuck(window.scrollY > 0)
+    on()
+    window.addEventListener('scroll', on, { passive: true })
+    return () => window.removeEventListener('scroll', on)
+  }, [])
+  return stuck
+}
+
 export function Header(p: HeaderProps) {
+  const stuck = useStuck()
   return (
-    <header className="hd">
+    <header className="hd" data-stuck={stuck}>
       {p.logo}
       <div>{p.site}</div>
       {p.views}

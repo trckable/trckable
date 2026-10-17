@@ -8,6 +8,9 @@
 .mk .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .mk{width:100%;max-width:1440px;padding:22px 32px 40px;container-type:inline-size}
 .mk .hd{display:flex;align-items:center;gap:14px}
+/* The header stays at the top of the window; its bottom edge shows once the page has moved under it (data-stuck, Header.tsx). */
+.mk .hd{position:sticky;top:0;z-index:20;margin:-22px -32px 0;padding:22px 32px 0;box-sizing:content-box;background:var(--mk-bg);border-bottom:1px solid transparent;transition:border-color .15s}
+.mk .hd[data-stuck=true]{border-bottom-color:var(--mk-line)}
 .mk .logo{width:34px;height:34px}
 .mk .mk-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--mk-line);background:var(--mk-card);border-radius:12px;height:36px;padding:0 12px;font-weight:600}
 .mk .mk-dot{width:8px;height:8px;border-radius:50%;background:var(--mk-green);flex:none}

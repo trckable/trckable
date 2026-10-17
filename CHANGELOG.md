@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The header stays at the top of the window while you scroll (its bottom edge shows once the page has moved under it), and N (Now) and 4 (28 days) pick a period again, with the ? list naming them.
 - Switching between Live and the Briefing is smooth: the other tab's code is fetched while the page is idle, a tab you come back to shows what it showed at once and refreshes behind it (no "Loading" line, no page building up piece by piece), the first visit shows a loading shape with the page's own boxes and sizes (Live too, no layout shift), and Explore opens and closes with a fade and a glide that finish before it leaves (instant with reduced motion).
 - The light theme reads clearly across the new pages: the Briefing chart's lime lines, labels and sales pills use the darker green, the selected tab and palette row, the skeleton shimmer, the phone's tab bar and the scrims are light instead of dark slabs, and the down band, usual band and the "now" shade show on white. The colours are tokens now, so dark looks the same.
 - Settings → Payments shows the number of payments recorded, and its Finish setup button sits under the text inside the card on a phone.
