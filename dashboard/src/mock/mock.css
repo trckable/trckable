@@ -1658,3 +1658,8 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .lrevb .lkgo{height:32px;padding:0 14px;border-radius:10px;background:var(--mk-lime);color:var(--mk-on-lime);font-weight:600}
 .mk .lrevb .how{color:var(--mk-muted);font-size:13px}
 .mk .lsp{display:block;width:100%;height:44px;color:var(--mk-lime);margin-top:var(--mk-s2)}
+
+/* Live's calm motion: the bars slide one place left when a minute passes, and the Live dot beats once for each visit. */
+.mk .lchart.shift{animation:mk-shift .3s ease-out}
+@keyframes mk-shift{from{opacity:.55;transform:translateX(3%)}}
+.mk .mk-pulse.ev{animation:mk-beat 1s ease-out 1,mk-pl 2s infinite}
