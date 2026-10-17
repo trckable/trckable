@@ -53,6 +53,10 @@ export function PageHeader(p: PageHeaderProps) {
   const viewer = isViewer()
   const [find, setFind] = useState(false)
   const [seed, setSeed] = useState('')
+  const openFind = (q: string) => {
+    setSeed(q)
+    setFind(true)
+  }
   useEffect(() => whenIdle(Palette.preload), [])
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -123,12 +127,12 @@ export function PageHeader(p: PageHeaderProps) {
               </button>
             )}
             {here && (
-              <button type="button" className="sr" data-key="filter" tabIndex={-1} aria-hidden="true" onClick={() => (setSeed(''), setFind(true))}>
+              <button type="button" className="sr" data-key="filter" tabIndex={-1} aria-hidden="true" onClick={() => openFind('')}>
                 {copy.filter}
               </button>
             )}
             {here && !viewer && (
-              <button type="button" className="sr" data-key="create" tabIndex={-1} aria-hidden="true" onClick={() => (setSeed(pal.create), setFind(true))}>
+              <button type="button" className="sr" data-key="create" tabIndex={-1} aria-hidden="true" onClick={() => openFind(pal.create)}>
                 {pal.create}
               </button>
             )}

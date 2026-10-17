@@ -35,7 +35,11 @@ export function NoteLine({ n, site, onChanged }: { n: Annotation; site: string; 
           save()
         }}
       >
-        <input required maxLength={140} autoFocus value={text} aria-label={copy.text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && (e.stopPropagation(), setEditing(false))} />
+        <input required maxLength={140} autoFocus value={text} aria-label={copy.text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => {
+          if (e.key !== 'Escape') return
+          e.stopPropagation()
+          setEditing(false)
+        }} />
         <button type="button" className="xb" onClick={() => setEditing(false)}>
           {copy.cancel}
         </button>

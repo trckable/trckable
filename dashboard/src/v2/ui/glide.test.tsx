@@ -24,9 +24,10 @@ describe('the glide', () => {
     expect(parse('1.284', de)?.n).toBe(1284)
     expect(parse('3,4 s', de)).toMatchObject({ n: 3.4, dec: 1, post: ' s' })
     expect(parse('12,3 %', de)).toMatchObject({ n: 12.3, dec: 1 })
-    const p = parse('3,4 s', de)!
-    expect(write(p, 5.25, de)).toBe('5,3 s')
-    expect(write(parse('1.284', de)!, 2500, de)).toBe('2.500')
+    const p = parse('3,4 s', de)
+    expect(p && write(p, 5.25, de)).toBe('5,3 s')
+    const k = parse('1.284', de)
+    expect(k && write(k, 2500, de)).toBe('2.500')
     const fr = marksOf('fr')
     expect(parse(`1${fr.group}284`, fr)?.n).toBe(1284)
     expect(parse('3.4 s', marksOf('en-US'))?.n).toBe(3.4)
