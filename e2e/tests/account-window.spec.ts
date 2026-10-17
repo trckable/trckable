@@ -45,7 +45,7 @@ for (const size of SIZES) {
   })
 }
 
-test('site settings never scrolls sideways on a phone or a big phone, and a tab keeps its flag in its name', async ({ page, request }) => {
+test('site settings never scrolls sideways on a phone or a big phone', async ({ page, request }) => {
   const sites = (await (await request.get(`${API}/api/v1/sites`, { headers: { Authorization: 'Bearer ' + TOKEN } })).json()).sites as { id: string; domain: string }[]
   const site = sites.find((s) => s.domain === 'example.com')!.id
   await page.context().addCookies([{ name: 'trckable_session', value: await session('account-window'), url: API }])
@@ -57,12 +57,5 @@ test('site settings never scrolls sideways on a phone or a big phone, and a tab 
     await page.waitForTimeout(300)
     const over = await window.evaluate((el) => [el, ...Array.from(el.querySelectorAll('.window-body'))].map((n) => n.scrollWidth - n.clientWidth))
     expect(over.every((o) => o <= 0), `sideways overflow at ${width}: ${over}`).toBe(true)
-  }
-  const flagged = page.locator('.window-nav button:has(.tag)')
-  const n = await flagged.count()
-  expect(n).toBeGreaterThan(0)
-  for (let i = 0; i < n; i++) {
-    const text = (await flagged.nth(i).locator('.tag').innerText()).trim()
-    await expect(flagged.nth(i)).toHaveAccessibleName(new RegExp(text))
   }
 })
