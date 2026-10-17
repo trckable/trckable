@@ -706,6 +706,11 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .hero .ch-top{display:flex;align-items:center;justify-content:space-between}
 .mk .bdot{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--mk-lime);color:#0a0b0c;font-size:12px;font-style:normal;font-weight:700;display:grid;place-items:center;padding:0 4px;line-height:1}
 .mk .ib.bell{position:relative}
+/* A notice that can be put away: a small × at its right (a build with its own list) */
+.mk .nfw{position:relative}
+.mk .nfw .nfx{position:absolute;top:8px;right:8px;width:24px;height:24px;border:0;border-radius:50%;background:none;color:var(--mk-muted);font-size:16px;line-height:1;cursor:pointer;opacity:0}
+.mk .nfw:hover .nfx,.mk .nfw .nfx:focus-visible{opacity:1}
+@media (hover:none){.mk .nfw .nfx{opacity:1}}
 /* A short wiggle for what is new (useBellAlert): the glyph turns about the top of the bell; not with reduced motion. */
 .mk .ib.bell.shake svg{transform-origin:50% 12%;animation:mk-bell-shake .6s ease-in-out}
 @keyframes mk-bell-shake{0%,100%{transform:rotate(0)}15%{transform:rotate(16deg)}30%{transform:rotate(-14deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(4deg)}}
@@ -1266,6 +1271,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .xp .mk-more:hover{color:var(--mk-text)}
 .mk .xempty{display:flex;flex-direction:column;align-items:flex-start;gap:var(--mk-s2);padding:var(--mk-s5) 0;color:var(--mk-muted);font-size:13px}
 .mk .xempty b{color:var(--mk-text);font-weight:600;font-size:14px}
+.mk .xerr svg{width:20px;height:20px;color:var(--mk-muted)}
 .mk .xnote .xb{height:34px}
 .mk .xt.xc .xrw .two{min-width:0;display:flex;flex-direction:column;gap:2px;padding:var(--mk-s1) 0}
 .mk .xt.xc .xrw .two .mtt{font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px}
@@ -1316,8 +1322,8 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .sk{animation:none}
 }
 @media (max-width:600px){
-.mk .xsub{display:grid;grid-auto-columns:minmax(0,1fr);width:100%}
-.mk .xsub button{height:44px;font-size:13px}
+.mk .xsub{display:flex;width:100%;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scroll-padding:0 var(--mk-s3)}
+.mk .xsub button{flex:1 0 auto;height:44px;font-size:13px;overflow:visible;text-overflow:clip;scroll-snap-align:center}
 .mk .xedr .xsub{width:auto;flex:1}
 .mk .xchip2{height:36px}
 .mk .xchip2 button{width:32px;height:32px}
@@ -1518,6 +1524,9 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .fresh-back:hover{color:var(--mk-text)}
 @media (max-width:600px){.mk .downbox .lk3{display:inline-flex;align-items:center;min-height:44px;min-width:44px}}
 .mk .sitelist > :not(#siteList){flex:none}
+/* A site waiting to be handed to someone: a Stop on its row, its line readable on both themes */
+.mk .site-row .sw-stop{flex:none;height:28px;margin-left:4px;padding:0 10px;font-size:12px}
+.mk .site-row .d.state-line.moving{color:var(--mk-text)}
 /* the period when it is not today: the pill and a × that goes back */
 .mk .pwrap.set{display:flex;align-items:center}
 .mk .pwrap.set .pill{border-top-right-radius:0;border-bottom-right-radius:0;border-right:0}

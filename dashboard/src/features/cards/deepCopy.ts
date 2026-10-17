@@ -56,6 +56,7 @@ export const deepCopy = defineCopy('cards.deep', {
     pages: (n: number, time: string) => `${fmtInt(n)} ${n === 1 ? 'page' : 'pages'} · ${time}`,
     goal: 'goal',
     none: 'No visits recorded yet.',
+    failed: 'Couldn’t read the latest people.',
     open: 'See this visitor’s whole journey',
   },
 })

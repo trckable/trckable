@@ -34,7 +34,7 @@ export function Sales({ x, d }: { x: XCtx; d: Model }) {
   return (
     <>
       <XSub label={copy.kindLabel} attr="xkind" value={x.kind} items={KINDS.map((k) => ({ key: k, label: copy.kinds[k || 'all'] }))} onPick={x.setKind} />
-      <XSec a={copy.saleCount(list.length)} b={
+      <XSec a={x.kind ? copy.kinds[x.kind as Sale['kind']] : copy.saleCount(d.payments)} b={
           <>
             {`${x.money(net)} ${copy.net}`}
             <SourceChip verified={x.site.verified} slot="revenue" />

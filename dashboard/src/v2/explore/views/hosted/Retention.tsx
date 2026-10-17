@@ -1,9 +1,9 @@
 // Retention as a table of the explore kind: the week people first came in the rows, the weeks after across, one ramp of
 // the accent in the cells and the average under them.
-import { useEffect, useState } from 'react'
-import { XEmpty } from '../../../ui/XBits'
+import { XEmpty, XError } from '../../../ui/XBits'
+import { useLoad } from '../../data/useLoad'
 import { Loading } from '../../../../components/loading/Loading'
-import { type Cohorts, type ReportQuery, more } from '../../../../lib/apiMore'
+import { type ReportQuery, more } from '../../../../lib/apiMore'
 import { fmtInt, fmtPct } from '../../../../lib/format'
 import { tag } from '../../../../i18n'
 import { deepCopy } from '../../../../features/cards/deepCopy'
@@ -14,21 +14,11 @@ const weekLabel = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateStrin
 
 export function XRetention({ x, query }: { x: XCtx; query: ReportQuery }) {
   const c = deepCopy.retention
-  const [data, setData] = useState<Cohorts | null>(null)
-  const [err, setErr] = useState(false)
-  useEffect(() => {
-    let live = true
-    more
-      .retention(x.site.id, query)
-      .then((d) => live && setData(d))
-      .catch(() => live && setErr(true))
-    return () => {
-      live = false
-    }
-  }, [x.site.id, query])
-  const r = retentionOf(data)
-  if (err) return <XEmpty title={c.failed} hint="" />
-  if (!data) return <Loading height={140} />
+  const key = `${x.site.id}|${query.from}|${query.to}|${query.testPayments ? 'test' : ''}|${JSON.stringify(query.filters ?? [])}`
+  const got = useLoad(key, () => more.retention(x.site.id, query), true)
+  if (got.state === 'loading') return <Loading height={140} />
+  if (got.state === 'error') return <XError title={c.failed} onRetry={got.retry} />
+  const r = retentionOf(got.data)
   if (r.kind === 'none') return <XEmpty title={c.none} hint="" />
   if (r.kind === 'line') return <XEmpty title={c.nextWeek(r.nextWeek)} hint="" />
   return (

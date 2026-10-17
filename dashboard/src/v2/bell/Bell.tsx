@@ -30,7 +30,7 @@ function go(n: Notice) {
 }
 
 export function Bell({ site, notices }: { site: Site | null; notices: ReturnType<typeof useNotices> }) {
-  const { items, read, unread, mark, markAll, can } = notices
+  const { items, read, unread, mark, markAll, can, dismiss, archive } = notices
   const [sheet, setSheet] = useState(false)
   const [told, setTold] = useState<Milestone | null>(null)
   const [open, setOpen] = useState(false)
@@ -43,7 +43,8 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
     return () => q.removeEventListener('change', f)
   }, [])
   if (!can) return null
-  const rows: BellRow[] = items.map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: !n.seen && !read.has(n.id) }))
+  const rows: BellRow[] = items.map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: !n.seen && !read.has(n.id), dismissable: n.dismissable }))
+  const old: BellRow[] = (archive?.items ?? []).map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: false }))
   return (
     <>
     <BellMenu
@@ -59,13 +60,15 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
       sheet={sheet}
       onPick={(id) => {
         mark(id)
-        const n = items.find((x) => x.id === id)
+        const n = items.find((x) => x.id === id) ?? archive?.items.find((x) => x.id === id)
         n?.read?.()
         if (n?.milestone && site && n.site === site.domain) setTold(n.milestone)
         else if (n?.open) n.open()
         else if (n) go(n)
       }}
       onAll={markAll}
+      onDismiss={dismiss}
+      archive={archive && { rows: old, load: archive.load, loading: archive.loading, words: archive.words }}
       onSettings={() => site && openSettings(site, 'alerts')}
     />
     {told && site && (
