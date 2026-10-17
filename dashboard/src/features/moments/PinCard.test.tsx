@@ -7,7 +7,6 @@ vi.mock('./api', () => ({ ownDays: vi.fn(() => Promise.resolve({ values: [], day
 vi.mock('../../lib/api', async (orig) => ({ ...(await orig<typeof import('../../lib/api')>()), call: vi.fn(() => Promise.resolve({ icons: [] })) }))
 vi.mock('../../lib/motion', async (orig) => ({ ...(await orig<typeof import('../../lib/motion')>()), reducedMotion: () => true }))
 
-import { ClusterList } from './ClusterList'
 import { chipsOf } from './kinds'
 import { PinCard } from './PinCard'
 import { pinsFromMoments } from './pins'
@@ -32,7 +31,7 @@ const money = (n: number) => `$${n}`
 const site = { id: 's1', timezone: 'UTC' }
 const today = new Date().toISOString().slice(0, 10)
 const surge = (referrer: string, text: string, hour: string): Moment => ({ t: `${today}T${hour}`, kind: 'surge', factor: 2.4, visitors: 33, referrer, text })
-const [facebook, google] = pinsFromMoments([surge('l.facebook.com', 'Facebook', '16:00'), surge('www.google.com', 'Google', '17:00')], true)
+const [facebook] = pinsFromMoments([surge('l.facebook.com', 'Facebook', '16:00')], true)
 
 describe('a surge as a card', () => {
   it('has a header, a body and a footer, and says the one source in every text', () => {
@@ -56,11 +55,5 @@ describe('a surge as a card', () => {
     expect(say(facebook, money).line).toBe('Surge from Facebook')
     expect(facebook.filters).toEqual([{ dim: 'referrer', value: 'l.facebook.com' }])
     expect(chipsOf(facebook)).toEqual([{ host: 'l.facebook.com' }])
-  })
-
-  it('lists another source that landed beside it under its own label, not as a line of the card', () => {
-    act(() => root.render(<ClusterList pins={[facebook, google]} at={0} money={money} onPick={vi.fn()} />))
-    expect(host.querySelector('.why-label')?.textContent).toBe('Also around then')
-    expect(host.querySelector('li > button')?.textContent).toBe('Surge from Google')
   })
 })

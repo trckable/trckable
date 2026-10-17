@@ -1,6 +1,6 @@
 // Live and the Briefing: the walkthrough's header, and one of its two screens under it. This replaces the dashboard's
 // own header and control rows for these two views; Explore (the full numbers) opens over either as a panel.
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { lazyLoad, whenIdle } from '../lib/lazyLoad'
 import { setView, type ViewState } from '../lib/url'
 import { PageHeader } from './PageHeader'
@@ -43,6 +43,8 @@ interface V2Props {
   /** Open Peek; absent where the person cannot ask. */
   onAsk?: () => void
   live: LiveProps
+  /** A shared link's header (whose numbers these are): the page then has no Live and nothing that writes. */
+  identity?: ReactNode
 }
 
 function vsWords(day: boolean, weekday: string, view: ViewState, range: Range): string | undefined {
@@ -82,6 +84,7 @@ export function V2View(p: V2Props) {
         tab={here}
         data={p.data}
         onAsk={p.onAsk}
+        identity={p.identity}
         period={
           here === 'briefing' && !p.waiting ? (
             <PeriodChip
@@ -108,7 +111,7 @@ export function V2View(p: V2Props) {
       {opened && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} money={p.money} onGoal={p.onGoal} />}
       <AiHost site={p.site} />
       <MkToastHost />
-      <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />
+      <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} hide={p.identity ? ['live'] : undefined} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />
     </div>
   )
 }

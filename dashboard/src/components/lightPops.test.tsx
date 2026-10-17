@@ -3,8 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { addDays, PRESETS, type ISODate } from '../lib/dates'
 import { DatePicker, type PickerValue } from './DatePicker'
 import { Periods } from './DateRangePeriods'
-import { filterCopy } from './filterCopy'
-import FilterPop from './FilterPop'
 import { withCustom } from './compareCustom'
 import { PERIODS_FIRST, PERIODS_MORE } from './dateRangeCopy'
 
@@ -87,31 +85,5 @@ describe('the comparison', () => {
     const v = withCustom({ ...at('7d'), compare: 'custom' })
     expect(v.compareCustom).toEqual({ from: addDays(TODAY, -13), to: addDays(TODAY, -7) })
     expect(withCustom(at('7d')).compareCustom).toBeUndefined()
-  })
-})
-
-describe('the filter list', () => {
-  const rows = (dim: string) => (dim === 'channel' ? [{ value: 'Direct', visitors: 5 }, { value: 'Search', visitors: 3 }] : []) as never
-  const list = (active: { dim: string; value: string }[]) =>
-    renderToStaticMarkup(<FilterPop rows={rows} labelFor={(_, v) => v} active={active} onPick={noop} onRemove={noop} onClear={noop} root={{ current: null }} onClose={noop} />)
-
-  it('has no Done button and folds what has nothing to pick into one row', () => {
-    const html = list([])
-    expect(html).not.toContain('>Done<')
-    expect(html.match(new RegExp(filterCopy.idle, 'g'))).toHaveLength(1)
-    expect(html).toContain('Channel')
-    expect(html).not.toContain('>Acquisition<')
-  })
-
-  it('keeps Clear in the search line, only while a filter is on', () => {
-    expect(list([])).not.toContain('Clear')
-    const html = list([{ dim: 'channel', value: 'Direct' }])
-    expect(html).toContain('Clear 1 filter<')
-    expect(html.indexOf('type="search"')).toBeLessThan(html.indexOf('Clear 1 filter'))
-  })
-
-  it('has a placeholder short enough to show whole', () => {
-    expect(filterCopy.placeholder.length).toBeLessThanOrEqual(24)
-    expect(list([])).toContain(`placeholder="${filterCopy.placeholder}"`)
   })
 })

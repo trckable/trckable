@@ -5,7 +5,7 @@ import { XGl, XGrab, XMi, XSep } from '../ui/XMenu'
 import { XIco } from '../ui/XIcons'
 import { copy } from './copy'
 import { chipName, dimWord, valueOf } from './filters'
-import { FILTER_DIMS, GROUPS } from './sections'
+import { FILTER_DIMS, groups } from './sections'
 import type { Filter } from '../../lib/api'
 import type { Connected, FilterDim, Option, SavedView, Section } from './types'
 
@@ -13,7 +13,7 @@ export function PickMenu({ section, conn, onPick }: { section: Section; conn: Co
   return (
     <>
       <XGrab />
-      {GROUPS.map((g) => (
+      {groups().map((g) => (
         <Fragment key={g.key}>
           <XGl>{copy.groups[g.key]}</XGl>
           {g.items.map((k) => (

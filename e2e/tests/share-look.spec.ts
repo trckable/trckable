@@ -30,13 +30,8 @@ test('a link wears the owner\'s logo and colour, and hides trckable\'s name', as
   await page.request.post(`${API}/api/e`, { headers: { 'Content-Type': 'text/plain', 'User-Agent': ua }, data: JSON.stringify({ s: site, k: 'pv', u: `https://${domain}/`, r: '', w: 1400 }) })
   await expect.poll(async () => ((await (await page.request.get(`${API}/api/v1/sites`)).json()).sites as { id: string; last_event_at?: number }[]).find((x) => x.id === site)?.last_event_at ?? 0, { timeout: 15_000 }).toBeGreaterThan(0)
 
-  await page.goto(`${API}/${domain}`)
-  await page.getByRole('button', { name: 'Data', exact: true }).click()
-  if (WIDTH && WIDTH <= 640) {
-    // On a phone Share is in ⋯.
-    await page.getByRole('button', { name: 'More', exact: true }).click()
-    await page.getByRole('menu', { name: 'More' }).getByRole('menuitem', { name: /Share/ }).click()
-  } else await page.locator('.subbar').getByRole('button', { name: 'Share' }).click()
+  await page.goto(`${API}/settings?site=${site}&tab=sharing`)
+  await page.getByRole('button', { name: 'Share your numbers' }).click()
   const dialog = page.getByRole('dialog', { name: 'Share your numbers' })
   await dialog.locator('.sd-linkbtn').click()
   const look = dialog.locator('.sd-look')

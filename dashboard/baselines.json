@@ -1,10 +1,9 @@
 {
-  "literals": 310,
+  "literals": 284,
   "components": {
     "src/charts/TimeChart.tsx": 264,
-    "src/main.tsx": 257,
+    "src/main.tsx": 252,
     "src/views/Account.tsx": 350,
-    "src/views/Dashboard.tsx": 657,
     "src/views/Health.tsx": 275,
     "src/views/Payments.tsx": 358,
     "src/views/Privacy.tsx": 738,

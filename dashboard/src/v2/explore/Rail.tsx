@@ -3,7 +3,7 @@
 import { Fragment } from 'react'
 import { XChev, XIco } from '../ui/XIcons'
 import { copy } from './copy'
-import { GROUPS } from './sections'
+import { groups } from './sections'
 import type { Connected, Section } from './types'
 
 export function Rail({ section, conn, folded, onFold, onPick }: { section: Section; conn: Connected; folded: boolean; onFold: () => void; onPick: (s: Section) => void }) {
@@ -13,7 +13,7 @@ export function Rail({ section, conn, folded, onFold, onPick }: { section: Secti
       <button type="button" className="xrc" data-xrc="1" aria-expanded={!folded} aria-label={word + copy.sectionList} title={word} onClick={onFold}>
         <XChev right={folded} />
       </button>
-      {GROUPS.map((g) => (
+      {groups().map((g) => (
         <Fragment key={g.key}>
           <div className="xgl">{folded ? '' : copy.groups[g.key]}</div>
           {g.items.map((k) => (

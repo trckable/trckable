@@ -68,3 +68,24 @@
   gap: 4px;
   font-size: 12px;
 }
+
+/* In the one header of the Briefing: the brand, then whose numbers these are, on one line. */
+.hd-id {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.hd-id .brand {
+  display: inline-flex;
+  align-items: center;
+}
+.hd-id .share-id {
+  margin-left: 0;
+}
+@media (max-width: 640px) {
+  .hd-id {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}

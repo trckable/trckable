@@ -68,7 +68,7 @@ test('a public link opens read-only, can change nothing, and stops the moment it
 
   const { context, page: view } = await stranger(browser)
   await view.goto(link(url))
-  await expect(view.locator('.overview-chart')).toBeVisible({ timeout: 20_000 })
+  await expect(view.locator('.brief')).toBeVisible({ timeout: 20_000 })
   // It shows this site's numbers…
   const me = await (await view.request.get(`${API}/api/v1/share/me`)).json()
   expect(me).toMatchObject({ domain: site.domain, name: 'For the team' })
@@ -113,7 +113,7 @@ test('Revenue: with it off the server never sends the figure; with it on the lin
   ] as const) {
     const { context, page: view } = await stranger(browser)
     await view.goto(link(url))
-    await expect(view.locator('.overview-chart')).toBeVisible({ timeout: 20_000 })
+    await expect(view.locator('.brief')).toBeVisible({ timeout: 20_000 })
     const body = await (await view.request.get(`${API}/api/v1/share/report?${range}`)).text()
     expect(body.includes('"money"'), `${url}: money in the report`).toBe(want)
     expect(body.includes('"revenue":'), `${url}: revenue on the rows`).toBe(want)
@@ -140,7 +140,7 @@ test('a password link asks first, refuses a wrong one, and opens with the right 
   await view.goto(link(url))
   await view.getByLabel(/password/i).fill('a long enough phrase')
   await view.keyboard.press('Enter')
-  await expect(view.locator('.overview-chart')).toBeVisible({ timeout: 20_000 })
+  await expect(view.locator('.brief')).toBeVisible({ timeout: 20_000 })
   await context.close()
 })
 

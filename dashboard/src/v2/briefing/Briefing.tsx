@@ -168,7 +168,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const shown = lock.known.slice(0, 4)
   rememberCards(site.id, shown.map((x) => x.key))
   const rest = lock.known.slice(4)
-  const act = nextStep({ site, cur, stories, top, downNow })
+  const act = isShared() ? null : nextStep({ site, cur, stories, top, downNow })
   const setups = setupRows({ site, cur, can: setupState.can, noSearch: setupState.noSearch, noAlerts: setupState.noAlerts, onGoal })
   const heroWhy = stories.find((x) => x.key === 'uptime')?.cause ?? stories.find((x) => x.key === 'sources')?.cause ?? (usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : null)
   if (kcs[0] && heroWhy && !stories.find((x) => x.key === 'uptime')) kcs[0].why = usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : undefined

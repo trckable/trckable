@@ -3,6 +3,7 @@
 // walkthrough's own.
 import { Fragment, type ReactNode } from 'react'
 import { fmtInt } from '../../lib/format'
+import { isShared } from '../../lib/me'
 import { Ico } from './icons'
 import { Spark } from './KpiCard'
 import { Rng } from './RangeBar'
@@ -150,10 +151,12 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
   const dn = c.done(s)
   return (
     <div className="ic-f">
-      <button type="button" className={`gh${w ? ' on' : ''}`} data-watch="1" title={copy.watchTitle} onClick={() => c.onWatch(s)}>
-        {w ? copy.watching : copy.watch}
-      </button>
-      {s.act && (
+      {!isShared() && (
+        <button type="button" className={`gh${w ? ' on' : ''}`} data-watch="1" title={copy.watchTitle} onClick={() => c.onWatch(s)}>
+          {w ? copy.watching : copy.watch}
+        </button>
+      )}
+      {s.act && !isShared() && (
         <button type="button" className={`xb cact${dn ? ' done' : ''}`} data-ca="1" onClick={() => c.onAct(s)}>
           {dn ? doneLabel[s.act.k] || copy.doneMark : s.act.t}
         </button>

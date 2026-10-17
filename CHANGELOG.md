@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- Shared links and their embeds open the new page, read only: the Briefing and Explore on what the public report carries (no Live, no site list, bell or person, nothing that writes), under a header with the site's name, logo and colour. The old Data page is gone: its addresses (?view=data, ?v=explore, Full) open the Briefing or Explore, and the share card and the link's look (logo, colour, domain) are one tap away in Settings → Sharing.
 - Explore's tabs that were the old cards (highlights, sources that pay, pages that sell, latest buyers, people, retention, the charts, AI and search) are drawn in the panel's own tables and lines, every tab has a name in the tab bar, and an old address with a funnel's steps (fs=) or ?x=ai opens what it names.
 - The light theme of the new header and menus reads clearly (the site list, the Live and Briefing tabs, the fields and hover fills), the faint grey text is a little lighter in the dark theme, and the bell and the online counts are read a moment after the page, not with it.
 - Tooltips and menus (the site list, the period, the bell, your menu, Filter, the (i) tips) are drawn on the page's top layer and kept whole inside the window, so a card's edge never cuts them off; a test opens each at a phone, a tablet and two desktop widths.

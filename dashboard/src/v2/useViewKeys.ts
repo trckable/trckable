@@ -2,6 +2,7 @@
 import { useEffect } from 'react'
 import { switchTab } from '../features/live/switchView'
 import { pressed } from '../lib/keys'
+import { isShared } from '../lib/me'
 import { goExplore } from './briefing/deeper'
 
 export function useViewKeys(here: 'live' | 'briefing') {
@@ -10,7 +11,7 @@ export function useViewKeys(here: 'live' | 'briefing') {
       const tg = (e.target as HTMLElement).tagName
       if (tg === 'INPUT' || tg === 'SELECT' || tg === 'TEXTAREA') return
       if (document.querySelector('.xscrim.on, .pal.on, .cd.on')) return
-      if (pressed(e, 'live')) void switchTab('live', here)
+      if (pressed(e, 'live') && !isShared()) void switchTab('live', here)
       else if (pressed(e, 'briefing')) void switchTab('briefing', here)
       else if (pressed(e, 'explore')) goExplore()
       else return
