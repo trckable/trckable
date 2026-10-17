@@ -94,6 +94,8 @@ export default function MentionMarks({ g, site, labels, bucket }: { g: ChartGeo;
           type="button"
           className={'mp-pin' + (list.length > 1 ? ' many' : '') + (lit ? ' lit' : '')}
           style={{ left: `clamp(11px, ${g.x(i)}px, calc(100% - 11px))`, top }}
+          data-rv={g.x(i)}
+          data-lbl="4"
           aria-label={list.length > 1 ? page.pinMany(list.length) : page.pin(titleOf(list[0]), list[0].visitors)}
           aria-describedby={at?.[0] === i ? id : undefined}
           onPointerDown={(e) => e.stopPropagation()}

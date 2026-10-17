@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { call, reportURL, type Bucket, type ReportQuery } from '../../lib/api'
 import { isShared } from '../../lib/me'
 import { bucketLabel } from '../../charts/timeScale'
+import { usePoint } from '../../v2/replay/reveal'
 import { channelLabel } from '../../lib/palette'
 import { markUsed } from '../moments/store'
 import { copy } from './copy'
@@ -22,8 +23,6 @@ export interface StoryProps {
   /** The chart's own bucket keys and visitors, point by point. */
   labels: string[]
   visitors: number[]
-  /** The playhead, as a point of the chart. */
-  at: number | null
   playing: boolean
   phase: 'on' | 'end'
   /** Writes an amount; only given where revenue may be shown. */
@@ -33,6 +32,8 @@ export interface StoryProps {
   source?: string
   /** First and last day shown. */
   period: [string, string]
+  /** The moments are here: the run may begin. */
+  onReady: () => void
   onJump: (i: number) => void
   onStops: (stops: number[]) => void
   onStop: () => void
@@ -54,15 +55,27 @@ export default function Story(p: StoryProps) {
   const [list, setList] = useState<Moment[]>([])
   useEffect(() => markUsed('replay'), []) // a card that offers Replay is not for someone who has played it
   const url = reportURL(p.site, { ...p.query, compare: undefined, daily: false, deep: false, bucket: p.bucket }).replace('/report?', '/moments?')
+  // The moments of this url have been read (a shared link has none to read).
+  const [got, setGot] = useState('')
+  const loaded = isShared() || got === url
   useEffect(() => {
-    // A shared link has no moments: its reader gets the plain replay.
     if (isShared()) return
     const ctl = new AbortController()
+    const done = (moments: Moment[]) => {
+      if (ctl.signal.aborted) return
+      setList(moments)
+      setGot(url)
+    }
     call<{ moments: Moment[] }>('GET', url, undefined, ctl.signal, true)
-      .then((r) => setList(r.moments ?? []))
-      .catch(() => setList([]))
+      .then((r) => done(r.moments ?? []))
+      .catch(() => done([]))
     return () => ctl.abort()
   }, [url])
+  // The run begins once what it shows has been read (and again after Replay again).
+  const { onReady } = p
+  useEffect(() => {
+    if (loaded && p.phase === 'on') onReady()
+  }, [loaded, p.phase, onReady])
   // Keyed by content: the chart hands over new arrays every render.
   const labelsKey = p.labels.join(',')
   const hasMoney = !!p.money
@@ -70,7 +83,7 @@ export default function Story(p: StoryProps) {
   const { onStops, onJump, onStop } = p
   useEffect(() => onStops(placed.map((x) => x.i)), [placed, onStops])
 
-  const at = p.at ?? -1
+  const at = usePoint(p.labels.length)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).closest?.('input, textarea, select, [contenteditable], svg, [role="dialog"]')) return

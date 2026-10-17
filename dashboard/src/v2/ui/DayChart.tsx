@@ -10,6 +10,9 @@ import type { Band, Judged } from '../briefing/usual'
 import type { ChartGeo } from '../../features/moments/marks'
 import { useGlide } from './glide'
 import { FutureHatch } from './FutureHatch'
+import { NoteMarks, SaleMarks, firstData } from './ChartMarks'
+import { useLabelLayout } from './labelLayout'
+import { DRAWN, RevealTip, useReveal } from './RevealClip'
 import './chartLayer.css'
 
 export interface ChartPoint {
@@ -63,6 +66,8 @@ export interface ChartIn {
 
 /** The layer starts this far down the chart, under the line of words that sits on its top edge. */
 const LAYER_TOP = 26
+/** The lane under the markers' that the period's label ("Traffic · above usual") has to itself. */
+const LABEL_LANE = 20
 
 const DOT = { up: 'var(--mk-lime)', dn: 'var(--mk-red)', none: 'var(--mk-text)' }
 
@@ -102,8 +107,8 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   const ph = W < 500
   const L = ph ? 8 : 36
   const Rr = ph ? 8 : 10
-  // With a layer over the plot, its markers have a lane of their own above it.
-  const T = (ph ? 18 : 30) + (layer ? LAYER_TOP + 6 : 0)
+  // With a layer over the plot, its markers have a lane of their own above it, and the period's label another under that.
+  const T = (ph ? 18 : 30) + (layer ? LAYER_TOP + 6 + LABEL_LANE : 0)
   const B = H - 22
   const span = Math.max(1, ph ? c.full : c.span)
   const X = (i: number) => L + ((W - L - Rr) * (i + 0.5)) / span
@@ -114,21 +119,27 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   const gh = useGlide('chart:hi', c.ladder.map((b) => b.hi))
   const pts = c.points.map((p, i) => ({ ...p, v: gv[i] ?? p.v }))
   const ladder = c.ladder.map((b, i) => ({ ...b, lo: gl[i] ?? b.lo, hi: gh[i] ?? b.hi })).slice(0, span)
-  const mx = Math.max(1, ...pts.map((p) => p.v), ...(c.band ? ladder.map((b) => b.hi) : [])) * 1.15
+  const f0 = /* before the first visit: shade only, no line, no usual */ firstData(c.bucket, pts.map((p) => p.v))
+  const drawn = pts.slice(f0)
+  const band = ladder.slice(f0)
+  const mx = Math.max(1, ...drawn.map((p) => p.v), ...(c.band ? band.map((b) => b.hi) : [])) * 1.15
   const Y = (v: number) => B - ((B - T) * v) / mx
   const step = niceStep(mx)
   const grid: number[] = []
   for (let g = 0; g < mx; g += step) grid.push(g)
-  const line = pts.map((p) => `${X(p.i)},${Y(p.v)}`).join(' ')
+  const line = drawn.map((p) => `${X(p.i)},${Y(p.v)}`).join(' ')
   const last = pts[pts.length - 1]
   const nowEdge = c.live ? edge(Math.min(c.elapsed, span)) : edge(span)
   const every = Math.max(1, Math.ceil(span / (ph ? 3 : 7)))
   const kfmt = (g: number) => (g >= 1000 ? `${g / 1000}k` : String(g))
-  const bi = Math.min(ladder.length - 1, Math.floor(ladder.length * 0.08))
-  const rise = c.rise && pts[c.rise.i] && !(ph && c.downs.length > 0) ? { p: pts[c.rise.i], text: ph ? c.rise.short : c.rise.text } : null
+  const bi = f0 + Math.min(band.length - 1, Math.floor(band.length * 0.08))
+  const rise = c.rise && c.rise.i >= f0 && pts[c.rise.i] && !(ph && c.downs.length > 0) ? { p: pts[c.rise.i], text: ph ? c.rise.short : c.rise.text } : null
   // On a phone a label that would run off the edge is written to the left of its line.
   const flip = ph && rise !== null && X(rise.p.i) + 6 + rise.text.length * 8 > W - Rr - 4
   const ticks = c.axis.filter((p) => p.i < span && p.tick && p.i % every === 0)
+  const geo = drawn.map((p) => [X(p.i), Y(p.v)])
+  useReveal({ pts: geo, h: H })
+  useLabelLayout({ pts: geo })
   const chart = (
     <svg
       ref={box}
@@ -154,9 +165,9 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
           )}
         </g>
       ))}
-      {c.band && ladder.length > 1 && <polygon points={`${ladder.map((b, i) => `${X(i)},${Y(b.hi)}`).join(' ')} ${ladder.map((b, i) => `${X(i)},${Y(b.lo)}`).reverse().join(' ')}`} fill="var(--mk-bandfill)" />}
-      {c.band && !ph && ladder.length > 1 && (
-        <text x={X(bi)} y={Y(ladder[bi].hi) - 8} fill="var(--mk-axis)" fontSize="12">
+      {c.band && band.length > 1 && <polygon points={`${band.map((b, i) => `${X(f0 + i)},${Y(b.hi)}`).join(' ')} ${band.map((b, i) => `${X(f0 + i)},${Y(b.lo)}`).reverse().join(' ')}`} fill="var(--mk-bandfill)" />}
+      {c.band && !ph && band.length > 1 && (
+        <text className="lbl" data-lbl="5" x={X(bi)} y={Y(ladder[bi].hi) - 8} fill="var(--mk-axis)" fontSize="12">
           {c.usualLabel}
         </text>
       )}
@@ -172,16 +183,22 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
           </g>
         )
       })}
-      {c.live && <FutureHatch x={nowEdge} y={T} width={Math.max(0, W - Rr - nowEdge)} height={B - T} />}
-      {pts.length > 0 && (
+      {f0 > 0 && (
         <>
-          <polygon points={`${X(pts[0].i)},${B} ${line} ${X(last.i)},${B}`} fill="var(--mk-areafill)" />
+          <rect x={edge(0)} y={T} width={edge(f0) - edge(0)} height={B - T} fill="var(--mk-nowshade)" />
+          {!ph && <text className="lbl" data-lbl="6" x={edge(0) + 6} y={T + 14} fill="var(--mk-axis)" fontSize="12">{copy.beforeFirst}</text>}
+        </>
+      )}
+      {c.live && <FutureHatch x={nowEdge} y={T} width={Math.max(0, W - Rr - nowEdge)} height={B - T} />}
+      {drawn.length > 0 && (
+        <g {...DRAWN}>
+          <polygon points={`${X(drawn[0].i)},${B} ${line} ${X(last.i)},${B}`} fill="var(--mk-areafill)" />
           <polyline points={line} fill="none" stroke="var(--mk-muted)" strokeWidth="2" strokeLinejoin="round" />
           {pts.map((p, i) =>
-            p.st ? (
+            p.st && i >= f0 ? (
               <polyline
                 key={p.i}
-                points={[Math.max(0, i - 1), i, Math.min(pts.length - 1, i + 1)].map((j) => `${X(pts[j].i)},${Y(pts[j].v)}`).join(' ')}
+                points={[Math.max(f0, i - 1), i, Math.min(pts.length - 1, i + 1)].map((j) => `${X(pts[j].i)},${Y(pts[j].v)}`).join(' ')}
                 fill="none"
                 stroke={p.st === 'up' ? 'var(--mk-lime)' : 'var(--mk-red)'}
                 strokeWidth="2.4"
@@ -194,36 +211,19 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
               <animate attributeName="r" values="4;7;4" dur="1.6s" repeatCount="indefinite" />
             </circle>
           )}
-          {rise && (
-            <g>
-              <line x1={X(rise.p.i)} x2={X(rise.p.i)} y1={Y(rise.p.v) - 6} y2={Math.max(T - 6, Y(rise.p.v) - 24)} stroke="var(--mk-lime)" />
-              <text x={flip ? X(rise.p.i) - 6 : Math.min(X(rise.p.i) + 6, W - Rr - rise.text.length * 7.4)} textAnchor={flip ? 'end' : undefined} y={Math.max(T - 8, Y(rise.p.v) - 27)} fill="var(--mk-lime)" fontSize="12" fontWeight="600">
-                {rise.text}
-              </text>
-            </g>
-          )}
-        </>
+        </g>
       )}
-      {(c.sales ?? []).slice(0, ph ? 12 : 10).map((x) => {
-        const xx = edge(x.at)
-        const col = x.neg ? 'var(--mk-red)' : 'var(--mk-lime)'
-        if (ph) return <circle key={`${x.at}${x.text}`} cx={xx} cy={B - 5} r="3.5" fill={col} />
-        const w = x.text.length * 7 + 14
-        return (
-          <g key={`${x.at}${x.text}`}>
-            <line x1={xx} x2={xx} y1={B} y2={B - 30} stroke={col} strokeDasharray="2 3" />
-            <rect x={xx - w / 2} y={B - 24} width={w} height="20" rx="10" fill={x.neg ? 'var(--mk-redP)' : 'var(--mk-limeP)'} stroke={col} />
-            <text x={xx} y={B - 10} fill={col} fontSize="12" textAnchor="middle">
-              {x.text}
-            </text>
-          </g>
-        )
-      })}
-      {c.notes.map((n) => (
-        <path key={`${n.i}${n.text}`} d={`M${X(n.i) - 6} ${B - 1}h12l-6-10z`} fill="var(--mk-amber)">
-          <title>{n.text}</title>
-        </path>
-      ))}
+      {rise && (
+        <g data-rv={X(rise.p.i)}>
+          <line x1={X(rise.p.i)} x2={X(rise.p.i)} y1={Y(rise.p.v) - 6} y2={T - 6} stroke="var(--mk-lime)" />
+          <text className="lbl" data-lbl="2" x={flip ? X(rise.p.i) - 6 : Math.min(X(rise.p.i) + 6, W - Rr - rise.text.length * 7.4)} textAnchor={flip ? 'end' : undefined} y={T - 10} fill="var(--mk-lime)" fontSize="12" fontWeight="600">
+            {rise.text}
+          </text>
+        </g>
+      )}
+      <RevealTip h={H} />
+      <SaleMarks sales={c.sales ?? []} ph={ph} edge={edge} B={B} />
+      <NoteMarks notes={c.notes} X={X} B={B} />
       {ticks.map((p) => (
         <text key={p.i} x={ph ? Math.max(20, Math.min(W - 20, X(p.i))) : X(p.i)} y={B + 17} fill="var(--mk-axis)" fontSize="12" textAnchor="middle">
           {p.tick}

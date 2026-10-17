@@ -18,7 +18,7 @@ import { CardList } from '../ui/StoryCard'
 import { Hero } from '../ui/HeroCard'
 import { whyRows } from './scoreWhy'
 import { chartNote } from '../ui/DayChart'
-import { ChartBlock } from './ChartBlock'
+import { ChartBlock, warmStory } from './ChartBlock'
 import { fmtInt as fmtN } from '../../lib/format'
 import { useStoryReplay } from './useStoryReplay'
 import { BounceNote } from './BounceNote'
@@ -83,6 +83,9 @@ const chartLine = (learning: boolean, low: boolean, hd: number, note: () => stri
 /** An empty period has no series at all (the server sends null): an empty list, so nothing below has to ask. */
 const normal = (r?: Result): Result | undefined => (r ? { ...r, series: r.series ?? [] } : undefined)
 
+/** Replay's button: it stops what plays, and starts it when it does not. */
+const stopOrGo = (playing: boolean, stop: () => void, go: () => void) => (playing ? stop : go)
+
 export default function Briefing({ site, data: page, loading, period, range, money, onGoal, visits }: BriefingProps) {
   const ui = useBriefingState(site.id)
   const [at, setAt] = useState<number | null>(null)
@@ -94,7 +97,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const data = useMemo(() => (page && hours ? { ...page, bucket: hours.bucket, current: hours.current } : page), [page, hours])
   const current = data?.current
   const previous = data?.previous
-  const cur0 = useMemo(() => normal(current), [current])
+  const cur = useMemo(() => normal(current), [current])
   const prev = useMemo(() => normal(previous), [previous])
   const unit = unitOf(period)
   const today = todayIn(site.timezone)
@@ -103,21 +106,20 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const hist = useHistory(site, today, data?.bucket === 'hour', !!data)
   const notes = useNotes(site.id, { from: addDays(today, -365), to: today }, () => undefined)
   const recent = useRecent(site.id, true)
-  const goalValue = (cur0?.goals ?? []).find((g) => g.visitors > 0)?.value
+  const goalValue = (cur?.goals ?? []).find((g) => g.visitors > 0)?.value
   const goalSlice = useSlice(site, range, data?.bucket, goalValue ? { dim: 'goal', value: goalValue } : null)
   const downNow = !!site.down_since
   const downMin = Math.round(up.lost / 60)
-  const slices = useSlices(site, range, cur0, prev, unit, cur0?.kpis.visitors ?? 0, !!cur0 && !!hist.daily)
-  const stuckPage = cur0?.dims.entry_page?.find((r) => r.value === '/pricing')?.value ?? cur0?.dims.entry_page?.[0]?.value ?? null
-  const pathSteps: (FunnelStep | PaidStep)[] = [...(cur0?.dims.entry_page ?? []).slice(0, 2).map((p) => ({ kind: 'page' as const, value: p.value })), ...((cur0?.goals ?? []).filter((g) => g.visitors > 0).slice(0, 1).map((g) => ({ kind: 'goal' as const, value: g.value }))), ...(cur0?.money ? [PAID_STEP] : [])]
-  const funnelWant = useSame(pathSteps.length >= 3 ? { steps: pathSteps, alt: (cur0?.dims.entry_page ?? []).find((p) => !/signup|checkout|cart/.test(p.value) && p.value !== '/' && !pathSteps.some((x) => x.value === p.value))?.value } : null)
-  const countryWant = useSame((cur0?.dims.country ?? []).slice(0, 5).map((r) => ({ code: r.value, people: r.visitors })))
-  const extras = useExtras(site, today, range, { money: !!cur0?.money, search: setupState.can && !setupState.noSearch, page: unit === 'today' ? stuckPage : null, funnel: funnelWant, countries: countryWant }, !!cur0)
+  const slices = useSlices(site, range, cur, prev, unit, cur?.kpis.visitors ?? 0, !!cur && !!hist.daily)
+  const stuckPage = cur?.dims.entry_page?.find((r) => r.value === '/pricing')?.value ?? cur?.dims.entry_page?.[0]?.value ?? null
+  const pathSteps: (FunnelStep | PaidStep)[] = [...(cur?.dims.entry_page ?? []).slice(0, 2).map((p) => ({ kind: 'page' as const, value: p.value })), ...((cur?.goals ?? []).filter((g) => g.visitors > 0).slice(0, 1).map((g) => ({ kind: 'goal' as const, value: g.value }))), ...(cur?.money ? [PAID_STEP] : [])]
+  const funnelWant = useSame(pathSteps.length >= 3 ? { steps: pathSteps, alt: (cur?.dims.entry_page ?? []).find((p) => !/signup|checkout|cart/.test(p.value) && p.value !== '/' && !pathSteps.some((x) => x.value === p.value))?.value } : null)
+  const countryWant = useSame((cur?.dims.country ?? []).slice(0, 5).map((r) => ({ code: r.value, people: r.visitors })))
+  const extras = useExtras(site, today, range, { money: !!cur?.money, search: setupState.can && !setupState.noSearch, page: unit === 'today' ? stuckPage : null, funnel: funnelWant, countries: countryWant }, !!cur)
   const dayStart = startOfDay(today, site.timezone)
   const clock = siteNow(site.timezone, new Date(nowSec * 1000))
   const end = Number(clock.slice(11, 13)) * 60 + Number(clock.slice(14, 16))
-  const rv = useReplayView({ site, today, cur: cur0, end, dayStart, slices, extras, incidents: up.list, money: money })
-  const cur = rv.cur
+  const rv = useReplayView({ site, today, cur, end, dayStart, slices, extras, incidents: up.list, money: money })
   // The page is whole when everything it is told by has been read for this period (or two seconds on, whatever is missing).
   const sig = [site.id, period, range.from, range.to].join('|')
   const [late, setLate] = useState('')
@@ -126,17 +128,17 @@ export default function Briefing({ site, data: page, loading, period, range, mon
     return () => clearTimeout(t)
   }, [sig])
   const ready = late === sig || (!loading && !!hist.daily && slices.fresh === true && extras.fresh === true && (unit !== 'today' && unit !== 'yesterday' ? true : usual !== null))
-  const parts = useParts({ site, cur, prev, usual, unit, range, today, bucket: data?.bucket, hist, up, downMin, nowSec, notes: notes.notes, slices, extras, money, clockAt: rv.clockAt })
+  const parts = useParts({ site, cur, prev, usual, unit, range, today, bucket: data?.bucket, hist, up, downMin, nowSec, notes: notes.notes, slices, extras, money })
   // The cards keep the order the page opened with; what is new waits behind the pill.
-  const lock = useCardLock([site.id, period, range.from, range.to].join('|'), parts?.stories.filter((x) => !rv.held(x)) ?? [])
+  const lock = useCardLock([site.id, period, range.from, range.to].join('|'), parts?.stories ?? [])
   const keyed = lock.known
   useBriefingKeys({ cards: (ui.all ? keyed : keyed.slice(0, 4)).map((s) => s.key), ui, open: (k) => ui.setOpen(keyed.find((s) => s.key === k) ?? null) })
-  const storyR = useStoryReplay(cur0?.series.length ?? 0)
+  const storyR = useStoryReplay(cur?.series.length ?? 0)
   if (!cur || !parts) return loading || !data ? <BriefingSkeleton site={site.id} label={copy.loading} /> : null
   const label = unit === 'today' ? `${presetById('today')?.label ?? 'Today'} · ${dayWords(range.to)}` : (presetById(period)?.label ?? fmtRange(range, today))
   const before = copy.before[unit]
   const { learning, scores, say, chart, uptime, low, mo, top } = parts
-  const stories = parts.stories.filter((x) => !rv.held(x))
+  const stories = parts.stories
   const ctx = cardCtx({ site, ui, wset, nowSec, hhmm: parts.hhmm, spark: slices.spark.length ? slices.spark : cur.series.map((p) => p.visitors), onGoal })
   // A day with nobody yet still has its chart and numbers once the site has a history; only a site that never had anyone is empty.
   const empty = cur.kpis.visitors === 0 && (parts.hd === 0 || !hist.daily)
@@ -181,8 +183,10 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const headline = `${say.lead} ${say.long.map((p) => p.t).join('')}`
   const watchRows = watchRowsOf(site.id, wset, stories)
   const canNote = !isViewer() && !isShared()
-  const replayStory = /* any period but today plays as a story */ pts.length > 1 && v > 0 && storyR.phase === 'off' ? storyR.start : undefined
-  const replayToday = !rv.r.on && end >= 60 && v > 0 ? rv.r.open : undefined
+  const replaying = unit === 'today' ? rv.r.playing : storyR.playing
+  const replayStory = /* any period but today plays as a story */ pts.length > 1 && v > 0 ? stopOrGo(storyR.playing, storyR.stop, storyR.start) : undefined
+  const replayToday = end >= 60 && v > 0 ? stopOrGo(rv.r.playing, rv.r.close, rv.r.open) : undefined
+
   const chartBlock = { site, range, chart, at, onAt: setAt, story: storyR, series: cur.series.slice(0, pts.length), bucket: data?.bucket ?? 'day', money, total: fmtN(v), source: top?.value, note: chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia('(max-width: 500px)').matches)), down: uptime.verdict === 'down', notes: notes.notes.length, onNotes: () => ui.setSheet('notes') }
   const body = (
 
@@ -201,6 +205,8 @@ export default function Briefing({ site, data: page, loading, period, range, mon
           moments={mo}
           why={heroWhy}
           onReplay={unit === 'today' ? replayToday : replayStory}
+          replaying={replaying}
+          onWarm={warmStory}
           chart={
             empty ? null : (
               <ChartBlock {...chartBlock} />
