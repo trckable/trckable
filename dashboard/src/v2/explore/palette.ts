@@ -11,6 +11,9 @@ import { ALL_TABS, offered, sectionOf } from './sections'
 import { copy } from './copy'
 import { copy as pc } from './paletteCopy'
 import { copy as mc } from '../../features/milestones/copy'
+import { copy as bc } from '../../features/bounce/b'
+import { copy as kc } from '../../features/markers/copy'
+import { markersOn, setMarkers } from '../../features/markers/settings'
 import type { PaletteItem } from '../ui/Palette'
 
 const PERIODS: [string, string][] = [['today', 'Today'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days'], ['90d', 'Last 90 days']]
@@ -24,6 +27,9 @@ export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report
   if (o.site && o.here === 'briefing' && !isShared()) out.push({ title: pc.newNote, kind: pc.kinds.create, group: pc.groups.create, run: () => window.dispatchEvent(new Event('trckable:note')) })
   // The tables and the two views belong to a site; a page without one offers the sites and the periods only.
   if (o.site) for (const t of ALL_TABS.filter(offered)) out.push({ title: `${copy.title} · ${t in copy.sub ? copy.sub[t] : copy.names[sectionOf(t)][0]}`, kind: pc.kinds.table, group: copy.title, run: () => openExplore(t) })
+  // The chart's markers (the sources' pills) are shown or put away from here; the guide to leaving after one page opens from here too.
+  if (o.site && !isShared()) out.push({ title: kc.group, kind: pc.kinds.view, group: pc.groups.goTo, run: () => setMarkers(!markersOn()) })
+  if (o.site && !isShared()) out.push({ title: bc.label, kind: pc.kinds.view, group: pc.groups.goTo, run: () => window.dispatchEvent(new Event('trckable:bounce')) })
   if (o.site && !isShared()) out.push({ title: mc.title, kind: pc.kinds.view, group: pc.groups.goTo, run: () => window.dispatchEvent(new Event('trckable:milestones')) })
   if (o.site) out.push(
     ...(isShared() ? [] : [{ title: pc.goLive, kind: pc.kinds.view, group: pc.groups.goTo, run: () => void switchTab('live', o.here) }]),

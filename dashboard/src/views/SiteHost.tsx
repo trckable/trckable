@@ -19,6 +19,8 @@ import { useLiveCount, useSiteDown } from '../features/live/liveLink'
 import { filterOps } from '../features/header/filterOps'
 import { DomainSwitch } from '../features/header/HeaderTools'
 import { filterFrom } from '../features/journey/filterFrom'
+import { GuideModal } from '../features/bounce/b'
+import { rangeQS } from '../lib/api'
 import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
 import { useMilestones } from '../features/milestones/useMilestones'
 import { AskPanel } from './AskLazy'
@@ -27,6 +29,7 @@ import { useLiveRefresh } from './useLiveRefresh'
 const V2View = lazy(() => import('../v2/V2View').then((m) => ({ default: m.V2View }))) // the two screens and their styles: one chunk, fetched when the page shows one
 const GaReturn = lazy(() => import('../features/install/GaReturn').then((m) => ({ default: m.GaReturn }))) // only on the way back from Google (?import=ga)
 const Signals = lazy(() => import('../features/signals/Signals')) // the tab's count, the sale toast and the notices: once the stream has spoken
+const SurgeLine = lazy(() => import('../features/signals/SurgeBanner')) // the line over the page when it was opened on a busy moment
 const Notices = lazy(() => import('./Notices')) // the note over test payments
 const AddGoals = lazy(() => import('./AddGoals').then((m) => ({ default: m.AddGoals })))
 const JourneyDialog = lazy(() => import('../features/journey/JourneyDialog').then((m) => ({ default: m.JourneyDialog })))
@@ -85,6 +88,13 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
   const [journey, setJourney] = useState<string | null>(null)
   const [addGoals, setAddGoals] = useState(false)
   const [askOpen, setAskOpen] = useState(false)
+  const [bounce, setBounce] = useState(false)
+  useEffect(() => {
+    if (shared) return
+    const open = () => setBounce(true)
+    window.addEventListener('trckable:bounce', open)
+    return () => window.removeEventListener('trckable:bounce', open)
+  }, [shared])
   const askOn = canAsk()
   const narrow = useNarrow()
   const money = mods === null || shows(mods, 'cards', 'revenue') ? cur?.money : undefined
@@ -108,6 +118,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
           onGoal={() => canChange() && setAddGoals(true)}
           onAsk={askOn ? () => setAskOpen(true) : undefined}
           identity={identity}
+          top={view.surge ? <Suspense fallback={null}><SurgeLine site={site.id} tz={site.timezone} started={view.surge} filters={view.filters} /></Suspense> : undefined}
           live={{ site: site.id, timezone: site.timezone, stream, cookieless: site.cookieless, whole: site, onVisitor: !shared && journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined }}
         />
       </Suspense>
@@ -146,6 +157,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
           <Notices kind="test" onAct={() => setView({ test: false })} />
         </Suspense>
       )}
+      {bounce && <Suspense fallback={null}><GuideModal site={site.id} domain={site.domain} qs={rangeQS(query)} onClose={() => setBounce(false)} /></Suspense>}
       <AskPanel open={askOn && askOpen} onClose={() => setAskOpen(false)} />
     </>
   )

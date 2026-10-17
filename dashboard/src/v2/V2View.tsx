@@ -48,6 +48,8 @@ interface V2Props {
   live: LiveProps
   /** A shared link's header (whose numbers these are): the page then has no Live and nothing that writes. */
   identity?: ReactNode
+  /** A line over the screen: the busy moment the page was opened on. */
+  top?: ReactNode
 }
 
 function vsWords(day: boolean, weekday: string, view: ViewState, range: Range): string | undefined {
@@ -119,6 +121,7 @@ export function V2View(p: V2Props) {
         }
       />
       <main id="main" className="vfade">
+        {p.top}
         {p.waiting ? <FreshSlot site={p.site} visits={p.live.stream.visits} /> : screen}
       </main>
       {opened && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} money={p.money} onGoal={p.onGoal} />}

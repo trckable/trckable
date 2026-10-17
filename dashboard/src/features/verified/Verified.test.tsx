@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { Verified } from '../../lib/api'
 import { SiteSeal } from './SiteSeal'
+import { SourceChip } from './SourceChip'
 import { VerifiedPill } from './VerifiedPill'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -86,6 +87,15 @@ describe('the seal', () => {
 })
 
 describe('the badges', () => {
+  it('names the source behind a card, and drops it when the source stops working', () => {
+    draw(<SourceChip verified={on} slot="revenue" />)
+    expect(host.querySelector('.vf-chip')?.textContent).toContain('Payments verified')
+    draw(<SourceChip verified={on} slot="search" />)
+    expect(host.querySelector('.vf-chip')?.textContent).toContain('Search verified')
+    draw(<SourceChip verified={off} slot="revenue" />)
+    expect(host.querySelector('.vf-chip')).toBeNull()
+  })
+
   it('puts a small seal beside a site only while one of its sources works', () => {
     draw(<SiteSeal verified={on} />)
     expect(host.querySelector('.vf-seal-dot')).not.toBeNull()

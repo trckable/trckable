@@ -1,10 +1,11 @@
 // AI & Search in the section's frame: the assistants that sent people, the crawlers that read the pages and each page's
 // reads against the visitors sent; Google's searches are the Search tab of Sources, one tap away.
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { XEmpty, XNote, XSec } from '../../../ui/XBits'
 import { XCols, type CRow } from '../../../ui/XTable'
 import { Loading } from '../../../../components/loading/Loading'
 import { fmtInt } from '../../../../lib/format'
+import { messageOf, more, type SearchReport } from '../../../../lib/apiMore'
 import { byAssistant } from '../../../../features/extras/assistants'
 import { aiCopy } from '../../../../features/aisearch/copy'
 import { useAiSearch } from '../../../../features/aisearch/useAiSearch'
@@ -13,6 +14,37 @@ import type { XCtx } from '../../ctx'
 
 const CrawlerSetup = lazy(() => import('../../../../features/crawlers/CrawlerSetup').then((m) => ({ default: m.CrawlerSetup })))
 const ROWS = 12
+
+/** Google's own searches, a few lines: what showed the site and was clicked (all of them are in Sources, Search). */
+function GoogleLines({ x }: { x: XCtx }) {
+  const [rep, setRep] = useState<SearchReport | null | 'off'>(null)
+  const key = JSON.stringify([x.site.id, x.query.from, x.query.to, x.query.filters])
+  useEffect(() => {
+    const ac = new AbortController()
+    more
+      .searchReport(x.site.id, x.query, 'query', ac.signal)
+      .then(setRep)
+      .catch((e: unknown) => !ac.signal.aborted && setRep(/not connected|module is off/i.test(messageOf(e)) ? 'off' : null))
+    return () => ac.abort()
+    // Keyed by content: the query is a new object each render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+  if (rep === 'off') {
+    return (
+      <XEmpty title={aiCopy.connectLabel} hint="">
+        <button type="button" className="xb" onClick={() => x.connect('search')}>
+          {aiCopy.connect}
+        </button>
+      </XEmpty>
+    )
+  }
+  if (!rep) return null
+  const list = (rep.rows ?? []).slice(0, 6)
+  if (list.length === 0) return <XEmpty title={aiCopy.noGoogle} hint="" />
+  const top = Math.max(1, ...list.map((r) => r.clicks))
+  const rows: CRow[] = list.map((r) => ({ key: r.key, a: r.key, bar: r.clicks / top, c: [fmtInt(r.clicks)] }))
+  return <XCols first={aiCopy.search} cols={[{ h: aiCopy.clicks }]} rows={rows} xc="minmax(0,1fr) 84px" limit={6} onAll={x.showAll} />
+}
 
 export default function AiTab({ x }: { x: XCtx }) {
   const { rep, reload } = useAiSearch(x.site.id, x.query, ROWS)
@@ -29,6 +61,8 @@ export default function AiTab({ x }: { x: XCtx }) {
   const reads: CRow[] = pages.map((p) => ({ key: p.path, a: p.flag ? `${p.path} · ${aiCopy.flag[p.flag]}` : p.path, bar: p.read / read, mono: true, onPick: () => x.pick('page', p.path), c: [fmtInt(p.read), fmtInt(p.sent)] }))
   return (
     <>
+      <XSec a={aiCopy.google}  />
+      <GoogleLines x={x} />
       <XSec a={aiCopy.assistants} b={fmtInt(rep.visitors)} />
       {assistants.length === 0 ? <XEmpty title={aiCopy.noAssistants} hint="" /> : <XCols first={aiCopy.assistant} cols={[{ h: aiCopy.visitors }]} rows={assistants} xc="minmax(0,1fr) 84px" limit={x.limit} onAll={x.showAll} />}
       <XSec a={aiCopy.crawlers} b={fmtInt(rep.crawled)} />
@@ -49,7 +83,7 @@ export default function AiTab({ x }: { x: XCtx }) {
       )}
       <XNote>
         <button type="button" className="xb" onClick={() => x.goTo('search')}>
-          {aiCopy.google} {'›'}
+          {aiCopy.search} {'›'}
         </button>
       </XNote>
       {setup && (

@@ -14,6 +14,7 @@ export function cardCtx(o: { site: Site; ui: ReturnType<typeof useBriefingState>
   const { site, ui, wset } = o
   const key = (s: Story) => `${site.id}|${s.key}`
   return {
+    verified: site.verified,
     know: () => null,
     onOpen: (s) => window.matchMedia('(max-width: 600px)').matches && ui.setOpen(s),
     onDeeper: (s) => goDeeper(site, s.deeper),

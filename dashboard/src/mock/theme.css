@@ -15,6 +15,7 @@
     --mk-muted: #58606c;
     --mk-faint: #5f6671;
     --mk-lime: #437800;
+    --mk-on-lime: #fff;
     --mk-red: #c62828;
     --mk-grid: #eef0eb;
     --mk-axis: #5f6671;
@@ -36,6 +37,7 @@
   --mk-muted: #58606c;
   --mk-faint: #5f6671;
   --mk-lime: #437800;
+  --mk-on-lime: #fff;
   --mk-red: #c62828;
   --mk-grid: #eef0eb;
   --mk-axis: #5f6671;

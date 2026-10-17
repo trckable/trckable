@@ -1,0 +1,90 @@
+// The chart of the hero with what lives over and under it: the line of words and the Notes button on top, the moments'
+// markers, the sources' pills and the busy band over the plot, and, while a period plays as a story, its rail under it.
+import { Suspense } from 'react'
+import { lazyLoad } from '../../lib/lazyLoad'
+import { openSettings } from '../../lib/settings'
+import { queryOf } from '../../lib/dashQuery'
+import { isShared } from '../../lib/me'
+import { readView } from '../../lib/url'
+import type { Bucket, Point, Site } from '../../lib/api'
+import type { Range } from '../../lib/dates'
+import { copy } from './copy'
+import { HeroChart, type ChartIn } from '../ui/DayChart'
+import type { StoryReplay } from './useStoryReplay'
+
+// Replay as a story, for the periods that are not today: its own chunk, fetched when it starts.
+const Story = lazyLoad(() => import('../../features/story/Story'))
+// The moments, the sources' pills and the busy band over the chart: their own chunk, drawn when the chart is.
+const MomentLayer = lazyLoad(() => import('../../features/moments/MomentLayer'))
+
+export interface ChartBlockProps {
+  site: Site
+  range: Range
+  chart: ChartIn
+  at: number | null
+  onAt: (i: number | null) => void
+  story: StoryReplay
+  series: readonly Point[]
+  bucket: Bucket
+  money?: (minor: number) => string
+  total: string
+  source?: string
+  note: string
+  down: boolean
+  notes: number
+  onNotes: () => void
+}
+
+export function ChartBlock(p: ChartBlockProps) {
+  const query = queryOf(readView(new URLSearchParams(location.search)), p.range)
+  const labels = p.series.map((x) => x.t)
+  return (
+    <div className="chwrap">
+      <div className="ch-top">
+        <span className="mk-quiet" id="chNote" style={p.down ? { color: 'var(--mk-red)' } : undefined}>
+          {p.note}
+        </span>
+        <button type="button" className="gh nbtn" data-info="notes" onClick={p.onNotes}>
+          {copy.noteBtn(p.notes)}
+        </button>
+      </div>
+      <HeroChart
+        c={p.chart}
+        at={p.story.at ?? p.at}
+        onAt={p.onAt}
+        layer={
+          isShared()
+            ? undefined
+            : (g) => (
+                <Suspense fallback={null}>
+                  <MomentLayer g={g} site={p.site} query={query} labels={labels} series={p.series} bucket={p.bucket} money={p.money ?? (() => '')} />
+                </Suspense>
+              )
+        }
+      />
+      {p.story.phase !== 'off' && (
+        <Suspense fallback={null}>
+          <Story
+            site={p.site.id}
+            query={query}
+            bucket={p.bucket}
+            labels={labels}
+            visitors={p.series.map((x) => x.visitors)}
+            at={p.story.at}
+            playing={p.story.playing}
+            phase={p.story.phase}
+            money={isShared() ? undefined : p.money}
+            total={p.total}
+            source={p.source}
+            period={[p.series[0]?.t.slice(0, 10) ?? p.range.from, p.range.to]}
+            onJump={p.story.jump}
+            onStops={() => undefined}
+            onStop={p.story.stop}
+            onAgain={p.story.start}
+            onShare={() => openSettings(p.site, 'sharing')}
+          />
+        </Suspense>
+      )}
+    </div>
+  )
+}

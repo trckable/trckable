@@ -6,6 +6,8 @@ import { XCols, type CRow } from '../../ui/XTable'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import { Lock } from './Lock'
+import { SourceChip } from '../../../features/verified/SourceChip'
+import { proofFor } from '../../../features/verified/model'
 import type { Search as Model, SearchRow } from '../types'
 import { fmtK, pct1 } from './numbers'
 
@@ -39,6 +41,11 @@ export function Search({ x, d }: { x: XCtx; d: Model }) {
   return (
     <>
       <XKcsPlain items={d.kcs} />
+      {proofFor(x.site.verified, 'search') && (
+        <XNote>
+          <SourceChip verified={x.site.verified} slot="search" />
+        </XNote>
+      )}
       <XSub
         label={copy.searchBy}
         attr="xsdim"
