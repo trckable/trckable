@@ -300,13 +300,6 @@
 .mk .lnow .minl{padding:4px 22px 0}
 .mk .lbottom{display:grid;grid-template-columns:1fr;gap:18px;padding:18px 22px 20px;border-top:1px solid var(--mk-line);margin-top:16px}
 .mk .lbottom.money{grid-template-columns:minmax(0,1fr) auto;gap:32px}
-.mk .lsplit{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;margin:10px 0 10px}
-.mk .lsplit button,.mk .lsplit span,.mk .lsplit .oth{min-width:3px;display:block}
-.mk .lsplit .oth{background:var(--mk-fill)}
-.mk .llegend{list-style:none;display:flex;flex-wrap:wrap;gap:4px 16px;margin:0;padding:0;font-size:12.5px}
-.mk .llegend .lg{display:flex;align-items:center;gap:6px;color:var(--mk-muted)}
-.mk .llegend i{width:8px;height:8px;border-radius:2px}
-.mk .llegend b{color:var(--mk-text);font-weight:600;margin-left:2px}
 .mk .lmoney{display:block;font-size:30px;letter-spacing:-.02em;margin-top:8px;font-variant-numeric:tabular-nums}
 .mk .lfeed{padding:6px 22px 0;max-height:520px;overflow:auto}
 .mk .lon .lv:first-child{border-top:0}
@@ -1592,4 +1585,42 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @keyframes mk-tickp{0%{color:var(--mk-lime);transform:scale(1.07)}100%{color:inherit;transform:none}}
 @media (max-width:700px){
 .mk .lfig>div:first-child .lbign{font-size:76px}
+}
+
+/* Live's left card: it is as tall as its content, never stretched to the list beside it. The two big numbers are one pair. */
+.mk .liveview>.lnow{align-self:start}
+.mk .lnow .lhead{flex-wrap:nowrap;gap:var(--mk-s3)}
+.mk .lnow .lhead .lm{margin:0 auto 0 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk .lnow .lfig{display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-end;gap:var(--mk-s3) var(--mk-s6)}
+.mk .lnow .lfig>div,.mk .lnow .lfig>div:nth-child(2){display:flex;flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:var(--mk-s1);order:0;margin:0;text-align:left}
+.mk .lnow .lfig .ll{order:0;font-size:13px}
+.mk .lnow .lfig .lbign,.mk .lnow .lfig>div:first-child .lbign,.mk .lnow .lfig>div:nth-child(2) .lbign{font-size:80px;line-height:1;font-weight:700;letter-spacing:-.05em;order:1}
+.mk .lnow .lfig .mk-ld{order:2;flex-basis:auto;font-size:12px}
+@media all{
+.mk .lnow[data-fit=tiny] .lfig .lbign,.mk .lnow[data-fit=tiny] .lfig>div:first-child .lbign,.mk .lnow[data-fit=tiny] .lfig>div:nth-child(2) .lbign{font-size:60px}
+}
+/* Under the numbers: the sources as rows, the revenue as a short block; one column until there is room for two. */
+.mk .lnow .lbottom,.mk .lnow .lbottom.money{grid-template-columns:1fr;gap:var(--mk-s4);align-items:start;margin-top:var(--mk-s4)}
+@media all{
+.mk .lnow[data-fit=wide] .lbottom.money{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:var(--mk-s6)}
+}
+.mk .lsrows{list-style:none;margin:var(--mk-s2) 0 0;padding:0;display:flex;flex-direction:column;gap:var(--mk-s2)}
+.mk .lsrows li{display:grid;grid-template-columns:minmax(0,9.5em) minmax(40px,1fr) 2.5em 3em;align-items:center;gap:var(--mk-s3);font-size:13px}
+.mk .lsn{display:flex;align-items:center;gap:var(--mk-s2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk .lsn i{width:8px;height:8px;border-radius:50%;flex:none}
+.mk .lsb{height:6px;border-radius:3px;background:var(--mk-fill);overflow:hidden}
+.mk .lsb u{display:block;height:100%;border-radius:3px;transition:width .3s}
+.mk .lsrows b{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.mk .lsrows em{text-align:right;font-style:normal;color:var(--mk-muted);font-variant-numeric:tabular-nums}
+.mk .lsq{margin-top:var(--mk-s2)}
+.mk .lrevc{margin-top:var(--mk-s2);padding:var(--mk-s3) var(--mk-s4);border:1px dashed var(--mk-line);border-radius:12px;display:flex;flex-direction:column;gap:var(--mk-s1)}
+.mk .lrevc p{margin:0}
+.mk .lrevc .lt1{font-weight:600;font-size:14px}
+.mk .lrevc .lt2{color:var(--mk-muted);font-size:12px}
+.mk .lrevb{display:flex;align-items:center;gap:var(--mk-s3);margin-top:var(--mk-s2);flex-wrap:wrap}
+.mk .lrevb .lkgo{height:32px;padding:0 14px;border-radius:10px;background:var(--mk-lime);color:#0a0b0c;font-weight:700}
+.mk .lrevb .how{color:var(--mk-muted);font-size:13px}
+.mk .lsp{display:block;width:100%;height:44px;color:var(--mk-lime);margin-top:var(--mk-s2)}
+@media (max-width:700px){
+.mk .liveview>.lnow{align-self:stretch}
 }

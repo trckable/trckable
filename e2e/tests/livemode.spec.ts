@@ -152,6 +152,45 @@ test('the sample revenue card on Live is never clipped: Connect sits fully insid
   }
 })
 
+// The left Live card is as tall as what is in it: no band of nothing, whatever the card's width or how quiet the site is,
+// and no section title that wraps.
+test('the Live card has no empty band and no wrapped titles, wide and narrow', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  for (const width of [900, 420]) {
+    await signIn(page, '/example.com?view=live')
+    await expect(online(page)).toBeVisible({ timeout: 15_000 })
+    await page.evaluate((w) => ((document.querySelector('.liveview') as HTMLElement).style.gridTemplateColumns = `${w}px 1fr`), width)
+    await page.waitForTimeout(300)
+    const r = await page.locator('.lnow').evaluate((card) => {
+      const box = card.getBoundingClientRect()
+      const chart = card.querySelector('.lchart')!
+      const parts = [...card.querySelectorAll('*')].filter((el) => (!el.children.length || el === chart) && !chart.contains(el) || el === chart)
+      const rects = parts.map((el) => el.getBoundingClientRect()).filter((b) => b.width > 0 && b.height > 0).sort((a, b) => a.top - b.top)
+      let reach = box.top
+      let gap = 0
+      for (const b of rects) {
+        gap = Math.max(gap, b.top - reach)
+        reach = Math.max(reach, b.bottom)
+      }
+      gap = Math.max(gap, box.bottom - reach)
+      const titles = [...card.querySelectorAll('.ll')].map((el) => el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight || '16'))
+      return { gap, width: box.width, titles }
+    })
+    expect(r.width).toBeLessThanOrEqual(width + 1)
+    expect(r.gap, `empty band at ${width}`).toBeLessThanOrEqual(48)
+    for (const t of r.titles) expect(t, `a title wraps at ${width}`).toBeLessThan(1.6)
+  }
+})
+
+test('online is never more than the visitors of the half hour', async ({ page }) => {
+  await signIn(page, '/example.com?view=live')
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
+  for (let i = 0; i < 4; i++) {
+    expect(await num(page, '.lnow .lfig .lbign')).toBeLessThanOrEqual(await num(page, '.lnow .lfig > div:nth-child(2) .lbign'))
+    await page.waitForTimeout(500)
+  }
+})
+
 test('the switch has the one dot, and it dims while the connection is down', async ({ page }) => {
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })

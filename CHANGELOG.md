@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- Live's left card is as tall as what is in it: the top sources are rows (a bar, how many, the percent), the revenue sample is one short block, the bottom row is one column when the card is narrow, a quiet half hour draws a visit as a short bar, the two big numbers are one pair, and Online now can no longer be more than the visitors of the last half hour (someone still on a page opened earlier counts in both).
 - Live's "online now" number is bigger than the old Live's, and when it changes it rolls to the new value with one brief accent flash (only a swap with reduced motion).
 - Live's sample Revenue today card keeps its size, so its Connect button is no longer cut off; the account menu sits at the bottom as a sheet on a phone; and a notice told while a screen is being drawn again waits for the next one instead of getting lost.
 - Live welcomes a new visit again: the row slides in at the top while the rows below make room, a soft lime glow fades and its dot beats once, and the online and last-half-hour numbers count up instead of swapping. Ten or more at once enter together, reduced motion keeps only the glow, and nothing moves on the first look. The half hour can also be drawn as a line (a small bars and line switch on the card, remembered in this browser), with the same minutes, tooltip and axis.

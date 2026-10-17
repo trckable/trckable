@@ -141,6 +141,9 @@ func TestLiveNowIsExact(t *testing.T) {
 			t.Fatalf("minute %d: %v, want %v (all %v vs %v)", i, got[i], minutes[i], got, minutes)
 		}
 	}
+	for v := range online {
+		cur[v] = true // whoever is online is in the half hour, whatever their event was
+	}
 	if out["visitors"] != float64(len(cur)) || out["previous"] != float64(len(prev)) || out["online"] != float64(len(online)) {
 		t.Fatalf("visitors %v previous %v online %v, want %d %d %d", out["visitors"], out["previous"], out["online"], len(cur), len(prev), len(online))
 	}
@@ -320,6 +323,24 @@ func TestLiveNowStillHereKeepsOnlineWithoutViews(t *testing.T) {
 	}
 	if views != 1 {
 		t.Fatalf("page views %v after the pings, want 1", views)
+	}
+}
+
+// Someone whose page was opened before the half hour and who is still pinging is online, so the half hour counts them
+// too: Online is never more than the half hour's visitors.
+func TestLiveNowOnlineIsNeverMoreThanTheHalfHour(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	now := g.advance(time.Second)
+	ms := now.UnixMilli()
+	min := int64(60_000)
+	g.event(t, event.Event{Kind: event.KindPageview, EventID: 1, TS: ms - 40*min, Visitor: 1, Pageview: 1, Path: "/open"})
+	g.event(t, event.Event{Kind: event.KindEngagement, EventID: 2, TS: ms - min, Visitor: 1, Pageview: 1, Path: "/open", EngagedMs: 39 * 60_000})
+	g.waitApplied(t, 2)
+	_, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/now", "")
+	if out["online"] != float64(1) || out["visitors"].(float64) < out["online"].(float64) {
+		t.Fatalf("online %v, visitors %v", out["online"], out["visitors"])
 	}
 }
 
