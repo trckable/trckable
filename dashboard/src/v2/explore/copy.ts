@@ -152,6 +152,8 @@ export const copy = defineCopy('v2explore', {
   goals: 'Goals',
   goesOn: (a: string, b: string) => `${a} go on here, usually ${b}`,
   paid: 'Paid',
+  /** The last funnel step counts people tied to the steps before it, not every sale of the period. */
+  paidAfter: (step: string) => `Paid after ${step}`,
   connectRevenue: 'Connect revenue',
   toSeeWhoPaid: ' to see who paid.',
   addAs: 'Add as',

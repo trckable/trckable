@@ -5,7 +5,9 @@ import { DOCS } from '../../components/footerLinks'
 import { LockCard } from './LockCard'
 import type { LockKind } from './lockCopy'
 
-const lead = (cards: boolean, some: boolean): string => {
+const lead = (cards: boolean, some: boolean, learning: boolean): string => {
+  // Nothing is called normal before the site has a normal to be told against.
+  if (learning) return copy.stillLearning
   if (!cards) return copy.wasNormal
   return some ? copy.allNormal : copy.nothingElse
 }
@@ -21,7 +23,7 @@ export function Calm({ cards, names, paused, learning, onExplore }: { cards: boo
           </>
         ) : (
           <>
-            <b>{lead(cards, names.length > 0)}</b>
+            <b>{lead(cards, names.length > 0, learning)}</b>
             {names.length && !learning ? `: ${names.join(', ')}` : ''}.
           </>
         )}

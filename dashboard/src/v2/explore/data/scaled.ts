@@ -16,3 +16,13 @@ export function scaled(r: Result, k: number, revenue?: number): Result {
     money: r.money ? { ...r.money, revenue: revenue ? Math.round(revenue) : Math.round(r.money.revenue * k) } : r.money,
   }
 }
+
+/** A report's earlier period with these sources' people set to what the same weekday usually brings them: the very figure the Briefing tells each source against, so a source says the same multiple on both screens. A source without a usual keeps its scaled share. */
+export function withSourceUsuals(r: Result, usuals: Map<string, number>): Result {
+  const list = r.dims.referrer
+  if (!list || usuals.size === 0) return r
+  return { ...r, dims: { ...r.dims, referrer: list.map((x) => {
+    const u = usuals.get(x.value)
+    return u === undefined ? x : { ...x, visitors: Math.round(u) }
+  }) } }
+}

@@ -44,7 +44,7 @@ describe('the funnel', () => {
   })
   it('names the paid step Paid', () => {
     const f = mapFunnel({ cur: [step('/', 100), { kind: 'paid', value: 'paid', visitors: 4, rate: 0.04, of_total: 0.04, median_s: 60, dropped: 0 }], report: report(null, false), ghost: false })
-    expect(f.steps.map((s) => s.name)).toEqual(['/', 'Paid'])
+    expect(f.steps.map((s) => s.name)).toEqual(['/', 'Paid after /'])
   })
   it('has no goals on when the site has none', () => {
     expect(mapFunnel({ cur: [], report: report(null, false), ghost: false }).goalsOn).toBe(false)

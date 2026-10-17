@@ -43,7 +43,11 @@ export function stepsOf(wanted: (FunnelStep | PaidStep)[] | undefined, pages: { 
 export function mapFunnel(o: { cur: FunnelResult[]; prev?: FunnelResult[]; report: Report; ghost: boolean }): Funnel {
   const { cur, prev, report } = o
   const base = !!report.previous && baseEnough(report.previous.kpis.visitors)
-  const steps: Step[] = cur.map((s, i) => ({ name: s.kind === 'paid' ? copy.paid : s.label || s.value, v: s.visitors, c: prev?.[i]?.visitors ?? 0 }))
+  const stepName = (s: FunnelResult, i: number): string => {
+    if (s.kind !== 'paid') return s.label || s.value
+    return i > 0 ? copy.paidAfter(cur[i - 1].label || cur[i - 1].value) : copy.paid
+  }
+  const steps: Step[] = cur.map((s, i) => ({ name: stepName(s, i), v: s.visitors, c: prev?.[i]?.visitors ?? 0 }))
   const goals: Goal[] = (report.current.goals ?? []).map((g) => ({ name: g.label || g.value, ...statOf(g.visitors, report.previous?.goals?.find((p) => p.value === g.value)?.visitors, base) }))
   const pages = (report.current.dims.page ?? []).map((r) => ({ name: r.value, ...statOf(r.visitors, report.previous?.dims.page?.find((p) => p.value === r.value)?.visitors, base) }))
   return { steps, leak: leakOf(steps), goals, vs: copy.vsUsual, ghost: o.ghost, goalsOn: goals.length > 0, pages }

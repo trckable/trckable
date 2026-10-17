@@ -13,7 +13,7 @@ import type { SliceData } from './useSlices'
 import { engagementFromBounce, sourceName, engagementScore, sentence, trafficFromBand, trafficScore, uptimeScore, type Score, type Unit, type Usual } from './model'
 import type { ScoreFacts } from './scoreWhy'
 import { pctText } from './kpis'
-import { dayBandOf, hourlyPeople, hourTable, stretchBand, usualBounce, verdictOf, type Band } from './usual'
+import { dayBandOf, hourlyPeople, hourTable, stretchBand, timesUsual, usualBounce, verdictOf, type Band } from './usual'
 import type { History } from './useHistory'
 
 const weekdayOf = (day: string) => new Date(day + 'T12:00:00Z').toLocaleDateString(tag ?? 'en-US', { weekday: 'long', timeZone: 'UTC' })
@@ -167,7 +167,7 @@ export function useParts(a: PartsIn) {
       first: extras.first ?? undefined,
     })
     const lead = learning ? undefined : leadSource(slices.slices.referrer, cur.kpis.visitors, site.domain)
-    const jump = lead?.band ? { name: sourceName(lead.value), value: lead.value, visitors: lead.v, times: lead.band.c > 0.5 ? lead.v / lead.band.c : null, vs: unit === 'today' || unit === 'yesterday' ? 'your usual' : undefined, st: lead.st === 'dn' ? ('dn' as const) : ('up' as const) } : null
+    const jump = lead?.band ? { name: sourceName(lead.value), value: lead.value, visitors: lead.v, times: timesUsual(lead.v, lead.band), vs: unit === 'today' || unit === 'yesterday' ? 'your usual' : undefined, st: lead.st === 'dn' ? ('dn' as const) : ('up' as const) } : null
     const usualWords = usualWordsOf(unit, weekday, clock.slice(11))
     const say = sentence({ cur, prev, usual, unit, weekday, self: site.domain, downMin, learning, low, jump, ongoing: downNow ? { since: uptimeIn.since, minutes: uptimeIn.minutesNow } : undefined, incidents: up.list.filter((x) => x.ended_at !== null).map((x, i) => ({ from: uptimeIn.incidents[i]?.from ?? '', to: uptimeIn.incidents[i]?.to ?? '', minutes: Math.round(((x.ended_at ?? nowSec) - x.started_at) / 60) })), lost: uptimeIn.lost, band: verdict && !learning ? { ratio: verdict.ratio, st, words: usualWords } : null })
     const top = jump
@@ -183,7 +183,7 @@ export function useParts(a: PartsIn) {
       const last = cur.series.reduce((k, p, i) => (p.t.slice(0, 10) === n.day ? i : k), first)
       return [{ i: hourly ? Math.min(first + 12, last) : first, text: n.text }]
     })
-    const chart = chartOf({ cur, prev, bucket: bucket ?? 'day', unit, nowT: live ? clock : undefined, weekday, riseName: top?.times && top.times >= 1.5 ? top.name : undefined, downs, notes: marks, bands, overall: st, sales: money && extras.buyers ? extras.buyers.filter((b) => b.amount > 0).map((b) => ({ at: siteNow(site.timezone, new Date(b.at)), text: money(b.amount), size: b.amount })) : undefined })
+    const chart = chartOf({ cur, prev, bucket: bucket ?? 'day', unit, nowT: live ? clock : undefined, weekday, riseName: top?.times && top.times >= 1.5 ? top.name : undefined, riseTimes: top?.times ?? undefined, riseVs: top?.vs ?? copy.before[unit], downs, notes: marks, bands, overall: st, sales: money && extras.buyers ? extras.buyers.filter((b) => b.amount > 0).map((b) => ({ at: siteNow(site.timezone, new Date(b.at)), text: money(b.amount), size: b.amount })) : undefined })
     const mo =
       hist.daily && !learning && !low
         ? moments({ totals, days, todayUp: unit === 'today' ? st === 'up' : false, from: Math.max(0, days.indexOf(range.from)), to: Math.max(0, days.indexOf(range.to)), elapsed: Math.round(nowHour * 60), today: unit === 'today', week: unit === 'week', filtered: false })
